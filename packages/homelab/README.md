@@ -200,59 +200,46 @@ ArgoCD, which reverts direct mutations.
 
 ## NetworkPolicy enforcement tooling
 
-Each namespace that has NetworkPolicies carries one allow-all staging policy,
-`enforcement-staging-<namespace>`, rendered from
-`src/cdk8s/src/fleet-policy/enforcement-stages.ts`. While its `podSelector` is
-`{}` the namespace is **open**; while it selects
-`homelab.sjer.red/enforcement-staging: never`, a label no pod carries, the
-namespace is **enforced**. Two scripts under `scripts/network-policy/` read
-that live state.
+The cluster enforces every namespace's NetworkPolicies. The scripts under
+`scripts/network-policy/` check a namespace live and open one in an emergency;
+they read the live policies, never the cdk8s source.
 
-| Command                                                           | Effect                                                            |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `bun run netpol:check <namespace> [--json]`                       | Read-only gate for one namespace                                  |
-| `bun run netpol:check --all-staged [--json]`                      | The gate for every staged namespace, as a table                   |
-| `bun run netpol:check --coverage [--allow-unstaged <name>]...`    | Pre-switch gate: every namespace with policies and pods is staged |
-| `bun run netpol:open <namespace>\|--all`                          | Dry run: the break-glass manifest and what it would change        |
-| `bun run netpol:open <namespace>\|--all --apply --reason "<why>"` | Break-glass: open the namespace(s) in the cluster                 |
-| `bun run netpol:open <namespace>\|--all --close`                  | Dry run: the break-glass policies that would be deleted           |
-| `bun run netpol:open <namespace>\|--all --close --apply`          | Delete the break-glass policies                                   |
-| `bun run netpol:restart-plan [--namespace <name>]... [--json]`    | Read-only: the ordered restart of policy-selected workloads       |
+| Command                                                           | Effect                                                        |
+| ----------------------------------------------------------------- | ------------------------------------------------------------- |
+| `bun run netpol:check <namespace> [--json]`                       | Read-only gate for one namespace                              |
+| `bun run netpol:check --all [--json]`                             | The gate for every namespace with a NetworkPolicy, as a table |
+| `bun run netpol:open <namespace>\|--all`                          | Dry run: the break-glass manifest and what it would change    |
+| `bun run netpol:open <namespace>\|--all --apply --reason "<why>"` | Break-glass: open the namespace(s) in the cluster             |
+| `bun run netpol:open <namespace>\|--all --close`                  | Dry run: the break-glass policies that would be deleted       |
+| `bun run netpol:open <namespace>\|--all --close --apply`          | Delete the break-glass policies                               |
+| `bun run netpol:restart-plan [--namespace <name>]... [--json]`    | Read-only: the ordered restart of policy-selected workloads   |
 
 `netpol:restart-plan` prints `kubectl rollout restart` and `rollout status`
 commands and runs none of them. It lists every Deployment, StatefulSet and
-DaemonSet with a pod that a policy other than the staging and break-glass
-policies selects: PostgreSQL clusters first, then the `temporal` namespace with
+DaemonSet with a pod that a policy other than an allow-all or break-glass
+policy selects: PostgreSQL clusters first, then the `temporal` namespace with
 its server first, then the rest. Host-network pods are left out, and selected
 pods no rollout owns are listed as comments. It is the workaround for
 [kube-network-policies#418](https://github.com/kubernetes-sigs/kube-network-policies/issues/418)
 in [Switch on network policy enforcement](../docs/wiki/src/content/docs/how-to/switch-on-network-policy-enforcement.md).
 
 `netpol:check` exits non-zero when any check fails. `--since-minutes <n>`
-(default 10) sets the restart and denial window; `--expect-stage
-open|enforced` fails when the staging policy's stage differs;
-`--allow-break-glass` accepts a live break-glass policy.
+(default 10) sets the restart and denial window; `--allow-break-glass`
+accepts a live break-glass policy.
 
 `denials` reads Loki, not `kubectl logs`: the enforcer logs every packet at
 `--v=2`, so on a busy node its container log rotates within about a minute.
 Each denial line is paired with the same agent pod's `Evaluating packet` line
 for that packet id, which names the pods.
 
-| Check      | Source                                                                                       | Result                                                                       |
-| ---------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `stage`    | The live staging and break-glass policies                                                    | Reported; fails if unrecognized, unexpected, or a break-glass policy is live |
-| `pods`     | `kubectl get pods`: every pod Ready, no container restart in the window                      | Pass or fail                                                                 |
-| `services` | Services and EndpointSlices: every Service backed by pods has a ready endpoint               | Pass or fail                                                                 |
-| `urls`     | Hosts from `platform-model.json`; path and accepted statuses from the live blackbox `Probe`s | Pass, fail or not checked                                                    |
-| `probes`   | `toolkit prom query probe_success` for the namespace's `Probe` jobs                          | Pass, fail or not checked                                                    |
-| `denials`  | Loki (`toolkit loki query`): the `kube-network-policies` log of the `kube-flannel` pods      | A note; never gates; "not available" when Loki cannot be read                |
-
-`--coverage` reads only policies and pods. It lists every namespace that has a
-NetworkPolicy other than its own staging policy, with its policy count, pod
-count, stage and break-glass state, and fails while any of them has pods but
-no staging policy (or an unrecognized one). A namespace without pods is
-reported as `no pods` and passes. `--allow-unstaged` excuses a namespace by
-name, or by prefix when the entry ends in `-` or `*`; it is repeatable.
+| Check         | Source                                                                                       | Result                                                        |
+| ------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `break-glass` | The live break-glass policy                                                                  | Fails while one exists, unless `--allow-break-glass`          |
+| `pods`        | `kubectl get pods`: every pod Ready, no container restart in the window                      | Pass or fail                                                  |
+| `services`    | Services and EndpointSlices: every Service backed by pods has a ready endpoint               | Pass or fail                                                  |
+| `urls`        | Hosts from `platform-model.json`; path and accepted statuses from the live blackbox `Probe`s | Pass, fail or not checked                                     |
+| `probes`      | `toolkit prom query probe_success` for the namespace's `Probe` jobs                          | Pass, fail or not checked                                     |
+| `denials`     | Loki (`toolkit loki query`): the `kube-network-policies` log of the `kube-flannel` pods      | A note; never gates; "not available" when Loki cannot be read |
 
 "Not checked" is never a pass: it marks a tailnet host that is not HTTP, or a
 Prometheus that could not be queried. URL requests run from the operator's
@@ -262,7 +249,7 @@ follows redirects counts as an answer.
 ### Break-glass
 
 `netpol:open --apply` is the one sanctioned direct `kubectl apply` in this
-package. It never touches the staging policy, which ArgoCD self-heals back to
+package. It never touches a rendered policy, which ArgoCD self-heals back to
 source. It creates a separate allow-all NetworkPolicy,
 `enforcement-break-glass-<namespace>`, labelled
 `homelab.sjer.red/break-glass: "true"` and annotated with the reason, the
@@ -275,11 +262,10 @@ orphaned resources, `resource.exclusions` covers only Velero kinds, and prune
 removes only tracked resources that left git. The policy therefore stays until
 an operator closes it.
 
-While a break-glass policy is live, `netpol:check` reports the stage as
-`open (break-glass)` and fails unless `--allow-break-glass` is passed;
-`--all-staged` includes every namespace that has one, and `--coverage` shows
-it in its own column. To remove it, set the namespace's stage-map entry to
-`"open"` in source, let ArgoCD sync, then run `--close --apply`. `--close`
+While a break-glass policy is live, `netpol:check` reports
+`open (break-glass)` and fails unless `--allow-break-glass` is passed; `--all`
+includes every namespace that has one. To remove it, fix the namespace's
+policies in source, let ArgoCD sync, then run `--close --apply`. `--close`
 deletes only a policy that carries both the label and the expected name, and
 refuses, with a non-zero exit, anything that carries only one of them.
 

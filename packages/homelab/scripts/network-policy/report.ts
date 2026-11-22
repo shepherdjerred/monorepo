@@ -4,7 +4,6 @@ import {
   type CheckStatus,
   type NamespaceReport,
 } from "./namespace-checks.ts";
-import { effectiveStageLabel } from "./break-glass.ts";
 
 const STATUS_LABELS: Record<CheckStatus, string> = {
   pass: "PASS",
@@ -58,20 +57,14 @@ export function renderReport(report: NamespaceReport): string {
 /** One row per namespace, then the details of every failed check. */
 export function renderTable(reports: readonly NamespaceReport[]): string {
   const checkCells = (report: NamespaceReport): string[] =>
-    CHECK_IDS.filter((id) => id !== "stage").map((id) => {
+    CHECK_IDS.map((id) => {
       const check = report.checks.find((entry) => entry.check === id);
       return check === undefined ? "-" : STATUS_LABELS[check.status];
     });
   const table = alignedRows([
-    [
-      "NAMESPACE",
-      "STAGE",
-      ...CHECK_IDS.filter((id) => id !== "stage").map((id) => id.toUpperCase()),
-      "RESULT",
-    ],
+    ["NAMESPACE", ...CHECK_IDS.map((id) => id.toUpperCase()), "RESULT"],
     ...reports.map((report) => [
       report.namespace,
-      effectiveStageLabel(report.stage, report.breakGlass),
       ...checkCells(report),
       resultLabel(report),
     ]),

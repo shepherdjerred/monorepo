@@ -1,25 +1,21 @@
 #!/usr/bin/env bun
 
 /**
- * The per-cutover gate of the NetworkPolicy enforcement rollout. Read-only.
+ * The live gate for a namespace under enforced NetworkPolicies. Read-only.
  *
  *   bun scripts/network-policy/check-namespace.ts <namespace> [--json]
- *   bun scripts/network-policy/check-namespace.ts --all-staged [--json]
- *   bun scripts/network-policy/check-namespace.ts --coverage [--allow-unstaged <name-or-prefix>]... [--json]
+ *   bun scripts/network-policy/check-namespace.ts --all [--json]
  *
- * Flags: `--since-minutes <n>` (the window in which a restart or a Failed pod
- * counts, and denials are read; default 10),
- * `--expect-stage open|enforced` (fail when the live stage differs) and
- * `--allow-break-glass` (a live break-glass policy otherwise fails the gate).
- * Exits non-zero when any check of any namespace fails.
- *
- * `--coverage` is the pre-switch gate: it fails while any namespace has
- * policies and pods but no staging policy.
+ * `--all` checks every namespace that has a NetworkPolicy. Flags:
+ * `--since-minutes <n>` (the window in which a restart or a Failed pod
+ * counts, and denials are read; default 10) and `--allow-break-glass` (a live
+ * break-glass policy otherwise fails the gate). Exits non-zero when any check
+ * of any namespace fails.
  */
 import { parseArgs } from "node:util";
 import { z } from "zod";
 import { platformModel, publicHostnames } from "#platform-model";
-import { breakGlassNamespaces, breakGlassState } from "./break-glass.ts";
+import { breakGlassState } from "./break-glass.ts";
 import {
   commandFailure,
   firstLine,
@@ -27,19 +23,14 @@ import {
   runCommand,
   type CommandRunner,
 } from "./command.ts";
-import {
-  coverageReport,
-  PodSummarySchema,
-  renderCoverage,
-} from "./coverage.ts";
 import { readEnforcerLog } from "./enforcer-log.ts";
 import {
   activePods,
   EndpointSliceSchema,
+  evaluateBreakGlass,
   evaluatePods,
   evaluateProbes,
   evaluateServices,
-  evaluateStage,
   evaluateUrlResponse,
   evaluateUrls,
   evaluateUrlsWithoutPods,
@@ -64,34 +55,24 @@ import {
 } from "./namespace-urls.ts";
 import {
   NamespaceNameSchema,
+  namespacesWithPolicies,
   readNetworkPolicies,
-  stagedNamespaces,
-  stageOf,
-  stagingPolicyOf,
   type NetworkPolicy,
-} from "./staging-policy.ts";
+} from "./policies.ts";
 
 const URL_TIMEOUT_MS = 15_000;
 
 export type CheckOptions = {
-  target: { namespace: string } | "all-staged" | "coverage";
-  /** `--coverage` only: namespaces, or prefixes, excused from staging. */
-  allowUnstaged: string[];
+  target: { namespace: string } | "all";
   json: boolean;
   sinceMinutes: number;
-  expectStage: "open" | "enforced" | undefined;
   allowBreakGlass: boolean;
 };
 
 const OptionsSchema = z.object({
   json: z.boolean().default(false),
-  "all-staged": z.boolean().default(false),
-  coverage: z.boolean().default(false),
-  "allow-unstaged": z
-    .array(z.string().regex(/^[a-z0-9][a-z0-9-]*\*?$/u))
-    .default([]),
+  all: z.boolean().default(false),
   "since-minutes": z.coerce.number().int().positive().default(10),
-  "expect-stage": z.enum(["open", "enforced"]).optional(),
   "allow-break-glass": z.boolean().default(false),
 });
 
@@ -101,38 +82,25 @@ export function parseCheckArguments(argv: readonly string[]): CheckOptions {
     allowPositionals: true,
     options: {
       json: { type: "boolean" },
-      "all-staged": { type: "boolean" },
-      coverage: { type: "boolean" },
-      "allow-unstaged": { type: "string", multiple: true },
+      all: { type: "boolean" },
       "since-minutes": { type: "string" },
-      "expect-stage": { type: "string" },
       "allow-break-glass": { type: "boolean" },
     },
   });
   const options = OptionsSchema.parse(values);
   const [namespace, ...extra] = positionals;
-  const targets = [
-    namespace !== undefined,
-    options["all-staged"],
-    options.coverage,
-  ].filter(Boolean).length;
-  const strayAllow = !options.coverage && options["allow-unstaged"].length > 0;
-  if (targets !== 1 || strayAllow || extra.length > 0) {
+  if ((namespace === undefined) === !options.all || extra.length > 0) {
     throw new Error(
-      "Usage: check-namespace.ts <namespace>|--all-staged [--json] [--since-minutes <n>] [--expect-stage open|enforced] [--allow-break-glass]\n" +
-        "       check-namespace.ts --coverage [--allow-unstaged <name-or-prefix>]... [--json]",
+      "Usage: check-namespace.ts <namespace>|--all [--json] [--since-minutes <n>] [--allow-break-glass]",
     );
   }
-  const cluster = options.coverage ? "coverage" : "all-staged";
   return {
     target:
       namespace === undefined
-        ? cluster
+        ? "all"
         : { namespace: NamespaceNameSchema.parse(namespace) },
-    allowUnstaged: options["allow-unstaged"],
     json: options.json,
     sinceMinutes: options["since-minutes"],
-    expectStage: options["expect-stage"],
     allowBreakGlass: options["allow-break-glass"],
   };
 }
@@ -222,10 +190,7 @@ export async function checkNamespace(
   namespace: string,
   cluster: ClusterFacts,
   dependencies: CheckDependencies,
-  options: Pick<
-    CheckOptions,
-    "sinceMinutes" | "expectStage" | "allowBreakGlass"
-  >,
+  options: Pick<CheckOptions, "sinceMinutes" | "allowBreakGlass">,
 ): Promise<NamespaceReport> {
   const { run } = dependencies;
   const inNamespace = (resource: string) => [
@@ -261,13 +226,9 @@ export async function checkNamespace(
         urls.checks.map((check) => answer(check, dependencies.fetchUrl)),
       )
     : [];
-  const stage = stageOf(stagingPolicyOf(cluster.policies, namespace));
   const breakGlass = breakGlassState(cluster.policies, namespace);
-  return namespaceReport(namespace, stage, breakGlass, [
-    evaluateStage(namespace, stage, breakGlass, {
-      expected: options.expectStage,
-      allowBreakGlass: options.allowBreakGlass,
-    }),
+  return namespaceReport(namespace, breakGlass, [
+    evaluateBreakGlass(namespace, breakGlass, options.allowBreakGlass),
     evaluatePods(pods.items, dependencies.now(), options.sinceMinutes),
     evaluateServices(services.items, slices.items),
     runsPods
@@ -281,42 +242,17 @@ export async function checkNamespace(
   ]);
 }
 
-/** The pre-switch gate: reads every policy and pod, nothing else. */
-async function runCoverage(
-  options: CheckOptions,
-  run: CommandRunner,
-): Promise<{ output: string; exitCode: number }> {
-  const [policies, pods] = await Promise.all([
-    readNetworkPolicies(run),
-    kubectlJson(
-      run,
-      ["get", "pods", "--all-namespaces"],
-      list(PodSummarySchema),
-    ),
-  ]);
-  const report = coverageReport(policies, pods.items, options.allowUnstaged);
-  return {
-    output: options.json
-      ? JSON.stringify(report, null, 2)
-      : renderCoverage(report),
-    exitCode: report.ok ? 0 : 1,
-  };
-}
-
 /** Runs the gate and returns what to print and the exit code. */
 export async function runCheck(
   options: CheckOptions,
   dependencies: CheckDependencies,
 ): Promise<{ output: string; exitCode: number }> {
-  if (options.target === "coverage") {
-    return runCoverage(options, dependencies.run);
-  }
   const cluster = await readClusterFacts(
     dependencies.run,
     options.sinceMinutes,
     dependencies.now(),
   );
-  if (options.target !== "all-staged") {
+  if (options.target !== "all") {
     const report = await checkNamespace(
       options.target.namespace,
       cluster,
@@ -330,19 +266,14 @@ export async function runCheck(
       exitCode: report.ok ? 0 : 1,
     };
   }
-  // A break-glass policy in an unstaged namespace is checked too.
-  const namespaces = [
-    ...new Set([
-      ...stagedNamespaces(cluster.policies),
-      ...breakGlassNamespaces(cluster.policies),
-    ]),
-  ].toSorted();
+  // A break-glass policy is a policy, so its namespace is always listed.
+  const namespaces = namespacesWithPolicies(cluster.policies);
   if (namespaces.length === 0) {
     // An empty gate must not read as a passed one.
     return {
       output: options.json
         ? "[]"
-        : "No namespace has a staging or break-glass policy; nothing was checked.",
+        : "No namespace has a NetworkPolicy; nothing was checked.",
       exitCode: 1,
     };
   }

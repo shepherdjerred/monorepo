@@ -37,4 +37,6 @@ export const wikiRedirects = {
   "/temporal/workflows/scout": "/explanation/temporal/workflow-families/",
   "/how-to/route-a-service-to-braintrust":
     "/how-to/route-a-service-to-phoenix/",
+  "/how-to/cut-a-namespace-over-to-enforced-policies/":
+    "/how-to/check-a-namespace-under-enforced-policies/",
 };

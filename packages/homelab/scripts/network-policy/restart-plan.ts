@@ -11,11 +11,11 @@ import { z } from "zod";
 import { isBreakGlassPolicy } from "./break-glass.ts";
 import { kubectlJson, runCommand, type CommandRunner } from "./command.ts";
 import {
+  allowsEverythingForEveryPod,
   NamespaceNameSchema,
   readNetworkPolicies,
-  stagingPolicyName,
   type NetworkPolicy,
-} from "./staging-policy.ts";
+} from "./policies.ts";
 
 const OwnerSchema = z.object({ kind: z.string(), name: z.string() });
 
@@ -164,8 +164,8 @@ function order(left: Workload, right: Workload): number {
 
 /**
  * Every workload with a running or pending pod that a NetworkPolicy selects.
- * The staging and break-glass policies do not count: they allow everything,
- * so they never isolate a pod. Host-network pods are skipped because policies
+ * Allow-all and break-glass policies do not count: they allow everything, so
+ * they never isolate a pod. Host-network pods are skipped because policies
  * do not apply to them.
  */
 export function restartPlan(
@@ -176,8 +176,7 @@ export function restartPlan(
 ): RestartPlan {
   const isolating = policies.filter(
     (policy) =>
-      policy.metadata.name !== stagingPolicyName(policy.metadata.namespace) &&
-      !isBreakGlassPolicy(policy),
+      !allowsEverythingForEveryPod(policy) && !isBreakGlassPolicy(policy),
   );
   const workloads = new Map<string, Workload>();
   const unmanaged: UnmanagedPod[] = [];

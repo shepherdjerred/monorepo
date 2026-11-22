@@ -3,7 +3,6 @@ import {
   getRegisteredBackendProbes,
   type BackendProbeDescriptor,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
-import { enforcementStagingPolicyName } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import {
   objectIdentity,
   synthesizedCharts,
@@ -214,14 +213,7 @@ export type FleetService = {
 export type Fleet = {
   objects: readonly SynthesizedObject[];
   workloads: readonly FleetWorkload[];
-  /**
-   * The policies that decide traffic once a namespace is enforced. The
-   * enforcement staging policies are kept apart so that no rule can count
-   * an allow-all staging policy as coverage or admission.
-   */
   networkPolicies: readonly FleetNetworkPolicy[];
-  /** The enforcement staging policy of each staged namespace. */
-  enforcementStagingPolicies: readonly FleetNetworkPolicy[];
   services: readonly FleetService[];
   /** Service selectors by namespace. */
   serviceSelectors: readonly {
@@ -351,10 +343,6 @@ export function againstDebt(
   };
 }
 
-function isStaging(policy: FleetNetworkPolicy): boolean {
-  return policy.name === enforcementStagingPolicyName(policy.namespace);
-}
-
 /** The fleet the given rendered objects and registered probes make up. */
 export function fleetOf(
   objects: readonly SynthesizedObject[],
@@ -376,8 +364,7 @@ export function fleetOf(
     workloads: objects
       .filter((object) => WORKLOAD_KINDS.has(object.kind))
       .map((object) => toWorkload(object)),
-    networkPolicies: policies.filter((policy) => !isStaging(policy)),
-    enforcementStagingPolicies: policies.filter((policy) => isStaging(policy)),
+    networkPolicies: policies,
     services,
     serviceSelectors: services.flatMap(({ namespace, selector }) =>
       selector === undefined ? [] : [{ namespace, selector }],

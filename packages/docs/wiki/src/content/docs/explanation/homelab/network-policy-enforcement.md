@@ -1,18 +1,17 @@
 ---
 title: How network policy enforcement works here
-description: What enforces a NetworkPolicy in the homelab cluster, why each namespace carries an allow-all staging policy, and what the checks around a cutover can and cannot prove.
+description: What enforces a NetworkPolicy in the homelab cluster, why there is no audit mode and what stands in for one, and what the policy checks can and cannot prove.
 sidebar:
   order: 9
 ---
 
-The cluster renders NetworkPolicies but nothing enforces them yet. Enforcement
-is switched on once for the whole cluster, and each namespace then moves to its
-own policies separately, behind a staging policy that keeps it open until it
-is ready.
+The cluster enforces NetworkPolicies through an agent that runs beside
+flannel on every node. Each namespace's own policies decide its traffic from
+the first packet after they sync, and a hand-applied break-glass policy is the
+only way to open a namespace faster than a release.
 
-Flannel is the only network plugin, and flannel ignores NetworkPolicy objects.
-Every policy in the repository is therefore a declaration today. A pod that a
-policy forbids from reaching Tracker still reaches it.
+Flannel is the only network plugin, and flannel itself ignores NetworkPolicy
+objects. Enforcement comes entirely from the agent described below.
 
 ## What enforces
 
@@ -29,15 +28,15 @@ rejected because production runs on one node. A plugin migration there is a
 full outage, while the sidecar is a DaemonSet roll that leaves running pods in
 place.
 
-The switch is made in a maintenance window. Until then the agent container does
-not exist, and every statement below about enforcement describes the cluster
-after it.
+The switch was made once, in a maintenance window;
+[How to switch on network policy enforcement](/how-to/switch-on-network-policy-enforcement/)
+is that procedure and its rollback.
 
 ## Default-open and additive
 
 A [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
-only ever allows. There is no deny rule. Two consequences follow, and the whole
-rollout rests on them.
+only ever allows. There is no deny rule. Two consequences follow, and
+everything below rests on them.
 
 A pod that no policy selects is fully open. Policies restrict only the pods
 their selector names, and only in the directions their `policyTypes` list. A
@@ -60,54 +59,34 @@ flowchart TD
   Any -->|no| Drop["Dropped"]
 ```
 
-## Why every namespace has a staging policy
+## No audit mode, and what stands in for one
 
 The agent has no audit mode. It cannot log what it would have dropped while
-still letting traffic through. Whatever policies select a pod apply from the
-first packet after the switch.
+still letting traffic through. A policy applies from the first packet after it
+syncs, so a wrong rule is an outage, not a warning.
 
-None of the existing policies has ever been tested against real traffic, so
-switching them all on at once would be a cluster-wide experiment. The staging
-policy is the substitute for the missing audit mode. It uses additivity
-against itself.
+Two things make that tolerable. Before a change merges, the fleet checks below
+compare every policy with the rest of the rendered topology. After it syncs,
+the live gate in
+[Check a namespace under enforced policies](/how-to/check-a-namespace-under-enforced-policies/)
+and the enforcer's denial log show what broke.
 
-Every namespace that has policies gets one more, named
-`enforcement-staging-<namespace>`. It allows all traffic in both directions.
-While it selects every pod, some policy allows every connection, so the
-namespace's real policies decide nothing. That stage is `"open"`.
+When something breaks faster than a fix can ship, additivity is the way out.
+One more policy that selects every pod and allows everything opens the
+namespace, whatever its other policies say. The
+[break-glass procedure](/how-to/open-a-namespace-in-an-emergency/) applies
+exactly that, by hand, as an object ArgoCD does not track. Self-heal cannot
+revert it, and nothing removes it but an operator.
 
-Cutting a namespace over changes only the staging policy's selector, to a
-label no pod carries. The policy then selects nothing and the real policies
-decide alone. That stage is `"enforced"`. Because only a selector changes,
-cutover and revert are in-place updates of one object and never wait on a
-prune.
-
-The stage of every namespace is one entry in
-[`enforcement-stages.ts`](packages/homelab/src/cdk8s/src/fleet-policy/enforcement-stages.ts).
-[`applyEnforcementStaging`](packages/homelab/src/cdk8s/src/enforcement-staging.ts)
-renders the staging policies from that map over the finished app, so a
-namespace cannot gain a policy without being staged. A namespace with a policy
-and no entry fails synthesis.
-
-Two kinds of namespace do not fit the simple case, and the same file declares
-both.
-
-`STAGED_WITHOUT_RENDERED_POLICY` lists namespaces whose policies synthesis
-cannot see. `argocd` and `prometheus` get theirs from an upstream Helm chart.
-One namespace holds a policy that exists only in the cluster. Each still needs
-a staging policy, so the map names the chart that carries it.
-
-`ENFORCED_WITHOUT_STAGING` lists namespaces that are deliberately not staged.
-They hold the isolation policy of a finished restore rehearsal or recovery and
-run no pod. Isolation is the intent there, so enforcement applies to them the
-moment the cluster enforces.
+The same property made the rollout safe. Every namespace first carried such
+an allow-all policy, and each was then moved to its own policies one at a
+time. Those policies were removed when the rollout finished.
 
 ## What the fleet checks prove
 
 The [fleet policy tests](packages/homelab/src/cdk8s/src/fleet-policy/fleet-policy.test.ts)
 read every rendered manifest and evaluate the policies the way the enforcer
-will. They ignore the staging policies, so an open namespace cannot hide a
-wrong rule.
+does.
 
 They prove that the declared topology is consistent with itself:
 
@@ -137,12 +116,12 @@ whose test also checks the value is still in the named source file. Address rule
 checked, since no pod or node address exists at synthesis time. The tests
 resolve an `ipBlock` only when it covers every address.
 
-The live gate, `check-namespace.ts`, closes part of that gap after a cutover.
+The live gate, `check-namespace.ts`, closes part of that gap after a change.
 It checks pod readiness, Service endpoints, the namespace's public and tailnet
 URLs, and its blackbox probes. All of those are connections _into_ the
 namespace. A blocked outbound call to a third-party API changes none of them.
 It shows up only in the enforcer's log and in the application's own behaviour,
-which is why a cutover ends with the namespace's user flow.
+which is why a check ends with the namespace's user flow.
 
 ## Node traffic and host-network pods
 
@@ -221,7 +200,7 @@ crashed enforcer that dropped everything would take down every service. The
 cost is silence. A dead agent looks exactly like a cluster with no policies,
 and nothing a user does reveals it. Only monitoring does: an alert fires when
 a node has no running enforcer or one restarts, as listed under
-[Watching the enforcer](/how-to/cut-a-namespace-over-to-enforced-policies/#watching-the-enforcer).
+[Watching the enforcer](/how-to/check-a-namespace-under-enforced-policies/#watching-the-enforcer).
 
 Policies are therefore a second boundary, not the only one. The workloads that
 must not reach a destination under any failure keep a pod-local firewall, as
@@ -236,12 +215,9 @@ switch. Writing policies for them is separate work, tracked as Tracker AI-600.
 Until it lands, a pod in one of those namespaces can still reach any open pod,
 and any pod can reach them.
 
-A namespace in the `"open"` stage is not protected either, however complete
-its policies look. The stage map is the honest statement of how much of the
-cluster is enforced.
-
-The break-glass policy is a third way a namespace can be open. It is applied
-by hand, outside source, and it overrides the stage until someone removes it.
+A break-glass policy opens a namespace completely, however complete its
+policies look. It is applied by hand, outside source, and it stays until
+someone removes it; an alert fires while it exists.
 
 The agent also exposes something new. It serves its metrics on port 9080 on
 every node address, so they are readable from the LAN and the tailnet. No
@@ -252,6 +228,6 @@ binds the port to loopback arrives with Talos 1.15.
 
 ## Related
 
-- [Cut a namespace over to enforced policies](/how-to/cut-a-namespace-over-to-enforced-policies/)
+- [Check a namespace under enforced policies](/how-to/check-a-namespace-under-enforced-policies/)
 - [Open a namespace in an emergency](/how-to/open-a-namespace-in-an-emergency/)
 - [Agent task boundary](/explanation/temporal/agent-task-boundary/)

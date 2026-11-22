@@ -2,12 +2,7 @@
 import { BREAK_GLASS_LABEL, breakGlassPolicyName } from "./break-glass.ts";
 import type { CommandResult, CommandRunner } from "./command.ts";
 import type { Probe } from "./namespace-urls.ts";
-import {
-  NEVER_LABEL,
-  NEVER_VALUE,
-  stagingPolicyName,
-  type NetworkPolicy,
-} from "./staging-policy.ts";
+import type { NetworkPolicy } from "./policies.ts";
 
 const ALLOW_ALL = {
   policyTypes: ["Ingress", "Egress"],
@@ -15,17 +10,11 @@ const ALLOW_ALL = {
   egress: [{}],
 };
 
-export function stagingPolicy(
-  namespace: string,
-  stage: "open" | "enforced",
-): NetworkPolicy {
+/** An allow-all policy that is not a break-glass policy. */
+export function allowAllPolicy(namespace: string, name: string): NetworkPolicy {
   return {
-    metadata: { name: stagingPolicyName(namespace), namespace },
-    spec: {
-      podSelector:
-        stage === "open" ? {} : { matchLabels: { [NEVER_LABEL]: NEVER_VALUE } },
-      ...ALLOW_ALL,
-    },
+    metadata: { name, namespace },
+    spec: { podSelector: {}, ...ALLOW_ALL },
   };
 }
 
