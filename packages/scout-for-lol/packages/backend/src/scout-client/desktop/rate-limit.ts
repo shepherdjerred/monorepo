@@ -5,6 +5,8 @@ const MAX_TRACKED_DEVICES = 10_000;
 export type DeviceWindowLimiter = {
   readonly limit: number;
   readonly allow: (deviceId: string, now?: number) => boolean;
+  /** Whole seconds until the current window ends, at least one. */
+  readonly secondsUntilReset: (now?: number) => number;
   readonly reset: (now?: number) => void;
 };
 
@@ -30,6 +32,10 @@ export function deviceWindowLimiter(limit: number): DeviceWindowLimiter {
         callsByDevice.set(deviceId, calls);
       }
       return true;
+    },
+    secondsUntilReset(now = Date.now()) {
+      const remaining = WINDOW_MS - (now - windowStartedAt);
+      return Math.min(60, Math.max(1, Math.ceil(remaining / 1000)));
     },
     reset(now = Date.now()) {
       windowStartedAt = now;

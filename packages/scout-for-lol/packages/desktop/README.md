@@ -6,8 +6,8 @@ directory keep the old name.)
 Pure-Rust desktop observer for League of Legends. The application is a
 background tray process with a small native status, pairing, settings, and
 diagnostics window, which runs as a separate child process. The window renders
-with `egui` by default; a `gpui-kit` window can be selected instead (see
-"Window toolkit"). It reads only the local gameplay endpoints declared in
+with `gpui-kit` on Windows and macOS and with `egui` on Linux; `egui` stays
+available as an explicit fallback (see "Window toolkit"). It reads only the local gameplay endpoints declared in
 `scout-client-core::lcu::LcuEndpoint` and persists outbound observations in a
 SQLite outbox before delivery. Custom and duel games are recognized from an
 exact observed roster; League gameflow then advances the bound game without
@@ -56,7 +56,7 @@ The workspace has seven crates:
   `crates/scout-voice/README.md`. `cpal` and `sherpa-onnx` are Windows and
   macOS dependencies only, so Linux CI builds and tests the rest.
 - `scout-client-app`: the `scout-client` binary: the supervisor, its tray, and
-  the `egui` window.
+  the fallback `egui` window.
 
 ### Process model
 
@@ -124,14 +124,18 @@ thread.
 
 ### Window toolkit
 
-The supervisor launches the `gpui-kit` window when `SCOUT_DESKTOP_UI=gpui` is
-set or `--ui=gpui` is passed; the flag wins over the variable. Otherwise it
-launches the `egui` window. Any other value is refused at startup with exit
-status 2, and so is `gpui` on Linux, where the window is not built.
+The supervisor launches the `gpui-kit` window on Windows and macOS, the only
+window with chat, voice, the coach and the overlay. `--ui=egui` or
+`SCOUT_DESKTOP_UI=egui` asks for the `egui` window instead, a fallback kept
+until a signed `gpui-kit` build passes runtime acceptance; `--ui=gpui` names
+the default explicitly. The flag wins over the variable. Any other value is
+refused at startup with exit status 2, and so is `gpui` on Linux, where the
+window is not built and `egui` is the default.
 
 ```bash
-mise exec -- cargo run --package scout-client-app -- --ui=gpui
-SCOUT_DESKTOP_UI=gpui mise exec -- cargo run --package scout-client-app
+mise exec -- cargo run --package scout-client-app
+mise exec -- cargo run --package scout-client-app -- --ui=egui
+SCOUT_DESKTOP_UI=egui mise exec -- cargo run --package scout-client-app
 ```
 
 Choosing a toolkit picks which process starts. That is bootstrap, not product
@@ -139,8 +143,10 @@ behaviour, so it is an environment variable or flag rather than a feature flag.
 Both windows render the same IPC state and send the same commands. The
 supervisor passes `--window --ui=<toolkit>` to the child explicitly, so the
 child never depends on the environment it inherits. Crash detection,
-relaunch, close, and quit treat both windows the same way. Start-at-login
-registration does not record the toolkit, so a login start opens `egui`.
+relaunch, close, and quit treat both windows the same way. No launch path
+records a toolkit: start at login passes only `--background` and the server,
+and the installer's shortcuts, the tray's Open and the updater's relaunch pass
+nothing, so each opens the default.
 
 The `gpui-kit` window uses the system UI font and the platform monospace font.
 Beaufort, Spiegel, and Berkeley Mono are not bundled until their licensing is
@@ -692,7 +698,9 @@ soon as the backend demands it.
 whenever the update state changes (`UpdateSnapshot`: a status, the version and
 whether it is required, never a URL or path), and both windows show it as an
 "Updates" row on the Overview page. Failures are recorded in diagnostics
-(`update_check`, `update_download`, `update_install`).
+(`update_check`, `update_download`, `update_install`). A channel with no
+manifest yet (HTTP 404) has published nothing: the build is up to date, and
+that is logged once at `info`, not as a failure on every check.
 
 **Telemetry.** `update_applied` is sent by the first run of a new version
 (`SettingsStore::note_run_version`) through the same usage-data gate as every
@@ -929,6 +937,14 @@ opponents and invited rosters. The player's roster retains its primary
 resource name; additional entities use `resource:id`, so they cannot replace
 one another. Each failed endpoint records a diagnostic and leaves the other
 reads eligible.
+Each entity is read at most once a pass. The player's Clash history names
+every tournament they entered, and the League client answers `400 Bad
+Request` for one that is no longer running, so a refusal (a 4xx other than a
+timeout or rate limit) is final for that ID until a payload naming it changes;
+asking again every pass was about a thousand refused requests a minute. A bare
+ID list (`current-tournament-ids`, `invited-roster-ids`) counts only for its
+own kind. `runtime/mock_lcu.rs` is the loopback League client these tests run
+against.
 The field names those IDs come from are the best available description of the
 League client's Clash payloads, written before a Clash window could confirm
 them. A name that never appears reads nothing. Every ID is parsed to its own
@@ -1250,12 +1266,13 @@ duration, size, and a bounded `detail` — so a credential, PUUID or filesystem
 path is not representable in one rather than merely filtered out of it. Adding
 a field is the only way to widen what a record can hold.
 
-The window renders with glow. On Windows both of egui's renderers panic when
-the GPU context is lost: glow when sleep/resume, a driver reset or a display
-change invalidates it, and wgpu when it can no longer write a buffer, which
-happened within a minute on a hybrid-GPU machine. So the window is not trusted
-to stay up, and it runs in its own process (see "Process model"). Diagnostics
-live in the supervisor, which records each window crash as `window_crash`.
+The fallback `egui` window renders with glow. On Windows both of egui's
+renderers panic when the GPU context is lost: glow when sleep/resume, a driver
+reset or a display change invalidates it, and wgpu when it can no longer write
+a buffer, which happened within a minute on a hybrid-GPU machine. So the
+window is not trusted to stay up, and it runs in its own process (see "Process
+model"). Diagnostics live in the supervisor, which records each window crash
+as `window_crash`.
 
 Errors, crashes and product events leave the machine only as described in
 "Error reports and usage data", and only while the user has not opted out.
@@ -1306,8 +1323,14 @@ it posts each event to `POST /api/scout-client/v1/desktop/events` as the paired
 device, and the backend validates it strictly, rate-limits it per device, and
 forwards it under a one-way digest of the device owner's identity (never the
 Discord ID, device ID or any gameplay value). Events wait for the first
-check-in, so an unpaired client sends nothing. `update_applied` is noticed by
-comparing the running version with the one recorded in `settings.json`.
+check-in, so an unpaired client sends nothing. The backend accepts
+`maxEventsPerDevicePerMinute` (30) per device per minute and answers more with
+429 and the seconds left in its window as `Retry-After`. The relay sends one
+event at a time, at most one every four seconds (half that limit), so a first
+start's burst of `post_game_reported` drains steadily; a 429 keeps the event
+at the front of the queue until `Retry-After` has passed and is logged once.
+`update_applied` is noticed by comparing the running version with the one
+recorded in `settings.json`.
 
 The contract is `data/src/scout-client/desktop-events.contract.json` with
 `desktop-events.fixtures.json`; the Zod schema

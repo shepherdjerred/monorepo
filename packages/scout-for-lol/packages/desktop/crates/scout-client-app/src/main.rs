@@ -8,8 +8,9 @@
 //! One executable, three processes. Started normally it is the supervisor: it
 //! owns the instance lock and the collector, never touches the GPU, and runs
 //! the window as a child (`--window`) that it relaunches when it crashes.
-//! The window renders with egui unless `SCOUT_DESKTOP_UI=gpui` or `--ui=gpui`
-//! selects the gpui-kit window (`scout-desktop-ui`). With the gpui window, the
+//! The window renders with the gpui-kit window (`scout-desktop-ui`) on Windows
+//! and macOS, and with egui on Linux or when `--ui=egui` (or
+//! `SCOUT_DESKTOP_UI=egui`) asks for the fallback. With the gpui window, the
 //! supervisor also runs chat and, on Windows and macOS, voice: it owns the
 //! microphone and the global keys, and the window only shows them. On Windows
 //! and macOS it also runs the in-game overlay as a second child (`--overlay`)

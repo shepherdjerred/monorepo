@@ -2,6 +2,7 @@
   "contractVersion": 1,
   "path": "/api/scout-client/v1/desktop/events",
   "appVersionMaxBytes": 64,
+  "maxEventsPerDevicePerMinute": 30,
   "commonProperties": {
     "platform": ["windows", "macos", "linux", "other"]
   },

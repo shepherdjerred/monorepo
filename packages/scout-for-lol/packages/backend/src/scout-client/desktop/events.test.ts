@@ -20,8 +20,11 @@ vi.mock("#src/analytics/product-analytics.ts", () => ({
 }));
 
 const { handleScoutClientRoute } = await import("#src/scout-client/http.ts");
-const { desktopEventAllowed, resetDesktopEventLimitForTests } =
-  await import("./events.ts");
+const {
+  desktopEventAllowed,
+  desktopEventRetryAfterSeconds,
+  resetDesktopEventLimitForTests,
+} = await import("./events.ts");
 
 const device: AuthenticatedScoutClient = {
   deviceId: "3f2b6f6e-7a54-4f55-9a2c-3f2d6a1d9a10",
@@ -102,7 +105,10 @@ describe("desktop events route", () => {
     }
     const limited = await post(validEvent);
     expect(limited.status).toBe(429);
-    expect(limited.headers.get("Retry-After")).toBe("60");
+    // The rest of the window, so the relay retries when it would be accepted.
+    const retryAfter = Number(limited.headers.get("Retry-After"));
+    expect(retryAfter).toBeGreaterThanOrEqual(1);
+    expect(retryAfter).toBeLessThanOrEqual(60);
     expect(analytics.current?.captureDesktop).toHaveBeenCalledTimes(30);
 
     authenticate.mockResolvedValue({
@@ -121,5 +127,16 @@ describe("desktop events route", () => {
     }
     expect(desktopEventAllowed(device.deviceId, start)).toBe(false);
     expect(desktopEventAllowed(device.deviceId, start + 60_000)).toBe(true);
+  });
+
+  test("a refusal says how much of the window is left", () => {
+    const start = Date.parse("2026-11-13T12:00:00.000Z");
+    resetDesktopEventLimitForTests(start);
+    for (let call = 0; call < 30; call += 1) {
+      desktopEventAllowed(device.deviceId, start);
+    }
+    expect(desktopEventAllowed(device.deviceId, start + 45_500)).toBe(false);
+    expect(desktopEventRetryAfterSeconds(start + 45_500)).toBe(15);
+    expect(desktopEventRetryAfterSeconds(start + 59_999)).toBe(1);
   });
 });

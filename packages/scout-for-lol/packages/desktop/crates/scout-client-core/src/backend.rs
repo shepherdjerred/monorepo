@@ -374,15 +374,20 @@ impl ScoutBackendClient {
         credential: &DeviceCredential,
         body: &crate::telemetry::UsageEventBody,
     ) -> Result<(), BackendError> {
-        self.http
+        let response = self
+            .http
             .post(self.endpoint(crate::telemetry::USAGE_EVENTS_PATH)?)
             .bearer_auth(&credential.token)
             .json(body)
             .send()
             .await
-            .map_err(BackendError::Request)?
-            .checked()
-            .await?;
+            .map_err(BackendError::Request)?;
+        if response.status().as_u16() == RATE_LIMITED_STATUS {
+            return Err(BackendError::RateLimited {
+                retry_after: retry_after(response.headers()),
+            });
+        }
+        response.checked().await?;
         Ok(())
     }
 
@@ -555,6 +560,22 @@ fn rejection(status: u16, body: &str) -> BackendError {
     }
 }
 
+/// The status of a rate-limited answer.
+pub const RATE_LIMITED_STATUS: u16 = 429;
+
+/// A `Retry-After` given in whole seconds. The HTTP-date form is not used by
+/// the Scout backend, so it reads as absent.
+fn retry_after(headers: &reqwest::header::HeaderMap) -> Option<std::time::Duration> {
+    headers
+        .get(reqwest::header::RETRY_AFTER)?
+        .to_str()
+        .ok()?
+        .trim()
+        .parse::<u64>()
+        .ok()
+        .map(std::time::Duration::from_secs)
+}
+
 /// The status of a `live_game_recording_refused` answer.
 pub const RECORDING_REFUSED_STATUS: u16 = 422;
 
@@ -614,6 +635,13 @@ pub enum BackendError {
         /// The server's own bounded explanation, empty when it gave none.
         message: String,
     },
+    /// Server asked this device to slow down (HTTP 429), and when to retry
+    /// when it said.
+    #[error("Scout backend rate-limited this device")]
+    RateLimited {
+        /// The server's `Retry-After`, in whole seconds, when it sent one.
+        retry_after: Option<std::time::Duration>,
+    },
     /// Server refused this build as older than the minimum it supports.
     #[error(
         "Scout needs Scout Client {} or newer; update this app to keep reporting games",
@@ -646,6 +674,7 @@ impl BackendError {
     pub fn status(&self) -> Option<u16> {
         match self {
             Self::Rejected { status, .. } => Some(*status),
+            Self::RateLimited { .. } => Some(RATE_LIMITED_STATUS),
             Self::UpgradeRequired(_) => Some(CLIENT_UPGRADE_REQUIRED_STATUS),
             Self::RecordingRefused(_) => Some(RECORDING_REFUSED_STATUS),
             Self::Request(error) => error.status().map(|status| status.as_u16()),

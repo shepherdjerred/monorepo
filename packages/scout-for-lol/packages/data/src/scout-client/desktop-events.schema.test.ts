@@ -3,6 +3,7 @@ import rawContract from "./desktop-events.contract.json" with { type: "json" };
 import rawFixtures from "./desktop-events.fixtures.json" with { type: "json" };
 import {
   SCOUT_DESKTOP_EVENTS_PATH,
+  SCOUT_DESKTOP_EVENTS_PER_DEVICE_PER_MINUTE,
   ScoutDesktopEventSchema,
   ScoutDesktopPlatformSchema,
   ScoutDesktopWindowCrashCauseSchema,
@@ -12,6 +13,9 @@ import {
 describe("Scout desktop event contract", () => {
   test("keeps the Zod schema aligned with the shared contract", () => {
     expect(SCOUT_DESKTOP_EVENTS_PATH).toBe(rawContract.path);
+    expect(SCOUT_DESKTOP_EVENTS_PER_DEVICE_PER_MINUTE).toBe(
+      rawContract.maxEventsPerDevicePerMinute,
+    );
     expect(ScoutDesktopPlatformSchema.options).toEqual(
       rawContract.commonProperties.platform,
     );
