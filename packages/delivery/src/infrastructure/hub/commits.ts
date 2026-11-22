@@ -1,4 +1,5 @@
 import type {
+  CarriedFailure,
   CommitBuild,
   CommitEnvironment,
   CommitListQuery,
@@ -13,6 +14,7 @@ import { decodeCursor, page, PAGE_SIZE } from "./cursor.ts";
 import { buildStatus } from "./status.ts";
 import { promotionOrder } from "./topology.ts";
 import { buildView, serviceSummary } from "./views.ts";
+import { pipelineNotes, withPipeline } from "./commit-pipeline-notes.ts";
 import {
   carryingCommits,
   pipelineCarriers,
@@ -101,6 +103,29 @@ async function carryingBuilds(
   return { carrierBuilds: [...rows, ...releases], superseding };
 }
 
+/**
+ * A failed build and the later commit that carries it, with how the release
+ * its change ships in stands: the verdict its row shows on the carrying
+ * commit, and its revision when a set was composed.
+ */
+function carriedFailure(
+  build: CommitBuild,
+  carrier: Carrier,
+  release: CommitService | undefined,
+): CarriedFailure {
+  return {
+    buildId: build.id,
+    includedIn: carrier.includedIn,
+    ...(build.serviceTitle === undefined
+      ? {}
+      : { serviceTitle: build.serviceTitle }),
+    ...(release === undefined ? {} : { releaseVerdict: release.verdict }),
+    ...(release?.versionSet == null
+      ? {}
+      : { releaseRevision: release.versionSet.revision }),
+  };
+}
+
 /** A build of a commit, named by its service's catalog title. */
 function commitBuild(row: Parameters<typeof buildView>[0]): CommitBuild {
   return {
@@ -182,6 +207,7 @@ async function readCommits(
   const sourceBySha = new Map(
     sourceCommits.map((row) => [row.sourceRevision, row]),
   );
+  const noteBySha = await pipelineNotes(database, builds, sourceBySha);
   // A service no environment tracks has nowhere to be released, so a
   // carried failure of it, or its release, decides nothing.
   const tracked = new Set(environments.map((row) => row.serviceId));
@@ -285,24 +311,11 @@ async function readCommits(
     const failedBuilds = own
       .filter((row) => buildStatus(row.status) === "failed")
       .map((row) => commitBuild(row));
-    const carriedFailures = failedBuilds.flatMap((build) => {
-      const carrier = carried.get(build.id);
-      return carrier === undefined
-        ? []
-        : [
-            {
-              buildId: build.id,
-              includedIn: carrier.includedIn,
-              ...(build.serviceTitle === undefined
-                ? {}
-                : { serviceTitle: build.serviceTitle }),
-            },
-          ];
-    });
     // A carried failure's change ships in the first later release of the
     // service, so that release's standing is this commit's for the service.
     // While no later passing build has a release, it is not released.
     const carriedEntries: CommitService[] = [];
+    const releaseOf = new Map<string, CommitService>();
     for (const build of failedBuilds) {
       const carrier = carried.get(build.id);
       if (carrier === undefined || !tracked.has(build.serviceId)) continue;
@@ -310,6 +323,7 @@ async function readCommits(
         (entry) => entry.id === carrier.releaseBuildId,
       );
       const entry = row === undefined ? null : standing(row);
+      if (entry !== null) releaseOf.set(build.id, entry);
       carriedEntries.push(
         row === undefined || entry === null
           ? {
@@ -323,6 +337,15 @@ async function readCommits(
           : { ...entry, includedIn: row.sourceRevision },
       );
     }
+    // The carrying release's own standing travels with the failure it
+    // carries, so no page says the carrier's build passed while the carrying
+    // commit's own row says its release failed.
+    const carriedFailures = failedBuilds.flatMap((build) => {
+      const carrier = carried.get(build.id);
+      return carrier === undefined
+        ? []
+        : [carriedFailure(build, carrier, releaseOf.get(build.id))];
+    });
     // A commit whose whole pipeline failed ships everything it changed in
     // the releases of the first later commit whose pipeline passed.
     const pipelineSha = pipelineCarrier.get(sha);
@@ -356,6 +379,7 @@ async function readCommits(
         sha,
         title: sourceBySha.get(sha)?.title ?? null,
         author: sourceBySha.get(sha)?.author ?? null,
+        ...withPipeline(noteBySha.get(sha)),
         verdict: commitVerdict({
           changed: changed.map((entry) => entry.verdict),
           failed: failedBuilds.length,

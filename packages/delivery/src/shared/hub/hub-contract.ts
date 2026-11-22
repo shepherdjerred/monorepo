@@ -548,6 +548,15 @@ export const CarriedFailureSchema = z.object({
   includedIn: z.string().min(7),
   /** The failed build's service, by its catalog title. */
   serviceTitle: z.string().min(1).optional(),
+  /**
+   * Where the carrying release of this service stands: the same verdict its
+   * row on the carrying commit shows, so a page can say the release failed
+   * instead of implying a passing build is all there is to say. Absent while
+   * no later passing build has a release.
+   */
+  releaseVerdict: CommitVerdictSchema.optional(),
+  /** The carrying release's version set revision; absent for a platform release. */
+  releaseRevision: z.number().int().positive().optional(),
 });
 export type CarriedFailure = z.infer<typeof CarriedFailureSchema>;
 
@@ -565,6 +574,17 @@ export const CommitBlockerSchema = z.object({
 });
 export type CommitBlocker = z.infer<typeof CommitBlockerSchema>;
 
+/**
+ * What Woodpecker's stored pipeline says about a commit whose own record
+ * holds no title or author: the pipeline's message title and its author.
+ */
+export const CommitPipelineNoteSchema = z.object({
+  number: z.number().int().positive(),
+  title: z.string().nullable(),
+  author: z.string().nullable(),
+});
+export type CommitPipelineNote = z.infer<typeof CommitPipelineNoteSchema>;
+
 export const CommitStatusSchema = z.object({
   sha: z.string().min(7),
   /**
@@ -575,6 +595,12 @@ export const CommitStatusSchema = z.object({
   title: z.string().nullable(),
   /** Woodpecker's pipeline author, the forge account behind the push; null as `title` is. */
   author: z.string().nullable(),
+  /**
+   * The best available stand-in while `title` or `author` is null: the
+   * message title and author of the Woodpecker pipeline of one of its builds,
+   * as Delivery last stored it. Absent when Delivery stored none.
+   */
+  pipeline: CommitPipelineNoteSchema.optional(),
   verdict: CommitVerdictSchema,
   /** A build of this commit, for its source panel; null if unseen. */
   buildId: IdentifierSchema.nullable(),

@@ -4,10 +4,12 @@ import type {
   CommitService,
   CommitStatus,
   CommitSummary,
+  CommitVerdict,
 } from "#shared/hub/hub-contract.ts";
 import {
   blockerNotes,
   commitStatement,
+  missingIdentity,
   parseSha,
   rowNotes,
   tallyText,
@@ -215,6 +217,166 @@ describe("commit statement", () => {
       "2 of 4 changed services failed to deploy: MINECRAFT tsmc and STREAMBOT prod. 2 of 4 are live.",
     );
   });
+
+  it("accounts for every changed service: failed, awaiting approval, deploying and live add up to the total", () => {
+    // /commits/72e4dff: 1 of 17 failed, 13 live, and three said nothing.
+    const entries = [
+      changed("minecraft", "failed"),
+      changed("golink", "awaiting_approval"),
+      changed("temporal", "awaiting_approval"),
+      changed("scout", "deploying"),
+      ...Array.from({ length: 13 }, (_, position) =>
+        changed(`live-${String(position)}`, "live"),
+      ),
+    ];
+    const statement = commitStatement(
+      status({ verdict: "failed", changed: entries }),
+    );
+    expect(statement).toBe(
+      "1 of 17 changed services failed to deploy: MINECRAFT prod. 2 need approval: GOLINK prod and TEMPORAL prod. 1 is deploying: SCOUT prod. 13 of 17 are live.",
+    );
+  });
+
+  it("names up to three services per state, then how many more", () => {
+    const entries = [
+      ...["a", "b", "c", "d", "e"].map((id) =>
+        changed(id, "awaiting_approval"),
+      ),
+      changed("f", "canceled"),
+    ];
+    expect(
+      commitStatement(
+        status({ verdict: "awaiting_approval", changed: entries }),
+      ),
+    ).toBe(
+      "5 of 6 changed services need approval: A prod, B prod, C prod +2 more. 1 had its deployment canceled: F prod.",
+    );
+  });
+
+  it("counts a service once, in its most urgent state, across its environments", () => {
+    const split: CommitService = {
+      ...changed("minecraft", "failed"),
+      environments: [
+        {
+          environmentId: "minecraft/tsmc",
+          name: "tsmc",
+          state: "failed",
+          deploymentId: null,
+        },
+        {
+          environmentId: "minecraft/beta",
+          name: "beta",
+          state: "deploying",
+          deploymentId: null,
+        },
+      ],
+    };
+    expect(
+      commitStatement(status({ verdict: "failed", changed: [split] })),
+    ).toBe("Its changed service failed to deploy: MINECRAFT tsmc.");
+  });
+
+  it("names the carrying release's own standing so it cannot contradict the carrier's row", () => {
+    // /commits/f545a3b failed its deployment; the build of the commit it
+    // carries passed CI. Saying only "build passed" contradicted its row.
+    const failed = build("golink", "failed", "Golink");
+    const statement = commitStatement(
+      status({
+        verdict: "failed",
+        failedBuilds: [failed],
+        carriedFailures: [
+          {
+            buildId: failed.id,
+            includedIn: NEWER,
+            serviceTitle: "Golink",
+            releaseVerdict: "failed",
+            releaseRevision: 347,
+          },
+        ],
+        changed: [changed("golink", "failed")],
+      }),
+    );
+    expect(statement).toContain(
+      "included in 69765c4, whose build of Golink passed, but the change ships in release r347, which failed to deploy.",
+    );
+  });
+});
+
+describe("commit identity", () => {
+  it("says nothing when the title and author were recorded", () => {
+    expect(
+      missingIdentity({
+        title: "fix: x",
+        author: "octocat",
+        pipeline: undefined,
+      }),
+    ).toBeNull();
+  });
+
+  it("says plainly that a title was not captured when there is no stand-in", () => {
+    expect(
+      missingIdentity({ title: null, author: null, pipeline: undefined }),
+    ).toBe("Title and author were not captured for this commit.");
+    expect(
+      missingIdentity({ title: "fix: x", author: null, pipeline: undefined }),
+    ).toBe("Author was not captured for this commit.");
+    expect(
+      missingIdentity({ title: null, author: "octocat", pipeline: undefined }),
+    ).toBe("Title was not captured for this commit.");
+  });
+
+  it("offers Woodpecker's stored pipeline as the stand-in, named as such", () => {
+    expect(
+      missingIdentity({
+        title: null,
+        author: null,
+        pipeline: { number: 18_050, title: "feat(x): y", author: "octocat" },
+      }),
+    ).toBe(
+      'Title and author were not captured for this commit. Woodpecker pipeline #18050 has the title "feat(x): y" and the author octocat.',
+    );
+    // Only what is missing is borrowed.
+    expect(
+      missingIdentity({
+        title: "fix: x",
+        author: null,
+        pipeline: { number: 7, title: "other", author: "octocat" },
+      }),
+    ).toBe(
+      "Author was not captured for this commit. Woodpecker pipeline #7 has the author octocat.",
+    );
+  });
+});
+
+/** A failed Golink build, carried by a newer commit whose release stands as given. */
+const carriedRelease = (releaseVerdict: CommitVerdict) => [
+  {
+    buildId: "ci-build",
+    includedIn: NEWER,
+    serviceTitle: "Golink",
+    releaseVerdict,
+    releaseRevision: 347,
+  },
+];
+
+/** A failed build of a service, carried by a newer commit whose release for it stands as given. */
+const carry = (
+  serviceTitle: string,
+  releaseVerdict: CommitVerdict,
+  releaseRevision: number,
+) => ({
+  buildId: `${serviceTitle}-build`,
+  includedIn: NEWER,
+  serviceTitle,
+  releaseVerdict,
+  releaseRevision,
+});
+
+/** A service held back in a prod environment, in a state. */
+const holding = (service: string, state: CommitBlocker["state"]) => ({
+  service,
+  environment: "prod",
+  state,
 });
 
 /** An environment whose newest deployment of the change failed. */
@@ -280,6 +442,63 @@ describe("commit row notes", () => {
     ]);
   });
 
+  it("names how the carrying release stands, so the row never says passed beside a failed carrier", () => {
+    const passed =
+      "Not built on its own; included in 69765c4, whose build of Golink passed";
+    const expected: [CommitVerdict, string][] = [
+      [
+        "failed",
+        `${passed}, but the change ships in release r347, which failed to deploy`,
+      ],
+      [
+        "awaiting_approval",
+        `${passed}, and the change ships in release r347, which awaits approval`,
+      ],
+      // A live release, or none yet: the pill says the rest.
+      ["deployed", passed],
+      ["waiting", passed],
+    ];
+    for (const [releaseVerdict, note] of expected)
+      expect(
+        rowNotes({
+          ...row,
+          verdict: "nothing_to_deploy",
+          carriedFailures: carriedRelease(releaseVerdict),
+        }),
+      ).toEqual([note]);
+  });
+
+  it("keeps each service's release with its own standing when one newer commit carries several", () => {
+    const notes = (...carriedFailures: ReturnType<typeof carry>[]) =>
+      rowNotes({
+        ...row,
+        verdict: "nothing_to_deploy",
+        failedBuildCount: carriedFailures.length,
+        carriedFailures,
+      });
+    // A failed r10 beside a live r20: only r10 is named, as failed.
+    expect(
+      notes(carry("Golink", "failed", 10), carry("Scout", "deployed", 20)),
+    ).toEqual([
+      "Not built on its own; included in 69765c4, whose build of Golink and Scout passed, but the change ships in Golink r10, which failed to deploy",
+    ]);
+    // Failed and awaiting approval stay apart, each with its own words.
+    expect(
+      notes(
+        carry("Golink", "failed", 10),
+        carry("Scout", "awaiting_approval", 10),
+      ),
+    ).toEqual([
+      "Not built on its own; included in 69765c4, whose build of Golink and Scout passed, but the change ships in Golink r10, which failed to deploy, and in Scout r10, which awaits approval",
+    ]);
+    // The same r-number in two services is two releases, not one.
+    expect(
+      notes(carry("Golink", "failed", 10), carry("Scout", "failed", 10)),
+    ).toEqual([
+      "Not built on its own; included in 69765c4, whose build of Golink and Scout passed, but the change ships in Golink r10 and Scout r10, which failed to deploy",
+    ]);
+  });
+
   it("names the blocking environment by its own words, never deploying when nothing is", () => {
     expect(
       rowNotes({
@@ -302,7 +521,11 @@ describe("commit row notes", () => {
         failing("Minecraft", "tsmc"),
         { service: "Temporal", environment: "prod", state: "not_started" },
       ]),
-    ).toEqual(["Streambot / prod: failed", "Minecraft / tsmc: failed"]);
+    ).toEqual([
+      "Streambot / prod: failed",
+      "Minecraft / tsmc: failed",
+      "Temporal / prod: not started",
+    ]);
     expect(
       blockerNotes([
         failing("A", "prod"),
@@ -317,13 +540,51 @@ describe("commit row notes", () => {
       "C / prod: failed",
       "+2 more failing",
     ]);
-    // With nothing failing, the most urgent one alone.
+    // With nothing failing, every other state that holds services back.
     expect(
       blockerNotes([
         { service: "Birmel", environment: "prod", state: "manual" },
         { service: "Golink", environment: "prod", state: "not_started" },
       ]),
-    ).toEqual(["Birmel / prod: needs manual release"]);
+    ).toEqual([
+      "Birmel / prod: needs manual release",
+      "Golink / prod: not started",
+    ]);
+  });
+
+  it("uses the singular for one service held back in several environments", () => {
+    expect(
+      blockerNotes([
+        {
+          service: "Golink",
+          environment: "prod",
+          state: "deploying",
+        },
+        { service: "Golink", environment: "beta", state: "deploying" },
+      ]),
+    ).toEqual(["1 is deploying: Golink / prod and Golink / beta"]);
+    // Two services stay plural.
+    expect(
+      blockerNotes([holding("A", "deploying"), holding("B", "deploying")]),
+    ).toEqual(["2 are deploying: A / prod and B / prod"]);
+  });
+
+  it("accounts for every state that holds services back, named up to three each", () => {
+    expect(
+      blockerNotes([
+        holding("A", "awaiting_approval"),
+        holding("B", "awaiting_approval"),
+        holding("C", "deploying"),
+        holding("D", "canceled"),
+        holding("E", "canceled"),
+        holding("F", "canceled"),
+        holding("G", "canceled"),
+      ]),
+    ).toEqual([
+      "2 need approval: A / prod and B / prod",
+      "C / prod: deploying",
+      "4 had their deployments canceled: D / prod, E / prod, F / prod +1 more",
+    ]);
   });
 });
 
