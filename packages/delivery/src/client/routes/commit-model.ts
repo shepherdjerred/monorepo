@@ -7,6 +7,8 @@ import type {
   CommitSummary,
   CommitVerdict,
 } from "#shared/hub/hub-contract.ts";
+import { carriedIn, includedNote } from "./commit-release.ts";
+import { capped, distinct, plural, series } from "./commit-text.ts";
 
 // Each verdict borrows the pipeline status it resembles and keeps its own
 // words, so one `Status` draws the same glyph, green, red and amber everywhere
@@ -130,55 +132,6 @@ export const ENVIRONMENT: Record<
   },
 };
 
-const plural = (count: number, one: string, many: string) =>
-  `${String(count)} ${count === 1 ? one : many}`;
-
-/** "a", "a and b", "a, b and c". */
-function series(items: readonly string[]) {
-  const last = items.at(-1) ?? "";
-  return items.length <= 1
-    ? last
-    : `${items.slice(0, -1).join(", ")} and ${last}`;
-}
-
-/** Up to three items in a series, then how many more: "a, b, c and 2 more". */
-function capped(items: readonly string[], limit = 3) {
-  return items.length <= limit
-    ? series(items)
-    : `${items.slice(0, limit).join(", ")} and ${String(items.length - limit)} more`;
-}
-
-/** Each distinct value once, in first-seen order. */
-const distinct = (items: readonly string[]) => [...new Set(items)];
-
-/**
- * Where carried failures shipped: each carrying commit by short sha, and the
- * services whose build passed there. "Passed" is that build's CI, never the
- * carrying commit's verdict, which its own releases decide.
- */
-function carriedIn(carried: readonly CarriedFailure[]) {
-  const titles = new Map<string, string[]>();
-  for (const entry of carried) {
-    const sha = entry.includedIn.slice(0, 7);
-    titles.set(sha, [
-      ...(titles.get(sha) ?? []),
-      ...(entry.serviceTitle === undefined ? [] : [entry.serviceTitle]),
-    ]);
-  }
-  return series(
-    [...titles].map(([sha, services]) =>
-      services.length === 0
-        ? `${sha}, whose build passed`
-        : `${sha}, whose build of ${series(distinct(services))} passed`,
-    ),
-  );
-}
-
-/** Why a failed build held nothing back: a later commit's build that includes it passed. */
-export function includedNote(carried: readonly CarriedFailure[]) {
-  return `Not built on its own; included in ${carriedIn(carried)}`;
-}
-
 /** Among waiting environments, a cause (a manual release) before what waits on it. */
 const WAITING_ON: CommitEnvironmentState[] = [
   "manual",
@@ -244,19 +197,71 @@ const FAILING: ReadonlySet<CommitEnvironmentState> = new Set([
 /** How many failing environments a list row names before "+N more". */
 const NAMED_FAILURES = 3;
 
+type StuckGroup = {
+  state: CommitEnvironmentState;
+  /** The environments held back in this state, of services this state describes. */
+  members: CommitBlocker[];
+  /** How many services those are. */
+  count: number;
+};
+
+/**
+ * Every service held back, in the one state that describes it: the most
+ * urgent state of any of its environments. A service is counted once, so the
+ * groups and the services that are live add up to the services changed.
+ * Groups come in the order the blockers do, most urgent first.
+ */
+function stuckGroups(blockers: readonly CommitBlocker[]): StuckGroup[] {
+  const describing = new Map<string, CommitEnvironmentState>();
+  for (const blocker of blockers)
+    if (!describing.has(blocker.service))
+      describing.set(blocker.service, blocker.state);
+  const groups = new Map<CommitEnvironmentState, CommitBlocker[]>();
+  for (const blocker of blockers)
+    if (describing.get(blocker.service) === blocker.state)
+      groups.set(blocker.state, [
+        ...(groups.get(blocker.state) ?? []),
+        blocker,
+      ]);
+  return [...groups].map(([state, members]) => ({
+    state,
+    members,
+    count: new Set(members.map((member) => member.service)).size,
+  }));
+}
+
+/** Up to three names, then how many more: "a, b, c +2 more". */
+function namedWithMore(items: readonly string[]) {
+  return items.length <= NAMED_FAILURES
+    ? series(items)
+    : `${items.slice(0, NAMED_FAILURES).join(", ")} +${String(items.length - NAMED_FAILURES)} more`;
+}
+
 /**
  * What the list row says is stuck: every failing environment, up to three
- * and then how many more, or else the one most urgent environment.
+ * and then how many more, then each other state that holds services back
+ * (awaiting approval, deploying, canceled, not started) with its services,
+ * so what the row names and what is live add up to what changed.
  */
 export function blockerNotes(blockers: readonly CommitBlocker[]): string[] {
   const failing = blockers.filter((blocker) => FAILING.has(blocker.state));
-  if (failing.length === 0)
-    return blockers[0] === undefined ? [] : [blockerNote(blockers[0])];
+  const others = stuckGroups(blockers).filter(
+    (group) => !FAILING.has(group.state),
+  );
   return [
     ...failing.slice(0, NAMED_FAILURES).map((blocker) => blockerNote(blocker)),
     ...(failing.length > NAMED_FAILURES
       ? [`+${String(failing.length - NAMED_FAILURES)} more failing`]
       : []),
+    ...others.map((group) =>
+      group.members.length === 1 && group.members[0] !== undefined
+        ? blockerNote(group.members[0])
+        : `${String(group.count)} ${DOING[group.state][1]}: ${namedWithMore(
+            group.members.map(
+              (member) => `${member.service} / ${member.environment}`,
+            ),
+          )}`,
+    ),
   ];
 }
 
@@ -404,8 +409,7 @@ function liveness(
 ): string[] {
   const total = changed.length;
   const live = changed.filter((entry) => entry.verdict === "deployed").length;
-  const top = blockers[0];
-  if (top !== undefined) return heldBack(top, blockers, live, total);
+  if (blockers.length > 0) return heldBack(blockers, live, total);
   if (live < total)
     return [
       `${String(live)} of ${plural(total, "changed service is", "changed services are")} live.`,
@@ -413,29 +417,38 @@ function liveness(
   return [allLive(changed)];
 }
 
-/** What holds the most changed services back the most urgently, then how many are live. */
+/**
+ * What holds changed services back, every state in turn, most urgent first,
+ * each service in exactly one: the most urgent state first with its count of
+ * the whole ("1 of 17 changed services failed to deploy: A prod."), the
+ * others by count ("2 need approval: B prod and C prod."), up to three
+ * named per state and then "+N more". Last, how many are live, so the
+ * counts add up to the total.
+ */
 function heldBack(
-  top: CommitBlocker,
   blockers: readonly CommitBlocker[],
   live: number,
   total: number,
 ) {
-  const stuck = blockers.filter((blocker) => blocker.state === top.state);
-  const count = new Set(stuck.map((blocker) => blocker.service)).size;
-  const everyOne =
-    total === 1
-      ? "Its changed service"
-      : `All ${String(total)} changed services`;
-  const subject =
-    count < total
-      ? `${String(count)} of ${plural(total, "changed service", "changed services")}`
-      : everyOne;
-  const [one, many] = DOING[top.state];
-  const named = capped(
-    stuck.map((blocker) => `${blocker.service} ${blocker.environment}`),
-  );
+  const sentences = stuckGroups(blockers).map((group, position) => {
+    const [one, many] = DOING[group.state];
+    const named = namedWithMore(
+      group.members.map((member) => `${member.service} ${member.environment}`),
+    );
+    const everyOne =
+      total === 1
+        ? "Its changed service"
+        : `All ${String(total)} changed services`;
+    const subject =
+      position > 0
+        ? String(group.count)
+        : group.count < total
+          ? `${String(group.count)} of ${plural(total, "changed service", "changed services")}`
+          : everyOne;
+    return `${subject} ${group.count === 1 ? one : many}: ${named}.`;
+  });
   return [
-    `${subject} ${count === 1 ? one : many}: ${named}.`,
+    ...sentences,
     ...(live === 0
       ? []
       : [
@@ -458,6 +471,38 @@ function allLive(changed: CommitStatus["changed"]) {
   return throughNewer
     ? `${subject} live because newer commits include ${changed.length === 1 ? "it" : "them"}.`
     : `${subject} live.`;
+}
+
+/**
+ * What a commit page says where Delivery recorded no title or author: that
+ * it did not, and, if Woodpecker's stored pipeline has the missing parts,
+ * what it says, named as the pipeline's words. Null when both are recorded.
+ */
+export function missingIdentity(
+  commit: Pick<CommitStatus, "title" | "author" | "pipeline">,
+): string | null {
+  const noTitle = commit.title === null;
+  const noAuthor = commit.author === null;
+  if (!noTitle && !noAuthor) return null;
+  const what =
+    noTitle && noAuthor
+      ? "Title and author were"
+      : noTitle
+        ? "Title was"
+        : "Author was";
+  const standIn = [
+    ...(noTitle && commit.pipeline?.title != null
+      ? [`the title "${commit.pipeline.title}"`]
+      : []),
+    ...(noAuthor && commit.pipeline?.author != null
+      ? [`the author ${commit.pipeline.author}`]
+      : []),
+  ];
+  const note =
+    commit.pipeline === undefined || standIn.length === 0
+      ? ""
+      : ` Woodpecker pipeline #${String(commit.pipeline.number)} has ${standIn.join(" and ")}.`;
+  return `${what} not captured for this commit.${note}`;
 }
 
 /** The line under the changed services: how many built with nothing to deploy. */

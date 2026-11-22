@@ -7,6 +7,7 @@ import type {
   CommitEnvironmentGroup,
   CommitEnvironmentState,
   CommitService,
+  CommitStatus,
   CommitSummary,
   CommitVerdict,
 } from "#shared/hub/hub-contract.ts";
@@ -26,6 +27,7 @@ import { BuildList } from "./commit-builds.tsx";
 import {
   ENVIRONMENT,
   commitStatement,
+  missingIdentity,
   parseSha,
   rowNotes,
   tallyText,
@@ -374,6 +376,27 @@ function EnvironmentGroup({ group }: { group: CommitEnvironmentGroup }) {
   );
 }
 
+/**
+ * A commit's title and author. When Delivery recorded none (the commit
+ * predates capture, or no build of it has been qualified since), the page
+ * says so, and offers what Woodpecker's stored pipeline says as the best
+ * available stand-in, named as such, instead of a blank.
+ */
+function CommitIdentity({ commit }: { commit: CommitStatus }) {
+  const missing = missingIdentity(commit);
+  return (
+    <>
+      {commit.title !== null && (
+        <span className="commit-title">{commit.title}</span>
+      )}
+      {commit.author !== null && (
+        <span className="commit-byline">by {commit.author}</span>
+      )}
+      {missing !== null && <span className="commit-byline">{missing}</span>}
+    </>
+  );
+}
+
 function CommitPage() {
   const { sha } = commitRoute.useParams();
   const { data } = useSuspenseQuery(queries.commit(sha));
@@ -387,12 +410,7 @@ function CommitPage() {
         title={`Commit ${data.sha.slice(0, 7)}`}
         description={
           <>
-            {data.title !== null && (
-              <span className="commit-title">{data.title}</span>
-            )}
-            {data.author !== null && (
-              <span className="commit-byline">by {data.author}</span>
-            )}
+            <CommitIdentity commit={data} />
             <Verdict
               value={data.verdict}
               carried={carried}
