@@ -112,7 +112,7 @@ describe("Job tool installation under the checked-out revision's lockfile", () =
   // A retained executor's revision can predate the CI image's pins. Locked
   // mode installs a tool version the image lacks only from a checksum that
   // revision's mise.lock records, and awscli's linux-x64 entry has none before
-  // 2.41, so awscli is installed only when the stack archive is downloaded.
+  // 2.41, so awscli is installed only for the recipes that run `aws`.
   it("installs only jq, bun, node and helm for image provenance, under MISE_LOCKED", () => {
     expect(install({ ...request, recipe: "worker-images" })).toEqual([
       "mise-install(MISE_LOCKED=1):install --yes jq",
@@ -126,7 +126,6 @@ describe("Job tool installation under the checked-out revision's lockfile", () =
     "worker-preflight",
     "worker-step",
     "test",
-    "tofu-plan",
     "control-plane",
     "platform-recovery",
   ] as const)("installs no awscli for %s without a stack archive", (recipe) => {
@@ -136,10 +135,20 @@ describe("Job tool installation under the checked-out revision's lockfile", () =
     ]);
     expect(DELIVERY_JOB_FULL_TOOLS.split(" ")).not.toContain("awscli");
   });
-  it("installs awscli only for a recipe that downloads a stack archive", () => {
+  it.each(["tofu-plan", "tofu-apply"] as const)(
+    "installs awscli for %s, whose stacks run aws in local-exec provisioners",
+    (recipe) => {
+      expect(install({ ...request, recipe, input: {} })).toEqual([
+        "mise-install(MISE_LOCKED=1):install --yes jq",
+        `mise-install(MISE_LOCKED=1):install --yes ${DELIVERY_JOB_FULL_TOOLS} awscli`,
+      ]);
+    },
+  );
+  it("installs awscli for any recipe that downloads a stack archive", () => {
     expect(
       install({
         ...request,
+        recipe: "control-plane",
         input: {
           stack: "github",
           archive: {

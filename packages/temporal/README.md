@@ -221,7 +221,8 @@ A Job installs only the tools its recipe runs, under `MISE_LOCKED=1`: it runs
 the executor's revision, which can predate the image's pins, and locked mode
 installs a version the image lacks only from a checksum that revision's
 `mise.lock` records. Image provenance installs `bun node jq helm`; `awscli`
-(no checksum before 2.41) is installed only when a stack archive is downloaded.
+(no checksum before 2.41) is installed only for OpenTofu recipes and stack
+archive downloads, the only places `aws` runs.
 A worker
 candidate at the executor's own revision reuses the prepared checkout. Any other
 candidate is a detached worktree with a blobless fetch into the executor's

@@ -99,14 +99,17 @@ export const DELIVERY_ARCHIVE_ENDPOINT =
  * Bun. `jq` is installed first because the bootstrap reads the recipe with it.
  */
 export const DELIVERY_JOB_IMAGE_PROVENANCE_TOOLS = "bun node jq helm";
-/** Every other recipe; `awscli` is not here (see DELIVERY_JOB_ARCHIVE_TOOLS). */
+/** Every other recipe; `awscli` is not here (see DELIVERY_JOB_AWS_TOOLS). */
 export const DELIVERY_JOB_FULL_TOOLS =
   "bun node gh jq helm argocd opentofu aqua:temporalio/cli github:theseus-rs/postgresql-binaries";
 /**
- * Only the stack-archive download runs `aws`. Revisions before the awscli 2.41
- * pin record no linux-x64 checksum for it, which locked mode cannot install.
+ * `aws` runs in the stack-archive download and in OpenTofu stacks whose
+ * `local-exec` provisioners call it (SeaweedFS), so OpenTofu recipes and any
+ * archive download install it. Revisions before the awscli 2.41 pin record no
+ * linux-x64 checksum for it, which locked mode cannot install; no other recipe
+ * runs it.
  */
-export const DELIVERY_JOB_ARCHIVE_TOOLS = "awscli";
+export const DELIVERY_JOB_AWS_TOOLS = "awscli";
 
 /**
  * Input is validated by the selected source-owned handler, never executed as shell.
@@ -160,8 +163,8 @@ if [ "$recipe" = worker-images ]; then
 else
   tools="${DELIVERY_JOB_FULL_TOOLS}"
 fi
-if [ -n "$archive_uri" ]; then
-  tools="$tools ${DELIVERY_JOB_ARCHIVE_TOOLS}"
+if [ -n "$archive_uri" ] || [ "$recipe" = tofu-plan ] || [ "$recipe" = tofu-apply ]; then
+  tools="$tools ${DELIVERY_JOB_AWS_TOOLS}"
 fi
 MISE_LOCKED=1 mise install --yes $tools
 tool_paths=$(mise bin-paths $tools)
