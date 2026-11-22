@@ -34,7 +34,7 @@ export default defineConfig({
   build: {
     outDir: "../../dist/web",
     emptyOutDir: true,
-    rollupOptions: {
+    rolldownOptions: {
       input: { client: web("client/index.html") },
     },
   },

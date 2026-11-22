@@ -49,9 +49,10 @@ export function StatePill({
 /**
  * A title as its poster: the art, one phrase saying where the title stands,
  * its name, and a line of detail. The whole card is one link, so it holds no
- * other control. The link is named title first, then state and detail, which
- * is the order a list of links should be heard in, not the order they are
- * drawn in.
+ * other control. The link is named in the order its words are drawn, state,
+ * title, detail and note, so its spoken name starts with the words in sight
+ * (WCAG 2.5.3, Label in Name). The spaces between the blocks render nothing;
+ * they keep the words apart when the text is read as one string.
  *
  * `state` is null when nothing is known about the title, which is not the
  * same as any state. `note` is a second line of detail for the cards that
@@ -85,8 +86,8 @@ export function PosterCard({
   const Heading = headingLevel === 2 ? "h2" : "h3";
   const inRail = layout === "rail";
   const named = [
-    `${id}-title`,
     ...(state === null ? [] : [`${id}-state`]),
+    `${id}-title`,
     `${id}-detail`,
     ...(note === null ? [] : [`${id}-note`]),
   ];
@@ -111,18 +112,21 @@ export function PosterCard({
               id={`${id}-state`}
             />
           )}
-        </div>
+        </div>{" "}
         <div className={cx("text")}>
           <Heading className={cx("title")} id={`${id}-title`}>
             {title}
-          </Heading>
+          </Heading>{" "}
           <p className={cx("detail")} id={`${id}-detail`}>
             {detail}
           </p>
           {note !== null && (
-            <p className={cx("note")} id={`${id}-note`}>
-              {note}
-            </p>
+            <>
+              {" "}
+              <p className={cx("note")} id={`${id}-note`}>
+                {note}
+              </p>
+            </>
           )}
         </div>
       </Link>

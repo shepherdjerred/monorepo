@@ -406,22 +406,12 @@
         "e2e/**/*.ts"
       ]
     },
-    // Vitest configs and global setup are reached through test:e2e, test:full, test:startup,
-    // test:load, test:capacity* and test:stargate-restart. The Woodpecker lane invokes prepare-sidecar.ts
-    // as a script. Map authoring compiles the named authored programs and lobby
+    // Knip's Vitest plugin finds the suite configs and their global setup. The
+    // Woodpecker lane invokes prepare-sidecar.ts as a script. Map authoring compiles the named authored programs and lobby
     // annex by file path. Capture suites and their regeneration driver are also
     // invoked by CLI path. Knip cannot infer these command-line entries from imports.
     "packages/the-storm": {
       "entry": [
-        "vitest.capacity.config.ts",
-        "vitest.capacity-native.config.ts",
-        "vitest.capacity-frame-pacing.config.ts",
-        "vitest.e2e.config.ts",
-        "vitest.full.config.ts",
-        "vitest.startup.config.ts",
-        "vitest.stargate-restart.config.ts",
-        "vitest.load.config.ts",
-        "tests/e2e/global-setup.ts",
         "tests/e2e/prepare-sidecar.ts",
         "tools/maps/authored/*.ts",
         "tools/maps/lobby/annex.ts",

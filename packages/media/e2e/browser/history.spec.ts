@@ -102,7 +102,9 @@ test("the owner sees every stream, the household's numbers, and plays that link 
   // named, and links nowhere.
   const unlinked = rows.filter({ hasNot: page.getByRole("link") });
   expect(await unlinked.count()).toBeGreaterThan(0);
-  await expect(unlinked.first().locator("span").first()).toHaveText(/\S/u);
+  await expect(unlinked.first().locator("span:visible").first()).toHaveText(
+    /\S/u,
+  );
   expect(await unlinked.count()).toBeLessThan(64);
 
   // No member-facing contract value, and nothing wider than the screen.

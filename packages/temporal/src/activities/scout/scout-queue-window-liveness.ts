@@ -142,7 +142,7 @@ export const runtimeQueueLivenessLlm: QueueLivenessLlm = {
     const llm = temporalLlmRuntime();
     const result = await generateText({
       model: llm.languageModel(QUEUE_LIVENESS_MODEL, ["tools", "webSearch"]),
-      system: input.system,
+      instructions: input.system,
       prompt: input.prompt,
       tools: {
         web_search: webSearchTool(llm, QUEUE_LIVENESS_MODEL, MAX_WEB_SEARCHES),

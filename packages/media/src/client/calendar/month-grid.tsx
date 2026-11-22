@@ -157,18 +157,27 @@ export function MonthGrid({
                     data-today={date === today}
                     data-marked={date === marked}
                     aria-current={date === today ? "date" : undefined}
-                    aria-label={`${label}${date === today ? ", today" : ""}, ${
-                      events.length === 0
-                        ? "no releases"
-                        : releaseCount(events.length)
-                    }`}
                     tabIndex={reachable ? 0 : -1}
                     ref={reachable ? takeFocus : undefined}
                     onFocus={() => {
                       setChosen(date);
                     }}
                   >
-                    <time className={cx("cellDate")} dateTime={date}>
+                    {/* The day is named by its content, so the name starts
+                        with what is in sight (WCAG 2.5.3): the full date and
+                        count are spoken, the short date drawn. */}
+                    <span className="sr-only">
+                      {`${label}${date === today ? ", today" : ""}, ${
+                        events.length === 0
+                          ? "no releases"
+                          : releaseCount(events.length)
+                      }`}
+                    </span>{" "}
+                    <time
+                      className={cx("cellDate")}
+                      dateTime={date}
+                      aria-hidden="true"
+                    >
                       {(outside || week !== undefined) &&
                         dayOfMonth(date) === 1 && (
                           <span className={cx("cellMonth")}>

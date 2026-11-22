@@ -30,7 +30,7 @@
     "@shepherdjerred/native-release": "workspace:*"
   },
   "devDependencies": {
-    "@vitest/coverage-istanbul": "5.0.1",
-    "vitest": "5.0.1"
+    "@vitest/coverage-istanbul": "5.0.5",
+    "vitest": "5.0.5"
   }
 }

@@ -7,6 +7,27 @@ import {
 } from "#src/subject.ts";
 import { exporter } from "./otel-test-provider.ts";
 
+type EmbedEndEvent = Extract<
+  Parameters<RepositoryOpenTelemetry["onEnd"]>[0],
+  { embedding: unknown }
+>;
+
+function embedEndEvent(callId: string): EmbedEndEvent {
+  return {
+    callId,
+    operationId: "ai.embed",
+    provider: "openai.embedding",
+    modelId: "text-embedding-3-small",
+    value: "hello",
+    embedding: [0.1, 0.2],
+    usage: { tokens: 1 },
+    warnings: [],
+    runtimeContext: {},
+    providerMetadata: undefined,
+    response: undefined,
+  };
+}
+
 test("AI SDK spans are children of a repository-owned GenAI parent", () => {
   exporter.reset();
   const telemetry = new RepositoryOpenTelemetry({
@@ -45,19 +66,7 @@ test("AI SDK spans are children of a repository-owned GenAI parent", () => {
     embeddings: [[0.1, 0.2]],
     usage: { tokens: 1 },
   });
-  telemetry.onEnd({
-    callId: "call-1",
-    operationId: "ai.embed",
-    provider: "openai.embedding",
-    modelId: "text-embedding-3-small",
-    value: "hello",
-    embedding: [0.1, 0.2],
-    usage: { tokens: 1 },
-    warnings: [],
-    runtimeContext: {},
-    providerMetadata: undefined,
-    response: undefined,
-  });
+  telemetry.onEnd(embedEndEvent("call-1"));
 
   const spans = exporter.getFinishedSpans();
   const parent = spans.find((span) => span.name === "gen_ai.embeddings");
@@ -128,19 +137,7 @@ test("the active subject lands on the span that carries usage", async () => {
         embeddings: [[0.1, 0.2]],
         usage: { tokens: 1 },
       });
-      telemetry.onEnd({
-        callId: "call-subject",
-        operationId: "ai.embed",
-        provider: "openai.embedding",
-        modelId: "text-embedding-3-small",
-        value: "hello",
-        embedding: [0.1, 0.2],
-        usage: { tokens: 1 },
-        warnings: [],
-        runtimeContext: {},
-        providerMetadata: undefined,
-        response: undefined,
-      });
+      telemetry.onEnd(embedEndEvent("call-subject"));
       return Promise.resolve();
     },
   );
@@ -201,19 +198,7 @@ test("a call with no enclosing subject span carries no subject attributes", () =
     recordInputs: true,
     recordOutputs: true,
   });
-  telemetry.onEnd({
-    callId: "call-none",
-    operationId: "ai.embed",
-    provider: "openai.embedding",
-    modelId: "text-embedding-3-small",
-    value: "hello",
-    embedding: [0.1, 0.2],
-    usage: { tokens: 1 },
-    warnings: [],
-    runtimeContext: {},
-    providerMetadata: undefined,
-    response: undefined,
-  });
+  telemetry.onEnd(embedEndEvent("call-none"));
 
   const genAi = exporter
     .getFinishedSpans()

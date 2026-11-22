@@ -56,7 +56,7 @@ test.describe("browse rows", () => {
     // A series a Plex library outside Media holds: there, with no count.
     await expect(
       trending.getByRole("link", {
-        name: "The Wire In the library Series, 2002 Others follow this",
+        name: "In the library The Wire Series, 2002 Others follow this",
       }),
     ).toHaveAttribute("href", /^\/media\//u);
     // A title the household does not have offers a request, on its own page.
@@ -185,12 +185,12 @@ test.describe("search", () => {
     // What the household has, and what it could ask for, in one list.
     await expect(
       results(page).getByRole("link", {
-        name: "The Godfather Ready to watch Film, 1972 Others follow this",
+        name: "Ready to watch The Godfather Film, 1972 Others follow this",
       }),
     ).toHaveAttribute("href", /^\/media\//u);
     await expect(
       results(page).getByRole("link", {
-        name: "The Dark Knight Request Film, 2008",
+        name: "Request The Dark Knight Film, 2008",
       }),
     ).toHaveAttribute("href", "/catalog/movie/155");
 
@@ -228,7 +228,7 @@ test.describe("search", () => {
     await search(page).fill("severance");
     await expect(
       results(page).getByRole("link", {
-        name: "Severance 9 of 19 episodes Series, 2022 You follow this",
+        name: "9 of 19 episodes Severance Series, 2022 You follow this",
       }),
     ).toBeVisible();
     await search(page).fill("dune: part");

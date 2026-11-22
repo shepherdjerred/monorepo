@@ -25,7 +25,9 @@ export function paperTestConfig(include: string[]) {
     defineConfig({
       test: {
         include,
-        globalSetup: ["tests/e2e/global-setup.ts"],
+        globalSetup: [
+          path.join(import.meta.dirname, "tests/e2e/global-setup.ts"),
+        ],
         // One shared server and world: files must not race each other.
         fileParallelism: false,
         testTimeout: 60_000,

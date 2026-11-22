@@ -126,7 +126,7 @@ export const ConfigSchema = z.strictObject({
     commands: z.strictObject({
       enabled: z.boolean(),
       /**
-       * @deprecated Text commands are now accepted in whatever text channel `/play`
+       * Ignored: text commands are now accepted in whatever text channel `/play`
        * was invoked in. Optional so existing config.toml files validate.
        */
       channel_id: z

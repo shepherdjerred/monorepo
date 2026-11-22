@@ -132,7 +132,7 @@ describe("collectErrors against the real repo", () => {
     const lock = `{
   "packages": {
     "markdown-it": ["markdown-it@10.0.0", "", {}, "sha512-a"],
-    "other/markdown-it": ["markdown-it@15.0.1", "", {}, "sha512-b"],
+    "other/markdown-it": ["markdown-it@15.0.3", "", {}, "sha512-b"],
   },
 }`;
     await Bun.write(`${dir}/package.json`, JSON.stringify(manifest));
