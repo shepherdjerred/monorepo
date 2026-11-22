@@ -29,6 +29,14 @@ async function resolveBearerPrincipal(
   | { ok: true; principal: AuthPrincipal }
   | { ok: false; status: 401; error: string }
 > {
+  if (
+    configuredAuthToken !== "" &&
+    rawToken !== null &&
+    verifyBootstrapToken(rawToken, configuredAuthToken)
+  ) {
+    return { ok: true, principal: DEFAULT_ADMIN_PRINCIPAL };
+  }
+
   if (rawToken?.startsWith(API_TOKEN_PREFIX) === true) {
     const matched = await store.authenticateApiToken(hashApiToken(rawToken));
     if (matched === null) {
@@ -56,16 +64,12 @@ async function resolveBearerPrincipal(
     return { ok: true, principal: DEFAULT_ADMIN_PRINCIPAL };
   }
 
-  if (rawToken === null) {
-    return {
-      ok: false,
-      status: 401,
-      error: "Missing Authorization header",
-    };
-  }
-
-  return verifyBootstrapToken(rawToken, configuredAuthToken)
-    ? { ok: true, principal: DEFAULT_ADMIN_PRINCIPAL }
+  return rawToken === null
+    ? {
+        ok: false,
+        status: 401,
+        error: "Missing Authorization header",
+      }
     : { ok: false, status: 401, error: "Invalid token" };
 }
 

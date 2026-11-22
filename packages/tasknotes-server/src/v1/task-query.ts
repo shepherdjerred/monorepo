@@ -159,13 +159,26 @@ function matchesSearchText(task: Task, query: TaskListQuery): boolean {
   );
 }
 
+function queryNeedsDueDate(query: TaskListQuery): boolean {
+  return (
+    query.due_date !== undefined ||
+    query.due_before !== undefined ||
+    query.due_on_or_before !== undefined ||
+    query.due_after !== undefined ||
+    query.due_on_or_after !== undefined ||
+    query.overdue !== undefined
+  );
+}
+
 export async function queryFilteredTasks(
   store: FacetStore,
   userId: string,
   query: TaskListQuery,
 ): Promise<Task[]> {
   const zone = query.tz ?? "UTC";
-  const today = civilDateInZone(store.getNow(), zone);
+  const needsDue = queryNeedsDueDate(query);
+  const today =
+    query.overdue === undefined ? "" : civilDateInZone(store.getNow(), zone);
   const all = await store.listTasks({
     userId,
     projectId: query.project_id,
@@ -173,12 +186,18 @@ export async function queryFilteredTasks(
   });
 
   const filtered = all.filter((task) => {
-    const effectiveDue = effectiveTaskCivilDueDate(task, zone);
+    if (
+      !matchesPlacementAndStatus(task, query) ||
+      !matchesSearchText(task, query)
+    ) {
+      return false;
+    }
+    const effectiveDue = needsDue
+      ? effectiveTaskCivilDueDate(task, zone)
+      : null;
     return (
-      matchesPlacementAndStatus(task, query) &&
       matchesDueBounds(effectiveDue, query) &&
-      matchesDeadlineAndOverdue(task, query, effectiveDue, today) &&
-      matchesSearchText(task, query)
+      matchesDeadlineAndOverdue(task, query, effectiveDue, today)
     );
   });
 
@@ -194,7 +213,6 @@ export async function buildWorkspaceSnapshot(
   principal: AuthPrincipal,
   tz = "UTC",
 ) {
-  await store.getOrCreateUser(userId);
   const now = store.getNow();
   const today = civilDateInZone(now, tz);
 

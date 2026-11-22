@@ -1,5 +1,4 @@
 import type { z } from "zod";
-import { buildTaskCompletionUpdate } from "./recurrence.ts";
 import type {
   FilterAddArgsSchema,
   LabelAddArgsSchema,
@@ -160,18 +159,13 @@ async function handleTaskComplete(
   tempIdMapping: Record<string, string>,
 ): Promise<CommandOutcome> {
   const resolvedId = resolveRequiredId(args.id, tempIdMapping);
-  const existing = await tx.getTask(resolvedId, userId);
-  if (existing === null || existing.is_deleted) {
-    throw new EntityNotFoundError("Task", resolvedId);
-  }
   const completedAt =
     args.completed_at === undefined ||
     args.completed_at === null ||
     args.completed_at === ""
       ? tx.getNow()
       : parseValidDate(args.completed_at);
-  const update = buildTaskCompletionUpdate(existing, completedAt);
-  const updated = await tx.updateTask(resolvedId, userId, update);
+  const updated = await tx.completeTask(resolvedId, userId, completedAt);
   assertMutated(updated !== null, "Task", resolvedId);
   return {};
 }

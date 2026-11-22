@@ -6,6 +6,7 @@ import {
   buildFilterUpdateData,
   buildReminderUpdateData,
   buildSyncWhereClause,
+  lockExistingPrismaUser,
 } from "./prisma-helpers.ts";
 import type { PrismaSecondaryCtx } from "./prisma-secondary.ts";
 import { recordPrismaMutation } from "./prisma-tokens-audit.ts";
@@ -62,6 +63,7 @@ export async function updatePrismaReminder(
   userId: string,
   data: UpdateReminderInput,
 ): Promise<Reminder | null> {
+  await lockExistingPrismaUser(ctx.prisma, userId);
   const existing = await ctx.prisma.reminder.findFirst({
     where: { id, task: { userId } },
   });
@@ -97,6 +99,7 @@ export async function deletePrismaReminder(
   id: string,
   userId: string,
 ): Promise<boolean> {
+  await lockExistingPrismaUser(ctx.prisma, userId);
   const existing = await ctx.prisma.reminder.findFirst({
     where: { id, task: { userId } },
   });
@@ -187,6 +190,7 @@ export async function updatePrismaFilter(
   userId: string,
   data: UpdateFilterInput,
 ): Promise<Filter | null> {
+  await lockExistingPrismaUser(ctx.prisma, userId);
   const existing = await ctx.prisma.filter.findFirst({
     where: { id, userId },
   });
@@ -222,6 +226,7 @@ export async function deletePrismaFilter(
   id: string,
   userId: string,
 ): Promise<boolean> {
+  await lockExistingPrismaUser(ctx.prisma, userId);
   const existing = await ctx.prisma.filter.findFirst({
     where: { id, userId },
   });

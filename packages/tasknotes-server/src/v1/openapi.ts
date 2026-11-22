@@ -1,166 +1,360 @@
-function buildOpenApiComponents() {
+import {
+  buildOpenApiComponents,
+  buildSecondaryEntityPaths,
+  jsonArrayRef,
+  jsonRef,
+  jsonRequestBody,
+  pathParam,
+} from "./openapi-schemas.ts";
+
+function queryParam(
+  name: string,
+  schema: Record<string, unknown>,
+  description?: string,
+) {
   return {
-    securitySchemes: {
-      bearerAuth: {
-        type: "http",
-        scheme: "bearer",
-        description:
-          "Pass either a named API token (`Bearer fct_...`) for scoped LLM/integration access or `AUTH_TOKEN` for owner/admin access.",
+    name,
+    in: "query" as const,
+    schema,
+    ...(description === undefined ? {} : { description }),
+  };
+}
+
+function mutationFilterQueryParams(includeEntity = true) {
+  const entityParams = includeEntity
+    ? [
+        queryParam("entity_type", { type: "string" }),
+        queryParam("entity_id", { type: "string" }),
+      ]
+    : [];
+  return [
+    queryParam("token_id", { type: "string" }),
+    queryParam("actor_kind", { type: "string", enum: ["human", "agent"] }),
+    queryParam("actor_name", { type: "string" }),
+    ...entityParams,
+    queryParam("action", { type: "string" }),
+    queryParam("source", { type: "string", enum: ["sync", "rest", "mcp"] }),
+    queryParam("since", { type: "string", format: "date-time" }),
+    queryParam("since_seq", { type: "string" }),
+    queryParam("limit", { type: "integer", minimum: 1, maximum: 200 }),
+    queryParam("cursor", { type: "string" }),
+  ];
+}
+
+function taskListQueryParams() {
+  const boolEnum = { type: "string", enum: ["true", "false"] };
+  const isoDate = { type: "string", format: "date" };
+  return [
+    queryParam("project_id", { type: "string" }),
+    queryParam(
+      "section_id",
+      { type: "string" },
+      "Section UUID or 'none' for unsectioned tasks",
+    ),
+    queryParam(
+      "parent_id",
+      { type: "string" },
+      "Parent task UUID or 'none' for root tasks",
+    ),
+    queryParam("label_id", { type: "string" }),
+    queryParam("completed", boolEnum),
+    queryParam("include_deleted", boolEnum),
+    queryParam("priority", { $ref: "#/components/schemas/Priority" }),
+    queryParam("due_date", isoDate),
+    queryParam("due_before", isoDate),
+    queryParam("due_on_or_before", isoDate),
+    queryParam("due_after", isoDate),
+    queryParam("due_on_or_after", isoDate),
+    queryParam("deadline_before", isoDate),
+    queryParam("deadline_after", isoDate),
+    queryParam("overdue", boolEnum),
+    queryParam("tz", { type: "string" }),
+    queryParam("q", { type: "string" }),
+    queryParam("search", { type: "string" }),
+    queryParam("limit", { type: "integer", minimum: 1, maximum: 500 }),
+    queryParam("offset", { type: "integer", minimum: 0 }),
+  ];
+}
+
+function buildTaskPaths() {
+  const taskIdParam = pathParam("id", "Task ID");
+  const commentIdParam = pathParam("commentId", "Comment UUID");
+  const updateTaskOp = {
+    summary: "Update fields on a task",
+    requestBody: jsonRequestBody("UpdateTaskRequest"),
+    responses: {
+      "200": { description: "Updated task", ...jsonRef("Task") },
+    },
+  };
+
+  return {
+    "/api/v1/tasks": {
+      get: {
+        summary: "Query tasks with rich filters",
+        parameters: taskListQueryParams(),
+        responses: {
+          "200": { description: "Matching tasks", ...jsonArrayRef("Task") },
+        },
+      },
+      post: {
+        summary: "Create a task (defaults to Inbox if project_id is omitted)",
+        requestBody: jsonRequestBody("CreateTaskRequest"),
+        responses: {
+          "200": { description: "Created task", ...jsonRef("Task") },
+        },
       },
     },
-    schemas: {
-      Priority: {
-        type: "string",
-        enum: ["P1", "P2", "P3", "P4"],
-        description: "P1 = Urgent, P2 = High, P3 = Medium, P4 = Normal",
-      },
-      RecurrenceBasis: {
-        type: "string",
-        enum: ["Scheduled", "Completion"],
-      },
-      Task: {
-        type: "object",
-        required: [
-          "id",
-          "user_id",
-          "project_id",
-          "title",
-          "description",
-          "priority",
-          "child_order",
-          "is_recurring",
-          "label_ids",
-          "completed",
-          "is_deleted",
-          "created_at",
-          "updated_at",
+    "/api/v1/tasks/{id}": {
+      parameters: [taskIdParam],
+      get: {
+        summary: "Fetch a task by ID",
+        parameters: [
+          queryParam("include_deleted", {
+            type: "string",
+            enum: ["true", "false"],
+          }),
         ],
-        properties: {
-          id: { type: "string", format: "uuid" },
-          user_id: { type: "string" },
-          project_id: { type: "string", format: "uuid" },
-          section_id: { type: "string", format: "uuid" },
-          parent_id: { type: "string", format: "uuid" },
-          title: { type: "string" },
-          description: { type: "string" },
-          priority: { $ref: "#/components/schemas/Priority" },
-          child_order: { type: "number" },
-          due_date: {
-            type: "string",
-            format: "date",
-            description: "Civil date YYYY-MM-DD",
-          },
-          due_datetime: {
-            type: "string",
-            format: "date-time",
-            description: "RFC 3339 instant",
-          },
-          due_timezone: {
-            type: "string",
-            description: "IANA timezone such as America/Los_Angeles",
-          },
-          due_string: { type: "string" },
-          deadline: {
-            type: "string",
-            format: "date",
-            description: "Independent civil deadline YYYY-MM-DD",
-          },
-          is_recurring: { type: "boolean" },
-          recurrence_rule: {
-            type: "string",
-            description:
-              "RFC 5545 RRULE with FREQ=DAILY|WEEKLY|MONTHLY|YEARLY (e.g. FREQ=WEEKLY;BYDAY=MO,WE,FR)",
-          },
-          recurrence_basis: {
-            $ref: "#/components/schemas/RecurrenceBasis",
-          },
-          label_ids: { type: "array", items: { type: "string" } },
-          completed: { type: "boolean" },
-          completed_at: { type: "string", format: "date-time" },
-          is_deleted: { type: "boolean" },
-          comments: {
-            type: "array",
-            items: { $ref: "#/components/schemas/TaskComment" },
-          },
-          created_at: { type: "string", format: "date-time" },
-          updated_at: { type: "string", format: "date-time" },
+        responses: { "200": { description: "Task", ...jsonRef("Task") } },
+      },
+      patch: updateTaskOp,
+      put: updateTaskOp,
+      post: updateTaskOp,
+      delete: {
+        summary: "Soft-delete a task",
+        responses: { "204": { description: "Deleted" } },
+      },
+    },
+    "/api/v1/tasks/{id}/close": {
+      parameters: [taskIdParam],
+      post: {
+        summary: "Complete a task (advances next occurrence if recurring)",
+        responses: { "204": { description: "Completed" } },
+      },
+    },
+    "/api/v1/tasks/{id}/reopen": {
+      parameters: [taskIdParam],
+      post: {
+        summary: "Reopen a completed task",
+        responses: { "204": { description: "Reopened" } },
+      },
+    },
+    "/api/v1/tasks/{id}/restore": {
+      parameters: [taskIdParam],
+      post: {
+        summary: "Restore a soft-deleted task",
+        responses: {
+          "200": { description: "Restored task", ...jsonRef("Task") },
         },
       },
-      TaskComment: {
-        type: "object",
-        required: ["id", "body", "created_at"],
-        properties: {
-          id: { type: "string", format: "uuid" },
-          body: { type: "string" },
-          created_at: { type: "string", format: "date-time" },
-          file_name: { type: "string" },
-        },
-      },
-      ApiTokenSummary: {
-        type: "object",
-        required: [
-          "id",
-          "user_id",
-          "name",
-          "actor_kind",
-          "token_prefix",
-          "scopes",
-          "created_at",
-        ],
-        properties: {
-          id: { type: "string", format: "uuid" },
-          user_id: { type: "string" },
-          name: { type: "string" },
-          actor_kind: { type: "string", enum: ["human", "agent"] },
-          token_prefix: { type: "string" },
-          scopes: {
-            type: "array",
-            items: { type: "string", enum: ["read", "write"] },
+    },
+    "/api/v1/tasks/move": {
+      post: {
+        summary: "Atomically move/reparent/reorder tasks",
+        requestBody: jsonRequestBody("MoveTasksRequest"),
+        responses: {
+          "200": {
+            description: "Move summary",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["ok", "moved"],
+                  properties: {
+                    ok: { type: "boolean" },
+                    moved: { type: "integer" },
+                  },
+                },
+              },
+            },
           },
-          expires_at: { type: ["string", "null"], format: "date-time" },
-          revoked_at: { type: ["string", "null"], format: "date-time" },
-          last_used_at: { type: ["string", "null"], format: "date-time" },
-          created_at: { type: "string", format: "date-time" },
         },
       },
-      MutationEvent: {
-        type: "object",
-        required: [
-          "id",
-          "user_id",
-          "sync_seq",
-          "entity_type",
-          "entity_id",
-          "action",
-          "source",
-          "request_id",
-          "actor_kind",
-          "actor_name",
-          "changes",
-          "created_at",
-        ],
-        properties: {
-          id: { type: "string", format: "uuid" },
-          user_id: { type: "string" },
-          sync_seq: { type: "string" },
-          entity_type: {
+    },
+    "/api/v1/tasks/reschedule": {
+      post: {
+        summary: "Atomically reschedule multiple tasks",
+        requestBody: jsonRequestBody("RescheduleTasksRequest"),
+        responses: {
+          "200": {
+            description: "Updated tasks",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["items"],
+                  properties: {
+                    items: {
+                      type: "array",
+                      items: { $ref: "#/components/schemas/Task" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/tasks/{id}/comments": {
+      parameters: [taskIdParam],
+      get: {
+        summary: "List chronological comments on a task",
+        responses: {
+          "200": { description: "Comments", ...jsonArrayRef("TaskComment") },
+        },
+      },
+      post: {
+        summary: "Append a comment to a task",
+        requestBody: jsonRequestBody("CreateTaskCommentRequest"),
+        responses: {
+          "201": { description: "Created comment", ...jsonRef("TaskComment") },
+        },
+      },
+    },
+    "/api/v1/tasks/{id}/comments/{commentId}": {
+      parameters: [taskIdParam, commentIdParam],
+      delete: {
+        summary: "Delete a comment from a task",
+        responses: { "204": { description: "Deleted" } },
+      },
+    },
+    "/api/v1/tasks/{taskId}/comments/{commentId}/file": {
+      parameters: [pathParam("taskId", "Task ID"), commentIdParam],
+      get: {
+        summary: "Download a comment attachment",
+        responses: {
+          "200": {
+            description: "Attachment bytes",
+            content: {
+              "application/octet-stream": {
+                schema: { type: "string", format: "binary" },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/tasks/{id}/mutations": {
+      parameters: [taskIdParam],
+      get: {
+        summary: "Query mutation audit history for a single task",
+        parameters: mutationFilterQueryParams(false),
+        responses: {
+          "200": {
+            description: "Paginated task mutation events",
+            ...jsonRef("MutationPage"),
+          },
+        },
+      },
+    },
+  };
+}
+
+function buildTokenAndMcpPaths() {
+  const tokenRef = { $ref: "#/components/schemas/ApiTokenSummary" };
+  return {
+    "/api/v1/mutations": {
+      get: {
+        summary: "Query the append-only mutation audit ledger",
+        parameters: mutationFilterQueryParams(true),
+        responses: {
+          "200": {
+            description: "Paginated mutation audit events",
+            ...jsonRef("MutationPage"),
+          },
+        },
+      },
+    },
+    "/api/v1/tokens": {
+      get: {
+        summary: "List API tokens (admin AUTH_TOKEN only)",
+        parameters: [
+          queryParam("include_revoked", {
             type: "string",
-            enum: ["task", "project", "section", "label", "reminder", "filter"],
+            enum: ["true", "false"],
+          }),
+        ],
+        responses: {
+          "200": {
+            description: "API tokens",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["items"],
+                  properties: { items: { type: "array", items: tokenRef } },
+                },
+              },
+            },
           },
-          entity_id: { type: "string" },
-          action: { type: "string" },
-          source: { type: "string", enum: ["sync", "rest", "mcp"] },
-          command_uuid: { type: ["string", "null"] },
-          request_id: { type: "string", format: "uuid" },
-          actor_kind: { type: "string", enum: ["human", "agent"] },
-          actor_name: { type: "string" },
-          token_id: { type: ["string", "null"] },
-          token_prefix: { type: ["string", "null"] },
-          actor_metadata: { type: ["object", "null"] },
-          changes: { type: "object" },
-          before: { type: ["object", "null"] },
-          after: { type: ["object", "null"] },
-          created_at: { type: "string", format: "date-time" },
+        },
+      },
+      post: {
+        summary: "Mint a named API token (admin AUTH_TOKEN only)",
+        requestBody: jsonRequestBody("CreateApiTokenRequest"),
+        responses: {
+          "201": {
+            description: "Created token secret + metadata",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["token", "api_token"],
+                  properties: {
+                    token: { type: "string" },
+                    api_token: tokenRef,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/tokens/{id}": {
+      parameters: [pathParam("id", "API token ID")],
+      delete: {
+        summary: "Revoke an API token (admin AUTH_TOKEN only)",
+        responses: {
+          "200": {
+            description: "Revoked token metadata",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["api_token"],
+                  properties: { api_token: tokenRef },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/mcp": {
+      post: {
+        summary:
+          "Stateless Streamable HTTP Model Context Protocol (MCP) JSON-RPC 2.0 endpoint",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                oneOf: [
+                  { $ref: "#/components/schemas/JsonRpcRequest" },
+                  {
+                    type: "array",
+                    minItems: 1,
+                    items: { $ref: "#/components/schemas/JsonRpcRequest" },
+                  },
+                ],
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "JSON-RPC 2.0 response or batch response" },
+          "202": { description: "Accepted notification" },
         },
       },
     },
@@ -169,6 +363,12 @@ function buildOpenApiComponents() {
 
 function buildOpenApiPaths() {
   return {
+    "/api/v1/openapi.json": {
+      get: {
+        summary: "Fetch this OpenAPI 3.1.0 specification",
+        responses: { "200": { description: "OpenAPI 3.1.0 document" } },
+      },
+    },
     "/api/v1/whoami": {
       get: {
         summary: "Inspect the authenticated principal and token scopes",
@@ -180,275 +380,67 @@ function buildOpenApiPaths() {
         summary:
           "Load projects, sections, labels, saved filters, server time, and task counts in one call",
         parameters: [
-          {
-            name: "tz",
-            in: "query",
-            schema: { type: "string" },
-            description:
-              "Optional IANA timezone for civil today/overdue calculation",
-          },
+          queryParam(
+            "tz",
+            { type: "string" },
+            "Optional IANA timezone for civil today/overdue calculation",
+          ),
         ],
-        responses: {
-          "200": { description: "Workspace taxonomy and counts" },
-        },
+        responses: { "200": { description: "Workspace taxonomy and counts" } },
       },
     },
-    "/api/v1/tasks": {
-      get: {
-        summary: "Query tasks with rich filters",
-        parameters: [
-          { name: "project_id", in: "query", schema: { type: "string" } },
-          {
-            name: "section_id",
-            in: "query",
-            schema: { type: "string" },
-            description: "Section UUID or 'none' for unsectioned tasks",
-          },
-          {
-            name: "parent_id",
-            in: "query",
-            schema: { type: "string" },
-            description: "Parent task UUID or 'none' for root tasks",
-          },
-          { name: "label_id", in: "query", schema: { type: "string" } },
-          {
-            name: "completed",
-            in: "query",
-            schema: { type: "string", enum: ["true", "false"] },
-          },
-          {
-            name: "priority",
-            in: "query",
-            schema: { $ref: "#/components/schemas/Priority" },
-          },
-          {
-            name: "due_date",
-            in: "query",
-            schema: { type: "string", format: "date" },
-          },
-          {
-            name: "due_before",
-            in: "query",
-            schema: { type: "string", format: "date" },
-          },
-          {
-            name: "due_on_or_before",
-            in: "query",
-            schema: { type: "string", format: "date" },
-          },
-          {
-            name: "due_after",
-            in: "query",
-            schema: { type: "string", format: "date" },
-          },
-          {
-            name: "due_on_or_after",
-            in: "query",
-            schema: { type: "string", format: "date" },
-          },
-          {
-            name: "overdue",
-            in: "query",
-            schema: { type: "string", enum: ["true", "false"] },
-          },
-          { name: "tz", in: "query", schema: { type: "string" } },
-          { name: "q", in: "query", schema: { type: "string" } },
-          {
-            name: "limit",
-            in: "query",
-            schema: { type: "integer", minimum: 1, maximum: 500 },
-          },
-          {
-            name: "offset",
-            in: "query",
-            schema: { type: "integer", minimum: 0 },
-          },
-        ],
-        responses: { "200": { description: "Matching tasks" } },
-      },
+    "/api/v1/sync": {
       post: {
-        summary: "Create a task (defaults to Inbox if project_id is omitted)",
-        responses: { "200": { description: "Created task" } },
+        summary: "Execute delta sync commands and pull incremental state",
+        requestBody: jsonRequestBody("SyncRequest"),
+        responses: { "200": { description: "Sync delta response" } },
       },
     },
-    "/api/v1/tasks/{id}": {
-      get: {
-        summary: "Fetch a task by ID",
-        responses: { "200": { description: "Task" } },
-      },
-      patch: {
-        summary: "Update fields on a task",
-        responses: { "200": { description: "Updated task" } },
-      },
-      delete: {
-        summary: "Soft-delete a task",
-        responses: { "204": { description: "Deleted" } },
-      },
-    },
-    "/api/v1/tasks/{id}/close": {
-      post: {
-        summary: "Complete a task (advances next occurrence if recurring)",
-        responses: { "204": { description: "Completed" } },
-      },
-    },
-    "/api/v1/tasks/{id}/reopen": {
-      post: {
-        summary: "Reopen a completed task",
-        responses: { "204": { description: "Reopened" } },
-      },
-    },
-    "/api/v1/tasks/{id}/restore": {
-      post: {
-        summary: "Restore a soft-deleted task",
-        responses: { "200": { description: "Restored task" } },
-      },
-    },
-    "/api/v1/tasks/move": {
-      post: {
-        summary: "Atomically move/reparent/reorder tasks",
-        responses: { "200": { description: "Move summary" } },
-      },
-    },
-    "/api/v1/tasks/reschedule": {
-      post: {
-        summary: "Atomically reschedule multiple tasks",
-        responses: { "200": { description: "Updated tasks" } },
-      },
-    },
-    "/api/v1/tasks/{id}/comments": {
-      get: {
-        summary: "List chronological comments on a task",
-        responses: { "200": { description: "Comments" } },
-      },
-      post: {
-        summary: "Append a comment to a task",
-        responses: { "201": { description: "Created comment" } },
-      },
-    },
-    "/api/v1/tasks/{id}/comments/{commentId}": {
-      delete: {
-        summary: "Delete a comment from a task",
-        responses: { "204": { description: "Deleted" } },
-      },
-    },
-    "/api/v1/projects": {
-      get: {
-        summary: "List active projects",
-        responses: { "200": { description: "Projects" } },
-      },
-      post: {
-        summary: "Create a project",
-        responses: { "200": { description: "Created project" } },
-      },
-    },
-    "/api/v1/sections": {
-      get: {
-        summary: "List active sections (optional ?project_id=)",
-        responses: { "200": { description: "Sections" } },
-      },
-      post: {
-        summary: "Create a section in a project",
-        responses: { "200": { description: "Created section" } },
-      },
-    },
-    "/api/v1/labels": {
-      get: {
-        summary: "List active labels",
-        responses: { "200": { description: "Labels" } },
-      },
-      post: {
-        summary: "Create a label",
-        responses: { "200": { description: "Created label" } },
-      },
-    },
-    "/api/v1/reminders": {
-      get: {
-        summary: "List active reminders (optional ?task_id=)",
-        responses: { "200": { description: "Reminders" } },
-      },
-      post: {
-        summary: "Create a reminder",
-        responses: { "200": { description: "Created reminder" } },
-      },
-    },
-    "/api/v1/filters": {
-      get: {
-        summary: "List active saved filters",
-        responses: { "200": { description: "Filters" } },
-      },
-      post: {
-        summary: "Create a saved filter",
-        responses: { "200": { description: "Created filter" } },
-      },
-    },
-    "/api/v1/mutations": {
-      get: {
-        summary: "Query the append-only mutation audit ledger",
-        parameters: [
-          { name: "token_id", in: "query", schema: { type: "string" } },
-          {
-            name: "actor_kind",
-            in: "query",
-            schema: { type: "string", enum: ["human", "agent"] },
-          },
-          { name: "actor_name", in: "query", schema: { type: "string" } },
-          { name: "entity_type", in: "query", schema: { type: "string" } },
-          { name: "entity_id", in: "query", schema: { type: "string" } },
-          { name: "action", in: "query", schema: { type: "string" } },
-          {
-            name: "source",
-            in: "query",
-            schema: { type: "string", enum: ["sync", "rest", "mcp"] },
-          },
-          {
-            name: "since",
-            in: "query",
-            schema: { type: "string", format: "date-time" },
-          },
-          { name: "since_seq", in: "query", schema: { type: "string" } },
-          {
-            name: "limit",
-            in: "query",
-            schema: { type: "integer", minimum: 1, maximum: 200 },
-          },
-          { name: "cursor", in: "query", schema: { type: "string" } },
-        ],
-        responses: {
-          "200": { description: "Paginated mutation audit events" },
-        },
-      },
-    },
-    "/api/v1/tokens": {
-      get: {
-        summary: "List API tokens (admin AUTH_TOKEN only)",
-        responses: { "200": { description: "API tokens" } },
-      },
-      post: {
-        summary: "Mint a named API token (admin AUTH_TOKEN only)",
-        responses: {
-          "201": { description: "Created token secret + metadata" },
-        },
-      },
-    },
-    "/api/v1/tokens/{id}": {
-      delete: {
-        summary: "Revoke an API token (admin AUTH_TOKEN only)",
-        responses: { "200": { description: "Revoked token metadata" } },
-      },
-    },
-    "/api/v1/mcp": {
-      post: {
-        summary:
-          "Stateless Streamable HTTP Model Context Protocol (MCP) JSON-RPC 2.0 endpoint",
-        responses: { "200": { description: "JSON-RPC 2.0 response" } },
-      },
-    },
+    ...buildTaskPaths(),
+    ...buildSecondaryEntityPaths({
+      basePath: "/api/v1/projects",
+      label: "project",
+      entitySchema: "Project",
+      createSchema: "CreateProjectRequest",
+      updateSchema: "UpdateProjectRequest",
+    }),
+    ...buildSecondaryEntityPaths({
+      basePath: "/api/v1/sections",
+      label: "section",
+      entitySchema: "Section",
+      createSchema: "CreateSectionRequest",
+      updateSchema: "UpdateSectionRequest",
+      listParams: [queryParam("project_id", { type: "string" })],
+    }),
+    ...buildSecondaryEntityPaths({
+      basePath: "/api/v1/labels",
+      label: "label",
+      entitySchema: "Label",
+      createSchema: "CreateLabelRequest",
+      updateSchema: "UpdateLabelRequest",
+    }),
+    ...buildSecondaryEntityPaths({
+      basePath: "/api/v1/reminders",
+      label: "reminder",
+      entitySchema: "Reminder",
+      createSchema: "CreateReminderRequest",
+      updateSchema: "UpdateReminderRequest",
+      listParams: [queryParam("task_id", { type: "string" })],
+    }),
+    ...buildSecondaryEntityPaths({
+      basePath: "/api/v1/filters",
+      label: "filter",
+      entitySchema: "Filter",
+      createSchema: "CreateFilterRequest",
+      updateSchema: "UpdateFilterRequest",
+    }),
+    ...buildTokenAndMcpPaths(),
   };
 }
 
 export function buildOpenApiDocument(serverUrl?: string) {
   const servers =
-    serverUrl !== undefined && serverUrl !== "" ? [{ url: serverUrl }] : [];
+    serverUrl === undefined || serverUrl === "" ? [] : [{ url: serverUrl }];
 
   return {
     openapi: "3.1.0",

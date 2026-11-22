@@ -17,6 +17,7 @@ const TaskItemSchema = z.object({
   project_id: z.string(),
   section_id: z.string().optional(),
   parent_id: z.string().optional(),
+  child_order: z.number(),
   priority: z.string(),
   due_date: z.string().optional(),
   completed: z.boolean(),
@@ -243,6 +244,17 @@ describe("LLM REST Surface, Rich Filtering & OpenAPI 3.1", () => {
         }),
       }),
     ).toBe(200);
+    const movedReadback = await reqJson(
+      app,
+      `/api/v1/tasks/${unsectionedTask.id}`,
+      TaskItemSchema,
+      { headers: authHeaders(llmToken) },
+    );
+    expect(movedReadback).toMatchObject({
+      section_id: section.id,
+      parent_id: overdueTask.id,
+      child_order: 2,
+    });
 
     expect(
       await reqStatus(app, "/api/v1/tasks/reschedule", {
@@ -253,6 +265,13 @@ describe("LLM REST Surface, Rich Filtering & OpenAPI 3.1", () => {
         }),
       }),
     ).toBe(200);
+    const rescheduledReadback = await reqJson(
+      app,
+      `/api/v1/tasks/${overdueTask.id}`,
+      TaskItemSchema,
+      { headers: authHeaders(llmToken) },
+    );
+    expect(rescheduledReadback.due_date).toBe("2099-06-15");
 
     expect(
       await reqStatus(

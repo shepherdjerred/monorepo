@@ -246,6 +246,11 @@ export type FacetStore = {
     userId: string,
     data: UpdateTaskInput,
   ) => Promise<Task | null>;
+  readonly completeTask: (
+    id: string,
+    userId: string,
+    completedAt?: Date,
+  ) => Promise<Task | null>;
   readonly deleteTask: (id: string, userId: string) => Promise<boolean>;
   readonly getTask: (id: string, userId?: string) => Promise<Task | null>;
   readonly listTasks: (filter: ListTasksFilter) => Promise<Task[]>;

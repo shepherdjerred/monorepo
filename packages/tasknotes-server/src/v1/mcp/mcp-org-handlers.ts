@@ -12,10 +12,8 @@ import {
   UpdateReminderBodySchema,
   UpdateSectionBodySchema,
 } from "../rest-schemas.ts";
-import {
-  parseNullableDateForUpdate,
-  parseNullableStringForUpdate,
-} from "../sync-parsers.ts";
+import { parseNullableDateForUpdate } from "../sync-parsers.ts";
+import { parseNullablePair } from "../task-routes.ts";
 import { EntityNotFoundError, type FacetStore } from "../types.ts";
 
 export type McpExecCtx = {
@@ -127,7 +125,7 @@ const ORG_UPDATERS: Record<
     const updated = await ctx.store.updateProject(id, ctx.userId, {
       name: d.name,
       color: d.color,
-      parentId: parseNullableStringForUpdate(d.parent_id ?? d.parentId),
+      parentId: parseNullablePair(d.parent_id, d.parentId),
       childOrder: d.child_order ?? d.childOrder,
       isFavorite: d.is_favorite ?? d.isFavorite,
       isArchived: d.is_archived ?? d.isArchived,

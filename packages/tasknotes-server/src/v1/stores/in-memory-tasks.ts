@@ -9,6 +9,7 @@ import type {
 import { inferTaskUpdateAction } from "../audit-diff.ts";
 import type { ActorKind } from "../auth-types.ts";
 import { applyCommentMutation } from "../comments.ts";
+import { buildTaskCompletionUpdate } from "../recurrence.ts";
 import {
   applyTaskUpdateDates,
   applyTaskUpdateFields,
@@ -132,14 +133,41 @@ function validateInMemoryLabelIds(
 function validateInMemoryTaskRefs(
   ctx: InMemorySecondaryCtx,
   userId: string,
-  projectId: string | undefined,
-  sectionId: string | null | undefined,
+  refs: {
+    projectId: string | undefined;
+    sectionId: string | null | undefined;
+    currentProjectId?: string | undefined;
+    currentSectionId?: string | undefined;
+  },
 ): void {
-  if (projectId !== undefined) {
-    assertOwnedEntry(ctx.projects, projectId, userId, "Project");
+  if (refs.projectId === undefined && refs.sectionId === undefined) {
+    return;
   }
-  if (sectionId !== undefined && sectionId !== null && sectionId !== "") {
-    assertOwnedEntry(ctx.sections, sectionId, userId, "Section");
+  if (refs.projectId !== undefined) {
+    assertOwnedEntry(ctx.projects, refs.projectId, userId, "Project");
+  }
+  const effectiveProjectId = refs.projectId ?? refs.currentProjectId;
+  const effectiveSectionId =
+    refs.sectionId === undefined ? refs.currentSectionId : refs.sectionId;
+  if (
+    effectiveSectionId !== undefined &&
+    effectiveSectionId !== null &&
+    effectiveSectionId !== ""
+  ) {
+    const sec = assertOwnedEntry(
+      ctx.sections,
+      effectiveSectionId,
+      userId,
+      "Section",
+    );
+    if (
+      effectiveProjectId !== undefined &&
+      sec.value.project_id !== effectiveProjectId
+    ) {
+      throw new TypeError(
+        "The destination section must belong to the destination project.",
+      );
+    }
   }
 }
 
@@ -147,7 +175,10 @@ export function createInMemoryTask(
   ctx: InMemorySecondaryCtx,
   data: CreateTaskInput,
 ): Task {
-  validateInMemoryTaskRefs(ctx, data.userId, data.projectId, data.sectionId);
+  validateInMemoryTaskRefs(ctx, data.userId, {
+    projectId: data.projectId,
+    sectionId: data.sectionId,
+  });
   const labelIds =
     data.labelIds === undefined
       ? []
@@ -187,12 +218,12 @@ export function updateInMemoryTask(
   if (entry?.userId !== options.userId) {
     return null;
   }
-  validateInMemoryTaskRefs(
-    ctx,
-    options.userId,
-    options.data.projectId,
-    options.data.sectionId,
-  );
+  validateInMemoryTaskRefs(ctx, options.userId, {
+    projectId: options.data.projectId,
+    sectionId: options.data.sectionId,
+    currentProjectId: entry.value.project_id,
+    currentSectionId: entry.value.section_id,
+  });
   const validated: UpdateTaskInput =
     options.data.labelIds === undefined
       ? options.data
@@ -226,6 +257,27 @@ export function updateInMemoryTask(
   return updated;
 }
 
+export function completeInMemoryTask(
+  ctx: InMemorySecondaryCtx,
+  attachments: Map<string, Map<string, Uint8Array<ArrayBuffer>>>,
+  id: string,
+  options: { userId: string; completedAt: Date },
+): Task | null {
+  const entry = ctx.tasks.get(id);
+  if (entry?.userId !== options.userId || entry.value.is_deleted) {
+    return null;
+  }
+  const update = buildTaskCompletionUpdate(entry.value, options.completedAt);
+  const effectiveCtx: InMemorySecondaryCtx =
+    ctx.audit === undefined || ctx.audit.actionHint !== undefined
+      ? ctx
+      : { ...ctx, audit: { ...ctx.audit, actionHint: "complete" } };
+  return updateInMemoryTask(effectiveCtx, attachments, id, {
+    userId: options.userId,
+    data: update,
+  });
+}
+
 export function getInMemoryTask(
   ctx: InMemorySecondaryCtx,
   id: string,
@@ -239,9 +291,9 @@ export function listInMemoryTasks(
   filter: ListTasksFilter,
 ): Task[] {
   const pid =
-    filter.projectId !== undefined && filter.projectId !== ""
-      ? filter.projectId
-      : undefined;
+    filter.projectId === undefined || filter.projectId === ""
+      ? undefined
+      : filter.projectId;
   return queryStoredEntries(ctx.tasks, filter, {
     predicate: pid === undefined ? undefined : (t) => t.project_id === pid,
     compare: (a, b) => a.child_order - b.child_order,

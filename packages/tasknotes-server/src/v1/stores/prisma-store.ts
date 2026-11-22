@@ -7,7 +7,6 @@ import type {
   Section,
   Task,
 } from "../../protocol/generated.ts";
-import { inferTaskUpdateAction } from "../audit-diff.ts";
 import type {
   ApiTokenSummary,
   AuditContext,
@@ -16,17 +15,7 @@ import type {
   ListMutationsFilter,
   MutationPage,
 } from "../auth-types.ts";
-import { recordTaskMutationMetric } from "../mappers.ts";
-import {
-  buildPrismaTaskCreateData,
-  buildSyncWhereClause,
-  buildTaskUpdateData,
-  mapPrismaTask,
-  sanitizeSavepointName,
-  TASK_WITH_LABELS_INCLUDE,
-  validatePrismaLabelIds,
-  validatePrismaTaskRefs,
-} from "./prisma-helpers.ts";
+import { sanitizeSavepointName } from "./prisma-helpers.ts";
 import {
   createPrismaFilter,
   createPrismaReminder,
@@ -58,11 +47,18 @@ import {
   updatePrismaSection,
 } from "./prisma-secondary.ts";
 import {
+  completePrismaTask,
+  createPrismaTask,
+  deletePrismaTask,
+  getPrismaTask,
+  listPrismaTasks,
+  updatePrismaTask,
+} from "./prisma-tasks.ts";
+import {
   authenticatePrismaApiToken,
   createPrismaApiToken,
   listPrismaApiTokens,
   listPrismaMutations,
-  recordPrismaMutation,
   revokePrismaApiToken,
 } from "./prisma-tokens-audit.ts";
 import type * as V1 from "../types.ts";
@@ -97,6 +93,15 @@ export class PrismaFacetStore implements V1.FacetStore {
     return user.syncSequence;
   }
 
+  private async inTx<T>(fn: (tx: PrismaFacetStore) => Promise<T>): Promise<T> {
+    return !this.inTransaction && "$transaction" in this.prisma
+      ? await this.prisma.$transaction(
+          async (txClient: Prisma.TransactionClient) =>
+            await fn(new PrismaFacetStore(txClient, true, this.auditContext)),
+        )
+      : await fn(this);
+  }
+
   getNow(): Date {
     return new Date();
   }
@@ -108,12 +113,7 @@ export class PrismaFacetStore implements V1.FacetStore {
   }
 
   async transaction<T>(fn: (tx: V1.FacetStore) => Promise<T>): Promise<T> {
-    return !this.inTransaction && "$transaction" in this.prisma
-      ? await this.prisma.$transaction(
-          async (txClient: Prisma.TransactionClient) =>
-            await fn(new PrismaFacetStore(txClient, true, this.auditContext)),
-        )
-      : await fn(this);
+    return await this.inTx(fn);
   }
 
   async runInSavepoint<T>(name: string, fn: () => Promise<T>): Promise<T> {
@@ -143,27 +143,29 @@ export class PrismaFacetStore implements V1.FacetStore {
   async getOrCreateUser(
     userId: string,
   ): Promise<{ id: string; email: string; name: string }> {
-    const user = await this.prisma.user.upsert({
-      where: { id: userId },
-      create: {
-        id: userId,
-        email: `${userId}@tasknotes.local`,
-        name: "Default User",
-      },
-      update: {},
-    });
-    const existingInbox = await this.prisma.project.findFirst({
-      where: { userId, isInbox: true, isDeleted: false },
-      select: { id: true },
-    });
-    if (existingInbox === null) {
-      await this.withAuditContext(undefined).createProject({
-        userId,
-        name: "Inbox",
-        isInbox: true,
+    return await this.inTx(async (tx) => {
+      const user = await tx.prisma.user.upsert({
+        where: { id: userId },
+        create: {
+          id: userId,
+          email: `${userId}@tasknotes.local`,
+          name: "Default User",
+        },
+        update: {},
       });
-    }
-    return { id: user.id, email: user.email, name: user.name };
+      const existingInbox = await tx.prisma.project.findFirst({
+        where: { userId, isInbox: true, isDeleted: false },
+        select: { id: true },
+      });
+      if (existingInbox === null) {
+        await tx.withAuditContext(undefined).createProject({
+          userId,
+          name: "Inbox",
+          isInbox: true,
+        });
+      }
+      return { id: user.id, email: user.email, name: user.name };
+    });
   }
 
   async getSyncSequence(userId: string): Promise<bigint> {
@@ -200,7 +202,7 @@ export class PrismaFacetStore implements V1.FacetStore {
   }
 
   createApiToken(data: CreateApiTokenInput): Promise<ApiTokenSummary> {
-    return createPrismaApiToken(this.prisma, data);
+    return this.inTx((tx) => createPrismaApiToken(tx.prisma, data));
   }
   listApiTokens(
     userId: string,
@@ -209,7 +211,9 @@ export class PrismaFacetStore implements V1.FacetStore {
     return listPrismaApiTokens(this.prisma, userId, options);
   }
   revokeApiToken(id: string, userId: string): Promise<ApiTokenSummary | null> {
-    return revokePrismaApiToken(this.prisma, id, userId, this.getNow());
+    return this.inTx((tx) =>
+      revokePrismaApiToken(tx.prisma, id, userId, tx.getNow()),
+    );
   }
   authenticateApiToken(
     tokenHash: string,
@@ -224,115 +228,6 @@ export class PrismaFacetStore implements V1.FacetStore {
     return await this.prisma.task.count({ where: { isDeleted: false } });
   }
 
-  async createTask(data: V1.CreateTaskInput): Promise<Task> {
-    await validatePrismaTaskRefs(
-      this.prisma,
-      data.userId,
-      data.projectId,
-      data.sectionId,
-    );
-    const labelIds =
-      data.labelIds === undefined
-        ? []
-        : await validatePrismaLabelIds(this.prisma, data.userId, data.labelIds);
-    const syncSeq = await this.nextSyncSeq(data.userId);
-    const created = await this.prisma.task.create({
-      data: buildPrismaTaskCreateData(data, syncSeq, labelIds),
-      include: TASK_WITH_LABELS_INCLUDE,
-    });
-    recordTaskMutationMetric("created");
-    const mapped = mapPrismaTask(created);
-    await recordPrismaMutation(this.prisma, {
-      userId: data.userId,
-      syncSeq,
-      entityType: "task",
-      entityId: mapped.id,
-      action: this.auditContext?.actionHint ?? "create",
-      audit: this.auditContext,
-      before: null,
-      after: mapped,
-    });
-    return mapped;
-  }
-
-  async updateTask(
-    id: string,
-    userId: string,
-    data: V1.UpdateTaskInput,
-  ): Promise<Task | null> {
-    const existing = await this.prisma.task.findFirst({
-      where: { id, userId },
-      include: TASK_WITH_LABELS_INCLUDE,
-    });
-    if (existing === null) {
-      return null;
-    }
-    const before = mapPrismaTask(existing);
-    await validatePrismaTaskRefs(
-      this.prisma,
-      userId,
-      data.projectId,
-      data.sectionId,
-    );
-    const labelIds =
-      data.labelIds === undefined
-        ? undefined
-        : await validatePrismaLabelIds(this.prisma, userId, data.labelIds);
-    const syncSeq = await this.nextSyncSeq(userId);
-    const updated = await this.prisma.task.update({
-      where: { id },
-      data: buildTaskUpdateData(data, syncSeq, labelIds),
-      include: TASK_WITH_LABELS_INCLUDE,
-    });
-    recordTaskMutationMetric(data.isDeleted === true ? "deleted" : "updated");
-    const after = mapPrismaTask(updated);
-    await recordPrismaMutation(this.prisma, {
-      userId,
-      syncSeq,
-      entityType: "task",
-      entityId: id,
-      action: inferTaskUpdateAction(
-        before,
-        after,
-        data,
-        this.auditContext?.actionHint,
-      ),
-      audit: this.auditContext,
-      before,
-      after,
-    });
-    return after;
-  }
-
-  async deleteTask(id: string, userId: string): Promise<boolean> {
-    const existing = await this.prisma.task.findFirst({
-      where: { id, userId },
-      include: TASK_WITH_LABELS_INCLUDE,
-    });
-    if (existing === null) {
-      return false;
-    }
-    const before = mapPrismaTask(existing);
-    const syncSeq = await this.nextSyncSeq(userId);
-    const updated = await this.prisma.task.update({
-      where: { id },
-      data: { isDeleted: true, syncSeq },
-      include: TASK_WITH_LABELS_INCLUDE,
-    });
-    recordTaskMutationMetric("deleted");
-    await recordPrismaMutation(this.prisma, {
-      userId,
-      syncSeq,
-      entityType: "task",
-      entityId: id,
-      action: "delete",
-      audit: this.auditContext,
-      before,
-      after: mapPrismaTask(updated),
-    });
-    return true;
-  }
-
   async getAttachment(
     taskId: string,
     commentId: string,
@@ -345,46 +240,54 @@ export class PrismaFacetStore implements V1.FacetStore {
     return row?.attachment ?? null;
   }
 
-  async getTask(id: string, userId?: string): Promise<Task | null> {
-    const where: Prisma.TaskWhereInput = { id };
-    if (userId !== undefined && userId !== "") {
-      where.userId = userId;
-    }
-    const task = await this.prisma.task.findFirst({
-      where,
-      include: TASK_WITH_LABELS_INCLUDE,
-    });
-    return task === null ? null : mapPrismaTask(task);
+  createTask(data: V1.CreateTaskInput): Promise<Task> {
+    return this.inTx((tx) => createPrismaTask(tx.secondaryCtx(), data));
   }
-
-  async listTasks(filter: V1.ListTasksFilter): Promise<Task[]> {
-    const where: Prisma.TaskWhereInput = {
-      userId: filter.userId,
-      ...buildSyncWhereClause(filter),
-    };
-    if (filter.projectId !== undefined && filter.projectId !== "") {
-      where.projectId = filter.projectId;
-    }
-    const tasks = await this.prisma.task.findMany({
-      where,
-      orderBy: { childOrder: "asc" },
-      include: TASK_WITH_LABELS_INCLUDE,
-    });
-    return tasks.map((task) => mapPrismaTask(task));
+  updateTask(
+    id: string,
+    userId: string,
+    data: V1.UpdateTaskInput,
+  ): Promise<Task | null> {
+    return this.inTx((tx) =>
+      updatePrismaTask(tx.secondaryCtx(), id, userId, data),
+    );
+  }
+  completeTask(
+    id: string,
+    userId: string,
+    completedAt?: Date,
+  ): Promise<Task | null> {
+    const when = completedAt ?? this.getNow();
+    return this.inTx((tx) =>
+      completePrismaTask(tx.secondaryCtx(), id, userId, when),
+    );
+  }
+  deleteTask(id: string, userId: string): Promise<boolean> {
+    return this.inTx((tx) => deletePrismaTask(tx.secondaryCtx(), id, userId));
+  }
+  getTask(id: string, userId?: string): Promise<Task | null> {
+    return getPrismaTask(this.prisma, id, userId);
+  }
+  listTasks(filter: V1.ListTasksFilter): Promise<Task[]> {
+    return listPrismaTasks(this.prisma, filter);
   }
 
   createProject(data: V1.CreateProjectInput): Promise<Project> {
-    return createPrismaProject(this.secondaryCtx(), data);
+    return this.inTx((tx) => createPrismaProject(tx.secondaryCtx(), data));
   }
   updateProject(
     id: string,
     userId: string,
     data: V1.UpdateProjectInput,
   ): Promise<Project | null> {
-    return updatePrismaProject(this.secondaryCtx(), id, userId, data);
+    return this.inTx((tx) =>
+      updatePrismaProject(tx.secondaryCtx(), id, userId, data),
+    );
   }
   deleteProject(id: string, userId: string): Promise<boolean> {
-    return deletePrismaProject(this.secondaryCtx(), id, userId);
+    return this.inTx((tx) =>
+      deletePrismaProject(tx.secondaryCtx(), id, userId),
+    );
   }
   getProject(id: string, userId?: string): Promise<Project | null> {
     return getPrismaProject(this.secondaryCtx(), id, userId);
@@ -394,17 +297,21 @@ export class PrismaFacetStore implements V1.FacetStore {
   }
 
   createSection(data: V1.CreateSectionInput): Promise<Section> {
-    return createPrismaSection(this.secondaryCtx(), data);
+    return this.inTx((tx) => createPrismaSection(tx.secondaryCtx(), data));
   }
   updateSection(
     id: string,
     userId: string,
     data: V1.UpdateSectionInput,
   ): Promise<Section | null> {
-    return updatePrismaSection(this.secondaryCtx(), id, userId, data);
+    return this.inTx((tx) =>
+      updatePrismaSection(tx.secondaryCtx(), id, userId, data),
+    );
   }
   deleteSection(id: string, userId: string): Promise<boolean> {
-    return deletePrismaSection(this.secondaryCtx(), id, userId);
+    return this.inTx((tx) =>
+      deletePrismaSection(tx.secondaryCtx(), id, userId),
+    );
   }
   getSection(id: string, userId?: string): Promise<Section | null> {
     return getPrismaSection(this.secondaryCtx(), id, userId);
@@ -414,17 +321,19 @@ export class PrismaFacetStore implements V1.FacetStore {
   }
 
   createLabel(data: V1.CreateLabelInput): Promise<Label> {
-    return createPrismaLabel(this.secondaryCtx(), data);
+    return this.inTx((tx) => createPrismaLabel(tx.secondaryCtx(), data));
   }
   updateLabel(
     id: string,
     userId: string,
     data: V1.UpdateLabelInput,
   ): Promise<Label | null> {
-    return updatePrismaLabel(this.secondaryCtx(), id, userId, data);
+    return this.inTx((tx) =>
+      updatePrismaLabel(tx.secondaryCtx(), id, userId, data),
+    );
   }
   deleteLabel(id: string, userId: string): Promise<boolean> {
-    return deletePrismaLabel(this.secondaryCtx(), id, userId);
+    return this.inTx((tx) => deletePrismaLabel(tx.secondaryCtx(), id, userId));
   }
   getLabel(id: string, userId?: string): Promise<Label | null> {
     return getPrismaLabel(this.secondaryCtx(), id, userId);
@@ -434,17 +343,21 @@ export class PrismaFacetStore implements V1.FacetStore {
   }
 
   createReminder(data: V1.CreateReminderInput): Promise<Reminder> {
-    return createPrismaReminder(this.secondaryCtx(), data);
+    return this.inTx((tx) => createPrismaReminder(tx.secondaryCtx(), data));
   }
   updateReminder(
     id: string,
     userId: string,
     data: V1.UpdateReminderInput,
   ): Promise<Reminder | null> {
-    return updatePrismaReminder(this.secondaryCtx(), id, userId, data);
+    return this.inTx((tx) =>
+      updatePrismaReminder(tx.secondaryCtx(), id, userId, data),
+    );
   }
   deleteReminder(id: string, userId: string): Promise<boolean> {
-    return deletePrismaReminder(this.secondaryCtx(), id, userId);
+    return this.inTx((tx) =>
+      deletePrismaReminder(tx.secondaryCtx(), id, userId),
+    );
   }
   getReminder(id: string, userId?: string): Promise<Reminder | null> {
     return getPrismaReminder(this.secondaryCtx(), id, userId);
@@ -454,17 +367,19 @@ export class PrismaFacetStore implements V1.FacetStore {
   }
 
   createFilter(data: V1.CreateFilterInput): Promise<Filter> {
-    return createPrismaFilter(this.secondaryCtx(), data);
+    return this.inTx((tx) => createPrismaFilter(tx.secondaryCtx(), data));
   }
   updateFilter(
     id: string,
     userId: string,
     data: V1.UpdateFilterInput,
   ): Promise<Filter | null> {
-    return updatePrismaFilter(this.secondaryCtx(), id, userId, data);
+    return this.inTx((tx) =>
+      updatePrismaFilter(tx.secondaryCtx(), id, userId, data),
+    );
   }
   deleteFilter(id: string, userId: string): Promise<boolean> {
-    return deletePrismaFilter(this.secondaryCtx(), id, userId);
+    return this.inTx((tx) => deletePrismaFilter(tx.secondaryCtx(), id, userId));
   }
   getFilter(id: string, userId?: string): Promise<Filter | null> {
     return getPrismaFilter(this.secondaryCtx(), id, userId);

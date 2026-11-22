@@ -99,9 +99,9 @@ export function listInMemoryReminders(
   filter: ListRemindersFilter,
 ): Reminder[] {
   const tid =
-    filter.taskId !== undefined && filter.taskId !== ""
-      ? filter.taskId
-      : undefined;
+    filter.taskId === undefined || filter.taskId === ""
+      ? undefined
+      : filter.taskId;
   return queryStoredEntries(ctx.reminders, filter, {
     predicate: tid === undefined ? undefined : (r) => r.task_id === tid,
   });

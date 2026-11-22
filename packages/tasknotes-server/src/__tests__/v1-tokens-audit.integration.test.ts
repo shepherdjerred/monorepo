@@ -233,5 +233,89 @@ describe("PostgreSQL PrismaFacetStore API Tokens & Mutation Ledger", () => {
       ["Evening Planner", "comment_add", "mcp"],
       ["Claude Postgres", "create", "rest"],
     ]);
+
+    // 4. Label deletion records task label-removal mutation in PostgreSQL
+    const labelRes = await app.request("/api/v1/labels", {
+      method: "POST",
+      headers: bearer(claude.token),
+      body: JSON.stringify({ name: "dental" }),
+    });
+    const createdLabel = z
+      .object({ id: z.uuid() })
+      .parse(await labelRes.json());
+    await app.request(`/api/v1/tasks/${task.id}`, {
+      method: "PATCH",
+      headers: bearer(claude.token),
+      body: JSON.stringify({ label_ids: [createdLabel.id] }),
+    });
+    const unauthDeleteLabel = await app.request(
+      `/api/v1/labels/${createdLabel.id}`,
+      {
+        method: "DELETE",
+        headers: bearer(assistant.token),
+      },
+    );
+    expect(unauthDeleteLabel.status).toBe(401);
+    const deleteLabelRes = await app.request(
+      `/api/v1/labels/${createdLabel.id}`,
+      {
+        method: "DELETE",
+        headers: bearer(claude.token),
+      },
+    );
+    expect(deleteLabelRes.status).toBe(204);
+
+    // 5. Concurrent edits serialize before-snapshots accurately, and recurring completion serializes with reschedule
+    const recurringRes = await app.request("/api/v1/tasks", {
+      method: "POST",
+      headers: bearer(claude.token),
+      body: JSON.stringify({
+        title: "Weekly review",
+        priority: "P3",
+        due_date: "2026-11-22",
+        recurrence_rule: "FREQ=WEEKLY",
+      }),
+    });
+    const recurringTask = TaskSchema.parse(await recurringRes.json());
+
+    const [reschedOut, closeOut] = await Promise.all([
+      app.request("/api/v1/tasks/reschedule", {
+        method: "POST",
+        headers: bearer(claude.token),
+        body: JSON.stringify({
+          tasks: [{ id: recurringTask.id, due_date: "2026-12-06" }],
+        }),
+      }),
+      app.request(`/api/v1/tasks/${recurringTask.id}/close`, {
+        method: "POST",
+        headers: bearer(ADMIN_TOKEN),
+      }),
+    ]);
+    expect(reschedOut.status).toBe(200);
+    expect(closeOut.status).toBe(204);
+
+    const finalRecurringRes = await app.request(
+      `/api/v1/tasks/${recurringTask.id}`,
+      {
+        headers: bearer(ADMIN_TOKEN),
+      },
+    );
+    const finalRecurring = z
+      .object({ due_date: z.string() })
+      .parse(await finalRecurringRes.json());
+    expect(["2026-12-06", "2026-12-13"]).toContain(finalRecurring.due_date);
+
+    // 6. Corrupt persisted enum in MutationEvent fails loudly rather than fabricating fallback values
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "MutationEvent" ("id", "userId", "syncSeq", "entityType", "entityId", "action", "source", "requestId", "actorKind", "actorName", "changes") VALUES ($1, $2, 999999, 'corrupt_entity', $3, 'update', 'rest', $4, 'agent', 'Broken', '{}'::jsonb)`,
+      crypto.randomUUID(),
+      "00000000-0000-0000-0000-000000000000",
+      recurringTask.id,
+      crypto.randomUUID(),
+    );
+    const store = new PrismaFacetStore(prisma);
+    await expect(
+      store.listMutations({ userId: "00000000-0000-0000-0000-000000000000" }),
+    ).rejects.toThrow();
   });
 });

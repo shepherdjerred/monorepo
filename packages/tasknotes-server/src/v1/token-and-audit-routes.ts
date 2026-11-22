@@ -17,7 +17,7 @@ import {
 } from "./request-context.ts";
 import type { FacetStore } from "./types.ts";
 
-const CreateApiTokenBodySchema = z.object({
+export const CreateApiTokenBodySchema = z.object({
   name: z.string().trim().min(1).max(120),
   actor_kind: ActorKindSchema.default("agent"),
   scopes: z

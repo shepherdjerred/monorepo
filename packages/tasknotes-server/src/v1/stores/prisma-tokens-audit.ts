@@ -38,15 +38,6 @@ const FieldChangesJsonSchema = z.record(
   }),
 );
 
-function parseWithFallback<T>(
-  schema: z.ZodType<T>,
-  raw: unknown,
-  fallback: T,
-): T {
-  const parsed = schema.safeParse(raw);
-  return parsed.success ? parsed.data : fallback;
-}
-
 export function toInputJson(value: unknown): Prisma.InputJsonValue {
   const primitive = JsonPrimitiveSchema.safeParse(value);
   if (primitive.success) {
@@ -71,9 +62,9 @@ export function toInputJson(value: unknown): Prisma.InputJsonValue {
 function parseScopes(raw: readonly string[]): TokenScope[] {
   const scopes: TokenScope[] = [];
   for (const item of raw) {
-    const parsed = TokenScopeSchema.safeParse(item);
-    if (parsed.success && !scopes.includes(parsed.data)) {
-      scopes.push(parsed.data);
+    const parsed = TokenScopeSchema.parse(item);
+    if (!scopes.includes(parsed)) {
+      scopes.push(parsed);
     }
   }
   return scopes;
@@ -91,7 +82,7 @@ function toApiTokenSummary(row: {
   lastUsedAt: Date | null;
   createdAt: Date;
 }): ApiTokenSummary {
-  const actorKind = parseWithFallback(ActorKindSchema, row.actorKind, "agent");
+  const actorKind = ActorKindSchema.parse(row.actorKind);
   return {
     id: row.id,
     user_id: row.userId,
@@ -107,20 +98,15 @@ function toApiTokenSummary(row: {
 }
 
 function parseJsonRecord(value: unknown): Record<string, unknown> | null {
-  if (value === null || value === undefined) {
-    return null;
-  }
-  const parsed = RecordJsonSchema.safeParse(value);
-  return parsed.success ? parsed.data : null;
+  return value === null || value === undefined
+    ? null
+    : RecordJsonSchema.parse(value);
 }
 
 function parseFieldChanges(value: unknown): Record<string, FieldChange> {
-  const parsed = FieldChangesJsonSchema.safeParse(value);
-  if (!parsed.success) {
-    return {};
-  }
+  const parsed = FieldChangesJsonSchema.parse(value);
   const out: Record<string, FieldChange> = {};
-  for (const [key, entry] of Object.entries(parsed.data)) {
+  for (const [key, entry] of Object.entries(parsed)) {
     out[key] = { from: entry.from ?? null, to: entry.to ?? null };
   }
   return out;
@@ -264,7 +250,7 @@ export async function authenticatePrismaApiToken(
     id: row.id,
     userId: row.userId,
     name: row.name,
-    actorKind: parseWithFallback(ActorKindSchema, row.actorKind, "agent"),
+    actorKind: ActorKindSchema.parse(row.actorKind),
     tokenPrefix: row.tokenPrefix,
     scopes: parseScopes(row.scopes),
   };
@@ -328,17 +314,13 @@ export async function listPrismaMutations(
     id: row.id,
     user_id: row.userId,
     sync_seq: String(row.syncSeq),
-    entity_type: parseWithFallback(
-      MutationEntityTypeSchema,
-      row.entityType,
-      "task",
-    ),
+    entity_type: MutationEntityTypeSchema.parse(row.entityType),
     entity_id: row.entityId,
-    action: parseWithFallback(MutationActionSchema, row.action, "update"),
-    source: parseWithFallback(MutationSourceSchema, row.source, "rest"),
+    action: MutationActionSchema.parse(row.action),
+    source: MutationSourceSchema.parse(row.source),
     command_uuid: row.commandUuid,
     request_id: row.requestId,
-    actor_kind: parseWithFallback(ActorKindSchema, row.actorKind, "agent"),
+    actor_kind: ActorKindSchema.parse(row.actorKind),
     actor_name: row.actorName,
     token_id: row.tokenId,
     token_prefix: row.tokenPrefix,

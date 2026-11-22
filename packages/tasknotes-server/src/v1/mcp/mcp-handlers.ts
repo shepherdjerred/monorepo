@@ -8,7 +8,6 @@ import {
 } from "../auth-types.ts";
 import { CommentUploadSchema } from "../comments.ts";
 import { executeMcpOrgTool, type McpExecCtx } from "./mcp-org-handlers.ts";
-import { buildTaskCompletionUpdate } from "../recurrence.ts";
 import {
   CreateTaskBodySchema,
   RestTaskMoveBodySchema,
@@ -27,6 +26,7 @@ import {
   TaskListQuerySchema,
   TimeZoneParamSchema,
 } from "../task-query.ts";
+import { parseNullablePair } from "../task-routes.ts";
 import { EntityNotFoundError, type FacetStore } from "../types.ts";
 
 const IdArgSchema = z.object({
@@ -76,7 +76,7 @@ async function resolveDefaultProject(
   if (inbox !== undefined) {
     return inbox.id;
   }
-  const created = await store.withAuditContext(undefined).createProject({
+  const created = await store.createProject({
     userId,
     name: "Inbox",
     isInbox: true,
@@ -123,8 +123,7 @@ async function runUpdateTask(
 ): Promise<unknown> {
   const { id } = IdArgSchema.parse(args);
   const d = UpdateTaskBodySchema.parse(args);
-  const ruleInput = d.recurrence_rule ?? d.recurrenceRule;
-  const rule = parseNullableStringForUpdate(ruleInput);
+  const rule = parseNullablePair(d.recurrence_rule, d.recurrenceRule);
   const hasRule =
     d.recurrence_rule !== undefined || d.recurrenceRule !== undefined;
   const updated = await ctx.store.updateTask(id, ctx.userId, {
@@ -132,15 +131,15 @@ async function runUpdateTask(
     description: d.description,
     priority: d.priority,
     projectId: d.project_id ?? d.projectId,
-    sectionId: parseNullableStringForUpdate(d.section_id ?? d.sectionId),
-    parentId: parseNullableStringForUpdate(d.parent_id ?? d.parentId),
+    sectionId: parseNullablePair(d.section_id, d.sectionId),
+    parentId: parseNullablePair(d.parent_id, d.parentId),
     childOrder: d.child_order ?? d.childOrder,
     deadline: parseNullableDateForUpdate(d.deadline),
     recurrenceBasis: d.recurrence_basis,
     dueDate: parseNullableDateForUpdate(d.due_date),
     dueDatetime: parseNullableDateForUpdate(d.due_datetime),
-    dueTimezone: parseNullableStringForUpdate(d.due_timezone ?? d.dueTimezone),
-    dueString: parseNullableStringForUpdate(d.due_string ?? d.dueString),
+    dueTimezone: parseNullablePair(d.due_timezone, d.dueTimezone),
+    dueString: parseNullablePair(d.due_string, d.dueString),
     isRecurring: d.is_recurring ?? (hasRule ? rule !== null : undefined),
     recurrenceRule: rule,
     labelIds: d.label_ids ?? d.labelIds,
@@ -206,15 +205,9 @@ const MCP_TOOL_RUNNERS: Record<
   facet_update_task: runUpdateTask,
   facet_complete_task: async (ctx, args) => {
     const { id } = IdArgSchema.parse(args);
-    const existing = await ctx.store.getTask(id, ctx.userId);
-    if (existing === null || existing.is_deleted) {
-      throw new EntityNotFoundError("Task", id);
-    }
-    const update = buildTaskCompletionUpdate(existing, ctx.store.getNow());
-    const updated = await withHint(ctx.store, "complete").updateTask(
+    const updated = await withHint(ctx.store, "complete").completeTask(
       id,
       ctx.userId,
-      update,
     );
     if (updated === null) {
       throw new EntityNotFoundError("Task", id);

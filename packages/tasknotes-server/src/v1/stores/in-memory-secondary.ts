@@ -236,9 +236,9 @@ export function listInMemorySections(
   filter: ListSectionsFilter,
 ): Section[] {
   const pid =
-    filter.projectId !== undefined && filter.projectId !== ""
-      ? filter.projectId
-      : undefined;
+    filter.projectId === undefined || filter.projectId === ""
+      ? undefined
+      : filter.projectId;
   return queryStoredEntries(ctx.sections, filter, {
     predicate: pid === undefined ? undefined : (s) => s.project_id === pid,
     compare: (a, b) => a.section_order - b.section_order,
@@ -322,15 +322,19 @@ export function deleteInMemoryLabel(
   if (deleted === null) {
     return false;
   }
-  for (const taskEntry of ctx.tasks.values()) {
+  for (const [taskId, taskEntry] of ctx.tasks.entries()) {
     if (taskEntry.userId === userId && taskEntry.value.label_ids.includes(id)) {
-      const now = ctx.clock.now();
-      taskEntry.value.label_ids = taskEntry.value.label_ids.filter(
-        (lid) => lid !== id,
-      );
-      taskEntry.value.updated_at = now.toISOString();
-      taskEntry.updatedAt = now;
-      taskEntry.syncSeq = ctx.nextSyncSeq(userId);
+      ctx.mutateWithAudit({
+        map: ctx.tasks,
+        id: taskId,
+        userId,
+        entityType: "task",
+        resolveAction: () => "update",
+        mutate: (task, nowIso) => {
+          task.label_ids = task.label_ids.filter((lid) => lid !== id);
+          task.updated_at = nowIso;
+        },
+      });
     }
   }
   return true;

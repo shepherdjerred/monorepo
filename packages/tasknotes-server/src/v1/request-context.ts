@@ -84,29 +84,35 @@ export function resolveRequestActorMetadata(
     : { ok: false, response: c.json({ error: parsed.error }, 400) };
 }
 
+function firstNonEmpty(
+  a: string | undefined,
+  b: string | undefined,
+): string | undefined {
+  if (a !== undefined && a !== "") {
+    return a;
+  }
+  return b === undefined || b === "" ? undefined : b;
+}
+
 export function resolveRequestUserId(
   c: Context,
 ): { ok: true; userId: string } | { ok: false; response: Response } {
   const principal = getRequestPrincipal(c);
-  const headerUser = c.req.header("x-user-id")?.trim();
-  const queryUser = c.req.query("userId")?.trim();
-  const explicit =
-    headerUser !== undefined && headerUser !== ""
-      ? headerUser
-      : queryUser !== undefined && queryUser !== ""
-        ? queryUser
-        : undefined;
+  const explicit = firstNonEmpty(
+    c.req.header("x-user-id")?.trim(),
+    c.req.query("userId")?.trim(),
+  );
 
   if (principal.kind === "api_token") {
-    return explicit !== undefined && explicit !== principal.userId
-      ? {
+    return explicit === undefined || explicit === principal.userId
+      ? { ok: true, userId: principal.userId }
+      : {
           ok: false,
           response: c.json(
             { error: "API token cannot access another user workspace" },
             403,
           ),
-        }
-      : { ok: true, userId: principal.userId };
+        };
   }
 
   return { ok: true, userId: explicit ?? DEFAULT_USER_ID };

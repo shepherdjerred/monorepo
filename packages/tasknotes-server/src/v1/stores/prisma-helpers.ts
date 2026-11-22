@@ -14,28 +14,57 @@ import {
   type UpdateTaskInput,
 } from "../types.ts";
 
+export async function lockExistingPrismaUser(
+  prisma: PrismaClient | Prisma.TransactionClient,
+  userId: string,
+): Promise<void> {
+  await prisma.$queryRaw`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`;
+}
+
 export async function validatePrismaTaskRefs(
   prisma: PrismaClient | Prisma.TransactionClient,
   userId: string,
-  projectId: string | undefined,
-  sectionId: string | null | undefined,
+  refs: {
+    projectId: string | undefined;
+    sectionId: string | null | undefined;
+    currentProjectId?: string | undefined;
+    currentSectionId?: string | null | undefined;
+  },
 ): Promise<void> {
-  if (projectId !== undefined) {
+  if (refs.projectId === undefined && refs.sectionId === undefined) {
+    return;
+  }
+  if (refs.projectId !== undefined) {
     const found = await prisma.project.findFirst({
-      where: { id: projectId, userId },
+      where: { id: refs.projectId, userId },
       select: { id: true },
     });
     if (found === null) {
-      throw new EntityNotFoundError("Project", projectId);
+      throw new EntityNotFoundError("Project", refs.projectId);
     }
   }
-  if (sectionId !== undefined && sectionId !== null && sectionId !== "") {
+  const effectiveProjectId = refs.projectId ?? refs.currentProjectId;
+  const effectiveSectionId =
+    refs.sectionId === undefined ? refs.currentSectionId : refs.sectionId;
+  if (
+    effectiveSectionId !== undefined &&
+    effectiveSectionId !== null &&
+    effectiveSectionId !== ""
+  ) {
     const sec = await prisma.section.findFirst({
-      where: { id: sectionId, userId },
-      select: { id: true },
+      where: { id: effectiveSectionId, userId },
+      select: { id: true, projectId: true },
     });
     if (sec === null) {
-      throw new EntityNotFoundError("Section", sectionId);
+      throw new EntityNotFoundError("Section", effectiveSectionId);
+    }
+    if (
+      effectiveProjectId !== undefined &&
+      sec.projectId !== effectiveProjectId
+    ) {
+      throw new TypeError(
+        "The destination section must belong to the destination project.",
+      );
     }
   }
 }

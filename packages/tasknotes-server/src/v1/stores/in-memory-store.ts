@@ -44,6 +44,7 @@ import {
   updateInMemorySection,
 } from "./in-memory-secondary.ts";
 import {
+  completeInMemoryTask,
   createEmptyBackingState,
   createInMemoryTask,
   getInMemoryTask,
@@ -193,7 +194,7 @@ export class InMemoryFacetStore implements FacetStore {
     return this.auditContext;
   }
   transaction<T>(fn: (tx: FacetStore) => Promise<T>): Promise<T> {
-    return fn(this);
+    return runWithInMemorySavepoint(this.state, () => fn(this));
   }
   runInSavepoint<T>(_name: string, fn: () => Promise<T>): Promise<T> {
     return runWithInMemorySavepoint(this.state, fn);
@@ -310,6 +311,18 @@ export class InMemoryFacetStore implements FacetStore {
       updateInMemoryTask(this.secondaryCtx(), this.state.attachments, id, {
         userId,
         data,
+      }),
+    );
+  }
+  completeTask(
+    id: string,
+    userId: string,
+    completedAt?: Date,
+  ): Promise<Task | null> {
+    return Promise.resolve(
+      completeInMemoryTask(this.secondaryCtx(), this.state.attachments, id, {
+        userId,
+        completedAt: completedAt ?? this.getNow(),
       }),
     );
   }

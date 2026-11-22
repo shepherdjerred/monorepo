@@ -22,14 +22,18 @@ async function isHealthRequestAuthenticated(
   store: FacetStore,
 ): Promise<boolean> {
   const token = extractBearerToken(authorizationHeader);
+  if (
+    configuredAuthToken !== "" &&
+    token !== null &&
+    verifyBootstrapToken(token, configuredAuthToken)
+  ) {
+    return true;
+  }
   if (token?.startsWith(API_TOKEN_PREFIX) === true) {
     const matched = await store.authenticateApiToken(hashApiToken(token));
     return matched !== null;
   }
-  return (
-    configuredAuthToken === "" ||
-    (token !== null && verifyBootstrapToken(token, configuredAuthToken))
-  );
+  return configuredAuthToken === "";
 }
 
 export function createHealthRoutes(options: HealthRouteOptions): Hono {

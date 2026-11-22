@@ -2,7 +2,6 @@ import type { Context, Hono } from "hono";
 import type { z } from "zod";
 import type { Task } from "../protocol/generated.ts";
 import { CommentUploadSchema } from "./comments.ts";
-import { buildTaskCompletionUpdate } from "./recurrence.ts";
 import {
   requireScope,
   resolveRequestActorMetadata,
@@ -95,9 +94,9 @@ export function parseNullablePair(
   primary: string | null | undefined,
   fallback: string | null | undefined,
 ): string | null | undefined {
-  return primary === null || primary === ""
-    ? null
-    : parseNullableStringForUpdate(primary ?? fallback);
+  return parseNullableStringForUpdate(
+    primary === undefined ? fallback : primary,
+  );
 }
 
 async function resolveDefaultProjectId(
@@ -116,7 +115,7 @@ async function resolveDefaultProjectId(
   if (inbox !== undefined) {
     return inbox.id;
   }
-  const createdInbox = await store.withAuditContext(undefined).createProject({
+  const createdInbox = await store.createProject({
     userId,
     name: "Inbox",
     isInbox: true,
@@ -379,12 +378,7 @@ function mountTaskBatchAndLifecycleRoutes(
       return auth.response;
     }
     const id = c.req.param("id");
-    const task = await auth.store.getTask(id, auth.userId);
-    if (task === null || task.is_deleted) {
-      return c.json({ error: "Task not found" }, 404);
-    }
-    const update = buildTaskCompletionUpdate(task, auth.store.getNow());
-    const updated = await auth.store.updateTask(id, auth.userId, update);
+    const updated = await auth.store.completeTask(id, auth.userId);
     return updated === null
       ? c.json({ error: "Task not found" }, 404)
       : c.body(null, 204);

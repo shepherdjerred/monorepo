@@ -163,6 +163,8 @@ export async function executeSync(
       types === undefined || types.length === 0 || types.includes("all");
     const shouldInclude = (t: string) => includeAll || types.includes(t);
 
+    const currentSeq = await tx.getSyncSequence(userId);
+
     const tasks = shouldInclude("tasks") ? await tx.listTasks(filter) : [];
     const projects = shouldInclude("projects")
       ? await tx.listProjects(filter)
@@ -177,8 +179,6 @@ export async function executeSync(
     const filters = shouldInclude("filters")
       ? await tx.listFilters(filter)
       : [];
-
-    const currentSeq = await tx.getSyncSequence(userId);
 
     return {
       sync_token: `seq:${String(currentSeq)}`,
