@@ -200,8 +200,8 @@
     "scripts"
   ],
   "overrides": {
-    "@ai-sdk/provider": "4.0.26",
-    "@ai-sdk/provider-utils": "5.0.58",
+    "@ai-sdk/provider": "4.0.39",
+    "@ai-sdk/provider-utils": "5.0.83",
     "@grpc/grpc-js": "1.14.6",
     "@opentelemetry/api": "1.9.1",
     "@typescript-eslint/eslint-plugin": "8.72.2",
@@ -259,12 +259,12 @@
     "react-native-worklets@0.13.0": "patches/react-native-worklets@0.13.0.patch",
     "@lng2004/node-datachannel@0.32.3-20260815.5": "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.5.patch",
     "@react-native-menu/menu@2.0.0": "patches/@react-native-menu%2Fmenu@2.0.0.patch",
-    "@spectrum-ts/imessage@12.10.1": "patches/@spectrum-ts%2Fimessage@12.10.1.patch",
-    "@spectrum-ts/core@12.10.1": "patches/@spectrum-ts%2Fcore@12.10.1.patch",
     "mineflayer@4.39.0": "patches/mineflayer@4.39.0.patch",
     "discord.js-selfbot-v13@3.7.1": "patches/discord.js-selfbot-v13@3.7.1.patch",
     "@astrojs/internal-helpers@0.13.2": "patches/@astrojs%2Finternal-helpers@0.13.2.patch",
-    "markdown-it@14.3.3": "patches/markdown-it@14.3.3.patch"
+    "markdown-it@14.3.3": "patches/markdown-it@14.3.3.patch",
+    "@spectrum-ts/core@12.16.0": "patches/@spectrum-ts%2Fcore@12.16.0.patch",
+    "@spectrum-ts/imessage@12.16.0": "patches/@spectrum-ts%2Fimessage@12.16.0.patch"
   },
   "packageManager": "bun@1.4.5"
 }

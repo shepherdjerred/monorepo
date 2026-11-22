@@ -28,7 +28,7 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@ai-sdk/otel": "1.0.137",
+    "@ai-sdk/otel": "1.0.179",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/api-logs": "^0.223.0",
     "@opentelemetry/core": "^2.12.0",

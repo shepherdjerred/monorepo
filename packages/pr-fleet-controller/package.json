@@ -43,7 +43,7 @@
     "@shepherdjerred/llm-observability": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
     "@shepherdjerred/root-scripts": "workspace:*",
-    "ai": "7.0.137",
+    "ai": "7.0.179",
     "zod": "^4.4.3"
   },
   "devDependencies": {

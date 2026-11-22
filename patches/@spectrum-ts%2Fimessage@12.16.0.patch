@@ -1,8 +1,8 @@
 diff --git a/dist/index.d.ts b/dist/index.d.ts
-index 3b00a8c3b2d36b5ae53a429fb1fe5043c987bc22..4bd1948bc3ed04556486608bb5b0e25a62863952 100644
+index b9882b29a7c1740e8fa6762a7346f5407a12859c..f1fed5ca74ae3266a043d0fa5684bdf6a61bb627 100644
 --- a/dist/index.d.ts
 +++ b/dist/index.d.ts
-@@ -935,7 +935,7 @@ declare const definedIMessage: Platform<import("@spectrum-ts/core").PlatformDef<
+@@ -990,7 +990,7 @@ declare const definedIMessage: Platform<import("@spectrum-ts/core").PlatformDef<
    };
  }>;
  type DefinedIMessagePlatform = typeof definedIMessage;
