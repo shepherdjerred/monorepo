@@ -122,7 +122,6 @@ export const VersionMapSchema = z
     "library/nginx": z.string(),
     "bugsink/bugsink": z.string(),
     "arizephoenix/phoenix": z.string(),
-    "relay-server": z.string(),
     "temporalio/server": z.string(),
     "temporalio/ui": z.string(),
     "temporalio/admin-tools": z.string(),

@@ -1517,19 +1517,6 @@
       ]
     },
     {
-      "name": "relay-server",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": false
-      },
-      "value": "v0.9.2@sha256:815222bd2dc167ee0a5b702d2dcd3d9eb681985b9eb5e6e761adf3933554a11f",
-      "notes": [
-        "Relay Server - self-hosted Obsidian real-time collaboration backend (y-sweet fork)",
-        "not managed by renovate (docker.system3.md is a private relay.md registry; bump manually on upgrade)"
-      ]
-    },
-    {
       "name": "temporalio/server",
       "category": "upstream",
       "artifactType": "image",

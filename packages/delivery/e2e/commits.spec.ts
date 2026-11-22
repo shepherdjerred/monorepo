@@ -10,6 +10,9 @@ import {
   PIPELINE_CARRIER_POSITION,
   PIPELINE_FAILURE_POSITION,
   QUEUED_POSITION,
+  STORED_PIPELINE_AUTHOR,
+  STORED_PIPELINE_TITLE,
+  UNCAPTURED_POSITION,
   UNRELEASED_POSITION,
   historyPipeline,
   historySha,
@@ -77,6 +80,27 @@ test("the list row names the environment that is blocking it", async ({
   await expect(await findRow(page, PARTIAL_FAILURE_POSITION)).toContainText(
     "CI failed for Arcade",
   );
+});
+
+test("a commit Delivery never captured a title for says so and offers Woodpecker's stored pipeline instead of a blank", async ({
+  page,
+}) => {
+  const main = await openCommit(page, UNCAPTURED_POSITION);
+  const header = main.locator(".page-header");
+  await expect(header).toContainText(
+    "Title and author were not captured for this commit.",
+  );
+  await expect(header).toContainText(
+    `Woodpecker pipeline #${String(historyPipeline(UNCAPTURED_POSITION))} has the title "${STORED_PIPELINE_TITLE}" and the author ${STORED_PIPELINE_AUTHOR}.`,
+  );
+  // A recorded commit shows its own title and author and no such note.
+  const recorded = await openCommit(page, ACCEPTED_POSITION);
+  await expect(recorded.locator(".page-header")).not.toContainText(
+    "not captured",
+  );
+  await expect(recorded.locator(".page-header .commit-title")).toBeVisible();
+  await page.goto(`/commits/${historySha(UNCAPTURED_POSITION)}`);
+  await expectNoHorizontalOverflow(page);
 });
 
 test("the commit list says how many commits it shows", async ({ page }) => {

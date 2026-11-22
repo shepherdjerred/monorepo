@@ -563,22 +563,8 @@
       "kind": "workload",
       "package": "homelab",
       "aliases": [],
-      "namespaces": [
-        "freshrss",
-        "redlib",
-        "relay",
-        "stash",
-        "syncthing",
-        "pinchtab"
-      ],
-      "argoApps": [
-        "freshrss",
-        "redlib",
-        "relay",
-        "stash",
-        "syncthing",
-        "pinchtab"
-      ],
+      "namespaces": ["freshrss", "redlib", "stash", "syncthing", "pinchtab"],
+      "argoApps": ["freshrss", "redlib", "stash", "syncthing", "pinchtab"],
       "charts": [],
       "images": ["redlib"],
       "bootstrapImages": [],

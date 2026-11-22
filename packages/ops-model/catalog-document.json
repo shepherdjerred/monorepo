@@ -770,7 +770,7 @@
     {
       "id": "minecraft-shuxin",
       "title": "Minecraft shuxin server",
-      "lifecycle": "active",
+      "lifecycle": "retired",
       "selfHosted": false,
       "group": "minecraft",
       "components": [
@@ -811,7 +811,7 @@
     {
       "id": "minecraft-sjerred",
       "title": "Minecraft sjerred server",
-      "lifecycle": "active",
+      "lifecycle": "retired",
       "selfHosted": false,
       "group": "minecraft",
       "components": [
@@ -1432,25 +1432,6 @@
             "argoApp": "redlib"
           }
         ]
-      }
-    },
-    {
-      "id": "relay",
-      "title": "Relay",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "self-hosted-apps",
-      "components": [
-        {
-          "name": "chart:relay",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "workload",
-        "namespaces": ["relay"],
-        "argoApps": ["relay"]
       }
     },
     {
@@ -3057,6 +3038,7 @@
     {
       "id": "minecraft-shuxin/prod",
       "role": "durable",
+      "lifecycle": "retired",
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "minecraft-shuxin/prod/1",
@@ -3065,6 +3047,7 @@
     {
       "id": "minecraft-sjerred/prod",
       "role": "durable",
+      "lifecycle": "retired",
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "minecraft-sjerred/prod/1",
@@ -3084,7 +3067,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "promotionSourceEnvironmentId": "minecraft/sandbox",
-      "recipeRevisionId": "minecraft-tsmc/8",
+      "recipeRevisionId": "minecraft-tsmc/9",
       "configurationRevisionId": "minecraft-tsmc/10"
     },
     {
@@ -3248,14 +3231,6 @@
       "configurationRevisionId": "redlib/prod/1"
     },
     {
-      "id": "relay/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "relay/prod/1",
-      "configurationRevisionId": "relay/prod/1"
-    },
-    {
       "id": "stash/prod",
       "role": "durable",
       "approvalPolicy": "none",
@@ -3285,7 +3260,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/10"
+      "configurationRevisionId": "argocd/prod/11"
     },
     {
       "id": "chartmuseum/prod",
@@ -4826,31 +4801,6 @@
       "rule": "any-accepted"
     },
     {
-      "dependent": "relay/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "relay/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "relay/prod",
-      "prerequisite": "cloudflare-operator/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "relay/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "relay/prod",
-      "prerequisite": "tofu-seaweedfs/prod",
-      "rule": "any-accepted"
-    },
-    {
       "dependent": "resume/prod",
       "prerequisite": "tofu-seaweedfs/prod",
       "rule": "any-accepted"
@@ -5473,11 +5423,6 @@
     {
       "dependent": "tofu-cloudflare/prod",
       "prerequisite": "minecraft/tsmc",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "relay/prod",
       "rule": "any-accepted"
     },
     {

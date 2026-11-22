@@ -7,7 +7,7 @@ import type { PublishBuild } from "@shepherdjerred/delivery/contract";
 import {
   CATALOG_CORE,
   type CatalogCore,
-  catalogOwnsService,
+  catalogService,
 } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
 import type { TofuStack } from "@shepherdjerred/ops-model/platform-policy.ts";
@@ -113,24 +113,28 @@ export function attachTofuArchivePublications(
     repositoryId: input.repositoryId,
     pipelineNumber: input.pipelineNumber,
   });
-  const builds = entries.map((entry) => {
-    if (!catalogOwnsService(entry.serviceId, catalog))
+  const builds = entries.flatMap((entry) => {
+    const owner = catalogService(entry.serviceId, catalog);
+    if (owner === undefined)
       throw new Error(
         `OpenTofu archive ${entry.artifact.component} requires a service catalog owner ${entry.serviceId}`,
       );
+    if (owner.lifecycle !== "active") return [];
     if (publications.some((build) => build.serviceId === entry.serviceId))
       throw new Error(
         `One CI pipeline cannot publish ${entry.serviceId} twice`,
       );
-    return PublishBuildSchema.parse({
-      requestId: `ci/${String(input.repositoryId)}/${String(input.pipelineNumber)}/${entry.serviceId}`,
-      serviceId: entry.serviceId,
-      sourceRevision: input.sourceRevision,
-      ciUrl: input.ciUrl,
-      verifiedAt: input.capturedAt,
-      artifacts: [entry.artifact],
-      retainedArtifactIds: [],
-    });
+    return [
+      PublishBuildSchema.parse({
+        requestId: `ci/${String(input.repositoryId)}/${String(input.pipelineNumber)}/${entry.serviceId}`,
+        serviceId: entry.serviceId,
+        sourceRevision: input.sourceRevision,
+        ciUrl: input.ciUrl,
+        verifiedAt: input.capturedAt,
+        artifacts: [entry.artifact],
+        retainedArtifactIds: [],
+      }),
+    ];
   });
   return [...publications, ...builds];
 }

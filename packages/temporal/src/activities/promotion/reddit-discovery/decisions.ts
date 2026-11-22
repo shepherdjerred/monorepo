@@ -113,7 +113,7 @@ export const REDDIT_DECISION_QUESTIONS = [
     type: "choice",
     name: "hard_constraints",
     instructions:
-      "Check EVERY stated hard requirement against the approved server facts. Do not invent support, assume missing facts, or recast a non-negotiable requirement as an optional caveat. Examples include modpacks, cracked/offline authentication, pre-launch status, private Realm, age limits, location/latency, player activity, resets, and strict no-plugins vanilla. No stated hard requirements counts as satisfied only when the main request is demonstrably supported.",
+      "Check every deal-breaker against the approved server facts. A capability the author requests as essential, a stated exclusion, or an explicit non-negotiable is a hard requirement. Wording such as 'prefer', 'ideally', 'would be nice', or 'if possible' is optional unless the rest of the post makes it mandatory. For example, 'preferably 18+' is a preference, and 'please no under-18 players' is a requirement. Do not assume support for an unknown hard requirement. If the author states no hard requirements, choose satisfied. Main-request fit and optional preferences are evaluated separately.",
     choices: [
       {
         value: "satisfied",

@@ -16,7 +16,6 @@ const SPECIFIC_APP_TITLES: Readonly<Record<string, string>> = {
   golink: "Golink",
   freshrss: "FreshRSS",
   redlib: "Redlib",
-  relay: "Relay",
   stash: "Stash",
   syncthing: "Syncthing",
   pinchtab: "PinchTab",

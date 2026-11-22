@@ -51,6 +51,11 @@ Use the existing exact-revision release workflow and its [apply-safety preflight
 The declared replacements interrupt the single-replica service briefly; the existing claims and datasets must survive.
 Do not substitute manual controller deletion, application-wide replacement, or ignored immutable fields.
 
+The replacement options change only how a sync applies a resource, not how Argo CD compares it.
+An Application with `ServerSideApply=true` also uses Argo CD's server-side diff, which dry-run applies the whole desired object.
+When the changed template is immutable, that dry run fails and the Application stays in `ComparisonError`, so no sync starts.
+Check the Application's conditions after the release; a `ComparisonError` here needs a source change, not a retry.
+
 Verify the recreated controllers use the original claims and the updated template sizes.
 Verify every reviewed Service and ServiceMonitor has reconciled before proceeding.
 Check filer, master, volume, and S3 health, authenticated object reads, and an existing public asset.

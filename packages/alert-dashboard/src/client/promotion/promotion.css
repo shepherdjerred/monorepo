@@ -246,6 +246,36 @@
 .p-outreach-detail p {
   margin: 6px 0;
 }
+.p-outreach-coverage {
+  margin-block: 8px;
+}
+.p-outreach-coverage h4 {
+  margin: 0;
+  font-size: inherit;
+  font-weight: 600;
+}
+.p-outreach-coverage-list {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.p-outreach-coverage-list > li {
+  padding-block: 6px;
+  border-block-start: 1px solid var(--p-outreach-line);
+  overflow-wrap: break-word;
+}
+.p-outreach-coverage-window {
+  display: block;
+  margin-block: 2px;
+  font-size: 12px;
+}
+.p-outreach-posts {
+  margin-block: 8px;
+}
+.p-outreach-posts > summary {
+  padding-block: 4px;
+  cursor: pointer;
+}
 .p-outreach-receipts {
   padding-inline-start: 16px;
 }

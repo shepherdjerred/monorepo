@@ -537,7 +537,19 @@ test("v2 acquires an OCI chart from its registry by digest, with no Helm index o
   ]);
 });
 
-test("v2 registers one acquisition under every catalog service that acquires the component", async () => {
+async function acquireWithActiveServices(
+  entry: VersionCatalogEntry,
+  activeServiceIds: readonly string[],
+) {
+  const active = new Set(activeServiceIds);
+  const core = {
+    ...CATALOG_CORE,
+    services: CATALOG_CORE.services.map((service) =>
+      active.has(service.id)
+        ? { ...service, lifecycle: "active" as const }
+        : service,
+    ),
+  };
   const requests: AcquireUpstreamArtifact[] = [];
   const selected = await componentArtifactsForPublication(
     {
@@ -549,10 +561,18 @@ test("v2 registers one acquisition under every catalog service that acquires the
         return verified(input);
       },
     },
-    catalog(busybox),
+    catalog(entry),
     producer,
-    { credentials, registry: "v2" },
+    { credentials, registry: "v2", core },
   );
+  return { requests, selected };
+}
+
+test("v2 registers one acquisition under every active catalog service that acquires the component", async () => {
+  const { requests, selected } = await acquireWithActiveServices(busybox, [
+    "minecraft-shuxin",
+    "minecraft-sjerred",
+  ]);
   expect(
     selected.map((artifact) => [artifact.serviceId, artifact.component]),
   ).toEqual([
@@ -564,6 +584,17 @@ test("v2 registers one acquisition under every catalog service that acquires the
     "ci/1/42/acquire/minecraft-sjerred/library/busybox/1.37.0",
   ]);
   expect(new Set(requests.map((request) => request.artifact.id)).size).toBe(2);
+  await expect(
+    componentArtifactsForPublication(
+      {
+        latestQualifiedArtifact: unexpected,
+        acquireUpstreamArtifact: unexpected,
+      },
+      catalog(busybox),
+      producer,
+      { credentials, registry: "v2" },
+    ),
+  ).resolves.toEqual([]);
   await expect(
     componentArtifactsForPublication(
       {
@@ -582,21 +613,9 @@ test("v2 acquires an aliased image from its repository under the alias's compone
     (entry) => entry.name === "itzg/minecraft-server-java8",
   );
   if (java8 === undefined) throw new Error("Java 8 Minecraft image missing");
-  const requests: AcquireUpstreamArtifact[] = [];
-  const selected = await componentArtifactsForPublication(
-    {
-      latestQualifiedArtifact: async () => {
-        throw new DeliveryClientError(404, "NOT_FOUND", "No original");
-      },
-      acquireUpstreamArtifact: async (input) => {
-        requests.push(input);
-        return verified(input);
-      },
-    },
-    catalog(java8),
-    producer,
-    { credentials, registry: "v2" },
-  );
+  const { requests, selected } = await acquireWithActiveServices(java8, [
+    "minecraft-sjerred",
+  ]);
   expect(selected.length).toBeGreaterThan(0);
   for (const request of requests) {
     expect(request.artifact.component).toBe("image:minecraft-server-java8");

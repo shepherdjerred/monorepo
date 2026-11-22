@@ -339,9 +339,25 @@ it("uses safe legacy verified receipts once and leaves legacy and missing breakd
     ],
   };
   await recordSweep(store, sweep("legacy/run", legacy));
+  const coverage = [
+    {
+      subreddit: "MinecraftServer",
+      since: "2026-11-01T07:15:00.000Z",
+      until: "2026-11-01T07:30:00.000Z",
+      found: 5,
+      scored: 3,
+      skipped: 1,
+      pending: 1,
+      complete: false,
+    },
+  ];
   await recordSweep(
     store,
-    sweep("later/run", { ...legacy, completedAt: "2026-11-01T07:35:00.000Z" }),
+    sweep("later/run", {
+      ...legacy,
+      completedAt: "2026-11-01T07:35:00.000Z",
+      coverage,
+    }),
   );
   const failedAt = "2026-11-01T07:48:00.000Z";
   readSchedule.mockResolvedValueOnce({
@@ -356,7 +372,9 @@ it("uses safe legacy verified receipts once and leaves legacy and missing breakd
       },
     ],
   });
-  const data = await readRedditOutreachOverview(store, now, readSchedule);
+  const data = RedditOutreachOverviewSchema.parse(
+    await readRedditOutreachOverview(store, now, readSchedule),
+  );
   expect(data).toMatchObject({
     today: { draftsPrepared: null, verifiedReplies: 1, unresolvedReplies: 0 },
     runs: [
@@ -370,6 +388,7 @@ it("uses safe legacy verified receipts once and leaves legacy and missing breakd
       {
         id: "later/run",
         status: "recorded",
+        coverage,
         metrics: null,
         verifiedReceipts: [],
       },
@@ -385,4 +404,8 @@ it("uses safe legacy verified receipts once and leaves legacy and missing breakd
       },
     ],
   });
+  if (data.status !== "available") throw new Error("Expected coverage data");
+  expect(data.runs.find((run) => run.id === "legacy/run")).not.toHaveProperty(
+    "coverage",
+  );
 });

@@ -381,6 +381,42 @@ async function seedPipelineFailure(
   });
 }
 
+/** The commit Delivery never recorded a title or author for. */
+export const UNCAPTURED_POSITION = HISTORY.findIndex(
+  (commit) => commit.title === null,
+);
+/** What Woodpecker's stored pipeline says about that commit. */
+export const STORED_PIPELINE_TITLE = "fix(birmel): keep the queue on resume";
+export const STORED_PIPELINE_AUTHOR = "pipeline-author";
+
+/**
+ * Woodpecker's pipeline as the CI panel last stored it, for a commit that
+ * predates capture: its message and author are the only record of who pushed it.
+ */
+async function storePipeline(delivery: Delivery, pipelineNumber: number) {
+  await delivery.database.integrationSnapshot.create({
+    data: {
+      source: "woodpecker",
+      key: `1/${String(pipelineNumber)}`,
+      final: true,
+      fetchedAt: new Date(),
+      payload: {
+        number: pipelineNumber,
+        status: "success",
+        event: "push",
+        branch: "main",
+        author: STORED_PIPELINE_AUTHOR,
+        message: `${STORED_PIPELINE_TITLE}\n\nSeeded by the browser harness.`,
+        createdAt: new Date().toISOString(),
+        startedAt: null,
+        finishedAt: null,
+        url: `https://woodpecker.sjer.red/repos/1/pipeline/${String(pipelineNumber)}`,
+        workflows: [],
+      },
+    },
+  });
+}
+
 /**
  * Publish enough older commits that the commit list pages. Call this before
  * every other seed, so these are the oldest commits and builds the harness has
@@ -433,7 +469,8 @@ export async function seedCommitHistory(delivery: Delivery) {
       testExecutor,
     );
     await publishOthers(delivery, position);
-    if (commit.title !== null)
+    if (commit.title === null) await storePipeline(delivery, pipelineNumber);
+    else
       await delivery.recordSourceCommit({
         sourceRevision,
         message: `${commit.title}\n\nSeeded by the browser harness.`,

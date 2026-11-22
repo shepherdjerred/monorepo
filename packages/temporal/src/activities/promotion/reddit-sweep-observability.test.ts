@@ -23,6 +23,7 @@ import { claimRedditReply } from "./reddit-outreach/ledger.ts";
 import {
   readRedditSweep,
   readRedditSweepDay,
+  readRedditSweepPostPage,
   recordSweep,
 } from "./reddit-outreach/sweep-audit.ts";
 import { sweepRedditOutreach } from "./reddit-sweep.ts";
@@ -47,7 +48,7 @@ const qualification: RedditQualification = {
   explicitlySeekingServer: true,
   communityAllowsReply: true,
   hardConstraintsSatisfied: true,
-  reason: "Private assessment detail",
+  reason: "Supported server requirements",
 };
 
 function listing(id: string): RedditFeedPost {
@@ -149,6 +150,7 @@ beforeEach(() => {
               explicitlySeekingServer: false,
               communityAllowsReply: false,
               hardConstraintsSatisfied: false,
+              reason: "Clear requirements are missing",
             }
           : post.id === "declined"
             ? { ...qualification, decision: "no-match" }
@@ -170,6 +172,33 @@ afterEach(() => {
   vi.clearAllMocks();
   vi.useRealTimers();
 });
+
+async function expectRecordedPostDetails(
+  store: ReturnType<typeof promotionStore>,
+  occurrenceId: string,
+) {
+  const page = await readRedditSweepPostPage(store, occurrenceId, 0);
+  expect(page).toMatchObject({ status: "available", nextOffset: null });
+  if (page.status !== "available") throw new Error("Expected sweep posts");
+  expect(page.posts).toHaveLength(11);
+  expect(page.posts.find(({ id }) => id === "gates")).toMatchObject({
+    score: 0.8,
+    result: "no-match",
+    reason: "Clear requirements are missing",
+  });
+  expect(page.posts.find(({ id }) => id === "ineligible")).toMatchObject({
+    title: listing("ineligible").title,
+    score: null,
+    result: "skipped",
+    reason: "listing-ineligible",
+  });
+  expect(page.posts.find(({ id }) => id === "deferred")).toMatchObject({
+    score: 0.9,
+    result: "publish-deferred",
+  });
+  expect(page.posts[0]).not.toHaveProperty("author");
+  expect(page.posts[0]).not.toHaveProperty("body");
+}
 
 describe("Reddit outreach sweep observability", () => {
   it("counts production drafts and overlapping typed rejection gates", async () => {
@@ -217,6 +246,16 @@ describe("Reddit outreach sweep observability", () => {
       assessed: 7,
       drafts: [],
       stopReason: "publish-deferred",
+      coverage: [
+        {
+          subreddit,
+          found: 11,
+          scored: 6,
+          skipped: 4,
+          pending: 1,
+          complete: false,
+        },
+      ],
       metrics: {
         draftsPrepared: 4,
         reasons: {
@@ -240,18 +279,31 @@ describe("Reddit outreach sweep observability", () => {
     expect(await readRedditSweepDay(store, promotionSpendDay(now))).toEqual([
       summary,
     ]);
+    expect(summary).not.toHaveProperty("posts");
+    await expectRecordedPostDetails(store, summary.occurrenceId);
   });
 
   it("records when community rules prevent thread review", async () => {
+    const pinned = { ...listing("pinned"), sticky: true };
     const browser = browserFixture(
-      [listing("rejected")],
+      [pinned, listing("rejected")],
       "Don’t advertise on another community member’s post.",
     );
     const summary = await runSweep();
     expect(summary.metrics).toEqual({
       draftsPrepared: 0,
-      reasons: { "rules-exclude-replies": 1 },
+      reasons: { "listing-ineligible": 1, "rules-exclude-replies": 1 },
     });
+    expect(summary.coverage).toMatchObject([
+      {
+        subreddit,
+        found: 2,
+        scored: 0,
+        skipped: 2,
+        pending: 0,
+        complete: true,
+      },
+    ]);
     expect(browser.readThread).not.toHaveBeenCalled();
     expect(executeRedditOutreachReply).not.toHaveBeenCalled();
   });
@@ -296,6 +348,9 @@ describe("Reddit outreach sweep observability", () => {
     expect(executeRedditOutreachReply).not.toHaveBeenCalled();
     expect(await readRedditSweep(store, summary.occurrenceId)).toEqual(summary);
     expect(await readRedditSweepDay(store, promotionSpendDay(now))).toEqual([]);
+    expect(
+      await readRedditSweepPostPage(store, summary.occurrenceId, 0),
+    ).toEqual({ status: "unavailable" });
   });
 
   it("adds a safe browser failure category on a Reddit rate limit", async () => {
@@ -330,5 +385,28 @@ describe("Reddit outreach sweep observability", () => {
       summary,
     ]);
     expect(await readRedditSweep(store, summary.occurrenceId)).toEqual(summary);
+  });
+});
+
+it("retains scores and unprocessed posts when drafting fails", async () => {
+  browserFixture([listing("first"), listing("second")]);
+  vi.mocked(draftRedditInvite).mockRejectedValueOnce(
+    new Error("Private draft failure"),
+  );
+  const summary = await runSweep();
+  expect(summary.coverage).toMatchObject([
+    { found: 2, scored: 0, skipped: 0, pending: 2, complete: false },
+  ]);
+  const page = await readRedditSweepPostPage(
+    promotionStore(),
+    summary.occurrenceId,
+    0,
+  );
+  expect(page).toMatchObject({
+    status: "available",
+    posts: [
+      { id: "first", score: 0.9, result: "pending" },
+      { id: "second", score: null, result: "pending" },
+    ],
   });
 });

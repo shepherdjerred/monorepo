@@ -341,6 +341,64 @@ describe("commit titles and authors", () => {
     });
   });
 
+  test("a commit with no record offers the stored Woodpecker pipeline's message and author as a stand-in", async () => {
+    const revision = sha(40);
+    const stored = await cluster.database.build.findFirstOrThrow({
+      where: { sourceRevision: revision },
+    });
+    const number = stored.pipelineNumber ?? 0;
+    const key = `1/${String(number)}`;
+    await cluster.database.integrationSnapshot.create({
+      data: {
+        source: "woodpecker",
+        key,
+        final: true,
+        fetchedAt: new Date(),
+        payload: {
+          number,
+          status: "failed",
+          event: "push",
+          branch: "main",
+          author: " pipeline-author ",
+          message: "fix(scout): stored by Woodpecker\n\nBody.",
+          createdAt: new Date().toISOString(),
+          startedAt: null,
+          finishedAt: null,
+          url: `https://woodpecker.sjer.red/repos/1/pipeline/${String(number)}`,
+          workflows: [],
+        },
+      },
+    });
+    try {
+      // Delivery's own record stays empty: the stand-in is labelled apart.
+      const status = await commit(revision);
+      expect(status).toMatchObject({ title: null, author: null });
+      expect(status.pipeline).toEqual({
+        number,
+        title: "fix(scout): stored by Woodpecker",
+        author: "pipeline-author",
+      });
+      // With its own record, the commit needs no stand-in.
+      await delivery.recordSourceCommit({
+        sourceRevision: revision,
+        message: "feat(scout): recorded",
+        author: "recorded-author",
+        pipelineNumber: number,
+        ...(await qualificationOf(40, "request-standin")),
+      });
+      const recorded = await commit(revision);
+      expect(recorded).toMatchObject({
+        title: "feat(scout): recorded",
+        author: "recorded-author",
+      });
+      expect(recorded.pipeline).toBeUndefined();
+    } finally {
+      await cluster.database.integrationSnapshot.delete({
+        where: { source_key: { source: "woodpecker", key } },
+      });
+    }
+  });
+
   test("the first record wins and repeats change nothing", async () => {
     const revision = sha(20);
     const first = await qualificationOf(20, "request-first");

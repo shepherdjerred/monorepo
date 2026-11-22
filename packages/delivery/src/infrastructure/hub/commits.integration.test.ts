@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { commitStatus } from "#infrastructure/hub/commits.ts";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
-import { testExecutor, testPublisher } from "#testing/seed.ts";
+import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 
 /**
  * A commit whose CI failed is not built on its own when a later main commit
@@ -89,11 +89,21 @@ async function pushed(
   });
 }
 
-/** A carried failure as a commit read reports it, named by its service's title. */
-const carriedBy = (buildId: string, includedIn: string) => ({
+/**
+ * A carried failure as a commit read reports it, named by its service's
+ * title. With `released`, it also carries the standing of the release that
+ * ships it.
+ */
+const carriedBy = (buildId: string, includedIn: string, released = false) => ({
   buildId,
   includedIn,
   serviceTitle: expect.any(String) as unknown,
+  ...(released
+    ? {
+        releaseVerdict: expect.any(String) as unknown,
+        releaseRevision: expect.any(Number) as unknown,
+      }
+    : {}),
 });
 
 describe("commit status", () => {
@@ -130,10 +140,15 @@ describe("commit status", () => {
     const failed = await publish("arcade", sha("c"), 800, "failed");
     await publish("arcade", sha("d"), 801, "verified");
     const status = await commitStatus(context.cluster.database, sha("c"));
-    expect(status.carriedFailures).toEqual([carriedBy(failed, sha("d"))]);
+    expect(status.carriedFailures).toEqual([carriedBy(failed, sha("d"), true)]);
     expect(status.changed.map((entry) => entry.includedIn)).toEqual([sha("d")]);
     const [carried] = status.changed;
     expect(carried?.service.id).toBe("arcade");
+    // The failure says how its release stands, as the carrier's row does.
+    expect(status.carriedFailures?.[0]).toMatchObject({
+      releaseVerdict: carried?.verdict,
+      releaseRevision: carried?.versionSet?.revision,
+    });
     expect(carried?.environments.map((entry) => entry.environmentId)).toEqual([
       context.fixture.environment.id,
     ]);
@@ -153,7 +168,7 @@ describe("commit status", () => {
     await publish("arcade", sha("3"), 902, "verified");
     await context.delivery.qualify(skipped, "verified", testExecutor);
     const status = await commitStatus(context.cluster.database, sha("1"));
-    expect(status.carriedFailures).toEqual([carriedBy(failed, sha("2"))]);
+    expect(status.carriedFailures).toEqual([carriedBy(failed, sha("2"), true)]);
     const [carried] = status.changed;
     expect(status.changed).toHaveLength(1);
     expect(carried?.includedIn).toBe(sha("3"));
@@ -277,5 +292,49 @@ describe("commit status", () => {
       Math.max(...revisions.map((row) => row.revision)),
     );
     expect(status.environments.map((group) => group.total)).toEqual([1]);
+  });
+});
+
+describe("carried failures and their releases", () => {
+  test("a carried failure names the carrying release's failure, so the carrier's row cannot contradict it", async () => {
+    const failed = await publish("arcade", sha("a"), 1200, "failed");
+    await publish("arcade", sha("b"), 1201, "verified");
+    const before = await commitStatus(context.cluster.database, sha("a"));
+    const set = before.changed[0]?.versionSet;
+    if (set === null || set === undefined)
+      throw new Error("The carrying commit composed a set");
+    const deployment = await context.delivery.createDeployment(
+      {
+        requestId: "carrier/deploy",
+        environmentId: context.fixture.environment.id,
+        versionSetRevisionId: set.id,
+        expectedGeneration: context.fixture.environment.generation,
+        kind: "deploy",
+      },
+      testOperator,
+    );
+    await context.delivery.claim(deployment.id, testExecutor);
+    await context.delivery.finish(
+      deployment.id,
+      {
+        status: "failed",
+        message: "The rollout did not become healthy",
+        recoveryRequired: false,
+        evidence: [],
+      },
+      testExecutor,
+    );
+    const status = await commitStatus(context.cluster.database, sha("a"));
+    expect(status.carriedFailures).toEqual([
+      {
+        ...carriedBy(failed, sha("b")),
+        releaseVerdict: "failed",
+        releaseRevision: set.revision,
+      },
+    ]);
+    // The carrier's own row agrees: its release failed.
+    const carrier = await commitStatus(context.cluster.database, sha("b"));
+    expect(carrier.verdict).toBe("failed");
+    expect(status.verdict).toBe("failed");
   });
 });

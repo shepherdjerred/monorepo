@@ -2,11 +2,16 @@ import { timingSafeEqual } from "node:crypto";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { z } from "zod/v4";
 import type { PromotionHistoryEntry } from "@shepherdjerred/ops-model/promotion/model.ts";
+import {
+  REDDIT_OUTREACH_POST_LIMIT,
+  type RedditOutreachPostPage,
+} from "@shepherdjerred/ops-model/promotion/reddit-outreach.ts";
 import { reportReceiptStore } from "#activities/reports/report-object-store.ts";
 import {
   promotionStore,
   promotionStoragePrefix,
 } from "#activities/promotion/store.ts";
+import { readRedditSweepPostPage } from "#activities/promotion/reddit-outreach/sweep-audit.ts";
 import { readProductionPromotionStatus } from "./status.ts";
 import { readPromotionPlanningObservation } from "./status-schedule.ts";
 import { readRedditOutreachOverview } from "./reddit-outreach-status.ts";
@@ -17,6 +22,18 @@ const Query = z.object({
   since: z.iso.datetime().optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+const RedditPostsQuery = z.strictObject({
+  runId: z
+    .string()
+    .max(300)
+    .regex(/^[\w.:-]+\/[\w.:-]+$/u),
+  offset: z
+    .string()
+    .regex(/^\d{1,4}$/u)
+    .transform(Number)
+    .pipe(z.number().int().min(0).max(REDDIT_OUTREACH_POST_LIMIT))
+    .default(0),
 });
 
 export function startPromotionStatusServer(token: string) {
@@ -44,7 +61,9 @@ export function startPromotionStatusServer(token: string) {
   return Bun.serve({
     hostname: "0.0.0.0",
     port: 7343,
-    fetch: promotionStatusFetch(token, read),
+    fetch: promotionStatusFetch(token, read, async (runId, offset) =>
+      readRedditSweepPostPage(store, runId, offset),
+    ),
   });
 }
 
@@ -53,6 +72,11 @@ export function promotionStatusFetch(
   read: () => Promise<
     Awaited<ReturnType<typeof readProductionPromotionStatus>>
   >,
+  readPosts: (
+    runId: string,
+    offset: number,
+  ) => Promise<RedditOutreachPostPage> = async (runId, offset) =>
+    readRedditSweepPostPage(promotionStore(), runId, offset),
 ) {
   return async (request: Request): Promise<Response> => {
     const authorization = request.headers.get("authorization") ?? "";
@@ -62,11 +86,19 @@ export function promotionStatusFetch(
       return new Response("Unauthorized", { status: 401 });
     if (request.method !== "GET")
       return new Response("Read only", { status: 405 });
-    const url = new URL(request.url),
-      query = Query.safeParse(Object.fromEntries(url.searchParams));
-    if (!query.success)
-      return Response.json({ error: "Invalid query" }, { status: 400 });
+    const url = new URL(request.url);
+    const params = Object.fromEntries(url.searchParams);
     try {
+      if (url.pathname === "/api/v1/promotion/reddit-posts") {
+        const query = RedditPostsQuery.safeParse(params);
+        return !query.success ||
+          url.searchParams.size !== Object.keys(params).length
+          ? Response.json({ error: "Invalid query" }, { status: 400 })
+          : Response.json(await readPosts(query.data.runId, query.data.offset));
+      }
+      const query = Query.safeParse(params);
+      if (!query.success)
+        return Response.json({ error: "Invalid query" }, { status: 400 });
       const data = await read();
       if (url.pathname === "/api/v1/promotion")
         return Response.json(data.overview);

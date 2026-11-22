@@ -61,7 +61,6 @@ import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/k
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/bugsink.ts";
 import { createPhoenixApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/phoenix.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/tasknotes.ts";
-import { createRelayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/relay.ts";
 import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/temporal.ts";
 import { createServiceProbesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/service-probes.ts";
 import { createTrmnlDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/trmnl-dashboard.ts";
@@ -174,7 +173,6 @@ export async function createAppsChart(app: App) {
   createBugsinkApp(chart);
   createPhoenixApp(chart);
   createTasknotesApp(chart);
-  createRelayApp(chart);
   createTemporalApp(chart);
   if (deliveryExecutorActivation() !== undefined)
     createDeliveryControlPlaneApp(chart);
