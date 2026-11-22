@@ -12,6 +12,7 @@
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
   },
   "devDependencies": {
+    "@shepherdjerred/console-ui": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@tsconfig/node-lts": "^24.0.1",
     "@tsconfig/recommended": "^1.0.13",
