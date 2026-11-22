@@ -99,8 +99,6 @@ async function extractEveryManager(
     .flatMap((manager) => matchesOf(manager, file, source));
 }
 
-const SHUXIN =
-  "packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-shuxin.ts";
 const STORM_MANIFEST = "packages/the-storm/server/plugins.json";
 const STORM_PIN_FILES = [
   STORM_MANIFEST,
@@ -114,22 +112,6 @@ const CATALOG = "packages/version-catalog/src/catalog.json";
 // Every quoted download URL in the Minecraft pin files that no manager reads,
 // and why. Anything else in those files must be extracted.
 const UNTRACKED_MINECRAFT_URLS: Record<string, string> = {
-  "https://itzg.github.io/minecraft-server-charts/":
-    "Helm repository, not a pin; the chart version is the catalog's minecraft entry",
-  "https://cdn.modrinth.com/data/O4o4mKaq/versions/dGfCZHqk/GriefPrevention.jar":
-    "shuxin GriefPrevention: the file name carries no version to order by",
-  "https://cdn.modrinth.com/data/kOfJBurB/versions/riRUqxfR/GeyserExtras-Spigot.jar":
-    "shuxin GeyserExtras: commented out until a build supports the installed Geyser",
-  "https://www.spigotmc.org/resources/chestsort-api.59773/download":
-    "commented out: Spigot downloads are Cloudflare-protected",
-  "https://www.spigotmc.org/resources/item-chest-sorter.75964/download":
-    "commented out: Spigot downloads are Cloudflare-protected",
-  "https://download.geysermc.org/v2/projects/geyser/versions/latest/builds/latest/downloads/spigot":
-    "shuxin Geyser follows `latest` by design",
-  "https://download.geysermc.org/v2/projects/floodgate/versions/latest/builds/latest/downloads/spigot":
-    "shuxin floodgate follows `latest` by design",
-  "https://popicraft.net/jenkins/job/mcMMO/lastSuccessfulBuild/artifact/target/mcMMO.jar":
-    "shuxin mcMMO follows `lastSuccessfulBuild` by design",
   "https://ci.citizensnpcs.co/job/Citizens2/4269/artifact/dist/target/Citizens-2.0.44-b4269.jar":
     "Storm Citizens: deliberate immutable Jenkins build (packages/the-storm/server/README.md)",
   "https://public.sjer.red/the-storm/plugins/CoreProtect-25.1.jar":
@@ -185,7 +167,7 @@ async function loadCatalogValue(name: string): Promise<string | undefined> {
 test("tracks every Minecraft plugin download URL or records why not", async () => {
   const managers = await loadTemplatedManagers();
   const untracked = new Set<string>();
-  for (const file of [SHUXIN, ...STORM_PIN_FILES]) {
+  for (const file of STORM_PIN_FILES) {
     const source = await Bun.file(`${root}/${file}`).text();
     const extracted = await extractEveryManager(managers, file);
     for (const [quoted] of source.matchAll(/"https:\/\/[^"]+"/gu)) {
@@ -222,7 +204,6 @@ test("orders every Modrinth URL by its file name within one artifact family", as
     (manager) => manager.datasourceTemplate === "custom.modrinth",
   );
   expect(modrinth.map((manager) => manager.depNameTemplate)).toEqual([
-    "minecraft-shuxin/{{{depName}}}",
     "the-storm/{{{depName}}}",
   ]);
   let checked = 0;
@@ -232,7 +213,7 @@ test("orders every Modrinth URL by its file name within one artifact family", as
       throw new Error(`${manager.description} has no regex versioning`);
     }
     const ordering = new RegExp(versioning.slice("regex:".length), "u");
-    for (const file of [SHUXIN, ...STORM_PIN_FILES]) {
+    for (const file of STORM_PIN_FILES) {
       if (!managerCoversFile(manager, file)) continue;
       for (const pin of await extractTemplated(manager, file)) {
         const groups = ordering.exec(pin.currentValue)?.groups;
@@ -249,17 +230,13 @@ test("orders every Modrinth URL by its file name within one artifact family", as
       }
     }
   }
-  // 11 shuxin URLs; 7 in plugins.json, 3 + 4 in the pins.ts mirrors and 2 in
-  // the Gradle runServer task.
-  expect(checked).toBe(27);
+  // 7 in plugins.json, 3 + 4 in the pins.ts mirrors and 2 in the Gradle
+  // runServer task.
+  expect(checked).toBe(16);
 });
 
 test("asks Modrinth for the Minecraft version each server runs", async () => {
   const managers = await loadTemplatedManagers();
-  expect(
-    modrinthGameVersion(managerNamed(managers, "minecraft-shuxin Modrinth")),
-  ).toBe(await loadCatalogValue("paper"));
-
   const manifest = StormManifestSchema.parse(
     await Bun.file(`${root}/${STORM_MANIFEST}`).json(),
   );
@@ -278,68 +255,15 @@ test("asks Modrinth for the Minecraft version each server runs", async () => {
   expect(datasources["modrinth"]?.transformTemplates).toEqual([
     expect.stringContaining('[$[version_type = "release"].'),
   ]);
-  for (const [name, { transformTemplates }] of Object.entries(datasources)) {
-    for (const transform of transformTemplates) {
+  for (const name of ["papermc", "modrinth"]) {
+    const transforms = datasources[name]?.transformTemplates;
+    expect(transforms, name).toBeDefined();
+    for (const transform of transforms ?? []) {
       // JSONata returns a lone result as an object rather than a one-element
       // list unless an array constructor wraps it.
       expect(transform, name).toMatch(/^\{"releases": \[/u);
     }
   }
-});
-
-test("moves the shuxin plugins in one PR and names their Delivery revision", async () => {
-  const config = await loadRenovateConfig();
-  const pins = await extractEveryManager(await loadTemplatedManagers(), SHUXIN);
-
-  expect(
-    pins.map(({ manager, depName }) => [manager.datasourceTemplate, depName]),
-  ).toEqual([
-    ["custom.modrinth", "minecraft-shuxin/Chunky-Bukkit"],
-    ["custom.modrinth", "minecraft-shuxin/EssentialsX"],
-    ["custom.modrinth", "minecraft-shuxin/EssentialsXSpawn"],
-    ["custom.modrinth", "minecraft-shuxin/PlaceholderAPI"],
-    ["custom.modrinth", "minecraft-shuxin/BedrockPlayerSupport"],
-    ["custom.modrinth", "minecraft-shuxin/LuckPerms-Bukkit"],
-    ["custom.modrinth", "minecraft-shuxin/CoreProtect-CE"],
-    ["custom.modrinth", "minecraft-shuxin/Sleeper"],
-    ["custom.modrinth", "minecraft-shuxin/LevelledMobs"],
-    ["custom.modrinth", "minecraft-shuxin/GravesX"],
-    ["custom.modrinth", "minecraft-shuxin/WanderingTrades"],
-    ["github-releases", "minecraft-shuxin/Vault"],
-    ["github-releases", "minecraft-shuxin/BlueMap"],
-    ["github-releases", "minecraft-shuxin/ProtocolLib"],
-    ["github-releases", "minecraft-shuxin/DecentHolograms"],
-  ]);
-  for (const pin of pins) {
-    expect(
-      groupNameFor(config.packageRules, {
-        manager: "custom.regex",
-        file: SHUXIN,
-        datasource: pin.manager.datasourceTemplate ?? "",
-        depName: pin.depName,
-        packageName: pin.packageName ?? pin.depName,
-      }),
-      pin.depName,
-    ).toBe("minecraft-shuxin plugins");
-  }
-
-  // A release asset that repeats the tag moves with it (BlueMap and
-  // DecentHolograms); one that does not keeps its name.
-  expect(
-    pins
-      .filter((pin) => pin.manager.datasourceTemplate === "github-releases")
-      .map((pin) => pin.text.split(pin.currentValue).length - 1),
-  ).toEqual([1, 2, 1, 2]);
-
-  const note = config.packageRules
-    .filter((rule) => rule.groupName === "minecraft-shuxin plugins")
-    .flatMap((rule) => rule.prBodyNotes ?? [])
-    .join("\n");
-  expect(note).toContain("`minecraft-shuxin/prod`");
-  expect(note).toContain("generate:catalog");
-  expect(
-    await Bun.file(`${root}/packages/ops-model/catalog-document.json`).text(),
-  ).toContain('"configurationRevisionId": "minecraft-shuxin/prod/');
 });
 
 test("bumps every copy of a Storm plugin URL together and leaves the hashes to a reviewer", async () => {

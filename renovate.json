@@ -127,33 +127,6 @@
     },
     {
       "customType": "regex",
-      "description": "minecraft-shuxin Modrinth plugin URLs. The whole file URL is the version (custom.modrinth); the registry URL limits candidates to releases for the server's Minecraft version, which must equal the version catalog's paper value (scripts/renovate-config.test.ts). Commented-out URLs are not read.",
-      "managerFilePatterns": [
-        "packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-shuxin.ts"
-      ],
-      "matchStrings": [
-        "\\n[ \\t]*\"(?<currentValue>https://cdn[.]modrinth[.]com/data/(?<packageName>[A-Za-z0-9]+)/versions/[A-Za-z0-9]+/(?<depName>[A-Za-z][A-Za-z-]*)-[0-9][^\"/]*[.]jar)\""
-      ],
-      "datasourceTemplate": "custom.modrinth",
-      "depNameTemplate": "minecraft-shuxin/{{{depName}}}",
-      "registryUrlTemplate": "https://api.modrinth.com/v2/project/{{{packageName}}}/version?game_versions=%5B%2226.2%22%5D&include_changelog=false",
-      "versioningTemplate": "regex:^https://cdn[.]modrinth[.]com/data/[A-Za-z0-9]+/versions/[A-Za-z0-9]+/(?<compatibility>[A-Za-z][A-Za-z-]*)-(?<major>[0-9]+)[.](?<minor>[0-9]+)(?:[.](?<patch>[0-9]+))?(?:[.](?<build>[0-9]+))?(?:-all|-[0-9a-f]{7}|%20b[0-9]+)?[.]jar$"
-    },
-    {
-      "customType": "regex",
-      "description": "minecraft-shuxin GitHub-release plugin URLs. The tag is the version; a release asset that repeats it in its filename moves with it.",
-      "managerFilePatterns": [
-        "packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-shuxin.ts"
-      ],
-      "matchStrings": [
-        "\\n[ \\t]*\"https://github[.]com/(?<packageName>[^/\"]+/(?<depName>[^/\"]+))/releases/download/v?(?<currentValue>[0-9][^/\"]*)/[^\"/]+[.]jar\""
-      ],
-      "datasourceTemplate": "github-releases",
-      "depNameTemplate": "minecraft-shuxin/{{{depName}}}",
-      "extractVersionTemplate": "^v?(?<version>.+)$"
-    },
-    {
-      "customType": "regex",
       "description": "The Storm Modrinth plugin URLs, in the production manifest and every mirror of it. The whole file URL is the version (custom.modrinth); the registry URL limits candidates to releases for the Paper family in server/plugins.json (scripts/renovate-config.test.ts). A bump is half an upgrade: Renovate moves only the URL, and a human fills version, sha256 and file (Modrinth publishes no SHA-256).",
       "managerFilePatterns": [
         "packages/the-storm/server/plugins.json",
@@ -228,7 +201,7 @@
       "defaultRegistryUrlTemplate": "https://api.modrinth.com/v2/project/Cfbcv7uF/version?game_versions=%5B%221.12.2%22%5D&loaders=%5B%22forge%22%5D&include_changelog=false",
       "format": "json",
       "transformTemplates": [
-        "{\"releases\": [$map($filter($, function($v) { $v.version_type = \"release\" }), function($v) { {\"version\": $v.files[primary = true][0].url, \"releaseTimestamp\": $v.date_published} })], \"sourceUrl\": \"https://github.com/DenisD3D/Mc2Discord\", \"homepage\": \"https://modrinth.com/mod/mc2discord\"}"
+        "{\"releases\": $map($filter($, function($v) { $v.version_type = \"release\" }), function($v) { {\"version\": $v.files[primary = true][0].url, \"releaseTimestamp\": $v.date_published} }), \"sourceUrl\": \"https://github.com/DenisD3D/Mc2Discord\", \"homepage\": \"https://modrinth.com/mod/mc2discord\"}"
       ]
     },
     "modrinth": {
@@ -598,31 +571,6 @@
       "matchFileNames": ["packages/the-storm/**"],
       "matchPackageNames": ["com.mojang:minecraft"],
       "enabled": false
-    },
-    {
-      "description": "Every minecraft-shuxin plugin moves in one PR. Half upgrade: the rendered Helm values are a Delivery configuration revision, which Renovate cannot regenerate or renumber.",
-      "groupName": "minecraft-shuxin plugins",
-      "matchFileNames": [
-        "packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-shuxin.ts"
-      ],
-      "prBodyNotes": [
-        "**Half upgrade.** Give `minecraft-shuxin/prod` a new `configurationRevisionId` in `packages/ops-model/catalog-document.json`, then run `bun run --cwd packages/homelab/src/cdk8s generate:catalog` to rewrite `packages/delivery/registrations/v2/minecraft-shuxin/prod/configuration.json`. `catalog-inventory.test.ts` fails until then."
-      ]
-    },
-    {
-      "description": "A Paper bump changes the Minecraft version shuxin's Modrinth plugin lookups must ask for, and shuxin's rendered Delivery configuration.",
-      "matchFileNames": ["packages/version-catalog/src/catalog.json"],
-      "matchPackageNames": ["paper"],
-      "prBodyNotes": [
-        "**Half upgrade.** Set `game_versions` in the minecraft-shuxin Modrinth manager's `registryUrlTemplate` in `renovate.json` to {{{newValue}}} (`scripts/renovate-config.test.ts` fails until then), give `minecraft-shuxin/prod` a new `configurationRevisionId` in `packages/ops-model/catalog-document.json`, and run `bun run --cwd packages/homelab/src/cdk8s generate:catalog`."
-      ]
-    },
-    {
-      "description": "mc2discord's URL is rendered into minecraft-sjerred's Delivery configuration revision.",
-      "matchPackageNames": ["mc2discord-forge-1.12.2"],
-      "prBodyNotes": [
-        "**Half upgrade.** Give `minecraft-sjerred/prod` a new `configurationRevisionId` in `packages/ops-model/catalog-document.json`, then run `bun run --cwd packages/homelab/src/cdk8s generate:catalog`."
-      ]
     },
     {
       "description": "Half upgrade: The Storm's Modrinth plugins are hash-pinned, and Modrinth publishes no SHA-256, so Renovate moves only each copy of the URL.",

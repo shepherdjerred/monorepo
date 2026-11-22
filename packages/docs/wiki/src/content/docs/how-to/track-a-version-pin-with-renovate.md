@@ -146,9 +146,6 @@ name.
    Bukkit one.
 2. Put the URL where a Modrinth manager reads it. Each manager asks Modrinth
    for builds of one Minecraft version only.
-   - minecraft-shuxin: `pluginUrls` in
-     [`minecraft-shuxin.ts`](packages/homelab/src/cdk8s/src/resources/argo-applications/games/minecraft-shuxin.ts).
-     It asks for the version catalog's `paper` value.
    - The Storm: [`server/plugins.json`](packages/the-storm/server/plugins.json)
      and its copies in the e2e harness, [`mc-harness`](packages/mc-harness/src/pins.ts)
      and the Gradle `runServer` task. It asks for the Paper family in
@@ -205,19 +202,6 @@ publishes no SHA-256, so the rest is manual.
    ```
 
 The image build checks `sha256` when it downloads each plugin.
-
-### A minecraft-shuxin plugin group
-
-The plugins render into a Delivery configuration revision, which Renovate
-cannot renumber.
-
-1. Give `minecraft-shuxin/prod` a new `configurationRevisionId` in
-   [`catalog-document.json`](packages/ops-model/catalog-document.json).
-2. Regenerate the revision files:
-
-   ```bash
-   bun run --cwd packages/homelab/src/cdk8s generate:catalog
-   ```
 
 ## Related
 
