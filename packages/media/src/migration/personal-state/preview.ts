@@ -61,6 +61,54 @@ function reviewedSeerrClaims(
   };
 }
 
+async function captureBindings(
+  tx: Prisma.TransactionClient,
+  capture: {
+    id: string;
+    sourceKind: string;
+    sourceInstanceId: string;
+    manifestHash: string;
+  },
+  requesterIds: readonly string[],
+  options: { machineId: string; includePlexAccountId: boolean },
+) {
+  const scoped: PersonalClaimBinding[] = [];
+  for (const requesterSourceId of requesterIds) {
+    const binding = await tx.legacyRequesterBinding.findFirst({
+      where: {
+        sourceKind: capture.sourceKind,
+        sourceInstanceId: capture.sourceInstanceId,
+        requesterSourceId,
+      },
+      orderBy: { revision: "desc" },
+      include: { user: { include: { plexIdentity: true } } },
+    });
+    if (binding === null) continue;
+    const evidence = await requesterEvidence(tx, capture.id, requesterSourceId);
+    const valid =
+      binding.captureId === capture.id &&
+      binding.captureHash === capture.manifestHash &&
+      binding.requesterEvidenceHash === evidence.requesterEvidenceHash &&
+      binding.user.plexIdentity !== null &&
+      eligibleBindingTarget(binding.user, options.machineId) &&
+      binding.user.plexIdentity.permittedSectionIds.length > 0 &&
+      snapshotHash(durableBindingIdentity(bindingIdentity(binding.user))) ===
+        snapshotHash(durableBindingIdentity(binding.identitySnapshot));
+    scoped.push({
+      requesterSourceId,
+      id: binding.id,
+      revision: binding.revision,
+      userId: binding.userId,
+      valid,
+      permittedMediaKinds: binding.user.plexIdentity?.permittedMediaKinds ?? [],
+      ...(options.includePlexAccountId
+        ? { plexAccountId: binding.user.plexAccountId }
+        : {}),
+    });
+  }
+  return scoped;
+}
+
 export async function previewPersonalMigration(
   tx: Prisma.TransactionClient,
   input: z.infer<typeof PersonalMigrationInputSchema>,
@@ -120,7 +168,6 @@ export async function previewPersonalMigration(
   const claims: PersonalMigrationClaim[] = [];
   const bindings: PersonalClaimBinding[] = [];
   for (const { row, capture } of parsed) {
-    const scoped: PersonalClaimBinding[] = [];
     const requesterIds = [
       ...new Set(
         capture.snapshot.records.flatMap((record) =>
@@ -132,37 +179,10 @@ export async function previewPersonalMigration(
       throw new Error(
         "Migration exceeds bounded household requester inventory",
       );
-    for (const requesterSourceId of requesterIds) {
-      const binding = await tx.legacyRequesterBinding.findFirst({
-        where: {
-          sourceKind: row.sourceKind,
-          sourceInstanceId: row.sourceInstanceId,
-          requesterSourceId,
-        },
-        orderBy: { revision: "desc" },
-        include: { user: { include: { plexIdentity: true } } },
-      });
-      if (binding === null) continue;
-      const evidence = await requesterEvidence(tx, row.id, requesterSourceId);
-      const valid =
-        binding.captureId === row.id &&
-        binding.captureHash === row.manifestHash &&
-        binding.requesterEvidenceHash === evidence.requesterEvidenceHash &&
-        binding.user.plexIdentity !== null &&
-        eligibleBindingTarget(binding.user, machineId) &&
-        binding.user.plexIdentity.permittedSectionIds.length > 0 &&
-        snapshotHash(durableBindingIdentity(bindingIdentity(binding.user))) ===
-          snapshotHash(durableBindingIdentity(binding.identitySnapshot));
-      scoped.push({
-        requesterSourceId,
-        id: binding.id,
-        revision: binding.revision,
-        userId: binding.userId,
-        valid,
-        permittedMediaKinds:
-          binding.user.plexIdentity?.permittedMediaKinds ?? [],
-      });
-    }
+    const scoped = await captureBindings(tx, row, requesterIds, {
+      machineId,
+      includePlexAccountId: input.deferUnboundRequesters === true,
+    });
     bindings.push(...scoped);
     claims.push(
       ...personalClaims({
@@ -173,6 +193,7 @@ export async function previewPersonalMigration(
         movieEditions: input.movieEditions,
         existing,
         historyOnly: input.historyOnly,
+        deferUnboundRequesters: input.deferUnboundRequesters,
       }),
     );
   }
@@ -188,6 +209,14 @@ export async function previewPersonalMigration(
   );
   if (claims.length > 1000)
     throw new Error("Personal migration exceeds 1000 bounded source requests");
+  const review = reviewedSeerrClaims(claims, input);
+  // Another review can withdraw a parked request without changing native state.
+  const approvals = await tx.seerrRequestApproval.findMany({
+    where: {
+      provenanceKey: { in: review.claims.map((claim) => claim.provenanceKey) },
+    },
+    orderBy: { provenanceKey: "asc" },
+  });
   const state = {
     runtime: await tx.mediaRuntimeState.findUniqueOrThrow({
       where: { id: "singleton" },
@@ -200,8 +229,8 @@ export async function previewPersonalMigration(
       sizeBytes: asset.sizeBytes.toString(),
     })),
     bindings,
+    ...(approvals.length > 0 ? { approvals } : {}),
   };
-  const review = reviewedSeerrClaims(claims, input);
   const preview = {
     schemaVersion: 1,
     captures: captures.map((row) => ({

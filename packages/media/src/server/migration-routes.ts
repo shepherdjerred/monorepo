@@ -22,6 +22,7 @@ export type MigrationAdministration = Pick<
     | "apply"
     | "imported"
     | "importedHistory"
+    | "attachImportedRequests"
     | "reconcile"
     | "passive"
   >;

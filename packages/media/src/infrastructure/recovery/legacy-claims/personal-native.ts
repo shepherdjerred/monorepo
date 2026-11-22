@@ -63,14 +63,18 @@ function exactTarget(target: Target, record: RequestRecord) {
 }
 const coordinateOrder = (a: number | null, b: number | null) =>
   (a ?? -1) - (b ?? -1);
-function exactTargets(targets: Target[], input: PersonalNativeInput) {
+export function exactPersonalTargets(
+  targets: Target[],
+  mediaIds: readonly string[],
+  record: RequestRecord,
+) {
   return (
-    targets.length === input.selected.mediaIds.length &&
-    targets.every((target) => exactTarget(target, input.record)) &&
-    (input.record.scope !== "season" ||
+    targets.length === mediaIds.length &&
+    targets.every((target) => exactTarget(target, record)) &&
+    (record.scope !== "season" ||
       snapshotHash(
         targets.map((target) => target.seasonNumber).sort(coordinateOrder),
-      ) === snapshotHash([...input.record.seasons].sort(coordinateOrder)))
+      ) === snapshotHash([...record.seasons].sort(coordinateOrder)))
   );
 }
 export async function personalNativeAccounted(
@@ -103,7 +107,8 @@ export async function personalNativeAccounted(
     include: { parent: { include: { parent: true } } },
   });
   budget?.consume(targets.length * 3);
-  if (!exactTargets(targets, input)) return false;
+  if (!exactPersonalTargets(targets, selected.mediaIds, input.record))
+    return false;
   const media = await tx.mediaItem.findMany({
     where: { id: { in: claim.mediaIds } },
     select: {

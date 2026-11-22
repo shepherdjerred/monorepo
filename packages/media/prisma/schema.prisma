@@ -393,6 +393,18 @@ model MigrationRecord {
   @@id([captureId, provenanceKey])
 }
 
+/// Latest owner-approved disposition for a captured Seerr request.
+model SeerrRequestApproval {
+  provenanceKey String @id
+  captureId String
+  captureCompletedAt DateTime
+  receiptId String
+  plexAccountId String?
+  pending Boolean
+  attachmentEventId String?
+  @@index([plexAccountId, pending])
+}
+
 model AdoptionProposal {
   id String @id @default(uuid())
   captureId String
