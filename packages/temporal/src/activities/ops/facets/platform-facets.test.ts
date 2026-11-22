@@ -48,8 +48,94 @@ function createMockPrometheus(
   });
 }
 
-describe("monorepo and cluster facets", () => {
-  test("monorepo facet compacts diagnostics, computes Turbo hit ratio, and builds workspace inventory", async () => {
+function createClusterTestPrometheus(): PrometheusClient {
+  return createMockPrometheus((q) => {
+    if (q.includes("node_cpu_seconds_total") && q.startsWith("count")) {
+      return [{ metric: { node: "torvalds" }, value: [1, "16"] }];
+    }
+    if (q.includes("zfs_zpool_size_bytes")) {
+      return [
+        {
+          metric: { instance: "torvalds", zpool_name: "zfspv-pool-nvme" },
+          value: [1, "1000000000000"],
+        },
+      ];
+    }
+    if (q.includes("zfs_zpool_free_bytes")) {
+      return [
+        {
+          metric: { instance: "torvalds", zpool_name: "zfspv-pool-nvme" },
+          value: [1, "600000000000"],
+        },
+      ];
+    }
+    if (q.includes("zfs_zpool == 1")) {
+      return [
+        {
+          metric: {
+            instance: "torvalds",
+            zpool_name: "zfspv-pool-nvme",
+            health: "DEGRADED",
+          },
+          value: [1, "1"],
+        },
+      ];
+    }
+    if (q.includes("kube_pod_spec_volumes_persistentvolumeclaims_info")) {
+      return [
+        {
+          metric: {
+            namespace: "tracker",
+            pod: "tracker-postgres-0",
+            persistentvolumeclaim: "tracker-db-pvc",
+          },
+          value: [1, "1"],
+        },
+        {
+          metric: {
+            namespace: "cache",
+            pod: "cache-postgres-0",
+            persistentvolumeclaim: "cache-scratch-pvc",
+          },
+          value: [1, "1"],
+        },
+      ];
+    }
+    if (q.includes("kube_persistentvolumeclaim_labels")) {
+      return [
+        {
+          metric: {
+            namespace: "tracker",
+            persistentvolumeclaim: "tracker-db-pvc",
+          },
+          value: [1, "1"],
+        },
+      ];
+    }
+    if (q.includes("nvme_data_units_written_total")) {
+      return [
+        {
+          metric: {
+            node: "torvalds",
+            device: "nvme0n1",
+            serial: "S1",
+            model: "Samsung 990 PRO",
+          },
+          value: [1, "10737418240"],
+        },
+      ];
+    }
+    if (q.includes("SeaweedFS_volumeServer_volumes")) {
+      return [{ metric: {}, value: [1, "12"] }];
+    }
+    return q.includes("SeaweedFS_volumeServer_max_volumes")
+      ? [{ metric: {}, value: [1, "64"] }]
+      : [];
+  });
+}
+
+describe("monorepo facet", () => {
+  test("compacts diagnostics, computes Turbo hit ratio, and builds workspace inventory", async () => {
     clearMonorepoCacheForTests();
     const run = compactVerifyDiagnosticsJson({
       turbo: [
@@ -81,52 +167,13 @@ describe("monorepo and cluster facets", () => {
     expect(facet.packageCount).toBeGreaterThan(20);
     expect(facet.catalogPinsCount).toBeGreaterThan(0);
   });
+});
 
-  test("cluster facet combines K8s nodes, workloads, databases, zpools, NVMe, SeaweedFS, and ArgoCD", async () => {
-    const prometheus = createMockPrometheus((q) => {
-      if (q.includes("node_cpu_seconds_total") && q.startsWith("count")) {
-        return [{ metric: { node: "torvalds" }, value: [1, "16"] }];
-      }
-      if (q.includes("zfs_zpool_size_bytes")) {
-        return [
-          {
-            metric: { instance: "torvalds", zpool_name: "zfspv-pool-nvme" },
-            value: [1, "1000000000000"],
-          },
-        ];
-      }
-      if (q.includes("zfs_zpool_free_bytes")) {
-        return [
-          {
-            metric: { instance: "torvalds", zpool_name: "zfspv-pool-nvme" },
-            value: [1, "600000000000"],
-          },
-        ];
-      }
-      if (q.includes("nvme_data_units_written_total")) {
-        return [
-          {
-            metric: {
-              node: "torvalds",
-              device: "nvme0n1",
-              serial: "S1",
-              model: "Samsung 990 PRO",
-            },
-            value: [1, "10737418240"],
-          },
-        ];
-      }
-      if (q.includes("SeaweedFS_volumeServer_volumes")) {
-        return [{ metric: {}, value: [1, "12"] }];
-      }
-      return q.includes("SeaweedFS_volumeServer_max_volumes")
-        ? [{ metric: {}, value: [1, "64"] }]
-        : [];
-    });
-
+describe("cluster facet", () => {
+  test("combines K8s nodes, workloads, databases, zpools, NVMe, SeaweedFS, and ArgoCD", async () => {
     const facet = await collectClusterFacet({
       services,
-      prometheus,
+      prometheus: createClusterTestPrometheus(),
       kubernetes: {
         listNodes: () =>
           Promise.resolve([
@@ -143,6 +190,16 @@ describe("monorepo and cluster facets", () => {
             {
               namespace: "tracker",
               name: "tracker-postgres-0",
+              phase: "Running",
+              createdAt: "2026-11-20T00:00:00Z",
+              ownerKind: "StatefulSet",
+              restarts: 0,
+              problem: undefined,
+              stuck: false,
+            },
+            {
+              namespace: "cache",
+              name: "cache-postgres-0",
               phase: "Running",
               createdAt: "2026-11-20T00:00:00Z",
               ownerKind: "StatefulSet",
@@ -194,7 +251,18 @@ describe("monorepo and cluster facets", () => {
               operation: undefined,
             },
           ]),
-        listVeleroBackups: () => Promise.resolve([]),
+        listVeleroBackups: () =>
+          Promise.resolve([
+            {
+              name: "daily-20261121020000",
+              namespace: "velero",
+              schedule: "daily",
+              createdAt: "2026-11-21T02:00:00Z",
+              startedAt: "2026-11-21T02:00:01Z",
+              completedAt: "2026-11-21T02:05:00Z",
+              phase: "Completed",
+            },
+          ]),
         listVeleroSchedules: () =>
           Promise.resolve([
             {
@@ -229,15 +297,25 @@ describe("monorepo and cluster facets", () => {
       desiredReplicas: 2,
       restarts24h: 3,
     });
-    expect(facet.databases[0]).toMatchObject({
+    expect(
+      facet.databases.find((db) => db.namespace === "tracker"),
+    ).toMatchObject({
       namespace: "tracker",
       engine: "postgres",
       veleroBackedUp: true,
+    });
+    expect(
+      facet.databases.find((db) => db.namespace === "cache"),
+    ).toMatchObject({
+      namespace: "cache",
+      engine: "postgres",
+      veleroBackedUp: false,
     });
     expect(facet.zpools[0]).toMatchObject({
       node: "torvalds",
       pool: "zfspv-pool-nvme",
       usedBytes: 400_000_000_000,
+      health: "DEGRADED",
     });
     expect(facet.nvmeDrives[0]).toMatchObject({
       node: "torvalds",

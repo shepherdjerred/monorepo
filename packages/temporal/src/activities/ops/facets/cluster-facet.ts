@@ -33,6 +33,7 @@ export const CLUSTER_PROM_QUERIES = {
   zpoolSize: "max by (node, instance, zpool_name) (zfs_zpool_size_bytes)",
   zpoolFree: "max by (node, instance, zpool_name) (zfs_zpool_free_bytes)",
   zpoolFrag: "max by (node, instance, zpool_name) (zfs_zpool_fragmentation)",
+  zpoolHealth: "max by (node, instance, zpool_name, health) (zfs_zpool == 1)",
   nvmeWritten24h:
     "(increase(nvme_data_units_written_total[24h]) * 512000) * on(device, instance) group_left(serial, model) nvme_device_info",
   nvmeBudget: "nvme_drive:write_budget_bytes_per_day:5y",
@@ -51,6 +52,12 @@ export const CLUSTER_PROM_QUERIES = {
     "max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes)",
   pvcCap:
     "max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_capacity_bytes)",
+  podPvcs:
+    "max by (namespace, pod, persistentvolumeclaim) (kube_pod_spec_volumes_persistentvolumeclaims_info)",
+  backedUpPvcs:
+    'max by (namespace, persistentvolumeclaim) (kube_persistentvolumeclaim_labels{label_velero_io_backup="enabled"})',
+  veleroLastStatus:
+    'max by (schedule) (velero_backup_last_status{schedule!=""})',
   restarts24h:
     "sum by (namespace, pod) (increase(kube_pod_container_status_restarts_total[24h]))",
   oomKills24h:
@@ -81,6 +88,7 @@ const CLUSTER_PROM_KEYS = [
   "zpoolSize",
   "zpoolFree",
   "zpoolFrag",
+  "zpoolHealth",
   "nvmeWritten24h",
   "nvmeBudget",
   "nvmeSize",
@@ -92,6 +100,9 @@ const CLUSTER_PROM_KEYS = [
   "swBuckets",
   "pvcUsed",
   "pvcCap",
+  "podPvcs",
+  "backedUpPvcs",
+  "veleroLastStatus",
   "restarts24h",
   "oomKills24h",
   "deploySpec",
@@ -115,6 +126,7 @@ function emptyPromMap(): ClusterPromMap {
     zpoolSize: [],
     zpoolFree: [],
     zpoolFrag: [],
+    zpoolHealth: [],
     nvmeWritten24h: [],
     nvmeBudget: [],
     nvmeSize: [],
@@ -126,6 +138,9 @@ function emptyPromMap(): ClusterPromMap {
     swBuckets: [],
     pvcUsed: [],
     pvcCap: [],
+    podPvcs: [],
+    backedUpPvcs: [],
+    veleroLastStatus: [],
     restarts24h: [],
     oomKills24h: [],
     deploySpec: [],
@@ -319,6 +334,9 @@ export async function collectClusterFacet(input: {
       pods: k8sLists.pods,
       pvcUsed: prom.pvcUsed,
       pvcCap: prom.pvcCap,
+      podPvcs: prom.podPvcs,
+      backedUpPvcs: prom.backedUpPvcs,
+      veleroLastStatus: prom.veleroLastStatus,
       veleroBackups: k8sLists.backups,
       veleroSchedules: k8sLists.schedules,
     }),
@@ -326,6 +344,7 @@ export async function collectClusterFacet(input: {
       size: prom.zpoolSize,
       free: prom.zpoolFree,
       frag: prom.zpoolFrag,
+      health: prom.zpoolHealth,
     }),
     nvmeDrives: buildNvmeDrives({
       written24h: prom.nvmeWritten24h,

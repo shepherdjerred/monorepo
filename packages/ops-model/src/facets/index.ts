@@ -189,7 +189,12 @@ export type BugsinkProjectSummary = BugsinkFacet["projects"][number];
 export type BugsinkTopIssue = BugsinkFacet["topIssues"][number];
 
 /** Flipt managed inventory, drift status, and default-off exceptions. */
-export const FliptNamespaceStatusSchema = z.enum(["ok", "drift", "missing"]);
+export const FliptNamespaceStatusSchema = z.enum([
+  "ok",
+  "drift",
+  "missing",
+  "unknown",
+]);
 export type FliptNamespaceStatus = z.infer<typeof FliptNamespaceStatusSchema>;
 export const FliptFacetSchema = z.object(fliptFacetShape);
 export type FliptFacet = z.infer<typeof FliptFacetSchema>;

@@ -96,10 +96,13 @@ const DATABASE_COLUMNS: readonly DataTableColumn<
     key: "velero",
     header: "Velero Backed Up",
     render: (r) =>
-      r.veleroBackedUp
+      r.veleroBackedUp === true
         ? dbPill("ok", "✓", "Backed up")
-        : dbPill("warning", "!", "Missing backup"),
-    sortValue: (r) => (r.veleroBackedUp ? 1 : 0),
+        : r.veleroBackedUp === false
+          ? dbPill("warning", "!", "Missing backup")
+          : dbPill("info", "•", "Unknown"),
+    sortValue: (r) =>
+      r.veleroBackedUp === true ? 2 : r.veleroBackedUp === null ? 1 : 0,
   },
 ];
 

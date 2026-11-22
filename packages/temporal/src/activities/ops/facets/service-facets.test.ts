@@ -301,14 +301,24 @@ describe("bugsink, tracker, and flipt facets", () => {
     expect(facet.urgentIssues[0]?.identifier).toBe("SJ-10");
   });
 
-  test("flipt facet emits all 16 managed namespaces on static fallback and detects live drift", async () => {
+  test("flipt facet emits unknown on static/500, detects live drift, and surfaces malformed snapshots", async () => {
     const staticFacet = await collectFliptFacet({ fliptUrl: "", now });
     expect(() => FliptFacetSchema.parse(staticFacet)).not.toThrow();
     expect(staticFacet.namespaces).toHaveLength(16);
     expect(staticFacet.totalFlags).toBeGreaterThan(0);
-    expect(staticFacet.namespaces.every((ns) => ns.prodStatus === "ok")).toBe(
-      true,
-    );
+    expect(
+      staticFacet.namespaces.every((ns) => ns.prodStatus === "unknown"),
+    ).toBe(true);
+
+    const unavailableFacet = await collectFliptFacet({
+      fliptUrl: "http://flipt:8080",
+      now,
+      fetcher: () =>
+        Promise.resolve(new Response("upstream error", { status: 500 })),
+    });
+    expect(
+      unavailableFacet.namespaces.every((ns) => ns.prodStatus === "unknown"),
+    ).toBe(true);
 
     const driftedFacet = await collectFliptFacet({
       fliptUrl: "http://flipt:8080",
@@ -319,6 +329,15 @@ describe("bugsink, tracker, and flipt facets", () => {
     expect(
       driftedFacet.namespaces.every((ns) => ns.prodStatus === "missing"),
     ).toBe(true);
+
+    await expect(
+      collectFliptFacet({
+        fliptUrl: "http://flipt:8080",
+        now,
+        fetcher: () =>
+          Promise.resolve(Response.json({ flags: [{ key: 123 }] })),
+      }),
+    ).rejects.toThrow();
   });
 });
 

@@ -98,7 +98,7 @@ export const clusterFacetShape = {
       ready: z.boolean(),
       usedBytes: z.number().nullable(),
       capacityBytes: z.number().nullable(),
-      veleroBackedUp: z.boolean(),
+      veleroBackedUp: z.boolean().nullable(),
     }),
   ),
   zpools: z.array(

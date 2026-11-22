@@ -14,6 +14,7 @@ import type {
   FliptFacet,
   FliptNamespaceStatus,
 } from "@shepherdjerred/ops-model/facets.ts";
+import { z } from "zod";
 
 const SNAPSHOT_TIMEOUT_MS = 4000;
 
@@ -56,8 +57,11 @@ async function evaluateNamespaceEnvironment(input: {
       ? "drift"
       : "ok";
   } catch (error: unknown) {
+    if (error instanceof z.ZodError || error instanceof SyntaxError) {
+      throw error;
+    }
     const message = error instanceof Error ? error.message : String(error);
-    return /\b404\b/u.test(message) ? "missing" : "ok";
+    return /\b404\b/u.test(message) ? "missing" : "unknown";
   }
 }
 
@@ -149,8 +153,8 @@ export async function collectFliptFacet(options?: {
           namespace: ns.key,
           name: ns.name,
           flagCount: prodExpected.length,
-          prodStatus: "ok" as const,
-          betaStatus: "ok" as const,
+          prodStatus: "unknown" as const,
+          betaStatus: "unknown" as const,
         };
       }
       const [prodStatus, betaStatus] = await Promise.all([

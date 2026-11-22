@@ -73,7 +73,9 @@ export function ClusterOverviewStrip({
     degraded === 0 ? "ok" : criticalWorkload ? "error" : "warning";
   const totalDbs = cluster.databases.length;
   const readyDbs = cluster.databases.filter((d) => d.ready).length;
-  const backedUp = cluster.databases.filter((d) => d.veleroBackedUp).length;
+  const backedUp = cluster.databases.filter(
+    (d) => d.veleroBackedUp === true,
+  ).length;
   const lag = cluster.seaweedfs.backupLagSeconds;
   const lagSev: Severity =
     lag === null

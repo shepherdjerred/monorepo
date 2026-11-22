@@ -325,7 +325,9 @@ export const ZPOOL_COLUMNS: readonly DataTableColumn<
     (r) =>
       r.health === "ONLINE"
         ? statusPill("ok", "✓", r.health)
-        : statusPill("error", "✕", r.health),
+        : r.health === "UNKNOWN"
+          ? statusPill("warning", "!", r.health)
+          : statusPill("error", "✕", r.health),
     (r) => r.health,
   ),
 ];

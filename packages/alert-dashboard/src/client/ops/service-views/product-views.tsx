@@ -39,6 +39,8 @@ function mapFliptCell(status: FliptNamespaceStatus): StatusMatrixCell {
       return { status: "warning", label: "Drift" };
     case "missing":
       return { status: "missing", label: "Missing" };
+    case "unknown":
+      return { status: "warning", label: "Unavailable" };
   }
 }
 

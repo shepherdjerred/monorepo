@@ -124,7 +124,12 @@ export const bugsinkFacetShape = {
   ),
 };
 
-const FliptNamespaceStatusInternalSchema = z.enum(["ok", "drift", "missing"]);
+const FliptNamespaceStatusInternalSchema = z.enum([
+  "ok",
+  "drift",
+  "missing",
+  "unknown",
+]);
 
 export const fliptFacetShape = {
   totalFlags: z.number(),
