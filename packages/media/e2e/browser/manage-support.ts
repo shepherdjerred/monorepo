@@ -1,21 +1,13 @@
 import { expect, type Page, type Request } from "@playwright/test";
-import { openAs, test, violationDetails } from "./support.ts";
+import { allowWrites, openSettled, violationDetails } from "./support.ts";
 
-/** Opens one of the owner's Manage pages and waits for its sections to load. */
+/**
+ * Opens one of the owner's Manage pages, waits for its sections to load, and
+ * lets it send the commands a test then answers with `answerWrites`.
+ */
 export async function openManage(page: Page, path: string) {
-  const base = test.info().project.use.baseURL;
-  if (base === undefined) {
-    throw new Error("The Playwright project has no baseURL");
-  }
-  // The client refuses to write without the session's CSRF cookie, which
-  // the fixture API does not issue.
-  await page
-    .context()
-    .addCookies([{ name: "media-csrf", value: "fixture-csrf", url: base }]);
-  await openAs(page, "owner", path);
-  await expect(
-    page.getByRole("status").filter({ hasText: "Loading" }),
-  ).toHaveCount(0);
+  await openSettled(page, "owner", path);
+  await allowWrites(page);
 }
 
 /** Opens a row that is closed until asked for, such as a provider. */
@@ -63,7 +55,7 @@ export async function answerWrites(
 
 function recorded(request: Request): Write {
   const headers = request.headers();
-  expect(headers["x-csrf-token"]).toBe("fixture-csrf");
+  expect(headers["x-csrf-token"]).toBe("browser-test");
   expect(headers["idempotency-key"]).toMatch(/^[\da-f-]{36}$/u);
   return {
     method: request.method(),
@@ -87,15 +79,6 @@ export async function violations(page: Page): Promise<string[]> {
     await Promise.allSettled(ending.map((animation) => animation.finished));
   });
   return violationDetails(page);
-}
-
-/** Whether the page is wider than the window, which a phone would scroll sideways. */
-export async function overflowsSideways(page: Page): Promise<boolean> {
-  return page.evaluate(
-    () =>
-      globalThis.document.documentElement.scrollWidth >
-      globalThis.document.documentElement.clientWidth,
-  );
 }
 
 /** The keys the client has put in session storage to retry a command. */

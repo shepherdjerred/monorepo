@@ -3,10 +3,9 @@ import {
   answerWrites,
   openManage,
   openRow,
-  overflowsSideways,
   violations,
 } from "./manage-support.ts";
-import { test } from "./support.ts";
+import { horizontalOverflow, test } from "./support.ts";
 
 /** The two controls of a duration field, by the field's visible label. */
 function duration(form: Locator, label: string) {
@@ -45,7 +44,7 @@ test.describe("lengths of time", () => {
       duration(form, "Minimum seeding time").unit.locator("option"),
     ).toHaveText(["seconds", "minutes", "hours", "days"]);
     expect(await violations(page)).toEqual([]);
-    expect(await overflowsSideways(page)).toBe(false);
+    expect(await horizontalOverflow(page)).toBe(0);
   });
 
   test("a time is sent in seconds, whatever unit it was typed in", async ({
@@ -103,7 +102,7 @@ test.describe("lengths of time", () => {
       /Enter a whole number of seconds\. 0\.01 minutes is 0\.6 seconds\./u,
     );
     expect(await violations(page)).toEqual([]);
-    expect(await overflowsSideways(page)).toBe(false);
+    expect(await horizontalOverflow(page)).toBe(0);
 
     // Nothing is rounded and sent.
     await save.click();

@@ -4,12 +4,11 @@ import {
   answerWrites,
   openManage,
   openRow,
-  overflowsSideways,
   storageContents,
   storedCommandKeys,
   violations,
 } from "./manage-support.ts";
-import { test } from "./support.ts";
+import { horizontalOverflow, test } from "./support.ts";
 
 test.describe("household", () => {
   test("pausing a member's requests sends the change and says what was done", async ({
@@ -344,7 +343,7 @@ test.describe("numbering", () => {
     );
     expect(writes[1]?.body).toMatchObject({ absoluteNumber: null });
     expect(await violations(page)).toEqual([]);
-    expect(await overflowsSideways(page)).toBe(false);
+    expect(await horizontalOverflow(page)).toBe(0);
   });
 });
 
@@ -435,7 +434,7 @@ for (const scheme of ["light", "dark"] as const) {
         .getByRole("button", { name: "Replace sign-in details" })
         .click();
       expect(await violations(page)).toEqual([]);
-      expect(await overflowsSideways(page)).toBe(false);
+      expect(await horizontalOverflow(page)).toBe(0);
     });
 
     test("the other Manage forms fit the window", async ({ page }) => {
@@ -445,7 +444,7 @@ for (const scheme of ["light", "dark"] as const) {
         "/manage/plex",
       ]) {
         await openManage(page, path);
-        expect(await overflowsSideways(page), path).toBe(false);
+        expect(await horizontalOverflow(page), path).toBe(0);
       }
     });
   });
