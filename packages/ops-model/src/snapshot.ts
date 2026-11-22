@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { OpsFacetsSchema } from "./facets/index.ts";
 import { SeveritySchema } from "./severity.ts";
 
 export const OPS_SNAPSHOT_SCHEMA_VERSION = 1;
@@ -60,6 +61,7 @@ export const LINK_KINDS = [
   "logs",
   "traces",
   "metrics",
+  "profiles",
   "argocd",
   "github",
   "tracker",
@@ -68,6 +70,10 @@ export const LINK_KINDS = [
   "woodpecker",
   "temporal",
   "registry",
+  "cloudflare",
+  "tailscale",
+  "flipt",
+  "golink",
 ] as const;
 
 export const LinkSchema = z.strictObject({
@@ -115,6 +121,10 @@ export const METRIC_UNITS = [
   "seconds",
   "hours",
   "tokens",
+  "bytes",
+  "bps",
+  "ms",
+  "celsius",
 ] as const;
 
 /** A headline number shown on tiles, TRMNL, and digests. */
@@ -208,8 +218,10 @@ export type ChangeEventInput = z.input<typeof ChangeEventSchema>;
 export const OpsIngestSchema = z.strictObject({
   snapshot: SnapshotSchema,
   changes: z.array(ChangeEventSchema),
+  facets: OpsFacetsSchema.optional(),
 });
 export type OpsIngest = z.infer<typeof OpsIngestSchema>;
+export type OpsIngestInput = z.input<typeof OpsIngestSchema>;
 
 export function parseSnapshot(value: unknown): Snapshot {
   return SnapshotSchema.parse(value);

@@ -123,3 +123,42 @@ export function chartmuseumChartLink(name: string, version: string): Link {
     ),
   };
 }
+
+/**
+ * Grafana Explore flamegraph link targeting the in-cluster Pyroscope continuous
+ * profiling datasource (`uid: "pyroscope"`, `type: "grafana-pyroscope-datasource"`),
+ * scoped to `{namespace="<namespace>"}`.
+ */
+export function grafanaPyroscopeExploreUrl(input: {
+  grafanaUrl: string;
+  namespace: string;
+  service?: string;
+}): string {
+  const datasource = {
+    type: "grafana-pyroscope-datasource",
+    uid: "pyroscope",
+  };
+  const panes = {
+    a: {
+      datasource: datasource.uid,
+      queries: [
+        {
+          refId: "A",
+          datasource,
+          queryType: "both",
+          profileTypeId: "process_cpu:cpu:nanoseconds:cpu:nanoseconds",
+          labelSelector: `{namespace=${JSON.stringify(input.namespace)}}`,
+        },
+      ],
+      range: { from: "now-1h", to: "now" },
+    },
+  };
+  const explore = new URL(
+    "explore",
+    `${input.grafanaUrl.replace(/\/+$/u, "")}/`,
+  );
+  explore.searchParams.set("schemaVersion", "1");
+  explore.searchParams.set("orgId", "1");
+  explore.searchParams.set("panes", JSON.stringify(panes));
+  return explore.toString();
+}

@@ -20,6 +20,44 @@ import {
   type Summary,
 } from "#shared/schema";
 
+const WATCHDOG_ALERTNAME = "Watchdog";
+
+export function isWatchdogForcedByFilters(params: URLSearchParams): boolean {
+  if (params.get("severity") === "unknown") return true;
+  const search = (params.get("q") ?? "").trim().toLowerCase();
+  return search.includes("watchdog");
+}
+
+export function shouldShowWatchdog(params: URLSearchParams): boolean {
+  return params.get("watchdog") === "1" || isWatchdogForcedByFilters(params);
+}
+
+export function filterWatchdogAlerts(
+  alerts: readonly AlertView[],
+  params: URLSearchParams,
+): {
+  visibleAlerts: readonly AlertView[];
+  watchdogCount: number;
+  showWatchdog: boolean;
+} {
+  const watchdogCount = alerts.filter(
+    (alert) => alert.alertname === WATCHDOG_ALERTNAME,
+  ).length;
+  const showWatchdog = shouldShowWatchdog(params);
+  const visibleAlerts = showWatchdog
+    ? alerts
+    : alerts.filter((alert) => alert.alertname !== WATCHDOG_ALERTNAME);
+  return { visibleAlerts, watchdogCount, showWatchdog };
+}
+
+export function watchdogToggleLabel(
+  showWatchdog: boolean,
+  watchdogCount: number,
+): string {
+  const suffix = watchdogCount > 0 ? ` (${String(watchdogCount)})` : "";
+  return showWatchdog ? `Hide Watchdog${suffix}` : `Show Watchdog${suffix}`;
+}
+
 function suppressionFromParam(raw: string | null): string | undefined {
   if (raw === null || raw === "") return "none";
   return raw === "all" ? undefined : raw;
@@ -145,11 +183,19 @@ export type ScopedAlertPageProps = {
     searchValue: string,
     update: (key: string, value: string) => void,
   ) => React.JSX.Element;
+  readonly renderFilterSuffix?: (
+    params: URLSearchParams,
+    items: readonly AlertView[],
+    update: (key: string, value: string) => void,
+  ) => React.ReactNode;
   readonly loadingText: string;
   readonly loadMoreText: string;
   readonly loadingMoreText: string;
   readonly invalidFiltersText: string;
-  readonly renderTable: (items: readonly AlertView[]) => React.JSX.Element;
+  readonly renderTable: (
+    items: readonly AlertView[],
+    params: URLSearchParams,
+  ) => React.JSX.Element;
 };
 
 export function DashboardPage(): React.JSX.Element {
@@ -199,16 +245,39 @@ export function DashboardPage(): React.JSX.Element {
           </label>
         </>
       )}
+      renderFilterSuffix={(params, items, update) => {
+        const { watchdogCount, showWatchdog } = filterWatchdogAlerts(
+          items,
+          params,
+        );
+        const forcedByFilter = isWatchdogForcedByFilters(params);
+        return (
+          <Button
+            aria-pressed={showWatchdog}
+            className="w-fit justify-self-start text-xs"
+            disabled={forcedByFilter && params.get("watchdog") !== "1"}
+            onClick={() => {
+              update("watchdog", params.get("watchdog") === "1" ? "" : "1");
+            }}
+            type="button"
+          >
+            {watchdogToggleLabel(showWatchdog, watchdogCount)}
+          </Button>
+        );
+      }}
       loadingText="Loading alerts…"
       loadMoreText="Load more alerts"
       loadingMoreText="Loading more alerts…"
       invalidFiltersText="Invalid active alert filters."
-      renderTable={(items) => (
-        <AlertTable
-          alerts={items}
-          empty="All clear — no operational alerts match these filters."
-        />
-      )}
+      renderTable={(items, params) => {
+        const { visibleAlerts, watchdogCount, showWatchdog } =
+          filterWatchdogAlerts(items, params);
+        const empty =
+          !showWatchdog && watchdogCount > 0
+            ? `No alerts match these filters. ${String(watchdogCount)} Watchdog heartbeat hidden.`
+            : "All clear — no operational alerts match these filters.";
+        return <AlertTable alerts={visibleAlerts} empty={empty} />;
+      }}
     />
   );
 }
@@ -320,13 +389,14 @@ export function ScopedAlertPage(
               ))}
             </select>
           </label>
+          {props.renderFilterSuffix?.(params, items, update)}
         </div>
         {input.success ? (
           alertsValue.status === "loading" ? (
             <div className="loading-state">{props.loadingText}</div>
           ) : (
             <>
-              {props.renderTable(items)}
+              {props.renderTable(items, params)}
               {alerts.hasNextPage ? (
                 <div className="history-pagination">
                   <Button

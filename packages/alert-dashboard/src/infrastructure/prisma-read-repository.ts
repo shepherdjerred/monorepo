@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import type { Prisma, PrismaClient } from "#generated/prisma/client/index.js";
 import { toAlertView, toEventView } from "#infrastructure/prisma-mappers";
 import {
@@ -32,6 +34,83 @@ function scopeWhere(
   return scope === "ops"
     ? { labelEntries: { none: { key: "category", value: "household" } } }
     : {};
+}
+
+const DeliveryScalarRowsSchema = z.array(
+  z.object({
+    id: z.string(),
+    receivedAtNs: z.coerce.bigint(),
+    groupKey: z.string(),
+    status: z.string(),
+    receiver: z.string(),
+    truncatedAlerts: z.coerce.number().int().nonnegative(),
+    notificationReason: z.string().nullable(),
+    payloadHash: z.string(),
+    rawPayloadRetained: z
+      .union([z.boolean(), z.bigint(), z.number()])
+      .transform((value) =>
+        typeof value === "boolean" ? value : Number(value) !== 0,
+      ),
+    rawExpiresAtNs: z.coerce.bigint(),
+  }),
+);
+
+type OccurrenceGroupCount = {
+  lifecycleState: string;
+  severity: string;
+  suppressionState: string;
+  _count: { _all: number };
+};
+
+function accumulateSummaryCounts(groups: readonly OccurrenceGroupCount[]) {
+  const totals = {
+    open: 0,
+    resolved: 0,
+    critical: 0,
+    warning: 0,
+    info: 0,
+    silenced: 0,
+    inhibited: 0,
+    unprocessed: 0,
+  };
+  for (const group of groups) {
+    const count = group._count._all;
+    if (group.lifecycleState === "resolved") {
+      totals.resolved += count;
+      continue;
+    }
+    if (group.lifecycleState !== "open") continue;
+    switch (group.suppressionState) {
+      case "none":
+        totals.open += count;
+        switch (group.severity) {
+          case "critical":
+            totals.critical += count;
+            break;
+          case "warning":
+            totals.warning += count;
+            break;
+          case "info":
+            totals.info += count;
+            break;
+          default:
+            break;
+        }
+        break;
+      case "silenced":
+        totals.silenced += count;
+        break;
+      case "inhibited":
+        totals.inhibited += count;
+        break;
+      case "unprocessed":
+        totals.unprocessed += count;
+        break;
+      default:
+        break;
+    }
+  }
+  return totals;
 }
 
 function alertWhere(input: AlertListInput): Prisma.AlertOccurrenceWhereInput {
@@ -138,6 +217,68 @@ export class PrismaReadRepository {
     return run?.completedAtNs ?? null;
   }
 
+  /**
+   * Projects scalar delivery columns and evaluates `rawPayload IS NOT NULL` in
+   * SQLite so multi-KB `rawPayload` JSON blobs are never transferred or parsed
+   * in JS. Applies the same `(receivedAtNs DESC, id DESC)` cursor window as
+   * `pageWindow`.
+   */
+  async #listAlertDeliveries(input: AlertDetailInput) {
+    const take = input.limit + 1;
+    const rawRows =
+      input.cursor === undefined
+        ? await this.#prisma.$queryRaw`
+            SELECT
+              d."id",
+              d."receivedAtNs",
+              d."groupKey",
+              d."status",
+              d."receiver",
+              d."truncatedAlerts",
+              d."notificationReason",
+              d."payloadHash",
+              CASE WHEN d."rawPayload" IS NOT NULL THEN 1 ELSE 0 END AS "rawPayloadRetained",
+              d."rawExpiresAtNs"
+            FROM "WebhookDeliveryOccurrence" link
+            INNER JOIN "WebhookDelivery" d ON d."id" = link."deliveryId"
+            WHERE link."occurrenceId" = ${input.id}
+            ORDER BY d."receivedAtNs" DESC, d."id" DESC
+            LIMIT ${take}
+          `
+        : await this.#prisma.$queryRaw`
+            SELECT
+              d."id",
+              d."receivedAtNs",
+              d."groupKey",
+              d."status",
+              d."receiver",
+              d."truncatedAlerts",
+              d."notificationReason",
+              d."payloadHash",
+              CASE WHEN d."rawPayload" IS NOT NULL THEN 1 ELSE 0 END AS "rawPayloadRetained",
+              d."rawExpiresAtNs"
+            FROM "WebhookDeliveryOccurrence" link
+            INNER JOIN "WebhookDelivery" d ON d."id" = link."deliveryId"
+            INNER JOIN (
+              SELECT cd."receivedAtNs", cd."id"
+              FROM "WebhookDeliveryOccurrence" clink
+              INNER JOIN "WebhookDelivery" cd ON cd."id" = clink."deliveryId"
+              WHERE clink."occurrenceId" = ${input.id}
+                AND cd."id" = ${input.cursor}
+            ) cursor_row ON (
+              d."receivedAtNs" < cursor_row."receivedAtNs"
+              OR (
+                d."receivedAtNs" = cursor_row."receivedAtNs"
+                AND d."id" < cursor_row."id"
+              )
+            )
+            WHERE link."occurrenceId" = ${input.id}
+            ORDER BY d."receivedAtNs" DESC, d."id" DESC
+            LIMIT ${take}
+          `;
+    return DeliveryScalarRowsSchema.parse(rawRows);
+  }
+
   async listAlerts(input: AlertListInput): Promise<AlertListResponse> {
     const [rows, latestSnapshotNs] = await Promise.all([
       this.#prisma.alertOccurrence.findMany({
@@ -162,11 +303,7 @@ export class PrismaReadRepository {
           events: { orderBy: [{ occurredAtNs: "asc" }, { id: "asc" }] },
         },
       }),
-      this.#prisma.webhookDelivery.findMany({
-        where: { occurrenceLinks: { some: { occurrenceId: input.id } } },
-        orderBy: [{ receivedAtNs: "desc" }, { id: "desc" }],
-        ...pageWindow(input),
-      }),
+      this.#listAlertDeliveries(input),
       this.#latestSnapshotCompletedAtNs(),
     ]);
     if (row === null) return null;
@@ -183,7 +320,7 @@ export class PrismaReadRepository {
         truncatedAlerts: delivery.truncatedAlerts,
         notificationReason: delivery.notificationReason,
         payloadHash: delivery.payloadHash,
-        rawPayloadRetained: delivery.rawPayload !== null,
+        rawPayloadRetained: delivery.rawPayloadRetained,
         rawExpiresAt: epochNanosecondsToInstantText(delivery.rawExpiresAtNs),
       })),
       deliveriesNextCursor: nextCursor(deliveries, input.limit),
@@ -211,87 +348,20 @@ export class PrismaReadRepository {
   }
 
   async summary(input?: SummaryInput): Promise<Summary> {
-    const scope = scopeWhere(input?.scope);
-    const [
-      open,
-      resolved,
-      critical,
-      warning,
-      info,
-      silenced,
-      inhibited,
-      unprocessed,
-      lastRun,
-    ] = await Promise.all([
-      this.#prisma.alertOccurrence.count({
-        where: { ...scope, lifecycleState: "open", suppressionState: "none" },
+    const [groups, latestSnapshotNs] = await Promise.all([
+      this.#prisma.alertOccurrence.groupBy({
+        where: scopeWhere(input?.scope),
+        by: ["lifecycleState", "severity", "suppressionState"],
+        _count: { _all: true },
       }),
-      this.#prisma.alertOccurrence.count({
-        where: { ...scope, lifecycleState: "resolved" },
-      }),
-      this.#prisma.alertOccurrence.count({
-        where: {
-          ...scope,
-          lifecycleState: "open",
-          severity: "critical",
-          suppressionState: "none",
-        },
-      }),
-      this.#prisma.alertOccurrence.count({
-        where: {
-          ...scope,
-          lifecycleState: "open",
-          severity: "warning",
-          suppressionState: "none",
-        },
-      }),
-      this.#prisma.alertOccurrence.count({
-        where: {
-          ...scope,
-          lifecycleState: "open",
-          severity: "info",
-          suppressionState: "none",
-        },
-      }),
-      this.#prisma.alertOccurrence.count({
-        where: {
-          ...scope,
-          lifecycleState: "open",
-          suppressionState: "silenced",
-        },
-      }),
-      this.#prisma.alertOccurrence.count({
-        where: {
-          ...scope,
-          lifecycleState: "open",
-          suppressionState: "inhibited",
-        },
-      }),
-      this.#prisma.alertOccurrence.count({
-        where: {
-          ...scope,
-          lifecycleState: "open",
-          suppressionState: "unprocessed",
-        },
-      }),
-      this.#prisma.snapshotRun.findFirst({
-        where: { status: "success" },
-        orderBy: { completedAtNs: "desc" },
-      }),
+      this.#latestSnapshotCompletedAtNs(),
     ]);
     return SummarySchema.parse({
-      open,
-      resolved,
-      critical,
-      warning,
-      info,
-      silenced,
-      inhibited,
-      unprocessed,
+      ...accumulateSummaryCounts(groups),
       lastReconciledAt:
-        lastRun === null
+        latestSnapshotNs === null
           ? null
-          : epochNanosecondsToInstantText(lastRun.completedAtNs),
+          : epochNanosecondsToInstantText(latestSnapshotNs),
     });
   }
 

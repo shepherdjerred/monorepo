@@ -36,9 +36,56 @@ export const CHART_CHROME: Record<
   dark: { axis: "#a09f98", grid: "#2c2c2a", baseline: "#383835" },
 };
 
+export const STACKED_AREA_ALPHA: Record<Theme, number> = {
+  light: 0.28,
+  dark: 0.32,
+};
+
+export const BAR_FILL_ALPHA: Record<Theme, number> = {
+  light: 0.24,
+  dark: 0.3,
+};
+
+const THRESHOLD_TONE: Record<Theme, Record<"warning" | "error", string>> = {
+  light: { warning: "#b86e00", error: "#c7352e" },
+  dark: { warning: "#f5c65a", error: "#f57973" },
+};
+
 export function seriesColor(theme: Theme, index: number): string {
   const palette = CATEGORICAL[theme];
   const color = palette[index % palette.length];
-  if (color === undefined) throw new Error("Categorical palette is empty");
+  if (color === undefined) {
+    throw new Error("Categorical palette is empty");
+  }
   return color;
+}
+
+export function hexWithAlpha(hex: string, alpha: number): string {
+  const clean = hex.startsWith("#") ? hex.slice(1) : hex;
+  if (clean.length !== 6) {
+    throw new Error(`Expected 6-digit hex color, received ${hex}`);
+  }
+  const red = Number.parseInt(clean.slice(0, 2), 16);
+  const green = Number.parseInt(clean.slice(2, 4), 16);
+  const blue = Number.parseInt(clean.slice(4, 6), 16);
+  return `rgba(${String(red)}, ${String(green)}, ${String(blue)}, ${String(alpha)})`;
+}
+
+export function seriesFillColor(
+  theme: Theme,
+  index: number,
+  alpha = STACKED_AREA_ALPHA[theme],
+): string {
+  return hexWithAlpha(seriesColor(theme, index), alpha);
+}
+
+export function barFillColor(theme: Theme, index: number): string {
+  return hexWithAlpha(seriesColor(theme, index), BAR_FILL_ALPHA[theme]);
+}
+
+export function thresholdColor(
+  theme: Theme,
+  tone: "warning" | "error" = "warning",
+): string {
+  return THRESHOLD_TONE[theme][tone];
 }

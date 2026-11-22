@@ -1,68 +1,37 @@
 import { z } from "zod";
-import { bearer, type Fetch } from "@shepherdjerred/ops-clients/http.ts";
+import {
+  bearer,
+  fetchJson,
+  UpstreamError,
+  type Fetch,
+} from "@shepherdjerred/ops-clients/http.ts";
 import { postGraphql } from "@shepherdjerred/ops-clients/graphql.ts";
+import {
+  BRANCH_HEAD,
+  CommitSchema,
+  connection,
+  GRAPHQL_RATE_LIMIT,
+  GraphqlRateLimitSchema,
+  isExactHeadApproved,
+  ISSUE_SEARCH,
+  MERGED_PULL_REQUESTS,
+  MergedPullRequestSchema,
+  OPEN_PULL_REQUESTS,
+  OpenPullRequestSchema,
+  PATH_HISTORY,
+  PULL_REQUEST_BODY,
+  PullRequestBodySchema,
+  RestCompareSchema,
+  RestRateLimitSchema,
+  RestReleaseSchema,
+  RollupStateSchema,
+  toAuthor,
+} from "@shepherdjerred/ops-clients/github-schemas.ts";
 
-const GITHUB_GRAPHQL_URL = "https://api.github.com/graphql";
-
-const PageInfoSchema = z.object({
-  hasNextPage: z.boolean(),
-  endCursor: z.string().nullable(),
-});
-
-const ActorSchema = z
-  .object({ login: z.string(), __typename: z.string() })
-  .nullable();
-
-const RollupStateSchema = z.enum([
-  "SUCCESS",
-  "FAILURE",
-  "ERROR",
-  "PENDING",
-  "EXPECTED",
-]);
-
-const OpenPullRequestSchema = z.object({
-  number: z.number().int(),
-  title: z.string(),
-  url: z.url(),
-  author: ActorSchema,
-  isDraft: z.boolean(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  reviewDecision: z
-    .enum(["APPROVED", "CHANGES_REQUESTED", "REVIEW_REQUIRED"])
-    .nullable(),
-  mergeable: z.enum(["MERGEABLE", "CONFLICTING", "UNKNOWN"]),
-  headRefName: z.string(),
-  labels: z.object({ nodes: z.array(z.object({ name: z.string() })) }),
-  commits: z.object({
-    nodes: z.array(
-      z.object({
-        commit: z.object({
-          oid: z.string(),
-          statusCheckRollup: z.object({ state: RollupStateSchema }).nullable(),
-        }),
-      }),
-    ),
-  }),
-});
-
-const MergedPullRequestSchema = z.object({
-  number: z.number().int(),
-  title: z.string(),
-  url: z.url(),
-  author: ActorSchema,
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  mergedAt: z.string().nullable(),
-});
-
-const CommitSchema = z.object({
-  oid: z.string(),
-  messageHeadline: z.string(),
-  committedDate: z.string(),
-  url: z.url(),
-});
+const GITHUB_API_URL = "https://api.github.com";
+const GITHUB_GRAPHQL_URL = `${GITHUB_API_URL}/graphql`;
+const MAX_PAGES = 20;
+const RELEASES_PER_PAGE = 100;
 
 export type AuthorKind = "user" | "bot";
 
@@ -81,6 +50,9 @@ export type OpenPullRequest = {
   reviewDecision: "APPROVED" | "CHANGES_REQUESTED" | "REVIEW_REQUIRED" | null;
   mergeable: "MERGEABLE" | "CONFLICTING" | "UNKNOWN";
   branch: string;
+  baseRefName: string;
+  headOid: string | undefined;
+  exactHeadApproved: boolean;
   labels: string[];
   checks: CheckRollup;
 };
@@ -89,6 +61,7 @@ export type MergedPullRequest = {
   number: number;
   title: string;
   url: string;
+  branch?: string;
   author: Author;
   createdAt: string;
   mergedAt: string;
@@ -105,82 +78,77 @@ export type BranchHead = Commit & { checks: CheckRollup };
 
 export type IssueBody = { number: number; url: string; body: string };
 
-function toAuthor(actor: z.infer<typeof ActorSchema>): Author {
-  if (actor === null) {
-    return undefined;
-  }
+export type RateLimitWindow = {
+  limit: number;
+  remaining: number;
+  used: number;
+  resetAt: string;
+  cost?: number;
+};
+
+export type PullRequestBody = {
+  number: number;
+  title: string;
+  body: string;
+  headRefName: string;
+  url: string;
+};
+
+export type GitHubReleaseNote = {
+  tagName: string;
+  name: string;
+  body: string;
+  url: string;
+  prerelease: boolean;
+  publishedAt: string | null;
+};
+
+export type CommitComparison = {
+  aheadBy: number;
+  htmlUrl: string;
+  commits: { sha: string; headline: string; committedAt: string }[];
+};
+
+function toOpenPullRequest(
+  pr: z.infer<typeof OpenPullRequestSchema>,
+): OpenPullRequest {
+  const headCommit = pr.commits.nodes[0]?.commit;
+  const headOid = headCommit?.oid;
   return {
-    login: actor.login,
-    kind: actor.__typename === "Bot" ? "bot" : "user",
+    number: pr.number,
+    title: pr.title,
+    url: pr.url,
+    author: toAuthor(pr.author),
+    draft: pr.isDraft,
+    createdAt: pr.createdAt,
+    updatedAt: pr.updatedAt,
+    reviewDecision: pr.reviewDecision,
+    mergeable: pr.mergeable,
+    branch: pr.headRefName,
+    baseRefName: pr.baseRefName,
+    headOid,
+    exactHeadApproved: isExactHeadApproved(headOid, pr.reviews.nodes),
+    labels: pr.labels.nodes.map((label) => label.name),
+    checks: headCommit?.statusCheckRollup?.state ?? "NONE",
   };
 }
 
-const OPEN_PULL_REQUESTS = `
-query OpenPullRequests($owner: String!, $name: String!, $after: String) {
-  repository(owner: $owner, name: $name) {
-    pullRequests(states: OPEN, first: 50, after: $after, orderBy: {field: CREATED_AT, direction: DESC}) {
-      pageInfo { hasNextPage endCursor }
-      nodes {
-        number title url isDraft createdAt updatedAt reviewDecision mergeable headRefName
-        author { login __typename }
-        labels(first: 20) { nodes { name } }
-        commits(last: 1) { nodes { commit { oid statusCheckRollup { state } } } }
-      }
-    }
-  }
-}`;
-
-const MERGED_PULL_REQUESTS = `
-query MergedPullRequests($owner: String!, $name: String!, $after: String) {
-  repository(owner: $owner, name: $name) {
-    pullRequests(states: MERGED, first: 100, after: $after, orderBy: {field: UPDATED_AT, direction: DESC}) {
-      pageInfo { hasNextPage endCursor }
-      nodes { number title url createdAt updatedAt mergedAt author { login __typename } }
-    }
-  }
-}`;
-
-const PATH_HISTORY = `
-query PathHistory($owner: String!, $name: String!, $ref: String!, $path: String!, $since: GitTimestamp!, $after: String) {
-  repository(owner: $owner, name: $name) {
-    ref(qualifiedName: $ref) {
-      target {
-        ... on Commit {
-          history(path: $path, since: $since, first: 100, after: $after) {
-            pageInfo { hasNextPage endCursor }
-            nodes { oid messageHeadline committedDate url }
-          }
-        }
-      }
-    }
-  }
-}`;
-
-const BRANCH_HEAD = `
-query BranchHead($owner: String!, $name: String!, $ref: String!) {
-  repository(owner: $owner, name: $name) {
-    ref(qualifiedName: $ref) {
-      target {
-        ... on Commit { oid messageHeadline committedDate url statusCheckRollup { state } }
-      }
-    }
-  }
-}`;
-
-const ISSUE_SEARCH = `
-query IssueSearch($query: String!) {
-  search(query: $query, type: ISSUE, first: 5) {
-    nodes { ... on Issue { number title url body } }
-  }
-}`;
-
-function connection<T extends z.ZodType>(item: T) {
-  return z.object({ pageInfo: PageInfoSchema, nodes: z.array(item) });
+function toMergedPullRequest(
+  pr: z.infer<typeof MergedPullRequestSchema>,
+  mergedAt: string,
+): MergedPullRequest {
+  return {
+    number: pr.number,
+    title: pr.title,
+    url: pr.url,
+    ...(pr.headRefName === undefined ? {} : { branch: pr.headRefName }),
+    author: toAuthor(pr.author),
+    createdAt: pr.createdAt,
+    mergedAt,
+  };
 }
 
-const MAX_PAGES = 20;
-
-/** Read-only GitHub GraphQL client for one repository. */
+/** Read-only GitHub GraphQL + REST client for repository and upstream delta reads. */
 export class GitHubClient {
   readonly #owner: string;
   readonly #name: string;
@@ -221,36 +189,41 @@ export class GitHubClient {
     );
   }
 
+  async #restGet<T extends z.ZodType>(
+    path: string,
+    schema: T,
+  ): Promise<z.infer<T>> {
+    const token = await this.#token();
+    return await fetchJson(
+      this.#fetch,
+      {
+        upstream: "github",
+        url: `${GITHUB_API_URL}${path}`,
+        init: {
+          headers: {
+            accept: "application/vnd.github+json",
+            ...bearer(token),
+          },
+        },
+      },
+      schema,
+    );
+  }
+
   async openPullRequests(): Promise<OpenPullRequest[]> {
-    const schema = z.object({
+    const Schema = z.object({
       repository: z.object({ pullRequests: connection(OpenPullRequestSchema) }),
     });
     const results: OpenPullRequest[] = [];
     let after: string | null = null;
     for (let page = 0; page < MAX_PAGES; page += 1) {
-      const data: z.infer<typeof schema> = await this.#query(
+      const data: z.infer<typeof Schema> = await this.#query(
         OPEN_PULL_REQUESTS,
         { ...this.#repository(), after },
-        schema,
+        Schema,
       );
       const { nodes, pageInfo } = data.repository.pullRequests;
-      for (const pr of nodes) {
-        results.push({
-          number: pr.number,
-          title: pr.title,
-          url: pr.url,
-          author: toAuthor(pr.author),
-          draft: pr.isDraft,
-          createdAt: pr.createdAt,
-          updatedAt: pr.updatedAt,
-          reviewDecision: pr.reviewDecision,
-          mergeable: pr.mergeable,
-          branch: pr.headRefName,
-          labels: pr.labels.nodes.map((label) => label.name),
-          checks:
-            pr.commits.nodes[0]?.commit.statusCheckRollup?.state ?? "NONE",
-        });
-      }
+      results.push(...nodes.map((pr) => toOpenPullRequest(pr)));
       if (!pageInfo.hasNextPage) {
         return results;
       }
@@ -267,36 +240,27 @@ export class GitHubClient {
    * `since` (a PR cannot be merged after its last update).
    */
   async mergedPullRequests(since: Date): Promise<MergedPullRequest[]> {
-    const schema = z.object({
+    const Schema = z.object({
       repository: z.object({
         pullRequests: connection(MergedPullRequestSchema),
       }),
     });
+    const sinceMs = since.getTime();
     const results: MergedPullRequest[] = [];
     let after: string | null = null;
     for (let page = 0; page < MAX_PAGES; page += 1) {
-      const data: z.infer<typeof schema> = await this.#query(
+      const data: z.infer<typeof Schema> = await this.#query(
         MERGED_PULL_REQUESTS,
         { ...this.#repository(), after },
-        schema,
+        Schema,
       );
       const { nodes, pageInfo } = data.repository.pullRequests;
       for (const pr of nodes) {
-        if (Date.parse(pr.updatedAt) < since.getTime()) {
+        if (Date.parse(pr.updatedAt) < sinceMs) {
           return results;
         }
-        if (
-          pr.mergedAt !== null &&
-          Date.parse(pr.mergedAt) >= since.getTime()
-        ) {
-          results.push({
-            number: pr.number,
-            title: pr.title,
-            url: pr.url,
-            author: toAuthor(pr.author),
-            createdAt: pr.createdAt,
-            mergedAt: pr.mergedAt,
-          });
+        if (pr.mergedAt !== null && Date.parse(pr.mergedAt) >= sinceMs) {
+          results.push(toMergedPullRequest(pr, pr.mergedAt));
         }
       }
       if (!pageInfo.hasNextPage) {
@@ -315,7 +279,7 @@ export class GitHubClient {
     path: string;
     since: Date;
   }): Promise<Commit[]> {
-    const schema = z.object({
+    const Schema = z.object({
       repository: z.object({
         ref: z
           .object({ target: z.object({ history: connection(CommitSchema) }) })
@@ -325,7 +289,7 @@ export class GitHubClient {
     const results: Commit[] = [];
     let after: string | null = null;
     for (let page = 0; page < MAX_PAGES; page += 1) {
-      const data: z.infer<typeof schema> = await this.#query(
+      const data: z.infer<typeof Schema> = await this.#query(
         PATH_HISTORY,
         {
           ...this.#repository(),
@@ -334,7 +298,7 @@ export class GitHubClient {
           since: input.since.toISOString(),
           after,
         },
-        schema,
+        Schema,
       );
       if (data.repository.ref === null) {
         throw new Error(`GitHub branch ${input.branch} does not exist`);
@@ -358,7 +322,7 @@ export class GitHubClient {
 
   /** The head commit of a branch with its combined check state. */
   async branchHead(branch: string): Promise<BranchHead> {
-    const schema = z.object({
+    const Schema = z.object({
       repository: z.object({
         ref: z
           .object({
@@ -374,7 +338,7 @@ export class GitHubClient {
     const data = await this.#query(
       BRANCH_HEAD,
       { ...this.#repository(), ref: `refs/heads/${branch}` },
-      schema,
+      Schema,
     );
     const target = data.repository.ref?.target;
     if (target === undefined) {
@@ -391,7 +355,7 @@ export class GitHubClient {
 
   /** The single open issue in this repository whose title is exactly `title`. */
   async openIssueByTitle(title: string): Promise<IssueBody> {
-    const schema = z.object({
+    const Schema = z.object({
       search: z.object({
         nodes: z.array(
           z.object({
@@ -408,7 +372,7 @@ export class GitHubClient {
       {
         query: `repo:${this.#owner}/${this.#name} is:issue is:open in:title "${title}"`,
       },
-      schema,
+      Schema,
     );
     const matches = data.search.nodes.filter((issue) => issue.title === title);
     const [issue] = matches;
@@ -418,5 +382,108 @@ export class GitHubClient {
       );
     }
     return { number: issue.number, url: issue.url, body: issue.body };
+  }
+
+  /** GraphQL and REST core rate limit windows for the configured token. */
+  async rateLimits(): Promise<{
+    graphql: RateLimitWindow;
+    core: RateLimitWindow;
+  }> {
+    const [graphqlData, restData] = await Promise.all([
+      this.#query(GRAPHQL_RATE_LIMIT, {}, GraphqlRateLimitSchema),
+      this.#restGet("/rate_limit", RestRateLimitSchema),
+    ]);
+    const gql = graphqlData.rateLimit;
+    const core = restData.resources.core;
+    return {
+      graphql: {
+        limit: gql.limit,
+        remaining: gql.remaining,
+        used: gql.used,
+        resetAt: gql.resetAt,
+        cost: gql.cost,
+      },
+      core: {
+        limit: core.limit,
+        remaining: core.remaining,
+        used: core.used,
+        resetAt: new Date(core.reset * 1000).toISOString(),
+      },
+    };
+  }
+
+  /** Read one pull request's full body and head branch. */
+  async pullRequestBody(number: number): Promise<PullRequestBody> {
+    const data = await this.#query(
+      PULL_REQUEST_BODY,
+      { ...this.#repository(), number },
+      PullRequestBodySchema,
+    );
+    const pr = data.repository.pullRequest;
+    if (pr === null) {
+      throw new UpstreamError("github", `PR #${String(number)} not found`, 404);
+    }
+    return {
+      number: pr.number,
+      title: pr.title,
+      body: pr.body,
+      headRefName: pr.headRefName,
+      url: pr.url,
+    };
+  }
+
+  /** Published releases of an upstream repository, newest pages first. */
+  async releasesBetween(input: {
+    owner: string;
+    name: string;
+    maxPages?: number;
+  }): Promise<GitHubReleaseNote[]> {
+    const maxPages = Math.min(Math.max(input.maxPages ?? 3, 1), MAX_PAGES);
+    const PageSchema = z.array(RestReleaseSchema);
+    const releases: GitHubReleaseNote[] = [];
+    const repoPath = `/repos/${encodeURIComponent(input.owner)}/${encodeURIComponent(input.name)}/releases`;
+    for (let page = 1; page <= maxPages; page += 1) {
+      const items = await this.#restGet(
+        `${repoPath}?per_page=${String(RELEASES_PER_PAGE)}&page=${String(page)}`,
+        PageSchema,
+      );
+      for (const release of items) {
+        if (!release.draft) {
+          releases.push({
+            tagName: release.tag_name,
+            name: release.name ?? release.tag_name,
+            body: release.body ?? "",
+            url: release.html_url,
+            prerelease: release.prerelease,
+            publishedAt: release.published_at ?? release.created_at,
+          });
+        }
+      }
+      if (items.length < RELEASES_PER_PAGE) {
+        break;
+      }
+    }
+    return releases;
+  }
+
+  /** Compare `base...head` commits on an upstream GitHub repository. */
+  async compareCommits(input: {
+    owner: string;
+    name: string;
+    base: string;
+    head: string;
+  }): Promise<CommitComparison> {
+    const path = `/repos/${encodeURIComponent(input.owner)}/${encodeURIComponent(input.name)}/compare/${encodeURIComponent(input.base)}...${encodeURIComponent(input.head)}`;
+    const data = await this.#restGet(path, RestCompareSchema);
+    return {
+      aheadBy: data.ahead_by,
+      htmlUrl: data.html_url,
+      commits: data.commits.map((entry) => ({
+        sha: entry.sha,
+        headline: (entry.commit.message.split("\n")[0] ?? "").trim(),
+        committedAt:
+          entry.commit.committer?.date ?? entry.commit.author?.date ?? "",
+      })),
+    };
   }
 }

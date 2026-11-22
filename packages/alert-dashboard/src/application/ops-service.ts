@@ -5,7 +5,11 @@ import {
   type FreshSnapshot,
 } from "@shepherdjerred/ops-model/assemble.ts";
 import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
-import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
+import type { FacetKey } from "@shepherdjerred/ops-model/facets.ts";
+import {
+  OPS_POLICY,
+  SNAPSHOT_STALE_AFTER_MS,
+} from "@shepherdjerred/ops-model/policy.ts";
 import {
   parseOpsIngest,
   SnapshotResponseSchema,
@@ -30,6 +34,7 @@ import {
   ChangeListInputSchema,
   CursorInputSchema,
   CursorResponseSchema,
+  OpsFacetsResponseSchema,
   SeriesInputSchema,
   SeriesResponseSchema,
   ServiceDetailSchema,
@@ -37,12 +42,15 @@ import {
   type ChangeView,
   type CursorConsumer,
   type CursorResponse,
+  type OpsFacetResponse,
+  type OpsFacetsResponse,
   type SeriesInput,
   type SeriesResponse,
   type ServiceDetail,
 } from "#shared/ops-schema";
 import { JsonTextSchema } from "#shared/json-text";
 import {
+  durationMilliseconds,
   epochNanosecondsToInstantText,
   toContractDate,
   type Clock,
@@ -73,7 +81,7 @@ export class OpsService {
     this.#grafanaUids = options.grafanaUids;
   }
 
-  /** Validate and store one collector delivery; prunes old snapshots. */
+  /** Validate and store one collector delivery; prunes old snapshots and changes. */
   async ingest(rawBody: string): Promise<StoreOpsSnapshotResult> {
     const body = parseOpsIngest(JsonTextSchema.parse(rawBody));
     return this.#repository.storeSnapshot({
@@ -84,6 +92,7 @@ export class OpsService {
         ...change,
         occurredAtNs: instantNs(change.occurredAt),
       })),
+      ...(body.facets === undefined ? {} : { facets: body.facets }),
       retentionDays: OPS_POLICY.snapshotHistoryDays,
     });
   }
@@ -94,7 +103,9 @@ export class OpsService {
     fresh: FreshSnapshot;
   } | null> {
     const stored = await this.#repository.latestSnapshot();
-    if (stored === null) return null;
+    if (stored === null) {
+      return null;
+    }
     return {
       stored,
       fresh: applyFreshness(stored.snapshot, toContractDate(this.#clock.now())),
@@ -103,7 +114,9 @@ export class OpsService {
 
   async snapshot(consumer?: CursorConsumer): Promise<SnapshotResponse> {
     const latest = await this.freshSnapshot();
-    if (latest === null) throw new SnapshotUnavailableError();
+    if (latest === null) {
+      throw new SnapshotUnavailableError();
+    }
     let newSignalIds: string[] = [];
     if (consumer !== undefined) {
       const cursor = await this.#repository.getCursor(consumer);
@@ -119,8 +132,44 @@ export class OpsService {
 
   /** Last successful ingest, for the `/metrics` freshness gauge. */
   async lastIngestAtNs(): Promise<bigint | null> {
-    const stored = await this.#repository.latestSnapshot();
-    return stored?.receivedAtNs ?? null;
+    return this.#repository.latestSnapshotReceivedAtNs();
+  }
+
+  async facets(): Promise<OpsFacetsResponse> {
+    const stored = await this.#repository.getAllFacets();
+    return OpsFacetsResponseSchema.parse({
+      generatedAt:
+        stored.generatedAtNs === null
+          ? null
+          : epochNanosecondsToInstantText(stored.generatedAtNs),
+      receivedAt:
+        stored.receivedAtNs === null
+          ? null
+          : epochNanosecondsToInstantText(stored.receivedAtNs),
+      stale:
+        stored.generatedAtNs !== null && this.#isStale(stored.generatedAtNs),
+      facets: stored.facets,
+    });
+  }
+
+  async facet<K extends FacetKey>(key: K): Promise<OpsFacetResponse<K>> {
+    const stored = await this.#repository.getFacet(key);
+    if (stored === null) {
+      return {
+        key,
+        generatedAt: null,
+        receivedAt: null,
+        stale: false,
+        data: null,
+      };
+    }
+    return {
+      key,
+      generatedAt: epochNanosecondsToInstantText(stored.generatedAtNs),
+      receivedAt: epochNanosecondsToInstantText(stored.receivedAtNs),
+      stale: this.#isStale(stored.generatedAtNs),
+      data: stored.data,
+    };
   }
 
   async changes(input: ChangeListInput): Promise<ChangeView[]> {
@@ -191,14 +240,22 @@ export class OpsService {
     });
   }
 
-  async series(input: SeriesInput): Promise<SeriesResponse> {
+  async series(
+    input: SeriesInput,
+    signal?: AbortSignal,
+  ): Promise<SeriesResponse> {
     const parsed = SeriesInputSchema.parse(input);
     const preset = SERIES_PRESETS[parsed.preset];
     const nowSeconds = Math.floor(this.#clock.now().epochMilliseconds / 1000);
-    const planned = planSeries(parsed.preset, parsed.range, nowSeconds);
+    const planned = planSeries(
+      parsed.preset,
+      parsed.range,
+      nowSeconds,
+      parsed.target,
+    );
     const results = await Promise.all(
       planned.map(async (query) => {
-        const series = await this.#series.range(query);
+        const series = await this.#series.range(query, signal);
         return series.map((entry) => ({
           name:
             query.legendLabel === undefined
@@ -209,8 +266,9 @@ export class OpsService {
       }),
     );
     const first = planned[0];
-    if (first === undefined)
+    if (first === undefined) {
       throw new Error(`Series preset ${parsed.preset} has no queries`);
+    }
     return SeriesResponseSchema.parse({
       preset: parsed.preset,
       range: parsed.range,
@@ -241,9 +299,19 @@ export class OpsService {
     });
   }
 
+  #isStale(generatedAtNs: bigint): boolean {
+    const ageMs = durationMilliseconds(
+      generatedAtNs,
+      this.#clock.now().epochNanoseconds,
+    );
+    return ageMs > SNAPSHOT_STALE_AFTER_MS;
+  }
+
   #service(id: string) {
     const service = this.#services.byId(id);
-    if (service === undefined) throw new ServiceNotFoundError(id);
+    if (service === undefined) {
+      throw new ServiceNotFoundError(id);
+    }
     return service;
   }
 }

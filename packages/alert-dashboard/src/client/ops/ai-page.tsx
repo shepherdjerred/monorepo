@@ -135,11 +135,18 @@ function AiBody({
         <RangePicker value={range} onChange={setRange} />
       </div>
       <div className="chart-grid">
-        <SeriesChart preset="ai-cost-by-source" range={range} />
-        <SeriesChart preset="ai-tokens-by-tool" range={range} />
-        <SeriesChart preset="cluster-llm-cost" range={range} />
-        <SeriesChart preset="ai-quota" range={range} />
-        <SeriesChart preset="provider-billed-cost" range={range} />
+        <SeriesChart preset="ai-cost-by-source" range={range} syncKey="ai" />
+        <SeriesChart preset="ai-tokens-by-tool" range={range} syncKey="ai" />
+        <SeriesChart preset="cluster-llm-cost" range={range} syncKey="ai" />
+        <SeriesChart preset="ai-quota" range={range} syncKey="ai" />
+        <SeriesChart preset="provider-billed-cost" range={range} syncKey="ai" />
+        <SeriesChart
+          preset="llm-token-cache-mix"
+          range={range}
+          mode="stacked-area"
+          syncKey="ai"
+          title="Cluster LLM token & cache mix"
+        />
       </div>
       {other.length === 0 ? null : (
         <section

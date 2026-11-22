@@ -22,12 +22,13 @@ describe("service drill-down links", () => {
     );
   });
 
-  it("builds Grafana Explore, dashboard, and Argo CD links on public hosts", () => {
+  it("builds Grafana Explore, Pyroscope profiles, dashboard, and Argo CD links on public hosts", () => {
     const links = serviceLinks(services.requireById("scout-for-lol"), uids);
     expect(links.map((link) => link.kind)).toEqual([
       "logs",
       "traces",
       "metrics",
+      "profiles",
       "grafana",
       "argocd",
       "argocd",
@@ -38,11 +39,21 @@ describe("service drill-down links", () => {
     expect(logs.searchParams.get("panes")).toContain(
       String.raw`{namespace=~\"scout-beta|scout-prod\"}`,
     );
-    expect(links[3]?.url).toBe(
+    const profiles = new URL(links[3]?.url ?? "");
+    expect(profiles.origin).toBe("https://grafana.tailnet-1a49.ts.net");
+    expect(profiles.pathname).toBe("/explore");
+    expect(profiles.searchParams.get("panes")).toContain("pyroscope");
+    expect(profiles.searchParams.get("panes")).toContain("scout-beta");
+    expect(links[4]?.url).toBe(
       "https://grafana.tailnet-1a49.ts.net/d/scout-for-lol-durable",
     );
-    expect(links[4]?.url).toBe(
+    expect(links[5]?.url).toBe(
       "https://argocd.tailnet-1a49.ts.net/applications/argocd/scout-beta",
     );
+  });
+
+  it("omits namespace-scoped Explore links when a service owns no namespaces", () => {
+    const links = serviceLinks(services.requireById("delivery-data"), uids);
+    expect(links.map((link) => link.kind)).toEqual(["argocd"]);
   });
 });

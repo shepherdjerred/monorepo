@@ -1,0 +1,360 @@
+/* ---- Hub 2.0 Product, PostHog, Storm & App Service Views ---- */
+
+.product-scope {
+  min-inline-size: 0;
+}
+
+.product-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-block: 14px 18px;
+}
+
+.product-kpi-grid .metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--panel);
+  border-color: var(--line);
+}
+
+.product-kpi-grid .metric strong {
+  font-family: "Berkeley Mono", ui-monospace, monospace;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.product-funnel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 14px;
+  margin-block-end: 18px;
+}
+
+.product-funnel-card {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-inline-size: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+}
+
+.product-funnel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 10px;
+  min-inline-size: 0;
+}
+
+.product-funnel-head h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.product-funnel-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.product-funnel-step {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+}
+
+.product-funnel-step-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+  min-inline-size: 0;
+}
+
+.product-funnel-step-label {
+  min-inline-size: 0;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.product-funnel-step-stats {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  color: var(--muted);
+  font-family: "Berkeley Mono", ui-monospace, monospace;
+  font-size: 0.73rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.product-funnel-step-stats strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.product-funnel-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--meter-track);
+  overflow: clip;
+}
+
+.product-funnel-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.product-host-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-inline-size: 0;
+}
+
+.product-host-name {
+  min-inline-size: 0;
+  color: var(--ink);
+  font-family: "Berkeley Mono", ui-monospace, monospace;
+  font-size: 0.8rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.product-trend-cell {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 10px;
+  min-inline-size: 0;
+}
+
+.product-trend-count {
+  min-inline-size: 3.1rem;
+  color: var(--ink);
+  font-family: "Berkeley Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.product-cwv-cell {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px 8px;
+  min-inline-size: 0;
+}
+
+.product-split-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+  margin-block-start: 18px;
+}
+
+.product-cell-stack {
+  display: grid;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.product-cell-primary {
+  min-inline-size: 0;
+  color: var(--ink);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.product-cell-secondary {
+  min-inline-size: 0;
+  color: var(--muted);
+  font-size: 0.73rem;
+  overflow-wrap: anywhere;
+}
+
+.product-url-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  min-inline-size: 0;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.product-url-link:hover {
+  text-decoration: underline;
+}
+
+.product-url-link svg {
+  flex: none;
+  width: 0.78rem;
+  height: 0.78rem;
+}
+
+.storm-quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-end: 18px;
+}
+
+.storm-quick-links .button {
+  text-decoration: none;
+}
+
+.storm-quick-links .button svg {
+  flex: none;
+  width: 0.82rem;
+  height: 0.82rem;
+}
+
+.storm-service-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-block-end: 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.storm-analytics-panel,
+.product-meter-card {
+  display: grid;
+  gap: 12px;
+  min-inline-size: 0;
+  padding: 16px 18px;
+  margin-block-end: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+}
+
+.storm-analytics-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  min-inline-size: 0;
+}
+
+.storm-analytics-head h2,
+.product-meter-card h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.96rem;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.product-service-stack {
+  display: grid;
+  gap: 18px;
+  min-inline-size: 0;
+  margin-block-end: 18px;
+}
+
+.product-service-stack > .block-heading {
+  margin-block: 6px 0;
+}
+
+.product-service-stack > .chart-grid,
+.product-service-stack > .product-kpi-grid,
+.product-service-stack > .product-meter-card {
+  margin-block: 0;
+}
+
+.product-scout-envs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+}
+
+.product-scout-env-card {
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+}
+
+.product-inline-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  min-inline-size: 0;
+}
+
+/* Allow multi-namespace filter pill bars (e.g. 16 Flipt namespaces) to wrap cleanly on 375px */
+.product-scope .visual-filter-pills {
+  flex-wrap: wrap;
+  max-inline-size: 100%;
+}
+
+@container content (max-width: 960px) {
+  .product-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .product-split-grid,
+  .storm-service-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .product-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-funnel-card,
+  .storm-analytics-panel,
+  .product-meter-card {
+    padding: 14px;
+  }
+
+  .product-trend-cell,
+  .product-cwv-cell {
+    justify-content: flex-start;
+  }
+}
+
+@media (forced-colors: active) {
+  .product-funnel-bar {
+    border: 1px solid CanvasText;
+  }
+
+  .product-funnel-bar-fill {
+    background: Highlight;
+  }
+}

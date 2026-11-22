@@ -149,6 +149,7 @@ import {
   runOpsDigest as _runOpsDigest,
   runOpsSnapshot as _runOpsSnapshot,
 } from "./ops-snapshot.ts";
+import { runRenovateDeltaEnrichment as _runRenovateDeltaEnrichment } from "./ops/renovate-delta-enrichment.ts";
 import * as agentChat from "./agent-chat/entrypoints.ts";
 import type {
   BlueBubblesCursor,
@@ -402,6 +403,7 @@ export const runGlitterCorpusDaily = () =>
 export const runLlmBilledCostReconciliation = () =>
   _runLlmBilledCostReconciliation();
 export const runOpsSnapshot = () => _runOpsSnapshot();
+export const runRenovateDeltaEnrichment = () => _runRenovateDeltaEnrichment();
 export async function runOpsDigest(
   input: Parameters<typeof _runOpsDigest>[0],
 ): ReturnType<typeof _runOpsDigest> {

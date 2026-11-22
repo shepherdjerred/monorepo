@@ -37,6 +37,7 @@ const CANCELLATION_GRACE_PERIOD_MS = 1000;
 export const TURBO_CACHE_CLEAN_ACTIVITY = "turbo-cache-clean";
 export const TURBO_CACHE_CLEAN_URL =
   "http://turbo-cache-turbo-cache-service.turbo-cache.svc.cluster.local:3000/v8/clean";
+export const TURBO_CACHE_SLUGS = ["monorepo", "monorepo-pull-request"] as const;
 const TurboCacheCleanResponseSchema = z.object({
   deleted: z.number().int().nonnegative(),
   scanned: z.number().int().nonnegative(),
@@ -455,30 +456,37 @@ export async function cleanTurboCache(
   cancellationSignal?: AbortSignal,
 ): Promise<TurboCacheCleanResult> {
   const token = await requiredSecretFile("TURBO_CACHE_TOKEN_FILE");
-  const url = new URL(
-    Bun.env["TURBO_CACHE_CLEAN_URL"] ?? TURBO_CACHE_CLEAN_URL,
-  );
-  url.searchParams.set("slug", "monorepo");
-  // Days. 14, not 30: at the observed ~13 GiB/day ingest a 30-day window's
-  // steady state (~390 GiB) exceeds even the 512 GiB PVC's comfort zone, and
-  // CI cache hits older than two weeks are vanishingly rare
-  // (PVCProjectedFullWithin14Days, 2026-08-28).
-  url.searchParams.set("olderThan", "14");
+  const baseUrl = Bun.env["TURBO_CACHE_CLEAN_URL"] ?? TURBO_CACHE_CLEAN_URL;
+  const signal = cancellationSignal ?? Context.current().cancellationSignal;
 
   try {
-    const response = await fetcher(url, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      signal: cancellationSignal ?? Context.current().cancellationSignal,
-    });
-    if (!response.ok) {
-      throw new Error(
-        `Turbo cache cleanup failed with HTTP ${String(response.status)}`,
+    let deleted = 0;
+    let scanned = 0;
+    for (const slug of TURBO_CACHE_SLUGS) {
+      const url = new URL(baseUrl);
+      url.searchParams.set("slug", slug);
+      // Days. 14, not 30: at the observed ~13 GiB/day ingest a 30-day window's
+      // steady state (~390 GiB) exceeds even the 512 GiB PVC's comfort zone, and
+      // CI cache hits older than two weeks are vanishingly rare
+      // (PVCProjectedFullWithin14Days, 2026-08-28).
+      url.searchParams.set("olderThan", "14");
+      const response = await fetcher(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+      });
+      if (!response.ok) {
+        throw new Error(
+          `Turbo cache cleanup for ${slug} failed with HTTP ${String(response.status)}`,
+        );
+      }
+      const slugResult = TurboCacheCleanResponseSchema.parse(
+        JSON.parse(await response.text()),
       );
+      deleted += slugResult.deleted;
+      scanned += slugResult.scanned;
     }
-    const result = TurboCacheCleanResponseSchema.parse(
-      JSON.parse(await response.text()),
-    );
+    const result = { deleted, scanned };
     maintenanceLastSuccessTimestampSeconds.set(
       { maintenance_job: TURBO_CACHE_CLEAN_ACTIVITY },
       Date.now() / 1000,

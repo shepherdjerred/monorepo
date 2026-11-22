@@ -14,59 +14,99 @@ explains the naming, the module model, and why Delivery stays a separate app.
 The core module has two halves in one process:
 
 - **Ops overview.** The Temporal `ops-snapshot` workflow posts an
-  [`@shepherdjerred/ops-model`](../ops-model/README.md) snapshot and change
-  events every five minutes. The dashboard stores them in SQLite, applies the
-  freshness policy at read time (a stale snapshot is never green), and renders
-  Home (`/`), Services, Flow (`/flow`), AI, Maintenance, and Review pages
-  plus the daily and weekly digest email. Home is the one overview page. In
-  order it shows the overall status; tiles for firing alerts, what waits on
-  Jerred, and Tracker triage; a card per area; a "Needs attention" list beside
-  what is new since the last visit; and a launcher for Tracker, Delivery, and
-  the tools. "Needs attention" lists every signal at attention severity or
-  waiting on Jerred, and its filter narrows it to what waits on him
-  (`/?show=waiting`, where the "Waiting on you" tile links). `/overview` was
-  a separate page and now redirects to `/`, keeping its query string. Flow
-  (pull requests and Tracker work) and Maintenance are section pages
-  (`src/client/ops/section-page.tsx`): a summary card per snapshot section
-  with every metric, then the trend charts, then a signal list per section.
-  Flow was served at `/delivery`, the name of a different app; that URL
-  redirects to `/flow` with its query string and fragment. A metric tile at
-  warning, error, or unknown carries an accent bar and a named icon. The AI
-  page (`src/client/ops/ai-page.tsx`) shows its status with the section
-  summary that explains it, API spend against the monthly budget beside the
-  section's other metrics, then one table of subscription quota windows
-  grouped by provider beside a table of usage by tool. Quota severity comes
-  from the snapshot: a row takes its signal's severity and the page never
-  derives one from the usage ratio, so a short window the collector reports
-  as informational because it is about to reset stays informational. A window
-  whose reset time is at or before the snapshot shows its last reading as
-  "reset · was N%". Usage by tool is API-equivalent spend: what each tool's
-  usage on the Mac this month would have cost at API prices. Most of it runs
-  on subscriptions, so it compares the tools and is not a bill. Trend
-  charts read Prometheus through named presets only; the browser never sends
-  PromQL. A chart's legend shows each series' newest sample until a point is
-  hovered. Every signal list renders through `SignalList`
-  (`src/client/ops/signal-list.tsx`): it collapses same-kind signals with
-  ops-model's `groupSignals` (an allowlist of kinds, so alerts never
-  collapse), shows a capped number of entries (ten unless the list sets its
-  own), and expands in place. There is no uncapped mode; the digest email
-  groups the same way before its own row cap. Change timelines cap the same
-  way, at fifteen. `e2e/volume.spec.ts` bounds page height at production
-  volume, how far down Home its area cards start, and how far down the
-  section pages their charts start.
+  [`@shepherdjerred/ops-model`](../ops-model/README.md) snapshot, change events,
+  and optional typed `OpsFacets` every five minutes. The dashboard stores
+  snapshots and changes in SQLite, upserts each facet key as a latest-only
+  `OpsFacet` row cached in memory, applies the freshness policy at read time (a
+  stale snapshot is never green), and renders Home (`/`), Services
+  (`/services`), Cluster (`/cluster`), Flow (`/flow`), Monorepo (`/monorepo`),
+  Renovate (`/renovate`), Product (`/product`), The Storm (`/the-storm`), AI
+  (`/ai`), Maintenance (`/maintenance`), and Review (`/review`) pages plus the
+  daily and weekly digest email. Home is the one overview page. In order it
+  shows the overall status; tiles for firing alerts, what waits on Jerred, and
+  Tracker triage; a card per area; a "Needs attention" list beside what is new
+  since the last visit; and a launcher for Tracker, Delivery, and the tools.
+  "Needs attention" lists every signal at attention severity or waiting on
+  Jerred, and its filter narrows it to what waits on him (`/?show=waiting`,
+  where the "Waiting on you" tile links). `/overview` was a separate page and
+  now redirects to `/`, keeping its query string. Flow (pull requests and
+  Tracker work) and Maintenance are section pages
+  (`src/client/ops/section-page.tsx`): a summary card per snapshot section with
+  every metric, then the trend charts, then a signal list per section. Flow was
+  served at `/delivery`, the name of a different app; that URL redirects to
+  `/flow` with its query string and fragment. A metric tile at warning, error,
+  or unknown carries an accent bar and a named icon. The AI page
+  (`src/client/ops/ai-page.tsx`) shows its status with the section summary that
+  explains it, API spend against the monthly budget beside the section's other
+  metrics, then one table of subscription quota windows grouped by provider
+  beside a table of usage by tool. Quota severity comes from the snapshot: a row
+  takes its signal's severity and the page never derives one from the usage
+  ratio, so a short window the collector reports as informational because it is
+  about to reset stays informational. A window whose reset time is at or before
+  the snapshot shows its last reading as "reset · was N%". Usage by tool is
+  API-equivalent spend: what each tool's usage on the Mac this month would have
+  cost at API prices. Most of it runs on subscriptions, so it compares the tools
+  and is not a bill. Trend charts read Prometheus through named presets only;
+  the browser never sends PromQL. A chart's legend shows each series' newest
+  sample until a point is hovered. Every signal list renders through
+  `SignalList` (`src/client/ops/signal-list.tsx`): it collapses same-kind
+  signals with ops-model's `groupSignals` (an allowlist of kinds, so alerts
+  never collapse), shows a capped number of entries (ten unless the list sets
+  its own), and expands in place. There is no uncapped mode; the digest email
+  groups the same way before its own row cap. Change timelines cap the same way,
+  at fifteen. `e2e/volume.spec.ts` bounds page height at production volume, how
+  far down Home its area cards start, and how far down the section pages their
+  charts start.
 - **Alert ledger & House chores.** Alertmanager remains authoritative for
   evaluation, grouping, inhibition, routing, and silences; this service stores
   actionable occurrence history (excluding `Watchdog`, `InfoInhibitor`,
-  `severity=info`, and `null`-only receivers), serves the Ops Active (`/alerts`),
-  House (`/house`), History (`/history` with `Ops`/`House`/`All` scope links),
-  and System (`/system`) pages, sends grouped opening email through Postal,
-  pushes eligible non-`pet-care` `category=household` chores and dismissals
-  durably to Home Assistant (`HomeAssistantOutbox`) when `HOMEASSISTANT_URL`
-  and `HOMEASSISTANT_TOKEN` are configured, and renders bounded Grafana-backed
-  Prometheus, Loki, and Tempo previews for firing alerts. Alert openings and
-  resolutions also appear on the ops change timeline, derived from the ledger
-  at read time, while daily and weekly Ops incident statistics exclude
+  `severity=info`, and `null`-only receivers at ingest), serves the Ops Active
+  (`/alerts`), House (`/house`), History (`/history` with `Ops`/`House`/`All`
+  scope links), and System (`/system`) pages, sends grouped opening email
+  through Postal, pushes eligible non-`pet-care` `category=household` chores and
+  dismissals durably to Home Assistant (`HomeAssistantOutbox`) when
+  `HOMEASSISTANT_URL` and `HOMEASSISTANT_TOKEN` are configured, and renders
+  bounded Grafana-backed Prometheus, Loki, and Tempo previews for firing alerts.
+  On `/alerts` (`src/client/dashboard-page.tsx`), any retained `Watchdog`
+  occurrences are hidden by default behind a URL-synced `Show Watchdog` /
+  `Hide Watchdog` toggle (`?watchdog=1`, forced visible when `severity=unknown`
+  or search matches `"watchdog"`), and `AlertTable` (`src/client/alert-table.tsx`)
+  collapses `alertname`s with two or more occurrences into expandable
+  `<details>` groups showing highest severity, occurrence count, and newest
+  `openedAt` age while leaving single occurrences inline. Alert openings and
+  resolutions also appear on the ops change timeline, derived from the ledger at
+  read time, while daily and weekly Ops incident statistics exclude
   `category=household` chores.
+
+### Facet-backed explorer routes & Visuals Kit
+
+Beyond the snapshot section pages, Hub serves dedicated deep-dive explorers
+backed by latest-only `OpsFacets` (`@shepherdjerred/ops-model/facets.ts`) and
+shared visual primitives:
+
+| Route        | Client entry                              | Facets & data                                                                                                                                                                                                    |
+| ------------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/cluster`   | `src/client/ops/pages/cluster-page.tsx`   | `cluster` facet + Prometheus presets across URL-synced `?tab=` views (`nodes`, `workloads` with `?retained=1` pool toggle and degraded-first sort, `databases`, and `storage` for ZFS pools, NVMe, SeaweedFS)    |
+| `/monorepo`  | `src/client/ops/pages/monorepo-page.tsx`  | `monorepo` facet + CI/Turborepo presets: 7d remote cache hit ratio and saved hours, audit strip, expensive/cache-missing tasks, and filterable workspace package directory                                       |
+| `/renovate`  | `src/client/ops/pages/renovate-page.tsx`  | `renovate` facet + velocity presets: open PR concurrency and LLM delta coverage meters, `?tab=` queue buckets (`prs`, `approval`, `held`, `hygiene`, `merged`), and `?expand=` version-delta drawers             |
+| `/product`   | `src/client/ops/pages/product-page.tsx`   | `product` snapshot section + `posthog` facet: 24h/7d traffic KPIs, conversion funnels with step retention, site traffic & Core Web Vitals (`p75` LCP/INP, exceptions, rageclicks), and top pages/referrers       |
+| `/the-storm` | `src/client/ops/pages/the-storm-page.tsx` | `minecraft`, `storm-brain`, and `storm-forum` service health, `ts-mc.net` slice of the `posthog` facet, player/companion and `target="minecraft"` namespace presets, filtered signals/changes, `/promotion` link |
+
+These pages share the **Visuals Kit** (`src/client/visuals/`):
+
+- `DataTable` (`data-table.tsx`): accessible sortable/searchable table with
+  select filters, initial row caps, expandable detail rows (`renderExpanded`),
+  and client-side CSV/JSON export (`formatDataTableCsv`, `formatDataTableJson`).
+- `BudgetMeter` and `StackedMeter` (`meters.tsx`): capacity/endurance gauges and
+  proportional segment bars.
+- `Sparkline` (`sparkline.tsx`), `StatusMatrix` (`status-matrix.tsx`), and
+  `StackTree` / `buildStackForest` (`stack-tree.tsx`) for inline 7d trends,
+  multi-environment check grids, and stacked PR trees.
+- Multi-mode `UplotChart` (`src/client/charts/uplot-chart.tsx`) and
+  `SeriesChart` (`src/client/charts/series-chart.tsx`): supports `"line"`,
+  `"stacked-area"`, and `"bar"` modes, horizontal `ChartThreshold` overlays,
+  crosshair synchronization across sibling charts via `syncKey`
+  (`getChartSync`), live resting legends, and collapsible data tables.
 
 It is deployed: CI builds and pushes the image (the `alert-dashboard` target in
 [`ci/scripts/images/image-targets.ts`](../../ci/scripts/images/image-targets.ts)),
@@ -239,27 +279,43 @@ Any other value stops the fixture server at startup. The volume snapshots live
 in `src/test-fixtures/ops-snapshot-volume.ts` and use the collector's real
 signal ids, kinds, and metric ids, so they are also the fixtures to import in
 client tests. Both carry a week of changes, about ninety, so the Review and
-service timelines run past their cap. While `OPS_FIXTURE` is set the fixture server re-ingests its
-snapshot every five minutes, as the collector does, so a long-running session
-never goes stale. Series charts and alert ledger pages show the fixture
-server's fixed sample data.
+service timelines run past their cap. `FIXTURE_OPS_FACETS`
+(`src/test-fixtures/ops-facets.ts`) provides schema-validated sample payloads
+across all 13 `OpsFacets` keys (`renovate`, `github`, `posthog`, `bugsink`,
+`flipt`, `tracker`, `cloudflare`, `tailscale`, `golink`, `monorepo`, `cluster`,
+`observability`, `temporal`); `src/dev.ts` attaches it to the local fixture
+ingest and the unit, route, and SQLite integration suites share it. While
+`OPS_FIXTURE` is set the fixture server re-ingests its snapshot every five
+minutes, as the collector does, so a long-running session never goes stale.
+Series charts and alert ledger pages show the fixture server's fixed sample
+data.
 
-| Route                                   | Purpose                                                                                                                                    |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `POST /internal/v1/alertmanager/events` | Alertmanager v4 webhook (bearer `ALERT_DASHBOARD_WEBHOOK_TOKEN`)                                                                           |
-| `POST /internal/v1/ops/snapshots`       | Collector ingest `{snapshot, changes}` (bearer `OPS_INGEST_TOKEN`); validates with `parseOpsIngest`, upserts changes, prunes old snapshots |
-| `POST /internal/v1/digests/:kind`       | `daily` or `weekly` digest (bearer `OPS_INGEST_TOKEN`); idempotent per Los Angeles date or ISO week                                        |
-| `GET /api/v1/ops/snapshot?consumer=`    | Latest snapshot with freshness applied; `503 snapshot_unavailable` before the first ingest; `consumer=web` annotates `newSignalIds`        |
-| `GET /api/v1/ops/changes`               | Change timeline (`service`, `since`, `limit`), stored events merged with alert openings and resolutions                                    |
-| `GET /api/v1/ops/services/:id`          | Catalog entry, its signals, recent changes, and Grafana Explore, dashboard, and Argo CD links                                              |
-| `GET /api/v1/ops/series?preset=&range=` | Named Prometheus preset (`ai-cost-by-source`, `prs-open`, `node-cpu`, …) over `24h`, `7d`, `30d`, or `90d`                                 |
-| `PUT /api/v1/ops/cursor`                | `{consumer: "web", seenSignalIds}` for "mark all seen"                                                                                     |
-| `GET /api/v1/ops/review?kind=`          | The digest report for the current period, as JSON                                                                                          |
-| `GET /api/v1/{summary,alerts,events}`   | Alert ledger reads                                                                                                                         |
+| Route                                           | Purpose                                                                                                                                                              |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /internal/v1/alertmanager/events`         | Alertmanager v4 webhook (bearer `ALERT_DASHBOARD_WEBHOOK_TOKEN`)                                                                                                     |
+| `POST /internal/v1/ops/snapshots`               | Collector ingest `{snapshot, changes, facets?}` (bearer `OPS_INGEST_TOKEN`, 8 MiB limit); validates with `parseOpsIngest`, upserts `OpsFacet` rows & changes, prunes |
+| `POST /internal/v1/digests/:kind`               | `daily` or `weekly` digest (bearer `OPS_INGEST_TOKEN`); idempotent per Los Angeles date or ISO week                                                                  |
+| `GET /api/v1/ops/snapshot?consumer=`            | Latest snapshot with freshness applied; `503 snapshot_unavailable` before the first ingest; `consumer=web` annotates `newSignalIds`                                  |
+| `GET /api/v1/ops/facets`                        | All stored latest-only facets `{generatedAt, receivedAt, stale, facets}` with the snapshot staleness budget applied                                                  |
+| `GET /api/v1/ops/facets/:key`                   | Single facet `{key, generatedAt, receivedAt, stale, data}` for a validated `FacetKey` (`data: null` before first ingest; `400` on invalid key)                       |
+| `GET /api/v1/ops/changes`                       | Change timeline (`service`, `since`, `limit`), stored events merged with alert openings and resolutions                                                              |
+| `GET /api/v1/ops/services/:id`                  | Catalog entry, its signals, recent changes, and Grafana Explore, dashboard, and Argo CD links                                                                        |
+| `GET /api/v1/ops/series?preset=&range=&target=` | Named Prometheus preset (`src/domain/ops-series.ts`) over `24h`, `7d`, `30d`, or `90d`, optionally scoped by a validated `target` regex (`SeriesTargetSchema`)       |
+| `PUT /api/v1/ops/cursor`                        | `{consumer: "web", seenSignalIds}` for "mark all seen"                                                                                                               |
+| `GET /api/v1/ops/review?kind=`                  | The digest report for the current period, as JSON                                                                                                                    |
+| `GET /api/v1/{summary,alerts,events}`           | Alert ledger reads                                                                                                                                                   |
 
 Snapshot retention runs inside ingest, not on a timer: the latest snapshot is
 kept, plus the earliest sample in each UTC hour for
-`OPS_POLICY.snapshotHistoryDays`. `/metrics` adds
+`OPS_POLICY.snapshotHistoryDays`. `OpsFacet` storage is latest-only:
+`PrismaOpsRepository` (`src/infrastructure/prisma-ops-repository.ts`) upserts
+one row per `FacetKey` in the `OpsFacet` table inside the ingest transaction,
+retains no historical facet rows, and serves reads from an in-memory facet
+cache hydrated from SQLite on demand. `PrometheusSeries`
+(`src/infrastructure/prometheus-series.ts`) bounds upstream range queries with a
+6-concurrency abort-aware semaphore, singleflight deduplication across
+concurrent subscribers (aborting upstream only when all subscribers abort), and
+a 30-second TTL cache (up to 256 entries). `/metrics` adds
 `alert_dashboard_ops_ingest_total{result}`,
 `alert_dashboard_ops_last_ingest_timestamp_seconds`,
 `alert_dashboard_ops_digest_total{kind,result}`, and the shared
@@ -359,9 +415,10 @@ dependency-cruiser (`dependency-cruiser.config.cjs`, run via
 - `src/client` — React UI; may only take type-only imports from the server
 
 `src/shared` holds the Zod API contracts both sides parse (`ops-schema.ts` for
-the ops routes), and `src/test-fixtures` holds the ops-model-valid fixture
-snapshot and in-memory adapters that the unit tests and the Playwright fixture
-server share.
+the ops, facet, and series routes), and `src/test-fixtures` holds the
+ops-model-valid fixture snapshots, `FIXTURE_OPS_FACETS` (`ops-facets.ts`), and
+in-memory adapters that the unit tests, `dev:fixture`, and the Playwright
+fixture server share.
 
 Circular dependencies are forbidden anywhere in `src/`.
 

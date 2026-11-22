@@ -108,14 +108,20 @@ describe("ops source collectors", () => {
         return Promise.resolve(Response.json({ data }));
       },
     });
-    const result = await collectRenovate(github);
+    const result = await collectRenovate(github, {
+      readDeltas: () => Promise.resolve({}),
+    });
     expect(result.signals.map((signal) => signal.id)).toEqual([
       "renovate:awaiting-approval",
     ]);
     expect("counts" in result).toBe(false);
+    expect(result.facets?.renovate?.counts["awaiting-approval"]).toBe(1);
     const text = await metricsText();
     expect(text).toContain(
       'renovate_updates_pending{state="awaiting-approval",component="temporal-worker"} 1',
+    );
+    expect(text).toContain(
+      'renovate_updates_pending{state="rate-limited",component="temporal-worker"} 0',
     );
     expect(text).toContain(
       'renovate_updates_pending{state="open-pr",component="temporal-worker"} 0',

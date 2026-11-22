@@ -4,7 +4,9 @@ import type {
   SectionId,
   SnapshotResponse,
 } from "@shepherdjerred/ops-model/snapshot.ts";
+import type { ReactNode } from "react";
 
+import { FlowEnrichment } from "./flow-enrichment.tsx";
 import {
   MetricTile,
   PageHeading,
@@ -23,6 +25,7 @@ export type SectionPageDefinition = {
   eyebrow: string;
   sections: readonly SectionId[];
   charts: readonly SeriesPresetId[];
+  enrichment?: ReactNode;
 };
 
 /** One section at a glance: its verdict, its summary and every metric. */
@@ -144,6 +147,7 @@ function SectionBody({
           <SeriesChart key={preset} preset={preset} range={range} />
         ))}
       </div>
+      {definition.enrichment}
       <h2 className="block-heading">Signals</h2>
       <SignalColumns sections={sections} newIds={newIds} />
     </>
@@ -174,6 +178,7 @@ const FLOW_PAGE: SectionPageDefinition = {
   eyebrow: "Pull requests & work",
   sections: ["delivery", "work"],
   charts: ["prs-open", "prs-merged", "renovate-pending", "tracker-open"],
+  enrichment: <FlowEnrichment />,
 };
 
 const MAINTENANCE_PAGE: SectionPageDefinition = {

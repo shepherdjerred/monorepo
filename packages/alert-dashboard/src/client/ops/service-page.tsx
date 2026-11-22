@@ -3,19 +3,48 @@ import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { worstSeverity } from "@shepherdjerred/ops-model/severity.ts";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftIcon } from "lucide-react";
-import { Link, useParams } from "react-router";
+import { Link, Navigate, useLocation, useParams } from "react-router";
 
 import { OpsApiError, serviceQuery } from "./ops-api.ts";
 import {
   ChangeTimeline,
   ExternalLink,
   PageHeading,
+  RangePicker,
   SeverityBadge,
 } from "./ops-ui.tsx";
+import { renderEngineeringServiceView } from "./service-views/engineering-views.tsx";
+import {
+  renderPlatformServiceView,
+  UniversalServiceTelemetry,
+} from "./service-views/platform-views.tsx";
+import { renderProductServiceView } from "./service-views/product-views.tsx";
 import { SignalList } from "./signal-list.tsx";
+import { useRange } from "#client/charts/use-range.ts";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { age } from "#client/time.ts";
 import type { ServiceDetail } from "#shared/ops-schema";
+
+const SERVICE_ALIASES: Readonly<Record<string, string>> = {
+  woodpecker: "ci",
+  turbo: "ci",
+  flipt: "flags",
+  cloudflare: "networking",
+  tailscale: "networking",
+  seaweedfs: "storage",
+  zfs: "storage",
+  prometheus: "observability",
+  loki: "observability",
+  tempo: "observability",
+  grafana: "observability",
+  phoenix: "observability",
+  pyroscope: "observability",
+  alloy: "observability",
+  argocd: "gitops",
+  scout: "scout-for-lol",
+  media: "streambot",
+  postal: "mail",
+};
 
 function Facts({
   detail,
@@ -60,19 +89,33 @@ function ServiceBody({
 }: {
   readonly detail: ServiceDetail;
 }): React.JSX.Element {
+  const [range, setRange] = useRange("7d");
   const severity = worstSeverity(
     detail.signals.map((signal) => signal.severity),
   );
+  const serviceTelemetry = renderEngineeringServiceView(
+    detail.service.id,
+    range,
+  ) ??
+    renderProductServiceView(detail.service.id, range) ??
+    renderPlatformServiceView(detail.service.id, range) ?? (
+      <UniversalServiceTelemetry detail={detail} range={range} />
+    );
   return (
     <>
       <Link className="back-link" to="/services">
         <ArrowLeftIcon aria-hidden="true" /> Services
       </Link>
       <PageHeading eyebrow="Service" title={detail.service.title}>
-        <SeverityBadge
-          severity={detail.snapshotGeneratedAt === null ? "unknown" : severity}
-          large
-        />
+        <div className="platform-heading-actions">
+          <RangePicker value={range} onChange={setRange} />
+          <SeverityBadge
+            severity={
+              detail.snapshotGeneratedAt === null ? "unknown" : severity
+            }
+            large
+          />
+        </div>
       </PageHeading>
       <p className="lede">
         {detail.snapshotGeneratedAt === null
@@ -88,6 +131,7 @@ function ServiceBody({
           />
         ))}
       </section>
+      {serviceTelemetry}
       <div className="service-layout">
         <div className="stack">
           <section
@@ -118,7 +162,19 @@ function ServiceBody({
 
 export function ServicePage(): React.JSX.Element {
   const { id = "" } = useParams();
-  const detail = Loaded.fromQuery(useQuery(serviceQuery(id)));
+  const { search, hash } = useLocation();
+  const aliasTarget = SERVICE_ALIASES[id];
+  const detail = Loaded.fromQuery(
+    useQuery({ ...serviceQuery(id), enabled: aliasTarget === undefined }),
+  );
+  if (aliasTarget !== undefined) {
+    return (
+      <Navigate
+        to={{ pathname: `/services/${aliasTarget}`, search, hash }}
+        replace
+      />
+    );
+  }
   return (
     <main>
       <title>{`${id} · Hub`}</title>

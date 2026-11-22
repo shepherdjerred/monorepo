@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
+import { FACET_KEYS } from "@shepherdjerred/ops-model/facets.ts";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
@@ -7,6 +8,7 @@ import {
   SnapshotUnavailableError,
 } from "#application/ops-errors";
 import { InstantTextSchema, type Clock } from "#shared/time";
+import { FIXTURE_OPS_FACETS } from "#test-fixtures/ops-facets";
 import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
 import { createOpsFixture } from "#test-fixtures/ops-services";
 
@@ -49,11 +51,76 @@ describe("ops ingest", () => {
     expect(fixture.repository.snapshots).toHaveLength(0);
   });
 
-  it("stores the snapshot and deduplicates change events by source and id", async () => {
-    const { fixture } = await ingested();
-    await fixture.ops.ingest(JSON.stringify(fixtureOpsIngest(NOW)));
+  it("stores the snapshot, tracks lastIngestAtNs, and prunes expired changes", async () => {
+    const clock = clockAt(NOW);
+    const fixture = createOpsFixture(clock);
+    expect(await fixture.ops.lastIngestAtNs()).toBeNull();
+
+    const initial = fixtureOpsIngest(NOW);
+    await fixture.ops.ingest(
+      JSON.stringify({
+        ...initial,
+        changes: [
+          ...initial.changes,
+          {
+            source: "github",
+            externalId: "pr:expired",
+            kind: "merge",
+            title: "Ancient merge",
+            occurredAt: "2026-01-01T00:00:00Z",
+            severity: "info",
+          },
+        ],
+      }),
+    );
+    expect(await fixture.ops.lastIngestAtNs()).toBe(
+      Temporal.Instant.from(NOW).epochNanoseconds,
+    );
     expect(fixture.repository.changes.size).toBe(3);
-    expect(fixture.repository.snapshots.length).toBeGreaterThan(0);
+  });
+
+  it("stores and serves facets with graceful empty states and staleness", async () => {
+    const clock = clockAt(NOW);
+    const fixture = createOpsFixture(clock);
+
+    expect(await fixture.ops.facets()).toEqual({
+      generatedAt: null,
+      receivedAt: null,
+      stale: false,
+      facets: {},
+    });
+    expect(await fixture.ops.facet("renovate")).toEqual({
+      key: "renovate",
+      generatedAt: null,
+      receivedAt: null,
+      stale: false,
+      data: null,
+    });
+
+    await fixture.ops.ingest(
+      JSON.stringify({
+        ...fixtureOpsIngest(NOW),
+        facets: FIXTURE_OPS_FACETS,
+      }),
+    );
+
+    const all = await fixture.ops.facets();
+    expect(all.stale).toBe(false);
+    expect(all.generatedAt).toBe(NOW);
+    expect(Object.keys(all.facets).toSorted()).toEqual(
+      [...FACET_KEYS].toSorted(),
+    );
+    expect(all.facets.posthog?.sites).toHaveLength(14);
+
+    const renovate = await fixture.ops.facet("renovate");
+    expect(renovate.stale).toBe(false);
+    expect(renovate.data?.items[0]?.delta?.impactLevel).toBe("breaking");
+
+    clock.set("2026-09-24T12:20:00Z");
+    const staleAll = await fixture.ops.facets();
+    const staleRenovate = await fixture.ops.facet("renovate");
+    expect(staleAll.stale).toBe(true);
+    expect(staleRenovate.stale).toBe(true);
   });
 });
 
@@ -150,6 +217,7 @@ describe("service detail join", () => {
       url: `https://hub.tailnet-1a49.ts.net/alerts/alert_${"a".repeat(32)}`,
     });
     expect(detail.links.map((link) => link.kind)).toContain("logs");
+    expect(detail.links.map((link) => link.kind)).toContain("profiles");
     expect(detail.snapshotGeneratedAt).toBe(NOW);
   });
 
@@ -178,7 +246,7 @@ describe("service detail join", () => {
 });
 
 describe("series presets", () => {
-  it("names series by the preset's legend label on one step grid", async () => {
+  it("names series by the preset's legend label on one step grid and forwards targets", async () => {
     const fixture = createOpsFixture(clockAt(NOW));
     const result = await fixture.ops.series({
       preset: "ai-cost-by-source",
@@ -194,5 +262,15 @@ describe("series presets", () => {
       "sum by (source) (increase(ai_usage_cost_usd_total[300s]))",
     );
     expect(result.stepSeconds).toBe(300);
+
+    const targeted = await fixture.ops.series({
+      preset: "namespace-memory",
+      range: "24h",
+      target: "scout-prod",
+    });
+    expect(targeted.unit).toBe("bytes");
+    expect(fixture.series.requests[1]?.promql).toContain(
+      'namespace=~"scout-prod"',
+    );
   });
 });

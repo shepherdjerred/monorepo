@@ -62,29 +62,45 @@ async function request<T>(path: string, schema: z.ZodType<T>): Promise<T> {
   return schema.parse(JSON.parse(body));
 }
 
-export async function listAlerts(
+function parseRequestedLimit(
   query: Readonly<Record<string, string>>,
-): Promise<readonly Alert[]> {
+): number | undefined {
   if (query["scope"] !== undefined) {
     AlertScopeSchema.parse(query["scope"]);
   }
   if (query["suppressionState"] !== undefined) {
     SuppressionStateSchema.parse(query["suppressionState"]);
   }
-  const requestedLimit =
-    query["limit"] === undefined
-      ? undefined
-      : RequestedLimitSchema.parse(query["limit"]);
+  const rawLimit = query["limit"];
+  return rawLimit === undefined || rawLimit === "all"
+    ? undefined
+    : RequestedLimitSchema.parse(rawLimit);
+}
+
+function buildAlertPageParams(
+  query: Readonly<Record<string, string>>,
+  pageSize: number,
+  cursor: string | undefined,
+): URLSearchParams {
+  const params = new URLSearchParams(query);
+  if (params.get("lifecycleState") === "all") params.delete("lifecycleState");
+  params.set("limit", String(pageSize));
+  if (cursor === undefined) params.delete("cursor");
+  else params.set("cursor", cursor);
+  return params;
+}
+
+export async function listAlerts(
+  query: Readonly<Record<string, string>>,
+): Promise<readonly Alert[]> {
+  const requestedLimit = parseRequestedLimit(query);
   const pageSize = Math.min(requestedLimit ?? 100, 100);
   const alerts: Alert[] = [];
   const seenCursors = new Set<string>();
   let cursor = query["cursor"];
   if (cursor !== undefined) seenCursors.add(cursor);
   do {
-    const params = new URLSearchParams(query);
-    params.set("limit", String(pageSize));
-    if (cursor === undefined) params.delete("cursor");
-    else params.set("cursor", cursor);
+    const params = buildAlertPageParams(query, pageSize, cursor);
     const result = await request(
       `/api/v1/alerts?${params.toString()}`,
       AlertListSchema,

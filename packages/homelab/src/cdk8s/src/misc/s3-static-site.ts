@@ -10,11 +10,13 @@ import {
   ConfigMap,
   Deployment,
   DeploymentStrategy,
+  Probe as KubeletProbe,
   Secret,
   Service,
   Volume,
 } from "cdk8s-plus-31";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { withCommonProps } from "./common.ts";
 import { ApiObject } from "cdk8s";
 import { Probe } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
@@ -122,6 +124,7 @@ export type CaddyfileGeneratorProps = {
 };
 
 export const STATIC_SITE_HTTP_PORT = 8080;
+export const STATIC_SITE_METRICS_PORT = 9180;
 
 /** The tunnel route of a host this origin serves: the model's static-site origin. */
 function originRoute(hostname: string): PublicHostname {
@@ -159,6 +162,11 @@ export function generateCaddyfile(props: CaddyfileGeneratorProps): string {
 	order s3proxy last
 	auto_https off
 	http_port ${STATIC_SITE_HTTP_PORT.toString()}
+	metrics
+}
+
+:${STATIC_SITE_METRICS_PORT.toString()} {
+	metrics /metrics
 }
 `);
 
@@ -400,7 +408,14 @@ export class S3StaticSites extends Construct {
         resources: {},
         name: "caddy",
         image: firstPartyImageRecipe("caddy-s3proxy"),
-        portNumber: STATIC_SITE_HTTP_PORT,
+        ports: [
+          { number: STATIC_SITE_HTTP_PORT },
+          { name: "metrics", number: STATIC_SITE_METRICS_PORT },
+        ],
+        startup: KubeletProbe.fromTcpSocket({
+          port: STATIC_SITE_HTTP_PORT,
+          failureThreshold: 3,
+        }),
         envVariables: {
           ...seaweedfsS3.credentialsEnv(credentialsSecret),
         },
@@ -435,12 +450,27 @@ export class S3StaticSites extends Construct {
 
     this.deployment = deployment;
 
+    const serviceLabels = { app: "s3-static-sites" };
     this.service = new Service(this, "service", {
       metadata: {
         name: "s3-static-sites",
+        labels: serviceLabels,
       },
       selector: deployment,
-      ports: [{ port: 80, targetPort: STATIC_SITE_HTTP_PORT }],
+      ports: [
+        { name: "http", port: 80, targetPort: STATIC_SITE_HTTP_PORT },
+        {
+          name: "metrics",
+          port: STATIC_SITE_METRICS_PORT,
+          targetPort: STATIC_SITE_METRICS_PORT,
+        },
+      ],
+    });
+
+    createServiceMonitor(chart, {
+      name: "s3-static-sites",
+      namespace,
+      matchLabels: serviceLabels,
     });
 
     for (const host of props.mailPolicies ?? []) {

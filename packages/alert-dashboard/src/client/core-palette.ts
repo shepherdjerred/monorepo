@@ -1,3 +1,4 @@
+import type { OpsFacets } from "@shepherdjerred/ops-model/facets.ts";
 import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 
 import { APPS, TOOLS } from "./external-links.ts";
@@ -8,6 +9,7 @@ import type {
 } from "./platform/module.ts";
 import type { ThemePreference } from "./theme.ts";
 import { trpcClient } from "./trpc.ts";
+import { OpsFacetsResponseSchema } from "#shared/ops-schema";
 
 /**
  * The theme store reads `matchMedia` when it loads, so it is imported on use:
@@ -20,6 +22,38 @@ async function applyTheme(preference: ThemePreference): Promise<void> {
 
 const SERVICE_LIMIT = 6;
 const ALERT_LIMIT = 6;
+const FACET_GROUP_LIMIT = 6;
+const FACET_CACHE_TTL_MS = 60_000;
+
+let cachedFacets: {
+  readonly expiresAtMs: number;
+  readonly promise: Promise<OpsFacets | null>;
+} | null = null;
+
+async function loadFacets(): Promise<OpsFacets | null> {
+  const nowMs = globalThis.performance.now();
+  if (cachedFacets !== null && nowMs < cachedFacets.expiresAtMs) {
+    return cachedFacets.promise;
+  }
+  const promise = (async (): Promise<OpsFacets | null> => {
+    try {
+      const response = await globalThis.fetch("/api/v1/ops/facets", {
+        headers: { accept: "application/json" },
+      });
+      if (!response.ok) return null;
+      const parsed = OpsFacetsResponseSchema.safeParse(await response.json());
+      return parsed.success ? parsed.data.facets : null;
+    } catch {
+      return null;
+    }
+  })();
+  cachedFacets = { expiresAtMs: nowMs + FACET_CACHE_TTL_MS, promise };
+  const result = await promise;
+  if (result === null && cachedFacets.promise === promise) {
+    cachedFacets = null;
+  }
+  return result;
+}
 
 /** The core module's palette commands: the apps and tools, and the theme. */
 export const coreCommands: readonly ModuleCommand[] = [
@@ -94,11 +128,75 @@ async function searchAlerts(
   }));
 }
 
-/** Catalog services and recent alerts. */
+async function searchFacets(
+  query: string,
+  signal: AbortSignal,
+): Promise<ModuleSearchResult[]> {
+  const facets = await loadFacets();
+  if (facets === null || signal.aborted) return [];
+  const needle = query.toLowerCase();
+
+  const packages: ModuleSearchResult[] = (facets.monorepo?.packages ?? [])
+    .filter(
+      (pkg) =>
+        pkg.name.toLowerCase().includes(needle) ||
+        pkg.path.toLowerCase().includes(needle) ||
+        pkg.category.toLowerCase().includes(needle),
+    )
+    .slice(0, FACET_GROUP_LIMIT)
+    .map((pkg) => ({
+      id: `package:${pkg.name}`,
+      group: "Packages",
+      label: pkg.name,
+      detail: `${pkg.path} · ${pkg.category}`,
+      to: "/monorepo",
+    }));
+
+  const renovate: ModuleSearchResult[] = (facets.renovate?.items ?? [])
+    .filter(
+      (item) =>
+        item.packageName.toLowerCase().includes(needle) ||
+        item.title.toLowerCase().includes(needle) ||
+        item.branch.toLowerCase().includes(needle) ||
+        item.ecosystem.toLowerCase().includes(needle),
+    )
+    .slice(0, FACET_GROUP_LIMIT)
+    .map((item) => ({
+      id: `renovate:${item.id}`,
+      group: "Renovate",
+      label: item.packageName,
+      detail:
+        item.targetVersion === undefined || item.targetVersion === null
+          ? item.state
+          : `→ ${item.targetVersion} · ${item.state}`,
+      to: "/renovate",
+    }));
+
+  const golinks: ModuleSearchResult[] = (facets.golink?.links ?? [])
+    .filter(
+      (link) =>
+        `go/${link.slug}`.toLowerCase().includes(needle) ||
+        link.targetUrl.toLowerCase().includes(needle) ||
+        link.tier.toLowerCase().includes(needle),
+    )
+    .slice(0, FACET_GROUP_LIMIT)
+    .map((link) => ({
+      id: `golink:${link.slug}`,
+      group: "Golinks",
+      label: `go/${link.slug}`,
+      detail: `${link.tier} · ${link.targetUrl}`,
+      to: "/services/golink",
+    }));
+
+  return [...packages, ...renovate, ...golinks];
+}
+
+/** Catalog services, workspace packages, Renovate items, Golinks, and recent alerts. */
 export const coreSearch: ModuleSearch = async (query, signal) => {
-  const [services, alerts] = await Promise.all([
+  const [services, alerts, facets] = await Promise.all([
     searchServices(query),
     searchAlerts(query, signal),
+    searchFacets(query, signal),
   ]);
-  return [...services, ...alerts];
+  return [...services, ...facets, ...alerts];
 };

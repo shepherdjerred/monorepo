@@ -4,6 +4,11 @@ import {
   type DigestKind,
   type DigestRunResponse,
 } from "@shepherdjerred/ops-model/digest.ts";
+import {
+  FACET_KEYS,
+  OpsFacetsSchema,
+  type OpsFacets,
+} from "@shepherdjerred/ops-model/facets.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import {
   SourceIdSchema,
@@ -130,6 +135,59 @@ function uncollectedSources(
   }));
 }
 
+/** Merge partial facet objects without clobbering sibling keys with `undefined`. */
+export function mergeOpsFacets(
+  base: OpsFacets,
+  addition: Partial<OpsFacets> | undefined,
+): OpsFacets {
+  if (addition === undefined) {
+    return base;
+  }
+  const next: OpsFacets = { ...base };
+  for (const key of FACET_KEYS) {
+    const incoming = addition[key];
+    if (incoming === undefined) {
+      continue;
+    }
+    if (key === "cluster" && next.cluster !== undefined) {
+      next.cluster = { ...next.cluster, ...addition.cluster };
+    } else if (key === "observability" && next.observability !== undefined) {
+      next.observability = { ...next.observability, ...addition.observability };
+    } else {
+      Object.assign(next, { [key]: incoming });
+    }
+  }
+  return next;
+}
+
+function normalizeCollectorOutcome(outcome: OpsCollectorOutcome) {
+  const source = SourceIdSchema.parse(outcome.source);
+  if (!outcome.ok) {
+    return { ...outcome, source };
+  }
+  const facets =
+    outcome.result.facets === undefined
+      ? undefined
+      : OpsFacetsSchema.parse(outcome.result.facets);
+  return {
+    ...outcome,
+    source,
+    result: {
+      status: SourceStatusSchema.parse(outcome.result.status),
+      signals: outcome.result.signals.map((signal) =>
+        SignalSchema.parse(signal),
+      ),
+      metrics: outcome.result.metrics.map((metric) =>
+        MetricSchema.extend({ section: SectionIdSchema }).parse(metric),
+      ),
+      changes: outcome.result.changes.map((change) =>
+        ChangeEventSchema.parse(change),
+      ),
+      ...(facets === undefined ? {} : { facets }),
+    },
+  };
+}
+
 /**
  * Turn per-source outcomes into a validated ingest payload. A doubled source
  * is a broken workflow contract and throws; an unreported one becomes a
@@ -140,27 +198,11 @@ export function buildOpsIngest(input: {
   now: Date;
   lastSuccess: ReadonlyMap<SourceId, string>;
   secrets: readonly (string | undefined)[];
+  extraFacets?: Partial<OpsFacets>;
 }): OpsIngest {
-  const normalized = input.outcomes.map((outcome) => {
-    const source = SourceIdSchema.parse(outcome.source);
-    if (!outcome.ok) return { ...outcome, source };
-    return {
-      ...outcome,
-      source,
-      result: {
-        status: SourceStatusSchema.parse(outcome.result.status),
-        signals: outcome.result.signals.map((signal) =>
-          SignalSchema.parse(signal),
-        ),
-        metrics: outcome.result.metrics.map((metric) =>
-          MetricSchema.extend({ section: SectionIdSchema }).parse(metric),
-        ),
-        changes: outcome.result.changes.map((change) =>
-          ChangeEventSchema.parse(change),
-        ),
-      },
-    };
-  });
+  const normalized = input.outcomes.map((outcome) =>
+    normalizeCollectorOutcome(outcome),
+  );
   const reported = normalized.map((outcome) => outcome.source);
   const duplicated = reported.filter(
     (source, index) => reported.indexOf(source) !== index,
@@ -176,6 +218,7 @@ export function buildOpsIngest(input: {
   const signals: SignalInput[] = [];
   const metrics: SectionMetric[] = [];
   const changes: ChangeEventInput[] = [];
+  let facets: OpsFacets = {};
   for (const outcome of outcomes) {
     if (outcome.ok) {
       statuses.push({
@@ -185,6 +228,7 @@ export function buildOpsIngest(input: {
       signals.push(...outcome.result.signals);
       metrics.push(...outcome.result.metrics);
       changes.push(...outcome.result.changes);
+      facets = mergeOpsFacets(facets, outcome.result.facets);
       continue;
     }
     const source = SourceIdSchema.parse(outcome.source);
@@ -198,13 +242,21 @@ export function buildOpsIngest(input: {
       ...(lastSuccessAt === undefined ? {} : { lastSuccessAt }),
     });
   }
+  if (input.extraFacets !== undefined) {
+    facets = mergeOpsFacets(facets, OpsFacetsSchema.parse(input.extraFacets));
+  }
   const snapshot = assembleSnapshot({
     generatedAt: input.now,
     sources: statuses,
     signals,
     metrics,
   });
-  return OpsIngestSchema.parse({ snapshot, changes: dedupeChanges(changes) });
+  const hasFacets = FACET_KEYS.some((key) => facets[key] !== undefined);
+  return OpsIngestSchema.parse({
+    snapshot,
+    changes: dedupeChanges(changes),
+    ...(hasFacets ? { facets } : {}),
+  });
 }
 
 /** Record successful sources so later failures can report their last success. */

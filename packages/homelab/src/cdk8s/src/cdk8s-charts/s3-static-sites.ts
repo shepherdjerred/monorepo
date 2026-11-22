@@ -2,12 +2,16 @@ import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
 import { Namespace } from "cdk8s-plus-31";
 import { createS3StaticSitesDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/s3-static-sites/index.ts";
-import { STATIC_SITE_HTTP_PORT } from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
+import {
+  STATIC_SITE_HTTP_PORT,
+  STATIC_SITE_METRICS_PORT,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/s3-static-site.ts";
 import { createFirstPartyNetworkPolicies } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/workload-parts.ts";
 import {
   cloudflareTunnelIngressRule,
   dnsEgressRule,
   nsPeer,
+  prometheusIngressRule,
   seaweedfsEgress,
   tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
@@ -36,7 +40,10 @@ export function createS3StaticSitesChart(app: App) {
       {
         name: "s3-static-sites-netpol",
         selects: "namespace",
-        ingress: [cloudflareTunnelIngressRule([STATIC_SITE_HTTP_PORT])],
+        ingress: [
+          cloudflareTunnelIngressRule([STATIC_SITE_HTTP_PORT]),
+          prometheusIngressRule([STATIC_SITE_METRICS_PORT]),
+        ],
         egress: [
           dnsEgressRule(),
           seaweedfsEgress(),

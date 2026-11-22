@@ -5,11 +5,13 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { ArrowLeftIcon, ExternalLinkIcon } from "lucide-react";
 import { useMemo } from "react";
 import { Link, useParams } from "react-router";
+import { z } from "zod";
 
 import { occurrencePreviewRange } from "./preview-range.ts";
 import { StaleNotice } from "./stale-notice.tsx";
 import { formatInstant } from "./time.ts";
 import { useTRPC } from "./trpc.ts";
+import { UplotChart, type ChartSeries } from "#client/charts/uplot-chart.tsx";
 import { Button } from "#components/button";
 import {
   AlertOccurrenceIdSchema,
@@ -18,13 +20,84 @@ import {
 } from "#shared/schema";
 import { epochNanosecondsToInstantText } from "#shared/time";
 
-function Preview({
+const PrometheusMatrixBodySchema = z.object({
+  resultType: z.literal("matrix"),
+  result: z.array(
+    z.object({
+      metric: z.record(z.string(), z.string()),
+      values: z.array(z.tuple([z.number(), z.string()])),
+    }),
+  ),
+});
+
+const PrometheusMatrixEnvelopeSchema = z.union([
+  PrometheusMatrixBodySchema,
+  z
+    .object({ data: PrometheusMatrixBodySchema })
+    .transform((envelope) => envelope.data),
+]);
+
+function formatMetricName(
+  metric: Readonly<Record<string, string>>,
+  fallbackIndex: number,
+): string {
+  const entries = Object.entries(metric).filter(([key]) => key !== "__name__");
+  return entries.length > 0
+    ? entries.map(([key, val]) => `${key}="${val}"`).join(", ")
+    : (metric["__name__"] ?? `series ${String(fallbackIndex + 1)}`);
+}
+
+export function parsePrometheusMatrixSeries(
+  raw: unknown,
+): readonly ChartSeries[] | null {
+  const parsed = PrometheusMatrixEnvelopeSchema.safeParse(raw);
+  if (!parsed.success || parsed.data.result.length === 0) return null;
+  const usedNames = new Set<string>();
+  const series: ChartSeries[] = [];
+  for (const [index, entry] of parsed.data.result.entries()) {
+    const points: [number, number][] = [];
+    for (const [timestamp, rawValue] of entry.values) {
+      const numeric = Number(rawValue);
+      if (Number.isFinite(timestamp) && Number.isFinite(numeric))
+        points.push([timestamp, numeric]);
+    }
+    if (points.length === 0) continue;
+    const baseName = formatMetricName(entry.metric, index);
+    const name = usedNames.has(baseName)
+      ? `${baseName} (${String(index + 1)})`
+      : baseName;
+    usedNames.add(name);
+    series.push({ name, points });
+  }
+  return series.length > 0 ? series : null;
+}
+
+export function deduplicatedAnnotations(
+  annotations: Readonly<Record<string, string>>,
+  alertSummary: string,
+): readonly (readonly [string, string])[] {
+  const summaryText = annotations["summary"]?.trim();
+  const normalizedAlertSummary = alertSummary.trim();
+  return Object.entries(annotations).filter(([key, value]) => {
+    if (key !== "description") return true;
+    const trimmed = value.trim();
+    return trimmed !== summaryText && trimmed !== normalizedAlertSummary;
+  });
+}
+
+export function Preview({
   title,
   value,
+  enablePrometheusChart = false,
 }: {
   title: string;
   value: Previews["prometheus"];
+  enablePrometheusChart?: boolean;
 }): React.JSX.Element {
+  const matrixSeries =
+    enablePrometheusChart && value.status === "available"
+      ? parsePrometheusMatrixSeries(value.data)
+      : null;
   return (
     <section className="preview">
       <div className="preview-heading">
@@ -34,11 +107,85 @@ function Preview({
       {value.status === "available" ? (
         <>
           <code>{value.query}</code>
-          <pre>{JSON.stringify(value.data, null, 2)}</pre>
+          {matrixSeries === null ? (
+            <pre>{JSON.stringify(value.data, null, 2)}</pre>
+          ) : (
+            <>
+              <div className="mt-2">
+                <UplotChart
+                  height={200}
+                  label={`${title}: ${value.query}`}
+                  series={matrixSeries}
+                  unit="count"
+                />
+              </div>
+              <details className="mt-2">
+                <summary className="cursor-pointer text-xs text-[var(--muted)]">
+                  Raw Prometheus JSON
+                </summary>
+                <pre>{JSON.stringify(value.data, null, 2)}</pre>
+              </details>
+            </>
+          )}
         </>
       ) : (
         <p>{value.reason}</p>
       )}
+    </section>
+  );
+}
+
+function AlertMetadataPanel({
+  value,
+}: {
+  readonly value: AlertDetail;
+}): React.JSX.Element {
+  const annotations = deduplicatedAnnotations(value.annotations, value.summary);
+  return (
+    <section className="panel metadata">
+      <h2>Metadata</h2>
+      <dl>
+        <div>
+          <dt>Fingerprint</dt>
+          <dd className="mono">{value.fingerprint}</dd>
+        </div>
+        <div>
+          <dt>Namespace</dt>
+          <dd className="mono">{value.namespace ?? "—"}</dd>
+        </div>
+        <div>
+          <dt>Opened</dt>
+          <dd className="mono">{formatInstant(value.openedAt)}</dd>
+        </div>
+        <div>
+          <dt>Resolved</dt>
+          <dd className="mono">{formatInstant(value.resolvedAt)}</dd>
+        </div>
+        <div>
+          <dt>Last seen</dt>
+          <dd className="mono">{formatInstant(value.lastSeenAt)}</dd>
+        </div>
+        <div>
+          <dt>Resolution source</dt>
+          <dd>{value.resolutionSource ?? "—"}</dd>
+        </div>
+      </dl>
+      <h3>Labels</h3>
+      <div className="label-list">
+        {Object.entries(value.labels).map(([key, label]) => (
+          <code key={key}>
+            {key}={label}
+          </code>
+        ))}
+      </div>
+      <h3>Annotations</h3>
+      <div className="label-list">
+        {annotations.map(([key, annotation]) => (
+          <code key={key}>
+            {key}={annotation}
+          </code>
+        ))}
+      </div>
     </section>
   );
 }
@@ -141,53 +288,7 @@ function AlertDetailContent({
               </div>
             </div>
             <div className="detail-grid">
-              <section className="panel metadata">
-                <h2>Metadata</h2>
-                <dl>
-                  <div>
-                    <dt>Fingerprint</dt>
-                    <dd className="mono">{value.fingerprint}</dd>
-                  </div>
-                  <div>
-                    <dt>Namespace</dt>
-                    <dd className="mono">{value.namespace ?? "—"}</dd>
-                  </div>
-                  <div>
-                    <dt>Opened</dt>
-                    <dd className="mono">{formatInstant(value.openedAt)}</dd>
-                  </div>
-                  <div>
-                    <dt>Resolved</dt>
-                    <dd className="mono">{formatInstant(value.resolvedAt)}</dd>
-                  </div>
-                  <div>
-                    <dt>Last seen</dt>
-                    <dd className="mono">{formatInstant(value.lastSeenAt)}</dd>
-                  </div>
-                  <div>
-                    <dt>Resolution source</dt>
-                    <dd>{value.resolutionSource ?? "—"}</dd>
-                  </div>
-                </dl>
-                <h3>Labels</h3>
-                <div className="label-list">
-                  {Object.entries(value.labels).map(([key, label]) => (
-                    <code key={key}>
-                      {key}={label}
-                    </code>
-                  ))}
-                </div>
-                <h3>Annotations</h3>
-                <div className="label-list">
-                  {Object.entries(value.annotations).map(
-                    ([key, annotation]) => (
-                      <code key={key}>
-                        {key}={annotation}
-                      </code>
-                    ),
-                  )}
-                </div>
-              </section>
+              <AlertMetadataPanel value={value} />
               <section className="panel">
                 <h2 className="section-heading">Lifecycle</h2>
                 <div className="timeline compact">
@@ -271,7 +372,11 @@ function AlertDetailContent({
                     */}
                     <StaleNotice errors={previewMeta.errors} />
                     <div className="preview-grid">
-                      <Preview title="Prometheus" value={data.prometheus} />
+                      <Preview
+                        enablePrometheusChart
+                        title="Prometheus"
+                        value={data.prometheus}
+                      />
                       <Preview title="Loki" value={data.loki} />
                       <Preview title="Tempo" value={data.tempo} />
                     </div>

@@ -1,14 +1,19 @@
 import {
   ActivityIcon,
-  HouseIcon,
   BotIcon,
   BoxesIcon,
   CalendarRangeIcon,
+  CpuIcon,
+  FolderGit2Icon,
+  Gamepad2Icon,
   GaugeIcon,
   GitPullRequestIcon,
   HistoryIcon,
+  HouseIcon,
   MegaphoneIcon,
+  RefreshCwIcon,
   ServerCogIcon,
+  TrendingUpIcon,
   WrenchIcon,
 } from "lucide-react";
 import { lazy } from "react";
@@ -32,6 +37,10 @@ const OpsHomeOverview = lazy(async () => {
   const module = await import("./ops/home-overview.tsx");
   return { default: module.OpsHomeOverview };
 });
+const ClusterPage = lazy(async () => {
+  const module = await import("./ops/pages/cluster-page.tsx");
+  return { default: module.ClusterPage };
+});
 const ServicesPage = lazy(async () => {
   const module = await import("./ops/services-page.tsx");
   return { default: module.ServicesPage };
@@ -40,9 +49,21 @@ const ServicePage = lazy(async () => {
   const module = await import("./ops/service-page.tsx");
   return { default: module.ServicePage };
 });
+const MonorepoPage = lazy(async () => {
+  const module = await import("./ops/pages/monorepo-page.tsx");
+  return { default: module.MonorepoPage };
+});
 const FlowPage = lazy(async () => {
   const module = await import("./ops/section-page.tsx");
   return { default: module.FlowPage };
+});
+const RenovatePage = lazy(async () => {
+  const module = await import("./ops/pages/renovate-page.tsx");
+  return { default: module.RenovatePage };
+});
+const ProductPage = lazy(async () => {
+  const module = await import("./ops/pages/product-page.tsx");
+  return { default: module.ProductPage };
 });
 const MaintenancePage = lazy(async () => {
   const module = await import("./ops/section-page.tsx");
@@ -55,6 +76,10 @@ const AiPage = lazy(async () => {
 const ReviewPage = lazy(async () => {
   const module = await import("./ops/review-page.tsx");
   return { default: module.ReviewPage };
+});
+const TheStormPage = lazy(async () => {
+  const module = await import("./ops/pages/the-storm-page.tsx");
+  return { default: module.TheStormPage };
 });
 const DashboardPage = lazy(async () => {
   const module = await import("./dashboard-page.tsx");
@@ -88,15 +113,20 @@ export const coreModule: ClientModule = {
   icon: GaugeIcon,
   basePath: "",
   routes: [
+    { path: "the-storm", page: TheStormPage },
     { path: "promotion", page: PromotionPage },
     { path: "", page: HomePage },
     // Home absorbed the Overview page; its URL still resolves.
     { path: "overview", page: OverviewRedirect },
+    { path: "cluster", page: ClusterPage },
     { path: "services", page: ServicesPage },
     { path: "services/:id", page: ServicePage },
+    { path: "monorepo", page: MonorepoPage },
     { path: "flow", page: FlowPage },
     // Flow lived at /delivery; its URL still resolves.
     { path: "delivery", page: DeliveryRedirect },
+    { path: "renovate", page: RenovatePage },
+    { path: "product", page: ProductPage },
     { path: "ai", page: AiPage },
     { path: "maintenance", page: MaintenancePage },
     { path: "review", page: ReviewPage },
@@ -109,9 +139,13 @@ export const coreModule: ClientModule = {
   // Entries without a `group` sit under the module title, "Ops".
   nav: [
     { label: "Home", icon: HouseIcon, path: "" },
+    { label: "Cluster", icon: CpuIcon, path: "cluster" },
     { label: "Services", icon: BoxesIcon, path: "services" },
+    { label: "Monorepo", icon: FolderGit2Icon, path: "monorepo" },
     // "Flow", not "Delivery": Delivery is the separate release app.
     { label: "Flow", icon: GitPullRequestIcon, path: "flow" },
+    { label: "Renovate", icon: RefreshCwIcon, path: "renovate" },
+    { label: "Product", icon: TrendingUpIcon, path: "product" },
     { label: "AI", icon: BotIcon, path: "ai" },
     { label: "Maintenance", icon: WrenchIcon, path: "maintenance" },
     { label: "Review", icon: CalendarRangeIcon, path: "review" },
@@ -131,6 +165,13 @@ export const coreModule: ClientModule = {
     },
     { label: "History", group: "Alerts", icon: HistoryIcon, path: "history" },
     { label: "System", group: "Alerts", icon: ServerCogIcon, path: "system" },
+    {
+      label: "Overview",
+      title: "The Storm overview",
+      group: "The Storm",
+      icon: Gamepad2Icon,
+      path: "the-storm",
+    },
     {
       label: "Promotion",
       group: "The Storm",

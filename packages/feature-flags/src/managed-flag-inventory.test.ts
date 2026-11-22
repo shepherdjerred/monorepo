@@ -740,3 +740,17 @@ describe("Hub alert email single-sender cutover", () => {
     );
   });
 });
+
+describe("Temporal Renovate LLM delta enrichment rollout", () => {
+  test("enables temporal-renovate-llm-delta-enabled globally in beta and prod", () => {
+    assertGloballyEnabledBooleanFlag(
+      "temporal",
+      "temporal-renovate-llm-delta-enabled",
+      {
+        owner: "temporal",
+        namespace: "temporal",
+        source: "temporal",
+      },
+    );
+  });
+});

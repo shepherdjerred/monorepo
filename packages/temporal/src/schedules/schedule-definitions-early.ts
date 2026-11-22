@@ -267,4 +267,20 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     workflowExecutionTimeout: "10 minutes",
     memo: "Weekly ops review digest email trigger (the dashboard renders and sends)",
   },
+  {
+    id: "renovate-delta-enrichment",
+    workflowType: "runRenovateDeltaEnrichment",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "12,42 * * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "15 minutes",
+    memo: "Every-30-minute Renovate dependency version-delta synthesis and S3 index update",
+    initialPauseNote:
+      "Awaiting 100% candidate traffic for runRenovateDeltaEnrichment; stable workers do not register this Workflow",
+  },
 ]);

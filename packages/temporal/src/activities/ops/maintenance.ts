@@ -24,19 +24,33 @@ export const MAINTENANCE_QUERIES = {
     "min by (instance) (probe_ssl_earliest_cert_expiry) - time()",
   filesystems: `max by (instance, mountpoint) (1 - node_filesystem_avail_bytes{${EXCLUDED_FS}} / node_filesystem_size_bytes{${EXCLUDED_FS}})`,
   zpools:
-    "max by (zpool_name) (1 - zfs_zpool_free_bytes / zfs_zpool_size_bytes)",
+    "max by (instance, zpool_name) (1 - zfs_zpool_free_bytes / zfs_zpool_size_bytes)",
   /** Seconds since the last successful Velero backup per schedule. */
   veleroBackups:
     'time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule!=""})',
   cpu: '1 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m]))',
   memory:
     "1 - sum(node_memory_MemAvailable_bytes) / sum(node_memory_MemTotal_bytes)",
+  /** SeaweedFS volume slot saturation across volume servers. */
+  seaweedfsVolumes:
+    "sum(SeaweedFS_volumeServer_volumes) / sum(SeaweedFS_volumeServer_max_volumes)",
+  /** Seconds since SeaweedFS filer.backup last received a metadata event. */
+  seaweedfsBackupLag:
+    'time() - min(SeaweedFS_filer_last_send_timestamp_of_subscribe{clientName="backup_s3"}) / 1e9',
 } as const;
 
 export type MaintenanceQuery = keyof typeof MAINTENANCE_QUERIES;
-export type MaintenanceSamples = Record<MaintenanceQuery, PrometheusSample[]>;
+export type MaintenanceSamples = Record<
+  Exclude<MaintenanceQuery, "seaweedfsVolumes" | "seaweedfsBackupLag">,
+  PrometheusSample[]
+> & {
+  seaweedfsVolumes?: PrometheusSample[];
+  seaweedfsBackupLag?: PrometheusSample[];
+};
 
 const DAY_SECONDS = 86_400;
+export const SEAWEEDFS_BACKUP_LAG_WARNING_SECONDS = 3600;
+export const SEAWEEDFS_BACKUP_LAG_ERROR_SECONDS = 14_400;
 
 export function certificateSeverity(secondsLeft: number): Severity {
   const days = secondsLeft / DAY_SECONDS;
@@ -99,6 +113,21 @@ function certificateSignals(samples: MaintenanceSamples): SignalInput[] {
   });
 }
 
+function zpoolVolume(sample: PrometheusSample) {
+  const zpool = label(sample, "zpool_name");
+  const instance = sample.metric["instance"];
+  const hasInstance = instance !== undefined && instance !== "";
+  return {
+    kind: "zpool",
+    name: hasInstance ? `zpool ${instance}:${zpool}` : `zpool ${zpool}`,
+    attributes: hasInstance ? { instance, zpool } : { zpool },
+    ratio: sample.value,
+    query: hasInstance
+      ? `1 - zfs_zpool_free_bytes{instance="${instance}",zpool_name="${zpool}"} / zfs_zpool_size_bytes`
+      : `1 - zfs_zpool_free_bytes{zpool_name="${zpool}"} / zfs_zpool_size_bytes`,
+  };
+}
+
 function capacitySignals(samples: MaintenanceSamples): SignalInput[] {
   const volumes = [
     ...samples.filesystems.map((sample) => ({
@@ -111,13 +140,7 @@ function capacitySignals(samples: MaintenanceSamples): SignalInput[] {
       ratio: sample.value,
       query: `1 - node_filesystem_avail_bytes{instance="${label(sample, "instance")}",mountpoint="${label(sample, "mountpoint")}"} / node_filesystem_size_bytes`,
     })),
-    ...samples.zpools.map((sample) => ({
-      kind: "zpool",
-      name: `zpool ${label(sample, "zpool_name")}`,
-      attributes: { zpool: label(sample, "zpool_name") },
-      ratio: sample.value,
-      query: `1 - zfs_zpool_free_bytes{zpool_name="${label(sample, "zpool_name")}"} / zfs_zpool_size_bytes`,
-    })),
+    ...samples.zpools.map((sample) => zpoolVolume(sample)),
   ];
   return volumes.flatMap((volume) => {
     const severity = diskSeverity(volume.ratio);
@@ -139,6 +162,61 @@ function capacitySignals(samples: MaintenanceSamples): SignalInput[] {
   });
 }
 
+function seaweedfsSignals(samples: MaintenanceSamples): SignalInput[] {
+  const signals: SignalInput[] = [];
+  const volumeRatio = scalar(samples.seaweedfsVolumes ?? []);
+  if (volumeRatio !== null) {
+    const severity = diskSeverity(volumeRatio);
+    if (severity !== "ok") {
+      signals.push({
+        id: "maintenance:seaweedfs:volumes",
+        source: "maintenance",
+        section: "maintenance",
+        service: "storage",
+        kind: "seaweedfs-volumes",
+        severity,
+        needsMe: false,
+        title: `SeaweedFS volume slots are ${String(Math.round(volumeRatio * 100))}% full`,
+        attributes: { usedRatio: volumeRatio },
+        links: [
+          metricsLink(
+            "SeaweedFS volume slots",
+            MAINTENANCE_QUERIES.seaweedfsVolumes,
+            "now-7d",
+          ),
+        ],
+      });
+    }
+  }
+  const lagSeconds = scalar(samples.seaweedfsBackupLag ?? []);
+  if (
+    lagSeconds !== null &&
+    lagSeconds >= SEAWEEDFS_BACKUP_LAG_WARNING_SECONDS
+  ) {
+    const severity: Severity =
+      lagSeconds >= SEAWEEDFS_BACKUP_LAG_ERROR_SECONDS ? "error" : "warning";
+    signals.push({
+      id: "maintenance:seaweedfs:backup-lag",
+      source: "maintenance",
+      section: "maintenance",
+      service: "storage",
+      kind: "seaweedfs-backup-lag",
+      severity,
+      needsMe: false,
+      title: `SeaweedFS B2 replication lag is ${String(Math.round(lagSeconds / 60))}m`,
+      attributes: { lagSeconds: Math.round(lagSeconds) },
+      links: [
+        metricsLink(
+          "SeaweedFS backup lag",
+          MAINTENANCE_QUERIES.seaweedfsBackupLag,
+          "now-24h",
+        ),
+      ],
+    });
+  }
+  return signals;
+}
+
 function scalar(samples: readonly PrometheusSample[]): number | null {
   if (samples.length > 1) {
     throw new Error(`Expected one sample, got ${String(samples.length)}`);
@@ -155,6 +233,7 @@ export function mapMaintenance(
 ): OpsCollection {
   const certificates = certificateSignals(samples);
   const capacity = capacitySignals(samples);
+  const seaweedfs = seaweedfsSignals(samples);
   const backups = backupFreshnessSignals({
     velero: samples.veleroBackups,
     schedules,
@@ -175,7 +254,13 @@ export function mapMaintenance(
     (observation) => observation.failed === undefined,
   );
   return {
-    signals: [...certificates, ...capacity, ...backups, ...outcomes.signals],
+    signals: [
+      ...certificates,
+      ...capacity,
+      ...seaweedfs,
+      ...backups,
+      ...outcomes.signals,
+    ],
     metrics: [
       metric({
         section: "maintenance",

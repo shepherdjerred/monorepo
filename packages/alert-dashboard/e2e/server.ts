@@ -25,6 +25,7 @@ import {
   FIXTURE_HOUSE_ALERTS,
   matchesAlertScope,
 } from "#test-fixtures/alert-ledger";
+import { FIXTURE_OPS_FACETS } from "#test-fixtures/ops-facets";
 import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
 import { volumeOpsIngest } from "#test-fixtures/ops-snapshot-volume";
 import { createOpsFixture } from "#test-fixtures/ops-services";
@@ -341,15 +342,18 @@ const { OPS_FIXTURE: requestedOpsFixture } = z
 
 function opsIngestBody(now: Temporal.Instant): OpsIngest {
   const generatedAt = now.subtract({ minutes: 2 }).toString();
-  switch (requestedOpsFixture) {
-    case "volume":
-      return volumeOpsIngest(generatedAt, "per-update");
-    case "volume-aggregate":
-      return volumeOpsIngest(generatedAt, "aggregate");
-    case "default":
-    case undefined:
-      return fixtureOpsIngest(generatedAt);
-  }
+  const base = (() => {
+    switch (requestedOpsFixture) {
+      case "volume":
+        return volumeOpsIngest(generatedAt, "per-update");
+      case "volume-aggregate":
+        return volumeOpsIngest(generatedAt, "aggregate");
+      case "default":
+      case undefined:
+        return fixtureOpsIngest(generatedAt);
+    }
+  })();
+  return { ...base, facets: FIXTURE_OPS_FACETS };
 }
 
 // Ops pages render relative ages, so the ops fixture uses the real clock and

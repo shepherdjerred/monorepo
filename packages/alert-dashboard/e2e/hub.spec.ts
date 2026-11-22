@@ -17,7 +17,7 @@ test("the palette opens from the keyboard and the sidebar, and closes on Escape"
   await expect(input).toBeFocused();
   await expect(
     palette.getByRole("group", { name: "Pages" }).getByRole("option"),
-  ).toHaveCount(11);
+  ).toHaveCount(16);
   await expect(
     palette.getByRole("option", { name: "Open Tracker" }),
   ).toBeVisible();
@@ -49,7 +49,7 @@ test("the palette filters pages and navigates with the keyboard", async ({
   await expect(reopened.getByRole("combobox")).toBeFocused();
   await page.keyboard.press("ArrowDown");
   await expect(
-    reopened.getByRole("option", { name: "Go to Services" }),
+    reopened.getByRole("option", { name: "Go to Cluster" }),
   ).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("ArrowUp");
   await page.keyboard.press("ArrowUp");
@@ -91,6 +91,34 @@ test("the palette searches catalog services and recent alerts", async ({
   await expect(alert).toContainText("DiskFull · open");
   await alert.click();
   await expect(page).toHaveURL(/\/alerts\/alert_a{32}$/u);
+
+  const packagesPalette = await openPalette(page);
+  await packagesPalette.getByRole("combobox").fill("@shepherdjerred/homelab");
+  const packages = packagesPalette.getByRole("group", { name: "Packages" });
+  const homelabPkg = packages.getByRole("option", {
+    name: /@shepherdjerred\/homelab/u,
+  });
+  await expect(homelabPkg).toContainText("packages/homelab · infra");
+  await homelabPkg.click();
+  await expect(page).toHaveURL(/\/monorepo$/u);
+
+  const renovatePalette = await openPalette(page);
+  await renovatePalette.getByRole("combobox").fill("prisma");
+  const renovateGroup = renovatePalette.getByRole("group", {
+    name: "Renovate",
+  });
+  const prismaItem = renovateGroup.getByRole("option", { name: /prisma/u });
+  await expect(prismaItem).toContainText("→ 8.0.0 · awaiting-approval");
+  await prismaItem.click();
+  await expect(page).toHaveURL(/\/renovate$/u);
+
+  const golinkPalette = await openPalette(page);
+  await golinkPalette.getByRole("combobox").fill("go/graf");
+  const golinks = golinkPalette.getByRole("group", { name: "Golinks" });
+  const grafLink = golinks.getByRole("option", { name: /go\/graf/u });
+  await expect(grafLink).toBeVisible();
+  await grafLink.click();
+  await expect(page).toHaveURL(/\/services\/golink$/u);
 });
 
 test("a palette command switches the theme", async ({ page }) => {

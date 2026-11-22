@@ -180,41 +180,51 @@ describe("maintenance subprocess runner", () => {
 });
 
 describe("Turbo cache cleanup", () => {
-  it("authenticates, sends the bounded retention query, and records counts", async () => {
+  it("authenticates, cleans both trusted and pull-request slugs, and records summed counts", async () => {
     await Bun.write("/tmp/turbo-cache-token-test", "turbo-secret-for-test");
     setEnvironment("TURBO_CACHE_TOKEN_FILE", "/tmp/turbo-cache-token-test");
-    let requestUrl = "";
+    const requestUrls: string[] = [];
     let authorization = "";
     const fetcher: MaintenanceFetch = (input, init) => {
-      requestUrl =
+      const href =
         typeof input === "string"
           ? input
           : input instanceof URL
             ? input.href
             : input.url;
+      requestUrls.push(href);
       authorization = new Headers(init?.headers).get("Authorization") ?? "";
-      return Promise.resolve(Response.json({ deleted: 7, scanned: 19 }));
+      const isPr = href.includes("slug=monorepo-pull-request");
+      return Promise.resolve(
+        Response.json(
+          isPr ? { deleted: 5, scanned: 11 } : { deleted: 7, scanned: 19 },
+        ),
+      );
     };
 
     await expect(
       cleanTurboCache(fetcher, new AbortController().signal),
     ).resolves.toEqual({
-      deleted: 7,
-      scanned: 19,
+      deleted: 12,
+      scanned: 30,
     });
-    expect(requestUrl).toContain("/v8/clean");
-    expect(requestUrl).toContain("slug=monorepo");
-    expect(requestUrl).toContain("olderThan=14");
+    expect(requestUrls).toHaveLength(2);
+    expect(requestUrls[0]).toContain("/v8/clean");
+    expect(requestUrls[0]).toContain("slug=monorepo");
+    expect(requestUrls[0]).toContain("olderThan=14");
+    expect(requestUrls[1]).toContain("/v8/clean");
+    expect(requestUrls[1]).toContain("slug=monorepo-pull-request");
+    expect(requestUrls[1]).toContain("olderThan=14");
     expect(authorization).toBe("Bearer turbo-secret-for-test");
     const exposition = await register.metrics();
     expect(exposition).toContain(
       'maintenance_job="turbo-cache-clean",outcome="success"',
     );
     expect(exposition).toMatch(
-      /turbo_cache_cleanup_entries_total\{[^}]*result="deleted"[^}]*\} 7/,
+      /turbo_cache_cleanup_entries_total\{[^}]*result="deleted"[^}]*\} 12/,
     );
     expect(exposition).toMatch(
-      /turbo_cache_cleanup_entries_total\{[^}]*result="scanned"[^}]*\} 19/,
+      /turbo_cache_cleanup_entries_total\{[^}]*result="scanned"[^}]*\} 30/,
     );
   });
 

@@ -43,11 +43,23 @@ test("the sidebar lists every page under its group", async ({ page }) => {
           - link "Home":
             - /url: /
         - listitem:
+          - link "Cluster":
+            - /url: /cluster
+        - listitem:
           - link "Services":
             - /url: /services
         - listitem:
+          - link "Monorepo":
+            - /url: /monorepo
+        - listitem:
           - link "Flow":
             - /url: /flow
+        - listitem:
+          - link "Renovate":
+            - /url: /renovate
+        - listitem:
+          - link "Product":
+            - /url: /product
         - listitem:
           - link "AI":
             - /url: /ai
@@ -74,6 +86,9 @@ test("the sidebar lists every page under its group", async ({ page }) => {
       - paragraph: The Storm
       - list "The Storm":
         - listitem:
+          - link "Overview":
+            - /url: /the-storm
+        - listitem:
           - link "Promotion":
             - /url: /promotion
   `);
@@ -90,7 +105,7 @@ test("every sidebar link is on screen at 1280px without scrolling", async ({
   await page.goto("/");
   const nav = page.getByRole("navigation", PRIMARY);
   const links = nav.getByRole("link");
-  await expect(links).toHaveCount(11);
+  await expect(links).toHaveCount(16);
   for (const link of await links.all())
     await expect(link).toBeInViewport({ ratio: 1 });
   expect(
@@ -158,14 +173,14 @@ test("the phone drawer opens from the top bar, traps focus, and closes on Escape
   await expect(drawer).toBeVisible();
   await expect(drawer.getByRole("navigation", PRIMARY)).toBeVisible();
   await expect(page.getByRole("navigation", PRIMARY)).toHaveCount(1);
-  await expect(drawer.getByRole("link")).toHaveCount(11);
+  await expect(drawer.getByRole("link")).toHaveCount(16);
   await expect(drawer.getByRole("link", { name: "Home" })).toHaveAttribute(
     "aria-current",
     "page",
   );
 
   // More Tab presses than the drawer has stops: focus wraps inside it.
-  for (let press = 0; press < 15; press += 1) {
+  for (let press = 0; press < 22; press += 1) {
     await page.keyboard.press("Tab");
     await expect(
       drawer.locator(":focus"),
@@ -279,7 +294,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     expect(await violations(new AxeBuilder({ page }))).toEqual([]);
     await page.getByRole("button", { name: "Open navigation" }).click();
     const drawer = page.getByRole("dialog", { name: "Navigation" });
-    await expect(drawer.getByRole("link")).toHaveCount(11);
+    await expect(drawer.getByRole("link")).toHaveCount(16);
     // Let the slide-in finish so contrast is measured on the settled drawer.
     await expect(drawer).not.toHaveAttribute("data-starting-style", "");
     expect(await violations(new AxeBuilder({ page }))).toEqual([]);

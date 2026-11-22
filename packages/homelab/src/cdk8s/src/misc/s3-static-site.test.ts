@@ -65,7 +65,12 @@ describe("S3StaticSites probes", () => {
                   containers: z.array(
                     z.object({
                       name: z.string(),
-                      ports: z.array(z.object({ containerPort: z.number() })),
+                      ports: z.array(
+                        z.object({
+                          containerPort: z.number(),
+                          name: z.string().optional(),
+                        }),
+                      ),
                       securityContext: z.object({
                         runAsUser: z.number(),
                         runAsNonRoot: z.boolean(),
@@ -88,7 +93,10 @@ describe("S3StaticSites probes", () => {
     const container = deployment.data.spec.template.spec.containers.find(
       (candidate) => candidate.name === "caddy",
     );
-    expect(container?.ports).toEqual([{ containerPort: 8080 }]);
+    expect(container?.ports).toEqual([
+      { containerPort: 8080 },
+      { containerPort: 9180, name: "metrics" },
+    ]);
     expect(container?.securityContext).toEqual({
       runAsUser: 1000,
       runAsNonRoot: true,
@@ -96,14 +104,22 @@ describe("S3StaticSites probes", () => {
       capabilities: { drop: ["ALL"] },
     });
 
-    const service = parseDocuments(synthesizeStaticSites())
+    const docs = parseDocuments(synthesizeStaticSites());
+    const service = docs
       .map((document) =>
         z
           .object({
             kind: z.literal("Service"),
+            metadata: z.object({
+              labels: z.record(z.string(), z.string()).optional(),
+            }),
             spec: z.object({
               ports: z.array(
-                z.object({ port: z.number(), targetPort: z.number() }),
+                z.object({
+                  name: z.string(),
+                  port: z.number(),
+                  targetPort: z.number(),
+                }),
               ),
             }),
           })
@@ -112,7 +128,46 @@ describe("S3StaticSites probes", () => {
       .find((result) => result.success);
     expect(service?.success).toBe(true);
     if (!service?.success) throw new Error("static-site Service missing");
-    expect(service.data.spec.ports).toEqual([{ port: 80, targetPort: 8080 }]);
+    expect(service.data.metadata.labels).toEqual({ app: "s3-static-sites" });
+    expect(service.data.spec.ports).toEqual([
+      { name: "http", port: 80, targetPort: 8080 },
+      { name: "metrics", port: 9180, targetPort: 9180 },
+    ]);
+
+    const serviceMonitor = docs
+      .map((document) =>
+        z
+          .object({
+            kind: z.literal("ServiceMonitor"),
+            metadata: z.object({
+              name: z.string(),
+              namespace: z.string(),
+              labels: z.object({ release: z.literal("prometheus") }),
+            }),
+            spec: z.object({
+              selector: z.object({
+                matchLabels: z.record(z.string(), z.string()),
+              }),
+              endpoints: z.array(
+                z.object({ port: z.string(), path: z.string() }),
+              ),
+            }),
+          })
+          .safeParse(document),
+      )
+      .find((result) => result.success);
+    expect(serviceMonitor?.data).toEqual({
+      kind: "ServiceMonitor",
+      metadata: {
+        name: "s3-static-sites-service-monitor",
+        namespace: "s3-static-sites",
+        labels: { release: "prometheus" },
+      },
+      spec: {
+        selector: { matchLabels: { app: "s3-static-sites" } },
+        endpoints: [{ port: "metrics", path: "/metrics" }],
+      },
+    });
   });
 
   test("generates an RSS-aware probe for sjer.red/rss.xml", () => {
@@ -184,10 +239,11 @@ const baseProps = {
 describe("generateCaddyfile", () => {
   const out = generateCaddyfile(baseProps);
 
-  it("emits a global block with s3proxy ordering and no auto_https", () => {
+  it("emits a global block with s3proxy ordering, metrics, and no auto_https", () => {
     expect(out).toContain("order s3proxy last");
     expect(out).toContain("auto_https off");
     expect(out).toContain("http_port 8080");
+    expect(out).toContain(":9180 {\n\tmetrics /metrics\n}");
   });
 
   it("emits a per-site block for every configured site", () => {
