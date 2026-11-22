@@ -36,7 +36,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   golink: "open",
   "gradle-build-cache": "open",
   home: "open",
-  media: "open",
+  media: "enforced",
   "minecraft-shuxin": "enforced",
   "minecraft-sjerred": "enforced",
   "minecraft-tsmc": "enforced",
