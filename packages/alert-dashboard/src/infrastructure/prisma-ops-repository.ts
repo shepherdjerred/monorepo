@@ -9,6 +9,8 @@ import type { PrismaClient } from "#generated/prisma/client/index.js";
 import type {
   AlertChangeQuery,
   ChangeQuery,
+  CompletedDailyDigestSummary,
+  DigestArchiveFields,
   DigestClaim,
   DigestRunKey,
   IncidentWindowStats,
@@ -22,7 +24,6 @@ import type {
 import type { AlertLedgerChange } from "#domain/ops-changes";
 import {
   buildAllFacetsView,
-  DigestStatusSchema,
   extractFacetEntries,
   INCIDENT_SEVERITIES,
   nsRange,
@@ -34,6 +35,13 @@ import {
 } from "#domain/ops-facet-mappers";
 import { prunableSnapshotIds, retentionCutoffNs } from "#domain/ops-retention";
 import type { AsyncMutex } from "#infrastructure/async-mutex";
+import {
+  claimDigestRunTransaction,
+  markDigestFailedRow,
+  markDigestSentRow,
+  markDigestSkippedRow,
+  previousCompletedDailyDigestRow,
+} from "#infrastructure/reports/prisma-digest-mutations";
 import {
   CursorConsumerSchema,
   type ChangeView,
@@ -377,73 +385,42 @@ export class PrismaOpsRepository implements OpsRepository {
     staleBeforeNs: bigint,
   ): Promise<DigestClaim> {
     return this.#writeMutex.runExclusive(() =>
-      this.#prisma.$transaction(async (transaction): Promise<DigestClaim> => {
-        const where = {
-          kind_periodKey: { kind: key.kind, periodKey: key.periodKey },
-        };
-        const existing = await transaction.digestRun.findUnique({ where });
-        if (existing === null) {
-          await transaction.digestRun.create({
-            data: {
-              id: crypto.randomUUID(),
-              kind: key.kind,
-              periodKey: key.periodKey,
-              messageId: key.messageId,
-              status: "sending",
-              createdAtNs: nowNs,
-              claimedAtNs: nowNs,
-              attemptCount: 1,
-            },
-          });
-          return { outcome: "claimed" };
-        }
-        const status = DigestStatusSchema.parse(existing.status);
-        if (status === "sent" || status === "skipped") {
-          return { outcome: "done", status };
-        }
-        if (
-          status === "sending" &&
-          existing.claimedAtNs !== null &&
-          existing.claimedAtNs > staleBeforeNs
-        ) {
-          return { outcome: "busy" };
-        }
-        await transaction.digestRun.update({
-          where,
-          data: {
-            status: "sending",
-            claimedAtNs: nowNs,
-            attemptCount: { increment: 1 },
-          },
-        });
-        return { outcome: "claimed" };
-      }),
+      this.#prisma.$transaction((transaction) =>
+        claimDigestRunTransaction(transaction, key, nowNs, staleBeforeNs),
+      ),
     );
   }
 
   async markDigestSent(
     key: DigestRunKey,
-    input: { sentAtNs: bigint; subject: string },
+    input: { sentAtNs: bigint; subject: string } & DigestArchiveFields,
   ): Promise<void> {
     await this.#writeMutex.runExclusive(() =>
-      this.#prisma.digestRun.update({
-        where: { kind_periodKey: { kind: key.kind, periodKey: key.periodKey } },
-        data: {
-          status: "sent",
-          sentAtNs: input.sentAtNs,
-          subject: input.subject,
-          lastError: null,
-        },
-      }),
+      markDigestSentRow(this.#prisma, key, input),
+    );
+  }
+
+  async markDigestSkipped(
+    key: DigestRunKey,
+    input: {
+      skipReason: string;
+      subject: string;
+    } & Required<DigestArchiveFields>,
+  ): Promise<void> {
+    await this.#writeMutex.runExclusive(() =>
+      markDigestSkippedRow(this.#prisma, key, input),
     );
   }
 
   async markDigestFailed(key: DigestRunKey, error: string): Promise<void> {
     await this.#writeMutex.runExclusive(() =>
-      this.#prisma.digestRun.update({
-        where: { kind_periodKey: { kind: key.kind, periodKey: key.periodKey } },
-        data: { status: "failed", lastError: error.slice(0, 2000) },
-      }),
+      markDigestFailedRow(this.#prisma, key, error),
     );
+  }
+
+  async previousCompletedDailyDigest(
+    beforePeriodKey: string,
+  ): Promise<CompletedDailyDigestSummary | null> {
+    return previousCompletedDailyDigestRow(this.#prisma, beforePeriodKey);
   }
 }

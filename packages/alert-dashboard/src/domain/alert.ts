@@ -4,7 +4,10 @@ import {
 } from "@shepherdjerred/ops-model/email/alert-context.ts";
 import { renderEmailHtml } from "@shepherdjerred/ops-model/email/render-html.ts";
 import { renderEmailText } from "@shepherdjerred/ops-model/email/render-text.ts";
-import { APP_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
+import {
+  APP_HOSTS,
+  hubIncidentMailUrl,
+} from "@shepherdjerred/ops-model/tool-links.ts";
 import { z } from "zod";
 
 import {
@@ -206,12 +209,13 @@ export function normalizeGeneratorUrl(
 export function openingEmail(
   alerts: readonly AlertOccurrenceRecord[],
   alertmanagerTruncatedAlerts = 0,
+  outboxId?: string,
 ): {
   subject: string;
   htmlBody: string;
   plainBody: string;
 } {
-  const { subject, document } = buildAlertOpeningDocument({
+  const { subject, document: baseDocument } = buildAlertOpeningDocument({
     alerts: alerts.map((alert) => ({
       id: alert.id,
       alertname: alert.alertname,
@@ -225,6 +229,16 @@ export function openingEmail(
     alertmanagerTruncatedAlerts,
     hubBaseUrl: APP_HOSTS.hub,
   });
+  const document =
+    outboxId === undefined
+      ? baseDocument
+      : {
+          ...baseDocument,
+          secondaryActions: [
+            ...(baseDocument.secondaryActions ?? []),
+            { label: "View mail in Hub", url: hubIncidentMailUrl(outboxId) },
+          ],
+        };
   return {
     subject,
     htmlBody: renderEmailHtml(document),
@@ -232,15 +246,28 @@ export function openingEmail(
   };
 }
 
-export function truncationEmail(truncatedAlerts: number): {
+export function truncationEmail(
+  truncatedAlerts: number,
+  outboxId?: string,
+): {
   subject: string;
   htmlBody: string;
   plainBody: string;
 } {
-  const { subject, document } = buildAlertTruncationDocument(
+  const { subject, document: baseDocument } = buildAlertTruncationDocument(
     truncatedAlerts,
     APP_HOSTS.hub,
   );
+  const document =
+    outboxId === undefined
+      ? baseDocument
+      : {
+          ...baseDocument,
+          secondaryActions: [
+            ...(baseDocument.secondaryActions ?? []),
+            { label: "View mail in Hub", url: hubIncidentMailUrl(outboxId) },
+          ],
+        };
   return {
     subject,
     htmlBody: renderEmailHtml(document),

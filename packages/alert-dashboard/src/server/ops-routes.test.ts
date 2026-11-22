@@ -44,6 +44,7 @@ function setup() {
     webhookToken: "alertmanager-webhook-token-32-characters",
     ops: fixture.ops,
     digests: fixture.digests,
+    reports: fixture.reports,
     opsIngestToken: TOKEN,
   });
   const ingest = (payload: string, token = TOKEN) =>

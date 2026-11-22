@@ -2,11 +2,13 @@ import {
   SERVICE_CATALOG,
   ServiceIndex,
 } from "@shepherdjerred/ops-model/catalog.ts";
+import { OPS_MAILBOXES } from "@shepherdjerred/ops-model/email/mailbox.ts";
 
 import { AlertService } from "#application/alert-service";
 import { DigestService } from "#application/ops-digest-service";
 import { OpsService } from "#application/ops-service";
 import type { PreviewPort } from "#application/ports";
+import { ReportService } from "#application/reports/report-service";
 import { AlertmanagerClient } from "#infrastructure/alertmanager-client";
 import { readConfig } from "#infrastructure/config";
 import {
@@ -66,8 +68,11 @@ initializeTracing({
   serviceName: config.OTEL_SERVICE_NAME,
   endpoint: config.OTEL_EXPORTER_OTLP_ENDPOINT,
 });
-const { ledger: repository, ops: opsRepository } =
-  await createPrismaRepositories(config.DATABASE_URL);
+const {
+  ledger: repository,
+  ops: opsRepository,
+  reports: reportRepository,
+} = await createPrismaRepositories(config.DATABASE_URL);
 const alertmanager = new AlertmanagerClient(config.ALERTMANAGER_URL);
 const grafanaPreviews = new GrafanaPreviewClient({
   baseUrl: config.GRAFANA_URL,
@@ -160,6 +165,20 @@ const digests = new DigestService({
   series,
   mailer: configuredPostal(config.POSTAL_DIGEST_FROM, config.POSTAL_DIGEST_TO),
   clock: systemClock,
+  dailyDigestQuietClear: config.DAILY_DIGEST_QUIET_CLEAR,
+});
+const reports = new ReportService({
+  repository: reportRepository,
+  digests,
+  clock: systemClock,
+  digestMailbox: {
+    from: config.POSTAL_DIGEST_FROM ?? OPS_MAILBOXES.digests.from,
+    to: config.POSTAL_DIGEST_TO ?? OPS_MAILBOXES.digests.to,
+  },
+  incidentMailbox: {
+    from: config.POSTAL_FROM ?? OPS_MAILBOXES.alerts.from,
+    to: config.POSTAL_TO ?? OPS_MAILBOXES.alerts.to,
+  },
 });
 const changes = new ChangeBus();
 const runHomeAssistantWorker = serializedWorker(async () => {
@@ -190,6 +209,7 @@ const app = createApp({
   webhookToken: config.ALERT_DASHBOARD_WEBHOOK_TOKEN,
   ops,
   digests,
+  reports,
   opsIngestToken: config.OPS_INGEST_TOKEN,
   promotionStatusUrl: config.PROMOTION_STATUS_URL,
   onWebhookIngested: () => {

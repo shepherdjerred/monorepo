@@ -18,10 +18,15 @@ describe("environment boundary", () => {
   test("email defaults off and supplies infrastructure defaults", () => {
     const config = readConfig(base);
     expect(config.EMAIL_ENABLED).toBe(false);
+    expect(config.DAILY_DIGEST_QUIET_CLEAR).toBe(true);
     expect(config.PORT).toBe(7341);
     expect(config.GRAFANA_LOKI_DATASOURCE_UID).toBe("loki");
     expect(config.POSTAL_DIGEST_FROM).toBeUndefined();
     expect(config.POSTAL_DIGEST_TO).toBeUndefined();
+    expect(
+      readConfig({ ...base, DAILY_DIGEST_QUIET_CLEAR: "false" })
+        .DAILY_DIGEST_QUIET_CLEAR,
+    ).toBe(false);
   });
 
   test("requires the ops ingest token and Prometheus URL", () => {

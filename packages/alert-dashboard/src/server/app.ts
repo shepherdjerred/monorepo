@@ -7,12 +7,14 @@ import { z } from "zod";
 import type { AlertService } from "#application/alert-service";
 import type { DigestService } from "#application/ops-digest-service";
 import type { OpsService } from "#application/ops-service";
+import type { ReportService } from "#application/reports/report-service";
 import { hasBearer } from "#server/bearer";
 import type { ChangeBus } from "#server/change-bus";
 import type { Metrics } from "#server/metrics";
 import { withSpan } from "#infrastructure/observability";
 import { opsErrorResponse, registerOpsRoutes } from "#server/ops-routes";
 import { mountModules, type ServerModule } from "#server/platform/module";
+import { registerReportRoutes } from "#server/report-routes";
 import { appRouter } from "#server/trpc";
 import { registerPromotionRoutes } from "#server/promotion-routes";
 import {
@@ -31,6 +33,7 @@ type AppOptions = {
   webhookToken: string;
   ops: OpsService;
   digests: DigestService;
+  reports: ReportService;
   opsIngestToken: string;
   promotionStatusUrl?: string;
   onWebhookIngested?: () => void;
@@ -243,6 +246,7 @@ export function createApp(options: AppOptions): Hono {
   app.all("/trpc/*", handleTrpc);
 
   registerOpsRoutes(app, options);
+  registerReportRoutes(app, options);
   registerPromotionRoutes(
     app,
     options.promotionStatusUrl,

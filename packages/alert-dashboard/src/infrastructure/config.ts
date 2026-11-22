@@ -10,6 +10,7 @@ const EnvironmentSchema = z
     ALERTMANAGER_URL: z.url(),
     ALERT_DASHBOARD_WEBHOOK_TOKEN: z.string().min(32),
     DATABASE_URL: z.string().min(1),
+    DAILY_DIGEST_QUIET_CLEAR: BooleanTextSchema.default(true),
     EMAIL_ENABLED: BooleanTextSchema.default(false),
     GRAFANA_PROMETHEUS_DATASOURCE_UID: z.string().min(1).default("prometheus"),
     GRAFANA_LOKI_DATASOURCE_UID: z.string().min(1).default("loki"),

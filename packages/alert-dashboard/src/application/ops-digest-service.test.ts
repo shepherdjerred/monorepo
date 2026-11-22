@@ -89,6 +89,155 @@ describe("digest runs", () => {
       DigestMailerUnconfiguredError,
     );
   });
+
+  it("sends the first clear daily digest, skips consecutive clear days, and emails again on recovery", async () => {
+    let currentInstant = Temporal.Instant.from("2026-09-28T14:30:00Z");
+    const clock = { now: () => currentInstant };
+    const ops = createOpsFixture(clock, { dailyDigestQuietClear: true });
+
+    const ingestClear = async () => {
+      const base = fixtureOpsIngest(
+        currentInstant.subtract({ minutes: 1 }).toString(),
+      );
+      await ops.ops.ingest(
+        JSON.stringify({
+          snapshot: {
+            ...base.snapshot,
+            severity: "ok",
+            summary: "All monitored areas are healthy",
+            sections: base.snapshot.sections.map((section) => ({
+              ...section,
+              severity: "ok",
+              summary: "Healthy",
+              signals: [],
+            })),
+          },
+          changes: [],
+        }),
+      );
+    };
+
+    const ingestAttention = async () => {
+      await ops.ops.ingest(
+        JSON.stringify(
+          fixtureOpsIngest(currentInstant.subtract({ minutes: 1 }).toString()),
+        ),
+      );
+    };
+
+    // Day 1 (clear, no prior daily digest): sends email and archives metadata.
+    await ingestClear();
+    expect(await ops.digests.run("daily")).toEqual({
+      kind: "daily",
+      periodKey: "2026-09-28",
+      status: "sent",
+      duplicate: false,
+    });
+    expect(ops.postal.sent).toHaveLength(1);
+    expect(ops.repository.digests.get("daily:2026-09-28")).toMatchObject({
+      status: "sent",
+      severity: "ok",
+      needsMeCount: 0,
+      attentionCount: 0,
+    });
+
+    // Day 2 (consecutive clear day): skips email, archives full payload, advances cursor.
+    currentInstant = currentInstant.add({ hours: 24 });
+    await ingestClear();
+    expect(await ops.digests.run("daily")).toEqual({
+      kind: "daily",
+      periodKey: "2026-09-29",
+      status: "skipped",
+      duplicate: false,
+    });
+    expect(ops.postal.sent).toHaveLength(1);
+    const skippedRow = ops.repository.digests.get("daily:2026-09-29");
+    expect(skippedRow).toMatchObject({
+      status: "skipped",
+      skipReason: "unchanged-clear",
+      severity: "ok",
+      needsMeCount: 0,
+      attentionCount: 0,
+    });
+    expect(skippedRow?.reportPayload).not.toBeNull();
+    expect(skippedRow?.htmlBody).toContain("All clear");
+    expect(skippedRow?.plainBody).toContain("Open in Hub:");
+    expect(await ops.digests.run("daily")).toEqual({
+      kind: "daily",
+      periodKey: "2026-09-29",
+      status: "skipped",
+      duplicate: true,
+    });
+
+    // Day 3 (attention needed): sends email.
+    currentInstant = currentInstant.add({ hours: 24 });
+    await ingestAttention();
+    expect(await ops.digests.run("daily")).toEqual({
+      kind: "daily",
+      periodKey: "2026-09-30",
+      status: "sent",
+      duplicate: false,
+    });
+    expect(ops.postal.sent).toHaveLength(2);
+
+    // Day 4 (recovery back to clear after attention day): MUST send recovery email!
+    currentInstant = currentInstant.add({ hours: 24 });
+    await ingestClear();
+    expect(await ops.digests.run("daily")).toEqual({
+      kind: "daily",
+      periodKey: "2026-10-01",
+      status: "sent",
+      duplicate: false,
+    });
+    expect(ops.postal.sent).toHaveLength(3);
+
+    // Day 5 (second clear day after recovery): skips again.
+    currentInstant = currentInstant.add({ hours: 24 });
+    await ingestClear();
+    expect(await ops.digests.run("daily")).toEqual({
+      kind: "daily",
+      periodKey: "2026-10-02",
+      status: "skipped",
+      duplicate: false,
+    });
+    expect(ops.postal.sent).toHaveLength(3);
+  });
+
+  it("sends consecutive clear daily digests when dailyDigestQuietClear is false", async () => {
+    let currentInstant = Temporal.Instant.from("2026-09-28T14:30:00Z");
+    const ops = createOpsFixture(
+      { now: () => currentInstant },
+      { dailyDigestQuietClear: false },
+    );
+    const ingestClear = async () => {
+      const base = fixtureOpsIngest(
+        currentInstant.subtract({ minutes: 1 }).toString(),
+      );
+      await ops.ops.ingest(
+        JSON.stringify({
+          snapshot: {
+            ...base.snapshot,
+            severity: "ok",
+            summary: "All monitored areas are healthy",
+            sections: base.snapshot.sections.map((section) => ({
+              ...section,
+              severity: "ok",
+              summary: "Healthy",
+              signals: [],
+            })),
+          },
+          changes: [],
+        }),
+      );
+    };
+
+    await ingestClear();
+    expect(await ops.digests.run("daily")).toMatchObject({ status: "sent" });
+    currentInstant = currentInstant.add({ hours: 24 });
+    await ingestClear();
+    expect(await ops.digests.run("daily")).toMatchObject({ status: "sent" });
+    expect(ops.postal.sent).toHaveLength(2);
+  });
 });
 
 describe("digest reports", () => {

@@ -10,6 +10,8 @@ import {
 import type {
   AlertChangeQuery,
   ChangeQuery,
+  CompletedDailyDigestSummary,
+  DigestArchiveFields,
   DigestClaim,
   DigestRunKey,
   IncidentWindowStats,
@@ -24,6 +26,7 @@ import type {
   StoredOpsSnapshot,
   ViewerCursorRecord,
 } from "#application/ports";
+import type { StoredDigestRun } from "#application/reports/report-ports";
 import type { AlertLedgerChange } from "#domain/ops-changes";
 import { prunableSnapshotIds, retentionCutoffNs } from "#domain/ops-retention";
 import {
@@ -33,11 +36,34 @@ import {
 } from "#shared/ops-schema";
 import { epochNanosecondsToInstantText } from "#shared/time";
 
-type DigestRow = {
-  status: "sending" | "sent" | "failed" | "skipped";
-  claimedAtNs: bigint | null;
+export type InMemoryDigestRow = StoredDigestRun & {
   attempts: number;
 };
+
+function initialDigestRow(key: DigestRunKey, nowNs: bigint): InMemoryDigestRow {
+  return {
+    id: `digest-${key.kind}-${key.periodKey}`,
+    kind: key.kind,
+    periodKey: key.periodKey,
+    status: "sending",
+    skipReason: null,
+    createdAtNs: nowNs,
+    claimedAtNs: nowNs,
+    sentAtNs: null,
+    attemptCount: 0,
+    attempts: 0,
+    messageId: key.messageId,
+    subject: null,
+    lastError: null,
+    severity: null,
+    summary: null,
+    needsMeCount: null,
+    attentionCount: null,
+    reportPayload: null,
+    htmlBody: null,
+    plainBody: null,
+  };
+}
 
 type StoredChange = ChangeView & { occurredAtNs: bigint };
 
@@ -75,7 +101,7 @@ export class InMemoryOpsRepository implements OpsRepository {
   readonly facets = new Map<FacetKey, StoredFacetEntry>();
   readonly changes = new Map<string, StoredChange>();
   readonly cursors = new Map<CursorConsumer, ViewerCursorRecord>();
-  readonly digests = new Map<string, DigestRow>();
+  readonly digests = new Map<string, InMemoryDigestRow>();
   alertLedger: AlertLedgerChange[] = [];
   incidents: IncidentWindowStats = { opened: 0, resolveDurationsNs: [] };
   #sequence = 0;
@@ -275,31 +301,106 @@ export class InMemoryOpsRepository implements OpsRepository {
     ) {
       return Promise.resolve({ outcome: "busy" });
     }
+    const base = existing ?? initialDigestRow(key, nowNs);
+    const nextAttempts = base.attempts + 1;
     this.digests.set(id, {
+      ...base,
       status: "sending",
       claimedAtNs: nowNs,
-      attempts: (existing?.attempts ?? 0) + 1,
+      attemptCount: nextAttempts,
+      attempts: nextAttempts,
+      messageId: key.messageId,
     });
     return Promise.resolve({ outcome: "claimed" });
   }
 
-  markDigestSent(key: DigestRunKey): Promise<void> {
-    this.#setStatus(key, "sent");
+  markDigestSent(
+    key: DigestRunKey,
+    input: { sentAtNs: bigint; subject: string } & DigestArchiveFields,
+  ): Promise<void> {
+    this.#updateDigest(key, {
+      status: "sent",
+      skipReason: null,
+      sentAtNs: input.sentAtNs,
+      subject: input.subject,
+      ...(input.severity === undefined ? {} : { severity: input.severity }),
+      ...(input.summary === undefined ? {} : { summary: input.summary }),
+      ...(input.needsMeCount === undefined
+        ? {}
+        : { needsMeCount: input.needsMeCount }),
+      ...(input.attentionCount === undefined
+        ? {}
+        : { attentionCount: input.attentionCount }),
+      ...(input.reportPayload === undefined
+        ? {}
+        : { reportPayload: input.reportPayload }),
+      ...(input.htmlBody === undefined ? {} : { htmlBody: input.htmlBody }),
+      ...(input.plainBody === undefined ? {} : { plainBody: input.plainBody }),
+      lastError: null,
+    });
     return Promise.resolve();
   }
 
-  markDigestFailed(key: DigestRunKey): Promise<void> {
-    this.#setStatus(key, "failed");
+  markDigestSkipped(
+    key: DigestRunKey,
+    input: {
+      skipReason: string;
+      subject: string;
+    } & Required<DigestArchiveFields>,
+  ): Promise<void> {
+    this.#updateDigest(key, {
+      ...input,
+      status: "skipped",
+      sentAtNs: null,
+      lastError: null,
+    });
     return Promise.resolve();
   }
 
-  #setStatus(key: DigestRunKey, status: DigestRow["status"]): void {
+  markDigestFailed(key: DigestRunKey, error: string): Promise<void> {
+    this.#updateDigest(key, {
+      status: "failed",
+      lastError: error.slice(0, 2000),
+    });
+    return Promise.resolve();
+  }
+
+  previousCompletedDailyDigest(
+    beforePeriodKey: string,
+  ): Promise<CompletedDailyDigestSummary | null> {
+    const match = [...this.digests.values()]
+      .flatMap((row) =>
+        row.kind === "daily" &&
+        row.periodKey < beforePeriodKey &&
+        (row.status === "sent" || row.status === "skipped")
+          ? [{ ...row, status: row.status }]
+          : [],
+      )
+      .toSorted((a, b) =>
+        a.periodKey === b.periodKey
+          ? a.createdAtNs > b.createdAtNs
+            ? -1
+            : 1
+          : b.periodKey.localeCompare(a.periodKey),
+      )[0];
+    return Promise.resolve(
+      match === undefined
+        ? null
+        : {
+            periodKey: match.periodKey,
+            status: match.status,
+            severity: match.severity,
+            needsMeCount: match.needsMeCount,
+            attentionCount: match.attentionCount,
+          },
+    );
+  }
+
+  #updateDigest(key: DigestRunKey, patch: Partial<InMemoryDigestRow>): void {
     const id = `${key.kind}:${key.periodKey}`;
     const existing = this.digests.get(id);
-    if (existing === undefined) {
-      throw new Error(`No digest run ${id}`);
-    }
-    this.digests.set(id, { ...existing, status });
+    if (existing === undefined) throw new Error(`No digest run ${id}`);
+    this.digests.set(id, { ...existing, ...patch });
   }
 }
 

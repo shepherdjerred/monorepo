@@ -6,6 +6,7 @@ import { systemClock } from "#shared/time";
 import { FIXTURE_OPS_FACETS } from "#test-fixtures/ops-facets";
 import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
 import { volumeOpsIngest } from "#test-fixtures/ops-snapshot-volume";
+import { fixtureReportIngestBatch } from "#test-fixtures/reports-fixture";
 
 const FIXTURE_INGEST_TOKEN = "fixture-ops-ingest-token-with-32-characters";
 
@@ -53,15 +54,25 @@ function buildSeededIngest(): OpsIngest {
 
 async function pushFixtureFacets(): Promise<boolean> {
   try {
-    const response = await fetch(`${apiBaseUrl}/internal/v1/ops/snapshots`, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${FIXTURE_INGEST_TOKEN}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(buildSeededIngest()),
-    });
-    return response.ok;
+    const [opsResponse, reportsResponse] = await Promise.all([
+      fetch(`${apiBaseUrl}/internal/v1/ops/snapshots`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${FIXTURE_INGEST_TOKEN}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(buildSeededIngest()),
+      }),
+      fetch(`${apiBaseUrl}/internal/v1/reports/runs`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${FIXTURE_INGEST_TOKEN}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(fixtureReportIngestBatch(systemClock.now())),
+      }),
+    ]);
+    return opsResponse.ok && reportsResponse.ok;
   } catch {
     return false;
   }
