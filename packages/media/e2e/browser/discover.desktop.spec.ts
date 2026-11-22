@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { CatalogSearchSchema } from "#shared/api.ts";
 import { openAs, test } from "./support.ts";
 
 /*
@@ -82,4 +83,52 @@ test("a row's buttons page through it, and an end hands focus to the other one",
   await expect(back).toBeDisabled();
   await expect(forward).toBeFocused();
   expect(await scrolled()).toBe(0);
+});
+
+test("a row that gains cards while it is on screen offers the new ones", async ({
+  page,
+}) => {
+  // The first answer for one feed is cut to three titles, with library
+  // access not confirmed, so the page offers to read everything again.
+  let cut = true;
+  await page.route(
+    /\/api\/v1\/catalog\/discover\?feed=popular_movies/u,
+    async (route) => {
+      if (!cut) {
+        await route.fallback();
+        return;
+      }
+      cut = false;
+      const response = await route.fetch();
+      const answer = CatalogSearchSchema.parse(await response.json());
+      await route.fulfill({
+        response,
+        json: {
+          ...answer,
+          libraryAccess: "stale",
+          results: answer.results
+            .slice(0, 3)
+            .map((title) => ({ ...title, library: null })),
+        },
+      });
+    },
+  );
+  await openAs(page, "member", "/discover");
+  await page.waitForLoadState("networkidle");
+  const cards = page
+    .getByRole("list", { name: "Popular films", exact: true })
+    .getByRole("listitem");
+  const forward = page.getByRole("button", {
+    name: "Scroll forward: Popular films",
+    includeHidden: true,
+  });
+  // Three cards fit on the screen: there is nowhere to scroll to.
+  await expect(cards).toHaveCount(3);
+  await expect(forward).toBeDisabled();
+
+  // The row is read again and comes back whole, without leaving the page.
+  await page.getByRole("button", { name: "Check again" }).click();
+  await expect(cards).toHaveCount(20);
+  await expect(forward).toBeEnabled();
+  await expect(forward).toBeVisible();
 });

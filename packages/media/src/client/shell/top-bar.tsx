@@ -69,9 +69,14 @@ function SearchField() {
     });
   }
 
+  /** Drops the search that is waiting for the typing to pause, if any. */
+  function dropPendingSearch() {
+    globalThis.clearTimeout(pause.current);
+  }
+
   /** Searches once the typing pauses, while Discover is the page open. */
   function searchSoon(value: string) {
-    globalThis.clearTimeout(pause.current);
+    dropPendingSearch();
     if (location.pathname !== DISCOVER_PATH) return;
     // The typing refines what this address shows. Whatever the reader does
     // during the pause that takes them to another address (another page,
@@ -107,14 +112,19 @@ function SearchField() {
         value={text}
         onChange={(event) => {
           setText(event.target.value);
-          // Text an input method is still composing is not a search yet.
+          // Text an input method is still composing is not a search yet, and
+          // neither any longer is what was typed just before it: sending
+          // that now would search for half of what the reader is writing.
           const { nativeEvent } = event;
           if (nativeEvent instanceof InputEvent && nativeEvent.isComposing) {
+            dropPendingSearch();
             return;
           }
           searchSoon(event.target.value);
         }}
+        onCompositionStart={dropPendingSearch}
         onCompositionEnd={(event) => {
+          // The finished text is what gets searched for.
           searchSoon(event.currentTarget.value);
         }}
         maxLength={QUERY_LIMIT}

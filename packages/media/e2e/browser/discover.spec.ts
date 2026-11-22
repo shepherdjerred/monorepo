@@ -400,7 +400,7 @@ for (const scheme of ["light", "dark"] as const) {
       });
       await expect(notice).toHaveCount(1);
       await expect(notice).toContainText(
-        "the titles here do not show what your household already has",
+        "Discover does not show what your household already has",
       );
       for (const row of ROWS) {
         await expect(rail(page, row).getByRole("listitem")).toHaveCount(20);
@@ -436,6 +436,29 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(
         main.getByText("Request", { exact: true }).first(),
       ).toBeVisible();
+    });
+
+    test("it is said over a search that finds nothing, too", async ({
+      page,
+    }) => {
+      await inScenario(page, "stale-library-access");
+      await openAs(page, "member", "/discover?q=zzzz");
+      await settle(page);
+      const nothing = page.getByRole("heading", { name: "No titles match" });
+      await expect(nothing).toBeVisible();
+      // No title carried the news, so the page itself has to.
+      const notice = page.getByRole("region", {
+        name: "Media could not confirm your Plex access just now",
+      });
+      await expect(notice).toHaveCount(1);
+      expect(await violationDetails(page)).toEqual([]);
+      expect(await horizontalOverflow(page)).toBe(0);
+
+      // With access confirmed, a search that finds nothing is only that.
+      await inScenario(page, "default");
+      await notice.getByRole("button", { name: "Check again" }).click();
+      await expect(notice).toHaveCount(0);
+      await expect(nothing).toBeVisible();
     });
   });
 }

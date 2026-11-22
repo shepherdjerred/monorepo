@@ -47,7 +47,9 @@ export function CatalogCard({
 /**
  * Said once, above the titles, when Media could not check them against the
  * library: the cards carry no state, and this is why. The reader can still
- * open any title; the only thing to do about the check is to ask again.
+ * open any title; the only thing to do about the check is to ask again. It
+ * is said over an empty result too, so its words do not count on there being
+ * titles under it.
  */
 export function AccessNotice() {
   const checking = useIsFetching({ queryKey: [CATALOG_QUERY_KEY] }) > 0;
@@ -57,9 +59,9 @@ export function AccessNotice() {
         Media could not confirm your Plex access just now
       </h2>
       <p className={cx("noticeBody")}>
-        Until it can, the titles here do not show what your household already
-        has. You can still open any of them. Check again in a few minutes; if
-        this keeps happening, ask the library owner.
+        Until it can, Discover does not show what your household already has.
+        You can still open any title. Check again in a few minutes; if this
+        keeps happening, ask the library owner.
       </p>
       <button
         className="button"
