@@ -7,7 +7,7 @@ import type { CatalogDetail } from "#shared/api.ts";
 import type { MediaUser } from "#shared/contract.ts";
 import { writeApi } from "#client/api.ts";
 import { ErrorNotice } from "#client/components.tsx";
-import { KIND_COPY } from "#client/presentation/state-phrase.ts";
+import { KIND_COPY, runtimeLabel } from "#client/presentation/state-phrase.ts";
 import { languageName } from "#client/request-sheet/languages.ts";
 import type { SheetSubject } from "#client/request-sheet/form.ts";
 import { RequestSheet } from "#client/request-sheet/sheet.tsx";
@@ -105,7 +105,13 @@ export function CatalogTitle({
           posterPath: item.posterPath,
           backdropPath: item.backdropPath,
         }}
-        meta={[KIND_COPY[item.kind], ...(year.length === 4 ? [year] : [])]}
+        meta={[
+          KIND_COPY[item.kind],
+          ...(year.length === 4 ? [year] : []),
+          ...(item.runtimeMinutes === null
+            ? []
+            : [runtimeLabel(item.runtimeMinutes)]),
+        ]}
         state={{ label: "Not in the library", tone: "neutral" }}
         overview={item.overview}
       >
