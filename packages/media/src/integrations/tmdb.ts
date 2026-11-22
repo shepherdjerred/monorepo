@@ -352,13 +352,27 @@ export class TmdbClient {
       headers,
       ...(signal === undefined ? {} : { signal }),
     });
-    const bytes = await boundedBytes(response, 8 * 1024 * 1024, "tmdb");
+    const bytes = await this.body(response);
     try {
       return JSON.parse(
         new TextDecoder("utf-8", { fatal: true }).decode(bytes),
       );
     } catch {
       throw new IntegrationError("tmdb", "invalid-response");
+    }
+  }
+
+  /**
+   * A connection that fails or times out after the headers arrived rejects the
+   * body read with the stream's own error. That is TMDB being unavailable, the
+   * same as a connection that never answered.
+   */
+  private async body(response: Response): Promise<Uint8Array<ArrayBuffer>> {
+    try {
+      return await boundedBytes(response, 8 * 1024 * 1024, "tmdb");
+    } catch (error) {
+      if (error instanceof IntegrationError) throw error;
+      throw new IntegrationError("tmdb", "unavailable");
     }
   }
 }

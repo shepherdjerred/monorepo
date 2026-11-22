@@ -2199,6 +2199,34 @@ waiting title is tried at least once in any five consecutive periods. A title
 whose refresh keeps failing, such as one TMDB has removed, stays unobserved and
 is retried on its turn, but it cannot keep the titles after it from theirs.
 
+That refresh reaches only a movie or series that has a default target, because
+the due pages read only rows that have one. A root without one, such as an
+imported film nobody has asked for or a series whose episodes are kept while
+the series itself was never declared, is on no page. It is also not refreshed:
+`refresh_catalog` rewrites catalog facts, and for a series its seasons,
+episodes, catalog state and numbering, none of which may change for a title
+nobody has declared anything about. Such a root only has its artwork observed.
+Each due sweep, once and before its first page, reads TMDB for at most 25 of
+them (`automation/reconciliation/root-artwork.ts`) and writes the poster,
+backdrop, synopsis and observation time through the same artwork write, under
+the canonical lock. It advances no `version`, creates no row and queues no
+operation, so it never enters the outbox. The 25 are a window over the waiting
+roots in id order that starts at `period × 25` modulo their number and wraps, so
+successive windows lie end to end: while the waiting set is unchanged every
+root is tried at least once in any `ceil(count / 25)` consecutive periods, and
+a backfill with no failures takes exactly that many. TMDB being unavailable, no
+longer having the title, or sending an unreadable body leaves that root waiting
+without failing the sweep or raising an intervention; it is tried again on a
+later turn and cannot keep the others from theirs. There is no marker for a
+title TMDB has removed, so such a root keeps waiting and costs one read on each
+of its turns. A sweep that is run again in the same period, or whose first
+Activity attempt is retried, takes a fresh window of at most 25 from what is
+still waiting.
+
+Both backfills are complete when no movie or series with a `tmdbId` has a null
+`artworkObservedAt`, apart from titles TMDB no longer answers for; neither
+needs turning off, because an observed title stops matching.
+
 Reads return that artwork as `artwork: { posterPath, backdropPath }`
 (`shared/artwork/contract.ts`), always the art of the movie or series a row
 belongs to, so a season or episode row shows its series'. Both paths are null
