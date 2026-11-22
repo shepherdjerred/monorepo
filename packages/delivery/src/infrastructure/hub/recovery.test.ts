@@ -21,15 +21,29 @@ const settled: ReadableIntent = {
 describe("a failure as the hub pages state it", () => {
   const row = { id: "de8f76cb", message: STALE, recoveryRequired: false };
 
+  const stages = new Map([
+    [
+      row.id,
+      [{ key: "step-sync", status: "running", message: "step-sync: running" }],
+    ],
+  ]);
+
   it("replaces the executor's stale words once recovery settled, and keeps them while it has not", () => {
-    expect(stated(row, new Map([[row.id, [settled]]])).message).toBe(
-      "Recovery intent 1 read the external operation back after the deployment ended: it ended in phase Succeeded.",
+    // A readback of Succeeded is never the reason: the interrupted step is.
+    expect(stated(row, new Map([[row.id, [settled]]]), stages).message).toBe(
+      "Step step-sync was still running when the deployment ended",
+    );
+    expect(stated(row, new Map([[row.id, [settled]]]), new Map()).message).toBe(
+      "No cause was recorded",
     );
     expect(
-      stated(row, new Map([[row.id, [{ ...settled, outcome: "pending" }]]]))
-        .message,
+      stated(
+        row,
+        new Map([[row.id, [{ ...settled, outcome: "pending" }]]]),
+        stages,
+      ).message,
     ).toBe(STALE);
-    expect(stated(row, new Map()).message).toBe(STALE);
+    expect(stated(row, new Map(), stages).message).toBe(STALE);
   });
 
   it("gives an interrupted step the phase its own request read back", () => {

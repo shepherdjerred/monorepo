@@ -472,7 +472,7 @@ test("the activity trail shows what each catalog reconcile changed", async ({
   await expect(entries.nth(1)).toContainText(
     "Configuration revisions created (1)",
   );
-  await expect(entries.nth(2)).toContainText("Environments created (8)");
+  await expect(entries.nth(2)).toContainText("Environments created (9)");
   await expectNoHorizontalOverflow(page);
 });
 

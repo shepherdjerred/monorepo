@@ -8,7 +8,7 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { firstLine } from "./attention.ts";
 import { decodeCursor, olderThan, page, PAGE_SIZE } from "./cursor.ts";
-import { recoveryIntentsOf, stated } from "./recovery.ts";
+import { causeStagesOf, recoveryIntentsOf, stated } from "./recovery.ts";
 import { activityEntry, entityDomain } from "./views.ts";
 
 type AuditRow = Prisma.AuditGetPayload<object>;
@@ -113,6 +113,7 @@ async function activitySubjects(
       deployments.map((row) => row.id),
     ),
   ]);
+  const stages = await causeStagesOf(database, intents);
   const revisionOf = new Map(deployed.map((row) => [row.id, row.revision]));
   const subjects = new Map<string, ActivitySubject>([
     ...deployments.map((row): [string, ActivitySubject] => [
@@ -138,7 +139,7 @@ async function activitySubjects(
       // A failure whose recovery settled says what recovery read back.
       ...deployments.map((row): [string, string | null] => [
         row.id,
-        stated(row, intents).message,
+        stated(row, intents, stages).message,
       ]),
       ...builds.map((row): [string, string | null] => [
         row.id,

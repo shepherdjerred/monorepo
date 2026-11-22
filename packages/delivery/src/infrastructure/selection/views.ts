@@ -129,6 +129,12 @@ export function detailView(
     revision: number;
     requestedAt: Date;
   } | null,
+  newerRequest: {
+    deploymentId: string;
+    revision: number;
+    status: string;
+    requestedAt: Date;
+  } | null,
 ) {
   return DeploymentDetailV2Schema.parse({
     ...detail,
@@ -144,6 +150,13 @@ export function detailView(
         : {
             ...acceptedRelease,
             requestedAt: acceptedRelease.requestedAt.toISOString(),
+          },
+    newerRequest:
+      newerRequest === null
+        ? null
+        : {
+            ...newerRequest,
+            requestedAt: newerRequest.requestedAt.toISOString(),
           },
   });
 }
@@ -170,6 +183,45 @@ async function acceptedReleaseOf(
     deploymentId: accepting.id,
     revision: set.revision,
     requestedAt: accepting.createdAt,
+  };
+}
+
+/** The statuses of a request that has not finished: the environment refuses another until it settles. */
+const UNFINISHED = ["queued", "running", "awaiting_approval"];
+
+/**
+ * The oldest request for the environment made after `row` that has not
+ * finished, with its set revision's number. Null when none is unfinished.
+ */
+async function newerRequestOf(
+  database: Database,
+  row: { id: string; environmentId: string; createdAt: Date },
+) {
+  const newer = await database.deployment.findFirst({
+    where: {
+      environmentId: row.environmentId,
+      id: { not: row.id },
+      createdAt: { gt: row.createdAt },
+      status: { in: UNFINISHED },
+    },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: {
+      id: true,
+      createdAt: true,
+      status: true,
+      versionSetRevisionId: true,
+    },
+  });
+  if (newer === null) return null;
+  const set = await database.versionSet.findUniqueOrThrow({
+    where: { id: newer.versionSetRevisionId },
+    select: { revision: true },
+  });
+  return {
+    deploymentId: newer.id,
+    revision: set.revision,
+    status: newer.status,
+    requestedAt: newer.createdAt,
   };
 }
 
@@ -286,6 +338,7 @@ export async function deploymentDetailV2(
       delivery.database,
       detail.environment.acceptedDeploymentId,
     ),
+    await newerRequestOf(delivery.database, row),
   );
 }
 

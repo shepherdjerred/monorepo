@@ -2,8 +2,10 @@ import { z } from "zod";
 import { EvidenceInputSchema } from "#shared/evidence-contract.ts";
 import {
   failureReason,
+  readbackOutcome,
   readbackPhase,
   recoveryReading,
+  type CauseStage,
   type ReadableIntent,
 } from "#shared/evidence/recovery-reading.ts";
 import type { Database } from "#infrastructure/database.ts";
@@ -50,14 +52,53 @@ export async function recoveryIntentsOf(
 }
 
 /**
+ * The steps of each deployment whose settled recovery read the work back as
+ * Succeeded, by deployment id: the cause of such a failure is the step it
+ * ended on, which only the steps hold. One read for every such deployment.
+ */
+export async function causeStagesOf(
+  database: Database,
+  intents: ReadonlyMap<string, readonly ReadableIntent[]>,
+): Promise<ReadonlyMap<string, CauseStage[]>> {
+  const ids = [...intents]
+    .filter(([, own]) => {
+      const reading = recoveryReading(own);
+      return reading !== null && readbackOutcome(reading) === "succeeded";
+    })
+    .map(([id]) => id);
+  if (ids.length === 0) return new Map();
+  const rows = await database.stage.findMany({
+    where: { deploymentId: { in: ids } },
+    select: {
+      deploymentId: true,
+      key: true,
+      status: true,
+      message: true,
+    },
+    orderBy: [{ startedAt: "asc" }, { updatedAt: "asc" }],
+  });
+  const stages = new Map<string, CauseStage[]>();
+  for (const { deploymentId, ...stage } of rows)
+    stages.set(deploymentId, [...(stages.get(deploymentId) ?? []), stage]);
+  return stages;
+}
+
+/**
  * A deployment with its message as every page states it: once its newest
  * recovery intent has settled, what recovery read back replaces what the
  * executor said while the outcome was unknown.
  */
 export function stated<
   T extends { id: string; message: string | null; recoveryRequired: boolean },
->(row: T, intents: ReadonlyMap<string, readonly ReadableIntent[]>): T {
-  return { ...row, message: failureReason(row, intents.get(row.id)) };
+>(
+  row: T,
+  intents: ReadonlyMap<string, readonly ReadableIntent[]>,
+  stages: ReadonlyMap<string, readonly CauseStage[]>,
+): T {
+  return {
+    ...row,
+    message: failureReason(row, intents.get(row.id), stages.get(row.id) ?? []),
+  };
 }
 
 /**

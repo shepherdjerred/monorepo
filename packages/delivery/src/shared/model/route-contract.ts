@@ -111,6 +111,21 @@ export const DeploymentDetailV2Schema = DeploymentDetailSchema.extend({
     })
     .nullable()
     .optional(),
+  /**
+   * The oldest request for this environment, made after this deployment,
+   * that has not finished: queued, running or awaiting approval. The
+   * environment refuses a retry of this deployment until it settles. Null
+   * when no newer request is unfinished; absent from servers that predate it.
+   */
+  newerRequest: z
+    .object({
+      deploymentId: IdentifierSchema,
+      revision: z.number().int().positive(),
+      status: z.enum(["queued", "running", "awaiting_approval"]),
+      requestedAt: TimestampSchema,
+    })
+    .nullable()
+    .optional(),
 });
 export type DeploymentDetailV2 = z.infer<typeof DeploymentDetailV2Schema>;
 

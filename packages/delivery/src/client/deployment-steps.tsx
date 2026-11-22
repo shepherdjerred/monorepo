@@ -10,6 +10,7 @@ import { Duration, RelativeTime } from "#client/components/time.tsx";
 import {
   readbackPhase,
   recoveryReading,
+  stepMessage,
   type RecoveryReading,
 } from "#shared/evidence/recovery-reading.ts";
 import {
@@ -128,22 +129,6 @@ export function stepEnd(
   if (interrupted(stage, deployment))
     return deployment.finishedAt ?? stage.updatedAt;
   return stage.status === "running" ? null : stage.updatedAt;
-}
-
-/**
- * What a step's message adds to its key and status. Executors often write
- * `step-sync: running`, which repeats both, and once the step is interrupted
- * the repeated status is stale, so that reads as nothing. A message that
- * starts with its own key loses the key.
- */
-export function stepMessage(stage: Pick<Stage, "key" | "status" | "message">) {
-  const prefix = `${stage.key}: `;
-  const text = (
-    stage.message.startsWith(prefix)
-      ? stage.message.slice(prefix.length)
-      : stage.message
-  ).trim();
-  return text === "" || text === stage.status ? null : text;
 }
 
 type RecoveryIntents = DeploymentDetailV2["recoveryIntents"];
