@@ -537,19 +537,10 @@ test("v2 acquires an OCI chart from its registry by digest, with no Helm index o
   ]);
 });
 
-async function acquireWithActiveServices(
+async function acquireV2(
   entry: VersionCatalogEntry,
-  activeServiceIds: readonly string[],
+  transport?: Parameters<typeof componentArtifactsForPublication>[3]["transport"],
 ) {
-  const active = new Set(activeServiceIds);
-  const core = {
-    ...CATALOG_CORE,
-    services: CATALOG_CORE.services.map((service) =>
-      active.has(service.id)
-        ? { ...service, lifecycle: "active" as const }
-        : service,
-    ),
-  };
   const requests: AcquireUpstreamArtifact[] = [];
   const selected = await componentArtifactsForPublication(
     {
@@ -563,25 +554,40 @@ async function acquireWithActiveServices(
     },
     catalog(entry),
     producer,
-    { credentials, registry: "v2", core },
+    {
+      credentials,
+      registry: "v2",
+      ...(transport === undefined ? {} : { transport }),
+    },
   );
   return { requests, selected };
 }
 
 test("v2 registers one acquisition under every active catalog service that acquires the component", async () => {
-  const { requests, selected } = await acquireWithActiveServices(busybox, [
-    "minecraft-shuxin",
-    "minecraft-sjerred",
-  ]);
+  const fixture = await chartTransport("alloy", "1.16.0", false);
+  const alloyChart: VersionCatalogEntry = {
+    name: "alloy",
+    category: "upstream",
+    artifactType: "helm-chart",
+    management: {
+      managed: true,
+      datasource: "helm",
+      registryUrl: fixture.index.slice(0, -1),
+      versioning: "semver",
+    },
+    value: "1.16.0",
+    component: true,
+  };
+  const { requests, selected } = await acquireV2(alloyChart, fixture.transport);
   expect(
     selected.map((artifact) => [artifact.serviceId, artifact.component]),
   ).toEqual([
-    ["minecraft-shuxin", "image:busybox"],
-    ["minecraft-sjerred", "image:busybox"],
+    ["alloy", "chart:alloy"],
+    ["alloy-gateway", "chart:alloy"],
   ]);
   expect(requests.map((request) => request.requestId)).toEqual([
-    "ci/1/42/acquire/minecraft-shuxin/library/busybox/1.37.0",
-    "ci/1/42/acquire/minecraft-sjerred/library/busybox/1.37.0",
+    "ci/1/42/acquire/alloy/alloy/1.16.0",
+    "ci/1/42/acquire/alloy-gateway/alloy/1.16.0",
   ]);
   expect(new Set(requests.map((request) => request.artifact.id)).size).toBe(2);
   await expect(
@@ -590,9 +596,20 @@ test("v2 registers one acquisition under every active catalog service that acqui
         latestQualifiedArtifact: unexpected,
         acquireUpstreamArtifact: unexpected,
       },
-      catalog(busybox),
+      catalog(alloyChart),
       producer,
-      { credentials, registry: "v2" },
+      {
+        credentials,
+        registry: "v2",
+        core: {
+          ...CATALOG_CORE,
+          services: CATALOG_CORE.services.map((service) =>
+            service.id === "alloy" || service.id === "alloy-gateway"
+              ? { ...service, lifecycle: "retired" as const }
+              : service,
+          ),
+        },
+      },
     ),
   ).resolves.toEqual([]);
   await expect(
@@ -609,22 +626,27 @@ test("v2 registers one acquisition under every active catalog service that acqui
 });
 
 test("v2 acquires an aliased image from its repository under the alias's component", async () => {
-  const java8 = parseVersionCatalog(rawVersionCatalog).entries.find(
-    (entry) => entry.name === "itzg/minecraft-server-java8",
+  const aliasedImage: VersionCatalogEntry = {
+    ...minecraftImage,
+    management: {
+      managed: true,
+      datasource: "docker",
+      registryUrl: "https://docker.io",
+      versioning: "docker",
+      packageName: "itzg/minecraft-server-upstream",
+    },
+  };
+  const { requests, selected } = await acquireV2(aliasedImage);
+  expect(selected.map((artifact) => artifact.serviceId)).toEqual(["minecraft"]);
+  expect(requests).toHaveLength(1);
+  expect(requests[0]?.artifact.component).toBe("image:minecraft-server");
+  expect(requests[0]?.artifact.uri).toBe(
+    "docker.io/itzg/minecraft-server-upstream",
   );
-  if (java8 === undefined) throw new Error("Java 8 Minecraft image missing");
-  const { requests, selected } = await acquireWithActiveServices(java8, [
-    "minecraft-sjerred",
-  ]);
-  expect(selected.length).toBeGreaterThan(0);
-  for (const request of requests) {
-    expect(request.artifact.component).toBe("image:minecraft-server-java8");
-    expect(request.artifact.uri).toBe("docker.io/itzg/minecraft-server");
-    expect(request.artifact.origin).toMatchObject({
-      repository: "https://docker.io",
-      name: "itzg/minecraft-server",
-    });
-  }
+  expect(requests[0]?.artifact.origin).toMatchObject({
+    repository: "https://docker.io",
+    name: "itzg/minecraft-server-upstream",
+  });
 });
 
 test("the version catalog's components are exactly the charts, images and Git sources catalog services acquire", () => {

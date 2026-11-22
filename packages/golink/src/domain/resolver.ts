@@ -76,14 +76,11 @@ const STRIPPABLE_SUFFIXES = [
  * these slugs remain allowed.
  * - Migrated aliases: `alerts` and `ops` (canonical app is `hub`).
  * - Headless gRPC, OTLP push, S3 API, LogQL, and build-cache endpoints.
- * - Scaled-to-zero Minecraft map ingresses (`minecraft-sjerred`, `minecraft-shuxin`).
  */
 export const EXCLUDED_DYNAMIC_INGRESS_SHORTS: ReadonlySet<string> = new Set([
   "alerts",
   "gradle-build-cache",
   "loki",
-  "minecraft-shuxin-bluemap",
-  "minecraft-sjerred-dynmap",
   "ops",
   "otlp-metrics",
   "seaweedfs-s3",

@@ -32,8 +32,8 @@ State still lives in the shared SeaweedFS S3 backend (`asuswrt/terraform.tfstate
 so it is durable and shared.
 
 The Storm's Bedrock path uses a separate 30004/UDP port forward to its
-Kubernetes NodePort. Shuxin retains 30003/UDP. This router stack is local-run
-only, so a source release alone does not activate the new public port.
+Kubernetes NodePort. This router stack is local-run only, so a source release
+alone does not activate the new public port.
 
 ## Provider install (filesystem mirror)
 

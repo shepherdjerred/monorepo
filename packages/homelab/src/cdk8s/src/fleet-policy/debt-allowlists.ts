@@ -100,7 +100,7 @@ export const UPSTREAM_NAMESPACES_WITHOUT_INGRESS_POLICY: ReadonlySet<string> =
   ]);
 
 /**
- * As above, for Egress. The Minecraft namespaces have Ingress policies only.
+ * As above, for Egress. `minecraft-tsmc` has an Ingress policy only.
  */
 export const UPSTREAM_NAMESPACES_WITHOUT_EGRESS_POLICY: ReadonlySet<string> =
   new Set([
@@ -117,8 +117,6 @@ export const UPSTREAM_NAMESPACES_WITHOUT_EGRESS_POLICY: ReadonlySet<string> =
     "loki",
     "mc-router",
     "mc-sandbox",
-    "minecraft-shuxin",
-    "minecraft-sjerred",
     "minecraft-tsmc",
     "node-feature-discovery",
     "openebs",
@@ -337,10 +335,6 @@ export const UPSTREAM_CONTAINERS_WITHOUT_REQUESTS: ReadonlySet<string> =
     "blackbox-exporter/prometheus-prometheus-blackbox-exporter/blackbox-exporter",
     "cert-manager/cert-manager-startupapicheck/cert-manager-startupapicheck",
     "velero/velero-upgrade-crds/velero",
-    // Init containers our own values add without resources
-    // (`misc/minecraft/minecraft-config.ts`, `minecraft-drift-check.ts`).
-    "minecraft-shuxin/minecraft-shuxin/check-config-drift",
-    "minecraft-shuxin/minecraft-shuxin/copy-plugin-configs",
     // Plugin init containers our own values add without resources
     // (`resources/argo-applications/storage/velero.ts`).
     "velero/velero/velero-plugin-for-aws",

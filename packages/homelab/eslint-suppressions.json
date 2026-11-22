@@ -109,11 +109,6 @@
       "count": 1
     }
   },
-  "src/cdk8s/src/misc/minecraft/minecraft-config.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 2
-    }
-  },
   "src/cdk8s/src/misc/typed-helm-parameters.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

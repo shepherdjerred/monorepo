@@ -9,7 +9,6 @@ import {
   createMinecraftTsmcApp,
   minecraftChartRepository,
 } from "./minecraft-tsmc.ts";
-import { createMinecraftShuxinApp } from "./minecraft-shuxin.ts";
 import { siteAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/misc/analytics.ts";
 
 // minecraft-tsmc runs docker.io/shepherdjerred/the-storm-server, built from
@@ -52,7 +51,7 @@ test("TSMC chart mirror is coupled to its exact reviewed ownership cutover", () 
     "https://chartmuseum.sjer.red",
   );
   expect(() =>
-    minecraftChartRepository({ "minecraft-tsmc": "minecraft-shuxin/prod" }),
+    minecraftChartRepository({ "minecraft-tsmc": "arcade/prod" }),
   ).toThrow("reviewed Delivery environment");
 });
 
@@ -78,7 +77,7 @@ function tsmcValues(): Record<string, unknown> {
   return tsmcHelm().valuesObject;
 }
 
-test("The Storm stays available without changing other Minecraft servers", () => {
+test("The Storm stays continuously available as the default router backend", () => {
   expect(tsmcValues()["replicaCount"]).toBe(1);
   expect(tsmcValues()["serviceAnnotations"]).toMatchObject({
     "mc-router.itzg.me/defaultServer": "true",
@@ -87,12 +86,6 @@ test("The Storm stays available without changing other Minecraft servers", () =>
   // The pinned router treats named and default discovery as mutually exclusive.
   expect(tsmcValues()["serviceAnnotations"]).not.toHaveProperty(
     "mc-router.itzg.me/externalServerName",
-  );
-  expect(shuxinValues()["serviceAnnotations"]).not.toHaveProperty(
-    "mc-router.itzg.me/defaultServer",
-  );
-  expect(shuxinValues()["serviceAnnotations"]).not.toHaveProperty(
-    "mc-router.itzg.me/autoScaleDown",
   );
 });
 
@@ -106,19 +99,6 @@ test("Storm analytics uses the shared direct capture bootstrap and production st
   expect(env["FLIPT_URL"]).toBeUndefined();
   expect(env["FLIPT_ENVIRONMENT"]).toBeUndefined();
 });
-
-function shuxinValues(): Record<string, unknown> {
-  const application = createMinecraftShuxinApp(Testing.chart()).toJson();
-  return z
-    .object({
-      spec: z.object({
-        source: z.object({
-          helm: z.object({ valuesObject: HelmValues }),
-        }),
-      }),
-    })
-    .parse(application).spec.source.helm.valuesObject;
-}
 
 function synthTsmc(): unknown[] {
   const app = new App();
@@ -256,21 +236,15 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     });
   });
 
-  test("uses PROXY-aware health probes for both PROXY-enabled Paper servers", () => {
-    for (const { values, command } of [
-      {
-        values: tsmcValues(),
-        command: ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"],
-      },
-      { values: shuxinValues(), command: ["mc-health", "--use-proxy"] },
-    ]) {
-      expect(values["livenessProbe"]).toMatchObject({
-        command,
-      });
-      expect(values["readinessProbe"]).toMatchObject({
-        command,
-      });
-    }
+  test("uses PROXY-aware health probes for the PROXY-enabled Paper server", () => {
+    const values = tsmcValues();
+    const command = ["mc-monitor", "status", "--use-proxy", "--timeout", "2s"];
+    expect(values["livenessProbe"]).toMatchObject({
+      command,
+    });
+    expect(values["readinessProbe"]).toMatchObject({
+      command,
+    });
   });
 
   test("requires Delivery to preserve both higher-precedence tag inputs", () => {

@@ -12,8 +12,6 @@ export const COMPANION_APPLICATIONS = [
   "prometheus",
   "cloudflare-operator",
   "chartmuseum",
-  "minecraft-sjerred",
-  "minecraft-shuxin",
   "minecraft-tsmc",
   "loki",
   "tempo",

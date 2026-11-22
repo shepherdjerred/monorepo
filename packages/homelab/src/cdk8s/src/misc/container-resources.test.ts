@@ -4,7 +4,6 @@ import { z } from "zod";
 import { App } from "cdk8s";
 import { rm } from "node:fs/promises";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   BATCH_PRIORITY,
   BURST_SERVICE_PRIORITY,
@@ -19,12 +18,6 @@ import {
   BEST_EFFORT_CONTAINER_ALLOWLIST,
   PARTIAL_REQUEST_CONTAINER_ALLOWLIST,
 } from "./container-resource-allowlist.ts";
-
-const LEGACY_DISCORD_MOD_PATH =
-  "/data/mods/dcintegration-forge-2.4.7.1-1.12.jar";
-const LEGACY_DISCORD_MOD_CLEANUP = expect.arrayContaining([
-  expect.stringContaining(LEGACY_DISCORD_MOD_PATH),
-]);
 
 /**
  * Container Resources Backstop
@@ -49,45 +42,8 @@ const MinecraftApplicationSchema = z.object({
     source: z.object({
       helm: z.object({ valuesObject: z.record(z.string(), z.unknown()) }),
     }),
-    ignoreDifferences: z
-      .array(
-        z.object({
-          group: z.string().optional(),
-          kind: z.string(),
-          jsonPointers: z.array(z.string()),
-        }),
-      )
-      .optional(),
-    syncPolicy: z.object({
-      automated: z.object({
-        enabled: z.boolean(),
-        prune: z.boolean().optional(),
-      }),
-    }),
   }),
 });
-
-function expectSjerredPostCutoverCleanup(
-  application: z.infer<typeof MinecraftApplicationSchema> | undefined,
-): void {
-  expect(
-    application?.spec.source.helm.valuesObject["deploymentAnnotations"],
-  ).toBeUndefined();
-  expect(application?.spec.syncPolicy.automated).toEqual({
-    enabled: true,
-  });
-  expect(application?.spec.ignoreDifferences).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({
-        group: "apps",
-        kind: "StatefulSet",
-        jsonPointers: expect.not.arrayContaining([
-          "/spec/volumeClaimTemplates",
-        ]),
-      }),
-    ]),
-  );
-}
 
 async function synthesizeApp(): Promise<string> {
   const app = new App({ outdir: SYNTH_OUTDIR });
@@ -397,130 +353,32 @@ describe("Burst-memory sharing policy", () => {
       const result = MinecraftApplicationSchema.safeParse(doc);
       return result.success ? [result.data] : [];
     });
-    for (const [name, cpu, request, limit, heap, mapPort, mapName] of [
-      ["minecraft-shuxin", "500m", "8Gi", "8Gi", "7G", 8100, "bluemap"],
-      ["minecraft-tsmc", "3", "11648Mi", "16Gi", "8G", 8100, "bluemap"],
-      ["minecraft-sjerred", "2", "6Gi", "8Gi", "5G", 8123, "dynmap"],
-    ] as const) {
-      const values = applications.find((app) => app.metadata.name === name)
-        ?.spec.source.helm.valuesObject;
-      expect(values, name).toBeDefined();
-      expect(values?.["extraPodSpec"], name).toEqual({
-        priorityClassName: BURST_SERVICE_PRIORITY,
-        ...(name === "minecraft-tsmc"
-          ? { automountServiceAccountToken: "false" }
-          : {}),
-      });
-      const replicas = name === "minecraft-tsmc" ? 1 : 0;
-      expect(values?.["replicaCount"], name).toBe(replicas);
-      expect(values?.["workloadAsStatefulSet"], name).toBe(true);
-      expect(values?.["resources"], name).toEqual({
-        requests: { cpu, memory: request },
-        limits: { memory: limit },
-      });
-      expect(values?.["minecraftServer"], name).toMatchObject({
-        memory: heap,
-        extraPorts: expect.arrayContaining([
-          {
-            service: { enabled: true, port: mapPort },
-            protocol: "TCP",
-            containerPort: mapPort,
-            name: mapName,
-            ingress: { enabled: false },
-          },
-        ]),
-      });
-    }
-    const sjerredApplication = applications.find(
-      (app) => app.metadata.name === "minecraft-sjerred",
-    );
-    const sjerred = sjerredApplication?.spec.source.helm.valuesObject;
-    expect(sjerred?.["startupProbe"]).toEqual({
-      enabled: true,
-      failureThreshold: 120,
-      periodSeconds: 10,
+    const values = applications.find(
+      (app) => app.metadata.name === "minecraft-tsmc",
+    )?.spec.source.helm.valuesObject;
+    expect(values, "minecraft-tsmc").toBeDefined();
+    expect(values?.["extraPodSpec"], "minecraft-tsmc").toEqual({
+      priorityClassName: BURST_SERVICE_PRIORITY,
+      automountServiceAccountToken: "false",
     });
-    expect(sjerred?.["minecraftServer"]).toMatchObject({
-      type: "AUTO_CURSEFORGE",
-      version: "1.12.2",
-      autoCurseForge: {
-        apiKey: {
-          existingSecret: "minecraft-sjerred-curseforge",
-          secretKey: "CF_API_KEY",
+    expect(values?.["replicaCount"], "minecraft-tsmc").toBe(1);
+    expect(values?.["workloadAsStatefulSet"], "minecraft-tsmc").toBe(true);
+    expect(values?.["resources"], "minecraft-tsmc").toEqual({
+      requests: { cpu: "3", memory: "11648Mi" },
+      limits: { memory: "16Gi" },
+    });
+    expect(values?.["minecraftServer"], "minecraft-tsmc").toMatchObject({
+      memory: "8G",
+      extraPorts: expect.arrayContaining([
+        {
+          service: { enabled: true, port: 8100 },
+          protocol: "TCP",
+          containerPort: 8100,
+          name: "bluemap",
+          ingress: { enabled: false },
         },
-        slug: "rlcraft",
-        fileId: "4612979",
-      },
-      modUrls: [
-        "https://github.com/webbukkit/dynmap/releases/download/v3.3-beta-2/Dynmap-3.3-beta-2-forge-1.12.2.jar",
-        versions["mc2discord-forge-1.12.2"],
-      ],
-      gameMode: "survival",
-      onlineMode: true,
-      maxPlayers: 20,
-      enableCommandBlock: true,
-      announcePlayerAchievements: true,
-      maxTickTime: -1,
-      overrideServerProperties: true,
-    });
-    expect(sjerred?.["persistence"]).toEqual({
-      dataDir: {
-        enabled: true,
-        existingClaim: "minecraft-sjerred-rlcraft-data",
-      },
-    });
-    expectSjerredPostCutoverCleanup(sjerredApplication);
-    expect(sjerredApplication?.metadata.annotations).toMatchObject({
-      "argocd.argoproj.io/client-side-apply-migration-manager":
-        "argocd-application-controller",
-    });
-    expect(sjerred?.["extraEnv"]).toEqual({
-      ALLOW_FLIGHT: "TRUE",
-      ENABLE_WHITELIST: "TRUE",
-    });
-    expect(sjerred?.["extraDeploy"]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          metadata: { name: "minecraft-sjerred-dynmap-config" },
-          data: expect.objectContaining({
-            "configuration.txt": expect.stringMatching(
-              /defaultzoom: 3\ndefaultworld: world\ndefaultmap: flat/,
-            ),
-          }),
-        }),
-        expect.objectContaining({
-          metadata: { name: "minecraft-sjerred-discord-integration-config" },
-          data: {
-            "mc2discord.toml": expect.stringMatching(
-              /token = "\$\{CFG_DISCORD_BOT_TOKEN\}"[\s\S]*\[Messages\][\s\S]*start = ""[\s\S]*stop = ""[\s\S]*\[Status\.Channels\][\s\S]*Channel = \[\]/,
-            ),
-          },
-        }),
       ]),
-    );
-    expect(sjerred?.["initContainers"]).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: "configure-discord-integration",
-          command: LEGACY_DISCORD_MOD_CLEANUP,
-          env: [
-            {
-              name: "CFG_DISCORD_BOT_TOKEN",
-              valueFrom: {
-                secretKeyRef: {
-                  name: "minecraft-sjerred-discord",
-                  key: "DISCORD_BOT_TOKEN",
-                },
-              },
-            },
-            {
-              name: "CFG_DISCORD_CHANNEL_ID",
-              value: "1337631455085334650",
-            },
-          ],
-        }),
-      ]),
-    );
+    });
     const tempo = applications.find((app) => app.metadata.name === "tempo");
     expect(tempo).toBeDefined();
     expect(tempo?.spec.source.helm.valuesObject["tempo"]).toMatchObject({

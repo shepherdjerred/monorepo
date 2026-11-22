@@ -13,8 +13,6 @@ import { createCertManagerApp } from "@shepherdjerred/homelab/cdk8s/src/resource
 import { createCloudflareOperatorApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/cloudflare-operator.ts";
 import { createNfdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/nfd.ts";
 import { createChartMuseumApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/chartmuseum.ts";
-import { createMinecraftSjerredApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/minecraft-sjerred.ts";
-import { createMinecraftShuxinApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/minecraft-shuxin.ts";
 import { createMinecraftTsmcApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/minecraft-tsmc.ts";
 import { createMcRouterApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/mc-router.ts";
 import { createLokiApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/loki.ts";
@@ -113,8 +111,6 @@ export async function createAppsChart(app: App) {
   createNfdApp(chart);
   createChartMuseumApp(chart);
   createMcRouterApp(chart);
-  createMinecraftSjerredApp(chart);
-  createMinecraftShuxinApp(chart);
   createMinecraftTsmcApp(chart);
   createLokiApp(chart);
   createPromtailApp(chart);

@@ -127,16 +127,6 @@ export class AsuswrtStack extends HomelabStack {
       internalIp: "192.168.1.81",
       internalPort: "30000",
     });
-    // The rule name is spelled "Mineraft Bedrock" on the device; kept verbatim
-    // so the identity matches (renaming would force a replace).
-    new PortForward(this, "minecraft_bedrock", {
-      provider: router,
-      name: "Mineraft Bedrock",
-      protocol: "UDP",
-      externalPort: "30003",
-      internalIp: "192.168.1.81",
-      internalPort: "30003",
-    });
     new PortForward(this, "minecraft_tsmc_bedrock", {
       provider: router,
       name: "The Storm Bedrock",

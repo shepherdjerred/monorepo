@@ -27,6 +27,14 @@ describe("production burst-memory headroom alerts", () => {
       expect(alert?.labels?.["severity"]).toBe(severity);
     },
   );
+
+  it("omits reservation-percentage and scale-to-zero wake alerts on torvalds", () => {
+    const alerts = getResourceMonitoringRuleGroups()
+      .flatMap((group) => group.rules ?? [])
+      .map((rule) => rule.alert);
+    expect(alerts).not.toContain("ProductionNodeMemoryRequestsHigh");
+    expect(alerts).not.toContain("ProductionWakeCapacityInsufficient");
+  });
 });
 
 describe("CriticalSystemLoad alert", () => {
@@ -110,20 +118,6 @@ describe("liskov memory and Woodpecker admission alerts", () => {
     expect(memory?.for).toBeUndefined();
     expect(admission?.expr.value).toContain('cluster_queue="woodpecker"');
     expect(admission?.for).toBe("30m");
-  });
-});
-
-describe("production memory request capacity", () => {
-  it("alerts on torvalds wake capacity rather than reservation percentage", () => {
-    const group = getResourceMonitoringRuleGroups().find(
-      (candidate) => candidate.name === "resource-memory-monitoring-production",
-    );
-    const alert = group?.rules?.find(
-      (candidate) => candidate.alert === "ProductionWakeCapacityInsufficient",
-    );
-    expect(alert?.expr.value).toContain('node="torvalds"');
-    expect(alert?.expr.value).toContain("kube_pod_status_phase");
-    expect(alert?.for).toBe("30m");
   });
 });
 
