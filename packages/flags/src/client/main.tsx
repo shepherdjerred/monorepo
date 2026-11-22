@@ -1,7 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
+import { createThemeStore } from "@shepherdjerred/console-ui";
 import { createRoot } from "react-dom/client";
 import { App } from "./app.tsx";
+import "@shepherdjerred/console-ui/styles/index.css";
 import "./styles.css";
 
 const queryClient = new QueryClient({
@@ -14,13 +16,15 @@ const queryClient = new QueryClient({
   },
 });
 
+const theme = createThemeStore("flags-theme");
+
 const root = document.querySelector("#root");
 if (root === null) throw new Error("flags page is missing #root");
 
 createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <App theme={theme} />
     </QueryClientProvider>
   </StrictMode>,
 );

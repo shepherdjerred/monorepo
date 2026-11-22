@@ -992,7 +992,9 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/console-ui": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
+        "@shepherdjerred/ops-model": "workspace:*",
         "@tanstack/react-query": "^5.101.2",
         "@types/bun": "1.4.5",
         "@types/react": "^19.3.0",
@@ -1001,6 +1003,7 @@
         "@vitejs/plugin-react": "^6.0.1",
         "@vitest/coverage-istanbul": "5.0.5",
         "eslint": "^10.7.0",
+        "lucide-react": "^1.14.0",
         "react": "19.3.1",
         "react-dom": "19.3.1",
         "typescript": "^6.0.3",
