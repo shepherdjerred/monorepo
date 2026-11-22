@@ -7,12 +7,18 @@ import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/fir
 import {
   dnsEgressRule,
   fliptEgress,
+  kubernetesApiEgressRule,
   nsPeer,
+  prometheusIngressRule,
   tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { tailnetService } from "homelab/src/platform-model.ts";
+import {
+  createFlagsIngressObserver,
+  FLAGS_TAILSCALE_INGRESS,
+} from "./ingress.ts";
 
 export const FLAGS_ACTIVE = true;
 
@@ -28,6 +34,7 @@ export function createFlagsDeployment(chart: Chart) {
     probes: { live: "/healthz", ready: "/healthz" },
     deployment: {
       strategy: DeploymentStrategy.recreate(),
+      automountServiceAccountToken: false,
       securityContext: { fsGroup: 1000 },
     },
     containers: () => {
@@ -67,7 +74,9 @@ export function createFlagsDeployment(chart: Chart) {
             FLAGS_OPERATOR_LOGINS: EnvValue.fromValue(
               "shepherdjerred@gmail.com",
             ),
-            FLAGS_TRUSTED_PROXIES: EnvValue.fromValue("10.244.0.0/16"),
+            FLAGS_INGRESS_IDENTITY_DIR: EnvValue.fromValue(
+              FLAGS_TAILSCALE_INGRESS.directory,
+            ),
             FLAGS_FLIPT_URL: EnvValue.fromValue(FLIPT_URL),
             FLAGS_MACHINE_TOKEN: EnvValue.fromSecretValue({
               secret: authSecret,
@@ -97,15 +106,25 @@ export function createFlagsDeployment(chart: Chart) {
         name: "flags-app-netpol",
         selects: "app",
         ingress: [
+          prometheusIngressRule([FLAGS_HTTP_PORT]),
           {
-            from: [nsPeer("tailscale"), nsPeer("prometheus")],
+            from: [
+              {
+                ...nsPeer(FLAGS_TAILSCALE_INGRESS.proxyNamespace),
+                podSelector: {
+                  matchLabels: FLAGS_TAILSCALE_INGRESS.parentLabels,
+                },
+              },
+            ],
             ports: [tcp(FLAGS_HTTP_PORT)],
           },
         ],
-        egress: [dnsEgressRule(), fliptEgress()],
+        egress: [dnsEgressRule(), kubernetesApiEgressRule(), fliptEgress()],
       },
     ],
   });
+
+  createFlagsIngressObserver(webService.deployment);
 
   const serverContainer = webService.deployment.containers[0];
   if (serverContainer === undefined) {

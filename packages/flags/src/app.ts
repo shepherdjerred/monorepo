@@ -127,7 +127,9 @@ export function createFlagsEvaluationApp({
 }
 
 export function createFlagsApp(dependencies: FlagsAppDependencies) {
-  parseTrustedProxyBlockList(dependencies.auth.trustedProxyAddresses);
+  if (typeof dependencies.auth.trustedProxyAddresses !== "function") {
+    parseTrustedProxyBlockList(dependencies.auth.trustedProxyAddresses);
+  }
   const { store } = dependencies;
   const app = new Hono();
 
@@ -145,7 +147,7 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
         ? next()
         : c.json(CREDENTIALLESS_REJECTION, 401);
     }
-    const principal = authenticate(
+    const principal = await authenticate(
       c.req.raw,
       dependencies.peerAddress?.(c.req.raw) ?? null,
       dependencies.auth,

@@ -1,5 +1,8 @@
 import { Database } from "bun:sqlite";
-import { flagDeployments } from "@shepherdjerred/feature-flags/deployments.ts";
+import {
+  flagDeployments,
+  type FlagDeployment,
+} from "@shepherdjerred/feature-flags/deployments.ts";
 import {
   evaluateBoolean,
   type FlagValue,
@@ -90,6 +93,18 @@ export class FlagStore {
       )
     `);
     return new FlagStore(db);
+  }
+
+  /** Deployments from `deployments` that do not yet have a stored document. */
+  missingDeployments(
+    deployments: readonly FlagDeployment[] = flagDeployments,
+  ): FlagDeployment[] {
+    const stored = new Set(this.list().map((summary) => summary.id));
+    return deployments.filter((deployment) => !stored.has(deployment.id));
+  }
+
+  close(): void {
+    this.db.close();
   }
 
   /** Inserts each deployment that is not already stored. Existing rows stay. */

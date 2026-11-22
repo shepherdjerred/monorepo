@@ -31,22 +31,27 @@ exposing management. The primary `PORT` (`7360`) serves all routes, including
 tailnet evaluation, management, and the browser UI.
 
 Management routes require the brokered `FLAGS_MACHINE_TOKEN` or a tailnet
-operator login (`FLAGS_OPERATOR_LOGINS`) inserted by a trusted proxy matching
-`FLAGS_TRUSTED_PROXIES`. `FLAGS_TRUSTED_PROXIES` accepts comma-separated exact
-IP addresses (`127.0.0.1`, `::1`) and CIDR subnets (`10.244.0.0/16`) matched
-with `node:net` `BlockList`, normalizes IPv4-mapped IPv6 peers, and fails fast
-at startup on malformed entries. Browser writes must be same-origin
+operator login (`FLAGS_OPERATOR_LOGINS`) inserted by the verified Tailscale
+ingress proxy (`FLAGS_INGRESS_IDENTITY_DIR` in Kubernetes, which fences the
+`flags-flags-ingress-ingress` UID, StatefulSet controller, and ready proxy Pod
+IP on each human request) or a local proxy matching `FLAGS_TRUSTED_PROXIES`.
+`FLAGS_TRUSTED_PROXIES` accepts comma-separated exact IP addresses (`127.0.0.1`,
+`::1`) and CIDR subnets matched with `node:net` `BlockList`, normalizes
+IPv4-mapped IPv6 peers, and fails fast at startup on malformed entries or when
+combined with `FLAGS_INGRESS_IDENTITY_DIR`. Browser writes must be same-origin
 (`FLAGS_PUBLIC_ORIGIN`). The routes are list, get, `apply`, `create-missing`,
 `retire`, and `diff`. `apply` and `retire` take `expectedRevision` and change
 nothing when it does not match, including later flags in that request.
 `create-missing` inserts absent keys and leaves an existing body as it is.
 
-Startup copies each deployment once. When `FLAGS_FLIPT_URL` is set, that copy
-is the Flipt document the deployment's pods read, and a percentage rollout,
-variant rule, or other unsupported construct stops the process. Without that
-variable, startup copies the managed inventory document. A document already
-stored is left alone. Namespace and environment pairs that no deployment
-reads, including the unused beta copies, are reported and not imported.
+Startup copies each missing deployment once. When `FLAGS_FLIPT_URL` is set,
+only deployments not yet stored in SQLite are fetched from Flipt, and a
+percentage rollout, variant rule, or other unsupported construct stops the
+process before writing. Once all deployments are persisted in SQLite, restarts
+do not contact Flipt. Without `FLAGS_FLIPT_URL`, startup copies the managed
+inventory document for any missing deployment. A document already stored is left
+alone. Namespace and environment pairs that no deployment reads, including the
+unused beta copies, are reported and not imported.
 
 ## Operator
 
