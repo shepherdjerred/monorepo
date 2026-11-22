@@ -369,6 +369,7 @@ export function App({ theme }: { theme: ThemeStore }) {
         <MobileBar
           kindFilter={kindFilter}
           counts={counts}
+          theme={theme}
           onKindFilterChange={setKindFilter}
         />
 

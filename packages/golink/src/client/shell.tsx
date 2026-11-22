@@ -110,10 +110,12 @@ export function SourcesSidebar({
 export function MobileBar({
   kindFilter,
   counts,
+  theme,
   onKindFilterChange,
 }: {
   kindFilter: KindFilter;
   counts: KindCounts;
+  theme: ThemeStore;
   onKindFilterChange: (next: KindFilter) => void;
 }) {
   return (
@@ -141,6 +143,7 @@ export function MobileBar({
           </select>
         )}
       </Field>
+      <ThemeRow store={theme} />
     </div>
   );
 }
