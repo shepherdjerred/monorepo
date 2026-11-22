@@ -31,7 +31,6 @@ concurrency:
   limit: 1
   group: tasknotes-windows-interactive
 
-
 # Artifacts have no successor: Woodpecker has no artifact store, and the CI
 # handoff bucket in scripts/lib/ci/ci-artifact.ts is what a real activation
 # would upload these through. Listed so the paths stay pinned:
