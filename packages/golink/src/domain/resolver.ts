@@ -70,6 +70,28 @@ const STRIPPABLE_SUFFIXES = [
   "-ui",
 ] as const;
 
+/**
+ * Tailnet `Ingress` and `LoadBalancer` slugs excluded from dynamic Tier 2
+ * discovery (and Tier 4 suffix-stripping). Manual Tier 1 overrides for any of
+ * these slugs remain allowed.
+ * - Migrated aliases: `alerts` and `ops` (canonical app is `hub`).
+ * - Headless gRPC, OTLP push, S3 API, LogQL, and build-cache endpoints.
+ * - Scaled-to-zero Minecraft map ingresses (`minecraft-sjerred`, `minecraft-shuxin`).
+ */
+export const EXCLUDED_DYNAMIC_INGRESS_SHORTS: ReadonlySet<string> = new Set([
+  "alerts",
+  "gradle-build-cache",
+  "loki",
+  "minecraft-shuxin-bluemap",
+  "minecraft-sjerred-dynmap",
+  "ops",
+  "otlp-metrics",
+  "seaweedfs-s3",
+  "temporal",
+  "turbo-cache",
+  "woodpecker-grpc",
+]);
+
 function isAllowedDynamicSlug(slug: string): boolean {
   return (
     slug.length > 0 &&
@@ -102,7 +124,10 @@ function parseIngressEntry(
     fqdn = `${cleaned}.${tailnetDomain.toLowerCase()}`;
   }
 
-  if (!isAllowedDynamicSlug(short)) {
+  if (
+    !isAllowedDynamicSlug(short) ||
+    EXCLUDED_DYNAMIC_INGRESS_SHORTS.has(short)
+  ) {
     return null;
   }
   const targetUrl = `https://${fqdn}/`;

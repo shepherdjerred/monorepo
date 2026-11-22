@@ -7,7 +7,7 @@ export function createGolinkApp(chart: Chart) {
     namespace: "golink",
     syncPolicy: {
       automated: { enabled: true },
-      syncOptions: ["CreateNamespace=true", "ApplyOutOfSyncOnly=true"],
+      syncOptions: ["CreateNamespace=true", "ServerSideApply=true"],
     },
   });
 }

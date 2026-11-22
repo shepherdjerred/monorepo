@@ -32,7 +32,6 @@ const ROOT_APEX_SLUGS: Readonly<Record<string, string>> = {
   "glitter-boys.com": "glitter-boys",
   "better-skill-capped.com": "bsc",
   "statically-typed.com": "statically-typed",
-  "clauderon.com": "clauderon",
 };
 
 const DOMAIN_SUFFIX_PREFIXES: readonly {
@@ -45,8 +44,27 @@ const DOMAIN_SUFFIX_PREFIXES: readonly {
   { suffix: ".glitter-boys.com", prefix: "glitter-boys-" },
   { suffix: ".better-skill-capped.com", prefix: "bsc-" },
   { suffix: ".statically-typed.com", prefix: "statically-typed-" },
-  { suffix: ".clauderon.com", prefix: "clauderon-" },
 ];
+
+/**
+ * Hostnames declared in `platform-model.json` that are excluded from dynamic
+ * `site` discovery:
+ * - Retired / duplicate public hostnames (`clauderon.com` 301s to `sjer.red`;
+ *   `livemap.ts-mc.net` duplicates `bluemap.ts-mc.net`).
+ * - Non-browser webhook / API receivers.
+ * - Scaled-to-zero Minecraft map endpoints (`minecraft-sjerred`, `minecraft-shuxin`).
+ */
+export const EXCLUDED_PLATFORM_HOSTNAMES: ReadonlySet<string> = new Set([
+  "clauderon.com",
+  "dynmap.sjer.red",
+  "livemap.ts-mc.net",
+  "pr-bot.sjer.red",
+  "relay.sjer.red",
+  "shuxin-bluemap.sjer.red",
+  "temporal-agent-tasks.sjer.red",
+  "temporal-sleep.sjer.red",
+  "xcode-cloud-webhook.sjer.red",
+]);
 
 function deriveKnownDomainSlug(hostname: string): string | null {
   for (const rule of DOMAIN_SUFFIX_PREFIXES) {
@@ -92,39 +110,53 @@ function isUsableSiteSlug(slug: string): boolean {
   );
 }
 
+function normalizeModelHostname(rawHostname: string): string {
+  return rawHostname.trim().toLowerCase().replace(/\.$/u, "");
+}
+
+function addPlatformSite(
+  byShort: Map<string, PlatformSiteEntry>,
+  rawHostname: string,
+  detailForHost: (hostname: string) => string,
+): void {
+  const hostname = normalizeModelHostname(rawHostname);
+  if (EXCLUDED_PLATFORM_HOSTNAMES.has(hostname)) {
+    return;
+  }
+  const short = deriveSlugForHostname(hostname);
+  if (short !== null && !byShort.has(short)) {
+    byShort.set(short, {
+      short,
+      targetUrl: `https://${hostname}/`,
+      detail: detailForHost(hostname),
+    });
+  }
+}
+
 export function derivePlatformSites(rawModel: unknown): PlatformSiteEntry[] {
   const model = PlatformModelSitesSchema.parse(rawModel);
   const byShort = new Map<string, PlatformSiteEntry>();
 
   for (const entry of model.publicHostnames) {
-    const short = deriveSlugForHostname(entry.hostname);
-    if (short !== null && !byShort.has(short)) {
-      byShort.set(short, {
-        short,
-        targetUrl: `https://${entry.hostname.toLowerCase()}/`,
-        detail: `Public service (${entry.namespace}/${entry.service})`,
-      });
-    }
+    addPlatformSite(
+      byShort,
+      entry.hostname,
+      () => `Public service (${entry.namespace}/${entry.service})`,
+    );
   }
 
   for (const site of model.staticSites) {
-    const primaryShort = deriveSlugForHostname(site.hostname);
-    if (primaryShort !== null && !byShort.has(primaryShort)) {
-      byShort.set(primaryShort, {
-        short: primaryShort,
-        targetUrl: `https://${site.hostname.toLowerCase()}/`,
-        detail: `Static site (${site.hostname.toLowerCase()})`,
-      });
-    }
+    addPlatformSite(
+      byShort,
+      site.hostname,
+      (hostname) => `Static site (${hostname})`,
+    );
     for (const alias of site.aliases ?? []) {
-      const aliasShort = deriveSlugForHostname(alias);
-      if (aliasShort !== null && !byShort.has(aliasShort)) {
-        byShort.set(aliasShort, {
-          short: aliasShort,
-          targetUrl: `https://${alias.toLowerCase()}/`,
-          detail: `Static site alias (${alias.toLowerCase()})`,
-        });
-      }
+      addPlatformSite(
+        byShort,
+        alias,
+        (hostname) => `Static site alias (${hostname})`,
+      );
     }
   }
 

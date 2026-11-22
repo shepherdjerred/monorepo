@@ -3190,7 +3190,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "golink/prod/2",
+      "recipeRevisionId": "golink/prod/3",
       "configurationRevisionId": "golink/prod/1"
     },
     {

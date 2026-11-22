@@ -9,8 +9,8 @@ Combines durable PostgreSQL-backed manual short links with zero-configuration di
 Every `GET /:short` and `GET /:short/*` request evaluates five deterministic tiers in order:
 
 1. **Manual (`manual`)**: Operator-defined links stored in PostgreSQL (`manual_links`). Always wins; if a manual link shares a slug with a lower-tier entry, the directory API exposes the overridden target under `shadows`.
-2. **Cluster Ingress (`ingress`)**: Live Kubernetes `Ingress` (`ingressClassName: tailscale`) and `Service` (`loadBalancerClass: tailscale`) hostnames discovered every 30s via the in-cluster ServiceAccount. Beats `site` so dual-exposed homelab services stay tailnet-routed.
-3. **Platform Site (`site`)**: Public hostnames and static sites derived deterministically from `packages/homelab/src/platform-model.json` when not already claimed by Tier 2.
+2. **Cluster Ingress (`ingress`)**: Live Kubernetes `Ingress` (`ingressClassName: tailscale`) and `Service` (`loadBalancerClass: tailscale`) hostnames discovered every 30s via the in-cluster ServiceAccount (`EXCLUDED_DYNAMIC_INGRESS_SHORTS` omits migrated aliases like `alerts`/`ops`, headless gRPC/cache/S3/OTLP endpoints, and scaled-to-zero game maps). Beats `site` so dual-exposed homelab services stay tailnet-routed.
+3. **Platform Site (`site`)**: Public hostnames and static sites derived deterministically from `packages/homelab/src/platform-model.json` when not already claimed by Tier 2 (`EXCLUDED_PLATFORM_HOSTNAMES` omits retired/duplicate hostnames, webhook receivers, and scaled-to-zero maps).
 4. **Stripped Alias (`alias`)**: Suffix-stripped aliases (`-ui`, `-dashboard`, `-admin`, `-server`, `-service`, `-web`, `-frontend`, `-build-cache`) over Tiers 2 and 3. Ambiguous collisions pointing to distinct destinations are dropped.
 5. **Parameterized Shortcut (`shortcut`)**:
    - `gh` / `gh/<rest>` -> `https://github.com/shepherdjerred/[<rest>]`
