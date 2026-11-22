@@ -959,7 +959,9 @@ restores the exact target while safely retaining additional worker versions.
 Deploy-scoped `POST /api/v1/workers/:id/retire` accepts only a request ID and the
 expected environment/worker generations. It creates a normal identity-bound
 `retire-host` deployment with one frozen zero-replica host and the accepted
-routing candidate unchanged. Scout production retirement requires human approval.
+routing candidate unchanged. That success does not suppress newer automatic
+set revisions, because the retirement did not choose a version. Scout
+production retirement requires human approval.
 The intent changes no worker replica state and accepts no caller-supplied proof.
 
 Delivery also retires drained hosts itself. Each dispatch tick, the executor

@@ -342,7 +342,9 @@ export async function finish(
  * automatic set revision of the service that exists when the operator's
  * choice is accepted, whichever origin composed it — a qualified build (R2)
  * or a tracking recomposition (R7) — so automatic selection does not revert
- * the choice, and only a newer one deploys. Revisions are monotonic per
+ * the choice, and only a newer one deploys. A host retirement is not a
+ * version choice: it keeps the accepted candidate, so it does not freeze
+ * newer automatic revisions. Revisions are monotonic per
  * service across lineages, so the newest automatic revision bounds every
  * set `automaticTarget` can return, a promotion source's included. It never
  * lowers an existing threshold, such as an alarm's (W2).
@@ -352,25 +354,33 @@ export async function finish(
  * after any other composer. Tracking recomposition runs only while accepting
  * a deployment, under the `delivery:claim` lock this transaction holds.
  */
+/** A succeeded manual deploy or rollback. Host retirement is not one: it keeps the accepted candidate. */
+export function manualVersionChoice(
+  row: { automatic: boolean; kind: string },
+  status: string,
+): boolean {
+  if (status !== "succeeded" || row.automatic) return false;
+  switch (row.kind) {
+    case "adopt-worker":
+    case "repair-trmnl":
+    case "retire-host":
+    case "root-release":
+    case "tofu-plan":
+    case "tofu-apply":
+    case "upgrade-control-plane":
+      return false;
+    default:
+      return true;
+  }
+}
+
 export async function manualSelectionBaseline(
   tx: Transaction,
   row: { automatic: boolean; serviceId: string; kind: string },
   status: string,
   current: number,
 ) {
-  if (
-    status !== "succeeded" ||
-    row.automatic ||
-    [
-      "adopt-worker",
-      "repair-trmnl",
-      "root-release",
-      "tofu-plan",
-      "tofu-apply",
-      "upgrade-control-plane",
-    ].includes(row.kind)
-  )
-    return null;
+  if (!manualVersionChoice(row, status)) return null;
   await lock(tx, `qualification:${row.serviceId}`);
   await lock(tx, `versionSet:${row.serviceId}`);
   const latest = await tx.versionSet.aggregate({
