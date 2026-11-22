@@ -73,10 +73,11 @@ export function ProfileForm({
       {profiles.data !== undefined && (
         <Form
           labelledBy={headingId}
-          onEdit={() => {
-            save.reset();
-            onEdit();
-          }}
+          // Editing never resets the save: a reset would end `isPending`
+          // while the request still runs, re-enabling Apply and dropping
+          // its failure. The Manage forms leave the mutation alone the same
+          // way; the next submit replaces its result.
+          onEdit={onEdit}
           validate={(form) => {
             const chosen = new FormData(form).get("profileId");
             return chosen === currentId

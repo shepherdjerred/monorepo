@@ -175,6 +175,47 @@ test.describe("a series", () => {
     await expect(page.getByText("Unsaved changes")).toBeVisible();
   });
 
+  test("changing the selection while a profile save is in flight keeps it pending and keeps its failure", async ({
+    page,
+  }) => {
+    await openManage(page, manage(series.id));
+    const writes: unknown[] = [];
+    const held = Promise.withResolvers<boolean>();
+    await page.route(`**/api/v1/media/${series.id}/profile`, async (route) => {
+      writes.push(route.request().postDataJSON());
+      await held.promise;
+      await route.fulfill({
+        status: 409,
+        json: {
+          error: {
+            code: "version_conflict",
+            message: "The title changed. Reload it and try again.",
+          },
+        },
+      });
+    });
+    const select = page.getByRole("combobox", { name: "Quality profile" });
+    await select.selectOption({ label: "Anime 1080p" });
+    await page.getByRole("button", { name: "Apply profile" }).click();
+    const applying = page.getByRole("button", { name: "Applying…" });
+    await expect(applying).toBeDisabled();
+
+    // Choosing something else does not detach the form from the save that is
+    // still running: Apply stays disabled, so no second change can be sent
+    // against the same version.
+    await select.selectOption({ label: "HD-1080p from Radarr" });
+    await expect(applying).toBeDisabled();
+    expect(writes).toHaveLength(1);
+
+    held.resolve(true);
+    await expect(page.getByRole("alert")).toContainText(
+      "The title changed. Reload it and try again.",
+    );
+    await expect(
+      page.getByRole("button", { name: "Apply profile" }),
+    ).toBeEnabled();
+  });
+
   test("retrying an acquisition sends the retry command and says it was queued", async ({
     page,
   }) => {
