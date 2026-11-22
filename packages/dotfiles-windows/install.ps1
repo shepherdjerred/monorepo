@@ -36,6 +36,13 @@ if ((Get-ItemProperty $devMode -ErrorAction SilentlyContinue).AllowDevelopmentWi
     if ($p.ExitCode -ne 0) { throw "Enabling Developer Mode failed with exit code $($p.ExitCode)" }
 }
 
+# Remove the legacy 260-character MAX_PATH cap for Bun, Git, and Node tooling on Windows.
+$fileSystemKey = 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem'
+if ((Get-ItemProperty $fileSystemKey -ErrorAction SilentlyContinue).LongPathsEnabled -ne 1) {
+    $p = Start-Process reg.exe -Verb RunAs -Wait -PassThru -ArgumentList 'add', 'HKLM\SYSTEM\CurrentControlSet\Control\FileSystem', '/v', 'LongPathsEnabled', '/t', 'REG_DWORD', '/d', '1', '/f'
+    if ($p.ExitCode -ne 0) { throw "Enabling Windows long paths failed with exit code $($p.ExitCode)" }
+}
+
 Invoke-Native { chezmoi init --apply --source $source }
 
 # The apply installs mise (and other portable packages) after the earlier PATH refresh.
