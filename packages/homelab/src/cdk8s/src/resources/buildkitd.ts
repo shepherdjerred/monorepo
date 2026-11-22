@@ -46,13 +46,14 @@ const PORT = 1234;
 const DEBUG_PORT = 6060;
 
 // Keep the on-disk build cache bounded well under the PVC size so BuildKit's GC
-// always has headroom and the volume can never fill. Limit usage to 240 GiB of
-// a 300 GiB PVC, retaining 60 GiB of free space for active solves and metadata.
-// This is large enough to retain hot production-image layers without letting an
-// unbounded build cache consume the CI node.
-const CACHE_PVC = Size.gibibytes(300);
-const GC_MAX_USED_BYTES = 240 * 1024 * 1024 * 1024;
-const GC_MIN_FREE_BYTES = 60 * 1024 * 1024 * 1024;
+// always has headroom and the volume can never fill. Limit usage to 480 GiB of
+// a 600 GiB PVC, retaining 120 GiB of free space for active solves and metadata,
+// and sweep short-lived build contexts and cache mounts first (96 GiB / 48h)
+// before evicting reusable base and toolchain layers.
+const CACHE_PVC = Size.gibibytes(600);
+const GC_EPHEMERAL_MAX_USED_BYTES = 96 * 1024 * 1024 * 1024;
+const GC_MAX_USED_BYTES = 480 * 1024 * 1024 * 1024;
+const GC_MIN_FREE_BYTES = 120 * 1024 * 1024 * 1024;
 
 // buildkitd.toml: listen on tcp for the remote driver, and cap the cache with a
 // GC policy so the compressed ZFS volume stays bounded (an unbounded build
@@ -71,9 +72,16 @@ debug = false
   # 12Gi limit (PR #1668 build 6303). Every fan-out needs a concurrency
   # bound; 8 matches the CPU limit and keeps peak memory proportional.
   max-parallelism = 8
-  # Enforce both an upper cache bound and free-space reserve. keepBytes is a
+  # Sweep short-lived build contexts, git checkouts, and cache mounts first so
+  # reusable base and toolchain layers stay warm, then enforce both an upper
+  # cache bound and free-space reserve across all records. keepBytes is a
   # retention floor, not a capacity ceiling, and therefore cannot prevent a
   # warm cache from filling the PVC.
+  [[worker.oci.gcpolicy]]
+    keepDuration = "48h"
+    maxUsedSpace = ${String(GC_EPHEMERAL_MAX_USED_BYTES)}
+    filters = ["type==source.local", "type==exec.cachemount", "type==source.git.checkout"]
+
   [[worker.oci.gcpolicy]]
     maxUsedSpace = ${String(GC_MAX_USED_BYTES)}
     minFreeSpace = ${String(GC_MIN_FREE_BYTES)}

@@ -2,8 +2,8 @@ import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/gen
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
 
-// Keep in sync with GC_KEEP_BYTES / CACHE_PVC in resources/buildkitd.ts:
-// BuildKit's GC keeps 240 GiB of the 300 GiB volume, so ~80% used is the
+// Keep in sync with GC_MAX_USED_BYTES / CACHE_PVC in resources/buildkitd.ts:
+// BuildKit's GC keeps 480 GiB of the 600 GiB volume, so ~80% used is the
 // DESIGNED steady state. Alert only above it — sustained >90% means GC is
 // failing to reclaim, not that the cache is warm.
 const CACHE_FILL_ALERT_RATIO = 0.9;
@@ -58,7 +58,7 @@ export function getBuildkitdRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "BuildKit cache volume is over 90% full",
             description: escapePrometheusTemplate(
-              "BuildKit cache PVC {{ $labels.persistentvolumeclaim }} has been {{ $value | humanizePercentage }} full for over an hour, meaning garbage collection is failing to reclaim space and image builds risk stalling. Inspect buildkitd disk usage, GC logs, and active build locks in the buildkitd namespace.",
+              "BuildKit cache PVC {{ $labels.persistentvolumeclaim }} has been {{ $value | humanizePercentage }} full for over an hour (~80% is the designed steady state where GC keeps 480Gi of 600Gi), meaning garbage collection is failing to reclaim space and image builds risk stalling. Inspect buildkitd disk usage, GC logs, and active build locks in the buildkitd namespace.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

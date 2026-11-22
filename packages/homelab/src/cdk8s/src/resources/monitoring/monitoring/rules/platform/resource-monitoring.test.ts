@@ -323,6 +323,9 @@ describe("dedicated BuildKit cache capacity alert", () => {
     expect(alert?.expr.value).toContain('namespace="buildkitd"');
     expect(alert?.expr.value).toContain("> 0.9");
     expect(alert?.for).toBe("1h");
+    expect(alert?.annotations?.["description"]).toContain(
+      "GC keeps 480Gi of 600Gi",
+    );
   });
 });
 

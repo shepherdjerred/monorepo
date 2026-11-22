@@ -4,7 +4,25 @@ import {
   PostgresqlSpecPostgresqlVersion,
   type PostgresqlSpecUsers,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/acid.zalan.do";
+import {
+  NVME_STORAGE_CLASS,
+  NVME_STORAGE_CLASS_LZ4,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import { ZFS_WAL_PARAMETERS } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/zfs-wal-parameters.ts";
+
+/**
+ * Existing `createSingleAppPostgreSQL` clusters provisioned on the uncompressed
+ * `zfs-ssd` StorageClass before `zfs-ssd-lz4` became the default.
+ *
+ * Kubernetes `StatefulSet.spec.volumeClaimTemplates` and bound PVC
+ * `storageClassName` are immutable, so live clusters keep `zfs-ssd` in Git
+ * (their underlying ZFS datasets enable `lz4` in place via
+ * `ZFSVolume.spec.compression`; see `scripts/zfs-nvme-lz4.ts`). Never add new
+ * apps to this set — all new clusters render `zfs-ssd-lz4` from creation.
+ */
+export const GRANDFATHERED_ZFS_SSD_POSTGRES_APPS: ReadonlySet<string> = new Set(
+  ["bugsink", "delivery", "media", "phoenix", "tasknotes", "tracker"],
+);
 
 type SingleAppPostgreSQLOptions = {
   /** Cluster `<app>-postgresql`, owner role `<app>`, database `<app>_db`. */
@@ -69,7 +87,9 @@ export function createSingleAppPostgreSQL(
         // (~26/dataset) balloon well past the live data. An 8Gi volume filled
         // to 0B (snapshots + data) and wedged writes (bugsink, 2026-05).
         size: "32Gi",
-        storageClass: "zfs-ssd",
+        storageClass: GRANDFATHERED_ZFS_SSD_POSTGRES_APPS.has(app)
+          ? NVME_STORAGE_CLASS
+          : NVME_STORAGE_CLASS_LZ4,
       },
       users: {
         [app]: userFlags,

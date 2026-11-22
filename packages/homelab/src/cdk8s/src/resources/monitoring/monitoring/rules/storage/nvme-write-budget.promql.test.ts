@@ -9,6 +9,7 @@ import {
   CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H,
   getNvmeRuleGroups,
   NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY,
+  NVME_DRIVE_WRITTEN_BYTES_24H,
   ZFS_POOL_WRITE_AMPLIFICATION_24H,
 } from "./nvme.ts";
 
@@ -62,8 +63,8 @@ const drives: Drive[] = [
   },
 ];
 
-function driveLabels(drive: Drive): string {
-  return `node="${drive.node}",instance="${drive.node}:9100",device="${drive.device}"`;
+function driveLabels(drive: Drive, pod = "node-exporter-a"): string {
+  return `node="${drive.node}",instance="${drive.node}:9100",pod="${pod}",device="${drive.device}"`;
 }
 
 function driveSeries(drive: Drive) {
@@ -352,6 +353,303 @@ test("NVMe write budget follows observed or rated wear and pages over-budget dri
                   { labels: '{step="playwright-e2e"}', value: 1 },
                   { labels: '{step="media-pms-wire"}', value: 1 },
                 ],
+              },
+            ],
+          },
+        ],
+      }),
+    );
+    await expectPromtoolRulesPass(testFile);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+type ExporterSegmentOptions = {
+  pod: string;
+  device: string;
+  serial: string;
+  capacityBytes: number;
+  used: number;
+  totalSamples: number;
+  unitsAt: (step: number) => number;
+  activeAt: (step: number) => boolean;
+};
+
+function exporterSegment({
+  pod,
+  device,
+  serial,
+  capacityBytes,
+  used,
+  totalSamples,
+  unitsAt,
+  activeAt,
+}: ExporterSegmentOptions) {
+  const base = `node="torvalds",instance="torvalds:9100",pod="${pod}",device="${device}"`;
+  const render = (valueAt: (step: number) => number) =>
+    Array.from({ length: totalSamples }, (_, step) =>
+      activeAt(step) ? String(valueAt(step)) : "_",
+    ).join(" ");
+  return [
+    {
+      series: `nvme_device_info{${base},serial="${serial}",model="Samsung SSD 990 PRO"}`,
+      values: render(() => 1),
+    },
+    {
+      series: `nvme_data_units_written_total{${base}}`,
+      values: render(unitsAt),
+    },
+    {
+      series: `nvme_percentage_used_ratio{${base}}`,
+      values: render(() => used),
+    },
+    {
+      series: `nvme_physical_size_bytes{${base}}`,
+      values: render(() => capacityBytes),
+    },
+    {
+      series: `nvme_available_spare_ratio{${base}}`,
+      values: render(() => 1),
+    },
+    {
+      series: `nvme_available_spare_threshold_ratio{${base}}`,
+      values: render(() => 0.1),
+    },
+    {
+      series: `nvme_media_errors_total{${base}}`,
+      values: render(() => 0),
+    },
+    {
+      series: `nvme_temperature_celsius{${base}}`,
+      values: render(() => 42),
+    },
+  ];
+}
+
+function serializeAllRuleGroups(groups: ReturnType<typeof getNvmeRuleGroups>) {
+  return {
+    groups: groups.map((group) => ({
+      name: group.name,
+      interval: group.interval,
+      rules: (group.rules ?? []).map((rule) =>
+        rule.record === undefined
+          ? {
+              alert: rule.alert,
+              expr: rule.expr.value,
+              for: rule.for,
+              labels: rule.labels,
+              annotations: rule.annotations,
+            }
+          : {
+              record: rule.record,
+              expr: rule.expr.value,
+            },
+      ),
+    })),
+  };
+}
+
+function dipAndSwapInputSeries(totalSamples: number, rebootStep: number) {
+  // Scenario A: liskov 2 TB pool drive at 160 TB lifetime writes (~612 GB/day
+  // 5-year budget). Writes ~400 GB/day (2,737 units/step), then dips backward
+  // by -4,347 units at step 200 on an unsafe shutdown before resuming:
+  //   net 24h units (steps 72..360) = 287 * 2737 - 4347 = 781,172 units
+  //   net 24h bytes = 781,172 * 512,000 = 399,960,064,000 (~400 GB).
+  // `increase()` would treat the -4,347 dip as a reset from 0 and add +160 TB.
+  const liskovStartUnits = Math.round(160e12 / DATA_UNIT_BYTES);
+  const liskovUnitsPerStep = 2737;
+  const unsafeShutdownDipUnits = 4347;
+  const liskovUnits = Array.from({ length: totalSamples }, (_, step) =>
+    step < rebootStep
+      ? liskovStartUnits + step * liskovUnitsPerStep
+      : liskovStartUnits +
+        (step - 1) * liskovUnitsPerStep -
+        unsafeShutdownDipUnits,
+  ).join(" ");
+
+  // Also verify an idle OS disk whose net 24h delta is negative (-200 units)
+  // clamps cleanly to 0 rather than going negative or spiking.
+  const idleStartUnits = Math.round(5e12 / DATA_UNIT_BYTES);
+  const idleUnits = Array.from({ length: totalSamples }, (_, step) =>
+    step < rebootStep ? idleStartUnits : idleStartUnits - 200,
+  ).join(" ");
+
+  const liskovPoolBase =
+    'node="liskov",instance="liskov:9100",pod="exporter-liskov",device="nvme1n1"';
+  const liskovOsBase =
+    'node="liskov",instance="liskov:9100",pod="exporter-liskov",device="nvme0n1"';
+  const constant = (value: number) =>
+    Array.from({ length: totalSamples }, () => String(value)).join(" ");
+
+  // Scenario B: torvalds reboots at step 200 and swaps nvme0n1 <-> nvme1n1.
+  // Both `exporter-old` (steps 0..200) and `exporter-new` (steps 200..360)
+  // report live samples at step 200 on the same `instance="torvalds:9100"`.
+  const torvaldsPoolStart = Math.round(100e12 / DATA_UNIT_BYTES);
+  const torvaldsOsStart = Math.round(10e12 / DATA_UNIT_BYTES);
+
+  return [
+    {
+      series: `nvme_device_info{${liskovPoolBase},serial="S7L9NJ0L312632A",model="Samsung SSD 990 PRO"}`,
+      values: constant(1),
+    },
+    {
+      series: `nvme_data_units_written_total{${liskovPoolBase}}`,
+      values: liskovUnits,
+    },
+    {
+      series: `nvme_percentage_used_ratio{${liskovPoolBase}}`,
+      values: constant(0.07),
+    },
+    {
+      series: `nvme_physical_size_bytes{${liskovPoolBase}}`,
+      values: constant(2e12),
+    },
+    {
+      series: `nvme_device_info{${liskovOsBase},serial="OSDISKLISKOV",model="Samsung SSD 990 PRO"}`,
+      values: constant(1),
+    },
+    {
+      series: `nvme_data_units_written_total{${liskovOsBase}}`,
+      values: idleUnits,
+    },
+    {
+      series: `nvme_percentage_used_ratio{${liskovOsBase}}`,
+      values: constant(0.01),
+    },
+    {
+      series: `nvme_physical_size_bytes{${liskovOsBase}}`,
+      values: constant(1e12),
+    },
+    ...exporterSegment({
+      pod: "exporter-old",
+      device: "nvme1n1",
+      serial: "S7KGNU0X511734N",
+      capacityBytes: 4e12,
+      used: 0.05,
+      totalSamples,
+      unitsAt: (step) => torvaldsPoolStart + step * 1000,
+      activeAt: (step) => step <= rebootStep,
+    }),
+    ...exporterSegment({
+      pod: "exporter-old",
+      device: "nvme0n1",
+      serial: "OSDISKTORVALDS",
+      capacityBytes: 1e12,
+      used: 0.02,
+      totalSamples,
+      unitsAt: (step) => torvaldsOsStart + step * 100,
+      activeAt: (step) => step <= rebootStep,
+    }),
+    ...exporterSegment({
+      pod: "exporter-new",
+      device: "nvme0n1",
+      serial: "S7KGNU0X511734N",
+      capacityBytes: 4e12,
+      used: 0.05,
+      totalSamples,
+      unitsAt: (step) => torvaldsPoolStart + step * 1000,
+      activeAt: (step) => step >= rebootStep,
+    }),
+    ...exporterSegment({
+      pod: "exporter-new",
+      device: "nvme1n1",
+      serial: "OSDISKTORVALDS",
+      capacityBytes: 1e12,
+      used: 0.02,
+      totalSamples,
+      unitsAt: (step) => torvaldsOsStart + step * 100,
+      activeAt: (step) => step >= rebootStep,
+    }),
+  ];
+}
+
+test("NVMe rules survive unsafe-shutdown firmware counter dips and overlapping reboot exporter pods", async () => {
+  const groups = getNvmeRuleGroups();
+  const alert = groups
+    .flatMap((group) => group.rules ?? [])
+    .find((rule) => rule.alert === "NvmeWriteBudgetExceeded");
+  if (alert === undefined) {
+    throw new Error("Missing NvmeWriteBudgetExceeded alert");
+  }
+
+  const totalSamples = EVAL_HOURS * 12 + 1; // indices 0..360 (0h..30h at 5m)
+  const rebootStep = 200; // 16h40m ("1000m"), inside the [6h, 30h] 24h window
+  const torvaldsPoolStart = Math.round(100e12 / DATA_UNIT_BYTES);
+  const torvaldsOsStart = Math.round(10e12 / DATA_UNIT_BYTES);
+
+  const directory = await mkdtemp(
+    path.join(tmpdir(), "nvme-dip-and-swap-promql-"),
+  );
+  try {
+    // Load ALL NVMe rule groups (`nvme.rules` + `nvme-write-budget.rules`) so
+    // promtool evaluates every instant alert and subquery across the overlap.
+    await Bun.write(
+      path.join(directory, "rules.json"),
+      JSON.stringify(serializeAllRuleGroups(groups)),
+    );
+
+    const testFile = path.join(directory, "tests.json");
+    await Bun.write(
+      testFile,
+      JSON.stringify({
+        rule_files: ["rules.json"],
+        evaluation_interval: "5m",
+        tests: [
+          {
+            interval: "5m",
+            input_series: dipAndSwapInputSeries(totalSamples, rebootStep),
+            promql_expr_test: [
+              // At the exact overlap step (200 * 5m = 1000m), joining with `pod`
+              // avoids many-to-many errors and resolves each drive's true units.
+              {
+                expr: 'max by (serial) ((nvme_data_units_written_total{node="torvalds"}) * on(device, instance, pod) group_left(serial, model) nvme_device_info)',
+                eval_time: "1000m",
+                exp_samples: [
+                  {
+                    labels: '{serial="S7KGNU0X511734N"}',
+                    value: torvaldsPoolStart + rebootStep * 1000,
+                  },
+                  {
+                    labels: '{serial="OSDISKTORVALDS"}',
+                    value: torvaldsOsStart + rebootStep * 100,
+                  },
+                ],
+              },
+              // At 30h, liskov reports ~400 GB (not +160 TB), the idle drive
+              // clamps to 0, and torvalds preserves continuous per-serial
+              // series across the nvme0n1 <-> nvme1n1 swap.
+              {
+                expr: `round(${NVME_DRIVE_WRITTEN_BYTES_24H} / 1e9)`,
+                eval_time: "30h",
+                exp_samples: [
+                  {
+                    labels:
+                      '{node="liskov",instance="liskov:9100",serial="S7L9NJ0L312632A",model="Samsung SSD 990 PRO"}',
+                    value: 400,
+                  },
+                  {
+                    labels:
+                      '{node="liskov",instance="liskov:9100",serial="OSDISKLISKOV",model="Samsung SSD 990 PRO"}',
+                    value: 0,
+                  },
+                  {
+                    labels:
+                      '{node="torvalds",instance="torvalds:9100",serial="S7KGNU0X511734N",model="Samsung SSD 990 PRO"}',
+                    value: 147,
+                  },
+                  {
+                    labels:
+                      '{node="torvalds",instance="torvalds:9100",serial="OSDISKTORVALDS",model="Samsung SSD 990 PRO"}',
+                    value: 15,
+                  },
+                ],
+              },
+              // None of the four under-budget drives fire NvmeWriteBudgetExceeded.
+              {
+                expr: String(alert.expr.value),
+                eval_time: "30h",
+                exp_samples: [],
               },
             ],
           },

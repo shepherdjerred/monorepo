@@ -28,17 +28,18 @@ function readsRawNvmeMetric(expression: string): boolean {
 }
 
 describe("stable storage-device identity joins", () => {
-  it("keys NVMe identity by device and scrape instance", () => {
+  it("keys NVMe identity by device, scrape instance, and exporter pod", () => {
     const rules = getNvmeRuleGroups()
       .flatMap((group) => group.rules ?? [])
       .map((rule) => String(rule.expr.value))
       .filter((expression) => readsRawNvmeMetric(expression));
     expect(rules.length).toBeGreaterThan(0);
     for (const expression of rules) {
-      expect(expression).toContain("on(device, instance)");
+      expect(expression).toContain("on(device, instance, pod)");
       expect(expression).toContain(
         "group_left(serial, model) nvme_device_info",
       );
+      expect(expression).not.toContain("on(device, instance)");
       expect(expression).not.toMatch(/on\(device\)(?!,)/);
     }
   });

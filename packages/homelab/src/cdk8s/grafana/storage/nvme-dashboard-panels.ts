@@ -19,7 +19,7 @@ const SERIAL_FILTER = 'serial=~"$serial"';
 const NVME_INFO = `nvme_device_info{${SERIAL_FILTER}}`;
 
 function withNvmeIdentity(metric: string): string {
-  return `(${metric}) * on(device, instance) group_left(serial, model) ${NVME_INFO}`;
+  return `(${metric}) * on(device, instance, pod) group_left(serial, model) ${NVME_INFO}`;
 }
 
 // Range queries over days must follow the physical drive across reboots that
@@ -44,15 +44,11 @@ export function addNvmePanels(builder: dashboard.DashboardBuilder): void {
           legend: "{{model}} · {{serial}} lifetime",
         },
         {
-          query: withNvmeIdentity(
-            `increase(nvme_data_units_written_total[24h]) * ${String(DATA_UNIT_BYTES)}`,
-          ),
+          query: `clamp_min(delta(${bySerial("nvme_data_units_written_total")}[24h:5m]), 0) * ${String(DATA_UNIT_BYTES)}`,
           legend: "{{model}} · {{serial}} 24h",
         },
         {
-          query: withNvmeIdentity(
-            `increase(nvme_data_units_written_total[7d]) * ${String(DATA_UNIT_BYTES)}`,
-          ),
+          query: `clamp_min(delta(${bySerial("nvme_data_units_written_total")}[7d:1h]), 0) * ${String(DATA_UNIT_BYTES)}`,
           legend: "{{model}} · {{serial}} 7d",
         },
       ],

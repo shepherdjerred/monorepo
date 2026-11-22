@@ -93,9 +93,10 @@ describe("dashboard query health", () => {
     expect(dashboardJson).not.toContain("NVMe Drive Writes per Day");
   });
 
-  test("joins storage identity on both device path and scrape instance", () => {
-    expect(dashboardJson).toContain("on(device, instance)");
+  test("joins storage identity on device path, scrape instance, and exporter pod", () => {
+    expect(dashboardJson).toContain("on(device, instance, pod)");
     expect(dashboardJson).toContain("on(disk, instance)");
+    expect(dashboardJson).not.toContain("on(device, instance)");
     expect(dashboardJson).not.toMatch(/on\(device\)(?!,)/);
     expect(dashboardJson).not.toMatch(/on\(disk\)(?!,)/);
   });
