@@ -28,6 +28,10 @@ import {
   type EvidenceResolution,
 } from "./source-read.ts";
 import { enrichCompleteMatch } from "./complete-match-policy.ts";
+import {
+  readLocalHistoryCandidates,
+  selectLocalHistoryMatch,
+} from "#src/scout-client/history-candidates.ts";
 
 /** How soon to look again when Riot's answer is still open. */
 const RIOT_UNDECIDED_RETRY_MS = 60_000;
@@ -41,9 +45,7 @@ function available<T extends CanonicalMatch>(
     kind: "available",
     value: match,
     coverage:
-      matchCoverageOf(match.metadata) === "end_of_game"
-        ? "partial"
-        : "complete",
+      matchCoverageOf(match.metadata) === "complete" ? "complete" : "partial",
     frozen,
     evidence: [{ source: matchDataSourceOf(match.metadata), sourceId }],
   };
@@ -165,9 +167,11 @@ async function resolveOpenCompleteMatch(
 }
 
 /**
- * The canonical match for a game, of either coverage. A complete match wins
- * whenever one exists: Riot's, or a paired client's history bundle. Only when
- * there is none does an end-of-game record stand in, and only after
+ * The canonical match for a game, of any coverage. A complete match wins
+ * whenever one exists: Riot's, or a paired client's witnessed bundle. Only
+ * when there is none does an end-of-game record stand in, and only when there
+ * is no end-of-game record either does a history record (a game no client
+ * witnessed end) stand in. Either partial record waits for
  *
  * - its deadline, so the game's bundle and pending aliases can still arrive;
  * - Riot's answer is definitive, unless this game is one Riot never
@@ -188,7 +192,9 @@ export async function resolveCanonicalMatch(
   const endOfGame = await optionalSourceRead("SCOUT_CLIENT", () =>
     readLocalEndOfGameCandidates(matchId),
   );
-  if (endOfGame === undefined || endOfGame.length === 0) return complete;
+  if (endOfGame === undefined) return complete;
+  if (endOfGame.length === 0)
+    return await resolveHistoryMatch(matchId, complete, now);
   const evidence = endOfGame.map((entry) => ({
     source: "SCOUT_CLIENT" as const,
     sourceId: entry.candidate.observationId,
@@ -218,5 +224,61 @@ export async function resolveCanonicalMatch(
     };
   // Read back from the selection row, which a racing writer may have filled.
   const selected = await selectLocalEndOfGameMatch(matchId, endOfGame, now);
+  return available(selected.match, selected.observationId, true);
+}
+
+/**
+ * The history record for a game nothing witnessed end, when no complete match
+ * or end-of-game record exists. It stands in only for a game Riot will not
+ * publish: one Riot withholds by queue (ARAM: Mayhem, a custom lobby), or one
+ * Riot refused outright (403), and only once the game is admitted history-only.
+ * A game Riot may still publish waits for Riot.
+ * Like an end-of-game record it waits its deadline after upload, so a
+ * witnessed record for the game takes precedence, and once frozen it is never
+ * replaced.
+ */
+async function resolveHistoryMatch(
+  matchId: RiotMatchId,
+  complete: Extract<
+    EvidenceResolution<CanonicalMatch>,
+    { kind: "unavailable" }
+  >,
+  now: Date,
+): Promise<EvidenceResolution<CanonicalMatch>> {
+  const history = await optionalSourceRead("SCOUT_CLIENT", () =>
+    readLocalHistoryCandidates(matchId),
+  );
+  if (history === undefined || history.length === 0) return complete;
+  const evidence = history.map((entry) => ({
+    source: "SCOUT_CLIENT" as const,
+    sourceId: entry.candidate.observationId,
+  }));
+  const [first] = history;
+  if (
+    first !== undefined &&
+    history.some(
+      (entry) => !localCanonicalMatchesAgree(first.match, entry.match),
+    )
+  )
+    return { kind: "conflict", evidence };
+  // A history record is history-only by contract: a game admitted for live
+  // processing (announced, with effects) never freezes as one.
+  const admission = await prisma.matchEvidenceAdmission.findUnique({
+    where: { riotMatchId: matchId },
+    select: { policy: true },
+  });
+  if (admission?.policy !== "HISTORY_ONLY") return complete;
+  const riotWillNotPublish =
+    complete.definitiveAbsence === "forbidden" ||
+    history.every((entry) => riotWithholdsMatchResult(entry.match.info));
+  if (!riotWillNotPublish) return complete;
+  if (!history.some((entry) => entry.eligibleAt <= now))
+    return {
+      kind: "pending",
+      retryAt: new Date(
+        Math.min(...history.map((entry) => entry.eligibleAt.getTime())),
+      ).toISOString(),
+    };
+  const selected = await selectLocalHistoryMatch(matchId, history, now);
   return available(selected.match, selected.observationId, true);
 }

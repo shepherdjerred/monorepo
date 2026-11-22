@@ -271,6 +271,19 @@ function participantSource(
 }
 
 /** Participant rows, with the loadout columns the caller reads. */
+/**
+ * Seconds a participant played, for per-minute rates: `time_played`, or the
+ * game's length for a history record, which does not state it.
+ */
+export const PLAYED_SECONDS_SQL =
+  "COALESCE(time_played, game_duration_seconds)";
+
+/**
+ * A participant's position, with a history record's unstated position read
+ * as Riot's own "no position" (`''`, as Riot states it for ARAM).
+ */
+export const TEAM_POSITION_SQL = "COALESCE(team_position, '')";
+
 export function buildMatchesSource(
   files: LakeFiles,
   predicate: SqlFragment,

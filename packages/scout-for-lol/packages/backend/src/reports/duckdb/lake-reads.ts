@@ -24,6 +24,8 @@ import {
   withLakeQueryRetry,
   type BoundParam,
   type SqlFragment,
+  PLAYED_SECONDS_SQL,
+  TEAM_POSITION_SQL,
 } from "#src/reports/duckdb/lake.ts";
 
 const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
@@ -221,8 +223,8 @@ export async function fetchPlayerMatchHistory(options: {
           `SELECT match_id, puuid, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
           `game_duration_seconds, queue, queue_id, game_mode, placement, subteam_placement, player_subteam_id, ` +
           `augment_1_id, augment_2_id, augment_3_id, augment_4_id, augment_5_id, augment_6_id, ` +
-          `champion_id, champion_name, team_position, team_id, win, kills, deaths, assists, creep_score, ` +
-          `gold_earned, total_damage_dealt_to_champions, vision_score, time_played, ` +
+          `champion_id, champion_name, ${TEAM_POSITION_SQL} AS team_position, team_id, win, kills, deaths, assists, creep_score, ` +
+          `gold_earned, total_damage_dealt_to_champions, vision_score, ${PLAYED_SECONDS_SQL} AS time_played, ` +
           `${MATCH_LOADOUT_LAKE_COLUMNS_SQL} ` +
           `FROM (${source.sql}) ${DEDUPE_TO_ONE_ROW_PER_MATCH} ` +
           `ORDER BY game_creation_ms DESC, match_id DESC ${limitSql}`,
@@ -293,7 +295,7 @@ export async function fetchPlayerChampionPool(options: {
           `sum(CASE WHEN win THEN 1 ELSE 0 END)::BIGINT AS wins, ` +
           `sum(kills)::BIGINT AS kills, sum(deaths)::BIGINT AS deaths, ` +
           `sum(assists)::BIGINT AS assists, sum(creep_score)::BIGINT AS creep_score, ` +
-          `sum(time_played)::BIGINT AS time_played, ` +
+          `sum(${PLAYED_SECONDS_SQL})::BIGINT AS time_played, ` +
           `sum(COALESCE(gold_earned, 0))::BIGINT AS gold_earned, ` +
           `sum(COALESCE(vision_score, 0))::BIGINT AS vision_score, ` +
           `sum(COALESCE(total_damage_dealt_to_champions, 0))::BIGINT AS damage_to_champions, ` +

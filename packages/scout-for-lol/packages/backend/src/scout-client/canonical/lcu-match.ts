@@ -48,9 +48,11 @@ export function localMatchEndTimestamp(payload: unknown): number | null {
  * Counted from the players, not `teams`: an Arena game lists teams 100 and 0
  * while its players sit on 100 and 200.
  */
-const MIN_FIELDED_SIDES = 2;
+export const MIN_FIELDED_SIDES = 2;
 
-function fieldedSides(participants: readonly { teamId: number }[]): number {
+export function fieldedSides(
+  participants: readonly { teamId: number }[],
+): number {
   return new Set(participants.map((participant) => participant.teamId)).size;
 }
 
@@ -267,8 +269,8 @@ function convertSupportedLcuMatchBundle(
  * Herald's comes from the payload when stated, otherwise from kill counts and
  * the timeline. Voidgrubs, optional in Match-V5, appear only when provable.
  */
-function convertTeams(
-  bundle: LocalMatchBundle,
+export function convertTeams(
+  bundle: Pick<LocalMatchBundle, "matchHistory" | "timeline">,
   participants: readonly { teamId: number; kills: number }[],
 ) {
   const game = bundle.matchHistory;

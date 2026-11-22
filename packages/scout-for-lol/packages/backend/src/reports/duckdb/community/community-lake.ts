@@ -10,6 +10,8 @@ import {
   withLakeQueryRetry,
   scalarParam,
   type BoundParam,
+  PLAYED_SECONDS_SQL,
+  TEAM_POSITION_SQL,
 } from "#src/reports/duckdb/lake.ts";
 
 const LakeInt = z.union([z.number(), z.bigint()]).transform(Number);
@@ -108,8 +110,8 @@ export async function fetchGuildMatchRows(options: {
         `full_rosters AS (${full.sql}) ` +
         `SELECT match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
         `queue, queue_id, game_mode, map_id, puuid, team_id, player_subteam_id, participant_id, ` +
-        `riot_id_game_name, riot_id_tagline, champion_name, team_position, win, ` +
-        `kills, deaths, assists, creep_score, time_played FROM full_rosters ` +
+        `riot_id_game_name, riot_id_tagline, champion_name, ${TEAM_POSITION_SQL} AS team_position, win, ` +
+        `kills, deaths, assists, creep_score, ${PLAYED_SECONDS_SQL} AS time_played FROM full_rosters ` +
         `ORDER BY game_creation_ms DESC, match_id DESC, participant_id`;
       return await withDuckDBConnection(async (session) => {
         const rows = await session.run(

@@ -11,6 +11,7 @@ import {
   scalarParam,
   withLakeQueryRetry,
   type BoundParam,
+  PLAYED_SECONDS_SQL,
 } from "#src/reports/duckdb/lake.ts";
 
 const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
@@ -108,7 +109,7 @@ export async function fetchChampionComparisons(options: {
           `sum(assists)::BIGINT AS assists, sum(creep_score)::BIGINT AS creep_score, ` +
           `sum(gold_earned)::BIGINT AS gold_earned, sum(vision_score)::BIGINT AS vision_score, ` +
           `sum(total_damage_dealt_to_champions)::BIGINT AS damage_to_champions, ` +
-          `sum(time_played)::BIGINT AS time_played FROM scoped GROUP BY entry_key`,
+          `sum(${PLAYED_SECONDS_SQL})::BIGINT AS time_played FROM scoped GROUP BY entry_key`,
         schema: ChampionComparisonRowSchema,
       });
     },

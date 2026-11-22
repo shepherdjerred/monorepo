@@ -56,7 +56,7 @@ const LegacyTeamSchema = z
     towerKills: z.number(),
   })
   .loose();
-const LegacyMatchSchema = z
+export const LegacyMatchSchema = z
   .object({
     gameCreation: z.number(),
     gameDuration: z.number(),

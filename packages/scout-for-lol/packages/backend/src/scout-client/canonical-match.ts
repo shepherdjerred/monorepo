@@ -6,9 +6,11 @@ import {
   storedParticipantIdentity,
   type CanonicalMatch,
   type CanonicalMatchRecord,
+  type HistoryMatch,
   type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data";
+import { convertHistoryMatch } from "./canonical/history-match.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
@@ -138,8 +140,39 @@ export function parseLocalCanonicalMatch(
     : match;
 }
 
+/**
+ * The history record (`local-history-1`) a candidate's history bundle
+ * supports, under the same identity checks as {@link parseLocalCanonicalMatch}:
+ * the requested match, its platform, and a resolved observer who played in
+ * it. A witnessed bundle is never read as one.
+ */
+export function parseLocalHistoryMatch(
+  riotMatchId: RiotMatchId,
+  candidate: Candidate,
+  identities: IdentityMap = new Map(),
+): HistoryMatch | null {
+  const platform = platformRouteOf(riotMatchId);
+  const payload = embeddedPayload(
+    translatePayloadIdentities(candidate.payload, identities),
+  );
+  const localPuuid =
+    candidate.localPuuid === null
+      ? null
+      : (identities.get(candidate.localPuuid) ?? candidate.localPuuid);
+  const match = convertHistoryMatch(riotMatchId, payload);
+  if (match === null || localPuuid === null) return null;
+  return match.info.platformId.toUpperCase() !== platform ||
+    candidate.platformId?.toUpperCase() !== platform ||
+    `${platform}_${match.info.gameId.toString()}` !== riotMatchId ||
+    !match.metadata.participants.includes(localPuuid)
+    ? null
+    : match;
+}
+
 /** The aliases a stored candidate needs before it can be parsed. */
-async function candidateIdentities(candidate: Candidate): Promise<IdentityMap> {
+export async function candidateIdentities(
+  candidate: Candidate,
+): Promise<IdentityMap> {
   const uuids = new Set(lcuUuidsIn(candidate.payload));
   if (candidate.localPuuid !== null) uuids.add(candidate.localPuuid);
   return readIdentityAliases(uuids);
@@ -182,6 +215,9 @@ export async function readSelectedCanonicalMatch(
   );
   if (endOfGame !== null)
     return { coverage: "end_of_game", match: endOfGame, observationId };
+  const history = parseLocalHistoryMatch(riotMatchId, observation, identities);
+  if (history !== null)
+    return { coverage: "history", match: history, observationId };
   throw ApplicationFailure.nonRetryable(
     `Selected local payload for ${riotMatchId} no longer validates`,
     "ScoutClientCanonicalDrift",
@@ -322,7 +358,7 @@ export function timelineMatchesResult(
   );
 }
 
-function conflictingCandidates(riotMatchId: RiotMatchId): never {
+export function conflictingCandidates(riotMatchId: RiotMatchId): never {
   throw ApplicationFailure.nonRetryable(
     `Paired clients supplied conflicting complete payloads for ${riotMatchId}`,
     "ScoutClientObservationConflict",
@@ -378,7 +414,7 @@ export async function resolveLocalCanonicalMatch(
 }
 
 /** Every accepted `post_game` observation of this game, oldest first. */
-async function acceptedPostGameObservations(riotMatchId: RiotMatchId) {
+export async function acceptedPostGameObservations(riotMatchId: RiotMatchId) {
   const platform = platformRouteOf(riotMatchId);
   const gameId = riotMatchId.slice(riotMatchId.indexOf("_") + 1);
   return await prisma.scoutClientObservation.findMany({

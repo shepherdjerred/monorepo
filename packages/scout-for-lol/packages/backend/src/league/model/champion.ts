@@ -58,6 +58,13 @@ function extractArenaMetrics(dto: CanonicalParticipant) {
 }
 
 function extractTeamSupport(dto: CanonicalParticipant) {
+  // Only a history record leaves these unstated, and Arena is never recorded
+  // from history alone: Riot publishes it.
+  if (
+    dto.totalDamageShieldedOnTeammates === null ||
+    dto.totalHealsOnTeammates === null
+  )
+    throw new Error("An Arena participant must state its teammate support");
   return {
     damageShieldedOnTeammate: dto.totalDamageShieldedOnTeammates,
     healsOnTeammate: dto.totalHealsOnTeammates,

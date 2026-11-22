@@ -48,8 +48,9 @@ export type MatchParticipant = {
   objectives: {
     turrets: number;
     inhibitors: number;
-    barons: number;
-    dragons: number;
+    /** Null when the record states no per-player kills (a history record). */
+    barons: number | null;
+    dragons: number | null;
   };
   loadout?: MatchLoadout | undefined;
   augments?: { id: number; name: string | null }[] | undefined;
