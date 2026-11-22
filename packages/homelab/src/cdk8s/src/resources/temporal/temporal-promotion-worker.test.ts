@@ -47,13 +47,7 @@ const DeploymentSchema = z.object({
               z.object({
                 name: z.string(),
                 value: z.string().optional(),
-                valueFrom: z
-                  .object({
-                    secretKeyRef: z
-                      .object({ name: z.string(), key: z.string() })
-                      .optional(),
-                  })
-                  .optional(),
+                valueFrom: z.unknown().optional(),
               }),
             ),
             name: z.string(),
