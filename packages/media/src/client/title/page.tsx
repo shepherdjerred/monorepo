@@ -76,9 +76,12 @@ function LibraryTitlePage({ user, id }: { user: MediaUser; id: string }) {
  */
 export function MediaTitlePage({ user }: { user: MediaUser }) {
   const { id } = useParams();
-  if (id === undefined) return <TitleNotFound />;
   // Keyed by title, so nothing a page holds carries over to the next one.
-  return <LibraryTitlePage key={id} user={user} id={id} />;
+  return id === undefined ? (
+    <TitleNotFound />
+  ) : (
+    <LibraryTitlePage key={id} user={user} id={id} />
+  );
 }
 
 /**

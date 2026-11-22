@@ -41,12 +41,12 @@ function heldPhrase(library: CatalogLibraryState): Copy {
       leavingSoon: null,
     });
   }
-  if (library.availability !== null) {
-    return AVAILABILITY_COPY[library.availability];
-  }
-  // No count and no state: a Plex library outside Media holds the episodes.
-  // That is "some of it is there", not "all of it" and not "none of it".
-  return IN_LIBRARY_COPY;
+  // With no count and no state, a Plex library outside Media holds the
+  // episodes. That is "some of it is there", not "all of it" and not "none
+  // of it".
+  return library.availability === null
+    ? IN_LIBRARY_COPY
+    : AVAILABILITY_COPY[library.availability];
 }
 
 /**

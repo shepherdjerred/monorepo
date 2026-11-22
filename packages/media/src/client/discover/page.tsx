@@ -106,7 +106,10 @@ function FeedTitles({ feed }: { feed: CatalogFeed }) {
 /** One feed, all of it, at `/discover/:feed`. */
 export function DiscoverFeedPage() {
   const feed = feedFromSlug(useParams()["feed"]);
-  if (feed === null) return <Navigate to={DISCOVER_PATH} replace />;
   // Keyed, so one feed's titles are never shown under another's heading.
-  return <FeedTitles key={feed} feed={feed} />;
+  return feed === null ? (
+    <Navigate to={DISCOVER_PATH} replace />
+  ) : (
+    <FeedTitles key={feed} feed={feed} />
+  );
 }
