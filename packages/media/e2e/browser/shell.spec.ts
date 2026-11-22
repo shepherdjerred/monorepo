@@ -264,12 +264,7 @@ test.describe("addresses that moved", () => {
   }
 
   // Addresses the server still writes into messages, which did not move.
-  const KEPT = [
-    "/requests?interest=00000000-0000-4000-8000-000000000001",
-    "/library",
-    "/recovery",
-    "/notifications",
-  ] as const;
+  const KEPT = ["/library", "/recovery", "/notifications"] as const;
 
   for (const kept of KEPT) {
     test(`${kept} is still its own page`, async ({ page }) => {

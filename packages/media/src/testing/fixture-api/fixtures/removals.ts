@@ -14,7 +14,13 @@ import {
   versionOf,
 } from "#testing/fixture-api/support.ts";
 import { storedArtwork } from "./artwork.ts";
-import { episodeId, seasonId, titleNamed, type Title } from "./titles.ts";
+import {
+  episodeId,
+  episodeItem,
+  seasonId,
+  titleNamed,
+  type Title,
+} from "./titles.ts";
 
 type RemovalList = z.input<typeof RemovalListSchema>;
 type HistoryItem = z.input<typeof RemovalHistoryItemSchema>;
@@ -22,25 +28,65 @@ type HistoryPage = z.input<typeof RemovalHistoryPageSchema>;
 
 type RemovalSeed = readonly [
   title: string,
-  state: string,
+  /** One of the three states `GET /api/v1/removals` lists. */
+  state: "warning_pending" | "grace_period" | "quarantined",
   /** Days until the grace period ends; negative once it has passed. */
   graceDays: number | null,
   purgeDays: number | null,
   /** Whether the signed-in member is one of those who asked for the title. */
   asked: "viewer" | "another member",
+  /**
+   * The season whose first episodes are leaving, one removal each, when it
+   * is not the whole title that leaves.
+   */
+  season?: number,
 ];
 
-/** Titles leaving soon, one or more per retention state. */
+/** How many episodes of a seeded season leave, a day apart. */
+const LEAVING_EPISODES = 4;
+
+/**
+ * Titles leaving soon, one or more per state, and one series that is losing
+ * several episodes at once.
+ */
 const REMOVALS: readonly RemovalSeed[] = [
-  ["The Expanse", "grace_period", 3, null, "viewer"],
+  ["The Expanse", "grace_period", 3, null, "viewer", 6],
   ["Mr. Robot", "grace_period", 6, null, "another member"],
   ["Knives Out", "warning_pending", null, null, "another member"],
-  ["Top Gun: Maverick", "notice_pending", null, null, "viewer"],
+  ["Top Gun: Maverick", "warning_pending", null, null, "viewer"],
   ["The Holdovers", "quarantined", -2, 5, "another member"],
   ["Silo", "quarantined", -5, 2, "viewer"],
   ["Get Out", "grace_period", 1, null, "viewer"],
-  ["Cowboy Bebop", "reply_pending", 7, null, "another member"],
+  ["Cowboy Bebop", "grace_period", 7, null, "another member"],
 ];
+
+/**
+ * The id of the retention decision behind one removal. The removal list and
+ * the removal history both report a decision under this id, which is how a
+ * client knows a history row and a listed removal are the same thing.
+ */
+function decisionId(seedIndex: number, part: number): string {
+  return fixtureId(12, (seedIndex + 1) * 100 + part);
+}
+
+/** What one seed removes: the title itself, or episodes of one season. */
+function removedItems(
+  title: Title,
+  season: number | undefined,
+): { id: string; title: string; kind: string; days: number }[] {
+  if (season === undefined) {
+    return [{ id: title.id, title: title.title, kind: title.kind, days: 0 }];
+  }
+  return Array.from({ length: LEAVING_EPISODES }, (_, index) => {
+    const episode = episodeItem(title, season, index + 1);
+    return {
+      id: episodeId(title, season, index + 1),
+      title: episode.title,
+      kind: episode.kind,
+      days: index,
+    };
+  });
+}
 
 /**
  * A removal the household can still stop, as the library reports it on the
@@ -71,7 +117,7 @@ export function leavingSoon(title: Title): {
  */
 export function removalList(persona: Persona): RemovalList {
   return REMOVALS.flatMap(
-    ([name, state, graceDays, purgeDays, asked], index) => {
+    ([name, state, graceDays, purgeDays, asked, season], index) => {
       if (
         persona !== "owner" &&
         state === "quarantined" &&
@@ -80,23 +126,22 @@ export function removalList(persona: Persona): RemovalList {
         return [];
       }
       const title = titleNamed(name);
-      return [
-        {
-          id: fixtureId(12, index + 1),
-          mediaId: title.id,
-          rootMediaId: title.id,
-          rootTitle: title.title,
-          artwork: storedArtwork(title),
-          state,
-          graceUntil: graceDays === null ? null : ahead(graceDays * DAY),
-          purgeAfter: purgeDays === null ? null : ahead(purgeDays * DAY),
-          media: {
-            title: title.title,
-            kind: title.kind,
-            version: versionOf(title.id),
-          },
+      return removedItems(title, season).map((item, part) => ({
+        id: decisionId(index, part),
+        mediaId: item.id,
+        rootMediaId: title.id,
+        rootTitle: title.title,
+        artwork: storedArtwork(title),
+        state,
+        graceUntil:
+          graceDays === null ? null : ahead((graceDays + item.days) * DAY),
+        purgeAfter: purgeDays === null ? null : ahead(purgeDays * DAY),
+        media: {
+          title: item.title,
+          kind: item.kind,
+          version: versionOf(item.id),
         },
-      ];
+      }));
     },
   );
 }
@@ -113,7 +158,11 @@ type HistorySeed = {
   edition?: string;
 };
 
-/** Removed titles, newest first, covering every state and restore outcome. */
+/**
+ * Removed titles, newest first, covering every state and restore outcome.
+ * One film has two versions set aside at once: its default version, which
+ * the removal list also holds, and a named cut, which it never does.
+ */
 const HISTORY: readonly HistorySeed[] = [
   {
     title: "The Holdovers",
@@ -123,6 +172,16 @@ const HISTORY: readonly HistorySeed[] = [
     state: "quarantined",
     restore: "recoverable",
     quarantinedDaysAgo: 2,
+  },
+  {
+    title: "The Holdovers",
+    kind: "movie",
+    reason: "owner_removed",
+    context: "household",
+    state: "quarantined",
+    restore: "recoverable",
+    quarantinedDaysAgo: 2,
+    edition: "directors_cut",
   },
   {
     title: "Hacks",
@@ -318,8 +377,28 @@ function restoreDeadline(seed: HistorySeed): string | null {
   return remaining >= 0 ? ahead(remaining * DAY) : ago(-remaining * DAY);
 }
 
+/**
+ * A set-aside default version of a whole title is a decision the removal
+ * list holds too, so its history row carries that decision's id. Every other
+ * history row is a decision the list does not hold.
+ */
+function historyId(seed: HistorySeed, index: number): string {
+  const listed = REMOVALS.findIndex(
+    (removal) =>
+      removal[0] === seed.title &&
+      removal[1] === "quarantined" &&
+      removal[5] === undefined,
+  );
+  return listed !== -1 &&
+    seed.state === "quarantined" &&
+    seed.edition === undefined &&
+    (seed.kind === "movie" || seed.kind === "series")
+    ? decisionId(listed, 0)
+    : fixtureId(13, index + 1);
+}
+
 const HISTORY_ITEMS: readonly HistoryItem[] = HISTORY.map((seed, index) => ({
-  id: fixtureId(13, index + 1),
+  id: historyId(seed, index),
   ...subject(titleNamed(seed.title), seed.kind),
   kind: seed.kind,
   edition: seed.edition ?? "default",

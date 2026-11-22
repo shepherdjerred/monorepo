@@ -1,11 +1,6 @@
 import { Link, NavLink } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
-import {
-  HOUSEKEEPING_NAV,
-  MANAGE_NAV,
-  PRIMARY_NAV,
-  type NavItem,
-} from "./navigation.ts";
+import { MANAGE_NAV, PRIMARY_NAV, type NavItem } from "./navigation.ts";
 import { HOME_PATH } from "./redirects.tsx";
 import { classNames } from "#client/ui/class-names.ts";
 import styles from "./shell.module.css";
@@ -42,12 +37,6 @@ export function Sidebar({ user }: { user: MediaUser }) {
       </Link>
       <nav className={cx("nav")} aria-label="Main">
         <NavList items={PRIMARY_NAV} />
-        <div className={cx("navGroup")}>
-          <p className={cx("navGroupLabel")} id="nav-housekeeping">
-            Housekeeping
-          </p>
-          <NavList items={HOUSEKEEPING_NAV} labelledBy="nav-housekeeping" />
-        </div>
         {user.role === "owner" && (
           <div className={cx("navGroup")}>
             <p className={cx("navGroupLabel")} id="nav-owner">

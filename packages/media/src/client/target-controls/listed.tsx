@@ -1,9 +1,9 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { DEFAULT_TARGET_UNAVAILABLE } from "#shared/editions/target-batch.ts";
 import type { DefaultTargetView } from "#shared/editions/target-view.ts";
 import { ApiError } from "#client/api.ts";
-import { readListedTargets, useTarget } from "./api.ts";
+import { readListedTargets, readTarget, useTarget } from "./api.ts";
 
 type ListedTargetsState = {
   mediaIds: ReadonlySet<string>;
@@ -62,6 +62,31 @@ export function ListedTargets({
     [ids, batch.error, batch.data],
   );
   return <ListedTargetsContext value={state}>{children}</ListedTargetsContext>;
+}
+
+/**
+ * The views of several of a list's rows at once, for an action that spans
+ * them. Each is the view, the reason the reader has none, or neither while
+ * the list's read is still on its way. Reads nothing itself.
+ */
+export function useListedTargetViews(mediaIds: readonly string[]): {
+  mediaId: string;
+  data: DefaultTargetView | undefined;
+  error: Error | null;
+}[] {
+  const listed = useContext(ListedTargetsContext);
+  const targets = useQueries({
+    queries: mediaIds.map((mediaId) => ({
+      queryKey: ["target", mediaId],
+      queryFn: () => readTarget(mediaId),
+      enabled: false,
+    })),
+  });
+  return mediaIds.map((mediaId, index) => ({
+    mediaId,
+    data: targets[index]?.data,
+    error: listed?.error ?? listed?.unavailable.get(mediaId) ?? null,
+  }));
 }
 
 /** A row's view: from its list's read, or its own read when no list has it. */

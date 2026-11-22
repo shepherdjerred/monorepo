@@ -54,8 +54,8 @@ export function MediaPage({ user }: { user: MediaUser }) {
   if (context.access === "protection_only")
     return (
       <>
-        <Link className="back-link" to="/requests">
-          ← My requests
+        <Link className="back-link" to="/library/mine">
+          ← My titles
         </Link>
         <PageTitle title="Request protections" />
         <ProtectionNotice />
@@ -91,8 +91,8 @@ function MediaDetails({
   const claimed = media.requests.some((request) => request.userId === user.id);
   return (
     <>
-      <Link className="back-link" to="/requests">
-        ← My requests
+      <Link className="back-link" to="/library/mine">
+        ← My titles
       </Link>
       <PageTitle title={media.title}>
         <p>

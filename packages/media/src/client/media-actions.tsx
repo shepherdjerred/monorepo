@@ -19,17 +19,23 @@ export function MediaActionButton({
   context,
   action,
   confirmation,
+  quiet = false,
 }: {
   user: MediaUser;
   context: DefaultTargetView;
   action: Exclude<MediaAction["action"], "select_release">;
   confirmation?: NonNullable<MediaDetail["removalConfirmation"]>;
+  /**
+   * Keeping and restoring are drawn as the main action, which they are where
+   * they are the one thing to do. Beside another main action they are quiet.
+   */
+  quiet?: boolean;
 }) {
   const mutation = useTargetCommand(user.id);
   return (
     <div className="action-control">
       <button
-        className={`button ${action === "keep" || action === "restore" ? "primary" : "subtle"}`}
+        className={`button ${!quiet && (action === "keep" || action === "restore") ? "primary" : "subtle"}`}
         disabled={
           mutation.isPending ||
           mutation.isSuccess ||

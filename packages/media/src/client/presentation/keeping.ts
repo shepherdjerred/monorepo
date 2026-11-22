@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import type { LibraryPageSchema } from "#shared/household/library.ts";
+import { LIBRARY_KEEPING_NAMES } from "#shared/household/names.ts";
 
 type LibraryItem = z.infer<typeof LibraryPageSchema>["items"][number];
 
@@ -19,8 +20,8 @@ export const PROTECTION_COPY = {
 
 /** What the owner's button does to a title the library keeps this way. */
 export const KEEPING_CHANGE_COPY = {
-  keep: { action: "Keep just for now", next: "temporary" },
-  temporary: { action: "Keep for good", next: "keep" },
+  keep: { action: LIBRARY_KEEPING_NAMES.temporary, next: "temporary" },
+  temporary: { action: LIBRARY_KEEPING_NAMES.keep, next: "keep" },
 } as const satisfies Record<
   NonNullable<LibraryItem["libraryKeeping"]>["keepingPolicy"],
   { action: string; next: "keep" | "temporary" }

@@ -9,9 +9,12 @@ import { CommandError, commandNeedsReview } from "./errors.tsx";
 export function ProtectionControls({
   user,
   context,
+  quiet = false,
 }: {
   user: MediaUser;
   context: DefaultTargetView;
+  /** None of these is the main action where they are shown. */
+  quiet?: boolean;
 }) {
   return (
     <div className="button-row">
@@ -23,6 +26,7 @@ export function ProtectionControls({
             user={user}
             context={context}
             action={action}
+            quiet={quiet}
           />
         ))}
     </div>
@@ -41,9 +45,12 @@ export function ProtectionNotice() {
 export function RequestProtection({
   user,
   request,
+  quiet = false,
 }: {
   user: MediaUser;
   request: { id: string; mediaId: string; version: number; active: boolean };
+  /** The request's main action is elsewhere, so its holds are drawn quiet. */
+  quiet?: boolean;
 }) {
   const target = useListedTarget(request.mediaId);
   const cancel = useTargetCommand(user.id);
@@ -63,7 +70,7 @@ export function RequestProtection({
           Request protections only; library details unavailable.
         </p>
       )}
-      <ProtectionControls user={user} context={context} />
+      <ProtectionControls user={user} context={context} quiet={quiet} />
       {request.active && canCancel && (
         <button
           className="button subtle"

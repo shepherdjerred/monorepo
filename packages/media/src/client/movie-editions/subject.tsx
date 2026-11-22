@@ -9,11 +9,14 @@ export function MovieRequestSubject({
   subjectUserId,
   change,
   disabled = false,
+  label = "Request for",
 }: {
   user: MediaUser;
   subjectUserId: string;
   change: (id: string) => void;
   disabled?: boolean;
+  /** What the choice is of, where it is not who a new request is for. */
+  label?: string;
 }) {
   const profiles = useQuery({
     queryKey: ["plex-profiles"],
@@ -24,7 +27,7 @@ export function MovieRequestSubject({
   return (
     <>
       <label>
-        Request for
+        {label}
         <select
           value={subjectUserId}
           disabled={disabled}

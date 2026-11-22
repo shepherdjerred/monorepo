@@ -14,11 +14,8 @@ test("the sidebar moves between pages and marks the current one", async ({
   await expect(sidebar.getByRole("link")).toHaveText([
     "Discover",
     "Library",
-    "My requests",
     "Calendar",
-    "Watch history",
-    "Leaving soon",
-    "Removed",
+    "History",
     "Manage",
   ]);
   await expect(sidebar.getByRole("link", { name: "Discover" })).toHaveAttribute(

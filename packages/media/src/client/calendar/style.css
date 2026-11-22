@@ -82,15 +82,4 @@
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
     gap: var(--space-4);
   }
-  .removal-history-dates {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: 0.4rem var(--space-4);
-  }
-  .removal-history-dates dt {
-    font-weight: 600;
-  }
-  .removal-history-dates dd {
-    margin: 0;
-  }
 }

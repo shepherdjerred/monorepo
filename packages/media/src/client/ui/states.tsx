@@ -32,17 +32,26 @@ type Failure = { title: string; body: string };
 /**
  * What went wrong, in the reader's terms, by the kind of failure:
  *
- * - no response at all (the browser's own `TypeError`, or a response that
- *   was not the API's);
+ * - no response at all (the browser's own `TypeError`);
+ * - an answer this client could not read (a schema mismatch);
  * - the server failing (5xx);
  * - Plex access Media could not confirm, which only Plex or the owner fixes;
  * - anything else the API refused, in the words the API chose.
  */
 function describe(error: Error, what: string): Failure {
-  if (!(error instanceof ApiError)) {
+  // `fetch` rejects with a TypeError when no response arrived at all.
+  if (error instanceof TypeError) {
     return {
       title: `${what} did not load`,
       body: "Media could not be reached. Check your connection, then try again.",
+    };
+  }
+  if (!(error instanceof ApiError)) {
+    // The answer arrived but was not what this page expects, which is what a
+    // tab left open across an update sees.
+    return {
+      title: `${what} did not load`,
+      body: "Media answered in a way this page could not read. Reload the page, then try again.",
     };
   }
   if (error.code === "plex_library_access_required") {

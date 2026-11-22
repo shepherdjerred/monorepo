@@ -36,11 +36,8 @@
       align-items: flex-start;
     }
   }
-  /* A thumbnail has no room for words; its row names the title beside it. */
-  @container (max-width: 72px) {
-    .placeholder {
-      display: none;
-    }
+  .placeholderMark {
+    display: none;
   }
   /* A long title stops after five lines instead of spilling out of the frame. */
   .placeholderTitle {
@@ -49,5 +46,22 @@
     -webkit-line-clamp: 5;
     overflow: hidden;
     overflow-wrap: anywhere;
+  }
+  /* A thumbnail has no room for words; its row names the title beside it,
+     and the tile is marked as standing in for a picture. */
+  @container (max-width: 72px) {
+    .placeholder {
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .placeholderTitle {
+      display: none;
+    }
+    .placeholderMark {
+      display: block;
+      width: 42%;
+      height: auto;
+    }
   }
 }

@@ -5,12 +5,13 @@ import { open, test, watchForFailures } from "./support.ts";
 const SINGLE_READ = /^\/api\/v2\/media\/[^/]+\/targets\/default$/u;
 const BATCH_READ = "/api/v2/targets/default";
 
-/** The list pages whose rows each need their title's default-target view. */
+/**
+ * The Library views whose rows each need their title's default-target view,
+ * and a control that only a row with its view shows.
+ */
 const LISTS = [
-  { label: "member /requests", rows: 15 },
-  // A member is not shown a title another member asked for once it is
-  // quarantined, so the fixture lists seven of its eight removals.
-  { label: "member /removals", rows: 7 },
+  { label: "member /library/mine", control: "Cancel request" },
+  { label: "member /library/leaving", control: "Keep for 30 days" },
 ] as const;
 
 for (const list of LISTS) {
@@ -33,10 +34,14 @@ for (const list of LISTS) {
     await page.clock.install();
     await open(page, route, baseURL);
 
-    // Every row has its controls, so every row's view arrived.
-    const rows = page.locator(".item-list > .request-row");
-    await expect(rows).toHaveCount(list.rows);
-    await expect(rows.locator(".action-control button").first()).toBeVisible();
+    // Rows have their controls, so their views arrived; none is still
+    // waiting, shown or not.
+    const controls = page.getByRole("button", {
+      name: list.control,
+      includeHidden: true,
+    });
+    await expect(controls.first()).toBeAttached();
+    expect(await controls.count()).toBeGreaterThan(4);
     await expect(page.getByText(/Loading (?:request )?controls…/u)).toHaveCount(
       0,
     );
