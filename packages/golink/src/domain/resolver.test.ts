@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   derivePlatformSites,
   deriveSlugForHostname,
+  EXCLUDED_PLATFORM_HOSTNAMES,
   loadPlatformSites,
   type PlatformSiteEntry,
 } from "./platform-sites.ts";
 import {
   buildCatalog,
+  EXCLUDED_DYNAMIC_INGRESS_SHORTS,
   resolveRedirect,
   type ManualLinkRecord,
 } from "./resolver.ts";
@@ -58,7 +60,6 @@ describe("platform-sites derivation", () => {
     expect(deriveSlugForHostname("statically-typed.com")).toBe(
       "statically-typed",
     );
-    expect(deriveSlugForHostname("clauderon.com")).toBe("clauderon");
   });
 
   it("never emits reserved slugs or go itself", () => {
@@ -90,16 +91,32 @@ describe("platform-sites derivation", () => {
     ]);
   });
 
-  it("loads the live homelab platform-model.json cleanly", async () => {
+  it("loads the live homelab platform-model.json cleanly and omits excluded hostnames", async () => {
     const sites = await loadPlatformSites();
     const shorts = new Set(sites.map((site) => site.short));
     expect(shorts.has("wiki")).toBe(true);
     expect(shorts.has("scout")).toBe(true);
     expect(shorts.has("scout-beta")).toBe(true);
     expect(shorts.has("tsmc")).toBe(true);
+    expect(shorts.has("tsmc-bluemap")).toBe(true);
     expect(shorts.has("tsmc-join")).toBe(true);
     expect(shorts.has("bsc")).toBe(true);
     expect(shorts.has("go")).toBe(false);
+
+    for (const excluded of [
+      "clauderon",
+      "dynmap",
+      "pr-bot",
+      "relay",
+      "shuxin-bluemap",
+      "temporal-agent-tasks",
+      "temporal-sleep",
+      "tsmc-livemap",
+      "xcode-cloud-webhook",
+    ]) {
+      expect(shorts.has(excluded), excluded).toBe(false);
+    }
+    expect(EXCLUDED_PLATFORM_HOSTNAMES.size).toBe(9);
   });
 });
 
@@ -239,7 +256,7 @@ describe("5-tier golink resolver", () => {
       "temporal-ui",
       "trmnl-dashboard",
       "storm-forum-admin",
-      "gradle-build-cache",
+      "artifact-build-cache",
       // Collision pair: both strip to "billing" with different targets
       "billing-ui",
       "billing-service",
@@ -269,14 +286,52 @@ describe("5-tier golink resolver", () => {
     expect(byShort.get("storm-forum")?.targetUrl).toBe(
       "https://storm-forum-admin.tailnet-1a49.ts.net/",
     );
-    expect(byShort.get("gradle")?.targetUrl).toBe(
-      "https://gradle-build-cache.tailnet-1a49.ts.net/",
+    expect(byShort.get("artifact")?.targetUrl).toBe(
+      "https://artifact-build-cache.tailnet-1a49.ts.net/",
     );
     expect(byShort.has("billing")).toBe(false);
     expect(byShort.get("media")?.kind).toBe("ingress");
     expect(byShort.get("media")?.targetUrl).toBe(
       "https://media.tailnet-1a49.ts.net/",
     );
+  });
+
+  it("excludes migrated, headless, and scaled-to-zero ingresses while allowing manual overrides", () => {
+    const ingressHosts = [
+      ...EXCLUDED_DYNAMIC_INGRESS_SHORTS,
+      "hub",
+      "temporal-ui",
+    ];
+    const catalog = buildCatalog({
+      manualLinks: [makeManual("alerts", "https://hub.tailnet-1a49.ts.net/")],
+      ingressHosts,
+      platformSites: [],
+      tailnetDomain: TAILNET,
+      dynamicAliasesEnabled: true,
+    });
+
+    expect(catalog.links.map((link) => link.short)).toEqual([
+      "alerts",
+      "hub",
+      "temporal",
+      "temporal-ui",
+    ]);
+    expect(
+      catalog.links.find((link) => link.short === "alerts")?.shadows,
+    ).toBeUndefined();
+    expect(
+      catalog.links.find((link) => link.short === "temporal")?.targetUrl,
+    ).toBe("https://temporal-ui.tailnet-1a49.ts.net/");
+    expect(
+      resolveRedirect({
+        short: "gradle",
+        manualLinks: [],
+        ingressHosts,
+        platformSites: [],
+        tailnetDomain: TAILNET,
+        dynamicAliasesEnabled: true,
+      }),
+    ).toBeNull();
   });
 });
 

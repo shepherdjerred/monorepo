@@ -28,7 +28,7 @@ describe("Golink Argo CD application", () => {
     expect(manifest.data.spec.destination.namespace).toBe("golink");
     expect(manifest.data.spec.syncPolicy.syncOptions).toEqual([
       "CreateNamespace=true",
-      "ApplyOutOfSyncOnly=true",
+      "ServerSideApply=true",
     ]);
   });
 });
