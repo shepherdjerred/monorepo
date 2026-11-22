@@ -5,13 +5,8 @@ import {
   PROFILE_IDS,
   profileList,
 } from "#testing/fixture-api/fixtures/profiles.ts";
-import {
-  answerWrites,
-  openManage,
-  overflowsSideways,
-  violations,
-} from "./support.ts";
-import { test } from "#e2e/browser/support.ts";
+import { answerWrites, openManage, violations } from "./support.ts";
+import { horizontalOverflow, test } from "#e2e/browser/support.ts";
 
 const HD = "HD 1080p — Movies";
 
@@ -392,7 +387,7 @@ for (const scheme of ["light", "dark"] as const) {
       await page.getByRole("button", { name: "Add an override" }).click();
       await expect(editor(page, "Start a new profile")).toBeVisible();
       expect(await violations(page)).toEqual([]);
-      expect(await overflowsSideways(page)).toBe(false);
+      expect(await horizontalOverflow(page)).toBe(0);
     });
   });
 }
