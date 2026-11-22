@@ -470,6 +470,48 @@ describe("FlagsProvider — transport, ETag polling, validation, and shutdown", 
     expect(failures).not.toHaveBeenCalled();
   });
 
+  test("rejects an older snapshot and mismatched 304 without replacing a newer false value", async () => {
+    vi.useFakeTimers();
+    const server = createFakeFlagsServer();
+    const failures = vi.fn();
+    provider = new FlagsProvider({
+      url: "http://flags.invalid:8080",
+      deployment: "scout/prod",
+      pollIntervalSeconds: 0,
+      fetcher: server.fetcher,
+      onRefreshFailure: failures,
+    });
+    await provider.initialize();
+    server.setBehavior({
+      kind: "snapshot",
+      etag: '"2"',
+      body: {
+        deployment: "scout/prod",
+        revision: 2,
+        flags: [
+          { type: "boolean", key: "plain-on", default: false, rollouts: [] },
+        ],
+      },
+    });
+    await expect(provider.refreshForEvaluation()).resolves.toBe(true);
+    await vi.advanceTimersByTimeAsync(1000);
+
+    server.setBehavior(DEFAULT_SERVER_BEHAVIOR);
+    await expect(provider.refreshForEvaluation()).resolves.toBe(false);
+    server.setBehavior({ kind: "not-modified", etag: '"3"' });
+    await expect(provider.refreshForEvaluation()).resolves.toBe(false);
+    expect(failures).toHaveBeenCalledTimes(2);
+    expect(provider.snapshotAgeSeconds()).toBe(1);
+    await expect(
+      provider.resolveBooleanEvaluation("plain-on", true, CONTEXT),
+    ).resolves.toMatchObject({ value: false });
+
+    server.setBehavior({ kind: "not-modified", etag: '"2"' });
+    await expect(provider.refreshForEvaluation()).resolves.toBe(true);
+    expect(server.calls.at(-1)?.headers["If-None-Match"]).toBe('"2"');
+    expect(provider.snapshotAgeSeconds()).toBe(0);
+  });
+
   test("retains last good snapshot and ETag across network, HTTP, and malformed refresh failures", async () => {
     vi.useFakeTimers();
     const server = createFakeFlagsServer();

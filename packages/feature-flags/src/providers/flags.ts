@@ -79,10 +79,15 @@ function notReady<T>(defaultValue: T): ResolutionDetails<T> {
   };
 }
 
+type FlagsSnapshot = {
+  readonly revision: number;
+  readonly flags: readonly FlagValue[];
+};
+
 function parseSnapshotBody(
   raw: unknown,
   expectedDeployment: string,
-): readonly FlagValue[] {
+): FlagsSnapshot {
   const parsed = FlagsDeploymentSnapshotSchema.parse(raw);
   if (parsed.deployment !== expectedDeployment) {
     throw new Error(
@@ -96,7 +101,7 @@ function parseSnapshotBody(
     }
     seen.add(flag.key);
   }
-  return parsed.flags;
+  return { revision: parsed.revision, flags: parsed.flags };
 }
 
 type FetchedSnapshotResponse =
@@ -191,7 +196,7 @@ export class FlagsProvider implements Provider {
 
   private readonly options: FlagsProviderOptions;
   private readonly snapshotUrl: string;
-  private snapshot: readonly FlagValue[] | undefined;
+  private snapshot: FlagsSnapshot | undefined;
   private etag: string | undefined;
   private lastSuccessfulRefreshMs: number | undefined;
   private refreshTimer: ReturnType<typeof setInterval> | undefined;
@@ -333,13 +338,23 @@ export class FlagsProvider implements Provider {
       if (sentEtag === undefined || this.snapshot === undefined) {
         throw new Error("Unconditional flags snapshot request returned 304");
       }
-      if (fetched.etag !== null && fetched.etag.length > 0) {
-        this.etag = fetched.etag;
+      if (fetched.etag !== null && fetched.etag !== sentEtag) {
+        throw new SnapshotUnavailableError(
+          "Flags snapshot returned a mismatched conditional validator",
+        );
       }
       this.recordSuccessfulRefresh();
       return;
     }
     const validated = parseSnapshotBody(fetched.raw, this.options.deployment);
+    if (
+      this.snapshot !== undefined &&
+      validated.revision < this.snapshot.revision
+    ) {
+      throw new SnapshotUnavailableError(
+        "Flags snapshot revision moved backward",
+      );
+    }
     this.snapshot = validated;
     this.etag =
       fetched.etag !== null && fetched.etag.length > 0
@@ -369,7 +384,7 @@ export class FlagsProvider implements Provider {
       mappedContext: Readonly<Record<string, string>>,
     ) => FlagEvaluation<T>,
   ): ResolutionDetails<T> {
-    const flags = this.snapshot;
+    const flags = this.snapshot?.flags;
     if (flags === undefined || this.closed) {
       return notReady(defaultValue);
     }
