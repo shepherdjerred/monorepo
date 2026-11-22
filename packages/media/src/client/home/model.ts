@@ -63,9 +63,9 @@ export function interestChecks(
         rootMediaId: request?.rootMediaId ?? interest.mediaId,
         name: request?.rootTitle ?? interest.title,
         part:
-          request !== undefined && request.mediaId !== request.rootMediaId
-            ? askedFor(request)
-            : null,
+          request === undefined || request.mediaId === request.rootMediaId
+            ? null
+            : askedFor(request),
         posterPath:
           interest.artwork?.posterPath ?? request?.artwork.posterPath ?? null,
       };
