@@ -1,5 +1,5 @@
 @layer components {
-  .panel {
+  .surface {
     display: grid;
     gap: var(--space-5);
     min-width: 0;
@@ -8,9 +8,9 @@
     border-radius: var(--radius-card);
     background: var(--surface);
     /* The rows and forms inside adapt to this width, not the window's. */
-    container: panel / inline-size;
+    container: surface / inline-size;
   }
-  .panel + .panel {
+  .surface + .surface {
     margin-top: var(--space-5);
   }
   .header {
@@ -137,7 +137,7 @@
     font-size: var(--text-sm);
   }
 
-  @container panel (max-width: 520px) {
+  @container surface (max-width: 520px) {
     .summary {
       flex-wrap: wrap;
       row-gap: var(--space-1);
@@ -152,7 +152,7 @@
     }
   }
   @media (max-width: 760px) {
-    .panel {
+    .surface {
       padding: var(--space-4);
       gap: var(--space-4);
     }

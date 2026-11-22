@@ -25,7 +25,7 @@ export function Panel({
 }) {
   const headingId = useId();
   return (
-    <section className={cx("panel")} id={id} aria-labelledby={headingId}>
+    <section className={cx("surface")} id={id} aria-labelledby={headingId}>
       <header className={cx("header")}>
         <h2 className={cx("title")} id={headingId}>
           {title}
