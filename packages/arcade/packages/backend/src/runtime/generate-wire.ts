@@ -1,3 +1,4 @@
+import { rename } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 
@@ -56,10 +57,6 @@ const root = path.resolve(import.meta.dirname, "../../../..");
 const wire = schema.parse(
   await Bun.file(path.join(root, "runtimes/wire.json")).json(),
 );
-await Bun.write(
-  path.join(root, "packages/common/src/wire.generated.ts"),
-  `// Generated from runtimes/wire.json. Run the Arcade generate task.\nexport const wire = ${JSON.stringify(wire, null, 2).replaceAll(/\b\d{5,}\b/g, (value) => value.replaceAll(/\B(?=(?:\d{3})+(?!\d))/g, "_"))} as const;\n`,
-);
 const header = [
   "// Generated from runtimes/wire.json. Run the Arcade generate task.",
   "#pragma once",
@@ -83,14 +80,24 @@ await Bun.write(
 );
 for (const [name, value] of Object.entries(wire.input))
   header.push(`inline constexpr uint32_t Input_${name} = ${String(value)};`);
+// Format in memory and swap the finished file in with a rename: the root
+// Prettier check runs alongside generate, so the file must never exist on disk
+// in an unformatted state.
+const contract = path.join(root, "packages/common/src/wire.generated.ts");
 const formatter = Bun.spawn(
-  [
-    "bunx",
-    "prettier",
-    "--write",
-    path.join(root, "packages/common/src/wire.generated.ts"),
-  ],
-  { cwd: path.resolve(root, "../.."), stdout: "ignore", stderr: "inherit" },
+  ["bunx", "prettier", "--stdin-filepath", contract],
+  {
+    cwd: path.resolve(root, "../.."),
+    stdin: new Blob([
+      `// Generated from runtimes/wire.json. Run the Arcade generate task.\nexport const wire = ${JSON.stringify(wire, null, 2).replaceAll(/\b\d{5,}\b/g, (value) => value.replaceAll(/\B(?=(?:\d{3})+(?!\d))/g, "_"))} as const;\n`,
+    ]),
+    stdout: "pipe",
+    stderr: "inherit",
+  },
 );
+const formatted = await new Response(formatter.stdout).text();
 if ((await formatter.exited) !== 0)
   throw new Error("Could not format the generated wire contract");
+const staging = `${contract}.${String(process.pid)}.tmp`;
+await Bun.write(staging, formatted);
+await rename(staging, contract);
