@@ -697,3 +697,177 @@ describe("consumerPlayer combined profile", () => {
     expect(finalPage.entries.at(-1)?.queue).toBeNull();
   });
 });
+
+describe("consumer readers over partial Mayhem records", () => {
+  // Beta, 2026-11-22: once the Scout Client's Mayhem games reached the lake as
+  // end-of-game records (no lobby creation time, no participant numbers) and
+  // history records (no time played, pings or objective kills), every
+  // profile read failed parsing a NULL game_creation_ms.
+  const MATE = testPuuid("consumer-mayhem-mate");
+  const now = Date.now();
+  const completeId = RiotMatchIdSchema.parse("NA1_7300000001");
+  const endOfGameId = RiotMatchIdSchema.parse("NA1_7300000002");
+  const historyId = RiotMatchIdSchema.parse("NA1_7300000003");
+
+  function mayhemFacts(playerId: number) {
+    const game = (options: {
+      matchId: RiotMatchId;
+      hoursAgo: number;
+      coverage: "complete" | "end_of_game" | "history";
+    }) =>
+      [MAIN, MATE].map((puuid) => ({
+        ...matchFact({
+          matchId: options.matchId,
+          puuid,
+          playerId: puuid === MAIN ? playerId : playerId + 100,
+          queue: "aram mayhem",
+          gameCreationAt: new Date(now - options.hoursAgo * 3_600_000),
+        }),
+        playerAlias: puuid === MAIN ? "Mayhem Player" : "Mayhem Mate",
+        queueId: 2400,
+        gameMode: "ARAM",
+        mapId: 12,
+        teamPosition: "",
+        gameDurationSeconds: 1200,
+        creepScore: 60,
+        championName: puuid === MAIN ? "Ashe" : "Annie",
+        championId: puuid === MAIN ? 22 : 1,
+        coverage: options.coverage,
+      }));
+    return [
+      ...game({ matchId: completeId, hoursAgo: 3, coverage: "complete" }),
+      ...game({ matchId: endOfGameId, hoursAgo: 2, coverage: "end_of_game" }),
+      ...game({ matchId: historyId, hoursAgo: 1, coverage: "history" }),
+    ];
+  }
+
+  async function seedMayhemPlayer() {
+    enableProfiles(guildId);
+    const player = await seedPlayer({
+      serverId: guildId,
+      alias: "Mayhem Player",
+      puuids: [MAIN],
+    });
+    await writeTestLake(lakeDir, {
+      serverId: guildId,
+      matchFacts: mayhemFacts(player.id),
+    });
+    return player;
+  }
+
+  test("the profile summary counts every recorded game and ignores unstated stats", async () => {
+    const player = await seedMayhemPlayer();
+    const summary = await trpc
+      .authedCaller()
+      .consumerPlayer.profileSummary({ playerId: player.id });
+
+    expect(summary.recentForm?.games).toBe(3);
+    expect(summary.behavior?.recent20?.games).toBe(3);
+    expect(summary.behavior?.streak?.games).toBe(3);
+    // No lane is stated in Mayhem: no preferred position is invented.
+    expect(summary.recentForm?.preferredPositions).toEqual([]);
+    const [ashe] = summary.championPool;
+    expect(ashe?.games).toBe(3);
+    // A history record states no time played; its game length stands in, so
+    // three 20-minute games of 60 CS are 3 CS a minute, not a division by an
+    // unknown.
+    expect(ashe?.csPerMinute).toBe(3);
+    expect(summary.recentForm?.averageCsPerMinute).toBe(3);
+  });
+
+  test("match history pages through every record newest first", async () => {
+    const player = await seedMayhemPlayer();
+    const caller = trpc.authedCaller();
+    const seen: RiotMatchId[] = [];
+    const created: number[] = [];
+    let cursor: Parameters<
+      typeof caller.consumerPlayer.matchHistory
+    >[0]["cursor"];
+    for (let page = 0; page < 4; page += 1) {
+      const history = await caller.consumerPlayer.matchHistory({
+        playerId: player.id,
+        limit: 1,
+        games: "all",
+        ...(cursor === undefined ? {} : { cursor }),
+      });
+      seen.push(...history.entries.map((entry) => entry.matchId));
+      created.push(...history.entries.map((entry) => entry.gameCreationMs));
+      if (history.nextCursor === null) break;
+      cursor = history.nextCursor;
+    }
+    expect(seen).toEqual([historyId, endOfGameId, completeId]);
+    // The end-of-game record states no lobby creation: it is placed at its
+    // start, the instant the canonical record is partitioned by.
+    expect(created[1]).toBe(now - 2 * 3_600_000);
+  });
+
+  test("a game window places an end-of-game record by its start", async () => {
+    enableProfiles(guildId);
+    const player = await seedPlayer({
+      serverId: guildId,
+      alias: "Windowed Mayhem Player",
+      puuids: [MAIN],
+    });
+    const older = Array.from({ length: 20 }, (_, index) => ({
+      ...matchFact({
+        matchId: RiotMatchIdSchema.parse(
+          `NA1_74000000${index.toString().padStart(2, "0")}`,
+        ),
+        puuid: MAIN,
+        playerId: player.id,
+        gameCreationAt: new Date(now - (index + 2) * 3_600_000),
+      }),
+      championId: 1,
+      championName: "Annie",
+    }));
+    const newest = {
+      ...matchFact({
+        matchId: endOfGameId,
+        puuid: MAIN,
+        playerId: player.id,
+        gameCreationAt: new Date(now - 3_600_000),
+      }),
+      coverage: "end_of_game" as const,
+    };
+    await writeTestLake(lakeDir, {
+      serverId: guildId,
+      matchFacts: [...older, newest],
+    });
+    const caller = trpc.authedCaller();
+
+    const summary = await caller.consumerPlayer.profileSummary({
+      playerId: player.id,
+      games: 20,
+    });
+    expect(
+      summary.championPool.map((entry) => [entry.championName, entry.games]),
+    ).toEqual([
+      ["Annie", 19],
+      ["Ashe", 1],
+    ]);
+
+    const comparison = await caller.consumerChampion.compare({
+      championId: 22,
+      games: 20,
+      cohort: "small_sample",
+    });
+    expect(comparison.rows.map((row) => [row.playerId, row.games])).toEqual([
+      [player.id, 1],
+    ]);
+  });
+
+  test("the guild overview reads the records' rosters inside a date window", async () => {
+    const player = await seedMayhemPlayer();
+    const overview = await trpc.authedCaller().consumerGuild.overview({
+      guildId,
+      windowDays: 30,
+      queuePreset: "all",
+    });
+    expect(overview.insights.matchCount).toBe(3);
+    const form = overview.insights.accountForms.find(
+      (entry) => entry.playerId === player.id,
+    );
+    expect(form?.games).toBe(3);
+    expect(form?.csPerMinute).toBe(3);
+  });
+});

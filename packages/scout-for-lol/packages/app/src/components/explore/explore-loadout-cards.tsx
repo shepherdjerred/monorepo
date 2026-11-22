@@ -1,5 +1,6 @@
 import {
   EXPLORE_LOADOUT_BUILD_PATH_MAX_EVENTS,
+  exploreLoadoutCardKey,
   type ExploreLoadoutCard,
 } from "@scout-for-lol/data";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
@@ -439,7 +440,7 @@ export function ExploreLoadoutCards(props: { cards: ExploreLoadoutCard[] }) {
     <div className="space-y-3" role="group" aria-label="Loadout cards">
       {props.cards.map((card) => (
         <ExploreLoadoutCardView
-          key={`${card.matchId}:${card.participantId.toString()}:${card.size}`}
+          key={`${exploreLoadoutCardKey(card)}:${card.size}`}
           card={card}
         />
       ))}

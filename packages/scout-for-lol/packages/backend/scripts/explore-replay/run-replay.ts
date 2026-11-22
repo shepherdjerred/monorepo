@@ -1,3 +1,4 @@
+import { exploreLoadoutCardKey } from "@scout-for-lol/data";
 import {
   exploreAnalysisEnabled,
   exploreModel,
@@ -246,8 +247,8 @@ function observationSide(observation: ReplayObservation): ReplaySide {
     ...queryFactsFromTrace(observation.trace),
     toolNames: observation.trace.map((entry) => recoveryToolName(entry)),
     matchCardIds: observation.matchCards.map((card) => card.match.matchId),
-    loadoutCardIds: observation.loadoutCards.map(
-      (card) => `${card.matchId}:${card.participantId.toString()}`,
+    loadoutCardIds: observation.loadoutCards.map((card) =>
+      exploreLoadoutCardKey(card),
     ),
     visualizationKind: observation.visualization?.kind ?? null,
   };
@@ -633,8 +634,8 @@ async function conversationCasesFor(stage: "beta" | "prod"): Promise<{
         matchCardIds: turn.baseline.matchCards.map(
           (card) => card.match.matchId,
         ),
-        loadoutCardIds: turn.baseline.loadoutCards.map(
-          (card) => `${card.matchId}:${card.participantId.toString()}`,
+        loadoutCardIds: turn.baseline.loadoutCards.map((card) =>
+          exploreLoadoutCardKey(card),
         ),
         visualizationKind: turn.baseline.visualization?.kind ?? null,
       });

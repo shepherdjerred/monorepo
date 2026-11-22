@@ -20,7 +20,8 @@ const MatchLoadoutRowSchema = z.object({
   game_duration_seconds: LakeIntSchema,
   // NULL for a bot or an unresolved player.
   puuid: z.string().nullable(),
-  participant_id: LakeIntSchema,
+  // NULL for an end-of-game record, which numbers no participant.
+  participant_id: LakeIntSchema.nullable(),
   champion_id: LakeIntSchema,
   champion_name: z.string(),
   item0: LakeIntSchema.nullable(),
@@ -70,7 +71,7 @@ export async function fetchMatchLoadoutRows(options: {
               `summoner1_id, summoner2_id, perk_primary_style, perk_sub_style, ` +
               `perk0, perk1, perk2, perk3, perk4, perk5, ` +
               `stat_perk_offense, stat_perk_flex, stat_perk_defense FROM (${source.sql}) ` +
-              `ORDER BY participant_id`,
+              `ORDER BY participant_id, champion_name`,
             bindParams(session, source.params),
           ),
         options.abortSignal === undefined

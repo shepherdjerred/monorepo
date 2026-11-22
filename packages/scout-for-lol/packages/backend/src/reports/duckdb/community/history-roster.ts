@@ -10,7 +10,9 @@ import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 const LakeInt = z.union([z.bigint(), z.number()]).transform(Number);
 const HistoryRosterRowSchema = z.object({
   match_id: RiotMatchIdSchema,
-  participant_id: LakeInt,
+  // NULL for an end-of-game record, which numbers no participant; its rows
+  // keep a stable order by champion instead.
+  participant_id: LakeInt.nullable(),
   team_id: LakeInt,
   champion_name: z.string(),
   riot_id_game_name: z.string().nullable(),
@@ -30,7 +32,7 @@ export async function fetchHistoryRosters(options: {
       return await withDuckDBConnection(async (session) => {
         const rows = await session.run(
           `SELECT match_id, participant_id, team_id, champion_name, riot_id_game_name, riot_id_tagline ` +
-            `FROM (${source.sql}) ORDER BY match_id, team_id, participant_id`,
+            `FROM (${source.sql}) ORDER BY match_id, team_id, participant_id, champion_name`,
           bindParams(session, source.params),
         );
         return rows.map((row) => HistoryRosterRowSchema.parse(row));
