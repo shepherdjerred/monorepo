@@ -23,7 +23,6 @@ import { createBugsinkChart } from "./cdk8s-charts/platform/bugsink.ts";
 import { createWoodpeckerChart } from "./cdk8s-charts/platform/woodpecker.ts";
 import { createPhoenixChart } from "./cdk8s-charts/platform/phoenix.ts";
 import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
-import { createRelayChart } from "./cdk8s-charts/relay.ts";
 import { createTemporalChart } from "./cdk8s-charts/platform/temporal.ts";
 import { createTrmnlDashboardChart } from "./cdk8s-charts/trmnl-dashboard.ts";
 import { createTurboCacheChart } from "./cdk8s-charts/platform/turbo-cache.ts";
@@ -114,7 +113,6 @@ export async function setupCharts(app: App): Promise<void> {
   createPhoenixChart(app);
   createTasknotesChart(app);
   createAlertDashboardChart(app);
-  createRelayChart(app);
   createTemporalChart(app);
   createDeliveryControlPlaneChart(app);
   createTrmnlDashboardChart(app);

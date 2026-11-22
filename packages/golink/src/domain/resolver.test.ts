@@ -107,7 +107,6 @@ describe("platform-sites derivation", () => {
       "clauderon",
       "dynmap",
       "pr-bot",
-      "relay",
       "shuxin-bluemap",
       "temporal-agent-tasks",
       "temporal-sleep",
@@ -116,7 +115,7 @@ describe("platform-sites derivation", () => {
     ]) {
       expect(shorts.has(excluded), excluded).toBe(false);
     }
-    expect(EXCLUDED_PLATFORM_HOSTNAMES.size).toBe(9);
+    expect(EXCLUDED_PLATFORM_HOSTNAMES.size).toBe(8);
   });
 });
 

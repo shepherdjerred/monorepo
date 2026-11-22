@@ -268,10 +268,9 @@ export class SeaweedfsStack extends HomelabStack {
     // copy. No expiry.
     this.consumed({ env: "RWF_ARCHIVE_S3_BUCKET" }, { protected: true });
 
-    // Document CRDT state + attachments for the self-hosted Relay Server
-    // (Obsidian real-time collaboration). See
-    // packages/homelab/src/cdk8s/src/resources/relay.
-    //
+    // Retained document CRDT state + attachments from the removed self-hosted
+    // Relay Server (Obsidian real-time collaboration). The bucket remains
+    // protected because it is the only copy of that document history.
     // relay-docs was created before this resource reached main, then manually
     // recreated after a cross-checkout tofu apply deleted it. Adopt the
     // existing bucket into state instead of trying CreateBucket over it.

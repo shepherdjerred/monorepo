@@ -92,11 +92,6 @@
       "service": "temporal-worker-gh-webhook"
     },
     {
-      "hostname": "relay.sjer.red",
-      "namespace": "relay",
-      "service": "relay-relay-service"
-    },
-    {
       "hostname": "seerr.sjer.red",
       "namespace": "media",
       "service": "media-seerr-service"

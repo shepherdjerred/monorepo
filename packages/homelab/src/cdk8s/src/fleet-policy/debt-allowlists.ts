@@ -253,7 +253,6 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "prometheus/zfs-snapshots-collector/zfs-snapshots-collector",
   "prometheus/zfs-zpool-collector/zfs-zpool-collector",
   "redlib/redlib/main",
-  "relay/relay/relay-server",
   "s3-static-sites/s3-static-sites/caddy",
   "scout-beta/scout-beta-scout-activity-worker/main",
   "scout-beta/scout-beta-scout-backend/main",

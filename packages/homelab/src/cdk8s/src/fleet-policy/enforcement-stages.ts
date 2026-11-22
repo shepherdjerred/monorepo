@@ -46,7 +46,6 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   postal: "enforced",
   prometheus: "enforced",
   redlib: "enforced",
-  relay: "enforced",
   "s3-static-sites": "enforced",
   "scout-beta": "enforced",
   "scout-prod": "enforced",

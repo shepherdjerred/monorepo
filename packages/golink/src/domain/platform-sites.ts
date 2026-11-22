@@ -59,7 +59,6 @@ export const EXCLUDED_PLATFORM_HOSTNAMES: ReadonlySet<string> = new Set([
   "dynmap.sjer.red",
   "livemap.ts-mc.net",
   "pr-bot.sjer.red",
-  "relay.sjer.red",
   "shuxin-bluemap.sjer.red",
   "temporal-agent-tasks.sjer.red",
   "temporal-sleep.sjer.red",
