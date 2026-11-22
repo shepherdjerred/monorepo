@@ -7,6 +7,7 @@ import {
   fixtureId,
   sha256,
 } from "#testing/fixture-api/support.ts";
+import type { NATIVE_REVIEW_STATES } from "#client/native-recovery/vocabulary.ts";
 import type { Title } from "#testing/fixture-api/fixtures/titles.ts";
 
 export type Detail = z.input<typeof NativeLifecycleDetailSchema>;
@@ -20,9 +21,8 @@ export const RUNTIME = {
 } as const;
 export const RESTORE_OPERATION_ID = fixtureId(33, 1);
 
-/** Where a prepared review stands, as the list and the review page show it. */
-export type ReviewState =
-  "awaiting_review" | "preparing" | "applying" | "applied";
+/** Where a prepared review stands: the states the page words, which are the server's. */
+export type ReviewState = (typeof NATIVE_REVIEW_STATES)[number];
 
 /** The fields every prepared review carries, whatever it is a review of. */
 export function reviewFrame(
