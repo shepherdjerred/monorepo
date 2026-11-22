@@ -67,6 +67,23 @@ test("the calendar opens as a month grid, and a full day says how many more it h
   await expect(group).toBeInViewport();
 });
 
+test("Week keeps keyboard focus when moving between weeks", async ({
+  page,
+}) => {
+  await openAs(page, "member", "/calendar?view=week&week=2025-12-28");
+  await settle(page);
+  await expect(page.locator("td[tabindex='0']")).toHaveCount(1);
+  await day(page, "2026-01-03").focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(day(page, "2026-01-03")).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect(day(page, "2026-01-04")).toBeFocused();
+  await expect(page).toHaveURL(/view=week&week=2026-01-04$/u);
+  await page.keyboard.press("PageDown");
+  await expect(day(page, "2026-01-11")).toBeFocused();
+  await expect(page.locator("td[tabindex='0']")).toHaveCount(1);
+});
+
 test("the arrow keys move between days, and past the month's end into the next", async ({
   page,
 }) => {

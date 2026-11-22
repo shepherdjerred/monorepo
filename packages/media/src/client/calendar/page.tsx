@@ -11,7 +11,14 @@ import { useCursorList } from "#client/ui/use-cursor-list.ts";
 import { useMediaQuery } from "#client/ui/use-media-query.ts";
 import { Agenda } from "./agenda.tsx";
 import styles from "./calendar.module.css";
-import { localToday, monthLabel, monthOf, type CivilDate } from "./dates.ts";
+import {
+  firstDay,
+  localToday,
+  monthLabel,
+  monthOf,
+  weekLabel,
+  type CivilDate,
+} from "./dates.ts";
 import { releaseDays, type ReleaseDays } from "./events.ts";
 import { MonthGrid } from "./month-grid.tsx";
 import { ReleaseList } from "./release.tsx";
@@ -21,6 +28,7 @@ import {
   anchoredDay,
   calendarReadPath,
   calendarSearch,
+  calendarViewOnDay,
   dayAnchor,
   isFiltered,
   LAYOUTS,
@@ -37,19 +45,23 @@ const ROOM_FOR_A_MONTH = "(min-width: 761px)";
 
 const LAYOUT_NAMES = {
   agenda: "Agenda",
+  week: "Week",
   month: "Month",
 } as const satisfies Record<CalendarLayout, string>;
 
-/** A month with nothing to show: what is missing and what to do about it. */
+/** A period with no releases: what is missing and what to do about it. */
 function NothingScheduled({
   view,
   clearedSearch,
 }: {
   view: CalendarView;
-  /** The address of this month with no filters. */
+  /** The address of this period with no filters. */
   clearedSearch: string;
 }) {
-  const name = monthLabel(view.month);
+  const name =
+    view.week === undefined
+      ? monthLabel(view.month)
+      : `the week of ${weekLabel(view.week)}`;
   if (isFiltered(view)) {
     return (
       <EmptyState
@@ -107,23 +119,41 @@ function Undated({ releases }: { releases: ReleaseDays }) {
 
 /**
  * The household's calendar: the episodes of series it follows as they air,
- * and the cinema, digital and disc dates of its films. One month at a time,
- * as an agenda on a phone and a month grid on a wider screen unless the
- * address says which.
+ * and the cinema, digital and disc dates of its films. The address selects
+ * a week, a month grid or an agenda. The default layout follows the screen.
  */
 export function CalendarPage() {
   const [params] = useSearchParams();
   const { hash } = useLocation();
   const navigate = useNavigate();
-  const monthHeading = useId();
+  const periodHeading = useId();
   const wide = useMediaQuery(ROOM_FOR_A_MONTH);
 
   const today = localToday();
   const view = readCalendarView(params, today);
   const layout = view.layout ?? (wide ? "month" : "agenda");
   const marked = anchoredDay(hash);
-  const range = visibleRange(view.month, layout);
+  const grid = layout === "month" || (layout === "week" && wide);
+  const range = visibleRange(view.month, layout, view.week);
   const search = (next: CalendarView) => calendarSearch(next, today);
+  const inRange = (date: CivilDate) => date >= range.from && date <= range.to;
+
+  function layoutSearch(nextLayout: CalendarLayout) {
+    const next = { ...view, layout: nextLayout };
+    if (nextLayout === layout || (layout !== "week" && nextLayout !== "week")) {
+      return search(next);
+    }
+    const currentDay =
+      view.week === undefined
+        ? view.month === monthOf(today)
+          ? today
+          : firstDay(view.month)
+        : inRange(today)
+          ? today
+          : view.week;
+    const day = marked !== null && inRange(marked) ? marked : currentDay;
+    return search(calendarViewOnDay(next, day));
+  }
 
   // The whole range, however many answers it takes: a calendar with a hole
   // in it is wrong, not merely short.
@@ -138,17 +168,16 @@ export function CalendarPage() {
       return { items: page.events, nextCursor: page.nextCursor };
     },
   });
-  // While another month loads, the previous answer is still held; only the
+  // While another period loads, the previous answer is still held; only the
   // part of it that belongs to the days now on screen is shown.
   const releases = releaseDays(
     calendar.items.filter(
-      (event) =>
-        event.date === null ||
-        (event.date >= range.from && event.date <= range.to),
+      (event) => event.date === null || inRange(event.date),
     ),
   );
   const nothing = releases.days.size === 0 && releases.undated.length === 0;
-  const loading = calendar.pending || (calendar.stale && nothing);
+  const loading =
+    calendar.pending || (layout !== "week" && calendar.stale && nothing);
 
   function show(next: CalendarView, day: CivilDate | null = null) {
     void navigate(
@@ -167,25 +196,30 @@ export function CalendarPage() {
         />
       );
     }
-    if (loading) return <CalendarSkeleton month={view.month} layout={layout} />;
-    if (nothing) {
+    if (loading) {
       return (
+        <CalendarSkeleton month={view.month} week={view.week} grid={grid} />
+      );
+    }
+    const empty =
+      nothing && !calendar.stale ? (
         <NothingScheduled
           view={view}
           clearedSearch={search({ ...view, kind: "all", status: "all" })}
         />
-      );
-    }
+      ) : null;
+    if (nothing && layout !== "week") return empty;
     return (
       <>
-        {layout === "month" ? (
+        {grid ? (
           <MonthGrid
             month={view.month}
+            week={view.week}
             today={today}
             marked={marked}
             releases={releases}
             busy={calendar.stale}
-            labelledBy={monthHeading}
+            labelledBy={periodHeading}
             agendaAddress={(date) => ({
               search: search({
                 ...view,
@@ -195,18 +229,20 @@ export function CalendarPage() {
               hash: dayAnchor(date),
             })}
             onLeave={(date) => {
-              show({ ...view, month: monthOf(date) });
+              show(calendarViewOnDay(view, date));
             }}
           />
         ) : (
           <Agenda
             month={view.month}
+            week={view.week}
             today={today}
             marked={marked}
             releases={releases}
             busy={calendar.stale}
           />
         )}
+        {empty}
         <Undated releases={releases} />
       </>
     );
@@ -227,7 +263,7 @@ export function CalendarPage() {
           marks="true"
           segments={LAYOUTS.map((value) => ({
             label: LAYOUT_NAMES[value],
-            to: { search: search({ ...view, layout: value }), hash },
+            to: { search: layoutSearch(value), hash },
             current: layout === value,
           }))}
         />
@@ -236,8 +272,8 @@ export function CalendarPage() {
         view={view}
         today={today}
         marked={marked}
-        headingId={monthHeading}
-        keepsScroll={layout === "month"}
+        headingId={periodHeading}
+        keepsScroll={grid}
         search={search}
         onChange={show}
       />

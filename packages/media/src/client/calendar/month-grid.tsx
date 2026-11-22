@@ -9,6 +9,8 @@ import {
   monthOf,
   monthShort,
   monthWeeks,
+  weekDays,
+  weekEnds,
   weekdayNames,
   type CivilDate,
   type CivilMonth,
@@ -21,19 +23,19 @@ import { dayAnchor } from "./view.ts";
 const cx = classNames(styles);
 
 /**
- * A month as a wall calendar: a grid of days, each listing its releases.
+ * A wall calendar for a month or a single week, with a cell for each day.
  *
  * It is an ARIA grid with one Tab stop. The arrow keys move between days,
  * Home and End go to the ends of the week, and Page Up and Page Down go a
- * month back or on; moving past the month's own days opens the month they
- * belong to. From the day focus is on, Tab walks that day's releases and
- * then leaves the grid, so a full month is never a hundred Tab stops.
+ * period back or on. Moving past the displayed period opens the next one.
+ * From the focused day, Tab visits its releases and then leaves the grid.
  *
  * On a screen too narrow for words in a square, each day shows how many
  * releases it has, as a link to that day in the agenda.
  */
 export function MonthGrid({
   month,
+  week,
   today,
   marked,
   releases,
@@ -43,32 +45,39 @@ export function MonthGrid({
   onLeave,
 }: {
   month: CivilMonth;
+  week: CivilDate | undefined;
   today: CivilDate;
   /** The day a link or the date field asked for. */
   marked: CivilDate | null;
   releases: ReleaseDays;
   busy: boolean;
-  /** The id of the heading that names the month. */
+  /** The id of the heading that names the displayed period. */
   labelledBy: string;
   /** Where a day's full list is: that day in the agenda. */
   agendaAddress: (date: CivilDate) => To;
-  /** Opens the month a day outside this one belongs to. */
+  /** Opens the period a day outside this one belongs to. */
   onLeave: (date: CivilDate) => void;
 }) {
-  const weeks = monthWeeks(month);
+  const weeks = week === undefined ? monthWeeks(month) : [weekDays(week)];
   const names = weekdayNames();
+  const weekRange = week === undefined ? undefined : weekEnds(week);
+
+  function inPeriod(date: CivilDate): boolean {
+    return weekRange === undefined
+      ? monthOf(date) === month
+      : date >= weekRange.start && date <= weekRange.end;
+  }
 
   // The day the grid's one Tab stop is on: the day the reader last moved
   // to, else the day a link asked for, else today, else the 1st.
   const [chosen, setChosen] = useState<CivilDate | null>(null);
   const resting =
-    marked !== null && monthOf(marked) === month
+    marked !== null && inPeriod(marked)
       ? marked
-      : monthOf(today) === month
+      : inPeriod(today)
         ? today
-        : firstDay(month);
-  const active =
-    chosen !== null && monthOf(chosen) === month ? chosen : resting;
+        : (week ?? firstDay(month));
+  const active = chosen !== null && inPeriod(chosen) ? chosen : resting;
 
   // A key press asks for focus on a day. Its square takes it once it is the
   // active one, which for a day in another month is after that month opens.
@@ -97,12 +106,16 @@ export function MonthGrid({
     if (!(from instanceof HTMLTableCellElement)) return;
     const date = from.dataset["date"];
     if (date === undefined) return;
-    const destination = keyDestination(event.key, date);
+    const destination = keyDestination(
+      event.key,
+      date,
+      week === undefined ? "month" : "week",
+    );
     if (destination === null) return;
     event.preventDefault();
     awaited.current = destination;
     setChosen(destination);
-    if (monthOf(destination) !== month) onLeave(destination);
+    if (!inPeriod(destination)) onLeave(destination);
   }
 
   return (
@@ -125,12 +138,12 @@ export function MonthGrid({
           </tr>
         </thead>
         <tbody>
-          {weeks.map((week) => (
-            <tr key={week[0]}>
-              {week.map((date) => {
+          {weeks.map((days) => (
+            <tr key={days[0]}>
+              {days.map((date) => {
                 const events = releases.days.get(date) ?? [];
                 const { listed, more } = squareReleases(events);
-                const outside = monthOf(date) !== month;
+                const outside = !inPeriod(date);
                 const label = dayLabel(date);
                 const reachable = date === active;
                 return (
@@ -156,11 +169,12 @@ export function MonthGrid({
                     }}
                   >
                     <time className={cx("cellDate")} dateTime={date}>
-                      {outside && dayOfMonth(date) === 1 && (
-                        <span className={cx("cellMonth")}>
-                          {monthShort(date)}{" "}
-                        </span>
-                      )}
+                      {(outside || week !== undefined) &&
+                        dayOfMonth(date) === 1 && (
+                          <span className={cx("cellMonth")}>
+                            {monthShort(date)}{" "}
+                          </span>
+                        )}
                       <span className={cx("cellNumeral")}>
                         {dayOfMonth(date)}
                       </span>

@@ -1067,42 +1067,43 @@ the household does not have.
 
 ### Calendar
 
-`/calendar` (`src/client/calendar/`) shows one month of
-`GET /api/v1/calendar`: the episodes of series the household follows and the
-United States cinema, digital and disc dates of its films. What it shows is in
-its address:
+`/calendar` (`src/client/calendar/`) has Month, Week and Agenda views. It
+reads the episodes of series the household follows and the United States
+cinema, digital and disc dates of its films from `GET /api/v1/calendar`.
+The address keeps the date range and filters.
 
 | Parameter | Values                                         | Left out                              |
 | --------- | ---------------------------------------------- | ------------------------------------- |
-| `month`   | `YYYY-MM`                                      | The month the viewer is in.           |
-| `view`    | `agenda`, `month`                              | Agenda up to 760 px wide, month over. |
+| `month`   | `YYYY-MM`                                      | The viewer's current month.           |
+| `view`    | `agenda`, `week`, `month`                      | Agenda up to 760 px wide, then Month. |
+| `week`    | `YYYY-MM-DD` within the selected week          | The viewer's current week.            |
 | `kind`    | `episode`, `theatrical`, `digital`, `physical` | Every kind.                           |
 | `status`  | `available`, `missing`                         | Ready or not.                         |
 
 A fragment `#day-YYYY-MM-DD` marks one day: the date field and a full square's
 "more" link write it, and the agenda scrolls to it. Previous, next and Today are
-links, so Back undoes a step; the filters, the date field and the keyboard
-rewrite the current entry.
+links, so Back undoes a step. Week navigation moves seven calendar days at a
+time. The filters, the date field and the keyboard rewrite the current entry.
 
 A release date is a civil date, never a moment in the viewer's time zone.
 `calendar/dates.ts` keeps a date as the `YYYY-MM-DD` text the API sends, does
 its arithmetic in UTC (which has no clock changes), and formats in UTC; the only
 thing it asks the viewer's clock is what today is. `calendar/events.ts` sorts
 releases onto days by that text. A release with no date yet (`date: null`) is
-listed under "Date not announced" in both layouts and is never put on a day.
+listed under "Date not announced" without assigning it to a day.
 
-The agenda asks for the month itself and the month grid for the whole
-Sunday-to-Saturday weeks around it. Either range is read to its end before it
-is shown (`useCursorList` with `paging: "all"`), because a calendar with a hole
-in it is wrong and not merely short; there is no "load more".
+Agenda reads the month itself, Month reads the whole Sunday-to-Saturday weeks
+around it, and Week reads exactly one Sunday-to-Saturday range. Week shows all
+seven days in a grid on wide screens and as a list on narrow screens.
+`useCursorList` with `paging: "all"` loads each range in full.
 
-The month grid is an ARIA grid with one Tab stop (`calendar/month-grid.tsx`).
-Arrow keys move a day or a week, Home and End go to the ends of the week, Page
-Up and Page Down a month; a move past the month's own days opens the month it
-lands in and focus follows. Tab from a day walks that day's releases and then
-leaves the grid. A square lists up to three releases, or two and a link to the
-rest in the agenda. Below 640 px of its own width a square shows only how many
-releases the day has, as that same link.
+The Month and Week grids have one Tab stop (`calendar/month-grid.tsx`).
+Left and Right move a day. In Month, Up and Down move a week. Home and End go
+to the ends of the week, and Page Up and Page Down move by the selected period.
+Focus follows the selected day across periods. Tab from a day visits its
+releases and then leaves the grid. A square lists up to three releases, or
+two and a link to the rest in the agenda. Below 640 px of its own width a
+square shows the release count as a link to the agenda.
 
 ### History
 

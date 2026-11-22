@@ -5,6 +5,7 @@ import {
   anchoredDay,
   calendarReadPath,
   calendarSearch,
+  calendarViewOnDay,
   dayAnchor,
   isFiltered,
   readCalendarView,
@@ -47,10 +48,28 @@ test("the month, both filters and the layout round-trip through the address", ()
 });
 
 test("a value the page does not know reads as that setting's default", () => {
-  expect(read("?month=2026-13&kind=vhs&status=maybe&view=week")).toEqual(
+  expect(read("?month=2026-13&kind=vhs&status=maybe&view=fortnight")).toEqual(
     read(""),
   );
   expect(read("?month=tomorrow").month).toBe("2026-11");
+});
+
+test("Week normalizes a date to Sunday and keeps the selected filters", () => {
+  const view = read("?kind=episode&status=missing&view=week&week=2027-01-02");
+  expect(view.week).toBe("2026-12-27");
+  expect(visibleRange(view.month, "week", view.week)).toEqual({
+    from: "2026-12-27",
+    to: "2027-01-02",
+  });
+  expect(calendarSearch(view, TODAY)).toBe(
+    "?kind=episode&status=missing&view=week&week=2026-12-27",
+  );
+  const current = calendarViewOnDay(view, TODAY);
+  expect(current.week).toBe("2026-11-15");
+  expect(calendarSearch(current, TODAY)).toBe(
+    "?kind=episode&status=missing&view=week",
+  );
+  expect(read("?view=week&week=2026-11-31").week).toBe(current.week);
 });
 
 test("a fragment names a day only when it is a real date", () => {
@@ -78,11 +97,11 @@ test("the agenda asks for the month itself and the grid for its whole weeks", ()
 });
 
 test("every range the page can show is one the API accepts", () => {
-  // Twenty years of months, in both layouts.
+  // Twenty years of months, in each layout.
   for (let index = 0; index < 240; index += 1) {
     const month = `${String(2020 + Math.floor(index / 12))}-${String((index % 12) + 1).padStart(2, "0")}`;
     expect(monthWeeks(month).length).toBeLessThanOrEqual(6);
-    for (const layout of ["agenda", "month"] as const) {
+    for (const layout of ["agenda", "week", "month"] as const) {
       const path = calendarReadPath(
         { kind: "all", status: "all" },
         visibleRange(month, layout),

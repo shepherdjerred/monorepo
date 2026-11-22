@@ -127,6 +127,12 @@ export function weekEnds(date: CivilDate): {
   return { start, end: shiftDays(start, 6) };
 }
 
+/** The seven days of the week containing this date, Sunday first. */
+export function weekDays(date: CivilDate): CivilDate[] {
+  const { start } = weekEnds(date);
+  return Array.from({ length: 7 }, (_, index) => shiftDays(start, index));
+}
+
 /*
  * Words. A civil date is formatted as the UTC midnight that stands for it,
  * in UTC, so the words name the date itself whatever the viewer's zone.
@@ -146,6 +152,27 @@ function formatted(
 /** "November 2026". */
 export function monthLabel(month: CivilMonth, locale?: string): string {
   return formatted(firstDay(month), { month: "long", year: "numeric" }, locale);
+}
+
+/** The first and last dates of a week, with both years when they differ. */
+export function weekLabel(date: CivilDate, locale?: string): string {
+  const { start, end } = weekEnds(date);
+  const year = { year: "numeric" } as const;
+  const first = formatted(
+    start,
+    {
+      month: "short",
+      day: "numeric",
+      ...(start.slice(0, 4) === end.slice(0, 4) ? {} : year),
+    },
+    locale,
+  );
+  const last = formatted(
+    end,
+    { month: "short", day: "numeric", ...year },
+    locale,
+  );
+  return `${first} – ${last}`;
 }
 
 /** "Saturday, November 14". */

@@ -1,5 +1,5 @@
 @layer pages {
-  /* Heading on the left, the two layouts on the right; stacked on a phone. */
+  /* Heading on the left, layouts on the right; stacked on a phone. */
   .header {
     display: flex;
     flex-wrap: wrap;
@@ -12,7 +12,7 @@
     margin-bottom: 0;
   }
 
-  /* Which month, then what narrows it. */
+  /* The current period, then its filters. */
   .toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -55,6 +55,9 @@
     font-size: var(--text-xl);
     letter-spacing: -0.03em;
     white-space: nowrap;
+  }
+  .monthNav[data-period="week"] .monthName {
+    white-space: normal;
   }
   .today {
     display: inline-flex;
