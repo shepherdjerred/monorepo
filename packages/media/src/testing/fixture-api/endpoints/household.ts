@@ -208,13 +208,17 @@ const playback: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/playback/history",
     schema: PlaybackHistorySchema,
-    respond: (request) => playbackHistory(request.query, request.persona),
-    samples: ["/playback/history", "/playback/history?search=bear"],
+    respond: (request) => playbackHistory(request.query, request),
+    samples: [
+      "/playback/history",
+      "/playback/history?search=bear",
+      "/playback/history?limit=25",
+    ],
   }),
   endpoint({
     path: "/playback/statistics",
     schema: PlaybackStatisticsSchema,
-    respond: (request) => playbackStatistics(request.query, request.persona),
+    respond: (request) => playbackStatistics(request.query, request),
     samples: ["/playback/statistics", "/playback/statistics?search=bear"],
   }),
   endpoint({
@@ -226,7 +230,7 @@ const playback: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/playback/now-playing",
     schema: NowPlayingSchema,
-    respond: (request) => nowPlaying(request.persona),
+    respond: (request) => nowPlaying(request),
     samples: ["/playback/now-playing"],
   }),
 ];

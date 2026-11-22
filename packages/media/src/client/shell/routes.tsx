@@ -5,7 +5,7 @@ import { App } from "#client/app.tsx";
 import { CalendarPage } from "#client/calendar/page.tsx";
 import { Loading, Notice, PageTitle } from "#client/components.tsx";
 import { DiscoverFeedPage, DiscoverPage } from "#client/discover/page.tsx";
-import { PlaybackHistoryPage } from "#client/household/playback.tsx";
+import { HistoryPage } from "#client/history/page.tsx";
 import { LibraryAll } from "#client/library/all.tsx";
 import { LibraryLeaving } from "#client/library/leaving.tsx";
 import { LibraryMine } from "#client/library/mine.tsx";
@@ -30,7 +30,7 @@ const LibraryAllSegment = withUser(LibraryAll);
 const LibraryMineSegment = withUser(LibraryMine);
 const LibraryLeavingSegment = withUser(LibraryLeaving);
 const LibraryRemovedSegment = withUser(LibraryRemoved);
-const PlaybackHistory = withUser(PlaybackHistoryPage);
+const History = withUser(HistoryPage);
 const Catalog = withUser(CatalogTitlePage);
 const Media = withUser(MediaTitlePage);
 const Notifications = withUser(NotificationsPage);
@@ -222,7 +222,7 @@ export const routes: RouteObject[] = [
             children: libraryRoutes,
           },
           { path: "calendar", element: <CalendarPage /> },
-          { path: "history", element: <PlaybackHistory /> },
+          { path: "history", element: <History /> },
           { path: "catalog/:kind/:id", element: <Catalog /> },
           { path: "media/:id", element: <Media /> },
           { path: "notifications", element: <Notifications /> },

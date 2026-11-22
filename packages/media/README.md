@@ -720,7 +720,7 @@ directly) and `/api/fixture/scenario/default` to leave it:
 | `stale-library-access` | Every catalog read reports `libraryAccess: "stale"` and no title carries a `library`. |
 | `feed-unavailable`     | The `popular_series` feed answers 502 `catalog_unavailable`; the rest keep working.   |
 | `catalog-unavailable`  | Every catalog read answers 502 `catalog_unavailable`, as when TMDB is down.           |
-| `new-household`        | Nobody has asked for anything yet: the calendar has no releases, dated or not.        |
+| `new-household`        | Nobody has asked for or watched anything: no releases, no plays, nothing playing.     |
 
 A fixture answers a scenario by reading `request.scenario`, and throws
 `FixtureFailure` (`src/testing/fixture-api/scenario.ts`) for an error the real
@@ -954,6 +954,8 @@ Shared building blocks live in `src/client/ui/`:
 | `poster-rail.tsx`            | `PosterRail`, a row of cards that scrolls sideways with scroll snap, and what stands in for one that failed.                                |
 | `segmented.tsx`              | A row of exclusive views that are links, so navigation and not an ARIA tablist.                                                             |
 | `choice.tsx`                 | `Choice`, a native select drawn as a chip, marked when it narrows the list it sits above.                                                   |
+| `search-field.tsx`           | `SearchField`, a search box whose text lives in the page's address.                                                                         |
+| `date-field.tsx`             | `DateField`, the browser's date field as a chip beside `Choice`.                                                                            |
 | `skeleton.tsx`, `states.tsx` | Loading shapes, empty states that say what to do next, and error states by kind of failure.                                                 |
 | `use-cursor-list.ts`         | The one place the client follows `nextCursor`: a page at a time, past empty pages, or every page.                                           |
 | `use-media-query.ts`         | Whether a media query matches, for the rare choice between two layouts whose markup differs.                                                |
@@ -1100,6 +1102,34 @@ lands in and focus follows. Tab from a day walks that day's releases and then
 leaves the grid. A square lists up to three releases, or two and a link to the
 rest in the agenda. Below 640 px of its own width a square shows only how many
 releases the day has, as that same link.
+
+### History
+
+`/history` (`src/client/history/`) shows what is playing now and what has been
+watched. An owner reads the household's plays and can narrow them to one
+person; a member reads only their own, which the playback API decides and the
+page does not.
+
+| Part        | Read                               | Notes                                                                            |
+| ----------- | ---------------------------------- | -------------------------------------------------------------------------------- |
+| Now playing | `GET /api/v1/playback/now-playing` | Asked again every minute. A stale answer says so instead of listing old streams. |
+| Statistics  | `GET /api/v1/playback/statistics`  | Three totals, then ranked bars. Hidden when there are no plays to count.         |
+| Plays       | `GET /api/v1/playback/history`     | Newest first, 25 at a time through `useCursorList`.                              |
+
+The title search, the person and the two days are query parameters (`search`,
+`userId`, `from`, `to`) that narrow the statistics and the list together.
+`from` and `to` are moments, the midnight that starts a day where the reader
+is: a play happened at a moment, unlike a release date.
+
+A play, or a stream, links to its title page when its `media` is present and is
+named without a link when it is null.
+
+A ranked bar is a `<progress>` whose `value` and `max` are the row's plays and
+the busiest row's, styled in `history.module.css`. Its length therefore comes
+from an attribute and never from an inline `style`, which the
+Content-Security-Policy refuses. Each bar is hidden from assistive technology,
+because its row already says the same numbers in words. `history/format.ts`
+holds how those numbers are said.
 
 ### Client styles and themes
 

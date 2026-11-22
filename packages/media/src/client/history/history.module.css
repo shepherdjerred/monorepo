@@ -1,0 +1,345 @@
+@layer pages {
+  .section {
+    margin-bottom: var(--space-7);
+  }
+  .section > h2 {
+    margin-bottom: var(--space-4);
+  }
+  .detail {
+    margin: 2px 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .quiet {
+    margin: 0;
+    color: var(--text-muted);
+  }
+
+  /* Now playing: one card per stream, as many to a row as fit. */
+  .streams {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    gap: var(--space-4);
+  }
+  .stream {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-areas:
+      "poster text"
+      "position position";
+    gap: var(--space-3) var(--space-4);
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+  .streamPoster {
+    grid-area: poster;
+  }
+  .streamText {
+    grid-area: text;
+    min-width: 0;
+  }
+  .streamState {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-3);
+    margin: var(--space-2) 0 0;
+  }
+  .streamState .detail {
+    margin: 0;
+  }
+  .streamPosition {
+    grid-area: position;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .streamPosition .detail {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * Bars. A <progress> draws its own length from its value, so no width is
+   * ever written into the page. The track is the element; the fill is the
+   * browser's own part of it, named differently by each engine, and the two
+   * names cannot share a rule.
+   */
+  .position,
+  .bar {
+    appearance: none;
+    display: block;
+    width: 100%;
+    border: 0 solid;
+    border-radius: var(--radius-pill);
+    overflow: clip;
+    background: var(--surface-sunken);
+    /* What Firefox draws the fill in when it has no rule of its own. */
+    color: var(--accent-strong);
+  }
+  .position {
+    height: 6px;
+    /* The stream's card is the page's surface; the track needs an edge. */
+    box-shadow: inset 0 0 0 1px var(--border);
+  }
+  .bar {
+    height: 8px;
+  }
+  .position::-webkit-progress-bar,
+  .bar::-webkit-progress-bar {
+    background: transparent;
+  }
+  .position::-webkit-progress-value,
+  .bar::-webkit-progress-value {
+    border-radius: var(--radius-pill);
+    background: var(--accent-strong);
+  }
+  .position::-moz-progress-bar,
+  .bar::-moz-progress-bar {
+    border-radius: var(--radius-pill);
+    background: var(--accent-strong);
+  }
+
+  /* Filters: search first, then who, then when. */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-6);
+  }
+  .search {
+    flex: 1 1 220px;
+    max-width: 320px;
+  }
+  .clear {
+    padding: var(--space-2);
+    border-radius: 4px;
+    color: var(--text-accent);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  .clear:hover {
+    text-decoration: underline;
+  }
+  .filterError {
+    flex-basis: 100%;
+    margin: 0;
+    color: var(--danger);
+    font-size: var(--text-sm);
+  }
+
+  /* Statistics: three totals, then the rankings. */
+  .statistics[aria-busy="true"] {
+    opacity: 0.6;
+  }
+  .tiles {
+    container-type: inline-size;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    gap: var(--space-3);
+    margin: 0 0 var(--space-3);
+  }
+  /* One tile to a row: its label and its figure share the line. */
+  @container (max-width: 419px) {
+    .tile {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0 var(--space-4);
+    }
+  }
+  .tile {
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+  .tile dt {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  .tile dd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--space-3);
+    margin: var(--space-1) 0 0;
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    letter-spacing: -0.035em;
+    font-variant-numeric: tabular-nums;
+  }
+  .tileAside {
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+  .note {
+    max-width: 720px;
+    margin: 0 0 var(--space-6);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .rankings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: var(--space-6) var(--space-6);
+  }
+  .ranking h3 {
+    margin-bottom: var(--space-3);
+  }
+  .bars {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+  }
+  /* A row's words on one line, its bar beneath across the whole row. */
+  .barRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    font-size: var(--text-sm);
+  }
+  .barLabel {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .barFigures {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+    white-space: nowrap;
+  }
+  .barTime {
+    margin-inline-start: var(--space-2);
+    color: var(--text-muted);
+  }
+  .bar {
+    grid-column: 1 / -1;
+  }
+
+  /* Plays: a row each. The columns follow the list's own width. */
+  .plays {
+    container-type: inline-size;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border);
+  }
+  .plays[aria-busy="true"] {
+    opacity: 0.6;
+  }
+  .play {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "poster title title"
+      "poster when state"
+      "poster how how";
+    gap: var(--space-1) var(--space-3);
+    align-items: start;
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border);
+    font-size: var(--text-sm);
+  }
+  .playPoster {
+    grid-area: poster;
+  }
+  .playTitle {
+    grid-area: title;
+    min-width: 0;
+    font-size: var(--text-md);
+  }
+  .playWhen {
+    grid-area: when;
+  }
+  .playHow {
+    grid-area: how;
+  }
+  .playState {
+    grid-area: state;
+    align-self: start;
+  }
+  .playName {
+    font-size: var(--text-md);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+    border-radius: 2px;
+  }
+  a.playName:hover {
+    color: var(--text-accent);
+  }
+  .playWatched {
+    margin: 0;
+    line-height: 1.4;
+  }
+  @container (min-width: 760px) {
+    .play {
+      grid-template-columns:
+        44px minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1.2fr)
+        130px;
+      grid-template-areas: "poster title when how state";
+      align-items: center;
+    }
+    .playState {
+      align-self: center;
+      justify-self: end;
+    }
+  }
+  .more {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-6);
+  }
+
+  /* Loading blocks, each the size of the thing it stands for. */
+  .skeletonPoster {
+    grid-area: poster;
+    width: 64px;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-poster);
+  }
+  .skeletonLine {
+    width: 70%;
+    height: 14px;
+    margin-bottom: 6px;
+  }
+  .skeletonShortLine {
+    width: 40%;
+    height: 12px;
+    margin-bottom: var(--space-3);
+  }
+  .skeletonFigure {
+    width: 55%;
+    height: 30px;
+  }
+  .skeletonBar {
+    height: 30px;
+    margin-bottom: var(--space-3);
+  }
+
+  @media (max-width: 760px) {
+    .search {
+      flex-basis: 100%;
+      max-width: none;
+    }
+  }
+}

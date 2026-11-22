@@ -15,6 +15,7 @@ import {
   personaUser,
   type Persona,
 } from "#testing/fixture-api/personas.ts";
+import type { FixtureScenario } from "#testing/fixture-api/scenario.ts";
 import {
   HOUR,
   MINUTE,
@@ -159,10 +160,15 @@ function historyRow(index: number, persona: Persona): Session {
   };
 }
 
-function matchingRows(parameters: URLSearchParams, persona: Persona) {
+type Reader = { persona: Persona; scenario: FixtureScenario };
+
+function matchingRows(parameters: URLSearchParams, reader: Reader) {
+  const { persona } = reader;
   const query = PlaybackQuerySchema.parse(Object.fromEntries(parameters));
   const search = (query.search ?? "").toLowerCase();
-  const rows = Array.from({ length: HISTORY_ROWS }, (_, index) =>
+  // A household that has watched nothing has no history to match.
+  const length = reader.scenario === "new-household" ? 0 : HISTORY_ROWS;
+  const rows = Array.from({ length }, (_, index) =>
     historyRow(index, persona),
   ).filter(
     (row) =>
@@ -176,9 +182,9 @@ function matchingRows(parameters: URLSearchParams, persona: Persona) {
 
 export function playbackHistory(
   parameters: URLSearchParams,
-  persona: Persona,
+  reader: Reader,
 ): History {
-  const { rows, cursor, limit } = matchingRows(parameters, persona);
+  const { rows, cursor, limit } = matchingRows(parameters, reader);
   let start = 0;
   if (cursor !== null) {
     const position = rows.findIndex((row) => row.id === cursor);
@@ -223,10 +229,10 @@ function ranking(
 
 export function playbackStatistics(
   parameters: URLSearchParams,
-  persona: Persona,
+  reader: Reader,
 ): Statistics {
   const minimumPlayMs = 120_000;
-  const rows = matchingRows(parameters, persona).rows.filter(
+  const rows = matchingRows(parameters, reader).rows.filter(
     (row) => row.watchedMs >= minimumPlayMs,
   );
   return {
@@ -274,8 +280,11 @@ function liveSession(
 }
 
 /** One stream for the viewer; the owner also sees a paused transcode. */
-export function nowPlaying(persona: Persona): NowPlaying {
+export function nowPlaying({ persona, scenario }: Reader): NowPlaying {
   const user = personaUser(persona);
+  if (scenario === "new-household") {
+    return { observedAt: ago(20_000), stale: false, items: [] };
+  }
   return {
     observedAt: ago(20_000),
     stale: false,
