@@ -69,6 +69,12 @@ test("serves the operator client without covering evaluation", async () => {
     expect(missingAsset.status).toBe(404);
     const health = await app.request("/healthz");
     expect(health.status).toBe(200);
+    const metrics = await app.request("/metrics");
+    expect(metrics.status).toBe(200);
+    expect(metrics.headers.get("content-type")).toContain(
+      "text/plain; version=0.0.4",
+    );
+    expect(await metrics.text()).toContain("# TYPE flags_deployments gauge");
     const snapshot = await app.request("/v1/deployments/scout/prod/snapshot");
     expect(snapshot.status).toBe(200);
     expect(snapshot.headers.get("content-type")).toContain("application/json");

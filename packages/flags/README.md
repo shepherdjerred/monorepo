@@ -11,7 +11,8 @@ SQLite volume at `/var/lib/flags` as the authoritative feature-flag service.
 
 ## HTTP
 
-`GET /healthz` answers the probes.
+`GET /healthz` answers the probes. `GET /metrics` exports Prometheus gauges for
+stored deployments, revisions, and flag counts on the primary listener.
 
 Credentialless routes reject an `Authorization` header:
 
