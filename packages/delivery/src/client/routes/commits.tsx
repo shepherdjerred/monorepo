@@ -267,6 +267,15 @@ function ServiceRow({ entry }: { entry: CommitService }) {
             {revisionLabel(entry.versionSet.revision)}
           </small>
         )}
+        {/* This commit's build failed; a newer commit's release carries it. */}
+        {entry.includedIn !== undefined && (
+          <small className="muted">
+            {" via "}
+            <Link to="/commits/$sha" params={{ sha: entry.includedIn }}>
+              <ShortSha sha={entry.includedIn} />
+            </Link>
+          </small>
+        )}
       </th>
       <td data-label="Status">
         <Verdict value={entry.verdict} />

@@ -493,6 +493,12 @@ export const CommitServiceSchema = z.object({
     .nullable(),
   verdict: CommitVerdictSchema,
   environments: z.array(CommitEnvironmentSchema),
+  /**
+   * Set when this commit's own build of the service failed and a newer
+   * commit's passing build carries the change: that commit's sha, and the
+   * build, set and environments are its release's.
+   */
+  includedIn: z.string().min(7).optional(),
 });
 export type CommitService = z.infer<typeof CommitServiceSchema>;
 

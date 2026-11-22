@@ -134,7 +134,9 @@ release. A failed build is carried when a later main commit's build of the
 same service passed: main is linear, so that commit includes this one and
 shipped its change. A commit's place on main is its push pipeline, so a rerun
 of an older commit never carries a newer failure. `carriedFailures` names the
-carrying commit, and a carried failure does not count toward the verdict. A
+carrying commit. A carried failure is not a CI failure of the commit; instead
+the carrying build's release joins `changed` (marked `includedIn`), so the
+commit is not deployed until that release is live. A
 commit's verdict is the most urgent of its services, then of its builds:
 recovery required, failed, needs approval, CI failed (with nothing carrying
 it), CI running, deploying, not released, deployed; its `blocker` names the

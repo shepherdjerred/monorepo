@@ -190,6 +190,27 @@ export function rollUp(parts: CommitVerdict[]): CommitVerdict {
   );
 }
 
+/**
+ * A commit's verdict. `changed` holds the verdict of every service it
+ * changed, including, for each failed build a later passing commit carries,
+ * that carrying build's release: the change ships there, so it counts as
+ * this commit's until that release is live. A carried failure is therefore
+ * not also a CI failure; only failures nothing carries are.
+ */
+export function commitVerdict(input: {
+  changed: CommitVerdict[];
+  failed: number;
+  carried: number;
+  pending: number;
+  builds: number;
+}): CommitVerdict {
+  const parts = [...input.changed];
+  if (input.failed > input.carried) parts.push("build_failed");
+  if (input.pending > 0) parts.push("building");
+  if (input.builds > 0 && parts.length === 0) parts.push("nothing_to_deploy");
+  return rollUp(parts);
+}
+
 /** The verdict one environment's state contributes to its service and commit. */
 export function stateVerdict(state: CommitEnvironmentState): CommitVerdict {
   switch (state) {

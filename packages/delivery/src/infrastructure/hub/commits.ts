@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { DeploymentStatusSchema } from "#shared/contract.ts";
 import type {
   CommitEnvironment,
@@ -6,7 +5,6 @@ import type {
   CommitService,
   CommitStatus,
   CommitSummary,
-  CommitVerdict,
 } from "#shared/hub/hub-contract.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
@@ -19,14 +17,15 @@ import { buildStatus } from "./status.ts";
 import { promotionOrder } from "./topology.ts";
 import { buildView, serviceSummary } from "./views.ts";
 import { latestDeployments } from "./attention.ts";
+import { carryingCommits } from "./carried.ts";
 import {
   blockingEnvironment,
   carries,
+  commitVerdict,
   decidingDeployment,
   environmentState,
   groupByEnvironment,
   isLive,
-  rollUp,
   serviceVerdict,
   verdictRank,
   type ChangeFacts,
@@ -146,42 +145,6 @@ async function environmentRecord(
 
 type EnvironmentRecord = Awaited<ReturnType<typeof environmentRecord>>;
 
-const CarriedRowsSchema = z.array(
-  z.object({ buildId: z.string(), includedIn: z.string() }),
-);
-
-/**
- * For each failed CI build, the first later main commit whose build of the
- * same service passed, by build id. Main is linear, so a commit pushed after
- * another descends from it: that commit's tree includes the failed one's
- * change, and its passing build published it. A commit's place on main is its
- * push pipeline, the one its source record was read from (else its build's
- * own), so a rerun of an older commit never counts as later.
- */
-async function carryingCommits(database: Database, failedIds: string[]) {
-  if (failedIds.length === 0) return new Map<string, string>();
-  const rows = CarriedRowsSchema.parse(
-    await database.$queryRaw`
-    SELECT f.id AS "buildId", c."sourceRevision" AS "includedIn"
-    FROM "Build" f
-    LEFT JOIN "SourceCommit" fs ON fs."sourceRevision" = f."sourceRevision"
-    CROSS JOIN LATERAL (
-      SELECT b."sourceRevision" FROM "Build" b
-      LEFT JOIN "SourceCommit" bs ON bs."sourceRevision" = b."sourceRevision"
-      WHERE b."serviceId" = f."serviceId" AND b."sourceKind" = 'ci'
-        AND b.status = 'verified' AND b."sourceRevision" <> f."sourceRevision"
-        AND COALESCE(bs."pipelineNumber", b."pipelineNumber")
-          > COALESCE(fs."pipelineNumber", f."pipelineNumber")
-      ORDER BY COALESCE(bs."pipelineNumber", b."pipelineNumber"), b.id
-      LIMIT 1
-    ) c
-    WHERE f.id = ANY(${failedIds}) AND f."sourceKind" = 'ci'
-      AND f.status = 'failed' AND f."pipelineNumber" IS NOT NULL
-  `,
-  );
-  return new Map(rows.map((row) => [row.buildId, row.includedIn]));
-}
-
 /**
  * The deployments that would deliver a change to one environment: those of
  * the change itself, and for a version set the environment's newest and
@@ -240,7 +203,20 @@ async function readCommits(
   const builds = rows.filter(
     (row) => index.byId(row.serviceId)?.id === row.serviceId,
   );
-  const buildIds = builds.map((row) => row.id);
+  const carried = await carryingCommits(
+    database,
+    builds
+      .filter((row) => buildStatus(row.status) === "failed")
+      .map((row) => row.id),
+  );
+  // The passing builds that carry a failed one: their releases decide
+  // whether the failed commit's change is live yet.
+  const carrierBuilds = await database.build.findMany({
+    where: {
+      id: { in: [...carried.values()].map((entry) => entry.carrierBuildId) },
+    },
+  });
+  const buildIds = [...builds, ...carrierBuilds].map((row) => row.id);
   const versionSets = await database.versionSet.findMany({
     where: { qualifiedBuildId: { in: buildIds } },
     select: { ...SET_FIELDS, serviceId: true, qualifiedBuildId: true },
@@ -250,7 +226,9 @@ async function readCommits(
       row.qualifiedBuildId === null ? [] : [[row.qualifiedBuildId, row]],
     ),
   );
-  const serviceIds = [...new Set(builds.map((row) => row.serviceId))];
+  const serviceIds = [
+    ...new Set([...builds, ...carrierBuilds].map((row) => row.serviceId)),
+  ];
   const [sourceCommits, deployments, environments] = await Promise.all([
     database.sourceCommit.findMany({
       where: { sourceRevision: { in: shas } },
@@ -277,125 +255,130 @@ async function readCommits(
       },
     }),
   ]);
-  const [record, carried] = await Promise.all([
-    environmentRecord(database, environments),
-    carryingCommits(
-      database,
-      builds
-        .filter((row) => buildStatus(row.status) === "failed")
-        .map((row) => row.id),
-    ),
-  ]);
+  const record = await environmentRecord(database, environments);
   const sourceBySha = new Map(
     sourceCommits.map((row) => [row.sourceRevision, row]),
   );
+
+  /** Where a passing build's change stands; null when it changed nothing. */
+  const standing = (build: (typeof rows)[number]): CommitService | null => {
+    const versionSet = versionSetByBuild.get(build.id);
+    const linked = deployments.filter(
+      (row) =>
+        row.platformSourceBuildId === build.id ||
+        row.versionSetRevisionId === versionSet?.id,
+    );
+    if (versionSet === undefined && linked.length === 0) return null;
+    const change: ChangeFacts =
+      versionSet === undefined ? null : setFacts(versionSet);
+    const candidates = environments.filter(
+      (row) =>
+        row.serviceId === build.serviceId &&
+        (versionSet !== undefined ||
+          linked.some((entry) => entry.environmentId === row.id)),
+    );
+    const live = new Set<string>();
+    const states: CommitEnvironment[] = promotionOrder(candidates).map(
+      (environment) => {
+        const accepted =
+          environment.acceptedVersionSetRevisionId === null
+            ? null
+            : record.sets.get(environment.acceptedVersionSetRevisionId);
+        if (accepted === undefined)
+          throw new Error(
+            `Environment ${environment.id} accepts a set revision not read`,
+          );
+        const deployment = carriersOf(change, environment.id, linked, record);
+        const state = environmentState({
+          change,
+          environment: {
+            id: environment.id,
+            automatic: environment.automatic,
+            promotionSourceEnvironmentId:
+              environment.promotionSourceEnvironmentId,
+            accepted,
+            locked:
+              record.newest.get(environment.id)?.recoveryRequired === true,
+          },
+          deployment,
+          sourceLive:
+            environment.promotionSourceEnvironmentId !== null &&
+            live.has(environment.promotionSourceEnvironmentId),
+        });
+        if (isLive(state)) live.add(environment.id);
+        return {
+          environmentId: environment.id,
+          name: environment.name,
+          state,
+          deploymentId: deployment?.id ?? null,
+        };
+      },
+    );
+    return {
+      service: serviceSummary(build.serviceId),
+      build: buildView(build),
+      versionSet:
+        versionSet === undefined
+          ? null
+          : { id: versionSet.id, revision: versionSet.revision },
+      verdict: serviceVerdict(
+        "succeeded",
+        states.map((entry) => entry.state),
+      ),
+      environments: states,
+    };
+  };
 
   return shas.map((sha): Read => {
     const own = builds.filter((row) => row.sourceRevision === sha);
     const changed: CommitService[] = [];
     let unchangedCount = 0;
     for (const build of own) {
-      const status = buildStatus(build.status);
-      const versionSet = versionSetByBuild.get(build.id);
-      const linked = deployments.filter(
-        (row) =>
-          row.platformSourceBuildId === build.id ||
-          row.versionSetRevisionId === versionSet?.id,
+      if (buildStatus(build.status) !== "succeeded") continue;
+      const entry = standing(build);
+      if (entry === null) unchangedCount += 1;
+      else changed.push(entry);
+    }
+    const failedBuilds = own
+      .filter((row) => buildStatus(row.status) === "failed")
+      .map((row) => buildView(row));
+    const carriedFailures = failedBuilds.flatMap((build) => {
+      const carrier = carried.get(build.id);
+      return carrier === undefined
+        ? []
+        : [{ buildId: build.id, includedIn: carrier.includedIn }];
+    });
+    // A carried failure's change ships in the carrying build's release, so
+    // that release's standing is this commit's for the service.
+    for (const build of failedBuilds) {
+      const carrier = carried.get(build.id);
+      const row = carrierBuilds.find(
+        (entry) => entry.id === carrier?.carrierBuildId,
       );
-      if (status !== "succeeded") continue;
-      if (versionSet === undefined && linked.length === 0) {
-        unchangedCount += 1;
-        continue;
-      }
-      const change: ChangeFacts =
-        versionSet === undefined ? null : setFacts(versionSet);
-      const candidates = environments.filter(
-        (row) =>
-          row.serviceId === build.serviceId &&
-          (versionSet !== undefined ||
-            linked.some((entry) => entry.environmentId === row.id)),
-      );
-      const live = new Set<string>();
-      const states: CommitEnvironment[] = promotionOrder(candidates).map(
-        (environment) => {
-          const accepted =
-            environment.acceptedVersionSetRevisionId === null
-              ? null
-              : record.sets.get(environment.acceptedVersionSetRevisionId);
-          if (accepted === undefined)
-            throw new Error(
-              `Environment ${environment.id} accepts a set revision not read`,
-            );
-          const deployment = carriersOf(change, environment.id, linked, record);
-          const state = environmentState({
-            change,
-            environment: {
-              id: environment.id,
-              automatic: environment.automatic,
-              promotionSourceEnvironmentId:
-                environment.promotionSourceEnvironmentId,
-              accepted,
-              locked:
-                record.newest.get(environment.id)?.recoveryRequired === true,
-            },
-            deployment,
-            sourceLive:
-              environment.promotionSourceEnvironmentId !== null &&
-              live.has(environment.promotionSourceEnvironmentId),
-          });
-          if (isLive(state)) live.add(environment.id);
-          return {
-            environmentId: environment.id,
-            name: environment.name,
-            state,
-            deploymentId: deployment?.id ?? null,
-          };
-        },
-      );
-      changed.push({
-        service: serviceSummary(build.serviceId),
-        build: buildView(build),
-        versionSet:
-          versionSet === undefined
-            ? null
-            : { id: versionSet.id, revision: versionSet.revision },
-        verdict: serviceVerdict(
-          status,
-          states.map((entry) => entry.state),
-        ),
-        environments: states,
-      });
+      const entry = row === undefined ? null : standing(row);
+      if (entry !== null && carrier !== undefined)
+        changed.push({ ...entry, includedIn: carrier.includedIn });
     }
     changed.sort(
       (left, right) =>
         verdictRank(left.verdict) - verdictRank(right.verdict) ||
         left.service.title.localeCompare(right.service.title),
     );
-    const failedBuilds = own
-      .filter((row) => buildStatus(row.status) === "failed")
-      .map((row) => buildView(row));
     const pendingBuilds = own
       .filter((row) => buildStatus(row.status) === "pending")
       .map((row) => buildView(row));
-    const carriedFailures = failedBuilds.flatMap((build) => {
-      const includedIn = carried.get(build.id);
-      return includedIn === undefined
-        ? []
-        : [{ buildId: build.id, includedIn }];
-    });
-    const parts: CommitVerdict[] = changed.map((entry) => entry.verdict);
-    // A failure a later passing commit carries held nothing back: its change
-    // shipped in that commit, so it does not speak for this one.
-    if (failedBuilds.length > carriedFailures.length)
-      parts.push("build_failed");
-    if (pendingBuilds.length > 0) parts.push("building");
-    if (own.length > 0 && parts.length === 0) parts.push("nothing_to_deploy");
     return {
       status: {
         sha,
         title: sourceBySha.get(sha)?.title ?? null,
         author: sourceBySha.get(sha)?.author ?? null,
-        verdict: rollUp(parts),
+        verdict: commitVerdict({
+          changed: changed.map((entry) => entry.verdict),
+          failed: failedBuilds.length,
+          carried: carriedFailures.length,
+          pending: pendingBuilds.length,
+          builds: own.length,
+        }),
         buildId: own[0]?.id ?? null,
         environments: groupByEnvironment(changed),
         seenAt: own[0]?.createdAt.toISOString() ?? null,

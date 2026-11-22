@@ -3,6 +3,7 @@ import type { CommitEnvironment } from "#shared/hub/hub-contract.ts";
 import {
   blockingEnvironment,
   carries,
+  commitVerdict,
   decidingDeployment,
   environmentState,
   groupByEnvironment,
@@ -344,6 +345,50 @@ describe("rollUp", () => {
     expect(rollUp([])).toBe("unknown");
     expect(rollUp(["deployed", "building", "failed"])).toBe("failed");
     expect(rollUp(["deployed", "nothing_to_deploy"])).toBe("deployed");
+  });
+
+  it("is not deployed while the release carrying a failed build's change is not live", () => {
+    // Service A deployed; B's build failed and a later passing build of B
+    // carries it, but that release waits on a manual release.
+    expect(
+      commitVerdict({
+        changed: ["deployed", "waiting"],
+        failed: 1,
+        carried: 1,
+        pending: 0,
+        builds: 2,
+      }),
+    ).toBe("waiting");
+    // Once the carrying release is live, so is this commit.
+    expect(
+      commitVerdict({
+        changed: ["deployed", "deployed"],
+        failed: 1,
+        carried: 1,
+        pending: 0,
+        builds: 2,
+      }),
+    ).toBe("deployed");
+    // A failure nothing carries is still a CI failure.
+    expect(
+      commitVerdict({
+        changed: ["deployed"],
+        failed: 1,
+        carried: 0,
+        pending: 0,
+        builds: 2,
+      }),
+    ).toBe("build_failed");
+    // A carried failure whose carrying build changed nothing deploys nothing.
+    expect(
+      commitVerdict({
+        changed: [],
+        failed: 1,
+        carried: 1,
+        pending: 0,
+        builds: 1,
+      }),
+    ).toBe("nothing_to_deploy");
   });
 
   it("lets an environment someone must act on outrank this commit's CI failure", () => {
