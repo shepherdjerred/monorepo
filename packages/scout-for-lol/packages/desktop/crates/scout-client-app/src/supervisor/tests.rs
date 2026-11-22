@@ -1,24 +1,37 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError};
-use std::time::{Duration, Instant};
+use std::time::Duration;
+#[cfg(unix)]
+use std::time::Instant;
 
 use scout_client_core::diagnostics::Diagnostics;
 use scout_client_core::settings::PrivacySettings;
-use scout_client_core::telemetry::{UsageEvent, WindowCrashCause, WindowCrashOutcome};
-use scout_client_runtime::instance::{InstanceLock, InstanceLockError};
+use scout_client_core::telemetry::UsageEvent;
+#[cfg(unix)]
+use scout_client_core::telemetry::{WindowCrashCause, WindowCrashOutcome};
+use scout_client_runtime::instance::InstanceLock;
+#[cfg(unix)]
+use scout_client_runtime::instance::InstanceLockError;
 use scout_client_runtime::runtime::{GameflowPhase, PhaseReceiver, RuntimeState, StateReceiver};
-use scout_desktop_ipc::{ChatCommand, ChatTurn, PROTOCOL_VERSION, SupervisorMessage};
+use scout_desktop_ipc::{ChatCommand, PROTOCOL_VERSION};
+#[cfg(unix)]
+use scout_desktop_ipc::{ChatTurn, SupervisorMessage};
 use scout_explore_client::app_turns::CoachInput;
 use scout_explore_client::relay::{ChatRelay, DetachedRelay, RelayCommand};
 use tokio::sync::{mpsc, watch};
 
+#[cfg(unix)]
 use crate::updater::policy::UpdateConfig;
+#[cfg(unix)]
 use crate::updater::service::{UpdateHandle, UpdateService};
+#[cfg(unix)]
 use crate::updater::testing::{FakeUpdater, available, version};
 
+#[cfg(unix)]
+use super::Window;
 use super::{
-    Collector, Control, MAX_QUICK_CRASHES, STABLE_RUN, Supervisor, SupervisorExit, Window,
-    WindowLauncher, WindowStatus, quick_crashes_now,
+    Collector, Control, MAX_QUICK_CRASHES, STABLE_RUN, Supervisor, SupervisorExit, WindowLauncher,
+    WindowStatus, quick_crashes_now,
 };
 
 type TestResult = Result<(), Box<dyn std::error::Error>>;
@@ -133,6 +146,7 @@ fn calls(calls: &Mutex<Vec<String>>) -> Vec<String> {
     calls.lock().unwrap_or_else(PoisonError::into_inner).clone()
 }
 
+#[cfg(unix)]
 fn crash_details(diagnostics: &Diagnostics) -> Vec<String> {
     diagnostics
         .events()
@@ -156,6 +170,7 @@ exit 0"#
 }
 
 /// A window stub that greets and exits cleanly.
+#[cfg(unix)]
 fn hello_only() -> String {
     format!(r#"printf '{{"type":"hello","protocol":{PROTOCOL_VERSION}}}\n'"#)
 }
@@ -177,6 +192,7 @@ struct Harness {
     status: watch::Receiver<WindowStatus>,
     run: tokio::task::JoinHandle<SupervisorExit>,
     calls: Arc<Mutex<Vec<String>>>,
+    #[cfg(unix)]
     usage: Arc<Mutex<Vec<UsageEvent>>>,
     diagnostics: Arc<Diagnostics>,
     directory: PathBuf,
@@ -184,6 +200,7 @@ struct Harness {
     phase: Arc<watch::Sender<GameflowPhase>>,
 }
 
+#[cfg(unix)]
 fn start(
     launcher: WindowLauncher,
     tray_available: bool,
@@ -198,6 +215,7 @@ fn start(
     )
 }
 
+#[cfg(unix)]
 fn start_with(
     launcher: WindowLauncher,
     tray_available: bool,
@@ -227,6 +245,9 @@ fn start_configured(
     let directory = scratch_directory()?;
     let lock = InstanceLock::acquire_in(&directory)?;
     let (collector, calls, diagnostics, usage) = FakeCollector::new();
+    // Only the Unix window tests read the usage events.
+    #[cfg(not(unix))]
+    drop(usage);
     let (runtime_state, phase_sender) = collector.senders();
     phase_sender.send_replace(phase);
     let (control, receiver) = mpsc::unbounded_channel();
@@ -245,6 +266,7 @@ fn start_configured(
         status,
         run,
         calls,
+        #[cfg(unix)]
         usage,
         diagnostics,
         directory,
@@ -254,6 +276,7 @@ fn start_configured(
 }
 
 impl Harness {
+    #[cfg(unix)]
     async fn wait_for(
         &mut self,
         condition: impl FnMut(&WindowStatus) -> bool,
@@ -344,6 +367,7 @@ async fn quick_crashes_stop_relaunching_after_the_limit() -> TestResult {
     Ok(())
 }
 
+#[cfg(unix)]
 fn crash_events(usage: &Mutex<Vec<UsageEvent>>) -> Vec<UsageEvent> {
     usage.lock().unwrap_or_else(PoisonError::into_inner).clone()
 }
@@ -708,6 +732,7 @@ async fn the_supervisor_holds_the_instance_lock_for_its_life() -> TestResult {
 }
 
 /// An update that is checked at once, and installed as soon as the app is idle.
+#[cfg(unix)]
 const IMMEDIATE: UpdateConfig = UpdateConfig {
     first_check_delay: Duration::ZERO,
     check_interval: Duration::from_hours(6),
@@ -715,12 +740,14 @@ const IMMEDIATE: UpdateConfig = UpdateConfig {
 };
 
 /// An updater that does nothing until it is told to.
+#[cfg(unix)]
 const WAITING: UpdateConfig = UpdateConfig {
     first_check_delay: Duration::from_hours(24),
     check_interval: Duration::from_hours(24),
     idle_install_after: Duration::ZERO,
 };
 
+#[cfg(unix)]
 fn updates(updater: &Arc<FakeUpdater>, config: UpdateConfig) -> UpdateHandle {
     UpdateService::start(
         Arc::clone(updater),
@@ -730,6 +757,7 @@ fn updates(updater: &Arc<FakeUpdater>, config: UpdateConfig) -> UpdateHandle {
     )
 }
 
+#[cfg(unix)]
 async fn staged(handle: &UpdateHandle) -> TestResult {
     let mut status = handle.subscribe();
     tokio::time::timeout(
@@ -966,19 +994,27 @@ exit 0"#
     Ok(())
 }
 
+/// Pairing changes reach chat from the supervisor's state, open window or
+/// not, so this runs without one: the window stubs are POSIX shell scripts,
+/// and Windows has no `sh` to start them.
 #[tokio::test]
 async fn a_finished_pairing_asks_chat_to_check_again() -> TestResult {
     let (relay, mut commands, _parts) = ChatRelay::detached();
-    let mut harness = start_configured(
-        sh(&window_script(""), &[]),
+    let harness = start_configured(
+        WindowLauncher::new(PathBuf::from("scout-test-no-window"), Vec::new()),
         true,
-        true,
+        false,
         GameflowPhase::default(),
         |supervisor| supervisor.with_chat(relay),
     )?;
-    harness.wait_for(|status| status.running).await?;
-    // The window's launch asked once; the pairing asks again.
-    assert_eq!(next_command(&mut commands).await?, ChatCommand::Refresh);
+    // The supervisor reads its pairing baseline when it subscribes to the
+    // state, before its first await; change nothing until it has.
+    tokio::time::timeout(PATIENCE, async {
+        while harness.runtime_state.receiver_count() == 0 {
+            tokio::task::yield_now().await;
+        }
+    })
+    .await?;
     // A device paired before chat asks for approval while still paired...
     harness.runtime_state.send_modify(|state| {
         state.paired = true;
@@ -990,9 +1026,16 @@ async fn a_finished_pairing_asks_chat_to_check_again() -> TestResult {
         .runtime_state
         .send_modify(|state| state.approval_url = None);
     assert_eq!(next_command(&mut commands).await?, ChatCommand::Refresh);
+    // A state change that leaves pairing as it was asks nothing.
+    harness
+        .runtime_state
+        .send_modify(|state| state.pending_observations = 3);
+    // None of it needed a window.
+    assert_eq!(harness.status.borrow().launches, 0);
     harness.control.send(Control::Quit)?;
     let (exit, _calls, _diagnostics, directory) = harness.finish().await?;
     assert_eq!(exit, SupervisorExit::Quit);
+    assert!(commands.try_recv().is_err(), "nothing else was asked");
     std::fs::remove_dir_all(directory)?;
     Ok(())
 }
@@ -1417,6 +1460,7 @@ async fn nothing_is_asked_without_item_facts() -> TestResult {
 
 /// An overlay stub: greets, reports `report` (a JSON line, or nothing), then
 /// appends every line it is sent to `$1` until `close` or a closed stdin.
+#[cfg(unix)]
 fn overlay_script(report: &str) -> String {
     format!(
         r#"printf '{{"type":"hello","protocol":{PROTOCOL_VERSION}}}\n'
@@ -1430,6 +1474,7 @@ exit 0"#
 }
 
 /// Wait until the file at `path` holds `needle`.
+#[cfg(unix)]
 async fn file_gains(path: &Path, needle: &str) -> Result<(), Box<dyn std::error::Error>> {
     tokio::time::timeout(PATIENCE, async {
         while !std::fs::read_to_string(path)
@@ -1444,6 +1489,7 @@ async fn file_gains(path: &Path, needle: &str) -> Result<(), Box<dyn std::error:
 }
 
 /// What the overlay stub was sent so far.
+#[cfg(unix)]
 fn overlay_lines(log: &Path) -> Vec<scout_desktop_ipc::OverlayCommand> {
     std::fs::read_to_string(log)
         .unwrap_or_default()
@@ -1453,6 +1499,7 @@ fn overlay_lines(log: &Path) -> Vec<scout_desktop_ipc::OverlayCommand> {
 }
 
 /// Wait until the overlay stub has been sent a line `matches` accepts.
+#[cfg(unix)]
 async fn overlay_sent(
     log: &Path,
     matches: impl Fn(&scout_desktop_ipc::OverlayCommand) -> bool,
@@ -1466,6 +1513,7 @@ async fn overlay_sent(
     Ok(())
 }
 
+#[cfg(unix)]
 fn shows(kind: scout_overlay::CardKind) -> impl Fn(&scout_desktop_ipc::OverlayCommand) -> bool {
     move |command| {
         matches!(
@@ -1716,11 +1764,13 @@ async fn overlay_on_screen() -> TestResult {
 
 /// Answers every review request with what `answers` holds next, and counts
 /// the requests.
+#[cfg(unix)]
 struct FakeReviews {
     answers: Mutex<Vec<super::review::ReviewAnswer>>,
     asked: Arc<Mutex<Vec<scout_client_core::desktop_api::CoachReviewRequest>>>,
 }
 
+#[cfg(unix)]
 impl super::ReviewSource for FakeReviews {
     fn fetch(
         &self,
