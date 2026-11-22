@@ -1,9 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
-import { DeploymentPageSchema } from "#shared/hub/hub-contract.ts";
+import { DeploymentSchema } from "#shared/contract.ts";
+import {
+  DeploymentPageSchema,
+  EnvironmentDetailSchema,
+} from "#shared/hub/hub-contract.ts";
 import { api, expectNoHorizontalOverflow } from "./helpers.ts";
 import {
   APPLIED_REQUEST,
   HELD_PROD,
+  IDLE_FAILED,
+  IDLE_FAILED_REQUEST,
   RECOVERY_PROD,
   REFUSAL,
   REFUSED_REQUEST,
@@ -52,7 +58,7 @@ test("every page states what recovery read back, never the executor's stale word
     "it ended in phase Succeeded",
   );
 
-  await page.goto("/activity");
+  await page.goto("/activity?action=deployment.failed");
   await expect(page.getByRole("main")).toContainText(
     "Step step-sync was still running when the deployment ended",
   );
@@ -152,6 +158,50 @@ test("a failure with a newer request queued offers no retry, says why, and quote
   await expect(
     main.getByRole("button", { name: "Retry as a new deployment" }),
   ).toHaveCount(0);
+  await expectNoHorizontalOverflow(page);
+});
+
+test("Retry returns on an open failed deployment once the newer request is canceled", async ({
+  page,
+  baseURL,
+}) => {
+  if (baseURL === undefined) throw new Error("Playwright baseURL required");
+  const headers = { Origin: baseURL };
+  const failedId = await deploymentId(page, IDLE_FAILED_REQUEST, IDLE_FAILED);
+  await page.goto(`/deployments/${failedId}`);
+  const main = page.getByRole("main");
+  const retry = main.getByRole("button", { name: "Retry as a new deployment" });
+  await expect(retry).toBeVisible();
+  // Another client requests a newer deployment while this page is open.
+  const environment = await api(
+    page,
+    `/api/v1/environments/${encodeURIComponent(IDLE_FAILED)}`,
+    EnvironmentDetailSchema,
+  );
+  const created = await page.request.post(
+    `/api/v1/deployments/${failedId}/retry`,
+    {
+      headers,
+      data: {
+        requestId: crypto.randomUUID(),
+        expectedGeneration: environment.environment.generation,
+      },
+    },
+  );
+  expect(created.status()).toBe(201);
+  const newer = DeploymentSchema.parse(await created.json());
+  const why = main.getByRole("region", { name: "Why it failed" });
+  await expect(why).toContainText("Retry is off until it settles");
+  await expect(retry).toHaveCount(0);
+  // It settles; the older failure's page, still open, offers Retry again.
+  const canceled = await page.request.post(
+    `/api/v1/deployments/${newer.id}/cancel`,
+    { headers },
+  );
+  expect(canceled.status()).toBe(200);
+  await expect(why).not.toContainText("Retry is off until it settles");
+  await expect(retry).toBeVisible();
+  await expect(why).toContainText("Fix the cause");
   await expectNoHorizontalOverflow(page);
 });
 

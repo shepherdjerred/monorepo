@@ -20,6 +20,13 @@ const IMAGE = "docker.io/shepherdjerred/streambot";
 /** Golink prod: a failed release with a newer request queued behind it. */
 export const HELD_PROD = "golink/prod";
 const HELD_SERVICE = "golink";
+/**
+ * Golink beta: the same refused release with nothing queued behind it, so a
+ * spec can request and cancel a newer deployment itself and repeat per project.
+ */
+export const IDLE_FAILED = "golink/beta";
+/** The request id of the refused deploy on Golink beta. */
+export const IDLE_FAILED_REQUEST = "model/golink/beta/refused";
 /** The request id of the r1 deploy the storageClass change refused. */
 export const REFUSED_REQUEST = "model/golink/refused";
 /** What the refused sync recorded, as the page must say it. */
@@ -37,6 +44,7 @@ const GOLINK: Target = {
   environment: HELD_PROD,
   image: "docker.io/shepherdjerred/golink",
 };
+const GOLINK_BETA: Target = { ...GOLINK, environment: IDLE_FAILED };
 /** The request id of the r4 deploy whose sync recovery read back as Succeeded. */
 export const APPLIED_REQUEST = "model/streambot/applied";
 /** The request id of the r2 deploy r3's acceptance superseded. */
@@ -46,6 +54,24 @@ export const SUPERSEDED_REQUEST = "model/streambot/superseded";
 const digest = (n: number) => `sha256:${String(n + 4).repeat(64)}`;
 /** The image ArgoCD reports running for Streambot: r4's, which recovery read back as applied. */
 export const RECOVERY_LIVE_IMAGE = `${IMAGE}@${digest(4)}`;
+
+/** Golink's recipe for its beta environment, whose Application and instance are its own (T6). */
+function betaRecipe() {
+  const recipe = applicationRecipe(HELD_SERVICE);
+  const name = `${HELD_SERVICE}-beta`;
+  return {
+    ...recipe,
+    application: {
+      ...recipe.application,
+      name,
+      destination: { ...recipe.application.destination, namespace: name },
+    },
+    steps: recipe.steps.map((entry) => ({
+      ...entry,
+      instance: `application:${name}`,
+    })),
+  };
+}
 
 type Catalog = {
   services: unknown[];
@@ -93,19 +119,20 @@ export function withRecovery<T extends Catalog>(document: T): T {
         recipeRevisionId: "streambot/1",
         configurationRevisionId: "streambot/1",
       },
-      {
-        id: HELD_PROD,
+      ...[HELD_PROD, IDLE_FAILED].map((id, index) => ({
+        id,
         role: "durable",
         approvalPolicy: "none",
         automatic: false,
-        recipeRevisionId: "golink/1",
+        recipeRevisionId: `golink/${String(index + 1)}`,
         configurationRevisionId: "golink/1",
-      },
+      })),
     ],
     recipes: [
       ...document.recipes,
       { id: "streambot/1", definition: applicationRecipe(SERVICE) },
       { id: "golink/1", definition: applicationRecipe(HELD_SERVICE) },
+      { id: "golink/2", definition: betaRecipe() },
     ],
     configurations: [
       ...document.configurations,
@@ -337,11 +364,28 @@ export async function seedRecovery(delivery: Delivery, database: Database) {
  */
 export async function seedHeldRetry(delivery: Delivery, database: Database) {
   const first = await publish(delivery, database, 1, GOLINK);
-  const refused = await start(delivery, database, {
+  await refuse(delivery, database, {
     requestId: REFUSED_REQUEST,
     setId: first,
     target: GOLINK,
   });
+  const second = await publish(delivery, database, 2, GOLINK);
+  await request(delivery, database, {
+    requestId: "model/golink/queued",
+    setId: second,
+    target: GOLINK,
+  });
+  // Beta's refused release has nothing queued behind it.
+  await refuse(delivery, database, {
+    requestId: IDLE_FAILED_REQUEST,
+    setId: await publish(delivery, database, 3, GOLINK),
+    target: GOLINK_BETA,
+  });
+}
+
+/** A deploy whose sync the executor ended failed, with the refusal as a receipt. */
+async function refuse(delivery: Delivery, database: Database, input: Request) {
+  const refused = await start(delivery, database, input);
   await step(delivery, refused.id, "step-apply-safety", "succeeded");
   await step(delivery, refused.id, "step-sync", {
     status: "failed",
@@ -358,10 +402,4 @@ export async function seedHeldRetry(delivery: Delivery, database: Database) {
     },
     testExecutor,
   );
-  const second = await publish(delivery, database, 2, GOLINK);
-  await request(delivery, database, {
-    requestId: "model/golink/queued",
-    setId: second,
-    target: GOLINK,
-  });
 }

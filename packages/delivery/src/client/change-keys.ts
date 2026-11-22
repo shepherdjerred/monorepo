@@ -28,11 +28,12 @@ const INTENT: QueryKey[] = [
 ];
 
 const BY_DOMAIN: Record<ChangeDomain, (change: ChangeEvent) => QueryKey[]> = {
-  deployment: (change) => [
-    ["deployment", change.entityId],
-    ["recovery-intent"],
-    ...RELEASE,
-  ],
+  // Every cached deployment detail, not only the changed one: a detail
+  // reads what newer requests for its environment are doing (`newerRequest`,
+  // `acceptedRelease`), so a settled or canceled request refreshes the older
+  // deployment's page too. The change names no environment to narrow it by;
+  // only the open detail refetches, the rest refetch when next opened.
+  deployment: () => [["deployment"], ["recovery-intent"], ...RELEASE],
   build: () => CATALOG,
   versionSet: () => CATALOG,
   artifact: () => CATALOG,

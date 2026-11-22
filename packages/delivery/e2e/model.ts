@@ -14,6 +14,7 @@ import {
 } from "./model-plan.ts";
 import {
   HELD_PROD,
+  IDLE_FAILED,
   RECOVERY_PROD,
   seedHeldRetry,
   seedRecovery,
@@ -38,6 +39,7 @@ export const MODEL_ENVIRONMENTS = [
   CHANNEL_PROD,
   RECOVERY_PROD,
   HELD_PROD,
+  IDLE_FAILED,
 ];
 
 type Document = Awaited<ReturnType<typeof catalogDocument>>;
