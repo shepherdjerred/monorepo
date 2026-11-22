@@ -94,8 +94,9 @@ test("a filter the server would refuse explains itself inside the page", async (
   await expectNoHorizontalOverflow(page);
 });
 
+// The words the status control shows; the URL carries the underscored tokens.
 const STATUS_VALUES =
-  "awaiting_approval, queued, running, succeeded, failed, canceled";
+  "awaiting approval, queued, running, succeeded, failed, canceled";
 
 for (const { path, noun, values, filter } of [
   {
@@ -113,13 +114,13 @@ for (const { path, noun, values, filter } of [
   {
     path: "/activity?within=bogus",
     noun: "time range",
-    values: "hour, day",
+    values: "Last hour, Last 24 hours",
     filter: "Filter activity",
   },
   {
     path: "/activity?problems=bogus",
     noun: "scope",
-    values: "only",
+    values: "Problems only",
     filter: "Filter activity",
   },
 ])
@@ -141,6 +142,58 @@ for (const { path, noun, values, filter } of [
     await expect(main.getByRole("status")).toContainText(/^Showing /u);
   });
 
+for (const { path, filters, filter, table } of [
+  {
+    path: "/activity?status=bogus",
+    filters: "Show, Time range, Action prefix, Actor, Entity",
+    filter: "Filter activity",
+    table: "ol.activity",
+  },
+  {
+    path: "/deployments?severity=high",
+    filters: "Service, Environment, Status",
+    filter: "Filter deployments",
+    table: "table",
+  },
+  {
+    path: "/artifacts?environment=arcade%2Fprod",
+    filters: "Service, Qualification",
+    filter: "Filter builds",
+    table: "table",
+  },
+])
+  test(`${path} names the parameter it has no filter for instead of ignoring it`, async ({
+    page,
+  }) => {
+    await page.goto(path);
+    const main = page.getByRole("main");
+    const name = /[?&]([^=]+)=/u.exec(path)?.[1] ?? "";
+    await expect(main.getByRole("status")).toHaveText(
+      `“${decodeURIComponent(name)}” is not a filter on this page. Choose one of ${filters}.`,
+    );
+    await expect(main.locator(table)).toHaveCount(0);
+    await expect(page.getByRole("search", { name: filter })).toBeVisible();
+    await main.getByRole("link", { name: "Clear filters" }).click();
+    await expect(page).toHaveURL(/\/[a-z]+$/u);
+    await expect(main.getByRole("status")).toContainText(/^Showing /u);
+  });
+
+test("an unknown search parameter on the overview and pipelines is named, not ignored", async ({
+  page,
+}) => {
+  for (const path of ["/?severity=high", "/pipelines?severity=high"]) {
+    await page.goto(path);
+    await expect(
+      page.getByRole("main").getByRole("status").first(),
+    ).toContainText("“severity” is not a filter on this page. Choose one of");
+    await page
+      .getByRole("main")
+      .getByRole("link", { name: "Clear filters" })
+      .click();
+    await expect(page.getByText("is not a filter on this page")).toHaveCount(0);
+  }
+});
+
 test("the overview and pipelines name the accepted statuses for one that is not", async ({
   page,
 }) => {
@@ -151,6 +204,10 @@ test("the overview and pipelines name the accepted statuses for one that is not"
       "“bogus” is not a status. Choose one of",
     );
     await expect(main.getByRole("status").first()).toContainText("failed");
+    // Words, not URL tokens.
+    await expect(main.getByRole("status").first()).not.toContainText(
+      "awaiting_approval",
+    );
     await main.getByRole("link", { name: "Clear filters" }).click();
     await expect(page).not.toHaveURL(/bogus/u);
     await expect(main.getByText("is not a status")).toHaveCount(0);
@@ -287,7 +344,7 @@ test("paging moves to the top of the list and back to the newest", async ({
   await expect(page).toHaveURL(/\/activity\?cursor=/u);
   const top = page.getByRole("heading", { level: 2, name: "Audit trail" });
   await expect(top).toBeFocused();
-  // Rows that fold several entries are counted as rows, the entries beside them.
+  // Rows that fold several events are counted as rows, the events beside them.
   await expect(page.getByRole("main").getByRole("status")).toContainText(
     /older than the previous page/u,
   );
@@ -340,12 +397,12 @@ test("activity counts the rows it renders, names its time zone and says why a de
   const entries = page.locator("ol.activity > li");
   await expect(entries.first()).toBeVisible();
   const rendered = await entries.count();
-  // The count is of rows; folded runs say how many entries they hold.
+  // The count is of rows; folded rows say how many events they hold.
   await expect(
     page.getByRole("status").filter({ hasText: /^Showing / }),
   ).toHaveText(
     new RegExp(
-      String.raw`^Showing (?:all ${String(rendered)} (?:entries|rows of \d+ entries)|the ${String(rendered)} newest (?:entries|rows of \d+ entries)\. Older ones are on the next page)\.$`,
+      String.raw`^Showing (?:all ${String(rendered)} events\.|the ${String(rendered)} newest events\. Older ones are on the next page\.|(?:all )?${String(rendered)} rows \(\d+ events, steps and repeats folded\)\. Newest first\.(?: Older ones are on the next page\.)?)$`,
       "u",
     ),
   );

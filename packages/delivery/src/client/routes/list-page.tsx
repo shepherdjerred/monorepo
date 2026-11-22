@@ -96,10 +96,11 @@ export function pageSummary({
   /** Singular and plural. */
   noun: [string, string];
   /**
-   * How many records the rows fold, when a row can hold several, so the
-   * count says both: "Showing 21 rows of 25 entries".
+   * How many records the rows fold, when a row can hold several, and what was
+   * folded, so the count says both: "Showing 20 rows (25 events, steps
+   * folded). Newest first."
    */
-  entries?: { count: number; noun: [string, string] } | undefined;
+  entries?: FoldedRecords | undefined;
   filtered: boolean;
   /** The page follows a cursor, so newer rows sit on the page before it. */
   older: boolean;
@@ -110,16 +111,27 @@ export function pageSummary({
   const matching = filtered ? " that match these filters" : "";
   if (count === 0)
     return filtered ? `No ${plural} match these filters.` : `No ${plural} yet.`;
-  const folded =
-    entries === undefined || entries.count === count
-      ? ""
-      : ` of ${String(entries.count)} ${pluralOf(entries.noun, entries.count)}`;
-  const rows = `${String(count)} ${pluralOf(noun, count)}${folded}${matching}`;
+  if (entries !== undefined && entries.count !== count) {
+    const rows = `${String(count)} ${pluralOf(noun, count)} (${String(entries.count)} ${pluralOf(entries.noun, entries.count)}, ${entries.folded})${matching}`;
+    if (older) return `Showing ${rows}, older than the previous page.`;
+    return more
+      ? `Showing ${rows}. Newest first. Older ones are on the next page.`
+      : `Showing all ${rows}. Newest first.`;
+  }
+  const rows = `${String(count)} ${pluralOf(noun, count)}${matching}`;
   if (older) return `Showing ${rows} older than the previous page.`;
   return more
-    ? `Showing the ${String(count)} newest ${pluralOf(noun, count)}${folded}${matching}. Older ones are on the next page.`
+    ? `Showing the ${String(count)} newest ${pluralOf(noun, count)}${matching}. Older ones are on the next page.`
     : `Showing all ${rows}.`;
 }
+
+/** The records a page's rows fold: how many, what to call them, and what was folded. */
+export type FoldedRecords = {
+  count: number;
+  noun: [string, string];
+  /** What the rows did to them, such as "steps folded". */
+  folded: string;
+};
 
 /**
  * The message for filters that cannot be used, with the way back to the whole
@@ -161,11 +173,8 @@ export function ResultSummary({
 }: {
   count: number;
   noun: [string, string];
-  /**
-   * How many records the rows fold, when a row can hold several, so the
-   * count says both: "Showing 21 rows of 25 entries".
-   */
-  entries?: { count: number; noun: [string, string] };
+  /** The records the rows fold, when a row can hold several; see `pageSummary`. */
+  entries?: FoldedRecords;
   filtered: boolean;
   older: boolean;
   more: boolean;

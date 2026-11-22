@@ -86,8 +86,19 @@ export function servicePlacement(
   return { title, group };
 }
 
+/**
+ * What kind of record an audit row's entity id names. It is the action's own
+ * domain, except that a worker retirement's proof is recorded against the
+ * retirement deployment, not a worker.
+ */
+export function entityDomain(action: string) {
+  return action === "worker.retirement_proved"
+    ? "deployment"
+    : changeDomain(action);
+}
+
 function activityTarget(row: AuditRow): AppTarget | null {
-  switch (changeDomain(row.action)) {
+  switch (entityDomain(row.action)) {
     case "deployment": {
       return { kind: "deployment", id: row.entityId };
     }

@@ -7,7 +7,12 @@ import { OverviewPanels } from "#client/components/overview-panels.tsx";
 import { PageHeader } from "#client/components/page-header.tsx";
 import { statusLabel } from "#client/components/status.tsx";
 import { FilterProblems } from "./list-page.tsx";
-import { problemsOf, resolveChoice } from "./catalog-filter.ts";
+import {
+  plainChoices,
+  problemsOf,
+  resolveChoice,
+  unknownFilters,
+} from "./catalog-filter.ts";
 import { kindPanels } from "./overview-model.ts";
 import { PipelineSearchSchema, formSearch } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
@@ -22,10 +27,16 @@ function OverviewPage() {
   );
   const chosen = resolveChoice(
     search.status,
-    GridEnvironmentStatusSchema.options,
+    plainChoices(GridEnvironmentStatusSchema.options),
     "status",
   );
-  const problems = problemsOf([chosen]);
+  const problems = problemsOf([
+    chosen,
+    ...unknownFilters(search, [
+      { name: "q", label: "Service" },
+      { name: "status", label: "Newest deployment" },
+    ]),
+  ]);
   const panels =
     problems.length > 0
       ? []

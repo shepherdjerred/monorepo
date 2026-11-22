@@ -175,6 +175,20 @@ function EnvironmentPage() {
         planWaiting={planWaiting}
         onDeployment={open}
       />
+      {/* What happened here comes before the retained builds, which can be many. */}
+      <section className="panel" aria-labelledby="history-heading">
+        <div className="section-heading">
+          <h2 id="history-heading">Recent deployments</h2>
+          <Link to="/deployments" search={{ environment: environment.id }}>
+            All deployments
+          </Link>
+        </div>
+        <DeploymentTable
+          deployments={detail.deployments}
+          empty="No deployments to this environment yet."
+          showEnvironment={false}
+        />
+      </section>
       {overview.data !== undefined && (
         <>
           <WorkerPoolPanel
@@ -189,19 +203,6 @@ function EnvironmentPage() {
           />
         </>
       )}
-      <section className="panel" aria-labelledby="history-heading">
-        <div className="section-heading">
-          <h2 id="history-heading">Recent deployments</h2>
-          <Link to="/deployments" search={{ environment: environment.id }}>
-            All deployments
-          </Link>
-        </div>
-        <DeploymentTable
-          deployments={detail.deployments}
-          empty="No deployments to this environment yet."
-          showEnvironment={false}
-        />
-      </section>
     </>
   );
 }

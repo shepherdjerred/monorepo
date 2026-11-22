@@ -188,6 +188,24 @@ describe("retained workers", () => {
     expect(passive.map((group) => group.workers.length)).toEqual([2]);
   });
 
+  test("retained artifacts with no desired host share one row whichever host they were built for", () => {
+    const elsewhere = WorkerVersionSchema.parse({
+      ...worker("f", 0),
+      host: workerHostSpecification("scout-beta"),
+    });
+    const groups = groupWorkers(
+      [worker("c", 0), elsewhere, worker("d", 0)],
+      SELECTED.buildId,
+      () => false,
+    );
+    expect(groups.map((group) => group.workers.length)).toEqual([3]);
+    const html = panel({ versions: [SELECTED, worker("c", 0), elsewhere] });
+    const [group = ""] = rows(html.slice(html.indexOf("Retained artifacts")));
+    expect(group).toContain("<strong>2 builds</strong>");
+    expect(group).toContain('<span class="disclosure-label">2 hosts</span>');
+    expect(group).toContain("Zero · artifacts retained");
+  });
+
   test("a pool with no desired host says so above its collapsed artifacts", () => {
     const html = panel({ versions: [worker("c", 0)] });
     expect(html).toContain("No worker build has a desired host.");

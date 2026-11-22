@@ -4,12 +4,11 @@ import {
   type ActivityQuery,
   type ActivitySubject,
 } from "#shared/hub/hub-contract.ts";
-import { changeDomain } from "#shared/hub/change-contract.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { firstLine } from "./attention.ts";
 import { decodeCursor, olderThan, page, PAGE_SIZE } from "./cursor.ts";
-import { activityEntry } from "./views.ts";
+import { activityEntry, entityDomain } from "./views.ts";
 
 type AuditRow = Prisma.AuditGetPayload<object>;
 
@@ -50,22 +49,28 @@ function ids(rows: readonly AuditRow[], domain: string) {
   return [
     ...new Set(
       rows
-        .filter((row) => changeDomain(row.action) === domain)
+        .filter((row) => entityDomain(row.action) === domain)
         .map((row) => row.entityId),
     ),
   ];
 }
 
-/** The deployment results whose entry says why: a failure, with or without a lock. */
+/**
+ * The results whose entry says why: a deployment's failure, with or without
+ * a lock, and a build CI failed or found incompatible.
+ */
 const FAILURE_ACTIONS: ReadonlySet<string> = new Set([
   "deployment.failed",
   "deployment.recovery_required",
+  "build.failed",
+  "build.incompatible",
 ]);
 
 /**
  * The service, environment and set revision number of every deployment,
- * build and version set a page of audit rows is about, and the message of
- * each deployment: one read per kind for the whole page, never one per row.
+ * build and version set a page of audit rows is about, and why each
+ * deployment or build failed: one read per kind for the whole page, never one
+ * per row.
  */
 async function activitySubjects(
   database: Database,
@@ -87,7 +92,7 @@ async function activitySubjects(
     }),
     database.build.findMany({
       where: { id: { in: ids(rows, "build") } },
-      select: { id: true, serviceId: true },
+      select: { id: true, serviceId: true, qualificationReason: true },
     }),
     database.versionSet.findMany({
       where: { id: { in: ids(rows, "versionSet") } },
@@ -121,7 +126,16 @@ async function activitySubjects(
   ]);
   return {
     subjects,
-    messages: new Map(deployments.map((row) => [row.id, row.message])),
+    messages: new Map([
+      ...deployments.map((row): [string, string | null] => [
+        row.id,
+        row.message,
+      ]),
+      ...builds.map((row): [string, string | null] => [
+        row.id,
+        row.qualificationReason,
+      ]),
+    ]),
   };
 }
 

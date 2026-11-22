@@ -32,6 +32,25 @@ const routeTree = rootRoute.addChildren([
   ...listRoutes,
 ]);
 
+/**
+ * Focus the first of these elements the page has. The new page is rendered
+ * before the router reports it resolved, so focus moves at once, for a click
+ * and for Enter on a link alike, and in a tab that runs no animation frames.
+ * A frame later it only repeats the move when the element it focused has
+ * since been replaced, so a reader who has tabbed on is never pulled back.
+ */
+function moveFocus(targets: readonly string[]) {
+  for (const target of targets) {
+    const element = document.querySelector<HTMLElement>(target);
+    if (element === null) continue;
+    element.focus();
+    requestAnimationFrame(() => {
+      if (!element.isConnected) moveFocus(targets);
+    });
+    return;
+  }
+}
+
 export function createDeliveryRouter(
   queryClient: QueryClient,
   feed: ChangeFeed,
@@ -66,16 +85,7 @@ export function createDeliveryRouter(
       : pagedOnly(previous, event.toLocation.search)
         ? ["#list-heading", "#main-heading"]
         : [];
-    if (targets.length > 0)
-      requestAnimationFrame(() => {
-        for (const target of targets) {
-          const element = document.querySelector<HTMLElement>(target);
-          if (element !== null) {
-            element.focus();
-            return;
-          }
-        }
-      });
+    if (targets.length > 0) moveFocus(targets);
   });
   return router;
 }

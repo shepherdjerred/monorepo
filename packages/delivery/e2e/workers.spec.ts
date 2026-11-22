@@ -141,6 +141,11 @@ for (const scheme of ["light", "dark"] as const) {
     await expect(
       pool.getByRole("term").filter({ hasText: "Image" }),
     ).toHaveCount(5);
+    // The last click scrolled a row under the sticky masthead, whose links
+    // are then the row's closest neighbours; audit the page from its top.
+    await page.evaluate(() => {
+      globalThis.scrollTo(0, 0);
+    });
     await expectNoViolations(page, "scout-for-lol/prod with worker rows open");
     await expectNoHorizontalOverflow(page);
     await pool.getByRole("button", { name: "Request retirement" }).click();

@@ -224,6 +224,91 @@ test("keyboard users reach content first and dialogs return focus", async ({
   await expect(trigger).toBeFocused();
 });
 
+test("keyboard activation of a navigation link moves focus to the page heading like a click", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const main = page.getByRole("navigation", { name: "Main" });
+  // Enter on a focused link.
+  await main.getByRole("link", { name: "Activity" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/activity$/u);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Activity", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("#main-heading")).toBeFocused();
+  await main.getByRole("link", { name: "Artifacts" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/artifacts$/u);
+  await expect(page.locator("#main-heading")).toBeFocused();
+  // The brand link is a link too.
+  await page.getByRole("link", { name: "Delivery", exact: true }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/$/u);
+  await expect(page.locator("#main-heading")).toBeFocused();
+  // A navigation that does not change the page keeps focus where it was.
+  await page.goto("/pipelines");
+  await main.getByRole("link", { name: "Pipelines" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(main.getByRole("link", { name: "Pipelines" })).toBeFocused();
+});
+
+for (const activation of ["keyboard", "click"] as const)
+  test(`focus reaches the heading by ${activation} even in a tab that runs no animation frames`, async ({
+    page,
+  }) => {
+    // A background or hidden tab never runs requestAnimationFrame, so focus
+    // cannot wait for one.
+    await page.addInitScript(() => {
+      globalThis.requestAnimationFrame = () => 0;
+    });
+    await page.goto("/");
+    await expect(page.locator("#main-heading")).toBeVisible();
+    const link = page
+      .getByRole("navigation", { name: "Main" })
+      .getByRole("link", { name: "Activity" });
+    if (activation === "keyboard") {
+      await link.focus();
+      await page.keyboard.press("Enter");
+    } else await link.click();
+    await expect(page).toHaveURL(/\/activity$/u);
+    await expect(page.locator("#main-heading")).toBeFocused();
+  });
+
+test("focus reaches the heading of a page that was slow to load", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator("#main-heading")).toBeVisible();
+  await page.route("**/api/v1/**", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    await route.continue();
+  });
+  const link = page
+    .getByRole("navigation", { name: "Main" })
+    .getByRole("link", { name: "Artifacts" });
+  await link.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/artifacts$/u);
+  await expect(page.locator("#main-heading")).toBeFocused();
+});
+
+test("the skip link moves focus into the main landmark", async ({ page }) => {
+  await page.goto("/activity");
+  await expect(page.locator("#main-heading")).toBeVisible();
+  await page.keyboard.press("Tab");
+  const skip = page.getByRole("link", { name: "Skip to content" });
+  await expect(skip).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/#main$/u);
+  // Focus is on the landmark, not left on the body, so the next Tab reaches
+  // the first control of the page rather than the masthead again.
+  await expect(page.locator("#main")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.locator("#main :focus")).toHaveCount(1);
+  await expect(page.locator("#main")).not.toBeFocused();
+});
+
 test("committed changes appear live without a reload", async ({
   page,
   baseURL,

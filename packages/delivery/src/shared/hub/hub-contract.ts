@@ -236,9 +236,10 @@ export const ActivityEntrySchema = z.object({
     .nullable()
     .optional(),
   /**
-   * Why a deployment's failure entry failed: the first line of the message
-   * the deployment recorded. Absent where the list does not read it and on
-   * other actions; null when the deployment recorded none.
+   * Why a failure entry failed: the first line of the message the
+   * deployment recorded, or of the reason a build's qualification recorded.
+   * Absent where the list does not read it and on other actions; null when
+   * none was recorded.
    */
   reason: z.string().nullable().optional(),
 });

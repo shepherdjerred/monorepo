@@ -73,22 +73,43 @@ describe("foldActivity", () => {
     ]);
   });
 
-  it("ends a run at another deployment, another actor or another action", () => {
+  it("keeps one row for each deployment, wherever other deployments' writes fall", () => {
     expect(
       shape([
         stage(FIRST, "step-sync", "succeeded"),
         stage(SECOND, "step-sync", "succeeded"),
-        stage(SECOND, "step-render", "succeeded", "operator@example.com"),
-        entry("platform.plan_recorded", SECOND),
-        stage(SECOND, "step-plan", "running"),
+        stage(FIRST, "step-sync", "running"),
+        stage(SECOND, "step-render", "succeeded"),
       ]),
     ).toEqual([
-      ["45cf:step-sync"],
-      ["3342:step-sync"],
-      ["3342:step-render"],
-      "platform.plan_recorded",
-      ["3342:step-plan"],
+      ["45cf:step-sync", "45cf:step-sync"],
+      ["3342:step-sync", "3342:step-render"],
     ]);
+  });
+
+  it("folds a step's updates into one row across other entries and other actors", () => {
+    const rowsOf = foldActivity([
+      stage(FIRST, "step-provenance", "succeeded"),
+      entry("deployment.lease_renewed", FIRST),
+      stage(FIRST, "step-provenance", "running", "operator@example.com"),
+      entry("platform.plan_recorded", SECOND),
+      stage(FIRST, "step-provenance", "running"),
+    ]);
+    expect(rowsOf.map((row) => row.kind)).toEqual(["stages", "entry", "entry"]);
+    const [stages] = rowsOf;
+    expect(stages?.kind === "stages" ? stages.entries : []).toHaveLength(3);
+  });
+
+  it("still ends a run of repeated build records at another action or actor", () => {
+    expect(
+      foldActivity([
+        entry("build.verified", "build-1"),
+        entry("build.verified", "build-2"),
+        entry("build.verified", "build-3", {}, "ci"),
+        entry("build.published", "build-3"),
+        entry("build.verified", "build-4"),
+      ]).map((row) => (row.kind === "entry" ? 1 : row.entries.length)),
+    ).toEqual([2, 1, 1, 1]);
   });
 
   it("folds only what one page holds: a run cut by the page boundary is a row on each page", () => {
@@ -373,7 +394,47 @@ describe("what an activity row says", () => {
     const [silent = ""] = rows(
       render([{ ...entry("deployment.failed", FIRST), reason: null }]),
     );
-    expect(silent).not.toContain("activity-reason");
+    expect(silent).toContain(
+      '<span class="activity-reason muted">no reason recorded</span>',
+    );
+  });
+
+  it("says why a build failed CI, or that no reason was recorded", () => {
+    const [reasoned = "", unreasoned = "", incompatible = "", other = ""] =
+      rows(
+        render([
+          {
+            ...entry("build.failed", "build-1"),
+            reason: "Required checks did not pass",
+          },
+          { ...entry("build.failed", "build-2"), reason: null },
+          {
+            ...entry("build.incompatible", "build-3"),
+            reason: "component server is not in the catalog",
+          },
+          entry("build.published", "build-4"),
+        ]),
+      );
+    expect(reasoned).toContain(
+      '<span class="activity-reason">Required checks did not pass</span>',
+    );
+    expect(reasoned).toContain("Build failed CI");
+    expect(unreasoned).toContain("no reason recorded");
+    expect(incompatible).toContain("component server is not in the catalog");
+    expect(other).not.toContain("activity-reason");
+  });
+
+  it("links the deployment a worker's retirement was proved for, as its neighbours do", () => {
+    const [retired = ""] = rows(
+      render([
+        {
+          ...entry("worker.retirement_proved", FIRST),
+          target: { kind: "deployment", id: FIRST },
+        },
+      ]),
+    );
+    expect(retired).toContain("Worker retired");
+    expect(retired).toContain(`href="/deployments/${FIRST}"`);
   });
 });
 
@@ -392,15 +453,45 @@ describe("latestStages", () => {
       ["step-render", "succeeded", 1],
     ]);
   });
+
+  it("lets two writes recorded in the same instant settle on the further stage", () => {
+    const at = "2026-11-20T09:00:00.000Z";
+    const running = {
+      ...stage(FIRST, "step-provenance", "running"),
+      occurredAt: at,
+    };
+    const succeeded = {
+      ...stage(FIRST, "step-provenance", "succeeded"),
+      occurredAt: at,
+    };
+    for (const entries of [
+      [running, succeeded],
+      [succeeded, running],
+    ])
+      expect(
+        latestStages(entries).map(({ status, writes }) => [status, writes]),
+      ).toEqual([["succeeded", 2]]);
+    // Writes at different times keep the newest, which is the first fetched.
+    expect(
+      latestStages([
+        stage(FIRST, "step-provenance", "running"),
+        stage(FIRST, "step-provenance", "succeeded"),
+      ]).map(({ status }) => status),
+    ).toEqual(["running"]);
+  });
 });
 
-/** The activity page's result line for `count` rows folded from `entries` entries. */
-function summary(count: number, entries: number, more = false) {
+/** The activity page's result line for `count` rows folded from `events` events. */
+function summary(count: number, events: number, more = false) {
   return renderWithRouter(
     <ResultSummary
       count={count}
-      noun={count === entries ? ["entry", "entries"] : ["row", "rows"]}
-      entries={{ count: entries, noun: ["entry", "entries"] }}
+      noun={count === events ? ["event", "events"] : ["row", "rows"]}
+      entries={{
+        count: events,
+        noun: ["event", "events"],
+        folded: "steps and repeats folded",
+      }}
       filtered={false}
       older={false}
       more={more}
@@ -411,11 +502,13 @@ function summary(count: number, entries: number, more = false) {
 }
 
 describe("the activity result line", () => {
-  it("counts the rows it shows, and the entries they fold when that differs", () => {
-    expect(summary(21, 25)).toContain("Showing all 21 rows of 25 entries.");
-    expect(summary(25, 25)).toContain("Showing all 25 entries.");
-    expect(summary(21, 25, true)).toContain(
-      "Showing the 21 newest rows of 25 entries. Older ones are on the next page.",
+  it("counts the rows it shows, and the events they fold when that differs", () => {
+    expect(summary(21, 25)).toContain(
+      "Showing all 21 rows (25 events, steps and repeats folded). Newest first.",
+    );
+    expect(summary(25, 25)).toContain("Showing all 25 events.");
+    expect(summary(20, 25, true)).toContain(
+      "Showing 20 rows (25 events, steps and repeats folded). Newest first. Older ones are on the next page.",
     );
   });
 });

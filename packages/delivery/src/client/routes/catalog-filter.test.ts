@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   boundedText,
+  plainChoices,
   problemsOf,
   resolveChoice,
   resolveEnvironment,
   resolveService,
+  unknownFilters,
   type CatalogService,
 } from "./catalog-filter.ts";
 import { pagedOnly } from "./search-schemas.ts";
@@ -123,7 +125,7 @@ describe("boundedText and problemsOf", () => {
 });
 
 describe("resolveChoice", () => {
-  const STATUSES = ["queued", "awaiting_approval"] as const;
+  const STATUSES = plainChoices(["queued", "awaiting_approval"]);
 
   it("accepts a listed value and ignores an absent one", () => {
     expect(resolveChoice("queued", STATUSES, "status")).toEqual({
@@ -140,10 +142,67 @@ describe("resolveChoice", () => {
     const bogus = resolveChoice("bogus", STATUSES, "status");
     expect(bogus.id).toBeUndefined();
     expect(bogus.problem).toBe(
-      "“bogus” is not a status. Choose one of queued, awaiting_approval.",
+      "“bogus” is not a status. Choose one of queued, awaiting approval.",
     );
     expect(problemsOf([bogus, resolveService("arcade", SERVICES)])).toEqual([
       bogus.problem,
+    ]);
+  });
+
+  it("matches the token the URL carries and names the words the control shows", () => {
+    expect(resolveChoice("awaiting_approval", STATUSES, "status").id).toBe(
+      "awaiting_approval",
+    );
+    // The words are not the token: a hand-typed label is not accepted.
+    expect(
+      resolveChoice("awaiting approval", STATUSES, "status").problem,
+    ).toContain("is not a status");
+    const only = resolveChoice(
+      "bogus",
+      [{ value: "only", label: "Problems only" }],
+      "scope",
+    );
+    expect(only.problem).toBe(
+      "“bogus” is not a scope. Choose one of Problems only.",
+    );
+  });
+});
+
+describe("unknownFilters", () => {
+  const ACTIVITY = [
+    { name: "problems", label: "Show" },
+    { name: "within", label: "Time range" },
+  ];
+
+  it("names each search parameter the page has no filter for", () => {
+    expect(
+      unknownFilters({ status: "bogus", within: "day", cursor: "c" }, ACTIVITY),
+    ).toEqual([
+      {
+        problem:
+          "“status” is not a filter on this page. Choose one of Show, Time range.",
+      },
+    ]);
+    expect(
+      problemsOf(unknownFilters({ a: "1", b: "2" }, ACTIVITY)),
+    ).toHaveLength(2);
+  });
+
+  it("accepts the page's own filters, the paging cursor and absent values", () => {
+    expect(
+      unknownFilters(
+        { problems: "only", within: undefined, cursor: "c", status: undefined },
+        ACTIVITY,
+      ),
+    ).toEqual([]);
+  });
+});
+
+describe("plainChoices", () => {
+  it("reads a token's underscores as spaces and keeps the token", () => {
+    expect(plainChoices(["awaiting_approval", "queued"])).toEqual([
+      { value: "awaiting_approval", label: "awaiting approval" },
+      { value: "queued", label: "queued" },
     ]);
   });
 });
