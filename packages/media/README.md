@@ -1162,11 +1162,29 @@ who follows the film or series to owner and member alike, the reader as "You";
 when the read withholds the list the line is left out, which is not the same as
 nobody following.
 
-The owner gets a second view, `?view=manage`, holding the operator panels the
-page has always had (acquisition and seeding, edition controls, quality profile,
-recorded files, release decisions, title history). `title/manage.tsx` is
-imported only through `React.lazy`, so those panels are a chunk a member never
-downloads, and a member who opens the address gets the member's page.
+The owner gets a second view, `?view=manage`, with one panel for each question
+the owner asks about a title, in this order:
+
+| Panel                             | Answers                                                               |
+| --------------------------------- | --------------------------------------------------------------------- |
+| Where it stands                   | Availability, upgrade monitoring, profile, requesters, holds          |
+| What is happening now             | Whether it can be watched, each download and its seeding, attempts    |
+| Change how it is acquired or kept | Retry, remove from library, the quality profile (a form)              |
+| Change an edition (films only)    | One edition's file, keep, pin, restore, retry, remove, release choice |
+| What files it has                 | Recorded files, their subtitles, media properties                     |
+| Releases and how they were judged | Each release found, its verdict and reasons (not for films)           |
+| What happened before              | The title's event history                                             |
+
+A film is changed one edition at a time, so its release choice sits under Change
+an edition, and the panels that describe "the title" describe the unmarked
+edition. Raw records (media properties, a release's evaluation) are behind a
+Technical details disclosure. Removing from the library, for a series and for an
+edition, asks first in a dialog that names what will go. The panels are built on
+`ui/panel.tsx`, `ui/data-list.tsx`, `ui/record.tsx` and the form primitives, and
+send the same commands the page always has. `title/manage/manage-title.tsx` is
+imported only through `React.lazy`, so those panels are a chunk (`manage-title`)
+a member never downloads, and a member who opens the address gets the member's
+page.
 
 The way back follows history; a page opened from an email has none, and there
 the link leads to the Library. A title that does not exist, one the reader may

@@ -1,0 +1,76 @@
+@layer pages {
+  .muted {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .stack {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    min-width: 0;
+  }
+
+  /* One edition: what it has, then what can be done to it. */
+  .edition {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    min-width: 0;
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border);
+  }
+  .editionHead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
+  .editionTitle {
+    margin: 0;
+    font-size: var(--text-lg);
+    letter-spacing: -0.02em;
+  }
+  .subhead {
+    margin: var(--space-2) 0 calc(-1 * var(--space-2));
+    font-size: var(--text-md);
+    font-weight: 600;
+  }
+  .removal {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border);
+  }
+  .removal .subhead {
+    margin: 0;
+  }
+  .removal p {
+    max-width: 44rem;
+  }
+
+  .captionName {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .file {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    min-width: 0;
+  }
+  .fileHead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
+  .fileTitle {
+    margin: 0;
+    font-size: var(--text-md);
+    font-weight: 600;
+  }
+}

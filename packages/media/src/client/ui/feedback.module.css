@@ -48,6 +48,16 @@
   .calloutText > :last-child {
     margin-bottom: 0;
   }
+  .calloutText p {
+    margin: 0;
+  }
+  .calloutText p + p {
+    margin-top: var(--space-1);
+  }
+  .calloutText ul {
+    margin: var(--space-1) 0 0;
+    padding-inline-start: var(--space-5);
+  }
 
   .badge {
     display: inline-flex;
@@ -70,6 +80,10 @@
   .badge[data-tone="ok"] {
     background: var(--ok-soft);
     color: var(--ok);
+  }
+  .badge[data-tone="progress"] {
+    background: var(--progress-soft);
+    color: var(--progress);
   }
   .badge[data-tone="warn"] {
     background: var(--warn-soft);

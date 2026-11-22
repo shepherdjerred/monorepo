@@ -1,0 +1,105 @@
+@layer pages {
+  /* The owner's view of one title: panels one under another, each answering
+     one question. Panels already separate themselves (`ui/panel.module.css`),
+     so the page only has to keep them in a column. */
+  .page {
+    display: grid;
+    gap: var(--space-5);
+    min-width: 0;
+  }
+  /* Panels keep their own distance from a panel above (`.surface + .surface`);
+     in this grid the gap does that. */
+  .page > *,
+  .page > div > * {
+    margin-top: 0;
+  }
+
+  .muted {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .stack {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    min-width: 0;
+  }
+  .stack > p {
+    margin: 0;
+  }
+
+  /* Where it stands: one line of what the title is, then its facts. */
+  .holds {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+  .holds > p {
+    margin: 0;
+  }
+  .retention {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  /* One file the system recorded. */
+  .file {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    min-width: 0;
+  }
+  .fileBadges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .subtitleName {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  /* What happened, newest first, on a line that connects the events. */
+  .events {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .event {
+    position: relative;
+    display: grid;
+    gap: 2px;
+    padding: 0 0 var(--space-4) var(--space-5);
+  }
+  .event:last-child {
+    padding-bottom: 0;
+  }
+  .event::before {
+    content: "";
+    position: absolute;
+    inset-block: 6px 0;
+    inset-inline-start: 4px;
+    width: 1px;
+    background: var(--border);
+  }
+  .event:last-child::before {
+    content: none;
+  }
+  .event::after {
+    content: "";
+    position: absolute;
+    inset-block-start: 5px;
+    inset-inline-start: 0;
+    width: 9px;
+    height: 9px;
+    border: 2px solid var(--text-muted);
+    border-radius: 50%;
+    background: var(--surface);
+  }
+}

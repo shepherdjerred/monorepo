@@ -157,20 +157,23 @@ test.describe("a film the household has", () => {
       "true",
     );
     await expect(
-      page.getByRole("heading", { name: "Title history" }),
+      page.getByRole("heading", { name: "What happened before" }),
     ).toBeVisible();
     await page.waitForLoadState("networkidle");
     expect(manageCode).toHaveLength(1);
-    // Today's operator panels, as they were.
+    // The owner's panels, one per question.
     for (const name of [
-      "Unmarked edition download & seeding",
-      "Manage a movie edition",
-      "Unmarked edition in your library",
-      "Unmarked edition files & subtitles",
+      "Where it stands",
+      "What is happening now",
+      "Change how it is acquired or kept",
+      "Change an edition",
+      "What files it has",
     ]) {
       await expect(page.getByRole("heading", { name })).toBeVisible();
     }
-    await expect(page.getByLabel("Quality profile")).toBeVisible();
+    await expect(
+      page.getByRole("combobox", { name: "Quality profile" }),
+    ).toBeVisible();
     expect(await violationDetails(page)).toEqual([]);
     expect(await overflow(page)).toBe(0);
 
@@ -189,7 +192,7 @@ test.describe("a film the household has", () => {
       page.getByRole("heading", { name: "In your household" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Title history" }),
+      page.getByRole("heading", { name: "What happened before" }),
     ).toHaveCount(0);
   });
 
@@ -283,15 +286,15 @@ test.describe("a series the household has", () => {
     expect(await violationDetails(page)).toEqual([]);
   });
 
-  test("the owner's Manage view keeps the release decisions", async ({
+  test("the owner's Manage view keeps the release decisions and the retry", async ({
     page,
   }) => {
     await open(page, "owner", `${mediaPath(series.id)}?view=manage`);
     for (const name of [
-      "Download & seeding",
-      "In your library",
-      "Release decisions",
-      "Title history",
+      "What is happening now",
+      "Where it stands",
+      "Releases and how they were judged",
+      "What happened before",
     ]) {
       await expect(page.getByRole("heading", { name })).toBeVisible();
     }

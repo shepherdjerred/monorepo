@@ -392,6 +392,25 @@ export function mediaDetail(
     requests: requesters(resolved, persona),
     holds: holds(resolved, persona),
     retention: retention(resolved),
+    // What the owner confirms to take an available series, season or episode
+    // out of the library. A film is removed one edition at a time instead.
+    ...(persona === "owner" &&
+    item.kind !== "movie" &&
+    item.availability === "available"
+      ? {
+          removalConfirmation: {
+            media: [
+              {
+                id: item.id,
+                title: item.title,
+                version: item.version,
+                generation: 3,
+              },
+            ],
+            assets: [],
+          },
+        }
+      : {}),
     watchStates:
       item.availability === "available"
         ? [
