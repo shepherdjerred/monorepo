@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   generatePath,
   Navigate,
@@ -37,6 +38,21 @@ export function MovedTo({
       replace
     />
   );
+}
+
+/**
+ * An address a member still uses where it is, and the owner works from
+ * Manage: the owner is sent to `path`, a member is shown `children`.
+ */
+export function MovedForOwner({
+  path,
+  children,
+}: {
+  path: string;
+  children: ReactNode;
+}) {
+  const user = useUser();
+  return user.role === "owner" ? <MovedTo path={path} /> : children;
 }
 
 /** Renders the routes beneath it for the owner; sends anyone else home. */

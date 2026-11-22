@@ -15,6 +15,13 @@ import { z } from "zod";
  *   there are no notifications, and no catalog title is in the library.
  * - `library-unavailable`: the library read answers 500 while every other
  *   read keeps working.
+ * - `recovery-long`: a restore that left forty-two titles held, two more
+ *   open household reviews (one of twenty-six episodes, one that cannot be
+ *   applied), and eight older applied ones.
+ * - `recovery-all-clear`: a restore that has been dealt with: nothing is
+ *   held and every household review has been applied.
+ * - `recovery-unavailable`: the recovery read answers 500 while every other
+ *   read keeps working.
  */
 export const FixtureScenarioSchema = z.enum([
   "default",
@@ -23,6 +30,9 @@ export const FixtureScenarioSchema = z.enum([
   "catalog-unavailable",
   "new-household",
   "library-unavailable",
+  "recovery-long",
+  "recovery-all-clear",
+  "recovery-unavailable",
 ]);
 export type FixtureScenario = z.infer<typeof FixtureScenarioSchema>;
 

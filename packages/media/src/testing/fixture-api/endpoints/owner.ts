@@ -13,11 +13,17 @@ import {
 } from "#shared/numbering.ts";
 import { PlexProfilesSchema } from "#shared/plex-admin.ts";
 import { QualityGuideStatusSchema } from "#shared/quality-guide/view.ts";
-import { RecoveryListSchema } from "#shared/recovery.ts";
+import { RecoveryDetailSchema, RecoveryListSchema } from "#shared/recovery.ts";
+import { LegacyRequesterListSchema } from "#shared/recovery-claims.ts";
 import {
   endpoint,
   type FixtureEndpoint,
 } from "#testing/fixture-api/endpoint.ts";
+import {
+  recoveryDetail,
+  recoveryList,
+  legacyRequesters,
+} from "#testing/fixture-api/fixtures/recovery.ts";
 import {
   capacityView,
   migrationBundles,
@@ -26,7 +32,6 @@ import {
   numberingSeries,
   plexProfiles,
   providerList,
-  recoveryList,
   subtitleTargets,
 } from "#testing/fixture-api/fixtures/owner.ts";
 import {
@@ -39,6 +44,7 @@ import {
   resolveMedia,
 } from "#testing/fixture-api/fixtures/titles.ts";
 import { HOUSEHOLD } from "#testing/fixture-api/personas.ts";
+import { fixtureId } from "#testing/fixture-api/support.ts";
 
 /**
  * Quality profiles and recovery state. Profiles are owner data: a member's
@@ -61,14 +67,19 @@ const shared: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/recovery",
     schema: RecoveryListSchema,
-    respond: (request) => {
-      const recovery = recoveryList(request.persona);
-      // The `new-household` household has never been restored from a backup.
-      return request.scenario === "new-household"
-        ? { ...recovery, holds: [], reviews: [] }
-        : recovery;
-    },
+    // A household that was never restored has no holds or reviews, and the
+    // `recovery-*` scenarios are the other states the page shows.
+    respond: (request) => recoveryList(request.persona, request.scenario),
     samples: ["/recovery"],
+  }),
+  endpoint({
+    path: "/recovery/reviews/:id",
+    schema: RecoveryDetailSchema,
+    respond: (request) => recoveryDetail(request.persona, request.param("id")),
+    belongsToRequest: (review, request) => review.id === request.param("id"),
+    samples: [1, 2, 3, 4, 5, 6].map(
+      (n) => `/recovery/reviews/${fixtureId(16, n)}`,
+    ),
   }),
 ];
 
@@ -114,6 +125,20 @@ const administration: readonly FixtureEndpoint[] = [
     schema: MigrationProposalListSchema,
     respond: () => migrationProposals(),
     samples: ["/admin/migration"],
+  }),
+  endpoint({
+    path: "/admin/legacy-requester-bindings",
+    access: "owner",
+    schema: LegacyRequesterListSchema,
+    respond: (request) => {
+      const captureId = request.query.get("captureId");
+      return captureId === null ? null : legacyRequesters(captureId);
+    },
+    belongsToRequest: (inventory, request) =>
+      inventory.captureId === request.query.get("captureId"),
+    samples: [
+      `/admin/legacy-requester-bindings?captureId=${fixtureId(17, 102)}`,
+    ],
   }),
   endpoint({
     path: "/admin/migration/bundles",

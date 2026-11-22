@@ -1,0 +1,29 @@
+@layer components {
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-6);
+    margin: 0;
+    font-size: var(--text-sm);
+  }
+  .facts > div {
+    display: grid;
+    gap: 2px;
+  }
+  .facts dt {
+    color: var(--text-muted);
+  }
+  /* Byte counts are long; they wrap rather than widen the page. */
+  .facts dd {
+    margin: 0;
+    font-size: var(--text-md);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+  .asOf {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+}

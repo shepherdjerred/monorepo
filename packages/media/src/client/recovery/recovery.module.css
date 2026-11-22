@@ -1,0 +1,222 @@
+/* The parts of the recovery pages that no shared primitive covers. */
+@layer components {
+  .stack {
+    display: grid;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+  .lead {
+    margin: 0;
+    max-width: 44rem;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .link {
+    color: var(--text-accent);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .standing {
+    display: grid;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  .back {
+    margin-bottom: var(--space-4);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: 32px;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  .back svg {
+    width: 16px;
+    height: 16px;
+  }
+  .back:hover {
+    color: var(--text);
+  }
+
+  /* A filter above a long list, with what it does to the list. */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-3);
+  }
+  .toolbarSearch {
+    flex: 1 1 14rem;
+    max-width: 24rem;
+  }
+  .count {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+
+  /* Titles to tick, grouped by why they are held. */
+  .groups {
+    display: grid;
+    gap: var(--space-5);
+    min-width: 0;
+  }
+  .group {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .groupLegend {
+    padding: 0;
+    font-size: var(--text-md);
+    font-weight: 600;
+  }
+  .groupNote {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .ticks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+    gap: var(--space-1) var(--space-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Titles that are only read, in columns when there are many. */
+  .titles {
+    columns: 14rem;
+    column-gap: var(--space-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .titles li {
+    break-inside: avoid;
+    padding: var(--space-1) 0;
+    overflow-wrap: anywhere;
+  }
+  .titles a {
+    color: var(--text-accent);
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .more {
+    margin-top: var(--space-2);
+  }
+  .more > summary {
+    min-height: 32px;
+    color: var(--text-accent);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .restTitles {
+    margin: var(--space-2) 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 400;
+  }
+  .more > .titles {
+    margin-top: var(--space-2);
+  }
+
+  /* Facts the owner may need to copy: a label and a value that wraps. */
+  .facts {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    font-size: var(--text-sm);
+  }
+  .facts > div {
+    display: grid;
+    grid-template-columns: minmax(8rem, 14rem) minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+  .facts dt {
+    color: var(--text-muted);
+  }
+  .facts dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    overflow-wrap: anywhere;
+  }
+  .plainFacts dd {
+    font-family: inherit;
+  }
+  @container surface (max-width: 520px) {
+    .facts > div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0;
+    }
+  }
+
+  /* One decision per title: the title, then the three choices. */
+  .decisions {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .decisions > li {
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--border);
+    min-width: 0;
+  }
+  .bulk {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    background: var(--surface-sunken);
+  }
+
+  /* A paragraph of what will happen, set apart where the button is. */
+  .before {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-inline-start: 3px solid var(--accent-strong);
+    background: var(--surface-sunken);
+    border-radius: var(--radius-control);
+    font-size: var(--text-md);
+  }
+  .before strong {
+    font-weight: 600;
+  }
+  .plain {
+    margin: 0;
+    max-width: 44rem;
+    color: var(--text-muted);
+  }
+  .reasons {
+    margin: 0;
+    padding-inline-start: var(--space-5);
+  }
+  .small {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .tech {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
+  }
+}

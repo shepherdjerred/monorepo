@@ -13,17 +13,21 @@ const cx = classNames(styles);
  */
 export function Panel({
   title,
+  titleId,
   description,
   id,
   children,
 }: {
   title: string;
+  /** An id for the heading, for a form inside the panel to be named by. */
+  titleId?: string;
   description?: ReactNode;
   /** An anchor other parts of the page link to. */
   id?: string;
   children: ReactNode;
 }) {
-  const headingId = useId();
+  const generatedId = useId();
+  const headingId = titleId ?? generatedId;
   return (
     <section className={cx("surface")} id={id} aria-labelledby={headingId}>
       <header className={cx("header")}>

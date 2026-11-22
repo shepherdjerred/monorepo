@@ -35,6 +35,16 @@ export default defineConfig({
               name: "zod",
               test: /\/node_modules\/zod\/|\/src\/client\/startup\/zod\.ts$/u,
             },
+            {
+              // The sheet that declares the cascade layer order is its own
+              // chunk, which the entry imports before any other. A component
+              // stylesheet shared by the entry and a lazy route sits in a
+              // shared chunk, and a shared chunk's styles are written before
+              // the entry's own; without this group such a sheet would open
+              // the bundle and the browser would fix `components` first.
+              name: "layers",
+              test: /\/src\/client\/styles\.css$|\/src\/client\/styles\/[^/]+\.css$/u,
+            },
           ],
         },
       },
