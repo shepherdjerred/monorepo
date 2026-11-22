@@ -1,6 +1,6 @@
 // Personal agent skills live once in packages/dotfiles/dot_agents/skills and
-// are synced onto Windows as real files by run_onchange_after_sync-agent-skills.ps1.tmpl,
-// with Claude and Gemini adapter symlinks pointing at ~/.agents/skills.
+// are synced onto Windows as real files by run_onchange_before_sync-agent-skills.ps1.tmpl
+// before Claude and Gemini adapter symlinks are created pointing at ~/.agents/skills.
 import path from "node:path";
 import { expect, test } from "vitest";
 
@@ -9,11 +9,11 @@ const windowsRoot = path.join(import.meta.dirname, "../../dotfiles-windows");
 const windowsSkillsDir = path.join(windowsRoot, "dot_agents/skills");
 const skillsSyncTemplate = path.join(
   windowsRoot,
-  "run_onchange_after_sync-agent-skills.ps1.tmpl",
+  "run_onchange_before_sync-agent-skills.ps1.tmpl",
 );
 const chezmoiShimTemplate = path.join(
   windowsRoot,
-  "run_onchange_after_sync-chezmoi-shim.ps1.tmpl",
+  "run_after_sync-chezmoi-shim.ps1.tmpl",
 );
 
 test("packages/dotfiles-windows has no duplicated git copies of personal skills", () => {

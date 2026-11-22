@@ -1,7 +1,7 @@
 # Ensures ~/.local/bin precedes WinGet\Links in User PATH and keeps a real
 # chezmoi.exe copy in ~/.local/bin so `hc exec -- pwsh -NoProfile -Command 'chezmoi ...'`
 # avoids WinGet's 0-byte NTFS symlink ERROR_NO_ASSOCIATION failure.
-# Packages hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# Runs on every apply (idempotent) so WinGet upgrades refresh ~/.local/bin/chezmoi.exe.
 $ErrorActionPreference = 'Stop'
 
 $localBin = Join-Path '{{ .chezmoi.homeDir }}' '.local\bin'

@@ -20,13 +20,13 @@ installs the Ubuntu WSL distro. Re-running it is safe.
 
 ## Agent skills
 
-`run_onchange_after_sync-agent-skills.ps1.tmpl` syncs the entire canonical
+`run_onchange_before_sync-agent-skills.ps1.tmpl` syncs the entire canonical
 personal skills catalog from
 [`../dotfiles/dot_agents/skills`](../dotfiles/dot_agents/skills) as real files
-into `~/.agents/skills`, hashing every file in the template so any edit in
-`../dotfiles` re-runs on `chezmoi apply` without duplicating files in Git.
-Relative adapter symlinks expose the same skills to Claude
-(`~/.claude/skills -> ../.agents/skills`) and Gemini
+into `~/.agents/skills` before adapter symlinks are created, hashing every file
+in the template so any edit in `../dotfiles` re-runs on `chezmoi apply` without
+duplicating files in Git. Relative adapter symlinks expose the same skills to
+Claude (`~/.claude/skills -> ../.agents/skills`) and Gemini
 (`~/.gemini/config/skills -> ../../.agents/skills`,
 `~/.gemini/GEMINI.md -> ../AGENTS.md`), while Codex reads `~/.agents/skills`
 directly. The shared `AGENTS.md` Browser Support policy (Baseline Widely
@@ -45,11 +45,12 @@ fish comes from MSYS2. Two settings make it behave like a native shell:
 PowerShell, cmd and other programs that search `PATH`. Herdr does not use it:
 herdr-core opens PowerShell for every terminal on Windows.
 
-`run_onchange_after_sync-chezmoi-shim.ps1.tmpl` ensures `~/.local/bin` precedes
+`run_after_sync-chezmoi-shim.ps1.tmpl` ensures `~/.local/bin` precedes
 `%LOCALAPPDATA%\Microsoft\WinGet\Links` in the user `PATH` and mirrors the real
 `chezmoi.exe` binary from `%LOCALAPPDATA%\Microsoft\WinGet\Packages\twpayne.chezmoi_*`
-into `~/.local/bin\chezmoi.exe`. That avoids WinGet's 0-byte NTFS symlink
-failing with `No application is associated` when invoked from non-interactive
+into `~/.local/bin\chezmoi.exe` on every apply (idempotent, only copying when
+the SHA-256 changes). That avoids WinGet's 0-byte NTFS symlink failing with
+`No application is associated` when invoked from non-interactive
 `hc exec -- pwsh -NoProfile -Command 'chezmoi ...'` sessions.
 
 noctty, Cursor and VS Code open fish by default. The fish credential exports
