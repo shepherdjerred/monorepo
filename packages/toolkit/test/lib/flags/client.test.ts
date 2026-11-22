@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { resolveFlagsMachineToken } from "#handlers/flags/index.ts";
 import { flagsBaseUrl, runFlags, type FlagsIo } from "#lib/flags/client.ts";
 
 const TOKEN = "super-secret-token";
@@ -147,4 +148,30 @@ test("a clean diff exits 0 and a drifted diff exits 1", async () => {
     await runFlags(["diff"], drifted.io, { json: false, file: undefined }),
   ).toBe(1);
   expect(drifted.text()).toContain("dares_enabled");
+});
+
+test("--machine resolves FLAGS_MACHINE_TOKEN through the broker when unset", async () => {
+  const saved = Bun.env["FLAGS_MACHINE_TOKEN"];
+  try {
+    Reflect.deleteProperty(Bun.env, "FLAGS_MACHINE_TOKEN");
+    const calls: (readonly string[])[] = [];
+    const resolved = await resolveFlagsMachineToken(true, async (names) => {
+      calls.push(names);
+      Bun.env["FLAGS_MACHINE_TOKEN"] = "brokered-flags-token";
+    });
+    expect(calls).toEqual([["FLAGS_MACHINE_TOKEN"]]);
+    expect(resolved).toBe("brokered-flags-token");
+
+    const second = await resolveFlagsMachineToken(true, async () => {
+      throw new Error("ambient token must skip broker");
+    });
+    expect(second).toBe("brokered-flags-token");
+    expect(await resolveFlagsMachineToken(false)).toBeUndefined();
+  } finally {
+    if (saved === undefined) {
+      Reflect.deleteProperty(Bun.env, "FLAGS_MACHINE_TOKEN");
+    } else {
+      Bun.env["FLAGS_MACHINE_TOKEN"] = saved;
+    }
+  }
 });

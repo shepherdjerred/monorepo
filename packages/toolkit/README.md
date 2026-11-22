@@ -337,9 +337,12 @@ this API. `tracker --help` lists the complete command tree.
 `toolkit flags` reads and writes the first-party flag service. Humans reach it
 over the tailnet, and the service takes their identity from the proxy. The
 command does not send a login header. `apply` sends the service origin so a
-human write passes the same-origin check. `--machine` sends `FLAGS_MACHINE_TOKEN`
-as a bearer and never prints that token. Evaluation stays credentialless; this
-command uses the management API.
+human write passes the same-origin check. `--machine` resolves
+`FLAGS_MACHINE_TOKEN` through the credential broker (defaulting to the
+`flags-auth` item in the homelab 1Password vault unless set in the environment
+or `[credentials].FLAGS_MACHINE_TOKEN`), sends it as a bearer, and never prints
+that token. Evaluation stays credentialless; this command uses the management
+API.
 
 ```bash
 toolkit flags deployments --json
@@ -1605,6 +1608,7 @@ header values and root paths containing the same text are preserved.
 | `talosctl`, `kube credential`, `aws credential`, `run`                                                                     | 1Password service account      |
 | `discord`                                                                                                                  | macOS Keychain / Windows DPAPI |
 | `scout ops` (`SCOUT_OPERATIONS_TOKEN_BETA`, `SCOUT_OPERATIONS_TOKEN_PROD`)                                                 | 1Password service account      |
+| `flags --machine` (`FLAGS_MACHINE_TOKEN`)                                                                                  | 1Password service account      |
 | `brim sync pull` (`BRIM_SYNC_AGE_IDENTITY`)                                                                                | 1Password service account      |
 | `brim sync` in broker mode (`BRIM_SYNC_S3_ACCESS_KEY_ID`, `BRIM_SYNC_S3_SECRET_ACCESS_KEY`)                                | 1Password service account      |
 

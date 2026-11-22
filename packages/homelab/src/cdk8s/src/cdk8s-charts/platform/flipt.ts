@@ -47,6 +47,8 @@ const CONSUMER_NAMESPACES = [
   "tracker",
   // Golink evaluates dynamic ingress, site-alias, and manual-edit gates.
   "golink",
+  // Flags imports live deployment snapshots on first boot.
+  "flags",
 ] as const;
 
 export function createFliptChart(app: App) {

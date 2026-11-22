@@ -48,6 +48,12 @@ export const flagDeployments = [
     fliptEnvironment: "prod",
   },
   {
+    id: "golink/prod",
+    catalog: "golink",
+    stage: "prod",
+    fliptEnvironment: "prod",
+  },
+  {
     id: "media/prod",
     catalog: "media",
     stage: "prod",

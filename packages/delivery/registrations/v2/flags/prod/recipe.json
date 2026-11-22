@@ -1,0 +1,59 @@
+{
+  "id": "flags/prod/2",
+  "definition": {
+    "kind": "kubernetes-application",
+    "application": {
+      "name": "flags",
+      "metadata": {
+        "labels": { "ci.sjer.red/managed-application": "true" },
+        "annotations": {
+          "argocd.argoproj.io/sync-options": "Prune=false",
+          "ci.sjer.red/application-lifecycle": "retain"
+        },
+        "finalizers": []
+      },
+      "project": "workloads",
+      "destination": {
+        "server": "https://kubernetes.default.svc",
+        "namespace": "flags"
+      },
+      "source": {
+        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "chart": "flags"
+      },
+      "syncOptions": ["CreateNamespace=true"],
+      "ignoreDifferences": [],
+      "revisionHistoryLimit": 5,
+      "lifecycle": "retain"
+    },
+    "chartComponent": "chart:flags",
+    "artifactParameters": {
+      "delivery.images.flags": {
+        "component": "image:flags",
+        "format": "reference"
+      }
+    },
+    "runner": { "service": "ci", "component": "image:ci-base" },
+    "steps": [
+      {
+        "kind": "apply-safety",
+        "instance": "application:flags",
+        "pointOfNoReturn": false
+      },
+      {
+        "kind": "sync",
+        "instance": "application:flags",
+        "pointOfNoReturn": false
+      }
+    ],
+    "oracle": {
+      "probes": [
+        {
+          "url": "https://flags.tailnet-1a49.ts.net/healthz",
+          "expectedStatus": 200
+        }
+      ],
+      "tests": []
+    }
+  }
+}

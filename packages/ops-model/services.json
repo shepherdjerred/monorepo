@@ -21,7 +21,8 @@
     "storm-forum": "storm-forum/prod",
     "minecraft-tsmc": "minecraft/tsmc",
     "glitter-boys-launcher": "glitter-boys-launcher/prod",
-    "golink": "golink/prod"
+    "golink": "golink/prod",
+    "flags": "flags/prod"
   },
   "platformDeliveryDelegated": true,
   "services": [
@@ -856,15 +857,20 @@
       "package": "flags",
       "aliases": [],
       "namespaces": ["flags"],
-      "argoApps": [],
-      "charts": ["flags"],
-      "rootReleaseExclusions": { "flags": "inactive" },
+      "argoApps": ["flags"],
+      "charts": [],
       "images": ["flags"],
       "bootstrapImages": [],
       "bugsinkProjects": [],
       "analyticsSites": [],
       "grafanaDashboards": [],
-      "deploy": []
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/flags",
+          "argoApp": "flags"
+        }
+      ]
     }
   ]
 }

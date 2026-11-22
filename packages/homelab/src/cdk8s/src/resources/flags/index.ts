@@ -1,52 +1,82 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { Cpu, EnvValue } from "cdk8s-plus-31";
+import { Cpu, DeploymentStrategy, EnvValue, Secret } from "cdk8s-plus-31";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { FLIPT_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   dnsEgressRule,
+  fliptEgress,
   nsPeer,
   tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
 
-/**
- * Activation gate. While it is false the chart publishes an inactive marker
- * and the root renders no Argo Application, so nothing deploys. Activating the
- * service is a reviewed change of its own: see the wiki how-to "Add a hosted
- * service".
- */
-export const FLAGS_ACTIVE = false;
+export const FLAGS_ACTIVE = true;
+
+const FLAGS_HTTP_PORT = 7360;
+const FLAGS_EVALUATION_PORT = 7361;
+const FLAGS_ITEM_ID = "dzcroze2qcoibfz3illceozbea";
 
 export function createFlagsDeployment(chart: Chart) {
-  return new FirstPartyWebService(chart, "flags-web-service", {
+  const flagsTailnet = tailnetService("flags");
+  const webService = new FirstPartyWebService(chart, "flags-web-service", {
     name: "flags",
-    port: 7360,
+    port: FLAGS_HTTP_PORT,
     probes: { live: "/healthz", ready: "/healthz" },
-    containers: () => ({
-      server: {
-        image: firstPartyImageRecipe("flags"),
-        securityContext: restrictedContainer(1000),
-        resources: {
-          cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
-          memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
+    deployment: {
+      strategy: DeploymentStrategy.recreate(),
+      securityContext: { fsGroup: 1000 },
+    },
+    containers: () => {
+      const authItem = onePasswordSecret(
+        chart,
+        "flags-auth-1p",
+        FLAGS_ITEM_ID,
+        { name: "flags-auth" },
+      );
+      const authSecret = Secret.fromSecretName(
+        chart,
+        "flags-auth-secret",
+        authItem.name,
+      );
+      return {
+        server: {
+          image: firstPartyImageRecipe("flags"),
+          securityContext: restrictedContainer(1000),
+          resources: {
+            cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
+            memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
+          },
+          envVariables: {
+            // Bun writes runtime state under $HOME; the root filesystem is
+            // read-only, so HOME points at the writable emptyDir.
+            HOME: EnvValue.fromValue("/tmp"),
+            HOST: EnvValue.fromValue("0.0.0.0"),
+            PORT: EnvValue.fromValue(String(FLAGS_HTTP_PORT)),
+            FLAGS_EVALUATION_PORT: EnvValue.fromValue(
+              String(FLAGS_EVALUATION_PORT),
+            ),
+            ENVIRONMENT: EnvValue.fromValue("production"),
+            FLAGS_DATABASE_PATH: EnvValue.fromValue(
+              "/var/lib/flags/flags.sqlite",
+            ),
+            FLAGS_PUBLIC_ORIGIN: EnvValue.fromValue(flagsTailnet.origin),
+            FLAGS_OPERATOR_LOGINS: EnvValue.fromValue(
+              "shepherdjerred@gmail.com",
+            ),
+            FLAGS_TRUSTED_PROXIES: EnvValue.fromValue("10.244.0.0/16"),
+            FLAGS_FLIPT_URL: EnvValue.fromValue(FLIPT_URL),
+            FLAGS_MACHINE_TOKEN: EnvValue.fromSecretValue({
+              secret: authSecret,
+              key: "FLAGS_MACHINE_TOKEN",
+            }),
+          },
         },
-        envVariables: {
-          // Bun writes runtime state under $HOME; the root filesystem is
-          // read-only, so HOME points at the writable emptyDir.
-          HOME: EnvValue.fromValue("/tmp"),
-          HOST: EnvValue.fromValue("0.0.0.0"),
-          PORT: EnvValue.fromValue("7360"),
-          ENVIRONMENT: EnvValue.fromValue("production"),
-          FLAGS_DATABASE_PATH: EnvValue.fromValue(
-            "/var/lib/flags/flags.sqlite",
-          ),
-          FLAGS_PUBLIC_ORIGIN: EnvValue.fromValue(
-            "https://flags.tailnet-1a49.ts.net",
-          ),
-        },
-      },
-    }),
+      };
+    },
     data: {
       id: "flags-data",
       storage: Size.gibibytes(1),
@@ -58,14 +88,7 @@ export function createFlagsDeployment(chart: Chart) {
       hosts: [
         {
           id: "flags-ingress",
-          // A prepared service renders nothing, so the platform model cannot
-          // declare its tailnet name yet. Activation declares "flags" in
-          // platform-model.json and replaces this with tailnetService("flags").
-          host: {
-            host: "flags",
-            namespace: "flags",
-            exposure: "ingress",
-          },
+          host: flagsTailnet,
         },
       ],
     },
@@ -76,12 +99,20 @@ export function createFlagsDeployment(chart: Chart) {
         ingress: [
           {
             from: [nsPeer("tailscale"), nsPeer("prometheus")],
-            ports: [tcp(7360)],
+            ports: [tcp(FLAGS_HTTP_PORT)],
           },
         ],
-        // Add an egress rule for each dependency the service calls.
-        egress: [dnsEgressRule()],
+        egress: [dnsEgressRule(), fliptEgress()],
       },
     ],
   });
+
+  const serverContainer = webService.deployment.containers[0];
+  if (serverContainer === undefined) {
+    throw new Error("Expected server container on flags Deployment");
+  }
+  serverContainer.addPort({ name: "eval", number: FLAGS_EVALUATION_PORT });
+  webService.service.bind(FLAGS_EVALUATION_PORT, { name: "eval" });
+
+  return webService;
 }

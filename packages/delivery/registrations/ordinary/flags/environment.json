@@ -1,0 +1,10 @@
+{
+  "id": "flags/prod",
+  "serviceId": "flags",
+  "name": "prod",
+  "application": "flags",
+  "pipelineRevisionId": "flags/prod/1",
+  "configurationRevision": "flags/prod/1",
+  "configuration": {},
+  "automatic": true
+}

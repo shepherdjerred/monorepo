@@ -14,6 +14,7 @@ export const ORDINARY_DELIVERY_ENVIRONMENTS: Readonly<Record<string, string>> =
     tasknotes: "tasknotes-server/prod",
     tracker: "tracker/prod",
     golink: "golink/prod",
+    flags: "flags/prod",
     delivery: "delivery/prod",
     "trmnl-dashboard": "trmnl-dashboard/prod",
     "alert-dashboard": "ops-dashboard/prod",
