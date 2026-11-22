@@ -159,7 +159,15 @@ export function RecoveryReviewPage({
                 claims={review.scope.legacyClaims}
               />
             )}
-          {owner && <ReleasePanel user={user} review={review} />}
+          {owner && (
+            // Keyed by the reviewed set, so statements ticked for one set of
+            // declarations are not carried to another.
+            <ReleasePanel
+              key={`${String(review.version)}:${review.responseHash ?? ""}`}
+              user={user}
+              review={review}
+            />
+          )}
         </>
       )}
     </>

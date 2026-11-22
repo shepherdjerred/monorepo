@@ -170,6 +170,9 @@ function RequesterRow({
   onEdited: () => void;
 }) {
   const [target, setTarget] = useState(requester.binding?.userId ?? "");
+  // Verifying a requester is verifying it as one person, so it is given again
+  // whenever the person changes.
+  const [verified, setVerified] = useState(false);
   const mutation = useMutation({
     mutationFn: (userId: string) =>
       writeApi({
@@ -250,6 +253,7 @@ function RequesterRow({
           value={target}
           onChange={(event) => {
             setTarget(event.target.value);
+            setVerified(false);
           }}
         >
           <option value="">Choose an identity</option>
@@ -279,6 +283,10 @@ function RequesterRow({
         <CheckboxField
           name="verified"
           required
+          checked={verified}
+          onChange={(event) => {
+            setVerified(event.target.checked);
+          }}
           requiredMessage="Confirm you verified this requester and identity."
           label="I verified this exact source requester and household identity. This association does not declare their current demand."
         />
