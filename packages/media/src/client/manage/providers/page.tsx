@@ -4,7 +4,7 @@ import { ProviderListSchema, type ProviderStatus } from "#shared/admin.ts";
 import { readApi } from "#client/api.ts";
 import { PageTitle } from "#client/components.tsx";
 import { Badge, LoadError } from "#client/ui/feedback.tsx";
-import { useSavedNotes } from "#client/ui/form.tsx";
+import { useSavedNotes } from "#client/ui/forms/form.tsx";
 import {
   Disclosure,
   DisclosureList,

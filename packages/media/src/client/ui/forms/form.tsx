@@ -8,9 +8,9 @@ import {
   type SyntheticEvent,
 } from "react";
 import { CircleAlertIcon, CircleCheckIcon, CircleDotIcon } from "lucide-react";
-import { Button } from "./button.tsx";
-import { classNames } from "./class-names.ts";
-import { Callout } from "./feedback.tsx";
+import { Button } from "#client/ui/button.tsx";
+import { classNames } from "#client/ui/class-names.ts";
+import { Callout } from "#client/ui/feedback.tsx";
 import { constraintMessage } from "./validation.ts";
 import styles from "./form.module.css";
 

@@ -8,7 +8,7 @@ import {
   EVERY_DURATION_UNIT,
   readDuration,
   type DurationRules,
-} from "#client/ui/duration.ts";
+} from "#client/ui/forms/duration.ts";
 
 /**
  * Reads a provider's form into the body `PUT /admin/providers/:id` accepts.

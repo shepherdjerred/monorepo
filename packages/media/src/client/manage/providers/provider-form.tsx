@@ -8,10 +8,14 @@ import { useUser } from "#client/shell/user.ts";
 import { Button } from "#client/ui/button.tsx";
 import { classNames } from "#client/ui/class-names.ts";
 import { ConfirmDialog } from "#client/ui/confirm-dialog.tsx";
-import { DurationField } from "#client/ui/duration-field.tsx";
-import { formatDuration } from "#client/ui/duration.ts";
-import { CheckboxField, FieldGroup, TextField } from "#client/ui/field.tsx";
-import { Form, FormFooter } from "#client/ui/form.tsx";
+import { DurationField } from "#client/ui/forms/duration-field.tsx";
+import { formatDuration } from "#client/ui/forms/duration.ts";
+import {
+  CheckboxField,
+  FieldGroup,
+  TextField,
+} from "#client/ui/forms/field.tsx";
+import { Form, FormFooter } from "#client/ui/forms/form.tsx";
 import {
   CREDENTIAL_FIELDS,
   DURATION_RULES,

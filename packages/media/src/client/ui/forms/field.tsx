@@ -1,6 +1,6 @@
 import { useId, type ComponentProps, type ReactNode } from "react";
 import { ChevronDownIcon, CircleAlertIcon } from "lucide-react";
-import { classNames } from "./class-names.ts";
+import { classNames } from "#client/ui/class-names.ts";
 import { useFieldError } from "./form.tsx";
 import styles from "./field.module.css";
 

@@ -14,8 +14,12 @@ import { PageTitle } from "#client/components.tsx";
 import { useUser } from "#client/shell/user.ts";
 import { Button, ButtonRow } from "#client/ui/button.tsx";
 import { Badge, LoadError } from "#client/ui/feedback.tsx";
-import { SelectField, TextAreaField, TextField } from "#client/ui/field.tsx";
-import { Form, FormFooter, useSavedNotes } from "#client/ui/form.tsx";
+import {
+  SelectField,
+  TextAreaField,
+  TextField,
+} from "#client/ui/forms/field.tsx";
+import { Form, FormFooter, useSavedNotes } from "#client/ui/forms/form.tsx";
 import {
   Disclosure,
   DisclosureList,

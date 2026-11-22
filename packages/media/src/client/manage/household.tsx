@@ -6,7 +6,7 @@ import { useUser } from "#client/shell/user.ts";
 import { Button } from "#client/ui/button.tsx";
 import { DataList, DataRow } from "#client/ui/data-list.tsx";
 import { Badge, Callout, LoadError } from "#client/ui/feedback.tsx";
-import { useSavedNotes } from "#client/ui/form.tsx";
+import { useSavedNotes } from "#client/ui/forms/form.tsx";
 import { EmptyNote, Panel, SkeletonRows } from "#client/ui/panel.tsx";
 
 type RequestsChange = {

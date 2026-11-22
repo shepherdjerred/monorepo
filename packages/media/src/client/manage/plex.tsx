@@ -13,8 +13,8 @@ import { useUser } from "#client/shell/user.ts";
 import { ConfirmDialog } from "#client/ui/confirm-dialog.tsx";
 import { DataList, DataRow } from "#client/ui/data-list.tsx";
 import { Badge, LoadError } from "#client/ui/feedback.tsx";
-import { SelectField, TextField } from "#client/ui/field.tsx";
-import { Form, FormFooter, useSavedNotes } from "#client/ui/form.tsx";
+import { SelectField, TextField } from "#client/ui/forms/field.tsx";
+import { Form, FormFooter, useSavedNotes } from "#client/ui/forms/form.tsx";
 import { EmptyNote, Panel, SkeletonRows } from "#client/ui/panel.tsx";
 
 type HomeProfile = PlexProfiles["homeUsers"][number];

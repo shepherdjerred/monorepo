@@ -7,9 +7,9 @@ import {
   SelectField,
   TextAreaField,
   TextField,
-} from "#client/ui/field.tsx";
+} from "#client/ui/forms/field.tsx";
 import { classNames } from "#client/ui/class-names.ts";
-import { DurationField } from "#client/ui/duration-field.tsx";
+import { DurationField } from "#client/ui/forms/duration-field.tsx";
 import { DURATION_RULES } from "./provider-input.ts";
 import styles from "./providers.module.css";
 

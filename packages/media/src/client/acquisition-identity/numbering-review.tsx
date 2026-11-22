@@ -11,7 +11,7 @@ import { queryClient, writeApi } from "#client/api.ts";
 import { Button, ButtonRow } from "#client/ui/button.tsx";
 import { DataList, DataRow } from "#client/ui/data-list.tsx";
 import { Callout } from "#client/ui/feedback.tsx";
-import { CheckboxField, FieldGroup } from "#client/ui/field.tsx";
+import { CheckboxField, FieldGroup } from "#client/ui/forms/field.tsx";
 
 export function NumberingBatchReview({
   user,

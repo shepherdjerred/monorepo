@@ -21,8 +21,8 @@ import {
   SelectField,
   TextAreaField,
   TextField,
-} from "#client/ui/field.tsx";
-import { FieldRow, Form, FormFooter } from "#client/ui/form.tsx";
+} from "#client/ui/forms/field.tsx";
+import { FieldRow, Form, FormFooter } from "#client/ui/forms/form.tsx";
 import { EmptyNote, Panel, SkeletonRows } from "#client/ui/panel.tsx";
 
 const SUBTITLE_FILE = /\.(?:srt|ass|ssa|vtt)$/iu;

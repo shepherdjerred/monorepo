@@ -11,8 +11,8 @@ import {
 import { readApi, writeApi } from "#client/api.ts";
 import { Button } from "#client/ui/button.tsx";
 import { Callout, LoadError } from "#client/ui/feedback.tsx";
-import { SelectField, TextField } from "#client/ui/field.tsx";
-import { Form } from "#client/ui/form.tsx";
+import { SelectField, TextField } from "#client/ui/forms/field.tsx";
+import { Form } from "#client/ui/forms/form.tsx";
 import { EmptyNote, Panel, SkeletonRows } from "#client/ui/panel.tsx";
 import { NumberingBatchReview } from "./numbering-review.tsx";
 
