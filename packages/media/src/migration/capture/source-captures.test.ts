@@ -57,9 +57,38 @@ test("Seerr source users are never inferred as Plex accounts; season coverage an
     },
   ]);
   expect(JSON.stringify(capture)).not.toContain("private");
+  expect(capture.records[0]).not.toHaveProperty("requestedAt");
+  expect(capture.endpoints[0]?.digest).toBe(
+    "72da9353ab14a6cd40231746d03d68bd73f58bd89ae975ab6a61ede1816749eb",
+  );
   expect(
     normalizeCapture(capture, { targets: [] }).entries[0]?.reasons,
   ).toContain("requester_unmapped");
+});
+test("Seerr captures the original request creation time in UTC", async () => {
+  const capture = await captureSeerr(
+    { ...source, source: "seerr" },
+    fetcher((url) => {
+      const reply = seerrReply(url);
+      if (reply.results === undefined) return reply;
+      return {
+        ...reply,
+        results: reply.results.map((result) => ({
+          ...result,
+          createdAt: "2020-09-12T10:00:27.321-07:00",
+          updatedAt: "2021-01-01T00:00:00.000Z",
+        })),
+      };
+    }),
+  );
+  expect(validateCapture(capture)).toMatchObject({
+    complete: true,
+    stable: true,
+  });
+  expect(capture.records[0]).toMatchObject({
+    requestedAt: "2020-09-12T17:00:27.321Z",
+  });
+  expect(capture.records[0]).not.toHaveProperty("updatedAt");
 });
 test("restricted Seerr inventory and changing page totals cannot claim completeness", async () => {
   const restricted = await captureSeerr(

@@ -1,6 +1,7 @@
 import type { MiddlewareHandler } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { MAX_MIGRATION_BYTES } from "#shared/migration.ts";
+import { PLEX_HISTORICAL_VIEW_MAX_BYTES } from "#shared/household/plex-history.ts";
 
 const movieCaptionCandidate =
   /^\/api\/v2\/media\/[^/]+\/movie-editions\/[^/]+\/subtitle-replacements\/candidates$/;
@@ -16,9 +17,12 @@ export const mediaRequestBodyLimit: MiddlewareHandler = async (c, next) => {
     maxSize:
       c.req.method === "POST" && c.req.path === "/api/v1/admin/migration"
         ? MAX_MIGRATION_BYTES
-        : upload
-          ? 12 * 1024 * 1024
-          : 64 * 1024,
+        : c.req.method === "POST" &&
+            c.req.path === "/api/v1/admin/playback/plex-history/import"
+          ? PLEX_HISTORICAL_VIEW_MAX_BYTES
+          : upload
+            ? 12 * 1024 * 1024
+            : 64 * 1024,
     onError: (context) =>
       context.json(
         {

@@ -15,9 +15,19 @@ import { useCursorList } from "#client/ui/use-cursor-list.ts";
 import styles from "./library.module.css";
 import { mineTitles } from "./mine-model.ts";
 import { MineTitleEntry } from "./mine-title.tsx";
+import { PlexRequestHistory } from "./plex-request-history.tsx";
 import { interestsRead, REQUESTS_READ } from "./reads.ts";
 
 const cx = classNames(styles);
+
+export function LibraryMine({ user }: { user: MediaUser }) {
+  return (
+    <>
+      <MineRequests user={user} />
+      <PlexRequestHistory key={user.id} userId={user.id} />
+    </>
+  );
+}
 
 /**
  * Everything the reader asked for, one entry per film or series: how far
@@ -27,7 +37,7 @@ const cx = classNames(styles);
  * Three reads know parts of this, and they are joined by request id, so the
  * two paged ones are read to the end before anything is shown.
  */
-export function LibraryMine({ user }: { user: MediaUser }) {
+function MineRequests({ user }: { user: MediaUser }) {
   // The owner can look at a managed profile's film requests instead of
   // their own; everyone else's subject is themselves.
   const [subjectUserId, setSubjectUserId] = useState(user.id);

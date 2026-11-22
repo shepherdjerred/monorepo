@@ -3,6 +3,16 @@ import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { PrismaPlaybackHistory } from "./service.ts";
 import { PrismaPlaybackCollector } from "./collector.ts";
 import { ImportPlaybackHistorySchema } from "#shared/household/playback.ts";
+import {
+  PlexHistoricalViewImportSchema,
+  type PlexHistoricalViewImport,
+  type PlexHistoricalViewQuery,
+} from "#shared/household/plex-history.ts";
+import type { MediaActor } from "#application/auth.ts";
+import {
+  importPlexHistoricalViews,
+  listPlexHistoricalViews,
+} from "./plex-history.ts";
 import type { PlexPlaybackSession } from "#integrations/plex-playback.ts";
 import { snapshotHash } from "#migration/profile-import.ts";
 
@@ -107,6 +117,161 @@ async function fixture() {
   };
   return { db, server, owner, member, time, service, input, seal };
 }
+
+describe("Plex historical views", () => {
+  it("retains removed Plex titles privately with stable pagination and no timed play or request changes", async () => {
+    const f = await fixture();
+    const importViews = (actor: MediaActor, input: PlexHistoricalViewImport) =>
+      importPlexHistoricalViews(f.db, actor, f.server, input);
+    const listViews = (
+      actor: MediaActor,
+      query: PlexHistoricalViewQuery = {},
+    ) => listPlexHistoricalViews(f.db, actor, f.server, query);
+    await f.service.importHistory(f.owner, f.input);
+    const marker = {
+      source: "view",
+      serverAccountId: "123",
+      sectionId: "7",
+      kind: "movie",
+      title: "A film previously removed from Plex",
+      guid: "plex://movie/historical-film",
+      seriesTitle: null,
+      seriesGuid: null,
+      seasonNumber: null,
+      episodeNumber: null,
+      viewedAt: "2025-06-29T07:21:44.000Z",
+      originallyAvailableAt: null,
+      viewType: 1,
+      viewCount: null,
+    };
+    const input = PlexHistoricalViewImportSchema.parse({
+      serverMachineId: f.server,
+      rows: [
+        ...Array.from({ length: 51 }, (_, index) => ({
+          ...marker,
+          sourceViewId: index + 1,
+        })),
+        { ...marker, serverAccountId: "9", sourceViewId: 52 },
+        {
+          ...marker,
+          source: "last_watched",
+          sourceViewId: 1,
+          title: "",
+          viewType: null,
+          viewCount: 3,
+        },
+      ],
+    });
+    await expect(importViews(f.member, input)).rejects.toMatchObject({
+      code: "forbidden",
+    });
+    await expect(
+      importViews(f.owner, {
+        ...input,
+        serverMachineId: crypto.randomUUID(),
+      }),
+    ).rejects.toMatchObject({ code: "wrong_server" });
+    const counts = await Promise.all([
+      importViews(f.owner, input),
+      importViews(f.owner, input),
+    ]);
+    expect(
+      counts.map((result) => result.imported).sort((a, b) => a - b),
+    ).toEqual([0, 53]);
+    expect(await listViews(f.owner)).toEqual({
+      items: [],
+      nextCursor: null,
+    });
+    expect(await listViews(f.member)).toEqual({
+      items: [],
+      nextCursor: null,
+    });
+    await f.db.plexIdentityMapping.create({
+      data: {
+        userId: f.member.id,
+        kind: "independent",
+        serverMachineId: f.server,
+        serverAccountId: "123",
+        verifiedAt: f.time.now,
+      },
+    });
+    expect(await listViews(f.member)).toEqual({
+      items: [],
+      nextCursor: null,
+    });
+    expect(await importViews(f.owner, input)).toEqual({
+      imported: 0,
+      unchanged: 53,
+    });
+    const first = await listViews(f.member);
+    expect(first.items).toHaveLength(50);
+    expect(first.items[0]).toEqual({
+      source: "view",
+      sourceViewId: 51,
+      kind: marker.kind,
+      title: marker.title,
+      seriesTitle: null,
+      seasonNumber: null,
+      episodeNumber: null,
+      viewedAt: marker.viewedAt,
+    });
+    expect(first.nextCursor).toBe("view:2");
+    const second = await listViews(f.member, {
+      cursor: { source: "view", sourceViewId: 2 },
+    });
+    expect(
+      second.items.map((row) => [row.source, row.sourceViewId, row.title]),
+    ).toEqual([
+      ["view", 1, marker.title],
+      ["last_watched", 1, ""],
+    ]);
+    await expect(
+      listViews(f.member, {
+        cursor: { source: "view", sourceViewId: 52 },
+      }),
+    ).rejects.toMatchObject({
+      code: "invalid_cursor",
+    });
+    const conflicting = PlexHistoricalViewImportSchema.parse({
+      serverMachineId: f.server,
+      rows: [
+        { ...marker, sourceViewId: 1, title: "Unexpected replacement" },
+        { ...marker, sourceViewId: 53 },
+      ],
+    });
+    await expect(importViews(f.owner, conflicting)).rejects.toMatchObject({
+      code: "history_changed",
+    });
+    expect(
+      await f.db.plexHistoricalView.count({
+        where: { serverMachineId: f.server },
+      }),
+    ).toBe(53);
+    const statistics = await f.service.statistics(f.member, { limit: 50 });
+    expect(statistics.plays).toBe(1);
+    expect(await f.db.watchState.count()).toBe(0);
+    expect(
+      await f.db.mediaRequest.count({ where: { userId: f.member.id } }),
+    ).toBe(0);
+    await f.db.mediaUser.update({
+      where: { id: f.member.id },
+      data: { restricted: true },
+    });
+    expect(await listViews(f.member)).toEqual({
+      items: [],
+      nextCursor: null,
+    });
+    await f.db.plexIdentityMapping.update({
+      where: { userId: f.member.id },
+      data: { userId: f.owner.id },
+    });
+    await importViews(f.owner, input);
+    expect(await listViews(f.owner)).toEqual({
+      items: [],
+      nextCursor: null,
+    });
+  });
+});
 
 describe("historical playback isolation and handoff", () => {
   it("imports once, preserves unmapped sessions privately, and never changes current watched state", async () => {

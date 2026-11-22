@@ -3329,6 +3329,39 @@ before retrying seal.
 Existing session rows are never deduplicated by time or title, and this import
 never changes Plex watched truth.
 
+### Historical Plex views
+
+The [Plex export](scripts/migration-plex-history.sql) reads retained movie and
+episode views, including views of removed titles. It also reads Plex's
+last-watched records when no retained view for the same account and GUID is as
+recent. Those rows retain their original GUID and timestamp when Plex no longer
+has a title.
+
+Run the export against the intended Plex server's library database using its
+bundled SQLite shell. Use the machine ID from that same Plex server's identity
+response. Keep stdout private and require the SQLite read to succeed before
+importing any batches.
+
+```sh
+set -o pipefail
+"$plex_sqlite" -readonly -batch -bail -json "$plex_library_db" \
+  < scripts/migration-plex-history.sql \
+  | bun scripts/migration-plex-history.ts --server-machine-id "$plex_machine_id"
+```
+
+Send each validated JSON line to
+`POST /api/v1/admin/playback/plex-history/import` with the current unrestricted
+Media owner session and its CSRF token. Check that `imported + unchanged` equals
+the number of records in each batch. Replaying identical view records is safe.
+A different declared Plex machine ID or changes to previously imported source
+rows cause the affected batch to be rejected.
+
+**My requests** shows Plex records to the person bound to the verified account
+at import. Replay the same batches after an account is verified to attach
+previously unbound records. Changing account mappings never transfers prior
+history to a different person. Plex history does not affect downloads,
+library retention, or the play counts and watch time supplied by timed sessions.
+
 ### Legacy subtitle adoption and policy
 
 Include each subtitle or preference provenance key in the existing handoff

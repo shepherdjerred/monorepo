@@ -11,7 +11,45 @@ import {
   SealPlaybackHandoffSchema,
   PlaybackHandoffStatusSchema,
 } from "#shared/household/playback.ts";
+import {
+  PlexHistoricalViewImportSchema,
+  PlexHistoricalViewQuerySchema,
+  type PlexHistoricalViewImport,
+  type PlexHistoricalViewQuery,
+  type PlexHistoricalViews,
+} from "#shared/household/plex-history.ts";
 import { parseInput, readJson } from "#server/validation.ts";
+
+export function registerPlexHistoricalViewRoutes(
+  app: Hono<{ Variables: { actor: MediaActor; requestId: string } }>,
+  service: {
+    list: (
+      actor: MediaActor,
+      query: PlexHistoricalViewQuery,
+    ) => Promise<PlexHistoricalViews>;
+    import: (
+      actor: MediaActor,
+      input: PlexHistoricalViewImport,
+    ) => Promise<{ imported: number; unchanged: number }>;
+  },
+) {
+  app.get("/api/v1/requests/plex-history", async (c) =>
+    c.json(
+      await service.list(
+        c.get("actor"),
+        parseInput(PlexHistoricalViewQuerySchema, c.req.query()),
+      ),
+    ),
+  );
+  app.post("/api/v1/admin/playback/plex-history/import", async (c) =>
+    c.json(
+      await service.import(
+        c.get("actor"),
+        parseInput(PlexHistoricalViewImportSchema, await readJson(c.req.raw)),
+      ),
+    ),
+  );
+}
 
 export function registerPlaybackRoutes(
   app: Hono<{ Variables: { actor: MediaActor; requestId: string } }>,
