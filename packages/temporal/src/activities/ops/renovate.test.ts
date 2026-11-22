@@ -1,3 +1,4 @@
+import { NoSuchKey } from "@aws-sdk/client-s3";
 import { describe, expect, test } from "vitest";
 import type {
   MergedPullRequest,
@@ -8,6 +9,7 @@ import {
   buildRenovateFacet,
   parseRenovateDeltaIndex,
   readLatestRenovateDeltas,
+  type S3DeltaClient,
 } from "./facets/renovate-facet.ts";
 import { mapRenovate } from "./renovate.ts";
 
@@ -174,13 +176,86 @@ describe("renovate mapper and enriched facet", () => {
       "open-pr": 1,
     });
   });
+});
 
-  test("gracefully returns empty delta map when S3 is unconfigured", async () => {
+describe("renovate delta S3 validation and target matching", () => {
+  test("returns empty delta map on missing S3 config or 404, and throws on corrupt payloads", async () => {
     const prevEndpoint = Bun.env["S3_ENDPOINT"];
     Reflect.deleteProperty(Bun.env, "S3_ENDPOINT");
     await expect(readLatestRenovateDeltas()).resolves.toEqual({});
     if (prevEndpoint !== undefined) {
       Reflect.set(Bun.env, "S3_ENDPOINT", prevEndpoint);
     }
+
+    const notFoundClient: S3DeltaClient = {
+      send: () =>
+        Promise.reject(
+          new NoSuchKey({ $metadata: { httpStatusCode: 404 }, message: "404" }),
+        ),
+    };
+    await expect(readLatestRenovateDeltas(notFoundClient)).resolves.toEqual({});
+
+    const corruptJson = JSON.stringify({
+      updatedAt: "2026-11-21T21:00:00Z",
+      deltasByBranch: { "renovate/zod-5.x": { broken: true } },
+    });
+    expect(() => parseRenovateDeltaIndex(corruptJson)).toThrow();
+
+    const corruptClient: S3DeltaClient = {
+      send: () =>
+        Promise.resolve({
+          Body: { transformToString: () => Promise.resolve(corruptJson) },
+        }),
+    };
+    await expect(readLatestRenovateDeltas(corruptClient)).rejects.toThrow();
+  });
+
+  test("ignores stale cached deltas whose targetVersion does not match the current dashboard or PR update", () => {
+    const staleDelta = {
+      cacheKey: "npm:zod:4.4.3->5.0.0",
+      generatedAt: "2026-11-21T21:00:00Z",
+      runningVersion: "4.4.3",
+      pinnedVersion: "4.4.3",
+      targetVersion: "5.0.0",
+      effectiveFromVersion: "4.4.3",
+      versionsBehindCount: 1,
+      summary: "Major Zod v5.0.0 release.",
+      impactLevel: "breaking" as const,
+      breakingChanges: ["Removed deprecated string helpers"],
+      highlights: ["Faster parsing"],
+      repoRelevance: "Used in ops-model",
+      evidenceSource: "github-releases" as const,
+      releaseUrls: ["https://github.com/colinhacks/zod/releases/tag/v5.0.0"],
+    };
+
+    const facet = buildRenovateFacet({
+      dashboard: {
+        number: 481,
+        url: "https://github.com/shepherdjerred/monorepo/issues/481",
+        body: "## Awaiting Approval\n - [ ] <!-- approve-branch=renovate/zod-5.x -->chore(deps): update dependency zod to v5.1.0",
+      },
+      openPullRequests: [
+        openPr({
+          number: 503,
+          branch: "renovate/hono-4.x",
+          title: "chore(deps): update dependency hono to v4.14.0",
+        }),
+      ],
+      merged30d: [],
+      deltasByBranch: {
+        "renovate/zod-5.x": staleDelta,
+        "renovate/hono-4.x": { ...staleDelta, targetVersion: "4.13.0" },
+      },
+      now,
+    });
+
+    expect(facet.llmEnrichedCount).toBe(0);
+    expect(facet.llmBreakingCount).toBe(0);
+    const zod = facet.items.find((i) => i.branch === "renovate/zod-5.x");
+    const hono = facet.items.find((i) => i.branch === "renovate/hono-4.x");
+    expect(zod?.targetVersion).toBe("5.1.0");
+    expect(zod?.delta).toBeUndefined();
+    expect(hono?.targetVersion).toBe("4.14.0");
+    expect(hono?.delta).toBeUndefined();
   });
 });

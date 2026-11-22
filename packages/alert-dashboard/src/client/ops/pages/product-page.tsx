@@ -4,7 +4,6 @@ import type { PostHogFacet } from "@shepherdjerred/ops-model/facets.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import type {
   Metric,
-  Section,
   SnapshotResponse,
 } from "@shepherdjerred/ops-model/snapshot.ts";
 import { useQuery } from "@tanstack/react-query";
@@ -20,6 +19,7 @@ import {
   MetricTile,
   PageHeading,
   RangePicker,
+  SectionSummary,
   SeverityBadge,
 } from "#client/ops/ops-ui.tsx";
 import { SignalList } from "#client/ops/signal-list.tsx";
@@ -105,30 +105,6 @@ function buildHeadlineMetrics(posthog: PostHogFacet | null): readonly Metric[] {
   ];
 }
 
-function ProbeSectionBanner({
-  section,
-}: {
-  readonly section: Section;
-}): React.JSX.Element {
-  return (
-    <article
-      className={`section-summary section-${section.severity}`}
-      aria-labelledby="product-probe-summary"
-    >
-      <h2 id="product-probe-summary">{section.title}</h2>
-      <SeverityBadge severity={section.severity} />
-      <p>{section.summary}</p>
-      {section.metrics.length === 0 ? null : (
-        <div className="metric-row">
-          {section.metrics.map((metric) => (
-            <MetricTile key={metric.id} metric={metric} />
-          ))}
-        </div>
-      )}
-    </article>
-  );
-}
-
 export function ProductPageView({
   range,
   onRangeChange,
@@ -152,7 +128,10 @@ export function ProductPageView({
         )}
       </PageHeading>
       {productSection === null ? null : (
-        <ProbeSectionBanner section={productSection} />
+        <SectionSummary
+          section={productSection}
+          headingId="product-probe-summary"
+        />
       )}
       <section aria-label="Headline analytics metrics">
         <div className="product-kpi-grid">

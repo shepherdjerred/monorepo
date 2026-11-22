@@ -5,9 +5,7 @@ import * as stackTreeModule from "./stack-tree.tsx";
 import * as statusMatrixModule from "./status-matrix.tsx";
 import "#styles/visuals.css";
 
-export type SparklineTone = sparklineModule.SparklineTone;
 export type SparklineProps = sparklineModule.SparklineProps;
-export type SparklineGeometry = sparklineModule.SparklineGeometry;
 
 export type BudgetMeterProps = metersModule.BudgetMeterProps;
 export type StackedMeterSegment = metersModule.StackedMeterSegment;
@@ -23,27 +21,15 @@ export type StackCheckState = stackTreeModule.StackCheckState;
 export type StackReviewDecision = stackTreeModule.StackReviewDecision;
 export type StackMergeableState = stackTreeModule.StackMergeableState;
 export type StackPullRequest = stackTreeModule.StackPullRequest;
-export type StackTreeNode = stackTreeModule.StackTreeNode;
 export type StackTreeProps = stackTreeModule.StackTreeProps;
 
 export type SortDirection = dataTableModule.SortDirection;
-export type DataTableSortState = dataTableModule.DataTableSortState;
 export type DataTableColumn<T> = dataTableModule.DataTableColumn<T>;
-export type DataTableFilterOption = dataTableModule.DataTableFilterOption;
-export type DataTableFilter = dataTableModule.DataTableFilter;
 export type DataTableExportColumn<T> = dataTableModule.DataTableExportColumn<T>;
 export type DataTableProps<T> = dataTableModule.DataTableProps<T>;
 
 export function Sparkline(props: SparklineProps): React.JSX.Element {
   return sparklineModule.Sparkline(props);
-}
-
-export function computeSparklineGeometry(
-  values: readonly number[],
-  width: number,
-  height: number,
-): SparklineGeometry {
-  return sparklineModule.computeSparklineGeometry(values, width, height);
 }
 
 export function BudgetMeter(props: BudgetMeterProps): React.JSX.Element {
@@ -60,12 +46,6 @@ export function StatusMatrix(props: StatusMatrixProps): React.JSX.Element {
 
 export function StackTree(props: StackTreeProps): React.JSX.Element {
   return stackTreeModule.StackTree(props);
-}
-
-export function buildStackForest(
-  pullRequests: readonly StackPullRequest[],
-): StackTreeNode[] {
-  return stackTreeModule.buildStackForest(pullRequests);
 }
 
 export function DataTable<T>(props: DataTableProps<T>): React.JSX.Element {

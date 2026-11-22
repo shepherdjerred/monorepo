@@ -34,7 +34,7 @@ function PresetChartGrid(props: {
   );
 }
 
-function overviewKpiCard(
+export function kpiCard(
   label: string,
   value: string,
   sub: string,
@@ -86,13 +86,13 @@ export function ClusterOverviewStrip({
 
   return (
     <section className="platform-kpi-grid" aria-label="Cluster overview">
-      {overviewKpiCard(
+      {kpiCard(
         "Nodes Ready",
         `${String(readyNodes)}/${String(totalNodes)}`,
         cluster.nodes.map((n) => n.name).join(" · ") || "Talos Linux",
         nodesSev,
       )}
-      {overviewKpiCard(
+      {kpiCard(
         "Workloads Healthy",
         `${String(healthy)} / ${String(total)}`,
         degraded > 0
@@ -100,7 +100,7 @@ export function ClusterOverviewStrip({
           : "0 degraded",
         workSev,
       )}
-      {overviewKpiCard(
+      {kpiCard(
         "Databases Ready",
         `${String(readyDbs)}/${String(totalDbs)}`,
         `${String(backedUp)}/${String(totalDbs)} Velero backed up`,
@@ -115,7 +115,7 @@ export function ClusterOverviewStrip({
           detail={`${String(cluster.seaweedfs.bucketsCount)} S3 buckets`}
         />
       </div>
-      {overviewKpiCard(
+      {kpiCard(
         "SeaweedFS → B2 Lag",
         formatValue(lag, "seconds"),
         "Offsite B2 replication",

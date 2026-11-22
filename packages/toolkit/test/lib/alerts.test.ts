@@ -141,16 +141,22 @@ describe("Alerts API pagination", () => {
   });
 });
 
+async function runAlertsListCli(
+  args: string[],
+): Promise<{ requestedUrls: URL[]; logged: string[] }> {
+  const requestedUrls: URL[] = [];
+  const logged: string[] = [];
+  installPaginatedFetchMock(requestedUrls);
+  vi.spyOn(console, "log").mockImplementation((message: unknown) => {
+    logged.push(String(message));
+  });
+  await handleAlertsCommand("list", args);
+  return { requestedUrls, logged };
+}
+
 describe("toolkit alerts list CLI defaults", () => {
   it("defaults to --state open and --limit 100 in a single HTTP request", async () => {
-    const requestedUrls: URL[] = [];
-    const logged: string[] = [];
-    installPaginatedFetchMock(requestedUrls);
-    vi.spyOn(console, "log").mockImplementation((message: unknown) => {
-      logged.push(String(message));
-    });
-
-    await handleAlertsCommand("list", ["--json"]);
+    const { requestedUrls, logged } = await runAlertsListCli(["--json"]);
 
     expect(requestedUrls).toHaveLength(1);
     expect(requestedUrls[0]?.searchParams.get("lifecycleState")).toBe("open");
@@ -159,14 +165,7 @@ describe("toolkit alerts list CLI defaults", () => {
   });
 
   it("supports --state all and --limit all to fetch open and resolved exhaustively", async () => {
-    const requestedUrls: URL[] = [];
-    const logged: string[] = [];
-    installPaginatedFetchMock(requestedUrls);
-    vi.spyOn(console, "log").mockImplementation((message: unknown) => {
-      logged.push(String(message));
-    });
-
-    await handleAlertsCommand("list", [
+    const { requestedUrls, logged } = await runAlertsListCli([
       "--state",
       "all",
       "--limit",
@@ -182,14 +181,7 @@ describe("toolkit alerts list CLI defaults", () => {
   });
 
   it("forwards explicit --state resolved and numeric --limit", async () => {
-    const requestedUrls: URL[] = [];
-    const logged: string[] = [];
-    installPaginatedFetchMock(requestedUrls);
-    vi.spyOn(console, "log").mockImplementation((message: unknown) => {
-      logged.push(String(message));
-    });
-
-    await handleAlertsCommand("list", [
+    const { requestedUrls, logged } = await runAlertsListCli([
       "--state",
       "resolved",
       "--limit",

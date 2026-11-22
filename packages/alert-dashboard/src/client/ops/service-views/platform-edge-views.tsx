@@ -10,12 +10,12 @@ import { SeriesChart } from "#client/charts/series-chart.tsx";
 import {
   ChartGrid,
   inlineBudgetMeter,
-  kpiCard,
   numTableCol,
   statusPill,
   tableCol,
   ZPOOL_COLUMNS,
 } from "#client/ops/pages/cluster-page.tsx";
+import { kpiCard } from "#client/ops/pages/cluster-storage-section.tsx";
 import {
   BudgetMeter,
   DataTable,

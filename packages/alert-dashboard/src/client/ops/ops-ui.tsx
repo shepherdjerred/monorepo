@@ -180,6 +180,34 @@ export function SectionCard({
   );
 }
 
+/** One section at a glance: its verdict, its summary and every metric. */
+export function SectionSummary({
+  section,
+  headingId,
+}: {
+  readonly section: Section;
+  readonly headingId?: string;
+}): React.JSX.Element {
+  const id = headingId ?? `summary-${section.id}`;
+  return (
+    <article
+      className={`section-summary section-${section.severity}`}
+      aria-labelledby={id}
+    >
+      <h2 id={id}>{section.title}</h2>
+      <SeverityBadge severity={section.severity} />
+      <p>{section.summary}</p>
+      {section.metrics.length === 0 ? null : (
+        <div className="metric-row">
+          {section.metrics.map((metric) => (
+            <MetricTile key={metric.id} metric={metric} />
+          ))}
+        </div>
+      )}
+    </article>
+  );
+}
+
 /** A severity badge beside a one-line verdict, with a line of context under it. */
 export function StatusBanner({
   severity,

@@ -45,7 +45,7 @@ export const CLUSTER_PROM_QUERIES = {
   swVolumes: "sum(SeaweedFS_volumeServer_volumes)",
   swMaxVolumes: "sum(SeaweedFS_volumeServer_max_volumes)",
   swBackupLag:
-    'time() - min(SeaweedFS_filer_last_send_timestamp_of_subscribe{clientName="backup_s3"}) / 1e9',
+    'clamp_min((max(SeaweedFS_filer_last_send_timestamp_of_subscribe{clientName=~"filer:.*"}) - max(SeaweedFS_filer_last_send_timestamp_of_subscribe{clientName="backup_s3"})) / 1e9, 0)',
   swBuckets: "count(count by (bucket) (SeaweedFS_s3_bucket_size_bytes))",
   pvcUsed:
     "max by (namespace, persistentvolumeclaim) (kubelet_volume_stats_used_bytes)",
@@ -61,6 +61,9 @@ export const CLUSTER_PROM_QUERIES = {
   stsSpec: "max by (namespace, statefulset) (kube_statefulset_replicas)",
   stsReady:
     "max by (namespace, statefulset) (kube_statefulset_status_replicas_ready)",
+  dsSpec:
+    "max by (namespace, daemonset) (kube_daemonset_status_desired_number_scheduled)",
+  dsReady: "max by (namespace, daemonset) (kube_daemonset_status_number_ready)",
   podImages: "max by (namespace, pod, image) (kube_pod_container_info)",
 } as const;
 
@@ -95,6 +98,8 @@ const CLUSTER_PROM_KEYS = [
   "deployReady",
   "stsSpec",
   "stsReady",
+  "dsSpec",
+  "dsReady",
   "podImages",
 ] as const satisfies readonly ClusterPromKey[];
 
@@ -127,6 +132,8 @@ function emptyPromMap(): ClusterPromMap {
     deployReady: [],
     stsSpec: [],
     stsReady: [],
+    dsSpec: [],
+    dsReady: [],
     podImages: [],
   };
 }

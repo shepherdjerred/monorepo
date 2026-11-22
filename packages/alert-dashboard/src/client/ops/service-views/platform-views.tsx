@@ -15,12 +15,12 @@ import { ObservabilityServiceView } from "./platform-observability-views.tsx";
 import { SeriesChart } from "#client/charts/series-chart.tsx";
 import {
   ChartGrid,
-  kpiCard,
   numTableCol,
   statusPill,
   tableCol,
   WORKLOAD_COLUMNS,
 } from "#client/ops/pages/cluster-page.tsx";
+import { kpiCard } from "#client/ops/pages/cluster-storage-section.tsx";
 import { age } from "#client/time.ts";
 import { DataTable, type DataTableColumn } from "#client/visuals/index.ts";
 import { formatValue } from "#shared/ops-format";

@@ -14,6 +14,8 @@ export type WorkloadPromInputs = {
   deployReady: readonly PrometheusSample[];
   stsSpec: readonly PrometheusSample[];
   stsReady: readonly PrometheusSample[];
+  dsSpec?: readonly PrometheusSample[];
+  dsReady?: readonly PrometheusSample[];
 };
 
 type WorkloadMaps = {
@@ -23,6 +25,7 @@ type WorkloadMaps = {
   imageByPod: Map<string, string>;
   deployReady: Map<string, number>;
   stsReady: Map<string, number>;
+  dsReady: Map<string, number>;
 };
 
 function samplePairMap(
@@ -66,17 +69,19 @@ function indexTelemetry(
     imageByPod,
     deployReady: samplePairMap(prom.deployReady, "namespace", "deployment"),
     stsReady: samplePairMap(prom.stsReady, "namespace", "statefulset"),
+    dsReady: samplePairMap(prom.dsReady ?? [], "namespace", "daemonset"),
   };
 }
 
 function addControllerSamples(input: {
   samples: readonly PrometheusSample[];
-  kind: "Deployment" | "StatefulSet";
+  kind: "Deployment" | "StatefulSet" | "DaemonSet";
   nameLabel: string;
   readyMap: ReadonlyMap<string, number>;
   argoByNs: ReadonlyMap<string, string>;
   services: ServiceIndex;
   target: Map<string, ClusterFacet["workloads"][number]>;
+  controllerSeeded: Set<string>;
 }): void {
   for (const s of input.samples) {
     const namespace = s.metric["namespace"] ?? "";
@@ -85,7 +90,9 @@ function addControllerSamples(input: {
       continue;
     }
     const svc = input.services.byNamespace(namespace);
-    input.target.set(`${namespace}/${input.kind}/${name}`, {
+    const key = `${namespace}/${input.kind}/${name}`;
+    input.controllerSeeded.add(key);
+    input.target.set(key, {
       namespace,
       kind: input.kind,
       name,
@@ -113,12 +120,14 @@ function inferWorkloadPrefix(
     : podName.replace(/-[a-z0-9]{8,10}-[a-z0-9]{5}$/u, "");
 }
 
-function mergePodIntoWorkloads(
-  pod: PodStatus,
-  maps: WorkloadMaps,
-  services: ServiceIndex,
-  target: Map<string, ClusterFacet["workloads"][number]>,
-): void {
+function mergePodIntoWorkloads(input: {
+  pod: PodStatus;
+  maps: WorkloadMaps;
+  services: ServiceIndex;
+  target: Map<string, ClusterFacet["workloads"][number]>;
+  controllerSeeded: ReadonlySet<string>;
+}): void {
+  const { pod, maps, services, target, controllerSeeded } = input;
   if (pod.ownerKind === "Job") {
     return;
   }
@@ -130,8 +139,15 @@ function mergePodIntoWorkloads(
   const restarts = maps.restartsByPod.get(podKey) ?? pod.restarts;
   const oom = maps.oomByPod.get(podKey) ?? 0;
   const img = maps.imageByPod.get(podKey) ?? "";
+  const isHealthy = pod.phase === "Running" && pod.problem === undefined;
   const existing = target.get(key);
   if (existing !== undefined) {
+    if (!controllerSeeded.has(key)) {
+      existing.desiredReplicas += 1;
+      if (isHealthy) {
+        existing.readyReplicas += 1;
+      }
+    }
     existing.restarts24h += restarts;
     existing.oomKills24h += oom;
     if (img !== "" && existing.image === "") {
@@ -140,7 +156,6 @@ function mergePodIntoWorkloads(
     return;
   }
   const svc = services.byNamespace(pod.namespace);
-  const isHealthy = pod.phase === "Running" && pod.problem === undefined;
   target.set(key, {
     namespace: pod.namespace,
     kind,
@@ -167,6 +182,7 @@ export function buildWorkloads(input: {
 } {
   const maps = indexTelemetry(input.argoApps, input.prom);
   const workloadsMap = new Map<string, ClusterFacet["workloads"][number]>();
+  const controllerSeeded = new Set<string>();
 
   addControllerSamples({
     samples: input.prom.deploySpec,
@@ -176,6 +192,7 @@ export function buildWorkloads(input: {
     argoByNs: maps.argoByNs,
     services: input.services,
     target: workloadsMap,
+    controllerSeeded,
   });
   addControllerSamples({
     samples: input.prom.stsSpec,
@@ -185,10 +202,27 @@ export function buildWorkloads(input: {
     argoByNs: maps.argoByNs,
     services: input.services,
     target: workloadsMap,
+    controllerSeeded,
+  });
+  addControllerSamples({
+    samples: input.prom.dsSpec ?? [],
+    kind: "DaemonSet",
+    nameLabel: "daemonset",
+    readyMap: maps.dsReady,
+    argoByNs: maps.argoByNs,
+    services: input.services,
+    target: workloadsMap,
+    controllerSeeded,
   });
 
   for (const pod of input.pods) {
-    mergePodIntoWorkloads(pod, maps, input.services, workloadsMap);
+    mergePodIntoWorkloads({
+      pod,
+      maps,
+      services: input.services,
+      target: workloadsMap,
+      controllerSeeded,
+    });
   }
 
   const workloads = [...workloadsMap.values()].sort(

@@ -4,18 +4,13 @@ import type {
   ClusterFacet,
   ClusterWorkload,
 } from "@shepherdjerred/ops-model/facets.ts";
-import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 
 import { SeriesChart } from "#client/charts/series-chart.tsx";
 import type { ChartMode, ChartThreshold } from "#client/charts/uplot-chart.tsx";
 import { facetQuery } from "#client/ops/ops-api.ts";
-import {
-  PageHeading,
-  ServiceLink,
-  SeverityBadge,
-} from "#client/ops/ops-ui.tsx";
+import { PageHeading, ServiceLink } from "#client/ops/ops-ui.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { BudgetMeter, type DataTableColumn } from "#client/visuals/index.ts";
 import { formatValue, type ValueUnit } from "#shared/ops-format";
@@ -137,27 +132,6 @@ export function statusPill(
       <span aria-hidden="true">{glyph}</span>
       <span>{text}</span>
     </span>
-  );
-}
-
-export function kpiCard(
-  label: string,
-  value: string,
-  sub: string,
-  severity: Severity = "ok",
-): React.JSX.Element {
-  return (
-    <div
-      key={label}
-      className={`platform-kpi-card platform-kpi-card-${severity}`}
-    >
-      <div className="platform-kpi-head">
-        <span className="platform-kpi-label">{label}</span>
-        {severity === "info" ? null : <SeverityBadge severity={severity} />}
-      </div>
-      <strong className="platform-kpi-value">{value}</strong>
-      <p className="platform-kpi-sub">{sub}</p>
-    </div>
   );
 }
 

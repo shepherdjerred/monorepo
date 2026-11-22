@@ -1,30 +1,17 @@
 import type { RenovateFacet } from "@shepherdjerred/ops-model/facets.ts";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
-
-import type { OpsFacetResponse } from "#shared/ops-schema";
-import { InstantTextSchema } from "#shared/time";
-import { FIXTURE_OPS_FACETS } from "#test-fixtures/ops-facets";
 
 vi.mock("#client/theme.ts", () => ({
   useResolvedTheme: () => "light",
 }));
 
-const { opsKeys } = await import("#client/ops/ops-api.ts");
+const { renderSeededFacetRoute, requireFixtureFacet } =
+  await import("./facet-page-test-helpers.tsx");
 const { filterRenovateItemsByTab, parseRenovateTab, RenovatePage } =
   await import("./renovate-page.tsx");
 
-const GENERATED_AT = InstantTextSchema.parse("2026-11-21T22:30:00Z");
-const RECEIVED_AT = InstantTextSchema.parse("2026-11-21T22:30:05Z");
-
 function getFixtureRenovate(): RenovateFacet {
-  const facet = FIXTURE_OPS_FACETS.renovate;
-  if (facet === undefined) {
-    throw new Error("FIXTURE_OPS_FACETS.renovate is missing");
-  }
-  return facet;
+  return requireFixtureFacet("renovate");
 }
 
 function renderRenovatePage(
@@ -32,25 +19,13 @@ function renderRenovatePage(
   data: RenovateFacet | null,
   stale = false,
 ): string {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  const envelope: OpsFacetResponse<"renovate"> = {
+  return renderSeededFacetRoute({
     key: "renovate",
-    generatedAt: GENERATED_AT,
-    receivedAt: RECEIVED_AT,
-    stale,
+    url,
     data,
-  };
-  queryClient.setQueryData(opsKeys.facet("renovate"), envelope);
-
-  return renderToStaticMarkup(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[url]}>
-        <RenovatePage />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
+    stale,
+    children: <RenovatePage />,
+  });
 }
 
 describe("RenovatePage helpers", () => {

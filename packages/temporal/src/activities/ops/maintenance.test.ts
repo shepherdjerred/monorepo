@@ -90,6 +90,9 @@ describe("maintenance zpool and SeaweedFS signals", () => {
   });
 
   test("emits SeaweedFS volume slot saturation and B2 replication lag signals when unhealthy", () => {
+    expect(MAINTENANCE_QUERIES.seaweedfsBackupLag).toBe(
+      'clamp_min((max(SeaweedFS_filer_last_send_timestamp_of_subscribe{clientName=~"filer:.*"}) - max(SeaweedFS_filer_last_send_timestamp_of_subscribe{clientName="backup_s3"})) / 1e9, 0)',
+    );
     const healthy = mapMaintenance(
       baseSamples({
         seaweedfsVolumes: [sample(0.5)],

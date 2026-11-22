@@ -26,6 +26,28 @@ import {
 const now = new Date("2026-11-21T22:00:00.000Z");
 const services = new ServiceIndex();
 
+type VectorRow = {
+  metric: Record<string, string>;
+  value: [number, string];
+};
+
+function createMockPrometheus(
+  respond: (query: string) => VectorRow[],
+): PrometheusClient {
+  return new PrometheusClient({
+    baseUrl: "http://prometheus:9090",
+    fetch: (input) => {
+      const query = new URL(String(input)).searchParams.get("query") ?? "";
+      return Promise.resolve(
+        Response.json({
+          status: "success",
+          data: { resultType: "vector", result: respond(query) },
+        }),
+      );
+    },
+  });
+}
+
 describe("monorepo and cluster facets", () => {
   test("monorepo facet compacts diagnostics, computes Turbo hit ratio, and builds workspace inventory", async () => {
     clearMonorepoCacheForTests();
@@ -61,54 +83,45 @@ describe("monorepo and cluster facets", () => {
   });
 
   test("cluster facet combines K8s nodes, workloads, databases, zpools, NVMe, SeaweedFS, and ArgoCD", async () => {
-    const prometheus = new PrometheusClient({
-      baseUrl: "http://prometheus:9090",
-      fetch: (input) => {
-        const q = new URL(String(input)).searchParams.get("query") ?? "";
-        let result: {
-          metric: Record<string, string>;
-          value: [number, string];
-        }[] = [];
-        if (q.includes("node_cpu_seconds_total") && q.startsWith("count")) {
-          result = [{ metric: { node: "torvalds" }, value: [1, "16"] }];
-        } else if (q.includes("zfs_zpool_size_bytes")) {
-          result = [
-            {
-              metric: { instance: "torvalds", zpool_name: "zfspv-pool-nvme" },
-              value: [1, "1000000000000"],
+    const prometheus = createMockPrometheus((q) => {
+      if (q.includes("node_cpu_seconds_total") && q.startsWith("count")) {
+        return [{ metric: { node: "torvalds" }, value: [1, "16"] }];
+      }
+      if (q.includes("zfs_zpool_size_bytes")) {
+        return [
+          {
+            metric: { instance: "torvalds", zpool_name: "zfspv-pool-nvme" },
+            value: [1, "1000000000000"],
+          },
+        ];
+      }
+      if (q.includes("zfs_zpool_free_bytes")) {
+        return [
+          {
+            metric: { instance: "torvalds", zpool_name: "zfspv-pool-nvme" },
+            value: [1, "600000000000"],
+          },
+        ];
+      }
+      if (q.includes("nvme_data_units_written_total")) {
+        return [
+          {
+            metric: {
+              node: "torvalds",
+              device: "nvme0n1",
+              serial: "S1",
+              model: "Samsung 990 PRO",
             },
-          ];
-        } else if (q.includes("zfs_zpool_free_bytes")) {
-          result = [
-            {
-              metric: { instance: "torvalds", zpool_name: "zfspv-pool-nvme" },
-              value: [1, "600000000000"],
-            },
-          ];
-        } else if (q.includes("nvme_data_units_written_total")) {
-          result = [
-            {
-              metric: {
-                node: "torvalds",
-                device: "nvme0n1",
-                serial: "S1",
-                model: "Samsung 990 PRO",
-              },
-              value: [1, "10737418240"],
-            },
-          ];
-        } else if (q.includes("SeaweedFS_volumeServer_volumes")) {
-          result = [{ metric: {}, value: [1, "12"] }];
-        } else if (q.includes("SeaweedFS_volumeServer_max_volumes")) {
-          result = [{ metric: {}, value: [1, "64"] }];
-        }
-        return Promise.resolve(
-          Response.json({
-            status: "success",
-            data: { resultType: "vector", result },
-          }),
-        );
-      },
+            value: [1, "10737418240"],
+          },
+        ];
+      }
+      if (q.includes("SeaweedFS_volumeServer_volumes")) {
+        return [{ metric: {}, value: [1, "12"] }];
+      }
+      return q.includes("SeaweedFS_volumeServer_max_volumes")
+        ? [{ metric: {}, value: [1, "64"] }]
+        : [];
     });
 
     const facet = await collectClusterFacet({
@@ -146,6 +159,26 @@ describe("monorepo and cluster facets", () => {
               restarts: 0,
               problem: undefined,
               stuck: false,
+            },
+            {
+              namespace: "promtail",
+              name: "promtail-aaaaa",
+              phase: "Running",
+              createdAt: "2026-11-20T00:00:00Z",
+              ownerKind: "DaemonSet",
+              restarts: 0,
+              problem: undefined,
+              stuck: false,
+            },
+            {
+              namespace: "promtail",
+              name: "promtail-bbbbb",
+              phase: "Running",
+              createdAt: "2026-11-20T00:00:00Z",
+              ownerKind: "DaemonSet",
+              restarts: 3,
+              problem: "CrashLoopBackOff",
+              stuck: true,
             },
           ]),
         listArgoApplications: () =>
@@ -185,6 +218,17 @@ describe("monorepo and cluster facets", () => {
       talosVersion: "v1.11.2",
     });
     expect(facet.workloadSummary.retainedPools).toBe(1);
+    expect(facet.workloadSummary.degraded).toBe(1);
+    expect(
+      facet.workloads.find(
+        (w) => w.namespace === "promtail" && w.name === "promtail",
+      ),
+    ).toMatchObject({
+      kind: "DaemonSet",
+      readyReplicas: 1,
+      desiredReplicas: 2,
+      restarts24h: 3,
+    });
     expect(facet.databases[0]).toMatchObject({
       namespace: "tracker",
       engine: "postgres",
@@ -211,37 +255,23 @@ describe("monorepo and cluster facets", () => {
 
 describe("observability and temporal facets", () => {
   test("observability facet combines Prometheus, Loki, Tempo RED, and Grafana", async () => {
-    const prometheus = new PrometheusClient({
-      baseUrl: "http://prometheus:9090",
-      fetch: (input) => {
-        const q = new URL(String(input)).searchParams.get("query") ?? "";
-        let result: {
-          metric: Record<string, string>;
-          value: [number, string];
-        }[] = [];
-        if (q.includes("prometheus_tsdb_head_series")) {
-          result = [{ metric: {}, value: [1, "150000"] }];
-        } else if (q === "up == 0") {
-          result = [
-            {
-              metric: { job: "node-exporter", instance: "10.0.0.2" },
-              value: [1, "0"],
-            },
-          ];
-        } else if (
-          q.startsWith(
-            "sum by (service) (rate(traces_spanmetrics_calls_total[5m]))",
-          )
-        ) {
-          result = [{ metric: { service: "tracker" }, value: [1, "3.45"] }];
-        }
-        return Promise.resolve(
-          Response.json({
-            status: "success",
-            data: { resultType: "vector", result },
-          }),
-        );
-      },
+    const prometheus = createMockPrometheus((q) => {
+      if (q.includes("prometheus_tsdb_head_series")) {
+        return [{ metric: {}, value: [1, "150000"] }];
+      }
+      if (q === "up == 0") {
+        return [
+          {
+            metric: { job: "node-exporter", instance: "10.0.0.2" },
+            value: [1, "0"],
+          },
+        ];
+      }
+      return q.startsWith(
+        "sum by (service) (rate(traces_spanmetrics_calls_total[5m]))",
+      )
+        ? [{ metric: { service: "tracker" }, value: [1, "3.45"] }]
+        : [];
     });
 
     const loki = new LokiClient({

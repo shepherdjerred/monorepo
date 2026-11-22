@@ -34,9 +34,9 @@ export const MAINTENANCE_QUERIES = {
   /** SeaweedFS volume slot saturation across volume servers. */
   seaweedfsVolumes:
     "sum(SeaweedFS_volumeServer_volumes) / sum(SeaweedFS_volumeServer_max_volumes)",
-  /** Seconds since SeaweedFS filer.backup last received a metadata event. */
+  /** Seconds SeaweedFS filer.backup lags behind the filer's metadata stream. */
   seaweedfsBackupLag:
-    'time() - min(SeaweedFS_filer_last_send_timestamp_of_subscribe{clientName="backup_s3"}) / 1e9',
+    'clamp_min((max(SeaweedFS_filer_last_send_timestamp_of_subscribe{clientName=~"filer:.*"}) - max(SeaweedFS_filer_last_send_timestamp_of_subscribe{clientName="backup_s3"})) / 1e9, 0)',
 } as const;
 
 export type MaintenanceQuery = keyof typeof MAINTENANCE_QUERIES;

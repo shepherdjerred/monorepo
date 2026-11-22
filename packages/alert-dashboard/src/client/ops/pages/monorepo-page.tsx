@@ -60,21 +60,29 @@ function InlineHitRatio({
   );
 }
 
-const EXPENSIVE_TASK_COLUMNS: readonly DataTableColumn<MonorepoExpensiveTask>[] =
-  [
+export function buildExpensiveTaskColumns(options?: {
+  readonly compact?: boolean;
+}): readonly DataTableColumn<MonorepoExpensiveTask>[] {
+  const compact = options?.compact === true;
+  return [
     {
       key: "taskId",
       header: "Task",
       sortValue: (row) => row.taskId,
-      render: (row) => (
-        <div className="eng-pkg-cell">
-          <span className="eng-pkg-name">{row.taskId}</span>
-          <span className="eng-pkg-sub">
-            <span>{row.packageName}</span>
-            <span className="visual-pill visual-pill-neutral">{row.task}</span>
-          </span>
-        </div>
-      ),
+      render: (row) =>
+        compact ? (
+          <code className="eng-pkg-name">{row.taskId}</code>
+        ) : (
+          <div className="eng-pkg-cell">
+            <span className="eng-pkg-name">{row.taskId}</span>
+            <span className="eng-pkg-sub">
+              <span>{row.packageName}</span>
+              <span className="visual-pill visual-pill-neutral">
+                {row.task}
+              </span>
+            </span>
+          </div>
+        ),
     },
     {
       key: "hits",
@@ -95,8 +103,18 @@ const EXPENSIVE_TASK_COLUMNS: readonly DataTableColumn<MonorepoExpensiveTask>[] 
       header: "Hit Ratio",
       align: "right",
       sortValue: (row) => row.hitRatio,
-      exportValue: (row) => Math.round(row.hitRatio * 100),
-      render: (row) => <InlineHitRatio ratio={row.hitRatio} />,
+      ...(compact
+        ? {}
+        : {
+            exportValue: (row: MonorepoExpensiveTask) =>
+              Math.round(row.hitRatio * 100),
+          }),
+      render: (row) =>
+        compact ? (
+          formatValue(row.hitRatio, "ratio")
+        ) : (
+          <InlineHitRatio ratio={row.hitRatio} />
+        ),
     },
     {
       key: "medianMissMs",
@@ -113,6 +131,9 @@ const EXPENSIVE_TASK_COLUMNS: readonly DataTableColumn<MonorepoExpensiveTask>[] 
       render: (row) => `${row.totalMissMinutes.toFixed(1)} min`,
     },
   ];
+}
+
+const EXPENSIVE_TASK_COLUMNS = buildExpensiveTaskColumns();
 
 const PACKAGE_COLUMNS: readonly DataTableColumn<MonorepoPackage>[] = [
   {

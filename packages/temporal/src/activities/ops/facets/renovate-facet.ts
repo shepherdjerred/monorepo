@@ -1,4 +1,9 @@
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  NoSuchKey,
+  S3Client,
+  S3ServiceException,
+} from "@aws-sdk/client-s3";
 import { z } from "zod";
 import type {
   IssueBody,
@@ -24,52 +29,55 @@ import {
   type RenovateVersionDelta,
 } from "@shepherdjerred/ops-model/facets.ts";
 import { daysBefore } from "#activities/ops/ops-types.ts";
+import { normalizeVersionString } from "#activities/ops/renovate-delta/semver-utils.ts";
 
 export const RENOVATE_DELTA_INDEX_KEY = "renovate-deltas/v1/latest-index.json";
 
-const RawDeltaEntrySchema = z.union([
-  RenovateVersionDeltaSchema,
-  z
-    .object({ delta: RenovateVersionDeltaSchema })
-    .transform((entry) => entry.delta),
-]);
-
 const RawDeltaIndexSchema = z.object({
-  updatedAt: z.string().optional(),
-  deltasByBranch: z.record(z.string(), z.unknown()).default({}),
+  updatedAt: z.iso.datetime().optional(),
+  deltasByBranch: z.record(z.string(), RenovateVersionDeltaSchema),
 });
 
 export type RenovateDeltaReader = () => Promise<
   Readonly<Record<string, RenovateVersionDelta>>
 >;
 
-/** Parse raw JSON from `latest-index.json`, skipping any malformed branch entry. */
+export type S3DeltaClient = {
+  readonly send: (
+    command: GetObjectCommand,
+    options?: { readonly abortSignal?: AbortSignal },
+  ) => Promise<{
+    readonly Body?:
+      { readonly transformToString: () => Promise<string> } | undefined;
+  }>;
+};
+
+function isS3NotFound(error: unknown): boolean {
+  return (
+    error instanceof NoSuchKey ||
+    (error instanceof S3ServiceException &&
+      error.$metadata.httpStatusCode === 404)
+  );
+}
+
+/** Parse and validate raw JSON from `latest-index.json`, failing loudly on malformed entries. */
 export function parseRenovateDeltaIndex(
   rawText: string,
 ): Record<string, RenovateVersionDelta> {
-  const parsed = RawDeltaIndexSchema.safeParse(JSON.parse(rawText));
-  if (!parsed.success) {
-    return {};
-  }
-  const result: Record<string, RenovateVersionDelta> = {};
-  for (const [branch, rawEntry] of Object.entries(parsed.data.deltasByBranch)) {
-    const validated = RawDeltaEntrySchema.safeParse(rawEntry);
-    if (validated.success) {
-      result[branch] = validated.data;
-    }
-  }
-  return result;
+  const parsed: unknown = JSON.parse(rawText);
+  return RawDeltaIndexSchema.parse(parsed).deltasByBranch;
 }
 
 /**
- * Read `s3://<bucket>/renovate-deltas/v1/latest-index.json`, gracefully
- * returning `{}` when S3 credentials are absent or the index object does not exist.
+ * Read `s3://<bucket>/renovate-deltas/v1/latest-index.json`, returning `{}`
+ * when S3 credentials are absent or the index object does not exist (404),
+ * and surfacing transport or schema errors loudly.
  */
 export async function readLatestRenovateDeltas(
-  s3Client?: S3Client,
+  s3Client?: S3DeltaClient,
 ): Promise<Readonly<Record<string, RenovateVersionDelta>>> {
   const bucket = Bun.env["REPORT_RECEIPT_BUCKET"] ?? "llm-archive";
-  let client = s3Client;
+  let client: S3DeltaClient | undefined = s3Client;
   if (client === undefined) {
     const endpoint = Bun.env["S3_ENDPOINT"];
     const accessKeyId = Bun.env["AWS_ACCESS_KEY_ID"];
@@ -95,6 +103,7 @@ export async function readLatestRenovateDeltas(
           : { accessKeyId, secretAccessKey, sessionToken },
     });
   }
+  let rawBody: string | undefined;
   try {
     const response = await client.send(
       new GetObjectCommand({
@@ -103,12 +112,22 @@ export async function readLatestRenovateDeltas(
       }),
       { abortSignal: AbortSignal.timeout(10_000) },
     );
-    return response.Body === undefined
-      ? {}
-      : parseRenovateDeltaIndex(await response.Body.transformToString());
-  } catch {
-    return {};
+    rawBody =
+      response.Body === undefined
+        ? undefined
+        : await response.Body.transformToString();
+  } catch (error: unknown) {
+    if (isS3NotFound(error)) {
+      return {};
+    }
+    throw error;
   }
+  if (rawBody === undefined) {
+    throw new Error(
+      `S3 object s3://${bucket}/${RENOVATE_DELTA_INDEX_KEY} returned an empty body`,
+    );
+  }
+  return parseRenovateDeltaIndex(rawBody);
 }
 
 function isHalfUpgrade(pr: OpenPullRequest): boolean {
@@ -144,12 +163,38 @@ function prFields(pr: OpenPullRequest | undefined): Partial<RenovateItem> {
   };
 }
 
+function resolveAuthoritativeTarget(
+  rawTargetVersion: string | undefined,
+): string | null {
+  return rawTargetVersion === undefined
+    ? null
+    : (normalizeVersionString(rawTargetVersion) ?? rawTargetVersion);
+}
+
+function matchDeltaForTarget(
+  delta: RenovateVersionDelta | undefined,
+  currentTargetVersion: string | null,
+): RenovateVersionDelta | undefined {
+  if (delta === undefined || currentTargetVersion === null) {
+    return undefined;
+  }
+  const normalizedDelta = normalizeVersionString(delta.targetVersion);
+  const normalizedCurrent = normalizeVersionString(currentTargetVersion);
+  const matches =
+    normalizedDelta !== null && normalizedCurrent !== null
+      ? normalizedDelta === normalizedCurrent
+      : delta.targetVersion.trim() === currentTargetVersion.trim();
+  return matches ? delta : undefined;
+}
+
 function buildDashboardItem(
   update: RenovateUpdate,
   pr: OpenPullRequest | undefined,
   delta: RenovateVersionDelta | undefined,
 ): RenovateItem {
   const ecosystem = update.ecosystem ?? "unknown";
+  const targetVersion = resolveAuthoritativeTarget(update.targetVersion);
+  const matchedDelta = matchDeltaForTarget(delta, targetVersion);
   return {
     id: `${update.state}:${update.branch}`,
     branch: update.branch,
@@ -161,11 +206,11 @@ function buildDashboardItem(
     state: update.state,
     checked: update.checked,
     ...prFields(pr),
-    runningVersion: delta?.runningVersion ?? null,
-    pinnedVersion: delta?.pinnedVersion ?? null,
-    targetVersion: delta?.targetVersion ?? update.targetVersion ?? null,
+    runningVersion: matchedDelta?.runningVersion ?? null,
+    pinnedVersion: matchedDelta?.pinnedVersion ?? null,
+    targetVersion,
     consumers: [],
-    ...(delta === undefined ? {} : { delta }),
+    ...(matchedDelta === undefined ? {} : { delta: matchedDelta }),
   };
 }
 
@@ -181,6 +226,8 @@ function buildStandalonePrItem(
     pr.branch,
     extracted.targetVersion,
   );
+  const targetVersion = resolveAuthoritativeTarget(extracted.targetVersion);
+  const matchedDelta = matchDeltaForTarget(delta, targetVersion);
   return {
     id: `pr:${String(pr.number)}`,
     branch: pr.branch,
@@ -192,11 +239,11 @@ function buildStandalonePrItem(
     state: openPrState(pr),
     checked: false,
     ...prFields(pr),
-    runningVersion: delta?.runningVersion ?? null,
-    pinnedVersion: delta?.pinnedVersion ?? null,
-    targetVersion: delta?.targetVersion ?? extracted.targetVersion ?? null,
+    runningVersion: matchedDelta?.runningVersion ?? null,
+    pinnedVersion: matchedDelta?.pinnedVersion ?? null,
+    targetVersion,
     consumers: [],
-    ...(delta === undefined ? {} : { delta }),
+    ...(matchedDelta === undefined ? {} : { delta: matchedDelta }),
   };
 }
 

@@ -1,8 +1,5 @@
 import { Loaded } from "@shepherdjerred/loaded";
-import type {
-  ClusterArgoApp,
-  MonorepoExpensiveTask,
-} from "@shepherdjerred/ops-model/facets.ts";
+import type { ClusterArgoApp } from "@shepherdjerred/ops-model/facets.ts";
 import {
   APP_HOSTS,
   argocdApplicationLink,
@@ -13,58 +10,16 @@ import { ExternalLinkIcon } from "lucide-react";
 import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { mapGitHubPrToStackPr } from "#client/ops/flow-enrichment.tsx";
 import { facetQuery } from "#client/ops/ops-api.ts";
+import { buildExpensiveTaskColumns } from "#client/ops/pages/monorepo-page.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import {
   DataTable,
   StackTree,
   type DataTableColumn,
 } from "#client/visuals/index.ts";
-import { formatValue } from "#shared/ops-format";
 import type { SeriesRange } from "#shared/ops-schema";
 
-const CI_TASK_COLUMNS: readonly DataTableColumn<MonorepoExpensiveTask>[] = [
-  {
-    key: "taskId",
-    header: "Task",
-    sortValue: (row) => row.taskId,
-    render: (row) => <code className="eng-pkg-name">{row.taskId}</code>,
-  },
-  {
-    key: "hits",
-    header: "Hits",
-    align: "right",
-    sortValue: (row) => row.hits,
-    render: (row) => formatValue(row.hits, "count"),
-  },
-  {
-    key: "misses",
-    header: "Misses",
-    align: "right",
-    sortValue: (row) => row.misses,
-    render: (row) => formatValue(row.misses, "count"),
-  },
-  {
-    key: "hitRatio",
-    header: "Hit Ratio",
-    align: "right",
-    sortValue: (row) => row.hitRatio,
-    render: (row) => formatValue(row.hitRatio, "ratio"),
-  },
-  {
-    key: "medianMissMs",
-    header: "Median Miss",
-    align: "right",
-    sortValue: (row) => row.medianMissMs,
-    render: (row) => formatValue(row.medianMissMs, "ms"),
-  },
-  {
-    key: "totalMissMinutes",
-    header: "Total Miss Time",
-    align: "right",
-    sortValue: (row) => row.totalMissMinutes,
-    render: (row) => `${row.totalMissMinutes.toFixed(1)} min`,
-  },
-];
+const CI_TASK_COLUMNS = buildExpensiveTaskColumns({ compact: true });
 
 const ARGO_COLUMNS: readonly DataTableColumn<ClusterArgoApp>[] = [
   {

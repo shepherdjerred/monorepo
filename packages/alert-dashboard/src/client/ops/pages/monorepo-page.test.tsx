@@ -1,51 +1,21 @@
 import type { MonorepoFacet } from "@shepherdjerred/ops-model/facets.ts";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router";
 import { describe, expect, it, vi } from "vitest";
-
-import type { OpsFacetResponse } from "#shared/ops-schema";
-import { InstantTextSchema } from "#shared/time";
-import { FIXTURE_OPS_FACETS } from "#test-fixtures/ops-facets";
 
 vi.mock("#client/theme.ts", () => ({
   useResolvedTheme: () => "light",
 }));
 
 const { MonorepoPage } = await import("./monorepo-page.tsx");
-const { opsKeys } = await import("#client/ops/ops-api.ts");
-
-const GENERATED_AT = InstantTextSchema.parse("2026-11-21T22:30:00Z");
-const RECEIVED_AT = InstantTextSchema.parse("2026-11-21T22:30:05Z");
-
-function getFixtureMonorepo(): MonorepoFacet {
-  const facet = FIXTURE_OPS_FACETS.monorepo;
-  if (facet === undefined) {
-    throw new Error("FIXTURE_OPS_FACETS.monorepo is missing");
-  }
-  return facet;
-}
+const { renderSeededFacetRoute, requireFixtureFacet } =
+  await import("./facet-page-test-helpers.tsx");
 
 function renderMonorepoPage(url: string, data: MonorepoFacet | null): string {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  const envelope: OpsFacetResponse<"monorepo"> = {
+  return renderSeededFacetRoute({
     key: "monorepo",
-    generatedAt: GENERATED_AT,
-    receivedAt: RECEIVED_AT,
-    stale: false,
+    url,
     data,
-  };
-  queryClient.setQueryData(opsKeys.facet("monorepo"), envelope);
-
-  return renderToStaticMarkup(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[url]}>
-        <MonorepoPage />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
+    children: <MonorepoPage />,
+  });
 }
 
 describe("MonorepoPage", () => {
@@ -58,7 +28,7 @@ describe("MonorepoPage", () => {
   });
 
   it("renders workspace KPIs, Turbo cache meter, 4 synchronized charts, audits strip, expensive tasks, and package directory", () => {
-    const monorepo = getFixtureMonorepo();
+    const monorepo = requireFixtureFacet("monorepo");
     const html = renderMonorepoPage("/monorepo?range=7d", monorepo);
 
     expect(html).toContain("<title>Monorepo · Hub</title>");

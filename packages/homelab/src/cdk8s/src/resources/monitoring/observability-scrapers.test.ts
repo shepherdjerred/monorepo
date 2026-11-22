@@ -3,58 +3,102 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { createObservabilityScrapers } from "./observability-scrapers.ts";
 
+const MonitorMetadataSchema = z.object({
+  name: z.string(),
+  namespace: z.string(),
+  labels: z.object({ release: z.literal("prometheus") }),
+});
+
+const NamespaceSelectorSchema = z.object({
+  matchNames: z.array(z.string()),
+});
+
+const MatchExpressionSchema = z.object({
+  key: z.string(),
+  operator: z.string(),
+  values: z.array(z.string()).optional(),
+});
+
+const MonitorEndpointSchema = z.object({
+  port: z.string(),
+  path: z.string(),
+  interval: z.string(),
+});
+
 const ServiceMonitorSchema = z.object({
   kind: z.literal("ServiceMonitor"),
-  metadata: z.object({
-    name: z.string(),
-    namespace: z.string(),
-    labels: z.object({ release: z.literal("prometheus") }),
-  }),
+  metadata: MonitorMetadataSchema,
   spec: z.object({
-    namespaceSelector: z.object({ matchNames: z.array(z.string()) }),
+    namespaceSelector: NamespaceSelectorSchema,
     selector: z.object({
       matchLabels: z.record(z.string(), z.string()),
-      matchExpressions: z
-        .array(
-          z.object({
-            key: z.string(),
-            operator: z.string(),
-            values: z.array(z.string()).optional(),
-          }),
-        )
-        .optional(),
+      matchExpressions: z.array(MatchExpressionSchema).optional(),
     }),
-    endpoints: z.array(
-      z.object({
-        port: z.string(),
-        path: z.string(),
-        interval: z.string(),
-      }),
-    ),
+    endpoints: z.array(MonitorEndpointSchema),
   }),
 });
 
 const PodMonitorSchema = z.object({
   kind: z.literal("PodMonitor"),
-  metadata: z.object({
-    name: z.string(),
-    namespace: z.string(),
-    labels: z.object({ release: z.literal("prometheus") }),
-  }),
+  metadata: MonitorMetadataSchema,
   spec: z.object({
-    namespaceSelector: z.object({ matchNames: z.array(z.string()) }),
+    namespaceSelector: NamespaceSelectorSchema,
     selector: z.object({
       matchLabels: z.record(z.string(), z.string()),
     }),
-    podMetricsEndpoints: z.array(
-      z.object({
-        port: z.string(),
-        path: z.string(),
-        interval: z.string(),
-      }),
-    ),
+    podMetricsEndpoints: z.array(MonitorEndpointSchema),
   }),
 });
+
+function expectedServiceMonitor(options: {
+  name: string;
+  namespace: string;
+  matchLabels: Record<string, string>;
+  port: string;
+  matchExpressions?: z.infer<typeof MatchExpressionSchema>[];
+}) {
+  return {
+    kind: "ServiceMonitor" as const,
+    metadata: {
+      name: options.name,
+      namespace: options.namespace,
+      labels: { release: "prometheus" as const },
+    },
+    spec: {
+      namespaceSelector: { matchNames: [options.namespace] },
+      selector: {
+        matchLabels: options.matchLabels,
+        ...(options.matchExpressions === undefined
+          ? {}
+          : { matchExpressions: options.matchExpressions }),
+      },
+      endpoints: [{ port: options.port, path: "/metrics", interval: "30s" }],
+    },
+  };
+}
+
+function expectedPodMonitor(options: {
+  name: string;
+  namespace: string;
+  matchLabels: Record<string, string>;
+  port: string;
+}) {
+  return {
+    kind: "PodMonitor" as const,
+    metadata: {
+      name: options.name,
+      namespace: options.namespace,
+      labels: { release: "prometheus" as const },
+    },
+    spec: {
+      namespaceSelector: { matchNames: [options.namespace] },
+      selector: { matchLabels: options.matchLabels },
+      podMetricsEndpoints: [
+        { port: options.port, path: "/metrics", interval: "30s" },
+      ],
+    },
+  };
+}
 
 describe("createObservabilityScrapers", () => {
   test("renders Prometheus-selected monitors for Loki, Promtail, Tempo, Pyroscope, and cloudflared", () => {
@@ -72,117 +116,62 @@ describe("createObservabilityScrapers", () => {
       .map((result) => result.data);
 
     expect(serviceMonitors).toEqual([
-      {
-        kind: "ServiceMonitor",
-        metadata: {
-          name: "loki-service-monitor",
-          namespace: "loki",
-          labels: { release: "prometheus" },
+      expectedServiceMonitor({
+        name: "loki-service-monitor",
+        namespace: "loki",
+        matchLabels: {
+          "app.kubernetes.io/name": "loki",
+          "app.kubernetes.io/instance": "loki",
         },
-        spec: {
-          namespaceSelector: { matchNames: ["loki"] },
-          selector: {
-            matchLabels: {
-              "app.kubernetes.io/name": "loki",
-              "app.kubernetes.io/instance": "loki",
-            },
-            matchExpressions: [
-              {
-                key: "prometheus.io/service-monitor",
-                operator: "NotIn",
-                values: ["false"],
-              },
-            ],
+        matchExpressions: [
+          {
+            key: "prometheus.io/service-monitor",
+            operator: "NotIn",
+            values: ["false"],
           },
-          endpoints: [
-            { port: "http-metrics", path: "/metrics", interval: "30s" },
-          ],
+        ],
+        port: "http-metrics",
+      }),
+      expectedServiceMonitor({
+        name: "tempo-service-monitor",
+        namespace: "tempo",
+        matchLabels: {
+          "app.kubernetes.io/name": "tempo",
+          "app.kubernetes.io/instance": "tempo",
         },
-      },
-      {
-        kind: "ServiceMonitor",
-        metadata: {
-          name: "tempo-service-monitor",
-          namespace: "tempo",
-          labels: { release: "prometheus" },
-        },
-        spec: {
-          namespaceSelector: { matchNames: ["tempo"] },
-          selector: {
-            matchLabels: {
-              "app.kubernetes.io/name": "tempo",
-              "app.kubernetes.io/instance": "tempo",
-            },
-          },
-          endpoints: [
-            { port: "tempo-prom-metrics", path: "/metrics", interval: "30s" },
-          ],
-        },
-      },
+        port: "tempo-prom-metrics",
+      }),
     ]);
 
     expect(podMonitors).toEqual([
-      {
-        kind: "PodMonitor",
-        metadata: {
-          name: "promtail",
-          namespace: "promtail",
-          labels: { release: "prometheus" },
+      expectedPodMonitor({
+        name: "promtail",
+        namespace: "promtail",
+        matchLabels: {
+          "app.kubernetes.io/name": "promtail",
+          "app.kubernetes.io/instance": "promtail",
         },
-        spec: {
-          namespaceSelector: { matchNames: ["promtail"] },
-          selector: {
-            matchLabels: {
-              "app.kubernetes.io/name": "promtail",
-              "app.kubernetes.io/instance": "promtail",
-            },
-          },
-          podMetricsEndpoints: [
-            { port: "http-metrics", path: "/metrics", interval: "30s" },
-          ],
+        port: "http-metrics",
+      }),
+      expectedPodMonitor({
+        name: "pyroscope",
+        namespace: "pyroscope",
+        matchLabels: {
+          "app.kubernetes.io/name": "pyroscope",
+          "app.kubernetes.io/instance": "pyroscope",
+          "app.kubernetes.io/component": "all",
         },
-      },
-      {
-        kind: "PodMonitor",
-        metadata: {
-          name: "pyroscope",
-          namespace: "pyroscope",
-          labels: { release: "prometheus" },
+        port: "http2",
+      }),
+      expectedPodMonitor({
+        name: "cloudflared",
+        namespace: "cloudflare-operator-system",
+        matchLabels: {
+          "cfargotunnel.com/app": "cloudflared",
+          "cfargotunnel.com/tunnel": "homelab-tunnel",
         },
-        spec: {
-          namespaceSelector: { matchNames: ["pyroscope"] },
-          selector: {
-            matchLabels: {
-              "app.kubernetes.io/name": "pyroscope",
-              "app.kubernetes.io/instance": "pyroscope",
-              "app.kubernetes.io/component": "all",
-            },
-          },
-          podMetricsEndpoints: [
-            { port: "http2", path: "/metrics", interval: "30s" },
-          ],
-        },
-      },
-      {
-        kind: "PodMonitor",
-        metadata: {
-          name: "cloudflared",
-          namespace: "cloudflare-operator-system",
-          labels: { release: "prometheus" },
-        },
-        spec: {
-          namespaceSelector: { matchNames: ["cloudflare-operator-system"] },
-          selector: {
-            matchLabels: {
-              "cfargotunnel.com/app": "cloudflared",
-              "cfargotunnel.com/tunnel": "homelab-tunnel",
-            },
-          },
-          podMetricsEndpoints: [
-            { port: "metrics", path: "/metrics", interval: "30s" },
-          ],
-        },
-      },
+        port: "metrics",
+      }),
     ]);
   });
 });

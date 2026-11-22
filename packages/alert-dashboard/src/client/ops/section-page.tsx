@@ -8,10 +8,9 @@ import type { ReactNode } from "react";
 
 import { FlowEnrichment } from "./flow-enrichment.tsx";
 import {
-  MetricTile,
   PageHeading,
   RangePicker,
-  SeverityBadge,
+  SectionSummary,
   WithSnapshot,
 } from "./ops-ui.tsx";
 import { columnSplit } from "./panel-columns.ts";
@@ -27,32 +26,6 @@ export type SectionPageDefinition = {
   charts: readonly SeriesPresetId[];
   enrichment?: ReactNode;
 };
-
-/** One section at a glance: its verdict, its summary and every metric. */
-function SectionSummary({
-  section,
-}: {
-  readonly section: Section;
-}): React.JSX.Element {
-  const headingId = `summary-${section.id}`;
-  return (
-    <article
-      className={`section-summary section-${section.severity}`}
-      aria-labelledby={headingId}
-    >
-      <h2 id={headingId}>{section.title}</h2>
-      <SeverityBadge severity={section.severity} />
-      <p>{section.summary}</p>
-      {section.metrics.length === 0 ? null : (
-        <div className="metric-row">
-          {section.metrics.map((metric) => (
-            <MetricTile key={metric.id} metric={metric} />
-          ))}
-        </div>
-      )}
-    </article>
-  );
-}
 
 /** One section's signals, capped like every other list. */
 function SectionSignals({

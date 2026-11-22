@@ -5,11 +5,10 @@ import * as tableParts from "./data-table-parts.tsx";
 import * as tableUtils from "./data-table-utils.ts";
 
 export type SortDirection = tableUtils.SortDirection;
-export type DataTableSortState = tableUtils.DataTableSortState;
+type DataTableSortState = tableUtils.DataTableSortState;
 export type DataTableColumn<T> = tableUtils.DataTableColumn<T>;
 export type DataTableExportColumn<T> = tableUtils.DataTableExportColumn<T>;
-export type DataTableFilterOption = tableParts.DataTableFilterOption;
-export type DataTableFilter = tableParts.DataTableFilter;
+type DataTableFilter = tableParts.DataTableFilter;
 
 export type DataTableProps<T> = {
   readonly caption: string;

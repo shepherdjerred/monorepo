@@ -12,12 +12,12 @@ import {
 } from "#client/ops/ops-ui.tsx";
 import {
   ChartGrid,
-  kpiCard,
   numTableCol,
   statusPill,
   tableCol,
   UrlTabBar,
 } from "#client/ops/pages/cluster-page.tsx";
+import { kpiCard } from "#client/ops/pages/cluster-storage-section.tsx";
 import {
   BudgetMeter,
   DataTable,

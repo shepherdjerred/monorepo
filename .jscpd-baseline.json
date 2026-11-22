@@ -4,10 +4,6 @@
       "clones": 1,
       "tokens": 134
     },
-    "packages/alert-dashboard/src/client/dashboard-page.tsx|packages/alert-dashboard/src/client/history-page.tsx": {
-      "clones": 1,
-      "tokens": 99
-    },
     "packages/alert-dashboard/src/infrastructure/observability.ts|packages/discord-plays-core/src/observability/tracing.ts": {
       "clones": 1,
       "tokens": 73
