@@ -215,6 +215,7 @@ function projectAudit(
     assessed: audit.assessed,
     cached: audit.cached,
     metrics: audit.metrics ?? null,
+    ...(audit.coverage === undefined ? {} : { coverage: audit.coverage }),
     verifiedReceipts: replies?.verifiedReceipts ?? [],
     unresolvedReplies: replies?.unresolvedReplies ?? 0,
     failureCategory: audit.failureCategory ?? null,

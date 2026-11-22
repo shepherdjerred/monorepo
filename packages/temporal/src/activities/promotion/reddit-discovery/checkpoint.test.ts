@@ -74,14 +74,16 @@ describe("Reddit durable incremental windows", () => {
 
   it("persists each settled row even if processing later throws and replays only unfinished rows", async () => {
     const input = fixture();
+    const onCoverage = vi.fn<NonNullable<typeof input.onCoverage>>();
     input.readPage = async () => ({
       posts: [post("first"), post("second")],
       after: null,
     });
     const interrupted = {
       ...input,
+      onCoverage,
       process: async ({ settle }: Parameters<typeof input.process>[0]) => {
-        await settle(["first"]);
+        await settle(["first"], "scored");
         throw new Error("worker stopped during second row");
       },
     };
@@ -92,11 +94,22 @@ describe("Reddit durable incremental windows", () => {
       pending: { until: new Date(now).toISOString(), after: null },
       settled: { first: post("first").createdAt },
     });
+    expect(onCoverage).toHaveBeenLastCalledWith({
+      subreddit: "MinecraftServer",
+      since: new Date(now - 15 * 60_000).toISOString(),
+      until: new Date(now).toISOString(),
+      found: 2,
+      scored: 1,
+      skipped: 0,
+      pending: 1,
+      complete: false,
+    });
     const process = vi.fn(input.process);
     await runIncrementalRedditDiscovery({
       ...input,
       now: now + 15 * 60_000,
       process,
+      onCoverage,
     });
     expect(process.mock.calls[0]?.[0].posts.map((item) => item.id)).toEqual([
       "second",
@@ -106,6 +119,37 @@ describe("Reddit durable incremental windows", () => {
       completedThrough: new Date(now).toISOString(),
       pending: null,
     });
+    expect(onCoverage).toHaveBeenLastCalledWith({
+      subreddit: "MinecraftServer",
+      since: new Date(now - 15 * 60_000).toISOString(),
+      until: new Date(now).toISOString(),
+      found: 1,
+      scored: 0,
+      skipped: 1,
+      pending: 0,
+      complete: true,
+    });
+  });
+
+  it("follows Next from an empty listing page before closing the window", async () => {
+    const input = fixture();
+    const onCoverage = vi.fn<NonNullable<typeof input.onCoverage>>();
+    const readPage = vi.fn(async ({ after }: { after: string | null }) =>
+      after === null
+        ? { posts: [], after: next() }
+        : { posts: [post("second")], after: null },
+    );
+    await runIncrementalRedditDiscovery({ ...input, readPage, onCoverage });
+    expect(readPage.mock.calls.map(([page]) => page.after)).toEqual([
+      null,
+      next(),
+    ]);
+    expect(onCoverage).toHaveBeenCalledWith(
+      expect.objectContaining({ found: 0, pending: 0, complete: false }),
+    );
+    expect(onCoverage).toHaveBeenLastCalledWith(
+      expect.objectContaining({ found: 1, skipped: 1, complete: true }),
+    );
   });
 
   it("retains the current page when a thread budget interrupts a partially settled page", async () => {

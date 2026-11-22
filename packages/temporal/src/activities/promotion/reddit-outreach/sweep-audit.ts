@@ -1,7 +1,13 @@
 import { z } from "zod/v4";
 import {
+  REDDIT_OUTREACH_POST_LIMIT,
+  REDDIT_OUTREACH_POST_PAGE_SIZE,
+  RedditOutreachCoverageSchema,
   RedditOutreachFailureCategorySchema,
   RedditOutreachMetricsSchema,
+  RedditOutreachPostSchema,
+  type RedditOutreachPost,
+  type RedditOutreachPostPage,
 } from "@shepherdjerred/ops-model/promotion/reddit-outreach.ts";
 import { promotionSpendDay } from "#activities/promotion/control/budget.ts";
 import type { PromotionStore } from "#activities/promotion/store.ts";
@@ -20,6 +26,7 @@ const RedditSweepSummarySchema = z.object({
   stopReason: z.string().optional(),
   deferUntil: z.iso.datetime().nullable().optional(),
   metrics: RedditOutreachMetricsSchema.optional(),
+  coverage: z.array(RedditOutreachCoverageSchema).optional(),
   failureCategory: RedditOutreachFailureCategorySchema.optional(),
   failures: z.array(z.object({ subreddit: z.string(), reason: z.string() })),
   replies: z.array(
@@ -40,6 +47,13 @@ const RedditSweepSummarySchema = z.object({
 });
 export type SweepSummary = z.infer<typeof RedditSweepSummarySchema>;
 const DailySweeps = z.record(z.string(), RedditSweepSummarySchema);
+const SweepPostsSchema = z.object({
+  preview: z.boolean(),
+  posts: z
+    .array(RedditOutreachPostSchema)
+    .max(REDDIT_OUTREACH_POST_LIMIT)
+    .optional(),
+});
 
 function sweepKey(occurrenceId: string) {
   return `reddit-outreach/sweeps/${encodeURIComponent(occurrenceId)}.json`;
@@ -48,8 +62,16 @@ function sweepKey(occurrenceId: string) {
 export async function recordSweep(
   store: PromotionStore,
   summary: SweepSummary,
+  posts?: readonly RedditOutreachPost[],
 ) {
-  if (!(await store.put(sweepKey(summary.occurrenceId), summary, undefined)))
+  const audit =
+    posts === undefined
+      ? summary
+      : {
+          ...summary,
+          ...SweepPostsSchema.parse({ preview: summary.preview, posts }),
+        };
+  if (!(await store.put(sweepKey(summary.occurrenceId), audit, undefined)))
     throw new Error("Reddit sweep audit already exists");
   if (summary.preview) return;
   const day = promotionSpendDay(new Date(summary.completedAt));
@@ -90,4 +112,21 @@ export async function readRedditSweepDay(store: PromotionStore, day: string) {
   return Object.values(current?.value ?? {}).sort((a, b) =>
     a.completedAt.localeCompare(b.completedAt),
   );
+}
+
+export async function readRedditSweepPostPage(
+  store: PromotionStore,
+  occurrenceId: string,
+  offset: number,
+): Promise<RedditOutreachPostPage> {
+  const audit = await store.read(sweepKey(occurrenceId), SweepPostsSchema);
+  const posts = audit?.value.posts;
+  if (posts === undefined || audit?.value.preview !== false)
+    return { status: "unavailable" };
+  const end = offset + REDDIT_OUTREACH_POST_PAGE_SIZE;
+  return {
+    status: "available",
+    posts: posts.slice(offset, end),
+    nextOffset: end < posts.length ? end : null,
+  };
 }

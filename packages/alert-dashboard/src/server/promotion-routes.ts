@@ -13,7 +13,7 @@ export function registerPromotionRoutes(
     if (baseUrl === undefined)
       return context.json({ error: "Promotion status is not configured" }, 503);
     if (
-      !/^\/api\/v1\/promotion(?:\/history|\/evidence\/[a-f0-9]{64})?$/.test(
+      !/^\/api\/v1\/promotion(?:\/(?:history|reddit-posts|evidence\/[a-f0-9]{64}))?$/.test(
         context.req.path,
       )
     )

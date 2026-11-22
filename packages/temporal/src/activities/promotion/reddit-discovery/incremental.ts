@@ -1,3 +1,4 @@
+import type { RedditOutreachCoverage } from "@shepherdjerred/ops-model/promotion/reddit-outreach.ts";
 import type { PromotionStore } from "#activities/promotion/store.ts";
 import type { RedditPage } from "./pipeline.ts";
 import {
@@ -11,12 +12,13 @@ import {
 } from "./checkpoint.ts";
 
 type PostIdentity = { id: string; createdAt: string };
+type Disposition = "scored" | "skipped";
 type ProcessPage<Post> = {
   subreddit: string;
   posts: readonly Post[];
   since: number;
   until: number;
-  settle: (ids: readonly string[]) => Promise<void>;
+  settle: (ids: readonly string[], disposition?: Disposition) => Promise<void>;
 };
 export type RedditIncrementalInput<Post extends PostIdentity> = {
   store: PromotionStore;
@@ -39,6 +41,8 @@ export type RedditIncrementalInput<Post extends PostIdentity> = {
   isPinned?: (post: Post) => boolean;
   isExpiredCursor?: (error: unknown) => boolean;
   onInspected?: () => void;
+  onCoverage?: (coverage: RedditOutreachCoverage) => void;
+  onPost?: (post: Post) => void;
 };
 export type RedditIncrementalResult = {
   stopReason: string;
@@ -50,6 +54,8 @@ type Community = {
   input: RedditCheckpointInput;
   checkpoint: RedditScanCheckpoint;
   restarted: boolean;
+  coverage: RedditOutreachCoverage;
+  discovered: Set<string>;
 };
 type Scan<Post extends PostIdentity> = {
   input: RedditIncrementalInput<Post>;
@@ -82,11 +88,27 @@ async function communities<Post extends PostIdentity>(
       now: input.now,
       maxAgeHours: input.maxAgeHours,
     };
+    const checkpoint = await openRedditScanWindow(checkpointInput);
+    const window = checkpoint.pending;
+    if (window === null) throw new Error("Reddit scan window did not open");
+    const coverage = {
+      subreddit,
+      since: window.since,
+      until: window.until,
+      found: 0,
+      scored: 0,
+      skipped: 0,
+      pending: 0,
+      complete: false,
+    };
     sources.set(subreddit, {
       input: checkpointInput,
-      checkpoint: await openRedditScanWindow(checkpointInput),
+      checkpoint,
       restarted: false,
+      coverage,
+      discovered: new Set(),
     });
+    input.onCoverage?.({ ...coverage });
   }
   return sources;
 }
@@ -109,7 +131,10 @@ export async function runIncrementalRedditDiscovery<Post extends PostIdentity>(
     for (const [subreddit, community] of sources) {
       const stop = scanStop(scan);
       if (stop !== undefined) return { ...result, stopReason: stop };
-      const outcome = await readCommunity(scan, community);
+      const outcome = await readCommunity(scan, community).finally(() => {
+        community.coverage.complete = community.checkpoint.pending === null;
+        input.onCoverage?.({ ...community.coverage });
+      });
       if (community.checkpoint.pending === null) {
         sources.delete(subreddit);
         result.completedCommunities.push(subreddit);
@@ -180,9 +205,17 @@ function pageRows<Post extends PostIdentity>(
       result.inspected++;
       input.onInspected?.();
     }
-    if (input.isPinned?.(post) === true) continue;
-    if (created < since) reachedCutoff = true;
-    if (created >= since) rows.set(post.id, post);
+    if (created < since) {
+      if (input.isPinned?.(post) !== true) reachedCutoff = true;
+      continue;
+    }
+    rows.set(post.id, post);
+    if (!community.discovered.has(post.id)) {
+      community.discovered.add(post.id);
+      community.coverage.found++;
+      community.coverage.pending++;
+      input.onPost?.(post);
+    }
   }
   return { rows, since, until, reachedCutoff, truncated };
 }
@@ -201,8 +234,11 @@ async function processCommunityPage<Post extends PostIdentity>(
   if (scan.input.signal.aborted) return "deadline";
   const stop = scan.input.shouldStop();
   if (stop !== undefined) return stop;
-  const settle = async (ids: readonly string[]) => {
-    const settled = ids.map((id) => {
+  const settle = async (
+    ids: readonly string[],
+    disposition: Disposition = "skipped",
+  ) => {
+    const settled = [...new Set(ids)].map((id) => {
       const row = rows.get(id);
       if (row === undefined)
         throw new Error(
@@ -210,11 +246,16 @@ async function processCommunityPage<Post extends PostIdentity>(
         );
       return { id, createdAt: row.createdAt };
     });
+    const newSettlements = settled.filter(
+      ({ id }) => community.checkpoint.settled[id] === undefined,
+    ).length;
     community.checkpoint = await settleRedditScanRows(
       community.input,
       window,
       settled,
     );
+    community.coverage[disposition] += newSettlements;
+    community.coverage.pending -= newSettlements;
   };
   const processed =
     rows.size === 0
@@ -234,7 +275,7 @@ async function processCommunityPage<Post extends PostIdentity>(
   )
     return processed.stopReason ?? "unsettled-page";
   if (truncated) return processed.stopReason ?? "scan-limit";
-  const next = reachedCutoff || page.posts.length === 0 ? null : page.after;
+  const next = reachedCutoff ? null : page.after;
   community.checkpoint = await advanceRedditScanPage(
     community.input,
     window,
