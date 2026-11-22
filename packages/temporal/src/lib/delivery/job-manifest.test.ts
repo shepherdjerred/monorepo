@@ -642,6 +642,19 @@ describe("Delivery test-suite Jobs (V5)", () => {
   });
 });
 
+describe("native addon cache", () => {
+  it("gives @swc/core a private cache on the pod workspace", () => {
+    const env =
+      deliveryJobManifest(request).spec?.template.spec?.containers[0]?.env;
+    expect(
+      env?.filter((entry) => entry.name.startsWith("SWC_NATIVE_BINDING_CACHE")),
+    ).toEqual([
+      { name: "SWC_NATIVE_BINDING_CACHE", value: "/workspace/home/.cache" },
+      { name: "SWC_NATIVE_BINDING_CACHE_SKIP_SECURITY_CHECK", value: "1" },
+    ]);
+  });
+});
+
 describe("runtime image", () => {
   it("ships every homelab module the manifest builder imports", async () => {
     const source = await Bun.file(

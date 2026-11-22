@@ -18,6 +18,7 @@ import {
   type DeliveryJobRequest,
 } from "#shared/delivery-job.ts";
 import { RecoveryJobInputSchema } from "./platform/recovery/request.ts";
+import { deliveryJobNativeAddonEnv } from "./job-swc-env.ts";
 
 const PREFIX = "delivery.shepherdjerred.com/";
 const QUEUE_LABEL = "kueue.x-k8s.io/queue-name";
@@ -138,6 +139,7 @@ export function deliveryJobManifest(raw: DeliveryJobRequest): V1Job {
               env: [
                 { name: "HOME", value: "/workspace/home" },
                 { name: "TMPDIR", value: "/workspace/tmp" },
+                ...deliveryJobNativeAddonEnv(),
                 { name: "DOCKER_CONFIG", value: "/var/run/delivery/docker" },
                 { name: "BUILDX_CONFIG", value: "/workspace/buildx" },
                 { name: "DELIVERY_JOB_REQUEST", value: canonicalJson(input) },
