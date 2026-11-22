@@ -13,7 +13,7 @@ export function wikiLinksPlugin(wikiRoot: string) {
         typeof node.lang === "string" &&
         PLAIN_TEXT_LANGUAGES.has(node.lang)
       ) {
-        context.setProperty(node, "lang", "text");
+        context.setField(node, "lang", "text");
       }
     },
     link(node, context) {
@@ -28,7 +28,7 @@ export function wikiLinksPlugin(wikiRoot: string) {
       const sourcePath = sourceFile.startsWith(`${normalizedRoot}/`)
         ? `packages/docs/wiki/${sourceFile.slice(normalizedRoot.length + 1)}`
         : sourceFile;
-      context.setProperty(node, "url", rewriteWikiLink(sourcePath, node.url));
+      context.setField(node, "url", rewriteWikiLink(sourcePath, node.url));
     },
   });
 }
