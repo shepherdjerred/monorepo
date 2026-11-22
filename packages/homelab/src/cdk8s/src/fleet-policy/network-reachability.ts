@@ -1,3 +1,4 @@
+import { PROD_NODE_INTERNAL_IP } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import {
   selectorMatches,
   type Fleet,
@@ -16,6 +17,7 @@ import {
  */
 
 const NAMESPACE_NAME_LABEL = "kubernetes.io/metadata.name";
+const PROD_NODE_CIDR = `${PROD_NODE_INTERNAL_IP}/32`;
 
 /**
  * A group of pods as a policy sees it. For a synthesized workload the labels
@@ -27,6 +29,13 @@ export type Pods = {
   labels: Readonly<Record<string, string>>;
   /** Container port numbers by name, to resolve a named policy port. */
   namedPorts: ReadonlyMap<string, number>;
+  /**
+   * `/32` CIDR advertised in Service Endpoints for a `hostNetwork` workload on
+   * the production node. `kube-network-policies` excludes `hostNetwork` pods
+   * from its pod/namespace index, so namespace/pod selectors never match them;
+   * only an `ipBlock` covering this address does.
+   */
+  hostAddressCidr?: string | undefined;
 };
 
 const EVERY_ADDRESS: ReadonlySet<string> = new Set(["0.0.0.0/0", "::/0"]);
@@ -43,6 +52,7 @@ export function podsOf(workload: FleetWorkload): Pods {
         ),
       ),
     ),
+    ...(workload.hostNetwork ? { hostAddressCidr: PROD_NODE_CIDR } : {}),
   };
 }
 
@@ -87,6 +97,14 @@ export function peerSelects(
   policyNamespace: string,
   pods: Pods,
 ): boolean {
+  if (pods.hostAddressCidr !== undefined) {
+    return (
+      peer.ipBlock !== undefined &&
+      (EVERY_ADDRESS.has(peer.ipBlock.cidr) ||
+        peer.ipBlock.cidr === pods.hostAddressCidr) &&
+      (peer.ipBlock.except ?? []).length === 0
+    );
+  }
   if (peer.ipBlock !== undefined)
     return (
       EVERY_ADDRESS.has(peer.ipBlock.cidr) &&

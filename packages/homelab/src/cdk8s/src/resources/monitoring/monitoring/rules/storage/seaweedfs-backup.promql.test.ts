@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { test } from "vitest";
+import { expect, test } from "vitest";
 import { expectPromtoolRulesPass } from "./promtool-test.ts";
 import { getSeaweedfsRuleGroups } from "./seaweedfs.ts";
 
@@ -23,6 +23,10 @@ test("SeaweedFS backup alerts measure lag against the filer, not the clock", asy
     (group) => group.name === "seaweedfs-backup",
   )?.rules;
   if (rules === undefined) throw new Error("Missing seaweedfs-backup rules");
+  expect(
+    rules.find((rule) => rule.alert === "SeaweedFSBackupLagging")
+      ?.keepFiringFor,
+  ).toBe("15m");
   const expressions = Object.fromEntries(
     rules.map((rule) => [rule.alert, rule.expr.value]),
   );

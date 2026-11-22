@@ -430,6 +430,27 @@ describe("Temporal domain poller scoping", () => {
   });
 });
 
+const repoLatencyBucket = (le: string, values: string) => ({
+  series: `temporal_worker_activity_schedule_to_start_latency_seconds_bucket{namespace="temporal",exported_namespace="prod",task_queue="repo-automation",le="${le}"}`,
+  values,
+});
+
+describe("Delivery state-machine exclusion", () => {
+  test("excludes Delivery deployment and worker-recovery workflows from generic activity failure rules", () => {
+    const retriesRule = getTemporalRuleGroups()
+      .find((group) => group.name === "temporal-platform-health")
+      ?.rules?.find(
+        (rule) => rule.alert === "TemporalActivityRetriesExhausted",
+      );
+    expect(retriesRule?.expr.value).toContain(
+      'workflowType!~"deliveryDeploymentWorkflow|deliveryWorkerRecoveryWorkflow"',
+    );
+    expect(findFailureRule("TemporalWorkflowActivityFailing")).toContain(
+      'workflowType!~"deliveryDeploymentWorkflow|deliveryWorkerRecoveryWorkflow"',
+    );
+  });
+});
+
 describe("Scout Data Dragon failure rules", () => {
   test("ScoutDataDragonAutoMergeFailed alerts on the last-failure recency gauge", () => {
     const expression = findFailureRule("ScoutDataDragonAutoMergeFailed");
@@ -456,10 +477,117 @@ describe("Scout Data Dragon failure rules", () => {
     expect(expression).not.toContain("increase(");
   });
 
-  test("ScoutDataDragonPrAutomationFailed no longer references the unreachable pr-merge-failed reason", () => {
-    const expression = findFailureRule("ScoutDataDragonPrAutomationFailed");
-    expect(expression).not.toContain("pr-merge-failed");
-    expect(expression).toContain("git-push-failed|pr-create-failed");
+  test("ScoutDataDragonPrAutomationFailed and ScoutDataDragonUpdateFailed partition failure reasons without overlap", async () => {
+    const prExpr = findFailureRule("ScoutDataDragonPrAutomationFailed");
+    const updateExpr = findFailureRule("ScoutDataDragonUpdateFailed");
+    expect(prExpr).not.toContain("pr-merge-failed");
+    expect(prExpr).toContain('reason=~"git-push-failed|pr-create-failed"');
+    expect(updateExpr).toContain('reason!~"git-push-failed|pr-create-failed"');
+
+    await runPromtoolFixture({
+      evaluation_interval: "1m",
+      tests: [
+        {
+          interval: "1m",
+          input_series: [
+            {
+              series:
+                'scout_data_dragon_last_failure_timestamp{reason="git-push-failed"}',
+              values: "300x10",
+            },
+            {
+              series:
+                'scout_data_dragon_last_failure_timestamp{reason="s3-upload-failed"}',
+              values: "300x10",
+            },
+          ],
+          promql_expr_test: [
+            {
+              expr: prExpr,
+              eval_time: "9m",
+              exp_samples: [
+                { labels: '{reason="git-push-failed"}', value: 240 },
+              ],
+            },
+            {
+              expr: updateExpr,
+              eval_time: "9m",
+              exp_samples: [
+                { labels: '{reason="s3-upload-failed"}', value: 240 },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  test("TemporalDomainScheduleToStartHigh requires sustained >10s p95 alongside live >5s server backlog age", async () => {
+    const rules =
+      getTemporalRuleGroups().find(
+        (group) => group.name === "temporal-workflow-failures",
+      )?.rules ?? [];
+    const latencyRules = rules.filter(
+      (rule) => rule.alert === "TemporalDomainScheduleToStartHigh",
+    );
+    for (const rule of latencyRules) {
+      expect(rule.for).toBe("10m");
+      expect(rule.keepFiringFor).toBe("10m");
+      expect(rule.expr.value).toContain("> 10");
+      expect(rule.expr.value).toContain("approximate_backlog_age_seconds");
+    }
+    const repoRule = latencyRules.find(
+      (rule) => rule.labels?.["task_queue"] === "repo-automation",
+    );
+    const repoExpr = repoRule?.expr.value;
+
+    await runPromtoolFixture({
+      evaluation_interval: "1m",
+      tests: [
+        {
+          interval: "1m",
+          input_series: [
+            repoLatencyBucket("10", "0x10"),
+            repoLatencyBucket("20", "0+1x10"),
+            repoLatencyBucket("+Inf", "0+1x10"),
+            {
+              series:
+                'approximate_backlog_age_seconds{namespace="temporal",exported_namespace="prod",taskqueue="repo_automation",task_type="Activity"}',
+              values: "0x10",
+            },
+          ],
+          promql_expr_test: [
+            { expr: repoExpr, eval_time: "9m", exp_samples: [] },
+          ],
+        },
+        {
+          interval: "1m",
+          input_series: [
+            repoLatencyBucket("10", "0x10"),
+            repoLatencyBucket("20", "0+1x10"),
+            repoLatencyBucket("+Inf", "0+1x10"),
+            {
+              series:
+                'approximate_backlog_age_seconds{namespace="temporal",exported_namespace="prod",taskqueue="repo_automation",task_type="Activity"}',
+              values: "12x10",
+            },
+          ],
+          promql_expr_test: [
+            {
+              expr: repoExpr,
+              eval_time: "9m",
+              exp_samples: [
+                {
+                  labels:
+                    '{exported_namespace="prod",task_queue="repo-automation"}',
+                  value: 19.5,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
   });
 });
 

@@ -37,6 +37,13 @@ function createAlertmanagerPostalSmtpSecret(chart: Chart): OnePasswordItem {
   });
 }
 
+/**
+ * Homelab 1Password item backing `prometheus-secrets` (Grafana credentials and
+ * `HOMEASSISTANT_TOKEN`). Shared by `alert-dashboard` for Home Assistant chore
+ * actuation.
+ */
+export const PROMETHEUS_VAULT_ITEM_ID = "42fn7x3zaemfenz35en27thw5u";
+
 /** Objects the root renders beside the Application; the `prometheus-companion` companion chart renders the same objects under transition rendering. */
 export function createPrometheusResources(chart: Chart): {
   alertDashboardSecrets: OnePasswordItem;
@@ -73,7 +80,7 @@ export function createPrometheusResources(chart: Chart): {
     "grafana-secret-onepassword",
     {
       spec: {
-        itemPath: vaultItemPath("42fn7x3zaemfenz35en27thw5u"),
+        itemPath: vaultItemPath(PROMETHEUS_VAULT_ITEM_ID),
       },
       metadata: {
         name: "prometheus-secrets",

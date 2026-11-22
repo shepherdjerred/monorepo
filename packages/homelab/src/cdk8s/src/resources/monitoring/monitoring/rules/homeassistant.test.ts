@@ -2,6 +2,8 @@ import { Glob } from "bun";
 import { describe, expect, test } from "vitest";
 import {
   getHomeAssistantRuleGroups,
+  HOME_ASSISTANT_KEEP_FIRING_FOR,
+  HOME_ASSISTANT_OPS_ALERT_NAMES,
   TEMPORAL_AUTOMATION_ENTITY_IDS,
 } from "./homeassistant.ts";
 import { runPromtoolFixture } from "./platform/promtool-fixture.ts";
@@ -651,30 +653,50 @@ describe("Home Assistant LR5 pod rollout and fault deduplication", () => {
 });
 
 describe("Home Assistant alert category", () => {
-  test("labels every alert household and leaves recording rules unlabelled", () => {
+  test("splits household chores from Ops integration health and holds household rules across Recreate restarts", () => {
     const rules = getHomeAssistantRuleGroups().flatMap(
       (group) => group.rules ?? [],
     );
     const alerts = rules.filter((rule) => rule.alert !== undefined);
     expect(alerts.length).toBeGreaterThan(0);
+
+    expect([...HOME_ASSISTANT_OPS_ALERT_NAMES]).toEqual([
+      "HomeAssistantAutomationDependencyUnavailable",
+      "PetCareEntityUnavailable",
+      "LitterRobotDiagnosticsStale",
+      "LitterRobotEntitiesStale",
+    ]);
+
     for (const rule of alerts) {
-      expect(rule.labels?.["category"], rule.alert).toBe("household");
       expect(rule.labels?.["severity"], rule.alert).toBeDefined();
+      if (HOME_ASSISTANT_OPS_ALERT_NAMES.has(rule.alert ?? "")) {
+        expect(rule.labels?.["category"], rule.alert).toBeUndefined();
+        expect(rule.keepFiringFor, rule.alert).toBeUndefined();
+      } else {
+        expect(rule.labels?.["category"], rule.alert).toBe("household");
+        expect(rule.keepFiringFor, rule.alert).toBe(
+          HOME_ASSISTANT_KEEP_FIRING_FOR,
+        );
+      }
     }
-    // The per-entity availability alerts keep their entity label too.
-    expect(
-      alerts.find((rule) => rule.alert === "PetCareEntityUnavailable")?.labels,
-    ).toMatchObject({ severity: "warning", category: "household" });
+
+    // Per-entity availability alerts keep their entity label and omit household category.
+    const petEntityRule = alerts.find(
+      (rule) => rule.alert === "PetCareEntityUnavailable",
+    );
+    expect(petEntityRule?.labels).toMatchObject({ severity: "warning" });
+    expect(petEntityRule?.labels?.["entity"]).toBeDefined();
+    expect(petEntityRule?.labels?.["category"]).toBeUndefined();
+
     for (const name of [
       "LitterRobotFilterOverdue",
       "HomeAssistantBatteryLow",
       "RoborockConsumableDue",
       "PetLibroFeederLivingRoomDesiccantDue",
     ]) {
-      expect(
-        alerts.some((rule) => rule.alert === name),
-        name,
-      ).toBe(true);
+      const rule = alerts.find((candidate) => candidate.alert === name);
+      expect(rule?.labels?.["category"], name).toBe("household");
+      expect(rule?.keepFiringFor, name).toBe("15m");
     }
     for (const record of rules.filter((rule) => rule.record !== undefined)) {
       expect(record.labels?.["category"], record.record).toBeUndefined();

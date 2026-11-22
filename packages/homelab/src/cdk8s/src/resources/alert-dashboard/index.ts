@@ -14,11 +14,13 @@ import {
   ALERTMANAGER_GATEWAY_PORT,
   PROMETHEUS_GATEWAY_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
+import { PROMETHEUS_VAULT_ITEM_ID } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/prometheus-resources.ts";
 import {
   nsPeer,
   tcp,
   tailscaleIngressRule,
   fliptEgress,
+  homeAssistantEgressRule,
   otlpEgress,
   prometheusIngressRule,
   dnsEgressRule,
@@ -53,6 +55,18 @@ export function createAlertDashboardDeployment(chart: Chart) {
         chart,
         "alert-dashboard-secret",
         credentials.name,
+      );
+      const haCredentials = new OnePasswordItem(
+        chart,
+        "alert-dashboard-ha-1p",
+        {
+          spec: { itemPath: vaultItemPath(PROMETHEUS_VAULT_ITEM_ID) },
+        },
+      );
+      const haSecret = Secret.fromSecretName(
+        chart,
+        "alert-dashboard-ha-secret",
+        haCredentials.name,
       );
       return {
         init: [
@@ -101,6 +115,13 @@ export function createAlertDashboardDeployment(chart: Chart) {
             GRAFANA_URL: EnvValue.fromValue(
               "http://prometheus-grafana.prometheus.svc.cluster.local:80",
             ),
+            HOMEASSISTANT_URL: EnvValue.fromValue(
+              "http://home-homeassistant-service.home.svc.cluster.local:8123",
+            ),
+            HOMEASSISTANT_TOKEN: EnvValue.fromSecretValue({
+              secret: haSecret,
+              key: "HOMEASSISTANT_TOKEN",
+            }),
             PROMETHEUS_URL: EnvValue.fromValue(
               "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
             ),
@@ -193,6 +214,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
             to: [nsPeer("postal")],
             ports: [tcp(5000)],
           },
+          homeAssistantEgressRule(),
           otlpEgress(),
         ],
       },

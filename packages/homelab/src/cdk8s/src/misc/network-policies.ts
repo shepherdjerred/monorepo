@@ -219,6 +219,21 @@ export function kubernetesApiEgressRule() {
   };
 }
 
+/**
+ * Home Assistant, as a pod's connection to `home-homeassistant-service.home`
+ * looks after DNAT.
+ *
+ * `homeassistant` runs with `hostNetwork: true` on the production node, so its
+ * Service Endpoints advertise `PROD_NODE_INTERNAL_IP:8123` rather than a pod
+ * network IP selectable by `nsPeer("home")`.
+ */
+export function homeAssistantEgressRule() {
+  return {
+    to: [{ ipBlock: { cidr: `${PROD_NODE_INTERNAL_IP}/32` } }],
+    ports: [tcp(8123)],
+  };
+}
+
 /** Metrics scraped by Prometheus from explicitly named workload ports. */
 export function prometheusIngressRule(ports: readonly number[]) {
   return namespaceIngressRule("prometheus", ports);

@@ -91,6 +91,7 @@ export function getSeaweedfsRuleGroups(): PrometheusRuleSpecGroups[] {
             `(max(${FILER_SENT}) - max(${BACKUP_SENT})) / 1e9 > 3600`,
           ),
           for: "30m",
+          keepFiringFor: "15m",
           labels: {
             severity: "warning",
           },

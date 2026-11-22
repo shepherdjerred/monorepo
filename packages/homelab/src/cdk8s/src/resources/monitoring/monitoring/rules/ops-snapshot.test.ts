@@ -52,6 +52,8 @@ describe("ops snapshot freshness rules", () => {
 describe("TemporalScheduledCurrentFailure", () => {
   const schedule =
     'temporal_namespace="prod",schedule_id="glitter-corpus-daily",workflow_type="runGlitterCorpusDaily"';
+  const outputLabels =
+    'exported_namespace="prod",schedule_id="glitter-corpus-daily",temporal_namespace="prod"';
 
   // Evaluated at 40m, so time() is 2400 and a fresh observation is newer
   // than 600 (time() - 1800).
@@ -59,23 +61,39 @@ describe("TemporalScheduledCurrentFailure", () => {
     pod: string;
     failed: number;
     observedAt: number;
+    valuesPrefix?: string;
+    count?: number;
   }): { series: string; values: string }[] {
     const labels = `namespace="temporal",pod="${input.pod}",${schedule}`;
+    const count = input.count ?? 40;
+    const prefix =
+      input.valuesPrefix === undefined ? "" : `${input.valuesPrefix} `;
     return [
       {
         series: `temporal_schedule_last_terminal_failed{${labels}}`,
-        values: `${String(input.failed)}x40`,
+        values: `${prefix}${String(input.failed)}x${String(count)}`,
       },
       {
         series: `temporal_schedule_observation_timestamp_seconds{${labels}}`,
-        values: `${String(input.observedAt)}x40`,
+        values: `${prefix}${String(input.observedAt)}x${String(count)}`,
       },
     ];
   }
 
-  it("fires only while the newest fresh observation reports a failed terminal run", async () => {
+  it("holds firing for 15m and carries exported_namespace and schedule_id for inhibition", () => {
+    const scheduledFailure = rule("TemporalScheduledCurrentFailure");
+    expect(scheduledFailure.keepFiringFor).toBe("15m");
+    expect(scheduledFailure.expr.value).toContain(
+      "last_over_time(temporal_schedule_last_terminal_failed[20m])",
+    );
+    expect(scheduledFailure.expr.value).toContain(
+      "last_over_time(temporal_schedule_observation_timestamp_seconds[20m])",
+    );
+  });
+
+  it("fires across single-replica rollout gaps while respecting newer pollers and freshness", async () => {
     const expr = rule("TemporalScheduledCurrentFailure").expr.value;
-    const firing = [{ labels: `{${schedule}}`, value: 1 }];
+    const firing = [{ labels: `{${outputLabels}}`, value: 1 }];
     await runPromtoolFixture({
       evaluation_interval: "1m",
       tests: [
@@ -85,15 +103,42 @@ describe("TemporalScheduledCurrentFailure", () => {
           expected: firing,
         },
         {
+          name: "single-replica rollout gap past 5m staleness keeps the alert active",
+          series: [
+            {
+              series: `temporal_schedule_last_terminal_failed{namespace="temporal",pod="infra-a",${schedule}}`,
+              values: "1x28 _x12",
+            },
+            {
+              series: `temporal_schedule_observation_timestamp_seconds{namespace="temporal",pod="infra-a",${schedule}}`,
+              values: "1600x28 _x12",
+            },
+          ],
+          expected: firing,
+        },
+        {
           name: "a later completed run clears it",
           series: poller({ pod: "infra-a", failed: 0, observedAt: 2000 }),
           expected: [],
         },
         {
-          name: "an older poller's failure cannot mask a newer success",
+          name: "an older poller's failure inside 20m cannot mask a newer pod's success",
           series: [
-            ...poller({ pod: "infra-old", failed: 1, observedAt: 1500 }),
-            ...poller({ pod: "infra-new", failed: 0, observedAt: 2000 }),
+            {
+              series: `temporal_schedule_last_terminal_failed{namespace="temporal",pod="infra-old",${schedule}}`,
+              values: "1x28 _x12",
+            },
+            {
+              series: `temporal_schedule_observation_timestamp_seconds{namespace="temporal",pod="infra-old",${schedule}}`,
+              values: "1500x28 _x12",
+            },
+            ...poller({
+              pod: "infra-new",
+              failed: 0,
+              observedAt: 2000,
+              valuesPrefix: "_x30",
+              count: 10,
+            }),
           ],
           expected: [],
         },
