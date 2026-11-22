@@ -57,7 +57,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   "storm-forum": "enforced",
   syncthing: "enforced",
   tasknotes: "enforced",
-  temporal: "open",
+  temporal: "enforced",
   tracker: "enforced",
   "trmnl-dashboard": "enforced",
   "turbo-cache": "enforced",
