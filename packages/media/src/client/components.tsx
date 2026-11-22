@@ -1,4 +1,3 @@
-import { Link } from "react-router";
 import type { ReactNode } from "react";
 import {
   STATUS_TONES,
@@ -106,14 +105,5 @@ export function EmptyState({
       <h2>{title}</h2>
       <p>{children}</p>
     </div>
-  );
-}
-
-export function MediaLink({ id, title }: { id: string; title: string }) {
-  return (
-    <Link className="media-link" to={`/media/${encodeURIComponent(id)}`}>
-      {title}
-      <span aria-hidden="true"> ↗</span>
-    </Link>
   );
 }

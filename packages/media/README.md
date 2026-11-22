@@ -718,6 +718,7 @@ directly) and `/api/fixture/scenario/default` to leave it:
 | `stale-library-access` | Every catalog read reports `libraryAccess: "stale"` and no title carries a `library`. |
 | `feed-unavailable`     | The `popular_series` feed answers 502 `catalog_unavailable`; the rest keep working.   |
 | `catalog-unavailable`  | Every catalog read answers 502 `catalog_unavailable`, as when TMDB is down.           |
+| `new-household`        | Nobody has asked for anything yet: the calendar has no releases, dated or not.        |
 
 A fixture answers a scenario by reading `request.scenario`, and throws
 `FixtureFailure` (`src/testing/fixture-api/scenario.ts`) for an error the real
@@ -947,8 +948,10 @@ Shared building blocks live in `src/client/ui/`:
 | `poster-card.tsx`            | `PosterCard`, `StatePill`, and `PosterGrid`, whose column count follows its own width (container queries).                                  |
 | `poster-rail.tsx`            | `PosterRail`, a row of cards that scrolls sideways with scroll snap, and what stands in for one that failed.                                |
 | `segmented.tsx`              | A row of exclusive views that are links, so navigation and not an ARIA tablist.                                                             |
+| `choice.tsx`                 | `Choice`, a native select drawn as a chip, marked when it narrows the list it sits above.                                                   |
 | `skeleton.tsx`, `states.tsx` | Loading shapes, empty states that say what to do next, and error states by kind of failure.                                                 |
 | `use-cursor-list.ts`         | The one place the client follows `nextCursor`: a page at a time, past empty pages, or every page.                                           |
+| `use-media-query.ts`         | Whether a media query matches, for the rare choice between two layouts whose markup differs.                                                |
 
 `src/client/presentation/` holds the words for contract enums, each table
 written `satisfies Record<Enum, …>`: an enum that gains a value stops compiling
@@ -1053,6 +1056,45 @@ In fixture mode every primary action has a film and a series: see the cases in
 Expanse" and "Get Out" are leaving soon, "Silo" and "The Holdovers" are removed
 but restorable, and `/catalog/movie/155` and `/catalog/series/1398` are titles
 the household does not have.
+
+### Calendar
+
+`/calendar` (`src/client/calendar/`) shows one month of
+`GET /api/v1/calendar`: the episodes of series the household follows and the
+United States cinema, digital and disc dates of its films. What it shows is in
+its address:
+
+| Parameter | Values                                         | Left out                              |
+| --------- | ---------------------------------------------- | ------------------------------------- |
+| `month`   | `YYYY-MM`                                      | The month the viewer is in.           |
+| `view`    | `agenda`, `month`                              | Agenda up to 760 px wide, month over. |
+| `kind`    | `episode`, `theatrical`, `digital`, `physical` | Every kind.                           |
+| `status`  | `available`, `missing`                         | Ready or not.                         |
+
+A fragment `#day-YYYY-MM-DD` marks one day: the date field and a full square's
+"more" link write it, and the agenda scrolls to it. Previous, next and Today are
+links, so Back undoes a step; the filters, the date field and the keyboard
+rewrite the current entry.
+
+A release date is a civil date, never a moment in the viewer's time zone.
+`calendar/dates.ts` keeps a date as the `YYYY-MM-DD` text the API sends, does
+its arithmetic in UTC (which has no clock changes), and formats in UTC; the only
+thing it asks the viewer's clock is what today is. `calendar/events.ts` sorts
+releases onto days by that text. A release with no date yet (`date: null`) is
+listed under "Date not announced" in both layouts and is never put on a day.
+
+The agenda asks for the month itself and the month grid for the whole
+Sunday-to-Saturday weeks around it. Either range is read to its end before it
+is shown (`useCursorList` with `paging: "all"`), because a calendar with a hole
+in it is wrong and not merely short; there is no "load more".
+
+The month grid is an ARIA grid with one Tab stop (`calendar/month-grid.tsx`).
+Arrow keys move a day or a week, Home and End go to the ends of the week, Page
+Up and Page Down a month; a move past the month's own days opens the month it
+lands in and focus follows. Tab from a day walks that day's releases and then
+leaves the grid. A square lists up to three releases, or two and a link to the
+rest in the agenda. Below 640 px of its own width a square shows only how many
+releases the day has, as that same link.
 
 ### Client styles and themes
 

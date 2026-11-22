@@ -6,6 +6,10 @@ import {
   type Page,
 } from "@playwright/test";
 import type { Persona } from "#testing/fixture-api/personas.ts";
+import {
+  SCENARIO_COOKIE,
+  type FixtureScenario,
+} from "#testing/fixture-api/scenario.ts";
 import { PERSONA_COOKIE } from "#testing/fixture-api/server.ts";
 import type { RouteCase } from "./routes.ts";
 
@@ -99,6 +103,17 @@ export async function allowWrites(page: Page) {
     .addCookies([
       { name: "media-csrf", value: "browser-test", url: page.url() },
     ]);
+}
+
+/** Puts the fixture API in a condition for this browser; see `scenario.ts`. */
+export async function inScenario(page: Page, scenario: FixtureScenario) {
+  const origin = test.info().project.use.baseURL;
+  if (origin === undefined) {
+    throw new Error("The Playwright project has no baseURL");
+  }
+  await page
+    .context()
+    .addCookies([{ name: SCENARIO_COOKIE, value: scenario, url: origin }]);
 }
 
 /** How far the page scrolls sideways; zero when it fits its viewport. */
