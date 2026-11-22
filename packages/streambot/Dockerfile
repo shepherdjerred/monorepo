@@ -253,6 +253,12 @@ COPY --from=voice-smoke /tmp/voice-model-smoke-passed /tmp/voice-model-smoke-pas
 COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
 ARG SMOKE_TARGET=streambot
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
+# Vitest's forks pool persists transformed modules in the workspace
+# node_modules/.vitest-cache. deps owns that tree as root, and this stage
+# runs as the deploy uid, so the cache directory has to exist for that user
+# or the first suite that writes it dies with EACCES.
+RUN mkdir -p /app/node_modules/.vitest-cache \
+    && chown 1000:1000 /app/node_modules/.vitest-cache
 USER 1000:1000
 ENV HOME=/tmp
 # The real-ffmpeg integration suite belongs to this stage and only this stage.
