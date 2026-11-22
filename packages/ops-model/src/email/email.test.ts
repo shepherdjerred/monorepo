@@ -57,12 +57,30 @@ describe("mailbox validation and semantic routing", () => {
     expect(reportMailboxForType("homelab-audit")).toEqual(
       OPS_MAILBOXES.reports.ops,
     );
-    expect(reportMailboxForType("scout-data-dragon")).toEqual(
-      OPS_MAILBOXES.reports.scout,
+    expect(reportMailboxForType("tasknotes-canary")).toEqual(
+      OPS_MAILBOXES.reports.ops,
     );
-    expect(reportMailboxForType("agent-task")).toEqual(
-      OPS_MAILBOXES.reports.general,
-    );
+    for (const scoutType of [
+      "scout-data-dragon",
+      "scout-lane-priors",
+      "scout-queue-windows",
+      "scout-season-refresh",
+    ]) {
+      expect(reportMailboxForType(scoutType)).toEqual(
+        OPS_MAILBOXES.reports.scout,
+      );
+    }
+    for (const generalType of [
+      "main-vuln-scan",
+      "link-rot-scan",
+      "storm-promotion",
+      "agent-task",
+      "unknown-future-report",
+    ]) {
+      expect(reportMailboxForType(generalType)).toEqual(
+        OPS_MAILBOXES.reports.general,
+      );
+    }
   });
 });
 

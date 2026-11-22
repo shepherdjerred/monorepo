@@ -818,3 +818,44 @@ describe("Temporal weighted round-robin PR code review rollout", () => {
     }
   });
 });
+
+describe("Scheduled reports auto-remediation and quiet-clear digest rollout", () => {
+  test("enables temporal-report-auto-remediation-enabled globally in beta and prod", () => {
+    assertGloballyEnabledBooleanFlag(
+      "temporal",
+      "temporal-report-auto-remediation-enabled",
+      {
+        owner: "temporal",
+        namespace: "temporal",
+        source: "temporal",
+      },
+    );
+  });
+
+  test("enables alert-dashboard-daily-digest-quiet-clear globally in beta and prod", () => {
+    assertGloballyEnabledBooleanFlag(
+      "alert-dashboard",
+      "alert-dashboard-daily-digest-quiet-clear",
+      {
+        owner: "alert-dashboard",
+        namespace: "alert-dashboard",
+        source: "alert-dashboard",
+      },
+    );
+  });
+
+  test("preserves temporal-daily-report-notifications-enabled prod override and beta exception", () => {
+    expect(
+      managedBooleanDefault(
+        "temporal-daily-report-notifications-enabled",
+        "prod",
+      ),
+    ).toBe(true);
+    expect(
+      managedBooleanDefault(
+        "temporal-daily-report-notifications-enabled",
+        "beta",
+      ),
+    ).toBe(false);
+  });
+});

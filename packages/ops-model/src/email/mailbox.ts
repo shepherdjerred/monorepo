@@ -124,6 +124,11 @@ export function reportMailboxForType(reportType: string): MailboxPair {
     case "scout-queue-windows":
     case "scout-season-refresh":
       return OPS_MAILBOXES.reports.scout;
+    case "main-vuln-scan":
+    case "link-rot-scan":
+    case "storm-promotion":
+    case "agent-task":
+      return OPS_MAILBOXES.reports.general;
     default:
       return OPS_MAILBOXES.reports.general;
   }

@@ -148,6 +148,13 @@ export function createTemporalIngressWorkers(
       ALERTMANAGER_URL: EnvValue.fromValue(
         "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
       ),
+      OPS_DASHBOARD_URL: EnvValue.fromValue(
+        "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",
+      ),
+      OPS_INGEST_TOKEN: EnvValue.fromSecretValue({
+        secret: props.secret,
+        key: "OPS_INGEST_TOKEN",
+      }),
     },
   });
 
