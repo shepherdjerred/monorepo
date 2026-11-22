@@ -148,13 +148,11 @@ spec:
                   key: SEAWEEDFS_SECRET_ACCESS_KEY
                   name: tracker-tracker-seaweedfs-1p
             - name: FEATURE_FLAGS_MODE
-              value: flipt
-            - name: FLIPT_NAMESPACE
-              value: tracker
-            - name: FLIPT_ENVIRONMENT
-              value: prod
-            - name: FLIPT_URL
-              value: http://flipt-flipt-service.flipt.svc.cluster.local:8080
+              value: flags
+            - name: FLAGS_DEPLOYMENT
+              value: tracker/prod
+            - name: FLAGS_URL
+              value: http://flags.flags.svc.cluster.local:7361
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: http://alloy-gateway.alloy-gateway.svc.cluster.local:4318
           image: '{{ required `Delivery requires image:tracker` (get (get (.Values.delivery | default dict) "images" | default dict) "tracker") }}'
@@ -351,12 +349,12 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: seaweedfs
     - ports:
-        - port: 8080
+        - port: 7361
           protocol: TCP
       to:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: flipt
+              kubernetes.io/metadata.name: flags
     - ports:
         - port: 4318
           protocol: TCP

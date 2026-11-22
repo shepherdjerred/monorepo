@@ -11,6 +11,7 @@ import {
 } from "@shepherdjerred/feature-flags/observability.ts";
 import type { EvaluationEvent } from "@shepherdjerred/feature-flags/observability.ts";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
+import { FlagsProvider } from "@shepherdjerred/feature-flags/providers/flags.ts";
 import { FliptProvider } from "@shepherdjerred/feature-flags/providers/flipt.ts";
 import { createFakeFetcher } from "@shepherdjerred/feature-flags/providers/fake-fetcher.ts";
 import snapshot from "@shepherdjerred/feature-flags/providers/fixtures/flipt-snapshot.default.json" with { type: "json" };
@@ -114,6 +115,26 @@ describe("evaluation instrumentation", () => {
     await shutdownFeatureFlags();
     expect(providerIdentities.at(-1)).toBeNull();
   });
+
+  test("reports provider identity in flags mode using catalog and stage and clears on shutdown", async () => {
+    const { recorder, providerIdentities } = createTestMetricsRecorder();
+    await initFeatureFlags({
+      environment: {
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: "http://flags.invalid:8080",
+        FLAGS_DEPLOYMENT: "scout/beta",
+      },
+      provider: new StaticProvider({ ai_reports_enabled: true }),
+      metrics: recorder,
+    });
+    expect(providerIdentities).toContainEqual({
+      flipt_environment: "beta",
+      flipt_namespace: "scout",
+      value: 1,
+    });
+    await shutdownFeatureFlags();
+    expect(providerIdentities.at(-1)).toBeNull();
+  });
   test("reports the flag, reason, and error code for every evaluation", async () => {
     const events: EvaluationEvent[] = [];
     await initFeatureFlags({
@@ -206,6 +227,39 @@ describe("snapshot age", () => {
     const age = provider.snapshotAgeSeconds();
     expect(age).toBeDefined();
     expect(age ?? Number.POSITIVE_INFINITY).toBeLessThan(5);
+
+    await provider.onClose();
+    expect(provider.snapshotAgeSeconds()).toBeUndefined();
+  });
+
+  test("FlagsProvider tracks snapshot age across initialize and close", async () => {
+    const ages: number[] = [];
+    const provider = new FlagsProvider({
+      url: "http://flags.invalid:8080",
+      deployment: "scout/prod",
+      pollIntervalSeconds: 300,
+      onSnapshotAge: (age) => ages.push(age),
+      fetcher: () =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          headers: { get: () => '"1"' },
+          json: () =>
+            Promise.resolve({
+              deployment: "scout/prod",
+              revision: 1,
+              flags: [],
+            }),
+        }),
+    });
+
+    expect(provider.snapshotAgeSeconds()).toBeUndefined();
+    await provider.initialize();
+    const age = provider.snapshotAgeSeconds();
+    expect(age).toBeDefined();
+    expect(age ?? Number.POSITIVE_INFINITY).toBeLessThan(5);
+    expect(ages).toHaveLength(1);
 
     await provider.onClose();
     expect(provider.snapshotAgeSeconds()).toBeUndefined();

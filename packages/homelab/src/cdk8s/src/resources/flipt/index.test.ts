@@ -407,49 +407,7 @@ describe("Flipt network policy", () => {
     expect(policy.spec.egress).toHaveLength(1);
   });
 
-  it.each([
-    ["the Temporal repo worker to read the managed snapshot", "temporal"],
-    // Without a consumer entry, Flipt ingress rejects storm-brain, flag
-    // reads degrade to defaults, and both endpoints stay 503 even after
-    // their flags are enabled.
-    ["storm-brain to read its classify/triage gates", "storm-brain"],
-    ["the production forum to read registration and season", "storm-forum"],
-    ["the private forum to read registration and season", "storm-forum-beta"],
-    ["Arcade to read per-game rollout gates", "arcade"],
-    [
-      "Delivery to evaluate fresh authorization and activation gates",
-      "delivery",
-    ],
-    ["Citizens companions to read their gameplay gate", "minecraft-tsmc"],
-    ["Tracker to read its managed flags", "tracker"],
-    ["Golink to read its dynamic-alias and manual-edit flags", "golink"],
-    ["Flags to import live snapshots on first boot", "flags"],
-  ])("allows %s", (_label, namespace) => {
-    const policy = z
-      .object({
-        spec: z.object({
-          ingress: z.array(z.unknown()),
-        }),
-      })
-      .loose()
-      .parse(
-        findManifest(synthesize(), "NetworkPolicy", "flipt-ingress-netpol"),
-      );
-    expect(policy.spec.ingress).toContainEqual(
-      expect.objectContaining({
-        ports: [{ port: 8080, protocol: "TCP" }],
-        from: expect.arrayContaining([
-          {
-            namespaceSelector: {
-              matchLabels: { "kubernetes.io/metadata.name": namespace },
-            },
-          },
-        ]),
-      }),
-    );
-  });
-
-  it("keeps consumer ingress namespace-scoped on the authenticated gateway only", () => {
+  it("limits idle ingress to Tailscale and Prometheus after consumer cutover", () => {
     const policy = z
       .object({
         spec: z.object({
@@ -474,16 +432,22 @@ describe("Flipt network policy", () => {
         findManifest(synthesize(), "NetworkPolicy", "flipt-ingress-netpol"),
       );
     expect(policy.spec.policyTypes).toEqual(["Ingress"]);
-    for (const rule of policy.spec.ingress) {
-      expect(rule.ports).toEqual([{ port: 8080, protocol: "TCP" }]);
-      for (const peer of rule.from) {
-        const labels = peer.namespaceSelector.matchLabels;
-        expect(Object.keys(labels)).toEqual(["kubernetes.io/metadata.name"]);
-        expect(labels["kubernetes.io/metadata.name"]).toMatch(
-          /^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$/u,
-        );
-        expect(labels["kubernetes.io/metadata.name"]).not.toBe("default");
-      }
-    }
+    expect(policy.spec.ingress).toEqual([
+      {
+        ports: [{ port: 8080, protocol: "TCP" }],
+        from: [
+          {
+            namespaceSelector: {
+              matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+            },
+          },
+          {
+            namespaceSelector: {
+              matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+            },
+          },
+        ],
+      },
+    ]);
   });
 });

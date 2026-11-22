@@ -78,7 +78,7 @@ describe("docker sandbox argv", () => {
     expect(args).toContain(`MC_BRIDGE_TOKEN=${secrets.bridgeToken}`);
     expect(args.at(-1)).toMatch(/^itzg\/minecraft-server:.+@sha256:/u);
     expect(args).not.toContain("--add-host");
-    profile.env["FLIPT_URL"] = "http://host.docker.internal:12345";
+    profile.env["FLAGS_URL"] = "http://host.docker.internal:12345";
     expect(dockerCreateArgs(options, "linux")).toContain(
       "host.docker.internal:host-gateway",
     );

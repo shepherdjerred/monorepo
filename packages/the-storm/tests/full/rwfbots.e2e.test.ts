@@ -820,7 +820,7 @@ async function watchShowcase(match: Match, outsider: Bot): Promise<void> {
     );
     await saveWatcherChatReceipt(match, live.matchId, result);
 
-    // Bot chat (the-storm-rwfbots-chat-enabled is on in the fake Flipt):
+    // Bot chat (the-storm-rwfbots-chat-enabled is on in the fake Flags service):
     // the watcher in the rwf world hears ✦-marked Global lines from the
     // showcase's bots, with a team mark once teams exist; team calls stay with
     // the bots' teams; the player in the main world hears none of them.

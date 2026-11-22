@@ -38,9 +38,9 @@ export async function startLocalStorm(options: LocalStormOptions) {
     ...overrides,
     ownedConfigDir,
     env: {
-      // The fake brain's Flipt double admits /rwf join and /rwf spectate.
-      FLIPT_URL: brainBaseUrl,
-      FLIPT_ENVIRONMENT: "prod",
+      // The fake brain's Flags double admits /rwf join and /rwf spectate.
+      FLAGS_URL: brainBaseUrl,
+      FLAGS_DEPLOYMENT: "minecraft/tsmc",
       POSTHOG_API_HOST: brainBaseUrl,
       POSTHOG_PROJECT_TOKEN: "phc_test",
       RWF_RECORDING_SALT: rwfRecordingSalt,

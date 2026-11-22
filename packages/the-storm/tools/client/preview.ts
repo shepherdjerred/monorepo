@@ -206,8 +206,8 @@ async function run(options: PreviewOptions, runState: Run): Promise<void> {
       : { exportRecordingsDir: path.join(runState.artifacts, "recordings") }),
     ownedConfigDir,
     env: {
-      FLIPT_URL: `http://host.docker.internal:${brain.port.toString()}`,
-      FLIPT_ENVIRONMENT: "prod",
+      FLAGS_URL: `http://host.docker.internal:${brain.port.toString()}`,
+      FLAGS_DEPLOYMENT: "minecraft/tsmc",
       POSTHOG_API_HOST: `http://host.docker.internal:${brain.port.toString()}`,
       POSTHOG_PROJECT_TOKEN: "phc_test",
       RWF_RECORDING_SALT: rwfRecordingSalt,

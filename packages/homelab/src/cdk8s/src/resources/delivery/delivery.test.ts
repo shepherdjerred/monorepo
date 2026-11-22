@@ -13,6 +13,7 @@ import { createArcadeChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-chart
 import { createDeliveryJobs } from "./jobs.ts";
 import { createDeliveryWorker } from "./worker.ts";
 import { renderedClaims } from "@shepherdjerred/homelab/cdk8s/src/testing/claim-manifest-schema.ts";
+import { PodSelectorSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/pod-template-schema.ts";
 import { createWoodpeckerStepNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/step-network-policy.ts";
 import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { CI_NPM_CREDENTIALS_ITEM } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
@@ -315,20 +316,7 @@ describe("Delivery infrastructure", () => {
       .array(
         z.object({
           spec: z.object({
-            podSelector: z
-              .object({
-                matchLabels: z.record(z.string(), z.string()).optional(),
-                matchExpressions: z
-                  .array(
-                    z.object({
-                      key: z.string(),
-                      operator: z.string(),
-                      values: z.array(z.string()).optional(),
-                    }),
-                  )
-                  .optional(),
-              })
-              .loose(),
+            podSelector: PodSelectorSchema,
             egress: z.unknown(),
           }),
         }),

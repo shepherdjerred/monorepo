@@ -5,7 +5,7 @@ import {
   externalHttpsEgressRule,
   nsPeer,
   tcp,
-  fliptEgress,
+  flagsEgress,
   lokiOtlpEgress,
   otlpEgress,
   postgresEgress,
@@ -17,7 +17,7 @@ import { MEDIA_APPLICATION_LABEL } from "./environment.ts";
 
 export function createMediaApplicationNetworkPolicies(chart: Chart): void {
   const database = postgresEgress("media-postgresql");
-  const flipt = fliptEgress();
+  const flags = flagsEgress();
   const telemetry = otlpEgress();
   new KubeNetworkPolicy(chart, "media-api-netpol", {
     spec: {
@@ -32,7 +32,7 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
       egress: [
         dnsEgressRule(),
         database,
-        flipt,
+        flags,
         telemetry,
         externalHttpsEgressRule(),
         // Login verifies the user's own library access against the existing Plex service.
@@ -58,7 +58,7 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
         egress: [
           dnsEgressRule(),
           database,
-          flipt,
+          flags,
           telemetry,
           // The Temporal worker image ships its logs to Loki by default.
           lokiOtlpEgress(),

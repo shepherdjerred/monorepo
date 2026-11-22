@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createAlertDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/alert-dashboard.ts";
 import { createPostalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/postal.ts";
 import { createAppsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/apps.ts";
-import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/flipt.ts";
+import { createFlagsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/flags.ts";
 import { createTrmnlDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts";
 import { PROD_NODE_INTERNAL_IP } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { createAlertDashboardApp } from "./alert-dashboard.ts";
@@ -221,7 +221,7 @@ describe("alert dashboard network paths", () => {
     expect(allowsEgress(dashboard.spec.egress, "temporal", 7233)).toBe(false);
   });
 
-  it("reaches Flipt for the digest flag", () => {
+  it("reaches Flags for the digest flag", () => {
     const dashboard = findPolicy(
       synthesize(
         createAlertDashboardChart,
@@ -229,13 +229,13 @@ describe("alert dashboard network paths", () => {
       ),
       "alert-dashboard-app-netpol",
     );
-    const flipt = findPolicy(
-      synthesize(createFliptChart, ".test-synth-alert-dashboard-flipt"),
-      "flipt-ingress-netpol",
+    const flags = findPolicy(
+      synthesize(createFlagsChart, ".test-synth-alert-dashboard-flags"),
+      "flags-app-netpol",
     );
 
-    expect(allowsEgress(dashboard.spec.egress, "flipt", 8080)).toBe(true);
-    expect(allowsIngress(flipt.spec.ingress, "alert-dashboard", 8080)).toBe(
+    expect(allowsEgress(dashboard.spec.egress, "flags", 7361)).toBe(true);
+    expect(allowsIngress(flags.spec.ingress, "alert-dashboard", 7361)).toBe(
       true,
     );
   });

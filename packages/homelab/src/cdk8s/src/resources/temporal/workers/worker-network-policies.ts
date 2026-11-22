@@ -10,7 +10,8 @@ import {
   tcp,
   cloudflareTunnelIngressRule,
   blackboxProbeIngressRule,
-  fliptEgress,
+  flagsEgress,
+  flagsManagementEgress,
   lokiOtlpEgress,
   otlpEgress,
   prometheusIngressRule,
@@ -52,31 +53,19 @@ function temporalServerEgress() {
   };
 }
 
-function fliptPodEgress() {
-  return {
-    to: [
-      { ...nsPeer("flipt"), podSelector: { matchLabels: { app: "flipt" } } },
-    ],
-    ports: [tcp(8080)],
-  };
-}
-
 // Every domain worker built on createTemporalDomainWorker() with
-// featureFlagsEnabled left at its default (i.e. every one of these
-// components) boots with temporalFeatureFlagEnvironment() so it can read the
-// temporal-call-graph-tracing flag. Flipt has no auth of its own —
-// reachability IS the authorization model — so this single, explicitly
-// named policy is what actually scopes which workers may query it. The
-// credentialless central-workflows track resolves the same flag itself (it
-// is the only role that actually hosts workflow code) but keeps its own,
-// narrower NetworkPolicy — see temporal-central-workflows-netpol below —
-// rather than joining this component-label selector.
-const FLIPT_CONSUMER_COMPONENTS = [
+// featureFlagsEnabled left at its default boots with
+// temporalFeatureFlagEnvironment() so it can read the
+// temporal-call-graph-tracing flag over the credentialless Flags evaluation
+// port (7361). `repo-worker` instead connects to port 7360 (which serves both
+// credentialless snapshots and authenticated inventory reconciliation) via
+// `temporal-repo-flags-netpol`, and the credentialless central-workflows track
+// keeps its own narrower NetworkPolicy (`temporal-central-workflows-netpol`).
+const FLAGS_CONSUMER_COMPONENTS = [
   "gateway",
   "home-worker",
   "reports-worker",
   "infra-worker",
-  "repo-worker",
   "scout-worker",
   "glitter-corpus-worker",
   "glitter-context-worker",
@@ -84,21 +73,21 @@ const FLIPT_CONSUMER_COMPONENTS = [
   "promotion-worker",
 ] as const;
 
-function createTemporalWorkersFliptEgressPolicy(chart: Chart): void {
-  new KubeNetworkPolicy(chart, "temporal-workers-flipt-egress", {
-    metadata: { name: "temporal-workers-flipt-egress" },
+function createTemporalWorkersFlagsEgressPolicy(chart: Chart): void {
+  new KubeNetworkPolicy(chart, "temporal-workers-flags-egress", {
+    metadata: { name: "temporal-workers-flags-egress" },
     spec: {
       podSelector: {
         matchExpressions: [
           {
             key: "component",
             operator: "In",
-            values: [...FLIPT_CONSUMER_COMPONENTS],
+            values: [...FLAGS_CONSUMER_COMPONENTS],
           },
         ],
       },
       policyTypes: ["Egress"],
-      egress: [fliptPodEgress()],
+      egress: [flagsEgress()],
     },
   });
 }
@@ -149,7 +138,7 @@ function createTemporalWorkersSeaweedfsEgressPolicy(chart: Chart): void {
 }
 
 export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
-  createTemporalWorkersFliptEgressPolicy(chart);
+  createTemporalWorkersFlagsEgressPolicy(chart);
   createTemporalWorkersSeaweedfsEgressPolicy(chart);
 
   new KubeNetworkPolicy(chart, "temporal-central-workflows-netpol", {
@@ -161,7 +150,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       egress: [
         dnsEgressRule(),
         temporalServerEgress(),
-        fliptPodEgress(),
+        flagsEgress(),
         otlpEgress(),
         lokiOtlpEgress(),
       ],
@@ -232,12 +221,12 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     },
   });
 
-  new KubeNetworkPolicy(chart, "temporal-repo-flipt-netpol", {
-    metadata: { name: "temporal-repo-flipt-netpol" },
+  new KubeNetworkPolicy(chart, "temporal-repo-flags-netpol", {
+    metadata: { name: "temporal-repo-flags-netpol" },
     spec: {
       podSelector: { matchLabels: { component: "repo-worker" } },
       policyTypes: ["Egress"],
-      egress: [fliptEgress()],
+      egress: [flagsManagementEgress()],
     },
   });
 

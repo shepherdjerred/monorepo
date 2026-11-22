@@ -22,7 +22,7 @@ import {
   streambotWebProbes,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot/web.ts";
 import {
-  fliptEnv,
+  flagsEnv,
   telemetryEnv,
   seaweedfsS3,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
@@ -187,11 +187,7 @@ export function createStreambotDeployment(
             // detector excludes them from the "real viewers" count and leaves once the
             // last human exits. Sourced from the canonical map in resources/userbot-ids.ts.
             // Bootstrap for the flag client — cannot come from a flag.
-            ...fliptEnv({
-              namespace: "streambot",
-              environment: "prod",
-              order: ["FLIPT_ENVIRONMENT", "FLIPT_NAMESPACE", "FLIPT_URL"],
-            }),
+            ...flagsEnv({ deployment: "streambot/prod" }),
             PINCHTAB_BASE_URL: EnvValue.fromValue(
               "http://pinchtab.pinchtab.svc.cluster.local:9867",
             ),

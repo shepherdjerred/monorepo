@@ -81,8 +81,8 @@ describe("Temporal FreshRSS integration", () => {
       value: "/run/secrets/freshrss/password",
     });
     expect(container.env).toContainEqual({
-      name: "FLIPT_URL",
-      value: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+      name: "FLAGS_URL",
+      value: "http://flags.flags.svc.cluster.local:7360",
     });
     expect(container.volumeMounts).toContainEqual(
       expect.objectContaining({
@@ -166,28 +166,28 @@ describe("Temporal FreshRSS integration", () => {
       ports: [{ port: ALERTMANAGER_GATEWAY_PORT, protocol: "TCP" }],
     });
 
-    const fliptPolicy = findTemporalResource(
+    const flagsPolicy = findTemporalResource(
       synthesized,
       "NetworkPolicy",
-      "temporal-repo-flipt-netpol",
+      "temporal-repo-flags-netpol",
     );
-    const fliptPolicySpec = z
+    const flagsPolicySpec = z
       .object({
         podSelector: z.object({
           matchLabels: z.record(z.string(), z.string()),
         }),
         egress: z.array(z.unknown()),
       })
-      .parse(fliptPolicy.spec);
-    expect(fliptPolicySpec.podSelector.matchLabels).toEqual({
+      .parse(flagsPolicy.spec);
+    expect(flagsPolicySpec.podSelector.matchLabels).toEqual({
       component: "repo-worker",
     });
-    expect(fliptPolicySpec.egress).toContainEqual({
-      ports: [{ port: 8080, protocol: "TCP" }],
+    expect(flagsPolicySpec.egress).toContainEqual({
+      ports: [{ port: 7360, protocol: "TCP" }],
       to: [
         {
           namespaceSelector: {
-            matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+            matchLabels: { "kubernetes.io/metadata.name": "flags" },
           },
         },
       ],

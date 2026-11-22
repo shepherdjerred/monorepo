@@ -191,10 +191,10 @@ function stormDevProfile(
     serverIcon: STORM_PATHS.serverIcon,
     env: {
       ...serverEnv(world, secrets),
-      // TheStorm requires bootstrap Flipt settings even when rollout checks
+      // TheStorm requires bootstrap Flags settings even when rollout checks
       // are intentionally inert in a disposable local sandbox.
-      FLIPT_URL: "http://127.0.0.1:9",
-      FLIPT_ENVIRONMENT: "prod",
+      FLAGS_URL: "http://127.0.0.1:9",
+      FLAGS_DEPLOYMENT: "minecraft/tsmc",
       // Loads an empty creative plot world before the module enables. Production
       // does not set this, so a missing restored world still refuses to start.
       THESTORM_CREATIVE_BOOTSTRAP: "true",
@@ -281,9 +281,9 @@ function stormImageProfile(
       // Pseudonymization only in disposable sandboxes; never used in production.
       RWF_RECORDING_SALT: "mc-harness-storm-fixture-recording-salt",
       // Keep companion gameplay suspended while the disposable server boots;
-      // the unreachable Flipt endpoint makes rollout evaluation fail closed.
-      FLIPT_URL: "http://127.0.0.1:9",
-      FLIPT_ENVIRONMENT: "prod",
+      // the unreachable Flags endpoint makes rollout evaluation fail closed.
+      FLAGS_URL: "http://127.0.0.1:9",
+      FLAGS_DEPLOYMENT: "minecraft/tsmc",
       ...bridgeAndRconEnv(secrets),
     },
     plugins: [],
@@ -369,8 +369,8 @@ export function resolveProfile(
       ...(request.rollout === undefined
         ? {}
         : {
-            FLIPT_URL: request.rollout.url,
-            FLIPT_ENVIRONMENT: request.rollout.environment,
+            FLAGS_URL: request.rollout.url,
+            FLAGS_DEPLOYMENT: request.rollout.deployment,
           }),
     },
     staged: [

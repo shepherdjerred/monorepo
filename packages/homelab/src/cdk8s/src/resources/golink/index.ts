@@ -14,7 +14,7 @@ import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/impor
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
-import { fliptEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import {
   FirstPartyWebService,
   type FirstPartyInitContainer,
@@ -24,7 +24,7 @@ import {
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
-  fliptEgress,
+  flagsEgress,
   kubernetesApiEgressRule,
   nsPeer,
   otlpEgress,
@@ -194,7 +194,7 @@ function buildGolinkServerContainer(
       PORT: EnvValue.fromValue(String(GOLINK_HTTP_PORT)),
       ENVIRONMENT: EnvValue.fromValue("production"),
       GOLINK_SEED_JSON: EnvValue.fromValue(CURATED_MANUAL_SEED_JSON),
-      ...fliptEnv({ namespace: "golink", environment: "prod" }),
+      ...flagsEnv({ deployment: "golink/prod" }),
       OTEL_EXPORTER_OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
     },
   };
@@ -367,7 +367,7 @@ export function createFirstPartyGolinkDeployment(chart: Chart, image: string) {
         egress: [
           dnsEgressRule(),
           postgresEgress("golink-postgresql"),
-          fliptEgress(),
+          flagsEgress(),
           otlpEgress(),
           kubernetesApiEgressRule(),
           externalHttpsEgressRule(),

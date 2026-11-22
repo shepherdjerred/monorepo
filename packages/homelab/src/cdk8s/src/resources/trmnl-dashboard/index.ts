@@ -7,12 +7,13 @@ import { IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
-  fliptEnv,
+  flagsEnv,
   bugsinkEnv,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   dnsEgressRule,
+  flagsEgress,
   nsPeer,
   tcp,
   cloudflareTunnelIngressRule,
@@ -69,11 +70,7 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
             key: "HA_TOKEN",
           }),
           DISPLAY_TIME_ZONE: EnvValue.fromValue("America/Los_Angeles"),
-          ...fliptEnv({
-            namespace: "trmnl-dashboard",
-            environment: "prod",
-            order: ["FLIPT_NAMESPACE", "FLIPT_URL", "FLIPT_ENVIRONMENT"],
-          }),
+          ...flagsEnv({ deployment: "trmnl-dashboard/prod" }),
           // The homelab screen renders from the ops snapshot the ops dashboard
           // (deployed as alert-dashboard) serves.
           OPS_DASHBOARD_URL: EnvValue.fromValue(OPS_DASHBOARD_URL),
@@ -140,6 +137,7 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
             to: [nsPeer("alert-dashboard")],
             ports: [tcp(7341)],
           },
+          flagsEgress(),
         ],
       },
     ],

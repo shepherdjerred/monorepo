@@ -9,7 +9,7 @@ import {
   kubernetesApiEgressRule,
   nsPeer,
   tcp,
-  fliptEgress,
+  flagsEgress,
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
@@ -88,7 +88,7 @@ export function createDeliveryPlatformWorker(
           ports: ports(7233),
         },
         { to: [nsPeer("delivery")], ports: ports(7353) },
-        fliptEgress(),
+        flagsEgress(),
       ],
     },
   });

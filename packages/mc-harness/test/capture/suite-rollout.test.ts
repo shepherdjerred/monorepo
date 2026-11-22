@@ -37,11 +37,15 @@ it("binds Linux readers to Docker's IPv4 bridge and preserves Desktop loopback r
 it("records the first real evaluation and replays it after upstream disappears", async () => {
   let enabled = true,
     calls = 0;
+  let observedPath = "";
+  let observedAuth: string | null = null;
   const upstream = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
-    fetch: () => {
+    fetch: (req) => {
       calls++;
+      observedPath = new URL(req.url).pathname;
+      observedAuth = req.headers.get("authorization");
       return Response.json({ enabled });
     },
   });
@@ -51,7 +55,7 @@ it("records the first real evaluation and replays it after upstream disappears",
     {
       source: {
         url: `http://127.0.0.1:${String(upstream.port)}`,
-        environment: "prod",
+        deployment: "minecraft/tsmc",
       },
       store,
       cache,
@@ -59,27 +63,30 @@ it("records the first real evaluation and replays it after upstream disappears",
     loopback,
   );
   const request = {
-    namespace_key: "the-storm",
-    flag_key: "example",
-    entity_id: "camera",
-    context: {},
+    deployment: "minecraft/tsmc",
+    key: "example",
+    context: { user: "camera" },
   };
   const evaluate = async (url: string) => {
     const result = await fetch(
-      new URL(
-        "/evaluate/v1/boolean",
-        url.replace("host.docker.internal", "127.0.0.1"),
-      ),
-      { method: "POST", body: JSON.stringify(request) },
+      new URL("/v1/evaluate", url.replace("host.docker.internal", "127.0.0.1")),
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+      },
     );
     return result.json();
   };
   try {
+    expect(recorder.bootstrap.deployment).toBe("minecraft/tsmc");
     expect(
       await Promise.all(
         Array.from({ length: 8 }, () => evaluate(recorder.bootstrap.url)),
       ),
     ).toEqual(Array.from({ length: 8 }, () => ({ enabled: true })));
+    expect(observedPath).toBe("/v1/evaluate");
+    expect(observedAuth).toBeNull();
     enabled = false;
     expect(await evaluate(recorder.bootstrap.url)).toEqual({ enabled: true });
     expect(calls).toBe(1);
@@ -88,6 +95,7 @@ it("records the first real evaluation and replays it after upstream disappears",
     await recorder.stop();
     const replay = await localRollout({ snapshot, store, cache }, loopback);
     try {
+      expect(replay.bootstrap.deployment).toBe("minecraft/tsmc");
       expect(await evaluate(replay.bootstrap.url)).toEqual({ enabled: true });
     } finally {
       await replay.stop();
@@ -99,7 +107,7 @@ it("records the first real evaluation and replays it after upstream disappears",
   }
 });
 
-it("admits local readers only on disposable map servers and rejects arbitrary HTTP endpoints", () => {
+it("admits local readers only on disposable map servers and rejects arbitrary HTTP endpoints or invalid deployments", () => {
   const base = {
     profile: "storm-dev",
     world: "real-map",
@@ -114,14 +122,26 @@ it("admits local readers only on disposable map servers and rejects arbitrary HT
       ...base,
       rollout: {
         url: "http://host.docker.internal:12345",
-        environment: "prod",
+        deployment: "minecraft/tsmc",
       },
     }).success,
   ).toBe(true);
   expect(
     SandboxCreateRequestSchema.safeParse({
       ...base,
-      rollout: { url: "http://untrusted.example", environment: "prod" },
+      rollout: {
+        url: "http://untrusted.example",
+        deployment: "minecraft/tsmc",
+      },
+    }).success,
+  ).toBe(false);
+  expect(
+    SandboxCreateRequestSchema.safeParse({
+      ...base,
+      rollout: {
+        url: "http://host.docker.internal:12345",
+        deployment: "prod",
+      },
     }).success,
   ).toBe(false);
   expect(
@@ -130,7 +150,7 @@ it("admits local readers only on disposable map servers and rejects arbitrary HT
       world: "flat",
       rollout: {
         url: "http://host.docker.internal:12345",
-        environment: "prod",
+        deployment: "minecraft/tsmc",
       },
     }).success,
   ).toBe(false);

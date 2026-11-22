@@ -5,14 +5,14 @@ import { Cpu, DeploymentStrategy, EnvValue, Secret } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { fliptEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
   nsPeer,
   tcp,
-  fliptEgress,
+  flagsEgress,
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
@@ -73,11 +73,7 @@ export function createStormBrainDeployment(chart: Chart) {
             secret: brainSecretRef,
             key: "OPENAI_API_KEY",
           }),
-          ...fliptEnv({
-            namespace: "storm",
-            environment: "prod",
-            order: ["FLIPT_URL", "FLIPT_NAMESPACE", "FLIPT_ENVIRONMENT"],
-          }),
+          ...flagsEnv({ deployment: "storm/prod" }),
         },
         securityContext: restrictedContainer(1000),
         resources: {
@@ -103,8 +99,8 @@ export function createStormBrainDeployment(chart: Chart) {
         ],
         egress: [
           dnsEgressRule(),
-          // Flipt evaluation (flipt-flipt-service.flipt.svc.cluster.local:8080)
-          fliptEgress(),
+          // First-party Flags evaluation (flags.flags.svc.cluster.local:7361)
+          flagsEgress(),
           // External HTTPS (OpenAI API)
           externalHttpsEgressRule(),
         ],

@@ -1,4 +1,4 @@
-# Runtime limits are repository-owned. New capabilities have managed Flipt gates.
+# Runtime limits are repository-owned. New capabilities have managed flag gates.
 letterLength: 2000
 letterIntervalSeconds: 10
 inboxLimit: 100

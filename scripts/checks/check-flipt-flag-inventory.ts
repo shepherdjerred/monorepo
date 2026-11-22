@@ -1,67 +1,97 @@
-import { applyMissingManagedFlags } from "../../packages/feature-flags/src/flipt-missing-flag-apply.ts";
-import { applyDeclaredManagedFlags } from "../../packages/feature-flags/src/flipt-declared-flag-apply.ts";
-import { createFliptOperatorFetcher } from "../../packages/feature-flags/src/flipt-operator-fetcher.ts";
+import type { FlagDeployment } from "../../packages/feature-flags/src/deployments.ts";
 import {
-  compareManagedFlagInventory,
-  fetchFliptSnapshot,
-  FliptSnapshotSchema,
-  formatManagedFlagDrift,
-} from "../../packages/feature-flags/src/managed-flag-drift.ts";
+  compareDeploymentFlags,
+  createFlagsMachineFetcher,
+  fetchFlagsDeploymentSnapshot,
+  FlagsDeploymentSnapshotSchema,
+  formatDeploymentFlagDrift,
+  normalizeFlagsBaseUrl,
+  selectFlagDeployments,
+} from "../../packages/feature-flags/src/flags-drift.ts";
+import {
+  applyDeclaredDeploymentFlags,
+  applyMissingDeploymentFlags,
+} from "../../packages/feature-flags/src/flags-reconcile.ts";
 import {
   managedFlagInventory,
   managedFlagNamespaces,
-  materializeManagedNamespaceEnvironment,
 } from "../../packages/feature-flags/src/managed-flag-inventory.ts";
+import { projectDeploymentFlags } from "../../packages/feature-flags/src/project-deployment.ts";
 
-function argument(name: string): string | undefined {
-  const index = Bun.argv.indexOf(name);
-  const value = Bun.argv[index + 1];
-  return index !== -1 && value !== undefined ? value : undefined;
+function argument(
+  name: string,
+  args: readonly string[] = Bun.argv,
+): string | undefined {
+  const index = args.indexOf(name);
+  const value = args[index + 1];
+  if (index === -1) return undefined;
+  if (value === undefined || value.startsWith("--")) {
+    throw new Error(`Explicit ${name} value is required`);
+  }
+  if (args.lastIndexOf(name) !== index) {
+    throw new Error(`Duplicate ${name}`);
+  }
+  return value;
 }
 
 export function declaredRolloutArguments(args: readonly string[]) {
   const plan = args.includes("--plan-declared");
   const apply = args.includes("--apply-declared");
   if (!plan && !apply) {
-    if (args.includes("--flag"))
+    if (args.includes("--flag")) {
       throw new Error("--flag requires --plan-declared or --apply-declared");
+    }
     return;
   }
-  if ((plan && apply) || args.includes("--apply-missing"))
+  if ((plan && apply) || args.includes("--apply-missing")) {
     throw new Error("Choose exactly one inventory mutation or preview mode");
-  const value = (name: string) => {
-    const index = args.indexOf(name);
-    const next = args[index + 1];
-    if (next === undefined || index === -1 || next.startsWith("--"))
-      throw new Error(`Explicit ${name} is required`);
-    if (args.lastIndexOf(name) !== index) throw new Error(`Duplicate ${name}`);
-    return next;
-  };
+  }
   const flagKeys = args.flatMap((arg, index) => {
     if (arg !== "--flag") return [];
     const key = args[index + 1];
-    if (key === undefined || key.startsWith("--"))
+    if (key === undefined || key.startsWith("--")) {
       throw new Error("--flag requires a key");
+    }
     return [key];
   });
-  if (flagKeys.length === 0)
+  if (flagKeys.length === 0) {
     throw new Error("Explicit --flag selection is required");
+  }
+  const deploymentFilter = argument("--deployment", args);
+  const environmentFilter = argument("--environment", args);
+  const namespaceFilter = argument("--namespace", args);
+  if (
+    deploymentFilter === undefined &&
+    (environmentFilter === undefined || namespaceFilter === undefined)
+  ) {
+    throw new Error(
+      "Explicit --deployment or both --environment and --namespace are required",
+    );
+  }
+  const selected = selectFlagDeployments({
+    deploymentFilter,
+    environmentFilter,
+    namespaceFilter,
+  });
+  const deployment = selected[0];
+  if (deployment === undefined || selected.length !== 1) {
+    throw new Error("Declared rollout must target exactly one deployment");
+  }
   return {
-    environment: value("--environment"),
-    namespace: value("--namespace"),
+    deployment,
     flagKeys,
     mode: apply ? ("apply" as const) : ("plan" as const),
   };
 }
 
 function requiredUrl(): string {
-  const url = argument("--url") ?? Bun.env["FLIPT_URL"];
+  const url = argument("--url") ?? Bun.env["FLAGS_URL"];
   if (url === undefined || url.length === 0) {
     throw new Error(
-      "FLIPT_URL or --url is required; this operator-only check never guesses a Flipt endpoint",
+      "FLAGS_URL or --url is required; this operator-only check never guesses a Flags endpoint",
     );
   }
-  return url.replace(/\/$/u, "");
+  return normalizeFlagsBaseUrl(url);
 }
 
 export function selectedManagedEnvironments(
@@ -87,74 +117,121 @@ export function selectedManagedNamespaces(
   return [namespaceFilter];
 }
 
-export type SnapshotLoader = (
-  environment: string,
-  namespace: string,
+export type DeploymentSnapshotLoader = (
+  deployment: FlagDeployment,
 ) => Promise<unknown>;
 
 export async function checkManagedFlagMatrix(options: {
+  deploymentFilter?: string | undefined;
   namespaceFilter?: string | undefined;
   environmentFilter?: string | undefined;
-  loadSnapshot: SnapshotLoader;
+  loadSnapshot: DeploymentSnapshotLoader;
 }): Promise<string[]> {
+  const deployments = selectFlagDeployments({
+    deploymentFilter: options.deploymentFilter,
+    environmentFilter: options.environmentFilter,
+    namespaceFilter: options.namespaceFilter,
+  });
   const messages: string[] = [];
   const failures: string[] = [];
-  for (const environment of selectedManagedEnvironments(
-    options.environmentFilter,
-  )) {
-    for (const namespace of selectedManagedNamespaces(
-      options.namespaceFilter,
-    )) {
-      const expectedFlags = materializeManagedNamespaceEnvironment(
-        managedFlagInventory,
-        environment,
-        namespace,
+  for (const deployment of deployments) {
+    const expectedFlags = projectDeploymentFlags(deployment);
+    let parsed: ReturnType<typeof FlagsDeploymentSnapshotSchema.parse>;
+    try {
+      parsed = FlagsDeploymentSnapshotSchema.parse(
+        await options.loadSnapshot(deployment),
       );
-      let snapshot: Awaited<ReturnType<typeof fetchFliptSnapshot>>;
-      try {
-        snapshot = FliptSnapshotSchema.parse(
-          await options.loadSnapshot(environment, namespace),
+      if (parsed.deployment !== deployment.id) {
+        throw new Error(
+          `snapshot deployment "${parsed.deployment}" did not match "${deployment.id}"`,
         );
-      } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
-        failures.push(
-          `Flipt snapshot validation failed in ${environment}/${namespace}: ${detail}`,
-        );
-        continue;
       }
-      const errors = formatManagedFlagDrift(
-        compareManagedFlagInventory(snapshot, expectedFlags),
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      failures.push(
+        `Flags snapshot validation failed in ${deployment.id}: ${detail}`,
       );
-      if (errors.length > 0) {
-        failures.push(
-          `Flipt managed-flag drift detected in ${environment}/${namespace}:\n  - ${errors.join("\n  - ")}`,
-        );
-        continue;
-      }
-      messages.push(
-        `Flipt managed-flag inventory is aligned: ${expectedFlags.length.toString()} keys in ${environment}/${namespace}`,
-      );
+      continue;
     }
+    const errors = formatDeploymentFlagDrift(
+      compareDeploymentFlags(parsed.flags, expectedFlags),
+    );
+    if (errors.length > 0) {
+      failures.push(
+        `Flags managed-flag drift detected in ${deployment.id}:\n  - ${errors.join("\n  - ")}`,
+      );
+      continue;
+    }
+    messages.push(
+      `Flags managed-flag inventory is aligned: ${expectedFlags.length.toString()} keys in ${deployment.id}`,
+    );
   }
   if (failures.length > 0) {
     throw new Error(
-      `Flipt managed-flag matrix check failed:\n- ${failures.join("\n- ")}`,
+      `Flags managed-flag check failed:\n- ${failures.join("\n- ")}`,
     );
   }
   return messages;
+}
+
+function resolveScopeArguments(args: readonly string[] = Bun.argv) {
+  const explicitDeployment = argument("--deployment", args);
+  const explicitNamespace = argument("--namespace", args);
+  const explicitEnvironment = argument("--environment", args);
+  if (
+    explicitDeployment !== undefined &&
+    (explicitNamespace !== undefined || explicitEnvironment !== undefined)
+  ) {
+    throw new Error(
+      "Choose either --deployment or --environment/--namespace filters",
+    );
+  }
+  if (
+    explicitDeployment !== undefined ||
+    explicitNamespace !== undefined ||
+    explicitEnvironment !== undefined
+  ) {
+    return {
+      deploymentFilter: explicitDeployment,
+      namespaceFilter: explicitNamespace,
+      environmentFilter: explicitEnvironment,
+    };
+  }
+  const ambientDeployment = Bun.env["FLAGS_DEPLOYMENT"];
+  if (ambientDeployment !== undefined && ambientDeployment.length > 0) {
+    return {
+      deploymentFilter: ambientDeployment,
+      namespaceFilter: undefined,
+      environmentFilter: undefined,
+    };
+  }
+  return {
+    deploymentFilter: undefined,
+    namespaceFilter: Bun.env["FLIPT_NAMESPACE"],
+    environmentFilter: Bun.env["FLIPT_ENVIRONMENT"],
+  };
 }
 
 async function runDeclaredRollout(
   rollout: NonNullable<ReturnType<typeof declaredRolloutArguments>>,
 ): Promise<void> {
   const url = requiredUrl();
-  const result = await applyDeclaredManagedFlags({
-    ...rollout,
+  const token = Bun.env["FLAGS_MACHINE_TOKEN"];
+  const hasToken = token !== undefined && token.trim() !== "";
+  const fetcher =
+    hasToken || rollout.mode === "apply"
+      ? createFlagsMachineFetcher(url, token)
+      : undefined;
+  const result = await applyDeclaredDeploymentFlags({
     url,
-    fetcher: createFliptOperatorFetcher(url, Bun.env["FLIPT_OPERATOR_TOKEN"]),
+    deployment: rollout.deployment,
+    flagKeys: rollout.flagKeys,
+    mode: rollout.mode,
+    ...(fetcher === undefined ? {} : { fetcher }),
     onPlan: (plan) => {
-      if (rollout.mode === "apply")
+      if (rollout.mode === "apply") {
         console.error(JSON.stringify({ phase: "preview", ...plan }));
+      }
     },
   });
   console.log(
@@ -164,8 +241,9 @@ async function runDeclaredRollout(
     result.changes.some(
       (change) => change.status === "conflict" || change.status === "failed",
     )
-  )
+  ) {
     process.exitCode = 1;
+  }
 }
 
 async function main(): Promise<void> {
@@ -174,38 +252,26 @@ async function main(): Promise<void> {
     await runDeclaredRollout(rollout);
     return;
   }
-  const namespaceFilter = argument("--namespace") ?? Bun.env["FLIPT_NAMESPACE"];
-  const environmentFilter =
-    argument("--environment") ?? Bun.env["FLIPT_ENVIRONMENT"];
+  const scope = resolveScopeArguments(Bun.argv);
+  const deployments = selectFlagDeployments(scope);
   const url = requiredUrl();
   if (Bun.argv.includes("--apply-missing")) {
-    const created = await applyMissingManagedFlags({
+    const created = await applyMissingDeploymentFlags({
       url,
-      fetcher: createFliptOperatorFetcher(url, Bun.env["FLIPT_OPERATOR_TOKEN"]),
-      ...(environmentFilter === undefined ? {} : { environmentFilter }),
-      ...(namespaceFilter === undefined ? {} : { namespaceFilter }),
+      fetcher: createFlagsMachineFetcher(url, Bun.env["FLAGS_MACHINE_TOKEN"]),
+      deployments,
     });
     for (const result of created) {
-      if (
-        result.createdFlags.length === 0 &&
-        result.createdSegments.length === 0 &&
-        result.createdNamespaces.length === 0
-      ) {
-        continue;
-      }
-      const namespaces = result.createdNamespaces.join(",") || "none";
-      const segments = result.createdSegments.join(",") || "none";
-      const flags = result.createdFlags.join(",") || "none";
+      if (result.createdFlags.length === 0) continue;
       console.log(
-        `created missing Flipt resources in ${result.environment}/${result.namespace}: namespaces=${namespaces} segments=${segments} flags=${flags}`,
+        `created missing Flags keys in ${result.deployment}: flags=${result.createdFlags.join(",")}`,
       );
     }
   }
   const messages = await checkManagedFlagMatrix({
-    namespaceFilter,
-    environmentFilter,
-    loadSnapshot: (environment, selectedNamespace) =>
-      fetchFliptSnapshot({ url, namespace: selectedNamespace, environment }),
+    ...scope,
+    loadSnapshot: (deployment) =>
+      fetchFlagsDeploymentSnapshot({ url, deployment }),
   });
   for (const message of messages) {
     console.log(message);

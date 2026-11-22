@@ -16,14 +16,24 @@ const StaticOverridesSchema = z.record(
   z.union([z.boolean(), z.string(), z.number()]),
 );
 
-function requireVariable(environment: Environment, name: string): string {
+function requireVariable(
+  environment: Environment,
+  name: string,
+  mode: "flags" | "flipt",
+): string {
   const value = environment[name];
   if (value === undefined || value.length === 0) {
     throw new Error(
-      `${name} is required when FEATURE_FLAGS_MODE=flipt. Set it, or set FEATURE_FLAGS_MODE=disabled.`,
+      `${name} is required when FEATURE_FLAGS_MODE=${mode}. Set it, or set FEATURE_FLAGS_MODE=disabled.`,
     );
   }
   return value;
+}
+
+function parsePollInterval(rawPoll: string | undefined): number {
+  return rawPoll === undefined || rawPoll.length === 0
+    ? DEFAULT_POLL_INTERVAL_SECONDS
+    : PollIntervalSchema.parse(rawPoll);
 }
 
 /**
@@ -37,7 +47,7 @@ export function loadFeatureFlagConfiguration(
   const rawMode = environment["FEATURE_FLAGS_MODE"];
   if (rawMode === undefined || rawMode.length === 0) {
     throw new Error(
-      "FEATURE_FLAGS_MODE is required (flipt | static | disabled). It has no default on purpose: a service that silently served call-site defaults would look healthy while ignoring every flag.",
+      "FEATURE_FLAGS_MODE is required (flags | flipt | static | disabled). It has no default on purpose: a service that silently served call-site defaults would look healthy while ignoring every flag.",
     );
   }
   const mode = FeatureFlagModeSchema.parse(rawMode);
@@ -55,15 +65,24 @@ export function loadFeatureFlagConfiguration(
     });
   }
 
-  const rawPoll = environment["FLIPT_POLL_INTERVAL_SECONDS"];
+  if (mode === "flags") {
+    return FeatureFlagConfigurationSchema.parse({
+      mode,
+      url: requireVariable(environment, "FLAGS_URL", "flags"),
+      deployment: requireVariable(environment, "FLAGS_DEPLOYMENT", "flags"),
+      pollIntervalSeconds: parsePollInterval(
+        environment["FLAGS_POLL_INTERVAL_SECONDS"],
+      ),
+    });
+  }
+
   return FeatureFlagConfigurationSchema.parse({
     mode,
-    url: requireVariable(environment, "FLIPT_URL"),
-    namespace: requireVariable(environment, "FLIPT_NAMESPACE"),
-    environment: requireVariable(environment, "FLIPT_ENVIRONMENT"),
-    pollIntervalSeconds:
-      rawPoll === undefined || rawPoll.length === 0
-        ? DEFAULT_POLL_INTERVAL_SECONDS
-        : PollIntervalSchema.parse(rawPoll),
+    url: requireVariable(environment, "FLIPT_URL", "flipt"),
+    namespace: requireVariable(environment, "FLIPT_NAMESPACE", "flipt"),
+    environment: requireVariable(environment, "FLIPT_ENVIRONMENT", "flipt"),
+    pollIntervalSeconds: parsePollInterval(
+      environment["FLIPT_POLL_INTERVAL_SECONDS"],
+    ),
   });
 }

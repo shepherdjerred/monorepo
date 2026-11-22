@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { MediaName, PresentationSchema } from "#protocol/media.ts";
 import type { CaptureScene } from "#src/capture/define.ts";
-import { CaptureFeatureSchema } from "#protocol/ipc.ts";
+import { CaptureFeatureSchema, FlagsDeploymentSchema } from "#protocol/ipc.ts";
 import { ClientNameSchema } from "#protocol/client.ts";
 import { BoxSchema, type Box } from "#protocol/bridge.ts";
 
@@ -60,7 +60,7 @@ export type CaptureSuite = {
   scenarios: SuiteScenario[];
   legacyOutputs?: LegacyOutput[] | undefined;
   features?: z.infer<typeof CaptureFeatureSchema>[] | undefined;
-  rollout?: { url: string; environment: "prod" | "beta" } | undefined;
+  rollout?: { url: string; deployment: string } | undefined;
 };
 const SceneSchema = z.object({
   name: MediaName,
@@ -94,7 +94,7 @@ export const SuiteSchema = z.strictObject({
           url.hash === ""
         );
       }),
-      environment: z.enum(["prod", "beta"]),
+      deployment: FlagsDeploymentSchema,
     })
     .optional(),
   scenarios: z

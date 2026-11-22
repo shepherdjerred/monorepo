@@ -1,8 +1,14 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { startFakeBrain, setRwfFeatures } from "#e2e/harness/fake-brain.ts";
+import { z } from "zod";
 import {
-  configureCapacityFeatures,
+  setRwfDenied,
+  setRwfFeatures,
+  setRwfKits,
+  startFakeBrain,
+} from "#e2e/harness/fake-brain.ts";
+import {
   CapacityFeatureReceiptSchema,
+  configureCapacityFeatures,
 } from "./features.ts";
 
 afterEach(() => vi.unstubAllEnvs());
@@ -42,6 +48,73 @@ it("enables exact actual capacity flags before the caller starts Paper and reads
         })),
       }),
     ).toThrow("readback");
+  } finally {
+    await brain.stop();
+  }
+});
+
+it("evaluates credentialless /v1/evaluate requests and rejects credentialed calls", async () => {
+  const brain = startFakeBrain(crypto.randomUUID());
+  const base = `http://127.0.0.1:${brain.port.toString()}`;
+  const player = crypto.randomUUID();
+  try {
+    const credentialed = await fetch(`${base}/v1/evaluate`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Bearer secret",
+      },
+      body: JSON.stringify({
+        deployment: "minecraft/tsmc",
+        key: "the-storm-staff-tools-enabled",
+        context: { user: player },
+      }),
+    });
+    expect(credentialed.status).toBe(400);
+
+    const evaluate = async (key: string, context: Record<string, string>) => {
+      const response = await fetch(`${base}/v1/evaluate`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ deployment: "minecraft/tsmc", key, context }),
+      });
+      expect(response.status).toBe(200);
+      return z
+        .strictObject({ enabled: z.boolean() })
+        .parse(await response.json());
+    };
+
+    expect(
+      await evaluate("the-storm-staff-tools-enabled", { user: player }),
+    ).toEqual({ enabled: true });
+    expect(
+      await evaluate("the-storm-stargates-enabled", {
+        server: "the-storm-server",
+      }),
+    ).toEqual({ enabled: true });
+    expect(await evaluate("the-storm-companions-enabled", {})).toEqual({
+      enabled: false,
+    });
+    expect(
+      await evaluate("the-storm-rwf-enabled", { user: player, world: "rwf" }),
+    ).toEqual({ enabled: true });
+    await setRwfDenied(brain.port, [player]);
+    expect(
+      await evaluate("the-storm-rwf-enabled", { user: player, world: "rwf" }),
+    ).toEqual({ enabled: false });
+    await setRwfKits(brain.port, [player], []);
+    expect(
+      await evaluate("the-storm-rwf-kits-enabled", {
+        user: player,
+        world: "rwf",
+      }),
+    ).toEqual({ enabled: true });
+    expect(
+      await evaluate("the-storm-rwf-killstreaks-enabled", {
+        user: player,
+        world: "rwf",
+      }),
+    ).toEqual({ enabled: false });
   } finally {
     await brain.stop();
   }

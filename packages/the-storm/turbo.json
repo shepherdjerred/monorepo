@@ -163,7 +163,7 @@
       "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
-        // check:managed-flags compares the plugin's Java Flipt clients with
+        // check:managed-flags compares the plugin's Java flag gates with
         // the shared inventory.
         "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!**/*.md",

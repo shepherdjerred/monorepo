@@ -2,11 +2,9 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Cpu, DeploymentStrategy, EnvValue, Secret } from "cdk8s-plus-31";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { FLIPT_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   dnsEgressRule,
-  fliptEgress,
   kubernetesApiEgressRule,
   nsPeer,
   prometheusIngressRule,
@@ -25,6 +23,36 @@ export const FLAGS_ACTIVE = true;
 const FLAGS_HTTP_PORT = 7360;
 const FLAGS_EVALUATION_PORT = 7361;
 const FLAGS_ITEM_ID = "dzcroze2qcoibfz3illceozbea";
+
+/**
+ * Namespaces allowed to evaluate flags over the credentialless evaluation port.
+ *
+ * Operator UI and authenticated management routes stay on port 7360, restricted
+ * to Tailscale, Prometheus health probes, and the Temporal repo worker.
+ */
+const CONSUMER_NAMESPACES = [
+  "arcade",
+  "delivery",
+  "starlight-karma-bot-beta",
+  "starlight-karma-bot-prod",
+  "scout-beta",
+  "scout-prod",
+  "birmel",
+  "temporal",
+  "trmnl-dashboard",
+  "alert-dashboard",
+  // streambot is deployed inside the `media` chart, alongside media-api/workers.
+  "media",
+  "storm-brain",
+  "storm-forum",
+  "storm-forum-beta",
+  "minecraft-tsmc",
+  // The Woodpecker maintenance worker runs the shared temporal-worker image in `woodpecker-ci`.
+  "woodpecker-ci",
+  "woodpecker",
+  "tracker",
+  "golink",
+] as const;
 
 export function createFlagsDeployment(chart: Chart) {
   const flagsTailnet = tailnetService("flags");
@@ -77,7 +105,6 @@ export function createFlagsDeployment(chart: Chart) {
             FLAGS_INGRESS_IDENTITY_DIR: EnvValue.fromValue(
               FLAGS_TAILSCALE_INGRESS.directory,
             ),
-            FLAGS_FLIPT_URL: EnvValue.fromValue(FLIPT_URL),
             FLAGS_MACHINE_TOKEN: EnvValue.fromSecretValue({
               secret: authSecret,
               key: "FLAGS_MACHINE_TOKEN",
@@ -115,11 +142,19 @@ export function createFlagsDeployment(chart: Chart) {
                   matchLabels: FLAGS_TAILSCALE_INGRESS.parentLabels,
                 },
               },
+              {
+                ...nsPeer("temporal"),
+                podSelector: { matchLabels: { component: "repo-worker" } },
+              },
             ],
             ports: [tcp(FLAGS_HTTP_PORT)],
           },
+          {
+            from: CONSUMER_NAMESPACES.map((namespace) => nsPeer(namespace)),
+            ports: [tcp(FLAGS_EVALUATION_PORT)],
+          },
         ],
-        egress: [dnsEgressRule(), kubernetesApiEgressRule(), fliptEgress()],
+        egress: [dnsEgressRule(), kubernetesApiEgressRule()],
       },
     ],
   });

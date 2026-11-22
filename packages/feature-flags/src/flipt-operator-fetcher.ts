@@ -1,5 +1,20 @@
 import type { FliptFetcher } from "./managed-flag-drift.ts";
 
+export function withBearerRedirectError(
+  input: string | Request | URL,
+  init: RequestInit | undefined,
+  token: string,
+): RequestInit {
+  const headers = new Headers(
+    input instanceof Request ? input.headers : undefined,
+  );
+  new Headers(init?.headers).forEach((value, key) => {
+    headers.set(key, value);
+  });
+  headers.set("Authorization", `Bearer ${token}`);
+  return { ...init, headers, redirect: "error" };
+}
+
 /** Management credentials are scoped to the selected Flipt origin. */
 export function createFliptOperatorFetcher(
   url: string,
@@ -15,13 +30,6 @@ export function createFliptOperatorFetcher(
     const target = input instanceof Request ? input.url : input;
     if (new URL(target).origin !== origin)
       throw new Error("Flipt operator request changed origin");
-    const headers = new Headers(
-      input instanceof Request ? input.headers : undefined,
-    );
-    new Headers(init?.headers).forEach((value, key) => {
-      headers.set(key, value);
-    });
-    headers.set("Authorization", `Bearer ${token}`);
-    return upstream(input, { ...init, headers, redirect: "error" });
+    return upstream(input, withBearerRedirectError(input, init, token));
   };
 }

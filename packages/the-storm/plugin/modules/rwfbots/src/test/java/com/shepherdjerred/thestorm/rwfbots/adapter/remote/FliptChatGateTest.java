@@ -20,15 +20,15 @@ final class FliptChatGateTest {
     var response = new AtomicReference<>("{\"enabled\":true}");
     var status = new AtomicInteger(200);
     var request = new AtomicReference<String>();
-    var environment = new AtomicReference<String>();
+    var authorization = new AtomicReference<String>();
     var server =
         HttpServer.create(
             new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 0), 0);
     server.createContext(
-        "/evaluate/v1/boolean",
+        "/v1/evaluate",
         exchange -> {
           request.set(new String(exchange.getRequestBody().readAllBytes(), UTF_8));
-          environment.set(exchange.getRequestHeaders().getFirst("x-flipt-environment"));
+          authorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
           var bytes = response.get().getBytes(UTF_8);
           exchange.sendResponseHeaders(status.get(), bytes.length);
           try (var body = exchange.getResponseBody()) {
@@ -38,13 +38,15 @@ final class FliptChatGateTest {
     server.start();
     try (var gate =
         new FliptChatGate(
-            URI.create("http://127.0.0.1:" + server.getAddress().getPort()), "beta", "rwf")) {
+            URI.create("http://127.0.0.1:" + server.getAddress().getPort()),
+            "the-storm/beta",
+            "rwf")) {
       assertThat(gate.enabled().join()).isTrue();
       assertThat(request.get())
           .isEqualTo(
-              "{\"namespace_key\":\"the-storm\",\"flag_key\":\"the-storm-rwfbots-chat-enabled\","
-                  + "\"entity_id\":\"the-storm-rwfbots-chat\",\"context\":{\"world\":\"rwf\"}}");
-      assertThat(environment.get()).isEqualTo("beta");
+              "{\"deployment\":\"the-storm/beta\",\"key\":\"the-storm-rwfbots-chat-enabled\","
+                  + "\"context\":{\"world\":\"rwf\"}}");
+      assertThat(authorization.get()).isNull();
 
       response.set("{\"enabled\":false}");
       assertThat(gate.enabled().join()).isFalse();
@@ -58,19 +60,23 @@ final class FliptChatGateTest {
       status.set(503);
       assertThatThrownBy(() -> gate.enabled().join())
           .isInstanceOf(CompletionException.class)
-          .hasCauseInstanceOf(IllegalStateException.class);
+          .hasRootCauseInstanceOf(IllegalStateException.class);
     } finally {
       server.stop(0);
     }
   }
 
   @Test
-  void refusesAnAddressOrEnvironmentItCannotTrust() {
-    assertThatThrownBy(() -> new FliptChatGate(URI.create("ftp://flipt"), "prod", "rwf"))
+  void refusesAnAddressOrDeploymentItCannotTrust() {
+    assertThatThrownBy(() -> new FliptChatGate(URI.create("ftp://flags"), "minecraft/tsmc", "rwf"))
         .hasMessageContaining("HTTP");
-    assertThatThrownBy(() -> new FliptChatGate(URI.create("http://user@flipt"), "prod", "rwf"))
+    assertThatThrownBy(
+            () -> new FliptChatGate(URI.create("http://user@flags"), "minecraft/tsmc", "rwf"))
         .hasMessageContaining("uncredentialed");
-    assertThatThrownBy(() -> new FliptChatGate(URI.create("http://flipt"), "staging", "rwf"))
-        .hasMessageContaining("environment");
+    assertThatThrownBy(() -> new FliptChatGate(URI.create("http://flags"), "staging", "rwf"))
+        .hasMessageContaining("deployment");
+    assertThatThrownBy(
+            () -> new FliptChatGate(URI.create("http://flags"), "the-storm/staging", "rwf"))
+        .hasMessageContaining("deployment");
   }
 }

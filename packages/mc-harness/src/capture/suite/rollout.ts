@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FlagsDeploymentSchema } from "#protocol/ipc.ts";
 import { retainBlob, cachedBlob, type BlobStore } from "./store.ts";
 import { command } from "./process.ts";
 
@@ -32,11 +33,10 @@ export async function rolloutListenHost(
   return gateway;
 }
 
-const RequestSchema = z.object({
-  namespace_key: z.string(),
-  flag_key: z.string(),
-  entity_id: z.string(),
-  context: z.record(z.string(), z.string()),
+const RequestSchema = z.strictObject({
+  deployment: FlagsDeploymentSchema,
+  key: z.string().min(1),
+  context: z.record(z.string(), z.string()).default({}),
 });
 const EntrySchema = z.strictObject({
   key: z.string(),
@@ -45,12 +45,13 @@ const EntrySchema = z.strictObject({
 });
 export const RolloutSnapshotSchema = z.strictObject({
   schema: z.literal(1),
-  environment: z.enum(["prod", "beta"]),
+  deployment: FlagsDeploymentSchema,
   entries: z.array(EntrySchema),
 });
 function requestKey(value: z.infer<typeof RequestSchema>): string {
   return JSON.stringify({
-    ...value,
+    deployment: value.deployment,
+    key: value.key,
     context: Object.fromEntries(
       Object.entries(value.context).toSorted(([a], [b]) => a.localeCompare(b)),
     ),
@@ -60,7 +61,7 @@ function requestKey(value: z.infer<typeof RequestSchema>): string {
 /** Record each effective decision once; replay never contacts the upstream reader. */
 export async function localRollout(
   options: {
-    source?: { url: string; environment: "prod" | "beta" };
+    source?: { url: string; deployment: string };
     snapshot?: string;
     store: BlobStore;
     cache: string;
@@ -75,30 +76,27 @@ export async function localRollout(
             await cachedBlob(options.store, options.cache, options.snapshot),
           ).json(),
         );
-  const environment = restored?.environment ?? options.source?.environment;
+  const rawDeployment = restored?.deployment ?? options.source?.deployment;
   if (
-    environment === undefined ||
+    rawDeployment === undefined ||
     (restored === undefined && options.source === undefined)
   )
     throw new Error("Rollout reader needs a source or retained snapshot");
+  const deployment = FlagsDeploymentSchema.parse(rawDeployment);
   const entries = new Map(restored?.entries.map((entry) => [entry.key, entry]));
   const pending = new Map<string, Promise<z.infer<typeof EntrySchema>>>();
   const errors: string[] = [];
   const resolve = async (key: string, input: z.infer<typeof RequestSchema>) => {
     if (restored !== undefined || options.source === undefined)
-      throw new Error(`Unrecorded rollout decision ${input.flag_key}`);
-    const response = await fetch(
-      new URL("/evaluate/v1/boolean", options.source.url),
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-flipt-environment": environment,
-        },
-        body: JSON.stringify(input),
-        signal: AbortSignal.timeout(5000),
+      throw new Error(`Unrecorded rollout decision ${input.key}`);
+    const response = await fetch(new URL("/v1/evaluate", options.source.url), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify(input),
+      signal: AbortSignal.timeout(5000),
+    });
     const entry = { key, status: response.status, body: await response.text() };
     if (response.status !== 200)
       throw new Error(
@@ -115,11 +113,15 @@ export async function localRollout(
       try {
         if (
           request.method !== "POST" ||
-          new URL(request.url).pathname !== "/evaluate/v1/boolean"
+          new URL(request.url).pathname !== "/v1/evaluate"
         )
           return new Response("Unsupported evaluation", { status: 404 });
-        const input = RequestSchema.parse(await request.json()),
-          key = requestKey(input);
+        const input = RequestSchema.parse(await request.json());
+        if (input.deployment !== deployment)
+          throw new Error(
+            `Rollout deployment ${input.deployment} differs from ${deployment}`,
+          );
+        const key = requestKey(input);
         let entry = entries.get(key);
         if (entry === undefined) {
           let evaluation = pending.get(key);
@@ -147,14 +149,14 @@ export async function localRollout(
   return {
     bootstrap: {
       url: `http://host.docker.internal:${port.toString()}`,
-      environment,
+      deployment,
     },
     retain: async () => {
       await Promise.all(pending.values());
       if (errors.length > 0) throw new Error(errors.join("; "));
       const snapshot = RolloutSnapshotSchema.parse({
         schema: 1,
-        environment,
+        deployment,
         entries: [...entries.values()],
       });
       return retainBlob(
@@ -162,6 +164,8 @@ export async function localRollout(
         new TextEncoder().encode(JSON.stringify(snapshot)),
       );
     },
-    stop: () => server.stop(true),
+    stop: async () => {
+      await server.stop();
+    },
   };
 }

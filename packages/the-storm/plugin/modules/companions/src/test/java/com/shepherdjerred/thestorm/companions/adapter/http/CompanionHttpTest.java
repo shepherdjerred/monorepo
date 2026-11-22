@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
 final class CompanionHttpTest {
-  private record Exchange(String path, String environment, String body) {}
+  private record Exchange(String path, String authorization, String body) {}
 
   private record Script(int status, String body) {}
 
@@ -35,7 +35,7 @@ final class CompanionHttpTest {
               new Exchange(
                   request.getRequestURI().getPath(),
                   java.util.Objects.requireNonNullElse(
-                      request.getRequestHeaders().getFirst("x-flipt-environment"), ""),
+                      request.getRequestHeaders().getFirst("Authorization"), ""),
                   new String(request.getRequestBody().readAllBytes(), UTF_8)));
           var bytes = response.body().getBytes(UTF_8);
           request.sendResponseHeaders(response.status(), bytes.length);
@@ -47,17 +47,17 @@ final class CompanionHttpTest {
   }
 
   @Test
-  void evaluatesTheManagedGameplayFlagInTheRightEnvironment() throws Exception {
+  void evaluatesTheManagedGameplayFlagInTheRightDeployment() throws Exception {
     var exchanges = new ArrayList<Exchange>();
     try (var server = server(new Script(200, "{\"enabled\":true}"), exchanges);
-        var gate = new FliptCompanionGate(server.address(), "beta")) {
+        var gate = new FliptCompanionGate(server.address(), "the-storm/beta")) {
       assertThat(gate.enabled().get(5, TimeUnit.SECONDS)).isTrue();
     }
     assertThat(exchanges).hasSize(1);
-    assertThat(exchanges.getFirst().path()).isEqualTo("/evaluate/v1/boolean");
-    assertThat(exchanges.getFirst().environment()).isEqualTo("beta");
+    assertThat(exchanges.getFirst().path()).isEqualTo("/v1/evaluate");
+    assertThat(exchanges.getFirst().authorization()).isEmpty();
     assertThat(exchanges.getFirst().body())
-        .contains("\"namespace_key\":\"the-storm\"", "the-storm-companions-enabled");
+        .contains("\"deployment\":\"the-storm/beta\"", "the-storm-companions-enabled");
   }
 
   @Test
@@ -66,7 +66,7 @@ final class CompanionHttpTest {
         java.util.List.of(
             new Script(503, "unavailable"), new Script(200, "{\"enabled\":\"true\"}"))) {
       try (var server = server(script, new ArrayList<>());
-          var gate = new FliptCompanionGate(server.address(), "prod")) {
+          var gate = new FliptCompanionGate(server.address(), "minecraft/tsmc")) {
         assertThatThrownBy(() -> gate.enabled().get(5, TimeUnit.SECONDS))
             .hasRootCauseInstanceOf(IllegalStateException.class);
       }

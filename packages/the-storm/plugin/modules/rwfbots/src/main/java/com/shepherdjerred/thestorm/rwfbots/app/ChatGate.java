@@ -14,7 +14,7 @@ public interface ChatGate extends AutoCloseable {
   @Override
   void close();
 
-  /** A gate that is always closed, for a server without Flipt. */
+  /** A gate that is always closed, for a server without Flags. */
   static ChatGate closed() {
     return new ChatGate() {
       @Override

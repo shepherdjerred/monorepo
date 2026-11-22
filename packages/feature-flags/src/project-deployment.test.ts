@@ -32,14 +32,28 @@ describe("projectDeploymentFlags", () => {
     });
   });
 
-  test("Scout prod Dares has no segment, and the explore model is the variant string", () => {
-    const flags = projectDeploymentById("scout/prod");
+  test("Scout prod Dares has no segment, and live variant overrides project accurately", () => {
+    const prodFlags = projectDeploymentById("scout/prod");
     expect(
-      evaluateBoolean(flags, "dares_enabled", { server: "anyone" }),
+      evaluateBoolean(prodFlags, "dares_enabled", { server: "anyone" }),
     ).toEqual({ kind: "value", value: false });
-    expect(evaluateString(flags, "scout-explore-model")).toEqual({
+    expect(evaluateString(prodFlags, "scout-explore-model")).toEqual({
+      kind: "value",
+      value: "gpt-5.6-luna",
+    });
+
+    const betaFlags = projectDeploymentById("scout/beta");
+    expect(evaluateString(betaFlags, "scout-explore-model")).toEqual({
       kind: "value",
       value: "gpt-6-luna",
+    });
+
+    const temporalFlags = projectDeploymentById("temporal/prod");
+    expect(
+      evaluateString(temporalFlags, "temporal-agent-chat-photon-owners"),
+    ).toEqual({
+      kind: "value",
+      value: "+19154335144",
     });
   });
 });

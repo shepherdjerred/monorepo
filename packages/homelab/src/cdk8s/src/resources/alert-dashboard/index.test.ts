@@ -211,7 +211,7 @@ describe("Alert Dashboard deployment", () => {
     ]);
   });
 
-  test("requires the ops ingest and Home Assistant tokens and wires Prometheus, Home Assistant and Flipt", () => {
+  test("requires the ops ingest and Home Assistant tokens and wires Prometheus, Home Assistant and Flags", () => {
     const env =
       synthesizeDeployment().spec.template.spec.containers.find(
         (container) => container.name === "alert-dashboard",
@@ -239,9 +239,10 @@ describe("Alert Dashboard deployment", () => {
     expect(entry("PROMETHEUS_URL")?.value).toBe(
       "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
     );
-    expect(entry("FEATURE_FLAGS_MODE")?.value).toBe("flipt");
-    expect(entry("FLIPT_URL")?.value).toBe(
-      "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+    expect(entry("FEATURE_FLAGS_MODE")?.value).toBe("flags");
+    expect(entry("FLAGS_DEPLOYMENT")?.value).toBe("alert-dashboard/prod");
+    expect(entry("FLAGS_URL")?.value).toBe(
+      "http://flags.flags.svc.cluster.local:7361",
     );
   });
 });

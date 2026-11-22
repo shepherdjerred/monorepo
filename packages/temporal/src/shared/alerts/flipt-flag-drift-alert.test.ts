@@ -7,13 +7,14 @@ import {
 const NOW = new Date("2026-08-28T15:00:00.000Z");
 
 describe("buildFliptFlagDriftAlert", () => {
-  test("fires one stable alert containing both mismatch directions", () => {
+  test("fires one stable alert containing missing, extra, and drifted keys", () => {
     const alert = buildFliptFlagDriftAlert(
       {
+        deployment: "scout/beta",
         namespace: "scout",
         environment: "beta",
-        missingInFlipt: ["declared-flag"],
-        undeclaredInInventory: ["manual-flag"],
+        missingFlags: ["declared-flag"],
+        extraFlags: ["manual-flag"],
         contractMismatches: ["model: expected Luna, got Sol"],
       },
       NOW,
@@ -23,19 +24,20 @@ describe("buildFliptFlagDriftAlert", () => {
       alertname: "FliptManagedFlagDrift",
       severity: "warning",
       component: "feature-flags",
+      deployment: "scout/beta",
       namespace: "scout",
       environment: "beta",
     });
     expect(alert.annotations["description"]).toContain(
-      "Declared keys missing from Flipt: declared-flag",
+      "Declared keys missing from Flags: declared-flag",
     );
     expect(alert.annotations["description"]).toContain(
-      "Flipt keys absent from the inventory: manual-flag",
+      "Live keys absent from the inventory: manual-flag",
     );
     expect(alert.annotations["description"]).toContain(
       "Behavior contract mismatches: model: expected Luna, got Sol",
     );
-    expect(alert.annotations["summary"]).toContain("beta/scout");
+    expect(alert.annotations["summary"]).toContain("scout/beta");
     expect(alert.endsAt).toBe(
       new Date(NOW.getTime() + FLIPT_FLAG_DRIFT_ALERT_TTL_MS).toISOString(),
     );
@@ -44,20 +46,22 @@ describe("buildFliptFlagDriftAlert", () => {
   test("resolves with the exact same labels when aligned", () => {
     const firing = buildFliptFlagDriftAlert(
       {
-        namespace: "scout",
-        environment: "beta",
-        missingInFlipt: ["declared-flag"],
-        undeclaredInInventory: [],
+        deployment: "minecraft/tsmc",
+        namespace: "the-storm",
+        environment: "prod",
+        missingFlags: ["declared-flag"],
+        extraFlags: [],
         contractMismatches: [],
       },
       NOW,
     );
     const alert = buildFliptFlagDriftAlert(
       {
-        namespace: "scout",
-        environment: "beta",
-        missingInFlipt: [],
-        undeclaredInInventory: [],
+        deployment: "minecraft/tsmc",
+        namespace: "the-storm",
+        environment: "prod",
+        missingFlags: [],
+        extraFlags: [],
         contractMismatches: [],
       },
       NOW,

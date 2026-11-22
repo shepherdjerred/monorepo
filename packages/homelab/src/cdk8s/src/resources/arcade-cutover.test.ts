@@ -61,7 +61,8 @@ describe("Arcade account handover", () => {
           containers: expect.arrayContaining([
             expect.objectContaining({
               env: expect.arrayContaining([
-                { name: "FLIPT_ENVIRONMENT", value: "prod" },
+                { name: "FEATURE_FLAGS_MODE", value: "flags" },
+                { name: "FLAGS_DEPLOYMENT", value: "arcade/prod" },
                 { name: "DEPLOYMENT_ENVIRONMENT", value: "prod" },
                 {
                   name: "WEB_PUBLIC_ORIGIN",

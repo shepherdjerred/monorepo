@@ -77,11 +77,11 @@ describe("Temporal LLM billing boundary", () => {
           resource.metadata?.name === "temporal-billing-alertmanager-netpol",
       ),
     ).toBe(false);
-    const flipt = findTemporalResource(
+    const flags = findTemporalResource(
       synthesized,
       "NetworkPolicy",
-      "temporal-workers-flipt-egress",
+      "temporal-workers-flags-egress",
     );
-    expect(JSON.stringify(flipt.spec)).not.toContain("billing-worker");
+    expect(JSON.stringify(flags.spec)).not.toContain("billing-worker");
   });
 });

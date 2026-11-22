@@ -120,7 +120,10 @@ export default defineCaptureSuite({
     { world: "rwf_lobby", min: [0, 0], max: [177, 99], paddingChunks: 2 },
   ],
   features: ["stargates"],
-  rollout: { url: "https://flipt.tailnet-1a49.ts.net", environment: "prod" },
+  rollout: {
+    url: "https://flags.tailnet-1a49.ts.net",
+    deployment: "minecraft/tsmc",
+  },
   // Qualify the shared mechanics before booting the more expensive fresh venues.
   scenarios: (
     [

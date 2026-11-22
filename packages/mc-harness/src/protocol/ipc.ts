@@ -71,6 +71,18 @@ export const CaptureFeatureSchema = z.enum([
   "stormnight",
 ]);
 
+export const FlagsDeploymentSchema = z
+  .string()
+  .regex(/^[^\s/]+\/[^\s/]+$/u, "Flags deployment must be <catalog>/<stage>")
+  .refine(
+    (value) =>
+      value === "minecraft/tsmc" ||
+      value === "minecraft/sandbox" ||
+      value.endsWith("/prod") ||
+      value.endsWith("/beta"),
+    "Flags deployment must target minecraft/tsmc, minecraft/sandbox, */prod, or */beta",
+  );
+
 const RolloutBootstrapSchema = z.strictObject({
   url: z.url().refine((value) => {
     if (!URL.canParse(value)) return false;
@@ -86,7 +98,7 @@ const RolloutBootstrapSchema = z.strictObject({
       url.hash === ""
     );
   }, "Rollout bootstrap requires HTTPS or an isolated host reader"),
-  environment: z.enum(["prod", "beta"]),
+  deployment: FlagsDeploymentSchema,
 });
 
 const SandboxCreateInputSchema = z.strictObject({

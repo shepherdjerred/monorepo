@@ -203,7 +203,7 @@ public record RwfBotsConfig(
   }
 
   /**
-   * Bot chat in the match world; also gated by the managed Flipt flag {@code
+   * Bot chat in the match world; also gated by the managed flag {@code
    * the-storm-rwfbots-chat-enabled}.
    *
    * @param enabled whether bots talk at all; when false the flag is never evaluated

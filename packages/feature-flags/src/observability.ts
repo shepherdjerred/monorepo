@@ -36,6 +36,13 @@ export const FEATURE_FLAG_METRIC_LABELS = {
 export type FlagOperation = "initialize" | "refresh" | "evaluate" | "shutdown";
 
 export type FlagEvaluationValue = "true" | "false" | "non_boolean" | "error";
+/**
+ * Configured provider identity labels. During the Flipt -> Flags cutover,
+ * `FEATURE_FLAGS_MODE=flags` maps `<catalog>/<stage>` onto
+ * `{ flipt_namespace: catalog, flipt_environment: stage }` so existing consumer
+ * Prometheus gauges and `FeatureFlagProviderInitFailing` alerts continue
+ * working without breaking label sets until `flipt` is retired in PR 3.
+ */
 export type FlagProviderInfo = {
   readonly flipt_environment: string;
   readonly flipt_namespace: string;

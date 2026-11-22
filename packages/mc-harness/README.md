@@ -129,8 +129,8 @@ lists it (older images predate it),
 while disabling RWF, which requires the provisioned `rwf` world and production
 recording salt. Docker and Kubernetes mount the overlay at the config file path,
 leaving the image's baked plugins visible. The overlay uses a clearly fake RWF
-salt and does not copy production world or plugin data. Both profiles set an unreachable Flipt
-bootstrap (`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=prod`), so
+salt and does not copy production world or plugin data. Both profiles set an unreachable Flags
+bootstrap (`FLAGS_URL=http://127.0.0.1:9`, `FLAGS_DEPLOYMENT=minecraft/tsmc`), so
 companions fail closed and do not spawn or act in the disposable world. The
 image must bake MCBridge; earlier images never answer the bridge health check.
 
@@ -154,9 +154,9 @@ The `storm-dev` profile adds the locally built `TheStorm.jar` (build it with
 `bunx turbo run build --filter=@shepherdjerred/the-storm`), the plugins
 its `paper-plugin.yml` requires (LuckPerms, CoreProtect, Multiverse; Citizens
 is already staged), `TheStormFixtures.jar` to prepare the protected arena worlds,
-and the inert local Flipt bootstrap required during plugin startup
-(`FLIPT_URL=http://127.0.0.1:9`, `FLIPT_ENVIRONMENT=prod`). Rollout checks
-therefore fail closed without requiring credentials or a running Flipt service,
+and the inert local Flags bootstrap required during plugin startup
+(`FLAGS_URL=http://127.0.0.1:9`, `FLAGS_DEPLOYMENT=minecraft/tsmc`). Rollout checks
+therefore fail closed without requiring credentials or a running Flags service,
 the repository-owned TheStorm and Citizens config with
 only the economy, mail, chat, tracks, skylands, towns, tickets, and creative
 modules on (skylands generates the `skylands` claim world towns requires; agent,
@@ -576,7 +576,7 @@ starting another capture against an unfinished site. Rehearsal copies the
 retained site's terrain into an empty owned `storm-prod`/`storm-candidate`
 sandbox and owns its `CapturePreview` client. It requires the matching server
 capability and enabled gameplay/rollout prerequisites; published sandboxes'
-closed Flipt bootstrap does not prove flag-gated Stargate behavior. Rehearsal
+closed Flags bootstrap does not prove flag-gated Stargate behavior. Rehearsal
 assets are private QA and are refused by docs export. Published media must
 come from completed live runs or fingerprinted real-map copies with verified
 restoration.
@@ -627,7 +627,7 @@ and restores its window settings. Observation does not trigger gameplay: drive
 the demonstrated flow separately after the native recorder reaches `CAPTURING`.
 
 Real-map sessions can explicitly use a reachable flag provider with
-`--rollout-url <https-endpoint> --rollout-environment prod|beta`. This changes
+`--rollout-url <https-endpoint> --rollout-deployment <catalog>/<stage>`. This changes
 only the disposable server's bootstrap and records that choice in its private
 provenance. It reads the provider's actual decisions; it never opens a closed
 gate or changes remote targeting. Credentials and query parameters are refused.

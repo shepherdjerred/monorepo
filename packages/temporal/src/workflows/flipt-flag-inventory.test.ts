@@ -12,14 +12,14 @@ describe("runFliptFlagInventory", () => {
       checkFliptFlagInventory: async () => {
         const result = [
           {
+            deployment: "scout/beta",
             namespace: "scout",
             environment: "beta",
-            missingInFlipt: [],
-            undeclaredInInventory: [],
+            revision: 1,
+            missingFlags: [],
+            extraFlags: [],
             contractMismatches: [],
             createdFlags: [],
-            createdSegments: [],
-            migratedFlags: [],
             retiredFlags: [],
             observedAt: "2026-08-28T15:00:00.000Z",
           },

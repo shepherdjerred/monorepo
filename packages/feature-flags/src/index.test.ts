@@ -3,6 +3,7 @@ import {
   initFeatureFlags,
   isEnabled,
   numberValue,
+  refreshFlagSnapshot,
   shutdownFeatureFlags,
   stringValue,
 } from "@shepherdjerred/feature-flags/index.ts";
@@ -352,5 +353,214 @@ describe("initialization", () => {
     stalled.resolve(true);
     await vi.advanceTimersByTimeAsync(0);
     expect(harness.closes()).toBe(3);
+  });
+});
+
+describe("flags mode", () => {
+  test("wires FlagsProvider from FEATURE_FLAGS_MODE=flags and supports evaluation and fresh checks", async () => {
+    const requests: { url: string; headers: Headers }[] = [];
+    let online = true;
+    vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
+      const headers = new Headers(init?.headers);
+      requests.push({ url, headers });
+      if (!online) {
+        return Promise.reject(new Error("offline"));
+      }
+      if (headers.get("if-none-match") === '"4"') {
+        return Promise.resolve(
+          new Response(null, { status: 304, headers: { ETag: '"4"' } }),
+        );
+      }
+      return Promise.resolve(
+        Response.json(
+          {
+            deployment: "scout/prod",
+            revision: 4,
+            flags: [
+              {
+                type: "boolean",
+                key: "ai_reports_enabled",
+                default: false,
+                rollouts: [],
+              },
+              {
+                type: "variant",
+                key: "scout-report-ai-model",
+                value: "gpt-6-luna",
+              },
+              {
+                type: "variant",
+                key: "llm-hourly-token-budget",
+                value: "0.5",
+              },
+            ],
+          },
+          { headers: { ETag: '"4"' } },
+        ),
+      );
+    });
+
+    await initFeatureFlags({
+      environment: {
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: "http://flags.invalid:8080",
+        FLAGS_DEPLOYMENT: "scout/prod",
+      },
+    });
+
+    expect(requests[0]?.url).toBe(
+      "http://flags.invalid:8080/v1/deployments/scout/prod/snapshot",
+    );
+    expect(requests[0]?.headers.get("authorization")).toBeNull();
+
+    const off = await isEnabled("ai_reports_enabled", {
+      default: true,
+      targetingKey: "service",
+    });
+    expect(off.value).toBe(false);
+    expect(isAbsent(off)).toBe(false);
+
+    await expect(
+      stringValue("scout-report-ai-model", {
+        default: "fallback",
+        targetingKey: "service",
+      }),
+    ).resolves.toMatchObject({ value: "gpt-6-luna" });
+
+    await expect(
+      numberValue("llm-hourly-token-budget", {
+        default: 1,
+        targetingKey: "service",
+      }),
+    ).resolves.toMatchObject({ value: 0.5 });
+
+    await expect(refreshFlagSnapshot()).resolves.toBe(true);
+
+    await expect(
+      isEnabled("dares_enabled", {
+        default: false,
+        targetingKey: "service",
+      }),
+    ).rejects.toThrow(FlagNotFoundError);
+
+    online = false;
+    await expect(refreshFlagSnapshot()).resolves.toBe(false);
+    await expect(
+      isEnabled("ai_reports_enabled", {
+        default: true,
+        targetingKey: "service",
+      }),
+    ).resolves.toMatchObject({ value: false });
+  });
+
+  test("createFlagConfigSource degrades on HTTP 200 body transport failure during requireFreshSnapshot", async () => {
+    const { createFlagConfigSource } =
+      await import("@shepherdjerred/feature-flags/config-source.ts");
+    let call = 0;
+    vi.spyOn(globalThis, "fetch").mockImplementation(() => {
+      call++;
+      if (call === 1) {
+        return Promise.resolve(
+          Response.json({
+            deployment: "woodpecker/prod",
+            revision: 1,
+            flags: [
+              {
+                type: "boolean",
+                key: "woodpecker-source-cache-enabled",
+                default: true,
+                rollouts: [],
+              },
+            ],
+          }),
+        );
+      }
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.error(new TypeError("terminated"));
+        },
+      });
+      return Promise.resolve(new Response(stream, { status: 200 }));
+    });
+
+    await initFeatureFlags({
+      environment: {
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: "http://flags.invalid:8080",
+        FLAGS_DEPLOYMENT: "woodpecker/prod",
+      },
+    });
+
+    const unavailableFlags: string[] = [];
+    const source = createFlagConfigSource({
+      targetingKey: "main",
+      kinds: { sourceCache: "boolean" },
+      requireFreshSnapshot: true,
+      onUnavailable: (flag) => unavailableFlags.push(flag),
+    });
+
+    await expect(
+      source.get({
+        key: "sourceCache",
+        flag: "woodpecker-source-cache-enabled",
+      }),
+    ).resolves.toBeUndefined();
+    expect(unavailableFlags).toEqual(["woodpecker-source-cache-enabled"]);
+  });
+
+  test("degrades cleanly to PROVIDER_NOT_READY on initial outage and recovers in background", async () => {
+    vi.useFakeTimers();
+    vi.spyOn(Math, "random").mockReturnValue(0.5);
+    let online = false;
+    vi.spyOn(globalThis, "fetch").mockImplementation(() => {
+      if (!online) return Promise.reject(new Error("connect ECONNREFUSED"));
+      return Promise.resolve(
+        Response.json({
+          deployment: "scout/prod",
+          revision: 1,
+          flags: [
+            {
+              type: "boolean",
+              key: "ai_reports_enabled",
+              default: true,
+              rollouts: [],
+            },
+          ],
+        }),
+      );
+    });
+
+    const failures: string[] = [];
+    await initFeatureFlags({
+      environment: {
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: "http://flags.invalid:8080",
+        FLAGS_DEPLOYMENT: "scout/prod",
+      },
+      onInitializationFailure: (message) => failures.push(message),
+    });
+
+    const duringOutage = await isEnabled("ai_reports_enabled", {
+      default: false,
+      targetingKey: "service",
+    });
+    expect(duringOutage.value).toBe(false);
+    expect(isAbsent(duringOutage)).toBe(true);
+    expect(failures).toHaveLength(1);
+
+    online = true;
+    await vi.advanceTimersByTimeAsync(1000);
+    await expect(
+      isEnabled("ai_reports_enabled", {
+        default: false,
+        targetingKey: "service",
+      }),
+    ).resolves.toMatchObject({ value: true, errorCode: undefined });
   });
 });

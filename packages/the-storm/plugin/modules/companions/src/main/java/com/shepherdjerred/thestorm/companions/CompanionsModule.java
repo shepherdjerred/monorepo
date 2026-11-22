@@ -34,7 +34,7 @@ public final class CompanionsModule implements StormModule {
     if (!(plugin instanceof CoreProtect coreProtect))
       throw new IllegalStateException("Companions require CoreProtect");
     var gate =
-        new FliptCompanionGate(URI.create(required("FLIPT_URL")), required("FLIPT_ENVIRONMENT"));
+        new FliptCompanionGate(URI.create(required("FLAGS_URL")), required("FLAGS_DEPLOYMENT"));
     running =
         new CompanionsPaper(
             context,

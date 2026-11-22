@@ -13,7 +13,7 @@ import {
   externalHttpsEgressRule,
   nsPeer,
   tcp,
-  fliptEgress,
+  flagsEgress,
   otlpEgress,
   seaweedfsEgress,
   prometheusIngressRule,
@@ -45,8 +45,8 @@ function scoutRuntimeEgressRules(stage: Stage) {
     otlpEgress(),
     // SeaweedFS S3 (seaweedfs-s3.seaweedfs.svc.cluster.local:8333)
     seaweedfsEgress(),
-    // Flipt evaluation (flipt-flipt-service.flipt.svc.cluster.local:8080)
-    fliptEgress(),
+    // First-party Flags evaluation (flags.flags.svc.cluster.local:7361)
+    flagsEgress(),
     // In-namespace PostgreSQL (scout-<stage>-postgresql:5432)
     postgresEgress(`scout-${stage}-postgresql`),
     // Temporal gRPC for the stage-local competition dispatcher and the

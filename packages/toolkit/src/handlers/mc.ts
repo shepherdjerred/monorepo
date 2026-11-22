@@ -166,7 +166,7 @@ async function handleSandbox(args: string[]): Promise<void> {
     "world-dir": { type: "string" },
     "map-spawn": { type: "string" },
     "rollout-url": { type: "string" },
-    "rollout-environment": { type: "string" },
+    "rollout-deployment": { type: "string" },
     "capture-feature": { type: "string", multiple: true },
     ttl: { type: "string" },
     keep: { type: "boolean", default: false },
@@ -186,7 +186,7 @@ async function handleSandbox(args: string[]): Promise<void> {
           ? {}
           : { mapDirectory: values["map-directory"] }),
         ...(mapSpawn === undefined ? {} : { mapSpawn }),
-        ...rolloutInput(values["rollout-url"], values["rollout-environment"]),
+        ...rolloutInput(values["rollout-url"], values["rollout-deployment"]),
         ...captureFeatureInput(values["capture-feature"]),
         ttlSeconds:
           values.ttl === undefined

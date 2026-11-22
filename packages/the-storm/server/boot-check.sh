@@ -84,7 +84,7 @@ boot() { # label [docker run args...]
     -e SPAWN_PROTECTION=0 -e STORM_BRAIN_BEARER_TOKEN=storm-boot-check-brain-token \
     -e DISCORD_BOT_TOKEN=invalid-storm-fixture-token -e DISCORD_CHANNEL_ID=1 \
     -e MC_BRIDGE_TOKEN="$bridge_token" -e MC_BRIDGE_BIND=127.0.0.1 \
-    -e FLIPT_URL=http://127.0.0.1:9 -e FLIPT_ENVIRONMENT=beta \
+    -e FLAGS_URL=http://127.0.0.1:9 -e FLAGS_DEPLOYMENT=the-storm/beta \
     -e RWF_RECORDING_SALT=storm-boot-check-recording-salt \
     "$image" >/dev/null
   local started=$SECONDS

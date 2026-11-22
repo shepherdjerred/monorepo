@@ -4,7 +4,7 @@ import { HTTPException } from "hono/http-exception";
 import { ZodError } from "zod";
 import { flagDeployments } from "@shepherdjerred/feature-flags/deployments.ts";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
-import { projectDeploymentFlags } from "@shepherdjerred/feature-flags/project-deployment.ts";
+import { diffProjectedDeploymentFlags } from "@shepherdjerred/feature-flags/flags-drift.ts";
 import {
   authenticate,
   parseTrustedProxyBlockList,
@@ -165,23 +165,7 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
       if (document === undefined) {
         throw new Error(`seeded deployment ${deployment.id} is missing`);
       }
-      const declared = projectDeploymentFlags(deployment);
-      const live = new Map(document.flags.map((flag) => [flag.key, flag]));
-      const declaredKeys = new Set(declared.map((flag) => flag.key));
-      return {
-        id: deployment.id,
-        revision: document.revision,
-        missing: declared.filter((flag) => !live.has(flag.key)),
-        extra: document.flags
-          .filter((flag) => !declaredKeys.has(flag.key))
-          .map((flag) => flag.key),
-        drift: declared.flatMap((flag) => {
-          const current = live.get(flag.key);
-          return current === undefined || Bun.deepEquals(current, flag)
-            ? []
-            : [{ key: flag.key, live: current, declared: flag }];
-        }),
-      };
+      return diffProjectedDeploymentFlags(deployment, document);
     });
     return c.json({ deployments });
   });

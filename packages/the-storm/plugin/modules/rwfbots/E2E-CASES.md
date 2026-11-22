@@ -148,9 +148,9 @@ asserted there; the load cases belong to the manual load profile
     `✦` line from a shipped personality and a player in the main world hears
     none. Discord, a member's client, the name's team colour and the pacing
     (gap, window, cooldowns) on the real server are not inspected.
-15. Turning the flag off in Flipt silences the bots within
+15. Turning the flag off in Flags silences the bots within
     `flagRefreshSeconds` without a restart, and turning it back on brings
-    them back; a Flipt outage keeps them silent and logs a warning.
+    them back; a Flags outage keeps them silent and logs a warning.
 
 ## Lobby
 

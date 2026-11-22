@@ -22,7 +22,7 @@ import {
   blueMapStorageResources,
   blueMapStorageVolumes,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/bluemap-storage.ts";
-import { FLIPT_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { FLAGS_EVALUATION_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 const NAMESPACE = "minecraft-tsmc";
@@ -254,8 +254,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
       OPS: "",
       // Empty OPS must clear persisted ops.json entries, not merge with them.
       EXISTING_OPS_FILE: "SYNCHRONIZE",
-      FLIPT_URL,
-      FLIPT_ENVIRONMENT: "prod",
+      FLAGS_URL: FLAGS_EVALUATION_URL,
+      FLAGS_DEPLOYMENT: "minecraft/tsmc",
       POSTHOG_API_HOST: analytics.apiHost,
       POSTHOG_PROJECT_TOKEN: analytics.projectToken,
       CFG_PROXY_PROTOCOL: "true",

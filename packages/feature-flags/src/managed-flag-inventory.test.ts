@@ -277,9 +277,9 @@ describe("ManagedFlagInventorySchema", () => {
     }
   });
 
-  test("uses Luna in both managed environments", () => {
+  test("uses Luna in both managed environments aligned with live Scout", () => {
     expect(exploreModel("beta")).toBe("gpt-6-luna");
-    expect(exploreModel("prod")).toBe("gpt-6-luna");
+    expect(exploreModel("prod")).toBe("gpt-5.6-luna");
     expect(() =>
       materializeManagedNamespaceEnvironment(
         managedFlagInventory,
@@ -662,24 +662,38 @@ describe("Red Warfare Search and Destroy rollout", () => {
 });
 
 describe("durable iMessage ingress rollout", () => {
-  test("enables Photon in both environments without changing owner lists", () => {
-    const betaFlag = materializeManagedNamespaceEnvironment(
+  test("enables Photon and aligns the owner allowlist in both environments", () => {
+    const betaFlags = materializeManagedNamespaceEnvironment(
       managedFlagInventory,
       "beta",
       "temporal",
-    ).find(
-      (candidate) => candidate.key === "temporal-agent-chat-photon-enabled",
     );
-    const prodFlag = materializeManagedNamespaceEnvironment(
+    const prodFlags = materializeManagedNamespaceEnvironment(
       managedFlagInventory,
       "prod",
       "temporal",
-    ).find(
-      (candidate) => candidate.key === "temporal-agent-chat-photon-enabled",
     );
 
-    expect(betaFlag?.default).toBe(true);
-    expect(prodFlag?.default).toBe(true);
+    expect(
+      betaFlags.find(
+        (candidate) => candidate.key === "temporal-agent-chat-photon-enabled",
+      )?.default,
+    ).toBe(true);
+    expect(
+      prodFlags.find(
+        (candidate) => candidate.key === "temporal-agent-chat-photon-enabled",
+      )?.default,
+    ).toBe(true);
+    expect(
+      betaFlags.find(
+        (candidate) => candidate.key === "temporal-agent-chat-photon-owners",
+      )?.default,
+    ).toBe("+19154335144");
+    expect(
+      prodFlags.find(
+        (candidate) => candidate.key === "temporal-agent-chat-photon-owners",
+      )?.default,
+    ).toBe("+19154335144");
   });
 });
 

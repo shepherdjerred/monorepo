@@ -1,22 +1,19 @@
 package com.shepherdjerred.thestorm.rwf.adapter.remote;
 
 import com.shepherdjerred.thestorm.core.expansion.FlagProviderUnavailableException;
+import com.shepherdjerred.thestorm.core.flags.FlagsClient;
 import com.shepherdjerred.thestorm.rwf.app.RwfFeatures;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * Evaluates the managed Red Warfare feature flags, which are server-wide, without blocking Paper's
- * main thread: each is evaluated for one fixed entity with the rwf map world as context. The
- * identifiers are checked against the shared flag inventory at build time.
+ * main thread: each is evaluated with the rwf map world as context. The identifiers are checked
+ * against the shared flag inventory at build time.
  */
 public final class FliptRwfFeatures implements RwfFeatures.Source {
 
-  private static final String NAMESPACE_KEY = "the-storm";
   private static final String MATCH_FLOW_FLAG_KEY = "the-storm-rwf-match-flow-enabled";
   private static final String CARRY_OVER_FLAG_KEY = "the-storm-rwf-carry-over-enabled";
   private static final String DEATH_FEED_FLAG_KEY = "the-storm-rwf-death-feed-enabled";
@@ -26,34 +23,20 @@ public final class FliptRwfFeatures implements RwfFeatures.Source {
   private static final String STATS_FLAG_KEY = "the-storm-rwf-stats-enabled";
   private static final String HOST_SETTINGS_FLAG_KEY = "the-storm-rwf-host-settings-enabled";
   private static final String CANDIDATE_VISITS_FLAG_KEY = "the-storm-rwf-candidate-visits-enabled";
-  private static final String ENTITY_ID = "the-storm-rwf-features";
 
-  private final HttpClient client;
-  private final URI endpoint;
-  private final String environment;
+  private final FlagsClient client;
   private final String world;
   private volatile RwfFeatures lastKnown;
 
   /**
-   * @param base the Flipt server address
-   * @param environment {@code prod} or {@code beta}
+   * @param base the Flags server address
+   * @param deployment the Flags deployment ({@code <catalog>/<stage>})
    * @param world the rwf map world, sent as evaluation context
    */
-  public FliptRwfFeatures(URI base, String environment, String world) {
-    if (!"http".equals(base.getScheme()) && !"https".equals(base.getScheme())) {
-      throw new IllegalArgumentException("Flipt URL must use HTTP or HTTPS");
-    }
-    if (base.getHost() == null || base.getUserInfo() != null || base.getQuery() != null) {
-      throw new IllegalArgumentException("Flipt URL must be an uncredentialed server address");
-    }
-    if (!"prod".equals(environment) && !"beta".equals(environment)) {
-      throw new IllegalArgumentException("unknown Flipt environment: " + environment);
-    }
-    this.endpoint = base.resolve("/evaluate/v1/boolean");
-    this.client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
-    this.environment = environment;
+  public FliptRwfFeatures(URI base, String deployment, String world) {
+    this.client = new FlagsClient(base, deployment);
     this.world = world;
-    var defaultOn = "prod".equals(environment);
+    var defaultOn = "prod".equals(client.stage());
     this.lastKnown =
         new RwfFeatures(false, false, false, false, false, false, false, defaultOn, defaultOn);
   }
@@ -89,37 +72,11 @@ public final class FliptRwfFeatures implements RwfFeatures.Source {
   }
 
   private CompletableFuture<Boolean> flag(String key, boolean fallback) {
-    var body =
-        "{\"namespace_key\":\""
-            + NAMESPACE_KEY
-            + "\",\"flag_key\":\""
-            + key
-            + "\",\"entity_id\":\""
-            + ENTITY_ID
-            + "\",\"context\":{\"world\":\""
-            + world
-            + "\"}}";
-    var request =
-        HttpRequest.newBuilder(endpoint)
-            .timeout(Duration.ofSeconds(3))
-            .header("Content-Type", "application/json")
-            .header("x-flipt-environment", environment)
-            .POST(HttpRequest.BodyPublishers.ofString(body))
-            .build();
     return client
-        .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        .thenApply(response -> {
-          if (response.statusCode() == 429
-              || (response.statusCode() >= 500 && response.statusCode() < 600))
-            throw new FlagProviderUnavailableException(
-                new java.io.IOException(String.format("Flipt HTTP %d", response.statusCode())));
-          return FliptRwfGate.parse(response);
-        })
+        .evaluate(key, Map.of("world", world))
         .exceptionally(failure -> {
           var cause = FlagProviderUnavailableException.unwrap(failure);
-          if ("prod".equals(environment)
-              && (cause instanceof java.io.IOException
-                  || cause instanceof FlagProviderUnavailableException)) {
+          if ("prod".equals(client.stage()) && cause instanceof FlagProviderUnavailableException) {
             System.getLogger(FliptRwfFeatures.class.getName())
                 .log(
                     System.Logger.Level.WARNING,

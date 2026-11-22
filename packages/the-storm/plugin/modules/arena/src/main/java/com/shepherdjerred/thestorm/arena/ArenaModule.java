@@ -82,14 +82,14 @@ public final class ArenaModule implements StormModule {
         .register(id(), reset::reset);
     var leaderboard = new JooqLeaderboardStore(database);
     com.shepherdjerred.thestorm.arena.app.SurvivalGate rollout;
-    var flipt = System.getenv("FLIPT_URL");
-    var environment = System.getenv("FLIPT_ENVIRONMENT");
-    if (flipt == null || flipt.isBlank() || environment == null || environment.isBlank()) {
+    var flagsUrl = System.getenv("FLAGS_URL");
+    var deployment = System.getenv("FLAGS_DEPLOYMENT");
+    if (flagsUrl == null || flagsUrl.isBlank() || deployment == null || deployment.isBlank()) {
       rollout = _ -> java.util.concurrent.CompletableFuture.completedFuture(false);
     } else {
       var remote =
           new com.shepherdjerred.thestorm.arena.adapter.remote.FliptSurvivalGate(
-              java.net.URI.create(flipt), environment);
+              java.net.URI.create(flagsUrl), deployment);
       gate = remote;
       rollout = remote;
     }

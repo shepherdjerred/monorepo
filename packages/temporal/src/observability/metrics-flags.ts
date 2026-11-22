@@ -1,5 +1,10 @@
 import { Counter, Gauge, type Registry } from "prom-client";
 import {
+  flagDeployments,
+  type FlagDeployment,
+} from "@shepherdjerred/feature-flags/deployments.ts";
+import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
+import {
   createFlagMetricsRecorder,
   createFlagMetricSet,
 } from "@shepherdjerred/feature-flags/observability.ts";
@@ -11,9 +16,8 @@ import {
 } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import {
   FLAG_ROLLOUT_STATES,
-  classifySnapshotBoolean,
+  classifyFlagBoolean,
 } from "@shepherdjerred/feature-flags/rollout-state.ts";
-import type { FliptSnapshot } from "@shepherdjerred/feature-flags/managed-flag-drift.ts";
 import { register } from "./metrics.ts";
 
 const pairLabels = ["flipt_environment", "flipt_namespace"] as const;
@@ -43,10 +47,11 @@ function recordScopedException(
   return { flag: flagIdentity.flag, issue: entry.issue };
 }
 
-/** A caller updates only successfully parsed snapshots; failures retain the last good timestamp. */
+/** A caller updates only successfully parsed documents; failures retain the last good timestamp. */
 export function createFlagInventoryMetrics(
   registry: Registry,
   inventory: ManagedFlagInventory = managedFlagInventory,
+  deployments: readonly FlagDeployment[] = flagDeployments,
 ) {
   const state = new Gauge({
     name: "feature_flag_rollout_state",
@@ -78,41 +83,49 @@ export function createFlagInventoryMetrics(
     labelNames: pairLabels,
     registers: [registry],
   });
+  const expectedIds = new Set(deployments.map((deployment) => deployment.id));
   const previous = new Map<string, { flag: string; issue: string }[]>();
   const previousFlags = new Map<string, string[]>();
-  for (const environment of inventory.environments) {
-    for (const namespace of inventory.namespaces)
-      expected.set(
-        { flipt_environment: environment.key, flipt_namespace: namespace.key },
-        1,
-      );
+  for (const deployment of deployments) {
+    expected.set(
+      {
+        flipt_environment: deployment.fliptEnvironment,
+        flipt_namespace: deployment.catalog,
+      },
+      1,
+    );
   }
   return {
-    observePair(
-      environment: string,
-      namespace: string,
-      snapshot: FliptSnapshot,
+    observeDeployment(
+      deployment: FlagDeployment,
+      liveFlags: readonly FlagValue[],
       at: Date,
     ): void {
+      if (!expectedIds.has(deployment.id)) {
+        throw new Error(
+          `Unexpected flag deployment observation: ${deployment.id}`,
+        );
+      }
       const declared = materializeManagedNamespaceEnvironment(
         inventory,
-        environment,
-        namespace,
+        deployment.fliptEnvironment,
+        deployment.catalog,
       );
-      const live = new Map(snapshot.flags.map((flag) => [flag.key, flag]));
+      const live = new Map(liveFlags.map((flag) => [flag.key, flag]));
       const flags = declared.flatMap((flag) =>
         flag.type === "boolean"
-          ? [{ flag, state: classifySnapshotBoolean(live.get(flag.key)) }]
+          ? [{ flag, state: classifyFlagBoolean(live.get(flag.key)) }]
           : [],
       );
       const timestamp = at.getTime() / 1000;
-      if (!Number.isFinite(timestamp))
-        throw new TypeError("Invalid Flipt observation timestamp");
+      if (!Number.isFinite(timestamp)) {
+        throw new TypeError("Invalid flag observation timestamp");
+      }
       const labels = {
-        flipt_environment: environment,
-        flipt_namespace: namespace,
+        flipt_environment: deployment.fliptEnvironment,
+        flipt_namespace: deployment.catalog,
       };
-      const key = `${environment}/${namespace}`;
+      const key = deployment.id;
       for (const old of previous.get(key) ?? []) {
         exception.remove({ ...labels, ...old });
         review.remove({ ...labels, ...old });
@@ -121,19 +134,21 @@ export function createFlagInventoryMetrics(
         (old) => !flags.some(({ flag }) => flag.key === old),
       );
       for (const old of removed) {
-        for (const value of FLAG_ROLLOUT_STATES)
+        for (const value of FLAG_ROLLOUT_STATES) {
           state.remove({ ...labels, flag: old, state: value });
+        }
       }
       const exceptions: { flag: string; issue: string }[] = [];
       for (const item of flags) {
         const flagIdentity = { ...labels, flag: item.flag.key };
-        for (const value of FLAG_ROLLOUT_STATES)
+        for (const value of FLAG_ROLLOUT_STATES) {
           state.set(
             { ...flagIdentity, state: value },
             value === item.state ? 1 : 0,
           );
+        }
         const scopedExceptions = (item.flag.defaultOffExceptions ?? []).filter(
-          (entry) => entry.environment === environment,
+          (entry) => entry.environment === deployment.fliptEnvironment,
         );
         for (const entry of scopedExceptions) {
           exceptions.push(

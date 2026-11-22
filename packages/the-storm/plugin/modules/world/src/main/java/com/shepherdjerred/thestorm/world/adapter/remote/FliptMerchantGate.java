@@ -5,15 +5,15 @@ import java.net.URI;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-/** Evaluates the independently managed merchant flag through the shared Flipt client. */
+/** Evaluates the independently managed merchant flag through the shared Flags client. */
 public final class FliptMerchantGate implements MerchantGate, AutoCloseable {
 
   private static final String FLAG_KEY = "the-storm-merchant-enabled";
 
   private final FliptCrierGate client;
 
-  public FliptMerchantGate(URI base, String environment) {
-    client = new FliptCrierGate(base, environment, FLAG_KEY);
+  public FliptMerchantGate(URI base, String deployment) {
+    client = new FliptCrierGate(base, deployment, FLAG_KEY);
   }
 
   @Override

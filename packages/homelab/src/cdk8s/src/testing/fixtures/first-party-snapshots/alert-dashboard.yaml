@@ -60,13 +60,11 @@ spec:
             - name: PROMETHEUS_URL
               value: http://prometheus-kube-prometheus-prometheus.prometheus:9090
             - name: FEATURE_FLAGS_MODE
-              value: flipt
-            - name: FLIPT_NAMESPACE
-              value: alert-dashboard
-            - name: FLIPT_URL
-              value: http://flipt-flipt-service.flipt.svc.cluster.local:8080
-            - name: FLIPT_ENVIRONMENT
-              value: prod
+              value: flags
+            - name: FLAGS_DEPLOYMENT
+              value: alert-dashboard/prod
+            - name: FLAGS_URL
+              value: http://flags.flags.svc.cluster.local:7361
             - name: POSTAL_HOST
               value: http://postal-postal-web-service.postal.svc.cluster.local:5000
             - name: ALERT_DASHBOARD_WEBHOOK_TOKEN
@@ -360,12 +358,12 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: prometheus
     - ports:
-        - port: 8080
+        - port: 7361
           protocol: TCP
       to:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: flipt
+              kubernetes.io/metadata.name: flags
     - ports:
         - port: 5000
           protocol: TCP

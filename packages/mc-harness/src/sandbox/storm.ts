@@ -38,7 +38,7 @@ export const STORM_PATHS = {
 /**
  * Modules `storm-dev` switches on: playable gameplay without external
  * services. `agent` needs storm-brain, `discord` a bot token and `world`
- * Flipt, so they stay off. Towns requires the mail service, and its claim
+ * Flags, so they stay off. Towns requires the mail service, and its claim
  * worlds include `skylands`, which the skylands module generates itself.
  * Mechanics runs inside TheStormMechanicsE2E, which also prepares its fixture
  * geometry.

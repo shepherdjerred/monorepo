@@ -23,7 +23,7 @@ import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/user
 import {
   telemetryEnv,
   seaweedfsS3,
-  FLIPT_URL,
+  flagsEnv,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export const APP_ROOT = "/app/packages/arcade";
@@ -209,11 +209,8 @@ model = "gpt-6.1-sol"
     envVariables: {
       ARCADE_CONFIG_PATH: EnvValue.fromValue("/config/arcade.toml"),
       NODE_ENV: EnvValue.fromValue("production"),
-      FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
-      FLIPT_NAMESPACE: EnvValue.fromValue("arcade"),
-      FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
+      ...flagsEnv({ deployment: "arcade/prod" }),
       DEPLOYMENT_ENVIRONMENT: EnvValue.fromValue("prod"),
-      FLIPT_URL: EnvValue.fromValue(FLIPT_URL),
       PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("arcade1")),
       // Shared origin for Discord links, OAuth, and browser controller traffic.
       WEB_PUBLIC_ORIGIN: EnvValue.fromValue("https://arcade.sjer.red"),

@@ -1,22 +1,24 @@
 import { z } from "zod";
+import {
+  isCredentiallessFlagsRequest,
+  ProdDeploymentSchema,
+} from "./brain/flags.ts";
 
 const EvaluationSchema = z.strictObject({
-  namespace_key: z.literal("the-storm"),
-  flag_key: z.literal("the-storm-beginners-luck-enabled"),
-  entity_id: z.uuid(),
-  context: z.strictObject({}),
+  deployment: ProdDeploymentSchema,
+  key: z.literal("the-storm-beginners-luck-enabled"),
+  context: z.strictObject({ user: z.uuid() }),
 });
 
-/** Per-player, default-off Flipt double, confined to disposable acceptance servers. */
+/** Per-player, default-off Flags double, confined to disposable acceptance servers. */
 export class BeginnerFlags {
   private players = new Set<string>();
 
   async evaluate(request: Request): Promise<Response | undefined> {
     const body: unknown = await request.json();
     const parsed = EvaluationSchema.safeParse(body);
-    return parsed.success &&
-      request.headers.get("x-flipt-environment") === "prod"
-      ? Response.json({ enabled: this.players.has(parsed.data.entity_id) })
+    return parsed.success && isCredentiallessFlagsRequest(request)
+      ? Response.json({ enabled: this.players.has(parsed.data.context.user) })
       : undefined;
   }
 

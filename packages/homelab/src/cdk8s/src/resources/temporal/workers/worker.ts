@@ -67,14 +67,16 @@ export function createTemporalWorkerDeployment(
     serverServiceName: props.serverServiceName,
     temporalSecret: secret,
   });
-  const fliptAuthItem = new OnePasswordItem(chart, "temporal-flipt-auth-1p", {
-    metadata: { name: "temporal-flipt-auth" },
-    spec: { itemPath: vaultItemPath("3mvuwmlazccxpq7tz7myqigtvq") },
-  });
-  const fliptAuthSecret = Secret.fromSecretName(
+  const flagsAuthItem = onePasswordSecret(
     chart,
-    "temporal-flipt-auth-secret",
-    fliptAuthItem.name,
+    "temporal-flags-auth-1p",
+    "dzcroze2qcoibfz3illceozbea",
+    { name: "flags-auth" },
+  );
+  const flagsAuthSecret = Secret.fromSecretName(
+    chart,
+    "temporal-flags-auth-secret",
+    flagsAuthItem.name,
   );
   // The read-only `homelab-audit` ArgoCD account's token, minted by
   // the argocd OpenTofu stack (homelab-cdktn/src/stacks/argocd.ts). The
@@ -334,7 +336,7 @@ export function createTemporalWorkerDeployment(
   } = createTemporalOperationsWorkers(chart, {
     serverServiceName: props.serverServiceName,
     secret,
-    fliptAuthSecret,
+    flagsAuthSecret,
     infraServiceAccount,
     homelabAuditEnvironment: homelabAuditEnv(
       secret,

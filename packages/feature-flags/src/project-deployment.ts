@@ -8,6 +8,7 @@ import {
   managedFlagInventory,
   materializeManagedNamespaceEnvironment,
   type ManagedFlag,
+  type ManagedFlagInventory,
 } from "./managed-flag-inventory.ts";
 
 const STRING_EQUALITY = "STRING_CONSTRAINT_COMPARISON_TYPE";
@@ -55,20 +56,24 @@ function projectFlag(flag: ManagedFlag): FlagValue {
 /** The flag document a deployment reads, projected from the managed inventory. */
 export function projectDeploymentFlags(
   deployment: FlagDeployment,
+  inventory: ManagedFlagInventory = managedFlagInventory,
 ): FlagValue[] {
   return materializeManagedNamespaceEnvironment(
-    managedFlagInventory,
+    inventory,
     deployment.fliptEnvironment,
     deployment.catalog,
   ).map((flag) => projectFlag(flag));
 }
 
-export function projectDeploymentById(id: string): FlagValue[] {
+export function projectDeploymentById(
+  id: string,
+  inventory: ManagedFlagInventory = managedFlagInventory,
+): FlagValue[] {
   const deployment = flagDeployments.find((candidate) => candidate.id === id);
   if (deployment === undefined) {
     throw new Error(`unknown flag deployment: ${id}`);
   }
-  return projectDeploymentFlags(deployment);
+  return projectDeploymentFlags(deployment, inventory);
 }
 
 export function deploymentForCatalog(

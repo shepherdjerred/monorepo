@@ -59,7 +59,7 @@ describe.skipIf(external)("active enforcement", () => {
       ]),
       ownedConfigDir,
       // The plugin's typed flag provider bootstraps even when only moderation runs.
-      env: { FLIPT_URL: brainBaseUrl, FLIPT_ENVIRONMENT: "prod" },
+      env: { FLAGS_URL: brainBaseUrl, FLAGS_DEPLOYMENT: "minecraft/tsmc" },
       brain: {
         baseUrl: brainBaseUrl,
         token,

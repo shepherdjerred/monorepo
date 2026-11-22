@@ -114,13 +114,13 @@ public final class TownsModule implements StormModule {
     parcels.load(await(leases.load(), "plot leases"));
     state.attachParcels(parcels);
     context.services().provide(ParcelBook.class, parcels);
-    var base = System.getenv("FLIPT_URL");
-    var environment = System.getenv("FLIPT_ENVIRONMENT");
+    var base = System.getenv("FLAGS_URL");
+    var deployment = System.getenv("FLAGS_DEPLOYMENT");
     RentalGate gate;
-    if (base == null || base.isBlank() || environment == null || environment.isBlank()) {
+    if (base == null || base.isBlank() || deployment == null || deployment.isBlank()) {
       gate = player -> CompletableFuture.completedFuture(false);
     } else {
-      var remote = new FliptRentalGate(URI.create(base), environment);
+      var remote = new FliptRentalGate(URI.create(base), deployment);
       rentalGate = remote;
       gate = remote;
     }

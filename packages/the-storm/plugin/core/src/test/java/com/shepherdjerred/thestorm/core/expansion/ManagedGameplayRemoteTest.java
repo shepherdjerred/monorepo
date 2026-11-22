@@ -22,7 +22,7 @@ final class ManagedGameplayRemoteTest {
       throws IOException {
     var server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
     server.createContext(
-        "/evaluate/v1/boolean",
+        "/v1/evaluate",
         exchange -> {
           var bytes = body.getBytes(UTF_8);
           exchange.sendResponseHeaders(status, bytes.length);
@@ -32,7 +32,8 @@ final class ManagedGameplayRemoteTest {
         });
     server.start();
     try (var flags =
-        ManagedGameplay.remote("http://127.0.0.1:" + server.getAddress().getPort(), "prod")) {
+        ManagedGameplay.remote(
+            "http://127.0.0.1:" + server.getAddress().getPort(), "minecraft/tsmc")) {
       verify.accept(flags);
     } finally {
       server.stop(0);
@@ -72,7 +73,7 @@ final class ManagedGameplayRemoteTest {
                   flags
                       .enabledOrDefault(ManagedGameplay.CONTENT_SAFETY, ACTOR, false, failure -> {})
                       .join())
-              .hasRootCauseMessage("rollout returned HTTP %s", status);
+              .hasRootCauseMessage("Flags evaluation returned HTTP %s", status);
           assertThat(flags.cachedEnabled(ManagedGameplay.CONTENT_SAFETY, ACTOR)).isEmpty();
         });
   }
@@ -124,7 +125,8 @@ final class ManagedGameplayRemoteTest {
     var port = server.getAddress().getPort();
     server.start();
     server.stop(0);
-    try (var flags = ManagedGameplay.remote("http://127.0.0.1:" + port, "prod")) {
+    try (var flags = ManagedGameplay.remote("http://127.0.0.1:" + port, "minecraft/tsmc")) {
+      assertThat(flags.ipEnforcementDefault()).isFalse();
       assertThat(
               flags
                   .enabledOrDefault(ManagedGameplay.CONTENT_SAFETY, ACTOR, false, failure -> {})
@@ -132,6 +134,13 @@ final class ManagedGameplayRemoteTest {
           .isFalse();
       assertThat(flags.cachedEnabled(ManagedGameplay.CONTENT_SAFETY, ACTOR)).contains(false);
       assertThat(flags.enabled(ManagedGameplay.ASYNC_CHAT_MODERATION, ACTOR).join()).isTrue();
+      assertThat(flags.enabled(ManagedGameplay.STAFF, ACTOR).join()).isTrue();
+    }
+    try (var betaFlags = ManagedGameplay.remote("http://127.0.0.1:" + port, "minecraft/sandbox")) {
+      assertThat(betaFlags.ipEnforcementDefault()).isTrue();
+      assertThat(betaFlags.enabled(ManagedGameplay.ASYNC_CHAT_MODERATION, ACTOR).join()).isTrue();
+      assertThatThrownBy(() -> betaFlags.enabled(ManagedGameplay.STAFF, ACTOR).join())
+          .hasCauseInstanceOf(FlagProviderUnavailableException.class);
     }
   }
 }

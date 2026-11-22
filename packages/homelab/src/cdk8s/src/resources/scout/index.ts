@@ -48,7 +48,7 @@ import {
   telemetryEnv,
   bugsinkEnv,
   seaweedfsS3,
-  FLIPT_URL,
+  flagsEnv,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 const VOICE_OPENAI_API_KEY_FILE = "/run/secrets/scout-openai/OPENAI_API_KEY";
@@ -253,13 +253,10 @@ export function createScoutDeployment(
     ),
     ENVIRONMENT: EnvValue.fromValue(stage),
     // Bootstrap for the flag client — these cannot come from a flag.
-    FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
-    FLIPT_ENVIRONMENT: EnvValue.fromValue(stage),
-    FLIPT_NAMESPACE: EnvValue.fromValue("scout"),
+    ...flagsEnv({ deployment: `scout/${stage}` }),
     TEMPORAL_NAMESPACE: EnvValue.fromValue(stage),
     // Scout owns and reconciles report schedules in its stage namespace.
     TEMPORAL_SCHEDULE_RECONCILIATION: EnvValue.fromValue("auto"),
-    FLIPT_URL: EnvValue.fromValue(FLIPT_URL),
     POSTHOG_PROJECT_TOKEN: EnvValue.fromValue(analytics.projectToken),
     POSTHOG_API_HOST: EnvValue.fromValue(analytics.apiHost),
     POSTHOG_SITE_KEY: EnvValue.fromValue(analytics.siteKey),

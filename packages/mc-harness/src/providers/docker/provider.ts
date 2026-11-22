@@ -93,7 +93,7 @@ export function dockerCreateArgs(
     "--label",
     `${LABELS.keep}=${options.keep.toString()}`,
     ...(platform === "linux" &&
-    options.profile.env["FLIPT_URL"]?.startsWith(
+    options.profile.env["FLAGS_URL"]?.startsWith(
       "http://host.docker.internal:",
     ) === true
       ? ["--add-host", "host.docker.internal:host-gateway"]

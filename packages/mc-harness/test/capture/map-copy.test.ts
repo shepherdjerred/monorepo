@@ -81,7 +81,7 @@ it("uses an explicit real rollout reader without admitting credentials or synthe
     mapSpawn: [0.5, 101, 0.5],
     ttlSeconds: 3600,
     keep: false,
-    rollout: { url: "https://example.com", environment: "prod" },
+    rollout: { url: "https://example.com", deployment: "minecraft/tsmc" },
   };
   const parsed = SandboxCreateRequestSchema.parse(request);
   const profile = resolveProfile(
@@ -89,8 +89,8 @@ it("uses an explicit real rollout reader without admitting credentials or synthe
     { bridgeToken: "a".repeat(48), rconPassword: "b".repeat(48) },
     { sha256: "c".repeat(64), files: 1, bytes: 1 },
   );
-  expect(profile.env["FLIPT_URL"]).toBe(request.rollout.url);
-  expect(profile.env["FLIPT_ENVIRONMENT"]).toBe("prod");
+  expect(profile.env["FLAGS_URL"]).toBe(request.rollout.url);
+  expect(profile.env["FLAGS_DEPLOYMENT"]).toBe("minecraft/tsmc");
   for (const url of [
     "invalid",
     "http://example.com",
