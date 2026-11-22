@@ -35,6 +35,7 @@ export const AlertOccurrenceRecordSchema = z.object({
   missingSinceNs: z.bigint().nullable(),
   absentSnapshots: z.number().int().nonnegative(),
   firstNotifiedAtNs: z.bigint().nullable(),
+  haNotifiedAtNs: z.bigint().nullable().optional(),
   lifecycleState: LifecycleStateSchema,
   suppressionState: SuppressionStateSchema,
   resolutionSource: ResolutionSourceSchema.nullable(),
@@ -93,6 +94,90 @@ export function severityFromLabels(
 ): z.infer<typeof SeveritySchema> {
   const parsed = SeveritySchema.safeParse(labels["severity"]);
   return parsed.success ? parsed.data : "unknown";
+}
+
+const CONTROL_ALERTNAMES = new Set(["Watchdog", "InfoInhibitor"]);
+
+/**
+ * Control alerts (`Watchdog`, `InfoInhibitor`), informational alerts, and
+ * alerts routed exclusively to Alertmanager's `null` sink are excluded from
+ * the durable ledger on both webhook ingest and snapshot reconciliation.
+ */
+export function shouldSkipLedgerAlert(input: {
+  labels: Readonly<Record<string, string>>;
+  receivers?: readonly { readonly name: string }[] | undefined;
+}): boolean {
+  if (CONTROL_ALERTNAMES.has(input.labels["alertname"] ?? "")) return true;
+  if (severityFromLabels(input.labels) === "info") return true;
+  if (
+    input.receivers !== undefined &&
+    input.receivers.length > 0 &&
+    input.receivers.every((receiver) => receiver.name === "null")
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Routine `warning` household chores notify Home Assistant without sending
+ * incident emails, while `critical` household faults and all Ops
+ * `warning`/`critical` alerts remain eligible for `EmailOutbox`.
+ */
+export function isEligibleEmailAlert(
+  status: "firing" | "resolved",
+  labels: Readonly<Record<string, string>>,
+): boolean {
+  const severity = severityFromLabels(labels);
+  if (status !== "firing") return false;
+  return labels["category"] === "household"
+    ? severity === "critical"
+    : severity === "critical" || severity === "warning";
+}
+
+/**
+ * Household chores at warning or critical notify Home Assistant once per
+ * occurrence, except `service="pet-care"` which Temporal's `pet-care-alerts`
+ * workflow already delivers directly to Home Assistant.
+ */
+export function isEligibleHouseAlert(
+  labels: Readonly<Record<string, string>>,
+): boolean {
+  const severity = severityFromLabels(labels);
+  return (
+    labels["category"] === "household" &&
+    (severity === "warning" || severity === "critical") &&
+    labels["service"] !== "pet-care"
+  );
+}
+
+export function houseNotificationId(fingerprint: string): string {
+  return `hub-house-${fingerprint}`;
+}
+
+export function houseNotificationPayload(input: {
+  fingerprint: string;
+  labels: Readonly<Record<string, string>>;
+  annotations: Readonly<Record<string, string>>;
+}): {
+  notificationId: string;
+  title: string;
+  message: string;
+} {
+  const alertname = input.labels["alertname"] ?? "Alert";
+  const summary = input.annotations["summary"]?.trim();
+  const description = input.annotations["description"]?.trim();
+  const message =
+    (summary !== undefined && summary.length > 0 ? summary : undefined) ??
+    (description !== undefined && description.length > 0
+      ? description
+      : undefined) ??
+    alertname;
+  return {
+    notificationId: houseNotificationId(input.fingerprint),
+    title: `[House] ${alertname}`,
+    message,
+  };
 }
 
 export function suppressionFromSnapshot(

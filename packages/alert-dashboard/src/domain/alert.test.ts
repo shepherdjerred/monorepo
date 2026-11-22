@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  isEligibleEmailAlert,
+  isEligibleHouseAlert,
   labelChanges,
   observedLastSeenAtNs,
   occurrenceId,
@@ -229,5 +231,36 @@ describe("alert domain", () => {
     expect(sameStringMap({ a: "1", b: "2" }, { b: "2", a: "1" })).toBe(true);
     expect(sameStringMap({ a: "1" }, { a: "1", b: "2" })).toBe(false);
     expect(sameStringMap({ a: "1", c: "2" }, { a: "1", b: "2" })).toBe(false);
+  });
+});
+
+describe("household vs ops notification eligibility", () => {
+  test("routine warning household chores skip email while queueing HA push; critical household queues both", () => {
+    const routineChore = {
+      alertname: "RoborockConsumableDue",
+      category: "household",
+      severity: "warning",
+      service: "roborock",
+    };
+    expect(isEligibleEmailAlert("firing", routineChore)).toBe(false);
+    expect(isEligibleHouseAlert(routineChore)).toBe(true);
+
+    const criticalHousehold = {
+      alertname: "WaterLeakDetected",
+      category: "household",
+      severity: "critical",
+      service: "homeassistant",
+    };
+    expect(isEligibleEmailAlert("firing", criticalHousehold)).toBe(true);
+    expect(isEligibleHouseAlert(criticalHousehold)).toBe(true);
+    expect(isEligibleEmailAlert("resolved", criticalHousehold)).toBe(false);
+
+    const opsWarning = {
+      alertname: "DiskFull",
+      severity: "warning",
+      namespace: "storage",
+    };
+    expect(isEligibleEmailAlert("firing", opsWarning)).toBe(true);
+    expect(isEligibleHouseAlert(opsWarning)).toBe(false);
   });
 });

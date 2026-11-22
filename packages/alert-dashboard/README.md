@@ -54,12 +54,19 @@ The core module has two halves in one process:
   way, at fifteen. `e2e/volume.spec.ts` bounds page height at production
   volume, how far down Home its area cards start, and how far down the
   section pages their charts start.
-- **Alert ledger.** Alertmanager remains authoritative for evaluation,
-  grouping, inhibition, routing, and silences; this service stores occurrence
-  history, serves the Alerts, History, and System pages, sends grouped opening
-  email through Postal, and renders bounded Grafana-backed Prometheus, Loki,
-  and Tempo previews for firing alerts. Alert openings and resolutions also
-  appear on the ops change timeline, derived from the ledger at read time.
+- **Alert ledger & House chores.** Alertmanager remains authoritative for
+  evaluation, grouping, inhibition, routing, and silences; this service stores
+  actionable occurrence history (excluding `Watchdog`, `InfoInhibitor`,
+  `severity=info`, and `null`-only receivers), serves the Ops Active (`/alerts`),
+  House (`/house`), History (`/history` with `Ops`/`House`/`All` scope links),
+  and System (`/system`) pages, sends grouped opening email through Postal,
+  pushes eligible non-`pet-care` `category=household` chores and dismissals
+  durably to Home Assistant (`HomeAssistantOutbox`) when `HOMEASSISTANT_URL`
+  and `HOMEASSISTANT_TOKEN` are configured, and renders bounded Grafana-backed
+  Prometheus, Loki, and Tempo previews for firing alerts. Alert openings and
+  resolutions also appear on the ops change timeline, derived from the ledger
+  at read time, while daily and weekly Ops incident statistics exclude
+  `category=household` chores.
 
 It is deployed: CI builds and pushes the image (the `alert-dashboard` target in
 [`ci/scripts/images/image-targets.ts`](../../ci/scripts/images/image-targets.ts)),

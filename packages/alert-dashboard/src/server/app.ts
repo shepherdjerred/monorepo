@@ -20,6 +20,7 @@ import {
   AlertListInputSchema,
   AlertOccurrenceIdSchema,
   EventListInputSchema,
+  SummaryInputSchema,
 } from "#shared/schema";
 import { instantTextToEpochNanoseconds } from "#shared/time";
 
@@ -32,6 +33,7 @@ type AppOptions = {
   digests: DigestService;
   opsIngestToken: string;
   promotionStatusUrl?: string;
+  onWebhookIngested?: () => void;
   /** Modules mounted under `/api/<id>` beside the built-in core routes. */
   modules?: readonly ServerModule[];
 };
@@ -173,6 +175,7 @@ export function createApp(options: AppOptions): Hono {
           result: "accepted",
         });
         options.changes.publish("webhook");
+        options.onWebhookIngested?.();
         return context.json(result, 202);
       } catch (error) {
         options.metrics.increment("alert_dashboard_webhook_total", {
@@ -183,9 +186,10 @@ export function createApp(options: AppOptions): Hono {
     },
   );
 
-  app.get("/api/v1/summary", async (context) =>
-    context.json(await options.service.summary()),
-  );
+  app.get("/api/v1/summary", async (context) => {
+    const input = SummaryInputSchema.parse(context.req.query());
+    return context.json(await options.service.summary(input));
+  });
   app.get("/api/v1/alerts", async (context) => {
     const query = context.req.query();
     const input = AlertListInputSchema.parse({

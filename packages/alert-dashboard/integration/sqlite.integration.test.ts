@@ -11,6 +11,7 @@ import {
   input,
   nanoseconds,
   prisma,
+  reconcileSnapshotAbsence,
   repository,
   resetDatabase,
   temporalFailureWebhook,
@@ -343,6 +344,7 @@ describe("SQLite alert ledger", () => {
     expect(refreshed.items[0]?.suppressionState).toBe("silenced");
     const suppressedSummary = await repository.summary();
     expect(suppressedSummary.warning).toBe(0);
+    expect(suppressedSummary.open).toBe(0);
     expect(suppressedSummary.silenced).toBe(1);
     await repository.ingestWebhook(
       input(
@@ -404,7 +406,7 @@ describe("SQLite snapshot reconciliation", () => {
       fingerprint,
       startsAt: "2026-08-08T18:00:00Z",
       generatorURL: "",
-      labels: { alertname: "OverlappingAlert", severity: "info" },
+      labels: { alertname: "OverlappingAlert", severity: "warning" },
       status: { inhibitedBy: [], silencedBy: [], state: "active" },
     });
     const start = nanoseconds("2026-08-08T18:00:00Z");
@@ -424,8 +426,9 @@ describe("SQLite snapshot reconciliation", () => {
     await Promise.all([
       repository.ingestWebhook(
         input(
-          webhook(fingerprint, "firing", "2026-08-08T18:07:00Z", "info"),
+          webhook(fingerprint, "firing", "2026-08-08T18:07:00Z", "warning"),
           "2026-08-08T18:07:01Z",
+          false,
         ),
       ),
       repository.reconcileSnapshot({
@@ -458,7 +461,11 @@ describe("SQLite snapshot reconciliation", () => {
       fingerprint: "fingerprint-snapshot",
       startsAt: "2026-08-08T18:00:00Z",
       generatorURL: "",
-      labels: { alertname: "SnapshotOnly", severity: "info" },
+      labels: {
+        alertname: "SnapshotOnly",
+        namespace: "ops",
+        severity: "warning",
+      },
       status: { inhibitedBy: [], silencedBy: [], state: "active" },
     });
     const minute = 60_000_000_000n;
@@ -494,9 +501,10 @@ describe("SQLite snapshot reconciliation", () => {
           "fingerprint-snapshot",
           "firing",
           "2026-08-08T18:08:00Z",
-          "info",
+          "warning",
         ),
         "2026-08-08T18:08:01Z",
+        false,
       ),
     );
     const afterReopen = await repository.listAlerts({ limit: 10 });
@@ -658,4 +666,336 @@ describe("SQLite webhook authority", () => {
     "closes an open occurrence on a zero-duration resolved heartbeat without later phantom rows",
     resolvesOpenOccurrenceOnZeroDurationHeartbeat,
   );
+});
+
+function customWebhook(options: {
+  fingerprint: string;
+  status: "firing" | "resolved";
+  labels: Record<string, string>;
+  annotations?: Record<string, string>;
+  startsAt?: string;
+}) {
+  const annotations = options.annotations ?? { summary: "Chore summary" };
+  const base = webhook(
+    options.fingerprint,
+    options.status,
+    options.startsAt ?? "2026-08-08T18:00:00Z",
+  );
+  return AlertmanagerWebhookSchema.parse({
+    ...base,
+    alerts: base.alerts.map((entry) => ({
+      ...entry,
+      labels: options.labels,
+      annotations,
+    })),
+  });
+}
+
+describe("SQLite reconciler hygiene, scoped reads, and Home Assistant outbox", () => {
+  it("skips Watchdog, InfoInhibitor, info severity, and null-only receivers across webhook and snapshot", async () => {
+    await repository.ingestWebhook(
+      input(
+        customWebhook({
+          fingerprint: "fp-watchdog",
+          status: "firing",
+          labels: { alertname: "Watchdog", severity: "none" },
+        }),
+        "2026-08-08T18:00:01Z",
+      ),
+    );
+    await repository.ingestWebhook(
+      input(
+        customWebhook({
+          fingerprint: "fp-inhibitor",
+          status: "firing",
+          labels: { alertname: "InfoInhibitor", severity: "none" },
+        }),
+        "2026-08-08T18:00:02Z",
+      ),
+    );
+    await repository.ingestWebhook(
+      input(
+        webhook("fp-info-webhook", "firing", "2026-08-08T18:00:00Z", "info"),
+        "2026-08-08T18:00:03Z",
+      ),
+    );
+
+    const reconcileResult = await repository.reconcileSnapshot({
+      alerts: [
+        AlertmanagerSnapshotAlertSchema.parse({
+          annotations: { summary: "Watchdog" },
+          endsAt: "0001-01-01T00:00:00Z",
+          fingerprint: "fp-snap-watchdog",
+          startsAt: "2026-08-08T18:00:00Z",
+          labels: { alertname: "Watchdog", severity: "none" },
+          status: { inhibitedBy: [], silencedBy: [], state: "active" },
+        }),
+        AlertmanagerSnapshotAlertSchema.parse({
+          annotations: { summary: "Info" },
+          endsAt: "0001-01-01T00:00:00Z",
+          fingerprint: "fp-snap-info",
+          startsAt: "2026-08-08T18:00:00Z",
+          labels: { alertname: "InformationalOnly", severity: "info" },
+          status: { inhibitedBy: [], silencedBy: [], state: "active" },
+        }),
+        AlertmanagerSnapshotAlertSchema.parse({
+          annotations: { summary: "Null routed" },
+          endsAt: "0001-01-01T00:00:00Z",
+          fingerprint: "fp-snap-null",
+          startsAt: "2026-08-08T18:00:00Z",
+          labels: { alertname: "NullRoutedWarning", severity: "warning" },
+          receivers: [{ name: "null" }],
+          status: { inhibitedBy: [], silencedBy: [], state: "active" },
+        }),
+      ],
+      startedAtNs: nanoseconds("2026-08-08T18:01:00Z"),
+      completedAtNs: nanoseconds("2026-08-08T18:01:01Z"),
+      missingGraceNs: 300_000_000_000n,
+    });
+
+    expect(reconcileResult).toEqual({ active: 0, opened: 0, resolved: 0 });
+    const allAlerts = await repository.listAlerts({ limit: 10 });
+    expect(allAlerts.items).toEqual([]);
+  });
+});
+
+describe("SQLite Home Assistant outbox and scoped reads", () => {
+  it("queues HA notifications once for non-pet-care household alerts, queues dismiss on resolve, and scopes queries", async () => {
+    const roborockLabels = {
+      alertname: "RoborockConsumableDue",
+      category: "household",
+      severity: "warning",
+      service: "roborock",
+      vacuum: "Downstairs Roborock",
+    };
+    const roborockIngest = await repository.ingestWebhook(
+      input(
+        customWebhook({
+          fingerprint: "fp-roborock",
+          status: "firing",
+          labels: roborockLabels,
+          annotations: { summary: "Main brush needs replacement" },
+        }),
+        "2026-08-08T18:00:01Z",
+        true,
+      ),
+    );
+    expect(roborockIngest.emailQueued).toBe(false);
+    await repository.ingestWebhook(
+      input(
+        customWebhook({
+          fingerprint: "fp-roborock",
+          status: "firing",
+          labels: roborockLabels,
+          annotations: { summary: "Main brush needs replacement" },
+        }),
+        "2026-08-09T06:00:01Z",
+        true,
+      ),
+    );
+    const petCareIngest = await repository.ingestWebhook(
+      input(
+        customWebhook({
+          fingerprint: "fp-pet-care",
+          status: "firing",
+          labels: {
+            alertname: "LitterRobotWasteDrawerNearlyFull",
+            category: "household",
+            severity: "critical",
+            service: "pet-care",
+          },
+        }),
+        "2026-08-08T18:00:02Z",
+        true,
+      ),
+    );
+    expect(petCareIngest.emailQueued).toBe(true);
+    await repository.ingestWebhook(
+      input(webhook("fp-ops-alert", "firing"), "2026-08-08T18:00:03Z", false),
+    );
+
+    const opsSummary = await repository.summary({ scope: "ops" });
+    const houseSummary = await repository.summary({ scope: "house" });
+    const allSummary = await repository.summary({ scope: "all" });
+    expect(opsSummary).toMatchObject({ open: 1, critical: 0, warning: 1 });
+    expect(houseSummary).toMatchObject({ open: 2, critical: 1, warning: 1 });
+    expect(allSummary).toMatchObject({ open: 3, critical: 1, warning: 2 });
+
+    const opsAlerts = await repository.listAlerts({ limit: 10, scope: "ops" });
+    const houseAlerts = await repository.listAlerts({
+      limit: 10,
+      scope: "house",
+    });
+    const houseEvents = await repository.listEvents({
+      limit: 10,
+      scope: "house",
+    });
+    expect(opsAlerts.items.map((item) => item.fingerprint)).toEqual([
+      "fp-ops-alert",
+    ]);
+    expect(
+      houseAlerts.items.map((item) => item.fingerprint).toSorted(),
+    ).toEqual(["fp-pet-care", "fp-roborock"]);
+    expect(
+      houseEvents.items.map((item) => item.alert.fingerprint).toSorted(),
+    ).toEqual(["fp-pet-care", "fp-roborock"]);
+
+    const claimed = await repository.claimPendingHomeAssistantNotifications(
+      nanoseconds("2026-08-09T06:01:00Z"),
+      10,
+      nanoseconds("2026-08-09T06:01:00Z"),
+    );
+    expect(claimed).toHaveLength(1);
+    expect(claimed[0]?.notification).toEqual({
+      action: "notify",
+      notificationId: "hub-house-fp-roborock",
+      title: "[House] RoborockConsumableDue",
+      message: "Main brush needs replacement",
+    });
+    const firstClaim = claimed[0];
+    if (firstClaim === undefined) throw new Error("expected HA claim");
+    await repository.markHomeAssistantSent({
+      id: firstClaim.id,
+      sendClaimId: firstClaim.sendClaimId,
+      sentAtNs: nanoseconds("2026-08-09T06:01:05Z"),
+    });
+
+    await repository.ingestWebhook(
+      input(
+        customWebhook({
+          fingerprint: "fp-roborock",
+          status: "resolved",
+          labels: roborockLabels,
+          annotations: { summary: "Main brush needs replacement" },
+        }),
+        "2026-08-09T06:10:01Z",
+        false,
+      ),
+    );
+    const dismissClaim =
+      await repository.claimPendingHomeAssistantNotifications(
+        nanoseconds("2026-08-09T06:11:00Z"),
+        10,
+        nanoseconds("2026-08-09T06:11:00Z"),
+      );
+    expect(dismissClaim).toHaveLength(1);
+    expect(dismissClaim[0]?.notification).toEqual({
+      action: "dismiss",
+      notificationId: "hub-house-fp-roborock",
+    });
+  });
+
+  it("cancels unsent HA notify and queues dismiss when snapshot reconciles resolution", async () => {
+    const start = nanoseconds("2026-08-09T07:00:00Z");
+    await reconcileSnapshotAbsence(
+      AlertmanagerSnapshotAlertSchema.parse({
+        annotations: { description: "Replace HEPA filter soon" },
+        endsAt: "0001-01-01T00:00:00Z",
+        fingerprint: "fp-snap-chore",
+        startsAt: "2026-08-09T07:00:00Z",
+        labels: {
+          alertname: "AirPurifierFilterDue",
+          category: "household",
+          severity: "warning",
+          service: "air-purifier",
+        },
+        status: { inhibitedBy: [], silencedBy: [], state: "active" },
+      }),
+      start,
+    );
+
+    const snapRows = await prisma.homeAssistantOutbox.findMany({
+      where: { notificationId: "hub-house-fp-snap-chore" },
+      orderBy: { createdAtNs: "asc" },
+    });
+    expect(snapRows).toHaveLength(2);
+    expect(snapRows[0]).toMatchObject({
+      action: "notify",
+      message: "Replace HEPA filter soon",
+      sentAtNs: null,
+    });
+    expect(snapRows[0]?.canceledAtNs).not.toBeNull();
+    expect(snapRows[1]).toMatchObject({
+      action: "dismiss",
+      canceledAtNs: null,
+    });
+  });
+});
+
+describe("SQLite Home Assistant outbox concurrent resolution ordering", () => {
+  it("holds dismiss until an in-flight notify settles and cancels failed notify on a resolved occurrence", async () => {
+    const labels = {
+      alertname: "RoborockFilterDue",
+      category: "household",
+      severity: "warning",
+      service: "roborock",
+    };
+    await repository.ingestWebhook(
+      input(
+        customWebhook({
+          fingerprint: "fp-inflight-chore",
+          status: "firing",
+          labels,
+          annotations: { summary: "Filter replacement due" },
+        }),
+        "2026-08-09T08:00:01Z",
+        false,
+      ),
+    );
+
+    const notifyClaims =
+      await repository.claimPendingHomeAssistantNotifications(
+        nanoseconds("2026-08-09T08:00:05Z"),
+        10,
+        nanoseconds("2026-08-09T08:00:05Z"),
+      );
+    expect(notifyClaims).toHaveLength(1);
+    const notifyClaim = notifyClaims[0];
+    if (notifyClaim === undefined) throw new Error("expected notify claim");
+
+    // Occurrence resolves while notifyClaim is still in-flight
+    await repository.ingestWebhook(
+      input(
+        customWebhook({
+          fingerprint: "fp-inflight-chore",
+          status: "resolved",
+          labels,
+          annotations: { summary: "Filter replacement due" },
+        }),
+        "2026-08-09T08:00:10Z",
+        false,
+      ),
+    );
+
+    // Dismiss must NOT race ahead while notify is still claimed
+    const duringInflight =
+      await repository.claimPendingHomeAssistantNotifications(
+        nanoseconds("2026-08-09T08:00:12Z"),
+        10,
+        nanoseconds("2026-08-09T08:00:12Z"),
+      );
+    expect(duringInflight).toEqual([]);
+
+    // In-flight notify fails -> canceled because occurrence is already resolved
+    await repository.markHomeAssistantFailed({
+      id: notifyClaim.id,
+      sendClaimId: notifyClaim.sendClaimId,
+      failedAtNs: nanoseconds("2026-08-09T08:00:15Z"),
+      nextAttemptAtNs: nanoseconds("2026-08-09T08:00:45Z"),
+      error: "timeout",
+    });
+
+    // Even past nextAttemptAtNs, notify is never retried and dismiss now claims cleanly
+    const afterFailure =
+      await repository.claimPendingHomeAssistantNotifications(
+        nanoseconds("2026-08-09T08:01:00Z"),
+        10,
+        nanoseconds("2026-08-09T08:01:00Z"),
+      );
+    expect(afterFailure).toHaveLength(1);
+    expect(afterFailure[0]?.notification).toEqual({
+      action: "dismiss",
+      notificationId: "hub-house-fp-inflight-chore",
+    });
+  });
 });

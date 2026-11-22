@@ -3,6 +3,7 @@ type MetricName =
   | "alert_dashboard_reconciliation_total"
   | "alert_dashboard_preview_failure_total"
   | "alert_dashboard_email_attempt_total"
+  | "alert_dashboard_homeassistant_attempt_total"
   | "alert_dashboard_ops_ingest_total"
   | "alert_dashboard_ops_digest_total"
   | "feature_flag_evaluations_total"

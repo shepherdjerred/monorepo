@@ -1,5 +1,11 @@
 import { parseArgs } from "node:util";
-import { getAlert, listAlerts, type Alert } from "#lib/alerts.ts";
+import {
+  AlertScopeSchema,
+  SuppressionStateSchema,
+  getAlert,
+  listAlerts,
+  type Alert,
+} from "#lib/alerts.ts";
 
 function printAlert(alert: Alert): void {
   const namespace = alert.namespace === null ? "" : ` [${alert.namespace}]`;
@@ -12,10 +18,18 @@ function printAlert(alert: Alert): void {
 }
 
 async function handleList(args: string[]): Promise<void> {
+  if (args.includes("--help") || args.includes("-h")) {
+    console.log(
+      "toolkit alerts list [--scope <ops|house|all>] [--suppression <none|silenced|inhibited|unprocessed>] [--state <open|resolved>] [--severity <critical|warning|info|unknown>] [--namespace <ns>] [--alertname <name>] [--search <q>] [--opened-from <iso>] [--opened-to <iso>] [--resolved-from <iso>] [--resolved-to <iso>] [--limit <n>] [--json]",
+    );
+    return;
+  }
   const { values } = parseArgs({
     args,
     options: {
       json: { type: "boolean", default: false },
+      scope: { type: "string" },
+      suppression: { type: "string" },
       state: { type: "string" },
       severity: { type: "string" },
       namespace: { type: "string" },
@@ -29,8 +43,18 @@ async function handleList(args: string[]): Promise<void> {
     },
     allowPositionals: false,
   });
+  const scope =
+    values.scope === undefined
+      ? undefined
+      : AlertScopeSchema.parse(values.scope);
+  const suppressionState =
+    values.suppression === undefined
+      ? undefined
+      : SuppressionStateSchema.parse(values.suppression);
   const query = Object.fromEntries(
     Object.entries({
+      scope,
+      suppressionState,
       lifecycleState: values.state,
       severity: values.severity,
       namespace: values.namespace,
@@ -77,7 +101,7 @@ export async function handleAlertsCommand(
     subcommand === "-h"
   ) {
     console.log(
-      "toolkit alerts list [filters] [--json]\ntoolkit alerts show <occurrence-id> [--json]\n\nEnvironment: ALERT_DASHBOARD_URL (defaults to Hub at https://hub.tailnet-1a49.ts.net)",
+      "toolkit alerts list [--scope <ops|house|all>] [--suppression <none|silenced|inhibited|unprocessed>] [filters] [--json]\ntoolkit alerts show <occurrence-id> [--json]\n\nEnvironment: ALERT_DASHBOARD_URL (defaults to Hub at https://hub.tailnet-1a49.ts.net)",
     );
     return;
   }

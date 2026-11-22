@@ -82,12 +82,12 @@ async function searchAlerts(
   signal: AbortSignal,
 ): Promise<ModuleSearchResult[]> {
   const { items } = await trpcClient.alerts.list.query(
-    { search: query, limit: ALERT_LIMIT },
+    { search: query, scope: "all", limit: ALERT_LIMIT },
     { signal },
   );
   return items.map((alert) => ({
     id: `alert:${alert.id}`,
-    group: "Alerts",
+    group: alert.labels["category"] === "household" ? "House" : "Alerts",
     label: alert.summary,
     detail: `${alert.alertname} · ${alert.lifecycleState}`,
     to: `/alerts/${alert.id}`,

@@ -29,6 +29,7 @@ const notes: ClientModule = {
       group: "Library",
       icon: GaugeIcon,
       path: "archive",
+      keywords: ["vault", "history"],
     },
   ],
   commands: [
@@ -72,8 +73,11 @@ describe("palette sections", () => {
     ]);
   });
 
-  it("matches pages by label and commands by label or keyword", () => {
+  it("matches pages by label or nav keywords and commands by label or keyword", () => {
     expect(labels("ARCH", [])).toEqual([
+      { heading: "Pages", labels: ["Go to Notes archive"] },
+    ]);
+    expect(labels("vault", [])).toEqual([
       { heading: "Pages", labels: ["Go to Notes archive"] },
     ]);
     expect(labels("create", [])).toEqual([

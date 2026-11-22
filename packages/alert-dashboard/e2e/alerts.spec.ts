@@ -19,7 +19,9 @@ test("URL-backed filters survive navigation, history, and reload", async ({
   await expect(page.getByRole("link", { name: /DiskFull/u })).toBeVisible();
   await page.getByLabel("Severity").selectOption("critical");
   await expect(page).toHaveURL(/severity=critical/u);
-  await expect(page.getByText("No alerts match these filters.")).toBeVisible();
+  await expect(
+    page.getByText("All clear — no operational alerts match these filters."),
+  ).toBeVisible();
   await page.getByRole("link", { name: "History" }).click();
   await expect(page).toHaveTitle("History · Hub");
   await page.goBack();
@@ -208,4 +210,86 @@ test("a failed refresh keeps the alerts on screen behind a stale notice", async 
   // The point of `degraded`: the data is still there.
   await expect(page.getByRole("link", { name: /DiskFull/u })).toBeVisible();
   await expect(page.getByText("Could not load alerts.")).toBeHidden();
+});
+
+test("separates Ops alerts (/alerts) from House chores (/house) and scopes History", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("list", { name: "At a glance" })
+    .getByRole("link", { name: /House/u })
+    .click();
+  await expect(page).toHaveURL(/\/house$/u);
+  await expect(page).toHaveTitle("House · Hub");
+  await expect(page.getByText("Home & pet care")).toBeVisible();
+
+  const houseSummary = page.getByRole("region", { name: "House summary" });
+  await expect(houseSummary.locator(".summary-card")).toHaveText([
+    "Open chores3",
+    "Urgent1",
+    "Routine2",
+    "Silenced0",
+  ]);
+
+  const houseTable = page.getByRole("table");
+  await expect(houseTable.getByRole("columnheader")).toHaveText([
+    "Priority",
+    "Chore / Item",
+    "Device / Area",
+    "State",
+    "Opened",
+  ]);
+  await expect(
+    houseTable.getByRole("link", { name: /Litter-Robot waste drawer/u }),
+  ).toBeVisible();
+  await expect(houseTable).toContainText("Litter-Robot 4");
+  await expect(houseTable).toContainText("Downstairs Roborock");
+  await expect(houseTable).toContainText("Dockstream Fountain");
+  await expect(houseTable).not.toContainText("DiskFull");
+
+  // Ops Active (/alerts) excludes House chores and defaults Suppression to Active (unsuppressed).
+  await page.goto("/alerts");
+  await expect(page.getByLabel("Suppression")).toHaveValue("");
+  await expect(page.getByRole("link", { name: /DiskFull/u })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /RoborockConsumableDue/u }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: /LitterRobotWasteDrawerNearlyFull/u }),
+  ).toHaveCount(0);
+
+  // Chore history link opens /history?scope=house with aria-current="page" on House.
+  await page.goto("/house");
+  await page.getByRole("link", { name: "Chore history" }).click();
+  await expect(page).toHaveURL(/\/history\?scope=house$/u);
+  const scopeNav = page.getByRole("navigation", { name: "History scope" });
+  await expect(scopeNav.getByRole("link", { name: "House" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(scopeNav.getByRole("link", { name: "Ops" })).not.toHaveAttribute(
+    "aria-current",
+  );
+  await expect(page.locator(".timeline article")).toHaveCount(3);
+  await expect(
+    page.getByRole("link", { name: "RoborockConsumableDue" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "DiskFull" })).toHaveCount(0);
+
+  await scopeNav.getByRole("link", { name: "All" }).click();
+  await expect(page).toHaveURL(/\/history\?scope=all$/u);
+  await expect(scopeNav.getByRole("link", { name: "All" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(page.locator(".timeline article")).toHaveCount(4);
+
+  await scopeNav.getByRole("link", { name: "Ops" }).click();
+  await expect(page).toHaveURL(/\/history\?scope=ops$/u);
+  await expect(scopeNav.getByRole("link", { name: "Ops" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(page.locator(".timeline article")).toHaveCount(1);
 });

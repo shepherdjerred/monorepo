@@ -22,6 +22,7 @@ export type OccurrenceRow = {
   missingSinceNs: bigint | null;
   absentSnapshots: number;
   firstNotifiedAtNs: bigint | null;
+  haNotifiedAtNs?: bigint | null;
   lifecycleState: string;
   suppressionState: string;
   resolutionSource: string | null;

@@ -33,6 +33,8 @@ export const SeveritySchema = z.enum([
   "info",
   "unknown",
 ]);
+export const AlertScopeSchema = z.enum(["ops", "house", "all"]);
+export type AlertScope = z.infer<typeof AlertScopeSchema>;
 export const ResolutionSourceSchema = z.enum(["webhook", "reconciled"]);
 export const AlertmanagerGeneratorUrlSchema = z.union([
   z.literal(""),
@@ -82,6 +84,7 @@ export const AlertmanagerSnapshotAlertSchema = z.object({
   updatedAt: InstantTextSchema.optional(),
   generatorURL: AlertmanagerGeneratorUrlSchema.optional(),
   labels: LabelMapSchema,
+  receivers: z.array(z.object({ name: z.string() })).optional(),
   status: z.object({
     inhibitedBy: z.array(z.string()),
     silencedBy: z.array(z.string()),
@@ -144,6 +147,7 @@ export const AlertDetailSchema = AlertViewSchema.extend({
 export const AlertListInputSchema = z.object({
   cursor: AlertOccurrenceIdSchema.optional(),
   limit: z.number().int().min(1).max(100).default(50),
+  scope: AlertScopeSchema.optional(),
   lifecycleState: LifecycleStateSchema.optional(),
   suppressionState: SuppressionStateSchema.optional(),
   severity: SeveritySchema.optional(),
@@ -160,12 +164,17 @@ export const AlertListInputSchema = z.object({
 export const EventListInputSchema = z.object({
   cursor: AlertEventIdSchema.optional(),
   limit: z.number().int().min(1).max(100).default(50),
+  scope: AlertScopeSchema.optional(),
   type: AlertEventTypeSchema.optional(),
   from: InstantTextSchema.optional(),
   to: InstantTextSchema.optional(),
   severity: SeveritySchema.optional(),
   alertname: z.string().min(1).optional(),
   namespace: z.string().min(1).optional(),
+});
+
+export const SummaryInputSchema = z.object({
+  scope: AlertScopeSchema.optional(),
 });
 
 export const AlertListResponseSchema = z.object({
@@ -232,6 +241,7 @@ export type AlertListInput = z.infer<typeof AlertListInputSchema>;
 export type EventListInput = z.infer<typeof EventListInputSchema>;
 export type AlertListResponse = z.infer<typeof AlertListResponseSchema>;
 export type EventListResponse = z.infer<typeof EventListResponseSchema>;
+export type SummaryInput = z.infer<typeof SummaryInputSchema>;
 export type Summary = z.infer<typeof SummarySchema>;
 export type SystemStatus = z.infer<typeof SystemStatusSchema>;
 export type PreviewInput = z.infer<typeof PreviewInputSchema>;

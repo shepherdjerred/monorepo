@@ -18,8 +18,13 @@ import {
   type AlertDetailInput,
   type AlertListInput,
   type EventListInput,
+  type SummaryInput,
 } from "#shared/schema";
 import { fixedClock, systemClock } from "#shared/time";
+import {
+  FIXTURE_HOUSE_ALERTS,
+  matchesAlertScope,
+} from "#test-fixtures/alert-ledger";
 import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
 import { volumeOpsIngest } from "#test-fixtures/ops-snapshot-volume";
 import { createOpsFixture } from "#test-fixtures/ops-services";
@@ -128,6 +133,40 @@ const alertPaginationCursor = paginatedAlerts[99]?.id;
 if (alertPaginationCursor === undefined)
   throw new Error("fixture alert pagination cursor is missing");
 
+const fixtureAlerts: readonly AlertDetail[] = [alert, ...FIXTURE_HOUSE_ALERTS];
+
+function matchesAlertQuery(item: AlertDetail, input: AlertListInput): boolean {
+  if (!matchesAlertScope(item.labels, input.scope)) return false;
+  if (
+    input.lifecycleState !== undefined &&
+    item.lifecycleState !== input.lifecycleState
+  )
+    return false;
+  if (
+    input.suppressionState !== undefined &&
+    item.suppressionState !== input.suppressionState
+  )
+    return false;
+  if (input.severity !== undefined && item.severity !== input.severity)
+    return false;
+  if (input.alertname !== undefined && item.alertname !== input.alertname)
+    return false;
+  if (input.namespace !== undefined && item.namespace !== input.namespace)
+    return false;
+  if (input.search !== undefined) {
+    const needle = input.search.toLowerCase();
+    const haystack = [
+      item.alertname,
+      item.summary,
+      item.fingerprint,
+      item.namespace ?? "",
+    ];
+    if (!haystack.some((field) => field.toLowerCase().includes(needle)))
+      return false;
+  }
+  return true;
+}
+
 class FixtureRepository implements AlertLedgerRepository {
   ingestWebhook = () =>
     Promise.resolve({
@@ -147,27 +186,29 @@ class FixtureRepository implements AlertLedgerRepository {
             ? input.cursor === undefined
               ? paginatedAlerts.slice(0, 100)
               : paginatedAlerts.slice(100)
-            : input.severity === undefined || input.severity === alert.severity
-              ? [alert]
-              : [],
+            : fixtureAlerts.filter((item) => matchesAlertQuery(item, input)),
         nextCursor:
           input.search === "PaginationFixture" && input.cursor === undefined
             ? alertPaginationCursor
             : null,
       }),
     );
-  getAlert = (input: AlertDetailInput): Promise<AlertDetail | null> =>
-    Promise.resolve(
-      input.id === alert.id
-        ? input.cursor === undefined
+  getAlert = (input: AlertDetailInput): Promise<AlertDetail | null> => {
+    if (input.id === alert.id) {
+      return Promise.resolve(
+        input.cursor === undefined
           ? alert
           : AlertDetailSchema.parse({
               ...alert,
               deliveries: [olderDelivery],
               deliveriesNextCursor: null,
-            })
-        : null,
+            }),
+      );
+    }
+    return Promise.resolve(
+      fixtureAlerts.find((item) => item.id === input.id) ?? null,
     );
+  };
   listEvents = (input: EventListInput) => {
     if (input.alertname === "PaginationFixture") {
       const firstPage = input.cursor === undefined;
@@ -180,30 +221,73 @@ class FixtureRepository implements AlertLedgerRepository {
         }),
       );
     }
-    const event = alert.events[0];
-    if (event === undefined)
-      throw new Error("fixture lifecycle event is missing");
+    const items = fixtureAlerts
+      .filter(
+        (candidate) =>
+          matchesAlertScope(candidate.labels, input.scope) &&
+          (input.severity === undefined ||
+            candidate.severity === input.severity) &&
+          (input.alertname === undefined ||
+            candidate.alertname === input.alertname) &&
+          (input.namespace === undefined ||
+            candidate.namespace === input.namespace),
+      )
+      .flatMap((candidate) =>
+        candidate.events
+          .filter(
+            (event) => input.type === undefined || event.type === input.type,
+          )
+          .map((event) => ({ ...event, alert: candidate })),
+      );
     return Promise.resolve(
       EventListResponseSchema.parse({
-        items: [{ ...event, alert }],
+        items,
         nextCursor: null,
       }),
     );
   };
-  summary = () =>
-    Promise.resolve(
+  summary = (input?: SummaryInput) => {
+    const scoped = fixtureAlerts.filter((candidate) =>
+      matchesAlertScope(candidate.labels, input?.scope),
+    );
+    const activeOpen = scoped.filter(
+      (candidate) =>
+        candidate.lifecycleState === "open" &&
+        candidate.suppressionState === "none",
+    );
+    return Promise.resolve(
       SummarySchema.parse({
-        open: 1,
-        resolved: 0,
-        critical: 0,
-        warning: 1,
-        info: 0,
-        silenced: 0,
-        inhibited: 0,
-        unprocessed: 0,
+        open: activeOpen.length,
+        resolved: scoped.filter(
+          (candidate) => candidate.lifecycleState === "resolved",
+        ).length,
+        critical: activeOpen.filter(
+          (candidate) => candidate.severity === "critical",
+        ).length,
+        warning: activeOpen.filter(
+          (candidate) => candidate.severity === "warning",
+        ).length,
+        info: activeOpen.filter((candidate) => candidate.severity === "info")
+          .length,
+        silenced: scoped.filter(
+          (candidate) =>
+            candidate.lifecycleState === "open" &&
+            candidate.suppressionState === "silenced",
+        ).length,
+        inhibited: scoped.filter(
+          (candidate) =>
+            candidate.lifecycleState === "open" &&
+            candidate.suppressionState === "inhibited",
+        ).length,
+        unprocessed: scoped.filter(
+          (candidate) =>
+            candidate.lifecycleState === "open" &&
+            candidate.suppressionState === "unprocessed",
+        ).length,
         lastReconciledAt: "2026-08-08T18:05:00Z",
       }),
     );
+  };
   checkDatabase = () => Promise.resolve();
   systemStatus = () =>
     Promise.resolve(
@@ -223,6 +307,9 @@ class FixtureRepository implements AlertLedgerRepository {
   claimPendingEmails = () => Promise.resolve([]);
   markEmailSent = () => Promise.resolve();
   markEmailFailed = () => Promise.resolve();
+  claimPendingHomeAssistantNotifications = () => Promise.resolve([]);
+  markHomeAssistantSent = () => Promise.resolve();
+  markHomeAssistantFailed = () => Promise.resolve();
   purgeExpiredRecords = () =>
     Promise.resolve({ webhookDeliveries: 0, snapshotRuns: 0 });
   disconnect = () => Promise.resolve();

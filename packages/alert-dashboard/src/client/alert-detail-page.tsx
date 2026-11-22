@@ -98,12 +98,13 @@ function AlertDetailContent({
         const deliveries = loadedAlert.pages.flatMap((page) => page.deliveries);
         const dashboardUrl = value.annotations["dashboard_url"];
         const runbookUrl = value.annotations["runbook_url"];
+        const isHouse = value.labels["category"] === "household";
         return (
           <main>
             <title>{`${value.alertname} · Hub`}</title>
             <StaleNotice errors={meta.errors} />
-            <Link className="back-link" to="/alerts">
-              <ArrowLeftIcon /> Active alerts
+            <Link className="back-link" to={isHouse ? "/house" : "/alerts"}>
+              <ArrowLeftIcon /> {isHouse ? "House" : "Active alerts"}
             </Link>
             <div className="detail-heading">
               <div>

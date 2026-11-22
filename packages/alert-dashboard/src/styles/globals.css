@@ -456,6 +456,12 @@ p {
   gap: 2rem;
   margin-bottom: 28px;
 }
+.heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
 .button {
   display: inline-flex;
   align-items: center;
@@ -468,6 +474,7 @@ p {
   background: var(--control-bg);
   color: var(--ink);
   font-weight: 650;
+  text-decoration: none;
   cursor: pointer;
 }
 .button:hover {
@@ -498,6 +505,9 @@ select {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 18px;
+}
+.summary-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .summary-card,
 .health-card {
@@ -560,6 +570,38 @@ select {
 .history-filters {
   grid-template-columns: repeat(6, minmax(130px, 1fr));
 }
+.scope-switch {
+  display: flex;
+  gap: 4px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel-2);
+  overflow-x: auto;
+}
+.scope-switch a {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+.scope-switch a:hover {
+  color: var(--ink);
+}
+.scope-switch a[aria-current="page"] {
+  color: var(--ink);
+}
+.scope-switch a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  border-block-end: 3px solid var(--accent);
+}
 .table-wrap {
   overflow-x: auto;
 }
@@ -599,6 +641,7 @@ tbody tr:hover {
   color: var(--muted);
 }
 .severity,
+.priority,
 .state,
 .suppression,
 .preview-status {
@@ -610,6 +653,14 @@ tbody tr:hover {
     700 0.65rem "Berkeley Mono",
     monospace;
   text-transform: uppercase;
+}
+.priority-urgent {
+  color: var(--sev-warning-ink);
+  background: var(--sev-warning-bg);
+}
+.priority-chore {
+  color: var(--sev-info-ink);
+  background: var(--sev-info-bg);
 }
 .severity-critical {
   color: var(--sev-error-ink);
@@ -908,7 +959,7 @@ tbody tr:hover {
   }
   .table-wrap td {
     display: grid;
-    grid-template-columns: 76px minmax(0, 1fr);
+    grid-template-columns: 92px minmax(0, 1fr);
     gap: 10px;
     align-items: start;
     padding: 8px 0;
@@ -2234,7 +2285,7 @@ tbody tr:hover {
   display: grid;
 }
 .stat-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: 14px;
 }
 .stat-card {
@@ -2385,7 +2436,12 @@ tbody tr:hover {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-/* Too narrow for three tiles to hold a label beside a badge: each tile
+@container content (max-width: 860px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* Too narrow for tiles to hold a label beside a badge: each tile
    becomes one row that leads with its number. */
 @container content (max-width: 720px) {
   .stat-grid {

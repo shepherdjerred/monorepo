@@ -883,7 +883,9 @@ PinchTab credentials or config.
 
 ### Operations and local history
 
-- `toolkit alerts list|show` queries the durable alert occurrence ledger.
+- `toolkit alerts list|show` queries the durable alert occurrence ledger,
+  supporting `--scope <ops|house|all>` and
+  `--suppression <none|silenced|inhibited|unprocessed>` on `list`.
 - `toolkit ops summary [--json] [--needs-me] [--section ID]` reads the homelab
   ops snapshot, applies the staleness policy, and prints overall severity, one
   line per section, what is waiting on you, and the top attention signals with

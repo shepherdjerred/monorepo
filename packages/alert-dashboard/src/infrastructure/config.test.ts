@@ -102,4 +102,20 @@ describe("environment boundary", () => {
       fetchSpy.mockRestore();
     }
   });
+
+  test("accepts optional Home Assistant URL and token", () => {
+    const unconfigured = readConfig(base);
+    expect(unconfigured.HOMEASSISTANT_URL).toBeUndefined();
+    expect(unconfigured.HOMEASSISTANT_TOKEN).toBeUndefined();
+
+    const configured = readConfig({
+      ...base,
+      HOMEASSISTANT_URL: "http://homeassistant.home.svc:8123",
+      HOMEASSISTANT_TOKEN: "ha-token",
+    });
+    expect(configured.HOMEASSISTANT_URL).toBe(
+      "http://homeassistant.home.svc:8123",
+    );
+    expect(configured.HOMEASSISTANT_TOKEN).toBe("ha-token");
+  });
 });

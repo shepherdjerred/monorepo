@@ -15,6 +15,7 @@ import {
   initFeatureFlagClient,
 } from "#infrastructure/digest-flag";
 import { GrafanaPreviewClient } from "#infrastructure/grafana-preview-client";
+import { HomeAssistantClient } from "#infrastructure/homeassistant-client";
 import {
   initializeTracing,
   shutdownTracing,
@@ -121,10 +122,22 @@ function incidentPostalClient(): PostalClient {
   return postal;
 }
 
+function configuredHomeAssistant(): HomeAssistantClient | null {
+  const { HOMEASSISTANT_URL, HOMEASSISTANT_TOKEN } = config;
+  if (HOMEASSISTANT_URL === undefined || HOMEASSISTANT_TOKEN === undefined) {
+    return null;
+  }
+  return new HomeAssistantClient({
+    baseUrl: HOMEASSISTANT_URL,
+    token: HOMEASSISTANT_TOKEN,
+  });
+}
+
 const service = new AlertService({
   repository,
   alertmanager,
   postal: config.EMAIL_ENABLED ? incidentPostalClient() : disabledPostal,
+  homeAssistant: configuredHomeAssistant(),
   previews,
   clock: systemClock,
   emailEnabled: config.EMAIL_ENABLED,
@@ -149,6 +162,27 @@ const digests = new DigestService({
   clock: systemClock,
 });
 const changes = new ChangeBus();
+const runHomeAssistantWorker = serializedWorker(async () => {
+  try {
+    const processed = await service.drainHomeAssistantOutbox();
+    if (processed > 0) {
+      metrics.increment(
+        "alert_dashboard_homeassistant_attempt_total",
+        {},
+        processed,
+      );
+    }
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        level: "error",
+        message: "homeassistant_worker_failed",
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
+  }
+});
+
 const app = createApp({
   service,
   changes,
@@ -158,6 +192,9 @@ const app = createApp({
   digests,
   opsIngestToken: config.OPS_INGEST_TOKEN,
   promotionStatusUrl: config.PROMOTION_STATUS_URL,
+  onWebhookIngested: () => {
+    void runHomeAssistantWorker();
+  },
   modules: serverModules,
 });
 const server = Bun.serve({
@@ -178,6 +215,7 @@ console.warn(
 async function reconcile(): Promise<void> {
   try {
     await reconcileAndPublish(service, changes, metrics);
+    await runHomeAssistantWorker();
   } catch (error) {
     console.error(
       JSON.stringify({
@@ -246,6 +284,7 @@ async function runRetentionWorker(): Promise<void> {
 }
 
 void runReconciliationWorker();
+void runHomeAssistantWorker();
 const reconciliationTimer = setInterval(
   () => void runReconciliationWorker(),
   15_000,

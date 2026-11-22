@@ -253,15 +253,20 @@ export class PrismaOpsRepository implements OpsRepository {
     sinceNs: bigint;
     untilNs: bigint;
   }): Promise<IncidentWindowStats> {
+    const opsOnly = {
+      labelEntries: { none: { key: "category", value: "household" } },
+    };
     const [opened, resolved] = await Promise.all([
       this.#prisma.alertOccurrence.count({
         where: {
+          ...opsOnly,
           severity: { in: INCIDENT_SEVERITIES },
           openedAtNs: nsRange(input.sinceNs, input.untilNs),
         },
       }),
       this.#prisma.alertOccurrence.findMany({
         where: {
+          ...opsOnly,
           severity: { in: INCIDENT_SEVERITIES },
           resolvedAtNs: nsRange(input.sinceNs, input.untilNs),
         },

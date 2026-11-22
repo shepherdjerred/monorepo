@@ -4,6 +4,7 @@ import { z } from "zod";
 import type {
   AlertLedgerRepository,
   AlertmanagerPort,
+  HomeAssistantPort,
   PostalPort,
   PreviewPort,
   RetentionResult,
@@ -15,6 +16,7 @@ import {
   EventListInputSchema,
   JsonObjectSchema,
   PreviewInputSchema,
+  SummaryInputSchema,
   type AlertDetail,
   type AlertDetailInput,
   type AlertListInput,
@@ -24,6 +26,7 @@ import {
   type PreviewInput,
   type Previews,
   type Summary,
+  type SummaryInput,
   type SystemStatus,
 } from "#shared/schema";
 import { addDuration, type Clock } from "#shared/time";
@@ -55,6 +58,7 @@ export type AlertServiceOptions = {
   repository: AlertLedgerRepository;
   alertmanager: AlertmanagerPort;
   postal: PostalPort;
+  homeAssistant?: HomeAssistantPort | null;
   previews: PreviewPort;
   clock: Clock;
   emailEnabled: boolean;
@@ -64,17 +68,39 @@ export class AlertService {
   readonly #repository: AlertLedgerRepository;
   readonly #alertmanager: AlertmanagerPort;
   readonly #postal: PostalPort;
+  readonly #homeAssistant: HomeAssistantPort | null;
   readonly #previews: PreviewPort;
   readonly #clock: Clock;
   readonly #emailEnabled: boolean;
+  #haDrainTail: Promise<void> = Promise.resolve();
 
   constructor(options: AlertServiceOptions) {
     this.#repository = options.repository;
     this.#alertmanager = options.alertmanager;
     this.#postal = options.postal;
+    this.#homeAssistant = options.homeAssistant ?? null;
     this.#previews = options.previews;
     this.#clock = options.clock;
     this.#emailEnabled = options.emailEnabled;
+  }
+
+  #triggerHomeAssistantDrain(): void {
+    if (this.#homeAssistant === null) return;
+    void this.#drainHomeAssistantInBackground();
+  }
+
+  async #drainHomeAssistantInBackground(): Promise<void> {
+    try {
+      await this.drainHomeAssistantOutbox();
+    } catch (error) {
+      console.error(
+        JSON.stringify({
+          level: "error",
+          message: "homeassistant_outbox_drain_failed",
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      );
+    }
   }
 
   async ingestWebhook(rawBody: string): Promise<{
@@ -88,7 +114,7 @@ export class AlertService {
     const hasher = new Bun.CryptoHasher("sha256");
     hasher.update(rawBody);
     const receivedAtNs = this.#clock.now().epochNanoseconds;
-    return this.#repository.ingestWebhook({
+    const result = await this.#repository.ingestWebhook({
       payload,
       rawPayload,
       payloadHash: hasher.digest("hex"),
@@ -96,6 +122,8 @@ export class AlertService {
       rawExpiresAtNs: addDuration(receivedAtNs, RAW_RETENTION),
       emailEnabled: this.#emailEnabled,
     });
+    this.#triggerHomeAssistantDrain();
+    return result;
   }
 
   async reconcile(): Promise<{
@@ -107,12 +135,14 @@ export class AlertService {
     try {
       const alerts = await this.#alertmanager.activeAlerts();
       const completedAtNs = this.#clock.now().epochNanoseconds;
-      return await this.#repository.reconcileSnapshot({
+      const result = await this.#repository.reconcileSnapshot({
         alerts,
         startedAtNs,
         completedAtNs,
         missingGraceNs: SNAPSHOT_MISSING_GRACE_NS,
       });
+      this.#triggerHomeAssistantDrain();
+      return result;
     } catch (error) {
       const completedAtNs = this.#clock.now().epochNanoseconds;
       const message = error instanceof Error ? error.message : String(error);
@@ -137,8 +167,10 @@ export class AlertService {
     return this.#repository.listEvents(EventListInputSchema.parse(input));
   }
 
-  summary(): Promise<Summary> {
-    return this.#repository.summary();
+  summary(input?: SummaryInput): Promise<Summary> {
+    return this.#repository.summary(
+      input === undefined ? undefined : SummaryInputSchema.parse(input),
+    );
   }
 
   async databaseReady(): Promise<boolean> {
@@ -201,6 +233,58 @@ export class AlertService {
       }
     }
     return messages.length;
+  }
+
+  async drainHomeAssistantOutbox(limit = 10): Promise<number> {
+    if (this.#homeAssistant === null) return 0;
+    const previous = this.#haDrainTail;
+    let release: (() => void) | undefined;
+    this.#haDrainTail = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous;
+    try {
+      return await this.#drainHomeAssistantBatch(limit);
+    } finally {
+      release?.();
+    }
+  }
+
+  async #drainHomeAssistantBatch(limit: number): Promise<number> {
+    if (this.#homeAssistant === null) return 0;
+    const nowNs = this.#clock.now().epochNanoseconds;
+    const items = await this.#repository.claimPendingHomeAssistantNotifications(
+      nowNs,
+      limit,
+      nowNs,
+    );
+    for (const item of items) {
+      try {
+        await this.#homeAssistant.send(item.notification);
+        await this.#repository.markHomeAssistantSent({
+          id: item.id,
+          sendClaimId: item.sendClaimId,
+          sentAtNs: this.#clock.now().epochNanoseconds,
+        });
+      } catch (error) {
+        const failedAtNs = this.#clock.now().epochNanoseconds;
+        const exponent = Math.min(item.attemptCount, 16);
+        const delaySeconds = Math.min(
+          30 * 2 ** exponent,
+          OUTBOX_MAX_BACKOFF_SECONDS,
+        );
+        await this.#repository.markHomeAssistantFailed({
+          id: item.id,
+          sendClaimId: item.sendClaimId,
+          failedAtNs,
+          nextAttemptAtNs: addDuration(failedAtNs, {
+            seconds: delaySeconds,
+          }),
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+    return items.length;
   }
 
   purgeExpiredRecords(): Promise<RetentionResult> {

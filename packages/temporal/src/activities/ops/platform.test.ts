@@ -41,7 +41,7 @@ function alert(
 }
 
 describe("alerts", () => {
-  test("groups only canonical workload identity and keeps active/suppressed distinct", () => {
+  test("groups only canonical workload identity and drops suppressed alerts", () => {
     const base = {
       alertname: "WorkflowFailed",
       namespace: "temporal",
@@ -104,18 +104,13 @@ describe("alerts", () => {
       [],
       context,
     );
-    expect(result.signals).toHaveLength(4);
+    expect(result.signals).toHaveLength(3);
     expect(result.signals[0]).toMatchObject({
       title: "WorkflowFailed: runBackup (×2)",
       attributes: { count: 2, temporalNamespace: "prod", taskQueue: "infra" },
     });
-    expect(
-      result.signals.find(
-        (signal) => signal.attributes?.["state"] === "suppressed",
-      )?.needsMe,
-    ).toBe(false);
-    expect(result.metrics[0]?.value).toBe(5);
-    expect(new Set(result.signals.map((signal) => signal.id)).size).toBe(4);
+    expect(result.metrics[0]?.value).toBe(4);
+    expect(new Set(result.signals.map((signal) => signal.id)).size).toBe(3);
   });
   test.each([
     ["critical", "error"],
@@ -126,18 +121,27 @@ describe("alerts", () => {
     expect(alertSeverity(alert({ severity: label }, 1))).toBe(expected);
   });
 
-  test("needsMe after 30 minutes, drops the watchdog, maps the service", () => {
+  test("needsMe after 30 minutes, drops control/info/null-receiver alerts, maps the service", () => {
     const result = mapAlerts(
       [
         alert({ alertname: "Watchdog", severity: "none" }, 600),
-        alert(
-          {
-            alertname: "BirmelDown",
-            severity: "critical",
-            namespace: "birmel",
-          },
-          45,
-        ),
+        alert({ alertname: "InfoInhibitor", severity: "none" }, 600),
+        alert({ alertname: "NoisyInfo", severity: "info" }, 60),
+        {
+          ...alert({ alertname: "NullRouted", severity: "warning" }, 60),
+          receivers: [{ name: "null" }],
+        },
+        {
+          ...alert(
+            {
+              alertname: "BirmelDown",
+              severity: "critical",
+              namespace: "birmel",
+            },
+            45,
+          ),
+          receivers: [{ name: "null" }, { name: "alerts" }],
+        },
         alert({ alertname: "DiskFilling", severity: "warning" }, 5),
       ],
       [],
@@ -153,11 +157,59 @@ describe("alerts", () => {
       ["alerts.firing", 2, "error"],
       ["alerts.critical", 1, "error"],
       ["alerts.warning", 1, "warning"],
+      ["house.chores.open", 0, "ok"],
     ]);
     expect(result.changes).toEqual([]);
     for (const signal of result.signals) {
       expect(() => SignalSchema.parse(signal)).not.toThrow();
     }
+  });
+});
+
+describe("alerts household split and grouping", () => {
+  test("splits household chores out of Ops signals and counts them at ok severity", () => {
+    const result = mapAlerts(
+      [
+        alert(
+          {
+            alertname: "RoborockConsumableDue",
+            category: "household",
+            severity: "warning",
+            service: "roborock",
+          },
+          120,
+        ),
+        alert(
+          {
+            alertname: "LitterRobotWasteDrawerNearlyFull",
+            category: "household",
+            severity: "critical",
+            service: "pet-care",
+          },
+          90,
+        ),
+        {
+          ...alert(
+            {
+              alertname: "SilencedChore",
+              category: "household",
+              severity: "warning",
+            },
+            30,
+          ),
+          status: { state: "suppressed", silencedBy: ["s1"], inhibitedBy: [] },
+        },
+      ],
+      [],
+      context,
+    );
+    expect(result.signals).toEqual([]);
+    expect(result.metrics.map((m) => [m.id, m.value, m.severity])).toEqual([
+      ["alerts.firing", 0, "ok"],
+      ["alerts.critical", 0, "ok"],
+      ["alerts.warning", 0, "ok"],
+      ["house.chores.open", 2, "ok"],
+    ]);
   });
 
   test("groups repeated alerts by name and namespace", () => {
@@ -234,28 +286,53 @@ describe("alerts.firing severity", () => {
     {
       name: "a critical alert",
       labels: ["warning", "critical"],
+      wantCount: 2,
       want: "error",
     },
-    { name: "an error alert", labels: ["info", "error"], want: "error" },
-    { name: "only warnings", labels: ["warning", "info"], want: "warning" },
-    { name: "an unrecognised label", labels: ["page-me"], want: "warning" },
-    { name: "only info and none", labels: ["info", "none"], want: "info" },
-    { name: "nothing firing", labels: [], want: "ok" },
-  ])("the firing count is as severe as $name: $want", ({ labels, want }) => {
-    const result = mapAlerts(
-      [
-        // Fires by design, so it never colours the count.
-        alert({ alertname: "Watchdog", severity: "critical" }, 600),
-        ...labels.map((severity, index) =>
-          alert({ alertname: `Alert${String(index)}`, severity }, 5),
-        ),
-      ],
-      [],
-      context,
-    );
-    const firing = result.metrics.find((m) => m.id === "alerts.firing");
-    expect([firing?.value, firing?.severity]).toEqual([labels.length, want]);
-  });
+    {
+      name: "an error alert alongside dropped info",
+      labels: ["info", "error"],
+      wantCount: 1,
+      want: "error",
+    },
+    {
+      name: "only warnings alongside dropped info",
+      labels: ["warning", "info"],
+      wantCount: 1,
+      want: "warning",
+    },
+    {
+      name: "an unrecognised label",
+      labels: ["page-me"],
+      wantCount: 1,
+      want: "warning",
+    },
+    {
+      name: "only info",
+      labels: ["info"],
+      wantCount: 0,
+      want: "ok",
+    },
+    { name: "nothing firing", labels: [], wantCount: 0, want: "ok" },
+  ])(
+    "the firing count is as severe as $name: $want",
+    ({ labels, wantCount, want }) => {
+      const result = mapAlerts(
+        [
+          // Fires by design, so it never colours the count.
+          alert({ alertname: "Watchdog", severity: "critical" }, 600),
+          alert({ alertname: "InfoInhibitor", severity: "critical" }, 600),
+          ...labels.map((severity, index) =>
+            alert({ alertname: `Alert${String(index)}`, severity }, 5),
+          ),
+        ],
+        [],
+        context,
+      );
+      const firing = result.metrics.find((m) => m.id === "alerts.firing");
+      expect([firing?.value, firing?.severity]).toEqual([wantCount, want]);
+    },
+  );
 
   test("an alert without a severity label makes the firing count a warning", () => {
     const result = mapAlerts(

@@ -4,6 +4,7 @@ import type { AlertmanagerPort } from "#application/ports";
 import { AlertmanagerSnapshotAlertSchema } from "#shared/schema";
 
 const AlertmanagerResponseSchema = z.array(AlertmanagerSnapshotAlertSchema);
+const LEDGER_RECEIVER_PATTERN = "^(alerts|alerts-ledger-only|postal-fallback)$";
 
 export class AlertmanagerClient implements AlertmanagerPort {
   readonly #baseUrl: string;
@@ -15,7 +16,9 @@ export class AlertmanagerClient implements AlertmanagerPort {
   async activeAlerts(): Promise<
     readonly z.infer<typeof AlertmanagerSnapshotAlertSchema>[]
   > {
-    const response = await fetch(`${this.#baseUrl}/api/v2/alerts`, {
+    const url = new URL(`${this.#baseUrl}/api/v2/alerts`);
+    url.searchParams.set("receiver", LEDGER_RECEIVER_PATTERN);
+    const response = await fetch(url, {
       headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(10_000),
     });

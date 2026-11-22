@@ -18,6 +18,7 @@ import type {
   PreviewInput,
   Previews,
   Summary,
+  SummaryInput,
   SystemStatus,
   JsonObject,
 } from "#shared/schema";
@@ -90,6 +91,43 @@ export type EmailSendFailureInput = {
   error: string;
 };
 
+export type HomeAssistantNotification =
+  | {
+      action: "notify";
+      notificationId: string;
+      title: string;
+      message: string;
+    }
+  | {
+      action: "dismiss";
+      notificationId: string;
+    };
+
+export type ClaimedHomeAssistantOutboxItem = {
+  id: string;
+  sendClaimId: string;
+  attemptCount: number;
+  notification: HomeAssistantNotification;
+};
+
+export type HomeAssistantSendSuccessInput = {
+  id: string;
+  sendClaimId: string;
+  sentAtNs: bigint;
+};
+
+export type HomeAssistantSendFailureInput = {
+  id: string;
+  sendClaimId: string;
+  failedAtNs: bigint;
+  nextAttemptAtNs: bigint;
+  error: string;
+};
+
+export type HomeAssistantPort = {
+  send: (notification: HomeAssistantNotification) => Promise<void>;
+};
+
 export type AlertLedgerRepository = {
   ingestWebhook: (input: IngestWebhookInput) => Promise<IngestWebhookResult>;
   reconcileSnapshot: (
@@ -103,7 +141,7 @@ export type AlertLedgerRepository = {
   listAlerts: (input: AlertListInput) => Promise<AlertListResponse>;
   getAlert: (input: AlertDetailInput) => Promise<AlertDetail | null>;
   listEvents: (input: EventListInput) => Promise<EventListResponse>;
-  summary: () => Promise<Summary>;
+  summary: (input?: SummaryInput) => Promise<Summary>;
   checkDatabase: () => Promise<void>;
   systemStatus: (emailEnabled: boolean, nowNs: bigint) => Promise<SystemStatus>;
   pendingEmails: (
@@ -117,6 +155,17 @@ export type AlertLedgerRepository = {
   ) => Promise<readonly ClaimedPendingEmail[]>;
   markEmailSent: (input: EmailSendSuccessInput) => Promise<void>;
   markEmailFailed: (input: EmailSendFailureInput) => Promise<void>;
+  claimPendingHomeAssistantNotifications: (
+    nowNs: bigint,
+    limit: number,
+    sendingAtNs: bigint,
+  ) => Promise<readonly ClaimedHomeAssistantOutboxItem[]>;
+  markHomeAssistantSent: (
+    input: HomeAssistantSendSuccessInput,
+  ) => Promise<void>;
+  markHomeAssistantFailed: (
+    input: HomeAssistantSendFailureInput,
+  ) => Promise<void>;
   purgeExpiredRecords: (input: RetentionInput) => Promise<RetentionResult>;
   disconnect: () => Promise<void>;
 };

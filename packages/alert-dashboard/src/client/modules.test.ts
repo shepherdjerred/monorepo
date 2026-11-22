@@ -43,6 +43,7 @@ describe("the composed module registry", () => {
       "shell /review",
       "shell /alerts",
       "shell /alerts/:id",
+      "shell /house",
       "shell /history",
       "shell /system",
     ]);
@@ -68,7 +69,12 @@ describe("the composed module registry", () => {
       },
       {
         label: "Alerts",
-        items: ["Active /alerts", "History /history", "System /system"],
+        items: [
+          "Active /alerts",
+          "House /house",
+          "History /history",
+          "System /system",
+        ],
       },
       { label: "The Storm", items: ["Promotion /promotion"] },
     ]);
@@ -86,6 +92,7 @@ describe("the composed module registry", () => {
       "Maintenance",
       "Review",
       "Active alerts",
+      "House",
       "History",
       "System",
       "Promotion",

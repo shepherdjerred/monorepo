@@ -8,6 +8,39 @@ import { epochNanosecondsToInstantText } from "#shared/time";
 
 export const EMAIL_SEND_CLAIM_LEASE_NS = 5n * 60n * 1_000_000_000n;
 
+export function claimableOutboxRowWhere(
+  id: string,
+  nowNs: bigint,
+  reclaimBeforeNs: bigint,
+) {
+  return {
+    id,
+    sentAtNs: null,
+    canceledAtNs: null,
+    nextAttemptAtNs: { lte: nowNs },
+    OR: [{ sendingAtNs: null }, { sendingAtNs: { lte: reclaimBeforeNs } }],
+  };
+}
+
+export function claimedSendWhere(id: string, sendClaimId: string) {
+  return {
+    id,
+    sendClaimId,
+    sentAtNs: null,
+    canceledAtNs: null,
+  };
+}
+
+export function sentOutboxUpdateData(sentAtNs: bigint) {
+  return {
+    sentAtNs,
+    sendingAtNs: null,
+    sendClaimId: null,
+    attemptCount: { increment: 1 },
+    lastError: null,
+  };
+}
+
 export async function claimPendingEmailRows(
   transaction: Prisma.TransactionClient,
   nowNs: bigint,
@@ -37,13 +70,7 @@ export async function claimPendingEmailRows(
   for (const candidate of candidates) {
     const sendClaimId = crypto.randomUUID();
     const result = await transaction.emailOutbox.updateMany({
-      where: {
-        id: candidate.id,
-        sentAtNs: null,
-        canceledAtNs: null,
-        nextAttemptAtNs: { lte: nowNs },
-        OR: [{ sendingAtNs: null }, { sendingAtNs: { lte: reclaimBeforeNs } }],
-      },
+      where: claimableOutboxRowWhere(candidate.id, nowNs, reclaimBeforeNs),
       data: { sendingAtNs, sendClaimId },
     });
     if (result.count === 1) {
@@ -63,19 +90,8 @@ export async function markEmailSentRow(
   input: EmailSendSuccessInput,
 ): Promise<void> {
   const result = await transaction.emailOutbox.updateMany({
-    where: {
-      id: input.id,
-      sendClaimId: input.sendClaimId,
-      sentAtNs: null,
-      canceledAtNs: null,
-    },
-    data: {
-      sentAtNs: input.sentAtNs,
-      sendingAtNs: null,
-      sendClaimId: null,
-      attemptCount: { increment: 1 },
-      lastError: null,
-    },
+    where: claimedSendWhere(input.id, input.sendClaimId),
+    data: sentOutboxUpdateData(input.sentAtNs),
   });
   if (result.count !== 1) {
     throw new Error(`Email send claim changed before success: ${input.id}`);
@@ -87,12 +103,7 @@ export async function markEmailFailedRow(
   input: EmailSendFailureInput,
 ): Promise<void> {
   const result = await transaction.emailOutbox.updateMany({
-    where: {
-      id: input.id,
-      sendClaimId: input.sendClaimId,
-      sentAtNs: null,
-      canceledAtNs: null,
-    },
+    where: claimedSendWhere(input.id, input.sendClaimId),
     data: {
       nextAttemptAtNs: input.nextAttemptAtNs,
       sendingAtNs: null,

@@ -4,12 +4,20 @@ import { AlertService } from "#application/alert-service";
 import type {
   AlertLedgerRepository,
   AlertmanagerPort,
+  HomeAssistantNotification,
+  HomeAssistantSendFailureInput,
+  HomeAssistantSendSuccessInput,
   IngestWebhookInput,
   PostalMessage,
   PostalPort,
   PreviewPort,
 } from "#application/ports";
-import { fixedClock } from "#shared/time";
+import { readinessOnlyLedger } from "#test-fixtures/alert-ledger";
+import {
+  InstantTextSchema,
+  fixedClock,
+  instantTextToEpochNanoseconds,
+} from "#shared/time";
 
 function unexpected(): Promise<never> {
   return Promise.reject(new Error("unexpected service call"));
@@ -19,6 +27,7 @@ describe("webhook evidence", () => {
   it("hashes and retains the original JSON before contract normalization", async () => {
     let ingested: IngestWebhookInput | undefined;
     const repository: AlertLedgerRepository = {
+      ...readinessOnlyLedger(),
       ingestWebhook: (input) => {
         ingested = input;
         return Promise.resolve({
@@ -28,20 +37,7 @@ describe("webhook evidence", () => {
           emailQueued: false,
         });
       },
-      reconcileSnapshot: unexpected,
-      recordSnapshotFailure: unexpected,
-      listAlerts: unexpected,
-      getAlert: unexpected,
-      listEvents: unexpected,
-      summary: unexpected,
       checkDatabase: unexpected,
-      systemStatus: unexpected,
-      pendingEmails: unexpected,
-      claimPendingEmails: unexpected,
-      markEmailSent: unexpected,
-      markEmailFailed: unexpected,
-      purgeExpiredRecords: unexpected,
-      disconnect: unexpected,
     };
     const alertmanager: AlertmanagerPort = { activeAlerts: unexpected };
     const postal: PostalPort = { send: unexpected };
@@ -106,16 +102,8 @@ describe("webhook evidence", () => {
     const sent: PostalMessage[] = [];
     const markedSent: string[] = [];
     const repository: AlertLedgerRepository = {
-      ingestWebhook: unexpected,
-      reconcileSnapshot: unexpected,
-      recordSnapshotFailure: unexpected,
-      listAlerts: unexpected,
-      getAlert: unexpected,
-      listEvents: unexpected,
-      summary: unexpected,
+      ...readinessOnlyLedger(),
       checkDatabase: unexpected,
-      systemStatus: unexpected,
-      pendingEmails: unexpected,
       claimPendingEmails: () =>
         Promise.resolve([
           {
@@ -132,9 +120,6 @@ describe("webhook evidence", () => {
         markedSent.push(input.id);
         return Promise.resolve();
       },
-      markEmailFailed: unexpected,
-      purgeExpiredRecords: unexpected,
-      disconnect: unexpected,
     };
     const service = new AlertService({
       repository,
@@ -154,5 +139,188 @@ describe("webhook evidence", () => {
     expect(markedSent).toEqual(["outbox-1"]);
     expect(sent).toHaveLength(1);
     expect(sent[0]?.plainBody).toBe("Storage · Critical\nDisk full\n");
+  });
+});
+
+describe("Home Assistant outbox drain", () => {
+  it("is a no-op when Home Assistant is unconfigured", async () => {
+    const service = new AlertService({
+      repository: readinessOnlyLedger(),
+      alertmanager: { activeAlerts: unexpected },
+      postal: { send: unexpected },
+      homeAssistant: null,
+      previews: { previews: unexpected, health: unexpected },
+      clock: fixedClock("2026-08-08T18:00:01Z"),
+      emailEnabled: false,
+    });
+
+    expect(await service.drainHomeAssistantOutbox()).toBe(0);
+  });
+
+  it("sends claimed notifications and backs off exponentially on failure", async () => {
+    const sent: HomeAssistantNotification[] = [];
+    const markedSent: HomeAssistantSendSuccessInput[] = [];
+    const markedFailed: HomeAssistantSendFailureInput[] = [];
+    const repository: AlertLedgerRepository = {
+      ...readinessOnlyLedger(),
+      claimPendingHomeAssistantNotifications: () =>
+        Promise.resolve([
+          {
+            id: "outbox-ok",
+            sendClaimId: "claim-ok",
+            attemptCount: 0,
+            notification: {
+              action: "notify",
+              notificationId: "hub-house-fp-1",
+              title: "[House] RoborockConsumableDue",
+              message: "Main brush due",
+            },
+          },
+          {
+            id: "outbox-fail",
+            sendClaimId: "claim-fail",
+            attemptCount: 2,
+            notification: {
+              action: "dismiss",
+              notificationId: "hub-house-fp-2",
+            },
+          },
+        ]),
+      markHomeAssistantSent: (value) => {
+        markedSent.push(value);
+        return Promise.resolve();
+      },
+      markHomeAssistantFailed: (value) => {
+        markedFailed.push(value);
+        return Promise.resolve();
+      },
+    };
+    const service = new AlertService({
+      repository,
+      alertmanager: { activeAlerts: unexpected },
+      postal: { send: unexpected },
+      homeAssistant: {
+        send: (notification) => {
+          if (notification.action === "dismiss") {
+            return Promise.reject(new Error("HA unreachable"));
+          }
+          sent.push(notification);
+          return Promise.resolve();
+        },
+      },
+      previews: { previews: unexpected, health: unexpected },
+      clock: fixedClock("2026-08-08T18:00:00Z"),
+      emailEnabled: false,
+    });
+
+    expect(await service.drainHomeAssistantOutbox()).toBe(2);
+    expect(sent).toHaveLength(1);
+    expect(markedSent).toEqual([
+      {
+        id: "outbox-ok",
+        sendClaimId: "claim-ok",
+        sentAtNs: instantTextToEpochNanoseconds(
+          InstantTextSchema.parse("2026-08-08T18:00:00Z"),
+        ),
+      },
+    ]);
+    // attemptCount=2 -> 30 * 2^2 = 120s backoff
+    expect(markedFailed).toEqual([
+      {
+        id: "outbox-fail",
+        sendClaimId: "claim-fail",
+        failedAtNs: instantTextToEpochNanoseconds(
+          InstantTextSchema.parse("2026-08-08T18:00:00Z"),
+        ),
+        nextAttemptAtNs: instantTextToEpochNanoseconds(
+          InstantTextSchema.parse("2026-08-08T18:02:00Z"),
+        ),
+        error: "HA unreachable",
+      },
+    ]);
+  });
+
+  it("serializes overlapping drain calls so dismiss cannot race ahead of notify", async () => {
+    const events: string[] = [];
+    let notifyEntered: (() => void) | undefined;
+    const enteredFirstSend = new Promise<void>((resolve) => {
+      notifyEntered = resolve;
+    });
+    let releaseFirstSend: (() => void) | undefined;
+    const firstSendGate = new Promise<void>((resolve) => {
+      releaseFirstSend = resolve;
+    });
+    let batchNumber = 0;
+    const repository: AlertLedgerRepository = {
+      ...readinessOnlyLedger(),
+      claimPendingHomeAssistantNotifications: () => {
+        batchNumber += 1;
+        events.push(`claim-${String(batchNumber)}`);
+        if (batchNumber === 1) {
+          return Promise.resolve([
+            {
+              id: "outbox-notify",
+              sendClaimId: "claim-notify",
+              attemptCount: 0,
+              notification: {
+                action: "notify",
+                notificationId: "hub-house-fp-race",
+                title: "[House] RoborockConsumableDue",
+                message: "Main brush due",
+              },
+            },
+          ]);
+        }
+        return Promise.resolve([
+          {
+            id: "outbox-dismiss",
+            sendClaimId: "claim-dismiss",
+            attemptCount: 0,
+            notification: {
+              action: "dismiss",
+              notificationId: "hub-house-fp-race",
+            },
+          },
+        ]);
+      },
+      markHomeAssistantSent: (value) => {
+        events.push(`sent-${value.id}`);
+        return Promise.resolve();
+      },
+    };
+    const service = new AlertService({
+      repository,
+      alertmanager: { activeAlerts: unexpected },
+      postal: { send: unexpected },
+      homeAssistant: {
+        send: async (notification) => {
+          events.push(`send-${notification.action}`);
+          if (notification.action === "notify") {
+            notifyEntered?.();
+            await firstSendGate;
+          }
+        },
+      },
+      previews: { previews: unexpected, health: unexpected },
+      clock: fixedClock("2026-08-08T18:00:00Z"),
+      emailEnabled: false,
+    });
+
+    const first = service.drainHomeAssistantOutbox();
+    const second = service.drainHomeAssistantOutbox();
+    await enteredFirstSend;
+    expect(events).toEqual(["claim-1", "send-notify"]);
+
+    if (releaseFirstSend === undefined) throw new Error("missing gate");
+    releaseFirstSend();
+    await Promise.all([first, second]);
+    expect(events).toEqual([
+      "claim-1",
+      "send-notify",
+      "sent-outbox-notify",
+      "claim-2",
+      "send-dismiss",
+      "sent-outbox-dismiss",
+    ]);
   });
 });

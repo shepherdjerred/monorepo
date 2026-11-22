@@ -14,6 +14,7 @@ import {
   EventListResponseSchema,
   PreviewInputSchema,
   PreviewsSchema,
+  SummaryInputSchema,
   SummarySchema,
   SystemStatusSchema,
 } from "#shared/schema";
@@ -34,8 +35,9 @@ async function translate<T>(operation: () => Promise<T>): Promise<T> {
 export const appRouter = t.router({
   summary: t.router({
     get: t.procedure
+      .input(SummaryInputSchema.optional())
       .output(SummarySchema)
-      .query(({ ctx }) => ctx.service.summary()),
+      .query(({ ctx, input }) => ctx.service.summary(input)),
   }),
   alerts: t.router({
     list: t.procedure

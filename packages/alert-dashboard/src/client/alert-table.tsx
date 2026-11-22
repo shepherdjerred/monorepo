@@ -3,6 +3,26 @@ import { Link } from "react-router";
 import { formatInstant } from "./time.ts";
 import type { AlertView } from "#shared/schema";
 
+export function AlertStateAndOpenedCells({
+  alert,
+}: {
+  readonly alert: AlertView;
+}): React.JSX.Element {
+  return (
+    <>
+      <td data-label="State">
+        <span className="state">{alert.lifecycleState}</span>
+        {alert.suppressionState === "none" ? null : (
+          <span className="suppression">{alert.suppressionState}</span>
+        )}
+      </td>
+      <td className="mono" data-label="Opened">
+        <time dateTime={alert.openedAt}>{formatInstant(alert.openedAt)}</time>
+      </td>
+    </>
+  );
+}
+
 export function AlertTable({
   alerts,
   empty = "No alerts match these filters.",
@@ -16,12 +36,12 @@ export function AlertTable({
       <table>
         <thead>
           <tr>
-            <th>Severity</th>
-            <th>Alert</th>
-            <th>Namespace</th>
-            <th>State</th>
-            <th>Opened</th>
-            <th>Last seen</th>
+            <th scope="col">Severity</th>
+            <th scope="col">Alert</th>
+            <th scope="col">Namespace</th>
+            <th scope="col">State</th>
+            <th scope="col">Opened</th>
+            <th scope="col">Last seen</th>
           </tr>
         </thead>
         <tbody>
@@ -41,17 +61,7 @@ export function AlertTable({
               <td className="mono" data-label="Namespace">
                 {alert.namespace ?? "—"}
               </td>
-              <td data-label="State">
-                <span className="state">{alert.lifecycleState}</span>
-                {alert.suppressionState === "none" ? null : (
-                  <span className="suppression">{alert.suppressionState}</span>
-                )}
-              </td>
-              <td className="mono" data-label="Opened">
-                <time dateTime={alert.openedAt}>
-                  {formatInstant(alert.openedAt)}
-                </time>
-              </td>
+              <AlertStateAndOpenedCells alert={alert} />
               <td className="mono" data-label="Last seen">
                 <time dateTime={alert.lastSeenAt}>
                   {formatInstant(alert.lastSeenAt)}

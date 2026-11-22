@@ -259,6 +259,18 @@ function metrics(): FixtureMetric[] {
       { value: 1, severity: "error" },
     ),
     metric(
+      { section: "alerts", source: "alerts" },
+      METRIC_IDS.alertsWarning,
+      "Warning",
+      { value: 2, severity: "warning" },
+    ),
+    metric(
+      { section: "alerts", source: "alerts" },
+      METRIC_IDS.houseChoresOpen,
+      "House chores open",
+      { value: 3, severity: "ok" },
+    ),
+    metric(
       { section: "platform", source: "kubernetes" },
       METRIC_IDS.nodesReady,
       "Nodes ready",
