@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "generate": {
+      "inputs": [
+        "src/tokens.json",
+        "src/tokens.ts",
+        "scripts/generate-tokens.ts"
+      ],
+      "outputs": ["src/styles/tokens.css"]
+    }
+  }
+}

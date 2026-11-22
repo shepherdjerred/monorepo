@@ -1,0 +1,10 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/console-ui",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["src"]
+    }
+  ]
+}

@@ -222,6 +222,10 @@
     "packages/loaded": {
       "project": ["src/**/*.{ts,tsx}"]
     },
+    "packages/console-ui": {
+      "entry": ["scripts/*.ts"],
+      "project": ["src/**/*.{ts,tsx}", "scripts/**/*.ts"]
+    },
     "packages/starlight-karma-bot": {
       "entry": ["src/index.ts", "scripts/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts", "prisma/**/*.prisma"]
