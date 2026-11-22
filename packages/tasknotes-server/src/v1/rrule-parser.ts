@@ -70,12 +70,12 @@ function parseByDayItem(rawItem: string): ByDaySpec | null {
   }
   const ordRaw = match[1];
   const ordinal =
-    ordRaw !== undefined && ordRaw !== ""
-      ? Number.parseInt(ordRaw, 10)
-      : undefined;
-  return ordinal !== undefined && ordinal !== 0
-    ? { weekday, ordinal }
-    : { weekday };
+    ordRaw === undefined || ordRaw === ""
+      ? undefined
+      : Number.parseInt(ordRaw, 10);
+  return ordinal === undefined || ordinal === 0
+    ? { weekday }
+    : { weekday, ordinal };
 }
 
 function parseByDayList(raw: string): ByDaySpec[] {

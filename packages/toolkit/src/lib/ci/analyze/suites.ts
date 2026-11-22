@@ -58,9 +58,9 @@ export function compareSuites(
   }
   return deltas.toSorted((left, right) =>
     group(left) === group(right)
-      ? left.delta !== null && right.delta !== null
-        ? Math.abs(right.delta) - Math.abs(left.delta)
-        : presentSeconds(right) - presentSeconds(left)
+      ? left.delta === null || right.delta === null
+        ? presentSeconds(right) - presentSeconds(left)
+        : Math.abs(right.delta) - Math.abs(left.delta)
       : group(left) - group(right),
   );
 }

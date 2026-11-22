@@ -177,16 +177,16 @@ function subjectOf(
   const whole = options.regionContext?.grid ?? grid;
   const offset = options.regionContext?.origin ?? { x: 0, y: 0, z: 0 };
   const geometry =
-    options.floor !== undefined || options.section !== undefined
-      ? cutGrid(whole, {
+    options.floor === undefined && options.section === undefined
+      ? whole
+      : cutGrid(whole, {
           ...(options.floor === undefined
             ? {}
             : { belowY: options.floor + offset.y }),
           ...(options.section === undefined
             ? {}
             : { behindZ: options.section + offset.z }),
-        })
-      : whole;
+        });
   let origin = offset;
   let size = grid.size;
   if (options.crop !== undefined) {

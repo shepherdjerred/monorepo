@@ -109,14 +109,13 @@ function permissionAccess(args: {
   if (!args.resolved) {
     return Loaded.loading();
   }
-  if (args.staleError === null) {
-    return Loaded.done(args.perms);
-  }
-  // Deliberately `error`, not `degraded`. This hook is the gate for the whole
+  // A stale error is deliberately `error`, not `degraded`. This hook is the gate for the whole
   // `/g/:guildId` subtree, and its consumers branch on `loading` and `error`
   // only — so a `degraded` here would fall through and render the permission-
   // gated workspace on permissions the server just failed to reconfirm. A
   // permission model has to fail closed; the cost is that a transient blip
   // closes the workspace until the next successful read.
-  return Loaded.failed(args.staleError, ["permissions"]);
+  return args.staleError === null
+    ? Loaded.done(args.perms)
+    : Loaded.failed(args.staleError, ["permissions"]);
 }

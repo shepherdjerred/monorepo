@@ -53,9 +53,8 @@ export function parseJsonNumberRecord(text: string): Record<string, number> {
  */
 export function parseJsonRecord(text: string): Record<string, unknown> {
   const parsed: unknown = JSON.parse(text);
-  if (typeof parsed === "object" && parsed != null && !Array.isArray(parsed)) {
-    // Object.entries/fromEntries rebuilds the object with the correct type
-    return Object.fromEntries(Object.entries(parsed));
-  }
-  return {};
+  // Object.entries/fromEntries rebuilds the object with the correct type
+  return typeof parsed === "object" && parsed != null && !Array.isArray(parsed)
+    ? Object.fromEntries(Object.entries(parsed))
+    : {};
 }

@@ -272,10 +272,9 @@ function accountName(
   names: ReadonlyMap<string, string>,
   id: string | null,
 ): string {
-  if (id === null) return DEFAULT_ACCOUNT;
   // An id the listing did not return is still a real account; label it by id
   // rather than folding it into another one's spend.
-  return names.get(id) ?? id;
+  return id === null ? DEFAULT_ACCOUNT : (names.get(id) ?? id);
 }
 
 function addUsageRow(

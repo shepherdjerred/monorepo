@@ -52,7 +52,7 @@ export class SeatManager {
       kind: "claimed",
       seat: target,
       displacedSocketId: heldSeat?.socketId,
-      vacatedSeat: held !== null && held !== target ? held : undefined,
+      vacatedSeat: held === null || held === target ? undefined : held,
     };
   }
 

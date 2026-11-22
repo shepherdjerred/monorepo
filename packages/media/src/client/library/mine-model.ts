@@ -79,10 +79,12 @@ function nameOf(asks: readonly MineAsk[], covered: readonly Request[]) {
     if (ask.movie?.access === "detail") return ask.movie.title;
   }
   const [part] = covered;
-  if (part !== undefined) return part.rootTitle;
-  // Only an interest is left: it names what was asked for, which is the
-  // title itself unless the ask was for a season or an episode.
-  return asks.find((ask) => ask.interest !== null)?.interest?.title ?? null;
+  // Without a covered part only an interest is left: it names what was asked
+  // for, which is the title itself unless the ask was for a season or an
+  // episode.
+  return part === undefined
+    ? (asks.find((ask) => ask.interest !== null)?.interest?.title ?? null)
+    : part.rootTitle;
 }
 
 function posterOf(asks: readonly MineAsk[], covered: readonly Request[]) {

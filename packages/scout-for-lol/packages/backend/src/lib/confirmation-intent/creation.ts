@@ -405,9 +405,9 @@ async function trackedPlayersChanged(
     where: { serverId: guildId, discordId: payload.discordUserId },
     select: { alias: true },
   });
-  return linked !== null && linked.alias !== payload.alias
-    ? `That Discord member is now linked to the tracked player "${linked.alias}". Nothing was created; ask Scout to prepare it again.`
-    : null;
+  return linked === null || linked.alias === payload.alias
+    ? null
+    : `That Discord member is now linked to the tracked player "${linked.alias}". Nothing was created; ask Scout to prepare it again.`;
 }
 
 async function executeSubscription(

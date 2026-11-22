@@ -154,8 +154,9 @@ export async function fetch(
       date: new Date(firstItem.date),
       source,
       preview:
-        preview !== undefined && preview !== ""
-          ? truncate(
+        preview === undefined || preview === ""
+          ? undefined
+          : truncate(
               sanitizeHtml(preview, {
                 parseStyleAttributes: false,
                 transformTags: {
@@ -175,8 +176,7 @@ export async function fetch(
                 },
               }),
               length,
-            )
-          : undefined,
+            ),
     };
   } catch (error) {
     console.error(`Error fetching ${source.url}: ${String(error)}`);

@@ -97,13 +97,13 @@ export class GolinkClient {
       }
       const shadowTier = item.shadows?.kind ?? item.shadows?.tier;
       const shadows: GolinkShadow | undefined =
-        shadowTier !== undefined && item.shadows !== undefined
-          ? {
+        shadowTier === undefined || item.shadows === undefined
+          ? undefined
+          : {
               tier: shadowTier,
               targetUrl: item.shadows.targetUrl,
               detail: item.shadows.detail,
-            }
-          : undefined;
+            };
 
       return [
         {

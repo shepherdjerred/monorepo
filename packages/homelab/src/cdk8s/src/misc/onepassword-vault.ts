@@ -60,7 +60,7 @@ export function buildPostgresUrlExpr(
   const user = "$USER";
   const pass = "$PASS";
   const base = `${PG_PROTOCOL}://${user}:${pass}@${host}/${database}`;
-  return options !== "" && options != null ? `${base}?${options}` : base;
+  return options === "" || options == null ? base : `${base}?${options}`;
 }
 
 /**

@@ -26,6 +26,7 @@ export async function compileProgram(options: {
   site: CompileJob["site"];
   timeoutMs?: number;
 }): Promise<CompileOutput> {
+  const { timeoutMs = 30_000 } = options;
   const program = path.resolve(options.program);
   await scanModuleGraph(program);
   const work = await mkdtemp(path.join(os.tmpdir(), "mc-build-"));
@@ -45,7 +46,7 @@ export async function compileProgram(options: {
       env: {},
       stdout: "pipe",
       stderr: "pipe",
-      timeout: options.timeoutMs ?? 30_000,
+      timeout: timeoutMs,
     });
     const [stdout, stderr, exitCode] = await Promise.all([
       new Response(child.stdout).text(),
@@ -54,12 +55,12 @@ export async function compileProgram(options: {
     ]);
     if (child.signalCode !== null) {
       throw new BuildProgramError(
-        `Build program timed out after ${(options.timeoutMs ?? 30_000).toString()} ms (killed with ${String(child.signalCode)})`,
+        `Build program timed out after ${timeoutMs.toString()} ms (killed with ${String(child.signalCode)})`,
       );
     }
     if (exitCode !== 0) {
       throw new BuildProgramError(
-        `Build program failed (exit ${exitCode.toString()}):\n${(stderr || stdout).trim()}`,
+        `Build program failed (exit ${exitCode.toString()}):\n${(stderr === "" ? stdout : stderr).trim()}`,
       );
     }
     const result = CompileResultSchema.parse(await Bun.file(out).json());

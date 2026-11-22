@@ -68,9 +68,9 @@ function voiceHarness(options: HarnessOptions = {}) {
       ) => {
         events.push("join");
         joins.push({ guildId, channelId });
-        return expectedEpoch !== undefined && expectedEpoch !== epoch
-          ? Promise.resolve("cancelled" as const)
-          : Promise.resolve(options.joinOutcome ?? "joined");
+        return expectedEpoch === undefined || expectedEpoch === epoch
+          ? Promise.resolve(options.joinOutcome ?? "joined")
+          : Promise.resolve("cancelled" as const);
       },
       leave: (guildId: DiscordGuildId) => {
         epoch++;

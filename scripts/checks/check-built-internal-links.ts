@@ -38,16 +38,14 @@ const attributePattern =
   /(?:href|src)=(['"])(\/[^'"#?\s>]*)(?:[?#][^'"]*)?\1/gu;
 
 function siteOwnedMarkup(html: string): string {
-  if (siteName !== "sjer.red") {
-    return html;
-  }
-
   // Webring previews are sanitized HTML fetched from other sites. A relative
   // link in that content belongs to the source site, not sjer.red.
-  return html.replaceAll(
-    /<p\s[^>]*class=(['"])[^'"]*summary[^'"]*\1[^>]*>[\s\S]*?<\/p>(?:\s*<\/p>)?/gu,
-    "",
-  );
+  return siteName === "sjer.red"
+    ? html.replaceAll(
+        /<p\s[^>]*class=(['"])[^'"]*summary[^'"]*\1[^>]*>[\s\S]*?<\/p>(?:\s*<\/p>)?/gu,
+        "",
+      )
+    : html;
 }
 
 for (const htmlFile of htmlFiles) {

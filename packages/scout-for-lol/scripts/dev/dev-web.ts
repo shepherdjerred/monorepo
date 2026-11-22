@@ -132,13 +132,11 @@ if (import.meta.main) {
         ? DEFAULT_DESIGN_AUDIT_LAKE_DIR
         : Bun.env["REPORT_LAKE_DIR"],
     );
-    if (shouldPrepareReportLake(options, isDesignAuditBoot)) {
-      console.log(await adoptSeedIfUnseeded(lakeDir));
-    } else {
-      console.log(
-        "Report lake: skipped (background jobs are disabled for this runtime)",
-      );
-    }
+    console.log(
+      shouldPrepareReportLake(options, isDesignAuditBoot)
+        ? await adoptSeedIfUnseeded(lakeDir)
+        : "Report lake: skipped (background jobs are disabled for this runtime)",
+    );
 
     const environment = buildDevEnvironment(
       Bun.env,

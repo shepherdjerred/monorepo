@@ -112,10 +112,10 @@ async function main() {
 try {
   await main();
 } catch (error) {
-  if (error instanceof ContentOperatorError) console.error(error.message);
-  else
-    console.error(
-      "Independent content recovery refused or remains incomplete. Preserve the exact native receipts, original backup and quarantine; inspect the same intent before retrying.",
-    );
+  console.error(
+    error instanceof ContentOperatorError
+      ? error.message
+      : "Independent content recovery refused or remains incomplete. Preserve the exact native receipts, original backup and quarantine; inspect the same intent before retrying.",
+  );
   process.exitCode = 1;
 }

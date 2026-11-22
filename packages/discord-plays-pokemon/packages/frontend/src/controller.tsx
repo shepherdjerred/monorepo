@@ -19,7 +19,7 @@ export function Controller({ reason }: { readonly reason: string | null }) {
     sendCommand(KEYMAP[edge.code] ?? edge.code);
   });
   useKeyboardControls(controls, (event) =>
-    !disabled && KEYMAP[event.code] !== undefined ? event.code : undefined,
+    disabled || KEYMAP[event.code] === undefined ? undefined : event.code,
   );
   const { releaseAll } = controls;
   // A server policy change must release any physically held keys.

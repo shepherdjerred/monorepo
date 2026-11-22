@@ -426,18 +426,18 @@ export function ReleaseForm({
     };
     // A promotion takes the source's accepted selection; it names no set revision (4.12).
     request.mutate(
-      !deploying && sourceEnvironment !== null
+      deploying || sourceEnvironment === null
         ? {
-            ...common,
-            kind: "promote",
-            sourceEnvironmentId: sourceEnvironment.id,
-          }
-        : {
             ...common,
             kind: realising,
             versionSetRevisionId: versionId,
             // Only a plain deploy may ask for an override approval (H4).
             ...(overrideWhy !== null && override ? { override: true } : {}),
+          }
+        : {
+            ...common,
+            kind: "promote",
+            sourceEnvironmentId: sourceEnvironment.id,
           },
     );
   }

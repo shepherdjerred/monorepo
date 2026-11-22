@@ -86,12 +86,11 @@ async function evaluateBudget(
     },
     select: { id: true },
   });
-  if (recent !== null) {
-    // Deferred, not dropped: the next daily run re-evaluates this guild.
-    return { kind: "deferred" };
-  }
-
-  return { kind: "allow", messageNumber: spent + 1 };
+  // A recent DM is deferred, not dropped: the next daily run re-evaluates this
+  // guild.
+  return recent === null
+    ? { kind: "allow", messageNumber: spent + 1 }
+    : { kind: "deferred" };
 }
 
 /** Reserve under database locks, shared by every process and the intent minter. */

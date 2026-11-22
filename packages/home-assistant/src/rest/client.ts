@@ -204,7 +204,7 @@ export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
     response: Response,
     method: "GET" | "POST",
     path: string,
-    notFoundResource?: string,
+    notFoundResource = path,
   ): Promise<void> {
     if (response.status === 401 || response.status === 403) {
       const text = await response.text();
@@ -212,7 +212,7 @@ export class HomeAssistantRestClient<S extends HaSchema = DefaultHaSchema> {
     }
     if (response.status === 404) {
       const text = await response.text();
-      throw new HaNotFoundError(notFoundResource ?? path, text);
+      throw new HaNotFoundError(notFoundResource, text);
     }
     if (!response.ok) {
       const text = await response.text();

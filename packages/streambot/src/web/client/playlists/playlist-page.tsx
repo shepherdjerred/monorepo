@@ -48,9 +48,9 @@ function useLinkedGuild(guild: string | null): LinkedGuild {
   if (remote.room === null) return { status: "waiting" };
   if (blocked && linked !== undefined)
     return { status: "elsewhere", linked: linked.name, voice: voice.name };
-  return wanted !== null && wanted !== remote.guildId
-    ? { status: "waiting" }
-    : { status: "ready", guildId: remote.guildId };
+  return wanted === null || wanted === remote.guildId
+    ? { status: "ready", guildId: remote.guildId }
+    : { status: "waiting" };
 }
 
 function Paging(props: { page: Page; offset: number }) {

@@ -302,7 +302,7 @@ function convertWithSchema(
     !typesAreCompatible(inferredType, schemaType)
   ) {
     const propName =
-      propertyName !== "" && propertyName != null ? `'${propertyName}': ` : "";
+      propertyName === "" || propertyName == null ? "" : `'${propertyName}': `;
     console.warn(
       `  ⚠️  Type mismatch for ${propName}Schema says '${schemaType}' but value suggests '${inferredType}' (value: ${String(value).slice(0, 50)})`,
     );

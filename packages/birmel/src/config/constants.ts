@@ -9,10 +9,8 @@ export function generateWakeWord(ownerName: string): string {
     return "birmel"; // fallback
   }
   const lowerName = ownerName.toLowerCase();
-  if (lowerName.startsWith("b")) {
-    return lowerName; // Already starts with 'b'
-  }
-  return "b" + lowerName.slice(1);
+  // Already starting with 'b' is kept as-is.
+  return lowerName.startsWith("b") ? lowerName : "b" + lowerName.slice(1);
 }
 
 export const DISCORD_MESSAGE_LIMIT = 2000;

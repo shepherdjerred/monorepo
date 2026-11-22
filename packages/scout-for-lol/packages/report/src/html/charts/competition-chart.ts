@@ -247,9 +247,9 @@ function buildLineOption(
         color: palette.grey[1],
         fontSize: 22,
         fontFamily: BODY_FONT,
-        ...(props.valueSuffix !== undefined && props.valueSuffix !== ""
-          ? { formatter: `{value}${props.valueSuffix}` }
-          : {}),
+        ...(props.valueSuffix === undefined || props.valueSuffix === ""
+          ? {}
+          : { formatter: `{value}${props.valueSuffix}` }),
       },
       splitLine: { lineStyle: { color: palette.grey[5], type: "dashed" } },
     },
@@ -327,9 +327,9 @@ function buildBarOption(
         color: palette.grey[1],
         fontSize: 22,
         fontFamily: BODY_FONT,
-        ...(props.valueSuffix !== undefined && props.valueSuffix !== ""
-          ? { formatter: `{value}${props.valueSuffix}` }
-          : {}),
+        ...(props.valueSuffix === undefined || props.valueSuffix === ""
+          ? {}
+          : { formatter: `{value}${props.valueSuffix}` }),
       },
       splitLine: {
         lineStyle: { color: palette.grey[5], type: "dashed" },
@@ -369,9 +369,9 @@ function buildBarOption(
           fontFamily: BODY_FONT,
           fontWeight: 700,
           distance: 12,
-          ...(props.valueSuffix !== undefined && props.valueSuffix !== ""
-            ? { formatter: `{c}${props.valueSuffix}` }
-            : {}),
+          ...(props.valueSuffix === undefined || props.valueSuffix === ""
+            ? {}
+            : { formatter: `{c}${props.valueSuffix}` }),
         },
       },
     ],

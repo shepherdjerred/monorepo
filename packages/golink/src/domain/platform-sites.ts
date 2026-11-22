@@ -175,11 +175,11 @@ export async function loadPlatformSites(
 ): Promise<PlatformSiteEntry[]> {
   const configuredEnvPath = Bun.env["GOLINK_PLATFORM_MODEL_PATH"]?.trim();
   const resolvedPath =
-    explicitModelPath !== undefined && explicitModelPath !== ""
-      ? path.resolve(explicitModelPath)
-      : configuredEnvPath !== undefined && configuredEnvPath !== ""
-        ? path.resolve(configuredEnvPath)
-        : DEFAULT_PLATFORM_MODEL_PATH;
+    explicitModelPath === undefined || explicitModelPath === ""
+      ? configuredEnvPath === undefined || configuredEnvPath === ""
+        ? DEFAULT_PLATFORM_MODEL_PATH
+        : path.resolve(configuredEnvPath)
+      : path.resolve(explicitModelPath);
 
   const raw: unknown = JSON.parse(await Bun.file(resolvedPath).text());
   return derivePlatformSites(raw);

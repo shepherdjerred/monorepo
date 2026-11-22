@@ -82,17 +82,13 @@ export function isAccountedFor(workspace: Workspace, file: string): boolean {
     if (step.runner !== "vitest") return false;
     const { filters, excludes, directories } = vitestSelection(step);
     // `--dir` is the Vitest root and limits which files this step can discover.
-    if (
-      directories.length > 0 &&
-      !directories.some((directory) => isUnder(file, directory))
-    ) {
-      return false;
-    }
     // An explicit exclusion is not evidence that this file runs elsewhere.
-    if (excludes.some((exclude) => minimatch(file, exclude))) return false;
     // Vitest matches positional filters as substrings of the file path.
     return (
-      filters.length === 0 || filters.some((filter) => file.includes(filter))
+      (directories.length === 0 ||
+        directories.some((directory) => isUnder(file, directory))) &&
+      !excludes.some((exclude) => minimatch(file, exclude)) &&
+      (filters.length === 0 || filters.some((filter) => file.includes(filter)))
     );
   });
 }

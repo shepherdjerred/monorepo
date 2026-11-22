@@ -181,9 +181,9 @@ function matchDeltaForTarget(
   const normalizedDelta = normalizeVersionString(delta.targetVersion);
   const normalizedCurrent = normalizeVersionString(currentTargetVersion);
   const matches =
-    normalizedDelta !== null && normalizedCurrent !== null
-      ? normalizedDelta === normalizedCurrent
-      : delta.targetVersion.trim() === currentTargetVersion.trim();
+    normalizedDelta === null || normalizedCurrent === null
+      ? delta.targetVersion.trim() === currentTargetVersion.trim()
+      : normalizedDelta === normalizedCurrent;
   return matches ? delta : undefined;
 }
 

@@ -135,18 +135,14 @@ export function isPrunableImage(
     return false;
   const suffixes = options?.suffixes ?? IMAGE_SUFFIXES;
   const exemptKeys = options?.exemptKeys ?? new Set<string>();
-  if (exemptKeys.has(key)) {
-    return false;
-  }
-  if (lastModified === undefined) {
-    return false;
-  }
-  if (!suffixes.some((suffix) => key.endsWith(suffix))) {
-    return false;
-  }
   // Strictly older than the cutoff — an object written exactly at the boundary
   // is inside the retention window and kept.
-  return lastModified.getTime() < cutoff.getTime();
+  return (
+    !exemptKeys.has(key) &&
+    lastModified !== undefined &&
+    suffixes.some((suffix) => key.endsWith(suffix)) &&
+    lastModified.getTime() < cutoff.getTime()
+  );
 }
 
 function createScoutS3Client(): S3Client {

@@ -41,11 +41,11 @@ function selectProperty(entry: Selected, step: string | number): Selected {
 }
 
 function expandArray(entry: Selected): Selected[] {
-  return !entry.present || !Array.isArray(entry.value)
-    ? [missing(`${entry.path}[]`)]
-    : entry.value.map((value, index) =>
+  return entry.present && Array.isArray(entry.value)
+    ? entry.value.map((value, index) =>
         observed(`${entry.path}[${index.toString()}]`, value),
-      );
+      )
+    : [missing(`${entry.path}[]`)];
 }
 
 /** Closed selectors over already validated JSON; no expressions or coercion. */

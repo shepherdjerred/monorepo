@@ -53,7 +53,7 @@ export type MediaMigrationCeiling =
 
 function optionalAdminUrl(): string | undefined {
   const raw = Bun.env["MEDIA_TEST_ADMIN_DATABASE_URL"]?.trim();
-  return raw !== undefined && raw !== "" ? raw : undefined;
+  return raw === undefined || raw === "" ? undefined : raw;
 }
 
 async function listMediaMigrations(): Promise<string[]> {

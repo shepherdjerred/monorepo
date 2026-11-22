@@ -60,13 +60,12 @@ export function decideReactionAward(params: {
   if (params.authorIsBot) {
     return { action: "ignore", reason: "message author is a bot" };
   }
-  if (params.authorId === params.reactorId) {
-    // Deliberately not the self-give penalty the slash command applies:
-    // reacting to your own message is usually expressive, not an attempt to
-    // farm karma, and punishing it would make the emoji feel like a trap.
-    return { action: "ignore", reason: "reacting to your own message" };
-  }
-  return { action: "award", receiverId: params.authorId };
+  // Deliberately not the self-give penalty the slash command applies:
+  // reacting to your own message is usually expressive, not an attempt to
+  // farm karma, and punishing it would make the emoji feel like a trap.
+  return params.authorId === params.reactorId
+    ? { action: "ignore", reason: "reacting to your own message" }
+    : { action: "award", receiverId: params.authorId };
 }
 
 const LEADERBOARD_PREFIX = "karma-lb";

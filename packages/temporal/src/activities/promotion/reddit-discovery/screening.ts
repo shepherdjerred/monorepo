@@ -138,13 +138,11 @@ function decisionUsage(
   if (result.status === "fulfilled") return result.value.usage;
   const error: unknown = result.reason;
   if (error instanceof StructuredOutputUsageError) return error.usage;
-  if (
-    error instanceof DecisionHttpError &&
-    [400, 401, 403, 404, 429].includes(error.status)
-  )
-    return null;
   // An ambiguous provider call keeps the spend reservation unresolved.
-  return undefined;
+  return error instanceof DecisionHttpError &&
+    [400, 401, 403, 404, 429].includes(error.status)
+    ? null
+    : undefined;
 }
 
 function addDecisionUsage(

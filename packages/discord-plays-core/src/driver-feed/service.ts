@@ -322,9 +322,10 @@ export class DriverFeedService {
 
 function requestUrl(request: IncomingMessage): URL | undefined {
   const url = request.url;
-  if (url === undefined) return undefined;
   // A relative request-target needs a base; this only serves its path and query.
-  return URL.parse(url, "http://localhost") ?? undefined;
+  return url === undefined
+    ? undefined
+    : (URL.parse(url, "http://localhost") ?? undefined);
 }
 
 function requestPath(request: IncomingMessage): string | undefined {

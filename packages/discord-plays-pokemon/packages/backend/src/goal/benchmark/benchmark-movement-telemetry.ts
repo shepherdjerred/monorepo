@@ -272,9 +272,9 @@ function movementPosition(value: unknown): MovementPosition | undefined {
   const map =
     position.map ??
     position.mapId ??
-    (position.mapGroup !== undefined && position.mapNum !== undefined
-      ? `${String(position.mapGroup)}:${String(position.mapNum)}`
-      : undefined);
+    (position.mapGroup === undefined || position.mapNum === undefined
+      ? undefined
+      : `${String(position.mapGroup)}:${String(position.mapNum)}`);
   return map === undefined
     ? undefined
     : { map: String(map), x: position.x, y: position.y };

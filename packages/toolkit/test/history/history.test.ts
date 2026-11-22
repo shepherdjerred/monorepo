@@ -41,11 +41,8 @@ let fixtureRoot = "";
 let paths: HistoryPaths;
 
 function stringValue(value: string | null): string {
-  if (value === null) {
-    // Missing fixture keys sort alongside empty keys.
-    return "";
-  }
-  return value;
+  // Missing fixture keys sort alongside empty keys.
+  return value ?? "";
 }
 
 function compareStrings(a: string | null, b: string | null): number {

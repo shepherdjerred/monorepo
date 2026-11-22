@@ -130,9 +130,9 @@ function TimelineReview(props: Props & { data: ReviewTimeline }) {
     (row) => row.participant_id === opponent?.participantId,
   );
   const difference =
-    frame !== undefined && opponentFrame !== undefined
-      ? frameDifference(frame, opponentFrame)
-      : undefined;
+    frame === undefined || opponentFrame === undefined
+      ? undefined
+      : frameDifference(frame, opponentFrame);
   const end = Math.max(
     last.timestampMs,
     props.data.events.at(-1)?.timestampMs ?? 0,

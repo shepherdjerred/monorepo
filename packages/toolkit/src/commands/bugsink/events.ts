@@ -86,11 +86,9 @@ export async function eventsCommand(
       maxPages: options.maxPages,
     });
 
-    if (options.json === true) {
-      console.log(formatJson(events));
-    } else {
-      console.log(formatEventsMarkdown(events));
-    }
+    console.log(
+      options.json === true ? formatJson(events) : formatEventsMarkdown(events),
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred";
@@ -111,11 +109,9 @@ export async function eventCommand(
       process.exit(1);
     }
 
-    if (options.json === true) {
-      console.log(formatJson(event));
-    } else {
-      console.log(formatEventDetails(event));
-    }
+    console.log(
+      options.json === true ? formatJson(event) : formatEventDetails(event),
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred";

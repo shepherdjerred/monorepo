@@ -164,11 +164,11 @@ export function OnboardingWizard() {
         onContinue={() => {
           const first = guilds[0];
           if (first === undefined) return;
-          if (guilds.length === 1) {
-            dispatch({ type: "select-guild", guildId: first.id });
-          } else {
-            dispatch({ type: "goto", step: "pick-guild" });
-          }
+          dispatch(
+            guilds.length === 1
+              ? { type: "select-guild", guildId: first.id }
+              : { type: "goto", step: "pick-guild" },
+          );
         }}
         onSkip={skip}
       />

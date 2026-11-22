@@ -487,15 +487,14 @@ export function parseYAMLCommentsWithMetadata(
           { index: i, mapComment },
         );
         const childKey = firstChildKey(itemCheck.data.value);
-        if (
+        storeComment(
+          comment,
           childKey !== undefined &&
-          /[A-Z]/.test(childKey) &&
-          commentDescribesKey(comment, childKey)
-        ) {
-          storeComment(comment, `${fullKey}.${childKey}`);
-        } else {
-          storeComment(comment, fullKey);
-        }
+            /[A-Z]/.test(childKey) &&
+            commentDescribesKey(comment, childKey)
+            ? `${fullKey}.${childKey}`
+            : fullKey,
+        );
 
         const valueInheritedComment = extractCommentBefore(
           itemCheck.data.value,

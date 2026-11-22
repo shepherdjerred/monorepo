@@ -133,11 +133,11 @@ function withheldReason(
   if (section === "live") return liveWithheldReason(initiation, flags);
   // An app-started turn carries the one section it exists for and no other;
   // a typed or spoken question carries any.
-  return initiation !== "player_typed" &&
-    initiation !== "player_voice" &&
-    INITIATION_SECTION[initiation] !== section
-    ? "section_outside_initiation"
-    : null;
+  return initiation === "player_typed" ||
+    initiation === "player_voice" ||
+    INITIATION_SECTION[initiation] === section
+    ? null
+    : "section_outside_initiation";
 }
 
 function liveWithheldReason(

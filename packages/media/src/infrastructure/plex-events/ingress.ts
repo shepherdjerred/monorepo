@@ -89,10 +89,10 @@ async function captureHintTarget(
   if (scope === null || (claims.length === 0 && scope.quarantine === null))
     return null;
   const original = await readWatchBinding(tx, scope);
-  return original?.association.item.ratingKey !== hint.ratingKey ||
-    original.association.item.type !== hint.mediaKind
-    ? null
-    : { match, scope, original };
+  return original?.association.item.ratingKey === hint.ratingKey &&
+    original.association.item.type === hint.mediaKind
+    ? { match, scope, original }
+    : null;
 }
 
 export class PrismaPlexEventIngress {

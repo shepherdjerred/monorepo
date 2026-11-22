@@ -89,7 +89,6 @@ export async function selectTip(
     serverId: audience.serverId,
     alreadyShown: await readers.shownTipKeys(audience),
   });
-  if (candidates.length === 0) return undefined;
   // Catalog order is the priority order, so the most broadly useful unused
   // feature is offered first rather than a random one.
   return candidates[0];

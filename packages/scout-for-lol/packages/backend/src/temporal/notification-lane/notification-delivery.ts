@@ -184,15 +184,14 @@ async function sendToChannel(args: {
       // ambiguous.
       return { outcome: "unknown" };
     }
-    if (options.reply !== undefined && isReplyPermissionError(error)) {
-      // v1's fallback for a settlement recap: a reply the bot may not make
-      // (no Read Message History, or Discord refused the reference) becomes
-      // one plain send. Safe to attempt because `isReplyPermissionError`
-      // names only failures `send` HANDLED — the reply never left — so the
-      // nonce is still unspent and a second request is a first send.
-      return await sendWithoutReply(options, target, guildId);
-    }
-    return classifyChannelSendFailure(error);
+    // v1's fallback for a settlement recap: a reply the bot may not make
+    // (no Read Message History, or Discord refused the reference) becomes
+    // one plain send. Safe to attempt because `isReplyPermissionError`
+    // names only failures `send` HANDLED — the reply never left — so the
+    // nonce is still unspent and a second request is a first send.
+    return options.reply !== undefined && isReplyPermissionError(error)
+      ? await sendWithoutReply(options, target, guildId)
+      : classifyChannelSendFailure(error);
   }
 }
 

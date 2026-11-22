@@ -417,7 +417,7 @@ async function discoverYt(st: State): Promise<YtdlpSearchResult[]> {
   const search = st.deps.searchYoutube ?? st.deps.discovery?.searchYoutube;
   const fetchMix = resolveMixFn(st.deps);
   const init =
-    search !== undefined && seed !== "" ? await search(seed, signal, 6) : [];
+    search === undefined || seed === "" ? [] : await search(seed, signal, 6);
   const disc = [...init];
   if (fetchMix !== undefined) {
     const rawIds = st.yt.map((r) => extractYoutubeVideoId(r.url) ?? "");

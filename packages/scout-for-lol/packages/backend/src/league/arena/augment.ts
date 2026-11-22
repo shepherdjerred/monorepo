@@ -21,11 +21,7 @@ export function mapAugmentIdsToUnion(augmentIds: number[]): Augment[] {
       ...aug,
       type: "full",
     });
-    if (parsed.success) {
-      result.push(parsed.data);
-    } else {
-      result.push({ id, type: "id" });
-    }
+    result.push(parsed.success ? parsed.data : { id, type: "id" });
   }
   return result;
 }

@@ -461,11 +461,7 @@ export async function deployedCommand(
     notes,
   };
 
-  if (opts.json === true) {
-    console.log(formatJson(report));
-  } else {
-    console.log(formatReport(report));
-  }
+  console.log(opts.json === true ? formatJson(report) : formatReport(report));
 
   // Exit non-zero unless every affected variant is fully RUNNING (or there's
   // nothing to deploy) — lets scripts/CI gate on it.

@@ -325,9 +325,9 @@ export class InMemoryFacetStore implements FacetStore {
 
   listTasks(filter: ListTasksFilter): Promise<Task[]> {
     const pid =
-      filter.projectId !== undefined && filter.projectId !== ""
-        ? filter.projectId
-        : undefined;
+      filter.projectId === undefined || filter.projectId === ""
+        ? undefined
+        : filter.projectId;
     return Promise.resolve(
       queryStoredEntries(this.tasks, filter, {
         predicate: pid === undefined ? undefined : (t) => t.project_id === pid,

@@ -297,11 +297,12 @@ export async function fetchSnapshotData(options: {
             const selectedRanks: Ranks = {};
             for (const queueType of criteria.queues) {
               let highestRank =
-                competitionStartDate !== undefined &&
-                competitionStartDate !== null &&
-                rankHistoryEndDate !== undefined &&
-                rankHistoryEndDate !== null
-                  ? await getHighestRankForPuuidsInWindow({
+                competitionStartDate === undefined ||
+                competitionStartDate === null ||
+                rankHistoryEndDate === undefined ||
+                rankHistoryEndDate === null
+                  ? undefined
+                  : await getHighestRankForPuuidsInWindow({
                       prismaClient: prisma,
                       puuids: participant.accounts.map(
                         (account) => account.puuid,
@@ -309,8 +310,7 @@ export async function fetchSnapshotData(options: {
                       queueType,
                       startDate: competitionStartDate,
                       endDate: rankHistoryEndDate,
-                    })
-                  : undefined;
+                    });
               if (currentRankData !== undefined) {
                 highestRank = getHigherRank(
                   highestRank,
@@ -521,11 +521,8 @@ export async function calculateLeaderboard(
       }
       // For Rank, validate and use league points as the sort key
       const rankResult = RankSchema.safeParse(entry.score);
-      if (rankResult.success) {
-        return rankToLeaguePoints(rankResult.data);
-      }
-      // Fallback for invalid data
-      return 0;
+      // Fallback to 0 for invalid data
+      return rankResult.success ? rankToLeaguePoints(rankResult.data) : 0;
     },
     "desc", // Higher is better
   ]);

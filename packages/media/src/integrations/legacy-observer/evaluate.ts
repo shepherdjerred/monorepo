@@ -45,11 +45,11 @@ function lineage(
   if (owners.length !== 1) return "unknown";
   const ref = owners[0];
   const parent = ref === undefined ? undefined : objects.get(ref.uid);
-  return !parent ||
-    parent.kind !== ref?.kind ||
-    parent.metadata.name !== ref.name
-    ? "unknown"
-    : lineage(parent, objects, seen);
+  return parent &&
+    parent.kind === ref?.kind &&
+    parent.metadata.name === ref.name
+    ? lineage(parent, objects, seen)
+    : "unknown";
 }
 
 function objectBlocker(

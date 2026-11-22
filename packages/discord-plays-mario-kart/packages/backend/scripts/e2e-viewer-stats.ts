@@ -418,7 +418,7 @@ if (countersWentBackwards || ssrcs.size > 1) {
 // delta; coercing null→0 would fake a zero (or manufacture a negative delta).
 // Return null for such a delta instead.
 const delta = (a: number | null, b: number | null): number | null =>
-  a !== null && b !== null ? b - a : null;
+  a === null || b === null ? null : b - a;
 
 // The start-before-join workflow can capture the peer before its inbound video
 // stats appear, so early samples have `video: null`. Anchor the window on the

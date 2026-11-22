@@ -80,9 +80,9 @@ export function builtinShortcuts(tailnetDomain: string): ShortcutSpec[] {
 export function parseSafeHttpUrl(rawUrl: string): URL | null {
   try {
     const parsed = new URL(rawUrl);
-    return parsed.protocol !== "http:" && parsed.protocol !== "https:"
-      ? null
-      : parsed;
+    return parsed.protocol === "http:" || parsed.protocol === "https:"
+      ? parsed
+      : null;
   } catch {
     return null;
   }

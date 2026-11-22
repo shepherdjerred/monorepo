@@ -231,10 +231,11 @@ function isIpv6SpecialPrefix(words: readonly number[]): boolean {
   const w1 = words[1];
   const w2 = words[2];
   const w3 = words[3];
-  if (w0 === 0x20_01 && w1 === 0x0d_b8) {
-    return true; // 2001:db8::/32
-  }
-  return w0 === 0x01_00 && w1 === 0 && w2 === 0 && w3 === 0; // 100::/64
+  // 2001:db8::/32 or 100::/64
+  return (
+    (w0 === 0x20_01 && w1 === 0x0d_b8) ||
+    (w0 === 0x01_00 && w1 === 0 && w2 === 0 && w3 === 0)
+  );
 }
 
 function isPrivateOrReservedIpv6(ip: string): boolean {

@@ -93,9 +93,9 @@ export function listInMemorySections(
   filter: ListSectionsFilter,
 ): Section[] {
   const pid =
-    filter.projectId !== undefined && filter.projectId !== ""
-      ? filter.projectId
-      : undefined;
+    filter.projectId === undefined || filter.projectId === ""
+      ? undefined
+      : filter.projectId;
   return queryStoredEntries(ctx.sections, filter, {
     predicate: pid === undefined ? undefined : (s) => s.project_id === pid,
     compare: (a, b) => a.section_order - b.section_order,
@@ -215,9 +215,9 @@ export function listInMemoryReminders(
   filter: ListRemindersFilter,
 ): Reminder[] {
   const tid =
-    filter.taskId !== undefined && filter.taskId !== ""
-      ? filter.taskId
-      : undefined;
+    filter.taskId === undefined || filter.taskId === ""
+      ? undefined
+      : filter.taskId;
   return queryStoredEntries(ctx.reminders, filter, {
     predicate: tid === undefined ? undefined : (r) => r.task_id === tid,
   });

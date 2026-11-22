@@ -101,12 +101,13 @@ function servedOn(fleet: Fleet, party: Party, port: FleetPolicyPort): boolean {
         selectorMatches({ matchLabels: service.selector }, labels),
     )
     .some((service) =>
-      service.ports.some(({ port: servicePort, targetPort, protocol }) =>
-        portsCover(
-          [port],
-          { protocol, port: targetPort ?? servicePort, endPort: undefined },
-          namedPorts,
-        ),
+      service.ports.some(
+        ({ port: servicePort, targetPort = servicePort, protocol }) =>
+          portsCover(
+            [port],
+            { protocol, port: targetPort, endPort: undefined },
+            namedPorts,
+          ),
       ),
     );
 }

@@ -28,7 +28,7 @@ function fallbackColour(seed: string): string {
 export function Avatar({
   name,
   url,
-  seed,
+  seed = name,
   size = "md",
   className,
 }: {
@@ -59,11 +59,7 @@ export function Avatar({
   return (
     <span
       aria-hidden="true"
-      className={cx(
-        base,
-        "font-semibold text-white",
-        fallbackColour(seed ?? name),
-      )}
+      className={cx(base, "font-semibold text-white", fallbackColour(seed))}
     >
       {initial}
     </span>

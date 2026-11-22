@@ -159,7 +159,9 @@ export function createTemporalReportAiResponse(input: {
       scoutReportAiRunDurationSeconds
         .labels(metricStatus)
         .observe((Date.now() - startedAt) / 1000);
-      if (!closed && outcome.status !== "completed") {
+      if (closed || outcome.status === "completed") {
+        close();
+      } else {
         void (async () => {
           try {
             await emit({
@@ -179,8 +181,6 @@ export function createTemporalReportAiResponse(input: {
             close();
           }
         })();
-      } else {
-        close();
       }
       activeRuns.delete(input.ticket.runId);
     },

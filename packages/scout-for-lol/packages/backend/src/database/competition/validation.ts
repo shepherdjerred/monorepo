@@ -29,17 +29,9 @@ export function isCompetitionActive(
   endDate: Date | null,
   now: Date = new Date(),
 ): boolean {
-  if (isCancelled) {
-    return false;
-  }
-
   // Season-based competition (no endDate) is always active unless cancelled
-  if (endDate === null) {
-    return true;
-  }
-
   // Fixed-date competition is active until endDate passes
-  return endDate > now;
+  return !isCancelled && (endDate === null || endDate > now);
 }
 
 // ============================================================================

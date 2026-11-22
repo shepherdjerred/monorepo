@@ -33,9 +33,9 @@ export async function readCompletedNativeCompensationState(
   const published =
     row.publicationCoordinatorOperationId === input.operationId &&
     row.verifiedPublication !== null;
-  return !completed && !published
-    ? null
-    : readNativeCompensationState(tx, input, budget);
+  return completed || published
+    ? readNativeCompensationState(tx, input, budget)
+    : null;
 }
 
 export async function readNativeCompensationState(

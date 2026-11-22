@@ -43,9 +43,8 @@ const platformSites = await loadPlatformSites(modelPath);
 
 const databaseUrl = Bun.env["DATABASE_URL"]?.trim();
 const repo =
-  databaseUrl !== undefined && databaseUrl !== ""
-    ? createPrismaManualLinkRepository(createDatabase(databaseUrl))
-    : createInMemoryManualLinkRepository({
+  databaseUrl === undefined || databaseUrl === ""
+    ? createInMemoryManualLinkRepository({
         initial: [
           {
             short: "ha",
@@ -58,11 +57,12 @@ const repo =
             createdBy: "jerred@tailnet",
           },
         ],
-      });
+      })
+    : createPrismaManualLinkRepository(createDatabase(databaseUrl));
 
 const portRaw = Bun.env["PORT"]?.trim();
 const port =
-  portRaw !== undefined && portRaw !== "" ? Number.parseInt(portRaw, 10) : 7352;
+  portRaw === undefined || portRaw === "" ? 7352 : Number.parseInt(portRaw, 10);
 const host = Bun.env["HOST"]?.trim() ?? "127.0.0.1";
 
 const app = createGolinkApp({
@@ -86,7 +86,7 @@ console.warn(
     message: "golink_dev_api_started",
     url: `http://${host}:${String(server.port)}`,
     storage:
-      databaseUrl !== undefined && databaseUrl !== "" ? "postgres" : "memory",
+      databaseUrl === undefined || databaseUrl === "" ? "memory" : "postgres",
   }),
 );
 

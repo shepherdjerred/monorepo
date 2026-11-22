@@ -161,11 +161,11 @@ export function buildDeterministicDeltaFallback(
   );
 
   const fromDesc =
-    candidate.runningVersion !== null &&
-    candidate.pinnedVersion !== null &&
-    candidate.runningVersion !== candidate.pinnedVersion
-      ? `${candidate.runningVersion} running (${candidate.pinnedVersion} pinned)`
-      : (candidate.effectiveFromVersion ?? "untracked baseline");
+    candidate.runningVersion === null ||
+    candidate.pinnedVersion === null ||
+    candidate.runningVersion === candidate.pinnedVersion
+      ? (candidate.effectiveFromVersion ?? "untracked baseline")
+      : `${candidate.runningVersion} running (${candidate.pinnedVersion} pinned)`;
 
   const firstHighlight = highlights[0];
   const sourceDesc =

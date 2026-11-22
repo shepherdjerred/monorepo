@@ -203,9 +203,7 @@ async function diagnoseSendFailure(channelId: DiscordChannelId): Promise<{
     refetched,
     configuration.applicationId,
   );
-  if (permissionCheck.status === "denied") {
-    return { kind: "permission", permissionReason: permissionCheck.reason };
-  }
+  // "denied" is the only status that reports a permission failure.
   // "allowed" — the bot can still post, so the original failure was transient.
   // "unknown" — the channel came back without its guild, so there is no local
   // permission state to read at all. Both are the operator's domain: this
@@ -214,7 +212,9 @@ async function diagnoseSendFailure(channelId: DiscordChannelId): Promise<{
   // real permission revocation is still escalated on a gatewayless role. What
   // is not available is the *guess*, and guessing "permission" here is what
   // sends an owner a DM about a permission they never changed.
-  return { kind: "other", permissionReason: undefined };
+  return permissionCheck.status === "denied"
+    ? { kind: "permission", permissionReason: permissionCheck.reason }
+    : { kind: "other", permissionReason: undefined };
 }
 
 /**
@@ -290,15 +290,9 @@ export async function send(
 
     // Log message info - only log string messages to avoid object stringification
     const stringResult = z.string().safeParse(options);
-    if (stringResult.success) {
-      logger.info(
-        `[ChannelSend] Sending message to ${channelId}: ${stringResult.data}`,
-      );
-    } else {
-      logger.info(
-        `[ChannelSend] Sending message to ${channelId}: [MessagePayload/MessageCreateOptions]`,
-      );
-    }
+    logger.info(
+      `[ChannelSend] Sending message to ${channelId}: ${stringResult.success ? stringResult.data : "[MessagePayload/MessageCreateOptions]"}`,
+    );
 
     // Send the message
     if (

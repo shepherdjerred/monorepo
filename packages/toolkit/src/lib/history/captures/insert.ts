@@ -176,9 +176,9 @@ export function insertCapture(
   // diffed against, even when the request chains from it.
   const previous =
     choosePrevious(store, { ...capture, id }, capture.blocks) ??
-    (capture.chainedFrom !== null && !isWarmup(store, capture.chainedFrom)
-      ? capture.chainedFrom
-      : null);
+    (capture.chainedFrom === null || isWarmup(store, capture.chainedFrom)
+      ? null
+      : capture.chainedFrom);
   const diff = diffBlocks(
     capture.blocks,
     previous === null ? null : captureBlocks(store, previous),

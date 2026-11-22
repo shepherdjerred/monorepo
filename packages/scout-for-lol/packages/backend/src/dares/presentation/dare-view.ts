@@ -358,8 +358,8 @@ export async function inspectVisibleDare(
   ]);
   if (row === null) return null;
   const state = DareStateSchema.parse(row.dareState);
-  return !visibleState(state) &&
-    row.challengerDiscordId !== input.viewerDiscordId
-    ? null
-    : inspection(row, input.viewerDiscordId, darePollHealth(botState));
+  return visibleState(state) ||
+    row.challengerDiscordId === input.viewerDiscordId
+    ? inspection(row, input.viewerDiscordId, darePollHealth(botState))
+    : null;
 }

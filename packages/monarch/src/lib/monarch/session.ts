@@ -26,9 +26,9 @@ export type MonarchSession = z.infer<typeof MonarchSessionSchema>;
 
 export function getSessionPath(): string {
   const explicit = Bun.env["MONARCH_SESSION_PATH"];
-  return explicit !== undefined && explicit !== ""
-    ? explicit
-    : DEFAULT_SESSION_PATH;
+  return explicit === undefined || explicit === ""
+    ? DEFAULT_SESSION_PATH
+    : explicit;
 }
 
 export async function loadMonarchSession(): Promise<MonarchSession> {

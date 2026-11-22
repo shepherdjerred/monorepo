@@ -58,7 +58,7 @@ function followedBy(
   const listedSelf = media.followers.some((follower) => follower.me);
   const names = [
     ...(listedSelf ? [part ? "You" : (self ?? "You")] : []),
-    ...(!listedSelf && !part && self !== null ? [self] : []),
+    ...(listedSelf || part || self === null ? [] : [self]),
     ...media.followers
       .filter((follower) => !follower.me)
       .map((follower) => follower.displayName),

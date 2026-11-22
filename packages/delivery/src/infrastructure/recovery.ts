@@ -267,9 +267,9 @@ export function createRecoveryInspector(options: {
         "Readback does not match the supplied external operation identity",
       );
     const pluginEvidence =
-      plugins !== undefined && options.inspectTrmnl !== undefined
-        ? await options.inspectTrmnl(detail)
-        : [];
+      plugins === undefined || options.inspectTrmnl === undefined
+        ? []
+        : await options.inspectTrmnl(detail);
     return [...settled.map((entry) => entry.evidence), ...pluginEvidence];
   };
 }

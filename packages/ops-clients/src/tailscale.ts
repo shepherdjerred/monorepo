@@ -99,9 +99,9 @@ export class TailscaleClient {
   constructor(options: TailscaleClientOptions) {
     const oauth =
       options.oauth ??
-      (options.clientId !== undefined && options.clientSecret !== undefined
-        ? { clientId: options.clientId, clientSecret: options.clientSecret }
-        : undefined);
+      (options.clientId === undefined || options.clientSecret === undefined
+        ? undefined
+        : { clientId: options.clientId, clientSecret: options.clientSecret });
     if (
       oauth === undefined &&
       (options.apiKey === undefined || options.apiKey === "")

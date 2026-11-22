@@ -112,9 +112,9 @@ async function serviceAccountToken(): Promise<string> {
 function kubernetesBaseUrl(): string | undefined {
   const host = optionalEnvironment("KUBERNETES_SERVICE_HOST");
   const port = optionalEnvironment("KUBERNETES_SERVICE_PORT");
-  return host !== undefined && port !== undefined
-    ? `https://${host}:${port}`
-    : undefined;
+  return host === undefined || port === undefined
+    ? undefined
+    : `https://${host}:${port}`;
 }
 
 function inClusterKubernetes(): KubernetesClient {

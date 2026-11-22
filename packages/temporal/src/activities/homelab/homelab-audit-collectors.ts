@@ -262,11 +262,11 @@ async function collectTemporalNamespace(
         workflowId: workflow.workflowId,
         runId: workflow.runId,
         ...(scheduleId === undefined ? {} : { scheduleId }),
-        ...(workflow.raw.firstRunId !== undefined &&
-        workflow.raw.firstRunId !== null &&
-        workflow.raw.firstRunId !== ""
-          ? { firstRunId: workflow.raw.firstRunId }
-          : {}),
+        ...(workflow.raw.firstRunId === undefined ||
+        workflow.raw.firstRunId === null ||
+        workflow.raw.firstRunId === ""
+          ? {}
+          : { firstRunId: workflow.raw.firstRunId }),
         workflowType: workflow.type,
         startedAt: workflow.startTime.toISOString(),
       });

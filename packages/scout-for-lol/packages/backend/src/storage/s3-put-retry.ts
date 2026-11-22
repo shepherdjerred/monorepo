@@ -35,12 +35,9 @@ function isRetryableError(error: unknown): boolean {
     return true;
   }
   const status = parsed.data.$metadata?.httpStatusCode;
-  if (status !== undefined) {
-    return status >= 500;
-  }
   // No HTTP status means the request never reached the server (timeout, DNS,
   // connection reset) — transient, worth retrying.
-  return true;
+  return status === undefined || status >= 500;
 }
 
 /**

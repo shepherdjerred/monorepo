@@ -78,9 +78,10 @@ function episodeSeriesTmdb(
 ) {
   const parent = media.parent;
   if (parent?.kind === "series") return parent.tmdbId;
-  if (parent?.kind !== undefined && parent.kind !== "season") return null;
   // Older retained native scopes store the canonical series ID in externalIds.
-  return parent?.parent?.tmdbId ?? historicalSeriesTmdb;
+  return parent?.kind === undefined || parent.kind === "season"
+    ? (parent?.parent?.tmdbId ?? historicalSeriesTmdb)
+    : null;
 }
 
 async function scanSection(

@@ -35,10 +35,11 @@ function isArenaFields(fields: {
   queueId?: number | undefined;
   gameMode?: string | undefined;
 }) {
-  if (fields.queueId === undefined && fields.gameMode === undefined)
-    return false;
   // 0 is the custom queue: it never matches Arena and is not logged as unknown.
-  return isArenaQueueOrMode(fields.queueId ?? 0, fields.gameMode ?? "");
+  return (
+    (fields.queueId !== undefined || fields.gameMode !== undefined) &&
+    isArenaQueueOrMode(fields.queueId ?? 0, fields.gameMode ?? "")
+  );
 }
 
 /**

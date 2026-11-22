@@ -71,11 +71,11 @@ export function logErrorDetails(
   }
 
   // Always log stack trace if available
-  if (stackTrace !== undefined && stackTrace.length > 0) {
-    logger.error(`[generateMatchReport] ❌ Error stack trace:\n${stackTrace}`);
-  } else {
-    logger.error(`[generateMatchReport] ❌ No stack trace available`);
-  }
+  logger.error(
+    stackTrace !== undefined && stackTrace.length > 0
+      ? `[generateMatchReport] ❌ Error stack trace:\n${stackTrace}`
+      : `[generateMatchReport] ❌ No stack trace available`,
+  );
 
   // Log match context
   logger.error(`[generateMatchReport] 📊 Match context:`);

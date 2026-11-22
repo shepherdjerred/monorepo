@@ -70,9 +70,9 @@ export async function runCommandAsync(
 function compareVersionsDescending(left: string, right: string): number {
   const leftNum = Number.parseFloat(left);
   const rightNum = Number.parseFloat(right);
-  return !Number.isNaN(leftNum) && !Number.isNaN(rightNum)
-    ? rightNum - leftNum
-    : right.localeCompare(left);
+  return Number.isNaN(leftNum) || Number.isNaN(rightNum)
+    ? right.localeCompare(left)
+    : rightNum - leftNum;
 }
 
 function versionSubdirectories(
@@ -372,16 +372,16 @@ export function discoverPostgresBinDir(
 
   const explicit = env["POSTGRES_BIN_DIR"]?.trim();
   const discovered =
-    explicit !== undefined && explicit !== ""
-      ? validateExplicitBinDir({
-          explicitDir: explicit,
+    explicit === undefined || explicit === ""
+      ? scanCandidateBinDirs({
+          candidates: candidatePostgresBinDirs(options),
           platform,
           requiredMajor,
           fileExists,
           run,
         })
-      : scanCandidateBinDirs({
-          candidates: candidatePostgresBinDirs(options),
+      : validateExplicitBinDir({
+          explicitDir: explicit,
           platform,
           requiredMajor,
           fileExists,

@@ -38,15 +38,14 @@ export function isChartablePreview(
   }
 
   const numericCols = plottableMetricColumns(preview.columns);
-  if (numericCols.length > 0) {
-    return true;
-  }
-
-  // Check if any non-label value is numeric
-  return preview.rows.some((row) =>
-    row.values.some(
-      (entry) => entry.column !== "label" && typeof entry.value === "number",
-    ),
+  // Otherwise check if any non-label value is numeric
+  return (
+    numericCols.length > 0 ||
+    preview.rows.some((row) =>
+      row.values.some(
+        (entry) => entry.column !== "label" && typeof entry.value === "number",
+      ),
+    )
   );
 }
 

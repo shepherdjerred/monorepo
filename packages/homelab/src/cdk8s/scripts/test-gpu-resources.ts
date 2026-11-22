@@ -72,7 +72,12 @@ function checkServiceGpuValue(
   );
   const serviceMatch = servicePattern.exec(content);
 
-  if (serviceMatch?.[1] != null && serviceMatch[1] !== "") {
+  if (serviceMatch?.[1] == null || serviceMatch[1] === "") {
+    console.error(
+      `❌ Service ${service}: Intel GPU resource not found in ${yamlFile}`,
+    );
+    tally.errors++;
+  } else {
     const value = serviceMatch[1].trim();
     if (value === EXPECTED_VALUE.toString()) {
       console.log(`✅ Service ${service}: Intel GPU correctly set to ${value}`);
@@ -82,11 +87,6 @@ function checkServiceGpuValue(
       );
       tally.errors++;
     }
-  } else {
-    console.error(
-      `❌ Service ${service}: Intel GPU resource not found in ${yamlFile}`,
-    );
-    tally.errors++;
   }
 }
 

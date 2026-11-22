@@ -31,7 +31,7 @@ const agentMarkers = [
 ] as const;
 
 function nonEmpty(value: string | undefined): string | undefined {
-  return value !== undefined && value !== "" ? value : undefined;
+  return value === undefined || value === "" ? undefined : value;
 }
 
 function normalizedPath(value: string | undefined): string | undefined {

@@ -66,7 +66,6 @@ const PHASE_STAGING_MIN = 0;
 const PHASE_RACING = 3;
 const PHASE_DECIDED_GP = 4;
 const PHASE_DECIDED_VS = 5;
-const PHASE_QUITTING = 6;
 const PHASE_BATTLE_DECIDED = 7;
 
 function normalizeRaceState(
@@ -87,10 +86,10 @@ function normalizeRaceState(
   ) {
     return "finished";
   }
-  if (phase >= PHASE_STAGING_MIN && phase < PHASE_RACING) return "staging";
-  if (phase === PHASE_QUITTING) return "menu";
-  // Anything unrecognized: treat as out-of-race.
-  return "menu";
+  // Quitting and anything unrecognized: treat as out-of-race.
+  return phase >= PHASE_STAGING_MIN && phase < PHASE_RACING
+    ? "staging"
+    : "menu";
 }
 
 /**

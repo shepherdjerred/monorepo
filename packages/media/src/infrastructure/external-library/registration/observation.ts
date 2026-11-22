@@ -219,12 +219,12 @@ async function episodeRoot(
   );
   const season = await metadata(parentKey);
   const show = await metadata(showKey);
-  return season.type !== "season" ||
-    show.type !== "show" ||
-    season.parentRatingKey !== show.ratingKey ||
-    season.index !== item.parentIndex ||
-    String(season.librarySectionID) !== sectionId ||
-    String(show.librarySectionID) !== sectionId
-    ? protectedPlex("Plex episode, season and show hierarchy changed")
-    : show;
+  return season.type === "season" &&
+    show.type === "show" &&
+    season.parentRatingKey === show.ratingKey &&
+    season.index === item.parentIndex &&
+    String(season.librarySectionID) === sectionId &&
+    String(show.librarySectionID) === sectionId
+    ? show
+    : protectedPlex("Plex episode, season and show hierarchy changed");
 }

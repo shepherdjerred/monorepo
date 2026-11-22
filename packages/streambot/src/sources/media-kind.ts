@@ -274,9 +274,8 @@ export function classifyMediaKind(
   // 7. Provider default. YouTube leans music: the overwhelming majority of what gets queued from it
   //    is listened to rather than watched, and getting it wrong costs a full video encode plus a
   //    Go Live connection to carry a still image.
-  if (input.provider === "youtube") {
-    return { kind: "music", decidedBy: "provider-default" };
-  }
   // 8. Everything else — arbitrary links, the local library — is video, as it was before this split.
-  return { kind: "video", decidedBy: "default" };
+  return input.provider === "youtube"
+    ? { kind: "music", decidedBy: "provider-default" }
+    : { kind: "video", decidedBy: "default" };
 }

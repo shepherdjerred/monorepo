@@ -447,9 +447,9 @@ function arrowsAsRows(event: KeyboardEvent): KeyPress {
   const mapped = rowArrows[event.key];
   return {
     key:
-      mapped !== undefined && targetOf(event)?.closest(rowLink) != null
-        ? mapped
-        : event.key,
+      mapped === undefined || targetOf(event)?.closest(rowLink) == null
+        ? event.key
+        : mapped,
     code: event.code,
     metaKey: event.metaKey,
     ctrlKey: event.ctrlKey,

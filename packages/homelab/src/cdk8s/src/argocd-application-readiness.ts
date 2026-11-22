@@ -197,9 +197,9 @@ function expectedApplicationFailure(
   if (!itemOperationIsReady(item)) {
     return `${wanted.name}: Operation=${operationPhase ?? "?"}`;
   }
-  return wanted.revision !== undefined && revision !== wanted.revision
-    ? `${wanted.name}: Revision=${revision ?? "?"} Expected=${wanted.revision}`
-    : undefined;
+  return wanted.revision === undefined || revision === wanted.revision
+    ? undefined
+    : `${wanted.name}: Revision=${revision ?? "?"} Expected=${wanted.revision}`;
 }
 
 export function releaseTreeReadiness(

@@ -154,7 +154,9 @@ export class DolphinHost {
     const child = this.child;
     if (child?.exitCode === null) {
       try {
-        if (this.socket !== undefined && !this.socket.destroyed)
+        if (this.socket === undefined || this.socket.destroyed) {
+          child.kill("SIGTERM");
+        } else {
           this.socket.write(
             encodePacket({
               kind: "stop",
@@ -163,7 +165,7 @@ export class DolphinHost {
               payload: new Uint8Array(),
             }),
           );
-        else child.kill("SIGTERM");
+        }
         const code = await waitFor(
           child.exited,
           new AbortController().signal,

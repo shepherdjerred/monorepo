@@ -69,9 +69,9 @@ function dueFromParams(params: ViewParams): string | undefined {
   if (before === "week") {
     return "week";
   }
-  return before !== undefined && parseDay(before) !== undefined
-    ? before
-    : undefined;
+  return before === undefined || parseDay(before) === undefined
+    ? undefined
+    : before;
 }
 
 /**

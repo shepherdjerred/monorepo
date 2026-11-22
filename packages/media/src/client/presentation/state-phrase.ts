@@ -91,8 +91,9 @@ export function libraryStatePhrase(
       tone: "warn",
     };
   }
-  if (item.episodes !== null) return episodesPhrase(item.episodes);
   // A series the API gives no count for is one a Plex library outside Media
   // already holds, so it can be played.
-  return AVAILABILITY_COPY[item.availability ?? "available"];
+  return item.episodes === null
+    ? AVAILABILITY_COPY[item.availability ?? "available"]
+    : episodesPhrase(item.episodes);
 }

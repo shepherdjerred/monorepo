@@ -369,13 +369,8 @@ export function getCompetitionStatus(
       return "ENDED";
     }
 
-    // Rule 3: Competition hasn't started yet
-    if (now < startDate) {
-      return "DRAFT";
-    }
-
-    // Rule 4: Competition is active
-    return "ACTIVE";
+    // Rule 3: Competition hasn't started yet; Rule 4: otherwise it is active
+    return now < startDate ? "DRAFT" : "ACTIVE";
   }
 
   // Edge case: season-based competition with invalid/missing season

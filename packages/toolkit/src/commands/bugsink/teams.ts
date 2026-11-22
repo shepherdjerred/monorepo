@@ -61,11 +61,9 @@ export async function teamsCommand(options: TeamsOptions = {}): Promise<void> {
   try {
     const teams = await getTeams();
 
-    if (options.json === true) {
-      console.log(formatJson(teams));
-    } else {
-      console.log(formatTeamsMarkdown(teams));
-    }
+    console.log(
+      options.json === true ? formatJson(teams) : formatTeamsMarkdown(teams),
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred";
@@ -86,11 +84,9 @@ export async function teamCommand(
       process.exit(1);
     }
 
-    if (options.json === true) {
-      console.log(formatJson(team));
-    } else {
-      console.log(formatTeamDetails(team));
-    }
+    console.log(
+      options.json === true ? formatJson(team) : formatTeamDetails(team),
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred";

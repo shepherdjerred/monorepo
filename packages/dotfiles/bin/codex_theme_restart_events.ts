@@ -250,8 +250,11 @@ export function statusReport(input: StatusInput): {
   );
   const expected = themeForAppearance(current);
   lines.push(`Expected Codex theme: ${expected}`);
-  if (input.terminals.length === 0) lines.push("Local Codex terminals: none");
-  else lines.push("Local Codex terminals:");
+  lines.push(
+    input.terminals.length === 0
+      ? "Local Codex terminals: none"
+      : "Local Codex terminals:",
+  );
   for (const process of input.terminals) {
     const result = terminalLine(process, {
       expected,

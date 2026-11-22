@@ -301,10 +301,9 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
         for: "5m",
         labels,
       },
-      ...(typeof candidateDeploymentPattern !== "string" ||
-      typeof candidateServicePattern !== "string"
-        ? []
-        : [
+      ...(typeof candidateDeploymentPattern === "string" &&
+      typeof candidateServicePattern === "string"
+        ? [
             {
               alert: "TemporalDomainWorkflowCandidateUnavailable",
               annotations: {
@@ -317,7 +316,8 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
               for: "5m",
               labels: { ...labels, track: "candidate" },
             },
-          ]),
+          ]
+        : []),
     ];
   });
 }

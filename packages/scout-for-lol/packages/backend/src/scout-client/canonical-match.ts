@@ -131,13 +131,13 @@ export function parseLocalCanonicalMatch(
     convertLcuMatchBundle(riotMatchId, payload) ??
     scoutBuiltMatchV5(riotMatchId, payload);
   if (match === null || localPuuid === null) return null;
-  return match.metadata.matchId !== riotMatchId ||
-    match.info.platformId.toUpperCase() !== platform ||
-    candidate.platformId?.toUpperCase() !== platform ||
-    `${platform}_${match.info.gameId.toString()}` !== riotMatchId ||
-    !match.metadata.participants.includes(localPuuid)
-    ? null
-    : match;
+  return match.metadata.matchId === riotMatchId &&
+    match.info.platformId.toUpperCase() === platform &&
+    candidate.platformId?.toUpperCase() === platform &&
+    `${platform}_${match.info.gameId.toString()}` === riotMatchId &&
+    match.metadata.participants.includes(localPuuid)
+    ? match
+    : null;
 }
 
 /**
@@ -161,12 +161,12 @@ export function parseLocalHistoryMatch(
       : (identities.get(candidate.localPuuid) ?? candidate.localPuuid);
   const match = convertHistoryMatch(riotMatchId, payload);
   if (match === null || localPuuid === null) return null;
-  return match.info.platformId.toUpperCase() !== platform ||
-    candidate.platformId?.toUpperCase() !== platform ||
-    `${platform}_${match.info.gameId.toString()}` !== riotMatchId ||
-    !match.metadata.participants.includes(localPuuid)
-    ? null
-    : match;
+  return match.info.platformId.toUpperCase() === platform &&
+    candidate.platformId?.toUpperCase() === platform &&
+    `${platform}_${match.info.gameId.toString()}` === riotMatchId &&
+    match.metadata.participants.includes(localPuuid)
+    ? match
+    : null;
 }
 
 /** The aliases a stored candidate needs before it can be parsed. */

@@ -106,9 +106,9 @@ export function validateTargetUrl(raw: string): string | null {
   } catch {
     return "Enter a complete URL starting with https:// or http://.";
   }
-  return parsed.protocol !== "http:" && parsed.protocol !== "https:"
-    ? "Destination URL must use https:// or http://."
-    : null;
+  return parsed.protocol === "http:" || parsed.protocol === "https:"
+    ? null
+    : "Destination URL must use https:// or http://.";
 }
 
 export const UpsertManualLinkInputSchema = z.object({

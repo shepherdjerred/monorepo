@@ -120,9 +120,9 @@ async function handleTaskUpdate(
 ): Promise<CommandOutcome> {
   const resolvedId = resolveRequiredId(args.id, tempIdMapping);
   const resolvedProjectId =
-    args.project_id !== undefined && args.project_id !== ""
-      ? resolveRequiredId(args.project_id, tempIdMapping)
-      : undefined;
+    args.project_id === undefined || args.project_id === ""
+      ? undefined
+      : resolveRequiredId(args.project_id, tempIdMapping);
   const recurrenceRule = parseNullableStringForUpdate(args.recurrence_rule);
   const isRecurring =
     args.recurrence_rule === undefined ? undefined : recurrenceRule !== null;
@@ -165,11 +165,11 @@ async function handleTaskComplete(
     throw new EntityNotFoundError("Task", resolvedId);
   }
   const completedAt =
-    args.completed_at !== undefined &&
-    args.completed_at !== null &&
-    args.completed_at !== ""
-      ? parseValidDate(args.completed_at)
-      : tx.getNow();
+    args.completed_at === undefined ||
+    args.completed_at === null ||
+    args.completed_at === ""
+      ? tx.getNow()
+      : parseValidDate(args.completed_at);
   const update = buildTaskCompletionUpdate(existing, completedAt);
   const updated = await tx.updateTask(resolvedId, userId, update);
   assertMutated(updated !== null, "Task", resolvedId);

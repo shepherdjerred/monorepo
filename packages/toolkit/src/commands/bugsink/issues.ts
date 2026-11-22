@@ -95,11 +95,11 @@ export async function issuesCommand(
       all: options.all,
     });
 
-    if (options.json === true) {
-      console.log(formatJson(issues));
-    } else {
-      console.log(formatIssuesMarkdown(issues, options));
-    }
+    console.log(
+      options.json === true
+        ? formatJson(issues)
+        : formatIssuesMarkdown(issues, options),
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred";

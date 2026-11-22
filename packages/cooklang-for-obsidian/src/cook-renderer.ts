@@ -27,7 +27,7 @@ function field(
   key: string,
 ): string | undefined {
   const value = metadata[key];
-  return value !== undefined && value !== "" ? value : undefined;
+  return value === undefined || value === "" ? undefined : value;
 }
 
 function renderMetadata(container: HTMLElement, recipe: ParsedRecipe): void {

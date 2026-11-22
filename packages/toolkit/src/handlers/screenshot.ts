@@ -149,13 +149,11 @@ export async function handleScreenshotCommand(
       baseUrl: values["base-url"],
     });
 
-    if (values.json) {
-      console.log(JSON.stringify(result));
-    } else {
-      console.log(
-        `Saved ${result.path} (${result.url}, ${String(result.durationMs)}ms)`,
-      );
-    }
+    console.log(
+      values.json
+        ? JSON.stringify(result)
+        : `Saved ${result.path} (${result.url}, ${String(result.durationMs)}ms)`,
+    );
   } catch (error) {
     console.error(
       `toolkit screenshot failed: ${error instanceof Error ? error.message : String(error)}`,

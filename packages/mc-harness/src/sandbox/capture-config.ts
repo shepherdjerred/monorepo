@@ -110,10 +110,11 @@ export function captureConfig(source: string, entry: Entry): string {
         portals: [],
       });
     case "stargates":
-      if (entry.publicHub === true) return Bun.YAML.stringify(parsed);
       // Server hubs refer to realms omitted from the disposable import.
       // Player-built networks retain their ordinary configuration.
-      return Bun.YAML.stringify({ ...parsed, serverGates: [] });
+      return Bun.YAML.stringify(
+        entry.publicHub === true ? parsed : { ...parsed, serverGates: [] },
+      );
     case "essentials":
       return Bun.YAML.stringify({
         ...parsed,

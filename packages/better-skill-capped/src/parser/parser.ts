@@ -125,10 +125,10 @@ export function getCourseImageUrl(course: ManifestCourse): string {
   ) {
     return course.courseImage2;
   }
-  return course.courseImage3 !== "" &&
-    !course.courseImage3.includes("ik.imagekit.io")
-    ? course.courseImage3
-    : course.courseImage;
+  return course.courseImage3 === "" ||
+    course.courseImage3.includes("ik.imagekit.io")
+    ? course.courseImage
+    : course.courseImage3;
 }
 
 function parseVideo(video: ManifestVideo): Video {
