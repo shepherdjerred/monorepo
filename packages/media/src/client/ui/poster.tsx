@@ -15,7 +15,8 @@ const cx = classNames(styles);
  *
  * The poster is decoration: it always sits beside the title as text, so the
  * image has an empty `alt` and the placeholder is hidden from assistive
- * technology.
+ * technology. The placeholder draws the name as generated content, so the
+ * text of a card that links the poster is the title once (WCAG 2.5.3).
  *
  * `sizes` is the rendered width, as for any responsive image: the browser
  * picks from the proxy's widths with it.
@@ -39,7 +40,7 @@ export function Poster({
     return (
       <div className={cx("frame")}>
         <div className={cx("placeholder")} aria-hidden="true">
-          <span className={cx("placeholderTitle")}>{title}</span>
+          <span className={cx("placeholderTitle")} data-title={title} />
           <ClapperboardIcon className={cx("placeholderMark")} />
         </div>
       </div>

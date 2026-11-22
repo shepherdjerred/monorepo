@@ -83,7 +83,7 @@ test("a poster that cannot be fetched gives way to the title's name", async ({
   await expect(card).toHaveCount(1);
   await expect(card.locator("img")).toHaveCount(0);
   await expect(
-    card.getByRole("link", { name: "Your Name. Ready to watch Film, 2016" }),
+    card.getByRole("link", { name: "Ready to watch Your Name. Film, 2016" }),
   ).toBeVisible();
 });
 

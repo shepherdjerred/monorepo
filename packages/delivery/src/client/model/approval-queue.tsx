@@ -135,7 +135,7 @@ function ApprovalRow({
         <Link
           to="/deployments/$deploymentId"
           params={{ deploymentId: item.id }}
-          aria-label={`Deployment to ${item.environmentId}, ${item.kind}${release}, requested ${relativeTime(item.createdAt, at)}`}
+          aria-label={`Deployment to ${names.service(item)} · ${names.environment(item)} (${item.environmentId}), ${item.kind}${release}, requested ${relativeTime(item.createdAt, at)}`}
         >
           {names.service(item)} · {names.environment(item)}
         </Link>

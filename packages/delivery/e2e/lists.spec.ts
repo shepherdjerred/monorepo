@@ -324,7 +324,7 @@ test("deployments say when recovery is required and name links by what they open
   await expect(row).toContainText("failed · recovery required");
   await expect(
     row.getByRole("link", {
-      name: /^Deployment to minecraft\/tsmc, deploy r\d+, /,
+      name: /^Deployment to [^,]+ \(minecraft\/tsmc\), deploy r\d+, /u,
     }),
   ).toHaveText(/tsmc$/u);
   // The overview's name in sight, the environment's id in its title.

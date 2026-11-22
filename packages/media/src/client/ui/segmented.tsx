@@ -77,8 +77,13 @@ export function Segmented({
               ) : (
                 <segment.icon aria-hidden="true" />
               )}
+              {/* The flex gap draws the space before the number; the space
+                  character keeps label and number two words in the text. */}
               {counted(segment) && (
-                <span className={cx("count")}>{segment.count?.value}</span>
+                <>
+                  {" "}
+                  <span className={cx("count")}>{segment.count?.value}</span>
+                </>
               )}
             </Link>
           </li>

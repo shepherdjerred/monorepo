@@ -15,6 +15,7 @@ import {
   Identifier,
   Revision,
   isOpaqueIdentifier,
+  versionSetName,
 } from "#client/components/identifier.tsx";
 import {
   CatalogName,
@@ -31,7 +32,7 @@ import {
   latestStages,
   outcomeOf,
 } from "./activity-fold.ts";
-import { actionLabel } from "./activity-labels.ts";
+import { actionLabel, targetName } from "./activity-labels.ts";
 
 /** One catalog reconcile: what the document created, renamed, rebound, retired and refused (4.1). */
 function CatalogReconcile({ result }: { result: CatalogReconcileRecord }) {
@@ -91,13 +92,6 @@ function Id({ value }: { value: string }) {
     <span className="mono">{value}</span>
   );
 }
-
-const TARGET_NAMES = {
-  build: "Build",
-  deployment: "Deployment",
-  environment: "Environment",
-  versionSet: "Version set",
-} as const;
 
 /**
  * Where an entry's deployment, build or version set belongs: its environment
@@ -169,7 +163,7 @@ function Entity({
       ) : (
         <TargetLink
           target={entry.target}
-          label={`${TARGET_NAMES[entry.target.kind]} ${entry.entityId}`}
+          label={targetName(entry.target.kind, entry.entityId, release)}
         >
           {text}
         </TargetLink>
@@ -235,7 +229,10 @@ function Requested({
           <Link
             to="/versions/$versionSetId"
             params={{ versionSetId: requested.versionSetRevisionId }}
-            aria-label={`Version set ${requested.versionSetRevisionId}`}
+            aria-label={versionSetName(
+              revision,
+              requested.versionSetRevisionId,
+            )}
           >
             {revision === null ? (
               <Id value={requested.versionSetRevisionId} />

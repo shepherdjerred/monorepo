@@ -67,6 +67,14 @@ export function DeploymentStatus({
   );
 }
 
+/**
+ * An environment as the link shows it, its id in parentheses when the name
+ * differs: a link's spoken name starts with the words in sight (WCAG 2.5.3).
+ */
+function shownAs(name: string, slug: string) {
+  return name === slug ? slug : `${name} (${slug})`;
+}
+
 function Row({
   deployment,
   showEnvironment,
@@ -92,7 +100,9 @@ function Row({
           to="/deployments/$deploymentId"
           params={{ deploymentId: deployment.id }}
           aria-label={`Deployment${
-            showEnvironment ? ` to ${deployment.environmentId}` : ""
+            showEnvironment
+              ? ` to ${shownAs(environment, deployment.environmentId)}`
+              : ""
           }, ${what}, ${relativeTime(deployment.createdAt, at)}`}
         >
           {name}

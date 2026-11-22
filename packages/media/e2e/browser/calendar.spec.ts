@@ -376,8 +376,11 @@ for (const zone of [
         ["2026-03-09", "Monday, March 9, no releases"],
         ["2026-03-30", "Monday, March 30, no releases"],
       ] as const) {
+        // A day's name opens with its date and count; its releases follow.
         await expect(
-          grid.getByRole("gridcell", { name, exact: true }),
+          grid.getByRole("gridcell", {
+            name: new RegExp(`^${name}(?: |$)`, "u"),
+          }),
         ).toHaveAttribute("data-date", date);
       }
       // The grid asked for the weeks around March, to the day.

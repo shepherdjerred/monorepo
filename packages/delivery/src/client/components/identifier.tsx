@@ -38,6 +38,16 @@ export function revisionLabel(revision: number) {
   return `r${String(revision)}`;
 }
 
+/**
+ * A version set's spoken name: its r-number first when known, as the link
+ * shows it (WCAG 2.5.3), then its id.
+ */
+export function versionSetName(revision: number | null, id: string) {
+  return revision === null
+    ? `Version set ${id}`
+    : `Version set ${revisionLabel(revision)}, ${id}`;
+}
+
 /** A version-set revision as its r-number; its full id, when known, in `title`. */
 export function Revision({ revision, id }: { revision: number; id?: string }) {
   return (

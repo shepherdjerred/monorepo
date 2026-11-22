@@ -1,3 +1,5 @@
+import { versionSetName } from "#client/components/identifier.tsx";
+
 /**
  * What each recorded audit action means, in the words an on-call person
  * uses. The raw code stays available as the label's `title`; an action not
@@ -75,4 +77,25 @@ const ACTION_LABELS: Readonly<Record<string, string>> = {
 /** A recorded action in plain words, or the action itself when it has none. */
 export function actionLabel(action: string) {
   return ACTION_LABELS[action] ?? action;
+}
+
+const TARGET_NAMES = {
+  build: "Build",
+  deployment: "Deployment",
+  environment: "Environment",
+  versionSet: "Version set",
+} as const;
+
+/**
+ * A linked entry's spoken name. A version set read with its release starts
+ * with the r-number the link shows (WCAG 2.5.3), then its id.
+ */
+export function targetName(
+  kind: keyof typeof TARGET_NAMES,
+  id: string,
+  release: number | null,
+) {
+  return kind === "versionSet"
+    ? versionSetName(release, id)
+    : `${TARGET_NAMES[kind]} ${id}`;
 }

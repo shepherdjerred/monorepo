@@ -19,7 +19,7 @@ test("approvals put the waiting decisions first, named by service, environment a
   const row = waiting.locator("tbody tr").filter({ hasText: "Override" });
   await expect(
     row.getByRole("link", {
-      name: /^Deployment to arcade\/prod, deploy r4, requested /,
+      name: /^Deployment to Arcade · prod \(arcade\/prod\), deploy r4, requested /u,
     }),
   ).toHaveText("Arcade · prod");
   // The release reads as its set revision's number, not a bare id.

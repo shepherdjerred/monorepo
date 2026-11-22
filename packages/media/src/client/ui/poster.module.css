@@ -47,6 +47,9 @@
     overflow: hidden;
     overflow-wrap: anywhere;
   }
+  .placeholderTitle::before {
+    content: attr(data-title);
+  }
   /* A thumbnail has no room for words; its row names the title beside it,
      and the tile is marked as standing in for a picture. */
   @container (max-width: 72px) {

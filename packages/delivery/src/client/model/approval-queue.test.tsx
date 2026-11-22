@@ -28,7 +28,7 @@ describe("the approval queue", () => {
     );
     expect(html).toContain(">Scout for LoL · prod</a>");
     expect(html).toContain(
-      `aria-label="Deployment to ${first.environmentId}, ${first.kind} r44, requested `,
+      `aria-label="Deployment to Scout for LoL · prod (${first.environmentId}), ${first.kind} r44, requested `,
     );
     expect(html).toContain('<span class="revision">r44</span>');
     expect(html).toContain('aria-label="Version set r44"');
