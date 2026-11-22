@@ -1,6 +1,3 @@
-import { chmod, mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import nodePath from "node:path";
 import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { createAgentTaskSecretTokenState } from "#activities/agent/agent-task-env.ts";
@@ -35,15 +32,17 @@ import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
   ReportRemediationV1Schema,
   type ReportRemediationV1,
-} from "#shared/reports/report.ts";
+} from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import {
   buildRemediationPrBody,
   configureRemediationPrAutoMerge,
+  createScratchWorkspace,
   enforceAllowedPaths,
   formatAndFilterAllowedFiles,
   listDirtyRepoPaths,
   remediationAgentEnv,
   remediationBranchName,
+  resolveRepoBaseSha,
   revertUnverifiedFiles,
   unifiedDiffForFiles,
 } from "./codex-pr-remediation-git.ts";
@@ -133,24 +132,6 @@ function safeHeartbeat(payload: Record<string, unknown>): void {
   }
 }
 
-async function createScratchWorkspace(slug: string): Promise<{
-  tempDir: string;
-  repoDir: string;
-  cleanup: () => Promise<void>;
-}> {
-  const tempDir = await mkdtemp(
-    nodePath.join(tmpdir(), `temporal-remediation-${slug}-`),
-  );
-  await chmod(tempDir, 0o711);
-  return {
-    tempDir,
-    repoDir: `${tempDir}/monorepo`,
-    cleanup: async () => {
-      await rm(tempDir, { recursive: true, force: true });
-    },
-  };
-}
-
 async function executeCodexTurn(input: {
   repoDir: string;
   prompt: string;
@@ -191,7 +172,20 @@ async function executeCodexTurn(input: {
     timeoutController.signal,
     ...(activitySignal === undefined ? [] : [activitySignal]),
   ]);
-  let eventCount = 0;
+  let seenEvents = 0;
+  const beforeEvent = createAgentSecretRefreshHandler(secretState.refresh);
+  const onEvent = createTemporalAgentEventHandler({
+    nextEventCount: () => {
+      seenEvents += 1;
+      return seenEvents;
+    },
+    heartbeat: safeHeartbeat,
+  });
+  const sandboxPolicy = {
+    sandboxMode: "danger-full-access" as const,
+    networkAccessEnabled: true,
+    webSearchMode: "live" as const,
+  };
 
   try {
     return await input.runAgentTurn({
@@ -205,20 +199,10 @@ async function executeCodexTurn(input: {
       auth: { kind: "openai-api-key", apiKey: openAiApiKey },
       env: remediationAgentEnv(openAiApiKey, input.sourceEnv),
       signal,
-      sandboxPolicy: {
-        sandboxMode: "danger-full-access",
-        networkAccessEnabled: true,
-        webSearchMode: "live",
-      },
+      sandboxPolicy,
       redactTokens: secretState.tokens,
-      beforeEvent: createAgentSecretRefreshHandler(secretState.refresh),
-      onEvent: createTemporalAgentEventHandler({
-        nextEventCount: () => {
-          eventCount += 1;
-          return eventCount;
-        },
-        heartbeat: safeHeartbeat,
-      }),
+      beforeEvent,
+      onEvent,
     });
   } catch (error: unknown) {
     if (error instanceof AgentTurnExecutionError && error.generationStarted) {
@@ -255,13 +239,8 @@ async function publishVerifiedRemediationPr(input: {
     commandRunner,
   );
   const branch = remediationBranchName(input.slug, unifiedDiff);
-  const mintGitHubToken =
-    input.deps.mintGitHubToken ??
-    (async () => {
-      const tokenResult = await createGitHubAppInstallationToken();
-      return tokenResult.token;
-    });
-  const ghToken = await mintGitHubToken();
+  const ghToken = await (input.deps.mintGitHubToken?.() ??
+    createGitHubAppInstallationToken().then((res) => res.token));
   const findOpenPr =
     input.deps.findOpenPr ??
     ((locator) => findOpenSeasonRefreshPr(locator, commandRunner));
@@ -270,7 +249,6 @@ async function publishVerifiedRemediationPr(input: {
     input.deps.configureAutoMerge ??
     ((autoMergeInput) =>
       configureRemediationPrAutoMerge({ ...autoMergeInput, commandRunner }));
-
   const existingPrUrl = await findOpenPr({
     repoDir: input.repoDir,
     branch,
@@ -278,11 +256,12 @@ async function publishVerifiedRemediationPr(input: {
     repoSlug: REPO_SLUG,
   });
   const outcome = existingPrUrl === undefined ? "pr-created" : "pr-reused";
+  const trimmedNotes = (input.agentNotes ?? "").trim();
   const demoContent =
     input.extraNotes ??
-    (input.agentNotes !== undefined && input.agentNotes.trim() !== ""
-      ? input.agentNotes.trim().slice(0, 1500)
-      : `\`\`\`diff\n${unifiedDiff.slice(0, 1200)}\n\`\`\``);
+    (trimmedNotes === ""
+      ? `\`\`\`diff\n${unifiedDiff.slice(0, 1200)}\n\`\`\``
+      : trimmedNotes.slice(0, 1500));
   const body = buildRemediationPrBody({
     why: input.prWhy,
     what: input.prWhat,
@@ -323,6 +302,59 @@ async function publishVerifiedRemediationPr(input: {
     unresolvedCount: input.unresolvedCount,
     summary: input.verificationSummary,
   });
+}
+
+async function verifyAndIsolateRepoChanges<TExtra>(input: {
+  repoDir: string;
+  baseSha: string | undefined;
+  spec: RunCodexPrRemediationInput<TExtra>;
+  deps: CodexPrRemediationDependencies;
+  commandRunner: GitCommandRunner;
+}): Promise<{
+  verification: CodexPrVerificationResult<TExtra>;
+  finalVerifiedFiles: string[];
+}> {
+  const { allowedFiles } = await enforceAllowedPaths({
+    repoDir: input.repoDir,
+    ...(input.baseSha === undefined ? {} : { baseSha: input.baseSha }),
+    isAllowedPath: input.spec.isAllowedPath,
+    commandRunner: input.commandRunner,
+  });
+  const formatStep =
+    input.deps.formatFiles ??
+    ((fmtInput) =>
+      formatAndFilterAllowedFiles({
+        ...fmtInput,
+        commandRunner: input.commandRunner,
+      }));
+  const formattedFiles = await formatStep({
+    repoDir: input.repoDir,
+    changedFiles: allowedFiles,
+    formatFiles: input.spec.formatFiles ?? true,
+  });
+  const verification = await input.spec.verifyAndFilter(
+    input.repoDir,
+    formattedFiles,
+  );
+  const verifiedAllowed = verification.verifiedFiles.filter((path) =>
+    input.spec.isAllowedPath(path),
+  );
+  await revertUnverifiedFiles({
+    repoDir: input.repoDir,
+    candidateFiles: formattedFiles,
+    verifiedFiles: verifiedAllowed,
+    ...(input.baseSha === undefined ? {} : { baseSha: input.baseSha }),
+    commandRunner: input.commandRunner,
+  });
+  const survivingDirty = new Set(
+    await listDirtyRepoPaths(input.repoDir, input.commandRunner),
+  );
+  return {
+    verification,
+    finalVerifiedFiles: verifiedAllowed
+      .filter((path) => survivingDirty.has(path))
+      .sort((left, right) => left.localeCompare(right)),
+  };
 }
 
 export async function runCodexPrRemediationWithExtra<TExtra = undefined>(
@@ -367,7 +399,7 @@ export async function runCodexPrRemediationWithExtra<TExtra = undefined>(
     if (input.prepareRepo !== undefined) {
       await input.prepareRepo(workspace.repoDir);
     }
-
+    const baseSha = await resolveRepoBaseSha(workspace.repoDir, commandRunner);
     const prompt =
       typeof input.prompt === "function"
         ? await input.prompt(workspace.repoDir)
@@ -383,41 +415,14 @@ export async function runCodexPrRemediationWithExtra<TExtra = undefined>(
       sourceEnv: deps.env ?? Bun.env,
     });
 
-    const { allowedFiles } = await enforceAllowedPaths({
-      repoDir: workspace.repoDir,
-      isAllowedPath: input.isAllowedPath,
-      commandRunner,
-    });
-    const formatStep =
-      deps.formatFiles ??
-      ((fmtInput) =>
-        formatAndFilterAllowedFiles({ ...fmtInput, commandRunner }));
-    const formattedFiles = await formatStep({
-      repoDir: workspace.repoDir,
-      changedFiles: allowedFiles,
-      formatFiles: input.formatFiles ?? true,
-    });
-
-    const verification = await input.verifyAndFilter(
-      workspace.repoDir,
-      formattedFiles,
-    );
-    const verifiedAllowed = verification.verifiedFiles.filter((path) =>
-      input.isAllowedPath(path),
-    );
-    await revertUnverifiedFiles({
-      repoDir: workspace.repoDir,
-      candidateFiles: formattedFiles,
-      verifiedFiles: verifiedAllowed,
-      commandRunner,
-    });
-
-    const survivingDirty = new Set(
-      await listDirtyRepoPaths(workspace.repoDir, commandRunner),
-    );
-    const finalVerifiedFiles = verifiedAllowed
-      .filter((path) => survivingDirty.has(path))
-      .sort((left, right) => left.localeCompare(right));
+    const { verification, finalVerifiedFiles } =
+      await verifyAndIsolateRepoChanges({
+        repoDir: workspace.repoDir,
+        baseSha,
+        spec: input,
+        deps,
+        commandRunner,
+      });
 
     if (finalVerifiedFiles.length === 0) {
       return {
@@ -451,22 +456,21 @@ export async function runCodexPrRemediationWithExtra<TExtra = undefined>(
     return { remediation, extra: verification.extra };
   } finally {
     clearInterval(heartbeat);
-    try {
-      await workspace.cleanup();
-    } catch (cleanupError: unknown) {
+    await workspace.cleanup().catch((cleanupError: unknown) => {
+      const error =
+        cleanupError instanceof Error
+          ? cleanupError.message
+          : String(cleanupError);
       console.warn(
         JSON.stringify({
           level: "warning",
           component: input.callSite,
           msg: "Failed to clean up remediation scratch directory",
           tempDir: workspace.tempDir,
-          error:
-            cleanupError instanceof Error
-              ? cleanupError.message
-              : String(cleanupError),
+          error,
         }),
       );
-    }
+    });
   }
 }
 

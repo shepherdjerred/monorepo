@@ -15,7 +15,7 @@ import {
   buildMainVulnScanReport,
   countCriticalVulnerabilities,
 } from "#activities/maintenance/main-vuln-scan-report.ts";
-import type { ReportRemediationV1 } from "#shared/reports/report.ts";
+import type { ReportRemediationV1 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const RETRY = {

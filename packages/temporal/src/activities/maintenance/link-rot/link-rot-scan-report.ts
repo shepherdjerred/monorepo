@@ -1,9 +1,10 @@
 // Pure report assembly for the weekly link-rot scan — no I/O, no
 // Bugsink/observability imports, so the workflow bundle can import it directly
 // (same pattern as main-vuln-scan-report.ts).
+import type { ReportRemediationV1 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import type { DeadLink, LinkRotScanResult } from "./link-rot-scan.ts";
 import type { ActivityReportInput } from "#activities/reports/report-delivery.ts";
-import type { ReportRemediationV1 } from "#shared/reports/report.ts";
+import { buildScannerRemediationArtifacts } from "#activities/remediation/scanner-remediation-report.ts";
 
 export const LINK_ROT_REPORT_TYPE = "link-rot-scan";
 export const LINK_ROT_SCHEDULE_ID = "link-rot-scan-weekly";
@@ -60,67 +61,59 @@ function buildRemediationCheckAndEvidence(
   checks: ActivityReportInput["checks"];
   evidence: ActivityReportInput["evidence"];
 } {
-  if (remediation === undefined) {
-    return { checks: [], evidence: [] };
+  return buildScannerRemediationArtifacts({
+    observedAt,
+    remediation,
+    checkId: "dead-link-remediation",
+    checkLabel: "Automated dead-link remediation",
+    receiptId: REMEDIATION_RECEIPT_ID,
+    receiptSource: "Codex SDK dead-link remediation",
+  });
+}
+
+export type LinkRotRemediationReportInput = ReportRemediationV1 & {
+  readonly resolvedLinkKeys?: readonly string[];
+};
+
+function deadLinkIdentityKey(link: DeadLink): string {
+  return `${normalizeSource(link.source)}\u{0}${link.url}`;
+}
+
+function isLinkVerifiedRepaired(
+  link: DeadLink,
+  deadLinks: readonly DeadLink[],
+  remediation: LinkRotRemediationReportInput | undefined,
+): boolean {
+  if (remediation?.prUrl === undefined) {
+    return false;
   }
-  const failedWithoutPr =
-    remediation.outcome === "partial" && remediation.prUrl === undefined;
-  const skipped = remediation.outcome === "skipped";
-  const receiptStatus = failedWithoutPr ? "failure" : "success";
-  return {
-    checks: [
-      {
-        id: "dead-link-remediation",
-        label: "Automated dead-link remediation",
-        required: false,
-        status: skipped ? "skipped" : failedWithoutPr ? "failed" : "passed",
-        summary: remediation.summary ?? `Outcome: ${remediation.outcome}`,
-        evidenceReceiptIds: skipped ? [] : [REMEDIATION_RECEIPT_ID],
-      },
-    ],
-    evidence: skipped
-      ? []
-      : [
-          {
-            id: REMEDIATION_RECEIPT_ID,
-            source: "Codex SDK dead-link remediation",
-            observedAt,
-            status: receiptStatus,
-            ...(remediation.prUrl === undefined
-              ? {}
-              : { url: remediation.prUrl }),
-            excerpt: (remediation.summary ?? remediation.outcome).slice(
-              0,
-              2000,
-            ),
-          },
-        ],
-  };
+  if ((remediation.unresolvedCount ?? 0) === 0) {
+    return true;
+  }
+  if (remediation.resolvedLinkKeys !== undefined) {
+    return new Set(remediation.resolvedLinkKeys).has(deadLinkIdentityKey(link));
+  }
+  const changedSources = new Set(remediation.changedFiles);
+  if (!changedSources.has(normalizeSource(link.source))) {
+    return false;
+  }
+  const linksInChangedSources = deadLinks.filter((candidate) =>
+    changedSources.has(normalizeSource(candidate.source)),
+  ).length;
+  return linksInChangedSources === (remediation.resolvedCount ?? 0);
 }
 
 function buildDeadLinkFindings(
   deadLinks: readonly DeadLink[],
-  remediation: ReportRemediationV1 | undefined,
+  remediation: LinkRotRemediationReportInput | undefined,
 ): ActivityReportInput["findings"] {
   const prUrl = remediation?.prUrl;
-  const allResolvedInPr =
-    prUrl !== undefined && (remediation?.unresolvedCount ?? 0) === 0;
-  const changedSources = new Set(remediation?.changedFiles);
-  const maxDowngraded =
-    prUrl === undefined
-      ? 0
-      : allResolvedInPr
-        ? deadLinks.length
-        : (remediation?.resolvedCount ?? 0);
-  let downgradedSoFar = 0;
 
   return deadLinks.map((link) => {
-    const canDowngrade =
+    if (
       prUrl !== undefined &&
-      downgradedSoFar < maxDowngraded &&
-      (allResolvedInPr || changedSources.has(normalizeSource(link.source)));
-    if (canDowngrade) {
-      downgradedSoFar += 1;
+      isLinkVerifiedRepaired(link, deadLinks, remediation)
+    ) {
       return {
         section: "Dead links",
         state: "observing" as const,
@@ -210,18 +203,25 @@ function buildLinkRotVerdict(
 export function buildLinkRotReport(
   startedAt: string,
   result: LinkRotScanResult,
-  remediation?: ReportRemediationV1,
+  remediation?: LinkRotRemediationReportInput,
 ): ActivityReportInput {
   const dead = result.deadLinks.length;
   const timedOut = result.timedOutLinks.length;
   const ignoredRootRelative = result.ignoredRootRelativeLinks;
+  const envelopeRemediation =
+    remediation === undefined
+      ? undefined
+      : (() => {
+          const { resolvedLinkKeys: _ignored, ...rest } = remediation;
+          return rest;
+        })();
   const internalLinkSummary =
     ignoredRootRelative === 0
       ? ""
       : ` ${String(ignoredRootRelative)} site-root-relative ${ignoredRootRelative === 1 ? "link was" : "links were"} delegated to their owning site checks.`;
   const remediationArtifacts = buildRemediationCheckAndEvidence(
     result.observedAt,
-    remediation,
+    envelopeRemediation,
   );
 
   return {
@@ -230,8 +230,8 @@ export function buildLinkRotReport(
     scheduleId: LINK_ROT_SCHEDULE_ID,
     startedAt,
     execution: "complete",
-    verdict: buildLinkRotVerdict(dead, timedOut, remediation),
-    headline: buildLinkRotHeadline(result, remediation),
+    verdict: buildLinkRotVerdict(dead, timedOut, envelopeRemediation),
+    headline: buildLinkRotHeadline(result, envelopeRemediation),
     checks: [
       {
         id: "lychee-scan-completed",
@@ -269,13 +269,15 @@ export function buildLinkRotReport(
     ],
     limitations: [
       "Scope: tracked Markdown, web links only, verbatim/code-block URLs skipped; 403/429 responses count as alive (bot-hostile hosts). Site-root-relative links are validated by the owning site's build checks. See root lychee.toml.",
-      ...(remediation?.outcome === "partial" &&
-      remediation.summary !== undefined
-        ? [remediation.summary]
+      ...(envelopeRemediation?.outcome === "partial" &&
+      envelopeRemediation.summary !== undefined
+        ? [envelopeRemediation.summary]
         : []),
     ],
-    actions: linkRotActions(dead, timedOut, remediation),
-    ...(remediation === undefined ? {} : { remediation }),
+    actions: linkRotActions(dead, timedOut, envelopeRemediation),
+    ...(envelopeRemediation === undefined
+      ? {}
+      : { remediation: envelopeRemediation }),
     provenance: {
       source: "https://github.com/shepherdjerred/monorepo",
       repoSha: result.repoSha,

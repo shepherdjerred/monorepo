@@ -7,10 +7,12 @@ import type {
   LinkRotScanActivities,
   LinkRotScanResult,
 } from "#activities/maintenance/link-rot/link-rot-scan.ts";
-import type { LinkRotRemediationActivities } from "#activities/maintenance/link-rot/link-rot-remediation.ts";
+import type {
+  LinkRotRemediationActivities,
+  LinkRotRemediationResult,
+} from "#activities/maintenance/link-rot/link-rot-remediation.ts";
 import type { LinkRotScanAlertActivities } from "#activities/maintenance/link-rot/link-rot-scan-alerts.ts";
 import type { ReportDeliveryActivities } from "#activities/reports/report-delivery.ts";
-import type { ReportRemediationV1 } from "#shared/reports/report.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   buildLinkRotFailureReport,
@@ -93,7 +95,7 @@ export async function runLinkRotScanWorkflow(): Promise<void> {
     throw error;
   }
 
-  let remediation: ReportRemediationV1 | undefined;
+  let remediation: LinkRotRemediationResult | undefined;
   if (result.deadLinks.length > 0 && patched("link-rot-remediation-v1")) {
     try {
       remediation = await remediateLinkRot(result);

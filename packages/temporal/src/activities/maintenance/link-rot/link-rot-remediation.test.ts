@@ -1,8 +1,5 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import nodePath from "node:path";
 import { describe, expect, test } from "vitest";
-import { runCommand } from "#activities/scout/scout-season-refresh-git.ts";
+import { createRemediationTestGitRepo } from "#activities/remediation/remediation-test-git.ts";
 import {
   isAllowedLinkRotPath,
   validateLycheeIgnoreChanges,
@@ -27,55 +24,54 @@ const DEAD_LINKS: DeadLink[] = [
   },
 ];
 
-function lycheeJson(errorMap: Record<string, { url: string; text: string }[]>) {
-  const mapped = Object.fromEntries(
-    Object.entries(errorMap).map(([source, links]) => [
-      source,
-      links.map((link) => ({
-        url: link.url,
-        status: { text: link.text, code: 404 },
-      })),
-    ]),
-  );
+function lycheeJson(
+  errorMap: Record<string, { url: string; text: string }[]>,
+  timeoutMap: Record<string, { url: string; text: string }[]> = {},
+): string {
+  const mapEntries = (
+    input: Record<string, { url: string; text: string }[]>,
+    code?: number,
+  ) =>
+    Object.fromEntries(
+      Object.entries(input).map(([source, links]) => [
+        source,
+        links.map((link) => ({
+          url: link.url,
+          status:
+            code === undefined
+              ? { text: link.text }
+              : { text: link.text, code },
+        })),
+      ]),
+    );
   const errorCount = Object.values(errorMap).reduce(
+    (sum, links) => sum + links.length,
+    0,
+  );
+  const timeoutCount = Object.values(timeoutMap).reduce(
     (sum, links) => sum + links.length,
     0,
   );
   return JSON.stringify({
     total: 10,
-    successful: 10 - errorCount,
+    successful: Math.max(0, 10 - errorCount - timeoutCount),
     errors: errorCount,
-    timeouts: 0,
+    timeouts: timeoutCount,
     excludes: 0,
-    error_map: mapped,
-    timeout_map: {},
+    error_map: mapEntries(errorMap, 404),
+    timeout_map: mapEntries(timeoutMap),
   });
 }
 
-async function setupGitFixture(): Promise<{
-  repoDir: string;
-  cleanup: () => Promise<void>;
-}> {
-  const tempDir = await mkdtemp(nodePath.join(tmpdir(), "link-rot-test-"));
-  const repoDir = `${tempDir}/repo`;
-  await runCommand(["mkdir", "-p", `${repoDir}/docs`], { cwd: tempDir });
-  await runCommand(["git", "init", "-b", "main"], { cwd: repoDir });
-  await runCommand(["git", "config", "user.email", "test@sjer.red"], {
-    cwd: repoDir,
+function setupGitFixture() {
+  return createRemediationTestGitRepo({
+    prefix: "link-rot-test-",
+    files: {
+      ".lycheeignore": "# Existing internal host\n^https?://go/\n",
+      "docs/a.md": "[a](https://example.org/dead-a)\n",
+      "docs/b.md": "[b](https://example.org/dead-b)\n",
+    },
   });
-  await runCommand(["git", "config", "user.name", "Test"], { cwd: repoDir });
-  await Bun.write(
-    `${repoDir}/.lycheeignore`,
-    "# Existing internal host\n^https?://go/\n",
-  );
-  await Bun.write(`${repoDir}/docs/a.md`, "[a](https://example.org/dead-a)\n");
-  await Bun.write(`${repoDir}/docs/b.md`, "[b](https://example.org/dead-b)\n");
-  await runCommand(["git", "add", "."], { cwd: repoDir });
-  await runCommand(["git", "commit", "-m", "init"], { cwd: repoDir });
-  return {
-    repoDir,
-    cleanup: () => rm(tempDir, { recursive: true, force: true }),
-  };
 }
 
 describe("isAllowedLinkRotPath", () => {
@@ -114,6 +110,24 @@ describe("validateLycheeIgnoreChanges", () => {
       validateLycheeIgnoreChanges(
         baseline,
         `${baseline}# Broad https rule\n^https?://.*\n`,
+      ).valid,
+    ).toBe(false);
+    expect(
+      validateLycheeIgnoreChanges(
+        baseline,
+        `${baseline}# Broad non-capturing group\n^https?://(?:.*)\n`,
+      ).valid,
+    ).toBe(false);
+    expect(
+      validateLycheeIgnoreChanges(
+        baseline,
+        `${baseline}# Alternation escape\n^https?://docs\\.vendor\\.example/guide|.*\n`,
+      ).valid,
+    ).toBe(false);
+    expect(
+      validateLycheeIgnoreChanges(
+        baseline,
+        `${baseline}# Unescaped host dots\n^https?://docs.vendor.example/guide\n`,
       ).valid,
     ).toBe(false);
     expect(
@@ -209,6 +223,105 @@ describe("verifyLinkRotRemediation", () => {
       });
 
       expect(result).toMatchObject({
+        verifiedFiles: ["docs/a.md"],
+        resolvedCount: 1,
+        unresolvedCount: 1,
+        autoMerge: false,
+      });
+      expect(await Bun.file(`${fixture.repoDir}/docs/b.md`).text()).toBe(
+        "[b](https://example.org/dead-b)\n",
+      );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  test("treats timed-out replacement links as unverified failures and prevents autoMerge", async () => {
+    const fixture = await setupGitFixture();
+    try {
+      await Bun.write(
+        `${fixture.repoDir}/docs/a.md`,
+        "[a](https://example.org/slow-replacement)\n",
+      );
+
+      const singleDeadLink = [DEAD_LINKS[0]!];
+      const allTimedOutResult = await verifyLinkRotRemediation({
+        repoDir: fixture.repoDir,
+        changedFiles: ["docs/a.md"],
+        originalDeadLinks: singleDeadLink,
+        beforeLycheeIgnore: "# Existing internal host\n^https?://go/\n",
+        runLychee: () =>
+          Promise.resolve(
+            lycheeJson(
+              {},
+              {
+                "docs/a.md": [
+                  {
+                    url: "https://example.org/slow-replacement",
+                    text: "Timeout",
+                  },
+                ],
+              },
+            ),
+          ),
+      });
+
+      expect(allTimedOutResult).toMatchObject({
+        verifiedFiles: [],
+        resolvedCount: 0,
+        unresolvedCount: 1,
+        autoMerge: false,
+      });
+      expect(await Bun.file(`${fixture.repoDir}/docs/a.md`).text()).toBe(
+        "[a](https://example.org/dead-a)\n",
+      );
+
+      await Bun.write(
+        `${fixture.repoDir}/docs/a.md`,
+        "[a](https://example.org/live-a)\n",
+      );
+      await Bun.write(
+        `${fixture.repoDir}/docs/b.md`,
+        "[b](https://example.org/slow-b)\n",
+      );
+
+      let partialCalls = 0;
+      const partialResult = await verifyLinkRotRemediation({
+        repoDir: fixture.repoDir,
+        changedFiles: ["docs/a.md", "docs/b.md"],
+        originalDeadLinks: DEAD_LINKS,
+        beforeLycheeIgnore: "# Existing internal host\n^https?://go/\n",
+        runLychee: () => {
+          partialCalls += 1;
+          return Promise.resolve(
+            partialCalls === 1
+              ? lycheeJson(
+                  {},
+                  {
+                    "docs/b.md": [
+                      {
+                        url: "https://example.org/slow-b",
+                        text: "Timeout",
+                      },
+                    ],
+                  },
+                )
+              : lycheeJson(
+                  {},
+                  {
+                    "docs/b.md": [
+                      {
+                        url: "https://example.org/dead-b",
+                        text: "Timeout",
+                      },
+                    ],
+                  },
+                ),
+          );
+        },
+      });
+
+      expect(partialResult).toMatchObject({
         verifiedFiles: ["docs/a.md"],
         resolvedCount: 1,
         unresolvedCount: 1,

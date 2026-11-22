@@ -1,6 +1,6 @@
 import { captureCommand } from "#activities/command-runner.ts";
 import {
-  runCodexPrRemediation,
+  runCodexPrRemediationWithExtra,
   type CodexPrRemediationDependencies,
   type CodexPrVerificationResult,
 } from "#activities/remediation/codex-pr-remediation.ts";
@@ -9,18 +9,29 @@ import {
   runCommand as defaultRunCommand,
   type GitCommandRunner,
 } from "#activities/scout/scout-season-refresh-git.ts";
-import type { ReportRemediationV1 } from "#shared/reports/report.ts";
+import type { ReportRemediationV1 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import {
   parseLycheeReport,
   type DeadLink,
   type LinkRotScanResult,
+  type ParsedLycheeReport,
 } from "./link-rot-scan.ts";
 
 const LYCHEEIGNORE_PATH = ".lycheeignore";
 const LYCHEE_FINDINGS_EXIT_CODE = 2;
 
-const SPECIFIC_URL_EXCLUSION_PREFIX =
-  /^\^https\?:\/\/(?!\.\*(?:$|\/)|\.\+(?:$|\/)|\[\^\/\]\*(?:$|\/)|\[\^\/\]\+(?:$|\/))\S{6,}$/u;
+const LITERAL_HOST_EXCLUSION_PATTERN =
+  /^\^https\?:\/\/[a-z0-9-]+(?:\\\.[a-z0-9-]+)+(?::\d+)?\/(\S+)$/iu;
+const BROAD_PATH_PREFIX_PATTERN =
+  /^(?:\.\*|\.\+|\(\?:\.\*\)|\(\?:\.\+\))(?:$|\$)/u;
+const SENTINEL_UNRELATED_URLS = [
+  "https://sentinel-unrelated-host.example/path",
+  "http://sentinel-other-host.invalid/docs",
+] as const;
+
+export type LinkRotRemediationResult = ReportRemediationV1 & {
+  resolvedLinkKeys?: string[];
+};
 
 export function normalizeLinkRotSourcePath(source: string): string {
   return source.startsWith("./") ? source.slice(2) : source;
@@ -48,13 +59,18 @@ function isMeaningfulCommentLine(line: string): boolean {
 }
 
 function isSpecificValidExclusionRegex(pattern: string): boolean {
-  if (!SPECIFIC_URL_EXCLUSION_PREFIX.test(pattern)) {
+  if (pattern.includes("|")) {
+    return false;
+  }
+  const match = LITERAL_HOST_EXCLUSION_PATTERN.exec(pattern);
+  const pathPart = match?.[1];
+  if (pathPart === undefined || BROAD_PATH_PREFIX_PATTERN.test(pathPart)) {
     return false;
   }
   try {
-    // Validate regex syntax deterministically before lychee consumes .lycheeignore.
-    new RegExp(pattern, "u");
-    return true;
+    // Validate regex syntax deterministically and verify it cannot match unrelated hosts.
+    const compiled = new RegExp(pattern, "u");
+    return SENTINEL_UNRELATED_URLS.every((url) => !compiled.test(url));
   } catch {
     return false;
   }
@@ -180,16 +196,103 @@ async function defaultRunLycheeJson(
   return stdout;
 }
 
+function linkIdentityKey(link: DeadLink): string {
+  return `${normalizeLinkRotSourcePath(link.source)}\u{0}${link.url}`;
+}
+
+function collectFailingLinks(parsed: ParsedLycheeReport): DeadLink[] {
+  return [...parsed.deadLinks, ...parsed.timedOutLinks];
+}
+
+function preExistingTimeoutOnlyKeys(
+  originalDeadLinks: readonly DeadLink[],
+  originalTimedOutLinks: readonly DeadLink[],
+): Set<string> {
+  const deadKeys = new Set(
+    originalDeadLinks.map((link) => linkIdentityKey(link)),
+  );
+  return new Set(
+    originalTimedOutLinks
+      .map((link) => linkIdentityKey(link))
+      .filter((key) => !deadKeys.has(key)),
+  );
+}
+
+function shouldRevertMarkdownFile(input: {
+  file: string;
+  parsed: ParsedLycheeReport;
+  originalDeadLinks: readonly DeadLink[];
+  originalTimedOut: readonly DeadLink[];
+}): boolean {
+  const beforeLinks = input.originalDeadLinks.filter(
+    (link) => normalizeLinkRotSourcePath(link.source) === input.file,
+  );
+  const beforeDeadUrls = new Set(beforeLinks.map((link) => link.url));
+  const beforeTimedOutUrls = new Set(
+    input.originalTimedOut
+      .filter((link) => normalizeLinkRotSourcePath(link.source) === input.file)
+      .map((link) => link.url),
+  );
+  const afterFailingLinks = collectFailingLinks(input.parsed).filter(
+    (link) => normalizeLinkRotSourcePath(link.source) === input.file,
+  );
+  const introducedNewFailingLink = afterFailingLinks.some(
+    (link) =>
+      !beforeDeadUrls.has(link.url) && !beforeTimedOutUrls.has(link.url),
+  );
+  const remainingTargetFailures = afterFailingLinks.filter(
+    (link) => beforeDeadUrls.has(link.url) || !beforeTimedOutUrls.has(link.url),
+  );
+  return (
+    introducedNewFailingLink ||
+    remainingTargetFailures.length >= beforeLinks.length
+  );
+}
+
+async function filterMarkdownCandidates(input: {
+  repoDir: string;
+  candidateFiles: readonly string[];
+  parsed: ParsedLycheeReport;
+  originalDeadLinks: readonly DeadLink[];
+  originalTimedOut: readonly DeadLink[];
+  commandRunner: GitCommandRunner;
+}): Promise<{ keptFiles: string[]; revertedAnyMarkdown: boolean }> {
+  const keptFiles: string[] = [];
+  let revertedAnyMarkdown = false;
+  for (const file of input.candidateFiles) {
+    if (file === LYCHEEIGNORE_PATH) {
+      keptFiles.push(file);
+      continue;
+    }
+    if (
+      shouldRevertMarkdownFile({
+        file,
+        parsed: input.parsed,
+        originalDeadLinks: input.originalDeadLinks,
+        originalTimedOut: input.originalTimedOut,
+      })
+    ) {
+      await revertSingleRepoPath(input.repoDir, file, input.commandRunner);
+      revertedAnyMarkdown = true;
+    } else {
+      keptFiles.push(file);
+    }
+  }
+  return { keptFiles, revertedAnyMarkdown };
+}
+
 export async function verifyLinkRotRemediation(input: {
   repoDir: string;
   changedFiles: readonly string[];
   originalDeadLinks: readonly DeadLink[];
+  originalTimedOutLinks?: readonly DeadLink[];
   beforeLycheeIgnore: string;
   runLychee?: LycheeRunner;
   commandRunner?: GitCommandRunner;
-}): Promise<CodexPrVerificationResult> {
+}): Promise<CodexPrVerificationResult<string[]>> {
   const commandRunner = input.commandRunner ?? defaultRunCommand;
   const runLychee = input.runLychee ?? defaultRunLycheeJson;
+  const originalTimedOut = input.originalTimedOutLinks ?? [];
   const originalCount = input.originalDeadLinks.length;
   const originalSources = [
     ...new Set(
@@ -206,6 +309,7 @@ export async function verifyLinkRotRemediation(input: {
       unresolvedCount: originalCount,
       verificationSummary:
         "No allowed files were modified by the remediation agent.",
+      extra: [],
     };
   }
 
@@ -237,41 +341,57 @@ export async function verifyLinkRotRemediation(input: {
       unresolvedCount: originalCount,
       verificationSummary:
         "Reverted invalid .lycheeignore changes; no verified dead-link fixes remain.",
+      extra: [],
     };
   }
 
   let parsed = parseLycheeReport(
     await runLychee(input.repoDir, originalSources),
   );
-  let revertedAnyMarkdown = false;
+  const filtered = await filterMarkdownCandidates({
+    repoDir: input.repoDir,
+    candidateFiles,
+    parsed,
+    originalDeadLinks: input.originalDeadLinks,
+    originalTimedOut,
+    commandRunner,
+  });
+  candidateFiles = filtered.keptFiles;
 
-  for (const file of candidateFiles) {
-    if (file === LYCHEEIGNORE_PATH) {
-      continue;
-    }
-    const beforeLinks = input.originalDeadLinks.filter(
-      (link) => normalizeLinkRotSourcePath(link.source) === file,
-    );
-    const beforeUrls = new Set(beforeLinks.map((link) => link.url));
-    const afterLinks = parsed.deadLinks.filter(
-      (link) => normalizeLinkRotSourcePath(link.source) === file,
-    );
-    const introducedNewDeadLink = afterLinks.some(
-      (link) => !beforeUrls.has(link.url),
-    );
-    const noNetImprovement = afterLinks.length >= beforeLinks.length;
-    if (introducedNewDeadLink || noNetImprovement) {
-      await revertSingleRepoPath(input.repoDir, file, commandRunner);
-      candidateFiles = candidateFiles.filter((candidate) => candidate !== file);
-      revertedAnyMarkdown = true;
-    }
+  if (candidateFiles.length === 0) {
+    return {
+      verifiedFiles: [],
+      resolvedCount: 0,
+      unresolvedCount: originalCount,
+      autoMerge: false,
+      verificationSummary:
+        "Reverted candidate Markdown edits after lychee reported broken or timed-out replacement links.",
+      extra: [],
+    };
   }
 
-  if (revertedAnyMarkdown && candidateFiles.length > 0) {
+  if (filtered.revertedAnyMarkdown) {
     parsed = parseLycheeReport(await runLychee(input.repoDir, originalSources));
   }
 
-  const remainingCount = parsed.deadLinks.length;
+  const ignoredTimeoutKeys = preExistingTimeoutOnlyKeys(
+    input.originalDeadLinks,
+    originalTimedOut,
+  );
+  const remainingFailures = collectFailingLinks(parsed).filter(
+    (link) => !ignoredTimeoutKeys.has(linkIdentityKey(link)),
+  );
+  const remainingFailureKeys = new Set(
+    remainingFailures.map((link) => linkIdentityKey(link)),
+  );
+  const resolvedLinkKeys = [
+    ...new Set(
+      input.originalDeadLinks
+        .map((link) => linkIdentityKey(link))
+        .filter((key) => !remainingFailureKeys.has(key)),
+    ),
+  ];
+  const remainingCount = remainingFailures.length;
   const resolvedCount = Math.max(0, originalCount - remainingCount);
   if (resolvedCount === 0) {
     for (const file of candidateFiles) {
@@ -281,23 +401,30 @@ export async function verifyLinkRotRemediation(input: {
       verifiedFiles: [],
       resolvedCount: 0,
       unresolvedCount: originalCount,
-      verificationSummary: `lychee re-check showed 0 of ${String(originalCount)} dead links resolved.`,
+      autoMerge: false,
+      verificationSummary: `lychee re-check showed 0 of ${String(originalCount)} dead links resolved (${String(parsed.timedOutLinks.length)} timed out).`,
+      extra: [],
     };
   }
 
+  const timeoutSuffix =
+    parsed.timedOutLinks.length === 0
+      ? ""
+      : `, ${String(parsed.timedOutLinks.length)} timed out`;
   return {
     verifiedFiles: candidateFiles,
     resolvedCount,
     unresolvedCount: remainingCount,
-    autoMerge: remainingCount === 0,
-    verificationSummary: `lychee verified ${String(resolvedCount)}/${String(originalCount)} dead links resolved (${String(remainingCount)} remaining).`,
+    autoMerge: remainingCount === 0 && parsed.timedOutLinks.length === 0,
+    verificationSummary: `lychee verified ${String(resolvedCount)}/${String(originalCount)} dead links resolved (${String(remainingCount)} remaining${timeoutSuffix}).`,
+    extra: resolvedLinkKeys,
   };
 }
 
 export async function remediateLinkRot(
   scanResult: LinkRotScanResult,
   deps: CodexPrRemediationDependencies & { runLychee?: LycheeRunner } = {},
-): Promise<ReportRemediationV1> {
+): Promise<LinkRotRemediationResult> {
   if (scanResult.deadLinks.length === 0) {
     return {
       outcome: "no-changes",
@@ -305,11 +432,12 @@ export async function remediateLinkRot(
       resolvedCount: 0,
       unresolvedCount: 0,
       summary: "No dead links required remediation.",
+      resolvedLinkKeys: [],
     };
   }
 
   let beforeLycheeIgnore = "";
-  return runCodexPrRemediation(
+  const outcome = await runCodexPrRemediationWithExtra<string[]>(
     {
       slug: "link-rot",
       callSite: "link-rot-remediation",
@@ -332,6 +460,7 @@ export async function remediateLinkRot(
           repoDir,
           changedFiles,
           originalDeadLinks: scanResult.deadLinks,
+          originalTimedOutLinks: scanResult.timedOutLinks,
           beforeLycheeIgnore,
           ...(deps.runLychee === undefined
             ? {}
@@ -343,12 +472,15 @@ export async function remediateLinkRot(
     },
     deps,
   );
+  return outcome.extra === undefined
+    ? outcome.remediation
+    : { ...outcome.remediation, resolvedLinkKeys: outcome.extra };
 }
 
 export const linkRotRemediationActivities = {
   async remediateLinkRot(
     scanResult: LinkRotScanResult,
-  ): Promise<ReportRemediationV1> {
+  ): Promise<LinkRotRemediationResult> {
     return remediateLinkRot(scanResult);
   },
 };

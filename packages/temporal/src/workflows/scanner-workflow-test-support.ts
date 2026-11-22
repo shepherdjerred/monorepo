@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 import { Worker } from "@temporalio/worker";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import type { PatchActivationCallback } from "@temporalio/worker";
-import { ReportRemediationV1Schema } from "#shared/reports/report.ts";
+import { ReportRemediationV1Schema } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import type { TaskQueue } from "#shared/task-queues.ts";
 
 const DeliveredReportSchema = z.object({

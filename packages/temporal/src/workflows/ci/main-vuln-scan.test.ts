@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MainVulnScanResult } from "#activities/maintenance/main-vuln-scan.ts";
-import type { ReportRemediationV1 } from "#shared/reports/report.ts";
+import type { ReportRemediationV1 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runMainVulnScanWorkflow } from "./main-vuln-scan.ts";
 import * as scannerTest from "#workflows/scanner-workflow-test-support.ts";

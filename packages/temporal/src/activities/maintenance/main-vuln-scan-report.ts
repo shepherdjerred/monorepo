@@ -1,9 +1,10 @@
 // Pure report assembly for the weekly main vulnerability scan — no I/O, no
 // Bugsink/observability imports, so the workflow bundle can import it directly
 // (same pattern as homelab-audit-report.ts).
+import type { ReportRemediationV1 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import type { MainVulnScanResult } from "./main-vuln-scan.ts";
 import type { ActivityReportInput } from "#activities/reports/report-delivery.ts";
-import type { ReportRemediationV1 } from "#shared/reports/report.ts";
+import { buildScannerRemediationArtifacts } from "#activities/remediation/scanner-remediation-report.ts";
 
 export const MAIN_VULN_SCAN_REPORT_TYPE = "main-vuln-scan";
 export const MAIN_VULN_SCAN_SCHEDULE_ID = "main-vuln-scan-weekly";
@@ -80,41 +81,14 @@ function buildVulnRemediationCheckAndEvidence(
   checks: ActivityReportInput["checks"];
   evidence: ActivityReportInput["evidence"];
 } {
-  if (remediation === undefined) {
-    return { checks: [], evidence: [] };
-  }
-  const failedWithoutPr =
-    remediation.outcome === "partial" && remediation.prUrl === undefined;
-  const skipped = remediation.outcome === "skipped";
-  return {
-    checks: [
-      {
-        id: "vuln-remediation",
-        label: "Automated vulnerability remediation",
-        required: false,
-        status: skipped ? "skipped" : failedWithoutPr ? "failed" : "passed",
-        summary: remediation.summary ?? `Outcome: ${remediation.outcome}`,
-        evidenceReceiptIds: skipped ? [] : [REMEDIATION_RECEIPT_ID],
-      },
-    ],
-    evidence: skipped
-      ? []
-      : [
-          {
-            id: REMEDIATION_RECEIPT_ID,
-            source: "Codex SDK vulnerability remediation",
-            observedAt,
-            status: failedWithoutPr ? "failure" : "success",
-            ...(remediation.prUrl === undefined
-              ? {}
-              : { url: remediation.prUrl }),
-            excerpt: (remediation.summary ?? remediation.outcome).slice(
-              0,
-              2000,
-            ),
-          },
-        ],
-  };
+  return buildScannerRemediationArtifacts({
+    observedAt,
+    remediation,
+    checkId: "vuln-remediation",
+    checkLabel: "Automated vulnerability remediation",
+    receiptId: REMEDIATION_RECEIPT_ID,
+    receiptSource: "Codex SDK vulnerability remediation",
+  });
 }
 
 export function buildMainVulnScanReport(

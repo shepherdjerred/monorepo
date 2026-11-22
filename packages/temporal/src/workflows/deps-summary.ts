@@ -21,7 +21,7 @@ import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/reports/report-delivery.ts";
-import type { ReportRemediationV1 } from "#shared/reports/report.ts";
+import type { ReportRemediationV1 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./scout/report-activity-queue.ts";
 
@@ -86,6 +86,7 @@ function dependencySection(change: DependencyChange): string {
 }
 
 function mergeResolvedReleaseNotes(
+  changes: readonly DependencyChange[],
   existingNotes: readonly ReleaseNote[],
   resolvedNotes: readonly ReleaseNote[],
   missing: readonly MissingReleaseNote[],
@@ -97,16 +98,31 @@ function mergeResolvedReleaseNotes(
   for (const note of existingNotes) {
     byKey.set(`${note.dependency}\u{0}${note.version}`, note);
   }
-  const resolvedDependencies = new Set<string>();
+  const resolvedVersionKeys = new Set<string>();
   for (const note of resolvedNotes) {
-    byKey.set(`${note.dependency}\u{0}${note.version}`, note);
-    resolvedDependencies.add(note.dependency);
+    const key = `${note.dependency}\u{0}${note.version}`;
+    if (!byKey.has(key)) {
+      byKey.set(key, note);
+    }
+    resolvedVersionKeys.add(key);
   }
+  const versionByCommitKey = new Map(
+    changes.map((change) => [
+      `${change.name}\u{0}${change.commitSha}`,
+      change.newVersion ?? "removed",
+    ]),
+  );
   return {
     notes: [...byKey.values()],
-    missing: missing.filter(
-      (candidate) => !resolvedDependencies.has(candidate.dependency),
-    ),
+    missing: missing.filter((candidate) => {
+      const version = versionByCommitKey.get(
+        `${candidate.dependency}\u{0}${candidate.commitSha}`,
+      );
+      return (
+        version === undefined ||
+        !resolvedVersionKeys.has(`${candidate.dependency}\u{0}${version}`)
+      );
+    }),
   };
 }
 
@@ -137,6 +153,7 @@ async function resolveReleaseNotesWithOptionalPr(
     );
     return {
       effectiveNotes: mergeResolvedReleaseNotes(
+        changes,
         fetchedNotes.notes,
         proposal.resolvedNotes,
         fetchedNotes.missing,

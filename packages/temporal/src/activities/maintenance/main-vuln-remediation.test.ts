@@ -1,9 +1,8 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import nodePath from "node:path";
 import { describe, expect, test } from "vitest";
+import { createRemediationTestGitRepo } from "#activities/remediation/remediation-test-git.ts";
 import { runCommand } from "#activities/scout/scout-season-refresh-git.ts";
 import {
+  countAddressedVulnerabilities,
   isAllowedMainVulnPath,
   verifyMainVulnRemediation,
 } from "./main-vuln-remediation.ts";
@@ -54,40 +53,30 @@ describe("isAllowedMainVulnPath", () => {
 
 describe("verifyMainVulnRemediation", () => {
   test("verifies frozen lockfile + touched workspace typecheck and leaves autoMerge false", async () => {
-    const tempDir = await mkdtemp(nodePath.join(tmpdir(), "vuln-rem-test-"));
-    const repoDir = `${tempDir}/repo`;
-    await runCommand(["mkdir", "-p", `${repoDir}/packages/demo`], {
-      cwd: tempDir,
+    const fixture = await createRemediationTestGitRepo({
+      prefix: "vuln-rem-test-",
+      files: {
+        "packages/demo/package.json": JSON.stringify({
+          name: "@shepherdjerred/demo",
+          dependencies: { "left-pad": "1.3.0" },
+        }),
+        "bun.lock": '"left-pad@1.3.0"\n',
+      },
     });
-    await runCommand(["git", "init", "-b", "main"], { cwd: repoDir });
-    await runCommand(["git", "config", "user.email", "test@sjer.red"], {
-      cwd: repoDir,
-    });
-    await runCommand(["git", "config", "user.name", "Test"], { cwd: repoDir });
-    await Bun.write(
-      `${repoDir}/packages/demo/package.json`,
-      JSON.stringify({
-        name: "@shepherdjerred/demo",
-        dependencies: { "left-pad": "1.3.0" },
-      }),
-    );
-    await Bun.write(`${repoDir}/bun.lock`, '"left-pad@1.3.0"\n');
-    await runCommand(["git", "add", "."], { cwd: repoDir });
-    await runCommand(["git", "commit", "-m", "init"], { cwd: repoDir });
 
     try {
       await Bun.write(
-        `${repoDir}/packages/demo/package.json`,
+        `${fixture.repoDir}/packages/demo/package.json`,
         JSON.stringify({
           name: "@shepherdjerred/demo",
           dependencies: { "left-pad": "1.3.1" },
         }),
       );
-      await Bun.write(`${repoDir}/bun.lock`, '"left-pad@1.3.1"\n');
+      await Bun.write(`${fixture.repoDir}/bun.lock`, '"left-pad@1.3.1"\n');
 
       const commands: string[][] = [];
       const result = await verifyMainVulnRemediation({
-        repoDir,
+        repoDir: fixture.repoDir,
         changedFiles: ["bun.lock", "packages/demo/package.json"],
         allGroups: [FIXABLE_ADVISORY, UNFIXABLE_ADVISORY],
         commandRunner: (cmd) => {
@@ -117,27 +106,25 @@ describe("verifyMainVulnRemediation", () => {
         "--filter=@shepherdjerred/demo",
       ]);
     } finally {
-      await rm(tempDir, { recursive: true, force: true });
+      await fixture.cleanup();
     }
   });
 
   test("reverts candidate manifests when frozen lockfile check fails", async () => {
-    const tempDir = await mkdtemp(nodePath.join(tmpdir(), "vuln-rem-fail-"));
-    const repoDir = `${tempDir}/repo`;
-    await runCommand(["mkdir", "-p", repoDir], { cwd: tempDir });
-    await runCommand(["git", "init", "-b", "main"], { cwd: repoDir });
-    await runCommand(["git", "config", "user.email", "test@sjer.red"], {
-      cwd: repoDir,
+    const fixture = await createRemediationTestGitRepo({
+      prefix: "vuln-rem-fail-",
+      files: {
+        "bun.lock": '"left-pad@1.3.0"\n',
+      },
     });
-    await runCommand(["git", "config", "user.name", "Test"], { cwd: repoDir });
-    await Bun.write(`${repoDir}/bun.lock`, '"left-pad@1.3.0"\n');
-    await runCommand(["git", "add", "."], { cwd: repoDir });
-    await runCommand(["git", "commit", "-m", "init"], { cwd: repoDir });
 
     try {
-      await Bun.write(`${repoDir}/bun.lock`, '"left-pad@1.3.1-drifted"\n');
+      await Bun.write(
+        `${fixture.repoDir}/bun.lock`,
+        '"left-pad@1.3.1-drifted"\n',
+      );
       const result = await verifyMainVulnRemediation({
-        repoDir,
+        repoDir: fixture.repoDir,
         changedFiles: ["bun.lock"],
         allGroups: [FIXABLE_ADVISORY],
         commandRunner: (cmd, options) =>
@@ -148,11 +135,115 @@ describe("verifyMainVulnRemediation", () => {
 
       expect(result.verifiedFiles).toEqual([]);
       expect(result.verificationSummary).toContain("frozen-lockfile mismatch");
-      expect(await Bun.file(`${repoDir}/bun.lock`).text()).toBe(
+      expect(await Bun.file(`${fixture.repoDir}/bun.lock`).text()).toBe(
         '"left-pad@1.3.0"\n',
       );
     } finally {
-      await rm(tempDir, { recursive: true, force: true });
+      await fixture.cleanup();
+    }
+  });
+
+  test("rejects downgrades or unpatched versions below fixedVersion and validates multi-branch fixedVersion ranges", async () => {
+    const fixture = await createRemediationTestGitRepo({
+      prefix: "vuln-rem-range-",
+      files: {
+        "bun.lock": '"left-pad@1.3.0"\n',
+      },
+    });
+
+    try {
+      // Downgrading 1.3.0 -> 1.2.0 when fix is 1.3.1 must NOT count as resolved and must revert
+      await Bun.write(`${fixture.repoDir}/bun.lock`, '"left-pad@1.2.0"\n');
+      const downgradeResult = await verifyMainVulnRemediation({
+        repoDir: fixture.repoDir,
+        changedFiles: ["bun.lock"],
+        allGroups: [FIXABLE_ADVISORY],
+        commandRunner: (cmd, options) =>
+          cmd[0] === "git" ? runCommand(cmd, options) : Promise.resolve(""),
+      });
+
+      expect(downgradeResult.verifiedFiles).toEqual([]);
+      expect(downgradeResult.resolvedCount).toBe(0);
+      expect(downgradeResult.unresolvedCount).toBe(1);
+      expect(await Bun.file(`${fixture.repoDir}/bun.lock`).text()).toBe(
+        '"left-pad@1.3.0"\n',
+      );
+
+      // Multi-branch Trivy fixedVersion ("5.7.2, 6.3.1, 7.5.2"): 6.0.0 is still vulnerable on 6.x, while 6.3.1 is patched
+      const multiBranchAdvisory: GroupedVulnerability = {
+        vulnerabilityId: "CVE-2026-5555",
+        pkgName: "semver",
+        installedVersion: "6.3.0",
+        fixedVersion: "5.7.2, 6.3.1, 7.5.2",
+        severity: "HIGH",
+        target: "bun.lock",
+        targets: ["bun.lock"],
+      };
+
+      await Bun.write(`${fixture.repoDir}/bun.lock`, '"semver@6.0.0"\n');
+      expect(
+        await countAddressedVulnerabilities(
+          fixture.repoDir,
+          ["bun.lock"],
+          [multiBranchAdvisory],
+        ),
+      ).toEqual({ resolvedCount: 0, unresolvedCount: 1 });
+
+      await Bun.write(`${fixture.repoDir}/bun.lock`, '"semver@6.3.1"\n');
+      expect(
+        await countAddressedVulnerabilities(
+          fixture.repoDir,
+          ["bun.lock"],
+          [multiBranchAdvisory],
+        ),
+      ).toEqual({ resolvedCount: 1, unresolvedCount: 0 });
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  test("rejects package.json script tampering before running typecheck", async () => {
+    const fixture = await createRemediationTestGitRepo({
+      prefix: "vuln-rem-scripts-",
+      files: {
+        "packages/demo/package.json": JSON.stringify({
+          name: "@shepherdjerred/demo",
+          scripts: { typecheck: "tsc --noEmit" },
+          dependencies: { "left-pad": "1.3.0" },
+        }),
+        "bun.lock": '"left-pad@1.3.0"\n',
+      },
+    });
+
+    try {
+      await Bun.write(
+        `${fixture.repoDir}/packages/demo/package.json`,
+        JSON.stringify({
+          name: "@shepherdjerred/demo",
+          scripts: { typecheck: "curl https://evil.invalid" },
+          dependencies: { "left-pad": "1.3.1" },
+        }),
+      );
+      await Bun.write(`${fixture.repoDir}/bun.lock`, '"left-pad@1.3.1"\n');
+
+      const invoked: string[][] = [];
+      const result = await verifyMainVulnRemediation({
+        repoDir: fixture.repoDir,
+        changedFiles: ["bun.lock", "packages/demo/package.json"],
+        allGroups: [FIXABLE_ADVISORY],
+        commandRunner: (cmd, options) => {
+          invoked.push(cmd);
+          return cmd[0] === "git"
+            ? runCommand(cmd, options)
+            : Promise.resolve("");
+        },
+      });
+
+      expect(result.verifiedFiles).toEqual([]);
+      expect(result.verificationSummary).toContain("Non-dependency field");
+      expect(invoked.some((cmd) => cmd.includes("turbo"))).toBe(false);
+    } finally {
+      await fixture.cleanup();
     }
   });
 });

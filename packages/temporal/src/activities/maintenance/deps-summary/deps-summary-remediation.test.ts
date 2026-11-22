@@ -176,4 +176,90 @@ describe("verifyCatalogReleaseNoteDiff", () => {
         "releaseNotesOverride.url 'https://example.com/404' on 'owner/tool' did not return HTTP 200.",
     });
   });
+
+  test("associates proposed overrides only with the missing current catalog version across multi-upgrade windows", async () => {
+    const catalogAtV3 = MutableCatalogSchema.parse(JSON.parse(BASE_CATALOG));
+    catalogAtV3.entries[0] = {
+      ...catalogAtV3.entries[0],
+      value: "3.0.0",
+    };
+    const beforeV3Text = JSON.stringify(catalogAtV3, null, 2);
+    catalogAtV3.entries[0] = {
+      ...catalogAtV3.entries[0],
+      releaseNotesOverride: {
+        url: "https://example.com/owner/tool/v3.0.0",
+        summary: "v3.0.0 switches to zero-copy framing.",
+      },
+    };
+
+    const v2Commit = "a".repeat(40);
+    const v3Commit = "c".repeat(40);
+    const multiChanges: DependencyChange[] = [
+      ...CHANGES,
+      {
+        ...CHANGES[0]!,
+        oldValue: "2.0.0",
+        newValue: "3.0.0",
+        oldVersion: "2.0.0",
+        newVersion: "3.0.0",
+        commitSha: v3Commit,
+        commitSubject: "chore(deps): update owner/tool to 3.0.0",
+      },
+    ];
+
+    // v2 had fetched notes; only v3 is missing: must emit ONLY v3 override note
+    const onlyV3MissingResult = await verifyCatalogReleaseNoteDiff({
+      beforeCatalogText: beforeV3Text,
+      afterCatalogText: JSON.stringify(catalogAtV3, null, 2),
+      changes: multiChanges,
+      missing: [
+        { dependency: "owner/tool", commitSha: v3Commit, attempts: [] },
+      ],
+      verifyHttp200: () => Promise.resolve(true),
+    });
+    expect(onlyV3MissingResult.valid).toBe(true);
+    if (!onlyV3MissingResult.valid) {
+      throw new Error("Expected valid v3 override");
+    }
+    expect(onlyV3MissingResult.resolvedMissingCount).toBe(1);
+    expect(onlyV3MissingResult.resolvedNotes).toEqual([
+      {
+        dependency: "owner/tool",
+        version: "3.0.0",
+        notes: "v3.0.0 switches to zero-copy framing.",
+        url: "https://example.com/owner/tool/v3.0.0",
+        source: "catalog-override",
+      },
+    ]);
+
+    // Both v2 and v3 missing: catalog.json at 3.0.0 resolves only v3 (1 of 2 missing)
+    const bothMissingResult = await verifyCatalogReleaseNoteDiff({
+      beforeCatalogText: beforeV3Text,
+      afterCatalogText: JSON.stringify(catalogAtV3, null, 2),
+      changes: multiChanges,
+      missing: [
+        { dependency: "owner/tool", commitSha: v2Commit, attempts: [] },
+        { dependency: "owner/tool", commitSha: v3Commit, attempts: [] },
+      ],
+      verifyHttp200: () => Promise.resolve(true),
+    });
+    expect(bothMissingResult.valid).toBe(true);
+    if (bothMissingResult.valid) {
+      expect(bothMissingResult.resolvedMissingCount).toBe(1);
+      expect(bothMissingResult.resolvedNotes).toHaveLength(1);
+      expect(bothMissingResult.resolvedNotes[0]?.version).toBe("3.0.0");
+    }
+
+    // Only v2 missing while catalog.json is already at 3.0.0 (which had notes): reject stale override
+    const staleMissingResult = await verifyCatalogReleaseNoteDiff({
+      beforeCatalogText: beforeV3Text,
+      afterCatalogText: JSON.stringify(catalogAtV3, null, 2),
+      changes: multiChanges,
+      missing: [
+        { dependency: "owner/tool", commitSha: v2Commit, attempts: [] },
+      ],
+      verifyHttp200: () => Promise.resolve(true),
+    });
+    expect(staleMissingResult.valid).toBe(false);
+  });
 });

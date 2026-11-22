@@ -1,3 +1,4 @@
+import nodePath from "node:path";
 import { z } from "zod/v4";
 import {
   botCloneCacheDir,
@@ -8,18 +9,26 @@ import {
   type CodexPrRemediationDependencies,
   type CodexPrVerificationResult,
 } from "#activities/remediation/codex-pr-remediation.ts";
-import { revertSingleRepoPath } from "#activities/remediation/codex-pr-remediation-git.ts";
+import {
+  isolatedRemediationCommandEnv,
+  revertSingleRepoPath,
+} from "#activities/remediation/codex-pr-remediation-git.ts";
 import { FullCatalogSchema } from "#activities/remediation/version-catalog-schema.ts";
 import {
   runCommand as defaultRunCommand,
   type GitCommandRunner,
 } from "#activities/scout/scout-season-refresh-git.ts";
-import type { ReportRemediationV1 } from "#shared/reports/report.ts";
+import type { ReportRemediationV1 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import type { MainVulnScanResult } from "./main-vuln-scan.ts";
 import {
   groupVulnerabilities,
   type GroupedVulnerability,
 } from "./main-vuln-scan-report.ts";
+import {
+  assertOnlyDependencyFieldsChanged,
+  findWorkspacesDeclaringPackages,
+  isTargetAdvisoryResolved,
+} from "#activities/remediation/main-vuln-version-check.ts";
 
 const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 const WorkspacePackageJsonSchema = z.object({
@@ -72,32 +81,6 @@ export function buildMainVulnRemediationPrompt(
   ].join("\n");
 }
 
-function escapeRegExp(literal: string): string {
-  return literal.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
-}
-
-function fileStillPinsVulnerableVersion(
-  content: string,
-  pkgName: string,
-  installedVersion: string,
-): boolean {
-  const escapedPkg = escapeRegExp(pkgName);
-  const escapedVer = escapeRegExp(installedVersion);
-  const patterns = [
-    new RegExp(String.raw`${escapedPkg}@${escapedVer}(?![\w.-])`, "u"),
-    new RegExp(
-      String.raw`"${escapedPkg}"[^\n]{0,120}"[^"]*\b${escapedVer}\b"`,
-      "u",
-    ),
-    new RegExp(
-      String.raw`name\s*=\s*"${escapedPkg}"[\s\S]{0,160}?version\s*=\s*"${escapedVer}"`,
-      "u",
-    ),
-    new RegExp(String.raw`\b${escapedPkg}\s+v?${escapedVer}\b`, "u"),
-  ];
-  return patterns.some((pattern) => pattern.test(content));
-}
-
 export async function countAddressedVulnerabilities(
   repoDir: string,
   verifiedFiles: readonly string[],
@@ -124,6 +107,7 @@ export async function countAddressedVulnerabilities(
       unresolvedCount += 1;
       continue;
     }
+    const fixedGroup = { ...group, fixedVersion: group.fixedVersion };
     const targetsTouched = group.targets.every((target) =>
       verifiedSet.has(target),
     );
@@ -134,13 +118,7 @@ export async function countAddressedVulnerabilities(
     let anyTargetStillVulnerable = false;
     for (const target of group.targets) {
       const content = await readTarget(target);
-      if (
-        fileStillPinsVulnerableVersion(
-          content,
-          group.pkgName,
-          group.installedVersion,
-        )
-      ) {
+      if (!isTargetAdvisoryResolved(target, content, fixedGroup)) {
         anyTargetStillVulnerable = true;
         break;
       }
@@ -183,6 +161,105 @@ async function revertAllCandidates(
   }
 }
 
+function uniqueParentDirs(
+  changedFiles: readonly string[],
+  predicate: (file: string) => boolean,
+): string[] {
+  const dirs = changedFiles
+    .filter((file) => predicate(file))
+    .map((file) => {
+      const dir = nodePath.dirname(file);
+      return dir === "." ? "" : dir;
+    });
+  return [...new Set(dirs)].sort((left, right) => left.localeCompare(right));
+}
+
+async function runEcosystemVerificationChecks(input: {
+  repoDir: string;
+  changedFiles: readonly string[];
+  allGroups: readonly GroupedVulnerability[];
+  commandRunner: GitCommandRunner;
+  commandEnv: Record<string, string | undefined>;
+}): Promise<string[]> {
+  const executedChecks: string[] = [];
+  const jsManifestTouched = input.changedFiles.some(
+    (file) => file === "bun.lock" || file.endsWith("package.json"),
+  );
+
+  if (jsManifestTouched) {
+    await assertOnlyDependencyFieldsChanged(input.repoDir, input.changedFiles);
+    await input.commandRunner(
+      ["bun", "install", "--frozen-lockfile", "--ignore-scripts"],
+      { cwd: input.repoDir, env: input.commandEnv },
+    );
+    executedChecks.push("bun install --frozen-lockfile");
+
+    const directWorkspaces = await resolveTouchedWorkspaceNames(
+      input.repoDir,
+      input.changedFiles,
+    );
+    const fixableNames = new Set(
+      input.allGroups
+        .filter((group) => group.fixedVersion !== undefined)
+        .map((group) => group.pkgName),
+    );
+    const workspaceNames =
+      directWorkspaces.length > 0
+        ? directWorkspaces
+        : await findWorkspacesDeclaringPackages(input.repoDir, fixableNames);
+
+    if (workspaceNames.length > 0) {
+      const filterArgs = workspaceNames.map((pkgName) => `--filter=${pkgName}`);
+      await input.commandRunner(
+        ["bunx", "--no-install", "turbo", "run", "typecheck", ...filterArgs],
+        { cwd: input.repoDir, env: input.commandEnv },
+      );
+      executedChecks.push(
+        `turbo typecheck (${String(workspaceNames.length)} workspace(s))`,
+      );
+    } else {
+      executedChecks.push(
+        "transitive JS lockfile-only change (full workspace build deferred to PR CI)",
+      );
+    }
+  }
+
+  for (const dir of uniqueParentDirs(input.changedFiles, (file) =>
+    /(?:^|\/)Cargo\.(?:toml|lock)$/u.test(file),
+  )) {
+    const cwd = dir === "" ? input.repoDir : `${input.repoDir}/${dir}`;
+    await input.commandRunner(["cargo", "check", "--locked"], {
+      cwd,
+      env: input.commandEnv,
+    });
+    executedChecks.push(`cargo check --locked (${dir || "."})`);
+  }
+
+  for (const dir of uniqueParentDirs(input.changedFiles, (file) =>
+    /(?:^|\/)go\.(?:mod|sum)$/u.test(file),
+  )) {
+    const cwd = dir === "" ? input.repoDir : `${input.repoDir}/${dir}`;
+    await input.commandRunner(["go", "build", "./..."], {
+      cwd,
+      env: input.commandEnv,
+    });
+    executedChecks.push(`go build ./... (${dir || "."})`);
+  }
+
+  for (const dir of uniqueParentDirs(input.changedFiles, (file) =>
+    /(?:^|\/)(?:pyproject\.toml|uv\.lock)$/u.test(file),
+  )) {
+    const cwd = dir === "" ? input.repoDir : `${input.repoDir}/${dir}`;
+    await input.commandRunner(["uv", "lock", "--check"], {
+      cwd,
+      env: input.commandEnv,
+    });
+    executedChecks.push(`uv lock --check (${dir || "."})`);
+  }
+
+  return executedChecks;
+}
+
 export async function verifyMainVulnRemediation(input: {
   repoDir: string;
   changedFiles: readonly string[];
@@ -201,40 +278,26 @@ export async function verifyMainVulnRemediation(input: {
     };
   }
 
+  let executedChecks: string[] = [];
   try {
     if (input.changedFiles.includes(VERSION_CATALOG_PATH)) {
       FullCatalogSchema.parse(
         await Bun.file(`${input.repoDir}/${VERSION_CATALOG_PATH}`).json(),
       );
+      executedChecks.push("catalog.json schema");
     }
 
-    const jsManifestTouched = input.changedFiles.some(
-      (file) => file === "bun.lock" || file.endsWith("package.json"),
-    );
-    const commandEnv = {
-      ENVIRONMENT: undefined,
+    const commandEnv = isolatedRemediationCommandEnv({
       BUN_INSTALL_CACHE_DIR: botCloneCacheDir(input.repoDir),
-    };
-
-    if (jsManifestTouched) {
-      await commandRunner(
-        ["bun", "install", "--frozen-lockfile", "--ignore-scripts"],
-        { cwd: input.repoDir, env: commandEnv },
-      );
-      const workspaceNames = await resolveTouchedWorkspaceNames(
-        input.repoDir,
-        input.changedFiles,
-      );
-      if (workspaceNames.length > 0) {
-        const filterArgs = workspaceNames.map(
-          (pkgName) => `--filter=${pkgName}`,
-        );
-        await commandRunner(
-          ["bunx", "--no-install", "turbo", "run", "typecheck", ...filterArgs],
-          { cwd: input.repoDir, env: commandEnv },
-        );
-      }
-    }
+    });
+    const ecosystemChecks = await runEcosystemVerificationChecks({
+      repoDir: input.repoDir,
+      changedFiles: input.changedFiles,
+      allGroups: input.allGroups,
+      commandRunner,
+      commandEnv,
+    });
+    executedChecks = [...executedChecks, ...ecosystemChecks];
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     await revertAllCandidates(input.repoDir, input.changedFiles, commandRunner);
@@ -262,16 +325,18 @@ export async function verifyMainVulnRemediation(input: {
       resolvedCount: 0,
       unresolvedCount: totalCount,
       verificationSummary:
-        "Reverted manifest changes because no reported HIGH/CRITICAL advisory version pin moved.",
+        "Reverted manifest changes because no reported HIGH/CRITICAL advisory version pin moved to a patched version.",
     };
   }
 
+  const checkList =
+    executedChecks.length === 0 ? "manifest diff" : executedChecks.join(", ");
   return {
     verifiedFiles: [...input.changedFiles],
     resolvedCount: counts.resolvedCount,
     unresolvedCount: counts.unresolvedCount,
     autoMerge: false,
-    verificationSummary: `Verified frozen lockfile and manifest consistency; addressed ${String(counts.resolvedCount)}/${String(totalCount)} grouped HIGH/CRITICAL advisories (${String(counts.unresolvedCount)} remaining).`,
+    verificationSummary: `Verified (${checkList}); addressed ${String(counts.resolvedCount)}/${String(totalCount)} grouped HIGH/CRITICAL advisories (${String(counts.unresolvedCount)} remaining).`,
   };
 }
 

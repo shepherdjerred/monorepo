@@ -311,7 +311,9 @@ describe("buildLinkRotReport", () => {
       "Retry timed-out links or investigate their reachability before treating them as dead or adding an exclusion.",
     ]);
   });
+});
 
+describe("buildLinkRotReport with remediation", () => {
   test("marks verdict changed and downgrades findings to info/observing when PR resolves all dead links", () => {
     const result = scanResult({
       totalLinks: 20,
@@ -389,6 +391,54 @@ describe("buildLinkRotReport", () => {
       "warning",
       "info",
     ]);
+
+    // Multi-link single file where only the SECOND link was repaired: must downgrade ONLY link B
+    const sameFileScan = scanResult({
+      totalLinks: 5,
+      successfulLinks: 3,
+      excludedLinks: 0,
+      ignoredRootRelativeLinks: 0,
+      deadLinks: [
+        {
+          url: "https://example.org/broken-first",
+          source: "docs/guide.md",
+          status: "404 Not Found",
+          statusCode: 404,
+          line: 4,
+        },
+        {
+          url: "https://example.org/repaired-second",
+          source: "docs/guide.md",
+          status: "404 Not Found",
+          statusCode: 404,
+          line: 18,
+        },
+      ],
+      timedOutLinks: [],
+    });
+    const sameFileReport = buildLinkRotReport(
+      "2026-08-23T11:55:00.000Z",
+      sameFileScan,
+      {
+        outcome: "pr-created",
+        prUrl: "https://github.com/shepherdjerred/monorepo/pull/503",
+        branchName: "chore/link-rot-11223344",
+        commitSha: "11223344",
+        autoMergeEnabled: false,
+        changedFiles: ["docs/guide.md"],
+        resolvedCount: 1,
+        unresolvedCount: 1,
+        summary: "lychee verified 1/2 dead links resolved (1 remaining).",
+        resolvedLinkKeys: [
+          "docs/guide.md\u{0}https://example.org/repaired-second",
+        ],
+      },
+    );
+    expect(sameFileReport.findings[0]?.severity).toBe("warning");
+    expect(sameFileReport.findings[1]).toMatchObject({
+      severity: "info",
+      state: "observing",
+    });
   });
 });
 

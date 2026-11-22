@@ -20,7 +20,7 @@ import type {
   DependencyChange,
   ReleaseNote,
 } from "#shared/deps-summary-types.ts";
-import type { ReportRemediationV1 } from "#shared/reports/report.ts";
+import type { ReportRemediationV1 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import type { MissingReleaseNote } from "./deps-summary-release-notes.ts";
 
 export type ProposeReleaseNoteOverridesResult = {
@@ -108,11 +108,20 @@ function parseCatalogPair(
   }
 }
 
+function changeCommitKey(dependency: string, commitSha: string): string {
+  return `${dependency}\u{0}${commitSha}`;
+}
+
+function bareCatalogVersion(value: string | undefined): string | undefined {
+  return value?.split("@")[0];
+}
+
 async function inspectCatalogEntryPair(input: {
   index: number;
   beforeEntry: StrictCatalogEntry;
   afterEntry: StrictCatalogEntry | undefined;
   missingNames: ReadonlySet<string>;
+  eligibleNames: ReadonlySet<string>;
   verifyHttp200: HttpUrlCheckFn;
 }): Promise<
   | { ok: true; addedOverride: ReleaseNotesOverride | undefined }
@@ -148,6 +157,12 @@ async function inspectCatalogEntryPair(input: {
       reason: `releaseNotesOverride modified on entry '${beforeEntry.name}' which is not in missing list.`,
     };
   }
+  if (!input.eligibleNames.has(beforeEntry.name)) {
+    return {
+      ok: false,
+      reason: `releaseNotesOverride modified on entry '${beforeEntry.name}' whose current catalog version '${beforeEntry.value}' has no missing release note.`,
+    };
+  }
   const candidateOverride = afterEntry.releaseNotesOverride;
   if (candidateOverride?.url === undefined) {
     return {
@@ -175,6 +190,7 @@ export async function verifyCatalogReleaseNoteDiff(input: {
       valid: true;
       verifiedOverrides: Map<string, ReleaseNotesOverride>;
       resolvedNotes: ReleaseNote[];
+      resolvedMissingCount: number;
     }
   | { valid: false; reason: string }
 > {
@@ -197,6 +213,30 @@ export async function verifyCatalogReleaseNoteDiff(input: {
   }
 
   const missingNames = new Set(input.missing.map((item) => item.dependency));
+  const missingKeys = new Set(
+    input.missing.map((item) =>
+      changeCommitKey(item.dependency, item.commitSha),
+    ),
+  );
+  const missingChanges = input.changes.filter((change) =>
+    missingKeys.has(changeCommitKey(change.name, change.commitSha)),
+  );
+  const eligibleTargetVersions = new Map<string, string>();
+  for (const beforeEntry of parsed.before.entries) {
+    const currentVersion = bareCatalogVersion(beforeEntry.value);
+    if (
+      currentVersion !== undefined &&
+      missingChanges.some(
+        (change) =>
+          change.name === beforeEntry.name &&
+          change.newValue !== undefined &&
+          change.newVersion === currentVersion,
+      )
+    ) {
+      eligibleTargetVersions.set(beforeEntry.name, currentVersion);
+    }
+  }
+  const eligibleNames = new Set(eligibleTargetVersions.keys());
   const verifiedOverrides = new Map<string, ReleaseNotesOverride>();
 
   for (const [index, beforeEntry] of parsed.before.entries.entries()) {
@@ -205,6 +245,7 @@ export async function verifyCatalogReleaseNoteDiff(input: {
       beforeEntry,
       afterEntry: parsed.after.entries[index],
       missingNames,
+      eligibleNames,
       verifyHttp200,
     });
     if (!inspected.ok) {
@@ -215,31 +256,46 @@ export async function verifyCatalogReleaseNoteDiff(input: {
     }
   }
 
-  const resolvedNotes = input.changes.flatMap((change) => {
+  const notesByVersionKey = new Map<string, ReleaseNote>();
+  let resolvedMissingCount = 0;
+  for (const change of missingChanges) {
     const override = verifiedOverrides.get(change.name);
-    return override === undefined
-      ? []
-      : [
-          {
-            dependency: change.name,
-            version: change.newVersion ?? "removed",
-            notes: override.summary,
-            url: override.url,
-            source: "catalog-override" as const,
-          },
-        ];
-  });
+    const targetVersion = eligibleTargetVersions.get(change.name);
+    if (
+      override === undefined ||
+      targetVersion === undefined ||
+      change.newValue === undefined ||
+      change.newVersion !== targetVersion
+    ) {
+      continue;
+    }
+    resolvedMissingCount += 1;
+    notesByVersionKey.set(`${change.name}\u{0}${targetVersion}`, {
+      dependency: change.name,
+      version: targetVersion,
+      notes: override.summary,
+      url: override.url,
+      source: "catalog-override",
+    });
+  }
 
-  return { valid: true, verifiedOverrides, resolvedNotes };
+  return {
+    valid: true,
+    verifiedOverrides,
+    resolvedNotes: [...notesByVersionKey.values()],
+    resolvedMissingCount,
+  };
 }
 
 export function buildReleaseNotesRemediationPrompt(
   changes: readonly DependencyChange[],
   missing: readonly MissingReleaseNote[],
 ): string {
-  const missingNames = new Set(missing.map((item) => item.dependency));
+  const missingKeys = new Set(
+    missing.map((item) => changeCommitKey(item.dependency, item.commitSha)),
+  );
   const relevantChanges = changes.filter((change) =>
-    missingNames.has(change.name),
+    missingKeys.has(changeCommitKey(change.name, change.commitSha)),
   );
   return [
     "You are proposing authoritative `releaseNotesOverride` entries in `packages/version-catalog/src/catalog.json` for weekly dependency changes whose automated release-note lookup came back unavailable.",
@@ -249,8 +305,8 @@ export function buildReleaseNotesRemediationPrompt(
     "",
     "Instructions:",
     `1. Edit ONLY \`${VERSION_CATALOG_PATH}\`.`,
-    "2. For each dependency listed in `missing`, use web search to locate an authoritative upstream release note, changelog, or version announcement URL returning HTTP 200.",
-    '3. Add `"releaseNotesOverride": { "url": "<https://...>", "summary": "<1-3 factual sentences summarizing changes in the target version>" }` ONLY when an authoritative HTTP-200 URL exists. Omit any dependency where no trustworthy source exists.',
+    "2. For each missing event whose `newValue` matches the entry's current `value` in `catalog.json`, use web search to locate an authoritative upstream release note, changelog, or version announcement URL returning HTTP 200.",
+    '3. Add `"releaseNotesOverride": { "url": "<https://...>", "summary": "<1-3 factual sentences summarizing changes in the target version>" }` ONLY when an authoritative HTTP-200 URL exists. Omit any dependency where no trustworthy source exists or whose current catalog version is not among the missing events.',
     "4. NEVER add, remove, or reorder entries in `entries`, and NEVER modify `value`, `management`, `notes`, or any field other than `releaseNotesOverride` on the listed missing entries.",
     "5. Keep valid JSON formatting. Do NOT run `git commit` or `git push`.",
   ].join("\n");
@@ -266,15 +322,13 @@ async function verifyCatalogOverridesInRepo(input: {
   commandRunner?: GitCommandRunner;
 }): Promise<CodexPrVerificationResult<ReleaseNote[]>> {
   const commandRunner = input.commandRunner ?? defaultRunCommand;
-  const uniqueMissingCount = new Set(
-    input.missing.map((item) => item.dependency),
-  ).size;
+  const totalMissingCount = input.missing.length;
 
   if (!input.changedFiles.includes(VERSION_CATALOG_PATH)) {
     return {
       verifiedFiles: [],
       resolvedCount: 0,
-      unresolvedCount: uniqueMissingCount,
+      unresolvedCount: totalMissingCount,
       verificationSummary: "No releaseNotesOverride changes were proposed.",
       extra: [],
     };
@@ -302,7 +356,7 @@ async function verifyCatalogOverridesInRepo(input: {
     return {
       verifiedFiles: [],
       resolvedCount: 0,
-      unresolvedCount: uniqueMissingCount,
+      unresolvedCount: totalMissingCount,
       verificationSummary:
         `Rejected proposed catalog.json edit: ${diffResult.reason}`.slice(
           0,
@@ -312,8 +366,8 @@ async function verifyCatalogOverridesInRepo(input: {
     };
   }
 
-  const resolvedCount = diffResult.verifiedOverrides.size;
-  const unresolvedCount = Math.max(0, uniqueMissingCount - resolvedCount);
+  const resolvedCount = diffResult.resolvedMissingCount;
+  const unresolvedCount = Math.max(0, totalMissingCount - resolvedCount);
   if (resolvedCount === 0) {
     await revertSingleRepoPath(
       input.repoDir,
@@ -323,7 +377,7 @@ async function verifyCatalogOverridesInRepo(input: {
     return {
       verifiedFiles: [],
       resolvedCount: 0,
-      unresolvedCount: uniqueMissingCount,
+      unresolvedCount: totalMissingCount,
       verificationSummary:
         "No verified releaseNotesOverride additions remained after catalog diff inspection.",
       extra: [],
@@ -335,7 +389,7 @@ async function verifyCatalogOverridesInRepo(input: {
     resolvedCount,
     unresolvedCount,
     autoMerge: false,
-    verificationSummary: `Verified schema, field-level catalog diff, and HTTP 200 reachability for ${String(resolvedCount)}/${String(uniqueMissingCount)} missing release-note overrides.`,
+    verificationSummary: `Verified schema, field-level catalog diff, and HTTP 200 reachability for ${String(resolvedCount)}/${String(totalMissingCount)} missing release-note events.`,
     extra: diffResult.resolvedNotes,
   };
 }

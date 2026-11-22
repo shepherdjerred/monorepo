@@ -1,20 +1,20 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import nodePath from "node:path";
 import type { ApplicationFailure } from "@temporalio/common";
 import { describe, expect, test, vi } from "vitest";
-import { runCommand } from "#activities/scout/scout-season-refresh-git.ts";
 import type { AgentTurnOutcome } from "#lib/agent-runner/contract.ts";
 import { AgentTurnExecutionError } from "#lib/agent-runner/errors.ts";
 import {
   REMEDIATION_DISABLED_SUMMARY,
   runCodexPrRemediation,
+  type CodexPrRemediationDependencies,
 } from "./codex-pr-remediation.ts";
 import {
   configureRemediationPrAutoMerge,
+  enforceAllowedPaths,
   remediationAgentEnv,
   remediationBranchName,
 } from "./codex-pr-remediation-git.ts";
+import { runCommand } from "#activities/scout/scout-season-refresh-git.ts";
+import { createRemediationTestGitRepo } from "./remediation-test-git.ts";
 
 function fakeAgentOutcome(
   finalText = "Updated target files.",
@@ -40,32 +40,32 @@ function fakeAgentOutcome(
   };
 }
 
-async function createLocalGitRepo(): Promise<{
+function createLocalGitRepo() {
+  return createRemediationTestGitRepo({
+    prefix: "remediation-test-",
+    repoSubdir: "monorepo",
+    files: {
+      "README.md": "# Hello\nOld link\n",
+      "OTHER.md": "# Other\nOriginal\n",
+      "AGENTS.md": "# Agents\nDo not touch\n",
+    },
+  });
+}
+
+function baseLocalRepoDeps(repo: {
   tempDir: string;
   repoDir: string;
-  cleanup: () => Promise<void>;
-}> {
-  const tempDir = await mkdtemp(nodePath.join(tmpdir(), "remediation-test-"));
-  const repoDir = `${tempDir}/monorepo`;
-  await runCommand(["mkdir", "-p", repoDir], { cwd: tempDir });
-  await runCommand(["git", "init", "-b", "main"], { cwd: repoDir });
-  await runCommand(["git", "config", "user.email", "test@sjer.red"], {
-    cwd: repoDir,
-  });
-  await runCommand(["git", "config", "user.name", "Test Bot"], {
-    cwd: repoDir,
-  });
-  await Bun.write(`${repoDir}/README.md`, "# Hello\nOld link\n");
-  await Bun.write(`${repoDir}/OTHER.md`, "# Other\nOriginal\n");
-  await Bun.write(`${repoDir}/AGENTS.md`, "# Agents\nDo not touch\n");
-  await runCommand(["git", "add", "."], { cwd: repoDir });
-  await runCommand(["git", "commit", "-m", "init"], { cwd: repoDir });
+}): CodexPrRemediationDependencies {
   return {
-    tempDir,
-    repoDir,
-    cleanup: async () => {
-      await rm(tempDir, { recursive: true, force: true });
-    },
+    isRemediationEnabled: () => Promise.resolve(true),
+    env: { OPENAI_API_KEY: "dummy-openai-value" },
+    createWorkspace: () =>
+      Promise.resolve({
+        tempDir: repo.tempDir,
+        repoDir: repo.repoDir,
+        cleanup: () => Promise.resolve(),
+      }),
+    cloneRepo: () => Promise.resolve(),
   };
 }
 
@@ -84,10 +84,14 @@ describe("remediationAgentEnv", () => {
       REPORT_HUB_INGEST_TOKEN: "dummy-hub",
       TEMPORAL_API_KEY: "dummy-temporal",
       ANTHROPIC_API_KEY: "dummy-anthropic",
+      WOODPECKER_TOKEN: "dummy-woodpecker",
+      FLAGS_MACHINE_TOKEN: "dummy-flags",
+      DOCKERHUB_READ_CONFIG_JSON: '{"auths":{}}',
     });
 
     expect(env["OPENAI_API_KEY"]).toBe("dummy-openai-value");
     expect(env["PATH"]).toBe("/usr/bin");
+    expect(env["HOME"]).toBe("/tmp/home");
     expect(env["GH_TOKEN"]).toBeUndefined();
     expect(env["GITHUB_APP_ID"]).toBeUndefined();
     expect(env["GITHUB_APP_PRIVATE_KEY"]).toBeUndefined();
@@ -98,6 +102,9 @@ describe("remediationAgentEnv", () => {
     expect(env["REPORT_HUB_INGEST_TOKEN"]).toBeUndefined();
     expect(env["TEMPORAL_API_KEY"]).toBeUndefined();
     expect(env["ANTHROPIC_API_KEY"]).toBeUndefined();
+    expect(env["WOODPECKER_TOKEN"]).toBeUndefined();
+    expect(env["FLAGS_MACHINE_TOKEN"]).toBeUndefined();
+    expect(env["DOCKERHUB_READ_CONFIG_JSON"]).toBeUndefined();
   });
 });
 
@@ -265,15 +272,7 @@ describe("runCodexPrRemediation reuse and failure cases", () => {
             }),
         },
         {
-          isRemediationEnabled: () => Promise.resolve(true),
-          env: { OPENAI_API_KEY: "dummy-openai-value" },
-          createWorkspace: () =>
-            Promise.resolve({
-              tempDir: repo.tempDir,
-              repoDir: repo.repoDir,
-              cleanup: () => Promise.resolve(),
-            }),
-          cloneRepo: () => Promise.resolve(),
+          ...baseLocalRepoDeps(repo),
           runAgentTurn: async (turn) => {
             await Bun.write(
               `${turn.cwd}/README.md`,
@@ -330,15 +329,7 @@ describe("runCodexPrRemediation reuse and failure cases", () => {
             }),
         },
         {
-          isRemediationEnabled: () => Promise.resolve(true),
-          env: { OPENAI_API_KEY: "dummy-openai-value" },
-          createWorkspace: () =>
-            Promise.resolve({
-              tempDir: repo.tempDir,
-              repoDir: repo.repoDir,
-              cleanup: () => Promise.resolve(),
-            }),
-          cloneRepo: () => Promise.resolve(),
+          ...baseLocalRepoDeps(repo),
           runAgentTurn: () => Promise.resolve(fakeAgentOutcome()),
           mintGitHubToken,
         },
@@ -424,8 +415,9 @@ describe("configureRemediationPrAutoMerge", () => {
     expect(enabled).toBe(false);
   });
 
-  test("disables previously armed auto-merge when autoMerge is false", async () => {
+  test("disables previously armed auto-merge and confirms disabled state when autoMerge is false", async () => {
     const calls: string[][] = [];
+    let viewCalls = 0;
     const enabled = await configureRemediationPrAutoMerge({
       repoDir: "/tmp",
       repoSlug: "shepherdjerred/monorepo",
@@ -434,13 +426,65 @@ describe("configureRemediationPrAutoMerge", () => {
       autoMerge: false,
       commandRunner: (command) => {
         calls.push(command);
-        return Promise.resolve(
-          command[1] === "pr" && command[2] === "view" ? "true" : "",
-        );
+        if (command[1] === "pr" && command[2] === "view") {
+          viewCalls += 1;
+          return Promise.resolve(viewCalls === 1 ? "true" : "false");
+        }
+        return Promise.resolve("");
       },
     });
     expect(enabled).toBe(false);
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(3);
     expect(calls[1]).toContain("--disable-auto");
+  });
+
+  test("throws when disabling auto-merge fails or leaves auto-merge armed on a review-only PR", async () => {
+    await expect(
+      configureRemediationPrAutoMerge({
+        repoDir: "/tmp",
+        repoSlug: "shepherdjerred/monorepo",
+        prUrl: "https://github.com/shepherdjerred/monorepo/pull/11",
+        ghToken: "dummy-github",
+        autoMerge: false,
+        commandRunner: (command) =>
+          command[1] === "pr" && command[2] === "view"
+            ? Promise.resolve("true")
+            : Promise.resolve(""),
+      }),
+    ).rejects.toThrow("Auto-merge remained enabled");
+  });
+});
+
+describe("enforceAllowedPaths baseSha guard", () => {
+  test("resets committed out-of-scope agent edits back to baseSha", async () => {
+    const repo = await createLocalGitRepo();
+    try {
+      const baseSha = await runCommand(["git", "rev-parse", "HEAD"], {
+        cwd: repo.repoDir,
+      });
+      await Bun.write(`${repo.repoDir}/AGENTS.md`, "# Pwned\n");
+      await runCommand(["git", "add", "AGENTS.md"], { cwd: repo.repoDir });
+      await runCommand(["git", "commit", "-m", "sneaky commit"], {
+        cwd: repo.repoDir,
+      });
+      await Bun.write(`${repo.repoDir}/README.md`, "# Hello\nAllowed fix\n");
+
+      const enforced = await enforceAllowedPaths({
+        repoDir: repo.repoDir,
+        baseSha,
+        isAllowedPath: (path) => path === "README.md",
+      });
+
+      expect(enforced.allowedFiles).toEqual(["README.md"]);
+      expect(enforced.revertedFiles).toContain("AGENTS.md");
+      expect(
+        await runCommand(["git", "rev-parse", "HEAD"], { cwd: repo.repoDir }),
+      ).toBe(baseSha);
+      expect(await Bun.file(`${repo.repoDir}/AGENTS.md`).text()).toBe(
+        "# Agents\nDo not touch\n",
+      );
+    } finally {
+      await repo.cleanup();
+    }
   });
 });
