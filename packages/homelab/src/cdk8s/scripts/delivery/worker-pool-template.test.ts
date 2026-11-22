@@ -76,6 +76,44 @@ async function render(chartName: string, manifest: string, selected: unknown) {
     await rm(directory, { recursive: true, force: true });
   }
 }
+function expectRetainedFlagMode(deployment: unknown, buildId: string) {
+  const variables = new Map(
+    z
+      .object({
+        spec: z.object({
+          template: z.object({
+            spec: z.object({
+              containers: z
+                .tuple([
+                  z.object({
+                    env: z.array(
+                      z.object({
+                        name: z.string(),
+                        value: z.string().optional(),
+                      }),
+                    ),
+                  }),
+                ])
+                .rest(z.unknown()),
+            }),
+          }),
+        }),
+      })
+      .parse(deployment)
+      .spec.template.spec.containers[0].env.map((entry) => [
+        entry.name,
+        entry.value,
+      ]),
+  );
+  expect(variables.get("FEATURE_FLAGS_MODE")).toBe(
+    buildId === THIRD ? "flags" : "flipt",
+  );
+  expect(variables.get("FLIPT_NAMESPACE")).toBe("temporal");
+  expect(variables.get("FLIPT_URL")).toBe(
+    "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+  );
+}
+
 function synth(chartName: string, stage?: "beta" | "prod") {
   const app = new App();
   const chart = new Chart(app, chartName, {
@@ -293,6 +331,7 @@ describe("Delivery fixed worker host rendering", () => {
           },
         });
         if (central) {
+          expectRetainedFlagMode(deployments[index], buildId);
           const account = z
             .object({
               spec: z.object({
