@@ -7,7 +7,12 @@ import {
 } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { lcuParticipantIdentity } from "./lcu-identity.ts";
-import { convertTeams, fieldedSides, MIN_FIELDED_SIDES } from "./lcu-match.ts";
+import {
+  convertTeams,
+  fieldedSides,
+  MIN_FIELDED_SIDES,
+  pairedParticipants,
+} from "./lcu-match.ts";
 import { lcuParticipantFields } from "./lcu-participant.ts";
 import { LegacyMatchSchema } from "./lcu-schema.ts";
 import { isArenaClientPayload } from "./unsupported-mode.ts";
@@ -50,16 +55,9 @@ export function convertHistoryMatch(
   const parsed = HistoryBundleSchema.safeParse(payload);
   if (!parsed.success) return null;
   const { matchHistory: game, timeline } = parsed.data;
-  const identities = new Map(
-    game.participantIdentities.map((identity) => [
-      identity.participantId,
-      identity,
-    ]),
-  );
-  if (identities.size !== game.participantIdentities.length) return null;
-  const participants = game.participants.flatMap((participant) => {
-    const identity = identities.get(participant.participantId);
-    if (identity === undefined) return [];
+  const pairs = pairedParticipants(game);
+  if (pairs === null) return null;
+  const participants = pairs.flatMap(({ participant, identity }) => {
     const named = lcuParticipantIdentity(identity.player.puuid, undefined);
     if (named === null) return [];
     const fields = lcuParticipantFields(
@@ -86,11 +84,7 @@ export function convertHistoryMatch(
     );
     return [fields];
   });
-  if (
-    participants.length !== game.participants.length ||
-    participants.length !== game.participantIdentities.length
-  )
-    return null;
+  if (participants.length !== pairs.length) return null;
   const typed = participants.map((fields) =>
     HistoryParticipantSchema.safeParse(fields),
   );

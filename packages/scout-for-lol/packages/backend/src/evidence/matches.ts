@@ -17,7 +17,6 @@ import {
   readLocalCanonicalCandidates,
   readLocalEndOfGameCandidates,
   selectLocalCanonicalMatch,
-  selectLocalEndOfGameMatch,
   localCanonicalMatchesAgree,
 } from "#src/scout-client/canonical-match.ts";
 import {
@@ -30,8 +29,9 @@ import {
 import { enrichCompleteMatch } from "./complete-match-policy.ts";
 import {
   readLocalHistoryCandidates,
+  selectLocalEndOfGameMatch,
   selectLocalHistoryMatch,
-} from "#src/scout-client/history-candidates.ts";
+} from "#src/scout-client/local-record-selection.ts";
 
 /** How soon to look again when Riot's answer is still open. */
 const RIOT_UNDECIDED_RETRY_MS = 60_000;

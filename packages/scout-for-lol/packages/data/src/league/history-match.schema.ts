@@ -4,6 +4,7 @@ import { checkStoredIdentities } from "./participant-identity.ts";
 import { RawMetadataSchema } from "./raw-match.schema.ts";
 import { RawParticipantSchema } from "./raw-participant.schema.ts";
 import { RawTeamSchema } from "./raw-team.schema.ts";
+import { SCOUT_BUILT_GAME_SHAPE } from "./scout-built-game.schema.ts";
 
 /**
  * The history canonical record (`local-history-1`): a game Scout knows only
@@ -143,20 +144,10 @@ export const HistoryMatchSchema = z
     }),
     info: z
       .object({
-        // The history row's own completion marker, required to say so.
-        endOfGameResult: z.literal("GameComplete"),
+        ...SCOUT_BUILT_GAME_SHAPE,
         gameCreation: z.number().int().positive(),
-        gameDuration: z.number().positive(),
-        gameEndTimestamp: z.number().int().positive(),
-        gameId: z.number().int().positive(),
-        gameMode: z.string().min(1),
-        gameStartTimestamp: z.number().int().positive(),
-        gameType: z.string().min(1),
         gameVersion: z.string().min(1),
-        mapId: z.number().int().positive(),
         participants: z.array(HistoryParticipantSchema).min(2),
-        platformId: z.string().min(1),
-        queueId: z.number().int().nonnegative(),
         teams: z.array(RawTeamSchema).min(2),
       })
       .strict(),

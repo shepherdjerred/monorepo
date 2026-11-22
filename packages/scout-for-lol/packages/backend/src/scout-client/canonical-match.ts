@@ -528,39 +528,3 @@ export async function readLocalEndOfGameCandidates(riotMatchId: RiotMatchId) {
   );
   return parsed.flat();
 }
-
-/**
- * Freeze an end-of-game record as the game's canonical match. Every candidate
- * must agree, not only the eligible ones: two clients that disagree about the
- * game produce no record. The selection row is the same one a bundle writes,
- * so whichever froze first stands; the answer is read back from it.
- */
-export async function selectLocalEndOfGameMatch(
-  riotMatchId: RiotMatchId,
-  candidates: Awaited<ReturnType<typeof readLocalEndOfGameCandidates>>,
-  now = new Date(),
-): Promise<SelectedCanonicalMatch> {
-  const first = candidates.find((entry) => entry.eligibleAt <= now);
-  if (first === undefined)
-    throw new Error("Cannot select an end-of-game record before its deadline");
-  if (
-    candidates.some(
-      ({ match }) => !localCanonicalMatchesAgree(first.match, match),
-    )
-  ) {
-    conflictingCandidates(riotMatchId);
-  }
-  await prisma.scoutClientCanonicalMatch.upsert({
-    where: { riotMatchId },
-    create: {
-      riotMatchId,
-      sourceObservationId: first.candidate.observationId,
-      payloadDigest: first.candidate.bodyDigest,
-      selectedAt: now,
-    },
-    update: {},
-  });
-  const selected = await readSelectedCanonicalMatch(riotMatchId);
-  if (selected === null) conflictingCandidates(riotMatchId);
-  return selected;
-}

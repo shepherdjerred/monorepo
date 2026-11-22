@@ -1,3 +1,4 @@
+import type { CanonicalMatch } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma } from "#src/database/index.ts";
 import { scoutClientEndOfGameDeadlineSeconds } from "#src/config/dynamic.ts";
@@ -11,13 +12,15 @@ import {
   localCanonicalMatchesAgree,
   parseLocalHistoryMatch,
   readSelectedCanonicalMatch,
+  type readLocalEndOfGameCandidates,
   type SelectedCanonicalMatch,
 } from "./canonical-match.ts";
 
 /**
- * Selection of the history record (`local-history-1`) for a game no client
- * witnessed end. `parseLocalHistoryMatch` lives beside the other record
- * parsers in `canonical-match.ts`, which reads a frozen selection back.
+ * Selection of the partial client records: the end-of-game record
+ * (`local-eog-1`) and the history record (`local-history-1`) for a game no
+ * client witnessed end. The record parsers live in `canonical-match.ts`,
+ * which reads a frozen selection back.
  */
 /**
  * History records this game's uploads support: one per `post_game`
@@ -77,9 +80,52 @@ export async function selectLocalHistoryMatch(
   candidates: Awaited<ReturnType<typeof readLocalHistoryCandidates>>,
   now = new Date(),
 ): Promise<SelectedCanonicalMatch> {
+  return await freezeEligibleLocalRecord(
+    riotMatchId,
+    candidates,
+    now,
+    "a history record",
+  );
+}
+
+/**
+ * Freeze an end-of-game record as the game's canonical match. Every candidate
+ * must agree, not only the eligible ones: two clients that disagree about the
+ * game produce no record. The selection row is the same one a bundle writes,
+ * so whichever froze first stands; the answer is read back from it.
+ */
+export async function selectLocalEndOfGameMatch(
+  riotMatchId: RiotMatchId,
+  candidates: Awaited<ReturnType<typeof readLocalEndOfGameCandidates>>,
+  now = new Date(),
+): Promise<SelectedCanonicalMatch> {
+  return await freezeEligibleLocalRecord(
+    riotMatchId,
+    candidates,
+    now,
+    "an end-of-game record",
+  );
+}
+
+/**
+ * Freeze the first eligible candidate of a partial client record (an
+ * end-of-game or history record) in the selection row every client record
+ * uses, and read the answer back from it. Every candidate must agree, not
+ * only the eligible ones.
+ */
+export async function freezeEligibleLocalRecord(
+  riotMatchId: RiotMatchId,
+  candidates: readonly {
+    readonly candidate: { observationId: string; bodyDigest: string };
+    readonly match: CanonicalMatch;
+    readonly eligibleAt: Date;
+  }[],
+  now: Date,
+  record: string,
+): Promise<SelectedCanonicalMatch> {
   const first = candidates.find((entry) => entry.eligibleAt <= now);
   if (first === undefined)
-    throw new Error("Cannot select a history record before its deadline");
+    throw new Error(`Cannot select ${record} before its deadline`);
   if (
     candidates.some(
       ({ match }) => !localCanonicalMatchesAgree(first.match, match),

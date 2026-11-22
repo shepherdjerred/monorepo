@@ -120,6 +120,31 @@ function matchSource(
 }
 
 /**
+ * Each history participant with the identity row that names it, or `null`
+ * unless every participant and every identity pair up one to one.
+ */
+export function pairedParticipants(game: {
+  readonly participants: readonly LegacyParticipant[];
+  readonly participantIdentities: readonly LegacyIdentity[];
+}): { participant: LegacyParticipant; identity: LegacyIdentity }[] | null {
+  const identities = new Map(
+    game.participantIdentities.map((identity) => [
+      identity.participantId,
+      identity,
+    ]),
+  );
+  if (identities.size !== game.participantIdentities.length) return null;
+  const pairs = game.participants.flatMap((participant) => {
+    const identity = identities.get(participant.participantId);
+    return identity === undefined ? [] : [{ participant, identity }];
+  });
+  return pairs.length === game.participants.length &&
+    pairs.length === game.participantIdentities.length
+    ? pairs
+    : null;
+}
+
+/**
  * One Match-V5 participant from a history row and its statistics source.
  * `named` is who the row names, already decided by the bundle converter.
  */
@@ -203,17 +228,9 @@ function convertSupportedLcuMatchBundle(
   const completedAt = localMatchEndTimestamp(bundle);
   if (completedAt === null) return null;
   const players = sourcePlayers(bundle);
-  const identities = new Map(
-    game.participantIdentities.map((identity) => [
-      identity.participantId,
-      identity,
-    ]),
-  );
-  if (identities.size !== game.participantIdentities.length) return null;
-
-  const participants = game.participants.flatMap((participant) => {
-    const identity = identities.get(participant.participantId);
-    if (identity === undefined) return [];
+  const pairs = pairedParticipants(game);
+  if (pairs === null) return null;
+  const participants = pairs.flatMap(({ participant, identity }) => {
     const matched = matchSource(participant, identity, players);
     if (matched === null) return [];
     const converted = convertParticipant(
@@ -225,8 +242,7 @@ function convertSupportedLcuMatchBundle(
     return converted === null ? [] : [converted];
   });
   if (
-    participants.length !== game.participants.length ||
-    participants.length !== game.participantIdentities.length ||
+    participants.length !== pairs.length ||
     fieldedSides(participants) < MIN_FIELDED_SIDES
   ) {
     return null;

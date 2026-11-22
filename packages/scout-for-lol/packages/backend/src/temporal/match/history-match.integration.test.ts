@@ -12,7 +12,6 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
 import {
-  CanonicalMatchRecordSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
@@ -22,7 +21,6 @@ import {
 } from "#src/testing/test-database.ts";
 import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-client-device.ts";
 import type { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 
 /**
@@ -60,36 +58,23 @@ vi.mock("#src/report-lake/paths.ts", async (original) => ({
   ...(await original()),
   resolveLakeDir: () => io.lakeDir,
 }));
-vi.mock("#src/storage/s3-helpers.ts", async (original) => ({
-  ...(await original()),
-  saveToS3: async (config: {
-    matchId: RiotMatchId;
-    assetType: string;
-    extension: string;
-    body: string;
-    contentType: string;
-  }) => {
-    const body = config.body;
-    const key = `games/${config.matchId}/${config.assetType}.${config.extension}`;
-    io.objects.set(key, body);
-    return {
-      key,
-      digest: new Bun.CryptoHasher("sha256").update(body).digest("hex"),
-      bytes: new TextEncoder().encode(body).byteLength,
-      contentType: config.contentType,
-      capturedAt: new Date().toISOString(),
-      url: `s3://history-record-fixture/${key}`,
-    };
-  },
-}));
-vi.mock("#src/report-store/s3-raw-source.ts", async (original) => ({
-  ...(await original()),
-  readVerifiedRawObjectText: async (args: { key: string }) => {
-    const body = io.objects.get(args.key);
-    if (body === undefined) throw new Error(`No object at ${args.key}`);
-    return body;
-  },
-}));
+vi.mock("#src/storage/s3-helpers.ts", async (original) => {
+  const { inMemoryS3 } =
+    await import("#src/testing/scout-client/match-pipeline-doubles.ts");
+  return {
+    ...(await original()),
+    saveToS3: inMemoryS3(io.objects, "history-record-fixture").saveToS3,
+  };
+});
+vi.mock("#src/report-store/s3-raw-source.ts", async (original) => {
+  const { inMemoryS3 } =
+    await import("#src/testing/scout-client/match-pipeline-doubles.ts");
+  return {
+    ...(await original()),
+    readVerifiedRawObjectText: inMemoryS3(io.objects, "history-record-fixture")
+      .readVerifiedRawObjectText,
+  };
+});
 vi.mock("#src/storage/s3-client.ts", () => ({
   createS3Client: () => ({ destroy: vi.fn() }),
 }));
@@ -112,9 +97,14 @@ const { reconcileMatchHistory } = await import("./history-recovery.ts");
 const { admitMatchEvidence } = await import("#src/evidence/admission.ts");
 const { resolveCanonicalMatch } = await import("#src/evidence/matches.ts");
 const { stageLakeProjection } = await import("../lake/lake-projection.ts");
-const { listStagingFiles } = await import("#src/report-lake/staging.ts");
 const { aliasedLcuBundle, lcuBundleMatchId } =
   await import("#src/testing/report-lake/lcu-bundle-fixtures.ts");
+const {
+  archivedRecordIn,
+  clearMatchPipelineRows,
+  createTrackedPlayer,
+  stagedMatchRows,
+} = await import("#src/testing/scout-client/match-pipeline-doubles.ts");
 
 const owner = DiscordAccountIdSchema.parse("160509172704739328");
 const guild = DiscordGuildIdSchema.parse("1337623164146155593");
@@ -188,11 +178,7 @@ async function admit(historical: boolean) {
 const pastDeadline = () => new Date(Date.now() - DEADLINE_MS - MINUTE);
 
 function archivedRecord() {
-  const [body] = [...io.objects.entries()]
-    .filter(([key]) => key.endsWith("/match.json"))
-    .map(([, value]) => value);
-  if (body === undefined) throw new Error("Nothing was archived");
-  return CanonicalMatchRecordSchema.parse(JSON.parse(body));
+  return archivedRecordIn(io.objects);
 }
 
 beforeAll(async () => {
@@ -206,43 +192,12 @@ beforeEach(async () => {
   io.render.mockClear();
   sequence = 0;
   await rm(io.lakeDir, { recursive: true, force: true });
-  await prisma.$transaction([
-    prisma.matchNotificationIntent.deleteMany(),
-    prisma.matchReportSnapshot.deleteMany(),
-    prisma.matchResultEvidence.deleteMany(),
-    prisma.matchTrackedAccount.deleteMany(),
-    prisma.matchProcessingReceipt.deleteMany(),
-    prisma.matchObservation.deleteMany(),
-    prisma.matchEvidenceAdmission.deleteMany(),
-    prisma.scoutClientCanonicalMatch.deleteMany(),
-    prisma.scoutClientObservation.deleteMany(),
-    prisma.scoutClientDevice.deleteMany(),
-    prisma.scoutClientPairing.deleteMany(),
-    prisma.account.deleteMany(),
-    prisma.player.deleteMany(),
-    prisma.user.deleteMany(),
-  ]);
-  const now = new Date();
-  await prisma.player.create({
-    data: {
-      alias: "Mayhem Scout",
-      discordId: owner,
-      serverId: guild,
-      creatorDiscordId: owner,
-      createdTime: now,
-      updatedTime: now,
-      accounts: {
-        create: {
-          alias: "Mayhem Scout",
-          puuid: observer,
-          region: "AMERICA_NORTH",
-          serverId: guild,
-          creatorDiscordId: owner,
-          createdTime: now,
-          updatedTime: now,
-        },
-      },
-    },
+  await clearMatchPipelineRows(prisma);
+  await createTrackedPlayer(prisma, {
+    alias: "Mayhem Scout",
+    owner,
+    guild,
+    puuid: observer,
   });
   deviceId = await createTestScoutClientDevice(prisma, owner);
 });
@@ -287,18 +242,12 @@ describe("an unwitnessed ARAM Mayhem game from its history bundle", () => {
     expect(await prisma.matchNotificationIntent.count()).toBe(0);
 
     await stageLakeProjection({ riotMatchId: matchId });
-    const files = await listStagingFiles(io.lakeDir, "matches");
-    const texts = await Promise.all(
-      files.map(async (file) => await Bun.file(file).text()),
+    const staged = await stagedMatchRows(io.lakeDir);
+    const rows = staged.map((row) =>
+      z
+        .looseObject({ coverage: z.string(), time_played: z.unknown() })
+        .parse(row),
     );
-    const rows = texts
-      .flatMap((text) => text.split("\n"))
-      .filter((line) => line.trim().length > 0)
-      .map((line) =>
-        z
-          .looseObject({ coverage: z.string(), time_played: z.unknown() })
-          .parse(JSON.parse(line)),
-      );
     expect(rows).toHaveLength(10);
     expect(new Set(rows.map((row) => row.coverage))).toEqual(
       new Set(["history"]),

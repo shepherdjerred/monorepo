@@ -20,6 +20,7 @@ import {
   type RawParticipant,
 } from "./raw-participant.schema.ts";
 import { RawBanSchema } from "./raw-team.schema.ts";
+import { SCOUT_BUILT_GAME_SHAPE } from "./scout-built-game.schema.ts";
 
 /**
  * The end-of-game canonical record: a game Scout knows only from the League
@@ -79,19 +80,10 @@ export const EndOfGameMatchSchema = z
     }),
     info: z
       .object({
-        endOfGameResult: z.literal("GameComplete"),
+        ...SCOUT_BUILT_GAME_SHAPE,
         gameCreation: z.null(),
-        gameDuration: z.number().positive(),
-        gameEndTimestamp: z.number().int().positive(),
-        gameId: z.number().int().positive(),
-        gameMode: z.string().min(1),
-        gameStartTimestamp: z.number().int().positive(),
-        gameType: z.string().min(1),
         gameVersion: z.null(),
-        mapId: z.number().int().positive(),
         participants: z.array(EndOfGameParticipantSchema).min(2),
-        platformId: z.string().min(1),
-        queueId: z.number().int().nonnegative(),
         teams: z.array(EndOfGameTeamSchema).min(2),
       })
       .strict(),
