@@ -17,6 +17,11 @@ import {
 import { buildSourceLabel } from "#shared/artifact-contract.ts";
 import { deploymentLinks } from "./links.ts";
 import { artifactToolLinks } from "#shared/hub/artifact-links.ts";
+import {
+  failureReason,
+  type ReadableIntent,
+} from "#shared/evidence/recovery-reading.ts";
+import { recoveryIntentsOf, steppedReadback } from "./recovery.ts";
 import { buildStatus, stageStatus } from "./status.ts";
 import { promotionOrder } from "./topology.ts";
 import { buildView, serviceSummary } from "./views.ts";
@@ -173,6 +178,7 @@ export function deploymentActions(
   deployment: DeploymentRow,
   application: string | null,
   revision: number | null,
+  intents: readonly ReadableIntent[] = [],
 ): PipelineAction[] {
   const label = revision === null ? "" : ` r${String(revision)}`;
   const stages = deployment.stages.toSorted(
@@ -180,34 +186,45 @@ export function deploymentActions(
       (left.startedAt ?? left.updatedAt).getTime() -
       (right.startedAt ?? right.updatedAt).getTime(),
   );
+  // Once recovery settled, what it read back replaces the executor's words.
+  const message = failureReason(deployment, intents);
   return [
     {
       key: "deployment",
       title: `${deployment.kind}${label}`,
       status: DeploymentStatusSchema.parse(deployment.status),
-      detail: deployment.message ?? `Requested by ${deployment.requestedBy}`,
+      detail: message ?? `Requested by ${deployment.requestedBy}`,
       startedAt:
         iso(deployment.startedAt) ?? deployment.createdAt.toISOString(),
       finishedAt: iso(deployment.finishedAt),
       target: { kind: "deployment", id: deployment.id },
       links: deploymentLinks(deployment, application),
     },
-    ...stages.map((stage) => ({
-      key: `stage:${stage.key}`,
-      title: stage.key,
-      status: stageStatus(stage.status),
-      detail: stage.message === "" ? null : stage.message,
-      startedAt: iso(stage.startedAt),
-      // A step still recorded as running when its deployment ended was
-      // interrupted: its clock stops at the deployment's end, and a running
-      // action with a finish reads as interrupted, its outcome unknown.
-      finishedAt:
-        stage.status === "running"
-          ? iso(deployment.finishedAt)
-          : stage.updatedAt.toISOString(),
-      target: { kind: "deployment" as const, id: deployment.id },
-      links: [],
-    })),
+    ...stages.map((stage) => {
+      const readback =
+        stage.status === "running" && deployment.finishedAt !== null
+          ? steppedReadback(intents, stage)
+          : null;
+      return {
+        key: `stage:${stage.key}`,
+        title: stage.key,
+        status: stageStatus(stage.status),
+        // An interrupted step's "running" is stale once recovery read it back.
+        detail:
+          readback !== null || stage.message === "" ? null : stage.message,
+        ...(readback === null ? {} : { readback }),
+        startedAt: iso(stage.startedAt),
+        // A step still recorded as running when its deployment ended was
+        // interrupted: its clock stops at the deployment's end, and a running
+        // action with a finish reads as interrupted, its outcome unknown.
+        finishedAt:
+          stage.status === "running"
+            ? iso(deployment.finishedAt)
+            : stage.updatedAt.toISOString(),
+        target: { kind: "deployment" as const, id: deployment.id },
+        links: [],
+      };
+    }),
   ];
 }
 
@@ -221,6 +238,10 @@ async function environmentStage(
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     include: { stages: true },
   });
+  const intents = await recoveryIntentsOf(
+    database,
+    deployment === null ? [] : [deployment.id],
+  );
   const selected =
     deployment === null
       ? null
@@ -269,6 +290,7 @@ async function environmentStage(
             deployment,
             env.application,
             selected?.revision ?? null,
+            intents.get(deployment.id),
           ),
   };
 }

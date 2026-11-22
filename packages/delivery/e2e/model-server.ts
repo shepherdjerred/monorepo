@@ -9,6 +9,7 @@ import {
   seedModelBrowser,
 } from "./model.ts";
 import { describeSeededCommits } from "./commits.ts";
+import { RECOVERY_LIVE_IMAGE } from "./model-recovery.ts";
 
 const harnessPort = Number(
   Bun.argv[2] ?? Bun.env["DELIVERY_MODEL_E2E_PORT"] ?? "17355",
@@ -34,10 +35,12 @@ try {
     delivery,
     port: harnessPort,
     enabledEnvironments: MODEL_ENVIRONMENTS,
-    // Both Arcade Applications run the image their environment accepted.
+    // Both Arcade Applications run the image their environment accepted;
+    // Streambot runs the image of the release recovery read back as applied.
     liveImages: {
       arcade: [MODEL_ACCEPTED_IMAGE],
       "arcade-beta": [MODEL_ACCEPTED_IMAGE],
+      streambot: [RECOVERY_LIVE_IMAGE],
     },
     // Arcade's newest build ran every monorepo CI lane, as production's do.
     ciRuns: { 104: "monorepo" },

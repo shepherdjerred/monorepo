@@ -53,6 +53,29 @@ function interrupted(action: PipelineAction) {
   return action.status === "running" && action.finishedAt !== null;
 }
 
+/**
+ * What an unfinished action's clock measures: how long it has waited for a
+ * person or in the queue, or run. "Running" is said only of work under way.
+ */
+export function ongoingWords(status: PipelineAction["status"]) {
+  switch (status) {
+    case "awaiting_approval": {
+      return "awaiting approval for";
+    }
+    case "queued":
+    case "pending": {
+      return "waiting for";
+    }
+    case "running":
+    case "succeeded":
+    case "failed":
+    case "canceled":
+    case "not_started": {
+      return "running";
+    }
+  }
+}
+
 function ActionRow({ action }: { action: PipelineAction }) {
   const detail = actionDetail(action);
   return (
@@ -60,7 +83,14 @@ function ActionRow({ action }: { action: PipelineAction }) {
       className={`action action-${interrupted(action) ? "interrupted" : action.status}`}
     >
       {interrupted(action) ? (
-        <Status value="unknown" label="interrupted · outcome unknown" />
+        <Status
+          value="unknown"
+          label={
+            action.readback === undefined
+              ? "interrupted · outcome unknown"
+              : `interrupted · recovery read back phase ${action.readback}`
+          }
+        />
       ) : (
         <Status value={action.status} />
       )}
@@ -77,7 +107,11 @@ function ActionRow({ action }: { action: PipelineAction }) {
           {action.startedAt !== null && (
             <>
               {action.spanLabel !== undefined && `${action.spanLabel} `}
-              <Duration start={action.startedAt} end={action.finishedAt} />
+              <Duration
+                start={action.startedAt}
+                end={action.finishedAt}
+                ongoing={ongoingWords(action.status)}
+              />
             </>
           )}
           {action.startedAt === null && action.finishedAt !== null && (

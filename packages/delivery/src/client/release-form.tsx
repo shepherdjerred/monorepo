@@ -20,6 +20,7 @@ import {
 } from "#client/model/environment-status.ts";
 import {
   REFUSAL_ID,
+  RefusalReason,
   RequestError,
   requestsRefused,
 } from "#client/model/environment-notices.tsx";
@@ -281,26 +282,32 @@ function OverrideChoice({
   );
 }
 
-/** What happens after the request, what to check first, and the button. */
+/**
+ * What happens after the request, what to check first, and the button.
+ * While the page refuses requests, why it does stands beside the button in
+ * place of what a request would do.
+ */
 function Footer({
   environment,
+  refusal,
   disabled,
   pending,
   describedBy,
 }: {
   environment: EnvironmentDetail["environment"];
+  refusal: ReactNode;
   disabled: boolean;
   pending: boolean;
   describedBy: string | undefined;
 }) {
+  let note: ReactNode = "The pipeline will begin after its gates pass.";
+  if (refusal !== null) note = refusal;
+  else if (environment.approvalPolicy === "required")
+    note = "This request will wait for a human approval.";
   return (
     <div className="form-footer">
       <div className="release-notes">
-        <p>
-          {environment.approvalPolicy === "required"
-            ? "This request will wait for a human approval."
-            : "The pipeline will begin after its gates pass."}
-        </p>
+        <p>{note}</p>
         <MonitorHold environmentId={environment.id} />
       </div>
       <button
@@ -504,6 +511,11 @@ export function ReleaseForm({
         )}
         <Footer
           environment={environment}
+          refusal={
+            shared ? (
+              <RefusalReason blocker={blocker} planWaiting={planWaiting} />
+            ) : null
+          }
           disabled={blocked}
           pending={request.isPending}
           describedBy={describedByFor(ids, {

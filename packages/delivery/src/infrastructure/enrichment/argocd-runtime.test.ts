@@ -146,3 +146,49 @@ describe("compareLiveImages", () => {
     });
   });
 });
+
+/** A desired release Delivery has not accepted, whose arcade image is `char`. */
+function desiredRelease(char: string, revision = 348) {
+  const artifact = selected.components["image:arcade"];
+  if (artifact === undefined) throw new Error("fixture has image:arcade");
+  return {
+    ...selected,
+    id: "desired",
+    revision,
+    components: {
+      "image:arcade": { ...artifact, digest: digest(char), runtimeDigests: [] },
+    },
+  };
+}
+
+describe("compareLiveImages against a desired release not yet accepted", () => {
+  it("counts the desired release's digest apart, never as unexpected", () => {
+    // Streambot prod: r345 accepted, r348 desired, and r348's image running.
+    expect(
+      compareLiveImages(selected, [image("d")], [], desiredRelease("d")),
+    ).toEqual([
+      {
+        component: "image:arcade",
+        expected: digest("a"),
+        live: [image("d")],
+        retained: 0,
+        unexpected: [],
+        matches: false,
+        desiredRevision: 348,
+        desired: 1,
+      },
+    ]);
+  });
+
+  it("still flags a digest that is neither accepted nor desired", () => {
+    expect(
+      compareLiveImages(selected, [image("c")], [], desiredRelease("d"))[0],
+    ).toMatchObject({ unexpected: [image("c")], desired: 0, matches: false });
+  });
+
+  it("says nothing of a desired release that is the accepted one", () => {
+    const [check] = compareLiveImages(selected, [image("a")], [], selected);
+    expect(check?.matches).toBe(true);
+    expect(check).not.toHaveProperty("desiredRevision");
+  });
+});

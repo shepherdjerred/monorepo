@@ -87,7 +87,7 @@ test("each environment stage says what runs and what is ready for it", async ({
   await page.goto("/pipelines/scout-for-lol");
   const stage = page.getByRole("region", { name: "prod", exact: true });
   await expect(stage.locator(".stage-standing")).toHaveText(
-    `Running r${String(running)} · up to date`,
+    `Accepted r${String(running)} · up to date`,
   );
   // A newer composed release waits for this approval-gated environment.
   await page.route(`**${path}`, async (route) => {
@@ -107,7 +107,7 @@ test("each environment stage says what runs and what is ready for it", async ({
     "/environments/scout-for-lol/prod",
   );
   await expect(stage.locator(".stage-standing")).toContainText(
-    `Running r${String(running)}`,
+    `Accepted r${String(running)}`,
   );
   await expectNoHorizontalOverflow(page);
 });

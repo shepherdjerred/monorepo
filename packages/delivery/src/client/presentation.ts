@@ -83,17 +83,47 @@ const counted = (count: number, noun: string) =>
   `${count.toString()} ${noun}${count === 1 ? "" : "s"}`;
 
 /**
- * What one image check found, in words. Every live image is the accepted
- * artifact, a retained worker build or unexpected, so the accepted artifact
- * runs exactly when some live image is neither of the other two.
+ * Whether one image check found the accepted artifact running. Every live
+ * image is the accepted artifact, the desired release's, a retained worker
+ * build or unexpected, so the accepted artifact runs exactly when some live
+ * image is none of the others.
  */
+function acceptedRunning(check: ImageCheck) {
+  return (
+    check.live.length >
+    check.retained + check.unexpected.length + (check.desired ?? 0)
+  );
+}
+
+/**
+ * How one image check stands: the accepted digest running; the desired
+ * release's digest running where Delivery has not accepted it, which is
+ * what was asked for and not a wrong image; or a wrong one.
+ */
+export function imageCheckStanding(check: ImageCheck) {
+  if (check.matches) return "accepted" as const;
+  return check.unexpected.length === 0 && (check.desired ?? 0) > 0
+    ? ("desired" as const)
+    : ("wrong" as const);
+}
+
+/** What one image check found, in words, naming the release each digest belongs to. */
 export function imageCheckSummary(check: ImageCheck) {
-  const acceptedRunning =
-    check.live.length > check.retained + check.unexpected.length;
+  const desired = check.desired ?? 0;
+  const release =
+    check.desiredRevision === undefined
+      ? "the desired release"
+      : `desired r${String(check.desiredRevision)}`;
+  const lead = acceptedRunning(check)
+    ? "runs the accepted digest"
+    : desired > 0
+      ? `runs ${release}'s digest, which Delivery has not accepted`
+      : "does not run the accepted digest";
   return [
-    acceptedRunning
-      ? "runs the accepted digest"
-      : "does not run the accepted digest",
+    lead,
+    ...(acceptedRunning(check) && desired > 0
+      ? [counted(desired, `image of ${release}`)]
+      : []),
     ...(check.unexpected.length > 0
       ? [counted(check.unexpected.length, "unexpected image")]
       : []),

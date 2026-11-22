@@ -245,6 +245,15 @@ describe("folding healthy services on a phone", () => {
   });
 });
 
+/** The words of one tally's counts in rendered markup, by its label. */
+function tally(html: string, label: string) {
+  const start = html.indexOf(`aria-label="${label}">`);
+  const list = html.slice(start, html.indexOf("</ul>", start));
+  return [...list.matchAll(/status-label">(?<words>[^<]+)/gu)].map(
+    (match) => match.groups?.["words"],
+  );
+}
+
 describe("overview panels markup", () => {
   const html = renderWithRouter(
     <OverviewPanels panels={kindPanels(GROUPS, [])} />,
@@ -267,7 +276,7 @@ describe("overview panels markup", () => {
     expect(html).toContain(
       '<ul class="overview-counts" aria-label="Products by status">' +
         '<li><span class="status status-succeeded"><span class="status-glyph" aria-hidden="true">✓</span>' +
-        '<span class="status-label">3 ok</span></span></li>',
+        '<span class="status-label">1 ok</span></span></li>',
     );
     expect(html).toContain(
       '<span class="status-label">1 recovery required</span>',
@@ -275,6 +284,19 @@ describe("overview panels markup", () => {
     expect(html).toContain(
       '<span class="status-label">1 no environments</span>',
     );
+  });
+
+  it("counts in a panel's tally only the tiles directly under it, and in each group's its own", () => {
+    // Arcade and Scout sit under Products; Webring and TSMC under their groups.
+    expect(tally(html, "Products by status")).toEqual([
+      "1 ok",
+      "1 awaiting approval",
+    ]);
+    expect(tally(html, "Group sites by status")).toEqual(["1 ok", "1 failed"]);
+    expect(tally(html, "Group minecraft by status")).toEqual([
+      "1 ok",
+      "1 recovery required",
+    ]);
   });
 
   it("links a tile to its pipeline and each chip to its environment", () => {

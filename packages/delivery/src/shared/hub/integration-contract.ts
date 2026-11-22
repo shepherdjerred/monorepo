@@ -114,10 +114,21 @@ export const ImageCheckSchema = z.object({
   live: z.array(z.string()),
   /** Live images a retained worker build explains. */
   retained: z.number().int().nonnegative(),
-  /** Live images neither the accepted artifact nor a retained worker explains. */
+  /**
+   * Live images neither the accepted artifact, a retained worker, nor the
+   * desired release's artifact explains.
+   */
   unexpected: z.array(z.string()),
   /** The accepted artifact is running and no live image is unexpected. */
   matches: z.boolean(),
+  /**
+   * The revision of the desired release when it is not the accepted one,
+   * such as a release recovery read back as applied but Delivery never
+   * accepted. Absent when desired is accepted, and from older servers.
+   */
+  desiredRevision: z.number().int().positive().optional(),
+  /** Live images the desired release's artifact, and not the accepted one, explains. */
+  desired: z.number().int().nonnegative().optional(),
 });
 export type ImageCheck = z.infer<typeof ImageCheckSchema>;
 

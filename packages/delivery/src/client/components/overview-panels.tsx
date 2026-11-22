@@ -216,10 +216,14 @@ export function OverviewPanels({ panels }: { panels: KindPanel[] }) {
           >
             <div className="section-heading">
               <h2 id={heading}>{panel.title}</h2>
-              <Counts
-                label={`${panel.title} by status`}
-                services={panel.services}
-              />
+              {/* The panel counts the tiles directly under it; each group
+                  below counts its own, so no service is counted twice. */}
+              {panel.ungrouped.length > 0 && (
+                <Counts
+                  label={`${panel.title} by status`}
+                  services={panel.ungrouped}
+                />
+              )}
             </div>
             {panel.ungrouped.length > 0 && (
               <TileRun

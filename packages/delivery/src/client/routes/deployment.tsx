@@ -22,11 +22,15 @@ import { ConfirmButton } from "#client/components/confirm-dialog.tsx";
 import { ErrorNotice } from "#client/components/notices.tsx";
 import { ApprovalForm } from "#client/forms/approval-form.tsx";
 import { DecisionOutcome } from "#client/forms/decision.tsx";
-import { WhyItFailed } from "#client/model/deployment-outcome.tsx";
+import {
+  SupersededNote,
+  WhyItFailed,
+  headerStatus,
+  offersRetry,
+} from "#client/model/deployment-outcome.tsx";
 import { DeploymentRecord, sourceLabel } from "#client/deployment-detail.tsx";
 import { DeploymentModel } from "#client/model/deployment-model.tsx";
 import { PlanApproval } from "#client/model/plan-approval.tsx";
-import { retryable as offersRetry } from "#client/model/view.ts";
 import type { RecoveryDecision } from "#client/platform-recovery.tsx";
 import { canApprove, canDeploy, isTerminal } from "#client/presentation.ts";
 import { Route as rootRoute } from "./root.tsx";
@@ -101,7 +105,9 @@ function DeploymentPage() {
     (intent) =>
       intent.dispatchBarrier !== null && intent.barrierRestoredAt === null,
   );
-  const retryable = offersRetry(deployment);
+  // A release a newer acceptance superseded, or recovery settled, is not retried.
+  const retryable = offersRetry(detail);
+  const status = headerStatus(detail);
   // What the last decision here did; focus moves to it once it is recorded.
   const [outcome, setOutcome] = useState<{
     deploymentId: string;
@@ -123,7 +129,7 @@ function DeploymentPage() {
           <span className="detail-summary">
             {/* Only the status is live: the relative time beside it changes every minute. */}
             <span role="status">
-              <Status value={deployment.status} />
+              <Status value={status.value} label={status.label ?? undefined} />
             </span>
             <span>{deployment.kind}</span>
             <Link
@@ -146,6 +152,7 @@ function DeploymentPage() {
         <DecisionOutcome text={outcome.text} />
       )}
       <WhyItFailed detail={detail} />
+      <SupersededNote detail={detail} />
       {action.error !== null && <ErrorNotice error={action.error} />}
       {deployment.status === "awaiting_approval" &&
         principal !== undefined &&

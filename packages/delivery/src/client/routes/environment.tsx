@@ -19,6 +19,7 @@ import {
 } from "#client/model/selection-facts.tsx";
 import {
   environmentBlocker,
+  newestFailure,
   type Blocker,
 } from "#client/model/environment-status.ts";
 import {
@@ -74,6 +75,7 @@ function Summary({
         planWaiting={planWaiting}
         environmentId={environment.id}
         revisions={revisions}
+        newest={newestFailure(detail)}
       />
     </>
   );

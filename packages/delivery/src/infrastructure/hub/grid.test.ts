@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import { CATALOG_CORE } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { HubGridSchema } from "#shared/hub/hub-contract.ts";
 import { index } from "#infrastructure/delivery-data.ts";
-import { FAILING_STREAK, QUEUED_ATTENTION_MINUTES } from "./attention.ts";
+import {
+  FAILING_STREAK,
+  QUEUED_ATTENTION_MINUTES,
+  STREAK_WINDOW,
+} from "./attention.ts";
 import {
   buildGrid,
   type AcceptingDeployment,
@@ -451,34 +455,47 @@ describe("overview grid queued attention", () => {
 /** A minute before the record was read: too soon to read as stuck in the queue. */
 const JUST_NOW = new Date(at(10).getTime() - 60_000);
 
-/** Flags prod's attention: a new attempt queued after the deployments in `prior`. */
-function retried(
-  prior: { id: string; status: string; message: string | null }[],
-  status = "queued",
-) {
+type Prior =
+  GridRecord["prior"] extends ReadonlyMap<string, infer T> ? T : never;
+
+/** Flags prod's attention: its newest deployment, after the deployments in `prior`. */
+function newestAfter(newest: GridDeployment, prior: Prior) {
   return buildGrid(
     record({
       services: active("flags"),
       environments: [environment("flags/prod")],
-      latest: new Map([
-        [
-          "flags/prod",
-          deployment("again", "flags/prod", {
-            status,
-            createdAt: JUST_NOW,
-            startedAt: null,
-            finishedAt: null,
-          }),
-        ],
-      ]),
+      latest: new Map([["flags/prod", newest]]),
       prior: new Map([["flags/prod", prior]]),
     }),
   ).attention;
 }
 
+/** Flags prod's attention: a new attempt queued after the deployments in `prior`. */
+function retried(prior: Prior, status = "queued") {
+  return newestAfter(
+    deployment("again", "flags/prod", {
+      status,
+      createdAt: JUST_NOW,
+      startedAt: null,
+      finishedAt: null,
+    }),
+    prior,
+  );
+}
+
 /** A deployment before the newest that failed, with what it recorded. */
 function failed(id: string, message: string | null) {
-  return { id, status: "failed", message };
+  return { id, status: "failed", message, recoveryRequired: false };
+}
+
+/** Flags prod's newest deployment, failed with `message` and nothing after it. */
+function newestFailed(message: string | null, recoveryRequired = false) {
+  return deployment("newest", "flags/prod", {
+    status: "failed",
+    message,
+    recoveryRequired,
+    finishedAt: at(9),
+  });
 }
 
 describe("overview grid failing-repeatedly attention", () => {
@@ -512,12 +529,67 @@ describe("overview grid failing-repeatedly attention", () => {
     expect(
       retried([
         failed("second", null),
-        { id: "first", status: "succeeded", message: null },
+        { ...failed("first", null), status: "succeeded" },
       ]),
     ).toEqual([]);
     expect(
       retried([failed("second", null), failed("first", null)], "succeeded"),
     ).toEqual([]);
+  });
+
+  it("flags failures in a row with nothing queued after them, the newest among them", () => {
+    // Streambot prod: r346, r347 and r348 failed, and nothing was requested since.
+    expect(
+      newestAfter(
+        newestFailed(
+          "Recovery intent 1 read the external operation back after the deployment ended: it ended in phase Succeeded.",
+        ),
+        [failed("r347", null), failed("r346", null)],
+      ),
+    ).toEqual([
+      {
+        kind: "failed",
+        title: "Flags prod is failing repeatedly",
+        detail:
+          "The last 3 deployments failed, the newest with: Recovery intent 1 read the external operation back after the deployment ended: it ended in phase Succeeded. Nothing newer is queued.",
+        at: at(9).toISOString(),
+        target: { kind: "deployment", id: "newest" },
+        serviceId: "flags",
+      },
+    ]);
+    // One failure after a success is a plain failure.
+    expect(
+      newestAfter(newestFailed("Sync timed out"), [
+        { ...failed("before", null), status: "succeeded" },
+      ]),
+    ).toMatchObject([
+      {
+        title: "Flags prod deployment failed",
+        detail: "The deploy of r275 failed: Sync timed out",
+      },
+    ]);
+  });
+
+  it("says a streak the read could not see the start of is that many or more", () => {
+    const window = Array.from({ length: STREAK_WINDOW }, (_, rank) =>
+      failed(`before-${String(rank)}`, null),
+    );
+    expect(newestAfter(newestFailed(null), window)[0]?.detail).toBe(
+      `The last ${String(STREAK_WINDOW + 1)} or more deployments failed. Nothing newer is queued.`,
+    );
+    expect(retried(window)[0]?.detail).toBe(
+      `The last ${String(STREAK_WINDOW)} or more deployments failed. The deploy of r275 is queued again.`,
+    );
+  });
+
+  it("asks for recovery first when the newest failure locked the environment", () => {
+    expect(
+      newestAfter(newestFailed("Sync outlived the executor", true), [
+        failed("before", null),
+      ]),
+    ).toMatchObject([
+      { kind: "recovery", title: "Flags prod requires recovery" },
+    ]);
   });
 });
 

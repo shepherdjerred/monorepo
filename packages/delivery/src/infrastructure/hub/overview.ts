@@ -12,6 +12,7 @@ import {
   latestBuilds,
   latestDeployments,
   priorDeployments,
+  statedDeployments,
 } from "./attention.ts";
 import { toolLinks } from "./links.ts";
 import { latestExecution } from "./executions.ts";
@@ -20,7 +21,7 @@ import { activityEntry, buildView, serviceSummary } from "./views.ts";
 
 /** Every delivered service with its newest build and environment states. */
 export async function hubOverview(database: Database): Promise<HubOverview> {
-  const [environmentRows, latest, prior, builds, awaiting, alarmed, audit] =
+  const [environmentRows, newest, before, builds, awaiting, alarmed, audit] =
     await Promise.all([
       database.environment.findMany({ orderBy: { id: "asc" } }),
       latestDeployments(database),
@@ -42,6 +43,7 @@ export async function hubOverview(database: Database): Promise<HubOverview> {
         take: 12,
       }),
     ]);
+  const { latest, prior } = await statedDeployments(database, newest, before);
   const environments = await Promise.all(
     environmentRows.map((row) => readEnvironment(database, row.id)),
   );

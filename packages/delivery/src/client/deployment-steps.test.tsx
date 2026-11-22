@@ -13,7 +13,13 @@ import {
   stepMessage,
   stepEnd,
 } from "./deployment-steps.tsx";
-import { WhyItFailed, failureStory } from "./model/deployment-outcome.tsx";
+import {
+  WhyItFailed,
+  deploymentVerdict,
+  failureStory,
+  headerStatus,
+  offersRetry,
+} from "./model/deployment-outcome.tsx";
 
 // The hub client resolves its API origin from the page; static rendering has none.
 vi.hoisted(() => {
@@ -617,5 +623,173 @@ describe("why a deployment failed", () => {
           : { ...base.approval, reason: "Reviewed the release" },
     };
     expect(record(approved)).not.toContain("Reviewed the release");
+  });
+});
+
+/** Before any fixture deployment was requested. */
+const LONG_AGO = "2020-01-01T00:00:00.000Z";
+
+/** Streambot prod r348's readback: the sync it outlived ended Succeeded. */
+const SUCCEEDED_READBACK =
+  "Independent Application readback: media, resourceVersion 330545892, request 942174ca, operation 6052ec99, phase Succeeded, finished 2026-11-22T08:14:30Z";
+
+/** The ended deployment settled as Succeeded, in an environment at `environment`. */
+function recoveredIn(
+  environment: Partial<DeploymentDetail["environment"]>,
+  acceptedRelease: {
+    deploymentId: string;
+    revision: number;
+    requestedAt: string;
+  } | null = null,
+) {
+  const settled = settledDetail(
+    [stage("step-sync", "running", "step-sync: running")],
+    [SUCCEEDED_READBACK],
+  );
+  return {
+    ...settled,
+    environment: {
+      ...settled.environment,
+      acceptedDeploymentId: "older-accepted",
+      acceptedVersionSetRevisionId: "older-set",
+      observedVersionSetRevisionId: "older-set",
+      ...environment,
+    },
+    acceptedRelease,
+  };
+}
+
+describe("what is true of a failed deployment beyond its status", () => {
+  it("says a sync recovery read back as Succeeded was applied but never accepted", () => {
+    const applied = recoveredIn(
+      { desiredVersionSetRevisionId: ended.deployment.versionSetRevisionId },
+      { deploymentId: "older-accepted", revision: 345, requestedAt: LONG_AGO },
+    );
+    expect(deploymentVerdict(applied)).toEqual({
+      kind: "applied",
+      acceptedRevision: 345,
+    });
+    expect(headerStatus(applied)).toEqual({
+      value: "unknown",
+      label: "failed · applied, not accepted",
+    });
+    // A retry is how Delivery comes to accept it.
+    expect(offersRetry(applied)).toBe(true);
+    const html = render(<WhyItFailed detail={applied} />);
+    expect(html).toContain("Why it failed");
+    expect(html).toContain("it ended in phase Succeeded.");
+    expect(html).toContain("change was applied, but Delivery never accepted");
+    expect(html).toContain("r345 is still accepted in");
+    expect(html).not.toContain("Fix the cause");
+    expect(html).not.toContain("may still be active");
+    // A deployment that never requested its sync applied nothing, whatever
+    // phase the prior operation it read back ended in.
+    const unsynced = settledDetail(
+      [stage("step-sync", "running", "step-sync: running")],
+      [
+        "Independent Application readback (no sync requested): media, resourceVersion 7, spec.source matches history 4, prior request 1d2e, operation 9, phase Succeeded, finished 2026-11-22T03:27:16Z",
+      ],
+    );
+    expect(
+      deploymentVerdict({
+        ...applied,
+        recoveryIntents: unsynced.recoveryIntents,
+      }),
+    ).toBeNull();
+  });
+
+  it("calls it recovered once the environment accepts or was seen running that release", () => {
+    for (const environment of [
+      { acceptedVersionSetRevisionId: ended.deployment.versionSetRevisionId },
+      { observedVersionSetRevisionId: ended.deployment.versionSetRevisionId },
+      { acceptedDeploymentId: ended.deployment.id },
+    ]) {
+      const recovered = recoveredIn(environment);
+      expect(deploymentVerdict(recovered)).toEqual({ kind: "recovered" });
+      expect(headerStatus(recovered)).toEqual({
+        value: "succeeded",
+        label: "failed, then recovered",
+      });
+      expect(offersRetry(recovered)).toBe(false);
+      const html = render(<WhyItFailed detail={recovered} />);
+      expect(html).toContain('<h2 id="failure-heading">How it recovered</h2>');
+      expect(html).toContain("Nothing:");
+      expect(html).not.toContain("panel-failed");
+    }
+  });
+
+  it("does not call a rebind recovered because the set it kept is accepted", () => {
+    // A rebind keeps the accepted set and changes recipe or configuration,
+    // so only its own acceptance shows the new selection runs.
+    const rebind = recoveredIn({
+      acceptedVersionSetRevisionId: ended.deployment.versionSetRevisionId,
+      observedVersionSetRevisionId: ended.deployment.versionSetRevisionId,
+    });
+    const kept = {
+      ...rebind,
+      deployment: {
+        ...rebind.deployment,
+        kind: "rebind" as const,
+        previousAcceptedVersionSetRevisionId:
+          ended.deployment.versionSetRevisionId,
+      },
+    };
+    expect(deploymentVerdict(kept)).toMatchObject({ kind: "applied" });
+    expect(offersRetry(kept)).toBe(true);
+    expect(
+      deploymentVerdict({
+        ...kept,
+        environment: { ...kept.environment, acceptedDeploymentId: id },
+      }),
+    ).toEqual({ kind: "recovered" });
+  });
+
+  it("says a failure a newer acceptance followed is superseded, and offers no retry", () => {
+    const superseded = {
+      ...ended,
+      deployment: { ...ended.deployment, message: "Sync timed out" },
+      acceptedRelease: {
+        deploymentId: "newer-accepted",
+        revision: 9,
+        requestedAt: "2026-12-01T00:00:00.000Z",
+      },
+    };
+    expect(deploymentVerdict(superseded)).toEqual({
+      kind: "superseded",
+      deploymentId: "newer-accepted",
+      revision: 9,
+    });
+    expect(offersRetry(superseded)).toBe(false);
+    expect(headerStatus(superseded).label).toBe("failed · superseded by r9");
+    const html = render(<WhyItFailed detail={superseded} />);
+    expect(html).toContain("Superseded by");
+    expect(html).toContain('href="/deployments/newer-accepted"');
+    expect(html).toContain("Retry is off");
+    expect(html).not.toContain("Fix the cause");
+    // An acceptance requested before this deployment does not supersede it.
+    expect(
+      deploymentVerdict({
+        ...superseded,
+        acceptedRelease: {
+          ...superseded.acceptedRelease,
+          requestedAt: LONG_AGO,
+        },
+      }),
+    ).toBeNull();
+  });
+
+  it("says no cause was recorded, and where to look, when nothing says why", () => {
+    const silent = {
+      ...ended,
+      deployment: { ...ended.deployment, message: null },
+      stages: [],
+      evidence: [],
+    };
+    expect(failureStory(silent)).toMatchObject({ caused: false });
+    const html = render(<WhyItFailed detail={silent} />);
+    expect(html).toContain("No cause was recorded.");
+    expect(html).toContain("Temporal workflow linked above");
+    expect(html).not.toContain("Fix the cause");
+    expect(render(<WhyItFailed detail={ended} />)).toContain("Fix the cause");
   });
 });

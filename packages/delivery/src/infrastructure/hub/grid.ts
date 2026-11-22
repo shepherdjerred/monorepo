@@ -18,6 +18,7 @@ import {
   latestBuilds,
   latestDeployments,
   priorDeployments,
+  statedDeployments,
   type AlarmedRelease,
   type AttentionDeployment,
   type PriorDeployment,
@@ -252,12 +253,12 @@ export function buildGrid(
 }
 
 /**
- * `GET /hub/grid`. Ten statements whatever the number of services: every row
+ * `GET /hub/grid`. Eleven statements whatever the number of services: every row
  * is read by set, never per service or per environment, and no execution is
  * traced.
  */
 export async function hubGrid(database: Database): Promise<HubGrid> {
-  const [services, environments, latest, prior, builds, awaiting] =
+  const [services, environments, newest, before, builds, awaiting] =
     await Promise.all([
       database.service.findMany({ select: { id: true, lifecycle: true } }),
       database.environment.findMany(),
@@ -266,6 +267,7 @@ export async function hubGrid(database: Database): Promise<HubGrid> {
       latestBuilds(database),
       awaitingDecisions(database),
     ]);
+  const { latest, prior } = await statedDeployments(database, newest, before);
   const ids = <T>(pick: (env: (typeof environments)[number]) => T | null) =>
     environments.flatMap((env) => {
       const value = pick(env);

@@ -229,7 +229,8 @@ test("each kind is a panel with its counts, and a group of several has its own",
     "Platform",
   ]);
   // Other specs deploy to the products, so their standings move between
-  // runs; a panel's counts always add up to the services it lists.
+  // runs; a panel's counts always add up to the tiles directly under it,
+  // and each group under it counts its own.
   const products = page.getByRole("region", { name: "Products", exact: true });
   const labels = await products
     .getByRole("list", { name: "Products by status" })
@@ -240,7 +241,9 @@ test("each kind is a panel with its counts, and a group of several has its own",
     (sum, label) => sum + Number(/\d+/u.exec(label)?.[0] ?? Number.NaN),
     0,
   );
-  await expect(products.locator(".overview-tile")).toHaveCount(counted);
+  await expect(
+    products.locator(".overview-tile:not(.overview-group .overview-tile)"),
+  ).toHaveCount(counted);
   // Platform services holds the two seeded v2-only services beside its own.
   const platform = page.getByRole("region", { name: "Platform", exact: true });
   const group = platform.getByRole("region", { name: "Platform services" });
