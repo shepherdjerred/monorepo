@@ -18,7 +18,7 @@ import type { EnforcementStage } from "@shepherdjerred/homelab/cdk8s/src/misc/ne
  */
 export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   "alert-dashboard": "enforced",
-  arcade: "open",
+  arcade: "enforced",
   argocd: "open",
   birmel: "enforced",
   bugsink: "enforced",
