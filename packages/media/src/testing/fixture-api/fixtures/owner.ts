@@ -269,6 +269,7 @@ const MIGRATIONS: readonly MigrationSeed[] = [
   ["sonarr", "4.0.11.2680", "awaiting_review", 20],
   ["overseerr", "1.33.2", "protected", 19],
   ["radarr", "5.14.0.9383", "revoked", 34],
+  ["bazarr", "1.4.5", "approved", 15],
 ];
 
 /** One captured source per review status. */

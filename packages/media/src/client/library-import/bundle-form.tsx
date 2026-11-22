@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId } from "react";
 import { useMutation } from "@tanstack/react-query";
 import type { z } from "zod";
 import type { MigrationProposalListSchema } from "#shared/migration.ts";
@@ -8,16 +8,37 @@ import {
   BundleReviewProtocolSchema,
 } from "#shared/handoff/library-bundle.ts";
 import { writeApi, queryClient } from "#client/api.ts";
-import { ErrorNotice } from "#client/components.tsx";
+import { SOURCE_LABELS, when } from "#client/migration/vocabulary.ts";
+import { FieldGroup, SelectField, TextField } from "#client/ui/forms/field.tsx";
+import { Form, FormFooter } from "#client/ui/forms/form.tsx";
 
 type Captures = z.infer<typeof MigrationProposalListSchema>;
 type Kind = z.infer<typeof LibraryCaptureKindSchema>;
-const labels = {
-  radarr: "Movies · Radarr",
-  sonarr: "TV and anime · Sonarr",
-  bazarr: "Subtitles · Bazarr (optional)",
-};
 
+const FIELDS = {
+  radarr: { label: "Movies, from Radarr", skip: "Choose a capture" },
+  sonarr: { label: "TV and anime, from Sonarr", skip: "Choose a capture" },
+  bazarr: {
+    label: "Subtitles, from Bazarr (optional)",
+    skip: "Skip subtitle capture",
+  },
+} satisfies Record<Kind, { label: string; skip: string }>;
+
+/** A root as the capture contract accepts it: absolute, without `..`, `?` or `#`. */
+const ROOT = String.raw`/(?!.*(?:\.\.|[?#])).*`;
+const ROOT_MESSAGE =
+  "Enter an absolute path such as /data/movies, without “..”, “?” or “#”.";
+
+function text(data: FormData, name: string): string {
+  const value = data.get(name);
+  return typeof value === "string" ? value : "";
+}
+
+/**
+ * Step 3's form: which captures to compare and where each library lives, as
+ * the source manager sees it and as Media sees it. Building the report
+ * changes nothing; files stay in place.
+ */
 export function LibraryBundleForm({
   captures,
   actorId,
@@ -27,18 +48,15 @@ export function LibraryBundleForm({
   actorId: string;
   onCreated: (id: string) => void;
 }) {
-  const [selected, setSelected] = useState<Record<Kind, string>>({
-    radarr: "",
-    sonarr: "",
-    bazarr: "",
-  });
-  const [movieSource, setMovieSource] = useState("");
-  const [tvSource, setTvSource] = useState("");
-  const [movieLocation, setMovieLocation] = useState("/data/movies");
-  const [tvLocation, setTvLocation] = useState("/data/tv");
+  const headingId = useId();
   const create = useMutation({
-    mutationFn: () =>
-      writeApi({
+    mutationFn: (data: FormData) => {
+      const selected: Record<Kind, string> = {
+        radarr: text(data, "radarr"),
+        sonarr: text(data, "sonarr"),
+        bazarr: text(data, "bazarr"),
+      };
+      return writeApi({
         actorId,
         path: "/admin/migration/bundles",
         schema: BundleReviewProtocolSchema,
@@ -49,19 +67,20 @@ export function LibraryBundleForm({
           rootMappings: [
             {
               captureId: selected.radarr,
-              sourceRoot: movieSource,
-              canonicalRoot: movieLocation,
+              sourceRoot: text(data, "movieSource"),
+              canonicalRoot: text(data, "movieLocation"),
               verified: false,
             },
             {
               captureId: selected.sonarr,
-              sourceRoot: tvSource,
-              canonicalRoot: tvLocation,
+              sourceRoot: text(data, "tvSource"),
+              canonicalRoot: text(data, "tvLocation"),
               verified: false,
             },
           ],
         }),
-      }),
+      });
+    },
     onSuccess: async (review) => {
       onCreated(review.id);
       await queryClient.invalidateQueries({
@@ -75,101 +94,98 @@ export function LibraryBundleForm({
     ).values(),
   ];
   return (
-    <form
-      className="stack-form"
-      onSubmit={(event) => {
-        event.preventDefault();
-        create.mutate();
-      }}
-    >
-      <p>
-        Choose your movie and TV library captures. Add a subtitle capture to
-        review existing captions and policies.
-      </p>
-      {LibraryCaptureKindSchema.options.map((kind) => (
-        <label key={kind}>
-          {labels[kind]}
-          <select
-            value={selected[kind]}
-            required={kind !== "bazarr"}
-            disabled={create.isPending}
-            onChange={(event) => {
-              setSelected({ ...selected, [kind]: event.target.value });
-            }}
-          >
-            <option value="">
-              {kind === "bazarr" ? "Skip subtitle capture" : "Choose a capture"}
-            </option>
-            {distinct
-              .filter((capture) => capture.source.kind === kind)
-              .map((capture) => (
+    <>
+      <h3 id={headingId}>Compare your captures</h3>
+      <Form
+        labelledBy={headingId}
+        onSubmit={(form) => {
+          create.mutate(new FormData(form));
+        }}
+      >
+        {LibraryCaptureKindSchema.options.map((kind) => {
+          const matching = distinct.filter(
+            (capture) => capture.source.kind === kind,
+          );
+          return (
+            <SelectField
+              key={kind}
+              label={FIELDS[kind].label}
+              name={kind}
+              required={kind !== "bazarr"}
+              requiredMessage={`Choose a ${SOURCE_LABELS[kind]} capture.`}
+              disabled={create.isPending}
+              description={
+                matching.length === 0
+                  ? `There is no ${SOURCE_LABELS[kind]} capture yet. Add one in step 1.`
+                  : undefined
+              }
+              defaultValue=""
+            >
+              <option value="">{FIELDS[kind].skip}</option>
+              {matching.map((capture) => (
                 <option key={capture.captureId} value={capture.captureId}>
-                  {new Date(capture.createdAt).toLocaleString()} ·{" "}
-                  {capture.source.version}
+                  {when(capture.createdAt)}, version {capture.source.version}
                 </option>
               ))}
-          </select>
-        </label>
-      ))}
-      <fieldset disabled={create.isPending}>
-        <legend>Library locations</legend>
-        <p>
-          Use the roots shown by your existing managers and the locations
-          visible to Media. Files stay in place.
-        </p>
-        <label>
-          Movie root in Radarr
-          <input
-            value={movieSource}
-            required
+            </SelectField>
+          );
+        })}
+        <FieldGroup
+          legend="Library locations"
+          description="Use the roots your existing managers show and the locations Media can see. Files stay in place."
+        >
+          <TextField
+            label="Movie root in Radarr"
+            name="movieSource"
             placeholder="/movies"
-            onChange={(event) => {
-              setMovieSource(event.target.value);
-            }}
-          />
-        </label>
-        <label>
-          Movie location in Media
-          <input
-            value={movieLocation}
             required
-            onChange={(event) => {
-              setMovieLocation(event.target.value);
-            }}
+            requiredMessage="Enter the movie root as Radarr shows it."
+            pattern={ROOT}
+            patternMessage={ROOT_MESSAGE}
+            disabled={create.isPending}
           />
-        </label>
-        <label>
-          TV root in Sonarr
-          <input
-            value={tvSource}
+          <TextField
+            label="Movie location in Media"
+            name="movieLocation"
+            defaultValue="/data/movies"
             required
+            requiredMessage="Enter where Media sees the movies."
+            pattern={ROOT}
+            patternMessage={ROOT_MESSAGE}
+            disabled={create.isPending}
+          />
+          <TextField
+            label="TV root in Sonarr"
+            name="tvSource"
             placeholder="/tv"
-            onChange={(event) => {
-              setTvSource(event.target.value);
-            }}
-          />
-        </label>
-        <label>
-          TV location in Media
-          <input
-            value={tvLocation}
             required
-            onChange={(event) => {
-              setTvLocation(event.target.value);
-            }}
+            requiredMessage="Enter the TV root as Sonarr shows it."
+            pattern={ROOT}
+            patternMessage={ROOT_MESSAGE}
+            disabled={create.isPending}
           />
-        </label>
-      </fieldset>
-      <button
-        className="button primary"
-        type="submit"
-        disabled={
-          create.isPending || selected.radarr === "" || selected.sonarr === ""
-        }
-      >
-        {create.isPending ? "Comparing your library…" : "Build library report"}
-      </button>
-      {create.error !== null && <ErrorNotice error={create.error} />}
-    </form>
+          <TextField
+            label="TV location in Media"
+            name="tvLocation"
+            defaultValue="/data/tv"
+            required
+            requiredMessage="Enter where Media sees the TV library."
+            pattern={ROOT}
+            patternMessage={ROOT_MESSAGE}
+            disabled={create.isPending}
+          />
+        </FieldGroup>
+        <FormFooter
+          submitLabel="Build library report"
+          pendingLabel="Comparing your library…"
+          pending={create.isPending}
+          error={create.error}
+          saved={
+            create.isSuccess ? "Library report built. Review it below." : null
+          }
+          note="Building a report compares the captures and saves the result. It changes no files."
+        />
+      </Form>
+    </>
   );
 }

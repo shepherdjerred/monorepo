@@ -1,0 +1,138 @@
+@layer components {
+  .steps {
+    display: grid;
+    margin-block-end: var(--space-5);
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+  .step {
+    display: grid;
+    align-content: start;
+    justify-items: start;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    counter-increment: step;
+  }
+  .stepLink {
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .stepLink::before {
+    content: counter(step) ". ";
+    color: var(--text-muted);
+  }
+  .stepLink:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .technical {
+    display: grid;
+    gap: var(--space-3);
+    font-size: var(--text-sm);
+  }
+  .technical p {
+    margin: 0;
+  }
+  .technical ul {
+    margin: 0;
+    padding-inline-start: var(--space-5);
+  }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: var(--space-4);
+    margin: 0;
+  }
+  .fact {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .fact dt {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .fact dd {
+    margin: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .code {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
+  }
+
+  .pickList {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .pick {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    cursor: pointer;
+  }
+  .pick[data-disabled] {
+    cursor: default;
+    color: var(--text-muted);
+  }
+  .pickBox {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 1px 0 0;
+    accent-color: var(--accent-strong);
+  }
+
+  .decision {
+    display: grid;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border);
+  }
+  .decision > p {
+    max-width: 44rem;
+    margin: 0;
+    color: var(--text-muted);
+  }
+  .decisionTitle {
+    margin: 0;
+    font-size: var(--text-lg);
+    letter-spacing: -0.02em;
+  }
+
+  .failure {
+    margin: 0;
+  }
+
+  .pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .pagerCount {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .pagerButtons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+}

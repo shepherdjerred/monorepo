@@ -4,7 +4,7 @@ import { CommandResultSchema } from "#shared/api.ts";
 import { MigrationSnapshotSchema } from "#shared/migration.ts";
 import { type ManualSubtitle, type SubtitleTarget } from "#shared/admin.ts";
 import { submitSubtitleUpload } from "./subtitle-upload.ts";
-import { uploadMigrationCapture } from "./migration.tsx";
+import { uploadMigrationCapture } from "./migration/upload.tsx";
 import {
   commandKey,
   queryClient,

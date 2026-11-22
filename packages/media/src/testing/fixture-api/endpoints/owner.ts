@@ -5,8 +5,14 @@ import {
 } from "#shared/api.ts";
 import { ProviderListSchema, SubtitleTargetListSchema } from "#shared/admin.ts";
 import { CapacityViewSchema } from "#shared/capacity/view.ts";
+import { HandoffPlanDetailSchema } from "#client/library-import/plan-detail.ts";
+import { NativeRecoveryInventorySchema } from "#shared/native-recovery.ts";
+import { BundleReviewProtocolSchema } from "#shared/handoff/library-bundle.ts";
 import { BundleReviewListSchema } from "#shared/migration-handoff.ts";
-import { MigrationProposalListSchema } from "#shared/migration.ts";
+import {
+  MigrationProposalListSchema,
+  MigrationProposalSchema,
+} from "#shared/migration.ts";
 import {
   NumberingEpisodeListSchema,
   NumberingSeriesListSchema,
@@ -34,6 +40,16 @@ import {
   providerList,
   subtitleTargets,
 } from "#testing/fixture-api/fixtures/owner.ts";
+import { nativeRecoveryInventory } from "#testing/fixture-api/fixtures/native-recovery.ts";
+import {
+  HANDOFF_IDS,
+  handoffDetail,
+} from "#testing/fixture-api/fixtures/handoff.ts";
+import {
+  BUNDLE_IDS,
+  bundleReviewDetail,
+  migrationProposalDetail,
+} from "#testing/fixture-api/fixtures/migration.ts";
 import {
   profileDefaults,
   profileList,
@@ -123,7 +139,9 @@ const administration: readonly FixtureEndpoint[] = [
     path: "/admin/migration",
     access: "owner",
     schema: MigrationProposalListSchema,
-    respond: () => migrationProposals(),
+    // A household on its first day has captured nothing.
+    respond: (request) =>
+      request.scenario === "new-household" ? [] : migrationProposals(),
     samples: ["/admin/migration"],
   }),
   endpoint({
@@ -144,8 +162,50 @@ const administration: readonly FixtureEndpoint[] = [
     path: "/admin/migration/bundles",
     access: "owner",
     schema: BundleReviewListSchema,
-    respond: () => migrationBundles(),
+    respond: (request) =>
+      request.scenario === "new-household" ? [] : migrationBundles(),
     samples: ["/admin/migration/bundles"],
+  }),
+  endpoint({
+    path: "/admin/native-recovery",
+    access: "owner",
+    schema: NativeRecoveryInventorySchema,
+    respond: () => nativeRecoveryInventory(),
+    samples: ["/admin/native-recovery"],
+  }),
+  endpoint({
+    path: "/admin/migration/bundles/:id",
+    access: "owner",
+    schema: BundleReviewProtocolSchema,
+    respond: (request) => {
+      const id = request.param("id");
+      const summary = migrationBundles().find((bundle) => bundle.id === id);
+      return summary === undefined ? null : bundleReviewDetail(id, summary);
+    },
+    samples: Object.values(BUNDLE_IDS).map(
+      (id) => `/admin/migration/bundles/${id}`,
+    ),
+  }),
+  endpoint({
+    path: "/admin/migration/:id",
+    access: "owner",
+    schema: MigrationProposalSchema,
+    respond: (request) => {
+      const summary = migrationProposals().find(
+        (proposal) => proposal.id === request.param("id"),
+      );
+      return summary === undefined ? null : migrationProposalDetail(summary);
+    },
+    samples: migrationProposals().map(
+      (proposal) => `/admin/migration/${proposal.id}`,
+    ),
+  }),
+  endpoint({
+    path: "/admin/handoffs/:id",
+    access: "owner",
+    schema: HandoffPlanDetailSchema,
+    respond: (request) => handoffDetail(request.param("id")),
+    samples: Object.values(HANDOFF_IDS).map((id) => `/admin/handoffs/${id}`),
   }),
   endpoint({
     path: "/admin/subtitles/targets",

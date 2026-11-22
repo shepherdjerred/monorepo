@@ -159,7 +159,7 @@ const manageRoutes: RouteObject[] = [
   {
     path: "migration",
     lazy: async () => {
-      const { MigrationPage } = await import("#client/migration.tsx");
+      const { MigrationPage } = await import("#client/migration/page.tsx");
       return { Component: withUser(MigrationPage) };
     },
   },
