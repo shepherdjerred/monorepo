@@ -5,14 +5,8 @@ import {
   type WorkflowStarter,
 } from "#automation/store.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
-import {
-  MovieEditionContextV3Schema,
-  type MovieEditionContextV3,
-} from "#shared/movie-editions/view.ts";
-import {
-  MovieRequestResultV3Schema,
-  MovieRequestV3Schema,
-} from "#shared/movie-editions/commands.ts";
+import { MovieEditionContextV3Schema } from "#shared/movie-editions/view.ts";
+import { MovieRequestResultV3Schema } from "#shared/movie-editions/commands.ts";
 import {
   MovieHistoryCommandResultV3Schema,
   MovieHistoryDetailV3Schema,
@@ -24,6 +18,7 @@ import { MovieHistoryPendingV3Schema } from "#shared/movie-editions/history-revi
 import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { createSystemHttpServer } from "#testing/system/http.ts";
 import { SystemHttpBrowser } from "#testing/system/browser.ts";
+import { movieRequestV3 } from "#testing/system/movie-request-v3.ts";
 import { createMovieHistoryFixture } from "./history-review-fixture.ts";
 import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
 import { completeFixtureRetentionInterests } from "#testing/retention-interest.ts";
@@ -121,7 +116,7 @@ export async function createMovieHistoryHttpFixture(
         `/api/v3/media/${f.scope.mediaId}/movie-requests`,
         {
           key: crypto.randomUUID(),
-          body: personalMovieRequest(choiceContext, edition),
+          body: movieRequestV3(choiceContext, edition, []),
         },
       ),
       MovieRequestResultV3Schema,
@@ -364,39 +359,4 @@ async function prepareHistoryRetention(
       where: { id: requestId },
     }),
   };
-}
-
-/** The real HTTP contract is sufficient here; importing browser API modules would pull DOM into workers. */
-function personalMovieRequest(
-  context: MovieEditionContextV3,
-  edition: MovieEditionKey,
-) {
-  const selected = context.options.find((option) => option.edition === edition);
-  if (selected === undefined)
-    throw new Error("Actual current edition context omitted the selected cut");
-  return MovieRequestV3Schema.parse({
-    schemaVersion: 3,
-    mediaId: context.mediaId,
-    subjectUserId: context.subjectUserId,
-    expected: {
-      mediaVersion: context.mediaVersion,
-      targetVersion: selected.targetVersion,
-      definition: selected.storedDefinition,
-      request:
-        selected.request === null
-          ? null
-          : {
-              id: selected.request.id,
-              version: selected.request.version,
-              choiceRevision: selected.request.choiceRevision,
-            },
-    },
-    selection: {
-      edition,
-      definitionVersion: selected.definitionVersion,
-      definitionDigest: selected.definitionDigest,
-      registryVersion: context.registryVersion,
-    },
-    options: { subtitleLanguages: [] },
-  });
 }

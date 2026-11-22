@@ -1576,25 +1576,13 @@
       "clones": 1,
       "tokens": 87
     },
-    "packages/media/src/client/movie-editions/api.ts|packages/media/src/client/movie-editions/request-api-v4.ts": {
-      "clones": 1,
-      "tokens": 102
-    },
-    "packages/media/src/client/movie-editions/api.ts|packages/media/src/testing/movie-workflow/history/history-http-fixture.ts": {
-      "clones": 1,
-      "tokens": 113
-    },
-    "packages/media/src/client/movie-editions/api.ts|packages/media/src/testing/movie-workflow/history/history-review-fixture.ts": {
+    "packages/media/src/client/movie-editions/request-api-v4.ts|packages/media/src/testing/movie-workflow/history/history-review-fixture.ts": {
       "clones": 1,
       "tokens": 90
     },
-    "packages/media/src/client/movie-editions/protection-v4.ts|packages/media/src/client/movie-editions/protection.ts": {
+    "packages/media/src/client/movie-editions/request-api-v4.ts|packages/media/src/testing/system/movie-request-v3.ts": {
       "clones": 1,
-      "tokens": 219
-    },
-    "packages/media/src/client/movie-editions/request.test.ts|packages/media/src/client/movie-editions/v4-test-support.ts": {
-      "clones": 1,
-      "tokens": 73
+      "tokens": 102
     },
     "packages/media/src/client/movie-editions/rollback-api.test.ts|packages/media/src/client/movie-editions/subtitle-api-v2.test.ts": {
       "clones": 1,
@@ -2079,10 +2067,6 @@
     "packages/media/src/testing/movie-workflow/history/history-cleanup-fixture.ts|packages/media/src/testing/movie-workflow/rollback/rollback-origin-fixture.ts": {
       "clones": 1,
       "tokens": 145
-    },
-    "packages/media/src/testing/movie-workflow/history/history-http-fixture.ts|packages/media/src/testing/movie-workflow/history/history-review-fixture.ts": {
-      "clones": 1,
-      "tokens": 71
     },
     "packages/media/src/testing/movie-workflow/rollback/rollback-http-fixture.ts|packages/media/src/testing/movie-workflow/subtitles/subtitle-replacement-http-fixture.ts": {
       "clones": 1,

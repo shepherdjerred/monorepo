@@ -1,22 +1,35 @@
 import { expect, vi } from "vitest";
 import { stubSessionStorage } from "#testing/browser-storage.ts";
+import { grantTestLease } from "#testing/authority.ts";
 import { MutationObserver, QueryClient } from "@tanstack/react-query";
 import { commandHttpFixture } from "./command-http-fixture.ts";
 import {
-  MovieEditionContextV3Schema,
-  MovieEditionRequestListV3Schema,
-} from "#shared/movie-editions/view.ts";
-import { MovieRequestResultV3Schema } from "#shared/movie-editions/commands.ts";
+  MovieEditionContextV4Schema,
+  MovieEditionRequestListV4Schema,
+} from "#shared/movie-editions/lifecycle/public-v4.ts";
+import { MovieRequestResultV4Schema } from "#shared/movie-editions/lifecycle/lifecycle-v4.ts";
 import { ApiError } from "#client/api.ts";
-import { movieRequest } from "#client/movie-editions/api.ts";
+import { movieRequestV4 } from "#client/movie-editions/request-api-v4.ts";
 import {
   movieProtectionAttempt,
   movieProtectionMutationOptions,
   movieProtectionSubmission,
   protectionRetryLabel,
   unresolvedMovieProtection,
-} from "#client/movie-editions/protection.ts";
+} from "#client/movie-editions/protection-v4.ts";
 import { createMediaApp, type MediaAppDependencies } from "#server/app.ts";
+
+const RETRY_PROFILE_RULES = {
+  qualities: ["WEB-1080p"],
+  rejectedCodecs: [],
+  requiredAudioLanguages: [],
+  minimumBytes: 1,
+  maximumBytes: 10_000_000,
+  minimumScore: 0,
+  tagScores: {},
+  cutoffQuality: "WEB-1080p",
+  cutoffScore: 0,
+};
 
 async function retryFixture(
   dependencies: MediaAppDependencies,
@@ -24,7 +37,26 @@ async function retryFixture(
 ) {
   const { db, f, close } = await commandHttpFixture();
   try {
+    // New v4 choices start acquisition: an active runtime and a movie profile.
+    await grantTestLease(db);
+    await db.mediaRuntimeState.update({
+      where: { id: "singleton" },
+      data: { mode: "active", ownershipConfirmed: true },
+    });
+    await db.qualityProfileDefault.create({
+      data: {
+        kind: "movie",
+        profile: {
+          create: {
+            name: "Retry fixture profile",
+            rules: RETRY_PROFILE_RULES,
+            versions: { create: { version: 0, rules: RETRY_PROFILE_RULES } },
+          },
+        },
+      },
+    });
     dependencies.media = f.service;
+    dependencies.movieLifecycle = f.service;
     dependencies.auth.authenticate = () =>
       Promise.resolve({ actor: f.actor, csrfHash: "csrf-hash" });
     const app = createMediaApp(dependencies);
@@ -66,16 +98,16 @@ async function retryFixture(
     }
     async function choose() {
       const contextResponse = await app.request(
-        `/api/v3/media/${f.media.id}/movie-edition-context`,
+        `/api/v4/media/${f.media.id}/movie-edition-context`,
         { headers },
       );
       expect(contextResponse.status).toBe(200);
-      const context = MovieEditionContextV3Schema.parse(
+      const context = MovieEditionContextV4Schema.parse(
         await contextResponse.json(),
       );
-      const input = movieRequest(context, "directors_cut", "en");
+      const input = movieRequestV4(context, "directors_cut", ["en"]);
       const response = await app.request(
-        `/api/v3/media/${f.media.id}/movie-requests`,
+        `/api/v4/media/${f.media.id}/movie-requests`,
         {
           method: "POST",
           headers: { ...headers, "Idempotency-Key": crypto.randomUUID() },
@@ -83,12 +115,12 @@ async function retryFixture(
         },
       );
       expect(response.status).toBe(200);
-      return MovieRequestResultV3Schema.parse(await response.json());
+      return MovieRequestResultV4Schema.parse(await response.json());
     }
     async function row() {
-      const response = await app.request("/api/v3/movie-requests", { headers });
+      const response = await app.request("/api/v4/movie-requests", { headers });
       expect(response.status).toBe(200);
-      const current = MovieEditionRequestListV3Schema.parse(
+      const current = MovieEditionRequestListV4Schema.parse(
         await response.json(),
       ).items.find((item) => item.scope.mediaId === f.media.id);
       if (current === undefined)
@@ -188,8 +220,8 @@ export async function verifyMovieProtectionLostAck(
     expect(unknown).toEqual(original);
     expect(protectionRetryLabel(original)).toBe(
       action === "cancel_request"
-        ? "Retry original cancellation"
-        : "Retry original revocation",
+        ? "Try cancelling again"
+        : "Try clearing the version again",
     );
     const retry = movieProtectionAttempt(
       f.observer.getCurrentResult(),
