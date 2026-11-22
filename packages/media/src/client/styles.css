@@ -276,17 +276,6 @@
     color: var(--text-muted);
     margin: 6px 0 0;
   }
-  .media-link {
-    font-weight: 500;
-    font-size: var(--text-md);
-  }
-  .media-link span {
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-  }
-  .media-link:hover {
-    color: var(--text-accent);
-  }
   /* Status badges. The tone comes from `status/tone.ts`; a bare badge is
      neutral. */
   .status,
