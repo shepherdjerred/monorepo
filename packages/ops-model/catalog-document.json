@@ -1429,25 +1429,6 @@
       }
     },
     {
-      "id": "relay",
-      "title": "Relay",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "self-hosted-apps",
-      "components": [
-        {
-          "name": "chart:relay",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "workload",
-        "namespaces": ["relay"],
-        "argoApps": ["relay"]
-      }
-    },
-    {
       "id": "stash",
       "title": "Stash",
       "package": "homelab",
@@ -3216,14 +3197,6 @@
       "configurationRevisionId": "redlib/prod/1"
     },
     {
-      "id": "relay/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "relay/prod/1",
-      "configurationRevisionId": "relay/prod/1"
-    },
-    {
       "id": "stash/prod",
       "role": "durable",
       "approvalPolicy": "none",
@@ -3253,7 +3226,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/10"
+      "configurationRevisionId": "argocd/prod/11"
     },
     {
       "id": "chartmuseum/prod",
@@ -4794,31 +4767,6 @@
       "rule": "any-accepted"
     },
     {
-      "dependent": "relay/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "relay/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "relay/prod",
-      "prerequisite": "cloudflare-operator/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "relay/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "relay/prod",
-      "prerequisite": "tofu-seaweedfs/prod",
-      "rule": "any-accepted"
-    },
-    {
       "dependent": "resume/prod",
       "prerequisite": "tofu-seaweedfs/prod",
       "rule": "any-accepted"
@@ -5441,11 +5389,6 @@
     {
       "dependent": "tofu-cloudflare/prod",
       "prerequisite": "minecraft/tsmc",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "relay/prod",
       "rule": "any-accepted"
     },
     {

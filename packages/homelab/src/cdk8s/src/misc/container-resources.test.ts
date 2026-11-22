@@ -181,13 +181,6 @@ const AUDITED_PERSISTENT_RESERVATIONS = new Map<string, ContainerResources>([
     },
   ],
   [
-    "relay/relay-server",
-    {
-      requests: { cpu: "250m", memory: "64Mi" },
-      limits: { cpu: "1000m", memory: "2048Mi" },
-    },
-  ],
-  [
     "stash/stash",
     {
       requests: { cpu: "250m", memory: "96Mi" },

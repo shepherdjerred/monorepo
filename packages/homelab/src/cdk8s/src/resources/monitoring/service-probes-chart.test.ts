@@ -104,16 +104,16 @@ describe("createServiceProbesChart", () => {
 
   test("public HTTP probe URL includes the registered path", () => {
     registerPublicProbe({
-      namespace: "relay",
-      serviceName: "relay-service",
-      fqdn: "relay.sjer.red",
-      path: "/ready",
+      namespace: "example",
+      serviceName: "example-service",
+      fqdn: "www.iana.org",
+      path: "/help/example-domains",
     });
 
     const [probe] = synthProbes();
-    expect(probe?.spec.jobName).toBe("probe-relay-relay-service-public");
+    expect(probe?.spec.jobName).toBe("probe-example-example-service-public");
     expect(probe?.spec.targets.staticConfig.static).toEqual([
-      "https://relay.sjer.red/ready",
+      "https://www.iana.org/help/example-domains",
     ]);
   });
 });
