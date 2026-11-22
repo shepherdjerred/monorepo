@@ -9,6 +9,7 @@ import {
 import { readApi } from "#client/api.ts";
 import { useNativeReviewApproval } from "./approval.ts";
 import { PublishedReview } from "./published.tsx";
+import { QuarantineFileReview } from "./quarantine-review.tsx";
 import { ReviewHeader } from "./shell.tsx";
 import { NativeArchiveReview } from "./archive/review.tsx";
 import { NativeCompensationReview } from "./compensation/review.tsx";
@@ -64,18 +65,56 @@ export function NativeRecoveryReview({
         onAcknowledge={setAcknowledged}
         onRefresh={() => result.refetch()}
         refreshing={result.isFetching}
-        loadError={result.error}
+        error={result.error}
       />
     );
-  const approval = {
-    acknowledged,
-    onAcknowledge: setAcknowledged,
-    onApply: () => {
-      apply.mutate();
-    },
-    pending: apply.isPending,
-    error: apply.error,
-  };
+  const compensation = compensationSelection(review);
+  const archiveScope = archiveSelection(review);
+  if (compensation !== null || archiveScope !== null) {
+    const legacy = {
+      acknowledged,
+      onAcknowledge: setAcknowledged,
+      onApply: () => {
+        apply.mutate();
+      },
+      pending: apply.isPending,
+      error: apply.error ?? result.error,
+      onRefresh: () => {
+        void result.refetch();
+      },
+      refreshing: result.isFetching,
+    };
+    if (compensation !== null)
+      return (
+        <NativeCompensationReview
+          user={user}
+          review={compensation.review}
+          scope={compensation.scope}
+          {...legacy}
+        />
+      );
+    if (archiveScope !== null && review !== undefined)
+      return (
+        <NativeArchiveReview review={review} scope={archiveScope} {...legacy} />
+      );
+  }
+  if (review !== undefined && quarantineSelection(review))
+    return (
+      <QuarantineFileReview
+        review={review}
+        loading={result.isPending}
+        loadError={result.error}
+        applyError={apply.error}
+        applying={apply.isPending}
+        onApply={() => {
+          apply.mutate();
+        }}
+        acknowledged={acknowledged}
+        onAcknowledge={setAcknowledged}
+        subtitlePolicies={reviewSubtitlePolicies(review)}
+        quarantined
+      />
+    );
   const header = {
     onRefresh: () => {
       void result.refetch();
@@ -83,27 +122,6 @@ export function NativeRecoveryReview({
     refreshing: result.isFetching,
     loadError: result.error,
   };
-  const compensation = compensationSelection(review);
-  if (compensation !== null)
-    return (
-      <NativeCompensationReview
-        user={user}
-        review={compensation.review}
-        scope={compensation.scope}
-        approval={approval}
-        header={header}
-      />
-    );
-  const archiveScope = archiveSelection(review);
-  if (archiveScope !== null && review !== undefined)
-    return (
-      <NativeArchiveReview
-        review={review}
-        scope={archiveScope}
-        approval={approval}
-        header={header}
-      />
-    );
   if (review === undefined)
     return result.isPending ? (
       <SkeletonRows label="Loading the review" rows={4} tall />
@@ -122,9 +140,16 @@ export function NativeRecoveryReview({
   return (
     <PublishedReview
       review={review}
-      quarantined={quarantineSelection(review)}
       subtitlePolicies={reviewSubtitlePolicies(review)}
-      approval={approval}
+      approval={{
+        acknowledged,
+        onAcknowledge: setAcknowledged,
+        onApply: () => {
+          apply.mutate();
+        },
+        pending: apply.isPending,
+        error: apply.error,
+      }}
       header={header}
     />
   );

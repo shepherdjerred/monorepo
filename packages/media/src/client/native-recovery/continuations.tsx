@@ -1,9 +1,7 @@
 import { Link } from "react-router";
 import type { z } from "zod";
 import type { NativeLifecycleDetailSchema } from "#shared/native-recovery/lifecycle.ts";
-import { DataList, DataRow } from "#client/ui/data-list.tsx";
-import { Panel } from "#client/ui/panel.tsx";
-import { phrase } from "./vocabulary.ts";
+import { humanize } from "#client/components.tsx";
 
 type Continuation = z.infer<
   typeof NativeLifecycleDetailSchema
@@ -11,37 +9,28 @@ type Continuation = z.infer<
 export function QuarantineContinuations({ items }: { items: Continuation[] }) {
   if (items.length === 0) return null;
   return (
-    <Panel
-      id="restoration"
-      title="Quarantine restoration"
-      description={
-        <p>
-          A shared file stays protected until every covered leaf has current
-          positive authority. Negative choices never authorize deletion.{" "}
-          <Link to="/recovery">Review current household intent</Link>.
-        </p>
-      }
-    >
-      <DataList label="Quarantine restorations">
-        {items.map((item) => (
-          <DataRow
-            key={item.id}
-            title={restorationTitle(item)}
-            detail={
-              <>
-                <p>{restorationDescription(item)}</p>
-                {item.media.map((media) => (
-                  <p key={media.id}>
-                    <Link to={`/media/${media.id}`}>{media.title}</Link>,{" "}
-                    {phrase(media.availability).toLowerCase()}
-                  </p>
-                ))}
-              </>
-            }
-          />
-        ))}
-      </DataList>
-    </Panel>
+    <section className="panel">
+      <h2>Quarantine restoration</h2>
+      {items.map((item) => (
+        <article key={item.id}>
+          <h3>{restorationTitle(item)}</h3>
+          <p>{restorationDescription(item)}</p>
+          <ul>
+            {item.media.map((media) => (
+              <li key={media.id}>
+                <Link to={`/media/${media.id}`}>{media.title}</Link> ·{" "}
+                {humanize(media.availability)}
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+      <p>
+        <Link to="/recovery">Review current household intent</Link>. A shared
+        file stays protected until every covered leaf has current positive
+        authority. Negative choices never authorize deletion.
+      </p>
+    </section>
   );
 }
 

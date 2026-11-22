@@ -1,52 +1,64 @@
 import type { z } from "zod";
+import { Link } from "react-router";
 import type { NativeLifecycleDetailSchema } from "#shared/native-recovery/lifecycle.ts";
 import type { NativeArchiveScope } from "#shared/native-recovery/archive.ts";
-import { DataList, DataRow } from "#client/ui/data-list.tsx";
-import { Panel } from "#client/ui/panel.tsx";
-import { Code, Effects } from "#client/ui/workflow.tsx";
-import type { Approval, Header } from "#client/native-recovery/published.tsx";
-import {
-  ApprovalSection,
-  ProofDetails,
-  ReviewHeader,
-  StatePanel,
-} from "#client/native-recovery/shell.tsx";
-import { phrase, when } from "#client/native-recovery/vocabulary.ts";
+import { PageTitle, ErrorNotice, humanize } from "#client/components.tsx";
 import { archiveBytes, archiveReasons, archiveRoles } from "./presentation.ts";
 
 type Detail = z.infer<typeof NativeLifecycleDetailSchema>;
-
-/** Resume expiry cleanup for the old versions the owner selected. Approval itself deletes nothing. */
 export function NativeArchiveReview({
   review,
   scope,
-  approval,
-  header,
+  acknowledged,
+  onAcknowledge,
+  onApply,
+  pending,
+  error,
+  onRefresh,
+  refreshing,
 }: {
   review: Detail;
   scope: NativeArchiveScope;
-  approval: Approval;
-  header: Header;
+  acknowledged: boolean;
+  onAcknowledge: (value: boolean) => void;
+  onApply: () => void;
+  pending: boolean;
+  error: Error | null;
+  onRefresh: () => void;
+  refreshing: boolean;
 }) {
-  const selected = scope.edges.filter((edge) => edge.selected).length;
   return (
     <>
-      <ReviewHeader
-        title="Resume archive expiry cleanup"
-        intro="Only the explicitly selected old versions can become eligible for expiry cleanup. Current playback and unselected archives remain retained."
-        back={{
-          to: "/manage/recovery/native/archives",
-          label: "All upgrade archives",
-        }}
-        refreshLabel="Refresh current protection and cleanup status"
-        {...header}
-      />
-      <StatePanel state={review.state}>
+      <PageTitle title="Resume archive expiry cleanup">
+        <p>
+          Only the explicitly selected old versions can become eligible for
+          expiry cleanup. Current playback and unselected archives remain
+          retained.
+        </p>
+      </PageTitle>
+      <p>
+        <Link to="/manage/recovery/native/archives">All upgrade archives</Link>{" "}
+        · <Link to="/recovery">Household protection</Link>
+      </p>
+      <button className="button" onClick={onRefresh} disabled={refreshing}>
+        {refreshing
+          ? "Refreshing…"
+          : "Refresh current protection and cleanup status"}
+      </button>
+      {error !== null && <ErrorNotice error={error} />}
+      <section className="panel">
+        <h2>{humanize(review.state)}</h2>
         <p>
           Approval itself deletes nothing. The original deadlines, subtitle
-          quality, and historical work remain unchanged. Fresh playback,
-          content, and household checks are required before cleanup.
+          quality and historical work remain unchanged. Fresh playback, content
+          and household checks are required before cleanup.
         </p>
+        {review.state === "preparing" && (
+          <p>
+            Workers are checking the complete file relationships, storage and
+            current Plex playback.
+          </p>
+        )}
         {review.state === "applied" && (
           <p>
             Physical responsibility is recorded. Newly recovered titles retain
@@ -54,109 +66,99 @@ export function NativeArchiveReview({
             current household intent separately.
           </p>
         )}
-      </StatePanel>
-      <Panel id="files" title="Selected and retained files">
-        <DataList label="Selected and retained files">
-          {scope.files.map((file) => (
-            <DataRow
-              key={file.assetId}
-              title={archiveRoles[file.role]}
-              detail={
-                <>
-                  <p>
-                    {scope.media
-                      .filter((media) => file.mediaIds.includes(media.id))
-                      .map((media) => media.title)
-                      .join(", ")}
-                  </p>
-                  <p>
-                    {archiveBytes(file.sizeBytes)}, {file.subtitles.length}{" "}
-                    subtitle record{file.subtitles.length === 1 ? "" : "s"}.
-                    Quality and provenance are preserved.
-                  </p>
-                  <p>
-                    {file.authority.kind === "rebaseline"
-                      ? "This exact physical version needs new ownership proof."
-                      : "An exact recorded physical approval or publication transition is reused; ownership versions and holds are not renewed."}
-                  </p>
-                  {scope.edges
-                    .filter((edge) => edge.assetId === file.assetId)
-                    .map((edge) => (
-                      <p key={edge.id}>
-                        {edge.selected
-                          ? "Selected cleanup"
-                          : "Retained dependency"}
-                        . Original expiry: {when(edge.expiresAt)}
-                      </p>
-                    ))}
-                </>
-              }
-            />
-          ))}
-        </DataList>
-      </Panel>
+      </section>
+      <section className="panel">
+        <h2>Selected and retained files</h2>
+        {scope.files.map((file) => (
+          <article key={file.assetId}>
+            <h3>{archiveRoles[file.role]}</h3>
+            <p>
+              {scope.media
+                .filter((media) => file.mediaIds.includes(media.id))
+                .map((media) => media.title)
+                .join(" · ")}
+            </p>
+            <p>
+              {archiveBytes(file.sizeBytes)} · {file.subtitles.length} subtitle
+              records. Quality and provenance are preserved.
+            </p>
+            <p>
+              {file.authority.kind === "rebaseline"
+                ? "This exact physical version needs new ownership proof."
+                : "An exact recorded physical approval or publication transition is reused; ownership versions and holds are not renewed."}
+            </p>
+            {scope.edges
+              .filter((edge) => edge.assetId === file.assetId)
+              .map((edge) => (
+                <p key={edge.id}>
+                  {edge.selected ? "Selected cleanup" : "Retained dependency"} ·
+                  Original expiry: {new Date(edge.expiresAt).toLocaleString()}
+                </p>
+              ))}
+          </article>
+        ))}
+      </section>
       {scope.supersessions !== undefined && (
-        <Panel id="superseded" title="Replace stopped cleanup approvals">
+        <section className="panel">
+          <h2>Replace stopped cleanup approvals</h2>
           <p>
             This review replaces {scope.supersessions.length} earlier cleanup
-            approval{scope.supersessions.length === 1 ? "" : "s"} after a
-            recorded upgrade. Earlier workers must have stopped, all retained
-            files must be unchanged, and no earlier purge may have begun. The
-            original expiry deadlines remain unchanged.
+            approval(s) after a recorded upgrade. Earlier workers must have
+            stopped, all retained files must be unchanged, and no earlier purge
+            may have begun. The original expiry deadlines remain unchanged.
           </p>
-        </Panel>
+        </section>
       )}
       {scope.terminalDependencies.length > 0 && (
-        <Panel id="removed" title="Already removed dependencies">
+        <section className="panel">
+          <h2>Already removed dependencies</h2>
           <p>
-            {scope.terminalDependencies.length} completed cleanup record
-            {scope.terminalDependencies.length === 1 ? "" : "s"} must match
-            fresh absence and journal proofs. They are not adopted or selected
-            again.
+            {scope.terminalDependencies.length} completed cleanup record(s) must
+            match fresh absence and journal proofs. They are not adopted or
+            selected again.
           </p>
-        </Panel>
+        </section>
       )}
       {(review.archiveContinuations?.length ?? 0) > 0 && (
-        <Panel id="status" title="Expiry cleanup status">
-          <DataList label="Expiry cleanup status">
-            {review.archiveContinuations?.map((item) => (
-              <DataRow
-                key={item.id}
-                title={item.titles.join(", ")}
-                detail={
-                  <>
-                    <p>
-                      {phrase(item.state)}. Original expiry:{" "}
-                      {when(item.expiresAt)}
-                    </p>
-                    {item.state === "superseded" && (
-                      <p>
-                        A newer exact review replaced this stopped approval.
-                        This approval cannot restart or delete files; it is not
-                        a cleanup completion.
-                      </p>
-                    )}
-                    {item.reasons.map((reason) => (
-                      <p key={reason}>{archiveReasons[reason]}</p>
-                    ))}
-                  </>
-                }
-              />
-            ))}
-          </DataList>
-        </Panel>
+        <section className="panel">
+          <h2>Expiry cleanup status</h2>
+          {review.archiveContinuations?.map((item) => (
+            <article key={item.id}>
+              <h3>
+                {item.titles.join(" · ")} · {humanize(item.state)}
+              </h3>
+              <p>
+                Original expiry: {new Date(item.expiresAt).toLocaleString()}
+              </p>
+              {item.state === "superseded" && (
+                <p>
+                  A newer exact review replaced this stopped approval. This
+                  approval cannot restart or delete files; it is not a cleanup
+                  completion.
+                </p>
+              )}
+              {item.reasons.map((reason) => (
+                <p key={reason}>{archiveReasons[reason]}</p>
+              ))}
+            </article>
+          ))}
+        </section>
       )}
-      <Panel id="changes" title="What this approval permits">
-        <Effects
-          will={[
-            "Resumes only the selected archive expiry cleanup, after its original deadline and once all current protections clear.",
-          ]}
-          wontTitle="What stays as it is"
-          wont={[
-            "Current playable versions and dependency-only archives are retained.",
-            "Keep choices, pins, and current demand are preserved. Ownership proof is not a household declaration.",
-          ]}
-        />
+      <section className="panel">
+        <h2>What this approval permits</h2>
+        <ul>
+          <li>
+            Resume only selected archive expiry cleanup after its original
+            deadline and all current protections clear.
+          </li>
+          <li>
+            Retain current playable versions and dependency-only archives.
+          </li>
+          <li>
+            Preserve Keep choices, pins and current demand. Ownership proof is
+            not a household declaration.
+          </li>
+        </ul>
         <p>
           A later upgrade needs its exact durable publication record and proof
           that earlier cleanup stopped without effects. Missing records or
@@ -164,39 +166,47 @@ export function NativeArchiveReview({
           them.
         </p>
         {review.state === "awaiting_review" && (
-          <ApprovalSection
-            summary={
-              <p>
-                Approving makes {selected} selected old version
-                {selected === 1 ? "" : "s"} eligible for expiry cleanup once
-                their deadlines pass. It deletes nothing now.
-              </p>
-            }
-            acknowledgement="I reviewed the selected cleanups, retained files and original deadlines. Household and playback protections still apply."
-            buttonLabel="Resume archive expiry cleanup"
-            confirmTitle="Resume expiry cleanup?"
-            confirmLabel="Resume cleanup"
-            confirmBody={
-              <p>
-                {selected} selected old version{selected === 1 ? "" : "s"} can
-                be cleaned up after the original deadlines and once household
-                and playback protections clear. Approval itself deletes nothing,
-                and this page cannot undo it.
-              </p>
-            }
-            {...approval}
-          />
+          <>
+            <label className="check-label">
+              <input
+                type="checkbox"
+                checked={acknowledged}
+                onChange={(event) => {
+                  onAcknowledge(event.target.checked);
+                }}
+              />
+              I reviewed the selected cleanups, retained files and original
+              deadlines. Household and playback protections still apply.
+            </label>
+            <button
+              className="button primary"
+              disabled={!acknowledged || pending}
+              onClick={onApply}
+            >
+              {pending
+                ? "Submitting approval…"
+                : "Resume archive expiry cleanup"}
+            </button>
+          </>
         )}
-        <ProofDetails planHash={review.planHash} expiresAt={review.expiresAt}>
+        <details>
+          <summary>Operator proof details</summary>
+          <p>
+            Review expires:{" "}
+            {review.expiresAt === null
+              ? "Not prepared"
+              : new Date(review.expiresAt).toLocaleString()}
+          </p>
+          <p>Plan digest: {review.planHash ?? "Pending inspection"}</p>
           {scope.files.map((file) => (
             <p key={file.assetId}>
-              <Code>{file.canonicalPath}</Code>
+              {file.canonicalPath}
               <br />
-              SHA-256 <Code>{file.checksum}</Code>
+              SHA-256: {file.checksum}
             </p>
           ))}
-        </ProofDetails>
-      </Panel>
+        </details>
+      </section>
     </>
   );
 }
