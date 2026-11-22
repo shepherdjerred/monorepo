@@ -187,8 +187,10 @@ describe("Scout beta workflow candidate", () => {
     expect(spec.template.spec.automountServiceAccountToken).toBe(false);
     expect(spec.template.spec.containers).toHaveLength(1);
     const container = spec.template.spec.containers[0];
-    expect(container?.command).toEqual(["bun"]);
-    expect(container?.args).toEqual(["run", "src/temporal/workflow-worker.ts"]);
+    expect(container?.command).toEqual(["sh", "-c"]);
+    expect(container?.args).toEqual([
+      "mkdir -p /tmp/swc-native && chmod 700 /tmp/swc-native && exec bun run src/temporal/workflow-worker.ts",
+    ]);
     expect(container?.env).toEqual([
       { name: "TZ", value: "America/Los_Angeles" },
       { name: "ENVIRONMENT", value: "beta" },
@@ -197,7 +199,8 @@ describe("Scout beta workflow candidate", () => {
         value:
           "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
       },
-      { name: "XDG_CACHE_HOME", value: "/tmp" },
+      { name: "SWC_NATIVE_BINDING_CACHE", value: "/tmp/swc-native" },
+      { name: "SWC_NATIVE_BINDING_CACHE_SKIP_SECURITY_CHECK", value: "1" },
       { name: "TEMPORAL_METRICS_ADDRESS", value: "0.0.0.0:9464" },
       { name: "TEMPORAL_NAMESPACE", value: "beta" },
       {

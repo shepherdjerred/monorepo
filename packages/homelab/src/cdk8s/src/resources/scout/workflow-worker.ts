@@ -52,8 +52,14 @@ export function createScoutWorkflowWorker(
       name,
       image:
         '{{ required `Delivery requires image:scout-for-lol` (get (get (.Values.delivery | default dict) "images" | default dict) "scout-for-lol") }}',
-      command: ["bun"],
-      args: ["run", "src/temporal/workflow-worker.ts"],
+      // @swc/core 1.16.22 materializes its native addon in a private cache.
+      // The pod-private emptyDir is mode 0777, which that check rejects, so
+      // the process creates a 0700 directory and uses the library's documented
+      // isolated-runtime opt-out. The addon file itself still has to be private.
+      command: ["sh", "-c"],
+      args: [
+        "mkdir -p /tmp/swc-native && chmod 700 /tmp/swc-native && exec bun run src/temporal/workflow-worker.ts",
+      ],
       ports: [{ name: "metrics", number: 9464, protocol: Protocol.TCP }],
       readiness: Probe.fromCommand(
         [
@@ -80,9 +86,8 @@ export function createScoutWorkflowWorker(
       envVariables: {
         ENVIRONMENT: EnvValue.fromValue(stage),
         ...temporalAddressEnv(),
-        // @swc/core extracts its real native binary into the user cache.
-        // The root filesystem is read-only; the emptyDir below is the writable path.
-        XDG_CACHE_HOME: EnvValue.fromValue("/tmp"),
+        SWC_NATIVE_BINDING_CACHE: EnvValue.fromValue("/tmp/swc-native"),
+        SWC_NATIVE_BINDING_CACHE_SKIP_SECURITY_CHECK: EnvValue.fromValue("1"),
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
         // Workflow workers are isolated to the stage they serve.
         TEMPORAL_NAMESPACE: EnvValue.fromValue(stage),
