@@ -144,4 +144,45 @@ final class SessionLedgerTest {
     assertThat(ended.pingAvgMs()).isZero();
     assertThat(ended.pingMaxMs()).isZero();
   }
+
+  @Test
+  void updateAfkSplitsAwayAndActiveIntervalsBetweenSamplerTicks() {
+    var t0 = Instant.parse("2026-11-22T18:00:00Z");
+    ledger.join(
+        new SessionLedger.JoinInput(
+            ALICE,
+            "Alice",
+            t0,
+            Platform.JAVA,
+            "26.3",
+            "vanilla",
+            "ts-mc.net",
+            WorldBucket.WORLD,
+            GameModeBucket.SURVIVAL,
+            false));
+
+    // Active for 12s, then enters AFK
+    var enteredAfk = ledger.updateAfk(ALICE, t0.plusSeconds(12), true).orElseThrow();
+    assertThat(enteredAfk.connectedMsDelta()).isEqualTo(12_000L);
+    assertThat(enteredAfk.activeMsDelta()).isEqualTo(12_000L);
+
+    // Away for 30s, then returns active before 60s sampler tick
+    var exitedAfk = ledger.updateAfk(ALICE, t0.plusSeconds(42), false).orElseThrow();
+    assertThat(exitedAfk.connectedMsDelta()).isEqualTo(30_000L);
+    assertThat(exitedAfk.activeMsDelta()).isZero();
+
+    // Periodic sampler tick at 60s records only the remaining 18s as active
+    var tick =
+        ledger
+            .checkpoint(
+                ALICE,
+                new SessionLedger.StateSample(
+                    t0.plusSeconds(60), WorldBucket.WORLD, GameModeBucket.SURVIVAL, false, 35))
+            .orElseThrow();
+    assertThat(tick.connectedMsDelta()).isEqualTo(18_000L);
+    assertThat(tick.activeMsDelta()).isEqualTo(18_000L);
+    var openSession = java.util.Objects.requireNonNull(tick.openSession());
+    assertThat(openSession.connectedMs()).isEqualTo(60_000L);
+    assertThat(openSession.activeMs()).isEqualTo(30_000L);
+  }
 }

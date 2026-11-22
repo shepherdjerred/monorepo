@@ -84,10 +84,20 @@ public final class StatsModule implements StormModule {
     var server = context.plugin().getServer();
     var ports = StatsPaperPorts.discover(context.services());
     var stateReader = new PlayerStateReader(server, ports, context.time());
-    var sessionListener = new StatsSessionListener(service, stateReader);
+    var sampler =
+        new StatsSampler(
+            new StatsSampler.Context(server, service, ports, stateReader),
+            context.time(),
+            context.logger());
+    var sessionListener = new StatsSessionListener(service, stateReader, sampler::samplePlayer);
     var combatListener = new StatsCombatListener(service, stateReader);
     server.getPluginManager().registerEvents(sessionListener, context.plugin());
     server.getPluginManager().registerEvents(combatListener, context.plugin());
+    Runnable afkUnsubscribe =
+        ports
+            .activityFeed()
+            .map(feed -> feed.observe((playerUuid, active) -> service.syncAfk(playerUuid, !active)))
+            .orElse(() -> {});
 
     for (var online : server.getOnlinePlayers()) {
       if (Humans.isHuman(online)) {
@@ -95,11 +105,6 @@ public final class StatsModule implements StormModule {
       }
     }
 
-    var sampler =
-        new StatsSampler(
-            new StatsSampler.Context(server, service, ports, stateReader),
-            context.time(),
-            context.logger());
     var snapshotPeriod = Duration.ofSeconds(config.snapshotIntervalSeconds());
     var samplerTask =
         context.scheduler().repeatOnMainThread(snapshotPeriod, snapshotPeriod, sampler::sample);
@@ -136,7 +141,9 @@ public final class StatsModule implements StormModule {
         .registerEventHandler(
             LifecycleEvents.COMMANDS, event -> command.register(event.registrar()));
 
-    running = new Running(service, sessionListener, combatListener, samplerTask, flushTask);
+    running =
+        new Running(
+            service, sessionListener, combatListener, afkUnsubscribe, samplerTask, flushTask);
   }
 
   @Override
@@ -146,6 +153,7 @@ public final class StatsModule implements StormModule {
     if (current != null) {
       current.samplerTask().cancel();
       current.flushTask().cancel();
+      current.afkUnsubscribe().run();
       HandlerList.unregisterAll(current.sessionListener());
       HandlerList.unregisterAll(current.combatListener());
       current.service().close();
@@ -185,6 +193,7 @@ public final class StatsModule implements StormModule {
       StatsService service,
       StatsSessionListener sessionListener,
       StatsCombatListener combatListener,
+      Runnable afkUnsubscribe,
       Cancellable samplerTask,
       Cancellable flushTask) {}
 }

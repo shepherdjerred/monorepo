@@ -1,6 +1,14 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
+import { z } from "zod";
+import {
+  QUERY_STALE_TIME_MS,
+  resetQueryCacheForTests,
+  revalidateApiUrlIfStale,
+  useApiQuery,
+} from "./api.ts";
 import { App } from "./app.tsx";
+import { ResponsiveTable, SortableTh } from "./components/sortable-table.tsx";
 import {
   formatSortAnnouncement,
   nextSortState,
@@ -75,5 +83,102 @@ describe("accessible table sorting and shell landmarks", () => {
     expect(html).toContain('role="status"');
     expect(html).not.toContain("/staff/network");
     expect(html).not.toContain("STAFF · TAILNET");
+  });
+
+  test("renders mobile sort controls for sortable tables and omits them for static tables", () => {
+    const noop = vi.fn();
+    const sortableHtml = renderToStaticMarkup(
+      <ResponsiveTable caption="Top warriors">
+        <thead>
+          <tr>
+            <SortableTh
+              label="Warrior"
+              direction="ascending"
+              onActivate={noop}
+            />
+            <SortableTh label="PvP Kills" numeric onActivate={noop} />
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Alice</th>
+            <td data-label="PvP Kills">12</td>
+          </tr>
+        </tbody>
+      </ResponsiveTable>,
+    );
+    expect(sortableHtml).toContain("table-mobile-sort");
+    expect(sortableHtml).toContain('aria-label="Sort Top warriors"');
+    expect(sortableHtml).toContain("Toggle Warrior sort direction");
+
+    const staticHtml = renderToStaticMarkup(
+      <ResponsiveTable caption="Recent feed">
+        <thead>
+          <tr>
+            <th scope="col">Time</th>
+            <th scope="col">Event</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Now</th>
+            <td data-label="Event">Slain</td>
+          </tr>
+        </tbody>
+      </ResponsiveTable>,
+    );
+    expect(staticHtml).not.toContain("table-mobile-sort");
+  });
+
+  test("expires cached API responses after QUERY_STALE_TIME_MS", async () => {
+    resetQueryCacheForTests();
+    vi.useFakeTimers();
+    let calls = 0;
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async () => {
+        calls += 1;
+        return Response.json({ count: calls });
+      });
+
+    const schema = z.object({ count: z.number() });
+    function Probe() {
+      const { state } = useApiQuery("/api/v1/test-live", schema);
+      return (
+        <span>{state.status === "success" ? state.data.count : "loading"}</span>
+      );
+    }
+
+    try {
+      vi.setSystemTime(new Date("2026-11-22T20:00:00Z"));
+      revalidateApiUrlIfStale("/api/v1/test-live", schema);
+      await vi.advanceTimersByTimeAsync(10);
+      expect(calls).toBe(1);
+      expect(renderToStaticMarkup(<Probe />)).toContain("loading");
+
+      // Within QUERY_STALE_TIME_MS, non-forced revalidation reuses cached success
+      vi.setSystemTime(
+        new Date(
+          Date.parse("2026-11-22T20:00:00Z") + QUERY_STALE_TIME_MS - 1000,
+        ),
+      );
+      revalidateApiUrlIfStale("/api/v1/test-live", schema);
+      await vi.advanceTimersByTimeAsync(10);
+      expect(calls).toBe(1);
+
+      // Past QUERY_STALE_TIME_MS, non-forced revalidation refreshes automatically
+      vi.setSystemTime(
+        new Date(
+          Date.parse("2026-11-22T20:00:00Z") + QUERY_STALE_TIME_MS + 1000,
+        ),
+      );
+      revalidateApiUrlIfStale("/api/v1/test-live", schema);
+      await vi.advanceTimersByTimeAsync(10);
+      expect(calls).toBe(2);
+    } finally {
+      fetchSpy.mockRestore();
+      resetQueryCacheForTests();
+      vi.useRealTimers();
+    }
   });
 });

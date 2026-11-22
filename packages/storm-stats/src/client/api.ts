@@ -46,13 +46,26 @@ export type ApiQueryState<T> =
       readonly httpStatus?: number;
     };
 
+export const QUERY_STALE_TIME_MS = 30_000;
+export const QUERY_POLL_INTERVAL_MS = 60_000;
+
 type CacheEntry = {
   state: ApiQueryState<unknown>;
+  fetchedAt: number;
   inFlight: Promise<void> | null;
   listeners: Set<() => void>;
+  latestSchema: z.ZodType | null;
+  stopLiveRefresh: (() => void) | null;
 };
 
 const queryCache = new Map<string, CacheEntry>();
+
+export function resetQueryCacheForTests(): void {
+  for (const entry of queryCache.values()) {
+    entry.stopLiveRefresh?.();
+  }
+  queryCache.clear();
+}
 
 const ErrorEnvelopeSchema = z.object({
   error: z.string(),
@@ -90,8 +103,11 @@ function getOrCreateEntry(url: string): CacheEntry {
   }
   const created: CacheEntry = {
     state: { status: "pending", data: undefined, error: undefined },
+    fetchedAt: 0,
     inFlight: null,
     listeners: new Set(),
+    latestSchema: null,
+    stopLiveRefresh: null,
   };
   queryCache.set(url, created);
   return created;
@@ -103,6 +119,51 @@ function notifyEntry(entry: CacheEntry): void {
   }
 }
 
+function isEntryStale(entry: CacheEntry): boolean {
+  return (
+    entry.state.status !== "success" ||
+    Date.now() - entry.fetchedAt >= QUERY_STALE_TIME_MS
+  );
+}
+
+function attachEntryLiveRefresh(url: string, entry: CacheEntry): void {
+  if (entry.stopLiveRefresh !== null) {
+    return;
+  }
+  const revalidateIfVisible = (): void => {
+    if (
+      typeof document !== "undefined" &&
+      document.visibilityState === "hidden"
+    ) {
+      return;
+    }
+    if (
+      entry.latestSchema !== null &&
+      entry.inFlight === null &&
+      isEntryStale(entry)
+    ) {
+      startFetch(url, entry.latestSchema, false);
+    }
+  };
+  const timer = globalThis.setInterval(
+    revalidateIfVisible,
+    QUERY_POLL_INTERVAL_MS,
+  );
+  const hasDocument =
+    typeof document !== "undefined" &&
+    typeof document.addEventListener === "function";
+  if (hasDocument) {
+    document.addEventListener("visibilitychange", revalidateIfVisible);
+  }
+  entry.stopLiveRefresh = () => {
+    globalThis.clearInterval(timer);
+    if (hasDocument) {
+      document.removeEventListener("visibilitychange", revalidateIfVisible);
+    }
+    entry.stopLiveRefresh = null;
+  };
+}
+
 function startFetch<T>(
   url: string,
   schema: z.ZodType<T>,
@@ -112,15 +173,18 @@ function startFetch<T>(
     return;
   }
   const entry = getOrCreateEntry(url);
+  entry.latestSchema = schema;
   if (entry.inFlight !== null) {
     return;
   }
-  if (!forceRefetch && entry.state.status === "success") {
+  if (!forceRefetch && !isEntryStale(entry)) {
     return;
   }
 
-  entry.state = { status: "pending", data: undefined, error: undefined };
-  notifyEntry(entry);
+  if (entry.state.status !== "success") {
+    entry.state = { status: "pending", data: undefined, error: undefined };
+    notifyEntry(entry);
+  }
 
   entry.inFlight = (async () => {
     try {
@@ -146,6 +210,7 @@ function startFetch<T>(
         };
         return;
       }
+      entry.fetchedAt = Date.now();
       entry.state = {
         status: "success",
         data: validated.data,
@@ -181,6 +246,13 @@ export function refetchApiUrl<T>(url: string, schema: z.ZodType<T>): void {
   startFetch(url, schema, true);
 }
 
+export function revalidateApiUrlIfStale<T>(
+  url: string,
+  schema: z.ZodType<T>,
+): void {
+  startFetch(url, schema, false);
+}
+
 export function useApiQuery<T>(
   url: string | null,
   schema: z.ZodType<T>,
@@ -196,12 +268,17 @@ export function useApiQuery<T>(
         };
       }
       const entry = getOrCreateEntry(url);
+      entry.latestSchema = schema;
       entry.listeners.add(listener);
-      if (entry.state.status === "pending" && entry.inFlight === null) {
+      attachEntryLiveRefresh(url, entry);
+      if (entry.inFlight === null && isEntryStale(entry)) {
         startFetch(url, schema, false);
       }
       return () => {
         entry.listeners.delete(listener);
+        if (entry.listeners.size === 0) {
+          entry.stopLiveRefresh?.();
+        }
       };
     },
     () => {

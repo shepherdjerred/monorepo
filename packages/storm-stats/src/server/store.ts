@@ -90,8 +90,8 @@ export class StormStatsStore {
     );
   }
 
-  onlineCount(): number {
-    return loadServerState(this.#db).onlinePlayers.length;
+  onlineCount(now?: Date | string): number {
+    return loadServerState(this.#db, resolveNowIso(now)).onlinePlayers.length;
   }
 
   serverName(): string {

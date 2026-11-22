@@ -13,18 +13,27 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.reset.PlayerResetRegistry;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
+import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.CurrencyId;
 import com.shepherdjerred.thestorm.economy.app.Money;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
+import com.shepherdjerred.thestorm.essentials.app.ActivityFeed;
+import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
+import com.shepherdjerred.thestorm.essentials.app.AfkTracker;
 import com.shepherdjerred.thestorm.quests.app.QuestCompletions;
 import com.shepherdjerred.thestorm.skills.app.SkillLevels;
 import com.shepherdjerred.thestorm.skills.app.SkillProgress;
 import com.shepherdjerred.thestorm.stats.StatsModule;
+import com.shepherdjerred.thestorm.stats.adapter.db.JooqStatsStore;
+import com.shepherdjerred.thestorm.stats.app.StatsConfig;
 import com.shepherdjerred.thestorm.stats.app.StatsService;
+import com.shepherdjerred.thestorm.stats.app.StatsTransport;
+import com.shepherdjerred.thestorm.stats.app.StatsWire;
 import com.shepherdjerred.thestorm.towns.app.TownRead;
 import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -240,6 +249,119 @@ final class StatsPaperTest {
     resets.complete(Set.of("stats"));
     resets.reset(alice.getUniqueId()).get();
     assertThat(statsService.store().findPlayer("Alice").get()).isEmpty();
+  }
+
+  @Test
+  void splitsAfkTransitionsCapturesQuitSnapshotAndSkipsFailedEnrichment() throws Exception {
+    var exportedBatches = new ArrayList<StatsWire.IngestBatch>();
+    StatsTransport recordingTransport =
+        new StatsTransport() {
+          @Override
+          public CompletableFuture<Void> send(StatsWire.IngestBatch batch) {
+            exportedBatches.add(batch);
+            return CompletableFuture.completedFuture(null);
+          }
+
+          @Override
+          public void close() {}
+        };
+
+    var customServices = new Services();
+    var afkTracker = new AfkTracker(now::get, Duration.ofMinutes(5), ProductAnalytics.disabled());
+    customServices.provide(AfkStatus.class, afkTracker);
+    customServices.provide(ActivityFeed.class, afkTracker);
+
+    var carol = addHumanPlayer("Carol");
+    var dan = addHumanPlayer("Dan");
+
+    var wallets = mock(Wallets.class);
+    when(wallets.balance(new AccountId.Player(carol.getUniqueId()), CurrencyId.CRYSTALS))
+        .thenReturn(CompletableFuture.completedFuture(Money.crystals(1250L)));
+    when(wallets.balance(new AccountId.Player(dan.getUniqueId()), CurrencyId.CRYSTALS))
+        .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("wallet db offline")));
+    customServices.provide(Wallets.class, wallets);
+
+    var customConfig =
+        new StatsConfig(
+            "The Storm",
+            "https://ts-mc.net",
+            "STORM_STATS_INGEST_URL",
+            "STORM_STATS_INGEST_TOKEN",
+            15,
+            60);
+    var customStore = new JooqStatsStore(database);
+    var rng = new SplittableRandom(99L);
+    var logger = mock(org.slf4j.Logger.class);
+    try (var customService =
+        new StatsService(
+            new StatsService.Dependencies(
+                customConfig,
+                customStore,
+                recordingTransport,
+                () -> CompletableFuture.completedFuture(true)),
+            new StatsService.Clocks(
+                now::get, () -> new java.util.UUID(rng.nextLong(), rng.nextLong()), logger))) {
+      var ports = StatsPaperPorts.discover(customServices);
+      var reader = new PlayerStateReader(server, ports, now::get);
+      var sampler =
+          new StatsSampler(
+              new StatsSampler.Context(server, customService, ports, reader), now::get, logger);
+      var listener = new StatsSessionListener(customService, reader, sampler::samplePlayer);
+      var unsub = afkTracker.observe((uuid, active) -> customService.syncAfk(uuid, !active));
+
+      try {
+        afkTracker.joined(carol.getUniqueId());
+        customService.playerJoined(reader.joinInput(carol, "ts-mc.net"));
+        afkTracker.joined(dan.getUniqueId());
+        customService.playerJoined(reader.joinInput(dan, "ts-mc.net"));
+
+        // Carol plays active for 10s, goes AFK for 25s, returns active for 10s, then quits at 45s
+        now.set(now.get().plusSeconds(10));
+        assertThat(afkTracker.toggle(carol.getUniqueId())).isTrue();
+        now.set(now.get().plusSeconds(25));
+        assertThat(afkTracker.active(carol.getUniqueId())).isTrue();
+        now.set(now.get().plusSeconds(10));
+
+        // Sample while both are online: Carol's enrichment succeeds (1250), Dan's fails (omitted!)
+        sampler.sample();
+        customService.flush().get();
+        assertThat(exportedBatches).isNotEmpty();
+        var sampledSnapshots =
+            exportedBatches.stream().flatMap(b -> b.playerSnapshots().stream()).toList();
+        assertThat(sampledSnapshots)
+            .extracting(StatsWire.PlayerGameplaySnapshot::playerName)
+            .containsExactly("Carol");
+        assertThat(sampledSnapshots.getFirst().coins()).isEqualTo(1250L);
+
+        exportedBatches.clear();
+        when(wallets.balance(new AccountId.Player(carol.getUniqueId()), CurrencyId.CRYSTALS))
+            .thenReturn(CompletableFuture.completedFuture(Money.crystals(1900L)));
+
+        // Carol earns crystals and quits before the next 60s sampler tick
+        now.set(now.get().plusSeconds(5));
+        listener.onQuit(
+            new org.bukkit.event.player.PlayerQuitEvent(
+                carol,
+                Component.empty(),
+                org.bukkit.event.player.PlayerQuitEvent.QuitReason.DISCONNECTED));
+        afkTracker.left(carol.getUniqueId());
+
+        waitForAsyncDb(customService);
+        var carolSummary = customStore.findPlayer("Carol").get().orElseThrow();
+        // 10s active + 25s AFK + 10s active + 5s active = 50s connected, 25s active!
+        assertThat(carolSummary.connectedMs()).isEqualTo(50_000L);
+        assertThat(carolSummary.activeMs()).isEqualTo(25_000L);
+
+        customService.flush().get();
+        var quitSnapshots =
+            exportedBatches.stream().flatMap(b -> b.playerSnapshots().stream()).toList();
+        assertThat(quitSnapshots)
+            .extracting(StatsWire.PlayerGameplaySnapshot::coins)
+            .containsExactly(1900L);
+      } finally {
+        unsub.run();
+      }
+    }
   }
 
   private PlayerMock addHumanPlayer(String name) {

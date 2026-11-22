@@ -130,7 +130,47 @@
 }
 
 /* Adaptive container-queried stacked card layout on narrow containers */
+.table-mobile-sort {
+  display: none;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border-block-end: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.mobile-sort-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.mobile-sort-select {
+  flex: 1 1 9rem;
+  min-inline-size: 0;
+  font: inherit;
+  font-size: max(1rem, 1em);
+  min-block-size: 2.75rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+}
+
+.mobile-sort-dir-btn {
+  padding-inline: 0.75rem;
+  font-size: 0.85rem;
+}
+
 @container (width < 580px) {
+  .table-mobile-sort:not(.table-mobile-sort-compact) {
+    display: flex;
+  }
+
   .data-table:not(.data-table-compact),
   .data-table:not(.data-table-compact) caption,
   .data-table:not(.data-table-compact) thead,
@@ -186,6 +226,10 @@
 }
 
 @container (width < 400px) {
+  .table-mobile-sort-compact {
+    display: flex;
+  }
+
   .data-table-compact,
   .data-table-compact caption,
   .data-table-compact thead,

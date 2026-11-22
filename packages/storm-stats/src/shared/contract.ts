@@ -66,7 +66,17 @@ export const VIEWER_ROLES = ["public", "staff"] as const;
 export type ViewerRole = (typeof VIEWER_ROLES)[number];
 export const ViewerRoleSchema = z.enum(VIEWER_ROLES);
 
-export const IsoTimestampSchema = z.iso.datetime({ offset: true });
+export function normalizeIsoTimestamp(value: string): string {
+  const parsedMs = Date.parse(value);
+  if (Number.isNaN(parsedMs)) {
+    throw new RangeError(`Invalid ISO timestamp: ${value}`);
+  }
+  return new Date(parsedMs).toISOString();
+}
+
+export const IsoTimestampSchema = z.iso
+  .datetime({ offset: true })
+  .transform((value) => normalizeIsoTimestamp(value));
 export const DayStringSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/u);
 export const UuidSchema = z.uuid();
 export const BoundedNameSchema = z.string().min(1).max(64);

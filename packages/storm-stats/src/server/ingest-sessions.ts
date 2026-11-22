@@ -1,5 +1,8 @@
 import type { Database } from "bun:sqlite";
-import type { IngestEvent } from "@shepherdjerred/storm-stats/shared/contract.ts";
+import {
+  normalizeIsoTimestamp,
+  type IngestEvent,
+} from "@shepherdjerred/storm-stats/shared/contract.ts";
 import { toPacificParts } from "./time.ts";
 
 export type MinimalPlayerInput = {
@@ -9,12 +12,20 @@ export type MinimalPlayerInput = {
   readonly firstSeenAt?: string;
 };
 
+function parseIsoMillis(value: string): number {
+  return Date.parse(normalizeIsoTimestamp(value));
+}
+
 function minIso(left: string, right: string): string {
-  return left <= right ? left : right;
+  return new Date(
+    Math.min(parseIsoMillis(left), parseIsoMillis(right)),
+  ).toISOString();
 }
 
 function maxIso(left: string, right: string): string {
-  return left >= right ? left : right;
+  return new Date(
+    Math.max(parseIsoMillis(left), parseIsoMillis(right)),
+  ).toISOString();
 }
 
 export function ensurePlayerRow(db: Database, input: MinimalPlayerInput): void {
@@ -24,10 +35,11 @@ export function ensurePlayerRow(db: Database, input: MinimalPlayerInput): void {
     )
     .get(input.uuid);
 
+  const seenAt = normalizeIsoTimestamp(input.seenAt);
   const candidateFirst =
     input.firstSeenAt === undefined
-      ? input.seenAt
-      : minIso(input.firstSeenAt, input.seenAt);
+      ? seenAt
+      : minIso(input.firstSeenAt, seenAt);
 
   if (existing === null) {
     const priorBounces =
@@ -45,7 +57,7 @@ export function ensurePlayerRow(db: Database, input: MinimalPlayerInput): void {
       input.name,
       input.name.toLowerCase(),
       candidateFirst,
-      input.seenAt,
+      seenAt,
       priorBounces,
     );
     return;
@@ -62,7 +74,7 @@ export function ensurePlayerRow(db: Database, input: MinimalPlayerInput): void {
     input.name,
     input.name.toLowerCase(),
     minIso(existing.first_seen_at, candidateFirst),
-    maxIso(existing.last_seen_at, input.seenAt),
+    maxIso(existing.last_seen_at, seenAt),
     input.uuid,
   );
 }
@@ -84,11 +96,12 @@ function ensureSessionRow(
   if (found !== null) {
     return;
   }
+  const startedAt = normalizeIsoTimestamp(input.startedAt);
   db.query(
     `INSERT INTO sessions (
       session_id, player_uuid, player_name, started_at, ongoing
     ) VALUES (?, ?, ?, ?, 1)`,
-  ).run(input.sessionId, input.playerUuid, input.playerName, input.startedAt);
+  ).run(input.sessionId, input.playerUuid, input.playerName, startedAt);
   db.query(
     "UPDATE players SET sessions_count = sessions_count + 1 WHERE uuid = ?",
   ).run(input.playerUuid);

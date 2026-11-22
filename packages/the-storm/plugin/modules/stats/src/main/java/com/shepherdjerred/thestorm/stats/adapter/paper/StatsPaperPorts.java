@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.players.Nicknames;
 import com.shepherdjerred.thestorm.core.towns.TownDirectory;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
+import com.shepherdjerred.thestorm.essentials.app.ActivityFeed;
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
 import com.shepherdjerred.thestorm.quests.app.QuestCompletions;
 import com.shepherdjerred.thestorm.rwf.app.store.StatsStore;
@@ -19,6 +20,7 @@ import java.util.Optional;
 /** Optional sibling module ports discovered from {@link Services} without hard coupling. */
 public record StatsPaperPorts(
     Optional<AfkStatus> afkStatus,
+    Optional<ActivityFeed> activityFeed,
     Optional<ArenaPresence> arenaPresence,
     Optional<ArenaCatalog> arenaCatalog,
     Optional<ArenaRecords> arenaRecords,
@@ -35,6 +37,7 @@ public record StatsPaperPorts(
   public static StatsPaperPorts discover(Services services) {
     return new StatsPaperPorts(
         services.find(AfkStatus.class),
+        services.find(ActivityFeed.class),
         services.find(ArenaPresence.class),
         services.find(ArenaCatalog.class),
         services.find(ArenaRecords.class),

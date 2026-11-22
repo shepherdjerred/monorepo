@@ -10,8 +10,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -32,12 +34,19 @@ public final class StatsSessionListener implements Listener {
 
   private final StatsService service;
   private final PlayerStateReader stateReader;
+  private final Consumer<Player> onQuitSnapshot;
   private final Map<UUID, String> pendingJoinAddresses = new ConcurrentHashMap<>();
   private final Set<UUID> kickedPlayers = new HashSet<>();
 
   public StatsSessionListener(StatsService service, PlayerStateReader stateReader) {
+    this(service, stateReader, ignored -> {});
+  }
+
+  public StatsSessionListener(
+      StatsService service, PlayerStateReader stateReader, Consumer<Player> onQuitSnapshot) {
     this.service = service;
     this.stateReader = stateReader;
+    this.onQuitSnapshot = onQuitSnapshot;
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
@@ -115,6 +124,7 @@ public final class StatsSessionListener implements Listener {
     }
     var uuid = player.getUniqueId();
     pendingJoinAddresses.remove(uuid);
+    onQuitSnapshot.accept(player);
     boolean kicked =
         kickedPlayers.remove(uuid) || event.getReason() == PlayerQuitEvent.QuitReason.KICKED;
     service.playerLeft(

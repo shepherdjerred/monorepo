@@ -1,10 +1,11 @@
 import type { Database } from "bun:sqlite";
-import type {
-  IngestBatch,
-  IngestBatchAck,
-  IngestEvent,
-  PlayerGameplaySnapshot,
-  ServerSnapshot,
+import {
+  IngestBatchSchema,
+  type IngestBatch,
+  type IngestBatchAck,
+  type IngestEvent,
+  type PlayerGameplaySnapshot,
+  type ServerSnapshot,
 } from "@shepherdjerred/storm-stats/shared/contract.ts";
 import {
   applySessionEnded,
@@ -292,8 +293,9 @@ function applyServerSnapshot(db: Database, snap: ServerSnapshot): void {
 
 export function ingestBatchInTransaction(
   db: Database,
-  batch: IngestBatch,
+  rawBatch: IngestBatch,
 ): IngestBatchAck {
+  const normalizedBatch = IngestBatchSchema.parse(rawBatch);
   const runTx = db.transaction((b: IngestBatch): IngestBatchAck => {
     db.query(
       `UPDATE server_state
@@ -362,5 +364,5 @@ export function ingestBatchInTransaction(
     };
   });
 
-  return runTx(batch);
+  return runTx(normalizedBatch);
 }

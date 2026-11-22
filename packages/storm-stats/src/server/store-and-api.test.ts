@@ -335,3 +335,146 @@ test("ingest endpoint enforces auth, ingestEnabled flag, payload size limit, sch
     store.close();
   }
 });
+
+test("normalizes mixed-precision and offset timestamps and expires stale online rosters", () => {
+  const store = StormStatsStore.open(":memory:");
+  try {
+    const playerUuid = "55555555-5555-4000-8000-000000000005";
+    const sessionId = "66666666-6666-4000-8000-000000000006";
+
+    store.ingestBatch({
+      schemaVersion: 1,
+      batchId: "77777777-7777-4000-8000-000000000001",
+      serverName: "The Storm",
+      sentAt: "2026-11-22T12:00:00Z",
+      events: [
+        {
+          type: "session_started",
+          eventId: "88888888-8888-4000-8000-000000000001",
+          occurredAt: "2026-11-22T12:00:00Z",
+          sessionId,
+          playerUuid,
+          playerName: "Chrono",
+          firstSeenAt: "2026-11-22T12:00:00Z",
+          platform: "java",
+          clientVersion: "26.3",
+          clientBrand: "vanilla",
+          joinAddress: "ts-mc.net",
+          countryCode: null,
+          countryName: null,
+        },
+        {
+          type: "combat_event",
+          eventId: "88888888-8888-4000-8000-000000000002",
+          occurredAt: "2026-11-22T14:00:00.500+02:00",
+          sessionId,
+          combatKind: "pve_kill",
+          killerUuid: playerUuid,
+          killerName: "Chrono",
+          victimUuid: null,
+          victimName: null,
+          mobType: "Zombie",
+          weapon: "Diamond Sword",
+          world: "world",
+        },
+      ],
+      playerSnapshots: [
+        {
+          playerUuid,
+          playerName: "Chrono",
+          capturedAt: "2026-11-22T12:00:00Z",
+          nickname: null,
+          primaryGroup: "default",
+          coins: 500,
+          townName: null,
+          townRole: null,
+          townClaims: 0,
+          powerLevel: 10,
+          topSkill: null,
+          topSkillLevel: 0,
+          skills: {},
+          tracks: {},
+          questsCompleted: 1,
+          arenaBestWaves: {},
+          rwfMatches: 0,
+          rwfWins: 0,
+          rwfLosses: 0,
+          rwfKills: 0,
+          rwfDeaths: 0,
+        },
+      ],
+      serverSnapshot: {
+        capturedAt: "2026-11-22T12:00:00Z",
+        onlinePlayers: [
+          {
+            uuid: playerUuid,
+            name: "Chrono",
+            mode: "survival",
+            world: "world",
+            afk: false,
+            pingMs: 32,
+            sessionStartedAt: "2026-11-22T12:00:00Z",
+          },
+        ],
+        maxPlayers: 64,
+        townsCount: 0,
+        towns: [],
+      },
+    });
+
+    // Sub-second snapshot 50ms after whole-second "12:00:00Z" must supersede 500 -> 950 coins
+    store.ingestBatch({
+      schemaVersion: 1,
+      batchId: "77777777-7777-4000-8000-000000000002",
+      serverName: "The Storm",
+      sentAt: "2026-11-22T12:00:00.050Z",
+      events: [],
+      playerSnapshots: [
+        {
+          playerUuid,
+          playerName: "Chrono",
+          capturedAt: "2026-11-22T12:00:00.050Z",
+          nickname: null,
+          primaryGroup: "default",
+          coins: 950,
+          townName: null,
+          townRole: null,
+          townClaims: 0,
+          powerLevel: 12,
+          topSkill: null,
+          topSkillLevel: 0,
+          skills: {},
+          tracks: {},
+          questsCompleted: 2,
+          arenaBestWaves: {},
+          rwfMatches: 0,
+          rwfWins: 0,
+          rwfLosses: 0,
+          rwfKills: 0,
+          rwfDeaths: 0,
+        },
+      ],
+      serverSnapshot: null,
+    });
+
+    const freshNow = new Date("2026-11-22T12:03:00Z");
+    const freshProfile = store.getPlayerProfile(playerUuid, freshNow);
+    expect(freshProfile?.player.firstSeenAt).toBe("2026-11-22T12:00:00.000Z");
+    expect(freshProfile?.player.lastSeenAt).toBe("2026-11-22T12:00:00.500Z");
+    expect(freshProfile?.gameplay?.coins).toBe(950);
+    expect(freshProfile?.player.online).toBe(true);
+    expect(store.getOverview(freshNow).onlineNow).toBe(1);
+    expect(store.onlineCount(freshNow)).toBe(1);
+
+    // Past 5-minute staleness threshold: saved roster expires cleanly
+    const staleNow = new Date("2026-11-22T12:06:00Z");
+    expect(store.getOverview(staleNow).onlineNow).toBe(0);
+    expect(store.getOverview(staleNow).onlinePlayers).toEqual([]);
+    expect(store.onlineCount(staleNow)).toBe(0);
+    expect(store.getPlayerProfile(playerUuid, staleNow)?.player.online).toBe(
+      false,
+    );
+  } finally {
+    store.close();
+  }
+});

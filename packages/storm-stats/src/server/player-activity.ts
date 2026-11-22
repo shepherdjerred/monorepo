@@ -18,7 +18,9 @@ import {
   type ServerStateRow,
   type SessionRow,
 } from "./schema.ts";
-import { DAY_MS, computeActivityIndex } from "./time.ts";
+import { DAY_MS, MINUTE_MS, computeActivityIndex } from "./time.ts";
+
+export const SERVER_SNAPSHOT_STALE_MS = 5 * MINUTE_MS;
 
 export type ThreeWeekWindows = {
   readonly w0: number;
@@ -31,7 +33,29 @@ export type PlayerActivityScore = {
   readonly activityGroup: ActivityGroup;
 };
 
-export function loadServerState(db: Database): {
+function isServerSnapshotFresh(
+  capturedAt: string | null,
+  nowIso: string | undefined,
+): boolean {
+  if (capturedAt === null) {
+    return false;
+  }
+  if (nowIso === undefined) {
+    return true;
+  }
+  const capturedMs = Date.parse(capturedAt);
+  const nowMs = Date.parse(nowIso);
+  return (
+    !Number.isNaN(capturedMs) &&
+    !Number.isNaN(nowMs) &&
+    nowMs - capturedMs <= SERVER_SNAPSHOT_STALE_MS
+  );
+}
+
+export function loadServerState(
+  db: Database,
+  nowIso?: string,
+): {
   readonly row: ServerStateRow;
   readonly onlinePlayers: OnlinePlayerSummary[];
   readonly onlineByUuid: ReadonlyMap<string, OnlinePlayerSummary>;
@@ -42,7 +66,9 @@ export function loadServerState(db: Database): {
   if (row === null) {
     throw new Error("storm-stats: missing singleton server_state row");
   }
-  const onlinePlayers = parseOnlinePlayersJson(row.online_players_json);
+  const onlinePlayers = isServerSnapshotFresh(row.snapshot_captured_at, nowIso)
+    ? parseOnlinePlayersJson(row.online_players_json)
+    : [];
   const onlineByUuid = new Map<string, OnlinePlayerSummary>(
     onlinePlayers.map((entry) => [entry.uuid, entry]),
   );

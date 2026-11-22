@@ -285,7 +285,7 @@ export function queryServerOverview(
   db: Database,
   nowIso: string,
 ): ServerOverviewResponse {
-  const { row: state, onlinePlayers } = loadServerState(db);
+  const { row: state, onlinePlayers } = loadServerState(db, nowIso);
   const todayPacific = toPacificDay(nowIso);
   const activityScores = loadAllPlayerActivityScores(db, nowIso);
   const playerbaseGroups = summarizePlayerbaseGroups(activityScores.values());

@@ -90,6 +90,13 @@ public final class StatsService implements AutoCloseable {
     ledger.update(playerUuid, sample).ifPresent(this::persistTransition);
   }
 
+  public synchronized void syncAfk(UUID playerUuid, boolean afk) {
+    if (stopped) {
+      return;
+    }
+    ledger.updateAfk(playerUuid, now(), afk).ifPresent(this::persistTransition);
+  }
+
   public synchronized void checkpointPlayer(UUID playerUuid, SessionLedger.StateSample sample) {
     if (stopped) {
       return;
@@ -187,12 +194,23 @@ public final class StatsService implements AutoCloseable {
     }
     pendingServerSnapshot.set(serverSnapshot);
     for (var snapshot : playerSnapshots) {
-      pendingPlayerSnapshots.put(UUID.fromString(snapshot.playerUuid()), snapshot);
-      if (pendingPlayerSnapshots.size() > 500) {
-        var first = pendingPlayerSnapshots.keySet().iterator();
-        if (first.hasNext()) {
-          pendingPlayerSnapshots.remove(first.next());
-        }
+      putPlayerSnapshot(snapshot);
+    }
+  }
+
+  public void bufferPlayerSnapshot(StatsWire.PlayerGameplaySnapshot snapshot) {
+    if (stopped || transport == null) {
+      return;
+    }
+    putPlayerSnapshot(snapshot);
+  }
+
+  private void putPlayerSnapshot(StatsWire.PlayerGameplaySnapshot snapshot) {
+    pendingPlayerSnapshots.put(UUID.fromString(snapshot.playerUuid()), snapshot);
+    if (pendingPlayerSnapshots.size() > 500) {
+      var first = pendingPlayerSnapshots.keySet().iterator();
+      if (first.hasNext()) {
+        pendingPlayerSnapshots.remove(first.next());
       }
     }
   }

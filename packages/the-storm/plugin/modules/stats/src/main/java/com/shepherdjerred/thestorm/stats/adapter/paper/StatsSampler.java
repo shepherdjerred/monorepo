@@ -121,6 +121,33 @@ public final class StatsSampler {
             });
   }
 
+  /** Captures and buffers a final gameplay snapshot for a disconnecting human player. */
+  public void samplePlayer(Player player) {
+    if (!Humans.isHuman(player)) {
+      return;
+    }
+    var capturedAt = Instant.ofEpochMilli(time.instant().toEpochMilli());
+    var townNamesById =
+        ports.townMembership().flatMap(m -> m.townIdOf(player.getUniqueId())).isPresent()
+            ? readTownsOnMainThread().namesById()
+            : Map.<UUID, String>of();
+    var capture = captureMainThreadPlayer(player, capturedAt, townNamesById);
+    var _ =
+        enrichOffThread(capture)
+            .whenComplete((snapshot, failure) -> {
+              if (failure != null) {
+                logger.warn(
+                    "Gameplay snapshot enrichment encountered an error for {}",
+                    capture.playerUuid(),
+                    failure);
+                return;
+              }
+              if (snapshot != null) {
+                service.bufferPlayerSnapshot(snapshot);
+              }
+            });
+  }
+
   private TownsCapture readTownsOnMainThread() {
     if (ports.townRead().isEmpty()) {
       return new TownsCapture(0, List.of(), Map.of());
@@ -249,11 +276,7 @@ public final class StatsSampler {
         .wallets()
         .orElseThrow()
         .balance(new AccountId.Player(playerUuid), CurrencyId.CRYSTALS)
-        .thenApply(Money::amount)
-        .exceptionally(failure -> {
-          logger.warn("Could not read crystal balance for {}", playerUuid, failure);
-          return 0L;
-        });
+        .thenApply(Money::amount);
   }
 
   private CompletableFuture<SkillSnapshot> readSkills(UUID playerUuid) {
@@ -264,11 +287,7 @@ public final class StatsSampler {
         .skillLevels()
         .orElseThrow()
         .progress(playerUuid)
-        .thenApply(StatsSampler::toSkillSnapshot)
-        .exceptionally(failure -> {
-          logger.warn("Could not read skill levels for {}", playerUuid, failure);
-          return SkillSnapshot.EMPTY;
-        });
+        .thenApply(StatsSampler::toSkillSnapshot);
   }
 
   private static SkillSnapshot toSkillSnapshot(SkillProgress progress) {
@@ -294,13 +313,7 @@ public final class StatsSampler {
     CompletableFuture<Map<String, Integer>> acc =
         CompletableFuture.completedFuture(new LinkedHashMap<>());
     for (var arenaId : ports.arenaCatalog().orElseThrow().ids()) {
-      var waveFuture =
-          records
-              .bestWave(playerUuid, arenaId)
-              .exceptionally(failure -> {
-                logger.warn("Could not read arena record {} for {}", arenaId, playerUuid, failure);
-                return OptionalInt.empty();
-              });
+      var waveFuture = records.bestWave(playerUuid, arenaId);
       acc =
           acc.thenCombine(
               waveFuture,
@@ -318,14 +331,7 @@ public final class StatsSampler {
     if (ports.rwfStats().isEmpty()) {
       return CompletableFuture.completedFuture(Optional.empty());
     }
-    return ports
-        .rwfStats()
-        .orElseThrow()
-        .totals(playerUuid)
-        .exceptionally(failure -> {
-          logger.warn("Could not read RWF totals for {}", playerUuid, failure);
-          return Optional.empty();
-        });
+    return ports.rwfStats().orElseThrow().totals(playerUuid);
   }
 
   private static StatsWire.PlayerGameplaySnapshot buildPlayerSnapshot(

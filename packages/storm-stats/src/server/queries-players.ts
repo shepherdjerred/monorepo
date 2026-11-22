@@ -166,7 +166,7 @@ export function loadAllDirectoryRows(
   viewer: ViewerRole,
   nowIso: string,
 ): PlayerDirectoryRow[] {
-  const { onlineByUuid } = loadServerState(db);
+  const { onlineByUuid } = loadServerState(db, nowIso);
   const activityByUuid = loadAllPlayerActivityScores(db, nowIso);
   const { primaryWorld, primaryMode } = loadPrimaryWorldAndModeByPlayer(db);
   const gameplayByUuid = loadGameplayMap(db);
@@ -405,7 +405,7 @@ export function queryPlayerProfile(
     return null;
   }
 
-  const { onlineByUuid } = loadServerState(db);
+  const { onlineByUuid } = loadServerState(db, nowIso);
   const onlineEntry = onlineByUuid.get(player.uuid);
   const activityByUuid = loadAllPlayerActivityScores(db, nowIso);
   const score = activityByUuid.get(player.uuid) ?? {

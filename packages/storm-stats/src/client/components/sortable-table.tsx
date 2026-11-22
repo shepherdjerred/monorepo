@@ -1,4 +1,11 @@
-import { useId, useMemo, useState, type ReactNode } from "react";
+import {
+  Children,
+  isValidElement,
+  useId,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import {
   formatSortAnnouncement,
@@ -10,6 +17,28 @@ import {
 } from "@shepherdjerred/storm-stats/client/sort.ts";
 import { useAnnounce } from "@shepherdjerred/storm-stats/client/live-announcer.tsx";
 
+type SortableThProps = {
+  readonly label: string;
+  readonly direction?: SortDirection | undefined;
+  readonly numeric?: boolean | undefined;
+  readonly onActivate: () => void;
+};
+
+function collectSortableHeaders(node: ReactNode, out: SortableThProps[]): void {
+  for (const child of Children.toArray(node)) {
+    if (isValidElement<SortableThProps>(child) && child.type === SortableTh) {
+      out.push(child.props);
+      continue;
+    }
+    if (
+      isValidElement<{ readonly children?: ReactNode }>(child) &&
+      child.props.children !== undefined
+    ) {
+      collectSortableHeaders(child.props.children, out);
+    }
+  }
+}
+
 export function ResponsiveTable({
   caption,
   compact = false,
@@ -20,6 +49,14 @@ export function ResponsiveTable({
   readonly children: ReactNode;
 }) {
   const captionId = useId();
+  const sortSelectId = useId();
+  const sortableHeaders: SortableThProps[] = [];
+  collectSortableHeaders(children, sortableHeaders);
+  const activeIndex = sortableHeaders.findIndex(
+    (col) => col.direction !== undefined,
+  );
+  const activeCol = sortableHeaders.find((col) => col.direction !== undefined);
+
   return (
     <div
       tabIndex={0}
@@ -27,6 +64,54 @@ export function ResponsiveTable({
       aria-labelledby={captionId}
       className="table-wrapper"
     >
+      {sortableHeaders.length > 0 ? (
+        <div
+          className={
+            compact
+              ? "table-mobile-sort table-mobile-sort-compact"
+              : "table-mobile-sort"
+          }
+          role="group"
+          aria-label={`Sort ${caption}`}
+        >
+          <label htmlFor={sortSelectId} className="mobile-sort-label">
+            Sort
+          </label>
+          <select
+            id={sortSelectId}
+            className="mobile-sort-select"
+            value={activeIndex === -1 ? "" : String(activeIndex)}
+            onChange={(event) => {
+              const chosen = sortableHeaders[Number(event.target.value)];
+              chosen?.onActivate();
+            }}
+          >
+            {activeIndex === -1 ? (
+              <option value="" disabled>
+                Choose column…
+              </option>
+            ) : null}
+            {sortableHeaders.map((col, idx) => (
+              <option key={col.label} value={String(idx)}>
+                {col.label}
+              </option>
+            ))}
+          </select>
+          {activeCol === undefined ? null : (
+            <button
+              type="button"
+              className="btn mobile-sort-dir-btn"
+              onClick={activeCol.onActivate}
+              aria-label={`Toggle ${activeCol.label} sort direction (currently ${activeCol.direction ?? "ascending"})`}
+            >
+              <SortIcon direction={activeCol.direction} />
+              <span>
+                {activeCol.direction === "ascending" ? "Asc" : "Desc"}
+              </span>
+            </button>
+          )}
+        </div>
+      ) : null}
       <table
         className={compact ? "data-table data-table-compact" : "data-table"}
       >
@@ -57,12 +142,7 @@ export function SortableTh({
   direction,
   numeric = false,
   onActivate,
-}: {
-  readonly label: string;
-  readonly direction?: SortDirection | undefined;
-  readonly numeric?: boolean | undefined;
-  readonly onActivate: () => void;
-}) {
+}: SortableThProps) {
   return (
     <th
       scope="col"

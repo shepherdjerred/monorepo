@@ -190,6 +190,30 @@ public final class SessionLedger {
             delta.events()));
   }
 
+  /** Splits an interval immediately when AFK state changes without touching Paper APIs. */
+  public Optional<LedgerTransition> updateAfk(UUID playerUuid, Instant at, boolean afk) {
+    var session = sessions.get(playerUuid);
+    if (session == null || session.afk == afk) {
+      return Optional.empty();
+    }
+    var delta = advance(session, truncateMillis(at), null);
+    session.afk = afk;
+    if (delta.events().isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        new LedgerTransition(
+            session.playerUuid,
+            session.playerName,
+            session.checkpointAt,
+            delta.connectedMs(),
+            delta.activeMs(),
+            0,
+            session.view(),
+            null,
+            delta.events()));
+  }
+
   /** Periodic checkpoint tick across an online player's current state. */
   public Optional<LedgerTransition> checkpoint(UUID playerUuid, StateSample sample) {
     var session = sessions.get(playerUuid);
