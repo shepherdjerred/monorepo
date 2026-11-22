@@ -100,6 +100,7 @@ test("actual frozen tables retain all request statuses, genuine IDs and selected
       stable: true,
     });
     expect(result.transport).toBe("frozen-sqlite");
+    expect(result.unassignedSeasonCount).toBe(0);
     expect(result.sqliteDigest).toBe(
       createHash("sha256").update(bytes).digest("hex"),
     );
@@ -141,6 +142,39 @@ test("actual frozen tables retain all request statuses, genuine IDs and selected
     expect(normalized.entries.every((entry) => !entry.owned)).toBe(true);
     expect(normalized.entries[0]?.reasons).toContain("requester_unmapped");
   });
+});
+
+test("unassigned SQL NULL season rows are counted without changing the request capture", async () => {
+  const bytes = image((db) =>
+    db.run(
+      "INSERT INTO season_request VALUES (75, NULL, 0, 2), (76, NULL, 1, 5)",
+    ),
+  );
+  await fixture(bytes, async (target) => {
+    const result = await readFrozenSeerr(target, source);
+    expect(result.unassignedSeasonCount).toBe(2);
+    expect(result.snapshot.records).toHaveLength(5);
+    expect(result.apiComparableDigest).toBe(recordDigest(apiRecords()));
+    expect(result.sqliteDigest).toBe(
+      createHash("sha256").update(bytes).digest("hex"),
+    );
+    expect(await Bun.file(target).bytes()).toEqual(new Uint8Array(bytes));
+  });
+});
+
+test("a nonnull dangling season reference fails even when the source also has unassigned rows", async () => {
+  await fixture(
+    image((db) =>
+      db.run(
+        "INSERT INTO season_request VALUES (75, NULL, 0, 2), (76, 999, 1, 5)",
+      ),
+    ),
+    async (target) => {
+      await expect(readFrozenSeerr(target, source)).rejects.toThrow(
+        "Frozen source has an orphaned season request",
+      );
+    },
+  );
 });
 
 test.each([
@@ -190,7 +224,6 @@ test.each([
   ["missing requester", "DELETE FROM user WHERE id=17"],
   ["null requester", "UPDATE media_request SET requestedById=NULL WHERE id=45"],
   ["non-positive Plex account ID", "UPDATE user SET plexId=0"],
-  ["orphan season", "UPDATE season_request SET requestId=999 WHERE id=71"],
   ["duplicate season", "UPDATE season_request SET seasonNumber=0 WHERE id=72"],
   ["unknown request status", "UPDATE media_request SET status=6 WHERE id=45"],
   ["unknown season status", "UPDATE season_request SET status=6 WHERE id=71"],
@@ -312,7 +345,10 @@ async function cli(target: string, stopped = true, version = "v3.5.0") {
 }
 
 test("actual CLI requires stopped-writer and exact-version evidence and exports only filtered capture/provenance", async () => {
-  await fixture(image(), async (target) => {
+  const bytes = image((db) =>
+    db.run("INSERT INTO season_request VALUES (75, NULL, 1, 5)"),
+  );
+  await fixture(bytes, async (target) => {
     expect(await cli(target, false)).toMatchObject({ exitCode: 1, stdout: "" });
     expect(await cli(target, true, "unknown")).toMatchObject({
       exitCode: 1,
@@ -323,6 +359,7 @@ test("actual CLI requires stopped-writer and exact-version evidence and exports 
     expect(result.stderr).toBe("");
     expect(JSON.parse(result.stdout)).toMatchObject({
       transport: "frozen-sqlite",
+      unassignedSeasonCount: 1,
       snapshot: {
         sourceKind: "seerr",
         records: [

@@ -3282,7 +3282,10 @@ creation time where available, and the Plex account ID joined from the
 requester's Seerr account. A requester without a stored Plex ID remains
 unmapped. The export carries no credentials, sessions, or email addresses.
 
-The wrapper's `sqliteDigest` hashes the original bytes.
+The wrapper's `sqliteDigest` hashes the original bytes. Its
+`unassignedSeasonCount` counts season rows whose Seerr `requestId` is SQL
+`NULL`. Those rows stay in the frozen database and do not enter the request
+snapshot.
 `apiComparableDigest` clears the Plex identity fields for comparison with the
 final HTTP capture, which leaves those fields unmapped. A discrepancy calls
 for review of the original source captures.

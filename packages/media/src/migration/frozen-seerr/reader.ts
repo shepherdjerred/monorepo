@@ -55,7 +55,7 @@ const Request = z.object({
 });
 const Season = z.object({
   id: z.int().positive(),
-  requestId: z.int().positive(),
+  requestId: z.int().positive().nullable(),
   seasonNumber: z.int().nonnegative(),
   status: z.int().min(1).max(5),
 });
@@ -123,18 +123,25 @@ function requests(db: Database) {
     throw new Error("Duplicate frozen request identity");
   validateRequesterIdentities(rows);
   const byRequest = new Map<number, z.infer<typeof Season>[]>();
+  let unassignedSeasonCount = 0;
   for (const season of seasons) {
-    if (!ids.has(season.requestId))
+    const { requestId } = season;
+    // Seerr allows SQL NULL here. Such a row belongs only to the frozen image.
+    if (requestId === null) {
+      unassignedSeasonCount++;
+      continue;
+    }
+    if (!ids.has(requestId))
       throw new Error("Frozen source has an orphaned season request");
-    const selected = byRequest.get(season.requestId) ?? [];
+    const selected = byRequest.get(requestId) ?? [];
     if (selected.some((item) => item.seasonNumber === season.seasonNumber))
       throw new Error("Frozen source has duplicate selected season identities");
     if (selected.length >= 1000)
       throw new Error("Frozen source exceeds selected season bound");
     selected.push(season);
-    byRequest.set(season.requestId, selected);
+    byRequest.set(requestId, selected);
   }
-  return rows.map((row) => {
+  const records = rows.map((row) => {
     const record = requestRecord({
       id: row.id,
       type: row.type,
@@ -152,6 +159,7 @@ function requests(db: Database) {
       requesterMappingEvidenceHash: null,
     });
   });
+  return { records, unassignedSeasonCount };
 }
 
 function readImage(bytes: Uint8Array, source: z.infer<typeof Source>) {
@@ -171,7 +179,9 @@ function readImage(bytes: Uint8Array, source: z.infer<typeof Source>) {
       .parse(db.query("PRAGMA quick_check").all());
     const first = requests(db);
     const second = requests(db);
-    const pass = (records: typeof first) => ({
+    if (first.unassignedSeasonCount !== second.unassignedSeasonCount)
+      throw new Error("Frozen unassigned season count changed");
+    const pass = (records: typeof first.records) => ({
       records,
       version: source.sourceVersion,
       pages: 0,
@@ -182,11 +192,12 @@ function readImage(bytes: Uint8Array, source: z.infer<typeof Source>) {
       sourceInstanceId: source.sourceInstanceId,
       startedAt,
       endpoints: ["requests"],
-      first: pass(first),
-      second: pass(second),
+      first: pass(first.records),
+      second: pass(second.records),
     });
     return {
       snapshot,
+      unassignedSeasonCount: first.unassignedSeasonCount,
       // Only source/current binding fields differ from the existing HTTP
       // request projection. This digest is diagnostic, never an API receipt.
       apiComparableDigest: recordDigest(
