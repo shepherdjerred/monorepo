@@ -3,11 +3,6 @@ import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
 import { LIGHT_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 
-export const TOFU_PLUGIN_CACHE = {
-  claim: "woodpecker-tofu-plugin-cache",
-  path: "/woodpecker/tofu-plugin-cache",
-} as const;
-
 export const GITHUB_DOWNLOAD: SecretGrant = {
   secret: "ci-github-credentials",
   key: "GITHUB_DOWNLOAD_TOKEN",
@@ -88,6 +83,8 @@ export const TOFU_VALIDATION_INSTALL_FILTERS = [
   "@homelab/cdk8s",
 ] as const;
 
+const VALIDATION_PLUGIN_CACHE_ENV = "TOFU_VALIDATION_PLUGIN_CACHE_DIR";
+
 /** CI validates configuration offline. Operational plans and applies run in Delivery. */
 export function tofuValidationSteps(images: CiImages): CiStep[] {
   return [
@@ -100,13 +97,14 @@ export function tofuValidationSteps(images: CiImages): CiStep[] {
         `ci/scripts/bun-install.sh --frozen-lockfile ${TOFU_VALIDATION_INSTALL_FILTERS.map((name) => `--filter '${name}'`).join(" ")} --production`,
         // Synthesized stacks: regenerate the provider bindings, then fail when
         // a committed main.tf.json differs from a fresh synthesis. This runs
-        // before the shared plugin cache is selected, which only the locked
-        // validations below may write.
+        // before the per-run validation plugin cache is exported below.
         "bun --no-install run --cwd packages/homelab-cdktn generate",
         "bun --no-install run --cwd packages/homelab-cdktn build",
-        `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
+        'plugin_cache="$(mktemp -d "${TMPDIR:-/tmp}/tofu-plugin-cache.XXXXXXXX")"',
+        "trap 'rm -rf \"$plugin_cache\"' EXIT",
+        `export ${VALIDATION_PLUGIN_CACHE_ENV}="$plugin_cache"`,
         `for stack in ${VALIDATED_STACKS.join(" ")}; do`,
-        `  flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts "$stack" validate`,
+        '  bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts "$stack" validate',
         "done",
       ],
       timeoutMinutes: 60,
@@ -123,7 +121,6 @@ export function tofuValidationSteps(images: CiImages): CiStep[] {
         ],
       },
       secrets: [GITHUB_DOWNLOAD],
-      volumes: [TOFU_PLUGIN_CACHE],
     },
   ];
 }

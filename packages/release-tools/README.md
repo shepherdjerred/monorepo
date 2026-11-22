@@ -9,9 +9,12 @@ of an ad-hoc fetch. The main-only lane calls `scripts/release/release.ts`; its r
 uses the pinned Codex SDK through the repository LLM runtime and keeps inference
 credentials out of tool subprocesses.
 
-Each runner invocation resolves its target revision and npm eligibility after
-the temporary clone finishes. It fetches and pins that exact commit before
-loading the manifest, so merges during cloning do not stale the release plan.
+Each temporary repository is initialized with a blobless partial clone
+(`--filter=blob:none`) so `release-please` reads full commit history and HEAD
+files without downloading historical blobs. For `release-pr`, target revision
+and npm eligibility resolve after the clone finishes; for `github-release`,
+target revision and SHA preflight run first and skip cloning entirely when no
+merged `autorelease: pending` pull requests exist on the target branch.
 Revision checks still reject main movement during manifest loading or around
 release mutations; a failed check remains a release failure.
 

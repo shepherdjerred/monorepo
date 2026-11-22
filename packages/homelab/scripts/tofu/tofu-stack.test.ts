@@ -6,6 +6,7 @@ import { z } from "zod";
 import {
   buildTofuEnvironment,
   desiredStateVariableValue,
+  validationEnvironment,
   validationInitArguments,
 } from "./tofu-stack.ts";
 import {
@@ -249,6 +250,78 @@ describe("OpenTofu credential contracts", () => {
     expect(STACK_MANIFEST.posthog.validationPassphraseVariable).toBe(
       "state_passphrase",
     );
+  });
+});
+
+describe("OpenTofu validation plugin cache", () => {
+  test("validationEnvironment always drops ambient TF_PLUGIN_CACHE_DIR and only promotes TOFU_VALIDATION_PLUGIN_CACHE_DIR for registry-backed stacks", async () => {
+    const previousPluginCache = Bun.env["TF_PLUGIN_CACHE_DIR"];
+    const previousValidationCache = Bun.env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"];
+    const createdDataRoots: string[] = [];
+
+    try {
+      Bun.env["TF_PLUGIN_CACHE_DIR"] = "/persistent/cross-pr-cache";
+      delete Bun.env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"];
+      const withoutValidationCache = await validationEnvironment(
+        STACK_MANIFEST.github,
+      );
+      createdDataRoots.push(withoutValidationCache.dataRoot);
+      expect(withoutValidationCache.env["TF_PLUGIN_CACHE_DIR"]).toBeUndefined();
+      expect(
+        withoutValidationCache.env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"],
+      ).toBeUndefined();
+
+      Bun.env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"] = "/tmp/per-run-plugin-cache";
+      const registryStack = await validationEnvironment(STACK_MANIFEST.github);
+      createdDataRoots.push(registryStack.dataRoot);
+      expect(registryStack.env["TF_PLUGIN_CACHE_DIR"]).toBe(
+        "/tmp/per-run-plugin-cache",
+      );
+      expect(
+        registryStack.env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"],
+      ).toBeUndefined();
+
+      const localProviderStack = await validationEnvironment(
+        STACK_MANIFEST.asuswrt,
+      );
+      createdDataRoots.push(localProviderStack.dataRoot);
+      expect(localProviderStack.env["TF_PLUGIN_CACHE_DIR"]).toBeUndefined();
+      expect(
+        localProviderStack.env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"],
+      ).toBeUndefined();
+
+      const operationalEnv = buildTofuEnvironment(
+        "github",
+        (name) => `${name}-value`,
+      );
+      expect(operationalEnv["TF_PLUGIN_CACHE_DIR"]).toBe(
+        "/persistent/cross-pr-cache",
+      );
+      expect(
+        operationalEnv["TOFU_VALIDATION_PLUGIN_CACHE_DIR"],
+      ).toBeUndefined();
+
+      Bun.env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"] = "";
+      const emptyValidationCache = await validationEnvironment(
+        STACK_MANIFEST.github,
+      );
+      createdDataRoots.push(emptyValidationCache.dataRoot);
+      expect(emptyValidationCache.env["TF_PLUGIN_CACHE_DIR"]).toBeUndefined();
+      expect(
+        emptyValidationCache.env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"],
+      ).toBeUndefined();
+    } finally {
+      if (previousPluginCache === undefined)
+        delete Bun.env["TF_PLUGIN_CACHE_DIR"];
+      else Bun.env["TF_PLUGIN_CACHE_DIR"] = previousPluginCache;
+      if (previousValidationCache === undefined)
+        delete Bun.env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"];
+      else
+        Bun.env["TOFU_VALIDATION_PLUGIN_CACHE_DIR"] = previousValidationCache;
+      for (const dataRoot of createdDataRoots) {
+        await rm(dataRoot, { recursive: true, force: true });
+      }
+    }
   });
 });
 
