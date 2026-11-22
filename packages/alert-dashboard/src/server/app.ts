@@ -1,7 +1,7 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { Hono, type Context } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { serveStatic } from "hono/bun";
+import { serveStatic } from "@hono/bun";
 import { z } from "zod";
 
 import type { AlertService } from "#application/alert-service";

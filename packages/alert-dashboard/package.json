@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
+    "@hono/bun": "^1.0.1",
     "@js-temporal/polyfill": "^0.5.1",
     "@opentelemetry/api": "^1.9.1",
     "@opentelemetry/context-async-hooks": "^2.12.0",

@@ -636,6 +636,45 @@ describe("patch attribution", () => {
     expect(ids.has("lint@1.0.0")).toBe(false);
     expect(closurePackageIds(["packages/missing"], lock)).toBeNull();
   });
+
+  test("closurePackageIds resolves deps of a package that exists only nested", () => {
+    // bun can place a package only under its dependent ("x/@s/p"), with that
+    // package's own deps nested beneath it ("x/@s/p/q") or under an ancestor
+    // ("x/r"). Lookup walks the full key path up, like node_modules.
+    const lock = parseLockfile(
+      JSON.stringify({
+        lockfileVersion: 1,
+        workspaces: {
+          "": { name: "root" },
+          "packages/a": { name: "a", dependencies: { x: "^1" } },
+        },
+        packages: {
+          x: ["x@1.0.0", "", { dependencies: { "@s/p": "^1" } }, "sha512-x"],
+          "x/@s/p": [
+            "@s/p@1.0.0",
+            "",
+            { dependencies: { q: "^1", r: "^1", t: "^1" } },
+            "sha512-p",
+          ],
+          "x/@s/p/q": ["q@1.0.0", "", {}, "sha512-q"],
+          "x/r": ["r@2.0.0", "", {}, "sha512-r-under-x"],
+          r: ["r@1.0.0", "", {}, "sha512-r"],
+          t: ["t@1.0.0", "", {}, "sha512-t"],
+        },
+      }),
+    );
+    const ids = closurePackageIds(["packages/a"], lock);
+    expect(ids).not.toBeNull();
+    if (ids === null) throw new Error("unreachable");
+    expect([...ids].sort()).toEqual([
+      "@s/p@1.0.0",
+      "a",
+      "q@1.0.0",
+      "r@2.0.0",
+      "t@1.0.0",
+      "x@1.0.0",
+    ]);
+  });
 });
 
 function runGit(repoRoot: string, args: readonly string[]): void {

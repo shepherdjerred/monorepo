@@ -343,34 +343,51 @@ export function parseLockfile(text: string): Lockfile {
 }
 
 /**
- * Resolve a dep name the way bun's nested lockfile keys shadow: the
- * `<parentPackageName>/<depName>` key wins over the bare `<depName>` key.
- * (Nested keys are parent-NAME scoped, e.g. "astro/sharp",
- * "@ai-sdk/amazon-bedrock/@ai-sdk/anthropic".) An unresolvable dep means the
- * lockfile model diverged from this walker — throw (the caller fails open).
+ * Split a lockfile package key into its package-name segments, keeping each
+ * scoped name whole: "@svgr/core/@svgr/babel-preset" → ["@svgr/core",
+ * "@svgr/babel-preset"].
+ */
+function packageKeySegments(key: string): string[] {
+  const parts = key.split("/");
+  const segments: string[] = [];
+  for (let index = 0; index < parts.length; index += 1) {
+    const part = parts[index] ?? "";
+    if (part.startsWith("@")) {
+      segments.push(`${part}/${parts[index + 1] ?? ""}`);
+      index += 1;
+    } else {
+      segments.push(part);
+    }
+  }
+  return segments;
+}
+
+/**
+ * Resolve a dep name the way bun's nested lockfile keys shadow, which mirrors
+ * node_modules lookup: starting from the parent's full key path, the deepest
+ * `<parentKey>/<depName>` key wins, then each ancestor path in turn, then the
+ * bare `<depName>` key. Keys nest by path, e.g. "astro/sharp" or
+ * "@svgr/core/@svgr/babel-preset/@svgr/babel-plugin-transform-svg-component".
+ * An unresolvable dep means the lockfile model diverged from this walker —
+ * throw (the caller fails open).
  */
 function resolvePackageKey(
   name: string,
-  parentName: string,
+  parentKey: string,
   packages: Lockfile["packages"],
 ): string | null {
-  if (parentName !== "") {
-    const nested = `${parentName}/${name}`;
+  const segments = parentKey === "" ? [] : packageKeySegments(parentKey);
+  for (let depth = segments.length; depth > 0; depth -= 1) {
+    const nested = `${segments.slice(0, depth).join("/")}/${name}`;
     if (packages.has(nested)) return nested;
   }
   return packages.has(name) ? name : null;
 }
 
-/** "name@version" | "@scope/name@version" | "name@workspace:dir" → the name. */
-function packageNameOfId(id: string): string {
-  const at = id.lastIndexOf("@");
-  if (at <= 0) throw new Error(`lockfile package id has no version: ${id}`);
-  return id.slice(0, at);
-}
-
 type ResolutionQueueEntry = {
   name: string;
-  parentName: string;
+  /** Lockfile key of the dependent (a workspace's name for its own deps). */
+  parentKey: string;
   required: boolean;
 };
 
@@ -396,7 +413,7 @@ function seedResolutionQueue(
     onWorkspace(dir, workspace);
     for (const [name, { spec, required }] of Object.entries(workspace.deps)) {
       if (!spec.startsWith("workspace:"))
-        queue.push({ name, parentName: workspace.name, required });
+        queue.push({ name, parentKey: workspace.name, required });
     }
   }
   return queue;
@@ -414,15 +431,11 @@ type QueueVisit = {
  * Throws on a required dep with no resolution; skips optional ones.
  */
 function visitQueueEntry(next: ResolutionQueueEntry, visit: QueueVisit): void {
-  const key = resolvePackageKey(
-    next.name,
-    next.parentName,
-    visit.lock.packages,
-  );
+  const key = resolvePackageKey(next.name, next.parentKey, visit.lock.packages);
   if (key === null) {
     if (next.required)
       throw new Error(
-        `lockfile has no resolution for ${next.name} under ${next.parentName}`,
+        `lockfile has no resolution for ${next.name} under ${next.parentKey}`,
       );
     return;
   }
@@ -433,10 +446,9 @@ function visitQueueEntry(next: ResolutionQueueEntry, visit: QueueVisit): void {
   visit.onEntry(key, entry);
   // Workspace members reached through the graph are covered by closureDirs.
   if (entry.id.includes("@workspace:")) return;
-  const parentName = packageNameOfId(entry.id);
   for (const { field, required } of PACKAGE_DEP_FIELDS) {
     for (const name of Object.keys(depMap(entry.meta, field))) {
-      visit.queue.push({ name, parentName, required });
+      visit.queue.push({ name, parentKey: key, required });
     }
   }
 }

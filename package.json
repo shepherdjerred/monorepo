@@ -218,17 +218,17 @@
     "deepmerge-ts": "8.0.2",
     "esbuild": "0.28.2",
     "engine.io": "6.6.11",
-    "fast-uri": "4.2.1",
+    "fast-uri": "4.2.3",
     "fast-xml-builder": "1.3.1",
     "brace-expansion": "5.0.12",
-    "ip-address": "10.7.3",
+    "ip-address": "10.7.6",
     "js-cookie": "3.0.8",
     "lodash-es": "4.18.1",
-    "mysql2": "3.22.0",
+    "mysql2": "3.24.4",
     "nanoid": "6.0.2",
     "pdfjs-dist": "6.4.299",
     "postcss": "8.5.29",
-    "sanitize-html": "2.18.0",
+    "sanitize-html": "2.18.2",
     "shell-quote": "1.12.0",
     "satteri": "0.10.5",
     "sherpa-onnx-darwin-arm64": "1.13.8",
@@ -239,7 +239,8 @@
     "sherpa-onnx-win-x64": "1.13.8",
     "socket.io-parser": "4.2.7",
     "tmp": "0.2.7",
-    "typescript-eslint": "8.71.1"
+    "typescript-eslint": "8.71.1",
+    "effect": "3.22.1"
   },
   "trustedDependencies": [
     "@lng2004/node-datachannel",
@@ -253,19 +254,18 @@
   ],
   "patchedDependencies": {
     "@react-native/metro-babel-transformer@0.87.1": "patches/@react-native%2Fmetro-babel-transformer@0.87.1.patch",
-    "@astrojs/starlight@0.42.2": "patches/@astrojs%2Fstarlight@0.42.2.patch",
     "markdown-it@10.0.0": "patches/markdown-it@10.0.0.patch",
-    "markdown-it@14.3.0": "patches/markdown-it@14.3.0.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",
     "react-native-worklets@0.13.0": "patches/react-native-worklets@0.13.0.patch",
-    "@astrojs/internal-helpers@0.11.0": "patches/@astrojs%2Finternal-helpers@0.11.0.patch",
     "@lng2004/node-datachannel@0.32.3-20260815.5": "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.5.patch",
     "@react-native-menu/menu@2.0.0": "patches/@react-native-menu%2Fmenu@2.0.0.patch",
     "@spectrum-ts/imessage@12.10.1": "patches/@spectrum-ts%2Fimessage@12.10.1.patch",
     "@spectrum-ts/core@12.10.1": "patches/@spectrum-ts%2Fcore@12.10.1.patch",
     "@astrojs/internal-helpers@0.12.0": "patches/@astrojs%2Finternal-helpers@0.12.0.patch",
     "mineflayer@4.39.0": "patches/mineflayer@4.39.0.patch",
-    "discord.js-selfbot-v13@3.7.1": "patches/discord.js-selfbot-v13@3.7.1.patch"
+    "discord.js-selfbot-v13@3.7.1": "patches/discord.js-selfbot-v13@3.7.1.patch",
+    "@astrojs/internal-helpers@0.13.2": "patches/@astrojs%2Finternal-helpers@0.13.2.patch",
+    "markdown-it@14.3.3": "patches/markdown-it@14.3.3.patch"
   },
   "packageManager": "bun@1.4.5"
 }
