@@ -140,6 +140,29 @@ export interface AlertmanagerSpec {
   readonly affinity?: AlertmanagerSpecAffinity;
 
   /**
+   * alertmanagerConfigFileSystemMode defines how the operator handles
+   * AlertmanagerConfig resources which have references to the Alertmanager
+   * container's filesystem (as opposed to secret key references). Users
+   * controlling the receiver's service may create an AlertmanagerConfig
+   * resource with a reference to a container's file (for instance using
+   * `botTokenFile` for the Telegram receiver) and exfiltrate sensitive
+   * content from files located in the Alertmanager container.
+   *
+   * Supported values are:
+   * - "DenyAll" denies any AlertmanagerConfig resource referencing files from the container's filesystem, non-compliant resources are rejected.
+   * - "FromAlertmanagerConfigMatcherStrategy" uses the `alertmanagerConfigNamespaceSelector` field to make a decision
+   * - When `alertmanagerConfigNamespaceSelector` is "None", it is equivalent to "AllowAll"
+   * - When `alertmanagerConfigNamespaceSelector` is "OnNamespaceExceptForAlertmanagerNamespace", it is equivalent to "AllowAll" for the AlertmanagerConfig resources located in the Alertmanager's namespace and "DenyAll" for all other resources.
+   * - When `alertmanagerConfigNamespaceSelector` is "OnNamespace", it is equivalent to "AllowAll" for the main AlertmanagerConfig resource (defined in `.spec.alertmanagerConfig.name`) and "DenyAll" for all other resources.
+   * - "AllowAll" allows any AlertmanagerConfig resource to reference files from the container's filesystem (use with caution).
+   *
+   * By default, the operator uses the "FromAlertmanagerConfigMatcherStrategy" mode.
+   *
+   * @schema AlertmanagerSpec#alertmanagerConfigFileSystemMode
+   */
+  readonly alertmanagerConfigFileSystemMode?: AlertmanagerSpecAlertmanagerConfigFileSystemMode;
+
+  /**
    * alertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects
    * process incoming alerts.
    *
@@ -746,6 +769,7 @@ export function toJson_AlertmanagerSpec(
     ),
     additionalPeers: obj.additionalPeers?.map((y) => y),
     affinity: toJson_AlertmanagerSpecAffinity(obj.affinity),
+    alertmanagerConfigFileSystemMode: obj.alertmanagerConfigFileSystemMode,
     alertmanagerConfigMatcherStrategy:
       toJson_AlertmanagerSpecAlertmanagerConfigMatcherStrategy(
         obj.alertmanagerConfigMatcherStrategy,
@@ -947,6 +971,36 @@ export function toJson_AlertmanagerSpecAffinity(
   );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * alertmanagerConfigFileSystemMode defines how the operator handles
+ * AlertmanagerConfig resources which have references to the Alertmanager
+ * container's filesystem (as opposed to secret key references). Users
+ * controlling the receiver's service may create an AlertmanagerConfig
+ * resource with a reference to a container's file (for instance using
+ * `botTokenFile` for the Telegram receiver) and exfiltrate sensitive
+ * content from files located in the Alertmanager container.
+ *
+ * Supported values are:
+ * - "DenyAll" denies any AlertmanagerConfig resource referencing files from the container's filesystem, non-compliant resources are rejected.
+ * - "FromAlertmanagerConfigMatcherStrategy" uses the `alertmanagerConfigNamespaceSelector` field to make a decision
+ * - When `alertmanagerConfigNamespaceSelector` is "None", it is equivalent to "AllowAll"
+ * - When `alertmanagerConfigNamespaceSelector` is "OnNamespaceExceptForAlertmanagerNamespace", it is equivalent to "AllowAll" for the AlertmanagerConfig resources located in the Alertmanager's namespace and "DenyAll" for all other resources.
+ * - When `alertmanagerConfigNamespaceSelector` is "OnNamespace", it is equivalent to "AllowAll" for the main AlertmanagerConfig resource (defined in `.spec.alertmanagerConfig.name`) and "DenyAll" for all other resources.
+ * - "AllowAll" allows any AlertmanagerConfig resource to reference files from the container's filesystem (use with caution).
+ *
+ * By default, the operator uses the "FromAlertmanagerConfigMatcherStrategy" mode.
+ *
+ * @schema AlertmanagerSpecAlertmanagerConfigFileSystemMode
+ */
+export enum AlertmanagerSpecAlertmanagerConfigFileSystemMode {
+  /** AllowAll */
+  ALLOW_ALL = "AllowAll",
+  /** FromAlertmanagerConfigMatcherStrategy */
+  FROM_ALERTMANAGER_CONFIG_MATCHER_STRATEGY = "FromAlertmanagerConfigMatcherStrategy",
+  /** DenyAll */
+  DENY_ALL = "DenyAll",
+}
 
 /**
  * alertmanagerConfigMatcherStrategy defines how AlertmanagerConfig objects
@@ -4207,7 +4261,7 @@ export interface AlertmanagerSpecClusterTlsServer {
    *
    * @schema AlertmanagerSpecClusterTlsServer#clientAuthType
    */
-  readonly clientAuthType?: string;
+  readonly clientAuthType?: AlertmanagerSpecClusterTlsServerClientAuthType;
 
   /**
    * clientCAFile defines the path to the CA certificate file for client certificate authentication to
@@ -9679,7 +9733,7 @@ export interface AlertmanagerSpecWebTlsConfig {
    *
    * @schema AlertmanagerSpecWebTlsConfig#clientAuthType
    */
-  readonly clientAuthType?: string;
+  readonly clientAuthType?: AlertmanagerSpecWebTlsConfigClientAuthType;
 
   /**
    * clientCAFile defines the path to the CA certificate file for client certificate authentication to
@@ -10834,6 +10888,24 @@ export interface AlertmanagerSpecAlertmanagerConfigurationGlobalTelegram {
    * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalTelegram#apiURL
    */
   readonly apiUrl?: string;
+
+  /**
+   * botToken represents the bot token configuration for Telegram.
+   * It is mutually exclusive with `botTokenFile`.
+   * It requires Alertmanager >= v0.31.0.
+   *
+   * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalTelegram#botToken
+   */
+  readonly botToken?: AlertmanagerSpecAlertmanagerConfigurationGlobalTelegramBotToken;
+
+  /**
+   * botTokenFile defines the file to read the Telegram bot token from.
+   * It is mutually exclusive with `botToken`.
+   * It requires Alertmanager >= v0.31.0.
+   *
+   * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalTelegram#botTokenFile
+   */
+  readonly botTokenFile?: string;
 }
 
 /**
@@ -10848,6 +10920,11 @@ export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalTelegram(
   }
   const result = {
     apiURL: obj.apiUrl,
+    botToken:
+      toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalTelegramBotToken(
+        obj.botToken,
+      ),
+    botTokenFile: obj.botTokenFile,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -11335,6 +11412,27 @@ export function toJson_AlertmanagerSpecClusterTlsServerCert(
   );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * clientAuthType defines the server policy for client TLS authentication.
+ *
+ * For more detail on clientAuth options:
+ * https://golang.org/pkg/crypto/tls/#ClientAuthType
+ *
+ * @schema AlertmanagerSpecClusterTlsServerClientAuthType
+ */
+export enum AlertmanagerSpecClusterTlsServerClientAuthType {
+  /** NoClientCert */
+  NO_CLIENT_CERT = "NoClientCert",
+  /** RequestClientCert */
+  REQUEST_CLIENT_CERT = "RequestClientCert",
+  /** RequireAnyClientCert */
+  REQUIRE_ANY_CLIENT_CERT = "RequireAnyClientCert",
+  /** VerifyClientCertIfGiven */
+  VERIFY_CLIENT_CERT_IF_GIVEN = "VerifyClientCertIfGiven",
+  /** RequireAndVerifyClientCert */
+  REQUIRE_AND_VERIFY_CLIENT_CERT = "RequireAndVerifyClientCert",
+}
 
 /**
  * client_ca defines the Secret or ConfigMap containing the CA certificate for client certificate
@@ -15751,6 +15849,27 @@ export function toJson_AlertmanagerSpecWebTlsConfigCert(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
+ * clientAuthType defines the server policy for client TLS authentication.
+ *
+ * For more detail on clientAuth options:
+ * https://golang.org/pkg/crypto/tls/#ClientAuthType
+ *
+ * @schema AlertmanagerSpecWebTlsConfigClientAuthType
+ */
+export enum AlertmanagerSpecWebTlsConfigClientAuthType {
+  /** NoClientCert */
+  NO_CLIENT_CERT = "NoClientCert",
+  /** RequestClientCert */
+  REQUEST_CLIENT_CERT = "RequestClientCert",
+  /** RequireAnyClientCert */
+  REQUIRE_ANY_CLIENT_CERT = "RequireAnyClientCert",
+  /** VerifyClientCertIfGiven */
+  VERIFY_CLIENT_CERT_IF_GIVEN = "VerifyClientCertIfGiven",
+  /** RequireAndVerifyClientCert */
+  REQUIRE_AND_VERIFY_CLIENT_CERT = "RequireAndVerifyClientCert",
+}
+
+/**
  * client_ca defines the Secret or ConfigMap containing the CA certificate for client certificate
  * authentication to the server.
  *
@@ -17325,6 +17444,64 @@ export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalSmtpTlsCon
     maxVersion: obj.maxVersion,
     minVersion: obj.minVersion,
     serverName: obj.serverName,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * botToken represents the bot token configuration for Telegram.
+ * It is mutually exclusive with `botTokenFile`.
+ * It requires Alertmanager >= v0.31.0.
+ *
+ * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalTelegramBotToken
+ */
+export interface AlertmanagerSpecAlertmanagerConfigurationGlobalTelegramBotToken {
+  /**
+   * The key of the secret to select from.  Must be a valid secret key.
+   *
+   * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalTelegramBotToken#key
+   */
+  readonly key: string;
+
+  /**
+   * Name of the referent.
+   * This field is effectively required, but due to backwards compatibility is
+   * allowed to be empty. Instances of this type with an empty value here are
+   * almost certainly wrong.
+   * More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+   *
+   * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalTelegramBotToken#name
+   */
+  readonly name?: string;
+
+  /**
+   * Specify whether the Secret or its key must be defined
+   *
+   * @schema AlertmanagerSpecAlertmanagerConfigurationGlobalTelegramBotToken#optional
+   */
+  readonly optional?: boolean;
+}
+
+/**
+ * Converts an object of type 'AlertmanagerSpecAlertmanagerConfigurationGlobalTelegramBotToken' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_AlertmanagerSpecAlertmanagerConfigurationGlobalTelegramBotToken(
+  obj:
+    AlertmanagerSpecAlertmanagerConfigurationGlobalTelegramBotToken | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    name: obj.name,
+    optional: obj.optional,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -26550,6 +26727,17 @@ export interface AlertmanagerConfigSpecRoute {
   readonly groupWait?: string;
 
   /**
+   * labels defines the list of labels that will be attached to the alerts matching this route.
+   * They can be inherited by child routes and can be overridden by child routes.
+   * The values support template expressions.
+   *
+   * It requires Alertmanager >= 0.34.0.
+   *
+   * @schema AlertmanagerConfigSpecRoute#labels
+   */
+  readonly labels?: AlertmanagerConfigSpecRouteLabels[];
+
+  /**
    * matchers defines the list of matchers that the alert's labels should match. For the first
    * level route, the operator removes any existing equality and regexp
    * matcher on the `namespace` label and adds a `namespace: <object
@@ -26607,6 +26795,7 @@ export function toJson_AlertmanagerConfigSpecRoute(
     groupBy: obj.groupBy?.map((y) => y),
     groupInterval: obj.groupInterval,
     groupWait: obj.groupWait,
+    labels: obj.labels?.map((y) => toJson_AlertmanagerConfigSpecRouteLabels(y)),
     matchers: obj.matchers?.map((y) =>
       toJson_AlertmanagerConfigSpecRouteMatchers(y),
     ),
@@ -28962,6 +29151,51 @@ export function toJson_AlertmanagerConfigSpecReceiversWechatConfigs(
     toParty: obj.toParty,
     toTag: obj.toTag,
     toUser: obj.toUser,
+  };
+  // filter undefined values
+  return Object.entries(result).reduce(
+    (r, i) => (i[1] === undefined ? r : { ...r, [i[0]]: i[1] }),
+    {},
+  );
+}
+/* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * KeyValue defines a (key, value) tuple.
+ *
+ * @schema AlertmanagerConfigSpecRouteLabels
+ */
+export interface AlertmanagerConfigSpecRouteLabels {
+  /**
+   * key defines the key of the tuple.
+   * This is the identifier or name part of the key-value pair.
+   *
+   * @schema AlertmanagerConfigSpecRouteLabels#key
+   */
+  readonly key: string;
+
+  /**
+   * value defines the value of the tuple.
+   * This is the data or content associated with the key.
+   *
+   * @schema AlertmanagerConfigSpecRouteLabels#value
+   */
+  readonly value: string;
+}
+
+/**
+ * Converts an object of type 'AlertmanagerConfigSpecRouteLabels' to JSON representation.
+ */
+/* eslint-disable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+export function toJson_AlertmanagerConfigSpecRouteLabels(
+  obj: AlertmanagerConfigSpecRouteLabels | undefined,
+): Record<string, any> | undefined {
+  if (obj === undefined) {
+    return undefined;
+  }
+  const result = {
+    key: obj.key,
+    value: obj.value,
   };
   // filter undefined values
   return Object.entries(result).reduce(
@@ -60418,6 +60652,17 @@ export interface PodMonitorSpec {
   readonly convertClassicHistogramsToNhcb?: boolean;
 
   /**
+   * extraScrapeMetrics defines whether to store additional time series for each scrape:
+   * `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+   * These metrics help monitor how close targets are to their configured limits.
+   *
+   * It requires Prometheus >= v3.10.0.
+   *
+   * @schema PodMonitorSpec#extraScrapeMetrics
+   */
+  readonly extraScrapeMetrics?: boolean;
+
+  /**
    * fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
    *
    * It requires Prometheus >= v3.0.0.
@@ -60607,6 +60852,7 @@ export function toJson_PodMonitorSpec(
     attachMetadata: toJson_PodMonitorSpecAttachMetadata(obj.attachMetadata),
     bodySizeLimit: obj.bodySizeLimit,
     convertClassicHistogramsToNHCB: obj.convertClassicHistogramsToNhcb,
+    extraScrapeMetrics: obj.extraScrapeMetrics,
     fallbackScrapeProtocol: obj.fallbackScrapeProtocol,
     jobLabel: obj.jobLabel,
     keepDroppedTargets: obj.keepDroppedTargets,
@@ -63542,6 +63788,17 @@ export interface ProbeSpec {
   readonly enableHttp2?: boolean;
 
   /**
+   * extraScrapeMetrics defines whether to store additional time series for each scrape:
+   * `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+   * These metrics help monitor how close targets are to their configured limits.
+   *
+   * It requires Prometheus >= v3.10.0.
+   *
+   * @schema ProbeSpec#extraScrapeMetrics
+   */
+  readonly extraScrapeMetrics?: boolean;
+
+  /**
    * fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
    *
    * It requires Prometheus >= v3.0.0.
@@ -63760,6 +64017,7 @@ export function toJson_ProbeSpec(
     bearerTokenSecret: toJson_ProbeSpecBearerTokenSecret(obj.bearerTokenSecret),
     convertClassicHistogramsToNHCB: obj.convertClassicHistogramsToNhcb,
     enableHttp2: obj.enableHttp2,
+    extraScrapeMetrics: obj.extraScrapeMetrics,
     fallbackScrapeProtocol: obj.fallbackScrapeProtocol,
     followRedirects: obj.followRedirects,
     interval: obj.interval,
@@ -67133,6 +67391,17 @@ export interface PrometheusSpec {
   readonly externalUrl?: string;
 
   /**
+   * extraScrapeMetrics defines whether to store additional time series for each scrape:
+   * `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+   * These metrics help monitor how close targets are to their configured limits.
+   *
+   * It requires Prometheus >= v2.32.0.
+   *
+   * @schema PrometheusSpec#extraScrapeMetrics
+   */
+  readonly extraScrapeMetrics?: boolean;
+
+  /**
    * hostAliases defines the optional list of hosts and IPs that will be injected into the Pod's
    * hosts file if specified.
    *
@@ -68148,6 +68417,7 @@ export function toJson_PrometheusSpec(
             {},
           ),
     externalUrl: obj.externalUrl,
+    extraScrapeMetrics: obj.extraScrapeMetrics,
     hostAliases: obj.hostAliases?.map((y) =>
       toJson_PrometheusSpecHostAliases(y),
     ),
@@ -82901,7 +83171,7 @@ export interface PrometheusSpecWebTlsConfig {
    *
    * @schema PrometheusSpecWebTlsConfig#clientAuthType
    */
-  readonly clientAuthType?: string;
+  readonly clientAuthType?: PrometheusSpecWebTlsConfigClientAuthType;
 
   /**
    * clientCAFile defines the path to the CA certificate file for client certificate authentication to
@@ -90996,6 +91266,27 @@ export function toJson_PrometheusSpecWebTlsConfigCert(
   );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * clientAuthType defines the server policy for client TLS authentication.
+ *
+ * For more detail on clientAuth options:
+ * https://golang.org/pkg/crypto/tls/#ClientAuthType
+ *
+ * @schema PrometheusSpecWebTlsConfigClientAuthType
+ */
+export enum PrometheusSpecWebTlsConfigClientAuthType {
+  /** NoClientCert */
+  NO_CLIENT_CERT = "NoClientCert",
+  /** RequestClientCert */
+  REQUEST_CLIENT_CERT = "RequestClientCert",
+  /** RequireAnyClientCert */
+  REQUIRE_ANY_CLIENT_CERT = "RequireAnyClientCert",
+  /** VerifyClientCertIfGiven */
+  VERIFY_CLIENT_CERT_IF_GIVEN = "VerifyClientCertIfGiven",
+  /** RequireAndVerifyClientCert */
+  REQUIRE_AND_VERIFY_CLIENT_CERT = "RequireAndVerifyClientCert",
+}
 
 /**
  * client_ca defines the Secret or ConfigMap containing the CA certificate for client certificate
@@ -101621,6 +101912,17 @@ export interface PrometheusAgentSpec {
   readonly externalUrl?: string;
 
   /**
+   * extraScrapeMetrics defines whether to store additional time series for each scrape:
+   * `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+   * These metrics help monitor how close targets are to their configured limits.
+   *
+   * It requires Prometheus >= v2.32.0.
+   *
+   * @schema PrometheusAgentSpec#extraScrapeMetrics
+   */
+  readonly extraScrapeMetrics?: boolean;
+
+  /**
    * hostAliases defines the optional list of hosts and IPs that will be injected into the Pod's
    * hosts file if specified.
    *
@@ -102500,6 +102802,7 @@ export function toJson_PrometheusAgentSpec(
             {},
           ),
     externalUrl: obj.externalUrl,
+    extraScrapeMetrics: obj.extraScrapeMetrics,
     hostAliases: obj.hostAliases?.map((y) =>
       toJson_PrometheusAgentSpecHostAliases(y),
     ),
@@ -114846,7 +115149,7 @@ export interface PrometheusAgentSpecWebTlsConfig {
    *
    * @schema PrometheusAgentSpecWebTlsConfig#clientAuthType
    */
-  readonly clientAuthType?: string;
+  readonly clientAuthType?: PrometheusAgentSpecWebTlsConfigClientAuthType;
 
   /**
    * clientCAFile defines the path to the CA certificate file for client certificate authentication to
@@ -121516,6 +121819,27 @@ export function toJson_PrometheusAgentSpecWebTlsConfigCert(
   );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * clientAuthType defines the server policy for client TLS authentication.
+ *
+ * For more detail on clientAuth options:
+ * https://golang.org/pkg/crypto/tls/#ClientAuthType
+ *
+ * @schema PrometheusAgentSpecWebTlsConfigClientAuthType
+ */
+export enum PrometheusAgentSpecWebTlsConfigClientAuthType {
+  /** NoClientCert */
+  NO_CLIENT_CERT = "NoClientCert",
+  /** RequestClientCert */
+  REQUEST_CLIENT_CERT = "RequestClientCert",
+  /** RequireAnyClientCert */
+  REQUIRE_ANY_CLIENT_CERT = "RequireAnyClientCert",
+  /** VerifyClientCertIfGiven */
+  VERIFY_CLIENT_CERT_IF_GIVEN = "VerifyClientCertIfGiven",
+  /** RequireAndVerifyClientCert */
+  REQUIRE_AND_VERIFY_CLIENT_CERT = "RequireAndVerifyClientCert",
+}
 
 /**
  * client_ca defines the Secret or ConfigMap containing the CA certificate for client certificate
@@ -130580,6 +130904,17 @@ export interface ScrapeConfigSpec {
   readonly eurekaSdConfigs?: ScrapeConfigSpecEurekaSdConfigs[];
 
   /**
+   * extraScrapeMetrics defines whether to store additional time series for each scrape:
+   * `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+   * These metrics help monitor how close targets are to their configured limits.
+   *
+   * It requires Prometheus >= v3.10.0.
+   *
+   * @schema ScrapeConfigSpec#extraScrapeMetrics
+   */
+  readonly extraScrapeMetrics?: boolean;
+
+  /**
    * fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
    *
    * It requires Prometheus >= v3.0.0.
@@ -130999,6 +131334,7 @@ export function toJson_ScrapeConfigSpec(
     eurekaSDConfigs: obj.eurekaSdConfigs?.map((y) =>
       toJson_ScrapeConfigSpecEurekaSdConfigs(y),
     ),
+    extraScrapeMetrics: obj.extraScrapeMetrics,
     fallbackScrapeProtocol: obj.fallbackScrapeProtocol,
     fileSDConfigs: obj.fileSdConfigs?.map((y) =>
       toJson_ScrapeConfigSpecFileSdConfigs(y),
@@ -165130,6 +165466,14 @@ Among other things, it allows to specify:
 * Target and metric relabeling.
 
 `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
+
+Service targets that aren't backed by Pods (for instance manually managed
+Endpoints or EndpointSlices) can only be scraped when the endpoint selects
+the service port with `port` instead of `targetPort` and `filterRunning` is
+set to `false`. Manually created Pods have no such restriction.
+
+For targets that aren't backed by Pods, you can also consider using the
+`ScrapeConfig` CRD.
  *
  * @schema ServiceMonitor
  */
@@ -165191,6 +165535,14 @@ export class ServiceMonitor extends ApiObject {
  * * Target and metric relabeling.
  *
  * `Prometheus` and `PrometheusAgent` objects select `ServiceMonitor` objects using label and namespace selectors.
+ *
+ * Service targets that aren't backed by Pods (for instance manually managed
+ * Endpoints or EndpointSlices) can only be scraped when the endpoint selects
+ * the service port with `port` instead of `targetPort` and `filterRunning` is
+ * set to `false`. Manually created Pods have no such restriction.
+ *
+ * For targets that aren't backed by Pods, you can also consider using the
+ * `ScrapeConfig` CRD.
  *
  * @schema ServiceMonitor
  */
@@ -165274,6 +165626,17 @@ export interface ServiceMonitorSpec {
    * @schema ServiceMonitorSpec#endpoints
    */
   readonly endpoints: ServiceMonitorSpecEndpoints[];
+
+  /**
+   * extraScrapeMetrics defines whether to store additional time series for each scrape:
+   * `scrape_timeout_seconds`, `scrape_sample_limit` and `scrape_body_size_bytes`.
+   * These metrics help monitor how close targets are to their configured limits.
+   *
+   * It requires Prometheus >= v3.10.0.
+   *
+   * @schema ServiceMonitorSpec#extraScrapeMetrics
+   */
+  readonly extraScrapeMetrics?: boolean;
 
   /**
    * fallbackScrapeProtocol defines the protocol to use if a scrape returns blank, unparseable, or otherwise invalid Content-Type.
@@ -165478,6 +165841,7 @@ export function toJson_ServiceMonitorSpec(
     bodySizeLimit: obj.bodySizeLimit,
     convertClassicHistogramsToNHCB: obj.convertClassicHistogramsToNhcb,
     endpoints: obj.endpoints?.map((y) => toJson_ServiceMonitorSpecEndpoints(y)),
+    extraScrapeMetrics: obj.extraScrapeMetrics,
     fallbackScrapeProtocol: obj.fallbackScrapeProtocol,
     jobLabel: obj.jobLabel,
     keepDroppedTargets: obj.keepDroppedTargets,
@@ -165778,6 +166142,9 @@ export interface ServiceMonitorSpecEndpoints {
    * by the Service.
    * If a name, it matches against `.spec.containers[].ports[].name` of the Pods.
    * If a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods.
+   *
+   * Because it relies on Pod metadata, endpoints which aren't backed by Pods
+   * are never scraped when `targetPort` is used.
    *
    * @schema ServiceMonitorSpecEndpoints#targetPort
    */
@@ -166662,6 +167029,9 @@ export enum ServiceMonitorSpecEndpointsScheme {
  * by the Service.
  * If a name, it matches against `.spec.containers[].ports[].name` of the Pods.
  * If a number, it matches against `.spec.containers[].ports[].containerPort` of the Pods.
+ *
+ * Because it relies on Pod metadata, endpoints which aren't backed by Pods
+ * are never scraped when `targetPort` is used.
  *
  * @schema ServiceMonitorSpecEndpointsTargetPort
  */
@@ -179237,7 +179607,7 @@ export interface ThanosRulerSpecWebTlsConfig {
    *
    * @schema ThanosRulerSpecWebTlsConfig#clientAuthType
    */
-  readonly clientAuthType?: string;
+  readonly clientAuthType?: ThanosRulerSpecWebTlsConfigClientAuthType;
 
   /**
    * clientCAFile defines the path to the CA certificate file for client certificate authentication to
@@ -185230,6 +185600,27 @@ export function toJson_ThanosRulerSpecWebTlsConfigCert(
   );
 }
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
+
+/**
+ * clientAuthType defines the server policy for client TLS authentication.
+ *
+ * For more detail on clientAuth options:
+ * https://golang.org/pkg/crypto/tls/#ClientAuthType
+ *
+ * @schema ThanosRulerSpecWebTlsConfigClientAuthType
+ */
+export enum ThanosRulerSpecWebTlsConfigClientAuthType {
+  /** NoClientCert */
+  NO_CLIENT_CERT = "NoClientCert",
+  /** RequestClientCert */
+  REQUEST_CLIENT_CERT = "RequestClientCert",
+  /** RequireAnyClientCert */
+  REQUIRE_ANY_CLIENT_CERT = "RequireAnyClientCert",
+  /** VerifyClientCertIfGiven */
+  VERIFY_CLIENT_CERT_IF_GIVEN = "VerifyClientCertIfGiven",
+  /** RequireAndVerifyClientCert */
+  REQUIRE_AND_VERIFY_CLIENT_CERT = "RequireAndVerifyClientCert",
+}
 
 /**
  * client_ca defines the Secret or ConfigMap containing the CA certificate for client certificate

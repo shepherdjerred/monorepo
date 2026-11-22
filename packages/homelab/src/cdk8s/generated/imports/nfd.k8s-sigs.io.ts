@@ -6,6 +6,7 @@ import { Construct } from "constructs";
 /**
  * NodeFeature resource holds the features discovered for one node in the
 cluster.
+NodeFeature is namespaced.
  *
  * @schema NodeFeature
  */
@@ -61,6 +62,7 @@ export class NodeFeature extends ApiObject {
 /**
  * NodeFeature resource holds the features discovered for one node in the
  * cluster.
+ * NodeFeature is namespaced.
  *
  * @schema NodeFeature
  */
@@ -394,7 +396,9 @@ export function toJson_NodeFeatureSpecFeaturesInstancesElements(
 /* eslint-enable max-len, @stylistic/max-len, quote-props, @stylistic/quote-props */
 
 /**
- * NodeFeatureGroup resource holds Node pools by featureGroup
+ * NodeFeatureGroup resource holds Node pools by featureGroup.
+NodeFeatureGroup is namespaced (short name `nfg`) and has a status subresource.
+Only objects in the namespace of nfd-master are processed.
  *
  * @schema NodeFeatureGroup
  */
@@ -452,7 +456,9 @@ export class NodeFeatureGroup extends ApiObject {
 }
 
 /**
- * NodeFeatureGroup resource holds Node pools by featureGroup
+ * NodeFeatureGroup resource holds Node pools by featureGroup.
+ * NodeFeatureGroup is namespaced (short name `nfg`) and has a status subresource.
+ * Only objects in the namespace of nfd-master are processed.
  *
  * @schema NodeFeatureGroup
  */
@@ -1175,6 +1181,7 @@ export enum NodeFeatureGroupSpecFeatureGroupRulesMatchAnyMatchFeaturesMatchNameO
 /**
  * NodeFeatureRule resource specifies a configuration for feature-based
 customization of node objects, such as node labeling.
+NodeFeatureRule is cluster-scoped (short name `nfr`).
  *
  * @schema NodeFeatureRule
  */
@@ -1234,6 +1241,7 @@ export class NodeFeatureRule extends ApiObject {
 /**
  * NodeFeatureRule resource specifies a configuration for feature-based
  * customization of node objects, such as node labeling.
+ * NodeFeatureRule is cluster-scoped (short name `nfr`).
  *
  * @schema NodeFeatureRule
  */
