@@ -31,7 +31,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   flags: "enforced",
   flipt: "open",
   freshrss: "enforced",
-  gickup: "open",
+  gickup: "enforced",
   "glitter-boys-launcher": "enforced",
   golink: "open",
   "gradle-build-cache": "open",
