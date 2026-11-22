@@ -48,7 +48,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   redlib: "enforced",
   relay: "enforced",
   "s3-static-sites": "open",
-  "scout-beta": "open",
+  "scout-beta": "enforced",
   "scout-prod": "open",
   seaweedfs: "open",
   "starlight-karma-bot-beta": "enforced",
