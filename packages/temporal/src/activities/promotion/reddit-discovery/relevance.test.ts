@@ -129,6 +129,8 @@ describe("Reddit invite drafting", () => {
       expect(call.system).toContain("untrusted external data");
       expect(call.system).toContain("do not rescore");
       expect(call.system).toContain("no execution tools");
+      expect(call.system).toContain("Jerred's voice");
+      expect(call.system).toContain("instead of em dashes");
       expect(call.prompt).toContain(input.serverFacts);
       expect(call.prompt).toContain(input.communityRules);
       return { draft: invite, usage };
@@ -150,14 +152,25 @@ describe("Reddit draft evidence contract", () => {
     expect(guardRedditInviteDraft(invite, input)).toEqual(invite);
   });
 
-  it("accepts a plain paragraph with the bare invite on its own line", () => {
+  it("accepts casual copy with an ordinary hyphen and the invite on its own line", () => {
     const draft = {
       ...invite,
       reply:
-        "hi! our server supports Java and Bedrock with towns.\nhttps://join.ts-mc.net/",
+        "hi! our server supports Java and Bedrock cross-play. feel free to try us out :)\nhttps://join.ts-mc.net/",
     };
     expect(guardRedditInviteDraft(draft, input)).toEqual(draft);
   });
+
+  it.each(["—", " – ", " -- "])(
+    "rejects a dash used as a sentence break (%s)",
+    (dash) => {
+      const draft = {
+        ...invite,
+        reply: `hi! our server supports Java and Bedrock${dash}feel free to try us out :)\nhttps://join.ts-mc.net/`,
+      };
+      expect(guardRedditInviteDraft(draft, input).reply).toBeNull();
+    },
+  );
 
   it.each([
     { reply: "our server: https://other.example/" },
