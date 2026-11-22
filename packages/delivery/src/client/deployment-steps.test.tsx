@@ -682,6 +682,20 @@ describe("what is true of a failed deployment beyond its status", () => {
     expect(html).toContain("r345 is still accepted in");
     expect(html).not.toContain("Fix the cause");
     expect(html).not.toContain("may still be active");
+    // A deployment that never requested its sync applied nothing, whatever
+    // phase the prior operation it read back ended in.
+    const unsynced = settledDetail(
+      [stage("step-sync", "running", "step-sync: running")],
+      [
+        "Independent Application readback (no sync requested): media, resourceVersion 7, spec.source matches history 4, prior request 1d2e, operation 9, phase Succeeded, finished 2026-11-22T03:27:16Z",
+      ],
+    );
+    expect(
+      deploymentVerdict({
+        ...applied,
+        recoveryIntents: unsynced.recoveryIntents,
+      }),
+    ).toBeNull();
   });
 
   it("calls it recovered once the environment accepts or was seen running that release", () => {

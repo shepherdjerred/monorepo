@@ -73,6 +73,18 @@ describe("how recovery read the external work back", () => {
     expect(readBack([])).toBeNull();
   });
 
+  it("never takes a prior operation's phase as this deployment's work", () => {
+    // The write-body failure `unsynced.ts` settles: no sync was requested,
+    // and the Application still matches the prior release's Succeeded sync.
+    const summary =
+      "Independent Application readback (no sync requested): flags, resourceVersion 7, spec.source matches history 4, prior request 1d2e, operation 9, phase Succeeded, finished 2026-11-22T03:27:16Z. Settled automatically";
+    expect(readBack([summary])).toBeNull();
+    const reading = recoveryReading([intent("succeeded", [summary])]);
+    expect(reading?.readbacks).toEqual([
+      { text: summary, application: "flags", request: null, phase: null },
+    ]);
+  });
+
   it("reads no phase out of a machine receipt", () => {
     const reading = recoveryReading([
       intent("succeeded", [JSON.stringify({ phase: "phase Succeeded" })]),

@@ -22,6 +22,8 @@ export type ReadableIntent = {
 const READBACK_APPLICATION = /readback(?: \([^)]*\))?: (?<app>[^\s,]+),/u;
 const READBACK_REQUEST = /\brequest (?<request>[^\s,]+)/u;
 const READBACK_PHASE = /\bphase (?<phase>[A-Z][A-Za-z]*)\b/u;
+/** A readback of a deployment that never requested its sync. */
+const NO_SYNC = "readback (no sync requested)";
 
 /** Whether a summary is a JSON object: a machine receipt, not a readback in words. */
 function isReceipt(summary: string) {
@@ -39,9 +41,15 @@ function isReceipt(summary: string) {
 
 /** One readback a settled recovery intent recorded, with what it names. */
 function readback(text: string) {
+  const application = READBACK_APPLICATION.exec(text)?.groups?.["app"] ?? null;
+  // A deployment that ended before requesting a sync changed nothing: the
+  // request and phase its readback names are a prior operation's, so they
+  // say nothing of this deployment's work (`argo-recovery/unsynced.ts`).
+  if (text.includes(NO_SYNC))
+    return { text, application, request: null, phase: null };
   return {
     text,
-    application: READBACK_APPLICATION.exec(text)?.groups?.["app"] ?? null,
+    application,
     request: READBACK_REQUEST.exec(text)?.groups?.["request"] ?? null,
     phase: READBACK_PHASE.exec(text)?.groups?.["phase"] ?? null,
   };
