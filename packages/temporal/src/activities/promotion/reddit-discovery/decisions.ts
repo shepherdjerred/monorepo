@@ -66,10 +66,21 @@ export const REDDIT_DECISION_QUESTIONS = [
       "The approved server facts clearly satisfy the author's MAIN request. Matching only secondary preferences is insufficient. Differences may be caveated only if minor or explicitly flexible. Treat a strict pure-vanilla/no-plugin request as a mismatch when facts include custom gameplay. Unknown facts cannot support a match. Estimate the probability of a strong main-request match, not the probability that some feature overlaps.",
   },
   {
-    type: "predicate",
-    name: "community_reply_permitted",
+    type: "choice",
+    name: "community_reply_restriction",
     instructions:
-      "The supplied current community rules permit a transparent promotional reply by a server owner to this kind of server-seeking post, including automation. An explicit prohibition on automated comments, bots, owner advertising, or this type of reply makes this false. Missing or ambiguous permission is insufficient; do not interpret post-submission permission as comment permission.",
+      "Check the supplied rules for a concrete restriction that applies to this transparent automated invite from a server owner. Review rules about bots, automated comments, promotional replies, owner advertising and where invitations may be posted. Silence or ambiguous permission alone does not establish a restriction.",
+    choices: [
+      {
+        value: "restricted",
+        description: "An applicable rule prohibits or limits this reply.",
+      },
+      {
+        value: "no_identified_restriction",
+        description:
+          "The supplied rules show no concrete restriction on this reply.",
+      },
+    ],
   },
   {
     type: "choice",
@@ -208,21 +219,23 @@ function namedPredicate(
   return answer?.type === "predicate" ? answer.probability : 0;
 }
 
-function allowedChoice(
-  answers: readonly DecisionAnswer[],
-  name: string,
-  expected: string,
-): boolean {
+function validatedChoice(answers: readonly DecisionAnswer[], name: string) {
   const answer = answers.find((item) => item.name === name);
-  if (answer?.type !== "choice") return false;
+  if (answer?.type !== "choice") return;
   const question = REDDIT_DECISION_QUESTIONS.find((item) => item.name === name);
-  if (question?.type !== "choice") return false;
+  if (question?.type !== "choice") return;
   const expectedValues: readonly string[] = question.choices.map(
     (choice) => choice.value,
   );
   const values = answer.probabilities.map((item) => item.value);
-  return (
-    answer.choice === expected &&
+  const selected = answer.probabilities.find(
+    (item) => item.value === answer.choice,
+  );
+  const valid =
+    selected !== undefined &&
+    answer.probabilities.every(
+      (item) => item.probability <= selected.probability,
+    ) &&
     values.length === expectedValues.length &&
     new Set(values).size === values.length &&
     Math.abs(
@@ -230,7 +243,18 @@ function allowedChoice(
     ) < 0.000001 &&
     values.every(
       (value) => typeof value === "string" && expectedValues.includes(value),
-    ) &&
+    );
+  return valid ? answer : undefined;
+}
+
+function allowedChoice(
+  answers: readonly DecisionAnswer[],
+  name: string,
+  expected: string,
+): boolean {
+  const answer = validatedChoice(answers, name);
+  return (
+    answer?.choice === expected &&
     answer.probabilities.some(
       (item) =>
         item.value === expected && item.probability > REDDIT_MATCH_THRESHOLD,
@@ -263,9 +287,11 @@ export function qualifyRedditDecision(
     namedPredicate(answers, "explicit_server_seeker") >
       REDDIT_MATCH_THRESHOLD &&
     allowedChoice(answers, "post_intent", "find_server");
-  const permitted =
-    namedPredicate(answers, "community_reply_permitted") >
-    REDDIT_MATCH_THRESHOLD;
+  const ruleAssessment = validatedChoice(
+    answers,
+    "community_reply_restriction",
+  );
+  const permitted = ruleAssessment?.choice === "no_identified_restriction";
   const requirements = allowedChoice(answers, "hard_constraints", "satisfied");
   const score = namedPredicate(answers, "strong_main_match");
   const match =
@@ -281,8 +307,8 @@ export function qualifyRedditDecision(
     communityAllowsReply: permitted,
     hardConstraintsSatisfied: requirements,
     reason: match
-      ? "Decisions confirms an explicit server seeker, strong main-request fit, supported hard requirements and community permission."
-      : `Decisions declined: ${[!complete && "incomplete, duplicate or refused answers", !seeker && "server-seeking intent unconfirmed", !permitted && "community permission unconfirmed", !requirements && "unmet or unknown hard requirements", score <= REDDIT_MATCH_THRESHOLD && "main-request match is not strictly above 0.80"].filter(Boolean).join("; ")}.`,
+      ? "Decisions confirms an explicit server seeker, strong main-request fit and supported hard requirements. No applicable community restriction was identified."
+      : `Decisions declined: ${[!complete && "incomplete, duplicate or refused answers", !seeker && "server-seeking intent unconfirmed", !permitted && (ruleAssessment?.choice === "restricted" ? "community rules restrict this reply" : "invalid community rules assessment"), !requirements && "unmet or unknown hard requirements", score <= REDDIT_MATCH_THRESHOLD && "main-request match is not strictly above 0.80"].filter(Boolean).join("; ")}.`,
   };
   return { qualification, usage, answers };
 }

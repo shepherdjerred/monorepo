@@ -57,13 +57,26 @@ function choice(
     })),
   };
 }
+
+function ruleChoice(
+  selected: "restricted" | "no_identified_restriction",
+  confidence = 0.99,
+) {
+  return choice(
+    "community_reply_restriction",
+    ["restricted", "no_identified_restriction"],
+    selected,
+    confidence,
+  );
+}
+
 function response() {
   return {
     model: DECISIONS_MODEL,
     answers: [
       predicate("explicit_server_seeker"),
       predicate("strong_main_match"),
-      predicate("community_reply_permitted"),
+      ruleChoice("no_identified_restriction"),
       choice(
         "post_intent",
         [
@@ -107,13 +120,13 @@ function parseRedditDecisionResponse(raw: unknown) {
 }
 
 describe("Reddit Decisions qualification", () => {
-  it("builds one classification request with independent main-fit, intent, hard-constraint and permission questions", () => {
+  it("builds one classification request with independent main-fit, intent, hard-constraint and community restriction questions", () => {
     const request = buildRedditDecisionRequest(input());
     expect(request.model).toBe("gpt-6-luna");
     expect(request.questions.map((question) => question.name)).toEqual([
       "explicit_server_seeker",
       "strong_main_match",
-      "community_reply_permitted",
+      "community_reply_restriction",
       "post_intent",
       "hard_constraints",
     ]);
@@ -190,18 +203,42 @@ describe("Reddit Decisions qualification", () => {
     );
   });
 
-  it.each(["explicit_server_seeker", "community_reply_permitted"])(
-    "does not let a high main score override %s",
-    (name) => {
-      const raw = response();
-      raw.answers = raw.answers.map((answer) =>
-        answer.name === name ? predicate(name, 0.8) : answer,
-      );
-      expect(parseRedditDecisionResponse(raw).qualification.decision).toBe(
-        "no-match",
-      );
-    },
-  );
+  it("still requires explicit server-seeker intent", () => {
+    const raw = response();
+    raw.answers[0] = predicate("explicit_server_seeker", 0.8);
+    expect(parseRedditDecisionResponse(raw).qualification.decision).toBe(
+      "no-match",
+    );
+  });
+
+  it("accepts an eligible request when no concrete rule restricts the reply", () => {
+    const raw = response();
+    raw.answers[2] = ruleChoice("no_identified_restriction", 0.51);
+    expect(parseRedditDecisionResponse(raw).qualification).toMatchObject({
+      decision: "match",
+      communityAllowsReply: true,
+    });
+  });
+
+  it("blocks an applicable restriction even for a high-fit request", () => {
+    const raw = response();
+    raw.answers[2] = ruleChoice("restricted", 0.51);
+    expect(parseRedditDecisionResponse(raw).qualification).toMatchObject({
+      decision: "no-match",
+      communityAllowsReply: false,
+      reason: expect.stringContaining("community rules restrict this reply"),
+    });
+  });
+
+  it("rejects a rules answer that contradicts its own distribution", () => {
+    const raw = response();
+    raw.answers[2] = ruleChoice("no_identified_restriction", 0.49);
+    expect(parseRedditDecisionResponse(raw).qualification).toMatchObject({
+      decision: "no-match",
+      communityAllowsReply: false,
+      reason: expect.stringContaining("invalid community rules assessment"),
+    });
+  });
 
   it.each(["unmet", "unknown"])(
     "disqualifies %s hard constraints even with perfect main fit",
