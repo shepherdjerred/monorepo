@@ -59,7 +59,7 @@
   ],
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
-    "jsdom": "^30.0.0",
+    "jsdom": "^31.0.1",
     "react": "19.3.1",
     "satori": "^0.47.0"
   },
