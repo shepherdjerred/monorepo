@@ -1,5 +1,6 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import { FeatureFlagModeSchema } from "@shepherdjerred/feature-flags/config/schema.ts";
 import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { z } from "zod";
 import { UpsertManualLinkInputSchema } from "#shared/contract.ts";
@@ -47,7 +48,7 @@ export const BootstrapSchema = z.object({
   ),
   FEATURE_FLAGS_MODE: z.preprocess(
     emptyStringToUndefined,
-    z.enum(["flipt", "static", "disabled"]).optional(),
+    FeatureFlagModeSchema.optional(),
   ),
   BUGSINK_DSN: z.preprocess(emptyStringToUndefined, z.url().optional()),
   VERSION: z.preprocess(emptyStringToUndefined, z.string().min(1).optional()),
