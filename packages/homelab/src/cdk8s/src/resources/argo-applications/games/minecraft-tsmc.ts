@@ -26,6 +26,22 @@ import { FLAGS_EVALUATION_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/fir
 import { helmApplication } from "@shepherdjerred/homelab/cdk8s/src/misc/argo/application.ts";
 
 const NAMESPACE = "minecraft-tsmc";
+/**
+ * An itzg chart bump rewrites the `chart` and `app.kubernetes.io/version`
+ * labels inside the StatefulSet's `volumeClaimTemplates`, which Kubernetes
+ * treats as immutable. The Application ignores that path with
+ * `RespectIgnoreDifferences=true`, so a sync never sends it, but
+ * `ServerSideApply=true` also turns on Argo CD's server-side diff. That
+ * dry-run applies the whole desired StatefulSet without honouring
+ * `ignoreDifferences`, fails, and leaves the Application in ComparisonError,
+ * so its resource tree, and every Delivery step that reads it, errors. The
+ * client-side diff honours the ignored path.
+ */
+const APPLICATION_METADATA = {
+  annotations: {
+    "argocd.argoproj.io/compare-options": "ServerSideDiff=false",
+  },
+};
 const analytics = siteAnalyticsConfiguration("ts-mc");
 const SECRET_NAME = "minecraft-tsmc-discord";
 const RCON_SECRET_NAME = "minecraft-tsmc-brain";
@@ -324,6 +340,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
   return helmApplication(chart, {
     name: "minecraft-tsmc",
     namespace: "minecraft-tsmc",
+    metadata: APPLICATION_METADATA,
     chart: "minecraft",
     repoUrl: minecraftChartRepository(),
     targetRevision: versions.minecraft,
