@@ -68,7 +68,7 @@ export function readCatalogLibraryState(
                     { kind: "series", tmdbId: { in: tmdbIds("series") } },
                   ],
                 },
-                libraryMemberWhere,
+                libraryMemberWhere(settings, user.plexIdentity),
               ],
             },
             include: libraryViewInclude,

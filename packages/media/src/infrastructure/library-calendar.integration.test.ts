@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { automationTestHarness } from "#testing/automation.ts";
 import { externalLibraryFixture } from "#testing/external-library-fixture.ts";
 import { PrismaCalendarApplication } from "#infrastructure/library/views/calendar.ts";
+import { readCatalogLibraryState } from "#infrastructure/library/views/catalog-state.ts";
 import { PrismaLibraryApplication } from "#infrastructure/library/views/library.ts";
 import { PrismaRemovalHistoryApplication } from "#infrastructure/library/views/removals.ts";
 import {
@@ -424,6 +425,114 @@ async function libraryIds(
 function ids(...rows: { id: string }[]) {
   return rows.map((row) => row.id);
 }
+
+test("current visible episode coverage lists a series with no series target or request", async () => {
+  const db = harness.database();
+  const tag = crypto.randomUUID();
+  const tmdbBase = Math.floor(Math.random() * 100_000_000);
+  const reader = await libraryMember(db, { sections: ["2"] });
+  const owner = await libraryMember(db, {
+    sections: ["2", "9"],
+    role: "owner",
+  });
+  async function imported(
+    name: string,
+    offset: number,
+    options: {
+      seasonSection?: string;
+      episodeSection?: string;
+      rootSection?: string;
+      coverage?: "current" | "superseded" | "none";
+    } = {},
+  ) {
+    const externalIds = (section: string | undefined) =>
+      section === undefined ? {} : { plexSectionId: section };
+    const externalId = tmdbBase + offset;
+    const root = await db.mediaItem.create({
+      data: {
+        kind: "series",
+        title: `${tag} ${name}`,
+        tmdbId: externalId,
+        externalIds: externalIds(options.rootSection),
+      },
+    });
+    if (options.coverage === "none")
+      return { ...root, key: { kind: "series" as const, externalId } };
+    const parent =
+      options.seasonSection === undefined
+        ? root
+        : await db.mediaItem.create({
+            data: {
+              kind: "season",
+              title: "Season 1",
+              seasonNumber: 1,
+              parentId: root.id,
+              externalIds: externalIds(options.seasonSection),
+            },
+          });
+    const current = options.coverage !== "superseded";
+    const episode = await libraryEpisode(db, parent.id, {
+      season: 1,
+      number: 1,
+      availability: current ? "available" : "wanted",
+      keep: true,
+      files: [{ recordedAt: daysAgo(30 - offset), current }],
+    });
+    if (options.episodeSection !== undefined)
+      await db.mediaItem.update({
+        where: { id: episode.id },
+        data: { externalIds: externalIds(options.episodeSection) },
+      });
+    return { ...root, key: { kind: "series" as const, externalId } };
+  }
+
+  const direct = await imported("A", 1);
+  const nested = await imported("B", 2, {
+    seasonSection: "2",
+  });
+  const otherSection = [
+    await imported("C", 3, { episodeSection: "9" }),
+    await imported("D", 4, { seasonSection: "9" }),
+    await imported("E", 5, { rootSection: "9", episodeSection: "2" }),
+    await imported("F", 6, { seasonSection: "9", episodeSection: "2" }),
+  ];
+  const old = await imported("G", 7, { coverage: "superseded" });
+  const shell = await imported("H", 8, { coverage: "none" });
+  const query = { query: tag, kind: "series" };
+  const library = await readLibrary(reader, { ...query, limit: 1 });
+  expect(library.ids).toEqual(ids(direct, nested));
+  for (const item of library.items)
+    expect(item).toMatchObject({
+      episodes: { available: 1, total: 1 },
+      policy: "unclassified",
+      libraryKeeping: null,
+    });
+  expect(
+    await libraryIds(reader, { ...query, sort: "added", limit: 1 }),
+  ).toEqual(ids(nested, direct));
+  expect(
+    await libraryIds(reader, { ...query, availability: "available" }),
+  ).toEqual(ids(direct, nested));
+  expect(await libraryIds(reader, { ...query, policy: "keep" })).toEqual([]);
+  expect(await libraryIds(owner, query)).toEqual(
+    ids(direct, nested, ...otherSection),
+  );
+
+  const catalog = await readCatalogLibraryState(
+    db,
+    settings,
+    reader,
+    [direct, nested, ...otherSection, old, shell].map(({ key }) => key),
+  );
+  for (const row of [direct, nested])
+    expect(catalog.state(row.key)).toMatchObject({
+      mediaId: row.id,
+      episodes: { available: 1, total: 1 },
+      requested: false,
+    });
+  for (const row of [...otherSection, old, shell])
+    expect(catalog.state(row.key)).toBeNull();
+});
 
 test("the library pages by title and by date added, an upgrade does not move a title, and a cursor pages only the sort that issued it", async () => {
   const db = harness.database();

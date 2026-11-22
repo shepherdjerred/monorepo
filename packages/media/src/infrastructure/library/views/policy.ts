@@ -1,4 +1,6 @@
 import type { Prisma } from "#generated/prisma/client.ts";
+import type { LibraryReadSettings } from "./plex-access.ts";
+import { coveredSeriesWhere, type EpisodeAccess } from "./series-episodes.ts";
 
 type Claim = {
   userId: string;
@@ -140,13 +142,20 @@ export function libraryFollowingWhere(
 }
 
 /** A title is in the household library while something holds it there. */
-export const libraryMemberWhere = {
-  OR: [
-    { intents: { some: { libraryKeep: true } } },
-    { requests: { some: { active: true, excluded: false } } },
-    { assets: { some: { current: true } } },
-  ],
-} satisfies Prisma.MediaItemWhereInput;
+export function libraryMemberWhere(
+  settings: LibraryReadSettings,
+  plexIdentity: EpisodeAccess | null,
+): Prisma.MediaItemWhereInput {
+  const coveredSeries = coveredSeriesWhere(settings, plexIdentity);
+  return {
+    OR: [
+      { intents: { some: { libraryKeep: true } } },
+      { requests: { some: { active: true, excluded: false } } },
+      { assets: { some: { current: true } } },
+      ...(coveredSeries === null ? [] : [coveredSeries]),
+    ],
+  };
+}
 
 export const libraryPolicyInclude = {
   intents: { where: { edition: "default" } },
