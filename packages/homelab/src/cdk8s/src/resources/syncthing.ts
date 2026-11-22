@@ -77,6 +77,29 @@ export function createSyncthingDeployment(chart: Chart) {
               udp(3478, 3479),
             ],
           },
+          // Direct sync with remote peers on whatever port they advertise.
+          // A peer behind a router port-forward or NAT-PMP mapping announces
+          // its public address on an arbitrary TCP/UDP port (not 22000), and
+          // a denied dial silently falls back to a slower public relay. The
+          // ports are unenumerable, so this admits every port but only to
+          // public addresses; private and CGNAT ranges stay limited to the
+          // Syncthing ports above.
+          {
+            to: [
+              {
+                ipBlock: {
+                  cidr: "0.0.0.0/0",
+                  except: [
+                    "10.0.0.0/8",
+                    "172.16.0.0/12",
+                    "192.168.0.0/16",
+                    "100.64.0.0/10",
+                  ],
+                },
+              },
+            ],
+            ports: [{ protocol: "TCP" }, { protocol: "UDP" }],
+          },
         ],
       },
     ],
