@@ -37,6 +37,46 @@ describe("the approval queue", () => {
     expect(html).toContain('<span class="muted"> (1)</span>');
   });
 
+  it("calls an undecided approval awaiting approval, as every other page does", () => {
+    const html = render(
+      <ApprovalQueue
+        items={[
+          {
+            ...first,
+            approval: first.approval && {
+              ...first.approval,
+              status: "pending",
+            },
+          },
+        ]}
+      />,
+    );
+    expect(html).toContain('class="status status-awaiting_approval"');
+    expect(html).toContain(
+      '<span class="status-label">awaiting approval</span>',
+    );
+    expect(html).not.toContain(">pending<");
+  });
+
+  it("shows the full recipe and configuration ids so the revision is never cut off", () => {
+    const recipe = "starlight-karma-bot-recipe-revision-with-a-long-name";
+    const html = render(
+      <ApprovalQueue
+        items={[
+          {
+            ...first,
+            selection: first.selection && {
+              ...first.selection,
+              recipeRevisionId: recipe,
+            },
+          },
+        ]}
+      />,
+    );
+    expect(html).toContain(`<span class="mono">${recipe}</span>`);
+    expect(html).not.toContain("…");
+  });
+
   it("names the selection by a short id when no number is loaded", () => {
     const id = "0f9d6a52-4c1e-4f7e-9a51-2b7d3c8e1f00";
     const html = render(

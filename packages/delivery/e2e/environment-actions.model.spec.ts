@@ -67,7 +67,7 @@ test("a locked environment says recovery is required and refuses every request",
   const request = main.getByRole("button", { name: "Request deployment" });
   await expect(request).toBeDisabled();
   await expect(request).toHaveAccessibleDescription(
-    /failed and needs recovery, so this environment is locked/u,
+    /failed and this environment is locked/u,
   );
   const rollbacks = main
     .getByRole("region", { name: "Rollback candidates" })
@@ -91,24 +91,80 @@ test("a deployment awaiting approval disables every request with a reason that l
   const request = form.getByRole("button", { name: "Request deployment" });
   await expect(request).toBeDisabled();
   await expect(request).toHaveAccessibleDescription(
-    /is awaiting approval\. Requests are refused until it finishes or is canceled\./u,
+    /is awaiting approval\. Requests, rebinds and rollbacks are refused until it finishes or is canceled\./u,
   );
-  await expect(form.getByRole("link", { name: waiting })).toHaveAttribute(
-    "href",
-    `/deployments/${waiting}`,
-  );
+  // The page says it once, and links the deployment in the way there.
+  await expect(main.locator(".notice", { hasText: "refused" })).toHaveCount(1);
+  await expect(
+    main.locator(".environment-notice").getByRole("link", { name: waiting }),
+  ).toHaveAttribute("href", `/deployments/${waiting}`);
   const rollback = main.getByRole("region", { name: "Rollback candidates" });
   for (const button of await rollback
     .getByRole("button", { name: ROLLBACK_BUTTONS })
     .all())
     await expect(button).toBeDisabled();
-  await expect(rollback.getByRole("link", { name: waiting })).toBeVisible();
+  await expect(rollback.locator(".notice")).toHaveCount(0);
   await expect(
     main
       .getByRole("region", { name: "Selection", exact: true })
       .getByRole("button", { name: "Rebind" }),
   ).toBeDisabled();
 });
+
+/** A computed `rgb()` or `rgba()` colour as its three channels. */
+function channels(color: string) {
+  const match = /^rgba?\((\d+), (\d+), (\d+)/u.exec(color);
+  if (match === null) throw new Error(`Unexpected colour ${color}`);
+  return match.slice(1, 4).map(Number);
+}
+
+/** WCAG relative luminance of a colour's channels. */
+function luminance(color: string) {
+  const [red = 0, green = 0, blue = 0] = channels(color).map((value) => {
+    const unit = value / 255;
+    return unit <= 3928 / 100_000
+      ? unit / 12.92
+      : ((unit + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}
+
+function contrast(first: string, second: string) {
+  const [light = 0, dark = 0] = [luminance(first), luminance(second)].toSorted(
+    (a, b) => b - a,
+  );
+  return (light + 0.05) / (dark + 0.05);
+}
+
+for (const scheme of ["light", "dark"] as const)
+  test(`a disabled request button loses its accent fill in ${scheme} mode and stays legible`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    const main = await open(page, PROD);
+    const button = main
+      .getByRole("region", { name: "Request a release" })
+      .getByRole("button", { name: "Request deployment" });
+    await expect(button).toBeDisabled();
+    const style = await button.evaluate((element) => {
+      const probe = globalThis.document.createElement("span");
+      probe.style.backgroundColor = "var(--accent)";
+      globalThis.document.body.append(probe);
+      const accent = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      const computed = getComputedStyle(element);
+      return {
+        accent,
+        fill: computed.backgroundColor,
+        text: computed.color,
+        opacity: computed.opacity,
+      };
+    });
+    // Not the accent fill at half opacity, which still reads as live.
+    expect(style.fill).not.toBe(style.accent);
+    expect(style.opacity).toBe("1");
+    expect(contrast(style.text, style.fill)).toBeGreaterThanOrEqual(4.5);
+  });
 
 test("a saved plan waiting for its decision reads as awaiting plan approval", async ({
   page,

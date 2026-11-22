@@ -282,10 +282,13 @@ describe("change feed keys", () => {
 });
 
 describe("search params", () => {
-  it("drops invalid and empty values from hand-edited URLs", () => {
+  it("drops empty values but keeps a typed status so the page can name the accepted ones", () => {
     expect(
       DeploymentSearchSchema.parse({ status: "exploded", service: " " }),
-    ).toEqual({ status: undefined, service: undefined });
+    ).toEqual({ status: "exploded", service: undefined });
+    expect(DeploymentSearchSchema.parse({ status: 7 })).toEqual({
+      status: undefined,
+    });
     expect(ActivitySearchSchema.parse({ action: "deployment." })).toEqual({
       action: "deployment.",
     });

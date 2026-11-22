@@ -128,7 +128,11 @@ function EnvironmentPage() {
         }
         actions={<ToolLinks links={detail.links} />}
       />
-      <EnvironmentNotice blocker={blocker} planWaiting={planWaiting} />
+      <EnvironmentNotice
+        blocker={blocker}
+        planWaiting={planWaiting}
+        permitted={identity.data === undefined || permitted}
+      />
       <div className="detail-grid">
         <EnvironmentState
           environment={environment}

@@ -165,7 +165,8 @@ function useNarrow() {
 
 /**
  * A run of tiles. On a phone, services that need nobody fold behind a
- * closed, counted disclosure after the ones that need someone, so a screen
+ * closed disclosure that says how many are healthy ("All 8 healthy" when
+ * nothing else is in the run) after the ones that need someone, so a screen
  * holds what matters; a wide screen shows every tile. A `whole` run (a
  * catalog group) folds only when every service in it is healthy, and
  * otherwise stays open together.
@@ -187,7 +188,9 @@ function TileRun({
     <>
       {open.length > 0 && <Tiles services={open} />}
       {settled.length > 0 && (
-        <Disclosure summary="Nothing needs attention" count={settled.length}>
+        <Disclosure
+          summary={`${open.length === 0 ? "All " : ""}${String(settled.length)} healthy`}
+        >
           <Tiles services={settled} />
         </Disclosure>
       )}

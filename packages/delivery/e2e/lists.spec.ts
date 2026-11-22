@@ -40,7 +40,7 @@ test("a service filter by its display name keeps the page and filters by id", as
     await expect(
       page.getByRole("status").filter({
         hasText:
-          /^Showing \d+ deployments? that match these filters, newest first\.$/u,
+          /^Showing (?:all |the )?\d+ (?:newest )?deployments? that match these filters\./u,
       }),
     ).toBeVisible();
     await expect(table.locator("tbody tr").first()).toContainText(
@@ -92,6 +92,107 @@ test("a filter the server would refuse explains itself inside the page", async (
   );
   await expect(main.getByRole("link", { name: "Clear filters" })).toBeVisible();
   await expectNoHorizontalOverflow(page);
+});
+
+const STATUS_VALUES =
+  "awaiting_approval, queued, running, succeeded, failed, canceled";
+
+for (const { path, noun, values, filter } of [
+  {
+    path: "/deployments?status=bogus",
+    noun: "status",
+    values: STATUS_VALUES,
+    filter: "Filter deployments",
+  },
+  {
+    path: "/artifacts?status=bogus",
+    noun: "qualification",
+    values: "verified, pending, failed",
+    filter: "Filter builds",
+  },
+  {
+    path: "/activity?within=bogus",
+    noun: "time range",
+    values: "hour, day",
+    filter: "Filter activity",
+  },
+  {
+    path: "/activity?problems=bogus",
+    noun: "scope",
+    values: "only",
+    filter: "Filter activity",
+  },
+])
+  test(`${path} names the accepted values instead of listing everything`, async ({
+    page,
+  }) => {
+    await page.goto(path);
+    const main = page.getByRole("main");
+    await expect(main.getByRole("status")).toHaveText(
+      `“bogus” is not a ${noun}. Choose one of ${values}.`,
+    );
+    // No rows and no paging from a filter that could not be read.
+    await expect(main.getByRole("table")).toHaveCount(0);
+    await expect(main.locator("ol.activity")).toHaveCount(0);
+    await expect(main.getByRole("link", { name: "Older" })).toHaveCount(0);
+    await expect(page.getByRole("search", { name: filter })).toBeVisible();
+    await main.getByRole("link", { name: "Clear filters" }).click();
+    await expect(page).not.toHaveURL(/bogus/u);
+    await expect(main.getByRole("status")).toContainText(/^Showing /u);
+  });
+
+test("the overview and pipelines name the accepted statuses for one that is not", async ({
+  page,
+}) => {
+  for (const path of ["/?status=bogus", "/pipelines?status=bogus"]) {
+    await page.goto(path);
+    const main = page.getByRole("main");
+    await expect(main.getByRole("status").first()).toContainText(
+      "“bogus” is not a status. Choose one of",
+    );
+    await expect(main.getByRole("status").first()).toContainText("failed");
+    await main.getByRole("link", { name: "Clear filters" }).click();
+    await expect(page).not.toHaveURL(/bogus/u);
+    await expect(main.getByText("is not a status")).toHaveCount(0);
+  }
+});
+
+test("a list that continues says it shows the newest rows, not a total", async ({
+  page,
+}) => {
+  const main = page.getByRole("main");
+  // The seeded builds fill a page and continue behind "Older".
+  await page.goto("/artifacts");
+  await expect(main.getByRole("link", { name: "Older" })).toBeVisible();
+  const builds = await main.locator("table tbody tr").count();
+  await expect(main.getByRole("status")).toHaveText(
+    `Showing the ${String(builds)} newest builds. Older ones are on the next page.`,
+  );
+  // The last page can say it shows everything that exists.
+  await page.goto("/deployments");
+  await expect(main.getByRole("link", { name: "Older" })).toHaveCount(0);
+  const deployments = await main.locator("table tbody tr").count();
+  await expect(main.getByRole("status")).toHaveText(
+    `Showing all ${String(deployments)} deployments.`,
+  );
+});
+
+test("artifacts name a service as the overview does, with its slug beneath", async ({
+  page,
+}) => {
+  await page.goto("/artifacts?service=gitops");
+  const cell = page
+    .getByRole("main")
+    .locator("td[data-label='Service']")
+    .first();
+  await expect(cell.locator("strong")).toHaveText("GitOps & charts");
+  await expect(cell.locator("small")).toHaveText("gitops");
+  // The build's own id is a hover title, not text on the page.
+  await expect(cell.locator("div")).toHaveAttribute(
+    "title",
+    /^Build [0-9a-f-]{36}$/u,
+  );
+  await expect(cell).not.toContainText(/[0-9a-f]{8}-[0-9a-f]{4}/u);
 });
 
 test("a cursor the server refuses keeps the layout and offers no useless retry", async ({
@@ -188,7 +289,7 @@ test("paging moves to the top of the list and back to the newest", async ({
   await expect(top).toBeFocused();
   // Rows that fold several entries are counted as rows, the entries beside them.
   await expect(page.getByRole("main").getByRole("status")).toContainText(
-    /older (?:entries|rows of \d+ entries)/u,
+    /older than the previous page/u,
   );
   await pages.getByRole("link", { name: "Newest" }).click();
   await expect(page).toHaveURL(/\/activity$/u);
@@ -244,7 +345,7 @@ test("activity counts the rows it renders, names its time zone and says why a de
     page.getByRole("status").filter({ hasText: /^Showing / }),
   ).toHaveText(
     new RegExp(
-      String.raw`^Showing ${String(rendered)} (?:entries|rows of \d+ entries), newest first\.$`,
+      String.raw`^Showing (?:all ${String(rendered)} (?:entries|rows of \d+ entries)|the ${String(rendered)} newest (?:entries|rows of \d+ entries)\. Older ones are on the next page)\.$`,
       "u",
     ),
   );

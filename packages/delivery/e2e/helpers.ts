@@ -141,6 +141,37 @@ export async function expectNoViolations(page: Page, path: string) {
   ).toEqual([]);
 }
 
+/**
+ * Open every collapsed disclosure, then require that nothing inside any
+ * overview tile reaches past the tile's right edge: a long status pill wraps
+ * in its chip instead of spilling out of the card.
+ */
+export async function expectContainedInTiles(page: Page) {
+  await page.evaluate(() => {
+    for (const details of globalThis.document.querySelectorAll<HTMLDetailsElement>(
+      "main details",
+    ))
+      details.open = true;
+  });
+  const escapes = await page.evaluate(() => {
+    const found: string[] = [];
+    for (const tile of globalThis.document.querySelectorAll(".overview-tile")) {
+      if (!tile.checkVisibility()) continue;
+      const edge = tile.getBoundingClientRect().right;
+      for (const element of tile.querySelectorAll("*")) {
+        const box = element.getBoundingClientRect();
+        // The words a glyph already says are clipped to one pixel, by design.
+        if (box.width > 1 && box.right > edge + 0.5)
+          found.push(
+            `${tile.querySelector("a")?.textContent ?? "tile"}: ${element.textContent}`,
+          );
+      }
+    }
+    return found;
+  });
+  expect(escapes).toEqual([]);
+}
+
 /** Whether the page has a phone's width, where tables stack and the nav wraps. */
 export function isPhone(page: Page) {
   return (page.viewportSize()?.width ?? 0) < 600;

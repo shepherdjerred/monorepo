@@ -6,6 +6,8 @@ import { AttentionPanel } from "#client/components/attention-panel.tsx";
 import { OverviewPanels } from "#client/components/overview-panels.tsx";
 import { PageHeader } from "#client/components/page-header.tsx";
 import { statusLabel } from "#client/components/status.tsx";
+import { FilterProblems } from "./list-page.tsx";
+import { problemsOf, resolveChoice } from "./catalog-filter.ts";
 import { kindPanels } from "./overview-model.ts";
 import { PipelineSearchSchema, formSearch } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
@@ -18,7 +20,19 @@ function OverviewPage() {
     (sum, group) => sum + group.services.length,
     0,
   );
-  const panels = kindPanels(data.groups, data.attention, search);
+  const chosen = resolveChoice(
+    search.status,
+    GridEnvironmentStatusSchema.options,
+    "status",
+  );
+  const problems = problemsOf([chosen]);
+  const panels =
+    problems.length > 0
+      ? []
+      : kindPanels(data.groups, data.attention, {
+          ...search,
+          status: chosen.id,
+        });
   const shown = panels.reduce((sum, panel) => sum + panel.services.length, 0);
   return (
     <>
@@ -63,12 +77,14 @@ function OverviewPage() {
           </button>
         </form>
         <p className="overview-total">
-          {shown === total
+          {shown === total && problems.length === 0
             ? `${String(total)} services`
             : `${String(shown)} of ${String(total)} services`}
         </p>
       </div>
-      {panels.length === 0 ? (
+      {problems.length > 0 ? (
+        <FilterProblems problems={problems} clearTo="/" />
+      ) : panels.length === 0 ? (
         <p className="empty">
           {total === 0
             ? "No active service is registered with Delivery yet."

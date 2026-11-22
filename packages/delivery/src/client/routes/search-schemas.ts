@@ -1,6 +1,4 @@
 import { z } from "zod";
-import { DeploymentStatusSchema } from "#shared/contract.ts";
-import { PipelineStatusSchema } from "#shared/hub/hub-contract.ts";
 
 const Optional = z
   .string()
@@ -8,7 +6,11 @@ const Optional = z
   .transform((value) => (value === "" ? undefined : value))
   .optional();
 
-/** Search params come from hand-edited URLs, so invalid values are dropped. */
+/**
+ * Search params come from hand-edited URLs, so a value of the wrong type is
+ * dropped. A choice filter keeps whatever text was typed: the page names the
+ * accepted values (`resolveChoice`) instead of silently showing everything.
+ */
 function lenient<T extends z.ZodType>(schema: T) {
   return z
     .unknown()
@@ -18,7 +20,7 @@ function lenient<T extends z.ZodType>(schema: T) {
 
 export const PipelineSearchSchema = z.object({
   q: lenient(Optional),
-  status: lenient(PipelineStatusSchema),
+  status: lenient(Optional),
 });
 export type PipelineSearch = z.infer<typeof PipelineSearchSchema>;
 
@@ -28,13 +30,13 @@ export const DeploymentSearchSchema = z.object({
   cursor: lenient(Optional),
   service: lenient(Optional),
   environment: lenient(Optional),
-  status: lenient(DeploymentStatusSchema),
+  status: lenient(Optional),
 });
 
 export const ArtifactSearchSchema = z.object({
   cursor: lenient(Optional),
   service: lenient(Optional),
-  status: lenient(z.enum(["pending", "verified", "failed"])),
+  status: lenient(Optional),
 });
 
 export const ActivitySearchSchema = z.object({
@@ -43,9 +45,9 @@ export const ActivitySearchSchema = z.object({
   action: lenient(Optional),
   entity: lenient(Optional),
   /** `only` lists just failures, refusals, lapses and alarms. */
-  problems: lenient(z.literal("only")),
+  problems: lenient(Optional),
   /** How far back to look: the last hour or day; absent is any time. */
-  within: lenient(z.enum(["hour", "day"])),
+  within: lenient(Optional),
 });
 
 export const EnvironmentSearchSchema = z.object({

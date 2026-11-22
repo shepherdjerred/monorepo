@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   boundedText,
   problemsOf,
+  resolveChoice,
   resolveEnvironment,
   resolveService,
   type CatalogService,
@@ -117,6 +118,32 @@ describe("boundedText and problemsOf", () => {
     );
     expect(problemsOf([long, resolveService("arcade", SERVICES)])).toEqual([
       "Action prefix can be at most 100 characters.",
+    ]);
+  });
+});
+
+describe("resolveChoice", () => {
+  const STATUSES = ["queued", "awaiting_approval"] as const;
+
+  it("accepts a listed value and ignores an absent one", () => {
+    expect(resolveChoice("queued", STATUSES, "status")).toEqual({
+      id: "queued",
+      problem: null,
+    });
+    expect(resolveChoice(undefined, STATUSES, "status")).toEqual({
+      id: undefined,
+      problem: null,
+    });
+  });
+
+  it("names the accepted values for one that is not listed", () => {
+    const bogus = resolveChoice("bogus", STATUSES, "status");
+    expect(bogus.id).toBeUndefined();
+    expect(bogus.problem).toBe(
+      "“bogus” is not a status. Choose one of queued, awaiting_approval.",
+    );
+    expect(problemsOf([bogus, resolveService("arcade", SERVICES)])).toEqual([
+      bogus.problem,
     ]);
   });
 });

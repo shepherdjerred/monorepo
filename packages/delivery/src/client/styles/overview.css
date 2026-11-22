@@ -128,6 +128,7 @@
   align-items: center;
   gap: var(--space-1);
   min-width: 0;
+  max-width: 100%;
 }
 .overview-arrow {
   color: var(--text-muted);
@@ -140,6 +141,8 @@
   gap: 0 var(--space-1);
   min-height: var(--target-min);
   min-width: 0;
+  /* A long status wraps inside the chip, never past the tile's edge. */
+  max-width: 100%;
   padding: 1px var(--row-pad-y);
   border: 1px solid var(--border);
   border-radius: var(--radius-small);
@@ -157,6 +160,10 @@
 }
 .overview-chip .status {
   padding: 0 var(--space-1);
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  border-radius: var(--radius-small);
   /* Contains the hidden words of a settled chip. */
   position: relative;
 }
