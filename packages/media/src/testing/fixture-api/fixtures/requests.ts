@@ -226,6 +226,30 @@ function interestPage(cursor: string | null, persona: Persona): InterestList {
   };
 }
 
+/**
+ * A request's interest as the interests list reports it. A request that list
+ * leaves out is still followed, at the revision the list would give it.
+ */
+export function requestInterest(
+  id: string,
+  persona: Persona,
+): Pick<InterestView, "interestRevision" | "interestState"> {
+  const listed = [null, SECOND_INTEREST_PAGE]
+    .flatMap((cursor) => interestPage(cursor, persona).items)
+    .find((item) => item.requestId === id);
+  if (listed !== undefined) {
+    return {
+      interestRevision: listed.interestRevision,
+      interestState: listed.interestState,
+    };
+  }
+  const parsed = parseFixtureId(id);
+  if (parsed?.namespace !== 5) {
+    throw new Error(`Not a fixture request identifier: ${id}`);
+  }
+  return { interestRevision: parsed.sequence % 3, interestState: "following" };
+}
+
 /** Requests carried over from the previous request manager. */
 export function importedClaims(persona: Persona): ImportedClaims {
   const userId = personaUser(persona).id;

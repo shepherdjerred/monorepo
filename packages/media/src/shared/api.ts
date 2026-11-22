@@ -19,6 +19,11 @@ import {
   UserSchema,
   RemovalConfirmationSchema,
 } from "./contract.ts";
+import { InterestStateSchema } from "./household/interests.ts";
+import {
+  LibraryKeepingSchema,
+  LibraryPolicySchema,
+} from "./household/library.ts";
 
 export const DateTimeSchema = z
   .union([z.date(), z.iso.datetime()])
@@ -120,6 +125,12 @@ export const MediaDetailSchema = MediaItemSchema.extend({
       externalId: z.number().int(),
     })
     .nullable(),
+  // How long the household keeps the root title, derived as its item on
+  // `GET /library` is: a season or episode reports its series'. They follow the
+  // title's default target, not the list: a title the list has stopped showing
+  // still reports them. `libraryKeeping` is null without a default target.
+  policy: LibraryPolicySchema,
+  libraryKeeping: LibraryKeepingSchema.nullable(),
   visibility: MediaVisibilitySchema,
   subtitlePolicies: z
     .array(
@@ -150,6 +161,12 @@ export const MediaDetailSchema = MediaItemSchema.extend({
       subtitleLanguages: z.array(z.string()),
       version: z.number().int(),
       user: z.object({ displayName: z.string() }),
+      // The request's interest, named as `GET /request-interests` names it and
+      // as an interest command expects it. Both are null for a request with no
+      // interest of its own: one a series or season request spread onto this
+      // row, whose interest is managed on that original request.
+      interestRevision: z.int().nonnegative().nullable(),
+      interestState: InterestStateSchema.nullable(),
     }),
   ),
   holds: z.array(

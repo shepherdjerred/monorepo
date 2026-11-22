@@ -12,8 +12,8 @@ import { visibilityReader } from "#infrastructure/visibility/access.ts";
 import { externalAvailableMediaIds } from "#infrastructure/external-library/availability.ts";
 import {
   libraryInterest,
+  libraryKeepingView,
   libraryViewInclude,
-  libraryViewPolicy,
 } from "#infrastructure/library/views/policy.ts";
 import {
   libraryAvailability,
@@ -76,10 +76,10 @@ export class PrismaLibraryApplication {
           .map((media) => {
             if (media.kind !== "movie" && media.kind !== "series")
               throw new Error("Library page read a row that is not a title");
-            const policy = libraryViewPolicy(media, actor.id);
-            const target = media.intents.find(
-              (intent) => intent.edition === "default",
-            );
+            const keeping = libraryKeepingView(media, {
+              actorId: actor.id,
+              owner: reader.owner,
+            });
             const leaving = leavingSoon(media.id);
             return {
               id: media.id,
@@ -87,8 +87,9 @@ export class PrismaLibraryApplication {
               kind: media.kind,
               year: media.year,
               artwork: rootArtwork(media),
-              ...libraryPolicyLabels(policy),
-              myInterest: libraryInterest(media, policy, actor.id),
+              policy: keeping.policy,
+              protection: keeping.protection,
+              myInterest: libraryInterest(media, keeping.claims, actor.id),
               availability: libraryAvailability(media, external),
               episodes: media.kind === "series" ? episodes(media.id) : null,
               addedAt: addedAt.get(media.id)?.toISOString() ?? null,
@@ -99,14 +100,7 @@ export class PrismaLibraryApplication {
                       state: leaving.state,
                       graceUntil: leaving.graceUntil?.toISOString() ?? null,
                     },
-              libraryKeeping:
-                target !== undefined && reader.owner
-                  ? {
-                      mediaVersion: media.version,
-                      targetVersion: target.version,
-                      keepingPolicy: target.libraryKeep ? "keep" : "temporary",
-                    }
-                  : null,
+              libraryKeeping: keeping.libraryKeeping,
             };
           })
           .filter((item) =>
@@ -201,11 +195,4 @@ async function addedPage(
         ? JSON.stringify({ addedAt: last.addedAt.toISOString(), id: last.id })
         : null,
   };
-}
-
-function libraryPolicyLabels(policy: ReturnType<typeof libraryViewPolicy>) {
-  if (policy.kept) return { policy: "keep", protection: "keep_indefinitely" };
-  return policy.householdFollowing
-    ? { policy: "temporary", protection: "temporary_interest" }
-    : { policy: "unclassified", protection: "review_required" };
 }

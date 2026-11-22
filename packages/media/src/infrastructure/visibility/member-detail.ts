@@ -28,6 +28,8 @@ export function memberDetail(detail: MediaDetail): MediaDetail {
     intent:
       detail.intent === null ? null : { ...detail.intent, profileId: null },
     subtitlePolicies: [],
+    // The keeping switch is the owner's; `policy` is the household's to read.
+    libraryKeeping: null,
     visibility: memberProgress(detail.visibility),
   };
 }

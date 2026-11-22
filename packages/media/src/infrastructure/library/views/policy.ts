@@ -50,6 +50,47 @@ export function libraryViewPolicy(media: LibraryPolicyNode, actorId: string) {
   };
 }
 
+type KeepingTitle = Omit<LibraryPolicyNode, "intents"> & {
+  version: number;
+  intents: (Target & { version: number })[];
+};
+
+/**
+ * What a movie or series reports about how long the household keeps it. The
+ * library list and the title read both report exactly this, so the keeping
+ * switch means the same thing wherever it is shown. `libraryKeeping` is the
+ * owner's switch over the default edition; nobody else reads it.
+ */
+export function libraryKeepingView(
+  media: KeepingTitle,
+  reader: { actorId: string; owner: boolean },
+) {
+  const claims = libraryViewPolicy(media, reader.actorId);
+  const target = media.intents.find((intent) => intent.edition === "default");
+  return {
+    claims,
+    ...keepingLabels(claims),
+    libraryKeeping:
+      target !== undefined && reader.owner
+        ? {
+            mediaVersion: media.version,
+            targetVersion: target.version,
+            keepingPolicy: target.libraryKeep
+              ? ("keep" as const)
+              : ("temporary" as const),
+          }
+        : null,
+  };
+}
+
+function keepingLabels(claims: ReturnType<typeof libraryViewPolicy>) {
+  if (claims.kept)
+    return { policy: "keep", protection: "keep_indefinitely" } as const;
+  return claims.householdFollowing
+    ? ({ policy: "temporary", protection: "temporary_interest" } as const)
+    : ({ policy: "unclassified", protection: "review_required" } as const);
+}
+
 /** What the actor's own claims on a title amount to; any past claim counts as released. */
 export function libraryInterest(
   media: { requests: readonly { userId: string }[] },

@@ -26,6 +26,12 @@ function ownerDetail(): MediaDetail {
     },
     overview: "A movie a member may read about.",
     catalog: { kind: "movie", externalId: 603 },
+    policy: "keep",
+    libraryKeeping: {
+      mediaVersion: 4,
+      targetVersion: 3,
+      keepingPolicy: "keep",
+    },
     visibility: {
       movieRequests: [],
       playback: {
@@ -94,7 +100,26 @@ function ownerDetail(): MediaDetail {
       version: 3,
       intentionallyRemovedAt: null,
     },
-    requests: [],
+    requests: [
+      {
+        id: crypto.randomUUID(),
+        userId: crypto.randomUUID(),
+        subtitleLanguages: ["en"],
+        version: 2,
+        user: { displayName: "Requester" },
+        interestRevision: 5,
+        interestState: "following",
+      },
+      {
+        id: crypto.randomUUID(),
+        userId: crypto.randomUUID(),
+        subtitleLanguages: [],
+        version: 0,
+        user: { displayName: "Covered by a series request" },
+        interestRevision: null,
+        interestState: null,
+      },
+    ],
     holds: [],
     retention: [],
     watchStates: [],
@@ -125,14 +150,39 @@ test("a member keeps progress, state and freshness while acquisition detail is w
   expect(member.visibility.historyTruncated).toBe(false);
 });
 
+test("a member reads how long the title is kept and never the owner's keeping switch", () => {
+  const owner = ownerDetail();
+  const member = memberDetail(owner);
+  expect(owner.libraryKeeping).toEqual({
+    mediaVersion: 4,
+    targetVersion: 3,
+    keepingPolicy: "keep",
+  });
+  expect(member.policy).toBe("keep");
+  expect(member.libraryKeeping).toBeNull();
+  // The read scopes requests to the reader; the projection passes them through.
+  expect(member.requests).toEqual(owner.requests);
+  expect(
+    member.requests.map((request) => [
+      request.interestRevision,
+      request.interestState,
+    ]),
+  ).toEqual([
+    [5, "following"],
+    [null, null],
+  ]);
+});
+
 test("the projection changes nothing else and stays within the existing strict contract", () => {
   const owner = ownerDetail();
   const member = memberDetail(owner);
-  const { visibility, intent, subtitlePolicies, ...rest } = member;
+  const { visibility, intent, subtitlePolicies, libraryKeeping, ...rest } =
+    member;
   const {
     visibility: _visibility,
     intent: _intent,
     subtitlePolicies: _subtitlePolicies,
+    libraryKeeping: _libraryKeeping,
     ...ownerRest
   } = owner;
   expect(rest).toEqual(ownerRest);
@@ -141,6 +191,7 @@ test("the projection changes nothing else and stays within the existing strict c
     visibility,
     intent,
     subtitlePolicies,
+    libraryKeeping,
   });
 });
 
