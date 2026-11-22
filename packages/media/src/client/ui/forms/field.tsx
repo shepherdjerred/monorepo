@@ -357,6 +357,9 @@ export function ChoiceField({
   onChange,
   disabled = false,
   layout = "row",
+  required = false,
+  requiredMessage,
+  error,
 }: {
   legend: string;
   description?: ReactNode;
@@ -368,14 +371,21 @@ export function ChoiceField({
   disabled?: boolean;
   /** `stack` puts each option on its own line, for options with help text. */
   layout?: "row" | "stack";
+  /** A choice must be made before the surrounding form is submitted. */
+  required?: boolean;
+  /** What to say when none is chosen; the form shows it beside the group. */
+  requiredMessage?: string;
+  /** An error from outside the surrounding form's own validation. */
+  error?: string | undefined;
 }) {
   const id = useId();
+  const field = useField(name, { description, error });
   const descriptionId = description === undefined ? undefined : `${id}-help`;
   return (
     <fieldset
       className={cx("group")}
       disabled={disabled}
-      aria-describedby={descriptionId}
+      aria-describedby={describedBy(descriptionId, field.errorId)}
     >
       <legend className={cx("label")}>{legend}</legend>
       {description !== undefined && (
@@ -392,6 +402,9 @@ export function ChoiceField({
               name={name}
               value={option.value}
               data-field-label={legend}
+              data-required-message={requiredMessage}
+              required={required}
+              aria-invalid={field.error !== undefined}
               {...(value === undefined
                 ? { defaultChecked: defaultValue === option.value }
                 : {
@@ -410,6 +423,9 @@ export function ChoiceField({
           </label>
         ))}
       </div>
+      {field.error !== undefined && field.errorId !== undefined && (
+        <FieldError id={field.errorId} message={field.error} />
+      )}
     </fieldset>
   );
 }

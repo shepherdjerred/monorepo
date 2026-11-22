@@ -17,15 +17,8 @@ import type {
   NumberingSeriesListSchema,
 } from "#shared/numbering.ts";
 import type { PlexProfilesSchema } from "#shared/plex-admin.ts";
-import type { RecoveryListSchema } from "#shared/recovery.ts";
 import { definitionDigest, movieScope } from "./movie-requests.ts";
-import {
-  ALEX,
-  KIDS,
-  MEMBER,
-  OWNER,
-  type Persona,
-} from "#testing/fixture-api/personas.ts";
+import { ALEX, KIDS, MEMBER, OWNER } from "#testing/fixture-api/personas.ts";
 import {
   DAY,
   HOUR,
@@ -33,7 +26,6 @@ import {
   ago,
   ahead,
   fixtureId,
-  pick,
   sha256,
 } from "#testing/fixture-api/support.ts";
 import {
@@ -49,7 +41,6 @@ type ProviderStatus = z.input<typeof ProviderStatusSchema>;
 type ProviderList = z.input<typeof ProviderListSchema>;
 type Capacity = z.input<typeof CapacityViewSchema>;
 type PlexProfiles = z.input<typeof PlexProfilesSchema>;
-type RecoveryList = z.input<typeof RecoveryListSchema>;
 type MigrationList = z.input<typeof MigrationProposalListSchema>;
 type MigrationStatus = MigrationList[number]["status"];
 type BundleList = z.input<typeof BundleReviewListSchema>;
@@ -271,62 +262,6 @@ export function plexProfiles(): PlexProfiles {
         version: 3,
         permittedSectionIds: ["2"],
         verifiedAt: ago(26 * HOUR),
-      },
-    ],
-  };
-}
-
-const HOLD_REASONS = [
-  "restored_from_backup",
-  "requester_unknown",
-  "keep_intent_unverified",
-];
-const HELD_TITLES = [
-  "Blade Runner 2049",
-  "The Wire",
-  "Interstellar",
-  "Cowboy Bebop",
-  "Succession",
-  "Alien",
-];
-
-/** Recovery holds everyone sees; only the owner sees the authority state. */
-export function recoveryList(persona: Persona): RecoveryList {
-  return {
-    authority:
-      persona === "owner"
-        ? {
-            mode: "observe",
-            ownershipConfirmed: false,
-            writerState: "revoked",
-            storageState: "current",
-          }
-        : null,
-    holds: HELD_TITLES.map((title, index) => ({
-      mediaId: titleNamed(title).id,
-      title,
-      reason: pick(HOLD_REASONS, index),
-    })),
-    // The two states a review has: open until the owner applies it, then
-    // released (`RecoveryReview.state` in the Prisma schema).
-    reviews: [
-      {
-        id: fixtureId(16, 1),
-        state: "awaiting_responses",
-        createdAt: ago(2 * DAY),
-        titles: ["Breaking Bad", "Better Call Saul"],
-      },
-      {
-        id: fixtureId(16, 2),
-        state: "released",
-        createdAt: ago(6 * DAY),
-        titles: ["The Godfather"],
-      },
-      {
-        id: fixtureId(16, 3),
-        state: "released",
-        createdAt: ago(19 * DAY),
-        titles: ["Chernobyl", "Fleabag", "Dark"],
       },
     ],
   };

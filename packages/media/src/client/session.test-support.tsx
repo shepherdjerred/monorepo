@@ -27,7 +27,7 @@ export const member = UserSchema.parse({
 });
 export const ownerReview = RecoveryDetailSchema.parse({
   id: reviewId,
-  state: "reviewing",
+  state: "awaiting_responses",
   version: 1,
   scopeHash: "a".repeat(64),
   responseHash: null,

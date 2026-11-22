@@ -236,10 +236,11 @@ test.describe("the owner's Home", () => {
     await item(needs, "6 titles are held after a restore")
       .getByRole("link", { name: "Review held titles" })
       .click();
-    await expect.poll(() => address(page)).toBe("/recovery");
+    // The owner's `/recovery` is the Recovery page in Manage.
+    await expect.poll(() => address(page)).toBe("/manage/recovery");
     await expect(
-      page.getByRole("heading", { level: 1, name: "Recovery protection" }),
-    ).toBeFocused();
+      page.getByRole("heading", { level: 1, name: "Recovery" }),
+    ).toBeVisible();
 
     await page.goBack();
     const playing = list(page, "Now playing");

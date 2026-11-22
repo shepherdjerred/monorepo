@@ -363,6 +363,8 @@ test.describe("addresses that moved", () => {
       "/manage/recovery/native/archives?from=email#top",
     ],
     ["/activity?from=email#top", "/manage/activity?from=email#top"],
+    // Recovery is where a member answers; the owner works from Manage.
+    ["/recovery?from=email#top", "/manage/recovery?from=email#top"],
     ["/manage", "/manage/household"],
     ["/no-such-page", "/"],
   ] as const;

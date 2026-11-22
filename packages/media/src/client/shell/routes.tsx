@@ -17,9 +17,9 @@ import { MovieHistoryPageV3 } from "#client/movie-history/page.tsx";
 import { NotificationCallback } from "#client/notifications/callback.tsx";
 import { NotificationsPage } from "#client/notifications/page.tsx";
 import { NotificationSettingsPage } from "#client/notifications/settings.tsx";
-import { RecoveryPage } from "#client/recovery/page.tsx";
+import { RecoveryPage, RecoveryReview } from "#client/recovery/page.tsx";
 import { CatalogTitlePage, MediaTitlePage } from "#client/title/page.tsx";
-import { HOME_PATH, MovedTo, OwnerOnly } from "./redirects.tsx";
+import { HOME_PATH, MovedForOwner, MovedTo, OwnerOnly } from "./redirects.tsx";
 import { useUser } from "./user.ts";
 
 /** A page that takes the signed-in user, as a route element. */
@@ -40,6 +40,7 @@ const Media = withUser(MediaTitlePage);
 const Notifications = withUser(NotificationsPage);
 const NotificationSettings = withUser(NotificationSettingsPage);
 const Recovery = withUser(RecoveryPage);
+const RecoveryReviewRoute = withUser(RecoveryReview);
 const MovieHistory = withUser(MovieHistoryPageV3);
 
 function EmailCallback() {
@@ -142,8 +143,9 @@ const manageRoutes: RouteObject[] = [
   {
     path: "recovery",
     lazy: async () => {
-      const { RecoveryHubPage } = await import("#client/manage/recovery.tsx");
-      return { Component: RecoveryHubPage };
+      const { ManageRecoveryPage } =
+        await import("#client/manage/recovery.tsx");
+      return { Component: ManageRecoveryPage };
     },
   },
   {
@@ -240,9 +242,18 @@ export const routes: RouteObject[] = [
           // the second to Discord as its return address.
           { path: "notifications/email", element: <EmailCallback /> },
           { path: "notifications/discord", element: <DiscordCallback /> },
-          { path: "recovery", element: <Recovery /> },
+          // A member answers reviews here; the owner works from Manage.
+          {
+            path: "recovery",
+            element: (
+              <MovedForOwner path="/manage/recovery">
+                <Recovery />
+              </MovedForOwner>
+            ),
+          },
+          // The reviews are answered where they are by owner and member alike.
           { path: "recovery/movies/:id", element: <MovieHistory /> },
-          { path: "recovery/:id", element: <Recovery /> },
+          { path: "recovery/:id", element: <RecoveryReviewRoute /> },
           {
             path: "manage",
             element: <OwnerOnly />,

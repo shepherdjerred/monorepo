@@ -1,4 +1,5 @@
 import type { Persona } from "#testing/fixture-api/personas.ts";
+import { fixtureId } from "#testing/fixture-api/support.ts";
 import {
   FEATURED,
   episodeId,
@@ -83,9 +84,10 @@ function shared(persona: Persona): RouteSpec[] {
       heading: "Connect your Discord account",
     },
     {
+      // The owner's address for it is a Manage page; the member's stays.
       label: `${persona} /recovery`,
       path: "/recovery",
-      heading: "Recovery protection",
+      heading: persona === "owner" ? "Recovery" : "Recovery reviews",
     },
     {
       label: `${persona} /media/:movie`,
@@ -143,12 +145,15 @@ function shared(persona: Persona): RouteSpec[] {
   ].map((route) => ({ ...route, persona }));
 }
 
+/** A household review as a member opens it, and as the owner does. */
+const REVIEW_HEADING = "Review protected titles";
+
 /**
  * Every route a household member can open from navigation or a list.
  *
- * Not covered, because the read-only fixture API cannot answer them: the
- * review pages `/recovery/:id` and `/recovery/movies/:id` (their detail
- * contracts have no fixture yet).
+ * Not covered, because the read-only fixture API cannot answer it: the movie
+ * edition review `/recovery/movies/:id` (its detail contract has no fixture
+ * yet).
  */
 const MEMBER_ROUTES: readonly RouteSpec[] = [
   {
@@ -187,8 +192,28 @@ const MEMBER_ROUTES: readonly RouteSpec[] = [
     path: `/media/${FEATURED.protectionOnly.id}`,
     heading: "Your request",
   },
+  {
+    label: "member /recovery/:id",
+    persona: "member",
+    path: `/recovery/${fixtureId(16, 1)}`,
+    heading: REVIEW_HEADING,
+  },
+  {
+    label: "member /recovery/:id (applied)",
+    persona: "member",
+    path: `/recovery/${fixtureId(16, 2)}`,
+    heading: REVIEW_HEADING,
+  },
   ...shared("member"),
 ];
+
+/** One review of each kind as the owner opens it: waiting on a household, applied, a long one, one that cannot be applied, and one ready to apply. */
+const OWNER_REVIEW_ROUTES: readonly RouteSpec[] = [1, 2, 4, 5, 6].map((n) => ({
+  label: `owner /recovery/:id (${String(n)})`,
+  persona: "owner" as const,
+  path: `/recovery/${fixtureId(16, n)}`,
+  heading: REVIEW_HEADING,
+}));
 
 /** The owner's view of a title: the operator panels behind its Manage switch. */
 const TITLE_MANAGE_ROUTES: readonly RouteSpec[] = [
@@ -234,6 +259,7 @@ const MANAGE_ROUTES: readonly RouteSpec[] = [
 const OWNER_ROUTES: readonly RouteSpec[] = [
   ...MANAGE_ROUTES,
   ...TITLE_MANAGE_ROUTES,
+  ...OWNER_REVIEW_ROUTES,
   ...shared("owner"),
 ];
 

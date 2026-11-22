@@ -725,13 +725,16 @@ outside it is wrong. Open `/api/fixture/scenario/<name>` to choose one for the
 browser (it sets the `media-fixture-scenario` cookie, which a browser test sets
 directly) and `/api/fixture/scenario/default` to leave it:
 
-| Scenario               | What the fixture API does                                                             |
-| ---------------------- | ------------------------------------------------------------------------------------- |
-| `stale-library-access` | Every catalog read reports `libraryAccess: "stale"` and no title carries a `library`. |
-| `feed-unavailable`     | The `popular_series` feed answers 502 `catalog_unavailable`; the rest keep working.   |
-| `catalog-unavailable`  | Every catalog read answers 502 `catalog_unavailable`, as when TMDB is down.           |
-| `new-household`        | A household on its first day: every list is empty and no catalog title is held.       |
-| `library-unavailable`  | `GET /library` answers 500 `internal_error`; every other read keeps working.          |
+| Scenario               | What the fixture API does                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------------------------ |
+| `stale-library-access` | Every catalog read reports `libraryAccess: "stale"` and no title carries a `library`.                  |
+| `feed-unavailable`     | The `popular_series` feed answers 502 `catalog_unavailable`; the rest keep working.                    |
+| `catalog-unavailable`  | Every catalog read answers 502 `catalog_unavailable`, as when TMDB is down.                            |
+| `new-household`        | A household on its first day: every list is empty and no catalog title is held.                        |
+| `library-unavailable`  | `GET /library` answers 500 `internal_error`; every other read keeps working.                           |
+| `recovery-long`        | A restore with 42 held titles, three open household reviews (one of 26 episodes) and ten applied ones. |
+| `recovery-all-clear`   | A restore that has been dealt with: nothing held, every household review applied.                      |
+| `recovery-unavailable` | `GET /recovery` answers 500 `internal_error`; every other read keeps working.                          |
 
 A fixture answers a scenario by reading `request.scenario`, and throws
 `FixtureFailure` (`src/testing/fixture-api/scenario.ts`) for an error the real
@@ -818,7 +821,7 @@ topic under `/manage`:
 | `/manage/numbering`                   | Anime absolute numbering                         |
 | `/manage/providers`                   | Providers and seeding policy                     |
 | `/manage/activity`                    | Operations                                       |
-| `/manage/recovery`                    | Links to each recovery job                       |
+| `/manage/recovery`                    | Recovery: reviews, held titles, and file proofs  |
 | `/manage/recovery/native/:id?`        | Native file recovery, archives, and compensation |
 | `/manage/migration`                   | Migration captures and library import            |
 
@@ -1513,17 +1516,17 @@ obfuscation, and Web Analytics injection stay off for this host.
 The owner's Manage pages are built from the primitives in `src/client/ui`.
 Pages outside Manage still use the shared classes in `styles.css`.
 
-| Module                        | Provides                                                                                                  |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `ui/forms/form.tsx`           | `Form`, `FormFooter`, `FieldRow`, `useSavedNotes`                                                         |
-| `ui/forms/field.tsx`          | `TextField`, `SelectField`, `TextAreaField`, `CheckboxField`, `ChoiceField`, `FieldGroup`, `InlineSelect` |
-| `ui/forms/duration-field.tsx` | `DurationField`: a length of time as an amount and a unit                                                 |
-| `ui/forms/list-editor.tsx`    | `ListEditor`: a list of distinct values, reordered with move buttons                                      |
-| `ui/button.tsx`               | `Button` (`primary`, `secondary`, `quiet`, `danger`), `IconButton`, `ButtonLink`, `ButtonRow`             |
-| `ui/confirm-dialog.tsx`       | `ConfirmDialog`, a native modal `<dialog>` whose Cancel takes focus                                       |
-| `ui/panel.tsx`                | `Panel`, `Disclosure`, `DisclosureList`, `SkeletonRows`, `EmptyNote`                                      |
-| `ui/data-list.tsx`            | `DataList` and `DataRow`: rows that stack into cards in a narrow container                                |
-| `ui/feedback.tsx`             | `Callout`, `LoadError`, `Badge`                                                                           |
+| Module                        | Provides                                                                                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ui/forms/form.tsx`           | `Form`, `FormFooter`, `FieldRow`, `useSavedNotes`                                                                                                |
+| `ui/forms/field.tsx`          | `TextField`, `SelectField`, `TextAreaField`, `CheckboxField`, `ChoiceField` (radios, with `required` and an error), `FieldGroup`, `InlineSelect` |
+| `ui/forms/duration-field.tsx` | `DurationField`: a length of time as an amount and a unit                                                                                        |
+| `ui/forms/list-editor.tsx`    | `ListEditor`: a list of distinct values, reordered with move buttons                                                                             |
+| `ui/button.tsx`               | `Button` (`primary`, `secondary`, `quiet`, `danger`), `IconButton`, `ButtonLink`, `ButtonRow`                                                    |
+| `ui/confirm-dialog.tsx`       | `ConfirmDialog`, a native modal `<dialog>` whose Cancel takes focus                                                                              |
+| `ui/panel.tsx`                | `Panel`, `Disclosure`, `DisclosureList`, `SkeletonRows`, `EmptyNote`                                                                             |
+| `ui/data-list.tsx`            | `DataList` and `DataRow`: rows that stack into cards in a narrow container                                                                       |
+| `ui/feedback.tsx`             | `Callout`, `LoadError`, `Badge`                                                                                                                  |
 
 `Form` owns validation. On submit it reads each control's own constraints
 (`required`, `min`, `pattern`, and so on, worded by `ui/forms/validation.ts`) and the
@@ -2370,7 +2373,20 @@ protect rather than prove quiescence.
 
 ## Recovery reconciliation API
 
-The `/recovery` interface shows owners protected titles and household reviews.
+Recovery is two pages over one read. The owner's is `/manage/recovery`; `/recovery`
+sends the owner there and is a member's own page. A review itself, `/recovery/:id`,
+is the same page for both, so a link in a message works for whoever opens it.
+The owner's page says first what is waiting (open reviews, held titles), then
+lists the household reviews with the applied ones folded away, the held titles
+grouped by why they are held with a filter, the owner's identity associations,
+the file proofs, the read-only automation authority, and storage capacity. A
+review shows its standing (who it waits for, or that it is ready), the titles,
+a declaration form for each person the reader may declare for, and, for the
+owner, who has declared, what stays as it is, and the apply form: three
+statements, then a dialog that names the titles. A review that cannot be
+applied, or was, shows no form and says why. Raw identifiers and hashes are
+under "Technical details".
+
 Owners select media to prepare a review; shared physical files expand the scope
 to all covered episodes. Independent accounts sign in and declare retain/request,
 Keep for a stated period, or no longer request for their applicable titles. The

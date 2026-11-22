@@ -6,15 +6,29 @@ import {
   type CapacityRoleView,
 } from "#shared/capacity/view.ts";
 import { readApi } from "#client/api.ts";
-import {
-  dateLabel,
-  ErrorNotice,
-  Loading,
-  Notice,
-} from "#client/components.tsx";
+import { dateLabel } from "#client/components.tsx";
+import { Button } from "#client/ui/button.tsx";
+import { classNames } from "#client/ui/class-names.ts";
+import { DataList, DataRow } from "#client/ui/data-list.tsx";
+import { Badge, Callout, LoadError } from "#client/ui/feedback.tsx";
+import { Panel, SkeletonRows } from "#client/ui/panel.tsx";
+import type { StatusTone } from "#client/status/tone.ts";
 import { capacityBytes } from "./format.ts";
 import { capacityReasons, capacityStates } from "./presentation.ts";
-import "./panel.css";
+import styles from "./panel.module.css";
+
+const cx = classNames(styles);
+
+/** How worrying each state of a measurement is. */
+const STATE_TONES = {
+  current: "ok",
+  missing: "warn",
+  unavailable: "warn",
+  future: "warn",
+  old_epoch: "warn",
+  root_changed: "warn",
+  stale: "warn",
+} as const satisfies Record<CapacityRoleView["state"], StatusTone>;
 
 export function CapacityPanel({ user }: { user: MediaUser }) {
   return user.role !== "owner" || user.restricted ? null : (
@@ -29,28 +43,36 @@ function OwnerCapacityPanel({ userId }: { userId: string }) {
     refetchInterval: 30_000,
   });
   return (
-    <section className="panel" aria-labelledby="storage-capacity-title">
-      <h2 id="storage-capacity-title">Storage capacity</h2>
-      <p>
-        Filesystem measurements are informational. They do not reserve space or
-        authorize writes. Movies and TV may share storage; their capacities
-        should not be added together.
-      </p>
-      {result.isPending && <Loading />}
-      {result.error !== null && <ErrorNotice error={result.error} />}
+    <Panel
+      title="Storage capacity"
+      description="Filesystem measurements are informational. They do not reserve space or authorize writes. Movies and TV may share storage; their capacities should not be added together."
+    >
+      {result.isPending && (
+        <SkeletonRows label="Loading storage capacity" rows={2} />
+      )}
+      {result.error !== null && (
+        <LoadError
+          what="Storage capacity"
+          error={result.error}
+          retry={() => {
+            void result.refetch();
+          }}
+        />
+      )}
       {result.error === null && result.data !== undefined && (
         <CapacityMeasurements view={result.data} />
       )}
-      <button
-        className="button subtle"
-        disabled={result.isFetching}
-        onClick={() => {
-          void result.refetch();
-        }}
-      >
-        Refresh view
-      </button>
-    </section>
+      <div>
+        <Button
+          disabled={result.isFetching}
+          onClick={() => {
+            void result.refetch();
+          }}
+        >
+          Refresh view
+        </Button>
+      </div>
+    </Panel>
   );
 }
 
@@ -58,34 +80,41 @@ export function CapacityMeasurements({ view }: { view: CapacityView }) {
   return (
     <>
       {!view.samplingEnabled && (
-        <Notice>
+        <Callout tone="neutral">
           Capacity collection is off. Existing measurements are shown only while
           their storage checks and sample times remain valid.
-        </Notice>
+        </Callout>
       )}
-      <p className="helper">Status checked {dateLabel(view.asOf)}.</p>
-      <div className="detail-columns">
+      <DataList label="Storage by library">
         {view.roles.map((role) => (
           <CapacityMeasurement key={role.role} value={role} />
         ))}
-      </div>
+      </DataList>
+      <p className={cx("asOf")}>Status checked {dateLabel(view.asOf)}.</p>
     </>
   );
 }
 
 function CapacityMeasurement({ value }: { value: CapacityRoleView }) {
   return (
-    <article>
-      <h3>{value.role === "movies" ? "Movies" : "TV"}</h3>
-      <p>
-        <strong>{capacityStates[value.state]}</strong>
-      </p>
-      {value.reason !== null && <p>{capacityReasons[value.reason]}</p>}
+    <DataRow
+      title={value.role === "movies" ? "Movies" : "TV"}
+      status={
+        <Badge tone={STATE_TONES[value.state]}>
+          {capacityStates[value.state]}
+        </Badge>
+      }
+      detail={
+        <>
+          {value.reason !== null && <p>{capacityReasons[value.reason]}</p>}
+          {value.sampledAt !== null && (
+            <p>Measured {dateLabel(value.sampledAt)}.</p>
+          )}
+        </>
+      }
+    >
       {value.state === "current" && <CurrentBytes value={value} />}
-      {value.sampledAt !== null && (
-        <p className="helper">Measured {dateLabel(value.sampledAt)}.</p>
-      )}
-    </article>
+    </DataRow>
   );
 }
 
@@ -93,7 +122,7 @@ function CurrentBytes({ value }: { value: CapacityRoleView }) {
   if (value.totalBytes === null || value.availableBytes === null)
     throw new Error("Current capacity requires measured bytes");
   return (
-    <dl className="facts capacity-facts">
+    <dl className={cx("facts")}>
       <div>
         <dt>Available</dt>
         <dd>{capacityBytes(value.availableBytes)}</dd>
