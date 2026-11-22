@@ -381,6 +381,15 @@ test("separates beta state and excludes digests, canaries, manual and checkpoint
   );
   expect(h.sent).toHaveLength(2);
   expect(h.families.size).toBe(2);
+  for (const [scheduleId, reportType] of [
+    ["homelab-audit-daily", "homelab-audit"],
+    ["scout-queue-windows-daily", "scout-queue-windows"],
+    ["scout-data-dragon-version-check", "scout-data-dragon"],
+    ["the-storm-promotion-daily", "storm-promotion"],
+    ["daily-notification-policy-canary", "daily-notification-policy-canary"],
+  ] as const) {
+    expect(usesDailyNotificationPolicy({ scheduleId, reportType })).toBe(true);
+  }
   for (const reportType of [
     "dependency-summary",
     "tasknotes-canary",
@@ -388,7 +397,58 @@ test("separates beta state and excludes digests, canaries, manual and checkpoint
   ]) {
     expect(usesDailyNotificationPolicy({ ...prod, reportType })).toBe(false);
   }
+  expect(
+    usesDailyNotificationPolicy({
+      scheduleId: "scout-data-dragon-weekly-refresh",
+      reportType: "scout-data-dragon",
+    }),
+  ).toBe(false);
   expect(usesDailyNotificationPolicy({ reportType: prod.reportType })).toBe(
     false,
+  );
+});
+
+test("remediation PR changes the notification fingerprint without perturbing non-PR reports", () => {
+  const base = report(1, null);
+  const withPr = ReportEnvelopeV1Schema.parse({
+    ...base,
+    verdict: "changed",
+    remediation: {
+      outcome: "pr-created",
+      prUrl: "https://github.com/shepherdjerred/monorepo/pull/1",
+      changedFiles: ["README.md"],
+    },
+  });
+  const reusedPr = ReportEnvelopeV1Schema.parse({
+    ...base,
+    verdict: "changed",
+    remediation: {
+      outcome: "pr-reused",
+      prUrl: "https://github.com/shepherdjerred/monorepo/pull/1",
+      changedFiles: ["README.md"],
+    },
+  });
+  const newerPr = ReportEnvelopeV1Schema.parse({
+    ...base,
+    verdict: "changed",
+    remediation: {
+      outcome: "pr-created",
+      prUrl: "https://github.com/shepherdjerred/monorepo/pull/2",
+      changedFiles: ["README.md"],
+    },
+  });
+  const changedWithoutPr = ReportEnvelopeV1Schema.parse({
+    ...base,
+    verdict: "changed",
+  });
+
+  expect(notificationCondition(withPr).fingerprint).not.toBe(
+    notificationCondition(changedWithoutPr).fingerprint,
+  );
+  expect(notificationCondition(reusedPr).fingerprint).not.toBe(
+    notificationCondition(withPr).fingerprint,
+  );
+  expect(notificationCondition(newerPr).fingerprint).not.toBe(
+    notificationCondition(withPr).fingerprint,
   );
 });

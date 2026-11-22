@@ -15,6 +15,7 @@ import {
   reportStateKey,
   type ReportStateV1,
 } from "./report-delivery.ts";
+import { pushSkippedReportNotificationToHub } from "./report-hub-ingest.ts";
 import {
   reportSendClaimKey,
   type ReportSendClaimV1,
@@ -465,5 +466,95 @@ describe("report send ownership", () => {
 
     expect(sent).toHaveLength(1);
     expect(result.deduplicated).toBe(false);
+  });
+});
+
+describe("report Hub ingestion", () => {
+  test("pushes newly sent, deduplicated, and skipped runs to Hub", async () => {
+    const { dependencies } = scenario(new Map<string, StoredClaim>());
+    const hubPushes: {
+      reportRunId: string;
+      sender: string;
+      recipient: string;
+      status: string;
+      skipReason?: string;
+    }[] = [];
+    const baseDeps = dependencies("workflow/run-1/activity-1/1", NOW);
+    const depsWithHub = {
+      ...baseDeps,
+      pushToHub: async (input: {
+        report: ReportEnvelopeV1;
+        addresses: { sender: string; recipient: string };
+        delivery:
+          | { deliveryStatus: "sent"; messageId: string; acceptedAt: string }
+          | {
+              deliveryStatus: "skipped";
+              skipReason: "unchanged" | "superseded";
+            };
+      }) => {
+        hubPushes.push({
+          reportRunId: input.report.reportRunId,
+          sender: input.addresses.sender,
+          recipient: input.addresses.recipient,
+          status: input.delivery.deliveryStatus,
+          ...(input.delivery.deliveryStatus === "skipped"
+            ? { skipReason: input.delivery.skipReason }
+            : {}),
+        });
+        return { pushed: 1 };
+      },
+    };
+
+    const first = await deliverReportWithDependencies(report(), depsWithHub);
+    const duplicate = await deliverReportWithDependencies(
+      report(),
+      depsWithHub,
+    );
+    await pushSkippedReportNotificationToHub({
+      report: {
+        ...report(),
+        reportRunId: "test-report:run-2",
+        reportType: "homelab-audit",
+      },
+      skipped: {
+        outcome: "skipped",
+        reason: "unchanged",
+        reportRunId: "test-report:run-2",
+        reportType: "homelab-audit",
+        scheduleId: "homelab-audit-daily",
+        completedAt: NOW,
+        observationKey:
+          "reports/observations/prod/homelab-audit/homelab-audit-daily/test-report-run-2.json",
+      },
+      resolveAddresses: async () => ({
+        sender: "Homelab Audit <ops@sjer.red>",
+        recipient: "ops@sjer.red",
+      }),
+      pushToHub: depsWithHub.pushToHub,
+    });
+
+    expect(first.deduplicated).toBe(false);
+    expect(duplicate.deduplicated).toBe(true);
+    expect(hubPushes).toEqual([
+      {
+        reportRunId: "test-report:run-1",
+        sender: "sender@example.com",
+        recipient: "recipient@example.com",
+        status: "sent",
+      },
+      {
+        reportRunId: "test-report:run-1",
+        sender: "sender@example.com",
+        recipient: "recipient@example.com",
+        status: "sent",
+      },
+      {
+        reportRunId: "test-report:run-2",
+        sender: "Homelab Audit <ops@sjer.red>",
+        recipient: "ops@sjer.red",
+        status: "skipped",
+        skipReason: "unchanged",
+      },
+    ]);
   });
 });

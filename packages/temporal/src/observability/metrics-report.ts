@@ -21,3 +21,10 @@ export const reportFreshnessState = new Gauge({
   labelNames: ["temporal_namespace", "schedule_id"] as const,
   registers: [register],
 });
+
+export const reportHubIngestTotal = new Counter({
+  name: "temporal_report_hub_ingest_total",
+  help: "Temporal report run ingestion attempts pushed to Hub by outcome",
+  labelNames: ["outcome"] as const,
+  registers: [register],
+});

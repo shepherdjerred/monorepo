@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
+import { hubReportRunUrl } from "@shepherdjerred/ops-model/tool-links.ts";
 import {
   hasTailoredReportPresentation,
   presentReport,
+  reportEyebrow,
   reportSubject,
   TAILORED_REPORT_TYPES,
 } from "./report-presentation.ts";
@@ -268,6 +270,48 @@ const SUBJECT_CASES = [
     expected: "Scout season: Update failed",
   },
   {
+    reportType: "storm-promotion",
+    title: "The Storm promotion summary",
+    execution: "complete",
+    verdict: "clear",
+    expected: "The Storm promotion: All clear",
+  },
+  {
+    reportType: "storm-promotion",
+    title: "The Storm promotion summary",
+    execution: "complete",
+    verdict: "changed",
+    expected: "The Storm promotion: Changes detected",
+  },
+  {
+    reportType: "storm-promotion",
+    title: "The Storm promotion summary",
+    execution: "complete",
+    verdict: "attention",
+    expected: "The Storm promotion: Destinations need review",
+  },
+  {
+    reportType: "storm-promotion",
+    title: "The Storm promotion summary",
+    execution: "complete",
+    verdict: "pending",
+    expected: "The Storm promotion: Still pending",
+  },
+  {
+    reportType: "storm-promotion",
+    title: "The Storm promotion summary",
+    execution: "partial",
+    verdict: "inconclusive",
+    expected: "The Storm promotion: Could not finish",
+  },
+  {
+    reportType: "storm-promotion",
+    title: "The Storm promotion summary",
+    execution: "failed",
+    verdict: "inconclusive",
+    expected: "The Storm promotion: Run failed",
+  },
+  {
     reportType: "tasknotes-canary",
     title: "TaskNotes skipped-files canary",
     execution: "complete",
@@ -303,10 +347,43 @@ describe("ReportEnvelopeV1", () => {
         }),
       ).toBe(subjectCase.expected);
     }
-    expect(TAILORED_REPORT_TYPES).toHaveLength(10);
+    expect(TAILORED_REPORT_TYPES).toHaveLength(11);
     expect(TAILORED_REPORT_TYPES.every(hasTailoredReportPresentation)).toBe(
       true,
     );
+    expect(reportEyebrow("storm-promotion")).toBe("The Storm Promotion");
+  });
+
+  test("derives PR-aware changed subjects when remediation includes a PR URL", () => {
+    const remediation = {
+      outcome: "pr-created" as const,
+      prUrl: "https://github.com/shepherdjerred/monorepo/pull/1",
+      changedFiles: ["README.md"],
+    };
+    expect(
+      reportSubject({
+        ...validReport(),
+        reportType: "link-rot-scan",
+        verdict: "changed",
+        remediation,
+      }),
+    ).toBe("Link check: Dead-link fix PR opened");
+    expect(
+      reportSubject({
+        ...validReport(),
+        reportType: "main-vuln-scan",
+        verdict: "changed",
+        remediation,
+      }),
+    ).toBe("Security scan: Vulnerability fix PR opened");
+    expect(
+      reportSubject({
+        ...validReport(),
+        reportType: "dependency-summary",
+        verdict: "changed",
+        remediation,
+      }),
+    ).toBe("Dependencies: Updates and release-note PR");
   });
 
   test("keeps unknown report types readable", () => {
@@ -602,13 +679,23 @@ describe("Human report email rendering", () => {
     );
   });
 
-  test("omits delivery internals and raw commands", () => {
-    const html = renderReportHtml(validReport());
-    const text = renderReportText(validReport());
+  test("omits delivery internals and raw commands while linking Open in Hub", () => {
+    const fixture = {
+      ...validReport(),
+      provenance: {
+        ...validReport().provenance,
+        runId: "workflow-internal-uuid",
+      },
+    };
+    const html = renderReportHtml(fixture);
+    const text = renderReportText(fixture);
+    const expectedHubUrl = hubReportRunUrl(fixture.reportRunId);
     for (const rendered of [html, text]) {
+      expect(rendered).toContain("Open in Hub");
+      expect(rendered).toContain(expectedHubUrl);
       expect(rendered).not.toContain("dependency-summary:run-1");
       expect(rendered).not.toContain("deps-summary-weekly-2026-08-10");
-      expect(rendered).not.toContain("run-1");
+      expect(rendered).not.toContain("workflow-internal-uuid");
       expect(rendered).not.toContain("git diff old new");
       expect(rendered).not.toContain("git-diff");
       expect(rendered).not.toContain("required");
@@ -630,5 +717,54 @@ describe("Human report email rendering", () => {
   test("keeps compact HTML and plain-text snapshots stable", () => {
     expect(renderReportHtml(validReport())).toMatchSnapshot();
     expect(renderReportText(validReport())).toMatchSnapshot();
+  });
+});
+
+describe("Automated remediation email rendering", () => {
+  test("renders automated remediation card and promotes PR link to primary action", () => {
+    const remediation = {
+      outcome: "pr-created" as const,
+      prUrl: "https://github.com/shepherdjerred/monorepo/pull/1",
+      branchName: "automation/link-rot",
+      autoMergeEnabled: true,
+      changedFiles: ["README.md", "packages/temporal/README.md"],
+      summary: "Replaced two permanently redirected documentation links.",
+    };
+    const report: ReportEnvelopeV1 = {
+      ...validReport(),
+      reportType: "link-rot-scan",
+      verdict: "changed",
+      provenance: {
+        ...validReport().provenance,
+        temporalUrl:
+          "https://temporal-ui.tailnet-1a49.ts.net/namespaces/prod/workflows/link-rot-scan",
+      },
+      remediation,
+    };
+    const html = renderReportHtml(report);
+    const text = renderReportText(report);
+    expect(html).toContain("Automated remediation");
+    expect(html).toContain("Auto-merge enabled");
+    expect(html).toContain("2 files");
+    expect(html).toContain("Review pull request");
+    expect(html).toContain("Open in Hub");
+    expect(html).toContain("View workflow run");
+    expect(text).toContain(
+      "Review pull request: https://github.com/shepherdjerred/monorepo/pull/1",
+    );
+    expect(text).toContain(
+      `Open in Hub: ${hubReportRunUrl(report.reportRunId)}`,
+    );
+
+    const awaitingReviewHtml = renderReportHtml({
+      ...report,
+      remediation: {
+        ...remediation,
+        outcome: "pr-reused",
+        autoMergeEnabled: false,
+      },
+    });
+    expect(awaitingReviewHtml).toContain("Awaiting review");
+    expect(awaitingReviewHtml).toContain("Remediation pull request updated");
   });
 });

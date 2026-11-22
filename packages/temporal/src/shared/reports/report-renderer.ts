@@ -11,12 +11,18 @@ import {
 } from "@shepherdjerred/ops-model/email/primitives.ts";
 import { renderEmailHtml } from "@shepherdjerred/ops-model/email/render-html.ts";
 import { renderEmailText } from "@shepherdjerred/ops-model/email/render-text.ts";
+import { hubReportRunUrl } from "@shepherdjerred/ops-model/tool-links.ts";
 import {
   presentReport,
+  reportEyebrow,
   type ReportEmailPresentation,
   type ReportPresentationTone,
 } from "./report-presentation.ts";
-import { ReportEnvelopeV1Schema, type ReportEnvelopeV1 } from "./report.ts";
+import {
+  ReportEnvelopeV1Schema,
+  type ReportEnvelopeV1,
+  type ReportRemediationV1,
+} from "./report.ts";
 
 function mapPresentationTone(tone: ReportPresentationTone): EmailTone {
   switch (tone) {
@@ -26,28 +32,6 @@ function mapPresentationTone(tone: ReportPresentationTone): EmailTone {
       return "warning";
     case "incomplete":
       return "critical";
-  }
-}
-
-function reportEyebrow(reportType: string): string {
-  switch (reportType) {
-    case "homelab-audit":
-      return "Homelab Check";
-    case "dependency-summary":
-      return "Repo Dependencies";
-    case "scout-data-dragon":
-    case "scout-lane-priors":
-    case "scout-queue-windows":
-    case "scout-season-refresh":
-      return "Scout Automation";
-    case "main-vuln-scan":
-      return "Security Scan";
-    case "link-rot-scan":
-      return "Link Check";
-    case "tasknotes-canary":
-      return "TaskNotes Check";
-    default:
-      return "Temporal Report";
   }
 }
 
@@ -87,6 +71,45 @@ function mapFindingSeverity(
     case "info":
       return { tone: "info", badge: "Note" };
   }
+}
+
+function buildRemediationSection(
+  remediation: ReportRemediationV1,
+  prHref: string,
+): Extract<EmailSection, { kind: "items" }> {
+  const autoMerge = remediation.autoMergeEnabled === true;
+  const fileCount = remediation.changedFiles.length;
+  const card: EmailItemCard = {
+    tone: autoMerge ? "ok" : "info",
+    badge: autoMerge ? "Auto-merge enabled" : "Awaiting review",
+    title:
+      remediation.outcome === "pr-reused"
+        ? "Remediation pull request updated"
+        : "Remediation pull request opened",
+    ...(remediation.summary === undefined ? {} : { body: remediation.summary }),
+    details: [
+      {
+        label: "Changed files",
+        value: `${String(fileCount)} ${fileCount === 1 ? "file" : "files"}`,
+        mono: false,
+      },
+      ...(remediation.branchName === undefined
+        ? []
+        : [
+            {
+              label: "Branch",
+              value: remediation.branchName,
+              mono: true,
+            },
+          ]),
+    ],
+    links: [{ label: "Review pull request", url: prHref }],
+  };
+  return {
+    kind: "items",
+    heading: "Automated remediation",
+    items: [card],
+  };
 }
 
 function buildFindingCards(
@@ -140,20 +163,47 @@ function buildChecksSection(
   };
 }
 
-function resolvePrimaryAction(
-  report: ReportEnvelopeV1,
-): EmailActionLink | undefined {
-  const temporalHref = safeHttpUrl(report.provenance.temporalUrl);
-  if (temporalHref !== null) {
-    return { label: "View workflow run", url: temporalHref };
-  }
+function firstEvidenceHref(report: ReportEnvelopeV1): string | null {
   for (const receipt of report.evidence) {
     const href = safeHttpUrl(receipt.url);
     if (href !== null) {
-      return { label: "View source", url: href };
+      return href;
     }
   }
-  return undefined;
+  return null;
+}
+
+function resolveDocumentActions(
+  report: ReportEnvelopeV1,
+  prHref: string | null,
+): {
+  primaryAction: EmailActionLink;
+  secondaryActions: EmailActionLink[];
+} {
+  const hubHref = hubReportRunUrl(report.reportRunId);
+  const temporalHref = safeHttpUrl(report.provenance.temporalUrl);
+  if (prHref !== null) {
+    return {
+      primaryAction: { label: "Review pull request", url: prHref },
+      secondaryActions: [
+        { label: "Open in Hub", url: hubHref },
+        ...(temporalHref === null
+          ? []
+          : [{ label: "View workflow run", url: temporalHref }]),
+      ],
+    };
+  }
+  const sourceHref = firstEvidenceHref(report);
+  const secondaryActions =
+    temporalHref === null
+      ? sourceHref === null
+        ? []
+        : [{ label: "View source", url: sourceHref }]
+      : [{ label: "View workflow run", url: temporalHref }];
+  return {
+    primaryAction: { label: "Open in Hub", url: hubHref },
+    secondaryActions,
+  };
 }
 
 function buildTechnicalDetails(report: ReportEnvelopeV1): EmailDetailRow[] {
@@ -209,8 +259,12 @@ export function buildReportEmailDocument(
 ): EmailDocument {
   const report = ReportEnvelopeV1Schema.parse(rawReport);
   const presentation = presentReport(report);
+  const prHref = safeHttpUrl(report.remediation?.prUrl);
   const findingCards = buildFindingCards(report, presentation);
   const sections: EmailSection[] = [
+    ...(prHref !== null && report.remediation !== undefined
+      ? [buildRemediationSection(report.remediation, prHref)]
+      : []),
     ...(findingCards.length === 0
       ? []
       : [
@@ -241,7 +295,10 @@ export function buildReportEmailDocument(
     buildChecksSection(report, presentation),
   ];
 
-  const primaryAction = resolvePrimaryAction(report);
+  const { primaryAction, secondaryActions } = resolveDocumentActions(
+    report,
+    prHref,
+  );
   const singleAction =
     presentation.actions.length === 1 ? presentation.actions[0] : undefined;
 
@@ -263,7 +320,8 @@ export function buildReportEmailDocument(
         }
       : {}),
     sections,
-    ...(primaryAction === undefined ? {} : { primaryAction }),
+    primaryAction,
+    ...(secondaryActions.length === 0 ? {} : { secondaryActions }),
     details: buildTechnicalDetails(report),
   };
 }
