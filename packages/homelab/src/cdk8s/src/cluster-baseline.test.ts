@@ -196,7 +196,12 @@ const CLUSTER_OBSERVABILITY_INVENTORY = [
   "v1/ConfigMap/prometheus/alertmanager-auth-gateway-config",
   "monitoring.coreos.com/v1/PodMonitor/woodpecker/woodpecker-server",
   "monitoring.coreos.com/v1/PodMonitor/kube-system/kube-network-policies",
+  "monitoring.coreos.com/v1/PodMonitor/promtail/promtail",
+  "monitoring.coreos.com/v1/PodMonitor/pyroscope/pyroscope",
+  "monitoring.coreos.com/v1/PodMonitor/cloudflare-operator-system/cloudflared",
   "monitoring.coreos.com/v1/ServiceMonitor/buildkitd/buildkitd-service-monitor",
+  "monitoring.coreos.com/v1/ServiceMonitor/loki/loki-service-monitor",
+  "monitoring.coreos.com/v1/ServiceMonitor/tempo/tempo-service-monitor",
   "monitoring.coreos.com/v1/ServiceMonitor/kueue-system/kueue-controller-manager-metrics",
   ...prometheusRules.map(
     ([namespace, name]) =>

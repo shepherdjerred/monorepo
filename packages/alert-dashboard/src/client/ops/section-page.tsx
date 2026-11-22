@@ -4,12 +4,13 @@ import type {
   SectionId,
   SnapshotResponse,
 } from "@shepherdjerred/ops-model/snapshot.ts";
+import type { ReactNode } from "react";
 
+import { FlowEnrichment } from "./flow-enrichment.tsx";
 import {
-  MetricTile,
   PageHeading,
   RangePicker,
-  SeverityBadge,
+  SectionSummary,
   WithSnapshot,
 } from "./ops-ui.tsx";
 import { columnSplit } from "./panel-columns.ts";
@@ -23,33 +24,8 @@ export type SectionPageDefinition = {
   eyebrow: string;
   sections: readonly SectionId[];
   charts: readonly SeriesPresetId[];
+  enrichment?: ReactNode;
 };
-
-/** One section at a glance: its verdict, its summary and every metric. */
-function SectionSummary({
-  section,
-}: {
-  readonly section: Section;
-}): React.JSX.Element {
-  const headingId = `summary-${section.id}`;
-  return (
-    <article
-      className={`section-summary section-${section.severity}`}
-      aria-labelledby={headingId}
-    >
-      <h2 id={headingId}>{section.title}</h2>
-      <SeverityBadge severity={section.severity} />
-      <p>{section.summary}</p>
-      {section.metrics.length === 0 ? null : (
-        <div className="metric-row">
-          {section.metrics.map((metric) => (
-            <MetricTile key={metric.id} metric={metric} />
-          ))}
-        </div>
-      )}
-    </article>
-  );
-}
 
 /** One section's signals, capped like every other list. */
 function SectionSignals({
@@ -144,6 +120,7 @@ function SectionBody({
           <SeriesChart key={preset} preset={preset} range={range} />
         ))}
       </div>
+      {definition.enrichment}
       <h2 className="block-heading">Signals</h2>
       <SignalColumns sections={sections} newIds={newIds} />
     </>
@@ -174,6 +151,7 @@ const FLOW_PAGE: SectionPageDefinition = {
   eyebrow: "Pull requests & work",
   sections: ["delivery", "work"],
   charts: ["prs-open", "prs-merged", "renovate-pending", "tracker-open"],
+  enrichment: <FlowEnrichment />,
 };
 
 const MAINTENANCE_PAGE: SectionPageDefinition = {

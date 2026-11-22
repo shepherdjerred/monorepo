@@ -72,6 +72,10 @@ describe("Temporal ops snapshot collector", () => {
       value: "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
     });
     expect(env).toContainEqual({
+      name: "GOLINK_URL",
+      value: "http://golink.golink.svc.cluster.local:7352",
+    });
+    expect(env).toContainEqual({
       name: "LOKI_URL",
       value: "http://loki.loki.svc.cluster.local:3100",
     });
@@ -95,7 +99,7 @@ describe("Temporal ops snapshot collector", () => {
     }
   });
 
-  test("lets the infra worker reach Grafana, Alertmanager, Loki, and Tempo", () => {
+  test("lets the infra worker reach Grafana, Alertmanager, Loki, Tempo, and golink", () => {
     const policy = findTemporalResource(
       resources(),
       "NetworkPolicy",
@@ -137,6 +141,7 @@ describe("Temporal ops snapshot collector", () => {
     expect(byPort.get(3100)).toBe("loki");
     expect(byPort.get(3200)).toBe("tempo");
     expect(byPort.get(7351)).toBe("tracker");
+    expect(byPort.get(7352)).toBe("golink");
     expect(byPort.get("grafana")).toBe("prometheus");
     // Kubernetes API and the dashboard ingest stay reachable.
     expect(byPort.has(6443)).toBe(true);

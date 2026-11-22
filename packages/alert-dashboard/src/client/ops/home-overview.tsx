@@ -18,7 +18,7 @@ const SECTION_PAGES: Partial<Record<SectionId, string>> = {
   errors: "/maintenance",
   platform: "/maintenance",
   observability: "/maintenance",
-  product: "/services",
+  product: "/product",
 };
 
 /**

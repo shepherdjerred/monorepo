@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it, test } from "vitest";
+import { afterEach, describe, expect, it, test, vi } from "vitest";
+import { z } from "zod";
 
 import { handleAlertsCommand } from "#handlers/alerts.ts";
 import { listAlerts } from "#lib/alerts.ts";
@@ -13,7 +14,7 @@ function fetchInputToUrl(input: FetchInput): URL {
   return input instanceof URL ? input : new URL(input.url);
 }
 
-function alert(index: number) {
+function alert(index: number, lifecycleState: "open" | "resolved" = "open") {
   return {
     id: `alert_${index.toString(16).padStart(32, "0")}`,
     fingerprint: `fingerprint-${String(index)}`,
@@ -21,11 +22,11 @@ function alert(index: number) {
     namespace: "test",
     severity: "warning",
     summary: "Pagination fixture",
-    lifecycleState: "open",
+    lifecycleState,
     suppressionState: "none",
-    resolutionSource: null,
+    resolutionSource: lifecycleState === "resolved" ? "webhook" : null,
     openedAt: "2026-08-08T18:00:00Z",
-    resolvedAt: null,
+    resolvedAt: lifecycleState === "resolved" ? "2026-08-08T18:05:00Z" : null,
     lastSeenAt: "2026-08-08T18:01:00Z",
     generatorUrl: null,
     labels: {},
@@ -49,7 +50,29 @@ function startMockServer(): { url: string; requests: URL[] } {
   return { url, requests };
 }
 
+function installPaginatedFetchMock(requestedUrls: URL[]): void {
+  const fetchMock: typeof fetch = Object.assign(
+    (input: FetchInput) => {
+      const url = fetchInputToUrl(input);
+      requestedUrls.push(url);
+      const secondPage = url.searchParams.has("cursor");
+      return Promise.resolve(
+        Response.json({
+          items: secondPage
+            ? [alert(100, "resolved")]
+            : Array.from({ length: 100 }, (_, index) => alert(index)),
+          nextCursor: secondPage ? null : alert(99).id,
+        }),
+      );
+    },
+    { preconnect: ORIGINAL_FETCH.preconnect },
+  );
+  globalThis.fetch = fetchMock;
+  Bun.env["ALERT_DASHBOARD_URL"] = "https://alerts.example.test";
+}
+
 afterEach(async () => {
+  vi.restoreAllMocks();
   globalThis.fetch = ORIGINAL_FETCH;
   while (activeServers.length > 0) {
     const server = activeServers.pop();
@@ -83,24 +106,7 @@ describe("Alerts API endpoint", () => {
 describe("Alerts API pagination", () => {
   it("follows every cursor when the caller does not set a result limit", async () => {
     const requestedUrls: URL[] = [];
-    const fetchMock: typeof fetch = Object.assign(
-      (input: FetchInput) => {
-        const url = fetchInputToUrl(input);
-        requestedUrls.push(url);
-        const secondPage = url.searchParams.has("cursor");
-        return Promise.resolve(
-          Response.json({
-            items: secondPage
-              ? [alert(100)]
-              : Array.from({ length: 100 }, (_, index) => alert(index)),
-            nextCursor: secondPage ? null : alert(99).id,
-          }),
-        );
-      },
-      { preconnect: ORIGINAL_FETCH.preconnect },
-    );
-    globalThis.fetch = fetchMock;
-    Bun.env["ALERT_DASHBOARD_URL"] = "https://alerts.example.test";
+    installPaginatedFetchMock(requestedUrls);
 
     const result = await listAlerts({ lifecycleState: "open" });
 
@@ -108,6 +114,87 @@ describe("Alerts API pagination", () => {
     expect(requestedUrls).toHaveLength(2);
     expect(requestedUrls[0]?.searchParams.get("limit")).toBe("100");
     expect(requestedUrls[1]?.searchParams.get("cursor")).toBe(alert(99).id);
+  });
+
+  it("supports limit=all for exhaustive pagination and strips lifecycleState=all", async () => {
+    const requestedUrls: URL[] = [];
+    installPaginatedFetchMock(requestedUrls);
+
+    const result = await listAlerts({ lifecycleState: "all", limit: "all" });
+
+    expect(result).toHaveLength(101);
+    expect(requestedUrls).toHaveLength(2);
+    expect(requestedUrls[0]?.searchParams.has("lifecycleState")).toBe(false);
+    expect(requestedUrls[0]?.searchParams.get("limit")).toBe("100");
+  });
+
+  it("stops after one page when limit=100 is satisfied", async () => {
+    const requestedUrls: URL[] = [];
+    installPaginatedFetchMock(requestedUrls);
+
+    const result = await listAlerts({ lifecycleState: "open", limit: "100" });
+
+    expect(result).toHaveLength(100);
+    expect(requestedUrls).toHaveLength(1);
+    expect(requestedUrls[0]?.searchParams.get("lifecycleState")).toBe("open");
+    expect(requestedUrls[0]?.searchParams.get("limit")).toBe("100");
+  });
+});
+
+async function runAlertsListCli(
+  args: string[],
+): Promise<{ requestedUrls: URL[]; logged: string[] }> {
+  const requestedUrls: URL[] = [];
+  const logged: string[] = [];
+  installPaginatedFetchMock(requestedUrls);
+  vi.spyOn(console, "log").mockImplementation((message: unknown) => {
+    logged.push(String(message));
+  });
+  await handleAlertsCommand("list", args);
+  return { requestedUrls, logged };
+}
+
+describe("toolkit alerts list CLI defaults", () => {
+  it("defaults to --state open and --limit 100 in a single HTTP request", async () => {
+    const { requestedUrls, logged } = await runAlertsListCli(["--json"]);
+
+    expect(requestedUrls).toHaveLength(1);
+    expect(requestedUrls[0]?.searchParams.get("lifecycleState")).toBe("open");
+    expect(requestedUrls[0]?.searchParams.get("limit")).toBe("100");
+    expect(logged).toHaveLength(1);
+  });
+
+  it("supports --state all and --limit all to fetch open and resolved exhaustively", async () => {
+    const { requestedUrls, logged } = await runAlertsListCli([
+      "--state",
+      "all",
+      "--limit",
+      "all",
+      "--json",
+    ]);
+
+    expect(requestedUrls).toHaveLength(2);
+    expect(requestedUrls[0]?.searchParams.has("lifecycleState")).toBe(false);
+    expect(requestedUrls[0]?.searchParams.get("limit")).toBe("100");
+    const printed = z.array(z.unknown()).parse(JSON.parse(logged[0] ?? "[]"));
+    expect(printed).toHaveLength(101);
+  });
+
+  it("forwards explicit --state resolved and numeric --limit", async () => {
+    const { requestedUrls, logged } = await runAlertsListCli([
+      "--state",
+      "resolved",
+      "--limit",
+      "25",
+      "--json",
+    ]);
+
+    expect(requestedUrls).toHaveLength(1);
+    expect(requestedUrls[0]?.searchParams.get("lifecycleState")).toBe(
+      "resolved",
+    );
+    expect(requestedUrls[0]?.searchParams.get("limit")).toBe("25");
+    expect(logged).toHaveLength(1);
   });
 });
 

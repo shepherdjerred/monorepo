@@ -1,5 +1,6 @@
 import { truncateGraphemes } from "@shepherdjerred/text";
 import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
+import type { OpsFacets } from "@shepherdjerred/ops-model/facets.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 import type {
   ChangeEventInput,
@@ -18,6 +19,7 @@ export type OpsCollection = {
   signals: SignalInput[];
   metrics: SectionMetric[];
   changes: ChangeEventInput[];
+  facets?: Partial<OpsFacets>;
 };
 
 /** Result of one source's collection activity. */

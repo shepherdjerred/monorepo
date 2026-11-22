@@ -28,9 +28,16 @@ export const githubPullRequestOldestOpenAgeSeconds = new Gauge({
   registers: [register],
 });
 
+export const githubRateLimitRemaining = new Gauge({
+  name: "github_rate_limit_remaining",
+  help: "Remaining GitHub App API requests in the current window by resource",
+  labelNames: ["resource"] as const,
+  registers: [register],
+});
+
 export const renovateUpdatesPending = new Gauge({
   name: "renovate_updates_pending",
-  help: "Renovate updates by state: awaiting approval, pending checks, or open PR",
+  help: "Renovate updates by dashboard state or open PR",
   labelNames: ["state"] as const,
   registers: [register],
 });
@@ -46,6 +53,53 @@ export const bugsinkIssuesUnresolved = new Gauge({
   name: "bugsink_issues_unresolved",
   help: "Unresolved, unmuted Bugsink issues by project slug",
   labelNames: ["project"] as const,
+  registers: [register],
+});
+
+export const bugsinkProjectDigestedEvents = new Gauge({
+  name: "bugsink_project_digested_events",
+  help: "Total digested Bugsink error events by project slug",
+  labelNames: ["project"] as const,
+  registers: [register],
+});
+
+export const posthogSitePageviews24h = new Gauge({
+  name: "posthog_site_pageviews_24h",
+  help: "PostHog pageviews over the last 24 hours by site and host",
+  labelNames: ["site", "host"] as const,
+  registers: [register],
+});
+
+export const posthogSiteDau24h = new Gauge({
+  name: "posthog_site_dau_24h",
+  help: "PostHog distinct daily active users over the last 24 hours by site and host",
+  labelNames: ["site", "host"] as const,
+  registers: [register],
+});
+
+export const posthogSiteLcpP75Ms = new Gauge({
+  name: "posthog_site_lcp_p75_ms",
+  help: "PostHog 24-hour p75 Largest Contentful Paint in milliseconds by site and host",
+  labelNames: ["site", "host"] as const,
+  registers: [register],
+});
+
+export const cloudflareR2StorageBytes = new Gauge({
+  name: "cloudflare_r2_storage_bytes",
+  help: "Cloudflare R2 bucket payload and metadata storage in bytes",
+  labelNames: ["bucket"] as const,
+  registers: [register],
+});
+
+export const tailscaleDevicesOnline = new Gauge({
+  name: "tailscale_devices_online",
+  help: "Number of Tailscale tailnet devices currently connected to control",
+  registers: [register],
+});
+
+export const monorepoTurboHitRatio7d = new Gauge({
+  name: "monorepo_turbo_hit_ratio_7d",
+  help: "Trailing 7-day Turborepo task cache hit ratio across analyzed CI verify runs",
   registers: [register],
 });
 

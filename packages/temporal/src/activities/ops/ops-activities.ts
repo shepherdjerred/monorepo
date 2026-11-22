@@ -1,7 +1,11 @@
 import { AlertmanagerClient } from "@shepherdjerred/ops-clients/alertmanager.ts";
 import { BugsinkClient } from "@shepherdjerred/ops-clients/bugsink.ts";
 import { WoodpeckerClient } from "@shepherdjerred/ops-clients/woodpecker.ts";
-import { GitHubClient } from "@shepherdjerred/ops-clients/github.ts";
+import {
+  GitHubClient,
+  type MergedPullRequest,
+  type OpenPullRequest,
+} from "@shepherdjerred/ops-clients/github.ts";
 import type { Fetch } from "@shepherdjerred/ops-clients/http.ts";
 import { KubernetesClient } from "@shepherdjerred/ops-clients/kubernetes.ts";
 import { TrackerClient } from "@shepherdjerred/ops-clients/tracker.ts";
@@ -13,9 +17,13 @@ import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import type { SourceId } from "@shepherdjerred/ops-model/snapshot.ts";
 import type { DigestKind as OpsDigestKind } from "@shepherdjerred/ops-model/digest.ts";
 import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
-import { collectTemporalSchedules } from "./temporal-schedules-collector.ts";
 import { captureCommand } from "#activities/command-runner.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import { collectAuxiliaryFacets } from "./facets/auxiliary-facets.ts";
+import {
+  buildTemporalFacet,
+  fetchTemporalWorkerDeployments,
+} from "./facets/temporal-facet.ts";
 import {
   buildOpsIngest,
   postJson,
@@ -48,6 +56,8 @@ import type {
   OpsContext,
   OpsSourceResult,
 } from "./ops-types.ts";
+import { readTemporalScheduleHealth } from "./temporal-schedules-client.ts";
+import { collectTemporalSchedules } from "./temporal-schedules-collector.ts";
 
 function requiredEnvironment(name: string): string {
   const value = Bun.env[name];
@@ -55,6 +65,11 @@ function requiredEnvironment(name: string): string {
     throw new Error(`${name} is required for the ops snapshot`);
   }
   return value.trim();
+}
+
+function optionalEnvironment(name: string): string | undefined {
+  const value = Bun.env[name]?.trim();
+  return value === undefined || value === "" ? undefined : value;
 }
 
 /** Woodpecker's numeric repository id, from the same item as its token. */
@@ -67,15 +82,20 @@ function requiredRepoId(): number {
 }
 
 /** Credentials whose values must never appear in a stored failure reason. */
-const SECRET_ENVIRONMENT = [
+export const SECRET_ENVIRONMENT = [
   "OPS_INGEST_TOKEN",
   "POSTHOG_PERSONAL_API_KEY",
   "BUGSINK_TOKEN",
   "WOODPECKER_TOKEN",
   "GITHUB_APP_PRIVATE_KEY",
+  "CLOUDFLARE_API_TOKEN",
+  "GRAFANA_API_KEY",
+  "TAILSCALE_API_KEY",
+  "TAILSCALE_OAUTH_CLIENT_SECRET",
 ] as const;
 
 const SERVICE_ACCOUNT_DIR = "/var/run/secrets/kubernetes.io/serviceaccount";
+const GITHUB_PR_CACHE_TTL_MS = 30_000;
 
 /** Trusts the cluster CA the pod's service account projects. */
 const clusterFetch: Fetch = async (input, init) => {
@@ -89,6 +109,14 @@ async function serviceAccountToken(): Promise<string> {
   return token.trim();
 }
 
+function kubernetesBaseUrl(): string | undefined {
+  const host = optionalEnvironment("KUBERNETES_SERVICE_HOST");
+  const port = optionalEnvironment("KUBERNETES_SERVICE_PORT");
+  return host !== undefined && port !== undefined
+    ? `https://${host}:${port}`
+    : undefined;
+}
+
 function inClusterKubernetes(): KubernetesClient {
   const host = requiredEnvironment("KUBERNETES_SERVICE_HOST");
   const port = requiredEnvironment("KUBERNETES_SERVICE_PORT");
@@ -97,6 +125,17 @@ function inClusterKubernetes(): KubernetesClient {
     token: serviceAccountToken,
     fetch: clusterFetch,
   });
+}
+
+function optionalKubernetes(): KubernetesClient | undefined {
+  const baseUrl = kubernetesBaseUrl();
+  return baseUrl === undefined
+    ? undefined
+    : new KubernetesClient({
+        baseUrl,
+        token: serviceAccountToken,
+        fetch: clusterFetch,
+      });
 }
 
 async function githubAppToken(): Promise<string> {
@@ -110,8 +149,73 @@ function prometheus(): PrometheusClient {
   });
 }
 
+function optionalPrometheus(): PrometheusClient | undefined {
+  const baseUrl = optionalEnvironment("PROMETHEUS_URL");
+  return baseUrl === undefined ? undefined : new PrometheusClient({ baseUrl });
+}
+
+function optionalLoki(): LokiClient | undefined {
+  const baseUrl = optionalEnvironment("LOKI_URL");
+  return baseUrl === undefined ? undefined : new LokiClient({ baseUrl });
+}
+
+let cachedOpenPrs:
+  { expiresAtMs: number; promise: Promise<OpenPullRequest[]> } | undefined;
+let cachedMergedPrs30d:
+  | {
+      bucketKey: number;
+      expiresAtMs: number;
+      promise: Promise<MergedPullRequest[]>;
+    }
+  | undefined;
+
+/**
+ * GitHubClient wrapper sharing `openPullRequests()` and 30d `mergedPullRequests()`
+ * over a 30s TTL so `collectOpsGithub` and `collectOpsRenovate` in the same tick
+ * share one GraphQL pagination pass.
+ */
+class SharedTickGitHubClient extends GitHubClient {
+  override async openPullRequests(): Promise<OpenPullRequest[]> {
+    const nowMs = Date.now();
+    if (cachedOpenPrs !== undefined && nowMs < cachedOpenPrs.expiresAtMs) {
+      return await cachedOpenPrs.promise;
+    }
+    const promise = super.openPullRequests();
+    cachedOpenPrs = { expiresAtMs: nowMs + GITHUB_PR_CACHE_TTL_MS, promise };
+    try {
+      return await promise;
+    } catch (error: unknown) {
+      cachedOpenPrs = undefined;
+      throw error;
+    }
+  }
+
+  override async mergedPullRequests(since: Date): Promise<MergedPullRequest[]> {
+    const nowMs = Date.now();
+    const bucketKey = Math.floor(since.getTime() / GITHUB_PR_CACHE_TTL_MS);
+    if (
+      cachedMergedPrs30d?.bucketKey === bucketKey &&
+      nowMs < cachedMergedPrs30d.expiresAtMs
+    ) {
+      return await cachedMergedPrs30d.promise;
+    }
+    const promise = super.mergedPullRequests(since);
+    cachedMergedPrs30d = {
+      bucketKey,
+      expiresAtMs: nowMs + GITHUB_PR_CACHE_TTL_MS,
+      promise,
+    };
+    try {
+      return await promise;
+    } catch (error: unknown) {
+      cachedMergedPrs30d = undefined;
+      throw error;
+    }
+  }
+}
+
 function monorepo(): GitHubClient {
-  return new GitHubClient({
+  return new SharedTickGitHubClient({
     owner: "shepherdjerred",
     name: "monorepo",
     token: githubAppToken,
@@ -198,15 +302,18 @@ export const opsActivities = {
     );
   },
   async collectOpsRenovate(): Promise<OpsSourceResult> {
-    return await timed("renovate", () => collectRenovate(monorepo()));
+    return await timed("renovate", (context) =>
+      collectRenovate(monorepo(), { now: context.now }),
+    );
   },
   async collectOpsTracker(): Promise<OpsSourceResult> {
-    return await timed("tracker", () =>
+    return await timed("tracker", (context) =>
       collectTracker(
         new TrackerClient({
           baseUrl: requiredEnvironment("TRACKER_URL"),
           publicUrl: requiredEnvironment("TRACKER_PUBLIC_URL"),
         }),
+        context.now,
       ),
     );
   },
@@ -262,12 +369,36 @@ export const opsActivities = {
     );
   },
   async collectOpsTemporal(): Promise<OpsSourceResult> {
-    return await timed("temporal", (context) =>
-      collectTemporalSchedules(
-        parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]),
+    return await timed("temporal", async (context) => {
+      const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
+      const k8sBase = kubernetesBaseUrl();
+      const [observations, workerDeployments] = await Promise.all([
+        readTemporalScheduleHealth(namespace, context.now),
+        k8sBase === undefined
+          ? Promise.resolve([])
+          : fetchTemporalWorkerDeployments({
+              baseUrl: k8sBase,
+              token: serviceAccountToken,
+              fetchImpl: clusterFetch,
+            }),
+      ]);
+      const collection = await collectTemporalSchedules(
+        namespace,
         context,
-      ),
-    );
+        () => Promise.resolve(observations),
+      );
+      const prom = optionalPrometheus();
+      const temporalFacet = await buildTemporalFacet({
+        observations,
+        workerDeployments,
+        ...(prom === undefined ? {} : { prometheus: prom }),
+        now: context.now,
+      });
+      return {
+        ...collection,
+        facets: { temporal: temporalFacet },
+      };
+    });
   },
   async collectOpsAi(): Promise<OpsSourceResult> {
     return await timed("ai", (context) => collectAi(prometheus(), context));
@@ -276,12 +407,25 @@ export const opsActivities = {
   async assembleAndPublishOpsSnapshot(input: {
     outcomes: OpsCollectorOutcome[];
   }): Promise<OpsPublishSummary> {
+    const now = new Date();
     const secrets = SECRET_ENVIRONMENT.map((name) => Bun.env[name]);
+    const k8s = optionalKubernetes();
+    const prom = optionalPrometheus();
+    const loki = optionalLoki();
+    const extraFacets = await collectAuxiliaryFacets({
+      outcomes: input.outcomes,
+      services,
+      ...(k8s === undefined ? {} : { kubernetes: k8s }),
+      ...(prom === undefined ? {} : { prometheus: prom }),
+      ...(loki === undefined ? {} : { loki }),
+      now,
+    });
     const ingest = buildOpsIngest({
       outcomes: input.outcomes,
-      now: new Date(),
+      now,
       lastSuccess: lastSourceSuccess,
       secrets,
+      extraFacets,
     });
     recordSourceSuccesses(input.outcomes, lastSourceSuccess);
     return await publishOpsIngest({

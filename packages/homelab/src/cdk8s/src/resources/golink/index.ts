@@ -26,6 +26,7 @@ import {
   externalHttpsEgressRule,
   fliptEgress,
   kubernetesApiEgressRule,
+  nsPeer,
   otlpEgress,
   postgresEgress,
   postgresOperatorIngressRule,
@@ -351,7 +352,18 @@ export function createFirstPartyGolinkDeployment(chart: Chart, image: string) {
         // select only app=golink pods instead of isolating golink-postgresql.
         name: "golink-netpol",
         selects: "app",
-        ingress: [prometheusIngressRule([GOLINK_HTTP_PORT])],
+        ingress: [
+          prometheusIngressRule([GOLINK_HTTP_PORT]),
+          {
+            from: [
+              {
+                ...nsPeer("temporal"),
+                podSelector: { matchLabels: { component: "infra-worker" } },
+              },
+            ],
+            ports: [tcp(GOLINK_HTTP_PORT)],
+          },
+        ],
         egress: [
           dnsEgressRule(),
           postgresEgress("golink-postgresql"),

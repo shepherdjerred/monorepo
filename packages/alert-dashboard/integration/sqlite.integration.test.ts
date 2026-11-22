@@ -1,10 +1,15 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { FACET_KEYS } from "@shepherdjerred/ops-model/facets.ts";
 
+import { AsyncMutex } from "#infrastructure/async-mutex";
+import { PrismaOpsRepository } from "#infrastructure/prisma-ops-repository";
 import {
   AlertmanagerSnapshotAlertSchema,
   AlertmanagerWebhookSchema,
 } from "#shared/schema";
 import { epochNanosecondsToInstantText, InstantTextSchema } from "#shared/time";
+import { FIXTURE_OPS_FACETS } from "#test-fixtures/ops-facets";
+import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
 import {
   disconnectDatabase,
   IndexRowSchema,
@@ -648,6 +653,105 @@ describe("SQLite queries and outbox", () => {
       epochNanosecondsToInstantText(successAt),
     );
   });
+
+  it("projects delivery scalars with cursor pagination and single-pass summary counts", async () => {
+    const fingerprint = "fingerprint-scalar-deliveries";
+    await repository.ingestWebhook(
+      input(webhook(fingerprint, "firing"), "2026-08-08T18:00:01Z", false),
+    );
+    await repository.ingestWebhook(
+      input(webhook(fingerprint, "firing"), "2026-08-08T18:00:02Z", false),
+    );
+    await repository.ingestWebhook(
+      input(webhook(fingerprint, "firing"), "2026-08-08T18:00:03Z", false),
+    );
+    const listed = await repository.listAlerts({ limit: 10 });
+    const occurrenceId = listed.items[0]?.id;
+    if (occurrenceId === undefined) throw new Error("expected occurrence");
+
+    const deliveries = await prisma.webhookDelivery.findMany({
+      orderBy: { receivedAtNs: "desc" },
+      select: { id: true },
+    });
+    const middleDeliveryId = deliveries[1]?.id;
+    if (middleDeliveryId === undefined)
+      throw new Error("expected middle delivery");
+    await prisma.$executeRaw`
+      UPDATE "WebhookDelivery"
+      SET "rawPayload" = NULL
+      WHERE "id" = ${middleDeliveryId}
+    `;
+
+    const firstPage = await repository.getAlert({ id: occurrenceId, limit: 2 });
+    expect(firstPage?.deliveries).toHaveLength(2);
+    expect(
+      firstPage?.deliveries.map((entry) => entry.rawPayloadRetained),
+    ).toEqual([true, false]);
+    expect(firstPage?.deliveriesNextCursor).toBe(middleDeliveryId);
+    const nextDeliveryCursor = firstPage?.deliveriesNextCursor ?? null;
+    if (nextDeliveryCursor === null)
+      throw new Error("expected delivery cursor");
+
+    const secondPage = await repository.getAlert({
+      id: occurrenceId,
+      cursor: nextDeliveryCursor,
+      limit: 2,
+    });
+    expect(secondPage?.deliveries).toHaveLength(1);
+    expect(secondPage?.deliveries[0]?.rawPayloadRetained).toBe(true);
+    expect(secondPage?.deliveriesNextCursor).toBeNull();
+
+    await repository.reconcileSnapshot({
+      alerts: [
+        AlertmanagerSnapshotAlertSchema.parse({
+          annotations: { summary: "Critical active" },
+          endsAt: "0001-01-01T00:00:00Z",
+          fingerprint: "fp-critical",
+          startsAt: "2026-08-08T18:01:00Z",
+          generatorURL: "",
+          labels: { alertname: "CriticalAlert", severity: "critical" },
+          status: { inhibitedBy: [], silencedBy: [], state: "active" },
+        }),
+        AlertmanagerSnapshotAlertSchema.parse({
+          annotations: { summary: "Inhibited warning" },
+          endsAt: "0001-01-01T00:00:00Z",
+          fingerprint: "fp-inhibited",
+          startsAt: "2026-08-08T18:01:00Z",
+          generatorURL: "",
+          labels: { alertname: "InhibitedAlert", severity: "warning" },
+          status: {
+            inhibitedBy: ["fp-critical"],
+            silencedBy: [],
+            state: "suppressed",
+          },
+        }),
+        AlertmanagerSnapshotAlertSchema.parse({
+          annotations: { summary: "Unprocessed alert" },
+          endsAt: "0001-01-01T00:00:00Z",
+          fingerprint: "fp-unprocessed",
+          startsAt: "2026-08-08T18:01:00Z",
+          generatorURL: "",
+          labels: { alertname: "UnprocessedAlert", severity: "warning" },
+          status: { inhibitedBy: [], silencedBy: [], state: "unprocessed" },
+        }),
+      ],
+      startedAtNs: nanoseconds("2026-08-08T18:01:00Z"),
+      completedAtNs: nanoseconds("2026-08-08T18:01:01Z"),
+      missingGraceNs: 300_000_000_000n,
+    });
+
+    const summary = await repository.summary();
+    expect(summary).toMatchObject({
+      open: 2,
+      resolved: 0,
+      critical: 1,
+      warning: 1,
+      info: 0,
+      silenced: 0,
+      inhibited: 1,
+      unprocessed: 1,
+    });
+  });
 });
 describe("SQLite webhook authority", () => {
   it(
@@ -997,5 +1101,76 @@ describe("SQLite Home Assistant outbox concurrent resolution ordering", () => {
       action: "dismiss",
       notificationId: "hub-house-fp-inflight-chore",
     });
+  });
+});
+
+describe("SQLite ops facets, cache, and change retention", () => {
+  beforeEach(async () => {
+    await prisma.opsFacet.deleteMany();
+  });
+
+  it("persists facets, serves from in-memory cache, hydrates cold starts, and prunes expired changes", async () => {
+    const writer = new PrismaOpsRepository(prisma, new AsyncMutex());
+    expect(await writer.latestSnapshotReceivedAtNs()).toBeNull();
+    expect(await writer.getFacet("renovate")).toBeNull();
+    expect(await writer.getAllFacets()).toEqual({
+      facets: {},
+      receivedAtNs: null,
+      generatedAtNs: null,
+    });
+
+    const ingestAt = "2026-09-24T12:00:00Z";
+    const generatedAtNs = nanoseconds(ingestAt);
+    const receivedAtNs = nanoseconds("2026-09-24T12:00:05Z");
+    const fixture = fixtureOpsIngest(ingestAt);
+
+    await writer.storeSnapshot({
+      snapshot: fixture.snapshot,
+      generatedAtNs,
+      receivedAtNs,
+      changes: [
+        ...fixture.changes.map((change) => ({
+          ...change,
+          occurredAtNs: nanoseconds(change.occurredAt),
+        })),
+        {
+          source: "github",
+          externalId: "pr:expired-change",
+          kind: "merge",
+          title: "Expired merge outside retention window",
+          occurredAt: "2026-01-01T00:00:00Z",
+          occurredAtNs: nanoseconds("2026-01-01T00:00:00Z"),
+          severity: "info",
+        },
+      ],
+      facets: FIXTURE_OPS_FACETS,
+      retentionDays: 90,
+    });
+
+    expect(await writer.latestSnapshotReceivedAtNs()).toBe(receivedAtNs);
+    const retainedChanges = await writer.listChanges({ limit: 100 });
+    expect(retainedChanges.map((change) => change.externalId)).not.toContain(
+      "pr:expired-change",
+    );
+    expect(retainedChanges).toHaveLength(3);
+
+    const warmAll = await writer.getAllFacets();
+    expect(warmAll.generatedAtNs).toBe(generatedAtNs);
+    expect(warmAll.receivedAtNs).toBe(receivedAtNs);
+    expect(Object.keys(warmAll.facets).toSorted()).toEqual(
+      [...FACET_KEYS].toSorted(),
+    );
+
+    // Cold-start repository hydrates directly from SQLite and validates schemas.
+    const coldReader = new PrismaOpsRepository(prisma, new AsyncMutex());
+    const coldRenovate = await coldReader.getFacet("renovate");
+    expect(coldRenovate?.generatedAtNs).toBe(generatedAtNs);
+    expect(coldRenovate?.data.openPrCount).toBe(3);
+
+    const coldAll = await coldReader.getAllFacets();
+    expect(Object.keys(coldAll.facets).toSorted()).toEqual(
+      [...FACET_KEYS].toSorted(),
+    );
+    expect(coldAll.facets.posthog?.sites).toHaveLength(14);
   });
 });

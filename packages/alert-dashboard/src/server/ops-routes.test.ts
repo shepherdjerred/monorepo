@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { SnapshotResponseSchema } from "@shepherdjerred/ops-model/snapshot.ts";
 import { DigestRunResponseSchema } from "@shepherdjerred/ops-model/digest.ts";
+import { SnapshotResponseSchema } from "@shepherdjerred/ops-model/snapshot.ts";
 
 import { AlertService } from "#application/alert-service";
 import { createApp } from "#server/app";
@@ -11,13 +11,16 @@ import {
   CursorResponseSchema,
   DigestReportSchema,
   OpsErrorSchema,
+  OpsFacetsResponseSchema,
+  opsFacetResponseSchema,
   SeriesResponseSchema,
   ServiceDetailSchema,
 } from "#shared/ops-schema";
 import { fixedClock } from "#shared/time";
-import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
 import { readinessOnlyLedger, unexpected } from "#test-fixtures/alert-ledger";
+import { FIXTURE_OPS_FACETS } from "#test-fixtures/ops-facets";
 import { createOpsFixture } from "#test-fixtures/ops-services";
+import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
 
 const NOW = "2026-09-24T15:00:00Z";
 const TOKEN = "ops-ingest-token-with-at-least-32-chars";
@@ -43,11 +46,11 @@ function setup() {
     digests: fixture.digests,
     opsIngestToken: TOKEN,
   });
-  const ingest = (body: string, token = TOKEN) =>
+  const ingest = (payload: string, token = TOKEN) =>
     app.request("/internal/v1/ops/snapshots", {
       method: "POST",
       headers: { authorization: `Bearer ${token}` },
-      body,
+      body: payload,
     });
   return { app, fixture, metrics, ingest };
 }
@@ -98,13 +101,61 @@ describe("ops ingest route", () => {
 });
 
 describe("ops read routes", () => {
-  it("answers 503 with a typed body before the first snapshot", async () => {
+  it("answers 503 with a typed body before the first snapshot, while facets answer 200 empty", async () => {
     const { app } = setup();
     const response = await app.request("/api/v1/ops/snapshot");
     expect(response.status).toBe(503);
     expect(OpsErrorSchema.parse(await response.json()).code).toBe(
       "snapshot_unavailable",
     );
+
+    const emptyFacets = await app.request("/api/v1/ops/facets");
+    expect(emptyFacets.status).toBe(200);
+    expect(OpsFacetsResponseSchema.parse(await emptyFacets.json())).toEqual({
+      generatedAt: null,
+      receivedAt: null,
+      stale: false,
+      facets: {},
+    });
+
+    const emptySingle = await app.request("/api/v1/ops/facets/github");
+    expect(emptySingle.status).toBe(200);
+    expect(
+      opsFacetResponseSchema("github").parse(await emptySingle.json()),
+    ).toEqual({
+      key: "github",
+      generatedAt: null,
+      receivedAt: null,
+      stale: false,
+      data: null,
+    });
+  });
+
+  it("serves all facets, single facets by key, and 400 on unknown facet keys", async () => {
+    const { app, ingest } = setup();
+    const withFacets = JSON.stringify({
+      ...fixtureOpsIngest(NOW),
+      facets: FIXTURE_OPS_FACETS,
+    });
+    const ingested = await ingest(withFacets);
+    expect(ingested.status).toBe(202);
+
+    const allResponse = await app.request("/api/v1/ops/facets");
+    expect(allResponse.status).toBe(200);
+    const all = OpsFacetsResponseSchema.parse(await allResponse.json());
+    expect(all.stale).toBe(false);
+    expect(all.facets.github?.openPrs).toHaveLength(4);
+    expect(all.facets.posthog?.sites).toHaveLength(14);
+
+    const singleResponse = await app.request("/api/v1/ops/facets/renovate");
+    expect(singleResponse.status).toBe(200);
+    const renovate = opsFacetResponseSchema("renovate").parse(
+      await singleResponse.json(),
+    );
+    expect(renovate.data?.openPrCount).toBe(3);
+
+    const unknown = await app.request("/api/v1/ops/facets/not-a-facet");
+    expect(unknown.status).toBe(400);
   });
 
   it("serves the snapshot, new-signal annotations, and the cursor round trip", async () => {
@@ -146,7 +197,7 @@ describe("ops read routes", () => {
     expect(badCursor.status).toBe(400);
   });
 
-  it("filters changes and serves service detail", async () => {
+  it("filters changes and serves service detail with Pyroscope profile links", async () => {
     const { app, ingest } = setup();
     await ingest(body);
     const changes = ChangeListResponseSchema.parse(
@@ -162,6 +213,7 @@ describe("ops read routes", () => {
     expect(detail.signals.map((signal) => signal.id)).toEqual([
       "bugsink:birmel:1882",
     ]);
+    expect(detail.links.map((link) => link.kind)).toContain("profiles");
     const missing = await app.request("/api/v1/ops/services/nope");
     expect(missing.status).toBe(404);
     expect(OpsErrorSchema.parse(await missing.json()).code).toBe(
@@ -169,8 +221,8 @@ describe("ops read routes", () => {
     );
   });
 
-  it("serves named series presets and rejects anything else", async () => {
-    const { app } = setup();
+  it("serves named and targeted series presets and rejects invalid inputs", async () => {
+    const { app, fixture } = setup();
     const ok = await app.request(
       "/api/v1/ops/series?preset=prs-open&range=30d",
     );
@@ -178,6 +230,20 @@ describe("ops read routes", () => {
     expect(SeriesResponseSchema.parse(await ok.json()).stepSeconds).toBe(
       4 * 3600,
     );
+
+    const targeted = await app.request(
+      "/api/v1/ops/series?preset=namespace-cpu&range=24h&target=scout-prod",
+    );
+    expect(targeted.status).toBe(200);
+    expect(fixture.series.requests.at(-1)?.promql).toContain(
+      'namespace=~"scout-prod"',
+    );
+
+    const badTarget = await app.request(
+      `/api/v1/ops/series?preset=namespace-cpu&target=${encodeURIComponent('scout"}')}`,
+    );
+    expect(badTarget.status).toBe(400);
+
     const raw = await app.request(
       `/api/v1/ops/series?preset=${encodeURIComponent("up{job='x'}")}`,
     );

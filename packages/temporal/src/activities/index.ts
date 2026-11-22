@@ -42,6 +42,7 @@ import { freshrssActivities } from "./maintenance/freshrss.ts";
 import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
 import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
+import { renovateDeltaActivities } from "./ops/renovate-delta/renovate-delta.ts";
 import { stormPlotActivities } from "./homelab/storm-plots.ts";
 import { rwfRecordingArchiveActivities } from "./homelab/rwf/recording-archive.ts";
 import { stormCompanionActivities } from "./homelab/storm-companions.ts";
@@ -90,6 +91,7 @@ export const infraActivities = {
   ...ciWorkspaceReaperActivities,
   ...ciWorkspaceGoldenActivities,
   ...opsActivities,
+  ...renovateDeltaActivities,
 };
 
 export const stormWorkerActivities = {
@@ -99,7 +101,10 @@ export const stormWorkerActivities = {
 
 // Keep the legacy infra registration above to drain recorded histories.
 // This queue exposes only bounded snapshot collection/publication operations.
-export const opsWorkerActivities = { ...opsActivities };
+export const opsWorkerActivities = {
+  ...opsActivities,
+  ...renovateDeltaActivities,
+};
 
 export const repoActivities = {
   ...ciMaintenanceActivities,

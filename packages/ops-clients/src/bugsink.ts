@@ -10,6 +10,8 @@ const ProjectSchema = z.object({
   id: z.number().int(),
   name: z.string(),
   slug: z.string(),
+  digested_event_count: z.number().int().nonnegative().optional(),
+  stored_event_count: z.number().int().nonnegative().optional(),
 });
 
 const IssueSchema = z.object({
@@ -39,7 +41,46 @@ export type BugsinkIssue = {
   muted: boolean;
 };
 
+export type BugsinkProjectSummary = {
+  project: BugsinkProject;
+  activeIssues7d: number;
+  staleIssues: number;
+  mutedIssues: number;
+  digestedEventsTotal: number;
+  topIssues: BugsinkIssue[];
+};
+
 const MAX_PAGES = 100;
+const PROJECT_FETCH_CONCURRENCY = 4;
+const ACTIVE_WINDOW_MS = 7 * 86_400_000;
+const TOP_ISSUES_LIMIT = 10;
+
+async function mapConcurrent<TInput, TOutput>(
+  items: readonly TInput[],
+  concurrency: number,
+  mapper: (item: TInput, index: number) => Promise<TOutput>,
+): Promise<TOutput[]> {
+  if (items.length === 0) {
+    return [];
+  }
+  const results = Array.from<TOutput>({ length: items.length });
+  let nextIndex = 0;
+  const workerCount = Math.min(concurrency, items.length);
+
+  async function worker(): Promise<void> {
+    while (nextIndex < items.length) {
+      const current = nextIndex;
+      nextIndex += 1;
+      const item = items[current];
+      if (item !== undefined) {
+        results[current] = await mapper(item, current);
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  return results;
+}
 
 /**
  * Read-only Bugsink canonical API client. List endpoints are cursor
@@ -119,6 +160,61 @@ export class BugsinkClient {
         transaction: issue.transaction,
         muted: issue.is_muted,
       }));
+  }
+
+  /**
+   * Fetch all projects and their unresolved issues with bounded concurrency (4)
+   * and compute 7d active, stale, muted, event totals, and top issues.
+   */
+  async allProjectsSummary(now = new Date()): Promise<BugsinkProjectSummary[]> {
+    const projectList = await this.projects();
+    const nowMs = now.getTime();
+
+    return await mapConcurrent(
+      projectList,
+      PROJECT_FETCH_CONCURRENCY,
+      async (project) => {
+        const issues = await this.unresolvedIssues(project.id);
+        let activeIssues7d = 0;
+        let staleIssues = 0;
+        let mutedIssues = 0;
+        let unresolvedEventsSum = 0;
+        const unmuted: BugsinkIssue[] = [];
+
+        for (const issue of issues) {
+          unresolvedEventsSum += issue.events;
+          if (issue.muted) {
+            mutedIssues += 1;
+            continue;
+          }
+          unmuted.push(issue);
+          const ageMs = nowMs - Date.parse(issue.lastSeen);
+          if (ageMs <= ACTIVE_WINDOW_MS) {
+            activeIssues7d += 1;
+          } else {
+            staleIssues += 1;
+          }
+        }
+
+        const topIssues = unmuted
+          .toSorted(
+            (left, right) =>
+              right.events - left.events ||
+              Date.parse(right.lastSeen) - Date.parse(left.lastSeen),
+          )
+          .slice(0, TOP_ISSUES_LIMIT);
+
+        return {
+          project,
+          activeIssues7d,
+          staleIssues,
+          mutedIssues,
+          digestedEventsTotal:
+            project.digested_event_count ?? unresolvedEventsSum,
+          topIssues,
+        };
+      },
+    );
   }
 }
 

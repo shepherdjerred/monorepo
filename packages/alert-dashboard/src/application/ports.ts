@@ -1,8 +1,13 @@
+import type { DigestKind } from "@shepherdjerred/ops-model/digest.ts";
+import type {
+  FacetByKey,
+  FacetKey,
+  OpsFacets,
+} from "@shepherdjerred/ops-model/facets.ts";
 import type {
   ChangeEvent,
   Snapshot,
 } from "@shepherdjerred/ops-model/snapshot.ts";
-import type { DigestKind } from "@shepherdjerred/ops-model/digest.ts";
 
 import type { AlertLedgerChange } from "#domain/ops-changes";
 import type { ChangeView, CursorConsumer } from "#shared/ops-schema";
@@ -200,11 +205,19 @@ export type StoredOpsSnapshot = {
   snapshot: Snapshot;
 };
 
+export type StoredOpsFacet<K extends FacetKey = FacetKey> = {
+  key: K;
+  generatedAtNs: bigint;
+  receivedAtNs: bigint;
+  data: FacetByKey[K];
+};
+
 export type StoreOpsSnapshotInput = {
   snapshot: Snapshot;
   generatedAtNs: bigint;
   receivedAtNs: bigint;
   changes: readonly (ChangeEvent & { occurredAtNs: bigint })[];
+  facets?: OpsFacets;
   retentionDays: number;
 };
 
@@ -257,8 +270,15 @@ export type OpsRepository = {
     input: StoreOpsSnapshotInput,
   ) => Promise<StoreOpsSnapshotResult>;
   latestSnapshot: () => Promise<StoredOpsSnapshot | null>;
+  latestSnapshotReceivedAtNs: () => Promise<bigint | null>;
   /** The newest stored snapshot generated at or before `targetNs`. */
   snapshotAtOrBefore: (targetNs: bigint) => Promise<StoredOpsSnapshot | null>;
+  getFacet: <K extends FacetKey>(key: K) => Promise<StoredOpsFacet<K> | null>;
+  getAllFacets: () => Promise<{
+    facets: OpsFacets;
+    receivedAtNs: bigint | null;
+    generatedAtNs: bigint | null;
+  }>;
   listChanges: (query: ChangeQuery) => Promise<ChangeView[]>;
   countChanges: (input: {
     kind: ChangeEvent["kind"];
@@ -292,7 +312,10 @@ export type SeriesRangeRequest = {
 };
 
 export type SeriesPort = {
-  range: (request: SeriesRangeRequest) => Promise<
+  range: (
+    request: SeriesRangeRequest,
+    signal?: AbortSignal,
+  ) => Promise<
     readonly {
       metric: Readonly<Record<string, string>>;
       points: readonly [number, number][];

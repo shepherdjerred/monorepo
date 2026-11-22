@@ -205,9 +205,9 @@ table {
   top: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   height: 100dvh;
-  padding: 16px 12px 12px;
+  padding: 12px 12px 10px;
   border-right: 1px solid var(--line);
   background: var(--header-bg);
 }
@@ -276,15 +276,15 @@ table {
   display: grid;
   flex: 1;
   align-content: start;
-  gap: 14px;
+  gap: 8px;
   min-height: 0;
   margin: 0 -12px;
-  padding: 4px 12px;
+  padding: 2px 12px;
   overflow-y: auto;
 }
 .nav-group-label {
   margin: 0;
-  padding: 0 10px 4px;
+  padding: 0 10px 2px;
   color: var(--muted);
   font-size: 0.7rem;
   font-weight: 700;
@@ -293,7 +293,7 @@ table {
 }
 .sidebar-nav ul {
   display: grid;
-  gap: 2px;
+  gap: 1px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -307,6 +307,12 @@ table {
   border-radius: var(--radius-sm);
   color: var(--muted);
   text-decoration: none;
+}
+.sidebar .nav-link {
+  min-height: 25px;
+  padding: 1px 10px;
+  font-size: 0.88rem;
+  line-height: 1.25;
 }
 .nav-link svg {
   flex: none;
@@ -372,7 +378,7 @@ table {
   margin-right: -6px;
 }
 .nav-drawer .nav-link {
-  min-height: 44px;
+  min-height: 38px;
 }
 @media (prefers-reduced-motion: no-preference) {
   .nav-drawer {

@@ -2,6 +2,7 @@ import type { Context, Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { DigestKindSchema } from "@shepherdjerred/ops-model/digest.ts";
+import { FacetKeySchema } from "@shepherdjerred/ops-model/facets.ts";
 
 import {
   DigestInProgressError,
@@ -65,7 +66,9 @@ export function opsErrorResponse(
   context: Context,
 ): Response | undefined {
   const match = ERROR_RESPONSES.find(({ type }) => error instanceof type);
-  if (match === undefined) return undefined;
+  if (match === undefined) {
+    return undefined;
+  }
   const body: OpsError = { error: error.message, code: match.code };
   return context.json(body, match.status);
 }
@@ -103,8 +106,11 @@ export function registerOpsRoutes(app: Hono, options: OpsRouteOptions): void {
   );
 
   app.post("/internal/v1/digests/:kind", async (context) => {
-    if (!hasBearer(context.req.header("authorization"), options.opsIngestToken))
+    if (
+      !hasBearer(context.req.header("authorization"), options.opsIngestToken)
+    ) {
       return unauthorized(context);
+    }
     const kind = DigestKindSchema.parse(context.req.param("kind"));
     try {
       const result = await options.digests.run(kind);
@@ -127,6 +133,17 @@ export function registerOpsRoutes(app: Hono, options: OpsRouteOptions): void {
     return context.json(await options.ops.snapshot(query.consumer));
   });
 
+  app.get("/api/v1/ops/facets", async (context) =>
+    context.json(await options.ops.facets()),
+  );
+
+  app.get("/api/v1/ops/facets/:key", async (context) => {
+    const parsed = FacetKeySchema.safeParse(context.req.param("key"));
+    return parsed.success
+      ? context.json(await options.ops.facet(parsed.data))
+      : context.json({ error: "Invalid facet key" }, 400);
+  });
+
   app.get("/api/v1/ops/changes", async (context) => {
     const input = ChangeListInputSchema.parse(context.req.query());
     return context.json({ items: await options.ops.changes(input) });
@@ -138,7 +155,9 @@ export function registerOpsRoutes(app: Hono, options: OpsRouteOptions): void {
 
   app.get("/api/v1/ops/series", async (context) => {
     const input = SeriesInputSchema.parse(context.req.query());
-    return context.json(await options.ops.series(input));
+    return context.json(
+      await options.ops.series(input, context.req.raw.signal),
+    );
   });
 
   app.put("/api/v1/ops/cursor", async (context) => {

@@ -1,4 +1,5 @@
 import { parseArgs } from "node:util";
+import { z } from "zod";
 import {
   AlertScopeSchema,
   SuppressionStateSchema,
@@ -6,6 +7,28 @@ import {
   listAlerts,
   type Alert,
 } from "#lib/alerts.ts";
+
+const StateFilterSchema = z.enum(["open", "resolved", "all"]);
+
+const ALERTS_HELP = `toolkit alerts list [--scope <ops|house|all>] [--suppression <none|silenced|inhibited|unprocessed>] [filters] [--json]
+toolkit alerts show <occurrence-id> [--json]
+
+Filters for list:
+  --scope <ops|house|all>      Alert scope filter
+  --suppression <state>        Suppression state (none, silenced, inhibited, unprocessed)
+  --state <open|resolved|all>  Lifecycle state filter (default: open)
+  --limit <N|all>              Maximum alerts to return, or "all" to paginate exhaustively (default: 100)
+  --severity <level>           Filter by severity (critical, warning, info, unknown)
+  --namespace <name>           Filter by Kubernetes namespace
+  --alertname <name>           Filter by exact alertname
+  --search <text>              Search summary, alertname, fingerprint, or namespace
+  --opened-from <instant>      Filter openedAt >= RFC 3339 instant
+  --opened-to <instant>        Filter openedAt <= RFC 3339 instant
+  --resolved-from <instant>    Filter resolvedAt >= RFC 3339 instant
+  --resolved-to <instant>      Filter resolvedAt <= RFC 3339 instant
+  --json                       Print JSON output
+
+Environment: ALERT_DASHBOARD_URL (defaults to Hub at https://hub.tailnet-1a49.ts.net)`;
 
 function printAlert(alert: Alert): void {
   const namespace = alert.namespace === null ? "" : ` [${alert.namespace}]`;
@@ -18,15 +41,10 @@ function printAlert(alert: Alert): void {
 }
 
 async function handleList(args: string[]): Promise<void> {
-  if (args.includes("--help") || args.includes("-h")) {
-    console.log(
-      "toolkit alerts list [--scope <ops|house|all>] [--suppression <none|silenced|inhibited|unprocessed>] [--state <open|resolved>] [--severity <critical|warning|info|unknown>] [--namespace <ns>] [--alertname <name>] [--search <q>] [--opened-from <iso>] [--opened-to <iso>] [--resolved-from <iso>] [--resolved-to <iso>] [--limit <n>] [--json]",
-    );
-    return;
-  }
   const { values } = parseArgs({
     args,
     options: {
+      help: { type: "boolean", short: "h", default: false },
       json: { type: "boolean", default: false },
       scope: { type: "string" },
       suppression: { type: "string" },
@@ -43,6 +61,10 @@ async function handleList(args: string[]): Promise<void> {
     },
     allowPositionals: false,
   });
+  if (values.help) {
+    console.log(ALERTS_HELP);
+    return;
+  }
   const scope =
     values.scope === undefined
       ? undefined
@@ -51,11 +73,14 @@ async function handleList(args: string[]): Promise<void> {
     values.suppression === undefined
       ? undefined
       : SuppressionStateSchema.parse(values.suppression);
+  const parsedState = StateFilterSchema.parse(values.state ?? "open");
+  const lifecycleState = parsedState === "all" ? undefined : parsedState;
+  const limit = values.limit ?? "100";
   const query = Object.fromEntries(
     Object.entries({
       scope,
       suppressionState,
-      lifecycleState: values.state,
+      lifecycleState,
       severity: values.severity,
       namespace: values.namespace,
       alertname: values.alertname,
@@ -64,7 +89,7 @@ async function handleList(args: string[]): Promise<void> {
       openedTo: values["opened-to"],
       resolvedFrom: values["resolved-from"],
       resolvedTo: values["resolved-to"],
-      limit: values.limit,
+      limit,
     }).flatMap(([key, value]) => (value === undefined ? [] : [[key, value]])),
   );
   const alerts = await listAlerts(query);
@@ -76,9 +101,16 @@ async function handleList(args: string[]): Promise<void> {
 async function handleShow(args: string[]): Promise<void> {
   const { values, positionals } = parseArgs({
     args,
-    options: { json: { type: "boolean", default: false } },
+    options: {
+      help: { type: "boolean", short: "h", default: false },
+      json: { type: "boolean", default: false },
+    },
     allowPositionals: true,
   });
+  if (values.help) {
+    console.log(ALERTS_HELP);
+    return;
+  }
   const id = positionals[0];
   if (id === undefined)
     throw new Error("Usage: toolkit alerts show <occurrence-id> [--json]");
@@ -100,9 +132,7 @@ export async function handleAlertsCommand(
     subcommand === "--help" ||
     subcommand === "-h"
   ) {
-    console.log(
-      "toolkit alerts list [--scope <ops|house|all>] [--suppression <none|silenced|inhibited|unprocessed>] [filters] [--json]\ntoolkit alerts show <occurrence-id> [--json]\n\nEnvironment: ALERT_DASHBOARD_URL (defaults to Hub at https://hub.tailnet-1a49.ts.net)",
-    );
+    console.log(ALERTS_HELP);
     return;
   }
   if (subcommand === "list") await handleList(args);

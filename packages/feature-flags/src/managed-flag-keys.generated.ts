@@ -375,6 +375,7 @@ export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "the-storm-promotion-enabled",
   "the-storm-reddit-outreach-enabled",
   "the-storm-rwf-recording-archive-enabled",
+  "temporal-renovate-llm-delta-enabled",
 ] as const;
 
 export type TemporalBooleanFlagKey =

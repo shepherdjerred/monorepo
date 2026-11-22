@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { prunableSnapshotIds } from "#domain/ops-retention";
+import { prunableSnapshotIds, retentionCutoffNs } from "#domain/ops-retention";
 
 const HOUR = 3_600_000_000_000n;
 const MINUTE = 60_000_000_000n;
@@ -11,7 +11,11 @@ function row(id: string, generatedAtNs: bigint) {
   return { id, generatedAtNs };
 }
 
-describe("snapshot retention", () => {
+describe("snapshot and change retention", () => {
+  it("computes the exact day-based nanosecond cutoff", () => {
+    expect(retentionCutoffNs(baseHour, 90)).toBe(baseHour - 90n * 24n * HOUR);
+  });
+
   it("keeps the earliest sample per hour plus the latest snapshot", () => {
     const rows = [
       row("h0-a", baseHour + 1n * MINUTE),

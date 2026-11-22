@@ -32,6 +32,7 @@ import { getJustinRuleGroups } from "./rules/host-automation/justin.ts";
 import { getStormBrainRuleGroups } from "./rules/storm-brain.ts";
 import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
 import { createNetworkPolicyEnforcementMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/network-policy-enforcement.ts";
+import { createObservabilityScrapers } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/observability-scrapers.ts";
 import { getAlertingControlRuleGroups } from "./rules/platform/alerting-control.ts";
 import { getGlitterLauncherReleaseRuleGroups } from "./rules/glitter-boys-launcher.ts";
 
@@ -39,6 +40,7 @@ export function createPrometheusMonitoring(chart: Chart) {
   createWoodpeckerMonitoring(chart);
   createBuildkitdMonitoring(chart);
   createNetworkPolicyEnforcementMonitoring(chart);
+  createObservabilityScrapers(chart);
 
   new PrometheusRule(chart, "prometheus-justin-rules", {
     metadata: {

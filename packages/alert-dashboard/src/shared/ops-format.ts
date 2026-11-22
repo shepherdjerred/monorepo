@@ -1,9 +1,8 @@
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
-import type { Metric } from "@shepherdjerred/ops-model/snapshot.ts";
 
-import type { SeriesUnit, Trend } from "#shared/ops-schema";
+import type { SeriesUnitSchema, Trend } from "#shared/ops-schema";
 
-export type ValueUnit = Metric["unit"] | SeriesUnit | Trend["unit"];
+export type ValueUnit = (typeof SeriesUnitSchema.options)[number];
 
 const compact = new Intl.NumberFormat("en-US", {
   notation: "compact",
@@ -14,6 +13,30 @@ const usd = new Intl.NumberFormat("en-US", {
   currency: "USD",
   maximumFractionDigits: 2,
 });
+
+const BYTE_UNITS = ["B", "KiB", "MiB", "GiB", "TiB"] as const;
+const BPS_UNITS = ["B/s", "KiB/s", "MiB/s", "GiB/s"] as const;
+
+function formatIec(
+  value: number,
+  units: readonly [string, ...string[]],
+): string {
+  let scaled = value;
+  let index = 0;
+  while (
+    index < units.length - 1 &&
+    (index === 0
+      ? Math.round(Math.abs(scaled)) >= 1024
+      : Math.abs(scaled) >= 1024)
+  ) {
+    scaled /= 1024;
+    index += 1;
+  }
+  const suffix = units[index] ?? units[0];
+  return index === 0
+    ? `${String(Math.round(scaled))} ${suffix}`
+    : `${scaled.toFixed(1)} ${suffix}`;
+}
 
 /** Human value for tiles, digests, and axis ticks. `null` is "no data". */
 export function formatValue(value: number | null, unit: ValueUnit): string {
@@ -31,6 +54,16 @@ export function formatValue(value: number | null, unit: ValueUnit): string {
       return `${value.toFixed(1)} h`;
     case "tokens":
       return compact.format(value);
+    case "bytes":
+      return formatIec(value, BYTE_UNITS);
+    case "bps":
+      return formatIec(value, BPS_UNITS);
+    case "ms":
+      return Math.round(Math.abs(value)) < 1000
+        ? `${String(Math.round(value))} ms`
+        : `${(value / 1000).toFixed(1)}s`;
+    case "celsius":
+      return `${String(Math.round(value))}°C`;
     case "count":
       return Number.isInteger(value) ? compact.format(value) : value.toFixed(1);
   }

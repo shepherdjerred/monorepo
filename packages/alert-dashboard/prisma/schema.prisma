@@ -199,3 +199,12 @@ model DigestRun {
 
   @@unique([kind, periodKey])
 }
+
+model OpsFacet {
+  key           String @id
+  generatedAtNs BigInt
+  receivedAtNs  BigInt
+  payload       Json
+
+  @@index([receivedAtNs])
+}

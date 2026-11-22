@@ -16,6 +16,14 @@ function isNewer(
   );
 }
 
+/** Cutoff timestamp (in epoch nanoseconds) for retaining snapshot and change rows. */
+export function retentionCutoffNs(
+  nowNs: bigint,
+  retentionDays: number,
+): bigint {
+  return nowNs - BigInt(retentionDays) * DAY_NS;
+}
+
 /**
  * Snapshot retention: keep the latest snapshot, plus the earliest sample in
  * every UTC hour inside the retention window, and prune everything else.
@@ -30,18 +38,25 @@ export function prunableSnapshotIds(
 ): string[] {
   let latest: RetainedSnapshotRow | undefined;
   for (const row of rows) {
-    if (latest === undefined || isNewer(row, latest)) latest = row;
+    if (latest === undefined || isNewer(row, latest)) {
+      latest = row;
+    }
   }
-  const cutoffNs = nowNs - BigInt(retentionDays) * DAY_NS;
+  const cutoffNs = retentionCutoffNs(nowNs, retentionDays);
   const earliestByHour = new Map<bigint, RetainedSnapshotRow>();
   for (const row of rows) {
-    if (row.generatedAtNs < cutoffNs) continue;
+    if (row.generatedAtNs < cutoffNs) {
+      continue;
+    }
     const bucket = row.generatedAtNs / HOUR_NS;
     const current = earliestByHour.get(bucket);
-    if (current === undefined || isNewer(current, row))
+    if (current === undefined || isNewer(current, row)) {
       earliestByHour.set(bucket, row);
+    }
   }
   const keep = new Set([...earliestByHour.values()].map((row) => row.id));
-  if (latest !== undefined) keep.add(latest.id);
+  if (latest !== undefined) {
+    keep.add(latest.id);
+  }
   return rows.filter((row) => !keep.has(row.id)).map((row) => row.id);
 }

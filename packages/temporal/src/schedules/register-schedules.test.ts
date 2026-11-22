@@ -454,6 +454,37 @@ describe("ops overview schedules", () => {
       workflowExecutionTimeout: "10 minutes",
     });
   });
+
+  test("renovate-delta-enrichment runs every 30 minutes and starts paused until cutover", () => {
+    const schedule = findScheduleById("renovate-delta-enrichment");
+    expect(schedule).toMatchObject({
+      workflowType: "runRenovateDeltaEnrichment",
+      args: [],
+      timing: {
+        kind: "cron",
+        expression: "12,42 * * * *",
+        timezone: "America/Los_Angeles",
+      },
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      overlap: ScheduleOverlapPolicy.SKIP,
+      workflowExecutionTimeout: "15 minutes",
+      initialPauseNote:
+        "Awaiting 100% candidate traffic for runRenovateDeltaEnrichment; stable workers do not register this Workflow",
+    });
+    expect(buildScheduleState(schedule, {})).toEqual({
+      paused: true,
+      note: schedule.initialPauseNote,
+    });
+    expect(
+      buildScheduleState(
+        schedule,
+        {},
+        { paused: false, note: "Candidate promoted to 100%" },
+      ),
+    ).toEqual({
+      paused: false,
+    });
+  });
 });
 
 test.each([
@@ -534,6 +565,9 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // Awaits a single triggerOpsDigest Activity; the dashboard renders and
   // sends. No workflow-level sleeps.
   "runOpsDigest",
+  // Awaits a single bounded enrichRenovateVersionDeltas Activity on the ops
+  // queue. No workflow-level sleeps.
+  "runRenovateDeltaEnrichment",
   // These workflows await one direct maintenance activity; the activity
   // timeout and retry policy are the relevant execution budget.
   "runBunCacheGcWorkflow",

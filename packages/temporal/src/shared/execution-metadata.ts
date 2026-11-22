@@ -120,6 +120,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runTrackerAttachmentCleanup: "infra",
   runOpsSnapshot: "infra",
   runOpsDigest: "infra",
+  runRenovateDeltaEnrichment: "infra",
   maintainStormForumWorkflow: "infra",
 
   // TASK_QUEUES.REPO_AUTOMATION

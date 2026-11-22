@@ -1,10 +1,7 @@
 import type { AlertmanagerClient } from "@shepherdjerred/ops-clients/alertmanager.ts";
 import type { BugsinkClient } from "@shepherdjerred/ops-clients/bugsink.ts";
 import type { WoodpeckerClient } from "@shepherdjerred/ops-clients/woodpecker.ts";
-import type {
-  GitHubClient,
-  OpenPullRequest,
-} from "@shepherdjerred/ops-clients/github.ts";
+import type { GitHubClient } from "@shepherdjerred/ops-clients/github.ts";
 import type { KubernetesClient } from "@shepherdjerred/ops-clients/kubernetes.ts";
 import type { TrackerClient } from "@shepherdjerred/ops-clients/tracker.ts";
 import type { LokiClient } from "@shepherdjerred/ops-clients/loki.ts";
@@ -19,19 +16,38 @@ import { DEPENDENCY_DASHBOARD_TITLE } from "@shepherdjerred/ops-clients/renovate
 import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
 import {
   bugsinkIssuesUnresolved,
-  githubPullRequestOldestOpenAgeSeconds,
-  githubPullRequestsMerged7d,
-  githubPullRequestsOpen,
   trackerIssuesOpen,
   renovateUpdatesPending,
   talosNodeReady,
   talosServiceHealthy,
 } from "#observability/metrics-ops.ts";
+import { recordVeleroOutcomes } from "#observability/metrics-velero.ts";
 import { aiQueries, mapAi, monthToDateWindow } from "./ai.ts";
 import { mapAlerts } from "./alerts.ts";
 import { mapArgoApplications, updateOutOfSyncSince } from "./argocd.ts";
 import { mapBugsink, unresolvedByProject } from "./bugsink.ts";
 import { mapCi } from "./ci.ts";
+import {
+  buildBugsinkFacet,
+  fetchBugsinkIssuesBounded,
+  recordBugsinkFacetGauges,
+} from "./facets/bugsink-facet.ts";
+import {
+  buildGitHubFacet,
+  recordGitHubPullRequestGauges,
+  safeGitHubRateLimits,
+} from "./facets/github-facet.ts";
+import {
+  buildPostHogFacet,
+  POSTHOG_FUNNEL_EVENTS,
+  recordPostHogFacetGauges,
+} from "./facets/posthog-facet.ts";
+import {
+  buildRenovateFacet,
+  readLatestRenovateDeltas,
+  type RenovateDeltaReader,
+} from "./facets/renovate-facet.ts";
+import { buildTrackerFacet } from "./facets/tracker-facet.ts";
 import {
   authorClass,
   CHANGE_WINDOW_DAYS,
@@ -61,7 +77,6 @@ import {
   zfsDeletionSignals,
   ZFS_DELETION_BYTES_QUERY,
 } from "./storage/zfs-deletion.ts";
-import { recordVeleroOutcomes } from "#observability/metrics-velero.ts";
 
 // Each collector does the I/O for one source, updates that source's gauges,
 // and hands the upstream data to its pure mapper.
@@ -129,39 +144,11 @@ export async function collectCi(
   return mapCi(await woodpecker.branchStatus("main"), context);
 }
 
-function setPullRequestGauges(
-  open: readonly OpenPullRequest[],
-  merged7d: readonly { authorClass: string }[],
-  now: Date,
-): void {
-  githubPullRequestsOpen.reset();
-  githubPullRequestOldestOpenAgeSeconds.reset();
-  const oldest = new Map<string, number>();
-  for (const pr of open) {
-    const author = authorClass(pr.author, pr.branch);
-    githubPullRequestsOpen.inc({
-      author_class: author,
-      draft: String(pr.draft),
-    });
-    if (!pr.draft) {
-      const age = (now.getTime() - Date.parse(pr.createdAt)) / 1000;
-      oldest.set(author, Math.max(oldest.get(author) ?? 0, age));
-    }
-  }
-  for (const [author, age] of oldest) {
-    githubPullRequestOldestOpenAgeSeconds.set({ author_class: author }, age);
-  }
-  githubPullRequestsMerged7d.reset();
-  for (const pr of merged7d) {
-    githubPullRequestsMerged7d.inc({ author_class: pr.authorClass });
-  }
-}
-
 export async function collectGitHub(
   github: GitHubClient,
   context: OpsContext,
 ): Promise<OpsCollection> {
-  const [open, merged30d, imagePins] = await Promise.all([
+  const [open, merged30d, imagePins, rateLimits] = await Promise.all([
     github.openPullRequests(),
     github.mergedPullRequests(daysBefore(context.now, 30)),
     github.commitsTouching({
@@ -169,73 +156,161 @@ export async function collectGitHub(
       path: VERSION_CATALOG_PATH,
       since: daysBefore(context.now, CHANGE_WINDOW_DAYS),
     }),
+    safeGitHubRateLimits(github),
   ]);
   const weekAgo = daysBefore(context.now, 7).getTime();
-  setPullRequestGauges(
+  recordGitHubPullRequestGauges(
     open,
     merged30d
       .filter((pr) => Date.parse(pr.mergedAt) >= weekAgo)
-      .map((pr) => ({ authorClass: authorClass(pr.author, "") })),
+      .map((pr) => ({ authorClass: authorClass(pr.author, pr.branch ?? "") })),
     context.now,
   );
-  return mapGitHub({ open, merged30d, imagePins }, context);
+  const collection = mapGitHub({ open, merged30d, imagePins }, context);
+  const githubFacet = buildGitHubFacet({
+    open,
+    merged30d,
+    rateLimits,
+    now: context.now,
+  });
+  return {
+    ...collection,
+    facets: { github: githubFacet },
+  };
 }
 
 export async function collectRenovate(
   github: GitHubClient,
+  options?: {
+    now?: Date;
+    readDeltas?: RenovateDeltaReader;
+  },
 ): Promise<OpsCollection> {
-  const [dashboard, open] = await Promise.all([
+  const now = options?.now ?? new Date();
+  const readDeltas = options?.readDeltas ?? readLatestRenovateDeltas;
+  const [dashboard, open, merged30d, deltasByBranch] = await Promise.all([
     github.openIssueByTitle(DEPENDENCY_DASHBOARD_TITLE),
     github.openPullRequests(),
+    github.mergedPullRequests(daysBefore(now, 30)),
+    readDeltas(),
   ]);
-  const { counts, ...collection } = mapRenovate(dashboard, open);
+  const { counts: legacyCounts, ...collection } = mapRenovate(dashboard, open);
+  const renovateFacet = buildRenovateFacet({
+    dashboard,
+    openPullRequests: open,
+    merged30d,
+    deltasByBranch,
+    now,
+  });
   renovateUpdatesPending.reset();
-  for (const [state, count] of Object.entries(counts)) {
+  for (const [state, count] of Object.entries(renovateFacet.counts)) {
     renovateUpdatesPending.set({ state }, count);
   }
-  return collection;
+  renovateUpdatesPending.set({ state: "open-pr" }, legacyCounts["open-pr"]);
+  return {
+    ...collection,
+    facets: { renovate: renovateFacet },
+  };
 }
 
 export async function collectTracker(
   tracker: TrackerClient,
+  now = new Date(),
 ): Promise<OpsCollection> {
-  const overview = await tracker.overview();
+  const [overview, secondary] = await Promise.all([
+    tracker.overview(),
+    Promise.allSettled([
+      tracker.activeForumNotices(),
+      tracker.projectIssueCounts(now),
+      tracker.completedThroughput7d(now),
+    ]),
+  ]);
+  const notices = secondary[0].status === "fulfilled" ? secondary[0].value : [];
+  const projects =
+    secondary[1].status === "fulfilled" ? secondary[1].value : [];
+  const throughput =
+    secondary[2].status === "fulfilled" ? secondary[2].value : null;
+
   trackerIssuesOpen.reset();
   for (const [team, states] of Object.entries(overview.counts)) {
     for (const [stateType, count] of Object.entries(states)) {
       trackerIssuesOpen.set({ team, state_type: stateType }, count);
     }
   }
-  return mapTracker(overview);
+  const collection = mapTracker(overview);
+  const trackerFacet = buildTrackerFacet({
+    overview,
+    notices,
+    projects,
+    throughput,
+  });
+  return {
+    ...collection,
+    facets: { tracker: trackerFacet },
+  };
 }
 
 export async function collectBugsink(
   bugsink: BugsinkClient,
   context: OpsContext,
 ): Promise<OpsCollection> {
-  const projects = await bugsink.projects();
-  const withIssues = await Promise.all(
-    projects.map(async (project) => ({
-      project,
-      issues: await bugsink.unresolvedIssues(project.id),
-    })),
-  );
+  const withIssues = await fetchBugsinkIssuesBounded(bugsink);
   bugsinkIssuesUnresolved.reset();
   for (const [project, count] of unresolvedByProject(withIssues)) {
     bugsinkIssuesUnresolved.set({ project }, count);
   }
-  return mapBugsink(withIssues, context);
+  const collection = mapBugsink(withIssues, context);
+  const bugsinkFacet = buildBugsinkFacet({
+    projectsWithIssues: withIssues,
+    now: context.now,
+  });
+  recordBugsinkFacetGauges(bugsinkFacet);
+  return {
+    ...collection,
+    facets: { bugsink: bugsinkFacet },
+  };
 }
 
 export async function collectPostHog(
   posthog: PostHogClient,
   context: OpsContext,
 ): Promise<OpsCollection> {
-  const [sites, topPages] = await Promise.all([
-    posthog.pageviewsByHost24h(),
+  const [traffic, topPages, secondary] = await Promise.all([
+    posthog.siteTrafficSummary(context.now),
     posthog.topPages24h(),
+    Promise.allSettled([
+      posthog.webVitalsByHost24h(),
+      posthog.topReferrers24h(),
+      posthog.eventCountsWindow(POSTHOG_FUNNEL_EVENTS),
+    ]),
   ]);
-  return mapPostHog(sites, topPages, context);
+
+  const webVitals =
+    secondary[0].status === "fulfilled" ? secondary[0].value : [];
+  const topReferrers =
+    secondary[1].status === "fulfilled" ? secondary[1].value : [];
+  const funnelCounts =
+    secondary[2].status === "fulfilled" ? secondary[2].value : [];
+
+  const sitePageviews = traffic.map((row) => ({
+    siteKey: row.siteKey,
+    host: row.host,
+    pageviews: row.pageviews24h,
+  }));
+  const collection = mapPostHog(sitePageviews, topPages, context);
+  const posthogFacet = buildPostHogFacet({
+    traffic,
+    topPages,
+    webVitals,
+    topReferrers,
+    funnelCounts,
+    services: context.services,
+  });
+  recordPostHogFacetGauges(posthogFacet);
+  return {
+    ...collection,
+    facets: { posthog: posthogFacet },
+  };
 }
 
 export async function collectProbes(
@@ -295,6 +370,8 @@ export async function collectMaintenance(
     veleroBackups,
     cpu,
     memory,
+    seaweedfsVolumes,
+    seaweedfsBackupLag,
     schedules,
     backupResources,
     restoreResources,
@@ -308,6 +385,8 @@ export async function collectMaintenance(
     run("veleroBackups"),
     run("cpu"),
     run("memory"),
+    run("seaweedfsVolumes"),
+    run("seaweedfsBackupLag"),
     kubernetes.listVeleroSchedules(),
     kubernetes.listVeleroBackups(),
     kubernetes.listVeleroRestores(),
@@ -323,6 +402,8 @@ export async function collectMaintenance(
       veleroBackups,
       cpu,
       memory,
+      seaweedfsVolumes,
+      seaweedfsBackupLag,
     },
     schedules,
     backupResources,

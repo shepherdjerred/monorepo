@@ -4,6 +4,7 @@ import {
   TOOL_HOSTS,
   argocdApplicationLink,
   grafanaDashboardLink,
+  grafanaPyroscopeExploreUrl,
 } from "@shepherdjerred/ops-model/tool-links.ts";
 
 export type GrafanaDatasourceUids = {
@@ -67,7 +68,8 @@ export function serviceLinks(
   uids: GrafanaDatasourceUids,
 ): Link[] {
   const links: Link[] = [];
-  if (service.namespaces.length > 0) {
+  const primaryNamespace = service.namespaces[0];
+  if (primaryNamespace !== undefined) {
     links.push(
       {
         kind: "logs",
@@ -92,6 +94,14 @@ export function serviceLinks(
           { type: "prometheus", uid: uids.prometheus },
           { expr: serviceMetricsQuery(service) },
         ),
+      },
+      {
+        kind: "profiles",
+        label: "Profiles",
+        url: grafanaPyroscopeExploreUrl({
+          grafanaUrl: TOOL_HOSTS.grafana,
+          namespace: primaryNamespace,
+        }),
       },
     );
   }

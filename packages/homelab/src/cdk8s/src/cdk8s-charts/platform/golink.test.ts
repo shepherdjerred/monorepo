@@ -255,6 +255,19 @@ describe("createGolinkChart policies and validation", () => {
     expect(appPolicy).toBeDefined();
     expect(appPolicy?.["spec"]).toMatchObject({
       podSelector: { matchLabels: { app: "golink" } },
+      ingress: expect.arrayContaining([
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+              },
+              podSelector: { matchLabels: { component: "infra-worker" } },
+            },
+          ],
+          ports: [{ port: 7352, protocol: "TCP" }],
+        },
+      ]),
     });
     expect(JSON.stringify(appPolicy?.["spec"])).toContain(
       KUBERNETES_API_ENDPOINT.cidr,

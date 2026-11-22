@@ -4580,6 +4580,18 @@
           "reviewBy": "2026-12-07"
         }
       ]
+    },
+    {
+      "key": "temporal-renovate-llm-delta-enabled",
+      "owner": "temporal",
+      "namespace": "temporal",
+      "source": "temporal",
+      "purpose": "Enrich pending Renovate dependency updates with cached LLM version-delta summaries, breaking-change notes, and repository relevance.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     }
   ],
   "exemptions": [

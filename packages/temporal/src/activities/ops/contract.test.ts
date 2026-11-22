@@ -48,6 +48,9 @@ const openPr = {
   reviewDecision: null,
   mergeable: "CONFLICTING" as const,
   branch: "feature",
+  baseRefName: "main",
+  headOid: SHA,
+  exactHeadApproved: false,
   labels: [],
   checks: "FAILURE" as const,
 };

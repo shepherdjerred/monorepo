@@ -27,17 +27,22 @@ function module(overrides: Partial<ClientModule>): ClientModule {
 const core = module({ id: CORE_MODULE_ID, basePath: "" });
 
 describe("the composed module registry", () => {
-  it("serves Home at the root and Flow at /flow, keeps /overview and /delivery for their redirects, and leaves every other URL unchanged", () => {
+  it("serves Home at the root and Flow at /flow, keeps /overview and /delivery for their redirects, and registers Hub 2.0 facet pages", () => {
     expect(
       registry.routes.map((route) => `${route.chrome} ${route.path}`),
     ).toEqual([
+      "shell /the-storm",
       "shell /promotion",
       "shell /",
       "shell /overview",
+      "shell /cluster",
       "shell /services",
       "shell /services/:id",
+      "shell /monorepo",
       "shell /flow",
       "shell /delivery",
+      "shell /renovate",
+      "shell /product",
       "shell /ai",
       "shell /maintenance",
       "shell /review",
@@ -60,8 +65,12 @@ describe("the composed module registry", () => {
         label: "Ops",
         items: [
           "Home /",
+          "Cluster /cluster",
           "Services /services",
+          "Monorepo /monorepo",
           "Flow /flow",
+          "Renovate /renovate",
+          "Product /product",
           "AI /ai",
           "Maintenance /maintenance",
           "Review /review",
@@ -76,7 +85,10 @@ describe("the composed module registry", () => {
           "System /system",
         ],
       },
-      { label: "The Storm", items: ["Promotion /promotion"] },
+      {
+        label: "The Storm",
+        items: ["Overview /the-storm", "Promotion /promotion"],
+      },
     ]);
   });
 
@@ -86,8 +98,12 @@ describe("the composed module registry", () => {
     );
     expect(registry.nav.map((item) => item.title)).toEqual([
       "Home",
+      "Cluster",
       "Services",
+      "Monorepo",
       "Flow",
+      "Renovate",
+      "Product",
       "AI",
       "Maintenance",
       "Review",
@@ -95,6 +111,7 @@ describe("the composed module registry", () => {
       "House",
       "History",
       "System",
+      "The Storm overview",
       "Promotion",
     ]);
   });

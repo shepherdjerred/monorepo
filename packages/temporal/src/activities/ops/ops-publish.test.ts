@@ -135,6 +135,45 @@ describe("buildOpsIngest", () => {
       }),
     ).toThrow(/report each source once; duplicated ai/);
   });
+
+  test("merges facets from successful source outcomes and extraFacets", () => {
+    const all = outcomes({ tracker: "tracker unavailable" });
+    const githubOutcome = all.find((outcome) => outcome.source === "github");
+    if (!githubOutcome?.ok) {
+      throw new Error("fixture");
+    }
+    githubOutcome.result.facets = {
+      github: {
+        openPrs: [],
+        merged7d: [],
+        mergesByAuthor7d: { derrej: 3 },
+        rateLimits: { graphql: null, core: null },
+      },
+    };
+    const ingest = buildOpsIngest({
+      outcomes: all,
+      now,
+      lastSuccess: new Map(),
+      secrets: [],
+      extraFacets: {
+        golink: {
+          totalLinks: 2,
+          countsByTier: { manual: 2 },
+          links: [
+            {
+              slug: "hub",
+              targetUrl: "https://hub.tailnet-1a49.ts.net",
+              tier: "manual",
+              clicks: 9,
+            },
+          ],
+        },
+      },
+    });
+    expect(ingest.facets?.github?.mergesByAuthor7d).toEqual({ derrej: 3 });
+    expect(ingest.facets?.golink?.totalLinks).toBe(2);
+    expect(ingest.facets?.tracker).toBeUndefined();
+  });
 });
 
 describe("helpers", () => {

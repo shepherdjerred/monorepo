@@ -265,6 +265,15 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         {
           to: [
             {
+              ...nsPeer("golink"),
+              podSelector: { matchLabels: { app: "golink" } },
+            },
+          ],
+          ports: [tcp(7352)],
+        },
+        {
+          to: [
+            {
               ...nsPeer("prometheus"),
               podSelector: {
                 matchLabels: {
