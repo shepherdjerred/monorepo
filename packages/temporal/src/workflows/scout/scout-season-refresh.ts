@@ -215,6 +215,23 @@ export function scoutSeasonReport(
       : [
           "Review source availability and sentinel/diff disagreement; do not treat this run as clean.",
         ],
+    ...(result.prUrl === undefined
+      ? {}
+      : {
+          remediation: {
+            outcome: "pr-created" as const,
+            prUrl: result.prUrl,
+            ...(result.branchName === undefined
+              ? {}
+              : { branchName: result.branchName }),
+            ...(result.commitHash === undefined
+              ? {}
+              : { commitSha: result.commitHash }),
+            autoMergeEnabled: false,
+            changedFiles: result.changedFiles,
+            summary: `Proposed LoL season date updates across ${result.changedFiles.length.toString()} ${result.changedFiles.length === 1 ? "file" : "files"}.`,
+          },
+        }),
     provenance: {
       source: "Riot/League sources and shepherdjerred/monorepo main",
       query: "current and upcoming League season/act dates",

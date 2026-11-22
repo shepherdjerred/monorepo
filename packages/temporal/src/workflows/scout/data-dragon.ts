@@ -202,6 +202,29 @@ function dataDragonLimitations(evaluation: DataDragonEvaluation): string[] {
   ];
 }
 
+function dataDragonRemediation(
+  state: DataDragonVersionState,
+  result: DataDragonUpdateResult | undefined,
+): ActivityReportInput["remediation"] {
+  if (result?.prUrl === undefined) {
+    return undefined;
+  }
+  const count = result.changedFiles.length;
+  return {
+    outcome: result.reason === "pr-already-open" ? "pr-reused" : "pr-created",
+    prUrl: result.prUrl,
+    ...(result.branchName === undefined
+      ? {}
+      : { branchName: result.branchName }),
+    ...(result.commitHash === undefined
+      ? {}
+      : { commitSha: result.commitHash }),
+    autoMergeEnabled: result.autoMergeConfigured === true,
+    changedFiles: result.changedFiles,
+    summary: `Data Dragon ${state.currentVersion} -> ${state.latestVersion} (${count.toString()} changed ${count === 1 ? "file" : "files"}).`,
+  };
+}
+
 export function dataDragonReport(
   startedAt: string,
   mode: DataDragonUpdateMode,
@@ -210,6 +233,7 @@ export function dataDragonReport(
 ): ActivityReportInput {
   const observedAt = new Date().toISOString();
   const evaluation = evaluateDataDragon(result);
+  const remediation = dataDragonRemediation(state, result);
   return {
     reportType: "scout-data-dragon",
     title: `Scout Data Dragon ${mode}`,
@@ -244,6 +268,7 @@ export function dataDragonReport(
     actions: evaluation.autoMergeFailed
       ? ["Review the open Data Dragon PR and merge it manually when green."]
       : [],
+    ...(remediation === undefined ? {} : { remediation }),
     provenance: {
       source: "ddragon.leagueoflegends.com and shepherdjerred/monorepo",
       query: mode,

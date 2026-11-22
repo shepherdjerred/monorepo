@@ -1,0 +1,404 @@
+import {
+  runCodexPrRemediationWithExtra,
+  type CodexPrRemediationDependencies,
+  type CodexPrVerificationResult,
+} from "#activities/remediation/codex-pr-remediation.ts";
+import { revertSingleRepoPath } from "#activities/remediation/codex-pr-remediation-git.ts";
+import {
+  CatalogSchema,
+  FullCatalogSchema,
+  VERSION_CATALOG_PATH,
+  type FullCatalog,
+  type ReleaseNotesOverride,
+  type StrictCatalogEntry,
+} from "#activities/remediation/version-catalog-schema.ts";
+import {
+  runCommand as defaultRunCommand,
+  type GitCommandRunner,
+} from "#activities/scout/scout-season-refresh-git.ts";
+import type {
+  DependencyChange,
+  ReleaseNote,
+} from "#shared/deps-summary-types.ts";
+import type { ReportRemediationV1 } from "#shared/reports/report.ts";
+import type { MissingReleaseNote } from "./deps-summary-release-notes.ts";
+
+export type ProposeReleaseNoteOverridesResult = {
+  remediation: ReportRemediationV1;
+  resolvedNotes: ReleaseNote[];
+};
+
+export type HttpUrlCheckFn = (url: string) => Promise<boolean>;
+
+async function defaultVerifyHttp200(url: string): Promise<boolean> {
+  if (!URL.canParse(url)) {
+    return false;
+  }
+  const parsed = new URL(url);
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    return false;
+  }
+  try {
+    const response = await fetch(url, {
+      redirect: "follow",
+      signal: AbortSignal.timeout(10_000),
+    });
+    return response.status === 200;
+  } catch {
+    return false;
+  }
+}
+
+function canonicalEntryWithoutOverride(entry: StrictCatalogEntry): string {
+  const { releaseNotesOverride: _ignored, ...rest } = entry;
+  return JSON.stringify({
+    name: rest.name,
+    value: rest.value,
+    category: rest.category,
+    artifactType: rest.artifactType,
+    management: rest.management.managed
+      ? {
+          managed: true,
+          datasource: rest.management.datasource,
+          versioning: rest.management.versioning,
+          packageName: rest.management.packageName ?? null,
+          registryUrl: rest.management.registryUrl ?? null,
+        }
+      : { managed: false },
+    imagePublisher: rest.imagePublisher ?? null,
+    component: rest.component ?? null,
+    notes: rest.notes ?? null,
+  });
+}
+
+function overridesEqual(
+  left: ReleaseNotesOverride | undefined,
+  right: ReleaseNotesOverride | undefined,
+): boolean {
+  return (
+    (left === undefined && right === undefined) ||
+    (left !== undefined &&
+      right !== undefined &&
+      (left.url ?? "") === (right.url ?? "") &&
+      left.summary === right.summary)
+  );
+}
+
+function parseCatalogPair(
+  beforeCatalogText: string,
+  afterCatalogText: string,
+):
+  | { ok: true; before: FullCatalog; after: FullCatalog }
+  | { ok: false; reason: string } {
+  try {
+    const beforeRaw: unknown = JSON.parse(beforeCatalogText);
+    const afterRaw: unknown = JSON.parse(afterCatalogText);
+    CatalogSchema.parse(beforeRaw);
+    CatalogSchema.parse(afterRaw);
+    return {
+      ok: true,
+      before: FullCatalogSchema.parse(beforeRaw),
+      after: FullCatalogSchema.parse(afterRaw),
+    };
+  } catch (error: unknown) {
+    return {
+      ok: false,
+      reason: `catalog.json schema validation failed: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}
+
+async function inspectCatalogEntryPair(input: {
+  index: number;
+  beforeEntry: StrictCatalogEntry;
+  afterEntry: StrictCatalogEntry | undefined;
+  missingNames: ReadonlySet<string>;
+  verifyHttp200: HttpUrlCheckFn;
+}): Promise<
+  | { ok: true; addedOverride: ReleaseNotesOverride | undefined }
+  | { ok: false; reason: string }
+> {
+  const { beforeEntry, afterEntry } = input;
+  if (afterEntry?.name !== beforeEntry.name) {
+    return {
+      ok: false,
+      reason: `Catalog entry order or identity changed at index ${String(input.index)}.`,
+    };
+  }
+  if (
+    canonicalEntryWithoutOverride(beforeEntry) !==
+    canonicalEntryWithoutOverride(afterEntry)
+  ) {
+    return {
+      ok: false,
+      reason: `Non-override field modified on catalog entry '${beforeEntry.name}'.`,
+    };
+  }
+  if (
+    overridesEqual(
+      beforeEntry.releaseNotesOverride,
+      afterEntry.releaseNotesOverride,
+    )
+  ) {
+    return { ok: true, addedOverride: undefined };
+  }
+  if (!input.missingNames.has(beforeEntry.name)) {
+    return {
+      ok: false,
+      reason: `releaseNotesOverride modified on entry '${beforeEntry.name}' which is not in missing list.`,
+    };
+  }
+  const candidateOverride = afterEntry.releaseNotesOverride;
+  if (candidateOverride?.url === undefined) {
+    return {
+      ok: false,
+      reason: `Newly added releaseNotesOverride on '${beforeEntry.name}' must include a verifiable URL.`,
+    };
+  }
+  if (!(await input.verifyHttp200(candidateOverride.url))) {
+    return {
+      ok: false,
+      reason: `releaseNotesOverride.url '${candidateOverride.url}' on '${beforeEntry.name}' did not return HTTP 200.`,
+    };
+  }
+  return { ok: true, addedOverride: candidateOverride };
+}
+
+export async function verifyCatalogReleaseNoteDiff(input: {
+  beforeCatalogText: string;
+  afterCatalogText: string;
+  changes: readonly DependencyChange[];
+  missing: readonly MissingReleaseNote[];
+  verifyHttp200?: HttpUrlCheckFn;
+}): Promise<
+  | {
+      valid: true;
+      verifiedOverrides: Map<string, ReleaseNotesOverride>;
+      resolvedNotes: ReleaseNote[];
+    }
+  | { valid: false; reason: string }
+> {
+  const verifyHttp200 = input.verifyHttp200 ?? defaultVerifyHttp200;
+  const parsed = parseCatalogPair(
+    input.beforeCatalogText,
+    input.afterCatalogText,
+  );
+  if (!parsed.ok) {
+    return { valid: false, reason: parsed.reason };
+  }
+  if (parsed.before.$schema !== parsed.after.$schema) {
+    return {
+      valid: false,
+      reason: "catalog.json $schema header was modified.",
+    };
+  }
+  if (parsed.before.entries.length !== parsed.after.entries.length) {
+    return { valid: false, reason: "Catalog entries were added or removed." };
+  }
+
+  const missingNames = new Set(input.missing.map((item) => item.dependency));
+  const verifiedOverrides = new Map<string, ReleaseNotesOverride>();
+
+  for (const [index, beforeEntry] of parsed.before.entries.entries()) {
+    const inspected = await inspectCatalogEntryPair({
+      index,
+      beforeEntry,
+      afterEntry: parsed.after.entries[index],
+      missingNames,
+      verifyHttp200,
+    });
+    if (!inspected.ok) {
+      return { valid: false, reason: inspected.reason };
+    }
+    if (inspected.addedOverride !== undefined) {
+      verifiedOverrides.set(beforeEntry.name, inspected.addedOverride);
+    }
+  }
+
+  const resolvedNotes = input.changes.flatMap((change) => {
+    const override = verifiedOverrides.get(change.name);
+    return override === undefined
+      ? []
+      : [
+          {
+            dependency: change.name,
+            version: change.newVersion ?? "removed",
+            notes: override.summary,
+            url: override.url,
+            source: "catalog-override" as const,
+          },
+        ];
+  });
+
+  return { valid: true, verifiedOverrides, resolvedNotes };
+}
+
+export function buildReleaseNotesRemediationPrompt(
+  changes: readonly DependencyChange[],
+  missing: readonly MissingReleaseNote[],
+): string {
+  const missingNames = new Set(missing.map((item) => item.dependency));
+  const relevantChanges = changes.filter((change) =>
+    missingNames.has(change.name),
+  );
+  return [
+    "You are proposing authoritative `releaseNotesOverride` entries in `packages/version-catalog/src/catalog.json` for weekly dependency changes whose automated release-note lookup came back unavailable.",
+    "",
+    "Missing release notes:",
+    JSON.stringify({ missing, relevantChanges }, null, 2),
+    "",
+    "Instructions:",
+    `1. Edit ONLY \`${VERSION_CATALOG_PATH}\`.`,
+    "2. For each dependency listed in `missing`, use web search to locate an authoritative upstream release note, changelog, or version announcement URL returning HTTP 200.",
+    '3. Add `"releaseNotesOverride": { "url": "<https://...>", "summary": "<1-3 factual sentences summarizing changes in the target version>" }` ONLY when an authoritative HTTP-200 URL exists. Omit any dependency where no trustworthy source exists.',
+    "4. NEVER add, remove, or reorder entries in `entries`, and NEVER modify `value`, `management`, `notes`, or any field other than `releaseNotesOverride` on the listed missing entries.",
+    "5. Keep valid JSON formatting. Do NOT run `git commit` or `git push`.",
+  ].join("\n");
+}
+
+async function verifyCatalogOverridesInRepo(input: {
+  repoDir: string;
+  changedFiles: readonly string[];
+  beforeCatalogText: string;
+  changes: readonly DependencyChange[];
+  missing: readonly MissingReleaseNote[];
+  verifyHttp200?: HttpUrlCheckFn;
+  commandRunner?: GitCommandRunner;
+}): Promise<CodexPrVerificationResult<ReleaseNote[]>> {
+  const commandRunner = input.commandRunner ?? defaultRunCommand;
+  const uniqueMissingCount = new Set(
+    input.missing.map((item) => item.dependency),
+  ).size;
+
+  if (!input.changedFiles.includes(VERSION_CATALOG_PATH)) {
+    return {
+      verifiedFiles: [],
+      resolvedCount: 0,
+      unresolvedCount: uniqueMissingCount,
+      verificationSummary: "No releaseNotesOverride changes were proposed.",
+      extra: [],
+    };
+  }
+
+  const afterCatalogText = await Bun.file(
+    `${input.repoDir}/${VERSION_CATALOG_PATH}`,
+  ).text();
+  const diffResult = await verifyCatalogReleaseNoteDiff({
+    beforeCatalogText: input.beforeCatalogText,
+    afterCatalogText,
+    changes: input.changes,
+    missing: input.missing,
+    ...(input.verifyHttp200 === undefined
+      ? {}
+      : { verifyHttp200: input.verifyHttp200 }),
+  });
+
+  if (!diffResult.valid) {
+    await revertSingleRepoPath(
+      input.repoDir,
+      VERSION_CATALOG_PATH,
+      commandRunner,
+    );
+    return {
+      verifiedFiles: [],
+      resolvedCount: 0,
+      unresolvedCount: uniqueMissingCount,
+      verificationSummary:
+        `Rejected proposed catalog.json edit: ${diffResult.reason}`.slice(
+          0,
+          500,
+        ),
+      extra: [],
+    };
+  }
+
+  const resolvedCount = diffResult.verifiedOverrides.size;
+  const unresolvedCount = Math.max(0, uniqueMissingCount - resolvedCount);
+  if (resolvedCount === 0) {
+    await revertSingleRepoPath(
+      input.repoDir,
+      VERSION_CATALOG_PATH,
+      commandRunner,
+    );
+    return {
+      verifiedFiles: [],
+      resolvedCount: 0,
+      unresolvedCount: uniqueMissingCount,
+      verificationSummary:
+        "No verified releaseNotesOverride additions remained after catalog diff inspection.",
+      extra: [],
+    };
+  }
+
+  return {
+    verifiedFiles: [VERSION_CATALOG_PATH],
+    resolvedCount,
+    unresolvedCount,
+    autoMerge: false,
+    verificationSummary: `Verified schema, field-level catalog diff, and HTTP 200 reachability for ${String(resolvedCount)}/${String(uniqueMissingCount)} missing release-note overrides.`,
+    extra: diffResult.resolvedNotes,
+  };
+}
+
+export async function proposeMissingReleaseNoteOverrides(
+  changes: DependencyChange[],
+  missing: MissingReleaseNote[],
+  deps: CodexPrRemediationDependencies & {
+    verifyHttp200?: HttpUrlCheckFn;
+  } = {},
+): Promise<ProposeReleaseNoteOverridesResult> {
+  if (missing.length === 0) {
+    return {
+      remediation: {
+        outcome: "no-changes",
+        changedFiles: [],
+        resolvedCount: 0,
+        unresolvedCount: 0,
+        summary: "No missing release notes required overrides.",
+      },
+      resolvedNotes: [],
+    };
+  }
+
+  let beforeCatalogText = "";
+  const outcome = await runCodexPrRemediationWithExtra<ReleaseNote[]>(
+    {
+      slug: "deps-release-notes",
+      callSite: "deps-summary-remediation",
+      failureTypePrefix: "DepsSummaryRemediation",
+      prTitle: "chore(version-catalog): add missing release-note overrides",
+      prWhy: `Weekly \`deps-summary-weekly\` had ${String(missing.length)} catalog ${missing.length === 1 ? "entry" : "entries"} without automatically resolvable release notes.`,
+      prWhat:
+        "Added verified `releaseNotesOverride` summaries and HTTP-200 source URLs in `packages/version-catalog/src/catalog.json`.",
+      prompt: buildReleaseNotesRemediationPrompt(changes, missing),
+      autoMerge: false,
+      cloneArgs: ["--filter=blob:none", "--single-branch", "--branch=main"],
+      isAllowedPath: (path) => path === VERSION_CATALOG_PATH,
+      prepareRepo: async (repoDir) => {
+        beforeCatalogText = await Bun.file(
+          `${repoDir}/${VERSION_CATALOG_PATH}`,
+        ).text();
+      },
+      verifyAndFilter: (repoDir, changedFiles) =>
+        verifyCatalogOverridesInRepo({
+          repoDir,
+          changedFiles,
+          beforeCatalogText,
+          changes,
+          missing,
+          ...(deps.verifyHttp200 === undefined
+            ? {}
+            : { verifyHttp200: deps.verifyHttp200 }),
+          ...(deps.commandRunner === undefined
+            ? {}
+            : { commandRunner: deps.commandRunner }),
+        }),
+    },
+    deps,
+  );
+
+  return {
+    remediation: outcome.remediation,
+    resolvedNotes: outcome.extra ?? [],
+  };
+}

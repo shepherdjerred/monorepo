@@ -30,8 +30,10 @@ import { weatherActivities } from "./weather.ts";
 import { workflowFailureWatchActivities } from "./maintenance/workflow-failure/workflow-failure-watch-activity.ts";
 import { maintenanceActivities } from "./maintenance/maintenance.ts";
 import { mainVulnScanActivities } from "./maintenance/main-vuln-scan.ts";
+import { mainVulnRemediationActivities } from "./maintenance/main-vuln-remediation.ts";
 import { mainVulnScanAlertActivities } from "./maintenance/main-vuln-scan-alerts.ts";
 import { linkRotScanActivities } from "./maintenance/link-rot/link-rot-scan.ts";
+import { linkRotRemediationActivities } from "./maintenance/link-rot/link-rot-remediation.ts";
 import { linkRotScanAlertActivities } from "./maintenance/link-rot/link-rot-scan-alerts.ts";
 import { reportDeliveryActivities } from "./reports/report-delivery.ts";
 import { tasknotesCanaryActivities } from "./maintenance/tasknotes-canary.ts";
@@ -112,6 +114,8 @@ export const repoActivities = {
   ...ciExtendedVerifyActivities,
   ...fetcherActivities,
   ...depsSummaryActivities,
+  ...linkRotRemediationActivities,
+  ...mainVulnRemediationActivities,
   ...cancelCiPipelinesActivities,
   ...checkPrMergeConflictsActivities,
   ...llmCatalogRefreshActivities,

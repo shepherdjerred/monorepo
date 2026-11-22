@@ -3,14 +3,14 @@ import type {
   DeadLink,
   LinkRotScanResult,
 } from "#activities/maintenance/link-rot/link-rot-scan.ts";
+import type { ReportRemediationV1 } from "#shared/reports/report.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runLinkRotScanWorkflow } from "./link-rot-scan.ts";
 import * as scannerTest from "./scanner-workflow-test-support.ts";
 
 // The workflow deliberately splits queues: the git/lychee scan runs on the
-// serial MAINTENANCE queue while delivery and the Alertmanager publish stay on
-// the credentialed REPORTS queue. The test mirrors that with one worker per
-// queue, which also proves the routing — a single-queue harness would hang.
+// serial MAINTENANCE queue, Codex remediation runs on REPO_AUTOMATION, and
+// delivery + Alertmanager publish stay on the credentialed REPORTS queue.
 const REPO_SHA = "d9ea9584e0123456789abcdef0123456789abcde";
 
 const getTestEnv = scannerTest.setupScannerWorkflowTestEnvironment();
@@ -42,6 +42,7 @@ function scanResult(deadLinks: DeadLink[]): LinkRotScanResult {
 async function runWorkflow(
   overrides: {
     scan?: () => Promise<LinkRotScanResult>;
+    remediate?: (input: LinkRotScanResult) => Promise<ReportRemediationV1>;
     publish?: () => Promise<void>;
   },
   deadLinks: DeadLink[] = [],
@@ -66,6 +67,20 @@ async function runWorkflow(
         },
       },
       {
+        taskQueue: TASK_QUEUES.REPO_AUTOMATION,
+        activities: {
+          remediateLinkRot:
+            overrides.remediate ??
+            (async (input: LinkRotScanResult) => ({
+              outcome: "no-changes" as const,
+              changedFiles: [],
+              resolvedCount: 0,
+              unresolvedCount: input.deadLinks.length,
+              summary: "No automatic dead-link replacement verified.",
+            })),
+        },
+      },
+      {
         taskQueue: TASK_QUEUES.MAINTENANCE,
         activities: {
           scanMainForLinkRot:
@@ -79,17 +94,64 @@ async function runWorkflow(
 }
 
 describe("runLinkRotScanWorkflow", () => {
-  it("delivers one clear report and resolves the alert on a clean scan", async () => {
-    const { harness, failure } = await runWorkflow({});
+  it("delivers one clear report and resolves the alert on a clean scan without calling remediation", async () => {
+    let remediationCalled = false;
+    const { harness, failure } = await runWorkflow({
+      remediate: () => {
+        remediationCalled = true;
+        return Promise.resolve({ outcome: "no-changes", changedFiles: [] });
+      },
+    });
     expect(failure).toBeUndefined();
+    expect(remediationCalled).toBe(false);
     scannerTest.expectCompleteScannerReport(harness, "clear", 0, REPO_SHA);
   }, 60_000);
 
-  it("reports dead links as warnings without paging", async () => {
+  it("reports dead links as warnings without paging when remediation makes no changes", async () => {
     const { harness, failure } = await runWorkflow({}, [DEAD_LINK]);
     expect(failure).toBeUndefined();
     // Dead links are warning findings by policy, so the occurrence resolves.
     scannerTest.expectCompleteScannerReport(harness, "attention", 0, REPO_SHA);
+  }, 60_000);
+
+  it("delivers a changed report with remediation PR when all dead links are resolved", async () => {
+    const { harness, failure } = await runWorkflow(
+      {
+        remediate: () =>
+          Promise.resolve({
+            outcome: "pr-created",
+            prUrl: "https://github.com/shepherdjerred/monorepo/pull/600",
+            branchName: "chore/link-rot-11223344",
+            commitSha: "112233445566",
+            autoMergeEnabled: true,
+            changedFiles: ["README.md"],
+            resolvedCount: 1,
+            unresolvedCount: 0,
+            summary: "lychee verified 1/1 dead links resolved.",
+          }),
+      },
+      [DEAD_LINK],
+    );
+    expect(failure).toBeUndefined();
+    scannerTest.expectCompleteScannerReport(harness, "changed", 0, REPO_SHA);
+    expect(harness.reports[0]?.remediation?.prUrl).toBe(
+      "https://github.com/shepherdjerred/monorepo/pull/600",
+    );
+  }, 60_000);
+
+  it("still delivers the scan report with a partial remediation note when Codex remediation fails", async () => {
+    const { harness, failure } = await runWorkflow(
+      {
+        remediate: () => Promise.reject(new Error("Codex API unavailable")),
+      },
+      [DEAD_LINK],
+    );
+    expect(failure).toBeUndefined();
+    scannerTest.expectCompleteScannerReport(harness, "attention", 0, REPO_SHA);
+    expect(harness.reports[0]?.remediation?.outcome).toBe("partial");
+    expect(harness.reports[0]?.remediation?.summary).toContain(
+      "Codex API unavailable",
+    );
   }, 60_000);
 
   it("delivers a failed report before rethrowing a scan failure", async () => {

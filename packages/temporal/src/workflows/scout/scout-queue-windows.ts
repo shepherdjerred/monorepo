@@ -379,12 +379,35 @@ function failureReport(startedAt: string, error: unknown): ActivityReportInput {
   };
 }
 
+function queueWindowsRemediation(
+  result: ScoutQueueWindowsResult,
+): ActivityReportInput["remediation"] {
+  if (result.prUrl === undefined) {
+    return undefined;
+  }
+  return {
+    outcome: "pr-created",
+    prUrl: result.prUrl,
+    ...(result.branchName === undefined
+      ? {}
+      : { branchName: result.branchName }),
+    ...(result.commitHash === undefined
+      ? {}
+      : { commitSha: result.commitHash }),
+    autoMergeEnabled:
+      result.autoMergeRequested && result.autoMergeConfigured === true,
+    changedFiles: result.changedFiles,
+    summary: `${result.editCount.toString()} queue-window ${result.editCount === 1 ? "edit" : "edits"} published in ${result.prUrl}.`,
+  };
+}
+
 export function scoutQueueWindowsReport(
   startedAt: string,
   result: ScoutQueueWindowsResult,
 ): ActivityReportInput {
   const observedAt = new Date().toISOString();
   const state = queueReportState(result);
+  const remediation = queueWindowsRemediation(result);
   return {
     reportType: "scout-queue-windows",
     title: "Scout queue windows",
@@ -430,6 +453,7 @@ export function scoutQueueWindowsReport(
         : []),
       ...endedQueueActions(result.livenessChecks),
     ],
+    ...(remediation === undefined ? {} : { remediation }),
     provenance: {
       source: "s3://scout-prod",
       query: `queue availability over the prior ${SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS.toString()} days`,

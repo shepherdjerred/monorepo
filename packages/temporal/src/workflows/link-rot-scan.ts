@@ -2,13 +2,15 @@ import {
   REPORT_DELIVERY_ACTIVITY_RETRY,
   REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
 } from "#shared/reports/report-delivery-policy.ts";
-import { proxyActivities } from "@temporalio/workflow";
+import { patched, proxyActivities } from "@temporalio/workflow";
 import type {
   LinkRotScanActivities,
   LinkRotScanResult,
 } from "#activities/maintenance/link-rot/link-rot-scan.ts";
+import type { LinkRotRemediationActivities } from "#activities/maintenance/link-rot/link-rot-remediation.ts";
 import type { LinkRotScanAlertActivities } from "#activities/maintenance/link-rot/link-rot-scan-alerts.ts";
 import type { ReportDeliveryActivities } from "#activities/reports/report-delivery.ts";
+import type { ReportRemediationV1 } from "#shared/reports/report.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   buildLinkRotFailureReport,
@@ -38,6 +40,19 @@ const { scanMainForLinkRot } = proxyActivities<LinkRotScanActivities>({
   startToCloseTimeout: "20 minutes",
   heartbeatTimeout: "90 seconds",
   retry: RETRY,
+});
+// Codex SDK + GitHub App PR creation runs on REPO_AUTOMATION, which holds
+// OPENAI_API_KEY and the GitHub App installation credentials.
+const { remediateLinkRot } = proxyActivities<LinkRotRemediationActivities>({
+  taskQueue: TASK_QUEUES.REPO_AUTOMATION,
+  startToCloseTimeout: "35 minutes",
+  heartbeatTimeout: "90 seconds",
+  retry: {
+    maximumAttempts: 2,
+    initialInterval: "1 minute",
+    backoffCoefficient: 2,
+    maximumInterval: "5 minutes",
+  },
 });
 // Delivery and alert publication run on the reports queue, which owns the
 // Postal, report-state S3, and ALERTMANAGER_URL credentials.
@@ -77,7 +92,32 @@ export async function runLinkRotScanWorkflow(): Promise<void> {
     );
     throw error;
   }
-  const report = buildLinkRotReport(startedAt, result);
+
+  let remediation: ReportRemediationV1 | undefined;
+  if (result.deadLinks.length > 0 && patched("link-rot-remediation-v1")) {
+    try {
+      remediation = await remediateLinkRot(result);
+    } catch (error) {
+      const cause =
+        error instanceof Error && error.cause instanceof Error
+          ? error.cause.message
+          : error instanceof Error
+            ? error.message
+            : String(error);
+      remediation = {
+        outcome: "partial",
+        changedFiles: [],
+        resolvedCount: 0,
+        unresolvedCount: result.deadLinks.length,
+        summary: `Automated dead-link remediation failed: ${cause}`.slice(
+          0,
+          500,
+        ),
+      };
+    }
+  }
+
+  const report = buildLinkRotReport(startedAt, result, remediation);
   await deliveryActivities.deliverActivityReport(report);
   await alertActivities.publishLinkRotScanAlerts({
     criticalCount: countCriticalReportFindings(report),

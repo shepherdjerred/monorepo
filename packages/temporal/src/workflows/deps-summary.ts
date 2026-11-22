@@ -3,15 +3,25 @@ import {
   REPORT_DELIVERY_ACTIVITY_RETRY,
   REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
 } from "#shared/reports/report-delivery-policy.ts";
-import { proxyActivities } from "@temporalio/workflow";
+import { patched, proxyActivities } from "@temporalio/workflow";
 import { graphemePrefix } from "@shepherdjerred/text";
-import type { DepsSummaryActivities } from "#activities/maintenance/deps-summary/deps-summary.ts";
-import type { DependencyChange } from "#shared/deps-summary-types.ts";
-import type { MissingReleaseNote } from "#activities/maintenance/deps-summary/deps-summary-release-notes.ts";
+import type {
+  DependencyCollectionResult,
+  DepsSummaryActivities,
+} from "#activities/maintenance/deps-summary/deps-summary.ts";
+import type {
+  DependencyChange,
+  ReleaseNote,
+} from "#shared/deps-summary-types.ts";
+import type {
+  MissingReleaseNote,
+  ReleaseNotesResult,
+} from "#activities/maintenance/deps-summary/deps-summary-release-notes.ts";
 import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/reports/report-delivery.ts";
+import type { ReportRemediationV1 } from "#shared/reports/report.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./scout/report-activity-queue.ts";
 
@@ -32,6 +42,19 @@ const {
   heartbeatTimeout: "60 seconds",
   retry: RETRY,
 });
+
+const { proposeMissingReleaseNoteOverrides } =
+  proxyActivities<DepsSummaryActivities>({
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
+    startToCloseTimeout: "30 minutes",
+    heartbeatTimeout: "90 seconds",
+    retry: {
+      maximumAttempts: 2,
+      initialInterval: "1 minute",
+      backoffCoefficient: 2,
+      maximumInterval: "5 minutes",
+    },
+  });
 
 const { advanceDependencySummaryCheckpoint } =
   proxyActivities<DepsSummaryActivities>({
@@ -54,10 +77,274 @@ function missingNoteLimitation(missing: MissingReleaseNote): string {
 }
 
 function dependencySection(change: DependencyChange): string {
-  if (change.kind === "upstream-upgrade") return "Upstream upgrades";
+  if (change.kind === "upstream-upgrade") {
+    return "Upstream upgrades";
+  }
   return change.kind === "internal-promotion"
     ? "Internal image and digest promotions"
     : "Additions, removals, and reverts";
+}
+
+function mergeResolvedReleaseNotes(
+  existingNotes: readonly ReleaseNote[],
+  resolvedNotes: readonly ReleaseNote[],
+  missing: readonly MissingReleaseNote[],
+): ReleaseNotesResult {
+  if (resolvedNotes.length === 0) {
+    return { notes: [...existingNotes], missing: [...missing] };
+  }
+  const byKey = new Map<string, ReleaseNote>();
+  for (const note of existingNotes) {
+    byKey.set(`${note.dependency}\u{0}${note.version}`, note);
+  }
+  const resolvedDependencies = new Set<string>();
+  for (const note of resolvedNotes) {
+    byKey.set(`${note.dependency}\u{0}${note.version}`, note);
+    resolvedDependencies.add(note.dependency);
+  }
+  return {
+    notes: [...byKey.values()],
+    missing: missing.filter(
+      (candidate) => !resolvedDependencies.has(candidate.dependency),
+    ),
+  };
+}
+
+function extractWorkflowCauseMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.cause instanceof Error ? error.cause.message : error.message;
+  }
+  return String(error);
+}
+
+async function resolveReleaseNotesWithOptionalPr(
+  changes: DependencyChange[],
+  fetchedNotes: ReleaseNotesResult,
+): Promise<{
+  effectiveNotes: ReleaseNotesResult;
+  remediation: ReportRemediationV1 | undefined;
+}> {
+  if (
+    fetchedNotes.missing.length === 0 ||
+    !patched("deps-summary-release-notes-pr-v1")
+  ) {
+    return { effectiveNotes: fetchedNotes, remediation: undefined };
+  }
+  try {
+    const proposal = await proposeMissingReleaseNoteOverrides(
+      changes,
+      fetchedNotes.missing,
+    );
+    return {
+      effectiveNotes: mergeResolvedReleaseNotes(
+        fetchedNotes.notes,
+        proposal.resolvedNotes,
+        fetchedNotes.missing,
+      ),
+      remediation: proposal.remediation,
+    };
+  } catch (error) {
+    return {
+      effectiveNotes: fetchedNotes,
+      remediation: {
+        outcome: "partial",
+        changedFiles: [],
+        resolvedCount: 0,
+        unresolvedCount: fetchedNotes.missing.length,
+        summary:
+          `Automated release-note override proposal failed: ${extractWorkflowCauseMessage(error)}`.slice(
+            0,
+            500,
+          ),
+      },
+    };
+  }
+}
+
+function buildReleaseNoteRemediationEvidence(
+  observedAt: string,
+  remediation: ReportRemediationV1 | undefined,
+): ActivityReportInput["evidence"] {
+  if (remediation === undefined || remediation.outcome === "skipped") {
+    return [];
+  }
+  const failed =
+    remediation.outcome === "partial" && remediation.prUrl === undefined;
+  return [
+    {
+      id: "release-note-remediation",
+      source: "Codex SDK catalog release-note override proposal",
+      observedAt,
+      status: failed ? "failure" : "success",
+      ...(remediation.prUrl === undefined ? {} : { url: remediation.prUrl }),
+      excerpt: (remediation.summary ?? remediation.outcome).slice(0, 2000),
+    },
+  ];
+}
+
+function buildDependencyFindings(
+  changes: readonly DependencyChange[],
+  notes: readonly ReleaseNote[],
+): ActivityReportInput["findings"] {
+  const notesByChange = new Map(
+    notes.map((note) => [`${note.dependency}\u{0}${note.version}`, note]),
+  );
+  return changes.map((change) => {
+    const note = notesByChange.get(
+      `${change.name}\u{0}${change.newVersion ?? "removed"}`,
+    );
+    return {
+      section: dependencySection(change),
+      severity:
+        change.kind === "removal" || change.kind === "revert"
+          ? ("warning" as const)
+          : ("info" as const),
+      summary: changeSummary(change),
+      detail:
+        note === undefined
+          ? change.commitSubject
+          : `${graphemePrefix(note.notes, 1000)}${note.url === undefined ? "" : ` (${note.url})`}`,
+      evidenceReceiptIds: ["catalog-diff", "release-note-resolution"],
+    };
+  });
+}
+
+function buildDependencySummaryChecks(
+  collection: DependencyCollectionResult,
+  effectiveNotes: ReleaseNotesResult,
+): ActivityReportInput["checks"] {
+  const hasChanges = collection.changes.length > 0;
+  const notesComplete = effectiveNotes.missing.length === 0;
+  return [
+    {
+      id: "repository-access",
+      label: "Repository access",
+      required: true,
+      status: "passed",
+      summary: `Read origin/main at ${collection.headSha}`,
+      evidenceReceiptIds: ["repository-state"],
+    },
+    {
+      id: "catalog-diff",
+      label: "Chronological catalog diff",
+      required: true,
+      status: "passed",
+      summary: `${collection.changes.length.toString()} events; endpoint states ${collection.endpointStatesIdentical ? "identical" : "different"}`,
+      evidenceReceiptIds: ["catalog-diff"],
+    },
+    {
+      id: "release-notes",
+      label: "Release-note resolution",
+      required: hasChanges,
+      status: hasChanges ? (notesComplete ? "passed" : "failed") : "skipped",
+      summary: hasChanges
+        ? `${effectiveNotes.notes.length.toString()} resolved, ${effectiveNotes.missing.length.toString()} unavailable`
+        : "No changed entries require release notes",
+      evidenceReceiptIds: hasChanges ? ["release-note-resolution"] : [],
+    },
+  ];
+}
+
+function buildDependencySummaryReport(input: {
+  startedAt: string;
+  observedAt: string;
+  daysBack: number;
+  collection: DependencyCollectionResult;
+  effectiveNotes: ReleaseNotesResult;
+  synthesis: string | undefined;
+  remediation: ReportRemediationV1 | undefined;
+}): ActivityReportInput {
+  const { collection, effectiveNotes, remediation } = input;
+  const hasChanges = collection.changes.length > 0;
+  const notesComplete = effectiveNotes.missing.length === 0;
+  const verdict = hasChanges
+    ? "changed"
+    : collection.endpointStatesIdentical
+      ? "clear"
+      : "inconclusive";
+
+  return {
+    reportType: "dependency-summary",
+    title: "Weekly dependency summary",
+    scheduleId: "deps-summary-weekly",
+    startedAt: input.startedAt,
+    execution: notesComplete ? "complete" : "partial",
+    verdict,
+    headline: hasChanges
+      ? `${collection.changes.length.toString()} catalog events from ${collection.baseSha.slice(0, 12)} to ${collection.headSha.slice(0, 12)}.`
+      : "Catalog states are identical at the last accepted checkpoint and current origin/main.",
+    checks: buildDependencySummaryChecks(collection, effectiveNotes),
+    evidence: [
+      {
+        id: "repository-state",
+        source: "git origin/main",
+        observedAt: input.observedAt,
+        status: "success",
+        command: "git rev-parse origin/main",
+        excerpt: collection.headSha,
+      },
+      {
+        id: "catalog-diff",
+        source: "version-catalog.json and legacy versions.ts replay",
+        observedAt: input.observedAt,
+        status: "success",
+        command: `git rev-list --reverse ${collection.baseSha}..${collection.headSha}`,
+        excerpt:
+          collection.changes.length === 0
+            ? "No catalog events"
+            : collection.changes
+                .slice(0, 20)
+                .map((change) => changeSummary(change))
+                .join("\n")
+                .slice(0, 2000),
+      },
+      ...(hasChanges
+        ? [
+            {
+              id: "release-note-resolution",
+              source: "merged PR, datasource metadata, and catalog overrides",
+              observedAt: input.observedAt,
+              status: notesComplete
+                ? ("success" as const)
+                : ("failure" as const),
+              excerpt: `${effectiveNotes.notes.length.toString()} resolved; ${effectiveNotes.missing.length.toString()} unavailable`,
+            },
+          ]
+        : []),
+      ...buildReleaseNoteRemediationEvidence(input.observedAt, remediation),
+    ],
+    findings: buildDependencyFindings(collection.changes, effectiveNotes.notes),
+    limitations: [
+      ...effectiveNotes.missing.map((missing) =>
+        missingNoteLimitation(missing),
+      ),
+      ...(remediation?.outcome === "partial" &&
+      remediation.summary !== undefined
+        ? [remediation.summary]
+        : []),
+    ],
+    actions: [
+      ...(remediation?.prUrl === undefined
+        ? []
+        : [
+            `Review and merge catalog release-note override PR ${remediation.prUrl}.`,
+          ]),
+      ...(effectiveNotes.missing.length === 0
+        ? []
+        : [
+            "Add a releaseNotesOverride to the catalog only when an authoritative source is known.",
+          ]),
+    ],
+    ...(input.synthesis === undefined ? {} : { synthesis: input.synthesis }),
+    ...(remediation === undefined ? {} : { remediation }),
+    provenance: {
+      repoSha: collection.headSha,
+      source: "shepherdjerred/monorepo origin/main",
+      query: collection.usedCheckpoint
+        ? `checkpoint ${collection.baseSha}..${collection.headSha}`
+        : `${input.daysBack.toString()}-day bootstrap ${collection.baseSha}..${collection.headSha}`,
+    },
+  };
 }
 
 function failureReport(startedAt: string, error: unknown): ActivityReportInput {
@@ -114,141 +401,22 @@ export async function generateDependencySummary(
   const startedAt = new Date().toISOString();
   try {
     const collection = await collectDependencyChanges(daysBack);
-    const releaseNotes = await fetchDependencyReleaseNotes(collection.changes);
+    const fetchedNotes = await fetchDependencyReleaseNotes(collection.changes);
+    const { effectiveNotes, remediation } =
+      await resolveReleaseNotesWithOptionalPr(collection.changes, fetchedNotes);
     const synthesis = await synthesizeDependencyChanges(
       collection.changes,
-      releaseNotes.notes,
+      effectiveNotes.notes,
     );
-    const observedAt = new Date().toISOString();
-    const hasChanges = collection.changes.length > 0;
-    const notesComplete = releaseNotes.missing.length === 0;
-    const notesByChange = new Map(
-      releaseNotes.notes.map((note) => [
-        `${note.dependency}\u{0}${note.version}`,
-        note,
-      ]),
-    );
-    const execution = notesComplete ? "complete" : "partial";
-    const report: ActivityReportInput = {
-      reportType: "dependency-summary",
-      title: "Weekly dependency summary",
-      scheduleId: "deps-summary-weekly",
+    const report = buildDependencySummaryReport({
       startedAt,
-      execution,
-      verdict: hasChanges
-        ? "changed"
-        : collection.endpointStatesIdentical
-          ? "clear"
-          : "inconclusive",
-      headline: hasChanges
-        ? `${collection.changes.length.toString()} catalog events from ${collection.baseSha.slice(0, 12)} to ${collection.headSha.slice(0, 12)}.`
-        : "Catalog states are identical at the last accepted checkpoint and current origin/main.",
-      checks: [
-        {
-          id: "repository-access",
-          label: "Repository access",
-          required: true,
-          status: "passed",
-          summary: `Read origin/main at ${collection.headSha}`,
-          evidenceReceiptIds: ["repository-state"],
-        },
-        {
-          id: "catalog-diff",
-          label: "Chronological catalog diff",
-          required: true,
-          status: "passed",
-          summary: `${collection.changes.length.toString()} events; endpoint states ${collection.endpointStatesIdentical ? "identical" : "different"}`,
-          evidenceReceiptIds: ["catalog-diff"],
-        },
-        {
-          id: "release-notes",
-          label: "Release-note resolution",
-          required: hasChanges,
-          status: hasChanges
-            ? notesComplete
-              ? "passed"
-              : "failed"
-            : "skipped",
-          summary: hasChanges
-            ? `${releaseNotes.notes.length.toString()} resolved, ${releaseNotes.missing.length.toString()} unavailable`
-            : "No changed entries require release notes",
-          evidenceReceiptIds: hasChanges ? ["release-note-resolution"] : [],
-        },
-      ],
-      evidence: [
-        {
-          id: "repository-state",
-          source: "git origin/main",
-          observedAt,
-          status: "success",
-          command: `git rev-parse origin/main`,
-          excerpt: collection.headSha,
-        },
-        {
-          id: "catalog-diff",
-          source: "version-catalog.json and legacy versions.ts replay",
-          observedAt,
-          status: "success",
-          command: `git rev-list --reverse ${collection.baseSha}..${collection.headSha}`,
-          excerpt:
-            collection.changes.length === 0
-              ? "No catalog events"
-              : collection.changes
-                  .slice(0, 20)
-                  .map((change) => changeSummary(change))
-                  .join("\n")
-                  .slice(0, 2000),
-        },
-        ...(hasChanges
-          ? [
-              {
-                id: "release-note-resolution",
-                source: "merged PR, datasource metadata, and catalog overrides",
-                observedAt,
-                status: notesComplete
-                  ? ("success" as const)
-                  : ("failure" as const),
-                excerpt: `${releaseNotes.notes.length.toString()} resolved; ${releaseNotes.missing.length.toString()} unavailable`,
-              },
-            ]
-          : []),
-      ],
-      findings: collection.changes.map((change) => {
-        const note = notesByChange.get(
-          `${change.name}\u{0}${change.newVersion ?? "removed"}`,
-        );
-        return {
-          section: dependencySection(change),
-          severity:
-            change.kind === "removal" || change.kind === "revert"
-              ? ("warning" as const)
-              : ("info" as const),
-          summary: changeSummary(change),
-          detail:
-            note === undefined
-              ? change.commitSubject
-              : `${graphemePrefix(note.notes, 1000)}${note.url === undefined ? "" : ` (${note.url})`}`,
-          evidenceReceiptIds: ["catalog-diff", "release-note-resolution"],
-        };
-      }),
-      limitations: releaseNotes.missing.map((missing) =>
-        missingNoteLimitation(missing),
-      ),
-      actions:
-        releaseNotes.missing.length === 0
-          ? []
-          : [
-              "Add a releaseNotesOverride to the catalog only when an authoritative source is known.",
-            ],
-      ...(synthesis === undefined ? {} : { synthesis }),
-      provenance: {
-        repoSha: collection.headSha,
-        source: "shepherdjerred/monorepo origin/main",
-        query: collection.usedCheckpoint
-          ? `checkpoint ${collection.baseSha}..${collection.headSha}`
-          : `${daysBack.toString()}-day bootstrap ${collection.baseSha}..${collection.headSha}`,
-      },
-    };
+      observedAt: new Date().toISOString(),
+      daysBack,
+      collection,
+      effectiveNotes,
+      synthesis,
+      remediation,
+    });
     const delivery = await deliverActivityReport(report);
     if (!("acceptedAt" in delivery)) {
       throw new Error(

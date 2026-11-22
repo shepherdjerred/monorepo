@@ -124,7 +124,15 @@ describe("deterministic maintenance report outcomes", () => {
           ),
         ),
       ),
-    ).toMatchObject({ execution: "complete", verdict: "changed" });
+    ).toMatchObject({
+      execution: "complete",
+      verdict: "changed",
+      remediation: {
+        outcome: "pr-created",
+        prUrl: "https://github.com/shepherdjerred/monorepo/pull/1",
+        autoMergeEnabled: true,
+      },
+    });
     expect(
       validate(
         dataDragonReport(
@@ -183,7 +191,16 @@ describe("deterministic maintenance report outcomes", () => {
           prUrl: "https://github.com/shepherdjerred/monorepo/pull/2",
         }),
       ),
-    ).toMatchObject({ execution: "complete", verdict: "changed" });
+    ).toMatchObject({
+      execution: "complete",
+      verdict: "changed",
+      remediation: {
+        outcome: "pr-created",
+        prUrl: "https://github.com/shepherdjerred/monorepo/pull/2",
+        autoMergeEnabled: false,
+        changedFiles: ["seasons.ts"],
+      },
+    });
     expect(
       validate(
         scoutSeasonReport(STARTED_AT, {
@@ -471,5 +488,42 @@ describe("Scout queue-window liveness", () => {
       report.checks.find((item) => item.id === "queue-liveness"),
     ).toMatchObject({ status: "skipped", required: false });
     expect(report.limitations).toEqual([]);
+  });
+
+  test("populates remediation metadata when scout-queue-windows opens a PR", () => {
+    const report = envelope(
+      scoutQueueWindowsReport(STARTED_AT, {
+        ...sparseResult([]),
+        changedFiles: [
+          "packages/scout-for-lol/packages/data/src/model/competitions/queue-windows.json",
+        ],
+        branchName: "chore/scout-queue-windows",
+        commitHash: "1234567890abcdef",
+        prUrl: "https://github.com/shepherdjerred/monorepo/pull/303",
+        autoMergeRequested: false,
+        autoMergeConfigured: true,
+        editCount: 1,
+        editSummaries: ["arurf: close 2026-08-25 — LLM confirmed ended"],
+        warningCount: 0,
+        warningSummaries: [],
+        warningFindings: [],
+        warningFingerprint: undefined,
+        warningConsecutiveRuns: 0,
+        outcome: "pr-created",
+      }),
+    );
+    expect(report.verdict).toBe("changed");
+    expect(report.remediation).toEqual({
+      outcome: "pr-created",
+      prUrl: "https://github.com/shepherdjerred/monorepo/pull/303",
+      branchName: "chore/scout-queue-windows",
+      commitSha: "1234567890abcdef",
+      autoMergeEnabled: false,
+      changedFiles: [
+        "packages/scout-for-lol/packages/data/src/model/competitions/queue-windows.json",
+      ],
+      summary:
+        "1 queue-window edit published in https://github.com/shepherdjerred/monorepo/pull/303.",
+    });
   });
 });

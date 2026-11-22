@@ -25,6 +25,10 @@ import {
   type QueueLivenessCheck,
 } from "./scout-queue-window-liveness.ts";
 import {
+  applyConfirmedEndedQueueCloses,
+  validateScoutQueueWindowsInRepo,
+} from "./scout-queue-window-close-remediation.ts";
+import {
   changedFilesInPaths,
   closeSeasonRefreshPr,
   openSeasonRefreshPr,
@@ -313,6 +317,11 @@ export const scoutQueueWindowsActivities = {
         queueWindowsFile: `${repoDir}/${QUEUE_WINDOWS_PATH}`,
         lookbackDays: LOOKBACK_DAYS,
       });
+      await applyConfirmedEndedQueueCloses({
+        queueWindowsFile: `${repoDir}/${QUEUE_WINDOWS_PATH}`,
+        report,
+        livenessChecks,
+      });
       const warningState = await updateWarningState(
         s3Endpoint,
         region,
@@ -362,6 +371,9 @@ export const scoutQueueWindowsActivities = {
           outcome: "no-diff",
         };
       }
+
+      await validateScoutQueueWindowsInRepo(repoDir);
+      files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
 
       const autoMerge = canAutoMerge(report.edits);
       let autoMergeConfigured: boolean | undefined;

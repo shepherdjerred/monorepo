@@ -52,6 +52,8 @@ const COMPLETE_RELEASE_NOTES = {
 
 type DependencySummaryTestActivities = {
   fetchDependencyReleaseNotes: () => unknown;
+  proposeMissingReleaseNoteOverrides?: () => unknown;
+  synthesizeDependencyChanges?: (changes: never, notes: never) => unknown;
   deliverActivityReport: (input: never) => unknown;
   advanceDependencySummaryCheckpoint: () => unknown;
 };
@@ -78,7 +80,20 @@ async function runDependencySummaryScenario(
     activities: {
       collectDependencyChanges: (): DependencyCollectionResult => COLLECTION,
       fetchDependencyReleaseNotes: activities.fetchDependencyReleaseNotes,
-      synthesizeDependencyChanges: (): undefined => undefined,
+      proposeMissingReleaseNoteOverrides:
+        activities.proposeMissingReleaseNoteOverrides ??
+        (() => ({
+          remediation: {
+            outcome: "no-changes",
+            changedFiles: [],
+            resolvedCount: 0,
+            unresolvedCount: 1,
+            summary: "No authoritative override found.",
+          },
+          resolvedNotes: [],
+        })),
+      synthesizeDependencyChanges:
+        activities.synthesizeDependencyChanges ?? ((): undefined => undefined),
       deliverActivityReport: activities.deliverActivityReport,
       advanceDependencySummaryCheckpoint:
         activities.advanceDependencySummaryCheckpoint,
@@ -284,4 +299,105 @@ describe("dependency summary release-note details", () => {
     );
     expect(detail?.isWellFormed()).toBe(true);
   }, 30_000);
+
+  test("merges proposed release-note overrides into synthesis and report while isolating proposal errors", async () => {
+    const reports: ActivityReportInput[] = [];
+    let synthesizedNotesCount = 0;
+    await runDependencySummaryScenario("dependency-summary-override-pr", {
+      fetchDependencyReleaseNotes: () => ({
+        notes: [],
+        missing: [
+          {
+            dependency: CHANGE.name,
+            commitSha: CHANGE.commitSha,
+            attempts: [],
+          },
+        ],
+      }),
+      proposeMissingReleaseNoteOverrides: () => ({
+        remediation: {
+          outcome: "pr-created",
+          prUrl: "https://github.com/shepherdjerred/monorepo/pull/901",
+          branchName: "chore/deps-release-notes-abcd1234",
+          commitSha: "abcd1234",
+          autoMergeEnabled: false,
+          changedFiles: ["packages/version-catalog/src/catalog.json"],
+          resolvedCount: 1,
+          unresolvedCount: 0,
+          summary: "Proposed 1 releaseNotesOverride.",
+        },
+        resolvedNotes: [
+          {
+            dependency: CHANGE.name,
+            version: CHANGE.newVersion,
+            notes: "Verified upstream changelog summary.",
+            url: "https://example.com/owner/tool/v2.0.0",
+            source: "catalog-override",
+          },
+        ],
+      }),
+      synthesizeDependencyChanges: (
+        _changes: never,
+        notes: readonly unknown[],
+      ) => {
+        synthesizedNotesCount = notes.length;
+        return "Updated owner/tool to 2.0.0.";
+      },
+      deliverActivityReport: (report: ActivityReportInput) => {
+        reports.push(report);
+        return {
+          accepted: true,
+          duplicate: false,
+          reportRunId: "dependency-summary:run-pr",
+          acceptedAt: "2026-08-10T16:01:00.000Z",
+        };
+      },
+      advanceDependencySummaryCheckpoint: (): undefined => undefined,
+    });
+
+    expect(synthesizedNotesCount).toBe(1);
+    expect(reports[0]).toMatchObject({
+      execution: "complete",
+      verdict: "changed",
+      synthesis: "Updated owner/tool to 2.0.0.",
+      remediation: {
+        outcome: "pr-created",
+        prUrl: "https://github.com/shepherdjerred/monorepo/pull/901",
+        autoMergeEnabled: false,
+      },
+    });
+
+    const fallbackReports: ActivityReportInput[] = [];
+    await runDependencySummaryScenario("dependency-summary-override-error", {
+      fetchDependencyReleaseNotes: () => ({
+        notes: [],
+        missing: [
+          {
+            dependency: CHANGE.name,
+            commitSha: CHANGE.commitSha,
+            attempts: [],
+          },
+        ],
+      }),
+      proposeMissingReleaseNoteOverrides: (): never => {
+        throw new Error("Codex unavailable");
+      },
+      deliverActivityReport: (report: ActivityReportInput) => {
+        fallbackReports.push(report);
+        return {
+          accepted: true,
+          duplicate: false,
+          reportRunId: "dependency-summary:run-err",
+          acceptedAt: "2026-08-10T16:01:00.000Z",
+        };
+      },
+      advanceDependencySummaryCheckpoint: (): undefined => undefined,
+    });
+
+    expect(fallbackReports[0]).toMatchObject({
+      execution: "partial",
+      verdict: "changed",
+      remediation: { outcome: "partial" },
+    });
+  }, 45_000);
 });

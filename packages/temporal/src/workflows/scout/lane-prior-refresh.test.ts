@@ -87,6 +87,14 @@ describe("runScoutLanePriorsWeeklyRefresh", () => {
       reportType: "scout-lane-priors",
       scheduleId: "scout-lane-priors-weekly-refresh",
       verdict: "changed",
+      remediation: {
+        outcome: "pr-created",
+        prUrl: RESULT.prUrl,
+        branchName: RESULT.branchName,
+        commitSha: RESULT.commitHash,
+        autoMergeEnabled: true,
+        changedFiles: RESULT.changedFiles,
+      },
     });
   }, 30_000);
 });
