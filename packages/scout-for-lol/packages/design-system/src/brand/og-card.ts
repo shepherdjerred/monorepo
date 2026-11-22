@@ -50,8 +50,10 @@ export function scoutOgCard(input: {
         {
           style: {
             marginLeft: "28px",
+            // Spiegel SemiBold declares weight 500; asking for 600 makes
+            // Satori synthesize a heavier face on top of it.
             fontFamily: "Spiegel",
-            fontWeight: 600,
+            fontWeight: 500,
             fontSize: "34px",
             color: colors.text,
           },

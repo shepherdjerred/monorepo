@@ -1,13 +1,13 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`square — 3-player squad 1`] = `"677df6c006757ee5d09a1dedfc893285968add62cc34d1e568d01b32f8a19e82"`;
+exports[`square — 3-player squad 1`] = `"e974a8def27e0c758094662ef0d2b2a44c6c927b76f70db183fca85a5c61bddb"`;
 
-exports[`square — 5-player squad with commentary 1`] = `"c1a686f40e4c63ecfe7f1cc42ec0755d0899251b4837fd3f6040037e374f2f09"`;
+exports[`square — 5-player squad with commentary 1`] = `"1c60741e1e577a6bddf1560b23640085994fcc3e841417e656e1d384e9f33ebf"`;
 
-exports[`square — 6-player squad with commentary 1`] = `"80fd724e3338a31113be22d83eb9d4118c73e8402b28d6f56db7c773cf042fd9"`;
+exports[`square — 6-player squad with commentary 1`] = `"63691b68d7bb8823725b225601c72f9bdc6614154a2191d2da2370cfadb06755"`;
 
-exports[`square — 10-player squad 1`] = `"05538c2b238f8ab5190e94f98d1fcabebfbe1b4bc9a56760e96d78c6fcc224e6"`;
+exports[`square — 10-player squad 1`] = `"0ce2465b1817a8d18a9eb3dc63ee69ec94b19e88abea678e2297a08d8b72bb78"`;
 
-exports[`square — solo defeat without commentary 1`] = `"4d2d0351cafe82dfe42a682566d8a34eda2904843b1bbf7eef2de6111698fce8"`;
+exports[`square — solo defeat without commentary 1`] = `"3c725d825bc109ebbb4b8261ee90723e366ec34f9dc1e32f5cffb6e6da29bbde"`;
 
-exports[`square — solo victory with public champion name 1`] = `"0fdf3a3d2a74acde4df7ebcaa7bd092f69cf358eb6c040bdac6b60344e0fdb62"`;
+exports[`square — solo victory with public champion name 1`] = `"14d78dd156b616a36c517e5f4d47ad321202e1eafce86fe72463853c57bed08c"`;

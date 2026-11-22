@@ -290,7 +290,7 @@ const ogSvg = await satori(
       },
       {
         name: "Spiegel",
-        weight: 600,
+        weight: 500,
         style: "normal",
         data: await Bun.file(spiegelSemiBold).arrayBuffer(),
       },

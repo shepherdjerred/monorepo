@@ -1,33 +1,33 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`all fields zeroed out test 1`] = `"c4a32b87b06147d40f7e416f78dd4c1d2e4d907158a597ef8e26d5d827476ff1"`;
+exports[`all fields zeroed out test 1`] = `"0f0c2baad807c8e719467edbdf62f9547930bf4382d2f906b686b27772dbab34"`;
 
-exports[`aram clash game test 1`] = `"21ddc899d290429a7412d8d8cd7ecbba9cc8002b2bbd7b02fbd96ffb1ebf3c90"`;
+exports[`aram clash game test 1`] = `"b893f238d41db796887c7dce0c8467cd39083d805483c2e6bcfe23623334a49d"`;
 
-exports[`clash game test 1`] = `"451d7b126f4651a30dbecea02eb38d8718856ce3cf66303c7b4cace9b3e4da6a"`;
+exports[`clash game test 1`] = `"643e090564b739c07fa21800f23fa03a5c5aa14ebf70337ed01cb5a2a4136f89"`;
 
-exports[`custom 1v1 renders on a 1372px canvas 1`] = `"8fbb7200a72e8010ad4cda613458915544372b173891ab7091a185b8448b4d70"`;
+exports[`custom 1v1 renders on a 1372px canvas 1`] = `"714e91ceb39f26fd96fcc51f56e881f730a4350945aec895ece170a9fddca3a7"`;
 
-exports[`custom 3v2 renders on a 2170px canvas 1`] = `"765d3cc22b70608cc5aefcbe7a5d74d2854fb5fa97421d089c3147e783990683"`;
+exports[`custom 3v2 renders on a 2170px canvas 1`] = `"8b6382bc58736a694a7ec05294ab8187990d074a3df84961e56d3c6207daba09"`;
 
-exports[`custom 3v3 renders on a 2436px canvas 1`] = `"a9a2e0fd50b72cfac4d7540c5dbc888590c3307de3a69b7f604fe23c562971b0"`;
+exports[`custom 3v3 renders on a 2436px canvas 1`] = `"f51a59f7e45f6a851f177d1a27e67835b12788f8fc9c3c5647a9eb7e7b983d12"`;
 
-exports[`custom 4v4 renders on a 2968px canvas 1`] = `"1727aeb2016e9efcd6aa3e82472d92377e883dced6ea56c065f306e5b9ee9b82"`;
+exports[`custom 4v4 renders on a 2968px canvas 1`] = `"ab9df07fe1a4c10444d5f2d8d981a5f4f3c94ca6052e7a58ebddc90f1e44df03"`;
 
-exports[`large values test 1`] = `"b302ad4661622d7af4d55e41792dbed8c008b0e720685297cdc4eaae993233bf"`;
+exports[`large values test 1`] = `"57e810f8f1e2e8a580c41c8ffd5ad341823a323240665e04bc8b3a1242d8cbd7"`;
 
-exports[`multiple highlighted players test 1`] = `"a4816ac09b1d0dea897c3fe54b21152bd7ed2393af74289dc1fdb1df9d718d93"`;
+exports[`multiple highlighted players test 1`] = `"30b2139257d3f58ca44425435892fd44ca119f5e0d38ed451b1537b1523cf92b"`;
 
-exports[`multiple players with promotion and demotion test 1`] = `"1bac05c773831543c3c2e54d4f45b5864c2517dab1b35cbf6b0670af3fb09525"`;
+exports[`multiple players with promotion and demotion test 1`] = `"1392dbc5b03d9277cc058714ff8f2ee7b53a7a025e077bc2e227d6af16cfc9ea"`;
 
-exports[`no items test 1`] = `"9054f21015bf50417e360100a3000ca827eee8797a0d2d43a7f649f130a331c2"`;
+exports[`no items test 1`] = `"ca63fb92e18b029f2b5d1a4859869ba434e510a2af1dc43e9fe7b523e3d1521d"`;
 
-exports[`no rank before match test 1`] = `"2d1d21124fc5aedf5f06d542221e6b894b20ddb2cbfa1d4346da6628d0a99224"`;
+exports[`no rank before match test 1`] = `"39f2ebcd821f67e5e3470c31cd7efaa14eb3572004d8b11a5b49c54af07b0122"`;
 
-exports[`no rank test 1`] = `"f4f8959398488d60ecfc73392d9538d509cd7c9f6619e05b75d81640c4e3af75"`;
+exports[`no rank test 1`] = `"1e91bf99274aaa0ff5c6e21fac438d361745127ee297f5c794e98501d0ef163c"`;
 
-exports[`sanity check 1`] = `"2d1b0af1a38372fc91c85c25e43a0513b2a2184f8deb6ccbd34ad08dee7057dd"`;
+exports[`sanity check 1`] = `"34c4a42f4b9e1b7c00536a2b10f25d27d7316cd2e0e8771c4110392e60ab7db2"`;
 
-exports[`surrender test 1`] = `"af70e058a4d4fd239d711f6a2a321bcbdef6266d34554f7bafce6220a8a87626"`;
+exports[`surrender test 1`] = `"f819b655893c28f32f45c9b9d056da7627b82b6eae8cf2ad46ff657f1e3970b0"`;
 
-exports[`victory test 1`] = `"a86077b1a129ff07b08904c816f15bd07597d0960fdbe3a87cd62d362b02beba"`;
+exports[`victory test 1`] = `"9a026da92a22e7a3027cb0aafd8b888cdd42da1ce84c55a1e49da9caa30b3b51"`;
