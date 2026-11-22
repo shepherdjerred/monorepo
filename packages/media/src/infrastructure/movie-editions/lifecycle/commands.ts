@@ -185,7 +185,7 @@ export class MovieLifecycleCommands extends MoviePublicCommandsV4 {
         if (epoch < 0)
           throw new MediaError(
             "runtime_protected",
-            "Media automation is paused",
+            "Your movie request wasn’t saved because Media automation is paused.",
             409,
           );
         const profileId = result.intent.profileId ?? defaults?.profileId;

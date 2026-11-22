@@ -2,7 +2,11 @@ import { ApiError } from "#client/api.ts";
 import { ErrorNotice, Notice } from "#client/components.tsx";
 
 export function commandNeedsReview(error: Error | null): boolean {
-  return error instanceof ApiError && error.status === 409;
+  return (
+    error instanceof ApiError &&
+    error.status === 409 &&
+    error.code !== "runtime_protected"
+  );
 }
 
 export function CommandError({
