@@ -16,6 +16,7 @@ import type { ArtifactResolution } from "@scout-for-lol/domain/artifacts/resolut
 import { TIMELINE_RECOVERY_WINDOW_MS } from "@scout-for-lol/domain/match-processing/eligibility.ts";
 import {
   completeMatchOf,
+  matchCoverageOf,
   type CanonicalMatch,
   type RawTimeline,
 } from "@scout-for-lol/data";
@@ -100,20 +101,22 @@ function timelineAbandonment(
 }
 
 /**
- * A game frozen as an end-of-game record has no timeline and never will, so
- * once its report is settled there is nothing left to recover. Abandoned at
- * once rather than after Riot's windows: no source can answer. New client
- * evidence still reopens the row, exactly as for any abandonment.
+ * A game frozen as an end-of-game or history record has no timeline Scout
+ * stores and never will, so once its report is settled there is nothing left
+ * to recover. Abandoned at once rather than after Riot's windows: no source
+ * can answer. New client evidence still reopens the row, exactly as for any
+ * abandonment.
  */
-function endOfGameAbandonment(
+function partialRecordAbandonment(
   admission: { policy: string },
+  record: "end_of_game_record" | "history_record",
   reportComplete: boolean,
   { evidenceReadAt }: AttemptClock,
 ) {
   return reportComplete || admission.policy === "FULL"
     ? {
         recoveryAbandonedAt: evidenceReadAt,
-        recoveryAbandonedReason: "end_of_game_record",
+        recoveryAbandonedReason: record,
       }
     : NOT_ABANDONED;
 }
@@ -142,14 +145,25 @@ async function historyTimeline(
 /** What one attempt settled about the timeline, as the admission records it. */
 function timelineOutcome(
   admission: { createdAt: Date; policy: string },
-  timeline: EvidenceResolution<RawTimeline> | null,
-  reportComplete: boolean,
+  settled: {
+    readonly match: CanonicalMatch;
+    readonly timeline: EvidenceResolution<RawTimeline> | null;
+    readonly reportComplete: boolean;
+  },
   clock: AttemptClock,
 ) {
+  const { match, timeline, reportComplete } = settled;
   return {
     historyTimelineRecovered: timeline?.kind === "available",
     ...(timeline === null
-      ? endOfGameAbandonment(admission, reportComplete, clock)
+      ? partialRecordAbandonment(
+          admission,
+          matchCoverageOf(match.metadata) === "history"
+            ? "history_record"
+            : "end_of_game_record",
+          reportComplete,
+          clock,
+        )
       : timelineAbandonment(admission, timeline, reportComplete, clock)),
   };
 }
@@ -161,6 +175,9 @@ async function ensureHistoryReport(
   context: Awaited<ReturnType<typeof resolveScoutObservedMatchContext>>,
 ): Promise<boolean> {
   if (policy !== "HISTORY_ONLY") return complete;
+  // A history record is a game nothing witnessed end: it is recorded for
+  // history and queries, and gets no report of its own.
+  if (matchCoverageOf(context.matchData.metadata) === "history") return true;
   if (context.trackedPlayers.length === 0) return false;
   if (!complete)
     await renderMatchNotificationArtifact({
@@ -299,7 +316,11 @@ export async function reconcileMatchHistory(now = new Date()): Promise<number> {
           historyReportComplete: reportComplete,
           recoveryClaimId: null,
           recoveryError: null,
-          ...timelineOutcome(admission, timeline, reportComplete, clock),
+          ...timelineOutcome(
+            admission,
+            { match: context.matchData, timeline, reportComplete },
+            clock,
+          ),
         },
       });
     } catch (error) {

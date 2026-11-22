@@ -1421,6 +1421,56 @@ never a failure:
   on such a game. The match card applies; the loadout card does not, since it
   keys its build path on participant numbers.
 
+#### History records
+
+A game the client did not witness end — an ARAM: Mayhem game played before
+the app was installed, or while it was closed — reaches the server only as the
+history bundle the client's history sweep uploads (`matchHistory` plus, when
+served, its `timeline`; no end-of-game block, replay or witnessed timing).
+`canonical/history-match.ts` (`convertHistoryMatch`) builds a `HistoryMatch`
+from it, tagged `dataVersion: "local-history-1"`, and `matchCoverageOf`
+reads `history`. `CanonicalMatch` is `RawMatch | EndOfGameMatch |
+HistoryMatch`.
+
+- Stated: the row's completion marker (`endOfGameResult: "GameComplete"`,
+  required), creation time, duration, version, queue, map, teams with their
+  bans and objective totals (derived as in the bundle converter), and each
+  player's stats, items, spells and runes.
+- Derived: the start is the stated creation and the end is creation plus
+  duration, since the row states neither.
+- `null`, never zero: `HISTORY_UNSTATED_PARTICIPANT_FIELDS` (pings, casts,
+  time played and dead, a player's own baron and dragon kills and the other
+  Match-V5 fields the row lacks). Their lake columns are
+  `HISTORY_NULLABLE_LAKE_COLUMNS`; readers that need a per-minute
+  denominator read `PLAYED_SECONDS_SQL`.
+- Arena is refused, since Riot publishes it, and so is a one-player list row.
+
+`resolveCanonicalMatch` reaches a history record last: only when there is no
+complete match and no end-of-game record, only for a game admitted
+`HISTORY_ONLY`, only when Riot refused it (403) or never publishes its queue,
+and only after the same deadline as an end-of-game record, so a witnessed
+record for the game, from any device, takes precedence. Copies carrying a
+timeline are preferred; disagreeing copies are a conflict. The pick is frozen
+in `ScoutClientCanonicalMatch` like any client record (device and owner follow
+from its observation) and never upgraded.
+
+A history record is history-only and drives no effects: history recovery
+archives it, commits a `HISTORY_ONLY`/`silent-backfill` observation and stages
+its lake rows, renders no report and mints no intent, and abandons it as
+`history_record`. It is never effect-eligible, so Dares, progression and the
+Hall of Fame never read it (the Hall throws on an unstated record statistic as
+a broken contract), and no coach review starts. Explore's `review_match`
+refuses it by name; its scoreboard is queryable like any other game, and it
+appears in web match history. Competitions' S3 scan counts it, as it counts
+every silent backfill, since its criteria read only the win and the champion.
+Migration `20261122020000_scout_client_history_record_reopen` reopened
+history-only admissions abandoned as `riot_match_*` before the record existed.
+Migration `20261122030000_scout_client_witnessed_unrecorded_history_only`
+re-admitted witnessed games live processing could not record (Mayhem bundles
+refused before lane `NONE` read as "no position") as history-only
+`late-discovery`, only where no live effect had run, so they are recorded
+silently rather than posted weeks late.
+
 Timeline selection is independent of result selection. Riot supplies its
 timeline when available; accepted client timeline observations can fill a
 missing timeline even for a Riot result. Participant IDs must identify the

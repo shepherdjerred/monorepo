@@ -137,7 +137,7 @@ function perMinute(value: number, durationSeconds: number): number {
 function rawHallRecordValue(
   match: HallRecordMatch,
   recordId: HallRecordId,
-): number {
+): number | null {
   switch (recordId) {
     case "kills":
       return match.kills;
@@ -186,7 +186,13 @@ export function hallRecordValue(
   recordId: HallRecordId,
 ): number {
   const precision = hallRecordDefinition(recordId).precision;
-  return Number(rawHallRecordValue(match, recordId).toFixed(precision));
+  const value = rawHallRecordValue(match, recordId);
+  // Only a history record leaves a record statistic NULL (time dead,
+  // teammate healing). It is history-only, so it is never effect-eligible and
+  // never reaches the Hall; reading one here is a broken contract.
+  if (value === null)
+    throw new Error(`Hall record ${recordId} read an unstated statistic`);
+  return Number(value.toFixed(precision));
 }
 
 function holderKey(holder: HallRecordHolder): string {

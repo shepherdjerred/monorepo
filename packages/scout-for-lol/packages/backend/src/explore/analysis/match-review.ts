@@ -46,6 +46,17 @@ const END_OF_GAME_REVIEW_REFUSAL = {
     "Scout recorded this game from the League client's end-of-game screen, without participant numbers or a timeline, so it has no timeline review; call review_match with participantId null for its end-of-game review.",
 };
 
+/**
+ * A history record (a game Scout knows only from the League client's match
+ * history, because nothing witnessed it end) has its scoreboard in the lake
+ * but no stored timeline to review.
+ */
+const HISTORY_REVIEW_REFUSAL = {
+  ok: false as const,
+  message:
+    "Scout recorded this game only from the League client's match history, after it ended, so it has no timeline review; its scoreboard is queryable like any other game.",
+};
+
 function matchRecord(document: unknown, matchId: RiotMatchId) {
   const record = CanonicalMatchRecordSchema.parse(document);
   if (record.match.metadata.matchId !== matchId)
@@ -53,10 +64,17 @@ function matchRecord(document: unknown, matchId: RiotMatchId) {
   return record;
 }
 
-/** A stored match document of either coverage; `null` for an end-of-game record. */
+/**
+ * The complete match document a timeline review reads, or the refusal for a
+ * partial record of either kind.
+ */
 function reviewableMatch(document: unknown, matchId: RiotMatchId) {
   const record = matchRecord(document, matchId);
-  return record.coverage === "complete" ? record.match : null;
+  if (record.coverage === "complete")
+    return { ok: true as const, match: record.match };
+  return record.coverage === "history"
+    ? HISTORY_REVIEW_REFUSAL
+    : END_OF_GAME_REVIEW_REFUSAL;
 }
 
 /**
@@ -298,8 +316,9 @@ export function recordedMatchRoster(data: unknown, matchId: RiotMatchId) {
       ok: false as const,
       message: "Scout has no stored match document for this game.",
     };
-  const match = reviewableMatch(rawMatch.document, matchId);
-  if (match === null) return END_OF_GAME_REVIEW_REFUSAL;
+  const reviewable = reviewableMatch(rawMatch.document, matchId);
+  if (!reviewable.ok) return reviewable;
+  const match = reviewable.match;
   return {
     ok: true as const,
     participants: roster(match),
@@ -324,8 +343,9 @@ export function summarizeRecordedMatch(
       ok: false as const,
       message: "This dataset has no raw match document for the selected game.",
     };
-  const match = reviewableMatch(rawMatch.document, matchId);
-  if (match === null) return END_OF_GAME_REVIEW_REFUSAL;
+  const reviewable = reviewableMatch(rawMatch.document, matchId);
+  if (!reviewable.ok) return reviewable;
+  const match = reviewable.match;
   if (
     new Set(match.info.participants.map((p) => p.participantId)).size !==
     match.info.participants.length

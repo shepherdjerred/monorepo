@@ -41,9 +41,15 @@ const ItemSlotSchema = z.number().nullable().default(null);
  * How complete a match record is: `complete` for a Match-V5 document, Riot's
  * or one the Scout Client assembled from the full history bundle, and
  * `end_of_game` for a game known only from the League client's end-of-game
- * block, which states no timeline, bans or participant slots.
+ * block, which states no timeline, bans or participant slots, and `history`
+ * for a game known only from the League client's match history, which states
+ * no pings, casts, time played or per-player objective kills.
  */
-export const MatchCoverageSchema = z.enum(["complete", "end_of_game"]);
+export const MatchCoverageSchema = z.enum([
+  "complete",
+  "end_of_game",
+  "history",
+]);
 export type MatchCoverage = z.infer<typeof MatchCoverageSchema>;
 
 export const MatchLakeRowSchema = z.object({
@@ -140,27 +146,30 @@ export const MatchLakeRowSchema = z.object({
   damage_dealt_to_turrets: z.number(),
   // Healing
   total_heal: z.number(),
-  total_heals_on_teammates: z.number(),
+  total_heals_on_teammates: z.number().nullable(),
   // Vision
   vision_score: z.number(),
   wards_placed: z.number(),
   wards_killed: z.number(),
   vision_wards_bought_in_game: z.number(),
-  detector_wards_placed: z.number(),
-  // Ping counts from Riot match data, available to ScoutQL and Dares.
-  all_in_pings: z.number(),
-  assist_me_pings: z.number(),
-  basic_pings: z.number(),
-  command_pings: z.number(),
-  danger_pings: z.number(),
-  enemy_missing_pings: z.number(),
-  enemy_vision_pings: z.number(),
-  get_back_pings: z.number(),
-  hold_pings: z.number(),
-  need_vision_pings: z.number(),
-  on_my_way_pings: z.number(),
-  push_pings: z.number(),
-  vision_cleared_pings: z.number(),
+  detector_wards_placed: z.number().nullable(),
+  // Ping counts from Riot match data, available to ScoutQL and Dares. A
+  // history record states no pings, casts, time played or dead, nor a
+  // player's own baron and dragon kills: those rows carry NULL, never zero
+  // (`HISTORY_NULLABLE_LAKE_COLUMNS`).
+  all_in_pings: z.number().nullable(),
+  assist_me_pings: z.number().nullable(),
+  basic_pings: z.number().nullable(),
+  command_pings: z.number().nullable(),
+  danger_pings: z.number().nullable(),
+  enemy_missing_pings: z.number().nullable(),
+  enemy_vision_pings: z.number().nullable(),
+  get_back_pings: z.number().nullable(),
+  hold_pings: z.number().nullable(),
+  need_vision_pings: z.number().nullable(),
+  on_my_way_pings: z.number().nullable(),
+  push_pings: z.number().nullable(),
+  vision_cleared_pings: z.number().nullable(),
   // Multikills / sprees
   double_kills: z.number(),
   triple_kills: z.number(),
@@ -171,17 +180,17 @@ export const MatchLakeRowSchema = z.object({
   first_blood_kill: z.boolean(),
   // Progression
   champ_level: z.number(),
-  champ_experience: z.number(),
+  champ_experience: z.number().nullable(),
   // Time
-  time_played: z.number(),
-  total_time_spent_dead: z.number(),
+  time_played: z.number().nullable(),
+  total_time_spent_dead: z.number().nullable(),
   longest_time_spent_living: z.number(),
   time_ccing_others: z.number(),
   // Objectives
   turret_kills: z.number(),
   inhibitor_kills: z.number(),
-  baron_kills: z.number(),
-  dragon_kills: z.number(),
+  baron_kills: z.number().nullable(),
+  dragon_kills: z.number().nullable(),
   // Arena
   placement: z.number().nullable(),
   subteam_placement: z.number().nullable(),

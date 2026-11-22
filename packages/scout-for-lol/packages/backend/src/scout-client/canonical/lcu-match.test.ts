@@ -32,6 +32,36 @@ const EndOfGameGoldSchema = z.looseObject({
 });
 
 describe("convertLcuMatchBundle", () => {
+  test("converts a real ARAM Mayhem game whose client states no lane", async () => {
+    // Every real Mayhem capture names each player's lane NONE; the redacted
+    // fixture's lanes were rewritten, so restore what the client sends.
+    const bundle = await aliasedBundle("lcu-postgame-aram-mayhem");
+    const LanesSchema = z.looseObject({
+      participants: z.array(
+        z.looseObject({ timeline: z.looseObject({ lane: z.string() }) }),
+      ),
+    });
+    const laneless = {
+      ...bundle,
+      matchHistory: {
+        ...bundle.matchHistory,
+        participants: LanesSchema.parse(bundle.matchHistory).participants.map(
+          (participant) => ({
+            ...participant,
+            timeline: { ...participant.timeline, lane: "NONE" },
+          }),
+        ),
+      },
+    };
+    const match = convertLcuMatchBundle(matchIdOf(bundle), laneless);
+    expect(match).not.toBeNull();
+    expect(
+      new Set(
+        match?.info.participants.map((participant) => participant.teamPosition),
+      ),
+    ).toEqual(new Set([""]));
+  });
+
   test("converts a real ranked game with every participant", async () => {
     const match = convertLcuMatchBundle(
       RiotMatchIdSchema.parse("NA1_5654104474"),

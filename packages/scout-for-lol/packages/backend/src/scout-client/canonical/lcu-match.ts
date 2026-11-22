@@ -48,9 +48,11 @@ export function localMatchEndTimestamp(payload: unknown): number | null {
  * Counted from the players, not `teams`: an Arena game lists teams 100 and 0
  * while its players sit on 100 and 200.
  */
-const MIN_FIELDED_SIDES = 2;
+export const MIN_FIELDED_SIDES = 2;
 
-function fieldedSides(participants: readonly { teamId: number }[]): number {
+export function fieldedSides(
+  participants: readonly { teamId: number }[],
+): number {
   return new Set(participants.map((participant) => participant.teamId)).size;
 }
 
@@ -115,6 +117,31 @@ function matchSource(
   return source === undefined || candidates.length !== 1
     ? null
     : { source, named };
+}
+
+/**
+ * Each history participant with the identity row that names it, or `null`
+ * unless every participant and every identity pair up one to one.
+ */
+export function pairedParticipants(game: {
+  readonly participants: readonly LegacyParticipant[];
+  readonly participantIdentities: readonly LegacyIdentity[];
+}): { participant: LegacyParticipant; identity: LegacyIdentity }[] | null {
+  const identities = new Map(
+    game.participantIdentities.map((identity) => [
+      identity.participantId,
+      identity,
+    ]),
+  );
+  if (identities.size !== game.participantIdentities.length) return null;
+  const pairs = game.participants.flatMap((participant) => {
+    const identity = identities.get(participant.participantId);
+    return identity === undefined ? [] : [{ participant, identity }];
+  });
+  return pairs.length === game.participants.length &&
+    pairs.length === game.participantIdentities.length
+    ? pairs
+    : null;
 }
 
 /**
@@ -201,17 +228,9 @@ function convertSupportedLcuMatchBundle(
   const completedAt = localMatchEndTimestamp(bundle);
   if (completedAt === null) return null;
   const players = sourcePlayers(bundle);
-  const identities = new Map(
-    game.participantIdentities.map((identity) => [
-      identity.participantId,
-      identity,
-    ]),
-  );
-  if (identities.size !== game.participantIdentities.length) return null;
-
-  const participants = game.participants.flatMap((participant) => {
-    const identity = identities.get(participant.participantId);
-    if (identity === undefined) return [];
+  const pairs = pairedParticipants(game);
+  if (pairs === null) return null;
+  const participants = pairs.flatMap(({ participant, identity }) => {
     const matched = matchSource(participant, identity, players);
     if (matched === null) return [];
     const converted = convertParticipant(
@@ -223,8 +242,7 @@ function convertSupportedLcuMatchBundle(
     return converted === null ? [] : [converted];
   });
   if (
-    participants.length !== game.participants.length ||
-    participants.length !== game.participantIdentities.length ||
+    participants.length !== pairs.length ||
     fieldedSides(participants) < MIN_FIELDED_SIDES
   ) {
     return null;
@@ -267,8 +285,8 @@ function convertSupportedLcuMatchBundle(
  * Herald's comes from the payload when stated, otherwise from kill counts and
  * the timeline. Voidgrubs, optional in Match-V5, appear only when provable.
  */
-function convertTeams(
-  bundle: LocalMatchBundle,
+export function convertTeams(
+  bundle: Pick<LocalMatchBundle, "matchHistory" | "timeline">,
   participants: readonly { teamId: number; kills: number }[],
 ) {
   const game = bundle.matchHistory;

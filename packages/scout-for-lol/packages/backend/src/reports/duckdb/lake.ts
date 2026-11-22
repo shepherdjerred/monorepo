@@ -271,6 +271,13 @@ function participantSource(
 }
 
 /** Participant rows, with the loadout columns the caller reads. */
+/**
+ * Seconds a participant played, for per-minute rates: `time_played`, or the
+ * game's length for a history record, which does not state it.
+ */
+export const PLAYED_SECONDS_SQL =
+  "COALESCE(time_played, game_duration_seconds)";
+
 export function buildMatchesSource(
   files: LakeFiles,
   predicate: SqlFragment,

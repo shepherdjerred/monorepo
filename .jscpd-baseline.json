@@ -2384,6 +2384,10 @@
       "clones": 1,
       "tokens": 83
     },
+    "packages/scout-for-lol/packages/backend/src/temporal/match/end-of-game-match.integration.test.ts|packages/scout-for-lol/packages/backend/src/temporal/match/history-match.integration.test.ts": {
+      "clones": 3,
+      "tokens": 327
+    },
     "packages/scout-for-lol/packages/backend/src/trpc/router/subscription-filters.router.test.ts|packages/scout-for-lol/packages/backend/src/trpc/router/subscription-mute.router.test.ts": {
       "clones": 1,
       "tokens": 156

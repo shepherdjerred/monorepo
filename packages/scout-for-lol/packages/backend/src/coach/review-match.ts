@@ -1,7 +1,7 @@
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 
 /** How much of a game its stored canonical match document covers. */
-export type StoredMatchCoverage = "complete" | "end_of_game";
+export type StoredMatchCoverage = "complete" | "end_of_game" | "history";
 
 /** The stored reads the review's start condition needs, replaceable in tests. */
 export type ReviewableMatchReads = {
@@ -33,6 +33,10 @@ export type ReviewableMatchReads = {
  *   reviews from the end-of-game stats and the owner's own recording, with no
  *   timeline.
  *
+ * A history record (a game the client never saw end, known only from its
+ * match history) never starts a review: it is history-only and drives no
+ * effects.
+ *
  * An end-of-game record still inside its deadline is not archived, so the
  * review waits for it to freeze; a history bundle arriving in that window
  * becomes the complete document instead, and is what gets reviewed. Result
@@ -43,5 +47,7 @@ export async function reviewableMatchParticipants(
   matchId: RiotMatchId,
 ): Promise<readonly string[] | null> {
   const coverage = await reads.storedMatchCoverage(matchId);
-  return coverage === null ? null : await reads.resultParticipants(matchId);
+  return coverage === null || coverage === "history"
+    ? null
+    : await reads.resultParticipants(matchId);
 }

@@ -103,8 +103,8 @@ export const MatchParticipantRowSchema = z
     total_damage_dealt_to_champions: LakeIntSchema,
     turret_kills: LakeIntSchema,
     inhibitor_kills: LakeIntSchema,
-    baron_kills: LakeIntSchema,
-    dragon_kills: LakeIntSchema,
+    baron_kills: LakeIntSchema.nullable(),
+    dragon_kills: LakeIntSchema.nullable(),
   })
   .extend(MatchLoadoutLakeRowSchema.shape);
 

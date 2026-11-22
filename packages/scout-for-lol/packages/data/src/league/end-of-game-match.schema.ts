@@ -1,8 +1,14 @@
 import { z } from "zod";
 import {
   SCOUT_CLIENT_END_OF_GAME_DATA_VERSION,
+  SCOUT_CLIENT_HISTORY_DATA_VERSION,
   matchCoverageOf,
 } from "./data-source.ts";
+import {
+  HistoryMatchSchema,
+  type HistoryMatch,
+  type HistoryParticipant,
+} from "./history-match.schema.ts";
 import { checkStoredIdentities } from "./participant-identity.ts";
 import {
   RawMetadataSchema,
@@ -14,6 +20,7 @@ import {
   type RawParticipant,
 } from "./raw-participant.schema.ts";
 import { RawBanSchema } from "./raw-team.schema.ts";
+import { SCOUT_BUILT_GAME_SHAPE } from "./scout-built-game.schema.ts";
 
 /**
  * The end-of-game canonical record: a game Scout knows only from the League
@@ -73,19 +80,10 @@ export const EndOfGameMatchSchema = z
     }),
     info: z
       .object({
-        endOfGameResult: z.literal("GameComplete"),
+        ...SCOUT_BUILT_GAME_SHAPE,
         gameCreation: z.null(),
-        gameDuration: z.number().positive(),
-        gameEndTimestamp: z.number().int().positive(),
-        gameId: z.number().int().positive(),
-        gameMode: z.string().min(1),
-        gameStartTimestamp: z.number().int().positive(),
-        gameType: z.string().min(1),
         gameVersion: z.null(),
-        mapId: z.number().int().positive(),
         participants: z.array(EndOfGameParticipantSchema).min(2),
-        platformId: z.string().min(1),
-        queueId: z.number().int().nonnegative(),
         teams: z.array(EndOfGameTeamSchema).min(2),
       })
       .strict(),
@@ -106,9 +104,10 @@ export type EndOfGameMatch = z.infer<typeof EndOfGameMatchSchema>;
 export type EndOfGameParticipant = z.infer<typeof EndOfGameParticipantSchema>;
 export type EndOfGameTeam = z.infer<typeof EndOfGameTeamSchema>;
 
-/** A stored match of either coverage. Consumers opt in to this union. */
-export type CanonicalMatch = RawMatch | EndOfGameMatch;
-export type CanonicalParticipant = RawParticipant | EndOfGameParticipant;
+/** A stored match of any coverage. Consumers opt in to this union. */
+export type CanonicalMatch = RawMatch | EndOfGameMatch | HistoryMatch;
+export type CanonicalParticipant =
+  RawParticipant | EndOfGameParticipant | HistoryParticipant;
 
 /**
  * A stored match with its coverage stated beside it, so a reader that needs
@@ -116,7 +115,8 @@ export type CanonicalParticipant = RawParticipant | EndOfGameParticipant;
  */
 export type CanonicalMatchRecord =
   | { readonly coverage: "complete"; readonly match: RawMatch }
-  | { readonly coverage: "end_of_game"; readonly match: EndOfGameMatch };
+  | { readonly coverage: "end_of_game"; readonly match: EndOfGameMatch }
+  | { readonly coverage: "history"; readonly match: HistoryMatch };
 
 const DataVersionSchema = z.looseObject({
   metadata: z.looseObject({ dataVersion: z.string() }),
@@ -129,9 +129,9 @@ function copyIssues(issues: readonly z.core.$ZodIssue[], ctx: z.RefinementCtx) {
 }
 
 /**
- * A stored match document of either coverage, chosen by its own
- * `dataVersion`. A document claiming the end-of-game version must be a valid
- * end-of-game record; anything else must be a valid Match-V5 document.
+ * A stored match document of any coverage, chosen by its own `dataVersion`.
+ * A document claiming the end-of-game or history version must be a valid
+ * record of that kind; anything else must be a valid Match-V5 document.
  */
 export const CanonicalMatchRecordSchema: z.ZodType<CanonicalMatchRecord> = z
   .unknown()
@@ -145,6 +145,15 @@ export const CanonicalMatchRecordSchema: z.ZodType<CanonicalMatchRecord> = z
       const parsed = EndOfGameMatchSchema.safeParse(value);
       if (parsed.success)
         return { coverage: "end_of_game", match: parsed.data };
+      copyIssues(parsed.error.issues, ctx);
+      return z.NEVER;
+    }
+    if (
+      version.success &&
+      version.data.metadata.dataVersion === SCOUT_CLIENT_HISTORY_DATA_VERSION
+    ) {
+      const parsed = HistoryMatchSchema.safeParse(value);
+      if (parsed.success) return { coverage: "history", match: parsed.data };
       copyIssues(parsed.error.issues, ctx);
       return z.NEVER;
     }
@@ -172,7 +181,7 @@ export function canonicalMatchTournamentCode(
 
 /**
  * The whole Match-V5 document behind a canonical match, or `null` for an
- * end-of-game record. For the effects that need what only Riot's document
+ * end-of-game or history record. For the effects that need what only Riot's document
  * states (a timeline, participant numbers): `null` means the game is
  * ineligible for them, never failed. The coverage rides in the document's own
  * `dataVersion`, so the narrowing re-parses a document already validated.

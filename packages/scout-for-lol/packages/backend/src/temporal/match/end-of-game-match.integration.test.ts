@@ -13,7 +13,6 @@ import path from "node:path";
 import { ApplicationFailure } from "@temporalio/common";
 import { z } from "zod";
 import {
-  CanonicalMatchRecordSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
@@ -26,7 +25,6 @@ import { createTestScoutClientDevice } from "#src/testing/scout-client/scout-cli
 import { makeRiotTransportFailure } from "#src/testing/riot-mocks.ts";
 import type { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
-import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 
 /**
  * An end-of-game-only game through the per-match core, against real rows.
@@ -62,36 +60,23 @@ vi.mock("#src/report-lake/paths.ts", async (original) => ({
   resolveLakeDir: () => io.lakeDir,
 }));
 // The S3 transport: content-addressed puts into a map, verified reads back.
-vi.mock("#src/storage/s3-helpers.ts", async (original) => ({
-  ...(await original()),
-  saveToS3: async (config: {
-    matchId: RiotMatchId;
-    assetType: string;
-    extension: string;
-    body: string;
-    contentType: string;
-  }) => {
-    const body = config.body;
-    const key = `games/${config.matchId}/${config.assetType}.${config.extension}`;
-    io.objects.set(key, body);
-    return {
-      key,
-      digest: new Bun.CryptoHasher("sha256").update(body).digest("hex"),
-      bytes: new TextEncoder().encode(body).byteLength,
-      contentType: config.contentType,
-      capturedAt: new Date().toISOString(),
-      url: `s3://end-of-game-fixture/${key}`,
-    };
-  },
-}));
-vi.mock("#src/report-store/s3-raw-source.ts", async (original) => ({
-  ...(await original()),
-  readVerifiedRawObjectText: async (args: { key: string }) => {
-    const body = io.objects.get(args.key);
-    if (body === undefined) throw new Error(`No object at ${args.key}`);
-    return body;
-  },
-}));
+vi.mock("#src/storage/s3-helpers.ts", async (original) => {
+  const { inMemoryS3 } =
+    await import("#src/testing/scout-client/match-pipeline-doubles.ts");
+  return {
+    ...(await original()),
+    saveToS3: inMemoryS3(io.objects, "end-of-game-fixture").saveToS3,
+  };
+});
+vi.mock("#src/report-store/s3-raw-source.ts", async (original) => {
+  const { inMemoryS3 } =
+    await import("#src/testing/scout-client/match-pipeline-doubles.ts");
+  return {
+    ...(await original()),
+    readVerifiedRawObjectText: inMemoryS3(io.objects, "end-of-game-fixture")
+      .readVerifiedRawObjectText,
+  };
+});
 // The doubles above stand in for every S3 call; no real client is built.
 vi.mock("#src/storage/s3-client.ts", () => ({
   createS3Client: () => ({ destroy: vi.fn() }),
@@ -138,7 +123,6 @@ const { reconcileScoreboardReport } = await import("./scoreboard-recovery.ts");
 const { admitMatchEvidence } = await import("#src/evidence/admission.ts");
 const { gameResultFromMatch } =
   await import("#src/scout-client/canonical/riot-result.ts");
-const { listStagingFiles } = await import("#src/report-lake/staging.ts");
 const { classicEndOfGameMatch, classicMatchId } =
   await import("#src/testing/scout-client/end-of-game-fixtures.ts");
 const {
@@ -150,6 +134,12 @@ const {
 } = await import("#src/testing/scout-client/end-of-game-uploads.ts");
 const { classicEndOfGameBlock } =
   await import("#src/testing/scout-client/end-of-game-fixtures.ts");
+const {
+  archivedRecordIn,
+  clearMatchPipelineRows,
+  createTrackedPlayer,
+  stagedMatchRows,
+} = await import("#src/testing/scout-client/match-pipeline-doubles.ts");
 
 const owner = DiscordAccountIdSchema.parse("160509172704739328");
 const guild = DiscordGuildIdSchema.parse("1337623164146155593");
@@ -177,46 +167,15 @@ beforeEach(async () => {
   io.render.mockClear();
   uploads.reset();
   await rm(io.lakeDir, { recursive: true, force: true });
-  await prisma.$transaction([
-    prisma.matchNotificationIntent.deleteMany(),
-    prisma.matchReportSnapshot.deleteMany(),
-    prisma.matchResultEvidence.deleteMany(),
-    prisma.matchTrackedAccount.deleteMany(),
-    prisma.matchProcessingReceipt.deleteMany(),
-    prisma.matchObservation.deleteMany(),
-    prisma.matchEvidenceAdmission.deleteMany(),
-    prisma.scoutClientCanonicalMatch.deleteMany(),
-    prisma.scoutClientObservation.deleteMany(),
-    prisma.scoutClientDevice.deleteMany(),
-    prisma.scoutClientPairing.deleteMany(),
-    prisma.account.deleteMany(),
-    prisma.player.deleteMany(),
-    prisma.user.deleteMany(),
-  ]);
+  await clearMatchPipelineRows(prisma);
   const observer = LeaguePuuidSchema.parse(
     observerOf(await classicEndOfGameBlock()),
   );
-  const now = new Date();
-  await prisma.player.create({
-    data: {
-      alias: "Classic Scout",
-      discordId: owner,
-      serverId: guild,
-      creatorDiscordId: owner,
-      createdTime: now,
-      updatedTime: now,
-      accounts: {
-        create: {
-          alias: "Classic Scout",
-          puuid: observer,
-          region: "AMERICA_NORTH",
-          serverId: guild,
-          creatorDiscordId: owner,
-          createdTime: now,
-          updatedTime: now,
-        },
-      },
-    },
+  await createTrackedPlayer(prisma, {
+    alias: "Classic Scout",
+    owner,
+    guild,
+    puuid: observer,
   });
   deviceId = await createTestScoutClientDevice(prisma, owner);
 });
@@ -261,11 +220,7 @@ async function processMatch() {
 
 /** The archived canonical document, as a reader of `games/` parses it. */
 function archivedRecord() {
-  const [body] = [...io.objects.entries()]
-    .filter(([key]) => key.endsWith("/match.json"))
-    .map(([, value]) => value);
-  if (body === undefined) throw new Error("Nothing was archived");
-  return CanonicalMatchRecordSchema.parse(JSON.parse(body));
+  return archivedRecordIn(io.objects);
 }
 
 const StagedMatchRowSchema = z.looseObject({
@@ -275,15 +230,8 @@ const StagedMatchRowSchema = z.looseObject({
 
 /** The distinct coverage of the staged `matches` rows (JSON Lines files). */
 async function stagedCoverage(): Promise<unknown[]> {
-  const files = await listStagingFiles(io.lakeDir, "matches");
-  expect(files.length).toBeGreaterThan(0);
-  const texts = await Promise.all(
-    files.map(async (file) => await Bun.file(file).text()),
-  );
-  const rows = texts
-    .flatMap((text) => text.split("\n"))
-    .filter((line) => line.trim().length > 0)
-    .map((line) => StagedMatchRowSchema.parse(JSON.parse(line)));
+  const staged = await stagedMatchRows(io.lakeDir);
+  const rows = staged.map((row) => StagedMatchRowSchema.parse(row));
   expect(rows.length).toBeGreaterThan(0);
   return [
     ...new Set(
