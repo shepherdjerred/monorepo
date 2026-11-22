@@ -1,6 +1,8 @@
 @layer components {
   .surface {
     display: grid;
+    /* A wide child scrolls inside the panel instead of widening it. */
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-5);
     min-width: 0;
     padding: var(--space-5);
@@ -75,6 +77,7 @@
   .summaryTitle {
     flex: 1 1 12rem;
     min-width: 0;
+    overflow-wrap: anywhere;
     margin: 0;
     font-size: var(--text-md);
     font-weight: 600;

@@ -38,7 +38,7 @@ const cx = classNames(styles);
 
 /** The owner's tools arrive only when the owner opens them. */
 const ManageTitle = lazy(async () => {
-  const { ManageTitle: Manage } = await import("./manage.tsx");
+  const { ManageTitle: Manage } = await import("./manage/manage-title.tsx");
   return { default: Manage };
 });
 

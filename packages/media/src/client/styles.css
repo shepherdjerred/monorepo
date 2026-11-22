@@ -475,28 +475,6 @@
   .back-link:hover {
     color: var(--text-accent);
   }
-  .asset-card {
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 20px;
-    padding-bottom: 20px;
-  }
-  .asset-card:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-  }
-  .subtitle-list {
-    list-style: none;
-    padding: 0;
-    font-size: var(--text-xs);
-  }
-  .subtitle-list li {
-    display: flex;
-    gap: var(--space-3);
-    justify-content: space-between;
-    align-items: center;
-    margin: var(--space-3) 0;
-  }
   .profile-details {
     border-top: 1px solid var(--border);
     padding: var(--space-3) 0;
@@ -522,16 +500,6 @@
     max-width: 300px;
     margin: 0;
   }
-  .retention-summary {
-    margin-top: 20px;
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--border);
-  }
-  .retention-summary p {
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    margin: var(--space-2) 0 0;
-  }
   .contact-settings {
     margin-top: 30px;
     padding-top: 25px;
@@ -539,18 +507,6 @@
   }
   .contact-settings .notice {
     margin-top: 15px;
-  }
-  .release-details {
-    border-bottom: 1px solid var(--border);
-    padding: 14px 0;
-  }
-  .release-details summary {
-    line-height: var(--leading-normal);
-    word-break: break-word;
-  }
-  .release-details h3 {
-    margin-top: 20px;
-    font-size: var(--text-sm);
   }
   .loading {
     display: flex;

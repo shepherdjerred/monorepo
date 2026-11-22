@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   CircleAlertIcon,
   CircleCheckIcon,
+  CircleDashedIcon,
   InfoIcon,
   RotateCwIcon,
   TriangleAlertIcon,
@@ -81,15 +82,23 @@ export function LoadError({
   );
 }
 
-/** A short label for the state of a thing. The icon carries the tone without color. */
+/**
+ * A short label for the state of a thing. The icon carries the tone without
+ * color. `progress` is a thing under way, which a callout never is.
+ */
 export function Badge({
   tone = "neutral",
   children,
 }: {
-  tone?: Tone;
+  tone?: Tone | "progress";
   children: ReactNode;
 }) {
-  const Icon = tone === "neutral" ? null : TONE_ICONS[tone];
+  const Icon =
+    tone === "neutral"
+      ? null
+      : tone === "progress"
+        ? CircleDashedIcon
+        : TONE_ICONS[tone];
   return (
     <span className={cx("badge")} data-tone={tone}>
       {Icon !== null && <Icon aria-hidden="true" />}

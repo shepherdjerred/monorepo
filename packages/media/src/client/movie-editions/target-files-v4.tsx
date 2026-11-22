@@ -1,5 +1,15 @@
 import type { MovieTargetContextV4 } from "#shared/movie-editions/lifecycle/public-v4.ts";
-import { humanize, Status, WireStatus } from "#client/components.tsx";
+import { humanize } from "#client/components.tsx";
+import { StatusBadge } from "#client/status/badge.tsx";
+import { SubtitleRequirements } from "#client/status/subtitle-requirements.tsx";
+import { Badge } from "#client/ui/feedback.tsx";
+import { DataList, DataRow } from "#client/ui/data-list.tsx";
+import { FactList } from "#client/ui/record.tsx";
+import { EmptyNote } from "#client/ui/panel.tsx";
+import styles from "./edition.module.css";
+import { classNames } from "#client/ui/class-names.ts";
+
+const cx = classNames(styles);
 
 export function MovieEditionFilesV4({
   context,
@@ -9,82 +19,69 @@ export function MovieEditionFilesV4({
   const asset = context.currentAsset;
   if (asset === null)
     return (
-      <p className="helper">
+      <EmptyNote>
         No current file has been published for this edition.
-      </p>
+      </EmptyNote>
     );
+  const properties = [
+    asset.properties.quality,
+    asset.properties.codec,
+    asset.properties.hdr === true ? "HDR" : undefined,
+  ].filter((value) => value !== undefined);
   return (
-    <div className="asset-card">
-      <div className="section-heading">
-        <h4>Current edition file</h4>
-        <WireStatus value={asset.state} />
+    <div className={cx("file")}>
+      <div className={cx("fileHead")}>
+        <h4 className={cx("fileTitle")}>Current edition file</h4>
+        <StatusBadge value={asset.state} />
       </div>
-      <p className="helper">
-        {[
-          asset.properties.quality,
-          asset.properties.codec,
-          asset.properties.hdr === true ? "HDR" : undefined,
-        ]
-          .filter((value) => value !== undefined)
-          .join(" · ")}
-      </p>
-      {asset.properties.audioLanguages !== undefined && (
-        <p className="helper">
-          Audio: {asset.properties.audioLanguages.join(", ")}
-        </p>
-      )}
+      <FactList
+        facts={[
+          ...(properties.length === 0
+            ? []
+            : [{ term: "Video", detail: properties.join(", ") }]),
+          ...(asset.properties.audioLanguages === undefined
+            ? []
+            : [
+                {
+                  term: "Audio",
+                  detail: asset.properties.audioLanguages.join(", "),
+                },
+              ]),
+        ]}
+      />
       {asset.subtitleStatus !== null && (
-        <div className="retention-summary">
-          <strong>
-            {asset.subtitleStatus.satisfied
-              ? "Subtitle requirements met"
-              : "Subtitle requirements pending"}
-          </strong>
-          {asset.subtitleStatus.householdMissing.length > 0 && (
-            <p className="helper">
-              English regular subtitles required for original-language playback
-            </p>
-          )}
-          {asset.subtitleStatus.missing.map((target) => (
-            <p className="helper" key={target.sourceItemId}>
-              {target.language} ·{" "}
-              {target.forced ? "Forced dialogue" : "Regular subtitles"}
-            </p>
-          ))}
-          {asset.subtitleStatus.protectedReasons.map((reason) => (
-            <p className="helper" key={reason}>
-              {humanize(reason)}
-            </p>
-          ))}
-        </div>
+        <SubtitleRequirements status={asset.subtitleStatus} />
       )}
       {asset.captions.length === 0 ? (
-        <p className="helper">
+        <EmptyNote>
           No installed or quarantined captions for this video.
-        </p>
+        </EmptyNote>
       ) : (
-        <ul className="subtitle-list">
+        <DataList label="Captions">
           {asset.captions.map((caption) => (
-            <li key={caption.id}>
-              <span>
-                {caption.language}
-                {caption.forced === true ? " · Forced" : ""}
-                {caption.hearingImpaired === true ? " · Hearing impaired" : ""}
-                <br />
-                <small className="helper">
-                  {caption.accepted
-                    ? "Quality verified for this video"
-                    : "Quality unverified for this video"}{" "}
-                  · {humanize(caption.storageKind)}
-                </small>
-              </span>
-              <Status value={caption.state} />
-            </li>
+            <DataRow
+              key={caption.id}
+              title={
+                <span className={cx("captionName")}>
+                  {caption.language}
+                  {caption.forced === true && <Badge>Forced</Badge>}
+                  {caption.hearingImpaired === true && (
+                    <Badge>Hearing impaired</Badge>
+                  )}
+                </span>
+              }
+              detail={`${
+                caption.accepted
+                  ? "Quality verified for this video"
+                  : "Quality unverified for this video"
+              }. Stored as ${humanize(caption.storageKind).toLowerCase()}.`}
+              status={<StatusBadge value={caption.state} />}
+            />
           ))}
-        </ul>
+        </DataList>
       )}
       {asset.captionsTruncated && (
-        <p className="helper">Showing the first 100 captions.</p>
+        <p className={cx("muted")}>Showing the first 100 captions.</p>
       )}
     </div>
   );

@@ -1,5 +1,15 @@
+import type { ReactNode } from "react";
 import type { MediaVisibility } from "#shared/visibility/detail.ts";
 import { dateLabel } from "#client/components.tsx";
+import { classNames } from "#client/ui/class-names.ts";
+import { Badge, Callout } from "#client/ui/feedback.tsx";
+import { FactList } from "#client/ui/record.tsx";
+import {
+  Disclosure,
+  DisclosureList,
+  EmptyNote,
+  Panel,
+} from "#client/ui/panel.tsx";
 import { downloadPercent, seededDuration } from "./format.ts";
 import {
   attemptLabel,
@@ -9,52 +19,89 @@ import {
   torrentHeading,
 } from "./presentation.ts";
 import { SeedingDiagnostics } from "./seeding.tsx";
-import "./styles.css";
+import styles from "./progress.module.css";
 
+const cx = classNames(styles);
+
+type Visibility = MediaVisibility;
+
+/**
+ * What is happening to a title now: whether it can be watched, the latest
+ * acquisition, each download with its seeding, and the acquisition history.
+ */
 export function MediaProgress({
   visibility,
-  heading = "Download & seeding",
+  heading = "What is happening now",
+  description,
+  id,
 }: {
-  visibility: MediaVisibility;
+  visibility: Visibility;
   heading?: string;
+  /** What the panel is about, when that is more than the title says. */
+  description?: ReactNode;
+  id?: string;
 }) {
   const latest = visibility.attempts[0];
+  const { playback } = visibility;
   return (
-    <section
-      className="panel media-progress"
-      aria-labelledby="media-progress-heading"
+    <Panel
+      title={heading}
+      description={description}
+      {...(id === undefined ? {} : { id })}
     >
-      <div className="section-heading">
-        <h2 id="media-progress-heading">{heading}</h2>
-        <span>
-          {visibility.playback.upgradeInProgress
-            ? "Upgrade in progress"
-            : "Recorded progress"}
-        </span>
-      </div>
-      <div
-        className={`playback-summary ${visibility.playback.playable ? "playback-ready" : ""}`}
+      <Callout
+        tone={playback.playable ? "ok" : "neutral"}
+        title={playbackHeading(playback)}
       >
-        <strong>{playbackHeading(visibility.playback)}</strong>
-        <p>{playbackMessage(visibility.playback)}</p>
-      </div>
-      {latest !== undefined && (
-        <p className="latest-acquisition">
-          <span className="helper">Latest acquisition record</span>
-          <strong>{attemptLabel(latest.state)}</strong>
-          {!latest.currentEpoch && (
-            <span className="helper">Recorded before recovery</span>
+        {playbackMessage(playback)}
+      </Callout>
+      {(latest !== undefined || playback.upgradeInProgress) && (
+        <div className={cx("latest")}>
+          {latest !== undefined && (
+            <p className={cx("latestRecord")}>
+              <span className={cx("muted")}>Latest acquisition record</span>
+              <strong>{attemptLabel(latest.state)}</strong>
+              {!latest.currentEpoch && <Badge>Recorded before recovery</Badge>}
+            </p>
           )}
-        </p>
+          {playback.upgradeInProgress && (
+            <Badge tone="progress">Upgrade in progress</Badge>
+          )}
+        </div>
       )}
-      {visibility.torrents.length === 0 ? (
-        <p className="muted">
-          No download observations are available for your current work on this
-          title.
-        </p>
+      <Transfers
+        attempts={visibility.attempts}
+        torrents={visibility.torrents}
+        empty="No download observations are available for your current work on this title."
+      />
+      {visibility.historyTruncated && (
+        <Callout tone="warn">
+          Only a bounded selection is shown. Episode totals and acquisition
+          history may be partial.
+        </Callout>
+      )}
+    </Panel>
+  );
+}
+
+/** The downloads of a title and the history of the attempts that made them. */
+export function Transfers({
+  attempts,
+  torrents,
+  empty,
+}: {
+  attempts: Visibility["attempts"];
+  torrents: Visibility["torrents"];
+  /** What to say when there are no downloads to show. */
+  empty: string;
+}) {
+  return (
+    <div className={cx("stack")}>
+      {torrents.length === 0 ? (
+        <EmptyNote>{empty}</EmptyNote>
       ) : (
-        <div className="download-grid">
-          {visibility.torrents.map((torrent, index) => (
+        <div className={cx("grid")}>
+          {torrents.map((torrent, index) => (
             <TorrentProgress
               key={torrent.id}
               torrent={torrent}
@@ -63,37 +110,44 @@ export function MediaProgress({
           ))}
         </div>
       )}
-      {visibility.attempts.length > 0 && (
-        <details className="acquisition-history">
-          <summary>Acquisition history ({visibility.attempts.length})</summary>
-          <ol>
-            {visibility.attempts.map((attempt) => {
-              const download = visibility.torrents.findIndex(
-                (torrent) => torrent.id === attempt.torrentId,
-              );
-              return (
-                <li key={attempt.id}>
-                  <strong>{attemptLabel(attempt.state)}</strong>
-                  <p className="helper">
-                    Started {dateLabel(attempt.createdAt)}
-                    {download === -1
-                      ? ""
-                      : ` · Download ${String(download + 1)}`}
-                    {attempt.currentEpoch ? "" : " · Recorded before recovery"}
-                  </p>
-                </li>
-              );
-            })}
-          </ol>
-        </details>
-      )}
-      {visibility.historyTruncated && (
-        <p className="progress-protection">
-          Only a bounded selection is shown. Episode totals and acquisition
-          history may be partial.
-        </p>
-      )}
-    </section>
+      <AcquisitionHistory attempts={attempts} torrents={torrents} />
+    </div>
+  );
+}
+
+/** Each attempt to acquire the title, newest first, with the download it made. */
+function AcquisitionHistory({
+  attempts,
+  torrents,
+}: {
+  attempts: Visibility["attempts"];
+  torrents: Visibility["torrents"];
+}) {
+  if (attempts.length === 0) return null;
+  return (
+    <DisclosureList>
+      <Disclosure title={`Acquisition history (${String(attempts.length)})`}>
+        <ol className={cx("attempts")}>
+          {attempts.map((attempt) => {
+            const download = torrents.findIndex(
+              (torrent) => torrent.id === attempt.torrentId,
+            );
+            return (
+              <li className={cx("attempt")} key={attempt.id}>
+                <strong>{attemptLabel(attempt.state)}</strong>
+                <span className={cx("muted")}>
+                  Started {dateLabel(attempt.createdAt)}.
+                  {download === -1
+                    ? ""
+                    : ` Made download ${String(download + 1)}.`}
+                  {attempt.currentEpoch ? "" : " Recorded before recovery."}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      </Disclosure>
+    </DisclosureList>
   );
 }
 
@@ -101,7 +155,7 @@ export function TorrentProgress({
   torrent,
   number,
 }: {
-  torrent: MediaVisibility["torrents"][number];
+  torrent: Visibility["torrents"][number];
   number: number;
 }) {
   const fresh = torrent.freshness === "fresh";
@@ -120,14 +174,14 @@ export function TorrentProgress({
             maximumFractionDigits: 3,
           });
   return (
-    <article className={`download-card ${fresh ? "" : "download-stale"}`}>
-      <div className="section-heading">
-        <h3>{torrentHeading(torrent)}</h3>
-        <span>Download {number}</span>
-      </div>
+    <article className={cx("card")} data-stale={!fresh || undefined}>
+      <header className={cx("cardHead")}>
+        <h3 className={cx("cardTitle")}>{torrentHeading(torrent)}</h3>
+        <span className={cx("muted")}>Download {number}</span>
+      </header>
       {torrent.progress !== null && (
-        <div className="download-meter">
-          <div>
+        <div className={cx("meter")}>
+          <div className={cx("meterLine")}>
             <span>{fresh ? "Downloaded" : "Last recorded progress"}</span>
             <strong>{downloadPercent(torrent.progress)}</strong>
           </div>
@@ -138,30 +192,37 @@ export function TorrentProgress({
           />
         </div>
       )}
-      <p className={fresh ? "helper" : "progress-protection"}>
-        {observationMessage(torrent)}
-        {torrent.observedAt === null
-          ? ""
-          : ` · ${dateLabel(torrent.observedAt)}`}
-      </p>
+      {fresh ? (
+        <p className={cx("muted")}>
+          {observationMessage(torrent)}
+          {torrent.observedAt === null
+            ? ""
+            : `, ${dateLabel(torrent.observedAt)}`}
+        </p>
+      ) : (
+        <Callout tone="warn">
+          {observationMessage(torrent)}
+          {torrent.observedAt === null
+            ? ""
+            : ` Last observed ${dateLabel(torrent.observedAt)}.`}
+        </Callout>
+      )}
       {accounting && (
-        <dl className="download-facts">
-          <div>
-            <dt>Share ratio</dt>
-            <dd>{ratio}</dd>
-          </div>
-          <div>
-            <dt>Actual seeded time</dt>
-            <dd>
-              {torrent.seededSeconds === null
-                ? "Not observed"
-                : seededDuration(torrent.seededSeconds)}
-            </dd>
-          </div>
-        </dl>
+        <FactList
+          facts={[
+            { term: "Share ratio", detail: ratio },
+            {
+              term: "Actual seeded time",
+              detail:
+                torrent.seededSeconds === null
+                  ? "Not observed"
+                  : seededDuration(torrent.seededSeconds),
+            },
+          ]}
+        />
       )}
       {torrent.progress === 1 && torrent.state !== "removed" && (
-        <p className="helper">
+        <p className={cx("muted")}>
           Download completion and seeding are separate from verified playback.
         </p>
       )}
