@@ -145,7 +145,9 @@ of a commit failed, its pipeline failed as a whole and CI published few or
 none of the services it changed. CI selects what to build against the last
 whole successful pipeline, so the first later commit whose pipeline passed
 built everything this one changed: that commit's releases of services this
-commit has no build of join `changed`, marked `includedIn`. A pipeline that
+commit has no build of join `changed`, marked `includedIn`; a build there
+that built new artifacts but composed nothing, because a newer build already
+stood for its service, is followed to that newer build's release. A pipeline that
 publishes several builds of one service for a commit still changed it once:
 the service counts once, by its newest set, and each environment reads the
 least advanced of its builds' states. A

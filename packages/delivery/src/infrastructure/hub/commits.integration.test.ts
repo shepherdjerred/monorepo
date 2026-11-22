@@ -218,6 +218,40 @@ describe("commit status", () => {
     expect(status.blockers?.[0]).toEqual(status.blocker);
   });
 
+  test("a whole failed pipeline follows a carrying build a newer one superseded to that newer release", async () => {
+    // Pipeline 1301 passed and built Arcade, but 1302's Arcade qualified
+    // first, so 1301's composed nothing and 1302's release carries it.
+    const failed = await publish("golink", sha("9"), 1300, "failed");
+    await publish("golink", sha("1"), 1301, "verified");
+    const superseded = await register("arcade", sha("1"), 1301);
+    await publish("arcade", sha("2"), 1302, "verified");
+    await context.delivery.qualify(superseded, "verified", testExecutor);
+    const status = await commitStatus(context.cluster.database, sha("9"));
+    expect(status.carriedFailures).toEqual([carriedBy(failed, sha("1"))]);
+    const [arcade, ...rest] = status.changed;
+    expect(rest).toEqual([]);
+    expect(arcade?.service.id).toBe("arcade");
+    expect(arcade?.includedIn).toBe(sha("2"));
+    expect(arcade?.versionSet).not.toBeNull();
+    expect(status.verdict).toBe(arcade?.verdict);
+  });
+
+  test("a whole failed pipeline takes no row from a carrying build that only kept earlier artifacts", async () => {
+    await publish("arcade", sha("7"), 1399, "verified");
+    await publish("golink", sha("9"), 1400, "failed");
+    await publish("golink", sha("1"), 1401, "verified");
+    const kept = await register(
+      "arcade",
+      sha("1"),
+      1401,
+      image("arcade", 1399),
+    );
+    await context.delivery.qualify(kept, "verified", testExecutor);
+    const status = await commitStatus(context.cluster.database, sha("9"));
+    expect(status.changed).toEqual([]);
+    expect(status.verdict).toBe("nothing_to_deploy");
+  });
+
   test("a commit whose pipeline passed for some services takes no other commit's releases", async () => {
     const failed = await publish("golink", sha("9"), 1100, "failed");
     await publish("birmel", sha("9"), 1100, "verified");

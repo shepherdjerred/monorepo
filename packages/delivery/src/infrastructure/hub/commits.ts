@@ -13,7 +13,12 @@ import { decodeCursor, page, PAGE_SIZE } from "./cursor.ts";
 import { buildStatus } from "./status.ts";
 import { promotionOrder } from "./topology.ts";
 import { buildView, serviceSummary } from "./views.ts";
-import { carryingCommits, pipelineCarriers } from "./carried.ts";
+import {
+  carryingCommits,
+  pipelineCarriers,
+  supersedingReleases,
+  type Carrier,
+} from "./carried.ts";
 import {
   blockingEnvironments,
   commitVerdict,
@@ -36,6 +41,65 @@ import {
 const SHA = /^[0-9a-f]{7,40}$/iu;
 
 type Read = { status: CommitStatus };
+
+/** Builds of catalog services only, as a commit read counts them. */
+const catalogBuilds = <T extends { serviceId: string }>(rows: T[]) =>
+  rows.filter((row) => index.byId(row.serviceId)?.id === row.serviceId);
+
+/**
+ * The builds whose releases carry failed commits' changes: each carried
+ * failure's release, and every build of a commit that carries a whole
+ * failed pipeline. A carrying pipeline's build that built new artifacts but
+ * composed nothing, because a newer build already stood for its service,
+ * ships in that newer build's release, so `superseding` maps it there and
+ * that build is read too.
+ */
+async function carryingBuilds(
+  database: Database,
+  carried: ReadonlyMap<string, Carrier>,
+  pipelineCarrier: ReadonlyMap<string, string>,
+) {
+  const rows = catalogBuilds(
+    await database.build.findMany({
+      where: {
+        OR: [
+          {
+            id: {
+              in: [...carried.values()].flatMap((entry) =>
+                entry.releaseBuildId === null ? [] : [entry.releaseBuildId],
+              ),
+            },
+          },
+          {
+            sourceRevision: { in: [...new Set(pipelineCarrier.values())] },
+            sourceKind: "ci",
+          },
+        ],
+      },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    }),
+  );
+  const carrierShas = new Set(pipelineCarrier.values());
+  const superseding = await supersedingReleases(
+    database,
+    rows
+      .filter(
+        (row) =>
+          carrierShas.has(row.sourceRevision) &&
+          buildStatus(row.status) === "succeeded",
+      )
+      .map((row) => row.id),
+  );
+  const seen = new Set(rows.map((row) => row.id));
+  const missing = [...new Set(superseding.values())].filter(
+    (id) => !seen.has(id),
+  );
+  const releases =
+    missing.length === 0
+      ? []
+      : await database.build.findMany({ where: { id: { in: missing } } });
+  return { carrierBuilds: [...rows, ...releases], superseding };
+}
 
 /** A build of a commit, named by its service's catalog title. */
 function commitBuild(row: Parameters<typeof buildView>[0]): CommitBuild {
@@ -70,29 +134,10 @@ async function readCommits(
       .map((row) => row.id),
   );
   const pipelineCarrier = pipelineCarriers(shas, builds, carried);
-  // The releases that carry a failed build's change decide whether the
-  // failed commit's change is live yet; for a commit whose whole pipeline
-  // failed, so does every release of the commit that carries it.
-  const carrierRows = await database.build.findMany({
-    where: {
-      OR: [
-        {
-          id: {
-            in: [...carried.values()].flatMap((entry) =>
-              entry.releaseBuildId === null ? [] : [entry.releaseBuildId],
-            ),
-          },
-        },
-        {
-          sourceRevision: { in: [...new Set(pipelineCarrier.values())] },
-          sourceKind: "ci",
-        },
-      ],
-    },
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-  });
-  const carrierBuilds = carrierRows.filter(
-    (row) => index.byId(row.serviceId)?.id === row.serviceId,
+  const { carrierBuilds, superseding } = await carryingBuilds(
+    database,
+    carried,
+    pipelineCarrier,
   );
   const buildIds = [...builds, ...carrierBuilds].map((row) => row.id);
   const versionSets = await database.versionSet.findMany({
@@ -210,6 +255,23 @@ async function readCommits(
     };
   };
 
+  /**
+   * Where a carrying pipeline's build stands: its own release, or, when a
+   * newer build already stood for its service, that build's release.
+   */
+  const carrierStanding = (
+    row: (typeof rows)[number],
+  ): CommitService | null => {
+    const own = standing(row);
+    if (own !== null) return { ...own, includedIn: row.sourceRevision };
+    const releaseId = superseding.get(row.id);
+    const release = carrierBuilds.find((entry) => entry.id === releaseId);
+    const entry = release === undefined ? null : standing(release);
+    return release === undefined || entry === null
+      ? null
+      : { ...entry, includedIn: release.sourceRevision };
+  };
+
   return shas.map((sha): Read => {
     const own = builds.filter((row) => row.sourceRevision === sha);
     const built: CommitService[] = [];
@@ -273,8 +335,8 @@ async function readCommits(
         buildStatus(row.status) !== "succeeded"
       )
         return [];
-      const entry = standing(row);
-      return entry === null ? [] : [{ ...entry, includedIn: pipelineSha }];
+      const entry = carrierStanding(row);
+      return entry === null ? [] : [entry];
     });
     const changed = mergeByService([
       ...built,
