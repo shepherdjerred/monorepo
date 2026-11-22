@@ -11,6 +11,10 @@ import {
 } from "@shepherdjerred/ops-model/email/primitives.ts";
 import { renderEmailHtml } from "@shepherdjerred/ops-model/email/render-html.ts";
 import { renderEmailText } from "@shepherdjerred/ops-model/email/render-text.ts";
+import {
+  reportEvidenceSourceLinks,
+  reportFindingToEmailCard,
+} from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import { hubReportRunUrl } from "@shepherdjerred/ops-model/tool-links.ts";
 import {
   presentReport,
@@ -32,44 +36,6 @@ function mapPresentationTone(tone: ReportPresentationTone): EmailTone {
       return "warning";
     case "incomplete":
       return "critical";
-  }
-}
-
-function evidenceUrls(
-  report: ReportEnvelopeV1,
-  receiptIds: readonly string[],
-): string[] {
-  const evidence = new Map(
-    report.evidence.map((receipt) => [receipt.id, receipt]),
-  );
-  return [
-    ...new Set(
-      receiptIds.flatMap((id) => {
-        const href = safeHttpUrl(evidence.get(id)?.url);
-        return href === null ? [] : [href];
-      }),
-    ),
-  ];
-}
-
-function sourceActionLinks(urls: readonly string[]): EmailActionLink[] {
-  return urls.map((url, index) => ({
-    label:
-      urls.length === 1 ? "View source" : `View source ${String(index + 1)}`,
-    url,
-  }));
-}
-
-function mapFindingSeverity(
-  severity: ReportEnvelopeV1["findings"][number]["severity"],
-): { tone: EmailTone; badge: string } {
-  switch (severity) {
-    case "critical":
-      return { tone: "critical", badge: "Critical" };
-    case "warning":
-      return { tone: "warning", badge: "Warning" };
-    case "info":
-      return { tone: "info", badge: "Note" };
   }
 }
 
@@ -116,20 +82,9 @@ function buildFindingCards(
   report: ReportEnvelopeV1,
   presentation: ReportEmailPresentation,
 ): EmailItemCard[] {
-  return presentation.findings.map((finding) => {
-    const { tone, badge } = mapFindingSeverity(finding.severity);
-    const links = sourceActionLinks(
-      evidenceUrls(report, finding.evidenceReceiptIds),
-    );
-    return {
-      tone,
-      badge,
-      ...(finding.section === undefined ? {} : { kicker: finding.section }),
-      title: finding.summary,
-      ...(finding.detail === undefined ? {} : { body: finding.detail }),
-      ...(links.length === 0 ? {} : { links }),
-    };
-  });
+  return presentation.findings.map((finding) =>
+    reportFindingToEmailCard(report.evidence, finding),
+  );
 }
 
 function buildChecksSection(
@@ -144,8 +99,9 @@ function buildChecksSection(
       passedLabels.push(check.label);
       continue;
     }
-    const links = sourceActionLinks(
-      evidenceUrls(report, check.evidenceReceiptIds),
+    const links = reportEvidenceSourceLinks(
+      report.evidence,
+      check.evidenceReceiptIds,
     );
     attentionChecks.push({
       status: check.status === "Problem" ? "problem" : "skipped",
@@ -262,9 +218,9 @@ export function buildReportEmailDocument(
   const prHref = safeHttpUrl(report.remediation?.prUrl);
   const findingCards = buildFindingCards(report, presentation);
   const sections: EmailSection[] = [
-    ...(prHref !== null && report.remediation !== undefined
-      ? [buildRemediationSection(report.remediation, prHref)]
-      : []),
+    ...(prHref === null || report.remediation === undefined
+      ? []
+      : [buildRemediationSection(report.remediation, prHref)]),
     ...(findingCards.length === 0
       ? []
       : [

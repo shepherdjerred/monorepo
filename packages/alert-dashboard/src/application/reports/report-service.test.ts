@@ -250,5 +250,47 @@ describe("ReportService feed pagination", () => {
     expect(byHasPr.items.map((item) => item.id)).toContain(
       "deep-history:needle-run",
     );
+
+    const oldMailCreatedNs = now.subtract({ hours: 48 }).epochNanoseconds;
+    fixture.reportsRepository.incidentMails.set("retried-mail-needle", {
+      id: "retried-mail-needle",
+      messageId: "<retried-mail-needle@sjer.red>",
+      deliveryId: "delivery-retried",
+      createdAtNs: oldMailCreatedNs,
+      sentAtNs: now.epochNanoseconds,
+      canceledAtNs: null,
+      canceledBy: null,
+      cancellationReason: null,
+      attemptCount: 3,
+      lastError: null,
+      occurrenceIds: [],
+      subject: "Warning: Retried incident email sent after backlog",
+      htmlBody: "<!DOCTYPE html><html><body>Retried</body></html>",
+      plainBody: "Retried",
+    });
+    for (let index = 0; index < 120; index += 1) {
+      const id = `newer-pending-mail-${String(index)}`;
+      fixture.reportsRepository.incidentMails.set(id, {
+        id,
+        messageId: `<${id}@sjer.red>`,
+        deliveryId: `delivery-${String(index)}`,
+        createdAtNs: now.subtract({ minutes: index + 1 }).epochNanoseconds,
+        sentAtNs: null,
+        canceledAtNs: null,
+        canceledBy: null,
+        cancellationReason: null,
+        attemptCount: 0,
+        lastError: null,
+        occurrenceIds: [],
+        subject: `Pending outbox ${String(index)}`,
+        htmlBody: "<!DOCTYPE html><html><body>Pending</body></html>",
+        plainBody: "Pending",
+      });
+    }
+    const recentIncidents = await fixture.reports.feed({
+      tab: "incidents",
+      limit: 5,
+    });
+    expect(recentIncidents.items[0]?.id).toBe("retried-mail-needle");
   });
 });

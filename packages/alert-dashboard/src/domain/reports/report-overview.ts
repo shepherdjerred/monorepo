@@ -174,13 +174,19 @@ export function digestRunToDeliveryStatus(
 }
 
 export function needsOperatorReview(input: {
+  execution?: ReportExecution | undefined;
   verdict: ReportVerdict;
   deliveryStatus: ReportDeliveryStatus;
   prUrl?: string | null | undefined;
   autoMergeEnabled?: boolean | null | undefined;
 }): boolean {
   if (input.deliveryStatus === "failed") return true;
-  if (input.verdict === "attention") return true;
+  if (input.execution !== undefined && input.execution !== "complete") {
+    return true;
+  }
+  if (input.verdict === "attention" || input.verdict === "inconclusive") {
+    return true;
+  }
   if (
     input.prUrl !== undefined &&
     input.prUrl !== null &&

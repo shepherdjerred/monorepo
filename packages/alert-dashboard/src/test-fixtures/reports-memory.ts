@@ -5,6 +5,7 @@ import type {
   ReportRunIngestItem,
 } from "@shepherdjerred/ops-model/reports/report-ingest.ts";
 
+import { toReportRunScalarFields } from "#application/reports/report-mappers";
 import type {
   ReportFeedCursor,
   ReportRepository,
@@ -12,12 +13,7 @@ import type {
   StoredIncidentMail,
   StoredReportRun,
 } from "#application/reports/report-ports";
-import {
-  countActionableFindings,
-  countFailedChecks,
-} from "#domain/reports/report-email";
 import type { IncidentMailOccurrence } from "#shared/reports-schema";
-import { InstantTextSchema, instantTextToEpochNanoseconds } from "#shared/time";
 import { InMemoryOpsRepository } from "#test-fixtures/ops-memory";
 
 function compareRunsDesc(
@@ -92,45 +88,9 @@ export class MemoryReportRepository implements ReportRepository {
     for (const item of items) {
       const { report } = item;
       const existing = this.runs.get(report.reportRunId);
-      const startedAtNs = instantTextToEpochNanoseconds(
-        InstantTextSchema.parse(report.startedAt),
-      );
-      const completedAtNs = instantTextToEpochNanoseconds(
-        InstantTextSchema.parse(report.completedAt),
-      );
-      const acceptedAtNs =
-        item.acceptedAt === undefined
-          ? null
-          : instantTextToEpochNanoseconds(
-              InstantTextSchema.parse(item.acceptedAt),
-            );
       this.runs.set(report.reportRunId, {
         id: report.reportRunId,
-        reportType: report.reportType,
-        scheduleId: report.scheduleId ?? null,
-        title: report.title,
-        eyebrow: item.eyebrow,
-        subject: item.subject,
-        mailboxFrom: item.mailboxFrom,
-        mailboxTo: item.mailboxTo,
-        execution: report.execution,
-        verdict: report.verdict,
-        deliveryStatus: item.deliveryStatus,
-        skipReason: item.skipReason ?? null,
-        messageId: item.messageId ?? null,
-        startedAtNs,
-        completedAtNs,
-        acceptedAtNs,
-        receivedAtNs,
-        prUrl: report.remediation?.prUrl ?? null,
-        autoMergeEnabled: report.remediation?.autoMergeEnabled ?? null,
-        workflowId: report.provenance.workflowId,
-        runId: report.provenance.runId,
-        temporalUrl: report.provenance.temporalUrl ?? null,
-        repoSha: report.provenance.repoSha ?? null,
-        findingCount: report.findings.length,
-        actionableFindingCount: countActionableFindings(report.findings),
-        failedCheckCount: countFailedChecks(report.checks),
+        ...toReportRunScalarFields(item, receivedAtNs),
         envelope: report,
         htmlBody: item.htmlBody ?? existing?.htmlBody ?? null,
       });
@@ -193,20 +153,24 @@ export class MemoryReportRepository implements ReportRepository {
     limit?: number;
   }): Promise<readonly StoredDigestRun[]> {
     const filtered = [...this.#opsRepository.digests.values()]
-      .filter(
-        (row) =>
+      .filter((row) => {
+        const effectiveTs = row.sentAtNs ?? row.createdAtNs;
+        return (
           (options?.sinceCreatedAtNs === undefined ||
-            row.createdAtNs >= options.sinceCreatedAtNs) &&
+            effectiveTs >= options.sinceCreatedAtNs) &&
           (options?.kind === undefined || row.kind === options.kind) &&
-          isBeforeCursor(row.createdAtNs, row.id, options?.before),
-      )
-      .toSorted((left, right) =>
-        left.createdAtNs === right.createdAtNs
+          isBeforeCursor(effectiveTs, row.id, options?.before)
+        );
+      })
+      .toSorted((left, right) => {
+        const leftTs = left.sentAtNs ?? left.createdAtNs;
+        const rightTs = right.sentAtNs ?? right.createdAtNs;
+        return leftTs === rightTs
           ? right.id.localeCompare(left.id)
-          : left.createdAtNs > right.createdAtNs
+          : leftTs > rightTs
             ? -1
-            : 1,
-      );
+            : 1;
+      });
     return Promise.resolve(
       options?.limit === undefined
         ? filtered
@@ -258,15 +222,21 @@ export class MemoryReportRepository implements ReportRepository {
     return Promise.resolve(
       [...this.incidentMails.values()]
         .filter((row) =>
-          isBeforeCursor(row.createdAtNs, row.id, options.before),
+          isBeforeCursor(
+            row.sentAtNs ?? row.createdAtNs,
+            row.id,
+            options.before,
+          ),
         )
-        .toSorted((left, right) =>
-          left.createdAtNs === right.createdAtNs
+        .toSorted((left, right) => {
+          const leftTs = left.sentAtNs ?? left.createdAtNs;
+          const rightTs = right.sentAtNs ?? right.createdAtNs;
+          return leftTs === rightTs
             ? right.id.localeCompare(left.id)
-            : left.createdAtNs > right.createdAtNs
+            : leftTs > rightTs
               ? -1
-              : 1,
-        )
+              : 1;
+        })
         .slice(0, options.limit),
     );
   }

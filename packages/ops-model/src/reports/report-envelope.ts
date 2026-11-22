@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  safeHttpUrl,
+  type EmailActionLink,
+  type EmailItemCard,
+  type EmailTone,
+} from "@shepherdjerred/ops-model/email/primitives.ts";
 
 const HttpUrlSchema = z.url({ protocol: /^https?$/u });
 
@@ -307,3 +313,47 @@ export const ReportEnvelopeV1Schema = ReportEnvelopeBaseSchema.superRefine(
 
 export type ReportEnvelopeV1 = z.infer<typeof ReportEnvelopeV1Schema>;
 export type ReportEnvelopeInputV1 = z.input<typeof ReportEnvelopeV1Schema>;
+
+export function reportEvidenceSourceLinks(
+  evidence: readonly Pick<ReportEvidenceReceiptV1, "id" | "url">[],
+  receiptIds: readonly string[],
+): EmailActionLink[] {
+  const byId = new Map(evidence.map((receipt) => [receipt.id, receipt]));
+  const urls = [
+    ...new Set(
+      receiptIds.flatMap((id) => {
+        const href = safeHttpUrl(byId.get(id)?.url);
+        return href === null ? [] : [href];
+      }),
+    ),
+  ];
+  return urls.map((url, index) => ({
+    label:
+      urls.length === 1 ? "View source" : `View source ${String(index + 1)}`,
+    url,
+  }));
+}
+
+export function reportFindingToEmailCard(
+  evidence: readonly Pick<ReportEvidenceReceiptV1, "id" | "url">[],
+  finding: Pick<
+    ReportFindingV1,
+    "severity" | "section" | "summary" | "detail" | "evidenceReceiptIds"
+  >,
+): EmailItemCard {
+  const links = reportEvidenceSourceLinks(evidence, finding.evidenceReceiptIds);
+  const { tone, badge }: { tone: EmailTone; badge: string } =
+    finding.severity === "critical"
+      ? { tone: "critical", badge: "Critical" }
+      : finding.severity === "warning"
+        ? { tone: "warning", badge: "Warning" }
+        : { tone: "info", badge: "Note" };
+  return {
+    tone,
+    badge,
+    ...(finding.section === undefined ? {} : { kicker: finding.section }),
+    title: finding.summary,
+    ...(finding.detail === undefined ? {} : { body: finding.detail }),
+    ...(links.length === 0 ? {} : { links }),
+  };
+}

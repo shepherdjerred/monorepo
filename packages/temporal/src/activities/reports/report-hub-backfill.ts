@@ -141,11 +141,17 @@ export function createS3HubBackfillStorage(
   };
 }
 
-function isStateObjectKey(key: string): boolean {
+function isStateObjectKey(key: string, statePrefix: string): boolean {
+  const normalizedPrefix = ensureTrailingSlash(statePrefix);
+  if (!key.startsWith(normalizedPrefix)) return false;
+  const relative = key.slice(normalizedPrefix.length);
+  const segments = relative.split("/");
   return (
-    key.endsWith(".json") &&
-    !key.endsWith(".send-claim.json") &&
-    !key.endsWith(".latest-index.json")
+    segments.length === 3 &&
+    segments.every((segment) => segment.length > 0) &&
+    relative.endsWith(".json") &&
+    !relative.endsWith(".send-claim.json") &&
+    !relative.endsWith(".latest-index.json")
   );
 }
 
@@ -185,7 +191,7 @@ async function reconstructFromStateKey(
   storage: HubBackfillStorage,
   key: string,
 ): Promise<ReportRunIngestItem | undefined> {
-  if (!isStateObjectKey(key)) return undefined;
+  if (!isStateObjectKey(key, storage.statePrefix)) return undefined;
   const state = await storage.readState(key);
   if (state === undefined) return undefined;
   const receipt =

@@ -9,11 +9,14 @@ import type {
 } from "@shepherdjerred/ops-model/snapshot.ts";
 import { useQuery } from "@tanstack/react-query";
 import {
+  ArrowDownRightIcon,
+  ArrowUpRightIcon,
   CircleAlertIcon,
   CircleCheckIcon,
   CircleHelpIcon,
   ExternalLinkIcon,
   InfoIcon,
+  MinusIcon,
   OctagonAlertIcon,
 } from "lucide-react";
 import { useId, type ReactNode } from "react";
@@ -23,11 +26,18 @@ import { ListToggle, useCapped } from "./capped-list.tsx";
 import { isSnapshotUnavailable, snapshotQuery } from "./ops-api.ts";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { age } from "#client/time.ts";
-import { SEVERITY_LABEL, formatValue } from "#shared/ops-format";
+import {
+  SEVERITY_LABEL,
+  formatDelta,
+  formatValue,
+  trendDelta,
+} from "#shared/ops-format";
 import {
   SERIES_RANGES,
   type ChangeView,
+  type DigestReport,
   type SeriesRange,
+  type Trend,
 } from "#shared/ops-schema";
 import type { SnapshotResponse } from "@shepherdjerred/ops-model/snapshot.ts";
 
@@ -377,5 +387,105 @@ export function WithSnapshot({
       <title>{`${title} · Hub`}</title>
       <SnapshotBlock title={title}>{children}</SnapshotBlock>
     </main>
+  );
+}
+
+function TrendRow({ trend }: { readonly trend: Trend }): React.JSX.Element {
+  const delta = trendDelta(trend);
+  const direction =
+    delta === null || delta === 0 ? "flat" : delta > 0 ? "up" : "down";
+  const good =
+    direction === "flat" ? null : (direction === "up") === trend.higherIsBetter;
+  const Icon =
+    direction === "up"
+      ? ArrowUpRightIcon
+      : direction === "down"
+        ? ArrowDownRightIcon
+        : MinusIcon;
+  return (
+    <tr>
+      <th scope="row">{trend.label}</th>
+      <td className="num">{formatValue(trend.current, trend.unit)}</td>
+      <td className="num muted">{formatValue(trend.previous, trend.unit)}</td>
+      <td
+        className={`num delta ${good === null ? "delta-flat" : good ? "delta-good" : "delta-bad"}`}
+      >
+        <Icon aria-hidden="true" /> {formatDelta(delta, trend.unit)}
+      </td>
+    </tr>
+  );
+}
+
+/** Trends compare whole weeks, so only the weekly report carries them. */
+export function TrendPanel({
+  trends,
+  headingId = "trends-heading",
+}: {
+  readonly trends: readonly Trend[];
+  readonly headingId?: string;
+}): React.JSX.Element {
+  return (
+    <section className="panel" aria-labelledby={headingId}>
+      <header className="panel-heading">
+        <h2 id={headingId}>Compared with the previous week</h2>
+      </header>
+      <div className="table-scroll">
+        <table className="trend-table">
+          <thead>
+            <tr>
+              <th scope="col">Measure</th>
+              <th scope="col" className="num">
+                This week
+              </th>
+              <th scope="col" className="num">
+                Previous
+              </th>
+              <th scope="col" className="num">
+                Change
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {trends.map((trend) => (
+              <TrendRow key={trend.id} trend={trend} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+export function IncidentPanel({
+  incidents,
+  headingId = "incident-heading",
+}: {
+  readonly incidents: DigestReport["incidents"];
+  readonly headingId?: string;
+}): React.JSX.Element {
+  return (
+    <section className="panel incident-panel" aria-labelledby={headingId}>
+      <header className="panel-heading">
+        <h2 id={headingId}>Incidents</h2>
+      </header>
+      <div className="metric-row">
+        <div className="metric">
+          <span>Opened</span>
+          <strong>{incidents.opened}</strong>
+        </div>
+        <div className="metric">
+          <span>Resolved</span>
+          <strong>{incidents.resolved}</strong>
+        </div>
+        <div className="metric">
+          <span>Median to resolve</span>
+          <strong>
+            {incidents.medianMinutesToResolve === null
+              ? "—"
+              : `${String(Math.round(incidents.medianMinutesToResolve))}m`}
+          </strong>
+        </div>
+      </div>
+    </section>
   );
 }

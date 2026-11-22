@@ -331,7 +331,10 @@ export class ReportService {
                 ...(before === undefined ? {} : { before }),
                 limit: pageSize,
               }),
-            (row) => ({ timestampNs: row.createdAtNs, id: row.id }),
+            (row) => ({
+              timestampNs: row.sentAtNs ?? row.createdAtNs,
+              id: row.id,
+            }),
             (digestRuns) =>
               buildFeedCandidates({
                 reportRuns: [],
@@ -349,7 +352,10 @@ export class ReportService {
                 limit: pageSize,
                 ...(before === undefined ? {} : { before }),
               }),
-            (row) => ({ timestampNs: row.createdAtNs, id: row.id }),
+            (row) => ({
+              timestampNs: row.sentAtNs ?? row.createdAtNs,
+              id: row.id,
+            }),
             (incidentMails) =>
               buildFeedCandidates({
                 reportRuns: [],
@@ -432,11 +438,11 @@ export class ReportService {
         ? await this.#digests.report(kind)
         : buildFallbackArchivedDigestReport(stored));
     const rendered =
-      stored.htmlBody !== null &&
-      stored.plainBody !== null &&
-      stored.subject !== null
-        ? null
-        : renderDigestEmail(report);
+      stored.htmlBody === null ||
+      stored.plainBody === null ||
+      stored.subject === null
+        ? renderDigestEmail(report)
+        : null;
     const status = stored.status === "sending" ? "live-preview" : stored.status;
 
     return DigestRunDetailSchema.parse({

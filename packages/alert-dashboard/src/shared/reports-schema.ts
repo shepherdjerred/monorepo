@@ -2,6 +2,7 @@ import { DigestKindSchema } from "@shepherdjerred/ops-model/digest.ts";
 import { MailboxAddressSchema } from "@shepherdjerred/ops-model/email/mailbox.ts";
 import {
   ReportEnvelopeV1Schema,
+  ReportExecutionSchema,
   ReportVerdictSchema,
 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import { ReportDeliveryStatusSchema } from "@shepherdjerred/ops-model/reports/report-ingest.ts";
@@ -40,6 +41,7 @@ export const ScheduleLatestRunSchema = z.object({
   completedAt: IsoTimestampSchema,
   subject: z.string().min(1),
   headline: z.string().min(1),
+  execution: ReportExecutionSchema.optional(),
   verdict: ReportVerdictSchema,
   deliveryStatus: ReportDeliveryStatusSchema,
   skipReason: z.string().min(1).optional(),
@@ -90,7 +92,6 @@ export const ReportFeedKindSchema = z.enum([
   "agent-task",
   "incident-mail",
 ]);
-export type ReportFeedKind = z.infer<typeof ReportFeedKindSchema>;
 
 export const ReportFeedDeliveryStatusSchema = z.enum([
   "sent",

@@ -26,6 +26,7 @@ import type {
   StoredOpsSnapshot,
   ViewerCursorRecord,
 } from "#application/ports";
+import { sentDigestBaseFields } from "#application/reports/report-mappers";
 import type { StoredDigestRun } from "#application/reports/report-ports";
 import type { AlertLedgerChange } from "#domain/ops-changes";
 import { prunableSnapshotIds, retentionCutoffNs } from "#domain/ops-retention";
@@ -319,24 +320,10 @@ export class InMemoryOpsRepository implements OpsRepository {
     input: { sentAtNs: bigint; subject: string } & DigestArchiveFields,
   ): Promise<void> {
     this.#updateDigest(key, {
-      status: "sent",
-      skipReason: null,
-      sentAtNs: input.sentAtNs,
-      subject: input.subject,
-      ...(input.severity === undefined ? {} : { severity: input.severity }),
-      ...(input.summary === undefined ? {} : { summary: input.summary }),
-      ...(input.needsMeCount === undefined
-        ? {}
-        : { needsMeCount: input.needsMeCount }),
-      ...(input.attentionCount === undefined
-        ? {}
-        : { attentionCount: input.attentionCount }),
+      ...sentDigestBaseFields(input),
       ...(input.reportPayload === undefined
         ? {}
         : { reportPayload: input.reportPayload }),
-      ...(input.htmlBody === undefined ? {} : { htmlBody: input.htmlBody }),
-      ...(input.plainBody === undefined ? {} : { plainBody: input.plainBody }),
-      lastError: null,
     });
     return Promise.resolve();
   }

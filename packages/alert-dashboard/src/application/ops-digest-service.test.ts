@@ -25,6 +25,30 @@ async function fixture(options: { mailer?: boolean } = {}) {
   return created;
 }
 
+async function ingestClearSnapshot(
+  ops: ReturnType<typeof createOpsFixture>,
+  instant: Temporal.Instant,
+  includeFixtureChanges = false,
+): Promise<void> {
+  const base = fixtureOpsIngest(instant.subtract({ minutes: 1 }).toString());
+  await ops.ops.ingest(
+    JSON.stringify({
+      snapshot: {
+        ...base.snapshot,
+        severity: "ok",
+        summary: "All monitored areas are healthy",
+        sections: base.snapshot.sections.map((section) => ({
+          ...section,
+          severity: "ok",
+          summary: "Healthy",
+          signals: [],
+        })),
+      },
+      changes: includeFixtureChanges ? base.changes : [],
+    }),
+  );
+}
+
 describe("digest runs", () => {
   it("sends each period exactly once and advances the digest cursor", async () => {
     const ops = await fixture();
@@ -95,27 +119,7 @@ describe("digest runs", () => {
     const clock = { now: () => currentInstant };
     const ops = createOpsFixture(clock, { dailyDigestQuietClear: true });
 
-    const ingestClear = async () => {
-      const base = fixtureOpsIngest(
-        currentInstant.subtract({ minutes: 1 }).toString(),
-      );
-      await ops.ops.ingest(
-        JSON.stringify({
-          snapshot: {
-            ...base.snapshot,
-            severity: "ok",
-            summary: "All monitored areas are healthy",
-            sections: base.snapshot.sections.map((section) => ({
-              ...section,
-              severity: "ok",
-              summary: "Healthy",
-              signals: [],
-            })),
-          },
-          changes: [],
-        }),
-      );
-    };
+    const ingestClear = () => ingestClearSnapshot(ops, currentInstant);
 
     const ingestAttention = async () => {
       await ops.ops.ingest(
@@ -203,40 +207,33 @@ describe("digest runs", () => {
     expect(ops.postal.sent).toHaveLength(3);
   });
 
-  it("sends consecutive clear daily digests when dailyDigestQuietClear is false", async () => {
+  it("sends consecutive clear daily digests when dailyDigestQuietClear is false or changes occurred", async () => {
     let currentInstant = Temporal.Instant.from("2026-09-28T14:30:00Z");
     const ops = createOpsFixture(
       { now: () => currentInstant },
       { dailyDigestQuietClear: false },
     );
-    const ingestClear = async () => {
-      const base = fixtureOpsIngest(
-        currentInstant.subtract({ minutes: 1 }).toString(),
-      );
-      await ops.ops.ingest(
-        JSON.stringify({
-          snapshot: {
-            ...base.snapshot,
-            severity: "ok",
-            summary: "All monitored areas are healthy",
-            sections: base.snapshot.sections.map((section) => ({
-              ...section,
-              severity: "ok",
-              summary: "Healthy",
-              signals: [],
-            })),
-          },
-          changes: [],
-        }),
-      );
-    };
 
-    await ingestClear();
+    await ingestClearSnapshot(ops, currentInstant);
     expect(await ops.digests.run("daily")).toMatchObject({ status: "sent" });
     currentInstant = currentInstant.add({ hours: 24 });
-    await ingestClear();
+    await ingestClearSnapshot(ops, currentInstant);
     expect(await ops.digests.run("daily")).toMatchObject({ status: "sent" });
     expect(ops.postal.sent).toHaveLength(2);
+
+    const quietOps = createOpsFixture(
+      { now: () => currentInstant },
+      { dailyDigestQuietClear: true },
+    );
+    await ingestClearSnapshot(quietOps, currentInstant);
+    expect(await quietOps.digests.run("daily")).toMatchObject({
+      status: "sent",
+    });
+    currentInstant = currentInstant.add({ hours: 24 });
+    await ingestClearSnapshot(quietOps, currentInstant, true);
+    expect(await quietOps.digests.run("daily")).toMatchObject({
+      status: "sent",
+    });
   });
 });
 

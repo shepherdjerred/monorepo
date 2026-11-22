@@ -86,6 +86,30 @@ test.each([false, true])(
   },
 );
 
+function failedReport(summary: string): ReportEnvelopeV1 {
+  return ReportEnvelopeV1Schema.parse({
+    ...report(1, null),
+    execution: "failed",
+    verdict: "inconclusive",
+    checks: [
+      {
+        id: "collector",
+        label: "Collector",
+        required: true,
+        status: "failed",
+        summary,
+        evidenceReceiptIds: ["evidence"],
+      },
+    ],
+  });
+}
+
+test("includes failed check summaries in fingerprints for failed executions", () => {
+  expect(notificationCondition(failedReport("HTTP 502")).fingerprint).not.toBe(
+    notificationCondition(failedReport("Disk quota exceeded")).fingerprint,
+  );
+});
+
 test("finishes a delivery already started by the prior worker with cadence semantics", async () => {
   let stored: NotificationMode | undefined;
   expect(

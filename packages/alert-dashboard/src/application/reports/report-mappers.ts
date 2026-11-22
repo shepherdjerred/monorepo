@@ -1,12 +1,18 @@
 import type { DigestKind } from "@shepherdjerred/ops-model/digest.ts";
 import type { MailboxPair } from "@shepherdjerred/ops-model/email/mailbox.ts";
+import type { ReportRunIngestItem } from "@shepherdjerred/ops-model/reports/report-ingest.ts";
 import { SeveritySchema as OpsSeveritySchema } from "@shepherdjerred/ops-model/severity.ts";
 
+import type { DigestArchiveFields } from "#application/ports";
 import type {
   StoredDigestRun,
   StoredIncidentMail,
   StoredReportRun,
 } from "#application/reports/report-ports";
+import {
+  countActionableFindings,
+  countFailedChecks,
+} from "#domain/reports/report-email";
 import {
   digestRunToDeliveryStatus,
   digestRunToVerdict,
@@ -18,7 +24,11 @@ import type {
   ReportRunSibling,
   ScheduleLatestRun,
 } from "#shared/reports-schema";
-import { epochNanosecondsToInstantText } from "#shared/time";
+import {
+  epochNanosecondsToInstantText,
+  InstantTextSchema,
+  instantTextToEpochNanoseconds,
+} from "#shared/time";
 
 export function reportRunHref(id: string): string {
   return `/reports/runs/${encodeURIComponent(id)}`;
@@ -32,11 +42,8 @@ export function incidentMailHref(id: string): string {
   return `/reports/mail/${encodeURIComponent(id)}`;
 }
 
-export function toLatestRunSummary(row: StoredReportRun): ScheduleLatestRun {
+function optionalReportRunOutcome(row: StoredReportRun) {
   return {
-    id: row.id,
-    runHref: reportRunHref(row.id),
-    completedAt: epochNanosecondsToInstantText(row.completedAtNs),
     subject: row.subject,
     headline: row.envelope.headline,
     verdict: row.verdict,
@@ -46,6 +53,82 @@ export function toLatestRunSummary(row: StoredReportRun): ScheduleLatestRun {
     ...(row.autoMergeEnabled === null
       ? {}
       : { autoMergeEnabled: row.autoMergeEnabled }),
+  };
+}
+
+export function toLatestRunSummary(row: StoredReportRun): ScheduleLatestRun {
+  return {
+    id: row.id,
+    runHref: reportRunHref(row.id),
+    completedAt: epochNanosecondsToInstantText(row.completedAtNs),
+    execution: row.execution,
+    ...optionalReportRunOutcome(row),
+  };
+}
+
+export function toReportRunScalarFields(
+  item: ReportRunIngestItem,
+  receivedAtNs: bigint,
+): Omit<StoredReportRun, "id" | "envelope" | "htmlBody"> {
+  const { report } = item;
+  const startedAtNs = instantTextToEpochNanoseconds(
+    InstantTextSchema.parse(report.startedAt),
+  );
+  const completedAtNs = instantTextToEpochNanoseconds(
+    InstantTextSchema.parse(report.completedAt),
+  );
+  const acceptedAtNs =
+    item.acceptedAt === undefined
+      ? null
+      : instantTextToEpochNanoseconds(InstantTextSchema.parse(item.acceptedAt));
+  return {
+    reportType: report.reportType,
+    scheduleId: report.scheduleId ?? null,
+    title: report.title,
+    eyebrow: item.eyebrow,
+    subject: item.subject,
+    mailboxFrom: item.mailboxFrom,
+    mailboxTo: item.mailboxTo,
+    execution: report.execution,
+    verdict: report.verdict,
+    deliveryStatus: item.deliveryStatus,
+    skipReason: item.skipReason ?? null,
+    messageId: item.messageId ?? null,
+    startedAtNs,
+    completedAtNs,
+    acceptedAtNs,
+    receivedAtNs,
+    prUrl: report.remediation?.prUrl ?? null,
+    autoMergeEnabled: report.remediation?.autoMergeEnabled ?? null,
+    workflowId: report.provenance.workflowId,
+    runId: report.provenance.runId,
+    temporalUrl: report.provenance.temporalUrl ?? null,
+    repoSha: report.provenance.repoSha ?? null,
+    findingCount: report.findings.length,
+    actionableFindingCount: countActionableFindings(report.findings),
+    failedCheckCount: countFailedChecks(report.checks),
+  };
+}
+
+export function sentDigestBaseFields(
+  input: { sentAtNs: bigint; subject: string } & DigestArchiveFields,
+) {
+  return {
+    status: "sent" as const,
+    skipReason: null,
+    sentAtNs: input.sentAtNs,
+    subject: input.subject,
+    ...(input.severity === undefined ? {} : { severity: input.severity }),
+    ...(input.summary === undefined ? {} : { summary: input.summary }),
+    ...(input.needsMeCount === undefined
+      ? {}
+      : { needsMeCount: input.needsMeCount }),
+    ...(input.attentionCount === undefined
+      ? {}
+      : { attentionCount: input.attentionCount }),
+    ...(input.htmlBody === undefined ? {} : { htmlBody: input.htmlBody }),
+    ...(input.plainBody === undefined ? {} : { plainBody: input.plainBody }),
+    lastError: null,
   };
 }
 
@@ -164,17 +247,9 @@ export function buildFeedCandidates(input: {
         scheduleId: row.scheduleId,
         eyebrow: row.eyebrow,
         title: row.title,
-        subject: row.subject,
-        headline: row.envelope.headline,
         mailboxFrom: row.mailboxFrom,
         mailboxTo: row.mailboxTo,
-        verdict: row.verdict,
-        deliveryStatus: row.deliveryStatus,
-        ...(row.skipReason === null ? {} : { skipReason: row.skipReason }),
-        ...(row.prUrl === null ? {} : { prUrl: row.prUrl }),
-        ...(row.autoMergeEnabled === null
-          ? {}
-          : { autoMergeEnabled: row.autoMergeEnabled }),
+        ...optionalReportRunOutcome(row),
         findingCount: row.findingCount,
         actionableFindingCount: row.actionableFindingCount,
         failedCheckCount: row.failedCheckCount,

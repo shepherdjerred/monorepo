@@ -5,93 +5,39 @@ import {
   type DigestKind,
 } from "@shepherdjerred/ops-model/digest.ts";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ArrowDownRightIcon,
-  ArrowLeftIcon,
-  ArrowUpRightIcon,
-  MinusIcon,
-} from "lucide-react";
-import { useRef } from "react";
-import { Link, useParams, useSearchParams } from "react-router";
+import { ArrowLeftIcon } from "lucide-react";
+import { Link, useParams } from "react-router";
 
 import {
   ChangeTimeline,
+  IncidentPanel,
   PageHeading,
   StatusBanner,
+  TrendPanel,
 } from "#client/ops/ops-ui.tsx";
 import { SignalList } from "#client/ops/signal-list.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
-import { formatDelta, formatValue, trendDelta } from "#shared/ops-format";
-import type { Trend } from "#shared/ops-schema";
 import type { DigestRunDetail } from "#shared/reports-schema";
 import "#styles/engineering.css";
 import "#styles/reports.css";
 import "#styles/visuals.css";
 
-import { EmailPreviewPanel } from "./email-preview-panel.tsx";
-import { digestRunDetailQuery, isReportsNotFound } from "./reports-api.ts";
 import {
-  deliveryStatusMeta,
-  formatPacificFull,
-  nextRovingTabIndex,
-  parseDetailViewMode,
-  type DetailViewMode,
-} from "./reports-format.ts";
-
-const VIEW_TABS: readonly {
-  readonly id: DetailViewMode;
-  readonly label: string;
-}[] = [
-  { id: "inspector", label: "Inspector" },
-  { id: "email", label: "Rendered Email" },
-];
-
-function TrendRow({ trend }: { readonly trend: Trend }): React.JSX.Element {
-  const delta = trendDelta(trend);
-  const direction =
-    delta === null || delta === 0 ? "flat" : delta > 0 ? "up" : "down";
-  const good =
-    direction === "flat" ? null : (direction === "up") === trend.higherIsBetter;
-  const Icon =
-    direction === "up"
-      ? ArrowUpRightIcon
-      : direction === "down"
-        ? ArrowDownRightIcon
-        : MinusIcon;
-  return (
-    <tr>
-      <th scope="row">{trend.label}</th>
-      <td className="num">{formatValue(trend.current, trend.unit)}</td>
-      <td className="num muted">{formatValue(trend.previous, trend.unit)}</td>
-      <td
-        className={`num delta ${good === null ? "delta-flat" : good ? "delta-good" : "delta-bad"}`}
-      >
-        <Icon aria-hidden="true" /> {formatDelta(delta, trend.unit)}
-      </td>
-    </tr>
-  );
-}
+  DetailViewTabs,
+  EmailPreviewPanel,
+  useDetailViewMode,
+} from "./email-preview-panel.tsx";
+import { digestRunDetailQuery, isReportsNotFound } from "./reports-api.ts";
+import { deliveryStatusMeta, formatPacificFull } from "./reports-format.ts";
 
 export function DigestRunBody({
   detail,
 }: {
   readonly detail: DigestRunDetail;
 }): React.JSX.Element {
-  const [params, setParams] = useSearchParams();
-  const viewMode = parseDetailViewMode(params.get("view"));
-  const tabRefs = useRef(new Map<DetailViewMode, HTMLButtonElement>());
+  const { viewMode, setView } = useDetailViewMode();
   const statusMeta = deliveryStatusMeta(detail.status);
   const { report } = detail;
-
-  const setView = (next: DetailViewMode) => {
-    const updated = new URLSearchParams(params);
-    if (next === "inspector") {
-      updated.delete("view");
-    } else {
-      updated.set("view", next);
-    }
-    setParams(updated, { replace: true });
-  };
 
   return (
     <>
@@ -121,48 +67,12 @@ export function DigestRunBody({
         title={detail.subject}
       />
 
-      <div
-        role="tablist"
-        aria-label="Digest detail view"
-        className="eng-tablist"
-      >
-        {VIEW_TABS.map((tab, index) => (
-          <button
-            key={tab.id}
-            id={`digest-view-tab-${tab.id}`}
-            ref={(node) => {
-              if (node === null) {
-                tabRefs.current.delete(tab.id);
-              } else {
-                tabRefs.current.set(tab.id, node);
-              }
-            }}
-            role="tab"
-            type="button"
-            className="eng-tab"
-            aria-selected={viewMode === tab.id}
-            tabIndex={viewMode === tab.id ? 0 : -1}
-            onClick={() => {
-              setView(tab.id);
-            }}
-            onKeyDown={(event) => {
-              const nextIdx = nextRovingTabIndex(
-                event.key,
-                index,
-                VIEW_TABS.length,
-              );
-              const nextTab = nextIdx === null ? undefined : VIEW_TABS[nextIdx];
-              if (nextTab !== undefined) {
-                event.preventDefault();
-                setView(nextTab.id);
-                tabRefs.current.get(nextTab.id)?.focus();
-              }
-            }}
-          >
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </div>
+      <DetailViewTabs
+        ariaLabel="Digest detail view"
+        idPrefix="digest-view"
+        viewMode={viewMode}
+        onSelect={setView}
+      />
 
       <div
         role="tabpanel"
@@ -204,67 +114,15 @@ export function DigestRunBody({
 
             <div className="review-grid">
               {report.trends.length === 0 ? null : (
-                <section
-                  className="panel"
-                  aria-labelledby="digest-trends-heading"
-                >
-                  <header className="panel-heading">
-                    <h2 id="digest-trends-heading">
-                      Compared with the previous week
-                    </h2>
-                  </header>
-                  <div className="table-scroll">
-                    <table className="trend-table">
-                      <thead>
-                        <tr>
-                          <th scope="col">Measure</th>
-                          <th scope="col" className="num">
-                            This week
-                          </th>
-                          <th scope="col" className="num">
-                            Previous
-                          </th>
-                          <th scope="col" className="num">
-                            Change
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {report.trends.map((trend) => (
-                          <TrendRow key={trend.id} trend={trend} />
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
+                <TrendPanel
+                  trends={report.trends}
+                  headingId="digest-trends-heading"
+                />
               )}
-
-              <section
-                className="panel incident-panel"
-                aria-labelledby="digest-incidents-heading"
-              >
-                <header className="panel-heading">
-                  <h2 id="digest-incidents-heading">Incidents</h2>
-                </header>
-                <div className="metric-row">
-                  <div className="metric">
-                    <span>Opened</span>
-                    <strong>{report.incidents.opened}</strong>
-                  </div>
-                  <div className="metric">
-                    <span>Resolved</span>
-                    <strong>{report.incidents.resolved}</strong>
-                  </div>
-                  <div className="metric">
-                    <span>Median to resolve</span>
-                    <strong>
-                      {report.incidents.medianMinutesToResolve === null
-                        ? "—"
-                        : `${String(Math.round(report.incidents.medianMinutesToResolve))}m`}
-                    </strong>
-                  </div>
-                </div>
-              </section>
+              <IncidentPanel
+                incidents={report.incidents}
+                headingId="digest-incidents-heading"
+              />
             </div>
 
             <div className="rep-two-col">

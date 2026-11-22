@@ -97,6 +97,7 @@ function isQuietClearDigestReport(report: DigestReport): boolean {
     report.needsMe.length === 0 &&
     report.attention.length === 0 &&
     report.newSinceLast.length === 0 &&
+    report.changes.length === 0 &&
     report.incidents.opened === 0
   );
 }

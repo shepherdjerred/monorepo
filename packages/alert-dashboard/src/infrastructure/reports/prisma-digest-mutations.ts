@@ -7,6 +7,7 @@ import type {
   DigestClaim,
   DigestRunKey,
 } from "#application/ports";
+import { sentDigestBaseFields } from "#application/reports/report-mappers";
 import { DigestStatusSchema } from "#domain/ops-facet-mappers";
 import { JsonObjectSchema } from "#shared/schema";
 
@@ -67,24 +68,10 @@ export async function markDigestSentRow(
   await prisma.digestRun.update({
     where: { kind_periodKey: { kind: key.kind, periodKey: key.periodKey } },
     data: {
-      status: "sent",
-      skipReason: null,
-      sentAtNs: input.sentAtNs,
-      subject: input.subject,
-      ...(input.severity === undefined ? {} : { severity: input.severity }),
-      ...(input.summary === undefined ? {} : { summary: input.summary }),
-      ...(input.needsMeCount === undefined
-        ? {}
-        : { needsMeCount: input.needsMeCount }),
-      ...(input.attentionCount === undefined
-        ? {}
-        : { attentionCount: input.attentionCount }),
+      ...sentDigestBaseFields(input),
       ...(input.reportPayload === undefined
         ? {}
         : { reportPayload: JsonObjectSchema.parse(input.reportPayload) }),
-      ...(input.htmlBody === undefined ? {} : { htmlBody: input.htmlBody }),
-      ...(input.plainBody === undefined ? {} : { plainBody: input.plainBody }),
-      lastError: null,
     },
   });
 }

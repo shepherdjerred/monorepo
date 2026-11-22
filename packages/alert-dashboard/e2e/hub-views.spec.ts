@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-import { DESKTOP, horizontalOverflow, PHONE, violations } from "./helpers.ts";
+import {
+  DESKTOP,
+  expectPagesFitViewport,
+  gotoLoadedPage,
+  PHONE,
+  violations,
+} from "./helpers.ts";
 
 test("/renovate renders KPIs, charts, tabs, and LLM version-delta drawers", async ({
   page,
@@ -280,15 +286,7 @@ for (const viewport of [PHONE, DESKTOP]) {
   test(`Hub 2.0 pages fit ${String(viewport.width)}px without horizontal overflow`, async ({
     page,
   }) => {
-    await page.setViewportSize(viewport);
-    for (const path of HUB_PATHS) {
-      await page.goto(path);
-      await expect(page.locator("main h1")).toBeVisible();
-      await expect(page.locator(".loading-state")).toHaveCount(0);
-      const overflow = await horizontalOverflow(page);
-      expect(overflow.document, path).toBeLessThanOrEqual(0);
-      expect(overflow.main, path).toBeLessThanOrEqual(0);
-    }
+    await expectPagesFitViewport(page, viewport, HUB_PATHS);
   });
 }
 
@@ -299,9 +297,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme });
     await page.setViewportSize(DESKTOP);
     for (const path of HUB_PATHS) {
-      await page.goto(path);
-      await expect(page.locator("main h1")).toBeVisible();
-      await expect(page.locator(".loading-state")).toHaveCount(0);
+      await gotoLoadedPage(page, path);
       expect(await violations(page), path).toEqual([]);
     }
   });

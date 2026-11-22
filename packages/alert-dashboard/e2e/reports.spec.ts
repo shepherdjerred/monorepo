@@ -1,7 +1,13 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-import { DESKTOP, horizontalOverflow, PHONE, violations } from "./helpers.ts";
+import {
+  DESKTOP,
+  expectPagesFitViewport,
+  gotoLoadedPage,
+  PHONE,
+  violations,
+} from "./helpers.ts";
 
 test("/reports renders KPIs, 13-stream matrix, feed filters, and navigates into run, digest, and incident inspectors", async ({
   page,
@@ -168,15 +174,7 @@ for (const viewport of [PHONE, DESKTOP]) {
   test(`Reports pages fit ${String(viewport.width)}px without horizontal overflow`, async ({
     page,
   }) => {
-    await page.setViewportSize(viewport);
-    for (const path of REPORT_PATHS) {
-      await page.goto(path);
-      await expect(page.locator("main h1")).toBeVisible();
-      await expect(page.locator(".loading-state")).toHaveCount(0);
-      const overflow = await horizontalOverflow(page);
-      expect(overflow.document, path).toBeLessThanOrEqual(0);
-      expect(overflow.main, path).toBeLessThanOrEqual(0);
-    }
+    await expectPagesFitViewport(page, viewport, REPORT_PATHS);
   });
 }
 
@@ -187,9 +185,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme });
     await page.setViewportSize(DESKTOP);
     for (const path of REPORT_PATHS) {
-      await page.goto(path);
-      await expect(page.locator("main h1")).toBeVisible();
-      await expect(page.locator(".loading-state")).toHaveCount(0);
+      await gotoLoadedPage(page, path);
       // Email previews intentionally set `sandbox=""` (opaque origin, scripts
       // disabled), so legacy mode runs axe on the host document (including
       // `<iframe title>`) without `runPartial` cross-frame script injection.

@@ -109,7 +109,13 @@ function createMemoryBackfillStorage() {
       const keys = matching.slice(0, maxKeys);
       return { keys, truncated: matching.length > maxKeys };
     },
-    readState: async (key) => states.get(key),
+    readState: async (key) => {
+      const value = states.get(key);
+      if (value === undefined && extraKeys.has(key)) {
+        throw new Error(`Unexpected readState on metadata key ${key}`);
+      }
+      return value;
+    },
     readReceipt: async (key) => receipts.get(key),
     readObservation: async (key) => observations.get(key),
     readSkip: async (key) => skips.get(key),
@@ -167,6 +173,8 @@ test("reconstructs sent states, skipped observations, semantic mailboxes, and ig
     },
   });
   mem.extraKeys.add(reportSendClaimKey(depsStateKey));
+  mem.extraKeys.add("reports/state/deps-summary-weekly.json");
+  mem.extraKeys.add("reports/state/scout-queue-windows.json");
 
   const pendingReport = makeReport({
     reportRunId: "link-rot-scan:run-pending",
@@ -233,7 +241,7 @@ test("reconstructs sent states, skipped observations, semantic mailboxes, and ig
     },
   });
 
-  expect(result).toEqual({ scanned: 5, pushed: 3, complete: true });
+  expect(result).toEqual({ scanned: 7, pushed: 3, complete: true });
   expect(
     ingested.map((item) => ({
       id: item.report.reportRunId,

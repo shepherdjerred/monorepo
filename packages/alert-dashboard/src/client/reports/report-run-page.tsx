@@ -3,8 +3,8 @@ import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { TOOL_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftIcon, ExternalLinkIcon } from "lucide-react";
-import { useRef, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router";
+import { useState } from "react";
+import { Link, useParams } from "react-router";
 
 import { PageHeading, SeverityBadge } from "#client/ops/ops-ui.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
@@ -13,7 +13,11 @@ import "#styles/engineering.css";
 import "#styles/reports.css";
 import "#styles/visuals.css";
 
-import { EmailPreviewPanel } from "./email-preview-panel.tsx";
+import {
+  DetailViewTabs,
+  EmailPreviewPanel,
+  useDetailViewMode,
+} from "./email-preview-panel.tsx";
 import {
   EvidenceReceiptsExplorer,
   ProvenanceAndHistoryPanel,
@@ -28,44 +32,21 @@ import { isReportsNotFound, reportRunDetailQuery } from "./reports-api.ts";
 import {
   deliveryStatusMeta,
   formatPacificFull,
-  nextRovingTabIndex,
-  parseDetailViewMode,
   verdictLabel,
   verdictToSeverity,
-  type DetailViewMode,
 } from "./reports-format.ts";
-
-const VIEW_TABS: readonly {
-  readonly id: DetailViewMode;
-  readonly label: string;
-}[] = [
-  { id: "inspector", label: "Inspector" },
-  { id: "email", label: "Rendered Email" },
-];
 
 export function ReportRunBody({
   detail,
 }: {
   readonly detail: ReportRunDetail;
 }): React.JSX.Element {
-  const [params, setParams] = useSearchParams();
-  const viewMode = parseDetailViewMode(params.get("view"));
+  const { viewMode, setView } = useDetailViewMode();
   const [highlightedReceiptId, setHighlightedReceiptId] = useState<
     string | null
   >(null);
-  const tabRefs = useRef(new Map<DetailViewMode, HTMLButtonElement>());
   const { report } = detail;
   const delivery = deliveryStatusMeta(detail.deliveryStatus);
-
-  const setView = (next: DetailViewMode) => {
-    const updated = new URLSearchParams(params);
-    if (next === "inspector") {
-      updated.delete("view");
-    } else {
-      updated.set("view", next);
-    }
-    setParams(updated, { replace: true });
-  };
 
   return (
     <>
@@ -124,48 +105,12 @@ export function ReportRunBody({
 
       <p className="rep-finding-detail">{report.headline}</p>
 
-      <div
-        role="tablist"
-        aria-label="Report detail view"
-        className="eng-tablist"
-      >
-        {VIEW_TABS.map((tab, index) => (
-          <button
-            key={tab.id}
-            id={`run-view-tab-${tab.id}`}
-            ref={(node) => {
-              if (node === null) {
-                tabRefs.current.delete(tab.id);
-              } else {
-                tabRefs.current.set(tab.id, node);
-              }
-            }}
-            role="tab"
-            type="button"
-            className="eng-tab"
-            aria-selected={viewMode === tab.id}
-            tabIndex={viewMode === tab.id ? 0 : -1}
-            onClick={() => {
-              setView(tab.id);
-            }}
-            onKeyDown={(event) => {
-              const nextIdx = nextRovingTabIndex(
-                event.key,
-                index,
-                VIEW_TABS.length,
-              );
-              const nextTab = nextIdx === null ? undefined : VIEW_TABS[nextIdx];
-              if (nextTab !== undefined) {
-                event.preventDefault();
-                setView(nextTab.id);
-                tabRefs.current.get(nextTab.id)?.focus();
-              }
-            }}
-          >
-            <span>{tab.label}</span>
-          </button>
-        ))}
-      </div>
+      <DetailViewTabs
+        ariaLabel="Report detail view"
+        idPrefix="run-view"
+        viewMode={viewMode}
+        onSelect={setView}
+      />
 
       <div
         role="tabpanel"

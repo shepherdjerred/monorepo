@@ -1,7 +1,6 @@
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowDownRightIcon, ArrowUpRightIcon, MinusIcon } from "lucide-react";
 import { useSearchParams } from "react-router";
 import {
   DigestKindSchema,
@@ -9,112 +8,18 @@ import {
 } from "@shepherdjerred/ops-model/digest.ts";
 
 import { reviewQuery } from "./ops-api.ts";
-import { ChangeTimeline, PageHeading, StatusBanner } from "./ops-ui.tsx";
+import {
+  ChangeTimeline,
+  IncidentPanel,
+  PageHeading,
+  StatusBanner,
+  TrendPanel,
+} from "./ops-ui.tsx";
 import { SignalList } from "./signal-list.tsx";
 import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { formatInstant } from "#client/time.ts";
-import { formatDelta, formatValue, trendDelta } from "#shared/ops-format";
-import { type DigestReport, type Trend } from "#shared/ops-schema";
-
-function TrendRow({ trend }: { readonly trend: Trend }): React.JSX.Element {
-  const delta = trendDelta(trend);
-  const direction =
-    delta === null || delta === 0 ? "flat" : delta > 0 ? "up" : "down";
-  const good =
-    direction === "flat" ? null : (direction === "up") === trend.higherIsBetter;
-  const Icon =
-    direction === "up"
-      ? ArrowUpRightIcon
-      : direction === "down"
-        ? ArrowDownRightIcon
-        : MinusIcon;
-  return (
-    <tr>
-      <th scope="row">{trend.label}</th>
-      <td className="num">{formatValue(trend.current, trend.unit)}</td>
-      <td className="num muted">{formatValue(trend.previous, trend.unit)}</td>
-      <td
-        className={`num delta ${good === null ? "delta-flat" : good ? "delta-good" : "delta-bad"}`}
-      >
-        <Icon aria-hidden="true" /> {formatDelta(delta, trend.unit)}
-      </td>
-    </tr>
-  );
-}
-
-/** Trends compare whole weeks, so only the weekly report carries them. */
-function TrendPanel({
-  trends,
-}: {
-  readonly trends: readonly Trend[];
-}): React.JSX.Element {
-  return (
-    <section className="panel" aria-labelledby="trends-heading">
-      <header className="panel-heading">
-        <h2 id="trends-heading">Compared with the previous week</h2>
-      </header>
-      <div className="table-scroll">
-        <table className="trend-table">
-          <thead>
-            <tr>
-              <th scope="col">Measure</th>
-              <th scope="col" className="num">
-                This week
-              </th>
-              <th scope="col" className="num">
-                Previous
-              </th>
-              <th scope="col" className="num">
-                Change
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {trends.map((trend) => (
-              <TrendRow key={trend.id} trend={trend} />
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  );
-}
-
-function IncidentPanel({
-  incidents,
-}: {
-  readonly incidents: DigestReport["incidents"];
-}): React.JSX.Element {
-  return (
-    <section
-      className="panel incident-panel"
-      aria-labelledby="incident-heading"
-    >
-      <header className="panel-heading">
-        <h2 id="incident-heading">Incidents</h2>
-      </header>
-      <div className="metric-row">
-        <div className="metric">
-          <span>Opened</span>
-          <strong>{incidents.opened}</strong>
-        </div>
-        <div className="metric">
-          <span>Resolved</span>
-          <strong>{incidents.resolved}</strong>
-        </div>
-        <div className="metric">
-          <span>Median to resolve</span>
-          <strong>
-            {incidents.medianMinutesToResolve === null
-              ? "—"
-              : `${String(Math.round(incidents.medianMinutesToResolve))}m`}
-          </strong>
-        </div>
-      </div>
-    </section>
-  );
-}
+import type { DigestReport } from "#shared/ops-schema";
 
 /** The verdict for the period, then its numbers. */
 function ReviewLead({

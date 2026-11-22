@@ -5,16 +5,17 @@ import {
   type EmailCheckItem,
   type EmailDetailRow,
   type EmailDocument,
-  type EmailItemCard,
   type EmailSection,
   type EmailTone,
 } from "@shepherdjerred/ops-model/email/primitives.ts";
 import { renderEmailHtml } from "@shepherdjerred/ops-model/email/render-html.ts";
 import { renderEmailText } from "@shepherdjerred/ops-model/email/render-text.ts";
-import type {
-  ReportCheckV1,
-  ReportEnvelopeV1,
-  ReportFindingV1,
+import {
+  reportEvidenceSourceLinks,
+  reportFindingToEmailCard,
+  type ReportCheckV1,
+  type ReportEnvelopeV1,
+  type ReportFindingV1,
 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import { hubReportRunUrl } from "@shepherdjerred/ops-model/tool-links.ts";
 
@@ -72,52 +73,7 @@ function envelopeBadge(report: ReportEnvelopeV1): string {
   }
 }
 
-function findingCard(
-  report: ReportEnvelopeV1,
-  finding: ReportFindingV1,
-): EmailItemCard {
-  const evidenceById = new Map(
-    report.evidence.map((receipt) => [receipt.id, receipt]),
-  );
-  const urls = [
-    ...new Set(
-      finding.evidenceReceiptIds.flatMap((id) => {
-        const href = safeHttpUrl(evidenceById.get(id)?.url);
-        return href === null ? [] : [href];
-      }),
-    ),
-  ];
-  const links: EmailActionLink[] = urls.map((url, index) => ({
-    label:
-      urls.length === 1 ? "View source" : `View source ${String(index + 1)}`,
-    url,
-  }));
-  const tone: EmailTone =
-    finding.severity === "critical"
-      ? "critical"
-      : finding.severity === "warning"
-        ? "warning"
-        : "info";
-  const badge =
-    finding.severity === "critical"
-      ? "Critical"
-      : finding.severity === "warning"
-        ? "Warning"
-        : "Note";
-  return {
-    tone,
-    badge,
-    ...(finding.section === undefined ? {} : { kicker: finding.section }),
-    title: finding.summary,
-    ...(finding.detail === undefined ? {} : { body: finding.detail }),
-    ...(links.length === 0 ? {} : { links }),
-  };
-}
-
 function buildChecksSection(report: ReportEnvelopeV1): EmailSection {
-  const evidenceById = new Map(
-    report.evidence.map((receipt) => [receipt.id, receipt]),
-  );
   const attentionChecks: EmailCheckItem[] = [];
   const passedLabels: string[] = [];
   for (const check of report.checks) {
@@ -125,19 +81,10 @@ function buildChecksSection(report: ReportEnvelopeV1): EmailSection {
       passedLabels.push(check.label);
       continue;
     }
-    const urls = [
-      ...new Set(
-        check.evidenceReceiptIds.flatMap((id) => {
-          const href = safeHttpUrl(evidenceById.get(id)?.url);
-          return href === null ? [] : [href];
-        }),
-      ),
-    ];
-    const links: EmailActionLink[] = urls.map((url, index) => ({
-      label:
-        urls.length === 1 ? "View source" : `View source ${String(index + 1)}`,
-      url,
-    }));
+    const links = reportEvidenceSourceLinks(
+      report.evidence,
+      check.evidenceReceiptIds,
+    );
     attentionChecks.push({
       status: check.status === "failed" ? "problem" : "skipped",
       label: check.label,
@@ -210,7 +157,7 @@ export function buildReportEnvelopeDocument(
             kind: "items" as const,
             heading: "Findings",
             items: activeOrAllFindings.map((finding) =>
-              findingCard(report, finding),
+              reportFindingToEmailCard(report.evidence, finding),
             ),
           },
         ]),

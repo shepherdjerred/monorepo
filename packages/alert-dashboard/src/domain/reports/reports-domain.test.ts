@@ -190,6 +190,13 @@ describe("reports email rendering and feed filtering", () => {
         autoMergeEnabled: false,
       }),
     ).toBe(true);
+    expect(
+      needsOperatorReview({
+        execution: "failed",
+        verdict: "inconclusive",
+        deliveryStatus: "sent",
+      }),
+    ).toBe(true);
   });
 
   it("filters feed items by tab, mailbox, verdict, delivery, PR presence, and search query", () => {

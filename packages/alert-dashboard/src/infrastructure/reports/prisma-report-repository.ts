@@ -21,6 +21,7 @@ import type {
   ReportRun as PrismaReportRunRow,
 } from "#generated/prisma/client/index.js";
 
+import { toReportRunScalarFields } from "#application/reports/report-mappers";
 import type {
   ReportFeedCursor,
   ReportRepository,
@@ -29,21 +30,50 @@ import type {
   StoredReportRun,
 } from "#application/reports/report-ports";
 import { DigestStatusSchema } from "#domain/ops-facet-mappers";
-import {
-  countActionableFindings,
-  countFailedChecks,
-} from "#domain/reports/report-email";
 import type { AsyncMutex } from "#infrastructure/async-mutex";
 import { DigestReportSchema } from "#shared/ops-schema";
 import type { IncidentMailOccurrence } from "#shared/reports-schema";
 import { JsonObjectSchema } from "#shared/schema";
-import {
-  epochNanosecondsToInstantText,
-  InstantTextSchema,
-  instantTextToEpochNanoseconds,
-} from "#shared/time";
+import { epochNanosecondsToInstantText } from "#shared/time";
 
 const StringIdListSchema = z.array(z.string());
+
+function sentBeforeCursorWhere(before: ReportFeedCursor | undefined) {
+  return before === undefined
+    ? {}
+    : {
+        OR: [
+          { sentAtNs: { lt: before.timestampNs } },
+          { sentAtNs: before.timestampNs, id: { lt: before.id } },
+        ],
+      };
+}
+
+function createdBeforeCursorWhere(before: ReportFeedCursor | undefined) {
+  return before === undefined
+    ? {}
+    : {
+        OR: [
+          { createdAtNs: { lt: before.timestampNs } },
+          { createdAtNs: before.timestampNs, id: { lt: before.id } },
+        ],
+      };
+}
+
+function mergeEffectiveTimestampRows<
+  T extends { id: string; createdAtNs: bigint; sentAtNs: bigint | null },
+>(sentRows: readonly T[], unsentRows: readonly T[], limit?: number): T[] {
+  const sorted = [...sentRows, ...unsentRows].toSorted((left, right) => {
+    const leftTs = left.sentAtNs ?? left.createdAtNs;
+    const rightTs = right.sentAtNs ?? right.createdAtNs;
+    return leftTs === rightTs
+      ? right.id.localeCompare(left.id)
+      : leftTs > rightTs
+        ? -1
+        : 1;
+  });
+  return limit === undefined ? sorted : sorted.slice(0, limit);
+}
 
 function toStoredReportRun(row: PrismaReportRunRow): StoredReportRun {
   return {
@@ -143,44 +173,8 @@ export class PrismaReportRepository implements ReportRepository {
       this.#prisma.$transaction(async (transaction) => {
         for (const item of items) {
           const { report } = item;
-          const startedAtNs = instantTextToEpochNanoseconds(
-            InstantTextSchema.parse(report.startedAt),
-          );
-          const completedAtNs = instantTextToEpochNanoseconds(
-            InstantTextSchema.parse(report.completedAt),
-          );
-          const acceptedAtNs =
-            item.acceptedAt === undefined
-              ? null
-              : instantTextToEpochNanoseconds(
-                  InstantTextSchema.parse(item.acceptedAt),
-                );
           const sharedFields = {
-            reportType: report.reportType,
-            scheduleId: report.scheduleId ?? null,
-            title: report.title,
-            eyebrow: item.eyebrow,
-            subject: item.subject,
-            mailboxFrom: item.mailboxFrom,
-            mailboxTo: item.mailboxTo,
-            execution: report.execution,
-            verdict: report.verdict,
-            deliveryStatus: item.deliveryStatus,
-            skipReason: item.skipReason ?? null,
-            messageId: item.messageId ?? null,
-            startedAtNs,
-            completedAtNs,
-            acceptedAtNs,
-            receivedAtNs,
-            prUrl: report.remediation?.prUrl ?? null,
-            autoMergeEnabled: report.remediation?.autoMergeEnabled ?? null,
-            workflowId: report.provenance.workflowId,
-            runId: report.provenance.runId,
-            temporalUrl: report.provenance.temporalUrl ?? null,
-            repoSha: report.provenance.repoSha ?? null,
-            findingCount: report.findings.length,
-            actionableFindingCount: countActionableFindings(report.findings),
-            failedCheckCount: countFailedChecks(report.checks),
+            ...toReportRunScalarFields(item, receivedAtNs),
             envelope: JsonObjectSchema.parse(report),
           };
           await transaction.reportRun.upsert({
@@ -293,28 +287,40 @@ export class PrismaReportRepository implements ReportRepository {
     before?: ReportFeedCursor;
     limit?: number;
   }): Promise<readonly StoredDigestRun[]> {
-    const rows = await this.#prisma.digestRun.findMany({
-      where: {
-        ...(options?.sinceCreatedAtNs === undefined
-          ? {}
-          : { createdAtNs: { gte: options.sinceCreatedAtNs } }),
-        ...(options?.kind === undefined ? {} : { kind: options.kind }),
-        ...(options?.before === undefined
-          ? {}
-          : {
-              OR: [
-                { createdAtNs: { lt: options.before.timestampNs } },
-                {
-                  createdAtNs: options.before.timestampNs,
-                  id: { lt: options.before.id },
-                },
-              ],
-            }),
-      },
-      orderBy: [{ createdAtNs: "desc" }, { id: "desc" }],
-      ...(options?.limit === undefined ? {} : { take: options.limit }),
-    });
-    return rows.map((row) => toStoredDigestRun(row));
+    const kindWhere = options?.kind === undefined ? {} : { kind: options.kind };
+    const [sentRows, unsentRows] = await Promise.all([
+      this.#prisma.digestRun.findMany({
+        where: {
+          ...kindWhere,
+          sentAtNs: {
+            not: null,
+            ...(options?.sinceCreatedAtNs === undefined
+              ? {}
+              : { gte: options.sinceCreatedAtNs }),
+          },
+          ...sentBeforeCursorWhere(options?.before),
+        },
+        orderBy: [{ sentAtNs: "desc" }, { id: "desc" }],
+        ...(options?.limit === undefined ? {} : { take: options.limit }),
+      }),
+      this.#prisma.digestRun.findMany({
+        where: {
+          ...kindWhere,
+          sentAtNs: null,
+          ...(options?.sinceCreatedAtNs === undefined
+            ? {}
+            : { createdAtNs: { gte: options.sinceCreatedAtNs } }),
+          ...createdBeforeCursorWhere(options?.before),
+        },
+        orderBy: [{ createdAtNs: "desc" }, { id: "desc" }],
+        ...(options?.limit === undefined ? {} : { take: options.limit }),
+      }),
+    ]);
+    return mergeEffectiveTimestampRows(
+      sentRows,
+      unsentRows,
+      options?.limit,
+    ).map((row) => toStoredDigestRun(row));
   }
 
   async listLatestDigestsByKind(): Promise<{
@@ -354,24 +360,27 @@ export class PrismaReportRepository implements ReportRepository {
     limit: number;
     before?: ReportFeedCursor;
   }): Promise<readonly StoredIncidentMail[]> {
-    const rows = await this.#prisma.emailOutbox.findMany({
-      ...(options.before === undefined
-        ? {}
-        : {
-            where: {
-              OR: [
-                { createdAtNs: { lt: options.before.timestampNs } },
-                {
-                  createdAtNs: options.before.timestampNs,
-                  id: { lt: options.before.id },
-                },
-              ],
-            },
-          }),
-      orderBy: [{ createdAtNs: "desc" }, { id: "desc" }],
-      take: options.limit,
-    });
-    return rows.map((row) => toStoredIncidentMail(row));
+    const [sentRows, unsentRows] = await Promise.all([
+      this.#prisma.emailOutbox.findMany({
+        where: {
+          sentAtNs: { not: null },
+          ...sentBeforeCursorWhere(options.before),
+        },
+        orderBy: [{ sentAtNs: "desc" }, { id: "desc" }],
+        take: options.limit,
+      }),
+      this.#prisma.emailOutbox.findMany({
+        where: {
+          sentAtNs: null,
+          ...createdBeforeCursorWhere(options.before),
+        },
+        orderBy: [{ createdAtNs: "desc" }, { id: "desc" }],
+        take: options.limit,
+      }),
+    ]);
+    return mergeEffectiveTimestampRows(sentRows, unsentRows, options.limit).map(
+      (row) => toStoredIncidentMail(row),
+    );
   }
 
   async getIncidentMail(id: string): Promise<{
