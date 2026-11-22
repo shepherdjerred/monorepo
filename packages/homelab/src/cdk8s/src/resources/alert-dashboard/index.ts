@@ -8,7 +8,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
-import { fliptEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   ALERTMANAGER_GATEWAY_PORT,
@@ -19,7 +19,7 @@ import {
   nsPeer,
   tcp,
   tailscaleIngressRule,
-  fliptEgress,
+  flagsEgress,
   homeAssistantEgressRule,
   otlpEgress,
   prometheusIngressRule,
@@ -125,11 +125,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
             PROMETHEUS_URL: EnvValue.fromValue(
               "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
             ),
-            ...fliptEnv({
-              namespace: "alert-dashboard",
-              environment: "prod",
-              order: ["FLIPT_NAMESPACE", "FLIPT_URL", "FLIPT_ENVIRONMENT"],
-            }),
+            ...flagsEnv({ deployment: "alert-dashboard/prod" }),
             POSTAL_HOST: EnvValue.fromValue(
               "http://postal-postal-web-service.postal.svc.cluster.local:5000",
             ),
@@ -209,7 +205,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
               tcp(ALERTMANAGER_GATEWAY_PORT),
             ],
           },
-          fliptEgress(),
+          flagsEgress(),
           {
             to: [nsPeer("postal")],
             ports: [tcp(5000)],

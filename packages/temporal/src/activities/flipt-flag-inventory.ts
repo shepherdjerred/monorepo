@@ -1,127 +1,145 @@
-import { createAlertmanagerPoster } from "#lib/alertmanager.ts";
-import { flagInventoryMetrics } from "#observability/metrics-flags.ts";
-import { applyMissingManagedFlags } from "@shepherdjerred/feature-flags/flipt-missing-flag-apply.ts";
-import { applyScoutBetaDurableOwnership } from "@shepherdjerred/feature-flags/scout-beta-durable-ownership.ts";
-import { applyRetiredManagedFlags } from "@shepherdjerred/feature-flags/flipt-retired-flag-apply.ts";
 import {
-  compareManagedFlagInventory,
-  fetchFliptSnapshot,
-  type FliptFetcher,
-} from "@shepherdjerred/feature-flags/managed-flag-drift.ts";
+  createAlertmanagerPoster,
+  type AlertmanagerAlert,
+} from "#lib/alertmanager.ts";
 import {
-  managedFlagInventory,
-  managedFlagNamespaces,
-  materializeManagedNamespaceEnvironment,
-} from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
+  flagInventoryMetrics,
+  type createFlagInventoryMetrics,
+} from "#observability/metrics-flags.ts";
+import {
+  flagDeployments,
+  type FlagDeployment,
+} from "@shepherdjerred/feature-flags/deployments.ts";
+import {
+  createFlagsMachineFetcher,
+  describeFlagValueDrift,
+  fetchFlagsDeploymentDocument,
+  fetchFlagsDiff,
+  type FlagsHttpFetcher,
+} from "@shepherdjerred/feature-flags/flags-drift.ts";
+import {
+  applyMissingDeploymentFlags,
+  applyRetiredDeploymentFlags,
+} from "@shepherdjerred/feature-flags/flags-reconcile.ts";
 import {
   buildFliptFlagDriftAlert,
   type FliptFlagDriftAlertInput,
 } from "#shared/alerts/flipt-flag-drift-alert.ts";
 
 export type FliptFlagInventoryResult = FliptFlagDriftAlertInput & {
+  readonly revision: number;
   readonly observedAt: string;
   readonly createdFlags: readonly string[];
-  readonly createdSegments: readonly string[];
-  readonly migratedFlags: readonly string[];
   readonly retiredFlags: readonly string[];
 };
 
-function requiredEnvironment(name: string): string {
-  const value = Bun.env[name];
+function requiredEnvironment(
+  name: string,
+  env: Readonly<Record<string, string | undefined>> = Bun.env,
+): string {
+  const value = env[name];
   if (value === undefined || value.length === 0) {
-    throw new Error(`${name} is required for the Flipt inventory check`);
+    throw new Error(`${name} is required for the Flags inventory reconciler`);
   }
   return value;
 }
 
-export type FliptFlagInventoryActivities = typeof fliptFlagInventoryActivities;
+export type ReconcileFlagsInventoryOptions = {
+  readonly url: string;
+  readonly token: string;
+  readonly alertmanagerUrl: string;
+  readonly deployments?: readonly FlagDeployment[];
+  readonly upstreamFetch?: FlagsHttpFetcher;
+  readonly metrics?: ReturnType<typeof createFlagInventoryMetrics>;
+  readonly postAlerts?: (alerts: readonly AlertmanagerAlert[]) => Promise<void>;
+  readonly now?: () => Date;
+};
 
-export function createAuthenticatedFliptFetcher(
-  token: string,
-  upstream: FliptFetcher = fetch,
-): FliptFetcher {
-  return (input, init) => {
-    const headers = new Headers(
-      input instanceof Request ? input.headers : undefined,
-    );
-    new Headers(init?.headers).forEach((value, name) => {
-      headers.set(name, value);
-    });
-    headers.set("Authorization", `Bearer ${token}`);
-    return upstream(input, { ...init, headers });
-  };
+export async function reconcileFlagsInventory(
+  options: ReconcileFlagsInventoryOptions,
+): Promise<FliptFlagInventoryResult[]> {
+  const deployments = options.deployments ?? flagDeployments;
+  const metrics = options.metrics ?? flagInventoryMetrics;
+  const clock = options.now ?? (() => new Date());
+  const fetcher = createFlagsMachineFetcher(
+    options.url,
+    options.token,
+    options.upstreamFetch,
+  );
+  const observedTime = clock();
+  const observedAt = observedTime.toISOString();
+
+  const retired = await applyRetiredDeploymentFlags({
+    url: options.url,
+    fetcher,
+    deployments,
+  });
+  const retiredByDeployment = new Map(
+    retired.map((entry) => [entry.deployment, entry.retiredFlags]),
+  );
+
+  const created = await applyMissingDeploymentFlags({
+    url: options.url,
+    fetcher,
+    deployments,
+  });
+  const createdByDeployment = new Map(
+    created.map((entry) => [entry.deployment, entry.createdFlags]),
+  );
+
+  const diff = await fetchFlagsDiff({ url: options.url, fetcher });
+  const diffByDeployment = new Map(
+    diff.deployments.map((entry) => [entry.id, entry]),
+  );
+
+  const results = await Promise.all(
+    deployments.map(async (deployment) => {
+      const deploymentDiff = diffByDeployment.get(deployment.id);
+      if (deploymentDiff === undefined) {
+        throw new Error(
+          `Flags diff response omitted deployment ${deployment.id}`,
+        );
+      }
+      const document = await fetchFlagsDeploymentDocument({
+        url: options.url,
+        deployment,
+        fetcher,
+      });
+      metrics.observeDeployment(deployment, document.flags, observedTime);
+      return {
+        deployment: deployment.id,
+        namespace: deployment.catalog,
+        environment: deployment.fliptEnvironment,
+        revision: document.revision,
+        missingFlags: deploymentDiff.missing.map((flag) => flag.key),
+        extraFlags: deploymentDiff.extra,
+        contractMismatches: deploymentDiff.drift.flatMap((entry) =>
+          describeFlagValueDrift(entry.declared, entry.live),
+        ),
+        createdFlags: createdByDeployment.get(deployment.id) ?? [],
+        retiredFlags: retiredByDeployment.get(deployment.id) ?? [],
+        observedAt,
+      };
+    }),
+  );
+
+  const alertTime = clock();
+  const poster =
+    options.postAlerts ?? createAlertmanagerPoster(options.alertmanagerUrl);
+  await poster(
+    results.map((result) => buildFliptFlagDriftAlert(result, alertTime)),
+  );
+  return results;
 }
+
+export type FliptFlagInventoryActivities = typeof fliptFlagInventoryActivities;
 
 export const fliptFlagInventoryActivities = {
   async checkFliptFlagInventory(): Promise<FliptFlagInventoryResult[]> {
-    const url = requiredEnvironment("FLIPT_URL");
-    const fetcher = createAuthenticatedFliptFetcher(
-      requiredEnvironment("FLIPT_OPERATOR_TOKEN"),
-    );
-    const observedAt = new Date().toISOString();
-    const retired = await applyRetiredManagedFlags({ url, fetcher });
-    const retiredByPair = new Map(
-      retired.map((result) => [
-        `${result.environment}/${result.namespace}`,
-        result.retiredFlags,
-      ]),
-    );
-    const created = await applyMissingManagedFlags({ url, fetcher });
-    const migratedFlags = await applyScoutBetaDurableOwnership({
-      url,
-      fetcher,
+    return reconcileFlagsInventory({
+      url: requiredEnvironment("FLAGS_URL"),
+      token: requiredEnvironment("FLAGS_MACHINE_TOKEN"),
+      alertmanagerUrl: requiredEnvironment("ALERTMANAGER_URL"),
     });
-    const createdByPair = new Map(
-      created.map((result) => [
-        `${result.environment}/${result.namespace}`,
-        result,
-      ]),
-    );
-    const results = await Promise.all(
-      managedFlagInventory.environments.flatMap((environment) =>
-        managedFlagNamespaces.map(async (namespace) => {
-          const expectedFlags = materializeManagedNamespaceEnvironment(
-            managedFlagInventory,
-            environment.key,
-            namespace,
-          );
-          const snapshot = await fetchFliptSnapshot({
-            url,
-            namespace,
-            environment: environment.key,
-            fetcher,
-          });
-          const drift = compareManagedFlagInventory(snapshot, expectedFlags);
-          flagInventoryMetrics.observePair(
-            environment.key,
-            namespace,
-            snapshot,
-            new Date(observedAt),
-          );
-          const applied = createdByPair.get(`${environment.key}/${namespace}`);
-          return {
-            namespace,
-            environment: environment.key,
-            missingInFlipt: drift.missingInFlipt,
-            undeclaredInInventory: drift.undeclaredInInventory,
-            contractMismatches: drift.contractMismatches,
-            createdFlags: applied?.createdFlags ?? [],
-            createdSegments: applied?.createdSegments ?? [],
-            migratedFlags:
-              namespace === "scout" && environment.key === "beta"
-                ? migratedFlags
-                : [],
-            retiredFlags:
-              retiredByPair.get(`${environment.key}/${namespace}`) ?? [],
-            observedAt,
-          };
-        }),
-      ),
-    );
-    const alertTime = new Date();
-    await createAlertmanagerPoster(requiredEnvironment("ALERTMANAGER_URL"))(
-      results.map((result) => buildFliptFlagDriftAlert(result, alertTime)),
-    );
-    return results;
   },
 };

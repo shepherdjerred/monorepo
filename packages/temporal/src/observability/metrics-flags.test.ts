@@ -1,7 +1,22 @@
 import { expect, test } from "vitest";
 import { Registry } from "prom-client";
-import { ManagedFlagInventorySchema } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
+import {
+  flagDeployments,
+  type FlagDeployment,
+} from "@shepherdjerred/feature-flags/deployments.ts";
+import {
+  managedFlagInventory,
+  ManagedFlagInventorySchema,
+} from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
+import { projectDeploymentFlags } from "@shepherdjerred/feature-flags/project-deployment.ts";
 import { createFlagInventoryMetrics } from "./metrics-flags.ts";
+
+const testDeployment: FlagDeployment = {
+  id: "test/prod",
+  catalog: "test",
+  stage: "prod",
+  fliptEnvironment: "prod",
+};
 
 test("publishes bounded one-hot states, missing flags, scoped exceptions and fresh timestamps", async () => {
   const registry = new Registry();
@@ -40,29 +55,26 @@ test("publishes bounded one-hot states, missing flags, scoped exceptions and fre
       ],
     })),
   });
-  const metrics = createFlagInventoryMetrics(registry, inventory);
+  const metrics = createFlagInventoryMetrics(registry, inventory, [
+    testDeployment,
+  ]);
   const at = new Date("2026-11-07T00:00:00Z");
-  metrics.observePair(
-    "prod",
-    "test",
-    {
-      flags: [
-        {
-          key: "first",
-          enabled: true,
-          type: "BOOLEAN_FLAG_TYPE",
-          rules: [],
-          rollouts: [],
-        },
-        {
-          key: "unmanaged",
-          enabled: true,
-          type: "BOOLEAN_FLAG_TYPE",
-          rules: [],
-          rollouts: [],
-        },
-      ],
-    },
+  metrics.observeDeployment(
+    testDeployment,
+    [
+      {
+        type: "boolean",
+        key: "first",
+        default: true,
+        rollouts: [],
+      },
+      {
+        type: "boolean",
+        key: "unmanaged",
+        default: true,
+        rollouts: [],
+      },
+    ],
     at,
   );
   let text = await registry.metrics();
@@ -80,20 +92,16 @@ test("publishes bounded one-hot states, missing flags, scoped exceptions and fre
   expect(text).toContain(
     `feature_flag_inventory_observed_timestamp_seconds{flipt_environment="prod",flipt_namespace="test"} ${String(at.getTime() / 1000)}`,
   );
-  metrics.observePair(
-    "prod",
-    "test",
-    {
-      flags: [
-        {
-          key: "first",
-          enabled: false,
-          type: "BOOLEAN_FLAG_TYPE",
-          rules: [],
-          rollouts: [],
-        },
-      ],
-    },
+  metrics.observeDeployment(
+    testDeployment,
+    [
+      {
+        type: "boolean",
+        key: "first",
+        default: false,
+        rollouts: [],
+      },
+    ],
     at,
   );
   text = await registry.metrics();
@@ -101,11 +109,62 @@ test("publishes bounded one-hot states, missing flags, scoped exceptions and fre
   expect(text).toContain('flag="first",state="off"} 1');
   const before = text;
   expect(() =>
-    metrics.observePair("unknown", "test", { flags: [] }, at),
+    metrics.observeDeployment(
+      {
+        id: "unknown/prod",
+        catalog: "unknown",
+        stage: "prod",
+        fliptEnvironment: "prod",
+      },
+      [],
+      at,
+    ),
   ).toThrow();
   expect(await registry.metrics()).toBe(before);
   inventory.flags.splice(0, 1);
-  metrics.observePair("prod", "test", { flags: [] }, at);
+  metrics.observeDeployment(testDeployment, [], at);
   text = await registry.metrics();
   expect(text).not.toContain('flag="first"');
+});
+
+test("sets expected gauges only for active flagDeployments and matches observed labels 1-to-1", async () => {
+  const registry = new Registry();
+  const metrics = createFlagInventoryMetrics(registry, managedFlagInventory);
+  const at = new Date("2026-11-22T00:00:00Z");
+
+  for (const deployment of flagDeployments) {
+    metrics.observeDeployment(
+      deployment,
+      projectDeploymentFlags(deployment),
+      at,
+    );
+  }
+
+  const json = await registry.getMetricsAsJSON();
+  const expectedMetric = json.find(
+    (entry) => entry.name === "feature_flag_inventory_expected",
+  );
+  const observedMetric = json.find(
+    (entry) =>
+      entry.name === "feature_flag_inventory_observed_timestamp_seconds",
+  );
+  const expectedPairs = (expectedMetric?.values ?? [])
+    .map(
+      (v) =>
+        `${String(v.labels["flipt_environment"])}/${String(v.labels["flipt_namespace"])}`,
+    )
+    .toSorted();
+  const observedPairs = (observedMetric?.values ?? [])
+    .map(
+      (v) =>
+        `${String(v.labels["flipt_environment"])}/${String(v.labels["flipt_namespace"])}`,
+    )
+    .toSorted();
+
+  expect(expectedPairs).toHaveLength(17);
+  expect(observedPairs).toEqual(expectedPairs);
+  expect(expectedPairs).toContain("prod/golink");
+  expect(expectedPairs).toContain("prod/the-storm");
+  expect(expectedPairs).not.toContain("beta/temporal");
+  expect(expectedPairs).not.toContain("prod/justin");
 });

@@ -12,8 +12,12 @@ import {
   type FliptEvaluationClient,
 } from "@shepherdjerred/feature-flags/providers/flipt-client.ts";
 import { toFliptInputs } from "@shepherdjerred/feature-flags/providers/flipt-context.ts";
-
-class SnapshotUnavailableError extends Error {}
+import {
+  createFreshSnapshotGate,
+  observeCompletion,
+  settleRefresh,
+  SnapshotUnavailableError,
+} from "@shepherdjerred/feature-flags/providers/snapshot-refresh.ts";
 
 async function fetchSnapshot(
   source: FliptFetcher,
@@ -38,27 +42,6 @@ async function fetchSnapshot(
     });
   } finally {
     if (abort !== undefined) signal.removeEventListener("abort", abort);
-  }
-}
-
-async function settleRefresh(
-  task: Promise<unknown> | undefined,
-): Promise<void> {
-  try {
-    await task;
-  } catch {
-    // The refresh owner records the failure; later requests can still recover.
-  }
-}
-
-async function observeCompletion(
-  task: Promise<unknown>,
-  cleanup: () => void,
-): Promise<void> {
-  try {
-    await settleRefresh(task);
-  } finally {
-    cleanup();
   }
 }
 
@@ -130,7 +113,9 @@ export class FliptProvider implements Provider {
   private refreshTimer: ReturnType<typeof setInterval> | undefined;
   private readonly controller = new AbortController();
   private refreshTask: Promise<void> | undefined;
-  private freshSnapshot: Promise<boolean> | undefined;
+  private readonly checkFreshSnapshot = createFreshSnapshotGate(() =>
+    this.enqueueRefresh(true),
+  );
   private forceFullSnapshot = false;
   private closed = false;
 
@@ -266,24 +251,9 @@ export class FliptProvider implements Provider {
 
   /** Requires a validated full snapshot; ordinary reads still use the last good one. */
   refreshForEvaluation(): Promise<boolean> {
-    if (this.closed || this.client === undefined) return Promise.resolve(false);
-    if (this.freshSnapshot !== undefined) return this.freshSnapshot;
-    const refresh = this.requireFreshSnapshot();
-    this.freshSnapshot = refresh;
-    void observeCompletion(refresh, () => {
-      if (this.freshSnapshot === refresh) this.freshSnapshot = undefined;
-    });
-    return refresh;
-  }
-
-  private async requireFreshSnapshot(): Promise<boolean> {
-    try {
-      await this.enqueueRefresh(true);
-      return true;
-    } catch (error) {
-      if (error instanceof SnapshotUnavailableError) return false;
-      throw error;
-    }
+    return this.closed || this.client === undefined
+      ? Promise.resolve(false)
+      : this.checkFreshSnapshot();
   }
 
   onClose(): Promise<void> {

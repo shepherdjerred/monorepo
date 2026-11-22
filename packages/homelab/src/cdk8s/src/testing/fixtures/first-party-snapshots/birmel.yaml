@@ -50,13 +50,11 @@ spec:
                   key: DISCORD_CLIENT_ID
                   name: birmel-birmel-1p
             - name: FEATURE_FLAGS_MODE
-              value: flipt
-            - name: FLIPT_ENVIRONMENT
-              value: prod
-            - name: FLIPT_NAMESPACE
-              value: birmel
-            - name: FLIPT_URL
-              value: http://flipt-flipt-service.flipt.svc.cluster.local:8080
+              value: flags
+            - name: FLAGS_DEPLOYMENT
+              value: birmel/prod
+            - name: FLAGS_URL
+              value: http://flags.flags.svc.cluster.local:7361
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -478,12 +476,12 @@ spec:
             matchLabels:
               app.kubernetes.io/component: gateway
     - ports:
-        - port: 8080
+        - port: 7361
           protocol: TCP
       to:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: flipt
+              kubernetes.io/metadata.name: flags
     - ports:
         - port: 9867
           protocol: TCP

@@ -2,7 +2,6 @@ import { beforeEach, expect, test } from "vitest";
 import { App } from "cdk8s";
 import { z } from "zod";
 import { createFlagsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/flags.ts";
-import { FLIPT_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { KUBERNETES_API_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 import { FLAGS_TAILSCALE_INGRESS } from "@shepherdjerred/homelab/cdk8s/src/resources/flags/ingress.ts";
@@ -115,7 +114,6 @@ test("an activated service renders its workload and evaluation port", () => {
                   name: "FLAGS_INGRESS_IDENTITY_DIR",
                   value: FLAGS_TAILSCALE_INGRESS.directory,
                 },
-                { name: "FLAGS_FLIPT_URL", value: FLIPT_URL },
                 {
                   name: "FLAGS_MACHINE_TOKEN",
                   valueFrom: {
@@ -132,6 +130,7 @@ test("an activated service renders its workload and evaluation port", () => {
       },
     },
   });
+  expect(JSON.stringify(deployment)).not.toContain("FLAGS_FLIPT_URL");
   expect(JSON.stringify(deployment)).not.toContain("FLAGS_TRUSTED_PROXIES");
 
   const service = manifests.find((manifest) => manifest.kind === "Service");
@@ -157,14 +156,31 @@ test("an activated service renders its workload and evaluation port", () => {
       },
     },
   });
+});
 
-  const policy = manifests.find(
+test("an activated service scopes network policy ingress and egress", () => {
+  const manifests = z
+    .array(Manifest)
+    .parse(createFlagsChart(new App()).toJson());
+  const netpol = manifests.find(
     (manifest) =>
       manifest.kind === "NetworkPolicy" &&
       manifest.metadata.name === "flags-app-netpol",
   );
-  expect(policy).toMatchObject({
+  expect(netpol).toMatchObject({
     spec: {
+      egress: [
+        {
+          ports: [
+            { port: 53, protocol: "UDP" },
+            { port: 53, protocol: "TCP" },
+          ],
+        },
+        {
+          to: [{ ipBlock: { cidr: KUBERNETES_API_ENDPOINT.cidr } }],
+          ports: [{ port: KUBERNETES_API_ENDPOINT.port, protocol: "TCP" }],
+        },
+      ],
       ingress: [
         {
           from: [
@@ -186,16 +202,45 @@ test("an activated service renders its workload and evaluation port", () => {
                 matchLabels: FLAGS_TAILSCALE_INGRESS.parentLabels,
               },
             },
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+              },
+              podSelector: { matchLabels: { component: "repo-worker" } },
+            },
           ],
           ports: [{ port: 7360, protocol: "TCP" }],
         },
-      ],
-      egress: expect.arrayContaining([
         {
-          to: [{ ipBlock: { cidr: KUBERNETES_API_ENDPOINT.cidr } }],
-          ports: [{ port: KUBERNETES_API_ENDPOINT.port, protocol: "TCP" }],
+          ports: [{ port: 7361, protocol: "TCP" }],
+          from: [
+            "arcade",
+            "delivery",
+            "starlight-karma-bot-beta",
+            "starlight-karma-bot-prod",
+            "scout-beta",
+            "scout-prod",
+            "birmel",
+            "temporal",
+            "trmnl-dashboard",
+            "alert-dashboard",
+            "media",
+            "storm-brain",
+            "storm-forum",
+            "storm-forum-beta",
+            "minecraft-tsmc",
+            "woodpecker-ci",
+            "woodpecker",
+            "tracker",
+            "golink",
+          ].map((namespace) => ({
+            namespaceSelector: {
+              matchLabels: { "kubernetes.io/metadata.name": namespace },
+            },
+          })),
         },
-      ]),
+      ],
     },
   });
+  expect(JSON.stringify(netpol)).not.toContain("flipt");
 });

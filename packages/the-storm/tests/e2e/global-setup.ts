@@ -195,9 +195,9 @@ export default async function setup(project: TestProject) {
       ...historicalShopEnvironment(),
       ...historicalTownEnvironment(),
       // The managed-flag gates (rwf join here; crier and merchant in the full
-      // suite) evaluate against the fake brain's Flipt double.
-      FLIPT_URL: brainBaseUrl,
-      FLIPT_ENVIRONMENT: "prod",
+      // suite) evaluate against the fake brain's Flags double.
+      FLAGS_URL: brainBaseUrl,
+      FLAGS_DEPLOYMENT: "minecraft/tsmc",
       POSTHOG_API_HOST: brainBaseUrl,
       POSTHOG_PROJECT_TOKEN: "phc_test",
       RWF_RECORDING_SALT: rwfRecordingSalt,

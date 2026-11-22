@@ -10,7 +10,7 @@ import {
   kubernetesApiEgressRule,
   nsPeer,
   tcp,
-  fliptEgress,
+  flagsEgress,
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { PROMETHEUS_GATEWAY_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
@@ -201,7 +201,7 @@ export function createDeliveryWorker(
           ports: [tcp(7233)],
         },
         { to: [nsPeer("delivery")], ports: [tcp(7353)] },
-        fliptEgress(),
+        flagsEgress(),
         // Worker poller proofs query Prometheus. NetworkPolicy matches the pod
         // port, the authenticated gateway's, not the Service's 9090.
         { to: [nsPeer("prometheus")], ports: [tcp(PROMETHEUS_GATEWAY_PORT)] },

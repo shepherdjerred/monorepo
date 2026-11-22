@@ -40,15 +40,10 @@ export type TemporalDomainWorkerProps = {
     readOnly?: boolean;
   }[];
   /**
-   * The central Workflow-only role is deliberately credentialless (no
-   * service-account token, no secrets — see
-   * temporal-workflow-boundary.test.ts's closed env-var-name assertion), so
-   * it must not receive Flipt reachability or credentials either. Every
-   * other domain worker reads the temporal-call-graph-tracing flag and
-   * defaults to true.
+   * Every domain worker except billing reads the `temporal-call-graph-tracing`
+   * flag via the credentialless Flags snapshot endpoint and defaults to true.
    */
   featureFlagsEnabled?: boolean;
-  featureFlagEnvironment?: "beta" | "prod";
 };
 
 export function createTemporalDomainWorker(
@@ -130,7 +125,7 @@ export function createTemporalDomainWorker(
       envVariables: {
         ...(props.featureFlagsEnabled === false
           ? {}
-          : temporalFeatureFlagEnvironment(props.featureFlagEnvironment)),
+          : temporalFeatureFlagEnvironment()),
         ...props.envVariables,
       },
     }),

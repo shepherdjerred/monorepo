@@ -169,7 +169,7 @@ function forumEgress(component: "web" | "release") {
     ...[
       ["seaweedfs", 8333],
       ["postal", 25],
-      ["flipt", 8080],
+      ["flags", 7361],
     ].map(([name, number]) => ({
       to: [nsPeer(String(name))],
       ports: [tcp(Number(number))],

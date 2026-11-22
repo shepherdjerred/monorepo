@@ -134,10 +134,10 @@ traces:
 # the players in the match world only, members and watchers alike, never to
 # Discord or anyone outside it; casual lines use Global and tactical calls use
 # Team, framed like player chat
-# with the dim ✦ bot marker. Also gated by the managed Flipt flag
-# the-storm-rwfbots-chat-enabled (namespace the-storm), evaluated off the main
+# with the dim ✦ bot marker. Also gated by the managed flag
+# the-storm-rwfbots-chat-enabled (catalog the-storm), evaluated off the main
 # thread every flagRefreshSeconds: the flag off, an evaluation error or a
-# missing FLIPT_URL or FLIPT_ENVIRONMENT keeps bots silent. With enabled false
+# missing FLAGS_URL or FLAGS_DEPLOYMENT keeps bots silent. With enabled false
 # the flag is never evaluated.
 #
 # At each moment an eligible bot speaks with chance chances.<moment> times its

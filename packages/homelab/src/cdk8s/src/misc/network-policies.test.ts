@@ -11,6 +11,8 @@ import {
   cloudflareTunnelIngressRule,
   dnsEgressRule,
   externalHttpsEgressRule,
+  flagsEgress,
+  flagsManagementEgress,
   fliptEgress,
   homeAssistantEgressRule,
   intraNamespaceRule,
@@ -101,6 +103,8 @@ describe("network policy peer library", () => {
       render({
         egress: [
           dnsEgressRule(),
+          flagsEgress(),
+          flagsManagementEgress(),
           fliptEgress(),
           otlpEgress(),
           seaweedfsEgress(),
@@ -119,6 +123,8 @@ describe("network policy peer library", () => {
         ],
         ports: [port(53, "UDP"), port(53)],
       },
+      { to: [namespace("flags")], ports: [port(7361)] },
+      { to: [namespace("flags")], ports: [port(7360)] },
       { to: [namespace("flipt")], ports: [port(8080)] },
       { to: [namespace("alloy-gateway")], ports: [port(4318)] },
       { to: [namespace("seaweedfs")], ports: [port(8333)] },

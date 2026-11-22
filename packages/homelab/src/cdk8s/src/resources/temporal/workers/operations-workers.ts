@@ -18,7 +18,7 @@ import { rwfArchiveEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/tempo
 import {
   telemetryEnv,
   seaweedfsS3,
-  FLIPT_URL,
+  FLAGS_MANAGEMENT_URL,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 function s3Env(secret: ISecret): Record<string, EnvValue> {
@@ -63,7 +63,7 @@ function githubEnv(secret: ISecret): Record<string, EnvValue> {
 export type TemporalOperationsWorkerProps = {
   serverServiceName: string;
   secret: ISecret;
-  fliptAuthSecret: ISecret;
+  flagsAuthSecret: ISecret;
   infraServiceAccount: ServiceAccount;
   homelabAuditEnvironment: Record<string, EnvValue>;
   talosConfigVolume: Volume;
@@ -235,12 +235,11 @@ export function createTemporalOperationsWorkers(
       ALERTMANAGER_URL: EnvValue.fromValue(
         "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
       ),
-      FLIPT_URL: EnvValue.fromValue(FLIPT_URL),
-      FLIPT_OPERATOR_TOKEN: EnvValue.fromSecretValue({
-        secret: props.fliptAuthSecret,
-        key: "operator-token",
+      FLAGS_URL: EnvValue.fromValue(FLAGS_MANAGEMENT_URL),
+      FLAGS_MACHINE_TOKEN: EnvValue.fromSecretValue({
+        secret: props.flagsAuthSecret,
+        key: "FLAGS_MACHINE_TOKEN",
       }),
-      FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
       FRESHRSS_API_URL: EnvValue.fromValue(
         "http://freshrss-service.freshrss.svc.cluster.local/api/greader.php",
       ),

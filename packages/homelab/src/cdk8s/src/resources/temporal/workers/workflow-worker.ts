@@ -26,13 +26,11 @@ function createWorkflowWorker(
     memoryRequest: Size.mebibytes(512),
     memoryLimit: Size.gibibytes(2),
     automountServiceAccountToken: false,
-    // Unlike application secrets, Flipt reachability is not a credential —
-    // there is no auth on Flipt, reachability IS the authorization model
-    // (see worker-network-policies.ts). This role's worker.ts main() calls
-    // initializeCallGraphTracing() unconditionally, and it is the only role
-    // that actually hosts workflow code, so it must resolve
-    // temporal-call-graph-tracing itself or the PR's namesake feature never
-    // turns on for a single real workflow execution.
+    // Unlike application secrets, Flags evaluation reachability is not a
+    // credential — port 7361 is credentialless (see worker-network-policies.ts).
+    // This role's worker.ts main() calls initializeCallGraphTracing()
+    // unconditionally, and it is the only role that actually hosts workflow
+    // code, so it must resolve temporal-call-graph-tracing itself.
     envVariables: {
       ...temporalAddressEnv(props.serverServiceName),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),

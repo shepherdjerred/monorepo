@@ -161,7 +161,7 @@ public final class TheStormPlugin extends JavaPlugin {
     analytics = analyticsPaper;
     var rollout =
         com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.remote(
-            requiredEnvironment("FLIPT_URL"), requiredEnvironment("FLIPT_ENVIRONMENT"));
+            requiredEnvironment("FLAGS_URL"), requiredEnvironment("FLAGS_DEPLOYMENT"));
     gameplay = rollout;
     services.provide(com.shepherdjerred.thestorm.core.expansion.ManagedGameplay.class, rollout);
     services.provide(

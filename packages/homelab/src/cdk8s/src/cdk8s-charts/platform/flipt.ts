@@ -12,45 +12,6 @@ import {
   tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
-/**
- * Namespaces allowed to evaluate flags.
- *
- * These namespaces consume the explicitly unauthenticated evaluation surface.
- * Flipt management remains authenticated even from an allowed namespace.
- */
-const CONSUMER_NAMESPACES = [
-  "arcade",
-  "delivery",
-  "starlight-karma-bot-beta",
-  "starlight-karma-bot-prod",
-  "scout-beta",
-  "scout-prod",
-  "birmel",
-  "temporal",
-  "trmnl-dashboard",
-  // The ops dashboard reads its incident-mail settings from Flipt.
-  "alert-dashboard",
-  // streambot is deployed inside the `media` chart, not its own namespace.
-  "media",
-  // The Woodpecker maintenance worker runs the shared temporal-worker image
-  // (component: maintenance-worker) but lives in the `woodpecker-ci`
-  // namespace, not `temporal` — it needs its own entry here or its
-  // temporal-call-graph-tracing check silently degrades to the default false.
-  // storm-brain reads the storm namespace flags (conversation and model).
-  "storm-brain",
-  "storm-forum",
-  "storm-forum-beta",
-  "minecraft-tsmc",
-  "woodpecker-ci",
-  "woodpecker",
-  // Tracker reads its managed flags through the shared config source.
-  "tracker",
-  // Golink evaluates dynamic ingress, site-alias, and manual-edit gates.
-  "golink",
-  // Flags imports live deployment snapshots on first boot.
-  "flags",
-] as const;
-
 export function createFliptChart(app: App) {
   const chart = new Chart(app, "flipt", {
     namespace: "flipt",
@@ -63,10 +24,9 @@ export function createFliptChart(app: App) {
 
   createFliptDeployment(chart);
 
-  // Network policy limits the authenticated gateway's callers. Tailscale
-  // reaches the Basic-authenticated UI, Prometheus scrapes the explicitly
-  // public metrics route, and consumers can only use the evaluation routes
-  // that the gateway and Flipt both exempt from authentication.
+  // All flag consumers now evaluate against first-party `flags`. While Flipt
+  // stays deployed idle ahead of retirement, only Tailscale and Prometheus
+  // reach its gateway.
   new KubeNetworkPolicy(chart, "flipt-ingress-netpol", {
     metadata: { name: "flipt-ingress-netpol" },
     spec: {
@@ -74,13 +34,7 @@ export function createFliptChart(app: App) {
       policyTypes: ["Ingress"],
       ingress: [
         {
-          from: [
-            nsPeer("tailscale"),
-            nsPeer("prometheus"),
-            // Consumer namespaces. Each service is added here as it adopts
-            // flags; native authentication separately protects management.
-            ...CONSUMER_NAMESPACES.map((namespace) => nsPeer(namespace)),
-          ],
+          from: [nsPeer("tailscale"), nsPeer("prometheus")],
           ports: [tcp(FLIPT_PORT)],
         },
       ],

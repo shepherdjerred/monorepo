@@ -2,7 +2,12 @@ import { z } from "zod";
 import { rwfTestSettings } from "./rwf-settings.ts";
 import { BeginnerFlags } from "./beginner-flags.ts";
 import { moderate } from "./brain/moderation.ts";
-import { expansionEvaluation, stargatesEvaluation } from "./brain/flags.ts";
+import {
+  expansionEvaluation,
+  isCredentiallessFlagsRequest,
+  ProdDeploymentSchema,
+  stargatesEvaluation,
+} from "./brain/flags.ts";
 
 /**
  * The storm-brain double the server container talks to. It answers both flows
@@ -53,9 +58,9 @@ export type FakeBrainMode =
 type BrainState = {
   mode: FakeBrainMode;
   analytics: unknown[];
-  /** Players the Flipt double answers `the-storm-rwf-enabled: false` for. */
+  /** Players the Flags double answers `the-storm-rwf-enabled: false` for. */
   rwfDenied: Set<string>;
-  /** The Red Warfare match features the Flipt double answers `true` for. */
+  /** The Red Warfare match features the Flags double answers `true` for. */
   rwfFeatures: Set<RwfFeature>;
   /** Players the double answers `the-storm-rwf-kits-enabled: true` for. */
   rwfKits: Set<string>;
@@ -80,23 +85,24 @@ export const rwfFeatureFlags = [
 
 export type RwfFeature = (typeof rwfFeatureFlags)[number];
 
-/** The rwf feature flags are one server-wide entity, evaluated in the map world. */
+/** The rwf feature flags are server-wide, evaluated in the map world. */
 const RwfFeatureFlagSchema = z.strictObject({
-  namespace_key: z.literal("the-storm"),
-  flag_key: z.enum(rwfFeatureFlags),
-  entity_id: z.literal("the-storm-rwf-features"),
+  deployment: ProdDeploymentSchema,
+  key: z.enum(rwfFeatureFlags),
   context: z.strictObject({ world: z.literal(rwfTestSettings.world) }),
 });
 
 /** The kit list and killstreak flags are per player, evaluated in the map world. */
 const RwfPlayerFlagSchema = z.strictObject({
-  namespace_key: z.literal("the-storm"),
-  flag_key: z.enum([
+  deployment: ProdDeploymentSchema,
+  key: z.enum([
     "the-storm-rwf-kits-enabled",
     "the-storm-rwf-killstreaks-enabled",
   ]),
-  entity_id: z.uuid(),
-  context: z.strictObject({ world: z.literal(rwfTestSettings.world) }),
+  context: z.strictObject({
+    user: z.uuid(),
+    world: z.literal(rwfTestSettings.world),
+  }),
 });
 
 // Test-only control hook (no auth): the kit suite opens the full kit list, the
@@ -137,7 +143,7 @@ export function brainControlUrl(port: number, route: string): string {
 
 /**
  * Opens the full kit list and shop for exactly `kits`, and the killstreaks for
- * exactly `killstreaks` (player UUIDs), through the Flipt double's control hook.
+ * exactly `killstreaks` (player UUIDs), through the Flags double's control hook.
  */
 export async function setRwfKits(
   port: number,
@@ -260,7 +266,7 @@ function triage(body: unknown): Response {
 
 /**
  * Closes `the-storm-rwf-enabled` for exactly `denied` (player UUIDs) through
- * the Flipt double's test-only control hook; an empty list opens it again.
+ * the Flags double's test-only control hook; an empty list opens it again.
  */
 export async function setRwfDenied(
   port: number,
@@ -278,7 +284,7 @@ export async function setRwfDenied(
 
 /**
  * Switches on exactly `enabled` of the Red Warfare match feature flags through
- * the Flipt double's test-only control hook; the rest answer off. Returns the
+ * the Flags double's test-only control hook; the rest answer off. Returns the
  * previous flags so a caller can restore the fixture after its case.
  */
 export async function setRwfFeatures(
@@ -334,94 +340,93 @@ export async function failedTriages(port: number): Promise<number> {
 
 /** Bot chat is one server-wide flag, evaluated with the rwf world as context. */
 const BotChatFlagSchema = z.strictObject({
-  namespace_key: z.literal("the-storm"),
-  flag_key: z.literal("the-storm-rwfbots-chat-enabled"),
-  entity_id: z.literal("the-storm-rwfbots-chat"),
+  deployment: ProdDeploymentSchema,
+  key: z.literal("the-storm-rwfbots-chat-enabled"),
   context: z.strictObject({ world: z.literal(rwfTestSettings.world) }),
 });
 
 /** Ordinary learned gameplay stays off in the authored native regression lane. */
-const BotLearningFlagSchema = z
-  .strictObject({
-    namespace_key: z.literal("the-storm"),
-    flag_key: z.literal("the-storm-rwfbots-learning-enabled"),
-    entity_id: z.uuid(),
-    context: z.strictObject({
-      match: z.uuid(),
-      map: z.string().min(1),
-      world: z.literal(rwfTestSettings.world),
-    }),
-  })
-  .refine((value) => value.entity_id === value.context.match);
+const BotLearningFlagSchema = z.strictObject({
+  deployment: ProdDeploymentSchema,
+  key: z.literal("the-storm-rwfbots-learning-enabled"),
+  context: z.strictObject({
+    match: z.uuid(),
+    map: z.string().min(1),
+    world: z.literal(rwfTestSettings.world),
+  }),
+});
 
 /**
- * The Flipt double: companions stay off; bot chat, the crier, merchant and rwf
+ * The Flags double: companions stay off; bot chat, the crier, merchant and rwf
  * gates open, except rwf for the players the suite denied.
  */
 async function evaluateFlag(
   request: Request,
   state: BrainState,
 ): Promise<Response> {
+  if (!isCredentiallessFlagsRequest(request)) {
+    return new Response("invalid evaluation", { status: 400 });
+  }
   const body: unknown = await request.json();
   const expanded =
     expansionEvaluation(body, request, state.mode !== "screening-disabled") ??
     stargatesEvaluation(body, request);
   if (expanded !== undefined) return expanded;
-  const prod = request.headers.get("x-flipt-environment") === "prod";
   const companion = z
     .strictObject({
-      namespace_key: z.literal("the-storm"),
-      flag_key: z.literal("the-storm-companions-enabled"),
-      entity_id: z.literal("the-storm-companions"),
+      deployment: ProdDeploymentSchema,
+      key: z.literal("the-storm-companions-enabled"),
       context: z.strictObject({}),
     })
     .safeParse(body);
-  if (prod && companion.success) {
+  if (companion.success) {
     return Response.json({ enabled: false });
   }
-  if (prod && BotChatFlagSchema.safeParse(body).success) {
+  if (BotChatFlagSchema.safeParse(body).success) {
     return Response.json({ enabled: true });
   }
-  if (prod && BotLearningFlagSchema.safeParse(body).success) {
+  if (BotLearningFlagSchema.safeParse(body).success) {
     return Response.json({ enabled: false });
   }
   const playerFlag = RwfPlayerFlagSchema.safeParse(body);
-  if (prod && playerFlag.success) {
+  if (playerFlag.success) {
     const open =
-      playerFlag.data.flag_key === "the-storm-rwf-kits-enabled"
+      playerFlag.data.key === "the-storm-rwf-kits-enabled"
         ? state.rwfKits
         : state.rwfKillstreaks;
-    return Response.json({ enabled: open.has(playerFlag.data.entity_id) });
+    return Response.json({ enabled: open.has(playerFlag.data.context.user) });
   }
   const feature = RwfFeatureFlagSchema.safeParse(body);
-  if (prod && feature.success) {
+  if (feature.success) {
     return Response.json({
-      enabled: state.rwfFeatures.has(feature.data.flag_key),
+      enabled: state.rwfFeatures.has(feature.data.key),
     });
   }
   const evaluated = z
     .object({
-      namespace_key: z.literal("the-storm"),
-      flag_key: z.enum([
+      deployment: ProdDeploymentSchema,
+      key: z.enum([
         "the-storm-crier-enabled",
         "the-storm-merchant-enabled",
         "the-storm-rwf-enabled",
         "the-storm-survival-enabled",
       ]),
-      entity_id: z.uuid(),
       // The crier and merchant evaluate in the main world; rwf in its own.
       context: z
-        .object({ world: z.enum(["world", rwfTestSettings.world]) })
+        .object({
+          user: z.uuid(),
+          world: z.enum(["world", rwfTestSettings.world]),
+        })
         .strict(),
     })
     .strict()
     .safeParse(body);
-  if (!prod || !evaluated.success) {
+  if (!evaluated.success) {
     return new Response("invalid evaluation", { status: 400 });
   }
   const denied =
-    evaluated.data.flag_key === "the-storm-rwf-enabled" &&
-    state.rwfDenied.has(evaluated.data.entity_id);
+    evaluated.data.key === "the-storm-rwf-enabled" &&
+    state.rwfDenied.has(evaluated.data.context.user);
   return Response.json({ enabled: !denied });
 }
 
@@ -471,10 +476,7 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
       ) {
         return Response.json(state.analytics);
       }
-      if (
-        url.pathname === "/evaluate/v1/boolean" &&
-        request.method === "POST"
-      ) {
+      if (url.pathname === "/v1/evaluate" && request.method === "POST") {
         return (
           (await beginners.evaluate(request.clone())) ??
           evaluateFlag(request, state)

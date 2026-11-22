@@ -3051,7 +3051,7 @@
       "automatic": true,
       "promotionSourceEnvironmentId": "minecraft/sandbox",
       "recipeRevisionId": "minecraft-tsmc/8",
-      "configurationRevisionId": "minecraft-tsmc/9"
+      "configurationRevisionId": "minecraft-tsmc/10"
     },
     {
       "id": "mc-router/prod",

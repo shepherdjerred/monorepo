@@ -6,7 +6,7 @@ describe("loadFeatureFlagConfiguration", () => {
     // No Zod default on purpose. A pod that forgets this should crash at
     // startup, not quietly serve call-site defaults while looking healthy.
     expect(() => loadFeatureFlagConfiguration({})).toThrow(
-      /FEATURE_FLAGS_MODE is required/,
+      /FEATURE_FLAGS_MODE is required \(flags \| flipt \| static \| disabled\)/,
     );
   });
 
@@ -29,7 +29,135 @@ describe("loadFeatureFlagConfiguration", () => {
       loadFeatureFlagConfiguration({ FEATURE_FLAGS_MODE: "disabled" }),
     ).toEqual({ mode: "disabled" });
   });
+});
 
+describe("loadFeatureFlagConfiguration — flags mode", () => {
+  test("flags mode requires FLAGS_URL and never falls back to FLIPT_URL", () => {
+    expect(() =>
+      loadFeatureFlagConfiguration({
+        FEATURE_FLAGS_MODE: "flags",
+        FLIPT_URL: "http://flipt.flipt.svc.cluster.local:8080",
+        FLAGS_DEPLOYMENT: "scout/prod",
+      }),
+    ).toThrow(/FLAGS_URL is required when FEATURE_FLAGS_MODE=flags/);
+    expect(() =>
+      loadFeatureFlagConfiguration({
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: "",
+        FLAGS_DEPLOYMENT: "scout/prod",
+      }),
+    ).toThrow(/FLAGS_URL is required when FEATURE_FLAGS_MODE=flags/);
+  });
+
+  test("flags mode requires FLAGS_DEPLOYMENT and never aliases FLIPT_NAMESPACE or FLIPT_ENVIRONMENT", () => {
+    expect(() =>
+      loadFeatureFlagConfiguration({
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: "http://flags.flags.svc.cluster.local:8080",
+        FLIPT_NAMESPACE: "scout",
+        FLIPT_ENVIRONMENT: "prod",
+      }),
+    ).toThrow(/FLAGS_DEPLOYMENT is required when FEATURE_FLAGS_MODE=flags/);
+  });
+
+  test.each([
+    "not-a-url",
+    "ftp://flags.flags.svc.cluster.local:8080",
+    "ws://flags.flags.svc.cluster.local:8080",
+    "file:///tmp/flags.json",
+    "http://user:pass@flags.flags.svc.cluster.local:8080",
+    "https://token@flags.flags.svc.cluster.local:8080",
+    "http://:secret@flags.flags.svc.cluster.local:8080",
+    "http://:@flags.flags.svc.cluster.local:8080",
+  ])("flags mode rejects disallowed FLAGS_URL %s", (url) => {
+    expect(() =>
+      loadFeatureFlagConfiguration({
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: url,
+        FLAGS_DEPLOYMENT: "scout/prod",
+      }),
+    ).toThrow();
+  });
+
+  test.each([
+    "scout",
+    "/prod",
+    "scout/",
+    "/",
+    "scout/prod/extra",
+    "scout /prod",
+    "../prod",
+    "scout/..",
+    "./prod",
+  ])("flags mode rejects malformed FLAGS_DEPLOYMENT %s", (deployment) => {
+    expect(() =>
+      loadFeatureFlagConfiguration({
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: "http://flags.flags.svc.cluster.local:8080",
+        FLAGS_DEPLOYMENT: deployment,
+      }),
+    ).toThrow();
+  });
+
+  test("flags mode defaults poll interval to 300s and treats empty string as absent", () => {
+    expect(
+      loadFeatureFlagConfiguration({
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: "https://flags.example.test",
+        FLAGS_DEPLOYMENT: "scout/beta",
+        FLIPT_POLL_INTERVAL_SECONDS: "15",
+      }),
+    ).toEqual({
+      mode: "flags",
+      url: "https://flags.example.test",
+      deployment: "scout/beta",
+      pollIntervalSeconds: 300,
+    });
+
+    expect(
+      loadFeatureFlagConfiguration({
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: "http://flags.flags.svc.cluster.local:8080",
+        FLAGS_DEPLOYMENT: "minecraft/tsmc",
+        FLAGS_POLL_INTERVAL_SECONDS: "",
+      }),
+    ).toEqual({
+      mode: "flags",
+      url: "http://flags.flags.svc.cluster.local:8080",
+      deployment: "minecraft/tsmc",
+      pollIntervalSeconds: 300,
+    });
+  });
+
+  test("flags mode parses custom poll interval and rejects non-positive or non-integer values", () => {
+    expect(
+      loadFeatureFlagConfiguration({
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: "http://flags.flags.svc.cluster.local:8080",
+        FLAGS_DEPLOYMENT: "scout/prod",
+        FLAGS_POLL_INTERVAL_SECONDS: "60",
+      }),
+    ).toEqual({
+      mode: "flags",
+      url: "http://flags.flags.svc.cluster.local:8080",
+      deployment: "scout/prod",
+      pollIntervalSeconds: 60,
+    });
+
+    for (const invalid of ["0", "-5", "1.5", "abc"]) {
+      expect(() =>
+        loadFeatureFlagConfiguration({
+          FEATURE_FLAGS_MODE: "flags",
+          FLAGS_URL: "http://flags.flags.svc.cluster.local:8080",
+          FLAGS_DEPLOYMENT: "scout/prod",
+          FLAGS_POLL_INTERVAL_SECONDS: invalid,
+        }),
+      ).toThrow();
+    }
+  });
+});
+
+describe("loadFeatureFlagConfiguration — flipt and static modes", () => {
   test("flipt mode requires a URL", () => {
     expect(() =>
       loadFeatureFlagConfiguration({ FEATURE_FLAGS_MODE: "flipt" }),

@@ -340,7 +340,7 @@ the CoreProtect donation key.
 The active agent uses the homelab brain service. Unlocked chest theft and
 permitted PvP are allowed; ban and temporary-ban recommendations escalate to
 human staff. Crier and merchant visits additionally require their production
-Flipt flags.
+managed flags.
 
 Essentials asynchronously loads the existing windmill spawn chunk and holds
 logins closed until its floor and clearance are safe. Arena and shard startup
@@ -482,7 +482,7 @@ packages/the-storm/server/boot-check.sh the-storm-server:dev
 
 The full-module suite uses a separate `TheStormFixtures.jar` to prepare
 synthetic worlds and blocks at the shipped coordinates. It is never shipped
-in TheStorm.jar or the production image. The fake brain and Flipt boundary
+in TheStorm.jar or the production image. The fake brain and Flags boundary
 exercise gameplay without external AI calls. A deliberately malformed Discord
 token tests module wiring without posting externally; it cannot prove real
 Discord authentication.

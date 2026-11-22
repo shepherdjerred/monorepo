@@ -21,11 +21,11 @@ export function parseMcArgs<
 
 export function rolloutInput(
   url: string | undefined,
-  environment: string | undefined,
+  deployment: string | undefined,
 ) {
-  return url === undefined && environment === undefined
+  return url === undefined && deployment === undefined
     ? {}
-    : { rollout: { url, environment } };
+    : { rollout: { url, deployment } };
 }
 
 export function captureFeatureInput(features: string[] | undefined) {

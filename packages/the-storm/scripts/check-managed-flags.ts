@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * Checks each Java Flipt client's namespace and flag key constants against the
- * managed flag whose `source` names it in the shared inventory.
+ * Checks each Java flag gate's key constant against the managed flag whose
+ * `source` names it in the shared inventory.
  *
  * This runs as its own Turbo task rather than inside Gradle's compileJava, so
  * the inventory, which changes with every flag anywhere in the repository, is
@@ -13,6 +13,7 @@ import path from "node:path";
 import { z } from "zod";
 
 const REMOTE = "plugin/modules";
+const STORM_CATALOG = "the-storm";
 
 type ManagedFlagGate = {
   /** The inventory flag's `source`. */
@@ -21,8 +22,6 @@ type ManagedFlagGate = {
   readonly keyFile: string;
   /** Flag key constant name; `FLAG_KEY` unless a client evaluates several. */
   readonly keyConstant?: string;
-  /** Java file declaring `NAMESPACE_KEY`; the key file unless shared. */
-  readonly namespaceFile?: string;
   /** Expected production inventory default; uncommissioned gates default off. */
   readonly expectedDefault?: boolean;
 };
@@ -35,8 +34,6 @@ export const MANAGED_FLAG_GATES: readonly ManagedFlagGate[] = [
   {
     flagSource: "the-storm-skylands-launch",
     keyFile: `${REMOTE}/skytravel/src/main/java/com/shepherdjerred/thestorm/skytravel/adapter/paper/LaunchFlights.java`,
-    namespaceFile:
-      "plugin/core/src/main/java/com/shepherdjerred/thestorm/core/expansion/ManagedGameplay.java",
     expectedDefault: true,
   },
   {
@@ -55,7 +52,6 @@ export const MANAGED_FLAG_GATES: readonly ManagedFlagGate[] = [
   {
     flagSource: "the-storm-merchant",
     keyFile: `${world}/FliptMerchantGate.java`,
-    namespaceFile: `${world}/FliptCrierGate.java`,
   },
   { flagSource: "the-storm-rwf", keyFile: `${rwf}/FliptRwfGate.java` },
   { flagSource: "the-storm-rwf-kits", keyFile: `${rwf}/FliptRwfKitsGate.java` },
@@ -104,12 +100,12 @@ function javaConstant(file: string, text: string, name: string): string {
   ).exec(text);
   const value = match?.[1];
   if (value === undefined) {
-    throw new Error(`missing Flipt client constant ${name} in ${file}`);
+    throw new Error(`missing Flags client constant ${name} in ${file}`);
   }
   return value;
 }
 
-/** Every mismatch between the Java Flipt clients and the inventory. */
+/** Every mismatch between the Java flag gates and the inventory. */
 export function managedFlagViolations(
   inventory: Inventory,
   readJava: (file: string) => string,
@@ -127,25 +123,19 @@ export function managedFlagViolations(
       );
       continue;
     }
-    const namespaceFile = gate.namespaceFile ?? gate.keyFile;
     const key = javaConstant(
       gate.keyFile,
       readJava(gate.keyFile),
       gate.keyConstant ?? "FLAG_KEY",
     );
-    const namespace = javaConstant(
-      namespaceFile,
-      readJava(namespaceFile),
-      "NAMESPACE_KEY",
-    );
     if (
       flag.type !== "boolean" ||
       flag.default !== (gate.expectedDefault ?? false) ||
       flag.key !== key ||
-      flag.namespace !== namespace
+      flag.namespace !== STORM_CATALOG
     ) {
       violations.push(
-        `Flipt ${gate.flagSource} identifiers differ from managed inventory`,
+        `Flags ${gate.flagSource} identifiers differ from managed inventory`,
       );
     }
   }
@@ -164,10 +154,11 @@ if (import.meta.main) {
   );
   const sources = new Map<string, string>();
   for (const gate of MANAGED_FLAG_GATES) {
-    for (const file of [gate.keyFile, gate.namespaceFile ?? gate.keyFile]) {
-      if (!sources.has(file)) {
-        sources.set(file, await Bun.file(path.join(packageRoot, file)).text());
-      }
+    if (!sources.has(gate.keyFile)) {
+      sources.set(
+        gate.keyFile,
+        await Bun.file(path.join(packageRoot, gate.keyFile)).text(),
+      );
     }
   }
   const violations = managedFlagViolations(inventory, (file) => {

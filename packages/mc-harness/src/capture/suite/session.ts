@@ -55,7 +55,7 @@ export async function localSession(input: {
   spawn: [number, number, number];
   helpers: string[];
   features?: z.infer<typeof CaptureFeatureSchema>[];
-  rollout?: { url: string; environment: "prod" | "beta" };
+  rollout?: { url: string; deployment: string };
 }) {
   const control = new CaptureTransport(
     "suite",

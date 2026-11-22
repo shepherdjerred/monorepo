@@ -45,8 +45,8 @@ public final class RwfBotsModule implements StormModule {
    * @param world the match world; empty means the map world rwf runs in, read from rwf.yml
    * @param lobbyWorld the lobby world; empty means the lobby world named in rwf.yml
    * @param tickTimes the server's recent tick times; empty means the real server's
-   * @param chatGate the bot chat flag; empty means Flipt from {@code FLIPT_URL} and {@code
-   *     FLIPT_ENVIRONMENT}, closed when either is unset
+   * @param chatGate the bot chat flag; empty means Flags from {@code FLAGS_URL} and {@code
+   *     FLAGS_DEPLOYMENT}, closed when either is unset
    */
   public record Hooks(
       Optional<Function<ModuleContext, Bodies>> bodies,
@@ -200,32 +200,32 @@ public final class RwfBotsModule implements StormModule {
             view::noFallUntil, context.time()));
   }
 
-  /** The managed chat flag from the environment; closed, with a warning, when Flipt is unset. */
+  /** The managed chat flag from the environment; closed, with a warning, when Flags is unset. */
   private static ChatGate fliptChatGate(ModuleContext context, World world) {
-    var base = Optional.ofNullable(System.getenv("FLIPT_URL")).filter(v -> !v.isBlank());
-    var environment =
-        Optional.ofNullable(System.getenv("FLIPT_ENVIRONMENT")).filter(v -> !v.isBlank());
-    if (base.isEmpty() || environment.isEmpty()) {
+    var base = Optional.ofNullable(System.getenv("FLAGS_URL")).filter(v -> !v.isBlank());
+    var deployment =
+        Optional.ofNullable(System.getenv("FLAGS_DEPLOYMENT")).filter(v -> !v.isBlank());
+    if (base.isEmpty() || deployment.isEmpty()) {
       context
           .logger()
-          .warn("rwfbots: FLIPT_URL or FLIPT_ENVIRONMENT is unset; bots stay silent in chat");
+          .warn("rwfbots: FLAGS_URL or FLAGS_DEPLOYMENT is unset; bots stay silent in chat");
       return ChatGate.closed();
     }
     return new FliptChatGate(
-        URI.create(base.orElseThrow()), environment.orElseThrow(), world.getName());
+        URI.create(base.orElseThrow()), deployment.orElseThrow(), world.getName());
   }
 
   private static LearningGate fliptLearningGate(ModuleContext context) {
-    var base = Optional.ofNullable(System.getenv("FLIPT_URL")).filter(v -> !v.isBlank());
-    var environment =
-        Optional.ofNullable(System.getenv("FLIPT_ENVIRONMENT")).filter(v -> !v.isBlank());
-    if (base.isEmpty() || environment.isEmpty()) {
+    var base = Optional.ofNullable(System.getenv("FLAGS_URL")).filter(v -> !v.isBlank());
+    var deployment =
+        Optional.ofNullable(System.getenv("FLAGS_DEPLOYMENT")).filter(v -> !v.isBlank());
+    if (base.isEmpty() || deployment.isEmpty()) {
       context
           .logger()
           .info("rwfbots: learning flag bootstrap absent; ordinary matches stay authored");
       return LearningGate.absent();
     }
-    return new FliptLearningGate(URI.create(base.orElseThrow()), environment.orElseThrow());
+    return new FliptLearningGate(URI.create(base.orElseThrow()), deployment.orElseThrow());
   }
 
   /** One of the worlds rwf runs in, as its config names it. */

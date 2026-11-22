@@ -1,4 +1,4 @@
-/** The managed Flipt flag that gates bot chat, evaluated over HTTP off the main thread. */
+/** The managed flag gates for bot chat and learning, evaluated over HTTP off the main thread. */
 @NullMarked
 package com.shepherdjerred.thestorm.rwfbots.adapter.remote;
 

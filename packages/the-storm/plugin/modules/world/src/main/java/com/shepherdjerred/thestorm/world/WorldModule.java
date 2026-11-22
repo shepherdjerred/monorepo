@@ -63,13 +63,13 @@ public final class WorldModule implements StormModule {
       map.start(context.scheduler());
       borders = map;
     }
-    var base = System.getenv("FLIPT_URL");
-    var environment = System.getenv("FLIPT_ENVIRONMENT");
+    var base = System.getenv("FLAGS_URL");
+    var deployment = System.getenv("FLAGS_DEPLOYMENT");
     CrierGate rollout;
-    if (base == null || base.isBlank() || environment == null || environment.isBlank()) {
+    if (base == null || base.isBlank() || deployment == null || deployment.isBlank()) {
       rollout = player -> java.util.concurrent.CompletableFuture.completedFuture(false);
     } else {
-      var remote = new FliptCrierGate(URI.create(base), environment);
+      var remote = new FliptCrierGate(URI.create(base), deployment);
       gate = remote;
       rollout = remote;
     }
@@ -120,10 +120,10 @@ public final class WorldModule implements StormModule {
     }
     if (config.merchant().enabled()) {
       MerchantGate merchantRollout;
-      if (base == null || base.isBlank() || environment == null || environment.isBlank()) {
+      if (base == null || base.isBlank() || deployment == null || deployment.isBlank()) {
         merchantRollout = player -> java.util.concurrent.CompletableFuture.completedFuture(false);
       } else {
-        var remote = new FliptMerchantGate(URI.create(base), environment);
+        var remote = new FliptMerchantGate(URI.create(base), deployment);
         merchantGate = remote;
         merchantRollout = remote;
       }

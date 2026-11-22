@@ -906,9 +906,9 @@ and Citizens bodies do not count as human presence.
 
 The world module also owns an on-demand `/crier` bulletin. Its separate
 `world.yml` `crier.enabled` setting ships as `true`. The `/crier` command registers with the
-module and evaluates `the-storm-crier-enabled` in Flipt for each player. Both
+module and evaluates `the-storm-crier-enabled` in Flags for each player. Both
 the typed file safety gate and the managed flag must allow the command; a
-missing or failed Flipt evaluation leaves it unavailable. The managed flag is
+missing or failed flag evaluation leaves it unavailable. The managed flag is
 enabled in the beta inventory; production stays gated until live acceptance.
 Java flag IDs are checked
 against the shared inventory during Gradle compilation. Once enabled, the
@@ -951,7 +951,7 @@ block below must be solid, with two air blocks above it. The listener refuses
 an unsafe or unloaded anchor; it never chooses another position.
 The independent managed `the-storm-merchant-enabled` flag must evaluate true
 for the arriving player. The beta inventory enables it; production stays gated
-until live acceptance. Flipt errors or
+until live acceptance. Flag evaluation errors or
 missing bootstrap settings keep visits off.
 
 On the first join, world entry, teleport, respawn, or block movement within `arrivalRadius` of
@@ -1308,7 +1308,7 @@ routes, power and plane progress. Debug play writes no XP or leaderboard results
 An active run or conflicting lobby cannot be fast-forwarded.
 
 Placement is controlled by strict `arena/survival.yml`; admission also requires
-the managed `the-storm-survival-enabled` flag for the player. Missing Flipt
+the managed `the-storm-survival-enabled` flag for the player. Missing Flags
 bootstrap or failed evaluations keep admission closed. Startup validates the
 authored blueprint and resets gates and defenses before opening admission.
 See the wiki's **How to provision The Storm settlement** for placement and recovery.
@@ -3277,7 +3277,7 @@ accepting the model or enabling ordinary learned play.
 
 The independent learning gate is documented in the feature flags reference above.
 Its accepted ONNX bundle must ship with the server image after the human pilot
-and all promotion gates pass. Missing Flipt
+and all promotion gates pass. Missing Flags
 bootstrap and transport outages keep that match authored. A successful false
 answer is final for the match; malformed values, missing declared flags and
 authorization failures surface as errors.
@@ -3363,7 +3363,7 @@ The dye leaves through the `/rwf leave` path.
 
 `bun run rwf:watch` boots a disposable Paper server in Docker with every
 shipped module plus `rwf` and `rwfbots`, Citizens and its owned config, the
-void `rwf` world and a stand-in for Flipt that opens `/rwf` to everyone. It
+void `rwf` world and a stand-in for Flags that opens `/rwf` to everyone. It
 publishes the game port on `127.0.0.1:25565` (offline mode) and runs until
 Ctrl-C, which removes the container. Build the jar first.
 
@@ -4115,7 +4115,7 @@ Collection is boot-scoped behind the default-off managed flag
 `the-storm-analytics-enabled` (`the-storm` namespace, beta and production
 overrides enabled).
 Bootstrap uses `POSTHOG_API_HOST`, `POSTHOG_PROJECT_TOKEN` and
-`FLIPT_ENVIRONMENT`, supplied from the analytics registry by homelab CDK8s.
+`FLAGS_DEPLOYMENT`, supplied from the analytics registry by homelab CDK8s.
 Missing or invalid bootstrap and failed flag evaluation leave collection off.
 SQLite owns event-driven session checkpoints and the outgoing event queue.
 Gameplay transitions and interactions advance playtime and trigger delivery;

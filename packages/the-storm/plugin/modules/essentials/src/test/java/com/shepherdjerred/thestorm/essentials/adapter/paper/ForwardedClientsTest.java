@@ -69,7 +69,7 @@ final class ForwardedClientsTest {
         new com.shepherdjerred.thestorm.core.expansion.ManagedGameplay(
             (key, actor) ->
                 java.util.concurrent.CompletableFuture.failedFuture(
-                    new IllegalStateException("Flipt unavailable")),
+                    new IllegalStateException("Flags unavailable")),
             () -> {},
             false);
     var production = new ForwardedClients(failed, () -> true, ip -> java.util.Optional.empty());
@@ -82,7 +82,7 @@ final class ForwardedClientsTest {
         new com.shepherdjerred.thestorm.core.expansion.ManagedGameplay(
             (key, actor) ->
                 java.util.concurrent.CompletableFuture.failedFuture(
-                    new IllegalStateException("Flipt unavailable")),
+                    new IllegalStateException("Flags unavailable")),
             () -> {},
             true);
     var betaClients = new ForwardedClients(beta, () -> true, ip -> java.util.Optional.empty());

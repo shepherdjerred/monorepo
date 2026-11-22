@@ -1,10 +1,18 @@
 import { App } from "cdk8s";
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
-import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/flipt.ts";
+import { createFlagsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/flags.ts";
+import {
+  FLAGS_EVALUATION_URL,
+  FLAGS_MANAGEMENT_URL,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 import { ContainerEnvSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/container-env-schema.ts";
+import { PodSelectorSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/pod-template-schema.ts";
+
+beforeEach(resetProbeRegistry);
 
 const DeploymentSchema = z.object({
   kind: z.literal("Deployment"),
@@ -29,19 +37,7 @@ const NetworkPolicySchema = z.object({
   metadata: z.object({ name: z.string() }),
   spec: z.object({
     egress: z.array(z.unknown()).optional(),
-    podSelector: z
-      .object({
-        matchExpressions: z
-          .array(
-            z.object({
-              key: z.string(),
-              operator: z.string(),
-              values: z.array(z.string()).optional(),
-            }),
-          )
-          .optional(),
-      })
-      .optional(),
+    podSelector: PodSelectorSchema.optional(),
   }),
 });
 
@@ -54,7 +50,7 @@ function synthesizeTemporal(): unknown[] {
 }
 
 describe("Temporal feature-flag boundary", () => {
-  test("configures every central worker for Flipt", () => {
+  test("configures every central worker for first-party Flags", () => {
     const expectedComponents = new Set([
       "gateway",
       "home-worker",
@@ -86,13 +82,12 @@ describe("Temporal feature-flag boundary", () => {
           entry.value,
         ]),
       );
-      expect(environment.get("FEATURE_FLAGS_MODE")).toBe("flipt");
-      expect(environment.get("FLIPT_URL")).toBe(
-        "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
-      );
-      expect(environment.get("FLIPT_NAMESPACE")).toBe("temporal");
-      expect(environment.get("FLIPT_ENVIRONMENT")).toBe(
-        component === "gateway" ? "beta" : "prod",
+      expect(environment.get("FEATURE_FLAGS_MODE")).toBe("flags");
+      expect(environment.get("FLAGS_DEPLOYMENT")).toBe("temporal/prod");
+      expect(environment.get("FLAGS_URL")).toBe(
+        component === "repo-worker"
+          ? FLAGS_MANAGEMENT_URL
+          : FLAGS_EVALUATION_URL,
       );
       expect(environment.get("TELEMETRY_ENABLED")).toBe("true");
       expect(environment.get("OTLP_ENDPOINT")).toBeDefined();
@@ -101,7 +96,7 @@ describe("Temporal feature-flag boundary", () => {
     expect(configuredComponents).toEqual(expectedComponents);
   });
 
-  test("grants the Flipt operator token only to the repo operations worker", () => {
+  test("grants the Flags machine token only to the repo operations worker", () => {
     const deployments = synthesizeTemporal().flatMap((resource) => {
       const parsed = DeploymentSchema.safeParse(resource);
       return parsed.success ? [parsed.data] : [];
@@ -112,36 +107,41 @@ describe("Temporal feature-flag boundary", () => {
     );
     for (const deployment of centralWorkers) {
       const component = deployment.spec.template.metadata.labels["component"];
-      const operatorToken =
+      const machineToken =
         deployment.spec.template.spec.containers[0]?.env.find(
-          (entry) => entry.name === "FLIPT_OPERATOR_TOKEN",
+          (entry) => entry.name === "FLAGS_MACHINE_TOKEN",
         );
       if (component === "repo-worker") {
-        expect(operatorToken?.valueFrom?.secretKeyRef).toEqual({
-          key: "operator-token",
-          name: "temporal-flipt-auth",
+        expect(machineToken?.valueFrom?.secretKeyRef).toEqual({
+          key: "FLAGS_MACHINE_TOKEN",
+          name: "flags-auth",
         });
       } else {
-        expect(operatorToken).toBeUndefined();
+        expect(machineToken).toBeUndefined();
       }
+      expect(
+        deployment.spec.template.spec.containers[0]?.env.find(
+          (entry) => entry.name === "FLIPT_OPERATOR_TOKEN",
+        ),
+      ).toBeUndefined();
     }
   });
 
-  test("adds an explicit worker egress policy to Flipt", () => {
+  test("adds explicit worker egress policies to Flags", () => {
     const policies = synthesizeTemporal().flatMap((resource) => {
       const parsed = NetworkPolicySchema.safeParse(resource);
       return parsed.success ? [parsed.data] : [];
     });
-    const policy = policies.find(
+    const evalPolicy = policies.find(
       (candidate) =>
-        candidate.metadata.name === "temporal-workers-flipt-egress",
+        candidate.metadata.name === "temporal-workers-flags-egress",
     );
-    expect(policy?.spec.egress).toHaveLength(1);
-    expect(JSON.stringify(policy)).toContain('"port":8080');
-    expect(JSON.stringify(policy)).toContain(
-      '"kubernetes.io/metadata.name":"flipt"',
+    expect(evalPolicy?.spec.egress).toHaveLength(1);
+    expect(JSON.stringify(evalPolicy)).toContain('"port":7361');
+    expect(JSON.stringify(evalPolicy)).toContain(
+      '"kubernetes.io/metadata.name":"flags"',
     );
-    expect(policy?.spec.podSelector?.matchExpressions).toEqual([
+    expect(evalPolicy?.spec.podSelector?.matchExpressions).toEqual([
       {
         key: "component",
         operator: "In",
@@ -150,7 +150,6 @@ describe("Temporal feature-flag boundary", () => {
           "home-worker",
           "reports-worker",
           "infra-worker",
-          "repo-worker",
           "scout-worker",
           "glitter-corpus-worker",
           "glitter-context-worker",
@@ -159,24 +158,34 @@ describe("Temporal feature-flag boundary", () => {
         ],
       },
     ]);
+
+    const managementPolicy = policies.find(
+      (candidate) => candidate.metadata.name === "temporal-repo-flags-netpol",
+    );
+    expect(managementPolicy?.spec.podSelector?.matchLabels).toEqual({
+      component: "repo-worker",
+    });
+    expect(managementPolicy?.spec.egress).toEqual([
+      {
+        ports: [{ port: 7360, protocol: "TCP" }],
+        to: [
+          {
+            namespaceSelector: {
+              matchLabels: { "kubernetes.io/metadata.name": "flags" },
+            },
+          },
+        ],
+      },
+    ]);
   });
 
-  test("allows the Temporal namespace through Flipt ingress", () => {
-    const app = new App({ outdir: ".test-synth-flipt-temporal-consumer" });
-    createFliptChart(app);
+  test("allows Temporal and Woodpecker namespaces through Flags ingress", () => {
+    const app = new App({ outdir: ".test-synth-flags-temporal-consumer" });
+    createFlagsChart(app);
     const manifest = app.synthYaml();
     expect(manifest).toContain("kubernetes.io/metadata.name: temporal");
-  });
-
-  test("allows the Woodpecker namespace through Flipt ingress", () => {
-    // The maintenance worker (woodpecker-maintenance-worker.ts) runs the
-    // shared temporal-worker image but lives in the `woodpecker` namespace,
-    // not `temporal` — without its own consumer entry, Flipt's own ingress
-    // NetworkPolicy rejects it and temporal-call-graph-tracing silently
-    // degrades to the default false for that worker.
-    const app = new App({ outdir: ".test-synth-flipt-woodpecker-consumer" });
-    createFliptChart(app);
-    const manifest = app.synthYaml();
+    expect(manifest).toContain("component: repo-worker");
     expect(manifest).toContain("kubernetes.io/metadata.name: woodpecker");
+    expect(manifest).toContain("kubernetes.io/metadata.name: woodpecker-ci");
   });
 });

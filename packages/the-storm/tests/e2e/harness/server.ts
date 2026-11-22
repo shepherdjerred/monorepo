@@ -96,7 +96,7 @@ export type StartServerOptions = ModuleConfigOverrides & {
   /** Contents of plugins/TheStorm/config.yml. */
   stormConfig: string;
   /**
-   * Container environment beyond the server basics: the Flipt gate address and
+   * Container environment beyond the server basics: the Flags gate address and
    * the recording salt the modules under test read at enable.
    */
   env: Record<string, string>;

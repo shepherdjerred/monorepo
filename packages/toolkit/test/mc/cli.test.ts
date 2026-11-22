@@ -61,6 +61,43 @@ describe("toolkit mc argument handling", () => {
     expect(exitCode).toBe(1);
     expect(stderr).toContain("toolkit mc daemon start");
   });
+
+  test("accepts --rollout-deployment on real-map sandbox up and rejects --rollout-environment", async () => {
+    const { stdout } = await runMcCommand(["sandbox", "--help"]);
+    expect(stdout).toContain("--rollout-deployment <catalog>/<stage>");
+    expect(stdout).not.toContain("--rollout-environment");
+
+    const valid = await runMcCommand([
+      "sandbox",
+      "up",
+      "--profile",
+      "storm-dev",
+      "--world",
+      "real-map",
+      "--map-directory",
+      "/maps/source",
+      "--map-spawn",
+      "[0,64,0]",
+      "--rollout-url",
+      "https://flags.tailnet-1a49.ts.net",
+      "--rollout-deployment",
+      "minecraft/tsmc",
+    ]);
+    expect(valid.exitCode).toBe(1);
+    expect(valid.stderr).not.toContain("Unknown option");
+    expect(valid.stderr).toContain("toolkit mc daemon start");
+
+    const legacy = await runMcCommand([
+      "sandbox",
+      "up",
+      "--rollout-url",
+      "https://flags.tailnet-1a49.ts.net",
+      "--rollout-environment",
+      "prod",
+    ]);
+    expect(legacy.exitCode).toBe(1);
+    expect(legacy.stderr).toContain("Unknown option '--rollout-environment'");
+  });
 });
 
 describe("toolkit mc live argument handling", () => {

@@ -1,10 +1,11 @@
 import { describe, expect, test } from "vitest";
 import { App, Chart, Testing } from "cdk8s";
 import { z } from "zod";
+import { flagDeployments } from "@shepherdjerred/feature-flags/deployments.ts";
 import {
-  flagDeploymentForSelector,
-  flagDeployments,
-} from "@shepherdjerred/feature-flags/deployments.ts";
+  FLAGS_EVALUATION_URL,
+  FLAGS_MANAGEMENT_URL,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { createArcadeChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/games/arcade.ts";
 import { createBirmelChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/birmel.ts";
 import { createMediaChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/media/media.ts";
@@ -49,13 +50,14 @@ const ManifestSchema = z
   })
   .loose();
 
-async function fliptConsumers(
+async function flagsConsumers(
   createChart: (app: App) => void | Promise<void>,
 ): Promise<
   {
     name: string;
-    environment: string | undefined;
-    namespace: string | undefined;
+    mode: string | undefined;
+    deployment: string | undefined;
+    url: string | undefined;
   }[]
 > {
   const app = new App();
@@ -78,12 +80,26 @@ async function fliptConsumers(
             const env = new Map(
               (container.env ?? []).map((entry) => [entry.name, entry.value]),
             );
-            if (env.get("FEATURE_FLAGS_MODE") !== "flipt") return [];
+            for (const legacy of [
+              "FLIPT_NAMESPACE",
+              "FLIPT_ENVIRONMENT",
+              "FLIPT_URL",
+              "FLIPT_OPERATOR_TOKEN",
+            ]) {
+              expect(
+                env.has(legacy),
+                `${parsed.data.metadata.name} still sets ${legacy}`,
+              ).toBe(false);
+            }
+            const mode = env.get("FEATURE_FLAGS_MODE");
+            expect(mode).not.toBe("flipt");
+            if (mode !== "flags") return [];
             return [
               {
                 name: parsed.data.metadata.name,
-                environment: env.get("FLIPT_ENVIRONMENT"),
-                namespace: env.get("FLIPT_NAMESPACE"),
+                mode,
+                deployment: env.get("FLAGS_DEPLOYMENT"),
+                url: env.get("FLAGS_URL"),
               },
             ];
           },
@@ -92,64 +108,56 @@ async function fliptConsumers(
   );
 }
 
-describe("Flipt consumer environments", () => {
+describe("First-party Flags consumer deployments", () => {
   const cases = [
     {
       name: "Scout beta",
-      environment: "beta",
-      namespace: "scout",
+      deployment: "scout/beta",
       // Application, gateway and activity worker all evaluate the
-      // same beta/scout flags from separate pods.
+      // same scout/beta flags from separate pods.
       count: 3,
       createChart: (app: App) => createScoutChart(app, "beta"),
     },
     {
       name: "Scout prod",
-      environment: "prod",
-      namespace: "scout",
-      // Application, gateway and activity worker share prod/scout.
+      deployment: "scout/prod",
+      // Application, gateway and activity worker share scout/prod.
       count: 3,
       createChart: (app: App) => createScoutChart(app, "prod"),
     },
     {
       name: "Karma beta",
-      environment: "beta",
-      namespace: "starlight-karma-bot",
+      deployment: "starlight-karma-bot/beta",
       count: 1,
       createChart: (app: App) => createStarlightKarmaBotChart(app, "beta"),
     },
     {
       name: "Karma prod",
-      environment: "prod",
-      namespace: "starlight-karma-bot",
+      deployment: "starlight-karma-bot/prod",
       count: 1,
       createChart: (app: App) => createStarlightKarmaBotChart(app, "prod"),
     },
     {
       name: "Birmel",
-      environment: "prod",
-      namespace: "birmel",
+      deployment: "birmel/prod",
       count: 1,
       createChart: (app: App) => createBirmelChart(app),
     },
     {
       name: "Streambot",
-      environment: "prod",
-      namespace: "streambot",
+      deployment: "streambot/prod",
       count: 1,
       createChart: (app: App) => createMediaChart(app),
     },
     {
       name: "TRMNL dashboard",
-      environment: "prod",
-      namespace: "trmnl-dashboard",
+      deployment: "trmnl-dashboard/prod",
       count: 1,
       createChart: (app: App) => createTrmnlDashboardChart(app),
     },
     {
       name: "Hub",
-      environment: "prod",
-      namespace: "alert-dashboard",
+      deployment: "alert-dashboard/prod",
       count: 1,
       createChart: (app: App) => {
         createAlertDashboardChart(app);
@@ -157,46 +165,41 @@ describe("Flipt consumer environments", () => {
     },
     {
       name: "Temporal",
-      environment: "prod",
-      namespace: "temporal",
+      deployment: "temporal/prod",
       count: 11,
       createChart: (app: App) => createTemporalChart(app),
     },
   ];
 
   test.each(cases)(
-    "sets $name to $environment/$namespace",
-    async ({ name, environment, namespace, count, createChart }) => {
-      const consumers = await fliptConsumers(createChart);
+    "sets $name to $deployment",
+    async ({ deployment, count, createChart }) => {
+      const consumers = await flagsConsumers(createChart);
       expect(consumers).toHaveLength(count);
       for (const consumer of consumers) {
-        const gateway =
-          name === "Temporal" && consumer.name === "temporal-temporal-gateway";
-        expect(consumer.environment).toBe(gateway ? "beta" : environment);
-        expect(consumer.namespace).toBe(namespace);
-        // The gateway still reads the beta temporal document. That read is
-        // not a deployment; every other selector is one.
-        if (gateway) {
-          expect(
-            flagDeploymentForSelector(
-              consumer.namespace ?? "",
-              consumer.environment ?? "",
-            ),
-          ).toBeUndefined();
-          continue;
-        }
-        expect(
-          flagDeploymentForSelector(
-            consumer.namespace ?? "",
-            consumer.environment ?? "",
-          ),
-        ).toMatchObject({
-          catalog: namespace,
-          fliptEnvironment: environment,
-        });
+        expect(consumer.mode).toBe("flags");
+        expect(consumer.deployment).toBe(deployment);
+        expect(consumer.url).toBe(
+          consumer.name === "temporal-temporal-repo-worker"
+            ? FLAGS_MANAGEMENT_URL
+            : FLAGS_EVALUATION_URL,
+        );
       }
     },
   );
+
+  test("temporal-temporal-gateway selects temporal/prod", async () => {
+    const consumers = await flagsConsumers((app) => createTemporalChart(app));
+    const gateway = consumers.find(
+      (consumer) => consumer.name === "temporal-temporal-gateway",
+    );
+    expect(gateway).toEqual({
+      name: "temporal-temporal-gateway",
+      mode: "flags",
+      deployment: "temporal/prod",
+      url: FLAGS_EVALUATION_URL,
+    });
+  });
 
   test("every flag deployment is selected by a chart", async () => {
     const charts = [
@@ -231,45 +234,51 @@ describe("Flipt consumer environments", () => {
         return createDeliveryChart(app, activation);
       },
     ];
+    const knownDeployments = new Set<string>(
+      flagDeployments.map((deployment) => deployment.id),
+    );
     const selected = new Set<string>();
     for (const createChart of charts) {
-      for (const consumer of await fliptConsumers(createChart)) {
-        if (
-          consumer.name === "temporal-temporal-gateway" &&
-          consumer.namespace === "temporal" &&
-          consumer.environment === "beta"
-        ) {
-          continue;
-        }
-        if (
-          consumer.namespace === undefined ||
-          consumer.environment === undefined
-        ) {
+      for (const consumer of await flagsConsumers(createChart)) {
+        if (consumer.deployment === undefined || consumer.url === undefined) {
           throw new Error(
-            `${consumer.name} evaluates flags without a namespace and environment`,
+            `${consumer.name} evaluates flags without FLAGS_DEPLOYMENT and FLAGS_URL`,
           );
         }
-        const deployment = flagDeploymentForSelector(
-          consumer.namespace,
-          consumer.environment,
+        expect(consumer.url).toBe(
+          consumer.name === "temporal-temporal-repo-worker"
+            ? FLAGS_MANAGEMENT_URL
+            : FLAGS_EVALUATION_URL,
         );
-        if (deployment === undefined) {
+        if (!knownDeployments.has(consumer.deployment)) {
           throw new Error(
-            `${consumer.name} reads ${consumer.namespace}/${consumer.environment}, which is not a deployment`,
+            `${consumer.name} reads ${consumer.deployment}, which is not a deployment`,
           );
         }
-        selected.add(deployment.id);
+        selected.add(consumer.deployment);
       }
     }
     const minecraft = new App();
     const minecraftChart = new Chart(minecraft, "minecraft-tsmc");
-    createMinecraftTsmcApp(minecraftChart);
-    const rendered = JSON.stringify(Testing.synth(minecraftChart));
-    if (!rendered.includes("FLIPT_ENVIRONMENT")) {
-      throw new Error("minecraft/tsmc does not set a Flipt environment");
-    }
-    // The chart sets the environment only. The server hardcodes namespace the-storm.
-    selected.add("minecraft/tsmc");
+    const minecraftApp = createMinecraftTsmcApp(minecraftChart).toJson();
+    const minecraftEnv = z
+      .object({
+        spec: z.object({
+          source: z.object({
+            helm: z.object({
+              valuesObject: z.object({
+                extraEnv: z.record(z.string(), z.unknown()),
+              }),
+            }),
+          }),
+        }),
+      })
+      .parse(minecraftApp).spec.source.helm.valuesObject.extraEnv;
+    expect(minecraftEnv["FLAGS_URL"]).toBe(FLAGS_EVALUATION_URL);
+    expect(minecraftEnv["FLAGS_DEPLOYMENT"]).toBe("minecraft/tsmc");
+    expect(minecraftEnv["FLIPT_URL"]).toBeUndefined();
+    expect(minecraftEnv["FLIPT_ENVIRONMENT"]).toBeUndefined();
+    selected.add(String(minecraftEnv["FLAGS_DEPLOYMENT"]));
     expect([...selected].sort()).toEqual(
       flagDeployments.map((deployment) => deployment.id).sort(),
     );

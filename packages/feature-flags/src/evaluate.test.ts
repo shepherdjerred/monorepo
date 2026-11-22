@@ -130,6 +130,15 @@ describe("evaluateString and evaluateNumber", () => {
       kind: "invalid",
       message: 'variant "soon" for flag "label" is not a number',
     });
+    expect(
+      evaluateNumber(
+        [{ type: "variant", key: "blank", value: "   " }],
+        "blank",
+      ),
+    ).toEqual({
+      kind: "invalid",
+      message: 'variant "   " for flag "blank" is not a number',
+    });
   });
 
   test("a boolean key is a type mismatch and a missing key stays missing", () => {

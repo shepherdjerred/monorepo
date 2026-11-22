@@ -102,6 +102,16 @@ export function intraNamespaceRule() {
   return { from: [{ podSelector: {} }] };
 }
 
+/** Credentialless flag evaluation against Flags (`flags.flags`, HTTP 7361). */
+export function flagsEgress() {
+  return { to: [nsPeer("flags")], ports: [tcp(7361)] };
+}
+
+/** Authenticated flag management against Flags (`flags.flags`, HTTP 7360). */
+export function flagsManagementEgress() {
+  return { to: [nsPeer("flags")], ports: [tcp(7360)] };
+}
+
 /** Flag evaluation against Flipt (`flipt-flipt-service.flipt`, HTTP 8080). */
 export function fliptEgress() {
   return { to: [nsPeer("flipt")], ports: [tcp(8080)] };

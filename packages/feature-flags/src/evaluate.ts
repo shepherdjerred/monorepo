@@ -100,12 +100,20 @@ export function evaluateString(
   return { kind: "value", value: flag.value };
 }
 
+export const evaluateVariant = evaluateString;
+
 export function evaluateNumber(
   flags: readonly FlagValue[],
   key: string,
 ): FlagEvaluation<number> {
   const evaluated = evaluateString(flags, key);
   if (evaluated.kind !== "value") return evaluated;
+  if (evaluated.value.trim().length === 0) {
+    return {
+      kind: "invalid",
+      message: `variant "${evaluated.value}" for flag "${key}" is not a number`,
+    };
+  }
   const value = Number(evaluated.value);
   if (!Number.isFinite(value)) {
     return {

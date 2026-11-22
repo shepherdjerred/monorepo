@@ -1,5 +1,14 @@
 import { z } from "zod";
 
+export const ProdDeploymentSchema = z.enum([
+  "minecraft/tsmc",
+  "the-storm/prod",
+]);
+
+export function isCredentiallessFlagsRequest(request: Request): boolean {
+  return request.headers.get("authorization") === null;
+}
+
 /** Enable the server-scoped Stargate flag only in disposable acceptance servers. */
 export function stargatesEvaluation(
   body: unknown,
@@ -7,19 +16,17 @@ export function stargatesEvaluation(
 ): Response | undefined {
   const evaluation = z
     .strictObject({
-      namespace_key: z.literal("the-storm"),
-      flag_key: z.literal("the-storm-stargates-enabled"),
-      entity_id: z.literal("the-storm-server"),
-      context: z.strictObject({}),
+      deployment: ProdDeploymentSchema,
+      key: z.literal("the-storm-stargates-enabled"),
+      context: z.strictObject({ server: z.literal("the-storm-server") }),
     })
     .safeParse(body);
-  return evaluation.success &&
-    request.headers.get("x-flipt-environment") === "prod"
+  return evaluation.success && isCredentiallessFlagsRequest(request)
     ? Response.json({ enabled: true })
     : undefined;
 }
 
-/** Per-player expansion flags in the disposable Flipt double. */
+/** Per-player expansion flags in the disposable Flags double. */
 export function expansionEvaluation(
   body: unknown,
   request: Request,
@@ -27,8 +34,8 @@ export function expansionEvaluation(
 ): Response | undefined {
   const expansion = z
     .strictObject({
-      namespace_key: z.literal("the-storm"),
-      flag_key: z.enum([
+      deployment: ProdDeploymentSchema,
+      key: z.enum([
         "the-storm-staff-tools-enabled",
         "the-storm-identity-enabled",
         "the-storm-letters-enabled",
@@ -38,20 +45,18 @@ export function expansionEvaluation(
         "the-storm-async-chat-moderation-enabled",
         "the-storm-anticheat-corrections-enabled",
       ]),
-      entity_id: z.uuid(),
-      context: z.strictObject({}),
+      context: z.strictObject({ user: z.uuid() }),
     })
     .safeParse(body);
-  return expansion.success &&
-    request.headers.get("x-flipt-environment") === "prod"
+  return expansion.success && isCredentiallessFlagsRequest(request)
     ? Response.json({
         enabled:
           ![
             "the-storm-ip-enforcement-enabled",
             "the-storm-anticheat-corrections-enabled",
-          ].includes(expansion.data.flag_key) &&
+          ].includes(expansion.data.key) &&
           (screeningEnabled ||
-            expansion.data.flag_key !== "the-storm-content-safety-enabled"),
+            expansion.data.key !== "the-storm-content-safety-enabled"),
       })
     : undefined;
 }

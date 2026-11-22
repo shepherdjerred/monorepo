@@ -6,7 +6,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { match } from "ts-pattern";
 import {
-  fliptEnv,
+  flagsEnv,
   bugsinkEnv,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
@@ -14,7 +14,7 @@ import { FirstPartyWorker } from "@shepherdjerred/homelab/cdk8s/src/misc/first-p
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
-  fliptEgress,
+  flagsEgress,
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
@@ -111,11 +111,7 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
             // flag.
             KARMA_ADMIN_USER_ID: EnvValue.fromValue("160509172704739328"),
             // Bootstrap for the flag client itself — it cannot come from a flag.
-            ...fliptEnv({
-              namespace: "starlight-karma-bot",
-              environment: stage,
-              order: ["FLIPT_ENVIRONMENT", "FLIPT_NAMESPACE", "FLIPT_URL"],
-            }),
+            ...flagsEnv({ deployment: `starlight-karma-bot/${stage}` }),
             DATA_DIR: EnvValue.fromValue("/data"),
             // Prisma-native database, backfilled once from the legacy TypeORM
             // `glitter.sqlite`, which stays on the volume untouched.
@@ -155,8 +151,8 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
         ingress: [prometheusIngressRule([8000])],
         egress: [
           dnsEgressRule(),
-          // Flipt evaluation (`FLIPT_URL`)
-          fliptEgress(),
+          // First-party Flags evaluation (`FLAGS_URL`)
+          flagsEgress(),
           // Discord, and Bugsink through its public DSN host
           externalHttpsEgressRule(),
         ],

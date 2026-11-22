@@ -20,15 +20,15 @@ final class FliptSurvivalGateTest {
     var response = new AtomicReference<>("{\"enabled\":true}");
     var status = new AtomicInteger(200);
     var request = new AtomicReference<String>();
-    var environment = new AtomicReference<String>();
+    var authorization = new AtomicReference<String>();
     var server =
         HttpServer.create(
             new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 0), 0);
     server.createContext(
-        "/evaluate/v1/boolean",
+        "/v1/evaluate",
         exchange -> {
           request.set(new String(exchange.getRequestBody().readAllBytes(), UTF_8));
-          environment.set(exchange.getRequestHeaders().getFirst("x-flipt-environment"));
+          authorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
           var bytes = response.get().getBytes(UTF_8);
           exchange.sendResponseHeaders(status.get(), bytes.length);
           try (var body = exchange.getResponseBody()) {
@@ -43,11 +43,11 @@ final class FliptSurvivalGateTest {
       assertThat(gate.enabled(player).join()).isTrue();
       assertThat(request.get())
           .contains(
-              "\"namespace_key\":\"the-storm\"",
-              "\"flag_key\":\"the-storm-survival-enabled\"",
-              player.toString());
-      assertThat(environment.get()).isEqualTo("prod");
-      assertThat(request.get()).doesNotContain("environment_key");
+              "\"deployment\":\"minecraft/tsmc\"",
+              "\"key\":\"the-storm-survival-enabled\"",
+              "\"user\":\"" + player + "\"",
+              "\"world\":\"world\"");
+      assertThat(authorization.get()).isNull();
 
       response.set("{\"enabled\":false}");
       assertThat(gate.enabled(player).join()).isFalse();
@@ -61,7 +61,7 @@ final class FliptSurvivalGateTest {
       status.set(503);
       assertThatThrownBy(() -> gate.enabled(player).join())
           .isInstanceOf(CompletionException.class)
-          .hasCauseInstanceOf(IllegalStateException.class);
+          .hasRootCauseInstanceOf(IllegalStateException.class);
     } finally {
       server.stop(0);
     }

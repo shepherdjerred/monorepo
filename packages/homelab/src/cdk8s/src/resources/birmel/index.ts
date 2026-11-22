@@ -21,7 +21,7 @@ import {
   dnsEgressRule,
   nsPeer,
   tcp,
-  fliptEgress,
+  flagsEgress,
   lokiOtlpEgress,
   otlpEgress,
   prometheusIngressRule,
@@ -33,7 +33,7 @@ import {
   netAdminFirewallSecurityContext,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/net-admin-firewall.ts";
 import {
-  fliptEnv,
+  flagsEnv,
   telemetryEnv,
   bugsinkEnv,
   seaweedfsS3,
@@ -104,8 +104,8 @@ export function createBirmelDeployment(chart: Chart) {
           // OTLP logs to Loki: LOKI_OTLP_ENDPOINT is unset, so the code
           // default in packages/birmel/src/observability/tracing.ts applies
           lokiOtlpEgress(),
-          // Flipt evaluation (flipt-flipt-service.flipt.svc.cluster.local:8080)
-          fliptEgress(),
+          // First-party Flags evaluation (flags.flags.svc.cluster.local:7361)
+          flagsEgress(),
           // PinchTab browser automation (pinchtab.pinchtab.svc.cluster.local:9867)
           {
             to: [nsPeer("pinchtab")],
@@ -239,11 +239,7 @@ done`,
       }),
 
       // Bootstrap for the flag client — these cannot come from a flag.
-      ...fliptEnv({
-        namespace: "birmel",
-        environment: "prod",
-        order: ["FLIPT_ENVIRONMENT", "FLIPT_NAMESPACE", "FLIPT_URL"],
-      }),
+      ...flagsEnv({ deployment: "birmel/prod" }),
       // Provider credentials for the LLM runtime, from Birmel's own OpenAI
       // project and the Gemini key the google stack minted. Anthropic
       // arrives through addAnthropicFederation below instead of a key.

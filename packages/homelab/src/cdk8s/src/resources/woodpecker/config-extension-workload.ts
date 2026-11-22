@@ -29,9 +29,9 @@ import {
   tcp,
   dnsEgressRule,
   externalHttpsEgressRule,
-  nsPeer,
+  flagsEgress,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
-import { fliptEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 /**
  * The service that generates every build's pipeline.
@@ -76,11 +76,7 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
       image: firstPartyImageRecipe("woodpecker-config-extension"),
       ports: [{ name: "http", number: CONFIG_EXTENSION_PORT }],
       envVariables: {
-        ...fliptEnv({
-          namespace: "woodpecker",
-          environment: "prod",
-          order: ["FLIPT_URL", "FLIPT_NAMESPACE", "FLIPT_ENVIRONMENT"],
-        }),
+        ...flagsEnv({ deployment: "woodpecker/prod" }),
         CI_GATE_IMAGE: EnvValue.fromValue(
           firstPartyImageRecipe("woodpecker-config-extension"),
         ),
@@ -131,15 +127,7 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
         },
       ],
       egress: [
-        {
-          to: [
-            {
-              ...nsPeer("flipt"),
-              podSelector: { matchLabels: { app: "flipt" } },
-            },
-          ],
-          ports: [tcp(8080)],
-        },
+        flagsEgress(),
         dnsEgressRule(),
         // The server's own API (to resolve the last green commit) and
         // raw.githubusercontent.com (to read the committed image digests at

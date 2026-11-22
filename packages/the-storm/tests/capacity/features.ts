@@ -18,7 +18,7 @@ const Evaluation = z.strictObject({
 });
 export const CapacityFeatureReceiptSchema = z
   .strictObject({
-    source: z.literal("private-flipt-test-double"),
+    source: z.literal("private-flags-test-double"),
     appliesBeforeBoot: z.literal(true),
     configuredAt: z.number().int().positive(),
     previous: z.array(z.enum(rwfFeatureFlags)),
@@ -62,17 +62,15 @@ export async function configureCapacityFeatures(
   const evaluations = await Promise.all(
     rwfFeatureFlags.map(async (key) => {
       const response = await fetch(
-        `http://${host}:${port.toString()}/evaluate/v1/boolean`,
+        `http://${host}:${port.toString()}/v1/evaluate`,
         {
           method: "POST",
           headers: {
             "content-type": "application/json",
-            "x-flipt-environment": "prod",
           },
           body: JSON.stringify({
-            namespace_key: "the-storm",
-            flag_key: key,
-            entity_id: "the-storm-rwf-features",
+            deployment: "minecraft/tsmc",
+            key,
             context: { world: rwfTestSettings.world },
           }),
         },
@@ -88,7 +86,7 @@ export async function configureCapacityFeatures(
     }),
   );
   return CapacityFeatureReceiptSchema.parse({
-    source: "private-flipt-test-double",
+    source: "private-flags-test-double",
     appliesBeforeBoot: true,
     configuredAt: Date.now(),
     previous,

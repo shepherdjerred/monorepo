@@ -1,9 +1,10 @@
 package com.shepherdjerred.thestorm.core.analytics;
 
+import com.shepherdjerred.thestorm.core.flags.FlagsClient;
 import java.net.URI;
 import java.util.Map;
 
-/** Capture credentials and deployment identity; collection behavior belongs to Flipt. */
+/** Capture credentials and deployment identity; collection behavior belongs to Flags. */
 public record AnalyticsBootstrap(URI host, String projectToken, String stage) {
   public AnalyticsBootstrap {
     if ((!"https".equals(host.getScheme()) && !"http".equals(host.getScheme()))
@@ -24,7 +25,7 @@ public record AnalyticsBootstrap(URI host, String projectToken, String stage) {
     return new AnalyticsBootstrap(
         URI.create(required(environment, "POSTHOG_API_HOST")),
         required(environment, "POSTHOG_PROJECT_TOKEN"),
-        required(environment, "FLIPT_ENVIRONMENT"));
+        FlagsClient.deploymentStage(required(environment, "FLAGS_DEPLOYMENT")));
   }
 
   private static String required(Map<String, String> environment, String key) {

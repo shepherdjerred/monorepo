@@ -61,13 +61,11 @@ spec:
             - name: DISPLAY_TIME_ZONE
               value: America/Los_Angeles
             - name: FEATURE_FLAGS_MODE
-              value: flipt
-            - name: FLIPT_NAMESPACE
-              value: trmnl-dashboard
-            - name: FLIPT_URL
-              value: http://flipt-flipt-service.flipt.svc.cluster.local:8080
-            - name: FLIPT_ENVIRONMENT
-              value: prod
+              value: flags
+            - name: FLAGS_DEPLOYMENT
+              value: trmnl-dashboard/prod
+            - name: FLAGS_URL
+              value: http://flags.flags.svc.cluster.local:7361
             - name: OPS_DASHBOARD_URL
               value: http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341
             - name: BUGSINK_DSN
@@ -252,6 +250,13 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: alert-dashboard
+    - ports:
+        - port: 7361
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flags
   podSelector: {}
   policyTypes:
     - Egress

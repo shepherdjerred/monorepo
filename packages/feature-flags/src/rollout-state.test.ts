@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  classifyFlagBoolean,
   classifyManagedBoolean,
   classifySnapshotBoolean,
 } from "./rollout-state.ts";
@@ -200,6 +201,49 @@ describe("rollout classification", () => {
         rollouts: [],
       }),
     ).toBe("invalid");
+  });
+});
+
+describe("classifyFlagBoolean", () => {
+  test("classifies first-party FlagValue booleans, segments, missing, and invalid entries", () => {
+    expect(classifyFlagBoolean(undefined)).toBe("missing");
+    expect(
+      classifyFlagBoolean({ type: "variant", key: "test", value: "sol" }),
+    ).toBe("invalid");
+    expect(
+      classifyFlagBoolean({
+        type: "boolean",
+        key: "test",
+        default: false,
+        rollouts: [{ constraints: [], result: true }],
+      }),
+    ).toBe("invalid");
+    expect(
+      classifyFlagBoolean({
+        type: "boolean",
+        key: "test",
+        default: true,
+        rollouts: [
+          {
+            constraints: [{ property: "stage", value: "beta" }],
+            result: true,
+          },
+        ],
+      }),
+    ).toBe("on");
+    expect(
+      classifyFlagBoolean({
+        type: "boolean",
+        key: "test",
+        default: false,
+        rollouts: [
+          {
+            constraints: [{ property: "stage", value: "beta" }],
+            result: true,
+          },
+        ],
+      }),
+    ).toBe("targeted");
   });
 });
 

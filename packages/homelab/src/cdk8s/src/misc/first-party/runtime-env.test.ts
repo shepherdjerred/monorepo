@@ -4,6 +4,9 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   bugsinkEnv,
+  flagsEnv,
+  FLAGS_EVALUATION_URL,
+  FLAGS_MANAGEMENT_URL,
   fliptEnv,
   FLIPT_URL,
   seaweedfsS3,
@@ -57,6 +60,22 @@ function render(
     ),
   );
 }
+
+describe("flagsEnv", () => {
+  test("declares the mode first, then deployment and credentialless evaluation URL", () => {
+    expect(render(() => flagsEnv({ deployment: "tracker/prod" }))).toEqual([
+      "FEATURE_FLAGS_MODE=flags",
+      "FLAGS_DEPLOYMENT=tracker/prod",
+      `FLAGS_URL=${FLAGS_EVALUATION_URL}`,
+    ]);
+    expect(FLAGS_EVALUATION_URL).toBe(
+      "http://flags.flags.svc.cluster.local:7361",
+    );
+    expect(FLAGS_MANAGEMENT_URL).toBe(
+      "http://flags.flags.svc.cluster.local:7360",
+    );
+  });
+});
 
 describe("fliptEnv", () => {
   test("declares the mode first, then namespace, environment and URL", () => {

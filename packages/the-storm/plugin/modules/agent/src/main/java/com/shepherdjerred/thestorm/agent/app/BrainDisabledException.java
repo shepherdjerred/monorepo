@@ -1,7 +1,7 @@
 package com.shepherdjerred.thestorm.agent.app;
 
 /**
- * The brain answered, but the flow is switched off in Flipt. This is steady state, not an outage:
+ * The brain answered, but the flow is switched off in Flags. This is steady state, not an outage:
  * flows complete silently and the service's own metrics record the disabled call. Never logged as
  * an error: with both flows off, every chat line and ticket would howl.
  */

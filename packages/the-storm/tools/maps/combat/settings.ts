@@ -15,7 +15,7 @@ export async function configureHostFeatures(port: number) {
   ];
   const previous = await setRwfFeatures(port, enabled);
   return {
-    source: "private-flipt-test-double",
+    source: "private-flags-test-double",
     previous,
     enabled,
     appliesBeforeBoot: true,

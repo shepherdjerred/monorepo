@@ -11,8 +11,10 @@ import type {
   ManagedVariantFlagKey,
 } from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
 import { loadFeatureFlagConfiguration } from "@shepherdjerred/feature-flags/config/load.ts";
+import { parseFlagsDeployment } from "@shepherdjerred/feature-flags/config/schema.ts";
 import { NoopProvider } from "@shepherdjerred/feature-flags/providers/noop.ts";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
+import { FlagsProvider } from "@shepherdjerred/feature-flags/providers/flags.ts";
 import { FliptProvider } from "@shepherdjerred/feature-flags/providers/flipt.ts";
 import type { FeatureFlagConfiguration } from "@shepherdjerred/feature-flags/config/schema.ts";
 import type {
@@ -47,6 +49,14 @@ function providerFor(
       return new NoopProvider();
     case "static":
       return new StaticProvider(configuration.overrides);
+    case "flags":
+      return new FlagsProvider({
+        url: configuration.url,
+        deployment: configuration.deployment,
+        pollIntervalSeconds: configuration.pollIntervalSeconds,
+        onRefreshFailure: () => metrics?.countError("refresh"),
+        onSnapshotAge: (seconds) => metrics?.observeSnapshotAge(seconds),
+      });
     case "flipt":
       return new FliptProvider({
         url: configuration.url,
@@ -63,14 +73,26 @@ function observeProviderIdentity(
   configuration: FeatureFlagConfiguration,
   metrics: FlagMetricsRecorder | undefined,
 ): void {
-  metrics?.observeProviderInfo(
-    configuration.mode === "flipt"
-      ? {
-          flipt_environment: configuration.environment,
-          flipt_namespace: configuration.namespace,
-        }
-      : undefined,
-  );
+  if (configuration.mode === "flipt") {
+    metrics?.observeProviderInfo({
+      flipt_environment: configuration.environment,
+      flipt_namespace: configuration.namespace,
+    });
+    return;
+  }
+  if (configuration.mode === "flags") {
+    const parsed = parseFlagsDeployment(configuration.deployment);
+    metrics?.observeProviderInfo(
+      parsed === undefined
+        ? undefined
+        : {
+            flipt_environment: parsed.stage,
+            flipt_namespace: parsed.catalog,
+          },
+    );
+    return;
+  }
+  metrics?.observeProviderInfo(undefined);
 }
 
 export type InitFeatureFlagsOptions = {
@@ -413,7 +435,9 @@ export async function numberValue(
 /** Opt-in authority check for destructive operations; ordinary evaluations stay cached. */
 export async function refreshFlagSnapshot(): Promise<boolean> {
   const provider = OpenFeature.getProvider(CLIENT_NAME);
-  return provider instanceof FliptProvider && provider.refreshForEvaluation();
+  return provider instanceof FlagsProvider || provider instanceof FliptProvider
+    ? provider.refreshForEvaluation()
+    : false;
 }
 
 /**

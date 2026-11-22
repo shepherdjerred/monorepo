@@ -39,8 +39,8 @@ export async function mapServerConfig(
     agent: { mode: "shadow" as const, reviewSamplePercent: 100 },
     brain,
     env: {
-      FLIPT_URL: brain.baseUrl,
-      FLIPT_ENVIRONMENT: "prod",
+      FLAGS_URL: brain.baseUrl,
+      FLAGS_DEPLOYMENT: "minecraft/tsmc",
       RWF_RECORDING_SALT: rwfRecordingSalt,
       ...env,
     },
@@ -153,8 +153,8 @@ export async function exportTerrain(
       agent: { mode: "shadow", reviewSamplePercent: 100 },
       brain: { baseUrl: brainUrl, token },
       env: {
-        FLIPT_URL: brainUrl,
-        FLIPT_ENVIRONMENT: "prod",
+        FLAGS_URL: brainUrl,
+        FLAGS_DEPLOYMENT: "minecraft/tsmc",
         RWF_RECORDING_SALT: rwfRecordingSalt,
       },
       resources: { cpus: 4, heap: "8G", memoryLimit: "10g" },

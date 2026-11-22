@@ -1,5 +1,6 @@
 import { EnvValue, type ISecret } from "cdk8s-plus-31";
 import type { Construct } from "constructs";
+import type { flagDeployments } from "@shepherdjerred/feature-flags/deployments.ts";
 import { consumedBucket, platformModel } from "homelab/src/platform-model.ts";
 import type { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
@@ -17,6 +18,29 @@ import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/ot
  * change a rendered manifest. Converging the dialects is a separate,
  * per-service change.
  */
+
+/** First-party Flags's in-cluster credentialless evaluation endpoint. */
+export const FLAGS_EVALUATION_URL = "http://flags.flags.svc.cluster.local:7361";
+
+/** First-party Flags's in-cluster authenticated management endpoint. */
+export const FLAGS_MANAGEMENT_URL = "http://flags.flags.svc.cluster.local:7360";
+
+export type FlagDeploymentId = (typeof flagDeployments)[number]["id"];
+
+/**
+ * Bootstrap for the first-party Flags client: `FEATURE_FLAGS_MODE=flags`
+ * followed by the deployment document id and evaluation URL. These cannot come
+ * from a flag.
+ */
+export function flagsEnv(props: {
+  deployment: FlagDeploymentId;
+}): Record<string, EnvValue> {
+  return {
+    FEATURE_FLAGS_MODE: EnvValue.fromValue("flags"),
+    FLAGS_DEPLOYMENT: EnvValue.fromValue(props.deployment),
+    FLAGS_URL: EnvValue.fromValue(FLAGS_EVALUATION_URL),
+  };
+}
 
 /** Flipt's in-cluster evaluation endpoint. */
 export const FLIPT_URL =

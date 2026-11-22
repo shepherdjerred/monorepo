@@ -21,17 +21,17 @@ final class FliptLearningGateTest {
   void sendsMatchTargetingAndDistinguishesAnswersFromOutagesAndInvalidValues() throws Exception {
     var json = JsonMapper.builder().build();
     var request = new AtomicReference<String>();
-    var environment = new AtomicReference<String>();
+    var authorization = new AtomicReference<String>();
     var response = new AtomicReference<>("{\"enabled\":true}");
     var status = new AtomicInteger(200);
     var server =
         HttpServer.create(
             new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 0), 0);
     server.createContext(
-        "/evaluate/v1/boolean",
+        "/v1/evaluate",
         exchange -> {
           request.set(new String(exchange.getRequestBody().readAllBytes(), UTF_8));
-          environment.set(exchange.getRequestHeaders().getFirst("x-flipt-environment"));
+          authorization.set(exchange.getRequestHeaders().getFirst("Authorization"));
           var bytes = response.get().getBytes(UTF_8);
           exchange.sendResponseHeaders(status.get(), bytes.length);
           try (var body = exchange.getResponseBody()) {
@@ -42,19 +42,17 @@ final class FliptLearningGateTest {
     var context = new LearningGate.Context(new UUID(1, 2), "map\"name", "rwf", 123);
     try (var gate =
         new FliptLearningGate(
-            URI.create("http://127.0.0.1:" + server.getAddress().getPort()), "beta")) {
+            URI.create("http://127.0.0.1:" + server.getAddress().getPort()), "the-storm/beta")) {
       assertThat(gate.evaluate(context).join())
           .isEqualTo(new LearningGate.Decision(true, LearningGate.Source.FLIPT));
       var payload = json.readTree(request.get());
-      assertThat(payload.path("namespace_key").asString()).isEqualTo("the-storm");
-      assertThat(payload.path("flag_key").asString())
-          .isEqualTo("the-storm-rwfbots-learning-enabled");
-      assertThat(payload.path("entity_id").asString()).isEqualTo(context.match().toString());
+      assertThat(payload.path("deployment").asString()).isEqualTo("the-storm/beta");
+      assertThat(payload.path("key").asString()).isEqualTo("the-storm-rwfbots-learning-enabled");
       assertThat(payload.path("context").path("match").asString())
           .isEqualTo(context.match().toString());
       assertThat(payload.path("context").path("map").asString()).isEqualTo(context.map());
       assertThat(payload.path("context").path("world").asString()).isEqualTo("rwf");
-      assertThat(environment.get()).isEqualTo("beta");
+      assertThat(authorization.get()).isNull();
       response.set("{\"enabled\":false}");
       assertThat(gate.evaluate(context).join())
           .isEqualTo(new LearningGate.Decision(false, LearningGate.Source.FLIPT));
@@ -85,11 +83,14 @@ final class FliptLearningGateTest {
 
   @Test
   void refusesInvalidBootstrapValuesAndEnabledDefaults() {
-    assertThatThrownBy(() -> new FliptLearningGate(URI.create("ftp://flipt"), "prod"))
+    assertThatThrownBy(() -> new FliptLearningGate(URI.create("ftp://flags"), "minecraft/tsmc"))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new FliptLearningGate(URI.create("http://user@flipt"), "prod"))
+    assertThatThrownBy(
+            () -> new FliptLearningGate(URI.create("http://user@flags"), "minecraft/tsmc"))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new FliptLearningGate(URI.create("http://flipt"), "staging"))
+    assertThatThrownBy(() -> new FliptLearningGate(URI.create("http://flags"), "staging"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new FliptLearningGate(URI.create("http://flags"), "the-storm/staging"))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new LearningGate.Decision(true, LearningGate.Source.ABSENT))
         .isInstanceOf(IllegalArgumentException.class);

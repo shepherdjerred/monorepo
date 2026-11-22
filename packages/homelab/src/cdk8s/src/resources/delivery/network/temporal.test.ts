@@ -180,7 +180,7 @@ beforeAll(() => {
 });
 
 describe("actual Delivery client reachability to Temporal", () => {
-  it("boots both Flipt-consuming control-plane roles with an exporter and collector-only OTLP egress", () => {
+  it("boots both Flags-consuming control-plane roles with an exporter and collector-only OTLP egress", () => {
     const producers = workloads.filter((workload) =>
       ["delivery-worker", "delivery-platform-worker"].includes(
         workload.spec.template.metadata.labels["component"] ?? "",

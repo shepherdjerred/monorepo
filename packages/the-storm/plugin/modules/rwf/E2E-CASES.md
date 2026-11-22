@@ -196,14 +196,14 @@ AFK.` and earn nothing; every player's credits end at the sum of both
 ## Rollout
 
 20. `/rwf join` is refused while `the-storm-rwf-enabled` is false for the
-    player in the configured Flipt environment, and admitted once it is true;
-    with `FLIPT_URL` unset the command stays closed to everyone. **Proven** for
-    admission (the fake brain's Flipt double answers `enabled: true` for the
-    `rwf` world in `prod`) and for the per-player refusal: with the double
+    player in the configured Flags deployment, and admitted once it is true;
+    with `FLAGS_URL` unset the command stays closed to everyone. **Proven** for
+    admission (the fake brain's Flags double answers `enabled: true` for the
+    `rwf` world in `minecraft/tsmc`) and for the per-player refusal: with the double
     answering `false` for one player, their `/rwf join` and `/rwf spectate`
     are both refused with `Search and Destroy is not open to you yet.` and
     the lobby counts no human or watcher, and the same `/rwf join` admits
-    them once the flag opens. A server without `FLIPT_URL` is not.
+    them once the flag opens. A server without `FLAGS_URL` is not.
 21. Bedrock (Geyser): holograms, the sidebar and messages render.
 
 ## Watching
@@ -272,7 +272,7 @@ next`, the bots-only match outlives the no-humans abort and ends with a
 ## Match experience
 
 `tests/e2e/rwf-experience.e2e.test.ts` runs each case under the managed flags
-it needs, set on the fake brain's Flipt double; an operator's `/rwf admin stop`
+it needs, set on the fake brain's Flags double; an operator's `/rwf admin stop`
 opens a fresh lobby under them, since flags are read as each match opens.
 
 29. With the match flow on, the lone staged map is chosen at once, previews
@@ -311,7 +311,7 @@ opens a fresh lobby under them, since flags are read as each match opens.
 ## Kits
 
 `tests/e2e/rwf-kits.e2e.test.ts` opens the per-player kit list, shop and
-killstreak flags for its players on the fake brain's Flipt double before they
+killstreak flags for its players on the fake brain's Flags double before they
 join, and gives Red Warfare credits with `/eco give <player> <n> rwf_credits`.
 
 37. This week's free kits are listed and credits buy a kit for good.

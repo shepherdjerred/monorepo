@@ -34,7 +34,7 @@ import {
 } from "./upgrade-environment.ts";
 import type { ForumRelease, ForumStage } from "./release-schema.ts";
 import { forumTemplateInputs } from "./delivery-inputs.ts";
-import { FLIPT_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { FLAGS_EVALUATION_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 // Requests follow each container's measured p95 working set (7d,
 // 2026-10-31): php 112Mi, activities 135Mi, nginx 4Mi.
@@ -302,12 +302,11 @@ export function createStormForumChart(
                   value: TEMPORAL_CLUSTER_ADDRESS,
                 },
                 { name: "TEMPORAL_NAMESPACE", value: "prod" },
-                { name: "FEATURE_FLAGS_MODE", value: "flipt" },
-                { name: "FLIPT_NAMESPACE", value: "storm" },
-                { name: "FLIPT_ENVIRONMENT", value: release.stage },
+                { name: "FEATURE_FLAGS_MODE", value: "flags" },
+                { name: "FLAGS_DEPLOYMENT", value: `storm/${release.stage}` },
                 {
-                  name: "FLIPT_URL",
-                  value: FLIPT_URL,
+                  name: "FLAGS_URL",
+                  value: FLAGS_EVALUATION_URL,
                 },
               ],
             },

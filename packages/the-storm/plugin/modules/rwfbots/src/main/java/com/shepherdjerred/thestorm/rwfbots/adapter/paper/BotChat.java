@@ -55,9 +55,9 @@ import org.jspecify.annotations.Nullable;
  * loop's sightings and objective calls ({@link Callout}) are said in Team chat in the speaker's
  * voice ({@link CalloutLines}): those nearest a human first, urgent calls ahead of sightings, and
  * none a teammate just made about the same place ({@link CalloutLog}). Every second it offers the
- * director an idle moment and, every {@code flagRefresh}, evaluates the managed Flipt flag off the
- * main thread; the cached answer gates every line, so the flag off, an evaluation failure or no
- * answer yet keeps bots silent. Main thread only.
+ * director an idle moment and, every {@code flagRefresh}, evaluates the managed flag off the main
+ * thread; the cached answer gates every line, so the flag off, an evaluation failure or no answer
+ * yet keeps bots silent. Main thread only.
  */
 public final class BotChat implements Consumer<MatchNotification>, BodyActivity {
 

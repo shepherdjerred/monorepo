@@ -38,7 +38,7 @@ const DeploymentSchema = z.object({
   }),
 });
 
-test("synthesizes authenticated brain, Flipt, and monitoring wiring", () => {
+test("synthesizes authenticated brain, Flags, and monitoring wiring", () => {
   const app = new App();
   const chart = new Chart(app, "test", {
     namespace: "storm-brain",
@@ -49,7 +49,7 @@ test("synthesizes authenticated brain, Flipt, and monitoring wiring", () => {
 
   expect(manifests).toContain("STORM_BRAIN_BEARER_TOKEN");
   expect(manifests).toContain("OPENAI_API_KEY");
-  expect(manifests).toContain("flipt-flipt-service.flipt.svc.cluster.local");
+  expect(manifests).toContain("flags.flags.svc.cluster.local:7361");
   expect(manifests).toContain("ServiceMonitor");
   expect(manifests).toContain('"readOnlyRootFilesystem":true');
 

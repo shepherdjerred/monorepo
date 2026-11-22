@@ -64,16 +64,15 @@ describe("central Temporal Workflow boundary", () => {
       });
       // This role is the only one that actually hosts workflow code, so it
       // must resolve the temporal-call-graph-tracing flag itself (worker.ts
-      // main() calls initializeCallGraphTracing() unconditionally). Flipt has
-      // no auth of its own — reachability IS the authorization model — so
-      // these four vars stay credential-free: no secretKeyRef, no token,
-      // unlike the application secrets this role is deliberately denied.
+      // main() calls initializeCallGraphTracing() unconditionally). Flags
+      // evaluation on port 7361 is credentialless, so these three vars stay
+      // credential-free: no secretKeyRef, no token, unlike the application
+      // secrets this role is deliberately denied.
       expect(container.env.map((variable) => variable.name).sort()).toEqual([
         "ENVIRONMENT",
         "FEATURE_FLAGS_MODE",
-        "FLIPT_ENVIRONMENT",
-        "FLIPT_NAMESPACE",
-        "FLIPT_URL",
+        "FLAGS_DEPLOYMENT",
+        "FLAGS_URL",
         "OTLP_ENDPOINT",
         "TELEMETRY_ENABLED",
         "TELEMETRY_SERVICE_NAME",
@@ -148,30 +147,38 @@ describe("central Temporal Workflow boundary", () => {
       "worker-family": "central-workflows",
     });
     expect(spec.ingress).toHaveLength(1);
-    // TCP:8080 is Flipt (this role's own temporal-call-graph-tracing check)
-    // and Loki's gateway (the image's default OTLP logs endpoint) — still no
-    // general TCP:443 egress.
+    // TCP:7361 is Flags evaluation (this role's temporal-call-graph-tracing
+    // check) and TCP:8080 is Loki's gateway (the image's default OTLP logs
+    // endpoint) — still no general TCP:443 egress.
     expect(ports).toEqual([
       "TCP:4318",
       "TCP:53",
       "TCP:7233",
-      "TCP:8080",
+      "TCP:7361",
       "TCP:8080",
       "UDP:53",
     ]);
     expect(ports).not.toContain("TCP:443");
-    const port8080Rules = spec.egress.filter((rule) =>
+    const flagsRule = spec.egress.find((rule) =>
+      rule.ports.some((port) => port.port === 7361),
+    );
+    expect(flagsRule?.to).toEqual([
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "flags" },
+        },
+      },
+    ]);
+    const lokiRule = spec.egress.find((rule) =>
       rule.ports.some((port) => port.port === 8080),
     );
-    expect(port8080Rules.map((rule) => rule.to)).toEqual(
-      ["flipt", "loki"].map((namespace) => [
-        {
-          namespaceSelector: {
-            matchLabels: { "kubernetes.io/metadata.name": namespace },
-          },
+    expect(lokiRule?.to).toEqual([
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "loki" },
         },
-      ]),
-    );
+      },
+    ]);
     const otlpRule = spec.egress.find((rule) =>
       rule.ports.some((port) => port.port === 4318),
     );

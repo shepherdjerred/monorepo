@@ -279,8 +279,8 @@ export async function openPaperDuels(
       },
       brain: { baseUrl: brainUrl, token },
       env: {
-        FLIPT_URL: brainUrl,
-        FLIPT_ENVIRONMENT: "prod",
+        FLAGS_URL: brainUrl,
+        FLAGS_DEPLOYMENT: "minecraft/tsmc",
         RWF_RECORDING_SALT: rwfRecordingSalt,
         ...trainingScenarioEnvironment(trainingScenario),
         ...(profile === "load"

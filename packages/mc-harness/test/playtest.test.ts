@@ -247,8 +247,8 @@ describe("profiles and staging", () => {
       "Multiverse-Core",
     ]);
     expect(storm.env).toMatchObject({
-      FLIPT_URL: "http://127.0.0.1:9",
-      FLIPT_ENVIRONMENT: "prod",
+      FLAGS_URL: "http://127.0.0.1:9",
+      FLAGS_DEPLOYMENT: "minecraft/tsmc",
       THESTORM_CREATIVE_BOOTSTRAP: "true",
     });
     const stormConfig = storm.staged.find(
@@ -271,12 +271,12 @@ describe("profiles and staging", () => {
   });
 
   it.each(["storm-prod", "storm-candidate"] as const)(
-    "gives %s the inert Flipt bootstrap companions need to enable",
+    "gives %s the inert Flags bootstrap companions need to enable",
     (profile) => {
       const image = resolveProfile(publishedStorm(profile), secrets);
       expect(image.env).toMatchObject({
-        FLIPT_URL: "http://127.0.0.1:9",
-        FLIPT_ENVIRONMENT: "prod",
+        FLAGS_URL: "http://127.0.0.1:9",
+        FLAGS_DEPLOYMENT: "minecraft/tsmc",
         RWF_RECORDING_SALT: "mc-harness-storm-fixture-recording-salt",
       });
       expect(image.staged).toHaveLength(2);

@@ -7,8 +7,11 @@ describe("flag deployments", () => {
     const selectors = flagDeployments.map(
       (deployment) => `${deployment.catalog}/${deployment.fliptEnvironment}`,
     );
+    expect(flagDeployments).toHaveLength(17);
+    expect(ids).toEqual([...ids].toSorted());
     expect(new Set(ids).size).toBe(ids.length);
     expect(new Set(selectors).size).toBe(selectors.length);
+    expect(flagDeploymentForSelector("golink", "prod")?.id).toBe("golink/prod");
   });
 
   test("only Scout and Karma have a second stage", () => {

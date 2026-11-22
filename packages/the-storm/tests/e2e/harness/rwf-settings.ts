@@ -4,7 +4,7 @@ import type { RwfOverlay } from "./config-overlays.ts";
  * The rwf.yml overrides the e2e server plays with: the fixture worlds, a lone
  * human starts a match, and a short countdown and end screen. The pinned rules
  * (the 60 s fuse and the payouts among them) have no knob and run as shipped.
- * Shared by the staging code and the fake brain's Flipt double, which admits
+ * Shared by the staging code and the fake brain's Flags double, which admits
  * this world.
  */
 export const rwfTestSettings: RwfOverlay = {

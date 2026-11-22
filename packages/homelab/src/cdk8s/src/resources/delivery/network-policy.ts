@@ -6,7 +6,7 @@ import {
   kubernetesApiEgressRule,
   nsPeer,
   tcp,
-  fliptEgress,
+  flagsEgress,
   postgresEgress,
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
@@ -72,7 +72,7 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
         externalHttpsEgressRule(),
         kubernetesApiEgressRule(),
         postgresEgress("delivery-postgresql"),
-        fliptEgress(),
+        flagsEgress(),
         {
           to: ["storm-forum", "storm-forum-beta"].map((name) => ({
             ...nsPeer(name),

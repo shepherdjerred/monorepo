@@ -5,14 +5,14 @@ import { Cpu, DeploymentStrategy, EnvValue, Secret } from "cdk8s-plus-31";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import {
-  fliptEnv,
+  flagsEnv,
   seaweedfsS3,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   nsPeer,
   tcp,
-  fliptEgress,
+  flagsEgress,
   otlpEgress,
   seaweedfsEgress,
   postgresEgress,
@@ -91,7 +91,7 @@ export function createTrackerDeployment(chart: Chart, image: string) {
           ...seaweedfsS3.bucketEnv("S3_BUCKET", "tracker"),
           S3_REGION: EnvValue.fromValue("us-east-1"),
           ...seaweedfsS3.credentialsEnv(s3),
-          ...fliptEnv({ namespace: "tracker", environment: "prod" }),
+          ...flagsEnv({ deployment: "tracker/prod" }),
           OTEL_EXPORTER_OTLP_ENDPOINT: EnvValue.fromValue(
             OTLP_GATEWAY_BASE_URL,
           ),
@@ -126,7 +126,7 @@ export function createTrackerDeployment(chart: Chart, image: string) {
           dnsEgressRule(),
           postgresEgress("tracker-postgresql"),
           seaweedfsEgress(),
-          fliptEgress(),
+          flagsEgress(),
           otlpEgress(),
         ],
       },

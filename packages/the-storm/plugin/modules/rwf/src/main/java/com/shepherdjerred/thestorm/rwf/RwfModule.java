@@ -79,12 +79,12 @@ public final class RwfModule implements StormModule {
    * What tests replace.
    *
    * @param env reads environment variables
-   * @param gate the join gate; empty means the Flipt gate from {@code FLIPT_URL} and {@code
-   *     FLIPT_ENVIRONMENT}
+   * @param gate the join gate; empty means the Flags gate from {@code FLAGS_URL} and {@code
+   *     FLAGS_DEPLOYMENT}
    * @param server the server operations tests replace; empty means the real server's
-   * @param features the match feature flags; empty means Flipt from {@code FLIPT_URL} and {@code
-   *     FLIPT_ENVIRONMENT}, every feature off when they are unset
-   * @param kitGates the per-player kit and killstreak gates; empty means their Flipt flags, read
+   * @param features the match feature flags; empty means Flags from {@code FLAGS_URL} and {@code
+   *     FLAGS_DEPLOYMENT}, every feature off when they are unset
+   * @param kitGates the per-player kit and killstreak gates; empty means their managed flags, read
    *     the same way
    */
   public record Hooks(
@@ -289,28 +289,28 @@ public final class RwfModule implements StormModule {
   }
 
   /**
-   * The kit and killstreak gates: the test hook, or their Flipt flags from the environment, off for
-   * everyone when unset.
+   * The kit and killstreak gates: the test hook, or their managed flags from the environment, off
+   * for everyone when unset.
    */
   private FeatureGates kitGates(ModuleContext context, RwfConfig config) {
     if (hooks.kitGates().isPresent()) {
       return hooks.kitGates().orElseThrow();
     }
-    var base = hooks.env().apply("FLIPT_URL").filter(v -> !v.isBlank());
-    var environment = hooks.env().apply("FLIPT_ENVIRONMENT").filter(v -> !v.isBlank());
-    if (base.isEmpty() || environment.isEmpty()) {
+    var base = hooks.env().apply("FLAGS_URL").filter(v -> !v.isBlank());
+    var deployment = hooks.env().apply("FLAGS_DEPLOYMENT").filter(v -> !v.isBlank());
+    if (base.isEmpty() || deployment.isEmpty()) {
       context
           .logger()
           .warn(
-              "FLIPT_URL or FLIPT_ENVIRONMENT is unset; rwf offers the first four kits and no"
+              "FLAGS_URL or FLAGS_DEPLOYMENT is unset; rwf offers the first four kits and no"
                   + " killstreaks");
       JoinGate closed = player -> CompletableFuture.completedFuture(false);
       return new FeatureGates(closed, closed);
     }
     var uri = URI.create(base.orElseThrow());
-    var kits = FliptRwfKitsGate.create(uri, environment.orElseThrow(), config.worlds().maps());
+    var kits = FliptRwfKitsGate.create(uri, deployment.orElseThrow(), config.worlds().maps());
     var killstreaks =
-        FliptRwfKillstreaksGate.create(uri, environment.orElseThrow(), config.worlds().maps());
+        FliptRwfKillstreaksGate.create(uri, deployment.orElseThrow(), config.worlds().maps());
     featureFlags.add(kits);
     featureFlags.add(killstreaks);
     return new FeatureGates(kits, killstreaks);
@@ -372,42 +372,42 @@ public final class RwfModule implements StormModule {
     return recorder;
   }
 
-  /** The feature flags: the test hook, or Flipt from the environment, all off when unset. */
+  /** The feature flags: the test hook, or Flags from the environment, all off when unset. */
   private RwfFeatures.Source features(ModuleContext context, RwfConfig config) {
     if (hooks.features().isPresent()) {
       return hooks.features().orElseThrow();
     }
-    var base = hooks.env().apply("FLIPT_URL").filter(v -> !v.isBlank());
-    var environment = hooks.env().apply("FLIPT_ENVIRONMENT").filter(v -> !v.isBlank());
-    if (base.isEmpty() || environment.isEmpty()) {
+    var base = hooks.env().apply("FLAGS_URL").filter(v -> !v.isBlank());
+    var deployment = hooks.env().apply("FLAGS_DEPLOYMENT").filter(v -> !v.isBlank());
+    if (base.isEmpty() || deployment.isEmpty()) {
       context
           .logger()
-          .warn("FLIPT_URL or FLIPT_ENVIRONMENT is unset; every rwf match feature stays off");
+          .warn("FLAGS_URL or FLAGS_DEPLOYMENT is unset; every rwf match feature stays off");
       return RwfFeatures.Source.fixed(RwfFeatures.NONE);
     }
     var source =
         new FliptRwfFeatures(
-            URI.create(base.orElseThrow()), environment.orElseThrow(), config.worlds().maps());
+            URI.create(base.orElseThrow()), deployment.orElseThrow(), config.worlds().maps());
     features = source;
     return source;
   }
 
-  /** The join gate: the test hook, or Flipt from the environment, closed when unset. */
+  /** The join gate: the test hook, or Flags from the environment, closed when unset. */
   private JoinGate gate(ModuleContext context, RwfConfig config) {
     if (hooks.gate().isPresent()) {
       return hooks.gate().orElseThrow();
     }
-    var base = hooks.env().apply("FLIPT_URL").filter(v -> !v.isBlank());
-    var environment = hooks.env().apply("FLIPT_ENVIRONMENT").filter(v -> !v.isBlank());
-    if (base.isEmpty() || environment.isEmpty()) {
+    var base = hooks.env().apply("FLAGS_URL").filter(v -> !v.isBlank());
+    var deployment = hooks.env().apply("FLAGS_DEPLOYMENT").filter(v -> !v.isBlank());
+    if (base.isEmpty() || deployment.isEmpty()) {
       context
           .logger()
-          .warn("FLIPT_URL or FLIPT_ENVIRONMENT is unset; /rwf join stays closed to everyone");
+          .warn("FLAGS_URL or FLAGS_DEPLOYMENT is unset; /rwf join stays closed to everyone");
       return player -> CompletableFuture.completedFuture(false);
     }
     var gate =
         new FliptRwfGate(
-            URI.create(base.orElseThrow()), environment.orElseThrow(), config.worlds().maps());
+            URI.create(base.orElseThrow()), deployment.orElseThrow(), config.worlds().maps());
     flipt = gate;
     return gate;
   }

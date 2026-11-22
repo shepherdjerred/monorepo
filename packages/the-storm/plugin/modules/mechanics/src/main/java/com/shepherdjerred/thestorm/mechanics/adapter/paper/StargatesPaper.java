@@ -115,7 +115,7 @@ public final class StargatesPaper {
                 context.scheduler().mainThread());
 
     if (rollout == null) {
-      context.logger().info("Stargates are disabled: no Flipt evaluation configuration");
+      context.logger().info("Stargates are disabled: no flags evaluation configuration");
     } else {
       var _ =
           rollout

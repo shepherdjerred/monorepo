@@ -6,7 +6,7 @@ export const authoredExperienceFixture = {
 };
 
 export const capacityFeatureReceiptFixture = {
-  source: "private-flipt-test-double",
+  source: "private-flags-test-double",
   appliesBeforeBoot: true,
   configuredAt: 1_700_000_000_000,
   previous: [],

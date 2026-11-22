@@ -32,7 +32,7 @@ import { attachDeliveryRecoveryReaders } from "@shepherdjerred/homelab/cdk8s/src
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createDeliveryIngressObserver } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/ingress.ts";
 import { DELIVERY_TAILSCALE_INGRESS } from "@shepherdjerred/ops-model/delivery-ingress.ts";
-import { fliptEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 function databaseUrl() {
   const protocol = "postgresql";
@@ -203,7 +203,7 @@ export function createDeliveryChart(
           secret: ciReader,
           key: "WOODPECKER_TOKEN",
         }),
-        ...fliptEnv({ namespace: "delivery", environment: "prod" }),
+        ...flagsEnv({ deployment: "delivery/prod" }),
       },
     }),
   );

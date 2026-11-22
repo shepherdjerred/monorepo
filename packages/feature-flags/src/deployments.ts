@@ -8,9 +8,8 @@
  * chart publishes no release, so nothing reads `storm`/`beta`. `justin` has
  * inventory flags and no chart selector, so it is not here.
  *
- * The Temporal ingress gateway is a prod workload that still reads the beta
- * temporal document. That pair is intentionally not a deployment. It moves
- * onto `temporal/prod` after the live beta and prod documents are diffed.
+ * The Temporal ingress gateway and Temporal workers both read `temporal/prod`
+ * now that the beta Photon owner list is carried in the production override.
  */
 
 export type FlagDeployment = {

@@ -1,3 +1,4 @@
+import type { FlagValue } from "./evaluate.ts";
 import type { SnapshotFlag } from "./managed-flag-drift.ts";
 import type { ManagedFlag } from "./managed-flag-inventory.ts";
 import { orderedBooleanRollouts } from "./flipt-boolean-rollouts.ts";
@@ -52,6 +53,25 @@ export function classifyManagedBoolean(
   return flag.rules.length > 0
     ? "invalid"
     : classify(flag.default, orderedBooleanRollouts(flag));
+}
+
+export function classifyFlagBoolean(
+  flag: FlagValue | undefined,
+): FlagRolloutState {
+  if (flag === undefined) return "missing";
+  if (
+    flag.type !== "boolean" ||
+    flag.rollouts.some((rollout) => rollout.constraints.length === 0)
+  ) {
+    return "invalid";
+  }
+  return classify(
+    flag.default,
+    flag.rollouts.map((rollout): BooleanRollout => ({
+      kind: "segment",
+      result: rollout.result,
+    })),
+  );
 }
 
 export function classifySnapshotBoolean(

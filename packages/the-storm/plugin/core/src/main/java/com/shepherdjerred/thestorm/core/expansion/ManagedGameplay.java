@@ -1,9 +1,6 @@
 package com.shepherdjerred.thestorm.core.expansion;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import com.shepherdjerred.thestorm.core.flags.FlagsClient;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.InstantSource;
@@ -14,11 +11,9 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
-import tools.jackson.databind.json.JsonMapper;
 
 /** Shared asynchronous rollout reader. Every command evaluates its actor. */
 public final class ManagedGameplay implements AutoCloseable {
-  private static final String NAMESPACE_KEY = "the-storm";
   private static final Duration CACHE_TTL = Duration.ofSeconds(30);
 
   private record EvaluationKey(String key, UUID actor) {}
@@ -79,68 +74,18 @@ public final class ManagedGameplay implements AutoCloseable {
     this.outageDefaults = outageDefaults;
   }
 
-  public static ManagedGameplay remote(String url, String environment) {
-    var base = URI.create(url);
-    if ((!"http".equals(base.getScheme()) && !"https".equals(base.getScheme()))
-        || base.getHost() == null
-        || base.getUserInfo() != null
-        || base.getQuery() != null
-        || (!"prod".equals(environment) && !"beta".equals(environment))) {
-      throw new IllegalArgumentException("invalid gameplay rollout bootstrap");
-    }
-    var client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
-    var json = JsonMapper.builder().build();
+  public static ManagedGameplay remote(String url, String deployment) {
+    var client = FlagsClient.open(url, deployment);
+    var prod = "prod".equals(client.stage());
     return new ManagedGameplay(
-        (key, actor) -> {
-          var body =
-              json.writeValueAsString(
-                  Map.of(
-                      "namespace_key",
-                      NAMESPACE_KEY,
-                      "flag_key",
-                      key,
-                      "entity_id",
-                      actor.toString(),
-                      "context",
-                      Map.of()));
-          var request =
-              HttpRequest.newBuilder(base.resolve("/evaluate/v1/boolean"))
-                  .timeout(Duration.ofSeconds(3))
-                  .header("Content-Type", "application/json")
-                  .header("x-flipt-environment", environment)
-                  .POST(HttpRequest.BodyPublishers.ofString(body))
-                  .build();
-          return client
-              .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-              .exceptionallyCompose(failure -> {
-                var cause = FlagProviderUnavailableException.unwrap(failure);
-                return CompletableFuture.failedFuture(
-                    cause instanceof java.io.IOException
-                        ? new FlagProviderUnavailableException(cause)
-                        : cause);
-              })
-              .thenApply(response -> readEvaluation(response, json));
-        },
-        client::shutdownNow,
+        (key, actor) -> client.evaluate(key, Map.of("user", actor.toString())),
+        client::close,
         InstantSource.system(),
         new OutageDefaults(
-            "beta".equals(environment),
-            "prod".equals(environment)
+            !prod,
+            prod
                 ? Set.of(STAFF, IDENTITY, LETTERS, ASYNC_CHAT_MODERATION)
                 : Set.of(ASYNC_CHAT_MODERATION)));
-  }
-
-  private static boolean readEvaluation(HttpResponse<String> response, JsonMapper json) {
-    if ((response.statusCode() >= 500 && response.statusCode() < 600)
-        || response.statusCode() == 429)
-      throw new FlagProviderUnavailableException(
-          new IllegalStateException("rollout returned HTTP " + response.statusCode()));
-    if (response.statusCode() != 200)
-      throw new IllegalStateException("rollout returned HTTP " + response.statusCode());
-    var value = json.readTree(response.body()).get("enabled");
-    if (value == null || !value.isBoolean())
-      throw new IllegalStateException("rollout response lacks enabled");
-    return value.booleanValue();
   }
 
   public CompletableFuture<Boolean> enabled(String key, UUID actor) {
