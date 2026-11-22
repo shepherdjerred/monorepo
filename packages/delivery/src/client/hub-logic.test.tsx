@@ -26,7 +26,7 @@ import {
 } from "./routes/search-schemas.ts";
 import {
   filterPipelines,
-  lastExecuted,
+  lastDeployment,
   stageStatuses,
 } from "./routes/pipeline-list-model.ts";
 
@@ -134,6 +134,24 @@ function pipeline(id: string, execution: ExecutionSummary | null): HubService {
   };
 }
 
+/** An environment of a pipeline whose newest deployment moved at `lastDeploymentAt`. */
+function env(
+  id: string,
+  lastDeploymentAt: string | null,
+): HubService["environments"][number] {
+  return {
+    id,
+    name: id,
+    status: "succeeded",
+    recoveryRequired: false,
+    acceptedRevision: 3,
+    observedAt: null,
+    approvalRequired: false,
+    activeDeploymentId: null,
+    lastDeploymentAt,
+  };
+}
+
 describe("pipeline list", () => {
   const execution: ExecutionSummary = {
     id: "build:b1",
@@ -161,11 +179,18 @@ describe("pipeline list", () => {
     createdAt: "2026-10-18T10:00:00.000Z",
   };
 
-  it("dates the execution by its newest activity", () => {
-    expect(lastExecuted(execution)).toBe("2026-10-18T10:06:00.000Z");
-    expect(lastExecuted({ ...execution, deployments: [] })).toBe(
-      "2026-10-18T10:00:00.000Z",
-    );
+  it("dates the last deployment by any environment's newest, whatever build it carries", () => {
+    // The newest build is a month old; prod deployed an older one today.
+    const gitops: HubService = {
+      ...pipeline("gitops", execution),
+      environments: [
+        env("gitops/beta", "2026-10-18T10:05:00.000Z"),
+        env("gitops/prod", "2026-11-20T09:00:00.000Z"),
+        env("gitops/next", null),
+      ],
+    };
+    expect(lastDeployment(gitops)).toBe("2026-11-20T09:00:00.000Z");
+    expect(lastDeployment(pipeline("forum", null))).toBeNull();
   });
 
   it("filters by name and by any stage's current status, CI run or environment", () => {

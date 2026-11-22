@@ -186,8 +186,9 @@ test("paging moves to the top of the list and back to the newest", async ({
   await expect(page).toHaveURL(/\/activity\?cursor=/u);
   const top = page.getByRole("heading", { level: 2, name: "Audit trail" });
   await expect(top).toBeFocused();
+  // Rows that fold several entries are counted as rows, the entries beside them.
   await expect(page.getByRole("main").getByRole("status")).toContainText(
-    "older entries",
+    /older (?:entries|rows of \d+ entries)/u,
   );
   await pages.getByRole("link", { name: "Newest" }).click();
   await expect(page).toHaveURL(/\/activity$/u);
@@ -229,6 +230,56 @@ test("activity labels its columns, puts the actor beside the action and marks fa
   await expect(
     entries.first().getByRole("link", { name: /^Deployment [0-9a-f-]{36}$/u }),
   ).toBeVisible();
+});
+
+test("activity counts the rows it renders, names its time zone and says why a deployment failed", async ({
+  page,
+}) => {
+  await page.goto("/activity");
+  const entries = page.locator("ol.activity > li");
+  await expect(entries.first()).toBeVisible();
+  const rendered = await entries.count();
+  // The count is of rows; folded runs say how many entries they hold.
+  await expect(
+    page.getByRole("status").filter({ hasText: /^Showing / }),
+  ).toHaveText(
+    new RegExp(
+      String.raw`^Showing ${String(rendered)} (?:entries|rows of \d+ entries), newest first\.$`,
+      "u",
+    ),
+  );
+  const zone = /Times are (UTC(?:[+-]\d{1,2}(?::\d{2})?)?)\./u.exec(
+    (await page.locator(".page-header .subtitle").textContent()) ?? "",
+  )?.[1];
+  if (zone === undefined) throw new Error("the header names the time zone");
+  await expect(entries.first().locator("time").first()).toHaveAttribute(
+    "title",
+    new RegExp(` ${zone.replace("+", String.raw`\+`)}$`, "u"),
+  );
+  // A stage written running and then succeeded reads once, as succeeded.
+  for (const run of await page.locator(".activity-stages").all()) {
+    const stages = await run.locator(".mono").allTextContents();
+    expect(new Set(stages).size).toBe(stages.length);
+  }
+
+  await page.goto("/activity?action=deployment.failed");
+  const failure = page.locator("ol.activity > li").first();
+  await expect(failure.locator(".activity-reason")).not.toBeEmpty();
+});
+
+test("an environment's recent deployments do not repeat the environment on every row", async ({
+  page,
+}) => {
+  await page.goto("/environments/scout-for-lol/prod");
+  const recent = page.getByRole("region", { name: "Recent deployments" });
+  await expect(recent.getByRole("table")).toBeVisible();
+  await expect(recent.locator("thead")).toContainText("Kind");
+  await expect(recent.locator("tbody")).not.toContainText("scout-for-lol/prod");
+  // The release state names its set revisions by number, the id in the title.
+  const state = page.getByRole("region", { name: "Release state" });
+  for (const revision of await state.locator(".revision").all())
+    await expect(revision).toHaveAttribute("title", /\S/u);
+  await expect(state.locator(".identifier")).toHaveCount(0);
 });
 
 test("on a phone each table row stacks under its labels without sideways scrolling", async ({

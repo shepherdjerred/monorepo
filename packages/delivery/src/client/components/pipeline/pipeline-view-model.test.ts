@@ -14,6 +14,7 @@ import {
   actionSummary,
   pipelineStages,
   stageActionList,
+  workflowSpan,
 } from "./pipeline-view-model.ts";
 
 function action(key: string, status: PipelineStatus = "succeeded") {
@@ -325,5 +326,74 @@ describe("the line under an action's title", () => {
     expect(
       actionDetail({ ...action("stage:sync"), detail: "{pending} on Argo" }),
     ).toBe("{pending} on Argo");
+  });
+});
+
+/** A passed workflow that ran from `startedAt` to `finishedAt`. */
+function timed(
+  pid: number,
+  name: string,
+  startedAt: string | null,
+  finishedAt: string | null,
+): CiWorkflow {
+  return { ...workflow(pid, name, "succeeded"), startedAt, finishedAt };
+}
+
+describe("the qualified run's duration", () => {
+  const qualification = {
+    ...action("qualification"),
+    startedAt: "2026-11-20T10:20:00.000Z",
+    finishedAt: "2026-11-20T10:20:55.000Z",
+    spanLabel: "qualification check",
+  } satisfies PipelineAction;
+
+  it("spans its build workflows' wall clock once CI is known, not Delivery's check", () => {
+    const [build] = pipelineStages(
+      [stage("build", [qualification])],
+      run([
+        timed(
+          1,
+          "images",
+          "2026-11-20T10:00:00.000Z",
+          "2026-11-20T10:13:00.000Z",
+        ),
+        timed(
+          2,
+          "charts",
+          "2026-11-20T10:02:00.000Z",
+          "2026-11-20T10:09:00.000Z",
+        ),
+        timed(
+          3,
+          "test-e2e",
+          "2026-11-20T09:00:00.000Z",
+          "2026-11-20T11:00:00.000Z",
+        ),
+        timed(4, "lint", null, null),
+      ]),
+    );
+    expect(build?.actions[0]).toMatchObject({
+      key: "qualification",
+      startedAt: "2026-11-20T10:00:00.000Z",
+      finishedAt: "2026-11-20T10:13:00.000Z",
+      spanLabel: "build workflows",
+    });
+  });
+
+  it("stays open while a build workflow runs, and keeps the check without CI", () => {
+    expect(
+      workflowSpan([
+        timed(1, "images", "2026-11-20T10:00:00.000Z", null),
+        timed(
+          2,
+          "charts",
+          "2026-11-20T10:02:00.000Z",
+          "2026-11-20T10:09:00.000Z",
+        ),
+      ]),
+    ).toEqual({ startedAt: "2026-11-20T10:00:00.000Z", finishedAt: null });
+    expect(workflowSpan([timed(1, "images", null, null)])).toBeNull();
+    const unchanged = [stage("build", [qualification])];
+    expect(pipelineStages(unchanged, undefined)).toEqual(unchanged);
   });
 });

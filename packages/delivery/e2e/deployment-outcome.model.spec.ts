@@ -55,6 +55,33 @@ test("a failed deployment says why at the top and what the operator can do", asy
   await expectNoHorizontalOverflow(page);
 });
 
+test("once recovery settles, the page reports what it read back instead of the stale headline", async ({
+  page,
+}) => {
+  const items = await newest(page, "arcade/beta");
+  const settled = items.find(
+    (item) => item.status === "failed" && !item.recoveryRequired,
+  );
+  if (settled === undefined) throw new Error("seeded settled interruption");
+  await page.goto(`/deployments/${settled.id}`);
+  const main = page.getByRole("main");
+  const why = main.getByRole("region", { name: "Why it failed" });
+  await expect(why).toContainText(
+    "Recovery intent 1 read the external operation back after the deployment ended: it ended in phase Failed.",
+  );
+  await expect(why).toContainText(
+    "Step step-sync was still running when the deployment ended; recovery has since read its outcome back.",
+  );
+  await expect(main).not.toContainText("may still be active");
+  await expect(main).not.toContainText("outcome is unknown");
+  const steps = main.getByRole("region", { name: "Steps" });
+  await expect(steps).toContainText(
+    "interrupted · recovery read back phase Failed",
+  );
+  await expect(steps).not.toContainText("step-sync: running");
+  await expectNoHorizontalOverflow(page);
+});
+
 test("a step its deployment outlived reads as interrupted, on the page and on the pipeline", async ({
   page,
 }) => {

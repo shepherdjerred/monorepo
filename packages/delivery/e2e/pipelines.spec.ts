@@ -31,3 +31,23 @@ test("the pipelines list names the CI run and shows every stage's own state", as
   await expect(row("Minecraft")).toHaveCount(1);
   await expectNoHorizontalOverflow(page);
 });
+
+test("the pipelines list leads with what needs attention and dates builds and deployments apart", async ({
+  page,
+}) => {
+  await page.goto("/pipelines");
+  const order = await page
+    .getByRole("main")
+    .getByRole("heading", { level: 2 })
+    .allTextContents();
+  expect(order[0]).toBe("Needs attention");
+  const table = page.getByRole("table");
+  await expect(table.locator("thead")).toContainText("Last activity");
+  const arcade = table.getByRole("row").filter({
+    has: page.getByRole("link", { name: "Arcade", exact: true }),
+  });
+  const last = arcade.locator('td[data-label="Last activity"]');
+  await expect(last).toContainText(/Last build \S/u);
+  await expect(last).toContainText(/Last deployment \S/u);
+  await expect(table).not.toContainText("Last executed");
+});

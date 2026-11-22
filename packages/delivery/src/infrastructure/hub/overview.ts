@@ -11,6 +11,7 @@ import {
   deploymentSubjects,
   latestBuilds,
   latestDeployments,
+  priorDeployments,
 } from "./attention.ts";
 import { toolLinks } from "./links.ts";
 import { latestExecution } from "./executions.ts";
@@ -19,10 +20,11 @@ import { activityEntry, buildView, serviceSummary } from "./views.ts";
 
 /** Every delivered service with its newest build and environment states. */
 export async function hubOverview(database: Database): Promise<HubOverview> {
-  const [environmentRows, latest, builds, awaiting, alarmed, audit] =
+  const [environmentRows, latest, prior, builds, awaiting, alarmed, audit] =
     await Promise.all([
       database.environment.findMany({ orderBy: { id: "asc" } }),
       latestDeployments(database),
+      priorDeployments(database),
       latestBuilds(database),
       awaitingDecisions(database),
       // An accepted release a monitor alarm fired on.
@@ -99,6 +101,10 @@ export async function hubOverview(database: Database): Promise<HubOverview> {
             observedAt: env.observedAt,
             approvalRequired: env.approvalPolicy === "required",
             activeDeploymentId: env.activeDeploymentId,
+            lastDeploymentAt:
+              deployment === undefined
+                ? null
+                : (deployment.finishedAt ?? deployment.createdAt).toISOString(),
           };
         }),
       };
@@ -109,6 +115,7 @@ export async function hubOverview(database: Database): Promise<HubOverview> {
     attention: attentionItems({
       awaiting,
       latest: latest.values(),
+      prior,
       alarms: alarmed.map((row) => {
         if (row.monitorAlarmedAt === null)
           throw new Error(

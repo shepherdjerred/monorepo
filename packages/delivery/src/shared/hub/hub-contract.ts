@@ -58,6 +58,12 @@ export const PipelineActionSchema = z.object({
   finishedAt: TimestampSchema.nullable(),
   target: AppTargetSchema.nullable(),
   links: z.array(LinkSchema),
+  /**
+   * What `startedAt` to `finishedAt` measures when it is not the whole
+   * action, such as "qualification check" for a build Delivery only checked:
+   * the page names it beside the duration.
+   */
+  spanLabel: z.string().min(1).optional(),
 });
 export type PipelineAction = z.infer<typeof PipelineActionSchema>;
 
@@ -166,6 +172,11 @@ export const HubEnvironmentSchema = z.object({
   observedAt: TimestampSchema.nullable(),
   approvalRequired: z.boolean(),
   activeDeploymentId: IdentifierSchema.nullable(),
+  /**
+   * When the newest deployment last moved: its finish, else its request.
+   * Null before any deployment; absent from servers that predate it.
+   */
+  lastDeploymentAt: TimestampSchema.nullable().optional(),
 });
 
 export const HubServiceSchema = ServiceSummarySchema.extend({
@@ -178,7 +189,8 @@ export type HubService = z.infer<typeof HubServiceSchema>;
 export const AttentionSchema = z.object({
   /**
    * `approval`: a deployment or a saved plan waits for a decision. `failed`:
-   * an environment's newest deployment failed. `recovery`: it failed and
+   * an environment's newest deployment failed, or a new one is queued or
+   * running after several failed in a row. `recovery`: it failed and
    * locked the environment. `alarm`: a monitor alarm fired on an accepted
    * release. `queued`: a deployment has waited too long for its first stage.
    * `build_failed`: a service's newest build failed qualification.
@@ -223,6 +235,12 @@ export const ActivityEntrySchema = z.object({
     })
     .nullable()
     .optional(),
+  /**
+   * Why a deployment's failure entry failed: the first line of the message
+   * the deployment recorded. Absent where the list does not read it and on
+   * other actions; null when the deployment recorded none.
+   */
+  reason: z.string().nullable().optional(),
 });
 export type ActivityEntry = z.infer<typeof ActivityEntrySchema>;
 export type ActivitySubject = NonNullable<ActivityEntry["subject"]>;
@@ -347,6 +365,16 @@ export const DeploymentPageSchema = pageSchema(DeploymentListItemSchema);
  */
 export const EnvironmentPageDetailSchema = EnvironmentDetailSchema.extend({
   deployments: z.array(DeploymentListItemSchema),
+  /**
+   * The revision number of each set revision the release state names
+   * (desired, observed and accepted), read as the deployment list reads its
+   * rows', so each reads `r274` even when it is older than `versionSets`.
+   */
+  releaseRevisions: z
+    .array(
+      z.object({ id: IdentifierSchema, revision: z.number().int().positive() }),
+    )
+    .optional(),
 });
 export type EnvironmentPageDetail = z.infer<typeof EnvironmentPageDetailSchema>;
 

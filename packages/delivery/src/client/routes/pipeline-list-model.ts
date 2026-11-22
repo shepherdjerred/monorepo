@@ -1,20 +1,28 @@
 import type {
   BuildView,
-  ExecutionSummary,
   HubService,
   PipelineStatus,
 } from "#shared/hub/hub-contract.ts";
 import type { PipelineSearch } from "./search-schemas.ts";
 
-/** The newest moment anything in the execution started or finished. */
-export function lastExecuted(execution: ExecutionSummary): string {
-  const moments = [
-    execution.createdAt,
-    ...execution.deployments.map(
-      (deployment) => deployment.finishedAt ?? deployment.createdAt,
-    ),
-  ];
-  return moments.toSorted().at(-1) ?? execution.createdAt;
+/**
+ * When any environment of the pipeline last saw a deployment move: the
+ * newest of each environment's newest deployment, finished or requested.
+ * Deployments of an older build or a composed release count, so a pipeline
+ * whose build is a month old still reads as deployed minutes ago. Null when
+ * no environment has a deployment.
+ */
+export function lastDeployment(pipeline: HubService): string | null {
+  return (
+    pipeline.environments
+      .flatMap((environment) =>
+        environment.lastDeploymentAt == null
+          ? []
+          : [environment.lastDeploymentAt],
+      )
+      .toSorted()
+      .at(-1) ?? null
+  );
 }
 
 /** A CI run's result in the pipeline vocabulary: a verified build passed. */

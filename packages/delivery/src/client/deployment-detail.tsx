@@ -2,6 +2,7 @@ import type {
   DeploymentDetail as Detail,
   Principal,
 } from "#shared/contract.ts";
+import type { DeploymentDetailV2 } from "#shared/model/contract.ts";
 import { isTerminal, messageNotice } from "./presentation.ts";
 import { SelectedArtifacts } from "./artifacts.tsx";
 import { FrozenWorkerPool } from "./worker-pool.tsx";
@@ -90,7 +91,8 @@ export function DeploymentRecord({
   pending,
   onRecoveryDecision,
 }: {
-  detail: Detail;
+  /** Its recovery intents, when read, tell an interrupted step what recovery found. */
+  detail: Detail & Partial<Pick<DeploymentDetailV2, "recoveryIntents">>;
   principal: Principal;
   pending: boolean;
   onRecoveryDecision: (decision: RecoveryDecision) => void;

@@ -111,6 +111,12 @@ export const ApprovalQueueItemSchema = DeploymentV2Schema.extend({
    * its saved plan (H6); no approval row exists until that decision.
    */
   awaitingPlanDecision: z.boolean().default(false),
+  /**
+   * The revision number of the set revision the row would select, read for
+   * the whole queue at once, so a decided or expired row reads `r274` too.
+   * Absent from servers that predate it.
+   */
+  versionSetRevision: z.number().int().positive().optional(),
 });
 export type ApprovalQueueItem = z.infer<typeof ApprovalQueueItemSchema>;
 

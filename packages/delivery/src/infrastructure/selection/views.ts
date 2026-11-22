@@ -267,6 +267,14 @@ export async function approvalById(database: Database, deploymentId: string) {
   );
 }
 
+/** The set revision an approval row would select: its frozen selection's, else its own. */
+function selected(item: {
+  selection: { versionSetRevisionId: string } | null;
+  versionSetRevisionId: string;
+}) {
+  return item.selection?.versionSetRevisionId ?? item.versionSetRevisionId;
+}
+
 /**
  * `GET /approvals`: deployments awaiting approval or a saved-plan decision,
  * then those whose approval was decided or expired in the last day, each
@@ -289,7 +297,18 @@ export async function approvalQueue(database: Database) {
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: 200,
   });
-  const items = rows.map((row) => approvalQueueItem(row));
+  const listed = rows.map((row) => approvalQueueItem(row));
+  const sets = await database.versionSet.findMany({
+    where: { id: { in: listed.map((item) => selected(item)) } },
+    select: { id: true, revision: true },
+  });
+  const revisions = new Map(sets.map((set) => [set.id, set.revision]));
+  const items = listed.map((item) => {
+    const revision = revisions.get(selected(item));
+    return revision === undefined
+      ? item
+      : { ...item, versionSetRevision: revision };
+  });
   const waiting = (item: (typeof items)[number]) =>
     item.status === "awaiting_approval" || item.awaitingPlanDecision;
   return items.toSorted(

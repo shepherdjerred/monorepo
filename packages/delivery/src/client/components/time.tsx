@@ -52,7 +52,29 @@ const clockFormat = new Intl.DateTimeFormat(undefined, {
   hourCycle: "h23",
 });
 
+const zoneFormat = new Intl.DateTimeFormat(undefined, {
+  timeZoneName: "shortOffset",
+});
+
 export type TimePrecision = keyof typeof exactFormats;
+
+/**
+ * The reader's time zone as its offset from UTC at a moment, such as
+ * `UTC-8` or `UTC+5:30`, or `UTC` itself. Daylight saving moves it, so a
+ * label for many moments reads it at one of them.
+ */
+export function zoneLabel(at: string | number) {
+  const name =
+    zoneFormat
+      .formatToParts(new Date(at))
+      .find((part) => part.type === "timeZoneName")?.value ?? "GMT";
+  return name.replace(/^GMT/u, "UTC");
+}
+
+/** A moment to the second with its zone: what a time's `title` says. */
+export function titleTime(iso: string) {
+  return `${exactTime(iso, "second")} ${zoneLabel(iso)}`;
+}
 
 /** A moment in the app's one absolute format, in the reader's time zone. */
 export function exactTime(iso: string, precision: TimePrecision = "minute") {
@@ -107,7 +129,7 @@ export function RelativeTime({
 }) {
   const at = useNow();
   return (
-    <time dateTime={value} title={exactTime(value, "second")}>
+    <time dateTime={value} title={titleTime(value)}>
       {clock && (
         <span className="clock">
           {clockTime(value, at)}
@@ -132,7 +154,7 @@ export function ExactTime({
 }) {
   const at = useNow();
   return (
-    <time dateTime={value} title={exactTime(value, "second")}>
+    <time dateTime={value} title={titleTime(value)}>
       {exactTime(value, precision)}
       {Date.parse(value) > at && (
         <span className="muted"> ({relativeTime(value, at)})</span>

@@ -27,8 +27,8 @@ import {
   DecisionActivitySchema,
   PublishedActivitySchema,
   RequestedActivitySchema,
-  StageActivitySchema,
   foldActivity,
+  latestStages,
   outcomeOf,
 } from "./activity-fold.ts";
 import { actionLabel } from "./activity-labels.ts";
@@ -264,9 +264,12 @@ function Recorded({
   names: CatalogNames;
 }) {
   const outcome = outcomeOf(entry.action);
-  // A failure already shows its status beside the action.
-  if (outcome !== null)
-    return outcome === "failed" ? null : <Status value={outcome} />;
+  // A failure already shows its status beside the action, so it says why.
+  if (outcome === "failed" || entry.action === "deployment.recovery_required")
+    return entry.reason == null ? null : (
+      <span className="activity-reason">{entry.reason}</span>
+    );
+  if (outcome !== null) return <Status value={outcome} />;
   switch (entry.action) {
     case "deployment.requested": {
       return <Requested entry={entry} names={names} />;
@@ -334,7 +337,11 @@ function When({ entries }: { entries: [ActivityEntry, ...ActivityEntry[]] }) {
   );
 }
 
-/** One deployment's consecutive stage writes: each stage and what it became, newest first. */
+/**
+ * One deployment's consecutive stage writes: each stage once, at what its
+ * newest write made it, newest first. A stage written more than once says
+ * how many writes it folds.
+ */
 function StageRun({
   entries,
   names,
@@ -351,15 +358,15 @@ function StageRun({
       <span className="activity-subject">
         <Entity entry={newest} names={names} />
         <ol className="activity-stages">
-          {entries.map((entry) => {
-            const recorded = StageActivitySchema.parse(entry.metadata);
-            return (
-              <li key={entry.id}>
-                <span className="mono">{recorded.stage}</span>
-                <Status value={recorded.status} />
-              </li>
-            );
-          })}
+          {latestStages(entries).map((stage) => (
+            <li key={stage.entry.id}>
+              <span className="mono">{stage.stage}</span>
+              <Status value={stage.status} />
+              {stage.writes > 1 && (
+                <small className="muted">{stage.writes} updates</small>
+              )}
+            </li>
+          ))}
         </ol>
       </span>
     </li>
@@ -447,6 +454,7 @@ export function ActivityList({
 }) {
   if (entries.length === 0) return <p className="empty">No activity yet.</p>;
   const names = catalogNames(services);
+  const rows = foldActivity(entries);
   return (
     <div className="activity-table">
       <div className="activity-columns" aria-hidden="true">
@@ -456,7 +464,7 @@ export function ActivityList({
         <span>About</span>
       </div>
       <ol className="activity">
-        {foldActivity(entries).map((row) => {
+        {rows.map((row) => {
           if (row.kind === "stages")
             return (
               <StageRun

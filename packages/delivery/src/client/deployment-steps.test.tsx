@@ -10,6 +10,7 @@ import {
   StepTimeline,
   interrupted,
   noStepsMessage,
+  stepMessage,
   stepEnd,
 } from "./deployment-steps.tsx";
 import { WhyItFailed, failureStory } from "./model/deployment-outcome.tsx";
@@ -375,6 +376,43 @@ function record(value: DeploymentDetail) {
   );
 }
 
+/** The ended deployment once its recovery intent settled, having read back `readbacks`. */
+function settledDetail(
+  stages: DeploymentDetail["stages"],
+  readbacks: string[],
+) {
+  return {
+    ...ended,
+    deployment: {
+      ...ended.deployment,
+      message:
+        "External operation may still be active; inspect its recorded identity before releasing ownership",
+    },
+    stages,
+    evidence: [],
+    recoveryIntents: [
+      {
+        id: "argo/auto-flags",
+        kind: "argo" as const,
+        deploymentId: id,
+        sequence: 1,
+        step: null,
+        requestedBy: "delivery/auto-recovery",
+        reason: "Opened automatically: the deployment ended recovery-required",
+        expectedGeneration: 0,
+        fingerprint: `sha256:${"4".repeat(64)}`,
+        evidence: readbacks.map((summary) => ({
+          kind: "reconciliation" as const,
+          summary,
+        })),
+        outcome: "succeeded" as const,
+        createdAt: finishedAt,
+        settledAt: finishedAt,
+      },
+    ],
+  };
+}
+
 describe("why a deployment failed", () => {
   it("names the message, the interrupted step, its last evidence and what to do", () => {
     expect(failureStory(ended)).toMatchObject({
@@ -415,6 +453,152 @@ describe("why a deployment failed", () => {
     );
     expect(html).toContain('href="/recovery-intents/scout-prod-37/recovery/2"');
     expect(html).toContain("Recovery intent 2</a> is pending");
+  });
+
+  it("reports what a settled recovery read back, not the executor's stale headline", () => {
+    const settled = settledDetail(
+      [stage("step-sync", "running", "step-sync: running")],
+      [
+        "Independent Application readback: flags, operation 2a71, phase Failed, finished 2026-11-22T03:27:16Z",
+      ],
+    );
+    const story = failureStory(settled);
+    expect(story).toMatchObject({
+      message: null,
+      settled: {
+        sequence: 1,
+        readbacks: [{ application: "flags", phase: "Failed" }],
+      },
+      step: { key: "step-sync", outcome: "interrupted", message: null },
+    });
+    const html = render(<WhyItFailed detail={settled} />);
+    expect(html).not.toContain("may still be active");
+    expect(html).not.toContain("outcome is unknown");
+    expect(html).toContain(
+      "read the external operation back after the deployment ended: it ended in phase Failed.",
+    );
+    expect(html).toContain('href="/recovery-intents/argo/auto-flags"');
+    // The timeline drops the stale running line and reports the reading.
+    const timeline = render(<StepTimeline detail={settled} />);
+    expect(timeline).not.toContain("step-sync: running");
+    expect(timeline).toContain("interrupted · recovery read back phase Failed");
+    expect(timeline).not.toContain("outcome unknown");
+  });
+
+  it("gives each interrupted step the readback of its own request, and names every Application", () => {
+    const first = {
+      ...stage("step-sync-web", "running", ""),
+      operationId: "request-web",
+    };
+    const second = {
+      ...stage("step-sync-api", "running", ""),
+      operationId: "request-api",
+    };
+    const settled = settledDetail(
+      [first, second],
+      [
+        "Independent Application readback: web, resourceVersion 1, request request-web, operation 1, phase Succeeded, finished 2026-11-22T03:27:16Z",
+        "Independent Application readback: api, resourceVersion 2, request request-api, operation 2, phase Failed, finished 2026-11-22T03:27:16Z",
+      ],
+    );
+    const timeline = render(<StepTimeline detail={settled} />);
+    expect(step(timeline, "step-sync-web")).toContain(
+      "interrupted · recovery read back phase Succeeded",
+    );
+    expect(step(timeline, "step-sync-api")).toContain(
+      "interrupted · recovery read back phase Failed",
+    );
+    const html = render(<WhyItFailed detail={settled} />);
+    expect(html).toContain(
+      "read each external operation back after the deployment ended: web ended in phase Succeeded; api ended in phase Failed.",
+    );
+    // A step no readback answers for does not borrow another's phase.
+    const unmatched = settledDetail(
+      [{ ...stage("step-sync-db", "running", ""), operationId: "request-db" }],
+      settled.recoveryIntents[0]?.evidence.map((entry) => entry.summary) ?? [],
+    );
+    expect(render(<StepTimeline detail={unmatched} />)).toContain(
+      "interrupted · settled by recovery intent 1",
+    );
+  });
+
+  it("points at the Job a failure names and says each instruction once", () => {
+    const job = {
+      ...ended,
+      deployment: {
+        ...ended.deployment,
+        message:
+          "Deployment stopped; inspect Workflow history and recorded evidence",
+      },
+      stages: [
+        stage(
+          "worker-image-provenance",
+          "failed",
+          "worker-image-provenance: read-only Job failed; nothing changed",
+        ),
+      ],
+      evidence: [
+        evidence(
+          "stage/worker-image-provenance/0",
+          "Pinned Job delivery-worker-jobs/delivery-eab307de, UID 6eb352d6-fa9d-4358-b4f7-dd85a47abc54, fingerprint eab3",
+          "preflight",
+        ),
+        evidence(
+          "stage/worker-image-provenance/1",
+          "Delivery Job failed; inspect its recorded UID and bounded stage logs; inspect Workflow history and recorded evidence",
+          "preflight",
+        ),
+      ],
+    };
+    const story = failureStory(job);
+    expect(story).toMatchObject({
+      message: "Deployment stopped",
+      step: { message: "read-only Job failed; nothing changed" },
+      evidence: { text: "Delivery Job failed" },
+      remedies: [
+        "Inspect Workflow history and recorded evidence.",
+        "Inspect its recorded UID and bounded stage logs.",
+      ],
+      pointers: [
+        { label: "Job", value: "delivery-worker-jobs/delivery-eab307de" },
+        { label: "UID", value: "6eb352d6-fa9d-4358-b4f7-dd85a47abc54" },
+      ],
+    });
+    const html = render(<WhyItFailed detail={job} />);
+    expect(html.split("nspect Workflow history")).toHaveLength(2);
+    expect(html).toContain(
+      '<code class="mono copyable-value">delivery-worker-jobs/delivery-eab307de</code>',
+    );
+    expect(html).toContain(
+      'aria-label="Copy UID 6eb352d6-fa9d-4358-b4f7-dd85a47abc54"',
+    );
+  });
+
+  it("keeps a step message that says more than its key and status", () => {
+    expect(
+      stepMessage({
+        key: "step-sync",
+        status: "running",
+        message: "step-sync: running",
+      }),
+    ).toBeNull();
+    expect(
+      stepMessage({
+        key: "step-sync",
+        status: "failed",
+        message: "step-sync: Job failed",
+      }),
+    ).toBe("Job failed");
+    expect(
+      stepMessage({
+        key: "step-plan",
+        status: "succeeded",
+        message: "plan completed",
+      }),
+    ).toBe("plan completed");
+    expect(
+      stepMessage({ key: "step-plan", status: "succeeded", message: "" }),
+    ).toBeNull();
   });
 
   it("says nothing for a deployment that did not fail", () => {

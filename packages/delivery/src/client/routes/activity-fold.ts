@@ -73,6 +73,28 @@ export function foldActivity(entries: readonly ActivityEntry[]): ActivityRow[] {
 }
 
 /**
+ * Each stage of a run once, at the state its newest write gave it: a stage
+ * written `running` and then `succeeded` reads only as succeeded. Newest
+ * first, as the run was fetched, each stage where its newest write sits.
+ */
+export function latestStages(
+  entries: readonly ActivityEntry[],
+): { entry: ActivityEntry; stage: string; status: string; writes: number }[] {
+  const latest = new Map<
+    string,
+    { entry: ActivityEntry; stage: string; status: string; writes: number }
+  >();
+  for (const entry of entries) {
+    const recorded = StageActivitySchema.parse(entry.metadata);
+    const seen = latest.get(recorded.stage);
+    if (seen === undefined)
+      latest.set(recorded.stage, { entry, ...recorded, writes: 1 });
+    else seen.writes += 1;
+  }
+  return [...latest.values()];
+}
+
+/**
  * The result an action names in its own suffix, for the actions that record
  * a deployment's outcome.
  */

@@ -38,12 +38,19 @@ test("activity filters to problems and a time range through the URL", async ({
   await expect(page).toHaveURL(/[?&]within=day/u);
   const entries = page.locator("ol.activity > li");
   await expect(entries.first()).toBeVisible();
-  for (const title of await entries
-    .locator(".activity-action")
-    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("title"))))
-    expect(title).toMatch(
-      /(?:failed|recovery_required|rejected|incompatible|expired|alarmed)$/u,
-    );
+  // The unfiltered rows stay until the filtered page arrives, so wait for it.
+  const problem =
+    /(?:failed|recovery_required|rejected|incompatible|expired|alarmed)$/u;
+  await expect
+    .poll(async () => {
+      const titles = await entries
+        .locator(".activity-action")
+        .evaluateAll((nodes) =>
+          nodes.map((node) => node.getAttribute("title") ?? ""),
+        );
+      return titles.filter((title) => !problem.test(title));
+    })
+    .toEqual([]);
   // The form shows what the URL carries after a reload.
   await page.reload();
   await expect(form.getByLabel("Show")).toHaveValue("only");

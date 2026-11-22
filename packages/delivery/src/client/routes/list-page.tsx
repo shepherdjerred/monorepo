@@ -88,10 +88,16 @@ export function ResultSummary({
   older,
   problems,
   clearTo,
+  entries,
 }: {
   count: number;
   /** Singular and plural. */
   noun: [string, string];
+  /**
+   * How many records the rows fold, when a row can hold several, so the
+   * count says both: "Showing 21 rows of 25 entries".
+   */
+  entries?: { count: number; noun: [string, string] };
   filtered: boolean;
   /** The page follows a cursor, so newer rows sit on the page before it. */
   older: boolean;
@@ -108,10 +114,14 @@ export function ResultSummary({
     text = filtered ? `No ${plural} match these filters.` : `No ${plural} yet.`;
     tone = "empty";
   } else {
+    const folded =
+      entries === undefined || entries.count === count
+        ? ""
+        : ` of ${String(entries.count)} ${pluralOf(entries.noun, entries.count)}`;
     text = `Showing ${String(count)} ${older ? "older " : ""}${pluralOf(
       noun,
       count,
-    )}${filtered ? " that match these filters" : ""}, newest first.`;
+    )}${folded}${filtered ? " that match these filters" : ""}, newest first.`;
     tone = "muted";
   }
   return (

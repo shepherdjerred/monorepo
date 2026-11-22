@@ -58,8 +58,43 @@ function workflowAction(workflow: CiWorkflow, run: CiRun): PipelineAction {
 }
 
 /**
+ * The wall-clock span of some workflows: from the first start to the last
+ * finish, still open while any started one runs. Null when none started.
+ */
+export function workflowSpan(workflows: readonly CiWorkflow[]) {
+  const started = workflows.flatMap((workflow) =>
+    workflow.startedAt === null
+      ? []
+      : [{ start: workflow.startedAt, end: workflow.finishedAt }],
+  );
+  const [first] = started.map((entry) => entry.start).toSorted();
+  if (first === undefined) return null;
+  const ends = started.map((entry) => entry.end);
+  const finished = ends.flatMap((end) => (end === null ? [] : [end]));
+  return {
+    startedAt: first,
+    finishedAt:
+      finished.length < ends.length
+        ? null
+        : (finished.toSorted().at(-1) ?? null),
+  };
+}
+
+/**
+ * The qualified run's own action, once its build workflows are known: its
+ * duration becomes their wall-clock span instead of Delivery's check.
+ */
+function spannedRun(action: PipelineAction, builds: readonly CiWorkflow[]) {
+  const span = workflowSpan(builds);
+  return span === null || action.spanLabel === undefined
+    ? action
+    : { ...action, ...span, spanLabel: "build workflows" };
+}
+
+/**
  * Split the server's Build stage into Build and Test using the latest CI run.
- * Without CI enrichment the server's single Build stage stands as is.
+ * Without CI enrichment the server's single Build stage stands as is. With
+ * it, the qualified run's duration is its build workflows' wall clock.
  */
 export function pipelineStages(
   stages: PipelineStage[],
@@ -75,7 +110,7 @@ export function pipelineStages(
     );
     // The run Delivery qualified leads; its workflows follow.
     const buildActions = [
-      ...stage.actions,
+      ...stage.actions.map((action) => spannedRun(action, builds)),
       ...builds.map((workflow) => workflowAction(workflow, run)),
     ];
     const testActions = tests.map((workflow) => workflowAction(workflow, run));

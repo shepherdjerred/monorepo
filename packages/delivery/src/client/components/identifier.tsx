@@ -38,7 +38,11 @@ export function revisionLabel(revision: number) {
   return `r${String(revision)}`;
 }
 
-/** A version-set revision as its r-number. */
-export function Revision({ revision }: { revision: number }) {
-  return <span className="revision">{revisionLabel(revision)}</span>;
+/** A version-set revision as its r-number; its full id, when known, in `title`. */
+export function Revision({ revision, id }: { revision: number; id?: string }) {
+  return (
+    <span className="revision" title={id}>
+      {revisionLabel(revision)}
+    </span>
+  );
 }
