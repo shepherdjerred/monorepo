@@ -41,6 +41,11 @@ describe("promotion report delivery keys", () => {
                   delivered.push(report);
                   return { reportRunId: report.reportRunId };
                 },
+                deliverScheduledReport: (input: unknown) => {
+                  const report = ReportEnvelopeV1Schema.parse(input);
+                  delivered.push(report);
+                  return { reportRunId: report.reportRunId };
+                },
               },
             });
             return await writer.runUntil(async () => {
@@ -68,6 +73,10 @@ describe("promotion report delivery keys", () => {
                 expect(delivered[index]).toEqual({ ...original, reportRunId });
                 expect(result).toEqual({ reportRunId });
                 const history = await handle.fetchHistory();
+                const expectedDeliveryActivity =
+                  workflowType === "reportStormPromotion"
+                    ? "deliverScheduledReport"
+                    : "deliverReport";
                 expect(
                   history.events?.flatMap((event) =>
                     event.activityTaskScheduledEventAttributes === undefined ||
@@ -78,7 +87,10 @@ describe("promotion report delivery keys", () => {
                             .activityType?.name,
                         ],
                   ),
-                ).toEqual(["collectPromotionDailyReport", "deliverReport"]);
+                ).toEqual([
+                  "collectPromotionDailyReport",
+                  expectedDeliveryActivity,
+                ]);
               }
             });
           },
@@ -95,6 +107,54 @@ describe("promotion report delivery keys", () => {
     },
     60_000,
   );
+
+  it("replays pre-patch reportStormPromotion histories that scheduled deliverReport", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    try {
+      const history = await runWorkflowWithActivityWorker(environment, {
+        workflowPath: new URL("replay-before-test-support.ts", import.meta.url)
+          .pathname,
+        activityTaskQueue: TASK_QUEUES.PROMOTION_CONTROL,
+        activities: {
+          collectPromotionDailyReport: () =>
+            promotionReport([initialPromotionState("pmc", 900)], 0),
+        },
+        execute: async () => {
+          const writer = await Worker.create({
+            connection: environment.nativeConnection,
+            taskQueue: TASK_QUEUES.REPORTS,
+            activities: {
+              deliverReport: (input: unknown) => {
+                const report = ReportEnvelopeV1Schema.parse(input);
+                return { reportRunId: report.reportRunId };
+              },
+            },
+          });
+          return await writer.runUntil(async () => {
+            const handle = await environment.client.workflow.start(
+              "reportStormPromotion",
+              {
+                workflowId: `promotion-report-replay-${crypto.randomUUID()}`,
+                taskQueue: TASK_QUEUES.WORKFLOWS,
+                args: [],
+              },
+            );
+            await handle.result();
+            return await handle.fetchHistory();
+          });
+        },
+      });
+
+      await Worker.runReplayHistory(
+        {
+          workflowsPath: new URL("index.ts", import.meta.url).pathname,
+        },
+        history,
+      );
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
 });
 
 describe("promotion Workflow effects", () => {

@@ -3,6 +3,12 @@ import {
   REPORT_SEND_CLAIM_TAKEOVER_MS,
   REPORT_SEND_DEADLINE_MS,
 } from "#shared/reports/report-delivery-policy.ts";
+import {
+  conditionalWrite,
+  readJson,
+  writeJson,
+  type ReportReceiptStore,
+} from "./report-object-store.ts";
 
 /**
  * Exclusive ownership of a report's Postal send.
@@ -43,6 +49,25 @@ export type ReportSendClaimBackend = {
 
 export function reportSendClaimKey(stateKey: string): string {
   return `${stateKey.replace(/\.json$/, "")}.send-claim.json`;
+}
+
+export function s3ReportSendClaimBackend(
+  store: ReportReceiptStore,
+): ReportSendClaimBackend {
+  return {
+    readSendClaim: async (key) => {
+      const held = await readJson(store, key, ReportSendClaimV1Schema);
+      return held === undefined
+        ? undefined
+        : { claim: held.value, etag: held.etag };
+    },
+    writeSendClaim: (key, claim, expectedEtag) =>
+      conditionalWrite(() =>
+        writeJson(store, key, ReportSendClaimV1Schema.parse(claim), {
+          expectedEtag,
+        }),
+      ),
+  };
 }
 
 /**

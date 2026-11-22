@@ -46,7 +46,7 @@ const redditRecovery = proxyActivities<
   retry: { maximumAttempts: 1 },
 });
 const reports = proxyActivities<
-  Pick<ReportDeliveryActivities, "deliverReport">
+  Pick<ReportDeliveryActivities, "deliverReport" | "deliverScheduledReport">
 >({
   taskQueue: TASK_QUEUES.REPORTS,
   startToCloseTimeout: REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
@@ -141,7 +141,10 @@ export const resolveStormPromotionAbsence =
 export const allocateStormPromotionAi = aiAllocation.allocateStormPromotionAi;
 
 export async function reportStormPromotion() {
-  return await reports.deliverReport(await reads.collectPromotionDailyReport());
+  const report = await reads.collectPromotionDailyReport();
+  return patched("storm-promotion-daily-policy-v1")
+    ? await reports.deliverScheduledReport(report)
+    : await reports.deliverReport(report);
 }
 
 export async function reportStormPromotionAcceptance() {

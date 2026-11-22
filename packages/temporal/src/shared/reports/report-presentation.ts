@@ -11,10 +11,35 @@ export const TAILORED_REPORT_TYPES = [
   "scout-lane-priors",
   "scout-queue-windows",
   "scout-season-refresh",
+  "storm-promotion",
   "tasknotes-canary",
 ] as const;
 
 const TailoredReportTypeSchema = z.enum(TAILORED_REPORT_TYPES);
+
+export function reportEyebrow(reportType: string): string {
+  switch (reportType) {
+    case "homelab-audit":
+      return "Homelab Check";
+    case "dependency-summary":
+      return "Repo Dependencies";
+    case "scout-data-dragon":
+    case "scout-lane-priors":
+    case "scout-queue-windows":
+    case "scout-season-refresh":
+      return "Scout Automation";
+    case "main-vuln-scan":
+      return "Security Scan";
+    case "link-rot-scan":
+      return "Link Check";
+    case "storm-promotion":
+      return "The Storm Promotion";
+    case "tasknotes-canary":
+      return "TaskNotes Check";
+    default:
+      return "Temporal Report";
+  }
+}
 
 export type ReportPresentationTone = "ok" | "review" | "incomplete";
 
@@ -79,7 +104,10 @@ const SUBJECT_POLICIES = {
   "dependency-summary": (report) =>
     subjectFromCopy(report, {
       clear: "Dependencies: Up to date",
-      changed: "Dependencies: Updates available",
+      changed:
+        report.remediation?.prUrl === undefined
+          ? "Dependencies: Updates available"
+          : "Dependencies: Updates and release-note PR",
       attention: "Dependencies: Action needed",
       pending: "Dependencies: Check pending",
       inconclusive: "Dependencies: Check incomplete",
@@ -99,7 +127,10 @@ const SUBJECT_POLICIES = {
   "link-rot-scan": (report) =>
     subjectFromCopy(report, {
       clear: "Link check: All links reachable",
-      changed: "Link check: Link changes detected",
+      changed:
+        report.remediation?.prUrl === undefined
+          ? "Link check: Link changes detected"
+          : "Link check: Dead-link fix PR opened",
       attention: "Link check: Broken links found",
       pending: "Link check: Still pending",
       inconclusive: "Link check: Could not finish",
@@ -109,7 +140,10 @@ const SUBJECT_POLICIES = {
   "main-vuln-scan": (report) =>
     subjectFromCopy(report, {
       clear: "Security scan: No high-risk issues",
-      changed: "Security scan: Advisory changes found",
+      changed:
+        report.remediation?.prUrl === undefined
+          ? "Security scan: Advisory changes found"
+          : "Security scan: Vulnerability fix PR opened",
       attention: "Security scan: Vulnerabilities need review",
       pending: "Security scan: Still pending",
       inconclusive: "Security scan: Could not finish",
@@ -155,6 +189,16 @@ const SUBJECT_POLICIES = {
       inconclusive: "Scout season: Could not finish",
       partial: "Scout season: Dates need review",
       failed: "Scout season: Update failed",
+    }),
+  "storm-promotion": (report) =>
+    subjectFromCopy(report, {
+      clear: "The Storm promotion: All clear",
+      changed: "The Storm promotion: Changes detected",
+      attention: "The Storm promotion: Destinations need review",
+      pending: "The Storm promotion: Still pending",
+      inconclusive: "The Storm promotion: Could not finish",
+      partial: "The Storm promotion: Could not finish",
+      failed: "The Storm promotion: Run failed",
     }),
   "tasknotes-canary": (report) =>
     subjectFromCopy(report, {

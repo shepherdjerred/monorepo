@@ -17,11 +17,13 @@ const FIXED_STARTED_AT = "2026-08-30T15:00:00.000Z";
 const FIXED_COMPLETED_AT = "2026-08-30T15:01:00.000Z";
 
 type PreviewDefinition = {
+  slug?: string;
   reportType: string;
   title: string;
   execution: ReportEnvelopeV1["execution"];
   verdict: ReportEnvelopeV1["verdict"];
   headline: string;
+  remediation?: ReportEnvelopeV1["remediation"];
 };
 
 const PREVIEWS = [
@@ -52,6 +54,25 @@ const PREVIEWS = [
     execution: "complete",
     verdict: "attention",
     headline: "Two dead links and one timed-out link were found.",
+  },
+  {
+    slug: "link-rot-scan-remediated",
+    reportType: "link-rot-scan",
+    title: "Weekly link-rot scan of main",
+    execution: "complete",
+    verdict: "changed",
+    headline: "Replaced two permanently redirected documentation links.",
+    remediation: {
+      outcome: "pr-created",
+      prUrl: "https://github.com/shepherdjerred/monorepo/pull/1",
+      branchName: "automation/link-rot-2026-08-30",
+      autoMergeEnabled: true,
+      changedFiles: ["README.md", "packages/temporal/README.md"],
+      resolvedCount: 2,
+      unresolvedCount: 0,
+      summary:
+        "Updated two moved documentation URLs and configured automatic merge once CI passes.",
+    },
   },
   {
     reportType: "main-vuln-scan",
@@ -89,6 +110,14 @@ const PREVIEWS = [
     headline: "The season-date check failed before it could reach a verdict.",
   },
   {
+    reportType: "storm-promotion",
+    title: "The Storm promotion summary",
+    execution: "complete",
+    verdict: "clear",
+    headline:
+      "6 destinations tracked; 0 blocked. Solver spending or reservations this month: $0.14.",
+  },
+  {
     reportType: "tasknotes-canary",
     title: "TaskNotes skipped-files canary",
     execution: "complete",
@@ -96,6 +125,37 @@ const PREVIEWS = [
     headline: "TaskNotes has 842 tasks, no skipped files, and healthy pods.",
   },
 ] satisfies PreviewDefinition[];
+
+function previewFindings(
+  definition: PreviewDefinition,
+  evidenceId: string,
+): ReportEnvelopeV1["findings"] {
+  const needsReview = definition.verdict === "attention";
+  if (!needsReview && definition.verdict !== "changed") {
+    return [];
+  }
+  return [
+    {
+      section: needsReview ? "Needs review" : "Changes",
+      severity: needsReview ? "warning" : "info",
+      summary: definition.headline,
+      detail: needsReview
+        ? "Review the source evidence before making a change."
+        : "The automation completed the expected update.",
+      evidenceReceiptIds: [evidenceId],
+    },
+  ];
+}
+
+function previewCheckSummary(
+  incomplete: boolean,
+  needsReview: boolean,
+): string {
+  if (incomplete) return "The check did not complete.";
+  return needsReview
+    ? "The check completed and found something to review."
+    : "The check completed successfully.";
+}
 
 function previewReport(
   definition: PreviewDefinition,
@@ -121,11 +181,7 @@ function previewReport(
         label: "Primary report check",
         required: true,
         status: incomplete || needsReview ? "failed" : "passed",
-        summary: incomplete
-          ? "The check did not complete."
-          : needsReview
-            ? "The check completed and found something to review."
-            : "The check completed successfully.",
+        summary: previewCheckSummary(incomplete, needsReview),
         evidenceReceiptIds: [evidenceId],
       },
     ],
@@ -139,20 +195,7 @@ function previewReport(
         command: "internal preview command hidden from the email",
       },
     ],
-    findings:
-      needsReview || definition.verdict === "changed"
-        ? [
-            {
-              section: needsReview ? "Needs review" : "Changes",
-              severity: needsReview ? "warning" : "info",
-              summary: definition.headline,
-              detail: needsReview
-                ? "Review the source evidence before making a change."
-                : "The automation completed the expected update.",
-              evidenceReceiptIds: [evidenceId],
-            },
-          ]
-        : [],
+    findings: previewFindings(definition, evidenceId),
     limitations: incomplete
       ? ["No complete conclusion is available from this run."]
       : [],
@@ -166,6 +209,9 @@ function previewReport(
             "Storage is healthy. The warning is isolated to one workload and is not spreading.",
         }
       : {}),
+    ...(definition.remediation === undefined
+      ? {}
+      : { remediation: definition.remediation }),
     provenance: {
       workflowId: `${definition.reportType}-preview-workflow`,
       runId: `preview-run-${String(index + 1)}`,
@@ -207,18 +253,19 @@ const galleryEntries: {
   to: string;
 }[] = [];
 for (const [index, definition] of PREVIEWS.entries()) {
+  const slug = definition.slug ?? definition.reportType;
   const report = previewReport(definition, index);
   const mailbox = reportMailboxForType(definition.reportType);
   await Bun.write(
-    path.join(OUTPUT_DIRECTORY, `${definition.reportType}.html`),
+    path.join(OUTPUT_DIRECTORY, `${slug}.html`),
     renderReportHtml(report),
   );
   await Bun.write(
-    path.join(OUTPUT_DIRECTORY, `${definition.reportType}.txt`),
+    path.join(OUTPUT_DIRECTORY, `${slug}.txt`),
     renderReportText(report),
   );
   galleryEntries.push({
-    name: definition.reportType,
+    name: slug,
     subject: reportSubject(report),
     from: mailbox.from,
     to: mailbox.to,
