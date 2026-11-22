@@ -20,14 +20,18 @@ import {
  * an episode, whose interest is managed on that original request.
  */
 export function requestOwnInterest(
-  request: Pick<MediaRequest, "direct" | "interestRevision" | "interestState">,
+  request: Pick<
+    MediaRequest,
+    "direct" | "interestRevision" | "interestState" | "keepingPolicy"
+  >,
 ) {
   return request.direct
     ? {
         interestRevision: request.interestRevision,
         interestState: request.interestState,
+        keepingPolicy: request.keepingPolicy,
       }
-    : { interestRevision: null, interestState: null };
+    : { interestRevision: null, interestState: null, keepingPolicy: null };
 }
 
 /**

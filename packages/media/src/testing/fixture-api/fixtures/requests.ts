@@ -268,7 +268,7 @@ function interestPage(cursor: string | null, persona: Persona): InterestList {
 export function requestInterest(
   id: string,
   persona: Persona,
-): Pick<InterestView, "interestRevision" | "interestState"> {
+): Pick<InterestView, "interestRevision" | "interestState" | "keepingPolicy"> {
   const listed = [null, SECOND_INTEREST_PAGE]
     .flatMap((cursor) => interestPage(cursor, persona).items)
     .find((item) => item.requestId === id);
@@ -276,13 +276,18 @@ export function requestInterest(
     return {
       interestRevision: listed.interestRevision,
       interestState: listed.interestState,
+      keepingPolicy: listed.keepingPolicy,
     };
   }
   const parsed = parseFixtureId(id);
   if (parsed?.namespace !== 5) {
     throw new Error(`Not a fixture request identifier: ${id}`);
   }
-  return { interestRevision: parsed.sequence % 3, interestState: "following" };
+  return {
+    interestRevision: parsed.sequence % 3,
+    interestState: "following",
+    keepingPolicy: "temporary",
+  };
 }
 
 /** Requests carried over from the previous request manager. */

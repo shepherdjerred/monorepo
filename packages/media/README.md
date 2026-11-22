@@ -170,6 +170,12 @@ list.
 | `GET /api/v1/catalog/discover?feed=&page=` | One page of a browse feed, same shape.     |
 | `GET /api/v1/catalog/:kind/:id`            | One movie or series, with its season list. |
 
+`GET /api/v1/catalog/:kind/:id` also carries `runtimeMinutes`: a film's runtime
+in whole minutes as TMDB lists it, or `null` when TMDB does not know it (TMDB
+sends 0 for that). It is always `null` for a series. TMDB gives a series no
+runtime, only `episode_run_time`, a list of typical episode lengths that is
+often empty; Media does not turn that into an average.
+
 `page` is 1 to 5 and defaults to 1; `totalPages` never exceeds 5. `feed` is one
 of:
 
@@ -1644,13 +1650,46 @@ title with no default target, which the command could not change, and for
 anyone but the owner. A title in a Plex library the reader may not open reports
 `unclassified` and `null`.
 
-Each entry of `requests` carries `interestRevision` and `interestState`, named
-as `GET /api/v1/request-interests` names them, beside the request's `version`.
-Together they are what `POST /api/v1/request-interests/:id/commands` expects,
-so a title page can stop following without a second read. Both are `null` for a
-request with no interest of its own: a row that a series or season request
-spread onto an episode, whose interest is managed on that original request. A
-member still reads only their own requests.
+Each entry of `requests` carries `interestRevision`, `interestState` and
+`keepingPolicy`, named as `GET /api/v1/request-interests` names them, beside the
+request's `version`. The version and the revision are what
+`POST /api/v1/request-interests/:id/commands` expects, so a title page can stop
+following without a second read. `keepingPolicy` is the request's own (`keep` or
+`temporary`): while it is `keep`, that command refuses `drop` and `finished`
+with 409 `keep_protected`. All three are `null` for a request with no interest
+of its own: a row that a series or season request spread onto an episode, whose
+interest is managed on that original request. A member still reads only their
+own requests.
+
+`runtimeMinutes` is the row's own runtime in whole minutes: a film's, or an
+episode's. A series and a season store none, so theirs is `null`; nothing is
+summed or averaged from their episodes. It is also `null` when TMDB does not
+know the runtime, which TMDB reports as 0.
+
+`followers` tells the household who follows the root title, so a member can see
+more than their own request:
+
+| Value                   | Meaning                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| `[{ displayName, me }]` | One entry per person who follows the title. `me` marks the reader's own entry. |
+| `[]`                    | Nobody follows it.                                                             |
+| `null`                  | The names are withheld from this reader. Do not read it as "nobody".           |
+
+- A follower has an active, not excluded claim on the root title itself whose
+  interest is `following`, on any edition. These are the claims behind the
+  library's `temporary` policy and `myInterest: following`, so `followers` is
+  empty exactly when the household does not follow the title.
+- A season or episode reports its series' followers. A claim on only a season or
+  an episode does not make its owner a follower of the series, and a series
+  request's rows on its episodes are still one follower.
+- The name is the display name of the person the claim belongs to, not of
+  whoever made the request. A managed profile is named as itself; an owner who
+  asked on someone's behalf is not named unless they follow the title too.
+- Entries carry a name and `me` only: no user, request or profile identifier.
+  The reader comes first, then the others by name.
+- `null` goes to an account the owner restricted, and to anyone for a title in a
+  Plex library they may not open. Everyone else in the household, the owner
+  included, reads the same names; the owner's `requests` is unchanged.
 
 `GET /api/v4/media/:id/movie-editions/:edition` applies that projection to its
 `progress`: a requester of the edition keeps each download's state, progress and

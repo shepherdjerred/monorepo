@@ -8,6 +8,7 @@ import type { Database } from "./database.ts";
 import type { CatalogDetail, CatalogSearch } from "#shared/api.ts";
 import {
   CATALOG_MAX_PAGE,
+  knownRuntimeMinutes,
   type CatalogFeed,
 } from "#shared/catalog/contract.ts";
 import { CatalogFeedCache } from "./catalog-feeds/cache.ts";
@@ -168,17 +169,19 @@ export class TmdbCatalogApplication implements CatalogApplication {
   }
 
   private async title(kind: "movie" | "series", externalId: number) {
-    if (kind === "movie")
+    if (kind === "movie") {
+      const movie = await this.tmdb.movie(externalId);
       return {
-        ...catalogItem({
-          ...(await this.tmdb.movie(externalId)),
-          media_type: "movie",
-        }),
+        ...catalogItem({ ...movie, media_type: "movie" }),
+        runtimeMinutes: knownRuntimeMinutes(movie.runtime),
         seasons: [],
       };
+    }
     const item = await this.tmdb.series(externalId);
     return {
       ...catalogItem({ ...item, media_type: "tv" }),
+      // TMDB gives a series no runtime of its own, so none is reported.
+      runtimeMinutes: null,
       seasons: item.seasons.map((season) => ({
         externalId: season.id,
         seasonNumber: season.season_number,

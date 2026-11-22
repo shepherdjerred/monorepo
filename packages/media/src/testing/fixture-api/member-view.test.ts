@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  CatalogDetailSchema,
   MediaDetailSchema,
   ProfileDefaultsSchema,
   ProfileListSchema,
@@ -9,7 +10,7 @@ import { RequestInterestListSchema } from "#shared/household/interests.ts";
 import { LibraryPageSchema } from "#shared/household/library.ts";
 import { MovieTargetContextV4Schema } from "#shared/movie-editions/lifecycle/public-v4.ts";
 import { FEATURED, episodeId, seasonId } from "./fixtures/titles.ts";
-import { MEMBER } from "./personas.ts";
+import { KIDS, MEMBER, OWNER, SAM } from "./personas.ts";
 import type { Persona } from "./personas.ts";
 import { routeFixture } from "./router.ts";
 
@@ -220,6 +221,7 @@ describe("what a title page reads about keeping and following", () => {
         version: interest.version,
         interestRevision: interest.interestRevision,
         interestState: interest.interestState,
+        keepingPolicy: interest.keepingPolicy,
       });
       states.add(interest.interestState);
     }
@@ -232,6 +234,7 @@ describe("what a title page reads about keeping and following", () => {
         userId: MEMBER.id,
         interestRevision: null,
         interestState: null,
+        keepingPolicy: null,
       }),
     ]);
   });
@@ -253,4 +256,122 @@ describe("what a title page reads about keeping and following", () => {
       );
     },
   );
+});
+
+describe("what a title page reads about its runtime and its followers", () => {
+  it.each([
+    { persona: "owner", reader: OWNER },
+    { persona: "member", reader: MEMBER },
+  ] as const)(
+    "$persona: followers are names only, the reader first, and agree with the reader's own request",
+    async ({ persona, reader }) => {
+      const library = LibraryPageSchema.parse(
+        await read("/library?limit=50", persona),
+      );
+      let withReader = 0;
+      for (const item of library.items) {
+        const detail = MediaDetailSchema.parse(
+          await read(`/media/${item.id}`, persona),
+        );
+        const followers = detail.followers ?? [];
+        expect(detail.followers).not.toBeNull();
+        for (const follower of followers)
+          expect(Object.keys(follower).sort()).toEqual(["displayName", "me"]);
+        const mine = followers.filter((follower) => follower.me);
+        expect(mine.length).toBeLessThanOrEqual(1);
+        const follows = detail.requests.some(
+          (request) =>
+            request.userId === reader.id &&
+            request.interestState === "following",
+        );
+        expect(mine.length === 1).toBe(follows);
+        if (follows) {
+          expect(followers[0]).toEqual({
+            displayName: reader.displayName,
+            me: true,
+          });
+          withReader += 1;
+        }
+        // A title the library holds only while followed has a follower.
+        if (item.policy === "temporary")
+          expect(followers.length).toBeGreaterThan(0);
+      }
+      expect(withReader).toBeGreaterThan(0);
+    },
+  );
+
+  it("a member reads the names of the others who follow a title, and a managed profile's own name", async () => {
+    const movie = MediaDetailSchema.parse(
+      await read(`/media/${FEATURED.movie.id}`, "member"),
+    );
+    expect(movie.followers).toContainEqual({
+      displayName: SAM.displayName,
+      me: false,
+    });
+    // The member's `requests` still holds only their own.
+    expect(
+      movie.requests.every((request) => request.userId === MEMBER.id),
+    ).toBe(true);
+    const managed = MediaDetailSchema.parse(
+      await read(`/media/${FEATURED.protectionOnly.id}`, "member"),
+    );
+    expect(managed.followers).toContainEqual({
+      displayName: KIDS.displayName,
+      me: false,
+    });
+  });
+
+  it("a season and an episode report their series' followers, and their own runtime", async () => {
+    const series = MediaDetailSchema.parse(
+      await read(`/media/${FEATURED.series.id}`, "member"),
+    );
+    const season = MediaDetailSchema.parse(
+      await read(`/media/${seasonId(FEATURED.series, 1)}`, "member"),
+    );
+    const episode = MediaDetailSchema.parse(
+      await read(`/media/${episodeId(FEATURED.series, 1, 3)}`, "member"),
+    );
+    expect(series.followers?.length).toBeGreaterThan(0);
+    expect(season.followers).toEqual(series.followers);
+    expect(episode.followers).toEqual(series.followers);
+    // A series and a season have no runtime of their own; an episode does.
+    expect(series.runtimeMinutes).toBeNull();
+    expect(season.runtimeMinutes).toBeNull();
+    expect(episode.runtimeMinutes).toEqual(expect.any(Number));
+  });
+
+  it("a film's title page and its catalog page report the same runtime, and a series' catalog page none", async () => {
+    const library = LibraryPageSchema.parse(
+      await read("/library?limit=50&kind=movie", "member"),
+    );
+    const runtimes = new Set<string>();
+    for (const item of library.items) {
+      const detail = MediaDetailSchema.parse(
+        await read(`/media/${item.id}`, "member"),
+      );
+      if (detail.catalog === null)
+        throw new Error(`${item.title} has no catalog page`);
+      const catalog = CatalogDetailSchema.parse(
+        await read(
+          `/catalog/movie/${String(detail.catalog.externalId)}`,
+          "member",
+        ),
+      );
+      expect(catalog.runtimeMinutes).toBe(detail.runtimeMinutes);
+      runtimes.add(detail.runtimeMinutes === null ? "unknown" : "known");
+    }
+    expect([...runtimes].sort()).toEqual(["known", "unknown"]);
+    const series = MediaDetailSchema.parse(
+      await read(`/media/${FEATURED.series.id}`, "member"),
+    );
+    if (series.catalog === null)
+      throw new Error("The featured series has no catalog page");
+    const catalog = CatalogDetailSchema.parse(
+      await read(
+        `/catalog/series/${String(series.catalog.externalId)}`,
+        "member",
+      ),
+    );
+    expect(catalog.runtimeMinutes).toBeNull();
+  });
 });

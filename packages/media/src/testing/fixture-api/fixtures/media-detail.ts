@@ -3,7 +3,12 @@ import type { MediaDetailSchema } from "#shared/api.ts";
 import type { Availability, MediaItem } from "#shared/contract.ts";
 import type { DefaultTargetBatchSchema } from "#shared/editions/target-batch.ts";
 import type { DefaultTargetViewSchema } from "#shared/editions/target-view.ts";
-import { storedArtwork, storedOverview } from "./artwork.ts";
+import {
+  filmRuntimeMinutes,
+  storedArtwork,
+  storedOverview,
+} from "./artwork.ts";
+import { titleFollowers } from "./followers.ts";
 import {
   CAPTIONS_MISSING,
   CAPTIONS_SATISFIED,
@@ -26,6 +31,7 @@ import {
   ahead,
   derivedId,
   fixtureId,
+  versionOf,
 } from "#testing/fixture-api/support.ts";
 import {
   FEATURED,
@@ -295,6 +301,7 @@ function requesters(
             user: { displayName: user.displayName },
             interestRevision: null,
             interestState: null,
+            keepingPolicy: null,
           },
         ];
   }
@@ -317,6 +324,13 @@ function requesters(
     : own;
 }
 
+/** A film's runtime, or an episode's own; a series and a season have none. */
+function runtimeMinutes(resolved: ResolvedMedia): number | null {
+  const { item, title } = resolved;
+  if (item.kind === "movie") return filmRuntimeMinutes(title.tmdbId);
+  return item.kind === "episode" ? 42 + versionOf(item.id) * 3 : null;
+}
+
 /** Everything the title page shows for a movie, series, season, or episode. */
 export function mediaDetail(
   resolved: ResolvedMedia,
@@ -331,10 +345,12 @@ export function mediaDetail(
     rootMediaId: title.id,
     artwork: storedArtwork(title),
     overview: storedOverview(title),
+    runtimeMinutes: runtimeMinutes(resolved),
     catalog: { kind: title.kind, externalId: title.tmdbId },
     // A season or episode page reports its series' keeping, as the library does.
     policy: libraryPolicy(title),
     libraryKeeping: libraryKeeping(title, persona),
+    followers: titleFollowers(title, persona),
     visibility: mediaVisibility(resolved, persona),
     subtitlePolicies: featured
       ? [

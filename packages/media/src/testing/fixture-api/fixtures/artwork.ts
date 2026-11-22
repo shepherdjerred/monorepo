@@ -83,3 +83,8 @@ export function mediaReference(
 export function storedOverview(title: Title): string | null {
   return observed(title) ? synopsis(title.title) : null;
 }
+
+/** A film's runtime as TMDB lists it, by its TMDB id. TMDB does not know a few. */
+export function filmRuntimeMinutes(tmdbId: number): number | null {
+  return tmdbId % 13 === 5 ? null : 84 + (tmdbId % 97);
+}

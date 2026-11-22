@@ -25,6 +25,7 @@ function ownerDetail(): MediaDetail {
       backdropPath: "/hGfEdCbA4321.jpg",
     },
     overview: "A movie a member may read about.",
+    runtimeMinutes: 136,
     catalog: { kind: "movie", externalId: 603 },
     policy: "keep",
     libraryKeeping: {
@@ -32,6 +33,10 @@ function ownerDetail(): MediaDetail {
       targetVersion: 3,
       keepingPolicy: "keep",
     },
+    followers: [
+      { displayName: "Requester", me: true },
+      { displayName: "Housemate", me: false },
+    ],
     visibility: {
       movieRequests: [],
       playback: {
@@ -109,6 +114,7 @@ function ownerDetail(): MediaDetail {
         user: { displayName: "Requester" },
         interestRevision: 5,
         interestState: "following",
+        keepingPolicy: "keep",
       },
       {
         id: crypto.randomUUID(),
@@ -118,6 +124,7 @@ function ownerDetail(): MediaDetail {
         user: { displayName: "Covered by a series request" },
         interestRevision: null,
         interestState: null,
+        keepingPolicy: null,
       },
     ],
     holds: [],
@@ -166,11 +173,24 @@ test("a member reads how long the title is kept and never the owner's keeping sw
     member.requests.map((request) => [
       request.interestRevision,
       request.interestState,
+      request.keepingPolicy,
     ]),
   ).toEqual([
-    [5, "following"],
-    [null, null],
+    [5, "following", "keep"],
+    [null, null, null],
   ]);
+});
+
+test("a member reads the runtime and who follows the title as the read reported them", () => {
+  const owner = ownerDetail();
+  const member = memberDetail(owner);
+  expect(member.runtimeMinutes).toBe(136);
+  // The read decides whose names a reader may see; the projection adds none.
+  expect(member.followers).toEqual([
+    { displayName: "Requester", me: true },
+    { displayName: "Housemate", me: false },
+  ]);
+  expect(memberDetail({ ...owner, followers: null }).followers).toBeNull();
 });
 
 test("the projection changes nothing else and stays within the existing strict contract", () => {

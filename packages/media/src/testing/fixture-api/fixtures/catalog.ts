@@ -19,6 +19,7 @@ import { DAY, NOW } from "#testing/fixture-api/support.ts";
 import {
   backdropPath,
   catalogArtwork,
+  filmRuntimeMinutes,
   posterPath,
   synopsis,
 } from "./artwork.ts";
@@ -309,6 +310,9 @@ export function catalogDetail(
   return {
     ...asRead(entry.item, scenario),
     libraryAccess: libraryAccess(scenario),
+    // TMDB lists a runtime for a film and none for a series.
+    runtimeMinutes:
+      entry.item.kind === "movie" ? filmRuntimeMinutes(externalId) : null,
     seasons:
       entry.item.kind === "movie"
         ? []
