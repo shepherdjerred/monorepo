@@ -82,19 +82,11 @@ function alertmanagerReceivers(alertDashboardSecretName: string) {
     {
       name: "alerts",
       webhook_configs: alertmanagerWebhookConfigs(alertDashboardSecretName),
-      // The ledger is the place to work alerts, but it is a page the operator
-      // has to remember to open. Only the null routes, fallback matchers, and
-      // routine warning household chores divert anything ahead of this
-      // receiver, so it sees the critical and warning alerts worth interrupting
-      // someone for. Delivery is additive: the webhook above still records
-      // every alert whether or not the mail succeeds.
-      //
-      // This and the dashboard's own outbox are alternatives, not layers. The
-      // webhook above queues an opening email of its own whenever the dashboard
-      // runs with EMAIL_ENABLED=true, which would mail every alert twice. The
-      // dashboard's sender is therefore off, and re-enabling it means removing
-      // this entry in the same change — see packages/alert-dashboard/README.md.
-      email_configs: OPERATOR_EMAIL_CONFIGS,
+      // Hub (`alert-dashboard`) owns incident opening emails for ordinary
+      // warning and critical alerts via its SQLite outbox (`alert-dashboard-email-enabled`).
+      // Keeping `email_configs` off this receiver ensures each alert mails once
+      // through Hub rather than twice; `postal-fallback` below retains direct
+      // Postal STARTTLS delivery for alerts that diagnose Hub or its webhook.
     },
     {
       // Routine household warnings (vacuums, litter, feeders, batteries) enter

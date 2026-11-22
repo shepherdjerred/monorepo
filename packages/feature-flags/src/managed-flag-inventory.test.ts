@@ -726,3 +726,17 @@ describe("Golink first-party rollout", () => {
     });
   });
 });
+
+describe("Hub alert email single-sender cutover", () => {
+  test("enables alert-dashboard-email-enabled globally in beta and prod", () => {
+    assertGloballyEnabledBooleanFlag(
+      "alert-dashboard",
+      "alert-dashboard-email-enabled",
+      {
+        owner: "alert-dashboard",
+        namespace: "alert-dashboard",
+        source: "alert-dashboard",
+      },
+    );
+  });
+});

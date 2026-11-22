@@ -188,7 +188,7 @@ in-cluster Prometheus, `http://prometheus-operated.prometheus:9090`). Postal
 uses the credential `POSTAL_API_KEY` and bootstrap connection settings
 `POSTAL_HOST` / `POSTAL_HOST_HEADER`.
 
-Incident mail uses `alert-dashboard-email-enabled` (default off). Incident
+Incident mail uses `alert-dashboard-email-enabled` (default on). Incident
 sender and recipient come from `alert-dashboard-incident-email-from` /
 `alert-dashboard-incident-email-to`, and digest sender and recipient come from
 `alert-dashboard-digest-email-from` / `alert-dashboard-digest-email-to`.
@@ -210,15 +210,14 @@ while sending was still flag-gated, returns
 `duplicate: true`, a failed period is retried by the next request, and a claim
 older than five minutes is presumed abandoned and may be reclaimed.
 
-Incident mail and Alertmanager's own mail are alternatives. The
-`alerts` receiver carries `email_configs` alongside its webhook, so every
-warning and critical alert is already mailed directly over Postal SMTP; turning
-this on as well would mail the same opening twice, once from Alertmanager and
-once from this outbox. Enable it only together with removing `email_configs`
-from that receiver in
-`packages/homelab/src/cdk8s/src/resources/argo-applications/observability/prometheus.ts`.
-While it stays off, `AlertDashboardOutboxStranded` reports any rows queued
-before it was disabled, since those can neither drain nor expire.
+Incident mail and Alertmanager's own mail are alternatives. Hub's outbox sends
+opening mail for ordinary warning and critical alerts (`alert-dashboard-email-enabled`
+on), while Alertmanager's `alerts` receiver delivers webhook-only and
+`postal-fallback` retains direct Postal STARTTLS mail for alerts that diagnose
+Hub or its webhook (`packages/homelab/src/cdk8s/src/resources/argo-applications/observability/prometheus.ts`).
+If `alert-dashboard-email-enabled` is turned off, `AlertDashboardOutboxStranded`
+reports any rows queued before it was disabled, since those can neither drain
+nor expire.
 
 The API server listens on port 7341 and the Vite dev server on 7342 (proxying
 `/api` and `/trpc` to 7341). The UI and tRPC transport share the same process

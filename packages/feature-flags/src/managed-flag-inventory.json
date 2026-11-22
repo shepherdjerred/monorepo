@@ -2547,26 +2547,10 @@
       "source": "alert-dashboard",
       "purpose": "Enable incident email at process startup; coordinate with Alertmanager routing and restart the dashboard.",
       "type": "boolean",
-      "default": false,
+      "default": true,
       "rollouts": [],
       "rules": [],
-      "thresholdRollouts": [],
-      "defaultOffExceptions": [
-        {
-          "environment": "beta",
-          "reason": "Alertmanager remains the incident email sender; dashboard email would duplicate delivery.",
-          "issue": "AI-442",
-          "enableWhen": "Owner authorizes a single-sender routing migration and email-delivery acceptance passes.",
-          "reviewBy": "2026-12-07"
-        },
-        {
-          "environment": "prod",
-          "reason": "Alertmanager remains the incident email sender; dashboard email would duplicate delivery.",
-          "issue": "AI-442",
-          "enableWhen": "Owner authorizes a single-sender routing migration and email-delivery acceptance passes.",
-          "reviewBy": "2026-12-07"
-        }
-      ]
+      "thresholdRollouts": []
     },
     {
       "key": "alert-dashboard-email-from",
