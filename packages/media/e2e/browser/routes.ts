@@ -248,6 +248,7 @@ const MANAGE_ROUTES: readonly RouteSpec[] = [
   { path: "/manage/household", heading: "Household" },
   { path: "/manage/quality", heading: "Quality" },
   { path: "/manage/subtitles", heading: "Subtitles" },
+  { path: "/manage/subtitles/replacements", heading: "Subtitle replacement" },
   { path: "/manage/plex", heading: "Plex" },
   { path: "/manage/numbering", heading: "Numbering" },
   { path: "/manage/providers", heading: "Providers and seeding" },
@@ -264,8 +265,7 @@ const MANAGE_ROUTES: readonly RouteSpec[] = [
  * The owner's own pages, plus the household pages that show an owner more
  * than a member (library keeping controls, title administration).
  *
- * Not covered: `/manage/recovery/native` and
- * `/manage/subtitles/replacements`, whose operator inventories have no
+ * Not covered: `/manage/recovery/native`, whose operator inventories have no
  * fixture yet.
  */
 const OWNER_ROUTES: readonly RouteSpec[] = [

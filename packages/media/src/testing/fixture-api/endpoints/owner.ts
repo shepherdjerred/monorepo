@@ -17,6 +17,10 @@ import {
   NumberingEpisodeListSchema,
   NumberingSeriesListSchema,
 } from "#shared/numbering.ts";
+import {
+  SubtitleReplacementDetailSchema,
+  SubtitleReplacementListSchema,
+} from "#shared/subtitle-replacement.ts";
 import { PlexProfilesSchema } from "#shared/plex-admin.ts";
 import { QualityGuideStatusSchema } from "#shared/quality-guide/view.ts";
 import { RecoveryDetailSchema, RecoveryListSchema } from "#shared/recovery.ts";
@@ -41,6 +45,11 @@ import {
   subtitleTargets,
 } from "#testing/fixture-api/fixtures/owner.ts";
 import { nativeRecoveryInventory } from "#testing/fixture-api/fixtures/native-recovery.ts";
+import {
+  REPLACEMENT_IDS,
+  subtitleReplacementDetail,
+  subtitleReplacementList,
+} from "#testing/fixture-api/fixtures/subtitle-replacements.ts";
 import {
   HANDOFF_IDS,
   handoffDetail,
@@ -206,6 +215,22 @@ const administration: readonly FixtureEndpoint[] = [
     schema: HandoffPlanDetailSchema,
     respond: (request) => handoffDetail(request.param("id")),
     samples: Object.values(HANDOFF_IDS).map((id) => `/admin/handoffs/${id}`),
+  }),
+  endpoint({
+    path: "/admin/subtitle-replacements",
+    access: "owner",
+    schema: SubtitleReplacementListSchema,
+    respond: () => subtitleReplacementList(),
+    samples: ["/admin/subtitle-replacements"],
+  }),
+  endpoint({
+    path: "/admin/subtitle-replacements/:id",
+    access: "owner",
+    schema: SubtitleReplacementDetailSchema,
+    respond: (request) => subtitleReplacementDetail(request.param("id")),
+    samples: Object.values(REPLACEMENT_IDS).map(
+      (id) => `/admin/subtitle-replacements/${id}`,
+    ),
   }),
   endpoint({
     path: "/admin/subtitles/targets",

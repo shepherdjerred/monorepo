@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
@@ -13,11 +13,19 @@ import {
   type MovieEditionScope,
 } from "#shared/movie-editions/registry.ts";
 import { readApi } from "#client/api.ts";
-import { ErrorNotice, Loading, Notice } from "#client/components.tsx";
-import { CommandError } from "#client/target-controls/errors.tsx";
+import { CommandFailure } from "#client/subtitle-replacement/failure.tsx";
+import { Callout, LoadError } from "#client/ui/feedback.tsx";
+import { SelectField } from "#client/ui/forms/field.tsx";
+import { Form, FormFooter } from "#client/ui/forms/form.tsx";
+import { Disclosure } from "#client/ui/panel.tsx";
 import { MovieCaptionUploadV2 } from "./subtitle-upload-v2.tsx";
 import { useMovieCaptionCommandV2 } from "./subtitle-api-v2.ts";
 
+/**
+ * Replace one installed caption of a published movie edition: pick the
+ * caption, upload or choose a validated candidate, and prepare a review. The
+ * replacement itself is approved on the review page.
+ */
 export function MovieCaptionReplacementV2({
   user,
   context,
@@ -60,47 +68,59 @@ export function MovieCaptionReplacementV2({
   );
   if (prepared !== null)
     return (
-      <Notice>
-        Review prepared for {movieEditionDisplayLabel(prepared.scope.edition)}.{" "}
+      <Callout tone="ok">
+        <span role="status">
+          Review prepared for {movieEditionDisplayLabel(prepared.scope.edition)}
+          .{" "}
+        </span>
         <Link to={`/manage/subtitles/replacements/${prepared.id}`}>
           Inspect and approve the exact replacement
         </Link>
-      </Notice>
+      </Callout>
     );
   return (
-    <details
-      onToggle={(event) => {
-        setOpen(event.currentTarget.open);
-      }}
+    <Disclosure
+      title={`Replace captions for ${context.editionLabel}`}
+      onToggle={setOpen}
     >
-      <summary>Replace captions for {context.editionLabel}</summary>
-      {target.isPending && <Loading />}
-      {target.error !== null && <ErrorNotice error={target.error} />}
+      <p>
+        Choose the installed caption to replace. Uploading or choosing a
+        candidate and preparing a review replaces nothing; you approve the exact
+        replacement on the review page.
+      </p>
+      {target.isPending && open && <p role="status">Loading captions…</p>}
+      {target.error !== null && (
+        <LoadError
+          what="Captions"
+          error={target.error}
+          retry={() => {
+            void target.refetch();
+          }}
+        />
+      )}
       {target.data !== undefined && (
-        <label>
-          Installed sidecar
-          <select
-            value={selected?.oldId ?? ""}
-            onChange={(event) => {
-              const value = target.data;
-              setSelected({ context: value, oldId: event.target.value });
-            }}
-          >
-            <option value="">Choose the exact caption…</option>
-            {target.data.subtitles
-              .filter(
-                (caption) =>
-                  caption.state === "installed" &&
-                  caption.storageKind === "sidecar" &&
-                  ["en", "zh-Hans"].includes(caption.language),
-              )
-              .map((caption) => (
-                <option key={caption.id} value={caption.id}>
-                  {caption.language} · {caption.filename}
-                </option>
-              ))}
-          </select>
-        </label>
+        <SelectField
+          label="Installed sidecar"
+          value={selected?.oldId ?? ""}
+          onChange={(event) => {
+            const value = target.data;
+            setSelected({ context: value, oldId: event.target.value });
+          }}
+        >
+          <option value="">Choose the exact caption…</option>
+          {target.data.subtitles
+            .filter(
+              (caption) =>
+                caption.state === "installed" &&
+                caption.storageKind === "sidecar" &&
+                ["en", "zh-Hans"].includes(caption.language),
+            )
+            .map((caption) => (
+              <option key={caption.id} value={caption.id}>
+                {caption.language}: {caption.filename}
+              </option>
+            ))}
+        </SelectField>
       )}
       {selected !== null && old !== undefined && (
         <div key={`${old.id}:${String(old.version)}`}>
@@ -130,7 +150,7 @@ export function MovieCaptionReplacementV2({
           )}
         </div>
       )}
-    </details>
+    </Disclosure>
   );
 }
 
@@ -149,6 +169,7 @@ function MovieCaptionPrepareV2({
   refresh: () => void;
   onPrepared: (id: string, scope: MovieEditionScope) => void;
 }) {
+  const headingId = useId();
   const [candidateId, setCandidateId] = useState("");
   const command = useMovieCaptionCommandV2(user.id, { onPrepared });
   const old = reviewed.subtitles.find((caption) => caption.id === oldId);
@@ -158,10 +179,31 @@ function MovieCaptionPrepareV2({
     (caption) => caption.id === candidateId,
   );
   return (
-    <div className="stack-form">
-      <label>
-        Validated candidate
-        <select
+    <>
+      <h4 id={headingId}>Prepare the replacement review</h4>
+      <Form
+        labelledBy={headingId}
+        onSubmit={() => {
+          if (candidate === undefined) return;
+          command.submit({
+            path: `/media/${reviewed.scope.mediaId}/movie-editions/${reviewed.scope.edition}/subtitle-replacements`,
+            body: MoviePrepareReplacementV2Schema.parse({
+              schemaVersion: 2,
+              scope: reviewed.scope,
+              oldSubtitleId: old.id,
+              candidateSubtitleId: candidate.id,
+              expectedOldVersion: old.version,
+              expectedCandidateVersion: candidate.version,
+            }),
+          });
+        }}
+      >
+        <SelectField
+          label="Validated candidate"
+          description="Only validated, accepted captions of the same language and kind are offered."
+          name="candidate"
+          required
+          requiredMessage="Choose the validated caption that replaces this one."
           disabled={command.blocked}
           value={candidateId}
           onChange={(event) => {
@@ -180,48 +222,30 @@ function MovieCaptionPrepareV2({
             )
             .map((caption) => (
               <option key={caption.id} value={caption.id}>
-                {caption.language} · {caption.providerId} ·{" "}
+                {caption.language}: {caption.providerId},{" "}
                 {caption.id.slice(0, 8)}
               </option>
             ))}
-        </select>
-      </label>
-      <button
-        className="button"
-        disabled={command.blocked || candidate === undefined}
-        onClick={() => {
-          if (candidate === undefined) return;
-          command.submit({
-            path: `/media/${reviewed.scope.mediaId}/movie-editions/${reviewed.scope.edition}/subtitle-replacements`,
-            body: MoviePrepareReplacementV2Schema.parse({
-              schemaVersion: 2,
-              scope: reviewed.scope,
-              oldSubtitleId: old.id,
-              candidateSubtitleId: candidate.id,
-              expectedOldVersion: old.version,
-              expectedCandidateVersion: candidate.version,
-            }),
-          });
-        }}
-      >
-        Prepare replacement review
-      </button>
-      <CommandError
+        </SelectField>
+        <FormFooter
+          submitLabel="Prepare replacement review"
+          pendingLabel="Preparing…"
+          pending={command.isPending}
+          disabled={command.blocked}
+          note="Preparing checks the files and replaces nothing."
+        />
+      </Form>
+      <CommandFailure
         error={command.error}
-        review={() => {
+        what="The preparation"
+        unknown={command.unknown}
+        pending={command.isPending}
+        onReview={() => {
           command.reset();
           refresh();
         }}
+        onRetry={command.retryOriginal}
       />
-      {command.unknown && (
-        <button
-          className="button"
-          disabled={command.isPending}
-          onClick={command.retryOriginal}
-        >
-          Retry original preparation
-        </button>
-      )}
-    </div>
+    </>
   );
 }

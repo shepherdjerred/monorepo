@@ -278,6 +278,18 @@ export function movieSubtitleTarget(
         storageKind: "sidecar",
       },
       {
+        id: fixtureId(9, 5004),
+        version: 1,
+        state: "validated",
+        qualityStatus: "accepted",
+        language: "en",
+        forced: false,
+        hearingImpaired: true,
+        providerId: "manual upload",
+        filename: null,
+        storageKind: "sidecar",
+      },
+      {
         id: fixtureId(9, 5003),
         version: 1,
         state: "validated",
