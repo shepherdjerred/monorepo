@@ -718,6 +718,32 @@ describe("what is true of a failed deployment beyond its status", () => {
     }
   });
 
+  it("does not call a rebind recovered because the set it kept is accepted", () => {
+    // A rebind keeps the accepted set and changes recipe or configuration,
+    // so only its own acceptance shows the new selection runs.
+    const rebind = recoveredIn({
+      acceptedVersionSetRevisionId: ended.deployment.versionSetRevisionId,
+      observedVersionSetRevisionId: ended.deployment.versionSetRevisionId,
+    });
+    const kept = {
+      ...rebind,
+      deployment: {
+        ...rebind.deployment,
+        kind: "rebind" as const,
+        previousAcceptedVersionSetRevisionId:
+          ended.deployment.versionSetRevisionId,
+      },
+    };
+    expect(deploymentVerdict(kept)).toMatchObject({ kind: "applied" });
+    expect(offersRetry(kept)).toBe(true);
+    expect(
+      deploymentVerdict({
+        ...kept,
+        environment: { ...kept.environment, acceptedDeploymentId: id },
+      }),
+    ).toEqual({ kind: "recovered" });
+  });
+
   it("says a failure a newer acceptance followed is superseded, and offers no retry", () => {
     const superseded = {
       ...ended,

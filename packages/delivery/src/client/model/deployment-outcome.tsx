@@ -61,9 +61,14 @@ export function deploymentVerdict(detail: Detail): Verdict | null {
   )
     return null;
   const set = deployment.versionSetRevisionId;
+  // A matching set revision proves this release runs only when the
+  // deployment moved the set; a rebind keeps the accepted set and changes
+  // the recipe or configuration, which only its own acceptance shows.
+  const movedSet = deployment.previousAcceptedVersionSetRevisionId !== set;
   return environment.acceptedDeploymentId === deployment.id ||
-    environment.acceptedVersionSetRevisionId === set ||
-    environment.observedVersionSetRevisionId === set
+    (movedSet &&
+      (environment.acceptedVersionSetRevisionId === set ||
+        environment.observedVersionSetRevisionId === set))
     ? { kind: "recovered" }
     : { kind: "applied", acceptedRevision: accepted?.revision ?? null };
 }
