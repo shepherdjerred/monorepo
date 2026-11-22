@@ -160,10 +160,42 @@ type HistorySeed = {
 
 /**
  * Removed titles, newest first, covering every state and restore outcome.
+ * `context` says whose request each was: the signed-in member's, or only
+ * other people's.
+ *
+ * The five newest are all other people's, which is a whole page: a member's
+ * first page of history is therefore empty and still has more behind it.
  * One film has two versions set aside at once: its default version, which
  * the removal list also holds, and a named cut, which it never does.
  */
 const HISTORY: readonly HistorySeed[] = [
+  {
+    title: "Parasite",
+    kind: "movie",
+    reason: "owner_removed",
+    context: "household",
+    state: "restored",
+    restore: "restored",
+    quarantinedDaysAgo: 1,
+  },
+  {
+    title: "Chernobyl",
+    kind: "series",
+    reason: "watched_by_requesters",
+    context: "household",
+    state: "cancelled",
+    restore: "unavailable",
+    quarantinedDaysAgo: 1,
+  },
+  {
+    title: "Interstellar",
+    kind: "movie",
+    reason: "temporary_interest_released",
+    context: "household",
+    state: "restored",
+    restore: "restored",
+    quarantinedDaysAgo: 2,
+  },
   {
     title: "The Holdovers",
     kind: "movie",
@@ -397,6 +429,7 @@ function historyId(seed: HistorySeed, index: number): string {
     : fixtureId(13, index + 1);
 }
 
+/** Every removal decision, with whose request it was. */
 const HISTORY_ITEMS: readonly HistoryItem[] = HISTORY.map((seed, index) => ({
   id: historyId(seed, index),
   ...subject(titleNamed(seed.title), seed.kind),
@@ -413,9 +446,24 @@ const HISTORY_ITEMS: readonly HistoryItem[] = HISTORY.map((seed, index) => ({
   restoreState: seed.restore,
 }));
 
-const HISTORY_PAGE_SIZE = 10;
+const HISTORY_PAGE_SIZE = 5;
 
-export function removalHistory(parameters: URLSearchParams): HistoryPage {
+/**
+ * What a page of decisions shows its reader, as the server decides it after
+ * the page has been cut. The owner sees every decision, as the household's.
+ * A member sees only the ones that were their own request, so a page can
+ * come back short, or empty, and still have more behind it.
+ */
+function shownTo(persona: Persona, page: readonly HistoryItem[]) {
+  return persona === "owner"
+    ? page.map((item) => ({ ...item, requesterContext: "household" as const }))
+    : page.filter((item) => item.requesterContext === "your_request");
+}
+
+export function removalHistory(
+  parameters: URLSearchParams,
+  persona: Persona,
+): HistoryPage {
   const cursor = parameters.get("cursor");
   let start = 0;
   if (cursor !== null) {
@@ -426,10 +474,10 @@ export function removalHistory(parameters: URLSearchParams): HistoryPage {
     }
     start = position + 1;
   }
-  const items = HISTORY_ITEMS.slice(start, start + HISTORY_PAGE_SIZE);
-  const last = items.at(-1);
+  const page = HISTORY_ITEMS.slice(start, start + HISTORY_PAGE_SIZE);
+  const last = page.at(-1);
   return {
-    items,
+    items: shownTo(persona, page),
     nextCursor:
       last !== undefined && start + HISTORY_PAGE_SIZE < HISTORY_ITEMS.length
         ? JSON.stringify({ createdAt: last.quarantinedAt, id: last.id })

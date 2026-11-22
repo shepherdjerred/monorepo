@@ -260,8 +260,8 @@ test("Leaving soon keeps a whole series' episodes in one action and reports each
 
 /**
  * Opens Removed, where Silo can be restored by either persona (the member
- * asked for it) and two versions of The Holdovers are set aside at once.
- * Returns the list and the film's two rows.
+ * asked for it). Returns the list and the rows of The Holdovers, a film
+ * someone else asked for with two versions set aside at once.
  */
 async function openRemoved(page: Page, persona: "owner" | "member") {
   await openAs(page, persona, "/library/removed");
@@ -270,33 +270,155 @@ async function openRemoved(page: Page, persona: "owner" | "member") {
   await expect(
     entry(list, "Silo").getByRole("button", { name: "Restore to library" }),
   ).toBeVisible();
-  const holdovers = entry(list, "The Holdovers");
-  await expect(holdovers).toHaveCount(2);
-  return { list, holdovers };
+  return { list, holdovers: entry(list, "The Holdovers") };
+}
+
+/**
+ * Presses "Show earlier removals" until the history has none left. Each
+ * press is waited out by its result, more rows in the list, because the
+ * button is renamed while it loads and is gone after the last page.
+ */
+async function showEveryRemoval(list: Locator) {
+  const page = list.page();
+  const earlier = page.getByRole("button", { name: "Show earlier removals" });
+  const rows = list.getByRole("heading");
+  for (let press = 0; press < 5; press += 1) {
+    await settle(page);
+    if (!(await earlier.isVisible())) break;
+    const shown = await rows.count();
+    await earlier.click();
+    await expect.poll(() => rows.count()).toBeGreaterThan(shown);
+  }
+  await expect(earlier).toHaveCount(0);
 }
 
 test("Removed keeps restore for the people who may use it", async ({
   page,
 }) => {
   const { list, holdovers } = await openRemoved(page, "member");
-  // Someone else asked for The Holdovers: neither version is theirs to restore.
-  await expect(holdovers.getByRole("button")).toHaveCount(0);
-  await expect(holdovers.getByRole("link", { name: /Open/u })).toHaveCount(2);
+  // A member's history is of what they asked for. Someone else asked for The
+  // Holdovers, so neither of its versions is in it.
+  await expect(holdovers).toHaveCount(0);
   await expect(
     entry(list, "Moonlight").getByRole("link", { name: /Ask for it again/u }),
   ).toBeVisible();
   await expect(list).not.toContainText(/quarantin|purged|default edition/iu);
 
-  await page.getByRole("button", { name: "Show earlier removals" }).click();
+  await showEveryRemoval(list);
+  await expect(entry(list, "Get Out")).toHaveCount(1);
+});
+
+/** The removal list without anything set aside: nothing is restorable. */
+async function withNothingToRestore(page: Page) {
+  await page.route(/\/api\/v1\/removals$/u, async (route) => {
+    const response = await route.fetch();
+    const rows = RemovalListSchema.parse(await response.json());
+    await route.fulfill({
+      response,
+      json: rows.filter((row) => row.state !== "quarantined"),
+    });
+  });
+}
+
+/** Counts the reads of the removal history a page makes. */
+function historyReads(page: Page): { count: number } {
+  const reads = { count: 0 };
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/v1/removal-history") {
+      reads.count += 1;
+    }
+  });
+  return reads;
+}
+
+test("a member whose newest removals are all other people's still reaches their own", async ({
+  page,
+}) => {
+  // The fixture's five newest removals, a whole page, are other people's, so
+  // this member's first page of history is empty and has more behind it.
+  // With nothing of theirs set aside either, nothing is listed up front.
+  await withNothingToRestore(page);
+  const reads = historyReads(page);
+  await openAs(page, "member", "/library/removed");
+  await settle(page);
+
+  // The view read on past the empty page instead of calling it the end.
   await expect(
-    page.getByRole("button", { name: "Show earlier removals" }),
+    page.getByRole("heading", { name: "Nothing has been removed" }),
   ).toHaveCount(0);
+  expect(reads.count).toBe(2);
+  const list = page.getByRole("list", { name: "Removed" });
+  await expect(list.getByRole("heading")).toHaveText([
+    "Hacks",
+    "Silo",
+    "Moonlight",
+    "Twin Peaks",
+  ]);
+  // Silo is not theirs to restore here, so it has the link, not the control.
+  await expect(entry(list, "Silo").getByRole("button")).toHaveCount(0);
+  expect(await violationDetails(page)).toEqual([]);
+
+  await showEveryRemoval(list);
+  await expect(list.getByRole("heading")).toHaveText([
+    "Hacks",
+    "Silo",
+    "Moonlight",
+    "Twin Peaks",
+    "Dark",
+    "Get Out",
+  ]);
+});
+
+test("a history with nothing to show for page after page says so and offers to look further", async ({
+  page,
+}) => {
+  await withNothingToRestore(page);
+  // Every page is empty and has another behind it, until `ended`.
+  const history = { reads: 0, ended: false };
+  await page.route(/\/api\/v1\/removal-history/u, async (route) => {
+    history.reads += 1;
+    await route.fulfill({
+      json: {
+        items: [],
+        nextCursor: history.ended
+          ? null
+          : JSON.stringify({
+              createdAt: "2026-11-01T00:00:00.000Z",
+              id: `page-${String(history.reads)}`,
+            }),
+      },
+    });
+  });
+  await openAs(page, "member", "/library/removed");
+  await settle(page);
+
+  // One look reads on through empty pages, but not without end.
+  await expect(
+    page.getByRole("heading", { name: "No removals of yours so far" }),
+  ).toBeVisible();
+  expect(history.reads).toBe(5);
+  expect(await violationDetails(page)).toEqual([]);
+
+  const further = page.getByRole("button", { name: "Look further back" });
+  await further.click();
+  await expect.poll(() => history.reads).toBe(10);
+  await expect(further).toBeVisible();
+
+  // When the history does end with nothing in it, the view says so.
+  history.ended = true;
+  await further.click();
+  await expect(
+    page.getByRole("heading", { name: "Nothing has been removed" }),
+  ).toBeVisible();
+  await expect(further).toHaveCount(0);
+  expect(history.reads).toBe(11);
 });
 
 test("restore is offered on the removal it restores, not on another cut of the film", async ({
   page,
 }) => {
   const { holdovers } = await openRemoved(page, "owner");
+  await expect(holdovers).toHaveCount(2);
   await allowWrites(page);
   // The control restores the film's default version, so only that version's
   // row may carry it.

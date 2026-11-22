@@ -172,6 +172,9 @@ function Unlisted({ user, removal }: { user: MediaUser; removal: Removal }) {
 export function LibraryRemoved({ user }: { user: MediaUser }) {
   const history = useCursorList({
     queryKey: ["removal-history"],
+    // The API cuts a page of the household's removals first and keeps the
+    // reader's own afterwards, so a page can be empty and not be the end.
+    emptyPages: "skip",
     read: (cursor) =>
       readApi(
         `/removal-history${cursor === null ? "" : `?cursor=${encodeURIComponent(cursor)}`}`,
@@ -204,7 +207,27 @@ export function LibraryRemoved({ user }: { user: MediaUser }) {
   }
   const restore = restoreControls(history.items, removals.data);
   if (history.items.length === 0 && restore.unlisted.length === 0) {
-    return (
+    // Nothing to show is the end of the history only when the history says
+    // it has ended. Otherwise a whole look found nothing of the reader's.
+    return history.hasMore ? (
+      <EmptyState
+        icon={ArchiveIcon}
+        title="No removals of yours so far"
+        action={
+          <button
+            className="button"
+            type="button"
+            disabled={history.loadingMore}
+            onClick={history.loadMore}
+          >
+            {history.loadingMore ? "Looking…" : "Look further back"}
+          </button>
+        }
+      >
+        None of the household’s most recent removals were of something you asked
+        for. There are earlier ones still to look through.
+      </EmptyState>
+    ) : (
       <EmptyState icon={ArchiveIcon} title="Nothing has been removed">
         When a film or series leaves the library, the record of it stays here,
         along with whether it can be restored.
