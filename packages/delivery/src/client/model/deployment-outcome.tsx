@@ -188,6 +188,29 @@ export function failureStory(detail: Detail) {
 
 type Story = NonNullable<ReturnType<typeof failureStory>>;
 
+/**
+ * What a settled recovery read back, after its intent's name: one
+ * operation's phase, each Application's phase when it read several back, or
+ * its words when no readback names a phase.
+ */
+export function settledWords(settled: RecoveryReading) {
+  const phased = settled.readbacks.filter((entry) => entry.phase !== null);
+  const [only] = settled.readbacks;
+  if (phased.length === 0)
+    return only === undefined
+      ? " settled what the deployment left running."
+      : ` settled what the deployment left running: ${only.text}`;
+  if (settled.readbacks.length === 1)
+    return ` read the external operation back after the deployment ended: it ended in phase ${String(only?.phase)}.`;
+  const each = phased
+    .map(
+      (entry) =>
+        `${entry.application ?? "an operation"} ended in phase ${String(entry.phase)}`,
+    )
+    .join("; ");
+  return ` read each external operation back after the deployment ended: ${each}.`;
+}
+
 /** What a settled recovery read back, in place of the executor's stale headline. */
 function SettledHeadline({ settled }: { settled: RecoveryReading }) {
   return (
@@ -195,11 +218,7 @@ function SettledHeadline({ settled }: { settled: RecoveryReading }) {
       <Link to="/recovery-intents/$" params={{ _splat: settled.id }}>
         Recovery intent {settled.sequence}
       </Link>
-      {settled.phase === null
-        ? settled.reading === null
-          ? " settled what the deployment left running."
-          : ` settled what the deployment left running: ${settled.reading}`
-        : ` read the external operation back after the deployment ended: it ended in phase ${settled.phase}.`}
+      {settledWords(settled)}
     </p>
   );
 }

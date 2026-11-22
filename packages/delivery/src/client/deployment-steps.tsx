@@ -143,42 +143,82 @@ export function stepMessage(stage: Pick<Stage, "key" | "status" | "message">) {
 
 type RecoveryIntents = DeploymentDetailV2["recoveryIntents"];
 
-/** The operation phase an independent readback names, such as `phase Failed`. */
+/**
+ * What an independent Application readback names: its Application (first,
+ * before a comma), the step's request it read back, and the operation's
+ * phase, as `recovery.ts` and `argo-recovery/unsynced.ts` write them.
+ */
+const READBACK_APPLICATION = /readback(?: \([^)]*\))?: (?<app>[^\s,]+),/u;
+const READBACK_REQUEST = /\brequest (?<request>[^\s,]+)/u;
 const READBACK_PHASE = /\bphase (?<phase>[A-Z][A-Za-z]*)\b/u;
+
+/** One readback a settled recovery intent recorded, with what it names. */
+function readback(text: string) {
+  return {
+    text,
+    application: READBACK_APPLICATION.exec(text)?.groups?.["app"] ?? null,
+    request: READBACK_REQUEST.exec(text)?.groups?.["request"] ?? null,
+    phase: READBACK_PHASE.exec(text)?.groups?.["phase"] ?? null,
+  };
+}
 
 /**
  * What the newest recovery intent settled, once it succeeded: which intent,
- * the reading its independent reader recorded, and the operation phase that
- * reading names. Null while no intent has settled, or when the newest one
- * failed, because then nothing has read the outcome back.
+ * and each readback its independent reader recorded, one per Application of
+ * a compound recipe. Null while no intent has settled, or when the newest
+ * one failed, because then nothing has read the outcome back.
  */
 export function recoveryReading(intents: RecoveryIntents | undefined) {
   const intent = (intents ?? []).toSorted(
     (left, right) => right.sequence - left.sequence,
   )[0];
   if (intent?.outcome !== "succeeded") return null;
-  const summary = intent.evidence.at(0)?.summary;
-  const parsed = summary === undefined ? null : parseEvidenceSummary(summary);
-  const reading = parsed?.kind === "text" ? parsed.text : null;
   return {
     id: intent.id,
     sequence: intent.sequence,
-    reading,
-    phase:
-      reading === null
-        ? null
-        : (READBACK_PHASE.exec(reading)?.groups?.["phase"] ?? null),
+    readbacks: intent.evidence.flatMap((entry) => {
+      const parsed = parseEvidenceSummary(entry.summary);
+      return parsed.kind === "text" ? [readback(parsed.text)] : [];
+    }),
   };
 }
 
 export type RecoveryReading = NonNullable<ReturnType<typeof recoveryReading>>;
 
+/**
+ * The phase recovery read back for one step's operation: the readback of
+ * that step's own request, or the only readback, when it names no request.
+ * Null when no readback, or more than one phase, answers for the step.
+ */
+export function readbackPhase(
+  reading: RecoveryReading,
+  stage: Pick<Stage, "operationId">,
+) {
+  const own = reading.readbacks.filter(
+    (entry) => entry.request === stage.operationId,
+  );
+  // A readback that names another step's request never answers for this one.
+  const answers =
+    own.length > 0
+      ? own
+      : reading.readbacks.filter((entry) => entry.request === null);
+  const phases = new Set(answers.map((entry) => entry.phase));
+  const [phase = null] = phases;
+  return phases.size === 1 && (own.length > 0 || answers.length === 1)
+    ? phase
+    : null;
+}
+
 /** An interrupted step's state, once recovery has read its operation back. */
-export function interruptedLabel(reading: RecoveryReading | null) {
+export function interruptedLabel(
+  reading: RecoveryReading | null,
+  stage: Pick<Stage, "operationId">,
+) {
   if (reading === null) return "interrupted · outcome unknown";
-  return reading.phase === null
+  const phase = readbackPhase(reading, stage);
+  return phase === null
     ? `interrupted · settled by recovery intent ${String(reading.sequence)}`
-    : `interrupted · recovery read back phase ${reading.phase}`;
+    : `interrupted · recovery read back phase ${phase}`;
 }
 
 /** What an empty step list means for a deployment in this state. */
@@ -205,13 +245,13 @@ export function StepStatus({
   deployment,
   reading = null,
 }: {
-  stage: Pick<Stage, "status">;
+  stage: Pick<Stage, "status" | "operationId">;
   deployment: DeploymentState;
   /** What a settled recovery read back, which an interrupted step reports. */
   reading?: RecoveryReading | null;
 }) {
   return interrupted(stage, deployment) ? (
-    <Status value="unknown" label={interruptedLabel(reading)} />
+    <Status value="unknown" label={interruptedLabel(reading, stage)} />
   ) : (
     <Status value={stage.status} />
   );
