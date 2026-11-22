@@ -345,7 +345,7 @@ test("activity counts the rows it renders, names its time zone and says why a de
     page.getByRole("status").filter({ hasText: /^Showing / }),
   ).toHaveText(
     new RegExp(
-      String.raw`^Showing ${String(rendered)} (?:entries|rows of \d+ entries), newest first\.$`,
+      String.raw`^Showing (?:all ${String(rendered)} (?:entries|rows of \d+ entries)|the ${String(rendered)} newest (?:entries|rows of \d+ entries)\. Older ones are on the next page)\.$`,
       "u",
     ),
   );
