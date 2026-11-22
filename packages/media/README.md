@@ -753,7 +753,7 @@ A fixture answers a scenario by reading `request.scenario`, and throws
 `FixtureFailure` (`src/testing/fixture-api/scenario.ts`) for an error the real
 API sends. `new-household` empties the reads Home, the Library and the Calendar
 are made of (requests, interests, film requests, the library, the calendar,
-removals, what is playing, the watch history, notifications, and what a restore left held), which is how Home's
+removals, what is playing, the watch history, notifications, what a restore left held, and the owner's migration captures and library reports), which is how Home's
 welcome is seen; `library-unavailable` is one of Home's sections failing among
 the others.
 
@@ -3454,6 +3454,18 @@ and those bytes remain in the excluded control root. Matching content or a
 filename does not prove ownership, so reconciliation does not automatically adopt
 or delete these artifacts. Keep the protection in place while investigating the
 exact journal and files; retrying alone cannot supply missing creation evidence.
+
+`/manage/migration` is one page in five numbered steps, with a list at the top
+that says where each stands: add a capture, review each capture, build and
+approve the library report, prepare files for adoption, and review and adopt.
+Only the last step records ownership. It asks the owner to confirm in a dialog
+that names how many files and Plex labels it will change, and says that the page
+cannot undo it. Revoking a capture's approval also asks, because the page has no
+way to approve that capture again. A refused review (`migration_review_stale`)
+says nothing was saved and offers to load the current review. Hashes, epochs, and
+source bindings sit behind each section's "Technical details". The fixture API
+serves a capture, a report and a plan in each state for it
+(`src/testing/fixture-api/fixtures/migration.ts` and `handoff.ts`).
 
 Owners can upload and review captures at `/manage/migration`. The API saves
 immutable capture records and report evidence. Approval binds capture/report
