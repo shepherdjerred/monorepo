@@ -11,38 +11,7 @@ import {
   Decision,
   TechnicalDetails,
 } from "#client/ui/workflow.tsx";
-import { phrase } from "./vocabulary.ts";
-
-/** What a review's state means for the owner. The state itself is free text from the server. */
-const STATE = {
-  preparing: {
-    label: "Being prepared",
-    tone: "neutral",
-    meaning:
-      "Workers are inspecting the files, storage, and Plex identity. Nothing is changed, and this page updates itself.",
-  },
-  awaiting_review: {
-    label: "Needs your approval",
-    tone: "warn",
-    meaning:
-      "Nothing has changed. Check what follows, then approve or leave it.",
-  },
-  applying: {
-    label: "Approval queued",
-    tone: "neutral",
-    meaning:
-      "Current content and authority are checked again before anything changes.",
-  },
-  applied: {
-    label: "Applied",
-    tone: "ok",
-    meaning: "The approved change is recorded.",
-  },
-} as const;
-
-function stateCopy(state: string) {
-  return Object.entries(STATE).find(([name]) => name === state)?.[1] ?? null;
-}
+import { REVIEW_STATE, phrase, reviewState } from "./vocabulary.ts";
 
 /** The title of a review page, where it came from, and how to refresh what it shows. */
 export function ReviewHeader({
@@ -91,10 +60,10 @@ export function StatePanel({
   state: string;
   children?: ReactNode;
 }) {
-  const copy = stateCopy(state);
+  const copy = REVIEW_STATE[reviewState(state)];
   return (
-    <Panel id="state" title={copy === null ? phrase(state) : copy.label}>
-      {copy !== null && <Callout tone={copy.tone}>{copy.meaning}</Callout>}
+    <Panel id="state" title={copy.label}>
+      <Callout tone={copy.tone}>{copy.meaning}</Callout>
       {children}
     </Panel>
   );

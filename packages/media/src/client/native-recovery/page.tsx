@@ -16,7 +16,7 @@ import { NativeRecoveryReview } from "./review.tsx";
 import { NativeArchiveIndex } from "./archive/index.tsx";
 import { NativeCompensationIndex } from "./compensation/index.tsx";
 import { CursorButtons, Prerequisites } from "./shell.tsx";
-import { phrase, when } from "./vocabulary.ts";
+import { REVIEW_STATE, phrase, reviewState, when } from "./vocabulary.ts";
 
 export function NativeRecoveryPage({ user }: { user: MediaUser }) {
   const { id } = useParams();
@@ -38,11 +38,14 @@ function NativeRecoveryIndex({ user }: { user: MediaUser }) {
   const navigate = useNavigate();
   const inventory = useQuery({
     queryKey: ["native-recovery", cursor],
-    queryFn: () =>
-      readApi(
+    queryFn: async () => {
+      const read = await readApi(
         `/admin/native-recovery${cursor === null ? "" : `?cursor=${encodeURIComponent(cursor)}`}`,
         NativeRecoveryInventorySchema,
-      ),
+      );
+      for (const plan of read.plans) reviewState(plan.state);
+      return read;
+    },
   });
   const prepare = useMutation({
     mutationFn: async () => {
@@ -245,7 +248,11 @@ function NativeRecoveryIndex({ user }: { user: MediaUser }) {
                   <DataRow
                     key={plan.id}
                     title={`Review prepared ${when(plan.createdAt)}`}
-                    status={<Badge>{phrase(plan.state)}</Badge>}
+                    status={
+                      <Badge>
+                        {REVIEW_STATE[reviewState(plan.state)].label}
+                      </Badge>
+                    }
                     actions={
                       <ButtonLink to={`/manage/recovery/native/${plan.id}`}>
                         Open review

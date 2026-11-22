@@ -8,6 +8,7 @@ import {
 } from "#shared/native-recovery/series-pack/detail.ts";
 import { readApi } from "#client/api.ts";
 import { useNativeReviewApproval } from "./approval.ts";
+import { reviewState } from "./vocabulary.ts";
 import { PublishedReview } from "./published.tsx";
 import { QuarantineFileReview } from "./quarantine-review.tsx";
 import { ReviewHeader } from "./shell.tsx";
@@ -31,11 +32,14 @@ export function NativeRecoveryReview({
   const [acknowledgement, setAcknowledgement] = useState<string | null>(null);
   const result = useQuery({
     queryKey: ["native-recovery-detail", id],
-    queryFn: () =>
-      readApi(
+    queryFn: async () => {
+      const read = await readApi(
         `/admin/native-recovery/${id}`,
         NativeRecoveryDetailProtocolSchema,
-      ),
+      );
+      reviewState(read.state);
+      return read;
+    },
     refetchInterval: (query) => {
       const review = query.state.data;
       return review !== undefined && "protocol" in review

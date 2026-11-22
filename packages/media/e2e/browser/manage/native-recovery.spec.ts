@@ -235,6 +235,27 @@ test.describe("a prepared file review", () => {
     });
   }
 
+  test("refuses a review in a state the server does not write, instead of guessing", async ({
+    page,
+  }) => {
+    const unknown = {
+      ...detail(NATIVE_REVIEW_IDS.awaitingReview),
+      state: "requires_review",
+    };
+    await page.route(
+      `**/api/v1/admin/native-recovery/${NATIVE_REVIEW_IDS.awaitingReview}`,
+      async (route) => route.fulfill({ json: unknown }),
+    );
+    await openManage(page, `${NATIVE}/${NATIVE_REVIEW_IDS.awaitingReview}`);
+    await expect(page.getByRole("alert")).toContainText(
+      "The review could not be loaded",
+    );
+    await expect(
+      page.getByRole("button", { name: "Apply this exact physical review" }),
+    ).toHaveCount(0);
+    expect(await horizontalOverflow(page)).toBe(0);
+  });
+
   test("sends the old address to the same review", async ({ page }) => {
     await openManage(page, `/recovery/native/${NATIVE_REVIEW_IDS.applied}`);
     await expect(page).toHaveURL(
