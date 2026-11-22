@@ -101,18 +101,20 @@ export function SeriesPackNativeReview({
           Restored files remain protected until every covered title has current
           positive household authority and Plex verifies the complete group.
         </p>
-        <DataList label="Restoration status">
-          {review.compensationContinuations.map((item) => (
-            <CompensationStatus
-              key={item.id}
-              user={user}
-              item={item}
-              onRefresh={() => {
-                void onRefresh();
-              }}
-            />
-          ))}
-        </DataList>
+        {review.compensationContinuations.length > 0 && (
+          <DataList label="Restoration status">
+            {review.compensationContinuations.map((item) => (
+              <CompensationStatus
+                key={item.id}
+                user={user}
+                item={item}
+                onRefresh={() => {
+                  void onRefresh();
+                }}
+              />
+            ))}
+          </DataList>
+        )}
       </StatePanel>
       <Panel id="coverage" title="Complete title coverage">
         <DataList label="Titles in this upgrade">

@@ -11,6 +11,17 @@ import {
   fixtureId,
   sha256,
 } from "#testing/fixture-api/support.ts";
+import { RUNTIME, scopeMedia, storageRoots, subtitleOf } from "./parts.ts";
+import { ARCHIVE_REVIEW_IDS, archiveReviewDetail } from "./archive.ts";
+import {
+  COMPENSATION_REVIEW_IDS,
+  compensationReviewDetail,
+} from "./compensation.ts";
+import { QUARANTINE_REVIEW_IDS, quarantineReviewDetail } from "./quarantine.ts";
+import {
+  SERIES_PACK_REVIEW_IDS,
+  seriesPackReviewDetail,
+} from "./series-pack.ts";
 import { titleNamed } from "#testing/fixture-api/fixtures/titles.ts";
 
 type Inventory = z.input<typeof NativeRecoveryInventorySchema>;
@@ -26,14 +37,19 @@ export const NATIVE_REVIEW_IDS = {
   applied: fixtureId(33, 13),
 } as const;
 
+const OTHER_REVIEWS = [
+  [QUARANTINE_REVIEW_IDS.awaitingReview, "awaiting_review", 1],
+  [ARCHIVE_REVIEW_IDS.awaitingReview, "awaiting_review", 1],
+  [COMPENSATION_REVIEW_IDS.awaitingReview, "awaiting_review", 1],
+  [SERIES_PACK_REVIEW_IDS.awaitingReview, "awaiting_review", 1],
+] as const;
+
 const REVIEW_STATES = [
   [NATIVE_REVIEW_IDS.awaitingReview, "awaiting_review", 2],
   [NATIVE_REVIEW_IDS.preparing, "preparing", 3],
   [NATIVE_REVIEW_IDS.applying, "applying", 6],
   [NATIVE_REVIEW_IDS.applied, "applied", 9],
 ] as const;
-
-const RUNTIME = { mode: "active", recoveryEpoch: 1, version: 12 } as const;
 
 const ASSETS = [
   ["Dune", "published", []],
@@ -62,7 +78,7 @@ export function nativeRecoveryInventory(
       state,
       reasons: [...reasons],
     })),
-    plans: REVIEW_STATES.map(([id, state, days]) => ({
+    plans: [...REVIEW_STATES, ...OTHER_REVIEWS].map(([id, state, days]) => ({
       id,
       state,
       createdAt: ago(days * DAY),
@@ -160,52 +176,17 @@ function scope(): Detail["scope"] {
     properties: {},
     mediaIds: [title.id],
     subtitles: Array.from({ length: subtitles }, (_, index) => ({
-      id: fixtureId(33, 500 + sequence * 10 + index),
-      assetId: fixtureId(33, 100 + sequence),
-      version: 1,
-      ownershipEpoch: 0,
+      ...subtitleOf({
+        id: fixtureId(33, 500 + sequence * 10 + index),
+        assetId: fixtureId(33, 100 + sequence),
+        path: `${path.replace(".mkv", "")}.en${index === 0 ? "" : ".hi"}.srt`,
+        checksum: sha256(`native-subtitle:${path}:${String(index)}`),
+        videoChecksum: sha256(`native-file:${path}`),
+        quality: index === 0 ? "accepted" : "unverified",
+        hearingImpaired: index !== 0,
+      }),
       state: "installed" as const,
-      qualityStatus:
-        index === 0 ? ("accepted" as const) : ("unverified" as const),
-      storageKind: "sidecar" as const,
-      language: "en",
-      providerId: "opensubtitles",
-      path: `${path.replace(".mkv", "")}.en${index === 0 ? "" : ".hi"}.srt`,
-      checksum: sha256(`native-subtitle:${path}:${String(index)}`),
-      videoChecksum: sha256(`native-file:${path}`),
-      videoVersion: 2,
-      forced: false,
-      hearingImpaired: index === 0 ? false : true,
-      streamIndex: null,
-      codec: null,
-      provenance: {},
-      matchingEvidence: {},
-      contentChecksum: null,
     })),
-  });
-  const root = (rootPath: "/data/movies" | "/data/tv", sequence: number) => ({
-    rootPath,
-    pvcUid: `pvc-${String(sequence)}`,
-    volumeName: `volume-${String(sequence)}`,
-    volumePath: `/volumes/${String(sequence)}`,
-    receipt: {
-      kind: "native" as const,
-      id: fixtureId(33, 800 + sequence),
-      planHash: sha256(`root:${rootPath}`),
-    },
-  });
-  const media = (title: typeof dune) => ({
-    id: title.id,
-    title: title.title,
-    kind: "movie" as const,
-    version: 3,
-    tmdbId: title.tmdbId,
-    externalIds: {},
-    seasonNumber: null,
-    episodeNumber: null,
-    parent: null,
-    intent: null,
-    profile: null,
   });
   return {
     schemaVersion: 1,
@@ -216,7 +197,7 @@ function scope(): Detail["scope"] {
       activation: "extend",
       assetIds: [fixtureId(33, 101), fixtureId(33, 102)],
     },
-    media: [media(dune), media(godfather)],
+    media: [scopeMedia(dune), scopeMedia(godfather)],
     files: [
       file(1, dune, "/data/movies/Dune (2021)/Dune (2021) Bluray-1080p.mkv", 2),
       file(
@@ -226,7 +207,7 @@ function scope(): Detail["scope"] {
         0,
       ),
     ],
-    storageRoots: [root("/data/movies", 1), root("/data/tv", 2)],
+    storageRoots: storageRoots(),
     subtitlePolicies: [
       {
         mediaId: dune.id,
@@ -284,3 +265,22 @@ export function nativeRecoveryDetail(id: string): Detail | null {
     continuations: [],
   };
 }
+
+/** Every prepared review the fixture API serves, of any kind. */
+export function nativeReviewDetail(id: string) {
+  return (
+    nativeRecoveryDetail(id) ??
+    quarantineReviewDetail(id) ??
+    archiveReviewDetail(id) ??
+    compensationReviewDetail(id) ??
+    seriesPackReviewDetail(id)
+  );
+}
+
+export const NATIVE_REVIEW_SAMPLES: readonly string[] = [
+  ...Object.values(NATIVE_REVIEW_IDS),
+  ...Object.values(QUARANTINE_REVIEW_IDS),
+  ...Object.values(ARCHIVE_REVIEW_IDS),
+  ...Object.values(COMPENSATION_REVIEW_IDS),
+  ...Object.values(SERIES_PACK_REVIEW_IDS),
+];

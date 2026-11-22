@@ -845,8 +845,12 @@ what stays as it is, and asks in a dialog before the one approval that changes
 ownership or cleanup. Preparing a review changes nothing. Paths, checksums, and
 plan digests sit behind "Technical details". The fixture API serves the
 inventories, and file reviews in each state
-(`src/testing/fixture-api/fixtures/migration/native-recovery.ts`); the archive,
-compensation, series-pack, and quarantine reviews have no fixture yet.
+(`src/testing/fixture-api/fixtures/migration/native-recovery.ts`); the quarantine,
+archive, interrupted-upgrade (compensation), and series-pack reviews each have
+one waiting, one ready to approve, and one applied
+(`fixtures/migration/`: `quarantine.ts`, `archive.ts`, `compensation.ts`,
+`series-pack.ts`, built on `parts.ts`). A refused and a
+stale approval are written in `e2e/browser/manage/native-reviews.spec.ts`.
 
 Each Manage page is a lazy route, so its code is a separate chunk that a member
 never downloads; a member who opens a Manage address is sent to Home, as is
