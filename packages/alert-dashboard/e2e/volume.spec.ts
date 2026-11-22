@@ -53,38 +53,53 @@ type PageBudget = {
  *
  * /ai was 2991 at desktop width (4640 on a phone) while its quota windows
  * were a list of one tall row each beside a short spend panel.
+ *
+ * Re-measured once signal lists became tables under severity headings and
+ * Home's areas became a table (per-update / aggregate, desktop then phone):
+ *
+ *   /             2000 / 2018   2456 / 2624
+ *   /flow         2883 / 3095   5112 / 5328
+ *   /maintenance  3055 / 2481   6140 / 5222
+ *   /ai           2325 / 2325   4935 / 4935
+ *
+ * with Trends at 375 on /flow and 650 on /maintenance at desktop width (597
+ * and 1214 on a phone). A bound only ever tightens: each is the smaller of
+ * its earlier value and the rule's multiple of the new height, so the
+ * desktop / and /flow and the phone /flow and /ai bounds are unchanged.
  */
 const PAGES: readonly PageBudget[] = [
   {
     path: "/",
     heading: "Home",
-    maxHeight: { desktop: 2850, phone: 4700 },
+    maxHeight: { desktop: 2850, phone: 3950 },
   },
   {
     path: "/flow",
     heading: "Flow",
     maxHeight: { desktop: 3900, phone: 6800 },
-    maxTrendsTop: { desktop: 720, phone: 1100 },
+    maxTrendsTop: { desktop: 565, phone: 900 },
   },
   {
     path: "/maintenance",
     heading: "Maintenance",
-    maxHeight: { desktop: 4400, phone: 9200 },
-    maxTrendsTop: { desktop: 1150, phone: 2200 },
+    maxHeight: { desktop: 3850, phone: 7700 },
+    maxTrendsTop: { desktop: 975, phone: 1825 },
   },
   {
     path: "/ai",
     heading: "AI usage & spend",
-    maxHeight: { desktop: 3500, phone: 6700 },
+    maxHeight: { desktop: 3490, phone: 6700 },
   },
 ];
 
 /**
- * How far down Home its Areas grid may start at desktop width, so the grid
- * opens on the first screen. Measured 397 in both variants; on /overview the
- * same grid started at 2747 once lists were capped.
+ * How far down Home its Areas table may start at desktop width, so it opens
+ * on the first screen. Measured 254 in both variants once the header bar
+ * held the attention filter and the headline figures became one strip (397
+ * as a grid of cards under a tall heading); about 1.5x that. On /overview
+ * the same grid started at 2747 once lists were capped.
  */
-const MAX_AREAS_TOP = 560;
+const MAX_AREAS_TOP = 380;
 
 async function serveVolume(page: Page, variant: VolumeVariant): Promise<void> {
   const snapshot = volumeSnapshotResponse(
@@ -159,7 +174,12 @@ for (const variant of VARIANTS) {
     await serveVolume(page, variant);
     await page.goto("/");
     const areas = page.getByRole("region", { name: "Areas" });
-    await expect(areas.locator(".section-card")).toHaveCount(9);
+    await expect(
+      areas
+        .getByRole("table", { name: "Areas" })
+        .locator("tbody")
+        .getByRole("row"),
+    ).toHaveCount(9);
     const box = await areas.boundingBox();
     expect(box?.y).toBeLessThan(MAX_AREAS_TOP);
     // The count metric is `ok` in one variant and `error` in the other; a
@@ -177,6 +197,24 @@ function attentionPanel(page: Page) {
   return page.getByRole("region", { name: "Needs attention" });
 }
 
+/** The header bar's tabs that filter "Needs attention". */
+function attentionFilter(page: Page) {
+  return page.getByRole("radiogroup", { name: "Needs attention filter" });
+}
+
+/** The list's entries: signal rows and same-kind group rows, not members. */
+function attentionEntries(page: Page) {
+  return attentionPanel(page)
+    .getByRole("table", { name: "Needs attention" })
+    .locator("tr[data-entry]");
+}
+
+/** The member rows (and their toggle row) a group row has opened. */
+function groupMembers(page: Page, groupId: string | null) {
+  if (groupId === null) throw new Error("the group row has no data-group");
+  return attentionPanel(page).locator(`tr[data-member-of="${groupId}"]`);
+}
+
 test("per-update: Renovate approvals collapse into one expandable row", async ({
   page,
 }) => {
@@ -184,12 +222,14 @@ test("per-update: Renovate approvals collapse into one expandable row", async ({
   await serveVolume(page, "per-update");
   await page.goto("/?show=waiting");
   const waiting = attentionPanel(page);
-  const filter = waiting.getByRole("radio", { name: /^Waiting on you/u });
+  const filter = attentionFilter(page).getByRole("radio", {
+    name: /^Waiting on you/u,
+  });
   await expect(filter).toHaveAttribute("aria-checked", "true");
   await expect(filter).toContainText("123");
 
   // 123 signals are 24 entries, and the list shows the eight worst.
-  const entries = waiting.locator(".signal-list").first().locator("> li");
+  const entries = attentionEntries(page);
   await expect(entries).toHaveCount(8);
   const showAll = waiting.getByRole("button", { name: "Show 16 more" });
   await expect(showAll).toHaveAttribute("aria-expanded", "false");
@@ -198,7 +238,9 @@ test("per-update: Renovate approvals collapse into one expandable row", async ({
   const showFewer = waiting.getByRole("button", { name: "Show fewer" });
   await expect(showFewer).toHaveAttribute("aria-expanded", "true");
   // The button names the list it controls.
-  await expect(entries.first().locator("xpath=..")).toHaveAttribute(
+  await expect(
+    entries.first().locator("xpath=ancestor::table"),
+  ).toHaveAttribute(
     "id",
     (await showFewer.getAttribute("aria-controls")) ?? "missing",
   );
@@ -206,27 +248,32 @@ test("per-update: Renovate approvals collapse into one expandable row", async ({
   // The approvals are informational, so their row ranks below the warnings.
   const group = waiting.locator(".signal-group");
   await expect(group).toHaveCount(1);
-  const summary = group.locator("summary");
+  // The group's row; its title is the disclosure button.
+  const summary = group;
+  const toggle = group.getByRole("button", {
+    name: /^100 Renovate updates awaiting approval/u,
+  });
+  const members = groupMembers(page, await group.getAttribute("data-group"));
   await expect(summary).toContainText("100 Renovate updates awaiting approval");
   await expect(summary).toContainText("Info");
   await expect(summary).toContainText("100 new");
   await expect(summary.getByRole("link")).toHaveCount(0);
-  await expect(group.locator(".signal")).toHaveCount(0);
+  await expect(members.and(page.locator(".signal"))).toHaveCount(0);
 
   // The disclosure is keyboard operable and mounts its members on open.
-  await summary.focus();
+  await toggle.focus();
   await page.keyboard.press("Enter");
-  await expect(group.locator("details")).toHaveAttribute("open", "");
-  await expect(group.locator(".signal")).toHaveCount(25);
-  await expect(group.locator(".signal").first()).toContainText(
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(members.and(page.locator(".signal"))).toHaveCount(25);
+  await expect(members.and(page.locator(".signal")).first()).toContainText(
     "chore(deps): update dependency",
   );
-  await group.getByRole("button", { name: "Show 75 more" }).click();
-  await expect(group.locator(".signal")).toHaveCount(100);
-  await group.getByRole("button", { name: "Show fewer" }).click();
-  await expect(group.locator(".signal")).toHaveCount(25);
-  await summary.click();
-  await expect(group.locator(".signal")).toHaveCount(0);
+  await members.getByRole("button", { name: "Show 75 more" }).click();
+  await expect(members.and(page.locator(".signal"))).toHaveCount(100);
+  await members.getByRole("button", { name: "Show fewer" }).click();
+  await expect(members.and(page.locator(".signal"))).toHaveCount(25);
+  await toggle.click();
+  await expect(members.and(page.locator(".signal"))).toHaveCount(0);
 
   await showFewer.click();
   await expect(entries).toHaveCount(8);
@@ -241,18 +288,19 @@ test("aggregate: failed restores lead the list as one row", async ({
   await page.setViewportSize(VIEWPORTS.phone);
   await serveVolume(page, "aggregate");
   await page.goto("/?show=waiting");
-  const waiting = attentionPanel(page);
-  const first = waiting.locator(".signal-list").first().locator("> li").first();
+  const first = attentionEntries(page).first();
   await expect(first).toHaveClass("signal-group");
-  await expect(first.locator("summary")).toContainText(
-    "10 failed Velero restores",
-  );
-  await expect(first.locator("summary")).toContainText("Warning");
-  await expect(first.locator("summary")).toContainText(/oldest \d+d ago/u);
-  await first.locator("summary").click();
+  // The group's row is its summary; its title is the disclosure button.
+  await expect(first).toContainText("10 failed Velero restores");
+  await expect(first).toContainText("Warning");
+  await expect(first).toContainText(/oldest \d+d ago/u);
+  await first
+    .getByRole("button", { name: /^10 failed Velero restores/u })
+    .click();
   // Ten members is under the group's own cap, so there is no second toggle.
-  await expect(first.locator(".signal")).toHaveCount(10);
-  await expect(first.getByRole("button")).toHaveCount(0);
+  const members = groupMembers(page, await first.getAttribute("data-group"));
+  await expect(members.and(page.locator(".signal"))).toHaveCount(10);
+  await expect(members.getByRole("button")).toHaveCount(0);
   const size = await documentSize(page);
   expect(size.scrollWidth).toBeLessThanOrEqual(size.clientWidth);
 });
@@ -345,18 +393,17 @@ test("alerts are never collapsed", async ({ page }) => {
   await serveVolume(page, "per-update");
   await page.goto("/");
   const attention = attentionPanel(page);
-  await expect(attention.getByRole("radio", { name: /^All/u })).toContainText(
-    "143",
-  );
+  await expect(
+    attentionFilter(page).getByRole("radio", { name: /^All/u }),
+  ).toContainText("143");
   // 143 signals are 44 entries: the 100 approvals are one row, and each of
   // the other 43 signals, every alert among them, keeps a row of its own.
   await attention.getByRole("button", { name: "Show 36 more" }).click();
   await expect(attention.locator(".signal")).toHaveCount(43);
   const groups = attention.locator(".signal-group");
   await expect(groups).toHaveCount(1);
-  await expect(groups.locator("summary")).toContainText(
-    "100 Renovate updates awaiting approval",
-  );
+  // The group's row is its summary.
+  await expect(groups).toContainText("100 Renovate updates awaiting approval");
   for (const title of [
     "torvalds has under 5% memory available",
     "Scout Riot API error rate is above 5%",

@@ -1,29 +1,19 @@
 import type {
-  SectionId,
+  Signal,
   SnapshotResponse,
 } from "@shepherdjerred/ops-model/snapshot.ts";
+import { useQuery } from "@tanstack/react-query";
 
-import { AttentionPanel } from "./attention-panel.tsx";
+import { AttentionPanel, AttentionTabs } from "./attention-panel.tsx";
+import { AreasTable } from "./areas-table.tsx";
 import { GlanceTiles } from "./glance-tiles.tsx";
 import { NewSinceLastVisit } from "./new-since-last-visit.tsx";
-import { SectionCard, SnapshotBlock, SnapshotStatusBanner } from "./ops-ui.tsx";
-
-/** Where each section's card links for its detail. */
-const SECTION_PAGES: Partial<Record<SectionId, string>> = {
-  alerts: "/alerts",
-  delivery: "/flow",
-  work: "/flow",
-  ai: "/ai",
-  maintenance: "/maintenance",
-  errors: "/maintenance",
-  platform: "/maintenance",
-  observability: "/maintenance",
-  product: "/product",
-};
+import { snapshotQuery } from "./ops-api.ts";
+import { SnapshotAge, SnapshotBlock, SnapshotStatusBanner } from "./ops-ui.tsx";
 
 /**
  * Ordered so the first screen answers "is anything wrong, and where": the
- * overall status, the three headline numbers, then every area. The lists that
+ * overall verdict, the headline figures, then every area. The lists that
  * take reading sit below.
  */
 function Overview({
@@ -32,26 +22,22 @@ function Overview({
   readonly snapshot: SnapshotResponse;
 }): React.JSX.Element {
   const newIds = new Set(snapshot.newSignalIds);
+  const titles = new Map(
+    snapshot.sections.map((section) => [section.id, section.title]),
+  );
+  const areaTitle = (signal: Signal): string =>
+    titles.get(signal.section) ?? signal.section;
   return (
     <>
       <SnapshotStatusBanner snapshot={snapshot} />
       <GlanceTiles snapshot={snapshot} />
-      <h2 className="block-heading">Areas</h2>
-      <section className="section-grid" aria-label="Areas">
-        {snapshot.sections.map((section) => (
-          <SectionCard
-            key={section.id}
-            section={section}
-            {...(SECTION_PAGES[section.id] === undefined
-              ? {}
-              : { to: SECTION_PAGES[section.id] })}
-          />
-        ))}
-      </section>
-      <div className="home-columns">
-        <AttentionPanel snapshot={snapshot} newIds={newIds} />
-        <NewSinceLastVisit snapshot={snapshot} />
-      </div>
+      <AreasTable snapshot={snapshot} />
+      <AttentionPanel
+        snapshot={snapshot}
+        newIds={newIds}
+        areaTitle={areaTitle}
+      />
+      <NewSinceLastVisit snapshot={snapshot} areaTitle={areaTitle} />
     </>
   );
 }
@@ -63,4 +49,22 @@ export function OpsHomeOverview(): React.JSX.Element {
       {(snapshot) => <Overview snapshot={snapshot} />}
     </SnapshotBlock>
   );
+}
+
+/**
+ * Home's header controls from the latest snapshot: the attention filter as
+ * view tabs and the snapshot's age. Before the first snapshot loads, the
+ * header is the title alone.
+ */
+export function useOpsHomeHeader(): {
+  readonly tabs?: React.JSX.Element;
+  readonly meta?: React.JSX.Element;
+} {
+  const { data } = useQuery(snapshotQuery());
+  return data === undefined
+    ? {}
+    : {
+        tabs: <AttentionTabs snapshot={data} />,
+        meta: <SnapshotAge snapshot={data} />,
+      };
 }

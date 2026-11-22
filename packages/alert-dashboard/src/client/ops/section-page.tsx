@@ -48,6 +48,7 @@ function SectionSignals({
       <SignalList
         signals={section.signals}
         empty="No signals."
+        label={section.title}
         newIds={newIds}
       />
     </section>

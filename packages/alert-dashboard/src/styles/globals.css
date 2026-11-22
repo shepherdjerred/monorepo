@@ -7,6 +7,7 @@
 @import "./legacy-tokens.css";
 @import "./primitives.css";
 @import "./tables.css";
+@import "./signals.css";
 
 /* Berkeley Mono is licensed and served by Hub from `public/fonts`. */
 @font-face {
@@ -812,129 +813,12 @@ select {
 .inline-error {
   color: var(--sev-error-ink);
 }
-.signal-list,
-.change-list,
 .service-grid {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.signal {
-  display: grid;
-  grid-template-columns: 6.3rem minmax(0, 1fr);
-  gap: 10px;
-  align-items: start;
-  padding: 10px 18px;
-  border-top: 1px solid var(--line-soft);
-}
-.signal .ui-glyph {
-  margin-top: 1px;
-}
-.signal-title {
-  margin: 0;
-  color: var(--ink);
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-.signal-title a {
-  text-decoration: none;
-}
-.signal-title a:hover {
-  text-decoration: underline;
-}
-.signal-detail {
-  margin: 2px 0 0;
-  font-size: 0.85rem;
-}
-.signal-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 0.75rem;
-}
-/* A run of same-kind signals collapsed into one disclosure row. */
-.signal-group {
-  border-top: 1px solid var(--line-soft);
-}
-.signal-group summary {
-  display: grid;
-  grid-template-columns: 6.3rem minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: start;
-  min-height: 44px;
-  padding: 10px 18px;
-  list-style: none;
-  cursor: pointer;
-}
-.signal-group summary::-webkit-details-marker {
-  display: none;
-}
-.signal-group summary .ui-glyph {
-  margin-top: 1px;
-}
-.signal-group summary .signal-body,
-.signal-group summary .signal-title {
-  display: block;
-  min-width: 0;
-}
-.signal-group-marker {
-  margin-top: 3px;
-  color: var(--muted);
-}
-.signal-group details[open] > summary .signal-group-marker {
-  transform: rotate(90deg);
-}
-.signal-group-members {
-  border-top: 1px solid var(--line-soft);
-  background: var(--panel-2);
-  box-shadow: inset 3px 0 0 var(--line);
-}
-.signal-group-members .signal:first-child {
-  border-top: 0;
-}
-.list-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  width: 100%;
-  min-height: 44px;
-  padding: 0 18px;
-  border: 0;
-  border-top: 1px solid var(--line-soft);
-  background: transparent;
-  color: var(--accent);
-  font-size: 0.82rem;
-  font-weight: 650;
-  text-align: left;
-  cursor: pointer;
-}
-.list-toggle svg {
-  width: 0.8rem;
-  height: 0.8rem;
-}
-.signal-group summary:hover,
-.list-toggle:hover {
-  background: var(--row-hover);
-}
-.signal-group summary:focus-visible,
-.list-toggle:focus-visible {
-  outline: 3px solid var(--accent-ring);
-  outline-offset: -3px;
-}
-.new-tag {
-  margin-left: 0.45rem;
-  padding: 0.05rem 0.4rem;
-  border-radius: 4px;
-  background: var(--accent);
-  color: var(--panel);
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  vertical-align: 2px;
-}
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -979,6 +863,7 @@ select {
 .signal-columns > :only-child {
   grid-column: 1 / -1;
 }
+
 .charts-heading {
   display: flex;
   align-items: center;
@@ -1282,24 +1167,7 @@ select {
   width: 0.8rem;
   height: 0.8rem;
 }
-.change {
-  display: grid;
-  grid-template-columns: 6.8rem minmax(0, 1fr);
-  gap: 10px;
-  padding: 10px 18px;
-  border-top: 1px solid var(--line-soft);
-}
-.change p {
-  margin: 0;
-  color: var(--ink);
-  overflow-wrap: anywhere;
-}
-.change a {
-  text-decoration: none;
-}
-.change a:hover {
-  text-decoration: underline;
-}
+
 .change-kind {
   align-self: start;
   width: fit-content;
@@ -1487,24 +1355,6 @@ select {
     min-height: 863px;
   }
 
-  .signal,
-  .change {
-    grid-template-columns: 1fr;
-    gap: 6px;
-    padding: 10px 14px;
-  }
-  .signal-group summary {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 6px 10px;
-    padding: 10px 14px;
-  }
-  .signal-group summary .signal-body {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-  .list-toggle {
-    padding: 0 14px;
-  }
   .panel-heading {
     padding: 14px 14px 8px;
   }
@@ -1540,110 +1390,14 @@ select {
   }
 }
 
-.home .block-heading {
-  margin: 22px 0 10px;
-}
-.launcher-grid {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-}
-
-.home-columns {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  gap: 18px;
-  align-items: start;
-  margin-top: 18px;
-}
-/* One heading holds a filter and the other a button; a shared height starts
-   both lists on the same line. Either control drops under its heading when
-   the two do not fit on one line. */
-.home-columns .panel-heading {
-  flex-wrap: wrap;
-  min-height: 68px;
-}
-.home-columns .panel-heading h2 {
-  flex: none;
-}
 .attention-panel {
   scroll-margin-top: 16px;
-}
-/* Apps beside Tools: one column of apps and three of tools make a block
-   with no part-filled row. */
-.launcher-groups {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
-  gap: 0 10px;
-}
-.launcher-groups h3 {
-  margin-top: 0;
-}
-.launcher-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-.launcher-group:first-child .launcher-grid {
-  grid-template-columns: minmax(0, 1fr);
-}
-.launcher-card span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.launcher-card {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-width: 0;
-  padding: 11px 14px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel);
-  font-weight: 600;
-  text-decoration: none;
-}
-.launcher-card:hover {
-  border-color: var(--accent);
-}
-.launcher-card svg {
-  flex: none;
-  color: var(--muted);
-}
-.launcher-card .launcher-external {
-  margin-left: auto;
-  width: 0.8rem;
-  height: 0.8rem;
-}
-@container content (max-width: 900px) {
-  .home-columns {
-    grid-template-columns: 1fr;
-  }
-  .launcher-groups {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px 0;
-  }
-  .launcher-group:first-child .launcher-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 900px) {
   /* The top bar is sticky at this width and would cover the panel's heading. */
   .attention-panel {
     scroll-margin-top: calc(var(--topbar-h) + 12px);
-  }
-}
-@media (max-width: 600px) {
-  .launcher-grid,
-  .launcher-group:first-child .launcher-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .launcher-card {
-    gap: 0.5rem;
-    padding: 11px 12px;
   }
 }
 

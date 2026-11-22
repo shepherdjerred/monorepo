@@ -147,6 +147,7 @@ function ServiceBody({
             <SignalList
               signals={detail.signals}
               empty="No signals for this service."
+              label="Signals"
               showService={false}
             />
           </section>

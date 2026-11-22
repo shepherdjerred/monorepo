@@ -45,12 +45,20 @@ test("home answers what is wrong, where, and what waits on me", async ({
   );
 
   await expect(
-    page.getByRole("region", { name: "Areas" }).locator(".section-card"),
+    page
+      .getByRole("region", { name: "Areas" })
+      .getByRole("table", { name: "Areas" })
+      .locator("tbody")
+      .getByRole("row"),
   ).toHaveCount(9);
 
   const attention = page.getByRole("region", { name: "Needs attention" });
-  const all = attention.getByRole("radio", { name: /^All/u });
-  const waiting = attention.getByRole("radio", { name: /^Waiting on you/u });
+  // The filter is the header bar's view tabs, named for the list it filters.
+  const filter = page.getByRole("radiogroup", {
+    name: "Needs attention filter",
+  });
+  const all = filter.getByRole("radio", { name: /^All/u });
+  const waiting = filter.getByRole("radio", { name: /^Waiting on you/u });
   await expect(all).toHaveAttribute("aria-checked", "true");
   await expect(waiting).toContainText("4");
   await expect(attention.locator(".signal").first()).toContainText(
@@ -79,7 +87,9 @@ test("the waiting tile filters the attention panel and brings it into view", asy
     .click();
   await expect(page).toHaveURL(/\/\?show=waiting$/u);
   await expect(
-    attention.getByRole("radio", { name: /^Waiting on you/u }),
+    page
+      .getByRole("radiogroup", { name: "Needs attention filter" })
+      .getByRole("radio", { name: /^Waiting on you/u }),
   ).toHaveAttribute("aria-checked", "true");
   await expect(attention.locator(".signal")).toHaveCount(4);
   await expect(heading).toBeInViewport();
@@ -289,7 +299,7 @@ test("/overview redirects to / and keeps the query string", async ({
   await expect(page).toHaveURL(/\/\?show=waiting$/u);
   await expect(
     page
-      .getByRole("region", { name: "Needs attention" })
+      .getByRole("radiogroup", { name: "Needs attention filter" })
       .getByRole("radio", { name: /^Waiting on you/u }),
   ).toHaveAttribute("aria-checked", "true");
 });
@@ -343,7 +353,7 @@ test("a long change timeline shows fifteen changes until it is expanded", async 
   await expect(rows.last()).toContainText("Change 15");
   const more = changes.getByRole("button", { name: "Show 25 more" });
   await expect(more).toHaveAttribute("aria-expanded", "false");
-  await expect(changes.getByRole("list")).toHaveAttribute(
+  await expect(changes.getByRole("table", { name: "Changes" })).toHaveAttribute(
     "id",
     (await more.getAttribute("aria-controls")) ?? "missing",
   );

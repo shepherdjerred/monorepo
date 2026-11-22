@@ -350,6 +350,7 @@ export function TheStormPageView({
           <SignalList
             signals={stormSignals}
             empty="No active signals across Minecraft, Storm Brain, or Storm Forum."
+            label="Storm signals"
             newIds={new Set(snapshot?.newSignalIds)}
           />
         </section>

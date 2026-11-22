@@ -22,13 +22,19 @@ The core module has two halves in one process:
   (`/services`), Cluster (`/cluster`), Flow (`/flow`), Monorepo (`/monorepo`),
   Renovate (`/renovate`), Product (`/product`), The Storm (`/the-storm`), AI
   (`/ai`), Maintenance (`/maintenance`), and Review (`/review`) pages plus the
-  daily and weekly digest email. Home is the one overview page. In order it
-  shows the overall status; a strip of headline figures for firing alerts,
-  what waits on Jerred, and Tracker triage; a card per area; a "Needs attention" list beside what is new
-  since the last visit; and a launcher for Tracker, Delivery, and the tools.
-  "Needs attention" lists every signal at attention severity or waiting on
-  Jerred, and its filter narrows it to what waits on him (`/?show=waiting`,
-  where the "Waiting on you" figure links). `/overview` was a separate page and
+  daily and weekly digest email. Home is the one overview page. Its header
+  bar holds the "Needs attention" filter as view tabs (All / Waiting on you,
+  each with its count) and the snapshot's age. Below it, in order: the
+  overall verdict; a strip of headline figures for firing alerts, what waits
+  on Jerred, and Tracker triage; the Areas table (status as a glyph and word,
+  issues against the busiest area, informational and waiting counts, and key
+  metrics as chips); "Needs attention" as a signal table; a compact "New
+  since last visit" table with "Mark all seen"; and a launcher of the other
+  apps and the tools. "Needs attention" lists every signal at attention
+  severity or waiting on Jerred, with an unread dot on each new one, and the
+  filter narrows it to what waits on him (`/?show=waiting`, where the
+  "Waiting on you" figure links). "New since last visit" stays because it
+  also lists new informational signals that are not in "Needs attention". `/overview` was a separate page and
   now redirects to `/`, keeping its query string. Flow (pull requests and
   Tracker work) and Maintenance are section pages
   (`src/client/ops/section-page.tsx`): a summary card per snapshot section with
@@ -49,14 +55,19 @@ The core module has two halves in one process:
   and is not a bill. Trend charts read Prometheus through named presets only;
   the browser never sends PromQL. A chart's legend shows each series' newest
   sample until a point is hovered. Every signal list renders through
-  `SignalList` (`src/client/ops/signal-list.tsx`): it collapses same-kind
-  signals with ops-model's `groupSignals` (an allowlist of kinds, so alerts
-  never collapse), shows a capped number of entries (ten unless the list sets
-  its own), and expands in place. There is no uncapped mode; the digest email
-  groups the same way before its own row cap. Change timelines cap the same way,
-  at fifteen. `e2e/volume.spec.ts` bounds page height at production volume, how
-  far down Home its area cards start, and how far down the section pages their
-  charts start.
+  `SignalList` (`src/client/ops/signal-list.tsx`) as one table: it collapses
+  same-kind signals with ops-model's `groupSignals` (an allowlist of kinds, so
+  alerts never collapse) into a row whose title is a disclosure button,
+  shows a capped number of entries (ten unless the list sets its own) under
+  one heading row per severity ("Error 3"), and expands in place. Columns are
+  the signal, where it belongs (the area on Home, the service elsewhere), its
+  usage meter for quota windows, and how long it has lasted; below 640px of
+  content width the middle columns fold into the signal's cell. There is no
+  uncapped mode; the digest email groups the same way before its own row cap.
+  Change timelines (`ChangeTimeline`) are a when / kind / change table that
+  caps the same way, at fifteen. `e2e/volume.spec.ts` bounds page height at
+  production volume, how far down Home its Areas table starts, and how far
+  down the section pages their charts start.
 - **Alert ledger & House chores.** Alertmanager remains authoritative for
   evaluation, grouping, inhibition, routing, and silences; this service stores
   actionable occurrence history (excluding `Watchdog`, `InfoInhibitor`,
@@ -455,8 +466,8 @@ console-ui's `HeaderBar` across the top of the panel: the title as the page's
 `<h1>`, an optional muted line saying what the page covers, and the page's
 controls (range tabs, buttons, its verdict) at the right. `MetricStrip` lays
 `MetricTile`s out as one description list of figure cells; `GlanceTiles` is
-Home's strip of linked headline figures. `SectionCard` and `SectionSummary`
-show an area's verdict as a glyph and word with its metrics as a strip;
+Home's strip of linked headline figures. `SectionSummary`
+shows an area's verdict as a glyph and word with its metrics as a strip;
 `StatusBanner` is a quiet verdict row; `RangePicker` is console-ui's `Tabs`
 radio group. `src/styles/primitives.css` styles them.
 

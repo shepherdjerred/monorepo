@@ -157,6 +157,7 @@ function AiBody({
           <SignalList
             signals={other}
             empty=""
+            label="Other signals"
             newIds={new Set(snapshot.newSignalIds)}
           />
         </section>

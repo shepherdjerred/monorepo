@@ -159,7 +159,15 @@ function ReviewLists({
             <span className="count">{report.newSinceLast.length}</span>
           </h2>
         </header>
-        <SignalList signals={report.newSinceLast} empty="Nothing new." />
+        <SignalList
+          signals={report.newSinceLast}
+          empty="Nothing new."
+          label={
+            report.kind === "daily"
+              ? "New since the last digest"
+              : "New this period"
+          }
+        />
       </section>
       <section className="panel list-panel" aria-labelledby="review-changes">
         <header className="panel-heading">

@@ -7,6 +7,11 @@
  */
 
 /* ---- Tables ---- */
+/* Visually hidden text inside a scrolled table is absolutely positioned; the
+   scroller contains it, so it cannot widen the page past the viewport. */
+.ui-table-scroll {
+  position: relative;
+}
 .ui-table {
   font-family: var(--ui-font-sans);
   font-size: 13px;

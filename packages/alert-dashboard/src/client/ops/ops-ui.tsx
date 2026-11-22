@@ -34,10 +34,13 @@ export const services = new ServiceIndex();
  */
 export function PageHeading({
   title,
+  tabs,
   meta,
   children,
 }: {
   readonly title: string;
+  /** View tabs right after the title, such as Home's attention filter. */
+  readonly tabs?: ReactNode;
   readonly meta?: ReactNode;
   /** Controls for the far right of the bar. */
   readonly children?: ReactNode;
@@ -46,6 +49,7 @@ export function PageHeading({
     <div className="page-head">
       <HeaderBar
         title={title}
+        {...(tabs === undefined ? {} : { tabs })}
         {...(meta === undefined ? {} : { meta })}
         {...(children === undefined ? {} : { actions: children })}
       />
@@ -124,37 +128,6 @@ export function MetricStrip({
   );
 }
 
-/**
- * One area as a card: its title (a link when the area has a page), its
- * verdict as a glyph and word, its summary, and up to three metrics.
- */
-export function SectionCard({
-  section,
-  to,
-}: {
-  readonly section: Section;
-  readonly to?: string;
-}): React.JSX.Element {
-  return (
-    <article className="section-card" data-sev={section.severity}>
-      <header>
-        <h2>
-          {to === undefined ? (
-            section.title
-          ) : (
-            <Link to={to}>{section.title}</Link>
-          )}
-        </h2>
-        <StatusGlyph severity={section.severity} />
-      </header>
-      <p>{section.summary}</p>
-      {section.metrics.length === 0 ? null : (
-        <MetricStrip metrics={section.metrics.slice(0, 3)} />
-      )}
-    </article>
-  );
-}
-
 /** One section at a glance: its verdict, its summary and every metric. */
 export function SectionSummary({
   section,
@@ -195,18 +168,23 @@ export function StatusBanner({
   /** Names the region for assistive technology. */
   readonly label: string;
   /** The meta line: what the verdict covers or how old it is. */
-  readonly children: ReactNode;
+  readonly children?: ReactNode;
 }): React.JSX.Element {
   return (
     <section className="status-banner" data-sev={severity} aria-label={label}>
       <StatusGlyph severity={severity} />
       <p className="status-summary">{summary}</p>
-      <p className="status-meta">{children}</p>
+      {children === undefined ? null : (
+        <p className="status-meta">{children}</p>
+      )}
     </section>
   );
 }
 
-/** The latest snapshot's verdict and its age. */
+/**
+ * The latest snapshot's verdict. Its age is in the page header; a stale
+ * snapshot also says so here, beside the verdict it qualifies.
+ */
 export function SnapshotStatusBanner({
   snapshot,
 }: {
@@ -218,10 +196,18 @@ export function SnapshotStatusBanner({
       summary={snapshot.summary}
       label="Overall status"
     >
-      Snapshot generated {age(snapshot.generatedAt)}
-      {snapshot.stale ? " · stale: treat green as unknown" : ""}
+      {snapshot.stale ? "Stale: treat green as unknown" : undefined}
     </StatusBanner>
   );
+}
+
+/** "Snapshot generated 2m ago", for a page header's meta line. */
+export function SnapshotAge({
+  snapshot,
+}: {
+  readonly snapshot: SnapshotResponse;
+}): React.JSX.Element {
+  return <>Snapshot generated {age(snapshot.generatedAt)}</>;
 }
 
 /** Changes a timeline shows before the rest sit behind "Show N more". */
@@ -243,32 +229,47 @@ export function ChangeTimeline({
     return <p className="list-empty">No changes recorded.</p>;
   return (
     <>
-      <ol className="change-list" id={listId}>
-        {list.shown.map((change) => (
-          <li key={change.id} className="change" data-sev={change.severity}>
-            <span className="change-kind">{change.kind}</span>
-            <div>
-              <p>
-                {change.url === undefined ? (
-                  change.title
-                ) : (
-                  <a href={change.url} target="_blank" rel="noreferrer">
-                    {change.title}
-                  </a>
-                )}
-              </p>
-              <div className="signal-meta">
-                <time dateTime={change.occurredAt}>
-                  {age(change.occurredAt)}
-                </time>
-                {showService && change.service !== undefined ? (
-                  <ServiceLink id={change.service} />
-                ) : null}
-              </div>
-            </div>
-          </li>
-        ))}
-      </ol>
+      <div className="ui-table-scroll">
+        <table
+          className="ui-table change-list"
+          id={listId}
+          aria-label="Changes"
+        >
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Kind</th>
+              <th scope="col">Change</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.shown.map((change) => (
+              <tr key={change.id} className="change" data-sev={change.severity}>
+                <td className="num change-when">
+                  <time dateTime={change.occurredAt}>
+                    {age(change.occurredAt)}
+                  </time>
+                </td>
+                <td>
+                  <span className="change-kind">{change.kind}</span>
+                </td>
+                <th scope="row" className="change-title">
+                  {change.url === undefined ? (
+                    change.title
+                  ) : (
+                    <a href={change.url} target="_blank" rel="noreferrer">
+                      {change.title}
+                    </a>
+                  )}
+                  {showService && change.service !== undefined ? (
+                    <ServiceLink id={change.service} />
+                  ) : null}
+                </th>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <ListToggle list={list} controls={listId} />
     </>
   );

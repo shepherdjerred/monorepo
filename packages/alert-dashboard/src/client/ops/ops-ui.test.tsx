@@ -87,7 +87,7 @@ function timeline(list: readonly ChangeView[], cap?: number): string {
 }
 
 function rows(html: string): number {
-  return html.split('<li class="change" ').length - 1;
+  return html.split('<tr class="change" ').length - 1;
 }
 
 describe("ChangeTimeline", () => {
@@ -106,7 +106,9 @@ describe("ChangeTimeline", () => {
     expect(rows(html)).toBe(15);
     expect(html).toContain("Merged #14");
     expect(html).not.toContain("Merged #15");
-    const listId = /<ol class="change-list" id="([^"]+)"/u.exec(html)?.[1];
+    const listId = /<table class="ui-table change-list" id="([^"]+)"/u.exec(
+      html,
+    )?.[1];
     expect(listId).toBeDefined();
     expect(html).toContain(
       `<button type="button" class="list-toggle" aria-expanded="false" aria-controls="${listId ?? ""}">Show 35 more`,

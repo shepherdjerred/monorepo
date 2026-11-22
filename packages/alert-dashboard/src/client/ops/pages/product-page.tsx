@@ -195,6 +195,7 @@ export function ProductPageView({
           <SignalList
             signals={productSection.signals}
             empty="No product signals."
+            label="Product signals"
             newIds={new Set(snapshot?.newSignalIds)}
           />
         </section>
