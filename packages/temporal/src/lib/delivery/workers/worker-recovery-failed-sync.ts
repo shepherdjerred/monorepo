@@ -5,6 +5,7 @@ import type {
   WorkerRecoveryContext,
 } from "@shepherdjerred/delivery/contract";
 import { verifyWorkerBaselinePods } from "./worker-hosts.ts";
+import { isPruneOnlyOutOfSync } from "#lib/delivery/argocd-proof.ts";
 import {
   requireFailedOwnedSync,
   type ModelWorkerRecovery,
@@ -67,6 +68,29 @@ export function failedOperation(raw: unknown): boolean {
   );
 }
 
+/**
+ * The executor never finished the sync step, Argo's operation has stopped,
+ * and the Application is OutOfSync for a reason other than prune-pending
+ * resources. Delivery did not accept the release. A Synced application, or
+ * one whose only drift is prune-pending, stays on the owned-sync path.
+ */
+export function executorStoppedUnsynced(raw: unknown): boolean {
+  const parsed = z
+    .object({
+      status: z.object({
+        sync: z.object({ status: z.string() }),
+        operationState: z.object({ phase: z.string() }).optional(),
+      }),
+    })
+    .safeParse(raw);
+  return (
+    parsed.success &&
+    parsed.data.status.operationState?.phase === "Succeeded" &&
+    parsed.data.status.sync.status === "OutOfSync" &&
+    !isPruneOnlyOutOfSync(raw)
+  );
+}
+
 /** The failed owned sync's classification: no operation, no legacy coverage, its own sync reading. */
 export async function classifyFailedSync(
   context: WorkerRecoveryContext,
@@ -75,18 +99,16 @@ export async function classifyFailedSync(
   target: { model: ModelWorkerRecovery; name: string; before: unknown },
 ) {
   const detail = context.deployment;
-  const { receipt } = requireFailedOwnedSync(
-    target.before,
-    detail,
-    target.model,
-  );
+  const owned = requireFailedOwnedSync(target.before, detail, target.model);
   await requireUnroutedCandidateHosts(context, pool, effects, target.name);
   return {
     unappliedBootstrap: false,
     operated: false,
     owned: undefined,
-    source: "failed-sync" as const,
-    receipt,
+    source: owned.unaccepted
+      ? ("unaccepted-sync" as const)
+      : ("failed-sync" as const),
+    receipt: owned.receipt,
     checkRoutes: (routes: CompleteWorkerRecovery["routes"]) => {
       if (pool.workerOperation === "rollout") {
         requireCandidateUnrouted(pool, routes);
@@ -94,16 +116,20 @@ export async function classifyFailedSync(
     },
     sync: (raw: unknown) => {
       const observed = requireFailedOwnedSync(raw, detail, target.model);
-      if (observed.receipt !== receipt)
+      if (observed.receipt !== owned.receipt)
         throw new Error("Failed worker sync changed during recovery proof");
       return observed.sync;
     },
   };
 }
 
-export function settledNote(source: "prior" | "written" | "failed-sync") {
+export function settledNote(
+  source: "prior" | "written" | "failed-sync" | "unaccepted-sync",
+) {
   if (source === "written")
     return "; the unsynced candidate body stays for the next deployment to replace";
+  if (source === "unaccepted-sync")
+    return "; the owned sync finished without acceptance, the application is still OutOfSync, the candidate is unrouted and unreferenced, and its body stays for the next deployment to replace";
   return source === "failed-sync"
     ? "; the owned sync failed before any routing step, the candidate is unrouted and unreferenced, and its body stays for the next deployment to replace"
     : "";

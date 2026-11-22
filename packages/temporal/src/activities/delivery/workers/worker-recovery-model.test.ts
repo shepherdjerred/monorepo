@@ -460,6 +460,47 @@ describe("an owned sync that failed before any routing step", () => {
     ]);
   });
 
+  test("a succeeded operation that left a real OutOfSync settles without acceptance when the candidate is unrouted", async () => {
+    const detail = failed(stoppedInSync, [], { introduced: true });
+    const failedApplication = failedSync(detail);
+    const proof = await proveSettledWorkerRecovery(
+      context(detail),
+      boundary(detail, {
+        application: {
+          ...failedApplication,
+          status: {
+            ...failedApplication.status,
+            health: { status: "Healthy" },
+            resources: [
+              {
+                kind: "Deployment",
+                name: "retained-host",
+                status: "OutOfSync",
+              },
+            ],
+            operationState: {
+              ...failedApplication.status.operationState,
+              phase: "Succeeded",
+            },
+          },
+        },
+        hosts: [STABLE, CANDIDATE],
+        prod: STABLE,
+      }),
+    );
+    expect(proof.evidence).toContainEqual(
+      expect.objectContaining({
+        kind: "reconciliation",
+        operationId: OPERATION,
+        summary: expect.stringContaining("finished without acceptance"),
+      }),
+    );
+    expect(proof.routes.map((route) => route.currentBuildId)).toEqual([
+      STABLE,
+      STABLE,
+    ]);
+  });
+
   test("a routed candidate, another request, or a changed body fails closed", async () => {
     const detail = failed(stoppedInSync, [], { introduced: true });
     await expect(

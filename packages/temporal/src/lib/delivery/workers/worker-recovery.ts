@@ -25,6 +25,7 @@ import {
 import { workerSourceFingerprint } from "./worker-source.ts";
 import {
   classifyFailedSync,
+  executorStoppedUnsynced,
   failedOperation,
   settledNote,
 } from "./worker-recovery-failed-sync.ts";
@@ -354,9 +355,18 @@ async function classifyRecovery(
 ) {
   const { model, name, before } = target;
   const detail = context.deployment;
-  // Only a terminally failed operation takes this path; a sync that succeeded
-  // after its executor stopped still settles as an owned sync below.
-  if (model?.failedSync === true && failedOperation(before)) {
+  // A terminally failed operation settles without acceptance. So does a
+  // rollout whose sync step never finished when Argo's operation stopped on
+  // an Application that is still OutOfSync for a real modification: routing
+  // never started, and Delivery did not accept the release. A retire-host
+  // keeps the owned-sync rule (AI-792): a Succeeded operation must be Synced,
+  // or OutOfSync only because obsolete resources await pruning. A sync that
+  // landed after its executor stopped still settles as an owned sync below.
+  if (
+    model?.failedSync === true &&
+    (failedOperation(before) ||
+      (pool.workerOperation === "rollout" && executorStoppedUnsynced(before)))
+  ) {
     const failed = await classifyFailedSync(context, pool, effects, {
       model,
       name,
@@ -380,7 +390,7 @@ async function classifyRecovery(
       ));
   recoverySync(before, operated);
   const owned = operated ? ownedRecoveryArgo(before, detail, model) : undefined;
-  let source: "prior" | "written" | "failed-sync" = "prior";
+  let source: "prior" | "written" | "failed-sync" | "unaccepted-sync" = "prior";
   if (owned !== undefined) {
     requireLegacyWorkerCoverage(
       await effects.resources(name, "Deployment"),
@@ -451,7 +461,8 @@ export async function proveSettledWorkerRecovery(
   const observed =
     operated ||
     pool.workerOperation === "baseline" ||
-    (source === "failed-sync" && pool.workerOperation === "retire")
+    ((source === "failed-sync" || source === "unaccepted-sync") &&
+      pool.workerOperation === "retire")
       ? pool
       : unappliedWorkerPool(pool, detail.deployment.id);
   await effects.pollers(observed);

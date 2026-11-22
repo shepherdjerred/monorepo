@@ -14,6 +14,7 @@ import { deliveryOperationId } from "#lib/delivery/selection.ts";
 import { recordedWorkerPlan } from "./worker-plan.ts";
 import { workerRolloutTarget } from "./worker-pool.ts";
 import { workerSourceFingerprint } from "./worker-source.ts";
+import { isPruneOnlyOutOfSync } from "#lib/delivery/argocd-proof.ts";
 
 /** Fixed keys the model worker step's v1 Jobs record (E5); never prefixed. */
 const WORKER_SUBSTAGES = new Set([
@@ -137,7 +138,7 @@ const FailedSyncSchema = z.object({
   status: z.object({
     sync: z.object({ status: z.enum(["Synced", "OutOfSync"]) }),
     operationState: z.object({
-      phase: z.enum(["Failed", "Error"]),
+      phase: z.enum(["Failed", "Error", "Succeeded"]),
       operation: z.object({
         info: z.array(z.object({ name: z.string(), value: z.string() })),
       }),
@@ -146,17 +147,35 @@ const FailedSyncSchema = z.object({
 });
 
 /**
- * This deployment's own sync ended terminally without succeeding: nothing is
- * in flight, the operation carries exactly this deployment's request, and the
- * Application holds exactly the body it rendered. Returns the Argo operation
- * receipt and the observed sync status.
+ * This deployment's own sync ended without acceptance: nothing is in flight,
+ * the operation carries exactly this deployment's request, and the Application
+ * holds exactly the body it rendered. A Failed or Error phase is the Argo
+ * operation itself failing. A Succeeded phase counts only when the Application
+ * is still OutOfSync for a reason other than prune-pending resources: Argo
+ * stopped waiting, and Delivery's readback never accepted the release. A
+ * Succeeded operation that is Synced, or OutOfSync only because resources
+ * await pruning, settles as an owned sync instead.
  */
 export function requireFailedOwnedSync(
   observed: unknown,
   detail: DeploymentDetail,
   model: ModelWorkerRecovery,
-): { receipt: string; sync: "Synced" | "OutOfSync" } {
+): {
+  receipt: string;
+  sync: "Synced" | "OutOfSync";
+  unaccepted: boolean;
+} {
   const application = FailedSyncSchema.parse(observed);
+  const phase = application.status.operationState.phase;
+  const unaccepted = phase === "Succeeded";
+  if (
+    unaccepted &&
+    (application.status.sync.status !== "OutOfSync" ||
+      isPruneOnlyOutOfSync(observed))
+  )
+    throw new Error(
+      "A succeeded worker sync still matches its release and settles as an owned sync",
+    );
   const info = application.status.operationState.operation.info;
   const requests = info.filter(
     (entry) => entry.name === "ci.sjer.red/request-id",
@@ -182,6 +201,7 @@ export function requireFailedOwnedSync(
   return {
     receipt: z.uuid().parse(receipts[0]?.value),
     sync: application.status.sync.status,
+    unaccepted,
   };
 }
 
