@@ -54,7 +54,7 @@ export function workerPoolExpressions(chart: string): string[] {
     "{{ $track }}",
     "{{ $worker.image | quote }}",
     "{{ $worker.replicas }}",
-    '{{ if eq $worker.buildId $pool.candidateBuildId }}"flags"{{ else }}"flipt"{{ end }}',
+    '{{ if eq $worker.buildId $pool.candidateBuildId }}"flags"{{ else }}"disabled"{{ end }}',
     "{{ end }}",
     "{{ $worker.buildId | quote }}",
   ];
@@ -84,10 +84,10 @@ function retainedPrototype(value: unknown, candidatePrefix: string): unknown {
 }
 
 /**
- * The candidate recipe is copied onto every retained host. A host whose image
- * predates `flags` still has to boot, so only the candidate build keeps that
- * mode; older hosts stay on the Flipt contract they were built for. Extra
- * Flipt variables are ignored when the mode is `flags`.
+ * The candidate recipe is copied onto every retained host. Retained worker
+ * images only replay in-flight workflows and may predate `flags`, so only the
+ * candidate build runs `FEATURE_FLAGS_MODE=flags`; older retained hosts boot
+ * with `FEATURE_FLAGS_MODE=disabled` (`NoopProvider`) and ignore `FLAGS_*`.
  */
 function retainLegacyFlagMode(
   env: { name: string; value?: string | undefined }[],
@@ -95,13 +95,6 @@ function retainLegacyFlagMode(
   const mode = env.find((entry) => entry.name === "FEATURE_FLAGS_MODE");
   if (mode?.value !== "flags") return env;
   mode.value = "DELIVERYFLAGMODE";
-  for (const [name, value] of [
-    ["FLIPT_URL", "http://flipt-flipt-service.flipt.svc.cluster.local:8080"],
-    ["FLIPT_NAMESPACE", "temporal"],
-    ["FLIPT_ENVIRONMENT", "prod"],
-  ] as const) {
-    if (!env.some((entry) => entry.name === name)) env.push({ name, value });
-  }
   return env;
 }
 
@@ -161,7 +154,7 @@ function prototypeManifest(
     .replaceAll("DELIVERYIMAGE", "{{ $worker.image | quote }}")
     .replaceAll(
       "DELIVERYFLAGMODE",
-      '{{ if eq $worker.buildId $pool.candidateBuildId }}"flags"{{ else }}"flipt"{{ end }}',
+      '{{ if eq $worker.buildId $pool.candidateBuildId }}"flags"{{ else }}"disabled"{{ end }}',
     )
     .replaceAll("replicas: 99117", "replicas: {{ $worker.replicas }}");
   // The serializer may quote the image sentinel in future; fail instead of emitting nested quotes.

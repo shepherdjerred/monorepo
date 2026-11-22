@@ -52,7 +52,7 @@ test("replacement observer OFF wins over old ON and stale observations disappear
           })),
           {
             series:
-              'feature_flag_inventory_expected{flipt_environment="prod",flipt_namespace="test"}',
+              'feature_flag_inventory_expected{container="temporal-repo-worker",flipt_environment="prod",flipt_namespace="test"}',
             values: "1+0x30",
           },
           ...["old", "new"].flatMap((instance) => [

@@ -47,7 +47,7 @@ export function getFliptRuleGroups(): PrometheusRuleSpecGroups[] {
               "The feature flag inventory observer has not recorded a fresh snapshot in over 10 minutes, leaving live flag rollout state unknown on dashboards and audits. Check Flags health and the inventory observer worker logs.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "((max by (flipt_environment, flipt_namespace) (feature_flag_inventory_expected) == 1) unless on (flipt_environment, flipt_namespace) (max by (flipt_environment, flipt_namespace) (feature_flag_inventory_observed_timestamp_seconds) > time() - 600)) or absent(feature_flag_inventory_expected)",
+            '((max by (flipt_environment, flipt_namespace) (feature_flag_inventory_expected{container="temporal-repo-worker"}) == 1) unless on (flipt_environment, flipt_namespace) (max by (flipt_environment, flipt_namespace) (feature_flag_inventory_observed_timestamp_seconds) > time() - 600)) or absent(feature_flag_inventory_expected{container="temporal-repo-worker"})',
           ),
           for: "5m",
           labels: { severity: "warning" },

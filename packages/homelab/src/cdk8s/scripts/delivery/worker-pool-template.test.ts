@@ -106,12 +106,11 @@ function expectRetainedFlagMode(deployment: unknown, buildId: string) {
       ]),
   );
   expect(variables.get("FEATURE_FLAGS_MODE")).toBe(
-    buildId === THIRD ? "flags" : "flipt",
+    buildId === THIRD ? "flags" : "disabled",
   );
-  expect(variables.get("FLIPT_NAMESPACE")).toBe("temporal");
-  expect(variables.get("FLIPT_URL")).toBe(
-    "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
-  );
+  expect(variables.get("FLAGS_DEPLOYMENT")).toBe("temporal/prod");
+  expect(variables.has("FLIPT_NAMESPACE")).toBe(false);
+  expect(variables.has("FLIPT_URL")).toBe(false);
 }
 
 function synth(chartName: string, stage?: "beta" | "prod") {
