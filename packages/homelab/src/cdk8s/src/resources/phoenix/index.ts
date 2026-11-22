@@ -103,6 +103,10 @@ export function createPhoenixDeployment(chart: Chart) {
           key: "password",
         }),
         PHOENIX_SQL_DATABASE_URL: EnvValue.fromValue(buildPgUrl()),
+        // Phoenix 21 defaults to loopback and leaves the pod address to the
+        // image's PHOENIX_HOST=::. Bind IPv4 explicitly so the Service,
+        // Tailscale ingress, and probes never depend on that image default.
+        PHOENIX_HOST: EnvValue.fromValue("0.0.0.0"),
         PHOENIX_WORKING_DIR: EnvValue.fromValue("/data"),
         PHOENIX_ROOT_URL: EnvValue.fromValue(tailnetService("phoenix").origin),
 
@@ -144,6 +148,10 @@ export function createPhoenixDeployment(chart: Chart) {
         // Code evaluators run in the in-process WASM sandbox only; never ship
         // span content to a hosted sandbox provider.
         PHOENIX_ALLOWED_SANDBOX_PROVIDERS: EnvValue.fromValue("WASM"),
+        // The network policy allows no internet egress, so the runtime
+        // model-price fetch from GitHub could only fail. Prices still move
+        // with the bundled manifest on each upgrade.
+        PHOENIX_DISABLE_MODEL_COST_AUTO_UPDATE: EnvValue.fromValue("true"),
       },
       securityContext: restrictedContainer(PHOENIX_UID),
       resources: {

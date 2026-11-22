@@ -192,7 +192,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "92.22.0",
+      "value": "93.6.1",
       "component": true
     },
     {
@@ -1510,7 +1510,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "regex:^version-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)-nonroot$"
       },
-      "value": "version-20.27.0-nonroot@sha256:d7f50b316f7801d3b1335a1825e9415a519d5ded7a9d9197c2664989e737d748",
+      "value": "version-22.0.0-nonroot@sha256:1cc6e3962b16d784055bcf71cea03ad50386564002ace1a11c1b409d34a08cf8",
       "notes": [
         "Phoenix publishes semver releases only under version-X.Y.Z tags; the nonroot",
         "variant runs as UID 65532 and is the one the upstream Helm chart deploys."
