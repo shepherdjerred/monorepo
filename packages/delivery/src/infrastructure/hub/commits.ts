@@ -209,11 +209,15 @@ async function readCommits(
       .filter((row) => buildStatus(row.status) === "failed")
       .map((row) => row.id),
   );
-  // The passing builds that carry a failed one: their releases decide
-  // whether the failed commit's change is live yet.
+  // The releases that carry a failed build's change decide whether the
+  // failed commit's change is live yet.
   const carrierBuilds = await database.build.findMany({
     where: {
-      id: { in: [...carried.values()].map((entry) => entry.carrierBuildId) },
+      id: {
+        in: [...carried.values()].flatMap((entry) =>
+          entry.releaseBuildId === null ? [] : [entry.releaseBuildId],
+        ),
+      },
     },
   });
   const buildIds = [...builds, ...carrierBuilds].map((row) => row.id);
@@ -348,16 +352,28 @@ async function readCommits(
         ? []
         : [{ buildId: build.id, includedIn: carrier.includedIn }];
     });
-    // A carried failure's change ships in the carrying build's release, so
-    // that release's standing is this commit's for the service.
+    // A carried failure's change ships in the first later release of the
+    // service, so that release's standing is this commit's for the service.
+    // While no later passing build has a release, it is not released.
     for (const build of failedBuilds) {
       const carrier = carried.get(build.id);
+      if (carrier === undefined) continue;
       const row = carrierBuilds.find(
-        (entry) => entry.id === carrier?.carrierBuildId,
+        (entry) => entry.id === carrier.releaseBuildId,
       );
       const entry = row === undefined ? null : standing(row);
-      if (entry !== null && carrier !== undefined)
-        changed.push({ ...entry, includedIn: carrier.includedIn });
+      changed.push(
+        row === undefined || entry === null
+          ? {
+              service: serviceSummary(build.serviceId),
+              build,
+              versionSet: null,
+              verdict: "waiting",
+              environments: [],
+              includedIn: carrier.includedIn,
+            }
+          : { ...entry, includedIn: row.sourceRevision },
+      );
     }
     changed.sort(
       (left, right) =>

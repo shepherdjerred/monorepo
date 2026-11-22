@@ -131,8 +131,11 @@ test("a commit whose failed CI a newer passing commit includes says where its ch
   page,
 }) => {
   const carrier = historySha(FAILED_POSITION + 1).slice(0, 7);
+  // The next commit kept Birmel's image and composed nothing; the first
+  // later release, the accepted one, is what carries the change to prod.
+  const release = historySha(ACCEPTED_POSITION).slice(0, 7);
   const row = await findRow(page, FAILED_POSITION);
-  await expect(row).toContainText("Included in newer");
+  await expect(row.locator(".status").first()).toHaveText(/Deployed/u);
   await expect(row).toContainText(
     `Not built on its own; included in ${carrier}, which passed`,
   );
@@ -143,6 +146,9 @@ test("a commit whose failed CI a newer passing commit includes says where its ch
   await expect(header).toContainText(
     `CI failed for 1 service here, so it was not built on its own; included in ${carrier}, which passed.`,
   );
+  const service = page.getByRole("region", { name: /^By service/u });
+  await expect(service.getByRole("link", { name: release })).toBeVisible();
+  await expect(service.getByRole("link", { name: "live prod" })).toBeVisible();
   await expect(header).not.toContainText(
     "nothing from this commit was published",
   );

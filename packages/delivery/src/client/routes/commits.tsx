@@ -282,7 +282,11 @@ function ServiceRow({ entry }: { entry: CommitService }) {
       </td>
       <td data-label="Environments">
         {entry.environments.length === 0 ? (
-          <span className="muted">No environment tracks this service</span>
+          <span className="muted">
+            {entry.includedIn !== undefined && entry.versionSet === null
+              ? "No newer release carries it yet"
+              : "No environment tracks this service"}
+          </span>
         ) : (
           <ul className="environment-strip">
             {entry.environments.map((environment) => (

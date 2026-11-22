@@ -495,8 +495,10 @@ export const CommitServiceSchema = z.object({
   environments: z.array(CommitEnvironmentSchema),
   /**
    * Set when this commit's own build of the service failed and a newer
-   * commit's passing build carries the change: that commit's sha, and the
-   * build, set and environments are its release's.
+   * commit's passing build carries the change. With a set or environments,
+   * they are the first later release of the service and this is its
+   * commit's sha; with neither, no later passing build has a release yet,
+   * the build is the failed one, and this is the first later passing commit.
    */
   includedIn: z.string().min(7).optional(),
 });

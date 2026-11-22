@@ -94,7 +94,7 @@ test("commits show their title and author, and page to older ones", async ({
   // unbreakable token wraps inside its row. The next commit passed, so the
   // row says where its change went rather than "CI failed".
   await expect(rows.filter({ hasText: FAILED_COMMIT_TITLE })).toContainText(
-    "Included in newer",
+    "Not built on its own",
   );
   await expect(recent.getByText(LONG_COMMIT_TITLE)).toBeVisible();
   await expectNoHorizontalOverflow(page);
