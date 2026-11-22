@@ -86,6 +86,16 @@ function household(page: Page) {
     .locator("..");
 }
 
+/*
+ * A page can still be reading the title when a test's last assertion passes.
+ * Its answer is a route handler that is awaiting the real read, and the
+ * browser context is torn down under it, which fails the test with "Response
+ * has been disposed". Waiting for the handlers first lets every read finish.
+ */
+test.afterEach(async ({ page }) => {
+  await page.unrouteAll({ behavior: "wait" });
+});
+
 test.describe("how long the library keeps a title", () => {
   const film = titleNamed("Alien");
 
