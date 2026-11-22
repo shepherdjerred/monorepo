@@ -4,6 +4,7 @@ import { Link } from "react-router";
 
 import { age, formatInstant } from "./time.ts";
 import type { AlertView } from "#shared/schema";
+import { AlertSeverity } from "./ledger-severity.tsx";
 
 const SEVERITY_RANK: Record<AlertView["severity"], number> = {
   critical: 4,
@@ -90,9 +91,7 @@ function AlertRow({ alert }: { readonly alert: AlertView }): React.JSX.Element {
   return (
     <tr>
       <td data-label="Severity">
-        <span className={`severity severity-${alert.severity}`}>
-          {alert.severity}
-        </span>
+        <AlertSeverity severity={alert.severity} />
       </td>
       <td data-label="Alert">
         <Link className="alert-link" to={`/alerts/${alert.id}`}>
@@ -159,9 +158,7 @@ export function AlertTable({
               aria-hidden="true"
               className="alert-group-chevron"
             />
-            <span className={`severity severity-${group.severity}`}>
-              {group.severity}
-            </span>
+            <AlertSeverity severity={group.severity} />
             <strong className="alert-group-name">{group.alertname}</strong>
             <span className="count">{group.alerts.length} occurrences</span>
             <span className="mono alert-group-newest">

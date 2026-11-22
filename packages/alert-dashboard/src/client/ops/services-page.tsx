@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import { allSignals } from "@shepherdjerred/ops-model/assemble.ts";
 import type { Service } from "@shepherdjerred/ops-model/catalog.ts";
 import type { OpsFacets } from "@shepherdjerred/ops-model/facets.ts";
@@ -17,7 +18,6 @@ import { Link } from "react-router";
 import { facetsQuery } from "./ops-api.ts";
 import {
   PageHeading,
-  SeverityBadge,
   WithSnapshot,
   services as serviceCatalog,
 } from "./ops-ui.tsx";
@@ -279,7 +279,7 @@ function ServiceGrid({
 
   return (
     <>
-      <PageHeading eyebrow="Service catalog" title="Services" />
+      <PageHeading title="Services" />
       <div className="services-toolbar">
         <label htmlFor={searchId} className="visual-search">
           <span className="sr-only">Search services</span>
@@ -336,7 +336,7 @@ function ServiceGrid({
                       to={`/services/${service.id}`}
                     >
                       <strong>{service.title}</strong>
-                      <SeverityBadge severity={severity} />
+                      <StatusGlyph severity={severity} />
                       <span className="service-sub">
                         {ownSignals.length === 0
                           ? "No signals"

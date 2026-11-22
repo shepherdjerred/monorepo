@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import { findSection } from "@shepherdjerred/ops-model/assemble.ts";
 import type { PostHogFacet } from "@shepherdjerred/ops-model/facets.ts";
@@ -16,11 +17,10 @@ import {
   snapshotQuery,
 } from "#client/ops/ops-api.ts";
 import {
-  MetricTile,
+  MetricStrip,
   PageHeading,
   RangePicker,
   SectionSummary,
-  SeverityBadge,
 } from "#client/ops/ops-ui.tsx";
 import { SignalList } from "#client/ops/signal-list.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
@@ -122,9 +122,9 @@ export function ProductPageView({
 
   return (
     <>
-      <PageHeading eyebrow="Web analytics & vitals" title="Product">
+      <PageHeading title="Product" meta="Web analytics & vitals">
         {productSection === null ? null : (
-          <SeverityBadge severity={productSection.severity} large />
+          <StatusGlyph severity={productSection.severity} />
         )}
       </PageHeading>
       {productSection === null ? null : (
@@ -134,11 +134,7 @@ export function ProductPageView({
         />
       )}
       <section aria-label="Headline analytics metrics">
-        <div className="product-kpi-grid">
-          {kpis.map((metric) => (
-            <MetricTile key={metric.id} metric={metric} />
-          ))}
-        </div>
+        <MetricStrip metrics={kpis} />
       </section>
       <div className="charts-heading">
         <h2 className="block-heading">Traffic & Web Vitals trends</h2>

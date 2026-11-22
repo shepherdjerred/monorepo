@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import {
   groupSignals,
   type SignalEntry,
@@ -8,7 +9,7 @@ import { ChevronRightIcon } from "lucide-react";
 import { useId, useState } from "react";
 
 import { ListToggle, cappedCount, useCapped } from "./capped-list.tsx";
-import { ExternalLink, ServiceLink, SeverityBadge } from "./ops-ui.tsx";
+import { ExternalLink, ServiceLink } from "./ops-ui.tsx";
 import { age } from "#client/time.ts";
 
 /** Entries a list shows before the rest sit behind "Show N more". */
@@ -28,7 +29,7 @@ function SignalItem({
   const [primary, ...rest] = signal.links;
   return (
     <li className="signal">
-      <SeverityBadge severity={signal.severity} />
+      <StatusGlyph severity={signal.severity} />
       <div className="signal-body">
         <p className="signal-title">
           {primary === undefined ? (
@@ -114,7 +115,7 @@ function SignalGroupItem({
         }}
       >
         <summary>
-          <SeverityBadge severity={group.severity} />
+          <StatusGlyph severity={group.severity} />
           <span className="signal-body">
             <span className="signal-title">
               {group.label}

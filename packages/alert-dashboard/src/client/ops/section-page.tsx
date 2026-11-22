@@ -21,7 +21,8 @@ import type { SeriesPresetId } from "#shared/ops-schema";
 
 export type SectionPageDefinition = {
   title: string;
-  eyebrow: string;
+  /** What the page covers, beside its title in the header. */
+  meta: string;
   sections: readonly SectionId[];
   charts: readonly SeriesPresetId[];
   enrichment?: ReactNode;
@@ -105,7 +106,7 @@ function SectionBody({
   const newIds = new Set(snapshot.newSignalIds);
   return (
     <>
-      <PageHeading eyebrow={definition.eyebrow} title={definition.title} />
+      <PageHeading title={definition.title} meta={definition.meta} />
       <section className="summary-stack" aria-label="Summary">
         {sections.map((section) => (
           <SectionSummary key={section.id} section={section} />
@@ -148,7 +149,7 @@ function SectionPage({
 
 const FLOW_PAGE: SectionPageDefinition = {
   title: "Flow",
-  eyebrow: "Pull requests & work",
+  meta: "Pull requests & work",
   sections: ["delivery", "work"],
   charts: ["prs-open", "prs-merged", "renovate-pending", "tracker-open"],
   enrichment: <FlowEnrichment />,
@@ -156,7 +157,7 @@ const FLOW_PAGE: SectionPageDefinition = {
 
 const MAINTENANCE_PAGE: SectionPageDefinition = {
   title: "Maintenance",
-  eyebrow: "What's rotting",
+  meta: "What's rotting",
   sections: ["maintenance", "errors", "platform", "observability"],
   charts: ["bugsink-unresolved", "alerts-firing", "node-cpu", "node-memory"],
 };

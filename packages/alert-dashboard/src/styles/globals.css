@@ -5,6 +5,7 @@
  * unlayered, wins over them.
  */
 @import "./legacy-tokens.css";
+@import "./primitives.css";
 
 /* Berkeley Mono is licensed and served by Hub from `public/fonts`. */
 @font-face {
@@ -421,8 +422,6 @@ tbody tr:hover {
 .alert-link span {
   color: var(--muted);
 }
-.severity,
-.priority,
 .state,
 .suppression,
 .preview-status {
@@ -435,30 +434,7 @@ tbody tr:hover {
     monospace;
   text-transform: uppercase;
 }
-.priority-urgent {
-  color: var(--sev-warning-ink);
-  background: var(--sev-warning-bg);
-}
-.priority-chore {
-  color: var(--sev-info-ink);
-  background: var(--sev-info-bg);
-}
-.severity-critical {
-  color: var(--sev-error-ink);
-  background: var(--sev-error-bg);
-}
-.severity-warning {
-  color: var(--sev-warning-ink);
-  background: var(--sev-warning-bg);
-}
-.severity-info {
-  color: var(--sev-info-ink);
-  background: var(--sev-info-bg);
-}
-.severity-unknown {
-  color: var(--sev-unknown-ink);
-  background: var(--sev-unknown-bg);
-}
+
 .state {
   background: var(--sev-ok-bg);
   color: var(--sev-ok-ink);
@@ -478,14 +454,7 @@ tbody tr:hover {
 .error-state {
   color: var(--sev-error-ink);
 }
-.stale-state {
-  padding: 10px 24px;
-  text-align: center;
-  color: var(--stale-ink);
-  background: var(--stale-bg);
-  border-bottom: 1px solid var(--stale-line);
-  font-size: 0.9rem;
-}
+
 .timeline {
   padding: 18px 24px;
 }
@@ -763,90 +732,8 @@ tbody tr:hover {
   }
 }
 
-/* ---- Ops overview ---- */
-.sev {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 0.3rem;
-  width: fit-content;
-  height: 22px;
-  border-radius: 999px;
-  padding: 0 0.5rem 0 0.4rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.sev svg {
-  width: 0.85rem;
-  height: 0.85rem;
-}
-.sev-large {
-  height: 30px;
-  padding: 0 0.75rem 0 0.6rem;
-  font-size: 0.8rem;
-}
-.sev-large svg {
-  width: 1.05rem;
-  height: 1.05rem;
-}
-.sev-ok {
-  background: var(--sev-ok-bg);
-  color: var(--sev-ok-ink);
-}
-.sev-info {
-  background: var(--sev-info-bg);
-  color: var(--sev-info-ink);
-}
-.sev-unknown {
-  background: var(--sev-unknown-bg);
-  color: var(--sev-unknown-ink);
-}
-.sev-warning {
-  background: var(--sev-warning-bg);
-  color: var(--sev-warning-ink);
-}
-.sev-error {
-  background: var(--sev-error-bg);
-  color: var(--sev-error-ink);
-}
-.status-banner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 18px;
-  margin-bottom: 14px;
-  border: 1px solid var(--line);
-  border-left: 4px solid var(--status-unknown);
-  border-radius: 12px;
-  background: var(--panel);
-}
-.status-banner.status-ok {
-  border-left-color: var(--status-good);
-}
-.status-banner.status-info {
-  border-left-color: var(--status-info);
-}
-.status-banner.status-warning {
-  border-left-color: var(--status-warning);
-}
-.status-banner.status-error {
-  border-left-color: var(--status-critical);
-}
-.status-summary {
-  margin: 0;
-  color: var(--ink);
-  font-size: 1.05rem;
-  font-weight: 600;
-}
-.status-meta {
-  margin: 2px 0 0;
-  font-size: 0.85rem;
-}
 .lede {
-  margin: -16px 0 18px;
+  margin: 0 0 18px;
 }
 .stack {
   display: grid;
@@ -858,8 +745,6 @@ tbody tr:hover {
 }
 .panel-heading h2,
 .panel-heading h3,
-.section-card h2,
-.section-summary h2,
 .metadata h2 {
   font-weight: 650;
 }
@@ -937,7 +822,7 @@ tbody tr:hover {
   padding: 10px 18px;
   border-top: 1px solid var(--line-soft);
 }
-.signal .sev {
+.signal .ui-glyph {
   margin-top: 1px;
 }
 .signal-title {
@@ -982,7 +867,7 @@ tbody tr:hover {
 .signal-group summary::-webkit-details-marker {
   display: none;
 }
-.signal-group summary .sev {
+.signal-group summary .ui-glyph {
   margin-top: 1px;
 }
 .signal-group summary .signal-body,
@@ -1077,190 +962,7 @@ tbody tr:hover {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
-/* Each card's heading, summary and metrics sit on row tracks shared with the
-   cards beside it, so the three line up across a row whatever wraps. */
-.section-card {
-  display: grid;
-  grid-row: span 3;
-  grid-template-rows: auto 1fr auto;
-  grid-template-rows: subgrid;
-  align-content: start;
-  gap: 8px;
-  min-width: 0;
-  padding: 14px 14px 16px;
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--status-unknown);
-  border-radius: 10px;
-  background: var(--panel);
-}
-.section-card.section-ok,
-.section-summary.section-ok {
-  border-top-color: var(--status-good);
-}
-.section-card.section-info,
-.section-summary.section-info {
-  border-top-color: var(--status-info);
-}
-.section-card.section-warning,
-.section-summary.section-warning {
-  border-top-color: var(--status-warning);
-}
-.section-card.section-error,
-.section-summary.section-error {
-  border-top-color: var(--status-critical);
-}
-.section-card header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.section-card h2 a {
-  text-decoration: none;
-}
-.section-card h2 a:hover {
-  text-decoration: underline;
-}
-.section-card p {
-  margin: 0;
-  font-size: 0.88rem;
-}
-.metric-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
-  gap: 8px;
-  padding: 0 18px 12px;
-}
-.section-card .metric-row,
-.section-summary .metric-row,
-.ai-tiles,
-.incident-panel .metric-row {
-  padding: 0;
-}
-/* Three across, so a card is the same height whatever its metrics are named;
-   the values share a baseline when one label wraps and its neighbour does not. */
-.section-card .metric-row {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-}
-.section-card .metric {
-  --metric-pad: 8px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding-block: 7px;
-}
-.section-card .metric span {
-  font-size: 0.7rem;
-}
-.section-card .metric strong {
-  font-size: 1.05rem;
-  overflow-wrap: anywhere;
-}
 
-.incident-panel .metric-row {
-  padding: 0 18px 16px;
-}
-.metric {
-  --metric-pad: 10px;
-  min-width: 0;
-  padding: 8px var(--metric-pad);
-  border-radius: 8px;
-  background: var(--panel-2);
-  border: 1px solid var(--line-soft);
-}
-.metric span {
-  display: block;
-  color: var(--muted);
-  font-size: 0.72rem;
-  overflow-wrap: anywhere;
-}
-.metric strong {
-  display: block;
-  margin-top: 2px;
-  font-size: 1.2rem;
-  font-weight: 650;
-}
-/* A metric that needs attention: a bar in the status colour, and an icon in
-   the corner (named for screen readers) so the tile does not depend on the
-   colour. The bar is a border, which forced-colors mode keeps; the padding
-   gives back its width. The icon sits beside the label, which may wrap,
-   rather than the value, which may not. */
-.metric-warning,
-.metric-error,
-.metric-unknown {
-  position: relative;
-  border-left: 3px solid var(--status-unknown);
-  padding-left: calc(var(--metric-pad) - 2px);
-}
-.metric-warning > span:first-child,
-.metric-error > span:first-child,
-.metric-unknown > span:first-child {
-  padding-right: 1.05rem;
-}
-.metric-warning {
-  border-left-color: var(--status-warning);
-}
-.metric-error {
-  border-left-color: var(--status-critical);
-}
-.metric-flag {
-  position: absolute;
-  top: 8px;
-  right: calc(var(--metric-pad) - 2px);
-  width: 0.85rem;
-  height: 0.85rem;
-  color: var(--sev-unknown-ink);
-}
-.metric-warning .metric-flag {
-  color: var(--sev-warning-ink);
-}
-.metric-error .metric-flag {
-  color: var(--sev-error-ink);
-}
-/* One section at a glance, full width: the title, summary and verdict on
-   one line and every metric on the next, on columns the cards share. */
-.summary-stack {
-  display: grid;
-  gap: 10px;
-}
-.section-summary {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas:
-    "title summary sev"
-    "metrics metrics metrics";
-  align-items: baseline;
-  gap: 10px 14px;
-  min-width: 0;
-  padding: 12px 14px 14px;
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--status-unknown);
-  border-radius: 10px;
-  background: var(--panel);
-}
-.section-summary h2 {
-  grid-area: title;
-}
-.section-summary > p {
-  grid-area: summary;
-  margin: 0;
-  font-size: 0.88rem;
-}
-.section-summary > .sev {
-  grid-area: sev;
-  align-self: center;
-}
-.section-summary .metric-row {
-  grid-area: metrics;
-  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
-}
-/* The values share a baseline when one label wraps and its neighbour does not. */
-.section-summary .metric {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
 /* Two columns of panels that each stack on their own. */
 .signal-columns,
 .review-lists {
@@ -1437,24 +1139,7 @@ tbody tr:hover {
 .ai-row > :only-child {
   grid-column: 1 / -1;
 }
-/* The tiles beside the spend panel stack to its height. */
-.ai-tiles {
-  grid-template-columns: 1fr;
-  grid-auto-rows: 1fr;
-}
-.ai-tiles .metric {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-inline: 16px;
-}
-.ai-tiles .metric strong {
-  font-size: 1.5rem;
-}
-.ai-tiles .metric-flag {
-  top: 12px;
-  right: 14px;
-}
+
 /* One line per window: the provider names its group from the first row. */
 .quota-table {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -1683,19 +1368,7 @@ tbody tr:hover {
   display: flex;
   flex-direction: column;
 }
-.incident-panel:not(:only-child) .metric-row {
-  flex: 1;
-  grid-template-columns: 1fr;
-  grid-auto-rows: 1fr;
-}
-.incident-panel:not(:only-child) .metric {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.incident-panel:not(:only-child) .metric strong {
-  font-size: 1.5rem;
-}
+
 /* Holds about the top block's height while the report loads, so the charts
    under it barely move when it lands. The weekly block has the trend table. */
 .review-lead[aria-busy="true"] {
@@ -1745,18 +1418,7 @@ tbody tr:hover {
   font-family: "Berkeley Mono", ui-monospace, monospace;
   font-size: 0.68rem;
 }
-.change-error .change-kind {
-  background: var(--sev-error-bg);
-  color: var(--sev-error-ink);
-}
-.change-warning .change-kind {
-  background: var(--sev-warning-bg);
-  color: var(--sev-warning-ink);
-}
-.change-ok .change-kind {
-  background: var(--sev-ok-bg);
-  color: var(--sev-ok-ink);
-}
+
 .service-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
@@ -1819,29 +1481,13 @@ tbody tr:hover {
 .delta-flat {
   color: var(--muted);
 }
-/* Three metric tiles no longer fit across a card: it keeps its title, badge
-   and summary. */
-@container content (max-width: 1000px) {
-  .section-card {
-    grid-row: span 2;
-  }
-  .section-card header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .section-card .metric-row {
-    display: none;
-  }
-}
+
 /* The quota table's four columns need about 640px, which two thirds of a
    narrower column is not: the AI rows stack, and the tiles go back to
    sitting side by side. */
 @container content (max-width: 1020px) {
   .ai-row {
     grid-template-columns: 1fr;
-  }
-  .ai-tiles {
-    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   }
 }
 /* Too narrow for four columns: each window becomes two lines, its name and
@@ -1920,46 +1566,12 @@ tbody tr:hover {
   .review-grid {
     grid-template-columns: 1fr;
   }
-  .incident-panel:not(:only-child) .metric-row {
-    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
-    grid-auto-rows: auto;
-  }
-  .incident-panel:not(:only-child) .metric strong {
-    font-size: 1.2rem;
-  }
+
   .review-lead-weekly[aria-busy="true"] {
     min-height: 740px;
   }
 }
-/* A narrower column fits seven tiles across only at the size of Home's, so a
-   section's metrics still make one row instead of leaving one tile over. */
-@container content (min-width: 601px) and (max-width: 1000px) {
-  .section-summary .metric-row {
-    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-    gap: 6px;
-  }
-  .section-summary .metric {
-    --metric-pad: 8px;
-    padding-block: 7px;
-  }
-  .section-summary .metric span {
-    font-size: 0.7rem;
-  }
-  .section-summary .metric strong {
-    font-size: 1.05rem;
-  }
-}
-/* The summary drops under its title; the verdict stays beside the title. */
-@container content (max-width: 720px) {
-  .section-summary {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "title sev"
-      "summary summary"
-      "metrics metrics";
-    gap: 8px 12px;
-  }
-}
+
 @media (max-width: 600px) {
   .section-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1969,32 +1581,14 @@ tbody tr:hover {
   .section-grid > :last-child:nth-child(odd) {
     grid-column: 1 / -1;
   }
-  .section-card {
-    grid-row: auto;
-    grid-template-rows: none;
-    padding: 10px 12px 12px;
-  }
-  .section-card p {
-    display: none;
-  }
-  /* Two tiles across; an odd one out takes the full row, as above. */
-  .section-summary .metric-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .section-summary .metric-row > :last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-  }
+
   .review-lead[aria-busy="true"] {
     min-height: 430px;
   }
   .review-lead-weekly[aria-busy="true"] {
     min-height: 1190px;
   }
-  .status-banner {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
-  }
+
   .signal,
   .change {
     grid-template-columns: 1fr;
@@ -2042,102 +1636,22 @@ tbody tr:hover {
   .hero-figure {
     font-size: 2.1rem;
   }
-  .page-heading .segmented {
-    width: fit-content;
-  }
+
   .chart-panel {
     padding: 12px;
   }
 }
 
-/* ---- Home ---- */
-/* Home leads with the overview, so its heading sits closer to it. */
-.home .page-heading {
-  margin-bottom: 18px;
-}
 .home .block-heading {
   margin: 22px 0 10px;
 }
-.stat-grid,
 .launcher-grid {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
 }
-.stat-grid {
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: 14px;
-}
-.stat-card {
-  min-width: 0;
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--status-unknown);
-  border-radius: 10px;
-  background: var(--panel);
-}
-.stat-card.stat-ok {
-  border-top-color: var(--status-good);
-}
-.stat-card.stat-info {
-  border-top-color: var(--status-info);
-}
-.stat-card.stat-warning {
-  border-top-color: var(--status-warning);
-}
-.stat-card.stat-error {
-  border-top-color: var(--status-critical);
-}
-/* The label and the severity badge share the first row; the number and its
-   hint share the second, on one baseline. */
-.stat-card a {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas:
-    "label label sev"
-    "value hint hint";
-  align-items: center;
-  gap: 2px 10px;
-  height: 100%;
-  padding: 11px 14px 9px;
-  border-radius: 0 0 9px 9px;
-  text-decoration: none;
-}
-.stat-card a:hover {
-  background: var(--row-hover);
-}
-.stat-label,
-.stat-hint {
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-.stat-label {
-  grid-area: label;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-width: 0;
-}
-.stat-card .sev {
-  grid-area: sev;
-}
-.stat-card strong {
-  grid-area: value;
-  align-self: baseline;
-  font:
-    700 1.7rem "Berkeley Mono",
-    monospace;
-}
-.stat-hint {
-  grid-area: hint;
-  align-self: baseline;
-  min-width: 0;
-}
-.stat-external {
-  flex: none;
-  width: 0.8rem;
-  height: 0.8rem;
-}
+
 .home-columns {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
@@ -2217,36 +1731,7 @@ tbody tr:hover {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-@container content (max-width: 860px) {
-  .stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-/* Too narrow for tiles to hold a label beside a badge: each tile
-   becomes one row that leads with its number. */
-@container content (max-width: 720px) {
-  .stat-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  .stat-card a {
-    grid-template-columns: 3.75rem minmax(0, 1fr) auto;
-    grid-template-areas:
-      "value label sev"
-      "value hint sev";
-    gap: 0 10px;
-    padding: 8px 14px;
-  }
-  .stat-card strong {
-    align-self: center;
-    font-size: 1.45rem;
-  }
-  .stat-label {
-    color: var(--ink);
-    font-size: 0.88rem;
-    font-weight: 600;
-  }
-}
+
 @media (max-width: 900px) {
   /* The top bar is sticky at this width and would cover the panel's heading. */
   .attention-panel {

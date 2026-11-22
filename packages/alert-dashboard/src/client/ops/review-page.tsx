@@ -1,3 +1,4 @@
+import { FigureStrip, Tabs } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { useQuery } from "@tanstack/react-query";
@@ -81,6 +82,11 @@ function TrendPanel({
   );
 }
 
+const PERIOD_OPTIONS = DigestKindSchema.options.map((option) => ({
+  value: option,
+  label: option === "weekly" ? "Week" : "Day",
+}));
+
 function IncidentPanel({
   incidents,
 }: {
@@ -94,24 +100,19 @@ function IncidentPanel({
       <header className="panel-heading">
         <h2 id="incident-heading">Incidents</h2>
       </header>
-      <div className="metric-row">
-        <div className="metric">
-          <span>Opened</span>
-          <strong>{incidents.opened}</strong>
-        </div>
-        <div className="metric">
-          <span>Resolved</span>
-          <strong>{incidents.resolved}</strong>
-        </div>
-        <div className="metric">
-          <span>Median to resolve</span>
-          <strong>
-            {incidents.medianMinutesToResolve === null
-              ? "—"
-              : `${String(Math.round(incidents.medianMinutesToResolve))}m`}
-          </strong>
-        </div>
-      </div>
+      <FigureStrip
+        figures={[
+          { label: "Opened", value: incidents.opened },
+          { label: "Resolved", value: incidents.resolved },
+          {
+            label: "Median to resolve",
+            value:
+              incidents.medianMinutesToResolve === null
+                ? "—"
+                : `${String(Math.round(incidents.medianMinutesToResolve))}m`,
+          },
+        ]}
+      />
     </section>
   );
 }
@@ -184,22 +185,15 @@ export function ReviewPage(): React.JSX.Element {
   return (
     <main>
       <title>Review · Hub</title>
-      <PageHeading eyebrow="How did it go" title="Review">
-        <div className="segmented" role="radiogroup" aria-label="Period">
-          {DigestKindSchema.options.map((option) => (
-            <button
-              key={option}
-              type="button"
-              role="radio"
-              aria-checked={option === kind}
-              onClick={() => {
-                setParams({ kind: option }, { replace: true });
-              }}
-            >
-              {option === "weekly" ? "Week" : "Day"}
-            </button>
-          ))}
-        </div>
+      <PageHeading title="Review">
+        <Tabs
+          label="Period"
+          options={PERIOD_OPTIONS}
+          value={kind}
+          onChange={(option) => {
+            setParams({ kind: option }, { replace: true });
+          }}
+        />
       </PageHeading>
       <div
         className={`review-lead review-lead-${kind}`}

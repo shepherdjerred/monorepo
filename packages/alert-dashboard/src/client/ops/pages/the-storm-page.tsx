@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import { allSignals, rankSignals } from "@shepherdjerred/ops-model/assemble.ts";
 import type {
@@ -25,10 +26,9 @@ import {
 import {
   ChangeTimeline,
   ExternalLink,
-  MetricTile,
+  MetricStrip,
   PageHeading,
   RangePicker,
-  SeverityBadge,
   services,
 } from "#client/ops/ops-ui.tsx";
 import { SignalList } from "#client/ops/signal-list.tsx";
@@ -146,7 +146,7 @@ function StormServiceCards({
           <li key={serviceId}>
             <Link className="service-card" to={`/services/${serviceId}`}>
               <strong>{service?.title ?? serviceId}</strong>
-              <SeverityBadge severity={severity} />
+              <StatusGlyph severity={severity} />
               <span className="service-sub">
                 {own.length === 0
                   ? "No active signals"
@@ -227,11 +227,7 @@ function StormAnalyticsPanel({
           </div>
         )}
       </div>
-      <div className="product-kpi-grid" style={{ marginBlock: 0 }}>
-        {metrics.map((metric) => (
-          <MetricTile key={metric.id} metric={metric} />
-        ))}
-      </div>
+      <MetricStrip metrics={metrics} />
       {primaryFunnel === undefined || finalStep === undefined ? null : (
         <p style={{ margin: 0, fontSize: "0.84rem" }}>
           <strong>{primaryFunnel.name}:</strong>{" "}
@@ -277,8 +273,8 @@ export function TheStormPageView({
 
   return (
     <>
-      <PageHeading eyebrow="Minecraft & community" title="The Storm">
-        <SeverityBadge severity={overallSeverity} large />
+      <PageHeading title="The Storm" meta="Minecraft & community">
+        <StatusGlyph severity={overallSeverity} />
       </PageHeading>
       <nav className="storm-quick-links" aria-label="The Storm quick links">
         <Link className="button" to="/promotion">

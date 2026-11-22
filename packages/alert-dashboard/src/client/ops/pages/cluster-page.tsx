@@ -349,7 +349,7 @@ export function ClusterPage(): React.JSX.Element {
             <StaleNotice errors={meta.errors} />
             {envelope.data === null ? (
               <>
-                <PageHeading eyebrow="Kubernetes & Talos" title="Cluster" />
+                <PageHeading title="Cluster" meta="Kubernetes & Talos" />
                 <div className="empty-state">
                   No cluster facet has been ingested yet. The Temporal
                   ops-snapshot workflow posts one every five minutes.

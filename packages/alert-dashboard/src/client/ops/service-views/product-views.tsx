@@ -22,7 +22,7 @@ import {
   PresetGrid,
   txtCol,
 } from "./product-view-helpers.tsx";
-import { MetricTile } from "#client/ops/ops-ui.tsx";
+import { MetricStrip } from "#client/ops/ops-ui.tsx";
 import {
   DataTable,
   StackedMeter,
@@ -238,11 +238,7 @@ function FlagsServiceView({
           ];
           return (
             <>
-              <div className="product-kpi-grid">
-                {kpis.map((m) => (
-                  <MetricTile key={m.id} metric={m} />
-                ))}
-              </div>
+              <MetricStrip metrics={kpis} />
               <div className="product-meter-card">
                 <StackedMeter
                   label="Rollout mix across managed flags"

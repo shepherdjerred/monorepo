@@ -118,7 +118,8 @@ describe("AlertTable multi-occurrence grouping", () => {
     expect(html).toContain('<details class="alert-group');
     expect(html).toContain("TemporalWorkflowFailed");
     expect(html).toContain("24 occurrences");
-    expect(html).toContain("severity-critical");
+    expect(html).toContain('data-sev="error"');
+    expect(html).toContain('<span class="ui-glyph-label">Critical</span>');
     expect(html).toContain(`/alerts/${storm[0]?.id ?? ""}`);
     expect(html).toContain(`/alerts/${storm[23]?.id ?? ""}`);
     expect(html).toContain(`/alerts/${single.id}`);

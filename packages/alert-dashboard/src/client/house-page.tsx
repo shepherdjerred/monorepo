@@ -8,6 +8,7 @@ import {
   SuppressionSelect,
 } from "./dashboard-page.tsx";
 import type { AlertView } from "#shared/schema";
+import { ChorePriority } from "./ledger-severity.tsx";
 
 export function houseDeviceArea(
   labels: Readonly<Record<string, string>>,
@@ -20,18 +21,6 @@ export function houseDeviceArea(
     labels["service"] ??
     "Home"
   );
-}
-
-function priorityLabel(severity: AlertView["severity"]): string {
-  if (severity === "critical") return "urgent";
-  return severity === "warning" ? "chore" : severity;
-}
-
-function priorityClass(severity: AlertView["severity"]): string {
-  if (severity === "critical") return "priority priority-urgent";
-  return severity === "warning"
-    ? "priority priority-chore"
-    : `severity severity-${severity}`;
 }
 
 export function HouseTable({
@@ -58,9 +47,7 @@ export function HouseTable({
           {alerts.map((alert) => (
             <tr key={alert.id}>
               <td data-label="Priority">
-                <span className={priorityClass(alert.severity)}>
-                  {priorityLabel(alert.severity)}
-                </span>
+                <ChorePriority severity={alert.severity} />
               </td>
               <td data-label="Chore / Item">
                 <Link className="alert-link" to={`/alerts/${alert.id}`}>

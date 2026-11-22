@@ -241,7 +241,7 @@ export function ClusterExplorerBody(props: {
 
   return (
     <>
-      <PageHeading eyebrow="Kubernetes & Talos" title="Cluster">
+      <PageHeading title="Cluster" meta="Kubernetes & Talos">
         <div className="platform-heading-actions">
           <RangePicker value={range} onChange={setRange} />
         </div>

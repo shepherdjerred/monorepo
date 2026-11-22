@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import type {
   ClusterFacet,
   ClusterNode,
@@ -6,7 +7,6 @@ import type {
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 
 import { SeriesChart } from "#client/charts/series-chart.tsx";
-import { SeverityBadge } from "#client/ops/ops-ui.tsx";
 import {
   BudgetMeter,
   DataTable,
@@ -41,13 +41,10 @@ export function kpiCard(
   severity: Severity = "ok",
 ): React.JSX.Element {
   return (
-    <div
-      key={label}
-      className={`platform-kpi-card platform-kpi-card-${severity}`}
-    >
+    <div key={label} className="platform-kpi-card" data-sev={severity}>
       <div className="platform-kpi-head">
         <span className="platform-kpi-label">{label}</span>
-        {severity === "info" ? null : <SeverityBadge severity={severity} />}
+        {severity === "info" ? null : <StatusGlyph severity={severity} />}
       </div>
       <strong className="platform-kpi-value">{value}</strong>
       <p className="platform-kpi-sub">{sub}</p>
@@ -148,7 +145,7 @@ function NodeCard({ node }: { readonly node: ClusterNode }): React.JSX.Element {
     >
       <header className="platform-card-head">
         <h3 id={`node-${node.name}`}>{node.name}</h3>
-        <SeverityBadge severity={node.ready ? "ok" : "error"} />
+        <StatusGlyph severity={node.ready ? "ok" : "error"} />
       </header>
       <BudgetMeter
         label={`${node.name} CPU`}

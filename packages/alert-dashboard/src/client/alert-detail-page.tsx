@@ -19,6 +19,7 @@ import {
   type Previews,
 } from "#shared/schema";
 import { epochNanosecondsToInstantText } from "#shared/time";
+import { AlertSeverity } from "./ledger-severity.tsx";
 
 const PrometheusMatrixBodySchema = z.object({
   resultType: z.literal("matrix"),
@@ -256,9 +257,7 @@ function AlertDetailContent({
             <div className="detail-heading">
               <div>
                 <div className="badge-row">
-                  <span className={`severity severity-${value.severity}`}>
-                    {value.severity}
-                  </span>
+                  <AlertSeverity severity={value.severity} />
                   <span className="state">{value.lifecycleState}</span>
                   {value.suppressionState === "none" ? null : (
                     <span className="suppression">

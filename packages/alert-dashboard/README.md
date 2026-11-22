@@ -23,19 +23,19 @@ The core module has two halves in one process:
   Renovate (`/renovate`), Product (`/product`), The Storm (`/the-storm`), AI
   (`/ai`), Maintenance (`/maintenance`), and Review (`/review`) pages plus the
   daily and weekly digest email. Home is the one overview page. In order it
-  shows the overall status; tiles for firing alerts, what waits on Jerred, and
-  Tracker triage; a card per area; a "Needs attention" list beside what is new
+  shows the overall status; a strip of headline figures for firing alerts,
+  what waits on Jerred, and Tracker triage; a card per area; a "Needs attention" list beside what is new
   since the last visit; and a launcher for Tracker, Delivery, and the tools.
   "Needs attention" lists every signal at attention severity or waiting on
   Jerred, and its filter narrows it to what waits on him (`/?show=waiting`,
-  where the "Waiting on you" tile links). `/overview` was a separate page and
+  where the "Waiting on you" figure links). `/overview` was a separate page and
   now redirects to `/`, keeping its query string. Flow (pull requests and
   Tracker work) and Maintenance are section pages
   (`src/client/ops/section-page.tsx`): a summary card per snapshot section with
   every metric, then the trend charts, then a signal list per section. Flow was
   served at `/delivery`, the name of a different app; that URL redirects to
-  `/flow` with its query string and fragment. A metric tile at warning, error,
-  or unknown carries an accent bar and a named icon. The AI page
+  `/flow` with its query string and fragment. A metric at warning, error, or
+  unknown colours its figure and adds a severity glyph with its word. The AI page
   (`src/client/ops/ai-page.tsx`) shows its status with the section summary that
   explains it, API spend against the monthly budget beside the section's other
   metrics, then one table of subscription quota windows grouped by provider
@@ -421,6 +421,28 @@ in-memory adapters that the unit tests, `dev:fixture`, and the Playwright
 fixture server share.
 
 Circular dependencies are forbidden anywhere in `src/`.
+
+### Severity and page primitives
+
+Hub has one severity vocabulary, console-ui's `ok`, `info`, `unknown`,
+`warning` and `error`, and shows it one way: console-ui's `StatusGlyph`, an
+icon in the severity colour beside its word, never colour alone. The alert
+ledger's own severities map onto it in `src/client/ledger-severity.tsx`: a
+`critical` alert is the `error` tone and keeps the word "Critical", and a house
+chore's priority reads "Urgent" or "Chore". Every element that carries a
+severity exposes it as `data-sev="<tone>"`, which console-ui turns into the
+glyph colour (`--ui-sev`) and a text-safe colour (`--ui-sev-ink`); Hub's styles
+key severity colours on that attribute, not on per-component class names.
+
+The shared page pieces live in `src/client/ops/ops-ui.tsx`. `PageHeading` is
+console-ui's `HeaderBar` across the top of the panel: the title as the page's
+`<h1>`, an optional muted line saying what the page covers, and the page's
+controls (range tabs, buttons, its verdict) at the right. `MetricStrip` lays
+`MetricTile`s out as one description list of figure cells; `GlanceTiles` is
+Home's strip of linked headline figures. `SectionCard` and `SectionSummary`
+show an area's verdict as a glyph and word with its metrics as a strip;
+`StatusBanner` is a quiet verdict row; `RangePicker` is console-ui's `Tabs`
+radio group. `src/styles/primitives.css` styles them.
 
 ### Modules
 

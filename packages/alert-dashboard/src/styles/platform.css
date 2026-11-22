@@ -38,25 +38,14 @@
   min-width: 0;
   padding: 12px 14px;
   border: 1px solid var(--line);
-  border-top: 3px solid var(--status-good);
   border-radius: var(--radius-md);
   background: var(--panel);
 }
-
-.platform-kpi-card-info {
-  border-top-color: var(--status-info);
-}
-
-.platform-kpi-card-unknown {
-  border-top-color: var(--status-unknown);
-}
-
-.platform-kpi-card-warning {
-  border-top-color: var(--status-warning);
-}
-
-.platform-kpi-card-error {
-  border-top-color: var(--status-critical);
+/* The figure takes its severity's text-safe colour; the glyph and word in
+   the head carry the meaning. */
+.platform-kpi-card:is([data-sev="warning"], [data-sev="error"])
+  .platform-kpi-value {
+  color: var(--ui-sev-ink);
 }
 
 .platform-kpi-head {

@@ -27,7 +27,7 @@ test("home answers what is wrong, where, and what waits on me", async ({
   await expect(firing).toContainText("3");
   await expect(firing).toContainText("in 1 group · 1 critical");
   await expect(firing).toHaveAttribute("href", "/alerts");
-  // Severity is a badge with a word, not only the tile's border colour.
+  // Severity is a glyph with a word, not only the figure's colour.
   await expect(firing).toContainText("Error");
   const houseTile = glance.getByRole("link", { name: /House/u });
   await expect(houseTile).toContainText("3");
@@ -191,10 +191,10 @@ test("a section page leads with summaries, then trends, then the signals", async
 
   // A metric that needs attention says so in words, not only with its bar.
   const stale = maintenance.locator(".metric", { hasText: "Stale backups" });
-  await expect(stale).toHaveClass(/\bmetric-error\b/u);
-  await expect(stale).toContainText("error");
+  await expect(stale).toHaveAttribute("data-sev", "error");
+  await expect(stale).toContainText("Error");
   const disk = maintenance.locator(".metric", { hasText: "Max disk used" });
-  await expect(disk).toHaveClass(/\bmetric-ok\b/u);
+  await expect(disk).toHaveAttribute("data-sev", "ok");
   await expect(disk).toHaveText("Max disk used71%");
 
   // One panel per section, each with its count, below the charts.
@@ -251,7 +251,7 @@ test("review leads with its verdict, then numbers, charts and lists", async ({
     page.getByRole("region", { name: "Compared with the previous week" }),
   ).toBeVisible();
   const incidents = page.getByRole("region", { name: "Incidents" });
-  await expect(incidents.locator(".metric")).toHaveCount(3);
+  await expect(incidents.getByRole("term")).toHaveCount(3);
   const changes = page.getByRole("region", { name: "Changes" });
   await expect(changes.locator(".change").first()).toBeVisible();
 

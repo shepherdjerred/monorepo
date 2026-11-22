@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import type {
@@ -11,12 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
 import { facetQuery, isSnapshotUnavailable } from "#client/ops/ops-api.ts";
-import {
-  PageHeading,
-  RangePicker,
-  ServiceLink,
-  SeverityBadge,
-} from "#client/ops/ops-ui.tsx";
+import { PageHeading, RangePicker, ServiceLink } from "#client/ops/ops-ui.tsx";
 import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { useRange } from "#client/charts/use-range.ts";
 import { StaleNotice } from "#client/stale-notice.tsx";
@@ -252,7 +248,7 @@ function AuditsStrip({
             <article key={audit.id} className="eng-audit-card">
               <div className="eng-audit-head">
                 <span className="eng-audit-title">{audit.label}</span>
-                <SeverityBadge severity={audit.status} />
+                <StatusGlyph severity={audit.status} />
               </div>
               <div className="eng-audit-meta">
                 <code className="visual-branch-chip">{audit.id}</code>
@@ -447,7 +443,7 @@ export function MonorepoPage(): React.JSX.Element {
   return (
     <main className="eng-page">
       <title>Monorepo · Hub</title>
-      <PageHeading eyebrow="Workspace & Turborepo" title="Monorepo" />
+      <PageHeading title="Monorepo" meta="Workspace & Turborepo" />
       <LoadingBlock
         values={{ facet }}
         fallback={<div className="loading-state">Loading Monorepo…</div>}

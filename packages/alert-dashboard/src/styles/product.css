@@ -4,28 +4,6 @@
   min-inline-size: 0;
 }
 
-.product-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-block: 14px 18px;
-}
-
-.product-kpi-grid .metric {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 10px 12px;
-  background: var(--panel);
-  border-color: var(--line);
-}
-
-.product-kpi-grid .metric strong {
-  font-family: "Berkeley Mono", ui-monospace, monospace;
-  font-size: 1.35rem;
-  font-variant-numeric: tabular-nums;
-}
-
 .product-funnel-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
@@ -286,7 +264,6 @@
 }
 
 .product-service-stack > .chart-grid,
-.product-service-stack > .product-kpi-grid,
 .product-service-stack > .product-meter-card {
   margin-block: 0;
 }
@@ -322,10 +299,6 @@
 }
 
 @container content (max-width: 960px) {
-  .product-kpi-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .product-split-grid,
   .storm-service-grid {
     grid-template-columns: 1fr;
@@ -333,10 +306,6 @@
 }
 
 @media (max-width: 600px) {
-  .product-kpi-grid {
-    grid-template-columns: 1fr;
-  }
-
   .product-funnel-card,
   .storm-analytics-panel,
   .product-meter-card {

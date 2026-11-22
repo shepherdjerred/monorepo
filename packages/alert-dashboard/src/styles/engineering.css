@@ -89,26 +89,9 @@
   gap: 4px;
   padding: 12px 14px;
   border: 1px solid var(--line);
-  border-block-start: 3px solid var(--status-good);
   border-radius: var(--radius-md);
   background: var(--panel);
   min-width: 0;
-}
-
-.eng-kpi-info {
-  border-block-start-color: var(--status-info);
-}
-
-.eng-kpi-warning {
-  border-block-start-color: var(--status-warning);
-}
-
-.eng-kpi-error {
-  border-block-start-color: var(--status-critical);
-}
-
-.eng-kpi-unknown {
-  border-block-start-color: var(--status-unknown);
 }
 
 .eng-kpi-top {
@@ -128,6 +111,11 @@
 
 .eng-kpi-value {
   color: var(--ink);
+}
+.eng-kpi-card:is([data-sev="warning"], [data-sev="error"]) .eng-kpi-value {
+  color: var(--ui-sev-ink);
+}
+.eng-kpi-value {
   font-family: "Berkeley Mono", ui-monospace, monospace;
   font-size: 1.35rem;
   font-variant-numeric: tabular-nums;

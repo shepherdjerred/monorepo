@@ -64,7 +64,7 @@ export function HomePage(): React.JSX.Element {
   return (
     <main className="home">
       <title>Home · Hub</title>
-      <PageHeading eyebrow="Homelab" title="Home" />
+      <PageHeading title="Home" />
       {modules.flatMap((module) =>
         (module.homeCards ?? []).map((entry) => (
           <Suspense

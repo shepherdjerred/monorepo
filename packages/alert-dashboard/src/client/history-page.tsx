@@ -12,6 +12,7 @@ import {
   EventListInputSchema,
   SeveritySchema,
 } from "#shared/schema";
+import { AlertSeverity } from "./ledger-severity.tsx";
 
 const SCOPE_OPTIONS = [
   ["ops", "Ops"],
@@ -238,11 +239,7 @@ export function HistoryPage(): React.JSX.Element {
                     <span className="timeline-dot" />
                     <div>
                       <div className="timeline-title">
-                        <span
-                          className={`severity severity-${event.alert.severity}`}
-                        >
-                          {event.alert.severity}
-                        </span>
+                        <AlertSeverity severity={event.alert.severity} />
                         <strong>{event.type.replaceAll("_", " ")}</strong>
                         <Link to={`/alerts/${event.occurrenceId}`}>
                           {event.alert.alertname}

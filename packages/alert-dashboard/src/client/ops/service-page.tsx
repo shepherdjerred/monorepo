@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { worstSeverity } from "@shepherdjerred/ops-model/severity.ts";
@@ -11,7 +12,6 @@ import {
   ExternalLink,
   PageHeading,
   RangePicker,
-  SeverityBadge,
 } from "./ops-ui.tsx";
 import { renderEngineeringServiceView } from "./service-views/engineering-views.tsx";
 import {
@@ -109,15 +109,14 @@ function ServiceBody({
       <Link className="back-link" to="/services">
         <ArrowLeftIcon aria-hidden="true" /> Services
       </Link>
-      <PageHeading eyebrow="Service" title={detail.service.title}>
+      <PageHeading title={detail.service.title}>
         <div className="platform-heading-actions">
           <ServiceConsoleLink serviceId={detail.service.id} />
           <RangePicker value={range} onChange={setRange} />
-          <SeverityBadge
+          <StatusGlyph
             severity={
               detail.snapshotGeneratedAt === null ? "unknown" : severity
             }
-            large
           />
         </div>
       </PageHeading>

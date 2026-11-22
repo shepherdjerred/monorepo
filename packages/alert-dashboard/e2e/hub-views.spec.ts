@@ -216,14 +216,14 @@ test("deep /services/:id views render StatusMatrix, facet tables, and alias redi
   ).toContainText("scout-experimental-voice-recap");
   // A service that is its own console links to it from the header.
   await expect(
-    page.locator("main .page-heading").getByRole("link", {
+    page.locator("main .page-head").getByRole("link", {
       name: "Open in Flags",
     }),
   ).toHaveAttribute("href", "https://flags.tailnet-1a49.ts.net");
 
   await page.goto("/services/golink");
   await expect(
-    page.locator("main .page-heading").getByRole("link", {
+    page.locator("main .page-head").getByRole("link", {
       name: "Open in Go links",
     }),
   ).toHaveAttribute("href", "https://go.tailnet-1a49.ts.net");

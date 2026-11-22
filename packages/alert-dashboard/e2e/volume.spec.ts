@@ -168,7 +168,7 @@ for (const variant of VARIANTS) {
       .getByRole("list", { name: "At a glance" })
       .getByRole("listitem")
       .filter({ hasText: "Firing alerts" });
-    await expect(firing).toHaveClass(/\bstat-error\b/u);
+    await expect(firing).toHaveAttribute("data-sev", "error");
     await expect(firing).toContainText("Error");
   });
 }

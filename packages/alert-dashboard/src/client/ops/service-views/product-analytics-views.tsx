@@ -12,7 +12,7 @@ import {
   txtCol,
   type PresetSpec,
 } from "./product-view-helpers.tsx";
-import { MetricTile } from "#client/ops/ops-ui.tsx";
+import { MetricStrip } from "#client/ops/ops-ui.tsx";
 import { age } from "#client/time.ts";
 import {
   DataTable,
@@ -197,9 +197,9 @@ export function BugsinkServiceView({
       <FacetSection facetKey="bugsink" label="Bugsink">
         {(bugsink) => (
           <>
-            <div className="product-kpi-grid">
-              <MetricTile
-                metric={kpi(
+            <MetricStrip
+              metrics={[
+                kpi(
                   "bugsink.unresolved",
                   "Total Unresolved Issues",
                   bugsink.totalUnresolved,
@@ -207,17 +207,15 @@ export function BugsinkServiceView({
                     severity: bugsink.totalUnresolved > 0 ? "warning" : "ok",
                     source: "bugsink",
                   },
-                )}
-              />
-              <MetricTile
-                metric={kpi(
+                ),
+                kpi(
                   "bugsink.digested",
                   "Total Digested Events",
                   bugsink.totalDigestedEvents,
                   { source: "bugsink" },
-                )}
-              />
-            </div>
+                ),
+              ]}
+            />
             <PresetGrid
               heading="Error trends"
               syncKey="bugsink"

@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { ChangeTimeline, MetricTile, StatusBanner } from "./ops-ui.tsx";
+import { SEVERITY_LABEL } from "#shared/ops-format";
 import type { ChangeView } from "#shared/ops-schema";
 
 function tile(severity: Severity): string {
@@ -22,7 +23,7 @@ function tile(severity: Severity): string {
 describe("MetricTile", () => {
   it.each(["ok", "info"] as const)("leaves an %s metric plain", (severity) => {
     expect(tile(severity)).toBe(
-      `<div class="metric metric-${severity}"><span>Fullest disk</span><strong>84%</strong></div>`,
+      `<div class="metric" data-sev="${severity}"><dt class="ui-strip-label">Fullest disk</dt><dd class="ui-strip-value"><span class="ui-strip-figure">84%</span></dd></div>`,
     );
   });
 
@@ -30,12 +31,15 @@ describe("MetricTile", () => {
     "flags a metric at %s with an icon and the word",
     (severity) => {
       const html = tile(severity);
-      expect(html).toContain(`class="metric metric-${severity}"`);
-      expect(html).toContain("<strong>84%</strong>");
-      // The icon is decoration; the word is what a screen reader gets.
-      expect(html).toMatch(/<svg[^>]*class="[^"]*metric-flag"/u);
+      expect(html).toContain(`class="metric" data-sev="${severity}"`);
+      expect(html).toContain('<span class="ui-strip-figure">84%</span>');
+      // The icon is decoration; the word is what everyone, including a
+      // screen reader, gets.
+      expect(html).toMatch(/<svg[^>]*class="[^"]*ui-glyph-icon"/u);
       expect(html).toMatch(/<svg[^>]*aria-hidden="true"/u);
-      expect(html).toContain(`<span class="sr-only">${severity}</span>`);
+      expect(html).toContain(
+        `<span class="ui-glyph-label">${SEVERITY_LABEL[severity]}</span>`,
+      );
     },
   );
 });
@@ -52,7 +56,7 @@ describe("StatusBanner", () => {
       </StatusBanner>,
     );
     expect(html).toContain(
-      '<section class="status-banner status-warning" aria-label="Status">',
+      '<section class="status-banner" data-sev="warning" aria-label="Status">',
     );
     expect(html).toContain("Warning");
     expect(html).toContain(
@@ -83,7 +87,7 @@ function timeline(list: readonly ChangeView[], cap?: number): string {
 }
 
 function rows(html: string): number {
-  return html.split('<li class="change ').length - 1;
+  return html.split('<li class="change" ').length - 1;
 }
 
 describe("ChangeTimeline", () => {

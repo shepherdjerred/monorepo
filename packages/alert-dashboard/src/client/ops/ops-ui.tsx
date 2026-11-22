@@ -7,15 +7,14 @@ import type {
   Metric,
   Section,
 } from "@shepherdjerred/ops-model/snapshot.ts";
-import { useQuery } from "@tanstack/react-query";
 import {
-  CircleAlertIcon,
-  CircleCheckIcon,
-  CircleHelpIcon,
-  ExternalLinkIcon,
-  InfoIcon,
-  OctagonAlertIcon,
-} from "lucide-react";
+  HeaderBar,
+  SEVERITY_ICON,
+  StatusGlyph,
+  Tabs,
+} from "@shepherdjerred/console-ui";
+import { useQuery } from "@tanstack/react-query";
+import { ExternalLinkIcon } from "lucide-react";
 import { useId, type ReactNode } from "react";
 import { Link } from "react-router";
 
@@ -33,35 +32,10 @@ import type { SnapshotResponse } from "@shepherdjerred/ops-model/snapshot.ts";
 
 export const services = new ServiceIndex();
 
-const SEVERITY_ICON: Record<Severity, typeof InfoIcon> = {
-  ok: CircleCheckIcon,
-  info: InfoIcon,
-  unknown: CircleHelpIcon,
-  warning: CircleAlertIcon,
-  error: OctagonAlertIcon,
-};
-
-/** Severity is always an icon plus a word, never color alone. */
-export function SeverityBadge({
-  severity,
-  large = false,
-}: {
-  readonly severity: Severity;
-  readonly large?: boolean;
-}): React.JSX.Element {
-  const Icon = SEVERITY_ICON[severity];
-  return (
-    <span className={`sev sev-${severity}${large ? " sev-large" : ""}`}>
-      <Icon aria-hidden="true" />
-      {SEVERITY_LABEL[severity]}
-    </span>
-  );
-}
-
 /**
- * A severity as an icon named for screen readers, for places too tight for a
- * `SeverityBadge`. The icon's shape differs per severity, so it never rests
- * on colour alone.
+ * A severity as an icon named for screen readers, for the meters and quota
+ * rows too tight for a `StatusGlyph` word. The icon's shape differs per
+ * severity, so it never rests on colour alone.
  */
 export function SeverityIcon({
   severity,
@@ -79,22 +53,28 @@ export function SeverityIcon({
   );
 }
 
+/**
+ * The page's header: console-ui's 48px `HeaderBar` across the top of the
+ * panel, with the page title as its `<h1>`, an optional muted meta line, and
+ * the page's controls (range tabs, buttons, its verdict) at the far right.
+ */
 export function PageHeading({
-  eyebrow,
   title,
+  meta,
   children,
 }: {
-  readonly eyebrow: string;
   readonly title: string;
+  readonly meta?: ReactNode;
+  /** Controls for the far right of the bar. */
   readonly children?: ReactNode;
 }): React.JSX.Element {
   return (
-    <div className="page-heading">
-      <div>
-        <p className="eyebrow">{eyebrow}</p>
-        <h1>{title}</h1>
-      </div>
-      {children}
+    <div className="page-head">
+      <HeaderBar
+        title={title}
+        {...(meta === undefined ? {} : { meta })}
+        {...(children === undefined ? {} : { actions: children })}
+      />
     </div>
   );
 }
@@ -128,9 +108,10 @@ export function ServiceLink({
 }
 
 /**
- * One metric as a tile. A metric that needs attention carries an accent bar
- * and a corner icon with its severity in words, so it never reads as healthy
- * and never depends on colour alone. `ok` and `info` stay plain.
+ * One metric as a figure cell of a `MetricStrip`: its label, then the figure
+ * in mono. A metric that needs attention colours its figure and adds a glyph
+ * with its severity in words, so it never depends on colour alone. `ok` and
+ * `info` stay plain.
  */
 export function MetricTile({
   metric,
@@ -139,16 +120,40 @@ export function MetricTile({
 }): React.JSX.Element {
   const flagged = metric.severity !== "ok" && metric.severity !== "info";
   return (
-    <div className={`metric metric-${metric.severity}`}>
-      <span>{metric.label}</span>
-      <strong>{formatValue(metric.value, metric.unit)}</strong>
-      {flagged ? (
-        <SeverityIcon severity={metric.severity} className="metric-flag" />
-      ) : null}
+    <div className="metric" data-sev={metric.severity}>
+      <dt className="ui-strip-label">{metric.label}</dt>
+      <dd className="ui-strip-value">
+        <span className="ui-strip-figure">
+          {formatValue(metric.value, metric.unit)}
+        </span>
+        {flagged ? <StatusGlyph severity={metric.severity} /> : null}
+      </dd>
     </div>
   );
 }
 
+/**
+ * Metrics as one description list of figure cells separated by hairlines,
+ * wrapping onto as many rows as the width needs.
+ */
+export function MetricStrip({
+  metrics,
+}: {
+  readonly metrics: readonly Metric[];
+}): React.JSX.Element {
+  return (
+    <dl className="metric-row">
+      {metrics.map((metric) => (
+        <MetricTile key={metric.id} metric={metric} />
+      ))}
+    </dl>
+  );
+}
+
+/**
+ * One area as a card: its title (a link when the area has a page), its
+ * verdict as a glyph and word, its summary, and up to three metrics.
+ */
 export function SectionCard({
   section,
   to,
@@ -157,7 +162,7 @@ export function SectionCard({
   readonly to?: string;
 }): React.JSX.Element {
   return (
-    <article className={`section-card section-${section.severity}`}>
+    <article className="section-card" data-sev={section.severity}>
       <header>
         <h2>
           {to === undefined ? (
@@ -166,15 +171,11 @@ export function SectionCard({
             <Link to={to}>{section.title}</Link>
           )}
         </h2>
-        <SeverityBadge severity={section.severity} />
+        <StatusGlyph severity={section.severity} />
       </header>
       <p>{section.summary}</p>
       {section.metrics.length === 0 ? null : (
-        <div className="metric-row">
-          {section.metrics.slice(0, 3).map((metric) => (
-            <MetricTile key={metric.id} metric={metric} />
-          ))}
-        </div>
+        <MetricStrip metrics={section.metrics.slice(0, 3)} />
       )}
     </article>
   );
@@ -191,24 +192,24 @@ export function SectionSummary({
   const id = headingId ?? `summary-${section.id}`;
   return (
     <article
-      className={`section-summary section-${section.severity}`}
+      className="section-summary"
+      data-sev={section.severity}
       aria-labelledby={id}
     >
       <h2 id={id}>{section.title}</h2>
-      <SeverityBadge severity={section.severity} />
+      <StatusGlyph severity={section.severity} />
       <p>{section.summary}</p>
       {section.metrics.length === 0 ? null : (
-        <div className="metric-row">
-          {section.metrics.map((metric) => (
-            <MetricTile key={metric.id} metric={metric} />
-          ))}
-        </div>
+        <MetricStrip metrics={section.metrics} />
       )}
     </article>
   );
 }
 
-/** A severity badge beside a one-line verdict, with a line of context under it. */
+/**
+ * A verdict as one quiet row: the severity glyph and word, the one-line
+ * summary, and a muted line of context after it.
+ */
 export function StatusBanner({
   severity,
   summary,
@@ -223,12 +224,10 @@ export function StatusBanner({
   readonly children: ReactNode;
 }): React.JSX.Element {
   return (
-    <section className={`status-banner status-${severity}`} aria-label={label}>
-      <SeverityBadge severity={severity} large />
-      <div>
-        <p className="status-summary">{summary}</p>
-        <p className="status-meta">{children}</p>
-      </div>
+    <section className="status-banner" data-sev={severity} aria-label={label}>
+      <StatusGlyph severity={severity} />
+      <p className="status-summary">{summary}</p>
+      <p className="status-meta">{children}</p>
     </section>
   );
 }
@@ -272,7 +271,7 @@ export function ChangeTimeline({
     <>
       <ol className="change-list" id={listId}>
         {list.shown.map((change) => (
-          <li key={change.id} className={`change change-${change.severity}`}>
+          <li key={change.id} className="change" data-sev={change.severity}>
             <span className="change-kind">{change.kind}</span>
             <div>
               <p>
@@ -301,6 +300,12 @@ export function ChangeTimeline({
   );
 }
 
+const RANGE_OPTIONS = SERIES_RANGES.map((range) => ({
+  value: range,
+  label: range,
+}));
+
+/** The chart range, as console-ui's underlined tabs (a radio group). */
 export function RangePicker({
   value,
   onChange,
@@ -309,21 +314,12 @@ export function RangePicker({
   readonly onChange: (range: SeriesRange) => void;
 }): React.JSX.Element {
   return (
-    <div className="segmented" role="radiogroup" aria-label="Chart range">
-      {SERIES_RANGES.map((range) => (
-        <button
-          key={range}
-          type="button"
-          role="radio"
-          aria-checked={range === value}
-          onClick={() => {
-            onChange(range);
-          }}
-        >
-          {range}
-        </button>
-      ))}
-    </div>
+    <Tabs
+      label="Chart range"
+      options={RANGE_OPTIONS}
+      value={value}
+      onChange={onChange}
+    />
   );
 }
 

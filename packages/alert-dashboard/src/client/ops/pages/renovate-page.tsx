@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import type {
@@ -14,12 +15,7 @@ import { z } from "zod";
 import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { useRange } from "#client/charts/use-range.ts";
 import { facetQuery, isSnapshotUnavailable } from "#client/ops/ops-api.ts";
-import {
-  PageHeading,
-  RangePicker,
-  SeverityBadge,
-  SeverityIcon,
-} from "#client/ops/ops-ui.tsx";
+import { PageHeading, RangePicker } from "#client/ops/ops-ui.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import {
   BudgetMeter,
@@ -94,7 +90,7 @@ function RenovateBanners({
           className="eng-callout eng-callout-warning"
           aria-label="Lookup warnings"
         >
-          <SeverityBadge severity="warning" />
+          <StatusGlyph severity="warning" />
           <div className="eng-callout-body">
             <p className="eng-callout-title">{warnLabel}</p>
             <ul className="eng-callout-list">
@@ -107,7 +103,7 @@ function RenovateBanners({
       )}
       {renovate.truncated ? (
         <section className="eng-callout" aria-label="Truncation notice">
-          <SeverityBadge severity="info" />
+          <StatusGlyph severity="info" />
           <div className="eng-callout-body">
             <p className="eng-callout-title">
               Dependency Dashboard issue body is truncated upstream.{" "}
@@ -274,11 +270,11 @@ function RenovateBody(p: {
       </div>
       <div className="eng-kpi-grid">
         {kpis.map((k) => (
-          <div key={k.label} className={`eng-kpi-card eng-kpi-${k.sev}`}>
+          <div key={k.label} className="eng-kpi-card" data-sev={k.sev}>
             <div className="eng-kpi-top">
               <span className="eng-kpi-label">{k.label}</span>
               {k.sev === "ok" || k.sev === "info" ? null : (
-                <SeverityIcon severity={k.sev} className="visual-meter-flag" />
+                <StatusGlyph severity={k.sev} />
               )}
             </div>
             <strong className="eng-kpi-value">{k.val}</strong>
@@ -339,7 +335,7 @@ export function RenovatePage(): React.JSX.Element {
   return (
     <main className="eng-page">
       <title>Renovate · Hub</title>
-      <PageHeading eyebrow="Dependency velocity" title="Renovate" />
+      <PageHeading title="Renovate" meta="Dependency velocity" />
       <LoadingBlock
         values={{ facet }}
         fallback={<div className="loading-state">Loading Renovate…</div>}
