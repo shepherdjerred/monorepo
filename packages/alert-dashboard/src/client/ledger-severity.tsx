@@ -8,7 +8,7 @@ type LedgerSeverity = AlertView["severity"];
  * The alert ledger's severities on the shared severity vocabulary: a ledger
  * `critical` is an `error` tone that keeps its own word.
  */
-const LEDGER_TONE: Readonly<Record<LedgerSeverity, Severity>> = {
+export const LEDGER_TONE: Readonly<Record<LedgerSeverity, Severity>> = {
   critical: "error",
   warning: "warning",
   info: "info",
@@ -25,13 +25,17 @@ const LEDGER_LABEL: Readonly<Record<LedgerSeverity, string>> = {
 /** An alert's severity as a glyph and its word, like every ops severity. */
 export function AlertSeverity({
   severity,
+  hideLabel = false,
 }: {
   readonly severity: LedgerSeverity;
+  /** Shows only the glyph; the word stays for assistive technology. */
+  readonly hideLabel?: boolean;
 }): React.JSX.Element {
   return (
     <StatusGlyph
       severity={LEDGER_TONE[severity]}
       label={LEDGER_LABEL[severity]}
+      hideLabel={hideLabel}
     />
   );
 }

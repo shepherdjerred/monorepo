@@ -8,6 +8,7 @@
 @import "./primitives.css";
 @import "./tables.css";
 @import "./signals.css";
+@import "./ledger.css";
 
 /* Berkeley Mono is licensed and served by Hub from `public/fonts`. */
 @font-face {
@@ -232,20 +233,7 @@ main {
   font-size: 0.72rem;
   letter-spacing: 0.12em;
 }
-.page-heading,
-.detail-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 28px;
-}
-.heading-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
+
 .button {
   display: inline-flex;
   align-items: center;
@@ -284,113 +272,27 @@ select {
   padding: 0 0.7rem;
   color: var(--ink);
 }
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 18px;
-}
-.summary-grid-4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-.summary-card,
+
 .health-card {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 16px;
 }
-.summary-card span {
-  display: block;
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-.summary-card strong {
-  display: block;
-  margin-top: 5px;
-  font:
-    700 1.7rem "Berkeley Mono",
-    monospace;
-}
+
 .panel {
   border: 1px solid var(--line);
   background: var(--panel);
   border-radius: 12px;
   overflow: hidden;
 }
-.section-heading {
-  padding: 20px 20px 0;
-}
-.filters {
-  padding: 14px;
-  border-bottom: 1px solid var(--line);
-  display: grid;
-  grid-template-columns: minmax(260px, 1fr) repeat(3, minmax(130px, auto));
-  gap: 12px;
-  align-items: end;
-}
-.filters label {
-  display: grid;
-  /* Lets a control shrink to its cell instead of overlapping the next. */
-  grid-template-columns: minmax(0, 1fr);
-  gap: 5px;
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 650;
-}
-.search {
-  position: relative;
-}
-.search svg {
-  position: absolute;
-  left: 0.65rem;
-  bottom: 0.6rem;
-  color: var(--muted);
-}
-.search .input {
-  padding-left: 2rem;
-  width: 100%;
-}
-.history-filters {
-  grid-template-columns: repeat(6, minmax(130px, 1fr));
-}
-.scope-switch {
-  display: flex;
-  gap: 4px;
-  padding: 0 14px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel-2);
-  overflow-x: auto;
-}
-.scope-switch a {
-  position: relative;
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  min-height: 40px;
-  padding: 0 12px;
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 650;
-  text-decoration: none;
-}
-.scope-switch a:hover {
-  color: var(--ink);
-}
-.scope-switch a[aria-current="page"] {
-  color: var(--ink);
-}
-.scope-switch a[aria-current="page"]::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0;
-  border-block-end: 3px solid var(--accent);
-}
+
 .table-wrap {
   overflow-x: auto;
 }
-/* Plain tables (the alert ledger's). In the reset layer, so a table that
-   takes console-ui's `ui-table` look gets it instead. */
+/* Plain tables: the promotion report's own tables and the status matrix
+   still build on these. In the reset layer, so every table that takes
+   console-ui's `ui-table` look (all of Hub's other tables) gets it instead. */
 @layer ui.reset {
   table {
     width: 100%;
@@ -428,28 +330,7 @@ select {
 .alert-link span {
   color: var(--muted);
 }
-.state,
-.suppression,
-.preview-status {
-  display: inline-flex;
-  width: fit-content;
-  border-radius: 999px;
-  padding: 0.25rem 0.48rem;
-  font:
-    700 0.65rem "Berkeley Mono",
-    monospace;
-  text-transform: uppercase;
-}
 
-.state {
-  background: var(--sev-ok-bg);
-  color: var(--sev-ok-ink);
-}
-.suppression {
-  margin-left: 0.3rem;
-  background: var(--sev-unknown-bg);
-  color: var(--sev-unknown-ink);
-}
 .loading-state,
 .empty-state,
 .error-state {
@@ -461,50 +342,6 @@ select {
   color: var(--sev-error-ink);
 }
 
-.timeline {
-  padding: 18px 24px;
-}
-.timeline article {
-  display: grid;
-  grid-template-columns: 15px 1fr;
-  gap: 10px;
-  position: relative;
-  padding-bottom: 24px;
-}
-.timeline article:not(:last-child)::before {
-  content: "";
-  position: absolute;
-  width: 1px;
-  background: var(--line);
-  left: 5px;
-  top: 12px;
-  bottom: 0;
-}
-.timeline-dot {
-  width: 11px;
-  height: 11px;
-  border-radius: 99px;
-  background: var(--accent);
-  margin-top: 4px;
-  z-index: 1;
-}
-.timeline-title {
-  display: flex;
-  gap: 0.75rem;
-  align-items: baseline;
-}
-.timeline-title a {
-  color: var(--accent);
-}
-.timeline time {
-  color: var(--muted);
-  font-size: 0.73rem;
-}
-.history-pagination {
-  display: flex;
-  justify-content: center;
-  padding: 0 24px 24px;
-}
 .back-link {
   display: inline-flex;
   align-items: center;
@@ -512,23 +349,7 @@ select {
   color: var(--muted);
   margin-bottom: 18px;
 }
-.badge-row,
-.link-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-.link-row a {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  color: var(--accent);
-}
-.detail-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-}
+
 .metadata {
   padding: 20px;
 }
@@ -553,8 +374,7 @@ select {
   flex-wrap: wrap;
   gap: 0.4rem;
 }
-.label-list code,
-.preview code {
+.label-list code {
   background: var(--code-bg);
   border-radius: 4px;
   padding: 0.3rem 0.45rem;
@@ -564,50 +384,7 @@ select {
 .compact {
   padding: 20px;
 }
-.previews {
-  margin-top: 28px;
-}
-.previews > h2 {
-  margin-bottom: 12px;
-  font-size: 1.2rem;
-}
-.preview-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-.preview {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel);
-  padding: 16px;
-  min-width: 0;
-}
-.preview-heading {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.preview-status.available {
-  background: var(--sev-ok-bg);
-  color: var(--sev-ok-ink);
-}
-.preview-status.unavailable {
-  background: var(--sev-unknown-bg);
-}
-.preview-status.error {
-  background: var(--sev-error-bg);
-  color: var(--sev-error-ink);
-}
-.preview pre {
-  max-height: 300px;
-  overflow: auto;
-  font-size: 0.65rem;
-  background: var(--pre-bg);
-  color: var(--pre-ink);
-  padding: 12px;
-  border-radius: 6px;
-}
+
 .health-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -628,39 +405,8 @@ select {
     monospace;
   text-transform: uppercase;
 }
-.health-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #b6b9b7;
-}
-.health-dot.ok {
-  background: #2b9a6d;
-}
-.health-dot.error,
-.health-dot.stale {
-  background: #c7463e;
-}
-.health-dot.disabled {
-  background: #777;
-}
-@container content (max-width: 1180px) {
-  .history-filters {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
+
 @container content (max-width: 900px) {
-  .summary-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .filters,
-  .history-filters {
-    grid-template-columns: 1fr 1fr;
-  }
-  .detail-grid,
-  .preview-grid {
-    grid-template-columns: 1fr;
-  }
   .health-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -669,13 +415,7 @@ select {
   main {
     padding: 24px 14px 56px;
   }
-  .page-heading,
-  .detail-heading {
-    display: grid;
-  }
-  .summary-grid,
-  .filters,
-  .history-filters,
+
   .health-grid,
   .metadata dl {
     grid-template-columns: 1fr;

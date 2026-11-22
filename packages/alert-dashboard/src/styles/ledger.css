@@ -1,0 +1,484 @@
+/*
+ * The alert ledger's pages (Active, House, History, System and an alert's
+ * detail) on the console look. These pages are flush with the panel, as the
+ * console draws them: the header bar, a figure strip, a toolbar and the
+ * table each run edge to edge.
+ */
+
+/* ---- Page frame ---- */
+main.ledger {
+  max-width: none;
+  padding: 0 0 48px;
+}
+main.ledger > .page-head {
+  margin: 0;
+}
+main.ledger .ui-header-actions .state,
+main.ledger .ui-header-actions .suppression {
+  margin: 0;
+}
+.ledger-figures .ui-strip {
+  border-bottom: 1px solid var(--ui-line);
+}
+.ledger-body {
+  padding: 16px 24px 0;
+}
+.ledger-section {
+  margin-top: 18px;
+}
+.ledger-section > .ui-section-head,
+.previews > .ui-section-head {
+  padding: 0 0 10px;
+}
+main.ledger > .ledger-section {
+  margin: 0;
+}
+main.ledger > .ledger-section > .ui-section-head {
+  padding: 16px 24px 9px;
+}
+.ledger-note {
+  margin: 0;
+  color: var(--ui-muted);
+}
+@media (max-width: 600px) {
+  .ledger-body {
+    padding-inline: 14px;
+  }
+  main.ledger > .ledger-section > .ui-section-head {
+    padding-inline: 14px;
+  }
+}
+
+/* ---- Toolbar: search and filters in console-ui's inline field look ---- */
+.ledger-toolbar {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--ui-line);
+}
+.toolbar-field,
+.ledger-toolbar .search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 0 0 9px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font-size: 12.5px;
+}
+.toolbar-field:focus-within,
+.ledger-toolbar .search:focus-within {
+  border-color: var(--ui-accent);
+}
+.toolbar-field-label {
+  flex: none;
+  color: var(--ui-muted);
+}
+.toolbar-field :is(select, .input) {
+  height: 26px;
+  min-width: 0;
+  padding: 0 9px 0 0;
+  border: 0;
+  background: none;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.toolbar-field :is(select, .input):focus-visible,
+.ledger-toolbar .search .input:focus-visible {
+  outline: 0;
+}
+.ledger-toolbar .search {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.ledger-toolbar .search svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--ui-muted);
+}
+.ledger-toolbar .search .input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  padding: 0 9px 0 0;
+  border: 0;
+  background: none;
+  font-size: 12.5px;
+}
+.ledger-toolbar .filter-action {
+  margin-left: auto;
+}
+.ledger-toolbar .toolbar-field .input {
+  width: 9rem;
+}
+.ledger-toolbar .toolbar-field .input[placeholder] {
+  width: 13.5rem;
+}
+@media (max-width: 600px) {
+  .ledger-toolbar {
+    padding-inline: 14px;
+  }
+  .ledger-toolbar > * {
+    flex: 1 1 100%;
+  }
+  .toolbar-field select,
+  .toolbar-field .input {
+    flex: 1;
+  }
+}
+
+/* ---- History scope: underlined tabs, as console-ui's view tabs ---- */
+.scope-switch {
+  display: flex;
+  gap: 18px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--ui-line);
+}
+.scope-switch a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--ui-muted);
+  font-weight: 500;
+  text-decoration: none;
+  box-shadow: inset 0 -2px 0 transparent;
+}
+.scope-switch a:hover {
+  color: var(--ui-ink);
+}
+.scope-switch a[aria-current="page"] {
+  color: var(--ui-ink);
+  font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--ui-accent);
+}
+@media (max-width: 600px) {
+  .scope-switch {
+    padding-inline: 14px;
+  }
+}
+
+/* ---- Ledger tables ---- */
+.ledger-table-wrap {
+  position: relative;
+  overflow-x: auto;
+}
+.ledger-table .alert-cell {
+  min-width: 16rem;
+  padding-block: 7px;
+}
+.alert-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+.alert-line > .ui-glyph {
+  margin-top: 2px;
+}
+/* No minimum width, and a long summary or alert name (House's are long
+   CamelCase ids) wraps, so a phone card never overflows. */
+.ledger-table .alert-link {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  text-decoration: none;
+}
+.ledger-table .alert-link :is(strong, span) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ledger-table .alert-link strong {
+  font-family: var(--ui-font-sans);
+  font-size: 13px;
+  font-weight: 600;
+}
+.ledger-table .alert-link span {
+  color: var(--ui-muted);
+  font-weight: 400;
+}
+.ledger-table .alert-link:hover strong {
+  text-decoration: underline;
+}
+.ledger-table td.mono {
+  color: var(--ui-ink-2);
+  font-size: 12px;
+}
+.ledger-table .ui-table-group th {
+  font-weight: 600;
+}
+.ledger-table .ui-table-group .ui-count {
+  margin-left: 8px;
+}
+.alert-group-toggle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  text-align: left;
+  color: var(--ui-ink);
+  cursor: pointer;
+}
+.alert-group-toggle .ui-count {
+  font-weight: 400;
+}
+.alert-group-chevron {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--ui-muted);
+  transition: rotate 120ms ease-out;
+}
+.alert-group-toggle[aria-expanded="true"] .alert-group-chevron {
+  rotate: 90deg;
+}
+.ledger-table .ui-table-child .alert-cell {
+  padding-left: 44px;
+  background: var(--ui-head);
+}
+.state-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.history-summary {
+  color: var(--ui-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .alert-group-chevron {
+    transition: none;
+  }
+}
+
+/* A lifecycle state and a suppression as small chips. */
+.state,
+.suppression {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  margin-right: 4px;
+  padding: 0 6px;
+  border: 1px solid var(--ui-line);
+  border-radius: 5px;
+  color: var(--ui-ink-2);
+  font-family: var(--ui-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.suppression {
+  color: var(--ui-muted);
+  border-style: dashed;
+}
+
+/*
+ * At phone width each ledger row becomes a card of label/value rows named by
+ * `data-label`. These rules outrank the table look's row heights and edge
+ * padding, which a card does not use.
+ */
+@media (max-width: 600px) {
+  .ledger-table-wrap {
+    overflow-x: visible;
+    padding: 10px 14px;
+    background: var(--ui-head);
+  }
+  .ledger-table-wrap .ledger-table,
+  .ledger-table-wrap .ledger-table tbody,
+  .ledger-table-wrap .ledger-table tr,
+  .ledger-table-wrap .ledger-table :is(th, td) {
+    display: block;
+    width: 100%;
+  }
+  /* The column names move into each cell's label; the header row stays
+     for assistive technology. */
+  .ledger-table-wrap .ledger-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .ledger-table-wrap .ledger-table tbody {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .ledger-table-wrap .ledger-table tbody tr:not(.ui-table-group) {
+    padding: 4px 12px;
+    border: 1px solid var(--ui-line);
+    border-radius: 9px;
+    background: var(--ui-panel);
+  }
+  .ledger-table-wrap .ledger-table tbody tr.ui-table-group th {
+    height: auto;
+    padding: 4px 2px 0;
+    border: 0;
+    background: none;
+  }
+  .ledger-table-wrap .ledger-table tbody tr:not(.ui-table-group) :is(th, td) {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    height: auto;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--ui-line-soft);
+    background: none;
+    white-space: normal;
+  }
+  .ledger-table-wrap .ledger-table tbody tr > :last-child {
+    border-bottom: 0;
+  }
+  .ledger-table-wrap .ledger-table tbody :is(th, td)[data-label]::before {
+    content: attr(data-label);
+    color: var(--ui-muted);
+    font-family: var(--ui-font-sans);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .ledger-table-wrap
+    .ledger-table
+    tbody
+    tr:not(.ui-table-group)
+    :is(th, td):empty {
+    display: none;
+  }
+  .ledger-table .alert-cell {
+    min-width: 0;
+  }
+  .ledger-table .ui-table-child .alert-cell {
+    padding-left: 0;
+  }
+}
+
+/* ---- Definition lists (System workers, alert metadata) ---- */
+.def-table {
+  display: grid;
+  grid-template-columns: minmax(10rem, max-content) minmax(0, 1fr);
+  margin: 0;
+  border-top: 1px solid var(--ui-line-soft);
+}
+.def-table > div {
+  display: contents;
+}
+.def-table dt,
+.def-table dd {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ui-line-soft);
+}
+.def-table dt {
+  padding-right: 24px;
+  color: var(--ui-muted);
+}
+.def-table dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+main.ledger > .ledger-section > .def-table {
+  margin-inline: 24px;
+}
+.def-subhead {
+  margin: 16px 0 8px;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+@media (max-width: 600px) {
+  main.ledger > .ledger-section > .def-table {
+    margin-inline: 14px;
+  }
+  .def-table {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .def-table dt {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+}
+
+/* ---- Alert detail ---- */
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.detail-grid > .ledger-section {
+  margin-top: 0;
+}
+.alert-detail .ui-table-scroll {
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+}
+.alert-detail .ui-table thead th {
+  border-top: 0;
+}
+.alert-detail .ui-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.evidence-key {
+  overflow-wrap: anywhere;
+}
+.previews {
+  margin-top: 24px;
+}
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.preview {
+  min-width: 0;
+}
+.preview-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.preview-heading h3 {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.preview > p {
+  margin: 0;
+  color: var(--ui-muted);
+}
+.preview > code {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--ui-track);
+  font-size: 12px;
+}
+.preview pre {
+  max-height: 300px;
+  margin: 0;
+  overflow: auto;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--pre-bg);
+  color: var(--pre-ink);
+  font-size: 11.5px;
+}
+@container content (max-width: 900px) {
+  .detail-grid,
+  .preview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---- System ---- */
+.system-table th[scope="row"] {
+  font-weight: 600;
+}

@@ -82,9 +82,17 @@ The core module has two halves in one process:
   occurrences are hidden by default behind a URL-synced `Show Watchdog` /
   `Hide Watchdog` toggle (`?watchdog=1`, forced visible when `severity=unknown`
   or search matches `"watchdog"`), and `AlertTable` (`src/client/alert-table.tsx`)
-  collapses `alertname`s with two or more occurrences into expandable
-  `<details>` groups showing highest severity, occurrence count, and newest
-  `openedAt` age while leaving single occurrences inline. Alert openings and
+  is one table under a heading row per severity ("Critical 1"); it collapses
+  `alertname`s with two or more occurrences into a row whose name is a
+  disclosure button (highest severity, occurrence count, newest `openedAt`
+  age) with each occurrence as a row under it, and leaves single occurrences
+  inline. The ledger pages share one frame (`ScopedAlertPage`): a header bar
+  with the reconciliation age and Refresh, a figure strip of the counts, a
+  toolbar of search and filters, and the table, flush with the panel; at
+  phone width each table row becomes a card of labelled values. History is
+  an events table, System a components table with each state as a glyph and
+  word, and an alert's detail page shows its metadata, lifecycle and webhook
+  evidence as tables. Alert openings and
   resolutions also appear on the ops change timeline, derived from the ledger at
   read time, while daily and weekly Ops incident statistics exclude
   `category=household` chores.

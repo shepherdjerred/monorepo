@@ -98,7 +98,7 @@ describe("AlertTable multi-occurrence grouping", () => {
     expect(html).toContain("HighMemory");
   });
 
-  it("groups >=2 occurrences sharing alertname into details.alert-group with individual links", () => {
+  it("groups >=2 occurrences sharing alertname into an alert-group disclosure row with individual links", () => {
     const storm = Array.from({ length: 24 }, (_, index) =>
       makeAlert(index + 1, {
         alertname: "TemporalWorkflowFailed",
@@ -115,7 +115,7 @@ describe("AlertTable multi-occurrence grouping", () => {
     expect(partitioned.singles).toHaveLength(1);
 
     const html = renderTable([...storm, single]);
-    expect(html).toContain('<details class="alert-group');
+    expect(html).toContain('<tr class="alert-group"');
     expect(html).toContain("TemporalWorkflowFailed");
     expect(html).toContain("24 occurrences");
     expect(html).toContain('data-sev="error"');

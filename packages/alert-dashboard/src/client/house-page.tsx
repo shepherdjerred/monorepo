@@ -3,9 +3,11 @@ import { Link } from "react-router";
 
 import { AlertStateAndOpenedCells } from "./alert-table.tsx";
 import {
+  figure,
   ScopedAlertPage,
   SearchBox,
   SuppressionSelect,
+  ToolbarSelect,
 } from "./dashboard-page.tsx";
 import type { AlertView } from "#shared/schema";
 import { ChorePriority } from "./ledger-severity.tsx";
@@ -32,8 +34,8 @@ export function HouseTable({
 }): React.JSX.Element {
   if (alerts.length === 0) return <div className="empty-state">{empty}</div>;
   return (
-    <div className="table-wrap">
-      <table>
+    <div className="ledger-table-wrap">
+      <table className="ui-table ledger-table" aria-label="House chores">
         <thead>
           <tr>
             <th scope="col">Priority</th>
@@ -72,22 +74,21 @@ export function HousePage(): React.JSX.Element {
     <ScopedAlertPage
       scope="house"
       documentTitle="House · Hub"
-      eyebrow="Home & pet care"
+      context="Home & pet care"
       heading="House"
       errorText="Could not load house chores."
       refreshAriaLabel="Refresh chores"
       headerActionsPrefix={
-        <Link className="button" to="/history?scope=house">
+        <Link className="ui-btn" to="/history?scope=house">
           <HistoryIcon aria-hidden="true" /> Chore history
         </Link>
       }
       summaryAriaLabel="House summary"
-      summaryGridClassName="summary-grid summary-grid-4"
       summaryCards={(summary) => [
-        ["Open chores", summary?.open],
-        ["Urgent", summary?.critical],
-        ["Routine", summary?.warning],
-        ["Silenced", summary?.silenced],
+        figure("Open chores", summary?.open),
+        figure("Urgent", summary?.critical, "warning"),
+        figure("Routine", summary?.warning),
+        figure("Silenced", summary?.silenced),
       ]}
       renderFilterPrefix={(params, searchValue, update) => (
         <>
@@ -99,8 +100,7 @@ export function HousePage(): React.JSX.Element {
               update("q", value);
             }}
           />
-          <label>
-            Priority
+          <ToolbarSelect label="Priority">
             <select
               value={params.get("severity") ?? ""}
               onChange={(event) => {
@@ -111,11 +111,10 @@ export function HousePage(): React.JSX.Element {
               <option value="critical">urgent</option>
               <option value="warning">chore</option>
             </select>
-          </label>
-          <label>
-            Suppression
+          </ToolbarSelect>
+          <ToolbarSelect label="Suppression">
             <SuppressionSelect params={params} update={update} />
-          </label>
+          </ToolbarSelect>
         </>
       )}
       loadingText="Loading chores…"
