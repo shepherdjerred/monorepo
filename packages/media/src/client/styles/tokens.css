@@ -84,25 +84,18 @@
     --neutral: light-dark(#4a564e, #c3ccc5);
     --neutral-soft: light-dark(#e4e8de, #2a322d);
 
-    /* Art. The welcome card, login artwork, and catalog letter tiles are
-       pictures, not chrome: a spruce set piece with tan and moss props that
-       reads the same on paper as in the dark room. */
+    /* Art. The login artwork is a picture, not chrome: a spruce set piece
+       with tan and moss props that reads the same on paper as in the dark
+       room. */
     --art-pine-900: #19291f;
-    --art-pine-800: #233126;
     --art-pine-700: #28382b;
-    --art-pine-600: #2f3e31;
-    --art-pine-edge: #3b4b3b;
     --art-moss-500: #596e48;
-    --art-moss-400: #61784f;
     --art-sage-400: #7d916b;
     --art-sage-300: #9baa7c;
     --art-clay-500: #7a6450;
     --art-clay-300: #b99469;
     --art-tan: #d3bb8f;
-    --art-tan-light: #e7d4b4;
     --art-cream: #e2dac8;
-    --art-on-pine: var(--mist);
-    --art-on-pine-muted: #b6c4b3;
     --art-shadow: #10180d55;
 
     /* Type. Nothing below 12px. */
@@ -119,8 +112,6 @@
     --text-display: clamp(2rem, 1.4rem + 2.4vw, 3rem);
     --leading-tight: 1.15;
     --leading-normal: 1.5;
-    /* Tracking for the small uppercase labels. */
-    --tracking-label: 0.12em;
 
     /* Space, radius, elevation, motion */
     --space-1: 4px;

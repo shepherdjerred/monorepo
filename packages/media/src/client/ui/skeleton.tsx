@@ -1,11 +1,14 @@
 import type { ReactNode } from "react";
 import { classNames } from "./class-names.ts";
 import gridStyles from "./poster-card.module.css";
+import railStyles from "./poster-rail.module.css";
 import styles from "./skeleton.module.css";
 
 const cx = classNames(styles);
 // The poster grid's own columns, so nothing moves when cards replace blocks.
 const grid = classNames(gridStyles);
+// And the rail's own track and card width, for the same reason.
+const rail = classNames(railStyles);
 
 /**
  * The shape of content that is on its way, in the space it will take, so the
@@ -38,6 +41,36 @@ export function PosterGridSkeleton({
               <div className={`${cx("block")} ${cx("poster")}`} />
               <div className={`${cx("block")} ${cx("line")}`} />
               <div className={`${cx("block")} ${cx("shortLine")}`} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </Loading>
+  );
+}
+
+/**
+ * A poster rail that is still loading, in exactly the room the rail will
+ * take: the same track, card width, and text block (`PosterRail`).
+ */
+export function PosterRailSkeleton({
+  label,
+  count = 10,
+}: {
+  label: string;
+  count?: number;
+}) {
+  return (
+    <Loading label={label}>
+      <div className={rail("rail")}>
+        <div className={`${rail("track")} ${rail("still")}`}>
+          {Array.from({ length: count }, (_, index) => (
+            <div key={index}>
+              <div className={`${cx("block")} ${cx("poster")}`} />
+              <div className={grid("railText")}>
+                <div className={`${cx("block")} ${cx("line")}`} />
+                <div className={`${cx("block")} ${cx("shortLine")}`} />
+              </div>
             </div>
           ))}
         </div>

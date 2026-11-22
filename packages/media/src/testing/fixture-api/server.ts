@@ -2,10 +2,16 @@ import { UserRoleSchema } from "#shared/contract.ts";
 import { fixtureArtwork } from "./fixtures/artwork-image.ts";
 import type { Persona } from "./personas.ts";
 import { routeFixture } from "./router.ts";
+import {
+  FixtureScenarioSchema,
+  SCENARIO_COOKIE,
+  type FixtureScenario,
+} from "./scenario.ts";
 
 /** Cookie that selects the signed-in persona for one browser. */
 export const PERSONA_COOKIE = "media-fixture-persona";
 const PERSONA_SWITCH = /^\/api\/fixture\/persona\/([^/]+)$/u;
+const SCENARIO_SWITCH = /^\/api\/fixture\/scenario\/([^/]+)$/u;
 const ARTWORK = /^\/api\/v1\/artwork\/([^/]+)\/([^/]+)$/u;
 
 export type FixtureApiOptions = {
@@ -61,6 +67,34 @@ function switchPersona(value: string): Response {
   });
 }
 
+function invalidScenario(value: string): Response {
+  return json(400, {
+    error: {
+      code: "fixture_scenario_invalid",
+      message: `Unknown fixture scenario "${value}"; use ${FixtureScenarioSchema.options.join(", ")}.`,
+    },
+  });
+}
+
+/**
+ * `GET /api/fixture/scenario/<scenario>` puts the fixture API in that
+ * condition for this browser, until it chooses `default` again.
+ */
+function switchScenario(value: string): Response {
+  const scenario = FixtureScenarioSchema.safeParse(value);
+  if (!scenario.success) {
+    return invalidScenario(value);
+  }
+  return new Response(null, {
+    status: 303,
+    headers: {
+      Location: "/",
+      "Set-Cookie": `${SCENARIO_COOKIE}=${scenario.data}; Path=/; SameSite=Lax`,
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
 /**
  * `GET /api/v1/artwork/:size/:file`, the one read that is not JSON. A success
  * carries the headers the real route sends; a failure is the typed error body
@@ -83,6 +117,26 @@ function artwork(size: string, file: string): Response {
 }
 
 /**
+ * The persona and scenario this browser chose by cookie, or the refusal of
+ * one it could not have chosen.
+ */
+function browserChoices(
+  request: Request,
+  defaultPersona: Persona,
+): { persona: Persona; scenario: FixtureScenario } | Response {
+  const chosen = cookie(request, PERSONA_COOKIE);
+  const persona = UserRoleSchema.safeParse(chosen ?? defaultPersona);
+  if (!persona.success) {
+    return invalidPersona(chosen ?? "");
+  }
+  const asked = cookie(request, SCENARIO_COOKIE);
+  const scenario = FixtureScenarioSchema.safeParse(asked ?? "default");
+  return scenario.success
+    ? { persona: persona.data, scenario: scenario.data }
+    : invalidScenario(asked ?? "");
+}
+
+/**
  * The fixture API as a request handler. Returns null for anything outside
  * `/api/`, so the caller decides how the client itself is served (the Vite
  * dev server in `dev:fixture`, the built bundle in the browser tests).
@@ -99,6 +153,10 @@ export function createFixtureApi(
     if (personaSwitch !== null && request.method === "GET") {
       return switchPersona(decodeURIComponent(personaSwitch[1] ?? ""));
     }
+    const scenarioSwitch = SCENARIO_SWITCH.exec(url.pathname);
+    if (scenarioSwitch !== null && request.method === "GET") {
+      return switchScenario(decodeURIComponent(scenarioSwitch[1] ?? ""));
+    }
     const image = ARTWORK.exec(url.pathname);
     if (image !== null && request.method === "GET") {
       return artwork(
@@ -106,16 +164,11 @@ export function createFixtureApi(
         decodeURIComponent(image[2] ?? ""),
       );
     }
-    const chosen = cookie(request, PERSONA_COOKIE);
-    const persona = UserRoleSchema.safeParse(chosen ?? options.defaultPersona);
-    if (!persona.success) {
-      return invalidPersona(chosen ?? "");
+    const browser = browserChoices(request, options.defaultPersona);
+    if (browser instanceof Response) {
+      return browser;
     }
-    const outcome = routeFixture({
-      method: request.method,
-      url,
-      persona: persona.data,
-    });
+    const outcome = routeFixture({ method: request.method, url, ...browser });
     if (outcome.status === 501) {
       options.log(`refused write: ${request.method} ${url.pathname}`);
     } else if (

@@ -124,10 +124,21 @@ export async function open(page: Page, route: RouteCase, origin: string) {
     page.getByRole("heading", { level: 1, name: route.heading, exact: true }),
   ).toBeVisible();
   // Secondary panels load after the heading; wait for all of them.
+  await settle(page);
+}
+
+/** Waits until the page's reads have answered and nothing says "Loading". */
+export async function settle(page: Page) {
   await page.waitForLoadState("networkidle");
   await expect(
     page.getByRole("status").filter({ hasText: "Loading" }),
   ).toHaveCount(0);
+}
+
+/** The address as the browser shows it: the path and the query string. */
+export function address(page: Page): string {
+  const url = new URL(page.url());
+  return `${url.pathname}${url.search}`;
 }
 
 /** The computed background of the page canvas, as the browser serializes it. */

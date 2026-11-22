@@ -42,6 +42,10 @@ test.each([
   // returns. Each must still resolve to its own page.
   ["/media/abc", "media/:id"],
   ["/catalog/movie/603", "catalog/:kind/:id"],
+  // Discover: the rows, a search, and one feed.
+  ["/discover", "discover"],
+  ["/discover?q=the", "discover"],
+  ["/discover/popular-films", "discover/:feed"],
   ["/library", "library"],
   ["/library/mine?interest=abc", "library/mine"],
   ["/library/leaving", "library/leaving"],

@@ -11,6 +11,10 @@ import {
   type CatalogFeed,
   type CatalogLibraryState,
 } from "#shared/catalog/contract.ts";
+import {
+  FixtureFailure,
+  type FixtureScenario,
+} from "#testing/fixture-api/scenario.ts";
 import { DAY, NOW } from "#testing/fixture-api/support.ts";
 import {
   backdropPath,
@@ -18,7 +22,12 @@ import {
   posterPath,
   synopsis,
 } from "./artwork.ts";
-import { libraryEpisodes, libraryInterest, libraryPolicy } from "./library.ts";
+import {
+  EXTERNALLY_HELD,
+  libraryEpisodes,
+  libraryInterest,
+  libraryPolicy,
+} from "./library.ts";
 import { AIRINGS, TITLES, type Title } from "./titles.ts";
 
 type CatalogItem = z.input<typeof CatalogItemSchema>;
@@ -53,6 +62,28 @@ const OUTSIDE_LIBRARY: readonly OutsideLibrarySeed[] = [
   ["The Leftovers", "series", "2014-06-29", 54_344, [10, 10, 8]],
   ["The Truman Show", "movie", "1998-06-04", 37_165, []],
   ["The White Lotus", "series", "2021-07-11", 111_803, [6, 7, 8]],
+  // What a browse feed mostly holds: titles nobody here has asked for. None
+  // has "the" in its name, so the search the tests make is unchanged.
+  ["Sinners", "movie", "2025-04-16", 1_233_413, []],
+  ["Conclave", "movie", "2024-10-25", 974_576, []],
+  ["Nosferatu", "movie", "2024-12-25", 426_063, []],
+  ["Flow", "movie", "2024-08-29", 823_219, []],
+  ["Challengers", "movie", "2024-04-18", 937_287, []],
+  ["Civil War", "movie", "2024-04-10", 929_590, []],
+  ["Inside Out 2", "movie", "2024-06-11", 1_022_789, []],
+  ["Furiosa: A Mad Max Saga", "movie", "2024-05-22", 786_892, []],
+  ["A Real Pain", "movie", "2024-11-01", 1_013_850, []],
+  ["Wicked", "movie", "2024-11-20", 402_431, []],
+  ["Perfect Days", "movie", "2023-11-10", 976_893, []],
+  ["Aftersun", "movie", "2022-10-21", 965_150, []],
+  ["Adolescence", "series", "2025-03-13", 249_042, [4]],
+  ["Shrinking", "series", "2023-01-26", 136_311, [10, 12]],
+  ["Fallout", "series", "2024-04-10", 106_379, [8]],
+  ["Ripley", "series", "2024-04-04", 94_028, [8]],
+  ["Baby Reindeer", "series", "2024-04-11", 241_259, [7]],
+  ["Industry", "series", "2020-11-09", 98_123, [8, 8, 8]],
+  ["Pluribus", "series", "2025-11-06", 225_171, [9]],
+  ["Paradise", "series", "2025-01-26", 245_927, [8]],
 ];
 
 function twoDigits(value: number): string {
@@ -110,25 +141,64 @@ const CATALOG: readonly CatalogEntry[] = [
 /** TMDB's page size, so paging behaves as it does against the real catalog. */
 const PAGE_SIZE = 20;
 
-function pageOf(items: readonly CatalogItem[], page: number): CatalogPage {
+/** The feed that is down in the `feed-unavailable` scenario. */
+export const UNAVAILABLE_FEED: CatalogFeed = "popular_series";
+
+/** What the catalog answers while TMDB is down, as the real route words it. */
+function catalogUnavailable(): FixtureFailure {
+  return new FixtureFailure(
+    502,
+    "catalog_unavailable",
+    "The catalog is not answering right now. Try again in a moment.",
+  );
+}
+
+/**
+ * Whether Media could confirm the reader's Plex access. When it could not,
+ * no title says what the household has of it.
+ */
+function libraryAccess(
+  scenario: FixtureScenario,
+): CatalogPage["libraryAccess"] {
+  return scenario === "stale-library-access" ? "stale" : "current";
+}
+
+function asRead(item: CatalogItem, scenario: FixtureScenario): CatalogItem {
+  return libraryAccess(scenario) === "stale"
+    ? { ...item, library: null }
+    : item;
+}
+
+function pageOf(
+  items: readonly CatalogItem[],
+  page: number,
+  scenario: FixtureScenario,
+): CatalogPage {
   return {
     page,
     totalPages: Math.min(
       CATALOG_MAX_PAGE,
       Math.max(1, Math.ceil(items.length / PAGE_SIZE)),
     ),
-    libraryAccess: "current",
-    results: items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    libraryAccess: libraryAccess(scenario),
+    results: items
+      .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+      .map((item) => asRead(item, scenario)),
   };
 }
 
-export function catalogSearch(parameters: URLSearchParams): CatalogPage {
+export function catalogSearch(
+  parameters: URLSearchParams,
+  scenario: FixtureScenario,
+): CatalogPage {
+  if (scenario === "catalog-unavailable") throw catalogUnavailable();
   const needle = (parameters.get("q") ?? "").trim().toLowerCase();
   return pageOf(
     CATALOG.filter((entry) =>
       entry.item.title.toLowerCase().includes(needle),
     ).map((entry) => entry.item),
     CatalogPageSchema.parse(parameters.get("page") ?? undefined),
+    scenario,
   );
 }
 
@@ -138,47 +208,97 @@ const AIRING = new Set(AIRINGS.map((airing) => airing.series));
 /** A stable shuffle, so a feed is not the library in its listing order. */
 function mixed(items: readonly CatalogItem[], stride: number): CatalogItem[] {
   return items
-    .map((item, index) => ({ item, rank: (index * stride) % items.length }))
+    .map((item, index) => ({
+      item,
+      rank: ((index + 1) * stride) % items.length,
+    }))
     .sort((left, right) => left.rank - right.rank)
     .map((ranked) => ranked.item);
 }
 
+/**
+ * A feed's order. Most of what a real feed lists is not in anybody's
+ * library, so two titles nobody here has asked for follow each one the
+ * household holds, for as long as there are both. `lead` is a held title the
+ * feed opens with, for a state that would otherwise be pages down.
+ */
+function browse(
+  items: readonly CatalogItem[],
+  stride: number,
+  lead?: string,
+): CatalogItem[] {
+  const held = mixed(
+    items.filter((item) => item.library !== null),
+    stride,
+  ).sort(
+    (left, right) => Number(right.title === lead) - Number(left.title === lead),
+  );
+  const outside = mixed(
+    items.filter((item) => item.library === null),
+    stride,
+  );
+  const order: CatalogItem[] = [];
+  while (held.length > 0 || outside.length > 0) {
+    order.push(...held.splice(0, 1), ...outside.splice(0, 2));
+  }
+  return order;
+}
+
 function upcomingDate(index: number): string {
-  return new Date(NOW + (index * 9 + 4) * DAY).toISOString().slice(0, 10);
+  return new Date(NOW + (index * 3 + 2) * DAY).toISOString().slice(0, 10);
 }
 
 /** What each browse row lists, as the matching TMDB list would. */
 const FEEDS: Record<CatalogFeed, readonly CatalogItem[]> = {
-  trending: mixed(ITEMS, 31),
-  popular_movies: mixed(
+  popular_movies: browse(
     ITEMS.filter((item) => item.kind === "movie"),
     17,
   ),
-  popular_series: mixed(
+  popular_series: browse(
     ITEMS.filter((item) => item.kind === "series"),
     13,
   ),
+  // Opens with the series whose episodes a Plex library outside Media holds.
+  trending: browse(ITEMS, 31, EXTERNALLY_HELD.title),
   // Not released yet: nothing the household could already hold a file of.
-  upcoming_movies: ITEMS.filter(
-    (item) =>
-      item.kind === "movie" && item.library?.availability !== "available",
+  upcoming_movies: browse(
+    ITEMS.filter(
+      (item) =>
+        item.kind === "movie" && item.library?.availability !== "available",
+    ),
+    7,
   ).map((item, index) => ({ ...item, date: upcomingDate(index) })),
-  on_the_air: ITEMS.filter(
-    (item) => item.kind === "series" && AIRING.has(item.title),
+  on_the_air: browse(
+    ITEMS.filter(
+      (item) =>
+        item.kind === "series" &&
+        (item.library === null || AIRING.has(item.title)),
+    ),
+    5,
   ),
 };
 
-export function catalogDiscover(parameters: URLSearchParams): CatalogPage {
-  return pageOf(
-    FEEDS[CatalogFeedSchema.parse(parameters.get("feed"))],
-    CatalogPageSchema.parse(parameters.get("page") ?? undefined),
-  );
+export function catalogDiscover(
+  parameters: URLSearchParams,
+  scenario: FixtureScenario,
+): CatalogPage {
+  const feed = CatalogFeedSchema.parse(parameters.get("feed"));
+  const page = CatalogPageSchema.parse(parameters.get("page") ?? undefined);
+  if (
+    scenario === "catalog-unavailable" ||
+    (scenario === "feed-unavailable" && feed === UNAVAILABLE_FEED)
+  ) {
+    throw catalogUnavailable();
+  }
+  return pageOf(FEEDS[feed], page, scenario);
 }
 
 export function catalogDetail(
   kind: string,
   externalId: number,
+  scenario: FixtureScenario,
 ): z.input<typeof CatalogDetailSchema> | null {
+  if (scenario === "catalog-unavailable") throw catalogUnavailable();
   const entry = CATALOG.find(
     (candidate) =>
       candidate.item.kind === kind && candidate.item.externalId === externalId,
@@ -187,8 +307,8 @@ export function catalogDetail(
     return null;
   }
   return {
-    ...entry.item,
-    libraryAccess: "current",
+    ...asRead(entry.item, scenario),
+    libraryAccess: libraryAccess(scenario),
     seasons:
       entry.item.kind === "movie"
         ? []

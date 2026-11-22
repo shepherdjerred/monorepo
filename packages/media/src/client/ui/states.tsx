@@ -60,6 +60,12 @@ function describe(error: Error, what: string): Failure {
       body: "The library is shown to people who can open it in Plex. Open Plex to check you still can, then try again; if that does not help, ask the library owner.",
     };
   }
+  if (error.code === "catalog_unavailable") {
+    return {
+      title: `${what} did not load`,
+      body: "The film and series listings Media looks titles up in are not answering right now. Your library is not affected. Try again in a moment.",
+    };
+  }
   if (error.status >= 500) {
     return {
       title: `${what} did not load`,

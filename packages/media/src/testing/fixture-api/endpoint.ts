@@ -1,10 +1,13 @@
 import type { z } from "zod";
 import type { MediaUser } from "#shared/contract.ts";
 import type { Persona } from "./personas.ts";
+import type { FixtureScenario } from "./scenario.ts";
 
 /** What a fixture handler knows about the request it answers. */
 export type FixtureRequest = {
   persona: Persona;
+  /** The condition this browser put the fixture API in; see `scenario.ts`. */
+  scenario: FixtureScenario;
   user: MediaUser;
   query: URLSearchParams;
   /** A `:name` segment of the endpoint path. Throws when it is not declared. */

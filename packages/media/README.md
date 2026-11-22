@@ -708,6 +708,21 @@ A running fixture server switches persona without a restart: open
 `/api/fixture/persona/member` or `/api/fixture/persona/owner` and the browser is
 signed in as that persona until it switches back.
 
+A scenario puts the fixture API in a condition a page only shows when something
+outside it is wrong. Open `/api/fixture/scenario/<name>` to choose one for the
+browser (it sets the `media-fixture-scenario` cookie, which a browser test sets
+directly) and `/api/fixture/scenario/default` to leave it:
+
+| Scenario               | What the fixture API does                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| `stale-library-access` | Every catalog read reports `libraryAccess: "stale"` and no title carries a `library`. |
+| `feed-unavailable`     | The `popular_series` feed answers 502 `catalog_unavailable`; the rest keep working.   |
+| `catalog-unavailable`  | Every catalog read answers 502 `catalog_unavailable`, as when TMDB is down.           |
+
+A fixture answers a scenario by reading `request.scenario`, and throws
+`FixtureFailure` (`src/testing/fixture-api/scenario.ts`) for an error the real
+API sends on purpose.
+
 The fixture API answers reads only. A write returns a typed `501`, an unknown
 path returns a typed `404` and is logged, and an owner-only route returns `403`
 to the member, so a page that depends on something unstubbed shows its error
@@ -801,8 +816,65 @@ After a navigation the shell moves focus to the new page's heading, which is why
 every page renders its heading through `PageTitle`. A switch between views of
 one page is the exception: a link that carries the `SAME_PAGE` state
 (`ui/same-page.ts`), as every `Segmented` link does, leaves focus on the control
-and the scroll position where it was. The top bar's search submits to
-`/discover?q=`, and Discover reads its search from that parameter.
+and the scroll position where it was.
+
+The top bar holds the client's one search field. From any page, Enter opens
+`/discover?q=` with the search. While Discover is the page open, the field also
+searches as it is typed in, 300 ms after the last keystroke: the first search
+adds a history entry, so Back returns to the browse rows, and each refinement
+rewrites it. Text an input method is still composing is not searched for. A
+typed search belongs to the address it was typed at: if the reader goes
+anywhere else before the 300 ms are up (another page, Back, "Clear search"), it
+is dropped instead of undoing what they did.
+
+### Discover
+
+`/discover` (`src/client/discover/`) is where a title is found and where the
+household's state of it is first seen. What it shows is in its address:
+
+| Address            | Shows                                                   |
+| ------------------ | ------------------------------------------------------- |
+| `/discover`        | One row per feed of `GET /api/v1/catalog/discover`.     |
+| `/discover?q=dune` | The results of `GET /api/v1/catalog/search`, as a grid. |
+| `/discover/:feed`  | One feed, all of it, as a grid.                         |
+
+`:feed` is `trending`, `popular-films`, `popular-series`, `airing-this-week` or
+`upcoming-films` (`discover/view.ts` maps them to the API's feed names); an
+address that names no feed opens `/discover`.
+
+A row is the first page of its feed in a `PosterRail`; "See all" opens the feed.
+A grid loads one catalog page (20 titles) at a time, up to the five the API
+offers. Both read through `useCatalogList`, which follows page numbers with
+`useCursorList` and shares one cache entry per feed between the row and the
+grid.
+
+Each card is one link: to `/media/:id` for a title the household has (`library`
+carries its `mediaId`), otherwise to `/catalog/:kind/:id`. The request itself is
+made on that page, not here. `discover/card.ts` turns the `library` annotation
+into what the card says:
+
+| `library`                                   | Card                                                       |
+| ------------------------------------------- | ---------------------------------------------------------- |
+| `null`, `libraryAccess: "current"`          | "Request", drawn as an offer and not as a state.           |
+| `null`, `libraryAccess: "stale"`            | No phrase at all.                                          |
+| a film (`availability`)                     | The library's phrase for that availability.                |
+| a series with `episodes`                    | "3 of 10 episodes", "Ready to watch" or "No episodes yet". |
+| a series with `episodes: null`              | "In the library": the count is unknown, not zero.          |
+| `myInterest: "following"`                   | Also "You follow this".                                    |
+| `requested`, and the reader does not follow | Also "Others follow this".                                 |
+
+A title that is not out yet shows the day it arrives in place of its year.
+
+When any page read answers `libraryAccess: "stale"`, the page says once, above
+the titles, that Media could not confirm the reader's Plex access, and offers
+"Check again", which re-reads every catalog list. Each title keeps the access of
+the page it arrived on, because a later page can come back stale after an
+earlier one was current.
+
+A feed that answers 502 `catalog_unavailable` fails in its own row, in the room
+its rail would have taken, with "Try again"; the other rows and search are
+separate reads and keep working. When every feed fails the page explains it
+once instead of five times.
 
 ### Library page and client primitives
 
@@ -872,6 +944,7 @@ Shared building blocks live in `src/client/ui/`:
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `poster.tsx`, `artwork.ts`   | A 2:3 poster from the artwork route, lazy, with a `srcset` of the proxy widths; no image shows the title instead. |
 | `poster-card.tsx`            | `PosterCard`, `StatePill`, and `PosterGrid`, whose column count follows its own width (container queries).        |
+| `poster-rail.tsx`            | `PosterRail`, a row of cards that scrolls sideways with scroll snap, and what stands in for one that failed.      |
 | `segmented.tsx`              | A row of exclusive views that are links, so navigation and not an ARIA tablist.                                   |
 | `skeleton.tsx`, `states.tsx` | Loading shapes, empty states that say what to do next, and error states by kind of failure.                       |
 | `use-cursor-list.ts`         | The one place the client follows `nextCursor`: a page at a time, past empty pages, or every page.                 |
