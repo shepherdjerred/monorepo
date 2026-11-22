@@ -1,188 +1,48 @@
-import { DeploymentStatusSchema } from "#shared/contract.ts";
 import type {
+  CommitBuild,
   CommitEnvironment,
   CommitListQuery,
   CommitService,
   CommitStatus,
   CommitSummary,
 } from "#shared/hub/hub-contract.ts";
-import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { index } from "#infrastructure/delivery-data.ts";
-import { AWAITING_PLAN_DECISION } from "#infrastructure/selection/views.ts";
-import { advancesAcceptance } from "#infrastructure/execution/ownership.ts";
 import { DeliveryError } from "#domain/error.ts";
 import { decodeCursor, page, PAGE_SIZE } from "./cursor.ts";
 import { buildStatus } from "./status.ts";
 import { promotionOrder } from "./topology.ts";
 import { buildView, serviceSummary } from "./views.ts";
-import { latestDeployments } from "./attention.ts";
-import { carryingCommits } from "./carried.ts";
+import { carryingCommits, pipelineCarriers } from "./carried.ts";
 import {
-  blockingEnvironment,
-  carries,
+  blockingEnvironments,
   commitVerdict,
-  decidingDeployment,
   environmentState,
   groupByEnvironment,
   isLive,
+  mergeByService,
   serviceVerdict,
   verdictRank,
   type ChangeFacts,
-  type SetFacts,
 } from "./commit-status.ts";
+import {
+  DEPLOYMENT_FIELDS,
+  SET_FIELDS,
+  carriersOf,
+  environmentRecord,
+  setFacts,
+} from "./commit-environments.ts";
 
 const SHA = /^[0-9a-f]{7,40}$/iu;
 
 type Read = { status: CommitStatus };
 
-type DeploymentRow = Pick<
-  Prisma.DeploymentGetPayload<object>,
-  | "id"
-  | "environmentId"
-  | "versionSetRevisionId"
-  | "platformSourceBuildId"
-  | "status"
-  | "recoveryRequired"
-  | "kind"
-  | "createdAt"
->;
-
-const DEPLOYMENT_FIELDS = {
-  id: true,
-  environmentId: true,
-  versionSetRevisionId: true,
-  platformSourceBuildId: true,
-  status: true,
-  recoveryRequired: true,
-  kind: true,
-  createdAt: true,
-} as const;
-
-const SET_FIELDS = {
-  id: true,
-  revision: true,
-  lineage: true,
-  orderMajor: true,
-  orderMinor: true,
-} as const;
-
-/** A set revision as the commit rules read it; a manual hotfix has no order key. */
-function setFacts(row: {
-  revision: number;
-  lineage: string;
-  orderMajor: number | null;
-  orderMinor: number | null;
-}): SetFacts {
+/** A build of a commit, named by its service's catalog title. */
+function commitBuild(row: Parameters<typeof buildView>[0]): CommitBuild {
   return {
-    revision: row.revision,
-    lineage: row.lineage,
-    order:
-      row.orderMajor === null || row.orderMinor === null
-        ? null
-        : { major: row.orderMajor, minor: row.orderMinor },
+    ...buildView(row),
+    serviceTitle: serviceSummary(row.serviceId).title,
   };
-}
-
-/** Deployments not yet finished: queued, running or waiting for a decision. */
-const OPEN_STATUSES = ["queued", "running", "awaiting_approval"];
-
-/**
- * What every environment the commits touch holds: its newest deployment of
- * any change, its unfinished deployments, which of those wait on a saved
- * plan, and the set revision behind each of them and each accepted
- * selection. Every read is by set, never per environment.
- */
-async function environmentRecord(
-  database: Database,
-  environments: readonly {
-    id: string;
-    acceptedVersionSetRevisionId: string | null;
-  }[],
-) {
-  const ids = environments.map((row) => row.id);
-  const [newestAll, open, planned] = await Promise.all([
-    latestDeployments(database),
-    database.deployment.findMany({
-      where: { environmentId: { in: ids }, status: { in: OPEN_STATUSES } },
-      select: DEPLOYMENT_FIELDS,
-    }),
-    database.deployment.findMany({
-      where: { AND: [{ environmentId: { in: ids } }, AWAITING_PLAN_DECISION] },
-      select: { id: true },
-    }),
-  ]);
-  const newest = new Map(
-    ids.flatMap((id) => {
-      const row = newestAll.get(id);
-      return row === undefined ? [] : [[id, row] as const];
-    }),
-  );
-  const sets = await database.versionSet.findMany({
-    where: {
-      id: {
-        in: [
-          ...environments.flatMap((row) =>
-            row.acceptedVersionSetRevisionId === null
-              ? []
-              : [row.acceptedVersionSetRevisionId],
-          ),
-          ...[...newest.values(), ...open].map(
-            (row) => row.versionSetRevisionId,
-          ),
-        ],
-      },
-    },
-    select: SET_FIELDS,
-  });
-  return {
-    newest,
-    open,
-    awaitingPlan: new Set(planned.map((row) => row.id)),
-    sets: new Map<string, SetFacts>(sets.map((row) => [row.id, setFacts(row)])),
-  };
-}
-
-type EnvironmentRecord = Awaited<ReturnType<typeof environmentRecord>>;
-
-/**
- * The deployments that would deliver a change to one environment: those of
- * the change itself, and for a version set the environment's newest and
- * unfinished deployments of a set revision that includes it.
- */
-function carriersOf(
-  change: ChangeFacts,
-  environmentId: string,
-  own: readonly DeploymentRow[],
-  record: EnvironmentRecord,
-) {
-  const carriers = new Map(
-    own
-      .filter((row) => row.environmentId === environmentId)
-      .map((row) => [row.id, row]),
-  );
-  if (change !== null) {
-    const newest = record.newest.get(environmentId);
-    for (const row of [
-      ...(newest === undefined ? [] : [newest]),
-      ...record.open.filter((entry) => entry.environmentId === environmentId),
-    ]) {
-      const set = record.sets.get(row.versionSetRevisionId);
-      if (set === undefined)
-        throw new Error(`Deployment ${row.id} names a set revision not read`);
-      if (carries(change, set)) carriers.set(row.id, row);
-    }
-  }
-  return decidingDeployment(
-    [...carriers.values()].map((row) => ({
-      ...row,
-      // A deployment waiting on a saved-plan decision is waiting for approval.
-      status: record.awaitingPlan.has(row.id)
-        ? ("awaiting_approval" as const)
-        : DeploymentStatusSchema.parse(row.status),
-      delivers: advancesAcceptance(row.kind),
-    })),
-  );
 }
 
 /**
@@ -209,17 +69,31 @@ async function readCommits(
       .filter((row) => buildStatus(row.status) === "failed")
       .map((row) => row.id),
   );
+  const pipelineCarrier = pipelineCarriers(shas, builds, carried);
   // The releases that carry a failed build's change decide whether the
-  // failed commit's change is live yet.
-  const carrierBuilds = await database.build.findMany({
+  // failed commit's change is live yet; for a commit whose whole pipeline
+  // failed, so does every release of the commit that carries it.
+  const carrierRows = await database.build.findMany({
     where: {
-      id: {
-        in: [...carried.values()].flatMap((entry) =>
-          entry.releaseBuildId === null ? [] : [entry.releaseBuildId],
-        ),
-      },
+      OR: [
+        {
+          id: {
+            in: [...carried.values()].flatMap((entry) =>
+              entry.releaseBuildId === null ? [] : [entry.releaseBuildId],
+            ),
+          },
+        },
+        {
+          sourceRevision: { in: [...new Set(pipelineCarrier.values())] },
+          sourceKind: "ci",
+        },
+      ],
     },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
+  const carrierBuilds = carrierRows.filter(
+    (row) => index.byId(row.serviceId)?.id === row.serviceId,
+  );
   const buildIds = [...builds, ...carrierBuilds].map((row) => row.id);
   const versionSets = await database.versionSet.findMany({
     where: { qualifiedBuildId: { in: buildIds } },
@@ -263,6 +137,9 @@ async function readCommits(
   const sourceBySha = new Map(
     sourceCommits.map((row) => [row.sourceRevision, row]),
   );
+  // A service no environment tracks has nowhere to be released, so a
+  // carried failure of it, or its release, decides nothing.
+  const tracked = new Set(environments.map((row) => row.serviceId));
 
   /** Where a passing build's change stands; null when it changed nothing. */
   const standing = (build: (typeof rows)[number]): CommitService | null => {
@@ -335,34 +212,43 @@ async function readCommits(
 
   return shas.map((sha): Read => {
     const own = builds.filter((row) => row.sourceRevision === sha);
-    const changed: CommitService[] = [];
+    const built: CommitService[] = [];
     let unchangedCount = 0;
     for (const build of own) {
       if (buildStatus(build.status) !== "succeeded") continue;
       const entry = standing(build);
       if (entry === null) unchangedCount += 1;
-      else changed.push(entry);
+      else built.push(entry);
     }
     const failedBuilds = own
       .filter((row) => buildStatus(row.status) === "failed")
-      .map((row) => buildView(row));
+      .map((row) => commitBuild(row));
     const carriedFailures = failedBuilds.flatMap((build) => {
       const carrier = carried.get(build.id);
       return carrier === undefined
         ? []
-        : [{ buildId: build.id, includedIn: carrier.includedIn }];
+        : [
+            {
+              buildId: build.id,
+              includedIn: carrier.includedIn,
+              ...(build.serviceTitle === undefined
+                ? {}
+                : { serviceTitle: build.serviceTitle }),
+            },
+          ];
     });
     // A carried failure's change ships in the first later release of the
     // service, so that release's standing is this commit's for the service.
     // While no later passing build has a release, it is not released.
+    const carriedEntries: CommitService[] = [];
     for (const build of failedBuilds) {
       const carrier = carried.get(build.id);
-      if (carrier === undefined) continue;
+      if (carrier === undefined || !tracked.has(build.serviceId)) continue;
       const row = carrierBuilds.find(
         (entry) => entry.id === carrier.releaseBuildId,
       );
       const entry = row === undefined ? null : standing(row);
-      changed.push(
+      carriedEntries.push(
         row === undefined || entry === null
           ? {
               service: serviceSummary(build.serviceId),
@@ -375,14 +261,34 @@ async function readCommits(
           : { ...entry, includedIn: row.sourceRevision },
       );
     }
-    changed.sort(
+    // A commit whose whole pipeline failed ships everything it changed in
+    // the releases of the first later commit whose pipeline passed.
+    const pipelineSha = pipelineCarrier.get(sha);
+    const builtHere = new Set(own.map((row) => row.serviceId));
+    const pipelineEntries = carrierBuilds.flatMap((row) => {
+      if (
+        row.sourceRevision !== pipelineSha ||
+        builtHere.has(row.serviceId) ||
+        !tracked.has(row.serviceId) ||
+        buildStatus(row.status) !== "succeeded"
+      )
+        return [];
+      const entry = standing(row);
+      return entry === null ? [] : [{ ...entry, includedIn: pipelineSha }];
+    });
+    const changed = mergeByService([
+      ...built,
+      ...carriedEntries,
+      ...pipelineEntries,
+    ]).toSorted(
       (left, right) =>
         verdictRank(left.verdict) - verdictRank(right.verdict) ||
         left.service.title.localeCompare(right.service.title),
     );
     const pendingBuilds = own
       .filter((row) => buildStatus(row.status) === "pending")
-      .map((row) => buildView(row));
+      .map((row) => commitBuild(row));
+    const blockers = blockingEnvironments(changed);
     return {
       status: {
         sha,
@@ -403,7 +309,8 @@ async function readCommits(
         failedBuilds,
         carriedFailures,
         pendingBuilds,
-        blocker: blockingEnvironment(changed),
+        blocker: blockers[0] ?? null,
+        blockers,
       },
     };
   });
@@ -458,8 +365,21 @@ function summary(status: CommitStatus, firstSeenAt: Date): CommitSummary {
     liveCount: status.changed.filter((entry) => entry.verdict === "deployed")
       .length,
     failedBuildCount: status.failedBuilds.length,
+    failedServices: [
+      ...new Set(
+        status.failedBuilds
+          .filter(
+            (build) =>
+              !(status.carriedFailures ?? []).some(
+                (entry) => entry.buildId === build.id,
+              ),
+          )
+          .map((build) => build.serviceTitle ?? build.serviceId),
+      ),
+    ],
     carriedFailures: status.carriedFailures ?? [],
     blocker: status.blocker,
+    blockers: status.blockers ?? [],
   };
 }
 

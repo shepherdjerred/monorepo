@@ -7,7 +7,6 @@ import type {
   CommitEnvironmentGroup,
   CommitEnvironmentState,
   CommitService,
-  CommitStatus,
   CommitSummary,
   CommitVerdict,
 } from "#shared/hub/hub-contract.ts";
@@ -17,11 +16,13 @@ import { Status } from "#client/components/status.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
 import { ShortSha } from "#client/components/links.tsx";
 import { OlderLink } from "#client/components/pager.tsx";
+import { pageSummary } from "./list-page.tsx";
 import { SourcePanel } from "#client/components/integrations.tsx";
 import { CursorSearchSchema } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
 import { revisionLabel } from "#client/components/identifier.tsx";
 import { Disclosure } from "#client/components/disclosure.tsx";
+import { BuildList } from "./commit-builds.tsx";
 import {
   ENVIRONMENT,
   commitStatement,
@@ -38,13 +39,20 @@ const isLiveState = (state: CommitEnvironmentState) =>
 function Verdict({
   value,
   carried,
+  pending,
 }: {
   value: CommitVerdict;
   carried?: readonly CarriedFailure[] | undefined;
+  /** The states of environments that do not have the change yet. */
+  pending?: readonly CommitEnvironmentState[] | undefined;
 }) {
-  const verdict = verdictView(value, carried);
+  const verdict = verdictView(value, { carried, pending });
   return <Status value={verdict.status} label={verdict.label} />;
 }
+
+/** The states of the environments a commit's blocker list names. */
+const blockerStates = (blocker: CommitSummary["blocker"]) =>
+  blocker === null ? [] : [blocker.state];
 
 function EnvironmentChip({
   entry,
@@ -112,7 +120,11 @@ function Tally({
 function CommitRow({ commit }: { commit: CommitSummary }) {
   return (
     <li className="commit-row">
-      <Verdict value={commit.verdict} carried={commit.carriedFailures} />
+      <Verdict
+        value={commit.verdict}
+        carried={commit.carriedFailures}
+        pending={blockerStates(commit.blocker)}
+      />
       <Link
         to="/commits/$sha"
         params={{ sha: commit.sha }}
@@ -232,6 +244,19 @@ function CommitsPage() {
         {data.items.length === 0 ? (
           <p className="empty">Delivery has not seen a commit yet.</p>
         ) : (
+          <div className="result-summary">
+            <p role="status" className="muted">
+              {pageSummary({
+                count: data.items.length,
+                noun: ["commit", "commits"],
+                filtered: false,
+                older: search.cursor !== undefined,
+                more: data.nextCursor !== null,
+              })}
+            </p>
+          </div>
+        )}
+        {data.items.length > 0 && (
           <div className="commit-table">
             <div className="commit-columns" aria-hidden="true">
               <span>Status</span>
@@ -278,7 +303,12 @@ function ServiceRow({ entry }: { entry: CommitService }) {
         )}
       </th>
       <td data-label="Status">
-        <Verdict value={entry.verdict} />
+        <Verdict
+          value={entry.verdict}
+          pending={entry.environments
+            .map((environment) => environment.state)
+            .filter((state) => !isLiveState(state))}
+        />
       </td>
       <td data-label="Environments">
         {entry.environments.length === 0 ? (
@@ -301,58 +331,6 @@ function ServiceRow({ entry }: { entry: CommitService }) {
   );
 }
 
-function BuildList({
-  title,
-  intro,
-  builds,
-  carried = [],
-}: {
-  title: string;
-  /** One plain sentence before the recorded reasons. */
-  intro: string;
-  builds: CommitStatus["failedBuilds"];
-  /** The newer commit that shipped each build's change, if any. */
-  carried?: readonly CarriedFailure[];
-}) {
-  if (builds.length === 0) return null;
-  return (
-    <section className="panel" aria-label={title}>
-      <h2>{title}</h2>
-      <p>{intro}</p>
-      <ul className="commit-builds">
-        {builds.map((build) => (
-          <li key={build.id}>
-            <Link to="/builds/$" params={{ _splat: build.id }}>
-              {build.serviceId}
-            </Link>
-            {build.qualificationReason !== null && (
-              <span className="muted"> · {build.qualificationReason}</span>
-            )}
-            <IncludedIn
-              sha={
-                carried.find((entry) => entry.buildId === build.id)?.includedIn
-              }
-            />
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function IncludedIn({ sha }: { sha: string | undefined }) {
-  if (sha === undefined) return null;
-  return (
-    <>
-      {" · included in "}
-      <Link to="/commits/$sha" params={{ sha }}>
-        <ShortSha sha={sha} />
-      </Link>
-      , which passed
-    </>
-  );
-}
-
 function EnvironmentGroup({ group }: { group: CommitEnvironmentGroup }) {
   const pending = group.members.filter((member) => !isLiveState(member.state));
   const live = group.members.filter((member) => isLiveState(member.state));
@@ -362,7 +340,11 @@ function EnvironmentGroup({ group }: { group: CommitEnvironmentGroup }) {
       aria-labelledby={`env-${group.name}-heading`}
     >
       <h3 id={`env-${group.name}-heading`}>
-        {group.name} <Verdict value={group.verdict} />{" "}
+        {group.name}{" "}
+        <Verdict
+          value={group.verdict}
+          pending={pending.map((member) => member.state)}
+        />{" "}
         <span className="muted">
           {group.liveCount} of {group.total}{" "}
           {group.total === 1 ? "service" : "services"} live
@@ -411,7 +393,11 @@ function CommitPage() {
             {data.author !== null && (
               <span className="commit-byline">by {data.author}</span>
             )}
-            <Verdict value={data.verdict} carried={carried} />{" "}
+            <Verdict
+              value={data.verdict}
+              carried={carried}
+              pending={blockerStates(data.blocker)}
+            />{" "}
             <span className="commit-statement">{commitStatement(data)}</span>
           </>
         }
@@ -426,7 +412,7 @@ function CommitPage() {
       />
       <BuildList
         title="Included in a newer commit"
-        intro="CI failed for these services on this commit, so it was not built on its own. A newer commit that includes this one passed, and its build published the change."
+        intro="CI failed for these services on this commit, so it was not built on its own. A newer commit includes this one, and its build of the same service passed and published the change; that commit's releases, shown below, decide whether it is live."
         builds={data.failedBuilds.filter((build) => isCarried(build))}
         carried={carried}
       />

@@ -494,11 +494,13 @@ export const CommitServiceSchema = z.object({
   verdict: CommitVerdictSchema,
   environments: z.array(CommitEnvironmentSchema),
   /**
-   * Set when this commit's own build of the service failed and a newer
-   * commit's passing build carries the change. With a set or environments,
-   * they are the first later release of the service and this is its
-   * commit's sha; with neither, no later passing build has a release yet,
-   * the build is the failed one, and this is the first later passing commit.
+   * Set when a newer commit's release carries this commit's change. Either
+   * this commit's own build of the service failed and a newer commit's
+   * passing build carries it, or the commit's whole pipeline failed and the
+   * first later commit whose pipeline passed released the service. With a
+   * set or environments, they are that release and this is its commit's
+   * sha; with neither, no later passing build has a release yet, the build
+   * is the failed one, and this is the first later passing commit.
    */
   includedIn: z.string().min(7).optional(),
 });
@@ -529,12 +531,32 @@ export type CommitEnvironmentGroup = z.infer<
   typeof CommitEnvironmentGroupSchema
 >;
 
-/** A failed build of a commit, and the later commit that passed and shipped its change. */
+/**
+ * A failed build of a commit, and the later commit whose build of the same
+ * service passed and so shipped its change. That commit's CI passed; its
+ * releases may still fail, so this says nothing about its verdict.
+ */
 export const CarriedFailureSchema = z.object({
   buildId: IdentifierSchema,
   includedIn: z.string().min(7),
+  /** The failed build's service, by its catalog title. */
+  serviceTitle: z.string().min(1).optional(),
 });
 export type CarriedFailure = z.infer<typeof CarriedFailureSchema>;
+
+/** A build of a commit with its service's catalog title, for a page to name it. */
+export const CommitBuildSchema = BuildViewSchema.extend({
+  serviceTitle: z.string().min(1).optional(),
+});
+export type CommitBuild = z.infer<typeof CommitBuildSchema>;
+
+/** A changed service's environment that does not have the change yet, and why. */
+export const CommitBlockerSchema = z.object({
+  service: z.string(),
+  environment: z.string(),
+  state: CommitEnvironmentStateSchema,
+});
+export type CommitBlocker = z.infer<typeof CommitBlockerSchema>;
 
 export const CommitStatusSchema = z.object({
   sha: z.string().min(7),
@@ -558,26 +580,22 @@ export const CommitStatusSchema = z.object({
   /** Services whose build passed with nothing to deploy. */
   unchangedCount: z.number().int().nonnegative(),
   /** Builds that failed or are still running, whether or not they changed anything. */
-  failedBuilds: z.array(BuildViewSchema),
+  failedBuilds: z.array(CommitBuildSchema),
   /**
    * Failed builds a newer commit carries: for each, the first later main
    * commit whose build of the same service passed and so shipped this
    * commit's change. Such a failure does not decide the verdict.
    */
   carriedFailures: z.array(CarriedFailureSchema).optional(),
-  pendingBuilds: z.array(BuildViewSchema),
+  pendingBuilds: z.array(CommitBuildSchema),
   /**
    * The most urgent environment of a changed service that does not have the
    * change, prod first among equals, so a page can say what is stuck and
    * where. Null when every one has it.
    */
-  blocker: z
-    .object({
-      service: z.string(),
-      environment: z.string(),
-      state: CommitEnvironmentStateSchema,
-    })
-    .nullable(),
+  blocker: CommitBlockerSchema.nullable(),
+  /** Every such environment, most urgent first; `blocker` is the first. */
+  blockers: z.array(CommitBlockerSchema).optional(),
 });
 export type CommitStatus = z.infer<typeof CommitStatusSchema>;
 
@@ -588,8 +606,11 @@ export const CommitSummarySchema = CommitStatusSchema.pick({
   verdict: true,
   seenAt: true,
   blocker: true,
+  blockers: true,
   carriedFailures: true,
 }).extend({
+  /** The services whose CI failed with nothing carrying it, by title, each once. */
+  failedServices: z.array(z.string()).optional(),
   changedCount: z.number().int().nonnegative(),
   liveCount: z.number().int().nonnegative(),
   environments: z.array(CommitEnvironmentGroupSchema.omit({ members: true })),

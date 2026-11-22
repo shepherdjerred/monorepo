@@ -23,7 +23,12 @@ export const LONG_COMMIT_TITLE =
 const HISTORY: {
   title: string | null;
   author: string;
-  outcome?: "failed";
+  /**
+   * `failed`: Birmel's build failed CI. `pipeline_failed`: the whole
+   * pipeline failed before it published Birmel, so only CI's own build of
+   * the commit exists, and it failed.
+   */
+  outcome?: "failed" | "pipeline_failed";
 }[] = [
   {
     title: "feat(birmel): add the voice session store",
@@ -76,6 +81,7 @@ const HISTORY: {
   {
     title: "ci(birmel): split the image build from the chart package",
     author: "shepherdjerred",
+    outcome: "pipeline_failed",
   },
   {
     title: "feat(birmel): remember each guild's volume",
@@ -101,6 +107,9 @@ const revision = (position: number) =>
 
 /** The full sha of the history commit at a position, oldest first. */
 export const historySha = (position: number) => revision(position + 1);
+
+/** The Woodpecker pipeline that built the history commit at a position. */
+export const historyPipeline = (position: number) => FIRST_PIPELINE + position;
 
 /** The commit whose only build, Birmel's, failed CI; the next commit's passed. */
 export const FAILED_POSITION = HISTORY.findIndex(
@@ -137,35 +146,58 @@ const PREVIOUS_LINEAGE = "0".repeat(64);
 export const CARRIED_FAILURE_POSITION = UNRELEASED_POSITION;
 export const CARRIER_POSITION = UNRELEASED_POSITION + 1;
 
-/** Another service's build of a history commit, verified or failed with a reason. */
+/**
+ * A commit whose whole pipeline failed: CI published only its own build of
+ * the commit, which failed, and nothing for Birmel. The next commit's
+ * pipeline passed and released Birmel, so this commit's change ships in that
+ * release, which waits on a manual release in prod.
+ */
+export const PIPELINE_FAILURE_POSITION = HISTORY.findIndex(
+  (commit) => commit.outcome === "pipeline_failed",
+);
+export const PIPELINE_CARRIER_POSITION = PIPELINE_FAILURE_POSITION + 1;
+
+type OtherBuild = {
+  serviceId: string;
+  digest: string;
+  failure?: string;
+  /** Ship no new image and keep the one built at this history position. */
+  retainFrom?: number;
+};
+
+/** The image another service's build at a pipeline publishes. */
+const otherImage = (serviceId: string, pipelineNumber: number) =>
+  `history/${String(pipelineNumber)}/${serviceId}-image`;
+
+/** Another service's build of a history commit, verified or failed with a reason; its id. */
 async function publishOther(
   delivery: Delivery,
-  build: {
-    serviceId: string;
-    sourceRevision: string;
-    pipelineNumber: number;
-    digest: string;
-    failure?: string;
-  },
+  build: OtherBuild & { sourceRevision: string; pipelineNumber: number },
 ) {
-  const tag = `history/${String(build.pipelineNumber)}/${build.serviceId}`;
   const published = await delivery.publish(
     {
-      requestId: tag,
+      requestId: `history/${String(build.pipelineNumber)}/${build.serviceId}`,
       serviceId: build.serviceId,
       sourceRevision: build.sourceRevision,
       ciUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${String(build.pipelineNumber)}`,
       verifiedAt: new Date().toISOString(),
-      artifacts: [
-        {
-          id: `${tag}-image`,
-          component: "server",
-          kind: "image",
-          uri: `docker.io/shepherdjerred/${build.serviceId}`,
-          version: `0.${String(build.pipelineNumber)}.0`,
-          digest: `sha256:${build.digest.repeat(64)}`,
-        },
-      ],
+      artifacts:
+        build.retainFrom === undefined
+          ? [
+              {
+                id: otherImage(build.serviceId, build.pipelineNumber),
+                component: "server",
+                kind: "image",
+                uri: `docker.io/shepherdjerred/${build.serviceId}`,
+                version: `0.${String(build.pipelineNumber)}.0`,
+                digest: `sha256:${build.digest.repeat(64)}`,
+              },
+            ]
+          : [],
+      retainedArtifactIds:
+        build.retainFrom === undefined
+          ? []
+          : [otherImage(build.serviceId, FIRST_PIPELINE + build.retainFrom)],
     },
     testPublisher,
     { repositoryId: 1, pipelineNumber: build.pipelineNumber },
@@ -176,25 +208,27 @@ async function publishOther(
     testExecutor,
     build.failure,
   );
+  return published.buildId;
 }
 
+const PIPELINE_FAILED = "CI pipeline did not pass exact main push verification";
+
 /** The builds of other services the history's commits carry, by position. */
-const OTHERS: Record<
-  number,
-  { serviceId: string; digest: string; failure?: string }
-> = {
+const OTHERS: Record<number, OtherBuild[]> = {
+  // CI's own image, which the pipeline failure's carrier keeps unchanged.
+  0: [{ serviceId: "ci", digest: "a" }],
   // Arcade's build failed in qualification with a raw reason; nothing later passes.
-  [PARTIAL_FAILURE_POSITION]: {
-    serviceId: "arcade",
-    digest: "d",
-    failure: PARTIAL_FAILURE_REASON,
-  },
-  [CARRIED_FAILURE_POSITION]: {
-    serviceId: "golink",
-    digest: "e",
-    failure: "CI pipeline did not pass exact main push verification",
-  },
-  [CARRIER_POSITION]: { serviceId: "golink", digest: "f" },
+  [PARTIAL_FAILURE_POSITION]: [
+    { serviceId: "arcade", digest: "d", failure: PARTIAL_FAILURE_REASON },
+  ],
+  [PIPELINE_FAILURE_POSITION]: [
+    { serviceId: "ci", digest: "b", failure: PIPELINE_FAILED },
+  ],
+  [CARRIED_FAILURE_POSITION]: [
+    { serviceId: "golink", digest: "e", failure: PIPELINE_FAILED },
+    { serviceId: "ci", digest: "a", retainFrom: 0 },
+  ],
+  [CARRIER_POSITION]: [{ serviceId: "golink", digest: "f" }],
 };
 
 /**
@@ -306,6 +340,47 @@ export async function seedBirmelRelease(
   setOf(UNRELEASED_POSITION);
 }
 
+/** The other services' builds of the history commit at a position. */
+async function publishOthers(delivery: Delivery, position: number) {
+  for (const other of OTHERS[position] ?? [])
+    await publishOther(delivery, {
+      ...other,
+      sourceRevision: historySha(position),
+      pipelineNumber: historyPipeline(position),
+    });
+}
+
+/**
+ * A history commit whose pipeline failed before it published Birmel: CI's
+ * own failed build, and the commit's title, are all Delivery holds.
+ */
+async function seedPipelineFailure(
+  delivery: Delivery,
+  position: number,
+  { title, author }: { title: string | null; author: string },
+) {
+  const others = OTHERS[position] ?? [];
+  const [ci] = others;
+  if (title === null || ci === undefined || others.length > 1)
+    throw new Error("A failed pipeline records CI's build and a title");
+  const sourceRevision = historySha(position);
+  const pipelineNumber = historyPipeline(position);
+  const buildId = await publishOther(delivery, {
+    ...ci,
+    sourceRevision,
+    pipelineNumber,
+  });
+  await delivery.recordSourceCommit({
+    sourceRevision,
+    message: `${title}\n\nSeeded by the browser harness.`,
+    author,
+    pipelineNumber,
+    buildId,
+    actor: testExecutor,
+    requestId: `history/${String(position + 1)}/source`,
+  });
+}
+
 /**
  * Publish enough older commits that the commit list pages. Call this before
  * every other seed, so these are the oldest commits and builds the harness has
@@ -319,6 +394,10 @@ export async function seedCommitHistory(delivery: Delivery) {
     const pipelineNumber = FIRST_PIPELINE + position;
     const sourceRevision = revision(position + 1);
     const tag = String(position + 1);
+    if (commit.outcome === "pipeline_failed") {
+      await seedPipelineFailure(delivery, position, commit);
+      continue;
+    }
     const ships = position % 4 === 0;
     const artifactId = `history/${tag}/image`;
     if (!ships && image === undefined)
@@ -353,13 +432,7 @@ export async function seedCommitHistory(delivery: Delivery) {
       commit.outcome ?? "verified",
       testExecutor,
     );
-    const other = OTHERS[position];
-    if (other !== undefined)
-      await publishOther(delivery, {
-        ...other,
-        sourceRevision,
-        pipelineNumber,
-      });
+    await publishOthers(delivery, position);
     if (commit.title !== null)
       await delivery.recordSourceCommit({
         sourceRevision,

@@ -139,11 +139,24 @@ the first later release of the service (the first later passing build that
 composed a set or has a platform deployment, since a build a newer verified
 one supersedes composes nothing) joins `changed`, marked `includedIn`, so the
 commit is not deployed until that release is live. While no later release
-exists the service reads not released. A
+exists the service reads not released; a service no environment tracks has
+nowhere to be released, so its carried failure adds no row. When every build
+of a commit failed, its pipeline failed as a whole and CI published few or
+none of the services it changed. CI selects what to build against the last
+whole successful pipeline, so the first later commit whose pipeline passed
+built everything this one changed: that commit's releases of services this
+commit has no build of join `changed`, marked `includedIn`. A pipeline that
+publishes several builds of one service for a commit still changed it once:
+the service counts once, by its newest set, and each environment reads the
+least advanced of its builds' states. A
 commit's verdict is the most urgent of its services, then of its builds:
 recovery required, failed, needs approval, CI failed (with nothing carrying
-it), CI running, deploying, not released, deployed; its `blocker` names the
-environment that verdict came from. The response also regroups the
+it), CI running, deploying, waiting, deployed; its `blocker` names the
+environment that verdict came from and `blockers` lists every environment
+without the change, most urgent first. A waiting commit's label names what
+it waits on (needs manual release, not started, waiting for an earlier
+stage); "not released" is reserved for a change no release of any changed
+service includes yet. The response also regroups the
 same rows by environment name, `prod` first, so a commit that touches many
 services still answers "is it in prod?" as one count with its stragglers
 named. The pure rules live in `src/infrastructure/hub/commit-status.ts`.

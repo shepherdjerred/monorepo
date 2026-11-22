@@ -1,10 +1,12 @@
 import { z } from "zod";
 import type { Database } from "#infrastructure/database.ts";
+import { buildStatus } from "./status.ts";
 
 const CarriedRowsSchema = z.array(
   z.object({
     buildId: z.string(),
     includedIn: z.string(),
+    includedInPosition: z.number().int(),
     releaseBuildId: z.string().nullable(),
   }),
 );
@@ -17,7 +19,12 @@ const CarriedRowsSchema = z.array(
  * stands for it, so the two can differ; `releaseBuildId` is null while no
  * later passing build has a release yet.
  */
-export type Carrier = { includedIn: string; releaseBuildId: string | null };
+export type Carrier = {
+  includedIn: string;
+  /** The carrying commit's place on main: its push pipeline's number. */
+  includedInPosition: number;
+  releaseBuildId: string | null;
+};
 
 /**
  * For each failed CI build, by failed build id, the first later main commit
@@ -44,10 +51,12 @@ export async function carryingCommits(
         AND f.status = 'failed' AND f."pipelineNumber" IS NOT NULL
     )
     SELECT f.id AS "buildId", first."sourceRevision" AS "includedIn",
-      released.id AS "releaseBuildId"
+      first.position AS "includedInPosition", released.id AS "releaseBuildId"
     FROM failed f
     CROSS JOIN LATERAL (
-      SELECT b.id, b."sourceRevision" FROM "Build" b
+      SELECT b.id, b."sourceRevision",
+        COALESCE(bs."pipelineNumber", b."pipelineNumber") AS position
+      FROM "Build" b
       LEFT JOIN "SourceCommit" bs ON bs."sourceRevision" = b."sourceRevision"
       WHERE b."serviceId" = f."serviceId" AND b."sourceKind" = 'ci'
         AND b.status = 'verified' AND b."sourceRevision" <> f."sourceRevision"
@@ -72,7 +81,45 @@ export async function carryingCommits(
   return new Map(
     rows.map((row) => [
       row.buildId,
-      { includedIn: row.includedIn, releaseBuildId: row.releaseBuildId },
+      {
+        includedIn: row.includedIn,
+        includedInPosition: row.includedInPosition,
+        releaseBuildId: row.releaseBuildId,
+      },
     ]),
   );
+}
+
+/**
+ * For each commit whose every build failed, the first later commit that
+ * carries one of its failed builds. Such a commit's pipeline failed as a
+ * whole, so CI published few or none of the services it changed. CI chooses
+ * what to build against the last whole successful pipeline, so the first
+ * later commit whose pipeline passed built everything this one changed: its
+ * releases are the ones that carry this commit's change.
+ */
+export function pipelineCarriers(
+  shas: readonly string[],
+  builds: readonly { id: string; sourceRevision: string; status: string }[],
+  carried: ReadonlyMap<string, Carrier>,
+) {
+  const carriers = new Map<string, string>();
+  for (const sha of shas) {
+    const own = builds.filter((row) => row.sourceRevision === sha);
+    if (
+      own.length === 0 ||
+      own.some((row) => buildStatus(row.status) !== "failed")
+    )
+      continue;
+    const [first] = own
+      .flatMap((row) => {
+        const carrier = carried.get(row.id);
+        return carrier === undefined ? [] : [carrier];
+      })
+      .toSorted(
+        (left, right) => left.includedInPosition - right.includedInPosition,
+      );
+    if (first !== undefined) carriers.set(sha, first.includedIn);
+  }
+  return carriers;
 }

@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
-import type { CommitEnvironment } from "#shared/hub/hub-contract.ts";
+import type {
+  CommitEnvironment,
+  CommitService,
+} from "#shared/hub/hub-contract.ts";
 import {
   blockingEnvironment,
+  blockingEnvironments,
   carries,
   commitVerdict,
   decidingDeployment,
   environmentState,
   groupByEnvironment,
+  mergeByService,
   rollUp,
   serviceVerdict,
   type EnvironmentFacts,
@@ -449,6 +454,108 @@ describe("blockingEnvironment", () => {
     expect(
       blockingEnvironment([changed("arcade", [["prod", "superseded"]])]),
     ).toBeNull();
+  });
+
+  it("lists every environment without the change, most urgent first, so a row can name each failure", () => {
+    expect(
+      blockingEnvironments([
+        changed("minecraft", [
+          ["sandbox", "live"],
+          ["tsmc", "failed"],
+        ]),
+        changed("streambot", [["prod", "failed"]]),
+        changed("temporal", [["prod", "not_started"]]),
+      ]),
+    ).toEqual([
+      { service: "STREAMBOT", environment: "prod", state: "failed" },
+      { service: "MINECRAFT", environment: "tsmc", state: "failed" },
+      { service: "TEMPORAL", environment: "prod", state: "not_started" },
+    ]);
+  });
+});
+
+/** One build's entry: Minecraft's pipeline publishes one build per component. */
+function entry(
+  revision: number,
+  states: [string, CommitEnvironment["state"]][],
+  includedIn?: string,
+): CommitService {
+  const environments = changed("minecraft", states).environments;
+  return {
+    service: {
+      id: "minecraft",
+      title: "Minecraft",
+      kind: "product",
+      links: [],
+    },
+    build: {
+      id: `build-${String(revision)}`,
+      serviceId: "minecraft",
+      sourceRevision: "3".repeat(40),
+      sourceKind: "ci",
+      ciUrl: null,
+      status: "verified",
+      qualificationReason: null,
+      platformChanges: null,
+      createdAt: "2026-11-01T00:00:00.000Z",
+      pipelineNumber: 18_442,
+      links: [],
+    },
+    versionSet: { id: `set-${String(revision)}`, revision },
+    verdict: serviceVerdict(
+      "succeeded",
+      environments.map((row) => row.state),
+    ),
+    environments,
+    ...(includedIn === undefined ? {} : { includedIn }),
+  };
+}
+
+describe("mergeByService", () => {
+  it("counts a service once, by its newest set, with each environment's least advanced state", () => {
+    const [merged, ...rest] = mergeByService([
+      entry(118, [
+        ["sandbox", "superseded"],
+        ["tsmc", "failed"],
+      ]),
+      entry(120, [
+        ["sandbox", "live"],
+        ["tsmc", "failed"],
+      ]),
+      entry(119, [
+        ["sandbox", "superseded"],
+        ["tsmc", "failed"],
+      ]),
+    ]);
+    expect(rest).toEqual([]);
+    expect(merged?.versionSet?.revision).toBe(120);
+    expect(merged?.build.id).toBe("build-120");
+    expect(merged?.environments.map((row) => [row.name, row.state])).toEqual([
+      ["sandbox", "live"],
+      ["tsmc", "failed"],
+    ]);
+    expect(merged?.verdict).toBe("failed");
+  });
+
+  it("is not live where an older build's release is and the newest is not", () => {
+    const [merged] = mergeByService([
+      entry(118, [["prod", "live"]]),
+      entry(119, [["prod", "not_started"]]),
+    ]);
+    expect(merged?.environments.map((row) => row.state)).toEqual([
+      "not_started",
+    ]);
+    expect(merged?.verdict).toBe("waiting");
+  });
+
+  it("keeps the carrying commit and leaves a lone entry as it is", () => {
+    const lone = entry(5, [["prod", "live"]], "9".repeat(40));
+    expect(mergeByService([lone])).toEqual([lone]);
+    const [merged] = mergeByService([
+      entry(4, [["prod", "live"]]),
+      entry(5, [["prod", "live"]], "9".repeat(40)),
+    ]);
+    expect(merged?.includedIn).toBe("9".repeat(40));
   });
 });
 
