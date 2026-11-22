@@ -3,15 +3,30 @@ import type { CommitEnvironment } from "#shared/hub/hub-contract.ts";
 import {
   blockingEnvironment,
   carries,
+  commitVerdict,
   decidingDeployment,
   environmentState,
   groupByEnvironment,
   rollUp,
   serviceVerdict,
   type EnvironmentFacts,
+  type SetFacts,
 } from "./commit-status.ts";
 
-const change = { revision: 5, lineage: "lineage-a" };
+/** A set revision; `pipeline` gives it the order key of the main pipeline that composed it. */
+function set(
+  revision: number,
+  lineage: string,
+  pipeline: number | null = null,
+): SetFacts {
+  return {
+    revision,
+    lineage,
+    order: pipeline === null ? null : { major: pipeline, minor: revision },
+  };
+}
+
+const change = set(5, "lineage-a");
 const at = (minute: number) => new Date(Date.UTC(2026, 10, 1, 0, minute));
 
 function environment(
@@ -33,7 +48,7 @@ describe("environmentState", () => {
       environmentState({
         change,
         environment: environment({
-          accepted: { revision: 5, lineage: "lineage-a" },
+          accepted: set(5, "lineage-a"),
         }),
         deployment: null,
         sourceLive: false,
@@ -46,7 +61,7 @@ describe("environmentState", () => {
       environmentState({
         change,
         environment: environment({
-          accepted: { revision: 9, lineage: "lineage-a" },
+          accepted: set(9, "lineage-a"),
           locked: true,
         }),
         deployment: {
@@ -64,7 +79,7 @@ describe("environmentState", () => {
       environmentState({
         change,
         environment: environment({
-          accepted: { revision: 9, lineage: "lineage-b" },
+          accepted: set(9, "lineage-b"),
         }),
         deployment: null,
         sourceLive: false,
@@ -77,7 +92,7 @@ describe("environmentState", () => {
       environmentState({
         change,
         environment: environment({
-          accepted: { revision: 4, lineage: "lineage-a" },
+          accepted: set(4, "lineage-a"),
         }),
         deployment: {
           status: "succeeded",
@@ -227,12 +242,51 @@ describe("environmentState", () => {
   });
 });
 
+describe("a change across a lineage change", () => {
+  it("is live through a newer release of a new lineage, not replaced by it", () => {
+    // Golink r2 (chart from one commit) was deployed; a component was added,
+    // which started a new lineage, and r5 composed from a later pipeline is
+    // accepted now. The change runs through r5.
+    expect(
+      environmentState({
+        change: set(2, "lineage-a", 17_374),
+        environment: environment({
+          accepted: set(5, "lineage-b", 18_320),
+        }),
+        deployment: {
+          status: "succeeded",
+          recoveryRequired: false,
+          delivers: true,
+        },
+        sourceLive: false,
+      }),
+    ).toBe("superseded");
+  });
+});
+
 describe("deployments that would deliver a change", () => {
   it("carries a change in the same or a later revision of its lineage", () => {
-    expect(carries(change, { revision: 5, lineage: "lineage-a" })).toBe(true);
-    expect(carries(change, { revision: 8, lineage: "lineage-a" })).toBe(true);
-    expect(carries(change, { revision: 4, lineage: "lineage-a" })).toBe(false);
-    expect(carries(change, { revision: 9, lineage: "lineage-b" })).toBe(false);
+    expect(carries(change, set(5, "lineage-a"))).toBe(true);
+    expect(carries(change, set(8, "lineage-a"))).toBe(true);
+    expect(carries(change, set(4, "lineage-a"))).toBe(false);
+    expect(carries(change, set(9, "lineage-b"))).toBe(false);
+  });
+
+  it("carries a change across a lineage change only in a set composed from the same or a later pipeline", () => {
+    const built = set(5, "lineage-a", 300);
+    expect(carries(built, set(9, "lineage-b", 300))).toBe(true);
+    expect(carries(built, set(9, "lineage-b", 301))).toBe(true);
+    expect(carries(built, set(9, "lineage-b", 299))).toBe(false);
+    // Same pipeline, registered earlier: the later registration decides.
+    expect(
+      carries(built, {
+        revision: 9,
+        lineage: "lineage-b",
+        order: { major: 300, minor: 4 },
+      }),
+    ).toBe(false);
+    // A manual hotfix has no place in main's history to compare.
+    expect(carries(built, set(9, "lineage-b"))).toBe(false);
   });
 
   it("decides by the newest unfinished one, else the newest", () => {
@@ -291,6 +345,64 @@ describe("rollUp", () => {
     expect(rollUp([])).toBe("unknown");
     expect(rollUp(["deployed", "building", "failed"])).toBe("failed");
     expect(rollUp(["deployed", "nothing_to_deploy"])).toBe("deployed");
+  });
+
+  it("is not deployed while the release carrying a failed build's change is not live", () => {
+    // Service A deployed; B's build failed and a later passing build of B
+    // carries it, but that release waits on a manual release.
+    expect(
+      commitVerdict({
+        changed: ["deployed", "waiting"],
+        failed: 1,
+        carried: 1,
+        pending: 0,
+        builds: 2,
+      }),
+    ).toBe("waiting");
+    // Once the carrying release is live, so is this commit.
+    expect(
+      commitVerdict({
+        changed: ["deployed", "deployed"],
+        failed: 1,
+        carried: 1,
+        pending: 0,
+        builds: 2,
+      }),
+    ).toBe("deployed");
+    // A failure nothing carries is still a CI failure.
+    expect(
+      commitVerdict({
+        changed: ["deployed"],
+        failed: 1,
+        carried: 0,
+        pending: 0,
+        builds: 2,
+      }),
+    ).toBe("build_failed");
+    // A carried failure whose carrying build changed nothing deploys nothing.
+    expect(
+      commitVerdict({
+        changed: [],
+        failed: 1,
+        carried: 1,
+        pending: 0,
+        builds: 1,
+      }),
+    ).toBe("nothing_to_deploy");
+  });
+
+  it("lets an environment someone must act on outrank this commit's CI failure", () => {
+    expect(rollUp(["build_failed", "recovery_required"])).toBe(
+      "recovery_required",
+    );
+    expect(rollUp(["build_failed", "failed"])).toBe("failed");
+    expect(rollUp(["build_failed", "awaiting_approval"])).toBe(
+      "awaiting_approval",
+    );
+    // A CI failure nothing carries still outranks progress and idling.
+    expect(rollUp(["build_failed", "deploying", "waiting"])).toBe(
+      "build_failed",
+    );
   });
 });
 

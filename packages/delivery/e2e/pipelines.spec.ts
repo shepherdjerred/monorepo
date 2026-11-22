@@ -36,6 +36,10 @@ test("the pipelines list leads with what needs attention and dates builds and de
   page,
 }) => {
   await page.goto("/pipelines");
+  // allTextContents does not wait; read the headings once the page has them.
+  await expect(
+    page.getByRole("main").getByRole("heading", { level: 2 }).first(),
+  ).toBeVisible();
   const order = await page
     .getByRole("main")
     .getByRole("heading", { level: 2 })

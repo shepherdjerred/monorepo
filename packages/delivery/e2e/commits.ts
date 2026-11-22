@@ -102,6 +102,11 @@ const revision = (position: number) =>
 /** The full sha of the history commit at a position, oldest first. */
 export const historySha = (position: number) => revision(position + 1);
 
+/** The commit whose only build, Birmel's, failed CI; the next commit's passed. */
+export const FAILED_POSITION = HISTORY.findIndex(
+  (commit) => commit.outcome === "failed",
+);
+
 /**
  * Birmel ships a new image every fourth commit. Its prod environment, which
  * needs a manual release, accepted the third, has the fourth queued with no
@@ -119,40 +124,78 @@ export const QUEUED_MINUTES = 50;
 export const PARTIAL_FAILURE_POSITION = 4;
 export const PARTIAL_FAILURE_REASON = `archive:arcade-client requires exact image:arcade digest sha256:${"c".repeat(64)}`;
 
-/** Arcade's build of the same commit, failed in qualification with a raw reason. */
-async function failAnotherService(
+/** The lineage Birmel's sets had before a component-list change. */
+const PREVIOUS_LINEAGE = "0".repeat(64);
+
+/**
+ * A commit whose CI failed for Golink while Birmel's change from it waits on
+ * a manual release in prod. The next commit's Golink build passed, so that
+ * failure held nothing back: the commit's headline is the manual release.
+ * Golink has no environment in the harness, so its passing build deploys
+ * nothing.
+ */
+export const CARRIED_FAILURE_POSITION = UNRELEASED_POSITION;
+export const CARRIER_POSITION = UNRELEASED_POSITION + 1;
+
+/** Another service's build of a history commit, verified or failed with a reason. */
+async function publishOther(
   delivery: Delivery,
-  sourceRevision: string,
-  pipelineNumber: number,
+  build: {
+    serviceId: string;
+    sourceRevision: string;
+    pipelineNumber: number;
+    digest: string;
+    failure?: string;
+  },
 ) {
-  const build = await delivery.publish(
+  const tag = `history/${String(build.pipelineNumber)}/${build.serviceId}`;
+  const published = await delivery.publish(
     {
-      requestId: `history/partial/arcade`,
-      serviceId: "arcade",
-      sourceRevision,
-      ciUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${String(pipelineNumber)}`,
+      requestId: tag,
+      serviceId: build.serviceId,
+      sourceRevision: build.sourceRevision,
+      ciUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${String(build.pipelineNumber)}`,
       verifiedAt: new Date().toISOString(),
       artifacts: [
         {
-          id: "history/partial/arcade-image",
+          id: `${tag}-image`,
           component: "server",
           kind: "image",
-          uri: "docker.io/shepherdjerred/arcade",
-          version: "0.9.0",
-          digest: `sha256:${"d".repeat(64)}`,
+          uri: `docker.io/shepherdjerred/${build.serviceId}`,
+          version: `0.${String(build.pipelineNumber)}.0`,
+          digest: `sha256:${build.digest.repeat(64)}`,
         },
       ],
     },
     testPublisher,
-    { repositoryId: 1, pipelineNumber },
+    { repositoryId: 1, pipelineNumber: build.pipelineNumber },
   );
   await delivery.qualify(
-    build.buildId,
-    "failed",
+    published.buildId,
+    build.failure === undefined ? "verified" : "failed",
     testExecutor,
-    PARTIAL_FAILURE_REASON,
+    build.failure,
   );
 }
+
+/** The builds of other services the history's commits carry, by position. */
+const OTHERS: Record<
+  number,
+  { serviceId: string; digest: string; failure?: string }
+> = {
+  // Arcade's build failed in qualification with a raw reason; nothing later passes.
+  [PARTIAL_FAILURE_POSITION]: {
+    serviceId: "arcade",
+    digest: "d",
+    failure: PARTIAL_FAILURE_REASON,
+  },
+  [CARRIED_FAILURE_POSITION]: {
+    serviceId: "golink",
+    digest: "e",
+    failure: "CI pipeline did not pass exact main push verification",
+  },
+  [CARRIER_POSITION]: { serviceId: "golink", digest: "f" },
+};
 
 /**
  * Give Birmel a prod environment and record where its history stands there:
@@ -232,6 +275,19 @@ export async function seedBirmelRelease(
           : {}),
       },
     });
+  // The partial-failure commit's release ran in prod first. Then a component
+  // list change started a new lineage: every set before the accepted one
+  // belongs to the previous lineage, so only the newer set's place in main's
+  // history says the accepted release still carries that change.
+  await record("birmel-first", PARTIAL_FAILURE_POSITION, "succeeded", 240);
+  await database.versionSet.updateMany({
+    where: {
+      id: {
+        in: [0, PARTIAL_FAILURE_POSITION].map((position) => setOf(position).id),
+      },
+    },
+    data: { lineage: PREVIOUS_LINEAGE },
+  });
   const accepted = await record(
     "birmel-accepted",
     ACCEPTED_POSITION,
@@ -297,8 +353,13 @@ export async function seedCommitHistory(delivery: Delivery) {
       commit.outcome ?? "verified",
       testExecutor,
     );
-    if (position === PARTIAL_FAILURE_POSITION)
-      await failAnotherService(delivery, sourceRevision, pipelineNumber);
+    const other = OTHERS[position];
+    if (other !== undefined)
+      await publishOther(delivery, {
+        ...other,
+        sourceRevision,
+        pipelineNumber,
+      });
     if (commit.title !== null)
       await delivery.recordSourceCommit({
         sourceRevision,

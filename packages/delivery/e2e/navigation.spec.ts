@@ -91,9 +91,10 @@ test("commits show their title and author, and page to older ones", async ({
   );
   await expect(arcade).toContainText("shepherdjerred");
   // A commit whose CI failed still has its title, and a title with one long
-  // unbreakable token wraps inside its row.
+  // unbreakable token wraps inside its row. The next commit passed, so the
+  // row says where its change went rather than "CI failed".
   await expect(rows.filter({ hasText: FAILED_COMMIT_TITLE })).toContainText(
-    "CI failed",
+    "Not built on its own",
   );
   await expect(recent.getByText(LONG_COMMIT_TITLE)).toBeVisible();
   await expectNoHorizontalOverflow(page);

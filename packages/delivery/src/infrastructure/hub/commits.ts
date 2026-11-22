@@ -5,7 +5,6 @@ import type {
   CommitService,
   CommitStatus,
   CommitSummary,
-  CommitVerdict,
 } from "#shared/hub/hub-contract.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
@@ -18,14 +17,15 @@ import { buildStatus } from "./status.ts";
 import { promotionOrder } from "./topology.ts";
 import { buildView, serviceSummary } from "./views.ts";
 import { latestDeployments } from "./attention.ts";
+import { carryingCommits } from "./carried.ts";
 import {
   blockingEnvironment,
   carries,
+  commitVerdict,
   decidingDeployment,
   environmentState,
   groupByEnvironment,
   isLive,
-  rollUp,
   serviceVerdict,
   verdictRank,
   type ChangeFacts,
@@ -58,6 +58,31 @@ const DEPLOYMENT_FIELDS = {
   kind: true,
   createdAt: true,
 } as const;
+
+const SET_FIELDS = {
+  id: true,
+  revision: true,
+  lineage: true,
+  orderMajor: true,
+  orderMinor: true,
+} as const;
+
+/** A set revision as the commit rules read it; a manual hotfix has no order key. */
+function setFacts(row: {
+  revision: number;
+  lineage: string;
+  orderMajor: number | null;
+  orderMinor: number | null;
+}): SetFacts {
+  return {
+    revision: row.revision,
+    lineage: row.lineage,
+    order:
+      row.orderMajor === null || row.orderMinor === null
+        ? null
+        : { major: row.orderMajor, minor: row.orderMinor },
+  };
+}
 
 /** Deployments not yet finished: queued, running or waiting for a decision. */
 const OPEN_STATUSES = ["queued", "running", "awaiting_approval"];
@@ -108,13 +133,13 @@ async function environmentRecord(
         ],
       },
     },
-    select: { id: true, revision: true, lineage: true },
+    select: SET_FIELDS,
   });
   return {
     newest,
     open,
     awaitingPlan: new Set(planned.map((row) => row.id)),
-    sets: new Map<string, SetFacts>(sets.map((row) => [row.id, row])),
+    sets: new Map<string, SetFacts>(sets.map((row) => [row.id, setFacts(row)])),
   };
 }
 
@@ -178,23 +203,36 @@ async function readCommits(
   const builds = rows.filter(
     (row) => index.byId(row.serviceId)?.id === row.serviceId,
   );
-  const buildIds = builds.map((row) => row.id);
+  const carried = await carryingCommits(
+    database,
+    builds
+      .filter((row) => buildStatus(row.status) === "failed")
+      .map((row) => row.id),
+  );
+  // The releases that carry a failed build's change decide whether the
+  // failed commit's change is live yet.
+  const carrierBuilds = await database.build.findMany({
+    where: {
+      id: {
+        in: [...carried.values()].flatMap((entry) =>
+          entry.releaseBuildId === null ? [] : [entry.releaseBuildId],
+        ),
+      },
+    },
+  });
+  const buildIds = [...builds, ...carrierBuilds].map((row) => row.id);
   const versionSets = await database.versionSet.findMany({
     where: { qualifiedBuildId: { in: buildIds } },
-    select: {
-      id: true,
-      serviceId: true,
-      revision: true,
-      lineage: true,
-      qualifiedBuildId: true,
-    },
+    select: { ...SET_FIELDS, serviceId: true, qualifiedBuildId: true },
   });
   const versionSetByBuild = new Map(
     versionSets.flatMap((row) =>
       row.qualifiedBuildId === null ? [] : [[row.qualifiedBuildId, row]],
     ),
   );
-  const serviceIds = [...new Set(builds.map((row) => row.serviceId))];
+  const serviceIds = [
+    ...new Set([...builds, ...carrierBuilds].map((row) => row.serviceId)),
+  ];
   const [sourceCommits, deployments, environments] = await Promise.all([
     database.sourceCommit.findMany({
       where: { sourceRevision: { in: shas } },
@@ -226,108 +264,144 @@ async function readCommits(
     sourceCommits.map((row) => [row.sourceRevision, row]),
   );
 
+  /** Where a passing build's change stands; null when it changed nothing. */
+  const standing = (build: (typeof rows)[number]): CommitService | null => {
+    const versionSet = versionSetByBuild.get(build.id);
+    const linked = deployments.filter(
+      (row) =>
+        row.platformSourceBuildId === build.id ||
+        row.versionSetRevisionId === versionSet?.id,
+    );
+    if (versionSet === undefined && linked.length === 0) return null;
+    const change: ChangeFacts =
+      versionSet === undefined ? null : setFacts(versionSet);
+    const candidates = environments.filter(
+      (row) =>
+        row.serviceId === build.serviceId &&
+        (versionSet !== undefined ||
+          linked.some((entry) => entry.environmentId === row.id)),
+    );
+    const live = new Set<string>();
+    const states: CommitEnvironment[] = promotionOrder(candidates).map(
+      (environment) => {
+        const accepted =
+          environment.acceptedVersionSetRevisionId === null
+            ? null
+            : record.sets.get(environment.acceptedVersionSetRevisionId);
+        if (accepted === undefined)
+          throw new Error(
+            `Environment ${environment.id} accepts a set revision not read`,
+          );
+        const deployment = carriersOf(change, environment.id, linked, record);
+        const state = environmentState({
+          change,
+          environment: {
+            id: environment.id,
+            automatic: environment.automatic,
+            promotionSourceEnvironmentId:
+              environment.promotionSourceEnvironmentId,
+            accepted,
+            locked:
+              record.newest.get(environment.id)?.recoveryRequired === true,
+          },
+          deployment,
+          sourceLive:
+            environment.promotionSourceEnvironmentId !== null &&
+            live.has(environment.promotionSourceEnvironmentId),
+        });
+        if (isLive(state)) live.add(environment.id);
+        return {
+          environmentId: environment.id,
+          name: environment.name,
+          state,
+          deploymentId: deployment?.id ?? null,
+        };
+      },
+    );
+    return {
+      service: serviceSummary(build.serviceId),
+      build: buildView(build),
+      versionSet:
+        versionSet === undefined
+          ? null
+          : { id: versionSet.id, revision: versionSet.revision },
+      verdict: serviceVerdict(
+        "succeeded",
+        states.map((entry) => entry.state),
+      ),
+      environments: states,
+    };
+  };
+
   return shas.map((sha): Read => {
     const own = builds.filter((row) => row.sourceRevision === sha);
     const changed: CommitService[] = [];
     let unchangedCount = 0;
     for (const build of own) {
-      const status = buildStatus(build.status);
-      const versionSet = versionSetByBuild.get(build.id);
-      const linked = deployments.filter(
-        (row) =>
-          row.platformSourceBuildId === build.id ||
-          row.versionSetRevisionId === versionSet?.id,
+      if (buildStatus(build.status) !== "succeeded") continue;
+      const entry = standing(build);
+      if (entry === null) unchangedCount += 1;
+      else changed.push(entry);
+    }
+    const failedBuilds = own
+      .filter((row) => buildStatus(row.status) === "failed")
+      .map((row) => buildView(row));
+    const carriedFailures = failedBuilds.flatMap((build) => {
+      const carrier = carried.get(build.id);
+      return carrier === undefined
+        ? []
+        : [{ buildId: build.id, includedIn: carrier.includedIn }];
+    });
+    // A carried failure's change ships in the first later release of the
+    // service, so that release's standing is this commit's for the service.
+    // While no later passing build has a release, it is not released.
+    for (const build of failedBuilds) {
+      const carrier = carried.get(build.id);
+      if (carrier === undefined) continue;
+      const row = carrierBuilds.find(
+        (entry) => entry.id === carrier.releaseBuildId,
       );
-      if (status !== "succeeded") continue;
-      if (versionSet === undefined && linked.length === 0) {
-        unchangedCount += 1;
-        continue;
-      }
-      const change: ChangeFacts = versionSet ?? null;
-      const candidates = environments.filter(
-        (row) =>
-          row.serviceId === build.serviceId &&
-          (versionSet !== undefined ||
-            linked.some((entry) => entry.environmentId === row.id)),
+      const entry = row === undefined ? null : standing(row);
+      changed.push(
+        row === undefined || entry === null
+          ? {
+              service: serviceSummary(build.serviceId),
+              build,
+              versionSet: null,
+              verdict: "waiting",
+              environments: [],
+              includedIn: carrier.includedIn,
+            }
+          : { ...entry, includedIn: row.sourceRevision },
       );
-      const live = new Set<string>();
-      const states: CommitEnvironment[] = promotionOrder(candidates).map(
-        (environment) => {
-          const accepted =
-            environment.acceptedVersionSetRevisionId === null
-              ? null
-              : record.sets.get(environment.acceptedVersionSetRevisionId);
-          if (accepted === undefined)
-            throw new Error(
-              `Environment ${environment.id} accepts a set revision not read`,
-            );
-          const deployment = carriersOf(change, environment.id, linked, record);
-          const state = environmentState({
-            change,
-            environment: {
-              id: environment.id,
-              automatic: environment.automatic,
-              promotionSourceEnvironmentId:
-                environment.promotionSourceEnvironmentId,
-              accepted,
-              locked:
-                record.newest.get(environment.id)?.recoveryRequired === true,
-            },
-            deployment,
-            sourceLive:
-              environment.promotionSourceEnvironmentId !== null &&
-              live.has(environment.promotionSourceEnvironmentId),
-          });
-          if (isLive(state)) live.add(environment.id);
-          return {
-            environmentId: environment.id,
-            name: environment.name,
-            state,
-            deploymentId: deployment?.id ?? null,
-          };
-        },
-      );
-      changed.push({
-        service: serviceSummary(build.serviceId),
-        build: buildView(build),
-        versionSet:
-          versionSet === undefined
-            ? null
-            : { id: versionSet.id, revision: versionSet.revision },
-        verdict: serviceVerdict(
-          status,
-          states.map((entry) => entry.state),
-        ),
-        environments: states,
-      });
     }
     changed.sort(
       (left, right) =>
         verdictRank(left.verdict) - verdictRank(right.verdict) ||
         left.service.title.localeCompare(right.service.title),
     );
-    const failedBuilds = own
-      .filter((row) => buildStatus(row.status) === "failed")
-      .map((row) => buildView(row));
     const pendingBuilds = own
       .filter((row) => buildStatus(row.status) === "pending")
       .map((row) => buildView(row));
-    const parts: CommitVerdict[] = changed.map((entry) => entry.verdict);
-    if (failedBuilds.length > 0) parts.push("build_failed");
-    if (pendingBuilds.length > 0) parts.push("building");
-    if (own.length > 0 && parts.length === 0) parts.push("nothing_to_deploy");
     return {
       status: {
         sha,
         title: sourceBySha.get(sha)?.title ?? null,
         author: sourceBySha.get(sha)?.author ?? null,
-        verdict: rollUp(parts),
+        verdict: commitVerdict({
+          changed: changed.map((entry) => entry.verdict),
+          failed: failedBuilds.length,
+          carried: carriedFailures.length,
+          pending: pendingBuilds.length,
+          builds: own.length,
+        }),
         buildId: own[0]?.id ?? null,
         environments: groupByEnvironment(changed),
         seenAt: own[0]?.createdAt.toISOString() ?? null,
         changed,
         unchangedCount,
         failedBuilds,
+        carriedFailures,
         pendingBuilds,
         blocker: blockingEnvironment(changed),
       },
@@ -384,6 +458,7 @@ function summary(status: CommitStatus, firstSeenAt: Date): CommitSummary {
     liveCount: status.changed.filter((entry) => entry.verdict === "deployed")
       .length,
     failedBuildCount: status.failedBuilds.length,
+    carriedFailures: status.carriedFailures ?? [],
     blocker: status.blocker,
   };
 }

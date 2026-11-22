@@ -6,8 +6,18 @@ import type {
   PipelineStatus,
 } from "#shared/hub/hub-contract.ts";
 
-/** A set revision as far as liveness is concerned. */
-export type SetFacts = { revision: number; lineage: string };
+/** Where an automatic set revision sits in main's history: its build's pipeline, then registration. */
+export type OrderKey = { major: number; minor: number };
+
+/**
+ * A set revision as far as liveness is concerned. `order` is null for a
+ * manual hotfix, which no main pipeline composed.
+ */
+export type SetFacts = {
+  revision: number;
+  lineage: string;
+  order: OrderKey | null;
+};
 
 /** The version set a build produced; null for a platform change. */
 export type ChangeFacts = SetFacts | null;
@@ -33,9 +43,23 @@ export type DeploymentFacts = {
   delivers: boolean;
 };
 
-/** Whether a set revision includes a change: the same or a later revision of its lineage. */
+/**
+ * Whether a set revision includes a change: the same or a later revision of
+ * its lineage, or, across a lineage change, an automatic set composed from
+ * the same or a later main pipeline. A component-list change starts a new
+ * lineage whose first set carries the accepted one forward, and automatic
+ * composition never goes below the live set's order key, so a later key
+ * holds the change's artifacts or newer builds of the same components.
+ */
 export function carries(change: SetFacts, set: SetFacts) {
-  return set.lineage === change.lineage && set.revision >= change.revision;
+  if (set.lineage === change.lineage) return set.revision >= change.revision;
+  return (
+    change.order !== null &&
+    set.order !== null &&
+    (set.order.major === change.order.major
+      ? set.order.minor >= change.order.minor
+      : set.order.major > change.order.major)
+  );
 }
 
 const OPEN: ReadonlySet<PipelineStatus> = new Set([
@@ -139,11 +163,14 @@ export function isLive(state: CommitEnvironmentState) {
 }
 
 // Most urgent first: a failure outranks progress, progress outranks idling.
+// An environment someone must act on (recover it, look at a failed
+// deployment, approve one) outranks this commit's own CI failure, which only
+// held back the services that failed.
 const VERDICT_PRIORITY: CommitVerdict[] = [
-  "build_failed",
   "recovery_required",
   "failed",
   "awaiting_approval",
+  "build_failed",
   "building",
   "deploying",
   "waiting",
@@ -161,6 +188,27 @@ export function rollUp(parts: CommitVerdict[]): CommitVerdict {
   return (
     VERDICT_PRIORITY.find((verdict) => parts.includes(verdict)) ?? "unknown"
   );
+}
+
+/**
+ * A commit's verdict. `changed` holds the verdict of every service it
+ * changed, including, for each failed build a later passing commit carries,
+ * that carrying build's release: the change ships there, so it counts as
+ * this commit's until that release is live. A carried failure is therefore
+ * not also a CI failure; only failures nothing carries are.
+ */
+export function commitVerdict(input: {
+  changed: CommitVerdict[];
+  failed: number;
+  carried: number;
+  pending: number;
+  builds: number;
+}): CommitVerdict {
+  const parts = [...input.changed];
+  if (input.failed > input.carried) parts.push("build_failed");
+  if (input.pending > 0) parts.push("building");
+  if (input.builds > 0 && parts.length === 0) parts.push("nothing_to_deploy");
+  return rollUp(parts);
 }
 
 /** The verdict one environment's state contributes to its service and commit. */

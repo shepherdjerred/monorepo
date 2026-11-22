@@ -121,16 +121,29 @@ A commit has one build per service, but only a build that produced a version
 set (or a platform deployment) changed anything. `GET /api/v1/commits` and
 `GET /api/v1/commits/:sha` (a full sha or an unambiguous prefix of at least
 seven digits) answer "is it deployed?" from those rows alone. An environment
-has the change when its accepted selection is the same or a later revision of
-the same lineage. Otherwise the deployments that would deliver it, of its set
-revision or a later one of the lineage, decide: it is `deploying` only while
+has the change when its accepted selection includes it: the same or a later
+revision of the same lineage, or, across a component-list change that started
+a new lineage, an automatic set whose order key (its main pipeline) is at or
+past the change's. Otherwise the deployments that would deliver it, of its set
+revision or a later one that includes it, decide: it is `deploying` only while
 one is queued or running. With none in flight it names why: recovery required
 (the environment's newest deployment locked it), awaiting approval, failed,
-canceled, replaced, waiting for the environment it promotes from, not started
-(automatic) or needs a manual release. A commit's verdict is the most urgent
-of its services, then of its builds: CI failed, recovery required, failed,
-needs approval, CI running, deploying, not released, deployed; its `blocker`
-names the environment that verdict came from. The response also regroups the
+canceled, replaced (by a release that does not include it), waiting for the
+environment it promotes from, not started (automatic) or needs a manual
+release. A failed build is carried when a later main commit's build of the
+same service passed: main is linear, so that commit includes this one and
+shipped its change. A commit's place on main is its push pipeline, so a rerun
+of an older commit never carries a newer failure. `carriedFailures` names the
+carrying commit. A carried failure is not a CI failure of the commit; instead
+the first later release of the service (the first later passing build that
+composed a set or has a platform deployment, since a build a newer verified
+one supersedes composes nothing) joins `changed`, marked `includedIn`, so the
+commit is not deployed until that release is live. While no later release
+exists the service reads not released. A
+commit's verdict is the most urgent of its services, then of its builds:
+recovery required, failed, needs approval, CI failed (with nothing carrying
+it), CI running, deploying, not released, deployed; its `blocker` names the
+environment that verdict came from. The response also regroups the
 same rows by environment name, `prod` first, so a commit that touches many
 services still answers "is it in prod?" as one count with its stragglers
 named. The pure rules live in `src/infrastructure/hub/commit-status.ts`.
