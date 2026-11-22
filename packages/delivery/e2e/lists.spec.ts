@@ -186,8 +186,9 @@ test("paging moves to the top of the list and back to the newest", async ({
   await expect(page).toHaveURL(/\/activity\?cursor=/u);
   const top = page.getByRole("heading", { level: 2, name: "Audit trail" });
   await expect(top).toBeFocused();
+  // Rows that fold several entries are counted as rows, the entries beside them.
   await expect(page.getByRole("main").getByRole("status")).toContainText(
-    "older entries",
+    /older (?:entries|rows of \d+ entries)/u,
   );
   await pages.getByRole("link", { name: "Newest" }).click();
   await expect(page).toHaveURL(/\/activity$/u);
