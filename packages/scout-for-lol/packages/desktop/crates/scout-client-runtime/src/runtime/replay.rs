@@ -95,7 +95,10 @@ pub(super) async fn upload_new_replays(
     };
     for entry in std::fs::read_dir(replay_path).map_err(|error| error.to_string())? {
         let entry = entry.map_err(|error| error.to_string())?;
-        match scan_replay_entry(backend, outbox, credential, diagnostics, &entry).await? {
+        let now_millis = chrono::Utc::now().timestamp_millis();
+        match scan_replay_entry(backend, outbox, credential, diagnostics, &entry, now_millis)
+            .await?
+        {
             ReplayDelivery::Settled | ReplayDelivery::Deferred => {}
             ReplayDelivery::Unresolved(detail) => {
                 scan_error.get_or_insert(detail);
@@ -112,12 +115,17 @@ pub(super) async fn upload_new_replays(
 ///
 /// Entries that are not finished replays are reported as `Settled`: there is
 /// nothing to deliver and nothing to report.
+///
+/// A file whose rejection has lapsed (see
+/// [`scout_client_core::outbox::REPLAY_REJECTION_RECHECK_MILLIS`]) is neither
+/// skipped by its file identity nor by its digest, so it is offered again.
 pub(super) async fn scan_replay_entry(
     backend: &ScoutBackendClient,
     outbox: &ObservationOutbox,
     credential: &DeviceCredential,
     diagnostics: &Diagnostics,
     entry: &std::fs::DirEntry,
+    now_millis: i64,
 ) -> Result<ReplayDelivery, String> {
     {
         if !entry
@@ -160,14 +168,14 @@ pub(super) async fn scan_replay_entry(
         )
         .map_err(|_| "Replay modification time is outside the supported range".to_owned())?;
         if outbox
-            .replay_file_handled(&path_key, bytes, modified_at_millis)
+            .replay_file_handled(&path_key, bytes, modified_at_millis, now_millis)
             .map_err(|error| error.to_string())?
         {
             return Ok(ReplayDelivery::Settled);
         }
         let digest = replay_sha256(path.clone()).await?;
         if outbox
-            .replay_handled(&digest)
+            .replay_handled(&digest, now_millis)
             .map_err(|error| error.to_string())?
         {
             outbox
@@ -176,7 +184,7 @@ pub(super) async fn scan_replay_entry(
             return Ok(ReplayDelivery::Settled);
         }
         if !outbox
-            .replay_retry_due(&digest, chrono::Utc::now().timestamp_millis())
+            .replay_retry_due(&digest, now_millis)
             .map_err(|error| error.to_string())?
         {
             return Ok(ReplayDelivery::Deferred);
@@ -218,7 +226,7 @@ pub(super) const REPLAY_DEFERRAL_ATTENTION_ATTEMPTS: i64 = 5;
 pub(super) enum ReplayOfferOutcome {
     /// The server wants it; upload.
     Send,
-    /// Nothing more to do for this file, now or ever.
+    /// Nothing more to do for this file until a lapsed rejection is re-checked.
     Settled,
     /// Ask again on a later scan.
     Deferred,
@@ -423,7 +431,8 @@ pub(super) fn apply_offer_decision(
     }
 }
 
-/// Write the terminal receipt that stops a replay being offered ever again.
+/// Record the server's "never" so the file is not offered again until the
+/// re-check interval lapses (`REPLAY_REJECTION_RECHECK_MILLIS`).
 pub(super) fn abandon_replay(
     outbox: &ObservationOutbox,
     candidate: &ReplayCandidate<'_>,
@@ -445,7 +454,7 @@ pub(super) struct ReplayCandidate<'a> {
 
 /// What one upload attempt settled.
 pub(super) enum ReplayDelivery {
-    /// Stored or permanently rejected; the file needs no further attention.
+    /// Stored or rejected; the file needs no attention until a re-check.
     Settled,
     /// The backend said "not yet"; leave the file for a later scan.
     Deferred,
@@ -706,6 +715,7 @@ mod tests {
     use scout_client_core::diagnostics::DiagnosticOutcome;
     use scout_client_core::diagnostics::Diagnostics;
 
+    use super::super::mock_lcu::MockLcu;
     use uuid::Uuid;
 
     #[test]
@@ -817,6 +827,111 @@ mod tests {
         assert_eq!(replay_platform_id(Path::new("5565990955.rofl")), None);
         assert_eq!(replay_platform_id(Path::new("replay.rofl")), None);
         assert_eq!(replay_platform_id(Path::new("TOOLONG1-123.rofl")), None);
+    }
+
+    /// The server's answer to every offer of `game_id` from now on.
+    fn answer_offer(server: &MockLcu, game_id: &str, decision: &str) {
+        server.answer(
+            &format!("/api/scout-client/v1/replays/{game_id}/offer"),
+            200,
+            &serde_json::json!({ "decision": decision }),
+        );
+    }
+
+    #[tokio::test]
+    async fn a_lapsed_rejection_is_offered_again_and_uploaded_only_when_wanted()
+    -> Result<(), Box<dyn std::error::Error>> {
+        use scout_client_core::outbox::REPLAY_REJECTION_RECHECK_MILLIS;
+
+        let directory = std::env::temp_dir().join(format!("scout-recheck-{}", Uuid::new_v4()));
+        std::fs::create_dir_all(&directory)?;
+        let game_id = "5565990955";
+        let replay = directory.join(format!("NA1-{game_id}.rofl"));
+        let contents = b"scout replay fixture";
+        std::fs::write(&replay, contents)?;
+        // Only a file left alone for 30 seconds is a finished replay.
+        std::fs::File::options()
+            .write(true)
+            .open(&replay)?
+            .set_modified(std::time::SystemTime::now() - Duration::from_secs(60))?;
+        let digest = replay_sha256(replay.clone()).await?;
+
+        let server = MockLcu::start().await?;
+        let offer = format!("/api/scout-client/v1/replays/{game_id}/offer");
+        let upload = format!("/api/scout-client/v1/replays/{game_id}");
+        let backend = ScoutBackendClient::new(&server.origin())?;
+        let outbox = ObservationOutbox::open(directory.join("outbox.db"))?;
+        let credential = DeviceCredential {
+            device_id: Uuid::new_v4(),
+            token: "token".to_owned(),
+        };
+        let diagnostics = Diagnostics::in_memory();
+        let scan = |now_millis: i64| {
+            let (backend, outbox, credential, diagnostics, directory) =
+                (&backend, &outbox, &credential, &diagnostics, &directory);
+            async move {
+                let mut outcomes = Vec::new();
+                for entry in std::fs::read_dir(directory)? {
+                    let outcome = scan_replay_entry(
+                        backend,
+                        outbox,
+                        credential,
+                        diagnostics,
+                        &entry?,
+                        now_millis,
+                    )
+                    .await?;
+                    outcomes.push(matches!(outcome, ReplayDelivery::Settled));
+                }
+                Ok::<_, Box<dyn std::error::Error>>(outcomes)
+            }
+        };
+        let interval = REPLAY_REJECTION_RECHECK_MILLIS;
+
+        // The backend has not deployed its reopen yet: the offer is refused.
+        answer_offer(&server, game_id, "never");
+        let start = chrono::Utc::now().timestamp_millis();
+        scan(start).await?;
+        assert_eq!((server.requests(&offer), server.requests(&upload)), (1, 0));
+
+        // Within the interval the file is settled without a request.
+        scan(start).await?;
+        scan(start + interval - 2_000).await?;
+        assert_eq!((server.requests(&offer), server.requests(&upload)), (1, 0));
+
+        // Once it lapses the scan asks again — the offer only, no bytes — and
+        // a repeat refusal starts a fresh interval.
+        scan(start + interval + 1).await?;
+        assert_eq!((server.requests(&offer), server.requests(&upload)), (2, 0));
+        let refused_again = chrono::Utc::now().timestamp_millis();
+        scan(refused_again + interval - 2_000).await?;
+        assert_eq!((server.requests(&offer), server.requests(&upload)), (2, 0));
+
+        // The backend reopens the replay. The next re-check offer is wanted,
+        // and only then is the file uploaded.
+        answer_offer(&server, game_id, "want");
+        server.answer(
+            &upload,
+            200,
+            &serde_json::json!({
+                "outcome": "accepted",
+                "digest": digest,
+                "bytes": contents.len(),
+            }),
+        );
+        scan(refused_again + interval + 1).await?;
+        assert_eq!((server.requests(&offer), server.requests(&upload)), (3, 1));
+        assert!(outbox.replay_uploaded(&digest)?);
+
+        // Stored is final: no later scan asks again.
+        scan(refused_again + 10 * interval).await?;
+        assert_eq!((server.requests(&offer), server.requests(&upload)), (3, 1));
+        let inventory = outbox.replay_inventory(10)?;
+        assert_eq!(inventory.len(), 1);
+        assert_eq!(inventory[0].state, "uploaded");
+
+        std::fs::remove_dir_all(&directory)?;
+        Ok(())
     }
 
     #[tokio::test]

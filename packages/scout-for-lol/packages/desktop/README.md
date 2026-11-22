@@ -941,7 +941,13 @@ Each entity is read at most once a pass. The player's Clash history names
 every tournament they entered, and the League client answers `400 Bad
 Request` for one that is no longer running, so a refusal (a 4xx other than a
 timeout or rate limit) is final for that ID until a payload naming it changes;
-asking again every pass was about a thousand refused requests a minute. A bare
+asking again every pass was about a thousand refused requests a minute. The
+refusal and the SHA-256 fingerprint of the payloads that named the ID are kept
+in the outbox (`refused_clash_read`), so a restart with unchanged payloads asks
+none of them again; held only in memory, every start re-asked each past
+tournament once. A refusal is forgotten when the League client answers the
+read, and kept while no payload names its ID, since a fresh start may not have
+read the history yet. A bare
 ID list (`current-tournament-ids`, `invited-roster-ids`) counts only for its
 own kind. `runtime/mock_lcu.rs` is the loopback League client these tests run
 against.
@@ -997,13 +1003,23 @@ a normalized scoreboard even when these fragments cannot form a complete
 Match-V5 document. After pairing, the approval page links to recovered games.
 
 Existing local replay files are offered independently. Temporary server
-deferrals remain retryable, with backoff up to one hour. Permanent server
-validation rejections remain terminal. One-time outbox migrations
-(`client_migration`) offer a file again when the rule that settled it was
-wrong: files older builds abandoned for missing evidence, and files the
-backend's replay validator refused before it understood patch 16.21's tagged
-chunks and remakes' `LeaverFail` (rejections kept as 400, 403 or 409). The
-client does not download replays.
+deferrals remain retryable, with backoff up to one hour. A rejection the
+server can revisit — an upload refused with 400 or 403, or an offer answered
+"never" (kept as 409) — stands for one day
+(`REPLAY_REJECTION_RECHECK_MILLIS`), after which the scan offers the file
+again: neither its digest receipt nor its cached file identity skips it. The
+re-check is an offer, with no file bytes; the file is uploaded only if the
+server answers "want", and a repeat refusal restarts the day. A server-side
+reopen therefore reaches every device within a day of deploying, with no
+client migration. A file too large (413) or not a replay (415) is final.
+
+Two one-time outbox migrations (`client_migration`) predate the re-check and
+remain for devices that have not run them: they re-offered files older builds
+abandoned for missing evidence, and files the backend's replay validator
+refused before it understood patch 16.21's tagged chunks and remakes'
+`LeaverFail`. A device whose migration ran before the backend had deployed its
+reopen picks the reopen up at the next re-check. The client does not download
+replays.
 
 ## Which games get reported
 
