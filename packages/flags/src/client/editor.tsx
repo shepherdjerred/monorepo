@@ -74,13 +74,14 @@ export function Editor({
     if (dialog !== null && !dialog.open) dialog.showModal();
   }
 
-  function onDialogClose() {
-    const dialog = dialogRef.current;
-    if (dialog === null || draft === undefined) return;
-    const value = dialog.returnValue;
-    dialog.returnValue = "";
-    if (value !== "save" || saving.current) return;
+  function confirmSave() {
+    dialogRef.current?.close();
+    if (draft === undefined || saving.current) return;
     void save(draft);
+  }
+
+  function cancelReview() {
+    dialogRef.current?.close();
   }
 
   async function save(flag: FlagValue) {
@@ -168,7 +169,6 @@ export function Editor({
         ref={dialogRef}
         className="fl-dialog"
         aria-labelledby="save-title"
-        onClose={onDialogClose}
       >
         <h2 id="save-title" className="fl-dialog-title">
           Save <span className="ui-mono">{flagKey}</span>
@@ -183,14 +183,19 @@ export function Editor({
             <pre>{flagText(draft)}</pre>
           </section>
         </div>
-        <form method="dialog" className="fl-dialog-actions">
-          <Button type="submit" value="cancel">
+        <div className="fl-dialog-actions">
+          <Button type="button" value="cancel" onClick={cancelReview}>
             Cancel
           </Button>
-          <Button type="submit" value="save" variant="primary">
+          <Button
+            type="button"
+            value="save"
+            variant="primary"
+            onClick={confirmSave}
+          >
             Save
           </Button>
-        </form>
+        </div>
       </dialog>
     </section>
   );
