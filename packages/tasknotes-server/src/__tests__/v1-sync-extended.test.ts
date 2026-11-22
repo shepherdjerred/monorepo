@@ -6,8 +6,8 @@ import {
   tasksDeletedTotal,
   tasksUpdatedTotal,
 } from "../metrics.ts";
-import { InMemoryFacetStore } from "../v1/in-memory-store.ts";
-import { sanitizeSavepointName } from "../v1/prisma-helpers.ts";
+import { InMemoryFacetStore } from "../v1/stores/in-memory-store.ts";
+import { sanitizeSavepointName } from "../v1/stores/prisma-helpers.ts";
 import { v1Routes } from "../v1/routes.ts";
 
 const TaskWireSchema = z.object({

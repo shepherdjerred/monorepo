@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { Hono } from "hono";
 import { z } from "zod";
-import { InMemoryFacetStore } from "../v1/in-memory-store.ts";
+import { InMemoryFacetStore } from "../v1/stores/in-memory-store.ts";
 import { v1Routes } from "../v1/routes.ts";
 
 const SyncResponseSchema = z.object({

@@ -9,6 +9,14 @@ import type {
   Section,
   Task,
 } from "../protocol/generated.ts";
+import type {
+  ApiTokenSummary,
+  AuditContext,
+  AuthenticatedApiToken,
+  CreateApiTokenInput,
+  ListMutationsFilter,
+  MutationPage,
+} from "./auth-types.ts";
 
 export class EntityNotFoundError extends Error {
   readonly entity: string;
@@ -184,6 +192,8 @@ export type ListFiltersFilter = BaseListFilter;
 
 export type FacetStore = {
   readonly getNow: () => Date;
+  readonly withAuditContext: (ctx: AuditContext | undefined) => FacetStore;
+  readonly getAuditContext: () => AuditContext | undefined;
   readonly transaction: <T>(fn: (tx: FacetStore) => Promise<T>) => Promise<T>;
   readonly runInSavepoint: <T>(
     name: string,
@@ -204,6 +214,24 @@ export type FacetStore = {
     status: string,
     resultId?: string | null,
   ) => Promise<void>;
+
+  readonly createApiToken: (
+    data: CreateApiTokenInput,
+  ) => Promise<ApiTokenSummary>;
+  readonly listApiTokens: (
+    userId: string,
+    options?: { includeRevoked?: boolean | undefined },
+  ) => Promise<ApiTokenSummary[]>;
+  readonly revokeApiToken: (
+    id: string,
+    userId: string,
+  ) => Promise<ApiTokenSummary | null>;
+  readonly authenticateApiToken: (
+    tokenHash: string,
+  ) => Promise<AuthenticatedApiToken | null>;
+  readonly listMutations: (
+    filter: ListMutationsFilter,
+  ) => Promise<MutationPage>;
 
   readonly countActiveTasks: () => Promise<number>;
   readonly getAttachment: (
@@ -239,6 +267,7 @@ export type FacetStore = {
     data: UpdateSectionInput,
   ) => Promise<Section | null>;
   readonly deleteSection: (id: string, userId: string) => Promise<boolean>;
+  readonly getSection: (id: string, userId?: string) => Promise<Section | null>;
   readonly listSections: (filter: ListSectionsFilter) => Promise<Section[]>;
 
   readonly createLabel: (data: CreateLabelInput) => Promise<Label>;
@@ -248,6 +277,7 @@ export type FacetStore = {
     data: UpdateLabelInput,
   ) => Promise<Label | null>;
   readonly deleteLabel: (id: string, userId: string) => Promise<boolean>;
+  readonly getLabel: (id: string, userId?: string) => Promise<Label | null>;
   readonly listLabels: (filter: ListLabelsFilter) => Promise<Label[]>;
 
   readonly createReminder: (data: CreateReminderInput) => Promise<Reminder>;
@@ -257,6 +287,10 @@ export type FacetStore = {
     data: UpdateReminderInput,
   ) => Promise<Reminder | null>;
   readonly deleteReminder: (id: string, userId: string) => Promise<boolean>;
+  readonly getReminder: (
+    id: string,
+    userId?: string,
+  ) => Promise<Reminder | null>;
   readonly listReminders: (filter: ListRemindersFilter) => Promise<Reminder[]>;
 
   readonly createFilter: (data: CreateFilterInput) => Promise<Filter>;
@@ -266,5 +300,6 @@ export type FacetStore = {
     data: UpdateFilterInput,
   ) => Promise<Filter | null>;
   readonly deleteFilter: (id: string, userId: string) => Promise<boolean>;
+  readonly getFilter: (id: string, userId?: string) => Promise<Filter | null>;
   readonly listFilters: (filter: ListFiltersFilter) => Promise<Filter[]>;
 };

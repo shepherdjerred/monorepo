@@ -55,7 +55,7 @@ async function resolveTaskProjectId(
   if (inbox !== undefined) {
     return inbox.id;
   }
-  const newInbox = await tx.createProject({
+  const newInbox = await tx.withAuditContext(undefined).createProject({
     userId,
     name: "Inbox",
     isInbox: true,

@@ -1,8 +1,28 @@
 import { z } from "zod";
 import type { SyncRequest, SyncResponse } from "../protocol/generated.ts";
-import { ValidatedSyncCommandSchema } from "./schemas.ts";
+import type { MutationAction } from "./auth-types.ts";
+import {
+  ValidatedSyncCommandSchema,
+  type ValidatedSyncCommand,
+} from "./schemas.ts";
 import { commandHandlers } from "./sync-handlers.ts";
 import type { FacetStore } from "./types.ts";
+
+const SYNC_ACTION_HINTS: Partial<
+  Record<ValidatedSyncCommand["type"], MutationAction>
+> = {
+  TaskComplete: "complete",
+  TaskUncomplete: "uncomplete",
+  TaskReorder: "reorder",
+  TaskMove: "move",
+  TaskReschedule: "reschedule",
+};
+
+function syncCommandActionHint(
+  commandType: ValidatedSyncCommand["type"],
+): MutationAction | undefined {
+  return SYNC_ACTION_HINTS[commandType];
+}
 
 const ArgsTempIdSchema = z.object({
   temp_id: z.string().optional(),
@@ -56,9 +76,20 @@ async function processCommand(
   }
 
   try {
-    const outcome = await tx.runInSavepoint(queued.uuid, async () => {
+    const baseAudit = tx.getAuditContext();
+    const commandTx =
+      baseAudit === undefined
+        ? tx
+        : tx.withAuditContext({
+            ...baseAudit,
+            source: "sync",
+            commandUuid: queued.uuid,
+            actionHint: syncCommandActionHint(parsedCommand.data.type),
+          });
+
+    const outcome = await commandTx.runInSavepoint(queued.uuid, async () => {
       const handler = commandHandlers[parsedCommand.data.type];
-      return await handler(tx, userId, parsedCommand.data, {
+      return await handler(commandTx, userId, parsedCommand.data, {
         queuedTempId: queued.temp_id,
         tempIdMapping,
       });
@@ -71,7 +102,7 @@ async function processCommand(
     ) {
       tempIdMapping[outcome.tempId] = outcome.createdId;
     }
-    await tx.recordProcessedCommand(
+    await commandTx.recordProcessedCommand(
       queued.uuid,
       userId,
       "ok",

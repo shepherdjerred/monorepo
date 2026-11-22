@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
-import { InMemoryFacetStore } from "../v1/in-memory-store.ts";
+import { InMemoryFacetStore } from "../v1/stores/in-memory-store.ts";
 import { computeNextOccurrence } from "../v1/recurrence.ts";
 import { v1Routes } from "../v1/routes.ts";
 

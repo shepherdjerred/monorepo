@@ -1,18 +1,25 @@
-import type { Context, Hono } from "hono";
+import type { Hono } from "hono";
+import { requireScope, resolveRequestUserId } from "./request-context.ts";
 import type { FacetStore } from "./types.ts";
 
-export function mountAttachmentRoute(
-  app: Hono,
-  store: FacetStore,
-  getUserId: (c: Context) => string,
-): void {
+export function mountAttachmentRoute(app: Hono, store: FacetStore): void {
   app.get("/api/v1/tasks/:taskId/comments/:commentId/file", async (c) => {
+    const scopeDenied = requireScope(c, "read");
+    if (scopeDenied !== null) {
+      return scopeDenied;
+    }
+    const resolvedUser = resolveRequestUserId(c);
+    if (!resolvedUser.ok) {
+      return resolvedUser.response;
+    }
     const bytes = await store.getAttachment(
       c.req.param("taskId"),
       c.req.param("commentId"),
-      getUserId(c),
+      resolvedUser.userId,
     );
-    if (bytes === null) return c.notFound();
+    if (bytes === null) {
+      return c.notFound();
+    }
     return new Response(bytes, {
       headers: {
         "Content-Type": "application/octet-stream",
