@@ -50,7 +50,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   "s3-static-sites": "open",
   "scout-beta": "enforced",
   "scout-prod": "enforced",
-  seaweedfs: "open",
+  seaweedfs: "enforced",
   "starlight-karma-bot-beta": "enforced",
   "starlight-karma-bot-prod": "enforced",
   stash: "enforced",
