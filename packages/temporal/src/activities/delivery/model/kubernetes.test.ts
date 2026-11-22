@@ -21,6 +21,7 @@ const calls = vi.hoisted(() => {
   const updates: unknown[] = [];
   const stages: { key: string; status: string; receipt: unknown }[] = [];
   const argoResponses = new Map<string, unknown[]>();
+  const hubReleases: unknown[] = [];
   const credentialDecision: { credentialPrune: boolean | MediaIngressPruning } =
     { credentialPrune: false };
   return {
@@ -32,6 +33,8 @@ const calls = vi.hoisted(() => {
     prune: false,
     ...credentialDecision,
     credentialFailure: false,
+    hubPrune: false,
+    hubReleases,
     lapsed: false,
     refuse: false,
     failCreate: false,
@@ -143,6 +146,13 @@ vi.mock("#lib/delivery/credential-prune.ts", () => ({
   },
 }));
 
+vi.mock("#lib/delivery/alert-dashboard/prune.ts", () => ({
+  alertDashboardSyncPrunes: (release: unknown) => {
+    calls.hubReleases.push(release);
+    return Promise.resolve(calls.hubPrune);
+  },
+}));
+
 const { applySafety, sync } = await import("./kubernetes.ts");
 
 /** The forum release, its chart in a store the sync reads by version. */
@@ -172,6 +182,8 @@ afterEach(() => {
   calls.prune = false;
   calls.credentialPrune = false;
   calls.credentialFailure = false;
+  calls.hubPrune = false;
+  calls.hubReleases = [];
   calls.argoResponses.clear();
   calls.lapsed = false;
   calls.updates = [];
@@ -384,6 +396,33 @@ describe("Kubernetes steps of a forum release", () => {
     expect(calls.events.indexOf("step-sync running")).toBeLessThan(
       calls.events.findIndex((event) => event.startsWith("sync-managed")),
     );
+  });
+
+  test("the Hub route guard authorizes pruning for the rendered release", async () => {
+    const { current, recipe } = fixture();
+    calls.hubPrune = true;
+    calls.reads = [application(false), application(true)];
+    await sync(current, recipe, "step-sync");
+    expect(
+      calls.events.find((event) => event.startsWith("sync-managed")),
+    ).toContain("--prune");
+    expect(calls.hubReleases).toEqual([
+      expect.objectContaining({
+        application: "storm-forum",
+        chart: "storm-forum",
+        namespace: "storm-forum",
+        environmentId: "storm-forum/prod",
+        revision: "1.0.1",
+      }),
+    ]);
+  });
+
+  test("the Hub route guard is not consulted once another guard prunes", async () => {
+    const { current, recipe } = fixture();
+    calls.credentialPrune = true;
+    calls.reads = [application(false), application(true)];
+    await sync(current, recipe, "step-sync");
+    expect(calls.hubReleases).toEqual([]);
   });
 
   test("failed credential proof prevents the native sync", async () => {

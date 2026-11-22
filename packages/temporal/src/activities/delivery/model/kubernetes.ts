@@ -50,6 +50,8 @@ import { minecraftSyncFence } from "./minecraft-upgrade.ts";
 import { forumBaselineFence, forumSyncPrune } from "./forum-bundle.ts";
 import { credentialSyncPrunes } from "#lib/delivery/credential-prune.ts";
 import { workerSyncPrunes } from "#lib/delivery/workers/worker-prune.ts";
+import { alertDashboardSyncPrunes } from "#lib/delivery/alert-dashboard/prune.ts";
+import { renderedRelease } from "#lib/delivery/retired-route-prune.ts";
 
 const READBACK_ATTEMPTS = 120;
 const READBACK_INTERVAL_MS = 5000;
@@ -469,7 +471,8 @@ async function syncOwned(
     // A preserved world switches images only with fresh preservation proof.
     minecraftSyncFence(current, recipe);
     // A forum release replaces the prior release's terminal migration Job;
-    // a worker release removes the hosts earlier retirements scaled to zero.
+    // Hub's release removes its retired alerts and ops Ingresses; a worker
+    // release removes the hosts earlier retirements scaled to zero.
     const applicationPrune = (await forumSyncPrune(
       current,
       recipe,
@@ -485,7 +488,10 @@ async function syncOwned(
         );
     const prune =
       applicationPrune === false
-        ? await workerSyncPrunes(current, rendered, argoRequest)
+        ? (await alertDashboardSyncPrunes(
+            renderedRelease(rendered),
+            argoRequest,
+          )) || (await workerSyncPrunes(current, rendered, argoRequest))
         : applicationPrune;
     await runGuardedArgoCommand(
       [
