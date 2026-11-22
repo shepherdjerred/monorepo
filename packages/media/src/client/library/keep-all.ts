@@ -19,7 +19,7 @@ export type KeepCandidate = {
 };
 
 /** The items a run still has to keep: everything not already kept. */
-export function remaining(
+function remaining(
   candidates: readonly KeepCandidate[],
   outcomes: KeepOutcomes,
 ): KeepCandidate[] {

@@ -60,6 +60,15 @@ const REMOVALS: readonly RemovalSeed[] = [
   ["Cowboy Bebop", "grace_period", 7, null, "another member"],
 ];
 
+/**
+ * The id of the retention decision behind one removal. The removal list and
+ * the removal history both report a decision under this id, which is how a
+ * client knows a history row and a listed removal are the same thing.
+ */
+function decisionId(seedIndex: number, part: number): string {
+  return fixtureId(12, (seedIndex + 1) * 100 + part);
+}
+
 /** What one seed removes: the title itself, or episodes of one season. */
 function removedItems(
   title: Title,
@@ -118,7 +127,7 @@ export function removalList(persona: Persona): RemovalList {
       }
       const title = titleNamed(name);
       return removedItems(title, season).map((item, part) => ({
-        id: fixtureId(12, (index + 1) * 100 + part),
+        id: decisionId(index, part),
         mediaId: item.id,
         rootMediaId: title.id,
         rootTitle: title.title,
@@ -149,7 +158,11 @@ type HistorySeed = {
   edition?: string;
 };
 
-/** Removed titles, newest first, covering every state and restore outcome. */
+/**
+ * Removed titles, newest first, covering every state and restore outcome.
+ * One film has two versions set aside at once: its default version, which
+ * the removal list also holds, and a named cut, which it never does.
+ */
 const HISTORY: readonly HistorySeed[] = [
   {
     title: "The Holdovers",
@@ -159,6 +172,16 @@ const HISTORY: readonly HistorySeed[] = [
     state: "quarantined",
     restore: "recoverable",
     quarantinedDaysAgo: 2,
+  },
+  {
+    title: "The Holdovers",
+    kind: "movie",
+    reason: "owner_removed",
+    context: "household",
+    state: "quarantined",
+    restore: "recoverable",
+    quarantinedDaysAgo: 2,
+    edition: "directors_cut",
   },
   {
     title: "Hacks",
@@ -354,8 +377,28 @@ function restoreDeadline(seed: HistorySeed): string | null {
   return remaining >= 0 ? ahead(remaining * DAY) : ago(-remaining * DAY);
 }
 
+/**
+ * A set-aside default version of a whole title is a decision the removal
+ * list holds too, so its history row carries that decision's id. Every other
+ * history row is a decision the list does not hold.
+ */
+function historyId(seed: HistorySeed, index: number): string {
+  const listed = REMOVALS.findIndex(
+    (removal) =>
+      removal[0] === seed.title &&
+      removal[1] === "quarantined" &&
+      removal[5] === undefined,
+  );
+  return listed !== -1 &&
+    seed.state === "quarantined" &&
+    seed.edition === undefined &&
+    (seed.kind === "movie" || seed.kind === "series")
+    ? decisionId(listed, 0)
+    : fixtureId(13, index + 1);
+}
+
 const HISTORY_ITEMS: readonly HistoryItem[] = HISTORY.map((seed, index) => ({
-  id: fixtureId(13, index + 1),
+  id: historyId(seed, index),
   ...subject(titleNamed(seed.title), seed.kind),
   kind: seed.kind,
   edition: seed.edition ?? "default",

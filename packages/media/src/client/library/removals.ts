@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import type { z } from "zod";
 import { RemovalListSchema, type RemovalList } from "#shared/api.ts";
+import type { RemovalHistoryItemSchema } from "#shared/household/calendar.ts";
 import { readApi } from "#client/api.ts";
 import {
   removalPhase,
@@ -7,6 +9,7 @@ import {
 } from "#client/presentation/removal.ts";
 
 export type Removal = RemovalList[number];
+export type RemovedItem = z.infer<typeof RemovalHistoryItemSchema>;
 
 /**
  * Removals that are pending or can still be undone. Leaving soon lists the
@@ -88,8 +91,45 @@ export function leavingTitles(removals: readonly Removal[]): LeavingTitle[] {
 }
 
 /** Removals whose files left the library and can still be put back. */
-export function restorable(removals: readonly Removal[]): Removal[] {
+function restorable(removals: readonly Removal[]): Removal[] {
   return removals.filter(
     (removal) => removalPhase(removal.state) === "quarantined",
   );
+}
+
+/**
+ * Where the restore control goes in the removal history.
+ *
+ * The control restores a title's default version, and the removal list is
+ * what says the reader may: it holds the set-aside removals of default
+ * versions that are theirs to undo. A history row and a listed removal are
+ * the same retention decision exactly when they carry the same id, so that
+ * is the match. The title alone is not: a film's default version and one of
+ * its cuts can both be set aside, and the cut's row must not get a control
+ * that would restore the other version.
+ *
+ * `rows` are the history rows that carry the control. `unlisted` are the
+ * restorable removals no history row shown so far stands for; they are
+ * listed on their own so the action never depends on how much history has
+ * been loaded. `targets` are the titles whose default-target view the
+ * controls need.
+ */
+export function restoreControls(
+  history: readonly RemovedItem[],
+  removals: readonly Removal[],
+): { rows: ReadonlySet<string>; unlisted: Removal[]; targets: string[] } {
+  const undoable = restorable(removals);
+  const decisions = new Set(undoable.map((removal) => removal.id));
+  const rows = new Set(
+    history
+      .filter(
+        (item) => item.restoreState === "recoverable" && decisions.has(item.id),
+      )
+      .map((item) => item.id),
+  );
+  return {
+    rows,
+    unlisted: undoable.filter((removal) => !rows.has(removal.id)),
+    targets: [...new Set(undoable.map((removal) => removal.mediaId))],
+  };
 }

@@ -18,10 +18,22 @@ import { EmptyState, ErrorState } from "#client/ui/states.tsx";
 import {
   keepEach,
   keepSummary,
-  remaining,
+  type KeepCandidate,
   type KeepOutcome,
   type KeepOutcomes,
 } from "./keep-all.ts";
+import {
+  entryRows,
+  leavingEntries,
+  runDismissed,
+  runFinished,
+  runReported,
+  runStarted,
+  unkeptRows,
+  type EntryRow,
+  type KeepRuns,
+  type LeavingEntry,
+} from "./keep-run.ts";
 import styles from "./library.module.css";
 import {
   leavingTitles,
@@ -31,6 +43,8 @@ import {
 } from "./removals.ts";
 
 const cx = classNames(styles);
+
+const NO_OUTCOMES: KeepOutcomes = new Map();
 
 /** What the rows of a title are, for "Keep all 8 episodes". */
 function noun(rows: readonly LeavingRow[]): string {
@@ -47,20 +61,23 @@ function leaves(row: LeavingRow): string {
 
 function RowOutcome({
   user,
-  row,
+  shown,
   outcome,
 }: {
   user: MediaUser;
-  row: LeavingRow;
+  shown: EntryRow;
   outcome: KeepOutcome | undefined;
 }) {
   if (outcome === undefined) {
-    return (
+    // A row a run never reached, or one that started leaving since.
+    return shown.listed ? (
       <ListedMediaAction
         user={user}
-        mediaId={row.removal.mediaId}
+        mediaId={shown.row.removal.mediaId}
         action="keep"
       />
+    ) : (
+      <p className={cx("partNote")}>No longer leaving</p>
     );
   }
   if (outcome.status === "saving") {
@@ -84,84 +101,89 @@ function RowOutcome({
  * Several parts of one series leaving together: one action keeps them all,
  * by sending each part's own keep command in turn, and each part can still be
  * kept on its own.
+ *
+ * Once that action has run, everything here is about the rows it started
+ * with (`entry.run`), not the rows the list holds now: the list drops each
+ * kept row when it is read again, and the report must not shrink with it.
  */
-function Parts({ user, title }: { user: MediaUser; title: LeavingTitle }) {
-  const views = useListedTargetViews(
-    title.rows.map((row) => row.removal.mediaId),
-  );
-  const [outcomes, setOutcomes] = useState<KeepOutcomes>(new Map());
-  const [running, setRunning] = useState(false);
-  const parts = noun(title.rows);
+function Parts({
+  user,
+  name,
+  entry,
+  onKeepAll,
+  onDismiss,
+}: {
+  user: MediaUser;
+  name: string;
+  entry: LeavingEntry;
+  onKeepAll: (candidates: readonly KeepCandidate[]) => void;
+  onDismiss: () => void;
+}) {
+  const { run } = entry;
+  // What "all" means: the run's rows once there is a run, the list's before.
+  const subject = run?.title.rows ?? entry.current?.rows ?? [];
+  const outcomes = run?.outcomes ?? NO_OUTCOMES;
+  const unkept = run === null ? subject : unkeptRows(run);
+  const views = useListedTargetViews(unkept.map((row) => row.removal.mediaId));
   const candidates = views.flatMap(({ mediaId, data, error }) => {
     const view = error ?? data;
     return view === undefined ? [] : [{ mediaId, view }];
   });
-  const loaded = candidates.length === title.rows.length;
-  const todo = remaining(candidates, outcomes);
-  const done = [...outcomes.values()].filter(
-    (outcome) => outcome.status !== "saving",
-  ).length;
+  const total = subject.length;
+  const parts = noun(subject);
+  const running = run?.running === true;
   const failed = [...outcomes.values()].some(
     (outcome) => outcome.status === "failed",
   );
-  const summary = keepSummary(outcomes, title.rows.length, parts);
-
-  async function keepAll() {
-    setRunning(true);
-    await keepEach({
-      candidates,
-      previous: outcomes,
-      write: (submission) =>
-        writeTarget(user.id, submission.context, submission.command),
-      report: (mediaId, outcome) => {
-        setOutcomes((current) => new Map(current).set(mediaId, outcome));
-      },
-    });
-    setRunning(false);
-    // One refresh for the whole run: kept parts leave the list together.
-    await Promise.all(
-      ["targets", "target", "removals", "library", "requests", "activity"].map(
-        (key) => queryClient.invalidateQueries({ queryKey: [key] }),
-      ),
-    );
-  }
-
+  const settled = [...outcomes.values()].filter(
+    (outcome) => outcome.status !== "saving",
+  ).length;
+  const summary = keepSummary(outcomes, total, parts);
   return (
     <div className={cx("parts")}>
-      {todo.length > 0 && (
+      {unkept.length > 0 && (
         <button
           className="button primary"
           type="button"
-          disabled={running || !loaded}
+          disabled={running || candidates.length < unkept.length}
           onClick={() => {
-            void keepAll();
+            onKeepAll(candidates);
           }}
         >
           {running
-            ? `Keeping ${String(Math.min(done + 1, title.rows.length))} of ${String(title.rows.length)}…`
+            ? `Keeping ${String(Math.min(settled + 1, total))} of ${String(total)}…`
             : failed
-              ? `Try the ${String(todo.length)} that failed again`
-              : `Keep all ${String(title.rows.length)} ${parts}`}
+              ? `Try the ${String(unkept.length)} that failed again`
+              : `Keep all ${String(total)} ${parts}`}
         </button>
       )}
       <p className={cx("partsSummary")} role="status">
         {summary}
       </p>
+      {run !== null && !running && summary !== null && (
+        <button className="button subtle" type="button" onClick={onDismiss}>
+          Dismiss this report
+        </button>
+      )}
       <details className={cx("partsList")} open={failed ? true : undefined}>
         <summary>
-          {`${String(title.rows.length)} ${parts} of ${title.name} leaving`}
+          {run === null
+            ? `${String(total)} ${parts} of ${name} leaving`
+            : `The ${String(total)} ${parts} of ${name} in this report`}
         </summary>
         <ul>
-          {title.rows.map((row) => (
-            <li className={cx("part")} key={row.removal.id}>
+          {entryRows(entry).map((shown) => (
+            <li className={cx("part")} key={shown.row.removal.id}>
               <div>
-                <p className={cx("partName")}>{row.removal.media.title}</p>
-                <p className={cx("rowDetail")}>{leaves(row)}</p>
+                <p className={cx("partName")}>
+                  {shown.row.removal.media.title}
+                </p>
+                <p className={cx("rowDetail")}>{leaves(shown.row)}</p>
               </div>
               <RowOutcome
                 user={user}
-                row={row}
-                outcome={outcomes.get(row.removal.mediaId)}
+                shown={shown}
+                outcome={outcomes.get(shown.row.removal.mediaId)}
               />
             </li>
           ))}
@@ -171,12 +193,27 @@ function Parts({ user, title }: { user: MediaUser; title: LeavingTitle }) {
   );
 }
 
-function Title({ user, title }: { user: MediaUser; title: LeavingTitle }) {
-  const [only] = title.rows;
-  const single = title.rows.length === 1 ? only : undefined;
-  const phase = title.rows.some((row) => row.phase === "grace_period")
-    ? "grace_period"
-    : "warning_pending";
+function Entry({
+  user,
+  entry,
+  onKeepAll,
+  onDismiss,
+}: {
+  user: MediaUser;
+  entry: LeavingEntry;
+  onKeepAll: (
+    title: LeavingTitle,
+    candidates: readonly KeepCandidate[],
+  ) => void;
+  onDismiss: () => void;
+}) {
+  const { current, run } = entry;
+  // An entry is a title that is leaving, a run's report, or both.
+  const title = current ?? run?.title;
+  if (title === undefined) throw new Error("An entry with nothing to show");
+  // Without a report, one row is just that row and its own hold.
+  const single =
+    run === null && current?.rows.length === 1 ? current.rows[0] : undefined;
   return (
     <li className={cx("entry")}>
       <div className={cx("entryPoster")}>
@@ -188,15 +225,23 @@ function Title({ user, title }: { user: MediaUser; title: LeavingTitle }) {
             {title.name}
           </Link>
         </h2>
-        <p className={cx("entryState")}>
-          <StatePill
-            state={{
-              label: LEAVING_COPY[phase](title.leavesAt),
-              tone: "warn",
-            }}
-          />
-        </p>
-        {title.leavesAt === null && (
+        {current === null ? (
+          <p className={cx("rowDetail")}>None of it is leaving any more.</p>
+        ) : (
+          <p className={cx("entryState")}>
+            <StatePill
+              state={{
+                label: LEAVING_COPY[
+                  current.rows.some((row) => row.phase === "grace_period")
+                    ? "grace_period"
+                    : "warning_pending"
+                ](current.leavesAt),
+                tone: "warn",
+              }}
+            />
+          </p>
+        )}
+        {current !== null && current.leavesAt === null && (
           <p className={cx("rowDetail")}>
             The people who asked for it are being told first. It gets a date
             once they have been.
@@ -208,7 +253,16 @@ function Title({ user, title }: { user: MediaUser; title: LeavingTitle }) {
       </div>
       <div className={cx("entryAction")}>
         {single === undefined ? (
-          <Parts user={user} title={title} />
+          <Parts
+            user={user}
+            name={title.name}
+            entry={entry}
+            onKeepAll={(candidates) => {
+              // A retry is of the run's own title, not of today's list.
+              onKeepAll(run?.title ?? title, candidates);
+            }}
+            onDismiss={onDismiss}
+          />
         ) : (
           <ListedMediaAction
             user={user}
@@ -224,6 +278,8 @@ function Title({ user, title }: { user: MediaUser; title: LeavingTitle }) {
 /** What is about to leave the library, for the whole household to see. */
 export function LibraryLeaving({ user }: { user: MediaUser }) {
   const removals = useRemovals();
+  // Held here, above the list: a report must outlive the rows it is about.
+  const [runs, setRuns] = useState<KeepRuns>(new Map());
   if (removals.error !== null) {
     return (
       <ErrorState
@@ -239,7 +295,8 @@ export function LibraryLeaving({ user }: { user: MediaUser }) {
     return <RowsSkeleton label="Loading what is leaving" />;
   }
   const titles = leavingTitles(removals.data);
-  if (titles.length === 0) {
+  const entries = leavingEntries(titles, runs);
+  if (entries.length === 0) {
     return (
       <EmptyState icon={HourglassIcon} title="Nothing is leaving">
         A film or series shows here before it leaves the library, with time to
@@ -247,6 +304,32 @@ export function LibraryLeaving({ user }: { user: MediaUser }) {
       </EmptyState>
     );
   }
+
+  async function keepAll(
+    title: LeavingTitle,
+    candidates: readonly KeepCandidate[],
+  ) {
+    const root = title.rootMediaId;
+    const started = runStarted(runs, title);
+    setRuns((current) => runStarted(current, title));
+    await keepEach({
+      candidates,
+      previous: started.get(root)?.outcomes ?? NO_OUTCOMES,
+      write: (submission) =>
+        writeTarget(user.id, submission.context, submission.command),
+      report: (mediaId, outcome) => {
+        setRuns((current) => runReported(current, root, { mediaId, outcome }));
+      },
+    });
+    setRuns((current) => runFinished(current, root));
+    // One refresh for the whole run: kept parts leave the list together.
+    await Promise.all(
+      ["targets", "target", "removals", "library", "requests", "activity"].map(
+        (key) => queryClient.invalidateQueries({ queryKey: [key] }),
+      ),
+    );
+  }
+
   return (
     <>
       <p className={cx("intro")}>
@@ -256,13 +339,27 @@ export function LibraryLeaving({ user }: { user: MediaUser }) {
         under Removed.
       </p>
       <ListedTargets
-        mediaIds={titles.flatMap((title) =>
-          title.rows.map((row) => row.removal.mediaId),
-        )}
+        mediaIds={entries.flatMap((entry) => [
+          ...(entry.current?.rows ?? []).map((row) => row.removal.mediaId),
+          // A row waiting for a retry keeps its view read, listed or not.
+          ...(entry.run === null ? [] : unkeptRows(entry.run)).map(
+            (row) => row.removal.mediaId,
+          ),
+        ])}
       >
         <ul className={cx("entries")} aria-label="Leaving soon">
-          {titles.map((title) => (
-            <Title key={title.rootMediaId} user={user} title={title} />
+          {entries.map((entry) => (
+            <Entry
+              key={entry.rootMediaId}
+              user={user}
+              entry={entry}
+              onKeepAll={(title, candidates) => {
+                void keepAll(title, candidates);
+              }}
+              onDismiss={() => {
+                setRuns((current) => runDismissed(current, entry.rootMediaId));
+              }}
+            />
           ))}
         </ul>
       </ListedTargets>

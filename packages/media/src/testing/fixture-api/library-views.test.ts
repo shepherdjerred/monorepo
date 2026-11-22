@@ -3,9 +3,10 @@ import { RemovalListSchema, RequestListSchema } from "#shared/api.ts";
 import { RequestInterestListSchema } from "#shared/household/interests.ts";
 import { MovieEditionRequestListV4Schema } from "#shared/movie-editions/lifecycle/public-v4.ts";
 import { mineTitles } from "#client/library/mine-model.ts";
-import { leavingTitles, restorable } from "#client/library/removals.ts";
+import { RemovalHistoryPageSchema } from "#shared/household/calendar.ts";
+import { leavingTitles, restoreControls } from "#client/library/removals.ts";
 import { movieRequestList } from "./fixtures/movie-requests.ts";
-import { removalList } from "./fixtures/removals.ts";
+import { removalHistory, removalList } from "./fixtures/removals.ts";
 import { interestList, requestList } from "./fixtures/requests.ts";
 import { MEMBER } from "./personas.ts";
 
@@ -33,7 +34,61 @@ test("leaving soon is one entry per title, soonest first, without what already l
   expect(expanse?.rows.every((row) => !row.whole)).toBe(true);
   // The series leaves when its first episode does.
   expect(expanse?.leavesAt).toBe(expanse?.rows[0]?.removal.graceUntil);
-  expect(restorable(removals).map((removal) => removal.rootTitle)).toEqual([
+});
+
+/** The first page of the removal history, as the Removed view first has it. */
+const history = RemovalHistoryPageSchema.parse(
+  removalHistory(new URLSearchParams()),
+).items;
+
+function carrying(persona: "owner" | "member"): string[] {
+  const controls = restoreControls(
+    history,
+    RemovalListSchema.parse(removalList(persona)),
+  );
+  return history
+    .filter((item) => controls.rows.has(item.id))
+    .map((item) => `${item.title}, ${item.edition}`);
+}
+
+test("the restore control goes on the row that is the listed removal, not on another cut of the film", () => {
+  // Two versions of one film are set aside at once.
+  const holdovers = history.filter((item) => item.title === "The Holdovers");
+  expect(holdovers.map((item) => item.edition)).toEqual([
+    "default",
+    "directors_cut",
+  ]);
+  expect(new Set(holdovers.map((item) => item.mediaId)).size).toBe(1);
+  expect(holdovers.every((item) => item.restoreState === "recoverable")).toBe(
+    true,
+  );
+  // The removal list holds the default version's decision only, and the
+  // control restores the default version: one row carries it, not both.
+  expect(carrying("owner")).toEqual([
+    "The Holdovers, default",
+    "Silo, default",
+  ]);
+  // A member is listed only what they asked for.
+  expect(carrying("member")).toEqual(["Silo, default"]);
+  expect(restoreControls(history, removals).unlisted).toEqual([]);
+});
+
+test("a restorable removal the loaded history does not show keeps an entry of its own", () => {
+  const none = restoreControls([], removals);
+  expect(none.rows.size).toBe(0);
+  expect(none.unlisted.map((removal) => removal.rootTitle)).toEqual([
+    "The Holdovers",
+    "Silo",
+  ]);
+  expect(none.targets).toEqual(none.unlisted.map((removal) => removal.mediaId));
+  // A history that shows only the other cut does not stand for the listed
+  // removal of the same film.
+  const cuts = restoreControls(
+    history.filter((item) => item.edition !== "default"),
+    removals,
+  );
+  expect(cuts.rows.size).toBe(0);
+  expect(cuts.unlisted.map((removal) => removal.rootTitle)).toEqual([
     "The Holdovers",
     "Silo",
   ]);

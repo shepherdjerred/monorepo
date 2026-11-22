@@ -839,8 +839,19 @@ episodes" action (`library/keep-all.ts`), which sends the existing per-episode
 `keep` command for each in turn and reports every outcome: one failure never
 stops the rest or hides what succeeded, and trying again sends only what failed,
 repeating the same command (and so the same idempotency key) when the earlier
-result is unknown. Rows whose files have already left are not leaving; Removed
-lists them, with the restore action, from the same read.
+result is unknown. A run is about the rows it started with
+(`library/keep-run.ts`): the list is read again after every run and drops each
+kept row, so the report's counts, its per-row results and its retry come from
+the run, not from the list on screen. A report with a failure stays until the
+reader dismisses it; one that kept everything goes when its rows leave the list.
+
+Rows whose files have already left are not leaving; Removed lists them from the
+same read. `GET /removals` holds only decisions about a title's default version,
+and the restore control restores that version, so in the removal history the
+control goes on the row whose `id` is a listed removal's `id` (both are the
+retention decision's id), never on a row that merely shares its `mediaId`: a
+film's default version and one of its cuts can be set aside at the same time,
+and the cut is recovered from the title page.
 
 Shared building blocks live in `src/client/ui/`:
 

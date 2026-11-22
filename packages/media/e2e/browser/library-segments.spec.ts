@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test";
+import { RemovalListSchema } from "#shared/api.ts";
 import { requestId } from "#testing/fixture-api/fixtures/requests.ts";
 import { openAs, test, violationDetails } from "./support.ts";
 
@@ -257,19 +258,30 @@ test("Leaving soon keeps a whole series' episodes in one action and reports each
   );
 });
 
-test("Removed keeps restore for the people who may use it", async ({
-  page,
-}) => {
-  await openAs(page, "member", "/library/removed");
+/**
+ * Opens Removed, where Silo can be restored by either persona (the member
+ * asked for it) and two versions of The Holdovers are set aside at once.
+ * Returns the list and the film's two rows.
+ */
+async function openRemoved(page: Page, persona: "owner" | "member") {
+  await openAs(page, persona, "/library/removed");
   await settle(page);
   const list = page.getByRole("list", { name: "Removed" });
-  // The member asked for Silo; someone else asked for The Holdovers.
   await expect(
     entry(list, "Silo").getByRole("button", { name: "Restore to library" }),
   ).toBeVisible();
   const holdovers = entry(list, "The Holdovers");
+  await expect(holdovers).toHaveCount(2);
+  return { list, holdovers };
+}
+
+test("Removed keeps restore for the people who may use it", async ({
+  page,
+}) => {
+  const { list, holdovers } = await openRemoved(page, "member");
+  // Someone else asked for The Holdovers: neither version is theirs to restore.
   await expect(holdovers.getByRole("button")).toHaveCount(0);
-  await expect(holdovers.getByRole("link", { name: /Open/u })).toBeVisible();
+  await expect(holdovers.getByRole("link", { name: /Open/u })).toHaveCount(2);
   await expect(
     entry(list, "Moonlight").getByRole("link", { name: /Ask for it again/u }),
   ).toBeVisible();
@@ -281,13 +293,136 @@ test("Removed keeps restore for the people who may use it", async ({
   ).toHaveCount(0);
 });
 
-test("the owner can restore anything still set aside", async ({ page }) => {
-  await openAs(page, "owner", "/library/removed");
+test("restore is offered on the removal it restores, not on another cut of the film", async ({
+  page,
+}) => {
+  const { holdovers } = await openRemoved(page, "owner");
+  await allowWrites(page);
+  // The control restores the film's default version, so only that version's
+  // row may carry it.
+  await expect(
+    holdovers.getByRole("button", { name: "Restore to library" }),
+  ).toHaveCount(1);
+  const cut = holdovers.filter({ hasText: "Director's cut" });
+  await expect(cut).toHaveCount(1);
+  await expect(cut.getByRole("button")).toHaveCount(0);
+  // The other cut is recovered from the title, where versions are chosen.
+  await expect(cut.getByRole("link", { name: /Open/u })).toBeVisible();
+
+  let sent: unknown = null;
+  await page.route(/\/api\/v2\/media\/[^/]+\/commands$/u, async (route) => {
+    sent = route.request().postDataJSON();
+    await route.fulfill({
+      status: 409,
+      json: { error: { code: "conflict", message: "This title changed." } },
+    });
+  });
+  await holdovers
+    .filter({ hasNotText: "Director's cut" })
+    .getByRole("button", { name: "Restore to library" })
+    .click();
+  await expect.poll(() => sent).not.toBeNull();
+  expect(sent).toMatchObject({
+    scope: { edition: "default" },
+    command: { action: "restore" },
+  });
+});
+
+/**
+ * Answers the keep command for each episode, failing the second one while
+ * `failing` is set, and makes the removal list forget every episode kept, as
+ * the server does.
+ */
+async function partlyKeep(page: Page) {
+  const commands: string[] = [];
+  const state = { failing: true, commands, listed: -1 };
+  const kept = new Set<string>();
+  await page.route(/\/api\/v2\/media\/[^/]+\/commands$/u, async (route) => {
+    const mediaId = new URL(route.request().url()).pathname.split("/")[4] ?? "";
+    state.commands.push(mediaId);
+    if (state.failing && state.commands.length === 2) {
+      await route.fulfill({
+        status: 503,
+        json: { error: { code: "unavailable", message: "Try again later." } },
+      });
+      return;
+    }
+    kept.add(mediaId);
+    await route.fulfill({
+      json: {
+        schemaVersion: 2,
+        scope: { mediaId, edition: "default" },
+        result: { status: "completed" },
+        appliedVersions: { mediaVersion: 2, targetVersion: 5 },
+      },
+    });
+  });
+  await page.route(/\/api\/v1\/removals$/u, async (route) => {
+    const response = await route.fetch();
+    const rows = RemovalListSchema.parse(await response.json());
+    const left = rows.filter((row) => !kept.has(row.mediaId));
+    state.listed = left.filter((row) => row.rootTitle === "The Expanse").length;
+    await route.fulfill({ response, json: left });
+  });
+  return state;
+}
+
+const PARTLY_KEPT =
+  "Kept 3 of 4 episodes for 30 days. 1 could not be kept and is marked below.";
+
+/**
+ * Keeps all four episodes of The Expanse with one command failing, and
+ * waits until the list has been read again and holds only that episode.
+ */
+async function keepAllButOne(page: Page) {
+  await openAs(page, "member", "/library/leaving");
   await settle(page);
-  const list = page.getByRole("list", { name: "Removed" });
-  for (const name of ["Silo", "The Holdovers"]) {
-    await expect(
-      entry(list, name).getByRole("button", { name: "Restore to library" }),
-    ).toBeVisible();
-  }
+  await allowWrites(page);
+  const run = await partlyKeep(page);
+  const expanse = entry(
+    page.getByRole("list", { name: "Leaving soon" }),
+    "The Expanse",
+  );
+  await expanse.getByRole("button", { name: "Keep all 4 episodes" }).click();
+  await expect(expanse.getByRole("status").first()).toHaveText(PARTLY_KEPT);
+  await expect.poll(() => run.listed).toBe(1);
+  await settle(page);
+  return { run, expanse };
+}
+
+test("a partly kept series keeps its report and its retry when the list refreshes down to one episode", async ({
+  page,
+}) => {
+  const { run, expanse } = await keepAllButOne(page);
+  // Only the episode that failed is still leaving, and the report still
+  // counts the four episodes the run started with.
+  await expect(expanse.getByRole("status").first()).toHaveText(PARTLY_KEPT);
+  await expect(expanse.getByText("Kept for 30 days")).toHaveCount(3);
+  await expect(expanse.getByText("Not kept: Try again later.")).toBeVisible();
+  expect(await violationDetails(page)).toEqual([]);
+
+  // The retry is still there, and still sends only what failed.
+  run.failing = false;
+  await expanse
+    .getByRole("button", { name: "Try the 1 that failed again" })
+    .click();
+  await expect.poll(() => run.commands.length).toBe(5);
+  expect(run.commands[4]).toBe(run.commands[1]);
+  // Fully kept, the series leaves the list and takes its report with it.
+  await expect(expanse).toHaveCount(0);
+});
+
+test("dismissing a keep-all report shows what is still leaving", async ({
+  page,
+}) => {
+  const { expanse } = await keepAllButOne(page);
+  await expanse.getByRole("button", { name: "Dismiss this report" }).click();
+  await expect(expanse.getByText(PARTLY_KEPT)).toHaveCount(0);
+  // One episode is left, with its own hold.
+  await expect(
+    expanse.getByRole("button", { name: "Keep for 30 days" }),
+  ).toBeVisible();
+  await expect(expanse.getByRole("button", { name: /Try the/u })).toHaveCount(
+    0,
+  );
 });

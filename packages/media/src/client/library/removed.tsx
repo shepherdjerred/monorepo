@@ -1,11 +1,11 @@
 import { ArchiveIcon } from "lucide-react";
-import type { z } from "zod";
 import { Link } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
+import { RemovalHistoryPageSchema } from "#shared/household/calendar.ts";
 import {
-  RemovalHistoryPageSchema,
-  type RemovalHistoryItemSchema,
-} from "#shared/household/calendar.ts";
+  MovieEditionKeySchema,
+  movieEditionDisplayLabel,
+} from "#shared/movie-editions/registry.ts";
 import { readApi } from "#client/api.ts";
 import {
   REMOVAL_REASON_COPY,
@@ -23,15 +23,27 @@ import { RowsSkeleton } from "#client/ui/skeleton.tsx";
 import { EmptyState, ErrorState } from "#client/ui/states.tsx";
 import { useCursorList } from "#client/ui/use-cursor-list.ts";
 import styles from "./library.module.css";
-import { restorable, useRemovals, type Removal } from "./removals.ts";
+import {
+  restoreControls,
+  useRemovals,
+  type Removal,
+  type RemovedItem as Removed,
+} from "./removals.ts";
 
 const cx = classNames(styles);
 
-type Removed = z.infer<typeof RemovalHistoryItemSchema>;
-
-/** "Film", "Season 2", or "Season 2, episode 4: Headspace". */
+/**
+ * "Film", "Film, Director's cut", "Season 2", or "Season 2, episode 4:
+ * Headspace". A named cut is named, because the same film's default version
+ * can be in the list beside it; the default version is just the film.
+ */
 function part(item: Removed): string {
-  if (item.seasonNumber === null) return REMOVED_KIND_COPY[item.kind];
+  if (item.seasonNumber === null) {
+    const edition = MovieEditionKeySchema.parse(item.edition);
+    return edition === "default"
+      ? REMOVED_KIND_COPY[item.kind]
+      : `${REMOVED_KIND_COPY[item.kind]}, ${movieEditionDisplayLabel(edition)}`;
+  }
   return item.episodeNumber === null
     ? `Season ${String(item.seasonNumber)}`
     : `Season ${String(item.seasonNumber)}, episode ${String(item.episodeNumber)}: ${item.title}`;
@@ -61,7 +73,10 @@ function Row({
 }: {
   user: MediaUser;
   item: Removed;
-  /** The reader may put it back: it is on their own list of removals. */
+  /**
+   * This row is a removal the reader may undo with the restore control: the
+   * same decision is on their list of removals (`restoreControls`).
+   */
   canRestore: boolean;
 }) {
   const name = item.seriesTitle ?? item.title;
@@ -187,17 +202,8 @@ export function LibraryRemoved({ user }: { user: MediaUser }) {
   if (history.pending || removals.data === undefined) {
     return <RowsSkeleton label="Loading what was removed" />;
   }
-  const undoable = restorable(removals.data);
-  const undoableIds = new Set(undoable.map((removal) => removal.mediaId));
-  const listedIds = new Set(
-    history.items
-      .filter((item) => item.restoreState === "recoverable")
-      .map((item) => item.mediaId),
-  );
-  const unlisted = undoable.filter(
-    (removal) => !listedIds.has(removal.mediaId),
-  );
-  if (history.items.length === 0 && unlisted.length === 0) {
+  const restore = restoreControls(history.items, removals.data);
+  if (history.items.length === 0 && restore.unlisted.length === 0) {
     return (
       <EmptyState icon={ArchiveIcon} title="Nothing has been removed">
         When a film or series leaves the library, the record of it stays here,
@@ -213,9 +219,9 @@ export function LibraryRemoved({ user }: { user: MediaUser }) {
         or the library owner; after that, asking for it again starts a new
         search.
       </p>
-      <ListedTargets mediaIds={[...undoableIds]}>
+      <ListedTargets mediaIds={restore.targets}>
         <ul className={cx("entries")} aria-label="Removed">
-          {unlisted.map((removal) => (
+          {restore.unlisted.map((removal) => (
             <Unlisted key={removal.id} user={user} removal={removal} />
           ))}
           {history.items.map((item) => (
@@ -223,10 +229,7 @@ export function LibraryRemoved({ user }: { user: MediaUser }) {
               key={item.id}
               user={user}
               item={item}
-              canRestore={
-                item.restoreState === "recoverable" &&
-                undoableIds.has(item.mediaId)
-              }
+              canRestore={restore.rows.has(item.id)}
             />
           ))}
         </ul>
