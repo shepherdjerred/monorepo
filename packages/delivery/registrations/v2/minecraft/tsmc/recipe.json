@@ -1,5 +1,5 @@
 {
-  "id": "minecraft-tsmc/8",
+  "id": "minecraft-tsmc/9",
   "definition": {
     "kind": "compound",
     "subRecipes": [
@@ -78,6 +78,7 @@
             "metadata": {
               "labels": { "ci.sjer.red/managed-application": "true" },
               "annotations": {
+                "argocd.argoproj.io/compare-options": "ServerSideDiff=false",
                 "argocd.argoproj.io/sync-options": "Prune=false",
                 "ci.sjer.red/application-lifecycle": "retain"
               },
