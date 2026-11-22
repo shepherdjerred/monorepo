@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   APP_HOSTS,
+  CONSOLE_LINKS,
   TOOL_HOSTS,
   argocdApplicationLink,
   chartmuseumChartLink,
@@ -26,6 +27,17 @@ describe("tool links", () => {
       expect(new URL(host).protocol).toBe("https:");
       expect(host.endsWith("/")).toBe(false);
     }
+  });
+
+  it("lists each console link once, as an https URL", () => {
+    const ids = CONSOLE_LINKS.map((link) => link.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const link of CONSOLE_LINKS) {
+      expect(new URL(link.url).protocol).toBe("https:");
+    }
+    expect(CONSOLE_LINKS.find((link) => link.id === "posthog")?.url).toBe(
+      "https://us.posthog.com/project/549883",
+    );
   });
 
   it("builds Woodpecker pipeline and step URLs", () => {
