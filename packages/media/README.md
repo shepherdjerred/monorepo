@@ -822,7 +822,10 @@ The top bar holds the client's one search field. From any page, Enter opens
 `/discover?q=` with the search. While Discover is the page open, the field also
 searches as it is typed in, 300 ms after the last keystroke: the first search
 adds a history entry, so Back returns to the browse rows, and each refinement
-rewrites it. Text an input method is still composing is not searched for.
+rewrites it. Text an input method is still composing is not searched for. A
+typed search belongs to the address it was typed at: if the reader goes
+anywhere else before the 300 ms are up (another page, Back, "Clear search"), it
+is dropped instead of undoing what they did.
 
 ### Discover
 

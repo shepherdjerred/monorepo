@@ -19,6 +19,42 @@ function address(page: Page): string {
   return `${url.pathname}${url.search}${url.hash}`;
 }
 
+/**
+ * Types over the search on screen, then leaves by `leave` before the field
+ * has sent it, and expects the leaving to stand once the field's pause has
+ * run out: the browse rows, an empty field, and nothing searched for.
+ *
+ * The page's clock is held still meanwhile, so "before the field has sent
+ * it" is so on any machine, however slow; it runs again afterwards whether
+ * or not the steps inside succeeded.
+ */
+async function leaveBeforeTypedSearchIsSent(
+  page: Page,
+  leave: () => Promise<void>,
+) {
+  const search = page.getByRole("searchbox", {
+    name: "Search films and series",
+  });
+  await page.clock.install();
+  await page.clock.pauseAt(new Date());
+  try {
+    await search.fill("dune part");
+    await leave();
+    await expect.poll(() => address(page)).toBe("/discover");
+    await expect(search).toHaveValue("");
+    // The pause runs out.
+    await page.clock.runFor(1000);
+  } finally {
+    await page.clock.resume();
+  }
+  expect(address(page)).toBe("/discover");
+  await expect(search).toHaveValue("");
+  await expect(
+    page.getByRole("heading", { level: 2, name: "Trending this week" }),
+  ).toBeVisible();
+  expect(address(page)).toBe("/discover");
+}
+
 async function themeColor(page: Page, scheme: "light" | "dark") {
   const content = await page
     .locator(
@@ -102,6 +138,34 @@ test.describe("top bar", () => {
     await expect(search).toHaveValue("");
     await page.waitForLoadState("networkidle");
     await expect(page).toHaveURL(/\/notifications$/u);
+  });
+
+  test("clearing the search drops a refinement that was still waiting to be sent", async ({
+    page,
+  }) => {
+    await openAs(page, "member", "/discover?q=dune");
+    await expect(
+      page.getByRole("searchbox", { name: "Search films and series" }),
+    ).toHaveValue("dune");
+    // The clear stands, although it leaves the reader on the same page.
+    await leaveBeforeTypedSearchIsSent(page, async () => {
+      await page.getByRole("link", { name: "Clear search" }).click();
+    });
+  });
+
+  test("going Back drops a refinement that was still waiting to be sent", async ({
+    page,
+  }) => {
+    await openAs(page, "member", "/discover");
+    // The first search adds a history entry over the browse rows.
+    await page
+      .getByRole("searchbox", { name: "Search films and series" })
+      .fill("dune");
+    await expect.poll(() => address(page)).toBe("/discover?q=dune");
+    // Back stands, although it leaves the reader on the same page.
+    await leaveBeforeTypedSearchIsSent(page, async () => {
+      await page.goBack();
+    });
   });
 
   test("the bell opens notifications", async ({ page }) => {

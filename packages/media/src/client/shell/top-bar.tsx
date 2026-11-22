@@ -24,6 +24,12 @@ function shownSearch(pathname: string, search: string): string {
     : "";
 }
 
+/** The page and query string the browser is at now, whatever was rendered. */
+function browserAddress(): string {
+  const { pathname, search } = globalThis.location;
+  return `${pathname}${search}`;
+}
+
 /**
  * The one search field. From any page, Enter opens Discover with the search
  * in its address. On Discover itself the results follow the typing, a pause
@@ -67,9 +73,14 @@ function SearchField() {
   function searchSoon(value: string) {
     globalThis.clearTimeout(pause.current);
     if (location.pathname !== DISCOVER_PATH) return;
+    // The typing refines what this address shows. Whatever the reader does
+    // during the pause that takes them to another address (another page,
+    // Back, "Clear search") is their later word, and the search typed before
+    // it is dropped. A search this field sends cancels the pause itself, so
+    // an address that changed under it was changed by something else.
+    const typedAt = browserAddress();
     pause.current = globalThis.setTimeout(() => {
-      // The reader may have left Discover during the pause.
-      if (globalThis.location.pathname === DISCOVER_PATH) search(value);
+      if (browserAddress() === typedAt) search(value);
     }, TYPING_PAUSE);
   }
 
