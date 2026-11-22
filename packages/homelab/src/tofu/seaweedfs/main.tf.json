@@ -78,10 +78,7 @@
       "landing_pages": { "bucket": "landing-pages" },
       "llm_archive": { "bucket": "llm-archive" },
       "public_sjer_red": { "bucket": "public-sjer-red" },
-      "relay_docs": {
-        "bucket": "relay-docs",
-        "lifecycle": { "prevent_destroy": true }
-      },
+      "relay_docs": { "bucket": "relay-docs", "force_destroy": true },
       "resume": { "bucket": "resume" },
       "scout_beta": { "bucket": "scout-beta" },
       "scout_design_system": { "bucket": "scout-design-system" },

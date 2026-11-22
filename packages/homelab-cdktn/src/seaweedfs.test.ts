@@ -111,7 +111,6 @@ const PROTECTED_BUCKETS = [
   "delivery_artifacts",
   "glitter_discord_corpus",
   "homelab_tofu_state",
-  "relay_docs",
   "scout_desktop",
   "storm_forum_backups",
   "storm_forum_releases",
@@ -259,7 +258,7 @@ describe("seaweedfs", () => {
       Object.keys(buckets).filter(
         (name) => buckets[name]?.force_destroy !== undefined,
       ),
-    ).toEqual(["clauderon"]);
+    ).toEqual(["clauderon", "relay_docs"]);
 
     expect(stack.import).toEqual([
       { id: "apple-sdks", to: "aws_s3_bucket.apple_sdks" },
