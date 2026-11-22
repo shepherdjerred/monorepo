@@ -129,6 +129,43 @@ export function ActionFailure({
 }
 
 /**
+ * What an action will do and what it will not, side by side. The second list
+ * is as much of the promise as the first: it says what stays as it is.
+ */
+export function Effects({
+  willTitle = "What this does",
+  will,
+  wontTitle = "What this does not do",
+  wont,
+}: {
+  willTitle?: string;
+  will: readonly ReactNode[];
+  wontTitle?: string;
+  wont: readonly ReactNode[];
+}) {
+  return (
+    <div className={cx("effects")}>
+      <section>
+        <h3 className={cx("effectsTitle")}>{willTitle}</h3>
+        <ul>
+          {will.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      </section>
+      <section>
+        <h3 className={cx("effectsTitle")}>{wontTitle}</h3>
+        <ul>
+          {wont.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+}
+
+/**
  * A checkbox that is the whole of a row's name: the label around it is the
  * target, so it is as large as the text beside it.
  */

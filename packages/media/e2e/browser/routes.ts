@@ -254,6 +254,18 @@ const MANAGE_ROUTES: readonly RouteSpec[] = [
   { path: "/manage/providers", heading: "Providers and seeding" },
   { path: "/manage/activity", heading: "Activity" },
   { path: "/manage/recovery", heading: "Recovery" },
+  {
+    path: "/manage/recovery/native",
+    heading: "Reprove restored library files",
+  },
+  {
+    path: "/manage/recovery/native/archives",
+    heading: "Review upgrade archives",
+  },
+  {
+    path: "/manage/recovery/native/compensations",
+    heading: "Review interrupted upgrades",
+  },
   { path: "/manage/migration", heading: "Migration" },
 ].map((route) => ({
   ...route,
@@ -265,8 +277,6 @@ const MANAGE_ROUTES: readonly RouteSpec[] = [
  * The owner's own pages, plus the household pages that show an owner more
  * than a member (library keeping controls, title administration).
  *
- * Not covered: `/manage/recovery/native`, whose operator inventories have no
- * fixture yet.
  */
 const OWNER_ROUTES: readonly RouteSpec[] = [
   ...MANAGE_ROUTES,

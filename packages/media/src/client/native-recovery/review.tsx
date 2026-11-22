@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
 import type { NativeLifecycleDetailSchema } from "#shared/native-recovery/lifecycle.ts";
 import {
@@ -9,8 +8,8 @@ import {
 } from "#shared/native-recovery/series-pack/detail.ts";
 import { readApi } from "#client/api.ts";
 import { useNativeReviewApproval } from "./approval.ts";
-import { NativeReviewStatus } from "./review-status.tsx";
-import { QuarantineContinuations } from "./continuations.tsx";
+import { PublishedReview } from "./published.tsx";
+import { ReviewHeader } from "./shell.tsx";
 import { NativeArchiveReview } from "./archive/review.tsx";
 import { NativeCompensationReview } from "./compensation/review.tsx";
 import { SeriesPackNativeReview } from "./series-pack/review.tsx";
@@ -19,12 +18,7 @@ import {
   nativeReviewAcknowledged,
 } from "./acknowledgement.ts";
 import type { z } from "zod";
-import {
-  PageTitle,
-  Loading,
-  ErrorNotice,
-  humanize,
-} from "#client/components.tsx";
+import { SkeletonRows } from "#client/ui/panel.tsx";
 
 export function NativeRecoveryReview({
   user,
@@ -70,7 +64,7 @@ export function NativeRecoveryReview({
         onAcknowledge={setAcknowledged}
         onRefresh={() => result.refetch()}
         refreshing={result.isFetching}
-        error={result.error}
+        loadError={result.error}
       />
     );
   const approval = {
@@ -80,11 +74,14 @@ export function NativeRecoveryReview({
       apply.mutate();
     },
     pending: apply.isPending,
-    error: apply.error ?? result.error,
+    error: apply.error,
+  };
+  const header = {
     onRefresh: () => {
       void result.refetch();
     },
     refreshing: result.isFetching,
+    loadError: result.error,
   };
   const compensation = compensationSelection(review);
   if (compensation !== null)
@@ -93,187 +90,43 @@ export function NativeRecoveryReview({
         user={user}
         review={compensation.review}
         scope={compensation.scope}
-        {...approval}
+        approval={approval}
+        header={header}
       />
     );
-  const subtitlePolicies = reviewSubtitlePolicies(review);
-  const quarantined = quarantineSelection(review);
   const archiveScope = archiveSelection(review);
   if (archiveScope !== null && review !== undefined)
     return (
-      <NativeArchiveReview review={review} scope={archiveScope} {...approval} />
+      <NativeArchiveReview
+        review={review}
+        scope={archiveScope}
+        approval={approval}
+        header={header}
+      />
+    );
+  if (review === undefined)
+    return result.isPending ? (
+      <SkeletonRows label="Loading the review" rows={4} tall />
+    ) : (
+      <ReviewHeader
+        title="Recover selected file ownership"
+        intro="File checks prove these physical versions."
+        back={{
+          to: "/manage/recovery/native",
+          label: "All native recovery reviews",
+        }}
+        refreshLabel="Refresh review"
+        {...header}
+      />
     );
   return (
-    <>
-      <PageTitle
-        title={
-          quarantined
-            ? "Recover quarantined file ownership"
-            : "Recover selected file ownership"
-        }
-      >
-        <p>
-          File checks prove these physical versions. They cannot recover
-          household choices lost after the backup.
-        </p>
-      </PageTitle>
-      <p>
-        <Link to="/manage/recovery/native">All native recovery reviews</Link>
-      </p>
-      {result.isPending && <Loading />}
-      {result.error !== null && <ErrorNotice error={result.error} />}
-      {apply.error !== null && <ErrorNotice error={apply.error} />}
-      {review !== undefined && (
-        <>
-          <NativeReviewStatus state={review.state} quarantined={quarantined} />
-          <QuarantineContinuations items={review.continuations} />
-          <section className="panel">
-            <h2>Affected titles</h2>
-            {review.scope.files.map((file) => (
-              <article key={file.assetId}>
-                <h3>
-                  {review.scope.media
-                    .filter((media) => file.mediaIds.includes(media.id))
-                    .map((media) => media.title)
-                    .join(" · ")}
-                </h3>
-                <p>
-                  {file.subtitles.length}{" "}
-                  {quarantined ? "quarantined" : "installed"} subtitles
-                  included. Their accepted, unverified or rejected quality
-                  status will be preserved.
-                </p>
-                {file.subtitles.length > 0 && (
-                  <ul>
-                    {file.subtitles.map((subtitle) => (
-                      <li key={subtitle.id}>
-                        {subtitle.language} · {humanize(subtitle.storageKind)} ·{" "}
-                        {humanize(subtitle.qualityStatus)}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </article>
-            ))}
-          </section>
-          <section className="panel">
-            <h2>Subtitle policies being renewed</h2>
-            {subtitlePolicies.map((policy) => (
-              <article key={policy.mediaId}>
-                <h3>
-                  {
-                    review.scope.media.find(
-                      (media) => media.id === policy.mediaId,
-                    )?.title
-                  }
-                </h3>
-                {policy.effective === null ? (
-                  <p>No restored policy; no policy authority will be added.</p>
-                ) : (
-                  <>
-                    <ul>
-                      {policy.effective.rules.targets.map((target, index) => (
-                        <li key={`${target.language}:${String(index)}`}>
-                          {target.language} ·{" "}
-                          {target.forced
-                            ? "Forced subtitles"
-                            : "Full subtitles"}{" "}
-                          · Hearing impaired: {humanize(target.hearingImpaired)}{" "}
-                          · Audio condition: {humanize(target.audio)}; policy
-                          audio language: {target.audioLanguage}
-                        </li>
-                      ))}
-                    </ul>
-                    {policy.effective.rules.protectedReasons.length > 0 && (
-                      <p>
-                        Preserved blockers:{" "}
-                        {policy.effective.rules.protectedReasons
-                          .map((reason) => humanize(reason))
-                          .join("; ")}
-                      </p>
-                    )}
-                  </>
-                )}
-              </article>
-            ))}
-          </section>
-          <section className="panel">
-            <h2>What this approval changes</h2>
-            <ul>
-              <li>
-                Renews ownership only for the exact reviewed videos and{" "}
-                {quarantined ? "quarantined" : "installed"} subtitle files.
-              </li>
-              <li>
-                Creates selected-title subtitle policy versions with the
-                reviewed rules; other titles keep their prior policies.
-              </li>
-              <li>
-                Keeps recovery holds and personal Keep choices and pins.
-                Existing work and delivery history is preserved.
-              </li>
-              <li>
-                New acquisition needs a current authorized request or an
-                explicit positive household declaration.
-              </li>
-              {quarantined && (
-                <li>
-                  Restoration requires current positive authority for every
-                  covered leaf. Mixed positive and negative demand on a shared
-                  file remains protected; a negative declaration never
-                  authorizes restoration or deletion.
-                </li>
-              )}
-            </ul>
-            {review.state === "awaiting_review" && (
-              <>
-                <label className="check-label">
-                  <input
-                    type="checkbox"
-                    checked={acknowledged}
-                    onChange={(event) => {
-                      setAcknowledged(event.target.checked);
-                    }}
-                  />
-                  I reviewed these titles, subtitle policies and physical
-                  proofs. I understand missing household history remains
-                  protected.
-                </label>
-                <button
-                  className="button primary"
-                  disabled={!acknowledged || apply.isPending}
-                  onClick={() => {
-                    apply.mutate();
-                  }}
-                >
-                  {apply.isPending
-                    ? "Submitting approval…"
-                    : "Apply this exact physical review"}
-                </button>
-              </>
-            )}
-            <details>
-              <summary>Operator proof details</summary>
-              <p>
-                Review expires:{" "}
-                {review.expiresAt === null
-                  ? "Not prepared"
-                  : new Date(review.expiresAt).toLocaleString()}
-              </p>
-              <p>Plan digest: {review.planHash ?? "Pending inspection"}</p>
-              {review.scope.files.map((file) => (
-                <p key={file.assetId}>
-                  {file.canonicalPath}
-                  <br />
-                  Recorded SHA-256: {file.checksum}
-                </p>
-              ))}
-              <p>Selected policy snapshots: {subtitlePolicies.length}</p>
-            </details>
-          </section>
-        </>
-      )}
-    </>
+    <PublishedReview
+      review={review}
+      quarantined={quarantineSelection(review)}
+      subtitlePolicies={reviewSubtitlePolicies(review)}
+      approval={approval}
+      header={header}
+    />
   );
 }
 

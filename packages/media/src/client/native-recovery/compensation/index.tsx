@@ -1,17 +1,26 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router";
+import { RotateCwIcon } from "lucide-react";
+import { useNavigate } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
 import { NativeCompensationInventorySchema } from "#shared/native-recovery/compensation-runtime.ts";
 import { NativeRecoveryInventorySchema } from "#shared/native-recovery.ts";
 import { CommandResultSchema } from "#shared/api.ts";
 import { readApi, writeApi } from "#client/api.ts";
+import { PageTitle } from "#client/components.tsx";
+import { Button, ButtonLink, ButtonRow } from "#client/ui/button.tsx";
+import { LoadError } from "#client/ui/feedback.tsx";
+import { EmptyNote, Panel, SkeletonRows } from "#client/ui/panel.tsx";
+import { ActionFailure, PickList } from "#client/ui/workflow.tsx";
 import {
-  PageTitle,
-  Loading,
-  ErrorNotice,
-  humanize,
-} from "#client/components.tsx";
+  CursorButtons,
+  Prerequisites,
+} from "#client/native-recovery/shell.tsx";
+import { phrase } from "#client/native-recovery/vocabulary.ts";
+import styles from "./compensation.module.css";
+import { classNames } from "#client/ui/class-names.ts";
+
+const cx = classNames(styles);
 
 export function NativeCompensationIndex({ user }: { user: MediaUser }) {
   const [cursor, setCursor] = useState<string | null>(null);
@@ -64,6 +73,7 @@ export function NativeCompensationIndex({ user }: { user: MediaUser }) {
         void navigate(`/manage/recovery/native/${result.nativeRecoveryId}`);
     },
   });
+  const items = inventory.data;
   return (
     <>
       <PageTitle title="Review interrupted upgrades">
@@ -72,115 +82,138 @@ export function NativeCompensationIndex({ user }: { user: MediaUser }) {
           bytes. A restored database cannot prove whether the successor was
           published after the backup.
         </p>
+        <ButtonRow>
+          <ButtonLink to="/manage/recovery/native">
+            Native file recovery
+          </ButtonLink>
+          <ButtonLink to="/recovery">Household recovery protection</ButtonLink>
+        </ButtonRow>
       </PageTitle>
-      <p>
-        <Link to="/manage/recovery/native">Native file recovery</Link> ·{" "}
-        <Link to="/recovery">Household protection</Link>
-      </p>
-      {(inventory.isPending || context.isPending) && <Loading />}
-      {[inventory.error, context.error, prepare.error].map((error, index) =>
-        error === null ? null : <ErrorNotice key={index} error={error} />,
+      {(inventory.isPending || context.isPending) && (
+        <SkeletonRows label="Loading the interrupted upgrades" rows={3} tall />
+      )}
+      {[inventory.error, context.error].map((error, index) =>
+        error === null ? null : (
+          <LoadError
+            key={index}
+            what="The interrupted upgrades"
+            error={error}
+            retry={() => {
+              void inventory.refetch();
+              void context.refetch();
+            }}
+          />
+        ),
       )}
       {context.data !== undefined && (
-        <section className="panel">
-          <h2>Before review</h2>
-          <p>
-            Only complete upgrades with durable original intent and acknowledged
-            physical effects can be reviewed. Missing or uncertain evidence
-            remains protected. Approval does not release household holds or
-            resume the old download.
-          </p>
-          {context.data.prerequisites.map((reason) => (
-            <p key={reason}>{humanize(reason)}</p>
-          ))}
-        </section>
+        <Prerequisites
+          intro="Only complete upgrades with durable original intent and acknowledged physical effects can be reviewed. Missing or uncertain evidence remains protected. Approval does not release household holds or resume the old download."
+          prerequisites={context.data.prerequisites}
+          done="No prerequisites are outstanding."
+          title="Before review"
+        />
       )}
-      {inventory.data !== undefined && (
-        <section className="panel">
-          <h2>Select one complete upgrade</h2>
-          <p>
-            Every covered title and file participates. Entries cannot be
-            selected individually.
-          </p>
-          {inventory.data.items.map((item) => (
-            <label className="check-label" key={item.transitionId}>
-              <input
-                type="radio"
-                name="compensation-transition"
-                checked={selected === item.transitionId}
-                disabled={!item.selectable || prepare.isPending}
-                onChange={() => {
-                  setSelected(item.transitionId);
-                }}
-              />
-              <span>
-                {item.media.map((media) => media.title).join(" · ")}
-                <small>
-                  {" "}
-                  · {item.predecessors.length} predecessor files; successor
-                  bytes retained
-                </small>
-                {item.protection !== null && (
-                  <span className="muted">{humanize(item.protection)}</span>
-                )}
-              </span>
-            </label>
-          ))}
-          {inventory.data.items.length === 0 && (
-            <p>No interrupted upgrades on this page.</p>
+      {items !== undefined && (
+        <Panel
+          id="upgrades"
+          title="Choose one complete upgrade"
+          description={
+            <p>
+              Every covered title and file participates; entries cannot be
+              selected individually. Preparing changes nothing; you approve the
+              review on the next page.
+            </p>
+          }
+        >
+          {items.items.length === 0 ? (
+            <EmptyNote>No interrupted upgrades on this page.</EmptyNote>
+          ) : (
+            <PickList
+              data-field="upgrade"
+              data-field-label="Interrupted upgrade"
+              tabIndex={-1}
+            >
+              {items.items.map((item) => (
+                <label className={cx("choice")} key={item.transitionId}>
+                  <input
+                    type="radio"
+                    name="compensation-transition"
+                    checked={selected === item.transitionId}
+                    disabled={!item.selectable || prepare.isPending}
+                    onChange={() => {
+                      setSelected(item.transitionId);
+                    }}
+                  />
+                  <span>
+                    {item.media.map((media) => media.title).join(", ")}
+                    <br />
+                    <small>
+                      {item.predecessors.length} predecessor file
+                      {item.predecessors.length === 1 ? "" : "s"}; successor
+                      bytes retained
+                    </small>
+                    {item.protection !== null && (
+                      <small>
+                        <br />
+                        Cannot be selected:{" "}
+                        {phrase(item.protection).toLowerCase()}
+                      </small>
+                    )}
+                  </span>
+                </label>
+              ))}
+            </PickList>
           )}
-          <button
-            className="button primary"
-            disabled={
-              selected === null ||
-              context.data?.restoreOperationId == null ||
-              context.data.prerequisites.length > 0 ||
-              prepare.isPending
-            }
-            onClick={() => {
-              prepare.mutate();
+          <CursorButtons
+            hasPrevious={cursor !== null}
+            next={items.nextCursor}
+            nextLabel="Next upgrades"
+            onFirst={() => {
+              setCursor(null);
+              setSelected(null);
             }}
-          >
-            {prepare.isPending
-              ? "Preparing…"
-              : "Prepare predecessor restoration review"}
-          </button>
-          <div className="button-row">
-            <button
-              className="button"
-              disabled={inventory.isFetching || context.isFetching}
+            onNext={(next) => {
+              setCursor(next);
+              setSelected(null);
+            }}
+          />
+          <ButtonRow>
+            <Button
+              variant="primary"
+              busy={prepare.isPending}
+              disabled={
+                selected === null ||
+                context.data?.restoreOperationId == null ||
+                context.data.prerequisites.length > 0
+              }
+              onClick={() => {
+                prepare.mutate();
+              }}
+            >
+              {prepare.isPending
+                ? "Preparing…"
+                : "Prepare predecessor restoration review"}
+            </Button>
+            <Button
+              busy={inventory.isFetching || context.isFetching}
               onClick={() => {
                 setSelected(null);
                 void inventory.refetch();
                 void context.refetch();
               }}
             >
+              <RotateCwIcon aria-hidden="true" />
               Refresh evidence
-            </button>
-            {cursor !== null && (
-              <button
-                className="button"
-                onClick={() => {
-                  setCursor(null);
-                  setSelected(null);
-                }}
-              >
-                First page
-              </button>
-            )}
-            {inventory.data.nextCursor !== null && (
-              <button
-                className="button"
-                onClick={() => {
-                  setCursor(inventory.data.nextCursor);
-                  setSelected(null);
-                }}
-              >
-                Next upgrades
-              </button>
-            )}
-          </div>
-        </section>
+            </Button>
+          </ButtonRow>
+          {prepare.error !== null && (
+            <ActionFailure
+              title="The review was not prepared"
+              error={prepare.error}
+              state="Nothing was prepared and no file was changed."
+            />
+          )}
+        </Panel>
       )}
     </>
   );
