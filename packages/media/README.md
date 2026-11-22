@@ -309,6 +309,10 @@ revoked library access does not block self protection.
 | `POST /api/v3/media/:id/movie-requests/:requestId/cancel`        | Cancel the exact request without requiring download permission.                                                                        |
 | `POST /api/v3/media/:id/movie-requests/:requestId/revoke-choice` | Clear the choice while retaining protective demand.                                                                                    |
 
+The household client no longer calls these routes; it uses the version-4 routes
+below. They stay mounted so an acknowledged version-3 command replays its
+original result, and integration tests drive them directly.
+
 The v3 producer leaves named acquisitions pending with `edition_acquisition_not_ready`.
 Those commands grant no named download or physical classification authority. An unmarked
 choice can sponsor ordinary compatible quality upgrades, subject to the existing

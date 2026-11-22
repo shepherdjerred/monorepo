@@ -17,7 +17,7 @@ import {
 } from "#shared/movie-editions/view.ts";
 import { DefaultTargetViewSchema } from "#shared/editions/target-view.ts";
 import { MovieRequestResultV3Schema } from "#shared/movie-editions/commands.ts";
-import { movieRequest } from "#client/movie-editions/api.ts";
+import { movieRequestV3 } from "./movie-request-v3.ts";
 import { SessionBoundary } from "#client/session.ts";
 import { grantTestLease } from "#testing/authority.ts";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
@@ -142,7 +142,7 @@ test("a signed-in movie request reaches real PostgreSQL and the outbox through H
   expect(choices.status).toBe(200);
   const context = MovieEditionContextV3Schema.parse(await choices.json());
   expect(context.subjectUserId).toBe(owner.id);
-  const input = movieRequest(context, "default", "en");
+  const input = movieRequestV3(context, "default", ["en"]);
   input.options.keepingPolicy = "temporary";
   const key = crypto.randomUUID();
   const path = `/api/v3/media/${mediaId}/movie-requests`;

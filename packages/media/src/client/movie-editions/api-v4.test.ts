@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { ApiError } from "#client/api.ts";
-import { movieRequestV4 } from "./request-api-v4.ts";
+import { stubSessionStorage } from "#testing/browser-storage.ts";
+import { movieRequestV4, submitMovieRequestV4 } from "./request-api-v4.ts";
 import { reviewMovieActivationV4 } from "./activation-v4.tsx";
 import {
   movieLifecycleCommandV4,
@@ -151,4 +152,46 @@ it("rejects a valid response for another cut rather than displaying borrowed con
   await expect(
     readMovieTargetV4(movieV4Ids.media, "theatrical_cut"),
   ).rejects.toThrow("Movie controls belong to another edition");
+});
+
+it("binds a named edition without its own request to no request rather than borrowing another edition's CAS", () => {
+  const input = movieRequestV4(movieV4ChoiceContext(), "theatrical_cut", [
+    "en",
+  ]);
+  expect(input.selection.edition).toBe("theatrical_cut");
+  expect(input.expected).toEqual({
+    mediaVersion: 8,
+    targetVersion: 19,
+    definition: null,
+    request: null,
+  });
+});
+
+it("surfaces the actual v4 conflict without refreshing or resubmitting the user's command", async () => {
+  stubSessionStorage();
+  vi.stubGlobal("document", { cookie: "media-csrf=fixture" });
+  const calls: { url: string; init: RequestInit }[] = [];
+  vi.stubGlobal("fetch", (url: string, init: RequestInit) => {
+    calls.push({ url, init });
+    return Promise.resolve(
+      Response.json(
+        {
+          error: {
+            code: "version_conflict",
+            message: "Review changed movie choices",
+          },
+        },
+        { status: 409 },
+      ),
+    );
+  });
+  const input = movieRequestV4(movieV4ChoiceContext(), "directors_cut", ["en"]);
+  await expect(
+    submitMovieRequestV4(movieV4Ids.subject, input),
+  ).rejects.toMatchObject({ status: 409, code: "version_conflict" });
+  expect(calls).toHaveLength(1);
+  expect(calls[0]?.url).toBe(
+    `/api/v4/media/${movieV4Ids.media}/movie-requests`,
+  );
+  expect(calls[0]?.init.body).toBe(JSON.stringify(input));
 });

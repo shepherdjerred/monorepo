@@ -31,13 +31,13 @@ test("v3 named own-request protections survive library revocation without exposi
 });
 
 test.each(["cancel_request", "revoke_choice"] as const)(
-  "v3 protective %s retries the original committed command after a later re-request",
+  "v4 protective %s retries the original committed command after a later re-request",
   async (action) => {
     await verifyMovieProtectionLostAck(fixture().dependencies, headers, action);
   },
 );
 
-test("v3 protective conflict requires explicit review before adopting current CAS", async () => {
+test("v4 protective conflict requires explicit review before adopting current CAS", async () => {
   await verifyMovieProtectionConflictReview(fixture().dependencies, headers);
 });
 
