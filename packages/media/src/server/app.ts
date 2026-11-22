@@ -68,7 +68,10 @@ import type {
 } from "#application/ports.ts";
 import { CreateRequestSchema } from "#shared/contract.ts";
 import type { PlaybackHistoryApplication } from "#application/playback-ports.ts";
-import { registerPlaybackRoutes } from "./household/playback.ts";
+import {
+  registerPlaybackRoutes,
+  registerPlexHistoricalViewRoutes,
+} from "./household/playback.ts";
 import { registerCalendarRoutes } from "./household/calendar.ts";
 import { registerRemovalHistoryRoutes } from "./household/removals.ts";
 import type { PrismaCalendarApplication } from "#infrastructure/library/views/calendar.ts";
@@ -104,6 +107,7 @@ export type MediaAppDependencies = {
   >;
   media: MediaApplication;
   playback?: PlaybackHistoryApplication;
+  plexHistory?: Parameters<typeof registerPlexHistoricalViewRoutes>[1];
   calendar?: Pick<PrismaCalendarApplication, "list">;
   removalHistory?: Pick<PrismaRemovalHistoryApplication, "list">;
   library?: Pick<PrismaLibraryApplication, "list">;
@@ -237,6 +241,8 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
   app.get("/api/v1/me", (c) => c.json(c.get("actor")));
   if (dependencies.playback !== undefined)
     registerPlaybackRoutes(app, dependencies.playback);
+  if (dependencies.plexHistory !== undefined)
+    registerPlexHistoricalViewRoutes(app, dependencies.plexHistory);
   if (dependencies.calendar !== undefined)
     registerCalendarRoutes(app, dependencies.calendar);
   if (dependencies.removalHistory !== undefined)

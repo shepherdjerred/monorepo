@@ -73,6 +73,8 @@ const Request = Base.extend({
   scope: z.enum(["movie", "series", "season", "episode"]),
   seasons: z.array(z.number().int().nonnegative()).max(1000),
   active: z.boolean(),
+  // Original source creation time. Older captures did not record it.
+  requestedAt: z.iso.datetime({ precision: 3 }).optional(),
   // Optional preserves the canonical representation of historical captures.
   // These are request statuses, not playback completion or MediaStatus values.
   sourceStatus: z.number().int().min(1).max(5).optional(),

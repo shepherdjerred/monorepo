@@ -95,6 +95,32 @@ model PlaybackSession {
   @@index([serverMachineId, state, lastSeenAt])
 }
 
+// Plex's retrospective view markers are independent of timed playback,
+// download requests, and the current state of the Plex catalog.
+model PlexHistoricalView {
+  serverMachineId       String
+  source                String
+  sourceViewId          BigInt
+  serverAccountId       String
+  boundPlexAccountId    String?
+  sectionId             String?
+  guid                  String?
+  kind                  String
+  title                 String
+  seriesTitle           String?
+  seriesGuid            String?
+  seasonNumber          Int?
+  episodeNumber         Int?
+  viewedAt              DateTime
+  originallyAvailableAt DateTime?
+  viewType              Int?
+  viewCount             Int?
+  sourceSnapshotDigest  String
+  importedAt            DateTime @default(now())
+  @@id([serverMachineId, source, sourceViewId])
+  @@index([serverMachineId, serverAccountId, boundPlexAccountId, viewedAt, source, sourceViewId], map: "plex_historical_view_page_idx")
+}
+
 model PlaybackSessionIdentity {
   source String
   sourceInstanceId String
