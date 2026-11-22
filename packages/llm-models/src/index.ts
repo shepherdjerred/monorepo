@@ -21,7 +21,7 @@ export type Provider = z.infer<typeof ProviderSchema>;
 
 /**
  * Who made and bills a model, for cost attribution. A superset of `Provider`:
- * a creator we only price (Moonshot's Kimi or xAI's Grok, logged by a local coding agent)
+ * a creator we only price (Moonshot's Kimi, xAI's Grok or Meta's Muse, logged by a local coding agent)
  * has no transport, so its entries are `pricingOnly` and never routable.
  */
 export const ModelCreatorSchema = z.enum([
@@ -30,6 +30,7 @@ export const ModelCreatorSchema = z.enum([
   "google",
   "moonshot",
   "xai",
+  "meta",
 ]);
 export type ModelCreator = z.infer<typeof ModelCreatorSchema>;
 

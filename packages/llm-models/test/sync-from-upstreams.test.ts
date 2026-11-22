@@ -977,7 +977,7 @@ describe("pricingOnly entries", () => {
       new Set(["anthropic", "moonshot", "xai"]),
     );
     expect(crossCheckedProviders(MODELS)).toEqual(
-      new Set(["openai", "anthropic", "google", "moonshot", "xai"]),
+      new Set(["openai", "anthropic", "google", "moonshot", "xai", "meta"]),
     );
   });
 

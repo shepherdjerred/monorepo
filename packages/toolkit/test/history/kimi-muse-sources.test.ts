@@ -334,8 +334,10 @@ describe("muse source", () => {
       cacheReadTokens: 0,
       cacheCreationTokens: 0,
       reasoningTokens: 100,
-      costUsd: null,
-      costComplete: false,
+      // muse-wonder-1.0 at $4/$20 with 8,000 of the input cached at $0.20:
+      // (2,000 * 4 + 8,000 * 0.20 + 300 * 20) / 1M.
+      costUsd: 0.0156,
+      costComplete: true,
     });
     expect(byId(documents, MUSE_SUB_ID).usageEvents).toMatchObject([
       { model: "muse-spark-1.3", inputTokens: 40, outputTokens: 4 },

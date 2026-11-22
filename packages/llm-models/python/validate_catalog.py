@@ -176,7 +176,7 @@ class ModelEntry(BaseModel):
     model_config = {"extra": "forbid"}
     id: str = Field(min_length=1)
     # Who made and bills the model; a superset of the NativeRoute transports.
-    provider: Literal["openai", "anthropic", "google", "moonshot", "xai"]
+    provider: Literal["openai", "anthropic", "google", "moonshot", "xai", "meta"]
     # Priced but never called: no routes, and the runtime refuses it.
     pricingOnly: Literal[True] | None = None
     displayName: str = Field(min_length=1)

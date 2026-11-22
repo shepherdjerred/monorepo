@@ -71,6 +71,23 @@ const MODEL_NAME_MAP: Readonly<Record<string, string>> = {
   model_placeholder_m133: "gemini-3.5-flash-high",
   model_placeholder_m187: "gemini-3.5-flash-extra-low",
   model_placeholder_m20: "gemini-3.5-flash-medium",
+  // IDs verified against the record's own name (field 19) in ccusage #2070
+  // and local databases: 1298 is gemini-3.7-flash, 1427/1437 are
+  // gemini-4-carbon at High/Medium effort (effort does not change pricing).
+  model_placeholder_m298: "gemini-3.7-flash",
+  model_placeholder_m401: "claude-opus-5-5",
+  model_placeholder_m404: "claude-sonnet-5-5",
+  model_placeholder_m427: "gemini-4-carbon",
+  model_placeholder_m437: "gemini-4-carbon",
+  "gemini-4-carbon-low": "gemini-4-carbon",
+  "gemini-4-carbon-medium": "gemini-4-carbon",
+  "gemini-4-carbon-high": "gemini-4-carbon",
+  "claude-opus-5-5-low": "claude-opus-5-5",
+  "claude-opus-5-5-medium": "claude-opus-5-5",
+  "claude-opus-5-5-high": "claude-opus-5-5",
+  "claude-sonnet-5-5-low": "claude-sonnet-5-5",
+  "claude-sonnet-5-5-medium": "claude-sonnet-5-5",
+  "claude-sonnet-5-5-high": "claude-sonnet-5-5",
   model_openai_gpt_oss_120b_medium: "gpt-oss-120b-medium",
   "gemini-pro-default": "gemini-3.1-pro",
   "gemini-pro-agent": "gemini-3.1-pro",
