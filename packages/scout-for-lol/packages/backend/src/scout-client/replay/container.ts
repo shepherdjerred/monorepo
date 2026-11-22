@@ -6,7 +6,17 @@ import {
 import { z } from "zod";
 
 const FILE_HEADER_BYTES = 15;
+/**
+ * A chunk header: its id (u32), the id it is followed by (u32), its kind
+ * (u8, 1 to 4), and its uncompressed and compressed sizes (u32 each).
+ */
 const CHUNK_HEADER_BYTES = 17;
+/**
+ * From patch 16.21 a one-byte tag sits between each chunk header and its body.
+ * Every replay seen carries 4 there, compressed or not.
+ */
+const CHUNK_TAG = 4;
+const FIRST_TAGGED_PATCH = [16, 21] as const;
 const REPLAY_SIGNATURE_BYTES = 256;
 const MAX_METADATA_BYTES = 4 * 1024 * 1024;
 const MAX_CHUNKS = 4096;
@@ -66,7 +76,8 @@ const ReplayParticipantSchema = z.looseObject({
   WARD_PLACED: ReplayIntegerSchema,
   WARD_KILLED: ReplayIntegerSchema,
   LEVEL: ReplayIntegerSchema,
-  WIN: z.enum(["Win", "Fail"]),
+  // A player who left is "LeaverFail"; a remake replay carries one.
+  WIN: z.enum(["Win", "Fail", "LeaverFail"]),
   ITEM0: ReplayIntegerSchema,
   ITEM1: ReplayIntegerSchema,
   ITEM2: ReplayIntegerSchema,
@@ -139,7 +150,8 @@ function replayParticipantFingerprint(
     wardsPlaced: participant.WARD_PLACED,
     wardsKilled: participant.WARD_KILLED,
     championLevel: participant.LEVEL,
-    win: participant.WIN,
+    // The match evidence says only whether the team won.
+    win: participant.WIN === "Win" ? "Win" : "Fail",
     items: [
       participant.ITEM0,
       participant.ITEM1,
@@ -173,51 +185,77 @@ function parseJson(input: string, message: string): unknown {
   }
 }
 
+/** Whether a replay of this game version tags each chunk body. */
+export function chunksAreTagged(version: string): boolean {
+  const [major = 0, minor = 0] = version.split(".").map(Number);
+  const [taggedMajor, taggedMinor] = FIRST_TAGGED_PATCH;
+  return major > taggedMajor || (major === taggedMajor && minor >= taggedMinor);
+}
+
+type ChunkTable = {
+  readonly start: number;
+  readonly end: number;
+  readonly expectedCount: number;
+  /** Whether a one-byte tag sits between each header and its body. */
+  readonly tagged: boolean;
+};
+
+/** Check one chunk at `cursor` and return where the next one starts. */
+async function validateChunk(
+  file: FileHandle,
+  cursor: number,
+  table: ChunkTable,
+): Promise<number> {
+  if (cursor + CHUNK_HEADER_BYTES > table.end) {
+    throw new ReplayContainerError("Replay chunk table is invalid", 400);
+  }
+  const header = await readExactly(file, CHUNK_HEADER_BYTES, cursor);
+  const kind = header.readUInt8(8);
+  const uncompressedBytes = header.readUInt32LE(9);
+  const compressedBytes = header.readUInt32LE(13);
+  const bodyBytes = compressedBytes === 0 ? uncompressedBytes : compressedBytes;
+  const bodyStart = cursor + CHUNK_HEADER_BYTES + (table.tagged ? 1 : 0);
+  if (
+    bodyBytes === 0 ||
+    bodyBytes > MAX_CHUNK_BYTES ||
+    kind < 1 ||
+    kind > 4 ||
+    bodyStart + bodyBytes > table.end
+  ) {
+    throw new ReplayContainerError("Replay chunk table is invalid", 400);
+  }
+  if (table.tagged) {
+    const tag = await readExactly(file, 1, cursor + CHUNK_HEADER_BYTES);
+    if (tag[0] !== CHUNK_TAG) {
+      throw new ReplayContainerError("Replay chunk table is invalid", 400);
+    }
+  }
+  if (compressedBytes > 0) {
+    const magic = await readExactly(file, ZSTD_MAGIC.byteLength, bodyStart);
+    if (!magic.equals(ZSTD_MAGIC)) {
+      throw new ReplayContainerError(
+        "Replay chunk compression is invalid",
+        400,
+      );
+    }
+  }
+  return bodyStart + bodyBytes;
+}
+
 async function validateChunks(
   file: FileHandle,
-  start: number,
-  end: number,
-  expectedCount: number,
+  table: ChunkTable,
 ): Promise<void> {
-  let cursor = start;
+  let cursor = table.start;
   let chunkCount = 0;
-  while (cursor < end) {
-    if (chunkCount >= MAX_CHUNKS || cursor + CHUNK_HEADER_BYTES > end) {
+  while (cursor < table.end) {
+    if (chunkCount >= MAX_CHUNKS) {
       throw new ReplayContainerError("Replay chunk table is invalid", 400);
     }
-    const header = await readExactly(file, CHUNK_HEADER_BYTES, cursor);
-    const uncompressedBytes = header.readUInt32LE(9);
-    const compressedBytes = header.readUInt32LE(13);
-    const bodyBytes =
-      compressedBytes === 0 ? uncompressedBytes : compressedBytes;
-    const streamTag = header.readUInt32LE(5);
-    if (
-      bodyBytes === 0 ||
-      bodyBytes > MAX_CHUNK_BYTES ||
-      (streamTag & 0x00_ff_ff_ff) !== 0 ||
-      streamTag >>> 24 < 1 ||
-      streamTag >>> 24 > 4 ||
-      cursor + CHUNK_HEADER_BYTES + bodyBytes > end
-    ) {
-      throw new ReplayContainerError("Replay chunk table is invalid", 400);
-    }
-    if (compressedBytes > 0) {
-      const magic = await readExactly(
-        file,
-        ZSTD_MAGIC.byteLength,
-        cursor + CHUNK_HEADER_BYTES,
-      );
-      if (!magic.equals(ZSTD_MAGIC)) {
-        throw new ReplayContainerError(
-          "Replay chunk compression is invalid",
-          400,
-        );
-      }
-    }
-    cursor += CHUNK_HEADER_BYTES + bodyBytes;
+    cursor = await validateChunk(file, cursor, table);
     chunkCount += 1;
   }
-  if (cursor !== end || chunkCount !== expectedCount) {
+  if (cursor !== table.end || chunkCount !== table.expectedCount) {
     throw new ReplayContainerError("Replay chunk count is invalid", 400);
   }
 }
@@ -358,7 +396,12 @@ export async function validateReplayContainer(
     if (expectedChunks <= 0 || expectedChunks > MAX_CHUNKS) {
       throw new ReplayContainerError("Replay chunk count is invalid", 400);
     }
-    await validateChunks(file, headerEnd, signatureStart, expectedChunks);
+    await validateChunks(file, {
+      start: headerEnd,
+      end: signatureStart,
+      expectedCount: expectedChunks,
+      tagged: chunksAreTagged(version.data),
+    });
   } finally {
     await file.close();
   }

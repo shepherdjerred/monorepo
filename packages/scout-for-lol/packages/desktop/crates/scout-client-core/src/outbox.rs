@@ -96,6 +96,19 @@ impl ObservationOutbox {
             transaction.execute_batch("DELETE FROM handled_replay_file WHERE digest IN (SELECT digest FROM rejected_replay WHERE status_code = 409);
               DELETE FROM rejected_replay WHERE status_code = 409;")?;
         }
+        // The backend's replay validator refused every replay from patch 16.21
+        // on (a one-byte chunk tag it did not expect) and every remake (a
+        // `LeaverFail` result), as uploads refused with 400 or 403 and as
+        // offers answered "never" (kept as 409). The backend reopened those
+        // rejections; offer each such file once more under its current rules.
+        if transaction.execute(
+            "INSERT OR IGNORE INTO client_migration (id) VALUES ('reoffer-replay-validator-rejections-v1')",
+            [],
+        )? == 1
+        {
+            transaction.execute_batch("DELETE FROM handled_replay_file WHERE digest IN (SELECT digest FROM rejected_replay WHERE status_code IN (400, 403, 409));
+              DELETE FROM rejected_replay WHERE status_code IN (400, 403, 409);")?;
+        }
         transaction.commit()?;
         Ok(outbox)
     }
@@ -990,6 +1003,32 @@ mod tests {
         outbox.mark_replay_rejected("new-validation-rejection", "3", 409)?;
         let reopened = ObservationOutbox::open(&path)?;
         assert!(reopened.replay_handled("new-validation-rejection")?);
+        fs::remove_file(path)?;
+        Ok(())
+    }
+
+    #[test]
+    fn replays_the_old_validator_refused_are_reoffered_only_once()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let connection = Connection::open(&path)?;
+        connection.execute_batch(super::SCHEMA)?;
+        connection.execute_batch("CREATE TABLE IF NOT EXISTS client_migration (id TEXT PRIMARY KEY);
+            INSERT INTO client_migration (id) VALUES ('reoffer-evidence-deferrals-v1');
+            INSERT INTO rejected_replay (digest, game_id, status_code) VALUES ('compression', '1', 400), ('participant', '2', 403), ('never', '3', 409), ('too-large', '4', 413);
+            INSERT INTO handled_replay_file (path, bytes, modified_at_millis, digest) VALUES ('compression.rofl', 100, 1, 'compression'), ('too-large.rofl', 100, 1, 'too-large');")?;
+        drop(connection);
+        let outbox = ObservationOutbox::open(&path)?;
+        for digest in ["compression", "participant", "never"] {
+            assert!(!outbox.replay_handled(digest)?, "{digest}");
+        }
+        assert!(!outbox.replay_file_handled("compression.rofl", 100, 1)?);
+        assert!(outbox.replay_handled("too-large")?);
+        assert!(outbox.replay_file_handled("too-large.rofl", 100, 1)?);
+        // A rejection under the corrected validator is final again.
+        outbox.mark_replay_rejected("compression", "1", 400)?;
+        let reopened = ObservationOutbox::open(&path)?;
+        assert!(reopened.replay_handled("compression")?);
         fs::remove_file(path)?;
         Ok(())
     }

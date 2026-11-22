@@ -997,9 +997,13 @@ a normalized scoreboard even when these fragments cannot form a complete
 Match-V5 document. After pairing, the approval page links to recovered games.
 
 Existing local replay files are offered independently. Temporary server
-deferrals remain retryable, with backoff up to one hour. An outbox migration
-reoffers files older builds abandoned for missing evidence. Permanent server
-validation rejections remain terminal. The client does not download replays.
+deferrals remain retryable, with backoff up to one hour. Permanent server
+validation rejections remain terminal. One-time outbox migrations
+(`client_migration`) offer a file again when the rule that settled it was
+wrong: files older builds abandoned for missing evidence, and files the
+backend's replay validator refused before it understood patch 16.21's tagged
+chunks and remakes' `LeaverFail` (rejections kept as 400, 403 or 409). The
+client does not download replays.
 
 ## Which games get reported
 
