@@ -596,17 +596,4 @@ test("leaves only catalog entries without a usable datasource unmanaged", async 
     .join("\n");
   expect(twin).toContain("`woodpecker-ci/plugin-git`");
   expect(twin).toContain("darwin-arm64_plugin-git");
-
-  // golink's rolling main tag has digest updates without a release timestamp.
-  expect(await loadCatalogValue("tailscale/golink")).toMatch(
-    /^main@sha256:[a-f0-9]{64}$/u,
-  );
-  expect(
-    config.packageRules.find((rule) =>
-      rule.matchPackageNames?.includes("tailscale/golink"),
-    ),
-  ).toMatchObject({
-    matchDatasources: ["docker"],
-    minimumReleaseAge: "0 days",
-  });
 });

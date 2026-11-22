@@ -584,12 +584,6 @@
       "minimumReleaseAge": "0 days"
     },
     {
-      "description": "golink publishes only a rolling main tag on ghcr.io, whose digest updates carry no release timestamp; under the strict 30-day release-age gate they would stay pending forever.",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["tailscale/golink"],
-      "minimumReleaseAge": "0 days"
-    },
-    {
       "description": "GrimAC resolves from a Modrinth Ivy repository (packages/the-storm/plugin/settings.gradle.kts), not Maven Central; the Maven lookup can only fail or be rate limited. The custom.modrinth manager tracks it from the Storm server manifest instead, and the GrimAC prBodyNotes name these Gradle pins.",
       "matchManagers": ["gradle"],
       "matchDatasources": ["maven"],
