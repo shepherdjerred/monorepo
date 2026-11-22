@@ -110,6 +110,53 @@ test("attention comes first and names the service and environment", async ({
   ).toBeVisible();
 });
 
+test("every attention row keeps its kind, lead, summary and time in the same columns", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openOverview(page);
+  const items = page
+    .getByRole("region", { name: "Needs attention" })
+    .getByRole("listitem");
+  await expect(items.first()).toBeVisible();
+  const cells = await items.evaluateAll((rows) =>
+    rows.map((row) => {
+      const box = (selector: string) => {
+        const rect = row.querySelector(selector)?.getBoundingClientRect();
+        return rect === undefined
+          ? null
+          : { x: rect.x, right: rect.right, top: rect.top };
+      };
+      return {
+        lead: box(".attention-lead"),
+        summary: box(".attention-summary"),
+        when: box(".attention-when"),
+      };
+    }),
+  );
+  expect(cells.length).toBeGreaterThan(1);
+  for (const row of cells) {
+    if (row.lead === null || row.summary === null)
+      throw new Error("every row has a lead and a summary");
+    // One line of cells: the summary and time start level with the lead.
+    expect(Math.abs(row.summary.top - row.lead.top)).toBeLessThan(4);
+    if (row.when !== null)
+      expect(Math.abs(row.when.top - row.lead.top)).toBeLessThan(4);
+  }
+  // The same columns on every row, wherever a row's words end.
+  const leads = new Set(cells.map((row) => Math.round(row.lead?.x ?? -1)));
+  const summaries = new Set(
+    cells.map((row) => Math.round(row.summary?.x ?? -1)),
+  );
+  const times = new Set(
+    cells.flatMap((row) =>
+      row.when === null ? [] : [Math.round(row.when.right)],
+    ),
+  );
+  expect([leads.size, summaries.size, times.size]).toEqual([1, 1, 1]);
+  await expectNoHorizontalOverflow(page);
+});
+
 test("a chip shows the accepted release apart from a newer request, each with its own status", async ({
   page,
 }) => {

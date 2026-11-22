@@ -260,11 +260,42 @@ button[aria-disabled="true"] {
   margin: var(--space-1) 0 0;
   padding-left: var(--space-5);
 }
+/* Kind, lead, summary and time sit in the same columns on every row, so a long summary wraps inside its own column instead of pushing the time to another line. */
 .attention li {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 24rem) minmax(0, 1fr) 9rem;
   gap: var(--space-1) var(--space-3);
   align-items: baseline;
+}
+.attention li > .badge {
+  justify-self: start;
+}
+.attention-lead,
+.attention-summary {
+  overflow-wrap: anywhere;
+}
+.attention-when {
+  grid-column: 4;
+  justify-self: end;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.attention-toggle {
+  margin-top: var(--space-2);
+}
+@media (width <= 720px) {
+  /* Narrow: the kind and its time on one line, then the lead, then the summary. */
+  .attention li {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .attention-lead,
+  .attention-summary {
+    grid-column: 1 / -1;
+  }
+  .attention-when {
+    grid-column: 2;
+    grid-row: 1;
+  }
 }
 .badge {
   font-size: var(--text-2xs);

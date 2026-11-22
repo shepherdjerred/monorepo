@@ -52,6 +52,57 @@ describe("pageSummary", () => {
     ).toBe("Showing 25 deployments older than the previous page.");
   });
 
+  it("says what a row folds, and that the rows are newest first", () => {
+    const rows: [string, string] = ["row", "rows"];
+    const events: [string, string] = ["event", "events"];
+    const folded = { count: 25, noun: events, folded: "steps folded" };
+    expect(
+      pageSummary({
+        count: 20,
+        noun: rows,
+        entries: folded,
+        filtered: false,
+        older: false,
+        more: false,
+      }),
+    ).toBe("Showing all 20 rows (25 events, steps folded). Newest first.");
+    expect(
+      pageSummary({
+        count: 20,
+        noun: rows,
+        entries: folded,
+        filtered: true,
+        older: false,
+        more: true,
+      }),
+    ).toBe(
+      "Showing 20 rows (25 events, steps folded) that match these filters. Newest first. Older ones are on the next page.",
+    );
+    expect(
+      pageSummary({
+        count: 20,
+        noun: rows,
+        entries: folded,
+        filtered: false,
+        older: true,
+        more: true,
+      }),
+    ).toBe(
+      "Showing 20 rows (25 events, steps folded), older than the previous page.",
+    );
+    // Nothing folded: the count is the plain one.
+    expect(
+      pageSummary({
+        count: 25,
+        noun: ["event", "events"],
+        entries: folded,
+        filtered: false,
+        older: false,
+        more: true,
+      }),
+    ).toBe("Showing the 25 newest events. Older ones are on the next page.");
+  });
+
   it("says when nothing matches", () => {
     expect(
       pageSummary({

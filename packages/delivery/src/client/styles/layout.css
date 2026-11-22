@@ -10,6 +10,10 @@
 .skip-link:focus {
   top: var(--space-3);
 }
+/* The skip link's target takes focus so the next Tab starts inside the page; the landmark is not a control, so it draws no ring. */
+#main:focus {
+  outline: none;
+}
 .masthead {
   position: sticky;
   top: 0;
@@ -185,7 +189,8 @@ main > :empty {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
   gap: var(--page-gap);
-  align-items: start;
+  /* Panels in a row share its height, so a short one beside a tall one leaves no blank gap under it. */
+  align-items: stretch;
 }
 .tabs {
   display: flex;

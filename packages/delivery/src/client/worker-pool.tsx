@@ -182,8 +182,10 @@ export type WorkerGroup = {
 /**
  * Worker builds as a table lists them. Builds whose rows would read the same
  * (one host, one desired-host count, no action of their own) share one row,
- * placed where the first of them appears. A build that offers an action
- * keeps a row of its own, so every button stays beside its build.
+ * placed where the first of them appears. Builds with no desired host are
+ * only retained artifacts, so they share one row whichever host they were
+ * built for. A build that offers an action keeps a row of its own, so every
+ * button stays beside its build.
  */
 export function groupWorkers(
   workers: readonly WorkerVersion[],
@@ -194,7 +196,9 @@ export function groupWorkers(
   for (const worker of workers) {
     const key = actionable(worker)
       ? `build:${worker.id}`
-      : `same:${hostSummary(worker.host)}:${desiredHosts(worker, selected)}`;
+      : worker.replicas === 0
+        ? "retained-artifacts"
+        : `same:${hostSummary(worker.host)}:${desiredHosts(worker, selected)}`;
     const group = groups.get(key);
     if (group === undefined) groups.set(key, { key, workers: [worker] });
     else group.workers.push(worker);
@@ -223,13 +227,21 @@ function WorkerGroupRow({
   column: boolean;
 }) {
   const [first] = workers;
+  const hosts = new Set(workers.map((worker) => hostSummary(worker.host)));
   return (
     <tr>
       <td>
         <span className="worker-build">
           <strong>{workers.length} builds</strong>
         </span>
-        <Disclosure summary={hostSummary(first.host)} count={workers.length}>
+        <Disclosure
+          summary={
+            hosts.size === 1
+              ? hostSummary(first.host)
+              : `${String(hosts.size)} hosts`
+          }
+          count={workers.length}
+        >
           <ul className="worker-group">
             {workers.map((worker) => (
               <GroupedWorker key={worker.id} worker={worker} />

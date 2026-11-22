@@ -4,12 +4,6 @@ import {
   useSuspenseQuery,
   type QueryClient,
 } from "@tanstack/react-query";
-import { DeploymentStatusSchema } from "#shared/contract.ts";
-import type {
-  ActivityQuery,
-  BuildListQuery,
-  DeploymentListQuery,
-} from "#shared/hub/hub-contract.ts";
 import { queries } from "#client/queries.ts";
 import {
   PageHeader,
@@ -23,15 +17,18 @@ import { ApprovalQueue } from "#client/model/approval-queue.tsx";
 import { useNow, zoneLabel } from "#client/components/time.tsx";
 import { ActivityList, ActivityScope } from "./activity-list.tsx";
 import { foldActivity } from "./activity-fold.ts";
+import { catalogServices } from "./catalog-filter.ts";
 import {
-  boundedText,
-  catalogServices,
-  problemsOf,
-  resolveChoice,
-  resolveEnvironment,
-  resolveService,
-  type CatalogService,
-} from "./catalog-filter.ts";
+  ACTION_MAX,
+  ACTOR_MAX,
+  ENTITY_MAX,
+  QUALIFICATIONS,
+  STATUSES,
+  activityFilters,
+  artifactFilters,
+  deploymentFilters,
+  type Search,
+} from "./list-filters.ts";
 import {
   CatalogOptions,
   ENVIRONMENT_OPTIONS,
@@ -51,18 +48,6 @@ import {
 } from "./search-schemas.ts";
 import { Route as rootRoute, RouteError } from "./root.tsx";
 
-const STATUSES = DeploymentStatusSchema.options;
-const QUALIFICATIONS = ["verified", "pending", "failed"] as const;
-const PROBLEMS = ["only"] as const;
-const WITHIN = ["hour", "day"] as const;
-
-/** The server bounds the activity filters to these lengths. */
-const ACTOR_MAX = 200;
-const ACTION_MAX = 100;
-const ENTITY_MAX = 200;
-
-type Search = Record<string, string | undefined>;
-
 /**
  * The catalog a service or environment filter resolves against. Without it a
  * filter still works by exact id, so a failed read never blocks the list.
@@ -81,27 +66,6 @@ async function loadCatalog(queryClient: QueryClient, search: Search) {
 
 function useCatalog() {
   return catalogServices(useQuery(queries.grid()).data);
-}
-
-function deploymentFilters(search: Search, services: CatalogService[]) {
-  const service = resolveService(search["service"], services);
-  const environment = resolveEnvironment(
-    search["environment"],
-    services,
-    service.id,
-  );
-  const status = resolveChoice(search["status"], STATUSES, "status");
-  const query: DeploymentListQuery = {
-    cursor: search["cursor"],
-    serviceId: service.id,
-    environmentId: environment.id,
-    status: status.id,
-  };
-  return {
-    query,
-    problems: problemsOf([service, environment, status]),
-    canonical: { service: service.id, environment: environment.id },
-  };
 }
 
 /** A failed read of a list keeps the page and offers to start again. */
@@ -175,8 +139,8 @@ function DeploymentsPage() {
             <select name="status" defaultValue={search.status ?? ""}>
               <option value="">Any status</option>
               {STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {status.replaceAll("_", " ")}
+                <option key={status.value} value={status.value}>
+                  {status.label}
                 </option>
               ))}
             </select>
@@ -259,25 +223,6 @@ const approvalsRoute = createRoute({
   component: ApprovalsPage,
 });
 
-function artifactFilters(search: Search, services: CatalogService[]) {
-  const service = resolveService(search["service"], services);
-  const status = resolveChoice(
-    search["status"],
-    QUALIFICATIONS,
-    "qualification",
-  );
-  const query: BuildListQuery = {
-    cursor: search["cursor"],
-    serviceId: service.id,
-    status: status.id,
-  };
-  return {
-    query,
-    problems: problemsOf([service, status]),
-    canonical: { service: service.id },
-  };
-}
-
 function ArtifactsPage() {
   const search = artifactsRoute.useSearch();
   const navigate = useNavigate({ from: artifactsRoute.fullPath });
@@ -328,9 +273,11 @@ function ArtifactsPage() {
             Qualification
             <select name="status" defaultValue={search.status ?? ""}>
               <option value="">Any</option>
-              <option value="verified">verified</option>
-              <option value="pending">pending</option>
-              <option value="failed">failed</option>
+              {QUALIFICATIONS.map((qualification) => (
+                <option key={qualification.value} value={qualification.value}>
+                  {qualification.label}
+                </option>
+              ))}
             </select>
           </label>
         </FilterForm>
@@ -376,26 +323,6 @@ const artifactsRoute = createRoute({
   errorComponent: listError("/artifacts"),
 });
 
-function activityFilters(search: Search) {
-  const actor = boundedText(search["actor"], "Actor", ACTOR_MAX);
-  const action = boundedText(search["action"], "Action prefix", ACTION_MAX);
-  const entity = boundedText(search["entity"], "Entity", ENTITY_MAX);
-  const scope = resolveChoice(search["problems"], PROBLEMS, "scope");
-  const within = resolveChoice(search["within"], WITHIN, "time range");
-  const query: ActivityQuery = {
-    cursor: search["cursor"],
-    actor: actor.id,
-    action: action.id,
-    entityId: entity.id,
-    problems: scope.id,
-    within: within.id,
-  };
-  return {
-    query,
-    problems: problemsOf([actor, action, entity, scope, within]),
-  };
-}
-
 function ActivityPage() {
   const search = activityRoute.useSearch();
   const navigate = useNavigate({ from: activityRoute.fullPath });
@@ -407,7 +334,7 @@ function ActivityPage() {
   });
   const shown = resolvedPage(data, filters.problems);
   const items = shown?.items ?? [];
-  // A row can fold several entries, so the count says rows and entries both.
+  // A row can fold several events, so the count says rows and events both.
   const rows = foldActivity(items).length;
   const now = useNow();
   return (
@@ -455,8 +382,12 @@ function ActivityPage() {
         </FilterForm>
         <ResultSummary
           count={rows}
-          noun={rows === items.length ? ["entry", "entries"] : ["row", "rows"]}
-          entries={{ count: items.length, noun: ["entry", "entries"] }}
+          noun={rows === items.length ? ["event", "events"] : ["row", "rows"]}
+          entries={{
+            count: items.length,
+            noun: ["event", "events"],
+            folded: "steps and repeats folded",
+          }}
           filtered={isFiltered(search)}
           older={search.cursor !== undefined}
           more={shown?.nextCursor != null}

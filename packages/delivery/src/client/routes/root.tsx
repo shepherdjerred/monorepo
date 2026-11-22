@@ -102,7 +102,7 @@ function RootLayout() {
           <Identity />
         </div>
       </header>
-      <main id="main">
+      <main id="main" tabIndex={-1}>
         <ConfirmDialogProvider>
           <Outlet />
         </ConfirmDialogProvider>

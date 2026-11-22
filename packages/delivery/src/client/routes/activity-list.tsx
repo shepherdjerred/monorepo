@@ -22,7 +22,7 @@ import {
   type CatalogNames,
 } from "#client/components/catalog-name.tsx";
 import { Status } from "#client/components/status.tsx";
-import type { CatalogService } from "./catalog-filter.ts";
+import type { CatalogService, ChoiceOption } from "./catalog-filter.ts";
 import {
   DecisionActivitySchema,
   PublishedActivitySchema,
@@ -255,6 +255,14 @@ function Requested({
   );
 }
 
+/** The failures whose entry carries why they failed, read with the page. */
+const REASONED_ACTIONS: ReadonlySet<string> = new Set([
+  "deployment.failed",
+  "deployment.recovery_required",
+  "build.failed",
+  "build.incompatible",
+]);
+
 /** What the common actions recorded beside their entity. */
 function Recorded({
   entry,
@@ -264,9 +272,12 @@ function Recorded({
   names: CatalogNames;
 }) {
   const outcome = outcomeOf(entry.action);
-  // A failure already shows its status beside the action, so it says why.
-  if (outcome === "failed" || entry.action === "deployment.recovery_required")
-    return entry.reason == null ? null : (
+  // A failure already shows its status beside the action, so it says why, or
+  // that nothing recorded why, rather than leaving the reader to wonder.
+  if (REASONED_ACTIONS.has(entry.action))
+    return entry.reason == null ? (
+      <span className="activity-reason muted">no reason recorded</span>
+    ) : (
       <span className="activity-reason">{entry.reason}</span>
     );
   if (outcome !== null) return <Status value={outcome} />;
@@ -338,7 +349,7 @@ function When({ entries }: { entries: [ActivityEntry, ...ActivityEntry[]] }) {
 }
 
 /**
- * One deployment's consecutive stage writes: each stage once, at what its
+ * One deployment's stage writes on this page: each stage once, at what its
  * newest write made it, newest first. A stage written more than once says
  * how many writes it folds.
  */
@@ -354,7 +365,9 @@ function StageRun({
     <li>
       <When entries={entries} />
       <Action action={newest.action} />
-      <span className="activity-actor">{newest.actor}</span>
+      <span className="activity-actor">
+        {[...new Set(entries.map((entry) => entry.actor))].join(", ")}
+      </span>
       <span className="activity-subject">
         <Entity entry={newest} names={names} />
         <ol className="activity-stages">
@@ -410,9 +423,21 @@ function RepeatedRun({
   );
 }
 
+/** What the Show filter accepts besides everything: the URL token and the words its option reads. */
+export const PROBLEM_CHOICES: readonly ChoiceOption<"only">[] = [
+  { value: "only", label: "Problems only" },
+];
+
+/** What the Time range filter accepts besides any time. */
+export const WITHIN_CHOICES: readonly ChoiceOption<"hour" | "day">[] = [
+  { value: "hour", label: "Last hour" },
+  { value: "day", label: "Last 24 hours" },
+];
+
 /**
  * The activity filter's scope: everything or only problems, and how far back.
- * Each select is a search parameter, so the URL carries the choice.
+ * Each select is a search parameter, so the URL carries the choice; the same
+ * options name what a wrong value could have been.
  */
 export function ActivityScope({
   search,
@@ -425,14 +450,21 @@ export function ActivityScope({
         Show
         <select name="problems" defaultValue={search.problems ?? ""}>
           <option value="">Everything</option>
-          <option value="only">Problems only</option>
+          {PROBLEM_CHOICES.map((choice) => (
+            <option key={choice.value} value={choice.value}>
+              {choice.label}
+            </option>
+          ))}
         </select>
       </label>
       <label>
         Time range
         <select name="within" defaultValue={search.within ?? ""}>
-          <option value="hour">Last hour</option>
-          <option value="day">Last 24 hours</option>
+          {WITHIN_CHOICES.map((choice) => (
+            <option key={choice.value} value={choice.value}>
+              {choice.label}
+            </option>
+          ))}
           <option value="">Any time</option>
         </select>
       </label>

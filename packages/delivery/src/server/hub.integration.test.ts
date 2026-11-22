@@ -251,6 +251,48 @@ describe("hub activity", () => {
       ).toHaveLength(0);
     expect(await status("/api/v1/activity?within=week")).toBe(400);
   });
+
+  test("says why a build failed CI, and links the deployment a worker's retirement was proved for", async () => {
+    const deployment = await delivery.database.deployment.findFirstOrThrow();
+    await delivery.database.build.update({
+      where: { id: fixture.publication.buildId },
+      data: { qualificationReason: "CI pipeline 12 failed\nsecond line" },
+    });
+    await delivery.database.$transaction(async (tx) => {
+      await audit(tx, testExecutor, {
+        action: "build.failed",
+        entityId: fixture.publication.buildId,
+        requestId: "hub-build-failed",
+      });
+      await audit(tx, testExecutor, {
+        action: "build.failed",
+        entityId: "hub-build-without-reason",
+        requestId: "hub-build-failed-silent",
+      });
+      await audit(tx, testExecutor, {
+        action: "worker.retirement_proved",
+        entityId: deployment.id,
+        requestId: "hub-retirement-proved",
+      });
+    });
+    const page = ActivityPageSchema.parse(
+      await body("/api/v1/activity?within=hour"),
+    );
+    const failed = page.items.filter(
+      (entry) => entry.action === "build.failed",
+    );
+    expect(failed.map((entry) => [entry.entityId, entry.reason])).toEqual(
+      expect.arrayContaining([
+        [fixture.publication.buildId, "CI pipeline 12 failed"],
+        ["hub-build-without-reason", null],
+      ]),
+    );
+    const retired = page.items.find(
+      (entry) => entry.action === "worker.retirement_proved",
+    );
+    expect(retired?.target).toEqual({ kind: "deployment", id: deployment.id });
+    expect(retired?.subject?.environmentId).toBe(deployment.environmentId);
+  });
 });
 
 describe("hub integrations", () => {

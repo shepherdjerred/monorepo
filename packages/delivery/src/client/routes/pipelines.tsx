@@ -17,7 +17,12 @@ import {
   filterPipelines,
   lastDeployment,
 } from "./pipeline-list-model.ts";
-import { problemsOf, resolveChoice } from "./catalog-filter.ts";
+import {
+  plainChoices,
+  problemsOf,
+  resolveChoice,
+  unknownFilters,
+} from "./catalog-filter.ts";
 import { FilterProblems } from "./list-page.tsx";
 import { PipelineSearchSchema, formSearch } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
@@ -166,10 +171,16 @@ function PipelinesPage() {
   const { data } = useSuspenseQuery(queries.hub());
   const chosen = resolveChoice(
     search.status,
-    PipelineStatusSchema.options,
+    plainChoices(PipelineStatusSchema.options),
     "status",
   );
-  const problems = problemsOf([chosen]);
+  const problems = problemsOf([
+    chosen,
+    ...unknownFilters(search, [
+      { name: "q", label: "Name" },
+      { name: "status", label: "Stage status" },
+    ]),
+  ]);
   const pipelines =
     problems.length > 0
       ? []
@@ -183,7 +194,7 @@ function PipelinesPage() {
         actions={<ToolLinks links={data.tools} />}
       />
       {/* What needs someone leads, as on the overview. */}
-      <AttentionPanel items={data.attention} />
+      <AttentionPanel items={data.attention} collapseAfter={5} />
       <section className="panel" aria-labelledby="pipelines-heading">
         <div className="section-heading">
           <h2 id="pipelines-heading">

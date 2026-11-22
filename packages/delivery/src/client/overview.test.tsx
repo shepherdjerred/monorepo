@@ -397,6 +397,40 @@ describe("attention panel", () => {
     );
   });
 
+  it("puts each item's kind, lead, summary and time in their own cells", () => {
+    const html = renderWithRouter(
+      <AttentionPanel items={[attention("arcade")]} />,
+    );
+    expect(html).toMatch(
+      /<li><span class="badge badge-failed">Failed<\/span><span class="attention-lead"><a href="[^"]+">[^<]+<\/a><\/span><span class="muted attention-summary">[^<]*<\/span><span class="attention-when"><time /u,
+    );
+  });
+
+  it("lists every item unless asked to collapse, and keeps the list's own semantics when it does", () => {
+    const items = ["a", "b", "c", "d", "e", "f", "g"].map((id) => ({
+      ...attention(id),
+      target: { kind: "deployment" as const, id },
+    }));
+    const all = renderWithRouter(<AttentionPanel items={items} />);
+    expect(all.match(/<li>/gu)).toHaveLength(7);
+    expect(all).not.toContain("attention-toggle");
+    const collapsed = renderWithRouter(
+      <AttentionPanel items={items} collapseAfter={5} />,
+    );
+    expect(collapsed.match(/<li>/gu)).toHaveLength(5);
+    expect(collapsed).toContain('<span class="attention-count">7 items</span>');
+    expect(collapsed).toMatch(
+      /<button type="button" class="secondary-button attention-toggle" aria-expanded="false" aria-controls="[^"]+">Show all 7<\/button>/u,
+    );
+    expect(collapsed).toContain('aria-labelledby="attention-heading"');
+    // Five or fewer need no disclosure.
+    const few = renderWithRouter(
+      <AttentionPanel items={items.slice(0, 5)} collapseAfter={5} />,
+    );
+    expect(few.match(/<li>/gu)).toHaveLength(5);
+    expect(few).not.toContain("attention-toggle");
+  });
+
   it("takes the failure tone for a monitor alarm, the waiting tone for a long queue", () => {
     expect(
       renderWithRouter(

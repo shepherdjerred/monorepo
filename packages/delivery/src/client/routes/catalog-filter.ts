@@ -159,23 +159,64 @@ export type Choice<T extends string> = {
   problem: string | null;
 };
 
+/** An accepted value of a choice filter: the token the URL carries, and the words people read. */
+export type ChoiceOption<T extends string> = { value: T; label: string };
+
+/** Options whose words are their token with its underscores read as spaces: `awaiting_approval` is "awaiting approval". */
+export function plainChoices<T extends string>(
+  values: readonly T[],
+): ChoiceOption<T>[] {
+  return values.map((value) => ({
+    value,
+    label: value.replaceAll("_", " "),
+  }));
+}
+
 /**
  * A filter that takes one of a few fixed values. A value that is not one of
- * them says so and names the accepted ones, as a service filter does, instead
- * of quietly listing everything.
+ * them says so and names the accepted ones in the words the page's own
+ * control shows, as a service filter does, instead of quietly listing
+ * everything.
  */
 export function resolveChoice<T extends string>(
   value: string | undefined,
-  accepted: readonly T[],
+  accepted: readonly ChoiceOption<T>[],
   noun: string,
 ): Choice<T> {
   if (value === undefined) return { id: undefined, problem: null };
-  const match = accepted.find((candidate) => candidate === value);
-  if (match !== undefined) return { id: match, problem: null };
+  const match = accepted.find((candidate) => candidate.value === value);
+  if (match !== undefined) return { id: match.value, problem: null };
   return {
     id: undefined,
-    problem: `“${value}” is not a ${noun}. Choose one of ${accepted.join(", ")}.`,
+    problem: `“${value}” is not a ${noun}. Choose one of ${accepted
+      .map((candidate) => candidate.label)
+      .join(", ")}.`,
   };
+}
+
+/** A search parameter a page filters by, and the name its control shows. */
+export type FilterName = { name: string; label: string };
+
+/**
+ * One problem for each search parameter the page has no filter for, such as
+ * `?status=` on a list that is not filtered by status, so a hand-edited
+ * address is never silently half-applied. The paging cursor is not a filter.
+ */
+export function unknownFilters(
+  search: object,
+  accepted: readonly FilterName[],
+): { problem: string }[] {
+  const known = new Set(["cursor", ...accepted.map((filter) => filter.name)]);
+  const names = accepted.map((filter) => filter.label).join(", ");
+  return Object.entries(search).flatMap(([name, value]) =>
+    value === undefined || known.has(name)
+      ? []
+      : [
+          {
+            problem: `“${name}” is not a filter on this page. Choose one of ${names}.`,
+          },
+        ],
+  );
 }
 
 /** The sentences of every filter that cannot be used. */
