@@ -197,6 +197,7 @@ describe("Scout beta workflow candidate", () => {
         value:
           "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
       },
+      { name: "XDG_CACHE_HOME", value: "/tmp" },
       { name: "TEMPORAL_METRICS_ADDRESS", value: "0.0.0.0:9464" },
       { name: "TEMPORAL_NAMESPACE", value: "beta" },
       {

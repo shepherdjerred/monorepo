@@ -80,6 +80,9 @@ export function createScoutWorkflowWorker(
       envVariables: {
         ENVIRONMENT: EnvValue.fromValue(stage),
         ...temporalAddressEnv(),
+        // @swc/core extracts its real native binary into the user cache.
+        // The root filesystem is read-only; the emptyDir below is the writable path.
+        XDG_CACHE_HOME: EnvValue.fromValue("/tmp"),
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
         // Workflow workers are isolated to the stage they serve.
         TEMPORAL_NAMESPACE: EnvValue.fromValue(stage),
