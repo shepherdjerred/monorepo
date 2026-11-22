@@ -55,6 +55,7 @@ test.each([
   ["/recovery/00000000-0000-4000-8000-000000000001", "recovery/:id"],
   ["/recovery/movies/abc", "recovery/movies/:id"],
   ["/notifications", "notifications"],
+  ["/notifications/settings", "notifications/settings"],
   ["/notifications/email#verify=token", "notifications/email"],
   ["/notifications/discord?code=abc&state=def", "notifications/discord"],
   // Manage.

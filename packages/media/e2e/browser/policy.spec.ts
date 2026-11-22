@@ -182,7 +182,7 @@ test("linking Discord leaves for Discord's own page", async ({ page }) => {
       route.fulfill({ contentType: "text/html", body: ELSEWHERE }),
     );
 
-  await page.goto("/notifications");
+  await page.goto("/notifications/settings");
   await page.getByRole("button", { name: "Link Discord" }).click();
   await page.waitForURL(DISCORD);
   await expect(page).toHaveTitle("Elsewhere");

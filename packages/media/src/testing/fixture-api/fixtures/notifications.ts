@@ -5,6 +5,7 @@ import type {
   OperationListSchema,
 } from "#shared/api.ts";
 import type { Persona } from "#testing/fixture-api/personas.ts";
+import type { FixtureScenario } from "#testing/fixture-api/scenario.ts";
 import { requestId } from "./requests.ts";
 import { HOUR, MINUTE, ago, fixtureId } from "#testing/fixture-api/support.ts";
 import { mediaReference } from "./artwork.ts";
@@ -42,15 +43,20 @@ const DELETED_TITLE_ID = fixtureId(2, 9999);
 
 /**
  * Every channel, delivery state, and failure the notifications page renders.
- * Two events reached their recipient on two channels, two are about an
- * episode, and some name no title: account email, owner health, and a title
- * that no longer exists.
+ * Several events reached their recipient on two channels, two are about an
+ * episode, and some name no title: account email, owner health, the
+ * household's shared announcement, and a title that no longer exists. One
+ * leaving-soon reminder is still unread and one has been read.
  */
 const EVENTS: readonly EventSeed[] = [
   {
-    kind: "removal_warning",
+    // Unread: the reminder in Media has not been acknowledged.
+    kind: "retention_warning",
     title: "The Expanse",
-    deliveries: [{ channel: "in_app", state: "pending", attempts: 0 }],
+    deliveries: [
+      { channel: "in_app", state: "pending", attempts: 0 },
+      { channel: "email", state: "accepted", providerStatus: "delivered" },
+    ],
   },
   {
     kind: "media_available",
@@ -101,6 +107,16 @@ const EVENTS: readonly EventSeed[] = [
   {
     kind: "files_quarantined",
     title: "The Holdovers",
+    deliveries: [
+      { channel: "email", state: "accepted", providerStatus: "delivered" },
+    ],
+  },
+  {
+    // The announcement in the household's channel is recorded against the
+    // owner and names no item.
+    kind: "media_available",
+    title: null,
+    ownerOnly: true,
     deliveries: [{ channel: "discord_shared", state: "accepted" }],
   },
   {
@@ -164,7 +180,16 @@ const EVENTS: readonly EventSeed[] = [
     kind: "media_available",
     title: "The Bear",
     episode: 7,
-    deliveries: [{ channel: "in_app", state: "accepted" }],
+    deliveries: [{ channel: "discord", state: "accepted" }],
+  },
+  {
+    // Read: the same reminder, acknowledged.
+    kind: "retention_warning",
+    title: "Moonlight",
+    deliveries: [
+      { channel: "in_app", state: "accepted", providerStatus: "viewed" },
+      { channel: "email", state: "accepted", providerStatus: "delivered" },
+    ],
   },
   {
     kind: "subtitles_ready",
@@ -198,8 +223,14 @@ function eventMedia(
 }
 
 /** One row per delivery, newest event first; an event's rows share its id. */
-export function notificationList(persona: Persona): NotificationList {
-  return EVENTS.map((seed, index) => ({ seed, index }))
+export function notificationList(
+  persona: Persona,
+  scenario: FixtureScenario,
+): NotificationList {
+  // A household nobody has asked anything of has been told nothing.
+  const events = scenario === "new-household" ? [] : EVENTS;
+  return events
+    .map((seed, index) => ({ seed, index }))
     .filter(({ seed }) => persona === "owner" || seed.ownerOnly !== true)
     .flatMap(({ seed, index }) => {
       const age = (index * 11 + 2) * HOUR;

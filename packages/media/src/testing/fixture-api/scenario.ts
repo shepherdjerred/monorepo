@@ -10,8 +10,8 @@ import { z } from "zod";
  *   search, keep working.
  * - `catalog-unavailable`: TMDB is down, so every catalog read answers 502.
  * - `new-household`: nobody has asked for or watched anything yet, so the
- *   calendar has no releases on it, dated or not, nothing is playing, and
- *   the watch history is empty.
+ *   calendar has no releases on it, dated or not, nothing is playing, the
+ *   watch history is empty, and there are no notifications.
  */
 export const FixtureScenarioSchema = z.enum([
   "default",

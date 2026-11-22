@@ -170,6 +170,7 @@
     margin-inline-start: auto;
   }
   .iconButton {
+    position: relative;
     display: grid;
     place-items: center;
     width: 36px;
@@ -193,6 +194,26 @@
   }
   .iconButton:focus-visible {
     outline-offset: 2px;
+  }
+  /* How many notifications are unread, on the corner of the bell. */
+  .bellCount {
+    position: absolute;
+    top: -5px;
+    inset-inline-end: -5px;
+    display: grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    box-shadow: 0 0 0 2px var(--canvas);
+    color: var(--text-on-accent);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
   }
   /* A flex column, as the page always was: the pages' own vertical margins
      are written for a container where they do not collapse. */

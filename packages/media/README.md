@@ -720,7 +720,7 @@ directly) and `/api/fixture/scenario/default` to leave it:
 | `stale-library-access` | Every catalog read reports `libraryAccess: "stale"` and no title carries a `library`. |
 | `feed-unavailable`     | The `popular_series` feed answers 502 `catalog_unavailable`; the rest keep working.   |
 | `catalog-unavailable`  | Every catalog read answers 502 `catalog_unavailable`, as when TMDB is down.           |
-| `new-household`        | Nobody has asked for or watched anything: no releases, no plays, nothing playing.     |
+| `new-household`        | Nobody has asked for or watched anything: no releases, plays or notifications.        |
 
 A fixture answers a scenario by reading `request.scenario`, and throws
 `FixtureFailure` (`src/testing/fixture-api/scenario.ts`) for an error the real
@@ -771,8 +771,9 @@ the shell (`shell/shell.tsx`) around the matched page. The shell is keyed by
 session generation, so a changed principal never keeps a mounted page.
 
 Everyone gets Discover, Library, Calendar, and History, in the sidebar and, on a
-phone, as tabs along the bottom. Notifications and recovery reviews are reached
-from the top bar and the account panel, because members use both. The owner also
+phone, as tabs along the bottom. Notifications are reached from the bell in the
+top bar, which carries the unread count, and notification settings and recovery
+reviews from the account panel, because members use all three. The owner also
 gets Manage (a fifth tab on a phone), one page per topic under `/manage`:
 
 | Address                               | Page                                             |
@@ -1130,6 +1131,48 @@ from an attribute and never from an inline `style`, which the
 Content-Security-Policy refuses. Each bar is hidden from assistive technology,
 because its row already says the same numbers in words. `history/format.ts`
 holds how those numbers are said.
+
+### Notifications
+
+`/notifications` (`src/client/notifications/`) lists what Media has told the
+reader, newest first. `GET /api/v1/notifications` returns one row per delivery
+channel; the page shows one entry per event by grouping the rows on `event.id`
+and nothing else (`notifications/model.ts`), with each channel as a badge that
+says how its delivery ended up. The read returns at most 100 deliveries and
+does not say whether more exist, so the page says "Earlier notifications are
+not listed" only when an answer is exactly that full.
+
+An entry names the title its event is about and shows its poster when
+`event.media` is present, and links to `/media/:id`; a season or an episode is
+named with its series (`rootTitle`). With no `media` it is a plain sentence
+that links nowhere. An event that batches several titles
+records only the first, so no sentence says how many. The kinds, channels and
+delivery states are typed as strings on the wire; the client lists the ones the
+server sends in `presentation/notification.ts`, and a value outside those lists
+fails the page instead of being shown under a guessed label.
+
+The one read state a notification has is the reminder shown in Media for a
+title that is leaving: its `in_app` delivery is `pending` until its reader
+marks it as read, which posts `/notifications/:id/read` and starts the title's
+seven-day warning. That is what "unread" means on the page and what the bell in
+the top bar counts. The bell and the page read through one cached query
+(`use-notifications.ts`, asked again every 30 seconds), so they cannot
+disagree; a message that only went out by email or Discord is never counted.
+
+What can be done about one delivery is under the entry's "Delivery details",
+open already when a delivery bounced, failed, or could not be confirmed: send
+it again, ask the provider what became of it, and for the owner give the
+provider's receipt. An owner-health alert about an earlier state takes no
+commands.
+
+How to be told is its own page, `/notifications/settings`, reached from the
+account menu and from the list: the email address and its verification, the
+Discord link, and which messages are sent. The server writes two more
+addresses, which must keep working: the link in a verification email
+(`/notifications/email#verify=<token>`, and `/notifications#verify=<token>`
+from older emails) and Discord's return (`/notifications/discord?code=&state=`).
+Each shows what it is about to confirm and sends nothing until the reader
+confirms, so a mail scanner that opens the link changes nothing.
 
 ### Client styles and themes
 
