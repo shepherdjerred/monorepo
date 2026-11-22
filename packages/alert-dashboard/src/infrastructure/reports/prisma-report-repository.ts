@@ -2,6 +2,7 @@ import {
   DigestKindSchema,
   type DigestKind,
 } from "@shepherdjerred/ops-model/digest.ts";
+import type { ReportVerdict } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import {
   ReportEnvelopeV1Schema,
   ReportExecutionSchema,
@@ -9,6 +10,7 @@ import {
 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import {
   ReportDeliveryStatusSchema,
+  type ReportDeliveryStatus,
   type ReportRunIngestItem,
 } from "@shepherdjerred/ops-model/reports/report-ingest.ts";
 import { z } from "zod";
@@ -20,6 +22,7 @@ import type {
 } from "#generated/prisma/client/index.js";
 
 import type {
+  ReportFeedCursor,
   ReportRepository,
   StoredDigestRun,
   StoredIncidentMail,
@@ -204,8 +207,18 @@ export class PrismaReportRepository implements ReportRepository {
     sinceCompletedAtNs?: bigint;
     scheduleId?: string;
     reportType?: string;
+    excludeReportType?: string;
+    verdict?: ReportVerdict;
+    deliveryStatus?: ReportDeliveryStatus;
+    hasPr?: boolean;
+    before?: ReportFeedCursor;
     limit?: number;
   }): Promise<readonly StoredReportRun[]> {
+    const reportTypeFilter =
+      options?.reportType ??
+      (options?.excludeReportType === undefined
+        ? undefined
+        : { not: options.excludeReportType });
     const rows = await this.#prisma.reportRun.findMany({
       where: {
         ...(options?.sinceCompletedAtNs === undefined
@@ -214,9 +227,25 @@ export class PrismaReportRepository implements ReportRepository {
         ...(options?.scheduleId === undefined
           ? {}
           : { scheduleId: options.scheduleId }),
-        ...(options?.reportType === undefined
+        ...(reportTypeFilter === undefined
           ? {}
-          : { reportType: options.reportType }),
+          : { reportType: reportTypeFilter }),
+        ...(options?.verdict === undefined ? {} : { verdict: options.verdict }),
+        ...(options?.deliveryStatus === undefined
+          ? {}
+          : { deliveryStatus: options.deliveryStatus }),
+        ...(options?.hasPr === true ? { prUrl: { not: null } } : {}),
+        ...(options?.before === undefined
+          ? {}
+          : {
+              OR: [
+                { completedAtNs: { lt: options.before.timestampNs } },
+                {
+                  completedAtNs: options.before.timestampNs,
+                  id: { lt: options.before.id },
+                },
+              ],
+            }),
       },
       orderBy: [{ completedAtNs: "desc" }, { id: "desc" }],
       ...(options?.limit === undefined ? {} : { take: options.limit }),
@@ -261,6 +290,7 @@ export class PrismaReportRepository implements ReportRepository {
   async listDigestRuns(options?: {
     sinceCreatedAtNs?: bigint;
     kind?: DigestKind;
+    before?: ReportFeedCursor;
     limit?: number;
   }): Promise<readonly StoredDigestRun[]> {
     const rows = await this.#prisma.digestRun.findMany({
@@ -269,6 +299,17 @@ export class PrismaReportRepository implements ReportRepository {
           ? {}
           : { createdAtNs: { gte: options.sinceCreatedAtNs } }),
         ...(options?.kind === undefined ? {} : { kind: options.kind }),
+        ...(options?.before === undefined
+          ? {}
+          : {
+              OR: [
+                { createdAtNs: { lt: options.before.timestampNs } },
+                {
+                  createdAtNs: options.before.timestampNs,
+                  id: { lt: options.before.id },
+                },
+              ],
+            }),
       },
       orderBy: [{ createdAtNs: "desc" }, { id: "desc" }],
       ...(options?.limit === undefined ? {} : { take: options.limit }),
@@ -309,12 +350,26 @@ export class PrismaReportRepository implements ReportRepository {
     return row === null ? null : toStoredDigestRun(row);
   }
 
-  async listIncidentMails(
-    limit: number,
-  ): Promise<readonly StoredIncidentMail[]> {
+  async listIncidentMails(options: {
+    limit: number;
+    before?: ReportFeedCursor;
+  }): Promise<readonly StoredIncidentMail[]> {
     const rows = await this.#prisma.emailOutbox.findMany({
+      ...(options.before === undefined
+        ? {}
+        : {
+            where: {
+              OR: [
+                { createdAtNs: { lt: options.before.timestampNs } },
+                {
+                  createdAtNs: options.before.timestampNs,
+                  id: { lt: options.before.id },
+                },
+              ],
+            },
+          }),
       orderBy: [{ createdAtNs: "desc" }, { id: "desc" }],
-      take: limit,
+      take: options.limit,
     });
     return rows.map((row) => toStoredIncidentMail(row));
   }

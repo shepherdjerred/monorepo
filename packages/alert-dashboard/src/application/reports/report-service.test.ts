@@ -128,3 +128,127 @@ describe("ReportService", () => {
     expect(await fixture.reports.incidentDetail("missing-mail")).toBeNull();
   });
 });
+
+describe("ReportService feed pagination", () => {
+  it("finds filtered feed matches even behind >300 newer clear runs", async () => {
+    const { fixture, now } = await setup();
+    const olderTargetCompleted = now.subtract({ hours: 20 * 24 });
+    const sampleCheck = {
+      id: "check-1",
+      label: "Audit check",
+      required: true,
+      status: "passed" as const,
+      summary: "Checked state.",
+      evidenceReceiptIds: ["receipt-1"],
+    };
+    const sampleEvidence = {
+      id: "receipt-1",
+      source: "homelab-audit",
+      origin: "declared-collector" as const,
+      semanticStatus: "passed" as const,
+      observedAt: olderTargetCompleted.toString(),
+      status: "success" as const,
+      exitCode: 0,
+    };
+    const bulkItems = [
+      {
+        report: {
+          schemaVersion: 1 as const,
+          reportRunId: "deep-history:needle-run",
+          reportType: "homelab-audit",
+          title: "Daily homelab audit",
+          scheduleId: "homelab-audit-daily",
+          startedAt: olderTargetCompleted.subtract({ seconds: 30 }).toString(),
+          completedAt: olderTargetCompleted.toString(),
+          execution: "complete" as const,
+          verdict: "attention" as const,
+          headline: "Deep historical certificate expiry needle",
+          checks: [{ ...sampleCheck, status: "failed" as const }],
+          evidence: [{ ...sampleEvidence, semanticStatus: "failed" as const }],
+          findings: [],
+          limitations: [],
+          actions: [],
+          remediation: {
+            outcome: "pr-created" as const,
+            prUrl: "https://github.com/shepherdjerred/monorepo/pull/9999",
+            autoMergeEnabled: false,
+            changedFiles: ["packages/homelab/README.md"],
+            resolvedCount: 1,
+            unresolvedCount: 0,
+            summary: "Opened historical remediation PR.",
+          },
+          provenance: {
+            workflowId: "wf-deep-needle",
+            runId: "run-deep-needle",
+          },
+        },
+        subject: "Homelab check: Historical certificate needle",
+        eyebrow: "Homelab Check",
+        mailboxFrom: "Homelab Audit <ops@sjer.red>",
+        mailboxTo: "ops@sjer.red",
+        deliveryStatus: "failed" as const,
+      },
+      ...Array.from({ length: 320 }, (_, index) => {
+        const completed = now.subtract({ minutes: index + 1 });
+        return {
+          report: {
+            schemaVersion: 1 as const,
+            reportRunId: `homelab-audit-daily:bulk-${String(index)}`,
+            reportType: "homelab-audit",
+            title: "Daily homelab audit",
+            scheduleId: "homelab-audit-daily",
+            startedAt: completed.subtract({ seconds: 10 }).toString(),
+            completedAt: completed.toString(),
+            execution: "complete" as const,
+            verdict: "clear" as const,
+            headline: "All clear",
+            checks: [sampleCheck],
+            evidence: [sampleEvidence],
+            findings: [],
+            limitations: [],
+            actions: [],
+            provenance: {
+              workflowId: `wf-bulk-${String(index)}`,
+              runId: `run-bulk-${String(index)}`,
+            },
+          },
+          subject: "Homelab check: All clear",
+          eyebrow: "Homelab Check",
+          mailboxFrom: "Homelab Audit <ops@sjer.red>",
+          mailboxTo: "ops@sjer.red",
+          deliveryStatus: "skipped" as const,
+          skipReason: "unchanged" as const,
+        };
+      }),
+    ];
+    for (let offset = 0; offset < bulkItems.length; offset += 50) {
+      await fixture.reports.ingest(
+        JSON.stringify({ items: bulkItems.slice(offset, offset + 50) }),
+      );
+    }
+
+    const bySearch = await fixture.reports.feed({
+      q: "certificate expiry needle",
+      limit: 20,
+    });
+    expect(bySearch.items.map((item) => item.id)).toContain(
+      "deep-history:needle-run",
+    );
+
+    const byDelivery = await fixture.reports.feed({
+      delivery: "failed",
+      limit: 20,
+    });
+    expect(byDelivery.items.map((item) => item.id)).toContain(
+      "deep-history:needle-run",
+    );
+
+    const byHasPr = await fixture.reports.feed({
+      hasPr: "1",
+      limit: 20,
+    });
+    expect(byHasPr.items.map((item) => item.id)).toContain(
+      "deep-history:needle-run",
+    );
+  });
+});

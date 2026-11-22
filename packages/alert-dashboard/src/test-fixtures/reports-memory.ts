@@ -1,7 +1,12 @@
 import type { DigestKind } from "@shepherdjerred/ops-model/digest.ts";
-import type { ReportRunIngestItem } from "@shepherdjerred/ops-model/reports/report-ingest.ts";
+import type { ReportVerdict } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
+import type {
+  ReportDeliveryStatus,
+  ReportRunIngestItem,
+} from "@shepherdjerred/ops-model/reports/report-ingest.ts";
 
 import type {
+  ReportFeedCursor,
   ReportRepository,
   StoredDigestRun,
   StoredIncidentMail,
@@ -23,6 +28,51 @@ function compareRunsDesc(
     return left.completedAtNs > right.completedAtNs ? -1 : 1;
   }
   return right.id.localeCompare(left.id);
+}
+
+function isBeforeCursor(
+  timestampNs: bigint,
+  id: string,
+  before: ReportFeedCursor | undefined,
+): boolean {
+  return (
+    before === undefined ||
+    timestampNs < before.timestampNs ||
+    (timestampNs === before.timestampNs && id < before.id)
+  );
+}
+
+function matchesReportRunOptions(
+  row: StoredReportRun,
+  options:
+    | {
+        sinceCompletedAtNs?: bigint;
+        scheduleId?: string;
+        reportType?: string;
+        excludeReportType?: string;
+        verdict?: ReportVerdict;
+        deliveryStatus?: ReportDeliveryStatus;
+        hasPr?: boolean;
+        before?: ReportFeedCursor;
+      }
+    | undefined,
+): boolean {
+  return (
+    options === undefined ||
+    ((options.sinceCompletedAtNs === undefined ||
+      row.completedAtNs >= options.sinceCompletedAtNs) &&
+      (options.scheduleId === undefined ||
+        row.scheduleId === options.scheduleId) &&
+      (options.reportType === undefined ||
+        row.reportType === options.reportType) &&
+      (options.excludeReportType === undefined ||
+        row.reportType !== options.excludeReportType) &&
+      (options.verdict === undefined || row.verdict === options.verdict) &&
+      (options.deliveryStatus === undefined ||
+        row.deliveryStatus === options.deliveryStatus) &&
+      (options.hasPr !== true || row.prUrl !== null) &&
+      isBeforeCursor(row.completedAtNs, row.id, options.before))
+  );
 }
 
 export class MemoryReportRepository implements ReportRepository {
@@ -92,30 +142,15 @@ export class MemoryReportRepository implements ReportRepository {
     sinceCompletedAtNs?: bigint;
     scheduleId?: string;
     reportType?: string;
+    excludeReportType?: string;
+    verdict?: ReportVerdict;
+    deliveryStatus?: ReportDeliveryStatus;
+    hasPr?: boolean;
+    before?: ReportFeedCursor;
     limit?: number;
   }): Promise<readonly StoredReportRun[]> {
     const filtered = [...this.runs.values()]
-      .filter((row) => {
-        if (
-          options?.sinceCompletedAtNs !== undefined &&
-          row.completedAtNs < options.sinceCompletedAtNs
-        ) {
-          return false;
-        }
-        if (
-          options?.scheduleId !== undefined &&
-          row.scheduleId !== options.scheduleId
-        ) {
-          return false;
-        }
-        if (
-          options?.reportType !== undefined &&
-          row.reportType !== options.reportType
-        ) {
-          return false;
-        }
-        return true;
-      })
+      .filter((row) => matchesReportRunOptions(row, options))
       .toSorted(compareRunsDesc);
     return Promise.resolve(
       options?.limit === undefined
@@ -154,21 +189,17 @@ export class MemoryReportRepository implements ReportRepository {
   listDigestRuns(options?: {
     sinceCreatedAtNs?: bigint;
     kind?: DigestKind;
+    before?: ReportFeedCursor;
     limit?: number;
   }): Promise<readonly StoredDigestRun[]> {
     const filtered = [...this.#opsRepository.digests.values()]
-      .filter((row) => {
-        if (
-          options?.sinceCreatedAtNs !== undefined &&
-          row.createdAtNs < options.sinceCreatedAtNs
-        ) {
-          return false;
-        }
-        if (options?.kind !== undefined && row.kind !== options.kind) {
-          return false;
-        }
-        return true;
-      })
+      .filter(
+        (row) =>
+          (options?.sinceCreatedAtNs === undefined ||
+            row.createdAtNs >= options.sinceCreatedAtNs) &&
+          (options?.kind === undefined || row.kind === options.kind) &&
+          isBeforeCursor(row.createdAtNs, row.id, options?.before),
+      )
       .toSorted((left, right) =>
         left.createdAtNs === right.createdAtNs
           ? right.id.localeCompare(left.id)
@@ -220,9 +251,15 @@ export class MemoryReportRepository implements ReportRepository {
     );
   }
 
-  listIncidentMails(limit: number): Promise<readonly StoredIncidentMail[]> {
+  listIncidentMails(options: {
+    limit: number;
+    before?: ReportFeedCursor;
+  }): Promise<readonly StoredIncidentMail[]> {
     return Promise.resolve(
       [...this.incidentMails.values()]
+        .filter((row) =>
+          isBeforeCursor(row.createdAtNs, row.id, options.before),
+        )
         .toSorted((left, right) =>
           left.createdAtNs === right.createdAtNs
             ? right.id.localeCompare(left.id)
@@ -230,7 +267,7 @@ export class MemoryReportRepository implements ReportRepository {
               ? -1
               : 1,
         )
-        .slice(0, limit),
+        .slice(0, options.limit),
     );
   }
 

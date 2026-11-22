@@ -19,7 +19,10 @@ import {
   toLatestRunSummary,
   toReportRunSibling,
 } from "#application/reports/report-mappers";
-import type { ReportRepository } from "#application/reports/report-ports";
+import type {
+  ReportFeedCursor,
+  ReportRepository,
+} from "#application/reports/report-ports";
 import { renderDigestEmail } from "#domain/ops-digest-email";
 import { digestPeriodKey } from "#domain/ops-period";
 import { renderReportEnvelopeEmail } from "#domain/reports/report-email";
@@ -220,44 +223,150 @@ export class ReportService {
 
   async feed(rawQuery: ReportsFeedQueryInput): Promise<ReportsFeedResponse> {
     const query = ReportsFeedQuerySchema.parse(rawQuery);
-    const fetchCap = Math.max(query.limit * 3, 250);
+    const pageSize = Math.max(query.limit, 100);
+    const isDigestScheduleFilter =
+      query.scheduleId === "ops-digest-daily" ||
+      query.scheduleId === "ops-digest-weekly";
+    const temporalDeliveryFilter =
+      query.delivery === "canceled" ? undefined : query.delivery;
     const includeTemporal =
-      query.tab === "all" ||
-      query.tab === "reports" ||
-      query.tab === "agent-tasks";
-    const includeDigests = query.tab === "all" || query.tab === "digests";
-    const includeIncidents = query.tab === "all" || query.tab === "incidents";
+      (query.tab === "all" ||
+        query.tab === "reports" ||
+        query.tab === "agent-tasks") &&
+      !isDigestScheduleFilter &&
+      query.delivery !== "canceled";
+    const includeDigests =
+      (query.tab === "all" || query.tab === "digests") &&
+      query.hasPr !== "1" &&
+      query.delivery !== "canceled" &&
+      (query.scheduleId === undefined || isDigestScheduleFilter);
+    const includeIncidents =
+      (query.tab === "all" || query.tab === "incidents") &&
+      query.hasPr !== "1" &&
+      query.scheduleId === undefined;
 
-    const [reportRuns, digestRuns, incidentMails] = await Promise.all([
+    const collectFromSource = async <T>(
+      fetchPage: (
+        before: ReportFeedCursor | undefined,
+      ) => Promise<readonly T[]>,
+      cursorOf: (row: T) => ReportFeedCursor,
+      toCandidates: (
+        rows: readonly T[],
+      ) => ReturnType<typeof buildFeedCandidates>,
+    ): Promise<ReturnType<typeof buildFeedCandidates>> => {
+      const matched: ReturnType<typeof buildFeedCandidates>[number][] = [];
+      let before: ReportFeedCursor | undefined;
+      for (;;) {
+        const page = await fetchPage(before);
+        if (page.length === 0) break;
+        const candidates = toCandidates(page);
+        const byId = new Map(candidates.map((item) => [item.id, item]));
+        for (const accepted of filterAndSortFeedItems(candidates, {
+          ...query,
+          limit: page.length,
+        })) {
+          const full = byId.get(accepted.id);
+          if (full !== undefined) {
+            matched.push(full);
+          }
+        }
+        if (matched.length >= query.limit || page.length < pageSize) {
+          break;
+        }
+        const last = page.at(-1);
+        if (last === undefined) break;
+        before = cursorOf(last);
+      }
+      return matched;
+    };
+
+    const digestKindFilter: DigestKind | undefined =
+      query.scheduleId === "ops-digest-daily"
+        ? "daily"
+        : query.scheduleId === "ops-digest-weekly"
+          ? "weekly"
+          : undefined;
+
+    const [reportMatches, digestMatches, incidentMatches] = await Promise.all([
       includeTemporal
-        ? this.#repository.listReportRuns({
-            ...(query.scheduleId === undefined
-              ? {}
-              : { scheduleId: query.scheduleId }),
-            ...(query.tab === "agent-tasks"
-              ? { reportType: "agent-task" }
-              : {}),
-            limit: fetchCap,
-          })
+        ? collectFromSource(
+            (before) =>
+              this.#repository.listReportRuns({
+                ...(query.scheduleId === undefined
+                  ? {}
+                  : { scheduleId: query.scheduleId }),
+                ...(query.tab === "agent-tasks"
+                  ? { reportType: "agent-task" }
+                  : query.tab === "reports"
+                    ? { excludeReportType: "agent-task" }
+                    : {}),
+                ...(query.verdict === undefined
+                  ? {}
+                  : { verdict: query.verdict }),
+                ...(temporalDeliveryFilter === undefined
+                  ? {}
+                  : { deliveryStatus: temporalDeliveryFilter }),
+                ...(query.hasPr === "1" ? { hasPr: true } : {}),
+                ...(before === undefined ? {} : { before }),
+                limit: pageSize,
+              }),
+            (row) => ({ timestampNs: row.completedAtNs, id: row.id }),
+            (reportRuns) =>
+              buildFeedCandidates({
+                reportRuns,
+                digestRuns: [],
+                incidentMails: [],
+                digestMailbox: this.#digestMailbox,
+                incidentMailbox: this.#incidentMailbox,
+              }),
+          )
         : Promise.resolve([]),
       includeDigests
-        ? this.#repository.listDigestRuns({ limit: fetchCap })
+        ? collectFromSource(
+            (before) =>
+              this.#repository.listDigestRuns({
+                ...(digestKindFilter === undefined
+                  ? {}
+                  : { kind: digestKindFilter }),
+                ...(before === undefined ? {} : { before }),
+                limit: pageSize,
+              }),
+            (row) => ({ timestampNs: row.createdAtNs, id: row.id }),
+            (digestRuns) =>
+              buildFeedCandidates({
+                reportRuns: [],
+                digestRuns,
+                incidentMails: [],
+                digestMailbox: this.#digestMailbox,
+                incidentMailbox: this.#incidentMailbox,
+              }),
+          )
         : Promise.resolve([]),
       includeIncidents
-        ? this.#repository.listIncidentMails(fetchCap)
+        ? collectFromSource(
+            (before) =>
+              this.#repository.listIncidentMails({
+                limit: pageSize,
+                ...(before === undefined ? {} : { before }),
+              }),
+            (row) => ({ timestampNs: row.createdAtNs, id: row.id }),
+            (incidentMails) =>
+              buildFeedCandidates({
+                reportRuns: [],
+                digestRuns: [],
+                incidentMails,
+                digestMailbox: this.#digestMailbox,
+                incidentMailbox: this.#incidentMailbox,
+              }),
+          )
         : Promise.resolve([]),
     ]);
 
-    const merged = buildFeedCandidates({
-      reportRuns,
-      digestRuns,
-      incidentMails,
-      digestMailbox: this.#digestMailbox,
-      incidentMailbox: this.#incidentMailbox,
-    });
-
     return ReportsFeedResponseSchema.parse({
-      items: filterAndSortFeedItems(merged, query),
+      items: filterAndSortFeedItems(
+        [...reportMatches, ...digestMatches, ...incidentMatches],
+        query,
+      ),
     });
   }
 

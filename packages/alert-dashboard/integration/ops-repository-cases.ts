@@ -276,7 +276,7 @@ export function registerOpsRepositoryCases(): void {
           true,
         ),
       );
-      const mails = await reportRepository.listIncidentMails(10);
+      const mails = await reportRepository.listIncidentMails({ limit: 10 });
       expect(mails).toHaveLength(1);
       const mail = mails[0];
       if (mail === undefined) throw new Error("expected queued incident mail");

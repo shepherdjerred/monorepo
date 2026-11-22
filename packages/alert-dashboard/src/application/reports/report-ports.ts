@@ -82,6 +82,11 @@ export type StoredIncidentMail = {
   plainBody: string | null;
 };
 
+export type ReportFeedCursor = {
+  readonly timestampNs: bigint;
+  readonly id: string;
+};
+
 export type ReportRepository = {
   upsertReportRuns: (
     items: readonly ReportRunIngestItem[],
@@ -91,6 +96,11 @@ export type ReportRepository = {
     sinceCompletedAtNs?: bigint;
     scheduleId?: string;
     reportType?: string;
+    excludeReportType?: string;
+    verdict?: ReportVerdict;
+    deliveryStatus?: ReportDeliveryStatus;
+    hasPr?: boolean;
+    before?: ReportFeedCursor;
     limit?: number;
   }) => Promise<readonly StoredReportRun[]>;
   listLatestRunsPerSchedule: (
@@ -104,6 +114,7 @@ export type ReportRepository = {
   listDigestRuns: (options?: {
     sinceCreatedAtNs?: bigint;
     kind?: DigestKind;
+    before?: ReportFeedCursor;
     limit?: number;
   }) => Promise<readonly StoredDigestRun[]>;
   listLatestDigestsByKind: () => Promise<{
@@ -114,7 +125,10 @@ export type ReportRepository = {
     kind: DigestKind,
     periodKey: string,
   ) => Promise<StoredDigestRun | null>;
-  listIncidentMails: (limit: number) => Promise<readonly StoredIncidentMail[]>;
+  listIncidentMails: (options: {
+    limit: number;
+    before?: ReportFeedCursor;
+  }) => Promise<readonly StoredIncidentMail[]>;
   getIncidentMail: (id: string) => Promise<{
     mail: StoredIncidentMail;
     occurrences: readonly IncidentMailOccurrence[];
