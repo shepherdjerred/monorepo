@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type {
+  CommitBlocker,
   CommitService,
   CommitStatus,
   CommitSummary,
 } from "#shared/hub/hub-contract.ts";
 import {
+  blockerNotes,
   commitStatement,
   parseSha,
   rowNotes,
@@ -15,7 +17,11 @@ import {
 
 const NEWER = "69765c4ae8".padEnd(40, "0");
 
-const build = (serviceId: string, outcome: "verified" | "failed") => ({
+const build = (
+  serviceId: string,
+  outcome: "verified" | "failed",
+  serviceTitle?: string,
+) => ({
   id: `${serviceId}-build`,
   serviceId,
   sourceRevision: "3".repeat(40),
@@ -27,6 +33,7 @@ const build = (serviceId: string, outcome: "verified" | "failed") => ({
   createdAt: "2026-11-01T00:00:00.000Z",
   pipelineNumber: 18_050,
   links: [],
+  ...(serviceTitle === undefined ? {} : { serviceTitle }),
 });
 
 function changed(
@@ -45,8 +52,23 @@ function changed(
   };
 }
 
+/** The not-live environments of changed entries, as the server lists them. */
+const blockersOf = (entries: CommitService[]): CommitBlocker[] =>
+  entries.flatMap((entry) =>
+    entry.environments
+      .filter(
+        (environment) =>
+          environment.state !== "live" && environment.state !== "superseded",
+      )
+      .map((environment) => ({
+        service: entry.service.title,
+        environment: environment.name,
+        state: environment.state,
+      })),
+  );
+
 function status(overrides: Partial<CommitStatus>): CommitStatus {
-  return {
+  const base: CommitStatus = {
     sha: "3".repeat(40),
     title: null,
     author: null,
@@ -61,6 +83,8 @@ function status(overrides: Partial<CommitStatus>): CommitStatus {
     blocker: null,
     ...overrides,
   };
+  const blockers = overrides.blockers ?? blockersOf(base.changed);
+  return { ...base, blockers, blocker: blockers[0] ?? null };
 }
 
 describe("commit statement", () => {
@@ -68,14 +92,14 @@ describe("commit statement", () => {
     const statement = commitStatement(
       status({
         verdict: "build_failed",
-        failedBuilds: [build("scout-frontend", "failed")],
+        failedBuilds: [build("scout-frontend", "failed", "Scout frontend")],
         changed: ["media", "delivery", "scout"].map((id) =>
           changed(id, "superseded"),
         ),
       }),
     );
     expect(statement).toBe(
-      "CI failed for 1 service, so Delivery published nothing for it. All 3 changed services are live because newer commits include them.",
+      "CI failed for Scout frontend, so Delivery published nothing for it. All 3 changed services are live because newer commits include them.",
     );
     expect(statement).not.toContain("nothing from this commit was published");
   });
@@ -85,49 +109,59 @@ describe("commit statement", () => {
       commitStatement(
         status({
           verdict: "build_failed",
-          failedBuilds: [build("birmel", "failed")],
+          failedBuilds: [build("birmel", "failed", "Birmel")],
         }),
       ),
     ).toBe("CI failed, so nothing from this commit was published.");
   });
 
-  it("says a failed build a newer passing commit includes was not built on its own, instead of CI failed", () => {
-    const failed = build("ci", "failed");
+  it("says where a carried failure shipped, and that the carrier's build passed, not the carrier", () => {
+    const failed = build("ci", "failed", "CI (Woodpecker)");
     const statement = commitStatement(
       status({
         verdict: "nothing_to_deploy",
         failedBuilds: [failed],
-        carriedFailures: [{ buildId: failed.id, includedIn: NEWER }],
+        carriedFailures: [
+          {
+            buildId: failed.id,
+            includedIn: NEWER,
+            serviceTitle: "CI (Woodpecker)",
+          },
+        ],
       }),
     );
     expect(statement).toBe(
-      "CI failed for 1 service here, so it was not built on its own; included in 69765c4, which passed.",
+      "CI failed for CI (Woodpecker) here, so it was not built on its own; included in 69765c4, whose build of CI (Woodpecker) passed.",
     );
+    expect(statement).not.toContain("which passed");
     expect(statement).not.toContain("nothing from this commit was published");
     expect(statement).not.toContain("changed nothing");
   });
 
-  it("leads with the real blocker when the only CI failure is carried by a newer commit", () => {
-    const failed = build("ci", "failed");
-    expect(
-      commitStatement(
-        status({
-          verdict: "waiting",
-          failedBuilds: [failed],
-          carriedFailures: [{ buildId: failed.id, includedIn: NEWER }],
-          changed: [
-            changed("temporal-data", "manual"),
-            changed("media", "live"),
-          ],
-          blocker: {
-            service: "Temporal data layer",
-            environment: "prod",
-            state: "manual",
+  it("leads with the real blocker, counted, before the carried CI failure", () => {
+    // /commits/3dadb10: 19 of 20 services live, one waits on a manual release.
+    const failed = build("scout-for-lol", "failed", "Scout for LoL");
+    const statement = commitStatement(
+      status({
+        verdict: "waiting",
+        failedBuilds: [failed],
+        carriedFailures: [
+          {
+            buildId: failed.id,
+            includedIn: NEWER,
+            serviceTitle: "Scout for LoL",
           },
-        }),
-      ),
-    ).toBe(
-      "Nothing that would deliver it is queued or running. CI failed for 1 service here, so it was not built on its own; included in 69765c4, which passed. 1 of 2 changed services are live. Temporal data layer prod needs a manual promotion or release; nothing is in flight.",
+        ],
+        changed: [
+          changed("temporal-data", "manual"),
+          ...Array.from({ length: 19 }, (_, position) =>
+            changed(`service-${String(position)}`, "superseded"),
+          ),
+        ],
+      }),
+    );
+    expect(statement).toBe(
+      "1 of 20 changed services needs a manual release: TEMPORAL-DATA prod. 19 of 20 are live. CI failed for Scout for LoL here, so it was not built on its own; included in 69765c4, whose build of Scout for LoL passed.",
     );
   });
 
@@ -136,33 +170,58 @@ describe("commit statement", () => {
       commitStatement(
         status({
           verdict: "recovery_required",
-          failedBuilds: [build("birmel", "failed")],
+          failedBuilds: [build("birmel", "failed", "Birmel")],
           changed: [changed("media", "recovery_required")],
-          blocker: {
-            service: "MEDIA",
-            environment: "prod",
-            state: "recovery_required",
-          },
         }),
       ),
     ).toBe(
-      "A failed deployment locked an environment, so nothing reaches it until an operator recovers it. CI failed for 1 service, so Delivery published nothing for it. 0 of 1 changed service is live. MEDIA prod is locked by a failed deployment until an operator recovers it.",
+      "Its changed service needs an operator to recover its environment: MEDIA prod. CI failed for Birmel, so Delivery published nothing for it.",
     );
   });
 
-  it("names the environment that is blocking and why", () => {
+  it("names every environment held back the same way and counts services, not builds", () => {
+    // /commits/0b3dde2: Minecraft failed in tsmc, the rest of prod is live.
+    const minecraft: CommitService = {
+      ...changed("minecraft", "failed"),
+      environments: [
+        {
+          environmentId: "minecraft/sandbox",
+          name: "sandbox",
+          state: "live",
+          deploymentId: null,
+        },
+        {
+          environmentId: "minecraft/tsmc",
+          name: "tsmc",
+          state: "failed",
+          deploymentId: null,
+        },
+      ],
+    };
+    const streambot = changed("streambot", "failed");
     expect(
       commitStatement(
         status({
-          verdict: "waiting",
-          changed: [changed("scout", "manual"), changed("media", "live")],
-          blocker: { service: "SCOUT", environment: "prod", state: "manual" },
+          verdict: "failed",
+          changed: [
+            minecraft,
+            streambot,
+            changed("delivery", "live"),
+            changed("tracker", "live"),
+          ],
         }),
       ),
     ).toBe(
-      "Nothing that would deliver it is queued or running. 1 of 2 changed services are live. SCOUT prod needs a manual promotion or release; nothing is in flight.",
+      "2 of 4 changed services failed to deploy: MINECRAFT tsmc and STREAMBOT prod. 2 of 4 are live.",
     );
   });
+});
+
+/** An environment whose newest deployment of the change failed. */
+const failing = (service: string, environment: string): CommitBlocker => ({
+  service,
+  environment,
+  state: "failed",
 });
 
 describe("commit row notes", () => {
@@ -180,27 +239,44 @@ describe("commit row notes", () => {
     failedBuildCount: 1,
   };
 
-  it("says CI failed for how many services beside the tallies", () => {
+  it("names the services whose CI failed beside the tallies", () => {
+    expect(rowNotes({ ...row, failedServices: ["CI (Woodpecker)"] })).toEqual([
+      "CI failed for CI (Woodpecker)",
+    ]);
+    expect(
+      rowNotes({
+        ...row,
+        failedBuildCount: 5,
+        failedServices: ["A", "B", "C", "D", "E"],
+      }),
+    ).toEqual(["CI failed for A, B, C and 2 more"]);
+    // A server that names none still counts them.
     expect(rowNotes(row)).toEqual(["CI failed for 1 service"]);
   });
 
-  it("says a carried failure was included in the newer commit, not that CI failed", () => {
+  it("says a carried failure was included in the newer commit, whose build passed", () => {
+    const carried = [
+      { buildId: "ci-build", includedIn: NEWER, serviceTitle: "Golink" },
+    ];
     expect(
       rowNotes({
         ...row,
         verdict: "nothing_to_deploy",
-        carriedFailures: [{ buildId: "ci-build", includedIn: NEWER }],
+        carriedFailures: carried,
       }),
-    ).toEqual(["Not built on its own; included in 69765c4, which passed"]);
+    ).toEqual([
+      "Not built on its own; included in 69765c4, whose build of Golink passed",
+    ]);
     expect(
       rowNotes({
         ...row,
         failedBuildCount: 2,
-        carriedFailures: [{ buildId: "ci-build", includedIn: NEWER }],
+        failedServices: ["Arcade"],
+        carriedFailures: carried,
       }),
     ).toEqual([
-      "CI failed for 1 service",
-      "Not built on its own; included in 69765c4, which passed",
+      "CI failed for Arcade",
+      "Not built on its own; included in 69765c4, whose build of Golink passed",
     ]);
   });
 
@@ -218,20 +294,68 @@ describe("commit row notes", () => {
       }),
     ).toEqual(["Temporal / prod: recovery required"]);
   });
+
+  it("names every failing environment, then how many more", () => {
+    expect(
+      blockerNotes([
+        failing("Streambot", "prod"),
+        failing("Minecraft", "tsmc"),
+        { service: "Temporal", environment: "prod", state: "not_started" },
+      ]),
+    ).toEqual(["Streambot / prod: failed", "Minecraft / tsmc: failed"]);
+    expect(
+      blockerNotes([
+        failing("A", "prod"),
+        failing("B", "prod"),
+        failing("C", "prod"),
+        failing("D", "prod"),
+        failing("E", "beta"),
+      ]),
+    ).toEqual([
+      "A / prod: failed",
+      "B / prod: failed",
+      "C / prod: failed",
+      "+2 more failing",
+    ]);
+    // With nothing failing, the most urgent one alone.
+    expect(
+      blockerNotes([
+        { service: "Birmel", environment: "prod", state: "manual" },
+        { service: "Golink", environment: "prod", state: "not_started" },
+      ]),
+    ).toEqual(["Birmel / prod: needs manual release"]);
+  });
 });
 
 describe("commit verdict and tallies", () => {
   it("shows a commit whose failures a newer commit carries as included, not nothing to deploy", () => {
-    expect(
-      verdictView("nothing_to_deploy", [
-        { buildId: "ci-build", includedIn: NEWER },
-      ]),
-    ).toEqual({ status: "not_started", label: "Included in newer" });
+    const carried = [{ buildId: "ci-build", includedIn: NEWER }];
+    expect(verdictView("nothing_to_deploy", { carried })).toEqual({
+      status: "not_started",
+      label: "Included in newer",
+    });
     expect(verdictView("nothing_to_deploy").label).toBe("Nothing to deploy");
+  });
+
+  it("names what a waiting commit waits on, and says not released only when no release includes it", () => {
+    expect(verdictView("waiting", { pending: ["manual"] })).toEqual({
+      status: "pending",
+      label: "Needs manual release",
+    });
+    // The cause before what waits on it.
     expect(
-      verdictView("waiting", [{ buildId: "ci-build", includedIn: NEWER }])
-        .label,
+      verdictView("waiting", { pending: ["waiting", "manual"] }).label,
+    ).toBe("Needs manual release");
+    expect(verdictView("waiting", { pending: ["not_started"] }).label).toBe(
+      "Not started",
+    );
+    expect(
+      verdictView("waiting", {
+        carried: [{ buildId: "ci-build", includedIn: NEWER }],
+      }).label,
     ).toBe("Not released");
+    // Other verdicts keep their own words.
+    expect(verdictView("failed", { pending: ["failed"] }).label).toBe("Failed");
   });
 
   it("explains an environment tally in short on screen and in full to a screen reader", () => {

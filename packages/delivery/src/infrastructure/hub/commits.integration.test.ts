@@ -89,6 +89,13 @@ async function pushed(
   });
 }
 
+/** A carried failure as a commit read reports it, named by its service's title. */
+const carriedBy = (buildId: string, includedIn: string) => ({
+  buildId,
+  includedIn,
+  serviceTitle: expect.any(String) as unknown,
+});
+
 describe("commit status", () => {
   test("a failed build a later passing commit includes is carried by it", async () => {
     const failed = await publish("golink", sha("1"), 500, "failed");
@@ -97,9 +104,7 @@ describe("commit status", () => {
     const status = await commitStatus(context.cluster.database, sha("1"));
     expect(status.failedBuilds.map((build) => build.id)).toEqual([failed]);
     // The first later commit that passed, not the newest.
-    expect(status.carriedFailures).toEqual([
-      { buildId: failed, includedIn: sha("2") },
-    ]);
+    expect(status.carriedFailures).toEqual([carriedBy(failed, sha("2"))]);
     expect(status.verdict).toBe("nothing_to_deploy");
   });
 
@@ -115,9 +120,7 @@ describe("commit status", () => {
     expect(before.verdict).toBe("build_failed");
     await publish("golink", sha("6"), 602, "verified");
     const status = await commitStatus(context.cluster.database, sha("5"));
-    expect(status.carriedFailures).toEqual([
-      { buildId: failed, includedIn: sha("6") },
-    ]);
+    expect(status.carriedFailures).toEqual([carriedBy(failed, sha("6"))]);
     expect(status.verdict).toBe("nothing_to_deploy");
   });
 
@@ -127,9 +130,7 @@ describe("commit status", () => {
     const failed = await publish("arcade", sha("c"), 800, "failed");
     await publish("arcade", sha("d"), 801, "verified");
     const status = await commitStatus(context.cluster.database, sha("c"));
-    expect(status.carriedFailures).toEqual([
-      { buildId: failed, includedIn: sha("d") },
-    ]);
+    expect(status.carriedFailures).toEqual([carriedBy(failed, sha("d"))]);
     expect(status.changed.map((entry) => entry.includedIn)).toEqual([sha("d")]);
     const [carried] = status.changed;
     expect(carried?.service.id).toBe("arcade");
@@ -152,9 +153,7 @@ describe("commit status", () => {
     await publish("arcade", sha("3"), 902, "verified");
     await context.delivery.qualify(skipped, "verified", testExecutor);
     const status = await commitStatus(context.cluster.database, sha("1"));
-    expect(status.carriedFailures).toEqual([
-      { buildId: failed, includedIn: sha("2") },
-    ]);
+    expect(status.carriedFailures).toEqual([carriedBy(failed, sha("2"))]);
     const [carried] = status.changed;
     expect(status.changed).toHaveLength(1);
     expect(carried?.includedIn).toBe(sha("3"));
@@ -174,9 +173,7 @@ describe("commit status", () => {
     const kept = await register("arcade", sha("0"), 951, image("arcade", 949));
     await context.delivery.qualify(kept, "verified", testExecutor);
     const status = await commitStatus(context.cluster.database, sha("f"));
-    expect(status.carriedFailures).toEqual([
-      { buildId: failed, includedIn: sha("0") },
-    ]);
+    expect(status.carriedFailures).toEqual([carriedBy(failed, sha("0"))]);
     expect(status.changed).toEqual([
       expect.objectContaining({
         versionSet: null,
@@ -195,5 +192,90 @@ describe("commit status", () => {
     expect(status.failedBuilds.map((build) => build.id)).toEqual([failed]);
     expect(status.carriedFailures).toEqual([]);
     expect(status.verdict).toBe("build_failed");
+  });
+
+  test("a commit whose whole pipeline failed stands where the next passing pipeline's releases stand", async () => {
+    // Pipeline 1000 failed before it published Arcade: Golink's build, which
+    // no environment tracks, is all it recorded. Pipeline 1001 passed and
+    // released Arcade, which carries the failed commit's change.
+    const failed = await publish("golink", sha("9"), 1000, "failed");
+    await publish("golink", sha("1"), 1001, "verified");
+    await publish("arcade", sha("1"), 1001, "verified");
+    const status = await commitStatus(context.cluster.database, sha("9"));
+    expect(status.carriedFailures).toEqual([carriedBy(failed, sha("1"))]);
+    // Golink has nowhere to be released, so it decides nothing.
+    expect(status.changed.map((entry) => entry.service.id)).toEqual(["arcade"]);
+    const [arcade] = status.changed;
+    expect(arcade?.includedIn).toBe(sha("1"));
+    expect(arcade?.versionSet).not.toBeNull();
+    expect(arcade?.environments.map((entry) => entry.environmentId)).toEqual([
+      context.fixture.environment.id,
+    ]);
+    // Never "not released" while that release is what carries it.
+    expect(status.verdict).toBe(arcade?.verdict);
+    expect(status.verdict).not.toBe("build_failed");
+    expect(status.blocker?.service).toBe(arcade?.service.title);
+    expect(status.blockers?.[0]).toEqual(status.blocker);
+  });
+
+  test("a whole failed pipeline follows a carrying build a newer one superseded to that newer release", async () => {
+    // Pipeline 1301 passed and built Arcade, but 1302's Arcade qualified
+    // first, so 1301's composed nothing and 1302's release carries it.
+    const failed = await publish("golink", sha("9"), 1300, "failed");
+    await publish("golink", sha("1"), 1301, "verified");
+    const superseded = await register("arcade", sha("1"), 1301);
+    await publish("arcade", sha("2"), 1302, "verified");
+    await context.delivery.qualify(superseded, "verified", testExecutor);
+    const status = await commitStatus(context.cluster.database, sha("9"));
+    expect(status.carriedFailures).toEqual([carriedBy(failed, sha("1"))]);
+    const [arcade, ...rest] = status.changed;
+    expect(rest).toEqual([]);
+    expect(arcade?.service.id).toBe("arcade");
+    expect(arcade?.includedIn).toBe(sha("2"));
+    expect(arcade?.versionSet).not.toBeNull();
+    expect(status.verdict).toBe(arcade?.verdict);
+  });
+
+  test("a whole failed pipeline takes no row from a carrying build that only kept earlier artifacts", async () => {
+    await publish("arcade", sha("7"), 1399, "verified");
+    await publish("golink", sha("9"), 1400, "failed");
+    await publish("golink", sha("1"), 1401, "verified");
+    const kept = await register(
+      "arcade",
+      sha("1"),
+      1401,
+      image("arcade", 1399),
+    );
+    await context.delivery.qualify(kept, "verified", testExecutor);
+    const status = await commitStatus(context.cluster.database, sha("9"));
+    expect(status.changed).toEqual([]);
+    expect(status.verdict).toBe("nothing_to_deploy");
+  });
+
+  test("a commit whose pipeline passed for some services takes no other commit's releases", async () => {
+    const failed = await publish("golink", sha("9"), 1100, "failed");
+    await publish("birmel", sha("9"), 1100, "verified");
+    await publish("golink", sha("1"), 1101, "verified");
+    await publish("arcade", sha("1"), 1101, "verified");
+    const status = await commitStatus(context.cluster.database, sha("9"));
+    expect(status.carriedFailures).toEqual([carriedBy(failed, sha("1"))]);
+    expect(status.changed.some((entry) => entry.service.id === "arcade")).toBe(
+      false,
+    );
+  });
+
+  test("a service built twice for one commit counts once, by its newest release", async () => {
+    await publish("arcade", sha("9"), 1200, "verified");
+    await publish("arcade", sha("9"), 1201, "verified");
+    const status = await commitStatus(context.cluster.database, sha("9"));
+    expect(status.changed.map((entry) => entry.service.id)).toEqual(["arcade"]);
+    const revisions = await context.cluster.database.versionSet.findMany({
+      where: { serviceId: "arcade" },
+      select: { revision: true },
+    });
+    expect(status.changed[0]?.versionSet?.revision).toBe(
+      Math.max(...revisions.map((row) => row.revision)),
+    );
+    expect(status.environments.map((group) => group.total)).toEqual([1]);
   });
 });

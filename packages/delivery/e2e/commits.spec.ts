@@ -7,8 +7,11 @@ import {
   FAILED_POSITION,
   PARTIAL_FAILURE_POSITION,
   PARTIAL_FAILURE_REASON,
+  PIPELINE_CARRIER_POSITION,
+  PIPELINE_FAILURE_POSITION,
   QUEUED_POSITION,
   UNRELEASED_POSITION,
+  historyPipeline,
   historySha,
 } from "./commits.ts";
 
@@ -33,16 +36,17 @@ test("a commit says deploying only while a deployment that carries it is in flig
   ).toHaveAttribute("href", "/deployments/birmel-queued");
 
   // Nothing was asked for the newest one: it waits on a manual release, and
-  // the page names the environment and why instead of saying "deploying".
+  // the pill and the page name that instead of saying "deploying" or "not
+  // released", since a release of it exists.
   const unreleased = await openCommit(page, UNRELEASED_POSITION);
-  await expect(unreleased.locator(".page-header")).toContainText(
-    "Not released",
+  const header = unreleased.locator(".page-header");
+  await expect(header.locator(".status").first()).toHaveText(
+    /Needs manual release/u,
   );
-  await expect(unreleased.locator(".page-header")).not.toContainText(
-    "Deploying",
-  );
-  await expect(unreleased).toContainText(
-    "Birmel prod needs a manual promotion or release; nothing is in flight.",
+  await expect(header).not.toContainText("Not released");
+  await expect(header).not.toContainText("Deploying");
+  await expect(header).toContainText(
+    "Its changed service needs a manual release: Birmel prod.",
   );
   await expect(
     service.getByRole("link", { name: "needs manual release prod" }),
@@ -60,16 +64,81 @@ test("the list row names the environment that is blocking it", async ({
   page,
 }) => {
   const unreleased = await findRow(page, UNRELEASED_POSITION);
-  await expect(unreleased).toContainText("Not released");
+  await expect(unreleased.locator(".status").first()).toHaveText(
+    /Needs manual release/u,
+  );
   await expect(unreleased).toContainText("Birmel / prod: needs manual release");
   await expect(unreleased).not.toContainText("Deploying");
   await expectNoHorizontalOverflow(page);
   await expect(await findRow(page, QUEUED_POSITION)).toContainText(
     "Birmel / prod: deploying",
   );
+  // The service whose CI failed is named, not counted.
   await expect(await findRow(page, PARTIAL_FAILURE_POSITION)).toContainText(
-    "CI failed for 1 service",
+    "CI failed for Arcade",
   );
+});
+
+test("the commit list says how many commits it shows", async ({ page }) => {
+  await page.goto("/commits");
+  const recent = page.getByRole("region", { name: "Recent commits" });
+  await expect(recent.getByRole("status")).toHaveText(
+    "Showing the 25 newest commits. Older ones are on the next page.",
+  );
+  await recent
+    .getByRole("navigation", { name: "Pages" })
+    .getByRole("link", { name: "Older" })
+    .click();
+  await expect(recent.getByRole("status")).toContainText(
+    "older than the previous page",
+  );
+});
+
+test("a commit whose whole pipeline failed stands where the next passing commit's release stands", async ({
+  page,
+}) => {
+  const carrier = historySha(PIPELINE_CARRIER_POSITION).slice(0, 7);
+  const main = await openCommit(page, PIPELINE_FAILURE_POSITION);
+  const header = main.locator(".page-header");
+  // Its change ships in the carrier's Birmel release, which waits on a
+  // manual release: never "not released" while that release carries it.
+  await expect(header.locator(".status").first()).toHaveText(
+    /Needs manual release/u,
+  );
+  await expect(header).toContainText(
+    `Its changed service needs a manual release: Birmel prod. CI failed for CI (Woodpecker) here, so it was not built on its own; included in ${carrier}, whose build of CI (Woodpecker) passed.`,
+  );
+  const service = page.getByRole("region", { name: /^By service/u });
+  await expect(service.getByRole("rowheader")).toHaveCount(1);
+  await expect(service.getByRole("rowheader")).toContainText("Birmel");
+  await expect(service.getByRole("link", { name: carrier })).toBeVisible();
+  await expect(service).not.toContainText("CI (Woodpecker)");
+  await expect(service).not.toContainText("No newer release carries it yet");
+  // The failed build names its service and links its CI run.
+  const included = page.getByRole("region", {
+    name: "Included in a newer commit",
+  });
+  await expect(
+    included.getByRole("link", { name: "CI (Woodpecker)" }),
+  ).toBeVisible();
+  const pipeline = String(historyPipeline(PIPELINE_FAILURE_POSITION));
+  await expect(
+    included.getByRole("link", { name: `Woodpecker #${pipeline}` }),
+  ).toHaveAttribute(
+    "href",
+    `https://woodpecker.sjer.red/repos/1/pipeline/${pipeline}`,
+  );
+
+  // The list row says the same thing in the same words.
+  const row = await findRow(page, PIPELINE_FAILURE_POSITION);
+  await expect(row.locator(".status").first()).toHaveText(
+    /Needs manual release/u,
+  );
+  await expect(row).toContainText(
+    `Not built on its own; included in ${carrier}, whose build of CI (Woodpecker) passed`,
+  );
+  await expect(row).toContainText("Birmel / prod: needs manual release");
+  await expectNoHorizontalOverflow(page);
 });
 
 /** The list row of a history commit, following "Older" until its page. */
@@ -106,17 +175,26 @@ test("a commit whose CI failed for one service says its other change is live thr
   const header = main.locator(".page-header");
   await expect(header).toContainText("CI failed");
   await expect(header).toContainText(
-    "CI failed for 1 service, so Delivery published nothing for it. Its 1 changed service is live because newer commits include it.",
+    "CI failed for Arcade, so Delivery published nothing for it. Its 1 changed service is live because newer commits include it.",
   );
   await expect(header).not.toContainText(
     "nothing from this commit was published",
   );
-  // A plain sentence comes before the raw reason Delivery recorded.
+  // A plain sentence comes before the raw reason Delivery recorded, and the
+  // build is named by its service with a link to the run that failed.
   const failed = page.getByRole("region", { name: "CI failed" });
   await expect(failed.locator("p").first()).toHaveText(
     "These services' builds failed CI or qualification, so Delivery published nothing from them. Each line quotes the reason Delivery recorded.",
   );
   await expect(failed).toContainText(PARTIAL_FAILURE_REASON);
+  await expect(failed.getByRole("link", { name: "Arcade" })).toBeVisible();
+  const pipeline = String(historyPipeline(PARTIAL_FAILURE_POSITION));
+  await expect(
+    failed.getByRole("link", { name: `Woodpecker #${pipeline}` }),
+  ).toHaveAttribute(
+    "href",
+    `https://woodpecker.sjer.red/repos/1/pipeline/${pipeline}`,
+  );
   // Its Birmel release ran in prod, then a newer release of a new lineage
   // replaced it; that release still carries the change.
   const service = page.getByRole("region", { name: /^By service/u });
@@ -137,14 +215,14 @@ test("a commit whose failed CI a newer passing commit includes says where its ch
   const row = await findRow(page, FAILED_POSITION);
   await expect(row.locator(".status").first()).toHaveText(/Deployed/u);
   await expect(row).toContainText(
-    `Not built on its own; included in ${carrier}, which passed`,
+    `Not built on its own; included in ${carrier}, whose build of Birmel passed`,
   );
   await expect(row).not.toContainText("CI failed");
 
   const main = await openCommit(page, FAILED_POSITION);
   const header = main.locator(".page-header");
   await expect(header).toContainText(
-    `CI failed for 1 service here, so it was not built on its own; included in ${carrier}, which passed.`,
+    `CI failed for Birmel here, so it was not built on its own; included in ${carrier}, whose build of Birmel passed.`,
   );
   const service = page.getByRole("region", { name: /^By service/u });
   await expect(service.getByRole("link", { name: release })).toBeVisible();
@@ -156,7 +234,7 @@ test("a commit whose failed CI a newer passing commit includes says where its ch
   const included = page.getByRole("region", {
     name: "Included in a newer commit",
   });
-  await expect(included).toContainText("birmel");
+  await expect(included).toContainText("Birmel");
   await included.getByRole("link", { name: carrier }).click();
   await expect(
     page.getByRole("heading", { level: 1, name: `Commit ${carrier}` }),
@@ -170,15 +248,20 @@ test("a carried CI failure does not outrank what actually blocks the commit", as
   const carrier = historySha(CARRIER_POSITION).slice(0, 7);
   const main = await openCommit(page, CARRIED_FAILURE_POSITION);
   const header = main.locator(".page-header");
-  await expect(header.locator(".status").first()).toHaveText(/Not released/u);
-  await expect(header).toContainText(
-    `CI failed for 1 service here, so it was not built on its own; included in ${carrier}, which passed.`,
+  await expect(header.locator(".status").first()).toHaveText(
+    /Needs manual release/u,
   );
+  // The real blocker leads; the carried failure follows.
   await expect(header).toContainText(
-    "Birmel prod needs a manual promotion or release; nothing is in flight.",
+    `Its changed service needs a manual release: Birmel prod. CI failed for Golink here, so it was not built on its own; included in ${carrier}, whose build of Golink passed.`,
   );
+  // Golink has no environment, so its carried failure adds no row.
+  const service = page.getByRole("region", { name: /^By service/u });
+  await expect(service).not.toContainText("Golink");
   const row = await findRow(page, CARRIED_FAILURE_POSITION);
-  await expect(row.locator(".status").first()).toHaveText(/Not released/u);
+  await expect(row.locator(".status").first()).toHaveText(
+    /Needs manual release/u,
+  );
   await expect(row).toContainText("Birmel / prod: needs manual release");
 });
 

@@ -1,5 +1,7 @@
 import type {
+  CommitBlocker,
   CommitEnvironment,
+  CommitService,
   CommitEnvironmentGroup,
   CommitEnvironmentState,
   CommitVerdict,
@@ -282,17 +284,18 @@ function environmentOrder(left: string, right: string) {
     : left.localeCompare(right);
 }
 
+type ChangedEnvironments = {
+  service: { title: string };
+  environments: CommitEnvironment[];
+}[];
+
 /**
- * The most urgent environment of any changed service that does not have the
- * change yet, prod before others of the same urgency; null when every one
- * has it.
+ * Every environment of a changed service that does not have the change yet,
+ * most urgent first, prod before others of the same urgency.
  */
-export function blockingEnvironment(
-  changed: {
-    service: { title: string };
-    environments: CommitEnvironment[];
-  }[],
-) {
+export function blockingEnvironments(
+  changed: ChangedEnvironments,
+): CommitBlocker[] {
   const pending = changed.flatMap((entry) =>
     entry.environments
       .filter((environment) => !isLive(environment.state))
@@ -302,14 +305,69 @@ export function blockingEnvironment(
         state: environment.state,
       })),
   );
-  return (
-    pending.toSorted(
-      (left, right) =>
-        stateRank(left.state) - stateRank(right.state) ||
-        environmentOrder(left.environment, right.environment) ||
-        left.service.localeCompare(right.service),
-    )[0] ?? null
+  return pending.toSorted(
+    (left, right) =>
+      stateRank(left.state) - stateRank(right.state) ||
+      environmentOrder(left.environment, right.environment) ||
+      left.service.localeCompare(right.service),
   );
+}
+
+/** The most urgent of `blockingEnvironments`; null when every one has the change. */
+export function blockingEnvironment(changed: ChangedEnvironments) {
+  return blockingEnvironments(changed)[0] ?? null;
+}
+
+/**
+ * One entry per service. A pipeline can publish several builds of one
+ * service for one commit, each composing the next set revision; the commit
+ * changed the service once. In each environment the least advanced of its
+ * builds' states speaks (the newest set is the last to arrive), and the
+ * newest set names the release.
+ */
+export function mergeByService(changed: CommitService[]): CommitService[] {
+  const byService = new Map<string, CommitService[]>();
+  for (const entry of changed)
+    byService.set(entry.service.id, [
+      ...(byService.get(entry.service.id) ?? []),
+      entry,
+    ]);
+  return [...byService.values()].map((entries) => {
+    const [first, ...rest] = entries;
+    if (first === undefined) throw new Error("A service group has an entry");
+    if (rest.length === 0) return first;
+    const newest = entries.reduce((left, right) =>
+      (right.versionSet?.revision ?? 0) > (left.versionSet?.revision ?? 0)
+        ? right
+        : left,
+    );
+    const environments = new Map<string, CommitEnvironment>();
+    for (const entry of entries)
+      for (const environment of entry.environments) {
+        const seen = environments.get(environment.environmentId);
+        if (
+          seen === undefined ||
+          stateRank(environment.state) < stateRank(seen.state)
+        )
+          environments.set(environment.environmentId, environment);
+      }
+    const states = [...environments.values()];
+    const includedIn = entries.find(
+      (entry) => entry.includedIn !== undefined,
+    )?.includedIn;
+    return {
+      ...newest,
+      environments: states,
+      verdict:
+        states.length === 0
+          ? rollUp(entries.map((entry) => entry.verdict))
+          : serviceVerdict(
+              "succeeded",
+              states.map((entry) => entry.state),
+            ),
+      ...(includedIn === undefined ? {} : { includedIn }),
+    };
+  });
 }
 
 /**
