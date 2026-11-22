@@ -5139,6 +5139,14 @@
           "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
+        },
+        {
+          "key": "scout-riot-budget-mode",
+          "type": "variant",
+          "default": "enforce",
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
         }
       ]
     },
