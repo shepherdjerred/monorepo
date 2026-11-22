@@ -6,6 +6,8 @@ import {
 } from "./job-manifest.ts";
 import {
   DELIVERY_JOB_BOOTSTRAP,
+  DELIVERY_JOB_FULL_TOOLS,
+  DELIVERY_JOB_IMAGE_PROVENANCE_TOOLS,
   PREVIOUS_DELIVERY_JOB_BOOTSTRAPS,
   type DeliveryJobRequest,
 } from "#shared/delivery-job.ts";
@@ -20,39 +22,75 @@ const request: DeliveryJobRequest = {
   input: { stack: "github", proof: { a: 1, b: 2 } },
 };
 
+const TOOL_INSTALL_START = "MISE_LOCKED=1 mise install --yes jq\n";
+const TOOL_PATH_EXPORT =
+  'export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"\n';
+
+/** Runs the bootstrap from the first mise install onward with fake tools. */
+function runPreparation(
+  jobRequest: DeliveryJobRequest,
+  stopAfter: string | undefined,
+) {
+  const start = DELIVERY_JOB_BOOTSTRAP.indexOf(TOOL_INSTALL_START);
+  if (start === -1) throw new Error("Missing tool installation");
+  const end =
+    stopAfter === undefined
+      ? DELIVERY_JOB_BOOTSTRAP.indexOf("cd packages/temporal\n")
+      : DELIVERY_JOB_BOOTSTRAP.indexOf(stopAfter) + stopAfter.length;
+  const preparation = DELIVERY_JOB_BOOTSTRAP.slice(start, end);
+  const result = Bun.spawnSync(
+    [
+      "bash",
+      "-c",
+      String.raw`set -euo pipefail
+bun() { printf 'bun:%s\n' "$*"; }
+bunx() { printf 'bunx:%s\n' "$*"; }
+# BSD paste (macOS) needs an operand where the GNU paste in the image reads stdin.
+paste() { tr '\n' ':' | sed 's/:$//'; echo; }
+mise() {
+  case "$1" in
+    install) printf 'mise-install(MISE_LOCKED=%s):%s\n' "$MISE_LOCKED" "$*" ;;
+    bin-paths) shift; printf '/fake/mise/%s/bin\n' "$@" ;;
+    *) exit 64 ;;
+  esac
+}
+${preparation}`,
+    ],
+    {
+      env: {
+        PATH: Bun.env["PATH"],
+        DELIVERY_JOB_REQUEST: JSON.stringify(jobRequest),
+      },
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
+  expect(result.stderr.toString()).toBe("");
+  expect(result.exitCode).toBe(0);
+  return result.stdout.toString().trim().split("\n").filter(Boolean);
+}
+
+/** The `mise install` invocations the bootstrap makes for a Job request. */
+const install = (jobRequest: DeliveryJobRequest) =>
+  runPreparation(jobRequest, TOOL_PATH_EXPORT).filter((line) =>
+    line.startsWith("mise-install"),
+  );
+
 it.each(["worker-images", "worker-step", "test"] as const)(
   "prepares only the dependencies needed by %s",
   (recipe) => {
-    const preparation = DELIVERY_JOB_BOOTSTRAP.split(
-      'export PATH="$(echo "$tool_paths" | paste -sd:):$PATH"\n',
-    )[1]?.split("cd packages/temporal\n")[0];
-    if (preparation === undefined) throw new Error("Missing Job preparation");
-    const result = Bun.spawnSync(
-      [
-        "bash",
-        "-c",
-        String.raw`set -euo pipefail
-bun() { printf 'bun:%s\n' "$*"; }
-bunx() { printf 'bunx:%s\n' "$*"; }
-${preparation}`,
-      ],
-      {
-        env: {
-          PATH: Bun.env["PATH"],
-          DELIVERY_JOB_REQUEST: JSON.stringify({
-            ...request,
-            recipe,
-            ...(recipe === "test"
-              ? { input: { suite: "test", workspace: "packages/delivery" } }
-              : {}),
-          }),
+    expect(
+      runPreparation(
+        {
+          ...request,
+          recipe,
+          ...(recipe === "test"
+            ? { input: { suite: "test", workspace: "packages/delivery" } }
+            : {}),
         },
-        stdout: "pipe",
-        stderr: "pipe",
-      },
-    );
-    expect(result.exitCode).toBe(0);
-    expect(result.stdout.toString().trim().split("\n").filter(Boolean)).toEqual(
+        undefined,
+      ).filter((line) => !line.startsWith("mise-install")),
+    ).toEqual(
       recipe === "worker-images"
         ? [
             "bun:install --frozen-lockfile --production --filter=@shepherdjerred/temporal",
@@ -69,6 +107,62 @@ ${preparation}`,
     );
   },
 );
+
+describe("Job tool installation under the checked-out revision's lockfile", () => {
+  // A retained executor's revision can predate the CI image's pins. Locked
+  // mode installs a tool version the image lacks only from a checksum that
+  // revision's mise.lock records, and awscli's linux-x64 entry has none before
+  // 2.41, so awscli is installed only when the stack archive is downloaded.
+  it("installs only jq, bun, node and helm for image provenance, under MISE_LOCKED", () => {
+    expect(install({ ...request, recipe: "worker-images" })).toEqual([
+      "mise-install(MISE_LOCKED=1):install --yes jq",
+      "mise-install(MISE_LOCKED=1):install --yes bun node jq helm",
+    ]);
+    expect(DELIVERY_JOB_IMAGE_PROVENANCE_TOOLS.split(" ")).not.toContain(
+      "awscli",
+    );
+  });
+  it.each([
+    "worker-preflight",
+    "worker-step",
+    "test",
+    "tofu-plan",
+    "control-plane",
+    "platform-recovery",
+  ] as const)("installs no awscli for %s without a stack archive", (recipe) => {
+    expect(install({ ...request, recipe, input: {} })).toEqual([
+      "mise-install(MISE_LOCKED=1):install --yes jq",
+      `mise-install(MISE_LOCKED=1):install --yes ${DELIVERY_JOB_FULL_TOOLS}`,
+    ]);
+    expect(DELIVERY_JOB_FULL_TOOLS.split(" ")).not.toContain("awscli");
+  });
+  it("installs awscli only for a recipe that downloads a stack archive", () => {
+    expect(
+      install({
+        ...request,
+        input: {
+          stack: "github",
+          archive: {
+            uri: "s3://delivery-artifacts/stack.tar",
+            digest: `sha256:${"c".repeat(64)}`,
+          },
+        },
+      }),
+    ).toEqual([
+      "mise-install(MISE_LOCKED=1):install --yes jq",
+      `mise-install(MISE_LOCKED=1):install --yes ${DELIVERY_JOB_FULL_TOOLS} awscli`,
+    ]);
+  });
+  it("keeps every install locked and never relaxes checksum verification", () => {
+    expect(DELIVERY_JOB_BOOTSTRAP.match(/mise install/gu)).toHaveLength(2);
+    expect(
+      DELIVERY_JOB_BOOTSTRAP.match(/MISE_LOCKED=1 mise install/gu),
+    ).toHaveLength(2);
+    expect(DELIVERY_JOB_BOOTSTRAP).not.toMatch(
+      /MISE_LOCKED=0|--no-lock|unlocked/u,
+    );
+  });
+});
 
 it("mounts the namespace-only readonly API token solely in fixed recovery recipes and accepts only known Kubernetes defaults", () => {
   const job = deliveryJobManifest({
@@ -448,7 +542,8 @@ describe("persistent stage workspace", () => {
     // The exact bootstraps that created Jobs before: the fresh emptyDir
     // workspace, then linked toolchains with no test or stack-archive step,
     // then the copied toolchain, then the repository that kept every fetched
-    // revision, then the stack archive extracted over the previous one. A
+    // revision, then the stack archive extracted over the previous one, then the
+    // full tool set with awscli installed for every recipe. A
     // changed digest means a retained Job could no longer be adopted.
     expect(
       PREVIOUS_DELIVERY_JOB_BOOTSTRAPS.map((script) =>
@@ -460,6 +555,7 @@ describe("persistent stage workspace", () => {
       "a5c909be28ebe8674710740bf59914338db047cb7831571023c3be7ddb9c7c15",
       "3fd9e4b9b8d049d2c56fabbf38f78eff2f10eeebfccd8419e97f98bcd85cb40a",
       "99e8cdfb302e6f2eb709ae86fd55b1bfd396008f6bb54186de14ae7b4f9920cd",
+      "6fd3b334472369b36e0765e45b7a0d1d0c3afce213ce8a2f8f93f987eff3c2bb",
     ]);
     for (const recipe of [
       "worker-images",

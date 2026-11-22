@@ -96,7 +96,9 @@ describe("reviewed isolated deployment Job recipes", () => {
   test("the bootstrap verifies the archive digest before extracting it", () => {
     const branch = DELIVERY_JOB_BOOTSTRAP.split(
       'if [ -n "$archive_uri" ]; then',
-    )[1]?.split("fi\n")[0];
+    )
+      .at(-1)
+      ?.split("fi\n")[0];
     if (branch === undefined) throw new Error("Archive branch is missing");
     expect(branch).toContain(
       "aws --endpoint-url https://seaweedfs-s3.tailnet-1a49.ts.net s3 cp",
