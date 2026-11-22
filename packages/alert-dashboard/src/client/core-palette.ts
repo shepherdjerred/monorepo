@@ -1,5 +1,5 @@
 import type { OpsFacets } from "@shepherdjerred/ops-model/facets.ts";
-import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
+import { MailIcon, MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 
 import { APPS, TOOLS } from "./external-links.ts";
 import type {
@@ -10,6 +10,7 @@ import type {
 import type { ThemePreference } from "./theme.ts";
 import { trpcClient } from "./trpc.ts";
 import { OpsFacetsResponseSchema } from "#shared/ops-schema";
+import { ReportsFeedResponseSchema } from "#shared/reports-schema";
 
 /**
  * The theme store reads `matchMedia` when it loads, so it is imported on use:
@@ -22,6 +23,7 @@ async function applyTheme(preference: ThemePreference): Promise<void> {
 
 const SERVICE_LIMIT = 6;
 const ALERT_LIMIT = 6;
+const REPORT_LIMIT = 6;
 const FACET_GROUP_LIMIT = 6;
 const FACET_CACHE_TTL_MS = 60_000;
 
@@ -66,6 +68,21 @@ export const coreCommands: readonly ModuleCommand[] = [
       globalThis.open(entry.url, "_blank", "noopener,noreferrer");
     },
   })),
+  {
+    id: "reports:needs-review",
+    label: "View Reports needing review",
+    icon: MailIcon,
+    keywords: [
+      "reports",
+      "emails",
+      "attention",
+      "vulnerabilities",
+      "deadlinks",
+    ],
+    run: ({ navigate }) => {
+      navigate("/reports?verdict=attention");
+    },
+  },
   {
     id: "theme:light",
     label: "Use light theme",
@@ -191,12 +208,44 @@ async function searchFacets(
   return [...packages, ...renovate, ...golinks];
 }
 
-/** Catalog services, workspace packages, Renovate items, Golinks, and recent alerts. */
+async function searchReports(
+  query: string,
+  signal: AbortSignal,
+): Promise<ModuleSearchResult[]> {
+  try {
+    const params = new URLSearchParams({
+      q: query,
+      limit: String(REPORT_LIMIT),
+    });
+    const response = await globalThis.fetch(
+      `/api/v1/reports/feed?${params.toString()}`,
+      {
+        headers: { accept: "application/json" },
+        signal,
+      },
+    );
+    if (!response.ok || signal.aborted) return [];
+    const parsed = ReportsFeedResponseSchema.safeParse(await response.json());
+    if (!parsed.success) return [];
+    return parsed.data.items.slice(0, REPORT_LIMIT).map((item) => ({
+      id: `report:${item.kind}:${item.id}`,
+      group: "Reports",
+      label: item.subject,
+      detail: `${item.eyebrow} · ${item.mailboxTo}`,
+      to: item.href,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Catalog services, workspace packages, Renovate items, Golinks, reports, and recent alerts. */
 export const coreSearch: ModuleSearch = async (query, signal) => {
-  const [services, alerts, facets] = await Promise.all([
+  const [services, alerts, facets, reports] = await Promise.all([
     searchServices(query),
     searchAlerts(query, signal),
     searchFacets(query, signal),
+    searchReports(query, signal),
   ]);
-  return [...services, ...facets, ...alerts];
+  return [...services, ...facets, ...reports, ...alerts];
 };

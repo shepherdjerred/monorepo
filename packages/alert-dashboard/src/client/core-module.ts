@@ -10,6 +10,7 @@ import {
   GitPullRequestIcon,
   HistoryIcon,
   HouseIcon,
+  MailIcon,
   MegaphoneIcon,
   RefreshCwIcon,
   ServerCogIcon,
@@ -77,6 +78,22 @@ const ReviewPage = lazy(async () => {
   const module = await import("./ops/review-page.tsx");
   return { default: module.ReviewPage };
 });
+const ReportsPage = lazy(async () => {
+  const module = await import("./reports/reports-page.tsx");
+  return { default: module.ReportsPage };
+});
+const ReportRunPage = lazy(async () => {
+  const module = await import("./reports/report-run-page.tsx");
+  return { default: module.ReportRunPage };
+});
+const DigestRunPage = lazy(async () => {
+  const module = await import("./reports/digest-run-page.tsx");
+  return { default: module.DigestRunPage };
+});
+const IncidentMailPage = lazy(async () => {
+  const module = await import("./reports/incident-mail-page.tsx");
+  return { default: module.IncidentMailPage };
+});
 const TheStormPage = lazy(async () => {
   const module = await import("./ops/pages/the-storm-page.tsx");
   return { default: module.TheStormPage };
@@ -130,6 +147,10 @@ export const coreModule: ClientModule = {
     { path: "ai", page: AiPage },
     { path: "maintenance", page: MaintenancePage },
     { path: "review", page: ReviewPage },
+    { path: "reports", page: ReportsPage },
+    { path: "reports/runs/:id", page: ReportRunPage },
+    { path: "reports/digests/:kind/:periodKey", page: DigestRunPage },
+    { path: "reports/mail/:id", page: IncidentMailPage },
     { path: "alerts", page: DashboardPage },
     { path: "alerts/:id", page: AlertDetailPage },
     { path: "house", page: HousePage },
@@ -149,6 +170,21 @@ export const coreModule: ClientModule = {
     { label: "AI", icon: BotIcon, path: "ai" },
     { label: "Maintenance", icon: WrenchIcon, path: "maintenance" },
     { label: "Review", icon: CalendarRangeIcon, path: "review" },
+    {
+      label: "Reports",
+      icon: MailIcon,
+      path: "reports",
+      keywords: [
+        "reports",
+        "emails",
+        "mail",
+        "digests",
+        "deadlinks",
+        "vulnerabilities",
+        "lychee",
+        "trivy",
+      ],
+    },
     {
       label: "Active",
       title: "Active alerts",
