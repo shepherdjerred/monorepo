@@ -1,0 +1,21 @@
+/* The movie edition review pages: only what the shared primitives lack. */
+@layer components {
+  /* A fieldset that disables its controls while a command runs, drawn as
+     no box at all. */
+  .group {
+    display: grid;
+    gap: var(--space-5);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .facts {
+    display: grid;
+    gap: var(--space-1);
+    margin: 0;
+    padding-inline-start: var(--space-5);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+}

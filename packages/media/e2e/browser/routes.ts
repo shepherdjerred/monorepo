@@ -148,13 +148,24 @@ function shared(persona: Persona): RouteSpec[] {
 /** A household review as a member opens it, and as the owner does. */
 const REVIEW_HEADING = "Review protected titles";
 
-/**
- * Every route a household member can open from navigation or a list.
- *
- * Not covered, because the read-only fixture API cannot answer it: the movie
- * edition review `/recovery/movies/:id` (its detail contract has no fixture
- * yet).
- */
+/** The three edition reviews the fixture API has, as their page names them. */
+const MOVIE_REVIEWS = [
+  [1, "Blade Runner — Final cut"],
+  [2, "Alien — Director's cut"],
+  [3, "Interstellar — Unmarked release — no named cut asserted"],
+] as const;
+
+/** The edition reviews, as each persona reads them. */
+function movieReviews(persona: Persona): RouteSpec[] {
+  return MOVIE_REVIEWS.map(([n, heading]) => ({
+    label: `${persona} /recovery/movies/:id (${String(n)})`,
+    persona,
+    path: `/recovery/movies/${fixtureId(19, n)}`,
+    heading,
+  }));
+}
+
+/** Every route a household member can open from navigation or a list. */
 const MEMBER_ROUTES: readonly RouteSpec[] = [
   {
     label: "member /discover",
@@ -204,6 +215,7 @@ const MEMBER_ROUTES: readonly RouteSpec[] = [
     path: `/recovery/${fixtureId(16, 2)}`,
     heading: REVIEW_HEADING,
   },
+  ...movieReviews("member"),
   ...shared("member"),
 ];
 
@@ -260,6 +272,7 @@ const OWNER_ROUTES: readonly RouteSpec[] = [
   ...MANAGE_ROUTES,
   ...TITLE_MANAGE_ROUTES,
   ...OWNER_REVIEW_ROUTES,
+  ...movieReviews("owner"),
   ...shared("owner"),
 ];
 

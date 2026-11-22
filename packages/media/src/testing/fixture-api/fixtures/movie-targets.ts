@@ -138,6 +138,10 @@ function admissionReasons(
   hasFile: boolean,
 ): MovieTargetDetail["reasons"] {
   if (hasFile) {
+    // Interstellar is held after a restore, and has a household review.
+    if (edition === "default" && resolved.title.title === "Interstellar") {
+      return ["recovery_hold"];
+    }
     return resolved.title === FEATURED.movie ? ["acquisition_active"] : [];
   }
   return edition === "default"

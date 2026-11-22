@@ -40,9 +40,11 @@ export async function answerWrites(
   page: Page,
   path: string,
   response?: { status?: number; json: unknown },
+  /** The `/api/v<version>` the client writes this path under. */
+  version = 1,
 ): Promise<Write[]> {
   const writes: Write[] = [];
-  await page.route(`**/api/v1${path}`, async (route) => {
+  await page.route(`**/api/v${String(version)}${path}`, async (route) => {
     const request = route.request();
     if (request.method() === "GET") {
       await route.fallback();

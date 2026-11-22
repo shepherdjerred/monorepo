@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import {
+  MovieHistoryDetailV3Schema,
+  MovieHistoryPersonalDetailV3Schema,
+} from "#shared/movie-editions/history-review-v3.ts";
 import { RecoveryDetailSchema, RecoveryListSchema } from "#shared/recovery.ts";
 import { LegacyRequesterListSchema } from "#shared/recovery-claims.ts";
 import { isWaitingState } from "#client/presentation/recovery.ts";
@@ -32,6 +36,18 @@ function detail(persona: Persona, n: number) {
   }
   return RecoveryDetailSchema.parse(outcome.body);
 }
+
+/** One cut review as `persona` reads it. */
+const movieReview = (persona: Persona, n: number) => {
+  const outcome = read(
+    `/v3/movie-history/reviews/${fixtureId(19, n)}`,
+    persona,
+  );
+  if (outcome.status !== 200) {
+    throw new Error(`cut review ${String(n)} was not served`);
+  }
+  return outcome.body;
+};
 
 describe("recovery fixtures", () => {
   it("lists one open review and two applied ones, with the restore's held titles", () => {
@@ -119,5 +135,37 @@ describe("recovery fixtures", () => {
         "member",
       ).status,
     ).toBe(403);
+  });
+
+  it("gives the owner a cut review's whole household and a member only their own declaration", () => {
+    for (const n of [1, 2, 3]) {
+      const owner = MovieHistoryDetailV3Schema.parse(movieReview("owner", n));
+      expect(owner.scope.users.map((user) => user.id)).toEqual([
+        OWNER.id,
+        MEMBER.id,
+        fixtureId(1, 5),
+      ]);
+      const member = MovieHistoryPersonalDetailV3Schema.parse(
+        movieReview("member", n),
+      );
+      expect(member.subject.id).toBe(MEMBER.id);
+    }
+    // Alien is ready to release, Interstellar is blocked, Blade Runner waits.
+    const ready = MovieHistoryDetailV3Schema.parse(movieReview("owner", 2));
+    expect(ready.missingUserIds).toEqual([]);
+    expect(ready.scope.blockers).toEqual([]);
+    const blocked = MovieHistoryDetailV3Schema.parse(movieReview("owner", 3));
+    expect(blocked.scope.blockers).not.toEqual([]);
+    const waiting = MovieHistoryDetailV3Schema.parse(movieReview("owner", 1));
+    expect(waiting.missingUserIds).toHaveLength(2);
+    // The member's own answer is recorded on Alien only.
+    const answered = MovieHistoryPersonalDetailV3Schema.parse(
+      movieReview("member", 2),
+    );
+    expect(answered.response).not.toBeNull();
+    const open = MovieHistoryPersonalDetailV3Schema.parse(
+      movieReview("member", 1),
+    );
+    expect(open.response).toBeNull();
   });
 });

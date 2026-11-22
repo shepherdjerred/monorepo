@@ -446,6 +446,19 @@ The owner releases the exact reviewed household response set after confirming
 the missing-history baseline and existing pins. Unknown browser writes retain
 their original actor, scope, body and idempotency key across a background refresh.
 
+The review page says first where the review stands (who it waits for, ready to
+release, released, or closed), then gives each person the owner may declare
+for one declaration form. The three declarations are radios that say what each
+records; one that is not open, such as Keep with no captured hold or "no longer
+request" while a request is active, is shown disabled with the reason. A Keep
+declaration then asks for which captured hold it uses. The owner sees who has
+declared and, once everyone has and nothing blocks the review, the release: three
+statements, then a dialog that names the film. A refused write says that nothing
+was recorded; one whose result was never acknowledged offers "Retry original
+action", which sends the same command again. Raw identifiers and hashes are under
+"Technical details" for the owner only. A member's own page carries none of the
+household's declarations.
+
 Version-4 removal warnings retain the selected edition and original decision's
 Plex projection. Delivery rechecks watch evidence, Keep, generation and configured
 access after its durable claim. Receipt reconciliation preserves the original
