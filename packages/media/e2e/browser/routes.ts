@@ -114,6 +114,12 @@ function shared(persona: Persona): RouteSpec[] {
       heading: "Blade Runner",
     },
     {
+      // A film kept just for now: the owner is offered the keeping switch.
+      label: `${persona} /media/:temporary`,
+      path: `/media/${titleNamed("Alien").id}`,
+      heading: "Alien",
+    },
+    {
       label: `${persona} /media/:leaving`,
       path: `/media/${titleNamed("The Expanse").id}`,
       heading: "The Expanse",

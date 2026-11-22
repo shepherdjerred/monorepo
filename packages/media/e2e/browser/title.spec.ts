@@ -42,6 +42,8 @@ test.describe("a film the household has", () => {
       movie.title,
     );
     await expect(main.getByText("Ready to watch").first()).toBeVisible();
+    // How long it runs, beside what it is and when it is from.
+    await expect(main.locator("header").getByText("2 hr 33 min")).toBeVisible();
     await expect(main.getByText(/Paul Atreides unites/u)).toBeVisible();
 
     // The backdrop is the one image fetched at high priority; the poster is
@@ -68,8 +70,11 @@ test.describe("a film the household has", () => {
     await expect(
       main.getByRole("button", { name: /^Cancel request/u }),
     ).toBeVisible();
-    // "Stop following" names another command; this page does not offer it.
-    await expect(main.getByText("Stop following")).toHaveCount(0);
+    // This request keeps the film for good, so it cannot simply be let go:
+    // the way out is withdrawing it, and the page says why.
+    await expect(
+      main.getByRole("button", { name: /^Stop following/u }),
+    ).toHaveCount(0);
     await expect(
       main.getByRole("button", { name: /^Request another version/u }),
     ).toBeVisible();
@@ -81,9 +86,17 @@ test.describe("a film the household has", () => {
     const household = main
       .getByRole("heading", { name: "In your household" })
       .locator("..");
-    await expect(household).toContainText("You");
-    // A member is told about their own request and nobody else's.
-    await expect(household).not.toContainText("Sam");
+    // Who follows it, by name, the reader first and never by their own name.
+    await expect(household).toContainText("You and Sam");
+    await expect(household).not.toContainText("Mei");
+    await expect(household).toContainText(
+      "For good, because your request asks for that",
+    );
+    await expect(household).toContainText(
+      "Your request keeps this for good, so Stop following is not offered. Only the owner can change how long it is kept.",
+    );
+    // A member has no keeping switch, so nothing explains one.
+    await expect(household).not.toContainText("standing choice");
 
     // Nothing of the owner's tools: no switch to them, no empty shells.
     await expect(
@@ -117,11 +130,21 @@ test.describe("a film the household has", () => {
     });
     await open(page, "owner", mediaPath(movie.id));
     const main = page.getByRole("main");
-    await expect(main.getByText("You, Sam")).toBeVisible();
-    // The owner's pin goes by its own name; keeping for good is the
-    // library's policy, which this page cannot read.
-    await expect(main.getByText("Pinned, so it never leaves")).toBeVisible();
-    await expect(main.getByText(/for good/iu)).toHaveCount(0);
+    await expect(main.getByText("You and Sam")).toBeVisible();
+    // How long the library keeps it and the owner's pin are two facts, each
+    // under its own name, and one line says how they relate.
+    const household = main
+      .getByRole("heading", { name: "In your household" })
+      .locator("..");
+    await expect(
+      household.getByText("For good: it stays even when nobody follows it"),
+    ).toBeVisible();
+    await expect(
+      household.getByText("Pinned, so it never leaves"),
+    ).toBeVisible();
+    await expect(household).toContainText(
+      "A 30-day hold and a pin protect it on top of that choice",
+    );
     await expect(main).not.toContainText(SYSTEM_VOCABULARY);
     // The owner's tools are not part of the page until they are opened.
     expect(manageCode).toEqual([]);

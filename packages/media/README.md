@@ -1085,13 +1085,15 @@ and one primary action chosen from where the reader stands with the title.
 `primary-action.ts` is that choice as a pure function of facts the reads report
 (`facts.ts`); it invents no permission:
 
-| The reader's standing                                    | Primary action                  |
-| -------------------------------------------------------- | ------------------------------- |
-| The files are removed and the reader may bring them back | Restore                         |
-| A removal is under way and the reader may hold the title | Keep for 30 days                |
-| The reader has a standing request                        | Following, which opens the menu |
-| The owner, on a title the household can already watch    | Keep for 30 days                |
-| Anything else                                            | Request                         |
+| The reader's standing                                                     | Primary action                      |
+| ------------------------------------------------------------------------- | ----------------------------------- |
+| The files are removed and the reader may bring them back                  | Restore                             |
+| A removal is under way and the reader may hold the title                  | Keep for 30 days                    |
+| The reader has a request and still follows the title                      | Following, which opens the menu     |
+| The owner, on a film or series the household can watch, kept just for now | Keep for good                       |
+| The owner, on a film or series the household can watch, kept for good     | Kept for good, which opens the menu |
+| The owner, on a season or an episode the household can watch              | Keep for 30 days                    |
+| Anything else                                                             | Request                             |
 
 Everything else the reader may do is in the menu beside it. A series, season or
 episode is acted on through the default-target read and its commands
@@ -1101,16 +1103,52 @@ a film with more than one version lists each under Versions with its own
 actions. Members call an edition a version, and the unmarked edition the
 standard version (`presentation/version.ts`).
 
-Below the hero: who follows the title and what keeps it, a series' seasons
-(each opens onto its episodes, read when first opened), a film's versions, and a
-closed "Files and subtitles". The title read gives the owner every follower's
-name and a member only their own request, so a member is told about themselves.
-The read does not carry the library's keeping policy, so "Keeping" reports the
-holds it does carry and the page does not offer "Keep for good", which is that
-policy's name in the Library. The owner's pin is a different thing and is in the
-menu under its own name ("Pin so it never leaves", "Remove pin"). Withdrawing a
-request is "Cancel request"; "Stop following" names letting an interest go, which
-needs the interest's revision and so is offered only in the Library's Mine view.
+Three things keep a title, and the page keeps them under three names:
+
+- **Keeping** is the library's standing choice for a film or series: "Keep for
+  good" or "Keep just for now", the owner's switch, named as the Library names
+  it (`shared/household/names.ts`) and sent as the same
+  `POST /library/:id/keeping-policy`. The switch position is
+  `libraryKeeping.keepingPolicy` of the title read. `policy` is the label every
+  reader gets, and it also says "keep" when a request keeps the title while the
+  switch is off; the page then says whose request does. A season or an episode
+  reports its series' keeping and has no switch of its own.
+- **Keep for 30 days** is a hold anyone allowed may place. It stops a removal
+  for a month and leaves the keeping choice as it is.
+- **Pin so it never leaves** is the owner's own hold with no end, also on top of
+  the keeping choice. It is never called keeping for good.
+
+A hold is not offered for a title that is pinned or kept for good unless a
+removal is already under way: there is nothing for it to stop.
+
+There are two ways out of a title the reader follows, and the menu offers one:
+
+- **Stop following** is the interest's `drop` command, as the Library's Mine
+  view sends it, at the `interestRevision` the title read reports. It is the way
+  out wherever the reader has an interest of their own in this very title that
+  can be let go: their own request for it, keeping it just for now. The request
+  stays on record under Mine, where "Keep watching" picks it up again.
+- **Cancel request** withdraws the request itself. It is offered where there is
+  no such interest: a season or episode that a request for the whole series
+  covers (taking that part out), a version of a film other than the standard
+  one (the read reports no interest for it), and a request that keeps its title
+  for good, which the server refuses to drop. For that last one the page says
+  what to do instead.
+
+The title read lists only the requests that still follow the title, so after
+"Stop following" the page says "Request" again. Both household commands
+(`title/household-commands.ts`) wait for the title to be read again before they
+report. A refusal the page expects is told in the reader's words on the page as
+just re-read: a stale version or revision (`version_conflict`), and a request
+that came to keep its title meanwhile (`keep_protected`).
+
+Below the hero: who follows the title, how long the library keeps it and what
+holds it meanwhile, a series' seasons (each opens onto its episodes, read when
+first opened), a film's versions, and a closed "Files and subtitles". The hero
+gives a film's or an episode's runtime where the read has one. `followers` names
+who follows the film or series to owner and member alike, the reader as "You";
+when the read withholds the list the line is left out, which is not the same as
+nobody following.
 
 The owner gets a second view, `?view=manage`, holding the operator panels the
 page has always had (acquisition and seeding, edition controls, quality profile,

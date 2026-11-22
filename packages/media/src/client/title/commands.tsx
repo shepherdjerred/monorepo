@@ -22,22 +22,27 @@ import {
 } from "#client/target-controls/errors.tsx";
 import { useTargetCommand } from "#client/target-controls/mutation.ts";
 import { classNames } from "#client/ui/class-names.ts";
-import { COMMAND_COPY, type TitleCommand } from "./copy.ts";
+import { COMMAND_COPY, type TargetCommand, type TitleCommand } from "./copy.ts";
 import { cancellableRequest, cancellableVersionRequest } from "./facts.ts";
 import styles from "./title.module.css";
 
 const cx = classNames(styles);
 
 /** How a page runs a title's commands and what it has to say about them. */
-export type CommandRunner = {
-  run: (command: TitleCommand) => void;
+export type CommandRunner<Command extends TitleCommand = TitleCommand> = {
+  run: (command: Command) => void;
   /** Nothing may start: a command is in flight or the last one is unsettled. */
   busy: boolean;
   /** The command in flight, for the button that started it. */
-  pending: TitleCommand | null;
+  pending: Command | null;
   /** The confirmation of the last command, in its button's own word. */
   done: string | null;
   error: Error | null;
+  /**
+   * Why the server refused the last command, in the reader's words, for a
+   * refusal the page expects. The page has read the title again by then.
+   */
+  notice: string | null;
   /** Sends the last command again exactly as it was, when its outcome is unknown. */
   retry: (() => void) | null;
   /** Reads the title again after it changed under a command. */
@@ -45,7 +50,7 @@ export type CommandRunner = {
 };
 
 /** A refusal is an answer; anything else may or may not have been applied. */
-function outcomeUnknown(error: Error | null): boolean {
+export function outcomeUnknown(error: Error | null): boolean {
   return (
     error !== null &&
     !(error instanceof ApiError && error.status >= 400 && error.status < 500)
@@ -53,7 +58,7 @@ function outcomeUnknown(error: Error | null): boolean {
 }
 
 /** The confirmation of a finished command, in its button's own word. */
-function confirmation(
+export function confirmation(
   command: TitleCommand | null,
   finished: "queued" | "completed" | null,
 ): string | null {
@@ -68,12 +73,12 @@ const TELEVISION_ACTIONS = {
   unpin: "unpin",
   restore: "restore",
 } as const satisfies Record<
-  Exclude<TitleCommand, "cancel_request">,
+  Exclude<TargetCommand, "cancel_request">,
   DefaultCommandV2["command"]["action"]
 >;
 
 function televisionCommand(
-  command: TitleCommand,
+  command: TargetCommand,
   context: DefaultTargetView,
   user: MediaUser,
 ): DefaultCommandV2["command"] {
@@ -100,9 +105,9 @@ function televisionCommand(
 export function useTelevisionRunner(
   user: MediaUser,
   context: DefaultTargetView,
-): CommandRunner {
+): CommandRunner<TargetCommand> {
   const mutation = useTargetCommand(user.id);
-  const [last, setLast] = useState<TitleCommand | null>(null);
+  const [last, setLast] = useState<TargetCommand | null>(null);
   const sent = mutation.variables?.context.expected;
   const settling =
     mutation.isSuccess &&
@@ -130,6 +135,7 @@ export function useTelevisionRunner(
         : (mutation.data.result.status ?? "completed"),
     ),
     error: mutation.error,
+    notice: null,
     retry:
       unknown && mutation.variables !== undefined
         ? () => {
@@ -150,8 +156,8 @@ const VERSION_ACTIONS = {
   restore: "restore",
 } as const;
 
-/** One of the two writes a film's version takes, as the runner sees it. */
-type Part = {
+/** One of the writes a runner is made of, as the runner sees it. */
+export type Part = {
   busy: boolean;
   isPending: boolean;
   /** How the last write ended, once it has. */
@@ -186,7 +192,7 @@ function useVersionLifecycle(user: MediaUser, version: MovieTargetContextV4) {
   };
   return {
     part,
-    submit: (command: Exclude<TitleCommand, "cancel_request">) => {
+    submit: (command: Exclude<TargetCommand, "cancel_request">) => {
       mutation.submit(version, { action: VERSION_ACTIONS[command] });
     },
   };
@@ -253,10 +259,10 @@ function useVersionStop(user: MediaUser, version: MovieTargetContextV4) {
 export function useVersionRunner(
   user: MediaUser,
   version: MovieTargetContextV4,
-): CommandRunner {
+): CommandRunner<TargetCommand> {
   const lifecycle = useVersionLifecycle(user, version);
   const stop = useVersionStop(user, version);
-  const [last, setLast] = useState<TitleCommand | null>(null);
+  const [last, setLast] = useState<TargetCommand | null>(null);
   const { finished } = last === "cancel_request" ? stop.part : lifecycle.part;
   return {
     run: (command) => {
@@ -268,6 +274,7 @@ export function useVersionRunner(
     pending: lifecycle.part.isPending || stop.part.isPending ? last : null,
     done: confirmation(last, finished),
     error: lifecycle.part.error ?? stop.part.error,
+    notice: null,
     retry: lifecycle.part.retry ?? stop.part.retry,
     review: () => {
       lifecycle.part.review();
@@ -278,8 +285,19 @@ export function useVersionRunner(
 }
 
 /** What the last command did, or why it did not, under the buttons. */
-export function CommandFeedback({ runner }: { runner: CommandRunner }) {
+export function CommandFeedback({
+  runner,
+}: {
+  runner: Pick<CommandRunner, "done" | "error" | "notice" | "retry" | "review">;
+}) {
   const { error, retry } = runner;
+  if (runner.notice !== null) {
+    return (
+      <p className={cx("notice")} role="status">
+        {runner.notice}
+      </p>
+    );
+  }
   if (error === null) {
     return runner.done === null ? null : (
       <p className={cx("done")} role="status">

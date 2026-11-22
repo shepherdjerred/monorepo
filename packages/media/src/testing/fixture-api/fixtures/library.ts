@@ -15,6 +15,7 @@ import {
 } from "#testing/fixture-api/support.ts";
 import { storedArtwork } from "./artwork.ts";
 import { leavingSoon } from "./removals.ts";
+import { requestKeeping } from "./requests.ts";
 import { TITLES, titleNamed, type Title } from "./titles.ts";
 
 type LibraryPage = z.input<typeof LibraryPageSchema>;
@@ -34,15 +35,22 @@ const PROTECTION = {
   unclassified: "review_required",
 } as const;
 
-/** How the library holds a title; the catalog fixtures agree with it. */
+/**
+ * How the library holds a title; the catalog fixtures agree with it. A title
+ * one of its requests keeps for good is kept for good, as on the server.
+ */
 export function libraryPolicy(title: Title): (typeof POLICIES)[number] {
-  return pick(POLICIES, title.index);
+  return requestKeeping(title.id) === "keep"
+    ? "keep"
+    : pick(POLICIES, title.index);
 }
 
 /**
  * The owner's keeping switch for a title; the title page reads the same one.
  * Every fixture title has a default target, so the owner always has a switch:
  * an unclassified title is one whose Keep is off and that nobody follows.
+ * The switch is the owner's own choice, so a title only a request keeps for
+ * good has it off.
  */
 export function libraryKeeping(
   title: Title,
@@ -52,7 +60,8 @@ export function libraryKeeping(
     ? {
         mediaVersion: versionOf(title.id),
         targetVersion: (title.index % 4) + 1,
-        keepingPolicy: libraryPolicy(title) === "keep" ? "keep" : "temporary",
+        keepingPolicy:
+          pick(POLICIES, title.index) === "keep" ? "keep" : "temporary",
       }
     : null;
 }

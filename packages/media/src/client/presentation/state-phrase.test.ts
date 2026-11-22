@@ -2,13 +2,26 @@ import { expect, test } from "vitest";
 import { AvailabilitySchema } from "#shared/contract.ts";
 import { AVAILABILITY_COPY } from "./availability.ts";
 import { KEEPING_COPY, PROTECTION_COPY } from "./keeping.ts";
-import { kindAndYear, libraryStatePhrase } from "./state-phrase.ts";
+import {
+  kindAndYear,
+  libraryStatePhrase,
+  runtimeLabel,
+} from "./state-phrase.ts";
 
 const film = {
   availability: "available",
   episodes: null,
   leavingSoon: null,
 } as const;
+
+test("a runtime is said in hours and minutes, without a part that is zero", () => {
+  expect(runtimeLabel(166, "en-US")).toBe("2 hr 46 min");
+  expect(runtimeLabel(58, "en-US")).toBe("58 min");
+  expect(runtimeLabel(120, "en-US")).toBe("2 hr");
+  expect(runtimeLabel(61, "en-US")).toBe("1 hr 1 min");
+  // The reader's locale writes each part its own way.
+  expect(runtimeLabel(95, "de-DE")).toBe("1 Std. 35 Min.");
+});
 
 test("a film says where it is on its way in", () => {
   expect(libraryStatePhrase(film)).toEqual({

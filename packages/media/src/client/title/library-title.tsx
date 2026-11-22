@@ -6,6 +6,7 @@ import type { MediaUser } from "#shared/contract.ts";
 import type { DefaultTargetView } from "#shared/editions/target-view.ts";
 import type { MovieTargetContextV4 } from "#shared/movie-editions/lifecycle/public-v4.ts";
 import { movieFulfillmentLabel } from "#client/movie-editions/presentation.ts";
+import { runtimeLabel } from "#client/presentation/state-phrase.ts";
 import { VERSION_COPY } from "#client/presentation/version.ts";
 import type { SheetSubject } from "#client/request-sheet/form.ts";
 import { classNames } from "#client/ui/class-names.ts";
@@ -23,9 +24,11 @@ import {
   Facts,
   Section,
   householdFacts,
+  householdNotes,
   selfAsFollower,
   type Fact,
 } from "./household.tsx";
+import { useTitleRunner } from "./household-commands.ts";
 import { EpisodeList, SeasonList, mediaPath, readMedia } from "./seasons.tsx";
 import { ActionsSkeleton } from "./states.tsx";
 import { VersionList, useMovieVersions } from "./versions.tsx";
@@ -84,12 +87,17 @@ function plural(count: number, one: string): string {
   return `${String(count)} ${count === 1 ? one : `${one}s`}`;
 }
 
-/** What kind of thing the title is, and when it is from. */
+/**
+ * What kind of thing the title is, when it is from, and for a film or an
+ * episode how long it runs. A series and a season have no length of their own.
+ */
 function metaOf(media: MediaDetail): string[] {
   const year = media.year === null ? [] : [String(media.year)];
+  const runtime =
+    media.runtimeMinutes === null ? [] : [runtimeLabel(media.runtimeMinutes)];
   switch (media.kind) {
     case "movie": {
-      return [TITLE_KIND_COPY.movie, ...year];
+      return [TITLE_KIND_COPY.movie, ...year, ...runtime];
     }
     case "series": {
       return [
@@ -111,6 +119,7 @@ function metaOf(media: MediaDetail): string[] {
               `Season ${String(media.seasonNumber)}, episode ${String(media.episodeNumber)}`,
             ]),
         ...year,
+        ...runtime,
       ];
     }
   }
@@ -240,13 +249,22 @@ function Household({
   return (
     <Section title="In your household">
       <Facts facts={[...householdFacts(media, user, self), ...more]} />
+      {householdNotes(media, user).map((note) => (
+        <p className={cx("householdNote")} key={note}>
+          {note}
+        </p>
+      ))}
     </Section>
   );
 }
 
 function TelevisionTitle(props: TitleProps) {
   const { user, media, context } = props;
-  const runner = useTelevisionRunner(user, context);
+  const runner = useTitleRunner(
+    user,
+    media,
+    useTelevisionRunner(user, context),
+  );
   const series = useSeries(media);
   const facts = televisionFacts(media, context, user);
   // A season or episode is asked for by name: "Severance, Season 2".
@@ -360,7 +378,7 @@ function MovieActions({
   media: MediaDetail;
   version: MovieTargetContextV4;
 }) {
-  const runner = useVersionRunner(user, version);
+  const runner = useTitleRunner(user, media, useVersionRunner(user, version));
   const asked = media.visibility.movieRequests.length > 0;
   return (
     <TitleActionBar

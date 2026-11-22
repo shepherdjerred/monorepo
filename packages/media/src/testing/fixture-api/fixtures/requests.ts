@@ -210,7 +210,8 @@ function interestPage(cursor: string | null, persona: Persona): InterestList {
     return {
       items: [
         interest(14, "Ted Lasso", mine),
-        interest(15, "The Expanse", mine, { keepingPolicy: "keep" }),
+        // Leaving soon in the removal fixtures, so no request keeps it.
+        interest(15, "The Expanse", mine),
         interest(13, "Dark", mine),
         // A request for a season or an episode names only that item.
         ...[4, 6, 11].map((sequence) => partInterest(sequence, mine)),
@@ -269,6 +270,22 @@ function interestPage(cursor: string | null, persona: Persona): InterestList {
     ],
     nextCursor: SECOND_INTEREST_PAGE,
   };
+}
+
+/**
+ * What the requests for a title say about how long the library keeps it. One
+ * request that keeps it for good is enough to keep it, whatever the owner's
+ * switch says; a title somebody follows is otherwise kept just for now.
+ */
+export function requestKeeping(mediaId: string): "keep" | "temporary" | null {
+  const following = requestList("owner")
+    .filter((request) => request.active && request.mediaId === mediaId)
+    .map((request) => requestInterest(request.id, "owner"))
+    .filter((own) => own.interestState === "following");
+  if (following.some((own) => own.keepingPolicy === "keep")) {
+    return "keep";
+  }
+  return following.length > 0 ? "temporary" : null;
 }
 
 /**

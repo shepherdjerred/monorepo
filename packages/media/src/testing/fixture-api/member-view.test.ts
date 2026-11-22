@@ -207,8 +207,10 @@ describe("what a title page reads about keeping and following", () => {
     const interests = RequestInterestListSchema.parse(
       await read("/request-interests", "member"),
     );
-    // The first interests page: every request on it that a title page lists.
-    const states = new Set<string>();
+    // The first interests page. A title page lists the requests that still
+    // follow their title, as the server's read does: an interest that was let
+    // go or ran out is on the interests list alone.
+    const states = new Map<string, number>();
     for (const interest of interests.items) {
       const detail = MediaDetailSchema.parse(
         await read(`/media/${interest.mediaId}`, "member"),
@@ -216,16 +218,27 @@ describe("what a title page reads about keeping and following", () => {
       const request = detail.requests.find(
         (entry) => entry.id === interest.requestId,
       );
-      if (request === undefined) continue;
+      states.set(
+        interest.interestState,
+        (states.get(interest.interestState) ?? 0) + 1,
+      );
+      if (interest.interestState !== "following") {
+        expect(request).toBeUndefined();
+        continue;
+      }
       expect(request).toMatchObject({
         version: interest.version,
         interestRevision: interest.interestRevision,
-        interestState: interest.interestState,
+        interestState: "following",
         keepingPolicy: interest.keepingPolicy,
       });
-      states.add(interest.interestState);
     }
-    expect([...states].sort()).toEqual(["dropped", "expired", "following"]);
+    expect([...states.keys()].sort()).toEqual([
+      "dropped",
+      "expired",
+      "finished",
+      "following",
+    ]);
     const episode = MediaDetailSchema.parse(
       await read(`/media/${episodeId(FEATURED.series, 1, 3)}`, "member"),
     );

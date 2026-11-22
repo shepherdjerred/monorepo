@@ -269,13 +269,26 @@ function retention(resolved: ResolvedMedia): MediaDetail["retention"] {
     : [{ id, ...removal, version: 1 }];
 }
 
+/**
+ * The reader's requests the detail read lists: those that still follow their
+ * title. One whose interest was let go or ran out still stands, but is not
+ * among them.
+ */
+function followingRequests(persona: Persona) {
+  return requestList(persona).filter(
+    (request) =>
+      request.active &&
+      requestInterest(request.id, persona).interestState === "following",
+  );
+}
+
 function requesters(
   resolved: ResolvedMedia,
   persona: Persona,
 ): MediaDetail["requests"] {
   const { item, title } = resolved;
   const user = personaUser(persona);
-  const standing = requestList(persona).filter((request) => request.active);
+  const standing = followingRequests(persona);
   const own = standing
     .filter((request) => request.mediaId === item.id)
     .map((request) => ({

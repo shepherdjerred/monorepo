@@ -14,6 +14,25 @@ export function shortDate(value: string, locale?: string): string {
   });
 }
 
+/**
+ * How long a film or an episode runs, as people say it: "2 hr 46 min",
+ * "58 min", "2 hr". Each part is written by the reader's locale.
+ */
+export function runtimeLabel(minutes: number, locale?: string): string {
+  const part = (value: number, unit: "hour" | "minute") =>
+    new Intl.NumberFormat(locale, {
+      style: "unit",
+      unit,
+      unitDisplay: "short",
+    }).format(value);
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return [
+    ...(hours > 0 ? [part(hours, "hour")] : []),
+    ...(hours === 0 || rest > 0 ? [part(rest, "minute")] : []),
+  ].join(" ");
+}
+
 /** When a title goes, once it has a date; before that, only that it will. */
 export const LEAVING_COPY = {
   warning_pending: () => "Leaving soon",

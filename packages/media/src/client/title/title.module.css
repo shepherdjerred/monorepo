@@ -153,6 +153,16 @@
     margin: 2px 0 0;
     overflow-wrap: anywhere;
   }
+  /* What the facts leave unsaid, in a line a reader can take or leave. */
+  .householdNote {
+    max-width: 68ch;
+    margin: var(--space-4) 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .householdNote + .householdNote {
+    margin-top: var(--space-2);
+  }
 
   /* Rows: episodes, and a catalog title's seasons. */
   .rows {
