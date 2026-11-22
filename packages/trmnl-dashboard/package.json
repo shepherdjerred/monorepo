@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@shepherdjerred/bugsink-config": "workspace:*",
-    "@sentry/bun": "^11.6.0",
+    "@sentry/bun": "^11.16.0",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/home-assistant": "workspace:*",

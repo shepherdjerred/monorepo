@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { TestWorkflowEnvironment } from "@temporalio/testing";
-import type { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import type { historyToJSON } from "@temporalio/common/proto-utils";
 
 type Event = NonNullable<Parameters<typeof historyToJSON>[0]["events"]>[number];
 

@@ -208,7 +208,7 @@
     "@typescript-eslint/parser": "8.72.2",
     "@typescript-eslint/utils": "8.72.2",
     "axios": "1.20.0",
-    "@opentelemetry/propagator-jaeger": "2.12.0",
+    "@opentelemetry/propagator-jaeger": "2.12.1",
     "fast-xml-parser": "5.11.1",
     "js-yaml": "5.4.3",
     "linkify-it": "6.1.0",

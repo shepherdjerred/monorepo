@@ -1,4 +1,4 @@
-import { msNumberToTs, requiredTsToMs } from "@temporalio/common/lib/time.js";
+import { msNumberToTs, requiredTsToMs } from "@temporalio/common/time";
 import { createTemporalReadClient } from "#client";
 import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 import { promotionConfig } from "#config/promotion.ts";

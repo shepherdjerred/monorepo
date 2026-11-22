@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import type { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import type { historyToJSON } from "@temporalio/common/proto-utils";
 import { z } from "zod";
 
 const PayloadCandidate = z.object({

@@ -21,7 +21,7 @@
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@sentry/react": "^11.5.0",
+    "@sentry/react": "^11.16.0",
     "@shepherdjerred/discord-plays-core": "workspace:*",
     "@shepherdjerred/bugsink-config": "workspace:*",
     "@tailwindcss/vite": "^4.0.17",

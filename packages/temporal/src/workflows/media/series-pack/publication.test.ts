@@ -4,7 +4,7 @@ import { Worker } from "@temporalio/worker";
 import { expect, test } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { assertPrivateHistory } from "#activities/media/testing/history.ts";
-import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import { historyToJSON } from "@temporalio/common/proto-utils";
 import { Context } from "@temporalio/activity";
 import type { WorkflowHandle } from "@temporalio/client";
 

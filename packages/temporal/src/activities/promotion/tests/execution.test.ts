@@ -37,20 +37,12 @@ async function execute(
   workflowId?: string,
 ) {
   const activity = promotionAgentActivities.executePromotion;
-  return await environment(workflowId).run<
-    Parameters<typeof activity>,
-    Awaited<ReturnType<typeof activity>>,
-    typeof activity
-  >(activity, { targetId: "pmc", mode });
+  return await environment(workflowId).run(activity, { targetId: "pmc", mode });
 }
 
 async function inspect() {
   const activity = promotionControlActivities.inspectPromotionTick;
-  return await environment().run<
-    Parameters<typeof activity>,
-    Awaited<ReturnType<typeof activity>>,
-    typeof activity
-  >(activity);
+  return await environment().run(activity);
 }
 
 async function seedLargeHistory() {
@@ -119,11 +111,10 @@ describe("promotion execution boundaries", () => {
     async (operation) => {
       await seedLargeHistory();
       const activity = promotionControlActivities.managePromotion;
-      const result = await environment().run<
-        Parameters<typeof activity>,
-        Awaited<ReturnType<typeof activity>>,
-        typeof activity
-      >(activity, { operation, targetId: "pmc" });
+      const result = await environment().run(activity, {
+        operation,
+        targetId: "pmc",
+      });
       const encoded = JSON.stringify(result);
       expect(encoded.length).toBeLessThan(100_000);
       expect(encoded).not.toContain("baseline-only");

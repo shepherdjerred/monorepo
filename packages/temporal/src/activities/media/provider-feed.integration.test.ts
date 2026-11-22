@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 
 import { Worker } from "@temporalio/worker";
 import { Context } from "@temporalio/activity";
-import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import { historyToJSON } from "@temporalio/common/proto-utils";
 import { expect, test } from "vitest";
 import { createProviderFeedWorkerFixture } from "@shepherdjerred/media/testing/provider-feed";
 import { TASK_QUEUES } from "#shared/task-queues.ts";

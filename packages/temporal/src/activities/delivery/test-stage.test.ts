@@ -26,11 +26,10 @@ const testStage = await import("./test-stage.ts");
 async function runDeliveryTestStage(
   ...args: Parameters<typeof testStage.runDeliveryTestStage>
 ) {
-  return await new MockActivityEnvironment().run<
-    Parameters<typeof testStage.runDeliveryTestStage>,
-    Awaited<ReturnType<typeof testStage.runDeliveryTestStage>>,
-    typeof testStage.runDeliveryTestStage
-  >(testStage.runDeliveryTestStage, ...args);
+  return await new MockActivityEnvironment().run(
+    testStage.runDeliveryTestStage,
+    ...args,
+  );
 }
 
 afterEach(() => {

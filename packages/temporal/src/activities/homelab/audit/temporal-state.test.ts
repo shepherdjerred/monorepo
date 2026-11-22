@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { msToTs } from "@temporalio/common/lib/time.js";
+import { msToTs } from "@temporalio/common/time";
 import { temporalFindings } from "#activities/homelab/homelab-audit-collectors.ts";
 import {
   temporalFailureRecovery,

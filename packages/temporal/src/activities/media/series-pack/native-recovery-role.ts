@@ -3,7 +3,7 @@ import path from "node:path";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { Worker } from "@temporalio/worker";
-import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import { historyToJSON } from "@temporalio/common/proto-utils";
 import type { TestWorkflowEnvironment } from "@temporalio/testing";
 import { expect } from "vitest";
 import type { NativeCompensationActivityInput } from "@shepherdjerred/media/native-compensation";

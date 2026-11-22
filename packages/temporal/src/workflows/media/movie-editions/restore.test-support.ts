@@ -3,7 +3,7 @@ import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import { WorkflowFailedError } from "@temporalio/client";
-import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import { historyToJSON } from "@temporalio/common/proto-utils";
 import { expect } from "vitest";
 import { setTimeout } from "node:timers/promises";
 import { TASK_QUEUES } from "#shared/task-queues.ts";

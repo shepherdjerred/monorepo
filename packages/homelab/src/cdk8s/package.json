@@ -57,7 +57,7 @@
   "devDependencies": {
     "@shepherdjerred/delivery": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
-    "@temporalio/testing": "1.24.0",
+    "@temporalio/testing": "1.26.0",
     "@types/bun": "1.4.5",
     "@types/lodash": "^4.17.24",
     "@typescript/native": "npm:typescript@7.0.2",

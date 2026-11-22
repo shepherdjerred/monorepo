@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import { historyToJSON } from "@temporalio/common/proto-utils";
 import { Worker } from "@temporalio/worker";
 import { Context, heartbeat } from "@temporalio/activity";
 import { z } from "zod";

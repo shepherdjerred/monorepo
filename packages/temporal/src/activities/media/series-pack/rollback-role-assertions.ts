@@ -1,5 +1,5 @@
 import { expect } from "vitest";
-import type { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import type { historyToJSON } from "@temporalio/common/proto-utils";
 
 export function assertSeriesPackRollbackActivities(
   history: Parameters<typeof historyToJSON>[0],

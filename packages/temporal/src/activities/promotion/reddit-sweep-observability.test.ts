@@ -89,11 +89,7 @@ function runSweep(preview = false) {
   return new MockActivityEnvironment({
     namespace: "prod",
     workflowExecution: { workflowId, runId },
-  }).run<
-    Parameters<typeof sweepRedditOutreach>,
-    Awaited<ReturnType<typeof sweepRedditOutreach>>,
-    typeof sweepRedditOutreach
-  >(sweepRedditOutreach, { preview });
+  }).run(sweepRedditOutreach, { preview });
 }
 
 function browserFixture(
