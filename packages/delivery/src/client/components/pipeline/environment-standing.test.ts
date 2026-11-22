@@ -5,6 +5,7 @@ import type {
   Transition,
 } from "#shared/hub/hub-contract.ts";
 import { environmentStanding } from "./environment-standing.ts";
+import { ongoingWords } from "./stage-card.tsx";
 
 const VERSION_ID = "11111111-1111-4111-8111-111111111111";
 
@@ -79,11 +80,11 @@ describe("environmentStanding", () => {
     });
     const stages = [versionStage(322), beta, prod];
     expect(environmentStanding(prod, stages)).toEqual({
-      facts: ["Running r274", "r293 canceled"],
+      facts: ["Accepted r274", "r293 canceled"],
       ready: { text: "r322 ready · needs approval", waitsForPerson: true },
     });
     expect(environmentStanding(beta, stages)).toEqual({
-      facts: ["Running r322", "up to date"],
+      facts: ["Accepted r322", "up to date"],
       ready: null,
     });
   });
@@ -110,7 +111,7 @@ describe("environmentStanding", () => {
       status: "running",
     });
     expect(environmentStanding(deploying, [versionStage(5)])).toEqual({
-      facts: ["Running r4", "r5 deploying"],
+      facts: ["Accepted r4", "r5 deploying"],
       ready: null,
     });
     const failed = environment({
@@ -122,7 +123,7 @@ describe("environmentStanding", () => {
     // Delivery does not retry a failed or canceled release on its own, so the
     // line must not promise it will, even on an automatic transition.
     expect(environmentStanding(failed, [versionStage(5)])).toEqual({
-      facts: ["Running r4", "r5 failed"],
+      facts: ["Accepted r4", "r5 failed"],
       ready: {
         text: "r5 will not deploy again on its own · retry or release by hand",
         waitsForPerson: true,
@@ -143,18 +144,46 @@ describe("environmentStanding", () => {
   it("says when nothing runs yet, and stays silent off the promotion page", () => {
     const empty = environment({ id: "app/prod", accepted: null });
     expect(environmentStanding(empty, [versionStage(1)])).toEqual({
-      facts: ["Nothing deployed yet"],
+      facts: ["Nothing accepted yet"],
       ready: {
         text: "r1 ready · deploys automatically",
         waitsForPerson: false,
       },
     });
     expect(environmentStanding(empty, [])).toEqual({
-      facts: ["Nothing deployed yet"],
+      facts: ["Nothing accepted yet"],
       ready: null,
     });
     const { accepted: _accepted, ...trace } = empty;
     expect(environmentStanding(trace, [])).toBeNull();
     expect(environmentStanding(versionStage(1), [])).toBeNull();
+  });
+
+  it("says what is accepted and what awaits approval, never running for both", () => {
+    // Scout prod: r274 accepted, the promotion of r322 waiting on a person.
+    const prod = environment({
+      id: "scout/prod",
+      accepted: 274,
+      newest: 322,
+      status: "awaiting_approval",
+      transition: { mode: "approval", sourceEnvironmentId: "scout/beta" },
+    });
+    const beta = environment({ id: "scout/beta", accepted: 322, newest: 322 });
+    const facts = environmentStanding(prod, [
+      versionStage(322),
+      beta,
+      prod,
+    ])?.facts;
+    expect(facts).toEqual(["Accepted r274", "r322 awaiting approval"]);
+    expect(facts?.join(" ")).not.toMatch(/running/iu);
+  });
+});
+
+describe("what an unfinished action's clock measures", () => {
+  it("says how long an action waited for a person or the queue, and running only for work under way", () => {
+    expect(ongoingWords("awaiting_approval")).toBe("awaiting approval for");
+    expect(ongoingWords("queued")).toBe("waiting for");
+    expect(ongoingWords("pending")).toBe("waiting for");
+    expect(ongoingWords("running")).toBe("running");
   });
 });

@@ -4,6 +4,7 @@ import type { Attention } from "#shared/hub/hub-contract.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { AWAITING_PLAN_DECISION } from "#infrastructure/selection/views.ts";
+import { recoveryIntentsOf, stated } from "./recovery.ts";
 import { servicePlacement } from "./views.ts";
 
 type DeploymentRow = Prisma.DeploymentGetPayload<object>;
@@ -14,11 +15,15 @@ const PriorRowsSchema = z.array(
     environmentId: z.string(),
     status: z.string(),
     message: z.string().nullable(),
+    recoveryRequired: z.boolean(),
   }),
 );
 
 /** What a failing streak reads from a deployment before the newest. */
-export type PriorDeployment = Pick<DeploymentRow, "id" | "status" | "message">;
+export type PriorDeployment = Pick<
+  DeploymentRow,
+  "id" | "status" | "message" | "recoveryRequired"
+>;
 
 /**
  * How long a deployment may sit queued with no stage started before it needs
@@ -29,11 +34,18 @@ export const QUEUED_ATTENTION_MINUTES = 15;
 const MINUTE = 60_000;
 
 /**
- * How many deployments in a row must have failed before a new one of the
- * same environment reads as failing repeatedly: one failure is a failure,
- * two and another attempt is a loop someone should break.
+ * How many of an environment's newest deployments in a row must have failed
+ * before it reads as failing repeatedly, whether or not another attempt is
+ * queued after them: one failure is a failure, two is a loop someone should
+ * break.
  */
 export const FAILING_STREAK = 2;
+
+/**
+ * How many deployments before the newest a streak reads. A longer run of
+ * failures reads as "this many or more".
+ */
+export const STREAK_WINDOW = 9;
 
 /** The deployment states a new attempt is in before it has a result. */
 const ATTEMPTING: ReadonlySet<string> = new Set(["queued", "running"]);
@@ -89,18 +101,19 @@ export async function latestDeployments(database: Database) {
 
 /**
  * The deployments just before each environment's newest, newest first: up to
- * `FAILING_STREAK` of them per environment, by environment id. One ranked
+ * `STREAK_WINDOW` of them per environment, by environment id. One ranked
  * read for every environment, never one per environment.
  */
 export async function priorDeployments(database: Database) {
   const rows = PriorRowsSchema.parse(
     await database.$queryRaw`
-    SELECT "id", "environmentId", "status", "message" FROM (
-      SELECT "id", "environmentId", "status", "message", ROW_NUMBER() OVER (
-        PARTITION BY "environmentId" ORDER BY "createdAt" DESC, "id" DESC
-      ) AS "rank" FROM "Deployment"
+    SELECT "id", "environmentId", "status", "message", "recoveryRequired" FROM (
+      SELECT "id", "environmentId", "status", "message", "recoveryRequired",
+        ROW_NUMBER() OVER (
+          PARTITION BY "environmentId" ORDER BY "createdAt" DESC, "id" DESC
+        ) AS "rank" FROM "Deployment"
     ) AS "ranked"
-    WHERE "rank" BETWEEN 2 AND ${FAILING_STREAK + 1}
+    WHERE "rank" BETWEEN 2 AND ${STREAK_WINDOW + 1}
     ORDER BY "environmentId", "rank"
   `,
   );
@@ -108,6 +121,38 @@ export async function priorDeployments(database: Database) {
   for (const { environmentId, ...row } of rows)
     prior.set(environmentId, [...(prior.get(environmentId) ?? []), row]);
   return prior;
+}
+
+/**
+ * Each environment's newest deployments with every message as the pages
+ * state it: a failure whose recovery has settled reads as what recovery
+ * read back (`stated`). One read of recovery intents for all of them.
+ */
+export async function statedDeployments<
+  Latest extends {
+    id: string;
+    message: string | null;
+    recoveryRequired: boolean;
+  },
+>(
+  database: Database,
+  latest: ReadonlyMap<string, Latest>,
+  prior: ReadonlyMap<string, readonly PriorDeployment[]>,
+) {
+  const intents = await recoveryIntentsOf(database, [
+    ...[...latest.values()].map((row) => row.id),
+    ...[...prior.values()].flatMap((rows) => rows.map((row) => row.id)),
+  ]);
+  return {
+    latest: new Map(
+      [...latest].map(([id, row]) => [id, stated(row, intents)] as const),
+    ),
+    prior: new Map(
+      [...prior].map(
+        ([id, rows]) => [id, rows.map((row) => stated(row, intents))] as const,
+      ),
+    ),
+  };
 }
 
 /** A recorded message's first line, the cause before any detail under it. */
@@ -194,9 +239,11 @@ function revisionLabel(revisions: ReadonlyMap<string, number>, setId: string) {
 }
 
 /**
- * A new attempt after `FAILING_STREAK` failures in a row, as an item that
- * links the newest failure, which says why. Null when the deployments
- * before it did not all fail.
+ * An environment whose newest deployments failed `FAILING_STREAK` or more
+ * times in a row: the newest deployment is the last of them, or a new
+ * attempt queued or running after them. Either way nothing newer has
+ * succeeded. The item links the newest failure, which says why; null when
+ * the newest deployments did not fail in a row.
  */
 function failingItem(
   deployment: AttentionDeployment,
@@ -204,21 +251,23 @@ function failingItem(
   subject: string,
   what: string,
 ): Attention | null {
-  const streak = prior.slice(0, FAILING_STREAK);
-  const [newest] = streak;
-  if (
-    newest === undefined ||
-    streak.length < FAILING_STREAK ||
-    !ATTEMPTING.has(deployment.status) ||
-    streak.some((entry) => entry.status !== "failed")
-  )
-    return null;
-  const reason = firstLine(newest.message);
+  const attempting = ATTEMPTING.has(deployment.status);
+  const recent = attempting ? prior : [deployment, ...prior];
+  const broken = recent.findIndex((entry) => entry.status !== "failed");
+  const count = broken === -1 ? recent.length : broken;
+  const [newest] = recent;
+  if (newest === undefined || count < FAILING_STREAK) return null;
+  // Every deployment the read holds failed: there may be more before them.
+  const more = broken === -1 && prior.length >= STREAK_WINDOW;
+  // The sentence ends here, so the reason's own full stop does not.
+  const reason = firstLine(newest.message)?.replace(/[.;]$/u, "") ?? null;
   return {
     kind: "failed",
     title: `${subject} is failing repeatedly`,
-    detail: `The last ${String(streak.length)} deployments failed${reason === null ? "" : `, the newest with: ${reason}`}. ${what} is ${deployment.status} again.`,
-    at: deployment.createdAt.toISOString(),
+    detail: `The last ${String(count)}${more ? " or more" : ""} deployments failed${reason === null ? "" : `, the newest with: ${reason}`}. ${attempting ? `${what} is ${deployment.status} again.` : "Nothing newer is queued."}`,
+    at: attempting
+      ? deployment.createdAt.toISOString()
+      : (deployment.finishedAt?.toISOString() ?? null),
     target: { kind: "deployment", id: newest.id },
     serviceId: deployment.serviceId,
   };
@@ -238,8 +287,7 @@ function deploymentItem(
   const at = deployment.finishedAt?.toISOString() ?? null;
   // "The deploy of r274": what this item is about, so no two read alike.
   const what = `The ${deployment.kind} of ${revisionLabel(input.revisions, deployment.versionSetRevisionId)}`;
-  const failing = failingItem(deployment, input.prior, subject, what);
-  if (failing !== null) return failing;
+  // A lock is the first thing to clear, however often the release failed.
   if (deployment.recoveryRequired)
     return {
       kind: "recovery",
@@ -249,6 +297,8 @@ function deploymentItem(
       target,
       serviceId: deployment.serviceId,
     };
+  const failing = failingItem(deployment, input.prior, subject, what);
+  if (failing !== null) return failing;
   if (deployment.status === "failed")
     return {
       kind: "failed",
@@ -280,9 +330,10 @@ function deploymentItem(
 
 /**
  * What someone has to act on, newest first: deployments and saved plans
- * awaiting a decision; environments whose newest deployment failed, requires
- * recovery, retries after `FAILING_STREAK` failures in a row, or has sat
- * queued longer than `QUEUED_ATTENTION_MINUTES`;
+ * awaiting a decision; environments whose newest deployment requires
+ * recovery, failed (`FAILING_STREAK` or more times in a row, with or without
+ * a new attempt after them), or has sat queued longer than
+ * `QUEUED_ATTENTION_MINUTES`;
  * environments whose accepted release a monitor alarm fired on; and services
  * whose newest build failed qualification. Each item says its reason once.
  */

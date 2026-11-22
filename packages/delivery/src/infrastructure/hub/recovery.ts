@@ -1,0 +1,73 @@
+import { z } from "zod";
+import { EvidenceInputSchema } from "#shared/evidence-contract.ts";
+import {
+  failureReason,
+  readbackPhase,
+  recoveryReading,
+  type ReadableIntent,
+} from "#shared/evidence/recovery-reading.ts";
+import type { Database } from "#infrastructure/database.ts";
+
+const EvidenceListSchema = z.array(EvidenceInputSchema);
+
+/** A recovery intent row's status as an outcome: anything unsettled is pending. */
+function outcome(status: string): ReadableIntent["outcome"] {
+  return status === "succeeded" || status === "failed" ? status : "pending";
+}
+
+/**
+ * The recovery intents of each deployment, by deployment id: one read for
+ * every id, never one per deployment.
+ */
+export async function recoveryIntentsOf(
+  database: Database,
+  deploymentIds: Iterable<string>,
+): Promise<ReadonlyMap<string, ReadableIntent[]>> {
+  const ids = [...new Set(deploymentIds)];
+  if (ids.length === 0) return new Map();
+  const rows = await database.recoveryIntent.findMany({
+    where: { deploymentId: { in: ids } },
+    select: {
+      id: true,
+      deploymentId: true,
+      sequence: true,
+      status: true,
+      evidence: true,
+    },
+  });
+  const intents = new Map<string, ReadableIntent[]>();
+  for (const row of rows)
+    intents.set(row.deploymentId, [
+      ...(intents.get(row.deploymentId) ?? []),
+      {
+        id: row.id,
+        sequence: row.sequence,
+        outcome: outcome(row.status),
+        evidence: EvidenceListSchema.parse(row.evidence),
+      },
+    ]);
+  return intents;
+}
+
+/**
+ * A deployment with its message as every page states it: once its newest
+ * recovery intent has settled, what recovery read back replaces what the
+ * executor said while the outcome was unknown.
+ */
+export function stated<
+  T extends { id: string; message: string | null; recoveryRequired: boolean },
+>(row: T, intents: ReadonlyMap<string, readonly ReadableIntent[]>): T {
+  return { ...row, message: failureReason(row, intents.get(row.id)) };
+}
+
+/**
+ * The phase recovery read back for a step its deployment outlived, or null
+ * while nothing has settled it or no readback answers for it.
+ */
+export function steppedReadback(
+  intents: readonly ReadableIntent[] | undefined,
+  stage: { operationId: string },
+) {
+  const reading = recoveryReading(intents);
+  return reading === null ? null : readbackPhase(reading, stage);
+}

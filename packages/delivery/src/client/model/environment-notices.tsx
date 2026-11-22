@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { DeliveryClientError } from "#shared/client.ts";
+import type { Deployment } from "#shared/contract.ts";
 import { queries } from "#client/queries.ts";
 import { Status } from "#client/components/status.tsx";
 import { errorMessage } from "#client/components/notices.tsx";
@@ -97,6 +98,24 @@ export function requestsRefused({
 const READ_ONLY = "Your identity has read-only access.";
 
 /**
+ * Why requests are refused, in one sentence beside a disabled request
+ * button: the deployment in the way, or a read-only identity.
+ */
+export function RefusalReason({
+  blocker,
+  planWaiting,
+}: {
+  blocker: Blocker | null;
+  planWaiting: boolean;
+}) {
+  return blocker === null ? (
+    <>{READ_ONLY} Requests are refused.</>
+  ) : (
+    <BlockedReason blocker={blocker} planWaiting={planWaiting} />
+  );
+}
+
+/**
  * The page's state under its title, and the one place it says requests are
  * refused: a locked environment as an error, a deployment in flight or a
  * read-only identity as information, and nothing while requests can be made.
@@ -146,19 +165,68 @@ export function EnvironmentNotice({
   );
 }
 
-/** The summary line's last part: the lock, the deployment in flight, or nothing. */
+/**
+ * With nothing in flight, the newest release when it failed and nothing
+ * accepted it since: the environment does not run what it was last asked to.
+ */
+function NewestFailed({
+  newest,
+  revisions,
+}: {
+  newest: Deployment;
+  revisions: RevisionNumbers;
+}) {
+  return (
+    <>
+      Nothing in flight ·{" "}
+      <Link
+        to="/deployments/$deploymentId"
+        params={{ deploymentId: newest.id }}
+        className="environment-in-flight"
+      >
+        <Status
+          value="failed"
+          label={
+            <>
+              newest release{" "}
+              {newest.platformSnapshot === null && (
+                <>
+                  <SetRevision
+                    id={newest.versionSetRevisionId}
+                    revisions={revisions}
+                  />{" "}
+                </>
+              )}
+              failed
+            </>
+          }
+        />
+      </Link>
+    </>
+  );
+}
+
+/** The summary line's last part: the lock, the deployment in flight, the newest failure, or nothing. */
 export function InFlightSummary({
   blocker,
   planWaiting,
   environmentId,
   revisions,
+  newest,
 }: {
   blocker: Blocker | null;
   planWaiting: boolean;
   environmentId: string;
   revisions: RevisionNumbers;
+  /** The environment's newest deployment, when it failed and nothing accepted it since. */
+  newest?: Deployment | null;
 }) {
-  if (blocker === null) return "Nothing in flight";
+  if (blocker === null)
+    return newest === undefined || newest === null ? (
+      "Nothing in flight"
+    ) : (
+      <NewestFailed newest={newest} revisions={revisions} />
+    );
   if (blocker.kind === "held")
     return (
       <>

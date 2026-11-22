@@ -31,7 +31,7 @@ function newestOutcome(stage: PipelineStage) {
       return "deploying";
     }
     case "awaiting_approval": {
-      return "waiting for approval";
+      return "awaiting approval";
     }
     case "failed": {
       return "failed";
@@ -62,7 +62,7 @@ function offered(stage: PipelineStage, stages: readonly PipelineStage[]) {
 
 /** An environment stage's status line: what it runs, and the release ready for it. */
 export type EnvironmentStanding = {
-  /** What it runs, then what its newest deployment did with another release. */
+  /** What it accepts, then what its newest deployment did with another release. */
   facts: string[];
   /** A newer release it could take, and whether that waits for a person. */
   ready: { text: string; waitsForPerson: boolean } | null;
@@ -70,7 +70,7 @@ export type EnvironmentStanding = {
 
 /**
  * One line under an environment stage's heading, from what the promotion
- * page already loads: the release it runs ("Running r274"), what its newest
+ * page already loads: the release it accepts ("Accepted r274"), what its newest
  * deployment is doing when that is another release ("r293 canceled"), and
  * whether a newer release is ready for it ("r322 ready · needs approval") or
  * it is up to date. Null for any other stage, and on a change's path, which
@@ -84,8 +84,8 @@ export function environmentStanding(
   const running = stage.accepted?.revision ?? null;
   const facts = [
     running === null
-      ? "Nothing deployed yet"
-      : `Running ${revisionLabel(running)}`,
+      ? "Nothing accepted yet"
+      : `Accepted ${revisionLabel(running)}`,
   ];
   const newest = stage.execution?.revision ?? null;
   const outcome = newestOutcome(stage);

@@ -8,6 +8,11 @@ import { Receipt } from "#client/components/receipt.tsx";
 import { Status } from "#client/components/status.tsx";
 import { Duration, RelativeTime } from "#client/components/time.tsx";
 import {
+  readbackPhase,
+  recoveryReading,
+  type RecoveryReading,
+} from "#shared/evidence/recovery-reading.ts";
+import {
   deploymentEvidenceCount,
   groupEvidence,
   parseEvidenceSummary,
@@ -142,72 +147,6 @@ export function stepMessage(stage: Pick<Stage, "key" | "status" | "message">) {
 }
 
 type RecoveryIntents = DeploymentDetailV2["recoveryIntents"];
-
-/**
- * What an independent Application readback names: its Application (first,
- * before a comma), the step's request it read back, and the operation's
- * phase, as `recovery.ts` and `argo-recovery/unsynced.ts` write them.
- */
-const READBACK_APPLICATION = /readback(?: \([^)]*\))?: (?<app>[^\s,]+),/u;
-const READBACK_REQUEST = /\brequest (?<request>[^\s,]+)/u;
-const READBACK_PHASE = /\bphase (?<phase>[A-Z][A-Za-z]*)\b/u;
-
-/** One readback a settled recovery intent recorded, with what it names. */
-function readback(text: string) {
-  return {
-    text,
-    application: READBACK_APPLICATION.exec(text)?.groups?.["app"] ?? null,
-    request: READBACK_REQUEST.exec(text)?.groups?.["request"] ?? null,
-    phase: READBACK_PHASE.exec(text)?.groups?.["phase"] ?? null,
-  };
-}
-
-/**
- * What the newest recovery intent settled, once it succeeded: which intent,
- * and each readback its independent reader recorded, one per Application of
- * a compound recipe. Null while no intent has settled, or when the newest
- * one failed, because then nothing has read the outcome back.
- */
-export function recoveryReading(intents: RecoveryIntents | undefined) {
-  const intent = (intents ?? []).toSorted(
-    (left, right) => right.sequence - left.sequence,
-  )[0];
-  if (intent?.outcome !== "succeeded") return null;
-  return {
-    id: intent.id,
-    sequence: intent.sequence,
-    readbacks: intent.evidence.flatMap((entry) => {
-      const parsed = parseEvidenceSummary(entry.summary);
-      return parsed.kind === "text" ? [readback(parsed.text)] : [];
-    }),
-  };
-}
-
-export type RecoveryReading = NonNullable<ReturnType<typeof recoveryReading>>;
-
-/**
- * The phase recovery read back for one step's operation: the readback of
- * that step's own request, or the only readback, when it names no request.
- * Null when no readback, or more than one phase, answers for the step.
- */
-export function readbackPhase(
-  reading: RecoveryReading,
-  stage: Pick<Stage, "operationId">,
-) {
-  const own = reading.readbacks.filter(
-    (entry) => entry.request === stage.operationId,
-  );
-  // A readback that names another step's request never answers for this one.
-  const answers =
-    own.length > 0
-      ? own
-      : reading.readbacks.filter((entry) => entry.request === null);
-  const phases = new Set(answers.map((entry) => entry.phase));
-  const [phase = null] = phases;
-  return phases.size === 1 && (own.length > 0 || answers.length === 1)
-    ? phase
-    : null;
-}
 
 /** An interrupted step's state, once recovery has read its operation back. */
 export function interruptedLabel(

@@ -195,6 +195,13 @@ export function createEnrichment(options: EnrichmentOptions) {
         env.acceptedVersionSetRevisionId === null
           ? null
           : await version(options.database, env.acceptedVersionSetRevisionId);
+      // A desired release Delivery has not accepted, such as one recovery
+      // read back as applied: its images are what was asked for, not wrong.
+      const desired =
+        env.desiredVersionSetRevisionId === null ||
+        env.desiredVersionSetRevisionId === env.acceptedVersionSetRevisionId
+          ? null
+          : await version(options.database, env.desiredVersionSetRevisionId);
       // Worker builds the pool still runs beside the accepted one. A narrow
       // read: this panel compares digests and validates no worker identity.
       const workers = await options.database.workerVersion.findMany({
@@ -210,6 +217,7 @@ export function createEnrichment(options: EnrichmentOptions) {
         token: options.argocd.token ?? "",
         application: env.application,
         accepted,
+        desired,
         retained: workers.map((worker) => worker.artifact),
         fetch: transport,
       });

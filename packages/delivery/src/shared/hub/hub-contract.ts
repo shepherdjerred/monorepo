@@ -64,6 +64,12 @@ export const PipelineActionSchema = z.object({
    * the page names it beside the duration.
    */
   spanLabel: z.string().min(1).optional(),
+  /**
+   * The phase recovery read back for a step its deployment outlived, such
+   * as "Succeeded", once a recovery intent settled it. Absent while the
+   * step's outcome is unknown.
+   */
+  readback: z.string().min(1).optional(),
 });
 export type PipelineAction = z.infer<typeof PipelineActionSchema>;
 

@@ -12,6 +12,7 @@ import {
   seedWaitingPlan,
   withStack,
 } from "./model-plan.ts";
+import { RECOVERY_PROD, seedRecovery, withRecovery } from "./model-recovery.ts";
 
 // The model state the browser specs read, built only through Delivery's own
 // catalog, publication, request, approval, execution, monitor and restore
@@ -29,6 +30,7 @@ export const MODEL_ENVIRONMENTS = [
   STACK_PROD,
   OPERATOR_PROD,
   CHANNEL_PROD,
+  RECOVERY_PROD,
 ];
 
 type Document = Awaited<ReturnType<typeof catalogDocument>>;
@@ -75,44 +77,46 @@ function document(base: Document, revision: 1 | 2 | 3) {
   };
   const arcade = base.recipes.find((entry) => entry.id === "arcade/3");
   if (arcade === undefined) throw new Error("fixture catalog has arcade/3");
-  return withStack({
-    ...base,
-    edges: [],
-    environments: base.environments.map((env) => ({
-      ...env,
-      automatic: false,
-      ...(env.id === MODEL_PROD
-        ? {
-            recipeRevisionId: prod.recipe,
-            configurationRevisionId: prod.configuration,
-          }
-        : {}),
-    })),
-    recipes: [
-      ...base.recipes.filter((entry) => entry.id !== "arcade/3"),
-      { id: "arcade/3", definition: monitored(arcade.definition, 100) },
-      ...(revision === 3
-        ? [{ id: "arcade/4", definition: monitored(arcade.definition, 250) }]
-        : []),
-    ],
-    configurations: [
-      ...base.configurations.filter((entry) => entry.id !== "arcade/1"),
-      {
-        id: "arcade/1",
-        content: { "schema.version": "1" },
-        forwardOnly: ["/helm/parameters/schema.version"],
-      },
-      ...(revision === 1
-        ? []
-        : [
-            {
-              id: "arcade/2",
-              content: { "schema.version": "2" },
-              forwardOnly: ["/helm/parameters/schema.version"],
-            },
-          ]),
-    ],
-  });
+  return withRecovery(
+    withStack({
+      ...base,
+      edges: [],
+      environments: base.environments.map((env) => ({
+        ...env,
+        automatic: false,
+        ...(env.id === MODEL_PROD
+          ? {
+              recipeRevisionId: prod.recipe,
+              configurationRevisionId: prod.configuration,
+            }
+          : {}),
+      })),
+      recipes: [
+        ...base.recipes.filter((entry) => entry.id !== "arcade/3"),
+        { id: "arcade/3", definition: monitored(arcade.definition, 100) },
+        ...(revision === 3
+          ? [{ id: "arcade/4", definition: monitored(arcade.definition, 250) }]
+          : []),
+      ],
+      configurations: [
+        ...base.configurations.filter((entry) => entry.id !== "arcade/1"),
+        {
+          id: "arcade/1",
+          content: { "schema.version": "1" },
+          forwardOnly: ["/helm/parameters/schema.version"],
+        },
+        ...(revision === 1
+          ? []
+          : [
+              {
+                id: "arcade/2",
+                content: { "schema.version": "2" },
+                forwardOnly: ["/helm/parameters/schema.version"],
+              },
+            ]),
+      ],
+    }),
+  );
 }
 
 /** The catalog document the harness reconciles at one revision. */
@@ -387,6 +391,7 @@ export async function seedModelBrowser(delivery: Delivery, database: Database) {
   await quarantine(delivery, database, fourth);
   await seedWaitingPlan(delivery, database);
   await seedOperatorRun(delivery);
+  await seedRecovery(delivery, database);
 }
 
 /** The request id of the beta deploy whose interrupted sync recovery has read back. */

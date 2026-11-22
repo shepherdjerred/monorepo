@@ -97,6 +97,20 @@ export const DeploymentDetailV2Schema = DeploymentDetailSchema.extend({
    * with the executor.
    */
   savedPlan: TofuPlanReceiptSchema.nullable().default(null),
+  /**
+   * The release the environment accepts now: the deployment that accepted
+   * it, when that deployment was requested, and its set revision's number.
+   * Null when nothing is accepted. A failure an acceptance requested after
+   * it followed is superseded. Absent from servers that predate it.
+   */
+  acceptedRelease: z
+    .object({
+      deploymentId: IdentifierSchema,
+      revision: z.number().int().positive(),
+      requestedAt: TimestampSchema,
+    })
+    .nullable()
+    .optional(),
 });
 export type DeploymentDetailV2 = z.infer<typeof DeploymentDetailV2Schema>;
 

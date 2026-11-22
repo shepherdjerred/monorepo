@@ -47,6 +47,23 @@ export function environmentBlocker(detail: {
   return active === null ? null : { kind: "held", deploymentId: active };
 }
 
+/**
+ * The environment's newest deployment when it failed and is not the one
+ * that accepted the release it runs: the release it was last asked for and
+ * does not run. Null when the newest deployment did not fail.
+ */
+export function newestFailure(detail: {
+  environment: { acceptedDeploymentId: string | null };
+  /** Newest first, as the environment page loads them. */
+  deployments: readonly Deployment[];
+}) {
+  const [newest] = detail.deployments;
+  return newest?.status === "failed" &&
+    newest.id !== detail.environment.acceptedDeploymentId
+    ? newest
+    : null;
+}
+
 /** The id of the deployment a blocker names. */
 export function blockingDeploymentId(blocker: Blocker) {
   return blocker.kind === "held" ? blocker.deploymentId : blocker.deployment.id;

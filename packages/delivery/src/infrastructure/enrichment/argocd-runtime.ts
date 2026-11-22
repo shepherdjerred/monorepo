@@ -45,13 +45,21 @@ const runs = (image: string, digests: string[]) =>
  * A worker pool runs older builds beside the accepted one until each is
  * retired, so a live image matches when the accepted artifact or a retained
  * worker artifact explains it. The accepted artifact itself must be running.
+ *
+ * When the environment desires another release than it accepts, such as one
+ * whose sync recovery read back as applied though Delivery never accepted
+ * it, a live image of that release's artifact is the desired one, counted
+ * apart and never unexpected.
  */
 export function compareLiveImages(
   selected: VersionSetRevision | null,
   images: string[],
   retained: RetainedImage[],
+  desiredSet: VersionSetRevision | null = null,
 ): ImageCheck[] {
   if (selected === null) return [];
+  const desiredRelease =
+    desiredSet === null || desiredSet.id === selected.id ? null : desiredSet;
   return Object.values(selected.components)
     .filter((artifact) => artifact.kind === "image")
     .flatMap((artifact) => {
@@ -65,17 +73,30 @@ export function compareLiveImages(
           ? [worker.digest, ...worker.runtimeDigests]
           : [],
       );
+      const wanted = desiredRelease?.components[artifact.component];
+      const desiredDigests =
+        wanted?.kind === "image" && wanted.uri === artifact.uri
+          ? [wanted.digest, ...wanted.runtimeDigests]
+          : [];
       const others = live.filter((image) => !runs(image, accepted));
-      const unexpected = others.filter((image) => !runs(image, kept));
+      const desired = others.filter((image) => runs(image, desiredDigests));
+      const rest = others.filter((image) => !runs(image, desiredDigests));
+      const unexpected = rest.filter((image) => !runs(image, kept));
       return {
         component: artifact.component,
         expected: artifact.digest,
         live,
-        retained: others.length - unexpected.length,
+        retained: rest.length - unexpected.length,
         unexpected,
         matches:
           live.some((image) => runs(image, accepted)) &&
           unexpected.length === 0,
+        ...(desiredRelease === null
+          ? {}
+          : {
+              desiredRevision: desiredRelease.revision,
+              desired: desired.length,
+            }),
       };
     });
 }
@@ -85,6 +106,8 @@ export async function readArgoRuntime(options: {
   token: string;
   application: string;
   accepted: VersionSetRevision | null;
+  /** The release the environment desires, when it is not the accepted one. */
+  desired?: VersionSetRevision | null;
   retained: RetainedImage[];
   fetch: Fetch;
 }): Promise<ArgoRuntime> {
@@ -115,6 +138,11 @@ export async function readArgoRuntime(options: {
     operationFinishedAt: iso(status.operationState?.finishedAt),
     reconciledAt: iso(status.reconciledAt),
     images,
-    imageChecks: compareLiveImages(options.accepted, images, options.retained),
+    imageChecks: compareLiveImages(
+      options.accepted,
+      images,
+      options.retained,
+      options.desired ?? null,
+    ),
   };
 }

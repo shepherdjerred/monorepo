@@ -8,6 +8,7 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { firstLine } from "./attention.ts";
 import { decodeCursor, olderThan, page, PAGE_SIZE } from "./cursor.ts";
+import { recoveryIntentsOf, stated } from "./recovery.ts";
 import { activityEntry, entityDomain } from "./views.ts";
 
 type AuditRow = Prisma.AuditGetPayload<object>;
@@ -88,6 +89,7 @@ async function activitySubjects(
         environmentId: true,
         versionSetRevisionId: true,
         message: true,
+        recoveryRequired: true,
       },
     }),
     database.build.findMany({
@@ -99,12 +101,18 @@ async function activitySubjects(
       select: { id: true, serviceId: true, revision: true },
     }),
   ]);
-  const deployed = await database.versionSet.findMany({
-    where: {
-      id: { in: deployments.map((row) => row.versionSetRevisionId) },
-    },
-    select: { id: true, revision: true },
-  });
+  const [deployed, intents] = await Promise.all([
+    database.versionSet.findMany({
+      where: {
+        id: { in: deployments.map((row) => row.versionSetRevisionId) },
+      },
+      select: { id: true, revision: true },
+    }),
+    recoveryIntentsOf(
+      database,
+      deployments.map((row) => row.id),
+    ),
+  ]);
   const revisionOf = new Map(deployed.map((row) => [row.id, row.revision]));
   const subjects = new Map<string, ActivitySubject>([
     ...deployments.map((row): [string, ActivitySubject] => [
@@ -127,9 +135,10 @@ async function activitySubjects(
   return {
     subjects,
     messages: new Map([
+      // A failure whose recovery settled says what recovery read back.
       ...deployments.map((row): [string, string | null] => [
         row.id,
-        row.message,
+        stated(row, intents).message,
       ]),
       ...builds.map((row): [string, string | null] => [
         row.id,

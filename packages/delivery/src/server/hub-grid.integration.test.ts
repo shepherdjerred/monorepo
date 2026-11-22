@@ -295,6 +295,6 @@ describe("hub grid batching", () => {
     const after = await countedRead();
     expect(after.services).toBe(before.services + added.length);
     expect(after.statements).toBe(before.statements);
-    expect(after.statements).toBe(10);
+    expect(after.statements).toBe(11);
   });
 });

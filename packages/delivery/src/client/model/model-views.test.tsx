@@ -19,6 +19,7 @@ import {
   formatEvidence,
   inFlightStatus,
   inFlightWords,
+  newestFailure,
   type Blocker,
 } from "./environment-status.ts";
 import {
@@ -838,6 +839,35 @@ describe("what stops an environment from taking a request", () => {
     expect(markup(<EnvironmentNotice blocker={null} planWaiting />)).toBe("");
   });
 
+  test("with nothing in flight, the summary says the newest release failed", () => {
+    const failed = { ...pending44, status: "failed" as const };
+    const newest = newestFailure({ environment: idle, deployments: [failed] });
+    expect(newest).toBe(failed);
+    const summary = markup(
+      <InFlightSummary
+        blocker={null}
+        planWaiting={false}
+        environmentId={fixtures.PROD}
+        revisions={REVISIONS}
+        newest={newest}
+      />,
+    );
+    expect(summary).toContain("Nothing in flight · ");
+    expect(summary).toContain(`href="/deployments/${failed.id}"`);
+    expect(summary).toContain('class="status status-failed"');
+    expect(summary).toMatch(/newest release .*failed/u);
+    // A failure that accepted nothing newer is the newest; one before a success is not.
+    expect(
+      newestFailure({ environment: idle, deployments: [pending44, failed] }),
+    ).toBeNull();
+    expect(
+      newestFailure({
+        environment: { ...idle, acceptedDeploymentId: failed.id },
+        deployments: [failed],
+      }),
+    ).toBeNull();
+  });
+
   test("rollback and rebind are disabled with a reason that links the deployment in the way", () => {
     const html = environment(true, {
       blocker: { kind: "in-flight", deployment: pending44, behind: 0 },
@@ -908,6 +938,28 @@ describe("the release form invites only a request that can succeed", () => {
       `<button type="submit" class="primary-button" disabled="" aria-describedby="${REFUSAL_ID}">Request deployment</button>`,
     );
     expect(html).not.toContain('class="notice"');
+  });
+
+  test("beside a refused request button stands why it is refused, not what a request would do", () => {
+    const locked = requestForm({
+      blocker: {
+        kind: "locked",
+        deployment: fixtures.deployments.quarantined37,
+      },
+    });
+    expect(locked).toContain(
+      "failed and needs recovery, so this environment is locked. Requests are refused until it has been checked.",
+    );
+    expect(locked).not.toContain("This request will wait for a human approval");
+    const readOnly = requestForm({ permitted: false });
+    expect(readOnly).toContain(
+      "Your identity has read-only access. Requests are refused.",
+    );
+    expect(readOnly).not.toContain("This request will wait");
+    // While requests can be made, the note says what happens next.
+    expect(requestForm()).toContain(
+      "This request will wait for a human approval.",
+    );
   });
 
   test("promoting the release already accepted here is disabled with its reason", () => {

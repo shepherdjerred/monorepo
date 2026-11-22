@@ -124,6 +124,11 @@ export function detailView(
     recoveryIntents: RecoveryIntent[];
     preparedPlatformPlan: { receipt: unknown } | null;
   },
+  acceptedRelease: {
+    deploymentId: string;
+    revision: number;
+    requestedAt: Date;
+  } | null,
 ) {
   return DeploymentDetailV2Schema.parse({
     ...detail,
@@ -133,7 +138,39 @@ export function detailView(
       recoveryIntentView(intent),
     ),
     savedPlan: row.preparedPlatformPlan?.receipt ?? null,
+    acceptedRelease:
+      acceptedRelease === null
+        ? null
+        : {
+            ...acceptedRelease,
+            requestedAt: acceptedRelease.requestedAt.toISOString(),
+          },
   });
+}
+
+/**
+ * The release an environment accepts now: the deployment that accepted it,
+ * when it was requested and its set revision's number. Null when nothing
+ * is accepted.
+ */
+async function acceptedReleaseOf(
+  database: Database,
+  acceptedDeploymentId: string | null,
+) {
+  if (acceptedDeploymentId === null) return null;
+  const accepting = await database.deployment.findUniqueOrThrow({
+    where: { id: acceptedDeploymentId },
+    select: { id: true, createdAt: true, versionSetRevisionId: true },
+  });
+  const set = await database.versionSet.findUniqueOrThrow({
+    where: { id: accepting.versionSetRevisionId },
+    select: { revision: true },
+  });
+  return {
+    deploymentId: accepting.id,
+    revision: set.revision,
+    requestedAt: accepting.createdAt,
+  };
 }
 
 /** The approve step's stage, which runs while a saved plan waits on its decision. */
@@ -242,7 +279,14 @@ export async function deploymentDetailV2(
       preparedPlatformPlan: { select: { receipt: true } },
     },
   });
-  return detailView(detail, row);
+  return detailView(
+    detail,
+    row,
+    await acceptedReleaseOf(
+      delivery.database,
+      detail.environment.acceptedDeploymentId,
+    ),
+  );
 }
 
 /** A deployment as the model routes return it, read by id. */

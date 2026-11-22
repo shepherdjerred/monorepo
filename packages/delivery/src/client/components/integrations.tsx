@@ -4,10 +4,11 @@ import type {
   CiRun,
   CiStage,
   CiWorkflow,
+  ImageCheck,
   UnavailableReason,
 } from "#shared/hub/integration-contract.ts";
 import { queries } from "#client/queries.ts";
-import { imageCheckSummary } from "#client/presentation.ts";
+import { imageCheckStanding, imageCheckSummary } from "#client/presentation.ts";
 import { Status } from "./status.tsx";
 import { Duration, RelativeTime } from "./time.tsx";
 import { ShortSha, ToolLinks } from "./links.tsx";
@@ -188,6 +189,24 @@ export function SourcePanel({
   );
 }
 
+/**
+ * One image check's pill: the accepted digest, the desired release's digest
+ * Delivery has not accepted (asked for, so not red), or a wrong image.
+ */
+function ImageStatus({ check }: { check: ImageCheck }) {
+  switch (imageCheckStanding(check)) {
+    case "accepted": {
+      return <Status value="succeeded" />;
+    }
+    case "desired": {
+      return <Status value="unknown" label="not accepted" />;
+    }
+    case "wrong": {
+      return <Status value="failed" />;
+    }
+  }
+}
+
 export function RuntimePanel({ environmentId }: { environmentId: string }) {
   const runtime = useQuery(queries.runtime(environmentId));
   return (
@@ -226,8 +245,8 @@ export function RuntimePanel({ environmentId }: { environmentId: string }) {
             <ul className="image-checks">
               {runtime.data.data.imageChecks.map((check) => (
                 <li key={check.component}>
-                  <Status value={check.matches ? "succeeded" : "failed"} />{" "}
-                  {check.component} {imageCheckSummary(check)}
+                  <ImageStatus check={check} /> {check.component}{" "}
+                  {imageCheckSummary(check)}
                   {check.unexpected.length > 0 && (
                     <ul aria-label={`${check.component} unexpected images`}>
                       {check.unexpected.map((image) => (

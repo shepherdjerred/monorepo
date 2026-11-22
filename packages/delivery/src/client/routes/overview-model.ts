@@ -66,11 +66,11 @@ export const KINDS: readonly { kind: Kind; title: string }[] = [
 export type KindPanel = {
   kind: Kind;
   title: string;
-  /** Every listed service of the kind, for the panel's counts. */
+  /** Every listed service of the kind, ungrouped and grouped. */
   services: GridService[];
   /**
    * Services the catalog groups alone. A group of one is that service, so it
-   * is listed without a group heading.
+   * is listed without a group heading. The panel's own counts are theirs.
    */
   ungrouped: GridService[];
   /** Catalog groups of several services, each under its own heading. */

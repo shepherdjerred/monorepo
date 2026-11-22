@@ -4,6 +4,7 @@ import { BuildWithArtifactsSchema } from "#shared/hub/hub-contract.ts";
 import { EnvironmentState } from "#client/components/environment-state.tsx";
 import {
   canApprove,
+  imageCheckStanding,
   imageCheckSummary,
   messageNotice,
   observation,
@@ -223,5 +224,44 @@ describe("release state presentation", () => {
     expect(html.match(/>r1<\/span>/gu)).toHaveLength(3);
     expect(html).toContain('title="arcade:1"');
     expect(html).not.toContain("Unknown");
+  });
+});
+
+describe("an image check against a desired release Delivery has not accepted", () => {
+  // Streambot prod: r345 accepted, r348 desired, r348's image live.
+  const check = {
+    component: "image:streambot",
+    expected: `sha256:${"0".repeat(64)}`,
+    live: [image(1)],
+    retained: 0,
+    unexpected: [],
+    matches: false,
+    desiredRevision: 348,
+    desired: 1,
+  };
+
+  test("names the desired release it runs, and is not a mismatch", () => {
+    expect(imageCheckSummary(check)).toBe(
+      "runs desired r348's digest, which Delivery has not accepted",
+    );
+    expect(imageCheckStanding(check)).toBe("desired");
+  });
+
+  test("counts it beside the accepted digest, and still flags a stray one", () => {
+    expect(
+      imageCheckSummary({
+        ...check,
+        live: [image(1), image(2)],
+        matches: true,
+      }),
+    ).toBe("runs the accepted digest · 1 image of desired r348");
+    expect(
+      imageCheckStanding({
+        ...check,
+        live: [image(1), image(2)],
+        unexpected: [image(2)],
+      }),
+    ).toBe("wrong");
+    expect(imageCheckStanding({ ...check, matches: true })).toBe("accepted");
   });
 });

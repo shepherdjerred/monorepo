@@ -166,14 +166,17 @@ export function ExactTime({
 export function Duration({
   start,
   end,
+  ongoing = "running",
 }: {
   start: string;
   end: string | null;
+  /** What an unfinished span measures, such as "awaiting approval for". */
+  ongoing?: string;
 }) {
   const at = useNow();
   return (
     <span className="duration">
-      {end === null ? "running " : ""}
+      {end === null ? `${ongoing} ` : ""}
       {duration(start, end, at)}
     </span>
   );
