@@ -162,11 +162,8 @@ export function createAlertDashboardDeployment(chart: Chart) {
     },
     tailscale: {
       probePath: "/healthz",
+      // The product is Hub and `hub` is its only tailnet host.
       hosts: [
-        { id: "alert-dashboard-ingress", host: tailnetService("alerts") },
-        // The same app serves the ops overview.
-        { id: "alert-dashboard-ops-ingress", host: tailnetService("ops") },
-        // The product is Hub; `ops` and `alerts` stay for existing links.
         { id: "alert-dashboard-hub-ingress", host: tailnetService("hub") },
       ],
     },

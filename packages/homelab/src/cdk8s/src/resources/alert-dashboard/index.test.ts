@@ -203,12 +203,8 @@ describe("Alert Dashboard deployment", () => {
     ).toBe(POSTAL_HOST);
   });
 
-  test("serves Hub on its own tailnet host and keeps ops and alerts", () => {
-    expect(synthesizeTailnetHosts().toSorted()).toEqual([
-      "alerts",
-      "hub",
-      "ops",
-    ]);
+  test("serves Hub on the hub tailnet host only", () => {
+    expect(synthesizeTailnetHosts()).toEqual(["hub"]);
   });
 
   test("requires the ops ingest and Home Assistant tokens and wires Prometheus, Home Assistant and Flags", () => {

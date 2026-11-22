@@ -17,8 +17,7 @@ export const TOOL_HOSTS = {
 
 /**
  * Browser-facing hosts of the first-party apps, for the same reason as
- * `TOOL_HOSTS`. Hub (the `alert-dashboard` workload) also still answers on
- * the older `ops` and `alerts` hosts; links use `hub`.
+ * `TOOL_HOSTS`. Hub (the `alert-dashboard` workload) answers on `hub` only.
  */
 export const APP_HOSTS = {
   hub: "https://hub.tailnet-1a49.ts.net",

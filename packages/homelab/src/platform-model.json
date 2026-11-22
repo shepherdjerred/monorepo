@@ -247,11 +247,6 @@
       "exposure": "ingress"
     },
     {
-      "host": "alerts",
-      "namespace": "alert-dashboard",
-      "exposure": "ingress"
-    },
-    {
       "host": "argocd",
       "namespace": "argocd",
       "exposure": "ingress"
@@ -346,11 +341,6 @@
     {
       "host": "minecraft-tsmc-bluemap",
       "namespace": "minecraft-tsmc",
-      "exposure": "ingress"
-    },
-    {
-      "host": "ops",
-      "namespace": "alert-dashboard",
       "exposure": "ingress"
     },
     {
