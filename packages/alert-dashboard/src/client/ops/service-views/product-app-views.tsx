@@ -33,7 +33,11 @@ const GOLINK_COLUMNS: readonly DataTableColumn<GolinkLink>[] = [
   txtCol(
     "tier",
     "Tier",
-    (l) => <span className="visual-pill visual-pill-info">{l.tier}</span>,
+    (l) => (
+      <span className="visual-pill" data-sev="info">
+        {l.tier}
+      </span>
+    ),
     (l) => l.tier,
   ),
   txtCol(
@@ -54,7 +58,8 @@ const GOLINK_COLUMNS: readonly DataTableColumn<GolinkLink>[] = [
           {l.shadows.map((s) => (
             <span
               key={s}
-              className="visual-pill visual-pill-warning"
+              className="visual-pill"
+              data-sev="warning"
             >{`! Overrides ${s}`}</span>
           ))}
         </div>

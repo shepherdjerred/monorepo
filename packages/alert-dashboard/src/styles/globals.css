@@ -6,6 +6,7 @@
  */
 @import "./legacy-tokens.css";
 @import "./primitives.css";
+@import "./tables.css";
 
 /* Berkeley Mono is licensed and served by Hub from `public/fonts`. */
 @font-face {
@@ -387,27 +388,31 @@ select {
 .table-wrap {
   overflow-x: auto;
 }
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.77rem;
-}
-th {
-  text-align: left;
-  color: var(--muted);
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  background: var(--panel-2);
-}
-th,
-td {
-  padding: 11px 13px;
-  border-bottom: 1px solid var(--line-soft);
-  vertical-align: middle;
-}
-tbody tr:hover {
-  background: var(--row-hover);
+/* Plain tables (the alert ledger's). In the reset layer, so a table that
+   takes console-ui's `ui-table` look gets it instead. */
+@layer ui.reset {
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.77rem;
+  }
+  th {
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--panel-2);
+  }
+  th,
+  td {
+    padding: 11px 13px;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: middle;
+  }
+  tbody tr:hover {
+    background: var(--row-hover);
+  }
 }
 .alert-link {
   display: grid;
@@ -1115,18 +1120,30 @@ tbody tr:hover {
   margin-bottom: 6px;
 }
 /* ---- AI ---- */
-/* Under the page's verdict, the summary that explains it. */
+/* The page's verdict and the summary that explains it, on one line in the
+   header: the summary truncates rather than wrapping under the verdict. */
 .page-status {
-  display: grid;
-  flex: none;
-  justify-items: end;
-  gap: 6px;
-  max-width: 30rem;
-  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 34rem;
+  white-space: nowrap;
 }
 .page-status p {
+  min-width: 0;
   margin: 0;
-  font-size: 0.88rem;
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+}
+.page-head .ui-header-actions:has(> .page-status) {
+  min-width: 0;
+}
+/* The figures beside the spend panel are as tall as their content. */
+.ai-row > .metric-row {
+  align-self: start;
 }
 /* Two panels on tracks every row of the page shares, stretched to one height
    so neither leaves a hole beside the other. */
@@ -1140,38 +1157,6 @@ tbody tr:hover {
   grid-column: 1 / -1;
 }
 
-/* One line per window: the provider names its group from the first row. */
-.quota-table {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 0.8rem;
-}
-.quota-table th,
-.quota-table td {
-  padding: 6px 7px;
-}
-.quota-table thead th {
-  padding-block: 7px;
-}
-/* The outer cells line up with the panel's heading. A provider's later rows
-   start at the window, so these are named cells and not `:first-child`. */
-.quota-table thead th:first-child,
-.quota-table .quota-provider,
-.quota-table .invalid-row td {
-  padding-left: 18px;
-}
-.quota-table thead th:last-child,
-.quota-table .quota-resets,
-.quota-table .invalid-row td {
-  padding-right: 18px;
-}
-.quota-table tbody th {
-  background: transparent;
-  color: var(--ink);
-  font-size: inherit;
-  letter-spacing: 0;
-  text-transform: none;
-  white-space: nowrap;
-}
 .quota-provider {
   font-weight: 650;
   vertical-align: top;
@@ -1210,46 +1195,11 @@ tbody tr:hover {
 .quota-table tbody:hover {
   background: var(--row-hover);
 }
-/* The meter takes whatever the other columns leave. */
-.quota-used-heading,
-.quota-used {
-  width: 100%;
-}
-.quota-meter {
-  display: grid;
-  grid-template-columns: minmax(32px, 1fr) max-content 0.9rem;
-  align-items: center;
-  gap: 8px;
-}
-/* The floor is the width of "100%", so every meter ends at the same place. */
-.quota-value {
-  min-width: 2.4rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 650;
-  text-align: right;
-  white-space: nowrap;
-}
-.quota-reset .quota-value {
-  color: var(--muted);
-  font-weight: 500;
-}
+
 .quota-flag {
   display: flex;
 }
-.quota-flag-icon {
-  width: 0.9rem;
-  height: 0.9rem;
-  color: var(--sev-unknown-ink);
-}
-.quota-info .quota-flag-icon {
-  color: var(--sev-info-ink);
-}
-.quota-warning .quota-flag-icon {
-  color: var(--sev-warning-ink);
-}
-.quota-error .quota-flag-icon {
-  color: var(--sev-error-ink);
-}
+
 .quota-resets {
   color: var(--muted);
   text-align: right;
@@ -1266,14 +1216,7 @@ tbody tr:hover {
 .tool-note {
   font-size: 0.85rem;
 }
-.tool-table th:first-child,
-.tool-table td:first-child {
-  padding-left: 18px;
-}
-.tool-table th:last-child,
-.tool-table td:last-child {
-  padding-right: 18px;
-}
+
 .tool-table tfoot th,
 .tool-table tfoot td {
   border-top: 1px solid var(--line);
@@ -1281,58 +1224,7 @@ tbody tr:hover {
   color: var(--ink);
   font-weight: 700;
 }
-.meter {
-  --meter-fill: var(--status-good);
-  position: relative;
-  height: 10px;
-  border-radius: 999px;
-  background: var(--meter-track);
-}
-.meter > span {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--meter-fill);
-}
-.meter-info {
-  --meter-fill: var(--status-info);
-}
-.meter-unknown {
-  --meter-fill: var(--status-unknown);
-}
-.meter-warning {
-  --meter-fill: var(--status-warning);
-}
-.meter-error {
-  --meter-fill: var(--status-critical);
-}
-/* The last reading before a reset: hatched and grey whatever its severity,
-   so it is never taken for the window's level now. */
-.meter-reset > span {
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--status-unknown) 0 2px,
-    transparent 2px 5px
-  );
-}
-/* Forced colours drop backgrounds; an outline and a system fill keep the
-   level readable. */
-@media (forced-colors: active) {
-  .meter {
-    border: 1px solid CanvasText;
-  }
-  .meter > span {
-    background: Highlight;
-  }
-}
-.meter .projection {
-  position: absolute;
-  top: -4px;
-  width: 2px;
-  height: 18px;
-  margin-left: -1px;
-  background: var(--ink);
-}
+
 .spend-panel {
   padding-bottom: 14px;
 }
@@ -1372,10 +1264,10 @@ tbody tr:hover {
 /* Holds about the top block's height while the report loads, so the charts
    under it barely move when it lands. The weekly block has the trend table. */
 .review-lead[aria-busy="true"] {
-  min-height: 250px;
+  min-height: 198px;
 }
 .review-lead-weekly[aria-busy="true"] {
-  min-height: 590px;
+  min-height: 484px;
 }
 .drill-links {
   display: flex;
@@ -1521,9 +1413,12 @@ tbody tr:hover {
   .quota-table tbody > tr:first-child {
     border-top-color: var(--line);
   }
+  /* A stacked cell is as tall as its content, not a 36px table row. */
   .quota-table tbody th,
   .quota-table tbody td {
     width: auto;
+    height: auto;
+    min-height: 0;
     padding: 0;
     border: 0;
   }
@@ -1567,8 +1462,11 @@ tbody tr:hover {
     grid-template-columns: 1fr;
   }
 
+  .review-lead[aria-busy="true"] {
+    min-height: 309px;
+  }
   .review-lead-weekly[aria-busy="true"] {
-    min-height: 740px;
+    min-height: 732px;
   }
 }
 
@@ -1583,10 +1481,10 @@ tbody tr:hover {
   }
 
   .review-lead[aria-busy="true"] {
-    min-height: 430px;
+    min-height: 324px;
   }
   .review-lead-weekly[aria-busy="true"] {
-    min-height: 1190px;
+    min-height: 863px;
   }
 
   .signal,
@@ -1960,4 +1858,49 @@ kbd svg {
 .filter-action {
   justify-self: start;
   width: fit-content;
+}
+
+/* ---- Chart panels ---- */
+.chart-panel {
+  padding: 12px 16px 10px;
+  border-color: var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+}
+.chart-panel figcaption {
+  align-items: center;
+  min-height: 24px;
+  margin-bottom: 6px;
+}
+.chart-panel h3 {
+  font-size: 13px;
+  font-weight: 600;
+}
+.chart-range {
+  color: var(--ui-faint);
+  font-family: var(--ui-font-mono);
+  font-size: 11.5px;
+}
+.chart-placeholder {
+  border-radius: 6px;
+  background: var(--ui-head);
+}
+.chart-empty {
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+.chart-panel .chart-error p,
+.chart-error {
+  color: var(--ui-sev-error-text);
+}
+.uplot-host .u-legend,
+.uplot-host .u-legend :is(th, td) {
+  font-size: 11.5px;
+}
+.chart-table summary {
+  color: var(--ui-muted);
+  font-size: 12px;
+}
+.chart-table summary:hover {
+  color: var(--ui-ink);
 }

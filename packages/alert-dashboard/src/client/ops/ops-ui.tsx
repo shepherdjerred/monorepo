@@ -7,12 +7,7 @@ import type {
   Metric,
   Section,
 } from "@shepherdjerred/ops-model/snapshot.ts";
-import {
-  HeaderBar,
-  SEVERITY_ICON,
-  StatusGlyph,
-  Tabs,
-} from "@shepherdjerred/console-ui";
+import { HeaderBar, StatusGlyph, Tabs } from "@shepherdjerred/console-ui";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLinkIcon } from "lucide-react";
 import { useId, type ReactNode } from "react";
@@ -22,7 +17,7 @@ import { ListToggle, useCapped } from "./capped-list.tsx";
 import { isSnapshotUnavailable, snapshotQuery } from "./ops-api.ts";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { age } from "#client/time.ts";
-import { SEVERITY_LABEL, formatValue } from "#shared/ops-format";
+import { formatValue } from "#shared/ops-format";
 import {
   SERIES_RANGES,
   type ChangeView,
@@ -31,27 +26,6 @@ import {
 import type { SnapshotResponse } from "@shepherdjerred/ops-model/snapshot.ts";
 
 export const services = new ServiceIndex();
-
-/**
- * A severity as an icon named for screen readers, for the meters and quota
- * rows too tight for a `StatusGlyph` word. The icon's shape differs per
- * severity, so it never rests on colour alone.
- */
-export function SeverityIcon({
-  severity,
-  className,
-}: {
-  readonly severity: Severity;
-  readonly className: string;
-}): React.JSX.Element {
-  const Icon = SEVERITY_ICON[severity];
-  return (
-    <>
-      <Icon className={className} aria-hidden="true" />
-      <span className="sr-only">{SEVERITY_LABEL[severity].toLowerCase()}</span>
-    </>
-  );
-}
 
 /**
  * The page's header: console-ui's 48px `HeaderBar` across the top of the

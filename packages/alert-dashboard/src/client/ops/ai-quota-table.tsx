@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill";
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import type { Signal } from "@shepherdjerred/ops-model/snapshot.ts";
 
 import {
@@ -9,14 +10,15 @@ import {
   type QuotaRow,
   type QuotaTableModel,
 } from "./ai-quota.ts";
-import { SeverityIcon } from "./ops-ui.tsx";
 import { formatInstant } from "#client/time.ts";
 
 const COLUMN_COUNT = 4;
 
 /**
- * The usage as a meter. A window that has reset keeps its last reading as the
- * meter's value, drawn hatched and grey so it never reads as a live full bar.
+ * The usage as console-ui's inline meter, with the severity's glyph and word
+ * after it when it needs attention. A window that has reset keeps its last
+ * reading as the meter's value, drawn hatched and grey so it never reads as a
+ * live full bar.
  */
 function UsedCell({ row }: { readonly row: QuotaRow }): React.JSX.Element {
   const percent = Math.min(row.usedRatio, 1) * 100;
@@ -24,21 +26,32 @@ function UsedCell({ row }: { readonly row: QuotaRow }): React.JSX.Element {
   return (
     <td className="quota-used" role="cell">
       <div className="quota-meter">
-        <div
-          className={`meter meter-${row.severity}${row.reset ? " meter-reset" : ""}`}
+        <span
+          className="ui-meter"
+          data-sev={row.severity}
+          data-reset={row.reset ? "" : undefined}
           role="meter"
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(percent)}
-          aria-valuetext={row.reset ? text : undefined}
+          // The fill stops at 100%; the spoken value is the shown reading,
+          // such as "131%" or "reset · was 100%".
+          aria-valuetext={text}
           aria-label={row.meterName}
         >
-          <span style={{ width: `${String(percent)}%` }} />
-        </div>
-        <span className="quota-value">{text}</span>
+          <span className="ui-meter-track" aria-hidden="true">
+            <span
+              className="ui-meter-fill"
+              style={{ width: `${String(percent)}%` }}
+            />
+          </span>
+          <span className="ui-meter-text" aria-hidden="true">
+            {text}
+          </span>
+        </span>
         <span className="quota-flag">
           {row.severity === "ok" ? null : (
-            <SeverityIcon severity={row.severity} className="quota-flag-icon" />
+            <StatusGlyph severity={row.severity} />
           )}
         </span>
       </div>
@@ -93,7 +106,9 @@ function QuotaGroupBody({
         <tr
           key={row.id}
           role="row"
-          className={`quota-row quota-${row.severity}${row.reset ? " quota-reset" : ""}`}
+          className="quota-row"
+          data-sev={row.severity}
+          data-reset={row.reset ? "" : undefined}
         >
           {index === 0 ? (
             <th
@@ -156,7 +171,11 @@ export function QuotaTable({
 }): React.JSX.Element {
   return (
     <div className="table-scroll">
-      <table className="quota-table" role="table" aria-labelledby={labelledBy}>
+      <table
+        className="quota-table ui-table"
+        role="table"
+        aria-labelledby={labelledBy}
+      >
         <thead role="rowgroup">
           <tr role="row">
             <th scope="col" role="columnheader">

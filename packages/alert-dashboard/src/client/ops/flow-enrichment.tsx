@@ -26,6 +26,7 @@ import {
   type StackReviewDecision,
 } from "#client/visuals/index.ts";
 import "#styles/engineering.css";
+import { Identifier } from "#client/visuals/identifier.tsx";
 
 const FLOW_CAP = 8;
 
@@ -118,11 +119,13 @@ const NOTICE_COLUMNS: readonly DataTableColumn<TrackerNotice>[] = [
       <div className="eng-pkg-cell">
         <span>{notice.title}</span>
         <span className="eng-pkg-sub">
-          <span className="visual-pill visual-pill-info">{notice.kind}</span>
+          <span className="visual-pill" data-sev="info">
+            {notice.kind}
+          </span>
           {notice.owner === null ? null : <span>{`@${notice.owner}`}</span>}
           {notice.scopes.slice(0, 3).map((scope) => (
             <code key={scope} className="visual-branch-chip">
-              {scope}
+              <Identifier value={scope} />
             </code>
           ))}
         </span>
@@ -151,9 +154,7 @@ const PROJECT_COLUMNS: readonly DataTableColumn<TrackerProjectSummary>[] = [
     key: "team",
     header: "Team",
     sortValue: (proj) => proj.team,
-    render: (proj) => (
-      <span className="visual-pill visual-pill-neutral">{proj.team}</span>
-    ),
+    render: (proj) => <span className="visual-pill">{proj.team}</span>,
   },
   {
     key: "openCount",

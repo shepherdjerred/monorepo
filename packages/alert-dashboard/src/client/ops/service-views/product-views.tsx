@@ -61,9 +61,7 @@ function isReviewOverdue(reviewBy: string): boolean {
 
 function enabledPill(enabled: boolean): React.JSX.Element {
   return (
-    <span
-      className={`visual-pill ${enabled ? "visual-pill-ok" : "visual-pill-neutral"}`}
-    >
+    <span className="visual-pill" data-sev={enabled ? "ok" : undefined}>
       {enabled ? "✓ Enabled" : "— Off"}
     </span>
   );
@@ -109,7 +107,8 @@ const FLIPT_FLAG_COLUMNS: readonly DataTableColumn<FliptFlagSummary>[] = [
           )}
           {f.reviewBy === undefined ? null : (
             <span
-              className={`visual-pill ${overdue ? "visual-pill-error" : "visual-pill-warning"}`}
+              className="visual-pill"
+              data-sev={overdue ? "error" : "warning"}
             >
               {overdue
                 ? `✕ Overdue (${f.reviewBy})`

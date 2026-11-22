@@ -92,21 +92,37 @@ shared visual primitives:
 | `/product`   | `src/client/ops/pages/product-page.tsx`   | `product` snapshot section + `posthog` facet: 24h/7d traffic KPIs, conversion funnels with step retention, site traffic & Core Web Vitals (`p75` LCP/INP, exceptions, rageclicks), and top pages/referrers       |
 | `/the-storm` | `src/client/ops/pages/the-storm-page.tsx` | `minecraft`, `storm-brain`, and `storm-forum` service health, `ts-mc.net` slice of the `posthog` facet, player/companion and `target="minecraft"` namespace presets, filtered signals/changes, `/promotion` link |
 
-These pages share the **Visuals Kit** (`src/client/visuals/`):
+These pages share the **Visuals Kit** (`src/client/visuals/`), drawn on the
+shared console look:
 
 - `DataTable` (`data-table.tsx`): accessible sortable/searchable table with
-  select filters, initial row caps, expandable detail rows (`renderExpanded`),
-  and client-side CSV/JSON export (`formatDataTableCsv`, `formatDataTableJson`).
+  filters, initial row caps, expandable detail rows (`renderExpanded`), and
+  client-side CSV/JSON export (`formatDataTableCsv`, `formatDataTableJson`).
+  The table is console-ui's `ui-table` (30px head row, 36px rows, hairlines,
+  mono right-aligned numerals); its toolbar uses console-ui's `Tabs` for
+  filters and `Button` for export, and below 680px of its own width each row
+  becomes a labelled card.
 - `BudgetMeter` and `StackedMeter` (`meters.tsx`): capacity/endurance gauges and
-  proportional segment bars.
+  proportional segment bars. A meter's severity is its `data-sev`; a meter that
+  needs attention also shows the severity's glyph and word.
 - `Sparkline` (`sparkline.tsx`), `StatusMatrix` (`status-matrix.tsx`), and
   `StackTree` / `buildStackForest` (`stack-tree.tsx`) for inline 7d trends,
-  multi-environment check grids, and stacked PR trees.
+  multi-environment check grids, and stacked PR trees. Matrix cells and
+  sparklines take their colour from `data-sev`; matrix cells always pair a
+  glyph with their word.
+- `.visual-pill` with `pillSeverity` (`pill.ts`): a category chip, or, with a
+  severity, a chip whose glyph takes that severity's colour.
 - Multi-mode `UplotChart` (`src/client/charts/uplot-chart.tsx`) and
   `SeriesChart` (`src/client/charts/series-chart.tsx`): supports `"line"`,
   `"stacked-area"`, and `"bar"` modes, horizontal `ChartThreshold` overlays,
   crosshair synchronization across sibling charts via `syncKey`
   (`getChartSync`), live resting legends, and collapsible data tables.
+
+The AI page's quota, tool-spend and Review's comparison tables are hand-built
+`ui-table`s; quota rows carry `data-sev` (and `data-reset` after a window
+resets) and use console-ui's 64px inline meter. Hub's table, meter and chart
+chrome lives in `src/styles/tables.css`, `src/styles/visuals.css` and the
+chart section of `src/styles/globals.css`.
 
 It is deployed: CI builds and pushes the image (the `alert-dashboard` target in
 [`ci/scripts/images/image-targets.ts`](../../ci/scripts/images/image-targets.ts)),

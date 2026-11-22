@@ -1,0 +1,104 @@
+/*
+ * Hub's tables, meters and chart chrome on the console look. Tables take
+ * console-ui's `ui-table` (30px head row on the head surface, 36px rows,
+ * hairline separators); the rules here adapt it to Hub's content: wrapping
+ * text cells, mono right-aligned numerals and row-header cells. Severity
+ * colour comes only from `data-sev` and the `--ui-sev-*` tokens.
+ */
+
+/* ---- Tables ---- */
+.ui-table {
+  font-family: var(--ui-font-sans);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+/* Hub's plain-table defaults (uppercase, muted, filled row headers) stay on
+   the alert ledger's tables; a `ui-table` reads in sentence case. */
+.ui-table th {
+  letter-spacing: normal;
+  text-transform: none;
+}
+.ui-table :is(tbody, tfoot) th {
+  height: 36px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ui-line-soft);
+  background: transparent;
+  color: var(--ui-ink);
+  font-size: inherit;
+  font-weight: 500;
+}
+.ui-table :is(tbody, tfoot) :is(th, td) {
+  white-space: normal;
+}
+.ui-table :is(tbody, tfoot) th:first-child {
+  padding-left: 20px;
+}
+.ui-table :is(tbody, tfoot) th:last-child {
+  padding-right: 20px;
+}
+.ui-table tbody tr:hover th {
+  background: var(--ui-hover);
+}
+.ui-table :is(th, td).num {
+  font-family: var(--ui-font-mono);
+  font-size: 12px;
+  letter-spacing: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+.ui-table thead th.num {
+  font-family: var(--ui-font-sans);
+}
+.ui-table tfoot :is(th, td) {
+  border-top: 1px solid var(--ui-line);
+  border-bottom: 0;
+  font-weight: 600;
+}
+.ui-table caption {
+  font-weight: 600;
+}
+
+/* ---- AI quota, tool spend and review trend tables ---- */
+/* A provider's later rows start at the window, not at a first column. */
+.quota-table tbody tr > .quota-window:first-child {
+  padding-left: 12px;
+}
+.quota-table .quota-provider {
+  vertical-align: top;
+  padding-top: 9px;
+}
+/* A provider's rows read as one block, so the group takes the hover. */
+.quota-table tbody tr:hover :is(th, td) {
+  background: transparent;
+}
+.quota-table tbody:hover {
+  background: var(--ui-hover);
+}
+.quota-used-heading,
+.quota-used {
+  width: auto;
+}
+.quota-meter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+/* The last reading before a reset: hatched and grey whatever its severity,
+   so it is never taken for the window's level now. */
+.ui-meter[data-reset] .ui-meter-fill {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--ui-sev-unknown) 0 2px,
+    transparent 2px 5px
+  );
+}
+.ui-meter[data-reset] .ui-meter-text {
+  color: var(--ui-muted);
+}
+.quota-flag {
+  display: flex;
+  min-width: 0;
+}
+.trend-table .delta {
+  font-weight: 600;
+}

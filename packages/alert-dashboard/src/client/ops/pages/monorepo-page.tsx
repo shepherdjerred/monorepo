@@ -25,6 +25,7 @@ import {
 import { formatValue } from "#shared/ops-format";
 import type { SeriesRange } from "#shared/ops-schema";
 import "#styles/engineering.css";
+import { Identifier } from "#client/visuals/identifier.tsx";
 
 function hitRatioSeverity(ratio: number | null): Severity {
   if (ratio === null || !Number.isFinite(ratio)) {
@@ -67,15 +68,19 @@ export function buildExpensiveTaskColumns(options?: {
       sortValue: (row) => row.taskId,
       render: (row) =>
         compact ? (
-          <code className="eng-pkg-name">{row.taskId}</code>
+          <code className="eng-pkg-name">
+            <Identifier value={row.taskId} />
+          </code>
         ) : (
           <div className="eng-pkg-cell">
-            <span className="eng-pkg-name">{row.taskId}</span>
+            <span className="eng-pkg-name">
+              <Identifier value={row.taskId} />
+            </span>
             <span className="eng-pkg-sub">
-              <span>{row.packageName}</span>
-              <span className="visual-pill visual-pill-neutral">
-                {row.task}
+              <span>
+                <Identifier value={row.packageName} />
               </span>
+              <span className="visual-pill">{row.task}</span>
             </span>
           </div>
         ),
@@ -138,9 +143,13 @@ const PACKAGE_COLUMNS: readonly DataTableColumn<MonorepoPackage>[] = [
     sortValue: (pkg) => pkg.name,
     render: (pkg) => (
       <div className="eng-pkg-cell">
-        <span className="eng-pkg-name">{pkg.name}</span>
+        <span className="eng-pkg-name">
+          <Identifier value={pkg.name} />
+        </span>
         <span className="eng-pkg-sub">
-          <code>{pkg.path}</code>
+          <code>
+            <Identifier value={pkg.path} />
+          </code>
         </span>
       </div>
     ),
@@ -149,9 +158,7 @@ const PACKAGE_COLUMNS: readonly DataTableColumn<MonorepoPackage>[] = [
     key: "category",
     header: "Category",
     sortValue: (pkg) => pkg.category,
-    render: (pkg) => (
-      <span className="visual-pill visual-pill-neutral">{pkg.category}</span>
-    ),
+    render: (pkg) => <span className="visual-pill">{pkg.category}</span>,
   },
   {
     key: "serviceId",
@@ -171,7 +178,7 @@ const PACKAGE_COLUMNS: readonly DataTableColumn<MonorepoPackage>[] = [
     exportValue: (pkg) => pkg.hasExtendedTests,
     render: (pkg) =>
       pkg.hasExtendedTests ? (
-        <span className="visual-pill visual-pill-info">
+        <span className="visual-pill" data-sev="info">
           <span aria-hidden="true">✓</span>Extended
         </span>
       ) : (
@@ -213,7 +220,7 @@ const PACKAGE_COLUMNS: readonly DataTableColumn<MonorepoPackage>[] = [
     sortValue: (pkg) => pkg.bugsinkOpenCount,
     render: (pkg) =>
       pkg.bugsinkOpenCount > 0 ? (
-        <span className="visual-pill visual-pill-warning">
+        <span className="visual-pill" data-sev="warning">
           <span aria-hidden="true">!</span>
           {String(pkg.bugsinkOpenCount)}
         </span>

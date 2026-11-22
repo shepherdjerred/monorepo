@@ -21,6 +21,7 @@ import {
   ClusterOverviewStrip,
   ClusterStorageSection,
 } from "./cluster-storage-section.tsx";
+import { pillSeverity } from "#client/visuals/pill.ts";
 
 const ExplorerTabSchema = z.enum([
   "nodes",
@@ -36,7 +37,7 @@ function dbPill(
   text: string,
 ): React.JSX.Element {
   return (
-    <span className={`visual-pill visual-pill-${tone}`}>
+    <span className="visual-pill" data-sev={pillSeverity(tone)}>
       <span aria-hidden="true">{glyph}</span>
       <span>{text}</span>
     </span>

@@ -56,7 +56,7 @@ function TrendPanel({
         <h2 id="trends-heading">Compared with the previous week</h2>
       </header>
       <div className="table-scroll">
-        <table className="trend-table">
+        <table className="trend-table ui-table">
           <thead>
             <tr>
               <th scope="col">Measure</th>

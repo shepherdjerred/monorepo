@@ -45,6 +45,18 @@ export const MATRIX_STATUS_LABEL: Record<MatrixCellStatus, string> = {
   info: "Info",
 };
 
+/** Each matrix status on the shared severity vocabulary; missing is unknown. */
+const MATRIX_SEVERITY: Record<
+  MatrixCellStatus,
+  "ok" | "warning" | "error" | "unknown" | "info"
+> = {
+  ok: "ok",
+  warning: "warning",
+  error: "error",
+  missing: "unknown",
+  info: "info",
+};
+
 function renderMatrixCell(
   cell: StatusMatrixCell | undefined,
 ): React.JSX.Element {
@@ -58,7 +70,8 @@ function renderMatrixCell(
   return (
     <>
       <span
-        className={`visual-matrix-cell visual-matrix-${status}`}
+        className="visual-matrix-cell"
+        data-sev={MATRIX_SEVERITY[status]}
         title={cell?.detail}
       >
         <span className="visual-matrix-glyph" aria-hidden="true">

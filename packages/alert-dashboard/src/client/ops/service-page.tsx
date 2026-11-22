@@ -106,9 +106,6 @@ function ServiceBody({
     );
   return (
     <>
-      <Link className="back-link" to="/services">
-        <ArrowLeftIcon aria-hidden="true" /> Services
-      </Link>
       <PageHeading title={detail.service.title}>
         <div className="platform-heading-actions">
           <ServiceConsoleLink serviceId={detail.service.id} />
@@ -120,6 +117,9 @@ function ServiceBody({
           />
         </div>
       </PageHeading>
+      <Link className="back-link" to="/services">
+        <ArrowLeftIcon aria-hidden="true" /> Services
+      </Link>
       <p className="lede">
         {detail.snapshotGeneratedAt === null
           ? "No snapshot has been ingested yet."

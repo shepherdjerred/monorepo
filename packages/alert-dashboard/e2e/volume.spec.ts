@@ -280,26 +280,26 @@ test("aggregate: a quota window that has reset is informational, not an error", 
   const reset = quotaRow(page, "Claude Code 5-hour quota used");
   await expect(reset).toContainText("reset · was 100%");
   await expect(reset).toContainText("awaiting new reading");
-  await expect(reset).toHaveClass(/\bquota-info\b/u);
-  await expect(reset).not.toHaveClass(/\bquota-error\b/u);
-  await expect(reset).toContainText("info");
+  await expect(reset).toHaveAttribute("data-sev", "info");
+  await expect(reset).not.toHaveAttribute("data-sev", "error");
+  await expect(reset).toContainText("Info");
   const meter = reset.getByRole("meter");
-  await expect(meter).toHaveClass(/\bmeter-reset\b/u);
-  await expect(meter).not.toHaveClass(/\bmeter-error\b/u);
+  await expect(meter).toHaveAttribute("data-reset", "");
+  await expect(meter).not.toHaveAttribute("data-sev", "error");
   await expect(meter).toHaveAttribute("aria-valuetext", "reset · was 100%");
 
   // 91% used but resetting within the hour or so: capped, and still live.
   const soon = quotaRow(page, "Antigravity Claude 5h quota used");
-  await expect(soon).toHaveClass(/\bquota-info\b/u);
-  await expect(soon).not.toHaveClass(/\bquota-reset\b/u);
+  await expect(soon).toHaveAttribute("data-sev", "info");
+  await expect(soon).not.toHaveAttribute("data-reset");
   await expect(soon).toContainText("91%");
   await expect(soon).toContainText("resets in 1h");
-  await expect(soon.getByRole("meter")).toHaveClass(/\bmeter-info\b/u);
+  await expect(soon.getByRole("meter")).toHaveAttribute("data-sev", "info");
 
   // 97% with days to go is an error in both variants.
   const full = quotaRow(page, "Claude Code Weekly Opus quota used");
-  await expect(full).toHaveClass(/\bquota-error\b/u);
-  await expect(full).toContainText("error");
+  await expect(full).toHaveAttribute("data-sev", "error");
+  await expect(full).toContainText("Error");
 });
 
 test("per-update: a reset quota window keeps the severity the collector reports", async ({
@@ -311,12 +311,12 @@ test("per-update: a reset quota window keeps the severity the collector reports"
   // Today's collector still calls the window an error; the page does not
   // overrule it, though its reset time shows the reading is the last one.
   const reset = quotaRow(page, "Claude Code 5-hour quota used");
-  await expect(reset).toHaveClass(/\bquota-error\b/u);
-  await expect(reset).toContainText("error");
+  await expect(reset).toHaveAttribute("data-sev", "error");
+  await expect(reset).toContainText("Error");
   await expect(reset).toContainText("reset · was 100%");
-  await expect(reset.getByRole("meter")).toHaveClass(/\bmeter-error\b/u);
+  await expect(reset.getByRole("meter")).toHaveAttribute("data-sev", "error");
   const soon = quotaRow(page, "Antigravity Claude 5h quota used");
-  await expect(soon).toHaveClass(/\bquota-warning\b/u);
+  await expect(soon).toHaveAttribute("data-sev", "warning");
   await expect(soon).toContainText("91%");
 });
 

@@ -1,3 +1,5 @@
+import { pillSeverity, type PillTone } from "./pill.ts";
+
 export type StackCheckState =
   | "SUCCESS"
   | "FAILURE"
@@ -54,8 +56,6 @@ export type StackTreeProps = {
   readonly label?: string | undefined;
   readonly emptyMessage?: string | undefined;
 };
-
-type PillTone = "ok" | "warning" | "error" | "info" | "neutral";
 
 type PillSpec = {
   readonly key: string;
@@ -260,7 +260,8 @@ function StackNodeItem({
           {pills.map((pill) => (
             <span
               key={pill.key}
-              className={`visual-pill visual-pill-${pill.tone}`}
+              className="visual-pill"
+              data-sev={pillSeverity(pill.tone)}
             >
               <span aria-hidden="true">{pill.glyph}</span>
               {pill.text}

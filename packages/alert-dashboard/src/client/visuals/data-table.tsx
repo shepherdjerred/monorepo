@@ -191,7 +191,7 @@ export function DataTable<T>({
         aria-labelledby={captionId}
         tabIndex={0}
       >
-        <table className="visual-table" role="table">
+        <table className="visual-table ui-table" role="table">
           <caption
             id={captionId}
             className={hideCaption ? "sr-only" : "visual-table-caption"}

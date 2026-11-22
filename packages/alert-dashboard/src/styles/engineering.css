@@ -226,12 +226,17 @@
   min-width: 0;
 }
 
+/* Identifiers wrap only where `Identifier` allows (after "/" or "#"); its
+   segments never wrap inside (see `.id-seg` in visuals.css). */
 .eng-pkg-name {
   color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  font-family: var(--ui-font-mono);
   font-size: 0.8rem;
   font-weight: 650;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+.eng-pkg-sub code {
+  overflow-wrap: break-word;
 }
 
 .eng-pkg-sub {

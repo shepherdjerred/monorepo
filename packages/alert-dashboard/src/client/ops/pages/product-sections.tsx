@@ -15,6 +15,7 @@ import {
   type DataTableColumn,
 } from "#client/visuals/index.ts";
 import { formatValue } from "#shared/ops-format";
+import { pillSeverity } from "#client/visuals/pill.ts";
 
 type LcpClassification = {
   readonly label: "Good" | "Needs Improvement" | "Poor" | "No data";
@@ -40,7 +41,10 @@ function FunnelCard({
     <article className="product-funnel-card" aria-label={funnel.name}>
       <header className="product-funnel-head">
         <h3>{funnel.name}</h3>
-        <span className="visual-pill visual-pill-info">{`${String(overall7d)}% 7d conversion`}</span>
+        <span
+          className="visual-pill"
+          data-sev="info"
+        >{`${String(overall7d)}% 7d conversion`}</span>
       </header>
       <StackedMeter
         label="7d entry outcome"
@@ -185,7 +189,7 @@ function buildSiteColumns(
                 ? "—"
                 : `${String(Math.round(site.p75LcpMs))} ms`}
             </span>
-            <span className={`visual-pill visual-pill-${badge.tone}`}>
+            <span className="visual-pill" data-sev={pillSeverity(badge.tone)}>
               <span aria-hidden="true">{badge.glyph}</span>
               {badge.label}
             </span>

@@ -433,16 +433,16 @@ test("AI page explains its status, groups quota by provider and ranks tools", as
   const weekly = quota.getByRole("row").filter({
     has: page.getByRole("meter", { name: "Claude 7d Weekly quota used" }),
   });
-  // Severity is the signal's, as a class for the colour and a word beside it.
-  await expect(weekly).toHaveClass(/\bquota-warning\b/u);
+  // Severity is the signal's, as data-sev for the colour and a word beside it.
+  await expect(weekly).toHaveAttribute("data-sev", "warning");
   await expect(weekly).toContainText("84%");
-  await expect(weekly).toContainText("warning");
+  await expect(weekly).toContainText("Warning");
   await expect(weekly).toContainText(/resets in \dd/u);
   await expect(
     quota.getByRole("row").filter({
       has: page.getByRole("meter", { name: "Codex 5h Session quota used" }),
     }),
-  ).toHaveClass(/\bquota-ok\b/u);
+  ).toHaveAttribute("data-sev", "ok");
 
   const tools = page.getByRole("table", { name: "Usage by tool" });
   await expect(tools.getByRole("columnheader")).toHaveText([

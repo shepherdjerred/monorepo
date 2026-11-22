@@ -18,6 +18,7 @@ import type { SeriesPresetId, SeriesRange } from "#shared/ops-schema";
 import "#styles/platform.css";
 
 import { ClusterExplorerBody } from "./cluster-workloads-section.tsx";
+import { pillSeverity } from "#client/visuals/pill.ts";
 
 export const CLUSTER_TABS = [
   "nodes",
@@ -128,7 +129,7 @@ export function statusPill(
   text: string,
 ): React.JSX.Element {
   return (
-    <span className={`visual-pill visual-pill-${tone}`}>
+    <span className="visual-pill" data-sev={pillSeverity(tone)}>
       <span aria-hidden="true">{glyph}</span>
       <span>{text}</span>
     </span>

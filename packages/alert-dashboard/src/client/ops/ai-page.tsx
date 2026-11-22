@@ -47,7 +47,8 @@ function SpendPanel({
         <span> of {formatValue(budget, "usd")} budget</span>
       </p>
       <div
-        className={`meter meter-${severity} spend-meter`}
+        className="visual-meter spend-meter"
+        data-sev={severity}
         role="meter"
         aria-valuemin={0}
         aria-valuemax={budget}
@@ -55,13 +56,14 @@ function SpendPanel({
         aria-label="Month-to-date spend against budget"
       >
         <span
+          className="visual-meter-fill"
           style={{
             width: `${String(Math.min((spent ?? 0) / budget, 1) * 100)}%`,
           }}
         />
         {projected === null ? null : (
           <i
-            className="projection"
+            className="visual-meter-projection"
             style={{
               left: `${String(Math.min(projected / budget, 1) * 100)}%`,
             }}

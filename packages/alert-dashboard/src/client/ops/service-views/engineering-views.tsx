@@ -42,7 +42,9 @@ const TRACKER_NOTICE_COLUMNS: readonly DataTableColumn<TrackerNotice>[] = [
     header: "Kind",
     sortValue: (row) => row.kind,
     render: (row) => (
-      <span className="visual-pill visual-pill-info">{row.kind}</span>
+      <span className="visual-pill" data-sev="info">
+        {row.kind}
+      </span>
     ),
   },
   {
@@ -78,9 +80,7 @@ const TRACKER_PROJECT_COLUMNS: readonly DataTableColumn<TrackerProjectSummary>[]
       key: "team",
       header: "Team",
       sortValue: (row) => row.team,
-      render: (row) => (
-        <span className="visual-pill visual-pill-neutral">{row.team}</span>
-      ),
+      render: (row) => <span className="visual-pill">{row.team}</span>,
     },
     {
       key: "openCount",
@@ -132,7 +132,7 @@ const TRACKER_URGENT_COLUMNS: readonly DataTableColumn<TrackerUrgentIssue>[] = [
     header: "Urgency / Impact",
     sortValue: (row) => row.urgency,
     render: (row) => (
-      <span className="visual-pill visual-pill-warning">
+      <span className="visual-pill" data-sev="warning">
         <span aria-hidden="true">!</span>
         {`${row.urgency} / ${row.impact}`}
       </span>
