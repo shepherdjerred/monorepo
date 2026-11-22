@@ -4,7 +4,7 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import type { Worker } from "@temporalio/worker";
 import type { TestWorkflowEnvironment } from "@temporalio/testing";
-import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import { historyToJSON } from "@temporalio/common/proto-utils";
 import { expect, test } from "vitest";
 import { createMovieTransferReuseWorkflowFixture } from "@shepherdjerred/media/testing/movie-transfer-reuse-workflow";
 import { startMovieRoleActivitiesV4 } from "#activities/media/testing/movie-role-activities.ts";

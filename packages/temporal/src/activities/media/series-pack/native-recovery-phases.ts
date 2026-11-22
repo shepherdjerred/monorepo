@@ -324,6 +324,6 @@ export function nativeRecoverySdk(operationId: string, activityId: string) {
     run: <Args extends unknown[], Result>(
       activity: (...args: Args) => Promise<Result>,
       ...args: Args
-    ) => actual.run<Args, Result, typeof activity>(activity, ...args),
+    ) => actual.run(activity, ...args),
   };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { Connection } from "@temporalio/client";
-import { msToTs } from "@temporalio/common/lib/time.js";
+import { msToTs } from "@temporalio/common/time";
 import { Database } from "bun:sqlite";
 import { z } from "zod";
 import {

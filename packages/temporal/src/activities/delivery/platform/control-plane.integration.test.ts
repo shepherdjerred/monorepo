@@ -36,11 +36,10 @@ import { admitPlatformNativeJob } from "#lib/delivery/platform/native-job.ts";
 async function asExecutor(
   ...args: Parameters<typeof executeControlPlaneWithJob>
 ) {
-  return await new MockActivityEnvironment().run<
-    Parameters<typeof executeControlPlaneWithJob>,
-    Awaited<ReturnType<typeof executeControlPlaneWithJob>>,
-    typeof executeControlPlaneWithJob
-  >(executeControlPlaneWithJob, ...args);
+  return await new MockActivityEnvironment().run(
+    executeControlPlaneWithJob,
+    ...args,
+  );
 }
 
 /** `finishDelivery` reports as the Activity of its executor Workflow (D7). */

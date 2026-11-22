@@ -10,6 +10,6 @@ export function movieRollbackSdkEnvironment(
     run: <Args extends unknown[], Result>(
       activity: (...args: Args) => Promise<Result>,
       ...args: Args
-    ) => environment.run<Args, Result, typeof activity>(activity, ...args),
+    ) => environment.run(activity, ...args),
   };
 }

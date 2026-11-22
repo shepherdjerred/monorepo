@@ -8,7 +8,7 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import type { Worker } from "@temporalio/worker";
 import type { TestWorkflowEnvironment } from "@temporalio/testing";
-import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import { historyToJSON } from "@temporalio/common/proto-utils";
 import { expect, test } from "vitest";
 import { createFutureSeriesWorkflowFixture } from "@shepherdjerred/media/testing/future-series-workflow";
 import { createAcquisitionNetworkWorkerActivities } from "./acquisition.ts";

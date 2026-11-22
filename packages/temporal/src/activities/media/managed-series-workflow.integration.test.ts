@@ -5,7 +5,7 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import type { Worker } from "@temporalio/worker";
 
-import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import { historyToJSON } from "@temporalio/common/proto-utils";
 import { expect, test } from "vitest";
 import { createManagedSeriesWorkflowFixture } from "@shepherdjerred/media/testing/managed-series-workflow";
 

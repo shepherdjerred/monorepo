@@ -6,7 +6,7 @@ import {
   TimeoutFailure,
   TimeoutType,
 } from "@temporalio/common";
-import { historyFromJSON } from "@temporalio/common/lib/proto-utils.js";
+import { historyFromJSON } from "@temporalio/common/proto-utils";
 import type { AlertPoster } from "#lib/alertmanager.ts";
 import { classifyWorkflowTimeoutHistory } from "./workflow-failure-history.ts";
 import {

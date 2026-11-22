@@ -27,11 +27,10 @@ async function finishAsExecutor(...args: Parameters<typeof finishDelivery>) {
 
 /** The platform step writes its stages as the executor's Activity (D7). */
 async function asExecutor(...args: Parameters<typeof executePlatformWithJob>) {
-  return await new MockActivityEnvironment().run<
-    Parameters<typeof executePlatformWithJob>,
-    Awaited<ReturnType<typeof executePlatformWithJob>>,
-    typeof executePlatformWithJob
-  >(executePlatformWithJob, ...args);
+  return await new MockActivityEnvironment().run(
+    executePlatformWithJob,
+    ...args,
+  );
 }
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;

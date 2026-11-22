@@ -3,7 +3,7 @@ import {
   msNumberToTs,
   requiredTsToMs,
   type Timestamp,
-} from "@temporalio/common/lib/time.js";
+} from "@temporalio/common/time";
 const reads = vi.hoisted(() => ({
   config: vi.fn(),
   client: vi.fn(),

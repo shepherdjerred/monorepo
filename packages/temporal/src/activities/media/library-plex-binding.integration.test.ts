@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 
 import { Worker } from "@temporalio/worker";
 import { Context } from "@temporalio/activity";
-import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import { historyToJSON } from "@temporalio/common/proto-utils";
 import { assertPrivateHistory } from "./testing/history.ts";
 import { expect, test } from "vitest";
 import { createLibraryBindingWorkerFixture } from "@shepherdjerred/media/testing/library-binding";

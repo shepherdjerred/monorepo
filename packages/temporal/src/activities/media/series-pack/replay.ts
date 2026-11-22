@@ -1,7 +1,7 @@
 import { replayWorkflowFile } from "#activities/media/testing/process.ts";
 import path from "node:path";
 import type { TestWorkflowEnvironment } from "@temporalio/testing";
-import { historyToJSON } from "@temporalio/common/lib/proto-utils.js";
+import { historyToJSON } from "@temporalio/common/proto-utils";
 import { assertPrivateHistory } from "#activities/media/testing/history.ts";
 import { assertSeriesPackRoleBudgets } from "./history.ts";
 
