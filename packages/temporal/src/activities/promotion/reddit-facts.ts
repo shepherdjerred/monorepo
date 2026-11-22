@@ -12,4 +12,4 @@ Examples of Jerred's tone: "hi! feel free to try us out :)" and
 Identify it as our server, never pretend to be an independent player or claim personal experience.
 For partial matches, explain the meaningful difference rather than hiding it.`;
 
-export const REDDIT_OUTREACH_POLICY_VERSION = 3;
+export const REDDIT_OUTREACH_POLICY_VERSION = 4;

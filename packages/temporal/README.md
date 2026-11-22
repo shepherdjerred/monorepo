@@ -1392,8 +1392,11 @@ remain manual.
 
 OpenAI Decisions scores the match against community rules and the approved facts
 in `src/activities/promotion/reddit-facts.ts`. A candidate needs a fit score
-strictly above 0.80, an explicit request for a server, community permission, and
-support for every hard requirement. A separate model drafts the invite after the
+strictly above 0.80, an explicit request for a server, and support for every
+hard requirement. An applicable rule against bots, automated comments,
+promotional replies, or owner advertising blocks outreach. Silence or
+ambiguity about permission leaves an otherwise eligible request available for
+drafting. A separate model drafts the invite after the
 thread and account are checked. Drafts can acknowledge a soft preference the
 server only partly meets. Requests already answered by `the_storm_mc` and
 threads whose comments cannot be fully inspected are excluded. Assessments are

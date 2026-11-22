@@ -389,7 +389,7 @@ function countDecisionRejections(
       : (
           [
             !qualification.explicitlySeekingServer && "intent-unconfirmed",
-            !qualification.communityAllowsReply && "permission-unconfirmed",
+            !qualification.communityAllowsReply && "rules-exclude-replies",
             !qualification.hardConstraintsSatisfied &&
               "requirements-unconfirmed",
             qualification.judgeScore <= REDDIT_MATCH_THRESHOLD &&

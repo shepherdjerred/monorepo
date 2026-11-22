@@ -228,7 +228,7 @@ describe("Reddit outreach sweep observability", () => {
           "already-handled": 2,
           "thread-ineligible": 1,
           "intent-unconfirmed": 1,
-          "permission-unconfirmed": 1,
+          "rules-exclude-replies": 1,
           "requirements-unconfirmed": 1,
           "score-too-low": 1,
           "decision-declined": 1,
