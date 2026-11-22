@@ -53,7 +53,7 @@
     "@shepherdjerred/llm-observability": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
     "@shepherdjerred/text": "workspace:*",
-    "ai": "^7.0.137",
+    "ai": "^7.0.179",
     "chrono-node": "^2.9.1",
     "cron-parser": "^5.5.0",
     "discord.js": "^14.27.0",

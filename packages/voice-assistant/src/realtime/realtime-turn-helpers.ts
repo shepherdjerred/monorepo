@@ -19,11 +19,16 @@ import type {
   RealtimeVerifiedCommandRouter,
 } from "./realtime-turn.ts";
 
-function audioTokenCount(details: readonly Record<string, number>[]): number {
-  return details.reduce(
-    (total, item) => total + (item["audio_tokens"] ?? 0),
-    0,
-  );
+function audioTokenCount(
+  details: readonly Readonly<Record<string, unknown>>[],
+): number {
+  return details.reduce<number>((total, item) => {
+    const tokens = item["audio_tokens"];
+    if (tokens === undefined) return total;
+    if (typeof tokens !== "number")
+      throw new TypeError("Realtime usage audio_tokens is not a number");
+    return total + tokens;
+  }, 0);
 }
 
 export function resolveTurnWake(

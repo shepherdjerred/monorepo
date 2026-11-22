@@ -1246,7 +1246,7 @@ labels without message bodies. Disabling admission lets accepted work settle.
 BlueBubbles has no bootstrap, credentials, Activity poller, or admission flags.
 Its Workflow definitions remain only for replay of closed histories.
 
-The pinned Spectrum 12.10.1 packages have declaration-only Bun patches. Core's
+The pinned Spectrum 12.16.0 packages have declaration-only Bun patches. Core's
 optional generic fields admit `undefined` with `exactOptionalPropertyTypes`;
 iMessage derives its definition from its config return type instead of an
 incompatible overloaded conditional type. Runtime SDK code is unchanged.
