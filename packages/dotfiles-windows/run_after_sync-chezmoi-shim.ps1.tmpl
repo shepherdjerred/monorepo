@@ -4,8 +4,8 @@
 # Runs on every apply (idempotent) so WinGet upgrades refresh ~/.local/bin/chezmoi.exe.
 $ErrorActionPreference = 'Stop'
 
-$localBin = Join-Path '{{ .chezmoi.homeDir }}' '.local\bin'
-$localAppData = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { Join-Path '{{ .chezmoi.homeDir }}' 'AppData\Local' }
+$localBin = [System.IO.Path]::GetFullPath((Join-Path '{{ .chezmoi.homeDir }}' '.local\bin'))
+$localAppData = if ($env:LOCALAPPDATA) { [System.IO.Path]::GetFullPath($env:LOCALAPPDATA) } else { [System.IO.Path]::GetFullPath((Join-Path '{{ .chezmoi.homeDir }}' 'AppData\Local')) }
 $wingetLinks = Join-Path $localAppData 'Microsoft\WinGet\Links'
 
 New-Item -ItemType Directory -Path $localBin -Force | Out-Null
@@ -16,7 +16,7 @@ $entries = @()
 if ($currentUserPath) {
     $entries = @($currentUserPath -split ';' | Where-Object { $_ -and $_.Trim().Length -gt 0 })
 }
-$norm = { param([string]$p) $p.Trim().TrimEnd('\').ToLowerInvariant() }
+$norm = { param([string]$p) $p.Trim().Replace('/', '\').TrimEnd('\').ToLowerInvariant() }
 $localNorm = & $norm $localBin
 $linksNorm = & $norm $wingetLinks
 
