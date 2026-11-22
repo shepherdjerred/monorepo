@@ -23,6 +23,12 @@ const REASONS: Record<UnavailableReason, string> = {
   timeout: "Timed out",
 };
 
+/** Reasons that only mean a lookup is not set up here, not that anything failed. */
+const OFF: ReadonlySet<UnavailableReason> = new Set([
+  "disabled",
+  "not-configured",
+]);
+
 function Unavailable({
   reason,
   detail,
@@ -140,7 +146,13 @@ export function SourcePanel({
       {source.data?.state === "unavailable" && (
         <>
           <p className="mono">{sha}</p>
-          <Unavailable {...source.data} />
+          {/* Lookups switched off by configuration are no news to a reader:
+              the full sha and its GitHub link say all there is. */}
+          {OFF.has(source.data.reason) ? (
+            <ToolLinks links={source.data.links} />
+          ) : (
+            <Unavailable {...source.data} />
+          )}
         </>
       )}
       {source.data?.state === "available" && (

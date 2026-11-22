@@ -1,4 +1,6 @@
 import type {
+  CarriedFailure,
+  CommitEnvironmentGroup,
   CommitEnvironmentState,
   CommitStatus,
   CommitSummary,
@@ -107,7 +109,7 @@ export const ENVIRONMENT: Record<
   replaced: {
     status: "pending",
     label: "replaced",
-    reason: "ran it, then another release replaced it.",
+    reason: "ran it, then a release that does not include it replaced it.",
   },
   manual: {
     status: "pending",
@@ -129,42 +131,112 @@ export const ENVIRONMENT: Record<
 const plural = (count: number, one: string, many: string) =>
   `${String(count)} ${count === 1 ? one : many}`;
 
+/** "a", "a and b", "a, b and c". */
+function series(items: readonly string[]) {
+  const last = items.at(-1) ?? "";
+  return items.length <= 1
+    ? last
+    : `${items.slice(0, -1).join(", ")} and ${last}`;
+}
+
+/** The newer commits that shipped this one's failed changes, by short sha, each once. */
+function carriers(carried: readonly CarriedFailure[]) {
+  return series([
+    ...new Set(carried.map((entry) => entry.includedIn.slice(0, 7))),
+  ]);
+}
+
+/** Why a failed build held nothing back: a later commit that includes it passed. */
+export function includedNote(carried: readonly CarriedFailure[]) {
+  return `Not built on its own; included in ${carriers(carried)}, which passed`;
+}
+
+/**
+ * The verdict's glyph and words. A commit whose only builds failed while a
+ * newer commit that includes it passed changed nothing on its own; it is
+ * included in that commit rather than "nothing to deploy".
+ */
+export function verdictView(
+  verdict: CommitVerdict,
+  carried: readonly CarriedFailure[] = [],
+): { status: string; label: string } {
+  return verdict === "nothing_to_deploy" && carried.length > 0
+    ? { status: "not_started", label: "Included in newer" }
+    : VERDICT[verdict];
+}
+
+/** What a list row's environment tally says, short and in full. */
+export function tallyText(
+  group: Pick<CommitEnvironmentGroup, "name" | "liveCount" | "total">,
+) {
+  return {
+    short: `${group.name} ${String(group.liveCount)}/${String(group.total)} live`,
+    full: `${group.name}: ${String(group.liveCount)} of ${plural(group.total, "changed service", "changed services")} live`,
+  };
+}
+
 /** What the list row says is stuck, named by service and environment. */
 export function blockerNote(blocker: NonNullable<CommitSummary["blocker"]>) {
   return `${blocker.service} / ${blocker.environment}: ${ENVIRONMENT[blocker.state].label}`;
 }
 
-/** The list row's notes beside its tallies: failed CI first, then what is stuck. */
+/**
+ * The list row's notes beside its tallies: CI that failed with nothing
+ * carrying it, failures a newer commit carries, then what is stuck.
+ */
 export function rowNotes(commit: CommitSummary): string[] {
+  const carried = commit.carriedFailures ?? [];
+  const failing = commit.failedBuildCount - carried.length;
   const notes: string[] = [];
-  if (commit.failedBuildCount > 0)
-    notes.push(
-      `CI failed for ${plural(commit.failedBuildCount, "service", "services")}`,
-    );
+  if (failing > 0)
+    notes.push(`CI failed for ${plural(failing, "service", "services")}`);
+  if (carried.length > 0) notes.push(includedNote(carried));
   if (commit.blocker !== null) notes.push(blockerNote(commit.blocker));
   return notes;
 }
 
 /**
  * The commit page's one statement: what the verdict means for this commit,
- * then how many changed services are live and, if not all, which
- * environment is stuck and why. A commit whose own CI failed for some
- * services can still have its other changes live, often through newer
- * commits; the statement says so instead of contradicting the rows.
+ * then which failed builds a newer commit carries, then how many changed
+ * services are live and, if not all, which environment is stuck and why. A
+ * commit whose own CI failed for some services can still have its other
+ * changes live, often through newer commits; the statement says so instead
+ * of contradicting the rows.
  */
 export function commitStatement(status: CommitStatus): string {
-  const failed = status.failedBuilds.length;
+  const carried = status.carriedFailures ?? [];
+  const failed = status.failedBuilds.length - carried.length;
   // A changed service no environment tracks has nowhere to be live.
   const changed = status.changed.filter(
     (entry) => entry.environments.length > 0,
   );
+  const failedSentence = `CI failed for ${plural(failed, "service", "services")}, so Delivery published nothing for ${failed === 1 ? "it" : "them"}.`;
   const opening =
-    status.verdict === "build_failed" && changed.length > 0
-      ? `CI failed for ${plural(failed, "service", "services")}, so Delivery published nothing for ${failed === 1 ? "it" : "them"}.`
-      : VERDICT[status.verdict].sentence;
-  return changed.length === 0
-    ? opening
-    : [opening, ...liveness(changed, status.blocker)].join(" ");
+    status.verdict === "build_failed"
+      ? [
+          changed.length > 0 || carried.length > 0
+            ? failedSentence
+            : VERDICT.build_failed.sentence,
+        ]
+      : [
+          // The included sentence says what happened; "changed nothing" would be untrue.
+          ...(status.verdict === "nothing_to_deploy" && carried.length > 0
+            ? []
+            : [VERDICT[status.verdict].sentence]),
+          ...(failed > 0 ? [failedSentence] : []),
+        ];
+  const one = carried.length === 1;
+  const included =
+    carried.length === 0
+      ? []
+      : [
+          `CI failed for ${plural(carried.length, "service", "services")} here, so ${one ? "it was" : "they were"} not built on ${one ? "its" : "their"} own; included in ${carriers(carried)}, which passed.`,
+        ];
+  return [
+    ...opening,
+    ...included,
+    ...(changed.length === 0 ? [] : liveness(changed, status.blocker)),
+  ].join(" ");
 }
 
 /** How many changed services are live, and if not all, where it is stuck and why. */

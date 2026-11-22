@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { DeploymentStatusSchema } from "#shared/contract.ts";
 import type {
   CommitEnvironment,
@@ -59,6 +60,31 @@ const DEPLOYMENT_FIELDS = {
   createdAt: true,
 } as const;
 
+const SET_FIELDS = {
+  id: true,
+  revision: true,
+  lineage: true,
+  orderMajor: true,
+  orderMinor: true,
+} as const;
+
+/** A set revision as the commit rules read it; a manual hotfix has no order key. */
+function setFacts(row: {
+  revision: number;
+  lineage: string;
+  orderMajor: number | null;
+  orderMinor: number | null;
+}): SetFacts {
+  return {
+    revision: row.revision,
+    lineage: row.lineage,
+    order:
+      row.orderMajor === null || row.orderMinor === null
+        ? null
+        : { major: row.orderMajor, minor: row.orderMinor },
+  };
+}
+
 /** Deployments not yet finished: queued, running or waiting for a decision. */
 const OPEN_STATUSES = ["queued", "running", "awaiting_approval"];
 
@@ -108,17 +134,53 @@ async function environmentRecord(
         ],
       },
     },
-    select: { id: true, revision: true, lineage: true },
+    select: SET_FIELDS,
   });
   return {
     newest,
     open,
     awaitingPlan: new Set(planned.map((row) => row.id)),
-    sets: new Map<string, SetFacts>(sets.map((row) => [row.id, row])),
+    sets: new Map<string, SetFacts>(sets.map((row) => [row.id, setFacts(row)])),
   };
 }
 
 type EnvironmentRecord = Awaited<ReturnType<typeof environmentRecord>>;
+
+const CarriedRowsSchema = z.array(
+  z.object({ buildId: z.string(), includedIn: z.string() }),
+);
+
+/**
+ * For each failed CI build, the first later main commit whose build of the
+ * same service passed, by build id. Main is linear, so a commit pushed after
+ * another descends from it: that commit's tree includes the failed one's
+ * change, and its passing build published it. A commit's place on main is its
+ * push pipeline, the one its source record was read from (else its build's
+ * own), so a rerun of an older commit never counts as later.
+ */
+async function carryingCommits(database: Database, failedIds: string[]) {
+  if (failedIds.length === 0) return new Map<string, string>();
+  const rows = CarriedRowsSchema.parse(
+    await database.$queryRaw`
+    SELECT f.id AS "buildId", c."sourceRevision" AS "includedIn"
+    FROM "Build" f
+    LEFT JOIN "SourceCommit" fs ON fs."sourceRevision" = f."sourceRevision"
+    CROSS JOIN LATERAL (
+      SELECT b."sourceRevision" FROM "Build" b
+      LEFT JOIN "SourceCommit" bs ON bs."sourceRevision" = b."sourceRevision"
+      WHERE b."serviceId" = f."serviceId" AND b."sourceKind" = 'ci'
+        AND b.status = 'verified' AND b."sourceRevision" <> f."sourceRevision"
+        AND COALESCE(bs."pipelineNumber", b."pipelineNumber")
+          > COALESCE(fs."pipelineNumber", f."pipelineNumber")
+      ORDER BY COALESCE(bs."pipelineNumber", b."pipelineNumber"), b.id
+      LIMIT 1
+    ) c
+    WHERE f.id = ANY(${failedIds}) AND f."sourceKind" = 'ci'
+      AND f.status = 'failed' AND f."pipelineNumber" IS NOT NULL
+  `,
+  );
+  return new Map(rows.map((row) => [row.buildId, row.includedIn]));
+}
 
 /**
  * The deployments that would deliver a change to one environment: those of
@@ -181,13 +243,7 @@ async function readCommits(
   const buildIds = builds.map((row) => row.id);
   const versionSets = await database.versionSet.findMany({
     where: { qualifiedBuildId: { in: buildIds } },
-    select: {
-      id: true,
-      serviceId: true,
-      revision: true,
-      lineage: true,
-      qualifiedBuildId: true,
-    },
+    select: { ...SET_FIELDS, serviceId: true, qualifiedBuildId: true },
   });
   const versionSetByBuild = new Map(
     versionSets.flatMap((row) =>
@@ -221,7 +277,15 @@ async function readCommits(
       },
     }),
   ]);
-  const record = await environmentRecord(database, environments);
+  const [record, carried] = await Promise.all([
+    environmentRecord(database, environments),
+    carryingCommits(
+      database,
+      builds
+        .filter((row) => buildStatus(row.status) === "failed")
+        .map((row) => row.id),
+    ),
+  ]);
   const sourceBySha = new Map(
     sourceCommits.map((row) => [row.sourceRevision, row]),
   );
@@ -243,7 +307,8 @@ async function readCommits(
         unchangedCount += 1;
         continue;
       }
-      const change: ChangeFacts = versionSet ?? null;
+      const change: ChangeFacts =
+        versionSet === undefined ? null : setFacts(versionSet);
       const candidates = environments.filter(
         (row) =>
           row.serviceId === build.serviceId &&
@@ -312,8 +377,17 @@ async function readCommits(
     const pendingBuilds = own
       .filter((row) => buildStatus(row.status) === "pending")
       .map((row) => buildView(row));
+    const carriedFailures = failedBuilds.flatMap((build) => {
+      const includedIn = carried.get(build.id);
+      return includedIn === undefined
+        ? []
+        : [{ buildId: build.id, includedIn }];
+    });
     const parts: CommitVerdict[] = changed.map((entry) => entry.verdict);
-    if (failedBuilds.length > 0) parts.push("build_failed");
+    // A failure a later passing commit carries held nothing back: its change
+    // shipped in that commit, so it does not speak for this one.
+    if (failedBuilds.length > carriedFailures.length)
+      parts.push("build_failed");
     if (pendingBuilds.length > 0) parts.push("building");
     if (own.length > 0 && parts.length === 0) parts.push("nothing_to_deploy");
     return {
@@ -328,6 +402,7 @@ async function readCommits(
         changed,
         unchangedCount,
         failedBuilds,
+        carriedFailures,
         pendingBuilds,
         blocker: blockingEnvironment(changed),
       },
@@ -384,6 +459,7 @@ function summary(status: CommitStatus, firstSeenAt: Date): CommitSummary {
     liveCount: status.changed.filter((entry) => entry.verdict === "deployed")
       .length,
     failedBuildCount: status.failedBuilds.length,
+    carriedFailures: status.carriedFailures ?? [],
     blocker: status.blocker,
   };
 }

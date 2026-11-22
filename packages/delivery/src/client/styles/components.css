@@ -515,12 +515,34 @@ label.checkbox input {
   block-size: 18px;
   flex: none;
 }
-/* Commits: a verdict, the commit, where it stands, and who and when. */
+/*
+ * Commits: a verdict, the commit, where it stands, and who and when. Every
+ * row shares the table's columns through subgrid, so each column starts at
+ * the same x on every row however wide one row's words are.
+ */
+.commit-table {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 2fr) minmax(0, 1.5fr) max-content;
+  column-gap: var(--space-4);
+}
+.commit-columns,
+.commit-list,
 .commit-row {
   display: grid;
-  grid-template-columns: 9.5rem minmax(0, 2fr) minmax(0, 1.5fr) auto;
-  column-gap: var(--space-4);
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+}
+.commit-row {
   align-items: baseline;
+}
+.commit-columns {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  padding-bottom: var(--row-pad-y);
+  border-bottom: 1px solid var(--border-strong);
+}
+.commit-columns > :last-child {
+  text-align: end;
 }
 /* The verdict is a pill as wide as its words, not as its column. */
 .commit-row > .status {
@@ -582,7 +604,7 @@ label.checkbox input {
 .commit-builds {
   overflow-wrap: anywhere;
 }
-.commit-list + .pager:not(:empty) {
+.commit-table + .pager:not(:empty) {
   border-top: 1px solid var(--border);
   padding-top: var(--space-2);
 }
@@ -606,8 +628,13 @@ label.checkbox input {
   .activity :is(.activity-when, .activity-subject) {
     grid-column: 1 / -1;
   }
+  .commit-columns {
+    display: none;
+  }
+  .commit-table {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .commit-row {
-    grid-template-columns: 1fr;
     row-gap: var(--space-0);
   }
   .commit-meta {

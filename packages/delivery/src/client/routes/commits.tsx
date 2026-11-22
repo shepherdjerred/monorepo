@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, createRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import type {
+  CarriedFailure,
   CommitEnvironment,
   CommitEnvironmentGroup,
   CommitEnvironmentState,
@@ -23,18 +24,25 @@ import { revisionLabel } from "#client/components/identifier.tsx";
 import { Disclosure } from "#client/components/disclosure.tsx";
 import {
   ENVIRONMENT,
-  VERDICT,
   commitStatement,
   parseSha,
   rowNotes,
+  tallyText,
   unchangedLine,
+  verdictView,
 } from "./commit-model.ts";
 
 const isLiveState = (state: CommitEnvironmentState) =>
   state === "live" || state === "superseded";
 
-function Verdict({ value }: { value: CommitVerdict }) {
-  const verdict = VERDICT[value];
+function Verdict({
+  value,
+  carried,
+}: {
+  value: CommitVerdict;
+  carried?: readonly CarriedFailure[] | undefined;
+}) {
+  const verdict = verdictView(value, carried);
   return <Status value={verdict.status} label={verdict.label} />;
 }
 
@@ -78,6 +86,7 @@ function EnvironmentChip({
 // Platform commits touch one environment per stack; the row shows the first few.
 const MAX_TALLIES = 4;
 
+/** "prod 14/19 live" on screen; "prod: 14 of 19 changed services live" to a screen reader. */
 function Tally({
   group,
 }: {
@@ -86,12 +95,14 @@ function Tally({
     "name" | "verdict" | "liveCount" | "total"
   >;
 }) {
+  const text = tallyText(group);
   return (
     <Status
-      value={VERDICT[group.verdict].status}
+      value={verdictView(group.verdict).status}
       label={
         <>
-          {group.name} {group.liveCount}/{group.total}
+          <span aria-hidden="true">{text.short}</span>
+          <span className="visually-hidden">{text.full}</span>
         </>
       }
     />
@@ -101,7 +112,7 @@ function Tally({
 function CommitRow({ commit }: { commit: CommitSummary }) {
   return (
     <li className="commit-row">
-      <Verdict value={commit.verdict} />
+      <Verdict value={commit.verdict} carried={commit.carriedFailures} />
       <Link
         to="/commits/$sha"
         params={{ sha: commit.sha }}
@@ -221,11 +232,19 @@ function CommitsPage() {
         {data.items.length === 0 ? (
           <p className="empty">Delivery has not seen a commit yet.</p>
         ) : (
-          <ul className="commit-list">
-            {data.items.map((commit) => (
-              <CommitRow key={commit.sha} commit={commit} />
-            ))}
-          </ul>
+          <div className="commit-table">
+            <div className="commit-columns" aria-hidden="true">
+              <span>Status</span>
+              <span>Commit</span>
+              <span>Changed services live, per environment</span>
+              <span>Author · first seen</span>
+            </div>
+            <ul className="commit-list">
+              {data.items.map((commit) => (
+                <CommitRow key={commit.sha} commit={commit} />
+              ))}
+            </ul>
+          </div>
         )}
         <OlderLink to="/commits" search={search} cursor={data.nextCursor} />
       </section>
@@ -273,11 +292,14 @@ function BuildList({
   title,
   intro,
   builds,
+  carried = [],
 }: {
   title: string;
   /** One plain sentence before the recorded reasons. */
   intro: string;
   builds: CommitStatus["failedBuilds"];
+  /** The newer commit that shipped each build's change, if any. */
+  carried?: readonly CarriedFailure[];
 }) {
   if (builds.length === 0) return null;
   return (
@@ -293,10 +315,28 @@ function BuildList({
             {build.qualificationReason !== null && (
               <span className="muted"> · {build.qualificationReason}</span>
             )}
+            <IncludedIn
+              sha={
+                carried.find((entry) => entry.buildId === build.id)?.includedIn
+              }
+            />
           </li>
         ))}
       </ul>
     </section>
+  );
+}
+
+function IncludedIn({ sha }: { sha: string | undefined }) {
+  if (sha === undefined) return null;
+  return (
+    <>
+      {" · included in "}
+      <Link to="/commits/$sha" params={{ sha }}>
+        <ShortSha sha={sha} />
+      </Link>
+      , which passed
+    </>
   );
 }
 
@@ -342,6 +382,9 @@ function EnvironmentGroup({ group }: { group: CommitEnvironmentGroup }) {
 function CommitPage() {
   const { sha } = commitRoute.useParams();
   const { data } = useSuspenseQuery(queries.commit(sha));
+  const carried = data.carriedFailures ?? [];
+  const isCarried = (build: { id: string }) =>
+    carried.some((entry) => entry.buildId === build.id);
   return (
     <>
       <PageHeader
@@ -355,7 +398,7 @@ function CommitPage() {
             {data.author !== null && (
               <span className="commit-byline">by {data.author}</span>
             )}
-            <Verdict value={data.verdict} />{" "}
+            <Verdict value={data.verdict} carried={carried} />{" "}
             <span className="commit-statement">{commitStatement(data)}</span>
           </>
         }
@@ -366,7 +409,13 @@ function CommitPage() {
       <BuildList
         title="CI failed"
         intro="These services' builds failed CI or qualification, so Delivery published nothing from them. Each line quotes the reason Delivery recorded."
-        builds={data.failedBuilds}
+        builds={data.failedBuilds.filter((build) => !isCarried(build))}
+      />
+      <BuildList
+        title="Included in a newer commit"
+        intro="CI failed for these services on this commit, so it was not built on its own. A newer commit that includes this one passed, and its build published the change."
+        builds={data.failedBuilds.filter((build) => isCarried(build))}
+        carried={carried}
       />
       <BuildList
         title="CI still running"

@@ -436,11 +436,12 @@ export const ExecutionQuerySchema = z.object({
 /**
  * Where one change stands in one environment, from the person's point of
  * view. `deploying` means a deployment that would deliver the change (its
- * set revision or a later one of the same lineage) is queued or running.
+ * set revision or a later one that includes it, see `carries`) is queued or
+ * running.
  * Every other unfinished state names why nothing is: `recovery_required` (a
  * failed deployment locked the environment), `awaiting_approval`, `failed`,
- * `canceled`, `replaced` (it was deployed, then another release replaced
- * it), `manual` (it needs a manual promotion or release), `waiting` (the
+ * `canceled`, `replaced` (it was deployed, then a release that does not
+ * include it, such as a rollback, replaced it), `manual` (it needs a manual promotion or release), `waiting` (the
  * environment it promotes from does not have it yet) and `not_started` (an
  * automatic environment that has started no deployment of it).
  */
@@ -520,6 +521,13 @@ export type CommitEnvironmentGroup = z.infer<
   typeof CommitEnvironmentGroupSchema
 >;
 
+/** A failed build of a commit, and the later commit that passed and shipped its change. */
+export const CarriedFailureSchema = z.object({
+  buildId: IdentifierSchema,
+  includedIn: z.string().min(7),
+});
+export type CarriedFailure = z.infer<typeof CarriedFailureSchema>;
+
 export const CommitStatusSchema = z.object({
   sha: z.string().min(7),
   /**
@@ -543,6 +551,12 @@ export const CommitStatusSchema = z.object({
   unchangedCount: z.number().int().nonnegative(),
   /** Builds that failed or are still running, whether or not they changed anything. */
   failedBuilds: z.array(BuildViewSchema),
+  /**
+   * Failed builds a newer commit carries: for each, the first later main
+   * commit whose build of the same service passed and so shipped this
+   * commit's change. Such a failure does not decide the verdict.
+   */
+  carriedFailures: z.array(CarriedFailureSchema).optional(),
   pendingBuilds: z.array(BuildViewSchema),
   /**
    * The most urgent environment of a changed service that does not have the
@@ -566,12 +580,13 @@ export const CommitSummarySchema = CommitStatusSchema.pick({
   verdict: true,
   seenAt: true,
   blocker: true,
+  carriedFailures: true,
 }).extend({
   changedCount: z.number().int().nonnegative(),
   liveCount: z.number().int().nonnegative(),
   environments: z.array(CommitEnvironmentGroupSchema.omit({ members: true })),
   buildId: IdentifierSchema,
-  /** How many services' CI failed for this commit. */
+  /** How many services' CI failed for this commit, carried or not. */
   failedBuildCount: z.number().int().nonnegative(),
 });
 export type CommitSummary = z.infer<typeof CommitSummarySchema>;
