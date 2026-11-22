@@ -36,8 +36,8 @@
           "minLength": 1
         },
         "provider": {
-          "description": "Who made and bills the model. A superset of the native-route transports: a creator with no transport (moonshot, xai) only appears on pricingOnly entries.",
-          "enum": ["openai", "anthropic", "google", "moonshot", "xai"]
+          "description": "Who made and bills the model. A superset of the native-route transports: a creator with no transport (moonshot, xai, meta) only appears on pricingOnly entries.",
+          "enum": ["openai", "anthropic", "google", "moonshot", "xai", "meta"]
         },
         "pricingOnly": {
           "description": "A model this repository prices but never calls. It declares no routes and the runtime refuses to resolve it.",

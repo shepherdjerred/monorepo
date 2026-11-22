@@ -194,6 +194,88 @@
       }
     }
   },
+  "gpt-6.2-sol": {
+    "id": "gpt-6.2-sol",
+    "provider": "openai",
+    "displayName": "GPT-6.2 Sol",
+    "description": "OpenAI's go-to model for everyday coding and agents. Prices from https://developers.openai.com/api/docs/models/gpt-6.2-sol (30-minute cache-write rate).",
+    "pricing": {
+      "modality": "text",
+      "input": 2,
+      "cachedInput": 0.1,
+      "cacheWrite": 2.5,
+      "output": 10,
+      "longContextSurcharge": {
+        "thresholdInputTokens": 272000,
+        "inputMultiplier": 2,
+        "outputMultiplier": 1.5
+      }
+    },
+    "contextWindow": 1050000,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 128000
+    },
+    "status": "current",
+    "routes": {
+      "native": {
+        "provider": "openai",
+        "modelId": "gpt-6.2-sol",
+        "endpoint": "language"
+      },
+      "codexSdk": {
+        "modelId": "gpt-6.2-sol"
+      }
+    }
+  },
+  "gpt-6.2-astra": {
+    "id": "gpt-6.2-astra",
+    "provider": "openai",
+    "displayName": "GPT-6.2 Astra",
+    "description": "OpenAI's most capable GPT-6.2 model for the hardest projects. Prices from https://developers.openai.com/api/docs/models/gpt-6.2-astra (30-minute cache-write rate).",
+    "pricing": {
+      "modality": "text",
+      "input": 8,
+      "cachedInput": 0.4,
+      "cacheWrite": 10,
+      "output": 40,
+      "longContextSurcharge": {
+        "thresholdInputTokens": 272000,
+        "inputMultiplier": 2,
+        "outputMultiplier": 1.5
+      }
+    },
+    "contextWindow": 1050000,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": true,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 128000
+    },
+    "status": "current",
+    "routes": {
+      "native": {
+        "provider": "openai",
+        "modelId": "gpt-6.2-astra",
+        "endpoint": "language"
+      },
+      "codexSdk": {
+        "modelId": "gpt-6.2-astra"
+      }
+    }
+  },
   "gpt-5.6-sol": {
     "id": "gpt-5.6-sol",
     "provider": "openai",
@@ -1168,6 +1250,38 @@
       }
     }
   },
+  "gemini-4-carbon": {
+    "id": "gemini-4-carbon",
+    "provider": "google",
+    "displayName": "Gemini 4 Carbon",
+    "description": "Google's most capable reasoning model for complex software engineering. Introductory pricing through 2026-11-30 ($2/$10/$0.10 per 1M); steps up to $4/$20/$0.20 on 2026-12-01. `cacheRead` is Gemini's implicit context-caching reuse rate; cache creation falls back to the plain input rate. Prices from https://aistudio.google.com/docs/pricing#gemini-4-carbon.",
+    "pricing": {
+      "modality": "text",
+      "input": 2,
+      "output": 10,
+      "cacheRead": 0.1
+    },
+    "contextWindow": 1048576,
+    "capabilities": {
+      "inputModalities": ["text", "image", "audio", "video"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": false,
+      "reasoning": true,
+      "supportsTemperature": true,
+      "supportsTopP": true,
+      "maxTokens": 65536
+    },
+    "status": "current",
+    "routes": {
+      "native": {
+        "provider": "google",
+        "modelId": "gemini-4-carbon",
+        "endpoint": "language"
+      }
+    }
+  },
   "kimi-k3.1-pro": {
     "id": "kimi-k3.1-pro",
     "provider": "moonshot",
@@ -1268,6 +1382,90 @@
       "supportsTemperature": false,
       "supportsTopP": false,
       "effortTiers": ["low", "medium", "high", "xhigh"]
+    },
+    "status": "current",
+    "routes": {}
+  },
+  "muse-wonder-1.0": {
+    "id": "muse-wonder-1.0",
+    "provider": "meta",
+    "pricingOnly": true,
+    "displayName": "Muse Wonder 1.0",
+    "description": "Meta's frontier Muse model, priced for Muse usage logs; never called from this repo. Prices from https://dev.meta.ai/models/muse-wonder ($4 input / $0.20 cached input / $20 output per 1M). Muse reports cached tokens as a subset of input, priced here as `cachedInput`.",
+    "pricing": {
+      "modality": "text",
+      "input": 4,
+      "output": 20,
+      "cachedInput": 0.2
+    },
+    "contextWindow": 1048576,
+    "capabilities": {
+      "inputModalities": ["text", "image", "video"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": false,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 128000,
+      "effortTiers": ["minimal", "low", "medium", "high", "xhigh", "max"]
+    },
+    "status": "current",
+    "routes": {}
+  },
+  "muse-spark-1.3": {
+    "id": "muse-spark-1.3",
+    "provider": "meta",
+    "pricingOnly": true,
+    "displayName": "Muse Spark 1.3",
+    "description": "Meta's Muse Spark 1.3, priced for Muse usage logs; never called from this repo. Prices from https://dev.meta.ai/products/muse-code ($1.25 input / $0.15 cached input / $4.25 output per 1M). Muse reports cached tokens as a subset of input, priced here as `cachedInput`.",
+    "pricing": {
+      "modality": "text",
+      "input": 1.25,
+      "output": 4.25,
+      "cachedInput": 0.15
+    },
+    "contextWindow": 1048576,
+    "capabilities": {
+      "inputModalities": ["text", "image", "video"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": false,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 128000,
+      "effortTiers": ["minimal", "low", "medium", "high", "xhigh", "max"]
+    },
+    "status": "current",
+    "routes": {}
+  },
+  "muse-spark-1.3-contributor": {
+    "id": "muse-spark-1.3-contributor",
+    "provider": "meta",
+    "pricingOnly": true,
+    "displayName": "Muse Spark 1.3 Contributor",
+    "description": "Contributor tier of Muse Spark 1.3 (content may be used to improve Meta's products), priced for Muse usage logs; never called from this repo. Prices from https://dev.meta.ai/products/muse-code ($0.10 input / $0.002 cached input / $0.20 output per 1M). Muse reports cached tokens as a subset of input, priced here as `cachedInput`.",
+    "pricing": {
+      "modality": "text",
+      "input": 0.1,
+      "output": 0.2,
+      "cachedInput": 0.002
+    },
+    "contextWindow": 1048576,
+    "capabilities": {
+      "inputModalities": ["text", "image", "video"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": false,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 128000,
+      "effortTiers": ["minimal", "low", "medium", "high", "xhigh", "max"]
     },
     "status": "current",
     "routes": {}

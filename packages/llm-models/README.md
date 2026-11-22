@@ -7,7 +7,7 @@ validated at runtime by Zod in TypeScript and Pydantic in Python.
 
 Units: text and image-input token prices are **USD per 1,000,000 tokens**;
 image-output prices are **USD per image**. Each entry carries provider
-(`openai` | `anthropic` | `google` | `moonshot` | `xai`),
+(`openai` | `anthropic` | `google` | `moonshot` | `xai` | `meta`),
 display name, pricing (text or image modality, including cache pricing),
 capabilities (temperature/top-p support, effort tiers, adaptive thinking),
 context window, and status (`current` | `preview` | `deprecated`).
@@ -15,7 +15,7 @@ context window, and status (`current` | `preview` | `deprecated`).
 An entry's `provider` is who made and bills the model; its `routes.native`
 provider is the transport `llm-runtime` calls, and only `openai`, `anthropic`,
 and `google` are transports. A model the repo prices but never calls, such as
-Moonshot's `kimi-k3.1-pro` or xAI's `grok-4.7` whose usage local coding agents
+Moonshot's `kimi-k3.1-pro`, xAI's `grok-4.7` or Meta's `muse-wonder-1.0` whose usage local coding agents
 log, is marked `"pricingOnly": true`. It declares no routes (the schema rejects
 one that does), `requireNativeRoute` refuses it with `PricingOnlyModelError`,
 and route lookups never resolve to it, so the runtime cannot call it. Every
@@ -61,9 +61,9 @@ price, output price, context window). It rewrites drifted values by default,
 never adds or removes models, and deliberately skips cache prices and image
 models (upstreams normalize those inconsistently); models absent from both
 upstreams are reported as overlay-only and stay manually maintained.
-Both upstream indexes are scoped to all five first-party text-model creators
+Both upstream indexes are scoped to all six first-party text-model creators
 (`openai`, `anthropic`, `google`, `moonshot` via `models.dev`'s `moonshotai` and
-LiteLLM's `moonshot/*`, and `xai`), excluding regional currency-converted
+LiteLLM's `moonshot/*`, `xai`, and `meta`), excluding regional currency-converted
 mirrors (`moonshotai-cn`), subscription-plan zero-cost rows (`kimi-code-plan-*`),
 and third-party gateways/resellers. `pricingOnly` text entries therefore get the
 same two-source cross-check and upstream-coverage check as routable ones while

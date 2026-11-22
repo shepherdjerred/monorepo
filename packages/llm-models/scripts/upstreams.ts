@@ -69,8 +69,8 @@ export function providerKey(provider: string, id: string): string {
 /**
  * models.dev provider ids we accept, mapped onto our `ModelCreator` ids.
  *
- * Scoped to the five first-party creators whose models we price (`openai`,
- * `anthropic`, `google`, `moonshotai` -> `moonshot`, `xai`). Regional mirrors
+ * Scoped to the six first-party creators whose models we price (`openai`,
+ * `anthropic`, `google`, `moonshotai` -> `moonshot`, `xai`, `meta`). Regional mirrors
  * with currency-converted rates (`moonshotai-cn`), subscription-plan zero-cost
  * rows (`kimi-code-plan-*`), and third-party gateways/resellers (`cortecs`,
  * `jiekou`, `requesty`, etc.) are excluded so lookup only ever sees the
@@ -82,6 +82,7 @@ const MODELS_DEV_VENDOR_TO_PROVIDER = new Map<string, ModelCreator>([
   ["google", "google"],
   ["moonshotai", "moonshot"],
   ["xai", "xai"],
+  ["meta", "meta"],
 ]);
 
 /** models.dev: { provider: { models: { id: { cost:{input,output}, limit:{context} } } } } — already per-1M. */
@@ -110,8 +111,8 @@ export function indexModelsDev(raw: unknown): Map<string, Upstream> {
 /**
  * LiteLLM `litellm_provider` values we accept, mapped onto our `ModelCreator` ids.
  *
- * Deliberately only the five first-party creators whose models we price
- * (`openai`, `anthropic`, `gemini` -> `google`, `moonshot`, `xai`). A key like
+ * Deliberately only the six first-party creators whose models we price
+ * (`openai`, `anthropic`, `gemini` -> `google`, `moonshot`, `xai`, `meta`). A key like
  * `bedrock/anthropic.claude-opus-5`, `azure/gpt-5.5`, `vertex_ai/gemini-x`,
  * `kyma/kimi-k3.1-pro`, `together_ai/moonshotai/Kimi-K3.1-Pro`, or
  * `us.xai.grok-4.7` (`bedrock_converse`) is a third-party reseller selling the
@@ -130,6 +131,7 @@ const LITELLM_VENDOR_TO_PROVIDER = new Map<string, ModelCreator>([
   ["gemini", "google"],
   ["moonshot", "moonshot"],
   ["xai", "xai"],
+  ["meta", "meta"],
 ]);
 
 /**
@@ -217,9 +219,9 @@ export function assertUpstreamCoverage(
 
 /**
  * The creators whose text models an upstream must cover for the run to count
- * as a real cross-check. Both `models.dev` (`moonshotai` -> `moonshot`, `xai`)
- * and LiteLLM (`moonshot/*`, `xai/*`) publish first-party rows for all five
- * text-model creators (`openai`, `anthropic`, `google`, `moonshot`, `xai`), so
+ * as a real cross-check. Both `models.dev` (`moonshotai` -> `moonshot`, `xai`, `meta`)
+ * and LiteLLM (`moonshot/*`, `xai/*`, `meta/*`) publish first-party rows for all six
+ * text-model creators (`openai`, `anthropic`, `google`, `moonshot`, `xai`, `meta`), so
  * `pricingOnly` text entries participate in the same two-source cross-check and
  * coverage assertion as routable ones. Image-only entries stay excluded because
  * per-image pricing is not cross-checked.

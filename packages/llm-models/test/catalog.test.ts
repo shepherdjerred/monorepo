@@ -434,7 +434,14 @@ describe("native pricing dimensions", () => {
 });
 
 describe("pricingOnly models", () => {
-  const PRICING_ONLY = ["kimi-k3.1-pro", "kimi-k3.1-pro-highspeed", "grok-4.7"];
+  const PRICING_ONLY = [
+    "kimi-k3.1-pro",
+    "kimi-k3.1-pro-highspeed",
+    "grok-4.7",
+    "muse-wonder-1.0",
+    "muse-spark-1.3",
+    "muse-spark-1.3-contributor",
+  ];
 
   test("Kimi K3.1 Pro is priced from Moonshot's published rates", () => {
     expect(getModel("kimi-k3.1-pro")).toMatchObject({
@@ -493,6 +500,43 @@ describe("pricingOnly models", () => {
     ).toBe(false);
   });
 
+  test("Meta Muse models are priced from Meta's published rates", () => {
+    for (const id of [
+      "muse-wonder-1.0",
+      "muse-spark-1.3",
+      "muse-spark-1.3-contributor",
+    ]) {
+      expect(getModel(id)).toMatchObject({
+        provider: "meta",
+        pricingOnly: true,
+        routes: {},
+      });
+    }
+    const million = { inputTokens: 1_000_000, outputTokens: 1_000_000 };
+    // $4/$20, $1.25/$4.25 and $0.10/$0.20 per 1M (dev.meta.ai).
+    expect(costForTextUsage("muse-wonder-1.0", million)).toBeCloseTo(24, 6);
+    expect(costForTextUsage("muse-spark-1.3", million)).toBeCloseTo(5.5, 6);
+    expect(costForTextUsage("muse-spark-1.3-contributor", million)).toBeCloseTo(
+      0.3,
+      6,
+    );
+    // Cached input is a subset of input, billed at the cached rate.
+    expect(
+      costForTextUsage("muse-wonder-1.0", {
+        inputTokens: 1_000_000,
+        cachedInputTokens: 1_000_000,
+        outputTokens: 0,
+      }),
+    ).toBeCloseTo(0.2, 6);
+    expect(
+      costForTextUsage("muse-spark-1.3-contributor", {
+        inputTokens: 1_000_000,
+        cachedInputTokens: 1_000_000,
+        outputTokens: 0,
+      }),
+    ).toBeCloseTo(0.002, 6);
+  });
+
   test("a moonshot creator never reaches the transport provider enum", () => {
     expect(
       modelsByProvider("moonshot")
@@ -511,6 +555,8 @@ describe("GPT-6 tier prices", () => {
     ["gpt-6.1-terra", 1, 0.05, 5],
     ["gpt-6-sol", 2, 0.2, 10],
     ["gpt-6-astra", 10, 1, 50],
+    ["gpt-6.2-sol", 2, 0.1, 10],
+    ["gpt-6.2-astra", 8, 0.4, 40],
   ])("%s", (id, input, cached, output) => {
     expect(getModel(id)).toMatchObject({
       provider: "openai",
@@ -536,6 +582,30 @@ describe("GPT-6 tier prices", () => {
       (300_000 * input * 2 + 100_000 * output * 1.5) / 1_000_000,
       9,
     );
+  });
+});
+
+describe("Gemini 4 Carbon", () => {
+  test("prices at Google's introductory $2/$10, $0.10 cache read per 1M", () => {
+    expect(getModel("gemini-4-carbon")).toMatchObject({
+      provider: "google",
+      routes: {
+        native: { provider: "google", modelId: "gemini-4-carbon" },
+      },
+    });
+    expect(
+      costForTextUsage("gemini-4-carbon", {
+        inputTokens: 1_000_000,
+        outputTokens: 1_000_000,
+      }),
+    ).toBeCloseTo(12, 6);
+    expect(
+      costForTextUsage("gemini-4-carbon", {
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReadTokens: 1_000_000,
+      }),
+    ).toBeCloseTo(0.1, 6);
   });
 });
 
