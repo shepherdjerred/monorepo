@@ -293,6 +293,27 @@ function tmdbAnswering(payload: object) {
 }
 
 describe("TMDB discovery", () => {
+  it("reports an answer that breaks after its headers as TMDB being unavailable", async () => {
+    const client = new TmdbClient(
+      { kind: "bearer", token: "fixture-token" },
+      async () =>
+        new Response(
+          new ReadableStream<Uint8Array>({
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode('{"id":'));
+              controller.error(new TypeError("terminated"));
+            },
+          }),
+          { headers: { "content-type": "application/json" } },
+        ),
+    );
+    await expect(client.movie(1)).rejects.toMatchObject({
+      service: "tmdb",
+      kind: "unavailable",
+    });
+    await expect(client.series(1)).rejects.toBeInstanceOf(IntegrationError);
+  });
+
   it("keeps movie and series results while excluding people", async () => {
     const client = new TmdbClient(
       { kind: "bearer", token: "fixture-token" },
