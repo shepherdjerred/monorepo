@@ -118,10 +118,12 @@ function stormSmokeStep(images: CiImages): CiStep {
           SIMULATION_DISTANCE: "4",
           ENABLE_AUTOPAUSE: "false",
           STORM_BRAIN_BEARER_TOKEN: BRAIN_TOKEN,
-          // The rwf join gate stays closed with FLIPT_URL unset, so point at
-          // the fake brain's Flipt endpoint.
+          // Point both Flipt and first-party Flags variables at the fake brain
+          // sidecar so main and the Flags cutover PR both boot cleanly.
           FLIPT_URL: `http://${BRAIN_HOST}:${BRAIN_PORT}`,
           FLIPT_ENVIRONMENT: "prod",
+          FLAGS_URL: `http://${BRAIN_HOST}:${BRAIN_PORT}`,
+          FLAGS_DEPLOYMENT: "minecraft/tsmc",
           POSTHOG_API_HOST: `http://${BRAIN_HOST}:${BRAIN_PORT}`,
           POSTHOG_PROJECT_TOKEN: "phc_test",
           RWF_RECORDING_SALT,

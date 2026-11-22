@@ -420,7 +420,10 @@ describe("Paper smoke lane", () => {
     if (typeof pluginPath !== "string")
       throw new TypeError(`missing plugin path for ${lane}`);
     expect(candidate.environment["STORM_E2E_FULL"]).toBe("0");
+    expect(paper.environment["FLIPT_URL"]).toBe("http://storm-brain:18081");
     expect(paper.environment["FLIPT_ENVIRONMENT"]).toBe("prod");
+    expect(paper.environment["FLAGS_URL"]).toBe("http://storm-brain:18081");
+    expect(paper.environment["FLAGS_DEPLOYMENT"]).toBe("minecraft/tsmc");
   });
 
   test("Paper CI has one bounded smoke lane with a plugin-only build", () => {
