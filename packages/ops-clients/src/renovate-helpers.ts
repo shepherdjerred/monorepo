@@ -144,11 +144,11 @@ function parseSemverTuple(
   version: string,
 ): readonly [number, number, number] | undefined {
   const match = /^v?(\d+)\.(\d+)\.(\d+)/iu.exec(version);
-  return match?.[1] !== undefined &&
-    match[2] !== undefined &&
-    match[3] !== undefined
-    ? [Number(match[1]), Number(match[2]), Number(match[3])]
-    : undefined;
+  return match?.[1] === undefined ||
+    match[2] === undefined ||
+    match[3] === undefined
+    ? undefined
+    : [Number(match[1]), Number(match[2]), Number(match[3])];
 }
 
 function compareSemverChange(
@@ -231,9 +231,9 @@ function parseMarkdownCellLink(cell: string): {
 } {
   const trimmed = cell.trim();
   const linkMatch = /^\[([^\]]+)\]\(([^)]+)\)$/u.exec(trimmed);
-  return linkMatch?.[1] !== undefined && linkMatch[2] !== undefined
-    ? { text: linkMatch[1].trim(), url: linkMatch[2].trim() }
-    : { text: trimmed.replaceAll("`", "").trim(), url: undefined };
+  return linkMatch?.[1] === undefined || linkMatch[2] === undefined
+    ? { text: trimmed.replaceAll("`", "").trim(), url: undefined }
+    : { text: linkMatch[1].trim(), url: linkMatch[2].trim() };
 }
 
 function splitTableCells(line: string): string[] {

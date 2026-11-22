@@ -204,9 +204,9 @@ export function filterClusterWorkloads(
 function shortImageRef(image: string): string {
   const trimmed = image.replace(/^docker\.io\//u, "");
   const [namePart, digestPart] = trimmed.split("@sha256:");
-  return namePart !== undefined && digestPart !== undefined
-    ? `${namePart}@${digestPart.slice(0, 7)}`
-    : trimmed;
+  return namePart === undefined || digestPart === undefined
+    ? trimmed
+    : `${namePart}@${digestPart.slice(0, 7)}`;
 }
 
 export const WORKLOAD_COLUMNS: readonly DataTableColumn<ClusterWorkload>[] = [

@@ -70,13 +70,13 @@ function resolveTailscaleClient(options?: {
   if (apiKey !== "") {
     return new TailscaleClient({ apiKey, tailnet, ...fetchOpt });
   }
-  return clientId !== "" && clientSecret !== ""
-    ? new TailscaleClient({
+  return clientId === "" || clientSecret === ""
+    ? undefined
+    : new TailscaleClient({
         oauth: { clientId, clientSecret },
         tailnet,
         ...fetchOpt,
-      })
-    : undefined;
+      });
 }
 
 export async function collectTailscaleFacet(options: {

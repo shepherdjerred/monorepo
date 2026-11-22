@@ -224,7 +224,7 @@ export function compactVerifyDiagnosticsJson(
       const end = task.execution?.endTime;
       const start = task.execution?.startTime;
       const durationMs =
-        end !== undefined && start !== undefined ? Math.max(0, end - start) : 0;
+        end === undefined || start === undefined ? 0 : Math.max(0, end - start);
       return { taskId: task.taskId, status: task.cache.status, durationMs };
     }),
   );
