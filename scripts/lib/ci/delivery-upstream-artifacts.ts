@@ -110,20 +110,22 @@ export function v1AcquisitionCatalog(catalog: VersionCatalog): VersionCatalog {
   };
 }
 
-/** One intent per catalog service that acquires the entry's component. */
+/** One intent per active catalog service that acquires the entry's component (S4). */
 function catalogIntents(
   entry: VersionCatalogEntry,
   core: CatalogCore,
 ): UpstreamIntent[] {
   const component = catalogComponentName(entry);
-  const owners = core.services.filter((service) =>
+  const declaring = core.services.filter((service) =>
     service.components.some(
       (candidate) =>
         candidate.name === component && candidate.producer === "acquisition",
     ),
   );
-  if (owners.length === 0)
+  if (declaring.length === 0)
     throw new Error(`Component ${component} has no acquiring catalog service`);
+  const owners = declaring.filter((service) => service.lifecycle === "active");
+  if (owners.length === 0) return [];
   const identity =
     entry.artifactType === "helm-chart"
       ? chartIdentity(entry)

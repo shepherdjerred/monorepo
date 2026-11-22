@@ -187,6 +187,20 @@ describe("OpenTofu archive registration", () => {
     expect(() =>
       attachTofuArchivePublications([duplicate], complete(), metadata),
     ).toThrow("cannot publish tofu-arr twice");
+    const retiredArr = attachTofuArchivePublications([], complete(), {
+      ...metadata,
+      catalog: {
+        ...CATALOG_CORE,
+        services: CATALOG_CORE.services.map((service) =>
+          service.id === "tofu-arr"
+            ? { ...service, lifecycle: "retired" as const }
+            : service,
+        ),
+      },
+    });
+    expect(retiredArr.some((build) => build.serviceId === "tofu-arr")).toBe(
+      false,
+    );
   });
 
   test("the handoff writer derives each service from the producer's per-stack record", async () => {

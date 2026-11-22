@@ -537,7 +537,15 @@ test("v2 acquires an OCI chart from its registry by digest, with no Helm index o
   ]);
 });
 
-test("v2 registers one acquisition under every catalog service that acquires the component", async () => {
+test("v2 registers one acquisition under every active catalog service that acquires the component", async () => {
+  const activeCore = {
+    ...CATALOG_CORE,
+    services: CATALOG_CORE.services.map((service) =>
+      service.id === "minecraft-shuxin" || service.id === "minecraft-sjerred"
+        ? { ...service, lifecycle: "active" as const }
+        : service,
+    ),
+  };
   const requests: AcquireUpstreamArtifact[] = [];
   const selected = await componentArtifactsForPublication(
     {
@@ -551,7 +559,7 @@ test("v2 registers one acquisition under every catalog service that acquires the
     },
     catalog(busybox),
     producer,
-    { credentials, registry: "v2" },
+    { credentials, registry: "v2", core: activeCore },
   );
   expect(
     selected.map((artifact) => [artifact.serviceId, artifact.component]),
@@ -570,6 +578,17 @@ test("v2 registers one acquisition under every catalog service that acquires the
         latestQualifiedArtifact: unexpected,
         acquireUpstreamArtifact: unexpected,
       },
+      catalog(busybox),
+      producer,
+      { credentials, registry: "v2" },
+    ),
+  ).resolves.toEqual([]);
+  await expect(
+    componentArtifactsForPublication(
+      {
+        latestQualifiedArtifact: unexpected,
+        acquireUpstreamArtifact: unexpected,
+      },
       catalog({ ...busybox, name: "library/not-in-the-catalog" }),
       producer,
       { credentials, registry: "v2" },
@@ -582,6 +601,14 @@ test("v2 acquires an aliased image from its repository under the alias's compone
     (entry) => entry.name === "itzg/minecraft-server-java8",
   );
   if (java8 === undefined) throw new Error("Java 8 Minecraft image missing");
+  const activeCore = {
+    ...CATALOG_CORE,
+    services: CATALOG_CORE.services.map((service) =>
+      service.id === "minecraft-sjerred"
+        ? { ...service, lifecycle: "active" as const }
+        : service,
+    ),
+  };
   const requests: AcquireUpstreamArtifact[] = [];
   const selected = await componentArtifactsForPublication(
     {
@@ -595,7 +622,7 @@ test("v2 acquires an aliased image from its repository under the alias's compone
     },
     catalog(java8),
     producer,
-    { credentials, registry: "v2" },
+    { credentials, registry: "v2", core: activeCore },
   );
   expect(selected.length).toBeGreaterThan(0);
   for (const request of requests) {
