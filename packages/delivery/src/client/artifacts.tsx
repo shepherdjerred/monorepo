@@ -6,6 +6,7 @@ import { artifactToolLinks } from "#shared/hub/artifact-links.ts";
 import { Status } from "#client/components/status.tsx";
 import { ShortSha, ToolLinks } from "#client/components/links.tsx";
 import { Disclosure } from "#client/components/disclosure.tsx";
+import type { CatalogNames } from "#client/components/catalog-name.tsx";
 
 /** What qualified a build that has no CI run to link. */
 function evidenceSummary(sourceKind: BuildSourceKind) {
@@ -28,8 +29,18 @@ function evidenceSummary(sourceKind: BuildSourceKind) {
   }
 }
 
-/** Each build with its qualification, artifacts and evidence; the page says when there are none. */
-export function BuildTable({ builds }: { builds: BuildWithArtifacts[] }) {
+/**
+ * Each build with its qualification, artifacts and evidence; the page says
+ * when there are none. A service is named as the overview names it, with its
+ * slug beneath; the build's own id is a hover title, since nobody reads it.
+ */
+export function BuildTable({
+  builds,
+  names,
+}: {
+  builds: BuildWithArtifacts[];
+  names?: CatalogNames | undefined;
+}) {
   return (
     <div className="table-scroll">
       <table className="build-catalog">
@@ -46,9 +57,14 @@ export function BuildTable({ builds }: { builds: BuildWithArtifacts[] }) {
           {builds.map((build) => (
             <tr key={build.id}>
               <td data-label="Service">
-                <div>
-                  <strong>{build.serviceId}</strong>
-                  <small>{build.id}</small>
+                <div title={`Build ${build.id}`}>
+                  <strong>
+                    {names?.service(build.serviceId) ?? build.serviceId}
+                  </strong>
+                  {(names?.service(build.serviceId) ?? build.serviceId) !==
+                    build.serviceId && (
+                    <small className="mono">{build.serviceId}</small>
+                  )}
                 </div>
               </td>
               <td data-label="Source">

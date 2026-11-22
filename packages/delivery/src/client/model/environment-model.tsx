@@ -32,7 +32,11 @@ import {
   type CandidateGroup,
 } from "./view.ts";
 import type { Blocker } from "./environment-status.ts";
-import { BlockedReason, RequestError } from "./environment-notices.tsx";
+import {
+  REFUSAL_ID,
+  RequestError,
+  requestsRefused,
+} from "./environment-notices.tsx";
 import { Fact, Facts } from "#client/components/facts.tsx";
 
 type Requested = Awaited<ReturnType<ModelRoutes["createDeployment"]>>;
@@ -75,17 +79,24 @@ function approvalNote(view: EnvironmentSelection) {
     : "The request starts once its gates pass.";
 }
 
-/** Why a rebind or rollback cannot be requested now, or null when it can. */
-function refusal(
-  view: EnvironmentSelection,
-  { permitted, blocker, planWaiting }: Actions,
-): ReactNode {
-  if (!permitted) return "Your identity has read-only access.";
-  if (view.lifecycle !== "active")
-    return `A ${view.lifecycle} environment admits no deployments.`;
-  return blocker === null ? null : (
-    <BlockedReason blocker={blocker} planWaiting={planWaiting} />
-  );
+/**
+ * Why a rebind or rollback cannot be requested for a reason of its own, or
+ * null. A refusal every request on the page shares (read-only access, a
+ * deployment in flight, a lock) is the page's one notice, not repeated here.
+ */
+function refusal(view: EnvironmentSelection): ReactNode {
+  return view.lifecycle === "active"
+    ? null
+    : `A ${view.lifecycle} environment admits no deployments.`;
+}
+
+/**
+ * What an unavailable request points to: its own reason, else the page's
+ * shared notice, else null when it can be made.
+ */
+function refusedBy(own: ReactNode, ownId: string, actions: Actions) {
+  if (own !== null) return ownId;
+  return requestsRefused(actions) ? REFUSAL_ID : null;
 }
 
 /** A request this panel sent, refused in words that name what is in the way. */
@@ -106,8 +117,9 @@ function SelectionPanel({
   const { environmentId, revisions } = actions;
   const changes = rebindChanges(view);
   const request = useRequest(actions);
-  const refused = refusal(view, actions);
+  const refused = refusal(view);
   const refusedId = useId();
+  const blockedBy = refusedBy(refused, refusedId, actions);
   return (
     <>
       <Facts>
@@ -162,8 +174,8 @@ function SelectionPanel({
           label="Rebind"
           title={`Rebind ${environmentId}?`}
           confirmLabel="Request rebind"
-          disabled={changes === null || refused !== null}
-          {...(refused === null ? {} : { describedBy: refusedId })}
+          disabled={changes === null || blockedBy !== null}
+          {...(blockedBy === null ? {} : { describedBy: blockedBy })}
           pending={request.isPending}
           onConfirm={() => {
             if (changes === null) return;
@@ -353,7 +365,8 @@ function RollbackCandidates({
   const refused =
     view === undefined
       ? "The binding generation is unavailable, so a rollback cannot be requested."
-      : refusal(view, actions);
+      : refusal(view);
+  const blockedBy = refusedBy(refused, refusedId, actions);
   const { shown, older } = splitCandidates(
     groupCandidates(candidates, view?.acceptedDeploymentId),
     view?.acceptedDeploymentId,
@@ -367,7 +380,7 @@ function RollbackCandidates({
           view={view}
           environmentId={environmentId}
           revisions={revisions}
-          refusedId={refused === null ? null : refusedId}
+          refusedId={blockedBy}
           pending={request.isPending}
           onRollback={(selectionDeploymentId) => {
             if (view === undefined) return;

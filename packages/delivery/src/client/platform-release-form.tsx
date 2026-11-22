@@ -1,4 +1,4 @@
-import { useId, useState, type SubmitEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { delivery } from "./api.ts";
 import type {
@@ -9,7 +9,7 @@ import type {
 } from "#shared/contract.ts";
 import type { Blocker } from "#client/model/environment-status.ts";
 import {
-  BlockedReason,
+  REFUSAL_ID,
   RequestError,
 } from "#client/model/environment-notices.tsx";
 import { TofuStackSchema } from "@shepherdjerred/ops-model/platform-policy.ts";
@@ -46,7 +46,6 @@ function TofuReleaseForm({
   planWaiting,
   onDeployment,
 }: Props) {
-  const blockedId = useId();
   const stack = TofuStackSchema.parse(
     environment.id.slice("gitops/tofu:".length),
   );
@@ -149,11 +148,7 @@ function TofuReleaseForm({
             Deployment access is required to request platform operations.
           </p>
         )}
-        {blocker !== null && (
-          <p className="notice" id={blockedId}>
-            <BlockedReason blocker={blocker} planWaiting={planWaiting} />
-          </p>
-        )}
+
         <button
           className="primary-button"
           disabled={
@@ -162,7 +157,7 @@ function TofuReleaseForm({
             blocker !== null ||
             !principal.scopes.includes("deploy")
           }
-          aria-describedby={blocker === null ? undefined : blockedId}
+          aria-describedby={blocker === null ? undefined : REFUSAL_ID}
         >
           Request exact operation
         </button>

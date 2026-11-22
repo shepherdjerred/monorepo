@@ -45,7 +45,7 @@ export function stageStatuses(pipeline: HubService): PipelineStatus[] {
 /** Pipelines whose name or id contains the query and with a stage in the chosen status. */
 export function filterPipelines(
   pipelines: HubService[],
-  search: PipelineSearch,
+  search: Pick<PipelineSearch, "q"> & { status?: PipelineStatus | undefined },
 ): HubService[] {
   const query = search.q?.toLowerCase();
   return pipelines.filter(

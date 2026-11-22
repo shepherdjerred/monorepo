@@ -58,7 +58,7 @@ function Navigation() {
                 <span className="nav-count">
                   <span className="visually-hidden">, </span>
                   {count}
-                  <span className="visually-hidden"> waiting</span>
+                  <span className="visually-hidden"> awaiting approval</span>
                 </span>
               )}
             </Link>

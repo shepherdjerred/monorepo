@@ -25,7 +25,7 @@ test("the pipelines list names the CI run and shows every stage's own state", as
   ).toHaveAttribute("href", "/environments/minecraft/tsmc");
 
   const filters = page.getByRole("search", { name: "Filter pipelines" });
-  await filters.getByLabel("A stage is").selectOption("failed");
+  await filters.getByLabel("Stage status").selectOption("failed");
   await filters.getByRole("button", { name: "Filter" }).click();
   await expect(page).toHaveURL(/\/pipelines\?status=failed$/u);
   await expect(row("Minecraft")).toHaveCount(1);

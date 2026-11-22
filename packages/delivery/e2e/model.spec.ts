@@ -183,7 +183,7 @@ test("the page leads with what runs here and what is in flight, then the release
     /Accepted r3 · Approval required · generation 6 · In flight: \Sdeploy r4 awaiting approval/u,
   );
   await expect(main.locator(".environment-notice")).toContainText(
-    /^In flight: deployment \S+ is awaiting approval\. New requests wait until it finishes or is canceled\.$/u,
+    /^In flight: deployment \S+ is awaiting approval\. Requests, rebinds and rollbacks are refused until it finishes or is canceled\.$/u,
   );
   expect(
     await main.getByRole("heading", { level: 2 }).allTextContents(),
@@ -448,7 +448,7 @@ test("approvals show the waiting override, the waiting saved plan and recently d
   ).toHaveCount(6);
   await expect(
     page.getByRole("navigation", { name: "Main" }).getByRole("link", {
-      name: /^Approvals\s*, 2 waiting$/u,
+      name: /^Approvals\s*, 2 awaiting approval$/u,
     }),
   ).toBeVisible();
   await expectNoHorizontalOverflow(page);

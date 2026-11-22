@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { HubGridSchema } from "#shared/hub/hub-contract.ts";
 import {
   api,
+  expectContainedInTiles,
   expectNoHorizontalOverflow,
   isPhone,
   requestArcadeDeployment,
@@ -225,7 +226,7 @@ test("a tile links its service and each environment chip", async ({ page }) => {
   if (isPhone(page) && !(await scout.isVisible()))
     await page
       .getByRole("region", { name: "Products", exact: true })
-      .locator("summary", { hasText: "Nothing needs attention" })
+      .locator("summary", { hasText: "healthy" })
       .click();
   const chips = scout.getByRole("list", {
     name: "Scout for LoL environments",
@@ -354,25 +355,32 @@ test("tiles fill the width on a desktop and sit two to a row on a phone", async 
   await expectNoHorizontalOverflow(page);
 });
 
+test("every chip stays inside its tile", async ({ page }) => {
+  await openOverview(page);
+  await expectContainedInTiles(page);
+  // A phone's narrow tiles are the hardest case; check that width too.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expectContainedInTiles(page);
+});
+
 test("a phone folds the services that need nobody behind a closed count", async ({
   page,
 }) => {
   await openOverview(page);
   const products = page.getByRole("region", { name: "Products", exact: true });
   const fold = products.locator("details", {
-    has: page.locator("summary", { hasText: "Nothing needs attention" }),
+    has: page.locator("summary", { hasText: "healthy" }),
   });
   if (!isPhone(page)) {
     // A wide screen shows every tile.
     await expect(
-      page.locator("main details", { hasText: "Nothing needs attention" }),
+      page.locator("main details", { hasText: "healthy" }),
     ).toHaveCount(0);
     return;
   }
   await expect(fold).toHaveJSProperty("open", false);
-  await expect(fold.locator("summary")).toHaveText(
-    /^Nothing needs attention\s*\d+$/u,
-  );
+  // The count reads as a count of healthy services, never as zero things.
+  await expect(fold.locator("summary")).toHaveText(/^(?:All )?\d+ healthy$/u);
   // What needs a person stays in sight: a service that requires recovery.
   await expect(tile(page, "Minecraft")).toBeVisible();
   await fold.locator("summary").click();

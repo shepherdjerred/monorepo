@@ -395,7 +395,7 @@ describe("latestStages", () => {
 });
 
 /** The activity page's result line for `count` rows folded from `entries` entries. */
-function summary(count: number, entries: number) {
+function summary(count: number, entries: number, more = false) {
   return renderWithRouter(
     <ResultSummary
       count={count}
@@ -403,6 +403,7 @@ function summary(count: number, entries: number) {
       entries={{ count: entries, noun: ["entry", "entries"] }}
       filtered={false}
       older={false}
+      more={more}
       problems={[]}
       clearTo="/activity"
     />,
@@ -411,9 +412,10 @@ function summary(count: number, entries: number) {
 
 describe("the activity result line", () => {
   it("counts the rows it shows, and the entries they fold when that differs", () => {
-    expect(summary(21, 25)).toContain(
-      "Showing 21 rows of 25 entries, newest first.",
+    expect(summary(21, 25)).toContain("Showing all 21 rows of 25 entries.");
+    expect(summary(25, 25)).toContain("Showing all 25 entries.");
+    expect(summary(21, 25, true)).toContain(
+      "Showing the 21 newest rows of 25 entries. Older ones are on the next page.",
     );
-    expect(summary(25, 25)).toContain("Showing 25 entries, newest first.");
   });
 });

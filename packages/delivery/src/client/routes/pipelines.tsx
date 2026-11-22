@@ -17,6 +17,8 @@ import {
   filterPipelines,
   lastDeployment,
 } from "./pipeline-list-model.ts";
+import { problemsOf, resolveChoice } from "./catalog-filter.ts";
+import { FilterProblems } from "./list-page.tsx";
 import { PipelineSearchSchema, formSearch } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
 
@@ -162,7 +164,16 @@ function PipelinesPage() {
   const search = pipelinesRoute.useSearch();
   const navigate = useNavigate({ from: pipelinesRoute.fullPath });
   const { data } = useSuspenseQuery(queries.hub());
-  const pipelines = filterPipelines(data.services, search);
+  const chosen = resolveChoice(
+    search.status,
+    PipelineStatusSchema.options,
+    "status",
+  );
+  const problems = problemsOf([chosen]);
+  const pipelines =
+    problems.length > 0
+      ? []
+      : filterPipelines(data.services, { ...search, status: chosen.id });
   return (
     <>
       <PageHeader
@@ -205,7 +216,7 @@ function PipelinesPage() {
             <input type="search" name="q" defaultValue={search.q ?? ""} />
           </label>
           <label>
-            A stage is
+            Stage status
             <select name="status" defaultValue={search.status ?? ""}>
               <option value="">Any status</option>
               {PipelineStatusSchema.options.map((status) => (
@@ -219,7 +230,9 @@ function PipelinesPage() {
             Filter
           </button>
         </form>
-        {pipelines.length === 0 ? (
+        {problems.length > 0 ? (
+          <FilterProblems problems={problems} clearTo="/pipelines" />
+        ) : pipelines.length === 0 ? (
           <p className="empty">
             {data.services.length === 0
               ? "No services publish through Delivery yet."

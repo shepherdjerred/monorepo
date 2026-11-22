@@ -57,10 +57,23 @@ function namesFrom(
   };
 }
 
+/**
+ * What an approval row calls its state. An undecided approval, or a saved
+ * plan that waits for a decision while its deployment runs, is "awaiting
+ * approval", as the overview, deployments and pipelines call the same state;
+ * the approval's own word for it is "pending".
+ */
+function approvalWords(item: ApprovalQueueItem) {
+  const status = item.approval?.status ?? item.status;
+  return status === "pending" || item.awaitingPlanDecision
+    ? "awaiting_approval"
+    : status;
+}
+
 function ApprovalState({ item }: { item: ApprovalQueueItem }) {
   return (
     <span className="detail-summary">
-      <Status value={item.approval?.status ?? item.status} />
+      <Status value={approvalWords(item)} />
       {item.approval?.override === true && (
         <span className="badge badge-override">Override</span>
       )}
@@ -96,10 +109,10 @@ function Release({
         )}
       </Link>
       {item.selection !== null && (
-        <small>
-          recipe <Identifier value={item.selection.recipeRevisionId} /> ·
-          configuration{" "}
-          <Identifier value={item.selection.configurationRevisionId} />
+        <small className="release-parts">
+          recipe <span className="mono">{item.selection.recipeRevisionId}</span>{" "}
+          · configuration{" "}
+          <span className="mono">{item.selection.configurationRevisionId}</span>
         </small>
       )}
     </>

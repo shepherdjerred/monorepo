@@ -4,6 +4,7 @@ import {
   useSuspenseQuery,
   type QueryClient,
 } from "@tanstack/react-query";
+import { DeploymentStatusSchema } from "#shared/contract.ts";
 import type {
   ActivityQuery,
   BuildListQuery,
@@ -26,6 +27,7 @@ import {
   boundedText,
   catalogServices,
   problemsOf,
+  resolveChoice,
   resolveEnvironment,
   resolveService,
   type CatalogService,
@@ -36,9 +38,10 @@ import {
   FilterForm,
   ListPanel,
   ResultSummary,
+  resolvedPage,
+  submitted,
   SERVICE_OPTIONS,
   isFiltered,
-  showSearch,
 } from "./list-page.tsx";
 import {
   ActivitySearchSchema,
@@ -48,14 +51,10 @@ import {
 } from "./search-schemas.ts";
 import { Route as rootRoute, RouteError } from "./root.tsx";
 
-const STATUSES = [
-  "awaiting_approval",
-  "queued",
-  "running",
-  "succeeded",
-  "failed",
-  "canceled",
-] as const;
+const STATUSES = DeploymentStatusSchema.options;
+const QUALIFICATIONS = ["verified", "pending", "failed"] as const;
+const PROBLEMS = ["only"] as const;
+const WITHIN = ["hour", "day"] as const;
 
 /** The server bounds the activity filters to these lengths. */
 const ACTOR_MAX = 200;
@@ -84,18 +83,6 @@ function useCatalog() {
   return catalogServices(useQuery(queries.grid()).data);
 }
 
-/** What a filter submit searches for: the ids its names resolve to. */
-function submitted(
-  form: HTMLFormElement,
-  resolve: (values: Search) => { canonical: Search },
-) {
-  const values: Search = formSearch(form);
-  for (const [name, id] of Object.entries(resolve(values).canonical))
-    if (id !== undefined) values[name] = id;
-  showSearch(form, values);
-  return values;
-}
-
 function deploymentFilters(search: Search, services: CatalogService[]) {
   const service = resolveService(search["service"], services);
   const environment = resolveEnvironment(
@@ -103,33 +90,21 @@ function deploymentFilters(search: Search, services: CatalogService[]) {
     services,
     service.id,
   );
+  const status = resolveChoice(search["status"], STATUSES, "status");
   const query: DeploymentListQuery = {
     cursor: search["cursor"],
     serviceId: service.id,
     environmentId: environment.id,
-    status: DeploymentSearchSchema.shape.status.parse(search["status"]),
+    status: status.id,
   };
   return {
     query,
-    problems: problemsOf([service, environment]),
+    problems: problemsOf([service, environment, status]),
     canonical: { service: service.id, environment: environment.id },
   };
 }
 
 /** A failed read of a list keeps the page and offers to start again. */
-/**
- * The page of results a list shows. A disabled query still returns whatever
- * is cached under its key, and a filter that could not be resolved shares
- * the unfiltered list's key, so its problem is shown alone: no rows and no
- * paging from another filter.
- */
-function resolvedPage<Page>(
-  data: Page | undefined,
-  problems: readonly unknown[],
-) {
-  return problems.length === 0 ? data : undefined;
-}
-
 function listError(to: "/deployments" | "/artifacts" | "/activity") {
   return function ListError({ error }: { error: Error }) {
     return (
@@ -212,6 +187,7 @@ function DeploymentsPage() {
           noun={["deployment", "deployments"]}
           filtered={isFiltered(search)}
           older={search.cursor !== undefined}
+          more={shown?.nextCursor != null}
           problems={filters.problems}
           clearTo="/deployments"
         />
@@ -285,14 +261,19 @@ const approvalsRoute = createRoute({
 
 function artifactFilters(search: Search, services: CatalogService[]) {
   const service = resolveService(search["service"], services);
+  const status = resolveChoice(
+    search["status"],
+    QUALIFICATIONS,
+    "qualification",
+  );
   const query: BuildListQuery = {
     cursor: search["cursor"],
     serviceId: service.id,
-    status: ArtifactSearchSchema.shape.status.parse(search["status"]),
+    status: status.id,
   };
   return {
     query,
-    problems: problemsOf([service]),
+    problems: problemsOf([service, status]),
     canonical: { service: service.id },
   };
 }
@@ -358,10 +339,13 @@ function ArtifactsPage() {
           noun={["build", "builds"]}
           filtered={isFiltered(search)}
           older={search.cursor !== undefined}
+          more={shown?.nextCursor != null}
           problems={filters.problems}
           clearTo="/artifacts"
         />
-        {items.length > 0 && <BuildTable builds={items} />}
+        {items.length > 0 && (
+          <BuildTable builds={items} names={catalogNames(services)} />
+        )}
         <OlderLink
           to="/artifacts"
           search={search}
@@ -396,15 +380,20 @@ function activityFilters(search: Search) {
   const actor = boundedText(search["actor"], "Actor", ACTOR_MAX);
   const action = boundedText(search["action"], "Action prefix", ACTION_MAX);
   const entity = boundedText(search["entity"], "Entity", ENTITY_MAX);
+  const scope = resolveChoice(search["problems"], PROBLEMS, "scope");
+  const within = resolveChoice(search["within"], WITHIN, "time range");
   const query: ActivityQuery = {
     cursor: search["cursor"],
     actor: actor.id,
     action: action.id,
     entityId: entity.id,
-    problems: ActivitySearchSchema.shape.problems.parse(search["problems"]),
-    within: ActivitySearchSchema.shape.within.parse(search["within"]),
+    problems: scope.id,
+    within: within.id,
   };
-  return { query, problems: problemsOf([actor, action, entity]) };
+  return {
+    query,
+    problems: problemsOf([actor, action, entity, scope, within]),
+  };
 }
 
 function ActivityPage() {
@@ -470,6 +459,7 @@ function ActivityPage() {
           entries={{ count: items.length, noun: ["entry", "entries"] }}
           filtered={isFiltered(search)}
           older={search.cursor !== undefined}
+          more={shown?.nextCursor != null}
           problems={filters.problems}
           clearTo="/activity"
         />

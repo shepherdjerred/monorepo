@@ -74,22 +74,54 @@ export function BlockedReason({
   }
 }
 
+/** The id of the page's one notice that says why requests are refused. */
+export const REFUSAL_ID = "environment-refusal";
+
 /**
- * The page's state under its title: a locked environment as an error, a
- * deployment in flight as information, and nothing while it is idle.
+ * Whether every request on the page is refused for a shared reason: the
+ * identity may only read, or a deployment is in flight or has locked the
+ * environment. The request form, the rebind and every rollback share it, so
+ * the page says it once (`EnvironmentNotice`) and each disabled button
+ * points there instead of repeating it.
+ */
+export function requestsRefused({
+  permitted,
+  blocker,
+}: {
+  permitted: boolean;
+  blocker: Blocker | null;
+}) {
+  return !permitted || blocker !== null;
+}
+
+const READ_ONLY = "Your identity has read-only access.";
+
+/**
+ * The page's state under its title, and the one place it says requests are
+ * refused: a locked environment as an error, a deployment in flight or a
+ * read-only identity as information, and nothing while requests can be made.
  */
 export function EnvironmentNotice({
   blocker,
   planWaiting,
+  permitted = true,
 }: {
   blocker: Blocker | null;
   planWaiting: boolean;
+  permitted?: boolean;
 }) {
-  if (blocker === null) return null;
+  if (!requestsRefused({ permitted, blocker })) return null;
+  if (blocker === null)
+    return (
+      <p className="notice info environment-notice" id={REFUSAL_ID}>
+        {READ_ONLY} Requesting a release, rebinding and rolling back are
+        refused.
+      </p>
+    );
   const link = <DeploymentLink id={blockingDeploymentId(blocker)} short />;
   if (blocker.kind === "locked")
     return (
-      <div className="notice error environment-notice">
+      <div className="notice error environment-notice" id={REFUSAL_ID}>
         <p>
           <strong>Recovery required:</strong> deployment {link} failed and this
           environment is locked.
@@ -98,16 +130,18 @@ export function EnvironmentNotice({
           A change may still be running outside Delivery. It must be checked
           before this environment unlocks; until then new requests and rollbacks
           are refused.
+          {permitted ? "" : ` ${READ_ONLY}`}
         </p>
       </div>
     );
   return (
-    <p className="notice info environment-notice">
+    <p className="notice info environment-notice" id={REFUSAL_ID}>
       <strong>In flight:</strong> deployment {link}{" "}
       {blocker.kind === "held"
         ? "holds this environment."
         : `is ${inFlightWords(blocker.deployment.status, planWaiting)}${blocker.behind > 0 ? ` and ${String(blocker.behind)} more wait behind it` : ""}.`}{" "}
-      New requests wait until it finishes or is canceled.
+      Requests, rebinds and rollbacks are refused until it finishes or is
+      canceled.{permitted ? "" : ` ${READ_ONLY}`}
     </p>
   );
 }

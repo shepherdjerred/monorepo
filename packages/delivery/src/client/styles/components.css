@@ -93,6 +93,16 @@ button[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
 }
+/*
+ * A control that cannot be used loses its fill and its accent, in both
+ * themes: a bright blue button at half opacity still reads as live.
+ */
+:is(.primary-button, .secondary-button):is(:disabled, [aria-disabled="true"]) {
+  background: var(--surface-sunken);
+  border-color: var(--border);
+  color: var(--text-muted);
+  opacity: 1;
+}
 .text-button {
   font-weight: var(--weight-semibold);
 }
@@ -613,4 +623,9 @@ label.checkbox input {
   .commit-meta {
     justify-content: flex-start;
   }
+}
+
+/* A release cell wraps its recipe and configuration ids rather than cutting them. */
+.release-parts {
+  overflow-wrap: anywhere;
 }

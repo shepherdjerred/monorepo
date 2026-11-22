@@ -19,8 +19,9 @@ import {
   type Blocker,
 } from "#client/model/environment-status.ts";
 import {
-  BlockedReason,
+  REFUSAL_ID,
   RequestError,
+  requestsRefused,
 } from "#client/model/environment-notices.tsx";
 
 type Kind = "deploy" | "promote";
@@ -190,24 +191,28 @@ function initialKindFor(
   return initialKind ?? (noop ? "deploy" : "promote");
 }
 
-/** Why the request cannot be made, or null when it can. */
-function unavailable({
+/**
+ * Whether the request is unavailable, and why. `reason` is a reason of this
+ * request's own; `shared` is a refusal every request on the page shares
+ * (read-only access, a deployment in flight, a lock), which the page's one
+ * notice says (`requestsRefused`) and the button points to.
+ */
+function requestState({
   permitted,
   blocker,
-  planWaiting,
   kind,
   noop,
+  noVersions,
 }: {
   permitted: boolean;
   blocker: Blocker | null;
-  planWaiting: boolean;
   kind: Kind;
   noop: string | null;
-}): ReactNode {
-  if (!permitted) return "Your identity has read-only access.";
-  if (blocker !== null)
-    return <BlockedReason blocker={blocker} planWaiting={planWaiting} />;
-  return kind === "promote" ? noop : null;
+  noVersions: boolean;
+}) {
+  const reason: ReactNode = kind === "promote" ? noop : null;
+  const shared = requestsRefused({ permitted, blocker });
+  return { reason, shared, blocked: reason !== null || shared || noVersions };
 }
 
 /**
@@ -314,9 +319,15 @@ function Footer({
 /** The first text that says why the button is unavailable, or what refused it. */
 function describedByFor(
   ids: { reason: string; empty: string; error: string },
-  state: { reason: ReactNode; noVersions: boolean; error: unknown },
+  state: {
+    reason: ReactNode;
+    shared: boolean;
+    noVersions: boolean;
+    error: unknown;
+  },
 ) {
   if (state.reason !== null) return ids.reason;
+  if (state.shared) return REFUSAL_ID;
   if (state.noVersions) return ids.empty;
   return state.error === null ? undefined : ids.error;
 }
@@ -389,12 +400,18 @@ export function ReleaseForm({
     deploying && realising === "deploy"
       ? overrideReason(detail, versionId, refused)
       : null;
-  const reason = unavailable({ permitted, blocker, planWaiting, kind, noop });
   // With no version published, the field itself says so and links the pipeline.
   const noVersions = deploying && detail.versionSets.length === 0;
+  const { reason, shared, blocked } = requestState({
+    permitted,
+    blocker,
+    kind,
+    noop,
+    noVersions,
+  });
   function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (reason !== null || noVersions || request.isPending) return;
+    if (blocked || request.isPending) return;
     const common = {
       requestId: crypto.randomUUID(),
       environmentId: environment.id,
@@ -487,10 +504,11 @@ export function ReleaseForm({
         )}
         <Footer
           environment={environment}
-          disabled={reason !== null || noVersions}
+          disabled={blocked}
           pending={request.isPending}
           describedBy={describedByFor(ids, {
             reason,
+            shared,
             noVersions,
             error: request.error,
           })}

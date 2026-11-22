@@ -1,8 +1,11 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import type { CatalogService } from "./catalog-filter.ts";
+import { formSearch } from "./search-schemas.ts";
 
-type ListPath = "/deployments" | "/artifacts" | "/activity";
+/** Pages whose filters can be cleared with a link back to the whole list. */
+type FilterPath =
+  "/" | "/pipelines" | "/deployments" | "/artifacts" | "/activity";
 
 /** The ids of the shared suggestion lists the filter inputs point at. */
 export const SERVICE_OPTIONS = "service-options";
@@ -77,17 +80,16 @@ function pluralOf(noun: [string, string], count: number) {
 }
 
 /**
- * One live line under the filters: how many rows this page shows, that none
- * match, or why a filter cannot be used. It stays mounted, so a screen reader
- * hears the new result after every filter.
+ * What a page of a newest-first list holds. The list has no total, so a full
+ * page says it holds the newest rows and that older ones follow, never how
+ * many exist; the last page is the only one that can say it shows them all.
  */
-export function ResultSummary({
+export function pageSummary({
   count,
   noun,
   filtered,
   older,
-  problems,
-  clearTo,
+  more,
   entries,
 }: {
   count: number;
@@ -97,39 +99,87 @@ export function ResultSummary({
    * How many records the rows fold, when a row can hold several, so the
    * count says both: "Showing 21 rows of 25 entries".
    */
-  entries?: { count: number; noun: [string, string] };
+  entries?: { count: number; noun: [string, string] } | undefined;
   filtered: boolean;
   /** The page follows a cursor, so newer rows sit on the page before it. */
   older: boolean;
-  problems: readonly string[];
-  clearTo: ListPath;
+  /** A cursor leads to older rows beyond this page. */
+  more: boolean;
 }) {
   const [, plural] = noun;
-  let text: string;
-  let tone: string;
-  if (problems.length > 0) {
-    text = problems.join(" ");
-    tone = "notice error";
-  } else if (count === 0) {
-    text = filtered ? `No ${plural} match these filters.` : `No ${plural} yet.`;
-    tone = "empty";
-  } else {
-    const folded =
-      entries === undefined || entries.count === count
-        ? ""
-        : ` of ${String(entries.count)} ${pluralOf(entries.noun, entries.count)}`;
-    text = `Showing ${String(count)} ${older ? "older " : ""}${pluralOf(
-      noun,
-      count,
-    )}${folded}${filtered ? " that match these filters" : ""}, newest first.`;
-    tone = "muted";
-  }
+  const matching = filtered ? " that match these filters" : "";
+  if (count === 0)
+    return filtered ? `No ${plural} match these filters.` : `No ${plural} yet.`;
+  const folded =
+    entries === undefined || entries.count === count
+      ? ""
+      : ` of ${String(entries.count)} ${pluralOf(entries.noun, entries.count)}`;
+  const rows = `${String(count)} ${pluralOf(noun, count)}${folded}${matching}`;
+  if (older) return `Showing ${rows} older than the previous page.`;
+  return more
+    ? `Showing the ${String(count)} newest ${pluralOf(noun, count)}${folded}${matching}. Older ones are on the next page.`
+    : `Showing all ${rows}.`;
+}
+
+/**
+ * The message for filters that cannot be used, with the way back to the whole
+ * list. It is a live region, so a screen reader hears it after a filter.
+ */
+export function FilterProblems({
+  problems,
+  clearTo,
+}: {
+  problems: readonly string[];
+  clearTo: FilterPath;
+}) {
   return (
     <div className="result-summary">
-      <p role="status" className={tone}>
-        {text}
+      <p role="status" className="notice error">
+        {problems.join(" ")}
       </p>
-      {filtered && (count === 0 || problems.length > 0) && (
+      <Link to={clearTo} search={{}}>
+        Clear filters
+      </Link>
+    </div>
+  );
+}
+
+/**
+ * One live line under the filters: how many rows this page shows, that none
+ * match, or why a filter cannot be used. It stays mounted, so a screen reader
+ * hears the new result after every filter.
+ */
+export function ResultSummary({
+  count,
+  noun,
+  filtered,
+  older,
+  more,
+  problems,
+  clearTo,
+  entries,
+}: {
+  count: number;
+  noun: [string, string];
+  /**
+   * How many records the rows fold, when a row can hold several, so the
+   * count says both: "Showing 21 rows of 25 entries".
+   */
+  entries?: { count: number; noun: [string, string] };
+  filtered: boolean;
+  older: boolean;
+  more: boolean;
+  problems: readonly string[];
+  clearTo: FilterPath;
+}) {
+  if (problems.length > 0)
+    return <FilterProblems problems={problems} clearTo={clearTo} />;
+  return (
+    <div className="result-summary">
+      <p role="status" className={count === 0 ? "empty" : "muted"}>
+        {pageSummary({ count, noun, filtered, older, more, entries })}
+      </p>
+      {filtered && count === 0 && (
         <Link to={clearTo} search={{}}>
           Clear filters
         </Link>
@@ -182,4 +232,31 @@ export function isFiltered(search: Record<string, string | undefined>) {
   return Object.entries(search).some(
     ([key, value]) => key !== "cursor" && value !== undefined,
   );
+}
+
+/**
+ * The page of results a list shows. A disabled query still returns whatever
+ * is cached under its key, and a filter that could not be resolved shares
+ * the unfiltered list's key, so its problem is shown alone: no rows and no
+ * paging from another filter.
+ */
+export function resolvedPage<Page>(
+  data: Page | undefined,
+  problems: readonly unknown[],
+) {
+  return problems.length === 0 ? data : undefined;
+}
+
+type Search = Record<string, string | undefined>;
+
+/** What a filter submit searches for: the ids its names resolve to. */
+export function submitted(
+  form: HTMLFormElement,
+  resolve: (values: Search) => { canonical: Search },
+) {
+  const values: Search = formSearch(form);
+  for (const [name, id] of Object.entries(resolve(values).canonical))
+    if (id !== undefined) values[name] = id;
+  showSearch(form, values);
+  return values;
 }

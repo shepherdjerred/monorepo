@@ -153,8 +153,35 @@ export function boundedText(
     : { id: value, problem: null };
 }
 
+/** A choice filter's meaning: one accepted value, or why the typed one is not. */
+export type Choice<T extends string> = {
+  id: T | undefined;
+  problem: string | null;
+};
+
+/**
+ * A filter that takes one of a few fixed values. A value that is not one of
+ * them says so and names the accepted ones, as a service filter does, instead
+ * of quietly listing everything.
+ */
+export function resolveChoice<T extends string>(
+  value: string | undefined,
+  accepted: readonly T[],
+  noun: string,
+): Choice<T> {
+  if (value === undefined) return { id: undefined, problem: null };
+  const match = accepted.find((candidate) => candidate === value);
+  if (match !== undefined) return { id: match, problem: null };
+  return {
+    id: undefined,
+    problem: `“${value}” is not a ${noun}. Choose one of ${accepted.join(", ")}.`,
+  };
+}
+
 /** The sentences of every filter that cannot be used. */
-export function problemsOf(resolved: readonly Resolved[]): string[] {
+export function problemsOf(
+  resolved: readonly { problem: string | null }[],
+): string[] {
   return resolved.flatMap((entry) =>
     entry.problem === null ? [] : [entry.problem],
   );

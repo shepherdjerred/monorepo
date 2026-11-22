@@ -21,7 +21,11 @@ import {
   inFlightWords,
   type Blocker,
 } from "./environment-status.ts";
-import { EnvironmentNotice, InFlightSummary } from "./environment-notices.tsx";
+import {
+  EnvironmentNotice,
+  InFlightSummary,
+  REFUSAL_ID,
+} from "./environment-notices.tsx";
 import {
   awaitsDecision,
   firingAlarms,
@@ -428,7 +432,19 @@ describe("environment model panels", () => {
 
   test("a read-only identity cannot request a rollback or rebind", () => {
     const html = environment(false);
-    expect(html).toContain("Your identity has read-only access.");
+    // The page says it once, in its notice; the panels do not repeat it.
+    expect(html).not.toContain("Your identity has read-only access.");
+    expect(
+      markup(
+        <EnvironmentNotice
+          blocker={null}
+          planWaiting={false}
+          permitted={false}
+        />,
+      ),
+    ).toContain(
+      `id="${REFUSAL_ID}">Your identity has read-only access. Requesting a release, rebinding and rolling back are refused.`,
+    );
     const items = candidateItems(html.slice(html.indexOf("candidates")));
     expect(items.every((item) => item.includes('disabled=""'))).toBe(true);
   });
@@ -778,7 +794,9 @@ describe("what stops an environment from taking a request", () => {
     const notice = markup(
       <EnvironmentNotice blocker={locked} planWaiting={false} />,
     );
-    expect(notice).toMatch(/^<div class="notice error environment-notice">/u);
+    expect(notice).toMatch(
+      /^<div class="notice error environment-notice" id="environment-refusal">/u,
+    );
     expect(notice).toContain("<strong>Recovery required:</strong> deployment");
     expect(notice).toContain('href="/deployments/scout-prod-37"');
     expect(notice).toContain("A change may still be running outside Delivery");
@@ -804,7 +822,7 @@ describe("what stops an environment from taking a request", () => {
     expect(
       markup(<EnvironmentNotice blocker={waiting} planWaiting={false} />),
     ).toMatch(
-      /^<p class="notice info environment-notice"><strong>In flight:<\/strong> deployment .*is awaiting approval and 1 more wait behind it\./u,
+      /^<p class="notice info environment-notice" id="environment-refusal"><strong>In flight:<\/strong> deployment .*is awaiting approval and 1 more wait behind it\. Requests, rebinds and rollbacks are refused until it finishes or is canceled\./u,
     );
     const summary = markup(
       <InFlightSummary
@@ -827,16 +845,12 @@ describe("what stops an environment from taking a request", () => {
     const items = candidateItems(html.slice(html.indexOf("candidates")));
     expect(items.every((item) => item.includes('disabled=""'))).toBe(true);
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Rebind</u);
-    const reasons = [
-      ...html.matchAll(/<p class="notice" id="([^"]+)">Deployment <a/gu),
-    ].map((match) => match[1] ?? "");
-    // The selection panel's reason and the candidates' reason.
-    expect(reasons).toHaveLength(2);
-    for (const id of reasons) expect(html).toContain(id);
-    expect(html).toContain('href="/deployments/scout-prod-44"');
-    expect(html).toContain(
-      "is awaiting approval. Requests are refused until it finishes or is canceled.",
-    );
+    // The panels repeat no banner: each button points at the page's one notice.
+    expect(html).not.toContain('class="notice"');
+    expect(
+      html.match(new RegExp(`aria-describedby="[^"]*${REFUSAL_ID}"`, "gu")),
+    ).not.toBeNull();
+    expect(html).not.toContain("Requests are refused until it finishes");
   });
 });
 
@@ -889,15 +903,11 @@ describe("the release form invites only a request that can succeed", () => {
         deployment: fixtures.deployments.quarantined37,
       },
     });
-    const [, reason = ""] =
-      /<p class="notice" id="([^"]+)">Deployment <a[^>]*href="\/deployments\/scout-prod-37"/u.exec(
-        html,
-      ) ?? [];
-    expect(reason).not.toBe("");
+    // The page's one notice says why; the button points at it and adds no banner.
     expect(html).toContain(
-      `<button type="submit" class="primary-button" disabled="" aria-describedby="${reason}">Request deployment</button>`,
+      `<button type="submit" class="primary-button" disabled="" aria-describedby="${REFUSAL_ID}">Request deployment</button>`,
     );
-    expect(html).toContain("failed and needs recovery");
+    expect(html).not.toContain('class="notice"');
   });
 
   test("promoting the release already accepted here is disabled with its reason", () => {
