@@ -229,12 +229,12 @@ function RequesterRow({
         labelledBy={headingId}
         onEdit={onEdited}
         validate={() =>
-          selected !== undefined && !selected.eligible
-            ? {
+          selected === undefined || selected.eligible
+            ? {}
+            : {
                 identity:
                   "This identity needs its Plex access reconciled before a requester can be matched to it.",
               }
-            : {}
         }
         onSubmit={() => {
           mutation.mutate(target);
