@@ -779,7 +779,9 @@ layout it is about: `*.desktop.spec.ts` (the sidebar) runs only in `desktop` and
 layout-specific test in one of those files instead of skipping it by viewport;
 the root quality ratchet rejects `test.skip`.
 
-`e2e/browser/manage/forms.spec.ts` and `durations.spec.ts` drive the owner's forms. Because the fixture API refuses writes, each test answers the
+`e2e/browser/manage/forms.spec.ts`, `durations.spec.ts`, and
+`quality.spec.ts` drive the owner's forms. Because the fixture API refuses
+writes, each test answers the
 write itself (`answerWrites` in `manage/support.ts`) and asserts the method,
 path, headers, and body the client sent. They prove what would be requested,
 not that anything was saved; a write against a real server is covered by the
@@ -1498,7 +1500,8 @@ Pages outside Manage still use the shared classes in `styles.css`.
 | `ui/forms/form.tsx`           | `Form`, `FormFooter`, `FieldRow`, `useSavedNotes`                                                         |
 | `ui/forms/field.tsx`          | `TextField`, `SelectField`, `TextAreaField`, `CheckboxField`, `ChoiceField`, `FieldGroup`, `InlineSelect` |
 | `ui/forms/duration-field.tsx` | `DurationField`: a length of time as an amount and a unit                                                 |
-| `ui/button.tsx`               | `Button` (`primary`, `secondary`, `quiet`, `danger`), `ButtonLink`, `ButtonRow`                           |
+| `ui/forms/list-editor.tsx`    | `ListEditor`: a list of distinct values, reordered with move buttons                                      |
+| `ui/button.tsx`               | `Button` (`primary`, `secondary`, `quiet`, `danger`), `IconButton`, `ButtonLink`, `ButtonRow`             |
 | `ui/confirm-dialog.tsx`       | `ConfirmDialog`, a native modal `<dialog>` whose Cancel takes focus                                       |
 | `ui/panel.tsx`                | `Panel`, `Disclosure`, `DisclosureList`, `SkeletonRows`, `EmptyNote`                                      |
 | `ui/data-list.tsx`            | `DataList` and `DataRow`: rows that stack into cards in a narrow container                                |
@@ -1528,7 +1531,15 @@ list above it keeps that message with `useSavedNotes`.
 
 A form that reads its controls by name (`FormData`) keeps the reader in its own
 module, such as `manage/providers/provider-input.ts`, so the request body does
-not depend on the layout.
+not depend on the layout. The quality profile form keeps typed state instead:
+`manage/quality/profile-model.ts` turns stored rules into form state and back.
+Reading a stored profile and building it again must give the same rules, with
+nothing rounded, reordered, or dropped; `profile-model.test.ts` and
+`testing/fixture-api/profile-form.test.ts` hold that. Rules the schema rejects,
+such as a value outside an enum, are shown as an error in place of the form.
+A profile captured from Radarr or Sonarr (`rules.resolved`) is the one part
+edited as JSON, because it is a hashed snapshot holding the source
+application's own custom-format data.
 
 ### Native subtitle tools
 

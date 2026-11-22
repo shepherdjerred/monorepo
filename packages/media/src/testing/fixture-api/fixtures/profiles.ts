@@ -4,12 +4,14 @@ import type {
   ProfileListSchema,
   QualityRulesSchema,
 } from "#shared/api.ts";
+import type { ResolvedProfile } from "#domain/resolved-contract.ts";
 import type {
   ManagedGuide,
   QualityGuideKind,
 } from "#shared/quality-guide/contract.ts";
 import type { QualityGuideStatusSchema } from "#shared/quality-guide/view.ts";
 import {
+  DAY,
   GIBIBYTE,
   HOUR,
   ago,
@@ -33,6 +35,7 @@ export const PROFILE_IDS = {
   moviesHd: fixtureId(15, 2),
   series4k: fixtureId(15, 3),
   anime: fixtureId(15, 4),
+  captured: fixtureId(15, 5),
 } as const;
 
 function managedGuide(kind: QualityGuideKind): ManagedGuide {
@@ -55,9 +58,12 @@ type RuleSeed = {
   audioLanguages?: string[];
 };
 
-/** Rules whose first listed quality is also the upgrade cutoff. */
+/**
+ * Rules whose best quality is also the upgrade cutoff. Qualities are listed
+ * the way the rules store them: least wanted first.
+ */
 function rules(seed: RuleSeed): QualityRules {
-  const [cutoffQuality] = seed.qualities;
+  const cutoffQuality = seed.qualities.at(-1);
   if (cutoffQuality === undefined) {
     throw new Error("A quality profile needs at least one quality");
   }
@@ -89,37 +95,111 @@ function managedRules(seed: RuleSeed, kind: QualityGuideKind): ManagedRules {
 const MOVIES_4K = "Living room 4K — Movies";
 const SERIES_4K = "Living room 4K — TV";
 
-/** Two guide-managed living-room profiles and two hand-written ones. */
+const HD_1080P = { name: "Bluray-1080p", source: "bluray", resolution: 1080 };
+const WEB_1080P = { name: "WEBDL-1080p", source: "webdl", resolution: 1080 };
+
+/** A profile as Radarr held it, captured whole when the library moved here. */
+function capturedProfile(): ResolvedProfile {
+  return {
+    schemaVersion: 1,
+    source: "radarr",
+    sourceVersion: "6.4.4.10685",
+    sourceCommit: sha1("radarr-source"),
+    capturedAt: ago(40 * DAY),
+    snapshotHash: sha256("radarr-snapshot"),
+    properPreference: "doNotPrefer",
+    profile: {
+      id: 4,
+      name: "HD-1080p",
+      upgradeAllowed: true,
+      cutoff: 7,
+      minFormatScore: 0,
+      cutoffFormatScore: 0,
+      minUpgradeFormatScore: 1,
+      items: [
+        { quality: { id: 3, ...WEB_1080P }, allowed: true, items: [] },
+        { quality: { id: 7, ...HD_1080P }, allowed: true, items: [] },
+      ],
+      formatItems: [{ format: 12, name: "x265 (HD)", score: -10_000 }],
+    },
+    customFormats: [
+      {
+        id: 12,
+        name: "x265 (HD)",
+        includeCustomFormatWhenRenaming: false,
+        specifications: [
+          {
+            name: "x265",
+            implementation: "ReleaseTitleSpecification",
+            negate: false,
+            required: true,
+            fields: [{ name: "value", value: "[xh][ ._-]?265|HEVC" }],
+          },
+        ],
+      },
+    ],
+    qualityDefinitions: [
+      {
+        quality: { id: 3, ...WEB_1080P },
+        title: "WEBDL-1080p",
+        weight: 9,
+        minSize: 0,
+        maxSize: 400,
+        preferredSize: 95,
+      },
+      {
+        quality: { id: 7, ...HD_1080P },
+        title: "Bluray-1080p",
+        weight: 10,
+        minSize: 0,
+        maxSize: 400,
+        preferredSize: 95,
+      },
+    ],
+  };
+}
+
+/**
+ * Two guide-managed living-room profiles, two hand-written ones, and one
+ * that carries the Radarr profile it was captured from.
+ */
 const QUALITY_RULES = {
   movies4k: managedRules(
     {
       qualities: [
-        "Remux-2160p",
-        "Bluray-2160p",
-        "WEBDL-2160p",
-        "Bluray-1080p",
         "WEBDL-1080p",
+        "Bluray-1080p",
+        "WEBDL-2160p",
+        "Bluray-2160p",
+        "Remux-2160p",
       ],
       maximumGibibytes: 95,
     },
     "movie",
   ),
   moviesHd: rules({
-    qualities: ["Bluray-1080p", "WEBDL-1080p", "WEBDL-720p"],
+    qualities: ["WEBDL-720p", "WEBDL-1080p", "Bluray-1080p"],
     maximumGibibytes: 25,
   }),
   series4k: managedRules(
     {
-      qualities: ["WEBDL-2160p", "Bluray-1080p", "WEBDL-1080p", "HDTV-1080p"],
+      qualities: ["HDTV-1080p", "WEBDL-1080p", "Bluray-1080p", "WEBDL-2160p"],
       maximumGibibytes: 30,
     },
     "series",
   ),
   anime: rules({
-    qualities: ["Bluray-1080p", "WEBDL-1080p", "HDTV-1080p"],
+    qualities: ["HDTV-1080p", "WEBDL-1080p", "Bluray-1080p"],
     maximumGibibytes: 12,
     audioLanguages: ["ja"],
   }),
+  captured: {
+    ...rules({
+      qualities: ["WEBDL-1080p", "Bluray-1080p"],
+      maximumGibibytes: 40,
+    }),
+    resolved: capturedProfile(),
+  },
 };
 
 export function profileList(): ProfileList {
@@ -147,6 +227,12 @@ export function profileList(): ProfileList {
       name: "Anime 1080p",
       version: 2,
       rules: QUALITY_RULES.anime,
+    },
+    {
+      id: PROFILE_IDS.captured,
+      name: "HD-1080p from Radarr",
+      version: 1,
+      rules: QUALITY_RULES.captured,
     },
   ];
 }
