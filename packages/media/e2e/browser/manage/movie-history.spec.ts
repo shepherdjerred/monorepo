@@ -1,4 +1,5 @@
 import { expect, type Page } from "@playwright/test";
+import { MovieHistoryDetailV3Schema } from "#shared/movie-editions/history-review-v3.ts";
 import { MEMBER } from "#testing/fixture-api/personas.ts";
 import { fixtureId, sha256 } from "#testing/fixture-api/support.ts";
 import { definitionDigest } from "#testing/fixture-api/fixtures/movie-requests.ts";
@@ -97,6 +98,8 @@ test.describe("a member answers an edition review", () => {
 
     // The first hold after the prompt is the member's Keep.
     await page.getByLabel("Captured Keep or pin").selectOption({ index: 1 });
+    // Choosing the hold asks for the acknowledgement again.
+    await page.getByLabel(/I declare the visible edition/u).check();
     await submit.click();
     await expect(page.getByText("Recorded", { exact: true })).toBeVisible();
     expect(writes).toHaveLength(1);
@@ -167,6 +170,46 @@ test.describe("a member answers an edition review", () => {
         subjectUserId: MEMBER.id,
         declaration: { intent: "no_longer_request" },
       },
+    });
+  });
+
+  test("changing the declaration or the Keep clears the acknowledgement, so what was chosen is what is confirmed", async ({
+    page,
+  }) => {
+    const writes = await answerWrites(
+      page,
+      `${REVIEWS}/${review(1)}/responses`,
+      {
+        json: { recoveryReviewId: review(1), status: "completed", version: 3 },
+      },
+      3,
+    );
+    await openAsMember(page, 1);
+    const acknowledge = page.getByLabel(/I declare the visible edition/u);
+    const submit = page.getByRole("button", { name: "Record my declaration" });
+
+    await page.getByLabel(/^I request this edition/u).check();
+    await acknowledge.check();
+    await expect(acknowledge).toBeChecked();
+    // A different declaration is a different thing to confirm.
+    await page.getByLabel(/^Keep this edition/u).check();
+    await expect(acknowledge).not.toBeChecked();
+    await page.getByLabel("Captured Keep or pin").selectOption({ index: 1 });
+    await submit.click();
+    await expect(page.getByRole("alert")).toContainText(
+      "Confirm the declaration to record it.",
+    );
+    expect(writes).toEqual([]);
+
+    await acknowledge.check();
+    await page.getByLabel("Captured Keep or pin").selectOption({ index: 0 });
+    await expect(acknowledge).not.toBeChecked();
+    await page.getByLabel("Captured Keep or pin").selectOption({ index: 1 });
+    await acknowledge.check();
+    await submit.click();
+    await expect.poll(() => writes).toHaveLength(1);
+    expect(writes[0]).toMatchObject({
+      body: { declaration: { intent: "keep" } },
     });
   });
 
@@ -317,6 +360,44 @@ test.describe("the owner's side of an edition review", () => {
         acknowledgeMissingHistory: true,
       },
     });
+  });
+
+  test("statements ticked for one set of declarations are cleared when the reviewed set changes", async ({
+    page,
+  }) => {
+    let changed = false;
+    await page.route(
+      `**/api/v3/movie-history/reviews/${review(2)}`,
+      async (route) => {
+        const response = await route.fetch();
+        const body = MovieHistoryDetailV3Schema.parse(await response.json());
+        await route.fulfill({
+          response,
+          json: changed
+            ? {
+                ...body,
+                version: 9,
+                responseHash: sha256("history-responses-2-changed"),
+              }
+            : body,
+        });
+      },
+    );
+    await page.clock.install();
+    await openManage(page, page3(2));
+    const first = page.getByLabel(/Everyone applicable is listed/u);
+    await first.check();
+    await page.getByLabel(/Preserve existing Keep, pins/u).check();
+    await expect(first).toBeChecked();
+
+    // The page reads the review again every few seconds; a changed set has
+    // to be confirmed afresh.
+    changed = true;
+    await page.clock.fastForward(10_000);
+    await expect(first).not.toBeChecked();
+    await expect(
+      page.getByLabel(/Preserve existing Keep, pins/u),
+    ).not.toBeChecked();
   });
 
   test("a release the review no longer matches says nothing was recorded and sends nothing more", async ({

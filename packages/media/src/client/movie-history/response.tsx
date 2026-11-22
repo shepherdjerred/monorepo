@@ -137,6 +137,9 @@ function DeclarationForm({
 }) {
   const [intent, setIntent] = useState<Intent | "">("");
   const [keepId, setKeepId] = useState("");
+  // What is acknowledged is this declaration with this hold, so choosing
+  // either again asks for the acknowledgement again.
+  const [acknowledged, setAcknowledged] = useState(false);
   const [problem, setProblem] = useState<Error | null>(null);
   const proxy = person.subject.id !== user.id;
   const name = proxy ? `${person.subject.displayName}’s` : "my";
@@ -179,6 +182,7 @@ function DeclarationForm({
           onChange={(value) => {
             setIntent(intentOf(value));
             setKeepId("");
+            setAcknowledged(false);
           }}
           options={options}
         />
@@ -191,6 +195,7 @@ function DeclarationForm({
             value={keepId}
             onChange={(event) => {
               setKeepId(event.target.value);
+              setAcknowledged(false);
             }}
           >
             <option value="">Choose your captured hold</option>
@@ -204,6 +209,10 @@ function DeclarationForm({
         <CheckboxField
           name="acknowledge"
           required
+          checked={acknowledged}
+          onChange={(event) => {
+            setAcknowledged(event.target.checked);
+          }}
           requiredMessage="Confirm the declaration to record it."
           label={`I declare the visible edition and captured choice, acknowledge ${String(claims)} selected imported request claim${claims === 1 ? "" : "s"}, and understand that lost request history cannot be reconstructed from files.`}
         />
