@@ -27,7 +27,7 @@ export const HANDOFF_IDS = {
   applying: fixtureId(32, 3),
   applied: fixtureId(32, 4),
   expired: fixtureId(32, 5),
-  cancelled: fixtureId(32, 6),
+  requiresReview: fixtureId(32, 6),
 } as const;
 
 type HandoffSeed = {
@@ -68,10 +68,10 @@ const HANDOFFS: Readonly<Record<string, HandoffSeed>> = {
     expiresInHours: -3,
     receipt: false,
   },
-  [HANDOFF_IDS.cancelled]: {
-    state: "cancelled",
-    plan: false,
-    expiresInHours: null,
+  [HANDOFF_IDS.requiresReview]: {
+    state: "requires_review",
+    plan: true,
+    expiresInHours: 20,
     receipt: false,
   },
 };

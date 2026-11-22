@@ -14,11 +14,14 @@ import styles from "./migration.module.css";
 
 const cx = classNames(styles);
 
-const OUTCOME = {
+export const DISCOVERY_OUTCOME = {
   ready: { label: "Ready", tone: "ok" },
   catalog_pending: { label: "Waiting for the catalog", tone: "warn" },
   protected: { label: "Protected", tone: "warn" },
-} as const;
+} satisfies Record<
+  z.infer<typeof MigrationDiscoveryResultSchema>["entries"][number]["status"],
+  { label: string; tone: "ok" | "warn" }
+>;
 
 /**
  * Optional, for a Radarr or Sonarr capture that is complete and stable: look
@@ -93,7 +96,7 @@ export function MigrationDiscovery({
           </p>
           <DataList label="Catalog discovery results">
             {result.entries.map((entry) => {
-              const outcome = OUTCOME[entry.status];
+              const outcome = DISCOVERY_OUTCOME[entry.status];
               return (
                 <DataRow
                   key={entry.sourceId}

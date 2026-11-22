@@ -229,7 +229,6 @@ test.describe("preparing files and adopting them", () => {
     ["preparing", "preparing", "Being prepared"],
     ["applying", "applying", "Being adopted"],
     ["applied", "applied", "Adopted"],
-    ["cancelled", "cancelled", "Cancelled"],
   ] as const;
   for (const [name, key, title] of STATES) {
     test(`shows a plan that is ${name} and offers nothing to approve`, async ({
@@ -250,6 +249,40 @@ test.describe("preparing files and adopting them", () => {
       expect(await horizontalOverflow(page)).toBe(0);
     });
   }
+
+  test("shows a plan the server stopped for review, with its files and nothing to approve", async ({
+    page,
+  }) => {
+    await openManage(
+      page,
+      `/manage/migration?handoff=${HANDOFF_IDS.requiresReview}`,
+    );
+    const plan = page.getByRole("region", {
+      name: "5. Review and adopt files",
+    });
+    await expect(plan.getByText("Stopped for review")).toBeVisible();
+    await expect(
+      plan.getByText("failed or was cancelled before it finished"),
+    ).toBeVisible();
+    await expect(
+      plan.getByText("Nothing more will run for this plan"),
+    ).toBeVisible();
+    await expect(
+      plan.getByRole("link", { name: "View activity" }),
+    ).toHaveAttribute("href", "/manage/activity");
+    // The page still shows what the plan held, not a load error.
+    await expect(
+      plan.getByText("/data/movies/Dune (2021)/Dune (2021) Bluray-1080p.mkv"),
+    ).toBeVisible();
+    await expect(page.getByText("could not be loaded")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Adopt files and correct Plex labels" }),
+    ).toHaveCount(0);
+    await plan.getByText("Technical details").click();
+    await expect(plan.getByText(/Review reference/u)).toBeVisible();
+    expect(await horizontalOverflow(page)).toBe(0);
+    expect(await violations(page)).toEqual([]);
+  });
 
   test("does not let an expired plan be approved", async ({ page }) => {
     await openManage(page, `/manage/migration?handoff=${HANDOFF_IDS.expired}`);

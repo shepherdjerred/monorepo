@@ -57,11 +57,11 @@ const PLAN_STATE = {
     meaning:
       "The files are adopted and the Plex labels are corrected. Recovery holds stay in effect.",
   },
-  cancelled: {
-    label: "Cancelled",
+  requires_review: {
+    label: "Stopped for review",
     tone: "danger",
     meaning:
-      "This plan was cancelled and nothing was adopted. Prepare a new batch in step 4.",
+      "The adoption failed or was cancelled before it finished, so Media stopped it and marked this plan for review. No receipt was recorded and nothing more will run for this plan. Prepare a fresh batch in step 4 to try again.",
   },
 } satisfies Record<
   State,
@@ -225,12 +225,13 @@ function CurrentPlan({
 /** Where the plan stands, and why it cannot be approved if it cannot. */
 function PlanBanner({ detail, expired }: { detail: Detail; expired: boolean }) {
   const state = PLAN_STATE[detail.state];
-  const running = detail.state === "preparing" || detail.state === "applying";
+  const showActivity =
+    detail.state !== "awaiting_review" && detail.state !== "applied";
   return (
     <>
       <Callout tone={state.tone} title={state.label}>
         {state.meaning}
-        {running && (
+        {showActivity && (
           <>
             {" "}
             <Link to="/manage/activity">View activity</Link> for progress or

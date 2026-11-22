@@ -5,18 +5,24 @@ import { HandoffScopeProtocolSchema } from "#shared/handoff/protocol.ts";
 import { readApi } from "#client/api.ts";
 
 /**
- * A prepared adoption plan as the page reads it. The server stores its state
- * as free text; these are the five it writes, and a sixth is an answer this
- * page cannot read.
+ * The states the server writes onto an adoption plan: `preparing` when it is
+ * created, `awaiting_review` when its checks finish, `applying` when the owner
+ * approves, `applied` when adoption completes, and `requires_review` when a
+ * failed or cancelled adoption is protected. The column is free text, so a
+ * sixth state is an answer this page cannot read; a test keeps this list equal
+ * to what the server code writes.
  */
+export const HANDOFF_PLAN_STATES = [
+  "preparing",
+  "awaiting_review",
+  "applying",
+  "applied",
+  "requires_review",
+] as const;
+
+/** A prepared adoption plan as the page reads it. */
 export const HandoffPlanDetailSchema = HandoffDetailSchema.safeExtend({
-  state: z.enum([
-    "preparing",
-    "awaiting_review",
-    "applying",
-    "applied",
-    "cancelled",
-  ]),
+  state: z.enum(HANDOFF_PLAN_STATES),
   scope: HandoffScopeProtocolSchema,
 });
 
