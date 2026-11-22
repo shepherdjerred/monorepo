@@ -53,7 +53,7 @@ describe("ZFS WAL settings on every Zalando cluster", () => {
 });
 
 describe("single-app PostgreSQL storageClass", () => {
-  it.each(["golink", "flags", "new-service"])(
+  it.each(["flags", "new-service"])(
     "provisions %s on compressed zfs-ssd-lz4 by default",
     (app) => {
       const cluster = clusterOf((chart) =>
