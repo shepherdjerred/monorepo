@@ -35,7 +35,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   "glitter-boys-launcher": "enforced",
   golink: "enforced",
   "gradle-build-cache": "open",
-  home: "open",
+  home: "enforced",
   media: "enforced",
   "minecraft-shuxin": "enforced",
   "minecraft-sjerred": "enforced",
