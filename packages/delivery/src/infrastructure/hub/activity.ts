@@ -7,6 +7,7 @@ import {
 import { changeDomain } from "#shared/hub/change-contract.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
+import { firstLine } from "./attention.ts";
 import { decodeCursor, olderThan, page, PAGE_SIZE } from "./cursor.ts";
 import { activityEntry } from "./views.ts";
 
@@ -55,15 +56,24 @@ function ids(rows: readonly AuditRow[], domain: string) {
   ];
 }
 
+/** The deployment results whose entry says why: a failure, with or without a lock. */
+const FAILURE_ACTIONS: ReadonlySet<string> = new Set([
+  "deployment.failed",
+  "deployment.recovery_required",
+]);
+
 /**
  * The service, environment and set revision number of every deployment,
- * build and version set a page of audit rows is about: one read per kind for
- * the whole page, never one per row.
+ * build and version set a page of audit rows is about, and the message of
+ * each deployment: one read per kind for the whole page, never one per row.
  */
 async function activitySubjects(
   database: Database,
   rows: readonly AuditRow[],
-): Promise<Map<string, ActivitySubject>> {
+): Promise<{
+  subjects: Map<string, ActivitySubject>;
+  messages: Map<string, string | null>;
+}> {
   const [deployments, builds, versions] = await Promise.all([
     database.deployment.findMany({
       where: { id: { in: ids(rows, "deployment") } },
@@ -72,6 +82,7 @@ async function activitySubjects(
         serviceId: true,
         environmentId: true,
         versionSetRevisionId: true,
+        message: true,
       },
     }),
     database.build.findMany({
@@ -90,7 +101,7 @@ async function activitySubjects(
     select: { id: true, revision: true },
   });
   const revisionOf = new Map(deployed.map((row) => [row.id, row.revision]));
-  return new Map<string, ActivitySubject>([
+  const subjects = new Map<string, ActivitySubject>([
     ...deployments.map((row): [string, ActivitySubject] => [
       row.id,
       {
@@ -108,9 +119,16 @@ async function activitySubjects(
       { serviceId: row.serviceId, environmentId: null, revision: row.revision },
     ]),
   ]);
+  return {
+    subjects,
+    messages: new Map(deployments.map((row) => [row.id, row.message])),
+  };
 }
 
-/** One page of the audit trail, newest first, each entry with what it is about. */
+/**
+ * One page of the audit trail, newest first, each entry with what it is
+ * about, and a deployment failure with the first line of why it failed.
+ */
 export async function activityPage(
   database: Database,
   query: ActivityQuery,
@@ -122,11 +140,17 @@ export async function activityPage(
     take: PAGE_SIZE + 1,
   });
   const selected = page(rows, PAGE_SIZE, (row) => row.occurredAt);
-  const subjects = await activitySubjects(database, selected.items);
+  const { subjects, messages } = await activitySubjects(
+    database,
+    selected.items,
+  );
   return {
     items: selected.items.map((row) => ({
       ...activityEntry(row),
       subject: subjects.get(row.entityId) ?? null,
+      ...(FAILURE_ACTIONS.has(row.action)
+        ? { reason: firstLine(messages.get(row.entityId) ?? null) }
+        : {}),
     })),
     nextCursor: selected.nextCursor,
   };

@@ -166,6 +166,12 @@ button[aria-disabled="true"] {
 .pipeline-table td {
   vertical-align: middle;
 }
+.last-activity {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-0);
+  white-space: nowrap;
+}
 .execution-cell {
   display: inline-flex;
   flex-direction: column;

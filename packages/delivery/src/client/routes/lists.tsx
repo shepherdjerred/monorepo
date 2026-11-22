@@ -19,7 +19,9 @@ import { catalogNames } from "#client/components/catalog-name.tsx";
 import { OlderLink } from "#client/components/pager.tsx";
 import { BuildTable } from "#client/artifacts.tsx";
 import { ApprovalQueue } from "#client/model/approval-queue.tsx";
+import { useNow, zoneLabel } from "#client/components/time.tsx";
 import { ActivityList, ActivityScope } from "./activity-list.tsx";
+import { foldActivity } from "./activity-fold.ts";
 import {
   boundedText,
   catalogServices,
@@ -416,12 +418,15 @@ function ActivityPage() {
   });
   const shown = resolvedPage(data, filters.problems);
   const items = shown?.items ?? [];
+  // A row can fold several entries, so the count says rows and entries both.
+  const rows = foldActivity(items).length;
+  const now = useNow();
   return (
     <>
       <PageHeader
         eyebrow={SECTION_EYEBROW}
         title="Activity"
-        description="The audit trail of every Delivery decision and result."
+        description={`The audit trail of every Delivery decision and result. Times are ${zoneLabel(now)}.`}
       />
       <ListPanel heading="Audit trail">
         <FilterForm
@@ -460,8 +465,9 @@ function ActivityPage() {
           </label>
         </FilterForm>
         <ResultSummary
-          count={items.length}
-          noun={["entry", "entries"]}
+          count={rows}
+          noun={rows === items.length ? ["entry", "entries"] : ["row", "rows"]}
+          entries={{ count: items.length, noun: ["entry", "entries"] }}
           filtered={isFiltered(search)}
           older={search.cursor !== undefined}
           problems={filters.problems}

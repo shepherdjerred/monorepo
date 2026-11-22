@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CATALOG_CORE } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { HubGridSchema } from "#shared/hub/hub-contract.ts";
 import { index } from "#infrastructure/delivery-data.ts";
-import { QUEUED_ATTENTION_MINUTES } from "./attention.ts";
+import { FAILING_STREAK, QUEUED_ATTENTION_MINUTES } from "./attention.ts";
 import {
   buildGrid,
   type AcceptingDeployment,
@@ -70,6 +70,7 @@ function record(overrides: Partial<GridRecord> = {}): GridRecord {
     services: [],
     environments: [],
     latest: new Map(),
+    prior: new Map(),
     awaiting: [],
     builds: new Map(),
     revisions: new Map([["set-275", 275]]),
@@ -444,6 +445,79 @@ describe("overview grid queued attention", () => {
   it("leaves a short queue alone, and one whose first stage has started", () => {
     expect(queued(QUEUED_ATTENTION_MINUTES - 1)).toEqual([]);
     expect(queued(50, at(9))).toEqual([]);
+  });
+});
+
+/** A minute before the record was read: too soon to read as stuck in the queue. */
+const JUST_NOW = new Date(at(10).getTime() - 60_000);
+
+/** Flags prod's attention: a new attempt queued after the deployments in `prior`. */
+function retried(
+  prior: { id: string; status: string; message: string | null }[],
+  status = "queued",
+) {
+  return buildGrid(
+    record({
+      services: active("flags"),
+      environments: [environment("flags/prod")],
+      latest: new Map([
+        [
+          "flags/prod",
+          deployment("again", "flags/prod", {
+            status,
+            createdAt: JUST_NOW,
+            startedAt: null,
+            finishedAt: null,
+          }),
+        ],
+      ]),
+      prior: new Map([["flags/prod", prior]]),
+    }),
+  ).attention;
+}
+
+/** A deployment before the newest that failed, with what it recorded. */
+function failed(id: string, message: string | null) {
+  return { id, status: "failed", message };
+}
+
+describe("overview grid failing-repeatedly attention", () => {
+  it(`flags a new attempt after ${String(FAILING_STREAK)} failures in a row, linking the newest failure`, () => {
+    expect(
+      retried([
+        failed("second", "External operation may still be active\nmore"),
+        failed("first", null),
+      ]),
+    ).toEqual([
+      {
+        kind: "failed",
+        title: "Flags prod is failing repeatedly",
+        detail:
+          "The last 2 deployments failed, the newest with: External operation may still be active. The deploy of r275 is queued again.",
+        at: JUST_NOW.toISOString(),
+        target: { kind: "deployment", id: "second" },
+        serviceId: "flags",
+      },
+    ]);
+    expect(
+      retried([failed("second", null), failed("first", null)], "running")[0]
+        ?.detail,
+    ).toBe(
+      "The last 2 deployments failed. The deploy of r275 is running again.",
+    );
+  });
+
+  it("leaves one failure, a broken streak and a settled attempt alone", () => {
+    expect(retried([failed("only", null)])).toEqual([]);
+    expect(
+      retried([
+        failed("second", null),
+        { id: "first", status: "succeeded", message: null },
+      ]),
+    ).toEqual([]);
+    expect(
+      retried([failed("second", null), failed("first", null)], "succeeded"),
+    ).toEqual([]);
   });
 });
 

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { ActivityEntry } from "#shared/hub/hub-contract.ts";
 import { renderWithRouter } from "#client/test-router.tsx";
-import { foldActivity, outcomeOf } from "./activity-fold.ts";
+import { foldActivity, latestStages, outcomeOf } from "./activity-fold.ts";
+import { ResultSummary } from "./list-page.tsx";
 import { ActivityList, isFailure } from "./activity-list.tsx";
 import { actionLabel } from "./activity-labels.ts";
 
@@ -338,5 +339,81 @@ describe("the activity list", () => {
 
   it("says so when there is no activity", () => {
     expect(render([])).toBe('<p class="empty">No activity yet.</p>');
+  });
+});
+
+describe("what an activity row says", () => {
+  it("lists each stage of a run once, at its newest state", () => {
+    const [run = ""] = rows(
+      render([
+        stage(FIRST, "step-sync", "running"),
+        stage(FIRST, "step-apply-safety", "succeeded"),
+        stage(FIRST, "step-apply-safety", "running"),
+      ]),
+    );
+    expect(run.match(/>step-apply-safety</gu)).toHaveLength(1);
+    expect(run).toMatch(
+      /step-apply-safety<\/span><span class="status status-succeeded">.*2 updates/u,
+    );
+    expect(run).toContain(">step-sync<");
+  });
+
+  it("says why a deployment failed when the list read its message", () => {
+    const [failed = ""] = rows(
+      render([
+        {
+          ...entry("deployment.failed", FIRST),
+          reason: "Job delivery-worker-jobs/delivery-1 failed",
+        },
+      ]),
+    );
+    expect(failed).toContain(
+      '<span class="activity-reason">Job delivery-worker-jobs/delivery-1 failed</span>',
+    );
+    const [silent = ""] = rows(
+      render([{ ...entry("deployment.failed", FIRST), reason: null }]),
+    );
+    expect(silent).not.toContain("activity-reason");
+  });
+});
+
+describe("latestStages", () => {
+  it("folds a stage's lifecycle into its newest write, keeping the fetched order", () => {
+    expect(
+      latestStages([
+        stage(FIRST, "step-sync", "running"),
+        stage(FIRST, "step-apply-safety", "succeeded"),
+        stage(FIRST, "step-apply-safety", "running"),
+        stage(FIRST, "step-render", "succeeded"),
+      ]).map(({ stage: key, status, writes }) => [key, status, writes]),
+    ).toEqual([
+      ["step-sync", "running", 1],
+      ["step-apply-safety", "succeeded", 2],
+      ["step-render", "succeeded", 1],
+    ]);
+  });
+});
+
+/** The activity page's result line for `count` rows folded from `entries` entries. */
+function summary(count: number, entries: number) {
+  return renderWithRouter(
+    <ResultSummary
+      count={count}
+      noun={count === entries ? ["entry", "entries"] : ["row", "rows"]}
+      entries={{ count: entries, noun: ["entry", "entries"] }}
+      filtered={false}
+      older={false}
+      problems={[]}
+      clearTo="/activity"
+    />,
+  );
+}
+
+describe("the activity result line", () => {
+  it("counts the rows it shows, and the entries they fold when that differs", () => {
+    expect(summary(21, 25)).toContain(
+      "Showing 21 rows of 25 entries, newest first.",
+    );
+    expect(summary(25, 25)).toContain("Showing 25 entries, newest first.");
   });
 });

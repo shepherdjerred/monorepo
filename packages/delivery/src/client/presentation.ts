@@ -49,8 +49,12 @@ export function revisionNumbers(detail: {
     versionSetRevisionId: string;
     versionSetRevision: number;
   }[];
+  releaseRevisions?: readonly { id: string; revision: number }[] | undefined;
 }): ReadonlyMap<string, number> {
   return new Map([
+    ...(detail.releaseRevisions ?? []).map(
+      (release) => [release.id, release.revision] as const,
+    ),
     ...detail.deployments.map(
       (deployment) =>
         [

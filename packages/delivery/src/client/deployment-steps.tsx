@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import type { DeploymentDetail as Detail } from "#shared/contract.ts";
+import type { DeploymentDetailV2 } from "#shared/model/contract.ts";
 import { Disclosure } from "#client/components/disclosure.tsx";
 import { Identifier } from "#client/components/identifier.tsx";
 import { Receipt } from "#client/components/receipt.tsx";
@@ -124,6 +125,62 @@ export function stepEnd(
   return stage.status === "running" ? null : stage.updatedAt;
 }
 
+/**
+ * What a step's message adds to its key and status. Executors often write
+ * `step-sync: running`, which repeats both, and once the step is interrupted
+ * the repeated status is stale, so that reads as nothing. A message that
+ * starts with its own key loses the key.
+ */
+export function stepMessage(stage: Pick<Stage, "key" | "status" | "message">) {
+  const prefix = `${stage.key}: `;
+  const text = (
+    stage.message.startsWith(prefix)
+      ? stage.message.slice(prefix.length)
+      : stage.message
+  ).trim();
+  return text === "" || text === stage.status ? null : text;
+}
+
+type RecoveryIntents = DeploymentDetailV2["recoveryIntents"];
+
+/** The operation phase an independent readback names, such as `phase Failed`. */
+const READBACK_PHASE = /\bphase (?<phase>[A-Z][A-Za-z]*)\b/u;
+
+/**
+ * What the newest recovery intent settled, once it succeeded: which intent,
+ * the reading its independent reader recorded, and the operation phase that
+ * reading names. Null while no intent has settled, or when the newest one
+ * failed, because then nothing has read the outcome back.
+ */
+export function recoveryReading(intents: RecoveryIntents | undefined) {
+  const intent = (intents ?? []).toSorted(
+    (left, right) => right.sequence - left.sequence,
+  )[0];
+  if (intent?.outcome !== "succeeded") return null;
+  const summary = intent.evidence.at(0)?.summary;
+  const parsed = summary === undefined ? null : parseEvidenceSummary(summary);
+  const reading = parsed?.kind === "text" ? parsed.text : null;
+  return {
+    id: intent.id,
+    sequence: intent.sequence,
+    reading,
+    phase:
+      reading === null
+        ? null
+        : (READBACK_PHASE.exec(reading)?.groups?.["phase"] ?? null),
+  };
+}
+
+export type RecoveryReading = NonNullable<ReturnType<typeof recoveryReading>>;
+
+/** An interrupted step's state, once recovery has read its operation back. */
+export function interruptedLabel(reading: RecoveryReading | null) {
+  if (reading === null) return "interrupted · outcome unknown";
+  return reading.phase === null
+    ? `interrupted · settled by recovery intent ${String(reading.sequence)}`
+    : `interrupted · recovery read back phase ${reading.phase}`;
+}
+
 /** What an empty step list means for a deployment in this state. */
 export function noStepsMessage(deployment: DeploymentState) {
   switch (deployment.status) {
@@ -146,12 +203,15 @@ export function noStepsMessage(deployment: DeploymentState) {
 export function StepStatus({
   stage,
   deployment,
+  reading = null,
 }: {
   stage: Pick<Stage, "status">;
   deployment: DeploymentState;
+  /** What a settled recovery read back, which an interrupted step reports. */
+  reading?: RecoveryReading | null;
 }) {
   return interrupted(stage, deployment) ? (
-    <Status value="unknown" label="interrupted · outcome unknown" />
+    <Status value="unknown" label={interruptedLabel(reading)} />
   ) : (
     <Status value={stage.status} />
   );
@@ -162,8 +222,13 @@ export function StepStatus({
  * settled step folds its evidence away; a failed, running or interrupted one
  * shows it.
  */
-export function StepTimeline({ detail }: { detail: Detail }) {
+export function StepTimeline({
+  detail,
+}: {
+  detail: Detail & { recoveryIntents?: RecoveryIntents };
+}) {
   const { deployment } = detail;
+  const reading = recoveryReading(detail.recoveryIntents);
   if (detail.stages.length === 0)
     return <p className="empty">{noStepsMessage(deployment)}</p>;
   const groups = grouped(detail);
@@ -176,8 +241,8 @@ export function StepTimeline({ detail }: { detail: Detail }) {
     <ol className="step-timeline">
       {stages.map((stage) => {
         const items = groups.steps.get(stage.key) ?? [];
-        const message =
-          stage.message === "" ? null : parseEvidenceSummary(stage.message);
+        const text = stepMessage(stage);
+        const message = text === null ? null : parseEvidenceSummary(text);
         const record = message?.kind === "record" ? message : null;
         return (
           <li
@@ -186,7 +251,11 @@ export function StepTimeline({ detail }: { detail: Detail }) {
           >
             <div className="step-head">
               <strong className="step-key">{stage.key}</strong>
-              <StepStatus stage={stage} deployment={deployment} />
+              <StepStatus
+                stage={stage}
+                deployment={deployment}
+                reading={reading}
+              />
               {stage.startedAt !== null && (
                 <Duration
                   start={stage.startedAt}

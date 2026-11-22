@@ -93,7 +93,7 @@ describe("release state presentation", () => {
     const html = renderWithRouter(
       <EnvironmentState
         environment={{ ...environment, observedAt: "2026-10-16T00:00:00.000Z" }}
-        versions={[]}
+        revisions={new Map()}
         now={Date.parse("2026-10-16T15:25:00.000Z")}
       />,
     );
@@ -143,7 +143,11 @@ describe("release state presentation", () => {
   });
   test("renders desired, observed, and unknown acceptance as separate evidence", () => {
     const html = renderWithRouter(
-      <EnvironmentState environment={environment} versions={[]} now={0} />,
+      <EnvironmentState
+        environment={environment}
+        revisions={new Map()}
+        now={0}
+      />,
     );
     expect(html).toContain("Desired");
     expect(html).toContain("arcade:2");
@@ -159,12 +163,12 @@ describe("release state presentation", () => {
     const html = renderWithRouter(
       <EnvironmentState
         environment={{ ...environment, desiredVersionSetRevisionId: loaded.id }}
-        versions={[loaded]}
+        revisions={new Map([[loaded.id, loaded.revision]])}
         now={0}
       />,
     );
     expect(html).toContain(
-      `<a href="/versions/${encodeURIComponent(loaded.id)}"><span class="revision">r${String(loaded.revision)}</span></a>`,
+      `<a href="/versions/${encodeURIComponent(loaded.id)}"><span class="revision" title="${loaded.id}">r${String(loaded.revision)}</span></a>`,
     );
     expect(html).not.toContain(" @ ");
   });
@@ -196,5 +200,28 @@ describe("release state presentation", () => {
     });
     // A set revision in neither list has no number, so the page shows its id.
     expect(numbers.get("arcade:1")).toBeUndefined();
+  });
+  test("the release state's own set revisions carry their numbers, however old", () => {
+    const numbers = revisionNumbers({
+      versionSets: [{ id: "arcade:9", revision: 9 }],
+      deployments: [],
+      releaseRevisions: [{ id: "arcade:1", revision: 1 }],
+    });
+    expect(numbers.get("arcade:1")).toBe(1);
+    const html = renderWithRouter(
+      <EnvironmentState
+        environment={{
+          ...environment,
+          desiredVersionSetRevisionId: "arcade:1",
+          observedVersionSetRevisionId: "arcade:1",
+          acceptedVersionSetRevisionId: "arcade:1",
+        }}
+        revisions={numbers}
+        now={0}
+      />,
+    );
+    expect(html.match(/>r1<\/span>/gu)).toHaveLength(3);
+    expect(html).toContain('title="arcade:1"');
+    expect(html).not.toContain("Unknown");
   });
 });

@@ -1,9 +1,9 @@
-import type { Environment, VersionSetRevision } from "#shared/contract.ts";
+import type { Environment } from "#shared/contract.ts";
 import { observation } from "#client/presentation.ts";
 import { SetRevisionLink } from "#client/model/selection-facts.tsx";
 import { Fact, Facts } from "./facts.tsx";
 
-/** A set revision the release state names: its r-number when loaded, else a short id. */
+/** A set revision the release state names: its r-number, its full id in the title. */
 function Release({
   id,
   revisions,
@@ -21,19 +21,18 @@ function Release({
 /**
  * Desired, observed and accepted are separate claims; show each. The observed
  * one is dated by the deployment that recorded it, not by a live probe.
+ * `revisions` holds the number of every set revision the page read,
+ * the three named here included.
  */
 export function EnvironmentState({
   environment,
-  versions,
+  revisions,
   now,
 }: {
   environment: Environment;
-  versions: VersionSetRevision[];
+  revisions: ReadonlyMap<string, number>;
   now: number;
 }) {
-  const revisions = new Map(
-    versions.map((version) => [version.id, version.revision] as const),
-  );
   return (
     <section className="panel" aria-labelledby="state-heading">
       <h2 id="state-heading">Release state</h2>

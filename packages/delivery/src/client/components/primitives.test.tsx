@@ -132,7 +132,9 @@ describe("DeploymentTable", () => {
     expect(html).toContain(
       `href="/versions/${encodeURIComponent(deployment.versionSetRevisionId)}"`,
     );
-    expect(html).toContain('<span class="revision">r274</span>');
+    expect(html).toContain(
+      `<span class="revision" title="${deployment.versionSetRevisionId}">r274</span>`,
+    );
     expect(html).not.toContain(`>${deployment.versionSetRevisionId}<`);
   });
 

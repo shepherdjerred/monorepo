@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ExactTime, RelativeTime, clockTime, exactTime } from "./time.tsx";
+import {
+  ExactTime,
+  RelativeTime,
+  clockTime,
+  exactTime,
+  titleTime,
+  zoneLabel,
+} from "./time.tsx";
 
 const MOMENT = "2026-11-21T19:27:03.000Z";
 
@@ -45,10 +52,18 @@ describe("clockTime", () => {
   });
 });
 
+describe("zoneLabel", () => {
+  it("names the reader's zone as its offset from UTC, and a title carries it", () => {
+    const zone = zoneLabel(MOMENT);
+    expect(zone).toMatch(/^UTC(?:[+-]\d{1,2}(?::\d{2})?)?$/u);
+    expect(titleTime(MOMENT)).toBe(`${exactTime(MOMENT, "second")} ${zone}`);
+  });
+});
+
 describe("time elements", () => {
   it("a relative time keeps the exact moment in its title, and shows its clock when asked", () => {
     const plain = renderToStaticMarkup(<RelativeTime value={MOMENT} />);
-    expect(plain).toContain(`title="${exactTime(MOMENT, "second")}"`);
+    expect(plain).toContain(`title="${titleTime(MOMENT)}"`);
     expect(plain).not.toContain('class="clock"');
     const clock = renderToStaticMarkup(<RelativeTime value={MOMENT} clock />);
     expect(clock).toContain('<span class="clock">');

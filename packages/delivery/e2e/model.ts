@@ -383,9 +383,81 @@ export async function seedModelBrowser(delivery: Delivery, database: Database) {
     },
     testOperator,
   );
+  await settledInterruption(delivery, database, fourth);
   await quarantine(delivery, database, fourth);
   await seedWaitingPlan(delivery, database);
   await seedOperatorRun(delivery);
+}
+
+/** The request id of the beta deploy whose interrupted sync recovery has read back. */
+export const SETTLED_REQUEST = "model/beta/settled";
+
+/**
+ * A beta deploy whose sync outlived its executor, as the quarantine below,
+ * but whose recovery intent an independent reader has since settled: the
+ * operation ended Failed, the locks are released, and the executor's
+ * "may still be active" is stale (4.15).
+ */
+async function settledInterruption(
+  delivery: Delivery,
+  database: Database,
+  setId: string,
+) {
+  const deployment = await delivery.createDeployment(
+    {
+      requestId: SETTLED_REQUEST,
+      environmentId: MODEL_BETA,
+      expectedGeneration: await generation(database, MODEL_BETA),
+      kind: "deploy",
+      versionSetRevisionId: setId,
+    },
+    testOperator,
+  );
+  await delivery.claim(deployment.id, testExecutor);
+  await delivery.stage(
+    deployment.id,
+    {
+      key: "step-sync",
+      status: "running",
+      operationId: `${deployment.id}/step-sync`,
+      message: "step-sync: running",
+      evidence: [],
+    },
+    testExecutor,
+  );
+  await delivery.finish(
+    deployment.id,
+    {
+      status: "failed",
+      message:
+        "External operation may still be active; inspect its recorded identity before releasing ownership",
+      recoveryRequired: true,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  const intent = await delivery.requestRecoveryIntent(
+    deployment.id,
+    {
+      requestId: "model/beta/settled/recovery",
+      reason: "Independent Application readback of the recorded sync",
+      expectedGeneration: await generation(database, MODEL_BETA),
+    },
+    testOperator,
+  );
+  await delivery.settleArgoIntent(
+    intent.id,
+    "Settled by independent Application readback of the finished operation",
+    testOperator,
+    [
+      {
+        kind: "reconciliation",
+        operationId: `${deployment.id}/operation-6`,
+        summary:
+          "Independent Application readback: arcade-beta, operation 6, phase Failed, finished 2026-11-22T03:27:16Z",
+      },
+    ],
+  );
 }
 
 /**

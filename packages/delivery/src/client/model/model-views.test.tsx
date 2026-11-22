@@ -297,7 +297,7 @@ describe("environment model panels", () => {
     const selection = html.slice(0, html.indexOf("Rollback candidates"));
     // The accepted set revision reads as its number and links to its page.
     expect(selection).toMatch(
-      /<a[^>]*href="\/versions\/scout-for-lol%3Ar42"[^>]*><span class="revision">r42<\/span><\/a>/u,
+      /<a[^>]*href="\/versions\/scout-for-lol%3Ar42"[^>]*><span class="revision" title="scout-for-lol:r42">r42<\/span><\/a>/u,
     );
     expect(selection).toContain("Frozen by");
     expect(selection).toContain('href="/deployments/scout-prod-42"');
@@ -345,7 +345,7 @@ describe("environment model panels", () => {
       html.slice(html.indexOf("candidates")),
     );
     expect(first).toMatch(
-      /<a[^>]*href="\/versions\/scout-for-lol%3Ar41"[^>]*><span class="revision">r41<\/span><\/a>/u,
+      /<a[^>]*href="\/versions\/scout-for-lol%3Ar41"[^>]*><span class="revision" title="scout-for-lol:r41">r41<\/span><\/a>/u,
     );
     expect(first).toContain('recipe <span class="mono">scout-prod/4</span>');
     expect(first).toContain(
@@ -480,13 +480,13 @@ describe("deployment model", () => {
     });
     // Each selection names its release by number and links to its page.
     expect(html).toContain(
-      `<a href="/versions/scout-for-lol%3Ar41"><span class="revision">r41</span></a>`,
+      `<a href="/versions/scout-for-lol%3Ar41"><span class="revision" title="scout-for-lol:r41">r41</span></a>`,
     );
     expect(html).toContain("Restores the selection accepted by");
     expect(html).toContain("scout-prod-41");
     expect(html).toContain("Previous accepted selection");
     expect(html).toContain(
-      `<a href="/versions/scout-for-lol%3Ar42"><span class="revision">r42</span></a>`,
+      `<a href="/versions/scout-for-lol%3Ar42"><span class="revision" title="scout-for-lol:r42">r42</span></a>`,
     );
     expect(html).toContain("granted");
   });

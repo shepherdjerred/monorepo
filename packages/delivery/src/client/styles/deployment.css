@@ -63,6 +63,40 @@
   font-weight: var(--weight-semibold);
   overflow-wrap: anywhere;
 }
+.failure-remedies {
+  margin: 0 0 var(--space-2);
+  padding-left: var(--space-4);
+}
+/* The Job and UID a failure names, each whole and copyable. */
+.failure-pointers {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-2);
+}
+.failure-pointers > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-0) var(--space-2);
+  align-items: baseline;
+  min-width: 0;
+}
+.failure-pointers dt {
+  font-weight: var(--weight-semibold);
+}
+.failure-pointers dd {
+  margin: 0;
+  min-width: 0;
+}
+.copyable {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-0) var(--space-2);
+  align-items: baseline;
+  min-width: 0;
+}
+.copyable-value {
+  overflow-wrap: anywhere;
+}
 .step-head,
 .evidence-head {
   display: flex;

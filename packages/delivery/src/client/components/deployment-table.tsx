@@ -39,7 +39,10 @@ function Release({ deployment }: { deployment: DeploymentListItem }) {
       params={{ versionSetId: deployment.versionSetRevisionId }}
       aria-label={`Version set ${revisionLabel(deployment.versionSetRevision)}`}
     >
-      <Revision revision={deployment.versionSetRevision} />
+      <Revision
+        revision={deployment.versionSetRevision}
+        id={deployment.versionSetRevisionId}
+      />
     </Link>
   );
 }

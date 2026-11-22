@@ -132,7 +132,7 @@ function EnvironmentPage() {
       <div className="detail-grid">
         <EnvironmentState
           environment={environment}
-          versions={detail.versionSets}
+          revisions={revisions}
           now={now}
         />
         <RuntimePanel environmentId={environment.id} />
@@ -195,6 +195,7 @@ function EnvironmentPage() {
         <DeploymentTable
           deployments={detail.deployments}
           empty="No deployments to this environment yet."
+          showEnvironment={false}
         />
       </section>
     </>

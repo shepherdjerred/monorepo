@@ -53,7 +53,7 @@ function namesFrom(
     service: (item) => titles.get(item.serviceId) ?? item.serviceId,
     environment: (item) =>
       environments.get(item.environmentId) ?? item.environmentId,
-    revision: (item) => numbers.get(item.id),
+    revision: (item) => item.versionSetRevision ?? numbers.get(item.id),
   };
 }
 

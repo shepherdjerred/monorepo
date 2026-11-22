@@ -15,7 +15,7 @@ import { ShortSha, ToolLinks } from "#client/components/links.tsx";
 import {
   ciStatus,
   filterPipelines,
-  lastExecuted,
+  lastDeployment,
 } from "./pipeline-list-model.ts";
 import { PipelineSearchSchema, formSearch } from "./search-schemas.ts";
 import { Route as rootRoute } from "./root.tsx";
@@ -103,8 +103,37 @@ function StageStrip({ pipeline }: { pipeline: HubService }) {
   );
 }
 
+/**
+ * When the pipeline last built and last deployed, each named: a build and a
+ * deployment are different events, and a deployment of an older build is
+ * still the newest thing that happened to the pipeline.
+ */
+function LastActivity({ pipeline }: { pipeline: HubService }) {
+  const deployed = lastDeployment(pipeline);
+  const build = pipeline.latestBuild;
+  return (
+    <span className="last-activity">
+      <span>
+        Last build{" "}
+        {build === null ? (
+          <span className="muted">never</span>
+        ) : (
+          <RelativeTime value={build.createdAt} />
+        )}
+      </span>
+      <span>
+        Last deployment{" "}
+        {deployed === null ? (
+          <span className="muted">never</span>
+        ) : (
+          <RelativeTime value={deployed} />
+        )}
+      </span>
+    </span>
+  );
+}
+
 function PipelineRow({ pipeline }: { pipeline: HubService }) {
-  const execution = pipeline.latestExecution;
   return (
     <tr>
       <th scope="row" data-label="Name">
@@ -122,12 +151,8 @@ function PipelineRow({ pipeline }: { pipeline: HubService }) {
       <td data-label="Stages">
         <StageStrip pipeline={pipeline} />
       </td>
-      <td data-label="Last executed">
-        {execution === null ? (
-          <span className="muted">Never</span>
-        ) : (
-          <RelativeTime value={lastExecuted(execution)} />
-        )}
+      <td data-label="Last activity">
+        <LastActivity pipeline={pipeline} />
       </td>
     </tr>
   );
@@ -146,6 +171,8 @@ function PipelinesPage() {
         description="Every pipeline from commit to runtime: its newest CI run, and where each environment stands."
         actions={<ToolLinks links={data.tools} />}
       />
+      {/* What needs someone leads, as on the overview. */}
+      <AttentionPanel items={data.attention} />
       <section className="panel" aria-labelledby="pipelines-heading">
         <div className="section-heading">
           <h2 id="pipelines-heading">
@@ -207,7 +234,7 @@ function PipelinesPage() {
                   <th scope="col">Latest CI run</th>
                   <th scope="col">Source revision</th>
                   <th scope="col">Stages</th>
-                  <th scope="col">Last executed</th>
+                  <th scope="col">Last activity</th>
                 </tr>
               </thead>
               <tbody>
@@ -219,7 +246,6 @@ function PipelinesPage() {
           </div>
         )}
       </section>
-      <AttentionPanel items={data.attention} />
     </>
   );
 }

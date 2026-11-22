@@ -17,8 +17,10 @@ import {
   deploymentSubjects,
   latestBuilds,
   latestDeployments,
+  priorDeployments,
   type AlarmedRelease,
   type AttentionDeployment,
+  type PriorDeployment,
 } from "./attention.ts";
 import { promotionOrder } from "./topology.ts";
 import { servicePlacement } from "./views.ts";
@@ -56,6 +58,8 @@ export type GridRecord = {
   environments: readonly EnvironmentRow[];
   /** The newest deployment of each environment, by environment id. */
   latest: ReadonlyMap<string, GridDeployment>;
+  /** The deployments just before each environment's newest, newest first, by environment id. */
+  prior: ReadonlyMap<string, readonly PriorDeployment[]>;
   /** Deployments awaiting approval or a saved-plan decision, newest first. */
   awaiting: readonly AttentionDeployment[];
   /** The newest build of each service, by service id. */
@@ -209,6 +213,7 @@ export function buildGrid(
       latest: [...record.latest.values()].filter((deployment) =>
         watched.has(deployment.environmentId),
       ),
+      prior: record.prior,
       alarms: environments.flatMap((env): AlarmedRelease[] => {
         const at = alarmedAt(record, env);
         if (at === null) return [];
@@ -247,18 +252,20 @@ export function buildGrid(
 }
 
 /**
- * `GET /hub/grid`. Nine statements whatever the number of services: every row
+ * `GET /hub/grid`. Ten statements whatever the number of services: every row
  * is read by set, never per service or per environment, and no execution is
  * traced.
  */
 export async function hubGrid(database: Database): Promise<HubGrid> {
-  const [services, environments, latest, builds, awaiting] = await Promise.all([
-    database.service.findMany({ select: { id: true, lifecycle: true } }),
-    database.environment.findMany(),
-    latestDeployments(database),
-    latestBuilds(database),
-    awaitingDecisions(database),
-  ]);
+  const [services, environments, latest, prior, builds, awaiting] =
+    await Promise.all([
+      database.service.findMany({ select: { id: true, lifecycle: true } }),
+      database.environment.findMany(),
+      latestDeployments(database),
+      priorDeployments(database),
+      latestBuilds(database),
+      awaitingDecisions(database),
+    ]);
   const ids = <T>(pick: (env: (typeof environments)[number]) => T | null) =>
     environments.flatMap((env) => {
       const value = pick(env);
@@ -292,6 +299,7 @@ export async function hubGrid(database: Database): Promise<HubGrid> {
     services,
     environments,
     latest,
+    prior,
     awaiting,
     builds,
     revisions: new Map(sets.map((row) => [row.id, row.revision])),

@@ -8,6 +8,17 @@ import { servicePlacement } from "./views.ts";
 
 type DeploymentRow = Prisma.DeploymentGetPayload<object>;
 const IdRowsSchema = z.array(z.object({ id: z.string() }));
+const PriorRowsSchema = z.array(
+  z.object({
+    id: z.string(),
+    environmentId: z.string(),
+    status: z.string(),
+    message: z.string().nullable(),
+  }),
+);
+
+/** What a failing streak reads from a deployment before the newest. */
+export type PriorDeployment = Pick<DeploymentRow, "id" | "status" | "message">;
 
 /**
  * How long a deployment may sit queued with no stage started before it needs
@@ -16,6 +27,16 @@ const IdRowsSchema = z.array(z.object({ id: z.string() }));
  */
 export const QUEUED_ATTENTION_MINUTES = 15;
 const MINUTE = 60_000;
+
+/**
+ * How many deployments in a row must have failed before a new one of the
+ * same environment reads as failing repeatedly: one failure is a failure,
+ * two and another attempt is a loop someone should break.
+ */
+export const FAILING_STREAK = 2;
+
+/** The deployment states a new attempt is in before it has a result. */
+const ATTEMPTING: ReadonlySet<string> = new Set(["queued", "running"]);
 
 /** What an attention item reads from a deployment. */
 export type AttentionDeployment = Pick<
@@ -64,6 +85,35 @@ export async function latestDeployments(database: Database) {
     where: { id: { in: rows.map((row) => row.id) } },
   });
   return new Map(deployments.map((row) => [row.environmentId, row]));
+}
+
+/**
+ * The deployments just before each environment's newest, newest first: up to
+ * `FAILING_STREAK` of them per environment, by environment id. One ranked
+ * read for every environment, never one per environment.
+ */
+export async function priorDeployments(database: Database) {
+  const rows = PriorRowsSchema.parse(
+    await database.$queryRaw`
+    SELECT "id", "environmentId", "status", "message" FROM (
+      SELECT "id", "environmentId", "status", "message", ROW_NUMBER() OVER (
+        PARTITION BY "environmentId" ORDER BY "createdAt" DESC, "id" DESC
+      ) AS "rank" FROM "Deployment"
+    ) AS "ranked"
+    WHERE "rank" BETWEEN 2 AND ${FAILING_STREAK + 1}
+    ORDER BY "environmentId", "rank"
+  `,
+  );
+  const prior = new Map<string, PriorDeployment[]>();
+  for (const { environmentId, ...row } of rows)
+    prior.set(environmentId, [...(prior.get(environmentId) ?? []), row]);
+  return prior;
+}
+
+/** A recorded message's first line, the cause before any detail under it. */
+export function firstLine(message: string | null) {
+  const line = message?.split("\n", 1)[0]?.trim() ?? "";
+  return line === "" ? null : line;
 }
 
 /**
@@ -143,16 +193,53 @@ function revisionLabel(revisions: ReadonlyMap<string, number>, setId: string) {
   return `r${String(revision)}`;
 }
 
+/**
+ * A new attempt after `FAILING_STREAK` failures in a row, as an item that
+ * links the newest failure, which says why. Null when the deployments
+ * before it did not all fail.
+ */
+function failingItem(
+  deployment: AttentionDeployment,
+  prior: readonly PriorDeployment[],
+  subject: string,
+  what: string,
+): Attention | null {
+  const streak = prior.slice(0, FAILING_STREAK);
+  const [newest] = streak;
+  if (
+    newest === undefined ||
+    streak.length < FAILING_STREAK ||
+    !ATTEMPTING.has(deployment.status) ||
+    streak.some((entry) => entry.status !== "failed")
+  )
+    return null;
+  const reason = firstLine(newest.message);
+  return {
+    kind: "failed",
+    title: `${subject} is failing repeatedly`,
+    detail: `The last ${String(streak.length)} deployments failed${reason === null ? "" : `, the newest with: ${reason}`}. ${what} is ${deployment.status} again.`,
+    at: deployment.createdAt.toISOString(),
+    target: { kind: "deployment", id: newest.id },
+    serviceId: deployment.serviceId,
+  };
+}
+
 /** One environment's newest deployment as an item, when it needs someone. */
 function deploymentItem(
   deployment: AttentionDeployment,
   subject: string,
-  input: { revisions: ReadonlyMap<string, number>; now: Date },
+  input: {
+    revisions: ReadonlyMap<string, number>;
+    now: Date;
+    prior: readonly PriorDeployment[];
+  },
 ): Attention | null {
   const target = { kind: "deployment", id: deployment.id } as const;
   const at = deployment.finishedAt?.toISOString() ?? null;
   // "The deploy of r274": what this item is about, so no two read alike.
   const what = `The ${deployment.kind} of ${revisionLabel(input.revisions, deployment.versionSetRevisionId)}`;
+  const failing = failingItem(deployment, input.prior, subject, what);
+  if (failing !== null) return failing;
   if (deployment.recoveryRequired)
     return {
       kind: "recovery",
@@ -194,7 +281,8 @@ function deploymentItem(
 /**
  * What someone has to act on, newest first: deployments and saved plans
  * awaiting a decision; environments whose newest deployment failed, requires
- * recovery, or has sat queued longer than `QUEUED_ATTENTION_MINUTES`;
+ * recovery, retries after `FAILING_STREAK` failures in a row, or has sat
+ * queued longer than `QUEUED_ATTENTION_MINUTES`;
  * environments whose accepted release a monitor alarm fired on; and services
  * whose newest build failed qualification. Each item says its reason once.
  */
@@ -202,6 +290,8 @@ export function attentionItems(input: {
   awaiting: readonly AttentionDeployment[];
   /** The newest deployment of each environment under watch. */
   latest: Iterable<AttentionDeployment>;
+  /** The deployments before each environment's newest, newest first, by environment id. */
+  prior: ReadonlyMap<string, readonly PriorDeployment[]>;
   alarms: readonly AlarmedRelease[];
   failedBuilds: readonly FailedBuild[];
   subject: (deployment: { serviceId: string; environmentId: string }) => string;
@@ -226,7 +316,10 @@ export function attentionItems(input: {
     };
   });
   for (const deployment of input.latest) {
-    const item = deploymentItem(deployment, subject(deployment), input);
+    const item = deploymentItem(deployment, subject(deployment), {
+      ...input,
+      prior: input.prior.get(deployment.environmentId) ?? [],
+    });
     if (item !== null) items.push(item);
   }
   for (const alarm of input.alarms)

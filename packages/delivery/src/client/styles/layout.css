@@ -132,11 +132,16 @@ main > :empty {
 .page-header h1:focus {
   outline: none;
 }
+/* The ring sits on the heading's box and clears the eyebrow above it. */
 .page-header h1:focus-visible {
   outline: 2px solid var(--focus);
+  outline-offset: 0;
 }
 .eyebrow {
   margin-bottom: var(--space-0);
+}
+.page-header .eyebrow {
+  margin-bottom: var(--space-1);
 }
 .subtitle {
   color: var(--text-muted);

@@ -99,7 +99,12 @@ export async function environmentDetail(
   environmentId: string,
 ): Promise<EnvironmentPageDetail> {
   const env = await readEnvironment(database, environmentId);
-  const [pipelineRow, sourceEnvironment, versionRows, deployments] =
+  const named = [
+    env.desiredVersionSetRevisionId,
+    env.observedVersionSetRevisionId,
+    env.acceptedVersionSetRevisionId,
+  ].flatMap((id) => (id === null ? [] : [id]));
+  const [pipelineRow, sourceEnvironment, versionRows, deployments, released] =
     await Promise.all([
       database.pipeline.findUnique({ where: { id: env.pipelineRevisionId } }),
       env.promotionSourceEnvironmentId === null
@@ -114,6 +119,10 @@ export async function environmentDetail(
         where: { environmentId },
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
         take: 20,
+      }),
+      database.versionSet.findMany({
+        where: { id: { in: named } },
+        select: { id: true, revision: true },
       }),
     ]);
   const pipeline = PipelineRevisionSchema.parse(
@@ -131,6 +140,7 @@ export async function environmentDetail(
       versionRows.map((row) => version(database, row.id)),
     ),
     deployments: await listItems(database, deployments),
+    releaseRevisions: released,
     links:
       env.application === null ? [] : [argocdApplicationLink(env.application)],
   };

@@ -43,7 +43,7 @@ export function SetRevision({
   return revision === undefined ? (
     <Identifier value={id} />
   ) : (
-    <Revision revision={revision} />
+    <Revision revision={revision} id={id} />
   );
 }
 

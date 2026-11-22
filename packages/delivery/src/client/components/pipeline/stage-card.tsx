@@ -75,7 +75,10 @@ function ActionRow({ action }: { action: PipelineAction }) {
         {detail !== null && <p>{detail}</p>}
         <p className="action-meta">
           {action.startedAt !== null && (
-            <Duration start={action.startedAt} end={action.finishedAt} />
+            <>
+              {action.spanLabel !== undefined && `${action.spanLabel} `}
+              <Duration start={action.startedAt} end={action.finishedAt} />
+            </>
           )}
           {action.startedAt === null && action.finishedAt !== null && (
             <RelativeTime value={action.finishedAt} />

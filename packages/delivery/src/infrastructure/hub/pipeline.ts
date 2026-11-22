@@ -33,6 +33,8 @@ const AUTOMATIC: Transition = {
   sourceEnvironmentId: null,
 };
 const iso = (value: Date | null) => value?.toISOString() ?? null;
+/** What a build stage's qualification action's duration measures. */
+const QUALIFICATION_SPAN = "qualification check";
 
 function sourceStage(
   build: BuildRow | null,
@@ -96,6 +98,9 @@ function buildStage(
                   build.createdAt.toISOString()),
             target: { kind: "build", id: build.id },
             links: buildView(build).links,
+            // From recording the build to checking its CI result: not how
+            // long CI ran, which Delivery does not record.
+            spanLabel: QUALIFICATION_SPAN,
           },
         ];
   return {
