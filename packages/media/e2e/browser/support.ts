@@ -124,6 +124,20 @@ export async function horizontalOverflow(page: Page): Promise<number> {
 }
 
 /**
+ * Makes the next page a signed-out one. The fixture API always has someone
+ * signed in; this is the answer a browser with no session gets, and the
+ * client shows the sign-in page for it.
+ */
+export async function signedOut(page: Page) {
+  await page.route("**/api/v1/me", async (route) =>
+    route.fulfill({
+      status: 401,
+      json: { error: { code: "unauthorized", message: "Sign in" } },
+    }),
+  );
+}
+
+/**
  * Everything a page can do wrong without failing an assertion on its text.
  * Content-Security-Policy violations are watched for every test, by the
  * suite's own `test` above.

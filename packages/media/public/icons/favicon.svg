@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    The mark of icon.svg for a browser tab, redrawn on the 32-pixel grid a tab
+    paints it on: stems 4 wide with every straight edge on a pixel boundary,
+    the mark larger in its tile, and no hairline edge, which a tab cannot
+    show.
+
+    This file is the favicon and the source of favicon-32.png
+    (`bun scripts/render-icons.ts`).
+  -->
+  <rect width="32" height="32" rx="7" fill="#141918" />
+  <path
+    d="M6 22V16a4 4 0 0 1 8 0V22M14 16a4 4 0 0 1 8 0V22"
+    fill="none"
+    stroke="#eef0e9"
+    stroke-width="4"
+  />
+  <circle cx="28" cy="20" r="2" fill="#e9b878" />
+</svg>

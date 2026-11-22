@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!--
+    The mark of icon.svg for an iOS home screen. iOS rounds the corners
+    itself and paints transparency black, so Spruce runs to every edge and
+    the tile has no corner or edge of its own. The mark is the size it is in
+    icon.svg.
+
+    Source of apple-touch-icon.png (`bun scripts/render-icons.ts`).
+  -->
+  <rect width="512" height="512" fill="#141918" />
+  <g transform="translate(77 170) scale(1.72)">
+    <path
+      d="M15 100V47.5a32.5 32.5 0 0 1 65 0V100M80 47.5a32.5 32.5 0 0 1 65 0V100"
+      fill="none"
+      stroke="#eef0e9"
+      stroke-width="30"
+    />
+    <circle cx="191" cy="83" r="17" fill="#e9b878" />
+  </g>
+</svg>

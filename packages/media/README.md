@@ -1226,6 +1226,64 @@ the table reads as neutral.
 DM Sans and Manrope are bundled from `@fontsource-variable` and served from
 `/assets`; the client requests nothing from another origin.
 
+### Installable web app
+
+Media can be installed from the browser: added to a phone's home screen or
+installed as a desktop app, it opens in its own window at `/` with no browser
+toolbar. `public/manifest.webmanifest` declares that, and `index.html` links it
+with the icons. A browser that does not read manifests shows the same site in a
+tab.
+
+| File in `public/icons/`                        | Used for                                                          |
+| ---------------------------------------------- | ----------------------------------------------------------------- |
+| `favicon.svg`, `favicon-32.png`                | The tab icon. The PNG is for a browser that takes no SVG favicon. |
+| `icon.svg`, `icon-192.png`, `icon-512.png`     | The app icon the manifest names, shown as drawn.                  |
+| `icon-maskable.svg`, `icon-maskable-512.png`   | The app icon for a launcher that cuts its own shape.              |
+| `apple-touch-icon.svg`, `apple-touch-icon.png` | The iOS home screen, 180 pixels.                                  |
+
+The mark is the `m.` of the shell's wordmark: two arches in Mist and the amber
+Lamp dot on a Spruce tile. Each SVG is written by hand and holds that mark for
+one place. The favicon is redrawn on the 32-pixel grid of a tab. The maskable
+icon runs Spruce to every edge and keeps the mark inside the centered circle,
+radius 40% of the icon, that every launcher mask leaves. The iOS icon also runs
+to the edge, because iOS rounds the corners itself and paints transparency
+black.
+
+The PNGs are committed; no build step draws them. After changing an SVG, draw
+them again with the Chromium the browser suite uses, look at the result, and
+commit it:
+
+```sh
+cd packages/media && bun scripts/render-icons.ts
+```
+
+The manifest's `background_color` and `theme_color` are both the dark canvas,
+`--spruce-900`. A manifest holds one color for every device, and that color is
+on screen before any page is: the launch screen, around the icon, which is
+itself Spruce. Once a page has loaded, its `theme-color` metas take over and
+follow the theme, pinned or not (see
+[Client styles and themes](#client-styles-and-themes)).
+
+The manifest and the icons keep fixed addresses, `/manifest.webmanifest` and
+`/icons/*`, instead of hashed names under `/assets`. An installed app, a home
+screen and a bookmark hold those addresses for years, the manifest's own
+address should not move, and Vite rewrites no URL inside a manifest, so hashed
+icons would need a build step that writes the manifest. Vite copies `public/`
+into `dist/` unchanged, and `mountMediaClient`
+(`src/server/static/client.ts`) serves exactly those two paths from it with
+`Cache-Control: no-cache` and an entity tag: a browser asks before each use and
+an unchanged file costs an empty `304`, so a new icon is seen at the next
+check. They are never `immutable`. A path under them with no file is a `404`,
+never the application shell.
+
+Neither path is behind the session. A browser fetches a manifest without
+cookies, and the sign-in page shows the same icons. Anything put in front of
+Media that requires sign-in has to let both through.
+
+There is no service worker, so no offline mode and no web push: installed
+Media needs the network exactly as a tab does. There is no install button
+either; the browser's own menu installs it.
+
 ### Security headers
 
 Every response (the application shell, its assets, and the API) carries the
@@ -1237,17 +1295,17 @@ Content-Security-Policy.
 default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'
 ```
 
-| Directive                                         | What the client does that needs it                                              |
-| ------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `default-src 'none'`                              | Nothing; whatever is not listed below is refused (frames, media, workers).      |
-| `script-src 'self'`                               | The module script and its chunks under `/assets`. No inline script, no `eval`.  |
-| `style-src 'self'`                                | The one stylesheet. No `<style>` element and no `style` attribute.              |
-| `img-src 'self'`, `font-src 'self'`               | The bundled fonts, and artwork once Media serves it. No `data:` or `blob:` URL. |
-| `connect-src 'self'`                              | `fetch` to `/api`, uploads included.                                            |
-| `manifest-src 'self'`                             | Nothing yet; a web app manifest would be Media's own file.                      |
-| `form-action 'self'`                              | Forms submit through script; left alone, they would post to Media.              |
-| `base-uri 'none'`, `object-src 'none'`            | Nothing; no `<base>` and no plugin content.                                     |
-| `frame-ancestors 'none'`, `X-Frame-Options: DENY` | Nothing frames Media, the Hub included.                                         |
+| Directive                                         | What the client does that needs it                                             |
+| ------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `default-src 'none'`                              | Nothing; whatever is not listed below is refused (frames, media, workers).     |
+| `script-src 'self'`                               | The module script and its chunks under `/assets`. No inline script, no `eval`. |
+| `style-src 'self'`                                | The one stylesheet. No `<style>` element and no `style` attribute.             |
+| `img-src 'self'`, `font-src 'self'`               | The bundled fonts, artwork, and the icons. No `data:` or `blob:` URL.          |
+| `connect-src 'self'`                              | `fetch` to `/api`, uploads included.                                           |
+| `manifest-src 'self'`                             | `/manifest.webmanifest` (see [Installable web app](#installable-web-app)).     |
+| `form-action 'self'`                              | Forms submit through script; left alone, they would post to Media.             |
+| `base-uri 'none'`, `object-src 'none'`            | Nothing; no `<base>` and no plugin content.                                    |
+| `frame-ancestors 'none'`, `X-Frame-Options: DENY` | Nothing frames Media, the Hub included.                                        |
 
 The policy names no origin but Media's own, and that is the rule for changing
 it: a new origin, or a new kind of resource (an inline script, a `data:` image,
@@ -1266,7 +1324,8 @@ chunk so it runs before a schema is built in any other.
 
 The policy is enforced wherever the built client is served: by the server, and
 by the browser suite, whose harness (`e2e/browser/server.ts`) puts the same
-middleware in front of `dist/`. Every browser test fails on a
+middleware and the same client mount in front of `dist/`. Every browser test
+fails on a
 `securitypolicyviolation` event or a console error about the policy, and
 `e2e/browser/policy.spec.ts` covers the sign-in page and the two hand-offs to
 another site. The Vite dev server (`bun run dev:fixture`) sends no policy,

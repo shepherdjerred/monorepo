@@ -1,8 +1,12 @@
 import { chown, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { z } from "zod";
 
 const packageRoot = `${import.meta.dir}/..`;
+const WebAppManifestSchema = z.object({
+  icons: z.array(z.object({ src: z.string() })).min(1),
+});
 
 function runSmokeCommand(
   args: string[],
@@ -162,11 +166,25 @@ try {
     const assetResponse = await fetch(new URL(asset, origin));
     if (!assetResponse.ok) throw new Error("Media client asset was not served");
   }
+  // The installable web app: the manifest and every icon it names, which the
+  // image holds only if the build copied `public/` into `dist/`.
+  const manifest = await fetch(new URL("/manifest.webmanifest", origin));
+  if (
+    !manifest.ok ||
+    manifest.headers.get("Content-Type") !== "application/manifest+json"
+  )
+    throw new Error("Media web app manifest was not served");
+  const { icons } = WebAppManifestSchema.parse(await manifest.json());
+  for (const { src } of icons) {
+    const icon = await fetch(new URL(src, origin));
+    if (!icon.ok || icon.headers.get("Content-Type") !== "image/png")
+      throw new Error(`Media web app icon ${src} was not served`);
+  }
   const anonymous = await fetch(`${origin}/api/v1/me`);
   if (anonymous.status !== 401)
     throw new Error("Media API did not require authentication");
   process.stdout.write(
-    "Media runtime smoke: migrated PostgreSQL, API, client routes, assets, and authentication boundary passed\n",
+    "Media runtime smoke: migrated PostgreSQL, API, client routes, assets, web app manifest and icons, and authentication boundary passed\n",
   );
 } finally {
   server.kill("SIGTERM");

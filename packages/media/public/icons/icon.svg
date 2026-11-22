@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!--
+    Media's mark: the "m." of the shell's wordmark, drawn rather than typeset
+    so it needs no font. Two arches on flat feet in Mist, and the wordmark's
+    amber Lamp dot on the baseline, on a Spruce tile with the hairline edge
+    the app's cards have. Colors are the raw palette of
+    src/client/styles/tokens.css: spruce-900, spruce-700, mist, lamp.
+
+    Source of icon-192.png and icon-512.png (`bun scripts/render-icons.ts`).
+    The mark is drawn in a 208 x 100 box: stems 30 wide, 65 apart, and a dot
+    34 across. favicon.svg, icon-maskable.svg and apple-touch-icon.svg hold
+    the same mark for the places that cut or shrink an icon.
+  -->
+  <rect width="512" height="512" rx="112" fill="#141918" />
+  <rect
+    x="4"
+    y="4"
+    width="504"
+    height="504"
+    rx="108"
+    fill="none"
+    stroke="#303934"
+    stroke-width="8"
+  />
+  <g transform="translate(77 170) scale(1.72)">
+    <path
+      d="M15 100V47.5a32.5 32.5 0 0 1 65 0V100M80 47.5a32.5 32.5 0 0 1 65 0V100"
+      fill="none"
+      stroke="#eef0e9"
+      stroke-width="30"
+    />
+    <circle cx="191" cy="83" r="17" fill="#e9b878" />
+  </g>
+</svg>
