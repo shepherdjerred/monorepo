@@ -3015,12 +3015,24 @@ Imported-library household-history holds still require review before cleanup.
 Cleanup policy time is independent of the original SDK, verification, storage,
 writer and SQL deadlines; advancing policy time cannot renew an effect's proof.
 
-Before the first legacy handoff, apply the declared production cutover hold on
-`media-acquisition-enabled` and confirm the live `prod/media` evaluation is off.
-The acquisition worker requires a fresh affirmative flag evaluation before
-allowing effects. Keep the hold until every legacy handoff is complete and each
-imported profile has its selected guide version. Then remove the production
-override and its default-off exception and apply the restored declaration.
+Before the first legacy handoff, point `FLAGS_URL` at the live Flags service.
+From the qualified cutover checkout, preview the acquisition hold for `media/prod`.
+
+```sh
+bun run check-flipt-flag-inventory -- --plan-declared \
+  --deployment media/prod --flag media-acquisition-enabled --json
+```
+
+Confirm the declaration is false with no rollout rules. Run the same command
+with `--apply-declared`, prefixed by
+`toolkit run --env FLAGS_MACHINE_TOKEN --`, to apply it with a revision check.
+Verify the fresh `media/prod` snapshot and the installed Network worker's
+acquisition decision both report false before handing off ownership. The
+worker requires a fresh affirmative flag evaluation before allowing effects.
+Keep the hold until every legacy handoff is complete and each imported profile
+has its selected guide version. Then remove the production override and its
+default-off exception and plan, apply, and verify the restored declaration
+for the same deployment and flag.
 Source cleanup, quarantine, and permanent purge default to disabled. Each
 effect still requires current ownership, intent, and policy checks.
 Tests against injected service responses establish adapter behavior, not live
@@ -3034,21 +3046,19 @@ Media digest. The chart constructor leaves the parallel application absent
 unless given an explicit image selection. Its synthesis recipe must be bound
 to an immutable artifact by Delivery before rendering a deployment.
 
-Before rolling out a qualified Media API image, set `FLIPT_URL` to the intended
-management endpoint and run this create-only bootstrap from the same qualified
-source. Verify the created-key list and fresh scoped readback before the consumer
-starts; preserve existing targeting and the acquisition hold through handoff.
-An older repo Activity image and Flipt's seed initializer do not backfill newly
-declared keys. Do not trigger the global inventory Workflow or use
-`--apply-declared` for this step.
+The Media API, Network, and Files roles read the first-party Flags deployment
+`media/prod`. Streambot uses its own deployment. If any declared Media flags
+are missing before rollout, use the qualified release checkout and `FLAGS_URL`
+to create the missing keys for Media only.
 
 ```sh
-FLIPT_OPERATOR_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/flipt-auth/operator-token' \
-  scripts/onepassword/with-service-account.sh \
-  op run -- env -u OP_SERVICE_ACCOUNT_TOKEN \
-  bun run check-flipt-flag-inventory -- \
-  --apply-missing --environment prod --namespace media
+toolkit run --env FLAGS_MACHINE_TOKEN -- \
+  bun run check-flipt-flag-inventory -- --apply-missing --deployment media/prod
 ```
+
+Verify the created keys and fresh scoped inventory before starting the consumer.
+The create-only command preserves existing targeting. Use the separate reviewed
+rollout procedure above to change an existing acquisition flag.
 
 The [API](src/server/index.ts) commits intent and an outbox row together. The
 [outbox dispatcher](src/automation/store.ts) starts workflows using stable IDs;
