@@ -1,6 +1,10 @@
 //! A mock League client for collector tests: a loopback HTTP server that
 //! answers each path from a table the test can change between passes, and
 //! counts every request it receives.
+//!
+//! It reads each request body to its `content-length` before answering, so it
+//! also stands in for the Scout backend's replay routes, whose uploads carry
+//! the file.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, PoisonError};
@@ -32,13 +36,32 @@ impl MockLcu {
                 tokio::spawn(async move {
                     let mut received = Vec::new();
                     let mut buffer = [0_u8; 4096];
-                    while !received.windows(4).any(|window| window == b"\r\n\r\n") {
+                    let head_end = loop {
+                        if let Some(end) =
+                            received.windows(4).position(|window| window == b"\r\n\r\n")
+                        {
+                            break end + 4;
+                        }
+                        match stream.read(&mut buffer).await {
+                            Ok(0) | Err(_) => return,
+                            Ok(read) => received.extend_from_slice(&buffer[..read]),
+                        }
+                    };
+                    let request = String::from_utf8_lossy(&received[..head_end]).into_owned();
+                    let body_length = request
+                        .lines()
+                        .find_map(|line| {
+                            let (name, value) = line.split_once(':')?;
+                            name.eq_ignore_ascii_case("content-length")
+                                .then(|| value.trim().parse::<usize>().ok())?
+                        })
+                        .unwrap_or_default();
+                    while received.len() < head_end + body_length {
                         match stream.read(&mut buffer).await {
                             Ok(0) | Err(_) => return,
                             Ok(read) => received.extend_from_slice(&buffer[..read]),
                         }
                     }
-                    let request = String::from_utf8_lossy(&received);
                     let path = request.split_whitespace().nth(1).unwrap_or_default();
                     *counts
                         .lock()
@@ -65,6 +88,11 @@ impl MockLcu {
             answers,
             requests,
         })
+    }
+
+    /// The mock's `http://127.0.0.1:<port>` origin.
+    pub(super) fn origin(&self) -> String {
+        self.origin.clone()
     }
 
     /// A client for this mock, sent a lockfile credential like the real one.

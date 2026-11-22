@@ -2,12 +2,14 @@
 
 use std::path::{Path, PathBuf};
 
-use rusqlite::{Connection, OptionalExtension, TransactionBehavior, params};
+use rusqlite::{Connection, OptionalExtension, TransactionBehavior, named_params, params};
 use thiserror::Error;
 use uuid::Uuid;
 
+mod clash;
 mod context;
 mod recovery;
+pub use clash::RefusedClashRead;
 pub use recovery::RecoveryGame;
 
 use crate::protocol::{
@@ -23,6 +25,31 @@ use crate::protocol::{
 /// worse than no key, because it would silently attach one game's roster to
 /// another.
 const LOBBY_BINDING_WINDOW_MILLIS: i64 = 15 * 60 * 1000;
+
+/// How long a replay rejection the server can revisit stands before the
+/// client asks about the file again.
+///
+/// The backend reopens rejections when the rule that produced them was wrong
+/// (a validator that did not understand a new patch's chunks, a remake it
+/// refused), and it can come to vouch for a match it could not vouch for
+/// earlier. A rejection held forever on the device never learns about either,
+/// so these are re-asked once a day. The re-ask is an offer — a digest and a
+/// size, no file bytes — and the file is uploaded only if the server answers
+/// "want"; a repeat refusal restarts the interval.
+///
+/// One day keeps the cost to a single small request per refused file per day,
+/// while a backend fix reaches every device within a day of deploying.
+pub const REPLAY_REJECTION_RECHECK_MILLIS: i64 = 24 * 60 * 60 * 1000;
+
+/// A `rejected_replay` row that still stands at `:now_millis`, given
+/// `:recheck_millis` = [`REPLAY_REJECTION_RECHECK_MILLIS`].
+///
+/// Upload refusals (400, 403) and "never" offers (kept as 409) are the server's
+/// judgment of the match and can change, so they lapse after the re-check
+/// interval. A file too large (413) or not a replay at all (415) cannot become
+/// acceptable, so those stand forever.
+const STANDING_REJECTION_SQL: &str = "(status_code NOT IN (400, 403, 409)
+   OR unixepoch(rejected_at) * 1000 + :recheck_millis > :now_millis)";
 
 /// One pending outbox row.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -85,6 +112,7 @@ impl ObservationOutbox {
         connection.execute_batch(COALESCE_KEY_INDEX)?;
         connection.execute_batch(recovery::SCHEMA)?;
         recovery::migrate(&connection)?;
+        connection.execute_batch(clash::SCHEMA)?;
         // Older builds permanently recorded a temporary lack of evidence as
         // HTTP 409. Re-offer those files once under the server's current policy.
         let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
@@ -101,6 +129,10 @@ impl ObservationOutbox {
         // `LeaverFail` result), as uploads refused with 400 or 403 and as
         // offers answered "never" (kept as 409). The backend reopened those
         // rejections; offer each such file once more under its current rules.
+        //
+        // Already applied on most devices and kept so the rest converge. New
+        // server-side reopens need no migration: revisitable rejections lapse
+        // after `REPLAY_REJECTION_RECHECK_MILLIS` and are offered again.
         if transaction.execute(
             "INSERT OR IGNORE INTO client_migration (id) VALUES ('reoffer-replay-validator-rejections-v1')",
             [],
@@ -714,24 +746,38 @@ impl ObservationOutbox {
         Ok(count == 1)
     }
 
-    /// Return whether a replay has a successful or terminal server receipt.
+    /// Return whether a replay is stored, or refused by a rejection that still
+    /// stands at `now_millis`.
+    ///
+    /// A revisitable rejection older than [`REPLAY_REJECTION_RECHECK_MILLIS`]
+    /// no longer counts, so the scan offers the file again.
     ///
     /// # Errors
     ///
     /// Returns [`OutboxError::Sqlite`] if local receipt state cannot be read.
-    pub fn replay_handled(&self, digest: &str) -> Result<bool, OutboxError> {
+    pub fn replay_handled(&self, digest: &str, now_millis: i64) -> Result<bool, OutboxError> {
         let connection = self.connection()?;
-        let count: i64 = connection.query_row(
-            "SELECT
-               (SELECT COUNT(*) FROM uploaded_replay WHERE digest = ?1) +
-               (SELECT COUNT(*) FROM rejected_replay WHERE digest = ?1)",
-            [digest],
+        let handled: bool = connection.query_row(
+            &format!(
+                "SELECT EXISTS (SELECT 1 FROM uploaded_replay WHERE digest = :digest)
+                   OR EXISTS (SELECT 1 FROM rejected_replay
+                              WHERE digest = :digest AND {STANDING_REJECTION_SQL})"
+            ),
+            named_params! {
+                ":digest": digest,
+                ":now_millis": now_millis,
+                ":recheck_millis": REPLAY_REJECTION_RECHECK_MILLIS,
+            },
             |row| row.get(0),
         )?;
-        Ok(count > 0)
+        Ok(handled)
     }
 
-    /// Return whether this unchanged file already has a durable terminal receipt.
+    /// Return whether this unchanged file is already settled at `now_millis`:
+    /// its digest is stored or refused by a rejection that still stands.
+    ///
+    /// The file identity only saves re-hashing; it never outlives the receipt
+    /// it points at, so a lapsed rejection is offered again like any other.
     ///
     /// # Errors
     ///
@@ -741,15 +787,29 @@ impl ObservationOutbox {
         path: &str,
         bytes: i64,
         modified_at_millis: i64,
+        now_millis: i64,
     ) -> Result<bool, OutboxError> {
         let connection = self.connection()?;
-        let count: i64 = connection.query_row(
-            "SELECT COUNT(*) FROM handled_replay_file
-             WHERE path = ?1 AND bytes = ?2 AND modified_at_millis = ?3",
-            params![path, bytes, modified_at_millis],
+        let handled: bool = connection.query_row(
+            &format!(
+                "SELECT EXISTS (
+                   SELECT 1 FROM handled_replay_file AS file
+                   WHERE path = :path AND bytes = :bytes
+                     AND modified_at_millis = :modified_at_millis
+                     AND (EXISTS (SELECT 1 FROM uploaded_replay WHERE digest = file.digest)
+                          OR EXISTS (SELECT 1 FROM rejected_replay
+                                     WHERE digest = file.digest AND {STANDING_REJECTION_SQL})))"
+            ),
+            named_params! {
+                ":path": path,
+                ":bytes": bytes,
+                ":modified_at_millis": modified_at_millis,
+                ":now_millis": now_millis,
+                ":recheck_millis": REPLAY_REJECTION_RECHECK_MILLIS,
+            },
             |row| row.get(0),
         )?;
-        Ok(count == 1)
+        Ok(handled)
     }
 
     /// Associate an unchanged local replay with its durable terminal receipt.
@@ -780,20 +840,29 @@ impl ObservationOutbox {
 
     /// Persist a successful content-addressed replay receipt.
     ///
+    /// A replay stored after a re-check supersedes the rejection that preceded
+    /// it, so the inventory reports one state per file.
+    ///
     /// # Errors
     ///
     /// Returns [`OutboxError::Sqlite`] if the receipt cannot be persisted.
     pub fn mark_replay_uploaded(&self, digest: &str, game_id: &str) -> Result<(), OutboxError> {
-        let connection = self.connection()?;
-        connection.execute(
+        let mut connection = self.connection()?;
+        let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        transaction.execute(
             "INSERT INTO uploaded_replay (digest, game_id) VALUES (?1, ?2)
              ON CONFLICT(digest) DO NOTHING",
             params![digest, game_id],
         )?;
+        transaction.execute("DELETE FROM rejected_replay WHERE digest = ?1", [digest])?;
+        transaction.commit()?;
         Ok(())
     }
 
-    /// Persist a terminal file-specific rejection so later replays can proceed.
+    /// Persist a file-specific rejection so later replays can proceed.
+    ///
+    /// A repeat rejection restarts the re-check interval: `rejected_at` is the
+    /// server's latest answer, not its first.
     ///
     /// # Errors
     ///
@@ -807,7 +876,11 @@ impl ObservationOutbox {
         let connection = self.connection()?;
         connection.execute(
             "INSERT INTO rejected_replay (digest, game_id, status_code)
-             VALUES (?1, ?2, ?3) ON CONFLICT(digest) DO NOTHING",
+             VALUES (?1, ?2, ?3)
+             ON CONFLICT(digest) DO UPDATE SET
+               game_id = excluded.game_id,
+               status_code = excluded.status_code,
+               rejected_at = CURRENT_TIMESTAMP",
             params![digest, game_id, status_code],
         )?;
         Ok(())
@@ -820,12 +893,16 @@ impl ObservationOutbox {
     /// a replay the backend will never accept looks exactly like one that is
     /// about to succeed.
     ///
+    /// A deferral of a re-checked file replaces its lapsed rejection: the
+    /// server no longer refuses it, it only cannot take it yet.
+    ///
     /// # Errors
     ///
     /// Returns [`OutboxError::Sqlite`] if the tally cannot be persisted.
     pub fn record_replay_deferral(&self, digest: &str, game_id: &str) -> Result<i64, OutboxError> {
-        let connection = self.connection()?;
-        connection.execute(
+        let mut connection = self.connection()?;
+        let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        transaction.execute(
             "INSERT INTO deferred_replay (digest, game_id, attempts)
              VALUES (?1, ?2, 1)
              ON CONFLICT(digest) DO UPDATE SET
@@ -833,11 +910,13 @@ impl ObservationOutbox {
                last_deferred_at = CURRENT_TIMESTAMP",
             params![digest, game_id],
         )?;
-        let attempts = connection.query_row(
+        transaction.execute("DELETE FROM rejected_replay WHERE digest = ?1", [digest])?;
+        let attempts = transaction.query_row(
             "SELECT attempts FROM deferred_replay WHERE digest = ?1",
             [digest],
             |row| row.get(0),
         )?;
+        transaction.commit()?;
         Ok(attempts)
     }
 
@@ -883,6 +962,7 @@ impl ObservationOutbox {
             "SELECT digest, game_id, 'uploaded' AS state FROM uploaded_replay
              UNION ALL
              SELECT digest, game_id, 'rejected' AS state FROM rejected_replay
+             WHERE digest NOT IN (SELECT digest FROM uploaded_replay)
              UNION ALL
              SELECT digest, game_id, 'deferred' AS state FROM deferred_replay
              WHERE digest NOT IN (SELECT digest FROM uploaded_replay)
@@ -977,10 +1057,126 @@ mod tests {
 
     use crate::protocol::{ObservationEnvelope, ObservationKind};
 
-    use super::{LOBBY_BINDING_WINDOW_MILLIS, LobbyBinding, ObservationOutbox, PendingGameTiming};
+    use super::{
+        LOBBY_BINDING_WINDOW_MILLIS, LobbyBinding, ObservationOutbox, PendingGameTiming,
+        REPLAY_REJECTION_RECHECK_MILLIS,
+    };
 
     fn temporary_database() -> std::path::PathBuf {
         std::env::temp_dir().join(format!("scout-outbox-{}.db", Uuid::new_v4()))
+    }
+
+    /// The wall clock: rejections are stamped by SQLite's `CURRENT_TIMESTAMP`.
+    fn now() -> i64 {
+        chrono::Utc::now().timestamp_millis()
+    }
+
+    /// Backdate a rejection as if the server had answered `hours` ago.
+    fn age_rejection(path: &std::path::Path, digest: &str, hours: i64) -> rusqlite::Result<()> {
+        Connection::open(path)?.execute(
+            "UPDATE rejected_replay SET rejected_at = datetime('now', ?2) WHERE digest = ?1",
+            rusqlite::params![digest, format!("-{hours} hours")],
+        )?;
+        Ok(())
+    }
+
+    #[test]
+    fn a_revisitable_rejection_is_reoffered_after_the_recheck_interval_and_not_before()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        // Upload refusals and "never" offers are the server's judgment of the
+        // match, which it can reopen.
+        for (digest, status) in [("bad-request", 400), ("forbidden", 403), ("never", 409)] {
+            outbox.mark_replay_rejected(digest, "1", status)?;
+            let file = format!("{digest}.rofl");
+            outbox.mark_replay_file_handled(&file, 100, 1, digest)?;
+            // Two seconds of slack: `rejected_at` is stored to the second.
+            let just_before = now() + REPLAY_REJECTION_RECHECK_MILLIS - 2_000;
+            assert!(outbox.replay_handled(digest, just_before)?, "{digest}");
+            assert!(
+                outbox.replay_file_handled(&file, 100, 1, just_before)?,
+                "{digest}"
+            );
+            // Once the interval lapses, neither the digest nor the cached file
+            // identity keeps the scan from offering it again.
+            let after = now() + REPLAY_REJECTION_RECHECK_MILLIS + 1;
+            assert!(!outbox.replay_handled(digest, after)?, "{digest}");
+            assert!(
+                !outbox.replay_file_handled(&file, 100, 1, after)?,
+                "{digest}"
+            );
+        }
+        fs::remove_file(path)?;
+        Ok(())
+    }
+
+    #[test]
+    fn a_repeat_refusal_restarts_the_recheck_interval() -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        outbox.mark_replay_rejected("never", "1", 409)?;
+        outbox.mark_replay_file_handled("never.rofl", 100, 1, "never")?;
+        age_rejection(&path, "never", 25)?;
+        assert!(!outbox.replay_handled("never", now())?);
+        assert!(!outbox.replay_file_handled("never.rofl", 100, 1, now())?);
+
+        // The re-check offer is refused again: the rejection stands for
+        // another full interval from this answer.
+        outbox.mark_replay_rejected("never", "1", 409)?;
+        let just_before = now() + REPLAY_REJECTION_RECHECK_MILLIS - 2_000;
+        assert!(outbox.replay_handled("never", just_before)?);
+        assert!(outbox.replay_file_handled("never.rofl", 100, 1, just_before)?);
+        assert!(!outbox.replay_handled("never", now() + REPLAY_REJECTION_RECHECK_MILLIS + 1)?);
+        fs::remove_file(path)?;
+        Ok(())
+    }
+
+    #[test]
+    fn a_file_too_large_or_not_a_replay_is_never_reoffered()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        let much_later = now() + 3_650 * REPLAY_REJECTION_RECHECK_MILLIS;
+        for (digest, status) in [("too-large", 413), ("not-a-replay", 415)] {
+            outbox.mark_replay_rejected(digest, "1", status)?;
+            let file = format!("{digest}.rofl");
+            outbox.mark_replay_file_handled(&file, 100, 1, digest)?;
+            age_rejection(&path, digest, 24 * 3_650)?;
+            assert!(outbox.replay_handled(digest, much_later)?, "{digest}");
+            assert!(
+                outbox.replay_file_handled(&file, 100, 1, much_later)?,
+                "{digest}"
+            );
+        }
+        fs::remove_file(path)?;
+        Ok(())
+    }
+
+    #[test]
+    fn a_rechecked_replay_reports_only_its_latest_state() -> Result<(), Box<dyn std::error::Error>>
+    {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        outbox.mark_replay_rejected("stored-later", "1", 409)?;
+        outbox.mark_replay_rejected("deferred-later", "2", 400)?;
+        // On re-check the server wanted one and could not yet take the other.
+        outbox.mark_replay_uploaded("stored-later", "1")?;
+        outbox.record_replay_deferral("deferred-later", "2")?;
+
+        let inventory = outbox.replay_inventory(100)?;
+        let states: Vec<_> = inventory
+            .iter()
+            .map(|row| (row.digest.as_str(), row.state.as_str()))
+            .collect();
+        assert_eq!(states.len(), 2);
+        assert!(states.contains(&("stored-later", "uploaded")));
+        assert!(states.contains(&("deferred-later", "deferred")));
+        // Deferred is not settled: it waits on its own backoff, not the
+        // rejection's re-check interval.
+        assert!(!outbox.replay_handled("deferred-later", now())?);
+        fs::remove_file(path)?;
+        Ok(())
     }
 
     /// A fixed, positive clock. The binding window is relative, so these tests
@@ -997,12 +1193,12 @@ mod tests {
             INSERT INTO handled_replay_file (path, bytes, modified_at_millis, digest) VALUES ('old.rofl', 100, 1, 'old-deferred');")?;
         drop(connection);
         let outbox = ObservationOutbox::open(&path)?;
-        assert!(!outbox.replay_handled("old-deferred")?);
-        assert!(!outbox.replay_file_handled("old.rofl", 100, 1)?);
-        assert!(outbox.replay_handled("invalid")?);
+        assert!(!outbox.replay_handled("old-deferred", now())?);
+        assert!(!outbox.replay_file_handled("old.rofl", 100, 1, now())?);
+        assert!(outbox.replay_handled("invalid", now())?);
         outbox.mark_replay_rejected("new-validation-rejection", "3", 409)?;
         let reopened = ObservationOutbox::open(&path)?;
-        assert!(reopened.replay_handled("new-validation-rejection")?);
+        assert!(reopened.replay_handled("new-validation-rejection", now())?);
         fs::remove_file(path)?;
         Ok(())
     }
@@ -1020,15 +1216,15 @@ mod tests {
         drop(connection);
         let outbox = ObservationOutbox::open(&path)?;
         for digest in ["compression", "participant", "never"] {
-            assert!(!outbox.replay_handled(digest)?, "{digest}");
+            assert!(!outbox.replay_handled(digest, now())?, "{digest}");
         }
-        assert!(!outbox.replay_file_handled("compression.rofl", 100, 1)?);
-        assert!(outbox.replay_handled("too-large")?);
-        assert!(outbox.replay_file_handled("too-large.rofl", 100, 1)?);
+        assert!(!outbox.replay_file_handled("compression.rofl", 100, 1, now())?);
+        assert!(outbox.replay_handled("too-large", now())?);
+        assert!(outbox.replay_file_handled("too-large.rofl", 100, 1, now())?);
         // A rejection under the corrected validator is final again.
         outbox.mark_replay_rejected("compression", "1", 400)?;
         let reopened = ObservationOutbox::open(&path)?;
-        assert!(reopened.replay_handled("compression")?);
+        assert!(reopened.replay_handled("compression", now())?);
         fs::remove_file(path)?;
         Ok(())
     }
@@ -1041,12 +1237,9 @@ mod tests {
         for attempt in 1..=20 {
             assert_eq!(outbox.record_replay_deferral("waiting", "1")?, attempt);
         }
-        assert!(!outbox.replay_handled("waiting")?);
-        assert!(!outbox.replay_retry_due("waiting", chrono::Utc::now().timestamp_millis())?);
-        assert!(
-            outbox
-                .replay_retry_due("waiting", chrono::Utc::now().timestamp_millis() + 3_600_001)?
-        );
+        assert!(!outbox.replay_handled("waiting", now())?);
+        assert!(!outbox.replay_retry_due("waiting", now())?);
+        assert!(outbox.replay_retry_due("waiting", now() + 3_600_001)?);
         fs::remove_file(path)?;
         Ok(())
     }
@@ -1241,7 +1434,7 @@ mod tests {
         let path = temporary_database();
         let outbox = ObservationOutbox::open(&path)?;
         outbox.record_replay_deferral("digest-a", "game-1")?;
-        assert!(!outbox.replay_handled("digest-a")?);
+        assert!(!outbox.replay_handled("digest-a", now())?);
         let _ = std::fs::remove_file(&path);
         Ok(())
     }
@@ -1275,14 +1468,14 @@ mod tests {
         assert_eq!(outbox.next_sequence()?, 4);
         assert!(outbox.acknowledge(second.observation_id)?);
         assert_eq!(outbox.next_sequence()?, 5);
-        assert!(!outbox.replay_handled("rejected-digest")?);
+        assert!(!outbox.replay_handled("rejected-digest", now())?);
         outbox.mark_replay_rejected("rejected-digest", "12345", 403)?;
-        assert!(outbox.replay_handled("rejected-digest")?);
-        assert!(!outbox.replay_file_handled("/replays/12345.rofl", 12, 34)?);
+        assert!(outbox.replay_handled("rejected-digest", now())?);
+        assert!(!outbox.replay_file_handled("/replays/12345.rofl", 12, 34, now())?);
         outbox.mark_replay_file_handled("/replays/12345.rofl", 12, 34, "rejected-digest")?;
-        assert!(outbox.replay_file_handled("/replays/12345.rofl", 12, 34)?);
-        assert!(!outbox.replay_file_handled("/replays/12345.rofl", 13, 34)?);
-        assert!(!outbox.replay_file_handled("/replays/12345.rofl", 12, 35)?);
+        assert!(outbox.replay_file_handled("/replays/12345.rofl", 12, 34, now())?);
+        assert!(!outbox.replay_file_handled("/replays/12345.rofl", 13, 34, now())?);
+        assert!(!outbox.replay_file_handled("/replays/12345.rofl", 12, 35, now())?);
         outbox.remember_end_of_game("observer", "12345", br#"{"gameId":12345}"#)?;
         outbox.remember_game_start("observer", "12345", 1_000)?;
         outbox.remember_game_start("observer", "12345", 1_250)?;
