@@ -98,7 +98,7 @@ export default defineConfig({
           },
           {
             name: "Spiegel",
-            weight: 600,
+            weight: 500,
             style: "normal",
             data: spiegelSemiBold,
           },

@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`loading screen renders image for arena-3v3.json 1`] = `"0945f8663c90fe250303ac82fe6227b1a5ef8a71766e28d175b34859c723f500"`;
+exports[`loading screen renders image for arena-3v3.json 1`] = `"53fd14d366e68fde4c7ba633c3f00f54c17a737a1a852a6fade0bc4d9491a08f"`;
 
-exports[`loading screen renders image for custom-classic-5v5.json 1`] = `"da96e29b032a8a0da03aba39763d9bbf4189907830d65e7eb195a063c47f72fc"`;
+exports[`loading screen renders image for custom-classic-5v5.json 1`] = `"5091915d54c8f19044273fed187d52dcfd6f9b1908be27764cb26629775e0c24"`;
 
-exports[`loading screen renders image for ranked-flex-5v5.json 1`] = `"230e1330484f44137b307701eaf5a5758ee577fcb7457f8200432ef9ee7a57d5"`;
+exports[`loading screen renders image for ranked-flex-5v5.json 1`] = `"6adb24a2c5450ed3e7eb2fedd07c2adafd270f3e8999dba132147b83fa5d9754"`;

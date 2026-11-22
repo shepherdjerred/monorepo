@@ -28,7 +28,7 @@ test("the social card keeps its title and description inside the padded canvas",
       },
       {
         name: "Spiegel",
-        weight: 600,
+        weight: 500,
         data: await Bun.file(
           new URL("Spiegel-TTF/Spiegel_TT_SemiBold.ttf", fonts),
         ).arrayBuffer(),
