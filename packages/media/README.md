@@ -864,7 +864,7 @@ nothing in it is not on the page:
 | ------------------ | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Needs your answer  | `GET /request-interests`; `GET /recovery` (owner) | The reader's own open "still watching?" checks with the three answers Mine gives, and for the owner each open household review and the held titles. |
 | Now playing        | `GET /playback/now-playing`                       | Current streams (the household's for the owner), each linked to its title when the session carries `media`. Nothing while the read is `stale`.      |
-| On the way         | `GET /requests`                                   | The reader's own active requests that have not all arrived, one entry per film or series, furthest along first.                                     |
+| On the way         | `GET /requests`, `GET /request-interests`         | The reader's own active requests they still follow that have not all arrived, one entry per film or series, furthest along first.                   |
 | New in the library | `GET /library?sort=added`                         | The first 20 titles as a `PosterRail`; "See all" opens the Library sorted the same way.                                                             |
 | This week          | `GET /calendar` for today and the six days after  | Dated releases a day to a column, as the Calendar's own rows; at most twelve, with the rest counted and left to the calendar.                       |
 | Leaving soon       | `GET /removals`                                   | The three titles that leave first, each with the Library's own 30-day hold, including "Keep all N episodes".                                        |
@@ -905,8 +905,20 @@ so a report stays until it is dismissed even when its title has left the list.
 
 "On the way" counts a series by its episode requests where it has them (a
 series request fans out to one per episode, and the episodes are what arrive),
-and otherwise says what the request itself says. Its steps are worded in
+and otherwise says what the request itself says. "N of M episodes ready to
+watch" counts only episodes that can be played: one that is set aside or gone
+is neither ready nor on its way. Its steps are worded in
 `presentation/progress.ts`, finer than the Library's one "On the way".
+
+A request stays `active` after the reader finishes it or stops following it,
+so the reader's interests decide what is listed, by the rule Mine uses
+(`releasedInterest` in `library/mine-model.ts`): a request whose interest is
+not `following` is not on the way, however far along it is. A season or
+episode that a request fans out to carries no field saying which request
+covers it, so those rows are judged by their title, as Mine groups them: they
+stay while any request on the title is still followed. The section waits for
+both reads before it lists anything, so a released title never shows and then
+disappears.
 
 A check answered on Home stays where it was as its own confirmation, in the
 words of the button that sent it (`INTEREST_DONE_COPY`), until the reader leaves

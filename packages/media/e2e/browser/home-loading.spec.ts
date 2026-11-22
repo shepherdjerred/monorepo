@@ -85,38 +85,63 @@ test.describe("while it loads", () => {
       (name) => name !== "Needs your answer" && name !== "Now playing",
     );
     // The four that usually have content are in, and nothing stands in for
-    // the two whose reads are still out: no heading and no placeholder.
+    // the two whose reads are still out: no heading and no placeholder of
+    // their own. On the way needs the interests too, so it holds its place.
     await expect(list(page, "Leaving soon")).toBeVisible();
-    await expect(list(page, "On the way")).toBeVisible();
     await expect(list(page, "New in the library")).toBeVisible();
     await expect.poll(quiet.asked).toBe(2);
     await expect(sectionHeadings(page)).toHaveText(usual);
     await expect(
       main(page).getByRole("status").filter({ hasText: "Loading" }),
+    ).toHaveText("Loading what is on the way");
+    await expect(
+      main(page).getByRole("list", { name: "On the way", exact: true }),
     ).toHaveCount(0);
     await expect(main(page).getByText("Welcome,")).toHaveCount(0);
 
     quiet.release();
     await expect(list(page, "Needs your answer")).toBeVisible();
     await expect(list(page, "Now playing")).toBeVisible();
+    await expect(list(page, "On the way")).toBeVisible();
     await expect(sectionHeadings(page)).toHaveText([...SECTIONS]);
   });
 
   test("the welcome waits until every read has answered", async ({ page }) => {
     await inScenario(page, "new-household");
-    // The two reads no placeholder stands in for: with every other read
-    // already answered empty, nothing on the page says they are still out.
+    // The two reads no placeholder of their own stands in for: with every
+    // other read already answered empty, only On the way, which waits on the
+    // interests, says anything is still out.
     const quiet = await hold(
       page,
       /\/api\/v1\/(request-interests|playback\/now-playing)/u,
     );
     await openAs(page, "member", "/");
     await expect.poll(quiet.asked).toBe(2);
-    // The four sections that hold their place have had their answers.
+    await expect(sectionHeadings(page)).toHaveText(["On the way"]);
+    await expect(
+      main(page).getByRole("status").filter({ hasText: "Loading" }),
+    ).toHaveText("Loading what is on the way");
+    // Nothing has been found, but nothing is known to be missing yet.
+    await expect(main(page).getByText("Welcome,")).toHaveCount(0);
+
+    quiet.release();
+    await expect(
+      page.getByRole("heading", { level: 2, name: "Welcome, Mei" }),
+    ).toBeVisible();
+  });
+
+  test("the welcome waits for a read that has no placeholder at all", async ({
+    page,
+  }) => {
+    await inScenario(page, "new-household");
+    // Only what is playing is out: every section that could say so has
+    // answered, and none is on the page.
+    const quiet = await hold(page, /\/api\/v1\/playback\/now-playing/u);
+    await openAs(page, "member", "/");
+    await expect.poll(quiet.asked).toBe(1);
     await expect(
       main(page).getByRole("status").filter({ hasText: "Loading" }),
     ).toHaveCount(0);
-    // Nothing has been found, but nothing is known to be missing yet.
     await expect(sectionHeadings(page)).toHaveCount(0);
     await expect(main(page).getByText("Welcome,")).toHaveCount(0);
 
@@ -124,6 +149,25 @@ test.describe("while it loads", () => {
     await expect(
       page.getByRole("heading", { level: 2, name: "Welcome, Mei" }),
     ).toBeVisible();
+  });
+
+  test("On the way lists nothing until the interests have answered", async ({
+    page,
+  }) => {
+    const quiet = await hold(page, /\/api\/v1\/request-interests/u);
+    await openAs(page, "member", "/");
+    await expect.poll(quiet.asked).toBeGreaterThan(0);
+    // The requests have answered, but which of them the reader still follows
+    // is not known: nothing from them is listed, and a placeholder says why.
+    await expect(
+      main(page).getByRole("list", { name: "On the way", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      main(page).getByRole("status").filter({ hasText: "Loading" }),
+    ).toHaveText("Loading what is on the way");
+
+    quiet.release();
+    await expect(list(page, "On the way").getByRole("listitem")).toHaveCount(6);
   });
 
   test("the welcome is not shown over a read that failed", async ({ page }) => {

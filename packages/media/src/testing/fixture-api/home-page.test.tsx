@@ -409,7 +409,6 @@ test("until its read answers, a section that usually has content holds its place
 });
 
 test.each([
-  ["the reader's checks", "interests"],
   ["what a restore left for the owner", "recovery"],
   ["what is playing", "playing"],
 ] as const)(
@@ -425,6 +424,28 @@ test.each([
     expect(html).not.toContain('role="status"');
   },
 );
+
+test("the welcome waits for the reader's interests, which only On the way waits on with a placeholder", () => {
+  const client = answered("owner", "new-household");
+  client.removeQueries({ queryKey: keys("owner").interests });
+  const html = home(client, "owner");
+  expect(html).not.toContain("Welcome,");
+  // Needs your answer holds no place; On the way does, as it needs them too,
+  // and lists nothing until they are in.
+  expect(headings(html)).toEqual(["On the way"]);
+  expect(html).toContain("Loading what is on the way");
+});
+
+test("a request the reader let go of is not listed while the interests are still out", () => {
+  const client = answered("member");
+  client.removeQueries({ queryKey: keys("member").interests });
+  const html = home(client, "member");
+  // The requests are answered, but nothing is listed until the interests
+  // say which of them the reader still follows.
+  expect(section(html, "On the way")).toContain("Loading what is on the way");
+  expect(section(html, "On the way")).not.toContain("Princess Mononoke");
+  expect(section(html, "On the way")).not.toContain("Andor");
+});
 
 test("a section that holds no place still says so when its read fails", () => {
   const failed = {

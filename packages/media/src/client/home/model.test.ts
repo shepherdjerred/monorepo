@@ -258,6 +258,7 @@ test("what is on the way is the reader's own requests that have not arrived", ()
       }),
     ],
     me,
+    [],
   );
   expect(titles).toHaveLength(1);
   expect(titles[0]).toMatchObject({
@@ -289,6 +290,7 @@ test("a series counts its episodes, and the furthest of them says how far it is"
       ...episodes,
     ],
     me,
+    [],
   );
   expect(arriving).toMatchObject({
     name: "Severance",
@@ -311,6 +313,7 @@ test("a series counts its episodes, and the furthest of them says how far it is"
         }),
       ],
       me,
+      [],
     ),
   ).toEqual([]);
 });
@@ -335,6 +338,7 @@ test("a request for one season or episode says which", () => {
       }),
     ],
     me,
+    [],
   );
   expect(season?.detail).toBe("Season 2");
   expect(episode?.detail).toBe(
@@ -363,8 +367,157 @@ test("what is furthest along comes first, then by name", () => {
       }),
     ],
     me,
+    [],
   ).map((entry) => entry.name);
   expect(names).toEqual(["Almost", "Arrival", "Zed", "Wanted"]);
+});
+
+test("a series counts only the episodes that can be played as ready to watch", () => {
+  const severance = title("Severance");
+  const episodes = (
+    ["downloading", "quarantined", "removed", "available"] as const
+  ).map((availability, index) =>
+    request({
+      root: severance,
+      kind: "episode",
+      availability,
+      season: 2,
+      episode: index + 1,
+      name: `Episode ${String(index + 1)}`,
+    }),
+  );
+  // One is coming, two are set aside or gone, one can be played.
+  expect(onTheWay(episodes, me, [])[0]?.detail).toBe(
+    "1 of 4 episodes ready to watch",
+  );
+  // With nothing played yet, none is ready: a set-aside episode is not.
+  expect(onTheWay(episodes.slice(0, 2), me, [])[0]?.detail).toBe(
+    "0 of 2 episodes ready to watch",
+  );
+  expect(
+    onTheWay(
+      [episodes[0], episodes[2]].flatMap((row) => row ?? []),
+      me,
+      [],
+    )[0]?.detail,
+  ).toBe("0 of 2 episodes ready to watch");
+});
+
+/** What the reader's interest in a request says, by request. */
+function interestIn(asked: Request, interestState: Interest["interestState"]) {
+  return interest(asked, { interestState, noticeEventId: null });
+}
+
+test("a request the reader let go of is not on the way, whatever its state", () => {
+  const rows = (["following", "dropped", "finished", "expired"] as const).map(
+    (interestState) => ({
+      interestState,
+      row: request({
+        root: title(`Was ${interestState}`),
+        kind: "movie",
+        availability: "searching",
+      }),
+    }),
+  );
+  const interests = rows.map(({ row, interestState }) =>
+    interestIn(row, interestState),
+  );
+  // The request itself stays active: letting go does not clear it.
+  expect(rows.every(({ row }) => row.active)).toBe(true);
+  expect(
+    onTheWay(
+      rows.map(({ row }) => row),
+      me,
+      interests,
+    ).map((entry) => entry.name),
+  ).toEqual(["Was following"]);
+});
+
+test("a request with no interest of its own is still on the way", () => {
+  const film = request({
+    root: title("Anora"),
+    kind: "movie",
+    availability: "searching",
+  });
+  expect(onTheWay([film], me, []).map((entry) => entry.name)).toEqual([
+    "Anora",
+  ]);
+});
+
+test("a series the reader let go of takes the episodes it covers with it", () => {
+  const severance = title("Severance");
+  const asked = request({
+    root: severance,
+    kind: "series",
+    availability: "downloading",
+  });
+  const covered = [1, 2].map((episode) =>
+    request({
+      root: severance,
+      kind: "episode",
+      availability: "downloading",
+      season: 2,
+      episode,
+    }),
+  );
+  const rows = [asked, ...covered];
+  expect(onTheWay(rows, me, [interestIn(asked, "following")])).toHaveLength(1);
+  for (const state of ["dropped", "finished"] as const) {
+    expect(onTheWay(rows, me, [interestIn(asked, state)]), state).toEqual([]);
+  }
+});
+
+test("a title with one request still followed keeps its covered episodes, and drops the one let go of", () => {
+  const andor = title("Andor");
+  // An episode asked for on its own, further along than anything else.
+  const letGo = request({
+    root: andor,
+    kind: "episode",
+    availability: "importing",
+    season: 1,
+    episode: 1,
+  });
+  const kept = request({
+    root: andor,
+    kind: "season",
+    availability: "downloading",
+    season: 2,
+    name: "Season 2",
+  });
+  const covered = request({
+    root: andor,
+    kind: "episode",
+    availability: "downloading",
+    season: 2,
+    episode: 3,
+  });
+  const [only, ...rest] = onTheWay([letGo, kept, covered], me, [
+    interestIn(letGo, "dropped"),
+    interestIn(kept, "following"),
+  ]);
+  expect(rest).toEqual([]);
+  // Only what the reader still follows is counted: the dropped episode's
+  // "importing" does not make the title look further along.
+  expect(only).toMatchObject({
+    name: "Andor",
+    stage: { label: "Downloading", tone: "progress" },
+  });
+});
+
+test("an episode asked for on its own is judged by its own interest", () => {
+  const arcane = title("Arcane");
+  const episode = request({
+    root: arcane,
+    kind: "episode",
+    availability: "wanted",
+    season: 2,
+    episode: 9,
+    name: "The Dirt Under Your Nails",
+  });
+  expect(
+    onTheWay([episode], me, [interestIn(episode, "following")]),
+  ).toHaveLength(1);
+  expect(onTheWay([episode], me, [interestIn(episode, "dropped")])).toEqual([]);
 });
 
 function release(

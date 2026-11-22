@@ -6,6 +6,7 @@ import { releaseDays } from "#client/calendar/events.ts";
 import type { LeavingEntry } from "#client/library/keep-run.ts";
 import {
   awaitsAnswer,
+  releasedInterest,
   type Interest,
   type Request,
 } from "#client/library/mine-model.ts";
@@ -132,18 +133,48 @@ export type OnTheWayTitle = {
 };
 
 /**
+ * The rows of one title that Media is still acquiring for the reader.
+ *
+ * A request stays `active` after its interest is finished or dropped, so
+ * `active` alone says nothing of whether the reader still follows it; the
+ * interest does, by the Library's own rule (`releasedInterest`). A row the
+ * reader asked for directly (it has an interest, or is the title itself) is
+ * judged by its own interest. A season or episode row that a request fans out
+ * to carries no field saying which request covers it, so it is judged by the
+ * title, as Mine groups it: kept while any ask on the title is still
+ * followed, or when the title has no ask to judge it by.
+ */
+function followedRows(
+  rows: readonly Request[],
+  interests: ReadonlyMap<string, Interest>,
+): Request[] {
+  const asked = (row: Request) =>
+    interests.has(row.id) || row.mediaId === row.rootMediaId;
+  const released = (row: Request) =>
+    releasedInterest(interests.get(row.id) ?? null);
+  const asks = rows.filter((row) => asked(row));
+  const covered = asks.length === 0 || asks.some((row) => !released(row));
+  return rows.filter((row) => (asked(row) ? !released(row) : covered));
+}
+
+/**
  * The reader's requests that are still arriving, one entry per film or
  * series, the ones furthest along first.
  *
  * A request for a series fans out to a request for each episode, and it is
  * the episodes that arrive. So where a title has episode rows they are what
  * is counted; otherwise the request itself says where it stands. The owner's
- * read lists everyone's requests, so only the reader's own are kept.
+ * read lists everyone's requests, so only the reader's own are kept, and only
+ * those the reader still follows (`followedRows`): `interests` are theirs.
  */
 export function onTheWay(
   requests: readonly Request[],
   userId: string,
+  interests: readonly Interest[],
 ): OnTheWayTitle[] {
+  const interestOf = new Map(
+    interests.map((interest) => [interest.requestId, interest]),
+  );
   const titles = new Map<string, Request[]>();
   for (const request of requests) {
     if (!request.active || request.userId !== userId) continue;
@@ -152,7 +183,8 @@ export function onTheWay(
     titles.set(request.rootMediaId, rows);
   }
   return [...titles.values()]
-    .flatMap((rows) => {
+    .flatMap((all) => {
+      const rows = followedRows(all, interestOf);
       const [first] = rows;
       if (first === undefined) return [];
       const episodes = rows.filter((row) => row.media.kind === "episode");
@@ -164,7 +196,11 @@ export function onTheWay(
         (left, right) => right.step - left.step,
       )[0];
       if (furthest === undefined) return [];
-      const ready = counted.length - arriving.length;
+      // Only an episode that can be played is ready: one that is set aside
+      // or gone is neither on its way nor there.
+      const ready = counted.filter(
+        (row) => row.media.availability === "available",
+      ).length;
       const asked = rows.find((row) => row.mediaId === row.rootMediaId);
       return [
         {

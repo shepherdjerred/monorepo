@@ -4,9 +4,10 @@ import { requestId } from "#testing/fixture-api/fixtures/requests.ts";
 import { list, main, sectionHeadings, SECTIONS } from "./home-page.ts";
 import {
   address,
+  allowWrites,
+  horizontalOverflow,
   inScenario,
   openAs,
-  pageOverflow,
   settle,
   test,
   violationDetails,
@@ -26,15 +27,6 @@ function item(items: Locator, name: string): Locator {
   return items.getByRole("listitem").filter({
     has: items.page().getByRole("heading", { name, exact: true }),
   });
-}
-
-/** The fixture API is read-only; writes are answered by the test. */
-async function allowWrites(page: Page) {
-  await page
-    .context()
-    .addCookies([
-      { name: "media-csrf", value: "browser-test", url: page.url() },
-    ]);
 }
 
 function byName(left: string, right: string): number {
@@ -105,6 +97,12 @@ test.describe("a member's Home", () => {
     await expect(way.getByRole("listitem")).toHaveCount(6);
     await expect(item(way, "Andor")).toContainText("Adding it to the library");
     await expect(item(way, "Anora")).toContainText("Looking for it");
+    // Princess Mononoke is being acquired and its request is still active,
+    // but the reader stopped following it. Further along than most, it would
+    // be among these six if the interest were ignored.
+    await expect(
+      way.getByRole("heading", { name: "Princess Mononoke" }),
+    ).toHaveCount(0);
 
     // The library's newest, as posters from the artwork route.
     const added = list(page, "New in the library");
@@ -151,7 +149,7 @@ test.describe("a member's Home", () => {
     await expect(main(page)).not.toContainText(
       /awaiting|grace|quarantin|transcode|direct play|validating|importing|_/iu,
     );
-    expect(await pageOverflow(page)).toBe(0);
+    expect(await horizontalOverflow(page)).toBe(0);
   });
 
   test("each “See all” opens the page that has the rest", async ({ page }) => {
@@ -250,7 +248,7 @@ test.describe("the owner's Home", () => {
     await expect(item(playing, "Spirited Away")).toContainText(
       "Kids, on LG webOS",
     );
-    expect(await pageOverflow(page)).toBe(0);
+    expect(await horizontalOverflow(page)).toBe(0);
   });
 });
 
@@ -386,7 +384,7 @@ for (const scheme of ["light", "dark"] as const) {
         ]);
       }
       expect(await violationDetails(page)).toEqual([]);
-      expect(await pageOverflow(page)).toBe(0);
+      expect(await horizontalOverflow(page)).toBe(0);
       await main(page)
         .getByRole("link", { name: "Find something to watch" })
         .click();
@@ -426,7 +424,7 @@ for (const scheme of ["light", "dark"] as const) {
         main(page).getByRole("link", { name: "See all: New in the library" }),
       ).toHaveCount(0);
       expect(await violationDetails(page)).toEqual([]);
-      expect(await pageOverflow(page)).toBe(0);
+      expect(await horizontalOverflow(page)).toBe(0);
 
       // The library answers again: the section fills in where it failed.
       await inScenario(page, "default");

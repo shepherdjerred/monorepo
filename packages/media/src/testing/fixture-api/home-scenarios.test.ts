@@ -59,6 +59,25 @@ function read<Schema extends z.ZodType>(
   return schema.parse(body);
 }
 
+/** Every interest of the persona, the pages of the read followed to the end. */
+function everyInterest(persona: Persona, scenario: FixtureScenario) {
+  const items: z.output<typeof RequestInterestListSchema>["items"] = [];
+  let cursor: string | null = null;
+  do {
+    const query: string =
+      cursor === null ? "" : `&cursor=${encodeURIComponent(cursor)}`;
+    const page: z.output<typeof RequestInterestListSchema> = read(
+      `/v1/request-interests?include=artwork${query}`,
+      RequestInterestListSchema,
+      persona,
+      scenario,
+    );
+    items.push(...page.items);
+    cursor = page.nextCursor;
+  } while (cursor !== null);
+  return items;
+}
+
 /**
  * How much each part of Home has to show for one persona, each counted from
  * its own read when asked. What a restore left to decide is read for the
@@ -94,7 +113,8 @@ function sections(
     playing: () =>
       read("/v1/playback/now-playing", NowPlayingSchema, persona, scenario)
         .items.length,
-    onTheWay: () => onTheWay(requests(), user.id).length,
+    onTheWay: () =>
+      onTheWay(requests(), user.id, everyInterest(persona, scenario)).length,
     added: () =>
       read("/v1/library?sort=added", LibraryPageSchema, persona, scenario).items
         .length,
@@ -118,6 +138,34 @@ describe("Home's fixtures", () => {
       expect(shown(), section).toBeGreaterThan(0);
     }
   });
+
+  it.each(PERSONAS)(
+    "keep a title the %s let go of in the requests, in flight and active, and off the way",
+    (persona) => {
+      const user = personaUser(persona);
+      const requests = read(
+        "/v1/requests",
+        RequestListSchema,
+        persona,
+        "default",
+      );
+      const interests = everyInterest(persona, "default");
+      const letGo = requests.find(
+        (request) => request.rootTitle === "Princess Mononoke",
+      );
+      // The server leaves a released request active, and so does the fixture.
+      expect(letGo).toMatchObject({ active: true, userId: user.id });
+      expect(letGo?.media.availability).toBe("validating");
+      expect(
+        interests.find((interest) => interest.requestId === letGo?.id),
+      ).toMatchObject({ interestState: "dropped" });
+      // By `active` alone it would be listed; by the interest it is not.
+      const names = (known: typeof interests) =>
+        onTheWay(requests, user.id, known).map((title) => title.name);
+      expect(names([])).toContain("Princess Mononoke");
+      expect(names(interests)).not.toContain("Princess Mononoke");
+    },
+  );
 
   it("give the owner more than one stream, and a member only their own", () => {
     expect(sections("owner", "default")["playing"]?.()).toBeGreaterThan(1);

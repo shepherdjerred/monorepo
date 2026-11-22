@@ -13,6 +13,7 @@ import {
   REMOVALS_READ,
   REQUESTS_READ,
 } from "#client/library/reads.ts";
+import type { Interest, Request } from "#client/library/mine-model.ts";
 import { leavingTitles, type LeavingTitle } from "#client/library/removals.ts";
 import { DEFAULT_VIEW, type LibraryView } from "#client/library/view.ts";
 import { useCursorList } from "#client/ui/use-cursor-list.ts";
@@ -57,8 +58,36 @@ function playingNow(now: z.infer<typeof NowPlayingSchema>): PlaybackSession[] {
 }
 
 /**
+ * What "On the way" shows from its two reads. Nothing is listed until both
+ * have answered: a request the reader has let go of stays `active`, and would
+ * show until the interests arrived to remove it. Either read failing fails
+ * the section, since without the interests it cannot tell what is followed.
+ */
+function onTheWayRead(input: {
+  requests: readonly Request[] | undefined;
+  requestsPending: boolean;
+  requestsError: Error | null;
+  interests: readonly Interest[];
+  interestsPending: boolean;
+  interestsError: Error | null;
+  userId: string;
+}): Pick<Read<OnTheWayTitle>, "items" | "pending" | "error"> {
+  const { requests, interests, interestsError } = input;
+  const answered =
+    requests !== undefined &&
+    !input.interestsPending &&
+    interestsError === null;
+  return {
+    items: answered ? onTheWay(requests, input.userId, interests) : [],
+    pending: input.requestsPending || input.interestsPending,
+    error: requests === undefined ? input.requestsError : interestsError,
+  };
+}
+
+/**
  * Every read Home is made of. Each is its own query, so each section loads
- * and fails on its own; none waits for another.
+ * and fails on its own. Only "On the way" needs two: the requests, and the
+ * reader's interests to tell which of them they still follow.
  *
  * Requests, interests, the library sorted by arrival, and removals are read
  * under the Library's own keys (`library/reads.ts`), the week's releases
@@ -127,11 +156,18 @@ export function useHomeReads(user: MediaUser) {
       },
     } satisfies Read<PlaybackSession>,
     onTheWay: {
-      items: onTheWay(requests.data ?? [], user.id),
-      pending: requests.isPending,
-      error: requests.data === undefined ? requests.error : null,
+      ...onTheWayRead({
+        requests: requests.data,
+        requestsPending: requests.isPending,
+        requestsError: requests.error,
+        interests: interests.items,
+        interestsPending: interests.pending,
+        interestsError,
+        userId: user.id,
+      }),
       retry: () => {
         void requests.refetch();
+        interests.retry();
       },
     } satisfies Read<OnTheWayTitle>,
     added: {
