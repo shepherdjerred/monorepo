@@ -56,7 +56,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   stash: "enforced",
   "storm-brain": "enforced",
   "storm-forum": "enforced",
-  syncthing: "open",
+  syncthing: "enforced",
   tasknotes: "enforced",
   temporal: "open",
   tracker: "enforced",
