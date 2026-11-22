@@ -1,4 +1,14 @@
 import { afterEach, expect, it, vi } from "vitest";
+import { z } from "zod/v4";
+import {
+  REDDIT_OUTREACH_POST_PAGE_SIZE,
+  RedditOutreachPostPageSchema,
+  type RedditOutreachPost,
+} from "@shepherdjerred/ops-model/promotion/reddit-outreach.ts";
+import {
+  readRedditSweepPostPage,
+  recordSweep,
+} from "#activities/promotion/reddit-outreach/sweep-audit.ts";
 const storage = vi.hoisted(() => ({ send: vi.fn() }));
 vi.mock("#activities/reports/report-object-store.ts", async (original) => ({
   ...(await original<object>()),
@@ -99,4 +109,88 @@ it("keeps the production overview available when the outreach status read fails"
     redditOutreach: { status: "unavailable" },
   });
   expect(JSON.stringify(body)).not.toContain("private outreach failure");
+});
+
+it("pages authenticated Reddit post rows and preserves legacy audit behavior", async () => {
+  const store = memoryPromotionStore();
+  const runId = "the-storm-reddit-outreach-workflow-2026-11-22T07:00:00Z/run";
+  const summary = {
+    occurrenceId: runId,
+    completedAt: "2026-11-22T19:00:00.000Z",
+    preview: false,
+    inspected: REDDIT_OUTREACH_POST_PAGE_SIZE + 1,
+    assessed: 0,
+    cached: 0,
+    failures: [],
+    replies: [],
+    drafts: [],
+  };
+  const posts = Array.from(
+    { length: REDDIT_OUTREACH_POST_PAGE_SIZE + 1 },
+    (_, index): RedditOutreachPost => ({
+      id: String(index),
+      subreddit: "MinecraftServer",
+      title: `Survival request ${String(index)}`,
+      url: `https://www.reddit.com/r/MinecraftServer/comments/${String(index)}/`,
+      score: null,
+      result: "pending",
+      reason: null,
+    }),
+  );
+  await recordSweep(store, summary, posts);
+  await recordSweep(store, { ...summary, occurrenceId: "legacy/run" });
+  const dayIndex = await store.read(
+    "reddit-outreach/sweep-days/2026-11-22.json",
+    z.record(z.string(), z.unknown()),
+  );
+  expect(dayIndex?.value[runId]).toBeDefined();
+  expect(dayIndex?.value[runId]).not.toHaveProperty("posts");
+
+  const readPosts = vi.fn(async (id: string, offset: number) =>
+    readRedditSweepPostPage(store, id, offset),
+  );
+  const handle = promotionStatusFetch(
+    "fixture-token",
+    () => readProductionPromotionStatus(store),
+    readPosts,
+  );
+  const request = (query: string, token = "fixture-token") =>
+    handle(
+      new Request(`http://status/api/v1/promotion/reddit-posts?${query}`, {
+        headers: { authorization: `Bearer ${token}` },
+      }),
+    );
+  const query = new URLSearchParams({ runId }).toString();
+  const denied = await request(query, "wrong");
+  expect(denied.status).toBe(401);
+  for (const invalid of [
+    "runId=bad",
+    `${query}&offset=-1`,
+    `${query}&offset=1501`,
+    `${query}&offset=0&offset=1`,
+  ]) {
+    const response = await request(invalid);
+    expect(response.status).toBe(400);
+  }
+  expect(readPosts).not.toHaveBeenCalled();
+
+  const response = await request(query);
+  const first = RedditOutreachPostPageSchema.parse(await response.json());
+  expect(first).toEqual({
+    status: "available",
+    posts: posts.slice(0, REDDIT_OUTREACH_POST_PAGE_SIZE),
+    nextOffset: REDDIT_OUTREACH_POST_PAGE_SIZE,
+  });
+  const tail = await request(
+    `${query}&offset=${String(REDDIT_OUTREACH_POST_PAGE_SIZE)}`,
+  );
+  expect(RedditOutreachPostPageSchema.parse(await tail.json())).toEqual({
+    status: "available",
+    posts: posts.slice(REDDIT_OUTREACH_POST_PAGE_SIZE),
+    nextOffset: null,
+  });
+  const legacy = await request("runId=legacy%2Frun");
+  expect(RedditOutreachPostPageSchema.parse(await legacy.json())).toEqual({
+    status: "unavailable",
+  });
 });

@@ -27,19 +27,29 @@ it("forwards only read-only promotion routes with the parent credential", async 
     "/api/v1/promotion/history?targetId=pmc&limit=10",
   );
   expect(read.status).toBe(200);
+  const postRead = await app.request(
+    "/api/v1/promotion/reddit-posts?runId=workflow%2Frun&offset=50",
+  );
+  expect(postRead.status).toBe(200);
   expect(requests).toEqual([
     {
       path: "/api/v1/promotion/history?targetId=pmc&limit=10",
       auth: "Bearer fixture-token",
     },
+    {
+      path: "/api/v1/promotion/reddit-posts?runId=workflow%2Frun&offset=50",
+      auth: "Bearer fixture-token",
+    },
   ]);
-  const mutation = await app.request("/api/v1/promotion", { method: "POST" });
+  const mutation = await app.request("/api/v1/promotion/reddit-posts", {
+    method: "POST",
+  });
   expect(mutation.status).toBe(405);
   expect(await app.request("/api/v1/promotion/other")).toHaveProperty(
     "status",
     404,
   );
-  expect(requests).toHaveLength(1);
+  expect(requests).toHaveLength(2);
 });
 
 it("shows unavailable status when the producer has not been configured", async () => {

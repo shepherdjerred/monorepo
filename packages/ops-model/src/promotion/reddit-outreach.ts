@@ -65,6 +65,76 @@ export type RedditOutreachFailureCategory = z.infer<
   typeof RedditOutreachFailureCategorySchema
 >;
 
+export const RedditOutreachCoverageSchema = z
+  .object({
+    subreddit: z.string().regex(/^\w{3,21}$/u),
+    since: z.iso.datetime(),
+    until: z.iso.datetime(),
+    found: count,
+    scored: count,
+    skipped: count,
+    pending: count,
+    complete: z.boolean(),
+  })
+  .refine(
+    (row) =>
+      row.found === row.scored + row.skipped + row.pending &&
+      (!row.complete || row.pending === 0),
+    "Reddit coverage counts must account for every found post",
+  );
+export type RedditOutreachCoverage = z.infer<
+  typeof RedditOutreachCoverageSchema
+>;
+
+export const REDDIT_OUTREACH_POST_LIMIT = 1500;
+export const REDDIT_OUTREACH_POST_PAGE_SIZE = 50;
+
+export const RedditOutreachPostSchema = z
+  .object({
+    id: z.string().regex(/^[a-z0-9]+$/u),
+    subreddit: z.string().regex(/^\w{3,21}$/u),
+    title: z.string().min(1).max(1000),
+    url: z.string(),
+    score: z.number().min(0).max(1).nullable(),
+    result: z.enum([
+      "pending",
+      "skipped",
+      "no-match",
+      "draft-rejected",
+      "draft-ready",
+      "publish-verified",
+      "publish-blocked",
+      "publish-duplicate",
+      "publish-deferred",
+    ]),
+    reason: z.string().max(1000).nullable(),
+  })
+  .refine(
+    ({ url, subreddit, id }) =>
+      url === `https://www.reddit.com/r/${subreddit}/comments/${id}/`,
+    "Reddit post URL must identify the recorded post",
+  );
+export type RedditOutreachPost = z.infer<typeof RedditOutreachPostSchema>;
+
+export const RedditOutreachPostPageSchema = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("unavailable") }),
+  z.object({
+    status: z.literal("available"),
+    posts: z
+      .array(RedditOutreachPostSchema)
+      .max(REDDIT_OUTREACH_POST_PAGE_SIZE),
+    nextOffset: z
+      .number()
+      .int()
+      .positive()
+      .max(REDDIT_OUTREACH_POST_LIMIT)
+      .nullable(),
+  }),
+]);
+export type RedditOutreachPostPage = z.infer<
+  typeof RedditOutreachPostPageSchema
+>;
+
 export const RedditOutreachRunSchema = z.object({
   id: z.string().min(1),
   at: z.iso.datetime(),
@@ -76,6 +146,7 @@ export const RedditOutreachRunSchema = z.object({
   assessed: count.nullable(),
   cached: count.nullable(),
   metrics: RedditOutreachMetricsSchema.nullable(),
+  coverage: z.array(RedditOutreachCoverageSchema).optional(),
   verifiedReceipts: z.array(
     z.url({ protocol: /^https$/, hostname: /^(www\.)?reddit\.com$/ }),
   ),

@@ -1421,6 +1421,15 @@ without submitting replies. Run it again to verify incremental scanning.
 Sweep audits include listing pages, thread reads, total page opens, elapsed
 sweep time, decisions, drafts, and the stop reason.
 
+The Promotion panel shows per-subreddit coverage in each run's details. The
+scan window counts fresh posts the sweep encountered, with totals for posts
+scored (including cached assessments), skipped before scoring, or pending.
+The pending count covers discovered posts that still need a disposition. An
+incomplete window can also have unread pages and resumes at its checkpoint.
+Completed windows reach the time cutoff or the end of the feed.
+Run details also let operators open the observed posts and see each Reddit
+link, fit score when available, outcome, and recorded reason.
+
 Per-post claims and Pacific daily reservations are conditional object-store
 writes. Uncertain submissions and filtered replies consume allowance and cannot
 be resent automatically. Existing Reddit promotions and outreach share the

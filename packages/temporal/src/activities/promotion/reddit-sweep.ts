@@ -1,11 +1,8 @@
 import { Context } from "@temporalio/activity";
-import {
-  StructuredOutputUsageError,
-  type AggregateLlmUsage,
-} from "@shepherdjerred/llm-runtime";
 import type {
+  RedditOutreachCoverage,
   RedditOutreachMetrics,
-  RedditOutreachReason,
+  RedditOutreachPost,
 } from "@shepherdjerred/ops-model/promotion/reddit-outreach.ts";
 import {
   redditOutreachConfig,
@@ -13,7 +10,6 @@ import {
 } from "#config/reddit-outreach.ts";
 import { promotionConfig } from "#config/promotion.ts";
 import { promotionStore, type PromotionStore } from "./store.ts";
-import { reservePromotionAi } from "./control/budget.ts";
 import { eligibleRedditRequest } from "./reddit-discovery/index.ts";
 import {
   RedditBrowserReadError,
@@ -21,11 +17,9 @@ import {
 } from "./reddit-discovery/browser-reader.ts";
 import {
   qualifiesForRedditDraft,
-  REDDIT_MATCH_THRESHOLD,
   type RedditQualification,
 } from "./reddit-discovery/decisions.ts";
 import { runIncrementalRedditDiscovery } from "./reddit-discovery/incremental.ts";
-import { draftRedditInvite } from "./reddit-discovery/relevance.ts";
 import type { RedditRequestPost } from "./reddit-discovery/model.ts";
 import { screenRedditBatch } from "./reddit-discovery/screening.ts";
 import { executeRedditOutreachReply } from "./reddit-outreach/index.ts";
@@ -38,11 +32,15 @@ import {
   RedditNavigationBudget,
   REDDIT_OUTREACH_ACCOUNT,
 } from "./reddit-outreach/browser-session.ts";
-import { REDDIT_OUTREACH_FACTS } from "./reddit-facts.ts";
 import {
   recordSweep,
   type SweepSummary,
 } from "./reddit-outreach/sweep-audit.ts";
+import {
+  countDecisionRejections,
+  countReason,
+  draftCandidate,
+} from "./reddit-outreach/sweep-evaluation.ts";
 import {
   readRedditDecisionsBackoff,
   recordSweepFailure,
@@ -59,6 +57,7 @@ type SweepInput = {
   store: PromotionStore;
   signal: AbortSignal;
   summary: ActiveSweepSummary;
+  posts: Map<string, RedditOutreachPost>;
 };
 type SweepServices = SweepInput & {
   browser: ReturnType<typeof createRedditOutreachBrowser>;
@@ -109,6 +108,7 @@ export async function sweepRedditOutreach(input: { preview?: boolean } = {}) {
     return summary;
   }
   const store = promotionStore();
+  const posts = new Map<string, RedditOutreachPost>();
   const signal = AbortSignal.any([
     context.cancellationSignal,
     AbortSignal.timeout(OUTREACH_SWEEP_BUDGET_MS),
@@ -120,14 +120,21 @@ export async function sweepRedditOutreach(input: { preview?: boolean } = {}) {
     });
   }, 15_000);
   try {
-    await runRedditOutreachSweep({ settings, config, store, signal, summary });
+    await runRedditOutreachSweep({
+      settings,
+      config,
+      store,
+      signal,
+      summary,
+      posts,
+    });
   } catch (error) {
     await recordSweepStop(store, summary, signal, error);
   } finally {
     clearInterval(beat);
   }
   finishSweepTiming(summary, started);
-  await recordSweep(store, summary);
+  await recordSweep(store, summary, [...posts.values()]);
   return summary;
 }
 
@@ -171,6 +178,7 @@ export async function runRedditOutreachSweep(input: SweepInput) {
   });
   const services = { ...input, browser };
   const rules = new Map<string, string>();
+  const coverage = new Map<string, RedditOutreachCoverage>();
   const result = await runIncrementalRedditDiscovery<RedditFeedPost>({
     store,
     signal,
@@ -190,6 +198,21 @@ export async function runRedditOutreachSweep(input: SweepInput) {
     },
     onInspected: () => {
       summary.inspected++;
+    },
+    onCoverage: (row) => {
+      coverage.set(row.subreddit, row);
+      summary.coverage = [...coverage.values()];
+    },
+    onPost: ({ id, subreddit, title }) => {
+      input.posts.set(id, {
+        id,
+        subreddit,
+        title,
+        url: `https://www.reddit.com/r/${subreddit}/comments/${id}/`,
+        score: null,
+        result: "pending",
+        reason: null,
+      });
     },
     shouldStop: () => {
       if (usedReplySlots(summary) >= replyLimit) return "reply-limit";
@@ -212,14 +235,6 @@ export async function runRedditOutreachSweep(input: SweepInput) {
 function rotateCommunities(subreddits: readonly string[], now: number) {
   const offset = Math.floor(now / (15 * 60_000)) % subreddits.length;
   return [...subreddits.slice(offset), ...subreddits.slice(0, offset)];
-}
-
-function countReason(
-  summary: ActiveSweepSummary,
-  reason: RedditOutreachReason,
-) {
-  const { reasons } = summary.metrics;
-  reasons[reason] = (reasons[reason] ?? 0) + 1;
 }
 
 function canScreen(post: RedditFeedPost) {
@@ -293,7 +308,10 @@ async function processPage(
   input: {
     subreddit: string;
     posts: readonly RedditFeedPost[];
-    settle: (ids: readonly string[]) => Promise<void>;
+    settle: (
+      ids: readonly string[],
+      disposition: "scored" | "skipped",
+    ) => Promise<void>;
     rules: Map<string, string>;
     replyLimit: number;
   },
@@ -306,10 +324,14 @@ async function processPage(
     signal.throwIfAborted();
     if (usedReplySlots(summary) >= input.replyLimit)
       return { stopReason: "reply-limit" };
+    const audit = services.posts.get(post.id);
+    if (audit === undefined) throw new Error("Missing Reddit post audit");
     const skipReason = await listingRejection(store, post);
     if (skipReason !== undefined) {
       countReason(summary, skipReason);
-      await input.settle([post.id]);
+      audit.result = "skipped";
+      audit.reason = skipReason;
+      await input.settle([post.id], "skipped");
       continue;
     }
     const threadReads = summary.threadReads ?? 0;
@@ -320,12 +342,17 @@ async function processPage(
       rules = await browser.readRules(input.subreddit);
       input.rules.set(input.subreddit, rules);
     }
-    if (permitsRuleReview(rules)) {
-      summary.threadReads = threadReads + 1;
-      if (!(await assessThread(services, post, rules)))
-        return { stopReason: "publish-deferred" };
-    } else countReason(summary, "rules-exclude-replies");
-    await input.settle([post.id]);
+    if (!permitsRuleReview(rules)) {
+      countReason(summary, "rules-exclude-replies");
+      audit.result = "skipped";
+      audit.reason = "rules-exclude-replies";
+      await input.settle([post.id], "skipped");
+      continue;
+    }
+    summary.threadReads = threadReads + 1;
+    const disposition = await assessThread(services, post, rules, audit);
+    if (disposition === "deferred") return { stopReason: "publish-deferred" };
+    await input.settle([post.id], disposition);
   }
   return {};
 }
@@ -334,13 +361,16 @@ async function assessThread(
   services: SweepServices,
   listing: RedditFeedPost,
   rules: string,
-) {
+  audit: RedditOutreachPost,
+): Promise<"scored" | "skipped" | "deferred"> {
   const { browser, store, signal, config, settings, summary } = services;
   const post = await browser.readThread(listing);
   const rejection = threadRejection(post, listing, settings.maxPostAgeHours);
   if (rejection !== undefined) {
     countReason(summary, rejection);
-    return true;
+    audit.result = "skipped";
+    audit.reason = rejection;
+    return "skipped";
   }
   const assessment = await screenRedditBatch({
     items: [{ post, rules }],
@@ -353,92 +383,47 @@ async function assessThread(
   summary.assessed += assessment.assessed;
   summary.cached += assessment.cached;
   const qualification = assessment.matches[0]?.qualification;
+  audit.score = qualification?.judgeScore ?? null;
+  audit.reason = qualification?.reason ?? "decision-declined";
   if (qualification === undefined || !qualifiesForRedditDraft(qualification)) {
     countDecisionRejections(summary, qualification);
-    return true;
+    audit.result = "no-match";
+    return "scored";
   }
-  const reply = await draftCandidate(services, post, rules, qualification);
+  const reply = await draftCandidate({
+    store,
+    signal,
+    config,
+    occurrenceId: summary.occurrenceId,
+    post,
+    rules,
+    qualification,
+  });
   if (reply === null) {
     countReason(summary, "draft-rejected");
-    return true;
+    audit.result = "draft-rejected";
+    audit.reason = "draft-rejected";
+    return "scored";
   }
   summary.metrics.draftsPrepared++;
   if (summary.preview) {
+    audit.result = "draft-ready";
     summary.drafts.push({
       postId: post.id,
       reply,
       matchProbability: qualification.judgeScore,
     });
-    return true;
+    return "scored";
   }
-  return await publishCandidate(services, {
+  const result = await publishCandidate(services, {
     post,
     reply,
     qualification,
     rules,
   });
-}
-
-function countDecisionRejections(
-  summary: ActiveSweepSummary,
-  qualification: RedditQualification | undefined,
-) {
-  const reasons =
-    qualification === undefined
-      ? []
-      : (
-          [
-            !qualification.explicitlySeekingServer && "intent-unconfirmed",
-            !qualification.communityAllowsReply && "rules-exclude-replies",
-            !qualification.hardConstraintsSatisfied &&
-              "requirements-unconfirmed",
-            qualification.judgeScore <= REDDIT_MATCH_THRESHOLD &&
-              "score-too-low",
-          ] as const
-        ).filter((reason) => reason !== false);
-  if (reasons.length === 0) countReason(summary, "decision-declined");
-  for (const reason of reasons) countReason(summary, reason);
-}
-
-function recordDraftUsage(usage: AggregateLlmUsage | null) {
-  return {
-    inputTokens: usage?.tokens.input ?? 0,
-    cachedInputTokens: usage?.tokens.cachedInput ?? 0,
-    cacheWriteInputTokens: usage?.tokens.cacheWrite ?? 0,
-    outputTokens: usage?.tokens.output ?? 0,
-    reasoningTokens: usage?.tokens.reasoning ?? 0,
-  };
-}
-
-async function draftCandidate(
-  services: SweepServices,
-  post: RedditRequestPost,
-  rules: string,
-  qualification: RedditQualification,
-) {
-  const { store, signal, summary, config } = services;
-  signal.throwIfAborted();
-  const record = await reservePromotionAi(
-    store,
-    `${summary.occurrenceId}/draft/${post.id}`,
-    config,
-  );
-  try {
-    const result = await draftRedditInvite({
-      post,
-      qualification,
-      model: config.model,
-      signal,
-      communityRules: rules,
-      serverFacts: REDDIT_OUTREACH_FACTS,
-    });
-    await record(recordDraftUsage(result.usage));
-    return result.draft.reply;
-  } catch (error) {
-    if (error instanceof StructuredOutputUsageError)
-      await record(recordDraftUsage(error.usage));
-    throw error;
-  }
+  audit.result = `publish-${result}`;
+  audit.reason = audit.result;
+  return result === "deferred" ? "deferred" : "scored";
 }
 
 async function publishCandidate(
@@ -471,7 +456,7 @@ async function publishCandidate(
   });
   summary.replies.push(result);
   countReason(summary, `publish-${result.status}`);
-  return result.status !== "deferred";
+  return result.status;
 }
 
 async function enabledBeforePublish(

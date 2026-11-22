@@ -1,12 +1,14 @@
+import { useState } from "react";
 import {
   RedditOutreachReasonSchema,
   type RedditOutreachFailureCategory,
   type RedditOutreachOverview,
-  type RedditOutreachReason,
   type RedditOutreachRun,
   type RedditOutreachStopReason,
 } from "@shepherdjerred/ops-model/promotion/reddit-outreach.ts";
 import { LinkOut, time } from "./ui.tsx";
+import { OutreachRunPosts } from "./reddit-outreach-posts.tsx";
+import { redditOutreachReasonLabels } from "./reddit-outreach-reasons.ts";
 
 const scheduleLabels = {
   active: "Active",
@@ -53,22 +55,6 @@ const stopLabels = {
   blocked: "Run blocked",
   other: "Other stop reason",
 } satisfies Record<RedditOutreachStopReason, string>;
-const reasonLabels = {
-  "listing-ineligible": "Listing ineligible",
-  "already-handled": "Already handled",
-  "rules-exclude-replies": "Community rules exclude replies",
-  "thread-ineligible": "Thread ineligible",
-  "intent-unconfirmed": "Server search intent unconfirmed",
-  "permission-unconfirmed": "Community permission unconfirmed",
-  "requirements-unconfirmed": "Server requirements unmet or unclear",
-  "score-too-low": "Fit score missed threshold",
-  "decision-declined": "Other qualification rejection",
-  "draft-rejected": "Draft rejected",
-  "publish-blocked": "Publish blocked",
-  "publish-duplicate": "Duplicate at publishing",
-  "publish-deferred": "Publish deferred",
-  "publish-verified": "Verified during the sweep",
-} satisfies Record<RedditOutreachReason, string>;
 const failureLabels = {
   browser: "Reddit browser",
   decisions: "Decisions API",
@@ -93,7 +79,61 @@ function RunTime({ at }: { at: string | null }) {
   return at === null ? "Not recorded" : <time dateTime={at}>{time(at)}</time>;
 }
 
+function OutreachRunCoverage({
+  coverage,
+}: {
+  coverage: RedditOutreachRun["coverage"];
+}) {
+  if (coverage === undefined || coverage.length === 0) {
+    return <p className="p-muted">Coverage unavailable for this run.</p>;
+  }
+  return (
+    <div className="p-outreach-coverage">
+      <h4>Subreddit coverage</h4>
+      <ul className="p-outreach-coverage-list" role="list">
+        {coverage.map((community) => (
+          <li key={community.subreddit}>
+            <strong>r/{community.subreddit}</strong>
+            <span className="p-muted p-outreach-coverage-window">
+              <RunTime at={community.since} /> to{" "}
+              <RunTime at={community.until} />
+            </span>
+            <span className="p-outreach-coverage-window">
+              {community.complete ? "Window complete" : "Window incomplete"}
+            </span>
+            <dl className="p-outreach-run-counts">
+              <div>
+                <dt>New posts</dt>
+                <dd>{count(community.found)}</dd>
+              </div>
+              <div>
+                <dt>Scored</dt>
+                <dd>{count(community.scored)}</dd>
+              </div>
+              <div>
+                <dt>Skipped</dt>
+                <dd>{count(community.skipped)}</dd>
+              </div>
+              <div>
+                <dt>Pending</dt>
+                <dd>{count(community.pending)}</dd>
+              </div>
+            </dl>
+          </li>
+        ))}
+      </ul>
+      {coverage.some((community) => !community.complete) && (
+        <p className="p-muted">
+          Pending counts cover posts found so far. Unread pages may contain
+          more.
+        </p>
+      )}
+    </div>
+  );
+}
+
 function OutreachRunDetails({ run }: { run: RedditOutreachRun }) {
+  const [showPosts, setShowPosts] = useState(false);
   const breakdown = RedditOutreachReasonSchema.options.flatMap((reason) => {
     const total = run.metrics?.reasons[reason];
     return total === undefined ? [] : [{ reason, total }];
@@ -101,6 +141,16 @@ function OutreachRunDetails({ run }: { run: RedditOutreachRun }) {
   return (
     <details className="p-row-detail p-outreach-detail">
       <summary>Run details</summary>
+      <OutreachRunCoverage coverage={run.coverage} />
+      <details
+        className="p-outreach-posts"
+        onToggle={(event) => {
+          setShowPosts(event.currentTarget.open);
+        }}
+      >
+        <summary>Individual posts</summary>
+        {showPosts && <OutreachRunPosts runId={run.id} />}
+      </details>
       {run.failureCategory !== null && (
         <p>Failure category · {failureLabels[run.failureCategory]}</p>
       )}
@@ -112,7 +162,7 @@ function OutreachRunDetails({ run }: { run: RedditOutreachRun }) {
           <dl className="p-outreach-breakdown">
             {breakdown.map(({ reason, total }) => (
               <div key={reason}>
-                <dt>{reasonLabels[reason]}</dt>
+                <dt>{redditOutreachReasonLabels[reason]}</dt>
                 <dd>{count(total)}</dd>
               </div>
             ))}

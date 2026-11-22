@@ -29,7 +29,10 @@ import { FIXTURE_OPS_FACETS } from "#test-fixtures/ops-facets";
 import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
 import { volumeOpsIngest } from "#test-fixtures/ops-snapshot-volume";
 import { createOpsFixture } from "#test-fixtures/ops-services";
-import { promotionFixture } from "#test-fixtures/promotion";
+import {
+  promotionFixture,
+  redditOutreachPostsFixture,
+} from "#test-fixtures/promotion";
 
 const alert = AlertDetailSchema.parse({
   id: `alert_${"a".repeat(32)}`,
@@ -412,6 +415,14 @@ Bun.serve({
   port,
   routes: {
     "/api/v1/promotion": { GET: () => Response.json(promotionFixture) },
+    "/api/v1/promotion/reddit-posts": {
+      GET: (request) => {
+        const params = new URL(request.url).searchParams;
+        return Response.json(
+          redditOutreachPostsFixture(params.get("runId"), params.get("offset")),
+        );
+      },
+    },
   },
   fetch: app.fetch,
 });

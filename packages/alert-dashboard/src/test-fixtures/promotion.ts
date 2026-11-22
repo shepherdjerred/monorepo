@@ -1,6 +1,7 @@
 import type { PromotionOverview } from "@shepherdjerred/ops-model/promotion/model.ts";
 import type {
   RedditOutreachOverview,
+  RedditOutreachPostPage,
   RedditOutreachRun,
 } from "@shepherdjerred/ops-model/promotion/reddit-outreach.ts";
 
@@ -30,6 +31,45 @@ const recorded: RedditOutreachRun = {
   unresolvedReplies: 1,
   failureCategory: null,
 };
+
+export function redditOutreachPostsFixture(
+  runId: string | null,
+  offset: string | null,
+): RedditOutreachPostPage {
+  if (runId !== recorded.id) return { status: "unavailable" };
+  if (offset === "50") {
+    return {
+      status: "available",
+      posts: [
+        {
+          id: "ghi789",
+          subreddit: "MinecraftServerFinder",
+          title: "My new survival server is open",
+          url: "https://www.reddit.com/r/MinecraftServerFinder/comments/ghi789/",
+          score: null,
+          result: "skipped",
+          reason: "listing-ineligible",
+        },
+      ],
+      nextOffset: null,
+    };
+  }
+  return {
+    status: "available",
+    posts: [
+      {
+        id: "abc123",
+        subreddit: "MinecraftServer",
+        title: "Looking for a survival server near my region",
+        url: "https://www.reddit.com/r/MinecraftServer/comments/abc123/",
+        score: 0.74,
+        result: "no-match",
+        reason: "The server location could not be confirmed.",
+      },
+    ],
+    nextOffset: 50,
+  };
+}
 
 export const redditOutreachFixture: Extract<
   RedditOutreachOverview,
@@ -79,11 +119,47 @@ export const redditOutreachFixture: Extract<
       assessed: 9,
       cached: 0,
       metrics: { draftsPrepared: 0, reasons: { "listing-ineligible": 328 } },
+      coverage: [
+        {
+          subreddit: "MinecraftServer",
+          since: "2026-11-21T18:15:00Z",
+          until: "2026-11-21T18:30:00Z",
+          found: 12,
+          scored: 9,
+          skipped: 1,
+          pending: 2,
+          complete: false,
+        },
+      ],
       verifiedReceipts: [],
       unresolvedReplies: 0,
       failureCategory: "decisions",
     },
-    recorded,
+    {
+      ...recorded,
+      coverage: [
+        {
+          subreddit: "MinecraftServer",
+          since: "2026-11-21T18:00:00Z",
+          until: "2026-11-21T18:15:00Z",
+          found: 26,
+          scored: 20,
+          skipped: 6,
+          pending: 0,
+          complete: true,
+        },
+        {
+          subreddit: "MinecraftServerFinder",
+          since: "2026-11-21T18:00:00Z",
+          until: "2026-11-21T18:15:00Z",
+          found: 12,
+          scored: 7,
+          skipped: 5,
+          pending: 0,
+          complete: true,
+        },
+      ],
+    },
     {
       ...recorded,
       id: "the-storm-reddit-outreach/older-audit",
