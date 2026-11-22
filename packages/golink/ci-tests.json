@@ -7,6 +7,7 @@
       "args": [
         "src/domain",
         "src/infrastructure",
+        "src/client",
         "src/server/app.test.ts",
         "--testTimeout",
         "30000",

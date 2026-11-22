@@ -1,28 +1,11 @@
-import type { LinkItem, LinkKind } from "#shared/contract.ts";
+import { CheckIcon, CopyIcon, CornerDownRightIcon } from "lucide-react";
+import { Button, IconButton } from "@shepherdjerred/console-ui";
+import type { LinkItem } from "#shared/contract.ts";
 import {
   describeDynamicKind,
   describeLinkKind,
+  sourceIcon,
 } from "./directory-sections.tsx";
-
-function sourceIconGlyph(kind: LinkKind): string {
-  switch (kind) {
-    case "manual": {
-      return "◆";
-    }
-    case "ingress": {
-      return "⇄";
-    }
-    case "site": {
-      return "◎";
-    }
-    case "alias": {
-      return "↳";
-    }
-    case "shortcut": {
-      return "⌘";
-    }
-  }
-}
 
 function formatLastClicked(iso: string | null | undefined): string {
   if (iso === undefined || iso === null || iso.length === 0) {
@@ -37,10 +20,6 @@ function formatLastClicked(iso: string | null | undefined): string {
     day: "numeric",
   });
   return `Last ${formatter.format(new Date(timestamp))}`;
-}
-
-function formatClickCount(count = 0): string {
-  return count === 1 ? "1 click" : `${String(count)} clicks`;
 }
 
 function RowActionsCell({
@@ -59,44 +38,44 @@ function RowActionsCell({
   onDelete: (item: LinkItem) => void;
 }) {
   if (!writesEnabled) {
-    return <span className="usage-dash">Read-only</span>;
+    return <span className="ui-muted">Read-only</span>;
   }
   if (item.kind === "manual") {
     return (
-      <div className="row-actions">
-        <button
-          type="button"
-          className="btn btn-secondary btn-row"
+      <div className="golink-row-actions">
+        <Button
+          className="golink-row-btn"
+          aria-label={`Edit go/${item.short}`}
           onClick={() => {
             onEdit(item);
           }}
         >
           Edit
-        </button>
-        <button
-          type="button"
-          className="btn btn-danger-outline btn-row"
+        </Button>
+        <Button
+          className="golink-row-btn golink-danger"
+          aria-label={`Delete go/${item.short}`}
           disabled={isDeleting}
           onClick={() => {
             onDelete(item);
           }}
         >
           {isDeleting ? "Deleting…" : "Delete"}
-        </button>
+        </Button>
       </div>
     );
   }
   return (
-    <div className="row-actions">
-      <button
-        type="button"
-        className="btn btn-secondary btn-row"
+    <div className="golink-row-actions">
+      <Button
+        className="golink-row-btn"
+        aria-label={`Override go/${item.short}`}
         onClick={() => {
           onOverride(item);
         }}
       >
         Override
-      </button>
+      </Button>
     </div>
   );
 }
@@ -121,91 +100,92 @@ function LinkTableRow({
   onDelete: (item: LinkItem) => void;
 }) {
   const isCopied = copiedShort === item.short;
-  const isDeleting = deletingShort === item.short;
   const hasDetail = item.detail !== undefined && item.detail.length > 0;
-  const hasAuthor = item.createdBy !== undefined && item.createdBy.length > 0;
+  const SourceIcon = sourceIcon(item.kind);
 
   return (
     <tr>
-      <th scope="row">
-        <div className="shortlink-cell">
+      <th scope="row" data-label="Shortlink">
+        <div className="golink-shortlink">
           <a
             href={`/${encodeURIComponent(item.short)}`}
-            className="shortlink-anchor"
+            className="ui-mono ui-strong"
           >
-            <span className="shortlink-prefix">go/</span>
-            <span>{item.short}</span>
+            go/{item.short}
           </a>
-          <button
-            type="button"
-            className="btn-inline copy-btn"
-            aria-label={
+          <IconButton
+            icon={isCopied ? CheckIcon : CopyIcon}
+            label={
               isCopied ? `Copied go/${item.short}` : `Copy go/${item.short} URL`
             }
+            className="golink-copy"
             onClick={() => {
               onCopy(item.short);
             }}
-          >
-            {isCopied ? "✓ Copied" : "Copy"}
-          </button>
+          />
         </div>
       </th>
 
-      <td>
-        <div className="destination-cell">
-          <a
-            href={item.targetUrl}
-            className="destination-link"
-            rel="noreferrer"
-          >
-            {item.targetUrl}
-          </a>
-          {item.shadows !== undefined && (
-            <p className="shadow-note">
-              <span aria-hidden="true">↳ </span>
+      <td className="golink-dest-cell" data-label="Destination">
+        <a
+          href={item.targetUrl}
+          className="golink-dest ui-mono"
+          title={item.targetUrl}
+          rel="noreferrer"
+        >
+          {item.targetUrl}
+        </a>
+        {item.shadows !== undefined && (
+          <p className="golink-shadow ui-muted" title={item.shadows.targetUrl}>
+            <CornerDownRightIcon aria-hidden />
+            <span>
               Overrides {describeDynamicKind(item.shadows.kind)}:{" "}
-              <code>{item.shadows.targetUrl}</code>
-            </p>
-          )}
-        </div>
+              <span className="ui-mono">{item.shadows.targetUrl}</span>
+            </span>
+          </p>
+        )}
       </td>
 
-      <td>
-        <div className="source-cell">
-          <span className={`source-badge source-badge-${item.kind}`}>
-            <span aria-hidden="true">{sourceIconGlyph(item.kind)}</span>
-            <span>{describeLinkKind(item.kind)}</span>
+      <td data-label="Source">
+        <span className="golink-source">
+          <SourceIcon aria-hidden />
+          <span>{describeLinkKind(item.kind)}</span>
+        </span>
+        {hasDetail && (
+          <span className="golink-detail ui-muted" title={item.detail}>
+            {item.detail}
           </span>
-          {hasDetail && <span className="source-detail">{item.detail}</span>}
-        </div>
+        )}
       </td>
 
-      <td>
+      <td
+        className="ui-num"
+        data-label="Usage"
+        title={
+          item.createdBy === undefined || item.createdBy.length === 0
+            ? undefined
+            : `Created by ${item.createdBy}`
+        }
+      >
         {item.kind === "manual" ? (
-          <div className="usage-cell">
-            <span className="usage-primary">
-              {formatClickCount(item.clicks)} ·{" "}
+          <>
+            <span className="ui-mono">{String(item.clicks ?? 0)}</span>
+            <span className="golink-detail ui-muted">
               {formatLastClicked(item.lastClickedAt)}
             </span>
-            {hasAuthor && (
-              <span className="usage-secondary">by {item.createdBy}</span>
-            )}
-          </div>
+          </>
         ) : (
-          <span
-            className="usage-dash"
-            aria-label="Not tracked for dynamic link"
-          >
+          <span className="ui-muted" aria-label="Not tracked for dynamic link">
             —
           </span>
         )}
       </td>
 
-      <td>
+      <td data-label="Actions" className="golink-actions-cell">
         <RowActionsCell
           item={item}
           writesEnabled={writesEnabled}
-          isDeleting={isDeleting}
+          isDeleting={deletingShort === item.short}
           onEdit={onEdit}
           onOverride={onOverride}
           onDelete={onDelete}
@@ -237,33 +217,34 @@ export function LinksTable({
   onDelete: (item: LinkItem) => void;
 }) {
   return (
-    <section className="table-card">
-      <div
-        tabIndex={0}
-        role="region"
-        aria-labelledby="links-table-caption"
-        className="table-wrapper"
-      >
-        <table className="links-table">
-          <caption id="links-table-caption">
-            <span>Active go/ routes</span>
-            <span className="caption-count">
-              Showing {String(items.length)} of {String(totalCount)}
-            </span>
-          </caption>
+    <section aria-labelledby="links-heading" className="golink-table-wrap">
+      <div className="ui-section-head">
+        <h2 className="ui-section-title" id="links-heading">
+          Routes
+        </h2>
+        <span className="ui-count">
+          {String(items.length)} of {String(totalCount)}
+        </span>
+      </div>
+      <div className="ui-table-scroll">
+        <table className="ui-table golink-links">
           <thead>
             <tr>
               <th scope="col">Shortlink</th>
               <th scope="col">Destination</th>
               <th scope="col">Source</th>
-              <th scope="col">Usage</th>
-              <th scope="col">Actions</th>
+              <th scope="col" className="ui-num">
+                Clicks
+              </th>
+              <th scope="col">
+                <span className="ui-sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {items.length === 0 ? (
-              <tr className="empty-row">
-                <td colSpan={5} className="empty-cell">
+              <tr>
+                <td colSpan={5} className="golink-empty">
                   No shortlinks match the current filter.
                 </td>
               </tr>

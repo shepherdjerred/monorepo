@@ -5,9 +5,9 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
+import { ShellFrame, type ThemeStore } from "@shepherdjerred/console-ui";
 import {
   normalizeShortSlug,
-  validateShortSlug,
   type LinkItem,
   type LinksDirectoryResponse,
 } from "#shared/contract.ts";
@@ -23,18 +23,16 @@ import {
   isEditableElement,
   matchesSearchAndKind,
 } from "./directory-filters.ts";
+import { ShortcutsSection, type KindFilter } from "./directory-sections.tsx";
 import {
-  DirectoryHeader,
-  SearchFilterBar,
-  ShortcutsSection,
-  type KindFilter,
-} from "./directory-sections.tsx";
-import { LinksTable } from "./links-table.tsx";
-import {
+  DeleteConfirmDialog,
+  LinkFormDialog,
   MissingSlugBanner,
-  UpsertFormCard,
+  showModalFromFocus,
   type FormMode,
-} from "./upsert-form-card.tsx";
+} from "./link-dialogs.tsx";
+import { LinksTable } from "./links-table.tsx";
+import { GolinkHeader, MobileBar, SourcesSidebar } from "./shell.tsx";
 import {
   bindFormValidation,
   focusFirstInvalidField,
@@ -42,6 +40,9 @@ import {
   syncShortInputValidity,
   syncTargetInputValidity,
 } from "./validation.ts";
+
+const INITIAL_SHORT_ERROR = "Enter a short link name, such as docs or ha.";
+const INITIAL_TARGET_ERROR = "Enter an http:// or https:// destination URL.";
 
 function DirectoryBody({
   loadError,
@@ -72,13 +73,9 @@ function DirectoryBody({
 }) {
   if (loadError !== null) {
     return (
-      <div className="feedback-banner feedback-error" role="alert">
+      <div className="golink-banner" data-sev="error" role="alert">
         <span>{loadError}</span>
-        <button
-          type="button"
-          className="btn btn-secondary btn-row"
-          onClick={onRetry}
-        >
+        <button type="button" className="ui-btn" onClick={onRetry}>
           Retry
         </button>
       </div>
@@ -86,9 +83,9 @@ function DirectoryBody({
   }
   if (isInitialLoading) {
     return (
-      <div className="loading-card" role="status" aria-live="polite">
+      <p className="golink-loading ui-muted" role="status" aria-live="polite">
         Loading shortlink directory…
-      </div>
+      </p>
     );
   }
   return (
@@ -106,7 +103,7 @@ function DirectoryBody({
   );
 }
 
-export function App() {
+export function App({ theme }: { theme: ThemeStore }) {
   const initialMissing = useMemo(() => extractInitialMissingSlug(), []);
 
   const [directory, setDirectory] = useState<LinksDirectoryResponse | null>(
@@ -117,32 +114,27 @@ export function App() {
 
   const [missingSlug, setMissingSlug] = useState<string | null>(initialMissing);
   const [formMode, setFormMode] = useState<FormMode>({ kind: "create" });
-  const [shortValue, setShortValue] = useState<string>(() =>
-    initialMissing !== null && validateShortSlug(initialMissing) === null
-      ? initialMissing
-      : "",
-  );
+  const [shortValue, setShortValue] = useState("");
   const [targetValue, setTargetValue] = useState("");
-  const [shortErrorText, setShortErrorText] = useState(
-    "Enter a short link name, such as docs or ha.",
-  );
-  const [targetErrorText, setTargetErrorText] = useState(
-    "Enter an http:// or https:// destination URL.",
-  );
+  const [shortErrorText, setShortErrorText] = useState(INITIAL_SHORT_ERROR);
+  const [targetErrorText, setTargetErrorText] = useState(INITIAL_TARGET_ERROR);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const [query, setQuery] = useState("");
   const [kindFilter, setKindFilter] = useState<KindFilter>("all");
   const [copiedShort, setCopiedShort] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<LinkItem | null>(null);
   const [deletingShort, setDeletingShort] = useState<string | null>(null);
 
   const formElementRef = useRef<HTMLFormElement | null>(null);
   const shortInputRef = useRef<HTMLInputElement | null>(null);
   const targetInputRef = useRef<HTMLInputElement | null>(null);
+  const formDialogRef = useRef<HTMLDialogElement | null>(null);
+  const deleteDialogRef = useRef<HTMLDialogElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
-  const hasAutoFocusedMissingRef = useRef(false);
   const copyResetTimerRef = useRef<
     ReturnType<typeof globalThis.setTimeout> | undefined
   >(undefined);
@@ -192,27 +184,10 @@ export function App() {
     return bindFormValidation(node);
   }, []);
 
-  const targetRefCallback = useCallback(
-    (node: HTMLInputElement | null) => {
-      targetInputRef.current = node;
-      if (
-        node !== null &&
-        initialMissing !== null &&
-        !hasAutoFocusedMissingRef.current &&
-        !node.disabled
-      ) {
-        hasAutoFocusedMissingRef.current = true;
-        node.focus();
-      }
-    },
-    [initialMissing],
-  );
-
   const writesEnabled = directory?.writesEnabled ?? true;
   const links = useMemo(() => directory?.links ?? [], [directory]);
   const shortcuts = directory?.shortcuts ?? [];
   const counts = useMemo(() => computeKindCounts(links), [links]);
-
   const activeMissingSlug = useMemo(() => {
     return missingSlug === null ||
       links.some((item) => item.short === missingSlug)
@@ -227,28 +202,53 @@ export function App() {
     );
   }, [kindFilter, links, query]);
 
-  const resetFormToCreate = (): void => {
-    setFormMode({ kind: "create" });
-    setShortValue("");
-    setTargetValue("");
+  const openDialog = (mode: FormMode, short: string, target: string): void => {
+    setFormMode(mode);
+    setShortValue(short);
+    setTargetValue(target);
+    setShortErrorText(INITIAL_SHORT_ERROR);
+    setTargetErrorText(INITIAL_TARGET_ERROR);
     setMutationError(null);
+    setStatusMessage(null);
+    setActionError(null);
     if (formElementRef.current !== null) {
       resetFormValidationState(formElementRef.current);
     }
+    showModalFromFocus(formDialogRef.current);
+    // The values above land on the next render; select once they have.
+    globalThis.setTimeout(() => {
+      const field =
+        short === "" && mode.kind === "create"
+          ? shortInputRef.current
+          : targetInputRef.current;
+      field?.focus();
+      field?.select();
+    }, 0);
   };
 
-  const scrollAndFocusTarget = (): void => {
-    if (formElementRef.current !== null) {
-      resetFormValidationState(formElementRef.current);
-      formElementRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
+  const handleNewLink = (prefill = ""): void => {
+    openDialog({ kind: "create" }, prefill, "");
+  };
+
+  const handleEditLink = (item: LinkItem): void => {
+    openDialog({ kind: "edit", short: item.short }, item.short, item.targetUrl);
+  };
+
+  const handleOverrideLink = (item: LinkItem): void => {
+    if (item.kind === "manual") {
+      handleEditLink(item);
+      return;
     }
-    globalThis.setTimeout(() => {
-      targetInputRef.current?.focus();
-      targetInputRef.current?.select();
-    }, 0);
+    openDialog(
+      {
+        kind: "override",
+        short: item.short,
+        dynamicKind: item.kind,
+        previousTargetUrl: item.targetUrl,
+      },
+      item.short,
+      item.targetUrl,
+    );
   };
 
   const handleShellKeyDown = (
@@ -260,7 +260,9 @@ export function App() {
       event.metaKey ||
       event.ctrlKey ||
       event.altKey ||
-      isEditableElement(event.target);
+      isEditableElement(event.target) ||
+      (event.target instanceof Element &&
+        event.target.closest("dialog") !== null);
     if (shouldIgnore) {
       return;
     }
@@ -296,7 +298,7 @@ export function App() {
       });
       setMissingSlug(null);
       clearUrlPathToRoot();
-      resetFormToCreate();
+      formDialogRef.current?.close();
       setStatusMessage(`Saved go/${saved.short} → ${saved.targetUrl}`);
       await reloadDirectory();
     } catch (error) {
@@ -308,55 +310,27 @@ export function App() {
     }
   };
 
-  const handleEditLink = (item: LinkItem): void => {
-    setMutationError(null);
-    setStatusMessage(null);
-    setFormMode({ kind: "edit", short: item.short });
-    setShortValue(item.short);
-    setTargetValue(item.targetUrl);
-    scrollAndFocusTarget();
-  };
-
-  const handleOverrideLink = (item: LinkItem): void => {
-    if (item.kind === "manual") {
-      handleEditLink(item);
-      return;
-    }
-    setMutationError(null);
-    setStatusMessage(null);
-    setFormMode({
-      kind: "override",
-      short: item.short,
-      dynamicKind: item.kind,
-      previousTargetUrl: item.targetUrl,
-    });
-    setShortValue(item.short);
-    setTargetValue(item.targetUrl);
-    scrollAndFocusTarget();
-  };
-
-  const handleDeleteLink = async (item: LinkItem): Promise<void> => {
-    if (deletingShort !== null || !writesEnabled) {
+  const confirmDelete = async (): Promise<void> => {
+    const item = pendingDelete;
+    if (item === null || deletingShort !== null || !writesEnabled) {
       return;
     }
     setDeletingShort(item.short);
-    setMutationError(null);
+    setActionError(null);
     setStatusMessage(null);
     try {
       await deleteManualLink(item.short);
-      if (formMode.kind !== "create" && formMode.short === item.short) {
-        resetFormToCreate();
-      }
       setStatusMessage(`Deleted manual link go/${item.short}.`);
       await reloadDirectory();
     } catch (error) {
-      setMutationError(
+      setActionError(
         error instanceof Error
           ? error.message
           : `Unable to delete go/${item.short}.`,
       );
     } finally {
       setDeletingShort(null);
+      deleteDialogRef.current?.close();
     }
   };
 
@@ -379,98 +353,123 @@ export function App() {
     }
   };
 
-  const showCancelButton =
-    formMode.kind !== "create" ||
-    activeMissingSlug !== null ||
-    shortValue.length > 0 ||
-    targetValue.length > 0;
-
   return (
-    <div
-      ref={shellRef}
-      className="golink-page"
-      onKeyDownCapture={handleShellKeyDown}
-    >
-      <DirectoryHeader
-        manualCount={counts.manual}
-        dynamicCount={counts.all - counts.manual}
-        shortcutCount={shortcuts.length}
-        viewer={directory?.viewer ?? null}
-        writesEnabled={writesEnabled}
-      />
-
-      <main className="golink-main">
-        {activeMissingSlug !== null && (
-          <MissingSlugBanner
-            slug={activeMissingSlug}
-            onDismiss={() => {
-              setMissingSlug(null);
-              clearUrlPathToRoot();
-            }}
+    <div ref={shellRef} onKeyDownCapture={handleShellKeyDown}>
+      <ShellFrame
+        sidebar={
+          <SourcesSidebar
+            counts={counts}
+            shortcutCount={shortcuts.length}
+            kindFilter={kindFilter}
+            theme={theme}
+            onKindFilterChange={setKindFilter}
           />
-        )}
-
-        <UpsertFormCard
-          formMode={formMode}
-          writesEnabled={writesEnabled}
-          shortValue={shortValue}
-          targetValue={targetValue}
-          shortErrorText={shortErrorText}
-          targetErrorText={targetErrorText}
-          isSubmitting={isSubmitting}
-          showCancelButton={showCancelButton}
-          mutationError={mutationError}
-          statusMessage={statusMessage}
-          formRef={formRef}
-          shortInputRef={shortInputRef}
-          targetRefCallback={targetRefCallback}
-          onShortValueChange={setShortValue}
-          onTargetValueChange={setTargetValue}
-          onShortErrorChange={setShortErrorText}
-          onTargetErrorChange={setTargetErrorText}
-          onSubmit={() => {
-            void submitUpsertForm();
-          }}
-          onCancel={() => {
-            setMissingSlug(null);
-            clearUrlPathToRoot();
-            resetFormToCreate();
-          }}
-        />
-
-        <SearchFilterBar
-          query={query}
+        }
+      >
+        <MobileBar
           kindFilter={kindFilter}
           counts={counts}
-          searchInputRef={searchInputRef}
-          onQueryChange={setQuery}
           onKindFilterChange={setKindFilter}
         />
 
-        <DirectoryBody
-          loadError={loadError}
-          isInitialLoading={isLoading && directory === null}
-          items={filteredLinks}
-          totalCount={links.length}
+        <GolinkHeader
+          query={query}
+          searchInputRef={searchInputRef}
+          viewerLogin={directory?.viewer.login ?? null}
           writesEnabled={writesEnabled}
-          copiedShort={copiedShort}
-          deletingShort={deletingShort}
-          onRetry={() => {
-            setIsLoading(true);
-            void reloadDirectory();
-          }}
-          onCopy={(short) => {
-            void handleCopyLink(short);
-          }}
-          onEdit={handleEditLink}
-          onOverride={handleOverrideLink}
-          onDelete={(item) => {
-            void handleDeleteLink(item);
+          onQueryChange={setQuery}
+          onNewLink={() => {
+            handleNewLink();
           }}
         />
+        <main>
+          {activeMissingSlug !== null && (
+            <MissingSlugBanner
+              slug={activeMissingSlug}
+              writesEnabled={writesEnabled}
+              onCreate={() => {
+                handleNewLink(activeMissingSlug);
+              }}
+              onDismiss={() => {
+                setMissingSlug(null);
+                clearUrlPathToRoot();
+              }}
+            />
+          )}
 
-        <ShortcutsSection shortcuts={shortcuts} />
-      </main>
+          {actionError !== null && (
+            <p className="golink-banner" data-sev="error" role="alert">
+              {actionError}
+            </p>
+          )}
+          <p
+            role="status"
+            aria-live="polite"
+            className={statusMessage === null ? "ui-sr-only" : "golink-banner"}
+            data-sev={statusMessage === null ? undefined : "ok"}
+          >
+            {statusMessage ?? ""}
+          </p>
+
+          <DirectoryBody
+            loadError={loadError}
+            isInitialLoading={isLoading && directory === null}
+            items={filteredLinks}
+            totalCount={links.length}
+            writesEnabled={writesEnabled}
+            copiedShort={copiedShort}
+            deletingShort={deletingShort}
+            onRetry={() => {
+              setIsLoading(true);
+              void reloadDirectory();
+            }}
+            onCopy={(short) => {
+              void handleCopyLink(short);
+            }}
+            onEdit={handleEditLink}
+            onOverride={handleOverrideLink}
+            onDelete={(item) => {
+              setPendingDelete(item);
+              showModalFromFocus(deleteDialogRef.current);
+            }}
+          />
+
+          <ShortcutsSection shortcuts={shortcuts} />
+        </main>
+      </ShellFrame>
+
+      <LinkFormDialog
+        dialogRef={formDialogRef}
+        formMode={formMode}
+        writesEnabled={writesEnabled}
+        shortValue={shortValue}
+        targetValue={targetValue}
+        shortErrorText={shortErrorText}
+        targetErrorText={targetErrorText}
+        isSubmitting={isSubmitting}
+        mutationError={mutationError}
+        formRef={formRef}
+        shortInputRef={shortInputRef}
+        targetInputRef={targetInputRef}
+        onShortValueChange={setShortValue}
+        onTargetValueChange={setTargetValue}
+        onShortErrorChange={setShortErrorText}
+        onTargetErrorChange={setTargetErrorText}
+        onSubmit={() => {
+          void submitUpsertForm();
+        }}
+      />
+      <DeleteConfirmDialog
+        dialogRef={deleteDialogRef}
+        item={pendingDelete}
+        isDeleting={deletingShort !== null}
+        onConfirm={() => {
+          void confirmDelete();
+        }}
+        onClose={() => {
+          setPendingDelete(null);
+        }}
+      />
     </div>
   );
 }
