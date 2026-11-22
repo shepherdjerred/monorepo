@@ -376,11 +376,16 @@ async function hydrateOne(
       `Queried participant ${request.puuid} is missing from match ${request.matchId}`,
     );
   }
-  const timelineEvents = await timelineForParticipant(
-    request.matchId,
-    row.participant_id,
-    abortSignal,
-  );
+  // An end-of-game record numbers no participant and states no timeline, so
+  // its card has no build path to read.
+  const timelineEvents =
+    row.participant_id === null
+      ? null
+      : await timelineForParticipant(
+          request.matchId,
+          row.participant_id,
+          abortSignal,
+        );
   return buildExploreLoadoutCard({ request, row, timelineEvents });
 }
 

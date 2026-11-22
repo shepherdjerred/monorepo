@@ -1,6 +1,9 @@
 import {
   computeKda,
+  END_OF_GAME_NULLABLE_LAKE_COLUMNS,
+  HISTORY_NULLABLE_LAKE_COLUMNS,
   type DiscordAccountId,
+  type MatchCoverage,
   type LeaguePuuid,
   type MatchLakeRow,
   type MatchLoadout,
@@ -81,6 +84,12 @@ export type TestLakeMatchFact = {
     Pick<MatchLakeRow, (typeof RUNE_SPELL_COLUMNS)[number]>
   >;
   gameCreationAt: Date;
+  /**
+   * How complete the record is; defaults to a complete Riot match. An
+   * end-of-game or history record leaves NULL exactly the columns its record
+   * does not state, as the lake does.
+   */
+  coverage?: MatchCoverage;
 };
 
 export type TestLakePrematchFact = {
@@ -118,7 +127,74 @@ function participantIdentity(
       };
 }
 
+/** The participant columns an end-of-game record does not state. */
+const END_OF_GAME_UNSTATED = {
+  game_creation_at: null,
+  game_version: null,
+  participant_id: null,
+  lane: null,
+  role: null,
+} as const satisfies Partial<MatchLakeRow>;
+
+/** The participant columns a history record does not state. */
+const HISTORY_UNSTATED = {
+  total_heals_on_teammates: null,
+  detector_wards_placed: null,
+  all_in_pings: null,
+  assist_me_pings: null,
+  basic_pings: null,
+  command_pings: null,
+  danger_pings: null,
+  enemy_missing_pings: null,
+  enemy_vision_pings: null,
+  get_back_pings: null,
+  hold_pings: null,
+  need_vision_pings: null,
+  on_my_way_pings: null,
+  push_pings: null,
+  vision_cleared_pings: null,
+  champ_experience: null,
+  time_played: null,
+  total_time_spent_dead: null,
+  baron_kills: null,
+  dragon_kills: null,
+} as const satisfies Partial<MatchLakeRow>;
+
+/**
+ * A partial record's unstated columns, checked against the record contracts
+ * so the fixture cannot drift from what the lake writes.
+ */
+function unstatedColumns(
+  coverage: MatchCoverage,
+  row: MatchLakeRow,
+): Partial<MatchLakeRow> {
+  if (coverage === "complete") return {};
+  const [unstated, contract] =
+    coverage === "end_of_game"
+      ? [END_OF_GAME_UNSTATED, END_OF_GAME_NULLABLE_LAKE_COLUMNS]
+      : [HISTORY_UNSTATED, HISTORY_NULLABLE_LAKE_COLUMNS];
+  const expected = contract.filter((column) => column in row).toSorted();
+  const actual = Object.keys(unstated).toSorted();
+  if (JSON.stringify(expected) !== JSON.stringify(actual)) {
+    throw new Error(
+      `Test lake ${coverage} unstated columns drifted: ${actual.join(", ")} vs ${expected.join(", ")}`,
+    );
+  }
+  return unstated;
+}
+
 export function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
+  const row = completeMatchRowFromFact(fact);
+  const coverage = fact.coverage ?? "complete";
+  return {
+    ...row,
+    ...unstatedColumns(coverage, row),
+    coverage,
+    data_source: coverage === "complete" ? row.data_source : "SCOUT_CLIENT",
+  };
+}
+
+function completeMatchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
   const created = fact.gameCreationAt.getTime();
   const gameDurationSeconds = fact.gameDurationSeconds ?? 1800;
   const timePlayedSeconds = fact.timePlayedSeconds ?? gameDurationSeconds;

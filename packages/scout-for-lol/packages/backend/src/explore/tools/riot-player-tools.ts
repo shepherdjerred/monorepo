@@ -20,6 +20,7 @@ import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildMatchesSource,
   buildTimelineCoverageSource,
+  GAME_CREATED_MS_SQL,
   listParam,
   withLakeQueryRetry,
   scalarParam,
@@ -64,7 +65,7 @@ async function inspectCoverage(puuid: LeaguePuuid): Promise<{
     }
     return await withDuckDBConnection(async (session) => {
       const matchRows = await session.run(
-        `SELECT COUNT(DISTINCT match_id) AS games, MIN(epoch_ms(game_creation_at)) AS first_game_ms, MAX(epoch_ms(game_creation_at)) AS last_game_ms FROM (${matches.sql})`,
+        `SELECT COUNT(DISTINCT match_id) AS games, MIN(${GAME_CREATED_MS_SQL}) AS first_game_ms, MAX(${GAME_CREATED_MS_SQL}) AS last_game_ms FROM (${matches.sql})`,
         bindParams(session, matches.params),
       );
       const coverage = CoverageRowSchema.parse(matchRows[0]);

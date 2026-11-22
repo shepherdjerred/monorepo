@@ -11,6 +11,7 @@ import {
   scalarParam,
   withLakeQueryRetry,
   type BoundParam,
+  GAME_CREATED_AT_SQL,
   PLAYED_SECONDS_SQL,
 } from "#src/reports/duckdb/lake.ts";
 
@@ -101,7 +102,7 @@ export async function fetchChampionComparisons(options: {
           `PARTITION BY requested.entry_key, matches.match_id ORDER BY matches.puuid) = 1), ` +
           `ranked AS (` +
           `SELECT *, row_number() OVER (` +
-          `PARTITION BY entry_key ORDER BY game_creation_at DESC, match_id DESC) AS player_game_rank ` +
+          `PARTITION BY entry_key ORDER BY ${GAME_CREATED_AT_SQL} DESC, match_id DESC) AS player_game_rank ` +
           `FROM deduped), scoped AS (SELECT * FROM ranked ${windowClause}) ` +
           `SELECT entry_key, min(champion_name) AS champion_name, count(*)::BIGINT AS games, ` +
           `sum(CASE WHEN win THEN 1 ELSE 0 END)::BIGINT AS wins, ` +

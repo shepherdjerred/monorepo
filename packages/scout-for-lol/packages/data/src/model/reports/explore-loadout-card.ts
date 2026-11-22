@@ -98,7 +98,8 @@ export const ExploreLoadoutCardSchema = z
   .object({
     size: ExploreLoadoutCardSizeSchema,
     matchId: RiotMatchIdSchema,
-    participantId: z.number().int().positive(),
+    // Null for an end-of-game record, which numbers no participant.
+    participantId: z.number().int().positive().nullable(),
     championId: z.number().int().positive(),
     championName: z.string().min(1).max(100),
     gameDurationSeconds: z.number().int().nonnegative(),
@@ -114,3 +115,17 @@ export const ExploreLoadoutCardSchema = z
   })
   .strict();
 export type ExploreLoadoutCard = z.infer<typeof ExploreLoadoutCardSchema>;
+
+/**
+ * The participant a card shows, within its match: its slot, or for an
+ * end-of-game record, which numbers no slot, its champion.
+ */
+export function exploreLoadoutCardKey(
+  card: Pick<ExploreLoadoutCard, "matchId" | "participantId" | "championId">,
+): string {
+  const participant =
+    card.participantId === null
+      ? `champion:${card.championId.toString()}`
+      : card.participantId.toString();
+  return `${card.matchId}:${participant}`;
+}
