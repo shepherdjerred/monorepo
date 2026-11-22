@@ -23,7 +23,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   birmel: "enforced",
   bugsink: "enforced",
   buildkitd: "open",
-  ddns: "open",
+  ddns: "enforced",
   delivery: "open",
   "delivery-platform-jobs": "open",
   "delivery-tsmc-controller": "open",
