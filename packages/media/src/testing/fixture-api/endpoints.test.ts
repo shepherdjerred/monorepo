@@ -205,7 +205,7 @@ describe("fixture volume", () => {
       .flatMap(({ artwork }) => [artwork.posterPath, artwork.backdropPath])
       .filter((path) => path !== null);
     for (const path of paths) {
-      expect(path).toMatch(/^\/[0-9a-f]{27}\.jpg$/u);
+      expect(path).toMatch(/^\/[0-9a-f]{27}\.png$/u);
     }
   });
 

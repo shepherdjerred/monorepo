@@ -788,6 +788,36 @@ After a navigation the shell moves focus to the new page's heading, which is why
 every page renders its heading through `PageTitle`. The top bar's search submits
 to `/discover?q=`, and Discover reads its search from that parameter.
 
+### Library page and client primitives
+
+`/library` shows every title the household has as a poster grid
+(`src/client/library/`). Search, the kind, keeping and readiness filters, the
+sort and the layout are query parameters (`q`, `kind`, `keeping`, `status`,
+`sort`, `view`), so a view can be linked and survives a reload; a value the page
+does not know reads as that setting's default. `view=list` is the compact list,
+which is where the owner switches a title between kept for good and kept just
+for now.
+
+Shared building blocks live in `src/client/ui/`:
+
+| Module                       | Holds                                                                                                             |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `poster.tsx`, `artwork.ts`   | A 2:3 poster from the artwork route, lazy, with a `srcset` of the proxy widths; no image shows the title instead. |
+| `poster-card.tsx`            | `PosterCard`, `StatePill`, and `PosterGrid`, whose column count follows its own width (container queries).        |
+| `segmented.tsx`              | A row of exclusive views that are links, so navigation and not an ARIA tablist.                                   |
+| `skeleton.tsx`, `states.tsx` | Loading shapes, empty states that say what to do next, and error states by kind of failure.                       |
+| `use-cursor-list.ts`         | The one place the client follows `nextCursor`: a page at a time, or every page.                                   |
+
+`src/client/presentation/` holds the words for contract enums, each table
+written `satisfies Record<Enum, …>`: an enum that gains a value stops compiling
+until it has copy, and no table has a fallback. A page shown to a member takes
+its wording from there, never from `humanize()` or a raw enum name.
+
+In fixture mode the artwork route draws a small PNG per file name
+(`src/testing/fixture-api/fixtures/artwork-image.ts`). Some fixture titles have
+no stored artwork, and the poster of "Your Name." answers 502, so both ways a
+poster can be missing are on screen.
+
 ### Client styles and themes
 
 The client is styled with CSS in five cascade layers, lowest priority first:

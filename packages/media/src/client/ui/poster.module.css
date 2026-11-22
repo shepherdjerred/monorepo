@@ -1,0 +1,53 @@
+@layer components {
+  .frame {
+    container-type: inline-size;
+    position: relative;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    border-radius: var(--radius-poster);
+    background: var(--surface-sunken);
+    /* An edge that holds on paper and in the dark room, whatever the art. */
+    outline: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+    outline-offset: -1px;
+  }
+  .image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    padding: 10cqi;
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-size: clamp(var(--text-xs), 10cqi, var(--text-lg));
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    letter-spacing: -0.02em;
+  }
+  /* A narrow card carries its state along the foot of the art
+     (`poster-card.module.css`), so the name moves to the head. */
+  @container (max-width: 126px) {
+    .placeholder {
+      align-items: flex-start;
+    }
+  }
+  /* A thumbnail has no room for words; its row names the title beside it. */
+  @container (max-width: 72px) {
+    .placeholder {
+      display: none;
+    }
+  }
+  /* A long title stops after five lines instead of spilling out of the frame. */
+  .placeholderTitle {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+}

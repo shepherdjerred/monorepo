@@ -1,0 +1,210 @@
+@layer pages {
+  /* Toolbar: search, then what narrows the list, then how it is arranged. */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  .search {
+    flex: 1 1 220px;
+    max-width: 320px;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 38px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--field);
+    color: var(--text-muted);
+  }
+  .search:focus-within {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .search svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+  .search input {
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text);
+    font-size: var(--text-sm);
+  }
+  .search input:focus-visible {
+    outline: none;
+  }
+  .choices,
+  .arrange {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .arrange {
+    margin-inline-start: auto;
+  }
+
+  /* A native select as a chip: the browser's own picker, the client's face. */
+  .choice {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .choice select {
+    appearance: none;
+    min-height: 38px;
+    padding: 0 34px 0 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .choice select:hover {
+    background: var(--surface-selected);
+  }
+  .choice select:focus-visible {
+    outline-offset: 2px;
+  }
+  .choice svg {
+    position: absolute;
+    inset-inline-end: 12px;
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  /* A filter that is narrowing the list says so with more than its words. */
+  .choice[data-active="true"] select {
+    background: var(--surface-selected);
+    border-color: var(--accent-strong);
+    box-shadow: inset 0 0 0 1px var(--accent-strong);
+  }
+
+  .note {
+    margin: calc(-1 * var(--space-3)) 0 var(--space-5);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .more {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-6);
+  }
+
+  /* Compact list. The columns follow the list's own width. */
+  .listNote {
+    max-width: 640px;
+    margin: 0 0 var(--space-4);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .rows {
+    container-type: inline-size;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border);
+  }
+  .rows[aria-busy="true"] {
+    opacity: 0.6;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-areas:
+      "poster title"
+      "poster state"
+      "poster keeping"
+      "poster action";
+    gap: var(--space-2) var(--space-4);
+    align-items: start;
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .rowPoster {
+    grid-area: poster;
+  }
+  .rowTitle {
+    grid-area: title;
+    min-width: 0;
+  }
+  .rowState {
+    grid-area: state;
+  }
+  .rowKeeping {
+    grid-area: keeping;
+  }
+  .rowAction {
+    grid-area: action;
+  }
+  .rowLink {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+    border-radius: 2px;
+  }
+  .rowLink:hover {
+    color: var(--text-accent);
+  }
+  .rowDetail {
+    margin: 2px 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+  }
+  .rowKeepingLabel {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1.4;
+  }
+  .rowError {
+    margin: var(--space-2) 0 0;
+    max-width: 260px;
+    color: var(--danger);
+    font-size: var(--text-sm);
+  }
+  @container (min-width: 720px) {
+    .row {
+      grid-template-columns: 44px minmax(0, 1.4fr) 190px minmax(0, 1fr) 170px;
+      grid-template-areas: "poster title state keeping action";
+      align-items: center;
+    }
+    .rowAction {
+      justify-self: end;
+      text-align: end;
+    }
+  }
+
+  @media (pointer: coarse) {
+    .search,
+    .choice select {
+      min-height: 44px;
+    }
+    /* Below 16px, iOS zooms the page when a field takes focus. */
+    .search input,
+    .choice select {
+      font-size: 1rem;
+    }
+  }
+  @media (max-width: 760px) {
+    .search {
+      flex-basis: 100%;
+      max-width: none;
+    }
+    .arrange {
+      margin-inline-start: 0;
+    }
+  }
+}

@@ -1,10 +1,12 @@
 import { UserRoleSchema } from "#shared/contract.ts";
+import { fixtureArtwork } from "./fixtures/artwork-image.ts";
 import type { Persona } from "./personas.ts";
 import { routeFixture } from "./router.ts";
 
 /** Cookie that selects the signed-in persona for one browser. */
 export const PERSONA_COOKIE = "media-fixture-persona";
 const PERSONA_SWITCH = /^\/api\/fixture\/persona\/([^/]+)$/u;
+const ARTWORK = /^\/api\/v1\/artwork\/([^/]+)\/([^/]+)$/u;
 
 export type FixtureApiOptions = {
   /** Persona served to a browser that has not chosen one. */
@@ -60,6 +62,27 @@ function switchPersona(value: string): Response {
 }
 
 /**
+ * `GET /api/v1/artwork/:size/:file`, the one read that is not JSON. A success
+ * carries the headers the real route sends; a failure is the typed error body
+ * every other route sends.
+ */
+function artwork(size: string, file: string): Response {
+  const image = fixtureArtwork(size, file);
+  if (image.status !== 200) {
+    return json(image.status, {
+      error: { code: image.code, message: image.message },
+    });
+  }
+  return new Response(image.bytes, {
+    headers: {
+      "Content-Type": "image/png",
+      "Content-Length": String(image.bytes.byteLength),
+      "Cache-Control": "private, max-age=31536000, immutable",
+    },
+  });
+}
+
+/**
  * The fixture API as a request handler. Returns null for anything outside
  * `/api/`, so the caller decides how the client itself is served (the Vite
  * dev server in `dev:fixture`, the built bundle in the browser tests).
@@ -75,6 +98,13 @@ export function createFixtureApi(
     const personaSwitch = PERSONA_SWITCH.exec(url.pathname);
     if (personaSwitch !== null && request.method === "GET") {
       return switchPersona(decodeURIComponent(personaSwitch[1] ?? ""));
+    }
+    const image = ARTWORK.exec(url.pathname);
+    if (image !== null && request.method === "GET") {
+      return artwork(
+        decodeURIComponent(image[1] ?? ""),
+        decodeURIComponent(image[2] ?? ""),
+      );
     }
     const chosen = cookie(request, PERSONA_COOKIE);
     const persona = UserRoleSchema.safeParse(chosen ?? options.defaultPersona);
