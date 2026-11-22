@@ -291,6 +291,7 @@ describe("credential resolver backends", () => {
   test("delivery resolves its provisioned admin credential through the broker", () => {
     const vaultRef = "op://v64ocnykdqju4ui6j6pua56xw4";
     const itemId = "ahbp4izt7fibvwdjwd4ffhiime";
+    const flagsItemId = "dzcroze2qcoibfz3illceozbea";
     expect(CREDENTIAL_REGISTRY["DELIVERY_EXECUTOR_TOKEN"]).toMatchObject({
       source: {
         kind: "op",
@@ -310,6 +311,13 @@ describe("credential resolver backends", () => {
       source: {
         kind: "op",
         ref: `${vaultRef}/${itemId}/DELIVERY_ADMIN_TOKEN`,
+      },
+    });
+    expect(CREDENTIAL_REGISTRY["FLAGS_MACHINE_TOKEN"]).toEqual({
+      description: "Flags service machine operator token",
+      source: {
+        kind: "op",
+        ref: `${vaultRef}/${flagsItemId}/FLAGS_MACHINE_TOKEN`,
       },
     });
   });

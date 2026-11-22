@@ -28,6 +28,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   "delivery-platform-jobs": "open",
   "delivery-tsmc-controller": "open",
   "delivery-worker-jobs": "open",
+  flags: "enforced",
   flipt: "enforced",
   freshrss: "enforced",
   gickup: "open",

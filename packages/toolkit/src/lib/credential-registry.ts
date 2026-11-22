@@ -33,6 +33,7 @@ const DELIVERY_SITE_ACTIVATOR_ITEM_ID = "l5c76kuxgqckt3xc7pmman6l4u";
 const DELIVERY_CACHE_PURGE_ITEM_ID = "la7gkfl5eqtxiiv2hq3qujx2gi";
 const SCOUT_BETA_ITEM_ID = "rtu44pohnp5ixdp2njuv5f6t2e";
 const SCOUT_PROD_ITEM_ID = "pacrc4wfbtct4y3qazkvazop5a";
+const FLAGS_ITEM_ID = "dzcroze2qcoibfz3illceozbea";
 
 export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
   MC_BRIDGE_TOKEN: {
@@ -127,6 +128,13 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
     source: {
       kind: "op",
       ref: `${HOMELAB_VAULT_REF}/${SCOUT_PROD_ITEM_ID}/SCOUT_OPERATIONS_TOKEN`,
+    },
+  },
+  FLAGS_MACHINE_TOKEN: {
+    description: "Flags service machine operator token",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/${FLAGS_ITEM_ID}/FLAGS_MACHINE_TOKEN`,
     },
   },
   GRAFANA_API_KEY: {

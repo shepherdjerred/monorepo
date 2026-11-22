@@ -5,7 +5,11 @@ import { ZodError } from "zod";
 import { flagDeployments } from "@shepherdjerred/feature-flags/deployments.ts";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
 import { projectDeploymentFlags } from "@shepherdjerred/feature-flags/project-deployment.ts";
-import { authenticate, type FlagsAuthConfig } from "./auth.ts";
+import {
+  authenticate,
+  parseTrustedProxyBlockList,
+  type FlagsAuthConfig,
+} from "./auth.ts";
 import {
   ApplyBodySchema,
   CreateMissingBodySchema,
@@ -15,6 +19,13 @@ import {
 import type { FlagStore } from "./store.ts";
 
 const SNAPSHOT = /^\/v1\/deployments\/[^/]+\/[^/]+\/snapshot$/u;
+const CREDENTIALLESS_REJECTION = {
+  error: "evaluation does not accept credentials",
+} as const;
+
+export type FlagsEvaluationAppDependencies = {
+  readonly store: FlagStore;
+};
 
 export type FlagsAppDependencies = {
   readonly store: FlagStore;
@@ -40,10 +51,7 @@ async function readBody(request: Request): Promise<unknown> {
   }
 }
 
-export function createFlagsApp(dependencies: FlagsAppDependencies) {
-  const { store } = dependencies;
-  const app = new Hono();
-
+function attachErrorHandler(app: Hono): void {
   app.onError((error, c) => {
     if (error instanceof HTTPException) {
       return c.json({ error: error.message }, error.status);
@@ -61,6 +69,71 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
     );
     return c.json({ error: "internal error" }, 500);
   });
+}
+
+function registerEvaluationRoutes(app: Hono, store: FlagStore): void {
+  app.get("/v1/deployments/:catalog/:stage/snapshot", (c) => {
+    const id = deploymentId(c.req.param("catalog"), c.req.param("stage"));
+    const document = store.document(id);
+    if (document === undefined)
+      return c.json({ error: "unknown deployment" }, 404);
+    const tag = etag(document.revision);
+    c.header("ETag", tag);
+    if (c.req.header("if-none-match") === tag) return c.body(null, 304);
+    return c.json({
+      deployment: document.id,
+      revision: document.revision,
+      flags: document.flags,
+    });
+  });
+
+  app.post("/v1/evaluate", async (c) => {
+    const body = EvaluateBodySchema.parse(await readBody(c.req.raw));
+    const evaluated = store.evaluate(
+      body.deployment,
+      body.key,
+      body.context ?? {},
+    );
+    if (evaluated.kind === "unknown-deployment") {
+      return c.json({ error: "unknown deployment" }, 404);
+    }
+    if (evaluated.kind === "missing") {
+      return c.json({ error: "FLAG_NOT_FOUND" }, 404);
+    }
+    return evaluated.kind === "type-mismatch" || evaluated.kind === "invalid"
+      ? c.json({ error: evaluated.message }, 400)
+      : c.json({ enabled: evaluated.value });
+  });
+}
+
+/**
+ * Credentialless evaluation surface for the dedicated in-cluster port. Serves
+ * health, snapshots, and boolean evaluation only; management routes, static UI
+ * assets, and operator headers are not mounted here.
+ */
+export function createFlagsEvaluationApp({
+  store,
+}: FlagsEvaluationAppDependencies) {
+  const app = new Hono();
+  attachErrorHandler(app);
+  app.get("/healthz", (c) => c.text("ok"));
+  app.use("/v1/*", async (c, next) =>
+    c.req.header("authorization") === undefined
+      ? next()
+      : c.json(CREDENTIALLESS_REJECTION, 401),
+  );
+  registerEvaluationRoutes(app, store);
+  return app;
+}
+
+export function createFlagsApp(dependencies: FlagsAppDependencies) {
+  if (typeof dependencies.auth.trustedProxyAddresses !== "function") {
+    parseTrustedProxyBlockList(dependencies.auth.trustedProxyAddresses);
+  }
+  const { store } = dependencies;
+  const app = new Hono();
+
+  attachErrorHandler(app);
 
   app.get("/healthz", (c) => c.text("ok"));
 
@@ -72,9 +145,9 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
     if (credentialless) {
       return c.req.header("authorization") === undefined
         ? next()
-        : c.json({ error: "evaluation does not accept credentials" }, 401);
+        : c.json(CREDENTIALLESS_REJECTION, 401);
     }
-    const principal = authenticate(
+    const principal = await authenticate(
       c.req.raw,
       dependencies.peerAddress?.(c.req.raw) ?? null,
       dependencies.auth,
@@ -121,20 +194,7 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
       : c.json(document);
   });
 
-  app.get("/v1/deployments/:catalog/:stage/snapshot", (c) => {
-    const id = deploymentId(c.req.param("catalog"), c.req.param("stage"));
-    const document = store.document(id);
-    if (document === undefined)
-      return c.json({ error: "unknown deployment" }, 404);
-    const tag = etag(document.revision);
-    c.header("ETag", tag);
-    if (c.req.header("if-none-match") === tag) return c.body(null, 304);
-    return c.json({
-      deployment: document.id,
-      revision: document.revision,
-      flags: document.flags,
-    });
-  });
+  registerEvaluationRoutes(app, store);
 
   app.get("/v1/deployments/:catalog/:stage/flags/:key", (c) => {
     const id = deploymentId(c.req.param("catalog"), c.req.param("stage"));
@@ -178,24 +238,6 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
         : writeFailure(c, result.failure);
     }
     return c.json({ revision: result.revision });
-  });
-
-  app.post("/v1/evaluate", async (c) => {
-    const body = EvaluateBodySchema.parse(await readBody(c.req.raw));
-    const evaluated = store.evaluate(
-      body.deployment,
-      body.key,
-      body.context ?? {},
-    );
-    if (evaluated.kind === "unknown-deployment") {
-      return c.json({ error: "unknown deployment" }, 404);
-    }
-    if (evaluated.kind === "missing") {
-      return c.json({ error: "FLAG_NOT_FOUND" }, 404);
-    }
-    return evaluated.kind === "type-mismatch" || evaluated.kind === "invalid"
-      ? c.json({ error: evaluated.message }, 400)
-      : c.json({ enabled: evaluated.value });
   });
 
   const clientRoot = dependencies.clientRoot;

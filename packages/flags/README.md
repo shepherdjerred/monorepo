@@ -6,9 +6,9 @@ second workload reads one. Storm forum and storm brain share `storm/prod`.
 A document is a list of boolean flags with ordered segment rollouts, or
 variant flags whose value is one string.
 
-The chart is prepared and inactive (`FLAGS_ACTIVE` is false), so this package
-does not deploy and Flipt still serves live evaluation. SQLite lives on the
-service's own ZFS volume at `/var/lib/flags`, not on the Flipt git volume.
+`FLAGS_ACTIVE` is `true`, so Delivery deploys `flags/prod` on its own ZFS NVMe
+SQLite volume at `/var/lib/flags`. Consumer reads and operator writes remain on
+Flipt until the consumer cutover change.
 
 ## HTTP
 
@@ -22,17 +22,36 @@ Credentialless routes reject an `Authorization` header:
   `{ enabled }` for a boolean. A missing flag is 404 `FLAG_NOT_FOUND`. A
   variant flag is 400. `enabled: false` is a successful answer.
 
+When `FLAGS_EVALUATION_PORT` is set (`7361` in production), a second listener
+mounts only `/healthz`, `/v1/deployments/:catalog/:stage/snapshot`, and
+`/v1/evaluate`. It rejects any `Authorization` header on `/v1/*` with 401,
+never reads `Tailscale-User-Login`, and omits management routes and the
+operator UI so in-cluster consumer NetworkPolicies can open evaluation without
+exposing management. The primary `PORT` (`7360`) serves all routes, including
+tailnet evaluation, management, and the browser UI.
+
 Management routes require the brokered `FLAGS_MACHINE_TOKEN` or a tailnet
-operator login inserted by a trusted proxy. Browser writes must be
-same-origin. The routes are list, get, `apply`, `create-missing`, `retire`,
-and `diff`. `apply` and `retire` take `expectedRevision` and change nothing
-when it does not match, including later flags in that request.
+operator login (`FLAGS_OPERATOR_LOGINS`) inserted by the verified Tailscale
+ingress proxy (`FLAGS_INGRESS_IDENTITY_DIR` in Kubernetes, which fences the
+`flags-flags-ingress-ingress` UID, StatefulSet controller, and ready proxy Pod
+IP on each human request) or a local proxy matching `FLAGS_TRUSTED_PROXIES`.
+`FLAGS_TRUSTED_PROXIES` accepts comma-separated exact IP addresses (`127.0.0.1`,
+`::1`) and CIDR subnets matched with `node:net` `BlockList`, normalizes
+IPv4-mapped IPv6 peers, and fails fast at startup on malformed entries or when
+combined with `FLAGS_INGRESS_IDENTITY_DIR`. Browser writes must be same-origin
+(`FLAGS_PUBLIC_ORIGIN`). The routes are list, get, `apply`, `create-missing`,
+`retire`, and `diff`. `apply` and `retire` take `expectedRevision` and change
+nothing when it does not match, including later flags in that request.
 `create-missing` inserts absent keys and leaves an existing body as it is.
 
-Startup copies each deployment's managed inventory document once. A document
-already stored is left alone. Namespace and environment pairs that no
-deployment reads, including the unused beta copies, are reported and not
-imported.
+Startup copies each missing deployment once. When `FLAGS_FLIPT_URL` is set,
+only deployments not yet stored in SQLite are fetched from Flipt, and a
+percentage rollout, variant rule, or other unsupported construct stops the
+process before writing. Once all deployments are persisted in SQLite, restarts
+do not contact Flipt. Without `FLAGS_FLIPT_URL`, startup copies the managed
+inventory document for any missing deployment. A document already stored is left
+alone. Namespace and environment pairs that no deployment reads, including the
+unused beta copies, are reported and not imported.
 
 ## Operator
 
@@ -44,5 +63,5 @@ A conflicting write is left unchanged and the other value is shown.
 
 `toolkit flags` is the command surface. See `packages/toolkit/README.md`.
 
-Activation, the consumer cut, and removing Flipt are later changes. They wait
-on an empty live diff.
+The consumer cutover and removing Flipt are later changes; consumer reads and
+operator writes stay on Flipt until that cutover lands.

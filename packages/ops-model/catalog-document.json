@@ -2795,13 +2795,17 @@
       ],
       "ops": {
         "kind": "product",
-        "namespaces": ["flags"]
+        "namespaces": ["flags"],
+        "argoApps": ["flags"]
       },
       "legacy": {
-        "rootReleaseExclusions": {
-          "flags": "inactive"
-        },
-        "charts": ["flags"]
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/flags",
+            "argoApp": "flags"
+          }
+        ]
       }
     }
   ],
@@ -3194,6 +3198,14 @@
       "configurationRevisionId": "golink/prod/1"
     },
     {
+      "id": "flags/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "flags/prod/2",
+      "configurationRevisionId": "flags/prod/1"
+    },
+    {
       "id": "redlib/prod",
       "role": "durable",
       "approvalPolicy": "none",
@@ -3239,7 +3251,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/9"
+      "configurationRevisionId": "argocd/prod/10"
     },
     {
       "id": "chartmuseum/prod",
@@ -4071,6 +4083,36 @@
     },
     {
       "dependent": "delivery/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "flags/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "flags/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "flags/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "flags/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "flags/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "flags/prod",
       "prerequisite": "prometheus/prod",
       "rule": "any-accepted"
     },
@@ -5627,7 +5669,8 @@
       "storm-forum": "storm-forum/prod",
       "minecraft-tsmc": "minecraft/tsmc",
       "glitter-boys-launcher": "glitter-boys-launcher/prod",
-      "golink": "golink/prod"
+      "golink": "golink/prod",
+      "flags": "flags/prod"
     },
     "platformDeliveryDelegated": true
   }

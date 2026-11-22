@@ -1,7 +1,8 @@
 import { expect, test } from "vitest";
 import { z } from "zod";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
-import { createFlagsApp } from "./app.ts";
+import { createFlagsApp, createFlagsEvaluationApp } from "./app.ts";
+import { authFromEnv } from "./auth.ts";
 import { FlagValueSchema } from "./schema.ts";
 import { FlagStore } from "./store.ts";
 
@@ -324,4 +325,89 @@ test("diff is empty after the seed and names a drifted flag", async () => {
     (deployment) => deployment.id === "scout/prod",
   );
   expect(scout?.drift.map((flag) => flag.key)).toEqual(["dares_enabled"]);
+});
+
+test("trusted proxy CIDR matches pod subnet peers and rejects out-of-subnet peers", async () => {
+  const store = FlagStore.open(":memory:");
+  store.seedFromInventory();
+  let peer: string | null = null;
+  const cidrAuth = authFromEnv({
+    FLAGS_OPERATOR_LOGINS: "operator@example.com",
+    FLAGS_TRUSTED_PROXIES: "10.244.0.0/16",
+    FLAGS_PUBLIC_ORIGIN: "https://flags.example.test",
+  });
+  const app = createFlagsApp({
+    store,
+    auth: cidrAuth,
+    peerAddress: () => peer,
+  });
+  const operatorHeaders = {
+    origin: "https://flags.example.test",
+    "tailscale-user-login": "operator@example.com",
+  };
+
+  peer = "10.244.0.29";
+  const ipv4Match = await app.request("/v1/deployments", {
+    headers: operatorHeaders,
+  });
+  expect(ipv4Match.status).toBe(200);
+
+  peer = "::ffff:10.244.0.29";
+  const mappedMatch = await app.request("/v1/deployments", {
+    headers: operatorHeaders,
+  });
+  expect(mappedMatch.status).toBe(200);
+
+  peer = "10.245.0.1";
+  const outOfSubnet = await app.request("/v1/deployments", {
+    headers: operatorHeaders,
+  });
+  expect(outOfSubnet.status).toBe(401);
+
+  expect(() => authFromEnv({ FLAGS_TRUSTED_PROXIES: "10.244.0.0/99" })).toThrow(
+    /Invalid FLAGS_TRUSTED_PROXIES entry/,
+  );
+  expect(() => authFromEnv({ FLAGS_TRUSTED_PROXIES: "not-an-ip" })).toThrow(
+    /Invalid FLAGS_TRUSTED_PROXIES entry/,
+  );
+});
+
+test("evaluation app serves health, snapshot, and evaluate without management routes", async () => {
+  const store = FlagStore.open(":memory:");
+  store.seedFromInventory();
+  const app = createFlagsEvaluationApp({ store });
+
+  const health = await app.request("/healthz");
+  expect(health.status).toBe(200);
+  expect(await health.text()).toBe("ok");
+
+  const snapshot = await app.request("/v1/deployments/scout/prod/snapshot");
+  expect(snapshot.status).toBe(200);
+  const tag = snapshot.headers.get("etag");
+  expect(tag).toBe('"1"');
+  const cached = await app.request("/v1/deployments/scout/prod/snapshot", {
+    headers: { "if-none-match": tag ?? "" },
+  });
+  expect(cached.status).toBe(304);
+
+  const evaluated = await app.request("/v1/evaluate", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ deployment: "scout/prod", key: "dares_enabled" }),
+  });
+  expect(evaluated.status).toBe(200);
+  expect(await evaluated.json()).toEqual({ enabled: false });
+
+  const withCredentials = await app.request("/v1/deployments", {
+    headers: { authorization: "Bearer machine-secret" },
+  });
+  expect(withCredentials.status).toBe(401);
+  expect(await withCredentials.json()).toEqual({
+    error: "evaluation does not accept credentials",
+  });
+
+  const operatorHeaderIgnored = await app.request("/v1/deployments", {
+    headers: { "tailscale-user-login": "operator@example.com" },
+  });
+  expect(operatorHeaderIgnored.status).toBe(404);
 });

@@ -1,9 +1,17 @@
 import { parseArgs } from "node:util";
+import { resolveCredentials } from "#lib/credentials.ts";
 import { flagsBaseUrl, runFlags, type FlagsIo } from "#lib/flags/client.ts";
 import { loadToolkitConfig } from "#lib/toolkit-config.ts";
 
-function machineToken(requested: boolean): string | undefined {
+export async function resolveFlagsMachineToken(
+  requested: boolean,
+  resolve: (names: readonly string[]) => Promise<void> = resolveCredentials,
+): Promise<string | undefined> {
   if (!requested) return undefined;
+  const existing = Bun.env["FLAGS_MACHINE_TOKEN"];
+  if (existing === undefined || existing.length === 0) {
+    await resolve(["FLAGS_MACHINE_TOKEN"]);
+  }
   const token = Bun.env["FLAGS_MACHINE_TOKEN"];
   if (token === undefined || token.length === 0) {
     throw new Error(
@@ -32,6 +40,11 @@ export async function handleFlagsCommand(
   const baseUrl = flagsBaseUrl(
     parsed.values.url ?? (await config.value("flagsUrl")),
   );
+  const helpOnly =
+    subcommand === undefined || subcommand === "--help" || subcommand === "-h";
+  const token = await resolveFlagsMachineToken(
+    parsed.values.machine && !helpOnly,
+  );
   const io: FlagsIo = {
     fetch,
     stdout: (line) => {
@@ -42,7 +55,7 @@ export async function handleFlagsCommand(
     },
     readFile: (path) => Bun.file(path).text(),
     baseUrl,
-    token: machineToken(parsed.values.machine),
+    token,
   };
   const positionals =
     subcommand === undefined

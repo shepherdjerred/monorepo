@@ -278,6 +278,11 @@
       "tags": ["tag:delivery"]
     },
     {
+      "host": "flags",
+      "namespace": "flags",
+      "exposure": "ingress"
+    },
+    {
       "host": "flipt",
       "namespace": "flipt",
       "exposure": "ingress"

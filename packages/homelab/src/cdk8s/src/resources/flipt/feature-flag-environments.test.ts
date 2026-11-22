@@ -12,6 +12,7 @@ import { createScoutChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts
 import { createStarlightKarmaBotChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/starlight-karma-bot.ts";
 import { createStormBrainChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/storm-brain.ts";
 import { createDeliveryChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/delivery.ts";
+import { createGolinkChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/golink.ts";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 import { createTrackerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/tracker.ts";
 import { createWoodpeckerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/woodpecker.ts";
@@ -213,6 +214,10 @@ describe("Flipt consumer environments", () => {
       (app: App) => createWoodpeckerChart(app),
       (app: App) => createStormBrainChart(app),
       (app: App) => createStormForumCharts(app),
+      (app: App) =>
+        createGolinkChart(app, {
+          image: "docker.io/shepherdjerred/golink:delivery-recipe",
+        }),
       (app: App) =>
         createTrackerChart(
           app,

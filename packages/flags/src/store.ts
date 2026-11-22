@@ -1,5 +1,8 @@
 import { Database } from "bun:sqlite";
-import { flagDeployments } from "@shepherdjerred/feature-flags/deployments.ts";
+import {
+  flagDeployments,
+  type FlagDeployment,
+} from "@shepherdjerred/feature-flags/deployments.ts";
 import {
   evaluateBoolean,
   type FlagValue,
@@ -92,8 +95,35 @@ export class FlagStore {
     return new FlagStore(db);
   }
 
+  /** Deployments from `deployments` that do not yet have a stored document. */
+  missingDeployments(
+    deployments: readonly FlagDeployment[] = flagDeployments,
+  ): FlagDeployment[] {
+    const stored = new Set(this.list().map((summary) => summary.id));
+    return deployments.filter((deployment) => !stored.has(deployment.id));
+  }
+
+  close(): void {
+    this.db.close();
+  }
+
   /** Inserts each deployment that is not already stored. Existing rows stay. */
   seedFromInventory(): { readonly seeded: readonly string[] } {
+    return this.seedDocuments(
+      flagDeployments.map((deployment) => ({
+        id: deployment.id,
+        flags: projectDeploymentFlags(deployment),
+      })),
+    );
+  }
+
+  /**
+   * Inserts deployments that are not already stored. A later call does not
+   * replace a document, so an imported live value stays after Flipt is gone.
+   */
+  seedDocuments(
+    documents: readonly { id: string; flags: readonly FlagValue[] }[],
+  ): { readonly seeded: readonly string[] } {
     const seeded: string[] = [];
     const insertDeployment = this.db.query(
       "INSERT INTO deployment (id, revision) VALUES (?, 1) ON CONFLICT DO NOTHING",
@@ -111,10 +141,8 @@ export class FlagStore {
         return true;
       },
     );
-    for (const deployment of flagDeployments) {
-      if (seed(deployment.id, projectDeploymentFlags(deployment))) {
-        seeded.push(deployment.id);
-      }
+    for (const document of documents) {
+      if (seed(document.id, document.flags)) seeded.push(document.id);
     }
     return { seeded };
   }
