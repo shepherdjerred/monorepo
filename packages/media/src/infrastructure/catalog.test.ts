@@ -146,6 +146,7 @@ test("movie and series detail carry the TMDB backdrop and the household's copy",
   ).app.details(member, "movie", 11);
   expect(CatalogDetailSchema.parse(movieDetail)).toEqual({
     ...movieItem,
+    runtimeMinutes: 100,
     seasons: [],
     library: owned,
     libraryAccess: "current",
@@ -159,10 +160,37 @@ test("movie and series detail carry the TMDB backdrop and the household's copy",
     externalId: 12,
     posterPath: null,
     backdropPath: "/series-backdrop.jpg",
+    runtimeMinutes: null,
     seasons: [{ seasonNumber: 1, episodeCount: 8 }],
     library: null,
     libraryAccess: "current",
   });
+});
+
+/** The runtime the catalog reports for a film TMDB lists with this one. */
+async function runtimeOf(runtime: number | null) {
+  const detail = await answering({
+    ...movie,
+    imdb_id: null,
+    runtime,
+  }).app.details(member, "movie", 11);
+  return CatalogDetailSchema.parse(detail).runtimeMinutes;
+}
+
+test("a film's catalog detail reports TMDB's runtime, and none when TMDB does not know it", async () => {
+  expect(await runtimeOf(142)).toBe(142);
+  // TMDB sends 0, not null, for a film whose runtime it has not been told.
+  expect(await runtimeOf(0)).toBeNull();
+  expect(await runtimeOf(null)).toBeNull();
+});
+
+test("a series' catalog detail reports no runtime, whatever episode lengths TMDB lists", async () => {
+  const detail = await answering({
+    ...series,
+    episode_run_time: [45, 60],
+    seasons: [{ id: 1, season_number: 1, episode_count: 8, name: "Season 1" }],
+  }).app.details(member, "series", 12);
+  expect(CatalogDetailSchema.parse(detail).runtimeMinutes).toBeNull();
 });
 
 test("a feed page is fetched once for the household while each reader gets their own library state", async () => {

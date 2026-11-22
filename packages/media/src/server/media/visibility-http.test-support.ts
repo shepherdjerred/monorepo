@@ -37,10 +37,20 @@ export async function verifyVisibilityHttp(
     const demoted = await app.request(url, { headers });
     expect(demoted.status).toBe(200);
     const body = await demoted.text();
-    expect(body).not.toMatch(
-      /PRIVATE|SECRET|"displayName":"Member"|providerReceipt|infoHash/u,
-    );
+    expect(body).not.toMatch(/PRIVATE|SECRET|providerReceipt|infoHash/u);
     const joined = MediaDetailSchema.parse(JSON.parse(body));
+    // The household sees who follows a title, by name and nothing else: the
+    // member's name is a follower, and none of their identifiers or their
+    // request is in the response. Their name is no longer a request's `user`.
+    expect(joined.followers).toEqual([
+      { displayName: f.owner.displayName, me: true },
+      { displayName: f.member.displayName, me: false },
+    ]);
+    expect(joined.requests.map((row) => row.user.displayName)).toEqual([
+      f.owner.displayName,
+    ]);
+    expect(body).not.toContain(f.member.id);
+    expect(body).not.toContain(f.request.id);
     expect(joined.visibility.torrents[0]?.diagnostics).toBeNull();
     expect(detail.visibility.attempts.map((row) => row.id)).toEqual([
       f.attempt.id,

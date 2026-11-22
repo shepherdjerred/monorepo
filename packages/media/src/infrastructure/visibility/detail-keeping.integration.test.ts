@@ -1,59 +1,25 @@
 import { expect, test } from "vitest";
 import type { MediaActor } from "#application/auth.ts";
 import type { Database } from "#infrastructure/database.ts";
-import { PrismaLibraryApplication } from "#infrastructure/library/views/library.ts";
 import {
   libraryEpisode,
   libraryHousehold,
-  libraryMember,
   librarySeason,
   libraryTitle,
 } from "#infrastructure/library/views/library.test-support.ts";
-import { PrismaMediaApplication } from "#infrastructure/media-service.ts";
-import { RequestInterestCommands } from "#infrastructure/request-interest/commands.ts";
 import { listRequestInterests } from "#infrastructure/request-interest/read.ts";
 import {
   LibraryQuerySchema,
   type LibraryQuery,
 } from "#shared/household/library.ts";
 import { automationTestHarness } from "#testing/automation.ts";
-import { grantTestLease } from "#testing/authority.ts";
+import {
+  runningHousehold as running,
+  titleApplications as applications,
+  titleHousehold as household,
+} from "./household.test-support.ts";
 
 const harness = automationTestHarness();
-const settings = {
-  serverMachineId: "fixture-server",
-  sections: { movie: "1", series: "2" },
-};
-
-function applications(db: Database) {
-  return {
-    media: new PrismaMediaApplication(db, {
-      keepDays: 30,
-      serverMachineId: settings.serverMachineId,
-      movieSectionId: settings.sections.movie,
-      visibilitySections: settings.sections,
-    }),
-    library: new PrismaLibraryApplication(db, settings),
-    interests: new RequestInterestCommands(db, { keepDays: 30 }),
-  };
-}
-
-async function household(db: Database) {
-  return {
-    owner: await libraryMember(db, { sections: ["1", "2"], role: "owner" }),
-    member: await libraryMember(db, { sections: ["1", "2"] }),
-    housemate: await libraryMember(db, { sections: ["1", "2"] }),
-  };
-}
-
-/** Commands, unlike reads, need a household that is running. */
-async function running(db: Database) {
-  await grantTestLease(db);
-  await db.mediaRuntimeState.update({
-    where: { id: "singleton" },
-    data: { mode: "active", ownershipConfirmed: true, recoveryEpoch: 0 },
-  });
-}
 
 async function targetVersion(db: Database, mediaId: string) {
   const target = await db.mediaIntent.findUniqueOrThrow({

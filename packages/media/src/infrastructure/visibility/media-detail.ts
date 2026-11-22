@@ -27,7 +27,8 @@ import {
   rootArtwork,
   rootMedia,
 } from "#infrastructure/library/views/artwork.ts";
-import { readTitleKeeping } from "#infrastructure/library/views/title-keeping.ts";
+import { readTitleHousehold } from "#infrastructure/library/views/title-household.ts";
+import { knownRuntimeMinutes } from "#shared/catalog/contract.ts";
 import { requestOwnInterest } from "#infrastructure/request-interest/read.ts";
 import type { MediaVisibility } from "#shared/visibility/detail.ts";
 import {
@@ -86,6 +87,7 @@ export function readMediaDetail(
             direct: true,
             interestRevision: true,
             interestState: true,
+            keepingPolicy: true,
           },
         },
         holds: {
@@ -197,9 +199,10 @@ export function readMediaDetail(
       visible: reader.visible,
     });
     const household = await defaultHouseholdCaptionRequirements(tx, item);
-    const keeping = await readTitleKeeping(tx, root, {
+    const titleHousehold = await readTitleHousehold(tx, root, {
       actorId: actor.id,
       owner: reader.owner,
+      restricted: reader.user.restricted,
       visible: reader.visible,
     });
     const detail = MediaDetailSchema.parse({
@@ -216,11 +219,23 @@ export function readMediaDetail(
       artwork: rootArtwork(item),
       overview: root.overview,
       catalog: catalogPage(root),
-      ...keeping,
+      runtimeMinutes: knownRuntimeMinutes(item.runtimeMinutes),
+      ...titleHousehold,
       requests: item.requests.map(
-        ({ direct, interestRevision, interestState, ...request }) => ({
+        ({
+          direct,
+          interestRevision,
+          interestState,
+          keepingPolicy,
+          ...request
+        }) => ({
           ...request,
-          ...requestOwnInterest({ direct, interestRevision, interestState }),
+          ...requestOwnInterest({
+            direct,
+            interestRevision,
+            interestState,
+            keepingPolicy,
+          }),
         }),
       ),
       assets: item.assets.map((coverage) => ({

@@ -64,3 +64,16 @@ export type CatalogLibraryState = z.infer<typeof CatalogLibraryStateSchema>;
  */
 export const LibraryAccessSchema = z.enum(["current", "stale"]);
 export type LibraryAccess = z.infer<typeof LibraryAccessSchema>;
+
+/**
+ * A runtime in whole minutes, or null when it is not known. A film has one and
+ * so does an episode; a series and a season have none of their own.
+ */
+export const RuntimeMinutesSchema = z.int().positive().nullable();
+/**
+ * TMDB reports a runtime it does not know as 0, and Media stores what TMDB
+ * sent. A read reports that as unknown, never as a film of no length.
+ */
+export function knownRuntimeMinutes(minutes: number | null): number | null {
+  return minutes !== null && minutes > 0 ? minutes : null;
+}

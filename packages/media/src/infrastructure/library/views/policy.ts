@@ -21,6 +21,42 @@ export type LibraryPolicyNode = {
   parent?: (LibraryPolicyNode & { parent?: LibraryPolicyNode | null }) | null;
 };
 
+/** A claim that stands and whose owner still follows the title. */
+function follows(claim: Claim): boolean {
+  return claim.active && !claim.excluded && claim.interestState === "following";
+}
+
+/**
+ * Who follows a root title, by name: the people whose own claim on it makes
+ * `libraryViewPolicy` report `householdFollowing`, once each however many
+ * editions they follow. A claim on only a season or an episode is not a claim
+ * on the title and is not read here. The reader comes first; no identifier
+ * leaves this function.
+ */
+export function titleFollowers(
+  root: {
+    requests: readonly (Claim & { user: { displayName: string } })[];
+  },
+  actorId: string,
+) {
+  const names = new Map<string, string>();
+  for (const claim of root.requests)
+    if (follows(claim)) names.set(claim.userId, claim.user.displayName);
+  return [...names]
+    .map(([userId, displayName]) => ({
+      userId,
+      displayName,
+      me: userId === actorId,
+    }))
+    .sort(
+      (left, right) =>
+        Number(right.me) - Number(left.me) ||
+        left.displayName.localeCompare(right.displayName) ||
+        left.userId.localeCompare(right.userId),
+    )
+    .map(({ displayName, me }) => ({ displayName, me }));
+}
+
 /** Explicit Temporary overrides migrated defaults; any explicit Keep protects the tree. */
 export function libraryViewPolicy(media: LibraryPolicyNode, actorId: string) {
   const ancestry: LibraryPolicyNode[] = [media];
@@ -41,14 +77,12 @@ export function libraryViewPolicy(media: LibraryPolicyNode, actorId: string) {
   const kept =
     libraryKeep || claims.some((claim) => claim.keepingPolicy === "keep");
   const following = claims.some(
-    (claim) => claim.userId === actorId && claim.interestState === "following",
+    (claim) => claim.userId === actorId && follows(claim),
   );
   return {
     kept,
     following,
-    householdFollowing: claims.some(
-      (claim) => claim.interestState === "following",
-    ),
+    householdFollowing: claims.some((claim) => follows(claim)),
   };
 }
 

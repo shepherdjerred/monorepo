@@ -3,6 +3,7 @@ import {
   libraryInterest,
   libraryKeepingView,
   libraryViewPolicy,
+  titleFollowers,
   type LibraryPolicyNode,
 } from "#infrastructure/library/views/policy.ts";
 
@@ -202,4 +203,70 @@ test("released own requests and unrelated editions do not create active followin
     following: false,
     householdFollowing: false,
   });
+});
+
+function claim(
+  userId: string,
+  displayName: string,
+  overrides: Partial<LibraryPolicyNode["requests"][number]> = {},
+) {
+  return {
+    userId,
+    active: true,
+    excluded: false,
+    keepingPolicy: "temporary" as const,
+    interestState: "following",
+    user: { displayName },
+    ...overrides,
+  };
+}
+test("a title's followers are the people whose own claim follows it, by name, the reader first", () => {
+  const root = {
+    requests: [
+      claim("u-zoe", "Zoe"),
+      claim("u-reader", "Reader"),
+      // A second edition of the same film is still one follower.
+      claim("u-zoe", "Zoe"),
+      claim("u-kept", "Avery", { keepingPolicy: "keep" }),
+      // Two people may share a name; each is still listed.
+      claim("u-other-avery", "Avery"),
+      claim("u-finished", "Finished", { interestState: "finished" }),
+      claim("u-dropped", "Dropped", { interestState: "dropped" }),
+      claim("u-expired", "Expired", { interestState: "expired" }),
+      claim("u-cancelled", "Cancelled", { active: false }),
+      claim("u-excluded", "Excluded", { excluded: true }),
+    ],
+  };
+  expect(titleFollowers(root, "u-reader")).toEqual([
+    { displayName: "Reader", me: true },
+    { displayName: "Avery", me: false },
+    { displayName: "Avery", me: false },
+    { displayName: "Zoe", me: false },
+  ]);
+  // Someone who does not follow the title reads the same names, none theirs.
+  expect(titleFollowers(root, "u-finished")).toEqual([
+    { displayName: "Avery", me: false },
+    { displayName: "Avery", me: false },
+    { displayName: "Reader", me: false },
+    { displayName: "Zoe", me: false },
+  ]);
+  expect(titleFollowers({ requests: [] }, "u-reader")).toEqual([]);
+});
+test("a title has followers exactly when the library reports the household following it", () => {
+  for (const requests of [
+    [],
+    [claim("a", "A")],
+    [claim("a", "A", { interestState: "finished" })],
+    [claim("a", "A", { active: false }), claim("b", "B")],
+    [claim("a", "A", { excluded: true })],
+    [claim("a", "A", { keepingPolicy: "keep" })],
+  ]) {
+    const media = { ...node("movie", false), requests };
+    expect(titleFollowers(media, "a").length > 0).toBe(
+      libraryViewPolicy(media, "a").householdFollowing,
+    );
+    expect(titleFollowers(media, "a").some((entry) => entry.me)).toBe(
+      libraryViewPolicy(media, "a").following,
+    );
+  }
 });

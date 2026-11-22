@@ -13,6 +13,7 @@ import { MediaReferenceSchema } from "./household/media-reference.ts";
 import {
   CatalogLibraryStateSchema,
   LibraryAccessSchema,
+  RuntimeMinutesSchema,
 } from "./catalog/contract.ts";
 import {
   MediaItemSchema,
@@ -20,7 +21,10 @@ import {
   UserSchema,
   RemovalConfirmationSchema,
 } from "./contract.ts";
-import { InterestStateSchema } from "./household/interests.ts";
+import {
+  InterestStateSchema,
+  KeepingPolicySchema,
+} from "./household/interests.ts";
 import {
   LibraryKeepingSchema,
   LibraryPolicySchema,
@@ -127,6 +131,9 @@ export const MediaDetailSchema = MediaItemSchema.extend({
   rootMediaId: z.string(),
   artwork: ArtworkSchema,
   overview: z.string().nullable(),
+  // This row's own runtime: a film's, or an episode's. A series and a season
+  // store none, and nothing is summed or averaged for them.
+  runtimeMinutes: RuntimeMinutesSchema,
   catalog: z
     .object({
       kind: z.enum(["movie", "series"]),
@@ -139,6 +146,13 @@ export const MediaDetailSchema = MediaItemSchema.extend({
   // still reports them. `libraryKeeping` is null without a default target.
   policy: LibraryPolicySchema,
   libraryKeeping: LibraryKeepingSchema.nullable(),
+  // The household members who follow the root title, by name only; `me` marks
+  // the reader's own entry. Empty when nobody follows it. Null when the names
+  // are withheld from this reader: an account the owner restricted, or a title
+  // in a Plex library the reader may not open.
+  followers: z
+    .array(z.object({ displayName: z.string(), me: z.boolean() }))
+    .nullable(),
   visibility: MediaVisibilitySchema,
   subtitlePolicies: z
     .array(
@@ -170,11 +184,13 @@ export const MediaDetailSchema = MediaItemSchema.extend({
       version: z.number().int(),
       user: z.object({ displayName: z.string() }),
       // The request's interest, named as `GET /request-interests` names it and
-      // as an interest command expects it. Both are null for a request with no
-      // interest of its own: one a series or season request spread onto this
-      // row, whose interest is managed on that original request.
+      // as an interest command expects it. All three are null for a request
+      // with no interest of its own: one a series or season request spread onto
+      // this row, whose interest is managed on that original request. While
+      // `keepingPolicy` is `keep`, the command refuses `drop` and `finished`.
       interestRevision: z.int().nonnegative().nullable(),
       interestState: InterestStateSchema.nullable(),
+      keepingPolicy: KeepingPolicySchema.nullable(),
     }),
   ),
   holds: z.array(
@@ -253,6 +269,9 @@ export const CatalogSearchSchema = z.object({
 });
 export const CatalogDetailSchema = CatalogItemSchema.extend({
   libraryAccess: LibraryAccessSchema,
+  // A film's runtime as TMDB lists it. Always null for a series: TMDB gives a
+  // series no runtime, only typical episode lengths, which are not one.
+  runtimeMinutes: RuntimeMinutesSchema,
   seasons: z.array(
     z.object({
       externalId: z.number().int(),
