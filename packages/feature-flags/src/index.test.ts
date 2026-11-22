@@ -459,6 +459,61 @@ describe("flags mode", () => {
     ).resolves.toMatchObject({ value: false });
   });
 
+  test("createFlagConfigSource degrades on HTTP 200 body transport failure during requireFreshSnapshot", async () => {
+    const { createFlagConfigSource } =
+      await import("@shepherdjerred/feature-flags/config-source.ts");
+    let call = 0;
+    vi.spyOn(globalThis, "fetch").mockImplementation(() => {
+      call++;
+      if (call === 1) {
+        return Promise.resolve(
+          Response.json({
+            deployment: "woodpecker/prod",
+            revision: 1,
+            flags: [
+              {
+                type: "boolean",
+                key: "woodpecker-source-cache-enabled",
+                default: true,
+                rollouts: [],
+              },
+            ],
+          }),
+        );
+      }
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.error(new TypeError("terminated"));
+        },
+      });
+      return Promise.resolve(new Response(stream, { status: 200 }));
+    });
+
+    await initFeatureFlags({
+      environment: {
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: "http://flags.invalid:8080",
+        FLAGS_DEPLOYMENT: "woodpecker/prod",
+      },
+    });
+
+    const unavailableFlags: string[] = [];
+    const source = createFlagConfigSource({
+      targetingKey: "main",
+      kinds: { sourceCache: "boolean" },
+      requireFreshSnapshot: true,
+      onUnavailable: (flag) => unavailableFlags.push(flag),
+    });
+
+    await expect(
+      source.get({
+        key: "sourceCache",
+        flag: "woodpecker-source-cache-enabled",
+      }),
+    ).resolves.toBeUndefined();
+    expect(unavailableFlags).toEqual(["woodpecker-source-cache-enabled"]);
+  });
+
   test("degrades cleanly to PROVIDER_NOT_READY on initial outage and recovers in background", async () => {
     vi.useFakeTimers();
     vi.spyOn(Math, "random").mockReturnValue(0.5);

@@ -509,6 +509,63 @@ describe("FlagsProvider — transport, ETag polling, validation, and shutdown", 
     await vi.advanceTimersByTimeAsync(5000);
     expect(server.calls.at(-1)?.headers["If-None-Match"]).toBe('"1"');
   });
+
+  test("classifies mid-body stream errors and body stalls as unavailable while keeping malformed JSON and schema errors fatal", async () => {
+    vi.useFakeTimers();
+    let mode: "initial" | "body-drop" | "body-stall" | "malformed-json" =
+      "initial";
+    provider = new FlagsProvider({
+      url: "http://flags.invalid:8080",
+      deployment: "scout/prod",
+      pollIntervalSeconds: 0,
+      requestTimeoutMilliseconds: 500,
+      fetcher: () => {
+        switch (mode) {
+          case "initial":
+            return Promise.resolve(
+              buildResponse(200, DEFAULT_SERVER_BEHAVIOR.body, '"1"'),
+            );
+          case "body-drop": {
+            const stream = new ReadableStream<Uint8Array>({
+              start(controller) {
+                controller.enqueue(
+                  new TextEncoder().encode('{"deployment":"scout/prod"'),
+                );
+                controller.error(new TypeError("terminated"));
+              },
+            });
+            return Promise.resolve(new Response(stream, { status: 200 }));
+          }
+          case "body-stall":
+            return Promise.resolve(
+              buildResponse(
+                200,
+                null,
+                '"2"',
+                () =>
+                  new Promise<never>(() => {
+                    /* Stalled body read until requestTimeoutMilliseconds fires. */
+                  }),
+              ),
+            );
+          case "malformed-json":
+            return Promise.resolve(new Response("{not-json", { status: 200 }));
+        }
+      },
+    });
+    await provider.initialize();
+
+    mode = "body-drop";
+    await expect(provider.refreshForEvaluation()).resolves.toBe(false);
+
+    mode = "body-stall";
+    const stalled = provider.refreshForEvaluation();
+    await vi.advanceTimersByTimeAsync(500);
+    await expect(stalled).resolves.toBe(false);
+
+    mode = "malformed-json";
+    await expect(provider.refreshForEvaluation()).rejects.toThrow(SyntaxError);
+  });
 });
 
 describe("FlagsProvider — validation and shutdown", () => {

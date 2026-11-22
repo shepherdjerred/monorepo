@@ -99,18 +99,30 @@ function parseSnapshotBody(
   return parsed.flags;
 }
 
-async function fetchWithBoundary(input: {
+type FetchedSnapshotResponse =
+  | {
+      readonly kind: "not-modified";
+      readonly etag: string | null;
+    }
+  | {
+      readonly kind: "snapshot";
+      readonly raw: unknown;
+      readonly etag: string | null;
+    };
+
+async function fetchSnapshotWithBoundary(input: {
   readonly fetcher: FlagsFetcher;
   readonly url: string;
   readonly headers: Readonly<Record<string, string>>;
   readonly providerSignal: AbortSignal;
   readonly timeoutMilliseconds: number;
-}): Promise<FlagsHttpResponse> {
+}): Promise<FetchedSnapshotResponse> {
   const signal = AbortSignal.any([
     input.providerSignal,
     AbortSignal.timeout(input.timeoutMilliseconds),
   ]);
-  if (signal.aborted) {
+  const isAborted = (): boolean => signal.aborted;
+  if (isAborted()) {
     throw new SnapshotUnavailableError("Flags snapshot request aborted");
   }
   let onAbort: (() => void) | undefined;
@@ -122,15 +134,40 @@ async function fetchWithBoundary(input: {
   });
   try {
     return await Promise.race([
-      input.fetcher(input.url, {
-        method: "GET",
-        headers: input.headers,
-        signal,
-      }),
+      (async (): Promise<FetchedSnapshotResponse> => {
+        const response = await input.fetcher(input.url, {
+          method: "GET",
+          headers: input.headers,
+          signal,
+        });
+        if (response.status === 304) {
+          return {
+            kind: "not-modified",
+            etag: response.headers.get("etag"),
+          };
+        }
+        if (response.status !== 200) {
+          throw new SnapshotUnavailableError(
+            `flags snapshot request failed: ${String(response.status)} ${response.statusText}`,
+          );
+        }
+        const raw = await response.json();
+        return {
+          kind: "snapshot",
+          raw,
+          etag: response.headers.get("etag"),
+        };
+      })(),
       aborted,
     ]);
   } catch (error) {
     if (error instanceof SnapshotUnavailableError) throw error;
+    if (isAborted()) {
+      throw new SnapshotUnavailableError("Flags snapshot request aborted", {
+        cause: error,
+      });
+    }
+    if (error instanceof SyntaxError) throw error;
     throw new SnapshotUnavailableError("Flags snapshot transport unavailable", {
       cause: error,
     });
@@ -269,55 +306,45 @@ export class FlagsProvider implements Provider {
       DEFAULT_REQUEST_TIMEOUT_MILLISECONDS;
 
     try {
-      const response = await fetchWithBoundary({
+      const fetched = await fetchSnapshotWithBoundary({
         fetcher,
         url: this.snapshotUrl,
         headers,
         providerSignal: this.controller.signal,
         timeoutMilliseconds,
       });
-      await this.applyRefreshResponse(response, sentEtag);
+      this.applyRefreshResponse(fetched, sentEtag);
     } catch (error) {
       if (!this.isClosed()) this.options.onRefreshFailure?.();
       throw error;
     }
   }
 
-  private async applyRefreshResponse(
-    response: FlagsHttpResponse,
+  private applyRefreshResponse(
+    fetched: FetchedSnapshotResponse,
     sentEtag: string | undefined,
-  ): Promise<void> {
+  ): void {
     if (this.isClosed()) {
       throw new SnapshotUnavailableError(
         "Flags provider closed during refresh",
       );
     }
-    if (response.status === 304) {
+    if (fetched.kind === "not-modified") {
       if (sentEtag === undefined || this.snapshot === undefined) {
         throw new Error("Unconditional flags snapshot request returned 304");
       }
-      const echoedEtag = response.headers.get("etag");
-      if (echoedEtag !== null && echoedEtag.length > 0) {
-        this.etag = echoedEtag;
+      if (fetched.etag !== null && fetched.etag.length > 0) {
+        this.etag = fetched.etag;
       }
       this.recordSuccessfulRefresh();
       return;
     }
-    if (response.status !== 200) {
-      throw new SnapshotUnavailableError(
-        `flags snapshot request failed: ${String(response.status)} ${response.statusText}`,
-      );
-    }
-    const raw = await response.json();
-    if (this.isClosed()) {
-      throw new SnapshotUnavailableError(
-        "Flags provider closed during refresh",
-      );
-    }
-    const validated = parseSnapshotBody(raw, this.options.deployment);
-    const nextEtag = response.headers.get("etag");
+    const validated = parseSnapshotBody(fetched.raw, this.options.deployment);
     this.snapshot = validated;
-    this.etag = nextEtag !== null && nextEtag.length > 0 ? nextEtag : undefined;
+    this.etag =
+      fetched.etag !== null && fetched.etag.length > 0
+        ? fetched.etag
+        : undefined;
     this.recordSuccessfulRefresh();
   }
 
