@@ -13,12 +13,8 @@ import { Plain } from "#client/recovery/parts.tsx";
 import { movieReviewPath } from "#client/recovery/paths.ts";
 import { readMovieHistoryIndexV3 } from "./api.ts";
 
-/**
- * The movie edition reviews waiting on a reader, answered one film and cut
- * at a time. The owner finds a film's review from the film itself, so the
- * owner's list is the one for the edition they opened.
- */
-export function MovieHistoryIndexV3({
+/** The reviews waiting on a reader for one edition, or for every film. */
+export function MovieHistoryReviewList({
   user,
   scope,
 }: {
@@ -43,6 +39,64 @@ export function MovieHistoryIndexV3({
     (a, b) => Number(a.responded) - Number(b.responded),
   );
   return (
+    <>
+      {result.isPending && (
+        <SkeletonRows label="Loading movie edition reviews" rows={2} />
+      )}
+      {result.error !== null && (
+        <LoadError
+          what="Movie edition reviews"
+          error={result.error}
+          retry={() => {
+            void result.refetch();
+          }}
+        />
+      )}
+      {result.data?.reviews.length === 0 && (
+        <EmptyNote>
+          No pending movie edition reviews need your response.
+        </EmptyNote>
+      )}
+      {reviews.length > 0 && (
+        <DataList label="Movie edition reviews">
+          {reviews.map((review) => (
+            <DataRow
+              key={review.id}
+              title={review.title}
+              detail={`${movieEditionDisplayLabel(review.scope.edition)}. Expires ${dateLabel(review.expiresAt)}.`}
+              status={
+                review.responded ? (
+                  <Badge tone="ok">Your declaration is recorded</Badge>
+                ) : (
+                  <Badge tone="warn">Your declaration is needed</Badge>
+                )
+              }
+              actions={
+                <ButtonLink to={movieReviewPath(review.id)}>
+                  {review.responded ? "View review" : "Open review"}
+                </ButtonLink>
+              }
+            />
+          ))}
+        </DataList>
+      )}
+    </>
+  );
+}
+
+/**
+ * The movie edition reviews waiting on a reader, answered one film and cut
+ * at a time. The owner finds a film's review from the film itself.
+ */
+export function MovieHistoryIndexV3({
+  user,
+  scope,
+}: {
+  user: MediaUser;
+  scope?: MovieEditionScope;
+}) {
+  const owner = user.role === "owner" && !user.restricted;
+  return (
     <Panel
       title="Movie edition household reviews"
       description="Choose the edition you want and apply any Keep before the owner captures a review. A later choice, cancellation or Keep needs a fresh review."
@@ -53,48 +107,10 @@ export function MovieHistoryIndexV3({
           household review. <ButtonLink to="/discover">Find a movie</ButtonLink>
         </Plain>
       ) : (
-        <>
-          {result.isPending && (
-            <SkeletonRows label="Loading movie edition reviews" rows={2} />
-          )}
-          {result.error !== null && (
-            <LoadError
-              what="Movie edition reviews"
-              error={result.error}
-              retry={() => {
-                void result.refetch();
-              }}
-            />
-          )}
-          {result.data?.reviews.length === 0 && (
-            <EmptyNote>
-              No pending movie edition reviews need your response.
-            </EmptyNote>
-          )}
-          {reviews.length > 0 && (
-            <DataList label="Movie edition reviews">
-              {reviews.map((review) => (
-                <DataRow
-                  key={review.id}
-                  title={review.title}
-                  detail={`${movieEditionDisplayLabel(review.scope.edition)}. Expires ${dateLabel(review.expiresAt)}.`}
-                  status={
-                    review.responded ? (
-                      <Badge tone="ok">Your declaration is recorded</Badge>
-                    ) : (
-                      <Badge tone="warn">Your declaration is needed</Badge>
-                    )
-                  }
-                  actions={
-                    <ButtonLink to={movieReviewPath(review.id)}>
-                      {review.responded ? "View review" : "Open review"}
-                    </ButtonLink>
-                  }
-                />
-              ))}
-            </DataList>
-          )}
-        </>
+        <MovieHistoryReviewList
+          user={user}
+          {...(scope === undefined ? {} : { scope })}
+        />
       )}
     </Panel>
   );

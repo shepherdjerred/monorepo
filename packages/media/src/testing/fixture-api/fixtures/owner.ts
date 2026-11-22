@@ -10,14 +10,11 @@ import type {
   MigrationProposalListSchema,
   SourceKindSchema,
 } from "#shared/migration.ts";
-import type { MovieHistoryPendingV3Schema } from "#shared/movie-editions/history-review-views-v3.ts";
-import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import type {
   NumberingEpisodeListSchema,
   NumberingSeriesListSchema,
 } from "#shared/numbering.ts";
 import type { PlexProfilesSchema } from "#shared/plex-admin.ts";
-import { definitionDigest, movieScope } from "./movie-requests.ts";
 import { ALEX, KIDS, MEMBER, OWNER } from "#testing/fixture-api/personas.ts";
 import {
   DAY,
@@ -28,13 +25,7 @@ import {
   fixtureId,
   sha256,
 } from "#testing/fixture-api/support.ts";
-import {
-  TITLES,
-  episodeId,
-  titleItem,
-  titleNamed,
-  type Title,
-} from "./titles.ts";
+import { TITLES, episodeId, titleItem, type Title } from "./titles.ts";
 import { assetId } from "./visibility.ts";
 
 type ProviderStatus = z.input<typeof ProviderStatusSchema>;
@@ -47,7 +38,6 @@ type BundleList = z.input<typeof BundleReviewListSchema>;
 type SubtitleTargets = z.input<typeof SubtitleTargetListSchema>;
 type NumberingSeries = z.input<typeof NumberingSeriesListSchema>;
 type NumberingEpisodes = z.input<typeof NumberingEpisodeListSchema>;
-type MovieHistoryPending = z.input<typeof MovieHistoryPendingV3Schema>;
 
 function provider(
   id: ProviderStatus["id"],
@@ -386,48 +376,4 @@ export function numberingEpisodes(title: Title): NumberingEpisodes {
     absoluteNumber: index < NUMBERED_EPISODES ? index + 1 : null,
     evidence: index < NUMBERED_EPISODES ? "anidb" : null,
   }));
-}
-
-type HistoryReviewSeed = readonly [
-  title: string,
-  edition: MovieEditionKey,
-  responded: boolean,
-  expiresInDays: number,
-];
-
-const HISTORY_REVIEWS: readonly HistoryReviewSeed[] = [
-  ["Blade Runner", "final_cut", false, 5],
-  ["Alien", "directors_cut", true, 9],
-  ["Interstellar", "default", false, 2],
-];
-
-/** Pending "which cut did you watch" reviews, optionally for one edition. */
-export function movieHistoryReviews(
-  parameters: URLSearchParams,
-): MovieHistoryPending {
-  const mediaId = parameters.get("mediaId");
-  const edition = parameters.get("edition");
-  return {
-    reviews: HISTORY_REVIEWS.map(
-      ([name, reviewEdition, responded, expiresInDays], index) => {
-        const title = titleNamed(name);
-        return {
-          id: fixtureId(19, index + 1),
-          version: index + 1,
-          scope: movieScope(title, reviewEdition),
-          definition: {
-            definitionVersion: 0 as const,
-            definitionDigest: definitionDigest(title, reviewEdition),
-          },
-          title: title.title,
-          expiresAt: ahead(expiresInDays * DAY),
-          responded,
-        };
-      },
-    ).filter(
-      (review) =>
-        mediaId === null ||
-        (review.scope.mediaId === mediaId && review.scope.edition === edition),
-    ),
-  };
 }

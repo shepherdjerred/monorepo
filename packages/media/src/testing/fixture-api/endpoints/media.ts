@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   memberDetail,
   memberMovieTarget,
@@ -10,11 +11,17 @@ import {
   batchAnswers,
 } from "#shared/editions/target-batch.ts";
 import { DefaultTargetViewSchema } from "#shared/editions/target-view.ts";
+import {
+  MovieHistoryDetailV3Schema,
+  MovieHistoryPersonalDetailV3Schema,
+  PrepareMovieHistoryV3Schema,
+} from "#shared/movie-editions/history-review-v3.ts";
 import { MovieHistoryPendingV3Schema } from "#shared/movie-editions/history-review-views-v3.ts";
 import {
   MovieEditionContextV4Schema,
   MovieTargetContextV4Schema,
 } from "#shared/movie-editions/lifecycle/public-v4.ts";
+import { fixtureId } from "#testing/fixture-api/support.ts";
 import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
 import { MovieRollbackViewV1Schema } from "#shared/movie-editions/rollback/view.ts";
 import { MovieSubtitleTargetV2Schema } from "#shared/movie-editions/subtitle-target-v2.ts";
@@ -37,7 +44,11 @@ import {
   movieSubtitleTarget,
   movieTarget,
 } from "#testing/fixture-api/fixtures/movie-targets.ts";
-import { movieHistoryReviews } from "#testing/fixture-api/fixtures/owner.ts";
+import {
+  movieHistoryContext,
+  movieHistoryDetail,
+  movieHistoryReviews,
+} from "#testing/fixture-api/fixtures/movie-history.ts";
 import { releaseList } from "#testing/fixture-api/fixtures/releases.ts";
 import {
   AIRING_EPISODES,
@@ -237,6 +248,40 @@ export const MEDIA_ENDPOINTS: readonly FixtureEndpoint[] = [
       "/movie-history/reviews",
       `/movie-history/reviews?mediaId=${titleNamed("Blade Runner").id}&edition=final_cut`,
       `/movie-history/reviews?mediaId=${FEATURED.movie.id}&edition=default`,
+    ],
+  }),
+  endpoint({
+    version: 3,
+    path: "/movie-history/reviews/:id",
+    // The owner reads the whole household's review, a member only their own.
+    schema: z.union([
+      MovieHistoryDetailV3Schema,
+      MovieHistoryPersonalDetailV3Schema,
+    ]),
+    respond: (request) =>
+      movieHistoryDetail(request.persona, request.param("id")),
+    belongsToRequest: (review, request) => review.id === request.param("id"),
+    samples: [1, 2, 3].map((n) => `/movie-history/reviews/${fixtureId(19, n)}`),
+  }),
+  endpoint({
+    version: 3,
+    path: "/movie-history/context",
+    access: "owner",
+    schema: PrepareMovieHistoryV3Schema,
+    respond: (request) => {
+      const parsed = MovieEditionKeySchema.safeParse(
+        request.query.get("edition"),
+      );
+      const mediaId = request.query.get("mediaId");
+      return mediaId === null || !parsed.success
+        ? null
+        : movieHistoryContext(mediaId, parsed.data);
+    },
+    belongsToRequest: (context, request) =>
+      context.scope.mediaId === request.query.get("mediaId") &&
+      context.scope.edition === request.query.get("edition"),
+    samples: [
+      `/movie-history/context?mediaId=${titleNamed("Interstellar").id}&edition=default`,
     ],
   }),
 ];

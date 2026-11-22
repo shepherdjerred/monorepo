@@ -156,16 +156,16 @@ export function recoveryList(
   };
 }
 
-const MACHINE = "fixture-server";
+export const MACHINE = "fixture-server";
 
-type Subject = (typeof SUBJECTS)[number];
-const SUBJECTS = [
+export type Subject = (typeof SUBJECTS)[number];
+export const SUBJECTS = [
   { user: OWNER, authority: "self", mapping: "account", home: null },
   { user: MEMBER, authority: "self", mapping: "account", home: null },
   { user: KIDS, authority: "managed_owner", mapping: "managed", home: "7" },
 ] as const;
 
-function claimIdentity(sequence: number) {
+export function claimIdentity(sequence: number) {
   return {
     provenanceKey: sha256(`claim-provenance-${String(sequence)}`),
     captureHash: sha256("capture-2"),
@@ -176,7 +176,11 @@ function claimIdentity(sequence: number) {
   };
 }
 
-function subject(row: Subject, mediaIds: readonly string[], claims: number) {
+export function recoverySubject(
+  row: Subject,
+  mediaIds: readonly string[],
+  claims: number,
+) {
   return {
     id: row.user.id,
     displayName: row.user.displayName,
@@ -310,7 +314,7 @@ export function recoveryDetail(
       },
     }));
   const roster = visible.map((row) =>
-    subject(row, mediaIds, owner && sequence === 4 ? 2 : 0),
+    recoverySubject(row, mediaIds, owner && sequence === 4 ? 2 : 0),
   );
   return {
     id,

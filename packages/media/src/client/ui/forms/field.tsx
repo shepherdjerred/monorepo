@@ -341,7 +341,13 @@ export function CheckboxField({
   );
 }
 
-type Choice = { value: string; label: string; description?: string };
+type Choice = {
+  value: string;
+  label: string;
+  description?: string;
+  /** This option cannot be chosen now; its description says why. */
+  disabled?: boolean;
+};
 
 /**
  * A few exclusive options, all visible: a radio group. Use a select when
@@ -404,6 +410,7 @@ export function ChoiceField({
               data-field-label={legend}
               data-required-message={requiredMessage}
               required={required}
+              disabled={option.disabled}
               aria-invalid={field.error !== undefined}
               {...(value === undefined
                 ? { defaultChecked: defaultValue === option.value }
