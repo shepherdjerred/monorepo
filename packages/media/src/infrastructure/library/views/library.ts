@@ -13,6 +13,7 @@ import { externalAvailableMediaIds } from "#infrastructure/external-library/avai
 import {
   libraryInterest,
   libraryKeepingView,
+  libraryMemberWhere,
   libraryViewInclude,
 } from "#infrastructure/library/views/policy.ts";
 import {
@@ -54,7 +55,11 @@ export class PrismaLibraryApplication {
     const cursor = libraryCursor(query);
     return repeatableRead(this.db, async (tx) => {
       const reader = await visibilityReader(tx, actor, this.settings);
-      const where = libraryWhere(query, actor.id);
+      const where = libraryWhere(
+        query,
+        actor.id,
+        libraryMemberWhere(this.settings, reader.user.plexIdentity),
+      );
       const page =
         cursor.sort === "title"
           ? await titlePage(tx, where, { after: cursor.after, query })

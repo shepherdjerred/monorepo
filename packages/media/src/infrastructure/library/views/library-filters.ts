@@ -2,11 +2,13 @@ import type { Prisma } from "#generated/prisma/client.ts";
 import type { LibraryQuery } from "#shared/household/library.ts";
 import {
   libraryFollowingWhere,
-  libraryMemberWhere,
   libraryPolicyWhere,
 } from "#infrastructure/library/views/policy.ts";
 import { leavingSoonWhere } from "#infrastructure/library/views/leaving.ts";
-import type { SeriesEpisodeCounts } from "#infrastructure/library/views/series-episodes.ts";
+import {
+  anyEpisode,
+  type SeriesEpisodeCounts,
+} from "#infrastructure/library/views/series-episodes.ts";
 
 type Where = Prisma.MediaItemWhereInput;
 
@@ -25,16 +27,6 @@ const availableEpisode = {
   availability: "available",
   ...regularSeason,
 } satisfies Where;
-
-/** An episode sits directly under its series or under one of its seasons. */
-function anyEpisode(episode: Where): Where {
-  return {
-    OR: [
-      { children: { some: episode } },
-      { children: { some: { kind: "season", children: { some: episode } } } },
-    ],
-  };
-}
 
 /**
  * Every title `libraryAvailabilityMatches` can accept, and some it rejects: an
@@ -68,7 +60,11 @@ function availabilitySupersetWhere(
 }
 
 /** The household-library titles a query asks for, before cursor and visibility. */
-export function libraryWhere(query: LibraryQuery, actorId: string): Where {
+export function libraryWhere(
+  query: LibraryQuery,
+  actorId: string,
+  membership: Where,
+): Where {
   return {
     AND: [
       {
@@ -77,7 +73,7 @@ export function libraryWhere(query: LibraryQuery, actorId: string): Where {
       query.query === ""
         ? {}
         : { title: { contains: query.query, mode: "insensitive" } },
-      libraryMemberWhere,
+      membership,
       query.policy === "all" ? {} : libraryPolicyWhere(query.policy),
       query.mine === "all" ? {} : libraryFollowingWhere(actorId),
       query.leaving === "all" ? {} : leavingSoonWhere,

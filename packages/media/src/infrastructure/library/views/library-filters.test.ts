@@ -4,6 +4,7 @@ import {
   libraryAvailabilityMatches,
   libraryWhere,
 } from "#infrastructure/library/views/library-filters.ts";
+import { libraryMemberWhere } from "#infrastructure/library/views/policy.ts";
 
 const movie = (availability: string) => ({
   kind: "movie" as const,
@@ -36,7 +37,11 @@ test("every title is either available or unavailable, never both and never neith
 });
 
 function conditions(query: Record<string, string>): number {
-  const where = libraryWhere(LibraryQuerySchema.parse(query), "actor");
+  const where = libraryWhere(
+    LibraryQuerySchema.parse(query),
+    "actor",
+    libraryMemberWhere({}, null),
+  );
   if (!Array.isArray(where.AND)) throw new TypeError("Expected a conjunction");
   return where.AND.filter((condition) => Object.keys(condition).length > 0)
     .length;

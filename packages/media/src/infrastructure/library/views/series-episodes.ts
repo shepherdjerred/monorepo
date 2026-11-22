@@ -1,5 +1,58 @@
 import { z } from "zod";
 import { Prisma } from "#generated/prisma/client.ts";
+import type { LibraryReadSettings } from "./plex-access.ts";
+
+type Where = Prisma.MediaItemWhereInput;
+export type EpisodeAccess = {
+  permittedMediaKinds: readonly string[];
+  permittedSectionIds: readonly string[];
+};
+
+/** An episode sits directly under its series or under one of its seasons. */
+export function anyEpisode(direct: Where, nested = direct): Where {
+  return {
+    OR: [
+      { children: { some: direct } },
+      { children: { some: { kind: "season", children: { some: nested } } } },
+    ],
+  };
+}
+
+function plexSection(equals: string | typeof Prisma.DbNull): Where {
+  return { externalIds: { path: ["plexSectionId"], equals } };
+}
+
+/** Only a visible episode reachable through the visible title adds membership. */
+export function coveredSeriesWhere(
+  settings: LibraryReadSettings,
+  plexIdentity: EpisodeAccess | null,
+): Where | null {
+  if (plexIdentity?.permittedMediaKinds.includes("series") !== true)
+    return null;
+  const { permittedSectionIds } = plexIdentity;
+  if (permittedSectionIds.length === 0) return null;
+
+  const allowed = permittedSectionIds.map((section) => plexSection(section));
+  const missing = plexSection(Prisma.DbNull);
+  const inherited = { OR: [...allowed, missing] };
+  const section = settings.sections?.series;
+  const rootSection =
+    section !== undefined && permittedSectionIds.includes(section)
+      ? inherited
+      : { OR: allowed };
+  const coveredEpisode = {
+    kind: "episode",
+    assets: { some: { edition: "default", current: true } },
+    ...inherited,
+  } satisfies Where;
+  return {
+    kind: "series",
+    AND: [
+      rootSection,
+      anyEpisode(coveredEpisode, { ...coveredEpisode, parent: inherited }),
+    ],
+  };
+}
 
 const RollupSchema = z.array(
   z.object({
