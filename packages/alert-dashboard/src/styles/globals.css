@@ -1,6 +1,12 @@
-@import "tailwindcss";
-@import "shadcn/tailwind.css";
+/*
+ * Hub's own styles. The shared console look
+ * (`@shepherdjerred/console-ui/styles/index.css`) is imported first by each
+ * entry point; its rules sit in `ui.*` cascade layers, so everything here,
+ * unlayered, wins over them.
+ */
+@import "./legacy-tokens.css";
 
+/* Berkeley Mono is licensed and served by Hub from `public/fonts`. */
 @font-face {
   font-family: "Berkeley Mono";
   src: url("/fonts/BerkeleyMono-Regular.woff2") format("woff2");
@@ -15,156 +21,53 @@
 }
 
 :root {
-  --sidebar-w: 232px;
-  --topbar-h: 52px;
-  --radius-sm: 7px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
-  color-scheme: light;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
-  --bg: #f4f6f2;
-  --panel: #fff;
-  --panel-2: #fafbf9;
-  --ink: #17211c;
-  --muted: #5f6a64;
-  --line: #d9ded8;
-  --line-soft: #e9ece8;
-  --accent: #176b4d;
-  --accent-ring: rgba(23, 107, 77, 0.25);
-  --header-bg: rgba(255, 255, 255, 0.9);
-  --control-bg: #fff;
-  --control-hover: #f3f5f2;
-  --code-bg: #f0f3ef;
-  --row-hover: #fafcf9;
-  --pre-bg: #111a15;
-  --pre-ink: #d4e6dc;
-  --sev-ok-bg: #e3f4e3;
-  --sev-ok-ink: #0a5c0a;
-  --sev-info-bg: #e5f2fc;
-  --sev-info-ink: #175989;
-  --sev-unknown-bg: #ecebe7;
-  --sev-unknown-ink: #52514e;
-  --sev-warning-bg: #fff2cf;
-  --sev-warning-ink: #7a4f00;
-  --sev-error-bg: #fde9e7;
-  --sev-error-ink: #9d241e;
-  --status-good: #0ca30c;
-  --status-info: #2a78d6;
-  --status-unknown: #9a9993;
-  --status-warning: #fab219;
-  --status-critical: #d03b3b;
-  --meter-track: #e6e9e5;
-  --delta-good: #006300;
-  --delta-bad: #9d241e;
-  --stale-bg: #fff6e0;
-  --stale-ink: #7a5200;
-  --stale-line: #f0d9a0;
-  color: var(--ink);
-  background: var(--bg);
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --bg: #0f1311;
-    --panel: #171b19;
-    --panel-2: #1c211f;
-    --ink: #e8ece9;
-    --muted: #a3ada7;
-    --line: #2e3632;
-    --line-soft: #252b28;
-    --accent: #4cc393;
-    --accent-ring: rgba(76, 195, 147, 0.35);
-    --header-bg: rgba(15, 19, 17, 0.88);
-    --control-bg: #1d2220;
-    --control-hover: #262c29;
-    --code-bg: #232926;
-    --row-hover: #1c211f;
-    --pre-bg: #0a0d0b;
-    --pre-ink: #cfe3d8;
-    --sev-ok-bg: #12301b;
-    --sev-ok-ink: #86dd95;
-    --sev-info-bg: #132a42;
-    --sev-info-ink: #93c3f5;
-    --sev-unknown-bg: #2a2a28;
-    --sev-unknown-ink: #c9c8bf;
-    --sev-warning-bg: #3a2c0a;
-    --sev-warning-ink: #f5c65a;
-    --sev-error-bg: #3d1716;
-    --sev-error-ink: #f5a09b;
-    --meter-track: #2a312d;
-    --delta-good: #3fcb62;
-    --delta-bad: #f5a09b;
-    --stale-bg: #33280c;
-    --stale-ink: #f5c65a;
-    --stale-line: #5a4717;
+
+/*
+ * Element defaults for Hub's pages. They live in console-ui's reset layer so
+ * the shared components (whose class rules sit in `ui.components`) keep their
+ * own icon sizes, label margins and colours, while every unlayered Hub class
+ * below still overrides them.
+ */
+@layer ui.reset {
+  body {
+    min-height: 100vh;
+  }
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+  .mono,
+  code,
+  pre,
+  time,
+  table {
+    font-family: var(--ui-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  h1 {
+    margin: 0.2rem 0 0.35rem;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    letter-spacing: -0.04em;
+  }
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+  }
+  h3 {
+    margin: 1.5rem 0 0.6rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  p {
+    margin: 0.25rem 0;
+    color: var(--muted);
   }
 }
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #0f1311;
-  --panel: #171b19;
-  --panel-2: #1c211f;
-  --ink: #e8ece9;
-  --muted: #a3ada7;
-  --line: #2e3632;
-  --line-soft: #252b28;
-  --accent: #4cc393;
-  --accent-ring: rgba(76, 195, 147, 0.35);
-  --header-bg: rgba(15, 19, 17, 0.88);
-  --control-bg: #1d2220;
-  --control-hover: #262c29;
-  --code-bg: #232926;
-  --row-hover: #1c211f;
-  --pre-bg: #0a0d0b;
-  --pre-ink: #cfe3d8;
-  --sev-ok-bg: #12301b;
-  --sev-ok-ink: #86dd95;
-  --sev-info-bg: #132a42;
-  --sev-info-ink: #93c3f5;
-  --sev-unknown-bg: #2a2a28;
-  --sev-unknown-ink: #c9c8bf;
-  --sev-warning-bg: #3a2c0a;
-  --sev-warning-ink: #f5c65a;
-  --sev-error-bg: #3d1716;
-  --sev-error-ink: #f5a09b;
-  --meter-track: #2a312d;
-  --delta-good: #3fcb62;
-  --delta-bad: #f5a09b;
-  --stale-bg: #33280c;
-  --stale-ink: #f5c65a;
-  --stale-line: #5a4717;
-}
-* {
-  box-sizing: border-box;
-}
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  min-width: 320px;
-  min-height: 100vh;
-}
-button,
-input,
-select {
-  font: inherit;
-}
-a {
-  color: inherit;
-}
-svg {
-  width: 1rem;
-  height: 1rem;
-}
-.mono,
-code,
-pre,
-time,
-table {
-  font-family: "Berkeley Mono", ui-monospace, monospace;
-  font-variant-numeric: tabular-nums;
-}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -190,145 +93,39 @@ table {
 .skip-link:focus {
   transform: none;
 }
-.app-layout {
-  display: grid;
-  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
-  min-height: 100dvh;
-}
 .brand {
-  font-weight: 750;
-  font-size: 1.2rem;
+  font-weight: 650;
+  font-size: 1rem;
   text-decoration: none;
 }
-.sidebar {
-  position: sticky;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  height: 100dvh;
-  padding: 12px 12px 10px;
-  border-right: 1px solid var(--line);
-  background: var(--header-bg);
-}
-.sidebar .brand {
-  align-self: flex-start;
-  padding: 0 10px;
-}
-/* The bordered controls of the sidebar: the search trigger and the theme
-   switch, one full-width row each. */
-.shell-control {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  height: 36px;
-  padding: 0 0.6rem;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--control-bg);
-  color: var(--muted);
-  text-align: left;
-  cursor: pointer;
-}
-.shell-control:hover {
-  background: var(--control-hover);
-  color: var(--ink);
-}
-.shell-control svg {
-  flex: none;
-}
-.search-trigger {
-  position: relative;
-  flex: none;
-}
-.search-trigger kbd {
-  position: absolute;
-  top: 50%;
-  right: 0.6rem;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
+/* The top bar's and drawer's icon buttons keep a 44px touch target. */
 .icon-button {
   display: inline-grid;
   flex: none;
   place-items: center;
   width: 44px;
   height: 44px;
-  border: 0;
   border-radius: 8px;
-  background: transparent;
-  color: var(--ink);
+  color: var(--ui-ink-2);
   cursor: pointer;
 }
 .icon-button:hover {
-  background: var(--control-hover);
+  background: var(--ui-side-hover);
 }
-.shell-control:focus-visible,
 .icon-button:focus-visible {
   outline: 3px solid var(--accent-ring);
   outline-offset: 2px;
 }
-/* The negative margin puts the scrollbar on the sidebar's edge and leaves
-   the links room for their focus ring inside the scroll container. */
-.sidebar-nav {
-  display: grid;
-  flex: 1;
-  align-content: start;
-  gap: 8px;
-  min-height: 0;
-  margin: 0 -12px;
-  padding: 2px 12px;
-  overflow-y: auto;
+/* Hub has three groups and sixteen pages, more than the shared sidebar's
+   group spacing fits beside a 720px-tall window; tighter gaps above each
+   group keep every row and the theme row on screen without scrolling. */
+.ui-nav-group {
+  margin-top: 10px;
 }
-.nav-group-label {
-  margin: 0;
-  padding: 0 10px 2px;
-  color: var(--muted);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.ui-nav-group:first-child {
+  margin-top: 6px;
 }
-.sidebar-nav ul {
-  display: grid;
-  gap: 1px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.nav-link {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  min-height: 32px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  color: var(--muted);
-  text-decoration: none;
-}
-.sidebar .nav-link {
-  min-height: 25px;
-  padding: 1px 10px;
-  font-size: 0.88rem;
-  line-height: 1.25;
-}
-.nav-link svg {
-  flex: none;
-}
-.nav-link:hover {
-  background: var(--control-hover);
-  color: var(--ink);
-}
-/* The current page, in the palette's selected-option language: a filled row
-   with an accent bar, so it does not rest on colour alone. */
-.nav-link.active {
-  background: var(--control-hover);
-  box-shadow: inset 2px 0 0 var(--accent);
-  color: var(--ink);
-  font-weight: 600;
-}
+/* Below 900px the shared sidebar hides; this bar and its drawer replace it. */
 .topbar {
   position: sticky;
   top: 0;
@@ -338,19 +135,19 @@ table {
   gap: 2px;
   height: var(--topbar-h);
   padding: 0 6px;
-  border-bottom: 1px solid var(--line);
-  background: var(--header-bg);
+  border-bottom: 1px solid var(--ui-line);
+  background: color-mix(in srgb, var(--ui-bg) 92%, transparent);
   backdrop-filter: blur(12px);
 }
-.topbar .brand {
+.topbar .ui-workspace {
+  flex: 0 1 auto;
   margin-right: auto;
-  padding: 0 6px;
 }
 .nav-backdrop {
   position: fixed;
   inset: 0;
   z-index: 20;
-  background: rgba(10, 14, 12, 0.45);
+  background: rgb(10 12 10 / 0.45);
 }
 .nav-drawer {
   position: fixed;
@@ -358,12 +155,13 @@ table {
   z-index: 21;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   width: min(300px, calc(100vw - 56px));
-  padding: 4px 12px 12px;
-  border-right: 1px solid var(--line);
-  background: var(--panel);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  padding: 4px 8px 12px;
+  overflow-y: auto;
+  border-right: 1px solid var(--ui-line);
+  background: var(--ui-bg);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.28);
 }
 .nav-drawer:focus-visible {
   outline: none;
@@ -374,11 +172,14 @@ table {
   align-items: center;
   justify-content: space-between;
   height: 44px;
-  padding-left: 10px;
-  margin-right: -6px;
+  padding-left: 8px;
+  margin-right: -4px;
 }
-.nav-drawer .nav-link {
-  min-height: 38px;
+.nav-drawer .ui-nav {
+  flex: none;
+}
+.nav-drawer .ui-nav-item {
+  height: 38px;
 }
 @media (prefers-reduced-motion: no-preference) {
   .nav-drawer {
@@ -397,13 +198,13 @@ table {
   }
 }
 @media (forced-colors: active) {
-  .nav-link.active {
+  .ui-nav-item[aria-current="page"] {
     outline: 2px solid Highlight;
     outline-offset: -2px;
   }
 }
-/* Page layouts respond to the width of this column, not of the viewport,
-   which the sidebar makes up to `--sidebar-w` wider. */
+/* Page layouts respond to the width of this container inside the panel, not
+   of the viewport, which the sidebar makes up to `--sidebar-w` wider. */
 .app-content {
   container: content / inline-size;
   min-width: 0;
@@ -412,12 +213,6 @@ table {
   outline: none;
 }
 @media (max-width: 900px) {
-  .app-layout {
-    display: block;
-  }
-  .sidebar {
-    display: none;
-  }
   .topbar {
     display: flex;
   }
@@ -426,26 +221,6 @@ main {
   max-width: 1440px;
   margin: 0 auto;
   padding: 36px 24px 72px;
-}
-h1 {
-  margin: 0.2rem 0 0.35rem;
-  font-size: clamp(1.8rem, 3vw, 2.6rem);
-  letter-spacing: -0.04em;
-}
-h2 {
-  font-size: 1rem;
-  margin: 0;
-}
-h3 {
-  font-size: 0.8rem;
-  margin: 1.5rem 0 0.6rem;
-  text-transform: uppercase;
-  color: var(--muted);
-  letter-spacing: 0.05em;
-}
-p {
-  color: var(--muted);
-  margin: 0.25rem 0;
 }
 .eyebrow {
   color: var(--accent);
@@ -2636,4 +2411,68 @@ kbd svg {
   .palette-footer {
     display: none;
   }
+}
+/* ---- Alert groups: one disclosure row per repeated alertname ---- */
+.alert-group {
+  border-bottom: 1px solid var(--line-soft);
+}
+.alert-group-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  list-style: none;
+  cursor: pointer;
+}
+.alert-group-summary::-webkit-details-marker {
+  display: none;
+}
+.alert-group-summary:hover {
+  background: var(--row-hover);
+}
+.alert-group-summary:focus-visible {
+  outline: 3px solid var(--accent-ring);
+  outline-offset: -3px;
+}
+.alert-group-chevron {
+  color: var(--muted);
+  transition: rotate 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.alert-group[open] .alert-group-chevron {
+  rotate: 90deg;
+}
+.alert-group-name {
+  font-size: 0.85rem;
+}
+.alert-group-newest {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+.alert-group-body {
+  border-top: 1px solid var(--line-soft);
+  background: var(--panel-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .alert-group-chevron {
+    transition: none;
+  }
+}
+/* ---- Alert detail: a query's chart and its raw response ---- */
+.query-chart,
+.query-raw {
+  margin-top: 0.5rem;
+}
+.query-raw-summary {
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  cursor: pointer;
+}
+/* An action under a filter form, as wide as its label. */
+.filter-action {
+  justify-self: start;
+  width: fit-content;
 }

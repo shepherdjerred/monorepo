@@ -446,7 +446,21 @@ shell navigation are generated from the composition root. Only `core` may use
 an empty `basePath`; the registry refuses duplicate ids, duplicate routes, and
 a `basePath` that collides with another module or a server path, at startup.
 
-The shell (`src/client/shell.tsx`) is a grouped sidebar. Each `nav` entry is
+The shell (`src/client/shell.tsx`) is the shared console shell from
+[`@shepherdjerred/console-ui`](../console-ui/README.md): a quiet sidebar beside
+an inset panel that holds the page. The sidebar opens with the app switcher (a
+menu of every console in `CONSOLE_LINKS` from
+`@shepherdjerred/ops-model/tool-links.ts`, Hub marked current, each opening in
+the same tab) and the search button for the palette, then the grouped pages,
+then the theme row. Hub's look is console-ui's stylesheet and tokens; Hub's
+own sheets (`src/styles/`) still use their original custom property names,
+which `src/styles/legacy-tokens.css` maps onto the shared `--ui-*` tokens, and
+`src/client/theme.ts` is console-ui's theme store under the `ops-theme` key.
+Charts take their axis, grid and threshold colours from the same tokens.
+Berkeley Mono is licensed and stays in `public/fonts`, declared by Hub's own
+`@font-face`.
+
+The sidebar is grouped. Each `nav` entry is
 listed under its `group`, which defaults to the module's `title`; entries from
 different modules that name the same group share one heading, and groups
 appear in the order they are first declared. An entry's `label` is its short
@@ -456,11 +470,13 @@ the palette, which also matches a page by its group. The registry refuses a
 blank group, two entries with the same target, and an entry that points at no
 declared route.
 
-At 900px and narrower the sidebar gives way to a top bar whose menu button
-opens the same groups in a modal drawer. Every page renders its own `<main>`
-inside the shell's content column, which is a size container named `content`:
-page layouts respond to that column's width with `@container content (...)`
-rather than to the viewport, because the sidebar makes the two differ.
+At 900px and narrower the sidebar gives way to Hub's top bar (menu button,
+app switcher, search and theme) whose menu button opens the same groups in a
+modal drawer. Every page renders its own `<main>` inside the panel's content
+container, which is a size container named `content`: page layouts respond to
+its width with `@container content (...)` rather than to the viewport, because
+the sidebar makes the two differ. The document scrolls, never the panel, so
+page-height checks measure the document.
 
 A server module declares `id` and `register(app)`, plus optional `trpc`,
 `ready`, and `close`. Modules mount before the `/api/*` catch-all, so an

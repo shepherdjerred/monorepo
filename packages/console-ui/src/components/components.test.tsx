@@ -60,6 +60,18 @@ describe("Sidebar navigation", () => {
     expect(html).toContain('<nav class="ui-nav" aria-label="Primary">');
   });
 
+  test("names the aside landmark only when given a label", () => {
+    expect(html).toMatch(/^<aside class="ui-side">/);
+    const labelled = renderToStaticMarkup(
+      <Sidebar label="Hub">
+        <SidebarGroup label="Ops">
+          <SidebarItem href="/" label="Home" />
+        </SidebarGroup>
+      </Sidebar>,
+    );
+    expect(labelled).toMatch(/^<aside class="ui-side" aria-label="Hub">/);
+  });
+
   test("renders each group as a labelled ul > li > a list", () => {
     const labelId = /<p class="ui-nav-label" id="([^"]+)">Ops<\/p>/.exec(
       html,
@@ -342,5 +354,9 @@ describe("ThemeRow", () => {
       /^<button type="button" class="ui-nav-item ui-theme-row" aria-label="Theme: dark">/,
     );
     expect(html).toContain('<span class="ui-nav-count">dark</span>');
+    // Visible text "Theme dark" sits inside the name "Theme: dark".
+    expect(html).toContain(
+      '<span class="ui-nav-text">Theme</span> <span class="ui-nav-count">dark</span>',
+    );
   });
 });

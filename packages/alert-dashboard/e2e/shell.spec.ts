@@ -95,6 +95,89 @@ test("every sidebar link is on screen at 1280px without scrolling", async ({
   ).toBeInViewport({ ratio: 1 });
 });
 
+test("the sidebar sits beside an inset panel, and the document scrolls", async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP);
+  await page.goto("/");
+  await expect(page.locator("main h1")).toHaveText("Home");
+  await expect(page.locator(".loading-state")).toHaveCount(0);
+
+  const sidebar = page.getByRole("complementary", { name: "Hub" });
+  const side = await sidebar.boundingBox();
+  if (side === null) throw new Error("the sidebar is not rendered");
+  expect(Math.abs(side.width - 228)).toBeLessThanOrEqual(1);
+
+  // The inset panel is the element that holds the page's content container.
+  const panel = page.locator("#content").locator("xpath=..");
+  const geometry = await panel.evaluate((element) => {
+    const style = globalThis.getComputedStyle(element);
+    const box = element.getBoundingClientRect();
+    return {
+      left: box.left,
+      borderWidth: Number.parseFloat(style.borderLeftWidth),
+      borderStyle: style.borderLeftStyle,
+      borderColor: style.borderLeftColor,
+      background: style.backgroundColor,
+      pageBackground: globalThis.getComputedStyle(globalThis.document.body)
+        .backgroundColor,
+      overflowY: style.overflowY,
+      scrollHeight: globalThis.document.documentElement.scrollHeight,
+      innerHeight: globalThis.innerHeight,
+    };
+  });
+  expect(geometry.left).toBeGreaterThanOrEqual(228);
+  expect(geometry.borderWidth).toBeGreaterThanOrEqual(1);
+  expect(geometry.borderStyle).toBe("solid");
+  expect(geometry.borderColor).not.toBe("rgba(0, 0, 0, 0)");
+  expect(geometry.borderColor).not.toBe(geometry.background);
+  expect(geometry.background).not.toBe(geometry.pageBackground);
+  // The panel never becomes a scroll container: page-height budgets measure
+  // the document, so a long page must lengthen the document instead.
+  expect(["auto", "scroll"]).not.toContain(geometry.overflowY);
+  expect(geometry.scrollHeight).toBeGreaterThan(geometry.innerHeight);
+  const panelBox = await panel.boundingBox();
+  if (panelBox === null) throw new Error("the panel is not rendered");
+  await page.mouse.move(panelBox.x + 200, 300);
+  await page.mouse.wheel(0, 600);
+  await expect
+    .poll(() => page.evaluate(() => globalThis.scrollY))
+    .toBeGreaterThan(0);
+  // The sidebar stays put while the document scrolls.
+  await expect(
+    sidebar.getByRole("button", { name: /^Theme: / }),
+  ).toBeInViewport({ ratio: 1 });
+});
+
+test("the app switcher opens a menu of the other consoles", async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP);
+  await page.goto("/");
+  await expect(page.locator("main h1")).toHaveText("Home");
+  const trigger = page
+    .getByRole("complementary", { name: "Hub" })
+    .getByRole("button", { name: /^Hub.*switch app$/u });
+  await expect(trigger).toBeInViewport({ ratio: 1 });
+  await trigger.click();
+  const menu = page.getByRole("menu");
+  await expect(menu).toBeVisible();
+  await expect(
+    menu.getByRole("menuitem", { name: "Go links" }),
+  ).toHaveAttribute("href", "https://go.tailnet-1a49.ts.net");
+  await expect(menu.getByRole("menuitem", { name: "Flags" })).toHaveAttribute(
+    "href",
+    "https://flags.tailnet-1a49.ts.net",
+  );
+  await expect(
+    menu.getByRole("menuitem", { name: "Hub", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  expect(await violations(new AxeBuilder({ page }))).toEqual([]);
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeHidden();
+  await expect(trigger).toBeFocused();
+});
+
 test("the sidebar marks the current page, including its detail pages", async ({
   page,
 }) => {

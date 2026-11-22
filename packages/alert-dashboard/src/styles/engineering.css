@@ -49,6 +49,7 @@
 .eng-callout-list {
   margin: 2px 0 0;
   padding-inline-start: 18px;
+  list-style: none;
   color: var(--muted);
   font-size: 0.8rem;
 }
@@ -383,6 +384,7 @@
 .eng-delta-list {
   margin: 0;
   padding-inline-start: 18px;
+  list-style: none;
   color: var(--ink);
   font-size: 0.78rem;
   line-height: 1.4;

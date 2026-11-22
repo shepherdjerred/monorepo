@@ -18,7 +18,7 @@ function ExternalGroup({
       <h3 id={id}>{title}</h3>
       <ul className="launcher-grid" aria-labelledby={id}>
         {entries.map((entry) => (
-          <li key={entry.url}>
+          <li key={entry.id}>
             <a
               className="launcher-card"
               href={entry.url}

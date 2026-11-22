@@ -1,3 +1,7 @@
+import {
+  APP_HOSTS,
+  CONSOLE_LINKS,
+} from "@shepherdjerred/ops-model/tool-links.ts";
 import { expect, test, type Locator } from "@playwright/test";
 
 import { DigestReportSchema } from "#shared/ops-schema";
@@ -110,6 +114,34 @@ test("home launches the other apps and the tools", async ({ page }) => {
       name: "Grafana",
     }),
   ).toHaveAttribute("href", "https://grafana.tailnet-1a49.ts.net");
+  // Every other console from the shared list, in its order, then the Go link
+  // index as the catch-all for every other service. Hub never links to itself.
+  for (const group of ["Apps", "Tools"] as const) {
+    const expected = CONSOLE_LINKS.filter(
+      (link) => link.group === group && link.id !== "hub",
+    ).map((link) => ({ name: link.label, href: link.url }));
+    if (group === "Tools")
+      expected.push({ name: "All services", href: APP_HOSTS.golink });
+    const links = launcher.getByRole("list", { name: group }).getByRole("link");
+    await expect(links).toHaveCount(expected.length);
+    for (const [index, { name, href }] of expected.entries()) {
+      await expect(links.nth(index)).toHaveAccessibleName(name);
+      await expect(links.nth(index)).toHaveAttribute("href", href);
+    }
+  }
+  await expect(
+    launcher.getByRole("list", { name: "Apps" }).getByRole("link", {
+      name: "Go links",
+    }),
+  ).toHaveAttribute("href", "https://go.tailnet-1a49.ts.net");
+  await expect(
+    launcher.getByRole("list", { name: "Apps" }).getByRole("link", {
+      name: "Flags",
+    }),
+  ).toHaveAttribute("href", "https://flags.tailnet-1a49.ts.net");
+  await expect(
+    launcher.getByRole("link", { name: "Hub", exact: true }),
+  ).toHaveCount(0);
 
   await page
     .getByRole("navigation", { name: "Primary navigation" })

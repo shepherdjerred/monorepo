@@ -18,7 +18,10 @@ import {
   renderPlatformServiceView,
   UniversalServiceTelemetry,
 } from "./service-views/platform-views.tsx";
-import { renderProductServiceView } from "./service-views/product-views.tsx";
+import {
+  renderProductServiceView,
+  ServiceConsoleLink,
+} from "./service-views/product-views.tsx";
 import { SignalList } from "./signal-list.tsx";
 import { useRange } from "#client/charts/use-range.ts";
 import { StaleNotice } from "#client/stale-notice.tsx";
@@ -108,6 +111,7 @@ function ServiceBody({
       </Link>
       <PageHeading eyebrow="Service" title={detail.service.title}>
         <div className="platform-heading-actions">
+          <ServiceConsoleLink serviceId={detail.service.id} />
           <RangePicker value={range} onChange={setRange} />
           <SeverityBadge
             severity={
