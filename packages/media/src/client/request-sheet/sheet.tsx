@@ -13,7 +13,9 @@ import {
   SheetBody,
   closeSheet,
 } from "#client/ui/sheet.tsx";
-import { Choice, LanguagePicker, Note, Problem } from "./controls.tsx";
+import { classNames } from "#client/ui/class-names.ts";
+import { Choice, LanguagePicker, Note, Problem, Report } from "./controls.tsx";
+import styles from "./controls.module.css";
 import { Episodes, ForWhom, Keeping, Seasons } from "./fields.tsx";
 import {
   initialValues,
@@ -21,12 +23,15 @@ import {
   validationMessage,
   type SheetSubject,
   type SheetValues,
+  type TelevisionSubject,
 } from "./form.ts";
 import {
   useMovieRequest,
   useTelevisionRequest,
   type RequestOutcome,
 } from "./submit.ts";
+
+const cx = classNames(styles);
 
 type Props = {
   user: MediaUser;
@@ -95,6 +100,7 @@ function reveal(problems: HTMLDivElement | null) {
 function RequestForm({
   user,
   problem,
+  report = null,
   error,
   pending,
   blocked,
@@ -105,6 +111,8 @@ function RequestForm({
   user: MediaUser;
   /** Why the sheet cannot be sent as it stands. */
   problem: string | null;
+  /** What a request that stopped part-way has and has not done. */
+  report?: string | null;
   error: Error | null;
   pending: boolean;
   /** Something the sheet needs has not loaded. */
@@ -130,9 +138,16 @@ function RequestForm({
             Requests are paused for your account. Ask the library owner.
           </Problem>
         )}
-        {((attempted && problem !== null) || error !== null) && (
+        {((attempted && problem !== null) ||
+          error !== null ||
+          report !== null) && (
           // Keyed by what is wrong, so a new problem is revealed again.
-          <div key={`${problem ?? ""}:${error?.message ?? ""}`} ref={reveal}>
+          <div
+            className={cx("outcome")}
+            key={`${problem ?? ""}:${error?.message ?? ""}:${report ?? ""}`}
+            ref={reveal}
+          >
+            {report !== null && <Report>{report}</Report>}
             {attempted && problem !== null && <Problem>{problem}</Problem>}
             <CommandError error={error} review={onReview} />
           </div>
@@ -265,9 +280,12 @@ function TelevisionRequest({
   user,
   subject,
   onRequested,
-}: FormProps<Exclude<SheetSubject, { kind: "movie" }>>) {
+}: FormProps<TelevisionSubject>) {
   const { values, change } = useSheetValues(subject, user);
-  const { request, locked, review } = useTelevisionRequest(user, subject);
+  const { request, locked, partial, review } = useTelevisionRequest(
+    user,
+    subject,
+  );
   if (request.data !== undefined) {
     return <Requested subject={subject} outcome={request.data} />;
   }
@@ -279,6 +297,7 @@ function TelevisionRequest({
     <RequestForm
       user={user}
       problem={validationMessage(subject, values)}
+      report={partial}
       error={request.error}
       pending={request.isPending}
       blocked={false}

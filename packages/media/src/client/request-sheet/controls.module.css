@@ -120,6 +120,11 @@
     outline-offset: 2px;
   }
 
+  /* What happened, then what is wrong, as one group at the foot. */
+  .outcome {
+    display: grid;
+    gap: var(--space-3);
+  }
   .note {
     margin: 0;
     padding: var(--space-3) var(--space-4);

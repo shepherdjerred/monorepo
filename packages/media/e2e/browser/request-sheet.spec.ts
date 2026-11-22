@@ -242,6 +242,79 @@ test("choosing seasons asks for each season on its own", async ({ page }) => {
   }
 });
 
+test("a batch that stops part-way keeps its answers and asks only for what is left", async ({
+  page,
+}) => {
+  const series = titleNamed("Succession");
+  await open(page, "member", `/media/${series.id}`);
+  const attempts: unknown[] = [];
+  await page.route(/\/api\/v2\/media\/[^/]+\/commands$/u, async (route) => {
+    const command = DefaultCommandV2Schema.parse(
+      route.request().postDataJSON(),
+    );
+    attempts.push(command);
+    // The second season's command is refused the first time it arrives.
+    if (attempts.length === 2) {
+      await route.fulfill({
+        status: 422,
+        json: {
+          error: {
+            code: "invalid_request_scope",
+            message: "Season 2 cannot be asked for right now.",
+          },
+        },
+      });
+      return;
+    }
+    await route.fulfill({
+      json: {
+        schemaVersion: 2,
+        scope: command.scope,
+        result: { status: "queued" },
+        appliedVersions: { mediaVersion: 9, targetVersion: 5 },
+      },
+    });
+  });
+  await opener(page).click();
+  const sheet = page.getByRole("dialog");
+  await sheet.getByRole("radio", { name: /^Only some seasons/u }).check();
+  await sheet.getByRole("checkbox", { name: "Season 1" }).check();
+  await sheet.getByRole("checkbox", { name: "Season 2" }).check();
+  const submit = sheet.getByRole("button", { name: "Request" });
+  await submit.click();
+
+  // Season 1 went through and season 2 did not: the sheet says both.
+  await expect(sheet.locator(".notice-error")).toContainText(
+    "Season 2 cannot be asked for right now.",
+  );
+  await expect(sheet.getByRole("status")).toContainText(
+    "Season 1 is requested. Season 2 is not yet.",
+  );
+  // The answers are the ones season 1 was asked for with; they cannot be
+  // changed for the rest of the batch.
+  for (const control of [
+    sheet.getByRole("checkbox", { name: "Chinese (Simplified)" }),
+    sheet.getByRole("checkbox", { name: "English" }),
+    sheet.getByRole("checkbox", { name: "Season 1" }),
+    sheet.getByRole("checkbox", { name: "Season 3" }),
+    sheet.getByRole("radio", { name: /^The whole series/u }),
+  ]) {
+    await expect(control).toBeDisabled();
+  }
+  expect(await violationDetails(page)).toEqual([]);
+  expect(await horizontalOverflow(page)).toBe(0);
+
+  await submit.click();
+  await expect(sheet.getByRole("status")).toContainText("Requested.");
+  // Three commands: season 1 once, then season 2 twice. The retry is the
+  // refused command again, unchanged, and season 1 is not asked for twice.
+  const commands = z.array(DefaultCommandV2Schema).length(3).parse(attempts);
+  const [first, refused, retried] = commands;
+  expect(retried).toEqual(refused);
+  expect(first?.scope.mediaId).not.toBe(refused?.scope.mediaId);
+  expect(first?.command).toEqual(refused?.command);
+});
+
 test("the owner's film request names the version, and a retry is the same request", async ({
   page,
 }) => {

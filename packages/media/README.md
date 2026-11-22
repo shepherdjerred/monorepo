@@ -1034,7 +1034,12 @@ is always just for now), and the subtitle languages, chosen from a list instead
 of typed as codes. `form.ts` maps those answers to commands and `submit.ts`
 sends them through `writeApi`, so every request carries the session's CSRF token
 and a retry key. A request whose outcome is unknown locks the sheet's answers
-and is sent again unchanged. Choosing seasons sends one command per season. The
+and is sent again unchanged. Choosing seasons sends one command per season. A
+request for the Specials season, whether ticked among the seasons or made from
+that season's own page, carries `includeSpecials`: the server leaves season-zero
+episodes out of any request without it. If a request for several seasons stops
+part-way, the seasons already accepted stay requested, so the sheet says which
+they are, locks its answers, and asks for the rest the same way. The
 two keeping answers are named from `src/shared/household/names.ts`, as the
 Library's switch and the server's message for a request with no answer are.
 

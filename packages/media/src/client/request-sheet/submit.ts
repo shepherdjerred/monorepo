@@ -21,9 +21,13 @@ import type { TargetSubmission } from "#client/target-controls/mutation.ts";
 import {
   chosenSeasons,
   movieOptions,
+  partialMessage,
+  requestItems,
   televisionCommand,
+  type RequestItem,
   type SheetSubject,
   type SheetValues,
+  type TelevisionSubject,
 } from "./form.ts";
 
 /** What a sent request leaves behind for the sheet to say. */
@@ -65,22 +69,37 @@ async function invalidateLists() {
   ]);
 }
 
+/** A request for several seasons that has begun and is not finished. */
+type Batch = {
+  /** The answers the first command was sent with, and every later one is. */
+  values: SheetValues;
+  /** What has been accepted so far, in the order it was sent. */
+  accepted: readonly RequestItem[];
+};
+
 /**
  * Asks for a series, some of its seasons, a season or an episode.
  *
  * Each item is one command against the versions read for it just before. A
  * command whose outcome is unknown is kept and sent again unchanged, so the
- * server recognises it; seasons already accepted are not asked for twice.
+ * server recognises it.
+ *
+ * Once one season of several is accepted, the request is finished with the
+ * answers it began with: what was accepted cannot be taken back from here,
+ * so the remaining seasons are asked for the same way and the sheet's
+ * answers stay locked until they are. Accepted seasons are not asked for
+ * twice.
  */
 export function useTelevisionRequest(
   user: MediaUser,
-  subject: Exclude<SheetSubject, { kind: "movie" }>,
+  subject: TelevisionSubject,
 ) {
   const adopted = useRef<string | null>(null);
-  const accepted = useRef(new Set<string>());
+  const batch = useRef<Batch | null>(null);
   const unacknowledged = useRef<TargetSubmission | null>(null);
   const request = useMutation({
-    mutationFn: async (values: SheetValues): Promise<RequestOutcome> => {
+    mutationFn: async (submitted: SheetValues): Promise<RequestOutcome> => {
+      const values = batch.current?.values ?? submitted;
       const { target } = subject;
       const rootId =
         "mediaId" in target
@@ -91,31 +110,36 @@ export function useTelevisionRequest(
               target.externalId,
             ));
       const seasons = chosenSeasons(subject, values);
-      const items =
-        seasons.length === 0
-          ? [{ mediaId: rootId, whole: subject.kind === "series" }]
-          : await seasonItems(rootId, seasons);
+      const items = requestItems(
+        subject,
+        rootId,
+        seasons,
+        seasons.length === 0 ? [] : await seasonsOf(rootId),
+      );
       for (const item of items) {
-        if (accepted.current.has(item.mediaId)) continue;
+        const accepted = batch.current?.accepted ?? [];
+        if (accepted.some((done) => done.mediaId === item.mediaId)) continue;
         const held = unacknowledged.current;
         const submission =
           held?.context.scope.mediaId === item.mediaId
             ? held
             : {
                 context: await readTarget(item.mediaId),
-                command: televisionCommand(values, user, item.whole),
+                command: televisionCommand(values, user, item.scope),
               };
         unacknowledged.current = submission;
         await writeTarget(user.id, submission.context, submission.command);
         unacknowledged.current = null;
-        accepted.current.add(item.mediaId);
+        batch.current = { values, accepted: [...accepted, item] };
       }
       return { mediaId: rootId, note: null };
     },
     onSuccess: async (outcome) => {
+      const accepted = batch.current?.accepted ?? [];
+      batch.current = null;
       await Promise.all([
         invalidateTarget(outcome.mediaId),
-        ...[...accepted.current].map((id) => invalidateTarget(id)),
+        ...accepted.map((item) => invalidateTarget(item.mediaId)),
         invalidateLists(),
       ]);
     },
@@ -123,10 +147,21 @@ export function useTelevisionRequest(
       if (refused(error)) unacknowledged.current = null;
     },
   });
+  const begun = batch.current;
   return {
     request,
-    /** An unknown outcome must be retried as it was sent. */
-    locked: request.isPending || unacknowledged.current !== null,
+    /**
+     * The answers cannot change: a command is in flight, one has an unknown
+     * outcome and must be retried as it was sent, or part of the request is
+     * already accepted.
+     */
+    locked:
+      request.isPending || unacknowledged.current !== null || begun !== null,
+    /** What a request that stopped part-way has and has not asked for. */
+    partial:
+      begun === null || request.isPending || request.isSuccess
+        ? null
+        : partialMessage(subject, ...progress(subject, begun)),
     review: () => {
       unacknowledged.current = null;
       request.reset();
@@ -134,23 +169,29 @@ export function useTelevisionRequest(
   };
 }
 
-/** The library's season items for the chosen season numbers. */
-async function seasonItems(rootId: string, seasons: readonly number[]) {
+/** The seasons a batch has asked for, and the ones it still has to. */
+function progress(
+  subject: TelevisionSubject,
+  batch: Batch,
+): [requested: number[], remaining: number[]] {
+  const requested = batch.accepted.flatMap((item) =>
+    item.seasonNumber === null ? [] : [item.seasonNumber],
+  );
+  return [
+    requested,
+    chosenSeasons(subject, batch.values).filter(
+      (season) => !requested.includes(season),
+    ),
+  ];
+}
+
+/** The series' items in the library, among them its seasons. */
+async function seasonsOf(rootId: string) {
   const series = await readApi(
     `/media/${encodeURIComponent(rootId)}`,
     MediaDetailSchema,
   );
-  return seasons.map((seasonNumber) => {
-    const season = series.children.find(
-      (child) => child.kind === "season" && child.seasonNumber === seasonNumber,
-    );
-    if (season === undefined) {
-      throw new Error(
-        `Season ${String(seasonNumber)} is still being added to the library. Try again in a moment.`,
-      );
-    }
-    return { mediaId: season.id, whole: false };
-  });
+  return series.children;
 }
 
 /**

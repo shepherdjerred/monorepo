@@ -254,6 +254,15 @@ export function Note({ children }: { children: ReactNode }) {
   return <p className={cx("note")}>{children}</p>;
 }
 
+/** What the request has done so far, announced when it appears. */
+export function Report({ children }: { children: ReactNode }) {
+  return (
+    <p className={cx("note")} role="status">
+      {children}
+    </p>
+  );
+}
+
 /** What stops the sheet from being sent, announced when it appears. */
 export function Problem({ children }: { children: ReactNode }) {
   return (

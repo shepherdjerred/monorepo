@@ -8,10 +8,13 @@ import {
   chosenSeasons,
   initialValues,
   movieOptions,
+  partialMessage,
   readVersion,
+  requestItems,
   televisionCommand,
   validationMessage,
   type SheetSubject,
+  type TelevisionSubject,
 } from "./form.ts";
 import { COMMON_LANGUAGES, MORE_LANGUAGES, languageName } from "./languages.ts";
 
@@ -31,7 +34,7 @@ const film: SheetSubject = {
   title: "Arrival",
   target: { externalId: 329_865 },
 };
-const series: SheetSubject = {
+const series: TelevisionSubject = {
   kind: "series",
   title: "Severance",
   target: { mediaId: "20000000-0000-4000-8000-000000000001" },
@@ -41,11 +44,46 @@ const series: SheetSubject = {
     { seasonNumber: 2, title: "Season 2", episodeCount: 10 },
   ],
 };
-const season: SheetSubject = {
+const season: TelevisionSubject = {
   kind: "season",
+  seasonNumber: 2,
   title: "Severance, Season 2",
   target: { mediaId: "30000000-0000-4000-8000-000000000002" },
 };
+const specialsSeason: TelevisionSubject = {
+  kind: "season",
+  seasonNumber: 0,
+  title: "Severance, Specials",
+  target: { mediaId: "30000000-0000-4000-8000-000000000000" },
+};
+const episode: TelevisionSubject = {
+  kind: "episode",
+  title: "Severance, Good News About Hell",
+  target: { mediaId: "40000000-0000-4000-8000-000000000101" },
+};
+/** The series' seasons as the library holds them. */
+const children = [
+  {
+    id: "30000000-0000-4000-8000-000000000000",
+    kind: "season",
+    seasonNumber: 0,
+  },
+  {
+    id: "30000000-0000-4000-8000-000000000001",
+    kind: "season",
+    seasonNumber: 1,
+  },
+  {
+    id: "30000000-0000-4000-8000-000000000002",
+    kind: "season",
+    seasonNumber: 2,
+  },
+] as const;
+const seriesId = "20000000-0000-4000-8000-000000000001";
+/** The library item the sheet was opened for. */
+function idOf(subject: TelevisionSubject): string {
+  return "mediaId" in subject.target ? subject.target.mediaId : seriesId;
+}
 
 describe("the sheet as it opens", () => {
   it("a member's request is just for now, in English, for themselves", () => {
@@ -85,7 +123,7 @@ describe("a series, season or episode request", () => {
         specials: true,
       },
       owner,
-      true,
+      "series",
     );
     expect(command).toEqual({
       action: "request",
@@ -115,42 +153,63 @@ describe("a series, season or episode request", () => {
         requesterUserId: kids,
       },
       owner,
-      true,
+      "series",
     );
     expect(forKids.requesterUserId).toBe(kids);
     expect(
-      televisionCommand(initialValues(series, member), member, true),
+      televisionCommand(initialValues(series, member), member, "series"),
     ).not.toHaveProperty("requesterUserId");
   });
 
-  it("asks for a season or an episode as it is", () => {
+  it("asks for a numbered season or an episode as it is", () => {
     const command = televisionCommand(
       { ...initialValues(series, member), future: true, specials: true },
       member,
-      false,
+      "part",
     );
     expect(command.includeFutureEpisodes).toBe(false);
     expect(command.includeSpecials).toBe(false);
   });
 
+  it("asks for the Specials season's episodes when that season is what is asked for", () => {
+    // The server leaves season-zero episodes out of any request that does
+    // not include specials, a request for the Specials season among them.
+    const command = televisionCommand(
+      initialValues(series, member),
+      member,
+      "specials",
+    );
+    expect(command.includeSpecials).toBe(true);
+    // Following new episodes is asked of a whole series only.
+    expect(command.includeFutureEpisodes).toBe(false);
+    expect(
+      DefaultCommandV2Schema.safeParse({
+        schemaVersion: 2,
+        scope: { mediaId: children[0].id, edition: "default" },
+        expected: { mediaVersion: 3, targetVersion: null },
+        command,
+      }).success,
+    ).toBe(true);
+  });
+
   it("asks for no subtitles when none are chosen, and for each once", () => {
     const values = initialValues(season, member);
     expect(
-      televisionCommand({ ...values, languages: [] }, member, false)
+      televisionCommand({ ...values, languages: [] }, member, "part")
         .subtitleLanguages,
     ).toEqual([]);
     expect(
       televisionCommand(
         { ...values, languages: ["en", "fr", "en"] },
         member,
-        false,
+        "part",
       ).subtitleLanguages,
     ).toEqual(["en", "fr"]);
   });
 
   it("refuses to build a command the sheet would not send", () => {
     expect(() =>
-      televisionCommand(initialValues(series, owner), owner, true),
+      televisionCommand(initialValues(series, owner), owner, "series"),
     ).toThrow("Choose how long to keep it.");
   });
 });
@@ -191,6 +250,65 @@ describe("choosing seasons", () => {
     expect(chosenSeasons(season, values)).toEqual([]);
     expect(validationMessage(season, values)).toBeNull();
     expect(chosenSeasons(film, values)).toEqual([]);
+  });
+});
+
+/** Each command a request sends: what it names and whether it brings specials. */
+function commands(subject: TelevisionSubject, seasons: readonly number[]) {
+  return requestItems(subject, idOf(subject), seasons, children).map(
+    (item) => ({
+      mediaId: item.mediaId,
+      seasonNumber: item.seasonNumber,
+      includeSpecials: televisionCommand(
+        { ...initialValues(subject, member), specials: false },
+        member,
+        item.scope,
+      ).includeSpecials,
+    }),
+  );
+}
+
+describe("what one request sends, item by item", () => {
+  it("the whole series is one command, with the sheet's answer on specials", () => {
+    expect(requestItems(series, seriesId, [], children)).toEqual([
+      { mediaId: seriesId, seasonNumber: null, scope: "series" },
+    ]);
+    expect(commands(series, [])[0]?.includeSpecials).toBe(false);
+  });
+
+  it("Specials ticked among the seasons is asked for with its episodes", () => {
+    expect(commands(series, [0, 2])).toEqual([
+      { mediaId: children[0].id, seasonNumber: 0, includeSpecials: true },
+      { mediaId: children[2].id, seasonNumber: 2, includeSpecials: false },
+    ]);
+  });
+
+  it("the Specials season's own page asks for its episodes too", () => {
+    expect(commands(specialsSeason, [])).toEqual([
+      { mediaId: children[0].id, seasonNumber: 0, includeSpecials: true },
+    ]);
+    expect(commands(season, [])[0]?.includeSpecials).toBe(false);
+    expect(commands(episode, [])[0]?.includeSpecials).toBe(false);
+  });
+
+  it("refuses a season the library does not hold yet, in the reader's words", () => {
+    expect(() => requestItems(series, seriesId, [1, 7], children)).toThrow(
+      "Season 7 is still being added to the library. Try again in a moment.",
+    );
+  });
+});
+
+describe("a request for several seasons that stopped part-way", () => {
+  it("says which seasons are requested and which are not, by their names", () => {
+    expect(partialMessage(series, [1], [2])).toBe(
+      "Season 1 is requested. Season 2 is not yet. Your answers stay as they were sent, so the rest is asked for the same way: choose Request to try again, or Cancel to leave it there.",
+    );
+    expect(partialMessage(series, [0, 1], [2])).toMatch(
+      /^Specials and Season 1 are requested\. Season 2 is not yet\./u,
+    );
+    expect(partialMessage(series, [1], [0, 2])).toMatch(
+      /^Season 1 is requested\. Specials and Season 2 are not yet\./u,
+    );
   });
 });
 

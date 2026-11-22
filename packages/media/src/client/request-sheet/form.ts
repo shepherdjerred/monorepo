@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { LanguageSchema, type MediaUser } from "#shared/contract.ts";
+import {
+  LanguageSchema,
+  type MediaItem,
+  type MediaUser,
+} from "#shared/contract.ts";
 import type { DefaultCommandV2 } from "#shared/editions/commands.ts";
 import {
   MovieEditionKeySchema,
@@ -25,8 +29,12 @@ export type SheetSubject = {
 } & (
   | { kind: "movie" }
   | { kind: "series"; seasons: readonly SheetSeason[] }
-  | { kind: "season" | "episode" }
+  | { kind: "season"; seasonNumber: number | null }
+  | { kind: "episode" }
 );
+
+/** A subject asked for through the series, season and episode commands. */
+export type TelevisionSubject = Exclude<SheetSubject, { kind: "movie" }>;
 
 /** How long the library keeps a title; empty until the owner has chosen. */
 export type KeepingChoice = "" | "keep" | "temporary";
@@ -117,21 +125,120 @@ type RequestCommand = Extract<
   { action: "request" }
 >;
 
+/** The catalog files a series' specials under season zero. */
+const SPECIALS_SEASON = 0;
+
 /**
- * The command for a series, season or episode. Following new episodes and
- * including specials are questions about a whole series: a season or an
- * episode is asked for as it is.
+ * What one command of a request covers:
+ *
+ * - `series`: the whole series. Whether it follows new episodes and brings
+ *   its specials are the sheet's two answers.
+ * - `specials`: the Specials season, asked for by itself.
+ * - `part`: a numbered season, or one episode, asked for as it is.
+ */
+export type RequestScope = "series" | "specials" | "part";
+
+function seasonScope(seasonNumber: number | null): RequestScope {
+  return seasonNumber === SPECIALS_SEASON ? "specials" : "part";
+}
+
+/** One command of a request: the library item it names and what it covers. */
+export type RequestItem = {
+  mediaId: string;
+  /** The season the item is; null for a series or an episode. */
+  seasonNumber: number | null;
+  scope: RequestScope;
+};
+
+type LibrarySeason = Pick<MediaItem, "id" | "kind" | "seasonNumber">;
+
+/**
+ * The commands a request is made of, in the order they are sent: one for the
+ * sheet's own subject, or one per chosen season. `children` are the series'
+ * items in the library, where each chosen season is found by its number.
+ */
+export function requestItems(
+  subject: TelevisionSubject,
+  rootId: string,
+  seasons: readonly number[],
+  children: readonly LibrarySeason[],
+): RequestItem[] {
+  if (seasons.length === 0) {
+    const seasonNumber =
+      subject.kind === "season" ? subject.seasonNumber : null;
+    return [
+      {
+        mediaId: rootId,
+        seasonNumber,
+        scope: subject.kind === "series" ? "series" : seasonScope(seasonNumber),
+      },
+    ];
+  }
+  return seasons.map((seasonNumber) => {
+    const season = children.find(
+      (child) => child.kind === "season" && child.seasonNumber === seasonNumber,
+    );
+    if (season === undefined) {
+      throw new Error(
+        `${seasonName(subject, seasonNumber)} is still being added to the library. Try again in a moment.`,
+      );
+    }
+    return {
+      mediaId: season.id,
+      seasonNumber,
+      scope: seasonScope(seasonNumber),
+    };
+  });
+}
+
+/** A season as the sheet lists it, or by its number when the sheet does not. */
+function seasonName(subject: TelevisionSubject, seasonNumber: number): string {
+  const listed =
+    subject.kind === "series"
+      ? subject.seasons.find((season) => season.seasonNumber === seasonNumber)
+      : undefined;
+  return listed?.title ?? `Season ${String(seasonNumber)}`;
+}
+
+/**
+ * What to say when a request for several seasons stopped part-way: which
+ * seasons are requested, which are not, and that the rest is asked for with
+ * the same answers.
+ */
+export function partialMessage(
+  subject: TelevisionSubject,
+  requested: readonly number[],
+  remaining: readonly number[],
+): string {
+  const names = (seasons: readonly number[]) =>
+    new Intl.ListFormat("en", { style: "long", type: "conjunction" }).format(
+      seasons.map((season) => seasonName(subject, season)),
+    );
+  return [
+    `${names(requested)} ${requested.length === 1 ? "is" : "are"} requested.`,
+    `${names(remaining)} ${remaining.length === 1 ? "is" : "are"} not yet.`,
+    "Your answers stay as they were sent, so the rest is asked for the same way: choose Request to try again, or Cancel to leave it there.",
+  ].join(" ");
+}
+
+/**
+ * The command for a series, season or episode. Following new episodes is a
+ * question about a whole series. So is bringing its specials, except for
+ * the Specials season itself: the server leaves season-zero episodes out of
+ * any request that does not include specials, a request for that season
+ * among them.
  */
 export function televisionCommand(
   values: SheetValues,
   user: MediaUser,
-  whole: boolean,
+  scope: RequestScope,
 ): RequestCommand {
   return {
     action: "request",
     ...checked(values),
-    includeFutureEpisodes: whole && values.future,
-    includeSpecials: whole && values.specials,
+    includeFutureEpisodes: scope === "series" && values.future,
+    includeSpecials:
+      scope === "series" ? values.specials : scope === "specials",
     // The server reads an absent requester as the person sending it.
     ...(values.requesterUserId === user.id
       ? {}

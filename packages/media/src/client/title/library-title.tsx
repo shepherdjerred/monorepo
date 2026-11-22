@@ -273,7 +273,9 @@ function TelevisionTitle(props: TitleProps) {
                 ],
           ),
         }
-      : { kind: media.kind === "season" ? "season" : "episode", title, target };
+      : media.kind === "season"
+        ? { kind: "season", seasonNumber: media.seasonNumber, title, target }
+        : { kind: "episode", title, target };
   return (
     <TitleFrame
       {...props}
