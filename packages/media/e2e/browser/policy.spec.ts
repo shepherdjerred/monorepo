@@ -2,7 +2,7 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { expect } from "@playwright/test";
 import { PERSONA_COOKIE } from "#testing/fixture-api/server.ts";
-import { openAs, test } from "./support.ts";
+import { openAs, signedOut, test } from "./support.ts";
 
 /**
  * The Content-Security-Policy, on the built client. Every other test in this
@@ -126,12 +126,7 @@ for (const scheme of ["light", "dark"] as const) {
     }) => {
       // The fixture API always has someone signed in; these are the answers
       // a signed-out browser gets.
-      await page.route("**/api/v1/me", async (route) =>
-        route.fulfill({
-          status: 401,
-          json: { error: { code: "unauthorized", message: "Sign in" } },
-        }),
-      );
+      await signedOut(page);
       await page.route("**/api/v1/auth/plex/start", async (route) =>
         route.fulfill({
           json: {

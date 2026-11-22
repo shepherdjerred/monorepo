@@ -23,6 +23,20 @@
       name="description"
       content="Your household's films, series, and requests in one place."
     />
+    <!--
+      The installable web app: public/manifest.webmanifest and public/icons,
+      served at these fixed addresses. The PNG favicon is for a browser that
+      takes no SVG one; its `sizes` lets the others prefer the SVG.
+    -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/icons/favicon-32.png"
+    />
+    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>Media · Your next watch</title>
   </head>
   <body>

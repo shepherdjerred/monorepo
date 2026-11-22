@@ -63,6 +63,19 @@ describe("browser client caching", () => {
     },
   );
 
+  // `web-app.test.ts` covers the files that exist. One that does not must
+  // never be answered with the shell: a browser would read HTML as a manifest.
+  test.each(["/manifest.webmanifest", "/icons/icon-192.png", "/icons/"])(
+    "a missing web app file (%s) is not found, not the shell, and never cached",
+    async (route) => {
+      const response = await app().request(route);
+      expect(response.status).toBe(404);
+      expect(response.headers.get("Cache-Control")).toBe("no-store");
+      expect(response.headers.get("ETag")).toBeNull();
+      expect(await response.text()).not.toBe(shell);
+    },
+  );
+
   test.each(["/", "/index.html", "/library/series/42"])(
     "the application shell at %s is never cached",
     async (route) => {
