@@ -61,7 +61,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   temporal: "open",
   tracker: "enforced",
   "trmnl-dashboard": "enforced",
-  "turbo-cache": "open",
+  "turbo-cache": "enforced",
   woodpecker: "open",
   "woodpecker-ci": "open",
 };
