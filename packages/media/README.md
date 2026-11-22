@@ -3047,9 +3047,14 @@ unless given an explicit image selection. Its synthesis recipe must be bound
 to an immutable artifact by Delivery before rendering a deployment.
 
 The Media API, Network, and Files roles read the first-party Flags deployment
-`media/prod`. Streambot uses its own deployment. If any declared Media flags
-are missing before rollout, use the qualified release checkout and `FLAGS_URL`
-to create the missing keys for Media only.
+`media/prod`. Streambot uses its own deployment. The Media version set tracks
+the worker accepted in `temporal/prod`. Before rollout, check that its selected
+`image:temporal-worker` supports `FEATURE_FLAGS_MODE=flags`. Use the recomposed
+Media version set after Temporal accepts a compatible worker. Check that both
+Ready Media workers run the selected image before starting legacy handoff.
+
+If any declared Media flags are missing before rollout, use the qualified
+release checkout and `FLAGS_URL` to create the missing keys for Media only.
 
 ```sh
 toolkit run --env FLAGS_MACHINE_TOKEN -- \
