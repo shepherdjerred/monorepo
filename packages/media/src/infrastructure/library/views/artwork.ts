@@ -1,5 +1,6 @@
-import type { Prisma } from "#generated/prisma/client.ts";
+import type { MediaKind, Prisma } from "#generated/prisma/client.ts";
 import type { Artwork } from "#shared/artwork/contract.ts";
+import type { MediaReference } from "#shared/household/media-reference.ts";
 
 type Node = { parentId: string | null };
 type ArtworkNode = Node & {
@@ -66,5 +67,32 @@ export function rootReference(
     rootMediaId: root.id,
     rootTitle: root.title,
     artwork: rootArtwork(media),
+  };
+}
+
+const namedFields = { ...artworkFields, title: true } as const;
+/** The narrowest selection that lets a row be referred to as a library title. */
+export const mediaReferenceSelect = {
+  ...namedFields,
+  kind: true,
+  parent: { select: { ...namedFields, parent: { select: namedFields } } },
+} as const satisfies Prisma.MediaItemSelect;
+
+/**
+ * How a row that is about one item refers to it: the item by its own id, kind
+ * and title, with the movie or series it belongs to, that root's own title
+ * and its art. A movie or series is its own root.
+ */
+export function mediaReference(
+  media: NamedNode & {
+    kind: MediaKind;
+    parent: (NamedNode & { parent: NamedNode | null }) | null;
+  },
+): MediaReference {
+  return {
+    id: media.id,
+    kind: media.kind,
+    title: media.title,
+    ...rootReference(media),
   };
 }

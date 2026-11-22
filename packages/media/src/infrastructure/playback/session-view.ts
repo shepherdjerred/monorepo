@@ -8,13 +8,11 @@ import {
   type VisibleMedia,
 } from "#infrastructure/visibility/access.ts";
 import {
-  rootArtwork,
+  mediaReference,
   rootMedia,
 } from "#infrastructure/library/views/artwork.ts";
-import {
-  PlaybackSessionViewSchema,
-  type PlaybackMedia,
-} from "#shared/household/playback.ts";
+import type { MediaReference } from "#shared/household/media-reference.ts";
+import { PlaybackSessionViewSchema } from "#shared/household/playback.ts";
 
 /** The Plex server whose plays are read, and the sections its titles default to. */
 export type PlaybackServer = {
@@ -50,29 +48,22 @@ export function playbackMediaByRatingKey(
   claims: readonly { ratingKey: string; mediaId: string }[],
   titles: readonly PlaybackLinkTitle[],
   visible: (media: VisibleMedia) => boolean,
-): Map<string, PlaybackMedia> {
+): Map<string, MediaReference> {
   const claimed = new Map<string, Set<string>>();
   for (const claim of claims) {
     const mediaIds = claimed.get(claim.ratingKey) ?? new Set<string>();
     claimed.set(claim.ratingKey, mediaIds.add(claim.mediaId));
   }
   const byId = new Map(titles.map((title) => [title.id, title]));
-  const resolved = new Map<string, PlaybackMedia>();
+  const resolved = new Map<string, MediaReference>();
   for (const [ratingKey, mediaIds] of claimed) {
     const [mediaId] = mediaIds;
     if (mediaId === undefined || mediaIds.size !== 1) continue;
     const title = byId.get(mediaId);
     if (title === undefined)
       throw new Error("A Plex item claim names a title that does not exist");
-    const root = rootMedia(title);
-    if (!visible(title) || !visible(root)) continue;
-    resolved.set(ratingKey, {
-      id: title.id,
-      rootMediaId: root.id,
-      kind: title.kind,
-      title: title.title,
-      artwork: rootArtwork(title),
-    });
+    if (!visible(title) || !visible(rootMedia(title))) continue;
+    resolved.set(ratingKey, mediaReference(title));
   }
   return resolved;
 }
@@ -91,7 +82,7 @@ export function readPlaybackMedia(
   actor: MediaActor,
   server: PlaybackServer,
   sessions: readonly Pick<PlaybackSession, "ratingKey">[],
-): Promise<ReadonlyMap<string, PlaybackMedia>> {
+): Promise<ReadonlyMap<string, MediaReference>> {
   const ratingKeys = [...new Set(sessions.map((row) => row.ratingKey))];
   if (ratingKeys.length === 0) return Promise.resolve(new Map());
   return repeatableRead(db, async (tx) => {
@@ -115,7 +106,7 @@ export function readPlaybackMedia(
 export function playbackSessionView(
   row: PlaybackSession,
   names: ReadonlyMap<string, string>,
-  media: ReadonlyMap<string, PlaybackMedia>,
+  media: ReadonlyMap<string, MediaReference>,
 ) {
   return PlaybackSessionViewSchema.parse({
     id: row.id,

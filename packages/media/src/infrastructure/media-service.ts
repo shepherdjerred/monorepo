@@ -16,7 +16,6 @@ import type { Database } from "./database.ts";
 import {
   RequestListSchema,
   OperationListSchema,
-  NotificationListSchema,
   UserListSchema,
 } from "#shared/api.ts";
 import { ReleaseListSchema } from "#shared/api.ts";
@@ -30,8 +29,7 @@ import { readMediaDetail } from "./visibility/media-detail.ts";
 import { rootReference } from "./library/views/artwork.ts";
 import { readRemovalList } from "./library/views/removal-list.ts";
 import { projectExternalRequests } from "./external-library/availability.ts";
-import { OwnerHealthSchema } from "#shared/notification-authority.ts";
-import { InterestCheckNoticeSchema } from "#shared/household/interests.ts";
+import { readNotificationList } from "./notifications/list.ts";
 import {
   readDefaultCommandContext,
   readDefaultCommandContexts,
@@ -327,66 +325,8 @@ export class PrismaMediaApplication
     });
   }
 
-  async notifications(actor: MediaActor) {
-    const runtime = await this.db.mediaRuntimeState.findUniqueOrThrow({
-      where: { id: "singleton" },
-    });
-    const deliveries = await this.db.notificationDelivery.findMany({
-      where: { userId: actor.id },
-      select: {
-        id: true,
-        channel: true,
-        state: true,
-        version: true,
-        failureReason: true,
-        providerStatus: true,
-        attempts: true,
-        acceptedAt: true,
-        createdAt: true,
-        event: { select: { mediaId: true, kind: true, payload: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 100,
-    });
-    return NotificationListSchema.parse(
-      deliveries.map(({ event, ...delivery }) => {
-        const interest =
-          event.kind === "interest_check"
-            ? InterestCheckNoticeSchema.parse(event.payload)
-            : null;
-        const proof =
-          event.kind === "owner_health"
-            ? OwnerHealthSchema.safeParse(event.payload)
-            : null;
-        return {
-          ...delivery,
-          event: {
-            mediaId: event.mediaId,
-            kind: event.kind,
-            ...(interest?.userId === actor.id
-              ? {
-                  interestRequestId: interest.requestId,
-                  interestRevision: interest.interestRevision,
-                }
-              : {}),
-            ...(proof === null
-              ? {}
-              : proof.success
-                ? {
-                    healthReason: proof.data.reason,
-                    healthState:
-                      runtime.recoveryEpoch === proof.data.recoveryEpoch &&
-                      runtime.version === proof.data.runtimeVersion &&
-                      runtime.mode === "observe" &&
-                      !runtime.ownershipConfirmed
-                        ? "current"
-                        : "superseded",
-                  }
-                : { healthState: "invalid" }),
-          },
-        };
-      }),
-    );
+  notifications(actor: MediaActor) {
+    return readNotificationList(this.db, actor);
   }
 
   profiles(actor: MediaActor) {

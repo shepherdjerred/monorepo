@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import {
+  mediaReference,
   rootArtwork,
   rootMedia,
   rootReference,
@@ -106,6 +107,45 @@ test("a row read without its ancestry is refused instead of passing as a root", 
 function named(id: string, parentId: string | null, title: string) {
   return { ...row(id, parentId), title };
 }
+
+test("a row about one item refers to it by its own id, kind and title, under its root and that root's art", () => {
+  const show = { ...series, title: "The series" };
+  expect(
+    mediaReference({
+      ...named("episode", "season", "Pilot"),
+      kind: "episode",
+      parent: { ...named("season", "series", "Season 1"), parent: show },
+    }),
+  ).toEqual({
+    id: "episode",
+    rootMediaId: "series",
+    rootTitle: "The series",
+    kind: "episode",
+    title: "Pilot",
+    artwork: seriesArt,
+  });
+  expect(
+    mediaReference({
+      ...named("movie", null, "The movie"),
+      kind: "movie",
+      parent: null,
+    }),
+  ).toEqual({
+    id: "movie",
+    rootMediaId: "movie",
+    rootTitle: "The movie",
+    kind: "movie",
+    title: "The movie",
+    artwork: unobserved,
+  });
+  expect(() =>
+    mediaReference({
+      ...named("episode", "season", "Pilot"),
+      kind: "episode",
+      parent: null,
+    }),
+  ).toThrow(unloaded);
+});
 
 test("a list row names its root title: a movie or series itself, a season or episode its series", () => {
   const show = { ...series, title: "The series" };

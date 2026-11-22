@@ -17,6 +17,7 @@ afterAll(async () => {
 
 const SECTION = "1";
 const artwork = { posterPath: "/poster.jpg", backdropPath: "/backdrop.jpg" };
+const SERIES = "Severance";
 
 /** One series whose two episodes Plex holds, and three plays: both episodes and an unclaimed key. */
 async function fixture() {
@@ -27,7 +28,10 @@ async function fixture() {
   const association = first(group).value;
   const server = association.access.serverMachineId;
   const seriesId = association.editionRootId;
-  await db.mediaItem.update({ where: { id: seriesId }, data: artwork });
+  await db.mediaItem.update({
+    where: { id: seriesId },
+    data: { ...artwork, title: SERIES },
+  });
   const owner = await db.mediaUser.create({
     data: {
       plexAccountId: crypto.randomUUID(),
@@ -94,6 +98,7 @@ async function fixture() {
         {
           id: episode.id,
           rootMediaId: seriesId,
+          rootTitle: SERIES,
           kind: "episode",
           title: episode.title,
           artwork,

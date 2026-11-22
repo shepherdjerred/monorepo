@@ -68,7 +68,9 @@ notification link never changes these states.
 Each now-playing and history session carries `media`, the library title it
 belongs to, resolved when the session is read from the Plex item Media holds for
 its rating key. It is null when no such item exists or the reader could not open
-the title page, including while the reader's Plex access is stale.
+the title page, including while the reader's Plex access is stale. It names the
+played movie or episode with the `rootMediaId`, `rootTitle` and `artwork` of
+its movie or series, so an episode's play can name its series.
 
 Calendar dates retain their source date-only precision, including TBA, rather
 than treating UTC midnight as an airing instant. Viewing history uses separate
@@ -2115,6 +2117,23 @@ removals require recipient opt-in. Subtitle notifications bind the installed tra
 to the exact current video asset/version and requested language. Shared Discord
 announcements contain availability or upgrade titles only; they cannot satisfy a
 personal removal warning.
+
+`GET /api/v1/notifications` returns the reader's own deliveries, newest first,
+one row per channel. `event.id` is the event a row delivers, so rows that share
+it are one notification sent on several channels. `event.media` is the item the
+event is about, in the shape a playback session uses
+(`shared/household/media-reference.ts`): its own `id`, `kind` and `title`, with
+the `rootMediaId`, `rootTitle` and `artwork` of its movie or series. An episode
+event therefore names its series, and a movie or series event repeats its own
+id and title as its root. A delivery that batches several titles names the
+first of its batch. `media` is null when the event
+names no item, as owner health, email verification and shared announcements do,
+and when the item no longer exists. It is not filtered by the reader's current
+Plex library access, because an event that names an item is addressed to people
+who asked for that item, whose message names it too, so `GET /api/v1/media/:id`
+can still refuse a title a row names. The one event addressed to owners
+instead, `system_intervention`, names its title only while its reader is an
+owner.
 
 Each send has a durable attempt identity, keyed recipient fingerprint, and immutable
 birth recovery epoch. Unknown outcomes are never resent automatically. The notification
