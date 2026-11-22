@@ -5,14 +5,14 @@ import {
   monthWeeks,
   parseDate,
   parseMonth,
+  weekEnds,
   type CivilDate,
   type CivilMonth,
 } from "./dates.ts";
 
 /**
- * What the calendar shows, as its address says it: the month, the two
- * filters, and whether it is laid out as an agenda or a month grid. A view
- * can be linked, bookmarked and reloaded, and Back undoes a step.
+ * The address names the layout, its month or week, and the two filters.
+ * A view can be linked, bookmarked and reloaded, and Back undoes a step.
  *
  * The address is something a person can type, so a value this page does not
  * know reads as that setting's default instead of failing the page.
@@ -26,12 +26,14 @@ export const RELEASE_KINDS = [
   "physical",
 ] as const;
 export const READINESS = ["all", "available", "missing"] as const;
-export const LAYOUTS = ["agenda", "month"] as const;
+export const LAYOUTS = ["agenda", "week", "month"] as const;
 
 export type CalendarLayout = (typeof LAYOUTS)[number];
 
 export type CalendarView = {
   month: CivilMonth;
+  /** The Sunday of the selected week, present in the week layout. */
+  week?: CivilDate;
   kind: (typeof RELEASE_KINDS)[number];
   status: (typeof READINESS)[number];
   /** Null when the address does not say: the screen's width decides. */
@@ -59,24 +61,50 @@ export function readCalendarView(
   params: URLSearchParams,
   today: CivilDate,
 ): CalendarView {
+  const layout = oneOf(LAYOUTS, params.get("view"));
+  const month = parseMonth(params.get("month")) ?? monthOf(today);
+  const date =
+    parseDate(params.get("week")) ??
+    (month === monthOf(today) ? today : firstDay(month));
+  const week = layout === "week" ? weekEnds(date).start : undefined;
   return {
-    month: parseMonth(params.get("month")) ?? monthOf(today),
+    month: week === undefined ? month : monthOf(week),
     kind: oneOf(RELEASE_KINDS, params.get("kind")) ?? "all",
     status: oneOf(READINESS, params.get("status")) ?? "all",
-    layout: oneOf(LAYOUTS, params.get("view")),
+    layout,
+    ...(week === undefined ? {} : { week }),
   };
 }
 
+/** Keep the layout and filters while opening the period containing a day. */
+export function calendarViewOnDay(
+  view: CalendarView,
+  day: CivilDate,
+): CalendarView {
+  if (view.layout !== "week") return { ...view, month: monthOf(day) };
+  const week = weekEnds(day).start;
+  return { ...view, month: monthOf(week), week };
+}
+
 /**
- * The query string of a view. The month the viewer is in is left out, so a
- * bookmark of "this month" is still this month next month.
+ * Leave out the current month or week so links to the current period advance
+ * with the viewer's calendar.
  */
 export function calendarSearch(view: CalendarView, today: CivilDate): string {
   const params = new URLSearchParams();
-  if (view.month !== monthOf(today)) params.set("month", view.month);
+  if (view.layout !== "week" && view.month !== monthOf(today)) {
+    params.set("month", view.month);
+  }
   if (view.kind !== "all") params.set("kind", view.kind);
   if (view.status !== "all") params.set("status", view.status);
   if (view.layout !== null) params.set("view", view.layout);
+  if (
+    view.layout === "week" &&
+    view.week !== undefined &&
+    view.week !== weekEnds(today).start
+  ) {
+    params.set("week", view.week);
+  }
   const search = params.toString();
   return search === "" ? "" : `?${search}`;
 }
@@ -86,15 +114,19 @@ export function isFiltered(view: CalendarView): boolean {
 }
 
 /**
- * The days a layout shows: the month itself as an agenda, and as a grid the
- * whole weeks around it, whose first and last rows reach into the
- * neighbouring months.
+ * The agenda shows its month, Week shows seven days, and the month grid
+ * includes the neighbouring dates in its first and last rows.
  */
 export function visibleRange(
   month: CivilMonth,
   layout: CalendarLayout,
+  week?: CivilDate,
 ): { from: CivilDate; to: CivilDate } {
   if (layout === "agenda") return { from: firstDay(month), to: lastDay(month) };
+  if (layout === "week") {
+    const { start, end } = weekEnds(week ?? firstDay(month));
+    return { from: start, to: end };
+  }
   const weeks = monthWeeks(month);
   const from = weeks[0]?.[0];
   const to = weeks.at(-1)?.[6];

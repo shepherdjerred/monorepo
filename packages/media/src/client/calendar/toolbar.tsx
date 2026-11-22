@@ -7,12 +7,14 @@ import { DateField } from "#client/ui/date-field.tsx";
 import styles from "./calendar.module.css";
 import {
   monthLabel,
-  monthOf,
   parseDate,
+  shiftDays,
   shiftMonth,
+  weekLabel,
   type CivilDate,
 } from "./dates.ts";
 import {
+  calendarViewOnDay,
   dayAnchor,
   READINESS,
   RELEASE_KINDS,
@@ -39,10 +41,15 @@ const STEPS = [
   { by: 1, word: "Next", icon: ChevronRightIcon },
 ] as const;
 
+function periodLabel(view: CalendarView): string {
+  return view.week === undefined
+    ? monthLabel(view.month)
+    : weekLabel(view.week);
+}
+
 /**
- * Which month, and what narrows it. Previous, next and Today are links, so
- * each month has an address and Back undoes a step; the filters and the date
- * field refine the view in place.
+ * Previous, Next and Today link to calendar periods so Back undoes a step.
+ * The filters and date field refine the view in place.
  */
 export function CalendarToolbar({
   view,
@@ -57,25 +64,36 @@ export function CalendarToolbar({
   today: CivilDate;
   /** The day the address marks, which the date field shows. */
   marked: CivilDate | null;
-  /** The id the month's name is given, for the grid to be labelled by. */
+  /** The heading that names the displayed period and its grid. */
   headingId: string;
   /** Whether Today leaves the page where it is scrolled: the grid fits. */
   keepsScroll: boolean;
   search: (view: CalendarView) => string;
   onChange: (view: CalendarView, day?: CivilDate) => void;
 }) {
-  const thisMonth = monthOf(today);
+  const week = view.week;
+  const period = week === undefined ? "month" : "week";
+  const current = calendarViewOnDay(view, today);
+  const showingCurrent =
+    week === undefined ? view.month === current.month : week === current.week;
   return (
     <div className={cx("toolbar")}>
-      <nav className={cx("monthNav")} aria-label="Month">
+      <nav
+        className={cx("monthNav")}
+        aria-label={week === undefined ? "Month" : "Week"}
+        data-period={period}
+      >
         {STEPS.map((step) => {
-          const month = shiftMonth(view.month, step.by);
+          const next =
+            week === undefined
+              ? { ...view, month: shiftMonth(view.month, step.by) }
+              : calendarViewOnDay(view, shiftDays(week, step.by * 7));
           return (
             <Link
               key={step.word}
               className={cx("step")}
-              to={{ search: search({ ...view, month }) }}
-              aria-label={`${step.word} month, ${monthLabel(month)}`}
+              to={{ search: search(next) }}
+              aria-label={`${step.word} ${period}, ${periodLabel(next)}`}
               preventScrollReset
             >
               <step.icon aria-hidden="true" />
@@ -83,15 +101,15 @@ export function CalendarToolbar({
           );
         })}
         <h2 className={cx("monthName")} id={headingId} aria-live="polite">
-          {monthLabel(view.month)}
+          {periodLabel(view)}
         </h2>
         <Link
           className={cx("today")}
           to={{
-            search: search({ ...view, month: thisMonth }),
+            search: search(current),
             hash: dayAnchor(today),
           }}
-          aria-current={view.month === thisMonth ? "true" : undefined}
+          aria-current={showingCurrent ? "true" : undefined}
           preventScrollReset={keepsScroll}
         >
           Today
@@ -105,7 +123,10 @@ export function CalendarToolbar({
           labels={KIND_OPTIONS}
           resting="all"
           onChange={(kind) => {
-            onChange({ ...view, kind });
+            onChange(
+              { ...view, kind },
+              week === undefined ? undefined : (marked ?? undefined),
+            );
           }}
         />
         <Choice
@@ -115,7 +136,10 @@ export function CalendarToolbar({
           labels={READINESS_OPTIONS}
           resting="all"
           onChange={(status) => {
-            onChange({ ...view, status });
+            onChange(
+              { ...view, status },
+              week === undefined ? undefined : (marked ?? undefined),
+            );
           }}
         />
         <DateField
@@ -125,7 +149,7 @@ export function CalendarToolbar({
           onChange={(value) => {
             // An emptied or half-typed field names no day.
             const day = parseDate(value);
-            if (day !== null) onChange({ ...view, month: monthOf(day) }, day);
+            if (day !== null) onChange(calendarViewOnDay(view, day), day);
           }}
         />
       </div>

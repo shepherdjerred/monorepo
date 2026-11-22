@@ -6,10 +6,11 @@ import {
   dayOfMonth,
   monthOf,
   monthWeeks,
+  weekDays,
   weekdayNames,
+  type CivilDate,
   type CivilMonth,
 } from "./dates.ts";
-import type { CalendarLayout } from "./view.ts";
 
 const cx = classNames(styles);
 const block = classNames(skeletonStyles)("block");
@@ -21,17 +22,18 @@ function blocksIn(day: number): number {
 
 /**
  * The calendar while its releases load, in the room the answer will take:
- * the month's own grid of days with nothing in them yet, or a few agenda
- * days.
+ * a grid of dates with nothing in them yet, or a few agenda days.
  */
 export function CalendarSkeleton({
   month,
-  layout,
+  week,
+  grid,
 }: {
   month: CivilMonth;
-  layout: CalendarLayout;
+  week: CivilDate | undefined;
+  grid: boolean;
 }) {
-  if (layout === "agenda") {
+  if (!grid) {
     return (
       <SkeletonStatus label="Loading the calendar">
         <div className={cx("agenda")}>
@@ -69,34 +71,38 @@ export function CalendarSkeleton({
             </tr>
           </thead>
           <tbody>
-            {monthWeeks(month).map((week) => (
-              <tr key={week[0]}>
-                {week.map((date) => (
-                  <td
-                    className={cx("cell")}
-                    key={date}
-                    data-outside={monthOf(date) !== month}
-                  >
-                    <div className={cx("cellDate")}>
-                      <span className={cx("cellNumeral")}>
-                        {dayOfMonth(date)}
-                      </span>
-                    </div>
-                    <div className={cx("squares")}>
-                      {Array.from(
-                        { length: blocksIn(dayOfMonth(date)) },
-                        (_, row) => (
-                          <div
-                            className={`${block} ${cx("skeletonSquare")}`}
-                            key={row}
-                          />
-                        ),
-                      )}
-                    </div>
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {(week === undefined ? monthWeeks(month) : [weekDays(week)]).map(
+              (days) => (
+                <tr key={days[0]}>
+                  {days.map((date) => (
+                    <td
+                      className={cx("cell")}
+                      key={date}
+                      data-outside={
+                        week === undefined && monthOf(date) !== month
+                      }
+                    >
+                      <div className={cx("cellDate")}>
+                        <span className={cx("cellNumeral")}>
+                          {dayOfMonth(date)}
+                        </span>
+                      </div>
+                      <div className={cx("squares")}>
+                        {Array.from(
+                          { length: blocksIn(dayOfMonth(date)) },
+                          (_, row) => (
+                            <div
+                              className={`${block} ${cx("skeletonSquare")}`}
+                              key={row}
+                            />
+                          ),
+                        )}
+                      </div>
+                    </td>
+                  ))}
+                </tr>
+              ),
+            )}
           </tbody>
         </table>
       </div>
