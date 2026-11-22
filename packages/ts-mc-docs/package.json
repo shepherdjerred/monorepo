@@ -20,7 +20,7 @@
     "@shepherdjerred/storm-theme": "workspace:*",
     "@astrojs/check": "^0.9.10",
     "@astrojs/sitemap": "^3.7.3",
-    "@astrojs/starlight": "^0.42.0",
+    "@astrojs/starlight": "^0.43.1",
     "astro": "^7.3.3",
     "sharp": "^0.35.0"
   },

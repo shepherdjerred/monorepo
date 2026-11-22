@@ -75,8 +75,8 @@
     "clsx": "^2.1.1",
     "lucide-react": "^1.14.0",
     "opentype.js": "^2.0.0",
-    "react": "19.3.0",
-    "react-dom": "19.3.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "satori": "^0.47.0",
@@ -104,7 +104,7 @@
     "vitest": "5.0.5"
   },
   "peerDependencies": {
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   }
 }

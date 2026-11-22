@@ -7,6 +7,9 @@ import { renderCard } from "@shepherdjerred/storm-theme/render";
 import { createAstroCacheDir } from "./src/astro-cache.mjs";
 
 export default defineConfig({
+  // Starlight 0.43 stopped forcing `:where()` scoping; keep the specificity
+  // these overrides and custom styles were written against.
+  scopedStyleStrategy: "where",
   vite: { cacheDir: createAstroCacheDir() },
   devToolbar: { enabled: false },
   server: { host: "127.0.0.1", port: 18797, strictPort: true },

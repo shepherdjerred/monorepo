@@ -301,7 +301,7 @@ describe("overview panels markup", () => {
 
   it("links a tile to its pipeline and each chip to its environment", () => {
     expect(html).toContain(
-      '<a href="/pipelines/scout" class="overview-service">SCOUT</a>',
+      '<a class="overview-service" href="/pipelines/scout">SCOUT</a>',
     );
     expect(html).toContain(
       '<ol class="overview-chips" aria-label="SCOUT environments">',
@@ -313,7 +313,7 @@ describe("overview panels markup", () => {
 
   it("keeps a chip's status words, revision and age in its accessible text", () => {
     expect(html).toContain(
-      '<a href="/environments/arcade/prod" class="overview-chip overview-chip-succeeded">' +
+      '<a class="overview-chip overview-chip-succeeded" href="/environments/arcade/prod">' +
         '<span class="env-name">prod</span>' +
         '<span class="status status-succeeded"><span class="status-glyph" aria-hidden="true">✓</span>' +
         '<span class="status-label">succeeded</span></span>' +
@@ -350,7 +350,7 @@ describe("overview panels markup", () => {
       />,
     );
     expect(chips).toContain(
-      '<a href="/environments/scout/prod" class="overview-chip overview-chip-request">' +
+      '<a class="overview-chip overview-chip-request" href="/environments/scout/prod">' +
         '<span class="env-name">prod</span>' +
         '<span class="overview-accepted"><span class="revision">r274</span>' +
         '<span class="visually-hidden"> accepted </span>',
@@ -395,7 +395,7 @@ describe("overview panels markup", () => {
     expect(html.match(/class="overview-arrow"/gu)).toHaveLength(1);
     expect(html).toContain(
       '<li><span class="overview-arrow" aria-hidden="true">→</span>' +
-        '<a href="/environments/scout/prod"',
+        '<a class="overview-chip overview-chip-awaiting_approval" href="/environments/scout/prod"',
     );
   });
 });

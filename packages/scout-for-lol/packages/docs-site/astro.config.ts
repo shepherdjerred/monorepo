@@ -39,6 +39,9 @@ const posthogHeadAttrs = {
  * prefix, and getting that wrong silently produces `/docs/docs/...` 404s.
  */
 export default defineConfig({
+  // Starlight 0.43 stopped forcing `:where()` scoping; keep the specificity
+  // these overrides and custom styles were written against.
+  scopedStyleStrategy: "where",
   base: "/docs/",
   cacheDir: `./node_modules/.astro-${flavor}/`,
   build: {

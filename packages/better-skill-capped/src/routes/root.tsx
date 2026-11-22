@@ -1,5 +1,10 @@
 import React from "react";
-import { Outlet, createRootRoute, useRouter } from "@tanstack/react-router";
+import {
+  type ErrorComponentProps,
+  Outlet,
+  createRootRoute,
+  useRouter,
+} from "@tanstack/react-router";
 import { Footer } from "#src/components/layout/footer";
 import { Button } from "#components/ui/button";
 
@@ -25,13 +30,7 @@ export function NotFound(): React.ReactElement {
 
 // Bugsink reporting happens in the router-level defaultOnCatch
 // (src/router.tsx); this component only renders the failure state.
-function RootError({
-  error,
-  reset,
-}: {
-  error: Error;
-  reset: () => void;
-}): React.ReactElement {
+function RootError({ error, reset }: ErrorComponentProps): React.ReactElement {
   const router = useRouter();
 
   return (
@@ -39,7 +38,9 @@ function RootError({
       <h1 className="text-4xl font-bold tracking-tight">
         Something went wrong
       </h1>
-      <p className="max-w-prose text-muted-foreground">{error.message}</p>
+      <p className="max-w-prose text-muted-foreground">
+        {error instanceof Error ? error.message : String(error)}
+      </p>
       <Button
         onClick={() => {
           reset();

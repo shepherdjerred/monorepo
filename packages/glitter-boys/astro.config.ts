@@ -3,6 +3,9 @@ import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 
 export default defineConfig({
+  // Starlight 0.43 stopped forcing `:where()` scoping; keep the specificity
+  // these overrides and custom styles were written against.
+  scopedStyleStrategy: "where",
   site: "https://glitter-boys.com",
   output: "static",
   trailingSlash: "always",

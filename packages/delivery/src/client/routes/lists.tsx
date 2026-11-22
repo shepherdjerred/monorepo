@@ -1,4 +1,5 @@
 import { Link, createRoute, useNavigate } from "@tanstack/react-router";
+import type { ErrorComponentProps } from "@tanstack/react-router";
 import {
   useQuery,
   useSuspenseQuery,
@@ -70,7 +71,7 @@ function useCatalog() {
 
 /** A failed read of a list keeps the page and offers to start again. */
 function listError(to: "/deployments" | "/artifacts" | "/activity") {
-  return function ListError({ error }: { error: Error }) {
+  return function ListError({ error }: ErrorComponentProps) {
     return (
       <RouteError
         error={error}
