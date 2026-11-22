@@ -22,7 +22,7 @@ afterEach(() => {
 
 it("creates new v4 consent only for the explicit edition using its own CAS", () => {
   const context = movieV4ChoiceContext();
-  const input = movieRequestV4(context, "directors_cut", "en, zh-CN");
+  const input = movieRequestV4(context, "directors_cut", ["en", "zh-CN"]);
   expect(input.schemaVersion).toBe(4);
   expect(input.selection.edition).toBe("directors_cut");
   expect(input.expected).toEqual({
@@ -119,7 +119,8 @@ it("explains a currently protected activation before sending any command", async
   ).rejects.toMatchObject({
     status: 503,
     code: "movie_activation_protected",
-    message: "Media ownership must be confirmed before downloads can start.",
+    message:
+      "Downloads are paused until the owner confirms Media manages this library.",
   });
   expect(fetcher.mock.calls).toHaveLength(1);
 });

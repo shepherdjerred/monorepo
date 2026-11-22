@@ -1,0 +1,402 @@
+@layer pages {
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 32px;
+    margin-bottom: var(--space-4);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+  .back:hover {
+    color: var(--text);
+  }
+  .back svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* The hero's actions: one main button, then the menu. */
+  .actions {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+  }
+  .actionRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+  .actionRow > :global(.button) {
+    min-height: 44px;
+  }
+  .standing {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    margin: 0;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--ok);
+    border-radius: var(--radius-control);
+    background: var(--ok-soft);
+    color: var(--ok);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+  .standing svg,
+  .done svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+  .done {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--ok);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+  .failure {
+    display: grid;
+    gap: var(--space-2);
+    justify-items: start;
+    max-width: 60ch;
+  }
+  .failureNote {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .notice {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+    max-width: 68ch;
+    margin: 0 0 var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-control);
+    background: var(--warn-soft);
+    color: var(--warn);
+    font-size: var(--text-sm);
+  }
+  .notice p {
+    margin: 0;
+  }
+  .download {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+    margin: 0 0 var(--space-4);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .download progress {
+    width: min(260px, 100%);
+    height: 6px;
+    accent-color: var(--accent-strong);
+  }
+  .quiet {
+    margin: 0 0 var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+
+  /* The switch is as wide as its two segments, not the page. */
+  .views {
+    display: flex;
+    margin-bottom: var(--space-5);
+  }
+
+  /* A disclosure's own mark: it turns to point down when open. */
+  .chevron {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+  }
+  details[open] > summary > .chevron {
+    transform: rotate(90deg);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .chevron {
+      transition: transform var(--dur-1) var(--ease-out);
+    }
+  }
+
+  .section {
+    max-width: 920px;
+    margin-bottom: var(--space-6);
+  }
+  .sectionTitle {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-lg);
+  }
+
+  /* A few facts side by side, as many to a row as fit. */
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-4) var(--space-6);
+    margin: 0;
+  }
+  .facts dt {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .facts dd {
+    margin: 2px 0 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* Rows: episodes, and a catalog title's seasons. */
+  .rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--border);
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    min-height: 48px;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .row .quiet {
+    margin: 0;
+  }
+  .rowNumber {
+    flex: none;
+    width: 2ch;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+  }
+  .rowLink,
+  .rowText {
+    flex: 1;
+    min-width: 12ch;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .rowLink:hover {
+    color: var(--text-accent);
+  }
+
+  .seasons {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .season {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    color: inherit;
+    font-size: inherit;
+  }
+  .seasonSummary {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    min-height: 52px;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-control);
+  }
+  .seasonSummary::-webkit-details-marker,
+  .disclosureSummary::-webkit-details-marker {
+    display: none;
+  }
+  .seasonSummary:focus-visible {
+    outline-offset: 2px;
+  }
+  .seasonSummary .quiet {
+    margin: 0;
+  }
+  .seasonName {
+    flex: 1;
+    font-weight: 600;
+  }
+  .seasonBody {
+    padding: 0 var(--space-4) var(--space-3);
+  }
+  .season[open] > .seasonSummary {
+    border-radius: var(--radius-control) var(--radius-control) 0 0;
+  }
+  .seasonLink {
+    margin: var(--space-3) 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .seasonLink a {
+    color: var(--text-accent);
+    font-weight: 600;
+  }
+
+  .versions {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .version {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    background: var(--surface);
+  }
+  .version .quiet {
+    margin: var(--space-1) 0 0;
+  }
+  .versionHead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+  }
+  .versionName {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    font-weight: 600;
+  }
+  .versionActions {
+    margin-inline-start: auto;
+  }
+  .versionLine {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-sm);
+  }
+
+  .disclosure {
+    max-width: 920px;
+    margin-bottom: var(--space-6);
+    border-block: 1px solid var(--border);
+    color: inherit;
+    font-size: inherit;
+  }
+  .disclosureSummary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4) 0;
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+  }
+  .disclosure > .quiet {
+    margin-bottom: var(--space-4);
+  }
+  .files {
+    display: grid;
+    gap: var(--space-4);
+    margin: 0 0 var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+  .fileTitle {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+  }
+  .file .quiet {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-4);
+    margin: 0;
+  }
+  .filePart {
+    white-space: nowrap;
+  }
+  .fileLine {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-sm);
+  }
+
+  .waysOut {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  /* The page's shape while it loads. */
+  .skeleton {
+    margin-bottom: var(--space-6);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .skeletonBand {
+    height: clamp(132px, 19vw, 248px);
+    border-radius: 0;
+  }
+  .skeletonContent {
+    display: grid;
+    grid-template-columns: 176px minmax(0, 1fr);
+    gap: var(--space-5);
+    padding: 0 var(--space-5) var(--space-5);
+  }
+  .skeletonPoster {
+    aspect-ratio: 2 / 3;
+    margin-top: -92px;
+    border-radius: var(--radius-poster);
+  }
+  .skeletonLines {
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+  }
+  .skeletonTitle {
+    width: min(360px, 80%);
+    height: 40px;
+  }
+  .skeletonLine {
+    width: min(520px, 100%);
+    height: 14px;
+  }
+  .skeletonButton {
+    width: 132px;
+    height: 44px;
+  }
+
+  @media (max-width: 760px) {
+    .actions {
+      justify-items: stretch;
+    }
+    .actionRow > :global(.button) {
+      flex: 1;
+    }
+    .actionRow > div:only-child {
+      flex: 1;
+    }
+    .skeletonContent {
+      grid-template-columns: 104px minmax(0, 1fr);
+      gap: var(--space-4);
+      padding: 0 var(--space-4) var(--space-4);
+    }
+    .skeletonPoster {
+      margin-top: -52px;
+    }
+    .skeletonLines {
+      padding-top: var(--space-3);
+    }
+  }
+}

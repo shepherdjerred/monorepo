@@ -42,8 +42,8 @@ export function readMovieRequests(
 
 /**
  * Where one film request stands and everything its requester can do about
- * it: start a saved edition choice, cancel, clear the choice, or keep the
- * edition. The title it belongs to is named by whatever lists it.
+ * it: start looking for a chosen version, cancel, clear the version, or
+ * hold it for 30 days. The title it belongs to is named by whatever lists it.
  */
 export function MovieRequestControls({
   user,
@@ -89,7 +89,7 @@ export function MovieRequestControls({
             className="text-link"
             to={`/media/${encodeURIComponent(request.scope.mediaId)}`}
           >
-            Choose a movie edition
+            Choose a version
           </Link>
         )}
       <div className="action-row">
@@ -120,7 +120,7 @@ export function MovieRequestControls({
               submit("revoke_choice");
             }}
           >
-            Clear edition choice, keep request
+            Clear the version, keep the request
           </button>
         )}
         {request.active && !disabled && subjectUserId === user.id && (
@@ -172,8 +172,8 @@ function ProtectionFeedback({
       {unresolved !== null && (
         <div role="status">
           <p>
-            The earlier action’s result is unknown. Retry that exact action
-            before making another change.
+            Media does not know whether that went through. Try it again before
+            doing anything else.
           </p>
           <button
             className="button subtle"
@@ -196,8 +196,8 @@ function ProtectionFeedback({
       {mutation.data !== undefined && (
         <p role="status">
           {mutation.data.state === "cancelled"
-            ? "Cancellation confirmed. The current request status is shown above."
-            : "Revocation confirmed. The current request status is shown above."}
+            ? "Request cancelled."
+            : "Version cleared. The request is kept."}
         </p>
       )}
     </>

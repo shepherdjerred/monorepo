@@ -57,10 +57,10 @@ export function MovieListedKeepV4({
         }}
       >
         {keep.isPending
-          ? "Keeping edition…"
+          ? "Saving…"
           : pending.current === null
-            ? "Keep this edition"
-            : "Retry original Keep"}
+            ? "Keep for 30 days"
+            : "Try keeping it again"}
       </button>
       <CommandError
         error={keep.error}
@@ -70,7 +70,7 @@ export function MovieListedKeepV4({
           void invalidateMovieTargetV4(scope.mediaId);
         }}
       />
-      {keep.isSuccess && <p role="status">This edition is protected.</p>}
+      {keep.isSuccess && <p role="status">Kept for 30 days.</p>}
     </>
   );
 }

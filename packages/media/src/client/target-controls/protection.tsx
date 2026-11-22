@@ -1,7 +1,7 @@
 import type { DefaultTargetView } from "#shared/editions/target-view.ts";
 import type { MediaUser } from "#shared/contract.ts";
 import { MediaActionButton } from "#client/media-actions.tsx";
-import { ErrorNotice, Notice } from "#client/components.tsx";
+import { ErrorNotice } from "#client/components.tsx";
 import { useListedTarget } from "./listed.tsx";
 import { useTargetCommand } from "./mutation.ts";
 import { CommandError, commandNeedsReview } from "./errors.tsx";
@@ -33,15 +33,6 @@ export function ProtectionControls({
   );
 }
 
-export function ProtectionNotice() {
-  return (
-    <Notice>
-      Library details are unavailable with your current access. You can still
-      use the request protections shown here.
-    </Notice>
-  );
-}
-
 export function RequestProtection({
   user,
   request,
@@ -67,7 +58,8 @@ export function RequestProtection({
     <div className="action-control">
       {context.access === "protection_only" && (
         <p className="helper">
-          Request protections only; library details unavailable.
+          Media cannot show you this title with your current Plex access. Your
+          request for it still stands.
         </p>
       )}
       <ProtectionControls user={user} context={context} quiet={quiet} />

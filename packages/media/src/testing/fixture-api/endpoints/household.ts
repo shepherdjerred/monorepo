@@ -118,7 +118,9 @@ const catalog: readonly FixtureEndpoint[] = [
     samples: [
       `/catalog/movie/${String(FEATURED.movie.tmdbId)}`,
       `/catalog/series/${String(FEATURED.series.tmdbId)}`,
+      // Titles the household does not have: a series and a film.
       "/catalog/series/1398",
+      "/catalog/movie/155",
     ],
   }),
 ];

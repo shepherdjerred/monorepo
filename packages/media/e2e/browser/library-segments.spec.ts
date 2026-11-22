@@ -140,13 +140,13 @@ test("Mine lists each title once, with every action a request has", async ({
   ]) {
     await expect(dark.getByRole("button", { name })).toBeVisible();
   }
-  // A film request: cancel, clear the edition choice, keep the edition.
+  // A film request: cancel, clear the version, hold it.
   const film = entry(list, "Blade Runner");
   await film.getByText("Manage this request").click();
   for (const name of [
     "Cancel request",
-    "Clear edition choice, keep request",
-    "Keep this edition",
+    "Clear the version, keep the request",
+    "Keep for 30 days",
   ]) {
     await expect(film.getByRole("button", { name })).toBeVisible();
   }

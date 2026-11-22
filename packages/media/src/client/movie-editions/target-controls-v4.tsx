@@ -43,7 +43,6 @@ export function MovieEditionControlsV4({
         value={edition}
         change={setEdition}
         disabled={action.isPending || action.unresolved !== null}
-        purpose="manage"
       />
       {edition !== "" && target.isPending && <Loading />}
       {target.error !== null && <ErrorNotice error={target.error} />}

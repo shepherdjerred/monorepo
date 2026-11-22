@@ -20,18 +20,19 @@ const sourceLabels = {
   overseerr: "Overseerr",
   jellyseerr: "Jellyseerr",
 } as const;
-function sourceStatusLabel(status: number) {
+/** Where the request stood in the manager it was imported from. */
+function sourceStanding(status: number) {
   switch (status) {
     case 1:
-      return "Pending at import";
+      return "It was still pending there.";
     case 2:
-      return "Approved at import";
+      return "It was approved there.";
     case 3:
-      return "Declined at import";
+      return "It was declined there.";
     case 4:
-      return "Failed at import";
+      return "It had failed there.";
     case 5:
-      return "Fulfilled at import";
+      return "It was fulfilled there.";
     default:
       throw new Error("Unknown imported request status");
   }
@@ -47,8 +48,8 @@ export function ImportedRequestSource({
   return (
     <div className="helper">
       <p>
-        Imported from {sourceLabels[claim.sourceKind]} ·{" "}
-        {sourceStatusLabel(claim.sourceStatus)}
+        Imported from {sourceLabels[claim.sourceKind]}.{" "}
+        {sourceStanding(claim.sourceStatus)}
       </p>
       {claim.sourceFulfilled && (
         <p>
@@ -62,10 +63,10 @@ export function ImportedRequestSource({
             className="text-link"
             to={`/media/${encodeURIComponent(claim.mediaId)}`}
           >
-            Choose a movie edition
+            Choose a version
           </Link>
         ) : (
-          <p>Waiting for the requester to choose a movie edition.</p>
+          <p>Waiting for the requester to choose a version.</p>
         ))}
     </div>
   );

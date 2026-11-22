@@ -813,7 +813,8 @@ carries, lands on Mine with that request's entry scrolled into view, marked, and
 its controls open.
 
 After a navigation the shell moves focus to the new page's heading, which is why
-every page renders its heading through `PageTitle`. A switch between views of
+every page renders its heading through `PageTitle` (the title page's hero
+renders its own, focusable the same way). A switch between views of
 one page is the exception: a link that carries the `SAME_PAGE` state
 (`ui/same-page.ts`), as every `Segmented` link does, leaves focus on the control
 and the scroll position where it was.
@@ -940,14 +941,14 @@ page is empty in `dev:fixture` too.
 
 Shared building blocks live in `src/client/ui/`:
 
-| Module                       | Holds                                                                                                             |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `poster.tsx`, `artwork.ts`   | A 2:3 poster from the artwork route, lazy, with a `srcset` of the proxy widths; no image shows the title instead. |
-| `poster-card.tsx`            | `PosterCard`, `StatePill`, and `PosterGrid`, whose column count follows its own width (container queries).        |
-| `poster-rail.tsx`            | `PosterRail`, a row of cards that scrolls sideways with scroll snap, and what stands in for one that failed.      |
-| `segmented.tsx`              | A row of exclusive views that are links, so navigation and not an ARIA tablist.                                   |
-| `skeleton.tsx`, `states.tsx` | Loading shapes, empty states that say what to do next, and error states by kind of failure.                       |
-| `use-cursor-list.ts`         | The one place the client follows `nextCursor`: a page at a time, past empty pages, or every page.                 |
+| Module                       | Holds                                                                                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `poster.tsx`, `artwork.ts`   | A 2:3 poster from the artwork route, lazy unless a page opens on it, with a `srcset` of the proxy widths; no image shows the title instead. |
+| `poster-card.tsx`            | `PosterCard`, `StatePill`, and `PosterGrid`, whose column count follows its own width (container queries).                                  |
+| `poster-rail.tsx`            | `PosterRail`, a row of cards that scrolls sideways with scroll snap, and what stands in for one that failed.                                |
+| `segmented.tsx`              | A row of exclusive views that are links, so navigation and not an ARIA tablist.                                                             |
+| `skeleton.tsx`, `states.tsx` | Loading shapes, empty states that say what to do next, and error states by kind of failure.                                                 |
+| `use-cursor-list.ts`         | The one place the client follows `nextCursor`: a page at a time, past empty pages, or every page.                                           |
 
 `src/client/presentation/` holds the words for contract enums, each table
 written `satisfies Record<Enum, …>`: an enum that gains a value stops compiling
@@ -958,6 +959,100 @@ In fixture mode the artwork route draws a small PNG per file name
 (`src/testing/fixture-api/fixtures/artwork-image.ts`). Some fixture titles have
 no stored artwork, and the poster of "Your Name." answers 502, so both ways a
 poster can be missing are on screen.
+
+### Title page and request sheet
+
+One page (`src/client/title/`) serves both title addresses. `/media/:id` is a
+film, series, season or episode the household has; the server writes that
+address into emails and notifications. `/catalog/:kind/:id` is a film or series
+by its catalog identity: one the household already has redirects to its
+`/media/:id`, and any other is shown from the catalog read alone and can only be
+asked for.
+
+The page opens on a hero (backdrop, poster, title, one state phrase, synopsis)
+and one primary action chosen from where the reader stands with the title.
+`primary-action.ts` is that choice as a pure function of facts the reads report
+(`facts.ts`); it invents no permission:
+
+| The reader's standing                                    | Primary action                  |
+| -------------------------------------------------------- | ------------------------------- |
+| The files are removed and the reader may bring them back | Restore                         |
+| A removal is under way and the reader may hold the title | Keep for 30 days                |
+| The reader has a standing request                        | Following, which opens the menu |
+| The owner, on a title the household can already watch    | Keep for 30 days                |
+| Anything else                                            | Request                         |
+
+Everything else the reader may do is in the menu beside it. A series, season or
+episode is acted on through the default-target read and its commands
+(`allowedProtectiveActions`, `ownRequests`). A film is acted on one version at a
+time through the movie-edition reads; the hero acts on the standard version and
+a film with more than one version lists each under Versions with its own
+actions. Members call an edition a version, and the unmarked edition the
+standard version (`presentation/version.ts`).
+
+Below the hero: who follows the title and what keeps it, a series' seasons
+(each opens onto its episodes, read when first opened), a film's versions, and a
+closed "Files and subtitles". The title read gives the owner every follower's
+name and a member only their own request, so a member is told about themselves.
+The read does not carry the library's keeping policy, so "Keeping" reports the
+holds it does carry and the page does not offer "Keep for good", which is that
+policy's name in the Library. The owner's pin is a different thing and is in the
+menu under its own name ("Pin so it never leaves", "Remove pin"). Withdrawing a
+request is "Cancel request"; "Stop following" names letting an interest go, which
+needs the interest's revision and so is offered only in the Library's Mine view.
+
+The owner gets a second view, `?view=manage`, holding the operator panels the
+page has always had (acquisition and seeding, edition controls, quality profile,
+recorded files, release decisions, title history). `title/manage.tsx` is
+imported only through `React.lazy`, so those panels are a chunk a member never
+downloads, and a member who opens the address gets the member's page.
+
+The way back follows history; a page opened from an email has none, and there
+the link leads to the Library. A title that does not exist, one the reader may
+not open, and a read that failed are three different pages.
+
+`src/client/request-sheet/` is the one place a title is asked for, from any
+page:
+
+```tsx
+{
+  asking && (
+    <RequestSheet
+      user={user}
+      subject={{ kind: "movie", title, target: { externalId } }}
+      onClose={() => setAsking(false)}
+    />
+  );
+}
+```
+
+The sheet is open for as long as it is rendered. `subject.target` is a library
+item or a catalog identity; a catalog title joins the library when the request
+is sent. It asks who the request is for (owner only), which version of a film or
+which seasons of a series, how long to keep it (owner only; a member's request
+is always just for now), and the subtitle languages, chosen from a list instead
+of typed as codes. `form.ts` maps those answers to commands and `submit.ts`
+sends them through `writeApi`, so every request carries the session's CSRF token
+and a retry key. A request whose outcome is unknown locks the sheet's answers
+and is sent again unchanged. Choosing seasons sends one command per season. A
+request for the Specials season, whether ticked among the seasons or made from
+that season's own page, carries `includeSpecials`: the server leaves season-zero
+episodes out of any request without it. If a request for several seasons stops
+part-way, the seasons already accepted stay requested, so the sheet says which
+they are, locks its answers, and asks for the rest the same way. The
+two keeping answers are named from `src/shared/household/names.ts`, as the
+Library's switch and the server's message for a request with no answer are.
+
+Two more building blocks come with it: `ui/sheet.tsx`, a native modal
+`<dialog>` (focus containment, Escape and focus return are the browser's; a
+press on the backdrop also closes it), and `ui/menu.tsx`, a button that
+discloses a short list of actions.
+
+In fixture mode every primary action has a film and a series: see the cases in
+`e2e/browser/title-actions.spec.ts`. "Blade Runner" has two versions, "The
+Expanse" and "Get Out" are leaving soon, "Silo" and "The Holdovers" are removed
+but restorable, and `/catalog/movie/155` and `/catalog/series/1398` are titles
+the household does not have.
 
 ### Client styles and themes
 

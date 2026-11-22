@@ -1,5 +1,10 @@
 import type { Persona } from "#testing/fixture-api/personas.ts";
-import { FEATURED } from "#testing/fixture-api/fixtures/titles.ts";
+import {
+  FEATURED,
+  episodeId,
+  seasonId,
+  titleNamed,
+} from "#testing/fixture-api/fixtures/titles.ts";
 
 export type RouteCase = {
   /** Stable name for test titles and the axe baseline. */
@@ -62,6 +67,43 @@ function shared(persona: Persona): RouteSpec[] {
       path: `/media/${series.id}`,
       heading: series.title,
     },
+    {
+      label: `${persona} /media/:season`,
+      path: `/media/${seasonId(series, 2)}`,
+      heading: "Season 2",
+    },
+    {
+      label: `${persona} /media/:episode`,
+      path: `/media/${episodeId(series, 2, 1)}`,
+      heading: "Hello, Ms. Cobel",
+    },
+    {
+      // A film with more than one version.
+      label: `${persona} /media/:versions`,
+      path: `/media/${titleNamed("Blade Runner").id}`,
+      heading: "Blade Runner",
+    },
+    {
+      label: `${persona} /media/:leaving`,
+      path: `/media/${titleNamed("The Expanse").id}`,
+      heading: "The Expanse",
+    },
+    {
+      label: `${persona} /media/:removed`,
+      path: `/media/${FEATURED.quarantinedMovie.id}`,
+      heading: FEATURED.quarantinedMovie.title,
+    },
+    {
+      // Titles the household does not have.
+      label: `${persona} /catalog/movie/:outside`,
+      path: "/catalog/movie/155",
+      heading: "The Dark Knight",
+    },
+    {
+      label: `${persona} /catalog/series/:outside`,
+      path: "/catalog/series/1398",
+      heading: "The Sopranos",
+    },
   ].map((route) => ({ ...route, persona }));
 }
 
@@ -114,9 +156,25 @@ const MEMBER_ROUTES: readonly RouteSpec[] = [
     label: "member /media/:protection-only",
     persona: "member",
     path: `/media/${FEATURED.protectionOnly.id}`,
-    heading: "Request protections",
+    heading: "Your request",
   },
   ...shared("member"),
+];
+
+/** The owner's view of a title: the operator panels behind its Manage switch. */
+const TITLE_MANAGE_ROUTES: readonly RouteSpec[] = [
+  {
+    label: "owner /media/:movie?view=manage",
+    persona: "owner",
+    path: `/media/${movie.id}?view=manage`,
+    heading: movie.title,
+  },
+  {
+    label: "owner /media/:series?view=manage",
+    persona: "owner",
+    path: `/media/${series.id}?view=manage`,
+    heading: series.title,
+  },
 ];
 
 /** The owner's Manage pages, each opened by its own address. */
@@ -146,6 +204,7 @@ const MANAGE_ROUTES: readonly RouteSpec[] = [
  */
 const OWNER_ROUTES: readonly RouteSpec[] = [
   ...MANAGE_ROUTES,
+  ...TITLE_MANAGE_ROUTES,
   ...shared("owner"),
 ];
 

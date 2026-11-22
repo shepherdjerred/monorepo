@@ -8,12 +8,10 @@ export function MovieEditionSelector({
   value,
   change,
   disabled,
-  purpose = "request",
 }: {
   value: MovieEditionKey | "";
   change: (edition: MovieEditionKey | "") => void;
   disabled: boolean;
-  purpose?: "request" | "manage";
 }) {
   return (
     <>
@@ -43,12 +41,6 @@ export function MovieEditionSelector({
         Unmarked means the release does not assert a named cut. It does not mean
         theatrical.
       </p>
-      {purpose === "request" && value !== "" && value !== "default" && (
-        <p role="status">
-          Media will look for this exact edition. A different cut will not
-          fulfill your request.
-        </p>
-      )}
     </>
   );
 }

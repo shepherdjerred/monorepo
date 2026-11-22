@@ -154,6 +154,20 @@ export const FEATURED = {
   numbering: titleNamed("Frieren: Beyond Journey's End"),
 } as const;
 
+/**
+ * Titles the owner holds for good. The featured movie is one the owner also
+ * follows; the other two are held and nothing else.
+ */
+const OWNER_KEPT: ReadonlySet<string> = new Set(
+  [FEATURED.movie, titleNamed("Dune"), titleNamed("Breaking Bad")].map(
+    (title) => title.id,
+  ),
+);
+
+export function ownerKeeps(title: Title): boolean {
+  return OWNER_KEPT.has(title.id);
+}
+
 export function seasonId(title: Title, season: number): string {
   return fixtureId(3, title.index * 100 + season);
 }

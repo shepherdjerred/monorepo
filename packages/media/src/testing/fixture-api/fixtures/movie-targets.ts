@@ -18,7 +18,8 @@ import {
 import type { Persona } from "#testing/fixture-api/personas.ts";
 import { requestId } from "./requests.ts";
 import { DAY, ago, fixtureId, sha256 } from "#testing/fixture-api/support.ts";
-import { FEATURED, type ResolvedMedia } from "./titles.ts";
+import { leavingSoon } from "./removals.ts";
+import { FEATURED, ownerKeeps, type ResolvedMedia } from "./titles.ts";
 import { assetId, mediaVisibility } from "./visibility.ts";
 
 type MovieTarget = z.input<typeof MovieTargetContextV4Schema>;
@@ -112,9 +113,16 @@ function currentAsset(resolved: ResolvedMedia): MovieTargetAsset {
 function allowedActions(
   persona: Persona,
   availability: Availability,
+  member: { mayKeep: boolean; asked: boolean },
 ): MovieTargetDetail["allowedActions"] {
   if (persona !== "owner") {
-    return ["keep"];
+    return [
+      ...(member.mayKeep ? (["keep"] as const) : []),
+      // Bringing a removed film back is for whoever asked for it.
+      ...(availability === "quarantined" && member.asked
+        ? (["restore"] as const)
+        : []),
+    ];
   }
   if (availability === "available") {
     return ["keep", "pin", "unpin", "remove", "select_release"];
@@ -137,6 +145,39 @@ function admissionReasons(
     : ["choice_activation_required", "asset_unavailable"];
 }
 
+/** The viewer's own requests for one cut of a movie. */
+function ownRequestsFor(
+  resolved: ResolvedMedia,
+  edition: MovieEditionKey,
+): MovieTarget["ownRequests"] {
+  return movieRequestsFor(resolved.title)
+    .filter((request) => request.edition === edition)
+    .map((request) => ({
+      id: requestId(request.sequence),
+      version: requestVersion(request),
+      active: request.active,
+      choiceId: choiceId(request),
+      choiceRevision: request.chosen ? 1 : 0,
+      canCancel: request.active,
+      canRevokeChoice: false,
+    }));
+}
+
+function protectiveActions(viewer: {
+  owner: boolean;
+  kept: boolean;
+  mayKeep: boolean;
+  asked: boolean;
+}): MovieTarget["allowedProtectiveActions"] {
+  if (viewer.owner) {
+    return ["keep", viewer.kept ? "unpin" : "pin", "cancel_request"];
+  }
+  return [
+    ...(viewer.mayKeep ? (["keep"] as const) : []),
+    ...(viewer.asked ? (["cancel_request"] as const) : []),
+  ];
+}
+
 /** The controls for one cut of a movie; only the unmarked cut has a file. */
 export function movieTarget(
   resolved: ResolvedMedia,
@@ -150,28 +191,23 @@ export function movieTarget(
   const owner = persona === "owner";
   const asset = hasFile ? currentAsset(resolved) : null;
   const visibility = mediaVisibility(resolved, persona);
+  const ownRequests = ownRequestsFor(resolved, edition);
+  const asked = ownRequests.some((request) => request.active);
+  const kept = owner && unmarked && ownerKeeps(title);
+  // A member may hold what they asked for, and anything that is leaving soon.
+  const mayKeep = asked || (unmarked && leavingSoon(title) !== null);
   return {
     schemaVersion: 4,
     scope: movieScope(title, edition),
     expected: { mediaVersion: item.version, targetVersion: 2 },
-    ownRequests: movieRequestsFor(title)
-      .filter((request) => request.edition === edition)
-      .map((request) => ({
-        id: requestId(request.sequence),
-        version: requestVersion(request),
-        active: request.active,
-        choiceId: choiceId(request),
-        choiceRevision: request.chosen ? 1 : 0,
-        canCancel: request.active,
-        canRevokeChoice: false,
-      })),
-    ownHold:
-      owner && unmarked && title === FEATURED.movie
-        ? { isPin: true, until: null }
-        : null,
-    allowedProtectiveActions: owner
-      ? ["keep", "pin", "unpin", "cancel_request"]
-      : ["keep", "cancel_request"],
+    ownRequests,
+    ownHold: kept ? { isPin: true, until: null } : null,
+    allowedProtectiveActions: protectiveActions({
+      owner,
+      kept,
+      mayKeep,
+      asked,
+    }),
     access: "detail",
     title: title.title,
     year: title.year,
@@ -183,7 +219,7 @@ export function movieTarget(
       monitoring: unmarked,
       libraryMonitoring: unmarked && title.index % 2 === 0,
     },
-    allowedActions: allowedActions(persona, availability),
+    allowedActions: allowedActions(persona, availability, { mayKeep, asked }),
     reasons: admissionReasons(resolved, edition, hasFile),
     removalConfirmation:
       asset !== null && owner

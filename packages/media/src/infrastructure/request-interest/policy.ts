@@ -1,4 +1,5 @@
 import { MediaError } from "#application/errors.ts";
+import { LIBRARY_KEEPING_NAMES } from "#shared/household/names.ts";
 import type { MediaActor } from "#application/auth.ts";
 import type { MediaRequest } from "#generated/prisma/client.ts";
 
@@ -30,7 +31,7 @@ export function requestKeepingPolicy(
     if (requested === "keep")
       throw new MediaError(
         "owner_required",
-        "Only the owner can keep media indefinitely",
+        "Only the owner can keep a title for good",
         403,
       );
     // Repeating a member request cannot revoke a permanent Keep granted by
@@ -44,7 +45,7 @@ export function requestKeepingPolicy(
     return prior.keepingPolicy;
   throw new MediaError(
     "keeping_policy_required",
-    "Choose Keep indefinitely or Temporary for this request",
+    `Choose ${LIBRARY_KEEPING_NAMES.keep} or ${LIBRARY_KEEPING_NAMES.temporary} for this request`,
     422,
   );
 }

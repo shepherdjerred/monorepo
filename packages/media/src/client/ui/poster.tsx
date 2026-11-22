@@ -24,10 +24,13 @@ export function Poster({
   path,
   title,
   sizes,
+  loading = "lazy",
 }: {
   path: string | null;
   title: string;
   sizes: string;
+  /** `eager` for the one poster a page opens on; a list's posters wait. */
+  loading?: "lazy" | "eager";
 }) {
   // The path that failed, not a flag: a row reused for another title starts
   // with a clean slate.
@@ -53,7 +56,7 @@ export function Poster({
         alt=""
         width={342}
         height={513}
-        loading="lazy"
+        loading={loading}
         decoding="async"
         onError={() => {
           setFailedPath(path);
