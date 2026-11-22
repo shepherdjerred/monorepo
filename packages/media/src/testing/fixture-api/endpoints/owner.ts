@@ -61,7 +61,13 @@ const shared: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/recovery",
     schema: RecoveryListSchema,
-    respond: (request) => recoveryList(request.persona),
+    respond: (request) => {
+      const recovery = recoveryList(request.persona);
+      // The `new-household` household has never been restored from a backup.
+      return request.scenario === "new-household"
+        ? { ...recovery, holds: [], reviews: [] }
+        : recovery;
+    },
     samples: ["/recovery"],
   }),
 ];

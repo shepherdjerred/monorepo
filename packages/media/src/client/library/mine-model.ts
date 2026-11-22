@@ -45,6 +45,16 @@ export type MineTitle = {
   needsAnswer: boolean;
 };
 
+/**
+ * Whether the person has let this ask go: they finished it, stopped following
+ * it, or never answered its check. The request itself stays `active` when
+ * they do, so the interest is what says Media no longer acquires it for them.
+ * A request with no interest of its own says nothing of the kind.
+ */
+export function releasedInterest(interest: Interest | null): boolean {
+  return interest !== null && interest.interestState !== "following";
+}
+
 export function awaitsAnswer(interest: Interest | null): boolean {
   return (
     interest !== null &&

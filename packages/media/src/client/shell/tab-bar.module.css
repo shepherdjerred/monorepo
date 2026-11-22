@@ -11,7 +11,7 @@
       bottom: 0;
       z-index: 5;
       display: grid;
-      /* Four tabs for a member, five for the owner, in equal shares. */
+      /* The five destinations, in equal shares. */
       grid-auto-flow: column;
       grid-auto-columns: minmax(0, 1fr);
       /* `--shell-bottom` is this bar's height above the safe area. */

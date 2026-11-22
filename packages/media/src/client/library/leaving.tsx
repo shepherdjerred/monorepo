@@ -24,6 +24,9 @@ import {
 } from "./keep-all.ts";
 import {
   entryRows,
+  entrySingleRow,
+  entryTargetIds,
+  entryTitle,
   leavingEntries,
   runDismissed,
   runFinished,
@@ -193,117 +196,31 @@ function Parts({
   );
 }
 
-function Entry({
-  user,
-  entry,
-  onKeepAll,
-  onDismiss,
-}: {
-  user: MediaUser;
-  entry: LeavingEntry;
-  onKeepAll: (
-    title: LeavingTitle,
-    candidates: readonly KeepCandidate[],
-  ) => void;
-  onDismiss: () => void;
-}) {
-  const { current, run } = entry;
-  // An entry is a title that is leaving, a run's report, or both.
-  const title = current ?? run?.title;
-  if (title === undefined) throw new Error("An entry with nothing to show");
-  // Without a report, one row is just that row and its own hold.
-  const single =
-    run === null && current?.rows.length === 1 ? current.rows[0] : undefined;
-  return (
-    <li className={cx("entry")}>
-      <div className={cx("entryPoster")}>
-        <Poster path={title.posterPath} title={title.name} sizes="72px" />
-      </div>
-      <div className={cx("entryBody")}>
-        <h2 className={cx("entryTitle")}>
-          <Link to={`/media/${encodeURIComponent(title.rootMediaId)}`}>
-            {title.name}
-          </Link>
-        </h2>
-        {current === null ? (
-          <p className={cx("rowDetail")}>None of it is leaving any more.</p>
-        ) : (
-          <p className={cx("entryState")}>
-            <StatePill
-              state={{
-                label: LEAVING_COPY[
-                  current.rows.some((row) => row.phase === "grace_period")
-                    ? "grace_period"
-                    : "warning_pending"
-                ](current.leavesAt),
-                tone: "warn",
-              }}
-            />
-          </p>
-        )}
-        {current !== null && current.leavesAt === null && (
-          <p className={cx("rowDetail")}>
-            The people who asked for it are being told first. It gets a date
-            once they have been.
-          </p>
-        )}
-        {single !== undefined && !single.whole && (
-          <p className={cx("rowDetail")}>{single.removal.media.title}</p>
-        )}
-      </div>
-      <div className={cx("entryAction")}>
-        {single === undefined ? (
-          <Parts
-            user={user}
-            name={title.name}
-            entry={entry}
-            onKeepAll={(candidates) => {
-              // A retry is of the run's own title, not of today's list.
-              onKeepAll(run?.title ?? title, candidates);
-            }}
-            onDismiss={onDismiss}
-          />
-        ) : (
-          <ListedMediaAction
-            user={user}
-            mediaId={single.removal.mediaId}
-            action="keep"
-          />
-        )}
-      </div>
-    </li>
-  );
+/** Whether anything of the title already has a date to leave by. */
+export function leavingPhase(title: LeavingTitle) {
+  return title.rows.some((row) => row.phase === "grace_period")
+    ? "grace_period"
+    : "warning_pending";
 }
 
-/** What is about to leave the library, for the whole household to see. */
-export function LibraryLeaving({ user }: { user: MediaUser }) {
-  const removals = useRemovals();
-  // Held here, above the list: a report must outlive the rows it is about.
+type KeepAll = (
+  title: LeavingTitle,
+  candidates: readonly KeepCandidate[],
+) => void;
+
+export type KeepRunControls = {
+  runs: KeepRuns;
+  keepAll: KeepAll;
+  dismiss: (rootMediaId: string) => void;
+};
+
+/**
+ * The "keep all" runs of a list of leaving titles, and how to start one, try
+ * its failures again, and dismiss its report. Held by whatever holds the
+ * list: a report must outlive the rows it is about.
+ */
+export function useKeepRuns(user: MediaUser): KeepRunControls {
   const [runs, setRuns] = useState<KeepRuns>(new Map());
-  if (removals.error !== null) {
-    return (
-      <ErrorState
-        error={removals.error}
-        what="What is leaving"
-        onRetry={() => {
-          void removals.refetch();
-        }}
-      />
-    );
-  }
-  if (removals.data === undefined) {
-    return <RowsSkeleton label="Loading what is leaving" />;
-  }
-  const titles = leavingTitles(removals.data);
-  const entries = leavingEntries(titles, runs);
-  if (entries.length === 0) {
-    return (
-      <EmptyState icon={HourglassIcon} title="Nothing is leaving">
-        A film or series shows here before it leaves the library, with time to
-        keep it.
-      </EmptyState>
-    );
-  }
 
   async function keepAll(
     title: LeavingTitle,
@@ -330,6 +247,144 @@ export function LibraryLeaving({ user }: { user: MediaUser }) {
     );
   }
 
+  return {
+    runs,
+    keepAll: (title, candidates) => {
+      void keepAll(title, candidates);
+    },
+    dismiss: (rootMediaId) => {
+      setRuns((current) => runDismissed(current, rootMediaId));
+    },
+  };
+}
+
+/**
+ * The one thing to do about an entry: keep it for 30 days, or, when several
+ * parts of it are leaving or a run has a report on it, keep them all.
+ */
+export function LeavingKeep({
+  user,
+  entry,
+  onKeepAll,
+  onDismiss,
+}: {
+  user: MediaUser;
+  entry: LeavingEntry;
+  onKeepAll: KeepAll;
+  onDismiss: () => void;
+}) {
+  const title = entryTitle(entry);
+  const single = entrySingleRow(entry);
+  return single === undefined ? (
+    <Parts
+      user={user}
+      name={title.name}
+      entry={entry}
+      onKeepAll={(candidates) => {
+        // A retry is of the run's own title, not of today's list.
+        onKeepAll(entry.run?.title ?? title, candidates);
+      }}
+      onDismiss={onDismiss}
+    />
+  ) : (
+    <ListedMediaAction
+      user={user}
+      mediaId={single.removal.mediaId}
+      action="keep"
+    />
+  );
+}
+
+function Entry({
+  user,
+  entry,
+  onKeepAll,
+  onDismiss,
+}: {
+  user: MediaUser;
+  entry: LeavingEntry;
+  onKeepAll: KeepAll;
+  onDismiss: () => void;
+}) {
+  const { current } = entry;
+  // An entry is a title that is leaving, a run's report, or both.
+  const title = entryTitle(entry);
+  // Without a report, one row is just that row and its own hold.
+  const single = entrySingleRow(entry);
+  return (
+    <li className={cx("entry")}>
+      <div className={cx("entryPoster")}>
+        <Poster path={title.posterPath} title={title.name} sizes="72px" />
+      </div>
+      <div className={cx("entryBody")}>
+        <h2 className={cx("entryTitle")}>
+          <Link to={`/media/${encodeURIComponent(title.rootMediaId)}`}>
+            {title.name}
+          </Link>
+        </h2>
+        {current === null ? (
+          <p className={cx("rowDetail")}>None of it is leaving any more.</p>
+        ) : (
+          <p className={cx("entryState")}>
+            <StatePill
+              state={{
+                label: LEAVING_COPY[leavingPhase(current)](current.leavesAt),
+                tone: "warn",
+              }}
+            />
+          </p>
+        )}
+        {current !== null && current.leavesAt === null && (
+          <p className={cx("rowDetail")}>
+            The people who asked for it are being told first. It gets a date
+            once they have been.
+          </p>
+        )}
+        {single !== undefined && !single.whole && (
+          <p className={cx("rowDetail")}>{single.removal.media.title}</p>
+        )}
+      </div>
+      <div className={cx("entryAction")}>
+        <LeavingKeep
+          user={user}
+          entry={entry}
+          onKeepAll={onKeepAll}
+          onDismiss={onDismiss}
+        />
+      </div>
+    </li>
+  );
+}
+
+/** What is about to leave the library, for the whole household to see. */
+export function LibraryLeaving({ user }: { user: MediaUser }) {
+  const removals = useRemovals();
+  // Held here, above the list: a report must outlive the rows it is about.
+  const keep = useKeepRuns(user);
+  if (removals.error !== null) {
+    return (
+      <ErrorState
+        error={removals.error}
+        what="What is leaving"
+        onRetry={() => {
+          void removals.refetch();
+        }}
+      />
+    );
+  }
+  if (removals.data === undefined) {
+    return <RowsSkeleton label="Loading what is leaving" />;
+  }
+  const titles = leavingTitles(removals.data);
+  const entries = leavingEntries(titles, keep.runs);
+  if (entries.length === 0) {
+    return (
+      <EmptyState icon={HourglassIcon} title="Nothing is leaving">
+        A film or series shows here before it leaves the library, with time to
+        keep it.
+      </EmptyState>
+    );
+  }
   return (
     <>
       <p className={cx("intro")}>
@@ -338,26 +393,16 @@ export function LibraryLeaving({ user }: { user: MediaUser }) {
         something leaves, its files can still be restored for a week; that is
         under Removed.
       </p>
-      <ListedTargets
-        mediaIds={entries.flatMap((entry) => [
-          ...(entry.current?.rows ?? []).map((row) => row.removal.mediaId),
-          // A row waiting for a retry keeps its view read, listed or not.
-          ...(entry.run === null ? [] : unkeptRows(entry.run)).map(
-            (row) => row.removal.mediaId,
-          ),
-        ])}
-      >
+      <ListedTargets mediaIds={entryTargetIds(entries)}>
         <ul className={cx("entries")} aria-label="Leaving soon">
           {entries.map((entry) => (
             <Entry
               key={entry.rootMediaId}
               user={user}
               entry={entry}
-              onKeepAll={(title, candidates) => {
-                void keepAll(title, candidates);
-              }}
+              onKeepAll={keep.keepAll}
               onDismiss={() => {
-                setRuns((current) => runDismissed(current, entry.rootMediaId));
+                keep.dismiss(entry.rootMediaId);
               }}
             />
           ))}

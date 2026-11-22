@@ -9,9 +9,12 @@ import { z } from "zod";
  * - `feed-unavailable`: one discover feed answers 502 while the others, and
  *   search, keep working.
  * - `catalog-unavailable`: TMDB is down, so every catalog read answers 502.
- * - `new-household`: nobody has asked for or watched anything yet, so the
- *   calendar has no releases on it, dated or not, nothing is playing, the
- *   watch history is empty, and there are no notifications.
+ * - `new-household`: a household on its first day. Nobody has asked for or
+ *   watched anything yet, so the calendar has no releases on it, dated or not,
+ *   the library is empty, nothing is playing, leaving or in the watch history,
+ *   there are no notifications, and no catalog title is in the library.
+ * - `library-unavailable`: the library read answers 500 while every other
+ *   read keeps working.
  */
 export const FixtureScenarioSchema = z.enum([
   "default",
@@ -19,6 +22,7 @@ export const FixtureScenarioSchema = z.enum([
   "feed-unavailable",
   "catalog-unavailable",
   "new-household",
+  "library-unavailable",
 ]);
 export type FixtureScenario = z.infer<typeof FixtureScenarioSchema>;
 
@@ -26,15 +30,15 @@ export type FixtureScenario = z.infer<typeof FixtureScenarioSchema>;
 export const SCENARIO_COOKIE = "media-fixture-scenario";
 
 /**
- * An answer that is an error the real API sends on purpose, such as a 502
- * when an upstream is down. A fixture throws it; the router turns it into
- * the typed error body.
+ * An answer that is an error the real API sends, such as a 502 when an
+ * upstream is down or the 500 of a read that broke. A fixture throws it;
+ * the router turns it into the typed error body.
  */
 export class FixtureFailure extends Error {
-  readonly status: 502;
+  readonly status: 500 | 502;
   readonly code: string;
 
-  constructor(status: 502, code: string, message: string) {
+  constructor(status: 500 | 502, code: string, message: string) {
     super(message);
     this.name = "FixtureFailure";
     this.status = status;

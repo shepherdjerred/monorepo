@@ -2,11 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CompassIcon } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
-import { RequestListSchema } from "#shared/api.ts";
 import type { MediaUser } from "#shared/contract.ts";
-import { readApi } from "#client/api.ts";
 import { ErrorNotice } from "#client/components.tsx";
-import { readInterests } from "#client/household/interests.tsx";
 import { readMovieRequests } from "#client/movie-editions/requests.tsx";
 import { MovieRequestSubject } from "#client/movie-editions/subject.tsx";
 import { useImportedRequests } from "#client/personal-migration/source.tsx";
@@ -18,6 +15,7 @@ import { useCursorList } from "#client/ui/use-cursor-list.ts";
 import styles from "./library.module.css";
 import { mineTitles } from "./mine-model.ts";
 import { MineTitleEntry } from "./mine-title.tsx";
+import { interestsRead, REQUESTS_READ } from "./reads.ts";
 
 const cx = classNames(styles);
 
@@ -35,16 +33,8 @@ export function LibraryMine({ user }: { user: MediaUser }) {
   const [subjectUserId, setSubjectUserId] = useState(user.id);
   const [params] = useSearchParams();
   const linkedRequestId = params.get("interest");
-  const requests = useQuery({
-    queryKey: ["requests"],
-    queryFn: () => readApi("/requests", RequestListSchema),
-    refetchInterval: 15_000,
-  });
-  const interests = useCursorList({
-    queryKey: ["request-interests", user.id],
-    read: readInterests,
-    paging: "all",
-  });
+  const requests = useQuery({ ...REQUESTS_READ, refetchInterval: 15_000 });
+  const interests = useCursorList(interestsRead(user.id));
   const movies = useCursorList({
     queryKey: ["movie-requests", 4, subjectUserId],
     read: (cursor) => readMovieRequests(subjectUserId, cursor),

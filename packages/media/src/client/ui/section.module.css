@@ -1,0 +1,39 @@
+@layer components {
+  /*
+   * One part of a page that has several: its heading and an optional link
+   * to all of it on a line, then its content. A page sets `--section-gap`
+   * to space its sections; a rail already ends in the line it keeps for a
+   * card's note, so the default is close.
+   */
+  .section {
+    margin-bottom: var(--section-gap, var(--space-5));
+  }
+  .section:last-child {
+    margin-bottom: 0;
+  }
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+  .title {
+    margin: 0;
+    font-size: var(--text-xl);
+    overflow-wrap: anywhere;
+  }
+  .link {
+    flex: none;
+    /* A target a finger can hit, without moving the heading's baseline. */
+    margin-block: -10px;
+    padding: 10px 0;
+    color: var(--text-accent);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: 2px;
+  }
+  .link:hover {
+    text-decoration: underline;
+  }
+}

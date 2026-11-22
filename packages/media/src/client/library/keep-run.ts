@@ -124,6 +124,34 @@ export function leavingEntries(
   ];
 }
 
+/** The film or series an entry is about: as listed now, else as its run had it. */
+export function entryTitle(entry: LeavingEntry): LeavingTitle {
+  const title = entry.current ?? entry.run?.title;
+  if (title === undefined) throw new Error("An entry with nothing to show");
+  return title;
+}
+
+/**
+ * The one row of an entry that is a single row with no report: it is just
+ * that row and its own hold, not a set of parts.
+ */
+export function entrySingleRow(entry: LeavingEntry): LeavingRow | undefined {
+  return entry.run === null && entry.current?.rows.length === 1
+    ? entry.current.rows[0]
+    : undefined;
+}
+
+/** Every row whose hold an entry's controls read. */
+export function entryTargetIds(entries: readonly LeavingEntry[]): string[] {
+  return entries.flatMap((entry) => [
+    ...(entry.current?.rows ?? []).map((row) => row.removal.mediaId),
+    // A row waiting for a retry keeps its view read, listed or not.
+    ...(entry.run === null ? [] : unkeptRows(entry.run)).map(
+      (row) => row.removal.mediaId,
+    ),
+  ]);
+}
+
 export type EntryRow = {
   row: LeavingRow;
   /** The row is in the removal list now, so it can still be kept. */

@@ -12,12 +12,20 @@ test("the sidebar moves between pages and marks the current one", async ({
   await openAs(page, "owner", "/discover");
   const sidebar = page.getByRole("navigation", { name: "Main" });
   await expect(sidebar.getByRole("link")).toHaveText([
+    "Home",
     "Discover",
     "Library",
     "Calendar",
     "History",
     "Manage",
   ]);
+  // The sidebar has Manage, so the account panel does not repeat it here.
+  await page.getByRole("button", { name: "Account" }).click();
+  await expect(
+    page.getByRole("link", { name: "Recovery reviews" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Manage" })).toHaveCount(1);
+  await page.keyboard.press("Escape");
   await expect(sidebar.getByRole("link", { name: "Discover" })).toHaveAttribute(
     "aria-current",
     "page",
@@ -43,6 +51,15 @@ test("the sidebar moves between pages and marks the current one", async ({
     page.getByRole("heading", { level: 1, name: "Quality" }),
   ).toBeFocused();
   await expect(manage.locator('[aria-current="page"]')).toHaveText("Quality");
+});
+
+test("the logo opens Home", async ({ page }) => {
+  await openAs(page, "member", "/library");
+  await page.getByRole("link", { name: "media." }).click();
+  await expect(page).toHaveURL(/\/$/u);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Home" }),
+  ).toBeFocused();
 });
 
 test("a member's sidebar has no Manage", async ({ page }) => {

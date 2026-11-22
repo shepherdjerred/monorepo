@@ -92,6 +92,14 @@ test("a reminder's link opens Mine at the request it names", async ({
   await expect(
     marked.getByRole("button", { name: "Keep watching" }),
   ).toBeVisible();
+  // Centring the entry can leave the one above it half under the sticky top
+  // bar, which is a scroll position and not a target that is too small. Put
+  // the entry just below the bar so the check sees only what it is for.
+  await marked.evaluate((entryElement) => {
+    const bar = document.querySelector("header");
+    const clearance = (bar?.getBoundingClientRect().bottom ?? 0) + 16;
+    window.scrollBy(0, entryElement.getBoundingClientRect().top - clearance);
+  });
   expect(await violationDetails(page)).toEqual([]);
 });
 

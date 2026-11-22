@@ -101,6 +101,8 @@ const REQUEST_SEEDS: readonly RequestSeed[] = [
   { sequence: 23, item: root("Heat"), active: false },
   { sequence: 24, item: root("The Social Network") },
   { sequence: 25, item: root("Arrival"), languages: ["en"] },
+  // Still being acquired, though the reader stopped following it (below).
+  { sequence: 26, item: root("Princess Mononoke"), languages: ["en"] },
 ];
 
 /** The signed-in person's requests, each with the item it asks for. */
@@ -212,6 +214,14 @@ function interestPage(cursor: string | null, persona: Persona): InterestList {
         interest(13, "Dark", mine),
         // A request for a season or an episode names only that item.
         ...[4, 6, 11].map((sequence) => partInterest(sequence, mine)),
+        // Let go of while its film is still being acquired: the request stays
+        // active, as the server leaves it, so a list of what is on the way
+        // must look at the interest and not only at `active`.
+        interest(26, "Princess Mononoke", mine, {
+          interestState: "dropped",
+          releasedAt: ago(4 * DAY),
+          releaseReason: "dropped_by_requester",
+        }),
       ],
       nextCursor: null,
     };

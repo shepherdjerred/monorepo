@@ -24,6 +24,7 @@ import { StatePill } from "#client/ui/poster-card.tsx";
 import styles from "./library.module.css";
 import {
   awaitsAnswer,
+  releasedInterest,
   type MineAsk,
   type MineTitle,
   type Request,
@@ -62,7 +63,7 @@ function stateOf(ask: MineAsk): Copy {
   if (request?.active === false || movie?.active === false) {
     return REQUEST_CANCELLED;
   }
-  if (interest !== null && interest.interestState !== "following") {
+  if (interest !== null && releasedInterest(interest)) {
     return INTEREST_STATE_COPY[interest.interestState];
   }
   if (movie !== null) return MOVIE_FULFILLMENT_COPY[movie.fulfillment.status];

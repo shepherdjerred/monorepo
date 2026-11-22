@@ -1,17 +1,13 @@
 import { CompassIcon } from "lucide-react";
-import { Link } from "react-router";
 import type { CatalogFeed } from "#shared/catalog/contract.ts";
 import { FEED_COPY } from "#client/presentation/catalog.ts";
-import { classNames } from "#client/ui/class-names.ts";
 import { PosterRail, PosterRailStandIn } from "#client/ui/poster-rail.tsx";
+import { Section } from "#client/ui/section.tsx";
 import { PosterRailSkeleton } from "#client/ui/skeleton.tsx";
 import { EmptyState, ErrorState } from "#client/ui/states.tsx";
 import { useCatalogList, type CatalogList } from "./catalog-list.ts";
-import styles from "./discover.module.css";
 import { AccessNotice, CatalogCard } from "./titles.tsx";
 import { FEED_ORDER, feedAddress } from "./view.ts";
-
-const cx = classNames(styles);
 
 /** A row shows a feed's first page; "See all" has the rest. */
 const ROW_LENGTH = 20;
@@ -45,22 +41,19 @@ function FeedRow({ feed, list }: { feed: CatalogFeed; list: CatalogList }) {
   const loading = list.pending && list.error === null;
   // A feed with nothing in it is not worth a heading.
   if (!loading && !failed(list) && list.entries.length === 0) return null;
-  // The heading and the named list are how a row is found; five more
-  // landmarks would only crowd the ones the shell has.
   return (
-    <section className={cx("row")}>
-      <div className={cx("rowHead")}>
-        <h2 className={cx("rowTitle")}>{title}</h2>
-        {!failed(list) && (
-          <Link
-            className={cx("seeAll")}
-            to={feedAddress(feed)}
-            aria-label={`See all: ${title}`}
-          >
-            See all
-          </Link>
-        )}
-      </div>
+    <Section
+      title={title}
+      {...(failed(list)
+        ? {}
+        : {
+            link: {
+              to: feedAddress(feed),
+              text: "See all",
+              label: `See all: ${title}`,
+            },
+          })}
+    >
       {loading && <PosterRailSkeleton label={`Loading ${title}`} />}
       {list.error !== null && failed(list) && (
         <PosterRailStandIn>
@@ -76,7 +69,7 @@ function FeedRow({ feed, list }: { feed: CatalogFeed; list: CatalogList }) {
           ))}
         </PosterRail>
       )}
-    </section>
+    </Section>
   );
 }
 

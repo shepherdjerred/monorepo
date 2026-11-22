@@ -78,24 +78,30 @@ function describe(error: Error, what: string): Failure {
 /**
  * A read that failed, in place of the content it would have shown. `what`
  * names that content as the start of a sentence ("Your library").
+ *
+ * `headingLevel` is 3 where the failure stands under a section's own
+ * heading instead of a page's.
  */
 export function ErrorState({
   error,
   what,
   onRetry,
+  headingLevel = 2,
 }: {
   error: Error;
   what: string;
   onRetry: () => void;
+  headingLevel?: 2 | 3;
 }) {
   const failure = describe(error, what);
+  const Heading = headingLevel === 2 ? "h2" : "h3";
   return (
     <div
       className={`${cx("state")} ${cx("failed")}`}
       role="alert"
       data-ui="error-state"
     >
-      <h2 className={cx("title")}>{failure.title}</h2>
+      <Heading className={cx("title")}>{failure.title}</Heading>
       <p className={cx("body")}>{failure.body}</p>
       <div className={cx("action")}>
         <button className="button" type="button" onClick={onRetry}>

@@ -6,6 +6,7 @@ import { CalendarPage } from "#client/calendar/page.tsx";
 import { Loading, Notice, PageTitle } from "#client/components.tsx";
 import { DiscoverFeedPage, DiscoverPage } from "#client/discover/page.tsx";
 import { HistoryPage } from "#client/history/page.tsx";
+import { HomePage } from "#client/home/page.tsx";
 import { LibraryAll } from "#client/library/all.tsx";
 import { LibraryLeaving } from "#client/library/leaving.tsx";
 import { LibraryMine } from "#client/library/mine.tsx";
@@ -28,6 +29,7 @@ function withUser(page: ComponentType<{ user: MediaUser }>) {
   };
 }
 
+const Home = withUser(HomePage);
 const LibraryAllSegment = withUser(LibraryAll);
 const LibraryMineSegment = withUser(LibraryMine);
 const LibraryLeavingSegment = withUser(LibraryLeaving);
@@ -179,7 +181,6 @@ const libraryRoutes: RouteObject[] = [
  * returns, and people have them bookmarked.
  */
 const movedRoutes: RouteObject[] = [
-  { index: true, element: <MovedTo path={HOME_PATH} /> },
   // `/requests?interest=<id>` is in every "still watching?" reminder; its
   // query travels with it and Mine marks the request it names.
   { path: "requests", element: <MovedTo path="/library/mine" /> },
@@ -217,6 +218,7 @@ export const routes: RouteObject[] = [
         // Pathless, so an error replaces the page and leaves the shell.
         errorElement: <RouteError />,
         children: [
+          { index: true, element: <Home /> },
           { path: "discover", element: <DiscoverPage /> },
           { path: "discover/:feed", element: <DiscoverFeedPage /> },
           {
