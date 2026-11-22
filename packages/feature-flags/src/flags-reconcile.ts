@@ -9,13 +9,31 @@ import {
   normalizeFlagsBaseUrl,
   type FlagsHttpFetcher,
 } from "./flags-drift.ts";
-import { assertRetiredFlagsAreUnmanaged } from "./flipt-retired-flag-apply.ts";
 import {
   managedFlagInventory,
+  materializeManagedNamespaceEnvironment,
   type ManagedFlagInventory,
 } from "./managed-flag-inventory.ts";
 import { projectDeploymentFlags } from "./project-deployment.ts";
 import { retiredFlagDeclarations } from "./retired-flag-declarations.ts";
+
+/** Refuse the whole operation before I/O if a retired flag is declared again. */
+export function assertRetiredFlagsAreUnmanaged(
+  inventory: ManagedFlagInventory,
+): void {
+  for (const declaration of retiredFlagDeclarations) {
+    const managed = materializeManagedNamespaceEnvironment(
+      inventory,
+      declaration.environment,
+      declaration.namespace,
+    );
+    if (managed.some((flag) => flag.key === declaration.key)) {
+      throw new Error(
+        `Refusing to retire managed flag ${declaration.environment}/${declaration.namespace}/${declaration.key}`,
+      );
+    }
+  }
+}
 
 const MAX_RETIRE_ATTEMPTS = 3;
 

@@ -118,7 +118,7 @@ describe("overview grid layout", () => {
       record({
         services: active(
           "tofu-cloudflare",
-          "flipt",
+          "nfd",
           "argocd",
           "arcade",
           "1password",
@@ -139,7 +139,7 @@ describe("overview grid layout", () => {
         "platform-services",
         "Platform services",
         "platform",
-        ["1password", "flipt"],
+        ["1password", "nfd"],
       ],
     ]);
     expect(
@@ -147,17 +147,17 @@ describe("overview grid layout", () => {
     ).toEqual([
       ["Arcade"],
       ["Argo CD", "OpenTofu cloudflare stack"],
-      ["1Password Connect", "Flipt"],
+      ["1Password Connect", "Node feature discovery"],
     ]);
     expect(HubGridSchema.parse(grid)).toEqual(grid);
   });
 
   it("includes a service only the v2 catalog declares", () => {
-    expect(index.byId("flipt")).toBeUndefined();
+    expect(index.byId("nfd")).toBeUndefined();
     const grid = buildGrid(
       record({
-        services: active("flipt"),
-        environments: [environment("flipt/prod")],
+        services: active("nfd"),
+        environments: [environment("nfd/prod")],
       }),
     );
     expect(grid.groups).toEqual([
@@ -167,11 +167,11 @@ describe("overview grid layout", () => {
         kind: "platform",
         services: [
           {
-            id: "flipt",
-            title: "Flipt",
+            id: "nfd",
+            title: "Node feature discovery",
             environments: [
               {
-                id: "flipt/prod",
+                id: "nfd/prod",
                 name: "prod",
                 status: "not_started",
                 request: null,
@@ -713,11 +713,11 @@ describe("overview grid attention", () => {
   it("orders attention newest first and names the service and environment", () => {
     const grid = buildGrid(
       record({
-        services: active("scout-for-lol", "arcade", "flipt", "birmel"),
+        services: active("scout-for-lol", "arcade", "nfd", "birmel"),
         environments: [
           environment("scout-for-lol/prod"),
           environment("arcade/prod"),
-          environment("flipt/prod"),
+          environment("nfd/prod"),
           environment("outside-the-catalog/prod"),
         ],
         awaiting: [
@@ -746,8 +746,8 @@ describe("overview grid attention", () => {
             }),
           ],
           [
-            "flipt/prod",
-            deployment("stuck", "flipt/prod", {
+            "nfd/prod",
+            deployment("stuck", "nfd/prod", {
               status: "failed",
               recoveryRequired: true,
               message:
@@ -788,7 +788,7 @@ describe("overview grid attention", () => {
     expect(
       grid.attention.map((item) => [item.kind, item.title, item.serviceId]),
     ).toEqual([
-      ["recovery", "Flipt prod requires recovery", "flipt"],
+      ["recovery", "Node feature discovery prod requires recovery", "nfd"],
       ["approval", "Scout for LoL prod awaits approval", "scout-for-lol"],
       ["build_failed", "Birmel build failed qualification", "birmel"],
       ["failed", "Arcade prod deployment failed", "arcade"],
@@ -869,13 +869,13 @@ describe("overview grid contract", () => {
 
   it("fails when a catalog service names a group the catalog lacks", () => {
     expect(() =>
-      buildGrid(record({ services: active("flipt") }), {
+      buildGrid(record({ services: active("nfd") }), {
         ...CATALOG_CORE,
         groups: CATALOG_CORE.groups.filter(
           (group) => group.id !== "platform-services",
         ),
       }),
-    ).toThrow("Catalog service flipt names unknown group platform-services");
+    ).toThrow("Catalog service nfd names unknown group platform-services");
   });
 });
 

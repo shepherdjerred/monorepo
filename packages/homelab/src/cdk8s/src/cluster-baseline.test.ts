@@ -135,7 +135,7 @@ const prometheusRules: readonly [namespace: string, name: string][] = [
   ["s3-static-sites", "static-sites"],
   ["prometheus", "service-probes"],
   ["prometheus", "alert-dashboard"],
-  ["prometheus", "flipt"],
+  ["prometheus", "flags"],
   ["bugsink", "bugsink"],
   ["seaweedfs", "seaweedfs"],
   ["postal", "postal"],

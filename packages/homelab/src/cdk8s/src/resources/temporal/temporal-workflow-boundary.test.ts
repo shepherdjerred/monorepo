@@ -148,15 +148,13 @@ describe("central Temporal Workflow boundary", () => {
     });
     expect(spec.ingress).toHaveLength(1);
     // TCP:7361 is Flags evaluation (this role's temporal-call-graph-tracing
-    // check); the two TCP:8080 rules are Loki's gateway (the image's default
-    // OTLP logs endpoint) and Flipt, which retained builds that predate the
-    // Flags cutover still evaluate against — still no general TCP:443 egress.
+    // check) and TCP:8080 is Loki's gateway (the image's default OTLP logs
+    // endpoint) — still no general TCP:443 egress.
     expect(ports).toEqual([
       "TCP:4318",
       "TCP:53",
       "TCP:7233",
       "TCP:7361",
-      "TCP:8080",
       "TCP:8080",
       "UDP:53",
     ]);
@@ -171,12 +169,15 @@ describe("central Temporal Workflow boundary", () => {
         },
       },
     ]);
-    const port8080Namespaces = spec.egress
-      .filter((rule) => rule.ports.some((port) => port.port === 8080))
-      .map((rule) => rule.to?.[0]?.namespaceSelector?.matchLabels);
-    expect(port8080Namespaces).toEqual([
-      { "kubernetes.io/metadata.name": "flipt" },
-      { "kubernetes.io/metadata.name": "loki" },
+    const lokiRule = spec.egress.find((rule) =>
+      rule.ports.some((port) => port.port === 8080),
+    );
+    expect(lokiRule?.to).toEqual([
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "loki" },
+        },
+      },
     ]);
     const otlpRule = spec.egress.find((rule) =>
       rule.ports.some((port) => port.port === 4318),

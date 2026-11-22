@@ -4620,10 +4620,11 @@
       "category": "bootstrap",
       "controls": [
         "FEATURE_FLAGS_MODE",
-        "FLIPT_URL",
+        "FLAGS_URL",
+        "FLAGS_DEPLOYMENT",
         "equivalent startup configuration"
       ],
-      "reason": "The service needs these values before a flag provider can initialize, so they cannot be sourced from Flipt."
+      "reason": "The service needs these values before a flag provider can initialize, so they cannot be sourced from Flags."
     }
   ],
   "environments": [

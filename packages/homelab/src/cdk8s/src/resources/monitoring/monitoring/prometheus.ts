@@ -232,9 +232,9 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
   });
 
-  new PrometheusRule(chart, "prometheus-flipt-rules", {
+  new PrometheusRule(chart, "prometheus-flags-rules", {
     metadata: {
-      name: "prometheus-flipt-rules",
+      name: "prometheus-flags-rules",
       namespace: "prometheus",
       labels: { release: "prometheus" },
     },

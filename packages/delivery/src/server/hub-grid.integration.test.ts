@@ -83,7 +83,7 @@ afterAll(async () => {
 
 describe("hub grid", () => {
   test("lists every active service under its catalog group, including a v2-only one", async () => {
-    await registerWithEnvironment("flipt", "prod");
+    await registerWithEnvironment("nfd", "prod");
     await cluster.database.service.update({
       where: { id: "birmel" },
       data: { lifecycle: "retired" },
@@ -97,7 +97,7 @@ describe("hub grid", () => {
         ...index.services
           .map((entry) => entry.id)
           .filter((id) => id !== "birmel"),
-        "flipt",
+        "nfd",
       ].toSorted(),
     );
     // Groups keep the catalog's order.
@@ -109,13 +109,13 @@ describe("hub grid", () => {
       overview.groups
         .find((group) => group.id === "platform-services")
         ?.services.map((entry) => entry.id),
-    ).toEqual(["flipt", "platform-services"]);
-    expect(service(overview, "flipt")).toEqual({
-      id: "flipt",
-      title: "Flipt",
+    ).toEqual(["nfd", "platform-services"]);
+    expect(service(overview, "nfd")).toEqual({
+      id: "nfd",
+      title: "Node feature discovery",
       environments: [
         {
-          id: "flipt/prod",
+          id: "nfd/prod",
           name: "prod",
           status: "not_started",
           request: null,

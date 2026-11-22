@@ -4,6 +4,7 @@ import {
   loadFeatureFlagConfiguration,
   type Environment,
 } from "@shepherdjerred/feature-flags/config/load.ts";
+import { parseFlagsDeployment } from "@shepherdjerred/feature-flags/config/schema.ts";
 import { FlagNotFoundError } from "@shepherdjerred/feature-flags/flag-result.ts";
 import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import {
@@ -46,12 +47,18 @@ export async function isRenovateLlmDeltaEnabled(
 ): Promise<boolean> {
   const configuration = loadFeatureFlagConfiguration(environment);
   const workloadEnv = environment["ENVIRONMENT"];
+  const parsedDeployment =
+    configuration.mode === "flags"
+      ? parseFlagsDeployment(configuration.deployment)
+      : undefined;
   const fliptEnv =
-    configuration.mode === "flipt"
-      ? configuration.environment
-      : workloadEnv === "prod" || workloadEnv === "production"
+    parsedDeployment?.stage === "beta"
+      ? "beta"
+      : parsedDeployment?.stage === "prod"
         ? "prod"
-        : "beta";
+        : workloadEnv === "prod" || workloadEnv === "production"
+          ? "prod"
+          : "beta";
   const defaultEnabled = managedBooleanDefault(
     RENOVATE_LLM_DELTA_FLAG_KEY,
     fliptEnv,
@@ -68,7 +75,7 @@ export async function isRenovateLlmDeltaEnabled(
     });
     return result.value;
   } catch (error: unknown) {
-    if (error instanceof FlagNotFoundError && configuration.mode !== "flipt") {
+    if (error instanceof FlagNotFoundError && configuration.mode !== "flags") {
       return defaultEnabled;
     }
     throw error;

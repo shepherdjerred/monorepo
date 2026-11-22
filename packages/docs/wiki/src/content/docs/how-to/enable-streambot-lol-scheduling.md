@@ -12,8 +12,8 @@ Activate scheduled LoL playback after Streambot's internal listener and dedicate
 2. Deliver the Streambot and Temporal changes through the [homelab release workflow](/how-to/cut-a-homelab-release/).
    Verify both deployments are ready, the `streambot` queue has an Activity poller, and the internal reconciliation request succeeds.
    Keep the automatic Schedule paused until these checks pass.
-3. Verify the production sports, LoL browsing, and automatic-playback gates are on for the intended server.
-   Streambot runs one production service; a Flipt beta copy does not provide a beta deployment.
+3. Verify the sports, LoL browsing, and automatic-playback gates are on in `streambot/prod` for the intended server.
+   Streambot runs a single production service and reads only `streambot/prod`.
    The [managed flag inventory](https://github.com/shepherdjerred/monorepo/blob/main/packages/feature-flags/FLAG-INVENTORY.md)
    owns their exact names and targeting.
 4. Unpause the declarative Schedule in the production namespace:

@@ -263,11 +263,6 @@
       "exposure": "ingress"
     },
     {
-      "host": "flipt",
-      "namespace": "flipt",
-      "exposure": "ingress"
-    },
-    {
       "host": "freshrss",
       "namespace": "freshrss",
       "exposure": "ingress"

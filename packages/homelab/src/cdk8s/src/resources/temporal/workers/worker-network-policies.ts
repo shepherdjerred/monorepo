@@ -12,7 +12,6 @@ import {
   blackboxProbeIngressRule,
   flagsEgress,
   flagsManagementEgress,
-  fliptEgress,
   lokiOtlpEgress,
   otlpEgress,
   prometheusIngressRule,
@@ -157,10 +156,6 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         dnsEgressRule(),
         temporalServerEgress(),
         flagsEgress(),
-        // Retained `delivery-wf-retained-*` hosts run pinned builds that
-        // predate the Flipt-to-Flags cutover (#4948) and still evaluate flags
-        // against Flipt. Remove this rule when Flipt retires (#4969, FM-59).
-        fliptEgress(),
         otlpEgress(),
         lokiOtlpEgress(),
       ],

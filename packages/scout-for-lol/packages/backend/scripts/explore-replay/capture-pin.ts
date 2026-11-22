@@ -82,12 +82,12 @@ async function parquetAccountRows(
  * `disabled` registers no provider, so every evaluation falls through to the
  * registry default plus the static overrides — the stage's static
  * configuration, and nothing more. That is the right answer only while the
- * stage has no provider targeting of its own; where Flipt says something
+ * stage has no provider targeting of its own; where Flags says something
  * different, a static capture records a value the guild does not have and the
  * replay would then reproduce and assert it as if it were real.
  *
  * So the caller decides, and the pin records which it was. Pass
- * `FEATURE_FLAGS_MODE=flipt` with the stage's provider reachable to capture
+ * `FEATURE_FLAGS_MODE=flags` with the stage's provider reachable to capture
  * live decisions; leave it unset for the static ones.
  */
 type FlagSource = "static" | "provider";
@@ -96,18 +96,18 @@ async function startFlags(): Promise<FlagSource> {
   const mode = Bun.env["FEATURE_FLAGS_MODE"];
   await initializeDynamicConfig({
     environment:
-      mode === "flipt" ? Bun.env : { FEATURE_FLAGS_MODE: "disabled" },
+      mode === "flags" ? Bun.env : { FEATURE_FLAGS_MODE: "disabled" },
     seed: replayDynamicConfigSeed(),
     startPolling: false,
   });
-  if (mode === "flipt") {
+  if (mode === "flags") {
     if (!(await refreshFlagSnapshot()))
       throw new Error(
-        "Live flag capture requires a reachable Flipt provider; refusing to label defaults as provider decisions.",
+        "Live flag capture requires a reachable Flags provider; refusing to label defaults as provider decisions.",
       );
     await refreshDynamicConfig();
   }
-  return mode === "flipt" ? "provider" : "static";
+  return mode === "flags" ? "provider" : "static";
 }
 
 /**

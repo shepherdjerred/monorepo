@@ -147,8 +147,8 @@ export function flagMetricsRecorder(sink: FlagMetricSink): FlagMetricsRecorder {
 
 /**
  * Initialize the process-wide flag client (one per process).
- * `FEATURE_FLAGS_MODE`, `FLIPT_URL`, `FLIPT_NAMESPACE`, and
- * `FLIPT_ENVIRONMENT` are bootstrap variables read by the flags package.
+ * `FEATURE_FLAGS_MODE`, `FLAGS_URL`, and `FLAGS_DEPLOYMENT` are bootstrap
+ * variables read by the flags package.
  */
 export async function initFeatureFlagClient(options: {
   environment: InitFeatureFlagsOptions["environment"];

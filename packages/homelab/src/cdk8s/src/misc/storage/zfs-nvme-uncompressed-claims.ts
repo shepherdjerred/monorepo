@@ -19,7 +19,6 @@ export const ZFS_NVME_UNCOMPRESSED_CLAIMS: ReadonlySet<string> = new Set([
   "arcade/arcade-goal-auth",
   "arcade/arcade-saves",
   "birmel/birmel-pvc",
-  "flipt/flipt-data",
   "freshrss/freshrss-data",
   "freshrss/freshrss-extensions",
   "home/eufy-security-ws-pvc",

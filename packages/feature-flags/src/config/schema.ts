@@ -12,12 +12,7 @@ import { z } from "zod";
  * fork is exactly the silent fallback this repo bans. Test and dev environments
  * set `FEATURE_FLAGS_MODE=disabled` explicitly.
  */
-export const FeatureFlagModeSchema = z.enum([
-  "flags",
-  "flipt",
-  "static",
-  "disabled",
-]);
+export const FeatureFlagModeSchema = z.enum(["flags", "static", "disabled"]);
 
 export type FeatureFlagMode = z.infer<typeof FeatureFlagModeSchema>;
 
@@ -86,19 +81,9 @@ export const FlagsConfigurationSchema = z.object({
 
 export type FlagsConfiguration = z.infer<typeof FlagsConfigurationSchema>;
 
-export const FliptConfigurationSchema = z.object({
-  mode: z.literal("flipt"),
-  url: z.url(),
-  namespace: z.string().min(1),
-  environment: z.string().min(1),
-  pollIntervalSeconds: z.number().int().positive(),
-});
-
-export type FliptConfiguration = z.infer<typeof FliptConfigurationSchema>;
-
 export const StaticConfigurationSchema = z.object({
   mode: z.literal("static"),
-  /** Key → value. Used by tests and by local development without a Flipt. */
+  /** Key → value. Used by tests and by local development without a Flags server. */
   overrides: z.record(
     z.string(),
     z.union([z.boolean(), z.string(), z.number()]),
@@ -115,7 +100,6 @@ export type DisabledConfiguration = z.infer<typeof DisabledConfigurationSchema>;
 
 export const FeatureFlagConfigurationSchema = z.discriminatedUnion("mode", [
   FlagsConfigurationSchema,
-  FliptConfigurationSchema,
   StaticConfigurationSchema,
   DisabledConfigurationSchema,
 ]);

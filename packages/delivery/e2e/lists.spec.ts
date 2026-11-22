@@ -86,7 +86,7 @@ test("a filter the server would refuse explains itself inside the page", async (
   ).toHaveValue("");
 
   // A filter that matches nothing says so, live, and offers the way back.
-  await page.goto("/artifacts?service=flipt");
+  await page.goto("/artifacts?service=nfd");
   await expect(main.getByRole("status")).toHaveText(
     "No builds match these filters.",
   );

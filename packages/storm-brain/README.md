@@ -45,7 +45,7 @@ Errors are plain-text bodies with bounded outcomes:
 | 415    | `application/json` required               |
 | 413    | Payload over `STORM_BRAIN_MAX_BODY_BYTES` |
 | 400    | Malformed JSON or schema violation        |
-| 503    | Flow disabled by its Flipt flag           |
+| 503    | Flow disabled by its feature flag         |
 | 429    | Shared conversation budget unavailable    |
 | 502    | Upstream LLM call failed (may still bill) |
 | 500    | Unexpected failure                        |
@@ -66,7 +66,7 @@ metered even on 502s.
   `minecraft-tsmc` namespace.
 - Image `docker.io/shepherdjerred/storm-brain`, versioned through the
   version catalog.
-- Flipt namespace `storm`, environment `prod`; the three flow flags above
+- Flags deployment `storm/prod`; the three flow flags above
   are the rollout switches. The plugin needs no restart when they flip.
 
 ## Configuration
@@ -134,5 +134,5 @@ FEATURE_FLAGS_STATIC_OVERRIDES='{"storm-brain-conversation-enabled":true}' \
   bun src/index.ts
 ```
 
-Never attach production Flipt from a workstation. In the cluster the chart
-sets `FEATURE_FLAGS_MODE=flipt` with the `storm` namespace.
+Never attach production Flags from a workstation. In the cluster the chart
+sets `FEATURE_FLAGS_MODE=flags` with `FLAGS_DEPLOYMENT=storm/prod`.

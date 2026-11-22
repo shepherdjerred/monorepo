@@ -3,7 +3,6 @@ import { z } from "zod";
 import { parseFlagsDeployment, validateFlagsUrl } from "./config/schema.ts";
 import { flagDeployments, type FlagDeployment } from "./deployments.ts";
 import type { FlagValue } from "./evaluate.ts";
-import { withBearerRedirectError } from "./flipt-operator-fetcher.ts";
 import {
   managedFlagInventory,
   managedFlagNamespaces,
@@ -138,7 +137,14 @@ export function createFlagsMachineFetcher(
     if (new URL(target).origin !== origin) {
       throw new Error("Flags machine request changed origin");
     }
-    return upstream(input, withBearerRedirectError(input, init, token));
+    const headers = new Headers(
+      input instanceof Request ? input.headers : undefined,
+    );
+    new Headers(init?.headers).forEach((value, key) => {
+      headers.set(key, value);
+    });
+    headers.set("Authorization", `Bearer ${token}`);
+    return upstream(input, { ...init, headers, redirect: "error" });
   };
 }
 

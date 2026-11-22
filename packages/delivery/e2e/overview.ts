@@ -6,7 +6,7 @@ import { seedBirmelRelease } from "./commits.ts";
 
 /**
  * Two services only the v2 catalog declares, registered as a reconcile leaves
- * them, so the overview has a catalog group of several services: Flipt with a
+ * them, so the overview has a catalog group of several services: NFD with a
  * production environment nothing was deployed to, and 1Password Connect with
  * no environment. No spec deploys to either, so the group's counts hold.
  */
@@ -14,20 +14,20 @@ export async function seedOverviewGroup(
   delivery: Delivery,
   database: Database,
 ) {
-  await registerTestService(database, "flipt");
+  await registerTestService(database, "nfd");
   await registerTestService(database, "1password");
   await delivery.registerPipeline(
-    "flipt/1",
+    "nfd/1",
     { kind: "manual", reason: "Overview fixture: nothing deploys here" },
     testOperator,
   );
   await delivery.registerEnvironment(
     {
-      id: "flipt/prod",
-      serviceId: "flipt",
+      id: "nfd/prod",
+      serviceId: "nfd",
       name: "prod",
-      pipelineRevisionId: "flipt/1",
-      configurationRevision: "flipt/config/1",
+      pipelineRevisionId: "nfd/1",
+      configurationRevision: "nfd/config/1",
       configuration: {},
       automatic: false,
     },

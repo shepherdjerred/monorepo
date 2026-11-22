@@ -12,9 +12,6 @@ import {
 import type { EvaluationEvent } from "@shepherdjerred/feature-flags/observability.ts";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
 import { FlagsProvider } from "@shepherdjerred/feature-flags/providers/flags.ts";
-import { FliptProvider } from "@shepherdjerred/feature-flags/providers/flipt.ts";
-import { createFakeFetcher } from "@shepherdjerred/feature-flags/providers/fake-fetcher.ts";
-import snapshot from "@shepherdjerred/feature-flags/providers/fixtures/flipt-snapshot.default.json" with { type: "json" };
 
 afterEach(async () => {
   await shutdownFeatureFlags();
@@ -83,10 +80,9 @@ describe("evaluation instrumentation", () => {
       createTestMetricsRecorder();
     await initFeatureFlags({
       environment: {
-        FEATURE_FLAGS_MODE: "flipt",
-        FLIPT_URL: "http://flipt.invalid:8080",
-        FLIPT_NAMESPACE: "scout",
-        FLIPT_ENVIRONMENT: "prod",
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: "http://flags.invalid:8080",
+        FLAGS_DEPLOYMENT: "scout/prod",
       },
       provider: new StaticProvider({
         ai_reports_enabled: false,
@@ -210,29 +206,10 @@ describe("evaluation instrumentation", () => {
 });
 
 describe("snapshot age", () => {
-  test("is undefined before initialize and zero-ish after", async () => {
+  test("FlagsProvider tracks snapshot age across initialize and close", async () => {
     // The outage signal: during a backend outage the client keeps serving its
     // last good snapshot, so evaluations still succeed and nothing looks wrong.
     // A rising age is what tells an operator the values are frozen.
-    const provider = new FliptProvider({
-      url: "http://flipt.invalid:8080",
-      namespace: "default",
-      environment: "default",
-      pollIntervalSeconds: 300,
-      fetcher: createFakeFetcher({ kind: "snapshot", body: snapshot }).fetcher,
-    });
-
-    expect(provider.snapshotAgeSeconds()).toBeUndefined();
-    await provider.initialize();
-    const age = provider.snapshotAgeSeconds();
-    expect(age).toBeDefined();
-    expect(age ?? Number.POSITIVE_INFINITY).toBeLessThan(5);
-
-    await provider.onClose();
-    expect(provider.snapshotAgeSeconds()).toBeUndefined();
-  });
-
-  test("FlagsProvider tracks snapshot age across initialize and close", async () => {
     const ages: number[] = [];
     const provider = new FlagsProvider({
       url: "http://flags.invalid:8080",

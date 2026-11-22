@@ -5,9 +5,10 @@ import {
 } from "@shepherdjerred/feature-flags/index.ts";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
-import { FliptProvider } from "@shepherdjerred/feature-flags/providers/flipt.ts";
-import { createFakeFetcher } from "@shepherdjerred/feature-flags/providers/fake-fetcher.ts";
-import snapshot from "@shepherdjerred/feature-flags/providers/fixtures/flipt-snapshot.default.json" with { type: "json" };
+import {
+  FlagsProvider,
+  type FlagsFetcher,
+} from "@shepherdjerred/feature-flags/providers/flags.ts";
 
 afterEach(async () => {
   await shutdownFeatureFlags();
@@ -15,19 +16,65 @@ afterEach(async () => {
 
 const NAMES = { key: "featureOn", flag: "ai_reports_enabled" } as const;
 
+type SnapshotBehavior =
+  | { readonly kind: "snapshot"; readonly body: unknown }
+  | { readonly kind: "network-error"; readonly message: string };
+
+function createFlagsTestFetcher(initial: SnapshotBehavior): {
+  readonly fetcher: FlagsFetcher;
+  setBehavior: (next: SnapshotBehavior) => void;
+  callCount: () => number;
+} {
+  let behavior = initial;
+  let calls = 0;
+  return {
+    fetcher: () => {
+      calls++;
+      if (behavior.kind === "network-error") {
+        return Promise.reject(new Error(behavior.message));
+      }
+      const body = behavior.body;
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        statusText: "OK",
+        headers: { get: () => null },
+        json: () => Promise.resolve(body),
+      });
+    },
+    setBehavior: (next) => {
+      behavior = next;
+    },
+    callCount: () => calls,
+  };
+}
+
 describe("flag config source — fresh authority", () => {
   test.each(["uninitialized", "disabled", "static", "outage"])(
     "strict %s configuration cannot authorize writes or hide invalid declared keys",
     async (mode) => {
       await shutdownFeatureFlags();
-      const fake = createFakeFetcher({ kind: "snapshot", body: snapshot });
+      const fake = createFlagsTestFetcher({
+        kind: "snapshot",
+        body: {
+          deployment: "scout/prod",
+          revision: 1,
+          flags: [
+            {
+              type: "boolean",
+              key: NAMES.flag,
+              default: true,
+              rollouts: [],
+            },
+          ],
+        },
+      });
       if (mode === "outage") {
         await initFeatureFlags({
           environment: { FEATURE_FLAGS_MODE: "disabled" },
-          provider: new FliptProvider({
-            url: "http://flipt.invalid:8080",
-            namespace: "default",
-            environment: "default",
+          provider: new FlagsProvider({
+            url: "http://flags.invalid:8080",
+            deployment: "scout/prod",
             pollIntervalSeconds: 300,
             fetcher: fake.fetcher,
           }),
@@ -76,19 +123,23 @@ describe("flag config source — fresh authority", () => {
 
   test("strict keys share one transport check; a new source observes outage and recovery", async () => {
     const body = {
-      ...snapshot,
-      flags: snapshot.flags.map((flag) => ({
-        ...flag,
-        key: flag.key === "plain-on" ? NAMES.flag : flag.key,
-      })),
+      deployment: "scout/prod",
+      revision: 1,
+      flags: [
+        {
+          type: "boolean",
+          key: NAMES.flag,
+          default: true,
+          rollouts: [],
+        },
+      ],
     };
-    const fake = createFakeFetcher({ kind: "snapshot", body });
+    const fake = createFlagsTestFetcher({ kind: "snapshot", body });
     await initFeatureFlags({
       environment: { FEATURE_FLAGS_MODE: "disabled" },
-      provider: new FliptProvider({
-        url: "http://flipt.invalid:8080",
-        namespace: "default",
-        environment: "default",
+      provider: new FlagsProvider({
+        url: "http://flags.invalid:8080",
+        deployment: "scout/prod",
         pollIntervalSeconds: 300,
         fetcher: fake.fetcher,
       }),
@@ -114,7 +165,7 @@ describe("flag config source — fresh authority", () => {
     expect(unavailable).toHaveBeenCalledExactlyOnceWith(NAMES.flag);
     fake.setBehavior({
       kind: "snapshot",
-      body: { namespace: { key: "default" }, flags: "invalid" },
+      body: { deployment: "scout/prod", revision: 1, flags: "invalid" },
     });
     await expect(createSource().get(NAMES)).rejects.toMatchObject({
       name: "ConfigSourceFatalError",

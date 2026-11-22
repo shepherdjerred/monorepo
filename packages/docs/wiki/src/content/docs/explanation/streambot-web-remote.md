@@ -240,7 +240,7 @@ Silent degradation was the risk to design against, so four layers contain it:
   imports the library. It never builds a stream URL, so playback depends on yt-dlp alone.
 - **Strict validation.** Each item is re-parsed against a strict schema in `search-provider.ts` and `youtube-music-items.ts` beside it.
   An item that fails is dropped and counted. A response where nothing validates is a typed error, never an empty list that looks like no results.
-- **A flag.** An operator switches the provider per request through the Flipt flag read in
+- **A flag.** An operator switches the provider per request through the feature flag read in
   [media feature gates](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/config/media-features.ts).
   An unknown value throws instead of choosing a provider.
 - **Metrics.** The

@@ -128,15 +128,15 @@ it("excludes Media's artwork cache from Velero; the API refetches it from TMDB",
   });
 });
 
-it("classifies 55 included and 51 excluded PVCs, including the separate BlueMap cache", () => {
+it("classifies 54 included and 51 excluded PVCs, including the separate BlueMap cache", () => {
   const keys = PVC_BACKUP_POLICY.map((entry) =>
     pvcBackupPolicyKey(entry.namespace, entry.name),
   );
-  expect(keys).toHaveLength(106);
-  expect(new Set(keys).size).toBe(106);
+  expect(keys).toHaveLength(105);
+  expect(new Set(keys).size).toBe(105);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-  ).toHaveLength(55);
+  ).toHaveLength(54);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
   ).toHaveLength(51);

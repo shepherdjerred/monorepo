@@ -13,7 +13,6 @@ import {
   externalHttpsEgressRule,
   flagsEgress,
   flagsManagementEgress,
-  fliptEgress,
   homeAssistantEgressRule,
   intraNamespaceRule,
   nsPeer,
@@ -105,7 +104,6 @@ describe("network policy peer library", () => {
           dnsEgressRule(),
           flagsEgress(),
           flagsManagementEgress(),
-          fliptEgress(),
           otlpEgress(),
           seaweedfsEgress(),
           postgresEgress("tracker-postgresql"),
@@ -125,7 +123,6 @@ describe("network policy peer library", () => {
       },
       { to: [namespace("flags")], ports: [port(7361)] },
       { to: [namespace("flags")], ports: [port(7360)] },
-      { to: [namespace("flipt")], ports: [port(8080)] },
       { to: [namespace("alloy-gateway")], ports: [port(4318)] },
       { to: [namespace("seaweedfs")], ports: [port(8333)] },
       {
@@ -149,6 +146,6 @@ describe("network policy peer library", () => {
   test("each call returns a fresh object", () => {
     expect(dnsEgressRule()).not.toBe(dnsEgressRule());
     expect(homeAssistantEgressRule()).not.toBe(homeAssistantEgressRule());
-    expect(nsPeer("flipt")).not.toBe(nsPeer("flipt"));
+    expect(nsPeer("flags")).not.toBe(nsPeer("flags"));
   });
 });

@@ -1,7 +1,5 @@
 import type { FlagValue } from "./evaluate.ts";
-import type { SnapshotFlag } from "./managed-flag-drift.ts";
 import type { ManagedFlag } from "./managed-flag-inventory.ts";
-import { orderedBooleanRollouts } from "./flipt-boolean-rollouts.ts";
 
 export const FLAG_ROLLOUT_STATES = [
   "on",
@@ -20,6 +18,52 @@ type BooleanRollout =
       readonly result: boolean;
       readonly percentage: number;
     };
+
+function orderedBooleanRollouts(
+  flag: Extract<ManagedFlag, { type: "boolean" }>,
+): BooleanRollout[] {
+  const thresholdByRank = new Map(
+    flag.thresholdRollouts.map((rollout) => [rollout.rank, rollout]),
+  );
+  if (thresholdByRank.size !== flag.thresholdRollouts.length) {
+    throw new Error(`duplicate threshold rollout rank for ${flag.key}`);
+  }
+
+  const total = flag.rollouts.length + thresholdByRank.size;
+  for (const rank of thresholdByRank.keys()) {
+    if (rank < 1 || rank > total) {
+      throw new Error(
+        `threshold rollout rank out of range for ${flag.key}: ${rank.toString()}`,
+      );
+    }
+  }
+
+  const ordered: BooleanRollout[] = [];
+  let segmentIndex = 0;
+  for (let rank = 1; rank <= total; rank += 1) {
+    const threshold = thresholdByRank.get(rank);
+    if (threshold !== undefined) {
+      ordered.push({
+        kind: "threshold",
+        percentage: threshold.percentage,
+        result: threshold.result,
+      });
+      continue;
+    }
+    const segment = flag.rollouts[segmentIndex];
+    if (segment === undefined) {
+      throw new Error(
+        `missing segment rollout for ${flag.key} at rank ${rank.toString()}`,
+      );
+    }
+    ordered.push({
+      kind: "segment",
+      result: segment.result,
+    });
+    segmentIndex += 1;
+  }
+  return ordered;
+}
 
 /** Prove constant outcomes; conditional segments are conservatively allowed to match. */
 function classify(
@@ -71,31 +115,5 @@ export function classifyFlagBoolean(
       kind: "segment",
       result: rollout.result,
     })),
-  );
-}
-
-export function classifySnapshotBoolean(
-  flag: SnapshotFlag | undefined,
-): FlagRolloutState {
-  if (flag === undefined) return "missing";
-  if (flag.type !== "BOOLEAN_FLAG_TYPE" || flag.rules.length > 0)
-    return "invalid";
-  const ordered = flag.rollouts.toSorted((a, b) => a.rank - b.rank);
-  if (
-    new Set(ordered.map((r) => r.rank)).size !== ordered.length ||
-    ordered.some((r) => r.rank < 1)
-  )
-    return "invalid";
-  return classify(
-    flag.enabled,
-    ordered.map((r): BooleanRollout =>
-      r.type === "THRESHOLD_ROLLOUT_TYPE"
-        ? {
-            kind: "threshold",
-            result: r.threshold.value,
-            percentage: r.threshold.percentage,
-          }
-        : { kind: "segment", result: r.segment.value },
-    ),
   );
 }
