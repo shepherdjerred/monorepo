@@ -21,6 +21,7 @@ import {
 } from "./reconciliation/library-movies.ts";
 import { movieManagementContext } from "./movie-editions/management-context.ts";
 import { artworkBackfillTurn } from "#domain/household/artwork-backfill.ts";
+import { observeUntargetedRootArtwork } from "./reconciliation/root-artwork.ts";
 import {
   MOVIE_WATCH_CURSOR,
   sweepMovieWatch,
@@ -71,6 +72,10 @@ export function createSweepActivities(
         return sweepDownloads(invocation, input.cursor);
       if (input.kind === "feeds")
         return sweepFeeds(context, input.cursor, input.sweepId);
+      // Every due sweep starts here exactly once, before any page: a root
+      // without a default target is on no page, so paging cannot reach it.
+      if (input.kind === "due" && input.cursor === null)
+        await observeUntargetedRootArtwork(context, duePeriod());
       return input.kind === "inventory"
         ? sweepInventory(context, input.sweepId)
         : sweepIntentPage(invocation, {

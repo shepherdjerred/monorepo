@@ -35,3 +35,49 @@ export function artworkBackfillTurn(
     .toSorted((left, right) => distance(left) - distance(right))
     .slice(0, ARTWORK_BACKFILL_PER_PAGE);
 }
+
+/**
+ * How many roots without a default target one due sweep may ask TMDB about.
+ * Each is one catalog read made by the sweep itself, never an outbox command.
+ */
+export const ARTWORK_ROOT_BACKFILL_PER_PERIOD = 25;
+
+/**
+ * Chooses which roots without a default target have their artwork observed
+ * this six-hour period. `count` is how many are waiting; the result is the
+ * stretches of that list to read, by position in id order.
+ *
+ * The waiting roots form a ring. The period's window starts at
+ * `period * budget` modulo `count` and takes the budget, wrapping. Successive
+ * windows therefore lie end to end, so while the waiting set stays the same
+ * they cover the whole ring: every waiting root is tried at least once in any
+ * `ceil(count / budget)` consecutive periods. Twenty-five or fewer are all
+ * tried every period.
+ *
+ * That set changes only when a root is observed, which is the backfill making
+ * progress, or when a root arrives or gains a target. A root TMDB keeps
+ * failing for stays in the ring and is retried on its turn, but it cannot hold
+ * the budget: the roots after it are reached by the same rotation. With fewer
+ * failing roots than the budget, every window still observes at least
+ * `budget - failing` roots, so a backfill of `count` roots ends within
+ * `ceil((count - failing) / (budget - failing))` periods, which is
+ * `ceil(count / budget)` when none fail. With more failing roots than that,
+ * a window can be all failures, and the guarantee is the rotation's alone:
+ * the set then stays the same, so within `ceil(count / budget)` periods the
+ * windows reach a root TMDB can answer for, if one is waiting.
+ */
+export function artworkRootBackfillTurn(
+  count: number,
+  period: number,
+): { skip: number; take: number }[] {
+  if (count === 0) return [];
+  const take = Math.min(count, ARTWORK_ROOT_BACKFILL_PER_PERIOD);
+  const start = (period * ARTWORK_ROOT_BACKFILL_PER_PERIOD) % count;
+  const first = Math.min(take, count - start);
+  return first === take
+    ? [{ skip: start, take }]
+    : [
+        { skip: start, take: first },
+        { skip: 0, take: take - first },
+      ];
+}

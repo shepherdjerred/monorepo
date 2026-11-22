@@ -56,12 +56,26 @@ export async function persistCatalogMedia(
 ) {
   const observedAt = input.observedAt ?? new Date();
   const item = await persistVersionedCatalog(tx, input, observedAt);
+  return await persistCatalogArtwork(tx, item.id, input.artwork, observedAt);
+}
+
+/**
+ * The artwork write alone, for a caller that holds the canonical lock. It
+ * touches no versioned field, catalog state or other row, which is what lets
+ * the due sweep observe artwork for a root it must not otherwise refresh.
+ */
+export async function persistCatalogArtwork(
+  tx: Prisma.TransactionClient,
+  mediaId: string,
+  artwork: CatalogArtwork,
+  observedAt: Date,
+) {
   return await tx.mediaItem.update({
-    where: { id: item.id },
+    where: { id: mediaId },
     data: {
-      posterPath: input.artwork.posterPath,
-      backdropPath: input.artwork.backdropPath,
-      overview: input.artwork.overview,
+      posterPath: artwork.posterPath,
+      backdropPath: artwork.backdropPath,
+      overview: artwork.overview,
       artworkObservedAt: observedAt,
     },
   });
