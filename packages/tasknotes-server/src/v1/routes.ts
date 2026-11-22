@@ -358,11 +358,14 @@ export function v1Routes(deps: V1Dependencies): Hono {
     if (!auth.ok) {
       return auth.response;
     }
+    const canProvision = getRequestPrincipal(c).scopes.includes("write");
     const baseAudit = auth.store.getAuditContext();
     const syncStore = auth.store.withAuditContext(
       baseAudit === undefined ? undefined : { ...baseAudit, source: "sync" },
     );
-    const response = await executeSync(syncStore, auth.userId, body.data);
+    const response = await executeSync(syncStore, auth.userId, body.data, {
+      provisionUser: canProvision,
+    });
     return c.json(response);
   });
 

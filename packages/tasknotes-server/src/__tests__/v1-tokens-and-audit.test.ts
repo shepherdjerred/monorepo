@@ -1,6 +1,7 @@
 import type { Hono } from "hono";
 import { beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
+import { bearerHeaders, reqJson, reqStatus } from "./test-http-helpers.ts";
 import { createFacetApp } from "../app.ts";
 import { registry } from "../metrics.ts";
 import { InMemoryFacetStore } from "../v1/stores/in-memory-store.ts";
@@ -86,37 +87,6 @@ const TaskIdSchema = z.object({
   due_date: z.string().optional(),
   completed: z.boolean(),
 });
-
-function bearerHeaders(
-  token: string,
-  extra?: Record<string, string>,
-): Record<string, string> {
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-    ...extra,
-  };
-}
-
-async function reqStatus(
-  app: Hono,
-  path: string,
-  init?: RequestInit,
-): Promise<number> {
-  const res = await app.request(path, init);
-  return res.status;
-}
-
-async function reqJson<T>(
-  app: Hono,
-  path: string,
-  schema: z.ZodType<T>,
-  init?: RequestInit,
-): Promise<T> {
-  const res = await app.request(path, init);
-  const raw: unknown = await res.json();
-  return schema.parse(raw);
-}
 
 async function mintToken(app: Hono, body: Record<string, unknown>) {
   const res = await app.request("/api/v1/tokens", {

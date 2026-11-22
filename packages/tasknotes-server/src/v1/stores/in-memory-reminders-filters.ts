@@ -58,6 +58,7 @@ export function createInMemoryReminder(
     audit: ctx.audit,
     before: null,
     after: cloned,
+    onCommit: ctx.onCommit,
   });
   return cloned;
 }
@@ -140,6 +141,7 @@ export function createInMemoryFilter(
     audit: ctx.audit,
     before: null,
     after: cloned,
+    onCommit: ctx.onCommit,
   });
   return cloned;
 }

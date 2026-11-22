@@ -53,6 +53,7 @@ export async function createPrismaReminder(
     audit: ctx.audit,
     before: null,
     after: mapped,
+    onCommit: ctx.onCommit,
   });
   return mapped;
 }
@@ -90,6 +91,7 @@ export async function updatePrismaReminder(
     audit: ctx.audit,
     before,
     after,
+    onCommit: ctx.onCommit,
   });
   return after;
 }
@@ -121,6 +123,7 @@ export async function deletePrismaReminder(
     audit: ctx.audit,
     before,
     after: toProtocolReminder(updated),
+    onCommit: ctx.onCommit,
   });
   return true;
 }
@@ -180,6 +183,7 @@ export async function createPrismaFilter(
     audit: ctx.audit,
     before: null,
     after: mapped,
+    onCommit: ctx.onCommit,
   });
   return mapped;
 }
@@ -217,6 +221,7 @@ export async function updatePrismaFilter(
     audit: ctx.audit,
     before,
     after,
+    onCommit: ctx.onCommit,
   });
   return after;
 }
@@ -248,6 +253,7 @@ export async function deletePrismaFilter(
     audit: ctx.audit,
     before,
     after: toProtocolFilter(updated),
+    onCommit: ctx.onCommit,
   });
   return true;
 }

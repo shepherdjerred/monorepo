@@ -123,6 +123,7 @@ export async function recordPrismaMutation(
     audit: AuditContext | undefined;
     before: object | null;
     after: object | null;
+    onCommit?: ((fn: () => void) => void) | undefined;
   },
 ): Promise<void> {
   const { audit } = params;
@@ -156,7 +157,14 @@ export async function recordPrismaMutation(
       after: afterRec === null ? Prisma.DbNull : toInputJson(afterRec),
     },
   });
-  recordMutationMetric(params.entityType, params.action, audit);
+  const emit = () => {
+    recordMutationMetric(params.entityType, params.action, audit);
+  };
+  if (params.onCommit === undefined) {
+    emit();
+  } else {
+    params.onCommit(emit);
+  }
 }
 
 export async function createPrismaApiToken(

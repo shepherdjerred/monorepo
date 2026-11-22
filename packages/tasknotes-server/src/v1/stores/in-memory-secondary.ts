@@ -37,9 +37,7 @@ import type {
   UpdateSectionInput,
 } from "../types.ts";
 
-export type InMemorySecondaryCtx = {
-  clock: MonotonicClock;
-  audit: AuditContext | undefined;
+export type InMemoryEntityMaps = {
   mutationEvents: Map<string, StoredMutationEvent>;
   tasks: Map<string, StoredEntry<Task>>;
   projects: Map<string, StoredEntry<Project>>;
@@ -47,7 +45,13 @@ export type InMemorySecondaryCtx = {
   labels: Map<string, StoredEntry<Label>>;
   reminders: Map<string, StoredEntry<Reminder>>;
   filters: Map<string, StoredEntry<Filter>>;
+};
+
+export type InMemorySecondaryCtx = InMemoryEntityMaps & {
+  clock: MonotonicClock;
+  audit: AuditContext | undefined;
   nextSyncSeq: (userId: string) => bigint;
+  onCommit: (fn: () => void) => void;
   mutateWithAudit: <T extends object>(params: {
     map: Map<string, StoredEntry<T>>;
     id: string;
@@ -114,6 +118,7 @@ export function createInMemoryProject(
     audit: ctx.audit,
     before: null,
     after: cloned,
+    onCommit: ctx.onCommit,
   });
   return cloned;
 }
@@ -195,6 +200,7 @@ export function createInMemorySection(
     audit: ctx.audit,
     before: null,
     after: cloned,
+    onCommit: ctx.onCommit,
   });
   return cloned;
 }
@@ -277,6 +283,7 @@ export function createInMemoryLabel(
     audit: ctx.audit,
     before: null,
     after: cloned,
+    onCommit: ctx.onCommit,
   });
   return cloned;
 }
@@ -285,14 +292,15 @@ export function updateInMemoryLabel(
   ctx: InMemorySecondaryCtx,
   id: string,
   userId: string,
-  data: UpdateLabelInput,
+  data: UpdateLabelInput & { actionOverride?: MutationAction | undefined },
 ): Label | null {
-  return ctx.mutateWithAudit({
+  const updated = ctx.mutateWithAudit({
     map: ctx.labels,
     id,
     userId,
     entityType: "label",
     resolveAction: (before, after) =>
+      data.actionOverride ??
       inferDeleteOrRestoreAction(
         before.is_deleted,
         after.is_deleted,
@@ -302,6 +310,27 @@ export function updateInMemoryLabel(
       applyLabelUpdate(lbl, data);
     },
   });
+  if (updated !== null && data.isDeleted === true) {
+    for (const [taskId, taskEntry] of ctx.tasks.entries()) {
+      if (
+        taskEntry.userId === userId &&
+        taskEntry.value.label_ids.includes(id)
+      ) {
+        ctx.mutateWithAudit({
+          map: ctx.tasks,
+          id: taskId,
+          userId,
+          entityType: "task",
+          resolveAction: () => "update",
+          mutate: (task, nowIso) => {
+            task.label_ids = task.label_ids.filter((lid) => lid !== id);
+            task.updated_at = nowIso;
+          },
+        });
+      }
+    }
+  }
+  return updated;
 }
 
 export function deleteInMemoryLabel(
@@ -309,35 +338,12 @@ export function deleteInMemoryLabel(
   id: string,
   userId: string,
 ): boolean {
-  const deleted = ctx.mutateWithAudit({
-    map: ctx.labels,
-    id,
-    userId,
-    entityType: "label",
-    resolveAction: () => "delete",
-    mutate: (lbl) => {
-      lbl.is_deleted = true;
-    },
-  });
-  if (deleted === null) {
-    return false;
-  }
-  for (const [taskId, taskEntry] of ctx.tasks.entries()) {
-    if (taskEntry.userId === userId && taskEntry.value.label_ids.includes(id)) {
-      ctx.mutateWithAudit({
-        map: ctx.tasks,
-        id: taskId,
-        userId,
-        entityType: "task",
-        resolveAction: () => "update",
-        mutate: (task, nowIso) => {
-          task.label_ids = task.label_ids.filter((lid) => lid !== id);
-          task.updated_at = nowIso;
-        },
-      });
-    }
-  }
-  return true;
+  return (
+    updateInMemoryLabel(ctx, id, userId, {
+      isDeleted: true,
+      actionOverride: "delete",
+    }) !== null
+  );
 }
 
 export function getInMemoryLabel(

@@ -68,6 +68,7 @@ export function recordInMemoryMutation(
     audit: AuditContext | undefined;
     before: object | null;
     after: object | null;
+    onCommit?: ((fn: () => void) => void) | undefined;
   },
 ): void {
   const { audit } = params;
@@ -109,7 +110,14 @@ export function recordInMemoryMutation(
     syncSeq: params.syncSeq,
     createdAt: now,
   });
-  recordMutationMetric(params.entityType, params.action, audit);
+  const emit = () => {
+    recordMutationMetric(params.entityType, params.action, audit);
+  };
+  if (params.onCommit === undefined) {
+    emit();
+  } else {
+    params.onCommit(emit);
+  }
 }
 
 export function createInMemoryApiToken(

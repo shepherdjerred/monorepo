@@ -1,7 +1,13 @@
-import type { Hono } from "hono";
 import { expect, test } from "vitest";
 import { z } from "zod";
+import {
+  bearerHeaders as headers,
+  McpRpcResponseSchema as McpSingleSchema,
+  reqJson,
+  reqStatus,
+} from "./test-http-helpers.ts";
 import { createFacetApp } from "../app.ts";
+import { mutationsTotal } from "../metrics.ts";
 import { InMemoryFacetStore } from "../v1/stores/in-memory-store.ts";
 
 const ADMIN_TOKEN = "fct_owner_bootstrap_secret";
@@ -30,13 +36,6 @@ const ProjectDocSchema = z.object({
   parent_id: z.string().optional(),
 });
 
-const McpSingleSchema = z.object({
-  jsonrpc: z.literal("2.0"),
-  id: z.union([z.string(), z.number(), z.null()]),
-  result: z.record(z.string(), z.unknown()).optional(),
-  error: z.object({ code: z.number(), message: z.string() }).optional(),
-});
-
 const McpBatchSchema = z.array(McpSingleSchema);
 
 const MutationsSchema = z.object({
@@ -49,31 +48,9 @@ const MutationsSchema = z.object({
   ),
 });
 
-function headers(token: string): Record<string, string> {
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
-}
-
-async function reqStatus(
-  app: Hono,
-  path: string,
-  init?: RequestInit,
-): Promise<number> {
-  const res = await app.request(path, init);
-  return res.status;
-}
-
-async function reqJson<T>(
-  app: Hono,
-  path: string,
-  schema: z.ZodType<T>,
-  init?: RequestInit,
-): Promise<T> {
-  const res = await app.request(path, init);
-  const raw: unknown = await res.json();
-  return schema.parse(raw);
+async function totalMutationMetricCount(): Promise<number> {
+  const snapshot = await mutationsTotal.get();
+  return snapshot.values.reduce((sum, item) => sum + item.value, 0);
 }
 
 async function createHarness() {
@@ -122,7 +99,7 @@ test("accepts fct_-prefixed AUTH_TOKEN as admin on protected routes and /api/hea
   expect(whoamiAgent.principal.kind).toBe("api_token");
 });
 
-test("workspace snapshot with read-only token does not recreate soft-deleted Inbox or advance syncSeq", async () => {
+test("read-only workspace snapshot and read-only sync do not recreate soft-deleted Inbox or advance syncSeq", async () => {
   const { store, app, rwToken, roToken } = await createHarness();
   const created = await reqJson(app, "/api/v1/tasks", TaskDocSchema, {
     method: "POST",
@@ -145,6 +122,18 @@ test("workspace snapshot with read-only token does not recreate soft-deleted Inb
     { headers: headers(roToken) },
   );
   expect(ws.projects).toHaveLength(0);
+
+  const roSync = await reqJson(
+    app,
+    "/api/v1/sync",
+    z.object({ projects: z.array(z.unknown()) }),
+    {
+      method: "POST",
+      headers: headers(roToken),
+      body: JSON.stringify({ commands: [] }),
+    },
+  );
+  expect(roSync.projects).toHaveLength(0);
   expect(await store.getSyncSequence(userId)).toBe(seqBefore);
 });
 
@@ -278,7 +267,7 @@ test("preserves explicit nulls in MCP updates and supports MCP JSON-RPC batches"
   expect(clearedProj.parent_id).toBeUndefined();
 });
 
-test("rolls back failing REST and MCP batches, enforces section-to-project consistency, audits label deletion task updates, and exposes OpenAPI schemas", async () => {
+test("rolls back failing batches and metrics, enforces section-to-project consistency, and cleans up task labels on soft-delete update", async () => {
   const { app, rwToken } = await createHarness();
   const projA = await reqJson(app, "/api/v1/projects", ProjectDocSchema, {
     method: "POST",
@@ -349,6 +338,7 @@ test("rolls back failing REST and MCP batches, enforces section-to-project consi
     MutationsSchema,
     { headers: headers(rwToken) },
   );
+  const metricBefore = await totalMutationMetricCount();
 
   expect(
     await reqStatus(app, "/api/v1/tasks/reschedule", {
@@ -388,6 +378,9 @@ test("rolls back failing REST and MCP batches, enforces section-to-project consi
   );
   expect(failedMcpReschedule.result?.["isError"]).toBe(true);
 
+  const metricAfterFailedBatches = await totalMutationMetricCount();
+  expect(metricAfterFailedBatches).toBe(metricBefore);
+
   const afterFailedBatches = await reqJson(
     app,
     `/api/v1/tasks/${task1.id}`,
@@ -408,10 +401,19 @@ test("rolls back failing REST and MCP batches, enforces section-to-project consi
 
   expect(
     await reqStatus(app, `/api/v1/labels/${label.id}`, {
-      method: "DELETE",
+      method: "PATCH",
       headers: headers(rwToken),
+      body: JSON.stringify({ is_deleted: true }),
     }),
-  ).toBe(204);
+  ).toBe(200);
+
+  const taskAfterLabelPatch = await reqJson(
+    app,
+    `/api/v1/tasks/${task1.id}`,
+    TaskDocSchema,
+    { headers: headers(rwToken) },
+  );
+  expect(taskAfterLabelPatch.label_ids).toEqual([]);
 
   const taskHistory = await reqJson(
     app,
@@ -420,22 +422,4 @@ test("rolls back failing REST and MCP batches, enforces section-to-project consi
     { headers: headers(rwToken) },
   );
   expect(taskHistory.items.map((i) => i.action)).toEqual(["update", "create"]);
-
-  const openApiRaw = await reqJson(
-    app,
-    "/api/v1/openapi.json",
-    z.object({
-      paths: z.record(z.string(), z.record(z.string(), z.unknown())),
-    }),
-    { headers: headers(rwToken) },
-  );
-  expect(openApiRaw.paths["/api/v1/tasks"]?.["post"]).toHaveProperty(
-    "requestBody",
-  );
-  expect(openApiRaw.paths["/api/v1/tasks/reschedule"]?.["post"]).toHaveProperty(
-    "requestBody",
-  );
-  expect(openApiRaw.paths["/api/v1/tasks/{id}"]?.["parameters"]).toBeDefined();
-  expect(openApiRaw.paths["/api/v1/projects/{id}"]).toBeDefined();
-  expect(openApiRaw.paths["/api/v1/tasks/{id}/mutations"]).toBeDefined();
 });

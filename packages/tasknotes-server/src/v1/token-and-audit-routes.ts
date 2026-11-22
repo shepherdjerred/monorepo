@@ -76,6 +76,52 @@ function queryParametersRecord(c: Context): Record<string, string> {
   return out;
 }
 
+async function respondWithMutations(
+  c: Context,
+  store: FacetStore,
+  fixedTaskId?: string,
+): Promise<Response> {
+  const scopeDenied = requireScope(c, "read");
+  if (scopeDenied !== null) {
+    return scopeDenied;
+  }
+  const resolvedUser = resolveRequestUserId(c);
+  if (!resolvedUser.ok) {
+    return resolvedUser.response;
+  }
+  if (fixedTaskId === "") {
+    return c.json({ error: "Task not found" }, 404);
+  }
+  const parsedQuery = ListMutationsQuerySchema.safeParse(
+    queryParametersRecord(c),
+  );
+  if (!parsedQuery.success) {
+    return c.json(
+      {
+        error: "Invalid query parameters",
+        details: parsedQuery.error.issues,
+      },
+      400,
+    );
+  }
+  const q = parsedQuery.data;
+  const page = await store.listMutations({
+    userId: resolvedUser.userId,
+    tokenId: q.token_id,
+    actorKind: q.actor_kind,
+    actorName: q.actor_name,
+    entityType: fixedTaskId === undefined ? q.entity_type : "task",
+    entityId: fixedTaskId ?? q.entity_id,
+    action: q.action,
+    source: q.source,
+    since: q.since === undefined ? undefined : new Date(q.since),
+    sinceSeq: q.since_seq === undefined ? undefined : BigInt(q.since_seq),
+    limit: q.limit,
+    cursor: q.cursor,
+  });
+  return c.json(page);
+}
+
 export function mountTokenAndAuditRoutes(app: Hono, store: FacetStore): void {
   app.get("/api/v1/whoami", (c) => {
     const scopeDenied = requireScope(c, "read");
@@ -173,85 +219,9 @@ export function mountTokenAndAuditRoutes(app: Hono, store: FacetStore): void {
       : c.json({ api_token: revoked });
   });
 
-  app.get("/api/v1/mutations", async (c) => {
-    const scopeDenied = requireScope(c, "read");
-    if (scopeDenied !== null) {
-      return scopeDenied;
-    }
-    const resolvedUser = resolveRequestUserId(c);
-    if (!resolvedUser.ok) {
-      return resolvedUser.response;
-    }
-    const parsedQuery = ListMutationsQuerySchema.safeParse(
-      queryParametersRecord(c),
-    );
-    if (!parsedQuery.success) {
-      return c.json(
-        {
-          error: "Invalid query parameters",
-          details: parsedQuery.error.issues,
-        },
-        400,
-      );
-    }
-    const q = parsedQuery.data;
-    const page = await store.listMutations({
-      userId: resolvedUser.userId,
-      tokenId: q.token_id,
-      actorKind: q.actor_kind,
-      actorName: q.actor_name,
-      entityType: q.entity_type,
-      entityId: q.entity_id,
-      action: q.action,
-      source: q.source,
-      since: q.since === undefined ? undefined : new Date(q.since),
-      sinceSeq: q.since_seq === undefined ? undefined : BigInt(q.since_seq),
-      limit: q.limit,
-      cursor: q.cursor,
-    });
-    return c.json(page);
-  });
+  app.get("/api/v1/mutations", (c) => respondWithMutations(c, store));
 
-  app.get("/api/v1/tasks/:id/mutations", async (c) => {
-    const scopeDenied = requireScope(c, "read");
-    if (scopeDenied !== null) {
-      return scopeDenied;
-    }
-    const resolvedUser = resolveRequestUserId(c);
-    if (!resolvedUser.ok) {
-      return resolvedUser.response;
-    }
-    const taskId = c.req.param("id");
-    if (taskId === "") {
-      return c.json({ error: "Task not found" }, 404);
-    }
-    const parsedQuery = ListMutationsQuerySchema.safeParse(
-      queryParametersRecord(c),
-    );
-    if (!parsedQuery.success) {
-      return c.json(
-        {
-          error: "Invalid query parameters",
-          details: parsedQuery.error.issues,
-        },
-        400,
-      );
-    }
-    const q = parsedQuery.data;
-    const page = await store.listMutations({
-      userId: resolvedUser.userId,
-      tokenId: q.token_id,
-      actorKind: q.actor_kind,
-      actorName: q.actor_name,
-      entityType: "task",
-      entityId: taskId,
-      action: q.action,
-      source: q.source,
-      since: q.since === undefined ? undefined : new Date(q.since),
-      sinceSeq: q.since_seq === undefined ? undefined : BigInt(q.since_seq),
-      limit: q.limit,
-      cursor: q.cursor,
-    });
-    return c.json(page);
-  });
+  app.get("/api/v1/tasks/:id/mutations", (c) =>
+    respondWithMutations(c, store, c.req.param("id")),
+  );
 }

@@ -21,6 +21,7 @@ export type PrismaTaskCtx = {
   prisma: PrismaClient | Prisma.TransactionClient;
   audit: AuditContext | undefined;
   nextSyncSeq: (userId: string) => Promise<bigint>;
+  onCommit: (fn: () => void) => void;
 };
 
 export async function createPrismaTask(
@@ -50,8 +51,11 @@ export async function createPrismaTask(
     audit: ctx.audit,
     before: null,
     after: mapped,
+    onCommit: ctx.onCommit,
   });
-  recordTaskMutationMetric("created");
+  ctx.onCommit(() => {
+    recordTaskMutationMetric("created");
+  });
   return mapped;
 }
 
@@ -96,8 +100,11 @@ export async function updatePrismaTask(
     audit: ctx.audit,
     before,
     after,
+    onCommit: ctx.onCommit,
   });
-  recordTaskMutationMetric(data.isDeleted === true ? "deleted" : "updated");
+  ctx.onCommit(() => {
+    recordTaskMutationMetric(data.isDeleted === true ? "deleted" : "updated");
+  });
   return after;
 }
 
@@ -138,8 +145,11 @@ export async function completePrismaTask(
     audit: ctx.audit,
     before,
     after,
+    onCommit: ctx.onCommit,
   });
-  recordTaskMutationMetric("updated");
+  ctx.onCommit(() => {
+    recordTaskMutationMetric("updated");
+  });
   return after;
 }
 
@@ -172,8 +182,11 @@ export async function deletePrismaTask(
     audit: ctx.audit,
     before,
     after: mapPrismaTask(updated),
+    onCommit: ctx.onCommit,
   });
-  recordTaskMutationMetric("deleted");
+  ctx.onCommit(() => {
+    recordTaskMutationMetric("deleted");
+  });
   return true;
 }
 

@@ -11,6 +11,7 @@ import {
   ReminderAddArgsSchema,
   ReminderUpdateArgsSchema,
   SectionUpdateArgsSchema,
+  TaskMoveArgsSchema,
 } from "./schemas.ts";
 
 export const RestPrioritySchema = z.enum([
@@ -102,19 +103,7 @@ export const CreateTaskCommentBodySchema = z.object({
   attachment_base64: z.string().optional(),
 });
 
-export const RestTaskMoveBodySchema = z.object({
-  tasks: z
-    .array(
-      z.object({
-        id: z.string().min(1),
-        project_id: z.string().min(1),
-        section_id: z.string().optional(),
-        parent_id: z.string().optional(),
-        child_order: z.number(),
-      }),
-    )
-    .min(1),
-});
+export const RestTaskMoveBodySchema = TaskMoveArgsSchema.extend({});
 
 export const RestTaskRescheduleBodySchema = z.object({
   tasks: z

@@ -106,6 +106,9 @@ export class InMemoryFacetStore implements FacetStore {
       reminders: this.state.reminders,
       filters: this.state.filters,
       nextSyncSeq: (uid) => this.nextSyncSeq(uid),
+      onCommit: (fn) => {
+        this.state.metrics.enqueue(fn);
+      },
       mutateWithAudit: (params) => this.mutateWithAudit(params),
     };
   }
@@ -158,6 +161,9 @@ export class InMemoryFacetStore implements FacetStore {
       audit: this.auditContext,
       before,
       after,
+      onCommit: (fn) => {
+        this.state.metrics.enqueue(fn);
+      },
     });
     return after;
   }
@@ -334,7 +340,9 @@ export class InMemoryFacetStore implements FacetStore {
       "task",
     );
     if (deleted) {
-      recordTaskMutationMetric("deleted");
+      this.state.metrics.enqueue(() => {
+        recordTaskMutationMetric("deleted");
+      });
     }
     return Promise.resolve(deleted);
   }

@@ -131,9 +131,12 @@ export async function executeSync(
   store: FacetStore,
   userId: string,
   request: ExecutableSyncRequest,
+  options?: { provisionUser?: boolean | undefined },
 ): Promise<SyncResponse> {
   return await store.transaction(async (tx) => {
-    await tx.getOrCreateUser(userId);
+    if (options?.provisionUser !== false) {
+      await tx.getOrCreateUser(userId);
+    }
 
     const tempIdMapping: Record<string, string> = {};
     const syncStatus: Record<string, string> = {};

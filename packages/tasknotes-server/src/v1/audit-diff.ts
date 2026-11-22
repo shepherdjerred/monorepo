@@ -140,3 +140,39 @@ export function recordMutationMetric(
     actor_kind: audit.actorKind,
   });
 }
+
+export class MetricCommitStack {
+  private readonly scopes: (() => void)[][] = [];
+
+  pushScope(): void {
+    this.scopes.push([]);
+  }
+
+  commitScope(): void {
+    const finished = this.scopes.pop();
+    if (finished === undefined) {
+      return;
+    }
+    const parent = this.scopes.at(-1);
+    if (parent === undefined) {
+      for (const emit of finished) {
+        emit();
+      }
+    } else {
+      parent.push(...finished);
+    }
+  }
+
+  rollbackScope(): void {
+    this.scopes.pop();
+  }
+
+  enqueue(emit: () => void): void {
+    const top = this.scopes.at(-1);
+    if (top === undefined) {
+      emit();
+    } else {
+      top.push(emit);
+    }
+  }
+}

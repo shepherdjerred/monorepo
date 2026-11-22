@@ -7,6 +7,7 @@ import type {
   Section,
   Task,
 } from "../../protocol/generated.ts";
+import { MetricCommitStack } from "../audit-diff.ts";
 import type {
   ApiTokenSummary,
   AuditContext,
@@ -64,17 +65,31 @@ import {
 import type * as V1 from "../types.ts";
 
 export class PrismaFacetStore implements V1.FacetStore {
+  private readonly inTransaction: boolean;
+  private readonly auditContext: AuditContext | undefined;
+  private readonly metrics: MetricCommitStack;
+
   constructor(
     private readonly prisma: PrismaClient | Prisma.TransactionClient,
-    private readonly inTransaction = false,
-    private readonly auditContext?: AuditContext,
-  ) {}
+    options?: {
+      inTransaction?: boolean | undefined;
+      auditContext?: AuditContext | undefined;
+      metrics?: MetricCommitStack | undefined;
+    },
+  ) {
+    this.inTransaction = options?.inTransaction ?? false;
+    this.auditContext = options?.auditContext;
+    this.metrics = options?.metrics ?? new MetricCommitStack();
+  }
 
   private secondaryCtx(): PrismaSecondaryCtx {
     return {
       prisma: this.prisma,
       audit: this.auditContext,
       nextSyncSeq: (uid) => this.nextSyncSeq(uid),
+      onCommit: (fn) => {
+        this.metrics.enqueue(fn);
+      },
     };
   }
 
@@ -94,19 +109,39 @@ export class PrismaFacetStore implements V1.FacetStore {
   }
 
   private async inTx<T>(fn: (tx: PrismaFacetStore) => Promise<T>): Promise<T> {
-    return !this.inTransaction && "$transaction" in this.prisma
-      ? await this.prisma.$transaction(
+    if (!this.inTransaction && "$transaction" in this.prisma) {
+      const txMetrics = new MetricCommitStack();
+      txMetrics.pushScope();
+      try {
+        const result = await this.prisma.$transaction(
           async (txClient: Prisma.TransactionClient) =>
-            await fn(new PrismaFacetStore(txClient, true, this.auditContext)),
-        )
-      : await fn(this);
+            await fn(
+              new PrismaFacetStore(txClient, {
+                inTransaction: true,
+                auditContext: this.auditContext,
+                metrics: txMetrics,
+              }),
+            ),
+        );
+        txMetrics.commitScope();
+        return result;
+      } catch (error: unknown) {
+        txMetrics.rollbackScope();
+        throw error;
+      }
+    }
+    return await fn(this);
   }
 
   getNow(): Date {
     return new Date();
   }
   withAuditContext(ctx: AuditContext | undefined): V1.FacetStore {
-    return new PrismaFacetStore(this.prisma, this.inTransaction, ctx);
+    return new PrismaFacetStore(this.prisma, {
+      inTransaction: this.inTransaction,
+      auditContext: ctx,
+      metrics: this.metrics,
+    });
   }
   getAuditContext(): AuditContext | undefined {
     return this.auditContext;
@@ -118,22 +153,18 @@ export class PrismaFacetStore implements V1.FacetStore {
 
   async runInSavepoint<T>(name: string, fn: () => Promise<T>): Promise<T> {
     if (!this.inTransaction && "$transaction" in this.prisma) {
-      return await this.prisma.$transaction(
-        async (txClient) =>
-          await new PrismaFacetStore(
-            txClient,
-            true,
-            this.auditContext,
-          ).runInSavepoint(name, fn),
-      );
+      return await this.inTx((tx) => tx.runInSavepoint(name, fn));
     }
     const safeName = sanitizeSavepointName(name);
+    this.metrics.pushScope();
     await this.prisma.$executeRawUnsafe(`SAVEPOINT ${safeName}`);
     try {
       const result = await fn();
       await this.prisma.$executeRawUnsafe(`RELEASE SAVEPOINT ${safeName}`);
+      this.metrics.commitScope();
       return result;
     } catch (error: unknown) {
+      this.metrics.rollbackScope();
       await this.prisma.$executeRawUnsafe(`ROLLBACK TO SAVEPOINT ${safeName}`);
       await this.prisma.$executeRawUnsafe(`RELEASE SAVEPOINT ${safeName}`);
       throw error;

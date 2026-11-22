@@ -1,12 +1,5 @@
-import type {
-  Filter,
-  Label,
-  Project,
-  Reminder,
-  Section,
-  Task,
-} from "../../protocol/generated.ts";
-import { inferTaskUpdateAction } from "../audit-diff.ts";
+import type { Task } from "../../protocol/generated.ts";
+import { inferTaskUpdateAction, MetricCommitStack } from "../audit-diff.ts";
 import type { ActorKind } from "../auth-types.ts";
 import { applyCommentMutation } from "../comments.ts";
 import { buildTaskCompletionUpdate } from "../recurrence.ts";
@@ -18,17 +11,16 @@ import {
   newMemoryTask,
   queryStoredEntries,
   restoreMap,
-  type StoredEntry,
   type StoredUser,
 } from "./in-memory-helpers.ts";
 import {
   getOwnedInMemoryItem,
+  type InMemoryEntityMaps,
   type InMemorySecondaryCtx,
 } from "./in-memory-secondary.ts";
 import {
   recordInMemoryMutation,
   type StoredApiToken,
-  type StoredMutationEvent,
 } from "./in-memory-tokens-audit.ts";
 import { recordTaskMutationMetric } from "../mappers.ts";
 import {
@@ -48,25 +40,20 @@ export type StoredProcessedCommand = {
   actorKind: ActorKind | null;
 };
 
-export type InMemoryBackingState = {
+export type InMemoryBackingState = InMemoryEntityMaps & {
   attachments: Map<string, Map<string, Uint8Array<ArrayBuffer>>>;
   clock: MonotonicClock;
+  metrics: MetricCommitStack;
   users: Map<string, StoredUser>;
-  tasks: Map<string, StoredEntry<Task>>;
-  projects: Map<string, StoredEntry<Project>>;
-  sections: Map<string, StoredEntry<Section>>;
-  labels: Map<string, StoredEntry<Label>>;
-  reminders: Map<string, StoredEntry<Reminder>>;
-  filters: Map<string, StoredEntry<Filter>>;
   processedCommands: Map<string, StoredProcessedCommand>;
   apiTokens: Map<string, StoredApiToken>;
-  mutationEvents: Map<string, StoredMutationEvent>;
 };
 
 export function createEmptyBackingState(): InMemoryBackingState {
   return {
     attachments: new Map(),
     clock: new MonotonicClock(),
+    metrics: new MetricCommitStack(),
     users: new Map(),
     tasks: new Map(),
     projects: new Map(),
@@ -96,9 +83,13 @@ export async function runWithInMemorySavepoint<T>(
   const commandsSnap = structuredClone(state.processedCommands);
   const tokensSnap = structuredClone(state.apiTokens);
   const eventsSnap = structuredClone(state.mutationEvents);
+  state.metrics.pushScope();
   try {
-    return await fn();
+    const result = await fn();
+    state.metrics.commitScope();
+    return result;
   } catch (error: unknown) {
+    state.metrics.rollbackScope();
     state.clock.restore(clockSnap);
     restoreMap(state.users, usersSnap);
     restoreMap(state.tasks, tasksSnap);
@@ -193,7 +184,9 @@ export function createInMemoryTask(
     updatedAt: now,
     syncSeq,
   });
-  recordTaskMutationMetric("created");
+  ctx.onCommit(() => {
+    recordTaskMutationMetric("created");
+  });
   const cloned = structuredClone(task);
   recordInMemoryMutation(ctx.mutationEvents, ctx.clock, {
     userId: data.userId,
@@ -204,6 +197,7 @@ export function createInMemoryTask(
     audit: ctx.audit,
     before: null,
     after: cloned,
+    onCommit: ctx.onCommit,
   });
   return cloned;
 }
@@ -250,9 +244,11 @@ export function updateInMemoryTask(
     },
   });
   if (updated !== null) {
-    recordTaskMutationMetric(
-      validated.isDeleted === true ? "deleted" : "updated",
-    );
+    ctx.onCommit(() => {
+      recordTaskMutationMetric(
+        validated.isDeleted === true ? "deleted" : "updated",
+      );
+    });
   }
   return updated;
 }

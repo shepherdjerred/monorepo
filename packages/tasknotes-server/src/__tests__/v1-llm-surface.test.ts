@@ -1,6 +1,12 @@
 import type { Hono } from "hono";
 import { beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
+import {
+  bearerHeaders as authHeaders,
+  McpRpcResponseSchema,
+  reqJson,
+  reqStatus,
+} from "./test-http-helpers.ts";
 import { createFacetApp } from "../app.ts";
 import { InMemoryFacetStore } from "../v1/stores/in-memory-store.ts";
 
@@ -48,39 +54,6 @@ const OpenApiSchema = z.object({
   openapi: z.literal("3.1.0"),
   paths: z.record(z.string(), z.unknown()),
 });
-const McpRpcResponseSchema = z.object({
-  jsonrpc: z.literal("2.0"),
-  id: z.union([z.string(), z.number(), z.null()]),
-  result: z.record(z.string(), z.unknown()).optional(),
-  error: z.object({ code: z.number(), message: z.string() }).optional(),
-});
-
-function authHeaders(token: string): Record<string, string> {
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
-}
-
-async function reqStatus(
-  app: Hono,
-  path: string,
-  init?: RequestInit,
-): Promise<number> {
-  const res = await app.request(path, init);
-  return res.status;
-}
-
-async function reqJson<T>(
-  app: Hono,
-  path: string,
-  schema: z.ZodType<T>,
-  init?: RequestInit,
-): Promise<T> {
-  const res = await app.request(path, init);
-  const raw: unknown = await res.json();
-  return schema.parse(raw);
-}
 
 async function setupHarness(): Promise<{ app: Hono; llmToken: string }> {
   const app = createFacetApp({

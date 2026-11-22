@@ -1,7 +1,7 @@
 import type { Prisma, PrismaClient } from "#generated/prisma/client.ts";
 import type { Label, Project, Section } from "../../protocol/generated.ts";
 import { inferDeleteOrRestoreAction } from "../audit-diff.ts";
-import type { AuditContext } from "../auth-types.ts";
+import type { AuditContext, MutationAction } from "../auth-types.ts";
 import {
   toProtocolLabel,
   toProtocolProject,
@@ -34,6 +34,7 @@ export type PrismaSecondaryCtx = {
   prisma: PrismaClient | Prisma.TransactionClient;
   audit: AuditContext | undefined;
   nextSyncSeq: (userId: string) => Promise<bigint>;
+  onCommit: (fn: () => void) => void;
 };
 
 export async function createPrismaProject(
@@ -65,6 +66,7 @@ export async function createPrismaProject(
     audit: ctx.audit,
     before: null,
     after: mapped,
+    onCommit: ctx.onCommit,
   });
   return mapped;
 }
@@ -102,6 +104,7 @@ export async function updatePrismaProject(
     audit: ctx.audit,
     before,
     after,
+    onCommit: ctx.onCommit,
   });
   return after;
 }
@@ -133,6 +136,7 @@ export async function deletePrismaProject(
     audit: ctx.audit,
     before,
     after: toProtocolProject(updated),
+    onCommit: ctx.onCommit,
   });
   return true;
 }
@@ -197,6 +201,7 @@ export async function createPrismaSection(
     audit: ctx.audit,
     before: null,
     after: mapped,
+    onCommit: ctx.onCommit,
   });
   return mapped;
 }
@@ -234,6 +239,7 @@ export async function updatePrismaSection(
     audit: ctx.audit,
     before,
     after,
+    onCommit: ctx.onCommit,
   });
   return after;
 }
@@ -265,6 +271,7 @@ export async function deletePrismaSection(
     audit: ctx.audit,
     before,
     after: toProtocolSection(updated),
+    onCommit: ctx.onCommit,
   });
   return true;
 }
@@ -326,6 +333,7 @@ export async function createPrismaLabel(
     audit: ctx.audit,
     before: null,
     after: mapped,
+    onCommit: ctx.onCommit,
   });
   return mapped;
 }
@@ -334,7 +342,7 @@ export async function updatePrismaLabel(
   ctx: PrismaSecondaryCtx,
   id: string,
   userId: string,
-  data: UpdateLabelInput,
+  data: UpdateLabelInput & { actionOverride?: MutationAction | undefined },
 ): Promise<Label | null> {
   await lockExistingPrismaUser(ctx.prisma, userId);
   const existing = await ctx.prisma.label.findFirst({
@@ -344,6 +352,18 @@ export async function updatePrismaLabel(
     return null;
   }
   const before = toProtocolLabel(existing);
+  const affectedTasks =
+    data.isDeleted === true
+      ? await ctx.prisma.task.findMany({
+          where: { userId, labels: { some: { labelId: id } } },
+          include: TASK_WITH_LABELS_INCLUDE,
+        })
+      : [];
+  if (data.isDeleted === true) {
+    await ctx.prisma.taskLabel.deleteMany({
+      where: { labelId: id, task: { userId } },
+    });
+  }
   const syncSeq = await ctx.nextSyncSeq(userId);
   const updated = await ctx.prisma.label.update({
     where: { id },
@@ -355,52 +375,17 @@ export async function updatePrismaLabel(
     syncSeq,
     entityType: "label",
     entityId: id,
-    action: inferDeleteOrRestoreAction(
-      before.is_deleted,
-      after.is_deleted,
-      ctx.audit?.actionHint,
-    ),
+    action:
+      data.actionOverride ??
+      inferDeleteOrRestoreAction(
+        before.is_deleted,
+        after.is_deleted,
+        ctx.audit?.actionHint,
+      ),
     audit: ctx.audit,
     before,
     after,
-  });
-  return after;
-}
-
-export async function deletePrismaLabel(
-  ctx: PrismaSecondaryCtx,
-  id: string,
-  userId: string,
-): Promise<boolean> {
-  await lockExistingPrismaUser(ctx.prisma, userId);
-  const existing = await ctx.prisma.label.findFirst({
-    where: { id, userId },
-  });
-  if (existing === null) {
-    return false;
-  }
-  const before = toProtocolLabel(existing);
-  const affectedTasks = await ctx.prisma.task.findMany({
-    where: { userId, labels: { some: { labelId: id } } },
-    include: TASK_WITH_LABELS_INCLUDE,
-  });
-  await ctx.prisma.taskLabel.deleteMany({
-    where: { labelId: id, task: { userId } },
-  });
-  const labelSeq = await ctx.nextSyncSeq(userId);
-  const updated = await ctx.prisma.label.update({
-    where: { id },
-    data: { isDeleted: true, syncSeq: labelSeq },
-  });
-  await recordPrismaMutation(ctx.prisma, {
-    userId,
-    syncSeq: labelSeq,
-    entityType: "label",
-    entityId: id,
-    action: "delete",
-    audit: ctx.audit,
-    before,
-    after: toProtocolLabel(updated),
+    onCommit: ctx.onCommit,
   });
   for (const affected of affectedTasks) {
     const beforeTask = mapPrismaTask(affected);
@@ -419,9 +404,22 @@ export async function deletePrismaLabel(
       audit: ctx.audit,
       before: beforeTask,
       after: mapPrismaTask(updatedTask),
+      onCommit: ctx.onCommit,
     });
   }
-  return true;
+  return after;
+}
+
+export async function deletePrismaLabel(
+  ctx: PrismaSecondaryCtx,
+  id: string,
+  userId: string,
+): Promise<boolean> {
+  const deleted = await updatePrismaLabel(ctx, id, userId, {
+    isDeleted: true,
+    actionOverride: "delete",
+  });
+  return deleted !== null;
 }
 
 export async function getPrismaLabel(

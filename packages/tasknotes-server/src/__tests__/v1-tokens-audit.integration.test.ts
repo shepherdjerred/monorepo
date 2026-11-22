@@ -259,11 +259,12 @@ describe("PostgreSQL PrismaFacetStore API Tokens & Mutation Ledger", () => {
     const deleteLabelRes = await app.request(
       `/api/v1/labels/${createdLabel.id}`,
       {
-        method: "DELETE",
+        method: "PATCH",
         headers: bearer(claude.token),
+        body: JSON.stringify({ is_deleted: true }),
       },
     );
-    expect(deleteLabelRes.status).toBe(204);
+    expect(deleteLabelRes.status).toBe(200);
 
     // 5. Concurrent edits serialize before-snapshots accurately, and recurring completion serializes with reschedule
     const recurringRes = await app.request("/api/v1/tasks", {
