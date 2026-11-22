@@ -57,6 +57,7 @@ export type SectionId = z.infer<typeof SectionIdSchema>;
 
 export const LINK_KINDS = [
   "native",
+  "hub",
   "grafana",
   "logs",
   "traces",

@@ -6,6 +6,14 @@ import {
   chartmuseumChartLink,
   githubCommitLink,
   grafanaPyroscopeExploreUrl,
+  hubDigestRunLink,
+  hubDigestRunUrl,
+  hubIncidentMailLink,
+  hubIncidentMailUrl,
+  hubReportRunLink,
+  hubReportRunUrl,
+  hubReportsLink,
+  hubReportsUrl,
   temporalWorkflowLink,
   woodpeckerPipelineLink,
   woodpeckerStepLink,
@@ -48,8 +56,48 @@ describe("tool links", () => {
       githubCommitLink("a".repeat(40)),
       argocdApplicationLink("scout-prod"),
       chartmuseumChartLink("arcade", "1.0.0+abc"),
+      hubReportsLink(),
+      hubReportRunLink("dependency-summary:run-1"),
+      hubDigestRunLink("daily", "2026-11-22"),
+      hubIncidentMailLink("outbox-1"),
     ])
       expect(LinkSchema.parse(link)).toEqual(link);
+  });
+
+  it("builds Hub reports, report run, digest run, and incident mail deep links", () => {
+    expect(hubReportsUrl()).toBe("https://hub.tailnet-1a49.ts.net/reports");
+    expect(hubReportsLink()).toEqual({
+      kind: "hub",
+      label: "Hub Reports",
+      url: "https://hub.tailnet-1a49.ts.net/reports",
+    });
+
+    expect(hubReportRunUrl("homelab-audit:2026-11-22/1")).toBe(
+      "https://hub.tailnet-1a49.ts.net/reports/runs/homelab-audit%3A2026-11-22%2F1",
+    );
+    expect(hubReportRunLink("homelab-audit:2026-11-22/1")).toEqual({
+      kind: "hub",
+      label: "Hub report",
+      url: "https://hub.tailnet-1a49.ts.net/reports/runs/homelab-audit%3A2026-11-22%2F1",
+    });
+
+    expect(hubDigestRunUrl("weekly", "2026-W47")).toBe(
+      "https://hub.tailnet-1a49.ts.net/reports/digests/weekly/2026-W47",
+    );
+    expect(hubDigestRunLink("daily", "2026-11-22")).toEqual({
+      kind: "hub",
+      label: "Hub daily digest 2026-11-22",
+      url: "https://hub.tailnet-1a49.ts.net/reports/digests/daily/2026-11-22",
+    });
+
+    expect(hubIncidentMailUrl("outbox/abc:1")).toBe(
+      "https://hub.tailnet-1a49.ts.net/reports/mail/outbox%2Fabc%3A1",
+    );
+    expect(hubIncidentMailLink("outbox-42")).toEqual({
+      kind: "hub",
+      label: "Hub incident mail",
+      url: "https://hub.tailnet-1a49.ts.net/reports/mail/outbox-42",
+    });
   });
 
   it("builds Grafana Pyroscope Explore URLs scoped to namespace", () => {

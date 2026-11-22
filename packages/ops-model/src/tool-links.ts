@@ -111,6 +111,63 @@ export function bugsinkLink(): Link {
   };
 }
 
+export function hubReportsUrl(): string {
+  return url(APP_HOSTS.hub, "reports");
+}
+
+export function hubReportRunUrl(reportRunId: string): string {
+  return url(APP_HOSTS.hub, `reports/runs/${encodeURIComponent(reportRunId)}`);
+}
+
+export function hubDigestRunUrl(
+  kind: "daily" | "weekly",
+  periodKey: string,
+): string {
+  return url(
+    APP_HOSTS.hub,
+    `reports/digests/${encodeURIComponent(kind)}/${encodeURIComponent(periodKey)}`,
+  );
+}
+
+export function hubIncidentMailUrl(outboxId: string): string {
+  return url(APP_HOSTS.hub, `reports/mail/${encodeURIComponent(outboxId)}`);
+}
+
+export function hubReportsLink(): Link {
+  return {
+    kind: "hub",
+    label: "Hub Reports",
+    url: hubReportsUrl(),
+  };
+}
+
+export function hubReportRunLink(reportRunId: string): Link {
+  return {
+    kind: "hub",
+    label: "Hub report",
+    url: hubReportRunUrl(reportRunId),
+  };
+}
+
+export function hubDigestRunLink(
+  kind: "daily" | "weekly",
+  periodKey: string,
+): Link {
+  return {
+    kind: "hub",
+    label: `Hub ${kind} digest ${periodKey}`,
+    url: hubDigestRunUrl(kind, periodKey),
+  };
+}
+
+export function hubIncidentMailLink(outboxId: string): Link {
+  return {
+    kind: "hub",
+    label: "Hub incident mail",
+    url: hubIncidentMailUrl(outboxId),
+  };
+}
+
 /** Chartmuseum chart-version metadata for a chart published there. */
 export function chartmuseumChartLink(name: string, version: string): Link {
   return {

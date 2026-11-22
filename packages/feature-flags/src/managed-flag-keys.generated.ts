@@ -376,6 +376,7 @@ export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "the-storm-reddit-outreach-enabled",
   "the-storm-rwf-recording-archive-enabled",
   "temporal-renovate-llm-delta-enabled",
+  "temporal-report-auto-remediation-enabled",
 ] as const;
 
 export type TemporalBooleanFlagKey =
@@ -406,6 +407,7 @@ export type TemporalFlagKey = (typeof TEMPORAL_FLAG_KEYS)[number];
 
 export const ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS = [
   "alert-dashboard-email-enabled",
+  "alert-dashboard-daily-digest-quiet-clear",
 ] as const;
 
 export type AlertDashboardBooleanFlagKey =
