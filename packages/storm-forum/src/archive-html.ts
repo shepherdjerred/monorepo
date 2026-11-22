@@ -92,9 +92,9 @@ export function archiveBBCode(
   function linkCode(node: ArchiveElement): string {
     const url = originalUrl(node.attribs["href"] ?? ""),
       value = content(node.children);
-    return url !== undefined && value.trim() !== ""
-      ? `[URL=${url}]${value}[/URL]`
-      : value;
+    return url === undefined || value.trim() === ""
+      ? value
+      : `[URL=${url}]${value}[/URL]`;
   }
   function spoilerCode(node: ArchiveElement): string {
     const spoiler = findAll(

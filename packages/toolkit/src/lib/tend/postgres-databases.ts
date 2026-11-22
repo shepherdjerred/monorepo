@@ -180,9 +180,9 @@ export function createPsqlSharedAdapter(
         name: row.name,
         comment: row.comment,
         connections: row.connections,
-        ...(row.mtimeEpoch !== null && row.mtimeEpoch !== undefined
-          ? { pgVersionMtimeMs: row.mtimeEpoch * 1000 }
-          : {}),
+        ...(row.mtimeEpoch === null || row.mtimeEpoch === undefined
+          ? {}
+          : { pgVersionMtimeMs: row.mtimeEpoch * 1000 }),
       }));
     },
     async dropDatabase(databaseName: string): Promise<void> {

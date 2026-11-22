@@ -94,11 +94,11 @@ export function multiSlotRoom(fixture: Fixture) {
   fixture.playback.deps.sessions = {
     ...base,
     getExisting: (guild, channel, number) =>
-      guild !== GUILD || channel !== CHANNEL
-        ? null
-        : number === undefined
+      guild === GUILD && channel === CHANNEL
+        ? number === undefined
           ? base.getExisting(guild, channel)
-          : (slots.get(number)?.handle ?? null),
+          : (slots.get(number)?.handle ?? null)
+        : null,
     ensureForPlay: ({ playbackChannel }) =>
       playbackChannel === undefined
         ? fixture.handle

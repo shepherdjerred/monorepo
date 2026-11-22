@@ -207,11 +207,11 @@ function visualizationColumns(plan: ScoutQlPlan): string[] {
   if (Array.isArray(y)) return y;
   const value = plan.render.encoding.value;
   if (value !== undefined) return [value];
-  if (plan.render.kind === "BOX_PLOT") {
-    // Five outputs, no explicit encoding: the SELECT order is the encoding.
-    return measures.slice(0, 5);
-  }
-  return measures.slice(0, 1);
+  // BOX_PLOT has five outputs and no explicit encoding: the SELECT order is
+  // the encoding.
+  return plan.render.kind === "BOX_PLOT"
+    ? measures.slice(0, 5)
+    : measures.slice(0, 1);
 }
 
 function buildSeries(

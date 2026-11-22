@@ -176,18 +176,14 @@ export function parseYtdlpInfo(stdout: string): YtdlpInfo {
  */
 export function selectedHasVideoStream(info: YtdlpInfo): boolean | undefined {
   const requested = info.requested_formats ?? [];
-  if (requested.length > 0) {
-    if (requested.some((format) => isRealCodec(format.vcodec))) {
-      return true;
-    }
-    // Only an explicit `"none"` on EVERY entry is a denial. A merge whose entries left `vcodec`
-    // unset says nothing, and answering `false` there would be the tri-state collapse described
-    // above — with the video transport as the casualty.
-    return (
-      !requested.every((format) => isAbsentCodec(format.vcodec)) && undefined
-    );
-  }
-  return isRealCodec(info.vcodec) || (!isAbsentCodec(info.vcodec) && undefined);
+  // Only an explicit `"none"` on EVERY entry is a denial. A merge whose entries left `vcodec`
+  // unset says nothing, and answering `false` there would be the tri-state collapse described
+  // above — with the video transport as the casualty.
+  return requested.length > 0
+    ? requested.some((format) => isRealCodec(format.vcodec)) ||
+        (!requested.every((format) => isAbsentCodec(format.vcodec)) &&
+          undefined)
+    : isRealCodec(info.vcodec) || (!isAbsentCodec(info.vcodec) && undefined);
 }
 
 /**

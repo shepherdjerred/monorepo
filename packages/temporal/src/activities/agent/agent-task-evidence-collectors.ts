@@ -162,9 +162,9 @@ function resolveJsonPath(value: unknown, path: readonly string[]): unknown[] {
       }
       return current.flatMap((item) => {
         const record = z.record(z.string(), z.unknown()).safeParse(item);
-        return !record.success || !(segment in record.data)
-          ? []
-          : [record.data[segment]];
+        return record.success && segment in record.data
+          ? [record.data[segment]]
+          : [];
       });
     },
     [value],

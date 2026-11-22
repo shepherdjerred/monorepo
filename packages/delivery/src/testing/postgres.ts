@@ -38,7 +38,7 @@ export function migrationNames() {
 
 function optionalAdminUrl(): string | undefined {
   const raw = Bun.env["DELIVERY_TEST_ADMIN_DATABASE_URL"]?.trim();
-  return raw !== undefined && raw !== "" ? raw : undefined;
+  return raw === undefined || raw === "" ? undefined : raw;
 }
 
 async function applySqlMigration(

@@ -9,7 +9,12 @@
       "count": 1
     }
   },
-  "src/handlers/screenshot.ts": {
+  "src/lib/history/query/results.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/lib/history/query/text.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -19,22 +24,12 @@
       "count": 1
     }
   },
-  "src/lib/history/sources/conductor.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/lib/history/query/results.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/lib/history/sources/codex.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/lib/history/query/text.ts": {
+  "src/lib/history/sources/conductor.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

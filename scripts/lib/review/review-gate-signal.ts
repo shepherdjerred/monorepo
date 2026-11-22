@@ -25,9 +25,9 @@ function latencySeconds(
   if (reviewedAt === null || headPushedAt === null) return null;
   const reviewed = Date.parse(reviewedAt);
   const pushed = Date.parse(headPushedAt);
-  return !Number.isFinite(reviewed) || !Number.isFinite(pushed)
-    ? null
-    : Math.round((reviewed - pushed) / 1000);
+  return Number.isFinite(reviewed) && Number.isFinite(pushed)
+    ? Math.round((reviewed - pushed) / 1000)
+    : null;
 }
 
 /**

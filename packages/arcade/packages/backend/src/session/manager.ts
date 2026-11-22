@@ -207,9 +207,9 @@ export class SessionManager<T extends PooledUserbot> {
   ): Promise<StopResult> {
     const entry = this.entries.get(id);
     if (entry === undefined) return { kind: "not-active" };
-    return entry.session.startedByUserId !== actor.userId && !actor.moderator
-      ? { kind: "forbidden" }
-      : this.stopEntry(entry, "userStop");
+    return entry.session.startedByUserId === actor.userId || actor.moderator
+      ? this.stopEntry(entry, "userStop")
+      : { kind: "forbidden" };
   }
 
   async stopForSystem(

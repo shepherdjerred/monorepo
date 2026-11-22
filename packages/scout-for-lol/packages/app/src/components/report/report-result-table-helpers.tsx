@@ -129,9 +129,9 @@ export function reportRowSortValue(
     return formatCell(column, row, evidenceRow, hasGamesColumn);
   }
   const value = row.values.find((entry) => entry.column === column.key)?.value;
-  return value !== null && value !== undefined && column.asset !== undefined
-    ? formatReportDisplayValue(column, value)
-    : (value ?? null);
+  return value === null || value === undefined || column.asset === undefined
+    ? (value ?? null)
+    : formatReportDisplayValue(column, value);
 }
 
 /** Give drill-down prompts the label shown to the user, not an asset ID. */

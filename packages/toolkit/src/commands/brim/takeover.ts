@@ -316,19 +316,15 @@ async function executeHerdrReplacement(options: {
       : { detachHerdrApp: context.detachHerdrApp }),
     ...(context.runHc === undefined ? {} : { runHc: context.runHc }),
   });
-  if (parsed.json) {
-    context.stdout(
-      JSON.stringify(
-        { prepared, targetProvider: selected.provider, replacement },
-        null,
-        2,
-      ),
-    );
-  } else {
-    context.stdout(
-      `Switched ${terminalAddress} from ${prepared.sourceDisplayName} to ${selected.displayName} (handoff: ${prepared.handoffPath})`,
-    );
-  }
+  context.stdout(
+    parsed.json
+      ? JSON.stringify(
+          { prepared, targetProvider: selected.provider, replacement },
+          null,
+          2,
+        )
+      : `Switched ${terminalAddress} from ${prepared.sourceDisplayName} to ${selected.displayName} (handoff: ${prepared.handoffPath})`,
+  );
   return 0;
 }
 

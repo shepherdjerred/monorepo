@@ -82,11 +82,11 @@ export async function releasesCommand(
   try {
     const releases = await getReleases(options.project);
 
-    if (options.json === true) {
-      console.log(formatJson(releases));
-    } else {
-      console.log(formatReleasesMarkdown(releases));
-    }
+    console.log(
+      options.json === true
+        ? formatJson(releases)
+        : formatReleasesMarkdown(releases),
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred";
@@ -107,11 +107,11 @@ export async function releaseCommand(
       process.exit(1);
     }
 
-    if (options.json === true) {
-      console.log(formatJson(release));
-    } else {
-      console.log(formatReleaseDetails(release));
-    }
+    console.log(
+      options.json === true
+        ? formatJson(release)
+        : formatReleaseDetails(release),
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred";

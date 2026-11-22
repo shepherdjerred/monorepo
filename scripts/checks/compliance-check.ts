@@ -269,11 +269,13 @@ export function invokesAmbiguousTypeScriptCompiler(
     let index = executableIndex + 1;
     while (tokens[index]?.startsWith("-") === true) index += 1;
     const subcommand = tokens[index];
-    if (subcommand !== "x" && subcommand !== "run") return false;
-    if (findBunxExecutable(tokens, index + 1) !== "tsc") return false;
     // `bun run tsc` runs a declared script named "tsc" when one exists
     // (checked on its own); otherwise Bun resolves the `tsc` binary.
-    return subcommand === "x" || !declaredScriptNames.has("tsc");
+    return (
+      (subcommand === "x" || subcommand === "run") &&
+      findBunxExecutable(tokens, index + 1) === "tsc" &&
+      (subcommand === "x" || !declaredScriptNames.has("tsc"))
+    );
   });
 }
 

@@ -27,9 +27,9 @@ export function mergeDescriptions(
   if (yamlComment === "" || yamlComment == null) {
     return schemaDescription;
   }
-  return schemaDescription !== "" && schemaDescription != null
-    ? `${yamlComment}\n\n${schemaDescription}`
-    : yamlComment;
+  return schemaDescription === "" || schemaDescription == null
+    ? yamlComment
+    : `${yamlComment}\n\n${schemaDescription}`;
 }
 
 /**

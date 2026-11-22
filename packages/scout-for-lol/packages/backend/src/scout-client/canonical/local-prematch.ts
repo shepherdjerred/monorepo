@@ -153,9 +153,9 @@ export function parseLocalPrematchIdentities(
         ...(player.spell2Id === undefined ? {} : { spell2Id: player.spell2Id }),
         riotId:
           player.riotId ??
-          (player.gameName !== undefined && player.tagLine !== undefined
-            ? `${player.gameName}#${player.tagLine}`
-            : (player.summonerName ?? "")),
+          (player.gameName === undefined || player.tagLine === undefined
+            ? (player.summonerName ?? "")
+            : `${player.gameName}#${player.tagLine}`),
       })),
     ),
   };
@@ -220,9 +220,9 @@ export function parseLocalPrematch(
       puuid: player.puuid.length === 78 ? player.puuid : null,
       riotId:
         player.riotId ??
-        (player.gameName !== undefined && player.tagLine !== undefined
-          ? `${player.gameName}#${player.tagLine}`
-          : (player.summonerName ?? "")),
+        (player.gameName === undefined || player.tagLine === undefined
+          ? (player.summonerName ?? "")
+          : `${player.gameName}#${player.tagLine}`),
       spell1Id: player.spell1Id,
       spell2Id: player.spell2Id,
       lastSelectedSkinIndex: player.selectedSkinIndex,

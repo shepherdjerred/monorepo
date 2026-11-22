@@ -28,9 +28,10 @@ export function samplerForImageData(
     lumaAt: (sourceX, sourceY) => {
       const x = Math.floor(sourceX * scaleX) - region.x;
       const y = Math.floor(sourceY * scaleY) - region.y;
-      if (x < 0 || y < 0 || x >= pixels.width || y >= pixels.height) return 0;
       // The overlay writes pure greyscale, so any colour channel is the luma.
-      return pixels.data[(y * pixels.width + x) * 4] ?? 0;
+      return x < 0 || y < 0 || x >= pixels.width || y >= pixels.height
+        ? 0
+        : (pixels.data[(y * pixels.width + x) * 4] ?? 0);
     },
   };
 }

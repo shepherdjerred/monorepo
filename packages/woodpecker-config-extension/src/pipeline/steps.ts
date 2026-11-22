@@ -144,7 +144,7 @@ export function buildPipelineSteps({
   images,
   trustedGateImage,
   changedBase = "",
-  verifyBase,
+  verifyBase = changedBase,
   imageReleaseBase = "",
   imageReleasePipeline,
 }: PipelineInputs): CiStep[] {
@@ -166,7 +166,7 @@ export function buildPipelineSteps({
         // The Storm's Gradle builds (~30 plugin modules) dominate verify when
         // their Turbo task misses; the node returns unchanged modules' outputs.
         ...GRADLE_BUILD_CACHE_ENVIRONMENT,
-        CI_CHANGED_BASE: verifyBase ?? changedBase,
+        CI_CHANGED_BASE: verifyBase,
       },
       // A first run in a new trust domain must rebuild every cache entry rather
       // than accepting unsigned output from the former shared cache. Keep the

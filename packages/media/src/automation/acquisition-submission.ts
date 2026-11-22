@@ -228,9 +228,9 @@ async function submissionPrerequisite(
   if (!runtime.active) return "runtime_observe";
   if (!recovering && !(await validAttempt(context, attempt.id)))
     return "intent_changed";
-  return !recovering && !(await context.gates.acquisition())
-    ? "acquisition_disabled"
-    : null;
+  return recovering || (await context.gates.acquisition())
+    ? null
+    : "acquisition_disabled";
 }
 
 async function prepareAndSubmit(

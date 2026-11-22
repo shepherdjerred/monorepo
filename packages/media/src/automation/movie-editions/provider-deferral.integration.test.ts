@@ -231,7 +231,7 @@ async function staggeredEmptySearch(remoteStatus?: number) {
     return Promise.resolve(
       Response.json(
         pirate ? [] : { hits: [] },
-        !pirate && remoteStatus !== undefined ? { status: remoteStatus } : {},
+        pirate || remoteStatus === undefined ? {} : { status: remoteStatus },
       ),
     );
   });

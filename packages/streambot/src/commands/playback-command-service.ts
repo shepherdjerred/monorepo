@@ -406,9 +406,9 @@ export class PlaybackCommandService extends PlaybackControls {
   private async discoveryEnabled(
     scope: DiscoveryScope | null,
   ): Promise<boolean> {
-    return scope !== null && this.deps.featureGate !== undefined
-      ? await this.deps.featureGate.assistantV2(scope)
-      : this.deps.discovery !== undefined;
+    return scope === null || this.deps.featureGate === undefined
+      ? this.deps.discovery !== undefined
+      : await this.deps.featureGate.assistantV2(scope);
   }
 
   async previous(

@@ -80,8 +80,8 @@ export function resolveSeriesSeasonSetV1(
     (episode) =>
       `${String(episode.seasonNumber)}:${String(episode.episodeNumber)}`,
   );
-  return new Set(ids).size !== ids.length ||
-    new Set(coordinates).size !== coordinates.length
-    ? { status: "protected" as const, reason: "season_set_conflict" }
-    : { status: "resolved" as const, mediaIds: ids.sort() };
+  return new Set(ids).size === ids.length &&
+    new Set(coordinates).size === coordinates.length
+    ? { status: "resolved" as const, mediaIds: ids.sort() }
+    : { status: "protected" as const, reason: "season_set_conflict" };
 }

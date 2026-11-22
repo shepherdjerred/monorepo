@@ -153,10 +153,10 @@ export function decideWorkflowStartRequest(
       ? { outcome: "adopt", record: inFlight }
       : { outcome: "conflict", reason: "request-differs" };
   }
-  return latestAccepted !== null &&
-    !sameWorkflowStartIdentity(latestAccepted, incoming)
-    ? { outcome: "conflict", reason: "request-differs" }
-    : { outcome: "record" };
+  return latestAccepted === null ||
+    sameWorkflowStartIdentity(latestAccepted, incoming)
+    ? { outcome: "record" }
+    : { outcome: "conflict", reason: "request-differs" };
 }
 
 export type WorkflowStartLostInsertDecision =
@@ -198,10 +198,10 @@ export function resolveWorkflowStartLostInsert(args: {
   requireContextShape(after, incoming.requestedWorkflowId);
   const winner =
     after.inFlight ??
-    (after.latestAccepted !== null &&
-    after.latestAccepted.requestId !== before.latestAccepted?.requestId
-      ? after.latestAccepted
-      : null);
+    (after.latestAccepted === null ||
+    after.latestAccepted.requestId === before.latestAccepted?.requestId
+      ? null
+      : after.latestAccepted);
   if (winner === null) {
     return { outcome: "retry" };
   }

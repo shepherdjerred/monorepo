@@ -38,9 +38,9 @@ export function sharedPostgresPort(
     return parsePortEnv("LOCAL_TEST_PG_PORT", localPort);
   }
   const scoutPort = env["SCOUT_PG_PORT"];
-  return scoutPort !== undefined && scoutPort !== ""
-    ? parsePortEnv("SCOUT_PG_PORT", scoutPort)
-    : DEFAULT_SHARED_PG_PORT;
+  return scoutPort === undefined || scoutPort === ""
+    ? DEFAULT_SHARED_PG_PORT
+    : parsePortEnv("SCOUT_PG_PORT", scoutPort);
 }
 
 export function sharedDatabaseUrl(
@@ -67,7 +67,7 @@ function nonEmptyEnv(
   key: string,
 ): string | undefined {
   const value = env[key];
-  return value !== undefined && value !== "" ? value : undefined;
+  return value === undefined || value === "" ? undefined : value;
 }
 
 function resolveUserBaseDirs(
@@ -238,9 +238,9 @@ function probeSuperuser(port: number): string {
 
   const explicitUser = nonEmptyEnv(Bun.env, "LOCAL_TEST_PG_USER")?.trim();
   const candidates =
-    explicitUser !== undefined && explicitUser !== ""
-      ? [explicitUser]
-      : ["scout", "postgres"];
+    explicitUser === undefined || explicitUser === ""
+      ? ["scout", "postgres"]
+      : [explicitUser];
 
   let lastError = "";
   for (const user of candidates) {

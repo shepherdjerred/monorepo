@@ -76,12 +76,12 @@ export async function createConfirmationIntent(
     expectedRevision: input.expectedRevision ?? null,
   };
   const intent = await createOrRead(prismaClient, data, input.idempotencyKey);
-  return intent.kind !== data.kind ||
-    intent.serverId !== data.serverId ||
-    intent.actorDiscordId !== data.actorDiscordId ||
-    intent.payload !== data.payload ||
-    intent.dareId !== data.dareId ||
-    intent.expectedRevision !== data.expectedRevision
-    ? { kind: "idempotency_conflict" }
-    : { kind: "intent_created", intent };
+  return intent.kind === data.kind &&
+    intent.serverId === data.serverId &&
+    intent.actorDiscordId === data.actorDiscordId &&
+    intent.payload === data.payload &&
+    intent.dareId === data.dareId &&
+    intent.expectedRevision === data.expectedRevision
+    ? { kind: "intent_created", intent }
+    : { kind: "idempotency_conflict" };
 }

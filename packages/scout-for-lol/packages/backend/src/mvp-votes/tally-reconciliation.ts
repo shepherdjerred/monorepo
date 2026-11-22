@@ -52,12 +52,11 @@ function editErrorCode(error: unknown): string {
     return "discord-target-unavailable";
   }
   const parsed = DiscordErrorCodeSchema.safeParse(error);
-  if (parsed.success && parsed.data.code === 10_008) {
-    return "discord-target-unavailable";
-  }
   // A timeout or broken connection may happen after Discord accepted the edit.
   // The next attempt replaces the same embed, so the unknown outcome is safe.
-  return "discord-edit-unknown";
+  return parsed.success && parsed.data.code === 10_008
+    ? "discord-target-unavailable"
+    : "discord-edit-unknown";
 }
 
 function noUpdateErrorCode(input: {

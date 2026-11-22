@@ -103,23 +103,22 @@ export function discoveredMatchesOf(scan: {
   riotMatchIds: readonly RiotMatchId[];
   matches?: unknown;
 }): readonly ScoutDiscoveredMatchRef[] {
-  if (scan.matches === undefined) {
-    // The id ALONE, which is all that generation recorded.
-    //
-    // `live` is the right answer for such a match, but supplying it here
-    // would be the new code's answer rather than the old code's: the child
-    // start is a recorded command, and adding a field to its input makes
-    // replay emit different arguments than history holds. A legacy branch has
-    // to reproduce what the old code SENT, not what the new code considers a
-    // sensible default — a default is exactly the helpful instinct that
-    // breaks determinism.
-    //
-    // The fact is still supplied, one layer down and where nothing has been
-    // recorded yet: a child started with no mode resolves `live` in
-    // `resolveDeliveryMode`, for the same reason and from the same evidence.
-    return scan.riotMatchIds.map((riotMatchId) => ({ riotMatchId }));
-  }
-  return ScoutDiscoveredMatchesSchema.parse(scan.matches);
+  // Without `matches`, the id ALONE, which is all that generation recorded.
+  //
+  // `live` is the right answer for such a match, but supplying it here
+  // would be the new code's answer rather than the old code's: the child
+  // start is a recorded command, and adding a field to its input makes
+  // replay emit different arguments than history holds. A legacy branch has
+  // to reproduce what the old code SENT, not what the new code considers a
+  // sensible default — a default is exactly the helpful instinct that
+  // breaks determinism.
+  //
+  // The fact is still supplied, one layer down and where nothing has been
+  // recorded yet: a child started with no mode resolves `live` in
+  // `resolveDeliveryMode`, for the same reason and from the same evidence.
+  return scan.matches === undefined
+    ? scan.riotMatchIds.map((riotMatchId) => ({ riotMatchId }))
+    : ScoutDiscoveredMatchesSchema.parse(scan.matches);
 }
 
 /**

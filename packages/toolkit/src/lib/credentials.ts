@@ -223,9 +223,9 @@ async function readLockedOnePassword(
   if (lock === null) return readFromOnePassword(name, description, ref, ctx);
   return lock(ref, async () => {
     const filled = await ctx.cache?.get(ref);
-    return filled !== undefined && filled !== null
-      ? { value: filled, source: "cache" }
-      : readFromOnePassword(name, description, ref, ctx);
+    return filled === undefined || filled === null
+      ? readFromOnePassword(name, description, ref, ctx)
+      : { value: filled, source: "cache" };
   });
 }
 

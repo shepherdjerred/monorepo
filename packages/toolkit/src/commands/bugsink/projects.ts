@@ -88,11 +88,11 @@ export async function projectsCommand(
   try {
     const projects = await getProjects(options.team);
 
-    if (options.json === true) {
-      console.log(formatJson(projects));
-    } else {
-      console.log(formatProjectsMarkdown(projects));
-    }
+    console.log(
+      options.json === true
+        ? formatJson(projects)
+        : formatProjectsMarkdown(projects),
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred";
@@ -113,11 +113,11 @@ export async function projectCommand(
       process.exit(1);
     }
 
-    if (options.json === true) {
-      console.log(formatJson(project));
-    } else {
-      console.log(formatProjectDetails(project));
-    }
+    console.log(
+      options.json === true
+        ? formatJson(project)
+        : formatProjectDetails(project),
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred";

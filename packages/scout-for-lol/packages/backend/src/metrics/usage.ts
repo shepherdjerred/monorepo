@@ -98,17 +98,13 @@ export async function updateUsageMetrics(
     }
 
     // Calculate averages
-    if (serversWithData.length > 0) {
-      avgPlayersPerServer.set(playersCount / serversWithData.length);
-    } else {
-      avgPlayersPerServer.set(0);
-    }
+    avgPlayersPerServer.set(
+      serversWithData.length > 0 ? playersCount / serversWithData.length : 0,
+    );
 
-    if (playersCount > 0) {
-      avgAccountsPerPlayer.set(accountsCount / playersCount);
-    } else {
-      avgAccountsPerPlayer.set(0);
-    }
+    avgAccountsPerPlayer.set(
+      playersCount > 0 ? accountsCount / playersCount : 0,
+    );
 
     // --- Guild health ---
 

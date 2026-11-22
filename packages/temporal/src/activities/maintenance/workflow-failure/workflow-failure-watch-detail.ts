@@ -97,9 +97,9 @@ function workerTaskQueueUnavailableReason(
   if (classification.workflowTaskScheduledButNotStarted) {
     return "a scheduled workflow task has not started";
   }
-  return !classification.workflowTaskStarted && !classification.activityStarted
-    ? "no activity reached execution"
-    : undefined;
+  return classification.workflowTaskStarted || classification.activityStarted
+    ? undefined
+    : "no activity reached execution";
 }
 
 function timeoutFailureFields(

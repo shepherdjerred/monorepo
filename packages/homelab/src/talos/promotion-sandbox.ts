@@ -99,16 +99,15 @@ export const brokeredTalosRunner: TalosRunner = (args, input) =>
   captureNative(["toolkit", "talosctl", ...args], input);
 export const readNativeNodeInfo: NodeInfoReader = () => {
   const kubectl = lookupExecutable("kubectl", Bun.env["PATH"]);
-  if (kubectl === null) {
-    return Promise.reject(
-      new OperatorError(
-        "native kubectl tooling",
-        "required executable not found",
-      ),
-    );
-  }
   // Native kubectl retains its existing kubeconfig exec-plugin authentication.
-  return captureNative([kubectl, "get", "node", "torvalds", "--output=json"]);
+  return kubectl === null
+    ? Promise.reject(
+        new OperatorError(
+          "native kubectl tooling",
+          "required executable not found",
+        ),
+      )
+    : captureNative([kubectl, "get", "node", "torvalds", "--output=json"]);
 };
 
 function targetArgs(args: readonly string[]) {

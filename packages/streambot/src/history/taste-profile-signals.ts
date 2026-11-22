@@ -29,9 +29,9 @@ function extractIntentQuery(
     if (parsed.success) {
       if (parsed.data.mode === "video") return null;
       const combined =
-        parsed.data.performer !== undefined && parsed.data.work !== undefined
-          ? `${parsed.data.performer} - ${parsed.data.work}`
-          : parsed.data.query;
+        parsed.data.performer === undefined || parsed.data.work === undefined
+          ? parsed.data.query
+          : `${parsed.data.performer} - ${parsed.data.work}`;
       return isBlockedText(combined) ? null : combined.slice(0, 120);
     }
   } catch {

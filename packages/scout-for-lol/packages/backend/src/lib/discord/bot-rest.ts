@@ -543,9 +543,9 @@ export function memberAvatarUrl(
   member: DiscordGuildMember,
   guildId: DiscordGuildId,
 ): string {
-  return member.avatar !== null && member.avatar !== undefined
-    ? cdn.guildMemberAvatar(guildId, member.user.id, member.avatar)
-    : userAvatarUrl(member.user);
+  return member.avatar === null || member.avatar === undefined
+    ? userAvatarUrl(member.user)
+    : cdn.guildMemberAvatar(guildId, member.user.id, member.avatar);
 }
 
 /**

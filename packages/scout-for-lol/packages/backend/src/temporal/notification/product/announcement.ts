@@ -149,14 +149,12 @@ export async function mintProductAnnouncement(
       !Bun.deepEquals(saved.effect, input.effect, true)
     )
       throw new Error(`Product occurrence ${key} has conflicting identity`);
-    if (
-      existing.intent.state.kind === "permission-denied" &&
+    // The first committed snapshot wins, even if standings changed on retry.
+    return existing.intent.state.kind === "permission-denied" &&
       existing.intent.lastFailure?.classification === "terminal" &&
       existing.intent.lastFailure.reason === "permission-denied"
-    )
-      return "confirmed-unsent";
-    // The first committed snapshot wins, even if standings changed on retry.
-    return "existing";
+      ? "confirmed-unsent"
+      : "existing";
   }
   const announcement = productAnnouncementCodec.serialize({
     announcementId: input.announcementId,

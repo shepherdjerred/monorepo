@@ -95,17 +95,15 @@ function scoresAreEqual(a: number | Rank, b: number | Rank): boolean {
   const bRankResult = RankSchema.safeParse(b);
 
   // Both are Rank objects
-  if (aRankResult.success && bRankResult.success) {
-    // For simplicity in tests, compare tier, division, and LP
-    return (
-      aRankResult.data.tier === bRankResult.data.tier &&
-      aRankResult.data.division === bRankResult.data.division &&
-      aRankResult.data.lp === bRankResult.data.lp
-    );
-  }
-
-  // Mixed types are never equal
-  return false;
+  // For simplicity in tests, compare tier, division, and LP. Mixed types are
+  // never equal.
+  return (
+    aRankResult.success &&
+    bRankResult.success &&
+    aRankResult.data.tier === bRankResult.data.tier &&
+    aRankResult.data.division === bRankResult.data.division &&
+    aRankResult.data.lp === bRankResult.data.lp
+  );
 }
 
 // ============================================================================

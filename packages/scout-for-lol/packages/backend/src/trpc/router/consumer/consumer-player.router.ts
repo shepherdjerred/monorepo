@@ -249,10 +249,10 @@ export const consumerPlayerRouter = router({
       if (scope.kind === "forbidden") {
         return { state: scope.reason } as const;
       }
-      return input?.guildId !== undefined &&
-        !scope.guilds.some((guild) => guild.id === input.guildId)
-        ? ({ state: "feature_disabled" } as const)
-        : ({ state: "available", guildCount: scope.guilds.length } as const);
+      return input?.guildId === undefined ||
+        scope.guilds.some((guild) => guild.id === input.guildId)
+        ? ({ state: "available", guildCount: scope.guilds.length } as const)
+        : ({ state: "feature_disabled" } as const);
     }),
 
   home: protectedProcedure.query(async ({ ctx }) => {

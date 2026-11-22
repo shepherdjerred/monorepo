@@ -205,11 +205,11 @@ function shouldOmitOutputKey(
   key: string,
   options: SanitizeToolOutputOptions,
 ): boolean {
-  if (key === "raw" && options.isCookiesCall) {
-    return true;
-  }
   // Unlisted tool: keep nothing. A tool added later is private by default.
-  return !(options.retainedDataKeys?.has(key) ?? false);
+  return (
+    (key === "raw" && options.isCookiesCall) ||
+    !(options.retainedDataKeys?.has(key) ?? false)
+  );
 }
 
 function sanitizeToolOutputData(

@@ -208,17 +208,14 @@ export function isCredentialFreePassthrough(
   if (command === "argocd" && isArgoHelpCommand(args)) return true;
   // Inspect the entire invocation: flags in a command payload or after `--`
   // must not turn an operational command into a credential-free dispatch.
-  if (args.length === 1) {
-    return args[0] === "--help" || args[0] === "-h" || args[0] === "--version";
-  }
-  // Plain `argocd version` contacts the server; only this client-only form
+  // Plain `argocd version` contacts the server; only the client-only form
   // can bypass credential resolution.
-  return (
-    command === "argocd" &&
-    args.length === 2 &&
-    args[0] === "version" &&
-    args[1] === "--client"
-  );
+  return args.length === 1
+    ? args[0] === "--help" || args[0] === "-h" || args[0] === "--version"
+    : command === "argocd" &&
+        args.length === 2 &&
+        args[0] === "version" &&
+        args[1] === "--client";
 }
 
 function hasFlag(args: readonly string[], flags: readonly string[]): boolean {

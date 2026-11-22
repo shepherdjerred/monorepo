@@ -55,7 +55,7 @@ async function applySingleChange(change: ProposedChange): Promise<boolean> {
           amount: sign * Math.abs(s.amount),
           categoryId: s.categoryId,
           merchantName: s.itemName,
-          ...(s.date !== undefined && s.date !== "" ? { date: s.date } : {}),
+          ...(s.date === undefined || s.date === "" ? {} : { date: s.date }),
         })),
       );
     }

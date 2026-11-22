@@ -71,9 +71,10 @@ export async function startClient(options: {
           throw new Error(
             `Client exited (${child.exitCode.toString()}); inspect ${log.name ?? "client.log"}`,
           );
-        return (await socketReady(session.socket))
-          ? StatusSchema.parse(await request(session, "status")).connected
-          : false;
+        return (
+          (await socketReady(session.socket)) &&
+          StatusSchema.parse(await request(session, "status")).connected
+        );
       },
       (connected) => connected,
       180_000,

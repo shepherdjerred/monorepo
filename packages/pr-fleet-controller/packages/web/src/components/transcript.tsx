@@ -21,13 +21,13 @@ function Row({ item }: { item: TimelineItem }): ReactElement {
       <div className="row-main">
         <div className="row-title">
           <span className="row-titletext">{d.title}</span>
-          {d.meta !== undefined && d.meta !== "" ? (
+          {d.meta === undefined || d.meta === "" ? null : (
             <span className="row-meta">{d.meta}</span>
-          ) : null}
+          )}
         </div>
-        {d.text !== undefined && d.text !== "" ? (
+        {d.text === undefined || d.text === "" ? null : (
           <pre className="row-text">{d.text}</pre>
-        ) : null}
+        )}
         {hasBody(d.body) ? (
           <details className="row-body">
             <summary>details</summary>

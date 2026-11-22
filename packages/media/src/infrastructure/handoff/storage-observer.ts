@@ -173,13 +173,15 @@ function approvedSourceUnchanged(
   );
   const before = approved[0];
   const after = current[0];
-  if (!before || !after || approved.length !== 1 || current.length !== 1)
-    return false;
   // Source identity includes the exact controller generation/spec and the full
   // source root/container/PVC/subpath binding. A newer lease cannot approve drift.
   return (
+    before !== undefined &&
+    after !== undefined &&
+    approved.length === 1 &&
+    current.length === 1 &&
     snapshotHash(z.json().parse(before.source)) ===
-    snapshotHash(z.json().parse(after.source))
+      snapshotHash(z.json().parse(after.source))
   );
 }
 

@@ -123,11 +123,11 @@ function matchedEpisodes(found: RegExpExecArray, name: string): number[] {
     [...name.matchAll(/\bS\d{1,3}/giu)].length > 1
   )
     return [];
-  return groups["separator"] !== undefined &&
-    !groups["separator"].includes("-") &&
-    groups["last"] !== undefined
-    ? [...range(groups["first"]), ...range(groups["last"])]
-    : range(groups["first"], groups["last"]);
+  return groups["separator"] === undefined ||
+    groups["separator"].includes("-") ||
+    groups["last"] === undefined
+    ? range(groups["first"], groups["last"])
+    : [...range(groups["first"]), ...range(groups["last"])];
 }
 
 function sourceQuality(name: string, metadataStart: number): string {

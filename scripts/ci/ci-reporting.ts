@@ -316,9 +316,9 @@ export function cargoTestJUnit(
     ({ status }) => status === "FAILED",
   );
   const invocationFailure =
-    exitCode !== 0 && !hasReportedFailure
-      ? [{ name: "cargo invocation", status: "FAILED" }]
-      : [];
+    exitCode === 0 || hasReportedFailure
+      ? []
+      : [{ name: "cargo invocation", status: "FAILED" }];
   const cases = [...testCases, ...invocationFailure];
   const failures = cases.filter(({ status }) => status === "FAILED").length;
   const skipped = cases.filter(({ status }) =>

@@ -76,7 +76,7 @@ export function clashTeamLabel(input: {
   teamAbbreviation?: string | undefined;
   teamName?: string | undefined;
 }): string | undefined {
-  return input.teamAbbreviation !== undefined && input.teamName !== undefined
-    ? `${input.teamAbbreviation} · ${input.teamName}`
-    : (input.teamAbbreviation ?? input.teamName);
+  return input.teamAbbreviation === undefined || input.teamName === undefined
+    ? (input.teamAbbreviation ?? input.teamName)
+    : `${input.teamAbbreviation} · ${input.teamName}`;
 }

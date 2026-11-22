@@ -188,13 +188,13 @@ function MatchReviewContent(props: {
           )}
           <TeamComparison teams={teams} />
           {props.arena ??
-            (props.matchups !== null && props.matchups !== undefined ? (
+            (props.matchups === null || props.matchups === undefined ? (
+              <MatchScoreboards teams={teams} showLoadout />
+            ) : (
               <RolePairedMatchScoreboard
                 teams={teams}
                 matchups={props.matchups}
               />
-            ) : (
-              <MatchScoreboards teams={teams} showLoadout />
             ))}
           {props.children}
         </TabsContent>

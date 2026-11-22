@@ -116,9 +116,9 @@ export async function validateChannelInGuild(
   if (channel == null) {
     return `Channel ${channelId} not found (deleted or no access)`;
   }
-  return !("guildId" in channel) || channel.guildId !== guildId
-    ? `Channel ${channelId} is not in this server`
-    : null;
+  return "guildId" in channel && channel.guildId === guildId
+    ? null
+    : `Channel ${channelId} is not in this server`;
 }
 
 /** Validate every present channel ID against the guild that admitted the turn. */

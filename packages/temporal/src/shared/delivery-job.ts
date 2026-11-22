@@ -70,9 +70,10 @@ export function deliveryJobArchive(
     .object({ archive: z.unknown().optional() })
     .loose()
     .safeParse(request.input);
-  if (!wrapper.success || wrapper.data.archive === undefined) return undefined;
   // A present archive is validated strictly; a malformed one never degrades to source mode.
-  return DeliveryJobArchiveSchema.parse(wrapper.data.archive);
+  return !wrapper.success || wrapper.data.archive === undefined
+    ? undefined
+    : DeliveryJobArchiveSchema.parse(wrapper.data.archive);
 }
 export const DeliveryJobReceiptSchema = z.object({
   namespace: z.enum(["delivery-worker-jobs", "delivery-platform-jobs"]),

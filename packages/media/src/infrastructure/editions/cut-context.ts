@@ -147,9 +147,9 @@ export async function currentCuts(
       .parse(asset.properties);
     const texts = originalTitleTexts(properties);
     const originalPath =
-      asset.sourcePath !== null && asset.sourcePath !== asset.path
-        ? asset.sourcePath
-        : null;
+      asset.sourcePath === null || asset.sourcePath === asset.path
+        ? null
+        : asset.sourcePath;
     if (originalPath !== null)
       result.push(
         parseCutEvidence({

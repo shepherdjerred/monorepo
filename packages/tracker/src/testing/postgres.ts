@@ -34,9 +34,9 @@ async function noopStop(): Promise<void> {
 export async function startTestPostgres() {
   const configuredAdmin = Bun.env["TRACKER_TEST_ADMIN_URL"]?.trim();
   const adminUrl =
-    configuredAdmin !== undefined && configuredAdmin !== ""
-      ? configuredAdmin
-      : undefined;
+    configuredAdmin === undefined || configuredAdmin === ""
+      ? undefined
+      : configuredAdmin;
   const ensured = await ensureTemplateDatabase({
     prefix: "tracker",
     user: "tracker",

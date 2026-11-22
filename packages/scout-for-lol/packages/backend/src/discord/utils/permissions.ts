@@ -40,13 +40,12 @@ const DiscordAPIErrorSchema = z.object({
  */
 export function isPermissionError(error: unknown): boolean {
   const result = DiscordAPIErrorSchema.safeParse(error);
-  if (!result.success) {
-    return false;
-  }
-
   // Discord API error code 50013 = Missing Permissions
   // Discord API error code 50001 = Missing Access (can't see channel)
-  return result.data.code === 50_013 || result.data.code === 50_001;
+  return (
+    result.success &&
+    (result.data.code === 50_013 || result.data.code === 50_001)
+  );
 }
 
 /**
@@ -56,11 +55,11 @@ export function isPermissionError(error: unknown): boolean {
  */
 export function isMissingChannelError(error: unknown): boolean {
   const result = DiscordAPIErrorSchema.safeParse(error);
-  if (!result.success) {
-    return false;
-  }
   // 10003 = Unknown Channel, 10004 = Unknown Guild
-  return result.data.code === 10_003 || result.data.code === 10_004;
+  return (
+    result.success &&
+    (result.data.code === 10_003 || result.data.code === 10_004)
+  );
 }
 
 /**
@@ -71,11 +70,8 @@ export function isMissingChannelError(error: unknown): boolean {
  */
 export function isUnknownGuildError(error: unknown): boolean {
   const result = DiscordAPIErrorSchema.safeParse(error);
-  if (!result.success) {
-    return false;
-  }
   // 10004 = Unknown Guild
-  return result.data.code === 10_004;
+  return result.success && result.data.code === 10_004;
 }
 
 /**

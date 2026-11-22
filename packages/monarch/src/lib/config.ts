@@ -124,9 +124,9 @@ export function getConfig(): Config {
   const defaultYears = [currentYear - 1, currentYear];
   const amazonYearsRaw = values["amazon-years"];
   const amazonYears =
-    amazonYearsRaw !== undefined && amazonYearsRaw !== ""
-      ? amazonYearsRaw.split(",").map(Number)
-      : defaultYears;
+    amazonYearsRaw === undefined || amazonYearsRaw === ""
+      ? defaultYears
+      : amazonYearsRaw.split(",").map(Number);
 
   return {
     apply: values.apply,
@@ -182,7 +182,7 @@ export function resolveCheckpointFile(
   checkpointFile: string | undefined,
   outputPath: string | undefined,
 ): string | undefined {
-  return checkpointFile !== undefined && checkpointFile !== ""
-    ? checkpointFile
-    : deriveCheckpointPath(outputPath);
+  return checkpointFile === undefined || checkpointFile === ""
+    ? deriveCheckpointPath(outputPath)
+    : checkpointFile;
 }

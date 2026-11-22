@@ -14,11 +14,11 @@ export function numberedPlaybackError(
   if (number === undefined) return null;
   if (sports && number === 1)
     return `Sports need a video channel. ${NUMBERED_CHANNEL_HINT}`;
-  return requested !== undefined &&
-    requested !== "auto" &&
-    requested !== playbackTransport(number)
-    ? `The selected channel determines audio or video. ${NUMBERED_CHANNEL_HINT}`
-    : null;
+  return requested === undefined ||
+    requested === "auto" ||
+    requested === playbackTransport(number)
+    ? null
+    : `The selected channel determines audio or video. ${NUMBERED_CHANNEL_HINT}`;
 }
 export function assertNumberedPlayback(
   number: PlaybackChannelNumber | undefined,

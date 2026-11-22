@@ -137,14 +137,14 @@ export function stairShape(
 }
 
 function joins(self: Connects, other: Connects | null): boolean {
-  if (other === null) {
-    return false;
-  }
-  if (other === "solid" || other === self) {
-    return true;
-  }
-  // Panes and walls join each other; fences only join fences and solids.
-  return self !== "fence" && other !== "fence";
+  // Solids and same-kind neighbours always join. Otherwise panes and walls join
+  // each other; fences only join fences and solids.
+  return (
+    other !== null &&
+    (other === "solid" ||
+      other === self ||
+      (self !== "fence" && other !== "fence"))
+  );
 }
 
 /** Compiled output of a build program, in local coordinates. */

@@ -386,7 +386,7 @@ export function parseHttpResponse(
     case "anthropic-messages": {
       const single = events[0];
       return anthropicResponse(
-        !sse && single !== undefined ? single : assembleAnthropic(events),
+        sse || single === undefined ? assembleAnthropic(events) : single,
       );
     }
     case "openai-responses":

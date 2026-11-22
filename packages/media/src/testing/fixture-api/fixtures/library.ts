@@ -165,19 +165,16 @@ function matches(query: LibraryQuery, item: LibraryItem): boolean {
 /** The matching titles in the order the query's sort lists them. */
 function ordered(query: LibraryQuery, persona: Persona): LibraryItem[] {
   const matching = libraryItems(persona).filter((item) => matches(query, item));
-  if (query.sort === "title") {
-    return matching.sort((left, right) =>
-      left.title.localeCompare(right.title),
-    );
-  }
-  // Newest first, and only what can be played, as the server lists it.
-  return matching
-    .filter((item) => item.addedAt !== null)
-    .sort(
-      (left, right) =>
-        (right.addedAt ?? "").localeCompare(left.addedAt ?? "") ||
-        right.id.localeCompare(left.id),
-    );
+  // Otherwise newest first, and only what can be played, as the server lists it.
+  return query.sort === "title"
+    ? matching.sort((left, right) => left.title.localeCompare(right.title))
+    : matching
+        .filter((item) => item.addedAt !== null)
+        .sort(
+          (left, right) =>
+            (right.addedAt ?? "").localeCompare(left.addedAt ?? "") ||
+            right.id.localeCompare(left.id),
+        );
 }
 
 function cursorOf(query: LibraryQuery, item: LibraryItem): string {

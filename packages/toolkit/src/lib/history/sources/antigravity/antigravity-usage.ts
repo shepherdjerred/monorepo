@@ -108,9 +108,9 @@ function modelNameFromFields(
     return text;
   }
   const modelId = fieldVarint(fields, modelIdField);
-  return modelId !== undefined && modelId !== 0
-    ? modelNameFromId(modelId)
-    : undefined;
+  return modelId === undefined || modelId === 0
+    ? undefined
+    : modelNameFromId(modelId);
 }
 
 /**
@@ -129,9 +129,9 @@ function usageEventFromModelUsage(
   const fields = decodeFields(bytes);
   const usageModelId = fieldVarint(fields, 1);
   const ownModelName =
-    usageModelId !== undefined && usageModelId !== 0
-      ? modelNameFromId(usageModelId)
-      : undefined;
+    usageModelId === undefined || usageModelId === 0
+      ? undefined
+      : modelNameFromId(usageModelId);
   const rawModelName = preferOwnModelId
     ? (ownModelName ?? fallback.modelName)
     : (fallback.modelName ?? ownModelName);
@@ -140,7 +140,7 @@ function usageEventFromModelUsage(
 
   const provider = fieldVarint(fields, 6);
   const effectiveProvider =
-    provider !== undefined && provider !== 0 ? provider : fallback.provider;
+    provider === undefined || provider === 0 ? fallback.provider : provider;
 
   const usage = reconciledUsageCounts({
     inputTokens: fieldVarint(fields, 2) ?? 0,
@@ -233,7 +233,7 @@ function stepModelFallback(fields: readonly ProtoField[]): ModelFallback {
   return {
     modelName: modelNameFromFields(modelInfoFields, 1, 12, 8),
     provider:
-      providerRaw !== undefined && providerRaw !== 0 ? providerRaw : undefined,
+      providerRaw === undefined || providerRaw === 0 ? undefined : providerRaw,
   };
 }
 

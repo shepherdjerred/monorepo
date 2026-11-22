@@ -378,14 +378,14 @@ function evaluateFlag<T>(
     reason: result.reason,
     errorCode: result.errorCode,
     value:
-      result.errorCode !== undefined &&
-      result.errorCode !== "PROVIDER_NOT_READY"
-        ? "error"
-        : typeof result.value === "boolean"
+      result.errorCode === undefined ||
+      result.errorCode === "PROVIDER_NOT_READY"
+        ? typeof result.value === "boolean"
           ? result.value
             ? "true"
             : "false"
-          : "non_boolean",
+          : "non_boolean"
+        : "error",
   });
   if (result.errorCode === "FLAG_NOT_FOUND") {
     throw new FlagNotFoundError(

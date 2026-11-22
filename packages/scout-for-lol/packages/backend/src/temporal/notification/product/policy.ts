@@ -18,11 +18,11 @@ async function competitionSuppression(
   });
   if (competition === null || competition.isCancelled)
     return "recipient-preference";
-  return competition.serverId !== guildId ||
-    record.intent.target.kind !== "channel" ||
-    competition.channelId !== record.intent.target.channelId
-    ? "recipient-preference"
-    : undefined;
+  return competition.serverId === guildId &&
+    record.intent.target.kind === "channel" &&
+    competition.channelId === record.intent.target.channelId
+    ? undefined
+    : "recipient-preference";
 }
 
 export async function productAnnouncementSuppression(

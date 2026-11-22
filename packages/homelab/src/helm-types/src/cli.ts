@@ -179,13 +179,13 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
     const code = generateTypeScriptCode(tsInterface, args.name);
 
     // Write to file or stdout
-    if (args.output != null && args.output !== "") {
+    if (args.output == null || args.output === "") {
+      // Write to stdout (so it can be piped)
+      console.log(code);
+    } else {
       await writeFile(args.output, code, "utf8");
       console.error("");
       console.error(`✅ Types written to: ${args.output}`);
-    } else {
-      // Write to stdout (so it can be piped)
-      console.log(code);
     }
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);

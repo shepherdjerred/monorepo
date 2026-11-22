@@ -204,12 +204,12 @@ function matchesPrHeadWithoutPostMergeCommits(
   pr: PullRequest,
   context: SquashMergeSafetyContext,
 ): boolean {
-  return pr.headRefOid !== undefined && context.headSha !== undefined
-    ? pr.headRefOid === context.headSha
-    : pr.updatedAt !== undefined &&
+  return pr.headRefOid === undefined || context.headSha === undefined
+    ? pr.updatedAt !== undefined &&
         context.latestCommitAtMs !== undefined &&
         context.latestCommitAtMs > 0 &&
-        context.latestCommitAtMs <= pr.updatedAt.getTime();
+        context.latestCommitAtMs <= pr.updatedAt.getTime()
+    : pr.headRefOid === context.headSha;
 }
 
 export function isSafeWorktree(

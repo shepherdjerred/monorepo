@@ -69,15 +69,15 @@ export function requestedMaintenanceSteps(
   pipeline: Pipeline,
 ) {
   const expectedSource = pipeline.variables["CI_MAINTENANCE_SOURCE"];
-  return expectedSource !== undefined && expectedSource !== pipeline.commit
-    ? [
+  return expectedSource === undefined || expectedSource === pipeline.commit
+    ? maintenanceSteps(images, kind)
+    : [
         {
           ...noWorkStep(images.base),
           key: "maintenance-superseded",
           label: "maintenance source superseded",
         },
-      ]
-    : maintenanceSteps(images, kind);
+      ];
 }
 
 /**

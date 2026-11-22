@@ -68,10 +68,10 @@ export function requestLeaves(
             ? { OR: [{ parentId: root.id }, { parent: { parentId: root.id } }] }
             : { parentId: root.id }),
           ...(request.includeSpecials ? {} : { NOT: { seasonNumber: 0 } }),
-          ...(!request.includeFutureEpisodes &&
-          request.coverageCompletedAt !== null
-            ? { createdAt: { lte: request.coverageCompletedAt } }
-            : {}),
+          ...(request.includeFutureEpisodes ||
+          request.coverageCompletedAt === null
+            ? {}
+            : { createdAt: { lte: request.coverageCompletedAt } }),
         }
       : { id: root.id },
     include: {

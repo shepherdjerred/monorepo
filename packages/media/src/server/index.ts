@@ -107,17 +107,17 @@ if (
 )
   throw new Error("Both Discord OAuth credentials must be configured together");
 const discord =
-  bootstrap.DISCORD_CLIENT_ID !== undefined &&
-  bootstrap.DISCORD_CLIENT_SECRET !== undefined
-    ? new DiscordOAuth({
+  bootstrap.DISCORD_CLIENT_ID === undefined ||
+  bootstrap.DISCORD_CLIENT_SECRET === undefined
+    ? null
+    : new DiscordOAuth({
         clientId: bootstrap.DISCORD_CLIENT_ID,
         clientSecret: bootstrap.DISCORD_CLIENT_SECRET,
         redirectUri: new URL(
           "/notifications/discord",
           bootstrap.PUBLIC_ORIGIN,
         ).toString(),
-      })
-    : null;
+      });
 const plexAuthentication = new PlexPinAuthentication({
   serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
   serverUrl: bootstrap.PLEX_SERVER_URL,

@@ -14,11 +14,11 @@ import { jsonLog } from "./webhook-log.ts";
 const COMPONENT = "pr-webhook";
 
 function workflowIdFor(input: CheckPrMergeConflictsInput): string {
-  if (input.kind === "all-prs") {
-    // Singleton — a newer push to main supersedes any in-flight run.
-    return `check-pr-merge-conflicts-main`;
-  }
-  return `check-pr-merge-conflict-pr-${String(input.prNumber)}`;
+  // The all-prs trigger is a singleton — a newer push to main supersedes any
+  // in-flight run.
+  return input.kind === "all-prs"
+    ? `check-pr-merge-conflicts-main`
+    : `check-pr-merge-conflict-pr-${String(input.prNumber)}`;
 }
 
 async function startConflictCheck(

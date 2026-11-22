@@ -284,9 +284,9 @@ function arrayEntrySegments(entries: readonly unknown[]): readonly string[] {
     const name = parsed.data["name"];
     return typeof name === "string" && name !== "" ? [name] : [];
   });
-  return names.length !== entries.length || new Set(names).size !== names.length
-    ? entries.map((_entry, index) => index.toString())
-    : names.map((name) => `[name=${name}]`);
+  return names.length === entries.length && new Set(names).size === names.length
+    ? names.map((name) => `[name=${name}]`)
+    : entries.map((_entry, index) => index.toString());
 }
 
 /**

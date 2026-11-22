@@ -87,9 +87,9 @@ export async function suggestRadioTracks(
 ): Promise<RadioSuggestionTrack[]> {
   const runtime =
     input.runtime ??
-    (input.apiKey !== undefined && input.apiKey.trim() !== ""
-      ? getOrCreateVoiceDecisionsRuntime({ apiKey: input.apiKey })
-      : null);
+    (input.apiKey === undefined || input.apiKey.trim() === ""
+      ? null
+      : getOrCreateVoiceDecisionsRuntime({ apiKey: input.apiKey }));
   if (runtime === null) return [];
 
   const timeoutSignal = AbortSignal.timeout(RADIO_LLM_TIMEOUT_MS);

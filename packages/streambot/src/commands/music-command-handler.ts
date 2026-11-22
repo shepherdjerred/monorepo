@@ -73,12 +73,12 @@ export async function runPlaylistImportCommand(
     guildId: interaction.guildId,
   };
   const playlistName =
-    customName !== undefined && customName !== ""
-      ? customName
-      : disambiguatePlaylistName(
+    customName === undefined || customName === ""
+      ? disambiguatePlaylistName(
           store.list(viewer, "mine").map((item) => item.name),
           imported.title,
-        );
+        )
+      : customName;
   const saved = store.create(viewer, playlistName, imported.items);
   const base = await webPageUrl(
     deps.config,

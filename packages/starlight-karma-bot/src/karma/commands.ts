@@ -119,9 +119,9 @@ async function handleKarmaGive(interaction: ChatInputCommandInteraction) {
   const newReceiverKarma = totals.receiverTotalAfter;
   const gave = `${userMention(giverUser.id)} gave ${bold(amount.toString())} karma to ${userMention(receiverUser.id)}`;
   const body =
-    reason !== undefined && reason !== ""
-      ? `${gave} because ${inlineCode(reason)}. They now have ${bold(newReceiverKarma.toString())} karma.`
-      : `${gave}. They now have ${bold(newReceiverKarma.toString())} karma.`;
+    reason === undefined || reason === ""
+      ? `${gave}. They now have ${bold(newReceiverKarma.toString())} karma.`
+      : `${gave} because ${inlineCode(reason)}. They now have ${bold(newReceiverKarma.toString())} karma.`;
   await interaction.reply(
     `${body}${milestoneSuffix(receiverUser.id, totals.milestone)}`,
   );

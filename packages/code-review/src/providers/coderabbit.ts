@@ -72,10 +72,10 @@ export function parseCoderabbitCleanHead(body: string): string | null {
     return null;
   }
   const parsed = CoverageSchema.safeParse(raw);
-  return !parsed.success ||
-    parsed.data.sourceCommitId !== parsed.data.coveredCommitId
-    ? null
-    : parsed.data.coveredCommitId;
+  return parsed.success &&
+    parsed.data.sourceCommitId === parsed.data.coveredCommitId
+    ? parsed.data.coveredCommitId
+    : null;
 }
 
 /** The bold title on the line after the badge line. */

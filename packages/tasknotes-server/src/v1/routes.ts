@@ -26,9 +26,9 @@ function getUserId(c: Context): string {
     return header;
   }
   const query = c.req.query("userId");
-  return query !== undefined && query !== ""
-    ? query
-    : "00000000-0000-0000-0000-000000000000";
+  return query === undefined || query === ""
+    ? "00000000-0000-0000-0000-000000000000"
+    : query;
 }
 
 async function readValidatedJson<T>(
@@ -135,13 +135,13 @@ async function handleCreateTask(
       deadline: parseNullableDate(parsed.deadline),
       recurrenceBasis: parsed.recurrence_basis,
       dueDate:
-        parsed.due_date !== undefined && parsed.due_date !== ""
-          ? new Date(parsed.due_date)
-          : undefined,
+        parsed.due_date === undefined || parsed.due_date === ""
+          ? undefined
+          : new Date(parsed.due_date),
       dueDatetime:
-        parsed.due_datetime !== undefined && parsed.due_datetime !== ""
-          ? new Date(parsed.due_datetime)
-          : undefined,
+        parsed.due_datetime === undefined || parsed.due_datetime === ""
+          ? undefined
+          : new Date(parsed.due_datetime),
       dueTimezone: parsed.due_timezone ?? parsed.dueTimezone,
       dueString: parsed.due_string ?? parsed.dueString,
       isRecurring:
@@ -294,7 +294,7 @@ export function v1Routes(deps: V1Dependencies): Hono {
     const tasks = await store.listTasks({
       userId: getUserId(c),
       projectId:
-        projectId !== undefined && projectId !== "" ? projectId : undefined,
+        projectId === undefined || projectId === "" ? undefined : projectId,
       includeDeleted: false,
     });
     return c.json(tasks);

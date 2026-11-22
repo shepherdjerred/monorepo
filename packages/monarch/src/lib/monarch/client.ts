@@ -351,8 +351,11 @@ function isPayrollDeposit(
 ): boolean {
   if (amount <= 0) return false;
   const lower = `${name} ${plaidName}`.toLowerCase();
-  if (lower.includes("class a")) return false; // brokerage, not payroll
-  return PAYROLL_MERCHANT_PATTERNS.some((p) => lower.includes(p));
+  // "class a" is a brokerage account, not payroll.
+  return (
+    !lower.includes("class a") &&
+    PAYROLL_MERCHANT_PATTERNS.some((p) => lower.includes(p))
+  );
 }
 
 // Restricted stock lapses in the equity brokerage account. They move no cash,

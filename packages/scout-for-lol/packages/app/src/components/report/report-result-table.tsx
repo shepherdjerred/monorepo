@@ -319,9 +319,11 @@ export function ReportResultTable(props: {
                             (entry) => entry.column === column.key,
                           )?.value;
                     const renderedValue =
-                      rawValue !== undefined &&
-                      rawValue !== null &&
-                      column.asset !== undefined ? (
+                      rawValue === undefined ||
+                      rawValue === null ||
+                      column.asset === undefined ? (
+                        cellValue
+                      ) : (
                         <span className="inline-flex items-center gap-2">
                           <ReportAssetIcon
                             kind={column.asset}
@@ -329,8 +331,6 @@ export function ReportResultTable(props: {
                           />
                           <span>{cellValue}</span>
                         </span>
-                      ) : (
-                        cellValue
                       );
                     return (
                       <TableCell

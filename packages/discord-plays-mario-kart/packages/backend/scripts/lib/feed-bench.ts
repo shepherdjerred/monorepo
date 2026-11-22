@@ -169,7 +169,9 @@ export async function pinchtabCli(
     proc.exited,
   ]);
   if (code !== 0) {
-    throw new Error(`pinchtab ${args.join(" ")} failed: ${stderr || stdout}`);
+    throw new Error(
+      `pinchtab ${args.join(" ")} failed: ${stderr === "" ? stdout : stderr}`,
+    );
   }
   return stdout;
 }

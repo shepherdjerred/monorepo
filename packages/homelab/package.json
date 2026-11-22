@@ -26,7 +26,7 @@
     "@types/bun": "1.4.5",
     "@typescript-eslint/utils": "^8.72.2",
     "eslint": "^10.7.0",
-    "eslint-plugin-unicorn": "^77.0.0",
+    "eslint-plugin-unicorn": "^78.0.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.2",

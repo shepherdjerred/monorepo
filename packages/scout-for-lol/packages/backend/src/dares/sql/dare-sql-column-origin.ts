@@ -160,16 +160,13 @@ function projectionOrigin(
   visited: ReadonlySet<AstObject>,
 ): DareSqlColumnOrigin {
   const expression = objectValue(projection);
-  if (
-    expression === null ||
-    stringValue(expression["class"]) !== "COLUMN_REF"
-  ) {
-    return "derived";
-  }
   // A projection that only forwards a column keeps that column's origin, which
   // is what lets `WITH g AS (SELECT team_position FROM T1) … g.team_position`
   // stay a lake column.
-  return columnOrigin(scope, arrayValue(expression["column_names"]), visited);
+  return expression === null ||
+    stringValue(expression["class"]) !== "COLUMN_REF"
+    ? "derived"
+    : columnOrigin(scope, arrayValue(expression["column_names"]), visited);
 }
 
 function derivedOrigin(

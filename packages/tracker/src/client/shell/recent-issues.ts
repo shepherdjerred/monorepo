@@ -12,11 +12,8 @@ type RecentStorage = Pick<Storage, "getItem" | "setItem">;
 export function createRecentIssues(storage: () => RecentStorage) {
   function read(): RecentIssue[] {
     const saved = storage().getItem(key);
-    if (saved === null) {
-      return [];
-    }
     // The key is versioned: a new shape gets a new key, never a fallback.
-    return RecentSchema.parse(JSON.parse(saved));
+    return saved === null ? [] : RecentSchema.parse(JSON.parse(saved));
   }
   return {
     read,

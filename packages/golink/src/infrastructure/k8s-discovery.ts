@@ -94,9 +94,9 @@ function collectHostFromService(
   const lbHostname =
     service.status?.loadBalancer?.ingress?.[0]?.hostname?.trim();
   const candidate =
-    annotatedHost !== undefined && annotatedHost !== ""
-      ? annotatedHost
-      : lbHostname;
+    annotatedHost === undefined || annotatedHost === ""
+      ? lbHostname
+      : annotatedHost;
   if (candidate !== undefined && candidate !== "") {
     hosts.add(candidate.toLowerCase());
   }

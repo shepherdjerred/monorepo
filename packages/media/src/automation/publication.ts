@@ -131,11 +131,10 @@ export function createPublicationActivities(
       });
       assertDefaultEdition(decision.edition);
       const runtime = await requireActiveRuntime(context.db);
-      return decision.state !== "restored" ||
-        !runtime.active ||
-        runtime.epoch !== receipt.recoveryEpoch
-        ? { status: "blocked", reason: "restore_evidence_obsolete" }
-        : publishCoverage(context, receipt.mediaIds, input.operationId, {
+      return decision.state === "restored" &&
+        runtime.active &&
+        runtime.epoch === receipt.recoveryEpoch
+        ? publishCoverage(context, receipt.mediaIds, input.operationId, {
             epoch: receipt.recoveryEpoch,
             receipt,
             binding: {
@@ -150,7 +149,8 @@ export function createPublicationActivities(
                 return restoration.parent;
               },
             },
-          });
+          })
+        : { status: "blocked", reason: "restore_evidence_obsolete" };
     },
     async publishMediaToPlex(input) {
       const invocation = execution();

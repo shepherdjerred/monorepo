@@ -84,17 +84,19 @@ export function ReportQueryPreview(props: {
           {previewQuery.isFetching && (
             <p className="text-xs text-scout-subtle">Updating…</p>
           )}
-          {result.visualization !== null &&
-          result.renderKind !== "TABLE" &&
-          result.renderKind !== "LIST" &&
-          result.renderKind !== "LEADERBOARD" ? (
+          {result.visualization === null ||
+          result.renderKind === "TABLE" ||
+          result.renderKind === "LIST" ||
+          result.renderKind === "LEADERBOARD" ? (
+            result.imageBase64 === null ? null : (
+              <img
+                className="w-full rounded-md border border-border"
+                src={`data:image/png;base64,${result.imageBase64}`}
+                alt={`${result.renderKind} preview`}
+              />
+            )
+          ) : (
             <InteractiveVisualization snapshot={result.visualization} />
-          ) : result.imageBase64 === null ? null : (
-            <img
-              className="w-full rounded-md border border-border"
-              src={`data:image/png;base64,${result.imageBase64}`}
-              alt={`${result.renderKind} preview`}
-            />
           )}
           <ReportResultTable
             columns={result.columns}

@@ -71,11 +71,9 @@ export async function issueCommand(
       process.exit(1);
     }
 
-    if (options.json === true) {
-      console.log(formatJson(issue));
-    } else {
-      console.log(formatIssueDetails(issue));
-    }
+    console.log(
+      options.json === true ? formatJson(issue) : formatIssueDetails(issue),
+    );
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Unknown error occurred";

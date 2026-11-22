@@ -358,9 +358,9 @@ async function main(): Promise<void> {
   const wantRom = romIdx !== -1;
   const romCandidate = wantRom ? args.at(romIdx + 1) : undefined;
   const romArg =
-    romCandidate !== undefined && !romCandidate.startsWith("--")
-      ? romCandidate
-      : undefined;
+    romCandidate === undefined || romCandidate.startsWith("--")
+      ? undefined
+      : romCandidate;
 
   await runSynthetic();
   if (wantRom) await runRom(romArg);

@@ -59,9 +59,9 @@ export function coachExecutionProfile(
   if (context.pregame !== undefined || context.postgame !== undefined) {
     return null;
   }
-  return context.champSelect !== undefined || context.live !== undefined
-    ? IN_GAME_PROFILE
-    : null;
+  return context.champSelect === undefined && context.live === undefined
+    ? null
+    : IN_GAME_PROFILE;
 }
 
 /** What a turn runs with: the profile's model and limits, or Explore's. */

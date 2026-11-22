@@ -164,24 +164,25 @@ export function RecentFormCard(props: {
           <div>
             <p className="text-muted-foreground">CS / min</p>
             <p className="font-semibold text-foreground">
-              {form.averageCsPerMinute !== null &&
-              form.averageCsPerMinute !== undefined
-                ? `${form.averageCsPerMinute.toFixed(1)}/m`
-                : "—"}
-              {form.averageCs !== null && form.averageCs !== undefined ? (
+              {form.averageCsPerMinute === null ||
+              form.averageCsPerMinute === undefined
+                ? "—"
+                : `${form.averageCsPerMinute.toFixed(1)}/m`}
+              {form.averageCs === null ||
+              form.averageCs === undefined ? null : (
                 <span className="ml-1 text-[11px] font-normal text-muted-foreground">
                   ({Math.round(form.averageCs).toString()})
                 </span>
-              ) : null}
+              )}
             </p>
           </div>
           <div>
             <p className="text-muted-foreground">Vision</p>
             <p className="font-semibold text-foreground">
-              {form.averageVisionScore !== null &&
-              form.averageVisionScore !== undefined
-                ? form.averageVisionScore.toFixed(1)
-                : "—"}
+              {form.averageVisionScore === null ||
+              form.averageVisionScore === undefined
+                ? "—"
+                : form.averageVisionScore.toFixed(1)}
             </p>
           </div>
         </div>
@@ -304,23 +305,25 @@ export function MatchHistoryList(props: {
           <div className="min-w-32">
             <p className="text-sm font-medium text-scout-ink">
               {props.playerId === undefined ? (
-                entry.placement !== undefined && entry.placement !== null ? (
-                  `#${entry.placement.toString()} placement`
-                ) : entry.win ? (
-                  "Victory"
+                entry.placement === undefined || entry.placement === null ? (
+                  entry.win ? (
+                    "Victory"
+                  ) : (
+                    "Defeat"
+                  )
                 ) : (
-                  "Defeat"
+                  `#${entry.placement.toString()} placement`
                 )
               ) : (
                 <Link
                   className="underline underline-offset-4"
                   to={`/players/${props.playerId.toString()}/matches/${encodeURIComponent(entry.matchId)}${props.profileSearch}`}
                 >
-                  {entry.placement !== undefined && entry.placement !== null
-                    ? `#${entry.placement.toString()} placement`
-                    : entry.win
+                  {entry.placement === undefined || entry.placement === null
+                    ? entry.win
                       ? "Victory"
-                      : "Defeat"}
+                      : "Defeat"
+                    : `#${entry.placement.toString()} placement`}
                 </Link>
               )}
             </p>

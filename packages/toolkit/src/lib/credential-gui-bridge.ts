@@ -83,9 +83,9 @@ export async function resolveGuiBridge(options: {
   if (options.herdrCore === null) return null;
   if (options.herdrCore !== undefined) {
     const toolkit = options.installedToolkit;
-    return toolkit !== undefined && toolkit !== null
-      ? { herdrCore: options.herdrCore, toolkit }
-      : null;
+    return toolkit === undefined || toolkit === null
+      ? null
+      : { herdrCore: options.herdrCore, toolkit };
   }
   return options.liveSubprocesses ? liveGuiBridge() : null;
 }

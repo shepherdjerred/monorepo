@@ -174,18 +174,18 @@ export function PostForm({
         ownerKey,
         attachmentIds: bodyDraft.attachments,
       });
-      return post !== undefined && revision !== undefined
-        ? api.forum.update.mutate({
-            actor: currentActor(),
-            id: post.id,
-            expectedRevision: revision,
-            ...common,
-          })
-        : api.forum.create.mutate({
+      return post === undefined || revision === undefined
+        ? api.forum.create.mutate({
             actor: currentActor(),
             kind,
             ...common,
             linkedIssueIdentifiers: parseIssueTokens(linkedIssues, issueInput),
+          })
+        : api.forum.update.mutate({
+            actor: currentActor(),
+            id: post.id,
+            expectedRevision: revision,
+            ...common,
           });
     },
     onSuccess: async (saved) => {

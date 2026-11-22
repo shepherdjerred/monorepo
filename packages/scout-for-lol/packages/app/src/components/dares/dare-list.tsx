@@ -123,9 +123,9 @@ function improvementUnit(
   if (source.includes("cs_per_minute") || source.includes("cs_per_min")) {
     return "CS/min";
   }
-  return condition.gameSet !== null && !GENERIC_GAME_SETS.has(condition.gameSet)
-    ? humanizeSlug(condition.gameSet)
-    : humanizeSlug(source);
+  return condition.gameSet === null || GENERIC_GAME_SETS.has(condition.gameSet)
+    ? humanizeSlug(source)
+    : humanizeSlug(condition.gameSet);
 }
 
 function conditionPhrase(
@@ -135,9 +135,9 @@ function conditionPhrase(
 ): string {
   const authored = authoredPhrase(gameSet, phrases);
   if (authored !== undefined) return authored;
-  return gameSet !== null && !GENERIC_GAME_SETS.has(gameSet)
-    ? humanizeSlug(gameSet)
-    : gamesLabel(target);
+  return gameSet === null || GENERIC_GAME_SETS.has(gameSet)
+    ? gamesLabel(target)
+    : humanizeSlug(gameSet);
 }
 
 function countableLine(

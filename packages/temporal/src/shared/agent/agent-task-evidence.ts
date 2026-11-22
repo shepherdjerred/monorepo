@@ -331,9 +331,9 @@ function normalizeDeclaredCheck(
   const summary =
     !evidenceIntegrityComplete && normalizedResult.status === "passed"
       ? `${normalizedResult.summary} Evidence validation failed.`
-      : !semanticPredicatesPassed && normalizedResult.status !== "failed"
-        ? `${normalizedResult.summary} Source-defined collector predicates failed: ${adverseSemanticStatusIds.join(", ")}.`
-        : normalizedResult.summary;
+      : semanticPredicatesPassed || normalizedResult.status === "failed"
+        ? normalizedResult.summary
+        : `${normalizedResult.summary} Source-defined collector predicates failed: ${adverseSemanticStatusIds.join(", ")}.`;
   return {
     check: {
       id: declared.id,
