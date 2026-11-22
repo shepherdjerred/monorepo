@@ -247,14 +247,15 @@ export function resetFormValidationState(form: HTMLFormElement): void {
 
 /**
  * Attaches `:user-invalid` + `.user-invalid-fallback` ARIA synchronization and
- * a single polite `.visually-hidden` live region (`500ms` post-blur announcement)
+ * a single polite `ui-sr-only` live region (`500ms` post-blur announcement)
  * for `form`. Returns a cleanup function suitable for a React 19 ref callback.
  */
 export function bindFormValidation(form: HTMLFormElement): () => void {
   const announcer = document.createElement("div");
   announcer.setAttribute("aria-live", "polite");
-  announcer.className = "visually-hidden";
-  document.body.append(announcer);
+  announcer.className = "ui-sr-only";
+  // Inside the modal: everything outside an open dialog is inert to assistive tech.
+  (form.closest("dialog") ?? document.body).append(announcer);
 
   const session: ValidationSession = {
     form,

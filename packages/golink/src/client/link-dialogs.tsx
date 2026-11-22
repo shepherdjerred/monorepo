@@ -60,11 +60,14 @@ export function showModalFromFocus(dialog: HTMLDialogElement | null): void {
 export function ModalDialog({
   dialogRef,
   labelledBy,
+  busy,
   onClose,
   children,
 }: {
   dialogRef: RefObject<HTMLDialogElement | null>;
   labelledBy: string;
+  /** While a request runs the dialog cannot be dismissed, so a late result never closes a newer opening. */
+  busy: boolean;
   onClose: () => void;
   children: ReactNode;
 }) {
@@ -80,9 +83,14 @@ export function ModalDialog({
         }
         onClose();
       }}
+      onCancel={(event) => {
+        if (busy) {
+          event.preventDefault();
+        }
+      }}
       onClick={(event) => {
         // A click on the backdrop lands on the dialog element itself.
-        if (event.target === event.currentTarget) {
+        if (!busy && event.target === event.currentTarget) {
           event.currentTarget.close();
         }
       }}
@@ -137,6 +145,7 @@ export function DeleteConfirmDialog({
     <ModalDialog
       dialogRef={dialogRef}
       labelledBy="delete-dialog-title"
+      busy={isDeleting}
       onClose={onClose}
     >
       <h2 className="golink-dialog-title" id="delete-dialog-title">
@@ -150,6 +159,7 @@ export function DeleteConfirmDialog({
       )}
       <div className="golink-dialog-actions">
         <Button
+          disabled={isDeleting}
           onClick={() => {
             dialogRef.current?.close();
           }}
@@ -209,6 +219,7 @@ export function LinkFormDialog({
     <ModalDialog
       dialogRef={dialogRef}
       labelledBy="upsert-form-heading"
+      busy={isSubmitting}
       onClose={noop}
     >
       <h2 className="golink-dialog-title" id="upsert-form-heading">
@@ -327,6 +338,7 @@ export function LinkFormDialog({
         <div className="golink-dialog-actions">
           <Button
             type="button"
+            disabled={isSubmitting}
             onClick={() => {
               dialogRef.current?.close();
             }}
