@@ -256,7 +256,7 @@ export function blockerNotes(blockers: readonly CommitBlocker[]): string[] {
     ...others.map((group) =>
       group.members.length === 1 && group.members[0] !== undefined
         ? blockerNote(group.members[0])
-        : `${String(group.count)} ${DOING[group.state][1]}: ${namedWithMore(
+        : `${String(group.count)} ${DOING[group.state][group.count === 1 ? 0 : 1]}: ${namedWithMore(
             group.members.map(
               (member) => `${member.service} / ${member.environment}`,
             ),

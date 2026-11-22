@@ -19,37 +19,56 @@ const RELEASE_STANDING: [CommitVerdict, string, string, boolean][] = [
 ];
 
 /**
- * The state of the releases that carry a commit's failed builds, said so
+ * How one carried failure's release is named: by its revision, led by its
+ * service when several services' releases are in play, since revision
+ * numbers restart per service and "r10" alone could be any of them.
+ */
+function releaseLabel(entry: CarriedFailure, withService: boolean) {
+  const revision =
+    entry.releaseRevision === undefined
+      ? null
+      : revisionLabel(entry.releaseRevision);
+  const service = withService ? entry.serviceTitle : undefined;
+  if (revision === null)
+    return service === undefined ? "its release" : `${service}'s release`;
+  return service === undefined ? revision : `${service} ${revision}`;
+}
+
+/**
+ * The standing of the releases that carry a commit's failed builds, said so
  * the carrying commit's row cannot contradict it: "the change ships in
- * release r12, which failed to deploy". The most urgent state of any of the
- * releases decides; releases with no recorded verdict (none yet) say
- * nothing. The release can belong to a commit after the carrier, when the
- * carrier composed nothing, so it is named by its own revision.
+ * release r12, which failed to deploy". Each release keeps its own state:
+ * releases are grouped by verdict, most urgent first, never merged under
+ * the worst one. Releases with no recorded verdict (none yet) or a live one
+ * say nothing. The release can belong to a commit after the carrier, when
+ * the carrier composed nothing, so it is named by its own revision.
  */
 function releaseWords(entries: readonly CarriedFailure[]) {
-  const verdicts = new Set(
-    entries.flatMap((entry) =>
-      entry.releaseVerdict === undefined ? [] : [entry.releaseVerdict],
-    ),
+  const withService =
+    new Set(entries.map((entry) => entry.serviceTitle)).size > 1;
+  const parts = RELEASE_STANDING.flatMap(
+    ([verdict, one, many, contradicts]) => {
+      const labels = distinct(
+        entries
+          .filter((entry) => entry.releaseVerdict === verdict)
+          .map((entry) => releaseLabel(entry, withService)),
+      );
+      if (labels.length === 0) return [];
+      const several = labels.length > 1;
+      const bare = withService || labels[0] === "its release";
+      const noun = bare ? "" : `${several ? "releases" : "release"} `;
+      return [
+        {
+          contradicts,
+          text: `${noun}${series(labels)}, which ${several ? many : one}`,
+        },
+      ];
+    },
   );
-  const standing = RELEASE_STANDING.find(([verdict]) => verdicts.has(verdict));
-  if (standing === undefined) return null;
-  const [, one, many, contradicts] = standing;
-  const revisions = distinct(
-    entries.flatMap((entry) =>
-      entry.releaseRevision === undefined
-        ? []
-        : [revisionLabel(entry.releaseRevision)],
-    ),
-  );
-  const several = revisions.length > 1;
-  const noun =
-    revisions.length === 0
-      ? "its release"
-      : `${several ? "releases" : "release"} ${series(revisions)}`;
+  if (parts.length === 0) return null;
   return {
-    contradicts,
-    text: `the change ships in ${noun}, which ${several ? many : one}`,
+    contradicts: parts.some((part) => part.contradicts),
+    text: `the change ships in ${parts.map((part) => part.text).join(", and in ")}`,
   };
 }
 
