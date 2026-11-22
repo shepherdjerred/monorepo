@@ -47,7 +47,7 @@ export function createGates(stage: string) {
   };
   return {
     async acquisition() {
-      // The current Flipt decision must authorize each acquisition check.
+      // Each acquisition check requires a fresh affirmative provider decision.
       const { value, source } = await mediaBehaviorConfig(stage, true).get(
         "acquisitionEnabled",
       );
