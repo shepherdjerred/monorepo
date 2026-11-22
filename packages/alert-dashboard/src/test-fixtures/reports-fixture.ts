@@ -164,78 +164,131 @@ export function fixtureReportIngestBatch(
     }
 
     if (schedule.scheduleId === "main-vuln-scan-weekly") {
-      items.push({
-        report: {
-          schemaVersion: 1,
-          reportRunId: "main-vuln-scan-weekly:latest",
+      const prevCompletedAt = now.subtract({ hours: 7 * 24 + 2 });
+      items.push(
+        clearEnvelopeItem({
+          scheduleId: schedule.scheduleId,
           reportType: schedule.reportType,
           title: schedule.title,
-          scheduleId: schedule.scheduleId,
-          startedAt: completedAt.subtract({ minutes: 3 }).toString(),
-          completedAt: completedAt.toString(),
-          execution: "complete",
-          verdict: "attention",
-          headline: "1 transitive advisory requires manual review.",
-          checks: [
-            {
-              id: "osv-audit",
-              label: "Workspace vulnerability audit",
-              required: true,
-              status: "failed",
-              summary: "Found 1 moderate advisory in transitive dependency.",
-              evidenceReceiptIds: ["receipt-vuln-scan"],
+          eyebrow: schedule.eyebrow,
+          mailboxFrom: schedule.mailbox.from,
+          mailboxTo: schedule.mailbox.to,
+          completedAt: prevCompletedAt,
+          deliveryStatus: "sent",
+          runSuffix: "prev",
+        }),
+        {
+          report: {
+            schemaVersion: 1,
+            reportRunId: "main-vuln-scan-weekly:latest",
+            reportType: schedule.reportType,
+            title: schedule.title,
+            scheduleId: schedule.scheduleId,
+            startedAt: completedAt.subtract({ minutes: 3 }).toString(),
+            completedAt: completedAt.toString(),
+            execution: "complete",
+            verdict: "attention",
+            headline: "1 transitive advisory requires manual review.",
+            synthesis:
+              "One moderate transitive advisory remains open behind an operator-reviewed override PR while container scans remain clean.",
+            checks: [
+              {
+                id: "osv-audit",
+                label: "Workspace vulnerability audit",
+                required: true,
+                status: "failed",
+                summary: "Found 1 moderate advisory in transitive dependency.",
+                evidenceReceiptIds: ["receipt-vuln-scan"],
+              },
+              {
+                id: "trivy-fs",
+                label: "Container & filesystem scan",
+                required: false,
+                status: "passed",
+                summary: "Zero critical or high CVEs in container rootfs.",
+                evidenceReceiptIds: ["receipt-trivy-fs"],
+              },
+            ],
+            evidence: [
+              {
+                id: "receipt-vuln-scan",
+                source: "bun-audit",
+                origin: "declared-collector",
+                semanticStatus: "failed",
+                observedAt: completedAt.subtract({ minutes: 1 }).toString(),
+                status: "success",
+                command: "bun audit --json",
+                exitCode: 1,
+                excerpt:
+                  '{\n  "advisories": [{ "id": "GHSA-sample-1", "severity": "moderate" }]\n}',
+                contentSha256: "a".repeat(64),
+                url: "https://github.com/advisories",
+              },
+              {
+                id: "receipt-trivy-fs",
+                source: "trivy",
+                origin: "declared-collector",
+                semanticStatus: "passed",
+                observedAt: completedAt.subtract({ minutes: 2 }).toString(),
+                status: "success",
+                command: "trivy fs --severity HIGH,CRITICAL .",
+                exitCode: 0,
+                excerpt: "Total: 0 (HIGH: 0, CRITICAL: 0)",
+              },
+            ],
+            findings: [
+              {
+                id: "ghsa-sample-1",
+                state: "active",
+                section: "Dependencies",
+                severity: "warning",
+                summary: "Moderate advisory awaiting upstream patch release",
+                detail:
+                  "Opened review PR with pinned override for operator sign-off.",
+                evidenceReceiptIds: ["receipt-vuln-scan"],
+              },
+              {
+                id: "ghsa-sample-0",
+                state: "recovered",
+                section: "Dependencies",
+                severity: "info",
+                summary: "Previously tracked lodash advisory resolved on main",
+                detail: "Verified clean across root bun.lock.",
+                evidenceReceiptIds: ["receipt-trivy-fs"],
+              },
+            ],
+            limitations: [
+              "Runtime exploitability depends on downstream call graph exposure.",
+            ],
+            actions: ["Review remediation PR #3072 before merging."],
+            remediation: {
+              outcome: "pr-created",
+              prUrl: "https://github.com/shepherdjerred/monorepo/pull/3072",
+              branchName: "auto/vuln-remediation",
+              commitSha: "2bb7b4315e11",
+              autoMergeEnabled: false,
+              changedFiles: ["package.json", "bun.lock"],
+              resolvedCount: 1,
+              unresolvedCount: 0,
+              summary: "Added temporary override and verified workspace tests.",
             },
-          ],
-          evidence: [
-            {
-              id: "receipt-vuln-scan",
-              source: "bun-audit",
-              origin: "declared-collector",
-              semanticStatus: "failed",
-              observedAt: completedAt.subtract({ minutes: 1 }).toString(),
-              status: "success",
-              exitCode: 1,
+            provenance: {
+              workflowId: "main-vuln-scan-weekly-latest",
+              runId: "run-vuln-latest",
+              temporalUrl:
+                "https://temporal-ui.tailnet-1a49.ts.net/namespaces/prod/workflows/main-vuln-scan-weekly-latest",
+              repoSha: "1aa6a3204f00",
             },
-          ],
-          findings: [
-            {
-              id: "ghsa-sample-1",
-              state: "active",
-              section: "Dependencies",
-              severity: "warning",
-              summary: "Moderate advisory awaiting upstream patch release",
-              detail:
-                "Opened review PR with pinned override for operator sign-off.",
-              evidenceReceiptIds: ["receipt-vuln-scan"],
-            },
-          ],
-          limitations: [],
-          actions: ["Review remediation PR #3072 before merging."],
-          remediation: {
-            outcome: "pr-created",
-            prUrl: "https://github.com/shepherdjerred/monorepo/pull/3072",
-            branchName: "auto/vuln-remediation",
-            commitSha: "2bb7b4315e11",
-            autoMergeEnabled: false,
-            changedFiles: ["package.json", "bun.lock"],
-            resolvedCount: 1,
-            unresolvedCount: 0,
-            summary: "Added temporary override and verified workspace tests.",
           },
-          provenance: {
-            workflowId: "main-vuln-scan-weekly-latest",
-            runId: "run-vuln-latest",
-            repoSha: "1aa6a3204f00",
-          },
+          subject: "Security scan: 1 advisory needs review (PR #3072)",
+          eyebrow: schedule.eyebrow,
+          mailboxFrom: schedule.mailbox.from,
+          mailboxTo: schedule.mailbox.to,
+          deliveryStatus: "sent",
+          messageId: "<main-vuln-scan-weekly-latest@sjer.red>",
+          acceptedAt: completedAt.add({ seconds: 2 }).toString(),
         },
-        subject: "Security scan: 1 advisory needs review (PR #3072)",
-        eyebrow: schedule.eyebrow,
-        mailboxFrom: schedule.mailbox.from,
-        mailboxTo: schedule.mailbox.to,
-        deliveryStatus: "sent",
-        messageId: "<main-vuln-scan-weekly-latest@sjer.red>",
-        acceptedAt: completedAt.add({ seconds: 2 }).toString(),
-      });
+      );
       continue;
     }
 
