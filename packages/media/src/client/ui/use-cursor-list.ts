@@ -39,25 +39,67 @@ export async function readEveryPage<Item>(
 }
 
 /**
+ * How many pages in a row one look reads when each comes back empty. An API
+ * that decides what a reader may see after it has cut the page can answer
+ * with nothing and still have more behind it; this many empty answers is
+ * where a look stops and the list says so, so that a long run of them costs
+ * a bounded number of requests and the reader decides whether to go on.
+ */
+export const EMPTY_PAGES_PER_LOOK = 5;
+
+/**
+ * One look at a list from `cursor`: the first page with anything in it, or
+ * the last page of the list, or, after `EMPTY_PAGES_PER_LOOK` empty pages
+ * with more still behind them, the last of those. Each page must move the
+ * cursor on; one that hands back the cursor it was read with would be read
+ * for ever, so it is an error.
+ */
+export async function readPastEmptyPages<Item>(
+  read: (cursor: string | null) => Promise<CursorPage<Item>>,
+  cursor: string | null,
+): Promise<CursorPage<Item>> {
+  let from = cursor;
+  let page = await read(from);
+  for (let looked = 1; looked < EMPTY_PAGES_PER_LOOK; looked += 1) {
+    if (page.items.length > 0 || page.nextCursor === null) return page;
+    if (page.nextCursor === from) {
+      throw new Error("A cursor-paged read answered with its own cursor");
+    }
+    from = page.nextCursor;
+    page = await read(from);
+  }
+  return page;
+}
+
+/**
  * A cursor-paged list: its rows so far and how to get more. The one place
  * the client follows `nextCursor`.
  *
  * While a changed `queryKey` (new filters, another sort) is loading, the
  * previous rows stay and `stale` is true, so a page can dim them instead of
  * emptying itself between two answers.
+ *
+ * `emptyPages: "skip"` is for a read whose pages can be empty with more
+ * behind them: each look (the first, and each `loadMore`) reads on past them
+ * (`readPastEmptyPages`). A list can then still be empty with `hasMore` set,
+ * which means a whole look found nothing; the page says so and offers
+ * another look.
  */
 export function useCursorList<Item>(options: {
   queryKey: QueryKey;
   read: (cursor: string | null) => Promise<CursorPage<Item>>;
   paging?: Paging;
+  emptyPages?: "show" | "skip";
   refetchInterval?: number;
 }) {
-  const { read, paging = "more" } = options;
+  const { read, paging = "more", emptyPages = "show" } = options;
+  const look = (cursor: string | null) =>
+    emptyPages === "skip" ? readPastEmptyPages(read, cursor) : read(cursor);
   const query = useInfiniteQuery({
     queryKey: options.queryKey,
     initialPageParam: firstCursor(),
     queryFn: ({ pageParam }) =>
-      paging === "all" ? readEveryPage(read) : read(pageParam),
+      paging === "all" ? readEveryPage(read) : look(pageParam),
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     placeholderData: (previous) => previous,
     ...(options.refetchInterval === undefined

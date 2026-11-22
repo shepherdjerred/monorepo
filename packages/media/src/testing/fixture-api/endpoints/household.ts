@@ -235,7 +235,7 @@ const removals: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/removal-history",
     schema: RemovalHistoryPageSchema,
-    respond: (request) => removalHistory(request.query),
+    respond: (request) => removalHistory(request.query, request.persona),
     samples: ["/removal-history"],
   }),
 ];

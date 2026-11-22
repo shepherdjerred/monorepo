@@ -36,20 +36,65 @@ test("leaving soon is one entry per title, soonest first, without what already l
   expect(expanse?.leavesAt).toBe(expanse?.rows[0]?.removal.graceUntil);
 });
 
-/** The first page of the removal history, as the Removed view first has it. */
-const history = RemovalHistoryPageSchema.parse(
-  removalHistory(new URLSearchParams()),
-).items;
+/** Every page of the removal history as one persona reads it, in order. */
+function historyPages(persona: "owner" | "member") {
+  const pages = [];
+  let cursor: string | null = null;
+  do {
+    const page = RemovalHistoryPageSchema.parse(
+      removalHistory(
+        new URLSearchParams(cursor === null ? {} : { cursor }),
+        persona,
+      ),
+    );
+    pages.push(page);
+    cursor = page.nextCursor;
+  } while (cursor !== null);
+  return pages;
+}
+
+/** The whole household's history, as the owner has it once it is all read. */
+const history = historyPages("owner").flatMap((page) => page.items);
 
 function carrying(persona: "owner" | "member"): string[] {
+  const shown = historyPages(persona).flatMap((page) => page.items);
   const controls = restoreControls(
-    history,
+    shown,
     RemovalListSchema.parse(removalList(persona)),
   );
-  return history
+  return shown
     .filter((item) => controls.rows.has(item.id))
     .map((item) => `${item.title}, ${item.edition}`);
 }
+
+test("a member's history page is cut first and filtered after, so the first one is empty with more behind it", () => {
+  const owner = historyPages("owner");
+  const member = historyPages("member");
+  // The same pages for both: what differs is what each page shows.
+  expect(member).toHaveLength(owner.length);
+  expect(owner.map((page) => page.items.length)).toEqual([5, 5, 5, 3]);
+  expect(member.map((page) => page.items.length)).toEqual([0, 4, 1, 1]);
+  expect(member[0]?.nextCursor).not.toBeNull();
+  expect(member.map((page) => page.nextCursor)).toEqual(
+    owner.map((page) => page.nextCursor),
+  );
+  // A member is shown their own requests, and the owner the household's.
+  const own = member.flatMap((page) => page.items);
+  expect(own.map((item) => item.seriesTitle ?? item.title)).toEqual([
+    "Hacks",
+    "Silo",
+    "Moonlight",
+    "Twin Peaks",
+    "Dark",
+    "Get Out",
+  ]);
+  expect(new Set(own.map((item) => item.requesterContext))).toEqual(
+    new Set(["your_request"]),
+  );
+  expect(new Set(history.map((item) => item.requesterContext))).toEqual(
+    new Set(["household"]),
+  );
+});
 
 test("the restore control goes on the row that is the listed removal, not on another cut of the film", () => {
   // Two versions of one film are set aside at once.

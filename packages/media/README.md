@@ -853,6 +853,19 @@ retention decision's id), never on a row that merely shares its `mediaId`: a
 film's default version and one of its cuts can be set aside at the same time,
 and the cut is recovered from the title page.
 
+`GET /removal-history` cuts a page of the household's removals first and keeps
+the reader's own afterwards, so a member's page can be short, or empty, and
+still carry `nextCursor`. An empty page is therefore never taken for the end of
+the history. Removed reads with `emptyPages: "skip"`: each look (the first, and
+each "Show earlier removals") follows the cursor past empty pages until one has
+something to show or the history ends, up to five pages. Five empty pages in a
+row with more behind them is where a look stops: the view then says that none of
+the most recent removals were the reader's and offers "Look further back", so a
+long run of other people's removals costs a bounded number of requests and never
+reads as "nothing has been removed". The fixture history is filtered the same
+way, and its five newest removals are all other people's, so a member's first
+page is empty in `dev:fixture` too.
+
 Shared building blocks live in `src/client/ui/`:
 
 | Module                       | Holds                                                                                                             |
@@ -861,7 +874,7 @@ Shared building blocks live in `src/client/ui/`:
 | `poster-card.tsx`            | `PosterCard`, `StatePill`, and `PosterGrid`, whose column count follows its own width (container queries).        |
 | `segmented.tsx`              | A row of exclusive views that are links, so navigation and not an ARIA tablist.                                   |
 | `skeleton.tsx`, `states.tsx` | Loading shapes, empty states that say what to do next, and error states by kind of failure.                       |
-| `use-cursor-list.ts`         | The one place the client follows `nextCursor`: a page at a time, or every page.                                   |
+| `use-cursor-list.ts`         | The one place the client follows `nextCursor`: a page at a time, past empty pages, or every page.                 |
 
 `src/client/presentation/` holds the words for contract enums, each table
 written `satisfies Record<Enum, …>`: an enum that gains a value stops compiling
