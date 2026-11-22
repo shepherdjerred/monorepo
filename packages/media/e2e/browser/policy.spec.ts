@@ -60,13 +60,16 @@ test("the built shell has nothing inline, and the stylesheet no data URL", async
 // The violation check lives in the suite's own `test`; a spec that took
 // Playwright's instead would run without it.
 test("every spec in this suite runs under the violation check", async () => {
-  const files = await readdir(import.meta.dir);
+  // Specs in a directory of their own, such as `manage/`, reach the suite's
+  // `test` by the package's `#e2e` path.
+  const files = await readdir(import.meta.dir, { recursive: true });
   const specs = files.filter((file) => file.endsWith(".spec.ts"));
   expect(specs).toContain("policy.spec.ts");
+  expect(specs).toContain(path.join("manage", "forms.spec.ts"));
   for (const spec of specs) {
     const source = await Bun.file(path.join(import.meta.dir, spec)).text();
     expect(source, spec).toMatch(
-      /import \{[^}]*\btest\b[^}]*\} from "\.\/support\.ts";/u,
+      /import \{[^}]*\btest\b[^}]*\} from "(?:\.\/|#e2e\/browser\/)support\.ts";/u,
     );
     expect(source, spec).not.toMatch(
       /import \{[^}]*\btest\b[^}]*\} from "@playwright\/test";/u,

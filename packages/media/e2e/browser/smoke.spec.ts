@@ -88,11 +88,14 @@ for (const scheme of SCHEMES) {
         const failures = watchForFailures(page, new URL(baseURL).origin);
         await open(page, route, baseURL);
 
-        // The shared error notice and the error state, by their own marks:
-        // `role="alert"` alone also matches product copy such as a
-        // bounced-email warning on a notification.
+        // The shared error notice, the error state, and the Manage pages'
+        // error callout, by their own marks: `role="alert"` alone also
+        // matches product copy such as a bounced-email warning on a
+        // notification.
         await expect(
-          page.locator('.notice-error, [data-ui="error-state"]'),
+          page.locator(
+            '.notice-error, [data-ui="error-state"], [role="alert"][data-tone="danger"]',
+          ),
         ).toHaveCount(0);
         expect(failures).toEqual([]);
         await expect(page).toHaveTitle(route.title);

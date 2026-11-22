@@ -1,0 +1,87 @@
+@layer components {
+  .frame {
+    container: data-list / inline-size;
+    min-width: 0;
+  }
+  .list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .row {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--border);
+    min-width: 0;
+  }
+  .line {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+  .main {
+    flex: 1 1 0;
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .title {
+    font-size: var(--text-md);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .detail {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
+  }
+  .detail p {
+    margin: 0;
+  }
+  .note {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--ok);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+  .note svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+  .status {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-2);
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-2);
+  }
+  .below {
+    min-width: 0;
+  }
+
+  /* Too narrow for one line: each row becomes a card of stacked parts. */
+  @container data-list (max-width: 520px) {
+    .line {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--space-3);
+    }
+    .status,
+    .actions {
+      justify-content: flex-start;
+    }
+  }
+}

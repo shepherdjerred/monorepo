@@ -98,7 +98,7 @@ const manageRoutes: RouteObject[] = [
   {
     path: "subtitles",
     lazy: async () => {
-      const { SubtitlesPage } = await import("#client/manage/tools.tsx");
+      const { SubtitlesPage } = await import("#client/manage/subtitles.tsx");
       return { Component: SubtitlesPage };
     },
   },
@@ -113,21 +113,22 @@ const manageRoutes: RouteObject[] = [
   {
     path: "plex",
     lazy: async () => {
-      const { PlexPage } = await import("#client/manage/tools.tsx");
+      const { PlexPage } = await import("#client/manage/plex.tsx");
       return { Component: PlexPage };
     },
   },
   {
     path: "numbering",
     lazy: async () => {
-      const { NumberingPage } = await import("#client/manage/tools.tsx");
+      const { NumberingPage } = await import("#client/manage/numbering.tsx");
       return { Component: NumberingPage };
     },
   },
   {
     path: "providers",
     lazy: async () => {
-      const { ProvidersPage } = await import("#client/manage/tools.tsx");
+      const { ProvidersPage } =
+        await import("#client/manage/providers/page.tsx");
       return { Component: ProvidersPage };
     },
   },

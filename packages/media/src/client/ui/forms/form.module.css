@@ -1,0 +1,102 @@
+@layer components {
+  .form {
+    display: grid;
+    gap: var(--space-5);
+    min-width: 0;
+  }
+
+  /* What is wrong, in one place, after a submit that was refused. */
+  .summary {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+    border-radius: var(--radius-control);
+    background: var(--danger-soft);
+    color: var(--danger);
+    font-size: var(--text-sm);
+  }
+  .summaryTitle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    font-weight: 600;
+  }
+  .summaryTitle svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+  .summaryList {
+    display: grid;
+    gap: var(--space-1);
+    margin: var(--space-2) 0 0;
+    padding-inline-start: var(--space-5);
+  }
+  /* A flex box's baseline is its first line, so the bullet sits beside the
+     start of a message that wraps, not beside its last line. */
+  .summaryLink {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-size: inherit;
+    text-align: start;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  @media (pointer: coarse) {
+    .summaryLink {
+      min-height: 32px;
+    }
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-3);
+  }
+  .row > :first-child {
+    flex: 1 1 14rem;
+  }
+
+  .footer {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .footerRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .footerStatus {
+    margin: 0;
+    font-size: var(--text-sm);
+  }
+  .saved,
+  .unsaved {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .saved svg,
+  .unsaved svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+  .saved {
+    color: var(--ok);
+    font-weight: 500;
+  }
+  .saved a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .unsaved {
+    color: var(--text-muted);
+  }
+}
