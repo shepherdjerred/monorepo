@@ -216,8 +216,14 @@ untracked except `node_modules`, so the tree equals the revision and
 re-links the CI image's mise toolchain instead of copying it, and copies only
 mise's per-tool metadata, so a missing tool version still installs beside the
 image's. Image provenance installs only the Temporal workspace's production
-dependencies, on its own claim so the two profiles never rewrite each other. A
-worker
+dependencies, on its own claim so the two profiles never rewrite each other.
+A Job installs only the tools its recipe runs, under `MISE_LOCKED=1`: it runs
+the executor's revision, which can predate the image's pins, and locked mode
+installs a version the image lacks only from a checksum that revision's
+`mise.lock` records. Image provenance installs `bun node jq helm`; `awscli`
+(no checksum before 2.41) is installed only for OpenTofu recipes and stack
+archive downloads, the only places `aws` runs.
+A worker
 candidate at the executor's own revision reuses the prepared checkout. Any other
 candidate is a detached worktree with a blobless fetch into the executor's
 object store, sharing the Job's Bun cache. Candidate `mise exec` never
