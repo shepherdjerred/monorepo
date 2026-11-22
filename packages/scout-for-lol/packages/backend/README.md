@@ -1465,6 +1465,11 @@ appears in web match history. Competitions' S3 scan counts it, as it counts
 every silent backfill, since its criteria read only the win and the champion.
 Migration `20261122020000_scout_client_history_record_reopen` reopened
 history-only admissions abandoned as `riot_match_*` before the record existed.
+Migration `20261122030000_scout_client_witnessed_unrecorded_history_only`
+re-admitted witnessed games live processing could not record (Mayhem bundles
+refused before lane `NONE` read as "no position") as history-only
+`late-discovery`, only where no live effect had run, so they are recorded
+silently rather than posted weeks late.
 
 Timeline selection is independent of result selection. Riot supplies its
 timeline when available; accepted client timeline observations can fill a

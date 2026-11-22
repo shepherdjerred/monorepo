@@ -369,3 +369,73 @@ describe("an unwitnessed ARAM Mayhem game from its history bundle", () => {
     expect(archivedRecord().coverage).toBe("history");
   });
 });
+
+async function abandonedLive() {
+  await admit(false);
+  await prisma.matchEvidenceAdmission.update({
+    where: { riotMatchId: matchId },
+    data: {
+      recoveryAbandonedAt: new Date(),
+      recoveryAbandonedReason: "riot_match_forbidden",
+      recoveryNextAttemptAt: new Date(Date.now() + 60 * MINUTE),
+    },
+  });
+}
+
+async function migrate() {
+  await prisma.$executeRawUnsafe(
+    await Bun.file(
+      new URL(
+        "../../../prisma/migrations/20261122030000_scout_client_witnessed_unrecorded_history_only/migration.sql",
+        import.meta.url,
+      ),
+    ).text(),
+  );
+}
+
+describe("a witnessed Mayhem game live processing could not record", () => {
+  test("is recorded silently from its bundle, never posted as live", async () => {
+    const bundle = await upload(witnessed, pastDeadline());
+    await abandonedLive();
+
+    await migrate();
+    await reconcileMatchHistory();
+
+    expect(archivedRecord().coverage).toBe("complete");
+    expect(
+      await prisma.scoutClientCanonicalMatch.findUnique({
+        where: { riotMatchId: matchId },
+      }),
+    ).toMatchObject({ sourceObservationId: bundle });
+    expect(
+      await prisma.matchEvidenceAdmission.findUnique({
+        where: { riotMatchId: matchId },
+      }),
+    ).toMatchObject({ policy: "HISTORY_ONLY", reason: "late-discovery" });
+    expect(
+      await prisma.matchObservation.findUnique({
+        where: { riotMatchId: matchId },
+      }),
+    ).toMatchObject({
+      processingPolicy: "HISTORY_ONLY",
+      deliveryMode: "silent-backfill",
+      matchDataSource: "SCOUT_CLIENT",
+    });
+    expect(await prisma.matchNotificationIntent.count()).toBe(0);
+  });
+
+  test("a live game without client evidence keeps its decision", async () => {
+    await abandonedLive();
+
+    await migrate();
+
+    expect(
+      await prisma.matchEvidenceAdmission.findUnique({
+        where: { riotMatchId: matchId },
+      }),
+    ).toMatchObject({
+      policy: "FULL",
+      recoveryAbandonedReason: "riot_match_forbidden",
+    });
+  });
+});
