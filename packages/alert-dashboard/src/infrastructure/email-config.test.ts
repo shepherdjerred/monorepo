@@ -13,9 +13,10 @@ beforeEach(() => {
 });
 
 describe("dashboard mail configuration", () => {
-  it("enables incident mail and semantic mailbox defaults on absence", async () => {
+  it("enables incident mail, quiet-clear digests, and semantic mailbox defaults on absence", async () => {
     expect(await alertEmailConfig()).toEqual({
       EMAIL_ENABLED: "true",
+      DAILY_DIGEST_QUIET_CLEAR: "true",
       POSTAL_FROM: OPS_MAILBOXES.alerts.from,
       POSTAL_TO: OPS_MAILBOXES.alerts.to,
       POSTAL_DIGEST_FROM: OPS_MAILBOXES.digests.from,
@@ -26,6 +27,7 @@ describe("dashboard mail configuration", () => {
   it("uses false and separate incident and digest routing answers without falling through", async () => {
     const answers: Record<string, unknown> = {
       alertEmailEnabled: false,
+      dailyDigestQuietClear: false,
       incidentEmailFrom: "Custom Alerts <incident@example.test>",
       incidentEmailTo: "incident@example.test",
       digestEmailFrom: "digest@example.test",
@@ -36,6 +38,7 @@ describe("dashboard mail configuration", () => {
     );
     expect(await alertEmailConfig()).toEqual({
       EMAIL_ENABLED: "false",
+      DAILY_DIGEST_QUIET_CLEAR: "false",
       POSTAL_FROM: "Custom Alerts <incident@example.test>",
       POSTAL_TO: "incident@example.test",
       POSTAL_DIGEST_FROM: "digest@example.test",
@@ -57,6 +60,7 @@ describe("dashboard mail configuration", () => {
       const config = await alertEmailConfig();
       expect(config).toEqual({
         EMAIL_ENABLED: "true",
+        DAILY_DIGEST_QUIET_CLEAR: "true",
         POSTAL_FROM: OPS_MAILBOXES.alerts.from,
         POSTAL_TO: OPS_MAILBOXES.alerts.to,
         POSTAL_DIGEST_FROM: OPS_MAILBOXES.digests.from,

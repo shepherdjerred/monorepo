@@ -70,6 +70,15 @@ describe("alert domain", () => {
     expect(result.plainBody).toContain(
       "Open Hub Alerts: https://hub.tailnet-1a49.ts.net/alerts",
     );
+
+    const outboxId = "123e4567-e89b-42d3-a456-426614174099";
+    const withOutbox = openingEmail([occurrence()], 0, outboxId);
+    expect(withOutbox.htmlBody).toContain(
+      `href="https://hub.tailnet-1a49.ts.net/reports/mail/${outboxId}"`,
+    );
+    expect(withOutbox.plainBody).toContain(
+      `View mail in Hub: https://hub.tailnet-1a49.ts.net/reports/mail/${outboxId}`,
+    );
   });
 
   test("truncation email links to the alerts page in both HTML and plain text", () => {
@@ -82,6 +91,15 @@ describe("alert domain", () => {
       "Open Hub Alerts: https://hub.tailnet-1a49.ts.net/alerts",
     );
     expect(result.plainBody).toContain("Omitted alerts: 3");
+
+    const outboxId = "123e4567-e89b-42d3-a456-426614174088";
+    const withOutbox = truncationEmail(3, outboxId);
+    expect(withOutbox.htmlBody).toContain(
+      `href="https://hub.tailnet-1a49.ts.net/reports/mail/${outboxId}"`,
+    );
+    expect(withOutbox.plainBody).toContain(
+      `View mail in Hub: https://hub.tailnet-1a49.ts.net/reports/mail/${outboxId}`,
+    );
   });
 
   test("opening email caps rows and reports local and upstream omissions", () => {

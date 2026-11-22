@@ -15,6 +15,7 @@ import {
 } from "@shepherdjerred/ops-model/digest.ts";
 
 import type {
+  CompletedDailyDigestSummary,
   DigestRunKey,
   OpsRepository,
   PostalPort,
@@ -54,6 +55,7 @@ export type DigestServiceOptions = {
   /** `null` when Postal is not configured for this process. */
   mailer: PostalPort | null;
   clock: Clock;
+  dailyDigestQuietClear?: boolean;
 };
 
 function metricValue(snapshot: Snapshot | null, id: string): number | null {
@@ -88,12 +90,35 @@ function signalsSince(
   );
 }
 
+function isQuietClearDigestReport(report: DigestReport): boolean {
+  return (
+    report.status.severity === "ok" &&
+    !report.status.stale &&
+    report.needsMe.length === 0 &&
+    report.attention.length === 0 &&
+    report.newSinceLast.length === 0 &&
+    report.incidents.opened === 0
+  );
+}
+
+function isPreviousDailyDigestClear(
+  previous: CompletedDailyDigestSummary | null,
+): boolean {
+  return (
+    previous !== null &&
+    previous.severity === "ok" &&
+    (previous.needsMeCount ?? 0) === 0 &&
+    (previous.attentionCount ?? 0) === 0
+  );
+}
+
 export class DigestService {
   readonly #repository: OpsRepository;
   readonly #ops: OpsService;
   readonly #series: SeriesPort;
   readonly #mailer: PostalPort | null;
   readonly #clock: Clock;
+  readonly #dailyDigestQuietClear: boolean;
 
   constructor(options: DigestServiceOptions) {
     this.#repository = options.repository;
@@ -101,6 +126,7 @@ export class DigestService {
     this.#series = options.series;
     this.#mailer = options.mailer;
     this.#clock = options.clock;
+    this.#dailyDigestQuietClear = options.dailyDigestQuietClear ?? true;
   }
 
   /** The report a digest sent now would contain, without sending it. */
@@ -110,7 +136,7 @@ export class DigestService {
 
   /**
    * Send the digest for the current period at most once. Periods recorded as
-   * skipped while sending was gated stay skipped.
+   * skipped while sending was gated or unchanged-clear stay skipped.
    */
   async run(kind: DigestKind): Promise<DigestRunResponse> {
     const now = this.#clock.now();
@@ -140,36 +166,93 @@ export class DigestService {
     if (claim.outcome === "busy") throw new DigestInProgressError(key);
 
     try {
-      const latest = await this.#ops.freshSnapshot();
-      const report = await this.#report(period, latest?.fresh ?? null);
-      const email = renderDigestEmail(report);
-      await mailer.send({
-        messageId: key.messageId,
-        subject: email.subject,
-        htmlBody: email.htmlBody,
-        plainBody: email.plainBody,
-        tag: `ops-digest-${kind}`,
-      });
-      const sentAt = this.#clock.now();
-      await this.#repository.markDigestSent(key, {
-        sentAtNs: sentAt.epochNanoseconds,
-        subject: email.subject,
-      });
-      if (kind === "daily" && latest !== null) {
-        await this.#repository.putCursor({
-          consumer: "digest",
-          lastSeenAtNs: sentAt.epochNanoseconds,
-          seenSignalIds: allSignals(latest.stored.snapshot).map(
-            (signal) => signal.id,
-          ),
-        });
-      }
-      return response("sent", false);
+      const status = await this.#deliverOrSkipClaimedRun(
+        kind,
+        period,
+        key,
+        mailer,
+      );
+      return response(status, false);
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       await this.#repository.markDigestFailed(key, reason);
       throw new DigestSendError(key, reason);
     }
+  }
+
+  async #deliverOrSkipClaimedRun(
+    kind: DigestKind,
+    period: DigestPeriod,
+    key: DigestRunKey,
+    mailer: PostalPort,
+  ): Promise<"sent" | "skipped"> {
+    const latest = await this.#ops.freshSnapshot();
+    const report = await this.#report(period, latest?.fresh ?? null);
+    const email = renderDigestEmail(report);
+    const archive = {
+      subject: email.subject,
+      severity: report.status.severity,
+      summary: report.status.summary,
+      needsMeCount: report.needsMe.length,
+      attentionCount: report.attention.length,
+      reportPayload: report,
+      htmlBody: email.htmlBody,
+      plainBody: email.plainBody,
+    };
+
+    if (await this.#shouldSkipQuietClear(kind, period.key, report)) {
+      const completedAt = this.#clock.now();
+      await this.#repository.markDigestSkipped(key, {
+        ...archive,
+        skipReason: "unchanged-clear",
+      });
+      await this.#advanceDailyCursor(
+        latest?.stored.snapshot ?? null,
+        completedAt,
+      );
+      return "skipped";
+    }
+
+    await mailer.send({
+      messageId: key.messageId,
+      subject: email.subject,
+      htmlBody: email.htmlBody,
+      plainBody: email.plainBody,
+      tag: `ops-digest-${kind}`,
+    });
+    const sentAt = this.#clock.now();
+    await this.#repository.markDigestSent(key, {
+      sentAtNs: sentAt.epochNanoseconds,
+      ...archive,
+    });
+    if (kind === "daily") {
+      await this.#advanceDailyCursor(latest?.stored.snapshot ?? null, sentAt);
+    }
+    return "sent";
+  }
+
+  async #shouldSkipQuietClear(
+    kind: DigestKind,
+    periodKey: string,
+    report: DigestReport,
+  ): Promise<boolean> {
+    if (kind !== "daily" || !this.#dailyDigestQuietClear) return false;
+    if (!isQuietClearDigestReport(report)) return false;
+    const previous =
+      await this.#repository.previousCompletedDailyDigest(periodKey);
+    return isPreviousDailyDigestClear(previous);
+  }
+
+  async #advanceDailyCursor(
+    snapshot: Snapshot | null,
+    at: Temporal.Instant,
+  ): Promise<void> {
+    if (snapshot === null) return;
+    await this.#repository.putCursor({
+      consumer: "digest",
+      lastSeenAtNs: at.epochNanoseconds,
+      seenSignalIds: allSignals(snapshot).map((signal) => signal.id),
+    });
   }
 
   async #report(

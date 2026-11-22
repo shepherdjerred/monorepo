@@ -185,19 +185,65 @@ model ViewerCursor {
 }
 
 model DigestRun {
-  id           String  @id
-  kind         String
-  periodKey    String
-  status       String
-  createdAtNs  BigInt
-  claimedAtNs  BigInt?
-  sentAtNs     BigInt?
-  attemptCount Int     @default(0)
-  messageId    String  @unique
-  subject      String?
-  lastError    String?
+  id             String  @id
+  kind           String
+  periodKey      String
+  status         String
+  skipReason     String?
+  createdAtNs    BigInt
+  claimedAtNs    BigInt?
+  sentAtNs       BigInt?
+  attemptCount   Int     @default(0)
+  messageId      String  @unique
+  subject        String?
+  lastError      String?
+  severity       String?
+  summary        String?
+  needsMeCount   Int?
+  attentionCount Int?
+  reportPayload  Json?
+  htmlBody       String?
+  plainBody      String?
 
   @@unique([kind, periodKey])
+  @@index([createdAtNs])
+}
+
+model ReportRun {
+  id                     String   @id
+  reportType             String
+  scheduleId             String?
+  title                  String
+  eyebrow                String
+  subject                String
+  mailboxFrom            String
+  mailboxTo              String
+  execution              String
+  verdict                String
+  deliveryStatus         String
+  skipReason             String?
+  messageId              String?
+  startedAtNs            BigInt
+  completedAtNs          BigInt
+  acceptedAtNs           BigInt?
+  receivedAtNs           BigInt
+  prUrl                  String?
+  autoMergeEnabled       Boolean?
+  workflowId             String
+  runId                  String
+  temporalUrl            String?
+  repoSha                String?
+  findingCount           Int
+  actionableFindingCount Int
+  failedCheckCount       Int
+  envelope               Json
+  htmlBody               String?
+
+  @@index([completedAtNs])
+  @@index([scheduleId, completedAtNs])
+  @@index([reportType, completedAtNs])
+  @@index([verdict, completedAtNs])
+  @@index([deliveryStatus, completedAtNs])
 }
 
 model OpsFacet {

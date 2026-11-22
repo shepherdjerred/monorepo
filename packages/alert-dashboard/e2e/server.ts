@@ -30,6 +30,7 @@ import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
 import { volumeOpsIngest } from "#test-fixtures/ops-snapshot-volume";
 import { createOpsFixture } from "#test-fixtures/ops-services";
 import { promotionFixture } from "#test-fixtures/promotion";
+import { seedReportFixtures } from "#test-fixtures/reports-fixture";
 
 const alert = AlertDetailSchema.parse({
   id: `alert_${"a".repeat(32)}`,
@@ -361,6 +362,11 @@ function opsIngestBody(now: Temporal.Instant): OpsIngest {
 const opsFixture = createOpsFixture(systemClock);
 const opsNow = systemClock.now();
 await opsFixture.ops.ingest(JSON.stringify(opsIngestBody(opsNow)));
+await seedReportFixtures({
+  reportsRepository: opsFixture.reportsRepository,
+  opsRepository: opsFixture.repository,
+  now: opsNow,
+});
 if (requestedOpsFixture !== undefined) {
   // A long-lived dev server would otherwise serve a stale snapshot after
   // three intervals, so it re-ingests on the collector's cadence.
@@ -399,6 +405,7 @@ const app = createApp({
   webhookToken: "fixture-webhook-token-with-32-characters",
   ops: opsFixture.ops,
   digests: opsFixture.digests,
+  reports: opsFixture.reports,
   opsIngestToken: "fixture-ops-ingest-token-with-32-characters",
 });
 const port = Number(

@@ -2,12 +2,15 @@ import { Temporal } from "@js-temporal/polyfill";
 import { describe, expect, it } from "vitest";
 
 import type { DigestRunKey } from "#application/ports";
+import { DigestReportSchema } from "#shared/ops-schema";
 import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
+import { fixtureReportIngestBatch } from "#test-fixtures/reports-fixture";
 import { AlertmanagerWebhookSchema } from "#shared/schema";
 import {
   input,
   nanoseconds,
   opsRepository,
+  reportRepository,
   repository,
   webhook,
 } from "./sqlite-fixture.ts";
@@ -160,6 +163,133 @@ export function registerOpsRepositoryCases(): void {
       });
       expect(stats.opened).toBe(1);
       expect(stats.resolveDurationsNs).toHaveLength(1);
+    });
+
+    it("persists ReportRun batches, DigestRun archives, and EmailOutbox Hub deep links in SQLite", async () => {
+      const now = Temporal.Instant.from("2026-11-22T18:00:00Z");
+      const batch = fixtureReportIngestBatch(now);
+      expect(
+        await reportRepository.upsertReportRuns(
+          batch.items,
+          now.epochNanoseconds,
+        ),
+      ).toEqual({ accepted: batch.items.length });
+
+      // Upsert update preserves htmlBody when omitted on a subsequent status update.
+      const firstItem = batch.items[0];
+      if (firstItem === undefined) throw new Error("expected fixture item");
+      await reportRepository.upsertReportRuns(
+        [{ ...firstItem, htmlBody: "<!DOCTYPE html><p>stored</p>" }],
+        now.epochNanoseconds + 1n,
+      );
+      await reportRepository.upsertReportRuns(
+        [firstItem],
+        now.epochNanoseconds + 2n,
+      );
+      const fetchedRun = await reportRepository.getReportRun(
+        firstItem.report.reportRunId,
+      );
+      expect(fetchedRun?.htmlBody).toBe("<!DOCTYPE html><p>stored</p>");
+
+      const latestPerSchedule =
+        await reportRepository.listLatestRunsPerSchedule([
+          "link-rot-scan-weekly",
+          "main-vuln-scan-weekly",
+        ]);
+      expect(latestPerSchedule.size).toBe(2);
+
+      // DigestRun rich archive + previousCompletedDailyDigest
+      const day1: DigestRunKey = {
+        kind: "daily",
+        periodKey: "2026-11-20",
+        messageId: "<ops-digest-daily-2026-11-20@sjer.red>",
+      };
+      const day2: DigestRunKey = {
+        kind: "daily",
+        periodKey: "2026-11-21",
+        messageId: "<ops-digest-daily-2026-11-21@sjer.red>",
+      };
+      const sampleDigestReport = DigestReportSchema.parse({
+        kind: "daily",
+        periodKey: "2026-11-20",
+        periodStart: "2026-11-19T15:30:00Z",
+        periodEnd: "2026-11-20T15:30:00Z",
+        status: {
+          severity: "ok",
+          summary: "All clear",
+          stale: false,
+          snapshotGeneratedAt: "2026-11-20T15:28:00Z",
+        },
+        attention: [],
+        needsMe: [],
+        newSinceLast: [],
+        changes: [],
+        incidents: { opened: 0, resolved: 0, medianMinutesToResolve: null },
+        trends: [],
+      });
+      await opsRepository.claimDigestRun(day1, 1000n, 0n);
+      await opsRepository.markDigestSent(day1, {
+        sentAtNs: 1010n,
+        subject: "Daily digest: All clear (Nov 20)",
+        severity: "ok",
+        summary: "All clear",
+        needsMeCount: 0,
+        attentionCount: 0,
+        reportPayload: sampleDigestReport,
+        htmlBody: "<p>clear</p>",
+        plainBody: "clear\n",
+      });
+      expect(
+        await opsRepository.previousCompletedDailyDigest("2026-11-21"),
+      ).toEqual({
+        periodKey: "2026-11-20",
+        status: "sent",
+        severity: "ok",
+        needsMeCount: 0,
+        attentionCount: 0,
+      });
+
+      await opsRepository.claimDigestRun(day2, 2000n, 0n);
+      await opsRepository.markDigestSkipped(day2, {
+        skipReason: "unchanged-clear",
+        subject: "Daily digest: All clear (Nov 21)",
+        severity: "ok",
+        summary: "All clear",
+        needsMeCount: 0,
+        attentionCount: 0,
+        reportPayload: { ...sampleDigestReport, periodKey: "2026-11-21" },
+        htmlBody: "<p>clear 2</p>",
+        plainBody: "clear 2\n",
+      });
+      const storedSkipped = await reportRepository.getDigestRun(
+        "daily",
+        "2026-11-21",
+      );
+      expect(storedSkipped?.status).toBe("skipped");
+      expect(storedSkipped?.skipReason).toBe("unchanged-clear");
+
+      // EmailOutbox incident mail + Hub deep link verification
+      await repository.ingestWebhook(
+        input(
+          webhook("fingerprint-mail-hub-link", "firing"),
+          "2026-11-22T17:00:00Z",
+          true,
+        ),
+      );
+      const mails = await reportRepository.listIncidentMails(10);
+      expect(mails).toHaveLength(1);
+      const mail = mails[0];
+      if (mail === undefined) throw new Error("expected queued incident mail");
+      expect(mail.htmlBody).toContain(`/reports/mail/${mail.id}`);
+      expect(mail.plainBody).toContain(
+        `View mail in Hub: https://hub.tailnet-1a49.ts.net/reports/mail/${mail.id}`,
+      );
+      const mailDetail = await reportRepository.getIncidentMail(mail.id);
+      expect(mailDetail?.occurrences).toHaveLength(1);
+      expect(await reportRepository.incidentOutboxCounts()).toEqual({
+        pending: 1,
+        failed: 0,
+      });
     });
   });
 }

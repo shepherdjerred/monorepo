@@ -134,7 +134,13 @@ describe("digest email", () => {
     expect(email.subject).toBe("Weekly review: Attention needed (Sep 21–28)");
     expect(email.subject).not.toContain("2026-W40");
     expect(email.htmlBody).toContain("Weekly review · Sep 21–28");
-    expect(email.htmlBody).not.toContain("2026-W40");
+    expect(email.htmlBody).not.toContain("Weekly review · 2026-W40");
+    expect(email.htmlBody).toContain(
+      'href="https://hub.tailnet-1a49.ts.net/reports/digests/weekly/2026-W40"',
+    );
+    expect(email.plainBody).toContain(
+      "Open in Hub: https://hub.tailnet-1a49.ts.net/reports/digests/weekly/2026-W40",
+    );
     expect(email.htmlBody).not.toContain("New this week");
 
     for (const body of [email.htmlBody, email.plainBody]) {
@@ -161,6 +167,9 @@ describe("digest email", () => {
     );
     expect(dailyClear.subject).toBe("Daily digest: All clear (Nov 20)");
     expect(dailyClear.plainBody).toContain("Morning check-in · Nov 20");
+    expect(dailyClear.plainBody).toContain(
+      "Open in Hub: https://hub.tailnet-1a49.ts.net/reports/digests/daily/2026-11-20",
+    );
     expect(dailyClear.plainBody).not.toContain("New since last digest");
 
     const weeklyClear = renderDigestEmail(
@@ -173,7 +182,10 @@ describe("digest email", () => {
     );
     expect(weeklyClear.subject).toBe("Weekly review: All clear (Nov 13–20)");
     expect(weeklyClear.plainBody).toContain("Weekly review · Nov 13–20");
-    expect(weeklyClear.plainBody).not.toContain("2026-W47");
+    expect(weeklyClear.plainBody).not.toContain("Weekly review · 2026-W47");
+    expect(weeklyClear.plainBody).toContain(
+      "Open in Hub: https://hub.tailnet-1a49.ts.net/reports/digests/weekly/2026-W47",
+    );
 
     const dailyNeedsReview = renderDigestEmail(
       DigestReportSchema.parse({

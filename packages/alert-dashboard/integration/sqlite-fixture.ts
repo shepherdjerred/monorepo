@@ -6,6 +6,7 @@ import type { IngestWebhookInput } from "#application/ports";
 import { AsyncMutex } from "#infrastructure/async-mutex";
 import { PrismaOpsRepository } from "#infrastructure/prisma-ops-repository";
 import { createPrismaRepository } from "#infrastructure/prisma-repository";
+import { PrismaReportRepository } from "#infrastructure/reports/prisma-report-repository";
 import {
   AlertmanagerWebhookSchema,
   JsonObjectSchema,
@@ -19,8 +20,13 @@ export const databaseUrl = DatabaseUrlSchema.parse(Bun.env["DATABASE_URL"]);
 export const prisma = new PrismaClient({
   adapter: new PrismaLibSql({ url: databaseUrl, intMode: "bigint" }),
 });
+const sharedWriteMutex = new AsyncMutex();
 export const repository = await createPrismaRepository(databaseUrl);
-export const opsRepository = new PrismaOpsRepository(prisma, new AsyncMutex());
+export const opsRepository = new PrismaOpsRepository(prisma, sharedWriteMutex);
+export const reportRepository = new PrismaReportRepository(
+  prisma,
+  sharedWriteMutex,
+);
 
 export function nanoseconds(value: string): bigint {
   return instantTextToEpochNanoseconds(InstantTextSchema.parse(value));
@@ -54,6 +60,8 @@ export async function resetDatabase(): Promise<void> {
     prisma.changeEvent.deleteMany(),
     prisma.viewerCursor.deleteMany(),
     prisma.digestRun.deleteMany(),
+    prisma.reportRun.deleteMany(),
+    prisma.opsFacet.deleteMany(),
   ]);
 }
 
