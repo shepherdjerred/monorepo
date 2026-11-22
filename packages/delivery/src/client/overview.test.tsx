@@ -363,6 +363,33 @@ describe("overview panels markup", () => {
     expect(chips).not.toContain("r274 canceled");
   });
 
+  it("says a worker retirement is queued apart from the accepted release, never as a pending release", () => {
+    const retiring = service("scout", [
+      environment("scout/beta", {
+        acceptedRevision: 338,
+        maintenance: {
+          kind: "retire-host",
+          status: "queued",
+          deploymentId: "retire",
+        },
+      }),
+    ]);
+    // The environment stands where the release that accepted it left it.
+    expect(serviceStanding(retiring)).toBe("succeeded");
+    const chip = renderWithRouter(
+      <OverviewPanels
+        panels={kindPanels([group("scout", "product", [retiring])], [])}
+      />,
+    );
+    expect(chip).toContain("overview-chip-succeeded");
+    expect(chip).toContain('<span class="revision">r338</span>');
+    expect(chip).toContain(
+      '<span class="status status-queued"><span class="status-glyph" aria-hidden="true">○</span>' +
+        '<span class="status-label">worker retirement queued</span></span>',
+    );
+    expect(chip).not.toContain("r338 queued");
+  });
+
   it("marks a firing monitor alarm on the accepted release", () => {
     const alarmed = service("arcade", [
       environment("arcade/prod", { alarmedAt: "2026-11-02T00:00:00.000Z" }),

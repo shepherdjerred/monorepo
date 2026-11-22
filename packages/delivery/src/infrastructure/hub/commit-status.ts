@@ -7,6 +7,7 @@ import type {
   CommitVerdict,
   PipelineStatus,
 } from "#shared/hub/hub-contract.ts";
+import { attemptPhase } from "#shared/hub/deployment-phase.ts";
 
 /** Where an automatic set revision sits in main's history: its build's pipeline, then registration. */
 export type OrderKey = { major: number; minor: number };
@@ -94,7 +95,8 @@ export function decidingDeployment<
  * liveness. Otherwise `deployment`, the deciding deployment among those that
  * would deliver the change (see `decidingDeployment`), says what is
  * happening; with none, the environment's own policy says why nothing is.
- * A change is `deploying` only while such a deployment is queued or running.
+ * A change is `deploying` only while such a deployment is running, and
+ * `queued` while one waits to be claimed.
  * `sourceLive` is whether the environment it promotes from already has it.
  */
 export function environmentState(input: {
@@ -138,7 +140,7 @@ function deploymentState(
     case "running":
     case "pending":
     case "queued": {
-      return "deploying";
+      return attemptPhase(status);
     }
     case "awaiting_approval": {
       return "awaiting_approval";
@@ -175,6 +177,7 @@ const VERDICT_PRIORITY: CommitVerdict[] = [
   "build_failed",
   "building",
   "deploying",
+  "queued",
   "waiting",
   "deployed",
   "nothing_to_deploy",
@@ -223,6 +226,9 @@ export function stateVerdict(state: CommitEnvironmentState): CommitVerdict {
     case "deploying": {
       return "deploying";
     }
+    case "queued": {
+      return "queued";
+    }
     case "awaiting_approval": {
       return "awaiting_approval";
     }
@@ -264,6 +270,7 @@ const STATE_URGENCY: CommitEnvironmentState[] = [
   "failed",
   "awaiting_approval",
   "deploying",
+  "queued",
   "manual",
   "canceled",
   "replaced",

@@ -151,8 +151,8 @@ describe("environmentState", () => {
 
   it.each([
     ["running", "deploying"],
-    ["queued", "deploying"],
-    ["pending", "deploying"],
+    ["queued", "queued"],
+    ["pending", "queued"],
     ["awaiting_approval", "awaiting_approval"],
     ["failed", "failed"],
     ["canceled", "canceled"],
@@ -317,6 +317,15 @@ describe("serviceVerdict", () => {
     expect(serviceVerdict("succeeded", ["live", "deploying"])).toBe(
       "deploying",
     );
+  });
+
+  it("says queued, not deploying, while a deployment waits to be claimed, and deploying once one runs", () => {
+    expect(serviceVerdict("succeeded", ["live", "queued"])).toBe("queued");
+    expect(serviceVerdict("succeeded", ["queued", "deploying"])).toBe(
+      "deploying",
+    );
+    expect(serviceVerdict("succeeded", ["queued", "manual"])).toBe("queued");
+    expect(rollUp(["queued", "waiting", "deployed"])).toBe("queued");
   });
 
   it("never says deploying when nothing is in flight", () => {

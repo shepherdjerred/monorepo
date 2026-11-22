@@ -2,14 +2,10 @@ import type {
   ActivityEntry,
   ActivitySubject,
 } from "#shared/hub/hub-contract.ts";
-import {
-  CatalogReconcileRecordSchema,
-  type CatalogReconcileRecord,
-} from "#shared/model/route-contract.ts";
+import { CatalogReconcileRecordSchema } from "#shared/model/route-contract.ts";
 import { Link } from "@tanstack/react-router";
 import { RelativeTime } from "#client/components/time.tsx";
 import { ShortSha, TargetLink } from "#client/components/links.tsx";
-import { Fact, Facts } from "#client/components/facts.tsx";
 import { Disclosure } from "#client/components/disclosure.tsx";
 import {
   Identifier,
@@ -27,62 +23,15 @@ import type { CatalogService, ChoiceOption } from "./catalog-filter.ts";
 import {
   DecisionActivitySchema,
   PublishedActivitySchema,
+  REPEATED_ACTIONS,
   RequestedActivitySchema,
   foldActivity,
   latestStages,
   outcomeOf,
+  repeatCount,
 } from "./activity-fold.ts";
 import { actionLabel, targetName } from "./activity-labels.ts";
-
-/** One catalog reconcile: what the document created, renamed, rebound, retired and refused (4.1). */
-function CatalogReconcile({ result }: { result: CatalogReconcileRecord }) {
-  const rows = [
-    ["Services created", result.services.created],
-    ["Service lineage changed", result.services.lineageChanged],
-    ["Services retired", result.services.retired],
-    ["Environments created", result.environments.created],
-    [
-      "Environments renamed",
-      result.environments.renamed.map((entry) => `${entry.from} → ${entry.to}`),
-    ],
-    ["Environments rebound", result.environments.rebound],
-    ["Environments retired", result.environments.retired],
-    ["Selections carried", result.environments.carried],
-    ["Recipe revisions created", result.recipes.created],
-    ["Configuration revisions created", result.configurations.created],
-    ["Refused", result.refused.map((entry) => `${entry.id}: ${entry.reason}`)],
-  ] as const;
-  const changed = rows.filter(([, ids]) => ids.length > 0);
-  return (
-    <div className="catalog-result">
-      {changed.length === 0 ? (
-        <p className="muted">
-          The record already matched the catalog document.
-        </p>
-      ) : (
-        <Facts>
-          {changed.map(([label, ids]) => (
-            <Fact
-              key={label}
-              label={
-                <>
-                  {label} ({ids.length})
-                </>
-              }
-              mono
-            >
-              {ids.join(", ")}
-            </Fact>
-          ))}
-        </Facts>
-      )}
-      <p className="muted">
-        {result.unchanged} unchanged · {result.edges} prerequisite edges ·{" "}
-        {result.references} component references
-      </p>
-    </div>
-  );
-}
+import { CatalogReconcile } from "./catalog-reconcile.tsx";
 
 /** An id as people read it: a UUID or digest short, a name as written. */
 function Id({ value }: { value: string }) {
@@ -254,6 +203,7 @@ function Requested({
 
 /** The failures whose entry carries why they failed, read with the page. */
 const REASONED_ACTIONS: ReadonlySet<string> = new Set([
+  "worker.recovery_failed",
   "deployment.failed",
   "deployment.recovery_required",
   "build.failed",
@@ -273,7 +223,7 @@ function Recorded({
   // that nothing recorded why, rather than leaving the reader to wonder.
   if (REASONED_ACTIONS.has(entry.action))
     return entry.reason == null ? (
-      <span className="activity-reason muted">no reason recorded</span>
+      <span className="activity-reason muted">No cause was recorded</span>
     ) : (
       <span className="activity-reason">{entry.reason}</span>
     );
@@ -383,7 +333,12 @@ function StageRun({
   );
 }
 
-/** One routine build record repeated by one actor: a count, with every entry behind it. */
+/**
+ * One routine record repeated by one actor: a count, with every entry behind
+ * it. A run of builds lists the builds it folds; a run about one thing (a
+ * deployment's check-ins, one worker's retirement in one environment) names
+ * that thing once and lists when each happened.
+ */
 function RepeatedRun({
   entries,
   names,
@@ -392,24 +347,32 @@ function RepeatedRun({
   names: CatalogNames;
 }) {
   const [newest] = entries;
+  const ofOneThing = !REPEATED_ACTIONS.has(newest.action);
   return (
     <li>
       <When entries={entries} />
       <Action action={newest.action} count={entries.length} />
       <span className="activity-actor">{newest.actor}</span>
       <span className="activity-subject">
-        {entries.length === 1 ? (
+        {ofOneThing || entries.length === 1 ? (
           <>
             <Entity entry={newest} names={names} />
             <Recorded entry={newest} names={names} />
           </>
-        ) : (
-          <Disclosure summary={`${String(entries.length)} builds`}>
+        ) : null}
+        {entries.length > 1 && (
+          <Disclosure summary={repeatCount(newest.action, entries.length)}>
             <ul className="activity-repeated">
               {entries.map((entry) => (
                 <li key={entry.id}>
-                  <Entity entry={entry} names={names} />
-                  <Recorded entry={entry} names={names} />
+                  {ofOneThing ? (
+                    <RelativeTime value={entry.occurredAt} clock />
+                  ) : (
+                    <>
+                      <Entity entry={entry} names={names} />
+                      <Recorded entry={entry} names={names} />
+                    </>
+                  )}
                 </li>
               ))}
             </ul>

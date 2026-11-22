@@ -20,8 +20,6 @@ export type ActivityRow =
   | { kind: "stages"; entries: [ActivityEntry, ...ActivityEntry[]] }
   | { kind: "repeated"; entries: [ActivityEntry, ...ActivityEntry[]] };
 
-type StageRow = Extract<ActivityRow, { kind: "stages" }>;
-
 /**
  * Routine build records that arrive in bursts, one per service a commit
  * builds; a run of them reads as one row with a count.
@@ -32,24 +30,78 @@ export const REPEATED_ACTIONS: ReadonlySet<string> = new Set([
   "build.published",
 ]);
 
+/** The unit separator keeps the parts of a key from running together. */
+const SEPARATOR = "\u{1F}";
+
+/**
+ * Actions that one actor records over and over about one thing: an executor
+ * checking in on a deployment while it runs, Delivery asking again for the
+ * same worker's retirement in one environment. Every repeat on the page is
+ * one counted row where the newest sits, however other entries interleave,
+ * keyed by what makes two of them the same repeat.
+ */
+const GROUPED_ACTIONS: ReadonlyMap<string, (entry: ActivityEntry) => string> =
+  new Map([
+    [
+      "deployment.lease_renewed",
+      (entry) => [entry.actor, entry.entityId].join(SEPARATOR),
+    ],
+    [
+      "worker.retirement_requested",
+      (entry) =>
+        [entry.actor, entry.subject?.environmentId ?? "", entry.entityId].join(
+          SEPARATOR,
+        ),
+    ],
+  ]);
+
+/** The count of a folded run with what it counts: "3 check-ins", "2 builds". */
+export function repeatCount(action: string, count: number) {
+  const nouns: Record<string, [string, string]> = {
+    "deployment.lease_renewed": ["check-in", "check-ins"],
+    "worker.retirement_requested": ["request", "requests"],
+  };
+  const [one, many] =
+    nouns[action] ??
+    (action.startsWith("build.") ? ["build", "builds"] : ["entry", "entries"]);
+  return `${String(count)} ${count === 1 ? one : many}`;
+}
+
+/** The rows that gather their entries from anywhere on the page. */
+type JoinedRow = Exclude<ActivityRow, { kind: "entry" }>;
+
+/**
+ * Where an entry that gathers with its kin goes: a stage write joins its
+ * deployment's steps, a grouped action its repeats. Null for any other entry.
+ */
+function joining(entry: ActivityEntry) {
+  if (entry.action === STAGE_ACTION)
+    return { kind: "stages", key: entry.entityId } as const;
+  const key = GROUPED_ACTIONS.get(entry.action)?.(entry);
+  return key === undefined ? null : ({ kind: "repeated", key } as const);
+}
+
 /**
  * Fold every stage write of one deployment on the page into one row, where
- * its newest write sits, and each run of one repeated build action by the
- * same actor into one counted row. A deployment's steps are one story however
- * other entries, other deployments or other actors interleave with them, so a
- * step that ran and then succeeded never reads as two rows. Presentational
- * and within one fetched page: a deployment whose writes cross a page
- * boundary reads as one row on each page.
+ * its newest write sits, each repeat of a grouped action (see
+ * `GROUPED_ACTIONS`) likewise, and each run of one repeated build action by
+ * the same actor into one counted row. A deployment's steps are one story
+ * however other entries, other deployments or other actors interleave with
+ * them, so a step that ran and then succeeded never reads as two rows.
+ * Presentational and within one fetched page: a deployment whose writes cross
+ * a page boundary reads as one row on each page.
  */
 export function foldActivity(entries: readonly ActivityEntry[]): ActivityRow[] {
   const rows: ActivityRow[] = [];
-  const stages = new Map<string, StageRow>();
+  const joined = new Map<string, JoinedRow>();
   for (const entry of entries) {
-    if (entry.action === STAGE_ACTION) {
-      const row = stages.get(entry.entityId);
+    const target = joining(entry);
+    if (target !== null) {
+      const id = [target.kind, target.key].join(SEPARATOR);
+      const row = joined.get(id);
       if (row === undefined) {
-        const created: StageRow = { kind: "stages", entries: [entry] };
-        stages.set(entry.entityId, created);
+        const created: JoinedRow = { kind: target.kind, entries: [entry] };
+        joined.set(id, created);
         rows.push(created);
       } else row.entries.push(entry);
       continue;

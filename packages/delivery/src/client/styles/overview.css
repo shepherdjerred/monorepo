@@ -167,8 +167,12 @@
   /* Contains the hidden words of a settled chip. */
   position: relative;
 }
-/* A check says "succeeded" at a glance; the words stay for assistive technology. */
-.overview-chip-succeeded .status-label {
+/*
+ * A check says "succeeded" at a glance; the words stay for assistive
+ * technology. Other facts on a settled chip, such as an alarm or a queued
+ * worker retirement, keep their words in sight.
+ */
+.overview-chip-succeeded > .status-succeeded .status-label {
   position: absolute;
   width: 1px;
   height: 1px;

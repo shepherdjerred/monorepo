@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { HubGridSchema, HubOverviewSchema } from "#shared/hub/hub-contract.ts";
-import { api, expectNoHorizontalOverflow } from "./helpers.ts";
+import {
+  api,
+  expectNoHorizontalOverflow,
+  showAllAttention,
+} from "./helpers.ts";
 
 test("the pipelines list names the CI run and shows every stage's own state", async ({
   page,
@@ -76,14 +80,17 @@ test("the pipelines list shows the first five attention items and the rest on re
   await expect(items).toHaveCount(5);
 });
 
-test("the overview lists every attention item, as its point", async ({
+test("the overview collapses a long attention list to five too, one behaviour on both pages", async ({
   page,
 }) => {
   const grid = await api(page, "/api/v1/hub/grid", HubGridSchema);
   await page.goto("/");
-  await expect(
-    page.getByRole("region", { name: "Needs attention" }).getByRole("listitem"),
-  ).toHaveCount(grid.attention.length);
+  const region = page.getByRole("region", { name: "Needs attention" });
+  await expect(region.getByRole("listitem")).toHaveCount(
+    Math.min(grid.attention.length, 5),
+  );
+  await showAllAttention(page);
+  await expect(region.getByRole("listitem")).toHaveCount(grid.attention.length);
 });
 
 test("the pipelines list leads with what needs attention and dates builds and deployments apart", async ({

@@ -280,6 +280,18 @@ export const GridRequestSchema = z.object({
   revision: z.number().int().positive(),
 });
 
+/**
+ * A maintenance deployment of the accepted release that is still open: it
+ * changes nothing about which release the environment runs (`retire-host`
+ * removes a drained retained worker), so it is not a pending release.
+ */
+export const GridMaintenanceSchema = z.object({
+  kind: z.literal("retire-host"),
+  /** `queued`, `running` or `awaiting_approval`; a maintenance deployment that ended is a `request`. */
+  status: DeploymentStatusSchema,
+  deploymentId: IdentifierSchema,
+});
+
 export const GridEnvironmentSchema = z.object({
   id: IdentifierSchema,
   name: z.string().min(1),
@@ -291,6 +303,12 @@ export const GridEnvironmentSchema = z.object({
    * deployment accepted the selection, or there is none.
    */
   request: GridRequestSchema.nullable(),
+  /**
+   * The newest deployment when it is open maintenance of the accepted
+   * release, such as retiring a drained worker: it is then neither `request`
+   * nor `status`. Absent when there is none, and from servers that predate it.
+   */
+  maintenance: GridMaintenanceSchema.nullable().optional(),
   /** When a monitor alarm fired on the accepted release; null while none is firing. */
   alarmedAt: TimestampSchema.nullable(),
   /** The newest deployment left its target quarantined until an operator recovers it. */
@@ -443,8 +461,8 @@ export const ExecutionQuerySchema = z.object({
 /**
  * Where one change stands in one environment, from the person's point of
  * view. `deploying` means a deployment that would deliver the change (its
- * set revision or a later one that includes it, see `carries`) is queued or
- * running.
+ * set revision or a later one that includes it, see `carries`) is running;
+ * `queued` means one is waiting for an executor to claim it.
  * Every other unfinished state names why nothing is: `recovery_required` (a
  * failed deployment locked the environment), `awaiting_approval`, `failed`,
  * `canceled`, `replaced` (it was deployed, then a release that does not
@@ -456,6 +474,7 @@ export const CommitEnvironmentStateSchema = z.enum([
   "live",
   "superseded",
   "deploying",
+  "queued",
   "awaiting_approval",
   "recovery_required",
   "failed",
@@ -485,6 +504,7 @@ export const CommitVerdictSchema = z.enum([
   "nothing_to_deploy",
   "waiting",
   "deploying",
+  "queued",
   "awaiting_approval",
   "recovery_required",
   "failed",
