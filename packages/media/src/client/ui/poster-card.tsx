@@ -3,6 +3,7 @@ import { Link, type To } from "react-router";
 import type { Copy } from "#client/presentation/copy.ts";
 import { classNames } from "./class-names.ts";
 import { Poster } from "./poster.tsx";
+import { PosterPlace, useOpensTitle } from "./motion/title-transition.ts";
 import styles from "./poster-card.module.css";
 
 const cx = classNames(styles);
@@ -83,6 +84,7 @@ export function PosterCard({
   layout?: "grid" | "rail";
 }) {
   const id = useId();
+  const opens = useOpensTitle(to, { path: posterPath, title });
   const Heading = headingLevel === 2 ? "h2" : "h3";
   const inRail = layout === "rail";
   const named = [
@@ -96,6 +98,7 @@ export function PosterCard({
       <Link
         className={inRail ? `${cx("card")} ${cx("inRail")}` : cx("card")}
         to={to}
+        {...opens.link}
         aria-labelledby={named.join(" ")}
       >
         <div className={cx("art")}>
@@ -103,6 +106,7 @@ export function PosterCard({
             path={posterPath}
             title={title}
             sizes={inRail ? RAIL_SIZES : GRID_SIZES}
+            carries={opens.carries}
           />
           {state !== null && (
             <StatePill
@@ -152,7 +156,7 @@ export function PosterGrid({
   return (
     <div className={cx("gridFrame")}>
       <ul className={cx("grid")} aria-label={label} aria-busy={busy}>
-        {children}
+        <PosterPlace value={label}>{children}</PosterPlace>
       </ul>
     </div>
   );

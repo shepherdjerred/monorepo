@@ -10,6 +10,14 @@
     outline: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
     outline-offset: -1px;
   }
+  /*
+   * The poster that moves between a card and its title page
+   * (`ui/motion/title-transition.ts`). The name is on one poster at a time, so the
+   * browser pairs the card's with the hero's.
+   */
+  .carries {
+    view-transition-name: title-poster;
+  }
   .image {
     display: block;
     width: 100%;
@@ -66,5 +74,17 @@
       width: 42%;
       height: auto;
     }
+  }
+
+  /* Both posters are 2:3, so the pair needs no stretching; the image keeps
+     its crop while the frame grows or shrinks. */
+  ::view-transition-group(title-poster) {
+    animation-duration: 320ms;
+    animation-timing-function: var(--ease-out);
+  }
+  ::view-transition-old(title-poster),
+  ::view-transition-new(title-poster) {
+    height: 100%;
+    object-fit: cover;
   }
 }

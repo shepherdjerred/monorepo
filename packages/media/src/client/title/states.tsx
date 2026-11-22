@@ -2,9 +2,15 @@ import { Link } from "react-router";
 import { ApiError } from "#client/api.ts";
 import { PageTitle } from "#client/components.tsx";
 import { classNames } from "#client/ui/class-names.ts";
+import { Poster } from "#client/ui/poster.tsx";
+import {
+  useHeroPosterCarries,
+  useOpenedPoster,
+} from "#client/ui/motion/title-transition.ts";
 import skeletonStyles from "#client/ui/skeleton.module.css";
 import { ErrorState } from "#client/ui/states.tsx";
 import { BackLink } from "./back.tsx";
+import { POSTER_SIZES } from "./hero.tsx";
 import styles from "./title.module.css";
 
 const cx = classNames(styles);
@@ -12,16 +18,32 @@ const block = classNames(skeletonStyles)("block");
 
 /**
  * The shape of a title page that is still loading: the hero's band, poster
- * and lines, then a few rows, in the space the page will take.
+ * and lines, then a few rows, in the space the page will take. A page
+ * opened from a poster card shows that poster, not a block: it is the
+ * element the transition from the card lands on.
  */
 export function TitleSkeleton() {
+  const opened = useOpenedPoster();
+  const carries = useHeroPosterCarries();
   return (
     <div role="status">
       <span className="sr-only">Loading title</span>
       <div className={cx("skeleton")} aria-hidden="true">
         <div className={`${block} ${cx("skeletonBand")}`} />
         <div className={cx("skeletonContent")}>
-          <div className={`${block} ${cx("skeletonPoster")}`} />
+          {opened === null ? (
+            <div className={`${block} ${cx("skeletonPoster")}`} />
+          ) : (
+            <div className={cx("openedPoster")}>
+              <Poster
+                path={opened.path}
+                title={opened.title}
+                sizes={POSTER_SIZES}
+                loading="eager"
+                carries={carries}
+              />
+            </div>
+          )}
           <div className={cx("skeletonLines")}>
             <div className={`${block} ${cx("skeletonTitle")}`} />
             <div className={`${block} ${cx("skeletonLine")}`} />

@@ -368,6 +368,13 @@
     margin-top: -92px;
     border-radius: var(--radius-poster);
   }
+  /* The poster a card handed over, where the hero's poster will be. */
+  .openedPoster {
+    align-self: start;
+    margin-top: -92px;
+    border-radius: var(--radius-poster);
+    box-shadow: var(--shadow-raised);
+  }
   .skeletonLines {
     display: grid;
     align-content: start;
@@ -402,7 +409,8 @@
       gap: var(--space-4);
       padding: 0 var(--space-4) var(--space-4);
     }
-    .skeletonPoster {
+    .skeletonPoster,
+    .openedPoster {
       margin-top: -52px;
     }
     .skeletonLines {

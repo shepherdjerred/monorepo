@@ -1,8 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { MemoryRouter } from "react-router";
 import { expect, test } from "vitest";
 import { ArtworkFileSchema, ArtworkSizeSchema } from "#shared/artwork/proxy.ts";
 import { artworkUrl } from "./artwork.ts";
+import { InRouter } from "#client/in-router.test-support.tsx";
 import { Poster } from "./poster.tsx";
 import { PosterCard } from "./poster-card.tsx";
 import { readEveryPage } from "./use-cursor-list.ts";
@@ -40,7 +40,7 @@ test("a title with no poster shows its name, not an image", () => {
 
 test("a poster card is one link that names the title and its state", () => {
   const html = renderToStaticMarkup(
-    <MemoryRouter>
+    <InRouter>
       <PosterCard
         to="/media/abc"
         title="Severance"
@@ -48,7 +48,7 @@ test("a poster card is one link that names the title and its state", () => {
         posterPath={null}
         state={{ label: "3 of 10 episodes", tone: "progress" }}
       />
-    </MemoryRouter>,
+    </InRouter>,
   );
   expect(html.match(/<a /gu)).toHaveLength(1);
   expect(html).toContain('href="/media/abc"');

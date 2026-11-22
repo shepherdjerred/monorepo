@@ -5,12 +5,13 @@ import { artworkUrl } from "#client/ui/artwork.ts";
 import { classNames } from "#client/ui/class-names.ts";
 import { Poster } from "#client/ui/poster.tsx";
 import { StatePill } from "#client/ui/poster-card.tsx";
+import { useHeroPosterCarries } from "#client/ui/motion/title-transition.ts";
 import styles from "./hero.module.css";
 
 const cx = classNames(styles);
 
 /** The hero poster is about 176px wide beside the sidebar, 104px on a phone. */
-const POSTER_SIZES = "(min-width: 761px) 176px, 104px";
+export const POSTER_SIZES = "(min-width: 761px) 176px, 104px";
 /** The backdrop spans the page column: the screen less the sidebar. */
 const BACKDROP_SIZES = "(min-width: 761px) calc(100vw - 296px), 100vw";
 
@@ -69,6 +70,7 @@ export function Hero({
   overview: string | null;
   children: ReactNode;
 }) {
+  const carries = useHeroPosterCarries();
   return (
     <header className={cx("hero")}>
       {/* One string child: React leaves a title with several text nodes empty. */}
@@ -81,6 +83,7 @@ export function Hero({
             title={title}
             sizes={POSTER_SIZES}
             loading="eager"
+            carries={carries}
           />
         </div>
         <div className={cx("head")}>

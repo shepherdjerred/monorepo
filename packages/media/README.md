@@ -1260,6 +1260,22 @@ Expanse" and "Get Out" are leaving soon, "Silo" and "The Holdovers" are removed
 but restorable, and `/catalog/movie/155` and `/catalog/series/1398` are titles
 the household does not have.
 
+Opening a title from a poster card (Library, Discover, Home, and the Calendar's
+release rows) carries the card's poster to the page's poster, and back on Back.
+View transitions are Baseline Newly available, so this is an enhancement and
+the instant navigation is the fallback: `ui/motion/title-transition.ts` asks for a
+transition only where `document.startViewTransition` exists and the reader has
+not asked for reduced motion, through react-router's own `viewTransition` link
+prop and `useViewTransitionState`. Going back is the router's: it remembers
+which pages it moved between and repeats the transition on a history change.
+The browser takes exactly one element with a transition name from each page, so
+only the opened card's poster carries it, picked by its list (`PosterPlace`) and
+title; the name is a class (`poster.module.css`), never an inline style, which
+the Content-Security-Policy forbids. The card puts its poster in the link's
+state, and the title page shows it in place of the skeleton's block, because the
+title is read after the page opens and the transition ends before that. Tab
+switches, filters, and every other navigation have no transition.
+
 ### Calendar
 
 `/calendar` (`src/client/calendar/`) has Month, Week and Agenda views. It

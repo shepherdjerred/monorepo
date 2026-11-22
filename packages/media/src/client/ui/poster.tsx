@@ -20,25 +20,32 @@ const cx = classNames(styles);
  *
  * `sizes` is the rendered width, as for any responsive image: the browser
  * picks from the proxy's widths with it.
+ *
+ * `carries` names the poster for the view transition between a card and its
+ * title page (`ui/motion/title-transition.ts`). Never set it from more than one poster
+ * at a time.
  */
 export function Poster({
   path,
   title,
   sizes,
   loading = "lazy",
+  carries = false,
 }: {
   path: string | null;
   title: string;
   sizes: string;
   /** `eager` for the one poster a page opens on; a list's posters wait. */
   loading?: "lazy" | "eager";
+  carries?: boolean;
 }) {
   // The path that failed, not a flag: a row reused for another title starts
   // with a clean slate.
   const [failedPath, setFailedPath] = useState<string | null>(null);
+  const frame = carries ? `${cx("frame")} ${cx("carries")}` : cx("frame");
   if (path === null || failedPath === path) {
     return (
-      <div className={cx("frame")}>
+      <div className={frame}>
         <div className={cx("placeholder")} aria-hidden="true">
           <span className={cx("placeholderTitle")} data-title={title} />
           <ClapperboardIcon className={cx("placeholderMark")} />
@@ -48,7 +55,7 @@ export function Poster({
   }
   const { src, srcSet } = posterSources(path);
   return (
-    <div className={cx("frame")}>
+    <div className={frame}>
       <img
         className={cx("image")}
         src={src}

@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { classNames } from "./class-names.ts";
+import { PosterPlace } from "./motion/title-transition.ts";
 import styles from "./poster-rail.module.css";
 
 const cx = classNames(styles);
@@ -117,7 +118,7 @@ export function PosterRail({
         aria-label={label}
         onScroll={settle}
       >
-        {children}
+        <PosterPlace value={label}>{children}</PosterPlace>
       </ul>
     </div>
   );
