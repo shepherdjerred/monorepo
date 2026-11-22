@@ -22,19 +22,11 @@ namespace TaskNotes.Windows.Tests
             ILogger logger = provider.CreateLogger("TaskNotes.Unit");
 
             KeyValuePair<string, object?>[] state = [new("Operation", "refresh")];
-            logger.Log(
-                LogLevel.Warning,
-                new EventId(1, "Sink"),
-                state,
-                null,
-                static (_, _) => "ignored formatter output"
+            logger.Log(LogLevel.Warning, new EventId(1, "Sink"), state, null, static (_, _) =>
+                "ignored formatter output"
             );
-            logger.Log(
-                LogLevel.Warning,
-                new EventId(2, "Sink"),
-                state,
-                null,
-                static (_, _) => "ignored formatter output"
+            logger.Log(LogLevel.Warning, new EventId(2, "Sink"), state, null, static (_, _) =>
+                "ignored formatter output"
             );
 
             Assert.IsEmpty(Directory.GetFiles(temporary.Path));
@@ -102,12 +94,8 @@ namespace TaskNotes.Windows.Tests
             Assert.IsFalse(logger.IsEnabled(LogLevel.Trace));
             Assert.IsTrue(logger.IsEnabled(LogLevel.Debug));
             logger.BeginScope("scope")?.Dispose();
-            logger.Log(
-                LogLevel.Trace,
-                new EventId(1),
-                "disabled",
-                null,
-                static (state, _) => state
+            logger.Log(LogLevel.Trace, new EventId(1), "disabled", null, static (state, _) =>
+                state
             );
             Assert.HasCount(0, Directory.GetFiles(temporary.Path));
         }

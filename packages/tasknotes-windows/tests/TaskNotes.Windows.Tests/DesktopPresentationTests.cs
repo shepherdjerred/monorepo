@@ -96,7 +96,7 @@ public sealed class DesktopPresentationTests
         Assert.IsFalse(editor.IsDirty);
         Assert.IsEmpty(editor.Reminders);
         Assert.IsTrue(await editor.SaveAsync());
-        _ = Assert.ThrowsExactly<ArgumentOutOfRangeException>(() =>
+        _ = await Assert.ThrowsExactlyAsync<ArgumentOutOfRangeException>(() =>
             editor.CommitFieldAsync("unknown-property")
         );
     }

@@ -22,10 +22,9 @@ public sealed partial class StandaloneProductionScenarios
         Assert.AreEqual(theme == "high-contrast", SystemInformation.HighContrast);
         if (theme != "high-contrast")
         {
-            using var personalize =
-                Registry.CurrentUser.OpenSubKey(
-                    @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
-                )
+            using var personalize = Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+            )
                 ?? throw new InvalidOperationException(
                     "The current Windows theme configuration is unavailable."
                 );

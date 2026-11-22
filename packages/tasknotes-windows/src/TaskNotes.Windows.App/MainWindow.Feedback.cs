@@ -66,13 +66,11 @@ public sealed partial class MainWindow
             try
             {
                 PrepareNativeFeedback();
-                _nativeFeedback!.TryPlay(
-                    cue,
-                    () =>
-                        _foreground
-                        && _taskSounds
-                        && Store.OwnsFeedback(feedback)
-                        && _feedbackPolicy.TryBeginPlayback(cue)
+                _nativeFeedback!.TryPlay(cue, () =>
+                    _foreground
+                    && _taskSounds
+                    && Store.OwnsFeedback(feedback)
+                    && _feedbackPolicy.TryBeginPlayback(cue)
                 );
                 _playingFeedback = feedback;
             }
@@ -91,9 +89,8 @@ public sealed partial class MainWindow
     }
 
     private void PrepareNativeFeedback() =>
-        _nativeFeedback ??= new NativeTaskFeedback(
-            _feedbackPolicy,
-            message => _ = DispatcherQueue.TryEnqueue(() => TaskWorkspace.ShowError(message))
+        _nativeFeedback ??= new NativeTaskFeedback(_feedbackPolicy, message =>
+            _ = DispatcherQueue.TryEnqueue(() => TaskWorkspace.ShowError(message))
         );
 
     private void Feedback_StateChanged(object? sender, EventArgs args)

@@ -42,8 +42,7 @@ public sealed partial class TaskEditorViewModel
     /// <summary>Loads native metadata away from the UI thread, fencing late responses by editor owner.</summary>
     public async Task LoadDependencyMetadataAsync(CancellationToken cancellationToken = default)
     {
-        var original =
-            _original
+        var original = _original
             ?? throw new InvalidOperationException("Load a task before its dependency metadata.");
         long owner = _ownerGeneration;
         long request = ++_dependencyRequest;
@@ -58,8 +57,7 @@ public sealed partial class TaskEditorViewModel
                 throw new InvalidOperationException(
                     "The store does not provide dependency editor metadata."
                 );
-            string profileId =
-                original.ProfileId
+            string profileId = original.ProfileId
                 ?? throw new ArgumentException(
                     "Select the task's owning vault before loading dependency relationships."
                 );

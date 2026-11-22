@@ -219,17 +219,17 @@ public sealed partial class TaskListWorkspaceView : UserControl
         FilterMenu.Items.Clear();
         if (ViewModel is not { } model)
             return;
-        AddFilters(
-            "Status",
-            model.State.StatusChoices,
-            _query.Statuses,
-            values => _query with { Statuses = values }
+        AddFilters("Status", model.State.StatusChoices, _query.Statuses, values =>
+            _query with
+            {
+                Statuses = values,
+            }
         );
-        AddFilters(
-            "Priority",
-            model.State.PriorityChoices,
-            _query.Priorities,
-            values => _query with { Priorities = values }
+        AddFilters("Priority", model.State.PriorityChoices, _query.Priorities, values =>
+            _query with
+            {
+                Priorities = values,
+            }
         );
         AddFilters(
             "Projects",

@@ -10,10 +10,9 @@ public sealed class StandaloneAcceptanceTests
 {
     private static string Schema()
     {
-        using var stream =
-            typeof(StandaloneAcceptanceTests).Assembly.GetManifestResourceStream(
-                "StandaloneAcceptanceSchema.json"
-            ) ?? throw new InvalidDataException("The neutral acceptance schema is missing.");
+        using var stream = typeof(StandaloneAcceptanceTests).Assembly.GetManifestResourceStream(
+            "StandaloneAcceptanceSchema.json"
+        ) ?? throw new InvalidDataException("The neutral acceptance schema is missing.");
         using StreamReader reader = new(stream);
         return reader.ReadToEnd();
     }

@@ -5,8 +5,8 @@ namespace TaskNotes.Windows.App
 {
     internal sealed class WinUiDispatcher(DispatcherQueue dispatcherQueue) : IUiDispatcher
     {
-        private readonly DispatcherQueue _dispatcherQueue =
-            dispatcherQueue ?? throw new ArgumentNullException(nameof(dispatcherQueue));
+        private readonly DispatcherQueue _dispatcherQueue = dispatcherQueue
+            ?? throw new ArgumentNullException(nameof(dispatcherQueue));
 
         public bool HasThreadAccess => _dispatcherQueue.HasThreadAccess;
 
