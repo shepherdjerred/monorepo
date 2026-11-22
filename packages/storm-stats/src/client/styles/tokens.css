@@ -1,0 +1,351 @@
+:root {
+  /* Raw Light ("Overcast Parchment & Storm Teal") tokens */
+  --bg-canvas-light: #f2f5f4;
+  --bg-sidebar-light: #e7eeec;
+  --bg-panel-light: #ffffff;
+  --bg-subtle-light: #edf2f1;
+  --bg-hover-light: #dde8e5;
+  --bg-warm-light: #faf0dc;
+  --border-light: #c6d4d0;
+  --border-strong-light: #94aba5;
+  --text-primary-light: #12201d;
+  --text-secondary-light: #3b4f4b;
+  --text-muted-light: #566b66;
+  --text-warm-light: #5f3f16;
+  --accent-light: #076c5b;
+  --accent-strong-light: #045043;
+  --accent-soft-light: #d3f0ea;
+  --accent-contrast-light: #ffffff;
+  --cyan-light: #006f78;
+  --focus-ring-light: #065f50;
+  --scrollbar-thumb-light: #6d837e;
+  --scrollbar-track-light: #e4ecea;
+
+  /* Semantic status & Activity Index light tokens */
+  --group-regular-fg-light: #086146;
+  --group-regular-bg-light: #d6f5ea;
+  --group-active-fg-light: #055a8c;
+  --group-active-bg-light: #d8effc;
+  --group-irregular-fg-light: #874d00;
+  --group-irregular-bg-light: #fdecc8;
+  --group-inactive-fg-light: #475663;
+  --group-inactive-bg-light: #e5eaee;
+  --danger-fg-light: #a61b1b;
+  --danger-bg-light: #fee4e2;
+  --gold-fg-light: #825300;
+  --gold-bg-light: #fef0c7;
+  --purple-fg-light: #5925dc;
+  --purple-bg-light: #ebe9fe;
+
+  /* Raw Dark ("Deep Storm Slate & Lightning Cyan") tokens */
+  --bg-canvas-dark: #0c1216;
+  --bg-sidebar-dark: #10181e;
+  --bg-panel-dark: #152028;
+  --bg-subtle-dark: #1b2832;
+  --bg-hover-dark: #223340;
+  --bg-warm-dark: #2a2217;
+  --border-dark: #253643;
+  --border-strong-dark: #3a5366;
+  --text-primary-dark: #eaf2f6;
+  --text-secondary-dark: #abc0cb;
+  --text-muted-dark: #849ca9;
+  --text-warm-dark: #f4dca9;
+  --accent-dark: #2dd4bf;
+  --accent-strong-dark: #5eead4;
+  --accent-soft-dark: #113533;
+  --accent-contrast-dark: #06211e;
+  --cyan-dark: #38bdf8;
+  --focus-ring-dark: #5eead4;
+  --scrollbar-thumb-dark: #607a8a;
+  --scrollbar-track-dark: #121b22;
+
+  /* Semantic status & Activity Index dark tokens */
+  --group-regular-fg-dark: #6ee7b7;
+  --group-regular-bg-dark: #0f3529;
+  --group-active-fg-dark: #7dd3fc;
+  --group-active-bg-dark: #0f2f44;
+  --group-irregular-fg-dark: #fcd34d;
+  --group-irregular-bg-dark: #38280c;
+  --group-inactive-fg-dark: #b0c1ce;
+  --group-inactive-bg-dark: #202c36;
+  --danger-fg-dark: #fca5a5;
+  --danger-bg-dark: #3b1819;
+  --gold-fg-dark: #fcd34d;
+  --gold-bg-dark: #36280d;
+  --purple-fg-dark: #c4b5fd;
+  --purple-bg-dark: #271c47;
+
+  /* Default resolved tokens (Light baseline fallback) */
+  --bg-canvas: var(--bg-canvas-light);
+  --bg-sidebar: var(--bg-sidebar-light);
+  --bg-panel: var(--bg-panel-light);
+  --bg-subtle: var(--bg-subtle-light);
+  --bg-hover: var(--bg-hover-light);
+  --bg-warm: var(--bg-warm-light);
+  --border: var(--border-light);
+  --border-strong: var(--border-strong-light);
+  --text-primary: var(--text-primary-light);
+  --text-secondary: var(--text-secondary-light);
+  --text-muted: var(--text-muted-light);
+  --text-warm: var(--text-warm-light);
+  --accent: var(--accent-light);
+  --accent-strong: var(--accent-strong-light);
+  --accent-soft: var(--accent-soft-light);
+  --accent-contrast: var(--accent-contrast-light);
+  --cyan: var(--cyan-light);
+  --focus-ring: var(--focus-ring-light);
+  --scrollbar-thumb: var(--scrollbar-thumb-light);
+  --scrollbar-track: var(--scrollbar-track-light);
+  --group-regular-fg: var(--group-regular-fg-light);
+  --group-regular-bg: var(--group-regular-bg-light);
+  --group-active-fg: var(--group-active-fg-light);
+  --group-active-bg: var(--group-active-bg-light);
+  --group-irregular-fg: var(--group-irregular-fg-light);
+  --group-irregular-bg: var(--group-irregular-bg-light);
+  --group-inactive-fg: var(--group-inactive-fg-light);
+  --group-inactive-bg: var(--group-inactive-bg-light);
+  --danger-fg: var(--danger-fg-light);
+  --danger-bg: var(--danger-bg-light);
+  --gold-fg: var(--gold-fg-light);
+  --gold-bg: var(--gold-bg-light);
+  --purple-fg: var(--purple-fg-light);
+  --purple-bg: var(--purple-bg-light);
+  --shadow-panel:
+    0 1px 3px rgb(12 24 22 / 0.06), 0 6px 18px rgb(12 24 22 / 0.04);
+
+  /* Baseline Widely Available fallback for prefers-color-scheme */
+  @media (prefers-color-scheme: dark) {
+    --bg-canvas: var(--bg-canvas-dark);
+    --bg-sidebar: var(--bg-sidebar-dark);
+    --bg-panel: var(--bg-panel-dark);
+    --bg-subtle: var(--bg-subtle-dark);
+    --bg-hover: var(--bg-hover-dark);
+    --bg-warm: var(--bg-warm-dark);
+    --border: var(--border-dark);
+    --border-strong: var(--border-strong-dark);
+    --text-primary: var(--text-primary-dark);
+    --text-secondary: var(--text-secondary-dark);
+    --text-muted: var(--text-muted-dark);
+    --text-warm: var(--text-warm-dark);
+    --accent: var(--accent-dark);
+    --accent-strong: var(--accent-strong-dark);
+    --accent-soft: var(--accent-soft-dark);
+    --accent-contrast: var(--accent-contrast-dark);
+    --cyan: var(--cyan-dark);
+    --focus-ring: var(--focus-ring-dark);
+    --scrollbar-thumb: var(--scrollbar-thumb-dark);
+    --scrollbar-track: var(--scrollbar-track-dark);
+    --group-regular-fg: var(--group-regular-fg-dark);
+    --group-regular-bg: var(--group-regular-bg-dark);
+    --group-active-fg: var(--group-active-fg-dark);
+    --group-active-bg: var(--group-active-bg-dark);
+    --group-irregular-fg: var(--group-irregular-fg-dark);
+    --group-irregular-bg: var(--group-irregular-bg-dark);
+    --group-inactive-fg: var(--group-inactive-fg-dark);
+    --group-inactive-bg: var(--group-inactive-bg-dark);
+    --danger-fg: var(--danger-fg-dark);
+    --danger-bg: var(--danger-bg-dark);
+    --gold-fg: var(--gold-fg-dark);
+    --gold-bg: var(--gold-bg-dark);
+    --purple-fg: var(--purple-fg-dark);
+    --purple-bg: var(--purple-bg-dark);
+    --shadow-panel: 0 2px 6px rgb(0 0 0 / 0.3), 0 10px 26px rgb(0 0 0 / 0.25);
+  }
+
+  /* Explicit meta override fallback before light-dark() enhancement */
+  &:has(> head > meta[name="color-scheme"][content="dark"]) {
+    color-scheme: dark;
+    --bg-canvas: var(--bg-canvas-dark);
+    --bg-sidebar: var(--bg-sidebar-dark);
+    --bg-panel: var(--bg-panel-dark);
+    --bg-subtle: var(--bg-subtle-dark);
+    --bg-hover: var(--bg-hover-dark);
+    --bg-warm: var(--bg-warm-dark);
+    --border: var(--border-dark);
+    --border-strong: var(--border-strong-dark);
+    --text-primary: var(--text-primary-dark);
+    --text-secondary: var(--text-secondary-dark);
+    --text-muted: var(--text-muted-dark);
+    --text-warm: var(--text-warm-dark);
+    --accent: var(--accent-dark);
+    --accent-strong: var(--accent-strong-dark);
+    --accent-soft: var(--accent-soft-dark);
+    --accent-contrast: var(--accent-contrast-dark);
+    --cyan: var(--cyan-dark);
+    --focus-ring: var(--focus-ring-dark);
+    --scrollbar-thumb: var(--scrollbar-thumb-dark);
+    --scrollbar-track: var(--scrollbar-track-dark);
+    --group-regular-fg: var(--group-regular-fg-dark);
+    --group-regular-bg: var(--group-regular-bg-dark);
+    --group-active-fg: var(--group-active-fg-dark);
+    --group-active-bg: var(--group-active-bg-dark);
+    --group-irregular-fg: var(--group-irregular-fg-dark);
+    --group-irregular-bg: var(--group-irregular-bg-dark);
+    --group-inactive-fg: var(--group-inactive-fg-dark);
+    --group-inactive-bg: var(--group-inactive-bg-dark);
+    --danger-fg: var(--danger-fg-dark);
+    --danger-bg: var(--danger-bg-dark);
+    --gold-fg: var(--gold-fg-dark);
+    --gold-bg: var(--gold-bg-dark);
+    --purple-fg: var(--purple-fg-dark);
+    --purple-bg: var(--purple-bg-dark);
+  }
+
+  &:has(> head > meta[name="color-scheme"][content="light"]) {
+    color-scheme: light;
+    --bg-canvas: var(--bg-canvas-light);
+    --bg-sidebar: var(--bg-sidebar-light);
+    --bg-panel: var(--bg-panel-light);
+    --bg-subtle: var(--bg-subtle-light);
+    --bg-hover: var(--bg-hover-light);
+    --bg-warm: var(--bg-warm-light);
+    --border: var(--border-light);
+    --border-strong: var(--border-strong-light);
+    --text-primary: var(--text-primary-light);
+    --text-secondary: var(--text-secondary-light);
+    --text-muted: var(--text-muted-light);
+    --text-warm: var(--text-warm-light);
+    --accent: var(--accent-light);
+    --accent-strong: var(--accent-strong-light);
+    --accent-soft: var(--accent-soft-light);
+    --accent-contrast: var(--accent-contrast-light);
+    --cyan: var(--cyan-light);
+    --focus-ring: var(--focus-ring-light);
+    --scrollbar-thumb: var(--scrollbar-thumb-light);
+    --scrollbar-track: var(--scrollbar-track-light);
+    --group-regular-fg: var(--group-regular-fg-light);
+    --group-regular-bg: var(--group-regular-bg-light);
+    --group-active-fg: var(--group-active-fg-light);
+    --group-active-bg: var(--group-active-bg-light);
+    --group-irregular-fg: var(--group-irregular-fg-light);
+    --group-irregular-bg: var(--group-irregular-bg-light);
+    --group-inactive-fg: var(--group-inactive-fg-light);
+    --group-inactive-bg: var(--group-inactive-bg-light);
+    --danger-fg: var(--danger-fg-light);
+    --danger-bg: var(--danger-bg-light);
+    --gold-fg: var(--gold-fg-light);
+    --gold-bg: var(--gold-bg-light);
+    --purple-fg: var(--purple-fg-light);
+    --purple-bg: var(--purple-bg-light);
+  }
+
+  /* Modern light-dark() enhancement keyed off computed color-scheme */
+  @supports (color: light-dark(white, black)) {
+    --bg-canvas: light-dark(var(--bg-canvas-light), var(--bg-canvas-dark));
+    --bg-sidebar: light-dark(var(--bg-sidebar-light), var(--bg-sidebar-dark));
+    --bg-panel: light-dark(var(--bg-panel-light), var(--bg-panel-dark));
+    --bg-subtle: light-dark(var(--bg-subtle-light), var(--bg-subtle-dark));
+    --bg-hover: light-dark(var(--bg-hover-light), var(--bg-hover-dark));
+    --bg-warm: light-dark(var(--bg-warm-light), var(--bg-warm-dark));
+    --border: light-dark(var(--border-light), var(--border-dark));
+    --border-strong: light-dark(
+      var(--border-strong-light),
+      var(--border-strong-dark)
+    );
+    --text-primary: light-dark(
+      var(--text-primary-light),
+      var(--text-primary-dark)
+    );
+    --text-secondary: light-dark(
+      var(--text-secondary-light),
+      var(--text-secondary-dark)
+    );
+    --text-muted: light-dark(var(--text-muted-light), var(--text-muted-dark));
+    --text-warm: light-dark(var(--text-warm-light), var(--text-warm-dark));
+    --accent: light-dark(var(--accent-light), var(--accent-dark));
+    --accent-strong: light-dark(
+      var(--accent-strong-light),
+      var(--accent-strong-dark)
+    );
+    --accent-soft: light-dark(
+      var(--accent-soft-light),
+      var(--accent-soft-dark)
+    );
+    --accent-contrast: light-dark(
+      var(--accent-contrast-light),
+      var(--accent-contrast-dark)
+    );
+    --cyan: light-dark(var(--cyan-light), var(--cyan-dark));
+    --focus-ring: light-dark(var(--focus-ring-light), var(--focus-ring-dark));
+    --scrollbar-thumb: light-dark(
+      var(--scrollbar-thumb-light),
+      var(--scrollbar-thumb-dark)
+    );
+    --scrollbar-track: light-dark(
+      var(--scrollbar-track-light),
+      var(--scrollbar-track-dark)
+    );
+    --group-regular-fg: light-dark(
+      var(--group-regular-fg-light),
+      var(--group-regular-fg-dark)
+    );
+    --group-regular-bg: light-dark(
+      var(--group-regular-bg-light),
+      var(--group-regular-bg-dark)
+    );
+    --group-active-fg: light-dark(
+      var(--group-active-fg-light),
+      var(--group-active-fg-dark)
+    );
+    --group-active-bg: light-dark(
+      var(--group-active-bg-light),
+      var(--group-active-bg-dark)
+    );
+    --group-irregular-fg: light-dark(
+      var(--group-irregular-fg-light),
+      var(--group-irregular-fg-dark)
+    );
+    --group-irregular-bg: light-dark(
+      var(--group-irregular-bg-light),
+      var(--group-irregular-bg-dark)
+    );
+    --group-inactive-fg: light-dark(
+      var(--group-inactive-fg-light),
+      var(--group-inactive-fg-dark)
+    );
+    --group-inactive-bg: light-dark(
+      var(--group-inactive-bg-light),
+      var(--group-inactive-bg-dark)
+    );
+    --danger-fg: light-dark(var(--danger-fg-light), var(--danger-fg-dark));
+    --danger-bg: light-dark(var(--danger-bg-light), var(--danger-bg-dark));
+    --gold-fg: light-dark(var(--gold-fg-light), var(--gold-fg-dark));
+    --gold-bg: light-dark(var(--gold-bg-light), var(--gold-bg-dark));
+    --purple-fg: light-dark(var(--purple-fg-light), var(--purple-fg-dark));
+    --purple-bg: light-dark(var(--purple-bg-light), var(--purple-bg-dark));
+  }
+
+  /* Base declaration MUST stay light dark so CSS works even if JS never runs */
+  color-scheme: light dark;
+  accent-color: var(--accent);
+  /* Never animate or transition scrollbar-color (WebKit flicker bug) */
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display:
+    "Trebuchet MS", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:
+    ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+}

@@ -39,6 +39,7 @@
         { "name": "starlight-karma-bot", "visibility": "private" },
         { "name": "storm-brain", "visibility": "private" },
         { "name": "storm-forum", "visibility": "private" },
+        { "name": "storm-stats", "visibility": "private" },
         { "name": "streambot", "visibility": "private" },
         { "name": "tasknotes-server", "visibility": "private" },
         { "name": "temporal-worker", "visibility": "private" },

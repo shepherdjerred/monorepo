@@ -135,9 +135,9 @@ function original(name: string) {
   });
 }
 
-test("all 23 canonical recipes have a fixed component/repository/owner without Git selected versions", () => {
-  expect(CANONICAL_IMAGE_TARGETS).toHaveLength(23);
-  expect(new Set(CANONICAL_IMAGE_TARGETS).size).toBe(23);
+test("all 24 canonical recipes have a fixed component/repository/owner without Git selected versions", () => {
+  expect(CANONICAL_IMAGE_TARGETS).toHaveLength(24);
+  expect(new Set(CANONICAL_IMAGE_TARGETS).size).toBe(24);
   expect(CANONICAL_IMAGE_TARGETS).toContain("flags");
   expect(CANONICAL_IMAGE_TARGETS).not.toContain("obsidian-headless");
   expect(CANONICAL_IMAGE_TARGETS).toContain("golink");

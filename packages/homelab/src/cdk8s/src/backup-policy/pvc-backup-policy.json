@@ -648,6 +648,12 @@
     "reason": "Flags SQLite documents"
   },
   {
+    "namespace": "storm-stats",
+    "name": "storm-stats-data",
+    "backup": "enabled",
+    "reason": "Storm player and gameplay analytics SQLite ledger"
+  },
+  {
     "namespace": "flipt",
     "name": "flipt-data",
     "backup": "enabled",

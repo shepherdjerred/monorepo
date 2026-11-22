@@ -38,3 +38,4 @@ modules:
   rwf: true
   rwfbots: true
   advancements: true
+  stats: true

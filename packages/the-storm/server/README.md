@@ -90,8 +90,8 @@ is private operational staging, never a repository or public PR asset.
 
 ## Plugin and configuration ownership
 
-`owned/plugins/TheStorm/config.yml` registers and enables all 32 Storm modules,
-including `creative`, `rwf`, and `rwfbots`. The creative world is the recovered
+`owned/plugins/TheStorm/config.yml` registers and enables all 33 Storm modules,
+including `creative`, `rwf`, `rwfbots`, and `stats`. The creative world is the recovered
 2016 plot map. Keep its Multiverse `auto-load` setting false: Multiverse enables
 before TheStorm and cannot obtain its generator then. TheStorm opens existing
 legacy or native creative terrain with its plot generator before enabling the

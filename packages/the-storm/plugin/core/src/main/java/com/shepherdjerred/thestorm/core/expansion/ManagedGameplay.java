@@ -35,6 +35,7 @@ public final class ManagedGameplay implements AutoCloseable {
   public static final String CONTENT_SAFETY = "the-storm-content-safety-enabled";
   public static final String ASYNC_CHAT_MODERATION = "the-storm-async-chat-moderation-enabled";
   public static final String ANTICHEAT_CORRECTIONS = "the-storm-anticheat-corrections-enabled";
+  public static final String STATS_EXPORT = "the-storm-stats-export-enabled";
   private final BiFunction<String, UUID, CompletableFuture<Boolean>> reader;
   private final Runnable stop;
   private final InstantSource time;
@@ -84,7 +85,7 @@ public final class ManagedGameplay implements AutoCloseable {
         new OutageDefaults(
             !prod,
             prod
-                ? Set.of(STAFF, IDENTITY, LETTERS, ASYNC_CHAT_MODERATION)
+                ? Set.of(STAFF, IDENTITY, LETTERS, ASYNC_CHAT_MODERATION, STATS_EXPORT)
                 : Set.of(ASYNC_CHAT_MODERATION)));
   }
 

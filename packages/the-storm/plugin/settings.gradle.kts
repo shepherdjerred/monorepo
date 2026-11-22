@@ -110,6 +110,7 @@ val modules =
         "rwf",
         "rwfbots",
         "advancements",
+        "stats",
     )
 
 include("core", "architecture", "dist")

@@ -490,7 +490,7 @@ Every module implements `StormModule` and is listed in `dist`'s `Modules`
 (a test fails if one is missing). `plugins/TheStorm/config.yml` must name every
 module under `modules:` with `true` or `false`; a missing or unknown key stops
 the plugin. The repository owns that file; the plugin never writes it.
-The shipped `config.yml` registers 31 modules and enables all of them. Every
+The shipped `config.yml` registers 33 modules and enables all of them. Every
 module must also declare its player-reset cleanup or explicitly declare itself
 stateless; startup fails if a module is omitted. This includes `creative` (the recovered plot world, which must already be loaded
 with generator `TheStorm:creative`, and whose CoreProtect block and WorldEdit
@@ -4128,3 +4128,21 @@ The private dashboard is declared in
 are the source for time sums; session-end totals only measure completed session
 length. All aggregates deduplicate stable event IDs and exclude beta captures.
 See the wiki's PostHog explanation for accounting semantics and live acceptance.
+
+## Player and gameplay analytics (`stats`)
+
+The `stats` module (`StatsModule`, configured by `server/owned/plugins/TheStorm/stats.yml`)
+tracks human player sessions, world/mode intervals, survival PvP/PvE combat, connection bounces,
+and progression snapshots across economy, towns, skills, tracks, quests, Mob Arena, and Search and
+Destroy. Citizens NPCs are excluded from every session, combat, and snapshot surface.
+
+- `/stats` displays live online humans, total tracked players, and a clickable link to the
+  configured `publicUrl` (`stats.ts-mc.net` once active, defaulting to `https://ts-mc.net`).
+- `/stats <player>` (and `/stats player <player>`) queries SQLite asynchronously off Paper's main
+  thread and displays first/last seen timestamps, active and connected playtime, session count,
+  survival PvP K/D, mob kills, and the player's web profile link.
+- When `STORM_STATS_INGEST_URL` and `STORM_STATS_INGEST_TOKEN` are set and the managed flag
+  `the-storm-stats-export-enabled` evaluates true, queued outbox events and latest snapshots are
+  exported in bounded HTTP batches (`../storm-stats/contracts/ingest-v1.json`) on virtual threads.
+  When both variables are unset, `stats` runs cleanly in local-only mode with a bounded 5,000-event
+  SQLite outbox.

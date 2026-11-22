@@ -29,6 +29,7 @@ import com.shepherdjerred.thestorm.skills.SkillsModule;
 import com.shepherdjerred.thestorm.skylands.SkylandsModule;
 import com.shepherdjerred.thestorm.skytravel.SkytravelModule;
 import com.shepherdjerred.thestorm.spells.SpellsModule;
+import com.shepherdjerred.thestorm.stats.StatsModule;
 import com.shepherdjerred.thestorm.tickets.TicketsModule;
 import com.shepherdjerred.thestorm.towns.TownsModule;
 import com.shepherdjerred.thestorm.tracks.TracksModule;
@@ -44,8 +45,9 @@ import java.util.List;
  * and reads essentials moderation history when that module is on. Quests, arena, rwf (Search and
  * Destroy), skills and seasonal post through discord when it is on, so they come after it; arena
  * and rwf also need economy. Rwfbots provides rwf's bot roster and so comes after rwf. World loads
- * before qol, which teleports into those worlds. Reset follows companions. Advancements is last: it
- * awards milestones the other modules have already saved.
+ * before qol, which teleports into those worlds. Reset follows companions. Advancements awards
+ * milestones the other modules have already saved. Stats comes last, sampling sessions and
+ * progression across the enabled gameplay modules.
  */
 final class Modules {
 
@@ -84,6 +86,7 @@ final class Modules {
         new SkytravelModule(),
         new CompanionsModule(),
         new ResetModule(),
-        new AdvancementsModule());
+        new AdvancementsModule(),
+        new StatsModule());
   }
 }

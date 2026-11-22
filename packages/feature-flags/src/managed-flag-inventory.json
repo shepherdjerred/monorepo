@@ -4592,6 +4592,42 @@
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
+    },
+    {
+      "key": "storm-stats-ingest-enabled",
+      "owner": "storm",
+      "namespace": "storm",
+      "source": "storm-stats",
+      "purpose": "Accept authenticated player and gameplay analytics batches from The Storm game server.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "storm-stats-public-enabled",
+      "owner": "storm",
+      "namespace": "storm",
+      "source": "storm-stats",
+      "purpose": "Serve public player and gameplay analytics on the public stats.ts-mc.net listener.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-stats-export-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-stats",
+      "purpose": "Export queued human session, combat, bounce, and gameplay snapshots to storm-stats.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     }
   ],
   "exemptions": [

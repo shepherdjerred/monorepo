@@ -52,6 +52,7 @@ final class ModulesTest {
           "skytravel",
           "spells",
           "stargates",
+          "stats",
           "tickets",
           "towns",
           "tracks",
@@ -82,7 +83,7 @@ final class ModulesTest {
     var config = ConfigFiles.load(SHIPPED_CONFIG, PluginConfig.class);
     var registered = ModuleRegistry.ids(Modules.all());
 
-    assertThat(registered).hasSize(32);
+    assertThat(registered).hasSize(33);
     assertThat(config.modules().keySet()).containsExactlyInAnyOrderElementsOf(registered);
     assertThat(
             config.modules().entrySet().stream()
