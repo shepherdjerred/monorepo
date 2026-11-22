@@ -37,7 +37,7 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   "gradle-build-cache": "open",
   home: "open",
   media: "open",
-  "minecraft-shuxin": "open",
+  "minecraft-shuxin": "enforced",
   "minecraft-sjerred": "open",
   "minecraft-tsmc": "open",
   "node-tuning": "open",
