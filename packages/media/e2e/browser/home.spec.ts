@@ -177,6 +177,8 @@ test.describe("a member's Home", () => {
     expect(paths.toSorted(byName)).toEqual(
       [
         "/api/v1/me",
+        // The bell in the top bar, for its unread count: the shell's, not Home's.
+        "/api/v1/notifications",
         "/api/v1/requests",
         // The reader's interests are two pages long.
         "/api/v1/request-interests",
