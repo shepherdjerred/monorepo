@@ -1,5 +1,9 @@
 import { expect, type Page, type Request } from "@playwright/test";
-import { allowWrites, openSettled, violationDetails } from "./support.ts";
+import {
+  allowWrites,
+  openSettled,
+  violationDetails,
+} from "#e2e/browser/support.ts";
 
 /**
  * Opens one of the owner's Manage pages, waits for its sections to load, and

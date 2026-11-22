@@ -7,8 +7,8 @@ import {
   storageContents,
   storedCommandKeys,
   violations,
-} from "./manage-support.ts";
-import { horizontalOverflow, test } from "./support.ts";
+} from "./support.ts";
+import { horizontalOverflow, test } from "#e2e/browser/support.ts";
 
 test.describe("household", () => {
   test("pausing a member's requests sends the change and says what was done", async ({

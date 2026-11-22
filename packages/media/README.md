@@ -779,8 +779,8 @@ layout it is about: `*.desktop.spec.ts` (the sidebar) runs only in `desktop` and
 layout-specific test in one of those files instead of skipping it by viewport;
 the root quality ratchet rejects `test.skip`.
 
-`e2e/browser/manage-forms.spec.ts` and `manage-durations.spec.ts` drive the owner's forms. Because the fixture API refuses writes, each test answers the
-write itself (`answerWrites` in `manage-support.ts`) and asserts the method,
+`e2e/browser/manage/forms.spec.ts` and `durations.spec.ts` drive the owner's forms. Because the fixture API refuses writes, each test answers the
+write itself (`answerWrites` in `manage/support.ts`) and asserts the method,
 path, headers, and body the client sent. They prove what would be requested,
 not that anything was saved; a write against a real server is covered by the
 server's own suites.

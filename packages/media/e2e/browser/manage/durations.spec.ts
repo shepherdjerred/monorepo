@@ -1,11 +1,6 @@
 import { expect, type Locator } from "@playwright/test";
-import {
-  answerWrites,
-  openManage,
-  openRow,
-  violations,
-} from "./manage-support.ts";
-import { horizontalOverflow, test } from "./support.ts";
+import { answerWrites, openManage, openRow, violations } from "./support.ts";
+import { horizontalOverflow, test } from "#e2e/browser/support.ts";
 
 /** The two controls of a duration field, by the field's visible label. */
 function duration(form: Locator, label: string) {
