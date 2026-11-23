@@ -4,6 +4,8 @@ import { DeploymentSchema } from "#shared/contract.ts";
 import {
   DeploymentPageSchema,
   EnvironmentDetailSchema,
+  HubGridSchema,
+  HubOverviewSchema,
 } from "#shared/hub/hub-contract.ts";
 
 /** Open the newest matching deployment of an environment by its deep link. */
@@ -225,6 +227,33 @@ export async function showAllAttention(page: Page) {
     .getByRole("region", { name: "Needs attention" })
     .getByRole("button", { name: /^Show all \d+$/u });
   if (await show.isVisible()) await show.click();
+}
+
+/**
+ * The Overview and the Pipelines list name the same "Needs attention" items:
+ * the same records from the API, and the same count and titles on the pages.
+ * Both pages take attention from one rule, so a failure no page can show a
+ * service for is on neither.
+ */
+export async function expectPagesAgreeOnAttention(page: Page) {
+  const grid = await api(page, "/api/v1/hub/grid", HubGridSchema);
+  const hub = await api(page, "/api/v1/hub", HubOverviewSchema);
+  expect(grid.attention.length).toBeGreaterThan(0);
+  expect(hub.attention).toEqual(grid.attention);
+  const leads: string[][] = [];
+  for (const path of ["/", "/pipelines"]) {
+    await page.goto(path);
+    const region = page.getByRole("region", { name: "Needs attention" });
+    await expect(region).toContainText(
+      `${String(grid.attention.length)} ${grid.attention.length === 1 ? "item" : "items"}`,
+    );
+    await showAllAttention(page);
+    await expect(region.getByRole("listitem")).toHaveCount(
+      grid.attention.length,
+    );
+    leads.push(await region.locator(".attention-lead").allTextContents());
+  }
+  expect(leads[1]).toEqual(leads[0]);
 }
 
 /** The Overview tile of one service: the list item holding the link to its pipeline. */

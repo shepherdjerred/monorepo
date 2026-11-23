@@ -3,6 +3,7 @@ import { HubGridSchema, HubOverviewSchema } from "#shared/hub/hub-contract.ts";
 import {
   api,
   expectNoHorizontalOverflow,
+  expectPagesAgreeOnAttention,
   showAllAttention,
 } from "./helpers.ts";
 
@@ -91,6 +92,12 @@ test("the overview collapses a long attention list to five too, one behaviour on
   );
   await showAllAttention(page);
   await expect(region.getByRole("listitem")).toHaveCount(grid.attention.length);
+});
+
+test("the overview and the pipelines list name the same items needing attention", async ({
+  page,
+}) => {
+  await expectPagesAgreeOnAttention(page);
 });
 
 test("the pipelines list leads with what needs attention and dates builds and deployments apart", async ({

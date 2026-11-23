@@ -8,6 +8,7 @@ import {
   LifecycleSchema,
 } from "#shared/contract.ts";
 import type {
+  Attention,
   GridEnvironment,
   GridService,
   HubGrid,
@@ -211,6 +212,83 @@ function gridEnvironments(
   );
 }
 
+/** The active services this server's catalog places, with their title and group, and those services' active environments. */
+export function listedRecord(
+  record: GridRecord,
+  catalog: CatalogCore = CATALOG_CORE,
+) {
+  const services = new Map<
+    string,
+    NonNullable<ReturnType<typeof servicePlacement>>
+  >();
+  for (const service of record.services) {
+    if (!isActive(service)) continue;
+    const placement = servicePlacement(service.id, catalog);
+    if (placement !== undefined) services.set(service.id, placement);
+  }
+  return {
+    services,
+    environments: record.environments.filter(
+      (env) => isActive(env) && services.has(env.serviceId),
+    ),
+  };
+}
+
+/**
+ * What needs someone, from one read of the record. Every page that lists
+ * attention takes it from here, so Overview and Pipelines can never disagree:
+ * an item exists only for a service and an environment a page lists, never
+ * for a retired service or environment, or one the catalog does not declare,
+ * whatever deployments the record still holds for it.
+ */
+export function gridAttention(
+  record: GridRecord,
+  catalog: CatalogCore = CATALOG_CORE,
+): Attention[] {
+  const { services, environments } = listedRecord(record, catalog);
+  const watched = new Set(environments.map((env) => env.id));
+  return attentionItems({
+    awaiting: record.awaiting.filter((deployment) =>
+      watched.has(deployment.environmentId),
+    ),
+    latest: [...record.latest.values()].filter((deployment) =>
+      watched.has(deployment.environmentId),
+    ),
+    prior: record.prior,
+    alarms: environments.flatMap((env): AlarmedRelease[] => {
+      const at = alarmedAt(record, env);
+      if (at === null) return [];
+      if (env.acceptedVersionSetRevisionId === null)
+        throw new Error(`Environment ${env.id} alarmed with nothing accepted`);
+      return [
+        {
+          environmentId: env.id,
+          serviceId: env.serviceId,
+          versionSetRevisionId: env.acceptedVersionSetRevisionId,
+          alarmedAt: at,
+        },
+      ];
+    }),
+    failedBuilds: [...services].flatMap(([serviceId, placement]) => {
+      const build = record.builds.get(serviceId);
+      return build?.status === "failed"
+        ? [
+            {
+              id: build.id,
+              serviceId,
+              serviceTitle: placement.title,
+              reason: build.qualificationReason,
+              at: build.createdAt.toISOString(),
+            },
+          ]
+        : [];
+    }),
+    subject: deploymentSubjects(record.environments),
+    revisions: record.revisions,
+    now: record.now,
+  });
+}
+
 /**
  * The overview grid from one read of the record: every active service this
  * server's catalog declares, under its catalog group, with what Delivery last
@@ -222,26 +300,20 @@ export function buildGrid(
   record: GridRecord,
   catalog: CatalogCore = CATALOG_CORE,
 ): HubGrid {
-  const environments = record.environments.filter((env) => isActive(env));
+  const { services: listed, environments } = listedRecord(record, catalog);
   const members = new Map<string, GridService[]>();
-  const listed = new Map<string, string>();
-  for (const service of record.services) {
-    if (!isActive(service)) continue;
-    const placement = servicePlacement(service.id, catalog);
-    if (placement === undefined) continue;
-    listed.set(service.id, placement.title);
+  for (const [serviceId, placement] of listed) {
     const group = members.get(placement.group.id) ?? [];
     group.push({
-      id: service.id,
+      id: serviceId,
       title: placement.title,
       environments: gridEnvironments(
-        environments.filter((env) => env.serviceId === service.id),
+        environments.filter((env) => env.serviceId === serviceId),
         record,
       ),
     });
     members.set(placement.group.id, group);
   }
-  const watched = new Set(environments.map((env) => env.id));
   return {
     groups: catalog.groups.flatMap((group) => {
       const services = members.get(group.id);
@@ -260,57 +332,16 @@ export function buildGrid(
             },
           ];
     }),
-    attention: attentionItems({
-      awaiting: record.awaiting.filter((deployment) =>
-        watched.has(deployment.environmentId),
-      ),
-      latest: [...record.latest.values()].filter((deployment) =>
-        watched.has(deployment.environmentId),
-      ),
-      prior: record.prior,
-      alarms: environments.flatMap((env): AlarmedRelease[] => {
-        const at = alarmedAt(record, env);
-        if (at === null) return [];
-        if (env.acceptedVersionSetRevisionId === null)
-          throw new Error(
-            `Environment ${env.id} alarmed with nothing accepted`,
-          );
-        return [
-          {
-            environmentId: env.id,
-            serviceId: env.serviceId,
-            versionSetRevisionId: env.acceptedVersionSetRevisionId,
-            alarmedAt: at,
-          },
-        ];
-      }),
-      failedBuilds: [...listed].flatMap(([serviceId, serviceTitle]) => {
-        const build = record.builds.get(serviceId);
-        return build?.status === "failed"
-          ? [
-              {
-                id: build.id,
-                serviceId,
-                serviceTitle,
-                reason: build.qualificationReason,
-                at: build.createdAt.toISOString(),
-              },
-            ]
-          : [];
-      }),
-      subject: deploymentSubjects(record.environments),
-      revisions: record.revisions,
-      now: record.now,
-    }),
+    attention: gridAttention(record, catalog),
   };
 }
 
 /**
- * `GET /hub/grid`. Eleven statements whatever the number of services: every row
- * is read by set, never per service or per environment, and no execution is
- * traced.
+ * The record the grid and every attention list are built from. Eleven
+ * statements whatever the number of services: every row is read by set, never
+ * per service or per environment, and no execution is traced.
  */
-export async function hubGrid(database: Database): Promise<HubGrid> {
+export async function readGridRecord(database: Database): Promise<GridRecord> {
   const [services, environments, newest, before, builds, awaiting] =
     await Promise.all([
       database.service.findMany({ select: { id: true, lifecycle: true } }),
@@ -350,7 +381,7 @@ export async function hubGrid(database: Database): Promise<HubGrid> {
       },
     }),
   ]);
-  return buildGrid({
+  return {
     services,
     environments,
     latest,
@@ -360,5 +391,10 @@ export async function hubGrid(database: Database): Promise<HubGrid> {
     revisions: new Map(sets.map((row) => [row.id, row.revision])),
     accepting: new Map(accepting.map((row) => [row.id, row])),
     now: new Date(),
-  });
+  };
+}
+
+/** `GET /hub/grid`. */
+export async function hubGrid(database: Database): Promise<HubGrid> {
+  return buildGrid(await readGridRecord(database));
 }

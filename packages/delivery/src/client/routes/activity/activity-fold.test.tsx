@@ -144,6 +144,36 @@ describe("foldActivity", () => {
     ).toEqual([3, 1, 1, 1]);
   });
 
+  it("folds the repeats of one worker retirement's proof into one row, not another deployment's", () => {
+    const proved = (deployment: string): ActivityEntry => ({
+      ...entry("worker.retirement_proved", deployment),
+      target: { kind: "deployment", id: deployment },
+      subject: {
+        serviceId: "temporal",
+        environmentId: "temporal/prod",
+        revision: 461,
+      },
+    });
+    const rowsOf = foldActivity([
+      proved(FIRST),
+      proved(FIRST),
+      entry("deployment.succeeded", FIRST),
+      proved(SECOND),
+      proved(FIRST),
+    ]);
+    expect(
+      rowsOf.map((row) => (row.kind === "entry" ? 1 : row.entries.length)),
+    ).toEqual([3, 1, 1]);
+    const [folded = ""] = rows(
+      render([proved(FIRST), proved(FIRST), proved(FIRST)]),
+    );
+    expect(folded).toContain("Worker retired");
+    expect(folded).toContain("×3");
+    expect(folded).toContain("3 proofs");
+    expect(folded).toContain(`href="/deployments/${FIRST}"`);
+    expect(folded).toContain("temporal/prod");
+  });
+
   it("still ends a run of repeated build records at another action or actor", () => {
     expect(
       foldActivity([
