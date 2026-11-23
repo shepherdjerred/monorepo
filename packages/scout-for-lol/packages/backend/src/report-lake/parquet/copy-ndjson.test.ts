@@ -179,7 +179,7 @@ test("sizes each COPY reader from its largest complete encoded record", async ()
       Buffer.byteLength(oversized),
       Buffer.byteLength(small),
     ]);
-    expect(sizes[0]).toBeGreaterThan(64 * 1024 * 1024);
+    expect(sizes[0]).toBeGreaterThan(32 * 1024 * 1024);
     expect(await Bun.file(`${sourcePath}.parquet-batch`).exists()).toBe(false);
   } finally {
     await rm(directory, { recursive: true });

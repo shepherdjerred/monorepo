@@ -270,7 +270,7 @@ Report-lake rebuilds buffer at most 1 MiB of NDJSON per writer, except for a
 single oversized document, which is drained immediately. Every producer awaits
 disk backpressure before writing more rows, including the raw source documents
 needed to rebuild the lake.
-Rebuilds and incremental folds feed Parquet COPY at most 64 MiB of encoded
+Rebuilds and incremental folds feed Parquet COPY at most 32 MiB of encoded
 NDJSON per batch, except for a single oversized record. Input batches preserve
 record boundaries, UTF-8, and numeric precision. COPY appends unique Parquet
 files and sizes DuckDB's JSON reader buffers from the largest encoded record in
