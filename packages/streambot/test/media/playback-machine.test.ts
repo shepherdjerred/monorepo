@@ -827,13 +827,71 @@ describe("crash recovery ladder", () => {
 });
 
 describe("crash recovery — state cleanup", () => {
-  test("a rejected recovery re-resolve clears recovery state so the NEXT item starts clean", async () => {
-    // "a" resolves for its initial play and its first crash-retry, then its SECOND re-resolve
-    // (recovery attempt 2) rejects; "b" resolves normally.
+  test("a failed re-resolve during crash recovery retries instead of dropping the item", async () => {
+    let resolveCalls = 0;
+    const { actor, stream } = await startFilePlayback(["movie"], {
+      resolveSource: (input) => {
+        resolveCalls += 1;
+        if (resolveCalls === 2)
+          return Promise.reject(new Error("provider session endpoint flapped"));
+        const { source } = input;
+        return Promise.resolve({
+          title: source.kind === "file" ? source.title : "x",
+          ffmpegInput: "resolved:movie",
+          mediaKind: "video",
+          chapters: [],
+        });
+      },
+    });
+
+    stream.crashCurrent(crashError(42));
+    await waitFor(
+      actor,
+      (s) => s.matches("streaming") && stream.invocationCount() === 2,
+      WAIT,
+    );
+    expect(resolveCalls).toBe(3);
+    expect(actor.getSnapshot().context.crashNotice).toMatchObject({
+      kind: "retry",
+      attempt: 2,
+    });
+    expect(stream.inputs[1]?.seekSeconds).toBe(42);
+  });
+
+  test("repeated re-resolve failures during crash recovery give up after the budget", async () => {
+    let resolveCalls = 0;
+    const { actor, stream } = await startFilePlayback(["movie"], {
+      resolveSource: (input) => {
+        resolveCalls += 1;
+        if (resolveCalls > 1)
+          return Promise.reject(new Error("provider unavailable"));
+        const { source } = input;
+        return Promise.resolve({
+          title: source.kind === "file" ? source.title : "x",
+          ffmpegInput: "resolved:movie",
+          mediaKind: "video",
+          chapters: [],
+        });
+      },
+    });
+
+    stream.crashCurrent(crashError(42));
+    await waitFor(actor, (s) => s.matches("idle"), WAIT);
+    // Initial resolve + one re-resolve per remaining crash-budget attempt.
+    expect(resolveCalls).toBe(4);
+    expect(actor.getSnapshot().context.crashNotice?.kind).toBe("gave-up");
+    expect(actor.getSnapshot().context.crashRetries).toBe(0);
+  });
+
+  test("rejected recovery re-resolves spend the budget, then the NEXT item starts clean", async () => {
+    // "a" resolves for its initial play and its first crash-retry, then every later re-resolve
+    // rejects until the crash budget is spent and "a" is dropped; "b" resolves normally.
     let resolveCalls = 0;
     const resolveSource: PlaybackActors["resolveSource"] = (input, signal) => {
       resolveCalls += 1;
-      return resolveCalls === 3
+      return resolveCalls >= 3 &&
+        input.source.kind === "file" &&
+        input.source.title === "a"
         ? Promise.reject(new Error("re-resolve failed (expired URL)"))
         : makeActors().resolveSource(input, signal);
     };
@@ -851,8 +909,8 @@ describe("crash recovery — state cleanup", () => {
     expect(stream.inputs[1]?.seekSeconds).toBe(42);
     stream.crashCurrent(crashError(84));
 
-    // The failed re-resolve drops "a" and advances to "b", which must start CLEAN — not inherit
-    // "a"'s crash offset (84) or its escalated hw-upload pipeline.
+    // The failed re-resolves retry within the budget, then drop "a" and advance to "b", which
+    // must start CLEAN — not inherit "a"'s crash offset (84) or its escalated pipeline.
     await waitForCurrentFile(actor, "b");
     const context = actor.getSnapshot().context;
     expect(context.crashRetries).toBe(0);
@@ -912,7 +970,11 @@ describe("crash recovery — state cleanup", () => {
       {
         resolveSource: (input, signal) => {
           resolveCalls += 1;
-          if (resolveCalls === 2) {
+          if (
+            resolveCalls >= 2 &&
+            input.source.kind === "file" &&
+            input.source.title === "a"
+          ) {
             return new Promise((_resolve, reject) => {
               signal.addEventListener("abort", () => {
                 reject(new Error("aborted"));
@@ -928,7 +990,8 @@ describe("crash recovery — state cleanup", () => {
     const errorKinds: (string | null)[] = [];
     actor.subscribe((s) => errorKinds.push(s.context.lastErrorKind));
     stream.crashCurrent(crashError(55));
-    // The retry re-resolve hangs → the wedge `resolveTimeout` fires → failed → skipped → "b".
+    // The retry re-resolve hangs → the wedge `resolveTimeout` retries within the budget, then
+    // gives up → failed → skipped → "b".
     await waitForCurrentFile(actor, "b");
     const context = actor.getSnapshot().context;
     expect(errorKinds).toContain("timeout");

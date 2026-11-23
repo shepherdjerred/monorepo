@@ -104,6 +104,51 @@ describe("native loader HLS relay", () => {
     }
   });
 
+  it("absorbs transient upstream 5XX responses instead of failing the stream", async () => {
+    const originalFetch = fetch;
+    const bytes = new Uint8Array([71, 0, 1, 2]);
+    let segmentRequests = 0;
+    vi.stubGlobal("fetch", async (url: string | URL) => {
+      const target = String(url);
+      if (target.endsWith("/v/hs"))
+        return Response.json({
+          ok: true,
+          q: "https://hs.embedse.com/q/synthetic/index.m3u8",
+        });
+      if (target.endsWith(".m3u8"))
+        return new Response(
+          "#EXTM3U\n#EXTINF:2,\nhttps://p16-common-sign.tiktokcdn.com/synthetic.image\n",
+        );
+      segmentRequests += 1;
+      return segmentRequests < 3
+        ? new Response("upstream flap", { status: 502 })
+        : new Response(sportsPng(bytes));
+    });
+    const prepared = await prepareLoaderHls(
+      html,
+      page,
+      new AbortController().signal,
+    );
+    if (prepared === null) throw new Error("Missing test preparation");
+    try {
+      const playlist = await originalFetch(prepared.input).then((response) =>
+        response.text(),
+      );
+      const segment = playlist.split("\n").find((line) => line.startsWith("/"));
+      if (segment === undefined) throw new Error("Missing test segment");
+      const segmentResponse = await originalFetch(
+        new URL(segment, prepared.input),
+      );
+      expect(segmentResponse.status).toBe(200);
+      expect(new Uint8Array(await segmentResponse.arrayBuffer())).toEqual(
+        bytes,
+      );
+      expect(segmentRequests).toBe(3);
+    } finally {
+      await prepared.close();
+    }
+  });
+
   it("rejects private upstream URLs and reports the bounded failure to its owner", async () => {
     const originalFetch = fetch;
     const requests: string[] = [];

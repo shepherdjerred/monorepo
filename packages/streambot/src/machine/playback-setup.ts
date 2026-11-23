@@ -1,13 +1,16 @@
 import { assign, fromPromise, setup } from "xstate";
 import {
+  crashGiveUpUpdates,
   externalStopMessage,
   MACHINE_TYPES,
   MAX_CRASH_RETRIES,
   moveVoiceTargetUpdates,
   playNowWhileJoiningUpdates,
   queuedItem,
+  resolveRetryUpdates,
   stalledAtEndOfMedia,
 } from "@shepherdjerred/streambot/machine/playback-helpers.ts";
+import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import type {
   JoinVoiceInput,
   LeaveVoiceInput,
@@ -72,6 +75,14 @@ export function playbackSetup(actors: PlaybackActors) {
       // A mid-stream death with retry budget left and an item to replay.
       isCrashRetryable: ({ context }) =>
         context.crashRetries < MAX_CRASH_RETRIES && context.current !== null,
+      // A crash-recovery re-resolve failed with budget left: retry the resolve, don't drop.
+      isResolveRetryable: ({ context }) =>
+        context.crashRetries > 0 &&
+        context.crashRetries < MAX_CRASH_RETRIES &&
+        context.current !== null,
+      // The crash budget is already spent while re-resolving: give up on the item.
+      isResolveBudgetSpent: ({ context }) =>
+        context.crashRetries >= MAX_CRASH_RETRIES && context.current !== null,
       // A stall at the end of a known-length item: retrying would seek past the last frame.
       isStalledAtEndOfMedia: ({ context, event }) =>
         event.type === "PRODUCER_STALLED" &&
@@ -104,6 +115,16 @@ export function playbackSetup(actors: PlaybackActors) {
       }),
       moveVoiceTarget: assign(({ context, event }) =>
         moveVoiceTargetUpdates(context, event),
+      ),
+      // Re-queue a crashed item whose recovery re-resolve just failed, within its budget.
+      queueResolveRetry: assign(({ context }) => resolveRetryUpdates(context)),
+      // Give up on a crashed item whose re-resolve failed with the budget already spent.
+      queueResolveGiveUp: assign(({ context, event }) =>
+        crashGiveUpUpdates(context, {
+          reason: "crash",
+          positionSeconds: context.resumeSeekSeconds,
+          lastError: getErrorMessage("error" in event ? event.error : event),
+        }),
       ),
       // Consume the one-shot resume seek so only the first post-restart playthrough seeks; any
       // loop/replay of the same item starts from 0.

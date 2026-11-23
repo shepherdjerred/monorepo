@@ -181,28 +181,47 @@ export function createPlaybackMachine(actors: PlaybackActors) {
               resolveDoneUpdates(context, event.output),
             ),
           },
-          onError: {
-            target: "failed",
-            actions: [
-              assign(({ context, event }) =>
-                resolveErrorUpdates(context, event.error),
-              ),
-              "clearRecovery",
-            ],
-          },
+          onError: [
+            {
+              guard: "isResolveRetryable",
+              target: "skipped",
+              actions: "queueResolveRetry",
+            },
+            {
+              guard: "isResolveBudgetSpent",
+              target: "failed",
+              actions: ["queueResolveGiveUp", "clearRecovery"],
+            },
+            {
+              target: "failed",
+              actions: [
+                assign(({ context, event }) =>
+                  resolveErrorUpdates(context, event.error),
+                ),
+                "clearRecovery",
+              ],
+            },
+          ],
         },
         // Bound a hung resolver; state exit aborts its subprocess.
         after: {
-          resolveTimeout: {
-            target: "failed",
-            actions: [
-              assign({
-                lastError: "resolving the source timed out",
-                lastErrorKind: "timeout",
-              }),
-              "clearRecovery",
-            ],
-          },
+          resolveTimeout: [
+            {
+              guard: "isResolveRetryable",
+              target: "skipped",
+              actions: "queueResolveRetry",
+            },
+            {
+              target: "failed",
+              actions: [
+                assign({
+                  lastError: "resolving the source timed out",
+                  lastErrorKind: "timeout",
+                }),
+                "clearRecovery",
+              ],
+            },
+          ],
         },
         on: {
           PLAY_NOW: { target: "resolving", actions: "playNow" },

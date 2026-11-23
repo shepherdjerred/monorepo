@@ -13,6 +13,36 @@ export type SportsFetch = (
   init?: RequestInit,
 ) => Promise<Response>;
 
+const UPSTREAM_ATTEMPTS = 3;
+
+/**
+ * One transient upstream 5XX or network error must not kill a live stream: the provider's
+ * candidate servers routinely flap for a single request at peak load. Bounded retries absorb
+ * that; a 4xx (e.g. 403 session-expired) is returned immediately since replaying it cannot help.
+ */
+export async function fetchSportsUpstream(
+  fetcher: SportsFetch,
+  input: Parameters<typeof fetch>[0],
+  init?: RequestInit,
+): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < UPSTREAM_ATTEMPTS; attempt++) {
+    if (attempt > 0)
+      await new Promise((resolve) => setTimeout(resolve, 200 * attempt));
+    if (init?.signal?.aborted === true) throw init.signal.reason;
+    try {
+      const response = await fetcher(input, init);
+      if (response.status < 500 || attempt === UPSTREAM_ATTEMPTS - 1)
+        return response;
+      await response.body?.cancel();
+    } catch (error) {
+      lastError = error;
+      if (attempt === UPSTREAM_ATTEMPTS - 1) throw error;
+    }
+  }
+  throw lastError;
+}
+
 function approvedResource(value: string): URL {
   const url = new URL(value);
   const cdn = url.hostname.endsWith(".tiktokcdn.com");
@@ -57,7 +87,7 @@ export async function prepareLoaderHls(
     Referer: pageUrl,
     Origin: new URL(pageUrl).origin,
   };
-  const response = await fetcher(endpoint, {
+  const response = await fetchSportsUpstream(fetcher, endpoint, {
     method: "POST",
     redirect: "error",
     signal,
@@ -169,7 +199,7 @@ export function createSportsHlsRelay(
       if (resource === undefined) return new Response(null, { status: 404 });
       resource.inFlight++;
       try {
-        const upstream = await fetcher(resource.url, {
+        const upstream = await fetchSportsUpstream(fetcher, resource.url, {
           headers,
           redirect: "error",
           signal: AbortSignal.any([

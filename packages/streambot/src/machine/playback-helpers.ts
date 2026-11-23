@@ -272,6 +272,20 @@ export function queueCrashRetryUpdates(
   };
 }
 
+/**
+ * Context updates when a crash-recovery re-resolve itself fails (e.g. the provider's session
+ * endpoint flaps while re-minting): count it against the same crash budget and re-queue the
+ * item instead of dropping it on the first failed re-resolve.
+ */
+export function resolveRetryUpdates(
+  context: PlaybackContext,
+): Partial<PlaybackContext> {
+  return queueCrashRetryUpdates(context, {
+    reason: "crash",
+    positionSeconds: context.resumeSeekSeconds,
+  });
+}
+
 /** Context updates for abandoning a crashing item after the retry budget is spent. */
 export function crashGiveUpUpdates(
   context: PlaybackContext,

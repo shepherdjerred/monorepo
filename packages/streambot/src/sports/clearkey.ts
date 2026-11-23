@@ -2,7 +2,7 @@ import { XMLParser } from "fast-xml-parser";
 import Builder from "fast-xml-builder";
 import { z } from "zod";
 import type { PreparedSportsInput } from "./prepared-input.ts";
-import { createSportsHlsRelay } from "./loader-hls.ts";
+import { createSportsHlsRelay, fetchSportsUpstream } from "./loader-hls.ts";
 import { SportsPlaybackError } from "./failures.ts";
 import { createDashResourceRegistry } from "./clearkey-dash-resources.ts";
 import { readSportsResponse } from "./relay/http-response.ts";
@@ -276,7 +276,7 @@ async function prepareClearKeyInput(
     Referer: frame.href,
     Origin: frame.origin,
   };
-  const response = await fetcher(frame, {
+  const response = await fetchSportsUpstream(fetcher, frame, {
     method: "POST",
     headers: { ...headers, "Content-Type": "application/json" },
     body: JSON.stringify({ ct: config.t }),
@@ -310,7 +310,7 @@ async function prepareClearKeyInput(
   }
   const lifetime = new AbortController();
   const load = async (requestSignal: AbortSignal) => {
-    const upstream = await fetcher(manifest, {
+    const upstream = await fetchSportsUpstream(fetcher, manifest, {
       headers,
       redirect: "error",
       signal: AbortSignal.any([requestSignal, AbortSignal.timeout(15_000)]),
@@ -340,7 +340,7 @@ async function prepareClearKeyInput(
     request: Request,
   ): Promise<Response> => {
     const range = request.headers.get("Range");
-    const upstream = await fetcher(resource, {
+    const upstream = await fetchSportsUpstream(fetcher, resource, {
       headers: { ...headers, ...(range === null ? {} : { Range: range }) },
       redirect: "error",
       signal: AbortSignal.any([
