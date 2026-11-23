@@ -1,9 +1,11 @@
 import { expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
-import { contentRecoveryCatalog } from "#testing/content-recovery-fixture.ts";
+import {
+  contentRecoveryCatalog,
+  failedHeldDeployment,
+} from "#testing/content-recovery-fixture.ts";
 import { registration } from "#testing/catalog-fixture.ts";
-import { testOperator, testPublisher } from "#testing/seed.ts";
-import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
+import { testOperator } from "#testing/seed.ts";
 import { createRecoveryInspector } from "#infrastructure/recovery.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 
@@ -16,39 +18,12 @@ const reason =
 async function refusedForumRelease() {
   const db = scope.cluster.database;
   const id = `forum-refused-${crypto.randomUUID()}`;
-  const env = await db.environment.findUniqueOrThrow({
-    where: { id: scope.fixture.environment.id },
-  });
-  await db.pipeline.create({
-    data: {
-      id: `${id}/recipe`,
-      definition: RecipeDefinitionSchema.parse(
-        await registration("specialized/storm-forum/pipeline.json"),
-      ),
-    },
-  });
-  await db.deployment.create({
-    data: {
-      id,
-      requestId: id,
-      environmentId: env.id,
-      serviceId: env.serviceId,
-      versionSetRevisionId: scope.fixture.versionSet.id,
-      pipelineRevisionId: `${id}/recipe`,
-      configurationId: env.declaredConfigurationId,
-      catalogRevision: "test",
-      expectedGeneration: env.generation,
-      kind: "deploy",
-      status: "failed",
-      recoveryRequired: true,
-      requestedBy: testPublisher.id,
-      finishedAt: new Date(),
-    },
-  });
-  await db.environment.update({
-    where: { id: env.id },
-    data: { activeDeploymentId: id },
-  });
+  const env = await failedHeldDeployment(
+    db,
+    scope.fixture,
+    id,
+    await registration("specialized/storm-forum/pipeline.json"),
+  );
   const operationId = deliveryOperationId(id);
   for (const [key, status] of [
     ["step-apply-safety", "succeeded"],

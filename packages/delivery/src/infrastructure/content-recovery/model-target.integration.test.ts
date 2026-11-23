@@ -1,9 +1,11 @@
 import { expect, test } from "vitest";
 import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
-import { contentRecoveryCatalog } from "#testing/content-recovery-fixture.ts";
+import {
+  contentRecoveryCatalog,
+  failedHeldDeployment,
+} from "#testing/content-recovery-fixture.ts";
 import { applicationRecipe, registration } from "#testing/catalog-fixture.ts";
-import { testOperator, testPublisher } from "#testing/seed.ts";
-import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
+import { testOperator } from "#testing/seed.ts";
 
 const scope = useDeliveryFixture({ catalog: contentRecoveryCatalog });
 
@@ -60,37 +62,7 @@ async function forumCompound() {
  */
 async function heldRelease(id: string, recipe: unknown, held: string) {
   const db = scope.cluster.database;
-  const env = await db.environment.findUniqueOrThrow({
-    where: { id: scope.fixture.environment.id },
-  });
-  await db.pipeline.create({
-    data: {
-      id: `${id}/recipe`,
-      definition: RecipeDefinitionSchema.parse(recipe),
-    },
-  });
-  await db.deployment.create({
-    data: {
-      id,
-      requestId: id,
-      environmentId: env.id,
-      serviceId: env.serviceId,
-      versionSetRevisionId: scope.fixture.versionSet.id,
-      pipelineRevisionId: `${id}/recipe`,
-      configurationId: env.declaredConfigurationId,
-      catalogRevision: "test",
-      expectedGeneration: env.generation,
-      kind: "deploy",
-      status: "failed",
-      recoveryRequired: true,
-      requestedBy: testPublisher.id,
-      finishedAt: new Date(),
-    },
-  });
-  await db.environment.update({
-    where: { id: env.id },
-    data: { activeDeploymentId: id },
-  });
+  const env = await failedHeldDeployment(db, scope.fixture, id, recipe);
   await db.targetLock.create({ data: { instance: held, deploymentId: id } });
   return env.generation;
 }

@@ -3,11 +3,10 @@ import { createTestDatabase } from "#testing/postgres.ts";
 import { seedDelivery, testExecutor, testOperator } from "#testing/seed.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createRecoveryInspector } from "#infrastructure/recovery.ts";
-import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
 import {
-  arcadePipeline,
   arcadeRegistration,
   publishCiRunner,
+  selectArcadeModelRecipe,
 } from "#testing/model-fixture.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 import type { DeploymentDetail } from "#shared/contract.ts";
@@ -72,16 +71,12 @@ describe("independent Argo recovery of a sync whose request never reached an ope
     delivery = new Delivery(cluster.database);
     const fixture = await seedDelivery(delivery, arcadeRegistration);
     await publishCiRunner(delivery);
-    const modelDefinition = recipeFromPipeline(arcadePipeline);
+    const modelDefinition = await selectArcadeModelRecipe(
+      cluster.database,
+      fixture.environment.id,
+    );
     if (modelDefinition.kind !== "kubernetes-application")
       throw new Error("Expected an Application recipe");
-    await cluster.database.pipeline.create({
-      data: { id: "arcade/model-1", definition: modelDefinition },
-    });
-    await cluster.database.environment.update({
-      where: { id: fixture.environment.id },
-      data: { pipelineRevisionId: "arcade/model-1" },
-    });
     const deployment = await delivery.createDeployment(
       {
         requestId: "refused-sync-guard/1",
