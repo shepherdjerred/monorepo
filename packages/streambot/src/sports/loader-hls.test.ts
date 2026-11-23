@@ -26,6 +26,19 @@ function stubLoaderUpstream(
   });
 }
 
+async function fetchFirstSegment(
+  fetchFn: typeof fetch,
+  input: string,
+): Promise<{ response: Response; segmentPath: string }> {
+  const playlist = await fetchFn(input).then((response) => response.text());
+  const segmentPath = playlist.split("\n").find((line) => line.startsWith("/"));
+  if (segmentPath === undefined) throw new Error("Missing test segment");
+  return {
+    response: await fetchFn(new URL(segmentPath, input)),
+    segmentPath,
+  };
+}
+
 describe("native loader HLS relay", () => {
   it("unwraps media, rejects arbitrary routes and releases its listener", async () => {
     const originalFetch = fetch;
@@ -53,14 +66,8 @@ describe("native loader HLS relay", () => {
     expect(prepared).not.toBeNull();
     if (prepared === null) throw new Error("Missing test preparation");
     try {
-      const playlist = await originalFetch(prepared.input).then((response) =>
-        response.text(),
-      );
-      const segment = playlist.split("\n").find((line) => line.startsWith("/"));
-      if (segment === undefined) throw new Error("Missing test segment");
-      const segmentResponse = await originalFetch(
-        new URL(segment, prepared.input),
-      );
+      const { response: segmentResponse, segmentPath: segment } =
+        await fetchFirstSegment(originalFetch, prepared.input);
       const segmentBytes = await segmentResponse.arrayBuffer();
       expect(new Uint8Array(segmentBytes)).toEqual(bytes);
       const partial = await originalFetch(new URL(segment, prepared.input), {
@@ -131,13 +138,9 @@ describe("native loader HLS relay", () => {
     );
     if (prepared === null) throw new Error("Missing test preparation");
     try {
-      const playlist = await originalFetch(prepared.input).then((response) =>
-        response.text(),
-      );
-      const segment = playlist.split("\n").find((line) => line.startsWith("/"));
-      if (segment === undefined) throw new Error("Missing test segment");
-      const segmentResponse = await originalFetch(
-        new URL(segment, prepared.input),
+      const { response: segmentResponse } = await fetchFirstSegment(
+        originalFetch,
+        prepared.input,
       );
       expect(segmentResponse.status).toBe(200);
       expect(new Uint8Array(await segmentResponse.arrayBuffer())).toEqual(
