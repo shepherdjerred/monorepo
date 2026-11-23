@@ -1,0 +1,110 @@
+/* Generated from src/tokens.json by scripts/generate-tokens.ts. Do not edit. */
+@layer ui.tokens {
+  :root {
+    color-scheme: light;
+    --ui-bg: #ecede6;
+    --ui-panel: #ffffff;
+    --ui-head: #f8f8f4;
+    --ui-hover: #f6f6f1;
+    --ui-side-hover: #e2e3da;
+    --ui-active: #dcded3;
+    --ui-ink: #1a1b18;
+    --ui-ink-2: #3f413b;
+    --ui-muted: #5a5c53;
+    --ui-faint: #6b6c65;
+    --ui-line: #dfe0d7;
+    --ui-line-soft: #eeefe9;
+    --ui-btn-edge: #c9cac0;
+    --ui-track: #e9eae3;
+    --ui-accent: #176b4d;
+    --ui-on-accent: #ffffff;
+    --ui-sev-ok: #1c8a48;
+    --ui-sev-ok-text: #17703b;
+    --ui-sev-ok-soft: #e8f3ed;
+    --ui-sev-info: #2f6fc0;
+    --ui-sev-info-text: #2a62aa;
+    --ui-sev-info-soft: #eaf1f9;
+    --ui-sev-unknown: #868680;
+    --ui-sev-unknown-text: #5d5e57;
+    --ui-sev-unknown-soft: #f3f3f2;
+    --ui-sev-warning: #bb7700;
+    --ui-sev-warning-text: #895700;
+    --ui-sev-warning-soft: #f8f1e6;
+    --ui-sev-error: #d1332b;
+    --ui-sev-error-text: #b72d26;
+    --ui-sev-error-soft: #faebea;
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ui-bg: #111210;
+    --ui-panel: #191a18;
+    --ui-head: #1e201d;
+    --ui-hover: #20221f;
+    --ui-side-hover: #1b1c1a;
+    --ui-active: #242622;
+    --ui-ink: #ecede8;
+    --ui-ink-2: #cbccc5;
+    --ui-muted: #a2a49a;
+    --ui-faint: #878981;
+    --ui-line: #2a2c28;
+    --ui-line-soft: #222421;
+    --ui-btn-edge: #3a3c37;
+    --ui-track: #2c2e2a;
+    --ui-accent: #4cc393;
+    --ui-on-accent: #0c1410;
+    --ui-sev-ok: #6fd08c;
+    --ui-sev-ok-text: #6fd08c;
+    --ui-sev-ok-soft: #27372b;
+    --ui-sev-info: #84b4f0;
+    --ui-sev-info-text: #84b4f0;
+    --ui-sev-info-soft: #2a333b;
+    --ui-sev-unknown: #8e9088;
+    --ui-sev-unknown-text: #a2a49a;
+    --ui-sev-unknown-soft: #2c2d2a;
+    --ui-sev-warning: #f0b84a;
+    --ui-sev-warning-text: #f0b84a;
+    --ui-sev-warning-soft: #3b3320;
+    --ui-sev-error: #ff7f76;
+    --ui-sev-error-text: #ff7f76;
+    --ui-sev-error-soft: #3e2a27;
+  }
+
+  /* The same dark values: CSS cannot join a selector and a media query in one rule. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ui-bg: #111210;
+      --ui-panel: #191a18;
+      --ui-head: #1e201d;
+      --ui-hover: #20221f;
+      --ui-side-hover: #1b1c1a;
+      --ui-active: #242622;
+      --ui-ink: #ecede8;
+      --ui-ink-2: #cbccc5;
+      --ui-muted: #a2a49a;
+      --ui-faint: #878981;
+      --ui-line: #2a2c28;
+      --ui-line-soft: #222421;
+      --ui-btn-edge: #3a3c37;
+      --ui-track: #2c2e2a;
+      --ui-accent: #4cc393;
+      --ui-on-accent: #0c1410;
+      --ui-sev-ok: #6fd08c;
+      --ui-sev-ok-text: #6fd08c;
+      --ui-sev-ok-soft: #27372b;
+      --ui-sev-info: #84b4f0;
+      --ui-sev-info-text: #84b4f0;
+      --ui-sev-info-soft: #2a333b;
+      --ui-sev-unknown: #8e9088;
+      --ui-sev-unknown-text: #a2a49a;
+      --ui-sev-unknown-soft: #2c2d2a;
+      --ui-sev-warning: #f0b84a;
+      --ui-sev-warning-text: #f0b84a;
+      --ui-sev-warning-soft: #3b3320;
+      --ui-sev-error: #ff7f76;
+      --ui-sev-error-text: #ff7f76;
+      --ui-sev-error-soft: #3e2a27;
+    }
+  }
+}
