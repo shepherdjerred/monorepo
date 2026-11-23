@@ -238,114 +238,12 @@ function resolveReceiver(
   return route.receiver;
 }
 
-const GO_TEMPLATE_HARNESS = `package main
-
-import (
-	"bytes"
-	"encoding/json"
-	htmltemplate "html/template"
-	"os"
-	texttemplate "text/template"
-)
-
-type Alert struct {
-	Status      string
-	Labels      map[string]string
-	Annotations map[string]string
-}
-
-type Alerts []Alert
-
-func (a Alerts) Firing() Alerts {
-	var out Alerts
-	for _, item := range a {
-		if item.Status == "firing" {
-			out = append(out, item)
-		}
-	}
-	return out
-}
-
-type Data struct {
-	Receiver     string
-	Status       string
-	Alerts       Alerts
-	CommonLabels map[string]string
-}
-
-func main() {
-	tmplBytes, err := os.ReadFile(os.Args[1])
-	if err != nil {
-		panic(err)
-	}
-	data := Data{
-		Receiver: "postal-fallback",
-		Status:   "firing",
-		CommonLabels: map[string]string{
-			"alertname":                "TemporalWorkflowNondeterministic",
-			"severity":                 "critical",
-			"alert_dashboard_fallback": "true",
-		},
-		Alerts: Alerts{
-			{
-				Status: "firing",
-				Labels: map[string]string{
-					"alertname":                "TemporalWorkflowNondeterministic",
-					"severity":                 "critical",
-					"namespace":                "temporal",
-					"pod":                      "temporal-worker-7b9d8f-abc12",
-					"node":                     "torvalds",
-					"workflow_type":            "runHomelabAudit",
-					"task_queue":               "monorepo-workflows",
-					"instance":                 "10.244.0.48:9100",
-					"job":                      "temporal-worker-metrics",
-					"endpoint":                 "http-metrics",
-					"prometheus":               "prometheus/prometheus-kube-prometheus-prometheus",
-					"alert_dashboard_fallback": "true",
-				},
-				Annotations: map[string]string{
-					"summary":     "Workflow stuck after a code change",
-					"description": "Workflow runHomelabAudit on queue monorepo-workflows failed replay due to a nondeterministic code change. Pause the worker rollout and test replay before shipping a fix.",
-				},
-			},
-		},
-	}
-
-	tt, err := texttemplate.New("ops").Parse(string(tmplBytes))
-	if err != nil {
-		panic(err)
-	}
-	ht, err := htmltemplate.New("ops").Parse(string(tmplBytes))
-	if err != nil {
-		panic(err)
-	}
-
-	var subjBuf, textBuf, htmlBuf bytes.Buffer
-	if err := tt.ExecuteTemplate(&subjBuf, "ops.email.subject", data); err != nil {
-		panic(err)
-	}
-	if err := tt.ExecuteTemplate(&textBuf, "ops.email.text", data); err != nil {
-		panic(err)
-	}
-	if err := ht.ExecuteTemplate(&htmlBuf, "ops.email.html", data); err != nil {
-		panic(err)
-	}
-
-	out, err := json.Marshal(map[string]string{
-		"subject": subjBuf.String(),
-		"text":    textBuf.String(),
-		"html":    htmlBuf.String(),
-	})
-	if err != nil {
-		panic(err)
-	}
-	_, _ = os.Stdout.Write(out)
-}
-`;
+const GO_HARNESS_PATH = `${CDK8S_DIR}/../../../ops-model/scripts/alertmanager-render.go`;
 
 async function validateAndRenderOpsTemplate(
   config: Record<string, unknown>,
   opsEmailTemplate: string,
+  scenario: "single" | "multi" = "single",
 ): Promise<{ subject: string; html: string; text: string } | null> {
   const tempDirResult = await Bun.$`mktemp -d`;
   const tempDir = tempDirResult.text().trim();
@@ -385,10 +283,8 @@ async function validateAndRenderOpsTemplate(
 
     const goPath = Bun.which("go");
     if (goPath === null) return null;
-    const harnessPath = `${tempDir}/render.go`;
-    await Bun.write(harnessPath, GO_TEMPLATE_HARNESS);
     const rawOutput =
-      await Bun.$`${goPath} run ${harnessPath} ${tmplPath}`.text();
+      await Bun.$`${goPath} run ${GO_HARNESS_PATH} ${tmplPath} ${scenario}`.text();
     return z
       .object({
         subject: z.string(),
@@ -555,6 +451,26 @@ describe("rendered Alerts receiver", () => {
       );
       expect(rendered.text).toContain("Workflow stuck after a code change");
       expect(rendered.text).not.toContain("10.244.0.48:9100");
+    }
+  }, 30_000);
+
+  it("groups a multi-alert fallback email by severity with the details helper", async () => {
+    const { config, opsEmailTemplate } = findAlertmanagerSection(renderedApps);
+    const rendered = await validateAndRenderOpsTemplate(
+      config,
+      opsEmailTemplate,
+      "multi",
+    );
+    if (rendered !== null) {
+      expect(rendered.html).not.toContain("ZgotmplZ");
+      expect(rendered.html).toContain("3 active alerts need attention");
+      expect(rendered.html).toContain("Critical</span>");
+      expect(rendered.html).toContain("Warning</span>");
+      expect(rendered.html).toContain("CI cache disk is 83% full");
+      expect(rendered.html).toContain("woodpecker-cache-pvc");
+      expect(rendered.html).toContain("Technical details");
+      expect(rendered.html).not.toContain("border-top:3px");
+      expect(rendered.text).toContain("ZFS pool: tank");
     }
   }, 30_000);
 });
