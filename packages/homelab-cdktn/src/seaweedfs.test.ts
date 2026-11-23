@@ -79,7 +79,6 @@ const BUCKETS = {
   landing_pages: "landing-pages",
   llm_archive: "llm-archive",
   public_sjer_red: "public-sjer-red",
-  relay_docs: "relay-docs",
   resume: "resume",
   scout_beta: "scout-beta",
   scout_design_system: "scout-design-system",
@@ -258,12 +257,11 @@ describe("seaweedfs", () => {
       Object.keys(buckets).filter(
         (name) => buckets[name]?.force_destroy !== undefined,
       ),
-    ).toEqual(["clauderon", "relay_docs"]);
+    ).toEqual(["clauderon"]);
 
     expect(stack.import).toEqual([
       { id: "apple-sdks", to: "aws_s3_bucket.apple_sdks" },
       { id: "stocks-sjer-red", to: "aws_s3_bucket.stocks_sjer_red" },
-      { id: "relay-docs", to: "aws_s3_bucket.relay_docs" },
       { id: "ci-handoff", to: "aws_s3_bucket.ci_handoff" },
     ]);
     expect(stack.removed).toEqual([
