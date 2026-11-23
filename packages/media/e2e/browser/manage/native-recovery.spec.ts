@@ -214,18 +214,7 @@ test.describe("a prepared file review", () => {
       `/admin/native-recovery/${NATIVE_REVIEW_IDS.awaitingReview}/apply`,
     );
     await openManage(page, `${NATIVE}/${NATIVE_REVIEW_IDS.awaitingReview}`);
-    await page
-      .getByRole("checkbox", {
-        name: /I reviewed these titles, subtitle policies/u,
-      })
-      .check();
-    await page
-      .getByRole("button", { name: "Apply this exact physical review" })
-      .click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: "Renew ownership" })
-      .click();
+    await approveFileReview(page);
     await expect.poll(() => writes.length).toBe(1);
     const alert = page.getByRole("alert");
     await expect(alert).toContainText(
@@ -251,18 +240,7 @@ test.describe("a prepared file review", () => {
       },
     );
     await openManage(page, `${NATIVE}/${NATIVE_REVIEW_IDS.awaitingReview}`);
-    await page
-      .getByRole("checkbox", {
-        name: /I reviewed these titles, subtitle policies/u,
-      })
-      .check();
-    await page
-      .getByRole("button", { name: "Apply this exact physical review" })
-      .click();
-    await page
-      .getByRole("dialog")
-      .getByRole("button", { name: "Renew ownership" })
-      .click();
+    await approveFileReview(page);
     const alert = page.getByRole("alert");
     await expect(alert).toContainText("The approval was not submitted");
     await expect(alert).toContainText("The proof changed");
@@ -468,4 +446,20 @@ for (const prepare of PREPARES) {
       await expect(alert).toContainText("Nothing was prepared");
     });
   });
+}
+
+/** Acknowledges the file review and confirms the approval in the dialog. */
+async function approveFileReview(page: Page) {
+  await page
+    .getByRole("checkbox", {
+      name: /I reviewed these titles, subtitle policies/u,
+    })
+    .check();
+  await page
+    .getByRole("button", { name: "Apply this exact physical review" })
+    .click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Renew ownership" })
+    .click();
 }

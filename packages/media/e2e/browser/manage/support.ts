@@ -1,4 +1,4 @@
-import { expect, type Page, type Request } from "@playwright/test";
+import { expect, type Page, type Request, type Route } from "@playwright/test";
 import {
   allowWrites,
   openSettled,
@@ -43,20 +43,12 @@ export async function answerWrites(
   /** The `/api/v<version>` the client writes this path under. */
   version = 1,
 ): Promise<Write[]> {
-  const writes: Write[] = [];
-  await page.route(`**/api/v${String(version)}${path}`, async (route) => {
-    const request = route.request();
-    if (request.method() === "GET") {
-      await route.fallback();
-      return;
-    }
-    writes.push(recorded(request));
-    await route.fulfill({
+  return interceptWrites(page, path, version, (route) =>
+    route.fulfill({
       status: response?.status ?? 200,
       json: response?.json ?? {},
-    });
-  });
-  return writes;
+    }),
+  );
 }
 
 /**
@@ -69,6 +61,17 @@ export async function dropWrites(
   path: string,
   version = 1,
 ): Promise<Write[]> {
+  return interceptWrites(page, path, version, (route) =>
+    route.abort("connectionreset"),
+  );
+}
+
+async function interceptWrites(
+  page: Page,
+  path: string,
+  version: number,
+  respond: (route: Route) => Promise<void>,
+): Promise<Write[]> {
   const writes: Write[] = [];
   await page.route(`**/api/v${String(version)}${path}`, async (route) => {
     const request = route.request();
@@ -77,7 +80,7 @@ export async function dropWrites(
       return;
     }
     writes.push(recorded(request));
-    await route.abort("connectionreset");
+    await respond(route);
   });
   return writes;
 }

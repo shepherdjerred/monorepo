@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import {
   BUNDLE_IDS,
   CAPTURES,
@@ -357,16 +357,7 @@ test.describe("preparing files and adopting them", () => {
       page,
       `/manage/migration?handoff=${HANDOFF_IDS.awaitingReview}`,
     );
-    await page
-      .getByRole("checkbox", { name: /I approve these file classifications/u })
-      .check();
-    await page
-      .getByRole("button", { name: "Adopt files and correct Plex labels" })
-      .click();
-    await page
-      .getByRole("dialog", { name: "Adopt these files?" })
-      .getByRole("button", { name: "Adopt files" })
-      .click();
+    await adoptFiles(page);
     const alert = page.getByRole("alert");
     await expect(alert).toContainText("The adoption was not submitted");
     await expect(alert).toContainText("The plan changed; prepare it again");
@@ -386,16 +377,7 @@ test("says the outcome is unknown, not that nothing was adopted, when the adopti
     page,
     `/manage/migration?handoff=${HANDOFF_IDS.awaitingReview}`,
   );
-  await page
-    .getByRole("checkbox", { name: /I approve these file classifications/u })
-    .check();
-  await page
-    .getByRole("button", { name: "Adopt files and correct Plex labels" })
-    .click();
-  await page
-    .getByRole("dialog", { name: "Adopt these files?" })
-    .getByRole("button", { name: "Adopt files" })
-    .click();
+  await adoptFiles(page);
   await expect.poll(() => writes.length).toBe(1);
   const alert = page.getByRole("alert");
   await expect(alert).toContainText(
@@ -406,3 +388,17 @@ test("says the outcome is unknown, not that nothing was adopted, when the adopti
     alert.getByRole("button", { name: "Refresh the plan" }),
   ).toBeVisible();
 });
+
+/** Acknowledges the classifications and confirms the adoption in the dialog. */
+async function adoptFiles(page: Page) {
+  await page
+    .getByRole("checkbox", { name: /I approve these file classifications/u })
+    .check();
+  await page
+    .getByRole("button", { name: "Adopt files and correct Plex labels" })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Adopt these files?" })
+    .getByRole("button", { name: "Adopt files" })
+    .click();
+}
