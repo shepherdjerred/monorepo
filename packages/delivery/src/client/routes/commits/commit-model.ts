@@ -92,8 +92,10 @@ export function environmentView(
 
 /**
  * A service row's glyph and words. A row that names a release (r346) whose
- * environments all hold a newer release instead says so, and that the
- * release failed first when it did, rather than the service's "Deployed".
+ * environments all hold a newer release instead says so, and first what
+ * the release's own deployment did when it failed ("Failed, superseded") or
+ * was canceled ("Canceled, superseded"; no deployment failed), rather than
+ * the service's "Deployed".
  */
 export function rowStanding(
   entry: Pick<CommitService, "verdict" | "environments">,
@@ -109,14 +111,14 @@ export function rowStanding(
     superseded.length !== entry.environments.length
   )
     return verdictView(entry.verdict, { pending });
-  const ended = superseded.some(
-    (environment) =>
-      environment.release?.status !== null &&
-      environment.release?.status !== undefined &&
-      OWN_ENDING[environment.release.status] !== undefined,
+  const outcomes = new Set(
+    superseded.map((environment) => environment.release?.status),
   );
-  return ended
-    ? { status: "failed", label: "Failed, superseded" }
+  // A failed deployment outranks a canceled one; a canceled one is never "Failed".
+  if (outcomes.has("failed"))
+    return { status: "failed", label: "Failed, superseded" };
+  return outcomes.has("canceled")
+    ? { status: "canceled", label: "Canceled, superseded" }
     : { status: "succeeded", label: "Superseded" };
 }
 

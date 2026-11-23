@@ -229,7 +229,7 @@ describe("a row that names a release shows that release's own state", () => {
   });
 
   it("gives the service row the release's standing, not the service's", () => {
-    const superseded = (status: "failed" | "succeeded") =>
+    const superseded = (status: "failed" | "canceled" | "succeeded") =>
       environment("superseded", { revision: 346, status, supersededBy: 381 });
     expect(
       rowStanding(
@@ -243,6 +243,33 @@ describe("a row that names a release shows that release's own state", () => {
         [],
       ),
     ).toEqual({ status: "succeeded", label: "Superseded" });
+    // A canceled deployment is not a failure: the row keeps the outcome.
+    expect(
+      rowStanding(
+        { verdict: "deployed", environments: [superseded("canceled")] },
+        [],
+      ),
+    ).toEqual({ status: "canceled", label: "Canceled, superseded" });
+    // Failed in one environment and canceled in another: the failure leads.
+    expect(
+      rowStanding(
+        {
+          verdict: "deployed",
+          environments: [superseded("canceled"), superseded("failed")],
+        },
+        [],
+      ),
+    ).toEqual({ status: "failed", label: "Failed, superseded" });
+    // Canceled beside a deployed one: still canceled, never failed.
+    expect(
+      rowStanding(
+        {
+          verdict: "deployed",
+          environments: [superseded("succeeded"), superseded("canceled")],
+        },
+        [],
+      ).label,
+    ).toBe("Canceled, superseded");
     // Live in one environment: the service's own verdict stands.
     expect(
       rowStanding(

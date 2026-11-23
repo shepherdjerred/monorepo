@@ -158,8 +158,8 @@ const LANDED: Record<CarriedRelease["state"], [string, string]> = {
 
 /**
  * The releases that ship a failed pipeline's change and have landed: live,
- * or superseded by a newer release that is deployed (r346 failed or was
- * replaced; the change is live through the newer one). The releases still
+ * or superseded by a newer release that is deployed (r346 failed, was
+ * canceled or was replaced; the change is live through the newer one). The releases still
  * held back are named by the row's blocker notes, so they are not here.
  * "Releases in f545a3b: 3 were superseded by newer releases, which are
  * deployed (Streambot & media r346, Golink r12, Hub r278), Cluster
