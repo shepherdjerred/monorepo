@@ -44,7 +44,7 @@ const { scanMainForLinkRot } = proxyActivities<LinkRotScanActivities>({
   retry: RETRY,
 });
 // Codex SDK + GitHub App PR creation runs on REPO_AUTOMATION, which holds
-// OPENAI_API_KEY and the GitHub App installation credentials.
+// the OpenAI project credential and the GitHub App installation credentials.
 const { remediateLinkRot } = proxyActivities<LinkRotRemediationActivities>({
   taskQueue: TASK_QUEUES.REPO_AUTOMATION,
   startToCloseTimeout: "35 minutes",

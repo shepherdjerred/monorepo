@@ -184,6 +184,9 @@ describe("applyConfirmedEndedQueueCloses", () => {
             sources: [
               "https://www.leagueoflegends.com/en-us/news/patch-26-17/",
             ],
+            searchedSources: [
+              "https://www.leagueoflegends.com/en-us/news/patch-26-17/",
+            ],
           },
         ],
       });
@@ -208,7 +211,7 @@ describe("applyConfirmedEndedQueueCloses", () => {
     }
   });
 
-  test("ignores ended verdicts with future dates, dates before start, unreachable URLs, errorClass, or disabled flag", async () => {
+  test("ignores ended verdicts with unsearched citations, future dates, dates before start, unreachable URLs, errorClass, or disabled flag", async () => {
     const temp = await writeTempQueueWindows({
       queues: {
         arurf: [{ start: "2026-08-10", end: null, source: "observed" }],
@@ -222,6 +225,25 @@ describe("applyConfirmedEndedQueueCloses", () => {
     };
 
     try {
+      const unsearchedCitation = await applyConfirmedEndedQueueCloses({
+        queueWindowsFile: temp.file,
+        report,
+        today: "2026-09-01",
+        isRemediationEnabled: () => Promise.resolve(true),
+        verifyHttpsSourceReachable: () => Promise.resolve(true),
+        livenessChecks: [
+          {
+            findingId: "f-unsearched",
+            queue: "arurf",
+            status: "ended",
+            endedOn: "2026-08-20",
+            rationale: "Cited a real URL that web search never returned",
+            sources: ["https://www.leagueoflegends.com/en-us/news/unrelated/"],
+          },
+        ],
+      });
+      expect(unsearchedCitation).toEqual([]);
+
       const unreachable = await applyConfirmedEndedQueueCloses({
         queueWindowsFile: temp.file,
         report,
@@ -236,6 +258,7 @@ describe("applyConfirmedEndedQueueCloses", () => {
             endedOn: "2026-08-20",
             rationale: "Ended",
             sources: ["https://www.leagueoflegends.com/dead"],
+            searchedSources: ["https://www.leagueoflegends.com/dead"],
           },
         ],
       });
@@ -255,6 +278,7 @@ describe("applyConfirmedEndedQueueCloses", () => {
             endedOn: "2026-08-05",
             rationale: "Before start",
             sources: ["https://www.leagueoflegends.com/ok"],
+            searchedSources: ["https://www.leagueoflegends.com/ok"],
           },
           {
             findingId: "f-3",
@@ -263,6 +287,7 @@ describe("applyConfirmedEndedQueueCloses", () => {
             endedOn: "2026-09-10",
             rationale: "After today",
             sources: ["https://www.leagueoflegends.com/ok"],
+            searchedSources: ["https://www.leagueoflegends.com/ok"],
           },
           {
             findingId: "f-4",
@@ -272,6 +297,7 @@ describe("applyConfirmedEndedQueueCloses", () => {
             errorClass: "TimeoutError",
             rationale: "Errored",
             sources: ["https://www.leagueoflegends.com/ok"],
+            searchedSources: ["https://www.leagueoflegends.com/ok"],
           },
         ],
       });
@@ -291,6 +317,7 @@ describe("applyConfirmedEndedQueueCloses", () => {
             endedOn: "2026-08-20",
             rationale: "Valid",
             sources: ["https://www.leagueoflegends.com/ok"],
+            searchedSources: ["https://www.leagueoflegends.com/ok"],
           },
         ],
       });

@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 import { botCloneCacheDir } from "#activities/bot-clone.ts";
+import { verifyUrlHttp200 } from "#activities/remediation/http-url-check.ts";
 import {
   runCommand as defaultRunCommand,
   type GitCommandRunner,
@@ -40,31 +41,15 @@ export function isValidIsoCalendarDate(value: string): boolean {
   );
 }
 
-async function defaultVerifyHttpsSourceReachable(
-  url: string,
-): Promise<boolean> {
-  if (!URL.canParse(url)) {
-    return false;
-  }
-  const parsed = new URL(url);
-  if (parsed.protocol !== "https:") {
-    return false;
-  }
-  try {
-    const response = await fetch(url, {
-      redirect: "follow",
-      signal: AbortSignal.timeout(10_000),
-    });
-    return response.status === 200;
-  } catch {
-    return false;
-  }
+function defaultVerifyHttpsSourceReachable(url: string): Promise<boolean> {
+  return verifyUrlHttp200(url, undefined, { httpsOnly: true });
 }
 
-async function hasReachableHttpsSource(
+async function reachableHttpsSources(
   sources: readonly string[],
   verifyHttps: HttpsReachabilityCheck,
-): Promise<boolean> {
+): Promise<string[]> {
+  const verified: string[] = [];
   for (const source of sources) {
     if (!URL.canParse(source)) {
       continue;
@@ -73,10 +58,10 @@ async function hasReachableHttpsSource(
       continue;
     }
     if (await verifyHttps(source)) {
-      return true;
+      verified.push(source);
     }
   }
-  return false;
+  return verified;
 }
 
 export async function applyConfirmedEndedQueueCloses(input: {
@@ -124,7 +109,11 @@ export async function applyConfirmedEndedQueueCloses(input: {
     if (endedOn < openWindow.start || endedOn > today) {
       continue;
     }
-    if (!(await hasReachableHttpsSource(check.sources, verifyHttps))) {
+    const verifiedSearchSources = await reachableHttpsSources(
+      check.searchedSources ?? [],
+      verifyHttps,
+    );
+    if (verifiedSearchSources.length === 0) {
       continue;
     }
 
@@ -133,7 +122,7 @@ export async function applyConfirmedEndedQueueCloses(input: {
       queue: check.queue,
       kind: "close",
       date: endedOn,
-      message: `LLM web-search confirmed ended (${check.rationale}; sources: ${check.sources.join(", ")})`,
+      message: `LLM web-search confirmed ended (${check.rationale}; sources: ${verifiedSearchSources.join(", ")})`,
     };
     input.report.edits.push(edit);
     appliedEdits.push(edit);

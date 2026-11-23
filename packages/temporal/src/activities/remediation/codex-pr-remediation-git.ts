@@ -46,7 +46,6 @@ const ALLOWED_REMEDIATION_RUNTIME_ENV_KEYS = new Set([
 ]);
 
 export function remediationAgentEnv(
-  openAiApiKey: string,
   sourceEnv: Readonly<Record<string, string | undefined>> = Bun.env,
 ): Record<string, string> {
   const allowlisted: Record<string, string> = {};
@@ -58,16 +57,35 @@ export function remediationAgentEnv(
       allowlisted[key] = value;
     }
   }
-  allowlisted["OPENAI_API_KEY"] = openAiApiKey;
   return allowlisted;
 }
 
+export function remediationDenyReadPaths(
+  workerPid: number = process.pid,
+): string[] {
+  return [
+    ...new Set([
+      "/run/secrets",
+      "/var/run/secrets",
+      "/etc/freshrss",
+      "/etc/talos",
+      "/etc/kubernetes",
+      "/proc/1",
+      `/proc/${String(workerPid)}`,
+    ]),
+  ];
+}
+
 export function isolatedRemediationCommandEnv(
-  overrides: Readonly<Record<string, string>> = {},
+  overrides: Readonly<Record<string, string | undefined>> = {},
   sourceEnv: Readonly<Record<string, string | undefined>> = Bun.env,
 ): Record<string, string | undefined> {
   const isolated: Record<string, string | undefined> = {};
-  for (const [key, value] of Object.entries(sourceEnv)) {
+  for (const key of new Set([
+    ...Object.keys(Bun.env),
+    ...Object.keys(sourceEnv),
+  ])) {
+    const value = key in sourceEnv ? sourceEnv[key] : Bun.env[key];
     isolated[key] =
       typeof value === "string" && ALLOWED_REMEDIATION_RUNTIME_ENV_KEYS.has(key)
         ? value
@@ -219,9 +237,26 @@ export async function formatAndFilterAllowedFiles(input: {
   changedFiles: readonly string[];
   formatFiles: boolean;
   commandRunner?: GitCommandRunner;
+  sourceEnv?: Readonly<Record<string, string | undefined>>;
   installRootForPrettier?: (repoDir: string) => Promise<void>;
 }): Promise<string[]> {
   const commandRunner = input.commandRunner ?? defaultRunCommand;
+  const runSanitizedSubprocess = (
+    command: string[],
+    options?: {
+      cwd?: string;
+      env?: Record<string, string | undefined>;
+      trimStdout?: boolean;
+    },
+  ): Promise<string> =>
+    commandRunner(command, {
+      cwd: options?.cwd ?? input.repoDir,
+      env: isolatedRemediationCommandEnv(options?.env, input.sourceEnv),
+      ...(options?.trimStdout === undefined
+        ? {}
+        : { trimStdout: options.trimStdout }),
+    });
+
   if (!input.formatFiles || input.changedFiles.length === 0) {
     return [...input.changedFiles];
   }
@@ -231,7 +266,10 @@ export async function formatAndFilterAllowedFiles(input: {
   }
   const prettierBin = `${input.repoDir}/node_modules/.bin/prettier`;
   if (!(await Bun.file(prettierBin).exists())) {
-    const installer = input.installRootForPrettier ?? rootInstallWithoutHooks;
+    const installer =
+      input.installRootForPrettier ??
+      ((repoDir: string) =>
+        rootInstallWithoutHooks(repoDir, runSanitizedSubprocess));
     await installer(input.repoDir);
   }
   const existingTextPaths: string[] = [];
@@ -241,23 +279,21 @@ export async function formatAndFilterAllowedFiles(input: {
     }
   }
   if (existingTextPaths.length > 0) {
-    await commandRunner(
-      [
-        "bunx",
-        "--no-install",
-        "prettier",
-        "--write",
-        "--ignore-unknown",
-        "--",
-        ...existingTextPaths,
-      ],
-      { cwd: input.repoDir, env: isolatedRemediationCommandEnv() },
-    );
+    await runSanitizedSubprocess([
+      "bunx",
+      "--no-install",
+      "prettier",
+      "--write",
+      "--ignore-unknown",
+      "--",
+      ...existingTextPaths,
+    ]);
   }
   await discardFormattingOnlyChanges({
     repoDir: input.repoDir,
     changedFiles: input.changedFiles,
     component: "codex-pr-remediation",
+    runCommand: runSanitizedSubprocess,
   });
   return listDirtyRepoPaths(input.repoDir, commandRunner);
 }

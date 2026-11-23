@@ -4,7 +4,16 @@ import {
   type CodexPrRemediationDependencies,
   type CodexPrVerificationResult,
 } from "#activities/remediation/codex-pr-remediation.ts";
-import { revertSingleRepoPath } from "#activities/remediation/codex-pr-remediation-git.ts";
+import {
+  isolatedRemediationCommandEnv,
+  revertSingleRepoPath,
+} from "#activities/remediation/codex-pr-remediation-git.ts";
+import {
+  newlyIntroducedMarkdownHttpUrls,
+  verifyUrlHttp200,
+  type HttpUrlCheckFn,
+} from "#activities/remediation/http-url-check.ts";
+import { validateLycheeIgnoreChanges } from "#activities/remediation/lychee-ignore-validation.ts";
 import {
   runCommand as defaultRunCommand,
   type GitCommandRunner,
@@ -19,15 +28,7 @@ import {
 
 const LYCHEEIGNORE_PATH = ".lycheeignore";
 const LYCHEE_FINDINGS_EXIT_CODE = 2;
-
-const LITERAL_HOST_EXCLUSION_PATTERN =
-  /^\^https\?:\/\/[a-z0-9-]+(?:\\\.[a-z0-9-]+)+(?::\d+)?\/(\S+)$/iu;
-const BROAD_PATH_PREFIX_PATTERN =
-  /^(?:\.\*|\.\+|\(\?:\.\*\)|\(\?:\.\+\))(?:$|\$)/u;
-const SENTINEL_UNRELATED_URLS = [
-  "https://sentinel-unrelated-host.example/path",
-  "http://sentinel-other-host.invalid/docs",
-] as const;
+const FORBIDDEN_LINK_ROT_BASENAMES = new Set(["agents.md", "claude.md"]);
 
 export type LinkRotRemediationResult = ReportRemediationV1 & {
   resolvedLinkKeys?: string[];
@@ -44,97 +45,18 @@ export function isAllowedLinkRotPath(
   if (path === LYCHEEIGNORE_PATH) {
     return true;
   }
-  if (!/\.(?:md|mdx|markdown)$/iu.test(path)) {
+  const normalized = path.replaceAll("\\", "/");
+  const basename = normalized.split("/").at(-1)?.toLowerCase() ?? "";
+  if (FORBIDDEN_LINK_ROT_BASENAMES.has(basename)) {
+    return false;
+  }
+  if (!/\.(?:md|mdx|markdown)$/iu.test(normalized)) {
     return false;
   }
   const allowedSources = new Set(
     deadLinks.map((link) => normalizeLinkRotSourcePath(link.source)),
   );
-  return allowedSources.has(path);
-}
-
-function isMeaningfulCommentLine(line: string): boolean {
-  const trimmed = line.trim();
-  return trimmed.startsWith("#") && trimmed.slice(1).trim().length >= 5;
-}
-
-function isSpecificValidExclusionRegex(pattern: string): boolean {
-  if (pattern.includes("|")) {
-    return false;
-  }
-  const match = LITERAL_HOST_EXCLUSION_PATTERN.exec(pattern);
-  const pathPart = match?.[1];
-  if (pathPart === undefined || BROAD_PATH_PREFIX_PATTERN.test(pathPart)) {
-    return false;
-  }
-  try {
-    // Validate regex syntax deterministically and verify it cannot match unrelated hosts.
-    const compiled = new RegExp(pattern, "u");
-    return SENTINEL_UNRELATED_URLS.every((url) => !compiled.test(url));
-  } catch {
-    return false;
-  }
-}
-
-function parseRuleSet(text: string): Set<string> {
-  return new Set(
-    text
-      .split(/\r?\n/u)
-      .map((line) => line.trim())
-      .filter((line) => line !== "" && !line.startsWith("#")),
-  );
-}
-
-function validateAddedRule(
-  rule: string,
-  blockHasComment: boolean,
-): string | undefined {
-  if (!blockHasComment) {
-    return `New .lycheeignore rule '${rule}' lacks a preceding '# <reason>' comment line.`;
-  }
-  return isSpecificValidExclusionRegex(rule)
-    ? undefined
-    : `New .lycheeignore rule '${rule}' must be a valid host-specific ^https?:// regex without broad wildcards.`;
-}
-
-export function validateLycheeIgnoreChanges(
-  beforeText: string,
-  afterText: string,
-): { valid: boolean; reason?: string } {
-  const beforeRules = parseRuleSet(beforeText);
-  const afterRules = new Set<string>();
-  let blockHasComment = false;
-
-  for (const rawLine of afterText.split(/\r?\n/u)) {
-    const trimmed = rawLine.trim();
-    if (trimmed === "") {
-      blockHasComment = false;
-      continue;
-    }
-    if (trimmed.startsWith("#")) {
-      blockHasComment ||= isMeaningfulCommentLine(trimmed);
-      continue;
-    }
-    afterRules.add(trimmed);
-    if (beforeRules.has(trimmed)) {
-      continue;
-    }
-    const violation = validateAddedRule(trimmed, blockHasComment);
-    if (violation !== undefined) {
-      return { valid: false, reason: violation };
-    }
-  }
-
-  for (const existingRule of beforeRules) {
-    if (!afterRules.has(existingRule)) {
-      return {
-        valid: false,
-        reason: `Existing .lycheeignore rule '${existingRule}' was removed.`,
-      };
-    }
-  }
-
-  return { valid: true };
+  return allowedSources.has(normalized);
 }
 
 export function buildLinkRotRemediationPrompt(
@@ -169,11 +91,13 @@ export function buildLinkRotRemediationPrompt(
 export type LycheeRunner = (
   repoDir: string,
   sources: readonly string[],
+  signal?: AbortSignal,
 ) => Promise<string>;
 
 async function defaultRunLycheeJson(
   repoDir: string,
   sources: readonly string[],
+  signal?: AbortSignal,
 ): Promise<string> {
   const { stdout, stderr, exitCode } = await captureCommand(
     [
@@ -186,7 +110,11 @@ async function defaultRunLycheeJson(
       "--",
       ...sources,
     ],
-    { cwd: repoDir },
+    {
+      cwd: repoDir,
+      env: isolatedRemediationCommandEnv(),
+      ...(signal === undefined ? {} : { signal }),
+    },
   );
   if (exitCode !== 0 && exitCode !== LYCHEE_FINDINGS_EXIT_CODE) {
     throw new Error(
@@ -249,13 +177,38 @@ function shouldRevertMarkdownFile(input: {
   );
 }
 
+async function hasVerifiedNewMarkdownUrls(input: {
+  repoDir: string;
+  file: string;
+  verifyHttp200: HttpUrlCheckFn;
+  commandRunner: GitCommandRunner;
+  signal?: AbortSignal;
+}): Promise<boolean> {
+  const beforeMarkdown = await input.commandRunner(
+    ["git", "show", `HEAD:${input.file}`],
+    { cwd: input.repoDir, trimStdout: false },
+  );
+  const afterMarkdown = await Bun.file(`${input.repoDir}/${input.file}`).text();
+  for (const url of newlyIntroducedMarkdownHttpUrls(
+    beforeMarkdown,
+    afterMarkdown,
+  )) {
+    if (!(await input.verifyHttp200(url, input.signal))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 async function filterMarkdownCandidates(input: {
   repoDir: string;
   candidateFiles: readonly string[];
   parsed: ParsedLycheeReport;
   originalDeadLinks: readonly DeadLink[];
   originalTimedOut: readonly DeadLink[];
+  verifyHttp200: HttpUrlCheckFn;
   commandRunner: GitCommandRunner;
+  signal?: AbortSignal;
 }): Promise<{ keptFiles: string[]; revertedAnyMarkdown: boolean }> {
   const keptFiles: string[] = [];
   let revertedAnyMarkdown = false;
@@ -264,14 +217,22 @@ async function filterMarkdownCandidates(input: {
       keptFiles.push(file);
       continue;
     }
-    if (
-      shouldRevertMarkdownFile({
-        file,
-        parsed: input.parsed,
-        originalDeadLinks: input.originalDeadLinks,
-        originalTimedOut: input.originalTimedOut,
-      })
-    ) {
+    const failedLychee = shouldRevertMarkdownFile({
+      file,
+      parsed: input.parsed,
+      originalDeadLinks: input.originalDeadLinks,
+      originalTimedOut: input.originalTimedOut,
+    });
+    const verifiedNewUrls = failedLychee
+      ? false
+      : await hasVerifiedNewMarkdownUrls({
+          repoDir: input.repoDir,
+          file,
+          verifyHttp200: input.verifyHttp200,
+          commandRunner: input.commandRunner,
+          ...(input.signal === undefined ? {} : { signal: input.signal }),
+        });
+    if (failedLychee || !verifiedNewUrls) {
       await revertSingleRepoPath(input.repoDir, file, input.commandRunner);
       revertedAnyMarkdown = true;
     } else {
@@ -288,10 +249,13 @@ export async function verifyLinkRotRemediation(input: {
   originalTimedOutLinks?: readonly DeadLink[];
   beforeLycheeIgnore: string;
   runLychee?: LycheeRunner;
+  verifyHttp200?: HttpUrlCheckFn;
   commandRunner?: GitCommandRunner;
+  signal?: AbortSignal;
 }): Promise<CodexPrVerificationResult<string[]>> {
   const commandRunner = input.commandRunner ?? defaultRunCommand;
   const runLychee = input.runLychee ?? defaultRunLycheeJson;
+  const verifyHttp200 = input.verifyHttp200 ?? verifyUrlHttp200;
   const originalTimedOut = input.originalTimedOutLinks ?? [];
   const originalCount = input.originalDeadLinks.length;
   const originalSources = [
@@ -346,7 +310,7 @@ export async function verifyLinkRotRemediation(input: {
   }
 
   let parsed = parseLycheeReport(
-    await runLychee(input.repoDir, originalSources),
+    await runLychee(input.repoDir, originalSources, input.signal),
   );
   const filtered = await filterMarkdownCandidates({
     repoDir: input.repoDir,
@@ -354,7 +318,9 @@ export async function verifyLinkRotRemediation(input: {
     parsed,
     originalDeadLinks: input.originalDeadLinks,
     originalTimedOut,
+    verifyHttp200,
     commandRunner,
+    ...(input.signal === undefined ? {} : { signal: input.signal }),
   });
   candidateFiles = filtered.keptFiles;
 
@@ -365,13 +331,15 @@ export async function verifyLinkRotRemediation(input: {
       unresolvedCount: originalCount,
       autoMerge: false,
       verificationSummary:
-        "Reverted candidate Markdown edits after lychee reported broken or timed-out replacement links.",
+        "Reverted candidate Markdown edits after lychee or HTTP-200 verification rejected replacement links.",
       extra: [],
     };
   }
 
   if (filtered.revertedAnyMarkdown) {
-    parsed = parseLycheeReport(await runLychee(input.repoDir, originalSources));
+    parsed = parseLycheeReport(
+      await runLychee(input.repoDir, originalSources, input.signal),
+    );
   }
 
   const ignoredTimeoutKeys = preExistingTimeoutOnlyKeys(
@@ -423,7 +391,10 @@ export async function verifyLinkRotRemediation(input: {
 
 export async function remediateLinkRot(
   scanResult: LinkRotScanResult,
-  deps: CodexPrRemediationDependencies & { runLychee?: LycheeRunner } = {},
+  deps: CodexPrRemediationDependencies & {
+    runLychee?: LycheeRunner;
+    verifyHttp200?: HttpUrlCheckFn;
+  } = {},
 ): Promise<LinkRotRemediationResult> {
   if (scanResult.deadLinks.length === 0) {
     return {
@@ -455,19 +426,21 @@ export async function remediateLinkRot(
           ? await ignoreFile.text()
           : "";
       },
-      verifyAndFilter: (repoDir, changedFiles) =>
+      verifyAndFilter: (repoDir, changedFiles, context) =>
         verifyLinkRotRemediation({
           repoDir,
           changedFiles,
           originalDeadLinks: scanResult.deadLinks,
           originalTimedOutLinks: scanResult.timedOutLinks,
           beforeLycheeIgnore,
+          commandRunner: context.commandRunner,
+          signal: context.signal,
           ...(deps.runLychee === undefined
             ? {}
             : { runLychee: deps.runLychee }),
-          ...(deps.commandRunner === undefined
+          ...(deps.verifyHttp200 === undefined
             ? {}
-            : { commandRunner: deps.commandRunner }),
+            : { verifyHttp200: deps.verifyHttp200 }),
         }),
     },
     deps,

@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
+import { validateLycheeIgnoreChanges } from "#activities/remediation/lychee-ignore-validation.ts";
 import { createRemediationTestGitRepo } from "#activities/remediation/remediation-test-git.ts";
 import {
   isAllowedLinkRotPath,
-  validateLycheeIgnoreChanges,
   verifyLinkRotRemediation,
 } from "./link-rot-remediation.ts";
 import type { DeadLink } from "./link-rot-scan.ts";
@@ -75,14 +75,67 @@ function setupGitFixture() {
 }
 
 describe("isAllowedLinkRotPath", () => {
-  test("permits only .lycheeignore and exact markdown sources from deadLinks", () => {
-    expect(isAllowedLinkRotPath(".lycheeignore", DEAD_LINKS)).toBe(true);
-    expect(isAllowedLinkRotPath("docs/a.md", DEAD_LINKS)).toBe(true);
-    expect(isAllowedLinkRotPath("docs/b.md", DEAD_LINKS)).toBe(true);
-    expect(isAllowedLinkRotPath("docs/unrelated.md", DEAD_LINKS)).toBe(false);
-    expect(isAllowedLinkRotPath("AGENTS.md", DEAD_LINKS)).toBe(false);
-    expect(isAllowedLinkRotPath("CLAUDE.md", DEAD_LINKS)).toBe(false);
-    expect(isAllowedLinkRotPath("src/index.ts", DEAD_LINKS)).toBe(false);
+  test("permits only .lycheeignore and exact markdown sources while rejecting AGENTS.md and CLAUDE.md at any depth", () => {
+    const linksWithInstructionSources: DeadLink[] = [
+      ...DEAD_LINKS,
+      {
+        url: "https://example.org/dead-root-agents",
+        source: "AGENTS.md",
+        status: "404 Not Found",
+        statusCode: 404,
+      },
+      {
+        url: "https://example.org/dead-nested-agents",
+        source: "packages/docs/wiki/AGENTS.md",
+        status: "404 Not Found",
+        statusCode: 404,
+      },
+      {
+        url: "https://example.org/dead-nested-claude",
+        source: "packages/scout-for-lol/CLAUDE.md",
+        status: "404 Not Found",
+        statusCode: 404,
+      },
+    ];
+    expect(
+      isAllowedLinkRotPath(".lycheeignore", linksWithInstructionSources),
+    ).toBe(true);
+    expect(isAllowedLinkRotPath("docs/a.md", linksWithInstructionSources)).toBe(
+      true,
+    );
+    expect(isAllowedLinkRotPath("docs/b.md", linksWithInstructionSources)).toBe(
+      true,
+    );
+    expect(
+      isAllowedLinkRotPath("docs/unrelated.md", linksWithInstructionSources),
+    ).toBe(false);
+    expect(isAllowedLinkRotPath("AGENTS.md", linksWithInstructionSources)).toBe(
+      false,
+    );
+    expect(
+      isAllowedLinkRotPath(
+        "packages/docs/wiki/AGENTS.md",
+        linksWithInstructionSources,
+      ),
+    ).toBe(false);
+    expect(
+      isAllowedLinkRotPath(
+        "packages/docs/wiki/agents.md",
+        linksWithInstructionSources,
+      ),
+    ).toBe(false);
+    expect(isAllowedLinkRotPath("CLAUDE.md", linksWithInstructionSources)).toBe(
+      false,
+    );
+    expect(
+      isAllowedLinkRotPath(
+        "packages/scout-for-lol/CLAUDE.md",
+        linksWithInstructionSources,
+      ),
+    ).toBe(false);
+    expect(
+      isAllowedLinkRotPath("src/index.ts", linksWithInstructionSources),
+    ).toBe(false);
   });
 });
 
@@ -148,6 +201,21 @@ describe("validateLycheeIgnoreChanges", () => {
   });
 });
 
+async function assertPartialDocsAOnly(
+  repoDir: string,
+  result: Awaited<ReturnType<typeof verifyLinkRotRemediation>>,
+): Promise<void> {
+  expect(result).toMatchObject({
+    verifiedFiles: ["docs/a.md"],
+    resolvedCount: 1,
+    unresolvedCount: 1,
+    autoMerge: false,
+  });
+  expect(await Bun.file(`${repoDir}/docs/b.md`).text()).toBe(
+    "[b](https://example.org/dead-b)\n",
+  );
+}
+
 describe("verifyLinkRotRemediation", () => {
   test("enables autoMerge when all dead links are resolved cleanly", async () => {
     const fixture = await setupGitFixture();
@@ -167,6 +235,7 @@ describe("verifyLinkRotRemediation", () => {
         originalDeadLinks: DEAD_LINKS,
         beforeLycheeIgnore: "# Existing internal host\n^https?://go/\n",
         runLychee: () => Promise.resolve(lycheeJson({})),
+        verifyHttp200: () => Promise.resolve(true),
       });
 
       expect(result).toMatchObject({
@@ -198,6 +267,7 @@ describe("verifyLinkRotRemediation", () => {
         changedFiles: ["docs/a.md", "docs/b.md"],
         originalDeadLinks: DEAD_LINKS,
         beforeLycheeIgnore: "# Existing internal host\n^https?://go/\n",
+        verifyHttp200: () => Promise.resolve(true),
         runLychee: () => {
           callCount += 1;
           return Promise.resolve(
@@ -222,20 +292,14 @@ describe("verifyLinkRotRemediation", () => {
         },
       });
 
-      expect(result).toMatchObject({
-        verifiedFiles: ["docs/a.md"],
-        resolvedCount: 1,
-        unresolvedCount: 1,
-        autoMerge: false,
-      });
-      expect(await Bun.file(`${fixture.repoDir}/docs/b.md`).text()).toBe(
-        "[b](https://example.org/dead-b)\n",
-      );
+      await assertPartialDocsAOnly(fixture.repoDir, result);
     } finally {
       await fixture.cleanup();
     }
   });
+});
 
+describe("verifyLinkRotRemediation timeout and HTTP 200 guards", () => {
   test("treats timed-out replacement links as unverified failures and prevents autoMerge", async () => {
     const fixture = await setupGitFixture();
     try {
@@ -250,6 +314,7 @@ describe("verifyLinkRotRemediation", () => {
         changedFiles: ["docs/a.md"],
         originalDeadLinks: singleDeadLink,
         beforeLycheeIgnore: "# Existing internal host\n^https?://go/\n",
+        verifyHttp200: () => Promise.resolve(true),
         runLychee: () =>
           Promise.resolve(
             lycheeJson(
@@ -291,6 +356,7 @@ describe("verifyLinkRotRemediation", () => {
         changedFiles: ["docs/a.md", "docs/b.md"],
         originalDeadLinks: DEAD_LINKS,
         beforeLycheeIgnore: "# Existing internal host\n^https?://go/\n",
+        verifyHttp200: () => Promise.resolve(true),
         runLychee: () => {
           partialCalls += 1;
           return Promise.resolve(
@@ -321,15 +387,65 @@ describe("verifyLinkRotRemediation", () => {
         },
       });
 
-      expect(partialResult).toMatchObject({
-        verifiedFiles: ["docs/a.md"],
-        resolvedCount: 1,
-        unresolvedCount: 1,
-        autoMerge: false,
-      });
-      expect(await Bun.file(`${fixture.repoDir}/docs/b.md`).text()).toBe(
-        "[b](https://example.org/dead-b)\n",
+      await assertPartialDocsAOnly(fixture.repoDir, partialResult);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  test("rejects newly introduced replacement URLs that return 403/429 even when lychee scan config accepts them, while preserving unchanged 403 links", async () => {
+    const fixture = await createRemediationTestGitRepo({
+      prefix: "link-rot-http200-",
+      files: {
+        ".lycheeignore": "# Existing internal host\n^https?://go/\n",
+        "docs/a.md":
+          "[unchanged](https://vendor.example/unchanged-403)\n[a](https://example.org/dead-a)\n",
+        "docs/b.md": "[b](https://example.org/dead-b)\n",
+      },
+    });
+    try {
+      await Bun.write(
+        `${fixture.repoDir}/docs/a.md`,
+        "[unchanged](https://vendor.example/unchanged-403)\n[a](https://example.org/live-200)\n",
       );
+      await Bun.write(
+        `${fixture.repoDir}/docs/b.md`,
+        "[b](https://example.org/replacement-403)\n",
+      );
+
+      const checkedUrls: string[] = [];
+      let lycheeCalls = 0;
+      const result = await verifyLinkRotRemediation({
+        repoDir: fixture.repoDir,
+        changedFiles: ["docs/a.md", "docs/b.md"],
+        originalDeadLinks: DEAD_LINKS,
+        beforeLycheeIgnore: "# Existing internal host\n^https?://go/\n",
+        verifyHttp200: (url) => {
+          checkedUrls.push(url);
+          return Promise.resolve(url === "https://example.org/live-200");
+        },
+        runLychee: () => {
+          lycheeCalls += 1;
+          return Promise.resolve(
+            lycheeCalls === 1
+              ? lycheeJson({})
+              : lycheeJson({
+                  "docs/b.md": [
+                    {
+                      url: "https://example.org/dead-b",
+                      text: "404 Not Found",
+                    },
+                  ],
+                }),
+          );
+        },
+      });
+
+      expect(checkedUrls).toEqual([
+        "https://example.org/live-200",
+        "https://example.org/replacement-403",
+      ]);
+      await assertPartialDocsAOnly(fixture.repoDir, result);
     } finally {
       await fixture.cleanup();
     }

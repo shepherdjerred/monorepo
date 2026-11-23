@@ -112,20 +112,23 @@ describe("queue liveness guard", () => {
     expect(llm.prompts[1]).toContain(PATCH_URL);
   });
 
-  test("keeps an ended verdict and its stated date", async () => {
+  test("keeps an ended verdict, its stated date, and only searched citations in searchedSources", async () => {
+    const unsearchedUrl =
+      "https://www.leagueoflegends.com/en-us/news/game-updates/unsearched-note/";
     const check = await verifyQueueLiveness(
       INPUT,
       fakeLlm({
         status: "ended",
         endedOn: "2026-09-24",
         rationale: "Patch 26.19 removed the mode.",
-        sources: [PATCH_URL],
+        sources: [PATCH_URL, unsearchedUrl],
       }),
     );
     expect(check).toMatchObject({
       status: "ended",
       endedOn: "2026-09-24",
-      sources: [PATCH_URL],
+      sources: [PATCH_URL, unsearchedUrl],
+      searchedSources: [PATCH_URL],
     });
   });
 

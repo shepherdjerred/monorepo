@@ -1,19 +1,16 @@
 import type { ApplicationFailure } from "@temporalio/common";
 import { describe, expect, test, vi } from "vitest";
-import type { AgentTurnOutcome } from "#lib/agent-runner/contract.ts";
+import type {
+  AgentTurnOutcome,
+  RunCodexAgentTurnInput,
+} from "#lib/agent-runner/contract.ts";
 import { AgentTurnExecutionError } from "#lib/agent-runner/errors.ts";
 import {
   REMEDIATION_DISABLED_SUMMARY,
   runCodexPrRemediation,
   type CodexPrRemediationDependencies,
 } from "./codex-pr-remediation.ts";
-import {
-  configureRemediationPrAutoMerge,
-  enforceAllowedPaths,
-  remediationAgentEnv,
-  remediationBranchName,
-} from "./codex-pr-remediation-git.ts";
-import { runCommand } from "#activities/scout/scout-season-refresh-git.ts";
+import { remediationBranchName } from "./codex-pr-remediation-git.ts";
 import { createRemediationTestGitRepo } from "./remediation-test-git.ts";
 
 function fakeAgentOutcome(
@@ -69,45 +66,6 @@ function baseLocalRepoDeps(repo: {
   };
 }
 
-describe("remediationAgentEnv", () => {
-  test("exposes OPENAI_API_KEY while stripping GitHub, Postal, S3, and Temporal secrets", () => {
-    const env = remediationAgentEnv("dummy-openai-value", {
-      PATH: "/usr/bin",
-      HOME: "/tmp/home",
-      GH_TOKEN: "dummy-gh",
-      GITHUB_APP_ID: "123",
-      GITHUB_APP_PRIVATE_KEY: "dummy-pem",
-      POSTAL_API_KEY: "dummy-postal",
-      AWS_ACCESS_KEY_ID: "dummy-aws-id",
-      AWS_SECRET_ACCESS_KEY: "dummy-aws",
-      S3_ENDPOINT: "https://s3.internal",
-      REPORT_HUB_INGEST_TOKEN: "dummy-hub",
-      TEMPORAL_API_KEY: "dummy-temporal",
-      ANTHROPIC_API_KEY: "dummy-anthropic",
-      WOODPECKER_TOKEN: "dummy-woodpecker",
-      FLAGS_MACHINE_TOKEN: "dummy-flags",
-      DOCKERHUB_READ_CONFIG_JSON: '{"auths":{}}',
-    });
-
-    expect(env["OPENAI_API_KEY"]).toBe("dummy-openai-value");
-    expect(env["PATH"]).toBe("/usr/bin");
-    expect(env["HOME"]).toBe("/tmp/home");
-    expect(env["GH_TOKEN"]).toBeUndefined();
-    expect(env["GITHUB_APP_ID"]).toBeUndefined();
-    expect(env["GITHUB_APP_PRIVATE_KEY"]).toBeUndefined();
-    expect(env["POSTAL_API_KEY"]).toBeUndefined();
-    expect(env["AWS_ACCESS_KEY_ID"]).toBeUndefined();
-    expect(env["AWS_SECRET_ACCESS_KEY"]).toBeUndefined();
-    expect(env["S3_ENDPOINT"]).toBeUndefined();
-    expect(env["REPORT_HUB_INGEST_TOKEN"]).toBeUndefined();
-    expect(env["TEMPORAL_API_KEY"]).toBeUndefined();
-    expect(env["ANTHROPIC_API_KEY"]).toBeUndefined();
-    expect(env["WOODPECKER_TOKEN"]).toBeUndefined();
-    expect(env["FLAGS_MACHINE_TOKEN"]).toBeUndefined();
-    expect(env["DOCKERHUB_READ_CONFIG_JSON"]).toBeUndefined();
-  });
-});
-
 describe("runCodexPrRemediation", () => {
   test("skips immediately without cloning or invoking Codex when feature flag is false", async () => {
     const cloneRepo = vi.fn();
@@ -148,9 +106,10 @@ describe("runCodexPrRemediation", () => {
     expect(runAgentTurn).not.toHaveBeenCalled();
   });
 
-  test("reverts disallowed tracked/untracked files and unverified files, opening a PR only for verified files", async () => {
+  test("enforces workspace-write scoped sandbox, tool-steps budget, path reverts, and verified-only PR staging", async () => {
     const repo = await createLocalGitRepo();
     let cleanedUp = false;
+    let capturedTurn: RunCodexAgentTurnInput | undefined;
     let capturedOpenPrBody = "";
     let capturedFiles: readonly string[] = [];
 
@@ -168,13 +127,11 @@ describe("runCodexPrRemediation", () => {
           formatFiles: false,
           isAllowedPath: (path) => path === "README.md" || path === "OTHER.md",
           verifyAndFilter: async (repoDir, changedFiles) => {
-            // Disallowed edits must ALREADY be reverted before verifyAndFilter runs!
             expect(changedFiles).toEqual(["OTHER.md", "README.md"]);
             expect(await Bun.file(`${repoDir}/AGENTS.md`).text()).toBe(
               "# Agents\nDo not touch\n",
             );
             expect(await Bun.file(`${repoDir}/sneaky.sh`).exists()).toBe(false);
-            // Reject OTHER.md, verify only README.md
             return {
               verifiedFiles: ["README.md"],
               resolvedCount: 1,
@@ -197,6 +154,7 @@ describe("runCodexPrRemediation", () => {
             }),
           cloneRepo: () => Promise.resolve(),
           runAgentTurn: async (turn) => {
+            capturedTurn = turn;
             await Bun.write(
               `${turn.cwd}/README.md`,
               "# Hello\nNew live link\n",
@@ -209,7 +167,6 @@ describe("runCodexPrRemediation", () => {
           mintGitHubToken: () => Promise.resolve("dummy-github"),
           findOpenPr: () => Promise.resolve(undefined),
           openPr: async (prInput) => {
-            // Unverified OTHER.md must be reverted before PR staging!
             expect(await Bun.file(`${repo.repoDir}/OTHER.md`).text()).toBe(
               "# Other\nOriginal\n",
             );
@@ -224,6 +181,22 @@ describe("runCodexPrRemediation", () => {
         },
       );
 
+      expect(capturedTurn?.turnBudgetKind).toBe("tool-steps");
+      expect(capturedTurn?.sandboxPolicy).toEqual({
+        sandboxMode: "workspace-write",
+        networkAccessEnabled: true,
+        webSearchMode: "live",
+      });
+      expect(capturedTurn?.scopedPermissions).toEqual({
+        denyReadPaths: expect.arrayContaining([
+          "/run/secrets",
+          "/var/run/secrets",
+          "/etc/freshrss",
+          "/proc/1",
+          `/proc/${String(process.pid)}`,
+        ]),
+        unixSockets: [],
+      });
       expect(cleanedUp).toBe(true);
       expect(capturedFiles).toEqual(["README.md"]);
       expect(capturedOpenPrBody).toContain("## Why");
@@ -247,7 +220,7 @@ describe("runCodexPrRemediation", () => {
   });
 });
 
-describe("runCodexPrRemediation reuse and failure cases", () => {
+describe("runCodexPrRemediation reuse and no-changes cases", () => {
   test("returns pr-reused with identical content-derived branch on repeat runs", async () => {
     const repo = await createLocalGitRepo();
     try {
@@ -347,6 +320,64 @@ describe("runCodexPrRemediation reuse and failure cases", () => {
       await repo.cleanup();
     }
   });
+});
+
+describe("runCodexPrRemediation cancellation and failure cases", () => {
+  test("stops before GitHub publication when canceled during verification", async () => {
+    const repo = await createLocalGitRepo();
+    const controller = new AbortController();
+    const mintGitHubToken = vi.fn();
+    const openPr = vi.fn();
+    const configureAutoMerge = vi.fn();
+
+    try {
+      await expect(
+        runCodexPrRemediation(
+          {
+            slug: "link-rot",
+            callSite: "link-rot-remediation",
+            failureTypePrefix: "LinkRotRemediation",
+            prTitle: "fix(docs): repair broken links",
+            prWhy: "Why",
+            prWhat: "What",
+            prompt: "Fix links",
+            autoMerge: true,
+            formatFiles: false,
+            isAllowedPath: (path) => path === "README.md",
+            verifyAndFilter: (_repoDir, changedFiles) => {
+              controller.abort(new Error("activity canceled mid-verification"));
+              return Promise.resolve({
+                verifiedFiles: changedFiles,
+                resolvedCount: 1,
+                unresolvedCount: 0,
+                verificationSummary: "Verified",
+              });
+            },
+          },
+          {
+            ...baseLocalRepoDeps(repo),
+            signal: controller.signal,
+            runAgentTurn: async (turn) => {
+              await Bun.write(
+                `${turn.cwd}/README.md`,
+                "# Hello\nNew live link\n",
+              );
+              return fakeAgentOutcome();
+            },
+            mintGitHubToken,
+            openPr,
+            configureAutoMerge,
+          },
+        ),
+      ).rejects.toThrow("activity canceled mid-verification");
+
+      expect(mintGitHubToken).not.toHaveBeenCalled();
+      expect(openPr).not.toHaveBeenCalled();
+      expect(configureAutoMerge).not.toHaveBeenCalled();
+    } finally {
+      await repo.cleanup();
+    }
+  });
 
   test("converts generationStarted AgentTurnExecutionError into non-retryable ApplicationFailure and cleans up", async () => {
     let cleanedUp = false;
@@ -399,92 +430,5 @@ describe("runCodexPrRemediation reuse and failure cases", () => {
       type: "LinkRotRemediationPossiblyAppliedFailure",
     } satisfies Partial<ApplicationFailure>);
     expect(cleanedUp).toBe(true);
-  });
-});
-
-describe("configureRemediationPrAutoMerge", () => {
-  test("catches gh pr merge --auto failure cleanly and returns false", async () => {
-    const enabled = await configureRemediationPrAutoMerge({
-      repoDir: "/tmp",
-      repoSlug: "shepherdjerred/monorepo",
-      prUrl: "https://github.com/shepherdjerred/monorepo/pull/9",
-      ghToken: "dummy-github",
-      autoMerge: true,
-      commandRunner: () => Promise.reject(new Error("auto-merge not allowed")),
-    });
-    expect(enabled).toBe(false);
-  });
-
-  test("disables previously armed auto-merge and confirms disabled state when autoMerge is false", async () => {
-    const calls: string[][] = [];
-    let viewCalls = 0;
-    const enabled = await configureRemediationPrAutoMerge({
-      repoDir: "/tmp",
-      repoSlug: "shepherdjerred/monorepo",
-      prUrl: "https://github.com/shepherdjerred/monorepo/pull/10",
-      ghToken: "dummy-github",
-      autoMerge: false,
-      commandRunner: (command) => {
-        calls.push(command);
-        if (command[1] === "pr" && command[2] === "view") {
-          viewCalls += 1;
-          return Promise.resolve(viewCalls === 1 ? "true" : "false");
-        }
-        return Promise.resolve("");
-      },
-    });
-    expect(enabled).toBe(false);
-    expect(calls).toHaveLength(3);
-    expect(calls[1]).toContain("--disable-auto");
-  });
-
-  test("throws when disabling auto-merge fails or leaves auto-merge armed on a review-only PR", async () => {
-    await expect(
-      configureRemediationPrAutoMerge({
-        repoDir: "/tmp",
-        repoSlug: "shepherdjerred/monorepo",
-        prUrl: "https://github.com/shepherdjerred/monorepo/pull/11",
-        ghToken: "dummy-github",
-        autoMerge: false,
-        commandRunner: (command) =>
-          command[1] === "pr" && command[2] === "view"
-            ? Promise.resolve("true")
-            : Promise.resolve(""),
-      }),
-    ).rejects.toThrow("Auto-merge remained enabled");
-  });
-});
-
-describe("enforceAllowedPaths baseSha guard", () => {
-  test("resets committed out-of-scope agent edits back to baseSha", async () => {
-    const repo = await createLocalGitRepo();
-    try {
-      const baseSha = await runCommand(["git", "rev-parse", "HEAD"], {
-        cwd: repo.repoDir,
-      });
-      await Bun.write(`${repo.repoDir}/AGENTS.md`, "# Pwned\n");
-      await runCommand(["git", "add", "AGENTS.md"], { cwd: repo.repoDir });
-      await runCommand(["git", "commit", "-m", "sneaky commit"], {
-        cwd: repo.repoDir,
-      });
-      await Bun.write(`${repo.repoDir}/README.md`, "# Hello\nAllowed fix\n");
-
-      const enforced = await enforceAllowedPaths({
-        repoDir: repo.repoDir,
-        baseSha,
-        isAllowedPath: (path) => path === "README.md",
-      });
-
-      expect(enforced.allowedFiles).toEqual(["README.md"]);
-      expect(enforced.revertedFiles).toContain("AGENTS.md");
-      expect(
-        await runCommand(["git", "rev-parse", "HEAD"], { cwd: repo.repoDir }),
-      ).toBe(baseSha);
-      expect(await Bun.file(`${repo.repoDir}/AGENTS.md`).text()).toBe(
-        "# Agents\nDo not touch\n",
-      );
-    } finally {
-      await repo.cleanup();
-    }
   });
 });

@@ -69,6 +69,8 @@ export type QueueLivenessCheck = {
   status: QueueLivenessStatus;
   rationale: string;
   sources: string[];
+  /** Cited URLs that were also returned by the research web-search call. */
+  searchedSources?: string[];
   endedOn?: string;
   /** The model proposed `live`, but no cited allowlisted page came from its search. */
   unsupportedLive?: boolean;
@@ -215,7 +217,10 @@ export function normalizeSourceUrl(url: string): string | undefined {
 export function acceptLivenessVerdict(
   verdict: QueueLivenessVerdict,
   researchSources: readonly string[],
-): Pick<QueueLivenessCheck, "status" | "sources" | "unsupportedLive"> {
+): Pick<
+  QueueLivenessCheck,
+  "status" | "sources" | "searchedSources" | "unsupportedLive"
+> {
   const searched = new Set(
     researchSources
       .map((url) => normalizeSourceUrl(url))
@@ -226,17 +231,22 @@ export function acceptLivenessVerdict(
       verdict.sources.filter((url) => normalizeSourceUrl(url) !== undefined),
     ),
   ].slice(0, MAX_SOURCES);
-  if (verdict.status !== "live") {
-    return { status: verdict.status, sources };
-  }
-  const supported = sources.some((url) => {
+  const searchedSources = sources.filter((url) => {
     const normalized = normalizeSourceUrl(url);
-    return (
-      normalized !== undefined &&
-      riotSourceFamily(url) !== undefined &&
-      searched.has(normalized)
-    );
+    return normalized !== undefined && searched.has(normalized);
   });
+  if (verdict.status !== "live") {
+    return {
+      status: verdict.status,
+      sources,
+      ...(verdict.status === "ended" && searchedSources.length > 0
+        ? { searchedSources }
+        : {}),
+    };
+  }
+  const supported = searchedSources.some(
+    (url) => riotSourceFamily(url) !== undefined,
+  );
   return supported
     ? { status: "live", sources }
     : { status: "unknown", sources, unsupportedLive: true };

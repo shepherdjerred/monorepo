@@ -5,6 +5,10 @@ import {
 } from "#activities/remediation/codex-pr-remediation.ts";
 import { revertSingleRepoPath } from "#activities/remediation/codex-pr-remediation-git.ts";
 import {
+  verifyUrlHttp200,
+  type HttpUrlCheckFn,
+} from "#activities/remediation/http-url-check.ts";
+import {
   CatalogSchema,
   FullCatalogSchema,
   VERSION_CATALOG_PATH,
@@ -27,27 +31,6 @@ export type ProposeReleaseNoteOverridesResult = {
   remediation: ReportRemediationV1;
   resolvedNotes: ReleaseNote[];
 };
-
-export type HttpUrlCheckFn = (url: string) => Promise<boolean>;
-
-async function defaultVerifyHttp200(url: string): Promise<boolean> {
-  if (!URL.canParse(url)) {
-    return false;
-  }
-  const parsed = new URL(url);
-  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-    return false;
-  }
-  try {
-    const response = await fetch(url, {
-      redirect: "follow",
-      signal: AbortSignal.timeout(10_000),
-    });
-    return response.status === 200;
-  } catch {
-    return false;
-  }
-}
 
 function canonicalEntryWithoutOverride(entry: StrictCatalogEntry): string {
   const { releaseNotesOverride: _ignored, ...rest } = entry;
@@ -123,6 +106,7 @@ async function inspectCatalogEntryPair(input: {
   missingNames: ReadonlySet<string>;
   eligibleNames: ReadonlySet<string>;
   verifyHttp200: HttpUrlCheckFn;
+  signal?: AbortSignal;
 }): Promise<
   | { ok: true; addedOverride: ReleaseNotesOverride | undefined }
   | { ok: false; reason: string }
@@ -170,7 +154,7 @@ async function inspectCatalogEntryPair(input: {
       reason: `Newly added releaseNotesOverride on '${beforeEntry.name}' must include a verifiable URL.`,
     };
   }
-  if (!(await input.verifyHttp200(candidateOverride.url))) {
+  if (!(await input.verifyHttp200(candidateOverride.url, input.signal))) {
     return {
       ok: false,
       reason: `releaseNotesOverride.url '${candidateOverride.url}' on '${beforeEntry.name}' did not return HTTP 200.`,
@@ -179,12 +163,68 @@ async function inspectCatalogEntryPair(input: {
   return { ok: true, addedOverride: candidateOverride };
 }
 
+function collectEligibleTargetVersions(
+  beforeEntries: readonly StrictCatalogEntry[],
+  missingChanges: readonly DependencyChange[],
+): Map<string, string> {
+  const eligibleTargetVersions = new Map<string, string>();
+  for (const beforeEntry of beforeEntries) {
+    const currentVersion = bareCatalogVersion(beforeEntry.value);
+    if (
+      currentVersion !== undefined &&
+      missingChanges.some(
+        (change) =>
+          change.name === beforeEntry.name &&
+          change.newValue !== undefined &&
+          change.newVersion === currentVersion,
+      )
+    ) {
+      eligibleTargetVersions.set(beforeEntry.name, currentVersion);
+    }
+  }
+  return eligibleTargetVersions;
+}
+
+function collectResolvedReleaseNotes(
+  missingChanges: readonly DependencyChange[],
+  verifiedOverrides: ReadonlyMap<string, ReleaseNotesOverride>,
+  eligibleTargetVersions: ReadonlyMap<string, string>,
+): { resolvedNotes: ReleaseNote[]; resolvedMissingCount: number } {
+  const notesByVersionKey = new Map<string, ReleaseNote>();
+  let resolvedMissingCount = 0;
+  for (const change of missingChanges) {
+    const override = verifiedOverrides.get(change.name);
+    const targetVersion = eligibleTargetVersions.get(change.name);
+    if (
+      override === undefined ||
+      targetVersion === undefined ||
+      change.newValue === undefined ||
+      change.newVersion !== targetVersion
+    ) {
+      continue;
+    }
+    resolvedMissingCount += 1;
+    notesByVersionKey.set(`${change.name}\u{0}${targetVersion}`, {
+      dependency: change.name,
+      version: targetVersion,
+      notes: override.summary,
+      url: override.url,
+      source: "catalog-override",
+    });
+  }
+  return {
+    resolvedNotes: [...notesByVersionKey.values()],
+    resolvedMissingCount,
+  };
+}
+
 export async function verifyCatalogReleaseNoteDiff(input: {
   beforeCatalogText: string;
   afterCatalogText: string;
   changes: readonly DependencyChange[];
   missing: readonly MissingReleaseNote[];
   verifyHttp200?: HttpUrlCheckFn;
+  signal?: AbortSignal;
 }): Promise<
   | {
       valid: true;
@@ -194,7 +234,7 @@ export async function verifyCatalogReleaseNoteDiff(input: {
     }
   | { valid: false; reason: string }
 > {
-  const verifyHttp200 = input.verifyHttp200 ?? defaultVerifyHttp200;
+  const verifyHttp200 = input.verifyHttp200 ?? verifyUrlHttp200;
   const parsed = parseCatalogPair(
     input.beforeCatalogText,
     input.afterCatalogText,
@@ -221,21 +261,10 @@ export async function verifyCatalogReleaseNoteDiff(input: {
   const missingChanges = input.changes.filter((change) =>
     missingKeys.has(changeCommitKey(change.name, change.commitSha)),
   );
-  const eligibleTargetVersions = new Map<string, string>();
-  for (const beforeEntry of parsed.before.entries) {
-    const currentVersion = bareCatalogVersion(beforeEntry.value);
-    if (
-      currentVersion !== undefined &&
-      missingChanges.some(
-        (change) =>
-          change.name === beforeEntry.name &&
-          change.newValue !== undefined &&
-          change.newVersion === currentVersion,
-      )
-    ) {
-      eligibleTargetVersions.set(beforeEntry.name, currentVersion);
-    }
-  }
+  const eligibleTargetVersions = collectEligibleTargetVersions(
+    parsed.before.entries,
+    missingChanges,
+  );
   const eligibleNames = new Set(eligibleTargetVersions.keys());
   const verifiedOverrides = new Map<string, ReleaseNotesOverride>();
 
@@ -247,6 +276,7 @@ export async function verifyCatalogReleaseNoteDiff(input: {
       missingNames,
       eligibleNames,
       verifyHttp200,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
     });
     if (!inspected.ok) {
       return { valid: false, reason: inspected.reason };
@@ -256,34 +286,15 @@ export async function verifyCatalogReleaseNoteDiff(input: {
     }
   }
 
-  const notesByVersionKey = new Map<string, ReleaseNote>();
-  let resolvedMissingCount = 0;
-  for (const change of missingChanges) {
-    const override = verifiedOverrides.get(change.name);
-    const targetVersion = eligibleTargetVersions.get(change.name);
-    if (
-      override === undefined ||
-      targetVersion === undefined ||
-      change.newValue === undefined ||
-      change.newVersion !== targetVersion
-    ) {
-      continue;
-    }
-    resolvedMissingCount += 1;
-    notesByVersionKey.set(`${change.name}\u{0}${targetVersion}`, {
-      dependency: change.name,
-      version: targetVersion,
-      notes: override.summary,
-      url: override.url,
-      source: "catalog-override",
-    });
-  }
-
+  const resolved = collectResolvedReleaseNotes(
+    missingChanges,
+    verifiedOverrides,
+    eligibleTargetVersions,
+  );
   return {
     valid: true,
     verifiedOverrides,
-    resolvedNotes: [...notesByVersionKey.values()],
-    resolvedMissingCount,
+    ...resolved,
   };
 }
 
@@ -320,6 +331,7 @@ async function verifyCatalogOverridesInRepo(input: {
   missing: readonly MissingReleaseNote[];
   verifyHttp200?: HttpUrlCheckFn;
   commandRunner?: GitCommandRunner;
+  signal?: AbortSignal;
 }): Promise<CodexPrVerificationResult<ReleaseNote[]>> {
   const commandRunner = input.commandRunner ?? defaultRunCommand;
   const totalMissingCount = input.missing.length;
@@ -345,6 +357,7 @@ async function verifyCatalogOverridesInRepo(input: {
     ...(input.verifyHttp200 === undefined
       ? {}
       : { verifyHttp200: input.verifyHttp200 }),
+    ...(input.signal === undefined ? {} : { signal: input.signal }),
   });
 
   if (!diffResult.valid) {
@@ -433,19 +446,18 @@ export async function proposeMissingReleaseNoteOverrides(
           `${repoDir}/${VERSION_CATALOG_PATH}`,
         ).text();
       },
-      verifyAndFilter: (repoDir, changedFiles) =>
+      verifyAndFilter: (repoDir, changedFiles, context) =>
         verifyCatalogOverridesInRepo({
           repoDir,
           changedFiles,
           beforeCatalogText,
           changes,
           missing,
+          commandRunner: context.commandRunner,
+          signal: context.signal,
           ...(deps.verifyHttp200 === undefined
             ? {}
             : { verifyHttp200: deps.verifyHttp200 }),
-          ...(deps.commandRunner === undefined
-            ? {}
-            : { commandRunner: deps.commandRunner }),
         }),
     },
     deps,

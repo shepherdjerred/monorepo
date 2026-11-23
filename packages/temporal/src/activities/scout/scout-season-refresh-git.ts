@@ -5,6 +5,7 @@ import { captureCommand } from "#activities/command-runner.ts";
 type GitRunBaseOptions = {
   cwd: string;
   env?: Record<string, string | undefined>;
+  signal?: AbortSignal;
   // Trailing-whitespace trimming is on by default because nearly every caller
   // wants a bare value (a sha, a branch name, a URL). `git status --porcelain`
   // is the exception: its first line can legitimately begin with a space, so
@@ -195,6 +196,7 @@ export type OpenPrInput = {
   ghToken: string;
   repoSlug: string;
   mainBranch: string;
+  signal?: AbortSignal;
 };
 
 export type OpenPrResult = {
@@ -204,7 +206,7 @@ export type OpenPrResult = {
 
 export type SeasonRefreshPrLocator = Pick<
   OpenPrInput,
-  "repoDir" | "branch" | "ghToken" | "repoSlug"
+  "repoDir" | "branch" | "ghToken" | "repoSlug" | "signal"
 >;
 
 export async function findOpenSeasonRefreshPr(
@@ -230,6 +232,7 @@ export async function findOpenSeasonRefreshPr(
     {
       cwd: input.repoDir,
       env: { GH_TOKEN: input.ghToken },
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
       redactOutput: true,
       operation: "pr-list",
     },
@@ -241,7 +244,7 @@ export async function findOpenSeasonRefreshPr(
 export async function refreshSeasonRefreshPrMetadata(
   input: Pick<
     OpenPrInput,
-    "repoDir" | "ghToken" | "repoSlug" | "title" | "body"
+    "repoDir" | "ghToken" | "repoSlug" | "title" | "body" | "signal"
   >,
   prUrl: string,
   commandRunner: GitCommandRunner = runCommand,
@@ -262,6 +265,7 @@ export async function refreshSeasonRefreshPrMetadata(
     {
       cwd: input.repoDir,
       env: { GH_TOKEN: input.ghToken },
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
       redactOutput: true,
       operation: "pr-edit",
     },
@@ -361,10 +365,13 @@ export async function fetchGeneratedRemoteBranch(input: {
   repoDir: string;
   branch: string;
   gitEnv: Record<string, string>;
+  signal?: AbortSignal;
 }): Promise<string | undefined> {
+  const signalOpt = input.signal === undefined ? {} : { signal: input.signal };
   const options = {
     cwd: input.repoDir,
     env: input.gitEnv,
+    ...signalOpt,
     redactOutput: true as const,
   };
   const remote = await runCommand(
@@ -377,7 +384,7 @@ export async function fetchGeneratedRemoteBranch(input: {
   if (remote.length === 0) return undefined;
   const shallow = await runCommand(
     ["git", "rev-parse", "--is-shallow-repository"],
-    { cwd: input.repoDir },
+    { cwd: input.repoDir, ...signalOpt },
   );
   if (shallow === "true") {
     await runCommand(
@@ -407,7 +414,7 @@ export async function fetchGeneratedRemoteBranch(input: {
   );
   return await runCommand(
     ["git", "rev-parse", `refs/remotes/origin/${input.branch}`],
-    { cwd: input.repoDir },
+    { cwd: input.repoDir, ...signalOpt },
   );
 }
 
@@ -417,7 +424,9 @@ export async function pushGeneratedBranch(input: {
   branch: string;
   gitEnv: Record<string, string>;
   expectedRemoteSha: string | undefined;
+  signal?: AbortSignal;
 }): Promise<void> {
+  input.signal?.throwIfAborted();
   await runCommand(
     [
       "git",
@@ -429,6 +438,7 @@ export async function pushGeneratedBranch(input: {
     {
       cwd: input.repoDir,
       env: input.gitEnv,
+      ...(input.signal === undefined ? {} : { signal: input.signal }),
       redactOutput: true,
       operation: "branch-push",
     },
@@ -441,7 +451,9 @@ export async function pushOwnedGeneratedCommit(input: {
   branch: string;
   gitEnv: Record<string, string>;
   expectedRemoteSha: string | undefined;
+  signal?: AbortSignal;
 }): Promise<string> {
+  input.signal?.throwIfAborted();
   if (input.expectedRemoteSha !== undefined) {
     await assertRemoteBranchIsOurs({
       ...input,
@@ -450,6 +462,7 @@ export async function pushOwnedGeneratedCommit(input: {
   }
   const commitHash = await runCommand(["git", "rev-parse", "HEAD"], {
     cwd: input.repoDir,
+    ...(input.signal === undefined ? {} : { signal: input.signal }),
   });
   await pushGeneratedBranch(input);
   return commitHash;
@@ -458,6 +471,8 @@ export async function pushOwnedGeneratedCommit(input: {
 export async function openSeasonRefreshPr(
   input: OpenPrInput,
 ): Promise<OpenPrResult> {
+  input.signal?.throwIfAborted();
+  const signalOpt = input.signal === undefined ? {} : { signal: input.signal };
   const askpass = await writeGitAskpass(input.tempDir);
   const gitEnv = {
     GH_TOKEN: input.ghToken,
@@ -467,9 +482,11 @@ export async function openSeasonRefreshPr(
 
   await runCommand(["git", "config", "user.email", "ci@sjer.red"], {
     cwd: input.repoDir,
+    ...signalOpt,
   });
   await runCommand(["git", "config", "user.name", "CI Bot"], {
     cwd: input.repoDir,
+    ...signalOpt,
   });
   // A retry (or a later scheduled run reusing an open proposal branch) starts
   // from a shallow main-only clone. Fetch the existing branch first so
@@ -479,12 +496,15 @@ export async function openSeasonRefreshPr(
     repoDir: input.repoDir,
     branch: input.branch,
     gitEnv,
+    ...signalOpt,
   });
   await runCommand(["git", "checkout", "-B", input.branch], {
     cwd: input.repoDir,
+    ...signalOpt,
   });
   await runCommand(["git", "add", "--", ...input.files], {
     cwd: input.repoDir,
+    ...signalOpt,
   });
   // Disarm hooks right before the commit, not just via rootInstallWithoutHooks
   // earlier — an agentic Claude/Codex step upstream of this call may have
@@ -492,25 +512,30 @@ export async function openSeasonRefreshPr(
   await disarmGitHooks(input.repoDir);
   await runCommand(["git", "commit", "-m", input.title], {
     cwd: input.repoDir,
+    ...signalOpt,
   });
   const commitHash = await pushOwnedGeneratedCommit({
     repoDir: input.repoDir,
     branch: input.branch,
     gitEnv,
     expectedRemoteSha,
+    ...signalOpt,
   });
   // Idempotency across activity retries: if a PR for this head branch already
   // exists (a prior attempt created it, then timed out or the worker died
   // before Temporal recorded completion), reuse it instead of creating a
   // duplicate. The force-with-lease push above already updated its branch.
+  input.signal?.throwIfAborted();
   const existingPrUrl = await findOpenSeasonRefreshPr(input);
   if (existingPrUrl !== undefined) {
     // The shared branch can carry new edits, warnings, patch-note evidence, or
     // auto-merge guidance on a later scheduled run. Keep the review context in
     // lockstep with the pushed diff instead of returning yesterday's metadata.
+    input.signal?.throwIfAborted();
     await refreshSeasonRefreshPrMetadata(input, existingPrUrl);
     return { commitHash, prUrl: existingPrUrl };
   }
+  input.signal?.throwIfAborted();
   const prUrl = await runCommand(
     [
       "gh",
@@ -530,6 +555,7 @@ export async function openSeasonRefreshPr(
     {
       cwd: input.repoDir,
       env: { GH_TOKEN: input.ghToken },
+      ...signalOpt,
       redactOutput: true,
       operation: "pr-create",
     },

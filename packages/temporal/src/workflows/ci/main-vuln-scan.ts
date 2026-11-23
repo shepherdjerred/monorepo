@@ -35,8 +35,8 @@ const { scanMainForVulnerabilities } = proxyActivities<MainVulnScanActivities>({
   retry: RETRY,
 });
 
-// Plain review PR creation runs on REPO_AUTOMATION, which owns OPENAI_API_KEY
-// and GitHub App installation credentials.
+// Plain review PR creation runs on REPO_AUTOMATION, which owns the OpenAI
+// project credential and GitHub App installation credentials.
 const { remediateMainVulnerabilities } =
   proxyActivities<MainVulnRemediationActivities>({
     taskQueue: TASK_QUEUES.REPO_AUTOMATION,

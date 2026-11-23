@@ -1,18 +1,8 @@
 import { Context } from "@temporalio/activity";
-import { simpleGit } from "simple-git";
 import { createAgentTaskSecretTokenState } from "#activities/agent/agent-task-env.ts";
 import {
-  activityCancellationSignalOrUndefined,
-  startToCloseTimeoutMsOrUndefined,
-} from "#activities/agent/agent-task-runtime.ts";
-import {
-  findOpenSeasonRefreshPr,
-  openSeasonRefreshPr,
   runCommand as defaultRunCommand,
   type GitCommandRunner,
-  type OpenPrInput,
-  type OpenPrResult,
-  type SeasonRefreshPrLocator,
 } from "#activities/scout/scout-season-refresh-git.ts";
 import { isReportRemediationEnabled } from "#config/report-remediation.ts";
 import {
@@ -28,27 +18,29 @@ import {
   AgentTurnExecutionError,
   nonRetryableGenerationFailure,
 } from "#lib/agent-runner/errors.ts";
-import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import { providerCredentialsFromEnv } from "@shepherdjerred/llm-runtime";
 import {
   ReportRemediationV1Schema,
   type ReportRemediationV1,
 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import {
-  buildRemediationPrBody,
-  configureRemediationPrAutoMerge,
   createScratchWorkspace,
   enforceAllowedPaths,
   formatAndFilterAllowedFiles,
+  isolatedRemediationCommandEnv,
   listDirtyRepoPaths,
   remediationAgentEnv,
-  remediationBranchName,
+  remediationDenyReadPaths,
   resolveRepoBaseSha,
   revertUnverifiedFiles,
-  unifiedDiffForFiles,
 } from "./codex-pr-remediation-git.ts";
+import {
+  createRemediationActivitySignal,
+  publishVerifiedRemediationPr,
+  type RemediationPublishDependencies,
+} from "./codex-pr-remediation-publish.ts";
 
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
-const REPO_SLUG = "shepherdjerred/monorepo";
 const MAIN_BRANCH = "main";
 const HEARTBEAT_INTERVAL_MS = 10_000;
 const DEFAULT_MODEL = "gpt-6-luna";
@@ -63,6 +55,11 @@ const DEFAULT_CLONE_ARGS = [
 
 export const REMEDIATION_DISABLED_SUMMARY =
   "Automated report remediation is disabled by feature flag.";
+
+export type RemediationStepContext = {
+  signal: AbortSignal;
+  commandRunner: GitCommandRunner;
+};
 
 export type CodexPrVerificationResult<TExtra = undefined> = {
   verifiedFiles: string[];
@@ -88,15 +85,19 @@ export type RunCodexPrRemediationInput<TExtra = undefined> = {
   formatFiles?: boolean;
   cloneArgs?: readonly string[];
   isAllowedPath: (path: string) => boolean;
-  prepareRepo?: (repoDir: string) => Promise<void>;
+  prepareRepo?: (
+    repoDir: string,
+    context: RemediationStepContext,
+  ) => Promise<void>;
   verifyAndFilter: (
     repoDir: string,
     changedFiles: string[],
+    context: RemediationStepContext,
   ) => Promise<CodexPrVerificationResult<TExtra>>;
   stage?: string;
 };
 
-export type CodexPrRemediationDependencies = {
+export type CodexPrRemediationDependencies = RemediationPublishDependencies & {
   isRemediationEnabled?: (stage?: string) => Promise<boolean>;
   createWorkspace?: (slug: string) => Promise<{
     tempDir: string;
@@ -110,18 +111,9 @@ export type CodexPrRemediationDependencies = {
     changedFiles: readonly string[];
     formatFiles: boolean;
   }) => Promise<string[]>;
-  mintGitHubToken?: () => Promise<string>;
-  findOpenPr?: (locator: SeasonRefreshPrLocator) => Promise<string | undefined>;
-  openPr?: (input: OpenPrInput) => Promise<OpenPrResult>;
-  configureAutoMerge?: (input: {
-    repoDir: string;
-    repoSlug: string;
-    prUrl: string;
-    ghToken: string;
-    autoMerge: boolean;
-  }) => Promise<boolean>;
   commandRunner?: GitCommandRunner;
   env?: Readonly<Record<string, string | undefined>>;
+  signal?: AbortSignal;
 };
 
 function safeHeartbeat(payload: Record<string, unknown>): void {
@@ -139,39 +131,22 @@ async function executeCodexTurn(input: {
   failureTypePrefix: string;
   model: string;
   maxTurns: number;
+  signal: AbortSignal;
   runAgentTurn: (turn: RunCodexAgentTurnInput) => Promise<AgentTurnOutcome>;
   sourceEnv: Readonly<Record<string, string | undefined>>;
 }): Promise<AgentTurnOutcome> {
-  const openAiApiKey = input.sourceEnv["OPENAI_API_KEY"];
-  if (openAiApiKey === undefined || openAiApiKey === "") {
+  input.signal.throwIfAborted();
+  const openAiApiKey = providerCredentialsFromEnv(input.sourceEnv).openai
+    ?.apiKey;
+  if (openAiApiKey === undefined) {
     throw new Error(
-      `OPENAI_API_KEY is required for ${input.callSite} remediation`,
+      `OpenAI provider credentials are required for ${input.callSite} remediation`,
     );
   }
   const secretState = await createAgentTaskSecretTokenState(
     undefined,
     input.sourceEnv,
   );
-  const activitySignal = activityCancellationSignalOrUndefined();
-  const timeoutController = new AbortController();
-  const timeoutMs = startToCloseTimeoutMsOrUndefined();
-  const timeoutTimer =
-    timeoutMs === undefined
-      ? undefined
-      : setTimeout(
-          () => {
-            timeoutController.abort(
-              new Error(
-                `${input.callSite} stopped before Temporal start-to-close timeout`,
-              ),
-            );
-          },
-          Math.max(1, timeoutMs - 15_000),
-        );
-  const signal = AbortSignal.any([
-    timeoutController.signal,
-    ...(activitySignal === undefined ? [] : [activitySignal]),
-  ]);
   let seenEvents = 0;
   const beforeEvent = createAgentSecretRefreshHandler(secretState.refresh);
   const onEvent = createTemporalAgentEventHandler({
@@ -181,11 +156,6 @@ async function executeCodexTurn(input: {
     },
     heartbeat: safeHeartbeat,
   });
-  const sandboxPolicy = {
-    sandboxMode: "danger-full-access" as const,
-    networkAccessEnabled: true,
-    webSearchMode: "live" as const,
-  };
 
   try {
     return await input.runAgentTurn({
@@ -194,12 +164,20 @@ async function executeCodexTurn(input: {
       prompt: input.prompt,
       model: input.model,
       maxTurns: input.maxTurns,
-      turnBudgetKind: "turns",
+      turnBudgetKind: "tool-steps",
       cwd: input.repoDir,
       auth: { kind: "openai-api-key", apiKey: openAiApiKey },
-      env: remediationAgentEnv(openAiApiKey, input.sourceEnv),
-      signal,
-      sandboxPolicy,
+      env: remediationAgentEnv(input.sourceEnv),
+      signal: input.signal,
+      sandboxPolicy: {
+        sandboxMode: "workspace-write",
+        networkAccessEnabled: true,
+        webSearchMode: "live",
+      },
+      scopedPermissions: {
+        denyReadPaths: remediationDenyReadPaths(),
+        unixSockets: [],
+      },
       redactTokens: secretState.tokens,
       beforeEvent,
       onEvent,
@@ -209,99 +187,7 @@ async function executeCodexTurn(input: {
       throw nonRetryableGenerationFailure(error, input.failureTypePrefix);
     }
     throw error;
-  } finally {
-    if (timeoutTimer !== undefined) {
-      clearTimeout(timeoutTimer);
-    }
   }
-}
-
-async function publishVerifiedRemediationPr(input: {
-  slug: string;
-  prTitle: string;
-  prWhy: string;
-  prWhat: string;
-  repoDir: string;
-  tempDir: string;
-  verifiedFiles: readonly string[];
-  resolvedCount: number;
-  unresolvedCount: number;
-  verificationSummary: string;
-  extraNotes: string | undefined;
-  agentNotes: string | undefined;
-  autoMerge: boolean;
-  deps: CodexPrRemediationDependencies;
-}): Promise<ReportRemediationV1> {
-  const commandRunner = input.deps.commandRunner ?? defaultRunCommand;
-  const unifiedDiff = await unifiedDiffForFiles(
-    input.repoDir,
-    input.verifiedFiles,
-    commandRunner,
-  );
-  const branch = remediationBranchName(input.slug, unifiedDiff);
-  const ghToken = await (input.deps.mintGitHubToken?.() ??
-    createGitHubAppInstallationToken().then((res) => res.token));
-  const findOpenPr =
-    input.deps.findOpenPr ??
-    ((locator) => findOpenSeasonRefreshPr(locator, commandRunner));
-  const openPr = input.deps.openPr ?? openSeasonRefreshPr;
-  const configureAutoMerge =
-    input.deps.configureAutoMerge ??
-    ((autoMergeInput) =>
-      configureRemediationPrAutoMerge({ ...autoMergeInput, commandRunner }));
-  const existingPrUrl = await findOpenPr({
-    repoDir: input.repoDir,
-    branch,
-    ghToken,
-    repoSlug: REPO_SLUG,
-  });
-  const outcome = existingPrUrl === undefined ? "pr-created" : "pr-reused";
-  const trimmedNotes = (input.agentNotes ?? "").trim();
-  const demoContent =
-    input.extraNotes ??
-    (trimmedNotes === ""
-      ? `\`\`\`diff\n${unifiedDiff.slice(0, 1200)}\n\`\`\``
-      : trimmedNotes.slice(0, 1500));
-  const body = buildRemediationPrBody({
-    why: input.prWhy,
-    what: input.prWhat,
-    changedFiles: input.verifiedFiles,
-    resolvedCount: input.resolvedCount,
-    unresolvedCount: input.unresolvedCount,
-    verificationSummary: input.verificationSummary,
-    demo: demoContent,
-    autoMerge: input.autoMerge,
-  });
-  const { commitHash, prUrl } = await openPr({
-    repoDir: input.repoDir,
-    tempDir: input.tempDir,
-    branch,
-    title: input.prTitle,
-    body,
-    files: input.verifiedFiles,
-    ghToken,
-    repoSlug: REPO_SLUG,
-    mainBranch: MAIN_BRANCH,
-  });
-  const autoMergeEnabled = await configureAutoMerge({
-    repoDir: input.repoDir,
-    repoSlug: REPO_SLUG,
-    prUrl,
-    ghToken,
-    autoMerge: input.autoMerge,
-  });
-
-  return ReportRemediationV1Schema.parse({
-    outcome,
-    prUrl,
-    branchName: branch,
-    commitSha: commitHash,
-    autoMergeEnabled,
-    changedFiles: [...input.verifiedFiles],
-    resolvedCount: input.resolvedCount,
-    unresolvedCount: input.unresolvedCount,
-    summary: input.verificationSummary,
-  });
 }
 
 async function verifyAndIsolateRepoChanges<TExtra>(input: {
@@ -309,11 +195,14 @@ async function verifyAndIsolateRepoChanges<TExtra>(input: {
   baseSha: string | undefined;
   spec: RunCodexPrRemediationInput<TExtra>;
   deps: CodexPrRemediationDependencies;
+  sourceEnv: Readonly<Record<string, string | undefined>>;
+  signal: AbortSignal;
   commandRunner: GitCommandRunner;
 }): Promise<{
   verification: CodexPrVerificationResult<TExtra>;
   finalVerifiedFiles: string[];
 }> {
+  input.signal.throwIfAborted();
   const { allowedFiles } = await enforceAllowedPaths({
     repoDir: input.repoDir,
     ...(input.baseSha === undefined ? {} : { baseSha: input.baseSha }),
@@ -326,16 +215,20 @@ async function verifyAndIsolateRepoChanges<TExtra>(input: {
       formatAndFilterAllowedFiles({
         ...fmtInput,
         commandRunner: input.commandRunner,
+        sourceEnv: input.sourceEnv,
       }));
   const formattedFiles = await formatStep({
     repoDir: input.repoDir,
     changedFiles: allowedFiles,
     formatFiles: input.spec.formatFiles ?? true,
   });
+  input.signal.throwIfAborted();
   const verification = await input.spec.verifyAndFilter(
     input.repoDir,
     formattedFiles,
+    { signal: input.signal, commandRunner: input.commandRunner },
   );
+  input.signal.throwIfAborted();
   const verifiedAllowed = verification.verifiedFiles.filter((path) =>
     input.spec.isAllowedPath(path),
   );
@@ -373,6 +266,10 @@ export async function runCodexPrRemediationWithExtra<TExtra = undefined>(
     };
   }
 
+  const { signal, dispose } = createRemediationActivitySignal(
+    input.callSite,
+    deps.signal,
+  );
   const startMs = Date.now();
   const heartbeat = setInterval(() => {
     safeHeartbeat({
@@ -383,13 +280,30 @@ export async function runCodexPrRemediationWithExtra<TExtra = undefined>(
 
   const createWorkspace = deps.createWorkspace ?? createScratchWorkspace;
   const workspace = await createWorkspace(input.slug);
-  const commandRunner = deps.commandRunner ?? defaultRunCommand;
+  const sourceEnv = deps.env ?? Bun.env;
+  const baseCommandRunner = deps.commandRunner ?? defaultRunCommand;
+  const commandRunner: GitCommandRunner = (command, options) => {
+    signal.throwIfAborted();
+    return baseCommandRunner(command, { ...options, signal });
+  };
 
   try {
+    signal.throwIfAborted();
     const cloneRepo =
       deps.cloneRepo ??
       (async (repoDir, cloneArgs) => {
-        await simpleGit().clone(REPO_URL, repoDir, [...cloneArgs]);
+        await commandRunner(
+          ["git", "clone", ...cloneArgs, "--", REPO_URL, repoDir],
+          {
+            cwd: workspace.tempDir,
+            env: isolatedRemediationCommandEnv(
+              { GIT_TERMINAL_PROMPT: "0" },
+              sourceEnv,
+            ),
+            redactOutput: true,
+            operation: "repo-clone",
+          },
+        );
       });
     await cloneRepo(
       workspace.repoDir,
@@ -397,7 +311,8 @@ export async function runCodexPrRemediationWithExtra<TExtra = undefined>(
     );
 
     if (input.prepareRepo !== undefined) {
-      await input.prepareRepo(workspace.repoDir);
+      signal.throwIfAborted();
+      await input.prepareRepo(workspace.repoDir, { signal, commandRunner });
     }
     const baseSha = await resolveRepoBaseSha(workspace.repoDir, commandRunner);
     const prompt =
@@ -411,8 +326,9 @@ export async function runCodexPrRemediationWithExtra<TExtra = undefined>(
       failureTypePrefix: input.failureTypePrefix,
       model: input.model ?? DEFAULT_MODEL,
       maxTurns: input.maxTurns ?? DEFAULT_MAX_TURNS,
+      signal,
       runAgentTurn: deps.runAgentTurn ?? runCodexAgentTurn,
-      sourceEnv: deps.env ?? Bun.env,
+      sourceEnv,
     });
 
     const { verification, finalVerifiedFiles } =
@@ -421,6 +337,8 @@ export async function runCodexPrRemediationWithExtra<TExtra = undefined>(
         baseSha,
         spec: input,
         deps,
+        sourceEnv,
+        signal,
         commandRunner,
       });
 
@@ -451,10 +369,13 @@ export async function runCodexPrRemediationWithExtra<TExtra = undefined>(
       extraNotes: verification.extraNotes,
       agentNotes: agentOutcome.finalText,
       autoMerge: verification.autoMerge ?? input.autoMerge,
+      signal,
+      commandRunner,
       deps,
     });
     return { remediation, extra: verification.extra };
   } finally {
+    dispose();
     clearInterval(heartbeat);
     await workspace.cleanup().catch((cleanupError: unknown) => {
       const error =

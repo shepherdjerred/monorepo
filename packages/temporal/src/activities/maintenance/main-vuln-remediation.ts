@@ -371,17 +371,23 @@ export async function remediateMainVulnerabilities(
       prompt: buildMainVulnRemediationPrompt(fixableGroups, unfixableCount),
       autoMerge: false,
       isAllowedPath: isAllowedMainVulnPath,
-      prepareRepo: async (repoDir) => {
-        await rootInstallWithoutHooks(repoDir);
+      prepareRepo: async (repoDir, context) => {
+        await rootInstallWithoutHooks(repoDir, (command, options) =>
+          context.commandRunner(command, {
+            cwd: options.cwd,
+            env: isolatedRemediationCommandEnv(options.env, deps.env),
+            ...(options.trimStdout === undefined
+              ? {}
+              : { trimStdout: options.trimStdout }),
+          }),
+        );
       },
-      verifyAndFilter: (repoDir, changedFiles) =>
+      verifyAndFilter: (repoDir, changedFiles, context) =>
         verifyMainVulnRemediation({
           repoDir,
           changedFiles,
           allGroups,
-          ...(deps.commandRunner === undefined
-            ? {}
-            : { commandRunner: deps.commandRunner }),
+          commandRunner: context.commandRunner,
         }),
     },
     deps,
