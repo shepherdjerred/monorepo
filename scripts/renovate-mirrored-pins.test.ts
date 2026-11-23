@@ -144,17 +144,17 @@ function modrinthGameVersion(manager: TemplatedManager): string | undefined {
     .parse(JSON.parse(query ?? "null"))[0];
 }
 
+// Only the fields these tests read; packages/the-storm/tests/pins.test.ts
+// validates the full production manifest.
+const StormPluginPinSchema = z.object({
+  name: z.string(),
+  version: z.string(),
+  url: z.string(),
+  sha256: z.string(),
+});
 const StormManifestSchema = z.object({
   paper: z.object({ version: z.string() }),
-  plugins: z.array(
-    z.object({
-      name: z.string(),
-      version: z.string(),
-      url: z.string(),
-      sha256: z.string(),
-      file: z.string(),
-    }),
-  ),
+  plugins: z.array(StormPluginPinSchema),
 });
 
 async function loadCatalogValue(name: string): Promise<string | undefined> {
