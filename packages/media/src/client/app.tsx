@@ -4,6 +4,10 @@ import { readSession, sessionBoundary } from "./api.ts";
 import { Login } from "./login.tsx";
 import { ErrorNotice, Loading } from "./components.tsx";
 import { Shell } from "./shell/shell.tsx";
+import { classNames } from "./ui/class-names.ts";
+import styles from "./app.module.css";
+
+const cx = classNames(styles);
 
 /**
  * The session gate, and the element of the root route: the sign-in page
@@ -24,7 +28,7 @@ export function App() {
   if (current.user === null) return <Login key={current.generation} />;
   if (session.error !== null)
     return (
-      <main className="session-state">
+      <main className={cx("sessionState")}>
         <ErrorNotice error={session.error} />
         <button
           className="button"
@@ -38,7 +42,7 @@ export function App() {
     );
   if (current.user === undefined)
     return (
-      <main className="session-state">
+      <main className={cx("sessionState")}>
         <Loading />
       </main>
     );

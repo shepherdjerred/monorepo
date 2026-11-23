@@ -1,9 +1,13 @@
 import type { ReactNode } from "react";
+import { classNames } from "#client/ui/class-names.ts";
+import styles from "./components.module.css";
 import {
   STATUS_TONES,
   wireStatusTone,
   type KnownStatus,
 } from "./status/tone.ts";
+
+const cx = classNames(styles);
 
 /**
  * A page's header: its heading and, optionally, one line saying what the
@@ -18,7 +22,7 @@ export function PageTitle({
   children?: ReactNode;
 }) {
   return (
-    <header className="page-title">
+    <header className={cx("pageTitle")}>
       {/* One string child: React leaves a title with several text nodes empty. */}
       <title>{`${title} · Media`}</title>
       <h1 tabIndex={-1}>{title}</h1>
@@ -46,8 +50,8 @@ export function Notice({
 
 export function Loading() {
   return (
-    <div className="loading" role="status">
-      <span className="loading-dot" />
+    <div className={cx("loading")} role="status">
+      <span className={cx("loadingDot")} />
       Loading your library…
     </div>
   );
@@ -60,7 +64,7 @@ export function ErrorNotice({ error }: { error: Error }) {
 /** A badge for a status the contract types as an enum. */
 export function Status({ value }: { value: KnownStatus }) {
   return (
-    <span className="status" data-tone={STATUS_TONES[value]}>
+    <span className={cx("status")} data-tone={STATUS_TONES[value]}>
       {humanize(value)}
     </span>
   );
@@ -69,7 +73,7 @@ export function Status({ value }: { value: KnownStatus }) {
 /** A badge for a status the contract types as a plain string. */
 export function WireStatus({ value }: { value: string }) {
   return (
-    <span className="status" data-tone={wireStatusTone(value)}>
+    <span className={cx("status")} data-tone={wireStatusTone(value)}>
       {humanize(value)}
     </span>
   );
@@ -98,8 +102,8 @@ export function EmptyState({
   children: ReactNode;
 }) {
   return (
-    <div className="empty-state">
-      <span className="empty-mark" aria-hidden="true">
+    <div className={cx("emptyState")}>
+      <span className={cx("emptyMark")} aria-hidden="true">
         ◈
       </span>
       <h2>{title}</h2>

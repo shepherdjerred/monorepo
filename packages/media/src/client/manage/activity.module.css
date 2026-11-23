@@ -1,0 +1,49 @@
+/* The activity list: one dot and line per operation. */
+@layer components {
+  .itemMain {
+    flex: 1;
+    min-width: 0;
+  }
+  .itemMain h2 {
+    font-size: var(--text-md);
+    margin: 0;
+  }
+  .itemMain p {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin: 6px 0 0;
+  }
+  .timeline {
+    margin-top: var(--space-3);
+  }
+  .timelineItem {
+    display: flex;
+    gap: 18px;
+    align-items: start;
+    padding: 0 0 28px 0;
+    position: relative;
+    font-size: var(--text-sm);
+  }
+  .timelineItem:not(:last-child)::before {
+    content: "";
+    height: 100%;
+    width: 1px;
+    background: var(--border);
+    position: absolute;
+    left: 4px;
+    top: 8px;
+  }
+  .timelineDot {
+    width: 9px;
+    height: 9px;
+    margin-top: 5px;
+    border: 2px solid var(--text-muted);
+    border-radius: 50%;
+    background: var(--surface);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+  .timelineItem p {
+    margin-bottom: 0;
+  }
+}

@@ -1,0 +1,19 @@
+/* The identity review's form, a card of its own. */
+@layer components {
+  .panel {
+    padding: 26px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    margin-bottom: var(--space-5);
+    min-width: 0;
+  }
+  .panel > h2 {
+    margin-bottom: var(--space-5);
+  }
+  @media (max-width: 760px) {
+    .panel {
+      padding: 22px;
+    }
+  }
+}

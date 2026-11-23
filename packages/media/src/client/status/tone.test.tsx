@@ -4,17 +4,17 @@ import { PageTitle, Status, WireStatus } from "#client/components.tsx";
 import { wireStatusTone } from "./tone.ts";
 
 test("a contract status renders with its tone", () => {
-  expect(renderToStaticMarkup(<Status value="available" />)).toBe(
-    '<span class="status" data-tone="ok">Available</span>',
+  expect(renderToStaticMarkup(<Status value="available" />)).toMatch(
+    /^<span class="[^"]+" data-tone="ok">Available<\/span>$/u,
   );
-  expect(renderToStaticMarkup(<Status value="requests_paused" />)).toBe(
-    '<span class="status" data-tone="warn">Requests paused</span>',
+  expect(renderToStaticMarkup(<Status value="requests_paused" />)).toMatch(
+    /^<span class="[^"]+" data-tone="warn">Requests paused<\/span>$/u,
   );
 });
 
 test("a wire status takes the tone of a word the server writes", () => {
-  expect(renderToStaticMarkup(<WireStatus value="grace_period" />)).toBe(
-    '<span class="status" data-tone="warn">Grace period</span>',
+  expect(renderToStaticMarkup(<WireStatus value="grace_period" />)).toMatch(
+    /^<span class="[^"]+" data-tone="warn">Grace period<\/span>$/u,
   );
 });
 

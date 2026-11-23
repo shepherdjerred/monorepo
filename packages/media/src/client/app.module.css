@@ -1,0 +1,13 @@
+/* The page shown while the session is read, or when it cannot be. */
+@layer components {
+  .sessionState {
+    padding: 80px;
+    max-width: 700px;
+    margin: auto;
+  }
+  @media (max-width: 760px) {
+    .sessionState {
+      padding: 50px 25px;
+    }
+  }
+}
