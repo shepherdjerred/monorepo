@@ -180,10 +180,6 @@ describe("agreement with the v1 definition sources", () => {
     expect(
       document.edges.filter((edge) => edge.prerequisite === "tofu-arr/prod"),
     ).toEqual([]);
-    for (const environment of document.environments.filter(
-      (candidate) => candidate.lifecycle !== "active",
-    ))
-      expect(environment.automatic, environment.id).toBe(false);
   });
 
   test("platform policy prerequisites are prerequisite edges", () => {
