@@ -50,3 +50,30 @@ for platform in x64 ARM64; do
   fi
   echo "ok: $msix ($description, $xbf_count XBF)"
 done
+
+# Publishes the sample as a self-contained, unpackaged x64 app: Windows App
+# SDK merges the app manifest with mt.exe, and the copy step expands the
+# Microsoft.UI.Xaml PRI, whose names differ in case from its files.
+standalone="$out/standalone"
+dotnet publish "$samples/winui/HelloWinUI.csproj" --nologo --configuration Release \
+  --runtime win-x64 -p:Platform=x64 -p:SelfContained=true \
+  -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true \
+  -p:EnableMsixTooling=false -p:DisableMsixProjectCapabilityAddedByProject=true \
+  -o "$standalone"
+
+description=$(file -b "$standalone/HelloWinUI.exe")
+if [[ $description != "PE32+ executable"*"x86-64"* ]]; then
+  echo "selftest: standalone HelloWinUI.exe is '$description', expected x86-64" >&2
+  exit 1
+fi
+manifest=$(find "$samples/winui/obj" -path '*/win-x64/Manifests/app.manifest' | head -n 1)
+if [[ -z $manifest ]] || ! grep -q 'activatableClass' "$manifest" || ! grep -q 'PerMonitorV2' "$manifest"; then
+  echo "selftest: mt.exe did not merge the Windows App SDK and app manifests" >&2
+  exit 1
+fi
+# Windows file names are case-insensitive; the PRI decides the copy's case.
+if [[ -z $(find "$standalone" -ipath "$standalone/Microsoft.UI.Xaml/Assets/NoiseAsset_256x256_PNG.png") ]]; then
+  echo "selftest: the Microsoft.UI.Xaml PRI payload was not copied to $standalone" >&2
+  exit 1
+fi
+echo "ok: $standalone/HelloWinUI.exe ($description, merged manifest, PRI payload)"
