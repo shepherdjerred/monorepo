@@ -1,7 +1,12 @@
 import { expect, test } from "bun:test";
+import { resolve, sep } from "node:path";
+import { pathToFileURL } from "node:url";
 import { createLatestDirectMissileFamilyAdapter } from "./latest-direct-missile-family-adapter.mjs";
 import { createMissilePresentationFamilies } from "./latest-missile-presentation-context.mjs";
-import { createProjectilePresentation } from "./latest-projectile-presentation.mjs";
+import {
+  createProjectilePresentation,
+  createOwnedProjectilePresentation,
+} from "./latest-projectile-presentation.mjs";
 import { createLatestWorldPresentation } from "./latest-world-presentation.mjs";
 import { createLatestTerrain } from "./latest-terrain.mjs";
 import {
@@ -10,7 +15,13 @@ import {
   isDirectImmutableData,
 } from "./latest-direct-immutable-data.mjs";
 
-const cache = new URL("../../../../.cache/replay-spike/", import.meta.url);
+const fixtureInput = process.env.SCOUT_REPLAY_RESEARCH_CACHE;
+if (fixtureInput !== undefined && !fixtureInput.trim())
+  throw Error("An explicit replay research fixture directory is required");
+const cache =
+  fixtureInput === undefined
+    ? new URL("../../../../.cache/replay-spike/", import.meta.url)
+    : pathToFileURL(resolve(fixtureInput) + sep);
 const load = (path) => Bun.file(new URL(`public/${path}`, cache)).bytes();
 const read = async (path) =>
   JSON.parse(new TextDecoder().decode(await load(path)));
@@ -41,6 +52,45 @@ const adapter = createLatestDirectMissileFamilyAdapter({
   report,
   manifest,
   presentation,
+});
+
+test("family adapters share only an owned exact-report projectile index", () => {
+  const owner = createOwnedProjectilePresentation(report, presentation),
+    shared = createLatestDirectMissileFamilyAdapter({
+      report,
+      manifest,
+      presentationOwner: owner,
+    });
+  expect(shared.events).toEqual(adapter.events);
+  expect(shared.omitted).toEqual(adapter.omitted);
+  for (const event of adapter.events.filter((row) => row.kind === "create")) {
+    const time = event.time + 0.1;
+    expect(shared.placement(event, time)).toEqual(
+      adapter.placement(event, time),
+    );
+  }
+  expect(() =>
+    createLatestDirectMissileFamilyAdapter({
+      report,
+      manifest,
+      presentation,
+      presentationOwner: owner,
+    }),
+  ).toThrow("Exact-build direct missile family");
+  expect(() =>
+    createLatestDirectMissileFamilyAdapter({
+      report,
+      manifest,
+      presentationOwner: { ...owner },
+    }),
+  ).toThrow("Owned projectile index");
+  expect(() =>
+    createLatestDirectMissileFamilyAdapter({
+      report: structuredClone(report),
+      manifest,
+      presentationOwner: owner,
+    }),
+  ).toThrow("Owned projectile index");
 });
 
 test("strict fixed-speed and fixed-time families preserve distinct source ownership", () => {

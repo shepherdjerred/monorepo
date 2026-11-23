@@ -126,7 +126,7 @@ globalThis.onmessage = ({ data }) => {
     failed = Error("Invalid particle worker protocol envelope");
     postMessage({
       version: 1,
-      fatal: { name: failed.name, message: failed.message },
+      fatal: workerErrorEnvelope(failed),
     });
     return;
   }
@@ -140,8 +140,9 @@ globalThis.onmessage = ({ data }) => {
         version: 1,
         id: data.id,
         ok: false,
-        error: { name: error.name, message: error.message },
+        error: workerErrorEnvelope(error),
       });
     }
   });
 };
+import { workerErrorEnvelope } from "./latest-worker-errors.mjs";

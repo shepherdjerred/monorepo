@@ -4,8 +4,15 @@ import {
   prepareLatestLifecycle,
   sampleLatestLifecycle,
 } from "./latest-lifecycle.mjs";
-import { CORPSE_POLICY_SHA } from "./latest-corpse-contract.mjs";
+import {
+  CORPSE_POLICY_SHA,
+  MAP11_CORPSE_POLICY_SHA,
+  MAP11_NEUTRAL_CORPSE_POLICY_SHA,
+  MAP11_ORDINAL_CORPSE_POLICY_SHA,
+  MAP11_CORPUS_CORPSE_POLICY_SHA,
+} from "./latest-corpse-contract.mjs";
 import { assertLatestSelectedCorpse } from "./latest-selected-corpse.mjs";
+import { bindLatestNeutralCorpseEntity } from "./latest-neutral-state-binding.mjs";
 export { CORPSE_POLICY_SHA } from "./latest-corpse-contract.mjs";
 const policies = new WeakMap();
 const freeze = (value) => {
@@ -38,7 +45,15 @@ export async function createLatestCorpsePolicy(
       sceneBytes,
       worldBytes,
     });
-  else if (packageSha256 !== CORPSE_POLICY_SHA)
+  else if (
+    ![
+      CORPSE_POLICY_SHA,
+      MAP11_CORPSE_POLICY_SHA,
+      MAP11_NEUTRAL_CORPSE_POLICY_SHA,
+      MAP11_ORDINAL_CORPSE_POLICY_SHA,
+      MAP11_CORPUS_CORPSE_POLICY_SHA,
+    ].includes(packageSha256)
+  )
     throw Error("Pinned corpse policy required");
   const meta = JSON.parse(
     new TextDecoder("utf-8", { fatal: true }).decode(bytes),
@@ -152,15 +167,27 @@ export function createLatestMinionCorpsePlayback(report, policy, bindings) {
     modes.set(event.sequence, event);
   }
   for (const binding of bindings.minions) {
-    const id = binding.event.entityId,
-      entity = report.worldEntities.find((e) => e.entityId === id),
-      duration = policy.bind(binding.unit.asset, [
+    const id = binding.event.entityId;
+    let entity;
+    if (binding.entityClass === "neutral-minion") {
+      entity = bindLatestNeutralCorpseEntity(
+        report,
+        binding,
+        policy.metadata.neutralCharacterRecordsProofSha256,
+      );
+    } else {
+      entity = report.worldEntities.find((e) => e.entityId === id);
+    }
+    const duration = policy.bind(binding.unit.asset, [
         ...new Set(binding.unit.records.map((r) => r.characterRecord)),
       ]),
       track = lifecycle.tracks.get(id);
     if (
       !entity ||
-      entity.entityClass !== "lane-minion" ||
+      entity.entityClass !== (binding.entityClass ?? "lane-minion") ||
+      (entity.entityClass !== "lane-minion" &&
+        (entity.entityClass !== "neutral-minion" ||
+          !policy.metadata.neutralCharacterRecordsProofSha256)) ||
       subjects.has(id) ||
       entity.creationTime !== binding.event.time
     )

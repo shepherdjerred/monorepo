@@ -4,6 +4,7 @@
  * lockstep deploy scripts share the exact same sync semantics).
  */
 
+import nodePath from "node:path";
 import { run } from "./run.ts";
 import {
   directS3ObjectMatchesSource,
@@ -43,11 +44,11 @@ export async function staticSiteFilePaths(
   directory: string,
 ): Promise<string[]> {
   const paths: string[] = [];
-  for await (const path of new Bun.Glob("**/*").scan({
+  for await (const file of new Bun.Glob("**/*").scan({
     cwd: directory,
     onlyFiles: true,
   })) {
-    paths.push(path);
+    paths.push(file.replaceAll(nodePath.sep, "/"));
   }
   return paths.sort();
 }

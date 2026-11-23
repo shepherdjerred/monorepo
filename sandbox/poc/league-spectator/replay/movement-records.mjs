@@ -1,5 +1,12 @@
 // Plain movement-vector grammar. Coordinates remain relative until the map's
 // recorded/asset-derived origin is established. This does not decrypt packets.
+export class MovementRecordError extends Error {
+  constructor(message, details) {
+    super(message);
+    this.name = "MovementRecordError";
+    this.details = Object.freeze({ ...details });
+  }
+}
 export function readMovementRecords(bytes, { deltaMode, motionBlock = false }) {
   if (!["signed8", "unsigned8"].includes(deltaMode))
     throw Error("Explicit movement delta interpretation required");
@@ -15,8 +22,18 @@ export function readMovementRecords(bytes, { deltaMode, motionBlock = false }) {
       entityId = view.getUint32(cursor + 2, true),
       speed = view.getFloat32(cursor + 6, true);
     cursor += 10;
-    if (!Number.isFinite(speed) || speed < 0 || speed > 5000)
-      throw Error("Invalid movement speed");
+    // Original559680/559d30 read the float32 unchanged; their conditional
+    // cache writes559b51/55a22a test positivity and unit flags, with no5000 cap.
+    // Nonfinite/negative controller semantics remain unsupported here.
+    if (!Number.isFinite(speed) || speed < 0)
+      throw new MovementRecordError("Invalid movement speed", {
+        recordOffset: cursor - 10,
+        recordIndex: records.length,
+        recordType,
+        entityId,
+        speed: String(speed),
+        speedBits: view.getUint32(cursor - 4, true),
+      });
     let extraByte = null;
     if (recordType & 1) {
       need(1);

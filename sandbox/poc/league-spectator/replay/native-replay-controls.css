@@ -1,0 +1,46 @@
+.native-replay-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-inline-size: 0;
+}
+.native-replay-controls-stage {
+  position: relative;
+  flex: none;
+  inline-size: var(--native-controls-width);
+  block-size: var(--native-controls-height);
+}
+.native-replay-controls-stage > canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.native-replay-controls-stage > button {
+  position: absolute;
+  padding: 0;
+  min-inline-size: 24px;
+  min-block-size: 24px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.native-replay-controls-stage > button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+.native-replay-controls-stage > button[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+.native-replay-controls > output {
+  font-variant-numeric: tabular-nums;
+}
+@media (pointer: coarse) {
+  .native-replay-controls-stage {
+    margin-inline-end: var(--native-controls-width);
+    margin-block-end: var(--native-controls-height);
+    transform: scale(2);
+    transform-origin: top left;
+  }
+}

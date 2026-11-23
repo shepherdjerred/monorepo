@@ -108,6 +108,174 @@ test("trusted bootstrap selects owned content and caller mutations cannot escape
     "Owned selected",
   );
 });
+
+async function multiSourceFixture() {
+  const value = await fixture();
+  const catalogPath = "latest-static-catalog/catalog.json";
+  const catalog = JSON.parse(
+    new TextDecoder().decode(value.files[catalogPath]),
+  );
+  const profilePath = "decoder-16.21-macos/profile.json";
+  catalog.schema = 2;
+  catalog.sourceAuthorities = {
+    build: {
+      kind: "approved-exact-build-public",
+      identity: {
+        file: profilePath,
+        sha256: await sha256(value.files[profilePath]),
+        bytes: value.files[profilePath].length,
+      },
+    },
+    scene: {
+      kind: "prepared-scene-public",
+      identity: {
+        file: catalog.roles.scene,
+        ...catalog.files[catalog.roles.scene],
+      },
+    },
+  };
+  for (const [file, entry] of Object.entries(catalog.files))
+    entry.source = { authority: "scene", file };
+  const animationFiles = {
+    sceneAnimationAuthority: "manifest.json",
+    sceneAnimationClock: "clock.json",
+    sceneAnimationRig: "rig.json",
+    sceneAnimationEventInventory: "events.json",
+    sceneAnimationLeafPoses: "leaves.json",
+  };
+  for (const [role, file] of Object.entries(animationFiles)) {
+    const target = "scene-animation/" + file;
+    const bytes = encode({ role });
+    value.files[target] = bytes;
+    catalog.roles[role] = target;
+    catalog.files[target] = {
+      bytes: bytes.length,
+      sha256: await sha256(bytes),
+      source: { authority: "animation", file },
+    };
+  }
+  const manifest = catalog.files[catalog.roles.sceneAnimationAuthority];
+  catalog.sourceAuthorities.animation = {
+    kind: "prepared-scene-animation",
+    identity: {
+      file: "manifest.json",
+      sha256: manifest.sha256,
+      bytes: manifest.bytes,
+    },
+  };
+  catalog.files["decoder-16.21-macos/image.bin"] = {
+    bytes: 1,
+    sha256: STATIC_CATALOG_DECODER_IMAGE_SHA256,
+    source: { authority: "build", file: "decoder-16.21-macos/image.bin" },
+  };
+  async function commit() {
+    value.files[catalogPath] = encode(catalog);
+    const bootstrap = JSON.parse(
+      new TextDecoder().decode(
+        value.files["latest-static-catalog/bootstrap.json"],
+      ),
+    );
+    bootstrap.catalog.sha256 = await sha256(value.files[catalogPath]);
+    value.files["latest-static-catalog/bootstrap.json"] = encode(bootstrap);
+  }
+  await commit();
+  return { ...value, catalog, commit };
+}
+
+test("schema2 preserves explicit source identities through worker capture and reads only declared animation sources", async () => {
+  const value = await multiSourceFixture();
+  const selected = await loadLatestStaticCatalogSelection(value);
+  expect(
+    selected.sceneAnimationResourcePath({
+      authority: "native",
+      file: "profile.json",
+    }),
+  ).toBe("decoder-16.21-macos/profile.json");
+  expect(
+    selected.sceneAnimationResourcePath({
+      authority: "derived",
+      file: "clock.json",
+    }),
+  ).toBe("scene-animation/clock.json");
+  expect(
+    selected.sceneAnimationResourcePath({
+      authority: "scene",
+      file: "leaf.json",
+    }),
+  ).toBe("latest-scene/leaf.json");
+  expect(() =>
+    selected.sceneAnimationResourcePath({
+      authority: "scene",
+      file: "clock.json",
+    }),
+  ).toThrow("outside explicit source closure");
+  expect(() =>
+    selected.sceneAnimationResourcePath({
+      authority: "derived",
+      file: "../clock.json",
+    }),
+  ).toThrow("authority/path");
+  expect(
+    await selected.readSceneAnimationResource({
+      authority: "native",
+      file: "profile.json",
+    }),
+  ).toEqual(value.files["decoder-16.21-macos/profile.json"]);
+  expect(
+    await selected.readSceneAnimationResource({
+      authority: "derived",
+      file: "clock.json",
+    }),
+  ).toEqual(value.files["scene-animation/clock.json"]);
+  await expect(
+    selected.readSceneAnimationResource({
+      authority: "scene",
+      file: "clock.json",
+    }),
+  ).rejects.toThrow("outside explicit source closure");
+  await expect(
+    selected.readSceneAnimationResource({
+      authority: "derived",
+      file: "../clock.json",
+    }),
+  ).rejects.toThrow("authority/path");
+  const initialization = selected.serializeForWorker();
+  const restored = await restoreLatestStaticCatalogSelection({
+    initialization,
+    load: value.load,
+  });
+  expect(restored.describe().sourceAuthorities).toEqual(
+    selected.describe().sourceAuthorities,
+  );
+  expect(
+    restored.sceneAnimationResourcePath({
+      authority: "derived",
+      file: "clock.json",
+    }),
+  ).toBe("scene-animation/clock.json");
+  expect(
+    await restored.readSceneAnimationResource({
+      authority: "derived",
+      file: "clock.json",
+    }),
+  ).toEqual(value.files["scene-animation/clock.json"]);
+});
+
+test("schema2 rejects rehashed catalogs that reassign scene or profile authority", async () => {
+  for (const mutate of [
+    (catalog) => {
+      catalog.files[catalog.roles.scene].source.authority = "build";
+    },
+    (catalog) => {
+      catalog.sourceAuthorities.build.identity.sha256 = "a".repeat(64);
+    },
+  ]) {
+    const value = await multiSourceFixture();
+    mutate(value.catalog);
+    await value.commit();
+    await expect(loadLatestStaticCatalogSelection(value)).rejects.toThrow();
+  }
+});
 test("caller expected hashes cannot replace the bootstrap-selected digest", async () => {
   const f = await fixture();
   f.files["latest-static-catalog/catalog.json"][0] ^= 1;

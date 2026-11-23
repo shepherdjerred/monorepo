@@ -1,6 +1,6 @@
 // Sparse access to one immutable Riot RMAN/WAD. Format reference: CommunityDragon/CDTB.
-import { mkdir } from "node:fs/promises";
 import { resolve, sep } from "node:path";
+import { createRmanChunkReader } from "./rman-chunks.mjs";
 
 export async function openLocalWad(installation, name, decompress) {
   const root = resolve(installation, "Game");
@@ -33,39 +33,17 @@ export async function openWad(manifest, name, cacheRoot, decompress) {
     (f) => f.name.toLowerCase() === name.toLowerCase(),
   );
   if (!file) throw Error(`Missing manifest file ${name}`);
-  await mkdir(`${cacheRoot}/chunks`, { recursive: true });
+  const chunkData = await createRmanChunkReader(
+    manifest,
+    cacheRoot,
+    decompress,
+  );
   let position = 0;
   const chunks = file.chunks.map((c) => {
     const result = { ...c, start: position };
     position += c.uncompressedSize;
     return result;
   });
-  async function chunkData(c) {
-    const cache = Bun.file(`${cacheRoot}/chunks/${c.id}.bin`);
-    let data;
-    if (await cache.exists()) data = new Uint8Array(await cache.arrayBuffer());
-    else {
-      const id = c.bundleId.toString(16).toUpperCase().padStart(16, "0");
-      const response = await fetch(
-        `https://lol.dyn.riotcdn.net/channels/public/bundles/${id}.bundle`,
-        {
-          headers: {
-            Range: `bytes=${c.offset}-${c.offset + c.compressedSize - 1}`,
-          },
-        },
-      );
-      if (response.status !== 206)
-        throw Error(`Bundle ${id}: expected HTTP 206, got ${response.status}`);
-      const compressed = new Uint8Array(await response.arrayBuffer());
-      if (compressed.length !== c.compressedSize)
-        throw Error("Invalid bundle range length");
-      data = decompress(compressed);
-    }
-    if (data.length !== c.uncompressedSize)
-      throw Error(`Invalid RMAN chunk length ${c.id}`);
-    if (!(await cache.exists())) await Bun.write(cache, data);
-    return data;
-  }
   async function range(start, length) {
     if (start < 0 || length < 0 || start + length > position)
       throw Error("WAD range outside file");
@@ -87,13 +65,16 @@ export async function openWad(manifest, name, cacheRoot, decompress) {
     );
     return output;
   }
-  return readWad(name, range, decompress);
+  const read = await readWad(name, range, decompress);
+  read.rmanReceipts = () => chunkData.receipts();
+  return read;
 }
 
 async function readWad(name, range, decompress) {
   const header = await range(0, 272);
   if (header[0] !== 82 || header[1] !== 87 || header[2] !== 3)
     throw Error("Unsupported WAD header");
+  if (header[3] > 4) throw Error("Unadmitted WAD minor version");
   const count = new DataView(header.buffer).getUint32(268, true);
   if (count > 1000000) throw Error("Invalid WAD index size");
   const index = await range(272, count * 32),
@@ -110,6 +91,7 @@ async function readWad(name, range, decompress) {
       first:
         d.getUint16(o + 22, true) +
         (header[3] >= 4 ? d.getUint8(o + 21) * 65536 : 0),
+      checksum: d.getBigUint64(o + 24, true),
     });
   }
   const lookup = (path) => {
@@ -117,8 +99,17 @@ async function readWad(name, range, decompress) {
     if (!e) throw Error(`Missing WAD asset ${path}`);
     return e;
   };
-  async function simple(e) {
+  function verifyStored(e, data, label) {
+    // WAD v3.1+ hashes the stored bytes, including compressed data. The exact
+    // 16.21/v3.4 corpus independently agrees for plain and subchunked entries.
+    const checksum =
+      header[3] >= 1 ? Bun.hash.xxHash3(data) : Bun.hash.xxHash64(data);
+    if (data.length !== e.compressed || checksum !== e.checksum)
+      throw Error(`WAD entry integrity mismatch ${label}`);
+  }
+  async function simple(e, label) {
     const data = await range(e.offset, e.compressed);
+    verifyStored(e, data, label);
     if (![0, 3].includes(e.type)) throw Error("Invalid simple WAD compression");
     const result = e.type === 0 ? data : decompress(data);
     if (result.length !== e.size) throw Error("WAD size mismatch");
@@ -127,17 +118,20 @@ async function readWad(name, range, decompress) {
   // Archives containing only raw/zstd entries have no subchunk table.
   // A table remains mandatory whenever a type-4 entry references it.
   const tocBytes = [...entries.values()].some((entry) => entry.type === 4)
-    ? await simple(lookup(name.replace(/\.client$/i, ".subchunktoc")))
+    ? await simple(
+        lookup(name.replace(/\.client$/i, ".subchunktoc")),
+        "subchunk table",
+      )
     : null;
   const toc = tocBytes
     ? new DataView(tocBytes.buffer, tocBytes.byteOffset, tocBytes.byteLength)
     : null;
-  const read = async (path) => {
-    const e = lookup(path);
-    if (e.type !== 4) return simple(e);
+  const readEntry = async (e, label) => {
+    if (e.type !== 4) return simple(e, label);
     if (!toc) throw Error("Missing required WAD subchunk table");
     const data = await range(e.offset, e.compressed),
       output = new Uint8Array(e.size);
+    verifyStored(e, data, label);
     let a = 0,
       b = 0;
     for (let i = 0; i < e.subchunks; i++) {
@@ -147,7 +141,7 @@ async function readWad(name, range, decompress) {
         hash = toc.getBigUint64(o + 8, true);
       const part = data.subarray(a, a + cs);
       if (part.length !== cs || Bun.hash.xxHash3(part) !== hash)
-        throw Error(`WAD subchunk integrity mismatch ${path}`);
+        throw Error(`WAD subchunk integrity mismatch ${label}`);
       const raw = cs === us ? part : decompress(part);
       if (raw.length !== us) throw Error("Invalid WAD subchunk length");
       output.set(raw, b);
@@ -157,6 +151,17 @@ async function readWad(name, range, decompress) {
     if (a !== data.length || b !== e.size)
       throw Error("WAD subchunk totals mismatch");
     return output;
+  };
+  const read = (path) => readEntry(lookup(path), path);
+  read.byHash = (hash) => {
+    if (typeof hash !== "bigint" || hash < 0n || hash > 0xffffffffffffffffn)
+      throw Error("An exact unsigned 64-bit WAD path hash is required");
+    const entry = entries.get(hash);
+    if (!entry)
+      throw Error(
+        `Missing WAD path hash ${hash.toString(16).padStart(16, "0")}`,
+      );
+    return readEntry(entry, `hash:${hash.toString(16).padStart(16, "0")}`);
   };
   read.has = (path) => entries.has(Bun.hash.xxHash64(path.toLowerCase()));
   return read;

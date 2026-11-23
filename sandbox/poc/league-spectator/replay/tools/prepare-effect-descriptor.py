@@ -28,8 +28,12 @@ BYTES = {'field98': 0x98, 'field99': 0x99}
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ['cache', 'client']: parser.add_argument(name, type=Path)
+    parser.add_argument('--decoder-root', type=Path)
+    parser.add_argument('--creation-source', type=Path,
+                        help='Read-only exact-build creation package and native sample observations cache')
     args = parser.parse_args()
-    decoder = args.cache / 'public/decoder-16.21-macos'
+    decoder = args.decoder_root or args.cache / 'public/decoder-16.21-macos'
+    creation_source = args.creation_source or args.cache
     n = NativeVfxRetirement(decoder, args.client)
     inputs = {}
     def read(path):
@@ -37,11 +41,11 @@ def main():
         return json.loads(raw)
     scene_path = args.cache / 'public/latest-scene/manifest.json'
     scene = read(scene_path)
-    creation_path = args.cache / 'public/latest-effect-creation/package.json'
+    creation_path = creation_source / 'public/latest-effect-creation/package.json'
     placement_path = args.cache / 'public/latest-effect-placement/package.json'
     creation, placement = read(creation_path), read(placement_path)
-    objects = read(args.cache / 'research/effect-creation-objects-native.json')
-    requests = read(args.cache / 'research/effect-creation-native.json')
+    objects = read(creation_source / 'research/effect-creation-objects-native.json')
+    requests = read(creation_source / 'research/effect-creation-native.json')
     vectors = read(args.cache / 'research/effect-placement-native.json')
     if (scene['build'] != n.profile['clientVersion'] or scene['protocol'] != n.profile['protocolDigest'] or
             placement['sceneManifestSha256'] != inputs[str(scene_path.resolve())] or

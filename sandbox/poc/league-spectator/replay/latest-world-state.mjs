@@ -1,9 +1,18 @@
 import { sha256 } from "./structural-comparison.mjs";
 import { LATEST_REPLICATION_SHA } from "./latest-replication.mjs";
-import { bindLatestBuildings, bindLatestMinions } from "./latest-world.mjs";
+import {
+  bindLatestBuildings,
+  bindLatestWorldMinions,
+} from "./latest-world.mjs";
 import { decodeRegisteredState } from "./latest-state-fields.mjs";
 import { assertLatestSelectedWorldState } from "./latest-selected-world-state.mjs";
-import { WORLD_STATE_SHA } from "./latest-world-state-contract.mjs";
+import {
+  WORLD_STATE_SHA,
+  MAP11_WORLD_STATE_SHA,
+  MAP11_NEUTRAL_WORLD_STATE_SHA,
+  MAP11_ORDINAL_WORLD_STATE_SHA,
+  MAP11_CORPUS_WORLD_STATE_SHA,
+} from "./latest-world-state-contract.mjs";
 export { WORLD_STATE_SHA } from "./latest-world-state-contract.mjs";
 
 export async function createLatestWorldStateReader(
@@ -22,7 +31,15 @@ export async function createLatestWorldStateReader(
       sceneBytes,
       catalogBytes,
     });
-  else if ((await sha256(bytes)) !== WORLD_STATE_SHA)
+  else if (
+    ![
+      WORLD_STATE_SHA,
+      MAP11_WORLD_STATE_SHA,
+      MAP11_NEUTRAL_WORLD_STATE_SHA,
+      MAP11_ORDINAL_WORLD_STATE_SHA,
+      MAP11_CORPUS_WORLD_STATE_SHA,
+    ].includes(await sha256(bytes))
+  )
     throw Error("Pinned world state schema required");
   const parse = (b) =>
       JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(b)),
@@ -59,7 +76,10 @@ export async function createLatestWorldStateReader(
       entities.push(e);
     };
     for (const b of bindLatestBuildings(report, scene, catalog)) {
-      if (b.asset.character !== "Turret")
+      if (
+        b.asset.character !== "Turret" &&
+        !(scene.map.id === 11 && b.object.replicationClass === "turret")
+      )
         throw Error("Unadmitted building replication class");
       add({
         entityId: b.event.entityId,
@@ -72,7 +92,7 @@ export async function createLatestWorldStateReader(
         healthBarHeight: null,
       });
     }
-    for (const b of bindLatestMinions(report, scene, catalog).minions) {
+    for (const b of bindLatestWorldMinions(report, scene, catalog).minions) {
       const paths = [...new Set(b.unit.records.map((r) => r.characterRecord))],
         records = paths.map((p) => meta.assets[b.unit.asset]?.records[p]);
       if (
@@ -89,13 +109,19 @@ export async function createLatestWorldStateReader(
         );
       add({
         entityId: b.event.entityId,
-        entityClass: "lane-minion",
+        entityClass: b.entityClass ?? "lane-minion",
         creationTime: b.event.time,
         asset: b.unit.asset,
         characterRecords: paths,
         team: null,
         replicationSchema: records[0].schema,
         healthBarHeight: records[0].healthBarHeight,
+        ...(b.entityClass === "neutral-minion"
+          ? {
+              creationPosition: b.creationPosition,
+              nativeTeamEnum: b.event.nativeTeamEnum,
+            }
+          : {}),
       });
     }
     return entities;
@@ -131,7 +157,21 @@ export async function createLatestWorldStateReader(
         stream: record.stream,
       });
     }
-    return { entities, updates };
+    return {
+      entities,
+      updates,
+      ...(entities.some((entity) => entity.entityClass === "neutral-minion")
+        ? {
+            neutralCreation: {
+              argumentProgramSha256: report.neutralCreationPackageSha256,
+              characterRecordsProofSha256:
+                meta.neutralCharacterRecordsProofSha256,
+              nativeFactoryAccepted: false,
+              snapshotsCreateEntities: false,
+            },
+          }
+        : {}),
+    };
   }
   return { metadata: structuredClone(meta), bind, worldState, reconstruct };
 }

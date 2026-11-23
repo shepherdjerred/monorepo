@@ -10,6 +10,7 @@ from pathlib import Path
 import unicorn
 from unicorn import x86_const as r
 from vfx_spawn_native import NativeSpawn,ADDRESSES,sha
+from world_minion_assets import world_minion_assets
 
 def f32(x):return struct.unpack('<f',struct.pack('<f',x))[0]
 def bits(x):return struct.unpack('<I',struct.pack('<f',x))[0]
@@ -17,7 +18,9 @@ def bits(x):return struct.unpack('<I',struct.pack('<f',x))[0]
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     for name in ['cache','client']:p.add_argument(name,type=Path)
-    p.add_argument('--observe',action='store_true');a=p.parse_args();cache=a.cache.resolve();n=NativeSpawn(cache/'public/decoder-16.21-macos',a.client)
+    p.add_argument('--observe',action='store_true')
+    p.add_argument('--decoder-root',type=Path,help='Explicit immutable exact-build decoder source; outputs remain in cache')
+    a=p.parse_args();cache=a.cache.resolve();decoder=a.decoder_root.resolve()if a.decoder_root else cache/'public/decoder-16.21-macos';n=NativeSpawn(decoder,a.client)
     inputs={}
     def read(path):
         raw=path.read_bytes();inputs[str(path.resolve())]=sha(raw);return json.loads(raw)
@@ -42,14 +45,19 @@ def main():
         n.put(record+0x474,'f',value);n.call(0x1897d0,{r.UC_X86_REG_RDI:entity});raw=n.u.reg_read(r.UC_X86_REG_XMM0)&0xffffffff
         return struct.unpack('<f',struct.pack('<I',raw))[0]
     assets={}
-    for key,asset in world['assets'].items():
-        if'spellCatalog'not in asset:continue
+    minion_assets,neutral_bindings=world_minion_assets(scene,world)
+    for key in sorted(minion_assets):
+        asset=world['assets'][key]
+        if'spellCatalog'not in asset:raise ValueError('Original registered minion spell catalog required')
         path=cache/'public/latest-scene'/asset['spellCatalog'];catalog=read(path);records={}
         for name in asset['characterRecords']:
             data=catalog['records'][name]['data']
             if data['__type']!='CharacterRecord':raise ValueError('Minion record type differs')
             value=data.get('deathTime',record_default)
             if type(value)not in [int,float]or not math.isfinite(value):raise ValueError('Invalid authored corpse lifetime')
+            neutral=neutral_bindings.get(key)
+            if neutral and(f32(value)!=neutral['deathTime']or bits(duration(value))!=neutral['corpseDurationBits']):
+                raise ValueError('Original neutral corpse fields differ from native CharacterRecord observations')
             records[name]={'deathTime':f32(value),'duration':duration(value),'durationBits':bits(duration(value))}
         assets[key]={'catalog':asset['spellCatalog'],'catalogSha256':inputs[str(path.resolve())],'records':records}
     probes=[]
@@ -114,6 +122,11 @@ def main():
         'assets':assets,'sourceBlocks':[{'startRva':x,'endRva':y,'sha256':sha(n.image[x:y])}for x,y in ranges],
         'scope':{'nativeDefaultConstructorExecuted':True,'nativeLifetimeGetterExecuted':True,'nativeFrameRetentionPrefixExecuted':True,
             'nativeDeathModePredicateExecuted':True,'nativeRetirementQueueStorageExecuted':True,'nativeLiveClockBindingVerified':False,'registryDeletionExecuted':False,'sceneRetirementCallbackExecuted':False,'deathAnimationTimingVerified':False,'corpseFadeVerified':False,'championCorpsePolicyVerified':False,'referenceAvCompared':False}}
+    if neutral_bindings:
+        meta['neutralCharacterRecordsProofSha256']=world['neutralCreation']['characterRecordProofSha256']
+        meta['scope']['originalNeutralMinionCharacterScalarsCompared']=True
+        meta['compilerSources']={name:sha(Path(__file__).with_name(name).read_bytes())for name in
+            ['prepare-corpse-policy.py','world_minion_assets.py']}
     raw=json.dumps(meta,indent=2).encode();out=cache/'public/latest-corpse';out.mkdir(exist_ok=True);(out/'package.json').write_bytes(raw)
     observations=[];death_modes=[]
     if a.observe:

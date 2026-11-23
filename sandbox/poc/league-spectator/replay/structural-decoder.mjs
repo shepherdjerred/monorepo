@@ -29,7 +29,9 @@ export class StructuralDecoder extends NativeDecoder {
       profile.imageBase + image.length - 1,
     );
   }
-  observePacket(opcode, payload, param) {
+  observePacket(opcode, payload, param, { captureMemory = true } = {}) {
+    if (typeof captureMemory !== "boolean")
+      throw Error("Explicit packet memory capture required");
     if (
       !Number.isInteger(opcode) ||
       opcode < 0 ||
@@ -91,13 +93,17 @@ export class StructuralDecoder extends NativeDecoder {
     const heapSize = this.readU32(NativeDecoder.CURSOR);
     if (heapSize > 0x1ff000 || consumed < 0 || consumed > payload.length)
       throw Error("Decoder exceeded packet/arena bounds");
-    return {
+    const result = {
       accepted,
       consumed,
       complete: accepted && consumed === payload.length,
       entryRva: entry - base,
-      object: this.read(object, size),
-      heap: this.read(NativeDecoder.HEAP, heapSize),
+      heapSize,
     };
+    if (captureMemory) {
+      result.object = this.read(object, size);
+      result.heap = this.read(NativeDecoder.HEAP, heapSize);
+    }
+    return result;
   }
 }

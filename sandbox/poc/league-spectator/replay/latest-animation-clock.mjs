@@ -1,5 +1,6 @@
 import { sha256 } from "./structural-comparison.mjs";
 import { animationHash } from "./latest-animation.mjs";
+import { validateSceneAnimationAuthority } from "./scene-animation-authority.mjs";
 
 const f = Math.fround,
   finite = (v) => typeof v === "number" && Number.isFinite(f(v)),
@@ -69,7 +70,39 @@ export function sampleNativeAtomicClock(clock, elapsed, delta = 0, rate = 1) {
 }
 
 export async function createLatestAnimationClock(profile, definitionBytes) {
-  if ((await sha256(definitionBytes)) !== profile.animationClockSha256)
+  return clockDefinition(
+    profile,
+    definitionBytes,
+    profile.animationClockSha256,
+  );
+}
+
+export async function createSceneAnimationClock(
+  profile,
+  definitionBytes,
+  authority,
+) {
+  validateSceneAnimationAuthority(authority);
+  if (
+    authority.build !== profile.clientVersion ||
+    authority.protocol !== profile.protocolDigest
+  )
+    throw Error("Scene clock authority build differs from original profile");
+  return clockDefinition(
+    profile,
+    definitionBytes,
+    authority.roles.clock.sha256,
+    authority.sceneManifestSha256,
+  );
+}
+
+async function clockDefinition(
+  profile,
+  definitionBytes,
+  expectedSha256,
+  sceneManifestSha256,
+) {
+  if ((await sha256(definitionBytes)) !== expectedSha256)
     throw Error("Animation clock package hash mismatch");
   const definition = JSON.parse(new TextDecoder().decode(definitionBytes));
   if (
@@ -81,6 +114,8 @@ export async function createLatestAnimationClock(profile, definitionBytes) {
     definition.sliceSha256 !==
       "6c2295282e20e2e65b62c0a28095d330233d2e8e16c246d8601aaa6ee3f6d64b" ||
     definition.decoderImageSha256 !== profile.decoderImageSha256 ||
+    (sceneManifestSha256 !== undefined &&
+      definition.sceneManifestSha256 !== sceneManifestSha256) ||
     definition.defaults.tickDuration !== f(1 / 30) ||
     definition.defaults.startFrame !== 0 ||
     definition.defaults.endFrame !== -1 ||

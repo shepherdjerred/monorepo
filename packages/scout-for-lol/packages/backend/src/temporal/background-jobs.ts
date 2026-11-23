@@ -9,6 +9,18 @@ export async function runBackgroundJobByKind(
   input: NonSupportBackgroundJobInput,
 ): Promise<void> {
   switch (input.kind) {
+    case "replay-patch-observation": {
+      const { refreshReplayPatchObservations } =
+        await import("#src/replays/observation.ts");
+      const context = Context.current();
+      await refreshReplayPatchObservations({
+        signal: context.cancellationSignal,
+        onProgress: (progress) => {
+          context.heartbeat({ kind: input.kind, ...progress });
+        },
+      });
+      break;
+    }
     case "competition-refresh": {
       const { runLifecycleCheck } =
         await import("#src/league/tasks/competition/lifecycle.ts");

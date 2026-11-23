@@ -28,12 +28,18 @@ export class LatestParentVfxRenderer extends LatestBoundVfxRenderer {
     world,
     manifest,
     effectsManifestBytes,
-    { assetBase, staticCatalog = null, selectedMaterials = null } = {},
+    {
+      assetBase,
+      staticCatalog = null,
+      selectedMaterials = null,
+      perspective,
+    } = {},
   ) {
     if (selectedMaterials !== null) {
       assertLatestSelectedMaterials(selectedMaterials).assertSelection(
         staticCatalog,
       );
+      selectedMaterials.assertPerspective?.(perspective);
       if (
         !["fixed-original-complete", "native-quad-partial"].includes(
           selectedMaterials.mode,
@@ -43,6 +49,7 @@ export class LatestParentVfxRenderer extends LatestBoundVfxRenderer {
     }
     super(world, manifest, effectsManifestBytes);
     this.selectedMaterials = selectedMaterials;
+    this.perspective = perspective;
     this.staticCatalog = staticCatalog;
     this.selectedQuadMaterials =
       selectedMaterials?.mode === "native-quad-partial";
@@ -106,6 +113,44 @@ export class LatestParentVfxRenderer extends LatestBoundVfxRenderer {
       );
       texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
       texture.magFilter = texture.minFilter = THREE.NearestFilter;
+    } else if (
+      [
+        "original-cold-default-texture",
+        "original-all-vision-fog-texture",
+      ].includes(binding.kind)
+    ) {
+      if (
+        !this.selectedQuadMaterials ||
+        typeof this.selectedMaterials.readColdDefaultTexture !== "function"
+      )
+        throw Error("Owned original cold texture registry required");
+      const ref =
+        binding.kind === "original-all-vision-fog-texture"
+          ? await this.selectedMaterials.readAllVisionFogTexture(
+              binding,
+              this.perspective,
+            )
+          : await this.selectedMaterials.readColdDefaultTexture(binding);
+      if (this.disposed)
+        throw new DOMException("Parent renderer disposed", "AbortError");
+      const wrap = {
+        repeat: THREE.RepeatWrapping,
+        clamp: THREE.ClampToEdgeWrapping,
+        mirror: THREE.MirroredRepeatWrapping,
+      }[binding.sampler.name];
+      if (wrap === undefined)
+        throw Error("Unsupported original cold texture sampler");
+      texture = new THREE.DataTexture(
+        ref.data,
+        ref.width,
+        ref.height,
+        THREE.RGBAFormat,
+        THREE.UnsignedByteType,
+      );
+      texture.wrapS = texture.wrapT = wrap;
+      texture.magFilter = texture.minFilter = binding.sampler.pixelated
+        ? THREE.NearestFilter
+        : THREE.LinearFilter;
     } else if (binding.kind === "prepared-texture") {
       if (this.selectedQuadMaterials) {
         const ref = await this.selectedTextureOwner.readTexture(binding),

@@ -4,7 +4,7 @@ import {
   sameDirectCompiledData,
 } from "./latest-direct-compiled-restore.mjs";
 import { assertLatestStaticCatalogSelection } from "./latest-static-catalog.mjs";
-import { CORPSE_POLICY_SHA } from "./latest-corpse-contract.mjs";
+import { approvedCorpsePolicyReferenceSha } from "./latest-corpse-contract.mjs";
 const decode = (bytes) =>
   JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 const digest = (value) =>
@@ -45,10 +45,13 @@ export async function assertLatestSelectedCorpse({
   if (!sameDirectCompiledData(profile, selection.profile()))
     throw Error("Corpse profile differs from selected root");
   const referenceBytes = await selection.readRole("corpsePolicyReference");
-  if ((await sha256(referenceBytes)) !== CORPSE_POLICY_SHA)
+  const scene = decode(sceneBytes);
+  if (
+    (await sha256(referenceBytes)) !==
+    approvedCorpsePolicyReferenceSha(scene.map?.id, await sha256(worldBytes))
+  )
     throw Error("Fixed original corpse policy reference required");
-  const scene = decode(sceneBytes),
-    world = decode(worldBytes),
+  const world = decode(worldBytes),
     reference = decode(referenceBytes);
   if (
     !Number.isInteger(scene.map?.id) ||

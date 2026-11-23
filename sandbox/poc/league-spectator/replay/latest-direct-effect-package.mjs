@@ -180,6 +180,7 @@ export async function loadLatestDirectEffectPackage({
   staticCatalog = null,
   selectedMaterials = null,
   viewerPoseInitialization = null,
+  perspective,
 }) {
   if (
     typeof load !== "function" ||
@@ -231,6 +232,7 @@ export async function loadLatestDirectEffectPackage({
     selectedMaterials = await loadLatestSelectedMaterialRegistry({
       staticCatalog,
       load,
+      perspective,
     });
   else if (selectedMaterials !== null)
     assertLatestSelectedMaterials(selectedMaterials);
@@ -418,6 +420,9 @@ export async function loadLatestDirectEffectPackage({
       build: manifest.build,
       protocol: manifest.protocol,
       contentHash: await sha256(manifestBytes),
+      ...(selectedMaterials?.describe().perspective === "all"
+        ? { perspective: "all" }
+        : {}),
     },
     materials: bridge.materials,
     selectedMaterials,

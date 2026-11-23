@@ -8,6 +8,7 @@ import struct
 
 from animation_events_native import NativeAnimationEvents, BLOCKS, BOUNDARIES
 from vfx_spawn_native import sha, name_hash
+from scene_metadata_output import SceneMetadataOutput
 
 
 def walk(value, path=()):
@@ -32,11 +33,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ["package", "client", "scene", "effects", "evidence"]:
         parser.add_argument(name, type=Path)
+    parser.add_argument('--output-package', type=Path, required=True)
     args = parser.parse_args()
+    output = SceneMetadataOutput(args.package, args.scene, args.output_package, args.evidence, (args.effects,))
+    output.read(args.client)
     kernel = NativeAnimationEvents(args.package, args.client)
     profile = kernel.profile
-    scene_raw = (args.scene / "manifest.json").read_bytes()
-    effects_raw = (args.effects / "manifest.json").read_bytes()
+    scene_raw = output.read(args.scene / "manifest.json")
+    effects_raw = output.read(args.effects / "manifest.json")
     scene, effects = json.loads(scene_raw), json.loads(effects_raw)
     if any(p["build"] != profile["clientVersion"] or p["protocol"] != profile["protocolDigest"]
            for p in [scene, effects]):
@@ -47,7 +51,7 @@ def main():
         actor = effects["actors"][actor_key]
         if actor["skinId"] != asset["skinId"] or actor["character"].lower() != asset["champion"].lower():
             raise ValueError("Animation event appearance mismatch")
-        raw = (args.scene / asset["animationGraph"]).read_bytes()
+        raw = output.read_scene(asset["animationGraph"])
         sources.append({"actor": actor_key, "file": asset["animationGraph"], "sha256": sha(raw)})
         for path, node in walk(json.loads(raw)):
             if "mEventDataMap" not in node:
@@ -115,19 +119,17 @@ def main():
         "fieldLayout": kernel.layout, "defaultDataHex": defaults.hex(),
         "sourceBlocks": [{"startRva": a, "endRva": b, "sha256": sha(kernel.image[a:b])} for a, b in BLOCKS],
         "compilerSources": {name: sha(Path(__file__).with_name(name).read_bytes()) for name in
-            ["prepare-animation-events.py", "animation_events_native.py", "vfx_spawn_native.py", "vfx_uv_native.py"]},
+            ["prepare-animation-events.py", "scene_metadata_output.py", "animation_events_native.py", "vfx_spawn_native.py", "vfx_uv_native.py"]},
         "assets": {"sceneManifestSha256": sha(scene_raw), "effectsManifestSha256": sha(effects_raw), "graphs": sources},
         "eventTypes": dict(types), "groups": groups,
         "scope": "Original constructors, forward dispatch and explicit resynchronization on owned event collections. Activation/release/speed are request sinks. No effect creation, attachment, interruption/loop policy, replay-time conversion, sound or renderer integration is claimed."}
     raw = json.dumps(metadata, indent=2).encode()
-    (args.package / "animation-events.json").write_bytes(raw)
-    profile["animationEventsSha256"] = sha(raw)
-    (args.package / "profile.json").write_text(json.dumps(profile, indent=2), encoding="utf-8")
+    output.publish('animation-events.json', raw, 'particle-event-scheduling')
     evidence = {"schema": 1, "build": metadata["build"], "protocol": metadata["protocol"],
         "definitionSha256": sha(raw), "decoderImageSha256": metadata["decoderImageSha256"],
         "executedOriginalBlocks": list(kernel.blocks.values()), "compilerSources": metadata["compilerSources"],
         "sequences": sequences, "scope": metadata["scope"]}
-    args.evidence.write_text(json.dumps(evidence, indent=2), encoding="utf-8")
+    output.write_evidence(json.dumps(evidence, indent=2).encode())
     events = [event for group in groups for event in group["events"]]
     print(json.dumps({"groups": len(groups), "events": len(events), "eventTypes": dict(types),
         "bindings": dict(Counter(e["binding"]["status"] for e in events)), "sequences": len(sequences),

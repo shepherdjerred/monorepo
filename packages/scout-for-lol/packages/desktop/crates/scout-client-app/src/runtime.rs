@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::io::Read as _;
 use std::path::Path;
 use std::path::PathBuf;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant, UNIX_EPOCH};
 
 use directories::ProjectDirs;
@@ -79,6 +79,8 @@ struct PendingPairing {
 }
 
 type ReplayUploadTask = JoinHandle<Result<(), String>>;
+type ReplayRecoveryProbes = Mutex<HashMap<(Uuid, String), Option<Instant>>>;
+const REPLAY_RECOVERY_PROBE_COOLDOWN: Duration = Duration::from_hours(1);
 
 /// Handle owned by the egui application.
 pub struct ClientRuntime {
@@ -135,6 +137,12 @@ impl ClientRuntime {
                     return;
                 }
             };
+            worker_diagnostics.record(DiagnosticEvent::new(
+                DiagnosticLevel::Info,
+                DiagnosticCategory::Runtime,
+                "start_collector",
+                DiagnosticOutcome::Succeeded,
+            ));
             runtime.block_on(run_collector(
                 worker_state,
                 worker_diagnostics,
@@ -215,12 +223,6 @@ async fn run_collector(
     mut commands: mpsc::UnboundedReceiver<RuntimeCommand>,
     backend_origin: String,
 ) {
-    diagnostics.record(DiagnosticEvent::new(
-        DiagnosticLevel::Info,
-        DiagnosticCategory::Runtime,
-        "start_collector",
-        DiagnosticOutcome::Succeeded,
-    ));
     let Some((backend, mut credential, mut outbox)) = collector_resources(&state, &backend_origin)
     else {
         diagnostics.record(
@@ -242,6 +244,7 @@ async fn run_collector(
     let mut tick_number = 0_u64;
     let mut checked_in_device: Option<Uuid> = None;
     let mut replay_upload_task: Option<ReplayUploadTask> = None;
+    let replay_recovery_probes = Arc::new(ReplayRecoveryProbes::default());
     let mut collection_workers = collection::CollectionWorkers::default();
     let mut ticker = tokio::time::interval(Duration::from_secs(2));
 
@@ -309,6 +312,7 @@ async fn run_collector(
                         &outbox,
                         active_credential,
                         &diagnostics,
+                        &replay_recovery_probes,
                     ));
                 }
             }
@@ -435,14 +439,23 @@ fn start_replay_upload(
     outbox: &ObservationOutbox,
     credential: &DeviceCredential,
     diagnostics: &Arc<Diagnostics>,
+    recovery_probes: &Arc<ReplayRecoveryProbes>,
 ) -> ReplayUploadTask {
     let backend = backend.clone();
     let outbox = outbox.clone();
     let credential = credential.clone();
     let diagnostics = Arc::clone(diagnostics);
-    tokio::spawn(
-        async move { upload_new_replays(&backend, &outbox, &credential, &diagnostics).await },
-    )
+    let recovery_probes = Arc::clone(recovery_probes);
+    tokio::spawn(async move {
+        upload_new_replays(
+            &backend,
+            &outbox,
+            &credential,
+            &diagnostics,
+            &recovery_probes,
+        )
+        .await
+    })
 }
 
 fn cancel_replay_upload(task: &mut Option<ReplayUploadTask>) {
@@ -515,6 +528,7 @@ async fn upload_new_replays(
     outbox: &ObservationOutbox,
     credential: &DeviceCredential,
     diagnostics: &Diagnostics,
+    recovery_probes: &ReplayRecoveryProbes,
 ) -> Result<(), String> {
     // Collected rather than returned on sight: a failure on one file must not
     // skip every replay behind it in the directory.
@@ -538,7 +552,16 @@ async fn upload_new_replays(
     };
     for entry in std::fs::read_dir(replay_path).map_err(|error| error.to_string())? {
         let entry = entry.map_err(|error| error.to_string())?;
-        match scan_replay_entry(backend, outbox, credential, diagnostics, &entry).await? {
+        match scan_replay_entry(
+            backend,
+            outbox,
+            credential,
+            diagnostics,
+            recovery_probes,
+            &entry,
+        )
+        .await?
+        {
             ReplayDelivery::Settled | ReplayDelivery::Deferred => {}
             ReplayDelivery::Unresolved(detail) => {
                 scan_error.get_or_insert(detail);
@@ -560,6 +583,7 @@ async fn scan_replay_entry(
     outbox: &ObservationOutbox,
     credential: &DeviceCredential,
     diagnostics: &Diagnostics,
+    recovery_probes: &ReplayRecoveryProbes,
     entry: &std::fs::DirEntry,
 ) -> Result<ReplayDelivery, String> {
     {
@@ -591,67 +615,133 @@ async fn scan_replay_entry(
             return Ok(ReplayDelivery::Settled);
         };
         let path_key = path.to_string_lossy().into_owned();
-        let bytes = i64::try_from(metadata.len())
-            .map_err(|_| "Replay size is outside the supported range".to_owned())?;
-        let modified_at_millis = i64::try_from(
-            metadata
-                .modified()
-                .map_err(|error| error.to_string())?
-                .duration_since(UNIX_EPOCH)
-                .map_err(|error| error.to_string())?
-                .as_millis(),
-        )
-        .map_err(|_| "Replay modification time is outside the supported range".to_owned())?;
-        if outbox
-            .replay_file_handled(&path_key, bytes, modified_at_millis)
+        let (bytes, modified_at_millis) = replay_file_identity(&metadata)?;
+        let (digest, reopening) = if let Some(receipt) = outbox
+            .handled_replay_file_receipt(&path_key, bytes, modified_at_millis, &game_id)
             .map_err(|error| error.to_string())?
         {
-            return Ok(ReplayDelivery::Settled);
-        }
-        let digest = replay_sha256(path.clone()).await?;
-        if outbox
-            .replay_handled(&digest)
-            .map_err(|error| error.to_string())?
+            let Some(digest) = receipt else {
+                return Ok(ReplayDelivery::Settled);
+            };
+            let offer = ReplayOffer {
+                digest: &digest,
+                bytes: metadata.len(),
+                platform_id: platform_id.as_deref(),
+            };
+            if !recover_legacy_replay(
+                backend,
+                outbox,
+                recovery_probes,
+                credential,
+                &game_id,
+                &offer,
+                &path,
+            )
+            .await?
+            {
+                return Ok(ReplayDelivery::Settled);
+            }
+            (digest, true)
+        } else {
+            (replay_sha256(path.clone()).await?, false)
+        };
+        if !reopening
+            && outbox
+                .replay_handled(&digest)
+                .map_err(|error| error.to_string())?
         {
             outbox
                 .mark_replay_file_handled(&path_key, bytes, modified_at_millis, &digest)
                 .map_err(|error| error.to_string())?;
             return Ok(ReplayDelivery::Settled);
         }
-        if !outbox
-            .replay_retry_due(&digest, chrono::Utc::now().timestamp_millis())
-            .map_err(|error| error.to_string())?
+        if !reopening
+            && !outbox
+                .replay_retry_due(&digest, chrono::Utc::now().timestamp_millis())
+                .map_err(|error| error.to_string())?
         {
             return Ok(ReplayDelivery::Deferred);
         }
-        match deliver_replay(
-            backend,
-            outbox,
-            credential,
-            diagnostics,
-            &ReplayCandidate {
-                game_id: &game_id,
-                platform_id: platform_id.as_deref(),
-                digest: &digest,
-                path: &path,
-                bytes: metadata.len(),
-            },
-        )
-        .await?
-        {
-            // A deferral leaves the file unhandled on purpose, so the next
-            // scan offers it again.
-            ReplayDelivery::Deferred => return Ok(ReplayDelivery::Deferred),
-            ReplayDelivery::Unresolved(detail) => {
-                return Ok(ReplayDelivery::Unresolved(detail));
-            }
-            ReplayDelivery::Settled => {}
+        let candidate = ReplayCandidate {
+            game_id: &game_id,
+            platform_id: platform_id.as_deref(),
+            digest: &digest,
+            path: &path,
+            bytes: metadata.len(),
+        };
+        let delivery = if reopening {
+            upload_offered_replay(backend, outbox, credential, diagnostics, &candidate).await?
+        } else {
+            deliver_replay(backend, outbox, credential, diagnostics, &candidate).await?
+        };
+        if !matches!(delivery, ReplayDelivery::Settled) {
+            return Ok(delivery);
         }
         outbox
             .mark_replay_file_handled(&path_key, bytes, modified_at_millis, &digest)
             .map_err(|error| error.to_string())?;
         Ok(ReplayDelivery::Settled)
     }
+}
+
+fn replay_file_identity(metadata: &std::fs::Metadata) -> Result<(i64, i64), String> {
+    let bytes = i64::try_from(metadata.len())
+        .map_err(|_| "Replay size is outside the supported range".to_owned())?;
+    let modified = metadata.modified().map_err(|error| error.to_string())?;
+    let millis = modified
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| error.to_string())?
+        .as_millis();
+    let millis = i64::try_from(millis)
+        .map_err(|_| "Replay modification time is outside the supported range".to_owned())?;
+    Ok((bytes, millis))
+}
+
+async fn recover_legacy_replay(
+    backend: &ScoutBackendClient,
+    outbox: &ObservationOutbox,
+    recovery_probes: &ReplayRecoveryProbes,
+    credential: &DeviceCredential,
+    game_id: &str,
+    offer: &ReplayOffer<'_>,
+    path: &Path,
+) -> Result<bool, String> {
+    let key = (credential.device_id, offer.digest.to_owned());
+    {
+        let mut probes = recovery_probes.lock().map_err(|error| error.to_string())?;
+        let now = Instant::now();
+        if probes
+            .get(&key)
+            .is_some_and(|retry_at| retry_at.is_none_or(|at| now < at))
+        {
+            return Ok(false);
+        }
+        // Keep an aborted request eligible for a later scan.
+        probes.insert(key.clone(), Some(now + REPLAY_RECOVERY_PROBE_COOLDOWN));
+    }
+    let response = backend.offer_replay(credential, game_id, offer).await;
+    let recheck = match &response {
+        Ok(reply) => reply.legacy_compression_offer_should_be_rechecked(),
+        Err(error) => error
+            .status()
+            .is_none_or(|status| status == 429 || status >= 500),
+    };
+    if !recheck {
+        recovery_probes
+            .lock()
+            .map_err(|error| error.to_string())?
+            .insert(key, None);
+    }
+    // File metadata identifies the cached receipt. Rehash the actual bytes
+    // before reopening its terminal rejection.
+    if !response.is_ok_and(|reply| reply.allows_legacy_compression_retry())
+        || replay_sha256(path.to_owned()).await? != offer.digest
+    {
+        return Ok(false);
+    }
+    outbox
+        .reopen_rejected_replay(offer.digest, game_id)
+        .map_err(|error| error.to_string())
 }
 
 /// Number of deferrals after which a replay is worth a warning.
@@ -739,7 +829,7 @@ async fn offer_replay(
     diagnostics.counters().http_response(status);
 
     let decision = match outcome {
-        Ok(decision) => decision,
+        Ok(response) => response.decision,
         // A backend that predates the offer route has no opinion to give, so
         // fall back to the behaviour that existed before it: upload and let
         // the server refuse. This keeps a client that ships ahead of its
@@ -913,6 +1003,16 @@ async fn deliver_replay(
             return Ok(ReplayDelivery::Unresolved(detail));
         }
     }
+    upload_offered_replay(backend, outbox, credential, diagnostics, candidate).await
+}
+
+async fn upload_offered_replay(
+    backend: &ScoutBackendClient,
+    outbox: &ObservationOutbox,
+    credential: &DeviceCredential,
+    diagnostics: &Diagnostics,
+    candidate: &ReplayCandidate<'_>,
+) -> Result<ReplayDelivery, String> {
     diagnostics.counters().replay_attempted();
     let started = std::time::Instant::now();
     let outcome = backend

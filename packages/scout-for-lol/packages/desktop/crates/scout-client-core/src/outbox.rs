@@ -724,6 +724,53 @@ impl ObservationOutbox {
         Ok(count == 1)
     }
 
+    /// Find an unchanged file receipt and its digest if it has an HTTP 400 for this game.
+    ///
+    /// The outer option indicates a file receipt. The inner option is the digest eligible
+    /// for a recovery offer.
+    ///
+    /// # Errors
+    ///
+    /// Returns a SQLite error if the receipt cannot be read.
+    pub fn handled_replay_file_receipt(
+        &self,
+        path: &str,
+        bytes: i64,
+        modified_at_millis: i64,
+        game_id: &str,
+    ) -> Result<Option<Option<String>>, OutboxError> {
+        let connection = self.connection()?;
+        Ok(connection.query_row(
+                "SELECT r.digest FROM handled_replay_file f
+                 LEFT JOIN rejected_replay r ON f.digest = r.digest AND r.game_id = ?4 AND r.status_code = 400
+                 WHERE f.path = ?1 AND f.bytes = ?2 AND f.modified_at_millis = ?3",
+            params![path, bytes, modified_at_millis, game_id],
+            |row| row.get(0),
+        ).optional()?)
+    }
+
+    /// Reopen one server-authorized terminal HTTP 400 and its file receipts.
+    ///
+    /// # Errors
+    ///
+    /// Returns a SQLite error if the receipts cannot be updated atomically.
+    pub fn reopen_rejected_replay(&self, digest: &str, game_id: &str) -> Result<bool, OutboxError> {
+        let mut connection = self.connection()?;
+        let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let reopened = transaction.execute(
+            "DELETE FROM rejected_replay WHERE digest = ?1 AND game_id = ?2 AND status_code = 400",
+            params![digest, game_id],
+        )? == 1;
+        if reopened {
+            transaction.execute(
+                "DELETE FROM handled_replay_file WHERE digest = ?1",
+                [digest],
+            )?;
+        }
+        transaction.commit()?;
+        Ok(reopened)
+    }
+
     /// Associate an unchanged local replay with its durable terminal receipt.
     ///
     /// # Errors
@@ -958,6 +1005,40 @@ mod tests {
     /// A fixed, positive clock. The binding window is relative, so these tests
     /// only need two instants a known distance apart.
     const NOW: i64 = 1_700_000_000_000;
+
+    #[test]
+    fn reopening_a_rejected_replay_releases_only_its_file_receipts()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        outbox.mark_replay_rejected("legacy", "1", 400)?;
+        outbox.mark_replay_rejected("other", "2", 403)?;
+        outbox.mark_replay_file_handled("legacy.rofl", 10, NOW, "legacy")?;
+        outbox.mark_replay_file_handled("copy.rofl", 10, NOW, "legacy")?;
+        outbox.mark_replay_file_handled("other.rofl", 10, NOW, "other")?;
+        assert_eq!(
+            outbox.handled_replay_file_receipt("legacy.rofl", 10, NOW, "1")?,
+            Some(Some("legacy".to_owned())),
+        );
+        assert_eq!(
+            outbox.handled_replay_file_receipt("legacy.rofl", 11, NOW, "1")?,
+            None
+        );
+        assert_eq!(
+            outbox.handled_replay_file_receipt("legacy.rofl", 10, NOW, "2")?,
+            Some(None)
+        );
+        assert!(!outbox.reopen_rejected_replay("legacy", "2")?);
+        assert!(!outbox.reopen_rejected_replay("other", "2")?);
+        assert!(outbox.reopen_rejected_replay("legacy", "1")?);
+        assert!(!outbox.replay_handled("legacy")?);
+        assert!(!outbox.replay_file_handled("legacy.rofl", 10, NOW)?);
+        assert!(!outbox.replay_file_handled("copy.rofl", 10, NOW)?);
+        assert!(outbox.replay_handled("other")?);
+        assert!(outbox.replay_file_handled("other.rofl", 10, NOW)?);
+        fs::remove_file(path)?;
+        Ok(())
+    }
 
     #[test]
     fn legacy_missing_evidence_rejections_are_reoffered_only_once()

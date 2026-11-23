@@ -6,11 +6,20 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import type { AuthenticatedScoutClient } from "./authentication.ts";
 import { REPLAY_UPLOAD_LEASE_MS } from "./replay-lease.ts";
+import { readFile, unlink, writeFile } from "node:fs/promises";
+import { Readable } from "node:stream";
+import { buffer } from "node:stream/consumers";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { validateReplayContainer } from "./replay/container.ts";
+import { buildReplayContainerFixture } from "#src/testing/replay-container-fixture.ts";
 
 const mocks = vi.hoisted(() => ({
   aggregate: vi.fn(),
   create: vi.fn(),
   executeRaw: vi.fn(),
+  findFirst: vi.fn(),
   findMany: vi.fn(),
   findUnique: vi.fn(),
   accountFindMany: vi.fn(),
@@ -44,6 +53,7 @@ vi.mock("#src/database/index.ts", () => ({
     scoutClientReplayArtifact: {
       aggregate: mocks.aggregate,
       create: mocks.create,
+      findFirst: mocks.findFirst,
       findUnique: mocks.findUnique,
       updateMany: mocks.updateMany,
     },
@@ -70,7 +80,7 @@ const { MAX_OWNER_REPLAYS_PER_DAY, uploadReplay } =
   await import("./replay-upload.ts");
 
 const LOCAL_PUUID = "p".repeat(78);
-const LEAGUE_PATCH = "16.18.817.5716";
+const LEAGUE_PATCH = "16.14.794.5912";
 const MATCH_STATS = {
   kills: 2,
   deaths: 5,
@@ -148,61 +158,46 @@ function replayFixture(
   puuid = LOCAL_PUUID,
   goldEarned = MATCH_STATS.goldEarned.toString(),
   headerVersion = LEAGUE_PATCH,
+  options: {
+    chunkHeaderBytes?: 17 | 18;
+    protocol?: string;
+    compressionTag?: number;
+    compressed?: boolean;
+    outcome?: string;
+  } = {},
 ): Uint8Array {
-  const version = Buffer.from(headerVersion, "ascii");
-  const header = Buffer.alloc(15);
-  header.write("RIOT", 0, "ascii");
-  header.writeUInt16LE(2, 4);
-  header[14] = version.byteLength;
-  const chunkHeader = Buffer.alloc(17);
-  chunkHeader.writeUInt32LE(1, 0);
-  chunkHeader[4] = 1;
-  chunkHeader.writeUInt32LE(0x04_00_00_00, 5);
-  chunkHeader.writeUInt32LE(1, 9);
-  const metadata = Buffer.from(
-    JSON.stringify({
-      gameLength: 60_000,
-      lastGameChunkId: 1,
-      lastKeyFrameId: 0,
-      statsJson: JSON.stringify([
-        {
-          PUUID: puuid,
-          TEAM: "100",
-          CHAMPIONS_KILLED: MATCH_STATS.kills.toString(),
-          NUM_DEATHS: MATCH_STATS.deaths.toString(),
-          ASSISTS: MATCH_STATS.assists.toString(),
-          GOLD_EARNED: goldEarned,
-          GOLD_SPENT: MATCH_STATS.goldSpent.toString(),
-          TOTAL_DAMAGE_DEALT_TO_CHAMPIONS:
-            MATCH_STATS.totalDamageDealtToChampions.toString(),
-          MINIONS_KILLED: MATCH_STATS.totalMinionsKilled.toString(),
-          VISION_SCORE: MATCH_STATS.visionScore.toString(),
-          WARD_PLACED: MATCH_STATS.wardsPlaced.toString(),
-          WARD_KILLED: MATCH_STATS.wardsKilled.toString(),
-          LEVEL: MATCH_STATS.champLevel.toString(),
-          WIN: MATCH_STATS.win,
-          ITEM0: MATCH_STATS.item0.toString(),
-          ITEM1: MATCH_STATS.item1.toString(),
-          ITEM2: MATCH_STATS.item2.toString(),
-          ITEM3: MATCH_STATS.item3.toString(),
-          ITEM4: MATCH_STATS.item4.toString(),
-          ITEM5: MATCH_STATS.item5.toString(),
-          ITEM6: MATCH_STATS.item6.toString(),
-        },
-      ]),
-    }),
-  );
-  const metadataLength = Buffer.alloc(4);
-  metadataLength.writeUInt32LE(metadata.byteLength);
-  return Buffer.concat([
-    header,
-    version,
-    chunkHeader,
-    Buffer.from([0]),
-    Buffer.alloc(256, 1),
-    metadata,
-    metadataLength,
-  ]);
+  return buildReplayContainerFixture({
+    ...options,
+    headerVersion,
+    protocol: options.protocol ?? "509c49fd988fca11",
+    gameLength: 60_000,
+    participants: [
+      {
+        PUUID: puuid,
+        TEAM: "100",
+        CHAMPIONS_KILLED: MATCH_STATS.kills.toString(),
+        NUM_DEATHS: MATCH_STATS.deaths.toString(),
+        ASSISTS: MATCH_STATS.assists.toString(),
+        GOLD_EARNED: goldEarned,
+        GOLD_SPENT: MATCH_STATS.goldSpent.toString(),
+        TOTAL_DAMAGE_DEALT_TO_CHAMPIONS:
+          MATCH_STATS.totalDamageDealtToChampions.toString(),
+        MINIONS_KILLED: MATCH_STATS.totalMinionsKilled.toString(),
+        VISION_SCORE: MATCH_STATS.visionScore.toString(),
+        WARD_PLACED: MATCH_STATS.wardsPlaced.toString(),
+        WARD_KILLED: MATCH_STATS.wardsKilled.toString(),
+        LEVEL: MATCH_STATS.champLevel.toString(),
+        WIN: options.outcome ?? MATCH_STATS.win,
+        ITEM0: MATCH_STATS.item0.toString(),
+        ITEM1: MATCH_STATS.item1.toString(),
+        ITEM2: MATCH_STATS.item2.toString(),
+        ITEM3: MATCH_STATS.item3.toString(),
+        ITEM4: MATCH_STATS.item4.toString(),
+        ITEM5: MATCH_STATS.item5.toString(),
+        ITEM6: MATCH_STATS.item6.toString(),
+      },
+    ],
+  });
 }
 
 function replayRequest(body: Uint8Array): Request {
@@ -223,7 +218,7 @@ test("atomically reclaims a replay upload whose lease expired", async () => {
   const digest = new Bun.CryptoHasher("sha256").update(body).digest("hex");
   const staleAt = new Date(Date.now() - REPLAY_UPLOAD_LEASE_MS - 1);
   const stale = {
-    id: "artifact-id",
+    id: crypto.randomUUID(),
     uploadState: "UPLOADING",
     gameId: "123",
     digest,
@@ -233,12 +228,19 @@ test("atomically reclaims a replay upload whose lease expired", async () => {
   };
   mocks.findUnique.mockResolvedValueOnce(stale).mockResolvedValueOnce(stale);
   const request = replayRequest(body);
-
-  await expect(uploadReplay(request, "123", DEVICE)).resolves.toEqual({
-    outcome: "accepted",
-    digest,
-    bytes: body.byteLength,
-  });
+  const previousPath = path.join(tmpdir(), `scout-replay-${stale.id}.rofl`);
+  const previousBytes = Buffer.from("partial bytes from the previous attempt");
+  await writeFile(previousPath, previousBytes, { flag: "wx" });
+  try {
+    await expect(uploadReplay(request, "123", DEVICE)).resolves.toEqual({
+      outcome: "accepted",
+      digest,
+      bytes: body.byteLength,
+    });
+    expect(await readFile(previousPath)).toEqual(previousBytes);
+  } finally {
+    await unlink(previousPath);
+  }
 
   expect(mocks.updateMany).toHaveBeenCalledTimes(2);
   expect(mocks.send).toHaveBeenCalledWith(
@@ -262,12 +264,124 @@ test("atomically reclaims a replay upload whose lease expired", async () => {
     2,
     expect.objectContaining({
       where: expect.objectContaining({
-        id: "artifact-id",
+        id: stale.id,
         uploadState: "UPLOADING",
       }),
       data: expect.objectContaining({ uploadState: "COMPLETED" }),
     }),
   );
+});
+
+test("reclaims an exact legacy compression rejection under the normal upload lease and quota", async () => {
+  const gameBuild = "16.23.840.6595";
+  const body = replayFixture(
+    LOCAL_PUUID,
+    MATCH_STATS.goldEarned.toString(),
+    gameBuild,
+    {
+      chunkHeaderBytes: 18,
+      protocol: "8bbfcd5af2bc92db",
+      compressed: true,
+    },
+  );
+  const digest = new Bun.CryptoHasher("sha256").update(body).digest("hex");
+  const rejected = {
+    id: "artifact-id",
+    platformId: "NA1",
+    gameId: "123",
+    uploadState: "REJECTED",
+    lastError: "Replay chunk compression is invalid",
+    objectKey: "legacy/replays/123.rofl",
+  };
+  mocks.findUnique.mockResolvedValue(rejected);
+  const upload = () => uploadReplay(replayRequest(body), "123", DEVICE);
+  mocks.findMany.mockResolvedValueOnce([]);
+  await expect(upload()).rejects.toMatchObject({ status: 409 });
+  expect(mocks.findUnique).not.toHaveBeenCalled();
+
+  mocks.findMany.mockResolvedValue([
+    {
+      localPuuid: LOCAL_PUUID,
+      platformId: "NA1",
+      leaguePatch: gameBuild,
+      payload: { resource: "match_history_game:123", data: MATCH_HISTORY },
+    },
+  ]);
+  mocks.aggregate.mockResolvedValueOnce({
+    _count: { _all: MAX_OWNER_REPLAYS_PER_DAY },
+    _sum: { bytes: null },
+  });
+  await expect(upload()).rejects.toMatchObject({ status: 429 });
+  expect(mocks.updateMany).not.toHaveBeenCalled();
+
+  mocks.updateMany.mockResolvedValueOnce({ count: 0 });
+  await expect(upload()).rejects.toMatchObject({ status: 409 });
+  expect(mocks.send).not.toHaveBeenCalled();
+
+  await expect(upload()).resolves.toEqual({
+    outcome: "accepted",
+    digest,
+    bytes: body.byteLength,
+  });
+  expect(mocks.create).not.toHaveBeenCalled();
+  expect(mocks.updateMany).toHaveBeenNthCalledWith(2, {
+    where: {
+      id: rejected.id,
+      digest,
+      gameId: "123",
+      platformId: "NA1",
+      uploadState: "REJECTED",
+      lastError: "Replay chunk compression is invalid",
+    },
+    data: expect.objectContaining({
+      uploadState: "UPLOADING",
+      lastError: null,
+      updatedAt: expect.any(Date),
+    }),
+  });
+  expect(mocks.send).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({
+      input: expect.objectContaining({ Key: rejected.objectKey }),
+    }),
+  );
+  expect(mocks.updateMany).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      data: expect.objectContaining({ uploadState: "COMPLETED", gameBuild }),
+    }),
+  );
+});
+
+test("a newly rejected invalid Zstandard frame stays terminal", async () => {
+  const body = replayFixture(
+    LOCAL_PUUID,
+    MATCH_STATS.goldEarned.toString(),
+    LEAGUE_PATCH,
+    { compressed: true },
+  );
+  const replayHeaderBytes = 15 + LEAGUE_PATCH.length;
+  body[replayHeaderBytes + 17] = 0;
+  const upload = () => uploadReplay(replayRequest(body), "123", DEVICE);
+  const lastError = "Replay chunk is missing its Zstandard frame marker";
+  await expect(upload()).rejects.toMatchObject({
+    status: 400,
+    message: lastError,
+  });
+  expect(mocks.updateMany).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({ data: { uploadState: "REJECTED", lastError } }),
+  );
+
+  mocks.findUnique.mockResolvedValue({
+    platformId: "NA1",
+    gameId: "123",
+    uploadState: "REJECTED",
+    lastError,
+  });
+  await expect(upload()).rejects.toMatchObject({
+    status: 400,
+    message: lastError,
+  });
+  expect(mocks.updateMany).toHaveBeenCalledTimes(1);
+  expect(mocks.send).not.toHaveBeenCalled();
 });
 
 test("keeps a replay retryable until its post-game observation arrives", async () => {
@@ -388,6 +502,158 @@ test("stores the replay at its declared length in the replay bucket", async () =
   });
 });
 
+test("serves an uploaded exact-build replay anonymously while its renderer is pending", async () => {
+  const { handleReplayRoute } = await import("../replays/http.ts");
+  const { resolveReplaySupport } = await import("../replays/support.ts");
+  const replayId = crypto.randomUUID();
+  const gameBuild = "16.23.840.6595";
+  const protocol = "8bbfcd5af2bc92db";
+  const body = replayFixture(
+    LOCAL_PUUID,
+    MATCH_STATS.goldEarned.toString(),
+    gameBuild,
+    { chunkHeaderBytes: 18, compressionTag: 4, protocol, compressed: true },
+  );
+  // The synthetic post-game source is a separate record from the ROFL input.
+  const participants = Array.from({ length: 10 }, (_, index) => ({
+    participantId: index + 1,
+    teamId: index < 5 ? 100 : 200,
+    stats: MATCH_STATS,
+  }));
+  mocks.findMany.mockResolvedValue([
+    {
+      localPuuid: LOCAL_PUUID,
+      platformId: "NA1",
+      leaguePatch: gameBuild,
+      payload: {
+        resource: "match_history_game:123",
+        data: {
+          ...MATCH_HISTORY,
+          mapId: 11,
+          gameMode: "CLASSIC",
+          participants,
+          participantIdentities: participants.map(({ participantId }) => ({
+            participantId,
+            player: {
+              puuid: participantId === 1 ? LOCAL_PUUID : String(participantId),
+            },
+          })),
+        },
+      },
+    },
+  ]);
+  mocks.create.mockResolvedValue({ id: replayId });
+  const putObject = vi.fn(async (command: PutObjectCommand) => {
+    expect(command).toBeInstanceOf(PutObjectCommand);
+    const { Body } = command.input;
+    if (!(Body instanceof Readable))
+      throw new TypeError("Expected a streamed replay upload");
+    return {
+      input: command.input,
+      bytes: await buffer(Body),
+    };
+  });
+  mocks.send.mockImplementationOnce(putObject);
+  const upload = await uploadReplay(replayRequest(body), "123", DEVICE);
+  expect(upload).toMatchObject({ outcome: "accepted", bytes: body.byteLength });
+
+  // Reuse the claim, completion, and object produced by upload at the read boundary.
+  const claim = mocks.create.mock.calls[0]?.[0].data;
+  const completion = mocks.updateMany.mock.lastCall?.[0].data;
+  expect(completion.uploadState).toBe("COMPLETED");
+  mocks.findFirst.mockResolvedValue({ id: replayId, ...claim, ...completion });
+  const stored = await putObject.mock.results[0]?.value;
+  if (!stored) throw new Error("Expected a replay object in storage");
+  expect(stored.bytes).toEqual(Buffer.from(body));
+  mocks.send.mockImplementation((command: GetObjectCommand) => {
+    expect(command).toBeInstanceOf(GetObjectCommand);
+    expect(command.input.Key).toBe(stored.input.Key);
+    expect(command.input.Bucket).toBe(stored.input.Bucket);
+    const range = command.input.Range;
+    const bytes =
+      range === undefined ? stored.bytes : stored.bytes.subarray(0, 4);
+    if (range !== undefined) expect(range).toBe("bytes=0-3");
+    return Promise.resolve({
+      Body: { transformToWebStream: () => new Blob([bytes]).stream() },
+      ContentLength: bytes.length,
+      ContentRange:
+        range === undefined
+          ? undefined
+          : `bytes 0-3/${Number(stored.bytes.length).toString()}`,
+      Metadata: stored.input.Metadata,
+    });
+  });
+
+  const now = new Date("2026-11-21T19:55:00Z");
+  const renderPackage = vi.fn().mockResolvedValue(null);
+  const support: Parameters<typeof handleReplayRoute>[2] = (replay) =>
+    resolveReplaySupport(replay, {
+      now: () => now,
+      observation: () =>
+        Promise.resolve({
+          platformId: "NA1",
+          patch: "16.23",
+          gameBuild,
+          sourceUrl:
+            "https://sieve.services.riotcdn.net/api/v1/products/lol/version-sets/NA1/versions?platform=windows",
+          sourceSha256: "c".repeat(64),
+          observedAt: now.toISOString(),
+        }),
+      renderPackage,
+    });
+  async function read(suffix = "", headers: Record<string, string> = {}) {
+    const url = new URL(
+      `https://scout.invalid/api/replays/${replayId}${suffix}`,
+    );
+    return await handleReplayRoute(
+      new Request(url.href, { headers }),
+      url,
+      support,
+    );
+  }
+
+  const descriptor = await read();
+  expect(descriptor?.status).toBe(200);
+  expect(await descriptor?.json()).toEqual({
+    replayId,
+    matchId: "NA1_123",
+    platformId: "NA1",
+    gameId: "123",
+    bytes: body.byteLength,
+    sha256: upload.digest,
+    gameBuild,
+    protocol,
+    durationSeconds: 60,
+    mapId: 11,
+    gameMode: "CLASSIC",
+    teamSizes: [5, 5],
+    playback: {
+      status: "support_preparing",
+      latestPatch: "16.23",
+      reason: "render_package_unavailable",
+    },
+  });
+  expect(renderPackage).toHaveBeenCalledExactlyOnceWith(gameBuild, protocol);
+  expect(mocks.findFirst).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: { id: replayId, uploadState: "COMPLETED" },
+    }),
+  );
+  const full = await read("/content");
+  const partial = await read("/content", { Range: "bytes=0-3" });
+  if (full === null || partial === null)
+    throw new Error("Replay content route did not respond");
+  expect(full.status).toBe(200);
+  expect(Buffer.from(await full.arrayBuffer())).toEqual(Buffer.from(body));
+  expect(partial.status).toBe(206);
+  expect(partial.headers.get("Content-Range")).toBe(
+    `bytes 0-3/${body.byteLength.toString()}`,
+  );
+  expect(Buffer.from(await partial.arrayBuffer())).toEqual(
+    Buffer.from(body.subarray(0, 4)),
+  );
+});
+
 test("records the storage failure it actually hit", async () => {
   // Every replay on beta failed this way, recorded only as "SeaweedFS upload
   // failed" while the real cause was an SDK checksum error.
@@ -410,11 +676,11 @@ test("records the storage failure it actually hit", async () => {
 });
 
 test("accepts a replay whose header zero-pads the build revision", async () => {
-  // A real replay: the header says 16.19.823.0722, the match 16.19.823.722.
+  // Zero-padding does not select another build or transport layout.
   const body = replayFixture(
     LOCAL_PUUID,
     MATCH_STATS.goldEarned.toString(),
-    "16.18.817.05716",
+    "16.14.794.05912",
   );
 
   await expect(
@@ -426,12 +692,281 @@ test("still refuses a replay from a different build", async () => {
   const body = replayFixture(
     LOCAL_PUUID,
     MATCH_STATS.goldEarned.toString(),
-    "16.18.818.5716",
+    "16.14.795.5912",
   );
 
   await expect(
     uploadReplay(replayRequest(body), "123", DEVICE),
   ).rejects.toMatchObject({ status: 403 });
+});
+
+for (const compressed of [false, true]) {
+  test(`accepts the observed 18-byte transport with ${compressed ? "compressed" : "uncompressed"} chunks`, async () => {
+    const build = "16.21.829.8620";
+    mocks.findMany.mockResolvedValue([
+      {
+        localPuuid: LOCAL_PUUID,
+        platformId: "NA1",
+        leaguePatch: build,
+        payload: { resource: "match_history_game:123", data: MATCH_HISTORY },
+      },
+    ]);
+    const body = replayFixture(
+      LOCAL_PUUID,
+      MATCH_STATS.goldEarned.toString(),
+      build,
+      {
+        chunkHeaderBytes: 18,
+        protocol: "20e09df23c66b85e",
+        compressed,
+      },
+    );
+    await expect(
+      uploadReplay(replayRequest(body), "123", DEVICE),
+    ).resolves.toMatchObject({ outcome: "accepted" });
+    expect(mocks.send).toHaveBeenCalledTimes(1);
+  });
+}
+
+test.each(["16.23.839.9929", "16.23.840.6595"])(
+  "stores the observed %s container with independently supplied match metadata",
+  async (gameBuild) => {
+    const protocol = "8bbfcd5af2bc92db";
+    mocks.findMany.mockResolvedValue([
+      {
+        localPuuid: LOCAL_PUUID,
+        platformId: "NA1",
+        leaguePatch: gameBuild,
+        payload: {
+          resource: "match_history_game:123",
+          data: { ...MATCH_HISTORY, mapId: 12, gameMode: "ARAM" },
+        },
+      },
+    ]);
+    const body = replayFixture(
+      LOCAL_PUUID,
+      MATCH_STATS.goldEarned.toString(),
+      gameBuild,
+      {
+        chunkHeaderBytes: 18,
+        compressionTag: 4,
+        protocol,
+        compressed: true,
+      },
+    );
+    await expect(
+      uploadReplay(replayRequest(body), "123", DEVICE),
+    ).resolves.toMatchObject({ outcome: "accepted" });
+    expect(mocks.send).toHaveBeenCalledTimes(1);
+    expect(mocks.updateMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          uploadState: "COMPLETED",
+          gameBuild,
+          protocol,
+          mapId: 12,
+          gameMode: "ARAM",
+        }),
+      }),
+    );
+  },
+);
+
+test("defers an unobserved build instead of classifying it as corrupt or assuming a legacy layout", async () => {
+  const build = "16.22.834.8910";
+  mocks.findMany.mockResolvedValue([
+    {
+      localPuuid: LOCAL_PUUID,
+      platformId: "NA1",
+      leaguePatch: build,
+      payload: { resource: "match_history_game:123", data: MATCH_HISTORY },
+    },
+  ]);
+  const body = replayFixture(
+    LOCAL_PUUID,
+    MATCH_STATS.goldEarned.toString(),
+    build,
+  );
+  await expect(
+    uploadReplay(replayRequest(body), "123", DEVICE),
+  ).rejects.toMatchObject({
+    status: 503,
+    message: expect.stringContaining("Unsupported container build/protocol"),
+  });
+  expect(mocks.send).not.toHaveBeenCalled();
+  expect(mocks.updateMany).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      data: expect.objectContaining({ uploadState: "FAILED" }),
+    }),
+  );
+});
+
+test("binds a leaver's observed loss to canonical losing provenance", async () => {
+  mocks.findMany.mockResolvedValue([
+    {
+      localPuuid: LOCAL_PUUID,
+      platformId: "NA1",
+      leaguePatch: LEAGUE_PATCH,
+      payload: {
+        resource: "match_history_game:123",
+        data: {
+          ...MATCH_HISTORY,
+          participants: [
+            {
+              participantId: 1,
+              teamId: 100,
+              stats: { ...MATCH_STATS, win: "Fail" },
+            },
+          ],
+        },
+      },
+    },
+  ]);
+  const body = replayFixture(LOCAL_PUUID, undefined, LEAGUE_PATCH, {
+    outcome: "LeaverFail",
+  });
+  await expect(
+    uploadReplay(replayRequest(body), "123", DEVICE),
+  ).resolves.toMatchObject({ outcome: "accepted" });
+  expect(mocks.send).toHaveBeenCalledOnce();
+});
+
+test.each([
+  ["LeaverFail", 403, "Replay participant does not match the observed match"],
+  ["UnknownOutcome", 400, "Replay participant metadata is invalid"],
+])(
+  "rejects footer outcome %s against winning provenance",
+  async (outcome, status, message) => {
+    const body = replayFixture(LOCAL_PUUID, undefined, LEAGUE_PATCH, {
+      outcome,
+    });
+    await expect(
+      uploadReplay(replayRequest(body), "123", DEVICE),
+    ).rejects.toMatchObject({ status, message });
+    expect(mocks.send).not.toHaveBeenCalled();
+  },
+);
+
+test("rejects an incompatible protocol before storage", async () => {
+  const body = replayFixture(
+    LOCAL_PUUID,
+    MATCH_STATS.goldEarned.toString(),
+    LEAGUE_PATCH,
+    { protocol: "20e09df23c66b85e" },
+  );
+  await expect(
+    uploadReplay(replayRequest(body), "123", DEVICE),
+  ).rejects.toMatchObject({
+    status: 400,
+    message: expect.stringContaining("Unsupported container protocol"),
+  });
+  expect(mocks.send).not.toHaveBeenCalled();
+});
+
+for (const [build, protocol] of [
+  ["16.18.817.5716", "f6a10af08504a7ee"],
+  ["16.19.823.0722", "6bfab33e871a4a58"],
+] as const) {
+  test(`retains authenticated legacy upload storage for observed ${build}`, async () => {
+    mocks.findMany.mockResolvedValue([
+      {
+        localPuuid: LOCAL_PUUID,
+        platformId: "NA1",
+        leaguePatch: build,
+        payload: { resource: "match_history_game:123", data: MATCH_HISTORY },
+      },
+    ]);
+    const body = replayFixture(
+      LOCAL_PUUID,
+      MATCH_STATS.goldEarned.toString(),
+      build,
+      { protocol },
+    );
+    await expect(
+      uploadReplay(replayRequest(body), "123", DEVICE),
+    ).resolves.toMatchObject({ outcome: "accepted" });
+  });
+}
+
+test("rejects the wrong 18-byte compression tag before storage", async () => {
+  const build = "16.21.829.8620";
+  mocks.findMany.mockResolvedValue([
+    {
+      localPuuid: LOCAL_PUUID,
+      platformId: "NA1",
+      leaguePatch: build,
+      payload: { resource: "match_history_game:123", data: MATCH_HISTORY },
+    },
+  ]);
+  const body = replayFixture(
+    LOCAL_PUUID,
+    MATCH_STATS.goldEarned.toString(),
+    build,
+    { chunkHeaderBytes: 18, protocol: "20e09df23c66b85e", compressionTag: 3 },
+  );
+  await expect(
+    uploadReplay(replayRequest(body), "123", DEVICE),
+  ).rejects.toMatchObject({
+    status: 400,
+    message: "Unsupported chunk compression tag 3",
+  });
+  expect(mocks.send).not.toHaveBeenCalled();
+});
+
+test("returns validated container identity and duration for artifact metadata", async () => {
+  const build = "16.21.829.8620";
+  const protocol = "20e09df23c66b85e";
+  const body = replayFixture(
+    LOCAL_PUUID,
+    MATCH_STATS.goldEarned.toString(),
+    build,
+    {
+      chunkHeaderBytes: 18,
+      protocol,
+      compressed: true,
+    },
+  );
+  const filePath = path.join(
+    tmpdir(),
+    `scout-replay-container-${crypto.randomUUID()}.rofl`,
+  );
+  await writeFile(filePath, body);
+  try {
+    await expect(
+      validateReplayContainer(filePath, body.byteLength, {
+        localPuuid: LOCAL_PUUID,
+        leaguePatch: build,
+        gameDurationSeconds: MATCH_HISTORY.gameDuration,
+        participant: {
+          puuid: LeaguePuuidSchema.parse(LOCAL_PUUID),
+          teamId: 100,
+          kills: MATCH_STATS.kills,
+          deaths: MATCH_STATS.deaths,
+          assists: MATCH_STATS.assists,
+          goldEarned: MATCH_STATS.goldEarned,
+          goldSpent: MATCH_STATS.goldSpent,
+          totalDamageDealtToChampions: MATCH_STATS.totalDamageDealtToChampions,
+          totalMinionsKilled: MATCH_STATS.totalMinionsKilled,
+          visionScore: MATCH_STATS.visionScore,
+          wardsPlaced: MATCH_STATS.wardsPlaced,
+          wardsKilled: MATCH_STATS.wardsKilled,
+          championLevel: MATCH_STATS.champLevel,
+          win: MATCH_STATS.win,
+          items: [
+            MATCH_STATS.item0,
+            MATCH_STATS.item1,
+            MATCH_STATS.item2,
+            MATCH_STATS.item3,
+            MATCH_STATS.item4,
+            MATCH_STATS.item5,
+            MATCH_STATS.item6,
+          ],
+        },
+      }),
+    ).resolves.toEqual({ gameBuild: build, protocol, durationSeconds: 60 });
+  } finally {
+    await unlink(filePath);
+  }
 });
 
 test("refuses a UUID-named replay whose player has no alias", async () => {

@@ -2,6 +2,8 @@ import { test, expect } from "bun:test";
 import {
   isDirectImmutableData,
   freezeDirectOwnedData,
+  createDirectOwnedDataFreezer,
+  protectDirectDataGraph,
 } from "./latest-direct-immutable-data.mjs";
 
 test("only completely immutable own-data graphs qualify for identity reuse", () => {
@@ -26,6 +28,46 @@ test("only completely immutable own-data graphs qualify for identity reuse", () 
   });
   expect(isDirectImmutableData(accessor)).toBe(false);
   expect(invoked).toBe(false);
+});
+
+test("a full-match freeze batch visits shared owned subgraphs once and preserves protected mutable aliases", () => {
+  const shared = {
+      source: Array.from({ length: 4096 }, (_, id) => ({
+        id,
+        value: [id, -0],
+      })),
+    },
+    mutableReasons = ["original omission"],
+    protection = new WeakSet();
+  protectDirectDataGraph({ reasons: mutableReasons }, protection);
+  const freezer = createDirectOwnedDataFreezer(protection),
+    count = 100760;
+  for (let index = 0; index < count; index++) freezer.freeze({ index, shared });
+  const metrics = freezer.metrics();
+  expect(metrics.reused).toBe(count - 1);
+  expect(metrics.visited).toBe(count + 2 + 4096 * 2);
+  expect(Object.isFrozen(shared.source[0].value)).toBe(true);
+  const aliased = { shared, mutableReasons };
+  freezer.freeze(aliased);
+  expect(Object.isFrozen(aliased)).toBe(false);
+  expect(Object.isFrozen(mutableReasons)).toBe(false);
+  mutableReasons.push("actual linked removal");
+  expect(aliased.mutableReasons).toHaveLength(2);
+});
+
+test("batch certification cannot leak from a rejected cyclic graph or mutable backing store", () => {
+  const freezer = createDirectOwnedDataFreezer(),
+    root = {},
+    child = { root };
+  root.child = child;
+  root.mutable = new Uint8Array([1]);
+  freezer.freeze(root);
+  expect(Object.isFrozen(child)).toBe(false);
+  expect(freezer.metrics().certified).toBe(0);
+  root.mutable[0] = 2;
+  freezer.freeze(child);
+  expect(Object.isFrozen(root)).toBe(false);
+  expect(freezer.metrics().certified).toBe(0);
 });
 
 test("rejected cyclic graphs cannot certify their frozen children", () => {

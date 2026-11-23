@@ -42,11 +42,7 @@ const BACKEND_ROOT = `${import.meta.dir}/../..`;
 const MIGRATIONS_DIR = `${BACKEND_ROOT}/prisma/migrations`;
 const ENSURE_TEMPLATE_SCRIPT = `${BACKEND_ROOT}/scripts/ensure-test-template.ts`;
 
-/**
- * Synchronous so createTestDatabase (called at suite module scope) can use it;
- * Bun.mmap is the synchronous file read (Bun.file().text() is not).
- */
-function computeTemplateHash(): string {
+async function computeTemplateHash(): Promise<string> {
   const hasher = new Bun.CryptoHasher("sha256");
   hasher.update(TEMPLATE_SCHEMA_VERSION);
   const glob = new Bun.Glob("*/migration.sql");
@@ -56,11 +52,14 @@ function computeTemplateHash(): string {
   }
   for (const file of files) {
     hasher.update(file);
-    hasher.update(Bun.mmap(`${MIGRATIONS_DIR}/${file}`));
+    for await (const chunk of Bun.file(`${MIGRATIONS_DIR}/${file}`).stream())
+      hasher.update(chunk);
   }
   hasher.update(JSON.stringify(SEASONS));
   return hasher.digest("hex");
 }
+
+if (import.meta.main) process.stdout.write(await computeTemplateHash());
 
 function templateDatabaseName(hash: string): string {
   return `scout_template_${hash.slice(0, 48)}`;
@@ -86,7 +85,18 @@ export function getTestTemplateDatabase(): string {
 export function ensureTestTemplateSync(): void {
   if (activeTemplateDatabase !== undefined) return;
   sweepStaleTestDatabases();
-  const wanted = computeTemplateHash();
+  const hashResult = Bun.spawnSync([process.execPath, import.meta.path], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  if (!hashResult.success)
+    throw new Error(
+      `Could not compute test template hash: ${hashResult.stderr.toString()}`,
+    );
+  const wanted = z
+    .string()
+    .regex(/^[a-f0-9]{64}$/)
+    .parse(hashResult.stdout.toString());
   const databaseName = templateDatabaseName(wanted);
   if (currentTemplateHash(databaseName) !== wanted) {
     const result = Bun.spawnSync(
@@ -239,7 +249,7 @@ async function rebuildTemplate(
  */
 export async function ensureTestTemplate(): Promise<void> {
   ensureDevPostgres();
-  const wanted = computeTemplateHash();
+  const wanted = await computeTemplateHash();
   const databaseName = templateDatabaseName(wanted);
   activeTemplateDatabase = databaseName;
   if (currentTemplateHash(databaseName) === wanted) {

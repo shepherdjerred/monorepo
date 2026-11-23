@@ -2,6 +2,7 @@
 // pointers. Unit-context precedence, global fallback and factory creation remain
 // separate unresolved engine stages.
 import { sha256 } from "./structural-comparison.mjs";
+import { replayRowAt } from "./latest-replay-columns.mjs";
 import { ownLatestStaticBytes } from "./latest-static-bytes.mjs";
 import {
   EFFECT_CONTEXTS_PACKAGE_SHA,
@@ -58,7 +59,7 @@ export async function createLatestEffectResolvers({
           contexts,
         });
   if (
-    meta.schema !== 1 ||
+    (meta.schema !== 1 && !(meta.schema === 2 && staticCatalog !== null)) ||
     meta.kind !== "prepared-authored-effect-resolvers" ||
     meta.build !== "16.21.829.8620" ||
     meta.protocol !== "20e09df23c66b85e" ||
@@ -129,7 +130,12 @@ export async function createLatestEffectResolvers({
     } else throw Error("Unknown authored resolver state");
     maps.set(actor.contextIdentity, freeze(actor));
   }
-  if (maps.size !== Object.keys(effects.actors).length)
+  if (
+    maps.size !==
+    (meta.schema === 2
+      ? meta.actors.length
+      : Object.keys(effects.actors).length)
+  )
     throw Error("Incomplete authored resolver inventory");
   freeze(meta);
   function lookup(identity, key) {
@@ -208,8 +214,9 @@ export async function createLatestEffectResolvers({
           creationSequence: request.creationSequence,
           entityId: request.entityId,
           auxiliary: selectAuxiliary(
-            report.effectDescriptors[i].unresolvedAuxiliaryContextIds,
-            report.effectDescriptors[i].resourceKey,
+            replayRowAt(report.effectDescriptors, i)
+              .unresolvedAuxiliaryContextIds,
+            replayRowAt(report.effectDescriptors, i).resourceKey,
           ),
           unitResourcePrecedenceVerified: false,
           globalResolutionVerified: false,
@@ -228,7 +235,7 @@ export async function createLatestEffectResolvers({
       const requests = api.bindRequests(report);
       for (const [i, request] of requests.entries()) {
         const creation = pipeline.creation(i),
-          descriptor = report.effectDescriptors[i];
+          descriptor = replayRowAt(report.effectDescriptors, i);
         if (
           creation.entityId !== request.entityId ||
           creation.creationSequence !== i ||

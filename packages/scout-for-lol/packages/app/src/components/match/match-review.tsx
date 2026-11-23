@@ -19,6 +19,7 @@ import {
 } from "./match-review-timeline.tsx";
 import { ChampionIcon } from "./champion-icon.tsx";
 import { MatchMvpTally, type MatchMvpTallyView } from "./match-mvp-tally.tsx";
+import { ReplayMatchLink } from "#src/components/replay/replay-match-link.tsx";
 import {
   laneOpponent,
   participantName,
@@ -87,6 +88,7 @@ function MatchReviewContent(props: {
   }));
   return (
     <div className="space-y-5">
+      <ReplayMatchLink matchId={props.matchId} />
       <label className="flex flex-wrap items-center gap-2 text-sm font-medium">
         Review player
         <select

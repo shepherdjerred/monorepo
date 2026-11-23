@@ -1,0 +1,143 @@
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { mkdir, realpath, writeFile } from "node:fs/promises";
+import { dirname, join, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+import { LocalScoutTerrainManifestSchema } from "../../../../../packages/scout-for-lol/packages/app/e2e/public-replay/local-scout-terrain-manifest.ts";
+
+const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
+const entrypoint = "engine.mjs";
+const sceneFiles = new Set([
+  "map.json",
+  "map.bin",
+  "scene.json",
+  "heights.bin",
+  "minimap.png",
+  "replay-motion-worker.mjs",
+  "replay-motion-decoder.bin",
+]);
+const assetPath =
+  /^(?:map-textures|champion-models|champion-animations|structure-models|nexus-models|inhibitor-models|world-unit-models|item-icons)\//;
+const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
+
+async function buildEngine(threeCore) {
+  const result = await Bun.build({
+    entrypoints: [
+      fileURLToPath(new URL("../scout-terrain-engine.ts", import.meta.url)),
+    ],
+    format: "esm",
+    target: "browser",
+    plugins: [
+      {
+        name: "local-scout-terrain-three",
+        setup(builder) {
+          builder.onResolve({ filter: /^\/three\.core\.js$/ }, () => ({
+            path: resolve(threeCore),
+          }));
+          builder.onResolve(
+            { filter: /^(?:zod$|@scout-for-lol\/replay\/)/ },
+            (args) => ({
+              path: Bun.resolveSync(
+                args.path,
+                join(repoRoot, "packages/scout-for-lol/packages/app"),
+              ),
+            }),
+          );
+        },
+      },
+    ],
+  });
+  if (!result.success || result.outputs.length !== 1)
+    throw new AggregateError(result.logs, "Scout terrain engine bundle failed");
+  return result.outputs[0];
+}
+
+export async function writeLocalScoutTerrainPackage({
+  output,
+  identity,
+  routes,
+  threeCore,
+  announcerFiles,
+}) {
+  const cache = join(await realpath(repoRoot), ".cache");
+  const outputRoot = resolve(output);
+  assert.equal(
+    dirname(outputRoot),
+    cache,
+    "Choose a new direct child of the repository's ignored .cache directory",
+  );
+  await mkdir(cache, { recursive: true });
+  assert.equal(
+    relative(await realpath(repoRoot), await realpath(cache)),
+    ".cache",
+    "Private package cache must stay inside this repository",
+  );
+  const resources = new Map([[entrypoint, await buildEngine(threeCore)]]);
+  for (const [path, bytes] of announcerFiles ?? []) resources.set(path, bytes);
+  for (const [route, [body]] of routes) {
+    assert.ok(route.startsWith("/"));
+    const path = route.slice(1);
+    if (sceneFiles.has(path) || assetPath.test(path)) resources.set(path, body);
+  }
+  for (const path of sceneFiles)
+    assert.ok(
+      resources.has(path),
+      `Required terrain resource missing: ${path}`,
+    );
+
+  const files = [];
+  for (const path of [...resources.keys()].sort()) {
+    const bytes = Buffer.from(
+      await new Response(resources.get(path)).arrayBuffer(),
+    );
+    resources.set(path, bytes);
+    files.push({ path, bytes: bytes.byteLength, sha256: sha256(bytes) });
+  }
+  const manifest = LocalScoutTerrainManifestSchema.parse({
+    schemaVersion: 1,
+    gameBuild: identity.build,
+    protocol: identity.protocol,
+    entrypoint,
+    capabilities: {
+      mapId: 11,
+      gameMode: "CLASSIC",
+      teamSizes: [5, 5],
+      rosterCoverage: "recorded-replay",
+      replaySha256: identity.replaySha256,
+      ...(announcerFiles === undefined
+        ? {}
+        : { announcerPreview: "female1-en-us" }),
+    },
+    files,
+  });
+  const manifestBytes = Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`);
+  const manifestSha256 = sha256(manifestBytes);
+  const packageDirectory = join(outputRoot, manifestSha256);
+  await mkdir(outputRoot);
+  await mkdir(packageDirectory);
+  for (const [path, bytes] of resources) {
+    const file = join(packageDirectory, ...path.split("/"));
+    assert.ok(file.startsWith(packageDirectory + sep));
+    await mkdir(dirname(file), { recursive: true });
+    await writeFile(file, bytes, { flag: "wx" });
+  }
+  const manifestPath = join(packageDirectory, "manifest.json");
+  await writeFile(manifestPath, manifestBytes, { flag: "wx" });
+  return { manifestPath, manifestSha256, ...identity, fileCount: files.length };
+}
+
+if (import.meta.main) {
+  const [output, ...args] = process.argv.slice(2);
+  assert.ok(
+    output && args.length >= 3,
+    "Usage: bun build-local-scout-terrain-package.mjs <new .cache child> <terrain directory> <three.core.js> <replay.rofl> --position-decoder <prepared decoder> --worker-decompressor <fzstd.mjs> --terrain-materials <materials.json> --champion-models <models manifest> [--turret-placements <receipt> --structure-models <structures manifest>] [--nexus-models <nexus manifest>] [--inhibitor-models <manifest> --inhibitor-models-sha256 <sha256>] [--announcer-preview <verified timing directory>]",
+  );
+  const server = fileURLToPath(
+    new URL("./serve-native-terrain.mjs", import.meta.url),
+  );
+  const result = Bun.spawnSync(
+    [process.execPath, server, ...args, "--private-package-output", output],
+    { stdout: "inherit", stderr: "inherit" },
+  );
+  process.exitCode = result.exitCode;
+}

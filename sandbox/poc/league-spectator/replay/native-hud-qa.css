@@ -1,0 +1,70 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+  background: #10151b;
+  color: #e5e9ef;
+}
+body {
+  margin: 0;
+}
+header,
+details {
+  padding: 16px 24px;
+}
+h1 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+p {
+  max-width: 1050px;
+  line-height: 1.4;
+  margin: 6px 0;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 18px;
+  align-items: end;
+}
+label {
+  display: grid;
+  gap: 6px;
+}
+label:has(input) {
+  display: flex;
+  align-items: center;
+  padding-bottom: 8px;
+}
+select {
+  max-width: min(700px, 90vw);
+  font: inherit;
+  padding: 7px;
+  color: inherit;
+  background: #202b37;
+  border: 1px solid #60758b;
+  border-radius: 4px;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #182029;
+  border-top: 1px solid #42505f;
+  border-bottom: 1px solid #42505f;
+}
+#fonts {
+  display: grid;
+  gap: 16px;
+  padding-top: 20px;
+}
+#fonts p {
+  font-size: 24px;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+[role="alert"] {
+  color: #ffb4a4;
+}

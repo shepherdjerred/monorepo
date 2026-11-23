@@ -7,6 +7,8 @@ import struct
 
 from animation_clock_native import NativeAnimationClock, BLOCKS, RESOURCE
 from vfx_spawn_native import sha
+from scene_metadata_output import SceneMetadataOutput
+from scene_animation_header import project_scene_animation_header
 
 
 def scalar(hex_value):
@@ -17,12 +19,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ["package", "client", "scene", "evidence"]:
         parser.add_argument(name, type=Path)
+    parser.add_argument('--output-package', type=Path, required=True)
     args = parser.parse_args()
+    output = SceneMetadataOutput(args.package, args.scene, args.output_package, args.evidence)
+    output.read(args.client)
     kernel = NativeAnimationClock(args.package, args.client)
     profile = kernel.profile
-    scene_raw = (args.scene / "manifest.json").read_bytes()
+    scene_raw = output.read(args.scene / "manifest.json")
     scene = json.loads(scene_raw)
-    world_raw = (args.scene / scene["world"]).read_bytes()
+    world_raw = output.read_scene(scene["world"])
     world = json.loads(world_raw)
     if scene["build"] != profile["clientVersion"] or scene["protocol"] != profile["protocolDigest"]:
         raise ValueError("Atomic clock scene build mismatch")
@@ -33,10 +38,10 @@ def main():
                 for key, offset in [("tickDuration", 0x68), ("startFrame", 0x88), ("endFrame", 0x8c)]}
     graphs, observations, format_counts = {}, [], Counter()
     for actor, asset in assets:
-        graph_raw = (args.scene / asset["animationGraph"]).read_bytes()
-        catalog_raw = (args.scene / asset["animationCatalog"]).read_bytes()
+        graph_raw = output.read_scene(asset["animationGraph"])
+        catalog_raw = output.read_scene(asset["animationCatalog"])
         selected_file = Path(asset["animationCatalog"]).parent / "selected-clips.json"
-        selected_raw = (args.scene / selected_file).read_bytes()
+        selected_raw = output.read_scene(selected_file)
         selected = json.loads(selected_raw)
         catalog = json.loads(catalog_raw)
         data = [g for g in json.loads(graph_raw).values() if isinstance(g, dict) and g.get("__type") == "AnimationGraphData"]
@@ -47,11 +52,16 @@ def main():
             if node["__type"] != "AtomicClipData":
                 continue
             raw_file = Path(asset["animationCatalog"]).parent / selected[name]
-            raw = (args.scene / raw_file).read_bytes()
-            resource = kernel.prepare_header(raw)
+            raw = output.read_scene(raw_file)
+            try:
+                resource = project_scene_animation_header(kernel, raw)
+            except ValueError as error:
+                raise ValueError(f'{actor}/{name}: {raw_file}: {error}') from error
             format_counts[(resource.get("kind", resource["status"]), resource["version"])] += 1
             clip = {"source": {"file": raw_file.as_posix(), "sha256": sha(raw),
                     "headerSha256": sha(raw[:0x80])}, "status": resource["status"]}
+            if 'headerProjection' in resource:
+                clip['headerProjection'] = resource['headerProjection']
             if resource["status"] != "prepared":
                 clips[name] = clip
                 continue
@@ -79,7 +89,7 @@ def main():
             "selectedClipsFile": selected_file.as_posix(), "selectedClipsSha256": sha(selected_raw), "clips": clips}
     # Fractional trims and tick/rate combinations expose the native operation
     # order, rather than comparing only integer frames on 30 FPS assets.
-    resource = kernel.prepare_header((args.scene / next(iter(next(iter(graphs.values()))["clips"].values()))["source"]["file"]).read_bytes())
+    resource = project_scene_animation_header(kernel, output.read_scene(next(iter(next(iter(graphs.values()))["clips"].values()))["source"]["file"]))
     for start, end in [(0, -1), (3.25, 20.75), (-2, 30), (12, 12), (2.5, 3.1)]:
         for tick in [1/60, 1/30, .0555555559694767, 1]:
             node = {"startFrame": start, "EndFrame": end, "mTickDuration": tick}
@@ -92,18 +102,16 @@ def main():
         "defaults": defaults, "fieldLayout": kernel.layout, "resourceClasses": RESOURCE,
         "sourceBlocks": [{"startRva": a, "endRva": b, "sha256": sha(kernel.image[a:b])} for a, b in BLOCKS],
         "compilerSources": {name: sha(Path(__file__).with_name(name).read_bytes()) for name in
-            ["prepare-animation-clock.py", "animation_clock_native.py", "vfx_spawn_native.py", "vfx_uv_native.py"]},
+            ["prepare-animation-clock.py", "scene_metadata_output.py", "scene_animation_header.py", "animation_clock_native.py", "vfx_spawn_native.py", "vfx_uv_native.py"]},
         "sceneManifestSha256": sha(scene_raw), "worldCatalogSha256": sha(world_raw), "graphs": graphs,
         "scope": "Original loaded-resource header projections/frame-count/FPS getters, atomic event-frame/duration prefixes and pose-time conversion. No pose evaluation, ANM payload conversion, recorded rate semantics, clip interruption or loop policy is established."}
     raw = json.dumps(metadata, indent=2).encode()
-    (args.package / "animation-clock.json").write_bytes(raw)
-    profile["animationClockSha256"] = sha(raw)
-    (args.package / "profile.json").write_text(json.dumps(profile, indent=2), encoding="utf-8")
+    output.publish('animation-clock.json', raw, 'atomic-clocks')
     evidence = {"schema": 1, "build": metadata["build"], "protocol": metadata["protocol"],
         "definitionSha256": sha(raw), "decoderImageSha256": metadata["decoderImageSha256"],
         "compilerSources": metadata["compilerSources"], "executedOriginalBlocks": list(kernel.blocks.values()),
         "observations": observations, "scope": metadata["scope"]}
-    args.evidence.write_text(json.dumps(evidence, indent=2), encoding="utf-8")
+    output.write_evidence(json.dumps(evidence, indent=2).encode())
     clips = [c for g in graphs.values() for c in g["clips"].values()]
     print(json.dumps({"graphs": len(graphs), "clips": len(clips), "statuses": dict(Counter(c["status"] for c in clips)),
         "formats": {str(k): v for k, v in format_counts.items()}, "observations": sum(len(o["samples"]) for o in observations),

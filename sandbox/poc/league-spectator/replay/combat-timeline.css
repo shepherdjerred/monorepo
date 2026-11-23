@@ -1,0 +1,184 @@
+:root {
+  color: #172223;
+  background: #eef1ed;
+  font-family: system-ui, sans-serif;
+  --team-a: #126456;
+  --team-b: #984224;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 2.75rem 1.25rem 4rem;
+}
+
+header {
+  margin-bottom: 1.75rem;
+}
+
+.scope {
+  color: #35685b;
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 7vw, 3.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.05em;
+}
+
+#status {
+  margin-bottom: 0;
+  color: #435854;
+}
+
+.scoreboard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.team {
+  --team: var(--team-a);
+  padding: 1rem 1.2rem;
+  background: #f8faf7;
+  border-radius: 0.5rem;
+  border-top: 0.25rem solid var(--team);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  color: var(--team);
+  font-weight: 700;
+}
+
+.team-b {
+  --team: var(--team-b);
+}
+
+.team strong {
+  font-size: 2rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.transport,
+.events {
+  background: #fff;
+  border: 1px solid #d5ded6;
+  border-radius: 0.5rem;
+  padding: 1.15rem;
+}
+
+.transport-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  font-weight: 700;
+}
+
+#clock,
+time {
+  color: #435854;
+  font-variant-numeric: tabular-nums;
+}
+
+.marks {
+  position: relative;
+  height: 0.85rem;
+  margin: 0.75rem 0.45rem 0;
+}
+
+.marks span {
+  position: absolute;
+  height: 0.8rem;
+  border-left: 2px solid var(--team-a);
+}
+
+.marks span.team-b {
+  border-color: var(--team-b);
+}
+
+input[type="range"] {
+  width: 100%;
+  margin: 0 0 0.75rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+button {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #adbeb5;
+  border-radius: 0.3rem;
+  background: #f4f6f3;
+  color: #172223;
+  font: inherit;
+  cursor: pointer;
+}
+
+#play {
+  min-width: 5.5rem;
+  border-color: #126456;
+  background: #126456;
+  color: #fff;
+}
+
+button:disabled {
+  color: #546761;
+  cursor: default;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #172223;
+  outline-offset: 3px;
+}
+
+.events {
+  margin-top: 0.75rem;
+}
+
+h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+}
+
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  display: grid;
+  grid-template-columns: 4.6rem minmax(0, 1fr) auto;
+  gap: 0.35rem 0.75rem;
+  align-items: baseline;
+  padding: 0.6rem 0;
+  border-top: 1px solid #e1e8e2;
+}
+
+li strong {
+  color: var(--team-a);
+  font-size: 0.85rem;
+}
+
+li strong.team-b {
+  color: var(--team-b);
+}

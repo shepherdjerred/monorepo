@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Security.Cryptography;
 using System.Text.Json;
 using LeagueToolkit.Core.Environment;
 using LeagueToolkit.Core.Memory;
@@ -21,12 +22,36 @@ foreach(var job in jobs){
 Console.WriteLine($"Converted {jobs.Count} exact-build textures");
 }else if(mode=="map"){
 
-using var asset = new EnvironmentAsset(File.OpenRead(args[0]));
+if (args.Length is < 2 or > 3 || (args.Length == 3 && args[2] != "infernal-overlays"))
+ throw new ArgumentException("Usage: map <input> <output-directory> [infernal-overlays]");
+bool includeInfernalOverlays = args.Length == 3;
+using var mapStream = File.OpenRead(args[0]);
+if (includeInfernalOverlays) {
+ const string map11Hash = "D6D8D434B977EE43BBC05AEB61D586476C692585DA9CF7B2971906091539D1A5";
+ if (Convert.ToHexString(SHA256.HashData(mapStream)) != map11Hash)
+  throw new InvalidDataException("Infernal overlays require the pinned Map11 geometry");
+ mapStream.Position = 0;
+}
+using var asset = new EnvironmentAsset(mapStream);
+var selectedMeshes = asset.Meshes.Where(mesh => ((int)mesh.VisibilityFlags & 1) != 0).ToList();
+if (includeInfernalOverlays) {
+ var materials = new HashSet<string>(StringComparer.Ordinal) {
+  "Maps/KitPieces/SRS/Base/Materials/Default/Ground_D4_DragonPit_Fire_A_MAT",
+  "Maps/KitPieces/SRS/Base/Materials/Default/Order_Dragon_Fire_B_MAT",
+  "Maps/KitPieces/SRS/Base/Materials/Default/Order_Dragon_Fire_A_MAT",
+ };
+ var overlays = asset.Meshes.Where(mesh =>
+  (int)mesh.VisibilityFlags == 2 && mesh.VisibilityControllerPathHash == 0xd1a17399u &&
+  mesh.Submeshes.Count() == 1 && materials.Contains(mesh.Submeshes.Single().Material)).ToArray();
+ if (overlays.Length != materials.Count ||
+     !materials.SetEquals(overlays.Select(mesh => mesh.Submeshes.Single().Material)))
+  throw new InvalidDataException("Pinned Map11 geometry is missing an Infernal overlay");
+ selectedMeshes.AddRange(overlays);
+}
 Directory.CreateDirectory(args[1]);
 using var writer = new BinaryWriter(File.Create(Path.Combine(args[1], "map.bin")));
 var meshes = new List<object>();
-foreach (var mesh in asset.Meshes) {
- if (((int)mesh.VisibilityFlags & 1) == 0) continue;
+foreach (var mesh in selectedMeshes) {
  var positions = mesh.VerticesView.GetAccessor(ElementName.Position).AsVector3Array();
  long positionOffset = writer.BaseStream.Position;
  foreach (var p in positions) {var v=Vector3.Transform(p, mesh.Transform);writer.Write(v.X);writer.Write(v.Y);writer.Write(v.Z);}

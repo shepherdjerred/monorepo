@@ -25,6 +25,8 @@
     "@scout-for-lol/backend": "workspace:*",
     "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/design-system": "workspace:*",
+    "@scout-for-lol/domain": "workspace:*",
+    "@scout-for-lol/replay": "workspace:*",
     "@scout-for-lol/report": "workspace:*",
     "@sentry/react": "^11.5.0",
     "@tanstack/react-form": "^1.33.5",

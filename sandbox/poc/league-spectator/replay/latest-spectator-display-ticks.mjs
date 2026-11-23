@@ -1,8 +1,10 @@
-export const FRAME_SCHEDULING_POLICY = "reply-driven-owned-presentations-v1";
+import { validatePresentationObservationOrder } from "./latest-spectator-observation-order.mjs";
+export const FRAME_SCHEDULING_POLICY = "reply-driven-owned-presentations-v2";
 const finite = Number.isFinite;
 const unsigned = (v) => Number.isSafeInteger(v) && v >= 0;
 const DRAW_FIELDS = [
   "drawId",
+  "drawOrder",
   "drawWallTime",
   "epoch",
   "stateKey",
@@ -31,6 +33,8 @@ function validateStamp(row, contract) {
     !row ||
     !unsigned(row.drawId) ||
     row.drawId < 1 ||
+    !unsigned(row.drawOrder) ||
+    row.drawOrder < 1 ||
     !unsigned(row.epoch) ||
     ![row.drawWallTime, row.presentedTime, row.speed, row.pixelRatio].every(
       finite,
@@ -74,26 +78,58 @@ function validateStamp(row, contract) {
 }
 export function validateDisplayTick(row, previous, contract) {
   validateStamp(row, contract);
+  // RAF's rendering timestamp and performance.now() are separately exposed,
+  // coarsened samples. Preserve both without ordering them against each other;
+  // each series and the performance.now()-based draw joins are checked below.
+  // Queued RAF callbacks can also observe the same performance.now() sample.
+  // Retain both observations; the RAF series still identifies forward ticks.
   if (
     ![row.wallTime, row.rafTime, row.desiredTime, row.desiredSpeed].every(
       finite,
     ) ||
     row.wallTime < row.drawWallTime ||
     row.rafTime < 0 ||
-    row.wallTime < row.rafTime ||
     row.desiredTime < 0 ||
     row.desiredSpeed <= 0 ||
     !unsigned(row.desiredEpoch) ||
     typeof row.desiredPlaying !== "boolean" ||
+    !unsigned(row.observationOrder) ||
+    row.observationOrder <= row.drawOrder ||
     (previous &&
-      (row.wallTime <= previous.wallTime ||
+      (row.wallTime < previous.wallTime ||
+        row.observationOrder <= previous.observationOrder ||
         row.rafTime <= previous.rafTime ||
         row.drawId < previous.drawId ||
         (row.drawId === previous.drawId && !sameStamp(row, previous)) ||
         (row.desiredEpoch === previous.desiredEpoch &&
           row.desiredTime < previous.desiredTime)))
   )
-    throw Error("Identified monotonic display tick required");
+    throw Error(
+      `Identified monotonic display tick required: ${JSON.stringify({
+        current: {
+          wallTime: row.wallTime,
+          rafTime: row.rafTime,
+          drawWallTime: row.drawWallTime,
+          drawId: row.drawId,
+          desiredTime: row.desiredTime,
+          desiredEpoch: row.desiredEpoch,
+        },
+        previous: previous
+          ? {
+              wallTime: previous.wallTime,
+              rafTime: previous.rafTime,
+              drawWallTime: previous.drawWallTime,
+              drawId: previous.drawId,
+              desiredTime: previous.desiredTime,
+              desiredEpoch: previous.desiredEpoch,
+            }
+          : null,
+        changedRetainedStamp:
+          !!previous &&
+          row.drawId === previous.drawId &&
+          !sameStamp(row, previous),
+      })}`,
+    );
 }
 // Draw identity is resolved only against recorded submissions or the explicit
 // pre-recording boundary. Retained canvas observations do not invent draws.
@@ -114,8 +150,8 @@ export function validateDisplayTickJoins(ticks, frames, contract) {
       draws.has(row.drawId) ||
       (previous &&
         (row.drawId <= previous.drawId ||
-          row.drawWallTime <= previous.drawWallTime ||
-          row.wallTime <= previous.wallTime))
+          row.drawWallTime < previous.drawWallTime ||
+          row.wallTime < previous.wallTime))
     )
       throw Error("Ordered unique draw frame required");
     const direct = row.directEffectFrame;
@@ -164,8 +200,7 @@ export function validateDisplayTickJoins(ticks, frames, contract) {
     )
       throw Error("Initial display boundary must precede recorded draws");
   }
-  let initialBoundaryTicks = 0,
-    completedIndex = -1;
+  let initialBoundaryTicks = 0;
   previous = null;
   for (const row of ticks) {
     validateDisplayTick(row, previous, contract);
@@ -176,16 +211,10 @@ export function validateDisplayTickJoins(ticks, frames, contract) {
       throw Error(
         "Display tick differs from its recorded draw or explicit boundary",
       );
-    while (
-      completedIndex + 1 < frames.length &&
-      frames[completedIndex + 1].drawWallTime <= row.wallTime
-    )
-      completedIndex++;
-    if (completedIndex >= 0 && frames[completedIndex].drawId !== row.drawId)
-      throw Error("Display tick must observe the latest completed draw");
     if (draw === boundary) initialBoundaryTicks++;
     previous = row;
   }
+  validatePresentationObservationOrder(frames, ticks, boundary);
   return {
     recordedDraws: frames.length,
     matchedTicks: ticks.length,

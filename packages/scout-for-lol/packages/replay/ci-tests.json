@@ -1,0 +1,5 @@
+{
+  "$schema": "../../../../scripts/ci-tests.schema.json",
+  "package": "@scout-for-lol/replay",
+  "steps": [{ "runner": "vitest", "args": ["src"] }]
+}

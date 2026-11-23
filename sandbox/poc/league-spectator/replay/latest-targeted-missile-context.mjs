@@ -25,6 +25,7 @@ export async function createTargetedMissilePresentation({
   profile,
   load,
   endTime,
+  staticCatalog = null,
 }) {
   if (
     profile.clientVersion !== report.build ||
@@ -109,6 +110,7 @@ export async function createTargetedMissilePresentation({
         terrain,
         records,
         load,
+        staticCatalog,
       });
     for (let index = 0; index < namedCandidates.length; index++) {
       const record = namedCandidates[index],

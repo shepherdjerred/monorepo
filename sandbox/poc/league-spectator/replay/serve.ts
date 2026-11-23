@@ -1,6 +1,24 @@
 import { resolve, dirname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildCombatTimelineWorker } from "./tools/build-combat-worker.ts";
 const source = dirname(fileURLToPath(import.meta.url));
+const combatWorker = await buildCombatTimelineWorker(source);
+const observationsRoute =
+  "/packages/scout-for-lol/packages/replay/src/observations/";
+const observationsRoot = fileURLToPath(
+  new URL(
+    "../../../../packages/scout-for-lol/packages/replay/src/observations/",
+    import.meta.url,
+  ),
+);
+const sharedTransportRoute =
+  "/packages/scout-for-lol/packages/domain/src/artifacts/replay-transport.mjs";
+const sharedTransportModule = fileURLToPath(
+  new URL(
+    "../../../../packages/scout-for-lol/packages/domain/src/artifacts/replay-transport.mjs",
+    import.meta.url,
+  ),
+);
 const assets = resolve(process.argv[2] ?? ".cache/replay-spike/public");
 const fixture = resolve(
   process.argv[3] ??
@@ -20,7 +38,21 @@ const server = Bun.serve({
   async fetch(request) {
     const url = new URL(request.url);
     let path;
-    if (url.pathname === "/fixture.rofl") path = fixture;
+    if (url.pathname === "/combat-timeline-worker.mjs")
+      return new Response(combatWorker, {
+        headers: {
+          "Content-Type": "text/javascript",
+          "Cache-Control": "no-cache",
+        },
+      });
+    if (url.pathname.startsWith(observationsRoute)) {
+      const name = url.pathname.slice(observationsRoute.length);
+      if (!/^[a-z-]+\.mjs$/.test(name))
+        return new Response("Forbidden", { status: 403 });
+      path = resolve(observationsRoot, name);
+    } else if (url.pathname === sharedTransportRoute)
+      path = sharedTransportModule;
+    else if (url.pathname === "/fixture.rofl") path = fixture;
     else if (url.pathname === "/research-latest.rofl") {
       if (!latestFixture)
         return new Response("Latest research replay not configured", {

@@ -23,7 +23,7 @@ export function staticArchivePath(value: string): string {
 export async function staticArchiveDigest(file: string): Promise<string> {
   const hasher = new Bun.CryptoHasher("sha256");
   let size = 0;
-  for await (const chunk of Bun.file(file).stream()) {
+  for await (const chunk of Bun.file(path.toNamespacedPath(file)).stream()) {
     size += chunk.length;
     if (size > MAX_ARCHIVE_BYTES)
       throw new Error("Static archive exceeds the 2 GiB release limit");
@@ -40,7 +40,8 @@ export async function staticArchiveFiles(directory: string): Promise<string[]> {
     dot: true,
     followSymlinks: false,
   })) {
-    const relative = staticArchivePath(name);
+    // Only normalize separators from filesystem discovery, before validating tar names.
+    const relative = staticArchivePath(name.split(path.sep).join("/"));
     const stats = await lstat(path.join(directory, relative));
     if (stats.isDirectory()) continue;
     if (!stats.isFile())
@@ -81,10 +82,13 @@ export async function createStaticArchive(
       : explicitArchiveFiles(members);
   const { readable, controller } = createTarPacker();
   await mkdir(path.dirname(output), { recursive: true });
-  const writing = Bun.write(output, new Response(readable));
+  const writing = Bun.write(
+    path.toNamespacedPath(output),
+    new Response(readable),
+  );
   try {
     for (const name of files) {
-      const file = Bun.file(path.join(source, name));
+      const file = Bun.file(path.toNamespacedPath(path.join(source, name)));
       const stream = controller.add({
         name,
         size: file.size,
@@ -128,7 +132,7 @@ export async function restoreStaticArchive(
     throw new Error(
       "Static archive checksum differs from the selected artifact",
     );
-  const entries = Bun.file(archive)
+  const entries = Bun.file(path.toNamespacedPath(archive))
     .stream()
     .pipeThrough(createTarDecoder({ strict: true }));
   const seen = new Set<string>();
@@ -148,7 +152,7 @@ export async function restoreStaticArchive(
       throw new Error("Static archive exceeds release extraction limits");
     const target = path.join(destination, name);
     await mkdir(path.dirname(target), { recursive: true });
-    await Bun.write(target, new Response(entry.body));
+    await Bun.write(path.toNamespacedPath(target), new Response(entry.body));
   }
   if (seen.size === 0) throw new Error("Static archive contains no files");
   return [...seen].sort();

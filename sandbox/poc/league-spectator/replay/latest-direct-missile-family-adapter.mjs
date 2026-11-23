@@ -1,5 +1,8 @@
 import { bindLatestMissileEffects } from "./latest-effects.mjs";
-import { createProjectilePresentation } from "./latest-projectile-presentation.mjs";
+import {
+  createOwnedProjectilePresentation,
+  readOwnedProjectileMetadata,
+} from "./latest-projectile-presentation.mjs";
 import { isDirectImmutableData } from "./latest-direct-immutable-data.mjs";
 
 export const DIRECT_MISSILE_FAMILY_POLICY =
@@ -44,18 +47,22 @@ const sameMetadata = (actual, expected) => {
 export function createLatestDirectMissileFamilyAdapter({
   report,
   manifest,
-  presentation,
+  presentation = null,
+  presentationOwner = null,
 }) {
   if (
     report.build !== "16.21.829.8620" ||
     report.protocol !== "20e09df23c66b85e" ||
     !/^[a-f0-9]{64}$/.test(report.replaySha256) ||
-    !presentation ||
-    !Array.isArray(presentation.traces)
+    (presentationOwner === null && !Array.isArray(presentation?.traces)) ||
+    (presentationOwner !== null && presentation !== null)
   )
     throw Error("Exact-build direct missile family inputs required");
-  const source = structuredClone(presentation);
-  const projectiles = createProjectilePresentation(report, source);
+  const projectiles =
+      presentationOwner === null
+        ? createOwnedProjectilePresentation(report, presentation)
+        : presentationOwner,
+    source = readOwnedProjectileMetadata(projectiles, report);
   const bindings = new Map(
     bindLatestMissileEffects(report, manifest).records.map((row) => [
       row.sequence,

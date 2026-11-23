@@ -1,17 +1,26 @@
-import { afterEach, expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import scoutBetaPipeline from "../../packages/delivery/registrations/specialized/scout-beta/pipeline.json";
+import scoutProdPipeline from "../../packages/delivery/registrations/specialized/scout-prod/pipeline.json";
+import scoutBetaRecipe from "../../packages/delivery/registrations/v2/scout-for-lol/beta/recipe.json";
+import scoutProdRecipe from "../../packages/delivery/registrations/v2/scout-for-lol/prod/recipe.json";
+import { assertNoReservedStaticFiles } from "../../packages/temporal/src/activities/delivery/static-site-effects.ts";
 
+import { run } from "./run.ts";
 import {
   forceMutableUploadCommand,
   isMissingS3Object,
   mutableSitePruneCommand,
   s3StaticSiteDownloadCommand,
+  s3SyncStaticSite,
   staticSiteFilePaths,
   staticSiteSyncDryRunCommand,
 } from "./s3-static-site.ts";
 import { filesHaveSameBytes } from "./s3-static-site-readback.ts";
+
+vi.mock("./run.ts", () => ({ run: vi.fn() }));
 
 const temporaryDirectories: string[] = [];
 
@@ -91,6 +100,57 @@ test("mutable pruning protects immutable files and the release marker", () => {
     "--delete",
   ]);
 });
+
+test.each([
+  ["beta", scoutBetaPipeline.scoutSite, scoutBetaRecipe.definition.steps],
+  ["prod", scoutProdPipeline.scoutSite, scoutProdRecipe.definition.steps],
+] as const)(
+  "Scout %s releases retain prior replay package keys",
+  async (_, legacy, steps) => {
+    const site = steps.find((step) => step.kind === "static-site")?.policy;
+    expect(site?.immutablePrefixes).toEqual(legacy.immutablePrefixes);
+    expect(site?.extraExcludes).toEqual(legacy.extraExcludes);
+    const replayPrefixes = ["replay-assets/", "replay-evidence/"];
+    for (const prefix of replayPrefixes) {
+      expect(legacy.immutablePrefixes).not.toContain(prefix);
+      expect(legacy.extraExcludes).toContain(`${prefix}*`);
+      expect(() =>
+        assertNoReservedStaticFiles(
+          [`${prefix}example.json`],
+          legacy.extraExcludes,
+        ),
+      ).toThrow("runtime-owned object");
+    }
+
+    const runMock = vi.mocked(run);
+    runMock.mockClear();
+    await s3SyncStaticSite({
+      source: "/tmp/release",
+      bucket: legacy.bucket,
+      endpoint: "https://s3.example.test",
+      immutablePrefixes: legacy.immutablePrefixes,
+      extraExcludes: legacy.extraExcludes,
+      forceMutableUpload: true,
+      cwd: "/tmp",
+      env: {},
+      dryRun: false,
+      haveCreds: true,
+    });
+    const commands = runMock.mock.calls.map(([command]) => command);
+    const prunes = commands.filter((command) => command.includes("--delete"));
+    expect(prunes).toHaveLength(1);
+    for (const prefix of replayPrefixes.map((value) => `${value}*`)) {
+      expect(
+        commands
+          .slice(0, 2)
+          .map((command) => command[command.indexOf(prefix) - 1]),
+      ).toEqual(["--exclude", "--exclude"]);
+      expect(
+        commands.slice(2).every((command) => !command.includes(prefix)),
+      ).toBe(true);
+    }
+  },
+);
 
 test("static-site reconciliation probes every release file without pruning retained assets", () => {
   expect(

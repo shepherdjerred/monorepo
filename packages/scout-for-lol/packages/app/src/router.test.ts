@@ -2,6 +2,8 @@ import { describe, expect, test } from "vitest";
 import { matchRoutes } from "react-router";
 import { routes } from "#src/router.tsx";
 import { trpcOptions } from "#src/lib/query/trpc-options.ts";
+import { replayFixture } from "#src/lib/replay/replay-fixture.ts";
+import { requireSessionLoader } from "#src/lib/routes/route-loaders.ts";
 
 /**
  * Every URL the JSX `<Routes>` tree served must still resolve through the
@@ -68,6 +70,27 @@ describe("router route matching", () => {
     const matches = matchRoutes(routes, "/totally-unknown-path");
     expect(matches).not.toBeNull();
     expect(matches?.at(-1)?.route.path).toBe("*");
+  });
+
+  test("a shared replay timestamp opens outside the session guard", () => {
+    const { replayId } = replayFixture;
+    const replay = matchRoutes(
+      routes,
+      `/app/replays/${replayId}?t=735.860`,
+      "/app",
+    );
+    expect(replay?.at(-1)).toMatchObject({
+      params: { replayId },
+      route: { path: "replays/:replayId" },
+    });
+    expect(replay?.map(({ route }) => route.loader)).not.toContain(
+      requireSessionLoader,
+    );
+
+    const players = matchRoutes(routes, "/app/players", "/app");
+    expect(players?.map(({ route }) => route.loader)).toContain(
+      requireSessionLoader,
+    );
   });
 });
 

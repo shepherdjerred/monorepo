@@ -6,7 +6,7 @@ import {
   sameDirectCompiledData,
 } from "./latest-direct-compiled-restore.mjs";
 import { assertLatestStaticCatalogSelection } from "./latest-static-catalog.mjs";
-import { WORLD_STATE_SHA } from "./latest-world-state-contract.mjs";
+import { approvedWorldStateReferenceSha } from "./latest-world-state-contract.mjs";
 
 const decode = (bytes) =>
   JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
@@ -51,9 +51,12 @@ export async function assertLatestSelectedWorldState({
   if (!sameDirectCompiledData(profile, selection.profile()))
     throw Error("World schema profile differs from selected static root");
   const referenceBytes = await selection.readRole("worldStateReference");
-  if ((await sha256(referenceBytes)) !== WORLD_STATE_SHA)
-    throw Error("Original approved world schema reference required");
   const scene = decode(sceneBytes);
+  if (
+    (await sha256(referenceBytes)) !==
+    approvedWorldStateReferenceSha(scene.map?.id, await sha256(catalogBytes))
+  )
+    throw Error("Original approved world schema reference required");
   if (
     typeof scene.world !== "string" ||
     !sameDirectCompiledData(

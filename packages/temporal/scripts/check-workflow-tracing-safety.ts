@@ -1,3 +1,5 @@
+import path from "node:path";
+
 const FORBIDDEN_HANDLER_PATTERN = /\bdefine(?:Query|Update)\b/u;
 const NONDETERMINISTIC_UUID_PATTERN = /\b(?:crypto\.)?randomUUID\s*\(/u;
 
@@ -26,7 +28,7 @@ export async function findTracingSafetyViolations(
       ) {
         continue;
       }
-      const file = `${root}/${relativePath}`;
+      const file = path.join(root, relativePath);
       const source = await Bun.file(file).text();
       if (FORBIDDEN_HANDLER_PATTERN.test(source)) {
         violations.push({ file, rule: "query-update-handler" });
@@ -40,11 +42,14 @@ export async function findTracingSafetyViolations(
 }
 
 async function main(): Promise<void> {
-  const packageRoot = new URL("..", import.meta.url).pathname;
-  const repositoryRoot = new URL("../../..", import.meta.url).pathname;
+  const packageRoot = path.resolve(import.meta.dir, "..");
+  const repositoryRoot = path.resolve(import.meta.dir, "../../..");
   const roots = [
-    `${packageRoot}src/workflows`,
-    `${repositoryRoot}packages/scout-for-lol/packages/temporal/src/workflows`,
+    path.join(packageRoot, "src/workflows"),
+    path.join(
+      repositoryRoot,
+      "packages/scout-for-lol/packages/temporal/src/workflows",
+    ),
   ];
   const violations = await findTracingSafetyViolations(roots);
   if (violations.length === 0) return;

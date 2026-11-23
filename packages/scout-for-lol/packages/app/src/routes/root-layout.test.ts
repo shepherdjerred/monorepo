@@ -46,6 +46,7 @@ describe("RootLayout shell selection", () => {
       "/welcome",
       "/installed",
       "/explore/s/share-token",
+      "/replays/776ca413-9b18-4930-b6d2-33c5b4152cda",
     ]) {
       expect(resolveAppShellMode(pathname, true)).toBe("focused");
     }

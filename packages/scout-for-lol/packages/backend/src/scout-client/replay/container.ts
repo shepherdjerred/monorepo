@@ -4,38 +4,25 @@ import {
   type LeaguePuuid,
 } from "@scout-for-lol/domain/identity/league-account.ts";
 import { z } from "zod";
+import {
+  getReplayContainerLayout,
+  normalizeGameBuild,
+  readReplayChunkHeader,
+  ReplayTransportError,
+  sameGameBuild as sharedSameGameBuild,
+  type ReplayContainerLayout,
+} from "@scout-for-lol/domain/artifacts/replay-transport.mjs";
+
+export function sameGameBuild(left: string, right: string): boolean {
+  return sharedSameGameBuild(left, right);
+}
 
 const FILE_HEADER_BYTES = 15;
-const CHUNK_HEADER_BYTES = 17;
 const REPLAY_SIGNATURE_BYTES = 256;
 const MAX_METADATA_BYTES = 4 * 1024 * 1024;
 const MAX_CHUNKS = 4096;
-const MAX_CHUNK_BYTES = 64 * 1024 * 1024;
-const MAX_DURATION_DRIFT_MS = 5000;
+export const MAX_DURATION_DRIFT_MS = 5000;
 const ZSTD_MAGIC = Buffer.from([0x28, 0xb5, 0x2f, 0xfd]);
-const VersionSchema = z.string().regex(/^\d{1,2}\.\d{1,2}\.\d{1,8}\.\d{1,8}$/);
-/**
- * Whether two four-part game versions name the same build. Compared part by
- * part as numbers: a replay header zero-pads the revision ("16.19.823.0722")
- * where the match and the League client state it bare ("16.19.823.722").
- * Any part that isn't a number makes the versions unequal.
- */
-export function sameGameBuild(left: string, right: string): boolean {
-  const leftParts = left.split(".");
-  const rightParts = right.split(".");
-  return (
-    leftParts.length === rightParts.length &&
-    leftParts.every((part, index) => {
-      const other = rightParts[index];
-      return (
-        other !== undefined &&
-        /^\d+$/.test(part) &&
-        /^\d+$/.test(other) &&
-        Number(part) === Number(other)
-      );
-    })
-  );
-}
 
 const ReplayIntegerSchema = z
   .string()
@@ -66,7 +53,9 @@ const ReplayParticipantSchema = z.looseObject({
   WARD_PLACED: ReplayIntegerSchema,
   WARD_KILLED: ReplayIntegerSchema,
   LEVEL: ReplayIntegerSchema,
-  WIN: z.enum(["Win", "Fail"]),
+  WIN: z
+    .enum(["Win", "Fail", "LeaverFail"])
+    .transform((outcome) => (outcome === "LeaverFail" ? "Fail" : outcome)),
   ITEM0: ReplayIntegerSchema,
   ITEM1: ReplayIntegerSchema,
   ITEM2: ReplayIntegerSchema,
@@ -109,7 +98,7 @@ export type ReplayParticipantFingerprint = {
 export class ReplayContainerError extends Error {
   constructor(
     message: string,
-    readonly status: 400 | 403,
+    readonly status: 400 | 403 | 503,
   ) {
     super(message);
   }
@@ -175,46 +164,47 @@ function parseJson(input: string, message: string): unknown {
 
 async function validateChunks(
   file: FileHandle,
-  start: number,
-  end: number,
-  expectedCount: number,
+  layout: ReplayContainerLayout,
+  {
+    start,
+    end,
+    expectedCount,
+  }: { start: number; end: number; expectedCount: number },
 ): Promise<void> {
   let cursor = start;
   let chunkCount = 0;
   while (cursor < end) {
-    if (chunkCount >= MAX_CHUNKS || cursor + CHUNK_HEADER_BYTES > end) {
+    if (chunkCount >= MAX_CHUNKS || cursor + layout.chunkHeaderBytes > end) {
       throw new ReplayContainerError("Replay chunk table is invalid", 400);
     }
-    const header = await readExactly(file, CHUNK_HEADER_BYTES, cursor);
-    const uncompressedBytes = header.readUInt32LE(9);
-    const compressedBytes = header.readUInt32LE(13);
-    const bodyBytes =
-      compressedBytes === 0 ? uncompressedBytes : compressedBytes;
-    const streamTag = header.readUInt32LE(5);
-    if (
-      bodyBytes === 0 ||
-      bodyBytes > MAX_CHUNK_BYTES ||
-      (streamTag & 0x00_ff_ff_ff) !== 0 ||
-      streamTag >>> 24 < 1 ||
-      streamTag >>> 24 > 4 ||
-      cursor + CHUNK_HEADER_BYTES + bodyBytes > end
-    ) {
+    const header = await readExactly(file, layout.chunkHeaderBytes, cursor);
+    const { compressedSize, storedSize } = readReplayChunkHeader(
+      header,
+      layout,
+    );
+    if (cursor + layout.chunkHeaderBytes + storedSize > end) {
       throw new ReplayContainerError("Replay chunk table is invalid", 400);
     }
-    if (compressedBytes > 0) {
+    if (compressedSize > 0) {
+      if (compressedSize < ZSTD_MAGIC.byteLength) {
+        throw new ReplayContainerError(
+          "Replay chunk is too short for a Zstandard frame",
+          400,
+        );
+      }
       const magic = await readExactly(
         file,
         ZSTD_MAGIC.byteLength,
-        cursor + CHUNK_HEADER_BYTES,
+        cursor + layout.chunkHeaderBytes,
       );
       if (!magic.equals(ZSTD_MAGIC)) {
         throw new ReplayContainerError(
-          "Replay chunk compression is invalid",
+          "Replay chunk is missing its Zstandard frame marker",
           400,
         );
       }
     }
-    cursor += CHUNK_HEADER_BYTES + bodyBytes;
+    cursor += layout.chunkHeaderBytes + storedSize;
     chunkCount += 1;
   }
   if (cursor !== end || chunkCount !== expectedCount) {
@@ -254,6 +244,49 @@ function requireObservedParticipant(
   }
 }
 
+async function validateReplayHeader(
+  file: FileHandle,
+  leaguePatch: string | null,
+): Promise<{
+  gameBuild: string;
+  protocol: string;
+  headerEnd: number;
+  layout: ReplayContainerLayout;
+}> {
+  const header = await readExactly(file, FILE_HEADER_BYTES, 0);
+  const versionLength = header[14];
+  if (
+    versionLength === undefined ||
+    versionLength === 0 ||
+    versionLength > 64 ||
+    header.subarray(0, 4).toString("ascii") !== "RIOT" ||
+    header.readUInt16LE(4) !== 2
+  )
+    throw new ReplayContainerError("Replay header is invalid", 400);
+  const versionBytes = await readExactly(
+    file,
+    versionLength,
+    FILE_HEADER_BYTES,
+  );
+  const gameBuild = normalizeGameBuild(
+    versionBytes.toString("utf8").replace(/\0+$/, ""),
+  );
+  if (gameBuild === null)
+    throw new ReplayContainerError("Replay version is invalid", 400);
+  if (leaguePatch !== null && !sameGameBuild(gameBuild, leaguePatch))
+    throw new ReplayContainerError(
+      "Replay patch does not match the observed match",
+      403,
+    );
+  const protocol = header.subarray(6, 14).toString("hex");
+  return {
+    gameBuild,
+    protocol,
+    headerEnd: FILE_HEADER_BYTES + versionLength,
+    layout: getReplayContainerLayout(gameBuild, protocol),
+  };
+}
+
 /**
  * Validate the ROFL container and bind its embedded player identity to evidence.
  *
@@ -267,45 +300,17 @@ export async function validateReplayContainer(
   bytes: number,
   provenance: ReplayProvenance,
   observerIds: ReadonlySet<string> = new Set([provenance.localPuuid]),
-): Promise<void> {
+): Promise<{ gameBuild: string; protocol: string; durationSeconds: number }> {
   const file = await open(path, "r");
   try {
     if (bytes < FILE_HEADER_BYTES + REPLAY_SIGNATURE_BYTES + 4) {
       throw new ReplayContainerError("Replay container is too short", 400);
     }
-    const header = await readExactly(file, FILE_HEADER_BYTES, 0);
-    const versionLength = header[14];
-    if (
-      versionLength === undefined ||
-      versionLength === 0 ||
-      versionLength > 64 ||
-      header.subarray(0, 4).toString("ascii") !== "RIOT" ||
-      header.readUInt16LE(4) !== 2
-    ) {
-      throw new ReplayContainerError("Replay header is invalid", 400);
-    }
-    const versionBytes = await readExactly(
-      file,
-      versionLength,
-      FILE_HEADER_BYTES,
-    );
-    const version = VersionSchema.safeParse(versionBytes.toString("ascii"));
-    if (!version.success) {
-      throw new ReplayContainerError("Replay version is invalid", 400);
-    }
-    if (
-      provenance.leaguePatch !== null &&
-      !sameGameBuild(version.data, provenance.leaguePatch)
-    ) {
-      throw new ReplayContainerError(
-        "Replay patch does not match the observed match",
-        403,
-      );
-    }
+    const { gameBuild, protocol, headerEnd, layout } =
+      await validateReplayHeader(file, provenance.leaguePatch);
 
     const metadataLengthBytes = await readExactly(file, 4, bytes - 4);
     const metadataLength = metadataLengthBytes.readUInt32LE(0);
-    const headerEnd = FILE_HEADER_BYTES + versionLength;
     const metadataStart = bytes - 4 - metadataLength;
     const signatureStart = metadataStart - REPLAY_SIGNATURE_BYTES;
     if (
@@ -358,7 +363,24 @@ export async function validateReplayContainer(
     if (expectedChunks <= 0 || expectedChunks > MAX_CHUNKS) {
       throw new ReplayContainerError("Replay chunk count is invalid", 400);
     }
-    await validateChunks(file, headerEnd, signatureStart, expectedChunks);
+    await validateChunks(file, layout, {
+      start: headerEnd,
+      end: signatureStart,
+      expectedCount: expectedChunks,
+    });
+    return {
+      gameBuild,
+      protocol,
+      durationSeconds: metadata.data.gameLength / 1000,
+    };
+  } catch (error) {
+    if (error instanceof ReplayTransportError) {
+      throw new ReplayContainerError(
+        error.message,
+        error.code === "unsupported-container" ? 503 : 400,
+      );
+    }
+    throw error;
   } finally {
     await file.close();
   }

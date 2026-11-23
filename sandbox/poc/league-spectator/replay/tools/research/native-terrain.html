@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Map11 terrain research</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto auto auto minmax(280px, 1fr);
+      background: #10171d;
+      color: #e4ebee;
+      font:
+        15px system-ui,
+        sans-serif;
+      color-scheme: dark;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      align-items: center;
+      padding: 12px 16px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 17px;
+    }
+    label {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    select,
+    input {
+      font: inherit;
+    }
+    select {
+      min-height: 36px;
+    }
+    p {
+      margin: 0;
+      padding: 0 16px 12px;
+      color: #cbd6dd;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <header>
+    <h1>Map11 terrain research</h1>
+    <label
+      >Match time
+      <select id="time" disabled></select
+    ></label>
+    <label
+      >Camera angle
+      <input id="angle" type="range" min="25" max="88" value="53" disabled
+    /></label>
+  </header>
+  <p id="status" role="status">
+    Loading installed terrain and captured positions…
+  </p>
+  <p>
+    Blue and orange identify the two recorded teams. Markers show native camera
+    attachment observations at captured match times.
+  </p>
+  <canvas
+    aria-label="Neutral terrain with exact native camera attachment markers"
+  ></canvas>
+  <script type="module" src="/terrain.mjs"></script>
+</html>

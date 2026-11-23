@@ -1,3 +1,5 @@
+import { canonicalDirectEmitterColor } from "./latest-direct-emitter-color-field.mjs";
+
 // Defaults observed through the original registered emitter constructor and
 // typed loader. Authored fields retain their values, including explicit zero.
 export const DIRECT_POINT_DEFAULT_BITS = Object.freeze({
@@ -30,5 +32,5 @@ const defaults = Object.freeze({
 export function normalizeDirectPointEmitter(source) {
   // An explicitly invalid authored value remains invalid. Only absent numeric
   // fields receive verified constructor defaults before admission.
-  return { ...defaults, ...source };
+  return { ...defaults, ...canonicalDirectEmitterColor(source) };
 }

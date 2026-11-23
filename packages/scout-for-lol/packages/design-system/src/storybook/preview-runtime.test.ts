@@ -1,5 +1,6 @@
 import {
   chmod,
+  copyFile,
   mkdir,
   mkdtemp,
   rm,
@@ -13,6 +14,7 @@ import { afterEach, expect, test } from "vitest";
 import { z } from "zod/v4";
 import {
   previewStorybook,
+  previewNodeExecutablePath,
   resolvePreviewNodeExecutable,
 } from "./preview-runtime.ts";
 
@@ -22,6 +24,12 @@ const fixtureRoots: string[] = [];
 
 afterEach(async () => {
   for (const root of fixtureRoots.splice(0)) {
+    if (
+      !path.resolve(root).startsWith(path.resolve(tmpdir()) + path.sep) ||
+      !path.basename(root).startsWith("scout-preview-runtime-")
+    ) {
+      throw new Error("Refusing to remove an unexpected runtime fixture path");
+    }
     await rm(root, { recursive: true, force: true });
   }
 });
@@ -32,11 +40,85 @@ async function runtimeFixture(): Promise<string> {
   return root;
 }
 
-async function fakeMise(root: string, contents: string): Promise<void> {
-  const executable = path.join(root, "mise");
-  await writeFile(executable, `#!/bin/sh\n${contents}\n`);
-  await chmod(executable, 0o755);
+async function fakeMise(
+  root: string,
+  contents: { posix: string; windows: string },
+): Promise<void> {
+  const windows = process.platform === "win32";
+  const executable = path.join(root, windows ? "mise.cmd" : "mise");
+  await writeFile(
+    executable,
+    windows
+      ? `@echo off\r\n${contents.windows}\r\n`
+      : `#!/bin/sh\n${contents.posix}\n`,
+  );
+  if (!windows) await chmod(executable, 0o755);
 }
+
+async function bunNodeShim(root: string): Promise<void> {
+  const executable = path.join(
+    root,
+    process.platform === "win32" ? "node.exe" : "node",
+  );
+  if (process.platform === "win32")
+    await copyFile(process.execPath, executable);
+  else await symlink(process.execPath, executable);
+}
+
+function fixtureEnvironment(
+  root: string,
+  inheritPath = false,
+): NodeJS.ProcessEnv {
+  const inheritedPath =
+    inheritedEnvironment["PATH"] ?? inheritedEnvironment["Path"] ?? "";
+  const environment = Object.fromEntries(
+    Object.entries(inheritedEnvironment).filter(
+      ([key]) => key.toUpperCase() !== "PATH",
+    ),
+  );
+  return {
+    ...environment,
+    PATH: inheritPath ? [root, inheritedPath].join(path.delimiter) : root,
+  };
+}
+
+async function installedNodeFixture(): Promise<string> {
+  const searchPath =
+    inheritedEnvironment["PATH"] ?? inheritedEnvironment["Path"] ?? "";
+  for (const directory of searchPath.split(path.delimiter)) {
+    if (directory.length === 0 || /[\\/]mise[\\/]shims[\\/]?$/i.test(directory))
+      continue;
+    const executable = path.join(
+      directory,
+      process.platform === "win32" ? "node.exe" : "node",
+    );
+    if (!(await Bun.file(executable).exists())) continue;
+    const probe = Bun.spawnSync(
+      [executable, "--print", "process.versions.bun === undefined"],
+      { env: inheritedEnvironment, stdout: "pipe", stderr: "pipe" },
+    );
+    if (
+      probe.exitCode === 0 &&
+      new TextDecoder().decode(probe.stdout).trim() === "true"
+    )
+      return executable;
+  }
+  throw new Error(
+    "Preview runtime tests require a real installed Node executable on PATH",
+  );
+}
+
+test("uses mise's platform-specific Node executable layout", () => {
+  expect(
+    previewNodeExecutablePath(String.raw`C:\mise\node\24.21.0`, "win32"),
+  ).toBe(String.raw`C:\mise\node\24.21.0\node.exe`);
+  expect(previewNodeExecutablePath("/opt/mise/node/24.21.0", "linux")).toBe(
+    "/opt/mise/node/24.21.0/bin/node",
+  );
+  expect(previewNodeExecutablePath("/opt/mise/node/24.21.0", "darwin")).toBe(
+    "/opt/mise/node/24.21.0/bin/node",
+  );
+});
 
 test("preserves the CI Node installation root through Turbo's strict E2E environment", async () => {
   const root = await runtimeFixture();
@@ -91,10 +173,19 @@ test("preserves the CI Node installation root through Turbo's strict E2E environ
 
 test("bypasses a Bun node shim and executes the installed Node runtime", async () => {
   const root = await runtimeFixture();
-  await symlink(process.execPath, path.join(root, "node"));
+  await bunNodeShim(root);
+  const node = await installedNodeFixture();
+  const nodeRoot =
+    process.platform === "win32"
+      ? path.dirname(node)
+      : path.dirname(path.dirname(node));
+  await fakeMise(root, {
+    posix: String.raw`printf "%s\n" "$SCOUT_TEST_NODE_ROOT"`,
+    windows: "echo %SCOUT_TEST_NODE_ROOT%",
+  });
   const environment = {
-    ...inheritedEnvironment,
-    PATH: `${root}:${inheritedEnvironment["PATH"] ?? ""}`,
+    ...fixtureEnvironment(root, true),
+    SCOUT_TEST_NODE_ROOT: nodeRoot,
   };
   const misleadingNode = Bun.spawnSync(
     ["node", "--print", "process.versions.bun"],
@@ -119,25 +210,25 @@ test("bypasses a Bun node shim and executes the installed Node runtime", async (
 
 test("fails when the configured Node installation is unavailable", async () => {
   const root = await runtimeFixture();
-  await fakeMise(root, "exit 1");
+  await fakeMise(root, { posix: "exit 1", windows: "exit /b 1" });
   await expect(
     resolvePreviewNodeExecutable(packageRoot, {
-      ...inheritedEnvironment,
-      PATH: root,
+      ...fixtureEnvironment(root),
     }),
   ).rejects.toThrow("requires installed Node");
 });
 
 test("the preview launches installed Node when PATH names Bun and mise cannot install tools", async () => {
   const root = await runtimeFixture();
-  const executable = await resolvePreviewNodeExecutable(packageRoot);
-  await symlink(process.execPath, path.join(root, "node"));
-  await fakeMise(
-    root,
-    String.raw`test "$1" = where && test "$2" = node || exit 1
+  const executable = await installedNodeFixture();
+  await bunNodeShim(root);
+  await fakeMise(root, {
+    posix: String.raw`test "$1" = where && test "$2" = node || exit 1
 test "$PWD" = "$SCOUT_TEST_REPOSITORY_ROOT" || exit 1
 printf "%s\n" "$SCOUT_TEST_NODE_ROOT"`,
-  );
+    windows:
+      'if not "%~1"=="where" exit /b 1\r\nif not "%~2"=="node" exit /b 1\r\nif /I not "%CD%"=="%SCOUT_TEST_REPOSITORY_ROOT%" exit /b 1\r\necho %SCOUT_TEST_NODE_ROOT%',
+  });
   const vite = path.join(root, "node_modules/vite/bin");
   await mkdir(vite, { recursive: true });
   const resultFile = path.join(root, "preview-result.json");
@@ -155,9 +246,11 @@ printf "%s\n" "$SCOUT_TEST_NODE_ROOT"`,
         args: ["--debug"],
       },
       {
-        ...inheritedEnvironment,
-        PATH: root,
-        SCOUT_TEST_NODE_ROOT: path.dirname(path.dirname(executable)),
+        ...fixtureEnvironment(root),
+        SCOUT_TEST_NODE_ROOT:
+          process.platform === "win32"
+            ? path.dirname(executable)
+            : path.dirname(path.dirname(executable)),
         SCOUT_TEST_REPOSITORY_ROOT: path.resolve(packageRoot, "../../../.."),
         SCOUT_TEST_PREVIEW_RESULT: resultFile,
       },
@@ -183,13 +276,16 @@ printf "%s\n" "$SCOUT_TEST_NODE_ROOT"`,
 
 test("rejects Bun even if the configured installation names it node", async () => {
   const root = await runtimeFixture();
-  await mkdir(path.join(root, "bin"));
-  await symlink(process.execPath, path.join(root, "bin", "node"));
-  await fakeMise(root, String.raw`printf "%s\n" "$SCOUT_TEST_NODE_ROOT"`);
+  const nodeBin = process.platform === "win32" ? root : path.join(root, "bin");
+  await mkdir(nodeBin, { recursive: true });
+  await bunNodeShim(nodeBin);
+  await fakeMise(root, {
+    posix: String.raw`printf "%s\n" "$SCOUT_TEST_NODE_ROOT"`,
+    windows: "echo %SCOUT_TEST_NODE_ROOT%",
+  });
   await expect(
     resolvePreviewNodeExecutable(packageRoot, {
-      ...inheritedEnvironment,
-      PATH: root,
+      ...fixtureEnvironment(root),
       SCOUT_TEST_NODE_ROOT: root,
     }),
   ).rejects.toThrow("real Node runtime");

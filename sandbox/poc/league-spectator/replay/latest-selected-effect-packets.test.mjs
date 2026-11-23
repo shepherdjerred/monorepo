@@ -3,6 +3,13 @@ import {
   assertEffectPacketSceneRebinding,
   assertLatestSelectedEffectPacket,
 } from "./latest-selected-effect-packets.mjs";
+import {
+  approvedEffectPacketReferenceSha,
+  EFFECT_PLACEMENT_PACKAGE_SHA,
+  EFFECT_DESCRIPTOR_PACKAGE_SHA,
+  MAP11_EFFECT_PLACEMENT_PACKAGE_SHA,
+  MAP11_EFFECT_DESCRIPTOR_PACKAGE_SHA,
+} from "./latest-effect-packet-contract.mjs";
 const oldHash = "a".repeat(64),
   newHash = "b".repeat(64);
 const scene = {
@@ -26,6 +33,35 @@ const fixture = () => ({
   sourceBlocks: [{ sha256: "c".repeat(64) }],
   creationPackageSha256: "d".repeat(64),
   scalar: -0,
+});
+
+test("Map11 has independently pinned native packet programs with no unknown-map fallback", () => {
+  expect(approvedEffectPacketReferenceSha("placement", 11)).toBe(
+    MAP11_EFFECT_PLACEMENT_PACKAGE_SHA,
+  );
+  expect(approvedEffectPacketReferenceSha("descriptor", 11)).toBe(
+    MAP11_EFFECT_DESCRIPTOR_PACKAGE_SHA,
+  );
+  expect(approvedEffectPacketReferenceSha("placement", 12)).toBe(
+    EFFECT_PLACEMENT_PACKAGE_SHA,
+  );
+  expect(approvedEffectPacketReferenceSha("descriptor", 12)).toBe(
+    EFFECT_DESCRIPTOR_PACKAGE_SHA,
+  );
+  expect(MAP11_EFFECT_PLACEMENT_PACKAGE_SHA).not.toBe(
+    EFFECT_PLACEMENT_PACKAGE_SHA,
+  );
+  expect(MAP11_EFFECT_DESCRIPTOR_PACKAGE_SHA).not.toBe(
+    EFFECT_DESCRIPTOR_PACKAGE_SHA,
+  );
+  for (const [kind, mapId] of [
+    ["placement", 14],
+    ["descriptor", null],
+    ["other", 11],
+  ])
+    expect(() => approvedEffectPacketReferenceSha(kind, mapId)).toThrow(
+      "independently approved",
+    );
 });
 
 test("scene-only packet rebinding preserves native codecs, calls and signed numeric data", () => {

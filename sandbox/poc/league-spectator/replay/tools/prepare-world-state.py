@@ -9,6 +9,7 @@ import argparse,json,struct
 from pathlib import Path
 from unicorn import x86_const as r
 from vfx_spawn_native import NativeSpawn,sha
+from world_minion_assets import world_minion_assets
 
 ENTITY,HANDLE,CHARACTER,INPUT,SLOT=0x10080000,0x10090000,0x100a0000,0x100b0000,0x100c0000
 GROUPS=[1,2,4,8,16,32,64]
@@ -18,7 +19,8 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     for key in ['cache','client']:p.add_argument(key,type=Path)
     p.add_argument('bindings',type=Path,nargs='?')
-    args=p.parse_args();cache=args.cache.resolve();dec=cache/'public/decoder-16.21-macos'
+    p.add_argument('--decoder-root',type=Path,help='Explicit immutable exact-build decoder source; outputs remain in cache')
+    args=p.parse_args();cache=args.cache.resolve();dec=args.decoder_root.resolve()if args.decoder_root else cache/'public/decoder-16.21-macos'
     inputs={}
     def read(path):
         raw=path.read_bytes();inputs[str(path.resolve())]=sha(raw);return json.loads(raw)
@@ -41,8 +43,10 @@ def main():
               'healthBarHeight':struct.unpack('<f',probe.u.mem_read(character+0xc0,4))[0]}
     if defaults!={'minionFlags':0,'healthBarHeight':100.0}:raise ValueError('Character defaults changed')
     assets={}
-    for key,asset in world['assets'].items():
-        if 'spellCatalog'not in asset:continue
+    minion_assets,neutral_bindings=world_minion_assets(scene,world)
+    for key in sorted(minion_assets):
+        asset=world['assets'][key]
+        if 'spellCatalog'not in asset:raise ValueError('Original registered minion spell catalog required')
         catalog=read(cache/'public/latest-scene'/asset['spellCatalog']);records={}
         for path in asset['characterRecords']:
             data=catalog['records'][path]['data']
@@ -50,6 +54,10 @@ def main():
             flags=data.get('minionFlags',defaults['minionFlags']);height=data.get('healthBarHeight',defaults['healthBarHeight'])
             if type(flags)is not int or not 0<=flags<=0xffffffff or type(height)not in[int,float]or not 0<height<10000:
                 raise ValueError('Unsupported minion definition')
+            neutral=neutral_bindings.get(key)
+            if neutral and(flags!=neutral['minionFlags']or height!=neutral['healthBarHeight']or
+                    ('minion-bit8'if flags&8 else'minion')!=neutral['replicationSchema']):
+                raise ValueError('Original neutral replication fields differ from native CharacterRecord observations')
             records[path]={'minionFlags':flags,'schema':'minion-bit8'if flags&8 else'minion','healthBarHeight':height}
         assets[key]={'catalogSha256':inputs[str((cache/'public/latest-scene'/asset['spellCatalog']).resolve())],
                      'catalogPath':asset['spellCatalog'],'records':records}
@@ -128,6 +136,12 @@ def main():
           'sourceBlocks':[{'startRva':a,'endRva':b,'sha256':sha(probe.image[a:b])}for a,b in ranges],
           'scope':{'laneMinionAndTurretClassesOnly':True,'originalRegistrationExecuted':True,'bit8VariantHasRecordedFixture':False,
                    'nativeHealthConsumersExecuted':True,'completeWorldConstructorExecuted':False,'referenceAvCompared':False}}
+    if neutral_bindings:
+        meta['neutralCharacterRecordsProofSha256']=world['neutralCreation']['characterRecordProofSha256']
+        meta['scope']['laneMinionAndTurretClassesOnly']=False
+        meta['scope']['originalNeutralMinionCharacterScalarsCompared']=True
+        meta['compilerSources']={name:sha(Path(__file__).with_name(name).read_bytes())for name in
+            ['prepare-world-state.py','world_minion_assets.py']}
     raw=json.dumps(meta,indent=2).encode();dest=cache/'public/latest-world-state/package.json';dest.parent.mkdir(exist_ok=True);dest.write_bytes(raw)
     if args.bindings is None:
         print(json.dumps({'packageSha256':sha(raw),'mode':'static-build-package-only','classes':len(schemas)}));return

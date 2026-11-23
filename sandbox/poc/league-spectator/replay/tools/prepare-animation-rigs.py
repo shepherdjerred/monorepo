@@ -6,31 +6,35 @@ import struct
 
 from animation_rig_native import NativeAnimationRig, BLOCKS
 from vfx_spawn_native import sha, name_hash
+from scene_metadata_output import SceneMetadataOutput
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ["package", "client", "scene", "libcpp_source", "evidence"]:
         parser.add_argument(name, type=Path)
+    parser.add_argument('--output-package', type=Path, required=True)
     args = parser.parse_args()
+    output = SceneMetadataOutput(args.package, args.scene, args.output_package, args.evidence)
+    output.read(args.client)
     kernel = NativeAnimationRig(args.package, args.client)
-    scene_raw = (args.scene / "manifest.json").read_bytes()
+    scene_raw = output.read(args.scene / "manifest.json")
     scene = json.loads(scene_raw)
-    world_raw = (args.scene / scene["world"]).read_bytes()
+    world_raw = output.read_scene(scene["world"])
     world = json.loads(world_raw)
     if scene["build"] != kernel.profile["clientVersion"] or scene["protocol"] != kernel.profile["protocolDigest"]:
         raise ValueError("Rig source build mismatch")
-    contract = args.libcpp_source.read_bytes()
+    contract = output.read(args.libcpp_source)
     if b"If n == 0, returns 0.  Else returns the lowest prime number that" not in contract:
         raise ValueError("Unsupported libc++ prime helper contract source")
     assets = [("champions/"+key, value) for key,value in scene["champions"].items()]
     assets += [("world/"+key, value) for key,value in world["assets"].items() if value.get("animationGraph") and value.get("animationCatalog")]
     graphs, observations = {}, []
     for actor, asset in assets:
-        catalog_raw = (args.scene / asset["animationCatalog"]).read_bytes()
+        catalog_raw = output.read_scene(asset["animationCatalog"])
         catalog = json.loads(catalog_raw)
         rig_file = (Path(asset["animationCatalog"]).parent / "model.skl").as_posix()
-        raw = (args.scene / rig_file).read_bytes()
+        raw = output.read_scene(rig_file)
         try:
             observed = kernel.prepare(raw, catalog["joints"])
         except ValueError as error:
@@ -53,17 +57,15 @@ def main():
             "maximumInput": 65536, "contractSourceSha256": sha(contract), "source": "Cached Emscripten 4.0.22 libc++ src/hash.cpp"},
         "sourceBlocks": [{"startRva": a, "endRva": b, "sha256": sha(kernel.image[a:b])} for a,b in BLOCKS],
         "compilerSources": {name: sha(Path(__file__).with_name(name).read_bytes()) for name in
-            ["prepare-animation-rigs.py", "animation_rig_native.py", "vfx_spawn_native.py"]},
+            ["prepare-animation-rigs.py", "scene_metadata_output.py", "animation_rig_native.py", "vfx_spawn_native.py"]},
         "sceneManifestSha256": sha(scene_raw), "worldCatalogSha256": sha(world_raw), "graphs": graphs,
         "scope": "Original complete SKL v0 constructor, joint conversion and FNV/ELF map builders. FNV names resolve to stored ELF keys; both original transform getters are observed on supplied pose buffers. Duplicate-name selection is retained explicitly. Allocation/copy services and bounded libc++ next-prime are explicit boundaries. Native world-pose production, dynamic bones, transforms across forms, particles and A/V remain unverified."}
     raw = json.dumps(metadata, indent=2).encode()
-    (args.package / "animation-rigs.json").write_bytes(raw)
-    kernel.profile["animationRigsSha256"] = sha(raw)
-    (args.package / "profile.json").write_text(json.dumps(kernel.profile, indent=2), encoding="utf-8")
+    output.publish('animation-rigs.json', raw, 'constructed-rigs')
     evidence = {"schema": 1, "build": metadata["build"], "protocol": metadata["protocol"], "definitionSha256": sha(raw),
         "compilerSources": metadata["compilerSources"], "nextPrimeCalls": kernel.prime_calls,
         "executedOriginalBlocks": list(kernel.blocks.values()), "observations": observations, "scope": metadata["scope"]}
-    args.evidence.write_text(json.dumps(evidence, indent=2), encoding="utf-8")
+    output.write_evidence(json.dumps(evidence, indent=2).encode())
     print(json.dumps({"rigs": len(graphs), "joints": sum(len(g["joints"]) for g in graphs.values()),
         "originalBlocks": len(kernel.blocks), "primeCalls": len(kernel.prime_calls), "sha256": sha(raw)}))
 

@@ -76,6 +76,10 @@ type S3ReadOptions = {
   abortSignal?: AbortSignal;
 };
 
+type S3TextReadOptions = S3ReadOptions & {
+  expectedBytes?: number;
+};
+
 /**
  * Fully enumerate a prefix via ContinuationToken (MaxKeys 1000), yielding every
  * object. Unlike the legacy importer's batched StartAfter loop this is
@@ -117,8 +121,9 @@ export async function readRawObjectText(
   client: S3Client,
   bucket: string,
   key: string,
-  options: S3ReadOptions = {},
+  options: S3TextReadOptions = {},
 ): Promise<string> {
+  options.abortSignal?.throwIfAborted();
   const response = await client.send(
     new GetObjectCommand({ Bucket: bucket, Key: key }),
     options.abortSignal === undefined
@@ -128,7 +133,64 @@ export async function readRawObjectText(
   if (response.Body === undefined) {
     throw new Error(`S3 object has no body: ${key}`);
   }
+  if (options.expectedBytes !== undefined) {
+    const reader = response.Body.transformToWebStream().getReader();
+    return await readBoundedRawObjectText(
+      reader,
+      options.expectedBytes,
+      response.ContentLength,
+      options.abortSignal,
+    );
+  }
   return await response.Body.transformToString();
+}
+
+async function readBoundedRawObjectText(
+  reader: Pick<
+    ReadableStreamDefaultReader<unknown>,
+    "read" | "cancel" | "releaseLock"
+  >,
+  expectedBytes: number,
+  contentLength: number | undefined,
+  signal: AbortSignal | undefined,
+): Promise<string> {
+  async function cancel(reason: unknown) {
+    try {
+      await reader.cancel(reason);
+    } catch {
+      // Transport cleanup must preserve the original read error.
+    }
+  }
+  const onAbort = () => void cancel(signal?.reason);
+  signal?.addEventListener("abort", onAbort, { once: true });
+  try {
+    signal?.throwIfAborted();
+    if (contentLength !== undefined && contentLength !== expectedBytes)
+      throw new Error("Raw archive length does not match its receipt");
+
+    const bytes = new Uint8Array(expectedBytes);
+    let offset = 0;
+    for (;;) {
+      const next = await reader.read();
+      signal?.throwIfAborted();
+      if (next.done) break;
+      if (!(next.value instanceof Uint8Array))
+        throw new TypeError("Raw archive body must contain byte chunks");
+      if (offset + next.value.byteLength > expectedBytes)
+        throw new Error("Raw archive body exceeds its recorded length");
+      bytes.set(next.value, offset);
+      offset += next.value.byteLength;
+    }
+    if (offset !== expectedBytes)
+      throw new Error("Raw archive body ended before its recorded length");
+    return new TextDecoder("utf-8", { ignoreBOM: true }).decode(bytes);
+  } catch (error) {
+    void cancel(error);
+    throw error;
+  } finally {
+    signal?.removeEventListener("abort", onAbort);
+    reader.releaseLock();
+  }
 }
 
 async function readRawObjectBytes(
@@ -253,7 +315,7 @@ export async function readVerifiedRawObjectBytes(
 }
 
 export async function readVerifiedRawObjectText(
-  args: VerifiedReadArgs,
+  args: VerifiedReadArgs & { options?: S3TextReadOptions },
 ): Promise<string> {
   return await readVerified(
     args,

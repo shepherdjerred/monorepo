@@ -9,10 +9,23 @@ import {
   directParticleWorldVector,
 } from "./latest-direct-effect-math.mjs";
 import {
-  freezeDirectOwnedData,
   protectDirectDataGraph,
+  createDirectOwnedDataFreezer,
 } from "./latest-direct-immutable-data.mjs";
+import { consumeDirectWorkerEventInput } from "./latest-direct-event-ownership.mjs";
+import { createLatestPreparationTrace } from "./latest-preparation-trace.mjs";
+import { createDirectCheckpointHistory } from "./latest-direct-checkpoint-history.mjs";
+import {
+  directCheckpointAtOrBefore,
+  retainDirectCheckpoint,
+} from "./latest-direct-checkpoint-cache.mjs";
+import { createDirectEventReasonOwnership } from "./latest-direct-event-reasons.mjs";
 import { sampleDirectEffectBirth } from "./latest-direct-effect-birth.mjs";
+import { directClampedDragVelocity,validateDirectBirthDrag,validateDirectBirthAngularStorage } from "./latest-direct-effect-birth-drag.mjs";
+import {
+  sampleDirectLegacyShapeRotation,
+  validateDirectLegacyShapeRotation,
+} from "./latest-direct-effect-legacy-rotation.mjs";
 import { directBoundFlexScale } from "./latest-direct-effect-flex.mjs";
 import {
   sampleDirectLegacyOffset,
@@ -24,6 +37,7 @@ import { directRayGeometry } from "./latest-direct-effect-ray.mjs";
 import { validateDirectRayProgram } from "./latest-direct-effect-ray-program.mjs";
 import { validateDirectCameraMeshFlags } from "./latest-direct-effect-camera-mesh-flags.mjs";
 import { validateDirectCameraLocalOffsetProgram } from "./latest-direct-effect-camera-local.mjs";
+import { validateDirectArbitraryLocalOrientationProgram } from "./latest-direct-effect-arbitrary-local.mjs";
 import {
   validateDirectMultUv,
   DIRECT_CONSTANT_MULT_UV_POLICY,
@@ -75,7 +89,7 @@ import {
 // asset IO or champion-specific branches belong in this module.
 export const DIRECT_EFFECT_BUILD = "16.21.829.8620";
 export const DIRECT_EFFECT_PROTOCOL = "20e09df23c66b85e";
-export const DIRECT_EFFECT_PROGRAM_VERSION = 38;
+export const DIRECT_EFFECT_PROGRAM_VERSION = 42;
 const f = Math.fround;
 const identityBasis = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 const vector = (v, n) =>
@@ -158,7 +172,13 @@ export class LatestDirectEffectRuntime {
   #rayCameraRequired = false;
   #checkpoints = [];
   #initial;
-  #checkpointLedger = new WeakMap();
+  #ledgerHistory = createDirectCheckpointHistory();
+  #generationHistory = createDirectCheckpointHistory();
+  #automaticHistories = new WeakMap();
+  #dirtyLedger = new Set();
+  #dirtyGenerations = new Set();
+  #eventReasons;
+  #immutableEvents = new WeakSet();
   #poseEvidenceSnapshot = createDirectPoseEvidenceSnapshots();
 
   constructor({
@@ -172,7 +192,10 @@ export class LatestDirectEffectRuntime {
     kernels,
     checkpointSeconds = 2,
     maximumCheckpoints = 16,
+    eventsOwnership = null,
+    onPreparation = null,
   }) {
+    const trace = createLatestPreparationTrace(onPreparation, "effect-runtime");
     if (
       build !== DIRECT_EFFECT_BUILD ||
       protocol !== DIRECT_EFFECT_PROTOCOL ||
@@ -201,6 +224,7 @@ export class LatestDirectEffectRuntime {
       worldPresentationContentHash: world.presentationContentHash ?? null,
     };
     this.definitions = definitions;
+    trace("definitions.validate", "begin", { definitions: definitions.size });
     for (const [id, d] of definitions) {
       if (
         id !== d.id ||
@@ -290,6 +314,7 @@ export class LatestDirectEffectRuntime {
         validateDirectParticlePaletteProgram(emitter);
         validateDirectCameraMeshFlags(emitter);
         validateDirectCameraLocalOffsetProgram(emitter);
+        validateDirectArbitraryLocalOrientationProgram(emitter);
         validateDirectMultUv(emitter);
         validateDirectNavGroundProgram(emitter, {
           id: d.id,
@@ -297,6 +322,8 @@ export class LatestDirectEffectRuntime {
           index: emitter.index,
         });
         validateDirectLegacyOffsetProgram(emitter);
+        validateDirectLegacyShapeRotation(emitter);
+        validateDirectBirthDrag(emitter,d.systemFlags);
         if (
           !validateDirectAbsentRotationController(
             emitter.absentRotationControllerProgram,
@@ -312,21 +339,42 @@ export class LatestDirectEffectRuntime {
           );
       }
     }
-    this.events = copy(events);
+    trace("definitions.validate", "end", { definitions: definitions.size });
+    trace("events.ownership", "begin", {
+      events: events.length,
+      adopted: eventsOwnership === null ? 0 : 1,
+    });
+    this.events =
+      eventsOwnership === null
+        ? copy(events)
+        : consumeDirectWorkerEventInput(eventsOwnership, events);
+    trace("events.ownership", "end", {
+      events: this.events.length,
+      adopted: eventsOwnership === null ? 0 : 1,
+    });
+    this.#eventReasons = createDirectEventReasonOwnership(this.events);
     // Creation inputs are retained by instances and never mutated. Omitted
     // request reasons also serve as a live ledger list; protect their complete
     // reachable graph, including any aliases from otherwise read-only events.
     // Stop/remove/removal-request paths only copy scalar input into live state.
     const mutableEventData = new WeakSet();
+    trace("events.protect", "begin", { events: this.events.length });
     for (const event of this.events)
       if (event.kind === "omitted")
         protectDirectDataGraph(event, mutableEventData);
+    trace("events.protect", "end");
+    const freezer = createDirectOwnedDataFreezer(mutableEventData);
+    trace("events.freeze", "begin");
     for (const event of this.events)
-      if (event.kind === "create")
-        freezeDirectOwnedData(event, mutableEventData);
+      if (event.kind === "create") {
+        freezer.freeze(event);
+        if (freezer.certified(event)) this.#immutableEvents.add(event);
+      }
+    trace("events.freeze", "end", freezer.metrics());
     const ids = new Set();
     const networkCreations = new Map();
     const networkGenerations = new Map();
+    trace("events.validate", "begin", { events: this.events.length });
     for (const [i, e] of this.events.entries()) {
       if (
         typeof e.id !== "string" ||
@@ -368,6 +416,7 @@ export class LatestDirectEffectRuntime {
       }
       ids.add(e.id);
     }
+    trace("events.validate", "end", { events: this.events.length });
     this.world = world;
     this.kernels = kernels;
     this.checkpointSeconds = checkpointSeconds;
@@ -390,7 +439,12 @@ export class LatestDirectEffectRuntime {
       allCompiledComponentInputsResolved: 0,
       runtimeActivated: 0,
     };
+    trace("initial.checkpoint", "begin");
     this.#initial = this.checkpoint();
+    trace("initial.checkpoint", "end", {
+      instances: this.instances.size,
+      ledger: this.ledger.size,
+    });
     this.lastCheckpoint = 0;
     this.metrics = {
       simulationMs: 0,
@@ -400,6 +454,10 @@ export class LatestDirectEffectRuntime {
       simulationSteps: 0,
       transferredBytes: 0,
       cameraCacheBuilds: 0,
+      checkpointSnapshots: 0,
+      checkpointRowsCopied: 0,
+      checkpointGenerationUpdates: 0,
+      checkpointMs: 0,
     };
   }
 
@@ -431,7 +489,14 @@ export class LatestDirectEffectRuntime {
     }
   }
 
-  #apply(event) {
+  #apply(sourceEvent) {
+    const event =
+      sourceEvent.kind === "create"
+        ? this.#eventReasons.creation(
+            sourceEvent,
+            this.#immutableEvents.has(sourceEvent),
+          )
+        : sourceEvent;
     if (event.kind === "omitted") {
       const identity = `${event.origin}:${event.entityId}`;
       const generation =
@@ -440,8 +505,10 @@ export class LatestDirectEffectRuntime {
           : null;
       if (generation !== null) {
         this.generations.set(identity, generation);
+        this.#dirtyGenerations.add(identity);
         this.instances.delete(identity);
       }
+      this.#dirtyLedger.add(event.id);
       this.ledger.set(event.id, {
         id: event.id,
         origin: event.origin,
@@ -467,7 +534,7 @@ export class LatestDirectEffectRuntime {
         componentWorldInputs: [],
         runtimeActivated: false,
         componentsGenerated: [],
-        reasons: event.reasons,
+        reasons: this.#eventReasons.omitted(event),
         entityReferences: event.descriptor
           ? Object.fromEntries(
               [
@@ -498,14 +565,18 @@ export class LatestDirectEffectRuntime {
           input.nativeWorldLookupAcceptance === null &&
           instance.emitters.some((e) => e.lifecycle !== null);
         if (row) {
-          this.#checkpointLedger.delete(row);
+          this.#dirtyLedger.add(row.id);
           (row.removalRequests ??= []).push(event.id);
           row.requestedFlags =
             ((row.requestedFlags ?? 0) | (event.requestedFlags ?? 0)) >>> 0;
           const reason = translated
             ? "lifecycle:partial-emitter-removal-native-world-acceptance-unknown"
             : `lifecycle:untranslated-removal-flags:${event.requestedFlags}`;
-          if (!row.reasons.includes(reason)) row.reasons.push(reason);
+          if (!row.reasons.includes(reason)) {
+            row.reasons.push(reason);
+            for (const id of this.#eventReasons.changed(row.reasons))
+              this.#dirtyLedger.add(id);
+          }
         }
         if (translated) {
           const transition = directRemovalFlagTransition({
@@ -557,6 +628,7 @@ export class LatestDirectEffectRuntime {
     }
     const generation = (this.generations.get(identity) ?? 0) + 1;
     this.generations.set(identity, generation);
+    this.#dirtyGenerations.add(identity);
     const definition = this.definitions.get(event.definitionId);
     const creationCursor = {
       transportSequence: event.transportSequence,
@@ -693,6 +765,7 @@ export class LatestDirectEffectRuntime {
           )
         : null,
     };
+    this.#dirtyLedger.add(event.id);
     this.ledger.set(event.id, row);
     this.counts.resourceResolved++;
     if (row.placementResolved) this.counts.placementResolved++;
@@ -828,7 +901,7 @@ export class LatestDirectEffectRuntime {
 
   #updateInstance(instance, time, cursor) {
     if (instance.retired) return;
-    this.#checkpointLedger.delete(this.ledger.get(instance.event.id));
+    this.#dirtyLedger.add(instance.event.id);
     const definition = this.definitions.get(instance.definitionId);
     const placement = this.#placement(instance.event, time, cursor);
     const row = this.ledger.get(instance.event.id);
@@ -1058,6 +1131,13 @@ export class LatestDirectEffectRuntime {
         f(local / program.lifetime),
         emitter.random,
       );
+    if (program.legacyShapeRotationProgram)
+      sampleDirectLegacyShapeRotation(
+        program.legacyShapeRotationProgram,
+        birth,
+        f(local / program.lifetime),
+        emitter.random,
+      );
     if (!(life > 0)) throw Error("Admitted particle has invalid lifetime");
     const offset = program.legacyOffsetProgram
       ? sampleDirectLegacyOffset(
@@ -1167,11 +1247,9 @@ export class LatestDirectEffectRuntime {
     // their own subset so attachment work cannot hide inside particle cost.
     this.metrics.worldQueryMs = 0;
     this.metrics.worldQueries = 0;
-    if (time < this.time) {
-      const saved =
-        this.#checkpoints.findLast((s) => s.time <= time) ?? this.#initial;
-      this.restore(saved);
-    }
+    const saved = directCheckpointAtOrBefore(this.#checkpoints, time);
+    if (time < this.time || (saved && saved.time > this.time))
+      this.#restoreCheckpoint(saved ?? this.#initial);
     // Use an integer tick index. Display rate/speed and fractional displays never
     // alter the canonical schedule or RNG consumption. Events split a tick and
     // retain transport order, including multiple entries at identical times.
@@ -1195,9 +1273,11 @@ export class LatestDirectEffectRuntime {
       this.time = nextTime;
       if (this.time - this.lastCheckpoint >= this.checkpointSeconds) {
         this.lastCheckpoint = this.time;
-        this.#checkpoints.push(this.#automaticCheckpoint());
-        if (this.#checkpoints.length > this.maximumCheckpoints)
-          this.#checkpoints.shift();
+        this.#checkpoints = retainDirectCheckpoint(
+          this.#checkpoints,
+          this.#automaticCheckpoint(),
+          this.maximumCheckpoints,
+        );
       }
     }
     this.time = time;
@@ -1347,7 +1427,10 @@ export class LatestDirectEffectRuntime {
               )
             : directParticleWorldBasis(
                 directParticleBasis(rotation),
-                birthBasis,
+                program.arbitraryLocalOrientationProgram
+                  ?.useCurrentRootBasisForAxes === true
+                  ? instance.basis
+                  : birthBasis,
               );
           const localPosition = directParticleWorldVector(
             [
@@ -1355,7 +1438,9 @@ export class LatestDirectEffectRuntime {
               emitter.motion[i * 6 + 1],
               emitter.motion[i * 6 + 2],
             ],
-            program.cameraLocalOffsetProgram?.useCurrentRootBasis === true
+            program.cameraLocalOffsetProgram?.useCurrentRootBasis === true ||
+              program.arbitraryLocalOrientationProgram
+                ?.useCurrentRootBasisForPosition === true
               ? instance.basis
               : birthBasis,
           );
@@ -1752,15 +1837,20 @@ export class LatestDirectEffectRuntime {
     };
   }
 
-  #checkpointData(ledger) {
+  #checkpointData(
+    ledger,
+    generations = [...this.generations],
+    reasonBindings = this.#eventReasons.checkpoint(this.instances).bindings,
+  ) {
     return {
       schema: 1,
       contract: this.contract,
       time: this.time,
       tick: this.tick,
       cursor: this.cursor,
-      generations: [...this.generations],
+      generations,
       ledger,
+      reasonBindings,
       counts: this.counts,
       lastCheckpoint: this.lastCheckpoint ?? 0,
       instances: [...this.instances].map(([id, instance]) => [
@@ -1778,20 +1868,49 @@ export class LatestDirectEffectRuntime {
 
   #automaticCheckpoint() {
     this.#checkWorldPresentation();
-    // Most ledger rows describe historical requests and no longer change.
-    // Copy live simulation/RNG state each time, but reuse detached ledger-row
-    // snapshots until an active update or later removal request invalidates one.
-    // Both the cache and checkpoint ring are private; no caller can mutate a
-    // shared snapshot. Restore copies it before making it live again.
-    const saved = copy(this.#checkpointData([]));
-    saved.ledger = [...this.ledger].map(([id, row]) => {
-      let snapshot = this.#checkpointLedger.get(row);
-      if (!snapshot) {
-        snapshot = copy(row);
-        this.#checkpointLedger.set(row, snapshot);
-      }
-      return [id, snapshot];
+    const started = now();
+    // A complete history is represented by persistent insertion-order roots.
+    // Only changed/new rows acquire detached versions at this boundary; neither
+    // history Map is traversed for every two-second checkpoint.
+    const reasons = this.#eventReasons.checkpoint(this.instances);
+    for (const id of reasons.dirty) this.#dirtyLedger.add(id);
+    const changedRows = [];
+    for (const id of this.#dirtyLedger) {
+      if (!this.ledger.has(id))
+        throw Error("Dirty checkpoint ledger identity is absent");
+      changedRows.push([id, this.ledger.get(id)]);
+    }
+    const generationChanges = [];
+    for (const id of this.#dirtyGenerations) {
+      if (!this.generations.has(id))
+        throw Error("Dirty checkpoint generation identity is absent");
+      generationChanges.push([id, this.generations.get(id)]);
+    }
+    const generations = this.#generationHistory.snapshotWithEntries(
+      generationChanges,
+      undefined,
+    );
+    this.metrics.checkpointRowsCopied += this.#dirtyLedger.size;
+    this.metrics.checkpointGenerationUpdates += this.#dirtyGenerations.size;
+    this.#dirtyLedger.clear();
+    this.#dirtyGenerations.clear();
+    const ledger = this.#ledgerHistory.snapshotWithEntries(
+      changedRows,
+      this.#checkpointData([], [], reasons.bindings),
+    );
+    const saved = {
+      schema: 1,
+      contract: this.contract,
+      time: this.time,
+      tick: this.tick,
+      cursor: this.cursor,
+    };
+    this.#automaticHistories.set(saved, {
+      ledger,
+      generations,
     });
+    this.metrics.checkpointSnapshots++;
+    this.metrics.checkpointMs += now() - started;
     return saved;
   }
 
@@ -1802,29 +1921,57 @@ export class LatestDirectEffectRuntime {
   }
 
   restore(saved) {
+    this.#restoreCheckpoint(saved);
+    // A detached caller-supplied state can represent a different branch even
+    // under the same replay contract. Only internal cached restores retain
+    // alternative states for subsequent forward/backward seeks.
+    this.#checkpoints = [];
+  }
+
+  #restoreCheckpoint(saved) {
     this.#checkWorldPresentation();
     if (
       saved.schema !== 1 ||
       JSON.stringify(saved.contract) !== JSON.stringify(this.contract)
     )
       throw Error("Incompatible direct effect checkpoint");
-    const state = copy(saved);
-    const mutableLedgerData = protectDirectDataGraph(state.ledger);
-    for (const [, instance] of state.instances)
-      freezeDirectOwnedData(instance.event, mutableLedgerData);
+    const automatic = this.#automaticHistories.get(saved);
+    let state;
+    if (automatic) {
+      const restored = this.#ledgerHistory.cloneState(automatic.ledger);
+      state = restored.payload;
+      state.ledger = restored.entries;
+      state.generations = this.#generationHistory.cloneEntries(
+        automatic.generations,
+      );
+    } else state = copy(saved);
     // Checkpoint compatibility also covers copied pose provenance. Validate
     // before changing any live clock, ledger or particle state.
     for (const [, row] of [...state.ledger, ...state.instances]) {
       this.#poseEvidence({ poseEvidence: row.placementEvidence?.poseEvidence });
       this.#poseEvidence({ poseEvidence: row.lastResolvedPoseEvidence });
     }
+    this.#eventReasons.restore(state);
+    const mutableLedgerData = protectDirectDataGraph(state.ledger);
+    const freezer = createDirectOwnedDataFreezer(mutableLedgerData);
+    for (const [, instance] of state.instances) freezer.freeze(instance.event);
     this.time = state.time;
     this.tick = state.tick;
     this.cursor = state.cursor;
     this.lastCheckpoint = state.lastCheckpoint;
     this.generations = new Map(state.generations);
     this.ledger = new Map(state.ledger);
-    this.#checkpointLedger = new WeakMap();
+    this.#dirtyLedger.clear();
+    this.#dirtyGenerations.clear();
+    if (automatic) {
+      this.#ledgerHistory.restore(automatic.ledger);
+      this.#generationHistory.restore(automatic.generations);
+    } else {
+      this.#ledgerHistory.clear();
+      this.#generationHistory.clear();
+      for (const id of this.ledger.keys()) this.#dirtyLedger.add(id);
+      for (const id of this.generations.keys()) this.#dirtyGenerations.add(id);
+    }
     this.counts = state.counts;
     this.generatedCount = [...this.ledger.keys()].filter((id) =>
       this.generated.has(id),

@@ -273,7 +273,7 @@ export async function storedRawArchiveDescriptor(
   artifact: ArtifactKind,
 ): Promise<ArtifactDescriptor | null> {
   const kind = rawArchiveReceiptKind(artifact);
-  const receipts = await listReceipts(db, { matchId });
+  const receipts = await listReceipts(db, { matchId, firstOfKind: kind });
   const archived = receipts.find((record) => record.receipt.kind === kind);
   return archived === undefined ? null : rawArchiveDescriptorOf(archived);
 }

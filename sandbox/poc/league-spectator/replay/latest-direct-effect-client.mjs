@@ -1,6 +1,7 @@
 import { LatestParticleWorkerClient } from "./latest-particle-worker-client.mjs";
 import { assertDirectCompiledDataGraph } from "./latest-direct-compiled-restore.mjs";
 import { consumeDirectInitializationTransfer } from "./latest-direct-initialization-ownership.mjs";
+import { consumeLatestDirectWorldInput } from "./latest-direct-world-input.mjs";
 
 export class LatestDirectEffectClient extends LatestParticleWorkerClient {
   constructor(options = {}) {
@@ -9,7 +10,10 @@ export class LatestDirectEffectClient extends LatestParticleWorkerClient {
       ...options,
     });
   }
-  async initialize(payload, { ownedInitialization = null } = {}) {
+  async initialize(
+    payload,
+    { ownedInitialization = null, worldInputOwnership = null } = {},
+  ) {
     const started = performance.now();
     if (this.initializationAttempted)
       throw Error("Direct worker initialization is one-use");
@@ -20,10 +24,26 @@ export class LatestDirectEffectClient extends LatestParticleWorkerClient {
         ownedInitialization === null
           ? null
           : consumeDirectInitializationTransfer(ownedInitialization, payload),
+      worldTransfers =
+        worldInputOwnership === null
+          ? []
+          : consumeLatestDirectWorldInput(worldInputOwnership, payload.report),
+      worldTransferBytes = worldTransfers.reduce(
+        (total, buffer) => total + buffer.byteLength,
+        0,
+      ),
       ownershipValidated = performance.now(),
-      promise = this.request("initialize", payload, plan?.transfers ?? []),
-      posted = performance.now(),
-      result = await promise;
+      transfers = [...(plan?.transfers ?? []), ...worldTransfers];
+    if (new Set(transfers).size !== transfers.length)
+      throw Error(
+        "Independent static and projected world transfer buffers required",
+      );
+    const promise = this.request("initialize", payload, transfers),
+      posted = performance.now();
+    // postMessage serializes synchronously; the sender retains no second event
+    // payload through this asynchronous initialization barrier.
+    payload = null;
+    const result = await promise;
     const accounting = result.initializationAccounting;
     if (
       !accounting ||
@@ -55,8 +75,11 @@ export class LatestDirectEffectClient extends LatestParticleWorkerClient {
         ticketPreparationCpuMs: plan?.ticketPreparationCpuMs ?? 0,
         producerScopes: plan?.scopes ?? [],
         isolatedMemoryCopy: false,
-        transferredBuffers: plan?.transferredBuffers ?? 0,
-        transferredBufferBytes: plan?.transferredBufferBytes ?? 0,
+        transferredBuffers:
+          (plan?.transferredBuffers ?? 0) + worldTransfers.length,
+        transferredBufferBytes:
+          (plan?.transferredBufferBytes ?? 0) + worldTransferBytes,
+        projectedWorldBufferBytes: worldTransferBytes,
         explicitSessionOwnership: plan !== null,
       },
     };

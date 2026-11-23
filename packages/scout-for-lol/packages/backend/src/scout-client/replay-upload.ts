@@ -1,7 +1,8 @@
-import { open, unlink } from "node:fs/promises";
+import { open, unlink, type FileHandle } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import nodePath from "node:path";
 import { z } from "zod";
+import { MAX_PUBLIC_REPLAY_BYTES as MAX_REPLAY_BYTES } from "@scout-for-lol/domain/artifacts/public-replay.ts";
 import configuration from "#src/configuration.ts";
 import { prisma, type Db } from "#src/database/index.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
@@ -18,6 +19,10 @@ import { resolveReplayProvenance } from "./replay/evidence.ts";
 import type { QualifiedReplayProvenance } from "./replay/evidence-selection.ts";
 import { persistReplayFile } from "./replay/object-store.ts";
 import {
+  isLegacyCompressionRejection,
+  legacyCompressionRejection,
+} from "./replay/rejection.ts";
+import {
   completedReplay,
   ReplayUploadError,
   type ReplayUploadResult,
@@ -27,7 +32,6 @@ import {
   replayUploadLeaseCutoff,
 } from "./replay-lease.ts";
 
-export const MAX_REPLAY_BYTES = 512 * 1024 * 1024;
 export const MAX_OWNER_REPLAY_BYTES_PER_DAY = 2n * 1024n * 1024n * 1024n;
 export const MAX_OWNER_REPLAYS_PER_DAY = 20;
 const REPLAY_QUOTA_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -230,7 +234,10 @@ async function claimReplayArtifact(
     ) {
       throw new ReplayUploadError("Replay upload is already in progress", 409);
     }
-    if (existing?.uploadState === "REJECTED") {
+    if (
+      existing?.uploadState === "REJECTED" &&
+      !isLegacyCompressionRejection(existing)
+    ) {
       throw new ReplayUploadError(
         existing.lastError ?? "Replay was rejected",
         400,
@@ -257,13 +264,21 @@ async function claimReplayArtifact(
       where: {
         digest: metadata.digest,
         gameId: metadata.gameId,
-        OR: [
-          { uploadState: "FAILED" },
-          {
-            uploadState: "UPLOADING",
-            updatedAt: { lte: replayUploadLeaseCutoff(leasedAt) },
-          },
-        ],
+        ...(existing.uploadState === "REJECTED"
+          ? {
+              ...legacyCompressionRejection,
+              id: existing.id,
+              platformId: existing.platformId,
+            }
+          : {
+              OR: [
+                { uploadState: "FAILED" },
+                {
+                  uploadState: "UPLOADING",
+                  updatedAt: { lte: replayUploadLeaseCutoff(leasedAt) },
+                },
+              ],
+            }),
       },
       data: {
         deviceId: device.deviceId,
@@ -296,14 +311,13 @@ function appendReplayHeader(header: Uint8Array, chunk: Uint8Array): Uint8Array {
 
 async function receiveReplay(
   metadata: ReplayMetadata,
-  temporaryPath: string,
+  fileHandle: FileHandle,
 ): Promise<ReceivedReplay> {
-  const fileHandle = await open(temporaryPath, "wx", 0o600);
   const hasher = new Bun.CryptoHasher("sha256");
-  const reader = metadata.body.getReader();
   let receivedBytes = 0;
   let header: Uint8Array = new Uint8Array();
   try {
+    const reader = metadata.body.getReader();
     let result = await reader.read();
     while (!result.done) {
       const chunk = BodyChunkSchema.safeParse(result.value);
@@ -441,11 +455,13 @@ async function acceptReplay(
 
   const temporaryPath = nodePath.join(
     tmpdir(),
-    `scout-replay-${claim.artifactId}.rofl`,
+    `scout-replay-${claim.artifactId}-${crypto.randomUUID()}.rofl`,
   );
+  let fileHandle: FileHandle | undefined;
   try {
-    const received = await receiveReplay(metadata, temporaryPath);
-    await validateReplayContainer(
+    fileHandle = await open(temporaryPath, "wx", 0o600);
+    const received = await receiveReplay(metadata, fileHandle);
+    const replayMetadata = await validateReplayContainer(
       temporaryPath,
       received.bytes,
       provenance,
@@ -470,6 +486,14 @@ async function acceptReplay(
         uploadState: "COMPLETED",
         completedAt: new Date(),
         bytes: BigInt(received.bytes),
+        gameBuild: replayMetadata.gameBuild,
+        protocol: replayMetadata.protocol,
+        durationSeconds: replayMetadata.durationSeconds,
+        mapId: provenance.mapId,
+        gameMode: provenance.gameMode,
+        ...(provenance.teamSizes === null
+          ? {}
+          : { teamSizes: provenance.teamSizes }),
       },
     });
     if (completed.count !== 1) {
@@ -488,6 +512,6 @@ async function acceptReplay(
     await markReplayFailed(claim.artifactId, claim.leasedAt, uploadError);
     throw uploadError;
   } finally {
-    await removeTemporaryReplay(temporaryPath);
+    if (fileHandle !== undefined) await removeTemporaryReplay(temporaryPath);
   }
 }

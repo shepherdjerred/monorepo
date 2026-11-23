@@ -1,5 +1,39 @@
 import { expect, test } from "bun:test";
-import { collectNamedBoneTypeOneCasterRecords } from "./latest-missile-caster-context.mjs";
+import {
+  collectNamedBoneTypeOneCasterRecords,
+  createOwnedMissileCasterStarts,
+} from "./latest-missile-caster-context.mjs";
+
+test("Map11 cannot reach the legacy rig path without its explicit scene authority", async () => {
+  const build = "16.21.829.8620",
+    protocol = "20e09df23c66b85e",
+    imageHash = "a".repeat(64),
+    reads = [];
+  await expect(
+    createOwnedMissileCasterStarts({
+      report: { build, protocol, decoderImageSha256: imageHash },
+      scene: { map: { id: 11 } },
+      profile: {
+        clientVersion: build,
+        protocolDigest: protocol,
+        decoderImageSha256: imageHash,
+      },
+      world: {
+        viewerRoot() {
+          throw Error("No world pose may be supplied to an unbound rig");
+        },
+      },
+      records: [],
+      load: async (file) => {
+        reads.push(file);
+        throw Error("Unbound legacy resource read");
+      },
+    }),
+  ).rejects.toThrow(
+    "Selected Map11 caster requires explicit scene animation authority",
+  );
+  expect(reads).toEqual([]);
+});
 
 test("named type1 source routing owns an inclusive requested prefix and preserves original record identity", () => {
   const make = (time) => ({

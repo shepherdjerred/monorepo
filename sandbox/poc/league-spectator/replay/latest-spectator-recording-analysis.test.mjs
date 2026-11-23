@@ -206,15 +206,18 @@ function replyFixture() {
   const old = fixture();
   const recorder = new LatestSpectatorDiagnostics({
     ...old.contract,
-    frameScheduling: "reply-driven-owned-presentations-v1",
+    frameScheduling: "reply-driven-owned-presentations-v2",
   });
+  let observationOrder = 0;
   old.frames.forEach((row, i) => {
+    const drawOrder = ++observationOrder;
     row.wallTime += 10;
     row.directEffectFrame.metrics.simulationSteps = i;
     row.directEffectFrame.metrics.simulationStepsAdvanced = 1;
     recorder.frame({
       ...row,
       drawId: i + 1,
+      drawOrder,
       drawWallTime: row.wallTime,
       epoch: 0,
       stateKey: String(row.replayTime),
@@ -238,6 +241,8 @@ function replyFixture() {
         desiredTime: row.replayTime + offset / 1000,
         presentedTime: row.replayTime,
         drawId: i + 1,
+        drawOrder,
+        observationOrder: ++observationOrder,
         stateKey: String(row.replayTime),
         worldStateKey: String(row.replayTime),
         particleStateKey: String(i),

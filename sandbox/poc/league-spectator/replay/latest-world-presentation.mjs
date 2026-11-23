@@ -1,4 +1,5 @@
 import { prepareLatestMovement } from "./latest-movement.mjs";
+import { bindOwnedLatestMovement } from "./latest-owned-movement.mjs";
 import { sampleMovement } from "./playback.mjs";
 import { createLatestDisplayFacing } from "./latest-display-facing.mjs";
 import {
@@ -7,12 +8,16 @@ import {
   movementFollowsRespawn,
 } from "./latest-lifecycle.mjs";
 import { sampleLatestMissileTrace } from "./latest-missile-playback.mjs";
-import { createProjectilePresentation } from "./latest-projectile-presentation.mjs";
+import {
+  createProjectilePresentation,
+  createOwnedProjectilePresentation,
+} from "./latest-projectile-presentation.mjs";
 import {
   createLatestVisibilityComponentPolicy,
   ROFL_ALL_VISION_POLICY,
 } from "./latest-target-visibility-policy.mjs";
 import { INITIAL_VISIBILITY_PREFIX_POLICY } from "./latest-initial-visibility-prefix.mjs";
+import { NEUTRAL_CREATION_PACKAGE_SHA } from "./latest-neutral-creation.mjs";
 import { INITIAL_RESOURCE_PREFIX_POLICY } from "./latest-initial-resource-prefix.mjs";
 import {
   createLatestDirectMissileAdapter,
@@ -100,6 +105,7 @@ export function createLatestWorldPresentation({
   initialResourcePrefix = null,
   placementResolver = null,
   viewerPoseAssets = null,
+  movementOwner = null,
 }) {
   if (
     report.build !== DIRECT_EFFECT_BUILD ||
@@ -141,7 +147,16 @@ export function createLatestWorldPresentation({
     throw Error(
       "Choose an explicit initial resource presentation policy or supplied resource tracks",
     );
-  const movement = prepareLatestMovement(report, scene.map).tracks;
+  const ownedMovement =
+    movementOwner === null
+      ? null
+      : bindOwnedLatestMovement(movementOwner, report, scene.map, {
+          heroCreationOrdinals: true,
+        });
+  const movement =
+    ownedMovement === null
+      ? prepareLatestMovement(report, scene.map).tracks
+      : null;
   const lifecycle = prepareLatestLifecycle(report).tracks;
   const displayFacingHeroes = structuredClone(report.heroes);
   let displayFacing = null;
@@ -150,7 +165,12 @@ export function createLatestWorldPresentation({
   // them; they must not acquire an unrelated renderer initialization dependency.
   const displayFacingService = () =>
     (displayFacing ??= createLatestDisplayFacing({
-      movement,
+      movement:
+        ownedMovement === null
+          ? movement
+          : ownedMovement.copyHeroTracks(
+              displayFacingHeroes.map((hero) => hero.entityId),
+            ),
       lifecycle,
       heroes: displayFacingHeroes,
     }));
@@ -266,16 +286,61 @@ export function createLatestWorldPresentation({
       });
     } else throw Error(`Unknown decoded world entity event ${event.kind}`);
   }
+  if (scene.map.id === 11 && report.neutralCreationPackageSha256 != null) {
+    if (
+      report.neutralCreationPackageSha256 !== NEUTRAL_CREATION_PACKAGE_SHA ||
+      !Array.isArray(report.neutralCreations) ||
+      !Array.isArray(report.neutralSnapshots)
+    )
+      throw Error(
+        "Pinned separate neutral gameplay/snapshot world inputs required",
+      );
+    for (const request of report.neutralCreations) {
+      if (
+        request.kind !== "neutral-creation-candidate" ||
+        request.stream !== 1 ||
+        request.nativeWorldAcceptance !== false ||
+        !finiteVector(request.firstVectorArgument, 3) ||
+        typeof request.character !== "string" ||
+        !/^[a-z0-9_]+$/i.test(request.character) ||
+        !Number.isInteger(request.requestedSkinId) ||
+        request.requestedSkinId < 0 ||
+        request.requestedSkinId > 0xffffffff
+      )
+        throw Error("Original neutral gameplay world root required");
+      register({
+        entityId: request.entityId,
+        creationTime: request.time,
+        creationTransportSequence: request.transportSequence,
+        creationEntryOrder: request.entryOrder,
+        creationStream: request.stream,
+        creationChunkId: request.chunkId,
+        sourceKind: request.kind,
+        position: request.firstVectorArgument,
+        entityClass: "neutral-minion",
+        character: request.character,
+        requestedSkinId: request.requestedSkinId,
+        skinId: null,
+        appearanceStatus:
+          "original-requested-skin; resource selection requires scene neutral policy",
+        nativeTeamEnum: request.nativeTeamEnum,
+        team: null,
+      });
+    }
+  }
   for (const hero of report.heroes) {
-    const initial = movement.get(hero.entityId)?.[0];
+    const initial = movement?.get(hero.entityId)?.[0];
     if (initial?.source === "initial-hero-creation")
       initial.transportSequence = hero.provenance?.transportSequence;
   }
   for (const entity of entities) register(entity);
-  const projectiles = createProjectilePresentation(
-    report,
-    targetedMissilePresentation,
-  );
+  const shareFamilyProjectiles =
+      directMissilePresentation !== null &&
+      targetedMissilePresentation !== null &&
+      effectsManifest !== null,
+    projectiles = shareFamilyProjectiles
+      ? createOwnedProjectilePresentation(report, targetedMissilePresentation)
+      : createProjectilePresentation(report, targetedMissilePresentation);
   const directMissiles =
     directMissilePresentation === null
       ? null
@@ -289,7 +354,7 @@ export function createLatestWorldPresentation({
       ? createLatestDirectMissileFamilyAdapter({
           report,
           manifest: effectsManifest,
-          presentation: targetedMissilePresentation,
+          presentationOwner: projectiles,
         })
       : null;
   const legacyCreates =
@@ -582,15 +647,15 @@ export function createLatestWorldPresentation({
           }
         : cursor;
       validateCursor(motionCursor);
-      const motionEvent = latest(
-        movement.get(entityId),
-        motionTime,
-        motionCursor,
-      );
-      const motion = sampleMovement(
-        motionEvent ? [motionEvent] : null,
-        motionTime,
-      );
+      const motionEvent =
+        ownedMovement === null
+          ? latest(movement.get(entityId), motionTime, motionCursor)
+          : null;
+      const motion =
+        ownedMovement === null
+          ? sampleMovement(motionEvent ? [motionEvent] : null, motionTime)
+          : ownedMovement.sample(entityId, motionTime, motionCursor);
+      const motionSource = motion?.event ?? null;
       let position = entity.position === null ? null : [...entity.position],
         direction = null,
         positionStatus = position ? "recorded-creation-position" : "unknown";
@@ -618,11 +683,11 @@ export function createLatestWorldPresentation({
           positionSource = {
             kind: "movement",
             entityId,
-            time: motionEvent.time,
-            sequence: motionEvent.sequence,
-            transportSequence: motionEvent.transportSequence ?? null,
-            entryOrder: motionEvent.entryOrder ?? null,
-            sourceKind: motionEvent.source,
+            time: motionSource.time,
+            sequence: motionSource.sequence,
+            transportSequence: motionSource.transportSequence ?? null,
+            entryOrder: motionSource.entryOrder ?? null,
+            sourceKind: motionSource.source,
             frozenAtDeath: life.dead
               ? {
                   time: life.interval.death.time,
@@ -672,16 +737,18 @@ export function createLatestWorldPresentation({
             !life.dead &&
             movementFollowsRespawn(motion, life.respawn),
           orientationKnown:
-            !!motionEvent &&
-            motionEvent.source !== "initial-hero-creation" &&
-            motionEvent.waypoints.some(
-              (point, index) =>
-                index > 0 &&
-                Math.hypot(
-                  point[0] - motionEvent.waypoints[index - 1][0],
-                  point[1] - motionEvent.waypoints[index - 1][1],
-                ) > 0,
-            ),
+            ownedMovement !== null
+              ? !!motion?.orientationKnown
+              : !!motionEvent &&
+                motionEvent.source !== "initial-hero-creation" &&
+                motionEvent.waypoints.some(
+                  (point, index) =>
+                    index > 0 &&
+                    Math.hypot(
+                      point[0] - motionEvent.waypoints[index - 1][0],
+                      point[1] - motionEvent.waypoints[index - 1][1],
+                    ) > 0,
+                ),
         },
         visibility: "unknown",
         ...resourceView(entityId, time, cursor),
@@ -1156,13 +1223,12 @@ export function buildLatestDirectEffectEvents({
     }
   }
   if (networkEvents.length)
-    events.push(
-      ...linkLatestNetworkEffectLifecycle({
-        events: networkEvents,
-        creations: report.effectCreations,
-        removals: report.effectRemovals,
-      }),
-    );
+    for (const event of linkLatestNetworkEffectLifecycle({
+      events: networkEvents,
+      creations: report.effectCreations,
+      removals: report.effectRemovals,
+    }))
+      events.push(event);
   if (!report || !Array.isArray(report.missiles))
     throw Error("Decoded presentation report required");
   const traces = new Map(missilePlayback.traces.map((t) => [t.sequence, t]));

@@ -9,6 +9,7 @@ import {
   STATIC_CATALOG_DECODER_IMAGE_SHA256,
 } from "./latest-static-catalog.mjs";
 import { EFFECT_RESOLVERS_PACKAGE_SHA } from "./latest-effect-resolver-contract.mjs";
+import { assertSceneResolverObservation } from "./scene-effect-resource-observation.mjs";
 const decode = (bytes) =>
   JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 const PREPARER_SHA =
@@ -53,6 +54,15 @@ export async function assertSelectedResolverObservation({
 }) {
   await assertSelectedResourceRoot({ selection, profile, manifestBytes });
   await selection.assertRole("effectResolvers", packageBytes);
+  const selectedMetadata = decode(packageBytes);
+  if (selectedMetadata.schema === 2)
+    return assertSceneResolverObservation({
+      selection,
+      profile,
+      metadata: selectedMetadata,
+      packageBytes,
+      contexts,
+    });
   const referenceBytes = await selection.readRole("effectResolversReference");
   if ((await sha256(referenceBytes)) !== EFFECT_RESOLVERS_PACKAGE_SHA)
     throw Error("Fixed original resolver program reference required");

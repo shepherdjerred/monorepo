@@ -14,6 +14,7 @@ function draw(id, wallTime, time = 70 + wallTime / 1000, patch = {}) {
   const advanced = patch.advanced ?? 1;
   return {
     drawId: id,
+    drawOrder: Math.round(wallTime * 1000000) * 2 + 1,
     wallTime,
     drawWallTime: wallTime,
     epoch: 0,
@@ -50,6 +51,7 @@ function tick(d, wallTime = d.drawWallTime, patch = {}) {
     ...d,
     wallTime,
     rafTime: wallTime,
+    observationOrder: Math.round(wallTime * 1000000) * 2 + 2,
     desiredTime: 70 + wallTime / 1000,
     desiredEpoch: d.epoch,
     desiredPlaying: d.playing,
@@ -70,6 +72,70 @@ function changeTime(d, time) {
     directEffectFrame: { ...d.directEffectFrame, time },
   };
 }
+test("separately coarsened RAF and performance samples retain their exact values", () => {
+  const boundary = draw(4, 32840, 52.7);
+  const previous = tick(boundary, 32849.69999998808, {
+    rafTime: 32849.6,
+    desiredTime: 52.7,
+    desiredEpoch: 1,
+  });
+  const current = tick(boundary, 32854.89999997616, {
+    rafTime: 32854.9,
+    desiredTime: 79.8,
+    desiredEpoch: 2,
+  });
+  const raw = structuredClone([previous, current]);
+  expect(current.wallTime).toBeLessThan(current.rafTime);
+  expect(
+    validateDisplayTickJoins([previous, current], [], {
+      ...contract,
+      initialDisplayBoundary: boundary,
+    }),
+  ).toEqual({ recordedDraws: 0, matchedTicks: 2, initialBoundaryTicks: 2 });
+  expect([previous, current]).toEqual(raw);
+  for (const patch of [
+    { wallTime: previous.wallTime - 1 },
+    { rafTime: previous.rafTime - 1 },
+    { drawWallTime: current.wallTime + 1 },
+    { desiredEpoch: 1, desiredTime: 20 },
+    { cameraKey: "foreign" },
+  ])
+    expect(() =>
+      validateDisplayTick({ ...current, ...patch }, previous, contract),
+    ).toThrow();
+});
+test("queued forward RAF callbacks retain identical coarsened performance samples", () => {
+  const boundary = draw(5, 403510.1999999881, 60);
+  const previous = tick(boundary, 406911.10000002384, {
+    rafTime: 406900.3,
+    desiredTime: 2900,
+    desiredEpoch: 5,
+  });
+  const current = {
+    ...previous,
+    rafTime: 406908.6,
+    observationOrder: previous.observationOrder + 1,
+  };
+  const raw = structuredClone([previous, current]);
+  expect(
+    validateDisplayTickJoins([previous, current], [], {
+      ...contract,
+      initialDisplayBoundary: boundary,
+    }),
+  ).toEqual({ recordedDraws: 0, matchedTicks: 2, initialBoundaryTicks: 2 });
+  expect([previous, current]).toEqual(raw);
+  for (const patch of [
+    { wallTime: current.wallTime - 0.1 },
+    { rafTime: previous.rafTime },
+    { drawId: 4 },
+    { cameraKey: "changed-retained-stamp" },
+    { desiredTime: 2899 },
+  ])
+    expect(() =>
+      validateDisplayTick({ ...current, ...patch }, previous, contract),
+    ).toThrow();
+});
+
 test("61 RAF observations distinguish 30 submitted updates from 60 heartbeats", () => {
   const frames = Array.from({ length: 31 }, (_, i) =>
     draw(i + 1, (i * 1000) / 30),
@@ -110,6 +176,7 @@ test("every draw-stamp field must join exactly; unknown and foreign draw identit
     simulationStepsAdvanced: 0,
     requestToPresentMs: 5,
     drawWallTime: 1,
+    drawOrder: 123,
   };
   for (const [key, value] of Object.entries(mutations))
     expect(() =>

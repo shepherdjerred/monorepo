@@ -2,13 +2,23 @@
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { strict as assert } from "node:assert";
+import { mkdir } from "node:fs/promises";
 import { sha256 } from "../structural-comparison.mjs";
 import { captureDirectSourceInputs } from "./direct-source-inputs.mjs";
 
-const cache = resolve(process.argv[2] ?? ".cache/replay-lineup-5667809143"),
+const [cacheArg, vendorArg, publicArg, outputArg, nativeControlArg] =
+  process.argv.slice(2);
+if ((publicArg && !outputArg) || (outputArg && !publicArg))
+  throw Error(
+    "Explicit public and owned proof output roots must be supplied together",
+  );
+const cache = resolve(cacheArg ?? ".cache/replay-lineup-5667809143"),
   root = resolve(import.meta.dir, ".."),
-  assets = resolve(cache, "public"),
-  vendor = resolve(".cache/replay-spike/public/vendor/three.module.js"),
+  assets = publicArg ? resolve(publicArg) : resolve(cache, "public"),
+  vendor = resolve(
+    vendorArg ?? ".cache/replay-spike/public/vendor/three.module.js",
+  ),
+  proofDirectory = outputArg ? resolve(outputArg) : resolve(cache, "research"),
   inputs = {},
   requests = [];
 async function raw(path) {
@@ -35,6 +45,7 @@ const entry = [
   "latest-direct-effect-package.mjs",
   "latest-static-catalog.mjs",
   "latest-selected-material-textures.mjs",
+  "latest-direct-effect-runtime.mjs",
 ];
 const bundle = await Bun.build({
   entrypoints: ["selected-renderer-entry"],
@@ -65,7 +76,13 @@ const bundle = await Bun.build({
 });
 if (!bundle.success || bundle.outputs.length !== 1)
   throw new AggregateError(bundle.logs, "Selected renderer bundle failed");
-const bundlePath = `${cache}/research/selected-material-renderer.bundle.mjs`;
+await mkdir(proofDirectory, { recursive: true });
+const bundlePath = resolve(
+  proofDirectory,
+  "selected-material-renderer.bundle.mjs",
+);
+if (outputArg && (await Bun.file(bundlePath).exists()))
+  throw Error("Fresh owned renderer proof output required");
 await Bun.write(bundlePath, bundle.outputs[0]);
 await raw(bundlePath);
 const api = await import(pathToFileURL(bundlePath).href),
@@ -80,7 +97,9 @@ const api = await import(pathToFileURL(bundlePath).href),
   quad = JSON.parse(
     new TextDecoder().decode(await selection.readRole("quadGpu")),
   ),
-  effectIds = [...new Set(quad.emitters.map((e) => e.effectId))].slice(0, 10),
+  effectIds = publicArg
+    ? [...new Set(quad.emitters.map((e) => e.effectId))]
+    : [...new Set(quad.emitters.map((e) => e.effectId))].slice(0, 10),
   prepared = await api.loadLatestDirectEffectPackage({
     load,
     manifestBytes,
@@ -117,7 +136,11 @@ assert.throws(
       staticCatalog: independentlyOwnedSelection,
       selectedMaterials: prepared.selectedMaterials,
     }),
-  /different owned catalog/,
+  {
+    message: Object.hasOwn(selection.describe(), "sourceAuthorities")
+      ? "Scene material registry belongs to a different selected catalog"
+      : "Selected material registry belongs to a different owned catalog",
+  },
 );
 assert.equal(invalidWorld.children.length, 0);
 const rendererRequestsStart = requests.length;
@@ -178,12 +201,134 @@ try {
     false,
     "Selected partial renderer must not fetch legacy/unprepared material families",
   );
+  let sourceFrameControl = null;
+  if (nativeControlArg) {
+    const nativeBytes = await raw(nativeControlArg),
+      native = JSON.parse(new TextDecoder().decode(nativeBytes));
+    assert.equal(
+      native.kind,
+      "original-archived-arbitrary-particle-orientation",
+    );
+    assert.equal(native.effectsManifestSha256, await sha256(manifestBytes));
+    const image = await selection.read("decoder-16.21-macos/image.bin");
+    assert.equal(native.decoderImageSha256, await sha256(image));
+    for (const [file, hash] of Object.entries(native.inputs))
+      assert.equal(await sha256(await raw(file)), hash, file);
+    for (const block of native.originalBlocks)
+      assert.equal(
+        await sha256(image.subarray(block.rva, block.rva + block.size)),
+        block.sha256,
+      );
+    const camera = new THREE.OrthographicCamera(
+      -1000,
+      1000,
+      1000,
+      -1000,
+      0.1,
+      5000,
+    );
+    camera.position.set(0, 1000, 0);
+    camera.up.set(0, 0, -1);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld(true);
+    let frames = 0,
+      nonemptyFrames = 0,
+      positionLanes = 0;
+    for (const c of native.cases.filter((row) => row.variant === "authored")) {
+      const definition = prepared.definitions.get(c.effectId);
+      assert.deepEqual(definition.blockers, []);
+      assert(definition.emitters.some((row) => row.index === c.emitterIndex));
+      const atTime = (time) =>
+        c.frames[
+          Math.min(c.frames.length - 1, Math.max(0, Math.round(time * 60)))
+        ].input;
+      const runtime = new api.LatestDirectEffectRuntime({
+        ...prepared.contract,
+        contentHash: definition.contentHash,
+        replayHash: "9".repeat(64),
+        definitions: prepared.definitions,
+        kernels: prepared.kernels,
+        events: [
+          {
+            id: `native-frame:${c.seedHex}:${c.schedule}`,
+            kind: "create",
+            origin: "animation",
+            entityId: 1,
+            definitionId: definition.id,
+            time: 0,
+            transportSequence: 0,
+            entryOrder: 0,
+            seedHex: c.seedHex,
+          },
+        ],
+        world: {
+          placement: (_event, time) => {
+            const input = atTime(time);
+            return {
+              resolved: true,
+              position: input.current,
+              basis: input.basis.filter(
+                (_, index) => index < 12 && index % 4 !== 3,
+              ),
+            };
+          },
+        },
+      });
+      for (const frame of c.frames) {
+        runtime.advanceTo(frame.input.time);
+        const packet = runtime.generateDraws({
+          right: frame.input.cameraRight,
+          up: frame.input.cameraUp,
+          position: frame.input.viewPosition,
+        });
+        renderer.commitDirect(packet, camera);
+        const meshes = [...renderer.directMeshes.values()].filter(
+            (mesh) => mesh.visible,
+          ),
+          expected = Uint8Array.fromHex(frame.output.geometry.verticesHex),
+          view = new DataView(expected.buffer);
+        assert.equal(meshes.length, expected.length ? 1 : 0);
+        if (expected.length) {
+          const mesh = meshes[0],
+            positions = mesh.geometry.attributes.a_POSITION.array;
+          assert.equal(mesh.material.isRawShaderMaterial, true);
+          assert.equal(positions.length / 3, expected.length / 28);
+          for (let vertex = 0; vertex < expected.length / 28; vertex++)
+            for (let lane = 0; lane < 3; lane++) {
+              assert.equal(
+                positions[vertex * 3 + lane],
+                view.getFloat32(vertex * 28 + lane * 4, true),
+              );
+              positionLanes++;
+            }
+          const index = Uint8Array.fromHex(frame.output.geometry.indicesHex);
+          assert.deepEqual(
+            new Uint8Array(mesh.geometry.index.array.buffer),
+            index,
+          );
+          nonemptyFrames++;
+        }
+        frames++;
+      }
+    }
+    assert(nonemptyFrames > 0);
+    sourceFrameControl = {
+      nativeControlSha256: await sha256(nativeBytes),
+      frames,
+      nonemptyFrames,
+      exactPositionLanes: positionLanes,
+      actualDirectRuntimeToRenderer: true,
+      suppliedWorldBasis: true,
+      replayActivationEstablished: false,
+    };
+  }
   summary = {
     effectIds,
     materials: expected.length,
     textures: renderer.textures.size,
     rgba: renderer.selectedTextureOwner.describe(),
     rendererRequests: requests.slice(rendererRequestsStart),
+    ...(sourceFrameControl ? { sourceFrameControl } : {}),
   };
 } finally {
   renderer.dispose();
@@ -209,7 +354,7 @@ const report = {
   },
 };
 await Bun.write(
-  `${cache}/research/selected-material-renderer-control.json`,
+  resolve(proofDirectory, "selected-material-renderer-control.json"),
   JSON.stringify(report, null, 2),
 );
 console.log(JSON.stringify(summary));

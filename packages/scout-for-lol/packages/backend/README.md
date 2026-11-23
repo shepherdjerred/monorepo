@@ -965,13 +965,137 @@ The verified file is then streamed to object storage. The shared S3 client
 SDK's default per-request checksum cannot hash a streamed body and failed every
 replay upload. A failure that isn't a typed rejection is recorded on the
 artifact's `lastError` with its own message, and the upload is `FAILED`, which
-the device retries; a `REJECTED` upload is final.
+the device retries. A `REJECTED` upload usually ends the attempt. The replay
+offer can authorize retrying a rejection from the old compression parser
+after confirming the caller's match provenance. The retried upload follows
+the usual quota, digest, and container checks.
 
 Replay evidence is joined by platform and game ID. Client and archived evidence
 are consulted independently, with the archive pinning an existing fingerprint.
 A bare ID that resolves to multiple platforms remains deferred. New artifacts
 retain the verified platform and use it in their object-store key; legacy
 artifacts retain their original keys and unqualified metadata.
+
+Completed replay artifacts have anonymous public read endpoints:
+`GET /api/replays/:replayId` returns an explicit public descriptor,
+`GET /api/replays/:replayId/content` streams the original file, and
+`GET /api/replays?platformId=NA1&gameId=123` returns the selected completed replay
+or `null`. Public descriptors exclude device ownership, object keys, private
+observations and internal errors. The existing raw-data bucket remains private;
+the backend streams only the key belonging to the selected completed artifact.
+Content supports HEAD, single byte ranges and digest-based ETags. Playback
+admission is separate from file availability: missing metadata, unknown platform,
+unobserved patch and missing admitted runtime packages stay explicit.
+
+`GET /api/replays/:replayId/timeline` returns selected Match-V5 events for a
+completed replay with matching Riot result and timeline archives from standard
+public Summoner's Rift 5v5 matchmaking. The replay's platform, game, build and
+duration and the two archives' participant rosters must agree. The response
+contains match-clock timestamps, event categories, allowlisted objective codes
+and explicitly credited objective or winning teams. It returns `timeline: null`
+when eligible evidence is absent, a receipt records an archive above the 16 MiB
+public read limit, or selected event times fall outside the replay duration plus
+the five-second upload verification tolerance. Timeline availability is
+independent of browser rendering admission.
+
+`ReplayPatchObservation` stores the official native release separately for each
+Riot platform. The five-minute Temporal job refreshes only platforms represented
+by completed replay artifacts, using bounded official Patchsieve reads and a
+monotonic observation-time write. An observation older than thirty minutes cannot
+keep a previous patch playable. Data Dragon versions do not admit native builds.
+`ReplayRenderPackage` binds exact manifest bytes, a complete hashed file inventory,
+publication receipt and native comparison evidence to one build/protocol. The root
+`manifest.json` key belongs to the separately hash-bound manifest. Normal Scout site
+releases reserve the `/replay-assets/` and `/replay-evidence/` paths for independent
+publication. A replay publisher must create objects without replacing existing
+bytes and verify readback against the inventory before registering an admitted
+package. Only current exact builds with proved Summoner's Rift/CLASSIC/5v5 input
+facts and an admitted package can become playable. Match lookup prefers the newest
+compatible artifact when a newer unsupported file also exists.
+
+From this package, assemble a deterministic archive from a prepared renderer
+directory containing only authorized build resources and the renderer's original
+root `manifest.json`. The output parent must already exist outside the source
+tree. The assembler uses the publisher's inventory and hash checks and emits the
+archive digest for the build record. It preserves the original manifest bytes.
+
+```bash
+bun scripts/assemble-replay-package.ts --source=./prepared-renderer --archive=./package.tar
+```
+
+Keep private replay inputs and per-match exports outside the source directory.
+The manifest's roster coverage claim and the separate native comparison still
+require their own evidence.
+
+Verify a renderer package archive from a trusted build record.
+
+```bash
+bun scripts/publish-replay-package.ts --archive=./package.tar --archive-sha256='sha256:<digest>' --stage=beta
+```
+
+Verification checks the supplied archive and inventories its objects locally,
+then prints a JSON receipt with the exact build, protocol, manifest URL and
+hashes. Use the digest supplied with the trusted build record. The default
+command does not need site credentials. The `beta` and `prod` stages use their
+respective Scout static sites declared in the homelab platform model.
+
+For an authorized publication, run the same command with `--apply` and the
+existing site writer credentials supplied through the 1Password service-account
+wrapper (`SEAWEEDFS_SITES_ACCESS_KEY_ID` and `SEAWEEDFS_SITES_SECRET_ACCESS_KEY`).
+The publisher verifies the archive before opening an S3 client. It publishes
+immutable objects in order and verifies their public bytes, writing the manifest
+last. After an interruption, retry with the same archive, digest and stage.
+Publication produces a receipt. Admission and native comparison evidence remain
+separate approval steps.
+
+Before admission, verify the reviewed public comparison summary against the
+published package and the exact report digest in the admission JSON.
+
+```bash
+bun scripts/publish-replay-comparison.ts --publication=./publication.json --admission=./admission.json --report=./report.json --stage=beta
+```
+
+The report must contain only the approved comparison metadata. Keep raw captures
+and identifying data in the review workflow. The default command rechecks the
+published package and the local report. For authorized publication, add `--apply`
+with the same site writer credentials as the package publisher. The writer
+conditionally creates `/replay-evidence/<sha256>/report.json` and verifies the
+original bytes by public readback.
+
+To check a published package before registry admission, save the publisher's
+`published` receipt and use the independently reviewed native comparison
+admission JSON for those exact manifest bytes.
+
+```bash
+bun scripts/admit-replay-package.ts --publication=./publication.json --admission=./admission.json --stage=beta --platform=NA1
+```
+
+The default command reads the package and comparison evidence from the selected
+public Scout site and verifies them against the two local inputs. No database
+credentials are needed. Each input must be a regular UTF-8 JSON file up to 32 MiB.
+Use the same stage recorded in the publication receipt.
+
+For authorized registry admission, add `--apply` and provide the
+`DATABASE_URL` for that **same Scout stage** through the repository's 1Password
+service-account wrapper. For a port-forward, forward the intended stage's
+database service and use that stage's credentials. The registry checks the
+database server's cluster identity through direct and forwarded connections,
+then checks the current exact build
+observed for the supplied Riot platform. Retrying an identical admission reports
+`already_admitted` in the final JSON line. This command verifies the published
+comparison evidence. Evidence generation and renderer publication are separate
+steps.
+
+New uploads retain the validated exact build, transport protocol and duration,
+plus map, mode and counted team sizes only when qualified match evidence proves them.
+Legacy completed artifacts can lack a platform or other replay metadata. From
+this package, `bun scripts/backfill-replay-metadata.ts --replay-id=<uuid>` downloads
+and checks that exact artifact against its original match provenance and digest,
+without updating the database. With `--apply`, the command fills missing fields
+after validating the replay and reconciling existing metadata with the evidence;
+repeat `--replay-id=<uuid>` for multiple explicit targets. Existing metadata is
+never overwritten, and unavailable provenance or unsupported framing fails
+without guessing. The command does not publish a renderer or admit a build.
 
 ### When a client payload becomes the match
 

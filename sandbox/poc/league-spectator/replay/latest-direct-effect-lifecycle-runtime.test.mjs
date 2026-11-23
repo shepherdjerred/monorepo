@@ -1,4 +1,6 @@
 import { expect, test } from "bun:test";
+import { resolve, sep } from "node:path";
+import { pathToFileURL } from "node:url";
 import { createDirectEffectKernels } from "./latest-direct-effect-worker.mjs";
 import { compileLatestDirectEffect } from "./latest-direct-effect-definition.mjs";
 import {
@@ -9,10 +11,14 @@ import {
 import { linkLatestNetworkEffectLifecycle } from "./latest-network-effect-lifecycle.mjs";
 import { sha256 } from "./structural-comparison.mjs";
 
-const root = new URL(
-    "../../../../.cache/replay-spike/public/decoder-16.21-macos/",
-    import.meta.url,
-  ),
+const fixtureInput = process.env.SCOUT_REPLAY_RESEARCH_CACHE;
+if (fixtureInput !== undefined && !fixtureInput.trim())
+  throw Error("An explicit replay research fixture directory is required");
+const cache =
+  fixtureInput === undefined
+    ? new URL("../../../../.cache/replay-spike/", import.meta.url)
+    : pathToFileURL(resolve(fixtureInput) + sep);
+const root = new URL("public/decoder-16.21-macos/", cache),
   profile = await Bun.file(new URL("profile.json", root)).json(),
   kernels = await createDirectEffectKernels({
     profile,

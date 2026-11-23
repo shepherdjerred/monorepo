@@ -3,6 +3,7 @@
 import { sha256 } from "./structural-comparison.mjs";
 import { ownLatestStaticBytes } from "./latest-static-bytes.mjs";
 import { directInitializationViewSpan } from "./latest-direct-initialization-ownership.mjs";
+import { assertSelectedStaticSourceAuthorities } from "./latest-static-source-authorities.mjs";
 import {
   assertDirectCompiledDataGraph,
   sameDirectCompiledData,
@@ -139,8 +140,9 @@ export async function loadLatestStaticCatalogSelection({ load }) {
       "map",
       "roles",
       "files",
+      ...(catalog.schema === 2 ? ["sourceAuthorities"] : []),
     ]) ||
-    catalog.schema !== 1 ||
+    ![1, 2].includes(catalog.schema) ||
     catalog.kind !== "prepared-selected-static-content" ||
     catalog.policy !== STATIC_CATALOG_POLICY ||
     catalog.build !== profile.clientVersion ||
@@ -175,7 +177,11 @@ export async function loadLatestStaticCatalogSelection({ load }) {
       path === profilePath ||
       path === bootstrapPath ||
       path === reference.path ||
-      !exactKeys(entry, ["sha256", "bytes"]) ||
+      !exactKeys(entry, [
+        "sha256",
+        "bytes",
+        ...(catalog.schema === 2 ? ["source"] : []),
+      ]) ||
       !digest(entry.sha256) ||
       !Number.isInteger(entry.bytes) ||
       entry.bytes < 0 ||
@@ -183,6 +189,8 @@ export async function loadLatestStaticCatalogSelection({ load }) {
     )
       throw Error("Invalid selected static file identity");
   }
+  if (catalog.schema === 2)
+    assertSelectedStaticSourceAuthorities(catalog, bootstrap.profile.sha256);
   if (new Set(Object.values(catalog.roles)).size !== roles.length)
     throw Error("Selected static roles must have distinct files");
   for (const role of roles)
@@ -296,12 +304,54 @@ export async function loadLatestStaticCatalogSelection({ load }) {
     map: clone(catalog.map),
     roles: clone(catalog.roles),
     files: clone(catalog.files),
+    ...(catalog.schema === 2
+      ? { sourceAuthorities: clone(catalog.sourceAuthorities) }
+      : {}),
   };
+  function sceneAnimationResourcePath({ authority, file }) {
+    if (catalog.schema !== 2 || !catalog.sourceAuthorities.animation)
+      throw Error("Explicit selected scene animation authority required");
+    const names = { native: "build", scene: "scene", derived: "animation" };
+    if (!Object.hasOwn(names, authority) || !pathValid(file))
+      throw Error("Bounded scene animation resource authority/path required");
+    const name = names[authority];
+    const identity = catalog.sourceAuthorities[name].identity;
+    const directory = identity.file.slice(
+      0,
+      identity.file.lastIndexOf("/") + 1,
+    );
+    const sourceFile = directory + file;
+    if (name === "build" && sourceFile === profilePath) return profilePath;
+    const matches = Object.entries(catalog.files).filter(
+      ([, entry]) =>
+        entry.source.authority === name && entry.source.file === sourceFile,
+    );
+    if (
+      !matches.length ||
+      matches.some(
+        ([, entry]) =>
+          entry.sha256 !== matches[0][1].sha256 ||
+          entry.bytes !== matches[0][1].bytes,
+      )
+    )
+      throw Error(
+        "Scene animation file outside explicit source closure: " +
+          authority +
+          ":" +
+          file,
+      );
+    return matches[0][0];
+  }
   const selection = Object.freeze({
     describe: () => clone(inventory),
     profile: () => clone(profile),
     readProfile: () => profileBytes.slice(),
     read,
+    sceneAnimationResourcePath,
+    async readSceneAnimationResource(resource) {
+      const path = sceneAnimationResourcePath(resource);
+      return path === profilePath ? profileBytes.slice() : read(path);
+    },
     async verifyNativeImageBlocks(blocks) {
       assertDirectCompiledDataGraph(blocks);
       if (!Array.isArray(blocks) || !blocks.length || blocks.length > 16384)

@@ -14,6 +14,13 @@ import {
   VIEWER_ROOT_ATTACHMENT_POLICY,
 } from "./latest-viewer-root-attachment.mjs";
 import { sha256 } from "./structural-comparison.mjs";
+import { workerErrorEnvelope } from "./latest-worker-errors.mjs";
+import { createLatestPreparationTrace } from "./latest-preparation-trace.mjs";
+import { ownDirectWorkerEventInput } from "./latest-direct-event-ownership.mjs";
+import {
+  DIRECT_WORLD_INPUT_KIND,
+  restoreLatestDirectWorldInput,
+} from "./latest-direct-world-input.mjs";
 import {
   restoreLatestDirectCompiledDefinitions,
   directInitializationBufferStats,
@@ -66,8 +73,18 @@ export async function createDirectEffectKernels({ profile, packages }) {
 // does not initialize workers, fetch assets or load an emulator.
 export function createDirectEffectWorkerHandler() {
   let runtime = null;
-  return async ({ type, payload }) => {
+  return async ({
+    type,
+    payload,
+    onPreparation = null,
+    eventsOwnership = null,
+  }) => {
+    const trace = createLatestPreparationTrace(onPreparation, "effect-worker");
     if (type === "initialize") {
+      trace("initialize", "begin", {
+        events: payload.events.length,
+        definitions: payload.definitions.length,
+      });
       if (runtime) throw Error("Direct effect worker already initialized");
       const accountingStarted = performance.now(),
         buffers = directInitializationBufferStats(payload),
@@ -75,6 +92,8 @@ export function createDirectEffectWorkerHandler() {
           ...buffers,
           workerAccountingMs: performance.now() - accountingStarted,
         };
+      if (payload.report?.kind === DIRECT_WORLD_INPUT_KIND)
+        payload.report = restoreLatestDirectWorldInput(payload.report);
       // The selected catalog owns both pose and compilation leaves. Shared paths
       // must agree byte-for-byte before restoring either capability.
       const selectedInputs = new Map(
@@ -121,9 +140,11 @@ export function createDirectEffectWorkerHandler() {
         if (!sameDirectCompiledData(staticCatalog.profile(), payload.profile))
           throw Error("Worker profile differs from captured static selection");
       }
+      trace("compiled.restore", "begin");
       const restored = await restoreLatestDirectCompiledDefinitions(payload, {
         staticCatalog,
       });
+      trace("compiled.restore", "end");
       const kernels = restored.kernels;
       if (
         payload.packages.placement === undefined &&
@@ -211,6 +232,7 @@ export function createDirectEffectWorkerHandler() {
         throw Error(
           "Direct missile presentation requires the compiled static manifest bytes",
         );
+      trace("world.build", "begin");
       const world = createLatestWorldPresentation({
         ...payload.world,
         report: payload.report,
@@ -227,16 +249,23 @@ export function createDirectEffectWorkerHandler() {
         placementResolver: placementPolicy?.resolve ?? null,
         viewerPoseAssets,
       });
+      trace("world.build", "end");
+      trace("runtime.create", "begin");
       runtime = new LatestDirectEffectRuntime({
         ...payload.contract,
         definitions,
         events: payload.events,
+        eventsOwnership,
+        onPreparation,
         world,
         kernels,
       });
+      trace("runtime.create", "end");
+      if (eventsOwnership !== null) payload.events = null;
+      trace("initialize", "end");
       return {
         contract: runtime.contract,
-        events: payload.events.length,
+        events: runtime.events.length,
         definitions: payload.definitions.length,
         emulatedInstructions: 0,
         compiledDefinitionValidation: restored.metrics,
@@ -313,7 +342,23 @@ if (
         if (data?.version !== 1 || !Number.isSafeInteger(data.id))
           throw Error("Malformed direct worker request");
         const processingAtEpochMs = performance.timeOrigin + performance.now();
-        const result = await handle(data);
+        const result = await handle({
+          ...data,
+          eventsOwnership:
+            data.type === "initialize"
+              ? ownDirectWorkerEventInput(data.payload.events)
+              : null,
+          onPreparation:
+            data.preparationDiagnostics === true
+              ? (event) =>
+                  self.postMessage({
+                    version: 1,
+                    id: data.id,
+                    type: "preparation",
+                    event,
+                  })
+              : null,
+        });
         const transfers = result.draws ? directDrawTransfers(result) : [];
         if (result.draws) {
           result.metrics = {
@@ -338,7 +383,7 @@ if (
           version: 1,
           id: data.id,
           ok: false,
-          error: { name: error.name, message: error.message },
+          error: workerErrorEnvelope(error),
         });
       }
     });

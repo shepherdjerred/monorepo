@@ -86,20 +86,28 @@ export function movementFollowsRespawn(state, respawn) {
 
 // Shared preview convention, not a recovered native death-animation controller.
 // Model retention is evaluated separately; this only selects/clamps pose layers.
-export function sampleLatestDeathPosePreview(graph, life, time) {
+export function sampleLatestDeathPosePreview(
+  graph,
+  life,
+  time,
+  selectorChoice = undefined,
+) {
   if (!life.dead || life.interval.postDeathActions.length) return null;
   if (!Number.isFinite(time) || time < life.interval.death.time)
     throw Error("Invalid death pose clock");
-  const start = graph.evaluate("Death", 0, { moving: false });
+  const context = { moving: false, selectorChoice };
+  const start = graph.evaluate("Death", 0, context);
   if (
     start.unresolved.length ||
     !Number.isFinite(start.duration) ||
     start.duration <= 0
   )
-    throw Error("Death graph cannot be presented by the current package");
+    throw Error(
+      `Death graph cannot be presented by the current package (entity ${life.interval.death.entityId ?? "unbound"}, death ${life.interval.death.time}, time ${time}): ${start.unresolved.map((entry) => entry.reason).join(",") || `duration ${start.duration}`}`,
+    );
   const phase = Math.min(
     time - life.interval.death.time,
     Math.max(0, start.duration - 0.000001),
   );
-  return graph.evaluate("Death", phase, { moving: false });
+  return graph.evaluate("Death", phase, context);
 }

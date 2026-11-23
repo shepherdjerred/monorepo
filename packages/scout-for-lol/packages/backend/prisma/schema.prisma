@@ -726,11 +726,46 @@ model ScoutClientReplayArtifact {
   completedAt DateTime?
   updatedAt   DateTime  @updatedAt
 
+  /// Validated ROFL header identity and duration. Null means legacy metadata
+  /// has not yet been backfilled; it does not imply playback admission.
+  gameBuild       String?
+  protocol        String?
+  durationSeconds Float?
+  mapId           Int?
+  gameMode        String?
+  teamSizes       Json?
+
   device ScoutClientDevice @relation(fields: [deviceId], references: [id], onDelete: Restrict)
 
   @@index([gameId, uploadState])
   @@index([platformId, gameId, uploadState])
   @@index([deviceId, createdAt])
+}
+
+/// Current official native release per platform. Independent of renderer admission.
+model ReplayPatchObservation {
+  platformId   String   @id
+  patch        String
+  gameBuild    String
+  sourceUrl    String
+  sourceSha256 String
+  observedAt   DateTime
+}
+
+/// Immutable published bytes plus separately bound native comparison admission.
+/// No row is created merely because a compiler or upload succeeds.
+model ReplayRenderPackage {
+  manifestSha256 String   @id
+  gameBuild      String
+  protocol       String
+  manifestPath   String   @unique
+  manifestJson   String
+  publishedSha256 String
+  publishedAt    DateTime
+  admissionJson  Json
+  admittedAt     DateTime
+
+  @@unique([gameBuild, protocol])
 }
 
 /// Immutable, idempotent gameplay observation received from a paired device.

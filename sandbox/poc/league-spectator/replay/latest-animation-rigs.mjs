@@ -1,4 +1,5 @@
 import { sha256 } from "./structural-comparison.mjs";
+import { validateSceneAnimationAuthority } from "./scene-animation-authority.mjs";
 
 const blocks = [
     [0x15b3cc0, 0x15b4130],
@@ -44,7 +45,35 @@ export async function createLatestAnimationRigBindings(
   profile,
   definitionBytes,
 ) {
-  if ((await sha256(definitionBytes)) !== profile.animationRigsSha256)
+  return rigDefinition(profile, definitionBytes, profile.animationRigsSha256);
+}
+
+export async function createSceneAnimationRigBindings(
+  profile,
+  definitionBytes,
+  authority,
+) {
+  validateSceneAnimationAuthority(authority);
+  if (
+    authority.build !== profile.clientVersion ||
+    authority.protocol !== profile.protocolDigest
+  )
+    throw Error("Scene rig authority build differs from original profile");
+  return rigDefinition(
+    profile,
+    definitionBytes,
+    authority.roles.rig.sha256,
+    authority.sceneManifestSha256,
+  );
+}
+
+async function rigDefinition(
+  profile,
+  definitionBytes,
+  expectedSha256,
+  sceneManifestSha256,
+) {
+  if ((await sha256(definitionBytes)) !== expectedSha256)
     throw Error("Rig package hash mismatch");
   const meta = JSON.parse(new TextDecoder().decode(definitionBytes));
   if (
@@ -56,6 +85,8 @@ export async function createLatestAnimationRigBindings(
     meta.sliceSha256 !==
       "6c2295282e20e2e65b62c0a28095d330233d2e8e16c246d8601aaa6ee3f6d64b" ||
     meta.decoderImageSha256 !== profile.decoderImageSha256 ||
+    (sceneManifestSha256 !== undefined &&
+      meta.sceneManifestSha256 !== sceneManifestSha256) ||
     meta.constructorRva !== 0x15b3cc0 ||
     meta.jointConstructorRva !== 0x15b4130 ||
     meta.mapBuilderRva !== 0x15b4330 ||

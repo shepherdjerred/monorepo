@@ -107,8 +107,12 @@ Match-V5 document. After pairing, the approval page links to recovered games.
 
 Existing local replay files are offered independently. Temporary server
 deferrals remain retryable, with backoff up to one hour. An outbox migration
-reoffers files older builds abandoned for missing evidence. Permanent server
-validation rejections remain terminal. The client does not download replays.
+reoffers files older builds abandoned for missing evidence. The client checks
+cached HTTP 400 rejections for unchanged replays. It retries the upload when
+the backend authorizes recovery and the file still matches its original digest.
+Temporary offer failures and legacy compression rejections awaiting a backend
+update are checked again after an hour. Other permanent validation rejections
+remain terminal. The client does not download replays.
 
 ## Lobby and game identity
 

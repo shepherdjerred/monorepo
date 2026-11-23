@@ -1,23 +1,37 @@
 // Explicit request ownership; termination rejects pending work instead of
 // allowing a discarded replay's response to affect a later replay.
+import { restoreWorkerError } from "./latest-worker-errors.mjs";
+import { assertLatestPreparationEvent } from "./latest-preparation-trace.mjs";
 export class LatestParticleWorkerClient {
   constructor({
     workerUrl = new URL("./latest-particle-worker.mjs", import.meta.url),
+    onPreparation = null,
   } = {}) {
+    if (onPreparation !== null && typeof onPreparation !== "function")
+      throw Error("Explicit worker preparation diagnostic callback required");
     this.worker = new Worker(workerUrl, { type: "module" });
     this.pending = new Map();
     this.nextId = 1;
     this.closed = false;
+    this.onPreparation = onPreparation;
     this.worker.onmessage = ({ data }) => {
       if (this.closed) return;
+      if (data?.version === 1 && data.type === "preparation") {
+        try {
+          if (!this.pending.has(data.id) || this.onPreparation === null)
+            throw Error("Unowned worker preparation diagnostic");
+          this.onPreparation(assertLatestPreparationEvent(data.event));
+        } catch (error) {
+          this.fail(error);
+        }
+        return;
+      }
       if (data?.version === 1 && data.fatal) {
-        this.fail(
-          Error(
-            typeof data.fatal.message === "string"
-              ? data.fatal.message
-              : "Invalid particle worker fatal response",
-          ),
-        );
+        try {
+          this.fail(restoreWorkerError(data.fatal));
+        } catch (error) {
+          this.fail(error);
+        }
         return;
       }
       const request = this.pending.get(data?.id);
@@ -43,10 +57,14 @@ export class LatestParticleWorkerClient {
           this.fail(error);
           return;
         }
-        const error = Error(data.error.message);
-        error.name = data.error.name;
-        request.reject(error);
-        this.fail(error);
+        try {
+          const error = restoreWorkerError(data.error);
+          request.reject(error);
+          this.fail(error);
+        } catch (error) {
+          request.reject(error);
+          this.fail(error);
+        }
       }
     };
     this.worker.onerror = (event) => this.fail(Error(event.message));
@@ -69,7 +87,16 @@ export class LatestParticleWorkerClient {
     return new Promise((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
       try {
-        this.worker.postMessage({ version: 1, id, type, payload }, transfer);
+        this.worker.postMessage(
+          {
+            version: 1,
+            id,
+            type,
+            payload,
+            preparationDiagnostics: this.onPreparation !== null,
+          },
+          transfer,
+        );
       } catch (error) {
         this.pending.delete(id);
         reject(error);

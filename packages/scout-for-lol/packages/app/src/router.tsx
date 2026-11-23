@@ -29,6 +29,7 @@ import { ReportForm } from "#src/routes/reports/report-form.tsx";
 import { ReportHelp } from "#src/routes/reports/report-help.tsx";
 import { Explore } from "#src/routes/explore.tsx";
 import { ExploreShared } from "#src/routes/explore-shared.tsx";
+import { PublicReplay } from "#src/routes/replays/replay.tsx";
 import { ConsumerPlayerSearch } from "#src/routes/consumer/consumer-player-search.tsx";
 import { ConsumerPlayerProfile } from "#src/routes/consumer/consumer-player-profile.tsx";
 import { ConsumerChampion } from "#src/routes/consumer/consumer-champion.tsx";
@@ -225,6 +226,7 @@ export const routes: RouteObject[] = [
       // A share link must work for someone with no Scout account, so this
       // sits outside RequireSession alongside /login.
       { path: "explore/s/:shareToken", element: <ExploreShared /> },
+      { path: "replays/:replayId", element: <PublicReplay /> },
       {
         element: <RequireSession />,
         loader: requireSessionLoader,

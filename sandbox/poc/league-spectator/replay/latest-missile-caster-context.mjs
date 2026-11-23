@@ -1,5 +1,7 @@
 import { sha256 } from "./structural-comparison.mjs";
 import { createLatestAnimationRigBindings } from "./latest-animation-rigs.mjs";
+import { createLatestViewerAnimationResources } from "./latest-viewer-animation-resources.mjs";
+import { assertLatestStaticCatalogSelection } from "./latest-static-catalog.mjs";
 import { initializeEmptyBoneCasterStart } from "./latest-missile-caster-start.mjs";
 import {
   initializeNamedBoneCasterStart,
@@ -84,7 +86,16 @@ export const createOwnedNamedBoneTypeOneMissileCasterStarts = (options) =>
   createOwnedCasterStarts(options, 1);
 
 async function createOwnedCasterStarts(
-  { report, scene, profile, world, terrain, records, load },
+  {
+    report,
+    scene,
+    profile,
+    world,
+    terrain,
+    records,
+    load,
+    staticCatalog = null,
+  },
   namedCastType,
 ) {
   const namedBone = namedCastType !== 0;
@@ -101,7 +112,15 @@ async function createOwnedCasterStarts(
     (namedBone && typeof world?.viewerPose !== "function")
   )
     throw Error("Exact-build owned caster world and static inputs required");
-  const inventoryBytes = await load("decoder-16.21-macos/animation-rigs.json");
+  if (staticCatalog !== null) assertLatestStaticCatalogSelection(staticCatalog);
+  const sceneAuthority = staticCatalog?.describe().sourceAuthorities?.animation;
+  if (scene.map?.id === 11 && !sceneAuthority)
+    throw Error(
+      "Selected Map11 caster requires explicit scene animation authority",
+    );
+  const inventoryBytes = sceneAuthority
+    ? await staticCatalog.readRole("sceneAnimationRig")
+    : await load("decoder-16.21-macos/animation-rigs.json");
   const controllerBytes = await load(
     "decoder-16.21-macos/missile-controllers.json",
   );
@@ -110,10 +129,6 @@ async function createOwnedCasterStarts(
   const initialization = createLatestMissileInitialization(
     decode(controllerBytes),
   );
-  const factory = await createLatestAnimationRigBindings(
-    profile,
-    inventoryBytes,
-  );
   const inventory = decode(inventoryBytes),
     sceneBytes = await load("latest-scene/manifest.json");
   if (
@@ -121,6 +136,18 @@ async function createOwnedCasterStarts(
     (await sha256(sceneBytes)) !== inventory.sceneManifestSha256
   )
     throw Error("Constructed rig inventory and actual scene differ");
+  const sceneAnimations = sceneAuthority
+    ? await createLatestViewerAnimationResources({
+        profile,
+        sceneBytes,
+        raw: load,
+        staticCatalog,
+      })
+    : null;
+  const factory =
+    sceneAnimations === null
+      ? await createLatestAnimationRigBindings(profile, inventoryBytes)
+      : null;
   const sourceRecords = new Map(
     report.missiles.map((record) => [record.sequence, record]),
   );
@@ -171,11 +198,29 @@ async function createOwnedCasterStarts(
       const rigBytes = await load(`latest-scene/${source.rigFile}`),
         catalogBytes = await load(`latest-scene/${source.catalogFile}`),
         spellBytes = await load(`latest-scene/${asset.spellCatalog}`);
-      const installed = await factory.bind(
-        asset.animationGraph,
-        rigBytes,
-        catalogBytes,
-      );
+      let installed;
+      if (sceneAnimations !== null) {
+        const bound = await sceneAnimations.bind(
+          asset.animationGraph,
+          await load(`latest-scene/${asset.animationGraph}`),
+          catalogBytes,
+        );
+        if (
+          bound.rig.rigSha256 !== source.rigSha256 ||
+          bound.rig.catalogSha256 !== source.catalogSha256 ||
+          (await sha256(rigBytes)) !== source.rigSha256
+        )
+          throw Error(
+            "Selected caster rig differs from scene animation authority",
+          );
+        installed = bound.rigBindings;
+      } else {
+        installed = await factory.bind(
+          asset.animationGraph,
+          rigBytes,
+          catalogBytes,
+        );
+      }
       const spells = decode(spellBytes);
       if (spells.character !== hero.champion)
         throw Error("Exact source caster spell catalog required");

@@ -65,7 +65,11 @@
             "docs/_astro/",
             "assets/scout/game/"
           ],
-          "extraExcludes": [".release-version"],
+          "extraExcludes": [
+            ".release-version",
+            "replay-assets/*",
+            "replay-evidence/*"
+          ],
           "entrypoints": [
             "index.html",
             "app/index.html",

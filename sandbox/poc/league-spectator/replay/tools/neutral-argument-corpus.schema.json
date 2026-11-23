@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "kind",
+    "build",
+    "protocol",
+    "decoderImageSha256",
+    "sources",
+    "requests"
+  ],
+  "properties": {
+    "schema": { "const": 1 },
+    "kind": { "const": "original-neutral-argument-proof-corpus" },
+    "build": { "const": "16.21.829.8620" },
+    "protocol": { "const": "20e09df23c66b85e" },
+    "decoderImageSha256": {
+      "const": "3e119190cfe42ea92e816107df229d3bd390547b846ca75bc161735e155e3ec7"
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "sha256", "replaySha256", "records"],
+        "properties": {
+          "file": { "type": "string", "minLength": 1, "maxLength": 2048 },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "replaySha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "records": { "type": "integer", "minimum": 1, "maximum": 10000 }
+        }
+      }
+    },
+    "requests": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2048,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["character", "skinId"],
+        "properties": {
+          "character": { "type": "string", "pattern": "^[a-z0-9_]{1,128}$" },
+          "skinId": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+        }
+      }
+    }
+  },
+  "x-maximumProofBytes": 67108864,
+  "x-maximumTotalRecords": 10000
+}

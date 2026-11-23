@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import {
   createLatestWorldPresentation,
   EFFECT_ENTITY_FIELDS,
+  buildLatestDirectEffectEvents,
 } from "./latest-world-presentation.mjs";
 
 const build = "16.21.829.8620",
@@ -64,6 +65,48 @@ const create = (overrides = {}, inputs = {}) =>
     terrain,
     ...inputs,
   });
+
+test("full-match network event count appends without argument expansion and retains causal order", () => {
+  const count = 261498;
+  const removals = Array.from({ length: count }, (_, index) => ({
+    opcode: 187,
+    entityId: (index % 1000) + 1,
+    contextId: 0,
+    time: Math.floor(index / 3) / 60,
+    transportSequence: index,
+    removalSequence: index,
+    chunkId: 1,
+    blockOffset: index * 4,
+    stream: 1,
+    reasonByte: 61,
+    requestedFlagMask: 0x800,
+  }));
+  const pipeline = {
+    events: removals.map((event) => ({
+      kind: "remove-request",
+      entityId: event.entityId,
+      time: event.time,
+      transportSequence: event.transportSequence,
+      removalSequence: event.removalSequence,
+      entryOrder: 0,
+      requestedFlagMask: event.requestedFlagMask,
+    })),
+  };
+  const events = buildLatestDirectEffectEvents({
+    pipeline,
+    report: { ...report, effectCreations: [], effectRemovals: removals },
+  });
+  expect(events).toHaveLength(count);
+  for (let index = 0; index < count; index++) {
+    if (
+      events[index].transportSequence !== index ||
+      events[index].removalSequence !== index ||
+      events[index].kind !== "removal-request"
+    )
+      throw Error(`Full-match causal event changed at ${index}`);
+  }
+  expect(removals[0]).not.toHaveProperty("generation");
+});
 test("internal reference snapshots reuse exact causal samples while public views remain independently mutable", () => {
   const internal = [],
     world = create(

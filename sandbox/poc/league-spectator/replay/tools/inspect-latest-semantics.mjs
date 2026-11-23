@@ -3,11 +3,18 @@ import { pathToFileURL } from "node:url";
 import { reconstructLatest } from "../latest-reconstruction.mjs";
 import { sha256 } from "../structural-comparison.mjs";
 
-const [replayPath, packagePath, runtimePath, vendorPath, outputPath, end] =
-  process.argv.slice(2);
+const [
+  replayPath,
+  packagePath,
+  runtimePath,
+  vendorPath,
+  outputPath,
+  end,
+  mapCache,
+] = process.argv.slice(2);
 if (!end)
   throw Error(
-    "Usage: bun tools/inspect-latest-semantics.mjs <replay.rofl> <package-dir> <runtime.mjs> <fzstd.mjs> <output.json> <end-seconds>",
+    "Usage: bun tools/inspect-latest-semantics.mjs <replay.rofl> <package-dir> <runtime.mjs> <fzstd.mjs> <output.json> <end-seconds> [exact-map-cache]",
   );
 const runtime = new Uint8Array(await Bun.file(runtimePath).arrayBuffer());
 const manifest = await Bun.file(runtimePath.replace(/\.mjs$/, ".json")).json();
@@ -17,6 +24,17 @@ const { default: createUnicorn } = await import(
   pathToFileURL(resolve(runtimePath))
 );
 const { decompress } = await import(pathToFileURL(resolve(vendorPath)));
+// Build-wide decoder programs remain read-only in their approved package.
+// Map-specific packages are independently produced against the exact scene;
+// their runtime readers still enforce pinned hashes and native source blocks.
+const mapBytes = async (relative) =>
+  new Uint8Array(
+    await Bun.file(
+      mapCache
+        ? resolve(mapCache, "public", relative)
+        : resolve(packagePath, "..", relative),
+    ).arrayBuffer(),
+  );
 const report = await reconstructLatest({
   buffer: await Bun.file(replayPath).arrayBuffer(),
   decompress,
@@ -46,15 +64,9 @@ const report = await reconstructLatest({
       resolve(packagePath, "../latest-effect-creation/package.json"),
     ).arrayBuffer(),
   ),
-  effectPlacementBytes: new Uint8Array(
-    await Bun.file(
-      resolve(packagePath, "../latest-effect-placement/package.json"),
-    ).arrayBuffer(),
-  ),
-  effectDescriptorBytes: new Uint8Array(
-    await Bun.file(
-      resolve(packagePath, "../latest-effect-descriptor/package.json"),
-    ).arrayBuffer(),
+  effectPlacementBytes: await mapBytes("latest-effect-placement/package.json"),
+  effectDescriptorBytes: await mapBytes(
+    "latest-effect-descriptor/package.json",
   ),
   appearanceStackInputBytes: new Uint8Array(
     await Bun.file(
@@ -102,32 +114,25 @@ const report = await reconstructLatest({
       resolve(packagePath, "../latest-inventory/package.json"),
     ).arrayBuffer(),
   ),
-  worldStateBytes: new Uint8Array(
-    await Bun.file(
-      resolve(packagePath, "../latest-world-state/package.json"),
-    ).arrayBuffer(),
-  ),
-  worldSceneBytes: new Uint8Array(
-    await Bun.file(
-      resolve(packagePath, "../latest-scene/manifest.json"),
-    ).arrayBuffer(),
-  ),
-  worldCatalogBytes: new Uint8Array(
-    await Bun.file(
-      resolve(packagePath, "../latest-scene/world.json"),
-    ).arrayBuffer(),
-  ),
+  worldStateBytes: await mapBytes("latest-world-state/package.json"),
+  worldSceneBytes: await mapBytes("latest-scene/manifest.json"),
+  worldCatalogBytes: await mapBytes("latest-scene/world.json"),
+  neutralCreationBytes:
+    mapCache &&
+    (
+      await Bun.file(
+        resolve(mapCache, "public/latest-scene/manifest.json"),
+      ).json()
+    ).map.id === 11
+      ? await mapBytes("latest-neutral-creation/package.json")
+      : null,
   replicationBytes: new Uint8Array(
     await Bun.file(
       resolve(packagePath, "../latest-replication/package.json"),
     ).arrayBuffer(),
   ),
   deltaMode: "signed8",
-  corpsePolicyBytes: new Uint8Array(
-    await Bun.file(
-      resolve(packagePath, "../latest-corpse/package.json"),
-    ).arrayBuffer(),
-  ),
+  corpsePolicyBytes: await mapBytes("latest-corpse/package.json"),
 });
 await Bun.write(outputPath, JSON.stringify(report));
 console.log(

@@ -11,7 +11,17 @@
  * This module is dev/test-only: it must never be imported by src/index.ts
  * or anything reachable from the production image entrypoint.
  */
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
+import {
+  lstat,
+  mkdir,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from "node:fs/promises";
+import path from "node:path";
+import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("postgres-server");
@@ -49,14 +59,9 @@ export function devPostgresDataRoot(): string {
   }
   const xdg = Bun.env["XDG_DATA_HOME"];
   const home = Bun.env["HOME"];
-  if (
-    (xdg === undefined || xdg === "") &&
-    (home === undefined || home === "")
-  ) {
-    throw new Error("Neither XDG_DATA_HOME nor HOME is set");
-  }
+  const homeDirectory = home === undefined || home === "" ? homedir() : home;
   const base =
-    xdg !== undefined && xdg !== "" ? xdg : `${home ?? ""}/.local/share`;
+    xdg !== undefined && xdg !== "" ? xdg : `${homeDirectory}/.local/share`;
   return `${base}/scout-for-lol/postgres/${POSTGRES_MAJOR.toString()}`;
 }
 
@@ -135,6 +140,10 @@ function serverIsUp(port: number): boolean {
     "127.0.0.1",
     "-p",
     port.toString(),
+    "-U",
+    "scout",
+    "-d",
+    "postgres",
     "-q",
   ]);
   return result.exitCode === 0;
@@ -177,13 +186,92 @@ function verifyRunningServer(dataDir: string): void {
 }
 
 function canonicalDirectory(directory: string): string {
-  const result = run(["realpath", directory]);
-  if (result.exitCode !== 0) {
+  return runFilesystemTask("canonicalize", directory);
+}
+
+const FileTaskSchema = z.enum([
+  "canonicalize",
+  "mkdir",
+  "acquire",
+  "release",
+  "lock-time",
+  "read-version",
+]);
+
+// Suite construction is synchronous. Run the async filesystem work in a
+// Bun child so Windows and Unix use the same native filesystem operations.
+function runFilesystemTask(
+  task: z.infer<typeof FileTaskSchema>,
+  target: string,
+): string {
+  const result = run([process.execPath, import.meta.path, task, target]);
+  if (result.exitCode !== 0)
     throw new Error(
-      `Cannot resolve PostgreSQL directory ${directory}: ${result.stderr}`,
+      `PostgreSQL filesystem operation ${task} failed: ${result.stderr}`,
     );
+  return result.stdout.trimEnd();
+}
+
+async function getLockMetadata(target: string) {
+  try {
+    return await lstat(target);
+  } catch (error) {
+    if (z.object({ code: z.literal("ENOENT") }).safeParse(error).success)
+      return;
+    throw error;
   }
-  return result.stdout.trim();
+}
+
+if (import.meta.main) {
+  const task = FileTaskSchema.parse(Bun.argv[2]);
+  const target = z.string().min(1).parse(Bun.argv[3]);
+  switch (task) {
+    case "canonicalize":
+      process.stdout.write(await realpath(target));
+      break;
+    case "mkdir":
+      await mkdir(target, { recursive: true });
+      break;
+    case "acquire":
+      try {
+        await mkdir(target);
+      } catch (error) {
+        if (!z.object({ code: z.literal("EEXIST") }).safeParse(error).success)
+          throw error;
+        break;
+      }
+      // The parent owns the lock. The owner file's mtime is the staleness clock.
+      await writeFile(
+        path.join(target, "pid"),
+        `${process.ppid.toString()}\n`,
+        {
+          flag: "wx",
+          mode: 0o600,
+        },
+      );
+      process.stdout.write("acquired");
+      break;
+    case "release": {
+      const expected = path.resolve(devPostgresDataRoot(), ".ensure.lock");
+      if (path.resolve(target) !== expected)
+        throw new Error(
+          "Refusing to remove an unexpected PostgreSQL startup lock target",
+        );
+      await rm(expected, { recursive: true, force: true });
+      break;
+    }
+    case "lock-time": {
+      const metadata =
+        (await getLockMetadata(path.join(target, "pid"))) ??
+        (await getLockMetadata(target));
+      if (metadata !== undefined)
+        process.stdout.write(metadata.mtimeMs.toString());
+      break;
+    }
+    case "read-version":
+      process.stdout.write(await readFile(target, "utf8"));
+      break;
+  }
 }
 
 function verifyBinaries(): void {
@@ -234,24 +322,53 @@ export function psqlMaintenance(sql: string): string {
  * process. The pid file's mtime is the staleness clock.
  */
 function acquireLock(lockDir: string): boolean {
-  const result = run(["mkdir", lockDir]);
-  if (result.exitCode !== 0) {
-    return false;
-  }
-  Bun.spawnSync(["sh", "-c", `echo $$ > ${lockDir}/pid`]);
-  return true;
+  return runFilesystemTask("acquire", lockDir) === "acquired";
 }
 
 function releaseLock(lockDir: string): void {
-  run(["rm", "-rf", lockDir]);
+  runFilesystemTask("release", lockDir);
 }
 
 function lockIsStale(lockDir: string): boolean {
-  const pidFile = Bun.file(`${lockDir}/pid`);
-  // lastModified is 0 for a missing file — a lock dir without a pid file yet
-  // is mid-creation; treat as fresh.
-  const mtime = pidFile.lastModified;
-  return mtime > 0 && Date.now() - mtime > LOCK_STALE_MS;
+  // A crash before the pid write must not leave an immortal empty lock.
+  const lockTime = runFilesystemTask("lock-time", lockDir);
+  return lockTime !== "" && Date.now() - Number(lockTime) > LOCK_STALE_MS;
+}
+
+function initializeDataDirectory(dataRoot: string, dataDir: string): void {
+  if (runsAsRoot()) {
+    const ownership = run(["chown", "-R", "nobody", dataRoot]);
+    if (ownership.exitCode !== 0)
+      throw binariesHint(
+        `chown failed for the Postgres data root: ${ownership.stderr}`,
+      );
+  }
+  // PG_VERSION is never empty; zero size denotes an uninitialized directory.
+  if (Bun.file(`${dataDir}/PG_VERSION`).size === 0) {
+    logger.info(`Initializing dev Postgres data dir at ${dataDir}`);
+    const init = runAsPostgresOwner([
+      "initdb",
+      "-D",
+      dataDir,
+      "-U",
+      "scout",
+      "--auth=trust",
+      "--encoding=UTF8",
+      "--no-locale",
+      "--data-checksums",
+    ]);
+    if (init.exitCode !== 0)
+      throw binariesHint(`initdb failed: ${init.stderr}`);
+    return;
+  }
+  const storedVersion = runFilesystemTask(
+    "read-version",
+    `${dataDir}/PG_VERSION`,
+  ).trim();
+  if (storedVersion !== POSTGRES_MAJOR.toString())
+    throw new Error(
+      `Refusing to start a different PostgreSQL major from ${dataDir}: ${storedVersion}`,
+    );
 }
 
 /**
@@ -270,7 +387,7 @@ export function ensureDevPostgres(): { port: number; superUrl: string } {
   }
 
   const lockDir = `${dataRoot}/.ensure.lock`;
-  run(["mkdir", "-p", dataRoot]);
+  runFilesystemTask("mkdir", dataRoot);
 
   const deadline = Date.now() + START_WAIT_MS;
   for (;;) {
@@ -301,49 +418,12 @@ export function ensureDevPostgres(): { port: number; superUrl: string } {
       return { port, superUrl };
     }
 
-    if (runsAsRoot()) {
-      const ownership = run(["chown", "-R", "nobody", dataRoot]);
-      if (ownership.exitCode !== 0) {
-        throw binariesHint(
-          `chown failed for the Postgres data root: ${ownership.stderr}`,
-        );
-      }
-    }
-
-    // Bun.file(...).size is 0 for a missing file; PG_VERSION is never empty.
-    if (Bun.file(`${dataDir}/PG_VERSION`).size === 0) {
-      logger.info(`Initializing dev Postgres data dir at ${dataDir}`);
-      // C locale: byte-order collation, identical between laptop and CI.
-      const init = runAsPostgresOwner([
-        "initdb",
-        "-D",
-        dataDir,
-        "-U",
-        "scout",
-        "--auth=trust",
-        "--encoding=UTF8",
-        "--no-locale",
-        "--data-checksums",
-      ]);
-      if (init.exitCode !== 0) {
-        throw binariesHint(`initdb failed: ${init.stderr}`);
-      }
-    } else {
-      const storedVersion = run(["cat", `${dataDir}/PG_VERSION`]);
-      if (
-        storedVersion.exitCode !== 0 ||
-        storedVersion.stdout.trim() !== POSTGRES_MAJOR.toString()
-      ) {
-        throw new Error(
-          `Refusing to start an unreadable or different PostgreSQL major from ${dataDir}: ${storedVersion.stderr}`,
-        );
-      }
-    }
+    initializeDataDirectory(dataRoot, dataDir);
 
     logger.info(`Starting dev Postgres on 127.0.0.1:${port.toString()}`);
     // Trust auth is loopback-only; durability flags are deliberate — this
     // server only ever holds throwaway dev/test data.
-    const start = runAsPostgresOwner([
+    const command = asPostgresOwner([
       "pg_ctl",
       "-D",
       dataDir,
@@ -356,9 +436,17 @@ export function ensureDevPostgres(): { port: number; superUrl: string } {
       `-p ${port.toString()} -c listen_addresses=127.0.0.1 -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c max_connections=200`,
       "start",
     ]);
+    // On Windows pg_ctl exits while its detached cmd/postgres descendants can
+    // retain the capture pipes. spawnSync then waits forever for pipe EOF.
+    // The server already writes its output to the explicit -l log above.
+    const start = Bun.spawnSync(command, {
+      env: Bun.env,
+      stdout: "ignore",
+      stderr: "ignore",
+    });
     if (start.exitCode !== 0 && !serverIsUp(port)) {
       throw binariesHint(
-        `pg_ctl start failed: ${start.stderr} (log: ${dataRoot}/server.log)`,
+        `pg_ctl start failed with status ${start.exitCode.toString()} (log: ${dataRoot}/server.log)`,
       );
     }
     verifyRunningServer(dataDir);

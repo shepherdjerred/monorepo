@@ -1,13 +1,10 @@
 // Execute original packet-to-descriptor code, before resource/factory lookup.
 import { NativeDecoder } from "./native-decoder.mjs";
 import { sha256 } from "./structural-comparison.mjs";
-import {
-  createLatestEffectPlacementReader,
-  EFFECT_PLACEMENT_PACKAGE_SHA,
-} from "./latest-effect-placement.mjs";
+import { createLatestEffectPlacementReader } from "./latest-effect-placement.mjs";
 import { EFFECT_CREATION_PACKAGE_SHA } from "./latest-effect-creation.mjs";
 import { assertLatestSelectedEffectPacket } from "./latest-selected-effect-packets.mjs";
-import { EFFECT_DESCRIPTOR_PACKAGE_SHA } from "./latest-effect-packet-contract.mjs";
+import { approvedEffectPacketReferenceSha } from "./latest-effect-packet-contract.mjs";
 export { EFFECT_DESCRIPTOR_PACKAGE_SHA } from "./latest-effect-packet-contract.mjs";
 
 export async function createLatestEffectDescriptorReader({
@@ -23,7 +20,14 @@ export async function createLatestEffectDescriptorReader({
   if (
     !(descriptorBytes instanceof Uint8Array) ||
     (staticCatalog === null &&
-      (await sha256(descriptorBytes)) !== EFFECT_DESCRIPTOR_PACKAGE_SHA)
+      (await sha256(descriptorBytes)) !==
+        approvedEffectPacketReferenceSha(
+          "descriptor",
+          JSON.parse(
+            new TextDecoder("utf-8", { fatal: true }).decode(sceneBytes),
+          ).map?.id,
+          await sha256(sceneBytes),
+        ))
   )
     throw Error("Pinned effect-descriptor package required");
   if (staticCatalog !== null)
@@ -54,7 +58,16 @@ export async function createLatestEffectDescriptorReader({
     meta.constructorImageSha256 !== profile.constructorImageSha256 ||
     meta.sliceSha256 !== placement.metadata.sliceSha256 ||
     meta.creationPackageSha256 !== EFFECT_CREATION_PACKAGE_SHA ||
-    meta.placementPackageSha256 !== EFFECT_PLACEMENT_PACKAGE_SHA ||
+    meta.placementPackageSha256 !==
+      (staticCatalog === null
+        ? approvedEffectPacketReferenceSha(
+            "placement",
+            placement.metadata.mapId,
+            await sha256(sceneBytes),
+          )
+        : await sha256(
+            await staticCatalog.readRole("effectPlacementReference"),
+          )) ||
     meta.sceneManifestSha256 !== (await sha256(sceneBytes)) ||
     meta.entryAddress !== 0x100f1000 ||
     meta.groupAddress !== 0x100f2000 ||

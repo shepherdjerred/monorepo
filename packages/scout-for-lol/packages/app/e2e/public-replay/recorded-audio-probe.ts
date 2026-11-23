@@ -1,0 +1,101 @@
+import type { Page } from "@playwright/test";
+
+type RecordedAudioProbe = {
+  contextCount: number;
+  closedCount: number;
+  starts: {
+    id: number;
+    frames: number;
+    delay: number;
+    offset: number;
+    rate: number;
+  }[];
+  stops: number[];
+};
+
+declare global {
+  var recordedAudioProbe: RecordedAudioProbe;
+}
+
+export async function installRecordedAudioProbe(page: Page) {
+  await page.addInitScript(() => {
+    const probe: RecordedAudioProbe = {
+      contextCount: 0,
+      closedCount: 0,
+      starts: [],
+      stops: [],
+    };
+    globalThis.recordedAudioProbe = probe;
+    let nextSource = 0;
+
+    // Decode real media through the browser without opening an audio device.
+    class RecordingAudioContext {
+      readonly destination = {};
+      readonly #started = performance.now();
+
+      constructor() {
+        probe.contextCount++;
+      }
+
+      get currentTime() {
+        return (performance.now() - this.#started) / 1000;
+      }
+
+      resume() {
+        return Promise.resolve();
+      }
+
+      close() {
+        probe.closedCount++;
+        return Promise.resolve();
+      }
+
+      decodeAudioData(bytes: ArrayBuffer) {
+        return new OfflineAudioContext(2, 1, 44_100).decodeAudioData(bytes);
+      }
+
+      createBufferSource() {
+        const id = ++nextSource;
+        const started = this.#started;
+        class RecordingBufferSource {
+          buffer: AudioBuffer | null = null;
+          playbackRate = { value: 1 };
+          onended = null;
+          connect() {
+            // The probe has no output device.
+          }
+
+          disconnect() {
+            // The probe has no output device.
+          }
+
+          start(when = 0, offset = 0) {
+            if (this.buffer === null)
+              throw new Error("Missing replay audio buffer");
+            probe.starts.push({
+              id,
+              frames: this.buffer.length,
+              delay: when - (performance.now() - started) / 1000,
+              offset,
+              rate: this.playbackRate.value,
+            });
+          }
+
+          stop() {
+            probe.stops.push(id);
+          }
+        }
+        return new RecordingBufferSource();
+      }
+    }
+
+    Object.defineProperty(globalThis, "AudioContext", {
+      configurable: true,
+      value: RecordingAudioContext,
+    });
+  });
+}
+
+export async function readRecordedAudioProbe(page: Page) {
+  return page.evaluate(() => globalThis.recordedAudioProbe);
+}

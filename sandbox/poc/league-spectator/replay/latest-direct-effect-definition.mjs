@@ -4,6 +4,7 @@ import {
   DIRECT_NAV_GROUND_OMISSIONS,
 } from "./latest-direct-nav-ground-materials.mjs";
 import { normalizeDirectPointEmitter } from "./latest-direct-effect-defaults.mjs";
+import { canonicalDirectSystemObjectPath } from "./latest-direct-system-object-path-field.mjs";
 import { compileDirectDepthBiasProgram } from "./latest-direct-effect-depth-bias.mjs";
 import {
   compileDirectMultUv,
@@ -40,6 +41,9 @@ import {
   compileDirectCameraLocalOffsetProgram,
   DIRECT_CAMERA_LOCAL_OFFSET_OMISSION,
 } from "./latest-direct-effect-camera-local.mjs";
+import { compileDirectArbitraryLocalOrientationProgram } from "./latest-direct-effect-arbitrary-local.mjs";
+import { compileDirectLegacyShapeRotation } from "./latest-direct-effect-legacy-rotation.mjs";
+import { compileDirectBirthDrag } from "./latest-direct-effect-birth-drag.mjs";
 import { DIRECT_STATIC_MESH_SCENE_OMISSIONS } from "./latest-direct-static-mesh-scene.mjs";
 import {
   compileDirectEmitterLifecycle,
@@ -244,6 +248,7 @@ export async function compileLatestDirectEffect({
   );
   if (record.definition?.__type !== "VfxSystemDefinitionData")
     throw Error("Invalid direct effect definition class");
+  record.definition = canonicalDirectSystemObjectPath(record.definition);
   const systemIdentity = normalizeSystemIdentity(id, record);
   const systemFlags = normalizeSystemFlags(record.definition);
   const systemAudio = normalizeDirectSystemAudio(record.definition);
@@ -346,10 +351,12 @@ export async function compileLatestDirectEffect({
       ? manifest.assets[rayProgram.palette.texture.toLowerCase()]
       : null;
     const zeroBoundFlex = directZeroBoundFlex(source.FlexShapeDefinition);
+    const birthDragProgram=compileDirectBirthDrag(source,primitiveKind,systemFlags);
     const reasons = Object.keys(source)
       .filter(
         (k) =>
           !fields.has(k) &&
+          !(birthDragProgram&&k==="birthDrag") &&
           !(
             k === "materialOverrideDefinitions" &&
             directEmptyLinkControllerCount(source) === 0
@@ -566,10 +573,15 @@ export async function compileLatestDirectEffect({
       source.SpawnShape,
       primitiveKind,
     );
+    const legacyShapeRotationProgram = compileDirectLegacyShapeRotation(
+      source,
+      primitiveKind,
+    );
     if (
       !noShape &&
       source.SpawnShape?.__type !== "{ee39916f}" &&
-      !legacyOffsetProgram
+      !legacyOffsetProgram &&
+      !legacyShapeRotationProgram
     )
       reasons.push(
         `shape:${source.SpawnShape?.__type ?? "unprepared-default"}`,
@@ -577,12 +589,13 @@ export async function compileLatestDirectEffect({
     if (
       Object.keys(source.SpawnShape ?? {}).some(
         (k) => !["__type", "emitOffset"].includes(k),
-      )
+      ) &&
+      !legacyShapeRotationProgram
     )
       reasons.push("shape-properties");
     // The original constructor leaves an absent shape null. Its birth branch
     // skips the shape callback with the initialized zero offset unchanged.
-    let offset = noShape ? [0, 0, 0] : null;
+    let offset = noShape || legacyShapeRotationProgram ? [0, 0, 0] : null;
     if (source.SpawnShape?.__type === "{ee39916f}") {
       try {
         offset = kernels.birth.pointOffset(source.SpawnShape);
@@ -662,14 +675,18 @@ export async function compileLatestDirectEffect({
     if (!cameraTrail && source.particleIsLocalOrientation !== undefined) {
       if (![0, 1, false, true].includes(source.particleIsLocalOrientation))
         reasons.push("binding:particle-local-orientation-type");
-      else if (!basisIndependent && !cameraLocalOffsetProgram)
+      else if (
+        !basisIndependent &&
+        !cameraLocalOffsetProgram &&
+        !compileDirectArbitraryLocalOrientationProgram(source, primitiveKind)
+      )
         reasons.push(
           "binding:particle-local-orientation-root-basis-untranslated",
         );
     }
     const angularVelocity = source.birthRotationalVelocity0;
     if (
-      angularVelocity !== undefined &&
+      !birthDragProgram && angularVelocity !== undefined &&
       (angularVelocity?.__type !== "ValueVector3" ||
         Object.keys(angularVelocity).some(
           (key) => !["__type", "constantValue"].includes(key),
@@ -682,7 +699,7 @@ export async function compileLatestDirectEffect({
         ))
     )
       reasons.push("birth:angular-velocity-constant");
-    if (angularVelocity !== undefined && cameraQuad)
+    if (!birthDragProgram && angularVelocity !== undefined && cameraQuad)
       reasons.push("birth:angular-velocity-camera-basis");
     if (![0, 1].some((v) => constant(source.bindWeight, v)))
       reasons.push("binding:nonconstant-weight");
@@ -854,7 +871,11 @@ export async function compileLatestDirectEffect({
       paletteTexture,
       meshRenderFlagsPolicy,
       cameraLocalOffsetProgram,
+      arbitraryLocalOrientationProgram:
+        compileDirectArbitraryLocalOrientationProgram(source, primitiveKind),
       legacyOffsetProgram,
+      ...(birthDragProgram?{birthDragProgram}:{}),
+      ...(legacyShapeRotationProgram ? { legacyShapeRotationProgram } : {}),
       lifecycleProgram,
       singleResourceProgram,
       materialKey: `${id}:${index}`,

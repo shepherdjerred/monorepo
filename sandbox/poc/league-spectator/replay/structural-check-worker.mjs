@@ -1,9 +1,20 @@
 import { compareStructural, sha256 } from "./structural-comparison.mjs";
 import { reconstructLatest } from "./latest-reconstruction.mjs";
+import { workerErrorEnvelope } from "./latest-worker-errors.mjs";
+import { createLatestPreparationTrace } from "./latest-preparation-trace.mjs";
+import {
+  compactReplayReport,
+  replayColumnTransfers,
+} from "./latest-replay-columns.mjs";
 import { restoreLatestStaticCatalogSelection } from "./latest-static-catalog.mjs";
 
+let assetBase = null;
 async function load(path, binary = false) {
-  const response = await fetch(path);
+  const url =
+    assetBase && path.startsWith("/assets/")
+      ? new URL(path.slice(8), assetBase).href
+      : path;
+  const response = await fetch(url);
   if (!response.ok)
     throw Error(`Research input ${path}: HTTP ${response.status}`);
   return binary
@@ -12,6 +23,13 @@ async function load(path, binary = false) {
 }
 self.onmessage = async ({ data }) => {
   try {
+    const trace = createLatestPreparationTrace(
+      data.preparationDiagnostics === true
+        ? (event) => self.postMessage({ type: "preparation", event })
+        : null,
+      "reconstruction-worker",
+    );
+    assetBase = data.assetBase ?? null;
     if (!["run", "reconstruct"].includes(data.type))
       throw Error("Unknown research worker request");
     const root = "/assets/decoder-16.21-macos";
@@ -25,8 +43,10 @@ self.onmessage = async ({ data }) => {
       ]);
     if ((await sha256(runtimeBytes)) !== runtimeManifest.sha256)
       throw Error("WASM runtime integrity check failed");
-    const { default: createUnicorn } =
-      await import("/assets/vendor/unicorn_x86_candidate.mjs");
+    const runtimeModuleUrl = assetBase
+      ? new URL("vendor/unicorn_x86_candidate.mjs", assetBase).href
+      : "/assets/vendor/unicorn_x86_candidate.mjs";
+    const { default: createUnicorn } = await import(runtimeModuleUrl);
     if (data.type === "reconstruct") {
       const staticCatalog =
         data.staticCatalogInitialization === undefined
@@ -82,8 +102,28 @@ self.onmessage = async ({ data }) => {
         load("/assets/latest-world-state/package.json", true),
         load("/assets/latest-scene/manifest.json", true),
         load("/assets/latest-scene/world.json", true),
-        import("/assets/vendor/fzstd.mjs"),
+        import(
+          assetBase
+            ? new URL("vendor/fzstd.mjs", assetBase).href
+            : "/assets/vendor/fzstd.mjs"
+        ),
       ]);
+      const neutralPath = "latest-neutral-creation/package.json";
+      // This is an optional additional Map11 diagnostic program, explicitly
+      // inventoried by its static producer. Older catalogs and Map12 make no
+      // speculative request for a possibly absent resource.
+      const neutralCreationBytes =
+        JSON.parse(
+          new TextDecoder("utf-8", { fatal: true }).decode(worldSceneBytes),
+        ).map?.id === 11 &&
+        staticCatalog !== null &&
+        Object.hasOwn(staticCatalog.describe().files, neutralPath)
+          ? await staticCatalog.read(neutralPath)
+          : null;
+      trace("decode", "begin", {
+        replayBytes: bytes.byteLength,
+        endTime: data.endTime ?? 120,
+      });
       const report = await reconstructLatest({
         buffer: bytes.buffer,
         decompress: vendor.decompress,
@@ -111,11 +151,27 @@ self.onmessage = async ({ data }) => {
         worldStateBytes,
         worldSceneBytes,
         worldCatalogBytes,
+        neutralCreationBytes,
         staticCatalog,
         endTime: data.endTime ?? 120,
         deltaMode: "signed8",
       });
-      self.postMessage({ type: "reconstruction", report });
+      trace("decode", "end", {
+        heroes: report.heroes.length,
+        movements: report.movement.length,
+        visibility: report.visibilityRequests.length,
+        descriptors: report.effectDescriptors.length,
+      });
+      trace("columns.pack", "begin");
+      const compact = compactReplayReport(report);
+      const transfers = replayColumnTransfers(compact);
+      trace("columns.pack", "end", {
+        bytes: transfers.reduce(
+          (total, buffer) => total + buffer.byteLength,
+          0,
+        ),
+      });
+      self.postMessage({ type: "reconstruction", report: compact }, transfers);
       return;
     }
     const [samples, oracle] = await Promise.all([
@@ -137,6 +193,10 @@ self.onmessage = async ({ data }) => {
     });
     self.postMessage({ type: "complete", report });
   } catch (error) {
-    self.postMessage({ type: "error", error: String(error) });
+    self.postMessage({
+      type: "error",
+      error: String(error),
+      ...workerErrorEnvelope(error),
+    });
   }
 };

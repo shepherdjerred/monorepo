@@ -155,6 +155,17 @@ for the mechanism.
   it. The same ESLint config forbids `temporal`, `report` and `data` from
   importing the backend at all.
 
+The [browser replay package](packages/replay/README.md) owns rendering-session
+lifecycle and verified build resources. The app owns the anonymous replay page
+and its controls. The backend owns completed-upload metadata, content reads and
+the public projection of verified match events. The event timeline supports
+timestamp links independently of gameplay playback. Public file access and
+renderer admission are separate contracts. An uploaded file can remain available
+while its game build or presentation capabilities are unsupported. The
+[backend replay reference](packages/backend/README.md#replay-files) describes
+storage and compatibility, including independently refreshed official release
+observations.
+
 Every boundary has a negative fixture in the package's
 `architecture-fixtures/` directory named `<from-layer>-<what>.ts`.
 `architecture-boundaries.test.ts` cruises the fixtures with the derived rules

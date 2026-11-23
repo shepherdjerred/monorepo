@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { chmod, mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
@@ -47,31 +54,71 @@ describe("immutable static archives", () => {
     const root = await scratch();
     const source = path.join(root, "source");
     const target = path.join(root, "target");
-    await mkdir(path.join(source, "assets"), { recursive: true });
+    await mkdir(path.join(source, "assets", "fonts"), { recursive: true });
     await mkdir(target);
     await Bun.write(path.join(source, "index.html"), "<h1>Release</h1>");
     await Bun.write(
-      path.join(source, "assets", "font.woff"),
+      path.join(source, "assets", "fonts", "font.woff"),
       new Uint8Array([0, 255, 12, 1]),
     );
     const archive = path.join(root, "site.tar");
     const first = await createStaticArchive(source, archive);
+    expect(first.files).toEqual(["assets/fonts/font.woff", "index.html"]);
     const second = await createStaticArchive(
       source,
       path.join(root, "second.tar"),
     );
     expect(first.digest).toBe(second.digest);
     expect(await restoreStaticArchive(archive, target, first.digest)).toEqual([
-      "assets/font.woff",
+      "assets/fonts/font.woff",
       "index.html",
     ]);
     expect(
-      await Bun.file(path.join(target, "assets", "font.woff")).bytes(),
+      await Bun.file(path.join(target, "assets", "fonts", "font.woff")).bytes(),
     ).toEqual(new Uint8Array([0, 255, 12, 1]));
     await expect(
       restoreStaticArchive(archive, target, first.digest),
     ).rejects.toThrow("must be empty");
   });
+  test("round trips nested filesystem paths longer than 260 characters", async () => {
+    const root = await scratch();
+    const source = path.join(root, "source");
+    const target = path.join(root, "target");
+    const member = [
+      "assets",
+      "b".repeat(120),
+      "c".repeat(120),
+      "data.bin",
+    ].join("/");
+    const original = path.join(source, member);
+    await mkdir(path.dirname(original), { recursive: true });
+    await mkdir(target);
+    await writeFile(original, "nested binary");
+    const archive = path.join(root, "site.tar");
+    const packed = await createStaticArchive(source, archive);
+    expect(packed.files).toEqual([member]);
+    expect(await restoreStaticArchive(archive, target, packed.digest)).toEqual([
+      member,
+    ]);
+    expect(await readFile(path.join(target, member), "utf8")).toBe(
+      "nested binary",
+    );
+  });
+  test.skipIf(path.sep === "\\")(
+    "rejects literal POSIX backslashes in discovered names",
+    async () => {
+      const root = await scratch();
+      const source = path.join(root, "source");
+      await mkdir(source);
+      await Bun.write(
+        path.join(source, String.raw`assets\file.txt`),
+        "private",
+      );
+      await expect(
+        createStaticArchive(source, path.join(root, "site.tar")),
+      ).rejects.toThrow("Unsafe static archive path");
+    },
+  );
   test("rejects altered bytes before writing any extracted file", async () => {
     const input = await malicious([
       { header: { name: "index.html", type: "file", size: 2 }, body: "ok" },
@@ -199,15 +246,12 @@ test.each([true, false])(
   async (present) => {
     const root = await scratch();
     const source = path.join(root, "site");
-    const bin = path.join(root, "bin");
     await mkdir(source);
-    await mkdir(bin);
     await Bun.write(path.join(source, "index.html"), "archive fixture");
-    const executable = path.join(bin, "aws");
+    const executable = path.join(root, "fake-aws.mjs");
     await Bun.write(
       executable,
-      String.raw`#!${process.execPath}
-import { appendFile, copyFile } from 'node:fs/promises';
+      String.raw`import { appendFile, copyFile } from 'node:fs/promises';
 const args = process.argv.slice(2);
 await appendFile(process.env.FIXTURE_CALLS, JSON.stringify({
   args,
@@ -221,17 +265,17 @@ if (args[1] === 'put-object') {
   process.exitCode = 75; // Lost upload response: exact readback still proves creation.
 }
 else if (args[0] === 's3') await copyFile(process.env.FIXTURE_OBJECT, args[3]);
+else throw new Error('Unexpected fixture AWS command');
 `,
     );
-    await chmod(executable, 0o755);
     const env = {
-      ...Bun.env,
-      PATH: `${bin}:${Bun.env["PATH"] ?? ""}`,
+      FIXTURE_AWS: executable,
       FIXTURE_CALLS: path.join(root, "calls.jsonl"),
       FIXTURE_OBJECT: path.join(root, "object.tar"),
       FIXTURE_PUBLICATION: JSON.stringify({
         bucket: "wiki-sjer-red",
         source,
+        registry: "v2",
         metadataDirectory: path.join(root, "metadata"),
       }),
       CI_REPO_ID: "1",
@@ -248,20 +292,33 @@ else if (args[0] === 's3') await copyFile(process.env.FIXTURE_OBJECT, args[3]);
         : "",
     };
     const moduleUrl = new URL("static-site-publication.ts", import.meta.url);
-    const child =
-      await Bun.$`${process.execPath} --eval ${`import { publishStaticSiteArchive } from ${JSON.stringify(moduleUrl.href)}; await publishStaticSiteArchive(JSON.parse(process.env.FIXTURE_PUBLICATION));`}`
-        .env(env)
-        .quiet()
-        .nothrow();
+    const child = Bun.spawn(
+      [
+        process.execPath,
+        "--eval",
+        `
+const spawn = Bun.spawn.bind(Bun);
+Bun.spawn = (argv, options) => {
+  if (argv[0] !== "aws") throw new Error("Unexpected fixture subprocess");
+  return spawn([process.execPath, process.env.FIXTURE_AWS, ...argv.slice(1)], options);
+};
+const { publishStaticSiteArchive } = await import(${JSON.stringify(moduleUrl.href)});
+await publishStaticSiteArchive(JSON.parse(process.env.FIXTURE_PUBLICATION));
+`,
+      ],
+      { env, stdout: "ignore", stderr: "pipe" },
+    );
+    const [stderr, exitCode] = await Promise.all([
+      new Response(child.stderr).text(),
+      child.exited,
+    ]);
     if (!present) {
-      expect(child.exitCode).not.toBe(0);
-      expect(child.stderr.toString()).toContain(
-        "DELIVERY_ARCHIVE_PUBLISHER_ACCESS_KEY_ID",
-      );
+      expect(exitCode).not.toBe(0);
+      expect(stderr).toContain("DELIVERY_ARCHIVE_PUBLISHER_ACCESS_KEY_ID");
       expect(await Bun.file(env.FIXTURE_CALLS).exists()).toBe(false);
       return;
     }
-    expect(child.exitCode, child.stderr.toString()).toBe(0);
+    expect(exitCode, stderr).toBe(0);
     const callText = await Bun.file(env.FIXTURE_CALLS).text();
     const calls = callText
       .trim()
@@ -283,6 +340,13 @@ else if (args[0] === 's3') await copyFile(process.env.FIXTURE_OBJECT, args[3]);
     ]);
     expect(calls[0]?.args).toContain("--if-none-match");
     expect(calls[0]?.args).toContain("*");
+    for (const call of calls)
+      expect(call).toMatchObject({
+        access: "publisher-access",
+        secret: "publisher-secret",
+        vault: null,
+        session: null,
+      });
   },
 );
 

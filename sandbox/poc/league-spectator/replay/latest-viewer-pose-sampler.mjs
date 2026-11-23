@@ -1,9 +1,18 @@
+import { createLatestViewerCpuAncestorPose } from "./latest-viewer-cpu-ancestor-pose.mjs";
 import { sampleAnimationFrame } from "./latest-animation.mjs";
 import { sampleLatestDeathPosePreview } from "./latest-lifecycle.mjs";
+import { createLatestViewerPoseEventIndex } from "./latest-viewer-pose-event-index.mjs";
+import { assertLatestViewerOrdinalJoints } from "./latest-viewer-ordinal-joints.mjs";
+import { latestViewerPoseAvailability } from "./latest-viewer-pose-availability.mjs";
 
 // Shared absolute-time animation sampling for visible actors and independently
 // owned CPU attachment hierarchies. Camera redraws do not advance this state.
 export const VIEWER_POSE_POLICY = "same-viewer-actor-pose-v1";
+export function viewerPoseJointDefaults(entry) {
+  return Object.hasOwn(entry, "poseJoints")
+    ? assertLatestViewerOrdinalJoints(entry)
+    : entry.jointMap.values();
+}
 export function applyLatestViewerPoseLayer(
   entry,
   layer,
@@ -11,13 +20,18 @@ export function applyLatestViewerPoseLayer(
 ) {
   const pose = entry.poseAssets.get(layer.file);
   if (!pose) throw Error(`Atomic viewer pose not loaded: ${layer.file}`);
+  const poseJoints = Object.hasOwn(entry, "poseJoints")
+    ? assertLatestViewerOrdinalJoints(entry)
+    : null;
   for (const track of pose.tracks) {
     const amount =
       (layer.weights ? layer.weights[track.jointId] : 1) * layer.weight;
     if (amount === 0) continue;
     if (!Number.isFinite(amount) || amount < 0 || amount > 1)
       throw Error("Invalid viewer pose layer weight");
-    const node = entry.jointMap.get(track.bone)?.node;
+    const node = poseJoints
+      ? poseJoints[track.jointId]?.node
+      : entry.jointMap.get(track.bone)?.node;
     if (!node || entry.catalog.joints[track.jointId] !== track.bone)
       throw Error("Viewer clip and hierarchy differ");
     const sample = sampleAnimationFrame(
@@ -94,39 +108,9 @@ function causalOrder(a, b) {
   if (a.time !== b.time) return a.time - b.time;
   return causalTieOrder(a, b) ?? a.sequence - b.sequence;
 }
-function sampleLayers(entry, events, plans, time, moving, life, cursor) {
-  const atTime = [];
-  for (const event of events) {
-    if (event.time > time) break;
-    if (event.time === time && cursor !== null) {
-      const ordinal = eventOrdinal(event);
-      if (
-        !Number.isSafeInteger(ordinal.transportSequence) ||
-        ordinal.transportSequence < 0 ||
-        (ordinal.transportSequence === cursor.transportSequence &&
-          (!Number.isSafeInteger(ordinal.entryOrder) || ordinal.entryOrder < 0))
-      )
-        return {
-          resolved: false,
-          reasons: ["pose:same-time-animation-causal-ordinal-unresolved"],
-        };
-      if (
-        ordinal.transportSequence > cursor.transportSequence ||
-        (ordinal.transportSequence === cursor.transportSequence &&
-          (ordinal.entryOrder > cursor.entryOrder ||
-            (cursor.exclusive === true &&
-              ordinal.entryOrder === cursor.entryOrder)))
-      )
-        continue;
-    }
-    atTime.push(event);
-  }
-  for (let index = 1; index < atTime.length; index++)
-    if (
-      atTime[index].time === atTime[index - 1].time &&
-      causalTieOrder(atTime[index], atTime[index - 1]) === null
-    )
-      return { resolved: false, reasons: ["pose:animation-order-unresolved"] };
+function sampleLayers(entry, eventIndex, plans, time, moving, life, cursor) {
+  const selection = eventIndex.select(moving ? 1 : 0, time, cursor);
+  if (!selection.resolved) return selection;
   const death = sampleLatestDeathPosePreview(entry.graph, life, time);
   if (death) {
     if (death.leaves.length !== 1)
@@ -141,11 +125,8 @@ function sampleLayers(entry, events, plans, time, moving, life, cursor) {
   const layers = entry.graph
     .evaluate(compiled.preview, time % compiled.duration, { moving })
     .leaves.map((leaf) => ({ ...leaf, event: null }));
-  const ownership = new Map();
-  for (const event of atTime)
-    for (const track of compiled.tracks.get(event)) ownership.set(track, event);
   const active = [];
-  for (const [track, event] of ownership) {
+  for (const [track, event] of selection.ownership) {
     if (event.rate <= 0) continue;
     for (const leaf of entry.graph.evaluate(
       event.name,
@@ -167,6 +148,7 @@ export function createLatestViewerPoseSampler({
   entry,
   entityId,
   bindings,
+  cpuAttachmentsOnly = false,
 }) {
   if (
     !uint(entityId) ||
@@ -174,6 +156,7 @@ export function createLatestViewerPoseSampler({
     !entry?.group ||
     !(entry.jointMap instanceof Map) ||
     !(entry.poseAssets instanceof Map) ||
+    typeof entry.graph?.evaluate !== "function" ||
     !Array.isArray(entry.catalog?.joints) ||
     !Array.isArray(entry.events) ||
     !Array.isArray(bindings)
@@ -181,6 +164,8 @@ export function createLatestViewerPoseSampler({
     throw Error(
       "Owned viewer hierarchy, clips and installed rig bindings required",
     );
+  if (Object.hasOwn(entry, "poseJoints"))
+    assertLatestViewerOrdinalJoints(entry);
   const events = structuredClone(entry.events).sort(causalOrder);
   for (const event of events)
     if (
@@ -202,24 +187,39 @@ export function createLatestViewerPoseSampler({
   // Prepared graph evaluation at clock0 depends only on the moving context.
   // Compile track ownership once, rather than reevaluating every historical
   // animation graph during each effect's world query. Active clocks still run.
-  const plans = [false, true].map((moving) => {
-    const preview = entry.previewNames[moving ? "run" : "idle"];
-    const initial = entry.graph.evaluate(preview, 0, { moving });
-    if (initial.unresolved.length || !(initial.duration > 0))
-      throw Error("Unprepared viewer preview clock");
-    return {
-      preview,
-      duration: initial.duration,
-      tracks: new Map(
-        events.map((event) => [
-          event,
-          entry.graph
-            .evaluate(event.name, 0, { moving })
-            .leaves.map((leaf) => leaf.track),
-        ]),
-      ),
-    };
-  });
+  const baseStateAvailability = latestViewerPoseAvailability(
+    entry.previewNames,
+  );
+  const plans =
+    baseStateAvailability.status === "unavailable"
+      ? null
+      : [false, true].map((moving) => {
+          const preview = entry.previewNames[moving ? "run" : "idle"];
+          const initial = entry.graph.evaluate(preview, 0, { moving });
+          if (initial.unresolved.length || !(initial.duration > 0))
+            throw Error("Unprepared viewer preview clock");
+          return {
+            preview,
+            duration: initial.duration,
+            tracks: new Map(
+              events.map((event) => [
+                event,
+                entry.graph
+                  .evaluate(event.name, 0, { moving })
+                  .leaves.map((leaf) => leaf.track),
+              ]),
+            ),
+          };
+        });
+  const eventIndex =
+    plans === null
+      ? null
+      : createLatestViewerPoseEventIndex({
+          events,
+          plans,
+          eventOrdinal,
+          causalTieOrder,
+        });
   for (const binding of structuredClone(bindings)) {
     if (
       !uint(binding.resolvedBoneKey) ||
@@ -250,6 +250,29 @@ export function createLatestViewerPoseSampler({
     position = new THREE.Vector3(),
     orientation = new THREE.Quaternion(),
     scale = new THREE.Vector3();
+  let cpuPose = null,
+    cpuNames = null;
+  function applyCpuPlan(plan, keys) {
+    const names = [
+      ...new Set(
+        keys.filter((key) => key !== 0).map((key) => keyMap.get(key).name),
+      ),
+    ];
+    if (
+      !cpuNames ||
+      names.length !== cpuNames.length ||
+      names.some((name, index) => name !== cpuNames[index])
+    ) {
+      cpuPose?.close();
+      cpuPose = createLatestViewerCpuAncestorPose({
+        THREE,
+        entry,
+        attachmentNames: names,
+      });
+      cpuNames = names;
+    }
+    cpuPose.apply(plan.layers);
+  }
   function apply(layer) {
     applyLatestViewerPoseLayer(entry, layer, {
       quaternionA,
@@ -259,15 +282,29 @@ export function createLatestViewerPoseSampler({
     });
   }
   function applyPlan(plan) {
-    for (const joint of entry.jointMap.values()) {
+    for (const joint of viewerPoseJointDefaults(entry)) {
       joint.node.position.copy(joint.position);
       joint.node.quaternion.copy(joint.quaternion);
       joint.node.scale.copy(joint.scale);
     }
     for (const layer of plan.layers) apply(layer);
   }
+  function unavailable(time, cursor) {
+    return {
+      resolved: false,
+      policy: VIEWER_POSE_POLICY,
+      entityId,
+      time,
+      cursor: structuredClone(cursor),
+      reasons: ["pose:base-animation-state-program-unavailable"],
+      unavailableBaseStates: [...baseStateAvailability.unavailableBaseStates],
+      nativeAcceptance: null,
+      nativePoseParity: null,
+    };
+  }
   return Object.freeze({
     policy: VIEWER_POSE_POLICY,
+    baseStateAvailability,
     applyLocalPose({ time, cursor = null, moving, life }) {
       cursorValue(cursor);
       if (
@@ -277,9 +314,10 @@ export function createLatestViewerPoseSampler({
         typeof life?.dead !== "boolean"
       )
         throw Error("Explicit local viewer pose clock/lifecycle required");
+      if (plans === null) return unavailable(time, cursor);
       const plan = sampleLayers(
         entry,
-        events,
+        eventIndex,
         plans,
         time,
         moving,
@@ -351,9 +389,10 @@ export function createLatestViewerPoseSampler({
           policy: VIEWER_POSE_POLICY,
           reasons: missing.map((key) => `pose:installed-key-unresolved:${key}`),
         };
+      if (plans === null) return unavailable(time, cursor);
       const plan = sampleLayers(
         entry,
-        events,
+        eventIndex,
         plans,
         time,
         moving,
@@ -361,7 +400,10 @@ export function createLatestViewerPoseSampler({
         cursor,
       );
       if (!plan.resolved) return { ...plan, policy: VIEWER_POSE_POLICY };
-      if (!rootOnly) applyPlan(plan);
+      if (!rootOnly) {
+        if (cpuAttachmentsOnly) applyCpuPlan(plan, attachmentKeys);
+        else applyPlan(plan);
+      }
       entry.group.position.fromArray(root.position);
       let yaw = Math.atan2(
         viewerYawInput.direction[0],
@@ -383,7 +425,8 @@ export function createLatestViewerPoseSampler({
       }
       entry.group.rotation.set(0, yaw, 0);
       if (!rootOnly) {
-        entry.group.updateWorldMatrix(true, true);
+        if (cpuAttachmentsOnly) cpuPose.updateWorldMatrices();
+        else entry.group.updateWorldMatrix(true, true);
         if (entry.group.parent)
           inverseParent.copy(entry.group.parent.matrixWorld).invert();
         else inverseParent.identity();

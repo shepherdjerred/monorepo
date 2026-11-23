@@ -1,5 +1,6 @@
 import { test, expect } from "bun:test";
-import { Vector3 } from "../../../../.cache/replay-spike/public/vendor/three.core.js";
+import { resolve, sep } from "node:path";
+import { pathToFileURL } from "node:url";
 import { LatestDirectEffectPresentation } from "./latest-direct-effect-presentation.mjs";
 import {
   LatestDirectCaptureOwnership,
@@ -9,6 +10,15 @@ import {
   sampleViewerFollowPosition,
   captureSynchronizedDirectView,
 } from "./latest-viewer-frame-coordination.mjs";
+
+const fixtureInput = process.env.SCOUT_REPLAY_RESEARCH_CACHE;
+if (fixtureInput !== undefined && !fixtureInput.trim())
+  throw Error("An explicit replay research fixture directory is required");
+const cache =
+  fixtureInput === undefined
+    ? new URL("../../../../.cache/replay-spike/", import.meta.url)
+    : pathToFileURL(resolve(fixtureInput) + sep);
+const { Vector3 } = await import(new URL("public/vendor/three.core.js", cache));
 
 const flush = async () => {
   await Promise.resolve();
@@ -239,8 +249,7 @@ test("explicit capture synchronizes world and follow before cloning camera or re
 });
 
 test("minion missing-state preview restores loaded root before movement or attack overrides across seeks", async () => {
-  const THREE =
-    await import("../../../../.cache/replay-spike/public/vendor/three.core.js");
+  const THREE = await import(new URL("public/vendor/three.core.js", cache));
   const { restoreViewerMinionBindPreview } =
     await import("./latest-viewer-frame-coordination.mjs");
   const group = new THREE.Group();

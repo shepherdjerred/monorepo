@@ -5,6 +5,8 @@ import {
 import { CHAMPION_STATE_FIELDS } from "./latest-champion-state.mjs";
 import { EXPERIENCE_SHA } from "./latest-experience.mjs";
 import { createLatestInventory } from "./latest-inventory.mjs";
+import { NEUTRAL_CREATION_PACKAGE_SHA } from "./latest-neutral-creation.mjs";
+import { isApprovedMap11NeutralCharacterRecordsProof } from "./latest-map11-neutral-contract.mjs";
 import {
   COMBAT_STATS_SHA,
   COMBAT_STAT_FIELDS,
@@ -45,6 +47,31 @@ export function createLatestReplayState(report, worldState = null) {
   if (hasInventory !== Object.hasOwn(report, "inventoryPackageSha256"))
     throw Error("Incomplete inventory state extension");
   const inventory = hasInventory ? createLatestInventory(report) : null;
+  const neutralPolicy = worldState?.neutralCreation;
+  const neutralRequests = new Map();
+  if (neutralPolicy !== undefined) {
+    if (
+      neutralPolicy.argumentProgramSha256 !== NEUTRAL_CREATION_PACKAGE_SHA ||
+      report.neutralCreationPackageSha256 !== NEUTRAL_CREATION_PACKAGE_SHA ||
+      !isApprovedMap11NeutralCharacterRecordsProof(
+        neutralPolicy.characterRecordsProofSha256,
+      ) ||
+      neutralPolicy.nativeFactoryAccepted !== false ||
+      neutralPolicy.snapshotsCreateEntities !== false ||
+      !Array.isArray(report.neutralCreations)
+    )
+      throw Error("Original neutral world-state candidate proof required");
+    for (const request of report.neutralCreations) {
+      if (
+        request.kind !== "neutral-creation-candidate" ||
+        request.stream !== 1 ||
+        request.nativeWorldAcceptance !== false ||
+        neutralRequests.has(request.entityId)
+      )
+        throw Error("Unique original neutral gameplay state identity required");
+      neutralRequests.set(request.entityId, request);
+    }
+  }
   const lifecycle = prepareLatestLifecycle(report),
     tracks = new Map(),
     championIds = new Set(report.heroes.map((h) => h.entityId)),
@@ -67,10 +94,22 @@ export function createLatestReplayState(report, worldState = null) {
     )
       throw Error("World state requires admitted entities and updates");
     for (const entity of worldState.entities) {
+      const neutral = entity.entityClass === "neutral-minion";
+      const request = neutral ? neutralRequests.get(entity.entityId) : null;
       if (
         entities.has(entity.entityId) ||
         !Number.isInteger(entity.entityId) ||
-        !["lane-minion", "turret"].includes(entity.entityClass) ||
+        (!neutral && !["lane-minion", "turret"].includes(entity.entityClass)) ||
+        (neutral &&
+          (!request ||
+            entity.creationTime !== request.time ||
+            entity.team !== null ||
+            entity.nativeTeamEnum !== request.nativeTeamEnum ||
+            !Array.isArray(entity.creationPosition) ||
+            entity.creationPosition.length !== 3 ||
+            entity.creationPosition.some(
+              (value, index) => value !== request.firstVectorArgument?.[index],
+            ))) ||
         !Number.isFinite(entity.creationTime) ||
         entity.creationTime < 0 ||
         entity.creationTime > report.endTime

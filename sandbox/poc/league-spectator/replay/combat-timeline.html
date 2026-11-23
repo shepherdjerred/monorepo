@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Replay combat timeline</title>
+    <link rel="stylesheet" href="/combat-timeline.css" />
+    <script type="module" src="/combat-timeline.mjs"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="scope">Scout replay research</p>
+        <h1>Combat timeline</h1>
+        <p id="status" role="status">
+          Reading combat events from the local replay…
+        </p>
+      </header>
+      <section id="timeline" aria-label="Combat timeline playback" hidden>
+        <div class="scoreboard">
+          <div class="team team-a">
+            <span>Team A kills</span><strong id="team-a">0</strong>
+          </div>
+          <div class="team team-b">
+            <span>Team B kills</span><strong id="team-b">0</strong>
+          </div>
+        </div>
+        <div class="transport">
+          <div class="transport-heading">
+            <label for="seek">Match time</label>
+            <span id="clock" aria-hidden="true"></span>
+          </div>
+          <div class="marks" id="marks" aria-hidden="true"></div>
+          <input id="seek" type="range" min="0" value="0" step="0.001" />
+          <div class="actions">
+            <button id="play" type="button">Play</button>
+            <button id="previous" type="button">Previous event</button>
+            <button id="next" type="button">Next event</button>
+          </div>
+        </div>
+        <section class="events" aria-labelledby="events-heading">
+          <h2 id="events-heading">Recent events</h2>
+          <p id="empty">No combat events yet.</p>
+          <ol id="event-list"></ol>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>

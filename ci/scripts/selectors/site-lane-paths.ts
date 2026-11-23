@@ -130,6 +130,7 @@ export const sitePaths = {
     // tRPC router *type*, which is erased at build time.
     "packages/scout-for-lol/packages/data",
     "packages/scout-for-lol/packages/domain",
+    "packages/scout-for-lol/packages/replay",
     "packages/scout-for-lol/packages/report",
     "packages/loaded",
     "packages/text",

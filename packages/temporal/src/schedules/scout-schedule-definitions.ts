@@ -175,6 +175,14 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       initiallyActive: true,
     }),
     intervalSchedule(stage, {
+      name: "replay-patch-observation",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "replay-patch-observation" }],
+      every: "5 minutes",
+      catchupWindow: CATCHUP_TIGHT,
+      initiallyActive: true,
+    }),
+    intervalSchedule(stage, {
       name: "competition-refresh",
       workflowType: "scoutBackgroundJobWorkflow",
       args: [{ stage, kind: "competition-refresh" }],

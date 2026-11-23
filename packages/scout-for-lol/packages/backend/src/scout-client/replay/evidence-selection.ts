@@ -1,13 +1,35 @@
 import type { ReplayProvenance } from "./container.ts";
+import type { ReplayPresentationFacts } from "./provenance.ts";
 
-export type QualifiedReplayProvenance = ReplayProvenance & {
-  readonly platformId: string;
-};
+export type QualifiedReplayProvenance = ReplayProvenance &
+  ReplayPresentationFacts & {
+    readonly platformId: string;
+  };
 export type ReplayEvidence = {
   readonly platformId: string;
   readonly authority: "archived" | "observed";
-  readonly provenance: ReplayProvenance;
+  readonly provenance: ReplayProvenance & Partial<ReplayPresentationFacts>;
 };
+
+function agreedFact<T>(values: readonly (T | null | undefined)[]): {
+  conflict: boolean;
+  value: T | null;
+} {
+  const known = values.filter((value) => value !== null && value !== undefined);
+  return {
+    conflict: new Set(known.map((value) => JSON.stringify(value))).size > 1,
+    value: known[0] ?? null,
+  };
+}
+
+function fingerprint(provenance: ReplayProvenance): string {
+  return JSON.stringify({
+    localPuuid: provenance.localPuuid,
+    leaguePatch: provenance.leaguePatch,
+    gameDurationSeconds: provenance.gameDurationSeconds,
+    participant: provenance.participant,
+  });
+}
 
 /** A bare game ID must resolve to exactly one platform; archives pin known facts. */
 export function selectReplayEvidence(
@@ -32,9 +54,23 @@ export function selectReplayEvidence(
     (entry) =>
       entry.authority === primary.authority &&
       entry.provenance.localPuuid === primary.provenance.localPuuid &&
-      JSON.stringify(entry.provenance) !== JSON.stringify(primary.provenance),
+      fingerprint(entry.provenance) !== fingerprint(primary.provenance),
   );
-  return conflict
+  const peers = ordered.filter(
+    (entry) =>
+      entry.authority === primary.authority &&
+      entry.provenance.localPuuid === primary.provenance.localPuuid,
+  );
+  const map = agreedFact(peers.map((entry) => entry.provenance.mapId));
+  const mode = agreedFact(peers.map((entry) => entry.provenance.gameMode));
+  const teams = agreedFact(peers.map((entry) => entry.provenance.teamSizes));
+  return conflict || map.conflict || mode.conflict || teams.conflict
     ? null
-    : { ...primary.provenance, platformId: primary.platformId };
+    : {
+        ...primary.provenance,
+        mapId: map.value,
+        gameMode: mode.value,
+        teamSizes: teams.value,
+        platformId: primary.platformId,
+      };
 }

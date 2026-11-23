@@ -1,5 +1,6 @@
 // GPU bindings from complete native material observations. Unsupported scene
 // resources remain explicit omissions; malformed prepared inputs fail.
+import { isSceneAllVisionFog } from "./scene-all-vision-fog.mjs";
 const decodeHex = (value) => {
   if (typeof value !== "string" || !/^(?:[a-f0-9]{2})*$/.test(value))
     throw Error("Exact particle byte hex required");
@@ -45,7 +46,10 @@ export async function prepareNativeParticleGpuBinding(n, record, context) {
     stages,
     colorBindings,
     vertexErosion = false,
+    allVisionFog = null,
   } = context;
+  if (allVisionFog !== null && !isSceneAllVisionFog(allVisionFog))
+    throw Error("Owned original all-vision fog authority required");
   const emitter =
       record.definition.complexEmitterDefinitionData[n.emitterIndex],
     colorBinding = colorBindings?.get(`${n.effectId}:${n.emitterIndex}`),
@@ -116,6 +120,12 @@ export async function prepareNativeParticleGpuBinding(n, record, context) {
     ),
     blocks = [],
     textures = {};
+  if (allVisionFog) {
+    const uniform = allVisionFog.uniform();
+    if (parameters.has(uniform.name))
+      throw Error("All-vision fog cannot replace an authored native uniform");
+    parameters.set(uniform.name, uniform);
+  }
   const missingInputs = [];
   for (const shader of shaderSources) {
     for (const block of shader.sidecar.blocks)
@@ -142,6 +152,7 @@ export async function prepareNativeParticleGpuBinding(n, record, context) {
           "PARTICLE_COLOR_TEXTURE__TX",
           "PIXEL_COLOR_REMAP_RAMP_SharedTexture",
           ...(vertexErosion ? ["sAlphaErosionTexture__TX"] : []),
+          ...(allVisionFog ? ["FOW_MAP_SharedTexture"] : []),
         ].includes(texture.name)
       )
         missingInputs.push(`unbound-texture:${texture.name}`);
@@ -299,6 +310,8 @@ export async function prepareNativeParticleGpuBinding(n, record, context) {
         binding = { kind: "supplied-white-lookup" };
       else if (t.name === "PIXEL_COLOR_REMAP_RAMP_SharedTexture")
         binding = { kind: "supplied-transparent-remap" };
+      else if (t.name === "FOW_MAP_SharedTexture" && allVisionFog)
+        binding = allVisionFog.binding();
       else throw Error(`Unprovided particle texture: ${t.name}`);
       for (const s of t.samplers) {
         if (!s.sampler || Object.hasOwn(textures, s.glslName))

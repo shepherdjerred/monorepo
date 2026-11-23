@@ -9,7 +9,11 @@ import { assertLatestStaticCatalogInitialization } from "./latest-static-catalog
 // One bounded diagnostic preparation over shared translated kernels. No motion
 // simulation or guest instructions execute on the spectator's main thread.
 export async function requestTargetedMissilePresentation(payload) {
-  const { onPreparationMetrics, ...workerPayload } = payload;
+  const {
+    onPreparationMetrics,
+    onPreparation = null,
+    ...workerPayload
+  } = payload;
   if (
     onPreparationMetrics !== undefined &&
     typeof onPreparationMetrics !== "function"
@@ -51,6 +55,7 @@ export async function requestTargetedMissilePresentation(payload) {
   };
   const client = new LatestParticleWorkerClient({
     workerUrl: new URL("./latest-targeted-missile-worker.mjs", import.meta.url),
+    onPreparation,
   });
   const handleMessage = client.worker.onmessage;
   let preparationMetrics;

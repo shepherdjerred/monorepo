@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Original League HUD primitives — static QA</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/qa.css" />
+    <script type="module" src="/qa.mjs"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Original League HUD primitives</h1>
+      <p>
+        16.21 static QA · original layout, image pixels, UV program outputs and
+        fonts.
+      </p>
+      <p>
+        Scene visibility, button states and ordering below are explicit
+        inspection inputs. Live controllers, native text shaping,
+        sliced/material providers and native blending remain unresolved.
+      </p>
+      <div class="controls">
+        <label
+          >Authored scene
+          <select id="scene"></select
+        ></label>
+        <label
+          >Controlled button state
+          <select id="state">
+            <option value="DefaultStateElements">Default</option>
+            <option value="HoverStateElements">Hover</option>
+            <option value="ClickedStateElements">Clicked</option>
+            <option value="selectedStateElements">Selected</option>
+          </select></label
+        >
+        <label
+          >Original viewport
+          <select id="viewport">
+            <option>1920×1080</option>
+            <option>1600×1200</option>
+            <option>1280×720</option>
+            <option>800×600</option>
+          </select></label
+        >
+        <label><input id="annotate" type="checkbox" /> QA bounds</label>
+      </div>
+      <p id="status" role="status">Loading original resources…</p>
+    </header>
+    <main>
+      <canvas
+        id="hud"
+        width="1920"
+        height="1080"
+        aria-label="Static original HUD primitive composition"
+      ></canvas>
+      <details>
+        <summary>Original font specimens · controlled text and sizing</summary>
+        <div id="fonts"></div>
+      </details>
+      <details>
+        <summary>Explicit omissions</summary>
+        <pre id="omissions"></pre>
+      </details>
+    </main>
+  </body>
+</html>

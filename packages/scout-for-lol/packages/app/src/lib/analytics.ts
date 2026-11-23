@@ -1,5 +1,6 @@
 import posthog, { type CaptureOptions } from "posthog-js";
 import { z } from "zod";
+import { normalizePath as normalizeAnalyticsPath } from "#src/lib/routes/analytics-path.ts";
 import {
   ANALYTICS_EVENT_NAMES,
   type AnalyticsProps,
@@ -438,57 +439,8 @@ export function stopAnalyticsCapture(): void {
   client.optOutCapturing();
 }
 
-/**
- * Collapse dynamic route segments to templates so pageviews group by shape
- * instead of exposing guild/report/player identifiers.
- */
 export function normalizePath(pathname: string): string {
-  const normalized = pathname
-    .replace(/^\/players\/[^/]+/, "/players/:playerId")
-    .replace(
-      /^\/players\/:playerId\/matches\/[^/]+/,
-      "/players/:playerId/matches/:matchId",
-    )
-    .replace(/^\/champions\/[^/]+/, "/champions/:championId")
-    .replace(/^\/halls\/[^/]+/, "/halls/:guildId")
-    .replace(/^\/challenge-runs\/[^/]+/, "/challenge-runs/:runId")
-    .replace(/^\/challenges\/drafts\/[^/]+/, "/challenges/drafts/:draftId")
-    .replace(
-      /^\/challenges\/(?!drafts(?:\/|$))[^/]+/,
-      "/challenges/:templateId",
-    )
-    .replace(/^\/duels\/[^/]+/, "/duels/:guildId")
-    .replace(
-      /^\/duels\/:guildId\/events\/[^/]+/,
-      "/duels/:guildId/events/:eventId",
-    )
-    .replace(
-      /^\/duels\/:guildId\/series\/[^/]+/,
-      "/duels/:guildId/series/:seriesId",
-    )
-    .replace(/^\/g\/[^/]+/, "/g/:guildId")
-    .replace(/^\/g\/:guildId\/players\/[^/]+/, "/g/:guildId/players/:alias")
-    .replace(
-      /\/competitions\/(?!new(?:\/|$))[^/]+/,
-      "/competitions/:competitionId",
-    )
-    .replace(
-      /\/reports\/(?!new(?:\/|$)|help(?:\/|$))[^/]+/,
-      "/reports/:reportId",
-    )
-    .replace(/^\/dares\/(?!settings$)[^/]+/, "/dares/:dareId")
-    // Share token first, so the conversation rule's lookahead then sees the
-    // already-templated `s` segment. The token is the share credential — it
-    // is templated away before anything reaches PostHog.
-    .replace(/^\/explore\/s\/[^/]+/, "/explore/s/:shareToken")
-    .replace(/^\/explore\/matches\/[^/]+/, "/explore/matches/:matchId")
-    .replace(
-      /^\/explore\/(?!s(?:\/|$)|matches(?:\/|$))[^/]+/,
-      "/explore/:conversationId",
-    );
-  const knownRoute =
-    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken|matches\/:matchId))?|\/players(?:\/:playerId(?:\/matches\/:matchId)?)?|\/champions\/:championId|\/halls\/:guildId|\/challenges(?:\/(?:drafts\/:draftId|:templateId))?|\/clash|\/challenge-runs\/:runId|\/duels\/:guildId(?:\/(?:events\/:eventId(?:\/standings)?|series\/:seriesId|head-to-head))?|\/dares(?:\/(?:settings|:dareId))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?|hall-of-fame)?)?)$/;
-  return knownRoute.test(normalized) ? normalized : "/not-found";
+  return normalizeAnalyticsPath(pathname);
 }
 
 function pageUrl(siteDomain: string, normalizedPath: string): string {

@@ -1,5 +1,6 @@
 // Pure, build-package animation graph subset. Unknown nodes remain explicit.
 import { sampleDualClockAnimationPoseFrame } from "./latest-animation-pose-time-domain.mjs";
+import { resolveLatestAnimationSelectorChoice } from "./latest-animation-selectors.mjs";
 export function animationHash(name) {
   let hash = 2166136261;
   for (const character of name.toLowerCase())
@@ -148,6 +149,16 @@ export function createAnimationGraph(graph, catalog, clock) {
       return pair
         ? evaluate(pair.mClipName, elapsed, context, next)
         : unknown("Missing discrete movement branch");
+    }
+    if (node.__type === "SelectorClipData" && node.Updater === undefined) {
+      if (context.selectorChoice === undefined)
+        return unknown("Selector requires an owned activation choice");
+      return evaluate(
+        resolveLatestAnimationSelectorChoice(context.selectorChoice, node),
+        elapsed,
+        context,
+        next,
+      );
     }
     if (node.__type === "ParallelClipData") {
       const results = node.mClipNameList.map((child) =>

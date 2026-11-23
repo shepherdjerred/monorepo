@@ -8,21 +8,19 @@ import {
   loadLatestStaticCatalogSelection,
 } from "../latest-static-catalog.mjs";
 import { createLatestEffectContexts } from "../latest-effect-contexts.mjs";
-import { WORLD_STATE_SHA } from "../latest-world-state-contract.mjs";
+import { approvedWorldStateReferenceSha } from "../latest-world-state-contract.mjs";
 import { EFFECT_RESOLVERS_PACKAGE_SHA } from "../latest-effect-resolver-contract.mjs";
 import { UNIT_RESOURCES_PACKAGE_SHA } from "../latest-unit-resources.mjs";
 import { INITIAL_RESOURCE_PREFIX_PACKAGE_SHA } from "../latest-initial-resource-prefix-contract.mjs";
 import { NEGATIVE_FORM_PREFIX_PACKAGE_SHA } from "../latest-negative-form-prefix-contract.mjs";
-import { CORPSE_POLICY_SHA } from "../latest-corpse.mjs";
+import { approvedCorpsePolicyReferenceSha } from "../latest-corpse-contract.mjs";
 import { SUBMESH_VISIBILITY_SHA } from "../latest-submesh-visibility.mjs";
 import { ITEM_ASSETS_SHA } from "../latest-item-assets.mjs";
-import {
-  EFFECT_PLACEMENT_PACKAGE_SHA,
-  EFFECT_DESCRIPTOR_PACKAGE_SHA,
-} from "../latest-effect-packet-contract.mjs";
+import { approvedEffectPacketReferenceSha } from "../latest-effect-packet-contract.mjs";
 import { captureDirectSourceInputs } from "./direct-source-inputs.mjs";
 import { SELECTED_BUILD_PROGRAMS } from "./selected-build-programs.mjs";
 import { DIRECT_NAV_CAMERA_PACKAGE_SHA } from "../latest-direct-nav-ground-materials.mjs";
+import { NEUTRAL_CREATION_PACKAGE_SHA } from "../latest-neutral-creation.mjs";
 const [cacheArg, worldStateReferenceArg] = process.argv.slice(2);
 if (!cacheArg || !worldStateReferenceArg || process.argv.length !== 4)
   throw Error(
@@ -43,6 +41,9 @@ await captureDirectSourceInputs([import.meta.path], raw);
 const profileBytes = await load("decoder-16.21-macos/profile.json"),
   profile = decode(profileBytes),
   scene = decode(await load("latest-scene/manifest.json"));
+const worldCatalogSha256 = await sha256(
+  await load(`latest-scene/${scene.world}`),
+);
 if (
   profile.decoderImageSha256 !== STATIC_CATALOG_DECODER_IMAGE_SHA256 ||
   profile.clientVersion !== scene.build ||
@@ -54,7 +55,10 @@ const proof = await raw(`${cache}/research/effect-contexts-native.json`),
 await Bun.write(`${cache}/public/${proofPath}`, proof);
 const worldStateReference = await raw(worldStateReferenceArg),
   worldStateReferencePath = "latest-static-catalog/world-state-reference.json";
-if ((await sha256(worldStateReference)) !== WORLD_STATE_SHA)
+if (
+  (await sha256(worldStateReference)) !==
+  approvedWorldStateReferenceSha(scene.map?.id, worldCatalogSha256)
+)
   throw Error("Fixed approved native world-schema reference required");
 await Bun.write(
   `${cache}/public/${worldStateReferencePath}`,
@@ -62,6 +66,13 @@ await Bun.write(
 );
 const programReferenceRoot = resolve(dirname(worldStateReferenceArg), "..");
 const fixedProgramPaths = [];
+if (scene.map.id === 11) {
+  const path = "latest-neutral-creation/package.json";
+  const bytes = await load(path);
+  if ((await sha256(bytes)) !== NEUTRAL_CREATION_PACKAGE_SHA)
+    throw Error("Independently pinned Map11 neutral argument program required");
+  fixedProgramPaths.push(path);
+}
 for (const [sourcePath, selectedPath, expected] of [
   [
     "latest-effect-resolvers/package.json",
@@ -86,7 +97,7 @@ for (const [sourcePath, selectedPath, expected] of [
   [
     "latest-corpse/package.json",
     "latest-static-catalog/corpse-policy-reference.json",
-    CORPSE_POLICY_SHA,
+    approvedCorpsePolicyReferenceSha(scene.map.id, worldCatalogSha256),
   ],
   [
     "latest-submesh-visibility/package.json",
@@ -96,12 +107,20 @@ for (const [sourcePath, selectedPath, expected] of [
   [
     "latest-effect-placement/package.json",
     "latest-static-catalog/effect-placement-reference.json",
-    EFFECT_PLACEMENT_PACKAGE_SHA,
+    approvedEffectPacketReferenceSha(
+      "placement",
+      scene.map.id,
+      decode(worldStateReference).sceneManifestSha256,
+    ),
   ],
   [
     "latest-effect-descriptor/package.json",
     "latest-static-catalog/effect-descriptor-reference.json",
-    EFFECT_DESCRIPTOR_PACKAGE_SHA,
+    approvedEffectPacketReferenceSha(
+      "descriptor",
+      scene.map.id,
+      decode(worldStateReference).sceneManifestSha256,
+    ),
   ],
 ]) {
   const bytes = await raw(`${programReferenceRoot}/${sourcePath}`);

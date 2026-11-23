@@ -80,6 +80,7 @@ hold only scoped invariants that agents must keep in context.
 | [loaded](loaded/)                                 | `Loaded<T>` renderability algebra + `LoadingBlock` for async UI state          |
 | [ops-clients](ops-clients/)                       | Zod-validated upstream clients for the ops snapshot collector                  |
 | [ops-model](ops-model/)                           | Ops snapshot contract, severity policy, and the service catalog                |
+| [Scout replay](scout-for-lol/packages/replay/)    | Verified browser replay session lifecycle and exact-build renderer contracts   |
 | [bugsink-config](bugsink-config/)                 | Browser-safe Bugsink data collection policy shared by application clients      |
 | [text](text/)                                     | Grapheme-safe truncation and chunking for user-facing text                     |
 | [voice-assistant](voice-assistant/)               | Shared wake-word voice pipeline (local cascade + OpenAI Realtime turn)         |

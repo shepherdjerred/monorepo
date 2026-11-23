@@ -1,5 +1,6 @@
 import type { Db } from "#src/database/index.ts";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
+import type { ReceiptKind } from "@scout-for-lol/domain/match-processing/states.ts";
 import {
   matchProcessingReceiptRecordToRow,
   matchProcessingReceiptRowToRecord,
@@ -93,11 +94,15 @@ async function applyReceipt(
 
 export async function listReceipts(
   db: Db,
-  args: { matchId: RiotMatchId },
+  args: { matchId: RiotMatchId; firstOfKind?: ReceiptKind },
 ): Promise<MatchProcessingReceiptRecord[]> {
   const rows = await db.matchProcessingReceipt.findMany({
-    where: { riotMatchId: args.matchId },
+    where: {
+      riotMatchId: args.matchId,
+      ...(args.firstOfKind === undefined ? {} : { kind: args.firstOfKind }),
+    },
     orderBy: { id: "asc" },
+    ...(args.firstOfKind === undefined ? {} : { take: 1 }),
   });
   return rows.map((row) => matchProcessingReceiptRowToRecord(row));
 }

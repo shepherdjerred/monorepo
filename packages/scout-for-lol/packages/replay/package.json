@@ -1,0 +1,38 @@
+{
+  "name": "@scout-for-lol/replay",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/session.ts",
+    "./types": "./src/types.ts",
+    "./engine": "./src/engine.ts",
+    "./research": "./src/research.ts",
+    "./scene": "./src/scene-playback.ts",
+    "./observations": "./src/observations.ts",
+    "./packets": "./src/packets.ts",
+    "./prepare": "./src/prepare.ts"
+  },
+  "scripts": {
+    "build": "bun build src/session.ts src/research.ts src/scene-playback.ts src/observations.ts src/packets.ts src/prepare.ts --target browser --format esm --splitting --outdir dist",
+    "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run src",
+    "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "bun x eslint src --max-warnings=0",
+    "format": "bun x prettier --check src"
+  },
+  "dependencies": {
+    "@scout-for-lol/domain": "workspace:*",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@typescript/native": "npm:typescript@7.0.2",
+    "bun-types": "1.4.2",
+    "eslint": "^10.7.0",
+    "prettier": "^3.9.9",
+    "typescript": "^6.0.3",
+    "vitest": "5.0.3"
+  },
+  "description": "Browser replay session lifecycle and verified exact-build engine packages",
+  "license": "GPL-3.0-only"
+}

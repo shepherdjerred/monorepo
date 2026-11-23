@@ -67,26 +67,7 @@ class NativeCooperativeThreads:
             if (attributes or not self.writable_file_memory(output, 8) or
                     not self.base <= start < self.base + 0x1fef000 or len(self.cooperative_threads) >= 8):
                 raise ValueError('Bounded owned default-attribute native thread creation required')
-            if self.cooperative_return is None:
-                self.cooperative_return = self.allocate_native_callback('cooperative-thread-return', self._thread_returned)
-            handle, storage = self.allocate(8), self.allocate(0x10200)
-            low, high = storage + 0x100, storage + 0x10100
-            engine.mem_write(storage, bytes([0xa5]) * 0x100)
-            engine.mem_write(high, bytes([0xa5]) * 0x100)
-            self.put(high - 8, 'Q', self.cooperative_return)
-            parent = engine.context_save()
-            engine.context_restore(self.initial)
-            for register, value in [(r.UC_X86_REG_RIP, start), (r.UC_X86_REG_RDI, argument),
-                                    (r.UC_X86_REG_RSP, high - 8)]:
-                engine.reg_write(register, value)
-            context = engine.context_save()
-            engine.context_restore(parent)
-            self.cooperative_threads[handle] = {'handle': handle, 'startRva': start - self.base,
-                'argument': argument, 'storage': storage, 'stackLow': low, 'stackHigh': high,
-                'context': context, 'tls': {}, 'runs': 0, 'completed': False, 'result': None, 'failed': False}
-            self.put(output, 'Q', handle)
-            self.cooperative_thread_calls.append({'handle': handle, 'startRva': start - self.base,
-                'argument': argument, 'runnableContextCreated': True, 'nativeCodeExecutedAtCreation': False})
+            self.create_owned_cooperative_context(engine, output, start, argument, stack_bytes=0x10000)
         else:
             if self.cooperative_active_thread is not None and name in ['_pthread_getspecific', '_pthread_setspecific']:
                 key = engine.reg_read(r.UC_X86_REG_RDI)
@@ -104,6 +85,55 @@ class NativeCooperativeThreads:
             return super().imported(engine, address, size, user)
         engine.reg_write(r.UC_X86_REG_RAX, 0)
         self.ret()
+
+    def create_owned_cooperative_context(self, engine, output, start, argument, *, stack_bytes,
+                                         platform_attributes=None, maximum_contexts=8):
+        """Own a runnable CPU context after its caller validates its platform ABI.
+
+        Attribute parsing belongs to the selected platform port. This shared
+        storage/dispatch core does not claim OS scheduling or execute a worker.
+        The legacy default-attribute import still supplies its original 64 KiB.
+        """
+        if (type(stack_bytes) is not int or not 0x4000 <= stack_bytes <= 0x200000 or
+                stack_bytes % 0x1000 or not self.writable_file_memory(output, 8) or
+                not self.base <= start < self.base + 0x1fef000 or
+                type(maximum_contexts) is not int or maximum_contexts not in [8, 16] or
+                len(self.cooperative_threads) >= maximum_contexts):
+            raise ValueError('Bounded owned cooperative thread context required')
+        if platform_attributes is not None and (type(platform_attributes) is not dict or any(
+                type(key) is not str or type(value) not in [str, int, bool, type(None)]
+                for key, value in platform_attributes.items())):
+            raise ValueError('Owned scalar cooperative platform attributes required')
+        if self.cooperative_return is None:
+            self.cooperative_return = self.allocate_native_callback('cooperative-thread-return', self._thread_returned)
+        handle, storage = self.allocate(8), self.allocate(stack_bytes+0x200)
+        low, high = storage+0x100, storage+0x100+stack_bytes
+        engine.mem_write(storage, bytes([0xa5])*0x100)
+        engine.mem_write(high, bytes([0xa5])*0x100)
+        self.put(high-8, 'Q', self.cooperative_return)
+        parent = engine.context_save()
+        try:
+            engine.context_restore(self.initial)
+            for register, value in [(r.UC_X86_REG_RIP, start), (r.UC_X86_REG_RDI, argument),
+                                    (r.UC_X86_REG_RSP, high-8)]:
+                engine.reg_write(register, value)
+            context = engine.context_save()
+        finally:
+            engine.context_restore(parent)
+        state = {'handle': handle, 'startRva': start-self.base,
+            'argument': argument, 'storage': storage, 'stackLow': low, 'stackHigh': high,
+            'context': context, 'tls': {}, 'runs': 0, 'completed': False, 'result': None, 'failed': False}
+        call = {'handle': handle, 'startRva': start-self.base,
+            'argument': argument, 'runnableContextCreated': True, 'nativeCodeExecutedAtCreation': False}
+        if platform_attributes is not None:
+            # Own scalar metadata: caller mutation cannot change a queued
+            # context's admitted stack/scheduling description.
+            state['platformAttributes'] = dict(platform_attributes)
+            call['platformAttributes'] = dict(platform_attributes)
+        self.cooperative_threads[handle] = state
+        self.put(output, 'Q', handle)
+        self.cooperative_thread_calls.append(call)
+        return handle
 
     def tls(self, engine, address, size, user):
         if self.cooperative_active_thread is not None:

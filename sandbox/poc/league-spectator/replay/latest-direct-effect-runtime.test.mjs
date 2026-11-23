@@ -17,6 +17,7 @@ import {
 import { compileLatestDirectEffect } from "./latest-direct-effect-definition.mjs";
 import { sha256 } from "./structural-comparison.mjs";
 import { normalizeDirectSystemAudio } from "./latest-direct-effect-audio.mjs";
+import { ownDirectWorkerEventInput } from "./latest-direct-event-ownership.mjs";
 import { compileDirectIntegratedRotation } from "./latest-direct-effect-integrated-rotation.mjs";
 import {
   compileDirectQuadSprite,
@@ -153,6 +154,124 @@ const geometry = (r) =>
   }));
 
 describe("direct effect state and replay clock", () => {
+  test("distant cached seeks preserve active particles, RNG and same-time creation/removal order", () => {
+    const events = Array.from({ length: 161 }, (_, i) => [
+      event({
+        id: `cached:${i}`,
+        time: i * 2,
+        transportSequence: i * 2,
+        entryOrder: 0,
+      }),
+      event({
+        id: `remove:${i}`,
+        kind: "remove",
+        time: i * 2 + 2,
+        transportSequence: i * 2 + 1,
+        entryOrder: 0,
+        retireImmediately: true,
+      }),
+    ]).flat();
+    const cached = runtime(events);
+    cached.advanceTo(320.25);
+    for (const time of [150.25, 20.25, 300.25, 40.25, 150.25, 320.25]) {
+      const reference = runtime(events);
+      reference.advanceTo(time);
+      const beforeSteps = cached.metrics.simulationSteps;
+      cached.advanceTo(time);
+      expect(cached.checkpoint()).toEqual(reference.checkpoint());
+      expect(geometry(cached)).toEqual(geometry(reference));
+      expect(cached.metrics.simulationSteps - beforeSteps).toBeLessThan(
+        reference.metrics.simulationSteps,
+      );
+    }
+  });
+
+  test("public restore invalidates future cached states and preserves a caller-restored RNG branch", () => {
+    const events = [
+      event({ id: "late", time: 100, transportSequence: 0, entryOrder: 0 }),
+    ];
+    const cached = runtime(events),
+      reference = runtime(events);
+    cached.advanceTo(120);
+    reference.advanceTo(0);
+    const branch = reference.checkpoint();
+    branch.cursor = events.length;
+    reference.restore(branch);
+    cached.restore(branch);
+    reference.advanceTo(110);
+    cached.advanceTo(110);
+    expect(cached.checkpoint()).toEqual(reference.checkpoint());
+    expect(cached.ledger.size).toBe(0);
+  });
+
+  test("full-match worker event adoption retains every ordered record without duplicating its graph or eagerly creating instances", () => {
+    const count = 307256,
+      createCount = 100760,
+      sharedMetadata = {
+        values: Array.from({ length: 4096 }, (_, index) => ({
+          index,
+          values: [index, -0],
+        })),
+      },
+      events = Array.from({ length: count }, (_, index) =>
+        event({
+          id: `full:${index}`,
+          entityId: (index % 4096) + 1,
+          time: index / 100,
+          transportSequence: index,
+          ...(index < createCount
+            ? { sharedMetadata }
+            : { kind: "omitted", reasons: ["source:unresolved"] }),
+        }),
+      ),
+      ownership = ownDirectWorkerEventInput(events),
+      stages = [];
+    const runtime = new LatestDirectEffectRuntime({
+      build,
+      protocol,
+      contentHash,
+      replayHash,
+      definitions: new Map([[definition.id, definition]]),
+      events,
+      eventsOwnership: ownership,
+      world,
+      kernels: { values, birth, emission },
+      onPreparation: (stage) => stages.push(stage),
+    });
+    expect(runtime.events).toBe(events);
+    expect(runtime.events).toHaveLength(count);
+    for (let index = 0; index < count; index++) {
+      if (
+        runtime.events[index].id !== `full:${index}` ||
+        runtime.events[index].transportSequence !== index
+      )
+        throw Error(`Worker-owned source event order changed at ${index}`);
+    }
+    expect(runtime.instances.size).toBe(0);
+    expect(runtime.ledger.size).toBe(0);
+    expect(runtime.cursor).toBe(0);
+    expect(Object.isFrozen(sharedMetadata.values[0].values)).toBe(true);
+    expect(Object.isFrozen(events[createCount].reasons)).toBe(false);
+    expect(
+      stages.find(
+        (stage) => stage.stage === "events.freeze" && stage.phase === "end",
+      ).counts.reused,
+    ).toBe(createCount - 1);
+    expect(
+      () =>
+        new LatestDirectEffectRuntime({
+          build,
+          protocol,
+          contentHash,
+          replayHash,
+          definitions: new Map([[definition.id, definition]]),
+          events,
+          eventsOwnership: ownership,
+          world,
+          kernels: { values, birth, emission },
+        }),
+    ).toThrow("Unused ownership");
+  });
   test("arbitrary corner sums retain original center/right/up float32 order", () => {
     const s = {
         ...source,
@@ -691,6 +810,8 @@ describe("direct effect state and replay clock", () => {
     expect(omitted.reasons).toEqual(["resource:missing"]);
     const saved = r.checkpoint();
     r.advanceTo(0.01);
+    expect(r.ledger.get(omitted.id).reasons).toEqual(["resource:missing"]);
+    expect(r.events[0].reasons).toEqual(["resource:missing"]);
     r.advanceTo(0.2);
     expect(r.checkpoint()).toEqual(saved);
   });
@@ -907,6 +1028,85 @@ describe("direct effect state and replay clock", () => {
     expect(rows.find((row) => row.id === "network:5:0").generation).toBe(2);
     expect(r).not.toHaveProperty("checkpoints");
     expect(r).not.toHaveProperty("initial");
+  });
+  test("automatic and public checkpoints preserve working reason aliases without leaking later removals backward into original events", () => {
+    const reasons = ["resource:missing"],
+      shared = { reasons },
+      long = structuredClone(definition);
+    long.emitters[0].source.particleLifetime = field(12);
+    long.emitters[0].lifetime = 12;
+    const ordered = [
+      event({ reasons, shared }),
+      event({
+        id: "omitted-a",
+        kind: "omitted",
+        entityId: 2,
+        time: 0.01,
+        transportSequence: 2,
+        reasons,
+        shared,
+      }),
+      event({
+        id: "omitted-b",
+        kind: "omitted",
+        entityId: 3,
+        time: 0.02,
+        transportSequence: 3,
+        reasons,
+        shared,
+      }),
+      ...[
+        ["first", 3, 4, 0x800, 2, "omitted-a"],
+        ["second", 5, 5, 0x400, 3, "omitted-b"],
+      ].map(
+        ([
+          id,
+          time,
+          transportSequence,
+          requestedFlags,
+          entityId,
+          sourceEventId,
+        ]) =>
+          event({
+            id,
+            kind: "removal-request",
+            time,
+            transportSequence,
+            requestedFlags,
+            entityId,
+            sourceEventId,
+          }),
+      ),
+    ];
+    const r = runtime(ordered, long);
+    r.advanceTo(6.1);
+    // Every destination is independently decoded/applied from pristine inputs.
+    // Includes before the first private checkpoint, between removals and after
+    // public restore; active event and historical omission rows stay aliased.
+    for (const time of [4.1, 1, 6.1, 2.1, 4.1, 6.1]) {
+      r.advanceTo(time);
+      const fresh = runtime(ordered, long);
+      fresh.advanceTo(time);
+      expect(r.checkpoint()).toEqual(fresh.checkpoint());
+      const active = r.instances.get("network-effect:1");
+      expect(active.event.reasons).toBe(r.ledger.get("omitted-a").reasons);
+      expect(active.event.shared.reasons).toBe(
+        r.ledger.get("omitted-b").reasons,
+      );
+      expect(r.events[0].reasons).toEqual(["resource:missing"]);
+      const saved = r.checkpoint();
+      r.restore(saved);
+      saved.reasonBindings[0][1].push("caller mutation");
+      expect(r.instances.get("network-effect:1").event.reasons).not.toContain(
+        "caller mutation",
+      );
+    }
+    expect(reasons).toEqual(["resource:missing"]);
+    expect(r.ledger.get("omitted-b").reasons).toEqual([
+      "resource:missing",
+      "lifecycle:untranslated-removal-flags:2048",
+      "lifecycle:untranslated-removal-flags:1024",
+    ]);
   });
   test("automatic checkpoints refresh active pose evidence and subsequent input loss", () => {
     const long = structuredClone(definition);

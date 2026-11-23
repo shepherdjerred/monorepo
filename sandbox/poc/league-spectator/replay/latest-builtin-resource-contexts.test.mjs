@@ -1,13 +1,18 @@
 import { expect, test } from "bun:test";
+import { resolve, sep } from "node:path";
+import { pathToFileURL } from "node:url";
 import { createLatestBuiltinResourceContexts } from "./latest-builtin-resource-contexts.mjs";
 import { createLatestEffectContexts } from "./latest-effect-contexts.mjs";
 import { createLatestEffectResolvers } from "./latest-effect-resolvers.mjs";
 import { createLatestUnitResources } from "./latest-unit-resources.mjs";
 
-const cache = new URL(
-  "../../../../.cache/replay-spike/public/",
-  import.meta.url,
-);
+const fixtureInput = process.env.SCOUT_REPLAY_RESEARCH_CACHE;
+if (fixtureInput !== undefined && !fixtureInput.trim())
+  throw Error("An explicit replay research fixture directory is required");
+const cache =
+  fixtureInput === undefined
+    ? new URL("../../../../.cache/replay-spike/public/", import.meta.url)
+    : new URL("public/", pathToFileURL(resolve(fixtureInput) + sep));
 const profile = await Bun.file(
   new URL("decoder-16.21-macos/profile.json", cache),
 ).json();

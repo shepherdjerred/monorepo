@@ -143,9 +143,14 @@ export const SCOUT_BACKGROUND_JOB_KINDS_V1 = [
   "clash-snapshot",
 ] as const;
 
+const CURRENT_SCOUT_BACKGROUND_JOB_KINDS = [
+  ...SCOUT_BACKGROUND_JOB_KINDS_V1,
+  "replay-patch-observation",
+] as const;
+
 /** Current producers and queue capability probes advertise only these jobs. */
 export const ScoutActiveBackgroundJobKindSchema = z.enum(
-  SCOUT_BACKGROUND_JOB_KINDS_V1.filter(
+  CURRENT_SCOUT_BACKGROUND_JOB_KINDS.filter(
     (kind) =>
       kind !== "custom-nights-expiry" &&
       kind !== "bucks-reconciliation" &&
@@ -156,7 +161,7 @@ export const ScoutActiveBackgroundJobKindSchema = z.enum(
 export const ScoutBackgroundJobInputSchema = z.object({
   stage: ScoutStageSchema,
   kind: z.enum(
-    SCOUT_BACKGROUND_JOB_KINDS_V1.filter(
+    CURRENT_SCOUT_BACKGROUND_JOB_KINDS.filter(
       (kind) => kind !== "custom-nights-expiry",
     ),
   ),

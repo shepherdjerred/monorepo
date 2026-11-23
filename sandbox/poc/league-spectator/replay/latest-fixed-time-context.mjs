@@ -27,6 +27,7 @@ export async function createFixedTimePresentation({
   load,
   endTime,
   includeZeroReference = false,
+  staticCatalog = null,
 }) {
   if (typeof includeZeroReference !== "boolean")
     throw Error("Explicit FixedTime family selection required");
@@ -125,6 +126,7 @@ export async function createFixedTimePresentation({
     terrain,
     records: zeroReferenceRecords,
     load,
+    staticCatalog,
   });
   for (const record of zeroReferenceRecords) {
     record.startInitialization = casterStarts.initialize(record);

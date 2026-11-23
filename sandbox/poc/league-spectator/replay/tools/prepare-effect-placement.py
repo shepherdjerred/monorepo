@@ -25,8 +25,12 @@ FIELDS = {
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ['cache', 'client']: parser.add_argument(name, type=Path)
+    parser.add_argument('--decoder-root', type=Path)
+    parser.add_argument('--creation-source', type=Path,
+                        help='Read-only exact-build creation package and native sample observations cache')
     args = parser.parse_args()
-    decoder = args.cache / 'public/decoder-16.21-macos'
+    decoder = args.decoder_root or args.cache / 'public/decoder-16.21-macos'
+    creation_source = args.creation_source or args.cache
     n = NativeVfxRetirement(decoder, args.client)
     inputs = {}
     def read(path):
@@ -34,13 +38,13 @@ def main():
         return json.loads(raw)
     manifest_path = args.cache / 'public/latest-scene/manifest.json'
     manifest = read(manifest_path)
-    creation = read(args.cache / 'public/latest-effect-creation/package.json')
-    objects = read(args.cache / 'research/effect-creation-objects-native.json')
-    requests = read(args.cache / 'research/effect-creation-native.json')
+    creation = read(creation_source / 'public/latest-effect-creation/package.json')
+    objects = read(creation_source / 'research/effect-creation-objects-native.json')
+    requests = read(creation_source / 'research/effect-creation-native.json')
     if (manifest['build'] != n.profile['clientVersion'] or manifest['protocol'] != n.profile['protocolDigest'] or
             creation['decoderImageSha256'] != n.profile['decoderImageSha256'] or
             objects['constructorImageSha256'] != n.profile['constructorImageSha256'] or
-            requests['packageSha256'] != sha((args.cache / 'public/latest-effect-creation/package.json').read_bytes())):
+            requests['packageSha256'] != sha((creation_source / 'public/latest-effect-creation/package.json').read_bytes())):
         raise ValueError('Placement input provenance differs')
     n.u.mem_write(GRID, bytes(0x100))
     for offset, axis, bound in [(0xbc, 0, 'min'), (0xc4, 2, 'min'), (0xc8, 0, 'max'), (0xd0, 2, 'max')]:

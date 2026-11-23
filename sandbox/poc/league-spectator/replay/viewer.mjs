@@ -615,8 +615,8 @@ async function openReplay(buffer) {
       clipStart =
         [...bins.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 180;
       clipEnd = clipStart + 30;
-      replayAudio?.reset();
       time = clipStart;
+      replayAudio?.reset(time);
       updateScene();
       focusAction();
       $("loading").style.display = "none";
@@ -656,8 +656,8 @@ async function openReplay(buffer) {
         seek: (t) => {
           if (!Number.isFinite(t) || t < 0 || t > replay.duration)
             throw Error("Invalid seek");
-          replayAudio?.reset();
           time = t;
+          replayAudio?.reset(time);
           updateScene();
         },
         positions: () =>
@@ -738,22 +738,26 @@ $("file").onchange = async () => {
   }
 };
 $("audio").onclick = async () => {
-  if (!replayAudio) return;
+  const audio = replayAudio;
+  if (!audio) return;
   $("audio").disabled = true;
   try {
-    if (replayAudio.enabled) replayAudio.mute();
-    else await replayAudio.enable();
-    $("audio").textContent = replayAudio.enabled
-      ? "Mute sound"
-      : "Enable sound";
+    if (audio.enabled) audio.mute();
+    else {
+      await audio.enable();
+      if (audio === replayAudio && audio.enabled) audio.reset(time);
+    }
+    if (audio === replayAudio)
+      $("audio").textContent = audio.enabled ? "Mute sound" : "Enable sound";
   } catch (error) {
-    fail(error);
+    if (audio === replayAudio) fail(error);
   } finally {
-    $("audio").disabled = false;
+    if (audio === replayAudio) $("audio").disabled = false;
   }
 };
 $("play").onclick = () => {
   playing = !playing;
+  if (!playing) replayAudio?.pause();
   $("play").textContent = playing ? "Ⅱ" : "▶";
   $("play").setAttribute(
     "aria-label",
@@ -761,9 +765,9 @@ $("play").onclick = () => {
   );
 };
 $("seek").oninput = () => {
-  replayAudio?.reset();
   clipMode = false;
   time = Number($("seek").value);
+  replayAudio?.reset(time);
   updateScene();
 };
 $("speed").onchange = () => {
@@ -773,8 +777,8 @@ $("reset").onclick = overview;
 $("focus").onclick = focusAction;
 $("clip").onclick = () => {
   if (!replay) return;
-  replayAudio?.reset();
   time = clipStart;
+  replayAudio?.reset(time);
   clipMode = true;
   updateScene();
   focusAction();
@@ -783,8 +787,8 @@ function jump(timeValue, index) {
   if (!replay) return;
   playing = false;
   clipMode = false;
-  replayAudio?.reset();
   time = timeValue;
+  replayAudio?.reset(time);
   $("play").textContent = "▶";
   $("play").setAttribute("aria-label", "Play replay");
   updateScene();
@@ -902,7 +906,8 @@ controls.addEventListener("start", () => {
 });
 let previous = performance.now();
 function frame(now) {
-  const dt = Math.min((now - previous) / 1000, 0.25);
+  const elapsed = (now - previous) / 1000;
+  const dt = Math.min(elapsed, 0.25);
   previous = now;
   if (playing && replay) {
     time = Math.min(time + dt * speed, clipMode ? clipEnd : replay.duration);
@@ -914,10 +919,13 @@ function frame(now) {
   }
   if (replay && window.replaySpike) updateScene();
   controls.update();
-  replayAudio?.update(time, playing, speed, [
-    controls.target.x,
-    -controls.target.z,
-  ]);
+  replayAudio?.update(
+    time,
+    playing,
+    speed,
+    [controls.target.x, -controls.target.z],
+    elapsed,
+  );
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }

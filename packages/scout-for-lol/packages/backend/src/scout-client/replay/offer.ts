@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "#src/database/index.ts";
 import type { AuthenticatedScoutClient } from "#src/scout-client/authentication.ts";
 import { resolveReplayProvenance } from "./evidence.ts";
+import { isLegacyCompressionRejection } from "./rejection.ts";
 
 /**
  * What the server wants done with a replay the client is holding.
@@ -43,6 +44,8 @@ export type ReplayOfferResult = {
   readonly decision: ReplayOfferDecision;
   /** Short, stable explanation. Shown in the client's diagnostics. */
   readonly reason: string;
+  /** Lets clients reopen a cached terminal rejection from the old validator. */
+  readonly retryLegacyCompressionRejection?: true;
 };
 
 /**
@@ -84,7 +87,12 @@ export async function decideReplayOffer(
   if (existing?.uploadState === "COMPLETED") {
     return { decision: "have", reason: "Already stored" };
   }
-  if (existing?.uploadState === "REJECTED") {
+  const retryLegacyCompressionRejection =
+    existing !== null && isLegacyCompressionRejection(existing);
+  if (
+    !retryLegacyCompressionRejection &&
+    existing?.uploadState === "REJECTED"
+  ) {
     return {
       decision: "never",
       reason: existing.lastError ?? "Replay was rejected",
@@ -101,6 +109,21 @@ export async function decideReplayOffer(
     return {
       decision: "later",
       reason: "No match evidence yet from this account's clients or from Riot",
+    };
+  }
+  if (retryLegacyCompressionRejection) {
+    if (
+      existing.platformId !== null &&
+      existing.platformId !== provenance.platformId
+    )
+      return {
+        decision: "never",
+        reason: "This replay is stored against a different platform",
+      };
+    return {
+      decision: "want",
+      reason: "Evidence is on file",
+      retryLegacyCompressionRejection: true,
     };
   }
   return { decision: "want", reason: "Evidence is on file" };

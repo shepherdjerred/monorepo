@@ -64,10 +64,31 @@ pub enum ReplayOfferDecision {
     Later,
 }
 
+/// Server response to a replay offer.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct ReplayOfferResponse {
-    decision: ReplayOfferDecision,
+pub struct ReplayOfferResponse {
+    /// Normal replay delivery decision.
+    pub decision: ReplayOfferDecision,
+    #[serde(default)]
+    retry_legacy_compression_rejection: bool,
+    reason: Option<String>,
+}
+
+impl ReplayOfferResponse {
+    /// Whether this offer explicitly authorizes reopening an old HTTP 400.
+    #[must_use]
+    pub fn allows_legacy_compression_retry(&self) -> bool {
+        self.decision == ReplayOfferDecision::Want && self.retry_legacy_compression_rejection
+    }
+
+    /// Whether a later metadata probe can discover a newly eligible replay.
+    #[must_use]
+    pub fn legacy_compression_offer_should_be_rechecked(&self) -> bool {
+        self.decision == ReplayOfferDecision::Later
+            || (self.decision == ReplayOfferDecision::Never
+                && self.reason.as_deref() == Some("Replay chunk compression is invalid"))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -283,7 +304,7 @@ impl ScoutBackendClient {
         credential: &DeviceCredential,
         game_id: &str,
         offer: &ReplayOffer<'_>,
-    ) -> Result<ReplayOfferDecision, BackendError> {
+    ) -> Result<ReplayOfferResponse, BackendError> {
         let response: ReplayOfferResponse = self
             .http
             .post(self.endpoint(&format!("/api/scout-client/v1/replays/{game_id}/offer"))?)
@@ -297,7 +318,7 @@ impl ScoutBackendClient {
             .json()
             .await
             .map_err(BackendError::Request)?;
-        Ok(response.decision)
+        Ok(response)
     }
 
     /// Stream one completed ROFL through the Scout backend relay.
@@ -494,6 +515,50 @@ fn revocation_is_complete_without_receipt(status: StatusCode) -> bool {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn only_an_explicit_want_can_reopen_a_replay_rejection() -> Result<(), serde_json::Error> {
+        for (body, expected) in [
+            (r#"{"decision":"want"}"#, false),
+            (
+                r#"{"decision":"never","retryLegacyCompressionRejection":true}"#,
+                false,
+            ),
+            (
+                r#"{"decision":"want","retryLegacyCompressionRejection":true}"#,
+                true,
+            ),
+        ] {
+            let offer: super::ReplayOfferResponse = serde_json::from_str(body)?;
+            assert_eq!(offer.allows_legacy_compression_retry(), expected);
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn legacy_offer_rechecks_preserve_the_old_rejection_until_authorized()
+    -> Result<(), serde_json::Error> {
+        for (body, expected) in [
+            (
+                r#"{"decision":"never","reason":"Replay chunk compression is invalid"}"#,
+                true,
+            ),
+            (
+                r#"{"decision":"never","reason":"Replay SHA-256 does not match"}"#,
+                false,
+            ),
+            (r#"{"decision":"later"}"#, true),
+            (r#"{"decision":"want"}"#, false),
+        ] {
+            let offer: super::ReplayOfferResponse = serde_json::from_str(body)?;
+            assert_eq!(
+                offer.legacy_compression_offer_should_be_rechecked(),
+                expected
+            );
+            assert!(!offer.allows_legacy_compression_retry());
+        }
+        Ok(())
+    }
+
     use reqwest::StatusCode;
 
     use super::{

@@ -26,6 +26,7 @@ const DEVICE: AuthenticatedScoutClient = {
 };
 const OFFER = { digest: "a".repeat(64), bytes: 20_000_000 } as const;
 const PROVENANCE = {
+  platformId: "NA1",
   localPuuid: "p".repeat(78),
   leaguePatch: "16.18.817.5716",
   gameDurationSeconds: 60,
@@ -39,8 +40,9 @@ beforeEach(() => {
 });
 
 test("wants a replay the server can vouch for", async () => {
-  await expect(decideReplayOffer("123", OFFER, DEVICE)).resolves.toMatchObject({
+  await expect(decideReplayOffer("123", OFFER, DEVICE)).resolves.toEqual({
     decision: "want",
+    reason: "Evidence is on file",
   });
 });
 
@@ -56,16 +58,58 @@ test("already has a completed replay", async () => {
   });
 });
 
-test("never wants a replay it already rejected", async () => {
+test.each([
+  "Replay does not have a ROFL header",
+  "Replay chunk is too short for a Zstandard frame",
+  "Replay chunk is missing its Zstandard frame marker",
+  "Replay chunk compression is invalid: additional detail",
+  null,
+])("never wants a replay rejected with %s", async (lastError) => {
   mocks.artifactFindUnique.mockResolvedValue({
     uploadState: "REJECTED",
     gameId: "123",
-    lastError: "Replay does not have a ROFL header",
+    lastError,
   });
 
   await expect(decideReplayOffer("123", OFFER, DEVICE)).resolves.toMatchObject({
     decision: "never",
-    reason: "Replay does not have a ROFL header",
+    reason: lastError ?? "Replay was rejected",
+  });
+  expect(mocks.resolveProvenance).not.toHaveBeenCalled();
+});
+
+test("offers a legacy compression rejection again once match evidence is available", async () => {
+  mocks.artifactFindUnique.mockResolvedValue({
+    uploadState: "REJECTED",
+    gameId: "123",
+    platformId: "NA1",
+    lastError: "Replay chunk compression is invalid",
+  });
+  mocks.resolveProvenance.mockResolvedValueOnce(null);
+  const offer = { ...OFFER, platformId: "NA1" };
+  await expect(decideReplayOffer("123", offer, DEVICE)).resolves.toEqual({
+    decision: "later",
+    reason: "No match evidence yet from this account's clients or from Riot",
+  });
+  await expect(decideReplayOffer("123", offer, DEVICE)).resolves.toEqual({
+    decision: "want",
+    reason: "Evidence is on file",
+    retryLegacyCompressionRejection: true,
+  });
+  await expect(decideReplayOffer("456", offer, DEVICE)).resolves.toMatchObject({
+    decision: "never",
+  });
+  await expect(
+    decideReplayOffer("123", { ...offer, platformId: "EUW1" }, DEVICE),
+  ).resolves.toMatchObject({ decision: "never" });
+  expect(mocks.resolveProvenance).toHaveBeenCalledTimes(2);
+  mocks.resolveProvenance.mockResolvedValueOnce({
+    ...PROVENANCE,
+    platformId: "EUW1",
+  });
+  await expect(decideReplayOffer("123", OFFER, DEVICE)).resolves.toEqual({
+    decision: "never",
+    reason: "This replay is stored against a different platform",
   });
 });
 

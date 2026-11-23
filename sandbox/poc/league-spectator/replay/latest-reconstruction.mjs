@@ -1,4 +1,5 @@
 import { openReplay, replayChunks, replayBlocks } from "./transport.mjs";
+import { createLatestReconstructionWindow } from "./latest-reconstruction-window.mjs";
 import { StructuralDecoder } from "./structural-decoder.mjs";
 import { createLatestFieldReader } from "./latest-fields.mjs";
 import { sha256 } from "./structural-comparison.mjs";
@@ -50,6 +51,15 @@ import { createLatestTargetVisibilityInputs } from "./latest-target-visibility.m
 import { createLatestTargetVisibilityMaskInputs } from "./latest-target-visibility-masks.mjs";
 import { createLatestStartupConfig } from "./latest-startup-config.mjs";
 import { readLatestReplayStartup } from "./latest-replay-startup.mjs";
+import {
+  createLatestParticipantReader,
+  bindLatestHeroParticipant,
+} from "./latest-participants.mjs";
+import {
+  createLatestNeutralCreationReader,
+  NEUTRAL_CREATION_PACKAGE_SHA,
+} from "./latest-neutral-creation.mjs";
+import { createLatestBuffResourceArgumentReader } from "./latest-buff-resource-arguments.mjs";
 
 // Browser-compatible research pipeline. It reports relative path records until
 // their map origin is established; it never substitutes Summoner's Rift's origin.
@@ -80,6 +90,7 @@ export async function reconstructLatest({
   worldStateBytes,
   worldSceneBytes,
   worldCatalogBytes,
+  neutralCreationBytes = null,
   staticCatalog = null,
   endTime,
   deltaMode,
@@ -98,6 +109,20 @@ export async function reconstructLatest({
     throw Error("Replay does not match the exact decoder package");
   if (!Number.isFinite(endTime) || endTime < 0 || endTime > replay.duration)
     throw Error("Invalid reconstruction window");
+  const requestedEndTimeSeconds = endTime;
+  let transportCoverage = null;
+  if (endTime === replay.duration) {
+    const window = createLatestReconstructionWindow({
+      declaredMilliseconds: replay.durationMilliseconds,
+      requestedEndTimeSeconds,
+    });
+    // Whole-container admission inspects every original stream before applying
+    // semantic readers. Partial windows keep their existing strict boundary.
+    for (const chunk of replayChunks(replay, decompress))
+      for (const block of replayBlocks(chunk)) window.observe(block);
+    transportCoverage = window.finish();
+    endTime = transportCoverage.effectiveEndTimeSeconds;
+  }
   if (
     (await sha256(image)) !== profile.decoderImageSha256 ||
     (await sha256(constructors)) !== profile.constructorImageSha256 ||
@@ -123,6 +148,10 @@ export async function reconstructLatest({
       decoder: startupDecoder,
       reader: startupReader,
       sceneBytes: worldSceneBytes,
+      participantReader: await createLatestParticipantReader({
+        profile,
+        image,
+      }),
     });
   } finally {
     startupDecoder.close();
@@ -131,6 +160,16 @@ export async function reconstructLatest({
     profile,
     JSON.parse(new TextDecoder().decode(fieldCodecBytes)),
   );
+  if (neutralCreationBytes !== null && startup.configuredMapId !== 11)
+    throw Error("The optional neutral745 program is admitted only for Map11");
+  const neutralCreationReader =
+    neutralCreationBytes === null
+      ? null
+      : await createLatestNeutralCreationReader({
+          profile,
+          image,
+          packageBytes: neutralCreationBytes,
+        });
   const effectRemovalReader = await createLatestEffectRemovalReader(
     profile,
     image,
@@ -222,6 +261,10 @@ export async function reconstructLatest({
     missiles = [],
     missileEvents = [],
     worldEvents = [],
+    neutralCreations = [],
+    neutralSnapshots = [],
+    buffResourceArguments = [],
+    buffResourceSnapshots = [],
     effectRemovals = [],
     effectCreations = [],
     effectDescriptors = [],
@@ -240,12 +283,69 @@ export async function reconstructLatest({
   const unhandledOpcodes = {},
     decodedPackets = { 728: 1 };
   let sequence = 0,
-    transportSequence = 0;
+    transportSequence = 0,
+    buffResourceArgumentReader = null;
   try {
+    if (startup.configuredMapId === 11)
+      buffResourceArgumentReader = await createLatestBuffResourceArgumentReader(
+        { decoder },
+      );
     for (const chunk of replayChunks(replay, decompress)) {
       if (![1, 2].includes(chunk.stream)) continue;
       for (const block of replayBlocks(chunk)) {
         const ordinal = transportSequence++;
+        if (
+          buffResourceArgumentReader !== null &&
+          block.opcode === 1160 &&
+          block.time <= endTime
+        ) {
+          const scalar = buffResourceArgumentReader.read(
+            decoder.observePacket(block.opcode, block.payload, block.param),
+          );
+          const argument = {
+            ...scalar,
+            opcode: block.opcode,
+            time: block.time,
+            rawTransportParam: block.param,
+            transportSequence: ordinal,
+            stream: chunk.stream,
+            chunkId: chunk.chunkId,
+            blockOffset: block.blockOffset,
+          };
+          (chunk.stream === 1
+            ? buffResourceArguments
+            : buffResourceSnapshots
+          ).push(argument);
+          // This prefix establishes arguments only. Keep the original semantic
+          // dispatcher and its unhandled-opcode accounting unchanged below.
+        }
+        if (
+          neutralCreationReader !== null &&
+          block.opcode === 745 &&
+          block.time <= endTime
+        ) {
+          const observation = decoder.observePacket(
+            block.opcode,
+            block.payload,
+            block.param,
+          );
+          const event = {
+            ...neutralCreationReader.read(observation),
+            id: `neutral-creation-request:${ordinal}:0`,
+            opcode: 745,
+            time: block.time,
+            transportSequence: ordinal,
+            entryOrder: 0,
+            stream: chunk.stream,
+            chunkId: chunk.chunkId,
+            blockOffset: block.blockOffset,
+          };
+          (chunk.stream === 1 ? neutralCreations : neutralSnapshots).push(
+            event,
+          );
+          decodedPackets[745] = (decodedPackets[745] ?? 0) + 1;
+          continue;
+        }
         if (
           (block.opcode === 822 ||
             targetVisibilityMaskInputs.opcodes.includes(block.opcode)) &&
@@ -477,16 +577,16 @@ export async function reconstructLatest({
         decodedPackets[block.opcode] = (decodedPackets[block.opcode] ?? 0) + 1;
         if (initialHero) {
           const hero = fields.heroCreation(observation),
-            metadata = replay.roster[hero.slot - 1];
-          if (!metadata || hero.champion !== metadata.champion)
-            throw Error(
-              `Hero slot ${hero.slot} disagrees with replay metadata`,
+            binding = bindLatestHeroParticipant(
+              hero,
+              startup.participants,
+              replay,
             );
           if (heroes.has(hero.entityId) || slots.has(hero.slot))
             throw Error("Duplicate initial hero identity");
           heroes.set(hero.entityId, {
             ...hero,
-            team: metadata.team,
+            ...binding,
             provenance,
           });
           slots.set(hero.slot, hero.entityId);
@@ -541,6 +641,7 @@ export async function reconstructLatest({
       }
     }
   } finally {
+    buffResourceArgumentReader?.close();
     decoder.close();
     effectDescriptorReader.close();
   }
@@ -615,6 +716,34 @@ export async function reconstructLatest({
     fieldCodecsSha256: profile.fieldCodecsSha256,
     effectRemovalPackageSha256: EFFECT_REMOVAL_PACKAGE_SHA,
     effectCreationPackageSha256: EFFECT_CREATION_PACKAGE_SHA,
+    neutralCreationPackageSha256:
+      neutralCreationReader === null ? null : NEUTRAL_CREATION_PACKAGE_SHA,
+    neutralCreations,
+    neutralSnapshots,
+    ...(buffResourceArgumentReader === null
+      ? {}
+      : {
+          buffResourceArgumentProgram: buffResourceArgumentReader.program,
+          buffResourceArguments,
+          buffResourceSnapshots,
+          buffResourceArgumentScope: {
+            originalScalarPrefixExecuted: true,
+            borrowedDecoderVmRestored: true,
+            snapshotGameplaySeparate: true,
+            snapshotRestorationAccepted: false,
+            recordedEntityRoutingEstablished: false,
+            resourceRegistryResolved: false,
+            buffMembershipEstablished: false,
+            liveAnimationProviderAdmitted: false,
+          },
+        }),
+    neutralCreationScope: {
+      nativeArgumentProgramSupplied: neutralCreationReader !== null,
+      snapshotGameplaySeparate: true,
+      snapshotRestorationAccepted: false,
+      resourceSkinResolutionIncluded: false,
+      acceptedWorldEntities: false,
+    },
     effectPlacementPackageSha256: await sha256(effectPlacementBytes),
     effectDescriptorPackageSha256: await sha256(effectDescriptorBytes),
     resourceRequestContract: resourceRequestReader.contract,
@@ -623,6 +752,9 @@ export async function reconstructLatest({
     primaryResourceDefaults: replicationReader.metadata.primaryResourceDefaults,
     replaySha256: await sha256(buffer),
     duration: replay.duration,
+    declaredDurationMilliseconds: replay.durationMilliseconds,
+    requestedEndTimeSeconds,
+    transportCoverage,
     endTime,
     deltaMode,
     coordinateSpace: "signed16-relative-grid",
@@ -669,13 +801,15 @@ export async function reconstructLatest({
       .map((h) => ({
         entityId: h.entityId,
         slot: h.slot,
-        identity: replay.playerIdentities[h.slot - 1],
-        source: "rofl-footer-slot",
+        identity: replay.playerIdentities[h.metadataIndex],
+        source: "recorded-startup-slot-to-footer-summoner-id",
       })),
     decodedPackets,
     unhandledOpcodes,
     summary: {
       heroes: heroes.size,
+      neutralCreations: neutralCreations.length,
+      neutralSnapshots: neutralSnapshots.length,
       replicationRecords: replicationRecords.length,
       championHealthUpdates: healthUpdates.length,
       championStateUpdates: championStateUpdates.length,

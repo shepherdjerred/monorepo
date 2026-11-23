@@ -347,11 +347,15 @@ export async function loadLatestInitialResourcePrefix({
   report,
   staticCatalog = null,
 }) {
-  if (staticCatalog !== null) load = (path) => staticCatalog.read(path);
   const packages = Object.fromEntries(
     await Promise.all(
       Object.entries(INITIAL_RESOURCE_STATIC_PACKAGES).map(
-        async ([key, path]) => [key, await load(path)],
+        async ([key, path]) => [
+          key,
+          await (staticCatalog === null
+            ? load(path)
+            : staticCatalog.readRole(key)),
+        ],
       ),
     ),
   );

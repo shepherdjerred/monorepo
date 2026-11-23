@@ -27,7 +27,8 @@ import {
   startAcceptedClientMatches,
 } from "./ingress.ts";
 import { ClientBindingReconciliationPending } from "./late-binding.ts";
-import { MAX_REPLAY_BYTES, uploadReplay } from "./replay-upload.ts";
+import { uploadReplay } from "./replay-upload.ts";
+import { MAX_PUBLIC_REPLAY_BYTES as MAX_REPLAY_BYTES } from "@scout-for-lol/domain/artifacts/public-replay.ts";
 import { ReplayUploadError } from "./replay/upload-result.ts";
 import { drainRequestBody } from "./replay/drain.ts";
 import { ReplayOfferRequestSchema, decideReplayOffer } from "./replay/offer.ts";

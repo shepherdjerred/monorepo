@@ -1,5 +1,10 @@
 import { expect, test } from "bun:test";
-import { createProjectilePresentation } from "./latest-projectile-presentation.mjs";
+import {
+  createProjectilePresentation,
+  createOwnedProjectilePresentation,
+  readOwnedProjectileMetadata,
+} from "./latest-projectile-presentation.mjs";
+import { sampleLatestMissileTrace } from "./latest-missile-playback.mjs";
 import {
   createLatestWorldPresentation,
   buildLatestDirectEffectEvents,
@@ -92,6 +97,38 @@ const scene = {
   },
   terrain = { sampleHeight: () => ({ inside: true, height: 0 }) };
 
+test("shared projectile owners retain one immutable snapshot and isolate all caller/result mutations", () => {
+  const input = presentation(),
+    sourceReport = structuredClone(report),
+    owner = createOwnedProjectilePresentation(sourceReport, input),
+    expected = createProjectilePresentation(sourceReport, input).query(10, 2.5),
+    source = readOwnedProjectileMetadata(owner, sourceReport);
+  input.endTime = 1;
+  input.policy = "changed-caller-policy";
+  input.traces[0].states[1].position[0] = -999;
+  expect(owner.query(10, 2.5)).toEqual(expected);
+  expect(Object.isFrozen(source)).toBe(true);
+  expect(Object.hasOwn(source.traces[0], "states")).toBe(false);
+  expect(Object.isFrozen(source.traces[0].omissions)).toBe(true);
+  expect(() => {
+    source.traces[0].omissions.push("changed-source");
+  }).toThrow();
+  const output = owner.query(10, 2.5);
+  output.position[0] = -1000;
+  output.omissions.push("changed-output");
+  expect(owner.query(10, 2.5)).toEqual(expected);
+  expect(() => readOwnedProjectileMetadata({ ...owner }, sourceReport)).toThrow(
+    "Owned projectile index",
+  );
+  expect(() =>
+    readOwnedProjectileMetadata(owner, structuredClone(sourceReport)),
+  ).toThrow("Owned projectile index");
+  sourceReport.replaySha256 = "b".repeat(64);
+  expect(() => readOwnedProjectileMetadata(owner, sourceReport)).toThrow(
+    "Owned projectile index",
+  );
+});
+
 test("projectile projection shares positions across world and projectile queries without guessing transforms/resources", () => {
   const world = createLatestWorldPresentation({
     report,
@@ -142,6 +179,69 @@ test("same-time repeated phase samples respect packet entry cutoffs", () => {
   expect(projectiles.query(10, 2).phase).toBe(2);
 });
 
+test("long projectile timelines preserve exact notification cutoffs, reverse queries and detached results", () => {
+  const input = presentation(),
+    localReport = structuredClone(report);
+  input.endTime = 161;
+  input.traces[0].states = Array.from({ length: 16000 }, (_, index) =>
+    state(1 + index / 100, [index / 10, 2, -index / 100], index < 8000 ? 0 : 1),
+  );
+  const original = input.traces[0];
+  const notification = {
+    ...original.states[8000],
+    phase: 2,
+    notificationSourceEventId: "phase:9000:1",
+    notificationTransportSequence: 9000,
+    notificationEntryOrder: 1,
+    targetPosition: [40, 5, 20],
+  };
+  original.states.splice(8001, 0, notification);
+  original.states.pop();
+  const projectiles = createProjectilePresentation(localReport, input);
+  const cursors = [
+    null,
+    { transportSequence: 9000, entryOrder: 0 },
+    { transportSequence: 9000, entryOrder: 1, exclusive: true },
+    { transportSequence: 9000, entryOrder: 1 },
+    { transportSequence: 9001, entryOrder: 0 },
+  ];
+  const times = [1, 80.999, 81, 81.005, 120.5, 160.98, 81, 20.5, 1];
+  for (const time of times)
+    for (const cursor of cursors) {
+      const states = cursor
+        ? original.states.filter(
+            (row) =>
+              row.time !== time ||
+              !row.notificationSourceEventId ||
+              row.notificationTransportSequence < cursor.transportSequence ||
+              (row.notificationTransportSequence === cursor.transportSequence &&
+                (row.notificationEntryOrder < cursor.entryOrder ||
+                  (!cursor.exclusive &&
+                    row.notificationEntryOrder === cursor.entryOrder))),
+          )
+        : original.states;
+      const baseline = structuredClone(
+        sampleLatestMissileTrace({ ...original, states }, time),
+      );
+      const actual = projectiles.query(10, time, cursor);
+      for (const key of Object.keys(baseline))
+        expect(actual[key]).toEqual(baseline[key]);
+      actual.position[0] = 99999;
+      actual.velocity[0] = 99999;
+      if (actual.targetPosition) actual.targetPosition[0] = 99999;
+      const repeated = projectiles.query(10, time, cursor);
+      for (const key of Object.keys(baseline))
+        expect(repeated[key]).toEqual(baseline[key]);
+    }
+  original.states[8001].notificationTransportSequence = 0;
+  expect(
+    projectiles.query(10, 81, { transportSequence: 9000, entryOrder: 0 }).phase,
+  ).toBe(1);
+  expect(
+    projectiles.query(10, 81, { transportSequence: 9000, entryOrder: 1 }).phase,
+  ).toBe(2);
+});
+
 test("generated projectile contract rejects stale identities, invalid poses and ambiguous registration", () => {
   expect(() =>
     createProjectilePresentation(report, {
@@ -182,8 +282,11 @@ test("projectile queries isolate target state and original report ownership", ()
   const before = projectiles.query(10, 1);
   before.targetPosition[0] = 999;
   input.traces[0].states[0].targetPosition[0] = 888;
+  input.policy = "changed-caller-policy";
+  input.endTime = 0;
   localReport.missiles[0].transportSequence = 999;
   expect(projectiles.query(10, 1).targetPosition).toEqual([20, 3, 0]);
+  expect(projectiles.query(10, 1).policy).toBe(policy);
   expect(
     projectiles.query(10, 1, { transportSequence: 7, entryOrder: 2 }),
   ).not.toBeNull();

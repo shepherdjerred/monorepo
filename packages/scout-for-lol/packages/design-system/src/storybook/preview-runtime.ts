@@ -5,6 +5,16 @@ const repositoryRoot = fileURLToPath(
   new URL("../../../../../../", import.meta.url),
 );
 
+/** mise installs Node beside node.exe on Windows and under bin on Unix. */
+export function previewNodeExecutablePath(
+  nodeRoot: string,
+  platform: NodeJS.Platform = process.platform,
+): string {
+  return platform === "win32"
+    ? path.win32.join(nodeRoot, "node.exe")
+    : path.posix.join(nodeRoot, "bin", "node");
+}
+
 /** Launch a static catalog using the validated executable, independent of PATH. */
 export async function previewStorybook(
   options: {
@@ -66,11 +76,7 @@ export async function resolvePreviewNodeExecutable(
   if (!path.isAbsolute(nodeRoot)) {
     throw new Error("mise returned an invalid Node installation path");
   }
-  const executable = path.join(
-    nodeRoot,
-    "bin",
-    process.platform === "win32" ? "node.exe" : "node",
-  );
+  const executable = previewNodeExecutablePath(nodeRoot);
   if (!(await Bun.file(executable).exists())) {
     throw new Error(
       `Node installation is missing ${executable}; run mise install.`,

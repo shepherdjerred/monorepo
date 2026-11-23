@@ -6,6 +6,7 @@ import { defaultPayloadConverter } from "@temporalio/common";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import {
   ScoutBackgroundJobInputSchema,
@@ -22,8 +23,8 @@ import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 let environment: TestWorkflowEnvironment;
 const pool = createScoutWorkerPool();
 const queues = scoutTaskQueues("dev");
-const workflowsPath = new URL("index.ts", import.meta.url).pathname;
-const capabilityPatch = "scout-queue-canary-background-kinds-v3";
+const workflowsPath = fileURLToPath(new URL("index.ts", import.meta.url));
+const capabilityPatch = "scout-queue-canary-background-kinds-v4";
 type History = Awaited<ReturnType<WorkflowHandle["fetchHistory"]>>;
 
 function hasCapabilityPatch(
@@ -52,16 +53,18 @@ function hasCapabilityPatch(
 }
 
 /** Compile the retained pre-patch branch without recording the new marker. */
-async function legacyWorkflowBundle(v2 = false) {
+async function legacyWorkflowBundle(version: 1 | 2 | 3 = 1) {
   const directory = await mkdtemp(path.join(tmpdir(), "scout-canary-legacy-"));
   const loader = path.join(directory, "pre-patch.cjs");
   try {
     await writeFile(
       loader,
       String.raw`module.exports = function(source) {
-      const marker = /patched\(\s*["']scout-queue-canary-background-kinds-v[23]["']\s*\)/g;
-      if ((source.match(marker) || []).length !== 2) throw Error("Expected exact retained patch boundary");
-      return source.replace(marker, match => match.includes("v3") || !${JSON.stringify(v2)} ? "false" : match);
+      const marker = /patched\(\s*["']scout-queue-canary-background-kinds-v[234]["']\s*\)/g;
+      if ((source.match(marker) || []).length !== 3) throw Error("Expected exact retained patch boundary");
+      return source.replace(marker, match => match.includes("v4") ||
+        (match.includes("v3") && ${String(version)} < 3) ||
+        (match.includes("v2") && ${String(version)} < 2) ? "false" : match);
     };`,
     );
     return await bundleWorkflowCode({
@@ -88,7 +91,7 @@ beforeEach(async () => {
     await Worker.create({
       connection: environment.nativeConnection,
       taskQueue: queues.workflow,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
+      workflowsPath,
     }),
   );
   for (const queueClass of [
@@ -152,6 +155,7 @@ test("reports candidate-compiled capabilities instead of echoing the requested s
       ScoutActiveBackgroundJobKindSchema.options,
     );
     expect(result.backgroundJobKinds).toContain("outreach");
+    expect(result.backgroundJobKinds).toContain("replay-patch-observation");
   }
   const history = await handle.fetchHistory();
   expect(hasCapabilityPatch(history)).toBe(true);
@@ -178,17 +182,22 @@ test("reports candidate-compiled capabilities instead of echoing the requested s
   }
 }, 120_000);
 
-test.each([false, true])(
-  "replays a completed retained canary with its original capabilities (v2: %s)",
-  async (v2) => {
+test.each([1, 2, 3] as const)(
+  "replays a completed retained canary with its original v%s capabilities",
+  async (version) => {
     const retainedKinds = SCOUT_BACKGROUND_JOB_KINDS_V1.filter(
-      (kind) => !v2 || kind !== "custom-nights-expiry",
+      (kind) =>
+        version === 1 ||
+        (kind !== "custom-nights-expiry" &&
+          (version !== 3 ||
+            (kind !== "bucks-reconciliation" &&
+              kind !== "weekly-bucks-leaderboard"))),
     );
     await pool.start(
       await Worker.create({
         connection: environment.nativeConnection,
         taskQueue: "legacy-canary",
-        workflowBundle: await legacyWorkflowBundle(v2),
+        workflowBundle: await legacyWorkflowBundle(version),
       }),
     );
     const handle = await environment.client.workflow.start(
@@ -216,7 +225,10 @@ test.each([false, true])(
     expect(hasCapabilityPatch(history)).toBe(false);
     expect(
       hasCapabilityPatch(history, "scout-queue-canary-background-kinds-v2"),
-    ).toBe(v2);
+    ).toBe(version === 2);
+    expect(
+      hasCapabilityPatch(history, "scout-queue-canary-background-kinds-v3"),
+    ).toBe(version === 3);
     expect(
       history.events?.at(-1)?.workflowExecutionCompletedEventAttributes,
     ).toBeDefined();

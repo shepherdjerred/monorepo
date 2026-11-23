@@ -5,12 +5,14 @@ import {
   createLatestViewerPoseSampler,
   VIEWER_POSE_POLICY,
 } from "./latest-viewer-pose-sampler.mjs";
+import { createLatestViewerPoseService } from "./latest-viewer-pose-service.mjs";
+import { setLatestViewerAnimatedVisibility } from "./latest-viewer-pose-availability.mjs";
 
 const THREE = await import(
   pathToFileURL(resolve(".cache/replay-spike/public/vendor/three.module.js"))
     .href
 );
-function fixture(events = []) {
+function fixture(events = [], configure = () => {}) {
   const mirror = new THREE.Group(),
     group = new THREE.Group(),
     model = new THREE.Group(),
@@ -98,6 +100,7 @@ function fixture(events = []) {
       name: "Hand",
     },
   ];
+  configure(entry);
   const sampler = createLatestViewerPoseSampler({
     THREE,
     entry,
@@ -121,6 +124,151 @@ function fixture(events = []) {
     });
   return { sampler, sample, entry, bindings, mirror, joint };
 }
+test("declared missing base states preserve all transforms without evaluating any graph", () => {
+  let evaluations = 0;
+  const { sampler, sample, entry, joint } = fixture([], (entry) => {
+    entry.previewNames = { idle: null, run: null };
+    entry.graph.evaluate = () => {
+      evaluations++;
+      throw Error("Must not evaluate unavailable state");
+    };
+  });
+  const transforms = () =>
+    [entry.group, joint].map((node) => ({
+      position: node.position.toArray(),
+      quaternion: node.quaternion.toArray(),
+      scale: node.scale.toArray(),
+      matrix: [...node.matrix.elements],
+      matrixWorld: [...node.matrixWorld.elements],
+    }));
+  const before = transforms();
+  const expected = {
+    resolved: false,
+    policy: VIEWER_POSE_POLICY,
+    entityId: 7,
+    time: 1,
+    cursor: null,
+    reasons: ["pose:base-animation-state-program-unavailable"],
+    unavailableBaseStates: ["idle", "run"],
+    nativeAcceptance: null,
+    nativePoseParity: null,
+  };
+  expect(sample()).toEqual(expected);
+  expect(sample({ moving: true, rootOnly: true, attachmentKeys: [0] })).toEqual(
+    expected,
+  );
+  expect(
+    sampler.applyLocalPose({ time: 1, moving: false, life: { dead: false } }),
+  ).toEqual(expected);
+  expect(transforms()).toEqual(before);
+  expect(evaluations).toBe(0);
+  expect(sampler.baseStateAvailability.status).toBe("unavailable");
+  expected.unavailableBaseStates.pop();
+  expect(sample().unavailableBaseStates).toEqual(["idle", "run"]);
+});
+test("unavailable base states still reject corrupt state, graph, event, rig and query metadata", () => {
+  for (const previewNames of [
+    { run: null },
+    { idle: undefined, run: null },
+    { idle: 0, run: null },
+    { idle: "", run: null },
+  ])
+    expect(() =>
+      fixture([], (entry) => {
+        entry.previewNames = previewNames;
+      }),
+    ).toThrow("Explicit viewer base animation states");
+  expect(() =>
+    fixture([], (entry) => {
+      entry.previewNames = { idle: null, run: null };
+      entry.graph = {};
+    }),
+  ).toThrow("Owned viewer hierarchy");
+  expect(() =>
+    fixture([{ time: NaN }], (entry) => {
+      entry.previewNames = { idle: null, run: null };
+    }),
+  ).toThrow("Invalid viewer animation event");
+  const { entry, bindings, sample } = fixture([], (entry) => {
+    entry.previewNames = { idle: null, run: "Run" };
+  });
+  expect(() =>
+    createLatestViewerPoseSampler({
+      THREE,
+      entry,
+      entityId: 7,
+      bindings: [{ ...bindings[0], poseJointIndex: 99 }],
+    }),
+  ).toThrow("Exact installed");
+  expect(() => sample({ time: NaN })).toThrow("Explicit viewer pose");
+  expect(sample({ attachmentKeys: [999] }).reasons).toEqual([
+    "pose:installed-key-unresolved:999",
+  ]);
+});
+test("pose service hides unavailable rendered actors before presentation and after attempted re-show", () => {
+  const { entry, bindings, joint } = fixture([], (entry) => {
+    entry.previewNames = { idle: null, run: null };
+  });
+  const assets = {
+    THREE,
+    policy: VIEWER_POSE_POLICY,
+    contentHash: "test-owned-static-assets",
+    actor: () => ({ actorKey: "test/0", bindings }),
+    createEntry: () => entry,
+    bindRenderedEntry: () => {},
+  };
+  const service = createLatestViewerPoseService({
+    assets,
+    report: {
+      heroes: [
+        {
+          entityId: 7,
+          champion: "test",
+          skinId: 0,
+          provenance: { time: 0, transportSequence: 0, entryOrder: 0 },
+        },
+      ],
+      resourceRequests: [],
+      effectDescriptors: [],
+    },
+  });
+  const entity = {
+    entityId: 7,
+    entityClass: "champion",
+    character: "test",
+    skinId: 0,
+    creationTransportSequence: 0,
+    position: [10, 20, 30],
+    lifecycle: "alive",
+    viewerLifecycle: { dead: false },
+    viewerMotion: { moving: false, orientationKnown: true },
+    orientationStatus: "movement-derived-preview",
+    direction: [0, 0, 1],
+    positionSource: { kind: "recorded" },
+  };
+  const before = [entry.group.position.toArray(), joint.position.toArray()];
+  service.bindRendered(7, entry);
+  expect(entry.group.visible).toBe(false);
+  const query = service.query(entity, [0, 123], 1);
+  expect(query.entityId).toBe(7);
+  expect(query.time).toBe(1);
+  expect(query.reasons).toEqual([
+    "pose:base-animation-state-program-unavailable",
+  ]);
+  entry.group.visible = true;
+  const presented = service.present(entity, 1, null);
+  expect(presented.reasons).toEqual(query.reasons);
+  expect(presented.actorVisible).toBe(false);
+  expect(entry.group.visible).toBe(false);
+  expect([entry.group.position.toArray(), joint.position.toArray()]).toEqual(
+    before,
+  );
+  for (const requested of [true, false, true])
+    expect(setLatestViewerAnimatedVisibility(entry, requested)).toBe(false);
+  entry.previewNames = { idle: "Idle", run: "Run" };
+  expect(setLatestViewerAnimatedVisibility(entry, true)).toBe(true);
+  expect(setLatestViewerAnimatedVisibility(entry, false)).toBe(false);
+});
 const event = (name, time, sequence, entryOrder = 0) => ({
   name,
   time,

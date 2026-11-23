@@ -1,5 +1,9 @@
 import { sha256 } from "./structural-comparison.mjs";
-import { createLatestAnimationClock } from "./latest-animation-clock.mjs";
+import {
+  createLatestAnimationClock,
+  createSceneAnimationClock,
+} from "./latest-animation-clock.mjs";
+import { validateSceneAnimationAuthority } from "./scene-animation-authority.mjs";
 import { validateAnimationPoseTimeDomain } from "./latest-animation-pose-time-domain.mjs";
 
 // Static, complete resource-frame coverage for the existing Toolkit pose
@@ -27,6 +31,40 @@ export async function createLatestAnimationPoses(
       Object.keys(clock.graphs).sort().join("\n")
   )
     throw Error("Unsupported animation pose package");
+  return poseBindings(clocks, manifest, clock);
+}
+
+export async function createSceneAnimationPoses(
+  profile,
+  clockBytes,
+  poseBytes,
+  authority,
+) {
+  validateSceneAnimationAuthority(authority);
+  const clocks = await createSceneAnimationClock(
+    profile,
+    clockBytes,
+    authority,
+  );
+  if ((await sha256(poseBytes)) !== authority.roles.leafPoses.sha256)
+    throw Error("Scene leaf pose role hash mismatch");
+  const manifest = JSON.parse(new TextDecoder().decode(poseBytes)),
+    clock = JSON.parse(new TextDecoder().decode(clockBytes));
+  if (
+    manifest.schema !== 1 ||
+    manifest.kind !== "original-scene-leaf-poses" ||
+    manifest.build !== profile.clientVersion ||
+    manifest.protocol !== profile.protocolDigest ||
+    manifest.animationClockSha256 !== authority.roles.clock.sha256 ||
+    manifest.sceneManifestSha256 !== authority.sceneManifestSha256 ||
+    Object.keys(manifest.graphs).sort().join("\n") !==
+      Object.keys(clock.graphs).sort().join("\n")
+  )
+    throw Error("Unsupported scene leaf pose role");
+  return poseBindings(clocks, manifest, clock, true);
+}
+
+function poseBindings(clocks, manifest, clock, sceneRoles = false) {
   return {
     async bind(graphFile, graphBytes, catalogBytes) {
       const boundClock = await clocks.bind(graphFile, graphBytes, catalogBytes),
@@ -56,6 +94,15 @@ export async function createLatestAnimationPoses(
           clip.sourceSha256 !== reference.source.sha256 ||
           clip.fps !== reference.exportedFps ||
           clip.duration !== reference.exportedDuration ||
+          (sceneRoles &&
+            clip.evaluator !==
+              (reference.resourceKind === "compressed" &&
+              reference.resourceVersion === 1
+                ? "original-native-compressed-v1"
+                : reference.resourceKind === "uncompressed" &&
+                    [3, 4, 5].includes(reference.resourceVersion)
+                  ? "pinned-toolkit-uncompressed"
+                  : null)) ||
           (files.has(clip.file) && files.get(clip.file) !== clip.sha256)
         )
           throw Error("Animation pose source/frame mismatch");

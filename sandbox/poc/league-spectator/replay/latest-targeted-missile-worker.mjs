@@ -14,12 +14,17 @@ import { loadLatestInitialResourcePrefix } from "./latest-initial-resource-prefi
 import { collectNamedBoneTypeOneCasterRecords } from "./latest-missile-caster-context.mjs";
 import { createLatestMissileInitialization } from "./latest-missile-initialization.mjs";
 import { sha256 } from "./structural-comparison.mjs";
+import { workerErrorEnvelope } from "./latest-worker-errors.mjs";
+import { createLatestPreparationTrace } from "./latest-preparation-trace.mjs";
 
 export async function prepareTargetedMissilePresentation(
   payload,
   inputLoad,
   observePreparation = null,
+  onPreparation = null,
 ) {
+  const trace = createLatestPreparationTrace(onPreparation, "targeted-worker");
+  trace("static.inputs", "begin");
   const files = new Map(),
     readSizes = new Map();
   const load = (path) => {
@@ -82,6 +87,10 @@ export async function prepareTargetedMissilePresentation(
       };
     }),
   );
+  trace("static.inputs", "end", {
+    heroes: subjects.length,
+    files: readSizes.size,
+  });
   const controllerBytes = await load(
     "decoder-16.21-macos/missile-controllers.json",
   );
@@ -89,14 +98,19 @@ export async function prepareTargetedMissilePresentation(
     (await sha256(controllerBytes)) !== payload.profile.missileControllersSha256
   )
     throw Error("Targeted source defaults differ");
+  trace("named.caster.scan", "begin", {
+    missiles: payload.report.missiles.length,
+  });
   const namedRecords = collectNamedBoneTypeOneCasterRecords({
     report: payload.report,
     subjects,
     initialization: createLatestMissileInitialization(decode(controllerBytes)),
   });
+  trace("named.caster.scan", "end", { records: namedRecords.length });
   const scanElapsedMs = performance.now() - preparationStarted;
   const sourceInputs = {};
   if (namedRecords.length && payload.family !== "fixed-time") {
+    trace("pose.assets", "begin");
     if (!payload.world?.resourceTracks?.length) {
       const initial = await loadLatestInitialResourcePrefix({
         profile: payload.profile,
@@ -114,6 +128,7 @@ export async function prepareTargetedMissilePresentation(
       load,
       staticCatalog,
     });
+    trace("pose.assets", "end", { files: readSizes.size });
   }
   if (observePreparation !== null) {
     if (typeof observePreparation !== "function")
@@ -130,6 +145,10 @@ export async function prepareTargetedMissilePresentation(
         "worker initialization-only source scan and conditional owned pose/resource loading; elapsed includes asynchronous loading, not per-frame work",
     });
   }
+  trace("world.build", "begin", {
+    movement: payload.report.movement.length,
+    visibility: payload.report.visibilityRequests?.length ?? 0,
+  });
   const world = createLatestWorldPresentation({
     ...payload.world,
     ...sourceInputs,
@@ -137,12 +156,16 @@ export async function prepareTargetedMissilePresentation(
     scene: payload.scene,
     terrain,
   });
+  trace("world.build", "end");
   const prepare =
     payload.family === "all"
       ? createMissilePresentationFamilies
       : payload.family === "fixed-time"
         ? createFixedTimePresentation
         : createTargetedMissilePresentation;
+  trace("presentation.families", "begin", {
+    missiles: payload.report.missiles.length,
+  });
   const result = await prepare({
     report: payload.report,
     scene: payload.scene,
@@ -151,10 +174,13 @@ export async function prepareTargetedMissilePresentation(
     profile: payload.profile,
     load,
     endTime: payload.report.endTime,
+    staticCatalog,
   });
+  trace("presentation.families", "end", { traces: result.traces?.length ?? 0 });
   if (staticCatalog !== null)
     result.staticCatalogInventory = staticCatalog.describe();
-  if (payload.includeDirectMissilePresentation)
+  if (payload.includeDirectMissilePresentation) {
+    trace("direct.missiles", "begin");
     result.directMissilePresentation =
       await loadLatestDirectMissilePresentation({
         profile: payload.profile,
@@ -168,6 +194,8 @@ export async function prepareTargetedMissilePresentation(
           ),
         ),
       });
+    trace("direct.missiles", "end");
+  }
   return result;
 }
 
@@ -206,6 +234,15 @@ if (
         (metrics) => {
           preparationMetrics = metrics;
         },
+        data.preparationDiagnostics === true
+          ? (event) =>
+              self.postMessage({
+                version: 1,
+                id: data.id,
+                type: "preparation",
+                event,
+              })
+          : null,
       );
       self.postMessage({
         version: 1,
@@ -219,7 +256,7 @@ if (
         version: 1,
         id: data?.id,
         ok: false,
-        error: { name: error.name, message: error.message },
+        error: workerErrorEnvelope(error),
       });
     }
   };

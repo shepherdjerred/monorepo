@@ -5,6 +5,11 @@ import { bindLatestCreationResources } from "./latest-effect-creation.mjs";
 import { EFFECT_DESCRIPTOR_PACKAGE_SHA } from "./latest-effect-descriptor.mjs";
 import { EFFECT_PLACEMENT_PACKAGE_SHA } from "./latest-effect-placement.mjs";
 import { sha256 } from "./structural-comparison.mjs";
+import {
+  isReplayRows,
+  replayRowAt,
+  ownReplayRows,
+} from "./latest-replay-columns.mjs";
 import { assertLatestSelectedMaterials } from "./latest-selected-materials.mjs";
 
 export const COMPLETE_QUAD_GPU_SHA =
@@ -50,7 +55,7 @@ export async function createLatestEffectPipeline({
       (selection
         ? selectedHash("effectPlacement")
         : EFFECT_PLACEMENT_PACKAGE_SHA) ||
-    !Array.isArray(report.effectDescriptors) ||
+    !isReplayRows(report.effectDescriptors) ||
     report.effectDescriptors.length !== report.effectCreations.length ||
     !Number.isFinite(report.endTime) ||
     report.endTime < 0
@@ -84,6 +89,7 @@ export async function createLatestEffectPipeline({
     (trail !== null && trail.effectsManifestSha256 !== effectsSha)
   )
     throw Error("Effect pipeline asset/capability identity differs");
+  const ownedDescriptors = ownReplayRows(report.effectDescriptors);
   const capabilities = buildCapabilities(
       effects,
       selectedMaterials === null
@@ -112,7 +118,7 @@ export async function createLatestEffectPipeline({
     },
     uniqueEffects = new Set();
   for (const [index, c] of report.effectCreations.entries()) {
-    const d = report.effectDescriptors[index],
+    const d = replayRowAt(ownedDescriptors, index),
       b = bindings[index];
     validateCreation(c, d, index, report.endTime);
     const dependencies = [];
@@ -159,7 +165,6 @@ export async function createLatestEffectPipeline({
       time: c.time,
       transportSequence: c.transportSequence,
       resource: structuredClone(b),
-      descriptor: structuredClone(d),
       capability,
       dependencies,
     });
@@ -216,7 +221,13 @@ export async function createLatestEffectPipeline({
       events[i].kind !== events[i - 1].kind
     )
       throw Error("Transport ordinal contains conflicting effect packet kinds");
-  return createRequestTimeline(events, templates, summary, report.endTime);
+  return createLatestRequestTimeline(
+    events,
+    templates,
+    summary,
+    report.endTime,
+    (index) => replayRowAt(ownedDescriptors, index),
+  );
 }
 
 function validateCreation(c, d, index, endTime) {
@@ -314,7 +325,13 @@ function buildCapabilities(effects, packages) {
   return out;
 }
 
-function createRequestTimeline(events, templates, summary, endTime) {
+export function createLatestRequestTimeline(
+  events,
+  templates,
+  summary,
+  endTime,
+  readDescriptor,
+) {
   // Checkpoints share immutable state records; each checkpoint owns its Map.
   // Removal requests preserve identity and accumulate native requested bits.
   const emptyCounts = () => ({
@@ -329,6 +346,12 @@ function createRequestTimeline(events, templates, summary, endTime) {
       totals: emptyCounts(),
     },
   ];
+  // Full-match timelines retain every event. Bound Map snapshots independently
+  // of match length; backward seeks replay exact events from a sparse boundary.
+  const checkpointStride = Math.max(
+    128,
+    Math.ceil(events.length / (16 * 128)) * 128,
+  );
   const apply = (states, totals, e) => {
     const prior = states.get(e.entityId);
     if (prior) totals[prior.phase]--;
@@ -367,7 +390,7 @@ function createRequestTimeline(events, templates, summary, endTime) {
     totals = emptyCounts();
   for (const [index, e] of events.entries()) {
     apply(states, totals, e);
-    if ((index + 1) % 128 === 0)
+    if ((index + 1) % checkpointStride === 0)
       checkpoints.push({
         index: index + 1,
         states: new Map(states),
@@ -389,7 +412,7 @@ function createRequestTimeline(events, templates, summary, endTime) {
     }
     const target = lo;
     if (target < cursor) {
-      const saved = checkpoints[Math.floor(target / 128)];
+      const saved = checkpoints[Math.floor(target / checkpointStride)];
       states = new Map(saved.states);
       totals = { ...saved.totals };
       cursor = saved.index;
@@ -402,6 +425,14 @@ function createRequestTimeline(events, templates, summary, endTime) {
       removalRequested: totals["removal-requested"],
       removalWithoutObservedCreation:
         totals["removal-without-observed-creation"],
+    });
+  };
+  const creation = (index) => {
+    if (!Number.isSafeInteger(index) || !templates.has(index))
+      throw Error("Unknown effect creation sequence");
+    return freeze({
+      ...templates.get(index),
+      descriptor: structuredClone(readDescriptor(index)),
     });
   };
   return {
@@ -432,15 +463,11 @@ function createRequestTimeline(events, templates, summary, endTime) {
             creation:
               state.creationSequence === null
                 ? null
-                : templates.get(state.creationSequence),
+                : creation(state.creationSequence),
           })
         : null;
     },
-    creation(index) {
-      if (!Number.isSafeInteger(index) || !templates.has(index))
-        throw Error("Unknown effect creation sequence");
-      return templates.get(index);
-    },
+    creation,
     get checkpointCount() {
       return checkpoints.length;
     },

@@ -4,6 +4,7 @@ import {
   summarizeDisplayTicks,
   FRAME_SCHEDULING_POLICY,
 } from "./latest-spectator-display-ticks.mjs";
+import { createDiagnosticFrameLookup } from "./latest-spectator-observation-order.mjs";
 const percentile = (values, fraction) => {
   if (!values.length) return null;
   const ordered = values.toSorted((a, b) => a - b);
@@ -122,6 +123,11 @@ function directTimings(rows) {
 // disables effects, alters resolution or asks a worker to prepare a frame.
 export class LatestSpectatorDiagnostics {
   constructor(contract) {
+    if (
+      contract.frameScheduling !== undefined &&
+      contract.frameScheduling !== FRAME_SCHEDULING_POLICY
+    )
+      throw Error("Current owned presentation scheduling contract required");
     this.contract = structuredClone(contract);
     this.frames = [];
     this.displayTicks = [];
@@ -148,7 +154,7 @@ export class LatestSpectatorDiagnostics {
     if (
       !Number.isFinite(row.wallTime) ||
       !Number.isFinite(row.replayTime) ||
-      (previous && row.wallTime <= previous.wallTime)
+      (previous && row.wallTime < previous.wallTime)
     )
       throw Error("Invalid spectator diagnostic frame clock");
     if (
@@ -159,7 +165,10 @@ export class LatestSpectatorDiagnostics {
         row.epoch < 0 ||
         !Number.isSafeInteger(row.drawId) ||
         row.drawId < 1 ||
+        !Number.isSafeInteger(row.drawOrder) ||
+        row.drawOrder < 1 ||
         (previous && row.drawId <= previous.drawId) ||
+        (previous && row.drawOrder <= previous.drawOrder) ||
         (row.directEffectFrame &&
           (!Number.isFinite(row.presentation?.requestedAt) ||
             row.presentation.requestedAt > row.wallTime ||
@@ -196,11 +205,11 @@ export class LatestSpectatorDiagnostics {
     this.closed = true;
     if (this.contract.frameScheduling === FRAME_SCHEDULING_POLICY)
       validateDisplayTickJoins(this.displayTicks, this.frames, this.contract);
-    const recordedFrames = new Map(
-      this.frames.map((row) => [row.wallTime, row]),
-    );
+    const identified =
+      this.contract.frameScheduling === FRAME_SCHEDULING_POLICY;
+    const lookup = createDiagnosticFrameLookup(this.frames, identified);
     const previousFrames = new Map(
-      this.frames.map((row, index) => [row.wallTime, this.frames[index - 1]]),
+      this.frames.map((row, index) => [row, this.frames[index - 1]]),
     );
     const gpuByFrame = new Map();
     const gpuSampleJoins = {
@@ -209,12 +218,14 @@ export class LatestSpectatorDiagnostics {
       metadataMismatchSamples: 0,
       invalidDurationSamples: 0,
       duplicateSamples: 0,
+      ambiguousFrameSamples: 0,
     };
     for (const sample of gpuTimings?.samples ?? []) {
-      const frame = recordedFrames.get(sample.wallTime);
-      if (!frame) gpuSampleJoins.unrecordedSamples++;
+      const { frame, ambiguous } = lookup(sample);
+      if (ambiguous) gpuSampleJoins.ambiguousFrameSamples++;
+      else if (!frame) gpuSampleJoins.unrecordedSamples++;
       else if (
-        !["replayHash", "replayTime", "mode"].every(
+        !["wallTime", "replayHash", "replayTime", "mode"].every(
           (key) => sample[key] === frame[key],
         )
       )
@@ -222,9 +233,9 @@ export class LatestSpectatorDiagnostics {
       else if (!Number.isFinite(sample.gpuMs) || sample.gpuMs < 0)
         gpuSampleJoins.invalidDurationSamples++;
       else {
-        const group = gpuByFrame.get(sample.wallTime) ?? [];
-        group.push(sample);
-        gpuByFrame.set(sample.wallTime, group);
+        const group = gpuByFrame.get(frame) ?? [];
+        group.push({ sample, frame });
+        gpuByFrame.set(frame, group);
       }
     }
     // A frame owns one whole-scene timer query. Ambiguous duplicate records
@@ -235,6 +246,10 @@ export class LatestSpectatorDiagnostics {
       return [];
     });
     gpuSampleJoins.matchedSamples = matchedGpuSamples.length;
+    // Historical schema1 summaries have no ambiguity counter. Preserve their
+    // exact shape when every timestamp still identifies a unique frame.
+    if (!identified && gpuSampleJoins.ambiguousFrameSamples === 0)
+      delete gpuSampleJoins.ambiguousFrameSamples;
     const cohorts = {};
     for (const [name, predicate] of [
       [
@@ -256,15 +271,15 @@ export class LatestSpectatorDiagnostics {
           (!window ||
             (row.replayTime >= window[0] && row.replayTime <= window[1])),
       );
-      const wallTimes = new Set(rows.map((row) => row.wallTime));
+      const selectedFrames = new Set(rows);
       // A display interval spans two recorded frames. CPU/GPU work belongs to
       // its ending frame, but the interval cannot represent one cohort when
       // its start belongs to another cohort/window or render configuration.
       const intervalRows = rows.filter((row) => {
-        const previous = previousFrames.get(row.wallTime);
+        const previous = previousFrames.get(row);
         return (
           previous &&
-          wallTimes.has(previous.wallTime) &&
+          selectedFrames.has(previous) &&
           ["replayHash", "width", "height", "pixelRatio"].every(
             (key) => row[key] === previous[key],
           )
@@ -281,7 +296,9 @@ export class LatestSpectatorDiagnostics {
         renderSubmissionMs: timings(rows, "renderSubmissionMs"),
         directEffects: directTimings(rows),
         gpuMs: timings(
-          matchedGpuSamples.filter((sample) => wallTimes.has(sample.wallTime)),
+          matchedGpuSamples
+            .filter(({ frame }) => selectedFrames.has(frame))
+            .map(({ sample }) => sample),
           "gpuMs",
         ),
         bufferingFrames: rows.filter((r) => r.mode === "buffering effects")
@@ -323,6 +340,7 @@ export class LatestSpectatorDiagnostics {
         workerTimingsExcludeMainThreadNavigationAndCommit: true,
         worldUpdateIncludesHud: true,
         frameIntervalsRequireAdjacentMatchingFrames: true,
+        ownedGpuSamplesRequireDrawIdentity: identified,
         directTimingsRequireCommittedFrameIdentity: true,
         transportIncludesSerializationAndScheduling: true,
         worldQueryIsIncludedInSimulation: true,

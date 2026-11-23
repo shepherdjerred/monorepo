@@ -14,6 +14,7 @@ import {
   APPROVED_NATIVE_MATERIAL_REFERENCE_SHA,
 } from "./latest-selected-vfx-material-inventory.mjs";
 import { createLatestVfxMaterials } from "./latest-vfx-materials.mjs";
+import { loadSceneSelectedMaterialRegistry } from "./scene-selected-materials.mjs";
 import { deriveSelectedParticleColorEntry } from "./latest-selected-particle-color-record.mjs";
 import { prepareNativeParticleGpuBinding } from "./latest-native-particle-gpu-binding.mjs";
 import {
@@ -48,6 +49,7 @@ export function assertLatestSelectedMaterials(value) {
 export async function loadLatestSelectedMaterialRegistry({
   staticCatalog,
   load,
+  perspective,
 }) {
   assertLatestStaticCatalogSelection(staticCatalog);
   need(
@@ -84,6 +86,17 @@ export async function loadLatestSelectedMaterialRegistry({
     quadBytes = await role("quadGpu"),
     quad = parse(quadBytes),
     mode = inventory.mode;
+  if (inventory.kind === "prepared-scene-controlled-material-package") {
+    const registry = await loadSceneSelectedMaterialRegistry({
+      staticCatalog,
+      load,
+      inventory,
+      quadBytes,
+      perspective,
+    });
+    owned.add(registry);
+    return registry;
+  }
   if (mode === "fixed-original-complete") {
     const trailBytes = await role("trailGpu"),
       erosionBytes = await role("erosionGpu"),

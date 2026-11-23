@@ -38,3 +38,18 @@ test("authored zero, curves and invalid declarations retain their own semantics"
     expect(source.birthScale0).toBe(value);
   }
 });
+
+test("archived original color name reaches the existing curve field without changing its value", () => {
+  const curve = {
+    __type: "ValueColor",
+    constantValue: [0, 0.25, 0.75, 1],
+  };
+  const source = { __type: "VfxEmitterDefinitionData", color: curve };
+  const normalized = normalizeDirectPointEmitter(source);
+  expect(normalized.Color).toBe(curve);
+  expect(Object.hasOwn(normalized, "color")).toBe(false);
+  expect(source.color).toBe(curve);
+  expect(() =>
+    normalizeDirectPointEmitter({ ...source, Color: curve }),
+  ).toThrow("Duplicate original emitter color field 3d7e6258");
+});

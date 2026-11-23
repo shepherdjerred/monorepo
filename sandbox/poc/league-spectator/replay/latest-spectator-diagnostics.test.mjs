@@ -1,5 +1,151 @@
 import { expect, test } from "bun:test";
 import { LatestSpectatorDiagnostics } from "./latest-spectator-diagnostics.mjs";
+import { FRAME_SCHEDULING_POLICY } from "./latest-spectator-display-ticks.mjs";
+
+function orderedFrame(id, drawOrder, patch = {}) {
+  const row = directFrame({
+    drawId: id,
+    drawOrder,
+    wallTime: 100,
+    drawWallTime: 100,
+    epoch: 0,
+    stateKey: "70",
+    worldStateKey: "70",
+    particleStateKey: String(id),
+    cameraKey: "camera",
+    desiredTime: 70,
+    simulationStepsAdvanced: 1,
+    requestToPresentMs: 0,
+    presentation: { requestedAt: 100, epoch: 0 },
+    width: 1920,
+    height: 1080,
+    pixelRatio: 1,
+    effectPreparationActive: false,
+    ...patch,
+  });
+  if (row.directEffectFrame) {
+    row.directEffectFrame.requestId = id;
+    row.directEffectFrame.metrics.simulationSteps = id;
+    row.directEffectFrame.metrics.simulationStepsAdvanced = 1;
+  }
+  return row;
+}
+function orderedTick(row, observationOrder, rafTime) {
+  return {
+    ...row,
+    observationOrder,
+    rafTime,
+    desiredEpoch: row.epoch,
+    desiredPlaying: row.playing,
+    desiredSpeed: row.speed,
+  };
+}
+
+test("same-clock owned frames preserve unique draw GPU attribution and zero intervals", () => {
+  const recorder = new LatestSpectatorDiagnostics({
+    frameScheduling: FRAME_SCHEDULING_POLICY,
+    replayHash: "replay-a",
+    comparisonWindow: [69, 99],
+  });
+  const frames = [
+    orderedFrame(1, 1),
+    orderedFrame(2, 3, { playing: false }),
+    orderedFrame(3, 5, {
+      effectsEnabled: false,
+      effectsVisible: false,
+      directEffectFrame: null,
+      particleStateKey: null,
+      simulationStepsAdvanced: 0,
+      presentation: null,
+      requestToPresentMs: null,
+    }),
+  ];
+  for (let i = 0; i < frames.length; i++) {
+    recorder.frame(frames[i]);
+    recorder.displayTick(orderedTick(frames[i], 2 * i + 2, 90 + i));
+  }
+  const samples = frames.map((row, i) => ({
+    drawId: row.drawId,
+    wallTime: 100,
+    replayHash: row.replayHash,
+    replayTime: row.replayTime,
+    mode: row.mode,
+    gpuMs: 10 ** i,
+  }));
+  const raw = structuredClone({ frames, samples });
+  const result = recorder.finish({ gpuTimings: { supported: true, samples } });
+  expect(result.frames.map((row) => row.intervalMs)).toEqual([null, 0, 0]);
+  expect(result.cohorts.effects1x.gpuMs.maximum).toBe(1);
+  expect(result.cohorts.paused.gpuMs.maximum).toBe(10);
+  expect(result.cohorts.worldOnly.gpuMs.maximum).toBe(100);
+  expect(result.gpuSampleJoins.matchedSamples).toBe(3);
+  expect(result.gpuSampleJoins.ambiguousFrameSamples).toBe(0);
+  expect(result.scheduling.joins.matchedTicks).toBe(3);
+  expect({ frames, samples }).toEqual(raw);
+  for (const row of result.frames) expect(row.wallTime).toBe(100);
+  expect(
+    () =>
+      new LatestSpectatorDiagnostics({
+        frameScheduling: "reply-driven-owned-presentations-v1",
+      }),
+  ).toThrow();
+});
+
+test("legacy tied clocks retain rows and raw GPU data while refusing ambiguous attribution", () => {
+  const recorder = new LatestSpectatorDiagnostics({
+    comparisonWindow: [69, 99],
+  });
+  const frames = [
+    directFrame({ wallTime: 100 }),
+    directFrame({ wallTime: 100, playing: false }),
+  ];
+  for (const row of frames) recorder.frame(row);
+  const samples = frames.map((row) => ({
+    wallTime: row.wallTime,
+    replayHash: row.replayHash,
+    replayTime: row.replayTime,
+    mode: row.mode,
+    gpuMs: row.playing ? 1 : 10,
+  }));
+  const result = recorder.finish({ gpuTimings: { samples } });
+  expect(result.frames).toHaveLength(2);
+  expect(result.frames[1].intervalMs).toBe(0);
+  expect(result.gpuTimings.samples).toEqual(samples);
+  expect(result.gpuSampleJoins.matchedSamples).toBe(0);
+  expect(result.gpuSampleJoins.ambiguousFrameSamples).toBe(2);
+  expect(result.cohorts.effects1x.gpuMs.samples).toBe(0);
+  expect(result.cohorts.paused.gpuMs.samples).toBe(0);
+});
+
+test("owned GPU IDs cannot reuse another draw's clocks or omit an identity", () => {
+  const recorder = new LatestSpectatorDiagnostics({
+    frameScheduling: FRAME_SCHEDULING_POLICY,
+    replayHash: "replay-a",
+  });
+  const frame = orderedFrame(1, 1);
+  recorder.frame(frame);
+  const sample = {
+    drawId: 1,
+    wallTime: 100,
+    replayHash: "replay-a",
+    replayTime: 70,
+    mode: "shared effects",
+    gpuMs: 1,
+  };
+  const result = recorder.finish({
+    gpuTimings: {
+      samples: [
+        { ...sample, drawId: undefined },
+        { ...sample, drawId: 2 },
+        { ...sample, wallTime: 99 },
+        sample,
+      ],
+    },
+  });
+  expect(result.gpuSampleJoins.unrecordedSamples).toBe(2);
+  expect(result.gpuSampleJoins.metadataMismatchSamples).toBe(1);
+  expect(result.gpuSampleJoins.matchedSamples).toBe(1);
+});
 
 const directFrame = (overrides = {}) => ({
   wallTime: 1,

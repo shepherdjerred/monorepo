@@ -97,6 +97,25 @@ test("an absent root HASH retains native constructor zero without substituting d
   });
 });
 
+test("archived exact root field label reaches the same identity gate and rejects ambiguity", async () => {
+  const d = await compile({
+    recordId: "abcdef01",
+    root: { "{1d369c29}": "{abcdef01}" },
+  });
+  expect(d.systemIdentity).toEqual({
+    objectPathHash: 0xabcdef01,
+    authored: true,
+  });
+  expect(d.blockers).toEqual([]);
+  for (const value of [null, 1, "{00000000}", "{12345678}"])
+    await expect(compile({ root: { "{1d369c29}": value } })).rejects.toThrow(
+      "objectPath HASH",
+    );
+  await expect(
+    compile({ root: { "{1d369c29}": "{abcdef01}", objectPath: "{abcdef01}" } }),
+  ).rejects.toThrow("Duplicate original system objectPath field 1d369c29");
+});
+
 test("malformed, unknown and mismatched HASH values fail the content contract", async () => {
   for (const objectPath of [
     null,

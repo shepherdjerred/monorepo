@@ -29,6 +29,7 @@ export async function readLatestReplayStartup({
   decoder,
   reader,
   sceneBytes,
+  participantReader,
 }) {
   let startup = null,
     streamSequence = 0;
@@ -53,6 +54,9 @@ export async function readLatestReplayStartup({
         );
       startup = {
         ...reader.read(observation),
+        ...(participantReader === undefined
+          ? {}
+          : { participants: participantReader.read(observation) }),
         packageSha256: STARTUP_CONFIG_SHA,
         source: {
           id: `startup:${chunk.chunkId}:${block.blockOffset}:728`,

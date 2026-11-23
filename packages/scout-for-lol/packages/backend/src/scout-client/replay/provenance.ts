@@ -39,6 +39,8 @@ const MatchIdentitySchema = z.looseObject({
 });
 const MatchHistoryEvidenceSchema = z.looseObject({
   platformId: z.string().optional(),
+  mapId: z.number().int().positive().optional(),
+  gameMode: z.string().min(1).optional(),
   gameId: z
     .union([z.number().int().positive(), GameIdSchema])
     .transform(String),
@@ -54,6 +56,37 @@ const PostGamePayloadSchema = z.looseObject({ data: z.unknown() });
 const PostGameBundleSchema = z.looseObject({
   matchHistory: MatchHistoryEvidenceSchema,
 });
+
+export type ReplayPresentationFacts = {
+  readonly mapId: number | null;
+  readonly gameMode: string | null;
+  readonly teamSizes: number[] | null;
+};
+export type ReplayMatchProvenance = ReplayProvenance & ReplayPresentationFacts;
+
+/** Count an explicit, complete two-team roster, never an inferred queue default. */
+function replayTeamSizes(
+  participants: readonly { participantId: number; teamId: number }[],
+): number[] | null {
+  if (
+    new Set(participants.map((participant) => participant.participantId))
+      .size !== participants.length
+  )
+    return null;
+  if (
+    participants.some(
+      (participant) => participant.teamId !== 100 && participant.teamId !== 200,
+    )
+  )
+    return null;
+  const blue = participants.filter(
+    (participant) => participant.teamId === 100,
+  ).length;
+  const red = participants.filter(
+    (participant) => participant.teamId === 200,
+  ).length;
+  return blue > 0 && red > 0 ? [blue, red] : null;
+}
 
 function participantFingerprint(
   match: z.infer<typeof MatchHistoryEvidenceSchema>,
@@ -113,7 +146,7 @@ function participantFingerprint(
 export function replayProvenanceFromMatch(
   match: RawMatch,
   uploaderPuuids: readonly string[],
-): ReplayProvenance | null {
+): ReplayMatchProvenance | null {
   const owned = new Set(uploaderPuuids);
   const participant = match.info.participants.find((candidate) =>
     owned.has(candidate.puuid),
@@ -123,6 +156,9 @@ export function replayProvenanceFromMatch(
     localPuuid: participant.puuid,
     leaguePatch: match.info.gameVersion,
     gameDurationSeconds: match.info.gameDuration,
+    mapId: match.info.mapId,
+    gameMode: match.info.gameMode,
+    teamSizes: replayTeamSizes(match.info.participants),
     participant: {
       puuid: LeaguePuuidSchema.parse(participant.puuid),
       teamId: participant.teamId,
@@ -163,7 +199,7 @@ type ObservedReplayEvidence = {
 /** Bind one requested game to its observer's exact post-game stat fingerprint. */
 export function parseObservedReplayProvenance(
   evidence: ObservedReplayEvidence,
-): ReplayProvenance | null {
+): ReplayMatchProvenance | null {
   const envelope = PostGamePayloadSchema.safeParse(evidence.payload);
   if (!envelope.success) return null;
   const direct = MatchHistoryEvidenceSchema.safeParse(envelope.data.data);
@@ -183,10 +219,26 @@ export function parseObservedReplayProvenance(
     return null;
   const participant = participantFingerprint(matchHistory, evidence.localPuuid);
   if (participant === null) return null;
+  const identities = new Set(
+    matchHistory.participantIdentities.map(
+      (identity) => identity.participantId,
+    ),
+  );
+  const completeRoster =
+    identities.size === matchHistory.participantIdentities.length &&
+    identities.size === matchHistory.participants.length &&
+    matchHistory.participants.every((member) =>
+      identities.has(member.participantId),
+    );
   return {
     localPuuid: evidence.localPuuid,
     leaguePatch: evidence.leaguePatch,
     gameDurationSeconds: matchHistory.gameDuration,
+    mapId: matchHistory.mapId ?? null,
+    gameMode: matchHistory.gameMode ?? null,
+    teamSizes: completeRoster
+      ? replayTeamSizes(matchHistory.participants)
+      : null,
     participant,
   };
 }

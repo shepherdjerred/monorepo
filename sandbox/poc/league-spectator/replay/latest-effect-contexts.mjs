@@ -1,8 +1,10 @@
 // Static character/skin namespaces behind opcode-756 auxiliary context IDs.
 // Context resources are ordered candidates, not successful effect creations.
 import { sha256 } from "./structural-comparison.mjs";
+import { isReplayRows, mapReplayRows } from "./latest-replay-columns.mjs";
 import { ownLatestStaticBytes } from "./latest-static-bytes.mjs";
 import { assertLatestSelectedContextObservation } from "./latest-selected-context-observation.mjs";
+import { assertSceneContextObservation } from "./scene-effect-resource-observation.mjs";
 export const EFFECT_CONTEXTS_PACKAGE_SHA =
   "d17f43afcb61be953f6f1441186b1d4956e019ec74e5160c571617f6263e5e87";
 const ownedContexts = new WeakSet();
@@ -58,7 +60,11 @@ export async function createLatestEffectContexts({
     meta = parse(packageBytes),
     effects = parse(effectsManifestBytes);
   if (staticCatalog !== null)
-    await assertLatestSelectedContextObservation({
+    await (
+      meta.schema === 2
+        ? assertSceneContextObservation
+        : assertLatestSelectedContextObservation
+    )({
       selection: staticCatalog,
       profile,
       image,
@@ -66,7 +72,7 @@ export async function createLatestEffectContexts({
       metadata: meta,
     });
   if (
-    meta.schema !== 1 ||
+    (meta.schema !== 1 && !(meta.schema === 2 && staticCatalog !== null)) ||
     meta.kind !== "prepared-character-effect-contexts" ||
     meta.build !== "16.21.829.8620" ||
     meta.protocol !== "20e09df23c66b85e" ||
@@ -85,7 +91,8 @@ export async function createLatestEffectContexts({
   for (const b of image === undefined ? [] : meta.sourceBlocks)
     if ((await sha256(image.subarray(b.rva, b.rva + b.size))) !== b.sha256)
       throw Error("Original context identity/registry instructions changed");
-  const contexts = new Map();
+  const contexts = new Map(),
+    aliases = new Set();
   for (const c of meta.contexts) {
     const actor = effects.actors[c.actorKey];
     if (
@@ -99,9 +106,22 @@ export async function createLatestEffectContexts({
         c.identity
     )
       throw Error("Static character context identity/asset mismatch");
-    contexts.set(c.identity, Object.freeze({ ...c }));
+    for (const key of meta.schema === 2 ? c.actorAliases : [c.actorKey]) {
+      if (aliases.has(key))
+        throw Error("Duplicate static appearance context alias");
+      aliases.add(key);
+    }
+    const owned = structuredClone(c);
+    function freeze(value) {
+      if (value && typeof value === "object") {
+        for (const child of Object.values(value)) freeze(child);
+        Object.freeze(value);
+      }
+      return value;
+    }
+    contexts.set(c.identity, freeze(owned));
   }
-  if (contexts.size !== Object.keys(effects.actors).length)
+  if (aliases.size !== Object.keys(effects.actors).length)
     throw Error("Static character context inventory incomplete");
   const lookup = (identity) => {
     if (!uint(identity))
@@ -159,14 +179,14 @@ export async function createLatestEffectContexts({
       if (
         report.build !== meta.build ||
         report.protocol !== meta.protocol ||
-        !Array.isArray(report.effectDescriptors) ||
+        !isReplayRows(report.effectDescriptors) ||
         !Array.isArray(report.effectCreations) ||
         report.effectDescriptors.length !== report.effectCreations.length
       )
         throw Error(
           "Matching complete effect descriptors required for context binding",
         );
-      return report.effectDescriptors.map((descriptor, index) => {
+      return mapReplayRows(report.effectDescriptors, (descriptor, index) => {
         if (
           descriptor.creationSequence !== index ||
           descriptor.resourceKey !==

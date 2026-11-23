@@ -1,5 +1,6 @@
 // Match entities come only from decoded packets. This joins their map hashes to
 // an offline, build-specific static catalog, never to a prepared match roster.
+import { bindLatestNeutralMinions } from "./latest-neutral-world.mjs";
 export function bindLatestBuildings(report, manifest, catalog) {
   if (
     catalog.schema !== 1 ||
@@ -111,5 +112,16 @@ export function bindLatestMinions(report, manifest, catalog) {
     registrationBase,
     anchors: towers.length,
     status: catalog.registrationStatus,
+  };
+}
+
+export function bindLatestWorldMinions(report, manifest, catalog) {
+  const lane = bindLatestMinions(report, manifest, catalog);
+  if (catalog.neutralCreation === undefined) return lane;
+  const neutral = bindLatestNeutralMinions(report, manifest, catalog);
+  return {
+    ...lane,
+    minions: [...lane.minions, ...neutral.minions],
+    neutralScope: neutral.scope,
   };
 }

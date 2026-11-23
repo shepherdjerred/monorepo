@@ -1,6 +1,7 @@
 import { loadLatestDirectEffectPackage } from "./latest-direct-effect-package.mjs";
 import { ownLatestStaticBytes } from "./latest-static-bytes.mjs";
-import { createDirectInitializationTransfer } from "./latest-direct-initialization-ownership.mjs";
+import { createDirectSessionResourceLoader } from "./latest-direct-session-preparation-io.mjs";
+import { createDirectSessionInitializationFactory } from "./latest-direct-session-initialization.mjs";
 import { assertReplayRendererPolicy } from "./latest-renderer-policy.mjs";
 import {
   buildLatestDirectEffectEvents,
@@ -28,6 +29,7 @@ import * as THREE from "three";
 import { loadLatestViewerPoseAssets } from "./latest-viewer-pose-assets.mjs";
 import { assertLatestStaticCatalogSelection } from "./latest-static-catalog.mjs";
 import { sameDirectCompiledData } from "./latest-direct-compiled-restore.mjs";
+import { createLatestPreparationTrace } from "./latest-preparation-trace.mjs";
 import {
   createLatestViewerPoseAttachmentPlacement,
   VIEWER_POSE_ATTACHMENT_POLICY,
@@ -35,7 +37,7 @@ import {
 
 // Ordinary Play and diagnostics share this partial presentation runtime.
 // Coverage, visual fidelity and browser performance acceptance remain separate.
-export async function createLatestDirectEffectSession({
+export async function prepareLatestDirectEffectSessionInputs({
   world,
   report,
   scene,
@@ -49,10 +51,19 @@ export async function createLatestDirectEffectSession({
   presentationInputs = null,
   unitResources = null,
   viewerPoseAssets = null,
+  movementOwner = null,
   staticCatalog = null,
   assetBase = new URL("/assets/", location.href).href,
+  onPreparation = null,
+  inputLoad = null,
+  targetedPreparation = requestTargetedMissilePresentation,
 }) {
   const sessionStarted = performance.now();
+  const trace = createLatestPreparationTrace(onPreparation, "effect-session");
+  trace("session", "begin", {
+    creations: report.effectCreations.length,
+    removals: report.effectRemovals.length,
+  });
   assertReplayRendererPolicy(THREE);
   manifestBytes = ownLatestStaticBytes(manifestBytes);
   if (!["actual-gpu", "loader-only-no-gpu"].includes(navigationMode))
@@ -68,20 +79,9 @@ export async function createLatestDirectEffectSession({
     JSON.stringify(scene)
   )
     throw Error("Scene object differs from exact manifest bytes");
-  const loaded = new Map();
-  const load = (path) => {
-    if (!loaded.has(path))
-      loaded.set(
-        path,
-        (async () => {
-          const response = await fetch(new URL(path, assetBase));
-          if (response.status !== 200)
-            throw Error(`Direct effect asset HTTP ${response.status}: ${path}`);
-          return new Uint8Array(await response.arrayBuffer());
-        })(),
-      );
-    return loaded.get(path);
-  };
+  if (typeof targetedPreparation !== "function")
+    throw Error("Explicit targeted preparation callback required");
+  const load = createDirectSessionResourceLoader(assetBase, inputLoad);
   if (
     presentationInputs !== null &&
     (typeof presentationInputs !== "object" ||
@@ -129,23 +129,25 @@ export async function createLatestDirectEffectSession({
   });
   const terrain = createLatestTerrain(scene, heightValues);
   let targetedSourcePreparationMetrics = null;
-  worldInputs.targetedMissilePresentation =
-    await requestTargetedMissilePresentation({
-      onPreparationMetrics: (metrics) => {
-        targetedSourcePreparationMetrics = metrics;
-      },
-      family: "all",
-      includeDirectMissilePresentation: true,
-      report,
-      scene,
-      heights: heightValues,
-      world: worldInputs,
-      profile,
-      assetBase,
-      ...(staticCatalog === null
-        ? {}
-        : { staticCatalogInitialization: staticCatalog.serializeForWorker() }),
-    });
+  trace("targeted.worker", "begin");
+  worldInputs.targetedMissilePresentation = await targetedPreparation({
+    onPreparation,
+    onPreparationMetrics: (metrics) => {
+      targetedSourcePreparationMetrics = metrics;
+    },
+    family: "all",
+    includeDirectMissilePresentation: true,
+    report,
+    scene,
+    heights: heightValues,
+    world: worldInputs,
+    profile,
+    assetBase,
+    ...(staticCatalog === null
+      ? {}
+      : { staticCatalogInitialization: staticCatalog.serializeForWorker() }),
+  });
+  trace("targeted.worker", "end");
   worldInputs.directMissilePresentation =
     worldInputs.targetedMissilePresentation.directMissilePresentation;
   delete worldInputs.targetedMissilePresentation.directMissilePresentation;
@@ -167,7 +169,9 @@ export async function createLatestDirectEffectSession({
       (await createLatestEffectContexts({
         profile,
         effectsManifestBytes: manifestBytes,
-        packageBytes: await load("latest-effect-contexts/package.json"),
+        packageBytes: await (staticCatalog === null
+          ? load("latest-effect-contexts/package.json")
+          : staticCatalog.readRole("effectContexts")),
         ...(staticCatalog === null
           ? {}
           : {
@@ -179,20 +183,25 @@ export async function createLatestDirectEffectSession({
       (await createLatestEffectResolvers({
         profile,
         contexts,
-        builtinContextPackageBytes: await load(
-          "latest-builtin-resource-contexts/package.json",
-        ),
+        builtinContextPackageBytes: await (staticCatalog === null
+          ? load("latest-builtin-resource-contexts/package.json")
+          : staticCatalog.readRole("builtinResourceContexts")),
         effectsManifestBytes: manifestBytes,
-        packageBytes: await load("latest-effect-resolvers/package.json"),
+        packageBytes: await (staticCatalog === null
+          ? load("latest-effect-resolvers/package.json")
+          : staticCatalog.readRole("effectResolvers")),
         staticCatalog,
       }));
     resourcePolicy = await createLatestUnitResources({
       profile,
       resolvers,
-      packageBytes: await load("latest-unit-resources/package.json"),
+      packageBytes: await (staticCatalog === null
+        ? load("latest-unit-resources/package.json")
+        : staticCatalog.readRole("unitResources")),
       staticCatalog,
     });
   }
+  trace("world.build", "begin");
   const presentationWorld = createLatestWorldPresentation({
     ...worldInputs,
     report,
@@ -202,8 +211,11 @@ export async function createLatestDirectEffectSession({
     initialResourcePrefix: initialResources?.policy ?? null,
     placementResolver: placementPolicy.resolve,
     viewerPoseAssets,
+    movementOwner,
   });
-  const events = buildLatestDirectEffectEvents({
+  trace("world.build", "end");
+  trace("events.build", "begin");
+  let events = buildLatestDirectEffectEvents({
     pipeline,
     report,
     missilePlayback,
@@ -211,10 +223,13 @@ export async function createLatestDirectEffectSession({
     world: presentationWorld,
     unitResources: resourcePolicy,
   });
+  trace("events.build", "end", { events: events.length });
   const poseInitialization = viewerPoseAssets.serializeForWorker();
   const packageStarted = performance.now();
+  trace("package.compile", "begin");
   const prepared = await loadLatestDirectEffectPackage({
     load,
+    perspective: "all",
     manifestBytes,
     staticCatalog,
     viewerPoseInitialization:
@@ -223,6 +238,7 @@ export async function createLatestDirectEffectSession({
       [e.definitionId, e.auxiliaryCandidateDefinitionId].filter(Boolean),
     ),
   });
+  trace("package.compile", "end", { definitions: prepared.definitions.size });
   const packageElapsedMs = performance.now() - packageStarted;
   if (initialResources)
     Object.assign(prepared.packages, initialResources.packages);
@@ -235,6 +251,71 @@ export async function createLatestDirectEffectSession({
     );
   for (const [id, definition] of prepared.definitions)
     placementDefinitions.set(id, definition);
+  return Object.freeze({
+    sessionStarted,
+    trace,
+    load,
+    prepared,
+    events,
+    presentationWorld,
+    viewerPoseAssets,
+    worldInputs,
+    heightValues,
+    placementPolicy,
+    initialResources,
+    poseInitialization,
+    staticCatalogInitialization,
+    targetedSourcePreparationMetrics,
+    packageElapsedMs,
+    manifestBytes,
+    sceneManifestBytes,
+    assetBase,
+    makeWorkerInitialization: createDirectSessionInitializationFactory({
+      report,
+      prepared,
+      events,
+      scene,
+      heightValues,
+      worldInputs,
+      staticCatalog,
+      staticCatalogInitialization,
+      poseInitialization,
+      trace,
+    }),
+  });
+}
+
+// Ordinary playback uses the same live preparation factory as source-bound
+// offline controls. Fetch, worker preparation and transfer ownership retain
+// their original defaults; the tool callbacks never choose presentation data.
+export async function createLatestDirectEffectSession(options) {
+  const {
+    world,
+    manifest,
+    gpuRenderer = null,
+    navigationMode = "actual-gpu",
+    staticCatalog = null,
+    onPreparation = null,
+  } = options;
+  let inputs = await prepareLatestDirectEffectSessionInputs(options);
+  options = null;
+  const {
+    sessionStarted,
+    trace,
+    load,
+    prepared,
+    presentationWorld,
+    viewerPoseAssets,
+    worldInputs,
+    heightValues,
+    placementPolicy,
+    initialResources,
+    targetedSourcePreparationMetrics,
+    packageElapsedMs,
+    manifestBytes,
+    sceneManifestBytes,
+    assetBase,
+  } = inputs;
   let navigation = null;
   const navigationStarted = performance.now();
   if (
@@ -275,7 +356,7 @@ export async function createLatestDirectEffectSession({
     };
   }
   const navigationElapsedMs = performance.now() - navigationStarted;
-  const client = new LatestDirectEffectClient();
+  const client = new LatestDirectEffectClient({ onPreparation });
   const presentation = new LatestDirectEffectPresentation(client);
   const renderer = new LatestDirectEffectRenderer(
     world,
@@ -286,29 +367,21 @@ export async function createLatestDirectEffectSession({
       navigation,
       staticCatalog,
       selectedMaterials: prepared.selectedMaterials ?? null,
+      perspective: "all",
     },
   );
   renderer.group.visible = false;
   try {
-    const initializationPayload = {
-      profile: prepared.profile,
-      packages: prepared.packages,
-      contract: { ...prepared.contract, replayHash: report.replaySha256 },
-      definitions: [...prepared.definitions.values()],
-      events,
-      report,
-      scene,
-      heights: heightValues,
-      world: worldInputs,
-      ...(staticCatalog === null ? {} : { staticCatalogInitialization }),
-    };
-    const ownedInitialization = createDirectInitializationTransfer(
-      initializationPayload,
-      [prepared.initializationCompilationInputs, poseInitialization.ownership],
-    );
-    const summary = await client.initialize(initializationPayload, {
-      ownedInitialization,
+    let initialization = inputs.makeWorkerInitialization();
+    trace("worker.initialize", "begin");
+    const initializing = client.initialize(initialization.payload, {
+      ownedInitialization: initialization.ownedInitialization,
+      worldInputOwnership: initialization.worldInputOwnership,
     });
+    initialization = null;
+    inputs = null;
+    const summary = await initializing;
+    trace("worker.initialize", "end");
     if (
       staticCatalog !== null &&
       !sameDirectCompiledData(
@@ -318,7 +391,9 @@ export async function createLatestDirectEffectSession({
     )
       throw Error("Direct worker restored a different static selection");
     const rendererStarted = performance.now();
+    trace("renderer.definitions", "begin");
     await renderer.loadDefinitions(prepared.definitions);
+    trace("renderer.definitions", "end");
     const rendererElapsedMs = performance.now() - rendererStarted;
     const transport = summary.initializationTransport;
     summary.sessionInitialization = {
@@ -409,6 +484,9 @@ export async function createLatestDirectEffectSession({
               meshRenderFlagsPolicy: e.meshRenderFlagsPolicy ?? null,
               cameraLocalOffsetProgram: structuredClone(
                 e.cameraLocalOffsetProgram ?? null,
+              ),
+              arbitraryLocalOrientationProgram: structuredClone(
+                e.arbitraryLocalOrientationProgram ?? null,
               ),
               legacyOffsetProgram: structuredClone(
                 e.legacyOffsetProgram ?? null,

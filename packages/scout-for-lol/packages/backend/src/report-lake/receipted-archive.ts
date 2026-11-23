@@ -245,6 +245,7 @@ async function readArchivedPayload<T>(args: {
   abortSignal: AbortSignal;
   parse: (value: unknown) => { success: true; data: T } | { success: false };
   expected: string;
+  boundedRead?: BoundedArchiveRead | undefined;
 }): Promise<T> {
   const bucket = configuration.s3BucketName;
   if (bucket === undefined) {
@@ -260,7 +261,16 @@ async function readArchivedPayload<T>(args: {
     bucket,
     key: args.descriptor.key,
     expectedDigest: args.descriptor.digest,
-    options: { abortSignal: args.abortSignal },
+    options:
+      args.boundedRead === undefined
+        ? { abortSignal: args.abortSignal }
+        : {
+            abortSignal: AbortSignal.any([
+              args.abortSignal,
+              args.boundedRead.signal,
+            ]),
+            expectedBytes: args.descriptor.bytes,
+          },
   });
   const parsed = args.parse(JSON.parse(text));
   if (!parsed.success) {
@@ -274,6 +284,8 @@ async function readArchivedPayload<T>(args: {
   }
   return parsed.data;
 }
+
+type BoundedArchiveRead = { signal: AbortSignal };
 
 /**
  * The archived prematch snapshot, for the resume path that reads it outside a
@@ -297,6 +309,7 @@ export async function readArchivedPrematchSnapshot(
 export async function readArchivedTimelinePayload(
   descriptor: ArtifactDescriptor,
   matchId: RiotMatchId,
+  boundedRead?: BoundedArchiveRead,
 ): Promise<RawTimeline> {
   return await readArchivedPayload({
     descriptor,
@@ -304,6 +317,7 @@ export async function readArchivedTimelinePayload(
     abortSignal: AbortSignal.timeout(ARCHIVE_FENCE_BUDGET.externalDeadlineMs),
     parse: (value) => RawTimelineSchema.safeParse(value),
     expected: "a match timeline",
+    boundedRead,
   });
 }
 
@@ -311,6 +325,7 @@ export async function readArchivedTimelinePayload(
 export async function readArchivedMatchPayload(
   descriptor: ArtifactDescriptor,
   matchId: RiotMatchId,
+  boundedRead?: BoundedArchiveRead,
 ): Promise<RawMatch> {
   return await readArchivedPayload({
     descriptor,
@@ -318,6 +333,7 @@ export async function readArchivedMatchPayload(
     abortSignal: AbortSignal.timeout(ARCHIVE_FENCE_BUDGET.externalDeadlineMs),
     parse: (value) => RawMatchSchema.safeParse(value),
     expected: "a Match-V5 payload",
+    boundedRead,
   });
 }
 

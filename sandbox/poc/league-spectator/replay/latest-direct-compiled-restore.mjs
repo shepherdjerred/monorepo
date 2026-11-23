@@ -284,6 +284,7 @@ export async function restoreLatestDirectCompiledDefinitions(
     effectIds,
     captureCompilationInputs: false,
     staticCatalog,
+    perspective: payload.contract.perspective,
   });
   if (used.size !== assets.size)
     throw Error("Captured compiler input inventory has unconsumed assets");
@@ -291,7 +292,8 @@ export async function restoreLatestDirectCompiledDefinitions(
     !sameDirectCompiledData(payload.profile, expected.profile) ||
     payload.contract.build !== expected.contract.build ||
     payload.contract.protocol !== expected.contract.protocol ||
-    payload.contract.contentHash !== expected.contract.contentHash
+    payload.contract.contentHash !== expected.contract.contentHash ||
+    payload.contract.perspective !== expected.contract.perspective
   )
     throw Error("Restored compiler build/profile identity differs");
   for (const key of [

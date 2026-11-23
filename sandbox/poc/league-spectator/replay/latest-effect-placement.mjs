@@ -2,7 +2,7 @@
 import { sha256 } from "./structural-comparison.mjs";
 import { latestMovementOrigin } from "./latest-movement.mjs";
 import { assertLatestSelectedEffectPacket } from "./latest-selected-effect-packets.mjs";
-import { EFFECT_PLACEMENT_PACKAGE_SHA } from "./latest-effect-packet-contract.mjs";
+import { approvedEffectPacketReferenceSha } from "./latest-effect-packet-contract.mjs";
 export { EFFECT_PLACEMENT_PACKAGE_SHA } from "./latest-effect-packet-contract.mjs";
 import {
   createLatestEffectCreationReader,
@@ -21,7 +21,14 @@ export async function createLatestEffectPlacementReader(
     !(placementBytes instanceof Uint8Array) ||
     !(sceneBytes instanceof Uint8Array) ||
     (staticCatalog === null &&
-      (await sha256(placementBytes)) !== EFFECT_PLACEMENT_PACKAGE_SHA)
+      (await sha256(placementBytes)) !==
+        approvedEffectPacketReferenceSha(
+          "placement",
+          JSON.parse(
+            new TextDecoder("utf-8", { fatal: true }).decode(sceneBytes),
+          ).map?.id,
+          await sha256(sceneBytes),
+        ))
   )
     throw Error("Pinned effect-placement decoder and scene bytes required");
   if (staticCatalog !== null)

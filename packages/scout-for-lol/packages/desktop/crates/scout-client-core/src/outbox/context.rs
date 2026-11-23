@@ -99,6 +99,7 @@ mod tests {
         );
         let reopened = ObservationOutbox::open(&path)?;
         assert_eq!(reopened.pending_end_of_game("one", "123")?, None);
+        drop(connection);
         std::fs::remove_file(path)?;
         Ok(())
     }

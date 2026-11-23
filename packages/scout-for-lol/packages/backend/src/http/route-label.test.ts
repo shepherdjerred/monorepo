@@ -20,6 +20,7 @@ describe("classifyRoute", () => {
     "/healthz",
     "/metrics",
     "/api/version",
+    "/api/replays",
     "/api/auth/discord/start",
     "/api/auth/discord/callback",
     "/api/auth/logout",
@@ -44,6 +45,19 @@ describe("classifyRoute", () => {
   });
 
   it("templates dynamic id segments", () => {
+    expect(
+      classifyRoute("/api/replays/58001d3b-f679-4bb6-9b3d-314900818b27"),
+    ).toBe("/api/replays/:id");
+    expect(
+      classifyRoute(
+        "/api/replays/58001d3b-f679-4bb6-9b3d-314900818b27/content",
+      ),
+    ).toBe("/api/replays/:id/content");
+    expect(
+      classifyRoute(
+        "/api/replays/58001d3b-f679-4bb6-9b3d-314900818b27/timeline",
+      ),
+    ).toBe("/api/replays/:id/timeline");
     expect(classifyRoute("/api/competition/42/leaderboard.png")).toBe(
       "/api/competition/:id/leaderboard.png",
     );

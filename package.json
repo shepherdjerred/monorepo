@@ -160,6 +160,7 @@
     "packages/scout-for-lol/packages/docs-site",
     "packages/scout-for-lol/packages/domain",
     "packages/scout-for-lol/packages/frontend",
+    "packages/scout-for-lol/packages/replay",
     "packages/scout-for-lol/packages/report",
     "packages/scout-for-lol/packages/temporal",
     "packages/s3-signed-request",

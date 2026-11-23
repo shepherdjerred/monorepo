@@ -1,6 +1,11 @@
 // Original component operations, plus an explicitly selected presentation view.
 // This policy never establishes original target acceptance or engine handles.
 import {
+  isReplayRows,
+  ownReplayRows,
+  replayRowProjection,
+} from "./latest-replay-columns.mjs";
+import {
   INITIAL_VISIBILITY_PREFIX_POLICY,
   INITIAL_VISIBILITY_PREFIX_PROOF,
   initialVisibilityPrefixEligibility,
@@ -100,6 +105,20 @@ const compare = (a, b) =>
   a.time - b.time ||
   a.transportSequence - b.transportSequence ||
   (a.entryOrder ?? 0) - (b.entryOrder ?? 0);
+const requestFields = [
+  "entityId",
+  "opcode",
+  "stream",
+  "time",
+  "transportSequence",
+  "entryOrder",
+  "id",
+  "acceptedByLiveUnit",
+  "visible",
+  "encodedViewSlotByte",
+  "chunkId",
+];
+const orderFields = ["time", "transportSequence", "entryOrder"];
 const included = (record, time, cursor) =>
   record.time < time ||
   (record.time === time &&
@@ -120,7 +139,7 @@ export function createLatestVisibilityComponentPolicy({
     build !== "16.21.829.8620" ||
     protocol !== "20e09df23c66b85e" ||
     policy !== ROFL_ALL_VISION_POLICY ||
-    !Array.isArray(requests) ||
+    !isReplayRows(requests) ||
     !Array.isArray(seedObservations) ||
     (initialRestorePolicy !== null &&
       initialRestorePolicy !== INITIAL_VISIBILITY_PREFIX_POLICY)
@@ -131,6 +150,9 @@ export function createLatestVisibilityComponentPolicy({
   const tracks = new Map(),
     ids = new Set(),
     seeds = new Map();
+  const ownedRequests = ownReplayRows(requests);
+  const request = (index) =>
+    replayRowProjection(ownedRequests, index, requestFields);
   // Only caller-supplied, separately verified component observations can seed
   // state. Raw snapshot packets never acquire this provenance automatically.
   for (const input of seedObservations) {
@@ -169,7 +191,8 @@ export function createLatestVisibilityComponentPolicy({
           "Visibility seed observations require distinct causal ordinals",
         );
   }
-  for (const input of requests) {
+  for (let index = 0; index < ownedRequests.length; index++) {
+    const input = request(index);
     if (
       !input ||
       !uint(input.entityId) ||
@@ -190,16 +213,23 @@ export function createLatestVisibilityComponentPolicy({
       );
     ids.add(input.id);
     if (!tracks.has(input.entityId)) tracks.set(input.entityId, []);
-    tracks.get(input.entityId).push(structuredClone(input));
+    tracks.get(input.entityId).push(index);
   }
-  for (const track of tracks.values()) {
-    track.sort(compare);
+  const compareIndices = (left, right) =>
+    compare(
+      replayRowProjection(ownedRequests, left, orderFields),
+      replayRowProjection(ownedRequests, right, orderFields),
+    );
+  for (const [entityId, track] of tracks) {
+    track.sort(compareIndices);
     for (let i = 1; i < track.length; i++)
-      if (compare(track[i - 1], track[i]) === 0)
+      if (compareIndices(track[i - 1], track[i]) === 0)
         throw Error(
           "Visibility events require distinct original causal ordinals",
         );
+    tracks.set(entityId, Uint32Array.from(track));
   }
+  ids.clear();
   return Object.freeze({
     policy,
     query(registration, time, cursor = null) {
@@ -287,7 +317,8 @@ export function createLatestVisibilityComponentPolicy({
         ignoredBeforeSeed = [],
         initialRestorePrefixEvents = [],
         ignoredSnapshotReasons = [];
-      for (const event of tracks.get(entityId) ?? []) {
+      for (const index of tracks.get(entityId) ?? []) {
+        const event = request(index);
         if (!included(event, time, cursor)) break;
         if (event.stream === 2) {
           const reason =

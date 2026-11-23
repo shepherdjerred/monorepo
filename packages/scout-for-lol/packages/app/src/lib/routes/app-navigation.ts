@@ -193,7 +193,8 @@ export function resolveAppShellMode(
   return pathname === "/welcome" ||
     pathname === "/installed" ||
     pathname === "/login" ||
-    pathname.startsWith("/explore/s/")
+    pathname.startsWith("/explore/s/") ||
+    pathname.startsWith("/replays/")
     ? "focused"
     : "workspace";
 }

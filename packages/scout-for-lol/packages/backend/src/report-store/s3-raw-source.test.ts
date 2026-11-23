@@ -1,10 +1,13 @@
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
-import { describe, expect, test } from "vitest";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { mockClient } from "aws-sdk-client-mock";
+import { describe, expect, test, vi } from "vitest";
 import {
   type RawObjectKind,
   classifyRawObjectKey,
   matchObjectKey,
   prematchObjectKey,
+  readVerifiedRawObjectText,
   timelineObjectKey,
 } from "#src/report-store/s3-raw-source.ts";
 
@@ -26,6 +29,87 @@ describe("classifyRawObjectKey", () => {
       expect(classifyRawObjectKey(key)).toBe(kind);
     }
   });
+});
+
+test("cancels a body that exceeds its receipt even when S3 reports the expected length", async () => {
+  const client = new S3Client({ region: "us-west-2" });
+  const s3 = mockClient(client);
+  const cancel = vi.fn();
+  const chunks = [new Uint8Array([65, 66]), new Uint8Array([67, 68])];
+  const pull = vi.fn(
+    (controller: ReadableStreamDefaultController<Uint8Array>) => {
+      const chunk = chunks.shift();
+      if (chunk === undefined) controller.close();
+      else controller.enqueue(chunk);
+    },
+  );
+  const stream = new ReadableStream({ pull, cancel }, { highWaterMark: 0 });
+  s3.on(GetObjectCommand).callsFake(() => ({
+    ContentLength: 3,
+    Body: { transformToWebStream: () => stream },
+  }));
+
+  await expect(
+    readVerifiedRawObjectText({
+      client,
+      bucket: "bucket",
+      key: "timeline.json",
+      expectedDigest: "a".repeat(64),
+      options: { expectedBytes: 3 },
+    }),
+  ).rejects.toThrow("Raw archive body exceeds its recorded length");
+  expect(pull).toHaveBeenCalledTimes(2);
+  expect(cancel).toHaveBeenCalledOnce();
+  expect(stream.locked).toBe(false);
+  s3.restore();
+});
+
+test("an already-aborted bounded raw read does not request the object", async () => {
+  const client = new S3Client({ region: "us-west-2" });
+  const s3 = mockClient(client);
+  const reason = new Error("request aborted");
+
+  await expect(
+    readVerifiedRawObjectText({
+      client,
+      bucket: "bucket",
+      key: "timeline.json",
+      expectedDigest: "a".repeat(64),
+      options: { expectedBytes: 3, abortSignal: AbortSignal.abort(reason) },
+    }),
+  ).rejects.toThrow(reason.message);
+  expect(s3.calls()).toHaveLength(0);
+  s3.restore();
+});
+
+test("aborting a bounded read cancels the pending stream read and releases its lock", async () => {
+  const client = new S3Client({ region: "us-west-2" });
+  const s3 = mockClient(client);
+  const cancel = vi.fn();
+  const pending = Promise.withResolvers<boolean>();
+  const stream = new ReadableStream(
+    { pull: () => pending.resolve(true), cancel },
+    { highWaterMark: 0 },
+  );
+  const controller = new AbortController();
+  const reason = new Error("request disconnected");
+  s3.on(GetObjectCommand).callsFake(() => ({
+    Body: { transformToWebStream: () => stream },
+  }));
+
+  const reading = readVerifiedRawObjectText({
+    client,
+    bucket: "bucket",
+    key: "timeline.json",
+    expectedDigest: "a".repeat(64),
+    options: { expectedBytes: 3, abortSignal: controller.signal },
+  });
+  await pending.promise;
+  controller.abort(reason);
+  await expect(reading).rejects.toThrow(reason.message);
+  expect(cancel).toHaveBeenCalledExactlyOnceWith(reason);
+  expect(stream.locked).toBe(false);
+  s3.restore();
 });
 
 describe("deterministic key builders (must mirror the live write paths)", () => {

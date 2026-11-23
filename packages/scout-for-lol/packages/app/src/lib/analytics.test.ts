@@ -23,6 +23,12 @@ import {
   type AnalyticsConfig,
 } from "#src/lib/analytics.ts";
 
+test("public replay pageviews keep the route shape without recording the replay ID", () => {
+  expect(normalizePath("/replays/776ca413-9b18-4930-b6d2-33c5b4152cda")).toBe(
+    "/replays/:replayId",
+  );
+});
+
 type CapturedEvent = {
   event: string;
   properties: Record<string, string | number | boolean> | undefined;

@@ -59,11 +59,20 @@ for (const emitter of quad.emitters) {
     throw Error("Selected texture material definition differs");
   for (const [uniform, binding] of Object.entries(emitter.textures)) {
     if (binding.kind !== "prepared-texture") {
-      if (
-        !["supplied-white-lookup", "supplied-transparent-remap"].includes(
+      if (!(
+        ["supplied-white-lookup", "supplied-transparent-remap"].includes(
           binding.kind,
-        )
-      )
+        ) ||
+        ([2, 3].includes(quad.schema) &&
+          binding.kind === "original-cold-default-texture" &&
+          binding.authoritySha256 ===
+            quad.originalColdDefaultAuthoritySha256) ||
+        (quad.schema === 3 &&
+          quad.perspective === "all" &&
+          binding.kind === "original-all-vision-fog-texture" &&
+          binding.perspective === "all" &&
+          binding.authoritySha256 === quad.originalAllVisionFogAuthoritySha256)
+      ))
         throw Error("Unknown selected texture binding kind");
       continue;
     }

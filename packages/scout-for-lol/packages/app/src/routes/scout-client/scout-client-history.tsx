@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import type { ReactNode } from "react";
+import { ReplayMatchLink } from "#src/components/replay/replay-match-link.tsx";
 import {
   Card,
   CardHeader,
@@ -31,7 +33,10 @@ function resultTitle(game: Results["results"][number]): string {
 }
 
 /** A scoreboard can show known facts even when the full report lacks inputs. */
-export function ScoutClientHistoryView(props: { readonly data: Results }) {
+export function ScoutClientHistoryView(props: {
+  readonly data: Results;
+  readonly replayLink?: (matchId: string) => ReactNode;
+}) {
   return (
     <main className="mx-auto w-full max-w-5xl space-y-6 px-4 py-8">
       <header className="space-y-2">
@@ -50,6 +55,9 @@ export function ScoutClientHistoryView(props: { readonly data: Results }) {
               scoreboard will appear when the result can be verified.
             </CardDescription>
           </CardHeader>
+          {props.replayLink !== undefined && (
+            <CardContent>{props.replayLink(conflict.matchId)}</CardContent>
+          )}
         </Card>
       ))}
       {props.data.results.length === 0 && props.data.conflicts.length === 0 ? (
@@ -70,6 +78,9 @@ export function ScoutClientHistoryView(props: { readonly data: Results }) {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {props.replayLink === undefined ? null : (
+              <div className="mb-4">{props.replayLink(game.matchId)}</div>
+            )}
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <caption className="sr-only">
@@ -152,6 +163,9 @@ export function ScoutClientHistory() {
   return results.isError ? (
     <ErrorState message={results.error.message} />
   ) : (
-    <ScoutClientHistoryView data={results.data} />
+    <ScoutClientHistoryView
+      data={results.data}
+      replayLink={(matchId) => <ReplayMatchLink matchId={matchId} />}
+    />
   );
 }

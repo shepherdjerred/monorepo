@@ -63,7 +63,17 @@ export function assertSelectedMaterialTextureInventory({
         need(
           ["supplied-white-lookup", "supplied-transparent-remap"].includes(
             binding.kind,
-          ),
+          ) ||
+            (quad.schema >= 2 &&
+              binding.kind === "original-cold-default-texture" &&
+              binding.authoritySha256 ===
+                quad.originalColdDefaultAuthoritySha256) ||
+            (quad.schema === 3 &&
+              quad.perspective === "all" &&
+              binding.kind === "original-all-vision-fog-texture" &&
+              binding.perspective === "all" &&
+              binding.authoritySha256 ===
+                quad.originalAllVisionFogAuthoritySha256),
           "Unknown selected material texture kind",
         );
         continue;

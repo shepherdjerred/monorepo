@@ -4,21 +4,16 @@ import {
   sameDirectCompiledData,
 } from "./latest-direct-compiled-restore.mjs";
 import { assertLatestStaticCatalogSelection } from "./latest-static-catalog.mjs";
-import {
-  EFFECT_PLACEMENT_PACKAGE_SHA,
-  EFFECT_DESCRIPTOR_PACKAGE_SHA,
-} from "./latest-effect-packet-contract.mjs";
+import { approvedEffectPacketReferenceSha } from "./latest-effect-packet-contract.mjs";
 
 const programs = {
   placement: {
     role: "effectPlacement",
     reference: "effectPlacementReference",
-    sha256: EFFECT_PLACEMENT_PACKAGE_SHA,
   },
   descriptor: {
     role: "effectDescriptor",
     reference: "effectDescriptorReference",
-    sha256: EFFECT_DESCRIPTOR_PACKAGE_SHA,
   },
 };
 const decode = (bytes) =>
@@ -81,13 +76,22 @@ export async function assertLatestSelectedEffectPacket({
   if (!sameDirectCompiledData(profile, selection.profile()))
     throw Error("Effect packet profile differs from selected root");
   const referenceBytes = await selection.readRole(program.reference);
-  if ((await sha256(referenceBytes)) !== program.sha256)
+  const scene = decode(sceneBytes),
+    reference = decode(referenceBytes);
+  if (
+    (await sha256(referenceBytes)) !==
+    approvedEffectPacketReferenceSha(
+      kind,
+      scene.map?.id,
+      reference.sceneManifestSha256,
+    )
+  )
     throw Error("Fixed original effect packet proof reference required");
   assertEffectPacketSceneRebinding(
     kind,
-    decode(referenceBytes),
+    reference,
     decode(packageBytes),
-    decode(sceneBytes),
+    scene,
     await sha256(sceneBytes),
   );
 }

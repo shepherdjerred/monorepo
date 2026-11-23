@@ -260,6 +260,12 @@ test("accepts only one exact main-only platform apply request", () => {
   ).toThrow("TOFU_PLATFORM_APPLY is main-only");
 });
 
+test("Scout Storybook rebuilds when the replay workspace changes", () => {
+  expect(selectorPathsForLane("site-scout-design-system")).toContain(
+    "packages/scout-for-lol/packages/replay",
+  );
+});
+
 test("site-scout excludes global CI inputs and uses exact release libraries", () => {
   const paths = selectorPathsForLane("site-scout");
   const globalPathSet = new Set<string>(globalPaths);

@@ -20,6 +20,8 @@ import {
   httpRequestsTotal,
 } from "#src/metrics/platform/web.ts";
 import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
+import { handleReplayRoute } from "#src/replays/http.ts";
+import { resolveReplaySupport } from "#src/replays/support.ts";
 import { handleScoutClientRoute } from "#src/scout-client/http.ts";
 import { handleSupportScreenshot } from "#src/support/http.ts";
 import { handleAuthRoutes } from "#src/trpc/auth-web.ts";
@@ -176,67 +178,18 @@ const server = Bun.serve({
  * {@link withHttpMetrics}, including the 404 fallback and error paths.
  */
 async function dispatch(request: Request, url: URL): Promise<Response> {
+  const replayResponse = await handleReplayRoute(
+    request,
+    url,
+    resolveReplaySupport,
+  );
+  if (replayResponse !== null) return replayResponse;
+
   const scoutClientResponse = await handleScoutClientRoute(request, url);
   if (scoutClientResponse !== null) return scoutClientResponse;
 
-  // Handle CORS preflight requests
-  if (request.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: corsHeadersFor(request),
-    });
-  }
-
-  // Startup probe - simple process alive check
-  if (url.pathname === "/ping") {
-    return new Response("pong", {
-      status: 200,
-      headers: {
-        "Content-Type": "text/plain",
-        ...corsHeadersFor(request),
-      },
-    });
-  }
-
-  // Liveness probe - restarts the pod on a sustained Riot API or Discord
-  // gateway failure
-  if (url.pathname === "/livez") {
-    return handleLivez({ cors: corsHeadersFor(request) });
-  }
-
-  // Readiness probe - checks Riot API health
-  if (url.pathname === "/healthz") {
-    return handleHealthz({ cors: corsHeadersFor(request) });
-  }
-
-  // Build/deploy identity: version, git SHA, tRPC contract hash
-  if (url.pathname === "/api/version") {
-    return handleVersion(request, corsHeadersFor(request));
-  }
-
-  // Metrics endpoint for Prometheus
-  if (url.pathname === "/metrics") {
-    try {
-      const metrics = await getMetrics();
-      return new Response(metrics, {
-        status: 200,
-        headers: {
-          "Content-Type": "text/plain; version=0.0.4; charset=utf-8",
-        },
-      });
-    } catch (error) {
-      logger.error("❌ Error generating metrics:", error);
-      Sentry.captureException(error, {
-        tags: { source: "http-server-metrics" },
-      });
-      return new Response("Internal Server Error", {
-        status: 500,
-        headers: {
-          "Content-Type": "text/plain",
-        },
-      });
-    }
-  }
+  const operationalResponse = await operationalRoute(request, url);
+  if (operationalResponse !== null) return operationalResponse;
 
   // Web auth: Discord OAuth start/install/callback/logout — see
   // handleAuthRoutes for the individual routes and their error handling.
@@ -351,6 +304,48 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
       ...corsHeadersFor(request),
     },
   });
+}
+
+async function operationalRoute(
+  request: Request,
+  url: URL,
+): Promise<Response | null> {
+  if (request.method === "OPTIONS")
+    return new Response(null, {
+      status: 204,
+      headers: corsHeadersFor(request),
+    });
+  if (url.pathname === "/ping")
+    return new Response("pong", {
+      headers: { "Content-Type": "text/plain", ...corsHeadersFor(request) },
+    });
+  if (url.pathname === "/livez")
+    return handleLivez({ cors: corsHeadersFor(request) });
+  if (url.pathname === "/healthz")
+    return handleHealthz({ cors: corsHeadersFor(request) });
+  if (url.pathname === "/api/version")
+    return handleVersion(request, corsHeadersFor(request));
+  return url.pathname === "/metrics" ? await metricsResponse() : null;
+}
+
+async function metricsResponse(): Promise<Response> {
+  try {
+    return new Response(await getMetrics(), {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain; version=0.0.4; charset=utf-8",
+      },
+    });
+  } catch (error) {
+    logger.error("❌ Error generating metrics:", error);
+    Sentry.captureException(error, {
+      tags: { source: "http-server-metrics" },
+    });
+    return new Response("Internal Server Error", {
+      status: 500,
+      headers: { "Content-Type": "text/plain" },
+    });
+  }
 }
 
 async function handleImageRoutes(

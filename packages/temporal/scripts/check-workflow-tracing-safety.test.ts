@@ -31,14 +31,14 @@ describe("findTracingSafetyViolations", () => {
       'import { defineQuery, defineUpdate } from "@temporalio/workflow";',
     );
     await expect(findTracingSafetyViolations([root])).resolves.toEqual([
-      { file: `${root}/workflow.ts`, rule: "query-update-handler" },
+      { file: path.join(root, "workflow.ts"), rule: "query-update-handler" },
     ]);
   });
 
   test("rejects nondeterministic workflow UUIDs", async () => {
     const root = await fixture("export const id = crypto.randomUUID();");
     await expect(findTracingSafetyViolations([root])).resolves.toEqual([
-      { file: `${root}/workflow.ts`, rule: "nondeterministic-uuid" },
+      { file: path.join(root, "workflow.ts"), rule: "nondeterministic-uuid" },
     ]);
   });
 

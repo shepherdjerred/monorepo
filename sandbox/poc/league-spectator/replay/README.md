@@ -11,7 +11,512 @@ support in the latest-build viewer, which has no integrated audio runtime.
 The local Bun process serves files; it does not decode matches. League does not
 run during preparation or playback.
 
-This is research code, outside Scout's application and deployment path.
+The research renderer remains outside Scout's hosted deployment. The local Scout
+demo below mounts it through a separate research adapter and the app's shared
+player surface. Public replay playback retains its own native-capability admission.
+
+## Local combat timeline
+
+For a private captured-position scene, run `bun tools/prepare-native-position-scene.mjs
+<replay.rofl> <private-output.json> <reference.json> [...reference.json]` from this
+directory. Each reference must satisfy the existing native position comparison
+receipt contract and match the original replay digest, build, protocol and footer
+duration. The adapter binds captured footer rows through prepared observation
+evidence and rejects ambiguous bindings or repeated capture clocks. Its output
+contains champion labels and numeric contexts, with original x/z projected to
+scene x/y; bounds describe observed points, not the map. Pass `trace` to the scene
+session with `sampling: "exact"`. Uncaptured times show no actors, including empty
+zero/footer boundary frames when those endpoints were not captured. Visibility,
+directed camera, trajectories and native scene readiness remain unmeasured.
+Keep the input receipts and output local; the capture's replay identity is
+operator-confirmed, not digest-attested by the Replay API.
+
+To check those observations against a private terrain image, pass the image and
+its projection receipt to the browser verifier. The receipt binds the image
+SHA-256 and navigation bounds to the same replay. Place minimum world X at the
+left and maximum world Z at the top. The verifier checks actor placement,
+camera follow, and the terrain pixels at a time with no recorded actors.
+
+```powershell
+bun tools/verify-browser-native-scene.mjs $newProofDirectory $replayPath $firstReference $secondReference --terrain $terrainPng $projectionReceipt
+```
+
+For the perspective view, use the reviewed private Map11 export for build
+`16.23.840.6595` and the existing local Three.js vendor file. The server binds
+the original geometry, exported files, replay, and position receipt by digest.
+It draws the untextured initial terrain and actors at the captured times with
+WebGL2. The browser verifier checks camera angle, depth, and marker placement.
+
+```powershell
+bun tools/serve-native-terrain.mjs $map11AuditDirectory $threeCorePath $replayPath $firstReference $secondReference
+bun tools/verify-browser-native-terrain.mjs $loopbackUrl $newProofDirectory
+```
+
+Pass `--scout-css` with the built app stylesheet to add the local `/scout`
+view. It uses Scout's shared replay controls and exact-time selectors for
+captured positions, corroborated dragon kills, and recorded inhibitor losses.
+The inhibitor count follows the match clock in either direction. The fixture has
+three verified losses. No world positions were verified for those losses.
+The player keeps its ordinary replay clock while the terrain shows actor
+markers only at verified position times.
+The scoreboard uses that same clock to show verified K/D/A, levels, deaths and
+returns across the match. The team kill display follows the same checkpoints.
+The winner appears at the footer clock when both teams' result flags agree.
+Pass `--turret-placements` with the reviewed installed Map11 receipt to show
+the verified turret cohort. Each marker clears at its recorded loss clock
+and returns on rewind.
+
+```powershell
+bun tools/serve-native-terrain.mjs $map11AuditDirectory $threeCorePath $replayPath $firstReference $secondReference --scout-css $scoutCssPath --turret-placements $turretReceipt
+bun tools/verify-browser-scout-terrain.mjs $loopbackUrl $newProofDirectory
+```
+
+Prepare the original turret models using the reviewed placement receipt and
+its archived materials BIN. The exporter verifies the installed source spans,
+original mesh and rig, and snapshot lifetimes against the saved replay.
+
+```powershell
+bun tools/prepare-native-terrain-structures.mjs $installation $replayPath $turretReceipt $archivedMapMaterials $ordinalExporterDirectory $newPrivateStructureDirectory
+```
+
+Pass `--structure-models <private-structure-directory>/manifest.json` together
+with `--turret-placements`. The viewer draws the 22 verified turret placements
+for each reviewed replay and removes a turret at its recorded destruction.
+Pan with the minimap and select **Close-up camera** to inspect a position.
+Turret damage and ruin states are still unverified.
+The minimap shows standing turrets as gold diamonds. **Recorded turret losses**
+jumps to the exact destruction clock and centers the free camera there.
+
+```powershell
+bun tools/prepare-native-terrain-nexus.mjs $installation $replayPath $archivedMapMaterials $preparedDecoder $ordinalExporterDirectory $newPrivateNexusDirectory
+```
+
+Pass `--nexus-models <private-nexus-directory>/manifest.json` with the reviewed
+prepared decoder. This draws both original Nexus models at their verified
+placements. **Jump to Nexus death cue** seeks to the recorded animation
+request. At that cue the viewer removes the target's intact model. The
+cue-to-clip mapping and destroyed-mesh timing remain unverified.
+
+To add the six authored inhibitors to a private Map 11 replay package, export
+their two team skins from the exact installed WAD:
+
+```powershell
+bun tools/prepare-native-terrain-inhibitors.mjs $installation $replayPath $turretReceipt $archivedMapMaterials $ordinalExporterDirectory $newPrivateInhibitorDirectory
+```
+
+Pass the resulting manifest and its SHA-256 using `--inhibitor-models` and
+`--inhibitor-models-sha256` together with `--turret-placements`. The exporter
+checks all 24 recorded turret anchors against the authored Map 11 registration
+order and corroborates its six inhibitor slots against the replay snapshots.
+Each standing model clears at its verified loss clock and returns when seeking
+before that clock. Destroyed appearance, transition animation, and respawn
+presentation remain unverified.
+
+Prepare the Earth, Chemtech, and Fire dragon models and their recorded tracks
+from the reviewed long 16.23.840.6595 ROFL and exact Map11 WAD.
+
+```powershell
+bun tools/prepare-native-terrain-dragon.mjs $installation $replayPath $preparedDecoder $ordinalExporterDirectory $newPrivateDragonDirectory
+```
+
+The packet verifier corroborates the kill against the replay footer and uses
+the context to bind it to the decoded opcode 392 creation and opcode 96
+waypoint records. The original creation reader supplies the object name.
+The exporter reads the authored Skin0 BIN, mesh, rig, and base-color texture
+from the Map11 WAD, then verifies the ordinal joints and embedded GLB
+textures. Add `--world-unit-models <private-dragon-directory>/manifest.json`
+and `--world-unit-models-sha256 <manifest-sha256>` to the loopback server or
+recorded package builder. The renderer uses recorded anchors and bounded
+positive-speed paths. Earth and the first Fire instance have bounded motion
+segments. Chemtech and the later Fire instances have exact anchors. The
+renderer leaves gaps where no position is known and clears the model at the
+corroborated kill. Facing, animation selection, corpse placement, and other
+dragon variants remain unverified.
+
+Prepare the two Baron instances and the pit Rift Herald from the same reviewed
+long replay using the Map11 archive as a local file:
+
+```powershell
+bun tools/prepare-native-terrain-neutral-objectives.mjs $archiveRoot $replayPath $preparedDecoder $ordinalExporterDirectory $newPrivateObjectiveDirectory
+$neutralUnitModels = Join-Path $newPrivateObjectiveDirectory manifest.json
+$neutralUnitModelsSha256 = (Get-FileHash $neutralUnitModels -Algorithm SHA256).Hash.ToLowerInvariant()
+```
+
+Pass `--neutral-unit-models $neutralUnitModels --neutral-unit-models-sha256
+$neutralUnitModelsSha256` to the loopback server or recorded package builder.
+This input can accompany the dragon and lane-minion inputs. The exporter binds
+the authored base models to named creation packets, exact waypoint
+observations, and synchronized kill evidence reconciled with the replay
+footer. Barons have exact position samples, including a same-clock position
+for each kill. Herald has two exact anchors and one bounded path earlier in
+its lifetime. The scene omits actors in unobserved intervals. Herald's kill
+marker has no recorded position, and summoned Herald and death animations
+are outside this evidence.
+
+Prepare the first lane-minion wave in the reviewed long replay with the
+archived native packet reader and the original Map11 melee and ranged skins.
+
+```powershell
+bun tools/research/export-exact-lane-minions.mjs $replayPath $macGameExecutable $installation $terrainStaticJson $laneActorProof
+$laneActorProofSha256 = (Get-FileHash $laneActorProof -Algorithm SHA256).Hash.ToLowerInvariant()
+bun tools/prepare-native-terrain-lane-minions.mjs $installation $ordinalExporterDirectory $macGameExecutable $laneActorProof $laneActorProofSha256 $newPrivateLaneDirectory
+```
+
+Pass `--lane-minion-models <private-lane-directory>/manifest.json` and
+`--lane-minion-models-sha256 <manifest-sha256>` to the recorded package
+builder. The actor proof binds the wave to its original barracks, class,
+team and recorded waypoints. The renderer uses bounded path intervals up
+to each contextual terminal event. Later waves, facing and death presentation
+remain unverified.
+
+Run the offline announcer verifier with a saved ROFL, the matching Female1
+English WPK, and the local vgmstream decoder. It verifies the recorded welcome
+and minion-spawn events and checks their original media at replay clock offsets.
+
+```powershell
+bun tools/verify-exact-terrain-announcer.mjs $replayPath $femaleEnglishWpk $vgmstreamCli $newAnnouncerProofDirectory
+```
+
+For the reviewed long replay, append the Map11
+`ENV_Map11_SRX_Elemental_Global_SFX_audio.wpk` path to also verify the
+Infernal terrain transition. Its opcode 880 packet records enum 194 at
+758.777796875 seconds. The exact-build event table names it
+`OnDragonTerrainTransitionInfernal`. The Map11 announcement record
+`b56f4be4` names the fixed `Play_sfx_Env_Map11_SRX_Transition_Stinger_oba`
+event without a team or actor token. The Wwise event resolves to streaming
+media 56523430. Append the Rift Herald audio BNK (Map11 WAD entry
+`3a5212378978284a`) after that WPK to also verify the Herald cue. Its opcode
+880 packet records enum 201 (`OnKillRiftHerald_Spectator`) at
+922.249119140625 seconds. Map11 record `222f2ed6` names the fixed Wwise event
+`Play_sfx_SRU_RiftHerald_death_reverb`. The event bank (Map11 WAD entry
+`6786fca8a9047ded`) resolves to embedded media 963276642. The verifier
+checks 232,332 stereo frames for the stinger and 314,891 mono frames for
+Herald at 44.1 kHz, including normal and double speed, seeking, post-cue
+silence, and rewind.
+
+The verifier uses headless offline audio and selects the default Map11 voice.
+For a private package build, pass `--announcer-preview <verified-timing-directory>`.
+The builder checks the exact saved replay, timing receipt, and authored WAVs.
+The player starts muted. Select **Announcer preview (Female1 English)** to
+enable the replay-clock cues in the verified timing directory. Native
+spectator admission, voice selection, and mixing are still separate
+acceptance checks.
+The recorded browser sound test decodes the actual WAVs with offline Web Audio
+and captures scheduling without opening an audio device.
+
+Add `--position-decoder $macGameExecutable` to the same command to show
+champion positions decoded from replay keyframes and movement packets. Supply
+your local game executable from Riot's exact `16.23.840.6595` macOS release.
+The server verifies its x86-64 slice and lookup digest and serves decoded
+position and movement data.
+The browser samples waypoints, recorded speed changes, and champion lifecycle
+at the replay clock. Keyframe jumps use the exact recorded positions. The
+browser uses the verified Map11 navigation surface for displayed heights.
+The two reviewed replay fixtures can run without camera position receipts.
+Pass both `--position-decoder` and `--scout-css` to read champion positions
+directly from replay packets. Opening creation and team records identify
+champions even when the match has no combat events. The short fixture has no
+reviewed turret placement receipt.
+
+Prepare the exact-build decoder once to run the preview with the replay,
+prepared decoder bytes, and local Map11 assets. Pass the prepared, pinned
+`fzstd.mjs` from the browser replay cache to decode champion motion and
+keyframes in a browser worker. Keep the raw replay and decoder files local.
+
+```powershell
+bun tools/prepare-native-terrain-decoder.mjs $macGameExecutable $preparedDecoder
+bun tools/serve-native-terrain.mjs $map11AuditDirectory $threeCorePath $replayPath --scout-css $scoutCssPath --position-decoder $preparedDecoder --worker-decompressor $fzstdPath
+node tools/verify-offline-terrain-motion-worker.mjs $workerOrigin $serverDecodeOrigin
+```
+
+For the comparison origin, start the same local server with the prepared
+decoder and without the worker decompressor argument. The verifier compares
+the emitted worker against server decoding and checks that both replay and
+decoder corruption are rejected.
+
+Run both checks together with a new proof directory. The harness starts two
+loopback servers, compares their output, captures screenshots and WebGL
+checks in headless Edge, and stops the servers on exit.
+
+```powershell
+bun tools/verify-offline-scout-terrain.mjs $newProofDirectory -- $map11AuditDirectory $threeCorePath $replayPath --scout-css $scoutCssPath --position-decoder $preparedDecoder --worker-decompressor $fzstdPath
+```
+
+From `packages/scout-for-lol/packages/app`, run the public-route browser harness
+with the built Scout app and loopback fixtures.
+
+```powershell
+bun --no-install --bun playwright test --config e2e/public-replay/playwright.config.ts
+```
+
+The fixtures exercise signed-out metadata and download, the package and worker
+integrity checks, and share links that restore the clock, camera, and vision in
+a fresh browser context. The synthetic engine draws a labeled test canvas.
+
+Use the recorded-replay harness to exercise the same Scout player with a saved
+16.23.840.6595 ROFL and its prepared Map11 assets. From the repository root,
+build the package in a new direct child of the ignored `.cache` directory. Use
+the same decoded terrain, materials, and model manifests as the loopback preview.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/build-local-scout-terrain-package.mjs $newPackageDirectory $map11AuditDirectory $threeCorePath $replayPath --position-decoder $preparedDecoder --worker-decompressor $fzstdPath --terrain-materials $terrainMaterials --champion-models $championModels --turret-placements $turretPlacements --structure-models $structureModels --nexus-models $nexusModels
+```
+
+From `packages/scout-for-lol/packages/app`, set both input paths to absolute
+paths and start the headless run. The builder prints the content-addressed
+manifest path.
+
+```powershell
+$env:SCOUT_REPLAY_E2E_MANIFEST = $absoluteManifestPath
+$env:SCOUT_REPLAY_E2E_ROFL = $absoluteReplayPath
+bun --no-install --bun playwright test --config e2e/public-replay/recorded-playwright.config.ts
+```
+
+The test-only build accepts the single-replay manifest. The package binds the
+prepared resources to that ROFL's SHA-256. The worker decodes the saved replay
+in the browser, and the normal player controls drive the Map11 renderer. The
+production package contract requires coverage for all legal lineups and skins.
+
+### Verify playback from a paired upload
+
+Build the recorded app and private package before starting the backend handoff.
+In the backend workspace, use the local PostgreSQL test harness and point the
+opt-in test at the original Scout Desktop recovery database and the directory
+containing the two saved replay files named in the test. The test opens the
+recovery database read-only and pairs its own local test device.
+
+```powershell
+$env:SCOUT_REPLAY_PROOF_OUTBOX = $absoluteDesktopDatabasePath
+$env:SCOUT_REPLAY_PROOF_DIRECTORY = $absoluteReplayDirectory
+$env:SCOUT_REPLAY_PROOF_HANDOFF = $newAbsoluteReceiptPath
+$env:SCOUT_REPLAY_PROOF_GAMES = ConvertTo-Json -InputObject $savedGames -Compress
+bun --no-install --bun vitest --config ../../../../vitest.config.ts run src/scout-client/real-replay-upload.integration.test.ts
+```
+
+Supply `$savedGames` as an array of objects with a string `gameId` and numeric
+`durationSeconds` for each saved match.
+
+In the app workspace, keep the manifest and ROFL inputs above. Once the receipt
+appears, select the game ID matching that ROFL and run against the uploaded
+replay. The backend holds the handoff for two minutes.
+
+```powershell
+$handoff = Get-Content -Raw -LiteralPath $receiptPath | ConvertFrom-Json -AsHashtable
+$env:SCOUT_REPLAY_E2E_BACKEND_ORIGIN = $handoff.origin
+$env:SCOUT_REPLAY_E2E_BACKEND_REPLAY_ID = $handoff.replayIds[$gameId]
+$env:SCOUT_REPLAY_E2E_REUSE_DIST = '1'
+try {
+  bun --no-install --bun playwright test --config e2e/public-replay/recorded-playwright.config.ts
+} finally {
+  Invoke-WebRequest -Method Delete -Uri "$($handoff.origin)/__replay_proof"
+}
+```
+
+The signed-out browser receives metadata and replay bytes from the local
+upload. The test preview attaches the private renderer after verifying the
+uploaded replay identity. The backend retains its normal playback status.
+
+To open the same app directly, keep those input paths set in the app workspace
+and run the preview. Open the replay URL that it prints.
+
+```powershell
+bun run build --config e2e/public-replay/recorded-vite.config.ts
+bun e2e/public-replay/recorded-preview.ts
+```
+
+The preview serves the built app, saved ROFL, and verified package over HTTP
+on loopback. Select **Free camera** and drag the scene or use the arrow keys to
+pan. Click the verified terrain topography minimap to center a close view, or focus it and use
+the arrow keys. **Zoom in** and **Zoom out** work in free and follow views.
+**Map overview** and Home reset the view. Select a participant to follow.
+Set `SCOUT_REPLAY_E2E_BUILD_NAME` to a distinct cache directory name before
+building and serving another preview alongside an existing one.
+
+For **Unit visibility**, generate the [exact team tracks](tools/research/README.md)
+from the same ROFL and pass `--team-vision` and `--team-vision-sha256` to the
+private package builder. The selected side filters the 3D actors and minimap
+markers with the same recorded masks. Terrain fog shading remains unverified.
+
+Add recorded health to the roster and above the visible champion models by
+preparing the same replay with
+[the champion health extractor](tools/research/README.md#recorded-champion-health).
+Pass its output and printed digest to `--champion-health` and
+`--champion-health-sha256` on the private package builder.
+
+Add the Gold held column and primary resource meters with
+[the champion resource extractor](tools/research/README.md#recorded-champion-resources-and-gold).
+Pass the output and printed digest to `--champion-resources` and
+`--champion-resources-sha256` on the same builder.
+
+Add recorded levels, total XP, and progress toward the next level with
+[the champion experience extractor](tools/research/README.md#recorded-champion-experience).
+Pass its output and printed digest to `--champion-experience` and
+`--champion-experience-sha256`. Set `--experience-map-definition` to the
+original 16.23.840.6595 Map11 definition extracted from the same build's WAD.
+
+Add the roster's seven playable item slots with the
+[recorded inventory tracks and icon catalog](tools/research/README.md#recorded-inventory).
+Pass both manifests and their digests to `--champion-inventory`,
+`--champion-inventory-sha256`, `--item-assets`, and `--item-assets-sha256`.
+
+To replay a verified champion animation request, generate a
+[recorded cue manifest](tools/research/README.md) and provide
+`--champion-animation-cues` and `--champion-animation-cues-sha256` to the private
+package builder. The builder checks the original packet in the same ROFL and
+binds the clip to the verified model, rig, and joint order. The browser samples
+the authored clip in its recorded request window. Native animation blending
+and preemption remain unverified.
+
+The recorded browser test checks team kills, roster statistics, and the
+winner at the exact replay end. It reads expected final scores independently
+from the original ROFL footer and checks that rewinding clears the result.
+
+With the same manifest and replay inputs, run the 1080p frame submission
+sampler from the app workspace. The default is headless Microsoft Edge.
+
+```powershell
+bun --no-install --bun playwright test --config e2e/public-replay/recorded-performance.config.ts
+```
+
+The report records the actual drawing buffer and graphics backend, samples
+frame submissions during 1× and 4× playback, and lists decode worker lifetimes.
+The reviewed long recording samples the opening, first lane wave, first
+champion kill, Fire Dragon movement, late minions, and closing structures. A
+package with unit visibility also samples both team views.
+The rates describe headless rendering. Continuous worker simulation and
+display presentation need their own measurements.
+
+The free camera can pan by clicking or dragging the minimap. With the map
+focused, the arrow keys pan and Home resets to the overview. Team markers on
+the minimap follow the same decoded positions drawn in the 3D view.
+
+To enable authored terrain color, extract the exact Map11 diffuse textures
+from the installed data files without starting the game. The extractor
+verifies the WAD, geometry, and material identities and retains the original
+texture mip at or below 512 pixels for this preview.
+
+```powershell
+dotnet build tools/terrain-texture-mips/TerrainTextureMips.csproj -o $textureExporterDirectory
+bun tools/prepare-native-terrain-materials.mjs $installation (Join-Path $map11AuditDirectory map) (Join-Path $textureExporterDirectory TerrainTextureMips.dll) $privateTerrainMaterialDirectory
+```
+
+Add `--terrain-materials <privateTerrainMaterialDirectory>/materials.json`
+to the local server command. The preview uses a diffuse shader with authored
+alpha cutoffs. The preview omits the translucent FaeLights pass pending its
+original shader. Water, lighting, and compositing parity are still unverified.
+
+To prepare the champions' original mesh and rig inputs, read the skin
+selectors from the replay's opening hero creation packets. The exporter uses
+the matching Windows installation on disk and does not launch it.
+
+```powershell
+bun tools/prepare-native-terrain-champions.mjs $installation $replayPath $preparedDecoder $newPrivateChampionDirectory
+```
+
+The directory must be new and under `.cache`. Each manifest records the
+selected skin BIN, original mesh and rig, authored default texture where
+present, and the associated source digests.
+
+Use the same installed archives and the local ordinal exporter directory
+containing `OrdinalModelExporter.dll` and `Exporter.dll` to prepare the
+models. The exporter resolves skin-specific range overrides and linked
+materials from the original definitions, including shared skin dependencies.
+It verifies the embedded textures, geometry range order, and rig bindings.
+
+```powershell
+bun tools/prepare-native-terrain-models.mjs $installation (Join-Path $newPrivateChampionDirectory manifest.json) $newPrivateModelDirectory $ordinalExporterDirectory
+```
+
+Add `--champion-models <private-model-directory>/manifest.json` to the
+loopback server or verification harness. The viewer draws the selected skin
+meshes and base-color textures at the replay's sampled champion positions.
+Choose a champion to follow and use **Close-up follow** to inspect the model.
+This view uses the original bind pose and opening mesh visibility.
+Replay-driven facing, animation, and native material shading remain unverified.
+
+The animation verifier samples an explicitly chosen authored clip against the
+original joint layout and checks exact rewind. The death verifier joins
+corroborated recorded deaths to authored clip and sound references from the
+selected skin graphs.
+
+```powershell
+bun tools/verify-native-terrain-ordinal-animation.mjs $installation $privateModelDirectory $animationAuditPath $champion $clipName $animationPackDll $threeCorePath $freshProofDirectory
+bun tools/verify-native-terrain-champion-deaths.mjs $replayPath $privateChampionManifest $installation
+```
+
+To export a compressed authored clip, run the pinned 16.23.840.6595 evaluator
+in the isolated offline probe. Use the expected animation and rig SHA-256 digests
+from the reviewed asset provenance. The probe reads an archived executable and
+verifies all three inputs before emulation. Renekton skin 9 and Chaos Nexus skin
+3 are verified examples.
+
+```powershell
+uv run --with capstone --with unicorn python tools/probe-exact-compressed-animation.py --client $macGameExecutable --animation $authoredAnm --animation-sha256 $reviewedAnmSha256 --rig $matchingSkl --rig-sha256 $reviewedSklSha256 --receipt $newAnimationReceipt --clip $newPackedClip
+```
+
+The receipt distinguishes sequential frame samples from fresh-cache seek
+controls. The probe verifies an authored asset. Replay-driven clip dispatch
+and sound scheduling remain separate acceptance checks.
+
+Use the private waypoint verifier to audit both movement packet variants on
+matching local replays. It prints record counts by stream and the recorded
+relative waypoints for verified champion bindings.
+
+```powershell
+bun tools/research/verify-native-terrain-waypoints.mjs $macGameExecutable $replayPath $secondReplayPath
+bun tools/research/verify-native-terrain-move-speed.mjs $macGameExecutable $replayPath $secondReplayPath
+```
+
+`combat-timeline.html` reads champion kills and deaths directly from the original
+16.23 replay in a browser worker. Its neutral team labels use the two recorded
+partitions. The player shows cumulative kill totals and recent events at the
+selected match time. It labels an event with a champion when the event context
+uniquely matches that participant's footer statistics. Each event is displayed
+independently.
+
+Pass a local ROFL and a prepared asset directory containing `vendor/fzstd.mjs`
+to the existing loopback server.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/serve.ts $assetRoot $replayPath $replayPath 4198
+```
+
+Open `http://127.0.0.1:4198/combat-timeline.html` to review the combat events.
+Public playback admission, actor movement, and the game scene are separate.
+
+To use the shared Scout analysis controls with the same decoded events, run
+`serve-scout-demo.ts` with `combat` after the port instead of a decoded
+duration. Use the prepared asset directory containing `vendor/fzstd.mjs`,
+an original 16.23 replay, and the compiled Scout stylesheet and Scout assets
+from the instructions below.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/serve-scout-demo.ts $leagueAssets $scoutReplay $scoutDemoCssPath $scoutAssets 4200 combat
+```
+
+Open the server address and select an event or use the match-time slider to
+seek. The event-type filter includes kills, deaths, level-ups, and champion
+returns when their recorded dead-time intervals verify. Verified lifecycle
+events also drive the team alive counts as the match clock moves. Combat
+counts include kills and deaths. A death with no recorded return adds no
+return marker. The turret and inhibitor destruction filters show corroborated
+recorded losses at their match times. Turret labels name the team that lost the
+turret when the recorded evidence verifies its side.
+
+Participant binding uses the original startup packet's native slot and 64-bit
+summoner key. The footer's `SUMMONER_ID` joins that key to team and display-name
+metadata; footer array order and footer `ID` are separate identities. Keys stay
+decimal strings to preserve all 64 bits. Missing or ambiguous keys fail, including
+mirror lineups. `tools/inspect-participant-consumer.py` executes the original
+slot/key instruction slices, and `tools/compare-participant-identity.mjs` compares
+those observations with the browser reader.
+
+`tools/inspect-full-decode.mjs <replay.rofl> <asset-root> <output.json>` inspects
+all original packet readers across full gameplay/keyframe streams. It retains
+class counts and bounded failure examples, records memory/time and input hashes,
+and avoids copying decoded arenas when structural status is sufficient. The
+optional `initial` mode extracts original hero and startup observations. Structural
+completion alone does not establish semantic reconstruction or rendered coverage.
 
 The exact-build `latest.html` viewer routes ordinary Play through the shared
 typed-array effect worker and translated game shaders. Static resources load
@@ -45,7 +550,92 @@ current evidence, missing capabilities, research uncertainties and completion
 criteria. The detailed research sections below retain their individual scopes;
 component results do not establish whole-match equivalence.
 
+## Local Scout player demo
+
+`scout-demo.tsx` mounts the app's `ReplaySessionPlayer` with
+`@scout-for-lol/replay/research`. The public `ReplayPlayer` wrapper continues to
+require an admitted native rendering package; the local adapter has an explicit
+research-only initialization path. Both surfaces share session ownership,
+loading/error presentation, controls, cancellation, resizing and disposal.
+
+The demo uses the real browser decoder and `latest-viewer.mjs` renderer for
+**16.21.829.8620 / Map12 / a default 120-second window**. It displays the
+verified partial scope above the player. Playback rates are 0.5×, 1×, 2× and 4×,
+with free/follow camera and all vision. Audio, team perspectives and directed
+camera remain unavailable. This scope does not establish full-match playback,
+Summoner's Rift, arbitrary content or native spectator equivalence.
+
+The loopback server builds the React entry in memory, serves one explicitly
+selected replay, and pins the selected static bootstrap's SHA-256. The player
+checks the original replay's byte length and digest before initializing. Research
+modules and prepared assets stay within their declared roots. The harness creates
+no public replay descriptor or native admission record.
+
+The extracted research graph requires the same-origin `/assets/` root because
+its vendor imports are still absolute. It verifies the pinned pose math bytes
+before importing their same-origin module URL. Embedded GLB textures use an image
+element loader, matching Scout's existing `img-src blob:` policy without adding
+Blob script or connection permissions. A public native package must instead
+provide its own immutable, closed resource graph.
+
+From the monorepo root, prepare the documented exact-build assets, then build the
+Scout app catalog to obtain its real stylesheet:
+
+```powershell
+bun run --filter=@scout-for-lol/app build:storybook
+
+$leagueAssets = 'C:/path/to/prepared/public'
+$scoutReplay = 'C:/path/to/NA1-5665845207.rofl'
+$scoutDemoCss = @(Get-ChildItem -LiteralPath packages/scout-for-lol/packages/app/storybook-static/assets -Filter 'iframe-*.css')
+if ($scoutDemoCss.Count -ne 1) { throw 'Build a fresh Scout app catalog first.' }
+$scoutDemoCssPath = $scoutDemoCss[0].FullName
+$scoutAssets = 'packages/scout-for-lol/packages/app/storybook-static/assets/scout'
+bun sandbox/poc/league-spectator/replay/tools/serve-scout-demo.ts $leagueAssets $scoutReplay $scoutDemoCssPath $scoutAssets 4183
+```
+
+Use an unused port. The server binds only to `127.0.0.1` and prints its address;
+append `?t=79` to initialize at a decoded timestamp. It starts paused and uses the
+same Play, seek and follow controls as the app. The optional argument after the
+port selects an explicit decoded duration within the original container duration.
+Larger diagnostic windows require separate browser memory, first-frame and seek
+acceptance; completing an offline decode does not establish those gates. A stylesheet from a fresh
+app catalog is required; the harness reuses Scout's CSS instead of maintaining
+another theme or styling build. The Scout assets root is explicit and must
+contain every `/assets/scout/` resource referenced by the selected stylesheet;
+startup fails if any required resource is missing or escapes that root. This also
+allows a CSS file from the app's `dist` build to use the catalog's owned assets
+without assuming that the CSS directory contains a second assets copy.
+
+An optional final argument selects a closed original-control bridge package.
+It replaces only the shared player's playback buttons and speed selector; the
+same owned session commands, timeline, camera, errors and disposal remain in use.
+Prepare it from the original HUD/source-control receipts and static QA package:
+
+```sh
+python sandbox/poc/league-spectator/replay/tools/prepare-native-replay-controls.py <proof-directory> <qa-package-root> <control-package-root>/manifest.json
+bun sandbox/poc/league-spectator/replay/tools/check-native-replay-control-model.mjs <control-package-root>/manifest.json <comparison-receipt.json>
+bun sandbox/poc/league-spectator/replay/tools/serve-scout-demo.ts <league-assets> <replay.rofl> <Scout-css> <Scout-assets> 4188 120 <control-package-root>/manifest.json
+node sandbox/poc/league-spectator/replay/tools/check-native-replay-controls.cjs http://127.0.0.1:4188
+```
+
+The bridge retains original authored button images, executed state outputs,
+rate steps/labels and pause selection. HTML buttons own keyboard activation and
+pointer lifetime; focus styling is independent of unproved native input bytes.
+Native hit regions receive an explicit symmetric browser expansion to 24 CSS
+pixels, and coarse input scales the whole cluster to 48-pixel targets without
+overlap. The four admitted actions call the actual SDK, respecting its rate
+capabilities; recording remains unavailable. This is source-backed control
+presentation in the shared player, rather than admission of native UI event
+services, complete native HUD visibility, text shaping or spectator parity.
+
 ## Supported input
+
+Archived 16.21 Map11 preparation is a separate
+[static geometry producer](tools/research/README.md#archived-map11-static-geometry).
+It uses exact release bytes, checks WAD entries and source-bound cache receipts,
+and emits an isolated closed inventory. It exports the base visibility mesh
+subset and diffuse textures only; it does not admit Summoner's Rift replay
+playback, world lifecycles, native materials or recorded map variants.
 
 Ordinary reconstruction requires the pinned startup configuration package and
 decodes exactly one stream-3 opcode728 packet before scene-bound readers run.
@@ -54,6 +644,62 @@ with a different map ID is rejected before world or effect placement. Startup
 decoding has separate stream-local identities and preserves gameplay transport
 ordinals. The same extractor can inspect startup without a scene; this does not
 establish mode/variant compatibility or add rendering support for another map.
+
+Map11 opcode745 neutral creation uses a separately pinned original argument
+reader. Gameplay requests and later stream-2 snapshots remain separate report
+inventories; snapshots do not create another entity. Preparing a neutral asset
+requires its original requested skin, the native Default-MapSkin resource-skin
+selection proof, and exact `CharacterRecord`/skin namespace owners. A physical
+`skin0.bin` filename cannot satisfy a different requested resource identity.
+
+`observe-neutral-world-placement.py --client-kind factory-minion` executes the
+original minion type registration, pool allocation, constructor and bounded
+world-registration/position prefix. `prepare-native-world-records-input.mjs` and
+`observe-world-character-records.py` separately check original replication-class,
+health-bar-height and corpse-lifetime consumers against the archived records.
+These controls retain an explicit supplied control world; they do not establish
+appearance loading, complete factory acceptance or native replay publication.
+
+`prepare-neutral-world-policy.mjs` binds those proofs into static asset identities
+without embedding match events. `prepare-map11-runtime-scene.mjs` accepts
+`--neutral <actor-root> <native-policy>` and namespaces its closed resources under
+`neutral/`, keeping repeated static/world actor resources distinct. Native world
+state and corpse producers then enumerate these explicitly declared minion assets
+and compare their values to the original record observations. Their new scene and
+world identities require separate selected-program approval. The logical replay
+lookup leaves team mapping unknown and never grants native spectator admission.
+
+For several recorded fixtures, `prepare-neutral-argument-corpus.mjs` takes an
+output filename followed by complete original factory-argument proofs. Its
+language-neutral [corpus contract](tools/neutral-argument-corpus.schema.json)
+binds every proof and replay digest; JavaScript and Python validators derive the
+same ASCII case-insensitive character/skin request set. Original records keep
+their separate match order and provenance. The Meta, placement, actor-request
+and static-policy tools accept this corpus directly. Placement controls use
+fresh bounded cold worlds for each source and batch, keeping all recorded points
+without claiming a live match or increasing native allocation limits.
+
+`capture-original-packet-window.mjs` captures an explicit diagnostic interval
+with fixed object/byte limits while retaining original gameplay ordinals.
+`observe-buff-rpc-arguments.py` checks the original BuffManager callback
+declarations and executes their argument prefixes. The resource-name hash
+controls execute the original ASCII hash function, separately from source
+inventory, resource lookup, buff membership and live animation-provider
+admission. A decoded buff argument or matching name hash does not establish any
+of those later capabilities.
+
+`inspect-borrowed-buff-resource-arguments.mjs <approved-public-assets>
+<original-window.json> <python-native-prefix-proof.json> <output.json>` compares
+the exact RPC1160 hash/context prefix against the independent Python controls.
+The reader borrows the existing structural decoder's VM, owns a bounded scratch
+stack, and restores registers and touched memory in `finally`; it allocates no
+second image or VM. The control also checks following packet equality,
+execution-failure cleanup, reentrancy and disposal. After that source-bound
+control passes, `inspect-replay-buff-resource-arguments.mjs
+<approved-public-assets> <exact.rofl> <borrowed-native-controls.json>
+<output.json>` inventories a whole match with original transport cursors and
+separate gameplay/snapshot records. Its scalar arguments do not establish live
+entity routing, buff membership, resource winners or Homeguard state.
 
 ### Selected static content
 
@@ -147,6 +793,67 @@ its declared texture leaves. It also copies the fixed build-wide item package
 and its hash-verified icons from the approved static root; lineup selection does
 not change that package's approval.
 
+For independently prepared scenes, use
+`prepare-selected-scene-catalog.mjs <private-source-configuration.json> <output-cache>`.
+The existing single-root command above retains schema 1. The multi-root command
+publishes schema 2 with an explicit source identity for every file. Its private
+configuration contains `{plan, roots, roles}`:
+
+- `plan` has `schema: 1`, `kind: "selected-static-source-plan"`, `sources`, and
+  `files`. Each source has `{kind, identity: {file, sha256, bytes}}`. Reserved
+  authorities `build`, `scene`, and `animation` use kinds
+  `approved-exact-build-public`, `prepared-scene-public`, and
+  `prepared-scene-animation`. Additional named package authorities use
+  `prepared-scene-package` and bind their own manifest. `roots` maps those same
+  authority names to explicit input directories; host paths remain private.
+  Identity manifests are bounded to16MiB for build/scene/animation and32MiB for
+  separately prepared package authorities that retain original native controls.
+- Every target file is declared as
+  `{source: {authority, file}, sha256, bytes}`. Both source and target paths are
+  relative. Include each authority's identity file in this inventory. There is
+  no search across roots when a declared file is absent, and no directory tree
+  is implicitly selected. The immutable build profile is selected at
+  `decoder-16.21-macos/profile.json`; its image remains an exact build resource.
+- `roles` includes the ordinary scene/effects/context/viewer-pose roles plus
+  `sceneAnimationAuthority`, `sceneAnimationClock`, `sceneAnimationRig`,
+  `sceneAnimationEventInventory`, and `sceneAnimationLeafPoses`. These last five
+  refer to the independently prepared animation authority and its four roles.
+  Every authority dependency must be present with its declared size and digest.
+  Historical decoder-directory clock, rig, event, and pose metadata cannot be
+  relabelled as these scene roles.
+
+Preparation reads all sources without modifying them and creates a fresh output
+namespace canonically disjoint from every input root. The bootstrap is written
+only after catalog and context validation. A source mismatch fails the run;
+it does not cause a download, root substitution, or profile rewrite.
+`prepare-selected-static-sources.mjs <configuration.json> <output-cache>` accepts
+the narrower `{plan, roots}` configuration to stage and inspect the same closed
+source inventory before the remaining producers are ready. That staging output
+has no bootstrap and establishes no replay readiness. Schema 2 selections expose
+`readSceneAnimationResource({authority, file})` for the typed animation adapter;
+its `native`, `scene`, and `derived` authorities remain distinct through worker
+capture and restoration. Content closure does not admit dynamic graph inputs,
+event scheduling, native world appearance, or spectator parity.
+
+`extend-selected-scene-material-config.mjs <scene-config.json> <native-root>
+<material-root> <GPU-root> <output-config.json> [explicit-cold-defaults-root]
+[explicit-all-vision-fog-root]` adds explicit native, material
+and controlled-GPU authorities to that private configuration. It reads only the
+GPU producer's declared dependencies, package files, and fixed original
+simulation programs; it does not select entire source trees. Native/material
+resources keep paths relative to their own manifest roles. Publishing this
+configuration preserves explicit unsupported materials and the producer's
+controlled environment; dynamic team fog, default-texture substitutions and
+native effect activation remain separate admission boundaries.
+GPU schema 2 requires the explicit cold-default root and its matching digest;
+it cannot search another authority for missing resources. The separate
+`sceneColdDefaultTextures` role closes only the declared default-resource
+proofs. GPU schema 3 additionally requires the explicit seventh all-vision root
+and its matching `sceneAllVisionFog` role. Its two declared native proofs must
+validate against the exact selected scene, world, original materials, profile
+and image; the supported perspective is explicitly `all`. Legacy schema 1/2
+invocations and outputs remain unchanged.
+
 The isolated cache bootstrap copies both `public/vendor` and `public/utils`:
 the installed GLTF loader has relative utility imports outside `vendor`.
 `prepare-isolated-browser-modules.mjs <approved-cache> <isolated-cache>` repairs
@@ -199,6 +906,161 @@ the original header. Native atomic time remains distinct from the Toolkit sample
 grid; converting native pose time to that grid is a presentation policy, not a
 claim of native pose interpolation parity. Other unequal formats fail explicitly.
 
+### Weighted death animation selection
+
+`latest-animation-selectors.mjs` translates the original 16.21 selector's ordered
+float32 weight accumulation, threshold comparison and existing xorshift stream.
+The original startup seed setter receives `mach_absolute_time` ticks and maps
+zero to one. The browser owns a local visual stream, initialized once per replay
+from its monotonic `performance.now()` clock projected to integer nanoseconds.
+Its seed value and global call ordering do not reproduce the original League
+process. The weighted kernel and RNG state are compared with execution of the
+original selector prefix on original graph BIN fields.
+
+Recorded minion deaths assign variants once in transport order. Opaque choices
+bind to their original graph node and death event, and backward seeks reuse them.
+Unknown selectors, updater inputs and non-atomic death controllers remain
+unsupported. This supplies the authored super-minion death variants; death pose
+clamping, native transitions and global animation scheduling retain their separate
+preview limitations. `tools/observe-animation-selector-native.py` captures the
+native controls and `tools/compare-animation-selector.mjs` compares their choices
+and complete RNG state. `tools/inspect-world-death-selector-playback.mjs` checks
+recorded full-match deaths and reverse-time sampling against the prepared assets.
+
+### Original spectator HUD resources
+
+The archived HUD tools retain original UI BIN definitions, scene links, button
+state lists, atlas coordinates and font namespace dependencies. Constructor and
+layout observations execute the original math/ARGB initialization block before
+reading defaults. Cold BSS values do not establish initialized UI defaults.
+
+`latest-native-hud-layout.mjs` runs the original layout program in an owned native
+WASM context with default settings and the original root-parent getter. Its
+package pins the image, services and observed source blocks. The public input
+preserves authored rectangles, flags and registered anchor types; unsupported
+overrides reject. `tools/prepare-native-hud-layout.mjs` binds the original native
+observations, and `tools/compare-native-hud-layout.mjs` compares ordered viewport
+changes with those results. This component does not yet integrate the HUD scene,
+controller state, localization or native text layout into the common renderer.
+
+Original `IMAA` resources provide a second image lookup: their sorted image keys
+select an indexed original texture hash and four UV floats. The archived image
+probe executes the original readers, lower-bound lookup, missing-key branch and
+unchanged constructor UV copy. The image resource producer binds those results to
+exact WAD textures and pinned exporter output; it never substitutes an extension
+or a similarly named image. Its resource index preserves ordinary atlas,
+loose-image, sliced-image and material-sampler references separately.
+
+`latest-native-hud-authored-uv.mjs` executes the original ordinary `AtlasData`
+UV program in WASM. Its producer binds the native constructor, source blocks and
+authored input receipts; its comparison checks exact float bytes for explicit
+zero/flip control inputs. Runtime flag selection, nested image-atlas composition,
+sliced providers, text and controller state require their own original consumers.
+These components are preparation primitives, not a rendered spectator HUD.
+
+`latest-native-hud-compositor.mjs` and the separate `native-hud-qa.html` harness
+render source-closed ordinary icon primitives at executed original rectangle/UV
+outputs. The complete element inventory includes button-state children that are
+not direct controller references. Its native/WASM comparison retains the same
+proved layout program while checking every source element. QA scene visibility,
+button state, draw order and Canvas blending are explicit controlled inputs;
+unsupported sliced/material providers remain listed. Font specimens use the
+original bytes with controlled text and sizing. The harness does not bind live
+replay state or establish native text shaping, layer defaults or HUD parity.
+
+```sh
+python sandbox/poc/league-spectator/replay/tools/prepare-native-hud-qa.py <proof-directory> <qa-package-root> --layout-controls native-hud-element-layouts-root-control.json --layout-comparison native-hud-element-layout-wasm-comparison.json
+bun sandbox/poc/league-spectator/replay/tools/serve-native-hud-qa.mjs <qa-package-root> 4250
+node sandbox/poc/league-spectator/replay/tools/check-native-hud-qa.cjs http://127.0.0.1:4250
+```
+
+The owned-browser control captures default/hover/restored states and original
+font specimens. Static QA requests the optional `willReadFrequently` context hint
+and records whether the browser accepts it before frequent pixel inspection.
+Unsupported browsers retain ordinary 2D rendering; that fallback does not promise
+identical readback backend behavior. The compositor's ordinary rendering default
+does not request this QA hint.
+
+The font directory probe verifies original OTF/TTF bytes, SFNT bounds and names
+through the actual `ux/fonts` namespace. Font files and decoded texture pixels do
+not establish original text shaping, sampler/blending state or controller behavior.
+
+`tools/observe-native-hud-slice-uv.py` executes the original three-/nine-slice
+provider programs with explicit SSE controls. The separate
+`tools/observe-native-hud-slice-caller.py` constructs the original icon, initializes
+its authored position and executes the complete original provider caller with
+the default UI manager and supplied viewports. It records the actual aspect/scale
+arguments and owned UV/border outputs. Vertex assembly, loaded texture resolution
+and live visibility remain separate; the ordinary compositor rejects these
+providers until their render consumer is admitted.
+
+Replay-control probes distinguish scalar policy from external services.
+`tools/observe-native-replay-display-policy.py` constructs the original clock,
+pause and controls owners, executes the Play selected/dirty predicates, and runs
+the original clock setter/getter, jump-back delta and reader-bound clamp.
+Pause bytes and source-reader bounds are explicit controls. The rate-label probe
+executes the original static initializer before selecting string arguments;
+uninitialized BSS does not supply valid labels. These probes do not replace the
+native widget lookup, text shaper or replay-client event notifications.
+
+The archive-backed prerequisite has an explicit-output driver:
+
+```sh
+python sandbox/poc/league-spectator/replay/tools/probe-archived-replay-ui-bootstrap.py <native-assets-public> <original-macos-client> <archived-installation-root> <retained-fixture-cache> <output-receipt.json>
+```
+
+The installation root must contain the exact profile-matching
+`Game/League of Legends.exe` and complete signed original
+`Game/DATA/FINAL/{DATA,Global,Bootstrap.windows}.wad.client` files. The driver
+preserves native signature/index validation and independently checks each
+original decoded subchunk table. It executes the complete original settings and
+local-controller constructor, then rejects access to omitted disk-log queues.
+Inputs and source bytes are checked again before the receipt is written, outside
+every retained input root. This constructor boundary does not establish replay
+client selection, executed background jobs or live native HUD readiness.
+
+`tools/observe-native-launched-replay-controls.py` adds an explicit existing ROFL
+launch path through the original launch-kind parser. The separate
+`tools/observe-native-cached-replay-controls.py` also constructs the original
+binary-resource cache, preserving its guard and recursive-mutex contract.
+Both retain the archive/bootstrap driver's ownership and disk-log guards.
+An actual authored controller/scene binding is still required before widget
+reference lookup can succeed; these observers never supply cached widget
+pointers, skip an original action consumer or mark a replay loaded.
+
+The complete UI archive can extend a verified installation with Scripts into a
+new six-file installation, preserving every parent file and subchunk receipt:
+
+```sh
+bun sandbox/poc/league-spectator/replay/tools/materialize-archived-ui-archive.mjs <RMAN-parser-root> <approved-research-cache> <archive-cache> <verified-scripts-manifest.json> <output-receipt.json> --materialize
+python sandbox/poc/league-spectator/replay/tools/probe-archived-replay-ui-data.py <native-assets-public> <original-macos-client> <new-installation-root> <retained-fixture-cache> <output-receipt.json>
+```
+
+The materializer verifies the source-pinned RMAN, ordered original chunk
+identities, complete file readback, WAD index and decoded subchunk table. It never
+rewrites parent installations or existing chunk receipts. Actual native signature
+validation is a separate gate executed by the Python observer. That observer
+also retains source-stream byte coverage: a successful library load that skips
+unregistered classes does not establish typed fields or widget readiness.
+`probe-archived-replay-ui-typed-data.py` additionally executes the original UI and
+replay reflection modules. Reaching the end of the source stream still leaves
+any subsequent native postload/service boundary explicit.
+
+`tools/materialize-archived-shader-archive.mjs` extends the complete six-file UI
+installation with the original `ShaderCache.dx11.wad.client` required by the
+frozen shader compiler:
+
+```sh
+bun sandbox/poc/league-spectator/replay/tools/materialize-archived-shader-archive.mjs <RMAN-parser-root> <approved-research-cache> <archive-cache> <verified-ui-manifest.json> <frozen-shader-package.json> <output-receipt.json> --materialize
+```
+
+It checks the exact archived executable and shader archive against the compiler
+authority, reconstructs every declared chunk, and reads back all seven complete
+files in a fresh installation. Parent files, subchunk receipts and compiler
+packages remain unchanged. Omit `--materialize` to validate and record the
+archive plan. This supplies offline compiler inputs; native archive signature
+validation, shader compilation and rendered UI acceptance remain separate.
+
 ### Direct effect runtime
 
 `latest-direct-effect-runtime.mjs` owns persistent typed-array particle state,
@@ -207,6 +1069,30 @@ checkpoints. Camera redraws generate draw packets without advancing simulation.
 The worker transfers independent geometry buffers; transferring a draw cannot
 detach simulation or checkpoint storage. These checkpoints contain runtime
 state, rather than emulated process memory.
+The bounded checkpoint cache keeps chronological private handles spread across
+the visited timeline. A seek restores the latest retained state at or before
+its destination, including a cached state ahead of the current clock. Event and
+tick processing then resumes at the original saved cursor without coarsening
+simulation. Equal-time checkpoints must agree on tick and event cursor. Public
+checkpoint restoration clears retained alternatives, so an external state cannot
+be overwritten by a cached future from the previous branch.
+The receiving worker hands its structured-cloned event graph to the runtime
+through a single-use ownership capability. Ordinary in-process construction still
+copies caller events. Every ordered event remains validated and retained; the
+constructor creates no future effect instances. Before freezing creation inputs,
+it protects all omitted-event graphs that retain mutable ledger aliases. A private
+batch memo reuses only completely validated and frozen subgraphs, including during
+checkpoint restoration. Rejected graphs cannot partially freeze or certify their
+children.
+`latest-direct-world-input.mjs` defines the versioned worker world input. The
+main thread retains the complete lossless replay report. The worker receives
+the movement, lifecycle, combat, resource, missile and visibility tracks its
+world consumers use, original champion base-flag replication records, and a
+four-field descriptor projection for attachment identities and keys. Newly
+owned descriptor columns transfer once; static asset ownership remains separate.
+Worker restoration installs throwing accessors for omitted original fields, so
+a newly added consumer must extend the explicit contract. Equivalence checks
+exercise absolute-time and causal-boundary queries, including backward seeks.
 Worker initialization reconstructs the complete compiled inventory from ordered
 event definition references and independent copies of the static asset inputs.
 It runs the same content-pinned loader, capability owners and compiler, then
@@ -327,8 +1213,23 @@ registered constructor are initialized. In particular, absent birth scale is a
 unit vector; an authored zero scale remains zero. The constructor and typed-loader
 controls are separate from the particle and packed-geometry comparisons.
 Legacy point offsets with verified non-random vector curves are sampled once at
-particle birth using normalized emitter age. Other Legacy rotation and random
-fields remain excluded. Older prepared JSON loses some signed-zero curve lanes;
+particle birth using normalized emitter age. A separate bounded Legacy rotation
+program admits single camera quads with the verified two-axis probability shape,
+constructor-zero shape vectors and no authored birth motion or rotation vectors.
+The original retained chance is sampled first, followed by both angle
+probabilities; those samples advance the original stream even though the three
+zero vectors retain their bytes through the original matrix operations. Authored
+axis values remain unchanged. Nonzero vectors, other axes/distributions, delayed
+births and other Legacy rotation/random fields remain excluded.
+`probe-scene-legacy-shape-rotation.py <decoder-package> <matching-client>
+<effects-root> <field-root> <fresh-proof.json> --component <effectId:emitterIndex>`
+observes the original typed source, constructor defaults, shape callbacks and
+every RNG call through complete births. `compare-scene-legacy-shape-rotation.mjs
+<closed-public-root> <native-proof.json> <fresh-comparison.json>` compares the
+unchanged source against its matching material, geometry, pool lanes and stream
+state. Supplied component bases and clocks do not establish recorded replay
+activation; that remains the separate ordinary-session control.
+Older prepared JSON loses some signed-zero curve lanes;
 that source limitation remains explicit even when rendered geometry agrees. The
 static asset writer now preserves negative zero, but existing packages require
 regeneration before they can claim that serialization policy.
@@ -408,6 +1309,25 @@ Root-only queries reuse the same causal layers and yaw while skipping unused
 joint evaluation. Cache keys retain absolute time, packet/entry cutoff and source
 state, independently of the camera. Native pose parity and engine acceptance
 remain unknown; supplied viewer poses do not establish original live providers.
+Per-track event indices select the last admitted owner without rescanning the
+complete animation history at every particle substep. Exact same-time packet and
+entry cutoffs, prior ambiguity failures, first-admitted track order and rate-zero
+suppression remain part of that selection. Graph evaluation and clip clocks stay
+in the shared sampler. `tools/compare-full-pose-event-index.mjs` compares the
+original prefix algorithm with the index over complete source-bound actor
+timelines, both movement plans and forward/reverse causal queries. Its standalone
+selection timings do not measure browser seek latency.
+CPU attachment queries reset and interpolate the requested bones' complete
+ancestor paths, including nonjoint GLB containers, instead of updating unrelated
+descendants. Every active clip track still passes the shared weight, joint,
+source-frame and channel checks. Native installed-name winners remain separate
+from ordinal pose tracks, including duplicate names. Visible actors and local
+pose application retain the full hierarchy path. The source-bound
+`tools/compare-viewer-cpu-ancestors.mjs` control compares exact matrices for
+individual and combined installed names; `tools/compare-cpu-ancestor-world-queries.mjs`
+compares complete CPU query results with the full-rig control at original causal
+boundaries in both directions. Their standalone timings do not establish a
+browser seek or memory improvement.
 When current facing is unknown, visible champion models use a separate display
 policy: the last accepted nondegenerate movement path is sampled at its first
 causal interruption, with creation/respawn resets and death-time freezing. Before
@@ -620,6 +1540,27 @@ original engine registration, collision and particle retirement remain partial.
 Legacy and targeted-family adapters must have disjoint source packets and
 missile identities. Ambiguous ownership fails before activation; network effect
 requests remain independent and are never deduplicated by this partition.
+World and family clients can share `createOwnedProjectilePresentation` for one
+exact report. It owns a private timeline copy and exposes only frozen metadata
+through `readOwnedProjectileMetadata`; hot sample arrays never leave the owner.
+The family constructor accepts that capability through `presentationOwner`,
+mutually exclusive with a caller-owned `presentation`. Foreign reports and
+forged capabilities fail. Public query results remain independently mutable,
+and both construction paths snapshot policy/end-time metadata rather than
+retaining the caller's complete presentation graph. This shares storage and
+validation without changing causal cutoffs, sampled motion or admission.
+
+`createOwnedLatestMovement` similarly retains one private accepted path index
+for a renderer session. The visible models and two main-thread world views bind
+that capability against the same report and map. Samples return owned position,
+direction and scalar provenance; numeric path arrays remain private. World views
+apply original hero-creation ordinals without mutating the visible-model view.
+Display-facing receives copies of only its hero tracks. Worker contexts retain
+their separate transferred input and index. This storage change preserves the
+existing quantized-path preview; it does not admit native locomotion, collision
+or acceleration. `tools/compare-owned-movement.mjs` compares complete retained
+replay path samples and ordered world queries with the independent-index path.
+
 `latest-direct-missile-presentation.mjs` separately rebuilds the unchanged legacy
 missile admission from decoded records and pinned static movement, actor and
 spell data in the preparation worker. Its generic adapter emits identifiable
@@ -688,11 +1629,23 @@ exact static presentation-content hash to every checkpoint. A different pose
 asset closure or a changed world hash rejects restoration and advancement.
 Creation evidence remains separate from the most recently resolved pose evidence;
 both survive checkpoints with explicit unknown native acceptance and pose parity.
-Automatic checkpoints reuse private, detached snapshots of unchanged historical
-ledger rows. Active updates and later removal requests invalidate those snapshots;
-the checkpoint interval and retained history stay the same. Public checkpoint
-queries return complete independent copies, and restoration copies cached state
-before making it live.
+Automatic checkpoints retain complete ledger and generation history in private
+insertion-order trees. Each boundary batches ledger and scalar generation writes,
+copying each touched tree branch once and retaining every historical row. The
+single structured clone of changed rows and active particle state is unchanged.
+Live omission reasons use owned
+working arrays, preserving creation/ledger aliases while leaving ordered source
+events pristine for backward replay. Active state and changed rows are copied
+together so checkpoint restoration preserves those aliases. The checkpoint
+interval and retained count stay the same. Public checkpoint queries return
+complete independent copies, and restoration copies cached state before making
+it live.
+`tools/compare-batched-direct-history.mjs` compares the per-row and batched tree
+algorithms under the same complete runtime. The matching
+`tools/check-batched-direct-history-chromium.cjs` runs that control in an owned
+browser with Scout's CSP and captures dependency hashes and complete ledger
+digests. Its all-omitted storage/tick workload is separate from actual effect
+simulation, rendered replay latency and memory acceptance.
 Worker timing also reports placement/resource/pose queries as a subset of total
 simulation time. Camera-only geometry performs no such queries; its query metrics
 are zero rather than reused from the preceding simulation update.
@@ -796,7 +1749,15 @@ Constant finite `EmitterPosition` values are world-space offsets when local
 orientation is explicitly disabled. Absent `isLocalOrientation` retains the
 observed constructor flag that inherits the system basis; this transforms the
 local emitter position, spawn offset and initial velocity at birth. Authored
-true, animated and randomized orientation/offset cases remain excluded.
+true is admitted only by the separate constant single-particle arbitrary-quad
+program. Its bound form follows the current verified root basis for both axes
+and position; its unbound form retains the birth-world origin while its axes
+follow the current verified basis. The unbound form requires original constant
+bind weight zero and no authored emitter-position field. Animated, randomized,
+multi-particle and other offset shapes remain excluded. The native orientation
+control varies basis and parent translation independently after birth; geometry,
+pool lanes and RNG are compared separately from material and recorded-event
+activation.
 Constant `birthVelocity` is admitted for verified single-particle components.
 Their local float32 positions accumulate each canonical update; replacing that
 integration with an age-times-velocity expression changes native rounding.
@@ -929,8 +1890,10 @@ time and browser long tasks where supported. Where WebGL2 disjoint timer queries
 are available, a bounded asynchronous queue also records whole-scene GPU time.
 Unavailable results are never waited for. Disjoint intervals discard pending
 durations; query pressure, another active timer, context loss and stop-time
-pending results remain explicit. GPU samples join cohorts by their original
-frame timestamp and do not isolate effects cost from the rest of the scene.
+pending results remain explicit. Owned GPU samples join cohorts by their unique
+draw ID and unchanged frame metadata, and do not isolate effects cost from the
+rest of the scene. Historical timestamp-only samples are unmatched when several
+frames share that clock sample; the raw ambiguous samples remain in the export.
 Summaries separate ordinary
 world-only playback, effects at 1x/4x and paused frames in 69–99 seconds. World-only
 samples require effects to be disabled, hidden and without active preparation.
@@ -946,7 +1909,7 @@ thread scheduling. GPU uploads are included in CPU submission rather than
 isolated as transfer timings. Effects-specific attribution of long tasks remains
 unmeasured; an exported recording does not establish acceptance automatically.
 
-Normal shared playback uses `reply-driven-owned-presentations-v1`: one worker
+Normal shared playback uses `reply-driven-owned-presentations-v2`: one worker
 request may run while the last claimed result is synchronously committed. The
 next request starts on reply, independently of RAF. A wall-anchored desired clock
 continues at the selected speed; world, effects and the captured camera commit at
@@ -963,6 +1926,13 @@ count simulation step revisions separately, so repeated RAF ticks cannot establi
 a higher effect update rate. Ordinary in-flight simulation is not an effect preparation window. Legacy
 schema 1 recordings remain readable; schema 2 does not establish a 60 FPS or
 latency acceptance gate merely by changing scheduling.
+
+The engine issues one shared observation sequence for completed draws and RAF
+observations. Exact draw stamps and this sequence establish which draw was latest,
+including when several `performance.now()` samples are equal. Raw performance
+samples remain nondecreasing; the independent RAF series, draw IDs and observation
+orders remain strictly ordered. No timestamp is clamped or offset. Version1 owned
+recordings require a fresh capture because they lack this causal order witness.
 
 Current recordings include the runtime program version and exact scene/effect
 manifest hashes. Start before the comparison window, play through it, and stop
@@ -985,6 +1955,29 @@ from complete reference runs. Camera changes, followed entity IDs and browser
 long tasks are observations; they do not establish each camera gesture, effects
 causation, rendered coverage or native visual parity. This is a local evidence
 reader and does not operate the browser.
+
+#### Measure full-match browser performance
+
+Prepare a local JSON request with `schemaVersion: 1` and
+`kind: "private-replay-performance-request"`. Give `subject` the reviewed
+`replaySha256`, `renderPackageManifestSha256`, `gameBuild`, `protocol`, and
+`durationSeconds`. Each `runs` entry names a raw recording `file`, its
+`sha256`, and the playback `rate` of `1` or `4`. Relative recording paths are
+resolved from the request file. Use `null` for an unavailable package hash
+when inspecting an older recording.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/qualify-replay-performance.mjs $requestPath $newPrivateResultPath
+```
+
+The local result reports 1080p draw cadence, maximum observed gaps, and worker
+timing derived from raw observations. It checks the highest per-span worker p95
+against the 4 ms and 8 ms budgets and reports the 60 FPS target. Full-match
+measurements require identified recordings covering the whole replay at both
+rates. The earlier bounded research recorder can supply partial measurements
+and seek diagnostics.
+Keep the request, recordings, and result private. Hosted anonymous playback
+and native audiovisual comparison have their own evidence.
 
 Run the focused checks from the repository root:
 
@@ -1111,10 +2104,276 @@ other fixture hash: entity identity uses this fixture's confirmed metadata order
 and IDs `0x400000ae` through `0x400000b7`. Scout's `16.18.817.5716` replays are
 unsupported. No decoder compatibility is inferred from a nearby patch number.
 
-## Latest installed build research
+## 16.23 packet framing
 
-The active next target is **16.21.829.8620** (patch 26.21), verified as the latest
-published KR/NA1 build on 2026-10-24 against Riot's release metadata.
+`replayPacketEnvelopes` walks decompressed records for builds `16.23.839.9929`
+and `16.23.840.6595` with protocol `8bbfcd5af2bc92db`. It keeps the marker, both
+encoded timing fields, the explicit opcode when present, the encoded context,
+and the payload bytes. The second timing field is four little-endian bytes
+between the first timing field and the payload length. The caller supplies
+decompression and consumes the iterator to verify every record boundary and the
+declared chunk count.
+
+Run a local scan with Node 24 and a matching replay file.
+
+```powershell
+node sandbox/poc/league-spectator/replay/tools/inspect-packet-envelopes.mjs $replayPath
+```
+
+The scan reports framing and aggregate stream counts. Payload meanings, context
+delta signedness, and playback clock selection require separate verification.
+
+`buildReplayKeyframeIndex` locates the stored byte range of each observed stream-2
+keyframe. It verifies the opening boundary record against the preceding chunk's
+boundary using both the secondary clock bits and the second payload byte. It also
+validates the absolute first timestamp in each keyframe's opening record.
+`findReplayKeyframe` selects the last indexed keyframe at or before a requested
+time in that clock. Pass the selected entry and the original replay to
+`readReplayKeyframe` to expand that chunk and read its raw packet envelopes.
+
+`readReplaySeekWindow` returns the selected keyframe and a lazy sequence of its
+snapshot envelopes followed by gameplay envelopes through the requested recorded
+time. Packet timing uses each absolute float32 primary field as an anchor and
+adds subsequent compact deltas as integer milliseconds. The reader preserves
+both original clock fields and the file order of packets with equal timestamps.
+
+With Edge and the Scout workspace dependencies installed, compare browser seek
+output with a sequential Node Zstd scan of the same local replay.
+
+```powershell
+bun run sandbox/poc/league-spectator/replay/tools/verify-browser-replay-seek.mjs $replayPath $fzstdPath
+```
+
+Set `$fzstdPath` to the local browser Zstd module. The check compares the
+original file hash, keyframe selection, and hashes of packet fields and payloads
+across three seek windows. Pass a comma-separated list of seconds to check
+specific times. Browser index and seek timings exclude hashing and are
+diagnostic. This check covers packet transport.
+
+Pass `--prepared` before the replay path to check Scout’s combined preparation
+path. The browser’s observation and packet digests are compared with the
+sequential reference. The report also checks preparation decompressions and
+samples verified turret state around the first recorded loss when present.
+
+Run the snapshot context verifier on the same local 16.23 ROFL to check
+opcode 313 record counts, context order, and the 5/5 partition against the
+footer team groups. It also reports how often gameplay opcode 75 shares those
+contexts under the signed-delta hypothesis. The report contains aggregate
+counts and does not bind contexts to individual participants or decode movement.
+
+```powershell
+node sandbox/poc/league-spectator/replay/tools/verify-snapshot-contexts.mjs $replayPath
+```
+
+The participant verifier binds team-scoped kill, death and assist signatures to
+the replay footer. An assist requires matching primary and secondary clocks
+across both supporting packet families and an eligible teammate kill. The actor
+sampler uses verified events through the requested timestamp, including events
+at that exact time. An unresolved actor receives a null K/D/A result.
+
+To compare opening structure identities and verify snapshot state against
+corroborated turret loss events, run the structure verifier on two local files.
+
+```powershell
+node sandbox/poc/league-spectator/replay/tools/verify-structure-fingerprints.mjs $firstReplayPath $secondReplayPath
+```
+
+The comparison uses the combined opening records for identity. Its snapshot
+state counts cover the verified turret losses only. Missing markers and exact
+clock ties are reported as unknown. Placement requires an independent landmark
+binding.
+
+### Verify installed Map11 placements
+
+Use the Map11 scene directory produced by `prepare-map11-native-input.mjs`
+for the admitted 16.21 archive and the Windows League installation root.
+
+```powershell
+bun run sandbox/poc/league-spectator/replay/tools/verify-installed-map11-placements.mjs $archivedWorldSourceDirectory $leagueInstallationDirectory
+```
+
+The verifier checks the archived source receipt, reads the installed Map11
+metadata from its WAD, and requires one complete byte match for each of the 24
+archived type-0 attackable placeables. It prints a JSON receipt with the reported
+installation version, metadata hashes, numeric placeable keys and translations.
+The receipt covers authored placement. Binding a replay context to an individual
+placeable requires independent evidence from that replay.
+
+### Capture reference positions
+
+Load the exact replay in League with the [Replay API enabled](https://developer.riotgames.com/docs/lol#replay-api).
+Use Node 24 and the [Riot Game Client certificate](https://static.developer.riotgames.com/docs/lol/riotgames.pem)
+if the local game certificate needs an explicit trust root.
+
+On Windows, a signed-in, idle League Client can open a downloaded NA1 replay
+through its local watch endpoint. The launcher checks the local file and client
+build, then verifies the game process and length through the Replay API.
+
+```powershell
+bun tools/launch-native-replay.mjs $replayPath --ca $riotRootPath
+```
+
+If the client adds time beyond the replay footer, corroborate the file name in
+its native game log, then pass `--expected-sha256` for that exact ROFL alongside
+`--expected-client-length` with the observed length.
+
+```powershell
+node sandbox/poc/league-spectator/replay/tools/capture-reference-positions.mjs --confirm-loaded-replay $replayPath $referencePath 10,20,30 --ca $riotRootPath
+```
+
+The capture advances at normal speed and samples the attached camera at stable
+paused times. It records the observed positions by footer row and includes the
+local replay's SHA-256. The Replay API reports the process and playback length.
+The operator confirms that the loaded file matches the input. Use these samples
+to evaluate candidate movement fields in the packet payloads.
+
+When the client playback length differs from the file footer, corroborate the
+loaded file path in the client logs before passing `--expected-client-length`
+with the measured API value. The receipt preserves both the observed client
+length and the file's duration. Sampling remains bounded by the file duration.
+
+Pass `--seek-snapshots` to sample directly after a paused seek to each requested
+time. The tool checks that the observed clock settles within two milliseconds of
+the request and labels the receipt `paused-seek`. Use this mode to examine
+keyframe state. Continuous capture remains the reference for forward playback.
+
+To align paused captures with recorded keyframes, use `--keyframes` in place of
+the seconds list. Provide up to 32 strictly increasing one-based ordinals. The
+initial 0-second keyframe is ordinal 1. The tool validates the complete packet
+index and stores the selected ordinals and their recorded primary clock times
+in the receipt.
+
+```powershell
+node sandbox/poc/league-spectator/replay/tools/capture-reference-positions.mjs --confirm-loaded-replay $replayPath $referencePath --keyframes "2,3,4,5,6" --seek-snapshots --ca $riotRootPath
+```
+
+Pass `--follow-actor` with a one-based footer row and three cue times to capture
+one actor through a start, turn, and arrival window during uninterrupted 1×
+playback. Confirm the exact loaded replay before capture.
+
+```powershell
+node sandbox/poc/league-spectator/replay/tools/capture-reference-positions.mjs --confirm-loaded-replay $replayPath $referencePath 57.5,59.542,62.5 --follow-actor 7 --ca $riotRootPath
+```
+
+The receipt labels the method `continuous-follow` and brackets each camera
+observation with playback clock reads. An attachment change, missing cue
+coverage, or gap beyond 200 ms invalidates the capture.
+Add `--follow-from <earlier-seconds>` to seek to a paused anchor before the
+capture window and then advance at 1×. The receipt records the requested and
+observed anchor clocks separately from the default run from zero.
+
+### Inspect a native audiovisual recording
+
+With the exact replay open in League, use Node 24 and Riot's loopback Replay API
+to record a WebM in a new local directory. The capture defaults to the duration
+declared in the replay footer. Pass `--window start,end` to capture a shorter
+interval. Use `--expected-client-length` if a separately observed client duration
+differs from the footer.
+
+```powershell
+node sandbox/poc/league-spectator/replay/tools/capture-native-replay-av.mjs --confirm-loaded-replay $replayPath $newCaptureDirectory --ca $riotRootPath
+```
+
+The capture saves a local `capture.json` candidate after seeing recording
+progress and checking both media tracks. The operator confirms which replay is
+open and independently reviews the replay-to-media clock anchor. Use the
+workspace's installed `node-av` with `probe` to inspect a clip, or use `verify`
+with the exact replay and the independently reviewed receipt.
+
+```powershell
+node sandbox/poc/league-spectator/replay/tools/verify-native-recording-metadata.mjs probe $clipPath
+node sandbox/poc/league-spectator/replay/tools/verify-native-recording-metadata.mjs verify $clipPath $replayPath $receiptPath
+```
+
+The receipt binds the build, protocol, replay and media SHA-256 values, footer
+duration, and a reviewed 1× recording window. Its media clock anchor pairs a
+reviewed replay time with a packet presentation timestamp. The result reports
+audio and video packet timestamp extents, the largest packet start step, and
+gaps in the declared packet coverage. A packet without a positive duration
+leaves the declared gap metric unavailable. Review decoded content, A/V
+synchronization, and scene fidelity separately. Keep the media local.
+
+To align a reviewed native and browser clip for comparison, record both at 1×
+over the same replay window. Give the browser receipt the
+`browser-replay-recording` source and its own media hash and clock anchor. The
+comparison verifies shared replay identity and window and reports both tracks'
+timing in their respective media clocks.
+
+```powershell
+node sandbox/poc/league-spectator/replay/tools/verify-native-recording-metadata.mjs compare $replayPath $nativeClip $nativeReceipt $browserClip $browserReceipt
+```
+
+### Check Map11 team orientation
+
+Use two continuous native position receipts from the same verified Map11 replay
+with distinct capture times. Choose a calibration receipt that starts with a
+position sample for every actor near their team's base.
+
+```powershell
+bun run sandbox/poc/league-spectator/replay/tools/verify-installed-map11-placements.mjs $archivedWorldSourceDirectory $leagueInstallationDirectory |
+  bun run sandbox/poc/league-spectator/replay/tools/verify-native-replay-orientation.mjs $replayPath - $calibrationPath $heldOutPath
+```
+
+The check binds the installed build, replay digest, and verified actor roster. It
+compares the native starting sides with the authored diagonal cohorts and reports
+the held-out observations in aggregate. Its clock range measures the difference
+between two packet clocks. Calibrating the native Replay API clock requires a
+separately witnessed event anchor.
+
+### Compare a decoder with the reference
+
+Use the original ROFL and a capture with at least two requested times. The
+offline harness verifies the file hash, build, protocol, and duration. It uses
+the earlier half of the samples, rounded up, for calibration and the remaining
+times for verification.
+
+```powershell
+node sandbox/poc/league-spectator/replay/tools/compare-reference-positions.mjs plan $replayPath $referencePath
+```
+
+Give the decoder the plan's requested time labels and the actual observed replay
+times. Keep the expected positions in the reference capture. Use the capture
+method from the plan to choose continuous playback or paused seeking. Write a
+JSON object with `schemaVersion: 1`, `replaySha256`, `build`, `protocol`,
+`durationMilliseconds`, `captureMethod`, `participantKey`, and `frames`. Each
+frame has `requestedTime`, the decoder's actual `time`, and `actors`. Each actor
+has `key`, its one-based ROFL footer row, and `position`, the world `[x, y, z]`.
+
+```powershell
+node sandbox/poc/league-spectator/replay/tools/compare-reference-positions.mjs compare $replayPath $referencePath $decodedPath
+```
+
+The report gives missing frames and actors, clock errors in seconds, and
+horizontal and vertical position errors in world units. The CLI exits
+successfully after reporting a comparison. Invalid inputs exit nonzero. Use the
+reported measured errors to evaluate the decoder.
+
+For a `continuous-follow` receipt, the plan gives the followed actor and
+indexed observation brackets without positions. The turn cue splits calibration
+from held-out brackets. A bracket that spans the cue has its own split. Supply
+decoder frames as `{index,time,actors}` under the same identity header. Each
+frame can include the followed actor and one decoder timestamp. Omit frames
+without an observation or use `time: null` to report a missing clock. The
+comparison reports missing and out-of-bracket clocks separately and scores
+positions only for timestamps inside their brackets.
+
+To test fixed-width position candidates before a decoder exists, reuse the
+original 16.23 ROFL and one or more continuous reference captures for that
+file. The probe needs at least five distinct observation times. It fits planar
+fields to the first two times, then checks at least three held-out times and an
+actor-shift control. It tests signed and unsigned context deltas and fixed-width
+`i16`, `i32`, and `f32` fields in the latest matching gameplay packet within two
+seconds before each observation. Packed and differential layouts are outside
+this probe's scope.
+
+```powershell
+node sandbox/poc/league-spectator/replay/tools/probe-position-scalars.mjs $replayPath $referencePath $additionalReferencePath
+```
+
+## 16.21 installed build research
+
+The research viewer targets **16.21.829.8620** (patch 26.21), which was the
+published KR/NA1 build on 2026-10-24 according to Riot's release metadata.
 The installed executable and a local replay match exactly. The original viewer
 still supports only its original fixture. A separate `latest.html` research viewer
 now connects browser-decoded hero identity, equipped-skin candidates and movement
@@ -1292,6 +2551,16 @@ The origin follows the native navgrid initializer's float32 bounds sum, integer
 truncation and signed16 division, producing **[6581, 6241]** for this package.
 An isolated execution of the original initializer block produces the same pair.
 **Summoner's Rift's origin is never substituted**.
+The header speed retains its finite, nonnegative float32 domain. Original readers
+`559680`/`559d30` preserve its bits; original conditional cache writes
+`559b51`/`55a22a` test positivity and unit flags without a 5000-unit limit.
+The parser therefore accepts recorded fast motion such as 8472.5, while retaining
+explicit boundaries for nonfinite and negative values. Header speed and the
+separate 56-byte motion-block speed remain distinct. This numeric-domain proof
+does not establish the recorded unit's flag state or a complete native movement
+controller. `inspect-movement-speed-boundary.mjs <approved-public> <replay>
+<output.json>` captures an original reader object, arena and exact packet cursor
+when another unsupported movement record is encountered.
 The report uses relative grid coordinates and enumerates 138 other gameplay
 opcode types encountered but unhandled in this window. Combat,
 state transitions and A/V reference fidelity are not established by these fields.
@@ -1801,9 +3070,10 @@ its sword; the separate authored death VFX is not yet rendered. The evidence
 image projects that mesh with real textures and the shared pose sampler. It uses
 approximate per-triangle texture sampling, not WebGL or League reference output.
 Full corpse presentation is not established by native mask correctness.
-The prepared super-minion Death roots use an unresolved selector in both teams'
-graphs. They are explicitly listed in the comparison evidence and are not admitted
-as single atomic death poses; this fixture window contains no super-minion deaths.
+The single-atomic mask comparison excludes the super-minion Selector roots in
+both teams' graphs; its fixture window contains no super-minion deaths. Their
+separate weighted death selection is described above and keeps each original
+child graph and mask, rather than treating the selector as one atomic clip.
 
 ```powershell
 python sandbox/poc/league-spectator/replay/tools/prepare-submesh-visibility.py .cache/replay-spike .cache/replay-spike/research/LeagueofLegends-macos
@@ -1963,6 +3233,342 @@ bun sandbox/poc/league-spectator/replay/tools/publish-attached-particles.mjs .ca
 ```
 
 ### Installed scene asset preparation
+
+For arbitrary decoded 16.21 rosters and original Map11 actor requests, use the
+archived preparation path instead of an installed client or CommunityDragon
+JSON:
+
+```text
+bun sandbox/poc/league-spectator/replay/tools/create-archived-actor-request.mjs <request.json> <decoded-hero-report.json> [additional-report-or-map11-inventory.json...]
+bun sandbox/poc/league-spectator/replay/tools/prepare-archived-actors.mjs <rman-parser-checkout> <approved-source-cache> <archive-cache> <request.json> <dotnet>
+```
+
+The request records exact decoded character/skin IDs and source hashes. World
+requests retain original character-record paths; static candidates do not assert
+replay entity existence. The producer verifies the pinned archived release,
+reads original WAD/BIN resources, follows declared BIN dependency links, and
+exports textures through the approved exporter. The owned ordinal model recipe
+reuses its pinned material and geometry helpers while creating every original
+SKL joint separately. Draw node names are unique ordinal identities; source names
+remain in `joint-bindings.json`. The original skin influence palette and every
+positive-weight SKN lane must retain the same original rig ID in serialized GLB
+output. Duplicate names never collapse joints or choose attachment targets.
+`asset.rigJointBindings` selects this sidecar, and
+`replay/ordinal-model-bindings.mjs` exposes the shared browser-safe raw-SKL/GLB
+validator. Pose tracks bind by original joint ordinal; native name/hash attachment
+lookup is a separately proved operation. Animation format
+routing is explicit: compressed version 1 resources execute the original client
+constructor, rig binding, initialized math context, cache and evaluator; declared
+uncompressed versions 3–5 use the pinned Toolkit evaluator. Other formats fail
+preparation. There is no error-triggered converter fallback. Native compressed
+exports include every original frame, rewind controls and digest-bound cache
+receipts; all required resources must complete before catalog publication.
+`animation-evidence.json` records this boundary. Frame interpolation and animation
+controller parity remain separate from these prepared samples.
+`latest-viewer-ordinal-joints.mjs` prepares an opaque model/rig binding from these
+verified bytes. CPU hierarchies and loaded `SkeletonUtils` clones bind every
+original pose ordinal through the unique exported node labels. Their attachment
+maps retain the original native name/hash lookup winner when names repeat. Pose
+application and absolute-time resets visit the complete ordinal array; resetting
+only the name map would omit the other original joint.
+Named metadata comes only from exact hashes in the pinned Toolkit
+metadata source. Unknown fields and unsigned 64-bit WAD references stay explicit;
+missing fields receive no guessed defaults.
+
+Each run writes a fresh `prepared/actors-*/public/latest-scene/` namespace,
+separate from the approved source cache. Its final manifest binds request,
+toolchain, original assets, CDN receipts and generated files. Source changes
+during preparation fail before the final manifest is written. `champions` and
+`worldAssets` use the existing actor resource paths; map geometry and entity
+registration are separate inputs. Albedo-only material rendering, heuristic
+preview clips, absent scale defaults, runtime forms, particles and audio remain
+explicit limitations. This static package grants no native viewer admission.
+
+`prepare-ordinal-actor-models.mjs <approved-source-cache> <closed-actor-manifest.json>
+<archive-cache> <dotnet>` derives fresh ordinal model output from an existing
+closed actor package without changing its source files or animation resources.
+`verify-ordinal-actor-models.mjs <ordinal-actor-manifest.json>` checks every file digest,
+original joint/parent/palette identity and serialized vertex skinning witness.
+
+Archived Map11 effects begin with an independent source inventory:
+
+```text
+bun sandbox/poc/league-spectator/replay/tools/inspect-archived-scene-effects.mjs <rman-parser-checkout> <approved-source-cache> <archive-cache> <closed-common-scene>
+```
+
+This tool follows original actor BIN dependency edges through explicitly declared
+archived WADs. It retains raw, typed and named metadata, all original VFX-system
+definitions, typed object references, asset paths and unsigned WAD hashes.
+Conflicting archive/object candidates and missing resources remain explicit;
+the inventory never selects an override winner. It creates a fresh source-bound
+namespace and verifies the selected scene, consumed inputs and generated files
+before writing its final manifest. Retained source bytes do not establish format
+translation, resource activation, event scheduling or rendered effects. The
+installed-client Map12 effects producer retains its separate build/map checks.
+
+```text
+bun sandbox/poc/league-spectator/replay/tools/prepare-archived-scene-effects.mjs <approved-source-cache> <closed-common-scene> <closed-fx-inventory> <archive-cache> [dotnet]
+bun sandbox/poc/league-spectator/replay/tools/verify-archived-scene-effects.mjs <closed-common-scene> <closed-effects-package>
+```
+
+The translator reconstructs typed and named definitions from the retained original
+BIN bytes, verifies selected skin/spell sources and converts supported original
+2D textures and static meshes through the pinned exporter. Its runtime manifest
+matches the selected scene digest. Original unsigned WAD links use an explicit
+`wad-hash/<16hex>` resource key; this identifies the original hash and does not
+invent a physical archive path. The package retains original asset bytes and
+source-reference identities. Cube/volume/array textures, animated VFX mesh
+bindings and unresolved objects stay explicitly unprepared. Static source
+bindings do not admit activation, event scheduling, native materials or audio.
+
+`prepare-scene-vfx-field-inputs.mjs`, `prepare-scene-vfx-native.mjs` and
+`prepare-scene-vfx-materials.mjs` derive separate original field/postload,
+bound-quad and material-selector authorities. They use fresh bounded native
+workers and the complete pristine math initializer. Their manifests retain
+unsupported classes, primitive environments and custom material factories.
+`verify-scene-vfx-native.mjs` and `verify-scene-vfx-materials.mjs` independently
+check resource bytes, original instruction blocks, source inputs and worker rows.
+For an expanded scene, `prepare-scene-vfx-extension-inputs.mjs` partitions exact
+authored field bytes, original owner/class and definition identities. The two
+`compose-scene-vfx-*.mjs` commands preserve original observation manifests and
+worker receipts, binding only identical resource bodies to the new scene. They
+do not relabel a historical observation as a new native execution.
+
+`createSceneVfxMaterialBindings` consumes those explicit authorities alongside
+unchanged profile/image bytes and the matching scene/effects manifests. Its
+resource reader names separate `native` and `material` roots. A material binds
+only after its original graph, worker receipt, source recipe and all 17 supplied
+predicate controls agree. Callers provide the environment and erosion drive;
+the adapter supplies no live scene predicates or default animation state.
+
+`prepare-scene-quad-gpu.mjs` requires an explicit controlled environment file and
+produces component bindings plus complete omission inventories. The selected
+registry uses roles `sceneVfxNativeAuthority`, `sceneVfxMaterialAuthority`,
+`sceneMaterialEnvironment`, `selectedMaterials`, `quadGpu`, `shaderPackage` and
+`shaderPairs`. Resources remain relative to their declared authority manifest;
+there is no cross-root lookup. The existing material owner keeps its separate
+legacy hash approvals. Missing original FoW/default textures, uniforms, color
+resources or other primitive families remain omissions; the new path rejects
+diagnostic white/transparent texture substitutes. Controlled selector results
+do not establish native resource acquisition, live pass scheduling, GPU
+submission or native spectator admission.
+
+GPU schema 3 adds the separate `sceneAllVisionFog` role. Prepare its immutable
+authority with `prepare-scene-all-vision-fog.mjs <approved-cache> <scene-root>
+<resource-native-proof.json> <extent-native-proof.json> <archive-cache>` and pass
+that root after the explicit cold-default root to `prepare-scene-quad-gpu.mjs`.
+The resource proof executes the original replay-camera all-vision action,
+original named `FOW_MAP` registration/acquisition and the original texture and
+sampler update. The texture comes from the actual native GPU resource readback;
+the native clamp/linear sampler is retained. The uniform proof reads original
+typed MapContainer bounds, constructor defaults and the original extent/uniform
+consumers. Both proofs bind the unchanged image/profile and the scene's original
+material BIN digest. Prepared geometry and navigation bounds cannot supply this
+uniform.
+
+The selected material factory and renderer require explicit `perspective: "all"`
+for schema 3. They preserve the authored shader fog mode and reject another
+perspective; this authority does not establish blue/red vision, the app's cold
+default, full GUI refresh or full map bootstrap. Earlier material schemas keep
+their existing approvals. `inspect-scene-all-vision-fog.mjs` checks actual native
+proof ownership and corrupt-source/resource/perspective negatives.
+`inspect-recorded-material-activation.mjs <explicit-config.json>` runs the ordinary
+preparer and every original event, then checks a requested recorded emitter's
+activation, geometry and actual Three material/texture objects. It never
+supplies effect placements or counts material preparation as replay coverage;
+browser rasterization and native spectator equivalence remain separate gates.
+
+`inventory-recorded-buff-sources.mjs` retains complete original actor/Map11 BINs,
+including `SpellObject` roots without `mSpell`, nested `mBuff`, raw class/field
+hashes and typed spans. `inspect-archived-shared-buff-sources.mjs` probes explicit
+archived global namespaces and follows their original dependency paths; its
+closed result can be passed as the inventory command's final optional input.
+ASCII ELF name matches retain all source collisions. A matching source name is
+separate from original context selection, registry lookup, pointer equality,
+Homeguard metadata interpretation and live buff membership.
+
+`prepare-homeguard-spell-source-input.mjs` selects every authored top-level
+property of the source-backed flag-bearing `SpellObject` owners, including
+`mSpell` when present. This is separate from the narrower `mBuff` metadata
+control. `observe-archived-buff-publication.py <approved-cache> <macos-client>
+<installation> <installation-manifest.json> <complete-spell-input.json>
+<output.json>` verifies complete original archive files, executes original
+signature/index and manifest readers, and records the first unsupported
+resource-publication boundary. The optional `--vfx-startup-source`, `--graphics`
+and `--shared-shaders` inputs select explicit original VFX and hardware
+dependencies. Its queue control uses original reads, completion workers and
+callbacks with caller-owned dispatch; it does not claim OS worker startup.
+`--factory-only` isolates the original runtime factory entry without claiming
+that dependent spell/VFX preloads have completed. Missing original scripts and
+null returned resources remain unavailable, without supplied source wrappers.
+
+`inspect-original-vfx-manager-startup.py` identifies the exact original scene
+allocation and manager-constructor caller. `probe-original-vfx-manager-startup.py
+<approved-cache> <macos-client> <installation> <startup-source.json> <output.json>
+--graphics <ANGLE-directory>` executes that caller with original-owned objects.
+The shared `original_vfx_startup_native.py` retains existing clock/pause owners
+and keeps CPU capability-descriptor execution separate from Metal execution or
+actual rendered feature support. Its narrowly scoped CPU-query ABI records
+explicit platform inputs. The dynamic GPU-buffer port admits only the observed
+original wrapper/pool call sites and validates pool dimensions. A null initial
+source creates real uninitialized GLES storage: device capacity is verified,
+while initial bytes and later native uploads remain explicitly unverified.
+Named texture/buffer lookups can still return null. Constructor completion alone
+does not establish resource readiness, live buff membership, Homeguard state or
+native spectator fidelity.
+
+For guarded cold hero controls, `prepare-recorded-mode-constant-input.mjs
+<map-definition.bin> <original-world-inspection.json> <output.json>` selects the
+mode identified by original startup evidence and its exact constant definition.
+Other mode references remain unresolved; host and guest reads of those cells
+fail. The VFX probe's `--hero --mode-input <input.json> --bind-hero-buffs` options
+execute the complete original concrete hero constructor, original local-world
+admission, and the original BuffManager owner lookup/RPC registration. This does
+not assign a recorded network identity, restore a historical unit snapshot, or
+admit the control as a replay entity.
+
+The publication probe's optional `--mode-input`, `--buff-capture`, and
+`--buff-prefix-proof` inputs are selected together with its full VFX dependencies.
+They exercise an explicitly cold control owner using an actual captured Shared
+S4SpawnLock descriptor. The callback constructs its own descriptor and retains
+its original stack through semantic consumption; its bytes must match the
+independent native prefix proof. A stopped callback remains an unsupported
+consumer boundary, even when an earlier resource publication succeeded. Platform
+clock inputs are separate from recorded game time and expiry scheduling.
+
+`original_audio_provider_native.py` keeps configuration before audio/UI owners
+in original source order and uses original service constructors, shared owner
+registration and the complete facade binding callback. The accompanying
+offscreen platform port is explicitly inactive and checks that its host thread
+has no active window. It admits only pinned AppKit callers/selectors and restores
+their bindings after execution; unsupported calls fail. Cursor requests affect
+only port-owned state, a native event device remains unavailable, and window
+server association returns an explicit connection error. This is separate from
+actual AppKit startup, audio device activation, sound playback and native frame
+scheduling. `probe-original-offscreen-application.py <decoder-package>
+<macos-client> <output.json>` checks the original inactive continuation and
+selector, ownership and failure-cleanup boundaries without opening a native UI.
+The configuration writer uses a bounded private C-stdio overlay for the exact
+`data/cfg/game.cfg` output. Initial absence and original create/truncate requests
+retain their real results; native output bytes and their digest are recorded
+without writing the retained installation or host configuration.
+`probe-original-configuration-overlay.py <decoder-package> <macos-client>
+<output.json>` compares supported stdio operations with actual host C stdio.
+The optional `--scheduler-source` input names the pinned Darwin pthread source
+for scheduler-range queries. Its explicit default-priority input is separate
+from the host scheduler, attributed worker creation and audio SDK readiness.
+
+`--condition-source` and `--condition-types-source` select pinned Darwin condition
+storage definitions. `--thread-public-source` and `--thread-impl-source`, together
+with the scheduler/type inputs, select the separate SDK attribute port. The
+original SDK wrapper controls joinability, stack size, scheduling policy and
+priority; the shared cooperative core preserves those values in independently
+guarded contexts. Its legacy default-attribute path keeps its existing quota and
+stack. No OS thread, realtime privilege, condition wake or SDK readiness is
+reported by creating a context. `probe-original-sdk-threads.py <decoder-package>
+<macos-client> <pthread.c> <types_internal.h> <pthread.h> <pthread_impl.h>
+<output.json>` executes the original attribute wrapper and a native callback,
+checks exact static C-library copy/zero boundaries, and verifies descriptor-bound
+per-context TLS template ownership. Logical TLS context controls are separate
+from actual SDK worker execution. The selected SDK memory-module constructor is
+bound to its original Mach-O initializer entry and constructs its own mutexes;
+the probe does not claim that all application module initializers have run.
+
+The optional `--sdk-clock-source` and `--sdk-clock-types-source` inputs select
+pinned Darwin Libc clock definitions. SDK clock ID 6 uses actual host boot time
+through the explicit Windows realtime API set, with the original microsecond
+resolution and bounded 16-byte `timespec` writes. Its UTC `time(NULL)` request
+uses the host C runtime. Neither clock supplies replay time or buff expiry.
+These ports reject unknown callers, clock IDs and storage. Empty broadcasts
+retain the original pristine-condition behavior with zero wakes and no signal
+saved for future waiters; actual waiting and scheduling remain separate gates.
+The audio configuration path executes its complete registered static module and
+the selected SDK memory initializer before runtime configuration. Diagnostic
+mutex construction reuses the original guarded fragment, without claiming that
+its enclosing application initializer has completed.
+
+Original serialized maps with duplicate keys retain their ordered typed entries.
+An optional request `nativeMapObservations: [{file, sha256}]` supplies original
+typed-reader/consumer observations, bound to the exact BIN digest, owner and
+nested field address. Proved clip-cache lookup selects the original native
+winner; proved event preparation retains every native row with separate internal
+row identities. Original authored keys and all source declarations remain in
+`native-map-evidence.json`. Shadowed original atomic files remain inventoried in
+`original-animation-inventory.json`; they do not become active clip identities.
+Unknown maps appear in `unsupportedDeclarations`. An ambiguous clip map still exports all
+original atomic resources, using source-entry inventory identities recorded in
+`animation-source-index.json`; those identities do not select an active clip.
+Consumers must honor `animationGraphStatus` and require original lookup semantics
+before using such a graph for native animation playback.
+
+New common scenes prepare their animation metadata separately from the approved
+decoder package:
+
+```text
+bun sandbox/poc/league-spectator/replay/tools/prepare-scene-animation-metadata.mjs <approved-source-cache> <closed-common-scene> <archive-cache> [python]
+```
+
+The fresh output contains a `scene-animation-authority` manifest with explicit
+clock, rig, event-inventory and leaf-pose roles. Each role binds its definition,
+source graphs/catalogs and dependencies by size and digest; the manifest binds
+the original profile, decoder image and exact scene. The approved profile and
+image remain read-only. Scene inputs must match the closed static inventory.
+All original leaf identities are preserved, including hashed names. Existing
+validated source clips supply leaf poses; no preview, first-clip or bind-pose
+selection supplies a missing Idle or Run program. Unknown event classes and
+missing effect bindings remain explicit unsupported capabilities. This authority
+does not admit dynamic state programs or native spectator fidelity.
+
+The language-neutral contract is
+`tools/scene-animation-authority.schema.json`; runtime validation is in
+`scene-animation-authority.mjs`. New scenes require their own matching roles.
+Preserved legacy scene metadata is a separate input, never a fallback.
+
+Prepare the scene's viewer model identities against that same authority:
+
+```text
+bun sandbox/poc/league-spectator/replay/tools/prepare-scene-viewer-pose-assets.mjs <approved-source-cache> <closed-common-scene> <animation-authority.json> <archive-cache>
+```
+
+This emits a fresh `latest-viewer-poses/package.json` with the actual champion
+GLB hashes and scales. It verifies the closed scene's model, graph, catalog and
+rig bytes against the animation authority, pins the original profile/image and
+viewer math, and records unchanged source identities in a separate proof. It
+does not select animation states or establish pose or rendered equivalence.
+
+`latest-viewer-animation-resources.mjs` uses the selected catalog's explicit
+scene animation authority for these scenes and preserves the separately pinned
+legacy factories for legacy scenes. `sceneAnimationResourcePath` resolves only a
+declared source authority and file. The viewer's owned byte reader records those
+resources in its worker bundle, so restoration needs no filesystem or undeclared
+asset lookup. The scene loader retains all declared atomic leaves without
+substituting heuristic previews for missing native controller state.
+
+Verify the selected pose resource bundle and original ordinal hierarchies in a
+separate worker with an independently decoded replay report:
+
+```text
+bun sandbox/poc/league-spectator/replay/tools/inspect-selected-viewer-pose-assets.mjs <selected-public-root> <decoded-report.json> <output.json>
+```
+
+The control records its selected inputs and code digests, checks all original
+joint ordinals before and after transfer, and verifies sender-buffer detachment.
+It does not reconstruct missing animation controllers or admit native fidelity.
+
+Prepare matching scene submesh visibility resources with the unchanged original
+native component and its selected-data comparison:
+
+```text
+bun sandbox/poc/league-spectator/replay/tools/prepare-scene-submesh-visibility.mjs <approved-source-cache> <closed-common-scene> <archive-cache> [python]
+```
+
+The producer stages verified graph, GLB, SKN and original decoder bytes in a
+private output namespace. The approved source remains read-only. Publication
+requires native resource-map/event/scheduler observations and the existing
+JavaScript comparison for every selected actor, preserving the fixed native
+program, layout and scope. Its closed package provides separate resource,
+native-observation and comparison roles; full animation-controller scheduling
+and graphics submission remain separate consumers.
 
 The compiler pins the installed executable and LeagueToolkit revision, builds an
 isolated .NET exporter, and verifies that each CommunityDragon metadata source's
@@ -2172,6 +3778,36 @@ Looping, full interruption/blend rules, additive tracks, selector randomness,
 target-angle updaters, skin gear, IK and animation-triggered effects/audio remain
 unimplemented. Unknown nodes and zero-rate events are listed under **Animation
 coverage gaps**, not assigned an invented action.
+
+For archived scene work, `latest-animation-provider-inputs.mjs` separately exposes
+observed replicated-computed `MoveSpeed` through
+`createLatestAnimationMoveSpeedProvider(report).sample(entityId, time, cursor)`.
+Its cursor is `{transportSequence, recordIndex, exclusive?}`. Before the first
+recorded observation it returns an explicit unavailable result. It preserves
+float32 values and original same-time ordering through forward and backward
+queries; it does not infer a speed from movement distance.
+The original raw field at `17a0` (group 32, field 24) refreshes the native cache at
+`f9c`, which the complete `MoveSpeedParametricUpdater` reads. Its control uses
+complete original concrete `AiHeroClient` constructors, original owner-interface
+RTTI, original replication and cache refresh, and the original updater.
+`IsHomeguardParametricUpdater` instead consumes live buff-instance and source
+spell-attribute state. An empty cold-client control is an ABI observation and
+cannot provide the missing replay buff state. Native frame scheduling, other
+provider inputs and dynamic graph admission remain separate boundaries.
+
+```powershell
+bun sandbox/poc/league-spectator/replay/tools/prepare-animation-move-speed-input.mjs <semantic-report.json> <approved-public> <input.json>
+python sandbox/poc/league-spectator/replay/tools/observe-animation-move-speed-native.py <approved-cache> <exact-client> <input.json> <native.json> --snapshot-bindings <bindings.json>
+bun sandbox/poc/league-spectator/replay/tools/compare-animation-move-speed.mjs <semantic-report.json> <input.json> <native.json> <comparison.json>
+python sandbox/poc/league-spectator/replay/tools/observe-animation-provider-abi.py <approved-cache> <exact-client> <bindings.json> <abi.json>
+```
+
+The optional snapshot binding file maps every historical input path in the
+approved character snapshot to an explicit current file with the same original
+digest. Partial mappings and changed bytes fail. It permits relocating an
+unchanged retained snapshot without modifying approved inputs or searching
+alternate roots. Native source and input identities are verified again before
+the controls publish their result.
 
 **Jump to recorded action** seeks to the first resolvable non-channel action and
 follows its hero. Chrome rendering was inspected on Hecarim's recorded
@@ -3446,9 +5082,8 @@ LeagueToolkit checkout. The final pose-preparation argument can select that
 SDK's executable; the default is the system Windows installation.
 
 ```powershell
-python sandbox/poc/league-spectator/replay/tools/prepare-animation-clock.py .cache/replay-spike/public/decoder-16.21-macos .cache/replay-spike/research/LeagueofLegends-macos .cache/replay-spike/public/latest-scene .cache/replay-spike/research/animation-clock-native.json
+python sandbox/poc/league-spectator/replay/tools/prepare-animation-clock.py .cache/replay-spike/public/decoder-16.21-macos .cache/replay-spike/research/LeagueofLegends-macos .cache/replay-spike/public/latest-scene .cache/derived-animation-metadata/clock-evidence.json --output-package .cache/derived-animation-metadata
 bun sandbox/poc/league-spectator/replay/tools/inspect-animation-clock.mjs .cache/replay-spike/public/decoder-16.21-macos .cache/replay-spike/public/latest-scene .cache/replay-spike/research/animation-clock-native.json .cache/replay-spike/research/animation-clock-comparison.json
-bun sandbox/poc/league-spectator/replay/tools/prepare-animation-poses.mjs .cache/replay-spike/public/decoder-16.21-macos .cache/replay-spike/public/latest-scene .cache/replay-spike/research/LeagueToolkit .cache/replay-spike/research/animation-exporter-build .cache/replay-spike/public/latest-animation-poses .cache/replay-spike/research/dotnet-10.0.303/dotnet.exe
 bun sandbox/poc/league-spectator/replay/tools/inspect-animation-poses.mjs .cache/replay-spike/public/decoder-16.21-macos .cache/replay-spike/public/latest-scene .cache/replay-spike/public/latest-animation-poses .cache/replay-spike/research/animation-poses-evidence.json
 python sandbox/poc/league-spectator/replay/tools/render-animation-clock.py .cache/replay-spike/public/decoder-16.21-macos .cache/replay-spike/research/animation-clock-comparison.json .cache/replay-spike/research/animation-poses-evidence.json .cache/replay-spike/public/evidence/latest-animation-clock.png
 ```
@@ -3492,7 +5127,7 @@ asset resolution and Ornn W's original requests at input frames 13 and 22. It
 is not a screenshot of the game or evidence of browser/GPU execution.
 
 ```powershell
-python sandbox/poc/league-spectator/replay/tools/prepare-animation-events.py .cache/replay-spike/public/decoder-16.21-macos .cache/replay-spike/research/LeagueofLegends-macos .cache/replay-spike/public/latest-scene .cache/replay-spike/public/latest-effects .cache/replay-spike/research/animation-events-native.json
+python sandbox/poc/league-spectator/replay/tools/prepare-animation-events.py .cache/replay-spike/public/decoder-16.21-macos .cache/replay-spike/research/LeagueofLegends-macos .cache/replay-spike/public/latest-scene .cache/replay-spike/public/latest-effects .cache/derived-animation-metadata/event-evidence.json --output-package .cache/derived-animation-metadata
 bun sandbox/poc/league-spectator/replay/tools/inspect-animation-events.mjs .cache/replay-spike/public/decoder-16.21-macos .cache/replay-spike/research/animation-events-native.json .cache/replay-spike/research/animation-events-comparison.json
 python sandbox/poc/league-spectator/replay/tools/render-animation-events.py .cache/replay-spike/public/decoder-16.21-macos .cache/replay-spike/research/animation-events-native.json .cache/replay-spike/research/animation-events-comparison.json .cache/replay-spike/public/evidence/latest-animation-events.png
 ```
@@ -3531,7 +5166,7 @@ actual attached particle rendering remain unverified. The software diagram
 `assets/evidence/latest-animation-rigs.png` records this distinction.
 
 ```powershell
-python sandbox/poc/league-spectator/replay/tools/prepare-animation-rigs.py .cache/replay-spike/public/decoder-16.21-macos .cache/replay-spike/research/LeagueofLegends-macos .cache/replay-spike/public/latest-scene .cache/replay-spike/research/emsdk/upstream/emscripten/system/lib/libcxx/src/hash.cpp .cache/replay-spike/research/animation-rigs-native.json
+python sandbox/poc/league-spectator/replay/tools/prepare-animation-rigs.py .cache/replay-spike/public/decoder-16.21-macos .cache/replay-spike/research/LeagueofLegends-macos .cache/replay-spike/public/latest-scene .cache/replay-spike/research/emsdk/upstream/emscripten/system/lib/libcxx/src/hash.cpp .cache/derived-animation-metadata/rig-evidence.json --output-package .cache/derived-animation-metadata
 bun sandbox/poc/league-spectator/replay/tools/inspect-animation-rigs.mjs .cache/replay-spike/public/decoder-16.21-macos .cache/replay-spike/public/latest-scene .cache/replay-spike/research/animation-rigs-native.json .cache/replay-spike/research/animation-rigs-comparison.json
 ```
 
@@ -8272,8 +9907,14 @@ camera buttons, or the 30-second activity window. Drag to orbit, right-drag to p
 and scroll to zoom. Map overview releases the following camera. Gameplay example
 buttons jump to minions, a corpse, jungle, wards, and spell effects. **More spell
 effects** cycles champion examples. **Enable sound** loads the static SFX package;
-playback near the camera triggers supported cast, attack, and death sounds. Seeking
-and pausing stop audio. Playback speed also changes audio pitch.
+playback near the camera triggers supported cast, attack, and death sounds. Audio
+starts at the elapsed replay offset when a frame crosses a cue. Seeking and
+pausing stop active sounds. Playback speed also changes audio pitch.
+
+Run `bun sandbox/poc/league-spectator/replay/tools/verify-browser-replay-audio.mjs`
+to check the legacy viewer's Web Audio transport in Edge. The tool generates a
+WAV and measures playback, cue offsets, rate, pause, backward seek, and disposal
+in the browser. This control uses a synthetic package and replay timeline.
 
 `serve.ts` binds only to loopback. It is a development file server, not a hosted
 Scout service. Prepared assets, native executables, ROFL files, and recordings stay

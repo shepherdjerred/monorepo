@@ -7,7 +7,9 @@ import {
 } from "./evidence-selection.ts";
 
 const match = RawMatchSchema.parse(
-  await Bun.file("../../testdata/rift.json").json(),
+  await Bun.file(
+    new URL("../../../../../testdata/rift.json", import.meta.url),
+  ).json(),
 );
 const provenance = replayProvenanceFromMatch(
   match,
@@ -43,4 +45,27 @@ test("archives pin the fingerprint and equal-authority contradictions wait", () 
       null,
     ),
   ).toEqual({ ...client.provenance, platformId: "NA1" });
+});
+
+test("missing presentation fields do not contradict a later complete observation", () => {
+  const unknown = {
+    ...client,
+    provenance: {
+      ...client.provenance,
+      mapId: null,
+      gameMode: null,
+      teamSizes: null,
+    },
+  };
+  expect(selectReplayEvidence([unknown, client], "NA1")).toMatchObject({
+    mapId: 11,
+    gameMode: "CLASSIC",
+    teamSizes: [5, 5],
+  });
+  expect(
+    selectReplayEvidence(
+      [client, { ...client, provenance: { ...client.provenance, mapId: 12 } }],
+      "NA1",
+    ),
+  ).toBeNull();
 });

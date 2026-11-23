@@ -10,6 +10,58 @@ import {
   validateMissileEffectBasisStates,
   MISSILE_EFFECT_BASIS_POLICY,
 } from "./latest-missile-effect-basis.mjs";
+import {
+  freezeDirectOwnedData,
+  isDirectImmutableData,
+} from "./latest-direct-immutable-data.mjs";
+
+const ownedPresentations = new WeakMap();
+
+// A shared query index owns one private snapshot. Only frozen metadata leaves
+// the owner; hot sample arrays stay private and query results remain detached.
+export function createOwnedProjectilePresentation(report, presentation) {
+  if (!presentation || !Array.isArray(presentation.traces))
+    throw Error("Explicit projectile presentation snapshot required");
+  const source = structuredClone(presentation),
+    metadata = freezeDirectOwnedData(
+      structuredClone({
+        build: source.build,
+        protocol: source.protocol,
+        replaySha256: source.replaySha256,
+        endTime: source.endTime,
+        policy: source.policy,
+        traces: source.traces.map(({ states: _states, ...trace }) => trace),
+      }),
+    );
+  if (!isDirectImmutableData(metadata))
+    throw Error("Plain immutable projectile source data required");
+  const owner = buildProjectilePresentation(report, source, true);
+  ownedPresentations.set(owner, {
+    report: new WeakRef(report),
+    build: report.build,
+    protocol: report.protocol,
+    replaySha256: report.replaySha256,
+    endTime: report.endTime,
+    metadata,
+  });
+  return owner;
+}
+
+export function readOwnedProjectileMetadata(owner, report) {
+  const record = ownedPresentations.get(owner);
+  if (
+    !record ||
+    !report ||
+    typeof report !== "object" ||
+    record.report.deref() !== report ||
+    record.build !== report.build ||
+    record.protocol !== report.protocol ||
+    record.replaySha256 !== report.replaySha256 ||
+    !Object.is(record.endTime, report.endTime)
+  )
+    throw Error("Owned projectile index for this exact replay report required");
+  return record.metadata;
+}
 const vector = (value) =>
   Array.isArray(value) &&
   value.length === 3 &&
@@ -31,8 +83,13 @@ const before = (row, time, cursor) =>
 // Serializable generated presentation identities. Native engine registration,
 // root basis, bone providers and final retirement remain explicit dependencies.
 export function createProjectilePresentation(report, presentation = null) {
+  return buildProjectilePresentation(report, presentation, false);
+}
+
+function buildProjectilePresentation(report, presentation, borrowOwnedTraces) {
   const traces = new Map(),
-    records = new Map();
+    records = new Map(),
+    notificationClocks = new Map();
   if (presentation !== null) {
     const combined =
       presentation.policy === MISSILE_PRESENTATION_FAMILIES_POLICY;
@@ -156,7 +213,19 @@ export function createProjectilePresentation(report, presentation = null) {
         );
       } else if (trace.states.some((state) => state.effectBasis !== undefined))
         throw Error("Missile effect basis requires its source program");
-      traces.set(trace.entityId, structuredClone(trace));
+      const ownedTrace = borrowOwnedTraces ? trace : structuredClone(trace);
+      traces.set(trace.entityId, ownedTrace);
+      // The causal filter can exclude only notification states whose original
+      // timestamp equals the query. Index those immutable clocks once; ordinary
+      // particle substeps need no scan/copy of the complete missile timeline.
+      notificationClocks.set(
+        trace.entityId,
+        new Set(
+          ownedTrace.states
+            .filter((state) => state.notificationSourceEventId)
+            .map((state) => state.time),
+        ),
+      );
       records.set(trace.entityId, {
         time: record.time,
         transportSequence: record.transportSequence,
@@ -164,6 +233,8 @@ export function createProjectilePresentation(report, presentation = null) {
       });
     }
   }
+  const queryPolicy = presentation?.policy,
+    queryEndTime = presentation?.endTime;
   const query = (entityId, time, cursor = null) => {
     if (
       !Number.isInteger(entityId) ||
@@ -177,30 +248,31 @@ export function createProjectilePresentation(report, presentation = null) {
       throw Error("Causal projectile presentation query required");
     const trace = traces.get(entityId),
       record = records.get(entityId);
-    if (!trace || time > presentation.endTime || !before(record, time, cursor))
+    if (!trace || time > queryEndTime || !before(record, time, cursor))
       return null;
-    const states = cursor
-      ? trace.states.filter(
-          (state) =>
-            state.time !== time ||
-            !state.notificationSourceEventId ||
-            before(
-              {
-                time: state.time,
-                transportSequence: state.notificationTransportSequence,
-                entryOrder: state.notificationEntryOrder,
-              },
-              time,
-              cursor,
-            ),
-        )
-      : trace.states;
+    const states =
+      cursor && notificationClocks.get(entityId).has(time)
+        ? trace.states.filter(
+            (state) =>
+              state.time !== time ||
+              !state.notificationSourceEventId ||
+              before(
+                {
+                  time: state.time,
+                  transportSequence: state.notificationTransportSequence,
+                  entryOrder: state.notificationEntryOrder,
+                },
+                time,
+                cursor,
+              ),
+          )
+        : trace.states;
     const sampled = structuredClone(
       sampleLatestMissileTrace({ ...trace, states }, time),
     );
     return {
       ...sampled,
-      policy: presentation.policy,
+      policy: queryPolicy,
       familyPolicy: trace.policy,
       instanceId: trace.instanceId,
       entityId,

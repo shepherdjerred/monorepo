@@ -3,6 +3,11 @@ import {
   VIEWER_POSE_POLICY,
 } from "./latest-viewer-pose-sampler.mjs";
 import { assertLatestDisplayFacing } from "./latest-display-facing.mjs";
+import { setLatestViewerAnimatedVisibility } from "./latest-viewer-pose-availability.mjs";
+import {
+  replayRowCount,
+  replayRowProjection,
+} from "./latest-replay-columns.mjs";
 import { createLatestResourceRequestTrack } from "./latest-resource-requests.mjs";
 import { isLatestNegativeFormPrefix } from "./latest-negative-form-prefix.mjs";
 const uint = (value) =>
@@ -106,6 +111,27 @@ export function createLatestViewerPoseService({
   }
   let simulations = 0,
     cacheHits = 0;
+  const attachmentKeys = new Map();
+  for (
+    let index = 0;
+    index < replayRowCount(report.effectDescriptors);
+    index++
+  ) {
+    const descriptor = replayRowProjection(report.effectDescriptors, index, [
+      "attachmentEntityId",
+      "lookup14EntityId",
+      "attachmentKey4c",
+      "attachmentKey50",
+    ]);
+    for (const [entityId, key] of [
+      [descriptor.attachmentEntityId, descriptor.attachmentKey4c],
+      [descriptor.lookup14EntityId, descriptor.attachmentKey50],
+    ]) {
+      if (!attachmentKeys.has(entityId))
+        attachmentKeys.set(entityId, new Set([0]));
+      attachmentKeys.get(entityId).add(key);
+    }
+  }
   function source(entityId) {
     const actor = assets.actor(entityId);
     if (!actor) return null;
@@ -115,12 +141,9 @@ export function createLatestViewerPoseService({
         entry,
         entityId,
         bindings: actor.bindings,
+        cpuAttachmentsOnly: true,
       }),
-      known = new Set([0]);
-    for (const d of report.effectDescriptors) {
-      if (d.attachmentEntityId === entityId) known.add(d.attachmentKey4c);
-      if (d.lookup14EntityId === entityId) known.add(d.attachmentKey50);
-    }
+      known = attachmentKeys.get(entityId) ?? new Set([0]);
     const installed = new Set(
       actor.bindings.map((binding) => binding.resolvedBoneKey),
     );
@@ -354,7 +377,7 @@ export function createLatestViewerPoseService({
       const actor = assets.actor(entityId);
       if (!actor) throw Error("Rendered static actor is unprepared");
       assets.bindRenderedEntry(entityId, entry);
-      rendered.set(entityId, {
+      const value = {
         entry,
         bindDisplayRotation: entry.group.quaternion.clone(),
         sampler: createLatestViewerPoseSampler({
@@ -363,7 +386,10 @@ export function createLatestViewerPoseService({
           entityId,
           bindings: actor.bindings,
         }),
-      });
+      };
+      if (value.sampler.baseStateAvailability.status === "unavailable")
+        setLatestViewerAnimatedVisibility(entry, true);
+      rendered.set(entityId, value);
     },
     present(entity, time, displayFacing) {
       const value = rendered.get(entity?.entityId);
@@ -371,6 +397,16 @@ export function createLatestViewerPoseService({
         throw Error("Registered visible pose actor/root required");
       const supplied = input(entity, time, null, []),
         sampled = value.sampler.sample(supplied);
+      if (value.sampler.baseStateAvailability.status === "unavailable") {
+        setLatestViewerAnimatedVisibility(value.entry, true);
+        return {
+          ...value.sampler.applyLocalPose(supplied),
+          displayOnly: true,
+          actorVisible: false,
+          lifecycle: entity.lifecycle,
+          moving: entity.viewerMotion.moving,
+        };
+      }
       if (sampled.resolved)
         return {
           ...sampled,

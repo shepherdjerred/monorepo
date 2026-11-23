@@ -8,15 +8,21 @@ import {
   sameDirectCompiledData,
   assertDirectCompiledDataGraph,
 } from "./latest-direct-compiled-restore.mjs";
-import { createLatestAnimationPoses } from "./latest-animation-poses.mjs";
-import { createLatestAnimationRigBindings } from "./latest-animation-rigs.mjs";
+import { createLatestViewerAnimationResources } from "./latest-viewer-animation-resources.mjs";
 import {
   createAnimationGraph,
   readAnimationAsset,
 } from "./latest-animation.mjs";
 import { resolveCombatPresentation } from "./latest-combat.mjs";
-import { VIEWER_POSE_POLICY } from "./latest-viewer-pose-sampler.mjs";
+import {
+  VIEWER_POSE_POLICY,
+  viewerPoseJointDefaults,
+} from "./latest-viewer-pose-sampler.mjs";
 import { createLatestViewerBoundSizeResources } from "./latest-viewer-bound-size.mjs";
+import {
+  bindLatestViewerOrdinalJoints,
+  prepareLatestViewerOrdinalJoints,
+} from "./latest-viewer-ordinal-joints.mjs";
 
 export const VIEWER_POSE_MATH_SHA256 =
   "3718df126d69c125362a03340913204470d8c50238605150e57f808840fb7759";
@@ -28,9 +34,17 @@ const exact = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 async function math(bytes) {
   if ((await sha256(bytes)) !== VIEWER_POSE_MATH_SHA256)
     throw Error("Pinned viewer pose math differs");
-  // three.core.js is the self-contained math/Object3D module re-exported by the
-  // viewer's three.module.js. A verified module Blob works in browser workers
-  // and Bun without a browser import map or host filesystem import.
+  // The browser serves this pinned, self-contained module from its trusted
+  // static root. Importing a Blob would require broadening Scout's script-src.
+  // Its bytes above are verified before the immutable same-origin URL executes.
+  const host = new URL(import.meta.url);
+  if (["http:", "https:"].includes(host.protocol))
+    return import(new URL("/assets/vendor/three.core.js", host).href);
+  if (host.protocol !== "file:")
+    throw Error(
+      "Trusted browser static root or local research module required",
+    );
+  // File-based Bun research tools have no HTTP asset root or browser CSP.
   const url = URL.createObjectURL(
     new Blob([bytes], { type: "text/javascript" }),
   );
@@ -40,7 +54,13 @@ async function math(bytes) {
     URL.revokeObjectURL(url);
   }
 }
-export function createLatestViewerPoseHierarchy(THREE, bytes, asset, catalog) {
+export function createLatestViewerPoseHierarchy(
+  THREE,
+  bytes,
+  asset,
+  catalog,
+  ordinalBinding = null,
+) {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   if (
     bytes.length < 20 ||
@@ -122,6 +142,13 @@ export function createLatestViewerPoseHierarchy(THREE, bytes, asset, catalog) {
       throw Error("Invalid GLB pose scene root");
     modelScene.add(nodes[index]);
   }
+  if (ordinalBinding !== null) {
+    const binding = bindLatestViewerOrdinalJoints(ordinalBinding.handle, {
+      modelSha256: ordinalBinding.modelSha256,
+      nodeForIndex: (index) => nodes[index],
+    });
+    return { group, ...binding, nodes, mirror };
+  }
   const jointMap = new Map();
   for (const name of catalog.joints) {
     const matches = nodes.filter(
@@ -190,12 +217,13 @@ export async function loadLatestViewerPoseAssets({
   // same worker; retain that exact image in the owned initialization producer.
   if (staticCatalog !== null) await raw("decoder-16.21-macos/image.bin");
   const sceneBytes = await raw("latest-scene/manifest.json"),
-    clockBytes = await raw("decoder-16.21-macos/animation-clock.json"),
-    poseBytes = await raw("latest-animation-poses/manifest.json"),
-    rigBytes = await raw("decoder-16.21-macos/animation-rigs.json"),
-    core = await raw("vendor/three.core.js");
-  const poseMeta = decode(poseBytes),
-    rigs = decode(rigBytes);
+    core = await raw("vendor/three.core.js"),
+    animationResources = await createLatestViewerAnimationResources({
+      profile,
+      sceneBytes,
+      raw,
+      staticCatalog,
+    });
   const packageBytes = await raw("latest-viewer-poses/package.json"),
     pinned = decode(packageBytes);
   if (staticCatalog !== null)
@@ -217,7 +245,9 @@ export async function loadLatestViewerPoseAssets({
     throw Error("Pinned static viewer pose package differs");
   if (
     !exact(decode(sceneBytes), scene) ||
-    (await sha256(sceneBytes)) !== poseMeta.sceneManifestSha256
+    (animationResources.sceneAuthoritySha256 !== null &&
+      pinned.sceneAnimationAuthoritySha256 !==
+        animationResources.sceneAuthoritySha256)
   )
     throw Error(
       "Viewer pose scene manifest differs from pinned animation package",
@@ -237,13 +267,7 @@ export async function loadLatestViewerPoseAssets({
   THREE ??= await math(core);
   if (THREE.REVISION !== "185")
     throw Error("Viewer pose THREE revision differs");
-  const poses = await createLatestAnimationPoses(
-      profile,
-      clockBytes,
-      poseBytes,
-    ),
-    rigFactory = await createLatestAnimationRigBindings(profile, rigBytes),
-    actors = new Map();
+  const actors = new Map();
   for (const hero of report.heroes) {
     const actorKey = `${hero.champion.toLowerCase()}/${hero.skinId}`,
       asset = scene.champions[actorKey];
@@ -262,7 +286,7 @@ export async function loadLatestViewerPoseAssets({
       model.scale !== asset.scale
     )
       throw Error("Pinned installed viewer GLB differs");
-    const bound = await poses.bind(
+    const bound = await animationResources.bind(
         asset.animationGraph,
         graphBytes,
         catalogBytes,
@@ -272,13 +296,9 @@ export async function loadLatestViewerPoseAssets({
         bound.catalog,
         bound.clock,
       ),
-      rig = rigs.graphs[asset.animationGraph];
+      rig = bound.rig;
     if (!rig) throw Error("Equipped constructed rig is unprepared");
-    const native = await rigFactory.bind(
-        asset.animationGraph,
-        await raw(`latest-scene/${rig.rigFile}`),
-        catalogBytes,
-      ),
+    const native = bound.rigBindings,
       bindings = rig.bindings.map((binding) => native.resolve(binding.name));
     const events = [
       ...report.animations
@@ -298,21 +318,21 @@ export async function loadLatestViewerPoseAssets({
         report,
       ).actions,
     ].sort((a, b) => a.time - b.time || a.sequence - b.sequence);
-    const files = new Set([
-        bound.catalog.clips[asset.previewClips.idle].file,
-        bound.catalog.clips[asset.previewClips.run].file,
-        ...graph.dependencies("Death"),
-        ...events.flatMap((event) => graph.dependencies(event.name)),
-      ]),
+    const files = new Set(
+        animationResources.sceneAuthoritySha256 !== null
+          ? Object.values(bound.catalog.clips).map((clip) => clip.file)
+          : [
+              bound.catalog.clips[asset.previewClips.idle].file,
+              bound.catalog.clips[asset.previewClips.run].file,
+              ...graph.dependencies("Death"),
+              ...events.flatMap((event) => graph.dependencies(event.name)),
+            ],
+      ),
       poseAssets = new Map();
     for (const file of files) {
       if (!/^clips\/\d+\.clip$/.test(file))
         throw Error("Invalid static pose clip path");
-      const bytes = await raw(
-        `latest-animation-poses/${bound.directory}/${file}`,
-      );
-      if ((await sha256(bytes)) !== bound.expectedFileHash(file))
-        throw Error("Viewer clip hash differs");
+      const bytes = await animationResources.readLeaf(bound, file);
       poseAssets.set(
         file,
         readAnimationAsset(
@@ -321,6 +341,29 @@ export async function loadLatestViewerPoseAssets({
             bytes.byteOffset + bytes.byteLength,
           ),
         ),
+      );
+    }
+    let ordinalBinding = null;
+    if (asset.rigJointBindings !== undefined) {
+      const bindingBytes = await raw(`latest-scene/${asset.rigJointBindings}`);
+      if (
+        model.rigJointBindings !== asset.rigJointBindings ||
+        model.rigJointBindingsSha256 !== (await sha256(bindingBytes))
+      )
+        throw Error("Viewer ordinal model binding differs");
+      ordinalBinding = {
+        modelSha256: model.sha256,
+        handle: await prepareLatestViewerOrdinalJoints({
+          modelBytes,
+          rigBytes: await raw(`latest-scene/${rig.rigFile}`),
+          bindingBytes,
+          catalog: bound.catalog,
+          rigBindings: native,
+        }),
+      };
+    } else if (animationResources.sceneAuthoritySha256 !== null) {
+      throw Error(
+        "Selected scene actor omitted original ordinal model bindings",
       );
     }
     const source = {
@@ -333,6 +376,8 @@ export async function loadLatestViewerPoseAssets({
       poseAssets,
       modelBytes,
       modelSha256: model.sha256,
+      ordinalBinding,
+      rigFile: rig.rigFile,
     };
     // Validate the complete hierarchy now, before ordinary Play is available.
     source.defaults = createLatestViewerPoseHierarchy(
@@ -340,6 +385,7 @@ export async function loadLatestViewerPoseAssets({
       modelBytes,
       asset,
       bound.catalog,
+      ordinalBinding,
     );
     actors.set(hero.entityId, source);
   }
@@ -404,10 +450,8 @@ export async function loadLatestViewerPoseAssets({
           model: hashes[`latest-scene/${source.asset.model}`],
           graph: hashes[`latest-scene/${source.asset.animationGraph}`],
           catalog: hashes[`latest-scene/${source.asset.animationCatalog}`],
-          rig: hashes[
-            `latest-scene/${rigs.graphs[source.asset.animationGraph].rigFile}`
-          ],
-          posePackage: hashes["latest-animation-poses/manifest.json"],
+          rig: hashes[`latest-scene/${source.rigFile}`],
+          posePackage: hashes[animationResources.poseManifestPath],
           math: VIEWER_POSE_MATH_SHA256,
         },
       };
@@ -422,6 +466,7 @@ export async function loadLatestViewerPoseAssets({
           source.modelBytes,
           source.asset,
           source.catalog,
+          source.ordinalBinding,
         ),
       );
     },
@@ -439,19 +484,36 @@ export async function loadLatestViewerPoseAssets({
         ])
       )
         throw Error("Rendered viewer actor differs from static pose asset");
-      for (const [name, expected] of source.defaults.jointMap) {
-        const actual = rendered.jointMap.get(name);
+      const expectedJoints = [
+          ...(source.defaults.poseJoints ?? source.defaults.jointMap.values()),
+        ],
+        actualJoints =
+          source.ordinalBinding === null
+            ? [...source.defaults.jointMap.keys()].map((name) =>
+                rendered.jointMap.get(name),
+              )
+            : [...viewerPoseJointDefaults(rendered)];
+      if (expectedJoints.length !== actualJoints.length)
+        throw Error("Rendered viewer omitted original pose joints");
+      for (const [index, expected] of expectedJoints.entries()) {
+        const actual = actualJoints[index];
         if (
           !actual ||
           !exact(actual.position.toArray(), expected.position.toArray()) ||
           !exact(actual.quaternion.toArray(), expected.quaternion.toArray()) ||
           !exact(actual.scale.toArray(), expected.scale.toArray())
         )
-          throw Error(`Rendered viewer bind pose differs: ${name}`);
+          throw Error(`Rendered viewer bind pose differs at joint ${index}`);
       }
       Object.assign(
         rendered,
-        entry(source, { group: rendered.group, jointMap: rendered.jointMap }),
+        entry(source, {
+          group: rendered.group,
+          jointMap: rendered.jointMap,
+          ...(source.ordinalBinding === null
+            ? {}
+            : { poseJoints: rendered.poseJoints }),
+        }),
       );
       return rendered;
     },

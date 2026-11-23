@@ -1,6 +1,24 @@
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
+import { homedir, tmpdir } from "node:os";
 
-import { assertDevPostgresIdentity } from "./postgres-server.ts";
+import {
+  assertDevPostgresIdentity,
+  devPostgresDataRoot,
+} from "./postgres-server.ts";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
+test("uses the native home directory when Windows has no HOME or XDG override", () => {
+  vi.stubEnv("HOME", undefined);
+  vi.stubEnv("XDG_DATA_HOME", undefined);
+  const expected =
+    process.getuid?.() === 0
+      ? `${tmpdir()}/scout-for-lol/postgres/18`
+      : `${homedir()}/.local/share/scout-for-lol/postgres/18`;
+  expect(devPostgresDataRoot()).toBe(expected);
+});
 
 describe("dev PostgreSQL ownership", () => {
   const directory = "/local/scout-for-lol/postgres/18/pgdata";

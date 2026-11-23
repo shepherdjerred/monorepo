@@ -368,6 +368,7 @@ export function consumeDirectInitializationTransfer(ticket, payload) {
   if (!plan || plan.used)
     throw Error("Unused session initialization transfer capability required");
   plan.used = true;
+  tickets.delete(ticket);
   if (plan.payload !== payload || payloadPackages(payload) !== plan.packages)
     throw Error("Session initialization payload was replaced");
   const transfers = [],
