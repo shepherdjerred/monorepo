@@ -1402,12 +1402,13 @@ strictly above 0.80, an explicit request for a server, and support for every
 hard requirement. An applicable rule against bots, automated comments,
 promotional replies, or owner advertising blocks outreach. Silence or
 ambiguity about permission leaves an otherwise eligible request available for
-drafting. A separate model drafts the invite after the
-thread and account are checked. Drafts can acknowledge a soft preference the
-server only partly meets. Requests already answered by `the_storm_mc` and
-threads whose comments cannot be fully inspected are excluded. Assessments are
-cached against the request, community rules and approved facts. Edits or rule
-changes require a fresh assessment.
+drafting. Qualitative community preferences can qualify when The Storm offers
+a useful fit. Adult-only requests can qualify based on The Storm's adult
+audience. The reply says that players of other ages can join. A separate model
+drafts the invite after the thread and account are checked. Requests already
+answered by `the_storm_mc` and threads whose comments cannot be fully inspected
+are excluded. Assessments are cached against the request, community rules and
+approved facts. Edits or rule changes require a fresh assessment.
 
 `the-storm-reddit-outreach-enabled` and the typed JSON flag
 `the-storm-reddit-outreach-settings` control this schedule's publishing separately

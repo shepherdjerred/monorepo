@@ -9,6 +9,7 @@ The crystal economy, spawn quests, Storm Shard equipment upgrades, and arenas ar
 The server uses custom plugins and does not offer arbitrary modpacks or strict vanilla.
 Land claims work for solo players and groups. The Storm uses its own plugin called Towns,
 not Towny. Players can claim land without joining or creating a town.
+The server rules prohibit griefing, and staff can roll it back.
 Spawn is PvP-free. PvP is enabled by default outside spawn and toggleable per player.
 The dedicated server is in Seattle, Washington (Pacific Northwest, US West).
 The owner is a software engineer and runs dedicated hardware the owner owns outright.
@@ -23,4 +24,4 @@ Examples of Jerred's tone: "hi! feel free to try us out :)" and
 Identify it as our server, never pretend to be an independent player or claim personal experience.
 For partial matches, explain the meaningful difference rather than hiding it.`;
 
-export const REDDIT_OUTREACH_POLICY_VERSION = 5;
+export const REDDIT_OUTREACH_POLICY_VERSION = 6;

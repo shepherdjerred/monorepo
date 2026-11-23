@@ -131,6 +131,9 @@ describe("Reddit invite drafting", () => {
       expect(call.system).toContain("no execution tools");
       expect(call.system).toContain("Jerred's voice");
       expect(call.system).toContain("instead of em dashes");
+      expect(call.system).toContain(
+        "our server is aimed at adults and other ages can join",
+      );
       expect(call.prompt).toContain(input.serverFacts);
       expect(call.prompt).toContain(input.communityRules);
       return { draft: invite, usage };
