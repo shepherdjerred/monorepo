@@ -5,7 +5,6 @@ import {
 } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { renderToString } from "react-dom/server";
-import { MemoryRouter } from "react-router";
 import { expect, test } from "vitest";
 import type { z } from "zod";
 import { RemovalListSchema, RequestListSchema } from "#shared/api.ts";
@@ -24,6 +23,7 @@ import type { FixtureScenario } from "./scenario.ts";
 import { NewInLibrary } from "#client/home/household.tsx";
 import { NowPlaying } from "#client/home/personal.tsx";
 import { weekFrom } from "#client/home/model.ts";
+import { InRouter } from "#client/in-router.test-support.tsx";
 import { HomePage } from "#client/home/page.tsx";
 
 /*
@@ -152,7 +152,7 @@ function answered(persona: Persona, scenario: FixtureScenario = "default") {
 function render(client: QueryClient, page: ReactNode): string {
   return renderToString(
     <QueryClientProvider client={client}>
-      <MemoryRouter>{page}</MemoryRouter>
+      <InRouter>{page}</InRouter>
     </QueryClientProvider>,
   );
 }

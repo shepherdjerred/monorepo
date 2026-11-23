@@ -19,10 +19,24 @@
       transition: none !important;
       scroll-behavior: auto !important;
     }
+    /* A view transition is not an element the rule above reaches. Links ask
+       for none under reduced motion (`ui/motion/title-transition.ts`), and the
+       router can still run one when the reader goes Back: it ends at once. */
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
   }
 }
 
 @layer components {
+  /* The only view transition is a poster moving between a card and its title
+     page (`ui/motion/title-transition.ts`). The rest of the page cross-fades behind
+     it, briefly, so the poster is what the eye follows. */
+  ::view-transition-group(root) {
+    animation-duration: 200ms;
+  }
   .sr-only {
     position: absolute;
     width: 1px;
