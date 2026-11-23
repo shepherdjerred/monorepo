@@ -37,7 +37,17 @@ describe("pageSummary", () => {
         older: false,
         more: false,
       }),
-    ).toBe("Showing all 1 deployment that matches these filters.");
+    ).toBe("Showing 1 deployment that matches these filters.");
+    // "All" says nothing about a single result.
+    expect(
+      pageSummary({
+        count: 1,
+        noun: DEPLOYMENTS,
+        filtered: false,
+        older: false,
+        more: false,
+      }),
+    ).toBe("Showing 1 deployment.");
     // The verb agrees with the count: several rows match, one matches.
     expect(
       pageSummary({

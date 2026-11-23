@@ -19,10 +19,12 @@ export type CommitEnvironmentRelease = z.infer<
 >;
 
 /**
- * A release that ships a failed pipeline's change and has landed in every
- * environment it reached: live there, or superseded by a newer accepted
- * release that is deployed. Releases still held back are named by the
- * commit's blockers instead.
+ * A release that ships a carried change and has landed in every environment
+ * it reached: `live` when it is still the accepted release somewhere, else
+ * `superseded` by a newer accepted release that is deployed. `outcome` is
+ * how its own deployments ended when one failed (it wins) or was canceled;
+ * absent when they succeeded or none was made. Releases still held back are
+ * named by the commit's blockers instead.
  */
 export const CarriedReleaseSchema = z.object({
   service: z.string(),
@@ -30,6 +32,7 @@ export const CarriedReleaseSchema = z.object({
   /** The commit whose pipeline built the release. */
   includedIn: z.string().min(7),
   state: z.enum(["live", "superseded"]),
+  outcome: z.enum(["failed", "canceled"]).optional(),
 });
 export type CarriedRelease = z.infer<typeof CarriedReleaseSchema>;
 

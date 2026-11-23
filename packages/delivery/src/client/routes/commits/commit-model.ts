@@ -274,10 +274,7 @@ function heldBack(
     const named = namedWithMore(
       group.members.map((member) => `${member.service} ${member.environment}`),
     );
-    const everyOne =
-      total === 1
-        ? "Its changed service"
-        : `All ${String(total)} changed services`;
+    const everyOne = allSubject(total);
     const subject =
       position > 0
         ? String(group.count)
@@ -296,20 +293,36 @@ function heldBack(
   ];
 }
 
-/** Every changed service is live, said once, and why when newer commits carry it. */
-function allLive(changed: CommitStatus["changed"]) {
-  const subject =
-    changed.length === 1
-      ? "Its 1 changed service is"
-      : `All ${String(changed.length)} changed services are`;
-  const throughNewer = changed.every((entry) =>
+/** "The changed service", "Both changed services", "All 5 changed services". */
+function allSubject(total: number) {
+  if (total === 1) return "The changed service";
+  return total === 2
+    ? "Both changed services"
+    : `All ${String(total)} changed services`;
+}
+
+/** A change that is live through a newer commit's release rather than its own. */
+const viaNewer = (entry: CommitStatus["changed"][number]) =>
+  entry.includedIn !== undefined ||
+  (entry.environments.length > 0 &&
     entry.environments.every(
       (environment) => environment.state === "superseded",
-    ),
-  );
-  return throughNewer
-    ? `${subject} live because newer commits include ${changed.length === 1 ? "it" : "them"}.`
-    : `${subject} live.`;
+    ));
+
+/**
+ * Every changed service is live, said once, and why when newer commits carry
+ * it: "because newer commits include them" when all do, which of them when
+ * only some do.
+ */
+function allLive(changed: CommitStatus["changed"]) {
+  const subject = `${allSubject(changed.length)} ${changed.length === 1 ? "is" : "are"} live`;
+  const carried = changed.filter((entry) => viaNewer(entry)).length;
+  if (carried === 0) return `${subject}.`;
+  if (carried === changed.length)
+    return `${subject} because newer commits include ${changed.length === 1 ? "it" : "them"}.`;
+  return carried === 1
+    ? `${subject}, one of them because a newer commit includes it.`
+    : `${subject}, ${String(carried)} of them because newer commits include them.`;
 }
 
 /**

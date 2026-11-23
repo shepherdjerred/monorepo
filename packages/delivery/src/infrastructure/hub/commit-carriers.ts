@@ -34,14 +34,15 @@ export function carriedFailure(
 /**
  * The releases that ship a failed pipeline's change and have landed, one per
  * service: live or superseded by a newer accepted release in every
- * environment they reached. A release still held back is named by the
+ * environment they reached, with how their own deployments ended. A release still held back is named by the
  * commit's blockers, and one with no version set (a platform change) has no
  * revision to name. The field is absent when there are none.
  */
 export function withCarriedReleases(entries: readonly CommitService[]): {
   carriedReleases?: CarriedRelease[];
 } {
-  const releases = entries.flatMap((entry): CarriedRelease[] => {
+  const releases = new Map<string, CarriedRelease>();
+  for (const entry of entries) {
     const { versionSet, includedIn, environments } = entry;
     const landed =
       environments.length > 0 &&
@@ -49,19 +50,29 @@ export function withCarriedReleases(entries: readonly CommitService[]): {
         (environment) =>
           environment.state === "live" || environment.state === "superseded",
       );
-    if (!landed || versionSet === null || includedIn === undefined) return [];
-    return [
-      {
-        service: entry.service.title,
-        revision: versionSet.revision,
-        includedIn,
-        state: environments.every((environment) => environment.state === "live")
-          ? "live"
-          : "superseded",
-      },
-    ];
-  });
-  return releases.length === 0 ? {} : { carriedReleases: releases };
+    if (!landed || versionSet === null || includedIn === undefined) continue;
+    // The release's own deployments, not the state: a release live in one
+    // environment is live even where a newer one superseded it elsewhere, and
+    // a failed or canceled deployment is named even when it was superseded.
+    const statuses = new Set(
+      environments.map((environment) => environment.release?.status),
+    );
+    const outcome = statuses.has("failed")
+      ? ("failed" as const)
+      : statuses.has("canceled")
+        ? ("canceled" as const)
+        : undefined;
+    releases.set(`${entry.service.id}/${String(versionSet.revision)}`, {
+      service: entry.service.title,
+      revision: versionSet.revision,
+      includedIn,
+      state: environments.some((environment) => environment.state === "live")
+        ? "live"
+        : "superseded",
+      ...(outcome === undefined ? {} : { outcome }),
+    });
+  }
+  return releases.size === 0 ? {} : { carriedReleases: [...releases.values()] };
 }
 
 /** The shas of the commits that carry a commit's failed builds. */

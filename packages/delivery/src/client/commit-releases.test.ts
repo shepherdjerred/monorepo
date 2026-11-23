@@ -46,11 +46,13 @@ const release = (
   service: string,
   revision: number,
   state: CarriedRelease["state"],
+  outcome?: CarriedRelease["outcome"],
 ): CarriedRelease => ({
   service,
   revision,
   includedIn: full("f545a3b"),
   state,
+  ...(outcome === undefined ? {} : { outcome }),
 });
 
 /** A service held back in one environment, in a state. */
@@ -122,23 +124,50 @@ describe("carrying commits as a list", () => {
 });
 
 describe("releases a failed pipeline's carrier shipped", () => {
-  it("names the superseded and live releases the blockers do not", () => {
-    // /commits/72e4dff: Minecraft r117 failed (a blocker); these landed.
+  it("counts and names each release by its own outcome, never flattened to superseded", () => {
+    // /commits/f545a3b-carried: 6 failed then superseded, 2 canceled, 8 plainly superseded, 1 live.
+    const failed = ["Arcade", "Golink", "Streambot & media", "A", "B", "C"].map(
+      (name, index) => release(name, 10 + index, "superseded", "failed"),
+    );
+    const canceled = [
+      release("Delivery", 324, "superseded", "canceled"),
+      release("Starlight Karma Bot", 216, "superseded", "canceled"),
+    ];
+    const plain = Array.from({ length: 8 }, (_, index) =>
+      release(`P${String(index)}`, 100 + index, "superseded"),
+    );
     expect(
       releasesNote([
-        release("Streambot & media", 346, "superseded"),
-        release("Delivery execution control plane", 171, "superseded"),
-        release("Golink", 12, "superseded"),
-        release("Hub", 278, "superseded"),
+        ...plain,
+        ...canceled,
+        ...failed,
         release("Cluster observability baseline", 75, "live"),
       ]),
     ).toBe(
-      "Releases in f545a3b: 4 were superseded by newer releases, which are deployed (Streambot & media r346, Delivery execution control plane r171, Golink r12 +1 more), Cluster observability baseline r75 is live",
+      "Releases in f545a3b: 6 failed and were superseded by newer releases, which are deployed (Arcade r10, Golink r11, Streambot & media r12 +3 more); 2 were canceled and superseded by newer releases, which are deployed (Delivery r324 and Starlight Karma Bot r216); 8 were superseded by newer releases, which are deployed (P0 r100, P1 r101, P2 r102 +5 more); Cluster observability baseline r75 is live",
     );
-    expect(
-      releasesNote([release("Streambot & media", 346, "superseded")]),
-    ).toBe(
+  });
+
+  it("words a single release by its own outcome and treats a still-live one as live", () => {
+    const only = (...releases: CarriedRelease[]) => releasesNote(releases);
+    expect(only(release("Streambot & media", 346, "superseded"))).toBe(
       "Releases in f545a3b: Streambot & media r346 was superseded by a newer release, which is deployed",
+    );
+    expect(only(release("Golink", 12, "superseded", "failed"))).toBe(
+      "Releases in f545a3b: Golink r12 failed and was superseded by a newer release, which is deployed",
+    );
+    expect(only(release("Delivery", 324, "superseded", "canceled"))).toBe(
+      "Releases in f545a3b: Delivery r324 was canceled and superseded by a newer release, which is deployed",
+    );
+    // /commits/bdf6689: one release is still live, the rest superseded.
+    expect(
+      only(
+        release("Starlight Karma Bot", 224, "live"),
+        release("Hub", 287, "superseded"),
+        release("Golink", 22, "superseded"),
+      ),
+    ).toBe(
+      "Releases in f545a3b: 2 were superseded by newer releases, which are deployed (Hub r287 and Golink r22); Starlight Karma Bot r224 is live",
     );
     expect(releasesNote([])).toBeNull();
     expect(releasesNote(undefined)).toBeNull();

@@ -359,8 +359,9 @@ function underStepsNote(underSteps: number, outside: number) {
       ? "is shown under the step that recorded it"
       : "are shown under the steps that recorded them";
   if (outside > 0) return `${String(underSteps)} more ${where}.`;
-  return underSteps === 1
-    ? `The only piece of evidence ${where}.`
+  if (underSteps === 1) return `The only piece of evidence ${where}.`;
+  return underSteps === 2
+    ? `Both pieces of evidence ${where}.`
     : `All ${String(underSteps)} pieces of evidence ${where}.`;
 }
 

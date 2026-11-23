@@ -402,7 +402,7 @@ async function readCommitRows(
         unchangedCount,
         failedBuilds,
         carriedFailures,
-        ...withCarriedReleases(pipelineEntries),
+        ...withCarriedReleases([...carriedEntries, ...pipelineEntries]),
         pendingBuilds,
         blocker: blockers[0] ?? null,
         blockers,

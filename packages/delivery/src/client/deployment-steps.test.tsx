@@ -251,7 +251,7 @@ describe("the evidence no listed step recorded", () => {
         />,
       ),
     ).toBe(
-      '<p class="muted">All 2 pieces of evidence are shown under the steps that recorded them.</p>',
+      '<p class="muted">Both pieces of evidence are shown under the steps that recorded them.</p>',
     );
   });
 

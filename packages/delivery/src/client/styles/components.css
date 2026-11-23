@@ -655,7 +655,11 @@ label.checkbox input {
 }
 .env-group h3 {
   margin-top: 0;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+/* The verdict and the count read as one sentence under the environment's name. */
+.env-group-summary {
+  margin: 0 0 var(--space-2);
 }
 @media (width <= 720px) {
   .activity-columns {
