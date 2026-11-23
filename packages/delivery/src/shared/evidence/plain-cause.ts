@@ -3,7 +3,8 @@
  * the source bundle around the throw (`21895 | ${body}`);`), a caret line
  * under it, the error's own sentence and its stack frames. Only the sentence
  * is for a reader; the rest is kept for the disclosure that holds the raw
- * text.
+ * text. Executors also run these onto one line, so an excerpt or a frame can
+ * follow prose on the same line.
  */
 
 /** A line of the bundle excerpt a runtime prints around a throw: `21895 | code`. */
@@ -12,6 +13,12 @@ const SOURCE_LINE = /^\s*\d+\s*\|/u;
 const CARET_LINE = /^\s*\^+\s*$/u;
 /** A stack frame: `at assertApplySafe (/app/dist/file.js:21900:11)`. */
 const STACK_FRAME = /^\s*at\s\S.*(?:\(|:\d+)/u;
+/** An excerpt that follows prose on the same line: `before any sync; 21895 | code`. */
+const INLINE_SOURCE = /[;,]?\s+\d{3,}\s+\|\s.*$/u;
+/** A frame that follows prose on the same line, with its name or without. */
+const FRAME_SOURCE = String.raw`\s+at\s+(?:async\s+)?(?:[^\s()]+\s+)?\(?[^\s()]+?:\d+:\d+\)?`;
+const INLINE_FRAME = new RegExp(FRAME_SOURCE, "gu");
+const HAS_INLINE_FRAME = new RegExp(FRAME_SOURCE, "u");
 /** The error name or `error:` a runtime puts before the sentence. */
 const ERROR_PREFIX = /^(?:[A-Za-z]*Error|error)\s*:\s*/u;
 
@@ -23,23 +30,39 @@ function isTraceLine(line: string) {
 
 /** Whether a recorded text carries source excerpts or stack frames. */
 export function hasTrace(text: string) {
-  return text.split("\n").some((line) => isTraceLine(line));
+  return text
+    .split("\n")
+    .some(
+      (line) =>
+        isTraceLine(line) ||
+        INLINE_SOURCE.test(line) ||
+        HAS_INLINE_FRAME.test(line),
+    );
+}
+
+/** One line's own words: an excerpt or frames that follow its prose removed. */
+function cleanLine(line: string) {
+  return line
+    .replace(INLINE_SOURCE, "")
+    .replaceAll(INLINE_FRAME, "")
+    .trim()
+    .replace(ERROR_PREFIX, "")
+    .replace(/[;,:]\s*$/u, "");
 }
 
 /**
  * The human sentence of a recorded error: its lines that are neither source
- * excerpt nor stack frame, joined, without the runtime's error prefix. A
- * text with no trace in it is returned as written. Empty when nothing but
- * trace is left.
+ * excerpt nor stack frame, each without an excerpt or frames run on after
+ * its words and without the runtime's error prefix, joined. A text with no
+ * trace in it is returned as written. Empty when nothing but trace is left.
  */
 export function plainCause(text: string) {
   return hasTrace(text)
     ? text
         .split("\n")
         .filter((line) => !isTraceLine(line))
-        .map((line) => line.trim())
+        .map((line) => cleanLine(line))
         .filter((line) => line !== "")
-        .join(" ")
-        .replace(ERROR_PREFIX, "")
+        .join("; ")
     : text;
 }

@@ -951,3 +951,59 @@ describe("what a failed deployment says while a newer request waits, and about t
     expect(disclosure).not.toContain(" open");
   });
 });
+
+describe("a failure whose evidence is a runtime error", () => {
+  /** Golink's apply-safety evidence as recorded, run-on excerpt and all. */
+  const RECORDED = [
+    "Delivery apply-safety refused the Application before any sync; 21895 | ${body}`);",
+    "21896 | }",
+    "21897 | const managed = ManagedResourcesSchema.parse(",
+    "error: Refusing golink sync because the desired state changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
+    "      at assertApplySafe (/app/packages/temporal/dist/delivery-argocd.js:21900:11)",
+    "      at async main (/app/packages/temporal/dist/delivery-argocd.js:23688:30)",
+  ].join("\n");
+  const SENTENCE =
+    "Delivery apply-safety refused the Application before any sync; Refusing golink sync because the desired state changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4";
+  const refused = {
+    ...ended,
+    deployment: { ...ended.deployment, message: null },
+    stages: [stage("step-apply-safety", "failed", "step-apply-safety: failed")],
+    evidence: [evidence("stage/step-apply-safety/0", RECORDED, "preflight")],
+  };
+
+  it("says the sentence in the prose and the Evidence entry, never the excerpt or frames", () => {
+    const html = render(
+      <>
+        <WhyItFailed detail={refused} />
+        <StepTimeline detail={refused} />
+      </>,
+    );
+    // Only a <pre> inside a collapsed disclosure holds the raw text.
+    const visible = html.replaceAll(/<pre[^>]*>[\s\S]*?<\/pre>/gu, "");
+    for (const fragment of [
+      "21895",
+      "21896",
+      "delivery-argocd.js",
+      "assertApplySafe",
+      "ManagedResourcesSchema",
+    ])
+      expect(visible).not.toContain(fragment);
+    expect(visible).toContain(`failed: ${SENTENCE}`);
+    expect(html.match(/<pre class="receipt-json">/gu)?.length).toBeGreaterThan(
+      0,
+    );
+    expect(html).toContain("assertApplySafe");
+  });
+
+  it("opens no disclosure on the raw text", () => {
+    const html = render(<StepTimeline detail={refused} />);
+    const opening = /<details class="disclosure"( open="")?>/gu;
+    const raw = html.split("Full error text");
+    expect(raw.length).toBeGreaterThan(1);
+    // The tag just before each "Full error text" summary carries no `open`.
+    for (const before of raw.slice(0, -1)) {
+      const tags = [...before.matchAll(opening)];
+      expect(tags.at(-1)?.[1]).toBeUndefined();
+    }
+  });
+});

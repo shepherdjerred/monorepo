@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DeploymentStatusSchema } from "#shared/contract.ts";
+import { plainCause } from "#shared/evidence/plain-cause.ts";
 import { NO_CAUSE } from "#shared/evidence/recovery-reading.ts";
 import type { Attention } from "#shared/hub/hub-contract.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
@@ -162,7 +163,10 @@ export async function statedDeployments<
 
 /** A recorded message's first line, the cause before any detail under it. */
 export function firstLine(message: string | null) {
-  const line = message?.split("\n", 1)[0]?.trim() ?? "";
+  // A runtime error's source excerpt and stack frames are not the cause.
+  const line =
+    (message === null ? "" : plainCause(message)).split("\n", 1)[0]?.trim() ??
+    "";
   return line === "" ? null : line;
 }
 

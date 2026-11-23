@@ -180,12 +180,25 @@ describe("unknownFilters", () => {
     ).toEqual([
       {
         problem:
-          "“status” is not a filter on this page. Choose one of Show, Time range.",
+          "“status” is not a filter on this page. Use one of: problems (Show), within (Time range).",
       },
     ]);
     expect(
       problemsOf(unknownFilters({ a: "1", b: "2" }, ACTIVITY)),
     ).toHaveLength(2);
+    // The artifacts list's qualification filter is written ?status=, so a
+    // typed ?qualification= is told the key, not the label it was taken from.
+    expect(
+      unknownFilters({ qualification: "pending" }, [
+        { name: "service", label: "Service" },
+        { name: "status", label: "Qualification" },
+      ]),
+    ).toEqual([
+      {
+        problem:
+          "“qualification” is not a filter on this page. Use one of: service, status (Qualification).",
+      },
+    ]);
   });
 
   it("accepts the page's own filters, the paging cursor and absent values", () => {

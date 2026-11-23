@@ -14,8 +14,8 @@ import { interrupted } from "#client/deployment-steps.tsx";
 import { CopyableIdentifier } from "#client/components/copyable.tsx";
 import { Disclosure } from "#client/components/disclosure.tsx";
 import { revisionLabel } from "#client/components/identifier.tsx";
-import { hasTrace } from "#shared/evidence/plain-cause.ts";
-import { failurePointers, sayOnce, spoken } from "./failure-words.ts";
+import { plainCause } from "#shared/evidence/plain-cause.ts";
+import { failurePointers, sayOnce, spoken, tracesOf } from "./failure-words.ts";
 import { retryable } from "./view.ts";
 
 type Detail = Pick<
@@ -205,7 +205,10 @@ export function failureStory(detail: Detail) {
     ? null
     : recoveryReading(detail.recoveryIntents);
   const once = sayOnce();
-  const message = settled === null ? once.say(deployment.message) : null;
+  const message =
+    settled === null && deployment.message !== null
+      ? once.say(plainCause(deployment.message))
+      : null;
   const raw = stage === undefined ? null : stepMessage(stage);
   let stepText = once.say(raw === null ? null : spoken(raw));
   let evidenceText = once.say(
@@ -239,13 +242,7 @@ export function failureStory(detail: Detail) {
      * The recorded texts that carry source excerpts or stack frames, as
      * recorded, for a disclosure: the prose above says only their sentence.
      */
-    traces: [
-      ...new Set(
-        [deployment.message, raw, item?.summary].flatMap((text) =>
-          text != null && hasTrace(text) ? [text] : [],
-        ),
-      ),
-    ],
+    traces: tracesOf([deployment.message, raw, item?.summary]),
     /**
      * Whether any record says why: a message, a step's words or evidence. What
      * recovery read back is what became of the external work, in any phase,

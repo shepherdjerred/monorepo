@@ -4,6 +4,7 @@ import {
   type ReceiptFact,
   type ReceiptValue,
 } from "#client/evidence.ts";
+import { hasTrace, plainCause } from "#shared/evidence/plain-cause.ts";
 import { Disclosure } from "./disclosure.tsx";
 import { Fact, Facts } from "./facts.tsx";
 import { Identifier } from "./identifier.tsx";
@@ -44,13 +45,37 @@ function FactList({ facts }: { facts: ReceiptFact[] }) {
 }
 
 /**
+ * Recorded prose. A runtime error's source excerpt, caret line and stack
+ * frames never show as text: the sentence does, and the whole text stays in
+ * a collapsed disclosure.
+ */
+export function RecordedText({
+  text,
+  className,
+}: {
+  text: string;
+  className?: string;
+}) {
+  if (!hasTrace(text)) return <p className={className}>{text}</p>;
+  const words = plainCause(text);
+  return (
+    <>
+      {words !== "" && <p className={className}>{words}</p>}
+      <Disclosure summary="Full error text">
+        <pre className="receipt-json">{text}</pre>
+      </Disclosure>
+    </>
+  );
+}
+
+/**
  * A summary or step message as people read it: prose as written, a machine
  * receipt as labelled facts with its nested values folded away. The
  * receipt's `adapter` is the caller's to show as the item's label.
  */
 export function Receipt({ parsed }: { parsed: ParsedSummary }) {
   if (parsed.kind === "text")
-    return <p className="receipt-text">{parsed.text}</p>;
+    return <RecordedText text={parsed.text} className="receipt-text" />;
   const short = parsed.facts.filter((fact) => !isWideValue(fact.value));
   const wide = parsed.facts.filter((fact) => isWideValue(fact.value));
   return (

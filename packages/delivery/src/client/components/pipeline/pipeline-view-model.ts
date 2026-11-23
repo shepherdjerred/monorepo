@@ -9,6 +9,7 @@ import type {
   CiWorkflow,
 } from "#shared/hub/integration-contract.ts";
 import { parseEvidenceSummary } from "#client/evidence.ts";
+import { plainCause } from "#shared/evidence/plain-cause.ts";
 
 const PRIORITY: PipelineStatus[] = [
   "failed",
@@ -151,7 +152,10 @@ export function stageSummary(stage: PipelineStage) {
 export function actionDetail(action: PipelineAction): string | null {
   if (action.detail === null) return null;
   const message = parseEvidenceSummary(action.detail);
-  return message.kind === "text" ? message.text : null;
+  if (message.kind !== "text") return null;
+  // A runtime error's excerpt and frames are not the action's line.
+  const words = plainCause(message.text);
+  return words === "" ? null : words;
 }
 
 export const INLINE_ACTION_LIMIT = 5;

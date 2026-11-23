@@ -352,8 +352,11 @@ describe("overview panels markup", () => {
     expect(chips).toContain(
       '<a class="overview-chip overview-chip-request" href="/environments/scout/prod">' +
         '<span class="env-name">prod</span>' +
+        // The accepted release keeps a status of its own beside the newer request's.
+        '<span class="status status-succeeded"><span class="status-glyph" aria-hidden="true">✓</span>' +
+        '<span class="status-label">accepted</span></span>' +
         '<span class="overview-accepted"><span class="revision">r274</span>' +
-        '<span class="visually-hidden"> accepted </span>',
+        "<time",
     );
     expect(chips).toContain(
       '<span class="status status-canceled"><span class="status-glyph" aria-hidden="true">⊘</span>' +

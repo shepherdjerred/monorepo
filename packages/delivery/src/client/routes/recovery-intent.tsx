@@ -8,6 +8,7 @@ import { DeploymentLink } from "#client/model/selection-facts.tsx";
 import { Route as rootRoute } from "./root.tsx";
 import { Fact, Facts } from "#client/components/facts.tsx";
 import { Disclosure } from "#client/components/disclosure.tsx";
+import { RecordedText } from "#client/components/receipt.tsx";
 
 /** One operator-authorised inspection of a `recovery-required` deployment (4.15). */
 function RecoveryIntentPage() {
@@ -66,7 +67,7 @@ function RecoveryIntentPage() {
             {intent.evidence.map((item) => (
               <li key={`${item.kind}:${item.summary}`}>
                 <span className="eyebrow">{item.kind}</span>
-                <p>{item.summary}</p>
+                <RecordedText text={item.summary} />
                 {item.url !== undefined && (
                   <a href={item.url}>
                     View evidence<span aria-hidden="true"> ↗</span>
