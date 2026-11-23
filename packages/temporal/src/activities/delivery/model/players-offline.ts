@@ -1,16 +1,13 @@
 import { z } from "zod";
 import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
 import { deliveryOperationId } from "#lib/delivery/selection.ts";
-import { workerApplicationResources } from "#lib/delivery/workers/worker-hosts.ts";
-import { argoRequest } from "#activities/delivery/argocd.ts";
 import {
   kubectl,
   type Command,
 } from "#activities/homelab/mining-reset-kubectl.ts";
 import { recordStage, stageOf } from "./stages.ts";
 
-/** The TSMC Application whose server the gate holds; the reviewed target is fixed. */
-const SERVER = "minecraft-tsmc";
+/** The TSMC server the gate holds; the reviewed target is fixed. */
 const POD = "minecraft-tsmc-0";
 const CONTAINER = "minecraft-tsmc";
 
@@ -30,7 +27,7 @@ export type PlayerCount = { online: number; maximum: number };
 
 export type PlayersOfflineEffects = {
   record: typeof recordStage;
-  pods: (application: string) => Promise<unknown[]>;
+  pods: () => Promise<unknown[]>;
   console: Command;
 };
 
@@ -79,10 +76,35 @@ async function readPlayers(command: Command): Promise<PlayerCount> {
   return parsePlayerList(result.stdout);
 }
 
+/**
+ * The server Pod, read from Kubernetes under the worker's `get` grant on
+ * exactly this Pod. It is not read through Argo CD's resource tree: that
+ * answers HTTP 500 whenever the Application's comparison fails, and the gate
+ * must not depend on the health of the release it holds. An absent Pod is a
+ * sleeping server; the worker's grant covers only this Pod, not the
+ * StatefulSet, so its replica count cannot confirm that. Every other failure
+ * fails the read, and with it the step.
+ */
+export async function readServerPod(command: Command): Promise<unknown[]> {
+  const result = await command([
+    "get",
+    "pod",
+    "-n",
+    "minecraft-tsmc",
+    POD,
+    "-o",
+    "json",
+  ]);
+  if (result.exitCode === 0) return [JSON.parse(result.stdout) as unknown];
+  if (result.stderr.includes("(NotFound)")) return [];
+  throw new Error(
+    `Reading ${POD} failed (exit ${String(result.exitCode)}): ${result.stderr.trim()}`,
+  );
+}
+
 const external: PlayersOfflineEffects = {
   record: recordStage,
-  pods: async (application) =>
-    await workerApplicationResources(application, "Pod", argoRequest),
+  pods: async () => await readServerPod(kubectl),
   console: kubectl,
 };
 
@@ -127,7 +149,7 @@ export async function runPlayersOfflineStep(
   };
   let reading;
   try {
-    reading = serving(await effects.pods(SERVER))
+    reading = serving(await effects.pods())
       ? { server: "serving" as const, ...(await readPlayers(effects.console)) }
       : { server: "asleep" as const, online: 0 };
   } catch (error) {
