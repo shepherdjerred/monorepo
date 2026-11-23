@@ -5,6 +5,7 @@ import { DataList, DataRow } from "#client/ui/data-list.tsx";
 import { Badge } from "#client/ui/feedback.tsx";
 import { Panel } from "#client/ui/panel.tsx";
 import { Code, Effects } from "#client/ui/workflow.tsx";
+import { QuarantineContinuations } from "./continuations.tsx";
 import {
   ApprovalSection,
   ProofDetails,
@@ -39,20 +40,27 @@ export type Header = {
  */
 export function PublishedReview({
   review,
+  quarantined,
   subtitlePolicies,
   approval,
   header,
 }: {
   review: Detail;
+  quarantined: boolean;
   subtitlePolicies: Policies;
   approval: Approval;
   header: Header;
 }) {
+  const kind = quarantined ? "quarantined" : "installed";
   const files = review.scope.files.length;
   return (
     <>
       <ReviewHeader
-        title="Recover selected file ownership"
+        title={
+          quarantined
+            ? "Recover quarantined file ownership"
+            : "Recover selected file ownership"
+        }
         intro="File checks prove these physical versions. They cannot recover household choices lost after the backup."
         back={{
           to: "/manage/recovery/native",
@@ -62,6 +70,14 @@ export function PublishedReview({
         {...header}
       />
       <StatePanel state={review.state}>
+        {quarantined && (
+          <p>
+            Approval preserves quarantine, subtitle quality, and existing
+            retention history. Files stay in quarantine until current household
+            intent authorizes restoration. This does not prove anyone watched
+            them or permit deletion.
+          </p>
+        )}
         {review.state === "applied" && (
           <p>
             Physical ownership is restored. Household protection remains active.{" "}
@@ -70,6 +86,7 @@ export function PublishedReview({
           </p>
         )}
       </StatePanel>
+      <QuarantineContinuations items={review.continuations} />
       <Panel id="titles" title="Affected titles">
         <DataList label="Affected titles">
           {review.scope.files.map((file) => (
@@ -79,7 +96,7 @@ export function PublishedReview({
               detail={
                 <>
                   <p>
-                    {file.subtitles.length} installed subtitle
+                    {file.subtitles.length} {kind} subtitle
                     {file.subtitles.length === 1 ? "" : "s"} included. Their
                     accepted, unverified, or rejected quality status is
                     preserved.
@@ -154,13 +171,18 @@ export function PublishedReview({
       <Panel id="changes" title="What this approval changes">
         <Effects
           will={[
-            `Renews ownership only for the exact reviewed videos and installed subtitle files.`,
+            `Renews ownership only for the exact reviewed videos and ${kind} subtitle files.`,
             "Creates selected-title subtitle policy versions with the reviewed rules; other titles keep their prior policies.",
           ]}
           wontTitle="What stays as it is"
           wont={[
             "Recovery holds, personal Keep choices, and pins stay in force. Existing work and delivery history is preserved.",
             "New acquisition still needs a current authorized request or an explicit positive household declaration.",
+            ...(quarantined
+              ? [
+                  "Restoration requires current positive authority for every covered leaf. Mixed positive and negative demand on a shared file remains protected; a negative declaration never authorizes restoration or deletion.",
+                ]
+              : []),
           ]}
         />
         {review.state === "awaiting_review" && (

@@ -1,5 +1,9 @@
 import type { Persona } from "#testing/fixture-api/personas.ts";
 import { fixtureId } from "#testing/fixture-api/support.ts";
+import { ARCHIVE_REVIEW_IDS } from "#testing/fixture-api/fixtures/migration/archive.ts";
+import { COMPENSATION_REVIEW_IDS } from "#testing/fixture-api/fixtures/migration/compensation.ts";
+import { QUARANTINE_REVIEW_IDS } from "#testing/fixture-api/fixtures/migration/quarantine.ts";
+import { SERIES_PACK_REVIEW_IDS } from "#testing/fixture-api/fixtures/migration/series-pack.ts";
 import {
   FEATURED,
   episodeId,
@@ -243,6 +247,25 @@ const TITLE_MANAGE_ROUTES: readonly RouteSpec[] = [
   },
 ];
 
+/** Native file recovery reviews: each kind, waiting for approval and applied. */
+const NATIVE_REVIEWS = [
+  { ids: QUARANTINE_REVIEW_IDS, heading: "Recover quarantined file ownership" },
+  { ids: ARCHIVE_REVIEW_IDS, heading: "Resume archive expiry cleanup" },
+  {
+    ids: COMPENSATION_REVIEW_IDS,
+    heading: "Restore reviewed predecessor files",
+  },
+  {
+    ids: SERIES_PACK_REVIEW_IDS,
+    heading: "Restore the reviewed earlier TV files",
+  },
+].flatMap(({ ids, heading }) =>
+  [ids.awaitingReview, ids.applied].map((id) => ({
+    path: `/manage/recovery/native/${id}`,
+    heading,
+  })),
+);
+
 /** The owner's Manage pages, each opened by its own address. */
 const MANAGE_ROUTES: readonly RouteSpec[] = [
   { path: "/manage/household", heading: "Household" },
@@ -266,6 +289,7 @@ const MANAGE_ROUTES: readonly RouteSpec[] = [
     path: "/manage/recovery/native/compensations",
     heading: "Review interrupted upgrades",
   },
+  ...NATIVE_REVIEWS,
   { path: "/manage/migration", heading: "Migration" },
 ].map((route) => ({
   ...route,

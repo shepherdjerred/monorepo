@@ -48,10 +48,10 @@ import {
   subtitleTargets,
 } from "#testing/fixture-api/fixtures/owner.ts";
 import {
-  NATIVE_REVIEW_IDS,
+  NATIVE_REVIEW_SAMPLES,
   nativeArchiveInventory,
   nativeCompensationInventory,
-  nativeRecoveryDetail,
+  nativeReviewDetail,
   nativeRecoveryInventory,
 } from "#testing/fixture-api/fixtures/migration/native-recovery.ts";
 import {
@@ -209,10 +209,8 @@ const administration: readonly FixtureEndpoint[] = [
     path: "/admin/native-recovery/:id",
     access: "owner",
     schema: NativeRecoveryDetailProtocolSchema,
-    respond: (request) => nativeRecoveryDetail(request.param("id")),
-    samples: Object.values(NATIVE_REVIEW_IDS).map(
-      (id) => `/admin/native-recovery/${id}`,
-    ),
+    respond: (request) => nativeReviewDetail(request.param("id")),
+    samples: NATIVE_REVIEW_SAMPLES.map((id) => `/admin/native-recovery/${id}`),
   }),
   endpoint({
     path: "/admin/migration/bundles/:id",
