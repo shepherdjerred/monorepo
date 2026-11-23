@@ -7,7 +7,6 @@ import type {
   CommitVerdict,
 } from "#shared/hub/hub-contract.ts";
 import {
-  blockerNotes,
   commitStatement,
   missingIdentity,
   parseSha,
@@ -16,6 +15,7 @@ import {
   unchangedLine,
   verdictView,
 } from "./routes/commits/commit-model.ts";
+import { blockerNotes } from "./routes/commits/commit-blockers.ts";
 
 const NEWER = "69765c4ae8".padEnd(40, "0");
 
@@ -133,7 +133,7 @@ describe("commit statement", () => {
       }),
     );
     expect(statement).toBe(
-      "CI failed for CI (Woodpecker) here, so it was not built on its own; included in 69765c4, whose build of CI (Woodpecker) passed.",
+      "Not built on its own; included in 69765c4 (whose build of CI (Woodpecker) passed).",
     );
     expect(statement).not.toContain("which passed");
     expect(statement).not.toContain("nothing from this commit was published");
@@ -163,7 +163,7 @@ describe("commit statement", () => {
       }),
     );
     expect(statement).toBe(
-      "1 of 20 changed services needs a manual release: TEMPORAL-DATA prod. 19 of 20 are live. CI failed for Scout for LoL here, so it was not built on its own; included in 69765c4, whose build of Scout for LoL passed.",
+      "1 of 20 changed services needs a manual release: TEMPORAL-DATA prod. 19 of 20 are live. Not built on its own; included in 69765c4 (whose build of Scout for LoL passed).",
     );
   });
 
@@ -297,7 +297,7 @@ describe("commit statement", () => {
       }),
     );
     expect(statement).toContain(
-      "included in 69765c4, whose build of Golink passed, but the change ships in release r347, which failed to deploy.",
+      "included in 69765c4 (whose build of Golink passed, but the change ships in release r347, which failed to deploy).",
     );
   });
 });
@@ -427,7 +427,7 @@ describe("commit row notes", () => {
         carriedFailures: carried,
       }),
     ).toEqual([
-      "Not built on its own; included in 69765c4, whose build of Golink passed",
+      "Not built on its own; included in 69765c4 (whose build of Golink passed)",
     ]);
     expect(
       rowNotes({
@@ -438,25 +438,25 @@ describe("commit row notes", () => {
       }),
     ).toEqual([
       "CI failed for Arcade",
-      "Not built on its own; included in 69765c4, whose build of Golink passed",
+      "Not built on its own; included in 69765c4 (whose build of Golink passed)",
     ]);
   });
 
   it("names how the carrying release stands, so the row never says passed beside a failed carrier", () => {
     const passed =
-      "Not built on its own; included in 69765c4, whose build of Golink passed";
+      "Not built on its own; included in 69765c4 (whose build of Golink passed";
     const expected: [CommitVerdict, string][] = [
       [
         "failed",
-        `${passed}, but the change ships in release r347, which failed to deploy`,
+        `${passed}, but the change ships in release r347, which failed to deploy)`,
       ],
       [
         "awaiting_approval",
-        `${passed}, and the change ships in release r347, which awaits approval`,
+        `${passed}, and the change ships in release r347, which awaits approval)`,
       ],
       // A live release, or none yet: the pill says the rest.
-      ["deployed", passed],
-      ["waiting", passed],
+      ["deployed", `${passed})`],
+      ["waiting", `${passed})`],
     ];
     for (const [releaseVerdict, note] of expected)
       expect(
@@ -480,7 +480,7 @@ describe("commit row notes", () => {
     expect(
       notes(carry("Golink", "failed", 10), carry("Scout", "deployed", 20)),
     ).toEqual([
-      "Not built on its own; included in 69765c4, whose build of Golink and Scout passed, but the change ships in Golink r10, which failed to deploy",
+      "Not built on its own; included in 69765c4 (whose build of Golink and Scout passed, but the change ships in Golink r10, which failed to deploy)",
     ]);
     // Failed and awaiting approval stay apart, each with its own words.
     expect(
@@ -489,13 +489,13 @@ describe("commit row notes", () => {
         carry("Scout", "awaiting_approval", 10),
       ),
     ).toEqual([
-      "Not built on its own; included in 69765c4, whose build of Golink and Scout passed, but the change ships in Golink r10, which failed to deploy, and in Scout r10, which awaits approval",
+      "Not built on its own; included in 69765c4 (whose build of Golink and Scout passed, but the change ships in Golink r10, which failed to deploy, and in Scout r10, which awaits approval)",
     ]);
     // The same r-number in two services is two releases, not one.
     expect(
       notes(carry("Golink", "failed", 10), carry("Scout", "failed", 10)),
     ).toEqual([
-      "Not built on its own; included in 69765c4, whose build of Golink and Scout passed, but the change ships in Golink r10 and Scout r10, which failed to deploy",
+      "Not built on its own; included in 69765c4 (whose build of Golink and Scout passed, but the change ships in Golink r10 and Scout r10, which failed to deploy)",
     ]);
   });
 

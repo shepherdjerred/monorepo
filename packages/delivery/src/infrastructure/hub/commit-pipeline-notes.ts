@@ -1,4 +1,4 @@
-import type { CommitPipelineNote } from "#shared/hub/hub-contract.ts";
+import type { CommitPipelineNote } from "#shared/hub/commit-release-contract.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { CiRunSchema } from "#shared/hub/integration-contract.ts";
 import { commitTitle } from "./source-commit.ts";

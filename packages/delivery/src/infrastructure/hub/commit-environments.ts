@@ -1,4 +1,5 @@
 import { DeploymentStatusSchema } from "#shared/contract.ts";
+import type { CommitEnvironmentRelease } from "#shared/hub/commit-release-contract.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { AWAITING_PLAN_DECISION } from "#infrastructure/selection/views.ts";
@@ -59,6 +60,39 @@ export function setFacts(row: {
       row.orderMajor === null || row.orderMinor === null
         ? null
         : { major: row.orderMajor, minor: row.orderMinor },
+  };
+}
+
+/**
+ * A version-set release as one environment saw it: its own newest
+ * deployment there, which `carriersOf` may not have chosen when a newer
+ * release's deployment carries the change, and the accepted release's
+ * revision when that newer release carries it. A platform change has none.
+ */
+export function releaseIn(
+  versionSet: { id: string; revision: number } | undefined,
+  environmentId: string,
+  own: readonly DeploymentRow[],
+  superseding: { state: string; accepted: SetFacts | null },
+): CommitEnvironmentRelease | undefined {
+  if (versionSet === undefined) return undefined;
+  const newest = own
+    .filter(
+      (row) =>
+        row.environmentId === environmentId &&
+        row.versionSetRevisionId === versionSet.id,
+    )
+    .toSorted(
+      (left, right) => right.createdAt.getTime() - left.createdAt.getTime(),
+    )
+    .at(0);
+  return {
+    revision: versionSet.revision,
+    status:
+      newest === undefined ? null : DeploymentStatusSchema.parse(newest.status),
+    ...(superseding.state === "superseded" && superseding.accepted !== null
+      ? { supersededBy: superseding.accepted.revision }
+      : {}),
   };
 }
 

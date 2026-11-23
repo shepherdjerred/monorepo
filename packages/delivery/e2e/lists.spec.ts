@@ -40,7 +40,7 @@ test("a service filter by its display name keeps the page and filters by id", as
     await expect(
       page.getByRole("status").filter({
         hasText:
-          /^Showing (?:all |the )?\d+ (?:newest )?deployments? that match these filters\./u,
+          /^Showing (?:all |the )?\d+ (?:newest )?deployments? that match(?:es)? these filters\./u,
       }),
     ).toBeVisible();
     await expect(table.locator("tbody tr").first()).toContainText(

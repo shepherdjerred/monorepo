@@ -24,9 +24,11 @@ import { Route as rootRoute } from "#client/routes/root.tsx";
 import { revisionLabel } from "#client/components/identifier.tsx";
 import { Disclosure } from "#client/components/disclosure.tsx";
 import { BuildList } from "./commit-builds.tsx";
+import { ENVIRONMENT } from "./commit-labels.ts";
 import {
-  ENVIRONMENT,
   commitStatement,
+  environmentView,
+  rowStanding,
   missingIdentity,
   parseSha,
   rowNotes,
@@ -60,14 +62,19 @@ function EnvironmentChip({
   entry,
   label,
 }: {
-  entry: Pick<CommitEnvironment, "environmentId" | "state" | "deploymentId">;
+  entry: Pick<
+    CommitEnvironment,
+    "environmentId" | "state" | "deploymentId" | "release"
+  >;
   label: string;
 }) {
-  const state = ENVIRONMENT[entry.state];
-  // Where the change is not live, the words say why; a glyph alone cannot.
-  const className = isLiveState(entry.state)
-    ? "env-pill"
-    : "env-pill env-pill-spelled";
+  const state = environmentView(entry);
+  // Where the change is not live, or is live through a newer release, the
+  // words say why; a glyph alone cannot.
+  const className =
+    isLiveState(entry.state) && state === ENVIRONMENT[entry.state]
+      ? "env-pill"
+      : "env-pill env-pill-spelled";
   const content = (
     <>
       <Status value={state.status} label={state.label} />
@@ -279,6 +286,17 @@ function CommitsPage() {
   );
 }
 
+/** The release's own standing: superseded releases say so instead of the service's "Deployed". */
+function ServiceStanding({ entry }: { entry: CommitService }) {
+  const standing = rowStanding(
+    entry,
+    entry.environments
+      .map((environment) => environment.state)
+      .filter((state) => !isLiveState(state)),
+  );
+  return <Status value={standing.status} label={standing.label} />;
+}
+
 function ServiceRow({ entry }: { entry: CommitService }) {
   return (
     <tr>
@@ -305,12 +323,7 @@ function ServiceRow({ entry }: { entry: CommitService }) {
         )}
       </th>
       <td data-label="Status">
-        <Verdict
-          value={entry.verdict}
-          pending={entry.environments
-            .map((environment) => environment.state)
-            .filter((state) => !isLiveState(state))}
-        />
+        <ServiceStanding entry={entry} />
       </td>
       <td data-label="Environments">
         {entry.environments.length === 0 ? (

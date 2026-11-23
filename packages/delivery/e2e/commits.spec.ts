@@ -132,7 +132,7 @@ test("a commit whose whole pipeline failed stands where the next passing commit'
     /Needs manual release/u,
   );
   await expect(header).toContainText(
-    `Its changed service needs a manual release: Birmel prod. CI failed for CI (Woodpecker) here, so it was not built on its own; included in ${carrier}, whose build of CI (Woodpecker) passed.`,
+    `Its changed service needs a manual release: Birmel prod. Not built on its own; included in ${carrier} (whose build of CI (Woodpecker) passed).`,
   );
   const service = page.getByRole("region", { name: /^By service/u });
   await expect(service.getByRole("rowheader")).toHaveCount(1);
@@ -161,7 +161,7 @@ test("a commit whose whole pipeline failed stands where the next passing commit'
     /Needs manual release/u,
   );
   await expect(row).toContainText(
-    `Not built on its own; included in ${carrier}, whose build of CI (Woodpecker) passed`,
+    `Not built on its own; included in ${carrier} (whose build of CI (Woodpecker) passed)`,
   );
   await expect(row).toContainText("Birmel / prod: needs manual release");
   await expectNoHorizontalOverflow(page);
@@ -224,9 +224,17 @@ test("a commit whose CI failed for one service says its other change is live thr
   // Its Birmel release ran in prod, then a newer release of a new lineage
   // replaced it; that release still carries the change.
   const service = page.getByRole("region", { name: /^By service/u });
+  // The row names its own release and says so: superseded by the accepted
+  // release, which is deployed, never the service's plain "Deployed".
   await expect(
-    service.getByRole("link", { name: "live (newer) prod" }),
+    service.getByRole("link", {
+      name: /^superseded by r\d+, which is deployed prod$/u,
+    }),
   ).toBeVisible();
+  await expect(service.locator("tbody tr").first()).toContainText("Superseded");
+  await expect(service.locator("tbody tr").first()).not.toContainText(
+    "Deployed",
+  );
   await expect(service).not.toContainText("replaced");
   await expectNoHorizontalOverflow(page);
 });
@@ -241,14 +249,14 @@ test("a commit whose failed CI a newer passing commit includes says where its ch
   const row = await findRow(page, FAILED_POSITION);
   await expect(row.locator(".status").first()).toHaveText(/Deployed/u);
   await expect(row).toContainText(
-    `Not built on its own; included in ${carrier}, whose build of Birmel passed`,
+    `Not built on its own; included in ${carrier} (whose build of Birmel passed)`,
   );
   await expect(row).not.toContainText("CI failed");
 
   const main = await openCommit(page, FAILED_POSITION);
   const header = main.locator(".page-header");
   await expect(header).toContainText(
-    `CI failed for Birmel here, so it was not built on its own; included in ${carrier}, whose build of Birmel passed.`,
+    `Not built on its own; included in ${carrier} (whose build of Birmel passed).`,
   );
   const service = page.getByRole("region", { name: /^By service/u });
   await expect(service.getByRole("link", { name: release })).toBeVisible();
@@ -279,7 +287,7 @@ test("a carried CI failure does not outrank what actually blocks the commit", as
   );
   // The real blocker leads; the carried failure follows.
   await expect(header).toContainText(
-    `Its changed service needs a manual release: Birmel prod. CI failed for Golink here, so it was not built on its own; included in ${carrier}, whose build of Golink passed.`,
+    `Its changed service needs a manual release: Birmel prod. Not built on its own; included in ${carrier} (whose build of Golink passed).`,
   );
   // Golink has no environment, so its carried failure adds no row.
   const service = page.getByRole("region", { name: /^By service/u });

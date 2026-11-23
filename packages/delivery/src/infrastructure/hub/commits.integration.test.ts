@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { commitStatus } from "#infrastructure/hub/commits.ts";
-import { useDeliveryFixture } from "#testing/delivery-fixture.ts";
+import {
+  acceptedDeployment,
+  useDeliveryFixture,
+} from "#testing/delivery-fixture.ts";
 import { testExecutor, testOperator, testPublisher } from "#testing/seed.ts";
 
 /**
@@ -98,6 +101,7 @@ const carriedBy = (buildId: string, includedIn: string, released = false) => ({
   buildId,
   includedIn,
   serviceTitle: expect.any(String) as unknown,
+  includedInVerdict: expect.any(String) as unknown,
   ...(released
     ? {
         releaseVerdict: expect.any(String) as unknown,
@@ -336,5 +340,65 @@ describe("carried failures and their releases", () => {
     const carrier = await commitStatus(context.cluster.database, sha("b"));
     expect(carrier.verdict).toBe("failed");
     expect(status.verdict).toBe("failed");
+  });
+});
+
+describe("a release a row names shows its own state", () => {
+  test("a landed release of a failed pipeline is named, then superseded by the accepted one", async () => {
+    // Pipeline 1300 failed for Golink, which no environment tracks; the next
+    // commit's Arcade release carries the change.
+    await publish("golink", sha("8"), 1300, "failed");
+    await publish("golink", sha("2"), 1301, "verified");
+    await publish("arcade", sha("2"), 1301, "verified");
+    const database = context.cluster.database;
+    const firstRead = await commitStatus(database, sha("8"));
+    const [first] = firstRead.changed;
+    if (first?.versionSet == null) throw new Error("A release was composed");
+    await acceptedDeployment(context, first.versionSet.id);
+    const live = await commitStatus(database, sha("8"));
+    expect(live.carriedReleases).toEqual([
+      {
+        service: "Arcade",
+        revision: first.versionSet.revision,
+        includedIn: sha("2"),
+        state: "live",
+      },
+    ]);
+    expect(live.changed[0]?.environments[0]?.release).toEqual({
+      revision: first.versionSet.revision,
+      status: "succeeded",
+    });
+    // A newer release is accepted: the first is superseded by it, and the
+    // row says which release and that it deployed.
+    await publish("arcade", sha("0"), 1302, "verified");
+    const newerRead = await commitStatus(database, sha("0"));
+    const [newer] = newerRead.changed;
+    if (newer?.versionSet == null) throw new Error("A newer set was composed");
+    await acceptedDeployment(context, newer.versionSet.id);
+    const superseded = await commitStatus(database, sha("8"));
+    expect(superseded.carriedReleases?.[0]?.state).toBe("superseded");
+    expect(superseded.changed[0]?.environments[0]).toMatchObject({
+      state: "superseded",
+      release: {
+        revision: first.versionSet.revision,
+        status: "succeeded",
+        supersededBy: newer.versionSet.revision,
+      },
+    });
+  });
+
+  test("a carried failure says where the commit that carries it stands", async () => {
+    const failed = await publish("golink", sha("6"), 1400, "failed");
+    await publish("golink", sha("7"), 1401, "verified");
+    await publish("arcade", sha("7"), 1401, "verified");
+    const database = context.cluster.database;
+    const carrier = await commitStatus(database, sha("7"));
+    const status = await commitStatus(database, sha("6"));
+    expect(status.carriedFailures).toEqual([
+      { ...carriedBy(failed, sha("7")), includedInVerdict: carrier.verdict },
+    ]);
+    // Arcade's release in the carrier is not deployed, so the carrier is not
+    // settled and the carried commit can say so.
+    expect(carrier.verdict).not.toBe("deployed");
   });
 });

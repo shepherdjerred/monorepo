@@ -108,7 +108,10 @@ export function pageSummary({
   more: boolean;
 }) {
   const [, plural] = noun;
-  const matching = filtered ? " that match these filters" : "";
+  // The verb agrees with the rows counted: "1 deployment that matches".
+  const matching = filtered
+    ? ` that ${count === 1 ? "matches" : "match"} these filters`
+    : "";
   if (count === 0)
     return filtered ? `No ${plural} match these filters.` : `No ${plural} yet.`;
   if (entries !== undefined && entries.count !== count) {
