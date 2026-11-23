@@ -1,6 +1,10 @@
 /** Pure evaluation of one namespace's live facts into a pass/fail report. */
 import { z } from "zod";
 import {
+  CI_STEP_POD_LABEL,
+  WOODPECKER_TASK_LABEL,
+} from "#cdk8s/src/resources/woodpecker/pod-labels.ts";
+import {
   expectationOf,
   type HttpExpectation,
   type Probe,
@@ -111,6 +115,7 @@ export const PodSchema = z.object({
   metadata: z.object({
     name: z.string(),
     creationTimestamp: z.string().optional(),
+    labels: z.record(z.string(), z.string()).default({}),
   }),
   status: z.object({
     phase: z.string().optional(),
@@ -160,6 +165,15 @@ export function activePods(pods: readonly Pod[]): Pod[] {
   return pods.filter((pod) => pod.status.phase !== "Succeeded");
 }
 
+/**
+ * A Woodpecker pipeline step or service pod. It lives for one step: CI
+ * admission holds it `SchedulingGated` or `Pending` until capacity frees, and
+ * its pipeline's result, not this check, judges whether it ran.
+ */
+export function isCiStepPod(pod: Pod): boolean {
+  return CI_STEP_POD_LABEL in pod.metadata.labels;
+}
+
 function recentRestarts(pod: Pod, since: Date): string[] {
   return containersOf(pod)
     .filter((container) => {
@@ -177,7 +191,8 @@ function recentRestarts(pod: Pod, since: Date): string[] {
  * Every pod Ready, and no container restarted inside the window. A Failed pod
  * that terminated before the window (one a node reboot left behind, already
  * replaced by its controller) is noted and not counted; one that failed inside
- * the window, a Job's included, fails the check.
+ * the window, a Job's included, fails the check. Woodpecker step pods are
+ * noted and not counted; every other pod of the CI namespace is.
  */
 export function evaluatePods(
   pods: readonly Pod[],
@@ -187,8 +202,15 @@ export function evaluatePods(
   const since = new Date(now.getTime() - windowMinutes * 60_000);
   const window = `the last ${String(windowMinutes)}m`;
   const earlier: string[] = [];
+  const ciSteps: string[] = [];
   const items = activePods(pods).flatMap((pod): Item[] => {
     const name = pod.metadata.name;
+    if (isCiStepPod(pod)) {
+      ciSteps.push(
+        `${name}: CI step pod, ${pod.status.phase ?? "no phase"} (not counted)`,
+      );
+      return [];
+    }
     if (pod.status.phase === "Failed") {
       const at = failedAt(pod);
       if (at !== undefined && at < since) {
@@ -223,7 +245,7 @@ export function evaluatePods(
     check: "pods",
     status: worstStatus(items),
     summary: `${String(count(items, "pass"))}/${String(items.length)} pods Ready with no restart in ${window}`,
-    details: [...problems(items), ...earlier],
+    details: [...problems(items), ...earlier, ...ciSteps],
   };
 }
 
@@ -235,6 +257,15 @@ export const ServiceSchema = z.object({
   }),
 });
 export type Service = z.infer<typeof ServiceSchema>;
+
+/**
+ * The headless Service Woodpecker creates per step (`wp-hsvc-<task>`). It
+ * selects that one step's pods by task, so it has no endpoint while the step
+ * waits for admission and none after the step ends.
+ */
+export function isCiStepService(service: Service): boolean {
+  return WOODPECKER_TASK_LABEL in (service.spec.selector ?? {});
+}
 
 export const EndpointSliceSchema = z.object({
   metadata: z.object({
@@ -257,7 +288,8 @@ export type EndpointSlice = z.infer<typeof EndpointSliceSchema>;
  * Every Service backed by pods has at least one ready endpoint. A Service
  * whose selector matches no pod at all (a replica Service of a one-instance
  * database, a workload scaled to zero) is noted and not counted: an unready or
- * unschedulable pod is the pods check's failure, not this one's.
+ * unschedulable pod is the pods check's failure, not this one's. A
+ * Woodpecker per-step Service is noted and not counted either.
  */
 export function evaluateServices(
   services: readonly Service[],
@@ -270,7 +302,12 @@ export function evaluateServices(
       Object.keys(service.spec.selector ?? {}).length > 0,
   );
   const empty: string[] = [];
+  const ciSteps: string[] = [];
   const items = selecting.flatMap((service): Item[] => {
+    if (isCiStepService(service)) {
+      ciSteps.push(`${service.metadata.name}: CI step Service (not counted)`);
+      return [];
+    }
     const endpoints = slices
       .filter(
         (slice) =>
@@ -296,7 +333,7 @@ export function evaluateServices(
     check: "services",
     status: worstStatus(items),
     summary: `${String(count(items, "pass"))}/${String(items.length)} Services backed by pods have ready endpoints`,
-    details: [...problems(items), ...empty],
+    details: [...problems(items), ...empty, ...ciSteps],
   };
 }
 

@@ -6,14 +6,9 @@ import {
 import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { BATCH_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
+import { WOODPECKER_TASK_LABEL } from "./pod-labels.ts";
 import { createRamScratchPolicy } from "./ram-scratch-policy.ts";
 import { createWorkspaceClonePolicy } from "./workspace-clone-policy.ts";
-
-/**
- * Label Woodpecker's Kubernetes backend stamps on every pod it creates --
- * clone, service, and step alike -- and nothing else carries.
- */
-export const WOODPECKER_TASK_LABEL = "woodpecker-ci.org/task-uuid";
 
 /** Resources every CI container must declare, as a request and a limit. */
 export const CI_BOUNDED_RESOURCES = [

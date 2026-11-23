@@ -45,8 +45,12 @@ first, then come back here.
 
    A `Failed` pod counts against `pods` only when it failed inside that
    window. One that failed earlier, such as a pod a node reboot left behind
-   after its controller replaced it, is listed as `(not counted)`. A
-   namespace scaled to zero has no pod to answer its URLs, so `urls` reports
+   after its controller replaced it, is listed as `(not counted)`.
+   Woodpecker step pods (label `ci.sjer.red/step-key`) and their per-step
+   headless Services (`wp-hsvc-*`) are listed as `(not counted)` too: CI
+   admission holds a step pod `SchedulingGated` until capacity frees, so a
+   pipeline's result judges them, not this gate. Other `woodpecker-ci` pods
+   and Services are checked as usual. A namespace scaled to zero has no pod to answer its URLs, so `urls` reports
    `namespace runs no pods` as INFO instead of requesting them. Scale the
    workload up first if its URLs are part of the evidence you need.
 

@@ -11,10 +11,8 @@ import {
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
-import {
-  CI_STEP_POD_LABEL,
-  DELIVERY_CI_API_STEPS,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/step-network-policy.ts";
+import { CI_STEP_POD_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/pod-labels.ts";
+import { DELIVERY_CI_API_STEPS } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/step-network-policy.ts";
 import { DELIVERY_TAILSCALE_INGRESS } from "@shepherdjerred/ops-model/delivery-ingress.ts";
 
 export function createDeliveryNetworkPolicy(chart: Chart) {
