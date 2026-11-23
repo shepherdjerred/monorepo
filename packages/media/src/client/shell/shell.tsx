@@ -24,7 +24,7 @@ export function Shell({ user }: { user: MediaUser }) {
   return (
     <ShellUserContext value={user}>
       <div className={cx("shell")}>
-        <a className="skip-link" href="#main">
+        <a className={cx("skipLink")} href="#main">
           Skip to content
         </a>
         <Sidebar user={user} />

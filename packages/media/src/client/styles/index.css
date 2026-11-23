@@ -1,0 +1,33 @@
+/*
+ * Layer order for the whole client. This statement must be the first
+ * `@layer` the browser sees, which is why `main.tsx` imports this file
+ * before the application: a feature stylesheet that reached the page first
+ * would otherwise put `pages` at the bottom.
+ */
+@layer reset, tokens, base, components, pages;
+
+@import "./fonts.css";
+@import "./tokens.css";
+@import "./base.css";
+@import "./document.css";
+@import "./components.css";
+
+@layer reset {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+      scroll-behavior: auto !important;
+    }
+    /* A view transition is not an element the rule above reaches. Links ask
+       for none under reduced motion (`ui/motion/title-transition.ts`), and the
+       router can still run one when the reader goes Back: it ends at once. */
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
+}

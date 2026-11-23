@@ -1,0 +1,30 @@
+/*
+ * The shell's fixed sizes (see `shell/`). They are set on the root because the
+ * document needs them too: the top bar is sticky and, on a phone, the tab bar
+ * is fixed, so a focused element or an in-page jump must come to rest clear
+ * of both.
+ */
+@layer components {
+  :root {
+    --shell-top: 64px;
+    --shell-bottom: 0px;
+    --shell-gutter: var(--space-6);
+    scroll-padding-top: calc(var(--shell-top) + var(--space-3));
+    scroll-padding-bottom: calc(
+      var(--shell-bottom) + env(safe-area-inset-bottom, 0px) + var(--space-3)
+    );
+  }
+  @media (max-width: 760px) {
+    :root {
+      --shell-top: 60px;
+      --shell-bottom: 56px;
+      --shell-gutter: var(--space-4);
+    }
+  }
+  /* The only view transition is a poster moving between a card and its title
+     page (`ui/motion/title-transition.ts`). The rest of the page cross-fades
+     behind it, briefly, so the poster is what the eye follows. */
+  ::view-transition-group(root) {
+    animation-duration: 200ms;
+  }
+}

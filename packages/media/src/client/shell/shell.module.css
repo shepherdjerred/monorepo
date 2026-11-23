@@ -1,7 +1,7 @@
 /*
  * The signed-in frame. Sizes shared with the rest of the client
  * (`--shell-top`, `--shell-bottom`, `--shell-gutter`) are set on the root in
- * `styles.css`, because the document's scroll padding depends on them.
+ * `styles/document.css`, because the document's scroll padding depends on them.
  */
 @layer components {
   .shell {
@@ -9,6 +9,19 @@
     grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
     min-height: 100vh;
     min-height: 100dvh;
+  }
+
+  .skipLink {
+    position: fixed;
+    top: -70px;
+    left: 20px;
+    z-index: 20;
+    background: var(--accent);
+    color: var(--text-on-accent);
+    padding: var(--space-3);
+  }
+  .skipLink:focus {
+    top: 12px;
   }
 
   /* Sidebar */

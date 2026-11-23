@@ -1392,10 +1392,11 @@ confirms, so a mail scanner that opens the link changes nothing.
 ### Client styles and themes
 
 The client is styled with CSS in five cascade layers, lowest priority first:
-`reset`, `tokens`, `base`, `components`, `pages`. Most of it is global; the
-shell, the Manage pages, and the form primitives in `ui/` use CSS Modules
-(`*.module.css`, read through `ui/class-names.ts`), whose rules sit in
-`components` like the shared classes. A CSS Module scopes container names as
+`reset`, `tokens`, `base`, `components`, `pages`. A component's styles live in
+its CSS Module (`*.module.css`, read through `ui/class-names.ts`); only a class
+that two or more unrelated pages write by hand is global, in
+`styles/components.css`. A module's rules sit in `components` or `pages`, and a
+module reaches a shared class with `:global(.name)`. A CSS Module scopes container names as
 it does class names, so `@container <name>` only matches a container declared
 in the same file; a module that sizes itself against a container declared
 elsewhere uses an unnamed `@container (…)`.
@@ -1405,13 +1406,15 @@ elsewhere uses an unnamed `@container (…)`.
 | `src/client/styles/tokens.css`                           | `tokens`        | Every color, type size, radius, shadow, and spacing step. |
 | `src/client/styles/fonts.css`                            | none            | The `@font-face` rules for the self-hosted fonts.         |
 | `src/client/styles/base.css`                             | `reset`, `base` | Element defaults.                                         |
-| `src/client/styles.css`                                  | `components`    | The layer order, shell sizes, and the shared class rules. |
+| `src/client/styles/index.css`                            | `reset`         | The layer order, and the reduced-motion reset.            |
+| `src/client/styles/document.css`                         | `components`    | The shell sizes the document's scroll padding needs.      |
+| `src/client/styles/components.css`                       | `components`    | The classes two or more unrelated pages write by hand.    |
 | A feature's own stylesheet, such as `calendar/style.css` | `pages`         | Rules for one page or panel.                              |
 
 A rule in a later layer wins over an earlier one whatever its specificity, so a
 page rule never needs a longer selector to override a component. The browser
 fixes the layer order at the first `@layer` it reads, which is why `main.tsx`
-imports `styles.css` before the application.
+imports `styles/index.css` before the application.
 
 No stylesheet other than `tokens.css` holds a hex color. Semantic tokens such as
 `--surface` and `--text-muted` choose between raw palette values with
@@ -1557,7 +1560,7 @@ obfuscation, and Web Analytics injection stay off for this host.
 ### Client forms
 
 The owner's Manage pages are built from the primitives in `src/client/ui`.
-Pages outside Manage still use the shared classes in `styles.css`.
+Pages outside Manage still use the shared classes in `styles/components.css`.
 
 | Module                        | Provides                                                                                                                                         |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |

@@ -102,7 +102,7 @@ function EpisodeChoices({
       )}
       {container.isPending && <Loading />}
       {container.error !== null && <ErrorNotice error={container.error} />}
-      <div className="actions">
+      <div className="action-row">
         <button
           className="button"
           type="button"
@@ -125,7 +125,7 @@ function EpisodeChoices({
         <span>{selected.length} selected</span>
       </div>
       {episodes.map((episode) => (
-        <label className="checkbox-label" key={episode.id}>
+        <label className="check-label" key={episode.id}>
           <input
             type="checkbox"
             checked={selected.includes(episode.id)}

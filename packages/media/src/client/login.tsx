@@ -2,6 +2,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { authPost, pollPlexLogin } from "./api.ts";
 import { ErrorNotice } from "./components.tsx";
+import { classNames } from "./ui/class-names.ts";
+import styles from "./login.module.css";
+
+const cx = classNames(styles);
 
 const LoginSchema = z.object({
   id: z.string(),
@@ -28,31 +32,31 @@ export function Login() {
         : 3000,
   });
   return (
-    <main className="login-screen">
-      <div className="login-art" aria-hidden="true">
-        <div className="film-frame frame-one" />
-        <div className="film-frame frame-two" />
-        <span className="login-star">✦</span>
+    <main className={cx("screen")}>
+      <div className={cx("art")} aria-hidden="true">
+        <div className={`${cx("filmFrame")} ${cx("frameOne")}`} />
+        <div className={`${cx("filmFrame")} ${cx("frameTwo")}`} />
+        <span className={cx("star")}>✦</span>
       </div>
-      <section className="login-panel">
-        <a className="brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
+      <section className={cx("panel")}>
+        <a className={cx("brand")} href="/">
+          <span className={cx("brandMark")} aria-hidden="true">
             m
           </span>{" "}
-          media<span className="brand-dot">.</span>
+          media<span className={cx("brandDot")}>.</span>
         </a>
         <h1>
           Your next watch.
           <br />
           <em>All in one place.</em>
         </h1>
-        <p className="login-description">
+        <p className={cx("description")}>
           Request a film. Follow a series. Find out when it’s ready. Your
           household’s library, with everything taken care of.
         </p>
         {login === undefined || poll.isError ? (
           <button
-            className="button primary large"
+            className={`button primary ${cx("signIn")}`}
             disabled={start.isPending}
             onClick={() => {
               start.mutate();
@@ -64,7 +68,7 @@ export function Login() {
         ) : (
           <>
             <a
-              className="button primary large"
+              className={`button primary ${cx("signIn")}`}
               href={login.authorizationUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -79,7 +83,7 @@ export function Login() {
         )}
         {start.error !== null && <ErrorNotice error={start.error} />}
         {poll.error !== null && <ErrorNotice error={poll.error} />}
-        <p className="login-note">
+        <p className={cx("note")}>
           For members of this Plex library. Your Plex password stays with Plex.
         </p>
       </section>
