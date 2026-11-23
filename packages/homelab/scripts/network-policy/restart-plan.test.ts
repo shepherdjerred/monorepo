@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
 import {
+  allowAllPolicy,
   breakGlassPolicy,
   fakeRunner,
   items,
   otherPolicy,
-  stagingPolicy,
 } from "./fixtures.ts";
 import {
   applyUpdateStrategies,
@@ -17,7 +17,7 @@ import {
   type RestartPod,
   type StrategyOwner,
 } from "./restart-plan.ts";
-import type { NetworkPolicy } from "./staging-policy.ts";
+import type { NetworkPolicy } from "./policies.ts";
 
 type PodOptions = {
   labels?: Record<string, string>;
@@ -81,7 +81,7 @@ const policies: NetworkPolicy[] = [
       { key: "component", operator: "In", values: ["server", "worker"] },
     ],
   }),
-  stagingPolicy("temporal", "open"),
+  allowAllPolicy("temporal", "temporal-open"),
   selecting("media", "media-ingress", {
     matchExpressions: [
       { key: "media.sjer.red/application", operator: "DoesNotExist" },
@@ -90,7 +90,7 @@ const policies: NetworkPolicy[] = [
   }),
   otherPolicy("tracker", "tracker"),
   // Allow-all policies isolate nothing, so their namespaces need no restart.
-  stagingPolicy("redlib", "open"),
+  allowAllPolicy("redlib", "redlib-open"),
   breakGlassPolicy("flipt"),
   selecting("woodpecker-ci", "steps", {
     matchExpressions: [{ key: "ci.sjer.red/step-key", operator: "Exists" }],
@@ -248,7 +248,7 @@ describe("restart plan", () => {
     expect(names).not.toContain("temporal-temporal-ui");
     // DoesNotExist excludes it.
     expect(names).not.toContain("plex");
-    // Only a staging or a break-glass policy selects these.
+    // Only an allow-all or a break-glass policy selects these.
     expect(names).not.toContain("redlib");
     expect(names).not.toContain("flipt");
     // Policies do not apply to a host-network pod.

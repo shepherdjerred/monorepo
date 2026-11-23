@@ -52,4 +52,25 @@ export function createFliptChart(app: App) {
       egress: [dnsEgressRule()],
     },
   });
+
+  // Flipt alone stays open until the namespace is retired: enforcing it
+  // dropped callers whose Delivery releases still pointed here. This
+  // allow-all overrides the two policies above. It keeps the name it had as
+  // the namespace's enforcement staging policy, so the live object is updated
+  // in place rather than replaced.
+  new KubeNetworkPolicy(chart, "enforcement-staging-flipt", {
+    metadata: {
+      name: "enforcement-staging-flipt",
+      annotations: {
+        "homelab.sjer.red/description":
+          "Allows all traffic for every Flipt pod until the namespace is retired.",
+      },
+    },
+    spec: {
+      podSelector: {},
+      policyTypes: ["Ingress", "Egress"],
+      ingress: [{}],
+      egress: [{}],
+    },
+  });
 }

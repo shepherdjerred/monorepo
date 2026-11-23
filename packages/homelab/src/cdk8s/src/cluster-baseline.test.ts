@@ -111,7 +111,6 @@ const CLUSTER_PLATFORM_INVENTORY = [
   "v1/ServiceAccount/node-tuning/cpu-power-cap",
   "apps/v1/DaemonSet/node-tuning/cpu-power-cap",
   "networking.k8s.io/v1/NetworkPolicy/node-tuning/cpu-power-cap-netpol",
-  "networking.k8s.io/v1/NetworkPolicy/node-tuning/enforcement-staging-node-tuning",
   ...["openebs", "prometheus", "minecraft-tsmc", "velero", "seaweedfs"].map(
     (namespace) =>
       `onepassword.com/v1/OnePasswordItem/${namespace}/dockerhub-pull-${namespace}`,

@@ -1,13 +1,14 @@
 ---
 title: How to switch on network policy enforcement
-description: Run the maintenance window that upgrades Talos, starts the kube-network-policies enforcer beside flannel, and proves it enforces without blocking a staged namespace.
+description: Run the maintenance window that upgrades Talos, starts the kube-network-policies enforcer beside flannel, and proves it enforces.
 ---
 
 This guide runs the one maintenance window that makes NetworkPolicies real.
 It upgrades both nodes to Talos 1.14.6, starts the `kube-network-policies`
 enforcer in the `kube-flannel` DaemonSet, and restarts the workloads that
-policies select. Every namespace with policies stays open through its staging
-policy, so the switch itself should block nothing.
+policies select. Every namespace's policies apply from the first packet the
+enforcer sees, so the namespace checks before and after each step are what
+show the switch broke nothing.
 
 Run the steps in order from the reviewed checkout of the change that carries
 the Talos pins. Each step ends with a decision. Do not start a step while the
@@ -15,8 +16,9 @@ previous decision is open.
 
 :::caution
 No audit mode exists. A pod that a policy selects is enforced from its first
-packet once the enforcer runs. The staging policies are the only thing that
-keeps today's behaviour.
+packet once the enforcer runs. Only a
+[break-glass policy](/how-to/open-a-namespace-in-an-emergency/) keeps a
+namespace open.
 :::
 
 ## What each step costs
@@ -38,26 +40,20 @@ keeps today's behaviour.
 
 ## 1. Check the preconditions
 
-1. Every namespace with policies and pods has its staging policy:
+1. Every namespace with policies is healthy and has no break-glass policy.
+   Keep the output as the baseline for step 11:
 
    ```bash
-   bun run --cwd packages/homelab netpol:check --coverage
+   bun run --cwd packages/homelab netpol:check --all
    ```
 
-2. Every staged namespace is open and healthy. Keep the output as the baseline
-   for step 11:
-
-   ```bash
-   bun run --cwd packages/homelab netpol:check --all-staged --expect-stage open
-   ```
-
-3. The fleet summary is clean:
+2. The fleet summary is clean:
 
    ```bash
    toolkit ops summary
    ```
 
-4. The promotion worker's seccomp profile is reviewed for the target release.
+3. The promotion worker's seccomp profile is reviewed for the target release.
    Talos 1.14.3 and later ship containerd 2.3.7, whose default profile differs
    from the 2.3.6 one the
    [profile provenance](packages/homelab/src/talos/seccomp/promotion-policy.json)
@@ -65,14 +61,14 @@ keeps today's behaviour.
    [Refresh a profile before upgrading its dependencies](/how-to/install-promotion-sandbox-prerequisites/#5-refresh-a-profile-before-upgrading-its-dependencies)
    first.
 
-5. Take an etcd snapshot and keep the file until the window is closed:
+4. Take an etcd snapshot and keep the file until the window is closed:
 
    ```bash
    talosctl --nodes torvalds.tailnet-1a49.ts.net etcd snapshot \
      "etcd-pre-enforcement-$(date +%Y%m%d).snapshot"
    ```
 
-6. Confirm a Velero backup completed within the last six hours. The scheduled
+5. Confirm a Velero backup completed within the last six hours. The scheduled
    `6hourly-backup-v2` backup is the volume backup of record:
 
    ```bash
@@ -89,7 +85,7 @@ keeps today's behaviour.
      --from-schedule 6hourly-backup-v2 --wait
    ```
 
-7. Record the running versions. Both nodes must report Talos `v1.14.2` or a
+6. Record the running versions. Both nodes must report Talos `v1.14.2` or a
    later 1.14 release, and Kubernetes `v1.37.1`:
 
    ```bash
@@ -98,7 +94,7 @@ keeps today's behaviour.
    kubectl get nodes -o wide
    ```
 
-**Decision:** continue only if all seven hold. A failed namespace check now is
+**Decision:** continue only if all six hold. A failed namespace check now is
 a failure the window would be blamed for later.
 
 ## 2. Pause CI
@@ -263,7 +259,7 @@ kubectl -n kube-system get pods -l k8s-app=flannel \
   -o jsonpath='{range .items[*]}{.spec.nodeName}{" "}{range .status.containerStatuses[*]}{.name}={.ready}/{.restartCount} {end}{"\n"}{end}'
 kubectl -n kube-system logs daemonset/kube-flannel -c kube-network-policies --tail=20
 kubectl top pods -n kube-system -l k8s-app=flannel --containers
-bun run --cwd packages/homelab netpol:check --all-staged --expect-stage open
+bun run --cwd packages/homelab netpol:check --all
 ```
 
 Both nodes must show `kube-network-policies=true/0`. Record the container's
@@ -278,8 +274,8 @@ switch back; do not go on to the restarts.
 
 The enforcer never labels a connection that was open before it started. Once
 a pod is isolated, replies on such a connection are judged as new inbound
-connections and dropped. Restart every workload that a policy selects now,
-while its namespace is still open, so its connections open under the enforcer.
+connections and dropped. Restart every workload that a policy selects now, so
+its connections open under the enforcer.
 
 1. Print the plan. The script only reads the cluster:
 
@@ -316,7 +312,7 @@ while its namespace is still open, so its connections open under the enforcer.
 5. Check the namespaces again:
 
    ```bash
-   bun run --cwd packages/homelab netpol:check --all-staged --expect-stage open
+   bun run --cwd packages/homelab netpol:check --all
    ```
 
 Each PostgreSQL cluster in the plan has one replica, so its database is down
@@ -329,7 +325,7 @@ namespace before going on.
 
 ## 11. Prove a policy is enforced
 
-Use a throwaway namespace with a deny policy and no staging policy.
+Use a throwaway namespace with a deny policy.
 
 1. Save this as `netpol-canary.yaml` and apply it:
 
@@ -426,12 +422,11 @@ Use a throwaway namespace with a deny policy and no staging policy.
 
    ```bash
    kubectl delete namespace netpol-canary
-   bun run --cwd packages/homelab netpol:check --coverage
-   bun run --cwd packages/homelab netpol:check --all-staged --expect-stage open
+   bun run --cwd packages/homelab netpol:check --all
    toolkit ops summary
    ```
 
-**Decision:** enforcement is on when the canary was blocked and every staged
+**Decision:** enforcement is on when the canary was blocked and every
 namespace still passes.
 
 ## 12. Resume CI
@@ -470,8 +465,8 @@ queue again and read the `woodpecker-ci` denials before anything else.
 
 ## Roll the switch back
 
-Use this when the enforcer blocks traffic that an open namespace should pass,
-or when it will not stay ready.
+Use this when the enforcer drops traffic that the policies allow, or when it
+will not stay ready.
 
 1. Turn the switch off:
 
@@ -530,7 +525,7 @@ bind the listener to loopback.
 - [Cut a homelab release](/how-to/cut-a-homelab-release/)
 - [Install promotion sandbox prerequisites](/how-to/install-promotion-sandbox-prerequisites/)
 - How network policy enforcement works here: `/explanation/homelab/network-policy-enforcement/`
-- Cut a namespace over to enforced policies: `/how-to/cut-a-namespace-over-to-enforced-policies/`
+- Check a namespace under enforced policies: `/how-to/check-a-namespace-under-enforced-policies/`
 - Open a namespace in an emergency: `/how-to/open-a-namespace-in-an-emergency/`
 
 ## References

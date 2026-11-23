@@ -6,8 +6,7 @@ import {
   type Probe,
   type UrlCheck,
 } from "./namespace-urls.ts";
-import { effectiveStageLabel, type BreakGlassState } from "./break-glass.ts";
-import type { Stage } from "./staging-policy.ts";
+import type { BreakGlassState } from "./break-glass.ts";
 
 /**
  * - `pass` / `fail`: the check ran.
@@ -17,7 +16,7 @@ import type { Stage } from "./staging-policy.ts";
 export type CheckStatus = "pass" | "fail" | "not-checked" | "info";
 
 export const CHECK_IDS = [
-  "stage",
+  "break-glass",
   "pods",
   "services",
   "urls",
@@ -35,9 +34,7 @@ export type CheckResult = {
 
 export type NamespaceReport = {
   namespace: string;
-  /** The stage of the staging policy. */
-  stage: Stage;
-  /** A break-glass policy overrides the stage while it exists. */
+  /** A break-glass policy opens the namespace while it exists. */
   breakGlass: BreakGlassState;
   ok: boolean;
   checks: CheckResult[];
@@ -65,30 +62,29 @@ function problems(items: readonly Item[]): string[] {
     .map((item) => item.detail);
 }
 
-export type StageExpectation = {
-  /** Fail when the staging policy's stage differs. */
-  expected: "open" | "enforced" | undefined;
-  /** Without this, a break-glass policy fails the check so it cannot hide. */
-  allowBreakGlass: boolean;
+const BREAK_GLASS_SUMMARIES: Record<BreakGlassState, string> = {
+  none: "no break-glass policy",
+  open: "open (break-glass)",
+  unrecognized: "unrecognized break-glass policy",
 };
 
-export function evaluateStage(
+/**
+ * Fails while any break-glass candidate exists, unless `allowBreakGlass`, so
+ * a forgotten break-glass cannot hide behind a passing gate.
+ */
+export function evaluateBreakGlass(
   namespace: string,
-  stage: Stage,
   breakGlass: BreakGlassState,
-  { expected, allowBreakGlass }: StageExpectation,
+  allowBreakGlass: boolean,
 ): CheckResult {
-  const unexpected = expected !== undefined && stage !== expected;
   const forgotten = breakGlass !== "none" && !allowBreakGlass;
-  const staging = breakGlass === "open" ? `; staging policy: ${stage}` : "";
   return {
-    check: "stage",
-    status:
-      stage === "unrecognized" || unexpected || forgotten ? "fail" : "info",
-    summary: `${effectiveStageLabel(stage, breakGlass)}${staging}${unexpected ? `, expected ${expected}` : ""}`,
+    check: "break-glass",
+    status: forgotten ? "fail" : breakGlass === "none" ? "pass" : "info",
+    summary: BREAK_GLASS_SUMMARIES[breakGlass],
     details: forgotten
       ? [
-          `a break-glass policy is live: reconcile the stage map, then run netpol:open ${namespace} --close --apply (or pass --allow-break-glass)`,
+          `a break-glass policy is live: fix the policy in source, then run netpol:open ${namespace} --close --apply (or pass --allow-break-glass)`,
         ]
       : [],
   };
@@ -491,13 +487,11 @@ export function evaluateProbes(
 /** A namespace passes when no check failed. */
 export function namespaceReport(
   namespace: string,
-  stage: Stage,
   breakGlass: BreakGlassState,
   checks: CheckResult[],
 ): NamespaceReport {
   return {
     namespace,
-    stage,
     breakGlass,
     ok: checks.every((check) => check.status !== "fail"),
     checks,

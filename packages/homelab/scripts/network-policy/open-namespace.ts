@@ -10,8 +10,7 @@
  *   bun scripts/network-policy/open-namespace.ts <namespace>|--all --close [--apply]
  *
  * Without `--apply` nothing is changed. The break-glass policy is the only
- * object ever written or deleted; the staging policy and every other policy
- * are left alone.
+ * object ever written or deleted; every other policy is left alone.
  */
 import { parseArgs } from "node:util";
 import { stringify } from "yaml";
@@ -38,13 +37,8 @@ import {
   NamespaceNameSchema,
   namespacesWithPolicies,
   readNetworkPolicies,
-  STAGE_MAP_PATH,
-  stageLabel,
-  stageOf,
-  stagingPolicyOf,
   type NetworkPolicy,
-  type Stage,
-} from "./staging-policy.ts";
+} from "./policies.ts";
 
 /** Nothing else owns the object, so no conflict has to be forced. */
 export const APPLY_COMMAND = [
@@ -128,7 +122,6 @@ type Outcome = { output: string; exitCode: number };
 
 export type OpenPlan = {
   namespace: string;
-  staging: Stage;
   before: BreakGlassState;
   /** `refresh`: the policy exists; applying rewrites its record. */
   action: "create" | "refresh";
@@ -143,7 +136,6 @@ export function planOpen(
 ): OpenPlan[] {
   return namespaces.map((namespace) => ({
     namespace,
-    staging: stageOf(stagingPolicyOf(policies, namespace)),
     before: breakGlassState(policies, namespace),
     action: policies.some(
       (policy) =>
@@ -156,7 +148,7 @@ export function planOpen(
   }));
 }
 
-/** How a break-glass opening is made permanent in source and then removed. */
+/** How a break-glass opening is resolved in source and then removed. */
 export function reconcileInstruction(namespaces: readonly string[]): string {
   if (namespaces.length === 0) {
     return "Nothing was opened, so there is nothing to reconcile.";
@@ -164,18 +156,18 @@ export function reconcileInstruction(namespaces: readonly string[]): string {
   const [only, ...others] = namespaces;
   const target = only !== undefined && others.length === 0 ? only : "--all";
   return [
-    "Reconcile, then close. ArgoCD does not track this policy, so it survives",
-    "self-heal and prune and stays until it is closed; netpol:check fails",
-    "while it exists.",
-    `  1. In ${STAGE_MAP_PATH} set:`,
-    ...namespaces.map((namespace) => `       "${namespace}": "open"`),
-    "     Merge it and wait for ArgoCD to sync, so the namespace stays open.",
+    "Fix in source, then close. ArgoCD does not track this policy, so it",
+    "survives self-heal and prune and stays until it is closed; netpol:check",
+    "fails while it exists.",
+    `  1. Allow the denied traffic in the policies of ${namespaces.join(", ")}`,
+    "     (or revert the change that broke it). Merge it and wait for ArgoCD",
+    "     to sync, so the namespace works without the break-glass policy.",
     `  2. bun run netpol:open ${target} --close --apply`,
   ].join("\n");
 }
 
 function describeOpen(plan: OpenPlan): string {
-  return `Namespace ${plan.namespace}: ${plan.action} ${plan.manifest.metadata.name} (staging policy: ${stageLabel(plan.staging)}; break-glass before: ${plan.before})`;
+  return `Namespace ${plan.namespace}: ${plan.action} ${plan.manifest.metadata.name} (break-glass before: ${plan.before})`;
 }
 
 async function existingNamespace(
@@ -265,8 +257,6 @@ async function open(
 
 export type ClosePlan = {
   namespace: string;
-  /** The staging stage that governs the namespace once the policy is gone. */
-  staging: Stage;
   /** Whether the one deletable break-glass policy exists. */
   deletable: boolean;
   /** Candidates that are refused, each with the reason. */
@@ -282,7 +272,6 @@ export function planClose(
     const candidates = breakGlassCandidates(policies, namespace);
     return {
       namespace,
-      staging: stageOf(stagingPolicyOf(policies, namespace)),
       deletable: candidates.some((policy) => refusalOf(policy) === undefined),
       refused: candidates.flatMap((policy) => {
         const refusal = refusalOf(policy);
@@ -296,13 +285,9 @@ export function planClose(
 
 function describeClose(plan: ClosePlan, verb: string): string[] {
   const name = `${plan.namespace}/${breakGlassPolicyName(plan.namespace)}`;
-  const governed =
-    plan.staging === "open"
-      ? "the staging policy keeps the namespace open"
-      : `the namespace is then governed by its staging policy: ${stageLabel(plan.staging)}`;
   return [
     plan.deletable
-      ? `Namespace ${plan.namespace}: ${verb} ${name}; ${governed}`
+      ? `Namespace ${plan.namespace}: ${verb} ${name}; its own policies govern it again`
       : `Namespace ${plan.namespace}: no break-glass policy to delete`,
     ...plan.refused,
   ];

@@ -5,12 +5,14 @@ import {
   breakGlassNamespaces,
   breakGlassPolicyName,
   breakGlassState,
-  effectiveStageLabel,
   isBreakGlassPolicy,
   refusalOf,
 } from "./break-glass.ts";
-import { breakGlassPolicy, otherPolicy, stagingPolicy } from "./fixtures.ts";
-import { NetworkPolicySchema, stageOf } from "./staging-policy.ts";
+import { allowAllPolicy, breakGlassPolicy, otherPolicy } from "./fixtures.ts";
+import {
+  allowsEverythingForEveryPod,
+  NetworkPolicySchema,
+} from "./policies.ts";
 
 const RECORD = {
   reason: "Tracker cannot reach PostgreSQL",
@@ -65,18 +67,18 @@ describe("break-glass manifest", () => {
     );
   });
 
-  test("reads back as the open break-glass policy, and is not a staging policy", () => {
+  test("reads back as the open break-glass policy", () => {
     const live = NetworkPolicySchema.parse(manifest);
     expect(isBreakGlassPolicy(live)).toBe(true);
     expect(breakGlassState([live], "tracker")).toBe("open");
-    expect(stageOf(live)).toBe("open");
-    expect(manifest.metadata.name).not.toBe("enforcement-staging-tracker");
+    expect(allowsEverythingForEveryPod(live)).toBe(true);
   });
 });
 
 describe("break-glass detection", () => {
   const policies = [
-    stagingPolicy("tracker", "enforced"),
+    // An allow-all policy that is not a break-glass one.
+    allowAllPolicy("tracker", "tracker-open"),
     otherPolicy("tracker", "tracker-app"),
     breakGlassPolicy("tracker"),
     // The label on another name, and the name without the label.
@@ -133,14 +135,5 @@ describe("break-glass detection", () => {
       "redlib",
       "tracker",
     ]);
-  });
-
-  test("the effective stage puts break-glass first", () => {
-    expect(effectiveStageLabel("enforced", "open")).toBe("open (break-glass)");
-    expect(effectiveStageLabel("none", "open")).toBe("open (break-glass)");
-    expect(effectiveStageLabel("enforced", "none")).toBe("enforced");
-    expect(effectiveStageLabel("open", "unrecognized")).toBe(
-      "open (unrecognized break-glass)",
-    );
   });
 });
