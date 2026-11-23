@@ -4,6 +4,7 @@ import {
   api,
   expectContainedInTiles,
   expectNoHorizontalOverflow,
+  expectPagesAgreeOnAttention,
   isPhone,
   openOverview,
   overviewTile as tile,
@@ -117,4 +118,10 @@ test("a queued worker retirement of the accepted release is not a pending releas
   await expectNoHorizontalOverflow(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await expectContainedInTiles(page);
+});
+
+test("the overview and the pipelines list name the same items needing attention", async ({
+  page,
+}) => {
+  await expectPagesAgreeOnAttention(page);
 });

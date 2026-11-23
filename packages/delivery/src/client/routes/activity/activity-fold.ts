@@ -36,7 +36,8 @@ const SEPARATOR = "\u{1F}";
 /**
  * Actions that one actor records over and over about one thing: an executor
  * checking in on a deployment while it runs, Delivery asking again for the
- * same worker's retirement in one environment. Every repeat on the page is
+ * same worker's retirement in one environment, the proof recorded for one
+ * retirement deployment. Every repeat on the page is
  * one counted row where the newest sits, however other entries interleave,
  * keyed by what makes two of them the same repeat.
  */
@@ -53,6 +54,15 @@ const GROUPED_ACTIONS: ReadonlyMap<string, (entry: ActivityEntry) => string> =
           SEPARATOR,
         ),
     ],
+    [
+      // Recorded against the retirement deployment, once as it is claimed and
+      // again as it is readmitted, so the same retirement reads as one row.
+      "worker.retirement_proved",
+      (entry) =>
+        [entry.actor, entry.subject?.environmentId ?? "", entry.entityId].join(
+          SEPARATOR,
+        ),
+    ],
   ]);
 
 /** The count of a folded run with what it counts: "3 check-ins", "2 builds". */
@@ -60,6 +70,7 @@ export function repeatCount(action: string, count: number) {
   const nouns: Record<string, [string, string]> = {
     "deployment.lease_renewed": ["check-in", "check-ins"],
     "worker.retirement_requested": ["request", "requests"],
+    "worker.retirement_proved": ["proof", "proofs"],
   };
   const [one, many] =
     nouns[action] ??

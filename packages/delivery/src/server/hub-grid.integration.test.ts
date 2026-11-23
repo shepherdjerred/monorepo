@@ -10,7 +10,7 @@ import { Delivery } from "#infrastructure/delivery.ts";
 import { index } from "#infrastructure/delivery-data.ts";
 import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
 import { hubGrid } from "#infrastructure/hub/grid.ts";
-import { HubGridSchema } from "#shared/hub/hub-contract.ts";
+import { HubGridSchema, HubOverviewSchema } from "#shared/hub/hub-contract.ts";
 
 let cluster: Awaited<ReturnType<typeof createTestDatabase>>;
 let delivery: Delivery;
@@ -232,6 +232,94 @@ describe("hub grid", () => {
         serviceId: "arcade",
       },
     ]);
+  });
+});
+
+/** A failed, locking deployment of an environment, with the set revision it deployed. */
+async function failDeployment(serviceId: string, environmentId: string) {
+  const seeded = await cluster.database.environment.findUniqueOrThrow({
+    where: { id: fixture.environment.id },
+  });
+  await cluster.database.versionSet.create({
+    data: {
+      id: `${environmentId}/set`,
+      serviceId,
+      revision: 1,
+      lineage: "attention",
+    },
+  });
+  await cluster.database.deployment.create({
+    data: {
+      id: `${environmentId}/failed`,
+      requestId: `${environmentId}/failed-request`,
+      environmentId,
+      serviceId,
+      versionSetRevisionId: `${environmentId}/set`,
+      pipelineRevisionId: seeded.pipelineRevisionId,
+      configurationId: seeded.declaredConfigurationId,
+      catalogRevision: "test-catalog",
+      expectedGeneration: 0,
+      kind: "deploy",
+      status: "failed",
+      recoveryRequired: true,
+      requestedBy: testOperator.id,
+      finishedAt: new Date(),
+    },
+  });
+}
+
+/** Both pages' attention: the Overview's grid and the Pipelines list's hub read. */
+async function pipelinesRead() {
+  const response = await app.request("/api/v1/hub", { headers });
+  expect(response.status).toBe(200);
+  return HubOverviewSchema.parse(await response.json());
+}
+
+async function attentionOfBothPages() {
+  const pipelines = await pipelinesRead();
+  const overview = await grid();
+  expect(pipelines.attention).toEqual(overview.attention);
+  return overview.attention.map((item) => item.title);
+}
+
+describe("hub attention across the pages", () => {
+  test("Overview and Pipelines list the same items, and none for a retired service or environment", async () => {
+    await registerWithEnvironment("tracker", "prod");
+    await failDeployment("tracker", "tracker/prod");
+    await failDeployment("flipt", "flipt/prod");
+    const before = await attentionOfBothPages();
+    expect(before).toEqual(
+      expect.arrayContaining([
+        "Tracker prod requires recovery",
+        "Flipt prod requires recovery",
+      ]),
+    );
+    // A retired environment of a live service is on neither page, so neither
+    // names its failure.
+    await cluster.database.environment.update({
+      where: { id: "flipt/prod" },
+      data: { lifecycle: "retired" },
+    });
+    const environmentGone = await attentionOfBothPages();
+    expect(environmentGone).toContain("Tracker prod requires recovery");
+    expect(environmentGone).not.toContain("Flipt prod requires recovery");
+    // So is a retired service's, however its deployments ended.
+    await cluster.database.service.update({
+      where: { id: "tracker" },
+      data: { lifecycle: "retired" },
+    });
+    const serviceGone = await attentionOfBothPages();
+    expect(serviceGone).not.toContain("Tracker prod requires recovery");
+    // The Pipelines list names no service the Overview does not.
+    const hub = await pipelinesRead();
+    const overview = await grid();
+    const listed = new Set(
+      overview.groups.flatMap((group) =>
+        group.services.map((entry) => entry.id),
+      ),
+    );
+    expect(hub.services.every((entry) => listed.has(entry.id))).toBe(true);
+    expect(hub.services.map((entry) => entry.id)).not.toContain("tracker");
   });
 });
 
