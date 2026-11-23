@@ -53,7 +53,7 @@
         "architecture-fixtures/**/*.ts"
       ],
       "project": [
-        "src/**/*.{ts,tsx,css}",
+        "src/**/*.{ts,tsx}",
         "integration/**/*.ts",
         "e2e/**/*.ts",
         "architecture-fixtures/**/*.ts",
