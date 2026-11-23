@@ -18,6 +18,7 @@ export function registerPersonalMigrationRoutes(
     | "apply"
     | "imported"
     | "importedHistory"
+    | "attachImportedRequests"
     | "reconcile"
     | "passive"
   >,
@@ -39,6 +40,11 @@ export function registerPersonalMigrationRoutes(
   );
   app.get("/api/v1/requests/imported-history", async (c) =>
     c.json(await migration.importedHistory(c.get("actor"))),
+  );
+  app.post("/api/v1/requests/imported/attach", async (c) =>
+    c.json({
+      attached: await migration.attachImportedRequests(c.get("actor")),
+    }),
   );
   app.post("/api/v1/admin/migration/personal/preview", async (c) =>
     c.json(

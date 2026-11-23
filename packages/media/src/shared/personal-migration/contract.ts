@@ -45,6 +45,7 @@ export const PersonalMigrationInputSchema = z.strictObject({
     .array(EvidenceHashSchema)
     .max(1000)
     .refine((ids) => new Set(ids).size === ids.length),
+  deferUnboundRequesters: z.literal(true).optional(),
   selectedSeerrRequests: z
     .array(SeerrRequestReferenceSchema)
     .min(1)
@@ -71,8 +72,12 @@ export const PersonalMigrationClaimSchema = z.strictObject({
   sourceId: z.string(),
   requesterSourceId: z.string(),
   sourceStatus: z.int().min(1).max(5).nullable(),
-  disposition: z.enum(["import", "history", "existing", "blocked"]),
+  disposition: z.enum(["import", "history", "existing", "deferred", "blocked"]),
   reason: z.string().nullable(),
+  plexAccountId: z
+    .string()
+    .regex(/^[1-9]\d*$/u)
+    .optional(),
   userId: z.uuid().nullable(),
   bindingId: z.uuid().nullable(),
   bindingRevision: z.int().nullable(),

@@ -3263,6 +3263,36 @@ same manager kind, instance, numeric media ID, and captured video path in a
 complete, stable combined bundle. Fresh handoff evidence additionally checks the
 actual worker/PVC roots and video bytes; matching path suffixes never suffice.
 
+### Frozen Seerr request capture
+
+Once the Seerr writer has stopped and SQLite's WAL has settled, read the
+existing database image with the original source-instance SHA-256 and the
+verified Seerr version.
+
+```sh
+bun packages/media/scripts/migration-seerr.ts \
+  --sqlite "$SEERR_DATABASE_PATH" \
+  --source-instance-id "$MEDIA_SOURCE_INSTANCE_HASH" \
+  --source-version "$MEDIA_SOURCE_VERSION" \
+  --writer-stopped
+```
+
+The reader works on a private in-memory copy and rejects a nonempty WAL,
+corrupt or changing files, dangling references, and conflicting requester
+identities. Upload the wrapper's `snapshot` through migration administration
+for owner review. It preserves exact request and season statuses, the original
+creation time where available, and the Plex account ID joined from the
+requester's Seerr account. A requester without a stored Plex ID remains
+unmapped. The export carries no credentials, sessions, or email addresses.
+
+The wrapper's `sqliteDigest` hashes the original bytes. Its
+`unassignedSeasonCount` counts season rows whose Seerr `requestId` is SQL
+`NULL`. Those rows stay in the frozen database and do not enter the request
+snapshot.
+`apiComparableDigest` clears the Plex identity fields for comparison with the
+final HTTP capture, which leaves those fields unmapped. A discrepancy calls
+for review of the original source captures.
+
 ### Personal state import contract
 
 The [personal migration service](src/migration/personal-state/service.ts) uses
@@ -3280,6 +3310,16 @@ Pass the same selection and its new hash to apply. A scoped receipt accounts
 only those reviewed requests. Omitted rows remain in the complete capture and
 unresolved requests retain their existing protections. `historyOnly` entries
 must belong to the selected requests when applying a scoped review.
+
+Set `deferUnboundRequesters: true` on both preview and apply to use the exact
+Plex account IDs in a frozen Seerr capture. The owner can approve the full
+request set before household members sign in. Media keeps each eligible
+request pending under the captured Plex account ID until that person signs in
+with current access to the relevant libraries. **My requests** also retries
+attachment for people who signed in before the library transition. A deferred
+request with unresolved catalog targets or a movie edition needs another
+review before it can attach. TV requests need current Media runtime authority.
+Newer reviewed history supersedes an earlier pending request.
 
 `POST /api/v1/admin/migration/personal/apply` takes the same selection,
 `previewHash`, `acknowledgeExistingLibraryKeep: true`, and

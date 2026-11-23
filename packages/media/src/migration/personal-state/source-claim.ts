@@ -1,4 +1,5 @@
 import type { Prisma } from "#generated/prisma/client.ts";
+import { MediaError } from "#application/errors.ts";
 import type { MovieEditionKey } from "#shared/movie-editions/registry.ts";
 import { movieEditionDisplayLabel } from "#shared/movie-editions/registry.ts";
 import {
@@ -79,7 +80,11 @@ export async function createImportedSourceClaim(
   });
   const epoch = await commandAutomationEpoch(tx);
   if (epoch < 0)
-    throw new Error("Activate Media before importing following TV claims");
+    throw new MediaError(
+      "runtime_not_active",
+      "Activate Media before importing following TV claims",
+      409,
+    );
   const defaults = await tx.qualityProfileDefault.findUnique({
     where: { kind: "series" },
   });

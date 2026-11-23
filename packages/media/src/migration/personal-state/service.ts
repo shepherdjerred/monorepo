@@ -25,6 +25,8 @@ import { importedRequestHistory } from "./history.ts";
 import { releasePersonalMigrationHolds } from "./holds.ts";
 import { PassiveRegistrationPreviewInputSchema } from "#shared/handoff/passive-registration.ts";
 import { previewPassiveRegistrations } from "./passive-preview.ts";
+import { attachSeerrRequests } from "./seerr-attachment.ts";
+import { recordSeerrApprovals } from "./seerr-approvals.ts";
 
 /** Owner-approved migration preserves genuine source interest, never a new acquisition consent. */
 export class PrismaPersonalMigration extends MediaCommandBase {
@@ -39,6 +41,11 @@ export class PrismaPersonalMigration extends MediaCommandBase {
   }
   importedHistory(actor: MediaActor) {
     return importedRequestHistory(this.db, actor, this.settings);
+  }
+  attachImportedRequests(actor: MediaActor) {
+    return attachSeerrRequests(this.db, actor, this.settings, (tx, command) =>
+      this.enqueue(tx, actor, command),
+    );
   }
   async passive(
     actor: MediaActor,
@@ -102,6 +109,7 @@ export class PrismaPersonalMigration extends MediaCommandBase {
       movieEditions: input.movieEditions,
       historyOnly: input.historyOnly,
       selectedSeerrRequests: input.selectedSeerrRequests,
+      deferUnboundRequesters: input.deferUnboundRequesters,
     });
     const current = await this.db.mediaUser.findUniqueOrThrow({
       where: { id: actor.id },
@@ -210,6 +218,7 @@ export class PrismaPersonalMigration extends MediaCommandBase {
             payload: z.record(z.string(), z.json()).parse({
               schemaVersion: 1,
               previewHash: preview.previewHash,
+              fullSeerrReview: selection.selectedSeerrRequests === undefined,
               captures: preview.captures,
               claims: preview.claims,
               sourceRecords,
@@ -222,6 +231,12 @@ export class PrismaPersonalMigration extends MediaCommandBase {
             }),
           },
         });
+        await recordSeerrApprovals(
+          tx,
+          event.id,
+          preview.claims,
+          selection.selectedSeerrRequests === undefined,
+        );
         const reconciliation = await releasePersonalMigrationHolds(tx, {
           actorId: actor.id,
           eventId: event.id,

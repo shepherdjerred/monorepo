@@ -6,7 +6,7 @@ import {
 import { registerAcquisitionRoutes } from "./media/acquisition-routes.ts";
 import { registerMediaEditionRoutes } from "./media/movie-edition-routes.ts";
 import { registerMovieLifecycleRoutesV4 } from "./media/movie-lifecycle-routes-v4.ts";
-import { notifyCommittedWrite } from "./notify-write.ts";
+import { attachSeerrAfterLogin, notifyCommittedWrite } from "./notify-write.ts";
 import type { MovieLifecycleApplicationV4 } from "#application/movie-lifecycle-ports-v4.ts";
 import type { MovieHistoryAdministration } from "#application/movie-history-ports.ts";
 import { registerMovieHistoryRoutes } from "./movie-history-routes.ts";
@@ -209,6 +209,7 @@ export function createMediaApp(dependencies: MediaAppDependencies) {
       readCookie(c.req.raw, loginName) ?? "",
     );
     if (!result) return c.json({ status: "pending" }, 202);
+    await attachSeerrAfterLogin(dependencies, result.actor, c.get("requestId"));
     setCookie(c, sessionName, result.sessionToken, {
       ...cookie,
       expires: result.expiresAt,

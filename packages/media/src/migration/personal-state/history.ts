@@ -20,6 +20,10 @@ import {
   type PersonalMigrationClaim,
 } from "#shared/personal-migration/contract.ts";
 import { ImportedRequestHistorySchema } from "#shared/personal-migration/history.ts";
+import {
+  captureHasUniquePlexRequester,
+  isIndependentSeerrAccount,
+} from "./seerr-attachment-binding.ts";
 
 const HistoryReceipt = z.object({
   claims: z.array(PersonalMigrationClaimSchema).max(1000),
@@ -153,12 +157,61 @@ function bindingKey(scope: BindingScope) {
   ]);
 }
 
+type HistoryAccess = Awaited<ReturnType<typeof assessVisibilityAccess>>;
+
+function acceptsCapturedAccount(
+  row: ReviewedHistory,
+  user: HistoryAccess["user"],
+  reader: NonNullable<HistoryAccess["reader"]>,
+) {
+  const { request, selected } = row;
+  return (
+    selected.plexAccountId === user.plexAccountId &&
+    request.plexAccountId === user.plexAccountId &&
+    (selected.userId === null || selected.userId === user.id) &&
+    reader.visible({ kind: titleKind(request.scope), externalIds: {} })
+  );
+}
+
+function captureRequesterKey(row: ReviewedHistory) {
+  return JSON.stringify([row.record.captureId, row.request.requesterSourceId]);
+}
+
+async function capturedRequestersForHistory(
+  tx: Prisma.TransactionClient,
+  rows: readonly ReviewedHistory[],
+  user: HistoryAccess["user"],
+  reader: NonNullable<HistoryAccess["reader"]>,
+) {
+  const verified = new Set<string>();
+  if (!isIndependentSeerrAccount(user)) return verified;
+
+  const candidates = new Map(
+    rows
+      .filter((row) => acceptsCapturedAccount(row, user, reader))
+      .map((row) => [captureRequesterKey(row), row]),
+  );
+  for (const [key, row] of candidates) {
+    if (
+      await captureHasUniquePlexRequester(tx, {
+        captureId: row.record.captureId,
+        requesterSourceId: row.request.requesterSourceId,
+        plexAccountId: user.plexAccountId,
+      })
+    )
+      verified.add(key);
+  }
+  return verified;
+}
+
 async function memberHistory(
   tx: Prisma.TransactionClient,
   rows: readonly ReviewedHistory[],
-  user: Awaited<ReturnType<typeof assessVisibilityAccess>>["user"],
+  access: HistoryAccess,
+  canReadManualBindings: boolean,
 ) {
-  if (rows.length === 0) return [];
+  const { user, reader } = access;
+  if (reader === null || rows.length === 0) return [];
 
   const scopes = new Map(
     rows.map((row) => {
@@ -188,24 +241,39 @@ async function memberHistory(
       .map((binding) => [bindingKey(binding), binding]),
   );
   const identity = snapshotHash(durableBindingIdentity(bindingIdentity(user)));
+  const capturedRequesters = await capturedRequestersForHistory(
+    tx,
+    rows,
+    user,
+    reader,
+  );
   return rows.filter((row) => {
     const { record, selected } = row;
     const key = bindingKey(bindingScope(row));
+    const current = latest.get(key);
+    const currentMatches =
+      current?.userId === user.id &&
+      snapshotHash(durableBindingIdentity(current.identitySnapshot)) ===
+        identity;
+    if (
+      capturedRequesters.has(captureRequesterKey(row)) &&
+      (current === undefined || currentMatches) &&
+      acceptsCapturedAccount(row, user, reader)
+    )
+      return true;
+    if (!canReadManualBindings || !currentMatches) return false;
+
     const historical =
       selected.bindingId === null
         ? undefined
         : reviewed.get(selected.bindingId);
-    const current = latest.get(key);
     return (
       historical?.userId === user.id &&
       historical.revision === selected.bindingRevision &&
       historical.captureId === record.captureId &&
       historical.captureHash === record.capture.manifestHash &&
       bindingKey(historical) === key &&
-      current?.userId === user.id &&
       snapshotHash(durableBindingIdentity(historical.identitySnapshot)) ===
-        identity &&
-      snapshotHash(durableBindingIdentity(current.identitySnapshot)) ===
         identity
     );
   });
@@ -276,12 +344,16 @@ export function importedRequestHistory(
   settings: Parameters<typeof assessVisibilityAccess>[2],
 ) {
   return repeatableRead(db, async (tx) => {
-    const { reader, user } = await assessVisibilityAccess(tx, actor, settings);
+    const access = await assessVisibilityAccess(tx, actor, settings);
+    const { reader, user } = access;
     const owner = user.role === "owner" && !user.restricted;
+    const canReadManualBindings =
+      settings.serverMachineId !== undefined &&
+      eligibleBindingTarget(user, settings.serverMachineId);
     if (
       !owner &&
-      (settings.serverMachineId === undefined ||
-        !eligibleBindingTarget(user, settings.serverMachineId))
+      !canReadManualBindings &&
+      (reader === null || !isIndependentSeerrAccount(user))
     )
       return [];
 
@@ -295,7 +367,12 @@ export function importedRequestHistory(
         throw new Error(
           "Imported request history no longer matches its receipt",
         );
-      if (!owner && selection.selected.userId !== user.id) continue;
+      if (
+        !owner &&
+        selection.selected.userId !== user.id &&
+        selection.selected.plexAccountId !== user.plexAccountId
+      )
+        continue;
       rows.push({
         record,
         selected: selection.selected,
@@ -304,7 +381,9 @@ export function importedRequestHistory(
       if (rows.length > 1000) throw historyLimit();
     }
 
-    const visible = owner ? rows : await memberHistory(tx, rows, user);
+    const visible = owner
+      ? rows
+      : await memberHistory(tx, rows, access, canReadManualBindings);
     const readTitle = await titleReader(
       tx,
       visible.map(({ request }) => request),
