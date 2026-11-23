@@ -10,6 +10,8 @@ import {
   type TemporalResource,
 } from "@shepherdjerred/homelab/cdk8s/src/temporal-test-resources.ts";
 import { ContainerEnvSchema } from "@shepherdjerred/homelab/cdk8s/src/testing/container-env-schema.ts";
+import { TALOS_API_PORT } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { PROD_NODE_INTERNAL_IP } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 const InfraDeploymentSpecSchema = z.object({
   template: z.object({
@@ -99,7 +101,7 @@ describe("Temporal ops snapshot collector", () => {
     }
   });
 
-  test("lets the infra worker reach Grafana, Alertmanager, Loki, Tempo, and golink", () => {
+  test("lets the infra worker reach Grafana, Alertmanager, Loki, Tempo, golink, and Talos", () => {
     const policy = findTemporalResource(
       resources(),
       "NetworkPolicy",
@@ -112,9 +114,12 @@ describe("Temporal ops snapshot collector", () => {
             to: z
               .array(
                 z.object({
-                  namespaceSelector: z.object({
-                    matchLabels: z.record(z.string(), z.string()),
-                  }),
+                  namespaceSelector: z
+                    .object({
+                      matchLabels: z.record(z.string(), z.string()),
+                    })
+                    .optional(),
+                  ipBlock: z.object({ cidr: z.string() }).optional(),
                 }),
               )
               .optional(),
@@ -128,9 +133,9 @@ describe("Temporal ops snapshot collector", () => {
     const byPort = new Map(
       egress.map((rule) => [
         rule.ports[0]?.port,
-        rule.to?.[0]?.namespaceSelector.matchLabels[
+        rule.to?.[0]?.namespaceSelector?.matchLabels[
           "kubernetes.io/metadata.name"
-        ],
+        ] ?? rule.to?.[0]?.ipBlock?.cidr,
       ]),
     );
     // Alertmanager and Prometheus by their gateway pod ports, not Services'.
@@ -143,6 +148,8 @@ describe("Temporal ops snapshot collector", () => {
     expect(byPort.get(7351)).toBe("tracker");
     expect(byPort.get(7352)).toBe("golink");
     expect(byPort.get("grafana")).toBe("prometheus");
+    // talosctl dials only the node endpoint its talosconfig names.
+    expect(byPort.get(TALOS_API_PORT)).toBe(`${PROD_NODE_INTERNAL_IP}/32`);
     // Kubernetes API and the dashboard ingest stay reachable.
     expect(byPort.has(6443)).toBe(true);
     expect(byPort.has(7341)).toBe(true);

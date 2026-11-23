@@ -407,7 +407,7 @@ describe("Flipt network policy", () => {
     expect(policy.spec.egress).toHaveLength(1);
   });
 
-  it("limits idle ingress to Tailscale and Prometheus after consumer cutover", () => {
+  it("limits ingress to Tailscale, Prometheus, and retained Temporal workflow hosts", () => {
     const policy = z
       .object({
         spec: z.object({
@@ -422,6 +422,9 @@ describe("Flipt network policy", () => {
                   namespaceSelector: z.object({
                     matchLabels: z.record(z.string(), z.string()),
                   }),
+                  podSelector: z
+                    .object({ matchLabels: z.record(z.string(), z.string()) })
+                    .optional(),
                 }),
               ),
             }),
@@ -444,6 +447,19 @@ describe("Flipt network policy", () => {
           {
             namespaceSelector: {
               matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+            },
+          },
+        ],
+      },
+      {
+        ports: [{ port: 8080, protocol: "TCP" }],
+        from: [
+          {
+            namespaceSelector: {
+              matchLabels: { "kubernetes.io/metadata.name": "temporal" },
+            },
+            podSelector: {
+              matchLabels: { "worker-family": "central-workflows" },
             },
           },
         ],

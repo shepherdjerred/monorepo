@@ -12,9 +12,11 @@ import {
   blackboxProbeIngressRule,
   flagsEgress,
   flagsManagementEgress,
+  fliptEgress,
   lokiOtlpEgress,
   otlpEgress,
   prometheusIngressRule,
+  talosApiEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import {
   ALERTMANAGER_GATEWAY_PORT,
@@ -151,6 +153,10 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         dnsEgressRule(),
         temporalServerEgress(),
         flagsEgress(),
+        // Retained `delivery-wf-retained-*` hosts run pinned builds that
+        // predate the Flipt-to-Flags cutover (#4948) and still evaluate flags
+        // against Flipt. Remove this rule when Flipt retires (#4969, FM-59).
+        fliptEgress(),
         otlpEgress(),
         lokiOtlpEgress(),
       ],
@@ -231,8 +237,9 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
   });
 
   // Kubernetes API, Prometheus, and the alert/ops dashboard for the audit
-  // collectors; Alertmanager, Tracker and Loki for the ops-snapshot collector.
-  // PostHog, GitHub, Woodpecker, and Bugsink ride the shared 443 rule.
+  // collectors; Alertmanager, Tracker and Loki for the ops-snapshot collector;
+  // the Talos API for both, which run talosctl. PostHog, GitHub, Woodpecker,
+  // and Bugsink ride the shared 443 rule.
   new KubeNetworkPolicy(chart, "temporal-infra-api-netpol", {
     metadata: { name: "temporal-infra-api-netpol" },
     spec: {
@@ -240,6 +247,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       policyTypes: ["Egress"],
       egress: [
         { ports: [tcp(6443)] },
+        talosApiEgressRule(),
         monitoringEgress(PROMETHEUS_GATEWAY_PORT),
         { ports: [tcp(7341)] },
         {

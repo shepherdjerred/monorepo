@@ -4,6 +4,8 @@ import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 import { createTemporalDataChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal-data.ts";
+import { TALOS_API_PORT } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { PROD_NODE_INTERNAL_IP } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 const SecurityContextSchema = z.object({
   allowPrivilegeEscalation: z.boolean(),
@@ -87,6 +89,17 @@ const NetworkPolicySchema = z.object({
       .optional(),
     egress: z.array(z.unknown()).optional(),
   }),
+});
+
+const EgressRuleSchema = z.object({
+  to: z
+    .array(
+      z.looseObject({ ipBlock: z.object({ cidr: z.string() }).optional() }),
+    )
+    .optional(),
+  ports: z
+    .array(z.object({ port: z.union([z.number(), z.string()]) }))
+    .optional(),
 });
 
 /** The Temporal workloads plus the data layer, which owns the Namespace under transition rendering. */
@@ -264,5 +277,31 @@ describe("Temporal agent provider network boundary", () => {
           ),
         ),
       ).toBe(true);
+  });
+
+  test("lets only the infra worker reach the Talos API, at the node endpoint", () => {
+    const policies = resources().flatMap((resource) => {
+      const parsed = NetworkPolicySchema.safeParse(resource);
+      return parsed.success ? [parsed.data] : [];
+    });
+    const talosRules = policies.flatMap((policy) =>
+      (policy.spec.egress ?? [])
+        .map((rule) => EgressRuleSchema.parse(rule))
+        .filter((rule) =>
+          (rule.ports ?? []).some((port) => port.port === TALOS_API_PORT),
+        )
+        .map((rule) => ({ policy, rule })),
+    );
+
+    expect(talosRules.map(({ policy }) => policy.metadata.name)).toEqual([
+      "temporal-infra-api-netpol",
+    ]);
+    const [talos] = talosRules;
+    expect(talos?.policy.spec.podSelector.matchLabels).toEqual({
+      component: "infra-worker",
+    });
+    expect(talos?.rule.to).toEqual([
+      { ipBlock: { cidr: `${PROD_NODE_INTERNAL_IP}/32` } },
+    ]);
   });
 });
