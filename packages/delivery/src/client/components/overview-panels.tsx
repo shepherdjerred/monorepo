@@ -81,6 +81,12 @@ function EnvironmentChip({ environment }: { environment: GridEnvironment }) {
           )}
         </span>
       )}
+      {environment.maintenance != null && (
+        <Status
+          value={environment.maintenance.status}
+          label={`worker retirement ${statusLabel(environment.maintenance.status)}`}
+        />
+      )}
       {environment.alarmedAt !== null && (
         <Status value="alarmed" label="alarm firing" />
       )}

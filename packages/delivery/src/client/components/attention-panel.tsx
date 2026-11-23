@@ -12,6 +12,9 @@ const ATTENTION: Record<Attention["kind"], string> = {
   build_failed: "Build",
 };
 
+/** How many items every page shows before the rest wait behind "Show all". */
+export const ATTENTION_COLLAPSE_AFTER = 5;
+
 /** Kinds that wait on someone rather than report a failure. */
 const WAITS: ReadonlySet<Attention["kind"]> = new Set(["approval", "queued"]);
 

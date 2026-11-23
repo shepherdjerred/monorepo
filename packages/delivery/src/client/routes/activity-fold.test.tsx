@@ -95,9 +95,53 @@ describe("foldActivity", () => {
       entry("platform.plan_recorded", SECOND),
       stage(FIRST, "step-provenance", "running"),
     ]);
-    expect(rowsOf.map((row) => row.kind)).toEqual(["stages", "entry", "entry"]);
+    expect(rowsOf.map((row) => row.kind)).toEqual([
+      "stages",
+      "repeated",
+      "entry",
+    ]);
     const [stages] = rowsOf;
     expect(stages?.kind === "stages" ? stages.entries : []).toHaveLength(3);
+  });
+
+  it("folds an executor's check-ins on one deployment into one row, however they interleave", () => {
+    const rowsOf = foldActivity([
+      entry("deployment.lease_renewed", FIRST),
+      entry("deployment.lease_renewed", FIRST),
+      entry("deployment.claimed", SECOND),
+      entry("deployment.lease_renewed", FIRST),
+      entry("deployment.lease_renewed", SECOND),
+      entry("deployment.lease_renewed", FIRST, {}, "another-executor"),
+    ]);
+    expect(
+      rowsOf.map((row) => (row.kind === "entry" ? 1 : row.entries.length)),
+    ).toEqual([3, 1, 1, 1]);
+  });
+
+  it("folds Delivery's repeated requests to retire one worker in one environment, not another's", () => {
+    const retirement = (
+      worker: string,
+      environmentId: string,
+    ): ActivityEntry => ({
+      ...entry(
+        "worker.retirement_requested",
+        worker,
+        {},
+        "delivery/auto-retire",
+      ),
+      subject: { serviceId: "scout-for-lol", environmentId, revision: 338 },
+    });
+    const rowsOf = foldActivity([
+      retirement("scout-beta-w1", "scout-for-lol/beta"),
+      entry("deployment.requested", FIRST),
+      retirement("scout-beta-w1", "scout-for-lol/beta"),
+      retirement("scout-beta-w2", "scout-for-lol/beta"),
+      retirement("scout-prod-w1", "scout-for-lol/prod"),
+      retirement("scout-beta-w1", "scout-for-lol/beta"),
+    ]);
+    expect(
+      rowsOf.map((row) => (row.kind === "entry" ? 1 : row.entries.length)),
+    ).toEqual([3, 1, 1, 1]);
   });
 
   it("still ends a run of repeated build records at another action or actor", () => {
@@ -395,7 +439,7 @@ describe("what an activity row says", () => {
       render([{ ...entry("deployment.failed", FIRST), reason: null }]),
     );
     expect(silent).toContain(
-      '<span class="activity-reason muted">no reason recorded</span>',
+      '<span class="activity-reason muted">No cause was recorded</span>',
     );
   });
 
@@ -419,9 +463,60 @@ describe("what an activity row says", () => {
       '<span class="activity-reason">Required checks did not pass</span>',
     );
     expect(reasoned).toContain("Build failed CI");
-    expect(unreasoned).toContain("no reason recorded");
+    expect(unreasoned).toContain("No cause was recorded");
     expect(incompatible).toContain("component server is not in the catalog");
     expect(other).not.toContain("activity-reason");
+  });
+
+  it("shows a worker recovery's recorded reason, or that no cause was recorded", () => {
+    const [reasoned = "", silent = ""] = rows(
+      render([
+        {
+          ...entry("worker.recovery_failed", FIRST),
+          reason: "The pool read back a different build",
+        },
+        { ...entry("worker.recovery_failed", SECOND), reason: null },
+      ]),
+    );
+    expect(reasoned).toContain("Worker recovery failed");
+    expect(reasoned).toContain(
+      '<span class="activity-reason">The pool read back a different build</span>',
+    );
+    expect(silent).toContain(
+      '<span class="activity-reason muted">No cause was recorded</span>',
+    );
+  });
+
+  it("folds repeats into one row with their count and where they ran", () => {
+    const subject = {
+      serviceId: "temporal",
+      environmentId: "temporal/prod",
+      revision: 438,
+    };
+    const requested = (offset: number): ActivityEntry => ({
+      ...entry("worker.retirement_requested", "temporal-w1", {}, "delivery"),
+      subject,
+      occurredAt: new Date(Date.UTC(2026, 10, 20, 9, 0) - offset).toISOString(),
+    });
+    const [run = ""] = rows(
+      render([requested(0), requested(300_000), requested(600_000)]),
+    );
+    expect(rows(render([requested(0), requested(300_000)]))).toHaveLength(1);
+    expect(run).toContain("Worker retirement requested");
+    expect(run).toContain("×3");
+    expect(run).toContain("3 requests");
+    // Where it happened, and the range the repeats span.
+    expect(run).toContain("temporal/prod");
+    expect(run).toContain("from ");
+    const [checkIns = ""] = rows(
+      render([
+        entry("deployment.lease_renewed", FIRST),
+        entry("deployment.lease_renewed", FIRST),
+        entry("deployment.lease_renewed", FIRST),
+      ]),
+    );
+    expect(checkIns).toContain("Executor checked in");
+    expect(checkIns).toContain("3 check-ins");
   });
 
   it("links the deployment a worker's retirement was proved for, as its neighbours do", () => {

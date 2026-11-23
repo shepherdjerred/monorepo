@@ -293,6 +293,48 @@ describe("hub activity", () => {
     expect(retired?.target).toEqual({ kind: "deployment", id: deployment.id });
     expect(retired?.subject?.environmentId).toBe(deployment.environmentId);
   });
+
+  test("names the environment of a worker retirement and recovery, and says why a recovery failed", async () => {
+    const deployment = await delivery.database.deployment.findFirstOrThrow();
+    await delivery.database.$transaction(async (tx) => {
+      await audit(tx, testExecutor, {
+        action: "worker.retirement_requested",
+        entityId: "hub-worker",
+        requestId: "hub-retirement-requested",
+        metadata: { deploymentId: deployment.id },
+      });
+      await audit(tx, testExecutor, {
+        action: "worker.recovery_failed",
+        entityId: deployment.id,
+        requestId: "hub-recovery-failed",
+        metadata: { message: "The pool read back a different build\nmore" },
+      });
+      await audit(tx, testExecutor, {
+        action: "worker.recovery_failed",
+        entityId: deployment.id,
+        requestId: "hub-recovery-failed-silent",
+      });
+    });
+    const page = ActivityPageSchema.parse(
+      await body("/api/v1/activity?within=hour"),
+    );
+    const requested = page.items.find(
+      (entry) => entry.action === "worker.retirement_requested",
+    );
+    expect(requested?.entityId).toBe("hub-worker");
+    expect(requested?.subject?.environmentId).toBe(deployment.environmentId);
+    const recoveries = page.items.filter(
+      (entry) => entry.action === "worker.recovery_failed",
+    );
+    expect(recoveries.map((entry) => entry.reason)).toEqual(
+      expect.arrayContaining(["The pool read back a different build", null]),
+    );
+    expect(
+      recoveries.every(
+        (entry) => entry.subject?.environmentId === deployment.environmentId,
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("hub integrations", () => {

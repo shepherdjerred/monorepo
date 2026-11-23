@@ -25,7 +25,12 @@ export const VERDICT: Record<
   deploying: {
     status: "running",
     label: "Deploying",
-    sentence: "A deployment that carries it is queued or running.",
+    sentence: "A deployment that carries it is running.",
+  },
+  queued: {
+    status: "queued",
+    label: "Queued",
+    sentence: "A deployment that carries it is queued, waiting to start.",
   },
   awaiting_approval: {
     status: "awaiting_approval",
@@ -87,7 +92,12 @@ export const ENVIRONMENT: Record<
   deploying: {
     status: "running",
     label: "deploying",
-    reason: "has a deployment that carries it queued or running.",
+    reason: "has a deployment that carries it running.",
+  },
+  queued: {
+    status: "queued",
+    label: "queued",
+    reason: "has a deployment that carries it queued, waiting to start.",
   },
   awaiting_approval: {
     status: "awaiting_approval",
@@ -387,6 +397,7 @@ const DOING: Record<CommitEnvironmentState, [string, string]> = {
   failed: ["failed to deploy", "failed to deploy"],
   awaiting_approval: ["needs approval", "need approval"],
   deploying: ["is deploying", "are deploying"],
+  queued: ["is queued", "are queued"],
   manual: ["needs a manual release", "need a manual release"],
   canceled: ["had its deployment canceled", "had their deployments canceled"],
   replaced: [

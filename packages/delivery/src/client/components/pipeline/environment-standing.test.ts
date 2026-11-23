@@ -114,6 +114,17 @@ describe("environmentStanding", () => {
       facts: ["Accepted r4", "r5 deploying"],
       ready: null,
     });
+    // Until an executor claims it, the deployment is queued, as everywhere else.
+    const queued = environment({
+      id: "app/prod",
+      accepted: 4,
+      newest: 5,
+      status: "queued",
+    });
+    expect(environmentStanding(queued, [versionStage(5)])).toEqual({
+      facts: ["Accepted r4", "r5 queued"],
+      ready: null,
+    });
     const failed = environment({
       id: "app/prod",
       accepted: 4,

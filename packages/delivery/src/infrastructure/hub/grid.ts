@@ -2,7 +2,11 @@ import {
   CATALOG_CORE,
   type CatalogCore,
 } from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
-import { ApprovalPolicySchema, LifecycleSchema } from "#shared/contract.ts";
+import {
+  ApprovalPolicySchema,
+  DeploymentStatusSchema,
+  LifecycleSchema,
+} from "#shared/contract.ts";
 import type {
   GridEnvironment,
   GridService,
@@ -103,6 +107,37 @@ function alarmedAt(record: GridRecord, env: EnvironmentRow) {
   return accepting.monitorAlarmedAt;
 }
 
+/** The deployment kinds that maintain the accepted release without changing it. */
+const MAINTENANCE_KINDS: ReadonlySet<string> = new Set(["retire-host"]);
+
+/** The states in which a maintenance deployment is still open. */
+const OPEN_STATUSES: ReadonlySet<string> = new Set([
+  "queued",
+  "running",
+  "awaiting_approval",
+]);
+
+/**
+ * Whether a deployment only maintains what the environment already accepted:
+ * retiring a drained worker deploys the accepted release again, so while it
+ * is open it is no pending release. One that ended stays a request, so a
+ * failed retirement still reads as the failure it is.
+ */
+function isOpenMaintenance(
+  env: EnvironmentRow,
+  deployment: GridDeployment,
+  status: GridEnvironment["status"],
+) {
+  return (
+    MAINTENANCE_KINDS.has(deployment.kind) &&
+    OPEN_STATUSES.has(status) &&
+    !deployment.recoveryRequired &&
+    env.acceptedDeploymentId !== null &&
+    deployment.id !== env.acceptedDeploymentId &&
+    deployment.versionSetRevisionId === env.acceptedVersionSetRevisionId
+  );
+}
+
 function gridEnvironment(
   env: EnvironmentRow,
   record: GridRecord,
@@ -119,15 +154,24 @@ function gridEnvironment(
           `Environment ${env.id} accepts a set revision the record does not hold`,
         );
   const finished = acceptingOf(record, env)?.finishedAt ?? null;
+  const newest =
+    deployment === undefined
+      ? "not_started"
+      : decisionStatus(deployment, record.awaiting);
+  const maintenance =
+    deployment !== undefined && isOpenMaintenance(env, deployment, newest)
+      ? deployment
+      : null;
   return {
     id: env.id,
     name: env.name,
-    status:
-      deployment === undefined
-        ? "not_started"
-        : decisionStatus(deployment, record.awaiting),
+    // Open maintenance of the accepted release leaves the environment's
+    // standing with the deployment that accepted it.
+    status: maintenance === null ? newest : "succeeded",
     request:
-      deployment === undefined || deployment.id === env.acceptedDeploymentId
+      deployment === undefined ||
+      maintenance !== null ||
+      deployment.id === env.acceptedDeploymentId
         ? null
         : {
             deploymentId: deployment.id,
@@ -137,6 +181,15 @@ function gridEnvironment(
               `Deployment ${deployment.id} deploys a set revision the record does not hold`,
             ),
           },
+    ...(maintenance === null
+      ? {}
+      : {
+          maintenance: {
+            kind: "retire-host" as const,
+            status: DeploymentStatusSchema.parse(newest),
+            deploymentId: maintenance.id,
+          },
+        }),
     alarmedAt: alarmedAt(record, env)?.toISOString() ?? null,
     recoveryRequired: deployment?.recoveryRequired ?? false,
     acceptedRevision: revision,

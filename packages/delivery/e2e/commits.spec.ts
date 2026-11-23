@@ -27,15 +27,17 @@ async function openCommit(page: Page, position: number) {
   return page.getByRole("main");
 }
 
-test("a commit says deploying only while a deployment that carries it is in flight", async ({
+test("a commit says deploying only once a deployment that carries it is claimed, and queued before", async ({
   page,
 }) => {
-  // Birmel prod has the next release queued: that commit is on its way.
+  // Birmel prod has the next release queued: that commit is on its way, but
+  // no executor has claimed the deployment, as the Overview also says.
   const queued = await openCommit(page, QUEUED_POSITION);
-  await expect(queued.locator(".page-header")).toContainText("Deploying");
+  await expect(queued.locator(".page-header")).toContainText("Queued");
+  await expect(queued.locator(".page-header")).not.toContainText("Deploying");
   const service = page.getByRole("region", { name: /^By service/u });
   await expect(
-    service.getByRole("link", { name: "deploying prod" }),
+    service.getByRole("link", { name: "queued prod" }),
   ).toHaveAttribute("href", "/deployments/birmel-queued");
 
   // Nothing was asked for the newest one: it waits on a manual release, and
@@ -74,7 +76,7 @@ test("the list row names the environment that is blocking it", async ({
   await expect(unreleased).not.toContainText("Deploying");
   await expectNoHorizontalOverflow(page);
   await expect(await findRow(page, QUEUED_POSITION)).toContainText(
-    "Birmel / prod: deploying",
+    "Birmel / prod: queued",
   );
   // The service whose CI failed is named, not counted.
   await expect(await findRow(page, PARTIAL_FAILURE_POSITION)).toContainText(

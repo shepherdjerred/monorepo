@@ -2,7 +2,10 @@ import { createRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { GridEnvironmentStatusSchema } from "#shared/hub/hub-contract.ts";
 import { queries } from "#client/queries.ts";
-import { AttentionPanel } from "#client/components/attention-panel.tsx";
+import {
+  ATTENTION_COLLAPSE_AFTER,
+  AttentionPanel,
+} from "#client/components/attention-panel.tsx";
 import { OverviewPanels } from "#client/components/overview-panels.tsx";
 import { PageHeader } from "#client/components/page-header.tsx";
 import { statusLabel } from "#client/components/status.tsx";
@@ -52,7 +55,10 @@ function OverviewPage() {
         title="Overview"
         description="Every active service and where it runs, as Delivery last recorded it. This is the deployment record, not live runtime health."
       />
-      <AttentionPanel items={data.attention} />
+      <AttentionPanel
+        items={data.attention}
+        collapseAfter={ATTENTION_COLLAPSE_AFTER}
+      />
       <div className="overview-toolbar">
         <form
           className="filters"

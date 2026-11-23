@@ -4,6 +4,7 @@ import {
   type ActivityQuery,
   type ActivitySubject,
 } from "#shared/hub/hub-contract.ts";
+import { z } from "zod";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { firstLine } from "./attention.ts";
@@ -46,6 +47,33 @@ export function activityWhere(
   };
 }
 
+const NamesDeploymentSchema = z.object({ deploymentId: z.string() });
+const RecordedMessageSchema = z.object({ message: z.string() });
+
+/**
+ * The deployment an audit row is about when its entity is not it: a worker
+ * retirement names its deployment in what it recorded, and a worker recovery
+ * is recorded against the deployment it recovers.
+ */
+function workerDeployment(row: AuditRow) {
+  if (row.action === "worker.retirement_requested") {
+    const named = NamesDeploymentSchema.safeParse(row.metadata);
+    return named.success ? named.data.deploymentId : null;
+  }
+  return row.action.startsWith("worker.recovery_") ? row.entityId : null;
+}
+
+/** The record a row's subject is read under: its deployment, else its own entity. */
+function subjectKey(row: AuditRow) {
+  return workerDeployment(row) ?? row.entityId;
+}
+
+/** The message a failure's own audit row recorded, when it carries one. */
+function recordedMessage(row: AuditRow) {
+  const recorded = RecordedMessageSchema.safeParse(row.metadata);
+  return recorded.success ? recorded.data.message : null;
+}
+
 function ids(rows: readonly AuditRow[], domain: string) {
   return [
     ...new Set(
@@ -61,6 +89,7 @@ function ids(rows: readonly AuditRow[], domain: string) {
  * a lock, and a build CI failed or found incompatible.
  */
 const FAILURE_ACTIONS: ReadonlySet<string> = new Set([
+  "worker.recovery_failed",
   "deployment.failed",
   "deployment.recovery_required",
   "build.failed",
@@ -82,7 +111,14 @@ async function activitySubjects(
 }> {
   const [deployments, builds, versions] = await Promise.all([
     database.deployment.findMany({
-      where: { id: { in: ids(rows, "deployment") } },
+      where: {
+        id: {
+          in: [
+            ...ids(rows, "deployment"),
+            ...rows.flatMap((row) => workerDeployment(row) ?? []),
+          ],
+        },
+      },
       select: {
         id: true,
         serviceId: true,
@@ -170,9 +206,15 @@ export async function activityPage(
   return {
     items: selected.items.map((row) => ({
       ...activityEntry(row),
-      subject: subjects.get(row.entityId) ?? null,
+      subject: subjects.get(subjectKey(row)) ?? null,
       ...(FAILURE_ACTIONS.has(row.action)
-        ? { reason: firstLine(messages.get(row.entityId) ?? null) }
+        ? {
+            reason: firstLine(
+              row.action === "worker.recovery_failed"
+                ? recordedMessage(row)
+                : (messages.get(row.entityId) ?? null),
+            ),
+          }
         : {}),
     })),
     nextCursor: selected.nextCursor,
