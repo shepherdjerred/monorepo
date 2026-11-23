@@ -147,23 +147,49 @@ export function includedNote(carried: readonly CarriedFailure[]) {
   return `Not built on its own; included in ${carriedIn(carried)}`;
 }
 
-/** How a landed release is worded, singular and plural. */
-const LANDED: Record<CarriedRelease["state"], [string, string]> = {
-  live: ["is live", "are live"],
-  superseded: [
-    "was superseded by a newer release, which is deployed",
-    "were superseded by newer releases, which are deployed",
+/**
+ * How a landed release is worded, singular and plural, by what happened to
+ * it: the release's own deployment failed or was canceled before a newer
+ * release superseded it, it was simply superseded, or it is still live.
+ */
+const LANDED: [(release: CarriedRelease) => boolean, [string, string]][] = [
+  [
+    (release) => release.state === "superseded" && release.outcome === "failed",
+    [
+      "failed and was superseded by a newer release, which is deployed",
+      "failed and were superseded by newer releases, which are deployed",
+    ],
   ],
-};
+  [
+    (release) =>
+      release.state === "superseded" && release.outcome === "canceled",
+    [
+      "was canceled and superseded by a newer release, which is deployed",
+      "were canceled and superseded by newer releases, which are deployed",
+    ],
+  ],
+  [
+    (release) =>
+      release.state === "superseded" && release.outcome === undefined,
+    [
+      "was superseded by a newer release, which is deployed",
+      "were superseded by newer releases, which are deployed",
+    ],
+  ],
+  [(release) => release.state === "live", ["is live", "are live"]],
+];
 
 /**
- * The releases that ship a failed pipeline's change and have landed: live,
- * or superseded by a newer release that is deployed (r346 failed, was
- * canceled or was replaced; the change is live through the newer one). The releases still
- * held back are named by the row's blocker notes, so they are not here.
- * "Releases in f545a3b: 3 were superseded by newer releases, which are
- * deployed (Streambot & media r346, Golink r12, Hub r278), Cluster
- * observability baseline r75 is live". Null when none have landed.
+ * The carried changes' releases that have landed, each counted and named by
+ * its own outcome, never flattened to "superseded": failed then superseded,
+ * canceled then superseded, simply superseded by a deployed release, and
+ * live. The releases still held back are named by the row's blocker notes,
+ * so they are not here.
+ * "Releases in f545a3b: 6 failed and were superseded by newer releases,
+ * which are deployed (Arcade r236, Golink r12, Streambot & media r346 +3
+ * more); 2 were canceled and superseded by newer releases, which are
+ * deployed (Delivery r324, Starlight Karma Bot r216); Cluster observability
+ * baseline r75 is live". Null when none have landed.
  */
 export function releasesNote(
   releases: readonly CarriedRelease[] | undefined,
@@ -172,18 +198,17 @@ export function releasesNote(
   const shas = distinct(
     releases.map((release) => release.includedIn.slice(0, 7)),
   );
-  const parts = (["superseded", "live"] as const).flatMap((state) => {
+  const parts = LANDED.flatMap(([matches, [one, many]]) => {
     const names = releases
-      .filter((release) => release.state === state)
+      .filter((release) => matches(release))
       .map(
         (release) => `${release.service} ${revisionLabel(release.revision)}`,
       );
     const [only] = names;
-    const [one, many] = LANDED[state];
     if (only === undefined) return [];
     return names.length === 1
       ? [`${only} ${one}`]
       : [`${String(names.length)} ${many} (${namedWithMore(names)})`];
   });
-  return `Releases in ${series(shas)}: ${parts.join(", ")}`;
+  return `Releases in ${series(shas)}: ${parts.join("; ")}`;
 }

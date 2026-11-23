@@ -642,7 +642,7 @@ export const CommitStatusSchema = z.object({
    * commit's change. Such a failure does not decide the verdict.
    */
   carriedFailures: z.array(CarriedFailureSchema).optional(),
-  /** The releases of the first later passing commit that ship a failed pipeline's change. */
+  /** The carried changes' releases that have landed, by their own outcome; see CarriedReleaseSchema. */
   carriedReleases: z.array(CarriedReleaseSchema).optional(),
   pendingBuilds: z.array(CommitBuildSchema),
   /**

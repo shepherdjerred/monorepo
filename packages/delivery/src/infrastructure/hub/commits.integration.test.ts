@@ -401,4 +401,57 @@ describe("a release a row names shows its own state", () => {
     // settled and the carried commit can say so.
     expect(carrier.verdict).not.toBe("deployed");
   });
+
+  test("a carried release is named by its own outcome, and one still live stays live", async () => {
+    // Arcade's build failed at sha 8; sha 2 carries it. The carrier's release
+    // is deployed by an operator, fails, then a newer release is accepted.
+    await publish("arcade", sha("8"), 1500, "failed");
+    await publish("arcade", sha("2"), 1501, "verified");
+    const database = context.cluster.database;
+    const carrierRead = await commitStatus(database, sha("8"));
+    const [release] = carrierRead.changed;
+    if (release?.versionSet == null) throw new Error("A release was composed");
+    // The carried commit names its carrier's release: unsettled, so no line yet.
+    expect(carrierRead.carriedReleases).toBeUndefined();
+    const failedDeployment = await context.delivery.createDeployment(
+      {
+        requestId: "r7/failed",
+        environmentId: context.fixture.environment.id,
+        versionSetRevisionId: release.versionSet.id,
+        expectedGeneration: context.fixture.environment.generation,
+        kind: "deploy",
+      },
+      testOperator,
+    );
+    await context.delivery.claim(failedDeployment.id, testExecutor);
+    await context.delivery.finish(
+      failedDeployment.id,
+      {
+        status: "failed",
+        message: "The rollout did not become healthy",
+        recoveryRequired: false,
+        evidence: [],
+      },
+      testExecutor,
+    );
+    await publish("arcade", sha("3"), 1502, "verified");
+    const newerRead = await commitStatus(database, sha("3"));
+    const [newer] = newerRead.changed;
+    if (newer?.versionSet == null) throw new Error("A newer set was composed");
+    await acceptedDeployment(context, newer.versionSet.id);
+    // The carried commit's release failed and was superseded: its own outcome.
+    const superseded = await commitStatus(database, sha("8"));
+    expect(superseded.carriedReleases).toEqual([
+      {
+        service: "Arcade",
+        revision: release.versionSet.revision,
+        includedIn: sha("2"),
+        state: "superseded",
+        outcome: "failed",
+      },
+    ]);
+    // The accepted release itself is live, with no outcome to report.
+    const live = await commitStatus(database, sha("3"));
+    expect(live.changed[0]?.environments[0]?.state).toBe("live");
+  });
 });

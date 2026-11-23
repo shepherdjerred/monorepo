@@ -195,7 +195,7 @@ function TileRun({
       {open.length > 0 && <Tiles services={open} />}
       {settled.length > 0 && (
         <Disclosure
-          summary={`${open.length === 0 ? "All " : ""}${String(settled.length)} healthy`}
+          summary={`${open.length === 0 && settled.length > 2 ? "All " : ""}${String(settled.length)} healthy`}
         >
           <Tiles services={settled} />
         </Disclosure>

@@ -2,14 +2,10 @@ import { useState } from "react";
 import { Link, createRoute, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import type {
-  CarriedFailure,
-  CommitEnvironment,
   CommitEnvironmentGroup,
-  CommitEnvironmentState,
   CommitService,
   CommitStatus,
   CommitSummary,
-  CommitVerdict,
 } from "#shared/hub/hub-contract.ts";
 import { queries } from "#client/queries.ts";
 import { PageHeader } from "#client/components/page-header.tsx";
@@ -22,12 +18,15 @@ import { SourcePanel } from "#client/components/integrations.tsx";
 import { CursorSearchSchema } from "#client/routes/search-schemas.ts";
 import { Route as rootRoute } from "#client/routes/root.tsx";
 import { revisionLabel } from "#client/components/identifier.tsx";
-import { Disclosure } from "#client/components/disclosure.tsx";
 import { BuildList } from "./commit-builds.tsx";
-import { ENVIRONMENT } from "./commit-labels.ts";
+import {
+  EnvironmentChip,
+  EnvironmentGroup,
+  Verdict,
+  isLiveState,
+} from "./commit-environments.tsx";
 import {
   commitStatement,
-  environmentView,
   rowStanding,
   missingIdentity,
   parseSha,
@@ -37,68 +36,9 @@ import {
   verdictView,
 } from "./commit-model.ts";
 
-const isLiveState = (state: CommitEnvironmentState) =>
-  state === "live" || state === "superseded";
-
-function Verdict({
-  value,
-  carried,
-  pending,
-}: {
-  value: CommitVerdict;
-  carried?: readonly CarriedFailure[] | undefined;
-  /** The states of environments that do not have the change yet. */
-  pending?: readonly CommitEnvironmentState[] | undefined;
-}) {
-  const verdict = verdictView(value, { carried, pending });
-  return <Status value={verdict.status} label={verdict.label} />;
-}
-
 /** The states of the environments a commit's blocker list names. */
 const blockerStates = (blocker: CommitSummary["blocker"]) =>
   blocker === null ? [] : [blocker.state];
-
-function EnvironmentChip({
-  entry,
-  label,
-}: {
-  entry: Pick<
-    CommitEnvironment,
-    "environmentId" | "state" | "deploymentId" | "release"
-  >;
-  label: string;
-}) {
-  const state = environmentView(entry);
-  // Where the change is not live, or is live through a newer release, the
-  // words say why; a glyph alone cannot.
-  const className =
-    isLiveState(entry.state) && state === ENVIRONMENT[entry.state]
-      ? "env-pill"
-      : "env-pill env-pill-spelled";
-  const content = (
-    <>
-      <Status value={state.status} label={state.label} />
-      <span className="env-name">{label}</span>
-    </>
-  );
-  return entry.deploymentId === null ? (
-    <Link
-      to="/environments/$"
-      params={{ _splat: entry.environmentId }}
-      className={className}
-    >
-      {content}
-    </Link>
-  ) : (
-    <Link
-      to="/deployments/$deploymentId"
-      params={{ deploymentId: entry.deploymentId }}
-      className={className}
-    >
-      {content}
-    </Link>
-  );
-}
 
 // Platform commits touch one environment per stack; the row shows the first few.
 const MAX_TALLIES = 4;
@@ -343,49 +283,6 @@ function ServiceRow({ entry }: { entry: CommitService }) {
         )}
       </td>
     </tr>
-  );
-}
-
-function EnvironmentGroup({ group }: { group: CommitEnvironmentGroup }) {
-  const pending = group.members.filter((member) => !isLiveState(member.state));
-  const live = group.members.filter((member) => isLiveState(member.state));
-  return (
-    <section
-      className="panel env-group"
-      aria-labelledby={`env-${group.name}-heading`}
-    >
-      <h3 id={`env-${group.name}-heading`}>
-        {group.name}{" "}
-        <Verdict
-          value={group.verdict}
-          pending={pending.map((member) => member.state)}
-        />{" "}
-        <span className="muted">
-          {group.liveCount} of {group.total}{" "}
-          {group.total === 1 ? "service" : "services"} live
-        </span>
-      </h3>
-      {pending.length > 0 && (
-        <ul className="environment-strip">
-          {pending.map((member) => (
-            <li key={member.environmentId}>
-              <EnvironmentChip entry={member} label={member.serviceTitle} />
-            </li>
-          ))}
-        </ul>
-      )}
-      {live.length > 0 && (
-        <Disclosure summary={<>{live.length} live</>}>
-          <ul className="environment-strip">
-            {live.map((member) => (
-              <li key={member.environmentId}>
-                <EnvironmentChip entry={member} label={member.serviceTitle} />
-              </li>
-            ))}
-          </ul>
-        </Disclosure>
-      )}
-    </section>
   );
 }
 
