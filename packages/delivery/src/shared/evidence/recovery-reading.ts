@@ -6,6 +6,8 @@
  * is stale, and the readback is what is true.
  */
 
+import { plainCause } from "./plain-cause.ts";
+
 /** The parts of a recovery intent a reading needs. */
 export type ReadableIntent = {
   id: string;
@@ -124,26 +126,31 @@ export function readbackOutcome(reading: RecoveryReading) {
 }
 
 /**
- * What a settled recovery read back, after its intent's name: one
- * operation's phase, each Application's phase when it read several back, or
- * its words when no readback names a phase.
+ * What a settled recovery found, for a sentence that follows its intent's
+ * name: each Application's phase, or the words of its first readback when
+ * none names a phase. Null when it recorded no readback.
  */
-export function settledWords(settled: RecoveryReading) {
+export function settledFindings(settled: RecoveryReading) {
   const phased = settled.readbacks.filter((entry) => entry.phase !== null);
-  const [only] = settled.readbacks;
-  if (phased.length === 0)
-    return only === undefined
-      ? " settled what the deployment left running."
-      : ` settled what the deployment left running: ${only.text}`;
-  if (settled.readbacks.length === 1)
-    return ` read the external operation back after the deployment ended: it ended in phase ${String(only?.phase)}.`;
-  const each = phased
-    .map(
-      (entry) =>
-        `${entry.application ?? "an operation"} ended in phase ${String(entry.phase)}`,
-    )
-    .join("; ");
-  return ` read each external operation back after the deployment ended: ${each}.`;
+  return phased.length === 0
+    ? (settled.readbacks[0]?.text ?? null)
+    : phased
+        .map(
+          (entry) =>
+            `${entry.application ?? "an operation"} ended in phase ${String(entry.phase)}`,
+        )
+        .join("; ");
+}
+
+/** The Applications a settled recovery read back, each once. */
+export function readbackApplications(settled: RecoveryReading) {
+  return [
+    ...new Set(
+      settled.readbacks.flatMap((entry) =>
+        entry.application === null ? [] : [entry.application],
+      ),
+    ),
+  ];
 }
 
 /** What a page says when no record gives a cause for a failure. */
@@ -175,8 +182,10 @@ export function stepMessage(stage: CauseStage) {
 export function stageCause(stages: readonly CauseStage[]) {
   const failed = stages.find((stage) => stage.status === "failed");
   if (failed !== undefined) {
-    const words = stepMessage(failed);
-    return words === null
+    const raw = stepMessage(failed);
+    // A runtime's source excerpt and stack frames are not the cause.
+    const words = raw === null ? null : plainCause(raw);
+    return words === null || words === ""
       ? `Step ${failed.key} failed`
       : `Step ${failed.key} failed: ${words}`;
   }
@@ -187,15 +196,13 @@ export function stageCause(stages: readonly CauseStage[]) {
 }
 
 /**
- * Why a failed deployment failed, as a page states it: what recovery read
- * back once the newest recovery intent has settled and the lock is released,
- * and otherwise what the executor recorded. While an intent is pending, or
- * the deployment still holds its lock, the executor's words stand: the
- * outcome is still unknown.
- *
- * A readback of Succeeded says the external work finished, which never
- * explains a failure: the cause is then the step the deployment ended on,
- * or that none was recorded.
+ * Why a failed deployment failed, as a page states it: what the executor
+ * recorded, until a recovery intent settled and released the lock. A
+ * settled recovery's readback is what became of the external work, in any
+ * phase, never why the deployment failed, so then the cause is the step that
+ * failed or the one the deployment ended on, or that none was recorded.
+ * While an intent is pending, or the deployment still holds its lock, the
+ * executor's words stand: the outcome is still unknown.
  */
 export function failureReason(
   deployment: { message: string | null; recoveryRequired: boolean },
@@ -203,9 +210,7 @@ export function failureReason(
   stages: readonly CauseStage[],
 ) {
   if (deployment.recoveryRequired) return deployment.message;
-  const reading = recoveryReading(intents);
-  if (reading === null) return deployment.message;
-  return readbackOutcome(reading) === "succeeded"
-    ? (stageCause(stages) ?? NO_CAUSE)
-    : `Recovery intent ${String(reading.sequence)}${settledWords(reading)}`;
+  return recoveryReading(intents) === null
+    ? deployment.message
+    : (stageCause(stages) ?? NO_CAUSE);
 }

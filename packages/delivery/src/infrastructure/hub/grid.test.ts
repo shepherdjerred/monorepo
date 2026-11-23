@@ -624,7 +624,7 @@ describe("overview grid failing-repeatedly attention", () => {
     expect(
       newestAfter(
         newestFailed(
-          "Recovery intent 1 read the external operation back after the deployment ended: it ended in phase Succeeded.",
+          "Step step-sync was still running when the deployment ended",
         ),
         [failed("r347", null), failed("r346", null)],
       ),
@@ -633,7 +633,7 @@ describe("overview grid failing-repeatedly attention", () => {
         kind: "failed",
         title: "Flags prod is failing repeatedly",
         detail:
-          "The last 3 deployments failed, the newest with: Recovery intent 1 read the external operation back after the deployment ended: it ended in phase Succeeded. Nothing newer is queued.",
+          "The last 3 deployments failed, the newest with: Step step-sync was still running when the deployment ended. Nothing newer is queued.",
         at: at(9).toISOString(),
         target: { kind: "deployment", id: "newest" },
         serviceId: "flags",
