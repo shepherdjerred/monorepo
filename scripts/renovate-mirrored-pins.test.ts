@@ -120,8 +120,6 @@ const UNTRACKED_MINECRAFT_URLS: Record<string, string> = {
     "Storm floodgate: GeyserMC's download API has no Renovate datasource",
   "https://download.geysermc.org/v2/projects/geyser/versions/2.12.1/builds/1295/downloads/spigot":
     "Storm Geyser: GeyserMC's download API has no Renovate datasource",
-  "https://fill-data.papermc.io/v1/objects/9601f9a26a2a52a0f2c807cf1abf691f96ee4fb287878313b601cebc2c51eabf/paper-26.3-244.jar":
-    "Storm Paper build: builds ship daily; the manifest and the harness mirror move by hand",
   "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.3/paper-global.yml":
     "Storm paperDefaults: reference configs pinned to a commit, refreshed with the Paper family",
   "https://raw.githubusercontent.com/Shonz1/minecraft-default-configs/6aacbe6355508991ad47b07de8dc7ef1c49430a4/26.3/paper-world-defaults.yml":
@@ -157,6 +155,29 @@ const StormManifestSchema = z.object({
   plugins: z.array(StormPluginPinSchema),
 });
 
+// Untracked URL families whose exact URL changes with every bump. Paper builds
+// ship daily; the manifest and the harness mirror move by hand, so the URL
+// (content hash and build number) must not be spelled out here.
+const UNTRACKED_MINECRAFT_URL_PATTERNS: readonly {
+  pattern: RegExp;
+  reason: string;
+}[] = [
+  {
+    pattern:
+      /^https:\/\/fill-data\.papermc\.io\/v1\/objects\/[0-9a-f]{64}\/paper-\d+\.\d+(?:\.\d+)?-\d+\.jar$/u,
+    reason:
+      "Storm Paper build: builds ship daily; the manifest and the harness mirror move by hand",
+  },
+];
+
+function untrackedReason(url: string): string | undefined {
+  return (
+    UNTRACKED_MINECRAFT_URLS[url] ??
+    UNTRACKED_MINECRAFT_URL_PATTERNS.find(({ pattern }) => pattern.test(url))
+      ?.reason
+  );
+}
+
 async function loadCatalogValue(name: string): Promise<string | undefined> {
   const catalog = parseVersionCatalog(
     await Bun.file(`${root}/${CATALOG}`).json(),
@@ -173,11 +194,9 @@ test("tracks every Minecraft plugin download URL or records why not", async () =
     for (const [quoted] of source.matchAll(/"https:\/\/[^"]+"/gu)) {
       const url = quoted.slice(1, -1);
       if (extracted.some((pin) => pin.text.includes(url))) {
-        expect(UNTRACKED_MINECRAFT_URLS[url], `${url} in ${file}`).toBe(
-          undefined,
-        );
+        expect(untrackedReason(url), `${url} in ${file}`).toBe(undefined);
       } else {
-        expect(UNTRACKED_MINECRAFT_URLS[url], `${url} in ${file}`).toEqual(
+        expect(untrackedReason(url), `${url} in ${file}`).toEqual(
           expect.any(String),
         );
         untracked.add(url);
@@ -188,14 +207,23 @@ test("tracks every Minecraft plugin download URL or records why not", async () =
   for (const [url] of settings.matchAll(
     /https:\/\/cdn\.modrinth\.com\/[^"\s)]*/gu,
   )) {
-    expect(UNTRACKED_MINECRAFT_URLS[url], url).toEqual(expect.any(String));
+    expect(untrackedReason(url), url).toEqual(expect.any(String));
     untracked.add(url);
   }
 
   // A stale entry would hide a URL that has since been removed or tracked.
-  expect([...untracked].toSorted()).toEqual(
-    Object.keys(UNTRACKED_MINECRAFT_URLS).toSorted(),
-  );
+  expect(
+    [...untracked].filter((url) => url in UNTRACKED_MINECRAFT_URLS).toSorted(),
+  ).toEqual(Object.keys(UNTRACKED_MINECRAFT_URLS).toSorted());
+  for (const { pattern } of UNTRACKED_MINECRAFT_URL_PATTERNS) {
+    expect(
+      [...untracked].some((url) => pattern.test(url)),
+      String(pattern),
+    ).toBe(true);
+  }
+  expect(
+    [...untracked].every((url) => untrackedReason(url) !== undefined),
+  ).toBe(true);
 });
 
 test("orders every Modrinth URL by its file name within one artifact family", async () => {
@@ -506,7 +534,6 @@ test("leaves only catalog entries without a usable datasource unmanaged", async 
     "itzg/minecraft-server-java17-archive",
     "unmined/unmined-cli",
     "woodpecker-ci/plugin-git",
-    "relay-server",
   ]);
   for (const entry of unmanaged) {
     expect(entry.notes?.length, entry.name).toBeGreaterThan(0);
