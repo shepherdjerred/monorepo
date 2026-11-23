@@ -7,10 +7,10 @@ export const serverImage =
 
 export const paper = {
   version: "26.3",
-  build: 244,
+  build: 251,
   // From https://fill.papermc.io/v3/projects/paper/versions/26.3/builds (channel STABLE).
-  url: "https://fill-data.papermc.io/v1/objects/9601f9a26a2a52a0f2c807cf1abf691f96ee4fb287878313b601cebc2c51eabf/paper-26.3-244.jar",
-  sha256: "9601f9a26a2a52a0f2c807cf1abf691f96ee4fb287878313b601cebc2c51eabf",
+  url: "https://fill-data.papermc.io/v1/objects/3e7591f1c5b40a379c0ef494bcbeda128a62f5819e32cfc5e6335880bee39c55/paper-26.3-251.jar",
+  sha256: "3e7591f1c5b40a379c0ef494bcbeda128a62f5819e32cfc5e6335880bee39c55",
   // https://github.com/PrismarineJS/minecraft-data protocolVersions.json: 26.3 is 777.
   protocol: 777,
 } as const;
