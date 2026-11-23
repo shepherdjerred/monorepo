@@ -435,8 +435,8 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
           playerUuid,
           playerName: "Chrono",
           capturedAt: "2026-11-22T12:00:00.050Z",
-          nickname: null,
-          primaryGroup: "default",
+          nickname: "ChronoPrime",
+          primaryGroup: "vip",
           coins: 950,
           townName: null,
           townRole: null,
@@ -458,10 +458,47 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
       serverSnapshot: null,
     });
 
+    // Late arrival of an older periodic snapshot must not overwrite nickname, group, or coins
+    store.ingestBatch({
+      schemaVersion: 1,
+      batchId: "77777777-7777-4000-8000-000000000003",
+      serverName: "The Storm",
+      sentAt: "2026-11-22T12:00:00.090Z",
+      events: [],
+      playerSnapshots: [
+        {
+          playerUuid,
+          playerName: "ChronoOld",
+          capturedAt: "2026-11-22T12:00:00.010Z",
+          nickname: "StaleNick",
+          primaryGroup: "default",
+          coins: 10,
+          townName: null,
+          townRole: null,
+          townClaims: 0,
+          powerLevel: 1,
+          topSkill: null,
+          topSkillLevel: 0,
+          skills: {},
+          tracks: {},
+          questsCompleted: 0,
+          arenaBestWaves: {},
+          rwfMatches: 0,
+          rwfWins: 0,
+          rwfLosses: 0,
+          rwfKills: 0,
+          rwfDeaths: 0,
+        },
+      ],
+      serverSnapshot: null,
+    });
+
     const freshNow = new Date("2026-11-22T12:03:00Z");
     const freshProfile = store.getPlayerProfile(playerUuid, freshNow);
     expect(freshProfile?.player.firstSeenAt).toBe("2026-11-22T12:00:00.000Z");
     expect(freshProfile?.player.lastSeenAt).toBe("2026-11-22T12:00:00.500Z");
+    expect(freshProfile?.player.nickname).toBe("ChronoPrime");
+    expect(freshProfile?.player.primaryGroup).toBe("vip");
     expect(freshProfile?.gameplay?.coins).toBe(950);
     expect(freshProfile?.gameplay?.tracks).toEqual({ explorer: 4 });
     expect(freshProfile?.gameplay?.questsCompleted).toBe(9);

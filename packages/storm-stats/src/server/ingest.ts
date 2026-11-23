@@ -169,18 +169,6 @@ function applyConnectionBounce(
 }
 
 function applyPlayerSnapshot(db: Database, snap: PlayerGameplaySnapshot): void {
-  ensurePlayerRow(db, {
-    uuid: snap.playerUuid,
-    name: snap.playerName,
-    seenAt: snap.capturedAt,
-  });
-  db.query(
-    `UPDATE players
-     SET nickname = ?,
-         primary_group = ?
-     WHERE uuid = ?`,
-  ).run(snap.nickname, snap.primaryGroup, snap.playerUuid);
-
   const existing = db
     .query<
       {
@@ -196,6 +184,18 @@ function applyPlayerSnapshot(db: Database, snap: PlayerGameplaySnapshot): void {
   if (existing !== null && existing.captured_at > snap.capturedAt) {
     return;
   }
+
+  ensurePlayerRow(db, {
+    uuid: snap.playerUuid,
+    name: snap.playerName,
+    seenAt: snap.capturedAt,
+  });
+  db.query(
+    `UPDATE players
+     SET nickname = ?,
+         primary_group = ?
+     WHERE uuid = ?`,
+  ).run(snap.nickname, snap.primaryGroup, snap.playerUuid);
   const tracksJson =
     snap.tracks === null
       ? (existing?.tracks_json ?? "{}")
