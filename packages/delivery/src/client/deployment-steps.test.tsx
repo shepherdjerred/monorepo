@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as fixtures from "#testing/model-fixtures.ts";
 import type { DeploymentDetail } from "#shared/contract.ts";
+import { stepMessage } from "#shared/evidence/recovery-reading.ts";
 import { renderWithRouter } from "#client/test-router.tsx";
 import { DeploymentRecord } from "./deployment-detail.tsx";
 import {
@@ -10,7 +11,6 @@ import {
   StepTimeline,
   interrupted,
   noStepsMessage,
-  stepMessage,
   stepEnd,
 } from "./deployment-steps.tsx";
 import {
@@ -791,5 +791,97 @@ describe("what is true of a failed deployment beyond its status", () => {
     expect(html).toContain("Temporal workflow linked above");
     expect(html).not.toContain("Fix the cause");
     expect(render(<WhyItFailed detail={ended} />)).toContain("Fix the cause");
+  });
+});
+
+describe("what a failed deployment says while a newer request waits, and about the work it ended on", () => {
+  it("turns Retry off while a newer request is unfinished, and says why", () => {
+    const failed = {
+      ...ended,
+      deployment: { ...ended.deployment, message: "Sync timed out" },
+    };
+    expect(offersRetry(failed)).toBe(true);
+    for (const status of ["queued", "running", "awaiting_approval"] as const) {
+      const waiting = {
+        ...failed,
+        newerRequest: {
+          deploymentId: "newer-request",
+          revision: 14,
+          status,
+          requestedAt: "2026-12-01T00:00:00.000Z",
+        },
+      };
+      expect(deploymentVerdict(waiting)).toMatchObject({
+        kind: "queued",
+        deploymentId: "newer-request",
+        revision: 14,
+        status,
+      });
+      expect(offersRetry(waiting)).toBe(false);
+      // The failure stays the header's status: nothing was accepted after it.
+      expect(headerStatus(waiting)).toEqual({ value: "failed", label: null });
+      const html = render(<WhyItFailed detail={waiting} />);
+      expect(html).toContain("A newer request,");
+      expect(html).toContain('href="/deployments/newer-request"');
+      expect(html).toContain(`is ${status.replaceAll("_", " ")}; Retry is off`);
+      expect(html).not.toContain("Fix the cause");
+    }
+    // A newer acceptance outranks a newer request still waiting.
+    expect(
+      deploymentVerdict({
+        ...failed,
+        newerRequest: {
+          deploymentId: "newer-request",
+          revision: 14,
+          status: "queued" as const,
+          requestedAt: "2026-12-01T00:00:00.000Z",
+        },
+        acceptedRelease: {
+          deploymentId: "newer-accepted",
+          revision: 9,
+          requestedAt: "2026-12-01T00:00:00.000Z",
+        },
+      }),
+    ).toMatchObject({ kind: "superseded" });
+  });
+
+  it("reads the reason a receipt records, instead of calling it a receipt", () => {
+    const refused = {
+      ...ended,
+      deployment: { ...ended.deployment, message: null },
+      stages: [
+        stage(
+          "step-sync",
+          "failed",
+          JSON.stringify({
+            adapter: "argo",
+            reason: "storageClass zfs-ssd to zfs-ssd-lz4 is immutable",
+          }),
+        ),
+      ],
+      evidence: [],
+    };
+    const html = render(<WhyItFailed detail={refused} />);
+    expect(html).toContain(
+      "failed: storageClass zfs-ssd to zfs-ssd-lz4 is immutable</p>",
+    );
+  });
+
+  it("leads with the step the deployment ended on, not with a readback of Succeeded", () => {
+    const settled = settledDetail(
+      [stage("step-sync", "running", "step-sync: running")],
+      [
+        "Independent Application readback: web, resourceVersion 1, request req, operation 1, phase Succeeded, finished 2026-11-22T03:27:16Z",
+      ],
+    );
+    const html = render(<WhyItFailed detail={settled} />);
+    expect(
+      html.indexOf("was still running when the deployment ended"),
+    ).toBeLessThan(html.indexOf("it ended in phase Succeeded"));
+    expect(failureStory(settled)).toMatchObject({
+      caused: false,
+      readbackFinished: true,
+    });
+    expect(html).toContain("No cause was recorded.");
   });
 });

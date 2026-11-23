@@ -1,23 +1,28 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import type { DeploymentDetailV2 } from "#shared/model/contract.ts";
-import { groupEvidence, parseEvidenceSummary } from "#client/evidence.ts";
+import { groupEvidence } from "#client/evidence.ts";
 import {
   readbackOutcome,
   recoveryReading,
   settledWords,
+  stepMessage,
+  NO_CAUSE as NO_CAUSE_RECORDED,
   type RecoveryReading,
 } from "#shared/evidence/recovery-reading.ts";
-import { interrupted, stepMessage } from "#client/deployment-steps.tsx";
+import { interrupted } from "#client/deployment-steps.tsx";
 import { CopyableIdentifier } from "#client/components/copyable.tsx";
 import { revisionLabel } from "#client/components/identifier.tsx";
+import { sayOnce, spoken } from "./failure-words.ts";
 import { retryable } from "./view.ts";
 
 type Detail = Pick<
   DeploymentDetailV2,
   "deployment" | "stages" | "evidence" | "recoveryIntents" | "environment"
 > &
-  Partial<Pick<DeploymentDetailV2, "acceptedRelease" | "versionSet">>;
+  Partial<
+    Pick<DeploymentDetailV2, "acceptedRelease" | "newerRequest" | "versionSet">
+  >;
 
 /**
  * What is true of an ended deployment beyond the status its executor left,
@@ -25,6 +30,8 @@ type Detail = Pick<
  *
  * - `superseded`: the environment has since accepted a release requested
  *   after this one, so retrying this one would move it backwards.
+ * - `queued`: a request made after this one has not finished, so the
+ *   environment refuses a retry until it settles.
  * - `recovered`: recovery read every external operation back as Succeeded,
  *   and the environment accepts or was observed running this release.
  * - `applied`: recovery read every operation back as Succeeded, but
@@ -34,11 +41,17 @@ type Detail = Pick<
  */
 export type Verdict =
   | { kind: "superseded"; deploymentId: string; revision: number }
+  | {
+      kind: "queued";
+      deploymentId: string;
+      revision: number;
+      status: "queued" | "running" | "awaiting_approval";
+    }
   | { kind: "recovered" }
   | { kind: "applied"; acceptedRevision: number | null };
 
 export function deploymentVerdict(detail: Detail): Verdict | null {
-  const { deployment, environment } = detail;
+  const { deployment } = detail;
   const ended =
     deployment.status === "failed" || deployment.status === "canceled";
   if (!ended || deployment.recoveryRequired) return null;
@@ -53,6 +66,18 @@ export function deploymentVerdict(detail: Detail): Verdict | null {
       deploymentId: accepted.deploymentId,
       revision: accepted.revision,
     };
+  const recovery = recoveryVerdict(detail);
+  if (recovery?.kind === "recovered") return recovery;
+  // Nothing newer was accepted, but a newer request that has not finished
+  // makes the environment refuse a retry until it settles.
+  const newer = detail.newerRequest ?? null;
+  return newer === null ? recovery : { kind: "queued", ...newer };
+}
+
+/** What recovery's readback says of an ended deployment: recovered, applied, or nothing. */
+function recoveryVerdict(detail: Detail): Verdict | null {
+  const { deployment, environment } = detail;
+  const accepted = detail.acceptedRelease ?? null;
   const reading = recoveryReading(detail.recoveryIntents);
   if (
     reading === null ||
@@ -73,12 +98,16 @@ export function deploymentVerdict(detail: Detail): Verdict | null {
     : { kind: "applied", acceptedRevision: accepted?.revision ?? null };
 }
 
-/** Whether the page offers a retry: a retryable deployment nothing has superseded or recovered. */
+/**
+ * Whether the page offers a retry: a retryable deployment nothing has
+ * superseded or recovered, and no newer request is waiting to settle.
+ */
 export function offersRetry(detail: Detail) {
   const verdict = deploymentVerdict(detail);
   return (
     retryable(detail.deployment) &&
     verdict?.kind !== "superseded" &&
+    verdict?.kind !== "queued" &&
     verdict?.kind !== "recovered"
   );
 }
@@ -96,6 +125,9 @@ export function headerStatus(detail: Detail): {
         value: status,
         label: `${status} · superseded by ${revisionLabel(verdict.revision)}`,
       };
+    }
+    case "queued": {
+      return { value: status, label: null };
     }
     case "recovered": {
       return { value: "succeeded", label: "failed, then recovered" };
@@ -115,62 +147,6 @@ export function explainsFailure(deployment: {
   recoveryRequired: boolean;
 }) {
   return deployment.status === "failed" || deployment.recoveryRequired;
-}
-
-/** A step message or a piece of evidence in words: its text, or what kind of receipt it is. */
-function spoken(summary: string, kind?: string) {
-  const parsed = parseEvidenceSummary(summary);
-  if (parsed.kind === "text") return parsed.text;
-  if (kind === undefined) return null;
-  return parsed.adapter === null
-    ? `a ${kind} receipt`
-    : `a ${kind} receipt from ${parsed.adapter}`;
-}
-
-/**
- * A clause that tells the reader what to do, such as "inspect its recorded
- * UID and bounded stage logs". Executors end a cause with one, and several
- * records of one failure repeat the same one.
- */
-const REMEDY = /^(?:inspect|check|retry|fix|re-?run|request|look at|wait) /iu;
-
-/** The clauses of a recorded sentence: split at `;` and at sentence ends. */
-function clauses(text: string) {
-  return text
-    .split(/(?<=[.;])\s+/u)
-    .map((part) => part.trim().replace(/[.;]$/u, ""))
-    .filter((part) => part !== "");
-}
-
-function sentence(text: string) {
-  return `${text.charAt(0).toUpperCase()}${text.slice(1)}.`;
-}
-
-/**
- * Says each clause once across the records of one failure: the deployment's
- * message, its step's message and its last evidence. `say` returns a
- * record's causes not said before, or null when it adds none, and collects
- * its remedies apart, so each instruction appears once under "What you can
- * do".
- */
-function sayOnce() {
-  const said = new Set<string>();
-  const remedies: string[] = [];
-  return {
-    say(text: string | null) {
-      if (text === null) return null;
-      const causes: string[] = [];
-      for (const clause of clauses(text)) {
-        const key = clause.toLowerCase();
-        if (said.has(key)) continue;
-        said.add(key);
-        if (REMEDY.test(clause)) remedies.push(sentence(clause));
-        else causes.push(clause);
-      }
-      return causes.length === 0 ? null : causes.join("; ");
-    },
-    remedies,
-  };
 }
 
 const JOB = /\bJob (?<job>[a-z0-9][\w.-]*\/[a-z0-9][\w.-]*)/u;
@@ -278,12 +254,19 @@ export function failureStory(detail: Detail) {
         ? null
         : { id: intent.id, sequence: intent.sequence, outcome: intent.outcome },
     next: nextStep(detail),
-    /** Whether any record says why: a message, a step's words, evidence or a readback. */
+    /**
+     * Whether any record says why: a message, a step's words, evidence or a
+     * readback of a failed phase. A readback of Succeeded says the work
+     * finished, which is no cause.
+     */
     caused:
       message !== null ||
       stepText !== null ||
       evidenceText !== null ||
-      settled !== null,
+      (settled !== null && readbackOutcome(settled) !== "succeeded"),
+    /** Whether recovery read the external work back as finished, which explains no failure. */
+    readbackFinished:
+      settled !== null && readbackOutcome(settled) === "succeeded",
   };
 }
 
@@ -358,6 +341,23 @@ function VerdictStep({
           : {environment} has since accepted a newer request, so nothing is left
           to fix here. Retry is off, because retrying {revision} would replace{" "}
           {revisionLabel(verdict.revision)} with this older request.
+        </p>
+      );
+    }
+    case "queued": {
+      return (
+        <p>
+          A newer request,{" "}
+          <Link
+            to="/deployments/$deploymentId"
+            params={{ deploymentId: verdict.deploymentId }}
+          >
+            {revisionLabel(verdict.revision)}
+          </Link>
+          , is {verdict.status.replaceAll("_", " ")}; Retry is off until it
+          settles, because {environment} refuses another request while one is
+          unfinished. Once it settles, request another release from{" "}
+          {environment} if {revision} is still needed.
         </p>
       );
     }
@@ -455,12 +455,15 @@ function NextStep({
 }
 
 /**
- * Why a canceled release a newer acceptance superseded offers no retry. A
- * failed one says so under why it failed.
+ * Why a canceled release a newer acceptance superseded, or a newer request
+ * holds, offers no retry. A failed one says so under why it failed.
  */
 export function SupersededNote({ detail }: { detail: Detail }) {
   const verdict = deploymentVerdict(detail);
-  if (explainsFailure(detail.deployment) || verdict?.kind !== "superseded")
+  if (
+    explainsFailure(detail.deployment) ||
+    (verdict?.kind !== "superseded" && verdict?.kind !== "queued")
+  )
     return null;
   return (
     <div className="notice">
@@ -484,6 +487,38 @@ function releaseName(detail: Detail) {
     : revisionLabel(detail.versionSet.revision);
 }
 
+/**
+ * What the records say caused the failure: the message, the step, its last
+ * evidence and what recovery read back. Work recovery read back as finished
+ * explains nothing, so that follows the step the deployment ended on.
+ */
+function FailureCause({ story }: { story: Story }) {
+  const readback =
+    story.settled === null ? null : <SettledHeadline settled={story.settled} />;
+  return (
+    <>
+      {story.message !== null && (
+        <p className="failure-message">{story.message}</p>
+      )}
+      {!story.readbackFinished && readback}
+      {story.step !== null && (
+        <StepSentence step={story.step} settled={story.settled !== null} />
+      )}
+      {story.evidence !== null && (
+        <p>
+          Last evidence
+          {story.evidence.from === null
+            ? " reported with the result"
+            : ` from ${story.evidence.from}`}
+          : {story.evidence.text}
+        </p>
+      )}
+      {story.readbackFinished && !story.caused && <p>{NO_CAUSE_RECORDED}.</p>}
+      {story.readbackFinished && readback}
+    </>
+  );
+}
+
 /** The top of a failed or locked deployment: why, and what the operator can do next. */
 export function WhyItFailed({ detail }: { detail: Detail }) {
   const story = failureStory(detail);
@@ -500,22 +535,7 @@ export function WhyItFailed({ detail }: { detail: Detail }) {
       aria-labelledby="failure-heading"
     >
       <h2 id="failure-heading">{story.heading}</h2>
-      {story.message !== null && (
-        <p className="failure-message">{story.message}</p>
-      )}
-      {story.settled !== null && <SettledHeadline settled={story.settled} />}
-      {story.step !== null && (
-        <StepSentence step={story.step} settled={story.settled !== null} />
-      )}
-      {story.evidence !== null && (
-        <p>
-          Last evidence
-          {story.evidence.from === null
-            ? " reported with the result"
-            : ` from ${story.evidence.from}`}
-          : {story.evidence.text}
-        </p>
-      )}
+      <FailureCause story={story} />
       <h3>What you can do</h3>
       {!settledByVerdict && story.remedies.length > 0 && (
         <ul className="failure-remedies">

@@ -187,7 +187,7 @@ export function deploymentActions(
       (right.startedAt ?? right.updatedAt).getTime(),
   );
   // Once recovery settled, what it read back replaces the executor's words.
-  const message = failureReason(deployment, intents);
+  const message = failureReason(deployment, intents, stages);
   return [
     {
       key: "deployment",

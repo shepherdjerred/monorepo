@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { DeploymentStatusSchema } from "#shared/contract.ts";
+import { NO_CAUSE } from "#shared/evidence/recovery-reading.ts";
 import type { Attention } from "#shared/hub/hub-contract.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { AWAITING_PLAN_DECISION } from "#infrastructure/selection/views.ts";
-import { recoveryIntentsOf, stated } from "./recovery.ts";
+import { causeStagesOf, recoveryIntentsOf, stated } from "./recovery.ts";
 import { servicePlacement } from "./views.ts";
 
 type DeploymentRow = Prisma.DeploymentGetPayload<object>;
@@ -143,13 +144,17 @@ export async function statedDeployments<
     ...[...latest.values()].map((row) => row.id),
     ...[...prior.values()].flatMap((rows) => rows.map((row) => row.id)),
   ]);
+  const stages = await causeStagesOf(database, intents);
   return {
     latest: new Map(
-      [...latest].map(([id, row]) => [id, stated(row, intents)] as const),
+      [...latest].map(
+        ([id, row]) => [id, stated(row, intents, stages)] as const,
+      ),
     ),
     prior: new Map(
       [...prior].map(
-        ([id, rows]) => [id, rows.map((row) => stated(row, intents))] as const,
+        ([id, rows]) =>
+          [id, rows.map((row) => stated(row, intents, stages))] as const,
       ),
     ),
   };
@@ -261,10 +266,16 @@ function failingItem(
   const more = broken === -1 && prior.length >= STREAK_WINDOW;
   // The sentence ends here, so the reason's own full stop does not.
   const reason = firstLine(newest.message)?.replace(/[.;]$/u, "") ?? null;
+  const cause =
+    reason === null
+      ? ""
+      : reason === NO_CAUSE
+        ? ", and no cause was recorded for the newest"
+        : `, the newest with: ${reason}`;
   return {
     kind: "failed",
     title: `${subject} is failing repeatedly`,
-    detail: `The last ${String(count)}${more ? " or more" : ""} deployments failed${reason === null ? "" : `, the newest with: ${reason}`}. ${attempting ? `${what} is ${deployment.status} again.` : "Nothing newer is queued."}`,
+    detail: `The last ${String(count)}${more ? " or more" : ""} deployments failed${cause}. ${attempting ? `${what} is ${deployment.status} again.` : "Nothing newer is queued."}`,
     at: attempting
       ? deployment.createdAt.toISOString()
       : (deployment.finishedAt?.toISOString() ?? null),
