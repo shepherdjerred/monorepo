@@ -6,14 +6,33 @@ afterEach(() => vi.unstubAllGlobals());
 const page = "https://v2.streameast.ga/nba/synthetic-game/3";
 const html =
   '<script>var _seEsBoot = {"t":"synthetic-ticket","hs":"https://hs.embedse.com/v/hs"};</script>';
+const PLAYLIST =
+  "#EXTM3U\n#EXTINF:2,\nhttps://p16-common-sign.tiktokcdn.com/synthetic.image\n";
+
+function stubLoaderUpstream(
+  segment: () => Response,
+  onHandshake?: (options?: RequestInit) => void,
+): void {
+  vi.stubGlobal("fetch", async (url: string | URL, options?: RequestInit) => {
+    const target = String(url);
+    if (target.endsWith("/v/hs")) {
+      onHandshake?.(options);
+      return Response.json({
+        ok: true,
+        q: "https://hs.embedse.com/q/synthetic/index.m3u8",
+      });
+    }
+    return target.endsWith(".m3u8") ? new Response(PLAYLIST) : segment();
+  });
+}
 
 describe("native loader HLS relay", () => {
   it("unwraps media, rejects arbitrary routes and releases its listener", async () => {
     const originalFetch = fetch;
     const bytes = new Uint8Array([71, 0, 1, 2]);
-    vi.stubGlobal("fetch", async (url: string | URL, options?: RequestInit) => {
-      const target = String(url);
-      if (target.endsWith("/v/hs")) {
+    stubLoaderUpstream(
+      () => new Response(sportsPng(bytes)),
+      (options) => {
         expect(options?.headers).toMatchObject({
           "User-Agent": "actual-browser",
         });
@@ -23,17 +42,8 @@ describe("native loader HLS relay", () => {
           mt: "synthetic-ticket",
           q: 1,
         });
-        return Response.json({
-          ok: true,
-          q: "https://hs.embedse.com/q/synthetic/index.m3u8",
-        });
-      }
-      return target.endsWith(".m3u8")
-        ? new Response(
-            "#EXTM3U\n#EXTINF:2,\nhttps://p16-common-sign.tiktokcdn.com/synthetic.image\n",
-          )
-        : new Response(sportsPng(bytes));
-    });
+      },
+    );
     const prepared = await prepareLoaderHls(
       html,
       page,
@@ -108,17 +118,7 @@ describe("native loader HLS relay", () => {
     const originalFetch = fetch;
     const bytes = new Uint8Array([71, 0, 1, 2]);
     let segmentRequests = 0;
-    vi.stubGlobal("fetch", async (url: string | URL) => {
-      const target = String(url);
-      if (target.endsWith("/v/hs"))
-        return Response.json({
-          ok: true,
-          q: "https://hs.embedse.com/q/synthetic/index.m3u8",
-        });
-      if (target.endsWith(".m3u8"))
-        return new Response(
-          "#EXTM3U\n#EXTINF:2,\nhttps://p16-common-sign.tiktokcdn.com/synthetic.image\n",
-        );
+    stubLoaderUpstream(() => {
       segmentRequests += 1;
       return segmentRequests < 3
         ? new Response("upstream flap", { status: 502 })

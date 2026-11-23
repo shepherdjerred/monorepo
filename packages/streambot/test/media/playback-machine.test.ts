@@ -826,22 +826,28 @@ describe("crash recovery ladder", () => {
   });
 });
 
+function countingResolver(shouldFail: (call: number) => boolean) {
+  let calls = 0;
+  const resolveSource: PlaybackActors["resolveSource"] = (input) => {
+    calls += 1;
+    if (shouldFail(calls))
+      return Promise.reject(new Error("provider unavailable"));
+    const { source } = input;
+    return Promise.resolve({
+      title: source.kind === "file" ? source.title : "x",
+      ffmpegInput: "resolved:movie",
+      mediaKind: "video" as const,
+      chapters: [],
+    });
+  };
+  return { resolveSource, calls: () => calls };
+}
+
 describe("crash recovery — state cleanup", () => {
   test("a failed re-resolve during crash recovery retries instead of dropping the item", async () => {
-    let resolveCalls = 0;
+    const resolver = countingResolver((call) => call === 2);
     const { actor, stream } = await startFilePlayback(["movie"], {
-      resolveSource: (input) => {
-        resolveCalls += 1;
-        if (resolveCalls === 2)
-          return Promise.reject(new Error("provider session endpoint flapped"));
-        const { source } = input;
-        return Promise.resolve({
-          title: source.kind === "file" ? source.title : "x",
-          ffmpegInput: "resolved:movie",
-          mediaKind: "video",
-          chapters: [],
-        });
-      },
+      resolveSource: resolver.resolveSource,
     });
 
     stream.crashCurrent(crashError(42));
@@ -850,7 +856,7 @@ describe("crash recovery — state cleanup", () => {
       (s) => s.matches("streaming") && stream.invocationCount() === 2,
       WAIT,
     );
-    expect(resolveCalls).toBe(3);
+    expect(resolver.calls()).toBe(3);
     expect(actor.getSnapshot().context.crashNotice).toMatchObject({
       kind: "retry",
       attempt: 2,
@@ -859,26 +865,15 @@ describe("crash recovery — state cleanup", () => {
   });
 
   test("repeated re-resolve failures during crash recovery give up after the budget", async () => {
-    let resolveCalls = 0;
+    const resolver = countingResolver((call) => call > 1);
     const { actor, stream } = await startFilePlayback(["movie"], {
-      resolveSource: (input) => {
-        resolveCalls += 1;
-        if (resolveCalls > 1)
-          return Promise.reject(new Error("provider unavailable"));
-        const { source } = input;
-        return Promise.resolve({
-          title: source.kind === "file" ? source.title : "x",
-          ffmpegInput: "resolved:movie",
-          mediaKind: "video",
-          chapters: [],
-        });
-      },
+      resolveSource: resolver.resolveSource,
     });
 
     stream.crashCurrent(crashError(42));
     await waitFor(actor, (s) => s.matches("idle"), WAIT);
     // Initial resolve + one re-resolve per remaining crash-budget attempt.
-    expect(resolveCalls).toBe(4);
+    expect(resolver.calls()).toBe(4);
     expect(actor.getSnapshot().context.crashNotice?.kind).toBe("gave-up");
     expect(actor.getSnapshot().context.crashRetries).toBe(0);
   });
