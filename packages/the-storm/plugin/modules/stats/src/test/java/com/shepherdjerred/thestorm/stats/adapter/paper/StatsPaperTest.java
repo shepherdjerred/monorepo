@@ -283,13 +283,23 @@ final class StatsPaperTest {
     customServices.provide(Wallets.class, wallets);
 
     var siblingCacheCleared = new java.util.concurrent.atomic.AtomicBoolean(false);
+    var savedArenaWave = new java.util.concurrent.atomic.AtomicInteger(12);
     var quests = mock(QuestCompletions.class);
     when(quests.counted(carol.getUniqueId()))
         .thenAnswer(inv -> siblingCacheCleared.get() ? OptionalInt.empty() : OptionalInt.of(7));
-    when(quests.counted(dan.getUniqueId())).thenReturn(OptionalInt.of(2));
+    when(quests.counted(dan.getUniqueId())).thenReturn(OptionalInt.empty());
     customServices.provide(QuestCompletions.class, quests);
 
-    // Register sibling MONITOR quit listener BEFORE StatsSessionListener, matching TheStormPlugin
+    customServices.provide(ArenaCatalog.class, () -> List.of("colosseum"));
+    var arenaRecords = mock(ArenaRecords.class);
+    when(arenaRecords.bestWave(carol.getUniqueId(), "colosseum"))
+        .thenAnswer(inv -> CompletableFuture.completedFuture(OptionalInt.of(savedArenaWave.get())));
+    when(arenaRecords.bestWave(dan.getUniqueId(), "colosseum"))
+        .thenReturn(CompletableFuture.completedFuture(OptionalInt.empty()));
+    customServices.provide(ArenaRecords.class, arenaRecords);
+
+    // Register sibling MONITOR quit listener BEFORE StatsSessionListener, matching TheStormPlugin:
+    // evicts quests cache AND persists final Mob Arena wave record at MONITOR.
     var siblingQuitListener = new org.bukkit.event.Listener() {};
     server
         .getPluginManager()
@@ -301,6 +311,7 @@ final class StatsPaperTest {
               if (rawEvent instanceof org.bukkit.event.player.PlayerQuitEvent quitEvent
                   && quitEvent.getPlayer().getUniqueId().equals(carol.getUniqueId())) {
                 siblingCacheCleared.set(true);
+                savedArenaWave.set(20);
               }
             },
             harnessPlugin);
@@ -332,7 +343,8 @@ final class StatsPaperTest {
         var sampler =
             new StatsSampler(
                 new StatsSampler.Context(server, customService, ports, reader), now::get, logger);
-        var listener = new StatsSessionListener(customService, reader, sampler::samplePlayer);
+        var listener =
+            new StatsSessionListener(customService, reader, sampler::prepareQuitSnapshot);
         server.getPluginManager().registerEvents(listener, harnessPlugin);
         var unsub = afkTracker.observe((uuid, active) -> customService.syncAfk(uuid, !active));
 
@@ -383,6 +395,31 @@ final class StatsPaperTest {
           assertThat(carolSummary.connectedMs()).isEqualTo(50_000L);
           assertThat(carolSummary.activeMs()).isEqualTo(25_000L);
 
+          // Simulate a late completion from an earlier periodic sample — must NOT overwrite quit!
+          customService.bufferPlayerSnapshot(
+              new StatsWire.PlayerGameplaySnapshot(
+                  carol.getUniqueId().toString(),
+                  "Carol",
+                  now.get().minusSeconds(15).toString(),
+                  null,
+                  "default",
+                  99L,
+                  null,
+                  null,
+                  0,
+                  0,
+                  null,
+                  0,
+                  Map.of(),
+                  null,
+                  null,
+                  Map.of(),
+                  0,
+                  0,
+                  0,
+                  0,
+                  0));
+
           customService.flush().get();
           var quitSnapshots =
               exportedBatches.stream().flatMap(b -> b.playerSnapshots().stream()).toList();
@@ -390,6 +427,7 @@ final class StatsPaperTest {
               .extracting(StatsWire.PlayerGameplaySnapshot::coins)
               .containsExactly(1900L);
           assertThat(quitSnapshots.getFirst().questsCompleted()).isEqualTo(7);
+          assertThat(quitSnapshots.getFirst().arenaBestWaves()).containsEntry("colosseum", 20);
         } finally {
           org.bukkit.event.HandlerList.unregisterAll(listener);
           org.bukkit.event.HandlerList.unregisterAll(siblingQuitListener);

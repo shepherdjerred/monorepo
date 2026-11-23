@@ -206,7 +206,14 @@ public final class StatsService implements AutoCloseable {
   }
 
   private void putPlayerSnapshot(StatsWire.PlayerGameplaySnapshot snapshot) {
-    pendingPlayerSnapshots.put(UUID.fromString(snapshot.playerUuid()), snapshot);
+    var playerUuid = UUID.fromString(snapshot.playerUuid());
+    pendingPlayerSnapshots.merge(
+        playerUuid,
+        snapshot,
+        (existing, incoming) ->
+            Instant.parse(incoming.capturedAt()).isBefore(Instant.parse(existing.capturedAt()))
+                ? existing
+                : incoming);
     if (pendingPlayerSnapshots.size() > 500) {
       var first = pendingPlayerSnapshots.keySet().iterator();
       if (first.hasNext()) {
@@ -329,7 +336,7 @@ public final class StatsService implements AutoCloseable {
       pendingServerSnapshot.compareAndSet(null, serverSnap);
     }
     for (var snap : playerSnaps) {
-      pendingPlayerSnapshots.putIfAbsent(UUID.fromString(snap.playerUuid()), snap);
+      putPlayerSnapshot(snap);
     }
   }
 

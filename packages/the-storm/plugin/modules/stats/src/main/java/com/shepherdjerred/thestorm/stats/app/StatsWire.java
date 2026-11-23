@@ -130,8 +130,8 @@ public final class StatsWire {
       @Nullable String topSkill,
       int topSkillLevel,
       Map<String, Integer> skills,
-      Map<String, Integer> tracks,
-      int questsCompleted,
+      @Nullable Map<String, Integer> tracks,
+      @Nullable Integer questsCompleted,
       Map<String, Integer> arenaBestWaves,
       int rwfMatches,
       int rwfWins,
@@ -140,7 +140,7 @@ public final class StatsWire {
       int rwfDeaths) {
     public PlayerGameplaySnapshot {
       skills = Map.copyOf(skills);
-      tracks = Map.copyOf(tracks);
+      tracks = tracks == null ? null : Map.copyOf(tracks);
       arenaBestWaves = Map.copyOf(arenaBestWaves);
     }
   }

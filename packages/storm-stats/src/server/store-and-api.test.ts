@@ -393,8 +393,8 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
           topSkill: null,
           topSkillLevel: 0,
           skills: {},
-          tracks: {},
-          questsCompleted: 1,
+          tracks: { explorer: 4 },
+          questsCompleted: 9,
           arenaBestWaves: {},
           rwfMatches: 0,
           rwfWins: 0,
@@ -423,6 +423,7 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
     });
 
     // Sub-second snapshot 50ms after whole-second "12:00:00Z" must supersede 500 -> 950 coins
+    // while null unloaded tracks/questsCompleted preserve existing progression!
     store.ingestBatch({
       schemaVersion: 1,
       batchId: "77777777-7777-4000-8000-000000000002",
@@ -444,8 +445,8 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
           topSkill: null,
           topSkillLevel: 0,
           skills: {},
-          tracks: {},
-          questsCompleted: 2,
+          tracks: null,
+          questsCompleted: null,
           arenaBestWaves: {},
           rwfMatches: 0,
           rwfWins: 0,
@@ -462,6 +463,8 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
     expect(freshProfile?.player.firstSeenAt).toBe("2026-11-22T12:00:00.000Z");
     expect(freshProfile?.player.lastSeenAt).toBe("2026-11-22T12:00:00.500Z");
     expect(freshProfile?.gameplay?.coins).toBe(950);
+    expect(freshProfile?.gameplay?.tracks).toEqual({ explorer: 4 });
+    expect(freshProfile?.gameplay?.questsCompleted).toBe(9);
     expect(freshProfile?.player.online).toBe(true);
     expect(store.getOverview(freshNow).onlineNow).toBe(1);
     expect(store.onlineCount(freshNow)).toBe(1);

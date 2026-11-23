@@ -182,13 +182,26 @@ function applyPlayerSnapshot(db: Database, snap: PlayerGameplaySnapshot): void {
   ).run(snap.nickname, snap.primaryGroup, snap.playerUuid);
 
   const existing = db
-    .query<{ captured_at: string }, [string]>(
-      "SELECT captured_at FROM player_gameplay WHERE player_uuid = ?",
+    .query<
+      {
+        captured_at: string;
+        tracks_json: string;
+        quests_completed: number;
+      },
+      [string]
+    >(
+      "SELECT captured_at, tracks_json, quests_completed FROM player_gameplay WHERE player_uuid = ?",
     )
     .get(snap.playerUuid);
   if (existing !== null && existing.captured_at > snap.capturedAt) {
     return;
   }
+  const tracksJson =
+    snap.tracks === null
+      ? (existing?.tracks_json ?? "{}")
+      : JSON.stringify(snap.tracks);
+  const questsCompleted =
+    snap.questsCompleted ?? existing?.quests_completed ?? 0;
 
   db.query(
     `INSERT INTO player_gameplay (
@@ -229,8 +242,8 @@ function applyPlayerSnapshot(db: Database, snap: PlayerGameplaySnapshot): void {
     snap.topSkill,
     snap.topSkillLevel,
     JSON.stringify(snap.skills),
-    JSON.stringify(snap.tracks),
-    snap.questsCompleted,
+    tracksJson,
+    questsCompleted,
     JSON.stringify(snap.arenaBestWaves),
     snap.rwfMatches,
     snap.rwfWins,

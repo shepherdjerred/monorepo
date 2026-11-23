@@ -89,7 +89,8 @@ public final class StatsModule implements StormModule {
             new StatsSampler.Context(server, service, ports, stateReader),
             context.time(),
             context.logger());
-    var sessionListener = new StatsSessionListener(service, stateReader, sampler::samplePlayer);
+    var sessionListener =
+        new StatsSessionListener(service, stateReader, sampler::prepareQuitSnapshot);
     var combatListener = new StatsCombatListener(service, stateReader);
     server.getPluginManager().registerEvents(sessionListener, context.plugin());
     server.getPluginManager().registerEvents(combatListener, context.plugin());

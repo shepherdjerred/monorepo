@@ -121,31 +121,39 @@ public final class StatsSampler {
             });
   }
 
-  /** Captures and buffers a final gameplay snapshot for a disconnecting human player. */
-  public void samplePlayer(Player player) {
+  /**
+   * Captures main-thread player caches before sibling quit handlers clear them, returning a
+   * callback to trigger async database enrichment after sibling {@code MONITOR} quit handlers save
+   * final arena/minigame records.
+   */
+  public Runnable prepareQuitSnapshot(Player player) {
     if (!Humans.isHuman(player)) {
-      return;
+      return () -> {};
     }
-    var capturedAt = Instant.ofEpochMilli(time.instant().toEpochMilli());
+    var initialAt = Instant.ofEpochMilli(time.instant().toEpochMilli());
     var townNamesById =
         ports.townMembership().flatMap(m -> m.townIdOf(player.getUniqueId())).isPresent()
             ? readTownsOnMainThread().namesById()
             : Map.<UUID, String>of();
-    var capture = captureMainThreadPlayer(player, capturedAt, townNamesById);
-    var _ =
-        enrichOffThread(capture)
-            .whenComplete((snapshot, failure) -> {
-              if (failure != null) {
-                logger.warn(
-                    "Gameplay snapshot enrichment encountered an error for {}",
-                    capture.playerUuid(),
-                    failure);
-                return;
-              }
-              if (snapshot != null) {
-                service.bufferPlayerSnapshot(snapshot);
-              }
-            });
+    var capture = captureMainThreadPlayer(player, initialAt, townNamesById);
+    return () -> {
+      var quitAt = Instant.ofEpochMilli(time.instant().toEpochMilli());
+      var stamped = quitAt.isAfter(capture.capturedAt()) ? capture.withCapturedAt(quitAt) : capture;
+      var _ =
+          enrichOffThread(stamped)
+              .whenComplete((snapshot, failure) -> {
+                if (failure != null) {
+                  logger.warn(
+                      "Gameplay snapshot enrichment encountered an error for {}",
+                      stamped.playerUuid(),
+                      failure);
+                  return;
+                }
+                if (snapshot != null) {
+                  service.bufferPlayerSnapshot(snapshot);
+                }
+              });
+    };
   }
 
   private TownsCapture readTownsOnMainThread() {
@@ -215,23 +223,6 @@ public final class StatsSampler {
         townRole = resolveTownRole(uuid, townId.orElseThrow());
       }
     }
-    var tracks = new LinkedHashMap<String, Integer>();
-    ports
-        .trackLevels()
-        .ifPresent(levels -> {
-          if (levels.isLoaded(uuid)) {
-            for (var track : Track.values()) {
-              tracks.put(track.id(), Math.max(0, levels.level(player, track)));
-            }
-          }
-        });
-    int questsCompleted =
-        ports
-            .questCompletions()
-            .map(q -> q.counted(uuid))
-            .filter(OptionalInt::isPresent)
-            .map(count -> Math.max(0, count.getAsInt()))
-            .orElse(0);
     return new MainThreadPlayerCapture(
         uuid,
         CombatClassifier.boundName(player.getName()),
@@ -241,8 +232,31 @@ public final class StatsSampler {
         townName,
         townRole,
         Math.max(0, townClaims),
-        Map.copyOf(tracks),
-        questsCompleted);
+        captureTracks(player),
+        captureQuestsCompleted(uuid));
+  }
+
+  private @Nullable Map<String, Integer> captureTracks(Player player) {
+    if (ports.trackLevels().isEmpty()) {
+      return Map.of();
+    }
+    var levels = ports.trackLevels().orElseThrow();
+    if (!levels.isLoaded(player.getUniqueId())) {
+      return null;
+    }
+    var loadedTracks = new LinkedHashMap<String, Integer>();
+    for (var track : Track.values()) {
+      loadedTracks.put(track.id(), Math.max(0, levels.level(player, track)));
+    }
+    return Map.copyOf(loadedTracks);
+  }
+
+  private @Nullable Integer captureQuestsCompleted(UUID playerUuid) {
+    if (ports.questCompletions().isEmpty()) {
+      return 0;
+    }
+    var counted = ports.questCompletions().orElseThrow().counted(playerUuid);
+    return counted.isPresent() ? Math.max(0, counted.getAsInt()) : null;
   }
 
   private String resolveTownRole(UUID playerUuid, UUID townId) {
@@ -381,8 +395,22 @@ public final class StatsSampler {
       @Nullable String townName,
       @Nullable String townRole,
       int townClaims,
-      Map<String, Integer> tracks,
-      int questsCompleted) {}
+      @Nullable Map<String, Integer> tracks,
+      @Nullable Integer questsCompleted) {
+    MainThreadPlayerCapture withCapturedAt(Instant updatedAt) {
+      return new MainThreadPlayerCapture(
+          playerUuid,
+          playerName,
+          updatedAt,
+          nickname,
+          primaryGroup,
+          townName,
+          townRole,
+          townClaims,
+          tracks,
+          questsCompleted);
+    }
+  }
 
   private record SkillSnapshot(
       int powerLevel, @Nullable String topSkill, int topSkillLevel, Map<String, Integer> levels) {
