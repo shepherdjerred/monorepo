@@ -4,13 +4,13 @@ import {
   IsoTimestampSchema,
   NonNegFloatSchema,
   NonNegIntSchema,
+  PlayerUuidSchema,
   TownSummarySnapshotSchema,
-  UuidSchema,
   WeaponStatSchema,
 } from "./contract.ts";
 
 export const PvpLeaderRowSchema = z.strictObject({
-  uuid: UuidSchema,
+  uuid: PlayerUuidSchema,
   name: z.string(),
   kills: NonNegIntSchema,
   deaths: NonNegIntSchema,
@@ -48,7 +48,7 @@ export const GameplayOverviewResponseSchema = z.strictObject({
   generatedAt: IsoTimestampSchema,
   economyTop: z.array(
     z.strictObject({
-      uuid: UuidSchema,
+      uuid: PlayerUuidSchema,
       name: z.string(),
       coins: NonNegIntSchema,
       townName: z.string().nullable(),
@@ -57,7 +57,7 @@ export const GameplayOverviewResponseSchema = z.strictObject({
   towns: z.array(TownSummarySnapshotSchema),
   skillsTop: z.array(
     z.strictObject({
-      uuid: UuidSchema,
+      uuid: PlayerUuidSchema,
       name: z.string(),
       powerLevel: NonNegIntSchema,
       topSkill: z.string().nullable(),
@@ -66,7 +66,7 @@ export const GameplayOverviewResponseSchema = z.strictObject({
   ),
   rwfTop: z.array(
     z.strictObject({
-      uuid: UuidSchema,
+      uuid: PlayerUuidSchema,
       name: z.string(),
       matches: NonNegIntSchema,
       wins: NonNegIntSchema,
@@ -78,14 +78,14 @@ export const GameplayOverviewResponseSchema = z.strictObject({
   arenaTop: z.array(
     z.strictObject({
       arena: z.string(),
-      uuid: UuidSchema,
+      uuid: PlayerUuidSchema,
       name: z.string(),
       bestWave: NonNegIntSchema,
     }),
   ),
   questsTop: z.array(
     z.strictObject({
-      uuid: UuidSchema,
+      uuid: PlayerUuidSchema,
       name: z.string(),
       questsCompleted: NonNegIntSchema,
       powerLevel: NonNegIntSchema,

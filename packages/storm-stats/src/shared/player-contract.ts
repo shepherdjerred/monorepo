@@ -10,8 +10,8 @@ import {
   NonNegIntSchema,
   NullablePingSchema,
   PlatformSchema,
+  PlayerUuidSchema,
   SessionSummarySchema,
-  UuidSchema,
   WeaponStatSchema,
   WorldBucketSchema,
   WorldShareSchema,
@@ -59,7 +59,7 @@ export const PlayerCalendarDaySchema = z.strictObject({
 export type PlayerCalendarDay = z.infer<typeof PlayerCalendarDaySchema>;
 
 export const PlayerProfileIdentitySchema = z.strictObject({
-  uuid: UuidSchema,
+  uuid: PlayerUuidSchema,
   name: z.string(),
   nickname: z.string().nullable(),
   online: z.boolean(),

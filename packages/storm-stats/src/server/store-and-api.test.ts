@@ -478,3 +478,143 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
     store.close();
   }
 });
+
+test("accepts Floodgate Bedrock player UUIDs while keeping RFC checks for batch and event IDs", async () => {
+  const store = StormStatsStore.open(":memory:");
+  try {
+    const ingestApp = createIngestApp({
+      store,
+      ingestToken: TEST_TOKEN,
+      ingestEnabled: async () => true,
+      maxBodyBytes: 65_536,
+    });
+    const publicApp = createPublicApp({
+      store,
+      publicEnabled: async () => true,
+      now: () => FIXED_NOW,
+    });
+
+    const bedrockUuid = "00000000-0000-0000-0009-01F9E3D21001";
+    const normalizedBedrockUuid = "00000000-0000-0000-0009-01f9e3d21001";
+    const sessionId = "99999999-9999-4000-8000-000000000001";
+
+    const bedrockBatch = {
+      schemaVersion: 1,
+      batchId: "99999999-9999-4000-8000-000000000002",
+      serverName: "The Storm",
+      sentAt: "2026-11-22T18:00:00Z",
+      events: [
+        {
+          type: "session_started",
+          eventId: "99999999-9999-4000-8000-000000000003",
+          occurredAt: "2026-11-22T18:00:00Z",
+          sessionId,
+          playerUuid: bedrockUuid,
+          playerName: ".BedrockBuilder",
+          firstSeenAt: "2026-11-22T18:00:00Z",
+          platform: "bedrock",
+          clientVersion: "1.21.50",
+          clientBrand: "Geyser",
+          joinAddress: "bedrock.ts-mc.net",
+          countryCode: null,
+          countryName: null,
+        },
+        {
+          type: "connection_bounce",
+          eventId: "99999999-9999-4000-8000-000000000004",
+          occurredAt: "2026-11-22T17:59:00Z",
+          playerUuid: bedrockUuid,
+          playerName: ".BedrockBuilder",
+          category: "full",
+          reason: "Server full",
+          joinAddress: "bedrock.ts-mc.net",
+        },
+      ],
+      playerSnapshots: [
+        {
+          playerUuid: bedrockUuid,
+          playerName: ".BedrockBuilder",
+          capturedAt: "2026-11-22T18:00:00Z",
+          nickname: null,
+          primaryGroup: "default",
+          coins: 300,
+          townName: null,
+          townRole: null,
+          townClaims: 0,
+          powerLevel: 8,
+          topSkill: "mining",
+          topSkillLevel: 8,
+          skills: { mining: 8 },
+          tracks: {},
+          questsCompleted: 3,
+          arenaBestWaves: {},
+          rwfMatches: 0,
+          rwfWins: 0,
+          rwfLosses: 0,
+          rwfKills: 0,
+          rwfDeaths: 0,
+        },
+      ],
+      serverSnapshot: {
+        capturedAt: "2026-11-22T19:59:00Z",
+        onlinePlayers: [
+          {
+            uuid: bedrockUuid,
+            name: ".BedrockBuilder",
+            mode: "survival",
+            world: "world",
+            afk: false,
+            pingMs: 45,
+            sessionStartedAt: "2026-11-22T18:00:00Z",
+          },
+        ],
+        maxPlayers: 64,
+        townsCount: 0,
+        towns: [],
+      },
+    };
+
+    const okRes = await ingestApp.request("/api/v1/ingest", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${TEST_TOKEN}`,
+      },
+      body: JSON.stringify(bedrockBatch),
+    });
+    expect(okRes.status).toBe(200);
+
+    // Non-RFC batchId must still fail strict generated-ID validation
+    const invalidBatchIdRes = await ingestApp.request("/api/v1/ingest", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${TEST_TOKEN}`,
+      },
+      body: JSON.stringify({
+        ...bedrockBatch,
+        batchId: normalizedBedrockUuid,
+      }),
+    });
+    expect(invalidBatchIdRes.status).toBe(400);
+
+    const profileRes = await publicApp.request(
+      `/api/v1/players/${normalizedBedrockUuid}`,
+    );
+    expect(profileRes.status).toBe(200);
+    const parsedProfile = PlayerProfileResponseSchema.parse(
+      await profileRes.json(),
+    );
+    expect(parsedProfile.player.uuid).toBe(normalizedBedrockUuid);
+    expect(parsedProfile.player.platform).toBe("bedrock");
+
+    const overviewRes = await publicApp.request("/api/v1/overview");
+    expect(overviewRes.status).toBe(200);
+    const parsedOverview = ServerOverviewResponseSchema.parse(
+      await overviewRes.json(),
+    );
+    expect(parsedOverview.onlinePlayers[0]?.uuid).toBe(normalizedBedrockUuid);
+  } finally {
+    store.close();
+  }
+});

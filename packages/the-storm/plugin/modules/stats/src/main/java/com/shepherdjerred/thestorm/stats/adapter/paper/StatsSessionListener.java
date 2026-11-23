@@ -116,6 +116,15 @@ public final class StatsSessionListener implements Listener {
             null));
   }
 
+  @EventHandler(priority = EventPriority.LOWEST)
+  public void onPreQuit(PlayerQuitEvent event) {
+    var player = event.getPlayer();
+    if (!Humans.isHuman(player)) {
+      return;
+    }
+    onQuitSnapshot.accept(player);
+  }
+
   @EventHandler(priority = EventPriority.MONITOR)
   public void onQuit(PlayerQuitEvent event) {
     var player = event.getPlayer();
@@ -124,7 +133,6 @@ public final class StatsSessionListener implements Listener {
     }
     var uuid = player.getUniqueId();
     pendingJoinAddresses.remove(uuid);
-    onQuitSnapshot.accept(player);
     boolean kicked =
         kickedPlayers.remove(uuid) || event.getReason() == PlayerQuitEvent.QuitReason.KICKED;
     service.playerLeft(

@@ -79,6 +79,10 @@ export const IsoTimestampSchema = z.iso
   .transform((value) => normalizeIsoTimestamp(value));
 export const DayStringSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/u);
 export const UuidSchema = z.uuid();
+export const PlayerUuidSchema = z
+  .string()
+  .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu)
+  .transform((value) => value.toLowerCase());
 export const BoundedNameSchema = z.string().min(1).max(64);
 export const NonNegIntSchema = z.number().int().min(0);
 export const NonNegFloatSchema = z.number().min(0);
@@ -96,7 +100,7 @@ export const SessionStartedEventSchema = z.strictObject({
   eventId: UuidSchema,
   occurredAt: IsoTimestampSchema,
   sessionId: UuidSchema,
-  playerUuid: UuidSchema,
+  playerUuid: PlayerUuidSchema,
   playerName: BoundedNameSchema,
   firstSeenAt: IsoTimestampSchema,
   platform: PlatformSchema,
@@ -116,7 +120,7 @@ export const SessionIntervalEventSchema = z.strictObject({
   occurredAt: IsoTimestampSchema,
   intervalEnd: IsoTimestampSchema,
   sessionId: UuidSchema,
-  playerUuid: UuidSchema,
+  playerUuid: PlayerUuidSchema,
   playerName: BoundedNameSchema,
   world: WorldBucketSchema,
   mode: GameModeSchema,
@@ -130,7 +134,7 @@ export const SessionEndedEventSchema = z.strictObject({
   eventId: UuidSchema,
   occurredAt: IsoTimestampSchema,
   sessionId: UuidSchema,
-  playerUuid: UuidSchema,
+  playerUuid: PlayerUuidSchema,
   playerName: BoundedNameSchema,
   startedAt: IsoTimestampSchema,
   connectedMs: NonNegativeMsSchema,
@@ -147,9 +151,9 @@ export const CombatEventSchema = z.strictObject({
   occurredAt: IsoTimestampSchema,
   sessionId: UuidSchema.nullable(),
   combatKind: CombatKindSchema,
-  killerUuid: UuidSchema.nullable(),
+  killerUuid: PlayerUuidSchema.nullable(),
   killerName: BoundedNameSchema.nullable(),
-  victimUuid: UuidSchema.nullable(),
+  victimUuid: PlayerUuidSchema.nullable(),
   victimName: BoundedNameSchema.nullable(),
   mobType: z.string().min(1).max(64).nullable(),
   weapon: z.string().min(1).max(80),
@@ -160,7 +164,7 @@ export const ConnectionBounceEventSchema = z.strictObject({
   type: z.literal("connection_bounce"),
   eventId: UuidSchema,
   occurredAt: IsoTimestampSchema,
-  playerUuid: UuidSchema.nullable(),
+  playerUuid: PlayerUuidSchema.nullable(),
   playerName: BoundedNameSchema,
   category: BounceCategorySchema,
   reason: z.string().max(240),
@@ -177,7 +181,7 @@ export const IngestEventSchema = z.discriminatedUnion("type", [
 export type IngestEvent = z.infer<typeof IngestEventSchema>;
 
 export const PlayerGameplaySnapshotSchema = z.strictObject({
-  playerUuid: UuidSchema,
+  playerUuid: PlayerUuidSchema,
   playerName: BoundedNameSchema,
   capturedAt: IsoTimestampSchema,
   nickname: z.string().min(1).max(64).nullable(),
@@ -204,7 +208,7 @@ export type PlayerGameplaySnapshot = z.infer<
 >;
 
 export const OnlinePlayerSummarySchema = z.strictObject({
-  uuid: UuidSchema,
+  uuid: PlayerUuidSchema,
   name: BoundedNameSchema,
   mode: GameModeSchema,
   world: WorldBucketSchema,
@@ -300,7 +304,7 @@ export type ModeShare = z.infer<typeof ModeShareSchema>;
 
 export const SessionSummarySchema = z.strictObject({
   sessionId: UuidSchema,
-  playerUuid: UuidSchema,
+  playerUuid: PlayerUuidSchema,
   playerName: z.string(),
   startedAt: IsoTimestampSchema,
   endedAt: IsoTimestampSchema.nullable(),
@@ -428,7 +432,7 @@ export const StaffPlayerRowSummarySchema = z.strictObject({
 export type StaffPlayerRowSummary = z.infer<typeof StaffPlayerRowSummarySchema>;
 
 export const PlayerDirectoryRowSchema = z.strictObject({
-  uuid: UuidSchema,
+  uuid: PlayerUuidSchema,
   name: z.string(),
   nickname: z.string().nullable(),
   online: z.boolean(),
@@ -475,9 +479,9 @@ export const CombatFeedRowSchema = z.strictObject({
   eventId: UuidSchema,
   occurredAt: IsoTimestampSchema,
   combatKind: CombatKindSchema,
-  killerUuid: UuidSchema.nullable(),
+  killerUuid: PlayerUuidSchema.nullable(),
   killerName: z.string().nullable(),
-  victimUuid: UuidSchema.nullable(),
+  victimUuid: PlayerUuidSchema.nullable(),
   victimName: z.string().nullable(),
   mobType: z.string().nullable(),
   weapon: z.string(),

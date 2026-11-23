@@ -8,6 +8,7 @@ import {
   PercentSchema,
   PlatformSchema,
   PlayerDirectoryRowSchema,
+  PlayerUuidSchema,
   UuidSchema,
 } from "./contract.ts";
 
@@ -46,7 +47,7 @@ export const StaffBouncesResponseSchema = z.strictObject({
     z.strictObject({
       eventId: UuidSchema,
       occurredAt: IsoTimestampSchema,
-      playerUuid: UuidSchema.nullable(),
+      playerUuid: PlayerUuidSchema.nullable(),
       playerName: z.string(),
       category: BounceCategorySchema,
       reason: z.string(),
@@ -78,7 +79,7 @@ export type StaffQueryResponse = z.infer<typeof StaffQueryResponseSchema>;
 
 export const StaffPlayerOverlayResponseSchema = z.strictObject({
   generatedAt: IsoTimestampSchema,
-  uuid: UuidSchema,
+  uuid: PlayerUuidSchema,
   name: z.string(),
   joinAddresses: z.array(
     z.strictObject({

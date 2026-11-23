@@ -2,9 +2,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import {
+  QUERY_ERROR_RETRY_MS,
   QUERY_STALE_TIME_MS,
+  refetchApiUrl,
   resetQueryCacheForTests,
   revalidateApiUrlIfStale,
+  subscribeToApiQuery,
   useApiQuery,
 } from "./api.ts";
 import { App } from "./app.tsx";
@@ -175,6 +178,64 @@ describe("accessible table sorting and shell landmarks", () => {
       revalidateApiUrlIfStale("/api/v1/test-live", schema);
       await vi.advanceTimersByTimeAsync(10);
       expect(calls).toBe(2);
+    } finally {
+      fetchSpy.mockRestore();
+      resetQueryCacheForTests();
+      vi.useRealTimers();
+    }
+  });
+
+  test("throttles failed query retries across resubscriptions until cooldown or manual refetch", async () => {
+    resetQueryCacheForTests();
+    vi.useFakeTimers();
+    let calls = 0;
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async () => {
+        calls += 1;
+        return Response.json({ error: "Player not found" }, { status: 404 });
+      });
+
+    const schema = z.object({ name: z.string() });
+    try {
+      vi.setSystemTime(new Date("2026-11-22T20:00:00Z"));
+      const unsubFirst = subscribeToApiQuery(
+        "/api/v1/players/unknown",
+        schema,
+        () => {
+          // Listener registered
+        },
+      );
+      await vi.advanceTimersByTimeAsync(10);
+      expect(calls).toBe(1);
+      unsubFirst();
+
+      // Immediate resubscription must not loop-fetch a 404 within QUERY_ERROR_RETRY_MS
+      const unsubSecond = subscribeToApiQuery(
+        "/api/v1/players/unknown",
+        schema,
+        () => {
+          // Resubscribed within error retry window
+        },
+      );
+      await vi.advanceTimersByTimeAsync(10);
+      expect(calls).toBe(1);
+
+      // Explicit manual refetch bypasses error cooldown immediately
+      refetchApiUrl("/api/v1/players/unknown", schema);
+      await vi.advanceTimersByTimeAsync(10);
+      expect(calls).toBe(2);
+
+      // Past QUERY_ERROR_RETRY_MS, background revalidation retries cleanly
+      vi.setSystemTime(
+        new Date(
+          Date.parse("2026-11-22T20:00:00Z") + QUERY_ERROR_RETRY_MS + 1000,
+        ),
+      );
+      revalidateApiUrlIfStale("/api/v1/players/unknown", schema);
+      await vi.advanceTimersByTimeAsync(10);
+      expect(calls).toBe(3);
+      unsubSecond();
     } finally {
       fetchSpy.mockRestore();
       resetQueryCacheForTests();

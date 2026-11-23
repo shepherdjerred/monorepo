@@ -86,6 +86,7 @@ final class StatsPaperTest {
   @TempDir Path tempDir;
 
   private ServerMock server;
+  private JavaPlugin harnessPlugin;
   private StormDatabase database;
   private StatsModule module;
   private Services services;
@@ -126,7 +127,7 @@ final class StatsPaperTest {
                   ProductAnalytics.disabled());
           module.enable(context);
         };
-    MockBukkit.load(HarnessPlugin.class);
+    harnessPlugin = MockBukkit.load(HarnessPlugin.class);
   }
 
   @AfterEach
@@ -281,6 +282,29 @@ final class StatsPaperTest {
         .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("wallet db offline")));
     customServices.provide(Wallets.class, wallets);
 
+    var siblingCacheCleared = new java.util.concurrent.atomic.AtomicBoolean(false);
+    var quests = mock(QuestCompletions.class);
+    when(quests.counted(carol.getUniqueId()))
+        .thenAnswer(inv -> siblingCacheCleared.get() ? OptionalInt.empty() : OptionalInt.of(7));
+    when(quests.counted(dan.getUniqueId())).thenReturn(OptionalInt.of(2));
+    customServices.provide(QuestCompletions.class, quests);
+
+    // Register sibling MONITOR quit listener BEFORE StatsSessionListener, matching TheStormPlugin
+    var siblingQuitListener = new org.bukkit.event.Listener() {};
+    server
+        .getPluginManager()
+        .registerEvent(
+            org.bukkit.event.player.PlayerQuitEvent.class,
+            siblingQuitListener,
+            org.bukkit.event.EventPriority.MONITOR,
+            (ignored, rawEvent) -> {
+              if (rawEvent instanceof org.bukkit.event.player.PlayerQuitEvent quitEvent
+                  && quitEvent.getPlayer().getUniqueId().equals(carol.getUniqueId())) {
+                siblingCacheCleared.set(true);
+              }
+            },
+            harnessPlugin);
+
     var customConfig =
         new StatsConfig(
             "The Storm",
@@ -289,77 +313,88 @@ final class StatsPaperTest {
             "STORM_STATS_INGEST_TOKEN",
             15,
             60);
-    var customStore = new JooqStatsStore(database);
     var rng = new SplittableRandom(99L);
     var logger = mock(org.slf4j.Logger.class);
-    try (var customService =
-        new StatsService(
-            new StatsService.Dependencies(
-                customConfig,
-                customStore,
-                recordingTransport,
-                () -> CompletableFuture.completedFuture(true)),
-            new StatsService.Clocks(
-                now::get, () -> new java.util.UUID(rng.nextLong(), rng.nextLong()), logger))) {
-      var ports = StatsPaperPorts.discover(customServices);
-      var reader = new PlayerStateReader(server, ports, now::get);
-      var sampler =
-          new StatsSampler(
-              new StatsSampler.Context(server, customService, ports, reader), now::get, logger);
-      var listener = new StatsSessionListener(customService, reader, sampler::samplePlayer);
-      var unsub = afkTracker.observe((uuid, active) -> customService.syncAfk(uuid, !active));
+    try (var customDatabase = StormDatabase.open(tempDir.resolve("custom-stats.db"))) {
+      customDatabase.migrate("stats", JooqStatsStore.class.getClassLoader());
+      var customStore = new JooqStatsStore(customDatabase);
+      try (var customService =
+          new StatsService(
+              new StatsService.Dependencies(
+                  customConfig,
+                  customStore,
+                  recordingTransport,
+                  () -> CompletableFuture.completedFuture(true)),
+              new StatsService.Clocks(
+                  now::get, () -> new java.util.UUID(rng.nextLong(), rng.nextLong()), logger))) {
+        var ports = StatsPaperPorts.discover(customServices);
+        var reader = new PlayerStateReader(server, ports, now::get);
+        var sampler =
+            new StatsSampler(
+                new StatsSampler.Context(server, customService, ports, reader), now::get, logger);
+        var listener = new StatsSessionListener(customService, reader, sampler::samplePlayer);
+        server.getPluginManager().registerEvents(listener, harnessPlugin);
+        var unsub = afkTracker.observe((uuid, active) -> customService.syncAfk(uuid, !active));
 
-      try {
-        afkTracker.joined(carol.getUniqueId());
-        customService.playerJoined(reader.joinInput(carol, "ts-mc.net"));
-        afkTracker.joined(dan.getUniqueId());
-        customService.playerJoined(reader.joinInput(dan, "ts-mc.net"));
+        try {
+          afkTracker.joined(carol.getUniqueId());
+          customService.playerJoined(reader.joinInput(carol, "ts-mc.net"));
+          afkTracker.joined(dan.getUniqueId());
+          customService.playerJoined(reader.joinInput(dan, "ts-mc.net"));
 
-        // Carol plays active for 10s, goes AFK for 25s, returns active for 10s, then quits at 45s
-        now.set(now.get().plusSeconds(10));
-        assertThat(afkTracker.toggle(carol.getUniqueId())).isTrue();
-        now.set(now.get().plusSeconds(25));
-        assertThat(afkTracker.active(carol.getUniqueId())).isTrue();
-        now.set(now.get().plusSeconds(10));
+          // Carol plays active for 10s, goes AFK for 25s, returns active for 10s, then quits at 45s
+          now.set(now.get().plusSeconds(10));
+          assertThat(afkTracker.toggle(carol.getUniqueId())).isTrue();
+          now.set(now.get().plusSeconds(25));
+          assertThat(afkTracker.active(carol.getUniqueId())).isTrue();
+          now.set(now.get().plusSeconds(10));
 
-        // Sample while both are online: Carol's enrichment succeeds (1250), Dan's fails (omitted!)
-        sampler.sample();
-        customService.flush().get();
-        assertThat(exportedBatches).isNotEmpty();
-        var sampledSnapshots =
-            exportedBatches.stream().flatMap(b -> b.playerSnapshots().stream()).toList();
-        assertThat(sampledSnapshots)
-            .extracting(StatsWire.PlayerGameplaySnapshot::playerName)
-            .containsExactly("Carol");
-        assertThat(sampledSnapshots.getFirst().coins()).isEqualTo(1250L);
+          // Sample while both are online: Carol's enrichment succeeds (1250), Dan's fails
+          // (omitted!)
+          sampler.sample();
+          customService.flush().get();
+          assertThat(exportedBatches).isNotEmpty();
+          var sampledSnapshots =
+              exportedBatches.stream().flatMap(b -> b.playerSnapshots().stream()).toList();
+          assertThat(sampledSnapshots)
+              .extracting(StatsWire.PlayerGameplaySnapshot::playerName)
+              .containsExactly("Carol");
+          assertThat(sampledSnapshots.getFirst().coins()).isEqualTo(1250L);
 
-        exportedBatches.clear();
-        when(wallets.balance(new AccountId.Player(carol.getUniqueId()), CurrencyId.CRYSTALS))
-            .thenReturn(CompletableFuture.completedFuture(Money.crystals(1900L)));
+          exportedBatches.clear();
+          when(wallets.balance(new AccountId.Player(carol.getUniqueId()), CurrencyId.CRYSTALS))
+              .thenReturn(CompletableFuture.completedFuture(Money.crystals(1900L)));
 
-        // Carol earns crystals and quits before the next 60s sampler tick
-        now.set(now.get().plusSeconds(5));
-        listener.onQuit(
-            new org.bukkit.event.player.PlayerQuitEvent(
-                carol,
-                Component.empty(),
-                org.bukkit.event.player.PlayerQuitEvent.QuitReason.DISCONNECTED));
-        afkTracker.left(carol.getUniqueId());
+          // Carol earns crystals and quits before the next 60s sampler tick
+          now.set(now.get().plusSeconds(5));
+          server
+              .getPluginManager()
+              .callEvent(
+                  new org.bukkit.event.player.PlayerQuitEvent(
+                      carol,
+                      Component.empty(),
+                      org.bukkit.event.player.PlayerQuitEvent.QuitReason.DISCONNECTED));
+          assertThat(siblingCacheCleared.get()).isTrue();
+          afkTracker.left(carol.getUniqueId());
 
-        waitForAsyncDb(customService);
-        var carolSummary = customStore.findPlayer("Carol").get().orElseThrow();
-        // 10s active + 25s AFK + 10s active + 5s active = 50s connected, 25s active!
-        assertThat(carolSummary.connectedMs()).isEqualTo(50_000L);
-        assertThat(carolSummary.activeMs()).isEqualTo(25_000L);
+          waitForAsyncDb(customService);
+          var carolSummary = customStore.findPlayer("Carol").get().orElseThrow();
+          // 10s active + 25s AFK + 10s active + 5s active = 50s connected, 25s active!
+          assertThat(carolSummary.connectedMs()).isEqualTo(50_000L);
+          assertThat(carolSummary.activeMs()).isEqualTo(25_000L);
 
-        customService.flush().get();
-        var quitSnapshots =
-            exportedBatches.stream().flatMap(b -> b.playerSnapshots().stream()).toList();
-        assertThat(quitSnapshots)
-            .extracting(StatsWire.PlayerGameplaySnapshot::coins)
-            .containsExactly(1900L);
-      } finally {
-        unsub.run();
+          customService.flush().get();
+          var quitSnapshots =
+              exportedBatches.stream().flatMap(b -> b.playerSnapshots().stream()).toList();
+          assertThat(quitSnapshots)
+              .extracting(StatsWire.PlayerGameplaySnapshot::coins)
+              .containsExactly(1900L);
+          assertThat(quitSnapshots.getFirst().questsCompleted()).isEqualTo(7);
+        } finally {
+          org.bukkit.event.HandlerList.unregisterAll(listener);
+          org.bukkit.event.HandlerList.unregisterAll(siblingQuitListener);
+          unsub.run();
+        }
       }
     }
   }

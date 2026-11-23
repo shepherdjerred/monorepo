@@ -1,4 +1,4 @@
-import { useMemo, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { z } from "zod";
 import {
   buildPlayersSearchParams,
@@ -47,11 +47,24 @@ export type ApiQueryState<T> =
     };
 
 export const QUERY_STALE_TIME_MS = 30_000;
+export const QUERY_ERROR_RETRY_MS = 30_000;
 export const QUERY_POLL_INTERVAL_MS = 60_000;
+
+const IDLE_STATE: ApiQueryState<never> = {
+  status: "idle",
+  data: undefined,
+  error: undefined,
+};
+
+const PENDING_STATE: ApiQueryState<never> = {
+  status: "pending",
+  data: undefined,
+  error: undefined,
+};
 
 type CacheEntry = {
   state: ApiQueryState<unknown>;
-  fetchedAt: number;
+  settledAt: number;
   inFlight: Promise<void> | null;
   listeners: Set<() => void>;
   latestSchema: z.ZodType | null;
@@ -102,8 +115,8 @@ function getOrCreateEntry(url: string): CacheEntry {
     return existing;
   }
   const created: CacheEntry = {
-    state: { status: "pending", data: undefined, error: undefined },
-    fetchedAt: 0,
+    state: PENDING_STATE,
+    settledAt: 0,
     inFlight: null,
     listeners: new Set(),
     latestSchema: null,
@@ -120,10 +133,15 @@ function notifyEntry(entry: CacheEntry): void {
 }
 
 function isEntryStale(entry: CacheEntry): boolean {
-  return (
-    entry.state.status !== "success" ||
-    Date.now() - entry.fetchedAt >= QUERY_STALE_TIME_MS
-  );
+  switch (entry.state.status) {
+    case "success":
+      return Date.now() - entry.settledAt >= QUERY_STALE_TIME_MS;
+    case "error":
+      return Date.now() - entry.settledAt >= QUERY_ERROR_RETRY_MS;
+    case "idle":
+    case "pending":
+      return true;
+  }
 }
 
 function attachEntryLiveRefresh(url: string, entry: CacheEntry): void {
@@ -181,8 +199,8 @@ function startFetch<T>(
     return;
   }
 
-  if (entry.state.status !== "success") {
-    entry.state = { status: "pending", data: undefined, error: undefined };
+  if (entry.state.status !== "success" && entry.state.status !== "pending") {
+    entry.state = PENDING_STATE;
     notifyEntry(entry);
   }
 
@@ -193,6 +211,7 @@ function startFetch<T>(
       });
       const rawBody = await parseResponseBody(response);
       if (!response.ok) {
+        entry.settledAt = Date.now();
         entry.state = {
           status: "error",
           data: undefined,
@@ -203,6 +222,7 @@ function startFetch<T>(
       }
       const validated = schema.safeParse(rawBody);
       if (!validated.success) {
+        entry.settledAt = Date.now();
         entry.state = {
           status: "error",
           data: undefined,
@@ -210,7 +230,7 @@ function startFetch<T>(
         };
         return;
       }
-      entry.fetchedAt = Date.now();
+      entry.settledAt = Date.now();
       entry.state = {
         status: "success",
         data: validated.data,
@@ -218,6 +238,7 @@ function startFetch<T>(
       };
     } catch (error_: unknown) {
       const parsedErr = z.object({ message: z.string() }).safeParse(error_);
+      entry.settledAt = Date.now();
       entry.state = {
         status: "error",
         data: undefined,
@@ -230,18 +251,6 @@ function startFetch<T>(
   })();
 }
 
-const IDLE_STATE: ApiQueryState<never> = {
-  status: "idle",
-  data: undefined,
-  error: undefined,
-};
-
-const PENDING_STATE: ApiQueryState<never> = {
-  status: "pending",
-  data: undefined,
-  error: undefined,
-};
-
 export function refetchApiUrl<T>(url: string, schema: z.ZodType<T>): void {
   startFetch(url, schema, true);
 }
@@ -253,6 +262,31 @@ export function revalidateApiUrlIfStale<T>(
   startFetch(url, schema, false);
 }
 
+export function subscribeToApiQuery<T>(
+  url: string | null,
+  schema: z.ZodType<T>,
+  listener: () => void,
+): () => void {
+  if (url === null) {
+    return () => {
+      // Disabled query requires no subscription
+    };
+  }
+  const entry = getOrCreateEntry(url);
+  entry.latestSchema = schema;
+  entry.listeners.add(listener);
+  attachEntryLiveRefresh(url, entry);
+  if (entry.inFlight === null && isEntryStale(entry)) {
+    startFetch(url, schema, false);
+  }
+  return () => {
+    entry.listeners.delete(listener);
+    if (entry.listeners.size === 0) {
+      entry.stopLiveRefresh?.();
+    }
+  };
+}
+
 export function useApiQuery<T>(
   url: string | null,
   schema: z.ZodType<T>,
@@ -260,38 +294,31 @@ export function useApiQuery<T>(
   readonly state: ApiQueryState<T>;
   readonly refetch: () => void;
 } {
-  const rawState = useSyncExternalStore(
-    (listener) => {
-      if (url === null) {
-        return () => {
-          // Disabled query requires no subscription
-        };
-      }
-      const entry = getOrCreateEntry(url);
-      entry.latestSchema = schema;
-      entry.listeners.add(listener);
-      attachEntryLiveRefresh(url, entry);
-      if (entry.inFlight === null && isEntryStale(entry)) {
-        startFetch(url, schema, false);
-      }
-      return () => {
-        entry.listeners.delete(listener);
-        if (entry.listeners.size === 0) {
-          entry.stopLiveRefresh?.();
-        }
-      };
-    },
-    () => {
-      if (url === null) {
-        return IDLE_STATE;
-      }
-      const entry = getOrCreateEntry(url);
-      if (entry.state.status === "pending" && entry.inFlight === null) {
-        startFetch(url, schema, false);
-      }
-      return entry.state;
-    },
+  const subscribe = useCallback(
+    (listener: () => void) => subscribeToApiQuery(url, schema, listener),
+    [url, schema],
+  );
+
+  const getSnapshot = useCallback(() => {
+    if (url === null) {
+      return IDLE_STATE;
+    }
+    const entry = getOrCreateEntry(url);
+    if (entry.state.status === "pending" && entry.inFlight === null) {
+      startFetch(url, schema, false);
+    }
+    return entry.state;
+  }, [url, schema]);
+
+  const getServerSnapshot = useCallback(
     () => (url === null ? IDLE_STATE : PENDING_STATE),
+    [url],
+  );
+
+  const rawState = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
   );
 
   const narrowedState = useMemo(
@@ -299,13 +326,15 @@ export function useApiQuery<T>(
     [rawState, schema],
   );
 
+  const refetch = useCallback(() => {
+    if (url !== null) {
+      startFetch(url, schema, true);
+    }
+  }, [url, schema]);
+
   return {
     state: narrowedState,
-    refetch: () => {
-      if (url !== null) {
-        startFetch(url, schema, true);
-      }
-    },
+    refetch,
   };
 }
 
