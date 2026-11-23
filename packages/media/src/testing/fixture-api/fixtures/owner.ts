@@ -348,6 +348,18 @@ export function subtitleTargets(query: string): SubtitleTargets {
             filename: `${title.title}.en.srt`,
             storageKind: "sidecar",
           },
+          {
+            id: fixtureId(9, 5200 + title.index),
+            version: 1,
+            state: "validated",
+            qualityStatus: "accepted",
+            language: "en",
+            forced: false,
+            hearingImpaired: false,
+            providerId: "manual upload",
+            filename: null,
+            storageKind: "sidecar",
+          },
         ],
       };
     });

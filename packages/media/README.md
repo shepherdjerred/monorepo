@@ -3448,6 +3448,15 @@ its exact observation and version. Only the same video, destination and subtitle
 format are supported; embedded, unowned, cross-epoch and ambiguous files remain
 protected. The video's version does not change.
 
+The review page states where a replacement stands in one phrase per state
+(`REPLACEMENT_STATE` in `src/client/subtitle-replacement/vocabulary.ts` is
+exhaustive over the server's states), shows what is replaced, and asks in a
+dialog before approving, naming the file and saying the page offers no undo. A
+conflict says the title changed and nothing was applied; a request that got no
+answer says the page cannot tell and offers the original action again, unchanged.
+The fixture API serves one replacement in each state
+(`src/testing/fixture-api/fixtures/subtitle-replacements.ts`).
+
 The movie replacement protocol uses a separate schema2 admission for
 all registered cuts. `PrismaMovieSubtitleReplacements` binds owner upload and
 review to the exact cut, current caption demand, unchanged video and actual
