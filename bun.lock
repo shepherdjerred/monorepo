@@ -1579,6 +1579,7 @@
         "zod": "^4.4.3",
       },
       "devDependencies": {
+        "@shepherdjerred/console-ui": "workspace:*",
         "@shepherdjerred/eslint-config": "workspace:*",
         "@tsconfig/node-lts": "^24.0.1",
         "@tsconfig/recommended": "^1.0.13",

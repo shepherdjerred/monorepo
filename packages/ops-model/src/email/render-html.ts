@@ -31,10 +31,10 @@ function buildStylesheet(p: EditorialPalette): string {
         `--t-${tone}-bg:${c.darkBg};--t-${tone}-ink:${c.darkInk};--t-${tone}-bd:${c.darkBorder};--t-${tone}-ac:${c.darkAccent};`,
     )
     .join("");
-  const darkDecls = `--canvas:${p.canvasDark};--surface:${p.surfaceDark};--subtle:${p.subtleDark};--ink:${p.inkDark};--sec:${p.secondaryInkDark};--muted:${p.mutedDark};--border:${p.borderDark};--chip:${p.chipBgDark};--brand:${p.brandDark};--cta-bg:${p.ctaBgDark};--cta-ink:${p.ctaInkDark};${toneVarsDark}`;
+  const darkDecls = `--canvas:${p.canvasDark};--surface:${p.surfaceDark};--subtle:${p.subtleDark};--ink:${p.inkDark};--sec:${p.secondaryInkDark};--muted:${p.mutedDark};--border:${p.borderDark};--hair:${p.hairlineDark};--brand:${p.brandDark};--cta-bg:${p.ctaBgDark};--cta-ink:${p.ctaInkDark};--cta-edge:${p.ctaEdgeDark};${toneVarsDark}`;
 
   return [
-    `:root{color-scheme:light dark;--canvas:${p.canvasLight};--surface:${p.surfaceLight};--subtle:${p.subtleLight};--ink:${p.inkLight};--sec:${p.secondaryInkLight};--muted:${p.mutedLight};--border:${p.borderLight};--chip:${p.chipBgLight};--brand:${p.brandLight};--cta-bg:${p.ctaBgLight};--cta-ink:${p.ctaInkLight};${toneVarsLight}}`,
+    `:root{color-scheme:light dark;--canvas:${p.canvasLight};--surface:${p.surfaceLight};--subtle:${p.subtleLight};--ink:${p.inkLight};--sec:${p.secondaryInkLight};--muted:${p.mutedLight};--border:${p.borderLight};--hair:${p.hairlineLight};--brand:${p.brandLight};--cta-bg:${p.ctaBgLight};--cta-ink:${p.ctaInkLight};--cta-edge:${p.ctaEdgeLight};${toneVarsLight}}`,
     `@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${darkDecls}} }`,
     `:root[data-theme="dark"]{color-scheme:dark;${darkDecls}}`,
     `:root[data-theme="light"]{color-scheme:light;}`,
@@ -42,23 +42,28 @@ function buildStylesheet(p: EditorialPalette): string {
     `.e-card{background-color:var(--surface)!important;border-color:var(--border)!important;}`,
     `.e-sub{background-color:var(--subtle)!important;border-color:var(--border)!important;}`,
     `.e-ink{color:var(--ink)!important;}.e-sec{color:var(--sec)!important;}.e-muted{color:var(--muted)!important;}.e-brand{color:var(--brand)!important;}`,
-    `.e-bd{border-color:var(--border)!important;}.e-next{background-color:var(--chip)!important;border-left-color:var(--brand)!important;}`,
-    `.e-cta{background-color:var(--cta-bg)!important;color:var(--cta-ink)!important;}`,
+    `.e-bd{border-color:var(--border)!important;}.e-hl{border-color:var(--hair)!important;}`,
+    `.e-cta{background-color:var(--cta-bg)!important;color:var(--cta-ink)!important;border-color:var(--cta-edge)!important;}`,
     ...(["critical", "warning", "ok", "info", "neutral"] as const).map(
       (t) =>
-        `.e-pill-${t}{background-color:var(--t-${t}-bg)!important;color:var(--t-${t}-ink)!important;border-color:var(--t-${t}-bd)!important;}.e-txt-${t}{color:var(--t-${t}-ink)!important;}.e-ac-${t}{border-left-color:var(--t-${t}-ac)!important;}`,
+        `.e-pill-${t}{background-color:var(--t-${t}-bg)!important;color:var(--t-${t}-ink)!important;border-color:var(--t-${t}-bd)!important;}.e-txt-${t}{color:var(--t-${t}-ink)!important;}.e-dot-${t}{background-color:var(--t-${t}-ac)!important;}`,
     ),
     `@media only screen and (max-width:520px){.e-pad{padding:20px 16px!important;}.e-h1{font-size:20px!important;}.e-outer{padding:12px 6px!important;}.e-dl-key{width:92px!important;} }`,
   ].join("");
 }
 
-function renderBadge(
+/** Small coloured dot; a rounded span so it also renders where glyph fonts differ. */
+function renderDot(tone: EmailTone, p: EditorialPalette): string {
+  return `<span class="e-dot-${tone}" style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${p.tones[tone].accent};"></span>`;
+}
+
+/** Status word in the tone's text-safe colour, preceded by its dot. */
+function renderStatus(
   tone: EmailTone,
   label: string,
   p: EditorialPalette,
 ): string {
-  const c = p.tones[tone];
-  return `<span class="e-pill-${tone}" style="display:inline-block;padding:2px 9px;border-radius:999px;border:1px solid ${c.border};background:${c.bg};color:${c.ink};font-size:11.5px;font-weight:700;letter-spacing:0.02em;line-height:1.5;">${escapeHtml(label)}</span>`;
+  return `${renderDot(tone, p)}<span class="e-txt-${tone}" style="margin-left:6px;color:${p.tones[tone].ink};font-size:13px;font-weight:650;line-height:1.4;">${escapeHtml(label)}</span>`;
 }
 
 function renderNextStepLine(
@@ -67,10 +72,10 @@ function renderNextStepLine(
   compact = false,
 ): string {
   if (nextStep === undefined || nextStep.length === 0) return "";
-  const margin = compact ? "10px 0 0" : "12px 0 0";
-  const pad = compact ? "8px 11px" : "10px 13px";
+  const margin = compact ? "10px 0 0" : "14px 0 0";
+  const pad = compact ? "7px 10px" : "10px 13px";
   const size = compact ? "13.5px" : "14.5px";
-  return `<div class="e-next e-ink" style="margin:${margin};padding:${pad};border-left:3px solid ${p.brandLight};border-radius:0 6px 6px 0;background:${p.chipBgLight};color:${p.inkLight};font-size:${size};line-height:1.5;"><strong>Next step:</strong> ${escapeHtml(nextStep)}</div>`;
+  return `<div class="e-sub e-ink" style="margin:${margin};padding:${pad};border:1px solid ${p.borderLight};border-radius:6px;background-color:${p.subtleLight};color:${p.inkLight};font-size:${size};line-height:1.5;"><strong>Next step:</strong> ${escapeHtml(nextStep)}</div>`;
 }
 
 function renderInlineLinks(
@@ -133,27 +138,83 @@ function renderCallout(callout: EmailCallout, p: EditorialPalette): string {
       : `<ul style="margin:${callout.text === undefined ? "0" : "5px 0 0"};padding-left:18px;font-size:14px;line-height:1.55;">${callout.bullets
           .map((item) => `<li style="margin:3px 0;">${escapeHtml(item)}</li>`)
           .join("")}</ul>`;
-  return `<div class="e-pill-${callout.tone}" style="margin:14px 0 0;padding:12px 14px;border-radius:8px;border:1px solid ${c.border};border-left:3px solid ${c.accent};background:${c.bg};color:${c.ink};">${title}${text}${bullets}</div>`;
+  return `<div class="e-pill-${callout.tone}" style="margin:16px 0 0;padding:12px 14px;border-radius:8px;border:1px solid ${c.border};background-color:${c.bg};color:${c.ink};">${title}${text}${bullets}</div>`;
 }
 
-function renderItemCard(item: EmailItemCard, p: EditorialPalette): string {
+const TABLE_STYLE =
+  "width:100%;border-collapse:collapse;border-spacing:0;table-layout:auto;";
+
+/** Row `<td>` style shared by hairline-separated lists. */
+function rowCellStyle(p: EditorialPalette, extra: string): string {
+  return `border-top:1px solid ${p.hairlineLight};${extra}`;
+}
+
+/** Group heading row ("Critical 2") above a run of same-tone items. */
+function renderGroupHeadingRow(
+  tone: EmailTone,
+  label: string,
+  count: number,
+  p: EditorialPalette,
+): string {
+  return `<tr><td colspan="2" class="e-bd" style="padding:14px 0 8px;border-bottom:1px solid ${p.borderLight};">${renderStatus(tone, label, p)}<span class="e-muted" style="margin-left:6px;color:${p.mutedLight};font-family:${p.fontMono};font-size:12px;">${String(count)}</span></td></tr>`;
+}
+
+/** One list row: dot, optional kicker/badge meta line, title, body, next step, links, details. */
+function renderItemRow(
+  item: EmailItemCard,
+  p: EditorialPalette,
+  showBadge: boolean,
+): string {
   const c = p.tones[item.tone];
-  const headerLeft =
+  const metaParts = [
     item.kicker === undefined
-      ? renderBadge(item.tone, item.badge, p)
-      : `<span class="e-sec" style="font-size:12.5px;font-weight:700;color:${p.secondaryInkLight};margin-right:8px;">${escapeHtml(item.kicker)}</span>${renderBadge(item.tone, item.badge, p)}`;
+      ? ""
+      : `<span class="e-sec" style="color:${p.secondaryInkLight};font-weight:650;">${escapeHtml(item.kicker)}</span>`,
+    showBadge
+      ? `<span class="e-txt-${item.tone}" style="color:${c.ink};font-weight:650;">${escapeHtml(item.badge)}</span>`
+      : "",
+  ].filter((part) => part.length > 0);
+  const meta =
+    metaParts.length === 0
+      ? ""
+      : `<div style="margin-bottom:2px;font-size:12.5px;line-height:1.4;">${metaParts.join('<span class="e-muted" style="color:' + p.mutedLight + ';margin:0 6px;">&middot;</span>')}</div>`;
   const body =
     item.body === undefined || item.body.length === 0
       ? ""
-      : `<p class="e-sec" style="margin:7px 0 0;font-size:14.5px;line-height:1.55;color:${p.secondaryInkLight};">${escapeHtml(item.body)}</p>`;
+      : `<p class="e-muted" style="margin:4px 0 0;font-size:14px;line-height:1.55;color:${p.mutedLight};">${escapeHtml(item.body)}</p>`;
   const nextHtml = renderNextStepLine(item.nextStep, p, true);
   const linksHtml = renderInlineLinks(item.links ?? [], p);
   const detailsHtml =
     item.details === undefined || item.details.length === 0
       ? ""
-      : `<div class="e-bd" style="margin-top:11px;padding-top:9px;border-top:1px solid ${p.borderLight};">${renderDetailsRows(item.details, p, true)}</div>`;
+      : `<div style="margin-top:10px;">${renderDetailsRows(item.details, p, true)}</div>`;
+  return `<tr><td class="e-hl" style="${rowCellStyle(p, "width:18px;padding:17px 0 14px;vertical-align:top;")}">${renderDot(item.tone, p).replace("display:inline-block;", "display:block;margin-top:5px;")}</td><td class="e-hl" style="${rowCellStyle(p, "padding:12px 0 14px;vertical-align:top;")}">${meta}<div class="e-ink" style="font-size:15.5px;font-weight:650;line-height:1.4;color:${p.inkLight};">${escapeHtml(item.title)}</div>${body}${nextHtml}${linksHtml}${detailsHtml}</td></tr>`;
+}
 
-  return `<div class="e-sub e-ac-${item.tone}" style="margin:0 0 12px;padding:14px 16px;border:1px solid ${p.borderLight};border-left:3px solid ${c.accent};border-radius:8px;background:${p.subtleLight};"><div>${headerLeft}</div><div class="e-ink" style="margin-top:6px;font-size:16px;font-weight:700;line-height:1.36;color:${p.inkLight};">${escapeHtml(item.title)}</div>${body}${nextHtml}${linksHtml}${detailsHtml}</div>`;
+/** Item list as a hairline table; mixed tones get a group heading per run of the same tone. */
+function renderItemList(
+  items: readonly EmailItemCard[],
+  p: EditorialPalette,
+): string {
+  const grouped = new Set(items.map((item) => item.tone)).size > 1;
+  const rows: string[] = [];
+  let index = 0;
+  while (index < items.length) {
+    const first = items[index];
+    if (first === undefined) break;
+    let end = index;
+    while (items[end + 1]?.tone === first.tone) end += 1;
+    const run = items.slice(index, end + 1);
+    const uniformBadge = run.every((item) => item.badge === first.badge);
+    if (grouped && uniformBadge) {
+      rows.push(renderGroupHeadingRow(first.tone, first.badge, run.length, p));
+    }
+    for (const item of run) {
+      rows.push(renderItemRow(item, p, !(grouped && uniformBadge)));
+    }
+    index = end + 1;
+  }
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="${TABLE_STYLE}">${rows.join("")}</table>`;
 }
 
 function sectionHeading(text: string, p: EditorialPalette): string {
@@ -180,10 +241,10 @@ function renderMetricsTable(
           : row.deltaTone === "bad"
             ? p.tones.critical.ink
             : p.mutedLight;
-      return `<tr><td class="e-ink e-bd" style="padding:8px 8px 8px 0;border-bottom:1px solid ${p.borderLight};font-size:14.5px;color:${p.inkLight};">${escapeHtml(row.label)}</td><td class="e-ink e-bd" style="padding:8px 0;border-bottom:1px solid ${p.borderLight};text-align:right;font-family:${p.fontMono};font-size:13.5px;font-weight:700;color:${p.inkLight};white-space:nowrap;">${escapeHtml(row.value)}</td><td class="${deltaClass} e-bd" style="padding:8px 0 8px 12px;border-bottom:1px solid ${p.borderLight};text-align:right;font-family:${p.fontMono};font-size:12.5px;color:${deltaColor};white-space:nowrap;">${escapeHtml(row.delta ?? "—")}</td></tr>`;
+      return `<tr><td class="e-muted e-hl" style="${rowCellStyle(p, `padding:9px 8px 9px 0;font-size:14px;color:${p.mutedLight};`)}">${escapeHtml(row.label)}</td><td class="e-ink e-hl" style="${rowCellStyle(p, `padding:9px 0;text-align:right;font-family:${p.fontMono};font-size:13.5px;font-weight:700;color:${p.inkLight};white-space:nowrap;`)}">${escapeHtml(row.value)}</td><td class="${deltaClass} e-hl" style="${rowCellStyle(p, `padding:9px 0 9px 12px;text-align:right;font-family:${p.fontMono};font-size:12.5px;color:${deltaColor};white-space:nowrap;`)}">${escapeHtml(row.delta ?? "—")}</td></tr>`;
     })
     .join("");
-  return `${sectionHeading(heading, p)}<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">${trs}</table>`;
+  return `${sectionHeading(heading, p)}<table role="presentation" cellpadding="0" cellspacing="0" style="${TABLE_STYLE}">${trs}</table>`;
 }
 
 function renderTimelineTable(
@@ -203,34 +264,33 @@ function renderTimelineTable(
         href === null
           ? escapeHtml(row.title)
           : `<a class="e-ink" href="${escapeHtml(href)}" style="color:${p.inkLight};text-decoration:underline;text-underline-offset:2px;">${escapeHtml(row.title)}</a>`;
-      return `<tr><td class="e-muted e-bd" style="padding:7px 10px 7px 0;border-bottom:1px solid ${p.borderLight};font-family:${p.fontMono};font-size:12px;color:${p.mutedLight};white-space:nowrap;vertical-align:top;">${escapeHtml(row.time)}</td><td class="e-muted e-bd" style="padding:7px 10px 7px 0;border-bottom:1px solid ${p.borderLight};font-size:12.5px;font-weight:600;color:${p.mutedLight};white-space:nowrap;vertical-align:top;">${escapeHtml(row.kind)}</td><td class="e-ink e-bd" style="padding:7px 0;border-bottom:1px solid ${p.borderLight};font-size:14px;line-height:1.45;color:${p.inkLight};">${titleHtml}</td></tr>`;
+      return `<tr><td class="e-muted e-hl" style="${rowCellStyle(p, `padding:8px 10px 8px 0;font-family:${p.fontMono};font-size:12px;color:${p.mutedLight};white-space:nowrap;vertical-align:top;`)}">${escapeHtml(row.time)}</td><td class="e-muted e-hl" style="${rowCellStyle(p, `padding:8px 10px 8px 0;font-size:12.5px;font-weight:600;color:${p.mutedLight};white-space:nowrap;vertical-align:top;`)}">${escapeHtml(row.kind)}</td><td class="e-ink e-hl" style="${rowCellStyle(p, `padding:8px 0;font-size:14px;line-height:1.45;color:${p.inkLight};`)}">${titleHtml}</td></tr>`;
     })
     .join("");
-  return `${head}<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">${trs}</table>`;
+  return `${head}<table role="presentation" cellpadding="0" cellspacing="0" style="${TABLE_STYLE}">${trs}</table>`;
 }
 
 function renderChecksBlock(
   section: Extract<EmailSection, { kind: "checks" }>,
   p: EditorialPalette,
 ): string {
-  const attention = section.attentionChecks
-    .map((check) =>
-      renderItemCard(
-        {
-          tone: check.status === "problem" ? "critical" : "neutral",
-          badge: check.status === "problem" ? "Problem" : "Not checked",
-          title: check.label,
-          body: check.summary,
-          ...(check.links === undefined ? {} : { links: check.links }),
-        },
-        p,
-      ),
-    )
-    .join("");
+  const attention =
+    section.attentionChecks.length === 0
+      ? ""
+      : renderItemList(
+          section.attentionChecks.map((check) => ({
+            tone: check.status === "problem" ? "critical" : "neutral",
+            badge: check.status === "problem" ? "Problem" : "Not checked",
+            title: check.label,
+            body: check.summary,
+            ...(check.links === undefined ? {} : { links: check.links }),
+          })),
+          p,
+        );
   const passedSummary =
     section.passedLabels.length === 0
       ? ""
-      : `<div class="e-sub" style="padding:10px 13px;border:1px solid ${p.borderLight};border-radius:7px;background:${p.subtleLight};font-size:13.5px;line-height:1.5;"><strong class="e-txt-ok" style="color:${p.tones.ok.ink};">&#10003; ${String(section.passedLabels.length)} checks passed:</strong> <span class="e-muted" style="color:${p.mutedLight};">${section.passedLabels.map((l) => escapeHtml(l)).join(" &middot; ")}</span></div>`;
+      : `<div class="e-hl" style="margin-top:${attention.length === 0 ? "0" : "4px"};padding:11px 0 0;border-top:1px solid ${p.hairlineLight};font-size:13.5px;line-height:1.5;"><strong class="e-txt-ok" style="color:${p.tones.ok.ink};">&#10003; ${String(section.passedLabels.length)} checks passed:</strong> <span class="e-muted" style="color:${p.mutedLight};">${section.passedLabels.map((l) => escapeHtml(l)).join(" &middot; ")}</span></div>`;
   return `${sectionHeading(section.heading, p)}${attention}${passedSummary}`;
 }
 
@@ -265,7 +325,7 @@ function renderSection(section: EmailSection, p: EditorialPalette): string {
         section.omittedNotice === undefined
           ? ""
           : `<p class="e-muted" style="margin:8px 0 0;font-size:13px;color:${p.mutedLight};">${escapeHtml(section.omittedNotice)}</p>`;
-      return `${head}${section.items.map((item) => renderItemCard(item, p)).join("")}${omitted}`;
+      return `${head}${renderItemList(section.items, p)}${omitted}`;
     }
     case "metrics":
       return renderMetricsTable(section.heading, section.rows, p);
@@ -294,7 +354,7 @@ function renderActionBar(doc: EmailDocument, p: EditorialPalette): string {
   const primaryHtml =
     primaryHref === null || doc.primaryAction === undefined
       ? ""
-      : `<a class="e-cta" href="${escapeHtml(primaryHref)}" style="display:inline-block;margin:0 14px 6px 0;padding:9px 16px;border-radius:7px;background:${p.ctaBgLight};color:${p.ctaInkLight};font-size:14px;font-weight:650;text-decoration:none;">${escapeHtml(doc.primaryAction.label)} &#8594;</a>`;
+      : `<a class="e-cta" href="${escapeHtml(primaryHref)}" style="display:inline-block;margin:0 14px 6px 0;padding:9px 16px 7px;border-radius:7px;background-color:${p.ctaBgLight};border-bottom:2px solid ${p.ctaEdgeLight};color:${p.ctaInkLight};font-size:14px;font-weight:650;text-decoration:none;">${escapeHtml(doc.primaryAction.label)}</a>`;
 
   const secondaryHtml = secondary
     .map(
@@ -327,7 +387,6 @@ export function renderEmailHtml(
   options: RenderEmailHtmlOptions = {},
 ): string {
   const p = HUB_EDITORIAL_PALETTE;
-  const topTone = p.tones[doc.tone];
   const themeAttr =
     options.forceColorScheme === undefined
       ? ""
@@ -336,7 +395,7 @@ export function renderEmailHtml(
   const actionsAbove = doc.actionsAboveSections ?? true;
 
   const preheaderHtml = `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:transparent;">${escapeHtml(doc.preheader)}${"&#847; &zwnj; &nbsp; ".repeat(18)}</div>`;
-  const headerBar = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;"><span class="e-muted" style="font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:${p.mutedLight};">${escapeHtml(doc.eyebrow)}</span>${renderBadge(doc.tone, doc.badge, p)}</div>`;
+  const headerBar = `<table role="presentation" cellpadding="0" cellspacing="0" style="${TABLE_STYLE}margin-bottom:8px;"><tr><td class="e-muted" style="padding:0;font-size:13px;line-height:1.4;color:${p.mutedLight};">${escapeHtml(doc.eyebrow)}</td><td style="padding:0 0 0 12px;text-align:right;white-space:nowrap;">${renderStatus(doc.tone, doc.badge, p)}</td></tr></table>`;
   const headingHtml = `<h1 class="e-ink e-h1" style="margin:0;font-size:22px;font-weight:700;line-height:1.28;letter-spacing:-0.015em;color:${p.inkLight};">${escapeHtml(doc.heading)}</h1>`;
   const leadHtml =
     doc.lead === undefined
@@ -354,7 +413,7 @@ export function renderEmailHtml(
     ? `${headerBar}${headingHtml}${leadHtml}${nextStepHtml}${calloutHtml}${actionsHtml}${sectionsHtml}${renderTechnicalDetailsFooter(doc, p)}`
     : `${headerBar}${headingHtml}${leadHtml}${nextStepHtml}${calloutHtml}${sectionsHtml}${actionsHtml}${renderTechnicalDetailsFooter(doc, p)}`;
 
-  const containerStyle = `width:100%;max-width:${String(p.maxWidthPx)}px;margin:0 auto;background:${p.surfaceLight};border:1px solid ${p.borderLight};border-top:3px solid ${topTone.accent};border-radius:10px;`;
+  const containerStyle = `width:100%;max-width:${String(p.maxWidthPx)}px;margin:0 auto;background-color:${p.surfaceLight};border:1px solid ${p.borderLight};border-radius:10px;`;
 
   return [
     "<!DOCTYPE html>",
