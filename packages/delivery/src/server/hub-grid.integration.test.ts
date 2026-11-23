@@ -286,23 +286,25 @@ describe("hub attention across the pages", () => {
   test("Overview and Pipelines list the same items, and none for a retired service or environment", async () => {
     await registerWithEnvironment("tracker", "prod");
     await failDeployment("tracker", "tracker/prod");
-    await failDeployment("flipt", "flipt/prod");
+    await failDeployment("nfd", "nfd/prod");
     const before = await attentionOfBothPages();
     expect(before).toEqual(
       expect.arrayContaining([
         "Tracker prod requires recovery",
-        "Flipt prod requires recovery",
+        "Node feature discovery prod requires recovery",
       ]),
     );
     // A retired environment of a live service is on neither page, so neither
     // names its failure.
     await cluster.database.environment.update({
-      where: { id: "flipt/prod" },
+      where: { id: "nfd/prod" },
       data: { lifecycle: "retired" },
     });
     const environmentGone = await attentionOfBothPages();
     expect(environmentGone).toContain("Tracker prod requires recovery");
-    expect(environmentGone).not.toContain("Flipt prod requires recovery");
+    expect(environmentGone).not.toContain(
+      "Node feature discovery prod requires recovery",
+    );
     // So is a retired service's, however its deployments ended.
     await cluster.database.service.update({
       where: { id: "tracker" },
