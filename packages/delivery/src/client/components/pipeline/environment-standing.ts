@@ -1,4 +1,5 @@
 import type { PipelineStage, Transition } from "#shared/hub/hub-contract.ts";
+import { attemptPhase } from "#shared/hub/deployment-phase.ts";
 import { revisionLabel } from "#client/components/identifier.tsx";
 
 /** How the release waiting for an environment would reach it. */
@@ -28,7 +29,7 @@ function newestOutcome(stage: PipelineStage) {
     case "running":
     case "queued":
     case "pending": {
-      return "deploying";
+      return attemptPhase(stage.status);
     }
     case "awaiting_approval": {
       return "awaiting approval";

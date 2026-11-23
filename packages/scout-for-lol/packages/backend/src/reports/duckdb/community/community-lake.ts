@@ -10,6 +10,7 @@ import {
   withLakeQueryRetry,
   scalarParam,
   type BoundParam,
+  GAME_CREATED_MS_SQL,
   PLAYED_SECONDS_SQL,
 } from "#src/reports/duckdb/lake.ts";
 
@@ -25,7 +26,8 @@ const GuildMatchRowSchema = z.object({
   puuid: z.string().nullable(),
   team_id: LakeInt,
   player_subteam_id: LakeInt.nullable(),
-  participant_id: LakeInt,
+  // NULL for an end-of-game record, which numbers no participant.
+  participant_id: LakeInt.nullable(),
   riot_id_game_name: z.string().nullable(),
   riot_id_tagline: z.string(),
   champion_name: z.string(),
@@ -61,7 +63,7 @@ export async function fetchGuildAccountCounts(options: {
       if (source === undefined) return [];
       return await withDuckDBConnection(async (session) => {
         const rows = await session.run(
-          `SELECT puuid, count(DISTINCT match_id)::BIGINT AS games, max(epoch_ms(game_creation_at))::BIGINT AS last_match_ms ` +
+          `SELECT puuid, count(DISTINCT match_id)::BIGINT AS games, max(${GAME_CREATED_MS_SQL})::BIGINT AS last_match_ms ` +
             `FROM (${source.sql}) GROUP BY puuid`,
           bindParams(session, source.params),
         );
@@ -92,7 +94,7 @@ export async function fetchGuildMatchRows(options: {
         params.push(listParam(options.queues));
       }
       if (options.afterMs !== undefined) {
-        clauses.push("epoch_ms(game_creation_at) >= ?");
+        clauses.push(`${GAME_CREATED_MS_SQL} >= ?`);
         params.push(scalarParam(options.afterMs));
       }
       const target = buildMatchesSource(files, {
@@ -107,11 +109,11 @@ export async function fetchGuildMatchRows(options: {
       const sql =
         `WITH target AS (SELECT DISTINCT match_id FROM (${target.sql})), ` +
         `full_rosters AS (${full.sql}) ` +
-        `SELECT match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
+        `SELECT match_id, ${GAME_CREATED_MS_SQL}::BIGINT AS game_creation_ms, ` +
         `queue, queue_id, game_mode, map_id, puuid, team_id, player_subteam_id, participant_id, ` +
         `riot_id_game_name, riot_id_tagline, champion_name, team_position, win, ` +
         `kills, deaths, assists, creep_score, ${PLAYED_SECONDS_SQL} AS time_played FROM full_rosters ` +
-        `ORDER BY game_creation_ms DESC, match_id DESC, participant_id`;
+        `ORDER BY game_creation_ms DESC, match_id DESC, participant_id, team_id, champion_name`;
       return await withDuckDBConnection(async (session) => {
         const rows = await session.run(
           sql,

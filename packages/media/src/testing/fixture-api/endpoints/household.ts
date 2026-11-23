@@ -21,6 +21,7 @@ import {
   PlaybackPeopleSchema,
   PlaybackStatisticsSchema,
 } from "#shared/household/playback.ts";
+import { PlexHistoricalViewsSchema } from "#shared/household/plex-history.ts";
 import { RequestInterestProgressSchema } from "#shared/household/progress.ts";
 import { MovieEditionRequestListV4Schema } from "#shared/movie-editions/lifecycle/public-v4.ts";
 import { ImportedPersonalClaimsSchema } from "#shared/personal-migration/contract.ts";
@@ -36,7 +37,7 @@ import {
   catalogSearch,
 } from "#testing/fixture-api/fixtures/catalog.ts";
 import { libraryPage } from "#testing/fixture-api/fixtures/library.ts";
-import { movieRequestList } from "#testing/fixture-api/fixtures/movie-requests.ts";
+import { movieRequestList } from "#testing/fixture-api/fixtures/movies/movie-requests.ts";
 import {
   notificationList,
   notificationPreferences,
@@ -48,6 +49,7 @@ import {
   playbackPeople,
   playbackStatistics,
 } from "#testing/fixture-api/fixtures/playback.ts";
+import { plexRequestHistory } from "#testing/fixture-api/fixtures/migration/plex-history.ts";
 import {
   removalHistory,
   removalList,
@@ -185,6 +187,16 @@ const requests: readonly FixtureEndpoint[] = [
     respond: (request) =>
       unlessNewHousehold(request, [], () => importedClaims(request.persona)),
     samples: ["/requests/imported"],
+  }),
+  endpoint({
+    path: "/requests/plex-history",
+    schema: PlexHistoricalViewsSchema,
+    respond: (request) =>
+      unlessNewHousehold(request, NO_ITEMS, () => plexRequestHistory(request)),
+    samples: [
+      "/requests/plex-history",
+      "/requests/plex-history?cursor=view%3A21",
+    ],
   }),
   endpoint({
     path: "/request-interests",

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  NO_CAUSE,
   failureReason,
   readbackOutcome,
   recoveryReading,
@@ -27,27 +28,72 @@ function intent(
 
 describe("why a failed deployment failed, as every page states it", () => {
   const unlocked = { message: STALE, recoveryRequired: false };
+  const interruptedSync = [
+    { key: "step-apply-safety", status: "succeeded", message: "" },
+    { key: "step-sync", status: "running", message: "step-sync: running" },
+  ];
+  const failedPhase =
+    "Independent Application readback: media, resourceVersion 1, request 942174ca, operation 6052ec99, phase Failed, finished 2026-11-22T08:14:30Z";
 
   it("keeps the executor's words while no recovery intent has settled", () => {
-    expect(failureReason(unlocked, undefined)).toBe(STALE);
-    expect(failureReason(unlocked, [])).toBe(STALE);
-    expect(failureReason(unlocked, [intent("pending")])).toBe(STALE);
+    expect(failureReason(unlocked, undefined, [])).toBe(STALE);
+    expect(failureReason(unlocked, [], [])).toBe(STALE);
+    expect(failureReason(unlocked, [intent("pending")], [])).toBe(STALE);
     // A newer pending intent reopens the question an older one settled.
     expect(
-      failureReason(unlocked, [intent("succeeded"), intent("pending", [], 2)]),
+      failureReason(
+        unlocked,
+        [intent("succeeded"), intent("pending", [], 2)],
+        interruptedSync,
+      ),
     ).toBe(STALE);
     // While the lock holds, nothing has released the deployment's claim.
     expect(
-      failureReason({ message: STALE, recoveryRequired: true }, [
-        intent("succeeded"),
-      ]),
+      failureReason(
+        { message: STALE, recoveryRequired: true },
+        [intent("succeeded")],
+        interruptedSync,
+      ),
     ).toBe(STALE);
   });
 
-  it("states what recovery read back once its newest intent settled", () => {
-    expect(failureReason(unlocked, [intent("succeeded")])).toBe(
-      "Recovery intent 1 read the external operation back after the deployment ended: it ended in phase Succeeded.",
+  it("states a phase recovery read back that is not Succeeded", () => {
+    expect(
+      failureReason(unlocked, [intent("succeeded", [failedPhase])], []),
+    ).toBe(
+      "Recovery intent 1 read the external operation back after the deployment ended: it ended in phase Failed.",
     );
+  });
+
+  it("never explains a failure by a readback of Succeeded: it names the step the deployment ended on", () => {
+    expect(
+      failureReason(unlocked, [intent("succeeded")], interruptedSync),
+    ).toBe("Step step-sync was still running when the deployment ended");
+    expect(
+      failureReason(
+        unlocked,
+        [intent("succeeded")],
+        [
+          ...interruptedSync,
+          {
+            key: "step-verify",
+            status: "failed",
+            message: "step-verify: health check timed out",
+          },
+        ],
+      ),
+    ).toBe("Step step-verify failed: health check timed out");
+  });
+
+  it("says no cause was recorded when no step names one", () => {
+    expect(failureReason(unlocked, [intent("succeeded")], [])).toBe(NO_CAUSE);
+    expect(
+      failureReason(
+        unlocked,
+        [intent("succeeded")],
+        [{ key: "step-sync", status: "succeeded", message: "" }],
+      ),
+    ).toBe("No cause was recorded");
   });
 });
 

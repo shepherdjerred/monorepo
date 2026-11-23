@@ -51,6 +51,17 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
               ...nsPeer("delivery-platform-jobs"),
               podSelector: { matchLabels: { app: "delivery-stage" } },
             },
+            // The retained Minecraft controller loads the deployment while
+            // answering a recovery-report request (see egress below).
+            {
+              ...nsPeer("delivery-tsmc-controller"),
+              podSelector: {
+                matchLabels: {
+                  app: "delivery-tsmc-controller",
+                  component: "delivery-tsmc-controller",
+                },
+              },
+            },
             {
               ...nsPeer(WOODPECKER_CI_NAMESPACE),
               podSelector: {
@@ -81,6 +92,23 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
             },
           })),
           ports: [tcp(8082)],
+        },
+        // Minecraft recovery completion reads the retained controller's
+        // recovery report (packages/delivery/src/server/index.ts). The
+        // controller's live-only ingress policy already admits app=delivery.
+        {
+          to: [
+            {
+              ...nsPeer("delivery-tsmc-controller"),
+              podSelector: {
+                matchLabels: {
+                  app: "delivery-tsmc-controller",
+                  component: "delivery-tsmc-controller",
+                },
+              },
+            },
+          ],
+          ports: [tcp(7356)],
         },
       ],
     },

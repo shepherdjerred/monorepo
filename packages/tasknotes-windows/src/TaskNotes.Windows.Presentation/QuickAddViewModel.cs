@@ -277,8 +277,7 @@ namespace TaskNotes.Windows.Presentation
                         cancellationToken
                     )
                     : null;
-                var preview =
-                    prepared?.Preview
+                var preview = prepared?.Preview
                     ?? await _store.PreviewQuickAddAsync(input, cancellationToken);
                 if (generation == _inputGeneration)
                 {

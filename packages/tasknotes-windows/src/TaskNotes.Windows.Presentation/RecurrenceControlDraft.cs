@@ -65,8 +65,7 @@ public sealed class RecurrenceControlDraft
             throw new ArgumentException("Choose a whole interval from one to 999.");
         if (frequency is null)
             return null;
-        var original =
-            _projection.Draft
+        var original = _projection.Draft
             ?? throw new InvalidOperationException("Editable recurrence has no core draft.");
         DayOfWeek[] days = selectedDays.ToArray();
         if (

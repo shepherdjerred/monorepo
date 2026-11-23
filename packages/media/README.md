@@ -3329,6 +3329,39 @@ before retrying seal.
 Existing session rows are never deduplicated by time or title, and this import
 never changes Plex watched truth.
 
+### Historical Plex views
+
+The [Plex export](scripts/migration-plex-history.sql) reads retained movie and
+episode views, including views of removed titles. It also reads Plex's
+last-watched records when no retained view for the same account and GUID is as
+recent. Those rows retain their original GUID and timestamp when Plex no longer
+has a title.
+
+Run the export against the intended Plex server's library database using its
+bundled SQLite shell. Use the machine ID from that same Plex server's identity
+response. Keep stdout private and require the SQLite read to succeed before
+importing any batches.
+
+```sh
+set -o pipefail
+"$plex_sqlite" -readonly -batch -bail -json "$plex_library_db" \
+  < scripts/migration-plex-history.sql \
+  | bun scripts/migration-plex-history.ts --server-machine-id "$plex_machine_id"
+```
+
+Send each validated JSON line to
+`POST /api/v1/admin/playback/plex-history/import` with the current unrestricted
+Media owner session and its CSRF token. Check that `imported + unchanged` equals
+the number of records in each batch. Replaying identical view records is safe.
+A different declared Plex machine ID or changes to previously imported source
+rows cause the affected batch to be rejected.
+
+**My requests** shows Plex records to the person bound to the verified account
+at import. Replay the same batches after an account is verified to attach
+previously unbound records. Changing account mappings never transfers prior
+history to a different person. Plex history does not affect downloads,
+library retention, or the play counts and watch time supplied by timed sessions.
+
 ### Legacy subtitle adoption and policy
 
 Include each subtitle or preference provenance key in the existing handoff
@@ -3415,6 +3448,15 @@ its exact observation and version. Only the same video, destination and subtitle
 format are supported; embedded, unowned, cross-epoch and ambiguous files remain
 protected. The video's version does not change.
 
+The review page states where a replacement stands in one phrase per state
+(`REPLACEMENT_STATE` in `src/client/subtitle-replacement/vocabulary.ts` is
+exhaustive over the server's states), shows what is replaced, and asks in a
+dialog before approving, naming the file and saying the page offers no undo. A
+conflict says the title changed and nothing was applied; a request that got no
+answer says the page cannot tell and offers the original action again, unchanged.
+The fixture API serves one replacement in each state
+(`src/testing/fixture-api/fixtures/movies/subtitle-replacements.ts`).
+
 The movie replacement protocol uses a separate schema2 admission for
 all registered cuts. `PrismaMovieSubtitleReplacements` binds owner upload and
 review to the exact cut, current caption demand, unchanged video and actual
@@ -3465,7 +3507,7 @@ way to approve that capture again. A refused review (`migration_review_stale`)
 says nothing was saved and offers to load the current review. Hashes, epochs, and
 source bindings sit behind each section's "Technical details". The fixture API
 serves a capture, a report and a plan in each state for it
-(`src/testing/fixture-api/fixtures/migration.ts` and `handoff.ts`).
+(`src/testing/fixture-api/fixtures/migration/migration.ts` and `handoff.ts`).
 
 Owners can upload and review captures at `/manage/migration`. The API saves
 immutable capture records and report evidence. Approval binds capture/report

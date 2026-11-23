@@ -6,6 +6,7 @@ import type {
   PipelineStage,
 } from "#shared/hub/hub-contract.ts";
 import type { CiRunIntegration } from "#shared/hub/integration-contract.ts";
+import { QueryClient } from "@tanstack/react-query";
 import { changeDomain } from "#shared/hub/change-contract.ts";
 import { keysForChange } from "./change-keys.ts";
 import {
@@ -245,8 +246,40 @@ describe("change feed keys", () => {
       entityId: "d1",
     });
     expect(keys).toContainEqual(["hub"]);
-    expect(keys).toContainEqual(["deployment", "d1"]);
+    // The prefix covers `["deployment", "d1"]` and the detail of every other
+    // deployment, whose `newerRequest` the change may have settled.
+    expect(keys).toContainEqual(["deployment"]);
     expect(keys).toContainEqual(["integration", "runtime"]);
+  });
+
+  it("refreshes a failed deployment's detail when a newer request for its environment settles", async () => {
+    const queryClient = new QueryClient();
+    const failedKey = ["deployment", "failed-r13"];
+    const newerKey = ["deployment", "queued-r14"];
+    queryClient.setQueryData(failedKey, { newerRequest: { status: "queued" } });
+    queryClient.setQueryData(newerKey, { deployment: { status: "queued" } });
+    // The change names the newer request, never the older deployment.
+    const change = {
+      id: "a",
+      domain: "deployment" as const,
+      action: "deployment.canceled",
+      entityId: "queued-r14",
+    };
+    for (const queryKey of keysForChange(change))
+      await queryClient.invalidateQueries({ queryKey, refetchType: "none" });
+    expect(queryClient.getQueryState(failedKey)?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(newerKey)?.isInvalidated).toBe(true);
+    // A change to a build leaves deployment details alone.
+    const other = new QueryClient();
+    other.setQueryData(failedKey, {});
+    for (const queryKey of keysForChange({
+      id: "b",
+      domain: "build",
+      action: "build.verified",
+      entityId: "b1",
+    }))
+      await other.invalidateQueries({ queryKey, refetchType: "none" });
+    expect(other.getQueryState(failedKey)?.isInvalidated).toBe(false);
   });
 
   it("refreshes every commit page and commit for a build, release or environment change", () => {

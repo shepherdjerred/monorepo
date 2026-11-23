@@ -9,7 +9,7 @@ import {
 } from "./routes/root.tsx";
 import { Route as overviewRoute } from "./routes/overview.tsx";
 import { pipelineListRoutes } from "./routes/pipelines.tsx";
-import { commitRoutes } from "./routes/commits.tsx";
+import { commitRoutes } from "./routes/commits/commits.tsx";
 import { serviceTree } from "./routes/service.tsx";
 import { Route as buildRoute } from "./routes/build.tsx";
 import { Route as versionRoute } from "./routes/version.tsx";

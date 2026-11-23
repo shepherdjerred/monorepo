@@ -197,3 +197,27 @@ export async function expectStackedTable(region: Locator) {
     if (box !== null) expect(box.height).toBeLessThan(24);
   }
 }
+
+/** Open the Overview, with a filter's search string if given, and wait for its heading. */
+export async function openOverview(page: Page, search = "") {
+  await page.goto(`/${search}`);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Overview", exact: true }),
+  ).toBeVisible();
+}
+
+/** Open the "Needs attention" list past its first five items, when it holds more. */
+export async function showAllAttention(page: Page) {
+  const show = page
+    .getByRole("region", { name: "Needs attention" })
+    .getByRole("button", { name: /^Show all \d+$/u });
+  if (await show.isVisible()) await show.click();
+}
+
+/** The Overview tile of one service: the list item holding the link to its pipeline. */
+export function overviewTile(page: Page, title: string) {
+  return page
+    .getByRole("main")
+    .getByRole("listitem")
+    .filter({ has: page.getByRole("link", { name: title, exact: true }) });
+}

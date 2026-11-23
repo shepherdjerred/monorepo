@@ -270,7 +270,6 @@ function participantSource(
   });
 }
 
-/** Participant rows, with the loadout columns the caller reads. */
 /**
  * Seconds a participant played, for per-minute rates: `time_played`, or the
  * game's length for a history record, which does not state it.
@@ -278,6 +277,18 @@ function participantSource(
 export const PLAYED_SECONDS_SQL =
   "COALESCE(time_played, game_duration_seconds)";
 
+/**
+ * When a game began, for ordering, paging and date windows: the lobby's
+ * creation, or for an end-of-game record, which states no creation, its
+ * start. The lake's form of `canonicalMatchCreatedAt`, which partitions the
+ * same record by the same instant. The source must project `game_start_at`.
+ */
+export const GAME_CREATED_AT_SQL = "COALESCE(game_creation_at, game_start_at)";
+
+/** {@link GAME_CREATED_AT_SQL} in epoch milliseconds. */
+export const GAME_CREATED_MS_SQL = `epoch_ms(${GAME_CREATED_AT_SQL})`;
+
+/** Participant rows, with the loadout columns the caller reads. */
 export function buildMatchesSource(
   files: LakeFiles,
   predicate: SqlFragment,
@@ -383,6 +394,8 @@ const IDENTITY_DIMENSION_LAKE_COLUMNS = {
   team_id: MATCH_LAKE_COLUMNS.team_id,
   champion_id: MATCH_LAKE_COLUMNS.champion_id,
   game_creation_at: MATCH_LAKE_COLUMNS.game_creation_at,
+  // An end-of-game record's creation is its start (GAME_CREATED_AT_SQL).
+  game_start_at: MATCH_LAKE_COLUMNS.game_start_at,
   riot_id_game_name: MATCH_LAKE_COLUMNS.riot_id_game_name,
   riot_id_tagline: MATCH_LAKE_COLUMNS.riot_id_tagline,
 } as const;

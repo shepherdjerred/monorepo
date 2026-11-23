@@ -38,17 +38,17 @@ import {
 import {
   EDITIONS,
   movieEditionContext,
-} from "#testing/fixture-api/fixtures/movie-requests.ts";
+} from "#testing/fixture-api/fixtures/movies/movie-requests.ts";
 import {
   movieRollback,
   movieSubtitleTarget,
   movieTarget,
-} from "#testing/fixture-api/fixtures/movie-targets.ts";
+} from "#testing/fixture-api/fixtures/movies/movie-targets.ts";
 import {
   movieHistoryContext,
   movieHistoryDetail,
   movieHistoryReviews,
-} from "#testing/fixture-api/fixtures/movie-history.ts";
+} from "#testing/fixture-api/fixtures/movies/movie-history.ts";
 import { releaseList } from "#testing/fixture-api/fixtures/releases.ts";
 import {
   AIRING_EPISODES,

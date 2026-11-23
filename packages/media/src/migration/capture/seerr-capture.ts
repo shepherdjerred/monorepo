@@ -27,6 +27,10 @@ const RequestWire = z.object({
     tmdbId: z.number().int().positive(),
     tvdbId: z.number().int().positive().nullish(),
   }),
+  createdAt: z.iso
+    .datetime({ offset: true, precision: 3 })
+    .or(z.iso.datetime({ offset: true, precision: 0 }))
+    .optional(),
   seasons: z
     .array(
       z.object({
@@ -66,6 +70,9 @@ function requestRecord(request: z.infer<typeof RequestWire>) {
       .map((season) => season.seasonNumber)
       .sort((a, b) => a - b),
     active: request.status === 2 || request.status === 5,
+    ...(request.createdAt === undefined
+      ? {}
+      : { requestedAt: new Date(request.createdAt).toISOString() }),
     sourceStatus: request.status,
     seasonStatuses: request.seasons
       .map((season) => ({

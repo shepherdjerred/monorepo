@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import { CAPTURES } from "#testing/fixture-api/fixtures/migration.ts";
+import { CAPTURES } from "#testing/fixture-api/fixtures/migration/migration.ts";
 import {
   migrationBundles,
   migrationProposals,

@@ -15,6 +15,7 @@ import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildMatchesSource,
   buildTimelineCoverageSource,
+  GAME_CREATED_MS_SQL,
   listParam,
   withLakeQueryRetry,
 } from "#src/reports/duckdb/lake.ts";
@@ -42,7 +43,7 @@ async function resolveMatchRefs(matchIds: RiotMatchId[]): Promise<{
     const coverageSource = buildTimelineCoverageSource(files, predicate);
     return await withDuckDBConnection(async (session) => {
       const rows = await session.run(
-        `SELECT match_id, any_value(platform_id) AS platform_id, MIN(epoch_ms(game_creation_at)) AS game_creation_ms FROM (${matchSource.sql}) GROUP BY match_id`,
+        `SELECT match_id, any_value(platform_id) AS platform_id, MIN(${GAME_CREATED_MS_SQL}) AS game_creation_ms FROM (${matchSource.sql}) GROUP BY match_id`,
         bindParams(session, matchSource.params),
       );
       const coverageRows =

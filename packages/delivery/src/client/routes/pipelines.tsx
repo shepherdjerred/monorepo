@@ -7,7 +7,10 @@ import {
   type PipelineStatus,
 } from "#shared/hub/hub-contract.ts";
 import { queries } from "#client/queries.ts";
-import { AttentionPanel } from "#client/components/attention-panel.tsx";
+import {
+  ATTENTION_COLLAPSE_AFTER,
+  AttentionPanel,
+} from "#client/components/attention-panel.tsx";
 import { PageHeader } from "#client/components/page-header.tsx";
 import { Status, statusLabel } from "#client/components/status.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
@@ -194,7 +197,10 @@ function PipelinesPage() {
         actions={<ToolLinks links={data.tools} />}
       />
       {/* What needs someone leads, as on the overview. */}
-      <AttentionPanel items={data.attention} collapseAfter={5} />
+      <AttentionPanel
+        items={data.attention}
+        collapseAfter={ATTENTION_COLLAPSE_AFTER}
+      />
       <section className="panel" aria-labelledby="pipelines-heading">
         <div className="section-heading">
           <h2 id="pipelines-heading">

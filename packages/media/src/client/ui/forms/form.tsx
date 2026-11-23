@@ -295,6 +295,7 @@ export function FormFooter({
   saved,
   error,
   note,
+  disabled = false,
 }: {
   submitLabel: string;
   pendingLabel: string;
@@ -305,6 +306,8 @@ export function FormFooter({
   error?: Error | null;
   /** What submitting will do, in a line under the button. */
   note?: ReactNode;
+  /** For a form that has done its one job and must not be sent again. */
+  disabled?: boolean;
 }) {
   const { edited } = useContext(FormContext);
   // A change that was refused is still unsaved.
@@ -316,7 +319,12 @@ export function FormFooter({
         <Callout tone="danger">{error.message}</Callout>
       )}
       <div className={cx("footerRow")}>
-        <Button type="submit" variant="primary" busy={pending}>
+        <Button
+          type="submit"
+          variant="primary"
+          busy={pending}
+          disabled={disabled}
+        >
           {pending ? pendingLabel : submitLabel}
         </Button>
         <p className={cx("footerStatus")} role="status">

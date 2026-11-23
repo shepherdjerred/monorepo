@@ -78,6 +78,21 @@ describe("ExploreLoadoutCards", () => {
     expect(markup).toContain("Skill order is not recorded");
   });
 
+  test("renders an end-of-game record's card, which numbers no participant", () => {
+    const unnumbered = ExploreLoadoutCardSchema.parse({
+      ...card(),
+      participantId: null,
+      buildPathRecorded: false,
+      buildPath: [],
+      skillOrder: [],
+    });
+    const markup = renderToStaticMarkup(
+      <ExploreLoadoutCards cards={[unnumbered]} />,
+    );
+    expect(markup).toContain("Ahri loadout");
+    expect(markup).toContain("Timeline data is not recorded for this match");
+  });
+
   test("renders compact cards without the detailed sections", () => {
     const compact = card("S");
     const markup = renderToStaticMarkup(

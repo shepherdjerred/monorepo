@@ -430,6 +430,88 @@ function queued(minutes: number, startedAt: Date | null = null) {
   ).attention;
 }
 
+/** Scout beta accepted r275; its newest deployment is a worker retirement with `newest` changed. */
+function retiring(newest: Partial<GridDeployment>) {
+  const grid = buildGrid(
+    record({
+      services: active("scout-for-lol"),
+      environments: [
+        environment("scout-for-lol/beta", {
+          acceptedVersionSetRevisionId: "set-275",
+          acceptedDeploymentId: "accepted",
+        }),
+      ],
+      latest: new Map([
+        [
+          "scout-for-lol/beta",
+          deployment("retire", "scout-for-lol/beta", {
+            kind: "retire-host",
+            status: "queued",
+            startedAt: null,
+            finishedAt: null,
+            createdAt: at(9),
+            ...newest,
+          }),
+        ],
+      ]),
+      revisions: new Map([
+        ["set-275", 275],
+        ["set-276", 276],
+      ]),
+      accepting: new Map([["accepted", accepted(at(1))]]),
+    }),
+  );
+  const [env] = grid.groups[0]?.services[0]?.environments ?? [];
+  if (env === undefined) throw new Error("Expected scout beta");
+  return { grid, env };
+}
+
+describe("overview grid maintenance of the accepted release", () => {
+  it("leaves a queued worker retirement of the accepted release out of the pending release", () => {
+    const { grid, env } = retiring({});
+    expect(env).toMatchObject({
+      status: "succeeded",
+      request: null,
+      acceptedRevision: 275,
+      maintenance: {
+        kind: "retire-host",
+        status: "queued",
+        deploymentId: "retire",
+      },
+    });
+    expect(HubGridSchema.parse(grid)).toEqual(grid);
+  });
+
+  it("reports a running or approval-gated retirement as it is", () => {
+    expect(retiring({ status: "running" }).env.maintenance?.status).toBe(
+      "running",
+    );
+    expect(
+      retiring({ status: "awaiting_approval" }).env.maintenance?.status,
+    ).toBe("awaiting_approval");
+  });
+
+  it("still reads a retirement that ended badly, or a deploy of the same release, as a request", () => {
+    for (const newest of [
+      { status: "failed" },
+      { status: "canceled" },
+      { status: "failed", recoveryRequired: true },
+      { kind: "deploy" },
+    ]) {
+      const { env } = retiring(newest);
+      expect(env.request).toEqual({ deploymentId: "retire", revision: 275 });
+      expect(env.maintenance).toBeUndefined();
+      expect(env.status).toBe(newest.status ?? "queued");
+    }
+  });
+
+  it("keeps a retirement of another release as the request it is", () => {
+    const { env } = retiring({ versionSetRevisionId: "set-276" });
+    expect(env.maintenance).toBeUndefined();
+    expect(env.request).toMatchObject({ deploymentId: "retire" });
+  });
+});
+
 describe("overview grid queued attention", () => {
   it(`flags a deployment queued ${String(QUEUED_ATTENTION_MINUTES)} minutes or more with no stage started`, () => {
     expect(queued(50)).toEqual([

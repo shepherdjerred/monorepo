@@ -91,10 +91,10 @@ export function promotionStatusFetch(
     try {
       if (url.pathname === "/api/v1/promotion/reddit-posts") {
         const query = RedditPostsQuery.safeParse(params);
-        return !query.success ||
-          url.searchParams.size !== Object.keys(params).length
-          ? Response.json({ error: "Invalid query" }, { status: 400 })
-          : Response.json(await readPosts(query.data.runId, query.data.offset));
+        return query.success &&
+          url.searchParams.size === Object.keys(params).length
+          ? Response.json(await readPosts(query.data.runId, query.data.offset))
+          : Response.json({ error: "Invalid query" }, { status: 400 });
       }
       const query = Query.safeParse(params);
       if (!query.success)

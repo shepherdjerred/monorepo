@@ -146,20 +146,66 @@ export function settledWords(settled: RecoveryReading) {
   return ` read each external operation back after the deployment ended: ${each}.`;
 }
 
+/** What a page says when no record gives a cause for a failure. */
+export const NO_CAUSE = "No cause was recorded";
+
+/** The parts of a step a failure's cause is read from. */
+export type CauseStage = { key: string; status: string; message: string };
+
+/**
+ * What a step's message adds to its key and status. Executors often write
+ * `step-sync: running`, which repeats both, and a message that starts with
+ * its own key loses the key. Null when nothing is left.
+ */
+export function stepMessage(stage: CauseStage) {
+  const prefix = `${stage.key}: `;
+  const text = (
+    stage.message.startsWith(prefix)
+      ? stage.message.slice(prefix.length)
+      : stage.message
+  ).trim();
+  return text === "" || text === stage.status ? null : text;
+}
+
+/**
+ * The cause the steps record for an ended deployment: the step that failed
+ * and what it said, or else the step still running when the deployment
+ * ended, whose outcome nothing reported. Null when no step says anything.
+ */
+export function stageCause(stages: readonly CauseStage[]) {
+  const failed = stages.find((stage) => stage.status === "failed");
+  if (failed !== undefined) {
+    const words = stepMessage(failed);
+    return words === null
+      ? `Step ${failed.key} failed`
+      : `Step ${failed.key} failed: ${words}`;
+  }
+  const running = stages.find((stage) => stage.status === "running");
+  return running === undefined
+    ? null
+    : `Step ${running.key} was still running when the deployment ended`;
+}
+
 /**
  * Why a failed deployment failed, as a page states it: what recovery read
  * back once the newest recovery intent has settled and the lock is released,
  * and otherwise what the executor recorded. While an intent is pending, or
  * the deployment still holds its lock, the executor's words stand: the
  * outcome is still unknown.
+ *
+ * A readback of Succeeded says the external work finished, which never
+ * explains a failure: the cause is then the step the deployment ended on,
+ * or that none was recorded.
  */
 export function failureReason(
   deployment: { message: string | null; recoveryRequired: boolean },
   intents: readonly ReadableIntent[] | undefined,
+  stages: readonly CauseStage[],
 ) {
   if (deployment.recoveryRequired) return deployment.message;
   const reading = recoveryReading(intents);
-  return reading === null
-    ? deployment.message
+  if (reading === null) return deployment.message;
+  return readbackOutcome(reading) === "succeeded"
+    ? (stageCause(stages) ?? NO_CAUSE)
     : `Recovery intent ${String(reading.sequence)}${settledWords(reading)}`;
 }

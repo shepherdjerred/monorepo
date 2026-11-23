@@ -3,8 +3,8 @@ import {
   BUNDLE_IDS,
   CAPTURES,
   bundleReviewDetail,
-} from "#testing/fixture-api/fixtures/migration.ts";
-import { HANDOFF_IDS } from "#testing/fixture-api/fixtures/handoff.ts";
+} from "#testing/fixture-api/fixtures/migration/migration.ts";
+import { HANDOFF_IDS } from "#testing/fixture-api/fixtures/migration/handoff.ts";
 import { PROFILE_IDS } from "#testing/fixture-api/fixtures/profiles.ts";
 import { sha256 } from "#testing/fixture-api/support.ts";
 import { horizontalOverflow, test } from "#e2e/browser/support.ts";

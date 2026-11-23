@@ -12,7 +12,14 @@ import {
   seedWaitingPlan,
   withStack,
 } from "./model-plan.ts";
-import { RECOVERY_PROD, seedRecovery, withRecovery } from "./model-recovery.ts";
+import {
+  HELD_PROD,
+  IDLE_FAILED,
+  RECOVERY_PROD,
+  seedHeldRetry,
+  seedRecovery,
+  withRecovery,
+} from "./model-recovery.ts";
 
 // The model state the browser specs read, built only through Delivery's own
 // catalog, publication, request, approval, execution, monitor and restore
@@ -31,6 +38,8 @@ export const MODEL_ENVIRONMENTS = [
   OPERATOR_PROD,
   CHANNEL_PROD,
   RECOVERY_PROD,
+  HELD_PROD,
+  IDLE_FAILED,
 ];
 
 type Document = Awaited<ReturnType<typeof catalogDocument>>;
@@ -392,6 +401,7 @@ export async function seedModelBrowser(delivery: Delivery, database: Database) {
   await seedWaitingPlan(delivery, database);
   await seedOperatorRun(delivery);
   await seedRecovery(delivery, database);
+  await seedHeldRetry(delivery, database);
 }
 
 /** The request id of the beta deploy whose interrupted sync recovery has read back. */

@@ -460,8 +460,8 @@ namespace TaskNotes.Windows.Tests
             editor.RecurrenceAnchor = "scheduled";
             Assert.IsTrue(await editor.SaveAsync(TestContext.CancellationToken));
 
-            TaskEditInput edit =
-                store.LastEdit ?? throw new AssertFailedException("No edit was recorded.");
+            TaskEditInput edit = store.LastEdit
+                ?? throw new AssertFailedException("No edit was recorded.");
             Assert.AreEqual("Ship Windows", edit.Title);
             Assert.AreEqual("Details", edit.Details);
             Assert.AreSequenceEqual(["Windows", "Native"], edit.Projects);
@@ -645,8 +645,7 @@ namespace TaskNotes.Windows.Tests
 
             internal void RunPending()
             {
-                Action action =
-                    Pending
+                Action action = Pending
                     ?? throw new InvalidOperationException("No presentation work was queued.");
                 Pending = null;
                 action();

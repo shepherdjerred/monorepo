@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import {
   HANDOFF_IDS,
   handoffDetail,
-} from "#testing/fixture-api/fixtures/handoff.ts";
+} from "#testing/fixture-api/fixtures/migration/handoff.ts";
 import {
   HANDOFF_PLAN_STATES,
   HandoffPlanDetailSchema,

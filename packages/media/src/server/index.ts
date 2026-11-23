@@ -44,6 +44,10 @@ import { renderMediaMetrics } from "#infrastructure/metrics.ts";
 import { PrismaCapacityAdministration } from "#infrastructure/capacity/service.ts";
 import { PrismaPlexEventIngress } from "#infrastructure/plex-events/ingress.ts";
 import { PrismaPlaybackHistory } from "#infrastructure/playback/service.ts";
+import {
+  importPlexHistoricalViews,
+  listPlexHistoricalViews,
+} from "#infrastructure/playback/plex-history.ts";
 import { playbackHandoffReady } from "#infrastructure/playback/handoff.ts";
 import { PrismaCalendarApplication } from "#infrastructure/library/views/calendar.ts";
 import { PrismaRemovalHistoryApplication } from "#infrastructure/library/views/removals.ts";
@@ -227,6 +231,22 @@ const app = createMediaApp({
       plexAdministration.libraryClient(actor),
     ),
   ),
+  plexHistory: {
+    list: (actor, query) =>
+      listPlexHistoricalViews(
+        database,
+        actor,
+        bootstrap.PLEX_SERVER_MACHINE_ID,
+        query,
+      ),
+    import: (actor, input) =>
+      importPlexHistoricalViews(
+        database,
+        actor,
+        bootstrap.PLEX_SERVER_MACHINE_ID,
+        input,
+      ),
+  },
   artwork,
   library: new PrismaLibraryApplication(database, {
     serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,

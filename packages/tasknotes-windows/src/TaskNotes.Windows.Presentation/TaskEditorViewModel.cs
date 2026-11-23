@@ -353,8 +353,7 @@ namespace TaskNotes.Windows.Presentation
             CancellationToken cancellationToken
         )
         {
-            TaskItem original =
-                _original
+            TaskItem original = _original
                 ?? throw new InvalidOperationException("Load a task before saving the editor.");
             string title = Title.Trim();
             if (title.Length == 0 && field is null or "title")
@@ -551,16 +550,15 @@ namespace TaskNotes.Windows.Presentation
         /// <summary>Deletes the loaded task.</summary>
         public Task DeleteAsync(CancellationToken cancellationToken = default)
         {
-            string taskId =
-                TaskId ?? throw new InvalidOperationException("Load a task before deleting it.");
+            string taskId = TaskId
+                ?? throw new InvalidOperationException("Load a task before deleting it.");
             return _store.DeleteTaskAsync(taskId, cancellationToken);
         }
 
         /// <summary>Restores the original values without persisting.</summary>
         public void Discard()
         {
-            var original =
-                _original
+            var original = _original
                 ?? throw new InvalidOperationException("Load a task before discarding edits.");
             var current = _store.State.AllTasks.SingleOrDefault(task =>
                 task.Id == original.Id && task.ProfileId == original.ProfileId

@@ -216,6 +216,28 @@
   .entryState {
     margin: var(--space-2) 0;
   }
+
+  .plexHistory {
+    margin-block-start: var(--space-7);
+  }
+  .plexHistory > h2 {
+    margin-block-end: var(--space-3);
+  }
+  .plexHistoryRow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-1) var(--space-4);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border);
+    overflow-wrap: anywhere;
+  }
+  .plexHistoryWhen {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+
   @container (min-width: 720px) {
     .entry {
       grid-template-columns: 72px minmax(0, 1fr) minmax(220px, 340px);

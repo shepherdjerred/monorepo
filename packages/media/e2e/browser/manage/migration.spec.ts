@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import { migrationProposalDetail } from "#testing/fixture-api/fixtures/migration.ts";
+import { migrationProposalDetail } from "#testing/fixture-api/fixtures/migration/migration.ts";
 import { horizontalOverflow, inScenario, test } from "#e2e/browser/support.ts";
 import { SNAPSHOT, openCapture, proposalSummary } from "./migration-support.ts";
 import { answerWrites, openManage, violations } from "./support.ts";

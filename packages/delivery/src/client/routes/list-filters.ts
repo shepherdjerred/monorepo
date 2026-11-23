@@ -4,7 +4,7 @@ import type {
   BuildListQuery,
   DeploymentListQuery,
 } from "#shared/hub/hub-contract.ts";
-import { PROBLEM_CHOICES, WITHIN_CHOICES } from "./activity-list.tsx";
+import { PROBLEM_CHOICES, WITHIN_CHOICES } from "./activity/activity-list.tsx";
 import {
   boundedText,
   plainChoices,

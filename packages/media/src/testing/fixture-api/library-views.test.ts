@@ -5,7 +5,7 @@ import { MovieEditionRequestListV4Schema } from "#shared/movie-editions/lifecycl
 import { mineTitles } from "#client/library/mine-model.ts";
 import { RemovalHistoryPageSchema } from "#shared/household/calendar.ts";
 import { leavingTitles, restoreControls } from "#client/library/removals.ts";
-import { movieRequestList } from "./fixtures/movie-requests.ts";
+import { movieRequestList } from "./fixtures/movies/movie-requests.ts";
 import { removalHistory, removalList } from "./fixtures/removals.ts";
 import { interestList, requestList } from "./fixtures/requests.ts";
 import { MEMBER } from "./personas.ts";

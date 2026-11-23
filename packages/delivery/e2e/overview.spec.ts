@@ -1,11 +1,14 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { HubGridSchema } from "#shared/hub/hub-contract.ts";
 import {
   api,
   expectContainedInTiles,
   expectNoHorizontalOverflow,
   isPhone,
+  openOverview,
+  overviewTile as tile,
   requestArcadeDeployment,
+  showAllAttention,
 } from "./helpers.ts";
 
 const NAVIGATION = [
@@ -17,21 +20,6 @@ const NAVIGATION = [
   "Artifacts",
   "Activity",
 ];
-
-async function openOverview(page: Page, search = "") {
-  await page.goto(`/${search}`);
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Overview", exact: true }),
-  ).toBeVisible();
-}
-
-/** The tile of one service: the list item holding the link to its pipeline. */
-function tile(page: Page, title: string) {
-  return page
-    .getByRole("main")
-    .getByRole("listitem")
-    .filter({ has: page.getByRole("link", { name: title, exact: true }) });
-}
 
 test("the overview is home and says what it shows", async ({ page }) => {
   await openOverview(page);
@@ -75,12 +63,14 @@ test("attention comes first and names the service and environment", async ({
   const grid = await api(page, "/api/v1/hub/grid", HubGridSchema);
   expect(grid.attention.length).toBeGreaterThan(0);
   const attention = page.getByRole("region", { name: "Needs attention" });
+  // Like Pipelines, a long list shows its first five behind "Show all".
   await expect(attention.getByRole("listitem")).toHaveCount(
-    grid.attention.length,
+    Math.min(grid.attention.length, 5),
   );
   await expect(attention).toContainText(
     `${String(grid.attention.length)} items`,
   );
+  await showAllAttention(page);
   // The Minecraft upgrade's interrupted executor stays quarantined in every run.
   const stuck = attention.getByRole("link", {
     name: "Minecraft tsmc requires recovery",
@@ -178,6 +168,7 @@ test("a chip shows the accepted release apart from a newer request, each with it
   await expect(chip).not.toContainText(`${accepted} queued`);
 
   // A deployment queued past the threshold with no stage started needs someone.
+  await showAllAttention(page);
   const attention = page.getByRole("region", { name: "Needs attention" });
   const item = attention
     .getByRole("listitem")
@@ -195,6 +186,7 @@ test("each attention item says what failed instead of the executor boilerplate",
   page,
 }) => {
   await openOverview(page);
+  await showAllAttention(page);
   const items = page
     .getByRole("region", { name: "Needs attention" })
     .getByRole("listitem");

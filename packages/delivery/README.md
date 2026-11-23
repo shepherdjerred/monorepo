@@ -344,7 +344,7 @@ worker-pool panels while the deployment awaits approval.
 The activity page shows what the common actions recorded: a stage write's
 stage and status, a request's environment, set revision and override reasons,
 a decision's override, a publication's service and source, and a result. Each
-known action reads in plain words (`src/client/routes/activity-labels.ts`)
+known action reads in plain words (`src/client/routes/activity/activity-labels.ts`)
 with its recorded code as the title; an unknown one is shown as recorded. Each
 row shows its clock reading to the second beside its age, so rows a minute
 apart still order by eye. `GET /api/v1/activity` names the service,

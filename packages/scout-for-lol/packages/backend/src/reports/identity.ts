@@ -9,6 +9,7 @@ import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildIdentityDimensionSource,
+  GAME_CREATED_AT_SQL,
   listParam,
   withLakeQueryRetry,
   scalarParam,
@@ -232,12 +233,12 @@ async function riotIdHistory(
     `SELECT puuid,
             concat_ws('#', riot_id_game_name, riot_id_tagline) AS riot_id,
             count(*) AS games,
-            CAST(min(game_creation_at) AS VARCHAR) AS first_seen,
-            CAST(max(game_creation_at) AS VARCHAR) AS last_seen
+            CAST(min(${GAME_CREATED_AT_SQL}) AS VARCHAR) AS first_seen,
+            CAST(max(${GAME_CREATED_AT_SQL}) AS VARCHAR) AS last_seen
        FROM (${source.sql})
       WHERE puuid IN (SELECT unnest(?))
       GROUP BY 1, 2
-      ORDER BY max(game_creation_at) DESC`,
+      ORDER BY max(${GAME_CREATED_AT_SQL}) DESC`,
     [...source.params, listParam(puuids)],
     IdentityRowSchema,
     abortSignal,

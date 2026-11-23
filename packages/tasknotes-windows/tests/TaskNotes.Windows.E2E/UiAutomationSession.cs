@@ -325,8 +325,8 @@ namespace TaskNotes.Windows.E2E
 
         internal static void InvokeDescendantByName(AutomationElement ancestor, string name)
         {
-            AutomationElement container =
-                AscendToPattern(ancestor, SelectionItemPattern.Pattern) ?? ancestor;
+            AutomationElement container = AscendToPattern(ancestor, SelectionItemPattern.Pattern)
+                ?? ancestor;
             AutomationElement element = WaitForElement(
                 () =>
                     container.FindFirst(
@@ -488,8 +488,8 @@ namespace TaskNotes.Windows.E2E
 
         internal static void ToggleDescendant(AutomationElement ancestor)
         {
-            AutomationElement container =
-                AscendToPattern(ancestor, SelectionItemPattern.Pattern) ?? ancestor;
+            AutomationElement container = AscendToPattern(ancestor, SelectionItemPattern.Pattern)
+                ?? ancestor;
             AutomationElement toggle = WaitForElement(
                 () =>
                     container.FindFirst(
@@ -518,8 +518,7 @@ namespace TaskNotes.Windows.E2E
             foreach (string name in names)
             {
                 AutomationElement named = WaitForName(name, CancellationToken.None);
-                AutomationElement selectable =
-                    AscendToPattern(named, SelectionItemPattern.Pattern)
+                AutomationElement selectable = AscendToPattern(named, SelectionItemPattern.Pattern)
                     ?? throw new AssertFailedException(
                         $"Task row '{name}' has no SelectionItem pattern."
                     );
@@ -532,8 +531,7 @@ namespace TaskNotes.Windows.E2E
         {
             RequireOwnedWindow();
             AutomationElement label = WaitForName(title, CancellationToken.None);
-            AutomationElement item =
-                AscendToPattern(label, InvokePattern.Pattern)
+            AutomationElement item = AscendToPattern(label, InvokePattern.Pattern)
                 ?? throw new AssertFailedException(
                     "The task row has no native ItemClick Invoke pattern."
                 );
@@ -546,8 +544,7 @@ namespace TaskNotes.Windows.E2E
                 TaskNotes.Windows.Host.AutomationIds.TaskRow(path),
                 CancellationToken.None
             );
-            var item =
-                AscendToPattern(row, InvokePattern.Pattern)
+            var item = AscendToPattern(row, InvokePattern.Pattern)
                 ?? throw new AssertFailedException(
                     "The exact task path has no ItemClick Invoke pattern."
                 );

@@ -13,7 +13,7 @@ import {
   CAPTIONS_MISSING,
   CAPTIONS_SATISFIED,
   CHINESE_CAPTIONS,
-} from "./movie-targets.ts";
+} from "./movies/movie-targets.ts";
 import {
   OWNER,
   SAM,

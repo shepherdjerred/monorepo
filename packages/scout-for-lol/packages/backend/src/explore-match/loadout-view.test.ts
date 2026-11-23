@@ -324,6 +324,39 @@ describe("Explore loadout card hydration", () => {
     });
   });
 
+  test("an end-of-game record's unnumbered participant gets a card without a build path", async () => {
+    vi.mocked(fetchMatchLoadoutRows).mockResolvedValue([
+      { ...LOADOUT_ROW, participant_id: null },
+    ]);
+    vi.mocked(fetchTimelineCoverage).mockClear();
+    vi.mocked(fetchTimelineEventPage).mockClear();
+    const request = ExploreLoadoutCardRequestSchema.parse({
+      matchId: LOADOUT_ROW.match_id,
+      puuid: PUUID,
+      size: "S",
+    });
+
+    const [card] = await hydrateExploreLoadoutCards({
+      requests: [request],
+      eligiblePairs: new Set([
+        exploreLoadoutPairKey({
+          matchId: request.matchId,
+          puuid: request.puuid,
+        }),
+      ]),
+    });
+
+    expect(card).toMatchObject({
+      participantId: null,
+      championName: "Ahri",
+      buildPathRecorded: false,
+      buildPath: [],
+      skillOrder: [],
+    });
+    expect(fetchTimelineCoverage).not.toHaveBeenCalled();
+    expect(fetchTimelineEventPage).not.toHaveBeenCalled();
+  });
+
   test("maps participant fields and asset filenames without retaining the PUUID", () => {
     const card = buildExploreLoadoutCard({
       request: ExploreLoadoutCardRequestSchema.parse({

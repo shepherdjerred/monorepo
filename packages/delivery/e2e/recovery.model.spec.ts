@@ -1,9 +1,18 @@
 import { expect, test, type Page } from "@playwright/test";
-import { DeploymentPageSchema } from "#shared/hub/hub-contract.ts";
+import { DeploymentSchema } from "#shared/contract.ts";
+import {
+  DeploymentPageSchema,
+  EnvironmentDetailSchema,
+} from "#shared/hub/hub-contract.ts";
 import { api, expectNoHorizontalOverflow } from "./helpers.ts";
 import {
   APPLIED_REQUEST,
+  HELD_PROD,
+  IDLE_FAILED,
+  IDLE_FAILED_REQUEST,
   RECOVERY_PROD,
+  REFUSAL,
+  REFUSED_REQUEST,
   SUPERSEDED_REQUEST,
 } from "./model-recovery.ts";
 
@@ -12,10 +21,14 @@ import {
 // executor until recovery read it back as Succeeded. ArgoCD reports r4's
 // image running, and nothing accepted r4.
 
-async function deploymentId(page: Page, requestId: string) {
+async function deploymentId(
+  page: Page,
+  requestId: string,
+  environmentId = RECOVERY_PROD,
+) {
   const { items } = await api(
     page,
-    `/api/v1/deployments?environmentId=${encodeURIComponent(RECOVERY_PROD)}`,
+    `/api/v1/deployments?environmentId=${encodeURIComponent(environmentId)}`,
     DeploymentPageSchema,
   );
   const found = items.find((item) => item.requestId === requestId);
@@ -31,20 +44,28 @@ test("every page states what recovery read back, never the executor's stale word
   const failing = attention
     .getByRole("listitem")
     .filter({ hasText: "prod is failing repeatedly" });
+  // A readback of Succeeded is never the reason: the step the deployment ended on is.
   await expect(failing).toContainText(
-    "The last 2 deployments failed, the newest with: Recovery intent 1 read the external operation back after the deployment ended: it ended in phase Succeeded. Nothing newer is queued.",
+    "The last 2 deployments failed, the newest with: Step step-sync was still running when the deployment ended. Nothing newer is queued.",
   );
+  await expect(failing).not.toContainText("phase Succeeded");
   await expect(attention).not.toContainText("may still be active");
 
   await page.goto("/pipelines");
   await expect(page.getByRole("main")).toContainText("is failing repeatedly");
   await expect(page.getByRole("main")).not.toContainText("may still be active");
+  await expect(page.getByRole("main")).not.toContainText(
+    "it ended in phase Succeeded",
+  );
 
-  await page.goto("/activity");
+  await page.goto("/activity?action=deployment.failed");
   await expect(page.getByRole("main")).toContainText(
-    "Recovery intent 1 read the external operation back",
+    "Step step-sync was still running when the deployment ended",
   );
   await expect(page.getByRole("main")).not.toContainText("may still be active");
+  await expect(page.getByRole("main")).not.toContainText(
+    "it ended in phase Succeeded",
+  );
 
   await page.goto("/pipelines/streambot");
   const prod = page.getByRole("region", { name: "prod", exact: true });
@@ -64,6 +85,10 @@ test("a release recovery read back as applied says so, and that Delivery never a
     /failed · applied, not accepted$/u,
   );
   const why = main.getByRole("region", { name: "Why it failed" });
+  // The step it ended on leads; the readback follows as what recovery found.
+  await expect(why).toContainText(
+    "was still running when the deployment ended; recovery has since read its outcome back",
+  );
   await expect(why).toContainText("it ended in phase Succeeded.");
   await expect(why).toContainText(
     "but Delivery never accepted r4: r3 is still accepted in streambot/prod",
@@ -112,6 +137,72 @@ test("a failure a newer acceptance superseded offers no retry, and says why", as
   await expect(
     main.getByRole("button", { name: "Retry as a new deployment" }),
   ).toHaveCount(0);
+});
+
+test("a failure with a newer request queued offers no retry, says why, and quotes the refusal", async ({
+  page,
+}) => {
+  await page.goto(
+    `/deployments/${await deploymentId(page, REFUSED_REQUEST, HELD_PROD)}`,
+  );
+  const main = page.getByRole("main");
+  const why = main.getByRole("region", { name: "Why it failed" });
+  // The recorded refusal is in the prose, not behind "inspect Workflow history".
+  await expect(why).toContainText(`failed: ${REFUSAL}`);
+  await expect(why).toContainText("A newer request, r2, is queued;");
+  await expect(why).toContainText("Retry is off until it settles");
+  await expect(why).not.toContainText("Fix the cause");
+  await expect(
+    why.getByRole("link", { name: "r2", exact: true }),
+  ).toHaveAttribute("href", /^\/deployments\//u);
+  await expect(
+    main.getByRole("button", { name: "Retry as a new deployment" }),
+  ).toHaveCount(0);
+  await expectNoHorizontalOverflow(page);
+});
+
+test("Retry returns on an open failed deployment once the newer request is canceled", async ({
+  page,
+  baseURL,
+}) => {
+  if (baseURL === undefined) throw new Error("Playwright baseURL required");
+  const headers = { Origin: baseURL };
+  const failedId = await deploymentId(page, IDLE_FAILED_REQUEST, IDLE_FAILED);
+  await page.goto(`/deployments/${failedId}`);
+  const main = page.getByRole("main");
+  const retry = main.getByRole("button", { name: "Retry as a new deployment" });
+  await expect(retry).toBeVisible();
+  // Another client requests a newer deployment while this page is open.
+  const environment = await api(
+    page,
+    `/api/v1/environments/${encodeURIComponent(IDLE_FAILED)}`,
+    EnvironmentDetailSchema,
+  );
+  const created = await page.request.post(
+    `/api/v1/deployments/${failedId}/retry`,
+    {
+      headers,
+      data: {
+        requestId: crypto.randomUUID(),
+        expectedGeneration: environment.environment.generation,
+      },
+    },
+  );
+  expect(created.status()).toBe(201);
+  const newer = DeploymentSchema.parse(await created.json());
+  const why = main.getByRole("region", { name: "Why it failed" });
+  await expect(why).toContainText("Retry is off until it settles");
+  await expect(retry).toHaveCount(0);
+  // It settles; the older failure's page, still open, offers Retry again.
+  const canceled = await page.request.post(
+    `/api/v1/deployments/${newer.id}/cancel`,
+    { headers },
+  );
+  expect(canceled.status()).toBe(200);
+  await expect(why).not.toContainText("Retry is off until it settles");
+  await expect(retry).toBeVisible();
+  await expect(why).toContainText("Fix the cause");
+  await expectNoHorizontalOverflow(page);
 });
 
 test("an environment that refuses requests says why beside the request button", async ({

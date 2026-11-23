@@ -15,7 +15,7 @@ import {
   tallyText,
   unchangedLine,
   verdictView,
-} from "./routes/commit-model.ts";
+} from "./routes/commits/commit-model.ts";
 
 const NEWER = "69765c4ae8".padEnd(40, "0");
 

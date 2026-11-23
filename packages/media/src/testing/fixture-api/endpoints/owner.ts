@@ -17,6 +17,10 @@ import {
   NumberingEpisodeListSchema,
   NumberingSeriesListSchema,
 } from "#shared/numbering.ts";
+import {
+  SubtitleReplacementDetailSchema,
+  SubtitleReplacementListSchema,
+} from "#shared/subtitle-replacement.ts";
 import { PlexProfilesSchema } from "#shared/plex-admin.ts";
 import { QualityGuideStatusSchema } from "#shared/quality-guide/view.ts";
 import { RecoveryDetailSchema, RecoveryListSchema } from "#shared/recovery.ts";
@@ -29,7 +33,7 @@ import {
   recoveryDetail,
   recoveryList,
   legacyRequesters,
-} from "#testing/fixture-api/fixtures/recovery.ts";
+} from "#testing/fixture-api/fixtures/migration/recovery.ts";
 import {
   capacityView,
   migrationBundles,
@@ -40,16 +44,21 @@ import {
   providerList,
   subtitleTargets,
 } from "#testing/fixture-api/fixtures/owner.ts";
-import { nativeRecoveryInventory } from "#testing/fixture-api/fixtures/native-recovery.ts";
+import { nativeRecoveryInventory } from "#testing/fixture-api/fixtures/migration/native-recovery.ts";
+import {
+  REPLACEMENT_IDS,
+  subtitleReplacementDetail,
+  subtitleReplacementList,
+} from "#testing/fixture-api/fixtures/movies/subtitle-replacements.ts";
 import {
   HANDOFF_IDS,
   handoffDetail,
-} from "#testing/fixture-api/fixtures/handoff.ts";
+} from "#testing/fixture-api/fixtures/migration/handoff.ts";
 import {
   BUNDLE_IDS,
   bundleReviewDetail,
   migrationProposalDetail,
-} from "#testing/fixture-api/fixtures/migration.ts";
+} from "#testing/fixture-api/fixtures/migration/migration.ts";
 import {
   profileDefaults,
   profileList,
@@ -206,6 +215,22 @@ const administration: readonly FixtureEndpoint[] = [
     schema: HandoffPlanDetailSchema,
     respond: (request) => handoffDetail(request.param("id")),
     samples: Object.values(HANDOFF_IDS).map((id) => `/admin/handoffs/${id}`),
+  }),
+  endpoint({
+    path: "/admin/subtitle-replacements",
+    access: "owner",
+    schema: SubtitleReplacementListSchema,
+    respond: () => subtitleReplacementList(),
+    samples: ["/admin/subtitle-replacements"],
+  }),
+  endpoint({
+    path: "/admin/subtitle-replacements/:id",
+    access: "owner",
+    schema: SubtitleReplacementDetailSchema,
+    respond: (request) => subtitleReplacementDetail(request.param("id")),
+    samples: Object.values(REPLACEMENT_IDS).map(
+      (id) => `/admin/subtitle-replacements/${id}`,
+    ),
   }),
   endpoint({
     path: "/admin/subtitles/targets",

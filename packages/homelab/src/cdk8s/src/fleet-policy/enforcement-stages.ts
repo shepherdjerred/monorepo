@@ -19,15 +19,15 @@ import type { EnforcementStage } from "@shepherdjerred/homelab/cdk8s/src/misc/ne
 export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   "alert-dashboard": "enforced",
   arcade: "enforced",
-  argocd: "open",
+  argocd: "enforced",
   birmel: "enforced",
   bugsink: "enforced",
   buildkitd: "enforced",
   ddns: "enforced",
-  delivery: "open",
-  "delivery-platform-jobs": "open",
-  "delivery-tsmc-controller": "open",
-  "delivery-worker-jobs": "open",
+  delivery: "enforced",
+  "delivery-platform-jobs": "enforced",
+  "delivery-tsmc-controller": "enforced",
+  "delivery-worker-jobs": "enforced",
   flags: "enforced",
   flipt: "open",
   freshrss: "enforced",
@@ -61,8 +61,8 @@ export const ENFORCEMENT_STAGES: Readonly<Record<string, EnforcementStage>> = {
   tracker: "enforced",
   "trmnl-dashboard": "enforced",
   "turbo-cache": "enforced",
-  woodpecker: "open",
-  "woodpecker-ci": "open",
+  woodpecker: "enforced",
+  "woodpecker-ci": "enforced",
 };
 
 /**

@@ -88,14 +88,11 @@ namespace TaskNotes.Windows.App.Tests
                 dispatcher,
                 NullLogger<UiOperationQueue>.Instance
             );
-            productionQueue.Run(
-                "production-success",
-                () =>
-                {
-                    success.SetResult();
-                    return Task.CompletedTask;
-                }
-            );
+            productionQueue.Run("production-success", () =>
+            {
+                success.SetResult();
+                return Task.CompletedTask;
+            });
             await success.Task.WaitAsync(TestContext.CancellationToken);
             await productionQueue.DrainAsync().WaitAsync(TestContext.CancellationToken);
 
