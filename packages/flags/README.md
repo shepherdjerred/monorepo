@@ -55,11 +55,23 @@ unused beta copies, are reported and not imported.
 
 ## Operator
 
-The browser UI is served by this process. The sidebar lists real deployments:
-a prod-only catalog is one row, and Scout and Karma list Beta and Prod. A flag
-row shows its key, On/Off/Targeted (or the variant string), and its type.
-Saving a flag shows the before and after document, then writes that revision.
-A conflicting write is left unchanged and the other value is shown.
+The browser UI is served by this process and uses the shared console look from
+`@shepherdjerred/console-ui`. The workspace button at the top of the sidebar is
+the app switcher: it lists the other consoles and tools from `ops-model`'s
+`CONSOLE_LINKS` and opens them in the same tab. Below it the sidebar lists real
+deployments with their flag counts: prod-only catalogs are one row, and Scout
+and Karma are grouped with Beta and Prod rows. Below 900px the sidebar is
+replaced by a header row with the app switcher and a deployment select.
+
+A deployment's header shows its revision. The flag table lists each flag's key,
+its state (On, Off or Targeted with a glyph, or the variant string) and its
+type. The search field filters flags by key and keeps the filter in the `?q=`
+query, so it survives choosing a flag. Choosing a flag opens its editor beside
+the table.
+
+"Review save" opens a dialog with the stored flag before and the draft after;
+Save writes that revision. A conflicting write is left unchanged: a warning
+above the form shows the other value beside the draft, with a button to load it.
 
 `toolkit flags` is the command surface. See `packages/toolkit/README.md`.
 
