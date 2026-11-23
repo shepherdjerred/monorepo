@@ -3,6 +3,8 @@ import type {
   CarriedFailure,
   CommitVerdict,
 } from "#shared/hub/hub-contract.ts";
+import type { CarriedRelease } from "#shared/hub/commit-release-contract.ts";
+import { namedWithMore } from "./commit-blockers.ts";
 import { distinct, series } from "./commit-text.ts";
 
 /**
@@ -81,9 +83,35 @@ function releaseClause(entries: readonly CarriedFailure[]) {
 }
 
 /**
- * Where carried failures shipped: each carrying commit by short sha, the
- * services whose build passed there, and how the release the change ships
- * in stands. "Passed" is that build's CI; a failed release is named rather
+ * How the commit that carries a failure stands itself, when that is not
+ * settled: the carrying commit's own row (its pill) can say it awaits
+ * approval or failed, so the note says so beside it instead of leaving
+ * "included in X" to look like good news. Most urgent verdict among the
+ * carried failures; null when it is deployed, idle or unknown.
+ */
+const CARRIER_STANDING: [CommitVerdict, string][] = [
+  ["recovery_required", "needs recovery"],
+  ["failed", "failed to deploy"],
+  ["build_failed", "failed CI"],
+  ["awaiting_approval", "awaits approval"],
+  ["deploying", "is deploying"],
+  ["queued", "is queued"],
+  ["building", "is still in CI"],
+];
+
+function carrierClause(sha: string, entries: readonly CarriedFailure[]) {
+  const verdicts = new Set(entries.map((entry) => entry.includedInVerdict));
+  const standing = CARRIER_STANDING.find(([verdict]) => verdicts.has(verdict));
+  return standing === undefined ? "" : `; ${sha} itself ${standing[1]}`;
+}
+
+/**
+ * Where carried failures shipped, as a list: each carrying commit by short
+ * sha with, in parentheses, the services whose build passed there, how the
+ * release the change ships in stands, and how the commit itself stands when
+ * it is not settled: "A (whose build of X passed) and B (whose build of Y
+ * passed, but the change ships in release r12, which failed to deploy)".
+ * "Passed" is that build's CI; a failed release or carrier is named rather
  * than left for the carrying commit's own row to contradict.
  */
 export function carriedIn(carried: readonly CarriedFailure[]) {
@@ -99,20 +127,63 @@ export function carriedIn(carried: readonly CarriedFailure[]) {
           entry.serviceTitle === undefined ? [] : [entry.serviceTitle],
         ),
       );
-      return `${sha}, whose ${services.length === 0 ? "build" : `build of ${series(services)}`} passed${releaseClause(entries)}`;
+      const built =
+        services.length === 0 ? "build" : `build of ${series(services)}`;
+      return `${sha} (whose ${built} passed${releaseClause(entries)}${carrierClause(sha, entries)})`;
     }),
   );
 }
 
-/** One carried failure's release as a short clause for the commit page's build list; "" when nothing needs saying. */
+/** One carried failure's release and carrier as a short clause for the commit page's build list; "" when nothing needs saying. */
 export function carriedReleaseNote(entry: CarriedFailure) {
   const words = releaseWords([entry]);
-  return words === null
-    ? ""
-    : `${words.contradicts ? " but" : " and"} ${words.text}`;
+  return `${
+    words === null ? "" : `${words.contradicts ? " but" : " and"} ${words.text}`
+  }${carrierClause(entry.includedIn.slice(0, 7), [entry])}`;
 }
 
 /** Why a failed build held nothing back: a later commit's build that includes it passed. */
 export function includedNote(carried: readonly CarriedFailure[]) {
   return `Not built on its own; included in ${carriedIn(carried)}`;
+}
+
+/** How a landed release is worded, singular and plural. */
+const LANDED: Record<CarriedRelease["state"], [string, string]> = {
+  live: ["is live", "are live"],
+  superseded: [
+    "was superseded by a newer release, which is deployed",
+    "were superseded by newer releases, which are deployed",
+  ],
+};
+
+/**
+ * The releases that ship a failed pipeline's change and have landed: live,
+ * or superseded by a newer release that is deployed (r346 failed, was
+ * canceled or was replaced; the change is live through the newer one). The releases still
+ * held back are named by the row's blocker notes, so they are not here.
+ * "Releases in f545a3b: 3 were superseded by newer releases, which are
+ * deployed (Streambot & media r346, Golink r12, Hub r278), Cluster
+ * observability baseline r75 is live". Null when none have landed.
+ */
+export function releasesNote(
+  releases: readonly CarriedRelease[] | undefined,
+): string | null {
+  if (releases === undefined || releases.length === 0) return null;
+  const shas = distinct(
+    releases.map((release) => release.includedIn.slice(0, 7)),
+  );
+  const parts = (["superseded", "live"] as const).flatMap((state) => {
+    const names = releases
+      .filter((release) => release.state === state)
+      .map(
+        (release) => `${release.service} ${revisionLabel(release.revision)}`,
+      );
+    const [only] = names;
+    const [one, many] = LANDED[state];
+    if (only === undefined) return [];
+    return names.length === 1
+      ? [`${only} ${one}`]
+      : [`${String(names.length)} ${many} (${namedWithMore(names)})`];
+  });
+  return `Releases in ${series(shas)}: ${parts.join(", ")}`;
 }

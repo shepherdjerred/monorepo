@@ -358,7 +358,19 @@ export function mergeByService(changed: CommitService[]): CommitService[] {
         )
           environments.set(environment.environmentId, environment);
       }
-    const states = [...environments.values()];
+    // The state is the least advanced of the builds', but the release the row
+    // names is the newest set: its metadata comes from that build alone, so it
+    // never describes an older release's outcome (r118 failed, r120 named).
+    const states = [...environments.values()].map(
+      ({ release: _other, ...environment }): CommitEnvironment => {
+        const named = newest.environments.find(
+          (entry) => entry.environmentId === environment.environmentId,
+        )?.release;
+        return named === undefined
+          ? environment
+          : { ...environment, release: named };
+      },
+    );
     const includedIn = entries.find(
       (entry) => entry.includedIn !== undefined,
     )?.includedIn;

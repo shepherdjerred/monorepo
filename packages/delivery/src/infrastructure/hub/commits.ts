@@ -1,5 +1,4 @@
 import type {
-  CarriedFailure,
   CommitBuild,
   CommitEnvironment,
   CommitListQuery,
@@ -15,6 +14,12 @@ import { buildStatus } from "./status.ts";
 import { promotionOrder } from "./topology.ts";
 import { buildView, serviceSummary } from "./views.ts";
 import { pipelineNotes, withPipeline } from "./commit-pipeline-notes.ts";
+import {
+  carriedFailure,
+  carrierCommitShas,
+  withCarriedReleases,
+  withCarrierVerdicts,
+} from "./commit-carriers.ts";
 import {
   carryingCommits,
   pipelineCarriers,
@@ -37,6 +42,7 @@ import {
   SET_FIELDS,
   carriersOf,
   environmentRecord,
+  releaseIn,
   setFacts,
 } from "./commit-environments.ts";
 
@@ -103,29 +109,6 @@ async function carryingBuilds(
   return { carrierBuilds: [...rows, ...releases], superseding };
 }
 
-/**
- * A failed build and the later commit that carries it, with how the release
- * its change ships in stands: the verdict its row shows on the carrying
- * commit, and its revision when a set was composed.
- */
-function carriedFailure(
-  build: CommitBuild,
-  carrier: Carrier,
-  release: CommitService | undefined,
-): CarriedFailure {
-  return {
-    buildId: build.id,
-    includedIn: carrier.includedIn,
-    ...(build.serviceTitle === undefined
-      ? {}
-      : { serviceTitle: build.serviceTitle }),
-    ...(release === undefined ? {} : { releaseVerdict: release.verdict }),
-    ...(release?.versionSet == null
-      ? {}
-      : { releaseRevision: release.versionSet.revision }),
-  };
-}
-
 /** A build of a commit, named by its service's catalog title. */
 function commitBuild(row: Parameters<typeof buildView>[0]): CommitBuild {
   return {
@@ -141,6 +124,26 @@ function commitBuild(row: Parameters<typeof buildView>[0]): CommitBuild {
  * list of commits costs a handful of queries, not one per service.
  */
 async function readCommits(
+  database: Database,
+  shas: string[],
+): Promise<Read[]> {
+  const reads = await readCommitRows(database, shas);
+  // A commit that carries another's failure says where it stands itself, so
+  // the carried one can say "carried by X, which awaits approval". A carrier
+  // outside the page is read once more; its own carriers are not followed.
+  const outside = [
+    ...new Set(carrierCommitShas(reads.map((read) => read.status))),
+  ].filter((sha) => !shas.includes(sha));
+  const extra = await readCommitRows(database, outside);
+  const verdicts = new Map(
+    [...reads, ...extra].map((read) => [read.status.sha, read.status.verdict]),
+  );
+  return reads.map((read) => ({
+    status: withCarrierVerdicts(read.status, verdicts),
+  }));
+}
+
+async function readCommitRows(
   database: Database,
   shas: string[],
 ): Promise<Read[]> {
@@ -258,11 +261,16 @@ async function readCommits(
             live.has(environment.promotionSourceEnvironmentId),
         });
         if (isLive(state)) live.add(environment.id);
+        const release = releaseIn(versionSet, environment.id, linked, {
+          state,
+          accepted,
+        });
         return {
           environmentId: environment.id,
           name: environment.name,
           state,
           deploymentId: deployment?.id ?? null,
+          ...(release === undefined ? {} : { release }),
         };
       },
     );
@@ -394,6 +402,7 @@ async function readCommits(
         unchangedCount,
         failedBuilds,
         carriedFailures,
+        ...withCarriedReleases(pipelineEntries),
         pendingBuilds,
         blocker: blockers[0] ?? null,
         blockers,
@@ -464,6 +473,9 @@ function summary(status: CommitStatus, firstSeenAt: Date): CommitSummary {
       ),
     ],
     carriedFailures: status.carriedFailures ?? [],
+    ...(status.carriedReleases === undefined
+      ? {}
+      : { carriedReleases: status.carriedReleases }),
     blocker: status.blocker,
     blockers: status.blockers ?? [],
   };

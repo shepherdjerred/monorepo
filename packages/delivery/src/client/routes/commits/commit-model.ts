@@ -1,146 +1,24 @@
 import type {
   CarriedFailure,
   CommitBlocker,
+  CommitEnvironment,
   CommitEnvironmentGroup,
   CommitEnvironmentState,
+  CommitService,
   CommitStatus,
   CommitSummary,
   CommitVerdict,
+  PipelineStatus,
 } from "#shared/hub/hub-contract.ts";
-import { carriedIn, includedNote } from "./commit-release.ts";
-import { capped, distinct, plural, series } from "./commit-text.ts";
-
-// Each verdict borrows the pipeline status it resembles and keeps its own
-// words, so one `Status` draws the same glyph, green, red and amber everywhere
-// in the hub.
-export const VERDICT: Record<
-  CommitVerdict,
-  { status: string; label: string; sentence: string }
-> = {
-  deployed: {
-    status: "succeeded",
-    label: "Deployed",
-    sentence: "Live in every environment that tracks it.",
-  },
-  deploying: {
-    status: "running",
-    label: "Deploying",
-    sentence: "A deployment that carries it is running.",
-  },
-  queued: {
-    status: "queued",
-    label: "Queued",
-    sentence: "A deployment that carries it is queued, waiting to start.",
-  },
-  awaiting_approval: {
-    status: "awaiting_approval",
-    label: "Needs approval",
-    sentence:
-      "A deployment that carries it is waiting for someone to approve it.",
-  },
-  recovery_required: {
-    status: "failed",
-    label: "Recovery required",
-    sentence:
-      "A failed deployment locked an environment, so nothing reaches it until an operator recovers it.",
-  },
-  failed: {
-    status: "failed",
-    label: "Failed",
-    sentence: "The newest deployment that carries it failed.",
-  },
-  build_failed: {
-    status: "failed",
-    label: "CI failed",
-    sentence: "CI failed, so nothing from this commit was published.",
-  },
-  building: {
-    status: "running",
-    label: "CI running",
-    sentence: "CI has not finished, so nothing is deployed yet.",
-  },
-  // With an environment to name, `verdictView` names what it waits on instead.
-  waiting: {
-    status: "pending",
-    label: "Not released",
-    sentence: "No release of a service it changed includes it yet.",
-  },
-  nothing_to_deploy: {
-    status: "not_started",
-    label: "Nothing to deploy",
-    sentence: "This commit changed nothing that Delivery deploys.",
-  },
-  unknown: {
-    status: "unknown",
-    label: "Not seen yet",
-    sentence:
-      "Delivery has not heard of this commit. CI may not have published it yet.",
-  },
-};
-
-/** One environment's standing: its chip's glyph and words, and why, as a sentence. */
-export const ENVIRONMENT: Record<
-  CommitEnvironmentState,
-  { status: string; label: string; reason: string }
-> = {
-  live: { status: "succeeded", label: "live", reason: "has it." },
-  superseded: {
-    status: "succeeded",
-    label: "live (newer)",
-    reason: "has it through a newer release.",
-  },
-  deploying: {
-    status: "running",
-    label: "deploying",
-    reason: "has a deployment that carries it running.",
-  },
-  queued: {
-    status: "queued",
-    label: "queued",
-    reason: "has a deployment that carries it queued, waiting to start.",
-  },
-  awaiting_approval: {
-    status: "awaiting_approval",
-    label: "needs approval",
-    reason: "has a deployment that carries it waiting for approval.",
-  },
-  recovery_required: {
-    status: "failed",
-    label: "recovery required",
-    reason: "is locked by a failed deployment until an operator recovers it.",
-  },
-  failed: {
-    status: "failed",
-    label: "failed",
-    reason: "failed the newest deployment that carries it.",
-  },
-  canceled: {
-    status: "canceled",
-    label: "canceled",
-    reason:
-      "had the deployment that carried it canceled, and nothing else is in flight.",
-  },
-  replaced: {
-    status: "pending",
-    label: "replaced",
-    reason: "ran it, then a release that does not include it replaced it.",
-  },
-  manual: {
-    status: "pending",
-    label: "needs manual release",
-    reason: "needs a manual promotion or release; nothing is in flight.",
-  },
-  waiting: {
-    status: "pending",
-    label: "waiting for earlier stage",
-    reason: "waits for the environment it promotes from to have it first.",
-  },
-  not_started: {
-    status: "not_started",
-    label: "not started",
-    reason: "has not started a deployment of it.",
-  },
-};
+import { includedNote, releasesNote } from "./commit-release.ts";
+import { capped, distinct, plural } from "./commit-text.ts";
+import { ENVIRONMENT, VERDICT } from "./commit-labels.ts";
+import {
+  DOING,
+  blockerNotes,
+  namedWithMore,
+  stuckGroups,
+} from "./commit-blockers.ts";
 
 /** Among waiting environments, a cause (a manual release) before what waits on it. */
 const WAITING_ON: CommitEnvironmentState[] = [
@@ -183,6 +61,67 @@ export function verdictView(
   return VERDICT[verdict];
 }
 
+/** What a release's own deployment did, said before "superseded". */
+const OWN_ENDING: Partial<Record<PipelineStatus, string>> = {
+  failed: "failed",
+  canceled: "canceled",
+};
+
+/**
+ * One environment chip's glyph and words. Where a newer accepted release
+ * carries the change, the chip does not call the release live: it says it
+ * was superseded by that release, which is deployed, and first what the
+ * release's own deployment did when that failed or was canceled ("failed,
+ * superseded by r381, which is deployed").
+ */
+export function environmentView(
+  entry: Pick<CommitEnvironment, "state" | "release">,
+): { status: string; label: string } {
+  const by = entry.release?.supersededBy;
+  if (by === undefined || entry.state !== "superseded")
+    return ENVIRONMENT[entry.state];
+  const own =
+    entry.release?.status === null || entry.release === undefined
+      ? undefined
+      : OWN_ENDING[entry.release.status];
+  return {
+    status: own ?? "succeeded",
+    label: `${own === undefined ? "" : `${own}, `}superseded by r${String(by)}, which is deployed`,
+  };
+}
+
+/**
+ * A service row's glyph and words. A row that names a release (r346) whose
+ * environments all hold a newer release instead says so, and first what
+ * the release's own deployment did when it failed ("Failed, superseded") or
+ * was canceled ("Canceled, superseded"; no deployment failed), rather than
+ * the service's "Deployed".
+ */
+export function rowStanding(
+  entry: Pick<CommitService, "verdict" | "environments">,
+  pending: readonly CommitEnvironmentState[],
+): { status: string; label: string } {
+  const superseded = entry.environments.filter(
+    (environment) =>
+      environment.state === "superseded" &&
+      environment.release?.supersededBy !== undefined,
+  );
+  if (
+    superseded.length === 0 ||
+    superseded.length !== entry.environments.length
+  )
+    return verdictView(entry.verdict, { pending });
+  const outcomes = new Set(
+    superseded.map((environment) => environment.release?.status),
+  );
+  // A failed deployment outranks a canceled one; a canceled one is never "Failed".
+  if (outcomes.has("failed"))
+    return { status: "failed", label: "Failed, superseded" };
+  return outcomes.has("canceled")
+    ? { status: "canceled", label: "Canceled, superseded" }
+    : { status: "succeeded", label: "Superseded" };
+}
+
 /** What a list row's environment tally says, short and in full. */
 export function tallyText(
   group: Pick<CommitEnvironmentGroup, "name" | "liveCount" | "total">,
@@ -193,88 +132,6 @@ export function tallyText(
   };
 }
 
-/** What the list row says is stuck, named by service and environment. */
-export function blockerNote(blocker: NonNullable<CommitSummary["blocker"]>) {
-  return `${blocker.service} / ${blocker.environment}: ${ENVIRONMENT[blocker.state].label}`;
-}
-
-/** Environments in these states need someone to look at them. */
-const FAILING: ReadonlySet<CommitEnvironmentState> = new Set([
-  "recovery_required",
-  "failed",
-]);
-
-/** How many failing environments a list row names before "+N more". */
-const NAMED_FAILURES = 3;
-
-type StuckGroup = {
-  state: CommitEnvironmentState;
-  /** The environments held back in this state, of services this state describes. */
-  members: CommitBlocker[];
-  /** How many services those are. */
-  count: number;
-};
-
-/**
- * Every service held back, in the one state that describes it: the most
- * urgent state of any of its environments. A service is counted once, so the
- * groups and the services that are live add up to the services changed.
- * Groups come in the order the blockers do, most urgent first.
- */
-function stuckGroups(blockers: readonly CommitBlocker[]): StuckGroup[] {
-  const describing = new Map<string, CommitEnvironmentState>();
-  for (const blocker of blockers)
-    if (!describing.has(blocker.service))
-      describing.set(blocker.service, blocker.state);
-  const groups = new Map<CommitEnvironmentState, CommitBlocker[]>();
-  for (const blocker of blockers)
-    if (describing.get(blocker.service) === blocker.state)
-      groups.set(blocker.state, [
-        ...(groups.get(blocker.state) ?? []),
-        blocker,
-      ]);
-  return [...groups].map(([state, members]) => ({
-    state,
-    members,
-    count: new Set(members.map((member) => member.service)).size,
-  }));
-}
-
-/** Up to three names, then how many more: "a, b, c +2 more". */
-function namedWithMore(items: readonly string[]) {
-  return items.length <= NAMED_FAILURES
-    ? series(items)
-    : `${items.slice(0, NAMED_FAILURES).join(", ")} +${String(items.length - NAMED_FAILURES)} more`;
-}
-
-/**
- * What the list row says is stuck: every failing environment, up to three
- * and then how many more, then each other state that holds services back
- * (awaiting approval, deploying, canceled, not started) with its services,
- * so what the row names and what is live add up to what changed.
- */
-export function blockerNotes(blockers: readonly CommitBlocker[]): string[] {
-  const failing = blockers.filter((blocker) => FAILING.has(blocker.state));
-  const others = stuckGroups(blockers).filter(
-    (group) => !FAILING.has(group.state),
-  );
-  return [
-    ...failing.slice(0, NAMED_FAILURES).map((blocker) => blockerNote(blocker)),
-    ...(failing.length > NAMED_FAILURES
-      ? [`+${String(failing.length - NAMED_FAILURES)} more failing`]
-      : []),
-    ...others.map((group) =>
-      group.members.length === 1 && group.members[0] !== undefined
-        ? blockerNote(group.members[0])
-        : `${String(group.count)} ${DOING[group.state][group.count === 1 ? 0 : 1]}: ${namedWithMore(
-            group.members.map(
-              (member) => `${member.service} / ${member.environment}`,
-            ),
-          )}`,
-    ),
-  ];
-}
-
 /** "CI failed for Arcade and Golink", or by count when no name is known. */
 function failedNote(names: readonly string[], count: number) {
   return `CI failed for ${names.length > 0 ? capped(names) : plural(count, "service", "services")}`;
@@ -282,8 +139,8 @@ function failedNote(names: readonly string[], count: number) {
 
 /**
  * The list row's notes beside its tallies: CI that failed with nothing
- * carrying it, by service, failures a newer commit carries, then what is
- * stuck.
+ * carrying it, by service, failures a newer commit carries and where their
+ * releases stand, then what is stuck.
  */
 export function rowNotes(commit: CommitSummary): string[] {
   const carried = commit.carriedFailures ?? [];
@@ -291,6 +148,8 @@ export function rowNotes(commit: CommitSummary): string[] {
   const notes: string[] = [];
   if (failing > 0) notes.push(failedNote(commit.failedServices ?? [], failing));
   if (carried.length > 0) notes.push(includedNote(carried));
+  const releases = releasesNote(commit.carriedReleases);
+  if (releases !== null) notes.push(releases);
   notes.push(
     ...blockerNotes(
       commit.blockers ?? (commit.blocker === null ? [] : [commit.blocker]),
@@ -349,10 +208,6 @@ function ciSentences(status: CommitStatus, carried: readonly CarriedFailure[]) {
   const failed = serviceNames(
     status.failedBuilds.filter((build) => !carriedIds.has(build.id)),
   );
-  const carriedNames = serviceNames(
-    status.failedBuilds.filter((build) => carriedIds.has(build.id)),
-  );
-  const one = carriedNames.length <= 1;
   return {
     failed:
       failed.length === 0
@@ -360,12 +215,7 @@ function ciSentences(status: CommitStatus, carried: readonly CarriedFailure[]) {
         : [
             `${failedNote(failed, failed.length)}, so Delivery published nothing for ${failed.length === 1 ? "it" : "them"}.`,
           ],
-    included:
-      carried.length === 0
-        ? []
-        : [
-            `${failedNote(carriedNames, carried.length)} here, so ${one ? "it was" : "they were"} not built on ${one ? "its" : "their"} own; included in ${carriedIn(carried)}.`,
-          ],
+    included: carried.length === 0 ? [] : [`${includedNote(carried)}.`],
   };
 }
 
@@ -385,28 +235,6 @@ function opening(status: CommitStatus, changed: boolean, carried: boolean) {
     ? []
     : [VERDICT[status.verdict].sentence];
 }
-
-/** What a number of changed services in one state are doing: singular, plural. */
-const DOING: Record<CommitEnvironmentState, [string, string]> = {
-  live: ["is live", "are live"],
-  superseded: ["is live", "are live"],
-  recovery_required: [
-    "needs an operator to recover its environment",
-    "need an operator to recover their environments",
-  ],
-  failed: ["failed to deploy", "failed to deploy"],
-  awaiting_approval: ["needs approval", "need approval"],
-  deploying: ["is deploying", "are deploying"],
-  queued: ["is queued", "are queued"],
-  manual: ["needs a manual release", "need a manual release"],
-  canceled: ["had its deployment canceled", "had their deployments canceled"],
-  replaced: [
-    "was replaced by a release without it",
-    "were replaced by a release without it",
-  ],
-  waiting: ["waits for an earlier stage", "wait for an earlier stage"],
-  not_started: ["has not started deploying", "have not started deploying"],
-};
 
 /**
  * How many changed services are live. If not all, the most urgent thing
