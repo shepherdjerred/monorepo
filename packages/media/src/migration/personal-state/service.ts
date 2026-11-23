@@ -21,6 +21,7 @@ import {
 import { previewPersonalMigration } from "./preview.ts";
 import { createImportedSourceClaim } from "./source-claim.ts";
 import { importedPersonalClaims } from "./imported.ts";
+import { importedRequestHistory } from "./history.ts";
 import { releasePersonalMigrationHolds } from "./holds.ts";
 import { PassiveRegistrationPreviewInputSchema } from "#shared/handoff/passive-registration.ts";
 import { previewPassiveRegistrations } from "./passive-preview.ts";
@@ -35,6 +36,9 @@ export class PrismaPersonalMigration extends MediaCommandBase {
   }
   imported(actor: MediaActor) {
     return importedPersonalClaims(this.db, actor);
+  }
+  importedHistory(actor: MediaActor) {
+    return importedRequestHistory(this.db, actor, this.settings);
   }
   async passive(
     actor: MediaActor,

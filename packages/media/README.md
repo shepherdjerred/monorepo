@@ -3295,6 +3295,13 @@ choice to the owner or the claim's own user. The requester makes that choice
 through the existing movie detail flow. TV imports preserve selected season
 requests, including explicitly selected specials.
 
+`GET /api/v1/requests/imported-history` reads reviewed history-only requests
+from the same source receipts. In **My requests**, the archive shows the
+original request date and status when the capture contains them. A person can
+see their own verified history. The owner can also see records whose requester
+has yet to be matched. Archived requests carry no acquisition or retention
+authority.
+
 The immutable `personal_state_imported` receipt accounts only its exact captured
 record digest, reviewed requester binding, and real native request identities.
 Once all relevant approved claims reconcile and library Keep defaults are

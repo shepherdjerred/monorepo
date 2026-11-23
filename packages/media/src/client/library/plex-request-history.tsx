@@ -39,14 +39,14 @@ function PlexHistoryRow({
     .filter((part) => part !== null)
     .join(" · ");
   return (
-    <li className={cx("plexHistoryRow")}>
+    <li className={cx("requestHistoryRow")}>
       <div>
         <p className={cx("entryTitle")}>{seriesTitle ?? title}</p>
         {view.kind === "episode" && detail !== "" && (
           <p className={cx("rowDetail")}>{detail}</p>
         )}
       </div>
-      <div className={cx("plexHistoryWhen")}>
+      <div className={cx("requestHistoryWhen")}>
         <time dateTime={view.viewedAt}>{dateLabel(view.viewedAt)}</time>
         {view.source === "last_watched" && (
           <p className={cx("rowDetail")}>Last watched in Plex</p>
@@ -73,7 +73,7 @@ export function PlexRequestHistory({ userId }: { userId: string }) {
     return null;
 
   return (
-    <section className={cx("plexHistory")}>
+    <section className={cx("requestHistory")}>
       <h2 id={heading}>Watched in Plex</h2>
       {history.pending && <RowsSkeleton label="Loading your Plex history" />}
       {history.items.length > 0 && (
