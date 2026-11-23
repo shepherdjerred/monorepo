@@ -4,7 +4,7 @@ import type { MediaUser } from "#shared/contract.ts";
 import type { NativeLifecycleDetailSchema } from "#shared/native-recovery/lifecycle.ts";
 import type { NativeRecoveryDetailProtocolSchema } from "#shared/native-recovery/series-pack/detail.ts";
 import { CommandResultSchema } from "#shared/api.ts";
-import { writeApi } from "#client/api.ts";
+import { NotSentError, writeApi } from "#client/api.ts";
 import { nativeReviewAcknowledged } from "./acknowledgement.ts";
 
 export function useNativeReviewApproval(input: {
@@ -24,7 +24,7 @@ export function useNativeReviewApproval(input: {
         !nativeReviewAcknowledged(input.acknowledgement, review) ||
         review?.planHash == null
       )
-        throw new Error(
+        throw new NotSentError(
           "The file proof changed. Review it again before applying.",
         );
       return writeApi({

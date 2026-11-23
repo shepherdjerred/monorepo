@@ -1,0 +1,19 @@
+@layer components {
+  /* A radio row, the exclusive twin of a PickBox. */
+  .choice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    cursor: pointer;
+  }
+  .choice input {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin: 1px 0 0;
+    accent-color: var(--accent-strong);
+  }
+  .choice input:disabled + span {
+    color: var(--text-muted);
+  }
+}

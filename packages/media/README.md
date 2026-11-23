@@ -838,6 +838,17 @@ topic under `/manage`:
 | `/manage/recovery/native/:id?`        | Native file recovery, archives, and compensation |
 | `/manage/migration`                   | Migration captures and library import            |
 
+The native file recovery pages (`src/client/native-recovery/`) share one shape:
+what must be true first, the files or upgrades to choose, and the reviews
+prepared from them. A review says where it stands, what approving changes and
+what stays as it is, and asks in a dialog before the one approval that changes
+ownership or cleanup. Preparing a review changes nothing. Paths, checksums, and
+plan digests sit behind "Technical details". The fixture API serves the
+inventories, and file reviews in each state
+(`src/testing/fixture-api/fixtures/migration/native-recovery.ts`). The archive,
+interrupted-upgrade (compensation), series-pack, and quarantine reviews keep
+their earlier form until they have fixtures and browser tests.
+
 Each Manage page is a lazy route, so its code is a separate chunk that a member
 never downloads; a member who opens a Manage address is sent to Home, as is
 anyone who opens an address that does not exist.
