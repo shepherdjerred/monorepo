@@ -169,6 +169,18 @@ describe("ReportsPage and deep-dive inspector rendering", () => {
     expect(html).not.toContain("Weekly link-rot scan");
   });
 
+  it("keeps search controls mounted and preserves trailing spaces while filtered feed loads", async () => {
+    const { fixture } = await seededFixture();
+    const overview = await fixture.reports.overview();
+
+    const html = renderWithRouter("/reports?q=certificate%20", (client) => {
+      client.setQueryData(reportsKeys.overview(), overview);
+    });
+
+    expect(html).toContain('type="search"');
+    expect(html).toContain('value="certificate "');
+  });
+
   it("renders ReportRunPage inspector and rendered email preview modes", async () => {
     const { fixture } = await seededFixture();
     const detail = await fixture.reports.runDetail(

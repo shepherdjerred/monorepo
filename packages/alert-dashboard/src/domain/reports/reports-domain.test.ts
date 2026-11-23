@@ -12,8 +12,10 @@ import {
   buildPacificDayWindow,
   buildScheduleDays,
   computeScheduleFreshness,
+  digestRunToVerdict,
   filterAndSortFeedItems,
   needsOperatorReview,
+  singleRunDayState,
 } from "#domain/reports/report-overview";
 import { ReportsFeedQuerySchema } from "#shared/reports-schema";
 
@@ -197,6 +199,21 @@ describe("reports email rendering and feed filtering", () => {
         deliveryStatus: "sent",
       }),
     ).toBe(true);
+    expect(
+      digestRunToVerdict({
+        status: "sent",
+        severity: null,
+        needsMeCount: null,
+        attentionCount: null,
+      }),
+    ).toBe("inconclusive");
+    expect(
+      singleRunDayState({
+        completedAtNs: 1n,
+        verdict: "inconclusive",
+        deliveryStatus: "sent",
+      }),
+    ).toBe("attention");
   });
 
   it("filters feed items by tab, mailbox, verdict, delivery, PR presence, and search query", () => {

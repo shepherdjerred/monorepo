@@ -138,7 +138,7 @@ export function ReportsPage(): React.JSX.Element {
         title="Reports"
       />
       <LoadingBlock
-        values={{ overview, feed }}
+        values={{ overview }}
         fallback={<div className="loading-state">Loading reports…</div>}
         renderError={() => (
           <div className="error-state">
@@ -146,7 +146,7 @@ export function ReportsPage(): React.JSX.Element {
           </div>
         )}
       >
-        {({ overview: overviewData, feed: feedData }, meta) => {
+        {({ overview: overviewData }, meta) => {
           const kpis = buildReportsKpis(overviewData.kpis);
           return (
             <>
@@ -190,7 +190,8 @@ export function ReportsPage(): React.JSX.Element {
               />
 
               <ReportsFeedSection
-                items={feedData.items}
+                feed={feed}
+                searchInput={params.get("q") ?? ""}
                 query={feedQuery}
                 onUpdateQuery={updateQuery}
                 onResetFilters={resetFilters}

@@ -91,9 +91,7 @@ export function singleRunDayState(
   if (run.verdict === "clear" && run.deliveryStatus === "skipped") {
     return "quiet-clear";
   }
-  return run.verdict === "inconclusive" && run.execution === "partial"
-    ? "attention"
-    : "clear";
+  return run.verdict === "inconclusive" ? "attention" : "clear";
 }
 
 export function buildScheduleDays(
@@ -155,6 +153,13 @@ export function digestRunToVerdict(input: {
 }): ReportVerdict {
   if (input.status === "sending") return "pending";
   if (input.status === "failed") return "inconclusive";
+  if (
+    input.severity === null &&
+    input.needsMeCount === null &&
+    input.attentionCount === null
+  ) {
+    return "inconclusive";
+  }
   if (
     (input.needsMeCount ?? 0) > 0 ||
     (input.attentionCount ?? 0) > 0 ||

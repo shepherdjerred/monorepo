@@ -1,15 +1,19 @@
+import type { Loaded } from "@shepherdjerred/loaded";
+import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { ReportVerdictSchema } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import { ExternalLinkIcon, SearchIcon, XIcon } from "lucide-react";
 import { useId, useMemo, useRef } from "react";
 import { Link } from "react-router";
 
 import { SeverityBadge } from "#client/ops/ops-ui.tsx";
+import { StaleNotice } from "#client/stale-notice.tsx";
 import { age } from "#client/time.ts";
 import { DataTable, type DataTableColumn } from "#client/visuals/index.ts";
 import {
   ReportFeedDeliveryStatusSchema,
   type ReportFeedItem,
   type ReportsFeedQueryInput,
+  type ReportsFeedResponse,
   type ReportsFeedTab,
 } from "#shared/reports-schema";
 
@@ -140,12 +144,13 @@ const FEED_COLUMNS: readonly DataTableColumn<ReportFeedItem>[] = [
 ];
 
 export function ReportsFeedSection(p: {
-  readonly items: readonly ReportFeedItem[];
+  readonly feed: Loaded<ReportsFeedResponse>;
+  readonly searchInput: string;
   readonly query: ReportsFeedQueryInput;
   readonly onUpdateQuery: (patch: Partial<ReportsFeedQueryInput>) => void;
   readonly onResetFilters: () => void;
 }): React.JSX.Element {
-  const { items, query, onUpdateQuery, onResetFilters } = p;
+  const { feed, searchInput, query, onUpdateQuery, onResetFilters } = p;
   const activeTab: ReportsFeedTab = query.tab ?? "all";
   const tabRefs = useRef(new Map<ReportsFeedTab, HTMLButtonElement>());
   const baseId = useId();
@@ -161,8 +166,8 @@ export function ReportsFeedSection(p: {
       query.verdict !== undefined ||
       query.delivery !== undefined ||
       query.hasPr === "1" ||
-      (query.q !== undefined && query.q.length > 0),
-    [query],
+      searchInput.trim().length > 0,
+    [query, searchInput],
   );
 
   return (
@@ -240,7 +245,7 @@ export function ReportsFeedSection(p: {
                 type="search"
                 className="input"
                 placeholder="Subject, headline, schedule, or mailbox…"
-                value={query.q ?? ""}
+                value={searchInput}
                 onChange={(event) => {
                   const next = event.currentTarget.value;
                   onUpdateQuery({ q: next.length === 0 ? undefined : next });
@@ -359,18 +364,33 @@ export function ReportsFeedSection(p: {
         aria-labelledby={`reports-tab-${activeTab}`}
         className="rep-tabpanel"
       >
-        <DataTable
-          key={`${activeTab}:${query.scheduleId ?? ""}`}
-          caption="Unified reports and outbound mail feed"
-          hideCaption
-          rows={items}
-          rowKey={(item) => `${item.kind}:${item.id}`}
-          rowLabel={(item) => item.subject}
-          columns={FEED_COLUMNS}
-          initialCap={10}
-          exportFilename="hub-reports-feed"
-          emptyMessage="No report runs, digests, or incident emails match these filters."
-        />
+        <LoadingBlock
+          values={{ feed }}
+          fallback={<div className="loading-state">Loading matching runs…</div>}
+          renderError={() => (
+            <div className="error-state">
+              Matching report and mail entries are unavailable.
+            </div>
+          )}
+        >
+          {({ feed: feedData }, meta) => (
+            <>
+              <StaleNotice errors={meta.errors} />
+              <DataTable
+                key={`${activeTab}:${query.scheduleId ?? ""}`}
+                caption="Unified reports and outbound mail feed"
+                hideCaption
+                rows={feedData.items}
+                rowKey={(item) => `${item.kind}:${item.id}`}
+                rowLabel={(item) => item.subject}
+                columns={FEED_COLUMNS}
+                initialCap={10}
+                exportFilename="hub-reports-feed"
+                emptyMessage="No report runs, digests, or incident emails match these filters."
+              />
+            </>
+          )}
+        </LoadingBlock>
       </div>
     </section>
   );

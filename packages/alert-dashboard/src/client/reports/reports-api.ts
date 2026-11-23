@@ -1,5 +1,5 @@
 import type { DigestKind } from "@shepherdjerred/ops-model/digest.ts";
-import { queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 
 import {
@@ -118,6 +118,7 @@ export function reportsFeedQuery(query: ReportsFeedQueryInput) {
         ReportsFeedResponseSchema,
         signal,
       ),
+    placeholderData: keepPreviousData,
     refetchInterval: REFRESH_MS,
   });
 }
