@@ -539,7 +539,9 @@ test("v2 acquires an OCI chart from its registry by digest, with no Helm index o
 
 async function acquireV2(
   entry: VersionCatalogEntry,
-  transport?: Parameters<typeof componentArtifactsForPublication>[3]["transport"],
+  transport?: Parameters<
+    typeof componentArtifactsForPublication
+  >[3]["transport"],
 ) {
   const requests: AcquireUpstreamArtifact[] = [];
   const selected = await componentArtifactsForPublication(

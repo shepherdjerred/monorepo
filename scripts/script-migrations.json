@@ -349,8 +349,8 @@
     },
     {
       "source": "packages/homelab/src/cdk8s/src/misc/minecraft/minecraft-config-drift-check.sh",
-      "disposition": "retain",
-      "reason": "ConfigMap-mounted init-container drift check runs on the busybox+yq image where Bun is unavailable"
+      "disposition": "delete",
+      "reason": "Retired with minecraft-shuxin and minecraft-sjerred: no remaining Minecraft workload mounts the busybox+yq drift-check init container."
     },
     {
       "source": "packages/homelab/src/cdk8s/src/resources/woodpecker/bun-cache-gc.sh",
