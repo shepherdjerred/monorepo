@@ -514,7 +514,11 @@ function FailureCause({ story }: { story: Story }) {
         </p>
       )}
       {story.traces.length > 0 && (
-        <Disclosure summary="Full error text" count={story.traces.length}>
+        <Disclosure
+          summary="Full error text"
+          // A count of one says nothing the one text beneath does not.
+          {...(story.traces.length > 1 ? { count: story.traces.length } : {})}
+        >
           {story.traces.map((trace) => (
             <pre key={trace} className="receipt-json">
               {trace}

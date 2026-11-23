@@ -57,7 +57,7 @@ const REMEDY = /^(?:inspect|check|retry|fix|re-?run|request|look at|wait) /iu;
 function clauses(text: string) {
   return text
     .split(/(?<=[.;])\s+/u)
-    .map((part) => part.trim().replace(/[.;]$/u, ""))
+    .map((part) => part.trim().replace(/[.;]+$/u, ""))
     .filter((part) => part !== "");
 }
 

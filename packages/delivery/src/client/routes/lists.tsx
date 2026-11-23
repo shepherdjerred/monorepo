@@ -219,8 +219,20 @@ function ApprovalsPage() {
 const approvalsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/approvals",
-  loader: ({ context }) =>
-    context.queryClient.query({ ...queries.approvals(), staleTime: "static" }),
+  loader: async ({ context }) => {
+    // The catalog names the services and environments the rows lead with; a
+    // failed read still shows the list, its ids said as words.
+    const [approvals] = await Promise.all([
+      context.queryClient.query({
+        ...queries.approvals(),
+        staleTime: "static",
+      }),
+      context.queryClient
+        .query({ ...queries.grid(), staleTime: "static" })
+        .catch(() => null),
+    ]);
+    return approvals;
+  },
   component: ApprovalsPage,
 });
 
