@@ -11,7 +11,7 @@ import {
   fixtureId,
   sha256,
 } from "#testing/fixture-api/support.ts";
-import { titleNamed } from "./titles.ts";
+import { titleNamed } from "#testing/fixture-api/fixtures/titles.ts";
 
 type Inventory = z.input<typeof NativeRecoveryInventorySchema>;
 type Detail = z.input<typeof NativeLifecycleDetailSchema>;
