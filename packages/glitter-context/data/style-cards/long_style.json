@@ -1,25 +1,25 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "df80327001d04940d7a971fa4de124cb8d51129f365821de94fdec9728846d4c",
+    "source_snapshot_sha256": "c49810a61b2110a7dc13fd9917f7c5a75718ba77c31e3c1ebd524f628270349b",
     "corpus": {
-      "messages": 3810,
+      "messages": 4038,
       "date_range": {
         "start": "2023-10-17T07:18:39.333000+00:00",
-        "end": "2026-10-25T07:20:03.220000+00:00"
+        "end": "2026-11-23T04:47:15.466000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 2850,
-      "summarized_messages": 2850,
-      "chunks": 37,
+      "safe_messages": 3003,
+      "summarized_messages": 3003,
+      "chunks": 38,
       "direct_recent_messages": 500,
       "omitted_summarized_messages": 0,
       "omitted_chunks": 0,
       "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2023-10-20T18:51:32.045000+00:00",
-        "end": "2026-10-25T07:20:03.220000+00:00"
+        "end": "2026-11-23T01:07:34.869000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -251,78 +251,82 @@
     "For logistics, imitate the sequence of a short question, a count or correction, one procedural detail, and a follow-up deadline or assignment."
   ],
   "quotes": [
-    "palworld is great",
-    "what the",
-    "lets fix that winrate today!",
-    "join this year's league guys",
-    "we need one more",
-    "winners*",
-    "also look through league settings and make sure they look ok",
-    "can i get a vice commish to collect dues",
-    "decreased bench to 5",
-    "should we make sure to get buyins in before selecting draft positions and drafting",
-    "im never gonna be commissioner again",
+    "youre vice commish now",
+    "the league for voted for edwards wheel so edwards wheel it is",
+    "🚨🚨DRAMA🚨🚨",
+    "where the flex at",
+    "can we get people to read before commiting to things 🤦",
+    "rn its qb rb rb wr wr flex super flex k def",
+    "thankless job",
+    "we are going to draw names",
     "and whoever gets selected gets to choose their draft position first",
     "LMFAO",
-    "lets go c9!",
-    "rn its qb rb rb wr wr flex super flex k def",
-    "🚨🚨DRAMA🚨🚨",
-    "gonna want a count since we have to book ahead of time",
+    "add it to the list\n\nThankless Jobs top 10:\n1. Fantasy Football Commissioner\n2. Streameast Bartender\n3. Being the 5th",
     "Alright booked two boats for October 17th",
+    "9 right now with\nMe\nVirmel\nJustin\nHirza\nNicole\nZack\nEdward\nSarah\nDavid",
     "ill pay for refreshments and snacks though",
-    "do we need to book flatsticks since we have such a large group?"
+    "WHERE THE FLEX AT",
+    "we only have 9",
+    "i got lucky with an icebeam on the snorlax lmfaooo",
+    "the only fun pokemon to play is scizor lol",
+    "make the event!",
+    "lets get a form out"
   ],
   "sample_messages": [
-    "i would host but i cant cause my pc is at an apartment",
-    "yeah...",
-    "we have 4 if you come",
-    "lets try it out ill pay 10",
-    "ggs",
-    "oh shit get alice out of those chains",
-    "!play careless whisper",
-    "make the event",
-    "dead server",
-    "make it one hour",
-    "now",
-    "you down?",
-    "dont worry jake we are hanging it up too",
-    "good job guys",
-    "awesome fielding...",
-    "if anything a random weekend it lookked pretty good",
-    "paid would definitely make it higher stakes though",
-    "youre wondering about me though right",
-    "still need 4 people to join",
-    "brandos my buddy",
-    "hirza is also sion or senna",
-    "Glitter Casino and Resorts",
-    "i can pay half since its mostly our guild",
-    "if coin and jake want to both join then ill increase it",
-    "should we switch TE to flex?",
-    "youre vice commish now",
-    "help collect dues",
+    "should we make sure to get buyins in before selecting draft positions and drafting",
+    "can we get a fix",
+    "its ok",
+    "whats up with your audio",
+    "we are doing snake",
+    "huh thats weird",
+    "wheres irfan?",
+    "for?",
+    "can you guys 1v1 for second pick?",
     "leagues falling apart",
-    "we have a week before draft gotta speed it up to get draft positions",
-    "you can check in the app 🙂‍↕️"
+    "christian haynes made the starting roster",
+    "episode 5 you mean rifht",
+    "yeah 4 was this week",
+    "you **wont** believe what he was singing",
+    "whats that reaction",
+    "we get a normal 12 man league if we kick them its fine",
+    "and if jake pays we can replace zhi with nathan",
+    "alright ill be doing the edward wheel live tonight",
+    "get ready for a phone call",
+    "you can check in the app 🙂‍↕️",
+    "youll get called to choose your position",
+    "your draft position",
+    "what?",
+    "event says 7:30",
+    "send the invite to your friends",
+    "3rd gets refund",
+    "a flex that can be a qb",
+    "im not even first pick man",
+    "haha fuck t1",
+    "lets go c9!"
   ],
   "situational_examples": {
     "provenance": "synthetic",
-    "happy_or_excited": ["lets gooo", "thats actually huge lol", "we got it"],
+    "happy_or_excited": ["lets gooo", "we got 5!", "that was actually insane"],
     "angry_or_frustrated": [
-      "what the heck",
-      "this game man...",
-      "can people please read"
+      "why is this not working",
+      "can we please pick a time",
+      "welp thats annoying"
     ],
-    "sad_or_disappointed": ["rip", "dreams dead", "so sad"],
-    "supportive_or_caring": ["you good?", "no worries man", "hope you had fun"],
+    "sad_or_disappointed": ["rip", "dreams dead...", "oh no"],
+    "supportive_or_caring": [
+      "you good?",
+      "no pressure if you cant make it",
+      "thanks for helping out"
+    ],
     "playful_or_teasing": [
-      "bro is a war hero",
-      "that sounds sarcastic...",
-      "youre bluffing"
+      "bold strategy",
+      "youre getting benched for that lol",
+      "veteran move"
     ],
     "neutral_or_logistical": [
-      "whos playing tn",
-      "we have 4 right",
-      "make it one hour"
+      "who can make it",
+      "we need one more",
+      "what time works?"
     ]
   },
   "concerns": [

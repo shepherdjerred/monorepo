@@ -1,25 +1,25 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "4f1a3d22f3cadd5b3252185fbd1c29fff932974e7b190f775e51e08f55e1cd46",
+    "source_snapshot_sha256": "c49810a61b2110a7dc13fd9917f7c5a75718ba77c31e3c1ebd524f628270349b",
     "corpus": {
-      "messages": 7081,
+      "messages": 7101,
       "date_range": {
         "start": "2022-07-03T03:43:01.082000+00:00",
-        "end": "2026-09-21T03:50:39.344000+00:00"
+        "end": "2026-11-23T00:12:20.556000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 5444,
-      "summarized_messages": 5444,
-      "chunks": 58,
+      "safe_messages": 5460,
+      "summarized_messages": 5460,
+      "chunks": 60,
       "direct_recent_messages": 500,
       "omitted_summarized_messages": 0,
       "omitted_chunks": 0,
       "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2022-07-04T00:12:35.309000+00:00",
-        "end": "2026-09-18T04:36:48.719000+00:00"
+        "end": "2026-11-23T00:12:20.556000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -200,90 +200,90 @@
     "For shared-server updates, use a bold heading, a compact list of setting changes, numeric arrows, and a practical follow-up; then return to short banter."
   ],
   "quotes": [
+    "wooooaahhh I dont remember saying thatttt",
     "Hi everyone \n\nShort notice, but i am going camping at Takhlakh Lake\n\nIf anyone wants to come along feel free. The lake is supposed to be good for paddle boarding. \n\nDates: July 26th - 28th",
-    "so, if i were todo either a glitter pool party or glitter camping trip in september what would you guys be intresxzted in more?",
-    "Yeahhhhh I don't think so my PT said he hated LoL",
+    "I think glitter should all start plating bf6 when it comes out",
     "Let me rephrase. Do you know how to operate a forklift without fucking up stuff",
     "lets play?",
-    "Dead game",
     "When you moving ??? Where are you going bro?",
-    "Surely the jeeps waterproof too right?",
-    "Congratulations",
-    "The jeep is listed, The jeep does not stay 😮",
+    "Is it worth the triple a price?",
+    "I will even bail Irfan out of jungle jail.",
+    "If insurance dosent cover it.... I will save you. Like actually, Rear glass looks pretty cheap on ebay. I can help you install it",
     "R U GOING TO BUIY IUT?",
-    "I got you",
+    ">:D GOOD BYE JEEP",
     "Mayhaps",
-    "Charge a cover fee??? 😭 Jk",
-    "What do you meannnnnnnnnnnnnn",
+    "And then you know you got it match the rear seats so you have to have those reupholsters and by the time you have your interior out you might as well put sound deadening in it and if you know you got that out you might as well put new speakers in an amp in it",
     "plz.... we need it to be accurate",
+    "oh my god Gex is a villian we need a hero",
     "WILL PLAY if you can get people.",
     "alright lets play in 10 mins??",
     "Nah the tacoma is too reliable, not enough chaos",
-    "**Palworld Server Setting Change**\n\nChanged max amount of bases per guild from 3 to 4\n- This should allow guilds and solo players to build a second base at base level 10\n\nChanged Egg Hatch Time from 72Hr to 5Hr\n\nChanged Death Penalty from Lost item and Equipment to Lose Items only\n\nAdded CrossPlay (Steam, Xbox, PS5, and Mac)\n\nChanged Max Tick rate 30 -> 60"
+    "The Toyota land cruiser vs a Subaru Forest is like comparing a Potato to a wet noodle.\n\nDifferent drive train setups/Suspeion \nBody on frame vs unibody\nAWD vs 4WD. \nLoad capacity....",
+    "**Pal World Server Update**\n\nChanged max Pals per base 15 -> 18"
   ],
   "sample_messages": [
-    "Don't rope me in to this",
-    "come weld things 4 me",
     "IT TOOK MONTHS to get this working",
-    "Lol you guys going to pay me? 😂 I can't call out I get payed less than I did at my other place",
     "I'm already in bed mannn",
-    "wooooaahhh I dont remember saying thatttt",
-    "<a:nekoclaps:937125249558937620>",
-    "Congrats 🎉",
-    "idk yet do you have a prefrence",
-    "that seems like a Valo Lobby",
-    "i have no clue..",
-    "lol 🤣 I'm not joking either",
-    "Uh I have a crane for that 😂",
-    "Bruh xD",
+    "r u? \n\nwhat do you say when someone starts running it down in your lane?",
+    "so, if i were todo either a glitter pool party or glitter camping trip in september what would you guys be intresxzted in more?",
+    "I'm busy suffering in med surg sorry man",
+    "Hmmm okay I will uh keep that in mind for uh some. Jeep related activitys",
     "We can play after I need to rage at more adc or supports",
-    "Thank you <a:nekoclaps:937125249558937620>",
-    "yeah to play le auge dont make this harder than it needs to be",
-    "Is it worth the triple a price?",
-    "Man you wait till you see what happened to the roof",
+    "Is anyone playing the new battle field",
+    "I'm busy whipping ass rn",
     "arc raiders server??",
     "She said 15:30 - I am here on time #punctual",
-    "are you one of those 3:30 - but actually its like 5:30",
-    "If insurance dosent cover it.... I will save you. Like actually, Rear glass looks pretty cheap on ebay. I can help you install it",
     "Who's in your lobby",
-    "I CANNOT beleive you put the AMG crashed in the back",
-    "come play?",
-    "And then you know you got it match the rear seats so you have to have those reupholsters and by the time you have your interior out you might as well put sound deadening in it and if you know you got that out you might as well put new speakers in an amp in it",
-    "Super bowl party my house",
-    "Or come to Utah with us",
-    "I'm guessing this just got announced and if you're seriously considering buying one I would recommend waiting at least one generation \n\nSo that way they can let the hardware mature a little bit along with the software this phone to mature as well"
+    "The next question will be taco or frontier",
+    "How do you reemeber that shit lol",
+    "First mod delete the chrome and deleted the push bar.",
+    "you only got 2 people bro",
+    "Charge a cover fee??? 😭 Jk",
+    "im sorry, this is out of my scope, let me go get your nurse for you.... *runs away 💨 *",
+    "im alrerady building the tacomaaaa",
+    "Can I unsee this?",
+    "I need more Garmin friends 😭",
+    "Take it easssyhyu mannnn",
+    "i want 1k so you gotta loball him lower BUHAHA",
+    "Lol do you want to go? I think they have one in Portland\n\nAlso they have a snow peak themed campsite on the coast that would be cool to check out",
+    "Nah, i am calling out tomorrow fuck this teacher.",
+    "Q.Q WELL good thing i did my stuff early cause i would have been screwed otherwise.",
+    "Alright well it seems like there is enough interest for me to plan something. \n\nWe can do lake Chelan. \n\nDue to the distance to Chelan I think a sat, sun, Mon or Fri, Sat, sun would be good",
+    "if you are intrested in a camping trip i will plan  one for us can you can go in the taco with me you just have to come on the Weekday, if you can work remote then you can just use starlink",
+    "so do we actually want to play palworld?",
+    "But if it's just me playing at the moment there is no point in hosting a server \n\nIf we have like gex and some others still playing then I don't mind hosting it"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "GUYS the server is actually up lets gooooo 😭",
-      "I fixed one thing and now the whole jeep is entering its reliable era",
-      "we got enough people?? this is huge mannnn"
+      "LETS GOOO, we actually got everyone in the lobby",
+      "That worked?? Okay, huge win",
+      "Camping plan is happening, lets go"
     ],
     "angry_or_frustrated": [
-      "why is this game making me work for fun ?????",
-      "the jeep has chosen violence against my wallet again",
-      "WHAT DO YOU MEAN the server reset everything"
+      "Why is this taking ages man",
+      "Dead game, where did everyone go",
+      "Okay this setup is being dramatic for no reason"
     ],
     "sad_or_disappointed": [
-      "welp the dream is dead for tonight",
-      "i wanted to play but everyone vanished man 😞",
-      "the jeep saga claims another weekend"
+      "Ah, I can't make it tonight sorry man",
+      "The dream is dead for now lol",
+      "I really wanted to go, maybe next time"
     ],
     "supportive_or_caring": [
-      "youre good bro, take your time and lmk when youre ready",
-      "i got you, we can figure out the plan together",
-      "go rest man, the game will still be there tomorrow"
+      "You good man? Need me to come help",
+      "Congrats, that's awesome 🎉",
+      "I can give you a hand if you want"
     ],
     "playful_or_teasing": [
-      "sir this is clearly a skill issue",
-      "you have been promoted to server gremlin",
-      "mayhaps the jeep is waterproof after all"
+      "Bro you are absolutely making this harder than it needs to be",
+      "I will even bail you out of jungle jail",
+      "You got invited and still managed to be late"
     ],
     "neutral_or_logistical": [
-      "what time are we meeting and who needs a ride?",
-      "server is up; changed the hatch time from 72hr to 5hr",
-      "i can bring tools, water, and the cooler if thats everything"
+      "What time are we meeting?",
+      "I can drive if that works for everyone",
+      "Server should be up now; let me know if it acts weird"
     ]
   },
   "concerns": [

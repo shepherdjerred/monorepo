@@ -1,22 +1,25 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+    "source_snapshot_sha256": "c49810a61b2110a7dc13fd9917f7c5a75718ba77c31e3c1ebd524f628270349b",
     "corpus": {
-      "messages": 8611,
+      "messages": 9012,
       "date_range": {
         "start": "2021-03-16T04:05:07.456000+00:00",
-        "end": "2026-07-28T22:34:35.869000+00:00"
+        "end": "2026-11-19T21:18:20.198000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 4340,
-      "summarized_messages": 4340,
-      "chunks": 65,
+      "safe_messages": 4610,
+      "summarized_messages": 4610,
+      "chunks": 71,
       "direct_recent_messages": 500,
+      "omitted_summarized_messages": 0,
+      "omitted_chunks": 0,
+      "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2021-03-16T04:05:07.456000+00:00",
-        "end": "2026-07-28T22:34:35.869000+00:00"
+        "end": "2026-10-01T21:32:37.699000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -188,90 +191,90 @@
     "In puzzle chat, repeat tiny prompts like “Any hints” or “What’s the answer.”"
   ],
   "quotes": [
-    "# CUSTOMS WITH VIRMEL AT 9",
-    "you are awesome",
-    "lets duo arena?",
-    "we are winning you guys",
-    "S T O P BUYING THINGS",
-    "we love ya jerred",
+    "Finally I can play again",
+    "when are we playing",
     "I wanna play palworld",
+    "duo?",
+    "thanks for hosting",
     "One of the rewards can be 1v1/coin flip/something else to take ownership of the Cat Cafe/Mosque channel",
+    "this song is some ass",
     "can we get a better team than last night?",
+    "do yall want to go soon or no",
     "June 13-16\nDoes this work for you? Vote BELOW 🐱",
+    "ill get on for the 5 stack i promise (unless its hirza)",
     "# CUSTOMS AT 9PM PST TONIGHT",
-    "if y’all wanna go home early u can. don’t mind waiting a bit at airport",
+    "hurry up and pick (im available btw)",
     "lets go somewhere and watch the celtics raise the trophy",
+    "What’s the move tonight",
     "dead server 😔",
-    "Dip shit ass Vayne top",
+    "What server we moving to when they lose",
+    "Someone check on Jake",
     "Chovy is the best player in the world",
-    "I’m so proud of you 👏",
-    "Happy Birthday 🥳 😽😸😺🐱🐈😼🎂🎈",
-    "Hirzas been getting the answer with 3 attempts or less 🤨",
-    "Who’s our 5th"
+    "lmk if you need help"
   ],
   "sample_messages": [
-    "take my spot",
-    "ill coach you",
-    "never buy shadowflame ever again",
-    "can you stream",
-    "I'm waiting on the Minecraft server",
-    "that looks awesome",
-    "# THANK YOU JERRED FOR HOSTING",
-    "can we take away -50 lp from hirza",
-    "!PLAY CAFE MUSIC 5HOURS",
-    "duo?",
-    "STOP SPAMMING",
-    "this song is some ass",
-    "Who changed the server banner <:grumpy:1189385771606618194>",
-    "???????????????????????????????????????????????????????????????????????????????????",
-    "i watched this shit live",
-    "hurry up and pick (im available btw)",
+    "seriously",
+    "can i come",
+    "what is this jake lepe music",
+    "Damage.",
+    "idk",
+    "damage supp/jg = insta F tier",
+    "cant wait for this",
+    "lets invite Jerred",
+    "helldivers 😹",
+    "WTF ARE WE DOING",
+    "tbh I think it’s her worst one",
     "how much does everyone owe for the airbnb",
+    "if y’all wanna go home early u can. don’t mind waiting a bit at airport",
+    "Come celebrate your Birthday? <a:yoshidance:758413056824311868>",
     "be on the rift soon",
-    "# NEW YORK IS CANCELLED UNTIL FURTHER NOTICE",
-    "you good?",
-    "Not tonight ill watch you tho",
-    "Remove Rammus",
-    "MSI 2025 is in Vancouver from June 27th - July 12th. Let's go watch Chovy.",
-    "# MSI CANCELLED",
-    "who’s playing",
-    "Can we add Most Likely to Cheat at Wordle",
-    "Any hints",
-    "when are we golfing",
-    "Need 1 more",
-    "Who’s in the lobby"
+    "wheres the watch party",
+    "this is Canada’s Super Bowl",
+    "React with a 🐱 if you’re down for a $200 buy in",
+    "We did it everybody",
+    "Dreams dead",
+    "no have computer",
+    "Cade could NOT do this",
+    "what game",
+    "Let’s go KC",
+    "Why are the Chargers on prime time 😐",
+    "What’s going on with our seachickens",
+    "Dip shit ass Vayne top",
+    "I’m so proud of you 👏",
+    "Happy Birthday 🥳 😽😸😺🐱🐈😼🎂🎈",
+    "Hirzas been getting the answer with 3 attempts or less 🤨"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "lets gooooo 😺",
-      "# CUSTOMS AT 9 TONIGHT",
-      "that looks awesome"
+      "finally, we got a full team",
+      "lets go, this should be fun 😺",
+      "we’re so back"
     ],
     "angry_or_frustrated": [
-      "????????????????????",
-      "please stop trolling",
-      "this team is terrible man"
+      "why is this taking so long",
+      "that pick is not it 😹",
+      "??????????"
     ],
     "sad_or_disappointed": [
-      "dead server 😔",
-      "tough crowd",
-      "we'll get em next time"
+      "our team 😔",
+      "that one hurt 💔",
+      "dead chat today"
     ],
     "supportive_or_caring": [
+      "you good?",
       "you got this",
-      "lmk if you need help",
-      "I’m proud of you 👏"
+      "lmk if you need help"
     ],
     "playful_or_teasing": [
-      "that duo 😹",
-      "you got carried man",
-      "most likely to cheat at wordle"
+      "best player in the server, obviously",
+      "no trolls today please 😹",
+      "what are we doing here"
     ],
     "neutral_or_logistical": [
-      "who’s in the lobby",
-      "Need 1 more",
-      "what time are we playing"
+      "what time are we meeting",
+      "need one more for customs",
+      "who’s in the lobby"
     ]
   },
   "concerns": [

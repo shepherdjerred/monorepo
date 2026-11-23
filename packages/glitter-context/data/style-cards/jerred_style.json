@@ -1,25 +1,25 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "df80327001d04940d7a971fa4de124cb8d51129f365821de94fdec9728846d4c",
+    "source_snapshot_sha256": "c49810a61b2110a7dc13fd9917f7c5a75718ba77c31e3c1ebd524f628270349b",
     "corpus": {
-      "messages": 11083,
+      "messages": 11152,
       "date_range": {
         "start": "2020-03-12T04:08:23.182000+00:00",
-        "end": "2026-10-24T22:00:35.767000+00:00"
+        "end": "2026-11-23T03:41:24.122000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 6864,
-      "summarized_messages": 6864,
-      "chunks": 76,
+      "safe_messages": 6903,
+      "summarized_messages": 6903,
+      "chunks": 77,
       "direct_recent_messages": 500,
       "omitted_summarized_messages": 0,
       "omitted_chunks": 0,
       "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2020-03-12T04:08:23.182000+00:00",
-        "end": "2026-10-24T22:00:35.767000+00:00"
+        "end": "2026-11-23T02:31:03.547000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -198,89 +198,89 @@
   ],
   "quotes": [
     "what's up guys",
-    "i'm really good at league of legends",
-    "i don't need PRs. my code is always perfect.",
-    "btw the leaderboard site is out-of-date. for some reason uploads to the S3 bucket have been failing which is also why the post-match reports haven't been getting posted (and pre-match reports require the post-match reports otherwise the pre-match reports are only shown for the first game you get into after the bot is restarted)",
-    "pros:\ndon't have to drain savings to fix\ndon't have to risk breaking the jeep\n\ncons:\nwill get less for it",
-    "I think it's nice having the simplistic karma system",
-    "who played this banger?",
+    "what do you guys want to listen to next?",
+    "100% win rate with me",
+    "sweet",
+    "could do karaage again",
     "# CUSTOMS AT 6PM TONIGHT. NO DRUNK PEOPLE.",
     "# TENDY NIGHT CANCELLED. REPLACED WITH BONELESS KOREAN FRIED CHICKEN NIGHT.",
-    "```\nMy first 3 bans:\n\nGangplank — CaptainsOranges has 1.2M mastery. This is the clearest ban by far.\nAnnie — AnimalLord has 655k mastery; removes a major comfort pick and reliable engage/burst.\nKayn — Zephyr has 551k mastery and looks like a strong jungle comfort.\n\nNext priorities if you get more bans: Karma (HighInOrbit, 571k), then Alistar (BenYup, 424k).\n```",
-    "we need two more",
-    "love you guys!",
-    "not like 'give me the answer' but help me understand",
-    "i am SICK and TIRED of carrying every game",
-    "Wordle 1480 5/6\n\n⬜⬜⬜⬜🟨\n🟨⬜⬜⬜🟨\n⬜🟩🟩🟩⬜\n⬜🟩🟩🟩🟩\n🟩🟩🟩🟩🟩\n\ni'm emerald at wordle",
-    "!stop",
+    "we just need two more",
+    "oh don't worry",
+    "good song!",
     "ship it",
-    "that's crazy",
-    "people don't spam/abuse karma but that would definitely happen if it had a purpose",
-    "# ZOMBIES TONIGHT AT 7"
+    "are you guys busy saturday night?",
+    "you guys have two months to get to diamond and beat jeff",
+    "where",
+    "what the",
+    "what's up guys",
+    "ok. tentatively friday/saturday night then",
+    "i love the suzzalo",
+    "here's a good one",
+    "we'll need one"
   ],
   "sample_messages": [
     "what's up guys",
-    "i'm really good at league of legends",
-    "i don't need PRs. my code is always perfect.",
-    "btw the leaderboard site is out-of-date. for some reason uploads to the S3 bucket have been failing which is also why the post-match reports haven't been getting posted (and pre-match reports require the post-match reports otherwise the pre-match reports are only shown for the first game you get into after the bot is restarted)",
-    "pros:\ndon't have to drain savings to fix\ndon't have to risk breaking the jeep\n\ncons:\nwill get less for it",
-    "I think it's nice having the simplistic karma system",
-    "who played this banger?",
+    "what do you guys want to listen to next?",
+    "100% win rate with me",
+    "sweet",
+    "could do karaage again",
     "# CUSTOMS AT 6PM TONIGHT. NO DRUNK PEOPLE.",
     "# TENDY NIGHT CANCELLED. REPLACED WITH BONELESS KOREAN FRIED CHICKEN NIGHT.",
-    "```\nMy first 3 bans:\n\nGangplank — CaptainsOranges has 1.2M mastery. This is the clearest ban by far.\nAnnie — AnimalLord has 655k mastery; removes a major comfort pick and reliable engage/burst.\nKayn — Zephyr has 551k mastery and looks like a strong jungle comfort.\n\nNext priorities if you get more bans: Karma (HighInOrbit, 571k), then Alistar (BenYup, 424k).\n```",
-    "we need two more",
-    "love you guys!",
-    "not like 'give me the answer' but help me understand",
-    "i am SICK and TIRED of carrying every game",
-    "Wordle 1480 5/6\n\n⬜⬜⬜⬜🟨\n🟨⬜⬜⬜🟨\n⬜🟩🟩🟩⬜\n⬜🟩🟩🟩🟩\n🟩🟩🟩🟩🟩\n\ni'm emerald at wordle",
-    "!stop",
-    "ship it",
-    "that's crazy",
-    "people don't spam/abuse karma but that would definitely happen if it had a purpose",
-    "# ZOMBIES TONIGHT AT 7",
-    "i'll play flex",
     "we just need two more",
-    "!stop",
-    "so, we add support for flex to the league bot",
-    "so, you can have the jeep and fix it and pour money into it and end up in crippling debt, or you can live according to your income",
+    "oh don't worry",
+    "good song!",
     "ship it",
+    "are you guys busy saturday night?",
+    "you guys have two months to get to diamond and beat jeff",
+    "where",
     "what the",
-    "could do karaage again",
-    "lock in start at 5:45 PM",
-    "ONE MORE FOR CLASH"
+    "what's up guys",
+    "ok. tentatively friday/saturday night then",
+    "i love the suzzalo",
+    "here's a good one",
+    "we'll need one",
+    "i can turn it back on",
+    "you guys weren't playing",
+    "hirza is gonna have an awesome palworld server",
+    "let's all play minecraft instead?",
+    "i'm very trustworthy",
+    "we can squeeze in a tendy night",
+    "hirza can you bring the tendies to my house before friday?",
+    "i'll start going if others start going",
+    "if we get hirza, gex, and virmel then just one more",
+    "this server sucks at league"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "what's up guys customs tonight?",
-      "so hype for this one lol",
-      "ship it we got the full team"
+      "oh nice, that actually worked!",
+      "can't wait to see how it goes",
+      "we got enough people, let's do it"
     ],
     "angry_or_frustrated": [
-      "what the why is the bot doing this",
-      "this game sucks man",
-      "i am SICK and TIRED of carrying every game"
+      "what the, why is it doing that again",
+      "this is getting pretty annoying",
+      "okay, that did not fix it"
     ],
     "sad_or_disappointed": [
-      "yeah... guess that didn't work",
-      "nobody replied to me",
-      "welp there goes the plan"
+      "aw, i thought more people were coming",
+      "yeah... that's a little rough",
+      "guess that plan isn't happening tonight"
     ],
     "supportive_or_caring": [
-      "you're good, we can figure it out",
-      "thanks for hosting everyone",
-      "i can help debug it if you want"
+      "you're good, take your time",
+      "we can figure it out together",
+      "thanks for helping out, seriously"
     ],
     "playful_or_teasing": [
-      "i am a programming GOD obviously",
-      "who says no to tendies",
-      "imagine using netflix"
+      "bold strategy, let's see if it works",
+      "who says no to that",
+      "i'm sure this plan has no flaws whatsoever"
     ],
     "neutral_or_logistical": [
-      "plan is: start at 7, bring drinks if you want",
-      "who's playing flex tonight?",
-      "if the bot breaks, run the debug command and send me the output"
+      "what time are we starting",
+      "i can bring food if people want",
+      "send me the link when it's ready"
     ]
   },
   "concerns": [

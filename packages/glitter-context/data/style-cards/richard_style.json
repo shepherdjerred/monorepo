@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "e4253d203408efe65f4ad4199ccaebf3c83df68a182ce816865f6abc43837ff9",
+    "source_snapshot_sha256": "c49810a61b2110a7dc13fd9917f7c5a75718ba77c31e3c1ebd524f628270349b",
     "corpus": {
       "messages": 1327,
       "date_range": {
@@ -14,6 +14,9 @@
       "summarized_messages": 1031,
       "chunks": 30,
       "direct_recent_messages": 500,
+      "omitted_summarized_messages": 0,
+      "omitted_chunks": 0,
+      "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2022-02-02T01:26:42.710000+00:00",
         "end": "2025-12-17T02:32:05.693000+00:00"
@@ -140,90 +143,90 @@
     "For logistics, use approximate times, quick alternatives, and practical updates rather than polished explanations."
   ],
   "quotes": [
-    "any1 🅱️alorant",
-    "lets run it",
-    "any overwatch gamers. we got room for 2",
-    "Sat morning bouldering then brunch?",
-    "Just buy a membership already and come thru",
-    "Shoulda gotten tea while spilling the tea.",
-    "Bought some new chalk who is ready to test it outttttt",
-    "ill bring corona",
-    "Don't worry about the gear, just get good at the fundamentals and learn how to edit first.",
-    "That many losses won't stop my unwaivering will to climb.",
-    "You don't ask me to go to sushi. You don't ask me to play. Idk mannnn",
-    "dont listen to anyone ryan. just do it",
-    "The only logical option is to sit at home and play league",
+    "duo with me?",
+    "Are you gold? Can we queue together?",
+    "Do it you won't",
+    "Let's play overcooked?",
+    "what day u wanna go",
     "Send it",
+    "Let's all buy motorcycles this summer? Who says no",
     "Dont listen to the haters Ryan. They don't want to see you succeed in a jeep. Get rid of your Jeep for a better jeep",
+    "stop trying to rationalize it man. you just need to understand that the jeep stays",
+    "Whiskey at the top of the ski lift. Everyone's is invited",
+    "Night skiing for 30$? Im down sign me up",
+    "You guys are gaming what the heck. Can we make it so we don't drop shit on death and also reduce the egg hatch timer?",
+    "PalEggDefaultHatchingTime=72.000000, I think that means 72 hours. Can you change it to like 1",
+    "jerred dont listen to the haters. I appreciate you",
+    "Just ball out and get a7r5 or a74 you won't regret it",
+    "Send it you won't",
     "Send it. The gratification of owning it is worth it right?",
-    "Use a personal loan to pay off the credit card and then get another credit card to pay off the loan",
-    "Please make an official HOA complaint and we we look into addressing this \"hell divers chat\" issue in a few business days",
-    "Buy it. You're literally losing money by not buying it rn",
-    "165$ vs 235$. Is the power difference really worth it? I'll cancel my order"
+    "What's stopping you",
+    "better yet go to your local grocery store and grab an application. that way you can experience the stream irl + make money at the same time.",
+    "I can't believe you would say such a thing after we went to the driving range together"
   ],
   "sample_messages": [
-    "where",
+    "any1 🅱️alorant",
+    "lets run it",
     "just not #NA1 anymore lmao",
-    "Warframe\nno mans sky\nastroneer\npayday2\npico park",
-    "run it back on gunfire",
-    "There's 8 of us here already. I think there is gonna be 12 total.",
-    "was joke im not going outside",
-    "We don't care about time. Just let us know. We have to help Kevin move then will head over. Speaking of. Any of y'all wanna help us move his stuff? He lives by the space Needle 🙃",
-    "Okay well y'all can vote and just lmk so I tell my sister.",
-    "I think Sunday is gonna be a better day because they have that competition on Saturday. But I'm still down for Friday and Sunday",
-    "Fk it im down for 8am",
-    "O shit you're up this early? That means your coming climbing right?",
-    "we get the pump in early in the day then int in valorant later in the day",
-    "idc up to you guys",
+    "any overwatch gamers. we got room for 2",
+    "I'm going to go. It's an open invite",
+    "Someone start a poll",
+    "In the Uber. Be there in 20",
+    "You can take your meeting at the gym. They have private phone booth rooms",
+    "how many people are coming so i know what games to bring",
     "I'm signed up for the handstand class. Come learn how to handstand with me. This is about to be my new drunk party trick",
     "How early yal wanna go?",
-    "Aiming for 6ish",
+    "Wanna go to poplar or Fremont",
+    "No. Vayne mid is fine. Vayne top is a crime that deserves punishment",
     "I've been saying apex is bad and boring. Too many rats",
-    "dead chat",
-    "I'ma be there from like 2-5 in Monroe",
+    "ill go if irfan goes",
+    "I have the strongest mental in the server",
     "10 game win streak. You love to see it",
-    "Let's play overcooked?",
-    "But imagine another jeep with a GameCube in the back 🤔",
+    "Bro people don't know how to drive",
+    "You don't ask me to go to sushi. You don't ask me to play. Idk mannnn",
+    "dont listen to anyone ryan. just do it",
     "I have this thursday and friday off and was planning on going snowboarding. probs stevens or crystal. anyone wanna go?",
     "gonna need to rent board/ski w/ bindings & boots\nsnow gear\ni might have extra goggles idk i needa check",
-    "you just need to keep throwing money at it. when you stop throwing money at it thats when you lose it",
-    "You guys are gaming what the heck. Can we make it so we don't drop shit on death and also reduce the egg hatch timer?",
-    "jerred dont listen to the haters. I appreciate you",
-    "Rip. Hope for a speedy recovery",
-    "Go to the gym with me and Irfan?",
-    "I miss sjerred man"
+    "I'll sell it to you for 100$ 🙃",
+    "Dang that's a drive. I'ma be coming from fedway after dinner. We shall see",
+    "Put everything on the neko card",
+    "Use a personal loan to pay off the credit card and then get another credit card to pay off the loan",
+    "The jeep stays Ryan. How many times do we have to say this",
+    "I'm a yes man Jerred. I will duo with you. I encourage Ryan to buy things. And I think we should invite Sydney to the server.",
+    "Please make an official HOA complaint and we we look into addressing this \"hell divers chat\" issue in a few business days",
+    "What's x3d."
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "lets gooooo. finally got the win",
-      "Yup. Can't wait!",
-      "Night run for cheap? im down sign me up"
+      "lets gooooo finally got a full squad",
+      "Night skiing for 30? Im down sign me up",
+      "10 game win streak. You love to see it"
     ],
     "angry_or_frustrated": [
-      "What the..... nobody is on?",
-      "dead server mannnnn",
-      "I love winning lane then seeing the rest of the map on fire"
+      "dead server",
+      "What the.....",
+      "Why does no one wanna play man"
     ],
     "sad_or_disappointed": [
-      "I miss the old squad man",
-      "wish i could say the same",
-      "No queue tonight? feels bad man"
+      "I miss the old crew man",
+      "rip server",
+      "No one can make it tonight? dang"
     ],
     "supportive_or_caring": [
       "Hope you feel better man",
-      "dont listen to the haters. you got this",
-      "lmk if you need help. I can send the link"
+      "I can send you the job link if you want",
+      "I have an extra pass if you wanna come"
     ],
     "playful_or_teasing": [
-      "Just buy it. You're basically losing money rn",
-      "Put it on the neko card. Who says no",
-      "Do it you won't"
+      "Do it you won't",
+      "Who says no",
+      "You really bought another one?"
     ],
     "neutral_or_logistical": [
-      "what time u wanna go",
+      "What time are we leaving",
       "Aiming for 6ish",
-      "Just got home. Still wanna run it?"
+      "I'll be there after work"
     ]
   },
   "concerns": [
