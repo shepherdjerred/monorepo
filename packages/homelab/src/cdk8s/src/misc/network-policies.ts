@@ -225,6 +225,24 @@ export function kubernetesApiEgressRule() {
   };
 }
 
+/** Talos's machine API (apid), which talosctl dials. */
+export const TALOS_API_PORT = 50_000;
+
+/**
+ * The Talos machine API on the production node, for a pod that runs talosctl.
+ *
+ * The talosconfig projected into such pods names one endpoint, torvalds'
+ * Tailscale hostname, which resolves to `PROD_NODE_INTERNAL_IP`. apid on that
+ * endpoint proxies requests for other nodes, so this one address is the only
+ * destination talosctl dials.
+ */
+export function talosApiEgressRule() {
+  return {
+    to: [{ ipBlock: { cidr: `${PROD_NODE_INTERNAL_IP}/32` } }],
+    ports: [tcp(TALOS_API_PORT)],
+  };
+}
+
 /**
  * Home Assistant, as a pod's connection to `home-homeassistant-service.home`
  * looks after DNAT.
