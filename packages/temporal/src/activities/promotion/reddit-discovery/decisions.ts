@@ -51,6 +51,9 @@ export type RedditJudgeInput = {
   signal: AbortSignal;
 };
 
+const ADULT_COMMUNITY_FIT =
+  "Treat requests for an adult or 18+ community, including adults-only wording, as an audience fit when the approved facts say the server is aimed at adults. A reply can explain that other ages can join.";
+
 /** Each question has a stable identity; a high fit score cannot override another gate. */
 export const REDDIT_DECISION_QUESTIONS = [
   {
@@ -62,14 +65,16 @@ export const REDDIT_DECISION_QUESTIONS = [
   {
     type: "predicate",
     name: "strong_main_match",
-    instructions:
-      "The approved server facts clearly satisfy the author's MAIN request. Matching only secondary preferences is insufficient. Differences may be caveated only if minor or explicitly flexible. Treat a strict pure-vanilla/no-plugin request as a mismatch when facts include custom gameplay. Unknown facts cannot support a match. Estimate the probability of a strong main-request match, not the probability that some feature overlaps.",
+    instructions: [
+      "Use the approved server facts to judge whether The Storm is a useful answer to the author's main request. Allow reasonable flexibility for qualitative preferences about community size, activity, play style, and atmosphere. A reply can explain a meaningful difference. Matching only secondary preferences is insufficient, and unknown facts cannot establish fit. Treat a strict pure-vanilla/no-plugin request as a mismatch when the server uses custom plugins.",
+      ADULT_COMMUNITY_FIT,
+    ].join(" "),
   },
   {
     type: "choice",
     name: "community_reply_restriction",
     instructions:
-      "Check the supplied rules for a concrete restriction that applies to this transparent automated invite from a server owner. Review rules about bots, automated comments, promotional replies, owner advertising and where invitations may be posted. Silence or ambiguous permission alone does not establish a restriction.",
+      "Check the supplied rules for a concrete restriction that applies to this transparent automated invite from a server owner. Choose restricted when the rules forbid automated comments, promotional replies, or owner advertising in this thread. Apply those rules even when the server is an excellent fit. Silence or ambiguous permission alone does not establish a restriction.",
     choices: [
       {
         value: "restricted",
@@ -112,8 +117,11 @@ export const REDDIT_DECISION_QUESTIONS = [
   {
     type: "choice",
     name: "hard_constraints",
-    instructions:
-      "Check every deal-breaker against the approved server facts. A capability the author requests as essential, a stated exclusion, or an explicit non-negotiable is a hard requirement. Wording such as 'prefer', 'ideally', 'would be nice', or 'if possible' is optional unless the rest of the post makes it mandatory. For example, 'preferably 18+' is a preference, and 'please no under-18 players' is a requirement. Do not assume support for an unknown hard requirement. If the author states no hard requirements, choose satisfied. Main-request fit and optional preferences are evaluated separately.",
+    instructions: [
+      "Check every genuine deal-breaker against the approved server facts. An essential capability, explicit exclusion, required version or modpack, or a stated minimum player count is a hard requirement. Treat qualitative community descriptions like 'small', 'friendly', and 'active' as preferences for the separate main-fit score. Wording like 'prefer', 'ideally', or 'if possible' is optional unless the rest of the post makes it mandatory. Choose satisfied when no hard requirements remain. Keep unknown or incompatible hard requirements binding.",
+      ADULT_COMMUNITY_FIT,
+      "Adult-only wording alone does not make the hard-constraints answer unmet when the audience fits.",
+    ].join(" "),
     choices: [
       {
         value: "satisfied",
