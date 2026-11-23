@@ -16,8 +16,8 @@ import { OlderLink } from "#client/components/pager.tsx";
 import { BuildTable } from "#client/artifacts.tsx";
 import { ApprovalQueue } from "#client/model/approval-queue.tsx";
 import { useNow, zoneLabel } from "#client/components/time.tsx";
-import { ActivityList, ActivityScope } from "./activity-list.tsx";
-import { foldActivity } from "./activity-fold.ts";
+import { ActivityList, ActivityScope } from "./activity/activity-list.tsx";
+import { foldActivity } from "./activity/activity-fold.ts";
 import { catalogServices } from "./catalog-filter.ts";
 import {
   ACTION_MAX,

@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import { REPLACEMENT_IDS } from "#testing/fixture-api/fixtures/subtitle-replacements.ts";
+import { REPLACEMENT_IDS } from "#testing/fixture-api/fixtures/movies/subtitle-replacements.ts";
 import { FEATURED } from "#testing/fixture-api/fixtures/titles.ts";
 import { horizontalOverflow, test } from "#e2e/browser/support.ts";
 import { answerWrites, openManage, violations } from "./support.ts";

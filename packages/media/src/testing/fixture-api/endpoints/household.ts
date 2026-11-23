@@ -37,7 +37,7 @@ import {
   catalogSearch,
 } from "#testing/fixture-api/fixtures/catalog.ts";
 import { libraryPage } from "#testing/fixture-api/fixtures/library.ts";
-import { movieRequestList } from "#testing/fixture-api/fixtures/movie-requests.ts";
+import { movieRequestList } from "#testing/fixture-api/fixtures/movies/movie-requests.ts";
 import {
   notificationList,
   notificationPreferences,
@@ -49,7 +49,7 @@ import {
   playbackPeople,
   playbackStatistics,
 } from "#testing/fixture-api/fixtures/playback.ts";
-import { plexRequestHistory } from "#testing/fixture-api/fixtures/plex-history.ts";
+import { plexRequestHistory } from "#testing/fixture-api/fixtures/migration/plex-history.ts";
 import {
   removalHistory,
   removalList,

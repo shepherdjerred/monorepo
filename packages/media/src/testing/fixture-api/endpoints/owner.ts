@@ -33,7 +33,7 @@ import {
   recoveryDetail,
   recoveryList,
   legacyRequesters,
-} from "#testing/fixture-api/fixtures/recovery.ts";
+} from "#testing/fixture-api/fixtures/migration/recovery.ts";
 import {
   capacityView,
   migrationBundles,
@@ -44,21 +44,21 @@ import {
   providerList,
   subtitleTargets,
 } from "#testing/fixture-api/fixtures/owner.ts";
-import { nativeRecoveryInventory } from "#testing/fixture-api/fixtures/native-recovery.ts";
+import { nativeRecoveryInventory } from "#testing/fixture-api/fixtures/migration/native-recovery.ts";
 import {
   REPLACEMENT_IDS,
   subtitleReplacementDetail,
   subtitleReplacementList,
-} from "#testing/fixture-api/fixtures/subtitle-replacements.ts";
+} from "#testing/fixture-api/fixtures/movies/subtitle-replacements.ts";
 import {
   HANDOFF_IDS,
   handoffDetail,
-} from "#testing/fixture-api/fixtures/handoff.ts";
+} from "#testing/fixture-api/fixtures/migration/handoff.ts";
 import {
   BUNDLE_IDS,
   bundleReviewDetail,
   migrationProposalDetail,
-} from "#testing/fixture-api/fixtures/migration.ts";
+} from "#testing/fixture-api/fixtures/migration/migration.ts";
 import {
   profileDefaults,
   profileList,

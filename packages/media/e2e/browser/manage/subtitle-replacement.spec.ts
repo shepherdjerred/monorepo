@@ -2,7 +2,7 @@ import { expect, type Page } from "@playwright/test";
 import {
   REPLACEMENT_IDS,
   subtitleReplacementDetail,
-} from "#testing/fixture-api/fixtures/subtitle-replacements.ts";
+} from "#testing/fixture-api/fixtures/movies/subtitle-replacements.ts";
 import { subtitleTargets } from "#testing/fixture-api/fixtures/owner.ts";
 import { horizontalOverflow, test } from "#e2e/browser/support.ts";
 import { answerWrites, openManage, violations } from "./support.ts";

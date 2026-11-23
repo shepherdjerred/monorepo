@@ -3455,7 +3455,7 @@ dialog before approving, naming the file and saying the page offers no undo. A
 conflict says the title changed and nothing was applied; a request that got no
 answer says the page cannot tell and offers the original action again, unchanged.
 The fixture API serves one replacement in each state
-(`src/testing/fixture-api/fixtures/subtitle-replacements.ts`).
+(`src/testing/fixture-api/fixtures/movies/subtitle-replacements.ts`).
 
 The movie replacement protocol uses a separate schema2 admission for
 all registered cuts. `PrismaMovieSubtitleReplacements` binds owner upload and
@@ -3507,7 +3507,7 @@ way to approve that capture again. A refused review (`migration_review_stale`)
 says nothing was saved and offers to load the current review. Hashes, epochs, and
 source bindings sit behind each section's "Technical details". The fixture API
 serves a capture, a report and a plan in each state for it
-(`src/testing/fixture-api/fixtures/migration.ts` and `handoff.ts`).
+(`src/testing/fixture-api/fixtures/migration/migration.ts` and `handoff.ts`).
 
 Owners can upload and review captures at `/manage/migration`. The API saves
 immutable capture records and report evidence. Approval binds capture/report

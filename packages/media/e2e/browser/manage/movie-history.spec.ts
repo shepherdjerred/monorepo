@@ -2,7 +2,7 @@ import { expect, type Page } from "@playwright/test";
 import { MovieHistoryDetailV3Schema } from "#shared/movie-editions/history-review-v3.ts";
 import { MEMBER } from "#testing/fixture-api/personas.ts";
 import { fixtureId, sha256 } from "#testing/fixture-api/support.ts";
-import { definitionDigest } from "#testing/fixture-api/fixtures/movie-requests.ts";
+import { definitionDigest } from "#testing/fixture-api/fixtures/movies/movie-requests.ts";
 import { titleNamed } from "#testing/fixture-api/fixtures/titles.ts";
 import {
   allowWrites,

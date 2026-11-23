@@ -1,6 +1,6 @@
 import type { MediaItem } from "#shared/contract.ts";
 import type { MediaVisibility } from "#shared/visibility/detail.ts";
-import { movieRequestsFor } from "./movie-requests.ts";
+import { movieRequestsFor } from "./movies/movie-requests.ts";
 import type { Persona } from "#testing/fixture-api/personas.ts";
 import { requestId } from "./requests.ts";
 import {
