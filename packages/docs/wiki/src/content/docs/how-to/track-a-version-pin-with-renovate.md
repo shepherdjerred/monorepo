@@ -125,6 +125,39 @@ names the checksum. Renovate cannot compute it.
 
    The pin appears under `packageFiles.regex` for its file.
 
+:::caution
+The extract run above is safe. Never give a `--dry-run=lookup` run a
+placeholder Docker Hub secret. The `docker.io` host rule names the real
+account, so each Docker Hub lookup becomes a failed login. Docker Hub then
+locks the account, and image publishing on main fails. For a lookup, run
+against a copy of `renovate.json` with its `hostRules` entry removed.
+:::
+
+## Track a Minecraft plugin from Modrinth
+
+A Modrinth plugin pin is its download URL, with no hint. The
+`custom.modrinth` datasource in [`renovate.json`](renovate.json) treats the
+whole file URL as the version and orders builds by the version in the file
+name.
+
+1. Pin the build's primary file URL. Its file name must carry the version,
+   such as `Chunky-Bukkit-1.5.66.jar`. Renovate offers only `release` builds
+   with the same name prefix, so a Fabric or Velocity build never replaces a
+   Bukkit one.
+2. Put the URL where a Modrinth manager reads it. Each manager asks Modrinth
+   for builds of one Minecraft version only.
+   - The Storm: [`server/plugins.json`](packages/the-storm/server/plugins.json)
+     and its copies in the e2e harness, [`mc-harness`](packages/mc-harness/src/pins.ts)
+     and the Gradle `runServer` task. It asks for the Paper family in
+     `server/plugins.json`.
+
+3. When a server moves to a new Minecraft version, change `game_versions` in
+   that manager's `registryUrlTemplate`. The root script tests fail until it
+   matches.
+4. A URL Renovate must not follow, such as a `latest` link or a file name
+   without a version, goes in `UNTRACKED_MINECRAFT_URLS` in
+   `scripts/renovate-mirrored-pins.test.ts` with its reason.
+
 ## Finish a half upgrade
 
 A Renovate pull request whose body says **Half upgrade** changed a version but
@@ -146,6 +179,29 @@ the checksum matches.
    bun run toolchain-version-sync
    bun run mise-lock-sync
    ```
+
+### A Storm plugin
+
+Renovate moves only the plugin's `url`, in every file that copies it. Modrinth
+publishes no SHA-256, so the rest is manual.
+
+1. In [`server/plugins.json`](packages/the-storm/server/plugins.json), set the
+   plugin's `version` and `file` to the new build and its `sha256` to the
+   output of `curl -fsSL <url> | sha256sum`.
+2. Copy `version` and `sha256` to the same plugin in the e2e harness and
+   [`mc-harness`](packages/mc-harness/src/pins.ts) pins.
+3. For GrimAC, also move the Gradle pins the pull request body names.
+4. Run the pin tests. They fail until every copy agrees and `version` matches
+   the URL:
+
+   ```bash
+   cd packages/the-storm
+   bun --no-install --bun vitest --config ../../vitest.config.ts run tests/pins.test.ts
+   cd ../mc-harness
+   bun --no-install --bun vitest --config ../../vitest.config.ts run test/pins.test.ts
+   ```
+
+The image build checks `sha256` when it downloads each plugin.
 
 ## Related
 

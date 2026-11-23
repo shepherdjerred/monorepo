@@ -13,6 +13,7 @@ const DATASOURCES = new Set([
   "docker",
   "github-releases",
   "npm",
+  "pypi",
   "custom.mc2discord-forge-1-12-2",
   "custom.papermc",
 ]);
@@ -22,6 +23,7 @@ const VERSIONING = new Set([
   "docker",
   "loose",
   "npm",
+  "pep440",
   "regex:^https://cdn[.]modrinth[.]com/data/Cfbcv7uF/versions/[A-Za-z0-9]+/mc2discord-forge-1[.]12[.]2-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)[.]jar$",
   "regex:^version-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)-nonroot$",
   // tonistiigi/binfmt tags are `qemu-vX.Y.Z`, beside moving tags like `latest`.
