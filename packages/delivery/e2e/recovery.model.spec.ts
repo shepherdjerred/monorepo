@@ -12,6 +12,8 @@ import {
   IDLE_FAILED_REQUEST,
   INTERRUPTED,
   INTERRUPTED_REQUEST,
+  APPLY_SAFETY_TRACE,
+  TRACED_REQUEST,
   READ_BACK_APPLICATION,
   RECOVERY_PROD,
   REFUSAL,
@@ -195,6 +197,45 @@ test("every page leads a deployment that ended mid-step with that step, not with
     .first();
   await expect(row).toContainText(INTERRUPTED_CAUSE);
   await expect(row).not.toContainText("ended in phase");
+});
+
+test("a failure recorded as a runtime error shows its sentence, and the raw text only in a collapsed disclosure", async ({
+  page,
+}) => {
+  await page.goto(
+    `/deployments/${await deploymentId(page, TRACED_REQUEST, INTERRUPTED)}`,
+  );
+  const main = page.getByRole("main");
+  const sentence =
+    "Delivery apply-safety refused the Application before any sync; Refusing golink sync because the desired state changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4";
+  const why = main.getByRole("region", { name: "Why it failed" });
+  await expect(why).toContainText(`failed: ${sentence}`, {
+    useInnerText: true,
+  });
+  // Nothing a person can see carries a source excerpt, a frame or a file path.
+  for (const fragment of [
+    "21895 |",
+    "21896 |",
+    "delivery-argocd.js",
+    "assertApplySafe",
+    "ManagedResourcesSchema",
+  ])
+    await expect(main).not.toContainText(fragment, { useInnerText: true });
+  // The Evidence entry opens on the sentence too.
+  const steps = main.getByRole("region", { name: "Steps" });
+  await expect(steps).toContainText(sentence, { useInnerText: true });
+  // The raw text is in a disclosure that starts collapsed.
+  const raw = main
+    .locator("details.disclosure")
+    .filter({ hasText: "Full error text" });
+  await expect(raw.first()).not.toHaveAttribute("open", "");
+  await expect(raw.first().locator("pre").first()).toBeHidden();
+  await expect(raw.first().locator("pre").first()).toHaveText(
+    APPLY_SAFETY_TRACE,
+  );
+  await raw.first().locator("summary").click();
+  await expect(raw.first().locator("pre").first()).toBeVisible();
+  await expectNoHorizontalOverflow(page);
 });
 
 test("the deployment page folds the readback into the step's sentence and names what it covers", async ({

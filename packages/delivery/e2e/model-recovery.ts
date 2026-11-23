@@ -35,6 +35,21 @@ export const INTERRUPTED = "golink/canary";
 export const INTERRUPTED_REQUEST = "model/golink/canary/interrupted";
 /** The Application whose readback names a phase. */
 export const READ_BACK_APPLICATION = "golink-canary-companion";
+/** The request id of the canary deploy whose apply-safety check threw. */
+export const TRACED_REQUEST = "model/golink/canary/refused";
+/**
+ * What the apply-safety check recorded as evidence: the executor's words, a
+ * bundle excerpt run on after them, more excerpt lines, the error's own
+ * sentence and its stack frames, as the runtime printed them.
+ */
+export const APPLY_SAFETY_TRACE = [
+  "Delivery apply-safety refused the Application before any sync; 21895 | ${body}`);",
+  "21896 | }",
+  "21897 | const managed = ManagedResourcesSchema.parse(",
+  "error: Refusing golink sync because the desired state changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
+  "      at assertApplySafe (/app/packages/temporal/dist/delivery-argocd.js:21900:11)",
+  "      at async main (/app/packages/temporal/dist/delivery-argocd.js:23688:30)",
+].join("\n");
 /** The request id of the refused deploy on Golink beta. */
 export const IDLE_FAILED_REQUEST = "model/golink/beta/refused";
 /** The request id of the r1 deploy the storageClass change refused. */
@@ -237,11 +252,14 @@ async function step(
   deploymentId: string,
   key: "step-apply-safety" | "step-sync",
   outcome:
-    "running" | "succeeded" | "failed" | { status: "failed"; message: string },
+    | "running"
+    | "succeeded"
+    | "failed"
+    | { status: "failed"; message: string; evidence?: string },
 ) {
-  const { status, message } =
+  const { status, message, evidence } =
     typeof outcome === "string"
-      ? { status: outcome, message: `${key}: ${outcome}` }
+      ? { status: outcome, message: `${key}: ${outcome}`, evidence: undefined }
       : outcome;
   await delivery.stage(
     deploymentId,
@@ -250,7 +268,10 @@ async function step(
       status,
       operationId: `${deploymentId}/request`,
       message,
-      evidence: [],
+      evidence:
+        evidence === undefined
+          ? []
+          : [{ kind: "preflight" as const, summary: evidence }],
     },
     testExecutor,
   );
@@ -419,9 +440,10 @@ export async function seedHeldRetry(delivery: Delivery, database: Database) {
     setId: await publish(delivery, database, 3, GOLINK),
     target: GOLINK_BETA,
   });
-  // Canary failed twice: a refusal, then a deploy that ended mid-step.
-  await refuse(delivery, database, {
-    requestId: "model/golink/canary/refused",
+  // Canary failed twice: an apply-safety check that threw, then a deploy that
+  // ended mid-step.
+  await throwInApplySafety(delivery, database, {
+    requestId: TRACED_REQUEST,
     setId: await publish(delivery, database, 4, GOLINK),
     target: GOLINK_CANARY,
   });
@@ -457,6 +479,30 @@ async function refuse(delivery: Delivery, database: Database, input: Request) {
       status: "failed",
       message:
         "Deployment stopped; inspect Workflow history and recorded evidence",
+      recoveryRequired: false,
+      evidence: [],
+    },
+    testExecutor,
+  );
+}
+
+/** A deploy whose apply-safety check threw, recording the error as the runtime printed it. */
+async function throwInApplySafety(
+  delivery: Delivery,
+  database: Database,
+  input: Request,
+) {
+  const thrown = await start(delivery, database, input);
+  await step(delivery, thrown.id, "step-apply-safety", {
+    status: "failed",
+    message: "step-apply-safety: failed",
+    evidence: APPLY_SAFETY_TRACE,
+  });
+  await delivery.finish(
+    thrown.id,
+    {
+      status: "failed",
+      message: "Deployment stopped",
       recoveryRequired: false,
       evidence: [],
     },

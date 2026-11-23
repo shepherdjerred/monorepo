@@ -7,6 +7,7 @@ import type {
 } from "#shared/model/contract.ts";
 import { queries } from "#client/queries.ts";
 import { Status } from "#client/components/status.tsx";
+import { revisionLabel } from "#client/components/identifier.tsx";
 import { RelativeTime } from "#client/components/time.tsx";
 import { specializedRecoveryShown } from "./view.ts";
 import {
@@ -77,7 +78,13 @@ function PreviousSelection({ previousId }: { previousId: string | null }) {
             />
           )}
           <p>
-            Accepted by <DeploymentLink id={previousId} />
+            Accepted by{" "}
+            <DeploymentLink
+              id={previousId}
+              label={`the ${detail.deployment.kind} of ${revisionLabel(detail.versionSet.revision)}`}
+            />
+            , requested by {detail.deployment.requestedBy}{" "}
+            <RelativeTime value={detail.deployment.createdAt} />
           </p>
         </>
       )}

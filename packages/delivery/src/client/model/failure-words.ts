@@ -1,5 +1,17 @@
 import { parseEvidenceSummary } from "#client/evidence.ts";
-import { plainCause } from "#shared/evidence/plain-cause.ts";
+import { hasTrace, plainCause } from "#shared/evidence/plain-cause.ts";
+
+/**
+ * The recorded texts, each once, that carry source excerpts or stack frames:
+ * as recorded, for a disclosure, while the prose says only their sentence.
+ */
+export function tracesOf(texts: readonly (string | null | undefined)[]) {
+  return [
+    ...new Set(
+      texts.flatMap((text) => (text != null && hasTrace(text) ? [text] : [])),
+    ),
+  ];
+}
 
 /** The receipt keys whose text states why the work was refused or failed. */
 const REASON_KEYS = new Set([
