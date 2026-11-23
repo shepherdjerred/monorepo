@@ -27,7 +27,9 @@ COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/golink'
 
 FROM deps AS build
-COPY --parents tsconfig.base.json packages/golink packages/config packages/feature-flags packages/bugsink-config packages/eslint-config packages/homelab/src/platform-model.json ./
+# console-ui and ops-model export TypeScript source the client build bundles;
+# they are devDependencies, so the runtime image never needs them.
+COPY --parents tsconfig.base.json packages/golink packages/console-ui packages/ops-model packages/config packages/feature-flags packages/bugsink-config packages/eslint-config packages/homelab/src/platform-model.json ./
 RUN cd packages/golink && bun run generate && bun run build
 
 FROM base AS prod-deps

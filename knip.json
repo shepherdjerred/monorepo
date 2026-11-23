@@ -77,9 +77,9 @@
       ]
     },
     "packages/golink": {
-      "entry": ["src/**/*.test.ts", "architecture-fixtures/**/*.ts"],
+      "entry": ["src/**/*.test.{ts,tsx}", "architecture-fixtures/**/*.ts"],
       "project": [
-        "src/**/*.{ts,tsx,css}",
+        "src/**/*.{ts,tsx}",
         "architecture-fixtures/**/*.ts",
         "prisma/**/*.prisma",
         "*.ts"
@@ -302,7 +302,7 @@
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
     "packages/scout-for-lol/packages/domain": {
-      "entry": ["src/**/*.test.ts", "architecture-fixtures/**/*.ts"],
+      "entry": ["src/**/*.test.{ts,tsx}", "architecture-fixtures/**/*.ts"],
       "project": ["src/**/*.ts", "architecture-fixtures/**/*.ts"]
     },
     "packages/scout-for-lol/packages/temporal": {

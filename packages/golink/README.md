@@ -32,8 +32,18 @@ Tiers 1–4 forward any request subpath and merge query parameters onto the dest
 | `/api/links`           | `GET`    | Full directory catalog, shortcuts, flag states, and Tailscale viewer identity. |
 | `/api/links`           | `POST`   | Upsert a manual link (gated by `golink-writes-enabled`).                       |
 | `/api/links/:short`    | `DELETE` | Delete a manual link (gated by `golink-writes-enabled`).                       |
-| `/`                    | `GET`    | React directory & link management SPA.                                         |
+| `/`                    | `GET`    | React directory & link management SPA (see [Web UI](#web-ui)).                 |
 | `/:short`, `/:short/*` | `GET`    | `302` redirect (`Cache-Control: no-store`), or `404` SPA/JSON on miss.         |
+
+## Web UI
+
+The SPA uses the shared console look from `@shepherdjerred/console-ui` (Hub, Go link and Flags share it) and has no router: one page, one `GET /api/links` load.
+
+- **App switcher.** The workspace button at the top of the sidebar shows "Go links" and lists the other consoles and tools from `CONSOLE_LINKS` in `@shepherdjerred/ops-model`.
+- **Sources sidebar.** All, Manual, Tailnet, Public sites and Auto-aliases rows, each with its count, filter the table; the selected row is `aria-current`. A Shortcuts row jumps to the shortcut reference. Below 900px the sidebar is hidden and a top bar offers the switcher and a source `<select>`. The theme row cycles system, light and dark (`golink-theme` in `localStorage`).
+- **Search.** The header filter matches slug, destination and source detail; `/` focuses it.
+- **Dialogs.** New link, Edit and Override open one native `<dialog>` (`showModal()`) with the same slug and URL validation; Delete asks for confirmation in a second dialog. Escape closes either and focus returns to the opener. A `go/<slug>` that does not exist shows a banner whose button opens the New link dialog prefilled.
+- **Read-only mode.** When `golink-writes-enabled` is off the header shows a "Read-only" chip instead of New link, and rows show no actions.
 
 ## Development
 
@@ -42,6 +52,6 @@ bun run generate        # Generate Prisma client into generated/prisma
 bun run dev             # Run local API server (in-memory or DATABASE_URL) + Vite
 bun run typecheck       # Native TypeScript strict check
 bun run lint            # ESLint (--max-warnings=0) + check-architecture
-bun run test            # Domain, resolver, architecture, and HTTP app unit tests
+bun run test            # Domain, resolver, architecture, client render, and HTTP app unit tests
 bun run test:extended   # Real PostgreSQL migration & CRUD integration suite
 ```

@@ -1,9 +1,16 @@
-import type { RefObject } from "react";
+import {
+  CommandIcon,
+  CornerDownRightIcon,
+  GlobeIcon,
+  ListIcon,
+  NetworkIcon,
+  PencilIcon,
+  type LucideIcon,
+} from "lucide-react";
 import type {
   DynamicLinkKind,
   LinkKind,
   ShortcutSpec,
-  Viewer,
 } from "#shared/contract.ts";
 
 export type KindFilter = "all" | "manual" | "ingress" | "site" | "alias";
@@ -16,16 +23,37 @@ export type KindCounts = {
   alias: number;
 };
 
-const KIND_FILTER_OPTIONS: readonly {
+export const KIND_FILTER_OPTIONS: readonly {
   value: KindFilter;
   label: string;
+  icon: LucideIcon;
 }[] = [
-  { value: "all", label: "All" },
-  { value: "manual", label: "Manual" },
-  { value: "ingress", label: "Tailnet" },
-  { value: "site", label: "Public Sites" },
-  { value: "alias", label: "Auto-Aliases" },
+  { value: "all", label: "All", icon: ListIcon },
+  { value: "manual", label: "Manual", icon: PencilIcon },
+  { value: "ingress", label: "Tailnet", icon: NetworkIcon },
+  { value: "site", label: "Public sites", icon: GlobeIcon },
+  { value: "alias", label: "Auto-aliases", icon: CornerDownRightIcon },
 ];
+
+export function sourceIcon(kind: LinkKind): LucideIcon {
+  switch (kind) {
+    case "manual": {
+      return PencilIcon;
+    }
+    case "ingress": {
+      return NetworkIcon;
+    }
+    case "site": {
+      return GlobeIcon;
+    }
+    case "alias": {
+      return CornerDownRightIcon;
+    }
+    case "shortcut": {
+      return CommandIcon;
+    }
+  }
+}
 
 export function describeDynamicKind(kind: DynamicLinkKind): string {
   switch (kind) {
@@ -48,169 +76,6 @@ export function describeLinkKind(kind: LinkKind): string {
   return kind === "manual" ? "Manual" : describeDynamicKind(kind);
 }
 
-function formatViewerTitle(
-  viewerLogin: string,
-  viewerDisplay: string | null,
-): string {
-  return viewerDisplay === null || viewerDisplay.length === 0
-    ? viewerLogin
-    : `${viewerDisplay} (${viewerLogin})`;
-}
-
-export function DirectoryHeader({
-  manualCount,
-  dynamicCount,
-  shortcutCount,
-  viewer,
-  writesEnabled,
-}: {
-  manualCount: number;
-  dynamicCount: number;
-  shortcutCount: number;
-  viewer: Viewer | null;
-  writesEnabled: boolean;
-}) {
-  const viewerLogin = viewer?.login ?? null;
-  const viewerDisplay = viewer?.displayName ?? null;
-
-  return (
-    <header className="site-header">
-      <div className="brand-cluster">
-        <a href="/" className="brand-badge" aria-label="go/ home">
-          go/
-        </a>
-        <div className="brand-title-block">
-          <h1 className="site-title">Shortlink Directory</h1>
-          <p className="live-counts">
-            <span>{String(manualCount)} manual</span>
-            <span aria-hidden="true">·</span>
-            <span>{String(dynamicCount)} dynamic</span>
-            <span aria-hidden="true">·</span>
-            <span>{String(shortcutCount)} shortcuts</span>
-          </p>
-        </div>
-      </div>
-
-      <div className="header-pills">
-        {!writesEnabled && (
-          <span className="viewer-pill viewer-pill-muted">Read-only mode</span>
-        )}
-        {viewerLogin === null || viewerLogin.length === 0 ? (
-          <span className="viewer-pill viewer-pill-muted">Tailnet viewer</span>
-        ) : (
-          <span
-            className="viewer-pill"
-            title={formatViewerTitle(viewerLogin, viewerDisplay)}
-          >
-            <span className="viewer-dot" aria-hidden="true" />
-            <span>{viewerLogin}</span>
-          </span>
-        )}
-      </div>
-    </header>
-  );
-}
-
-export function SearchFilterBar({
-  query,
-  kindFilter,
-  counts,
-  searchInputRef,
-  onQueryChange,
-  onKindFilterChange,
-}: {
-  query: string;
-  kindFilter: KindFilter;
-  counts: KindCounts;
-  searchInputRef: RefObject<HTMLInputElement | null>;
-  onQueryChange: (next: string) => void;
-  onKindFilterChange: (next: KindFilter) => void;
-}) {
-  return (
-    <search aria-label="Filter shortlinks" className="directory-search">
-      <form
-        action="/"
-        method="get"
-        className="search-controls"
-        onSubmit={(event) => {
-          event.preventDefault();
-        }}
-      >
-        <div className="field search-field">
-          <div className="search-label-row">
-            <label htmlFor="directory-filter-input">Filter directory</label>
-            <kbd className="shortcut-kbd" aria-hidden="true">
-              /
-            </kbd>
-          </div>
-          <span id="search-hint" className="hint">
-            Match shortlink name, destination URL, or source detail.
-          </span>
-          <div className="search-input-row">
-            <input
-              ref={searchInputRef}
-              id="directory-filter-input"
-              name="q"
-              type="search"
-              value={query}
-              placeholder="Filter go/ links, hosts, or services…"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="none"
-              spellCheck={false}
-              enterKeyHint="search"
-              aria-describedby="search-hint"
-              onChange={(event) => {
-                onQueryChange(event.target.value);
-              }}
-            />
-            {query.length > 0 && (
-              <button
-                type="button"
-                className="btn btn-secondary search-clear-btn"
-                onClick={() => {
-                  onQueryChange("");
-                  searchInputRef.current?.focus();
-                }}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
-
-        <fieldset className="kind-fieldset">
-          <legend className="kind-legend">Filter by source</legend>
-          <div className="radio-pill-group">
-            {KIND_FILTER_OPTIONS.map((option) => {
-              const radioId = `kind-filter-${option.value}`;
-              const optionCount = counts[option.value];
-              return (
-                <div key={option.value} className="radio-pill">
-                  <input
-                    type="radio"
-                    id={radioId}
-                    name="kind"
-                    value={option.value}
-                    checked={kindFilter === option.value}
-                    onChange={() => {
-                      onKindFilterChange(option.value);
-                    }}
-                  />
-                  <label htmlFor={radioId}>
-                    <span>{option.label}</span>
-                    <span className="pill-count">{String(optionCount)}</span>
-                  </label>
-                </div>
-              );
-            })}
-          </div>
-        </fieldset>
-      </form>
-    </search>
-  );
-}
-
 export function ShortcutsSection({
   shortcuts,
 }: {
@@ -221,39 +86,42 @@ export function ShortcutsSection({
   }
 
   return (
-    <section
-      className="shortcuts-section"
-      aria-labelledby="shortcuts-section-heading"
-    >
-      <div className="section-heading-row">
-        <h2 id="shortcuts-section-heading">Parameterized Shortcuts</h2>
-        <span className="section-subtitle">
-          Dynamic path templates resolved on the fly
-        </span>
+    <section id="shortcuts" aria-labelledby="shortcuts-heading">
+      <div className="ui-section-head">
+        <h2 className="ui-section-title" id="shortcuts-heading">
+          Shortcuts
+        </h2>
+        <span className="ui-muted">Path templates resolved on the fly</span>
       </div>
-      <div className="shortcuts-grid">
-        {shortcuts.map((spec) => (
-          <article key={spec.pattern} className="shortcut-card">
-            <div className="shortcut-pattern">
-              <span className="shortlink-prefix">go/</span>
-              <code>{spec.pattern}</code>
-            </div>
-            <p className="shortcut-description">{spec.description}</p>
-            <div className="shortcut-example">
-              <span className="shortcut-example-label">Example:</span>
-              <a
-                href={`/${spec.exampleShort}`}
-                className="shortcut-example-link"
-              >
-                go/{spec.exampleShort}
-              </a>
-              <span className="shortcut-arrow" aria-hidden="true">
-                →
-              </span>
-              <span className="shortcut-target">{spec.exampleTargetUrl}</span>
-            </div>
-          </article>
-        ))}
+      <div className="ui-table-scroll">
+        <table className="ui-table golink-shortcuts">
+          <thead>
+            <tr>
+              <th scope="col">Pattern</th>
+              <th scope="col">Description</th>
+              <th scope="col">Example</th>
+            </tr>
+          </thead>
+          <tbody>
+            {shortcuts.map((spec) => (
+              <tr key={spec.pattern}>
+                <th scope="row" className="ui-mono">
+                  go/{spec.pattern}
+                </th>
+                <td>{spec.description}</td>
+                <td>
+                  <a href={`/${spec.exampleShort}`} className="ui-mono">
+                    go/{spec.exampleShort}
+                  </a>
+                  <span className="ui-muted ui-mono">
+                    {" "}
+                    → {spec.exampleTargetUrl}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </section>
   );
