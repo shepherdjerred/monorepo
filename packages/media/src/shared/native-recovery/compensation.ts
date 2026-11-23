@@ -64,32 +64,48 @@ export const CompensationTransitionRefSchema =
   });
 export const NativeCompensationScopeSchema = NativeRecoveryScopeSchema.omit({
   subtitlePolicies: true,
-}).extend({
-  schemaVersion: z.literal(2),
-  lifecycleKind: z.literal("publication_compensation"),
-  request: PrepareNativeCompensationSchema,
-  transition: CompensationTransitionRefSchema,
-  intent: PublicationIntentSchema,
-  interruptedWork: InterruptedPublicationWorkSchema,
-  entries: z.array(PublicationEntryIntentSchema).min(1).max(25),
-  previousCompensation: z
-    .strictObject({
-      continuationId: z.uuid(),
-      descriptorHash: Hash,
-      executionHash: Hash.nullable(),
-      coordinatorOperationId: z.uuid(),
-    })
-    .nullable(),
-  requiredAbsences: z
-    .array(
-      z.strictObject({
-        assetId: z.uuid(),
-        libraryKind: z.enum(["movies", "tv"]),
-        canonicalPath: z.string().min(1).max(4096),
-      }),
-    )
-    .max(2525),
-});
+})
+  .extend({
+    schemaVersion: z.literal(2),
+    lifecycleKind: z.literal("publication_compensation"),
+    request: PrepareNativeCompensationSchema,
+    transition: CompensationTransitionRefSchema,
+    intent: PublicationIntentSchema,
+    interruptedWork: InterruptedPublicationWorkSchema,
+    entries: z.array(PublicationEntryIntentSchema).min(1).max(25),
+    previousCompensation: z
+      .strictObject({
+        continuationId: z.uuid(),
+        descriptorHash: Hash,
+        executionHash: Hash.nullable(),
+        coordinatorOperationId: z.uuid(),
+      })
+      .nullable(),
+    requiredAbsences: z
+      .array(
+        z.strictObject({
+          assetId: z.uuid(),
+          libraryKind: z.enum(["movies", "tv"]),
+          canonicalPath: z.string().min(1).max(4096),
+        }),
+      )
+      .max(2525),
+  })
+  .superRefine((scope, ctx) => {
+    // The server builds a scope from one transition row and refuses to read the
+    // intent or the interrupted work unless they carry that row's id.
+    const id = scope.transition.transitionId;
+    for (const [path, other] of [
+      ["intent", scope.intent.transitionId],
+      ["interruptedWork", scope.interruptedWork.transitionId],
+    ] as const)
+      if (other !== id)
+        ctx.addIssue({
+          code: "custom",
+          path: [path, "transitionId"],
+          message: "A compensation scope covers one transition",
+        });
+  });
 export const NativeCompensationStepSchema = z.strictObject({
   stepId: z.string().regex(/^[\w-]{1,100}$/u),
   entryOperationId: z.string().regex(/^[\w-]{1,100}$/u),
