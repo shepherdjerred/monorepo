@@ -106,7 +106,6 @@ export const DEBT: Readonly<Record<RuleId, ReadonlySet<string>>> = {
     "ci-handoff",
     "delivery-artifacts",
     "homelab-tofu-state",
-    "relay-docs",
     "storm-forum-backups",
     "the-storm-capture-fixtures",
     "ts-mc",

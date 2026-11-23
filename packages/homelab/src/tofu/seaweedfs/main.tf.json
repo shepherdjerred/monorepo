@@ -2,7 +2,6 @@
   "import": [
     { "id": "apple-sdks", "to": "aws_s3_bucket.apple_sdks" },
     { "id": "stocks-sjer-red", "to": "aws_s3_bucket.stocks_sjer_red" },
-    { "id": "relay-docs", "to": "aws_s3_bucket.relay_docs" },
     { "id": "ci-handoff", "to": "aws_s3_bucket.ci_handoff" }
   ],
   "locals": {
@@ -78,7 +77,6 @@
       "landing_pages": { "bucket": "landing-pages" },
       "llm_archive": { "bucket": "llm-archive" },
       "public_sjer_red": { "bucket": "public-sjer-red" },
-      "relay_docs": { "bucket": "relay-docs", "force_destroy": true },
       "resume": { "bucket": "resume" },
       "scout_beta": { "bucket": "scout-beta" },
       "scout_design_system": { "bucket": "scout-design-system" },

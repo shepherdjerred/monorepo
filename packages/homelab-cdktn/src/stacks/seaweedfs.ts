@@ -268,11 +268,6 @@ export class SeaweedfsStack extends HomelabStack {
     // copy. No expiry.
     this.consumed({ env: "RWF_ARCHIVE_S3_BUCKET" }, { protected: true });
 
-    // Retire the document CRDT state and attachments from the removed
-    // self-hosted Relay Server. Apply force_destroy here first; a follow-up
-    // removes this resource after that apply, as with Clauderon below.
-    this.bucket("relay-docs", { adopt: true, forceDestroy: true });
-
     // Public artifact bucket, served at https://public.sjer.red via Caddy
     // s3proxy. PR screenshots live under the `pr/assets/<number>/` prefix
     // (365-day TTL, below); the bucket root is seeded with a landing + 404
