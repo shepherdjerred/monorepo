@@ -23,6 +23,7 @@
   }
   .monthNav {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
     min-width: 0;
@@ -203,7 +204,9 @@
     color: var(--ok);
   }
   .more {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
     margin-top: 2px;
     padding: 2px;
     border-radius: 4px;
@@ -446,6 +449,16 @@
     }
     .monthName {
       font-size: var(--text-lg);
+    }
+  }
+
+  /* Today is a filled numeral; a user's colors drop the fill. */
+  @media (forced-colors: active) {
+    .cell[data-today="true"] .cellNumeral,
+    .day[data-today="true"] .dayNumeral {
+      background: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
     }
   }
 }

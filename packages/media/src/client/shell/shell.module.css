@@ -292,4 +292,15 @@
       );
     }
   }
+
+  @media (forced-colors: active) {
+    .navItem[aria-current="page"] {
+      background: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
+    }
+    .navItem[aria-current="page"] svg {
+      color: HighlightText;
+    }
+  }
 }

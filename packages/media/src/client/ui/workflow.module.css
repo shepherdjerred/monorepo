@@ -22,6 +22,7 @@
     counter-increment: step;
   }
   .stepLink {
+    min-height: 24px;
     font-weight: 600;
     color: var(--text);
     text-decoration: none;

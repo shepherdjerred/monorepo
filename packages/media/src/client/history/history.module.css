@@ -342,4 +342,22 @@
       max-width: none;
     }
   }
+
+  /* A user's colors drop the track and the fill; system colors draw them. */
+  @media (forced-colors: active) {
+    .position,
+    .bar {
+      border: 1px solid CanvasText;
+      background: Canvas;
+      forced-color-adjust: none;
+    }
+    .position::-webkit-progress-value,
+    .bar::-webkit-progress-value {
+      background: Highlight;
+    }
+    .position::-moz-progress-bar,
+    .bar::-moz-progress-bar {
+      background: Highlight;
+    }
+  }
 }
