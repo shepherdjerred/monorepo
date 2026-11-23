@@ -96,7 +96,14 @@ export function PublishedReview({
           ))}
         </DataList>
       </Panel>
-      <Panel id="policies" title="Subtitle policies being renewed">
+      <Panel
+        id="policies"
+        title={
+          review.state === "applied"
+            ? "Subtitle policies renewed"
+            : "Subtitle policies to be renewed"
+        }
+      >
         <DataList label="Subtitle policies">
           {subtitlePolicies.map((policy) => (
             <DataRow
@@ -134,8 +141,10 @@ export function PublishedReview({
               status={
                 policy.effective === null ? (
                   <Badge>No policy</Badge>
-                ) : (
+                ) : review.state === "applied" ? (
                   <Badge tone="ok">Renewed</Badge>
+                ) : (
+                  <Badge>Will be renewed</Badge>
                 )
               }
             />
@@ -176,6 +185,7 @@ export function PublishedReview({
               </p>
             }
             {...approval}
+            onRefresh={header.onRefresh}
           />
         )}
         <ProofDetails planHash={review.planHash} expiresAt={review.expiresAt}>

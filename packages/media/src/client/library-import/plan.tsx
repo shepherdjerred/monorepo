@@ -21,11 +21,11 @@ import { Badge, Callout, LoadError } from "#client/ui/feedback.tsx";
 import { CheckboxField } from "#client/ui/forms/field.tsx";
 import { EmptyNote, Panel, SkeletonRows } from "#client/ui/panel.tsx";
 import {
-  ActionFailure,
   Code,
   Decision,
   Facts,
   TechnicalDetails,
+  WriteFailure,
 } from "#client/ui/workflow.tsx";
 import { reasonLabel, when } from "#client/migration/vocabulary.ts";
 import { useHandoffPlan, type HandoffPlanDetailSchema } from "./plan-detail.ts";
@@ -390,10 +390,18 @@ function PlanApproval({
         </p>
       </ConfirmDialog>
       {apply.error !== null && (
-        <ActionFailure
-          title="The adoption was not submitted"
+        <WriteFailure
           error={apply.error}
-          state="As far as this page can tell, nothing was adopted and the plan is unchanged. Refresh the plan to confirm."
+          refused={{
+            title: "The adoption was not submitted",
+            state:
+              "The request was refused, so nothing was adopted and the plan is unchanged. Refresh the plan to see its current state.",
+          }}
+          unknown={{
+            title: "Whether the adoption was submitted is not known",
+            about: "whether the adoption was submitted",
+            check: "refresh the plan to see whether it was applied",
+          }}
           action={
             <Button
               onClick={() => {

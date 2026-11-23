@@ -7,9 +7,9 @@ import { Callout, LoadError } from "#client/ui/feedback.tsx";
 import { CheckboxField } from "#client/ui/forms/field.tsx";
 import { Panel } from "#client/ui/panel.tsx";
 import {
-  ActionFailure,
   Decision,
   TechnicalDetails,
+  WriteFailure,
 } from "#client/ui/workflow.tsx";
 import { REVIEW_STATE, phrase, reviewState } from "./vocabulary.ts";
 
@@ -88,6 +88,7 @@ export function ApprovalSection({
   onApply,
   pending,
   error,
+  onRefresh,
 }: {
   title?: string;
   /** What approving permits, before the acknowledgement. */
@@ -103,6 +104,8 @@ export function ApprovalSection({
   onApply: () => void;
   pending: boolean;
   error: Error | null;
+  /** Loads the review again, to see whether an approval went through. */
+  onRefresh: () => void;
 }) {
   const confirm = useRef<HTMLDialogElement>(null);
   return (
@@ -139,10 +142,24 @@ export function ApprovalSection({
         {confirmBody}
       </ConfirmDialog>
       {error !== null && (
-        <ActionFailure
-          title="The approval was not submitted"
+        <WriteFailure
           error={error}
-          state="As far as this page can tell, nothing was changed. Refresh the review to confirm."
+          refused={{
+            title: "The approval was not submitted",
+            state:
+              "The request was refused, so nothing was changed. Refresh the review to see its current state.",
+          }}
+          unknown={{
+            title: "Whether the approval was submitted is not known",
+            about: "whether the approval was recorded",
+            check: "refresh the review to see its state",
+          }}
+          action={
+            <Button onClick={onRefresh}>
+              <RotateCwIcon aria-hidden="true" />
+              Refresh the review
+            </Button>
+          }
         />
       )}
     </>

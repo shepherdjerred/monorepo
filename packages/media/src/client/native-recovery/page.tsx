@@ -4,14 +4,14 @@ import { useNavigate, useParams } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
 import { CommandResultSchema } from "#shared/api.ts";
 import { NativeRecoveryInventorySchema } from "#shared/native-recovery.ts";
-import { readApi, writeApi } from "#client/api.ts";
+import { NotSentError, readApi, writeApi } from "#client/api.ts";
 import { PageTitle } from "#client/components.tsx";
 import { Button, ButtonLink, ButtonRow } from "#client/ui/button.tsx";
 import { DataList, DataRow } from "#client/ui/data-list.tsx";
 import { Badge, LoadError } from "#client/ui/feedback.tsx";
 import { ChoiceField } from "#client/ui/forms/field.tsx";
 import { EmptyNote, Panel, SkeletonRows } from "#client/ui/panel.tsx";
-import { ActionFailure, PickBox, PickList } from "#client/ui/workflow.tsx";
+import { PickBox, PickList, WriteFailure } from "#client/ui/workflow.tsx";
 import { NativeRecoveryReview } from "./review.tsx";
 import { NativeArchiveIndex } from "./archive/index.tsx";
 import { NativeCompensationIndex } from "./compensation/index.tsx";
@@ -51,7 +51,7 @@ function NativeRecoveryIndex({ user }: { user: MediaUser }) {
     mutationFn: async () => {
       const data = inventory.data;
       if (data?.restoreOperationId == null)
-        throw new Error(
+        throw new NotSentError(
           "Complete the operator restore-to-observe procedure first",
         );
       return writeApi({
@@ -226,10 +226,28 @@ function NativeRecoveryIndex({ user }: { user: MediaUser }) {
               </Button>
             </div>
             {prepare.error !== null && (
-              <ActionFailure
-                title="The review was not prepared"
+              <WriteFailure
                 error={prepare.error}
-                state="Nothing was prepared and no file was changed."
+                refused={{
+                  title: "The review was not prepared",
+                  state: "Nothing was prepared and no file was changed.",
+                }}
+                unknown={{
+                  title: "Whether the review was prepared is not known",
+                  about: "whether the review was saved",
+                  check:
+                    "reload the prepared reviews to see whether it is listed",
+                }}
+                action={
+                  <Button
+                    onClick={() => {
+                      prepare.reset();
+                      void inventory.refetch();
+                    }}
+                  >
+                    Reload the prepared reviews
+                  </Button>
+                }
               />
             )}
           </Panel>

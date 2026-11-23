@@ -2,7 +2,7 @@ import { expect } from "@playwright/test";
 import { migrationProposalDetail } from "#testing/fixture-api/fixtures/migration/migration.ts";
 import { horizontalOverflow, inScenario, test } from "#e2e/browser/support.ts";
 import { SNAPSHOT, openCapture, proposalSummary } from "./migration-support.ts";
-import { answerWrites, openManage, violations } from "./support.ts";
+import { answerWrites, dropWrites, openManage, violations } from "./support.ts";
 
 test.describe("the migration page", () => {
   test("shows where each step stands and fits the screen", async ({ page }) => {
@@ -141,6 +141,32 @@ test.describe("the migration page", () => {
       "Bundle, report or runtime changed; regenerate review",
     );
     await expect(alert).toContainText("so nothing was saved");
+    await expect(
+      alert.getByRole("button", { name: "Load the current review" }),
+    ).toBeVisible();
+  });
+
+  test("says the outcome is unknown, not that nothing was saved, when the approval's response is lost", async ({
+    page,
+  }) => {
+    const sonarr = proposalSummary("sonarr");
+    const writes = await dropWrites(
+      page,
+      `/admin/migration/${sonarr.id}/review`,
+    );
+    await openManage(page, "/manage/migration");
+    await openCapture(page, /Review the Sonarr/u);
+    await page
+      .getByRole("checkbox", { name: /I reviewed this evidence/u })
+      .check();
+    await page.getByRole("button", { name: "Record approval" }).click();
+    await expect.poll(() => writes.length).toBe(1);
+    const alert = page.getByRole("alert");
+    await expect(alert).toContainText(
+      "cannot tell whether the approval was saved",
+    );
+    await expect(alert).not.toContainText("was not recorded");
+    await expect(alert).not.toContainText("nothing was saved");
     await expect(
       alert.getByRole("button", { name: "Load the current review" }),
     ).toBeVisible();

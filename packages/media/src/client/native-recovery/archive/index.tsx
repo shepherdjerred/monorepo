@@ -4,12 +4,12 @@ import { useNavigate } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
 import { NativeArchiveInventorySchema } from "#shared/native-recovery/archive-view.ts";
 import { CommandResultSchema } from "#shared/api.ts";
-import { readApi, writeApi } from "#client/api.ts";
+import { NotSentError, readApi, writeApi } from "#client/api.ts";
 import { PageTitle } from "#client/components.tsx";
 import { Button, ButtonLink, ButtonRow } from "#client/ui/button.tsx";
 import { LoadError } from "#client/ui/feedback.tsx";
 import { EmptyNote, Panel, SkeletonRows } from "#client/ui/panel.tsx";
-import { ActionFailure, PickBox, PickList } from "#client/ui/workflow.tsx";
+import { PickBox, PickList, WriteFailure } from "#client/ui/workflow.tsx";
 import {
   CursorButtons,
   Prerequisites,
@@ -33,7 +33,7 @@ export function NativeArchiveIndex({ user }: { user: MediaUser }) {
     mutationFn: async () => {
       const data = inventory.data;
       if (data?.restoreOperationId == null)
-        throw new Error(
+        throw new NotSentError(
           "Complete the operator restore-to-observe procedure first",
         );
       return writeApi({
@@ -171,10 +171,23 @@ export function NativeArchiveIndex({ user }: { user: MediaUser }) {
               </Button>
             </div>
             {prepare.error !== null && (
-              <ActionFailure
-                title="The review was not prepared"
+              <WriteFailure
                 error={prepare.error}
-                state="Nothing was prepared and no file was changed."
+                refused={{
+                  title: "The review was not prepared",
+                  state: "Nothing was prepared and no file was changed.",
+                }}
+                unknown={{
+                  title: "Whether the review was prepared is not known",
+                  about: "whether the review was saved",
+                  check:
+                    "open the prepared reviews to see whether it is listed",
+                }}
+                action={
+                  <ButtonLink to="/manage/recovery/native#reviews">
+                    Open the prepared reviews
+                  </ButtonLink>
+                }
               />
             )}
           </Panel>

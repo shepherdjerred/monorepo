@@ -26,6 +26,35 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * A command the page stopped before sending, so nothing was ever asked of the
+ * server. Throw it for a precondition checked locally.
+ */
+export class NotSentError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NotSentError";
+  }
+}
+
+/**
+ * What a failed command guarantees about the server, by the one rule every
+ * page shares:
+ *
+ * - `refused`: the page never sent it, or the server answered with a 4xx. A
+ *   command runs in one transaction with its idempotency record, so a refusal
+ *   wrote nothing.
+ * - `unknown`: anything else, such as a dropped connection, a lost or
+ *   unreadable response, or a server failure. The server may have saved the
+ *   change before the answer was lost, so the page must not say it did not.
+ */
+export function writeOutcome(error: Error): "refused" | "unknown" {
+  if (error instanceof NotSentError) return "refused";
+  return error instanceof ApiError && error.status >= 400 && error.status < 500
+    ? "refused"
+    : "unknown";
+}
+
 export async function readApi<T>(
   path: string,
   schema: z.ZodType<T>,

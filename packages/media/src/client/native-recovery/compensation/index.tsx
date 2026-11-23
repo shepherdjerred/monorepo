@@ -6,12 +6,12 @@ import type { MediaUser } from "#shared/contract.ts";
 import { NativeCompensationInventorySchema } from "#shared/native-recovery/compensation-runtime.ts";
 import { NativeRecoveryInventorySchema } from "#shared/native-recovery.ts";
 import { CommandResultSchema } from "#shared/api.ts";
-import { readApi, writeApi } from "#client/api.ts";
+import { NotSentError, readApi, writeApi } from "#client/api.ts";
 import { PageTitle } from "#client/components.tsx";
 import { Button, ButtonLink, ButtonRow } from "#client/ui/button.tsx";
 import { LoadError } from "#client/ui/feedback.tsx";
 import { EmptyNote, Panel, SkeletonRows } from "#client/ui/panel.tsx";
-import { ActionFailure, PickList } from "#client/ui/workflow.tsx";
+import { PickList, WriteFailure } from "#client/ui/workflow.tsx";
 import {
   CursorButtons,
   Prerequisites,
@@ -43,7 +43,7 @@ export function NativeCompensationIndex({ user }: { user: MediaUser }) {
     mutationFn: () => {
       const current = context.data;
       if (selected === null || current?.restoreOperationId == null)
-        throw new Error(
+        throw new NotSentError(
           "Select a complete interrupted upgrade after restore-to-observe",
         );
       if (
@@ -51,7 +51,7 @@ export function NativeCompensationIndex({ user }: { user: MediaUser }) {
           (item) => item.transitionId === selected && item.selectable,
         ) !== true
       )
-        throw new Error(
+        throw new NotSentError(
           "This interrupted upgrade is protected; refresh and review its current evidence",
         );
       return writeApi({
@@ -207,10 +207,22 @@ export function NativeCompensationIndex({ user }: { user: MediaUser }) {
             </Button>
           </ButtonRow>
           {prepare.error !== null && (
-            <ActionFailure
-              title="The review was not prepared"
+            <WriteFailure
               error={prepare.error}
-              state="Nothing was prepared and no file was changed."
+              refused={{
+                title: "The review was not prepared",
+                state: "Nothing was prepared and no file was changed.",
+              }}
+              unknown={{
+                title: "Whether the review was prepared is not known",
+                about: "whether the review was saved",
+                check: "open the prepared reviews to see whether it is listed",
+              }}
+              action={
+                <ButtonLink to="/manage/recovery/native#reviews">
+                  Open the prepared reviews
+                </ButtonLink>
+              }
             />
           )}
         </Panel>

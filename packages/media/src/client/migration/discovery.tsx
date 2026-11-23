@@ -7,7 +7,7 @@ import { queryClient, writeApi } from "#client/api.ts";
 import { Button } from "#client/ui/button.tsx";
 import { Badge } from "#client/ui/feedback.tsx";
 import { DataList, DataRow } from "#client/ui/data-list.tsx";
-import { ActionFailure } from "#client/ui/workflow.tsx";
+import { WriteFailure } from "#client/ui/workflow.tsx";
 import { reasonLabel } from "./vocabulary.ts";
 import { classNames } from "#client/ui/class-names.ts";
 import styles from "./migration.module.css";
@@ -81,10 +81,18 @@ export function MigrationDiscovery({
         </Button>
       </div>
       {discovery.error !== null && (
-        <ActionFailure
-          title="Catalog discovery did not finish this step"
+        <WriteFailure
           error={discovery.error}
-          state="No identities were added by this step. Run it again to retry from the same place."
+          refused={{
+            title: "Catalog discovery did not finish this step",
+            state:
+              "The request was refused, so no identities were added by this step. Run it again to retry from the same place.",
+          }}
+          unknown={{
+            title: "Whether this discovery step finished is not known",
+            about: "whether this step added any identities",
+            check: "run it again to continue from the same place",
+          }}
         />
       )}
       {result !== undefined && (

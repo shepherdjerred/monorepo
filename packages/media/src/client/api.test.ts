@@ -3,9 +3,11 @@ import { z } from "zod";
 import {
   ApiError,
   commandKey,
+  NotSentError,
   parseResponse,
   readApi,
   writeApi,
+  writeOutcome,
 } from "./api.ts";
 
 function memoryStorage() {
@@ -168,5 +170,21 @@ describe("browser command identity", () => {
     await expect(
       parseResponse(Response.json({ id: 123 }), z.object({ id: z.string() })),
     ).rejects.toThrow();
+  });
+});
+
+describe("what a failed write guarantees", () => {
+  it("is refused only by a 4xx answer or by a command that was never sent", () => {
+    expect(writeOutcome(new ApiError("stale", "Stale", 409))).toBe("refused");
+    expect(writeOutcome(new ApiError("bad", "Bad", 400))).toBe("refused");
+    expect(writeOutcome(new NotSentError("Choose a file"))).toBe("refused");
+  });
+
+  it("is unknown when no usable answer came back", () => {
+    expect(writeOutcome(new TypeError("Failed to fetch"))).toBe("unknown");
+    expect(writeOutcome(new ApiError("down", "Down", 502))).toBe("unknown");
+    expect(writeOutcome(new ApiError("down", "Down", 500))).toBe("unknown");
+    expect(writeOutcome(new z.ZodError([]))).toBe("unknown");
+    expect(writeOutcome(new Error("anything else"))).toBe("unknown");
   });
 });

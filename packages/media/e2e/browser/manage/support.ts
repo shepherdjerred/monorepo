@@ -59,6 +59,29 @@ export async function answerWrites(
   return writes;
 }
 
+/**
+ * Drops the connection of every write to `path`: the page gets no answer at
+ * all, as when a response is lost after the server may have acted on it.
+ * Returns what was sent, so a test can tell the request did go out.
+ */
+export async function dropWrites(
+  page: Page,
+  path: string,
+  version = 1,
+): Promise<Write[]> {
+  const writes: Write[] = [];
+  await page.route(`**/api/v${String(version)}${path}`, async (route) => {
+    const request = route.request();
+    if (request.method() === "GET") {
+      await route.fallback();
+      return;
+    }
+    writes.push(recorded(request));
+    await route.abort("connectionreset");
+  });
+  return writes;
+}
+
 function recorded(request: Request): Write {
   const headers = request.headers();
   expect(headers["x-csrf-token"]).toBe("browser-test");

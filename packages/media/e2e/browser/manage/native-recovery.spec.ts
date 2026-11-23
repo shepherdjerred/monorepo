@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import {
   NATIVE_REVIEW_IDS,
   nativeArchiveInventory,
@@ -8,7 +8,7 @@ import {
 } from "#testing/fixture-api/fixtures/migration/native-recovery.ts";
 import { sha256 } from "#testing/fixture-api/support.ts";
 import { horizontalOverflow, test } from "#e2e/browser/support.ts";
-import { answerWrites, openManage, violations } from "./support.ts";
+import { answerWrites, dropWrites, openManage, violations } from "./support.ts";
 
 const NATIVE = "/manage/recovery/native";
 
@@ -125,6 +125,39 @@ test.describe("reproving restored library files", () => {
 });
 
 test.describe("a prepared file review", () => {
+  for (const waiting of ["preparing", "awaitingReview", "applying"] as const) {
+    test(`does not call a subtitle policy renewed while the review is ${waiting}`, async ({
+      page,
+    }) => {
+      await openManage(page, `${NATIVE}/${NATIVE_REVIEW_IDS[waiting]}`);
+      const policies = page.getByRole("region", {
+        name: "Subtitle policies to be renewed",
+      });
+      await expect(policies.getByText("Will be renewed")).toBeVisible();
+      await expect(policies.getByText("Renewed", { exact: true })).toHaveCount(
+        0,
+      );
+      await expect(
+        policies.getByText("No policy", { exact: true }),
+      ).toBeVisible();
+    });
+  }
+
+  test("calls a subtitle policy renewed once the review is applied", async ({
+    page,
+  }) => {
+    await openManage(page, `${NATIVE}/${NATIVE_REVIEW_IDS.applied}`);
+    const policies = page.getByRole("region", {
+      name: "Subtitle policies renewed",
+    });
+    await expect(policies.getByText("Renewed", { exact: true })).toBeVisible();
+    await expect(policies.getByText("Will be renewed")).toHaveCount(0);
+    await expect(
+      policies.getByText("No policy", { exact: true }),
+    ).toBeVisible();
+    expect(await violations(page)).toEqual([]);
+  });
+
   test("is applied only after the acknowledgement and the confirmation", async ({
     page,
   }) => {
@@ -137,7 +170,7 @@ test.describe("a prepared file review", () => {
     await openManage(page, `${NATIVE}/${review.id}`);
     await expect(page.getByText("Affected titles")).toBeVisible();
     await expect(
-      page.getByText("Subtitle policies being renewed"),
+      page.getByText("Subtitle policies to be renewed"),
     ).toBeVisible();
     const button = page.getByRole("button", {
       name: "Apply this exact physical review",
@@ -171,6 +204,37 @@ test.describe("a prepared file review", () => {
       },
     });
     expect(await violations(page)).toEqual([]);
+  });
+
+  test("says it cannot tell whether the approval was recorded when the response is lost", async ({
+    page,
+  }) => {
+    const writes = await dropWrites(
+      page,
+      `/admin/native-recovery/${NATIVE_REVIEW_IDS.awaitingReview}/apply`,
+    );
+    await openManage(page, `${NATIVE}/${NATIVE_REVIEW_IDS.awaitingReview}`);
+    await page
+      .getByRole("checkbox", {
+        name: /I reviewed these titles, subtitle policies/u,
+      })
+      .check();
+    await page
+      .getByRole("button", { name: "Apply this exact physical review" })
+      .click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Renew ownership" })
+      .click();
+    await expect.poll(() => writes.length).toBe(1);
+    const alert = page.getByRole("alert");
+    await expect(alert).toContainText(
+      "cannot tell whether the approval was recorded",
+    );
+    await expect(alert).not.toContainText("nothing was changed");
+    await expect(
+      alert.getByRole("button", { name: "Refresh the review" }),
+    ).toBeVisible();
   });
 
   test("says nothing was changed when the approval is refused", async ({
@@ -329,3 +393,79 @@ test.describe("upgrade archives and interrupted upgrades", () => {
     expect(await violations(page)).toEqual([]);
   });
 });
+
+/** The three requests that prepare a review, each from its own page. */
+const PREPARES = [
+  {
+    name: "file review",
+    page: NATIVE,
+    path: "/admin/native-recovery",
+    choose: async (page: Page) => {
+      await page.getByRole("checkbox", { name: /Dune/u }).check();
+    },
+    button: "Prepare exact file review",
+  },
+  {
+    name: "archive review",
+    page: `${NATIVE}/archives`,
+    path: "/admin/native-recovery/archives",
+    choose: async (page: Page) => {
+      await page.getByRole("checkbox", { name: /Alien/u }).check();
+    },
+    button: "Prepare exact archive review",
+  },
+  {
+    name: "interrupted upgrade review",
+    page: `${NATIVE}/compensations`,
+    path: "/admin/native-recovery/compensations",
+    choose: async (page: Page) => {
+      await page.getByRole("radio", { name: /Interstellar/u }).check();
+    },
+    button: "Prepare predecessor restoration review",
+  },
+] as const;
+
+for (const prepare of PREPARES) {
+  test.describe(`preparing a ${prepare.name}`, () => {
+    test("says the outcome is unknown when the response is lost, and does not claim nothing was prepared", async ({
+      page,
+    }) => {
+      const writes = await dropWrites(page, prepare.path);
+      await openManage(page, prepare.page);
+      await prepare.choose(page);
+      await page.getByRole("button", { name: prepare.button }).click();
+      await expect.poll(() => writes.length).toBe(1);
+      const alert = page.getByRole("alert");
+      await expect(alert).toContainText(
+        "cannot tell whether the review was saved",
+      );
+      await expect(alert).toContainText(
+        "Before you change anything or try again",
+      );
+      await expect(alert).not.toContainText("Nothing was prepared");
+      await expect(alert).not.toContainText("no file was changed");
+      await expect(
+        alert
+          .getByRole("button", { name: "Reload the prepared reviews" })
+          .or(alert.getByRole("link", { name: "Open the prepared reviews" })),
+      ).toBeVisible();
+    });
+
+    test("says nothing was prepared when the server refuses", async ({
+      page,
+    }) => {
+      await answerWrites(page, prepare.path, {
+        status: 403,
+        json: {
+          error: { code: "runtime_protected", message: "Media is not ready" },
+        },
+      });
+      await openManage(page, prepare.page);
+      await prepare.choose(page);
+      await page.getByRole("button", { name: prepare.button }).click();
+      const alert = page.getByRole("alert");
+      await expect(alert).toContainText("Media is not ready");
+      await expect(alert).toContainText("Nothing was prepared");
+    });
+  });
+}

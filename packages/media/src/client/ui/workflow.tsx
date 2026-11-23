@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { writeOutcome } from "#client/api.ts";
 import { Button } from "./button.tsx";
 import { classNames } from "./class-names.ts";
 import { Badge, Callout } from "./feedback.tsx";
@@ -125,6 +126,50 @@ export function ActionFailure({
       <p className={cx("failure")}>{error.message}</p>
       <p className={cx("failure")}>{state}</p>
     </Callout>
+  );
+}
+
+/**
+ * A write that did not succeed, worded by what the page can honestly say
+ * about the server (see `writeOutcome`). A refusal says `refused.state`,
+ * which may promise nothing was saved. Any other failure says the page cannot
+ * tell whether it was, and asks the owner to look at the current state before
+ * changing anything or trying again. `action` is the control that loads that
+ * current state.
+ */
+export function WriteFailure({
+  error,
+  refused,
+  unknown,
+  action,
+}: {
+  error: Error;
+  refused: { title: string; state: ReactNode };
+  unknown: {
+    title: string;
+    /** What cannot be told: "whether the review was saved". */
+    about: string;
+    /** How to find out: "reload the prepared reviews to see whether it exists". */
+    check: string;
+  };
+  action?: ReactNode;
+}) {
+  if (writeOutcome(error) === "refused")
+    return (
+      <ActionFailure
+        title={refused.title}
+        error={error}
+        state={refused.state}
+        action={action}
+      />
+    );
+  return (
+    <ActionFailure
+      title={unknown.title}
+      error={error}
+      state={`This page did not get an answer it could use, so it cannot tell ${unknown.about}. Before you change anything or try again, ${unknown.check}.`}
+      action={action}
+    />
   );
 }
 
