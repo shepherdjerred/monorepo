@@ -13,8 +13,10 @@ import {
 } from "./enforcer-log.ts";
 import {
   breakGlassPolicy,
+  ciStepService,
   failedPod,
   fakeRunner,
+  gatedCiStepPod,
   items,
   otherPolicy,
   probe,
@@ -580,5 +582,62 @@ describe("what the gate does not count", () => {
     );
     expect(failing.exitCode).toBe(1);
     expect(failing.output).toContain("    - backup-job: not Ready (Failed)");
+  });
+
+  test("Woodpecker step pods and their per-step Services are noted, not counted", async () => {
+    const policies = [otherPolicy("woodpecker-ci", "ci-step")];
+    const steps: Replies = [
+      [
+        "get services",
+        items(
+          {
+            metadata: { name: "worker-metrics" },
+            spec: { selector: { app: "app-0" } },
+          },
+          ciStepService("81909"),
+          ciStepService("81479"),
+        ),
+      ],
+      [
+        "get endpointslices",
+        items(
+          {
+            metadata: {
+              labels: { "kubernetes.io/service-name": "worker-metrics" },
+            },
+            endpoints: [{ conditions: { ready: true } }],
+          },
+          {
+            metadata: {
+              labels: { "kubernetes.io/service-name": "wp-hsvc-81479" },
+            },
+            endpoints: [{ conditions: { ready: false } }],
+          },
+        ),
+      ],
+    ];
+    const gated = gatedCiStepPod("wp-01gated", "81909");
+    const passing = await runCheck(
+      parseCheckArguments(["woodpecker-ci"]),
+      dependencies(cluster(policies, [readyPod, gated], [], steps).run),
+    );
+    expect(passing.exitCode).toBe(0);
+    expect(passing.output).toMatch(/^PASS\s+pods\s+1\/1 pods Ready/mu);
+    expect(passing.output).toMatch(/^PASS\s+services\s+1\/1 Services/mu);
+    expect(passing.output).toContain(
+      "    - wp-01gated: CI step pod, Pending (not counted)",
+    );
+    expect(passing.output).toContain(
+      "    - wp-hsvc-81479: CI step Service (not counted)",
+    );
+
+    // The namespace's long-lived pod is still checked.
+    const stuck = { ...readyPod, status: { phase: "Pending" } };
+    const failing = await runCheck(
+      parseCheckArguments(["woodpecker-ci"]),
+      dependencies(cluster(policies, [stuck, gated], [], steps).run),
+    );
+    expect(failing.exitCode).toBe(1);
+    expect(failing.output).toContain("    - app-0: not Ready (Pending)");
   });
 });

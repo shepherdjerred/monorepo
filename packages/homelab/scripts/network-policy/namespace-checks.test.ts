@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { failedPod, probe } from "./fixtures.ts";
+import { ciStepService, failedPod, gatedCiStepPod, probe } from "./fixtures.ts";
 import {
   evaluateBreakGlass,
   evaluatePods,
@@ -9,9 +9,12 @@ import {
   evaluateUrls,
   evaluateUrlsWithoutPods,
   failedAt,
+  isCiStepPod,
+  isCiStepService,
   namespaceReport,
   parseProbeSuccess,
   PodSchema,
+  ServiceSchema,
   type CheckResult,
   type Pod,
 } from "./namespace-checks.ts";
@@ -167,6 +170,43 @@ describe("pods", () => {
     ).toEqual(new Date("2026-11-12T02:00:00Z"));
   });
 
+  test("a Woodpecker step pod is noted, not counted; other CI pods still are", () => {
+    const gated = PodSchema.parse(gatedCiStepPod("wp-01gated", "81909"));
+    const running = PodSchema.parse({
+      ...gatedCiStepPod("wp-01running", "81910"),
+      status: { phase: "Running", conditions: [] },
+    });
+    expect(isCiStepPod(gated)).toBe(true);
+    expect(isCiStepPod(pod("temporal-maintenance-worker"))).toBe(false);
+
+    const result = evaluatePods(
+      [pod("temporal-maintenance-worker"), gated, running],
+      NOW,
+      10,
+    );
+    expect(result).toEqual({
+      check: "pods",
+      status: "pass",
+      summary: "1/1 pods Ready with no restart in the last 10m",
+      details: [
+        "wp-01gated: CI step pod, Pending (not counted)",
+        "wp-01running: CI step pod, Running (not counted)",
+      ],
+    });
+
+    // A long-lived pod of the CI namespace is judged as any other.
+    const stuck = evaluatePods(
+      [pod("temporal-maintenance-worker", { ready: false }), gated],
+      NOW,
+      10,
+    );
+    expect(stuck.status).toBe("fail");
+    expect(stuck.details).toEqual([
+      "temporal-maintenance-worker: not Ready (Running)",
+      "wp-01gated: CI step pod, Pending (not counted)",
+    ]);
+  });
+
   test("a Failed pod with no time at all is counted", () => {
     const timeless = PodSchema.parse({
       metadata: { name: "timeless" },
@@ -215,6 +255,53 @@ describe("services", () => {
     );
     expect(result.details).toEqual([
       "postgresql-repl: selects no pods (not counted)",
+    ]);
+  });
+});
+
+describe("CI step Services", () => {
+  test("a per-step Service is noted, not counted, with or without endpoints", () => {
+    const gatedStep = ServiceSchema.parse(ciStepService("81909"));
+    expect(isCiStepService(gatedStep)).toBe(true);
+    expect(
+      isCiStepService(ServiceSchema.parse(service("web", { app: "web" }))),
+    ).toBe(false);
+
+    const result = evaluateServices(
+      [
+        service("worker-metrics", { component: "maintenance-worker" }),
+        gatedStep,
+        ciStepService("81479"),
+      ],
+      [
+        slice("worker-metrics", [true]),
+        // A step whose pod exists but is not Ready yet.
+        slice("wp-hsvc-81479", [false]),
+      ],
+    );
+    expect(result).toEqual({
+      check: "services",
+      status: "pass",
+      summary: "1/1 Services backed by pods have ready endpoints",
+      details: [
+        "wp-hsvc-81909: CI step Service (not counted)",
+        "wp-hsvc-81479: CI step Service (not counted)",
+      ],
+    });
+  });
+
+  test("a long-lived Service of the CI namespace still fails without ready endpoints", () => {
+    const result = evaluateServices(
+      [
+        service("worker-metrics", { component: "maintenance-worker" }),
+        ciStepService("81909"),
+      ],
+      [slice("worker-metrics", [false])],
+    );
+    expect(result.status).toBe("fail");
+    expect(result.details).toEqual([
+      "worker-metrics: no ready endpoints",
+      "wp-hsvc-81909: CI step Service (not counted)",
     ]);
   });
 });
