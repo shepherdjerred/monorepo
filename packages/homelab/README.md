@@ -451,7 +451,16 @@ talosctl --endpoints torvalds.tailnet-1a49.ts.net \
 
 # If a static-pod step remains on a config-version mismatch after 60 seconds,
 # leave upgrade-k8s running and reconcile the rendered pods from another shell.
+# Do not wait for its 5-minute deadline: during a kube-apiserver mismatch the
+# old API server is already gone, so the Kubernetes API is down until kubelet
+# renders the new static pod.
 # talosctl --nodes torvalds.tailnet-1a49.ts.net service kubelet restart
+
+# upgrade-k8s can compare the kube-proxy DaemonSet before Talos re-renders its
+# manifest and skip it as unchanged. If the DaemonSet still names the old
+# image, run the same upgrade-k8s command again; it is idempotent.
+kubectl -n kube-system get ds kube-proxy \
+  -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
 
 # Then update each kubelet through its hostname-authenticated Talos API.
 talosctl --namespace system --endpoints liskov --nodes liskov image pull \
