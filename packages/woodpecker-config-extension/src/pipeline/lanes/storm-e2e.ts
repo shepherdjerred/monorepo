@@ -103,7 +103,7 @@ function stormSmokeStep(images: CiImages): CiStep {
           EULA: "TRUE",
           TYPE: "PAPER",
           VERSION: "26.3",
-          PAPER_BUILD: "244",
+          PAPER_BUILD: "251",
           ONLINE_MODE: "FALSE",
           ENABLE_RCON: "true",
           RCON_PASSWORD,
