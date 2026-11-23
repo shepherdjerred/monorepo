@@ -10,6 +10,30 @@ import { Badge } from "#client/ui/feedback.tsx";
 import { WriteFailure } from "#client/ui/workflow.tsx";
 import { phrase } from "#client/native-recovery/vocabulary.ts";
 
+type Item = z.infer<typeof NativeCompensationContinuationViewSchema>;
+
+const PUBLICATION = {
+  held: { label: "Waiting", tone: "warn" },
+  ready: { label: "Ready to publish", tone: "neutral" },
+  publishing: { label: "In progress", tone: "progress" },
+  protected: { label: "Stopped: needs your review", tone: "danger" },
+  available: { label: "Verified in Plex", tone: "ok" },
+} satisfies Record<
+  Item["publicationState"],
+  { label: string; tone: "neutral" | "ok" | "warn" | "danger" | "progress" }
+>;
+
+/**
+ * Where the restoration stands, by what the server reports: only work that is
+ * publishing is in progress. A restoration the server holds in protection, or
+ * whose publication failed, was cancelled or is being reconciled, has stopped.
+ */
+function restorationBadge(item: Item) {
+  return item.state === "protected"
+    ? PUBLICATION.protected
+    : PUBLICATION[item.publicationState];
+}
+
 /** One interrupted upgrade's restoration: where the files and playback stand, and a retry. */
 export function CompensationStatus({
   user,
@@ -30,6 +54,7 @@ export function CompensationStatus({
       }),
     onSuccess: onRefresh,
   });
+  const badge = restorationBadge(item);
   return (
     <DataRow
       title={item.media.map((media) => media.title).join(", ")}
@@ -71,13 +96,7 @@ export function CompensationStatus({
           )}
         </>
       }
-      status={
-        item.publicationState === "available" ? (
-          <Badge tone="ok">Verified in Plex</Badge>
-        ) : (
-          <Badge tone="warn">In progress</Badge>
-        )
-      }
+      status={<Badge tone={badge.tone}>{badge.label}</Badge>}
       actions={
         item.fenceActive ? (
           <Button

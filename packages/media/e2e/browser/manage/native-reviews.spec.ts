@@ -254,6 +254,32 @@ for (const kind of KINDS) {
 }
 
 test.describe("restoring an interrupted upgrade", () => {
+  test("says restoration is waiting, not in progress, while playback is held", async ({
+    page,
+  }) => {
+    await openManage(page, `${NATIVE}/${COMPENSATION_REVIEW_IDS.applying}`);
+    const status = page.getByRole("region", {
+      name: "Restoration and playback",
+    });
+    await expect(status.getByText("Waiting", { exact: true })).toBeVisible();
+    await expect(status.getByText("In progress")).toHaveCount(0);
+  });
+
+  test("says stopped work needs a review, not that it is in progress", async ({
+    page,
+  }) => {
+    await openManage(page, `${NATIVE}/${COMPENSATION_REVIEW_IDS.stopped}`);
+    const status = page.getByRole("region", {
+      name: "Restoration and playback",
+    });
+    await expect(
+      status.getByText("Stopped: needs your review", { exact: true }),
+    ).toBeVisible();
+    await expect(status.getByText("In progress")).toHaveCount(0);
+    await expect(status.getByText("Waiting", { exact: true })).toHaveCount(0);
+    expect(await violations(page)).toEqual([]);
+  });
+
   test("confirms one upgrade of two files, not two upgrades", async ({
     page,
   }) => {

@@ -28,6 +28,8 @@ export const COMPENSATION_REVIEW_IDS = {
   awaitingReview: fixtureId(39, 1),
   preparing: fixtureId(39, 2),
   applying: fixtureId(39, 4),
+  /** Approved, then publication failed: the work stopped and needs a review. */
+  stopped: fixtureId(39, 5),
   applied: fixtureId(39, 3),
 } as const;
 
@@ -154,7 +156,7 @@ function plan(): Plan {
 }
 
 /** Where restoring the earlier files and their playback stands after approval. */
-function continuations(state: ReviewState): Continuation[] {
+function continuations(state: ReviewState, stopped: boolean): Continuation[] {
   if (state === "awaiting_review" || state === "preparing") return [];
   const titles = MOVIES.map((name) => titleNamed(name));
   const media = titles.map((title) => ({
@@ -162,6 +164,20 @@ function continuations(state: ReviewState): Continuation[] {
     title: title.title,
     availability: state === "applied" ? "available" : "unavailable",
   }));
+  if (stopped)
+    return [
+      {
+        id: fixtureId(39, 902),
+        transitionId: TRANSITION_ID,
+        version: 2,
+        state: "protected",
+        publicationState: "protected",
+        fenceActive: true,
+        protectedReason: "compensation_requires_review",
+        currentPositiveMediaIds: titles.map((title) => title.id),
+        media,
+      },
+    ];
   return state === "applying"
     ? [
         {
@@ -197,6 +213,7 @@ export function compensationReviewDetail(id: string): Detail | null {
     [COMPENSATION_REVIEW_IDS.awaitingReview]: "awaiting_review",
     [COMPENSATION_REVIEW_IDS.preparing]: "preparing",
     [COMPENSATION_REVIEW_IDS.applying]: "applying",
+    [COMPENSATION_REVIEW_IDS.stopped]: "applying",
     [COMPENSATION_REVIEW_IDS.applied]: "applied",
   } as const).find(([reviewId]) => reviewId === id);
   if (found === undefined) return null;
@@ -206,6 +223,9 @@ export function compensationReviewDetail(id: string): Detail | null {
     plan: state === "preparing" ? null : plan(),
     scope: scope(),
     continuations: [],
-    compensationContinuations: continuations(state),
+    compensationContinuations: continuations(
+      state,
+      id === COMPENSATION_REVIEW_IDS.stopped,
+    ),
   };
 }
