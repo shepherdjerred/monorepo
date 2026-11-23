@@ -66,11 +66,9 @@ test("once recovery settles, the page reports what it read back instead of the s
   await page.goto(`/deployments/${settled.id}`);
   const main = page.getByRole("main");
   const why = main.getByRole("region", { name: "Why it failed" });
+  // One sentence: the step it ended on, then what recovery has since found.
   await expect(why).toContainText(
-    "Recovery intent 1 read the external operation back after the deployment ended: it ended in phase Failed.",
-  );
-  await expect(why).toContainText(
-    "Step step-sync was still running when the deployment ended; recovery has since read its outcome back.",
+    "Step step-sync was still running when the deployment ended; recovery intent 1 has since read the outcome back and found arcade-beta ended in phase Failed, which does not say why it failed.",
   );
   await expect(main).not.toContainText("may still be active");
   await expect(main).not.toContainText("outcome is unknown");

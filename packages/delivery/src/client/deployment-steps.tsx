@@ -8,6 +8,7 @@ import { Receipt } from "#client/components/receipt.tsx";
 import { Status } from "#client/components/status.tsx";
 import { Duration, RelativeTime } from "#client/components/time.tsx";
 import {
+  readbackApplications,
   readbackPhase,
   recoveryReading,
   stepMessage,
@@ -133,16 +134,24 @@ export function stepEnd(
 
 type RecoveryIntents = DeploymentDetailV2["recoveryIntents"];
 
-/** An interrupted step's state, once recovery has read its operation back. */
+/**
+ * An interrupted step's state, once recovery has read back. A readback that
+ * answers for this step's own operation names its phase; any other says what
+ * it did read, so it does not pass for proof about this step.
+ */
 export function interruptedLabel(
   reading: RecoveryReading | null,
   stage: Pick<Stage, "operationId">,
 ) {
   if (reading === null) return "interrupted · outcome unknown";
   const phase = readbackPhase(reading, stage);
-  return phase === null
-    ? `interrupted · settled by recovery intent ${String(reading.sequence)}`
-    : `interrupted · recovery read back phase ${phase}`;
+  if (phase !== null) return `interrupted · recovery read back phase ${phase}`;
+  const applications = readbackApplications(reading);
+  const covered =
+    applications.length === 0
+      ? "no operation of this step"
+      : `${applications.join(", ")}, not this step`;
+  return `interrupted · recovery intent ${String(reading.sequence)} read back ${covered}`;
 }
 
 /** What an empty step list means for a deployment in this state. */

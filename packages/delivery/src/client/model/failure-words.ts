@@ -1,4 +1,5 @@
 import { parseEvidenceSummary } from "#client/evidence.ts";
+import { plainCause } from "#shared/evidence/plain-cause.ts";
 
 /** The receipt keys whose text states why the work was refused or failed. */
 const REASON_KEYS = new Set([
@@ -18,7 +19,11 @@ const REASON_KEYS = new Set([
  */
 export function spoken(summary: string, kind?: string) {
   const parsed = parseEvidenceSummary(summary);
-  if (parsed.kind === "text") return parsed.text;
+  if (parsed.kind === "text") {
+    // A runtime's source excerpt and stack frames are not words for a reader.
+    const words = plainCause(parsed.text);
+    return words === "" ? null : words;
+  }
   const reason = parsed.facts.find(
     (fact) => REASON_KEYS.has(fact.key) && fact.value.kind === "text",
   )?.value;
@@ -73,4 +78,33 @@ export function sayOnce() {
     },
     remedies,
   };
+}
+
+const JOB = /\bJob (?<job>[a-z0-9][\w.-]*\/[a-z0-9][\w.-]*)/u;
+const UID =
+  /\bUID (?<uid>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/iu;
+
+/**
+ * The Kubernetes Job and UID a failure's records name, so "inspect its
+ * recorded UID" points at one. Newest evidence first; each value once.
+ */
+export function failurePointers(detail: {
+  evidence: readonly { summary: string }[];
+  stages: readonly { message: string }[];
+}) {
+  const texts = [
+    ...detail.evidence.toReversed().map((item) => item.summary),
+    ...detail.stages.map((stage) => stage.message),
+  ];
+  const pointers: { label: "Job" | "UID"; value: string }[] = [];
+  for (const [label, pattern, group] of [
+    ["Job", JOB, "job"],
+    ["UID", UID, "uid"],
+  ] as const) {
+    const value = texts
+      .map((text) => pattern.exec(text)?.groups?.[group])
+      .find((found) => found !== undefined);
+    if (value !== undefined) pointers.push({ label, value });
+  }
+  return pointers;
 }

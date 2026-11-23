@@ -5,15 +5,17 @@ import { groupEvidence } from "#client/evidence.ts";
 import {
   readbackOutcome,
   recoveryReading,
-  settledWords,
+  settledFindings,
   stepMessage,
   NO_CAUSE as NO_CAUSE_RECORDED,
   type RecoveryReading,
 } from "#shared/evidence/recovery-reading.ts";
 import { interrupted } from "#client/deployment-steps.tsx";
 import { CopyableIdentifier } from "#client/components/copyable.tsx";
+import { Disclosure } from "#client/components/disclosure.tsx";
 import { revisionLabel } from "#client/components/identifier.tsx";
-import { sayOnce, spoken } from "./failure-words.ts";
+import { hasTrace } from "#shared/evidence/plain-cause.ts";
+import { failurePointers, sayOnce, spoken } from "./failure-words.ts";
 import { retryable } from "./view.ts";
 
 type Detail = Pick<
@@ -149,32 +151,6 @@ export function explainsFailure(deployment: {
   return deployment.status === "failed" || deployment.recoveryRequired;
 }
 
-const JOB = /\bJob (?<job>[a-z0-9][\w.-]*\/[a-z0-9][\w.-]*)/u;
-const UID =
-  /\bUID (?<uid>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/iu;
-
-/**
- * The Kubernetes Job and UID a failure's records name, so "inspect its
- * recorded UID" points at one. Newest evidence first; each value once.
- */
-export function failurePointers(detail: Pick<Detail, "evidence" | "stages">) {
-  const texts = [
-    ...detail.evidence.toReversed().map((item) => item.summary),
-    ...detail.stages.map((stage) => stage.message),
-  ];
-  const pointers: { label: "Job" | "UID"; value: string }[] = [];
-  for (const [label, pattern, group] of [
-    ["Job", JOB, "job"],
-    ["UID", UID, "uid"],
-  ] as const) {
-    const value = texts
-      .map((text) => pattern.exec(text)?.groups?.[group])
-      .find((found) => found !== undefined);
-    if (value !== undefined) pointers.push({ label, value });
-  }
-  return pointers;
-}
-
 /**
  * The step that failed, or else the one the deployment outlived, and the
  * last evidence it recorded: or what the executor reported with the result.
@@ -231,10 +207,15 @@ export function failureStory(detail: Detail) {
   const once = sayOnce();
   const message = settled === null ? once.say(deployment.message) : null;
   const raw = stage === undefined ? null : stepMessage(stage);
-  const stepText = once.say(raw === null ? null : spoken(raw));
-  const evidenceText = once.say(
+  let stepText = once.say(raw === null ? null : spoken(raw));
+  let evidenceText = once.say(
     item === undefined ? null : spoken(item.summary, item.kind),
   );
+  // What the step's own last evidence says is the step's cause, said once.
+  if (stepText === null && evidenceText !== null && from !== null) {
+    stepText = evidenceText;
+    evidenceText = null;
+  }
   const verdict = deploymentVerdict(detail);
   return {
     heading: storyHeading(deployment, verdict),
@@ -255,18 +236,22 @@ export function failureStory(detail: Detail) {
         : { id: intent.id, sequence: intent.sequence, outcome: intent.outcome },
     next: nextStep(detail),
     /**
-     * Whether any record says why: a message, a step's words, evidence or a
-     * readback of a failed phase. A readback of Succeeded says the work
-     * finished, which is no cause.
+     * The recorded texts that carry source excerpts or stack frames, as
+     * recorded, for a disclosure: the prose above says only their sentence.
      */
-    caused:
-      message !== null ||
-      stepText !== null ||
-      evidenceText !== null ||
-      (settled !== null && readbackOutcome(settled) !== "succeeded"),
-    /** Whether recovery read the external work back as finished, which explains no failure. */
-    readbackFinished:
-      settled !== null && readbackOutcome(settled) === "succeeded",
+    traces: [
+      ...new Set(
+        [deployment.message, raw, item?.summary].flatMap((text) =>
+          text != null && hasTrace(text) ? [text] : [],
+        ),
+      ),
+    ],
+    /**
+     * Whether any record says why: a message, a step's words or evidence. What
+     * recovery read back is what became of the external work, in any phase,
+     * and never why the deployment failed.
+     */
+    caused: message !== null || stepText !== null || evidenceText !== null,
   };
 }
 
@@ -280,35 +265,56 @@ function storyHeading(
 
 type Story = NonNullable<ReturnType<typeof failureStory>>;
 
-/** What a settled recovery read back, in place of the executor's stale headline. */
-function SettledHeadline({ settled }: { settled: RecoveryReading }) {
+/**
+ * What recovery found once it settled, ending the sentence that says what the
+ * deployment ended on: that it read the outcome back, and what, which does
+ * not say why the deployment failed.
+ */
+function RecoveryFound({ settled }: { settled: RecoveryReading }) {
+  const findings = settledFindings(settled);
   return (
-    <p className="failure-message">
+    <>
+      ;{" "}
       <Link to="/recovery-intents/$" params={{ _splat: settled.id }}>
-        Recovery intent {settled.sequence}
-      </Link>
-      {settledWords(settled)}
-    </p>
+        recovery intent {settled.sequence}
+      </Link>{" "}
+      has since read the outcome back
+      {findings === null ? "" : ` and found ${findings}`}, which does not say
+      why it failed
+    </>
   );
 }
 
+/**
+ * The step a failure ended on, or that no cause was recorded, in one
+ * sentence with what a settled recovery has since found.
+ */
 function StepSentence({
   step,
   settled,
 }: {
-  step: NonNullable<Story["step"]>;
-  settled: boolean;
+  step: Story["step"];
+  settled: RecoveryReading | null;
 }) {
+  if (step === null && settled === null) return null;
   const ending =
-    step.outcome === "failed"
+    step?.outcome === "failed"
       ? "failed"
-      : settled
-        ? "was still running when the deployment ended; recovery has since read its outcome back"
-        : "was still running when the deployment ended, so its outcome is unknown";
+      : settled === null
+        ? "was still running when the deployment ended, so its outcome is unknown"
+        : "was still running when the deployment ended";
   return (
     <p>
-      Step <strong className="mono">{step.key}</strong> {ending}
-      {step.message === null ? "." : `: ${step.message}`}
+      {step === null ? (
+        NO_CAUSE_RECORDED
+      ) : (
+        <>
+          Step <strong className="mono">{step.key}</strong> {ending}
+          {step.message === null ? "" : `: ${step.message}`}
+        </>
+      )}
+      {settled === null ? "." : <RecoveryFound settled={settled} />}
+      {settled === null ? "" : "."}
     </p>
   );
 }
@@ -488,22 +494,19 @@ function releaseName(detail: Detail) {
 }
 
 /**
- * What the records say caused the failure: the message, the step, its last
- * evidence and what recovery read back. Work recovery read back as finished
- * explains nothing, so that follows the step the deployment ended on.
+ * What the records say caused the failure: the message, the step it ended
+ * on with what recovery has since read back, and the last evidence. What
+ * recovery read back never leads: it is what became of the external work,
+ * not why the deployment failed. A recorded error's source excerpts and
+ * stack frames stay in a collapsed disclosure, never in the prose.
  */
 function FailureCause({ story }: { story: Story }) {
-  const readback =
-    story.settled === null ? null : <SettledHeadline settled={story.settled} />;
   return (
     <>
       {story.message !== null && (
         <p className="failure-message">{story.message}</p>
       )}
-      {!story.readbackFinished && readback}
-      {story.step !== null && (
-        <StepSentence step={story.step} settled={story.settled !== null} />
-      )}
+      <StepSentence step={story.step} settled={story.settled} />
       {story.evidence !== null && (
         <p>
           Last evidence
@@ -513,8 +516,15 @@ function FailureCause({ story }: { story: Story }) {
           : {story.evidence.text}
         </p>
       )}
-      {story.readbackFinished && !story.caused && <p>{NO_CAUSE_RECORDED}.</p>}
-      {story.readbackFinished && readback}
+      {story.traces.length > 0 && (
+        <Disclosure summary="Full error text" count={story.traces.length}>
+          {story.traces.map((trace) => (
+            <pre key={trace} className="receipt-json">
+              {trace}
+            </pre>
+          ))}
+        </Disclosure>
+      )}
     </>
   );
 }

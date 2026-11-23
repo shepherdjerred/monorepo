@@ -46,6 +46,43 @@ describe("a failure as the hub pages state it", () => {
     expect(stated(row, new Map(), stages).message).toBe(STALE);
   });
 
+  it("states tsmc's mixed readbacks, in any phase, as the step the deployment ended on", () => {
+    // minecraft/tsmc: two Applications read back, only one naming a phase, and
+    // two steps still running when the deployment ended.
+    const mixed: ReadableIntent = {
+      id: "argo/auto-4a0251b1",
+      sequence: 1,
+      outcome: "succeeded",
+      evidence: [
+        {
+          summary:
+            "Independent Application readback: minecraft-tsmc-companion, resourceVersion 7, request abc, operation 3, phase Succeeded, finished 2026-11-22T08:14:30Z",
+        },
+        {
+          summary:
+            "Independent Application readback: minecraft-tsmc, resourceVersion 8, no operation recorded",
+        },
+      ],
+    };
+    const tsmc = { id: "4a0251b1", message: STALE, recoveryRequired: false };
+    const steps = new Map([
+      [
+        tsmc.id,
+        [
+          {
+            key: "sub2-step-players-offline",
+            status: "running",
+            message: "",
+          },
+          { key: "sub3-step-sync", status: "running", message: "" },
+        ],
+      ],
+    ]);
+    expect(stated(tsmc, new Map([[tsmc.id, [mixed]]]), steps).message).toBe(
+      "Step sub2-step-players-offline was still running when the deployment ended",
+    );
+  });
+
   it("gives an interrupted step the phase its own request read back", () => {
     expect(steppedReadback([settled], { operationId: "b1aaf54f" })).toBe(
       "Succeeded",

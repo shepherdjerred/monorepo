@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   NO_CAUSE,
+  readbackApplications,
+  settledFindings,
   failureReason,
   readbackOutcome,
   recoveryReading,
@@ -57,12 +59,35 @@ describe("why a failed deployment failed, as every page states it", () => {
     ).toBe(STALE);
   });
 
-  it("states a phase recovery read back that is not Succeeded", () => {
+  it("never states a readback in any phase, nor one that names no phase, as the reason", () => {
+    const stages = [
+      { key: "sub2-step-players-offline", status: "running", message: "" },
+      { key: "sub3-step-sync", status: "running", message: "" },
+    ];
+    const cause =
+      "Step sub2-step-players-offline was still running when the deployment ended";
+    // A failed phase.
     expect(
-      failureReason(unlocked, [intent("succeeded", [failedPhase])], []),
-    ).toBe(
-      "Recovery intent 1 read the external operation back after the deployment ended: it ended in phase Failed.",
+      failureReason(unlocked, [intent("succeeded", [failedPhase])], stages),
+    ).toBe(cause);
+    // tsmc: two Applications read back, one with a phase and one without,
+    // so the readbacks as a whole name no outcome.
+    const mixed = intent("succeeded", [
+      "Independent Application readback: minecraft-tsmc-companion, resourceVersion 7, request abc, operation 3, phase Succeeded, finished 2026-11-22T08:14:30Z",
+      "Independent Application readback: minecraft-tsmc, resourceVersion 8, no operation recorded",
+    ]);
+    const reading = recoveryReading([mixed]);
+    if (reading === null) throw new Error("settled");
+    expect(readbackOutcome(reading)).toBeNull();
+    expect(failureReason(unlocked, [mixed], stages)).toBe(cause);
+    expect(failureReason(unlocked, [mixed], [])).toBe(NO_CAUSE);
+    expect(settledFindings(reading)).toBe(
+      "minecraft-tsmc-companion ended in phase Succeeded",
     );
+    expect(readbackApplications(reading)).toEqual([
+      "minecraft-tsmc-companion",
+      "minecraft-tsmc",
+    ]);
   });
 
   it("never explains a failure by a readback of Succeeded: it names the step the deployment ended on", () => {
