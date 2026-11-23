@@ -302,7 +302,7 @@ test("a carried CI failure does not outrank what actually blocks the commit", as
   );
   // The real blocker leads; the carried failure follows.
   await expect(header).toContainText(
-    `The changed service needs a manual release: Birmel prod. Not built on its own; included in ${carrier} (whose build of Golink passed).`,
+    `The changed service needs a manual release: Birmel prod. Built on its own for 2 services; 1 service (Golink) was built by a later commit: included in ${carrier} (whose build of Golink passed).`,
   );
   // Golink has no environment, so its carried failure adds no row.
   const service = page.getByRole("region", { name: /^By service/u });
@@ -312,6 +312,11 @@ test("a carried CI failure does not outrank what actually blocks the commit", as
     /Needs manual release/u,
   );
   await expect(row).toContainText("Birmel / prod: needs manual release");
+  // Only Golink went through the carrier; the row says what the commit built itself.
+  await expect(row).toContainText(
+    `Built on its own for 2 services; 1 service (Golink) was built by a later commit: included in ${carrier} (whose build of Golink passed)`,
+  );
+  await expect(row).not.toContainText("Not built on its own");
 });
 
 test("the commit list lines its columns up and explains each environment tally", async ({

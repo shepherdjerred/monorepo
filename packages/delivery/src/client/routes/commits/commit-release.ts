@@ -5,7 +5,7 @@ import type {
 } from "#shared/hub/hub-contract.ts";
 import type { CarriedRelease } from "#shared/hub/commit-release-contract.ts";
 import { namedWithMore } from "./commit-blockers.ts";
-import { distinct, series } from "./commit-text.ts";
+import { capped, distinct, plural, series } from "./commit-text.ts";
 
 /**
  * How a carrying release stands while it is not live, as the carrying
@@ -142,9 +142,28 @@ export function carriedReleaseNote(entry: CarriedFailure) {
   }${carrierClause(entry.includedIn.slice(0, 7), [entry])}`;
 }
 
-/** Why a failed build held nothing back: a later commit's build that includes it passed. */
-export function includedNote(carried: readonly CarriedFailure[]) {
-  return `Not built on its own; included in ${carriedIn(carried)}`;
+/**
+ * What happened to a commit's failed builds that a later commit carries. A
+ * commit with no build of its own says "Not built on its own; included in X
+ * (...)". One that built other services itself says so, and only the
+ * carried services went through the carrier: "Built on its own for 7
+ * services; 1 service (TRMNL dashboard) was built by a later commit: included
+ * in bdf6689 (whose build of TRMNL dashboard passed)".
+ */
+export function includedNote(
+  carried: readonly CarriedFailure[],
+  built: number,
+) {
+  if (built === 0)
+    return `Not built on its own; included in ${carriedIn(carried)}`;
+  const services = distinct(
+    carried.flatMap((entry) =>
+      entry.serviceTitle === undefined ? [] : [entry.serviceTitle],
+    ),
+  );
+  const count = Math.max(services.length, 1);
+  const named = services.length === 0 ? "" : ` (${capped(services)})`;
+  return `Built on its own for ${plural(built, "service", "services")}; ${plural(count, "service", "services")}${named} ${count === 1 ? "was" : "were"} built by a later commit: included in ${carriedIn(carried)}`;
 }
 
 /**

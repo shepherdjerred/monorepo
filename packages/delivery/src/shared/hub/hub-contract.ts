@@ -14,11 +14,7 @@ import {
   VersionSetRevisionSchema,
 } from "#shared/contract.ts";
 import { DeploymentKindV2Schema } from "#shared/deployment-request-contract.ts";
-import {
-  CarriedReleaseSchema,
-  CommitEnvironmentReleaseSchema,
-  CommitPipelineNoteSchema,
-} from "./commit-release-contract.ts";
+import * as releases from "./commit-release-contract.ts";
 
 const TimestampSchema = z.iso.datetime();
 
@@ -499,7 +495,7 @@ export const CommitEnvironmentSchema = z.object({
   state: CommitEnvironmentStateSchema,
   deploymentId: IdentifierSchema.nullable(),
   /** Set for a version-set release; absent for a platform change and from servers that predate it. */
-  release: CommitEnvironmentReleaseSchema.optional(),
+  release: releases.CommitEnvironmentReleaseSchema.optional(),
 });
 export type CommitEnvironment = z.infer<typeof CommitEnvironmentSchema>;
 
@@ -622,7 +618,7 @@ export const CommitStatusSchema = z.object({
    * message title and author of the Woodpecker pipeline of one of its builds,
    * as Delivery last stored it. Absent when Delivery stored none.
    */
-  pipeline: CommitPipelineNoteSchema.optional(),
+  pipeline: releases.CommitPipelineNoteSchema.optional(),
   verdict: CommitVerdictSchema,
   /** A build of this commit, for its source panel; null if unseen. */
   buildId: IdentifierSchema.nullable(),
@@ -634,6 +630,12 @@ export const CommitStatusSchema = z.object({
   changed: z.array(CommitServiceSchema),
   /** Services whose build passed with nothing to deploy. */
   unchangedCount: z.number().int().nonnegative(),
+  /**
+   * Services this commit's own pipeline built and passed, whether or not
+   * they changed anything. Zero means no service was built on its own, so a
+   * carried failure is the whole commit; absent from servers that predate it.
+   */
+  builtCount: z.number().int().nonnegative().optional(),
   /** Builds that failed or are still running, whether or not they changed anything. */
   failedBuilds: z.array(CommitBuildSchema),
   /**
@@ -643,7 +645,7 @@ export const CommitStatusSchema = z.object({
    */
   carriedFailures: z.array(CarriedFailureSchema).optional(),
   /** The carried changes' releases that have landed, by their own outcome; see CarriedReleaseSchema. */
-  carriedReleases: z.array(CarriedReleaseSchema).optional(),
+  carriedReleases: z.array(releases.CarriedReleaseSchema).optional(),
   pendingBuilds: z.array(CommitBuildSchema),
   /**
    * The most urgent environment of a changed service that does not have the
@@ -666,6 +668,7 @@ export const CommitSummarySchema = CommitStatusSchema.pick({
   blockers: true,
   carriedFailures: true,
   carriedReleases: true,
+  builtCount: true,
 }).extend({
   /** The services whose CI failed with nothing carrying it, by title, each once. */
   failedServices: z.array(z.string()).optional(),
