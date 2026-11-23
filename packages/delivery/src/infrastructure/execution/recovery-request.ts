@@ -16,6 +16,9 @@ import {
 import { createIntent } from "#infrastructure/recovery-intents.ts";
 import { modelTofuTarget } from "#infrastructure/platform-recovery/context.ts";
 import { recoveryIntentView } from "#infrastructure/selection/views.ts";
+import type { createRecoveryInspector } from "#infrastructure/recovery.ts";
+
+type RecoveryInspector = ReturnType<typeof createRecoveryInspector>;
 
 /** Which independent reader settles a quarantined deployment (4.15). */
 export function recoveryKindOf(
@@ -39,6 +42,28 @@ export function recoveryKindOf(
     forumReleaseOf(definition) !== undefined
     ? "content"
     : "argo";
+}
+
+/**
+ * A Forum release whose sync stage is recorded but still running may be
+ * asked to settle by Application readback instead of native Forum repair
+ * (AI-884): its release Job runs only inside the Argo operation, so the
+ * reader's never-requested proof, which fails closed on any other state, is
+ * the whole question. Every other deployment keeps its own kind.
+ */
+function requestedKind(
+  detail: DeploymentDetail,
+  expectedKind: RecoveryIntentRequest["expectedKind"],
+) {
+  const kind = recoveryKindOf(detail);
+  const forumSyncOpen =
+    kind === "content" &&
+    expectedKind === "argo" &&
+    forumReleaseOf(detail.pipeline.definition) !== undefined &&
+    detail.stages.some(
+      (stage) => stage.key.endsWith("step-sync") && stage.status === "running",
+    );
+  return forumSyncOpen ? "argo" : kind;
 }
 
 /**
@@ -131,14 +156,29 @@ async function specializedIntent(
  */
 export async function requestRecoveryIntent(
   this: Delivery,
-  deploymentId: string,
-  raw: RecoveryIntentRequest,
-  actor: Principal,
+  ...args: [
+    deploymentId: string,
+    raw: RecoveryIntentRequest,
+    actor: Principal,
+    inspect?: RecoveryInspector,
+  ]
 ) {
+  const [deploymentId, raw, actor, inspect] = args;
   requireScope(actor, "admin");
   const input = RecoveryIntentRequestSchema.parse(raw);
   const detail = await this.detail(deploymentId);
-  const kind = recoveryKindOf(detail);
+  const kind = requestedKind(detail, input.expectedKind);
+  // A Forum override opens an intent only once its readback already proves
+  // the request never reached an operation: an inapplicable argo intent could
+  // neither settle nor be abandoned, and would block native Forum recovery.
+  if (kind === "argo" && recoveryKindOf(detail) !== "argo") {
+    if (inspect === undefined)
+      throw new DeliveryError(
+        "PAUSED",
+        "Forum Application readback requires the independent recovery reader; no intent was opened",
+      );
+    await inspect(detail, { reason: input.reason });
+  }
   if (input.expectedKind !== undefined && input.expectedKind !== kind)
     throw new DeliveryError(
       "INVALID",

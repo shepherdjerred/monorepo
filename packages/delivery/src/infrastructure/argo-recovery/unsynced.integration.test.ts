@@ -5,7 +5,11 @@ import { Delivery } from "#infrastructure/delivery.ts";
 import { createRecoveryInspector } from "#infrastructure/recovery.ts";
 import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
 import { recipeFromPipeline } from "#shared/model/recipe-adapter.ts";
-import { arcadePipeline, publishCiRunner } from "#testing/model-fixture.ts";
+import {
+  arcadePipeline,
+  publishCiRunner,
+  selectArcadeModelRecipe,
+} from "#testing/model-fixture.ts";
 import { deliveryOperationId } from "#shared/operation-id.ts";
 import type { DeploymentDetail } from "#shared/contract.ts";
 
@@ -169,14 +173,7 @@ describe("independent Argo recovery before step-sync", () => {
     delivery = new Delivery(cluster.database);
     const fixture = await seedDelivery(delivery);
     await publishCiRunner(delivery);
-    const modelDefinition = recipeFromPipeline(arcadePipeline);
-    await cluster.database.pipeline.create({
-      data: { id: "arcade/model-1", definition: modelDefinition },
-    });
-    await cluster.database.environment.update({
-      where: { id: fixture.environment.id },
-      data: { pipelineRevisionId: "arcade/model-1" },
-    });
+    await selectArcadeModelRecipe(cluster.database, fixture.environment.id);
     const deployment = await delivery.createDeployment(
       {
         requestId: "unsynced-apply-safety/1",
