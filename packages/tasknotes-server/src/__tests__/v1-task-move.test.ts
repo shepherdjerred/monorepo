@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { InMemoryFacetStore } from "../v1/in-memory-store.ts";
+import { InMemoryFacetStore } from "../v1/stores/in-memory-store.ts";
 import { executeSync } from "../v1/sync.ts";
 
 test("moves a hierarchy and its orders atomically, rejects stale children, and detaches a child alone", async () => {

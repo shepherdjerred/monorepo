@@ -1,16 +1,127 @@
-import type { Prisma } from "#generated/prisma/client.ts";
-import type { Task } from "../protocol/generated.ts";
-import { storageComment } from "./comments.ts";
-import { toProtocolTask } from "./mappers.ts";
-import type {
-  BaseListFilter,
-  UpdateFilterInput,
-  UpdateLabelInput,
-  UpdateProjectInput,
-  UpdateReminderInput,
-  UpdateSectionInput,
-  UpdateTaskInput,
-} from "./types.ts";
+import type { Prisma, PrismaClient } from "#generated/prisma/client.ts";
+import type { Task } from "../../protocol/generated.ts";
+import { storageComment } from "../comments.ts";
+import { toProtocolTask } from "../mappers.ts";
+import {
+  type BaseListFilter,
+  type CreateTaskInput,
+  EntityNotFoundError,
+  type UpdateFilterInput,
+  type UpdateLabelInput,
+  type UpdateProjectInput,
+  type UpdateReminderInput,
+  type UpdateSectionInput,
+  type UpdateTaskInput,
+} from "../types.ts";
+
+export async function lockExistingPrismaUser(
+  prisma: PrismaClient | Prisma.TransactionClient,
+  userId: string,
+): Promise<void> {
+  await prisma.$queryRaw`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`;
+}
+
+export async function validatePrismaTaskRefs(
+  prisma: PrismaClient | Prisma.TransactionClient,
+  userId: string,
+  refs: {
+    projectId: string | undefined;
+    sectionId: string | null | undefined;
+    currentProjectId?: string | undefined;
+    currentSectionId?: string | null | undefined;
+  },
+): Promise<void> {
+  if (refs.projectId === undefined && refs.sectionId === undefined) {
+    return;
+  }
+  if (refs.projectId !== undefined) {
+    const found = await prisma.project.findFirst({
+      where: { id: refs.projectId, userId },
+      select: { id: true },
+    });
+    if (found === null) {
+      throw new EntityNotFoundError("Project", refs.projectId);
+    }
+  }
+  const effectiveProjectId = refs.projectId ?? refs.currentProjectId;
+  const effectiveSectionId =
+    refs.sectionId === undefined ? refs.currentSectionId : refs.sectionId;
+  if (
+    effectiveSectionId !== undefined &&
+    effectiveSectionId !== null &&
+    effectiveSectionId !== ""
+  ) {
+    const sec = await prisma.section.findFirst({
+      where: { id: effectiveSectionId, userId },
+      select: { id: true, projectId: true },
+    });
+    if (sec === null) {
+      throw new EntityNotFoundError("Section", effectiveSectionId);
+    }
+    if (
+      effectiveProjectId !== undefined &&
+      sec.projectId !== effectiveProjectId
+    ) {
+      throw new TypeError(
+        "The destination section must belong to the destination project.",
+      );
+    }
+  }
+}
+
+export async function validatePrismaLabelIds(
+  prisma: PrismaClient | Prisma.TransactionClient,
+  userId: string,
+  labelIds: string[],
+): Promise<string[]> {
+  const deduped = [...new Set(labelIds)];
+  if (deduped.length === 0) {
+    return [];
+  }
+  const existing = await prisma.label.findMany({
+    where: { id: { in: deduped }, userId, isDeleted: false },
+    select: { id: true },
+  });
+  const existingSet = new Set(existing.map((row) => row.id));
+  for (const labelId of deduped) {
+    if (!existingSet.has(labelId)) {
+      throw new EntityNotFoundError("Label", labelId);
+    }
+  }
+  return deduped;
+}
+
+export function buildPrismaTaskCreateData(
+  data: CreateTaskInput,
+  syncSeq: bigint,
+  labelIds: string[],
+): Prisma.TaskUncheckedCreateInput {
+  return {
+    id: data.id ?? crypto.randomUUID(),
+    userId: data.userId,
+    projectId: data.projectId,
+    sectionId: data.sectionId ?? null,
+    parentId: data.parentId ?? null,
+    title: data.title,
+    description: data.description ?? "",
+    priority: data.priority ?? "P4",
+    childOrder: data.childOrder ?? 0,
+    dueDate: data.dueDate ?? null,
+    dueDatetime: data.dueDatetime ?? null,
+    dueTimezone: data.dueTimezone ?? null,
+    dueString: data.dueString ?? null,
+    isRecurring: data.isRecurring ?? false,
+    deadline: data.deadline ?? null,
+    recurrenceBasis: data.recurrenceBasis ?? null,
+    recurrenceRule: data.recurrenceRule ?? null,
+    completed: data.completed ?? false,
+    completedAt: data.completedAt ?? null,
+    syncSeq,
+    ...(labelIds.length > 0
+      ? { labels: { create: labelIds.map((labelId) => ({ labelId })) } }
+      : {}),
+  };
+}
 
 export const TASK_WITH_LABELS_INCLUDE = {
   comments: {

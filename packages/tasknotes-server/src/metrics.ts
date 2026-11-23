@@ -41,6 +41,13 @@ export const tasksDeletedTotal = new Counter({
   registers: [registry],
 });
 
+export const mutationsTotal = new Counter({
+  name: "tasknotes_mutations_total",
+  help: "Total number of recorded Facet entity mutations",
+  labelNames: ["entity_type", "action", "source", "actor_kind"] as const,
+  registers: [registry],
+});
+
 export const uptimeSeconds = new Gauge({
   name: "tasknotes_uptime_seconds",
   help: "Server uptime in seconds",

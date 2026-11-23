@@ -20,6 +20,8 @@ model User {
   labels            Label[]
   filters           Filter[]
   processedCommands ProcessedCommand[]
+  apiTokens         ApiToken[]
+  mutationEvents    MutationEvent[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -174,11 +176,64 @@ model Filter {
   @@index([userId, syncSeq])
 }
 
+enum ActorKind {
+  human
+  agent
+}
+
 model ProcessedCommand {
-  uuid      String   @id
+  uuid      String     @id
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
   status    String
   resultId  String?
-  createdAt DateTime @default(now())
+  tokenId   String?
+  actorName String?
+  actorKind ActorKind?
+  createdAt DateTime   @default(now())
+}
+
+model ApiToken {
+  id          String          @id @default(uuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  name        String
+  actorKind   ActorKind       @default(agent)
+  tokenPrefix String
+  tokenHash   String          @unique
+  scopes      String[]        @default(["read", "write"])
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  lastUsedAt  DateTime?
+  createdAt   DateTime        @default(now())
+  mutations   MutationEvent[]
+
+  @@index([userId, createdAt])
+}
+
+model MutationEvent {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  syncSeq       BigInt
+  entityType    String
+  entityId      String
+  action        String
+  source        String
+  commandUuid   String?
+  requestId     String
+  actorKind     ActorKind
+  actorName     String
+  tokenId       String?
+  token         ApiToken? @relation(fields: [tokenId], references: [id], onDelete: SetNull)
+  tokenPrefix   String?
+  actorMetadata Json?
+  changes       Json
+  before        Json?
+  after         Json?
+  createdAt     DateTime  @default(now())
+
+  @@index([userId, createdAt, id])
+  @@index([userId, entityType, entityId, createdAt])
+  @@index([tokenId, createdAt])
 }

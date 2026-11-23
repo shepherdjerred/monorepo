@@ -163,6 +163,20 @@ export const FilterUpdateArgsSchema = LabelUpdateArgsSchema.extend({
   query: z.string().optional(),
 });
 
+export const TaskMoveArgsSchema = z.object({
+  tasks: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        project_id: z.string().min(1),
+        section_id: z.string().optional(),
+        parent_id: z.string().optional(),
+        child_order: z.number(),
+      }),
+    )
+    .min(1),
+});
+
 export const ValidatedSyncCommandSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("TaskAdd"), args: TaskAddArgsSchema }),
   z.object({
@@ -175,19 +189,7 @@ export const ValidatedSyncCommandSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("TaskReorder"), args: TaskReorderArgsSchema }),
   z.object({
     type: z.literal("TaskMove"),
-    args: z.object({
-      tasks: z
-        .array(
-          z.object({
-            id: z.string().min(1),
-            project_id: z.string().min(1),
-            section_id: z.string().optional(),
-            parent_id: z.string().optional(),
-            child_order: z.number(),
-          }),
-        )
-        .min(1),
-    }),
+    args: TaskMoveArgsSchema,
   }),
   z.object({
     type: z.literal("TaskReschedule"),

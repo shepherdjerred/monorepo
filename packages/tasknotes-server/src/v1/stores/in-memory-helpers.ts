@@ -5,8 +5,8 @@ import {
   type Reminder,
   type Section,
   type Task,
-} from "../protocol/generated.ts";
-import { parsePriority } from "./mappers.ts";
+} from "../../protocol/generated.ts";
+import { parsePriority } from "../mappers.ts";
 import {
   type BaseListFilter,
   type CreateTaskInput,
@@ -17,7 +17,7 @@ import {
   type UpdateReminderInput,
   type UpdateSectionInput,
   type UpdateTaskInput,
-} from "./types.ts";
+} from "../types.ts";
 
 export function newMemoryTask(
   data: CreateTaskInput,
