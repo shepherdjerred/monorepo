@@ -272,7 +272,12 @@ export function createApp(options: Options) {
   registerWorkerRoutes(app, { delivery, enabled });
   registerPlatformRoutes(app, { delivery, enabled });
   registerClaimRoute(app, delivery, enabled);
-  registerSelectionRoutes(app, delivery, options.config.writesEnabled);
+  registerSelectionRoutes(
+    app,
+    delivery,
+    options.config.writesEnabled,
+    options.inspectRecovery,
+  );
   registerTrmnlRepairRoute(app, delivery, enabled);
   registerControlPlaneRoutes(app, delivery, enabled);
   registerForumRoutes(app, delivery, {

@@ -100,17 +100,42 @@ function forumApplication(requestId: string, environmentId: string) {
   };
 }
 
-test("an operator may ask Application readback for a Forum release whose sync stage is still open", async () => {
+test("an operator's Forum Application readback opens an intent only once the readback already proves it (AI-884)", async () => {
   const { id, generation } = await refusedForumRelease();
+  const detail = await scope.delivery.detail(id);
   const request = {
     requestId: `${id}/argo`,
     reason,
     expectedGeneration: generation,
+    expectedKind: "argo" as const,
   };
+  const intents = async () =>
+    await scope.cluster.database.recoveryIntent.count({
+      where: { deploymentId: id },
+    });
+  await expect(
+    scope.delivery.requestRecoveryIntent(id, request, testOperator),
+  ).rejects.toMatchObject({ code: "PAUSED" });
+  const reached = createRecoveryInspector({
+    readApplication: async () =>
+      forumApplication(deliveryOperationId(id), detail.environment.id),
+  });
+  await expect(
+    scope.delivery.requestRecoveryIntent(id, request, testOperator, reached),
+  ).rejects.toMatchObject({ code: "INVALID" });
+  expect(await intents()).toBe(0);
+  const prior = createRecoveryInspector({
+    readApplication: async () =>
+      forumApplication(
+        "91078308-225c-4449-80f6-cc64a7b6e894",
+        detail.environment.id,
+      ),
+  });
   const intent = await scope.delivery.requestRecoveryIntent(
     id,
-    { ...request, expectedKind: "argo" },
+    request,
     testOperator,
+    prior,
   );
   expect(intent).toMatchObject({ kind: "argo", deploymentId: id });
 });
