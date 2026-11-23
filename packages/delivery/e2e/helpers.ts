@@ -198,12 +198,25 @@ export async function expectStackedTable(region: Locator) {
   }
 }
 
-/** Open the Overview, with a filter's search string if given, and wait for its heading. */
-export async function openOverview(page: Page, search = "") {
+/**
+ * Open the Overview, with a filter's search string if given, and wait for its
+ * heading. The "Needs attention" list shows only its first five items behind
+ * "Show all N", so by default it is opened past them: a spec that reads a
+ * particular item must not depend on how many others the shared fixture holds.
+ * A spec about the collapse itself asks for `attention: "collapsed"`. Returns
+ * the "Needs attention" region.
+ */
+export async function openOverview(
+  page: Page,
+  search = "",
+  { attention = "all" }: { attention?: "all" | "collapsed" } = {},
+) {
   await page.goto(`/${search}`);
   await expect(
     page.getByRole("heading", { level: 1, name: "Overview", exact: true }),
   ).toBeVisible();
+  if (attention === "all") await showAllAttention(page);
+  return page.getByRole("region", { name: "Needs attention" });
 }
 
 /** Open the "Needs attention" list past its first five items, when it holds more. */
