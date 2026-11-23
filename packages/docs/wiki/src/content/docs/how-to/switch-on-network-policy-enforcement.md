@@ -86,7 +86,7 @@ namespace open.
    ```
 
 6. Record the running versions. Both nodes must report Talos `v1.14.2` or a
-   later 1.14 release, and Kubernetes `v1.37.1`:
+   later 1.14 release, and Kubernetes `v1.37.2`:
 
    ```bash
    talosctl --endpoints liskov --nodes liskov version --short
@@ -169,7 +169,7 @@ what the switch adds.
 talosctl --endpoints torvalds.tailnet-1a49.ts.net \
   --nodes torvalds.tailnet-1a49.ts.net \
   upgrade-k8s --endpoint https://torvalds.tailnet-1a49.ts.net:6443 \
-  --to 1.37.1 --pre-pull-images=false --upgrade-kubelet=false --dry-run
+  --to 1.37.2 --pre-pull-images=false --upgrade-kubelet=false --dry-run
 ```
 
 :::danger
@@ -237,7 +237,7 @@ privileged, and starts with `--v=2`.
 talosctl --endpoints torvalds.tailnet-1a49.ts.net \
   --nodes torvalds.tailnet-1a49.ts.net \
   upgrade-k8s --endpoint https://torvalds.tailnet-1a49.ts.net:6443 \
-  --to 1.37.1 --pre-pull-images=false --upgrade-kubelet=false
+  --to 1.37.2 --pre-pull-images=false --upgrade-kubelet=false
 kubectl -n kube-system rollout status daemonset/kube-flannel --timeout=5m
 ```
 

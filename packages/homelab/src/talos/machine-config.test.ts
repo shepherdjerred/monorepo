@@ -245,7 +245,7 @@ test("source validation includes every declared patch and keeps synthetic genera
     ).toBe(true);
   }
   expect(calls[0]?.args).toContain("v1.14.6");
-  expect(calls[0]?.args).toContain("1.37.1");
+  expect(calls[0]?.args).toContain("1.37.2");
   expect(calls[0]?.args.join(" ")).not.toContain(
     "synthetic-private-key-marker",
   );
