@@ -8,7 +8,13 @@ import { workerApplicationResources } from "./workers/worker-hosts.ts";
 import {
   ManagedResourcesSchema,
   parseObject,
+  type ManagedResource,
 } from "homelab/scripts/argocd/argocd-apply-safety.ts";
+import {
+  assertRetiredEnforcementStagingPolicy,
+  enforcementStagingNamespace,
+  type DesiredResourceIdentity,
+} from "#lib/delivery/network-policy/enforcement-staging-prune.ts";
 
 const Metadata = z.object({
   name: z.string(),
@@ -143,17 +149,61 @@ export async function forumSyncPrunes(
       parseObject(resource.liveState, resource, "liveState") !== null &&
       parseObject(resource.targetState, resource, "targetState") === null,
   );
-  const rawPods =
-    obsolete.length === 0
-      ? []
-      : await workerApplicationResources(selection.application, "Pod", read);
+  await assertObsoleteForumResources({
+    app,
+    selection,
+    namespace: selection.namespace,
+    desired,
+    obsolete,
+    read,
+  });
+  const after = await read(app);
+  deliverySelectionPatch(after, selection);
+  const settled = Application.parse(after);
+  if (
+    settled.metadata.uid !== frozen.metadata.uid ||
+    canonicalJson(settled.spec) !== canonicalJson(frozen.spec)
+  )
+    throw new Error(
+      "Forum source or Application incarnation changed before sync",
+    );
+  return obsolete.length > 0;
+}
+
+async function assertObsoleteForumResources(input: {
+  app: string;
+  selection: DeliverySelection;
+  namespace: string;
+  desired: readonly DesiredResourceIdentity[];
+  obsolete: readonly ManagedResource[];
+  read: (path: string) => Promise<unknown>;
+}) {
+  const { app, selection, namespace, desired, obsolete, read } = input;
+  const hasNonStagingObsolete = obsolete.some(
+    (resource) => enforcementStagingNamespace(resource, namespace) === null,
+  );
+  const rawPods = hasNonStagingObsolete
+    ? await workerApplicationResources(selection.application, "Pod", read)
+    : [];
   const pods = rawPods.map((pod) => Pod.parse(pod));
   const seen = new Set<string>();
   for (const resource of obsolete) {
+    const stagingNamespace = enforcementStagingNamespace(resource, namespace);
+    if (stagingNamespace !== null) {
+      await assertRetiredEnforcementStagingPolicy({
+        application: selection.application,
+        resource: { ...resource, namespace: stagingNamespace },
+        desired,
+        defaultNamespace: namespace,
+        read,
+        seen,
+      });
+      continue;
+    }
     if (
       resource.group !== "batch" ||
       resource.kind !== "Job" ||
-      resource.namespace !== selection.namespace ||
+      resource.namespace !== namespace ||
       !/^storm-forum-release-[a-f0-9]{12}(?:[a-f0-9]{20})?$/u.test(
         resource.name,
       )
@@ -165,13 +215,12 @@ export async function forumSyncPrunes(
           target.apiVersion === "batch/v1" &&
           target.kind === "Job" &&
           target.metadata.name === resource.name &&
-          (target.metadata.namespace ?? selection.namespace) ===
-            resource.namespace,
+          (target.metadata.namespace ?? namespace) === namespace,
       )
     )
       throw new Error("Forum prune candidate remains in the selected render");
     const query = new URLSearchParams({
-      namespace: resource.namespace,
+      namespace,
       resourceName: resource.name,
       group: "batch",
       version: "v1",
@@ -185,21 +234,10 @@ export async function forumSyncPrunes(
     assertTerminalJob(job, {
       cached,
       application: selection.application,
-      namespace: resource.namespace,
+      namespace,
       name: resource.name,
       pods,
       seen,
     });
   }
-  const after = await read(app);
-  deliverySelectionPatch(after, selection);
-  const settled = Application.parse(after);
-  if (
-    settled.metadata.uid !== frozen.metadata.uid ||
-    canonicalJson(settled.spec) !== canonicalJson(frozen.spec)
-  )
-    throw new Error(
-      "Forum source or Application incarnation changed before sync",
-    );
-  return obsolete.length > 0;
 }

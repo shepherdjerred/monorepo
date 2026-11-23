@@ -49,6 +49,13 @@ resources block pruning. Keep the 1Password items active until old consumers
 have drained and the bindings and their generated Kubernetes Secrets are gone;
 then archive the items without revoking credentials.
 
+Those prune-capable guards (retired routes, Forum release Jobs, credential
+grooming, and worker host retirement) also allow pruning inert
+`enforcement-staging-<namespace>` `NetworkPolicy` objects (`enforced` stage,
+`homelab.sjer.red/enforcement-staging: never` pod selector, `flipt` excluded)
+omitted after the staging-policy removal; open or pod-selecting policies remain
+refused.
+
 The `delivery-dispatch` Schedule qualifies published builds against their exact
 terminal CI execution, reconciles automatic environment selections, and submits
 unacknowledged outbox rows. It starts paused until the service, executor
