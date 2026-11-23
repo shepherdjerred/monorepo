@@ -8,6 +8,7 @@ import {
 } from "#shared/model/recipe-view.ts";
 import type { z } from "zod";
 import {
+  helmSource,
   type KubernetesStep,
   type RecipeDefinition,
   RecipeDefinitionSchema,
@@ -20,6 +21,7 @@ import { RecoverDeploymentSchema } from "#shared/contract.ts";
 import type { ApplicationReader } from "#infrastructure/kubernetes/application-reader.ts";
 import {
   ArgoRecoverySchema,
+  inspectNeverRequestedSync,
   inspectUnsyncedTarget,
   requireKnownModelStages,
   type SettledApplicationReadback,
@@ -99,10 +101,20 @@ function modelSyncTarget(
   const readOnlyPreSync = recipe.steps
     .filter((step) => READ_ONLY_PRE_SYNC_STEPS.has(step.kind))
     .map((step) => qualify(stepStageKey("step", step.kind)));
+  const helm = helmSource(recipe.application.source);
   return {
     application: recipe.application.name,
     stage,
     applySafetyStage,
+    ...(helm === null
+      ? {}
+      : {
+          helmChart: {
+            repoURL: helm.repoURL,
+            chart: helm.chart,
+            chartComponent: recipe.chartComponent,
+          },
+        }),
     preSyncStages: [applySafetyStage, ...readOnlyPreSync],
     declaredStages: [
       ...recipe.steps.map((step) => qualify(stepStageKey("step", step.kind))),
@@ -172,13 +184,12 @@ function syncTargets(definition: StoredRecipeDefinition): SyncTarget[] | null {
     : null;
 }
 
-async function inspectSyncedTarget(
-  readApplication: ApplicationReader,
+function inspectSyncedTarget(
+  raw: unknown,
   detail: DeploymentDetail,
   target: SyncTarget,
   sync: { requestId: string; reason: string },
-): Promise<SettledApplicationReadback> {
-  const raw = await readApplication(target.application);
+): SettledApplicationReadback {
   if (raw === null)
     throw new DeliveryError(
       "CONFLICT",
@@ -208,6 +219,52 @@ async function inspectSyncedTarget(
 }
 
 /**
+ * Whether the Application's pending or recorded operation can be this sync
+ * stage's own request. Anything that cannot be read as another request's
+ * settled operation takes the synced readback, which fails closed.
+ */
+function carriesRequest(raw: unknown, requestId: string): boolean {
+  const parsed = ArgoRecoverySchema.safeParse(raw);
+  if (!parsed.success) return true;
+  const current = parsed.data;
+  if (current.operation !== undefined && current.operation !== null)
+    return true;
+  const requests = current.status.operationState.operation.info.filter(
+    (entry) => entry.name === "ci.sjer.red/request-id",
+  );
+  return requests.length !== 1 || requests[0]?.value === requestId;
+}
+
+/**
+ * One recorded sync stage's readback, from a single read of its Application:
+ * its own finished operation, or a request that never reached one (AI-884).
+ * A Forum release settles only through the latter.
+ */
+async function inspectRecordedSync(
+  readApplication: ApplicationReader,
+  detail: DeploymentDetail,
+  target: SyncTarget,
+  sync: {
+    stage: { operationId: string; status: string; startedAt: string | null };
+    reason: string;
+    neverRequestedOnly: boolean;
+    specialized: DeliveryError;
+  },
+): Promise<SettledApplicationReadback> {
+  const { stage, reason } = sync;
+  const raw = await readApplication(target.application);
+  const own =
+    stage.status !== "running" || carriesRequest(raw, stage.operationId);
+  if (own && sync.neverRequestedOnly) throw sync.specialized;
+  return own
+    ? inspectSyncedTarget(raw, detail, target, {
+        requestId: stage.operationId,
+        reason,
+      })
+    : inspectNeverRequestedSync(raw, detail, target, { stage, reason });
+}
+
+/**
  * Independent of Temporal and of ArgoCD's API: inspect the recorded
  * operation on each Application object through the projected reader (D5).
  * A supplied operation identity must be one of the Applications'; every
@@ -223,17 +280,20 @@ export function createRecoveryInspector(options: {
   ): Promise<EvidenceInput[]> => {
     const definition = detail.pipeline.definition;
     const targets = syncTargets(definition);
+    const specialized = new DeliveryError(
+      "INVALID",
+      "This target requires its specialized recovery procedure; retain ownership until its external work is settled",
+    );
     if (
       targets === null ||
       definition.kind === "static-site" ||
       workerRolloutOf(definition) !== undefined ||
-      siteReleaseOf(definition) !== undefined ||
-      forumReleaseOf(definition) !== undefined
+      siteReleaseOf(definition) !== undefined
     )
-      throw new DeliveryError(
-        "INVALID",
-        "This target requires its specialized recovery procedure; retain ownership until its external work is settled",
-      );
+      throw specialized;
+    // A Forum release's Job runs only inside its Argo operation: readback
+    // settles it only when that operation provably never started (AI-884).
+    const neverRequestedOnly = forumReleaseOf(definition) !== undefined;
     const plugins = trmnlPluginsOf(definition);
     if (plugins !== undefined && options.inspectTrmnl === undefined)
       throw new DeliveryError(
@@ -244,6 +304,7 @@ export function createRecoveryInspector(options: {
     const settled: SettledApplicationReadback[] = [];
     for (const target of targets) {
       const stage = detail.stages.find((entry) => entry.key === target.stage);
+      if (stage === undefined && neverRequestedOnly) throw specialized;
       settled.push(
         stage === undefined
           ? await inspectUnsyncedTarget(
@@ -252,9 +313,11 @@ export function createRecoveryInspector(options: {
               target,
               input.reason,
             )
-          : await inspectSyncedTarget(options.readApplication, detail, target, {
-              requestId: stage.operationId,
+          : await inspectRecordedSync(options.readApplication, detail, target, {
+              stage,
               reason: input.reason,
+              neverRequestedOnly,
+              specialized,
             }),
       );
     }

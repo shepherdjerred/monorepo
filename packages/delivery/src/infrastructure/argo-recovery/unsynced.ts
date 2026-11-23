@@ -11,6 +11,8 @@ export type SyncTarget = {
   applySafetyStage: string | null;
   preSyncStages: readonly string[];
   declaredStages: readonly string[];
+  /** The Helm chart a model recipe's apply-safety step writes, when it has one. */
+  helmChart?: { repoURL: string; chart: string; chartComponent: string };
 };
 
 export type SettledApplicationReadback = {
@@ -181,6 +183,104 @@ function requireSyncedHistorySource(
  * stale written body), and its last Argo operation belongs to an earlier
  * deployment rather than this one.
  */
+/**
+ * The written `spec.source` the never-requested proof accepts: the source
+ * Argo last synced (history), or exactly the chart this deployment's own
+ * apply-safety step wrote (its frozen chart component's revision), so a
+ * body is never attributed to this deployment by absence.
+ */
+function classifyWrittenSource(
+  current: UnsyncedApplication,
+  detail: DeploymentDetail,
+  target: SyncTarget,
+) {
+  const latest = current.status.history.reduce((left, right) =>
+    left.id > right.id ? left : right,
+  );
+  if (fingerprint(current.spec.source) === fingerprint(latest.source))
+    return `spec.source matches history ${String(latest.id)}`;
+  const chart = target.helmChart;
+  const selected =
+    chart === undefined
+      ? undefined
+      : detail.versionSet.components[chart.chartComponent]?.version;
+  const source = current.spec.source;
+  if (
+    chart !== undefined &&
+    selected !== undefined &&
+    source["repoURL"] === chart.repoURL &&
+    source["chart"] === chart.chart &&
+    source["targetRevision"] === selected
+  )
+    return `spec.source is this deployment's own unsynced apply-safety body (${chart.chart} ${selected}); history ${String(latest.id)} remains the last synced source and the next release rewrites the body`;
+  throw new DeliveryError(
+    "CONFLICT",
+    `Application ${target.application} holds a spec.source that is neither history ${String(latest.id)} nor this deployment's selected chart; keep target ownership`,
+  );
+}
+
+/**
+ * Proves a model Application target whose sync stage was recorded but whose
+ * request never reached an Argo operation (AI-884, D5, I2): a pre-sync guard
+ * refused after the stage was recorded. The live Application is quiescent and
+ * owned by this environment; its last operation carries an earlier request
+ * and finished before this sync stage started, so no operation of this
+ * deployment can have run since; and its `spec.source` is either the last
+ * synced history entry or exactly this deployment's own apply-safety body.
+ */
+export function inspectNeverRequestedSync(
+  raw: unknown,
+  detail: DeploymentDetail,
+  target: SyncTarget,
+  sync: {
+    stage: { operationId: string; status: string; startedAt: string | null };
+    reason: string;
+  },
+): SettledApplicationReadback {
+  const { stage, reason } = sync;
+  if (stage.status !== "running" || stage.startedAt === null)
+    throw new DeliveryError(
+      "CONFLICT",
+      `Sync stage ${target.stage} is not an open request; keep target ownership`,
+    );
+  const parsed = UnsyncedApplicationSchema.safeParse(raw);
+  if (raw === null || !parsed.success)
+    throw new DeliveryError(
+      "CONFLICT",
+      `Application ${target.application} records no finished operation to inspect; keep target ownership`,
+    );
+  const current = parsed.data;
+  const { operation, finishedAt } = requireQuiescentOwner(
+    current,
+    detail,
+    target.application,
+  );
+  const { priorRequestId, identity } = requirePriorOperation(
+    current,
+    detail,
+    target,
+  );
+  if (priorRequestId === stage.operationId)
+    throw new DeliveryError(
+      "CONFLICT",
+      `Application ${target.application} carries this deployment's sync request; take the synced readback`,
+    );
+  if (Date.parse(finishedAt) >= Date.parse(stage.startedAt))
+    throw new DeliveryError(
+      "CONFLICT",
+      `Application ${target.application}'s last operation finished after sync stage ${target.stage} started; keep target ownership`,
+    );
+  const written = classifyWrittenSource(current, detail, target);
+  return {
+    identity,
+    evidence: {
+      kind: "reconciliation",
+      operationId: identity,
+      summary: `Independent Application readback (sync request ${stage.operationId} never reached an operation): ${current.metadata.name}, resourceVersion ${current.metadata.resourceVersion}, last operation ${identity} for prior request ${priorRequestId}, phase ${operation.phase}, finished ${finishedAt} before the sync stage started ${stage.startedAt}; ${written}. ${reason}`,
+    },
+  };
+}
+
 export async function inspectUnsyncedTarget(
   readApplication: ApplicationReader,
   detail: DeploymentDetail,

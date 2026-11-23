@@ -432,7 +432,10 @@ describe("Kubernetes steps of a forum release", () => {
     await expect(sync(current, recipe, "step-sync")).rejects.toThrow(
       "Credential retirement proof failed",
     );
-    expect(calls.events).toEqual(["read", "step-sync running"]);
+    // No synced history: the step cannot prove what apply-safety replaced,
+    // so the stage stays running for recovery (D5).
+    expect(calls.events).toEqual(["read", "step-sync running", "read"]);
+    expect(calls.updates).toEqual([]);
   });
 
   test("a sync settled only by prune-pending resources records bounded evidence the API accepts", async () => {
@@ -690,5 +693,83 @@ describe("a failed apply-safety body write (AI-423)", () => {
       expect(error).not.toBeInstanceOf(ApplicationFailure);
       expect(calls.stages.map(({ status }) => status)).toEqual(["running"]);
     }
+  });
+});
+
+/** The written body, its last operation another request's, with a synced history. */
+function refusedApplication(requestId: string) {
+  const written = application(false);
+  return {
+    ...written,
+    metadata: { ...written.metadata, resourceVersion: "41" },
+    status: {
+      operationState: {
+        phase: "Succeeded",
+        operation: {
+          info: [
+            { name: "ci.sjer.red/request-id", value: requestId },
+            { name: "ci.sjer.red/operation-id", value: "operation-0" },
+          ],
+        },
+      },
+      history: [
+        {
+          id: 7,
+          source: { ...written.spec.source, targetRevision: "1.0.0" },
+        },
+      ],
+    },
+  };
+}
+
+describe("a pre-sync guard refusal (AI-884)", () => {
+  test("a guard refusal before any operation undoes the written body and settles the stage failed (AI-884)", async () => {
+    const { current, recipe } = fixture();
+    calls.credentialFailure = true;
+    calls.reads = [refusedApplication("prior-request")];
+    const failure = await sync(current, recipe, "step-sync").catch(
+      (error: unknown) => error,
+    );
+    expect(failure).toBeInstanceOf(ApplicationFailure);
+    expect(failure).toMatchObject({
+      type: "DeliverySyncGuardRefused",
+      nonRetryable: true,
+    });
+    expect(calls.updates).toHaveLength(1);
+    expect(calls.updates[0]).toMatchObject({
+      spec: { source: { targetRevision: "1.0.0" } },
+    });
+    expect(calls.stages.map(({ key, status }) => `${key} ${status}`)).toEqual([
+      "step-sync running",
+      "step-sync failed",
+    ]);
+    expect(JSON.stringify(calls.stages.at(-1)?.receipt)).toContain(
+      "never reached Argo",
+    );
+    expect(calls.events).not.toContain(expect.stringContaining("sync-managed"));
+  });
+
+  test("a guard refusal stays recovery-required while an operation is pending", async () => {
+    const { current, recipe } = fixture();
+    calls.credentialFailure = true;
+    calls.reads = [
+      { ...refusedApplication("prior-request"), operation: { sync: {} } },
+    ];
+    await expect(sync(current, recipe, "step-sync")).rejects.toThrow(
+      "Credential retirement proof failed",
+    );
+    expect(calls.updates).toEqual([]);
+    expect(calls.stages.map(({ status }) => status)).toEqual(["running"]);
+  });
+
+  test("a guard refusal stays recovery-required when undoing the body fails", async () => {
+    const { current, recipe } = fixture();
+    calls.credentialFailure = true;
+    calls.failUpdate = true;
+    calls.reads = [refusedApplication("prior-request")];
+    await expect(sync(current, recipe, "step-sync")).rejects.toThrow(
+      "Credential retirement proof failed",
+    );
+    expect(calls.stages.map(({ status }) => status)).toEqual(["running"]);
   });
 });

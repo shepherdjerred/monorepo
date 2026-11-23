@@ -42,6 +42,28 @@ export function recoveryKindOf(
 }
 
 /**
+ * A Forum release whose sync stage is recorded but still running may be
+ * asked to settle by Application readback instead of native Forum repair
+ * (AI-884): its release Job runs only inside the Argo operation, so the
+ * reader's never-requested proof, which fails closed on any other state, is
+ * the whole question. Every other deployment keeps its own kind.
+ */
+function requestedKind(
+  detail: DeploymentDetail,
+  expectedKind: RecoveryIntentRequest["expectedKind"],
+) {
+  const kind = recoveryKindOf(detail);
+  const forumSyncOpen =
+    kind === "content" &&
+    expectedKind === "argo" &&
+    forumReleaseOf(detail.pipeline.definition) !== undefined &&
+    detail.stages.some(
+      (stage) => stage.key.endsWith("step-sync") && stage.status === "running",
+    );
+  return forumSyncOpen ? "argo" : kind;
+}
+
+/**
  * An ordinary Application deployment's intent: settled later by the
  * independent Application readback (`POST /recovery-intents/:id/settle`).
  */
@@ -138,7 +160,7 @@ export async function requestRecoveryIntent(
   requireScope(actor, "admin");
   const input = RecoveryIntentRequestSchema.parse(raw);
   const detail = await this.detail(deploymentId);
-  const kind = recoveryKindOf(detail);
+  const kind = requestedKind(detail, input.expectedKind);
   if (input.expectedKind !== undefined && input.expectedKind !== kind)
     throw new DeliveryError(
       "INVALID",

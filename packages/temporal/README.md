@@ -56,6 +56,15 @@ grooming, and worker host retirement) also allow pruning inert
 omitted after the staging-policy removal; open or pod-selecting policies remain
 refused.
 
+A pre-sync guard that refuses after the sync stage is recorded (a fence, or a
+prune decision that refuses unrelated or storage pruning) no longer leaves the
+deployment recovery-required. The step reads the Application back, proves its
+request never reached an operation (none pending, the recorded operation is
+another request's and quiescent, a synced history entry exists), restores the
+`spec.source` apply-safety wrote to that history entry, and records the sync
+stage `failed` (`DeliverySyncGuardRefused`). If the proof or the restore fails,
+the stage stays running and recovery decides as before (D5).
+
 The `delivery-dispatch` Schedule qualifies published builds against their exact
 terminal CI execution, reconciles automatic environment selections, and submits
 unacknowledged outbox rows. It starts paused until the service, executor
