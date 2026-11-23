@@ -6,7 +6,7 @@ import type {
   SeriesPackNativeDetailV1,
 } from "#shared/native-recovery/series-pack/detail.ts";
 import { CommandResultSchema } from "#shared/api.ts";
-import { writeApi } from "#client/api.ts";
+import { NotSentError, writeApi } from "#client/api.ts";
 import { DataList, DataRow } from "#client/ui/data-list.tsx";
 import { Panel } from "#client/ui/panel.tsx";
 import { Effects } from "#client/ui/workflow.tsx";
@@ -50,7 +50,9 @@ export function SeriesPackNativeReview({
         current.planHash === null ||
         current.state !== "awaiting_review"
       )
-        throw new Error("The file proof changed. Review it before applying.");
+        throw new NotSentError(
+          "The file proof changed. Review it before applying.",
+        );
       return writeApi({
         actorId: user.id,
         path: `/admin/native-recovery/${current.id}/apply`,
@@ -166,6 +168,9 @@ export function SeriesPackNativeReview({
             }}
             pending={apply.isPending}
             error={apply.error}
+            onRefresh={() => {
+              void onRefresh();
+            }}
           />
         )}
         <ProofDetails planHash={review.planHash} expiresAt={review.expiresAt}>

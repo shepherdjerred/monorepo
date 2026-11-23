@@ -14,6 +14,7 @@ import {
   StatePanel,
 } from "#client/native-recovery/shell.tsx";
 import { CompensationStatus } from "./status.tsx";
+import { restorationSummary } from "./summary.ts";
 
 /** Restore the predecessor files of an interrupted upgrade, keeping the successor's bytes. */
 export function NativeCompensationReview({
@@ -34,6 +35,7 @@ export function NativeCompensationReview({
       ? null
       : FinishedNativeCompensationSchema.parse(review.plan);
   const continuations = review.compensationContinuations ?? [];
+  const restoration = restorationSummary(scope);
   return (
     <>
       <ReviewHeader
@@ -116,13 +118,18 @@ export function NativeCompensationReview({
             confirmLabel="Approve restoration"
             confirmBody={
               <p>
-                The earlier files of {scope.entries.length} upgrade
-                {scope.entries.length === 1 ? "" : "s"} will be authorized for
+                The earlier files of{" "}
+                {restoration.upgrades === 1
+                  ? "this upgrade"
+                  : `${String(restoration.upgrades)} upgrades`}{" "}
+                ({restoration.files} file
+                {restoration.files === 1 ? "" : "s"}) will be authorized for
                 restoration, with successor bytes retained. Household holds stay
                 in force. This page cannot undo it.
               </p>
             }
             {...approval}
+            onRefresh={header.onRefresh}
           />
         )}
         <ProofDetails planHash={review.planHash} expiresAt={review.expiresAt}>

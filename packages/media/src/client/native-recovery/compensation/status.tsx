@@ -7,7 +7,7 @@ import { writeApi } from "#client/api.ts";
 import { Button } from "#client/ui/button.tsx";
 import { DataRow } from "#client/ui/data-list.tsx";
 import { Badge } from "#client/ui/feedback.tsx";
-import { ActionFailure } from "#client/ui/workflow.tsx";
+import { WriteFailure } from "#client/ui/workflow.tsx";
 import { phrase } from "#client/native-recovery/vocabulary.ts";
 
 /** One interrupted upgrade's restoration: where the files and playback stand, and a retry. */
@@ -94,10 +94,19 @@ export function CompensationStatus({
       }
     >
       {retry.error !== null && (
-        <ActionFailure
-          title="The retry was not submitted"
+        <WriteFailure
           error={retry.error}
-          state="As far as this page can tell, nothing was changed. Refresh the review to confirm."
+          refused={{
+            title: "The retry was not submitted",
+            state:
+              "The request was refused, so nothing was changed. Refresh the review to see its current state.",
+          }}
+          unknown={{
+            title: "Whether the retry was submitted is not known",
+            about: "whether the retry was recorded",
+            check: "refresh the review to see where the restoration stands",
+          }}
+          action={<Button onClick={onRefresh}>Refresh the review</Button>}
         />
       )}
     </DataRow>

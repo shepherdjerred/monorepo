@@ -16,7 +16,7 @@ import {
   seriesPackReviewDetail,
 } from "#testing/fixture-api/fixtures/migration/series-pack.ts";
 import { horizontalOverflow, test } from "#e2e/browser/support.ts";
-import { answerWrites, openManage, violations } from "./support.ts";
+import { answerWrites, dropWrites, openManage, violations } from "./support.ts";
 
 const NATIVE = "/manage/recovery/native";
 
@@ -254,6 +254,31 @@ for (const kind of KINDS) {
 }
 
 test.describe("restoring an interrupted upgrade", () => {
+  test("confirms one upgrade of two files, not two upgrades", async ({
+    page,
+  }) => {
+    await openManage(
+      page,
+      `${NATIVE}/${COMPENSATION_REVIEW_IDS.awaitingReview}`,
+    );
+    await page
+      .getByRole("checkbox", {
+        name: /I reviewed the predecessor restoration/u,
+      })
+      .check();
+    await page
+      .getByRole("button", {
+        name: "Approve this exact predecessor restoration",
+      })
+      .click();
+    const dialog = page.getByRole("dialog", {
+      name: "Approve this predecessor restoration?",
+    });
+    await expect(dialog).toContainText("The earlier files of this upgrade");
+    await expect(dialog).toContainText("(2 files)");
+    await expect(dialog).not.toContainText("2 upgrades");
+  });
+
   test("retries the current restoration, and says what the state is if it is refused", async ({
     page,
   }) => {
@@ -276,6 +301,25 @@ test.describe("restoring an interrupted upgrade", () => {
       body: { expectedVersion: 2 },
     });
     expect(await violations(page)).toEqual([]);
+  });
+
+  test("says it cannot tell whether the retry was recorded when the response is lost", async ({
+    page,
+  }) => {
+    const writes = await dropWrites(
+      page,
+      "/admin/native-recovery/compensations/*/retry",
+    );
+    await openManage(page, `${NATIVE}/${COMPENSATION_REVIEW_IDS.applying}`);
+    await page
+      .getByRole("button", { name: "Check and retry current restoration" })
+      .click();
+    await expect.poll(() => writes.length).toBe(1);
+    const alert = page.getByRole("alert");
+    await expect(alert).toContainText(
+      "cannot tell whether the retry was recorded",
+    );
+    await expect(alert).not.toContainText("nothing was changed");
   });
 
   test("says the retry was not submitted when it is refused", async ({

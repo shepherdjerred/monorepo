@@ -185,6 +185,7 @@ export function NativeArchiveReview({
               </p>
             }
             {...approval}
+            onRefresh={header.onRefresh}
           />
         )}
         <ProofDetails planHash={review.planHash} expiresAt={review.expiresAt}>
