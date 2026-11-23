@@ -6,14 +6,46 @@ afterEach(() => vi.unstubAllGlobals());
 const page = "https://v2.streameast.ga/nba/synthetic-game/3";
 const html =
   '<script>var _seEsBoot = {"t":"synthetic-ticket","hs":"https://hs.embedse.com/v/hs"};</script>';
+const PLAYLIST =
+  "#EXTM3U\n#EXTINF:2,\nhttps://p16-common-sign.tiktokcdn.com/synthetic.image\n";
+
+function stubLoaderUpstream(
+  segment: () => Response,
+  onHandshake?: (options?: RequestInit) => void,
+): void {
+  vi.stubGlobal("fetch", async (url: string | URL, options?: RequestInit) => {
+    const target = String(url);
+    if (target.endsWith("/v/hs")) {
+      onHandshake?.(options);
+      return Response.json({
+        ok: true,
+        q: "https://hs.embedse.com/q/synthetic/index.m3u8",
+      });
+    }
+    return target.endsWith(".m3u8") ? new Response(PLAYLIST) : segment();
+  });
+}
+
+async function fetchFirstSegment(
+  fetchFn: typeof fetch,
+  input: string,
+): Promise<{ response: Response; segmentPath: string }> {
+  const playlist = await fetchFn(input).then((response) => response.text());
+  const segmentPath = playlist.split("\n").find((line) => line.startsWith("/"));
+  if (segmentPath === undefined) throw new Error("Missing test segment");
+  return {
+    response: await fetchFn(new URL(segmentPath, input)),
+    segmentPath,
+  };
+}
 
 describe("native loader HLS relay", () => {
   it("unwraps media, rejects arbitrary routes and releases its listener", async () => {
     const originalFetch = fetch;
     const bytes = new Uint8Array([71, 0, 1, 2]);
-    vi.stubGlobal("fetch", async (url: string | URL, options?: RequestInit) => {
-      const target = String(url);
-      if (target.endsWith("/v/hs")) {
+    stubLoaderUpstream(
+      () => new Response(sportsPng(bytes)),
+      (options) => {
         expect(options?.headers).toMatchObject({
           "User-Agent": "actual-browser",
         });
@@ -23,17 +55,8 @@ describe("native loader HLS relay", () => {
           mt: "synthetic-ticket",
           q: 1,
         });
-        return Response.json({
-          ok: true,
-          q: "https://hs.embedse.com/q/synthetic/index.m3u8",
-        });
-      }
-      return target.endsWith(".m3u8")
-        ? new Response(
-            "#EXTM3U\n#EXTINF:2,\nhttps://p16-common-sign.tiktokcdn.com/synthetic.image\n",
-          )
-        : new Response(sportsPng(bytes));
-    });
+      },
+    );
     const prepared = await prepareLoaderHls(
       html,
       page,
@@ -43,14 +66,8 @@ describe("native loader HLS relay", () => {
     expect(prepared).not.toBeNull();
     if (prepared === null) throw new Error("Missing test preparation");
     try {
-      const playlist = await originalFetch(prepared.input).then((response) =>
-        response.text(),
-      );
-      const segment = playlist.split("\n").find((line) => line.startsWith("/"));
-      if (segment === undefined) throw new Error("Missing test segment");
-      const segmentResponse = await originalFetch(
-        new URL(segment, prepared.input),
-      );
+      const { response: segmentResponse, segmentPath: segment } =
+        await fetchFirstSegment(originalFetch, prepared.input);
       const segmentBytes = await segmentResponse.arrayBuffer();
       expect(new Uint8Array(segmentBytes)).toEqual(bytes);
       const partial = await originalFetch(new URL(segment, prepared.input), {
@@ -99,6 +116,37 @@ describe("native loader HLS relay", () => {
         await response.arrayBuffer();
       }
       expect(sequence).toBe(2100);
+    } finally {
+      await prepared.close();
+    }
+  });
+
+  it("absorbs transient upstream 5XX responses instead of failing the stream", async () => {
+    const originalFetch = fetch;
+    const bytes = new Uint8Array([71, 0, 1, 2]);
+    let segmentRequests = 0;
+    stubLoaderUpstream(() => {
+      segmentRequests += 1;
+      return segmentRequests < 3
+        ? new Response("upstream flap", { status: 502 })
+        : new Response(sportsPng(bytes));
+    });
+    const prepared = await prepareLoaderHls(
+      html,
+      page,
+      new AbortController().signal,
+    );
+    if (prepared === null) throw new Error("Missing test preparation");
+    try {
+      const { response: segmentResponse } = await fetchFirstSegment(
+        originalFetch,
+        prepared.input,
+      );
+      expect(segmentResponse.status).toBe(200);
+      expect(new Uint8Array(await segmentResponse.arrayBuffer())).toEqual(
+        bytes,
+      );
+      expect(segmentRequests).toBe(3);
     } finally {
       await prepared.close();
     }
