@@ -4,7 +4,7 @@ import {
   DeploymentPageSchema,
   EnvironmentDetailSchema,
 } from "#shared/hub/hub-contract.ts";
-import { api, expectNoHorizontalOverflow } from "./helpers.ts";
+import { api, expectNoHorizontalOverflow, openOverview } from "./helpers.ts";
 import {
   APPLIED_REQUEST,
   HELD_PROD,
@@ -39,8 +39,7 @@ async function deploymentId(
 test("every page states what recovery read back, never the executor's stale words", async ({
   page,
 }) => {
-  await page.goto("/");
-  const attention = page.getByRole("region", { name: "Needs attention" });
+  const attention = await openOverview(page);
   const failing = attention
     .getByRole("listitem")
     .filter({ hasText: "prod is failing repeatedly" });

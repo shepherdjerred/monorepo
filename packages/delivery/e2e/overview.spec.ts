@@ -59,10 +59,9 @@ test("the overview is home and says what it shows", async ({ page }) => {
 test("attention comes first and names the service and environment", async ({
   page,
 }) => {
-  await openOverview(page);
+  const attention = await openOverview(page, "", { attention: "collapsed" });
   const grid = await api(page, "/api/v1/hub/grid", HubGridSchema);
   expect(grid.attention.length).toBeGreaterThan(0);
-  const attention = page.getByRole("region", { name: "Needs attention" });
   // Like Pipelines, a long list shows its first five behind "Show all".
   await expect(attention.getByRole("listitem")).toHaveCount(
     Math.min(grid.attention.length, 5),
@@ -168,7 +167,6 @@ test("a chip shows the accepted release apart from a newer request, each with it
   await expect(chip).not.toContainText(`${accepted} queued`);
 
   // A deployment queued past the threshold with no stage started needs someone.
-  await showAllAttention(page);
   const attention = page.getByRole("region", { name: "Needs attention" });
   const item = attention
     .getByRole("listitem")
@@ -186,7 +184,6 @@ test("each attention item says what failed instead of the executor boilerplate",
   page,
 }) => {
   await openOverview(page);
-  await showAllAttention(page);
   const items = page
     .getByRole("region", { name: "Needs attention" })
     .getByRole("listitem");
