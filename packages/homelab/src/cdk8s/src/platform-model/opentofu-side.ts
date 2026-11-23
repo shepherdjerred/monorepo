@@ -1,5 +1,9 @@
 import path from "node:path";
 import { z } from "zod";
+import {
+  CATALOG_CORE,
+  catalogService,
+} from "@shepherdjerred/ops-model/delivery-catalog/core.ts";
 import { literalString, objectEntries } from "./hcl.ts";
 import {
   TOFU_ROOT,
@@ -49,6 +53,8 @@ export type OpenTofuSide = {
   }[];
   /** Every `<host>.<tailnet>` name a stack mentions outside comments. */
   tailnetNames: readonly { stack: string; host: string; domain: string }[];
+  /** Stacks kept as archives with a retired service and no runnable environment. */
+  retiredStacks: ReadonlySet<string>;
   /** The S3 endpoint of every stack's state backend. */
   stateBackendEndpoints: readonly { stack: string; endpoint: string }[];
 };
@@ -353,10 +359,26 @@ export async function readOpenTofuSide(): Promise<OpenTofuSide> {
         ...name,
       })),
     ),
+    retiredStacks: new Set(names.filter((name) => isArchivedStack(name))),
     stateBackendEndpoints: stacks.flatMap((candidate) =>
       candidate.backendEndpoint === undefined
         ? []
         : [{ stack: candidate.name, endpoint: candidate.backendEndpoint }],
     ),
   };
+}
+
+function isArchivedStack(stack: string): boolean {
+  const serviceId = `tofu-${stack}`;
+  if (catalogService(serviceId)?.lifecycle !== "retired") return false;
+  const environments = CATALOG_CORE.environments.filter((environment) =>
+    environment.id.startsWith(`${serviceId}/`),
+  );
+  return (
+    environments.length > 0 &&
+    environments.every(
+      (environment) =>
+        environment.lifecycle === "retired" && !environment.automatic,
+    )
+  );
 }

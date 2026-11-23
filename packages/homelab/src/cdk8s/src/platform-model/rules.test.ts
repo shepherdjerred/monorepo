@@ -137,6 +137,7 @@ const openTofu: OpenTofuSide = {
   tailnetNames: [
     { stack: "tokens", host: "seaweedfs-s3", domain: "example.ts.net" },
   ],
+  retiredStacks: new Set(),
   stateBackendEndpoints: [
     { stack: "tokens", endpoint: "https://seaweedfs-s3.example.ts.net" },
   ],
@@ -321,6 +322,23 @@ const DISAGREEMENTS: [string, Sides, Partial<Record<RuleId, string[]>>][] = [
       tailnetDevicesWithoutDefinition: ["app/extra"],
       tailnetTagsMismatched: ["tag:new"],
       tailnetNamesWithoutDefinition: ["kubernetes: extra.example.ts.net"],
+    },
+  ],
+  [
+    "a retired archive and an active stack both mention an undeclared hostname",
+    {
+      ...agreed,
+      openTofu: {
+        ...openTofu,
+        retiredStacks: new Set(["archive"]),
+        tailnetNames: [
+          { stack: "archive", host: "extra", domain: "example.ts.net" },
+          { stack: "tokens", host: "extra", domain: "example.ts.net" },
+        ],
+      },
+    },
+    {
+      tailnetNamesWithoutDefinition: ["opentofu tokens: extra.example.ts.net"],
     },
   ],
   [

@@ -135,8 +135,8 @@ export function createMediaActivityWorkers(
     volumeMounts: [
       {
         path: "/migration/seerr",
-        // The retired writer releases this retained claim before the sole
-        // Files reader uses it. Keep CSI rw; enforce container read-only.
+        // Files mounts the stopped writer's claim read-only at CSI so kubelet
+        // skips its recursive fsGroup ownership change on retained data.
         volume: Volume.fromPersistentVolumeClaim(
           chart,
           "media-files-seerr-requests",
@@ -145,13 +145,12 @@ export function createMediaActivityWorkers(
             "media-files-seerr-claim",
             "seerr-pvc",
           ),
+          { readOnly: true },
         ),
         readOnly: true,
       },
       {
         path: "/migration/tautulli",
-        // Match the retained writer's rw CSI mount; enforce the migration
-        // reader's read-only access at the container bind mount instead.
         volume: Volume.fromPersistentVolumeClaim(
           chart,
           "media-files-tautulli-history",
@@ -160,6 +159,7 @@ export function createMediaActivityWorkers(
             "media-files-tautulli-claim",
             "tautulli-pvc",
           ),
+          { readOnly: true },
         ),
         readOnly: true,
       },

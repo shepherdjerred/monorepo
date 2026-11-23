@@ -14,6 +14,7 @@ const Resource = z.looseObject({
   metadata: z.looseObject({
     name: z.string(),
     labels: z.record(z.string(), z.string()).optional(),
+    annotations: z.record(z.string(), z.string()).optional(),
   }),
   spec: z.unknown().optional(),
 });
@@ -114,13 +115,26 @@ test("all fifteen persistent claims preserve identity, capacity, storage class a
 });
 
 test.each([
-  ["tautulli-pvc", "/migration/tautulli"],
-  ["seerr-pvc", "/migration/seerr"],
+  ["media-tautulli", "tautulli-pvc", "/migration/tautulli"],
+  ["media-seerr", "seerr-pvc", "/migration/seerr"],
 ])(
-  "only the Files role reads retained %s with a read-only container bind and matching CSI flags",
-  async (claim, path) => {
+  "only the Files role mounts the retained %s claim read-only at CSI and in the container",
+  async (writer, claim, path) => {
     const resources = await fixture();
+    const legacyWriter = resources.find(
+      (resource) => resource.metadata.name === writer,
+    );
+    expect(
+      legacyWriter?.metadata.annotations?.["argocd.argoproj.io/sync-wave"] ??
+        "0",
+    ).toBe("0");
     const PodStorage = z.object({
+      securityContext: z
+        .object({
+          fsGroup: z.number(),
+          fsGroupChangePolicy: z.string(),
+        })
+        .optional(),
       volumes: z.array(
         z.object({
           name: z.string(),
@@ -165,16 +179,40 @@ test.each([
       expect(history).toHaveLength(1);
       expect(history[0]?.persistentVolumeClaim).toEqual({
         claimName: claim,
-        readOnly: false,
+        readOnly: true,
+      });
+      expect(
+        resource?.metadata.annotations?.["argocd.argoproj.io/sync-wave"],
+      ).toBe("3");
+      expect(pod.securityContext).toEqual({
+        fsGroup: 1000,
+        fsGroupChangePolicy: "Always",
       });
       expect(pod.containers).toHaveLength(1);
-      expect(
-        pod.containers.flatMap((container) => container.volumeMounts),
-      ).toContainEqual({
+      const mounts = pod.containers.flatMap(
+        (container) => container.volumeMounts,
+      );
+      expect(mounts).toContainEqual({
         name: history[0]?.name,
         mountPath: path,
         readOnly: true,
       });
+      for (const [normalClaim, mountPath, readOnly] of [
+        ["plex-movies-hdd-pvc", "/data/movies", false],
+        ["plex-tv-hdd-pvc", "/data/tv", false],
+        ["qbittorrent-hdd-pvc", "/downloads", true],
+      ] as const) {
+        const volume = pod.volumes.find(
+          (candidate) =>
+            candidate.persistentVolumeClaim?.claimName === normalClaim,
+        );
+        expect(volume?.persistentVolumeClaim?.readOnly).toBe(false);
+        const mount = mounts.find(
+          (candidate) => candidate.name === volume?.name,
+        );
+        expect(mount?.mountPath).toBe(mountPath);
+        expect(mount?.readOnly ?? false).toBe(readOnly);
+      }
     }
   },
 );

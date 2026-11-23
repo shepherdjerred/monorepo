@@ -3409,7 +3409,9 @@ is empty/settled. Stdin is bounded and deserialized read-only in memory; no
 credential-bearing database file is written. The flag acknowledges observed
 source evidence and does not itself prove the writer stopped.
 
-After the Network worker observes the stopped writers, run the frozen reader.
+After the Network worker observes the stopped writers, verify the writer's
+Tautulli mount is unpublished and Files has a read-only CSI source and container
+mount. Then run the frozen reader.
 It opens SQLite read-only, requires zero active sessions, preserves every
 ungrouped history ID, and returns validated rows, the observation boundary
 (`through`), row count, and canonical snapshot digest. Import those rows in
@@ -3463,9 +3465,10 @@ library retention, or the play counts and watch time supplied by timed sessions.
 
 After Seerr's writer pod has stopped and its old mount is unpublished, the
 surviving Files role can read `seerr-pvc` at `/migration/seerr/db/db.sqlite3`.
-Confirm the actual PVC/node identity, sole read-only reader and settled WAL
-before capturing. The command does not stop the writer or checkpoint its
-database; a nonempty WAL, corrupt image or changing source fails the capture.
+Confirm the actual PVC/node identity, sole reader with a read-only CSI source
+and container mount, and settled WAL before capturing. The command leaves
+writer shutdown and WAL settlement to the operator. A nonempty WAL, corrupt
+image or changing source fails the capture.
 From the application repository root, supply the original source-instance
 SHA-256 identifier and independently verified source version:
 
