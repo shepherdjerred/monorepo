@@ -1,7 +1,7 @@
 import type { HubOverview, HubService } from "#shared/hub/hub-contract.ts";
 import type { Database } from "#infrastructure/database.ts";
 import { environment as readEnvironment } from "#infrastructure/delivery-data.ts";
-import { decisionStatus, latestBuilds } from "./attention.ts";
+import { decisionStatus } from "./attention.ts";
 import { gridAttention, listedRecord, readGridRecord } from "./grid.ts";
 import { toolLinks } from "./links.ts";
 import { latestExecution } from "./executions.ts";
@@ -15,14 +15,14 @@ import { activityEntry, buildView, serviceSummary } from "./views.ts";
  * pages list the same services and the same items.
  */
 export async function hubOverview(database: Database): Promise<HubOverview> {
-  const [record, builds, audit] = await Promise.all([
+  const [record, audit] = await Promise.all([
     readGridRecord(database),
-    latestBuilds(database),
     database.audit.findMany({
       orderBy: [{ occurredAt: "desc" }, { id: "desc" }],
       take: 12,
     }),
   ]);
+  const builds = record.builds;
   const { services: listed, environments: rows } = listedRecord(record);
   const environments = await Promise.all(
     rows.map((row) => readEnvironment(database, row.id)),

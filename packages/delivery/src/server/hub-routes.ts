@@ -29,15 +29,36 @@ import type { Enrichment } from "#infrastructure/enrichment/enrichment.ts";
 
 type App = Hono<{ Variables: { principal: Principal; requestId: string } }>;
 
+/** Coalesces concurrent identical reads triggered by SSE invalidation bursts. */
+function coalesceInFlight<T>(load: () => Promise<T>): () => Promise<T> {
+  let inflight: Promise<T> | undefined;
+  return () => {
+    inflight ??= (async () => {
+      try {
+        return await load();
+      } finally {
+        inflight = undefined;
+      }
+    })();
+    return inflight;
+  };
+}
+
 /** Browser hub reads. Registered before the parameterized legacy routes. */
 export function registerHubRoutes(app: App, database: Database) {
-  app.get("/api/v1/hub", async (c) => c.json(await hubOverview(database)));
-  app.get("/api/v1/hub/grid", async (c) => c.json(await hubGrid(database)));
-  app.get("/api/v1/commits", async (c) =>
-    c.json(
-      await commitPage(database, CommitListQuerySchema.parse(c.req.query())),
-    ),
-  );
+  const readOverview = coalesceInFlight(() => hubOverview(database));
+  const readGrid = coalesceInFlight(() => hubGrid(database));
+  const readNewestCommits = coalesceInFlight(() => commitPage(database, {}));
+  app.get("/api/v1/hub", async (c) => c.json(await readOverview()));
+  app.get("/api/v1/hub/grid", async (c) => c.json(await readGrid()));
+  app.get("/api/v1/commits", async (c) => {
+    const query = CommitListQuerySchema.parse(c.req.query());
+    return c.json(
+      query.cursor === undefined
+        ? await readNewestCommits()
+        : await commitPage(database, query),
+    );
+  });
   app.get("/api/v1/commits/:sha", async (c) =>
     c.json(await commitStatus(database, c.req.param("sha"))),
   );

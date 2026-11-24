@@ -18,7 +18,9 @@ import {
 import type { CatalogGroup } from "@shepherdjerred/ops-model/catalog-document-shape.ts";
 import { buildLinks, opsLinks } from "./links.ts";
 
-type BuildRow = Prisma.BuildGetPayload<object>;
+type BuildRow = Omit<Prisma.BuildGetPayload<object>, "platformChanges"> & {
+  platformChanges?: Prisma.JsonValue | null;
+};
 type AuditRow = Prisma.AuditGetPayload<object>;
 
 export function buildView(row: BuildRow): BuildView {

@@ -51,6 +51,8 @@ model Build {
   platformDeployments    Deployment[]             @relation("PlatformSource")
 
   @@index([serviceId, createdAt])
+  @@index([serviceId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([sourceRevision])
   @@index([createdAt(sort: Desc), id(sort: Desc)])
   @@index([serviceId, registrationSequence])
 }
@@ -258,6 +260,7 @@ model Deployment {
   introducedWorkers                    WorkerVersion[]
 
   @@index([environmentId, createdAt])
+  @@index([environmentId, createdAt(sort: Desc), id(sort: Desc)])
   @@index([status, createdAt])
   @@index([versionSetRevisionId])
   @@index([createdAt(sort: Desc), id(sort: Desc)])

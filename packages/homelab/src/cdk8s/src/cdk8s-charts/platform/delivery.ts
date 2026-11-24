@@ -149,8 +149,8 @@ export function createDeliveryChart(
       ports: [{ name: "http", number: 7353 }],
       resources: {
         cpu: { request: Cpu.millis(50), limit: Cpu.millis(500) },
-        // Measured working set (7d, 2026-10-31): p95 248Mi, max 456Mi.
-        memory: { request: Size.mebibytes(256), limit: Size.mebibytes(768) },
+        // Measured working set steady-state 185-270Mi; 1024Mi gives headroom for SSE/publication bursts.
+        memory: { request: Size.mebibytes(256), limit: Size.mebibytes(1024) },
       },
       startup: Probe.fromHttpGet("/healthz", {
         port: 7353,

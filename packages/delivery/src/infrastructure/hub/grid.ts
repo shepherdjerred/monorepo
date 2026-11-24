@@ -47,6 +47,7 @@ type BuildRow = Pick<
   Prisma.BuildGetPayload<object>,
   "id" | "status" | "qualificationReason" | "createdAt"
 >;
+type LatestBuildMap = Awaited<ReturnType<typeof latestBuilds>>;
 
 /** The newest deployment of an environment, with the set revision it deploys. */
 export type GridDeployment = AttentionDeployment &
@@ -341,7 +342,9 @@ export function buildGrid(
  * statements whatever the number of services: every row is read by set, never
  * per service or per environment, and no execution is traced.
  */
-export async function readGridRecord(database: Database): Promise<GridRecord> {
+export async function readGridRecord(
+  database: Database,
+): Promise<Omit<GridRecord, "builds"> & { builds: LatestBuildMap }> {
   const [services, environments, newest, before, builds, awaiting] =
     await Promise.all([
       database.service.findMany({ select: { id: true, lifecycle: true } }),
