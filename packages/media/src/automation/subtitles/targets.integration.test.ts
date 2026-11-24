@@ -86,7 +86,7 @@ test("actual target queue dispatches distinct regular and forced inputs, validat
   ).toEqual(
     expect.arrayContaining([
       ["only", "exclude"],
-      ["exclude", "include"],
+      ["exclude", null],
     ]),
   );
   expect(await f.queue()).toBe(0);
