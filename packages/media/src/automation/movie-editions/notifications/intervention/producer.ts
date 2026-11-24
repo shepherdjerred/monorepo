@@ -6,6 +6,7 @@ import {
 } from "#shared/movie-editions/intervention/v4.ts";
 import { movieInterventionCommand } from "./source.ts";
 import { queueDelivery } from "#automation/notifications/events.ts";
+import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 
 /** Actual failure transaction queues scoped personal and owner notices without claiming serving authority. */
@@ -36,6 +37,7 @@ export async function queueMovieInterventionV4(
     failure,
     ...(attemptId === undefined ? {} : { attemptId }),
   };
+  const reconciliationKey = repeatedReconciliationKey(operation, draft);
   const requests = await tx.mediaRequest.findMany({
     where: {
       mediaId: original.source.mediaId,
@@ -50,6 +52,7 @@ export async function queueMovieInterventionV4(
   });
   if (requests.length > 100)
     throw new Error("Movie intervention exceeds its recipient scope");
+  const personalRecipients = new Set<string>();
   for (const request of requests) {
     const choice = request.movieEditionChoice;
     if (choice === null) continue;
@@ -63,7 +66,7 @@ export async function queueMovieInterventionV4(
       throw new Error(
         "Movie intervention request choice changed its literal scope",
       );
-    await queueRecipient(
+    const queued = await queueRecipient(
       tx,
       MovieInterventionNoticeV4Schema.parse({
         ...draft,
@@ -77,7 +80,9 @@ export async function queueMovieInterventionV4(
         },
       }),
       choice.actorId,
+      reconciliationKey,
     );
+    if (queued) personalRecipients.add(request.userId);
   }
   const owners = await tx.mediaUser.findMany({
     where: { role: "owner", restricted: false },
@@ -86,7 +91,8 @@ export async function queueMovieInterventionV4(
   });
   if (owners.length > 100)
     throw new Error("Movie intervention exceeds its owner scope");
-  for (const owner of owners)
+  for (const owner of owners) {
+    if (personalRecipients.has(owner.id)) continue;
     await queueRecipient(
       tx,
       MovieInterventionNoticeV4Schema.parse({
@@ -95,13 +101,40 @@ export async function queueMovieInterventionV4(
         recipient: { kind: "owner", userId: owner.id },
       }),
       null,
+      reconciliationKey,
     );
+  }
+}
+
+function repeatedReconciliationKey(
+  operation: Pick<Operation, "kind" | "payload">,
+  notice: Pick<
+    MovieInterventionNoticeV4,
+    "source" | "recoveryEpoch" | "failure" | "attemptId"
+  >,
+) {
+  if (
+    notice.attemptId !== undefined ||
+    operation.kind !== "reconcile_movie_edition_v4"
+  )
+    return;
+  const retry = z
+    .object({ movieRetryV1: z.unknown().optional() })
+    .parse(operation.payload).movieRetryV1;
+  if (retry !== undefined) return;
+  return identityHash({
+    scope: notice.source.scope,
+    generation: notice.source.generation,
+    recoveryEpoch: notice.recoveryEpoch,
+    failure: notice.failure,
+  });
 }
 
 async function queueRecipient(
   tx: Prisma.TransactionClient,
   payload: MovieInterventionNoticeV4,
   actorId: string | null,
+  reconciliationKey: string | undefined,
 ) {
   const user = await tx.mediaUser.findUniqueOrThrow({
     where: { id: payload.recipient.userId },
@@ -113,13 +146,15 @@ async function queueRecipient(
     user.restricted ||
     (!preference.emailEnabled && !preference.discordEnabled)
   )
-    return;
+    return false;
+  const dedupeKey =
+    reconciliationKey === undefined
+      ? `movie-intervention-v4:${payload.source.operationId}:${payload.recipient.kind}:${payload.recipient.userId}`
+      : `movie-reconciliation-intervention-v4:${reconciliationKey}:${identityHash(payload.recipient)}`;
   const event = await tx.applicationEvent.upsert({
-    where: {
-      dedupeKey: `movie-intervention-v4:${payload.source.operationId}:${payload.recipient.kind}:${payload.recipient.userId}`,
-    },
+    where: { dedupeKey },
     create: {
-      dedupeKey: `movie-intervention-v4:${payload.source.operationId}:${payload.recipient.kind}:${payload.recipient.userId}`,
+      dedupeKey,
       mediaId: payload.source.mediaId,
       actorId,
       kind: payload.eventKind,
@@ -158,4 +193,5 @@ async function queueRecipient(
       `notification:${delivery.id}`,
     );
   }
+  return true;
 }
