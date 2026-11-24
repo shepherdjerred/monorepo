@@ -1,6 +1,7 @@
 import { runInNewContext } from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod/v4";
+import { PromotionSnapshotBlocked } from "./access/browser-snapshot.ts";
 import { PromotionBrowser } from "./browser.ts";
 import { captchaApplicationScript } from "./browser-scripts.ts";
 import { promotionTarget } from "./manifest.ts";
@@ -10,7 +11,7 @@ describe("native PinchTab transport", () => {
     const target = promotionTarget("pmc");
     const paths: string[] = [],
       actions: unknown[] = [];
-    let failSnapshot = false;
+    let snapshotFailure: Response | undefined;
     let failPointer = false;
     let navigateOnHover = false;
     let pageUrl = target.url;
@@ -60,8 +61,7 @@ describe("native PinchTab transport", () => {
           });
         }
         if (url.pathname.endsWith("/snapshot")) {
-          if (failSnapshot)
-            return new Response("Snapshot unavailable", { status: 503 });
+          if (snapshotFailure !== undefined) return snapshotFailure;
           return Response.json({
             idpiNotice: "UNTRUSTED CONTENT",
             untrustedContent: true,
@@ -140,10 +140,29 @@ describe("native PinchTab transport", () => {
       expect(paths).toContain(
         "/tabs/page/snapshot?format=json&selector=main&depth=3",
       );
-      failSnapshot = true;
+      snapshotFailure = new Response("Snapshot unavailable", { status: 503 });
       await expect(browser.snapshot()).rejects.toThrow("Snapshot unavailable");
       await expect(browser.accessibleControl("e41")).rejects.toThrow("Refresh");
-      failSnapshot = false;
+      snapshotFailure = Response.json(
+        { error: "Permission denied" },
+        { status: 403 },
+      );
+      await expect(browser.snapshot()).rejects.toThrow("Permission denied");
+      snapshotFailure = Response.json(
+        {
+          error:
+            "snapshot blocked by IDPI scanner: agent-hijacking pattern detected",
+        },
+        { status: 403 },
+      );
+      const blocked = browser.snapshot({ selector: "main" });
+      await expect(blocked).rejects.toBeInstanceOf(PromotionSnapshotBlocked);
+      await expect(blocked).rejects.toMatchObject({
+        selector: "main",
+        url: target.url,
+      });
+      await expect(browser.accessibleControl("e41")).rejects.toThrow("Refresh");
+      snapshotFailure = undefined;
       await browser.receiptSnapshot();
       expect(paths.at(-2)).toBe(
         "/tabs/page/snapshot?format=json&selector=main&depth=3",

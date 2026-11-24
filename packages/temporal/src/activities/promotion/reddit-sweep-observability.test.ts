@@ -5,6 +5,7 @@ import {
   DEFAULT_REDDIT_OUTREACH_SETTINGS,
   redditOutreachConfig,
 } from "#config/reddit-outreach.ts";
+import { PromotionSnapshotBlocked } from "./access/browser-snapshot.ts";
 import { promotionSpendDay } from "./control/budget.ts";
 import {
   RedditBrowserReadError,
@@ -306,6 +307,61 @@ describe("Reddit outreach sweep observability", () => {
     ]);
     expect(browser.readThread).not.toHaveBeenCalled();
     expect(executeRedditOutreachReply).not.toHaveBeenCalled();
+  });
+});
+
+describe("Reddit outreach sweep audit records", () => {
+  it("audits a scanner-blocked thread and continues to an eligible post", async () => {
+    const blocked = listing("flagged");
+    const next = listing("eligible");
+    const browser = browserFixture([blocked, next]);
+    browser.readThread.mockRejectedValueOnce(
+      new PromotionSnapshotBlocked(blocked.url, "#siteTable"),
+    );
+    vi.mocked(executeRedditOutreachReply).mockResolvedValueOnce({
+      postId: next.id,
+      status: "verified",
+      summary: "Verified reply fixture",
+    });
+
+    const summary = await runSweep();
+
+    expect(summary).toMatchObject({
+      stopReason: "exhausted",
+      assessed: 1,
+      metrics: { draftsPrepared: 1, reasons: { "publish-verified": 1 } },
+      failureCategory: "browser",
+      failures: [
+        {
+          subreddit,
+          reason: `PinchTab content scanner blocked #siteTable at ${blocked.url}`,
+        },
+      ],
+      coverage: [
+        { found: 2, scored: 1, skipped: 1, pending: 0, complete: true },
+      ],
+    });
+    expect(screenRedditBatch).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        items: [{ post: thread(next), rules: "Replies welcome" }],
+      }),
+    );
+    expect(draftRedditInvite).toHaveBeenCalledTimes(1);
+    expect(executeRedditOutreachReply).toHaveBeenCalledTimes(1);
+    expect(
+      await readRedditSweepPostPage(promotionStore(), summary.occurrenceId, 0),
+    ).toMatchObject({
+      status: "available",
+      posts: [
+        {
+          id: blocked.id,
+          score: null,
+          result: "skipped",
+          reason: "PinchTab content scanner blocked #siteTable",
+        },
+        { id: next.id, score: 0.9, result: "publish-verified" },
+      ],
+    });
   });
 
   it("audits a disabled production sweep without opening the browser", async () => {

@@ -1,6 +1,7 @@
 import { S3ServiceException } from "@aws-sdk/client-s3";
 import type { RedditOutreachFailureCategory } from "@shepherdjerred/ops-model/promotion/reddit-outreach.ts";
 import { z } from "zod/v4";
+import { PromotionSnapshotBlocked } from "#activities/promotion/access/browser-snapshot.ts";
 import { RedditBrowserReadError } from "#activities/promotion/reddit-discovery/browser-reader.ts";
 import { DecisionHttpError } from "#activities/promotion/reddit-discovery/decisions.ts";
 import type { PromotionStore } from "#activities/promotion/store.ts";
@@ -31,7 +32,11 @@ async function recordDecisionsBackoff(
 
 function failureCategory(error: unknown): RedditOutreachFailureCategory {
   if (error instanceof DecisionHttpError) return "decisions";
-  if (error instanceof RedditBrowserReadError) return "browser";
+  if (
+    error instanceof RedditBrowserReadError ||
+    error instanceof PromotionSnapshotBlocked
+  )
+    return "browser";
   return error instanceof S3ServiceException ? "storage" : "other";
 }
 
