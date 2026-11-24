@@ -1414,12 +1414,13 @@ remain manual.
 
 OpenAI Decisions scores the match against community rules and the approved facts
 in `src/activities/promotion/reddit-facts.ts`. A candidate needs a fit score
-strictly above 0.80, an explicit request for a server, and support for every
+of at least 0.60, an explicit request for a server, and support for every
 hard requirement. An applicable rule against bots, automated comments,
 promotional replies, or owner advertising blocks outreach. Silence or
 ambiguity about permission leaves an otherwise eligible request available for
-drafting. Qualitative community preferences can qualify when The Storm offers
-a useful fit. Adult-only requests can qualify based on The Storm's adult
+drafting. A useful partial fit can qualify when The Storm meets the main request
+and some of the preferences. The reply names concrete overlap and any meaningful
+differences. Adult-only requests can qualify based on The Storm's adult
 audience. The reply says that players of other ages can join. A separate model
 drafts the invite after the thread and account are checked. Requests already
 answered by `the_storm_mc` and threads whose comments cannot be fully inspected

@@ -147,7 +147,7 @@ beforeEach(() => {
           ? {
               ...qualification,
               decision: "no-match",
-              judgeScore: 0.8,
+              judgeScore: 0.59,
               explicitlySeekingServer: false,
               communityAllowsReply: false,
               hardConstraintsSatisfied: false,
@@ -183,7 +183,7 @@ async function expectRecordedPostDetails(
   if (page.status !== "available") throw new Error("Expected sweep posts");
   expect(page.posts).toHaveLength(11);
   expect(page.posts.find(({ id }) => id === "gates")).toMatchObject({
-    score: 0.8,
+    score: 0.59,
     result: "no-match",
     reason: "Clear requirements are missing",
   });
