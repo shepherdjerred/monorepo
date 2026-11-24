@@ -109,6 +109,20 @@ export function withConstraintsOf(lock: string, previous: string): string {
 }
 
 /**
+ * Platforms whose package hashes every lock must carry: CI validates and
+ * Delivery plans on Linux, operators run on macOS. Without explicit platforms,
+ * `tofu providers lock` records only the host's `h1:` hash for providers
+ * served from registry.terraform.io (ippontech/anthropic), and a Linux
+ * `tofu init -lockfile=readonly` then rejects the cached package.
+ */
+const LOCK_PLATFORMS = [
+  "linux_amd64",
+  "linux_arm64",
+  "darwin_amd64",
+  "darwin_arm64",
+] as const;
+
+/**
  * Rewrites one stack's lock file to the pinned versions.
  *
  * OpenTofu keeps a locked selection that still satisfies the stack's
@@ -136,7 +150,15 @@ async function refreshLock(
       path.join(exact, "main.tf.json"),
       exactPinConfiguration(stackPins),
     );
-    await tofu([`-chdir=${exact}`, "providers", "lock"], {});
+    await tofu(
+      [
+        `-chdir=${exact}`,
+        "providers",
+        "lock",
+        ...LOCK_PLATFORMS.map((platform) => `-platform=${platform}`),
+      ],
+      {},
+    );
     await Bun.write(
       lockPath,
       withConstraintsOf(
