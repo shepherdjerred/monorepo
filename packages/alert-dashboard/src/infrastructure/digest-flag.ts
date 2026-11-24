@@ -25,6 +25,12 @@ const DEFINITION = {
     default: managedBooleanDefault("alert-dashboard-email-enabled"),
     names: { flag: "alert-dashboard-email-enabled" },
   },
+  dailyDigestQuietClear: {
+    schema: z.boolean(),
+    sources: ["flag", "default"],
+    default: managedBooleanDefault("alert-dashboard-daily-digest-quiet-clear"),
+    names: { flag: "alert-dashboard-daily-digest-quiet-clear" },
+  },
   incidentEmailFrom: {
     schema: MailboxAddressSchema,
     sources: ["flag", "default"],
@@ -59,6 +65,7 @@ function createResolver() {
         targetingKey: TARGETING_KEY,
         kinds: {
           alertEmailEnabled: "boolean",
+          dailyDigestQuietClear: "boolean",
           incidentEmailFrom: "string",
           incidentEmailTo: "string",
           digestEmailFrom: "string",
@@ -85,16 +92,24 @@ function createResolver() {
 /** Incident and digest mail routing is constructed at startup; changes require a restart. */
 export async function alertEmailConfig() {
   const resolver = createResolver();
-  const [enabled, incidentFrom, incidentTo, digestFrom, digestTo] =
-    await Promise.all([
-      resolver.value("alertEmailEnabled"),
-      resolver.value("incidentEmailFrom"),
-      resolver.value("incidentEmailTo"),
-      resolver.value("digestEmailFrom"),
-      resolver.value("digestEmailTo"),
-    ]);
+  const [
+    enabled,
+    dailyDigestQuietClear,
+    incidentFrom,
+    incidentTo,
+    digestFrom,
+    digestTo,
+  ] = await Promise.all([
+    resolver.value("alertEmailEnabled"),
+    resolver.value("dailyDigestQuietClear"),
+    resolver.value("incidentEmailFrom"),
+    resolver.value("incidentEmailTo"),
+    resolver.value("digestEmailFrom"),
+    resolver.value("digestEmailTo"),
+  ]);
   return {
     EMAIL_ENABLED: String(enabled),
+    DAILY_DIGEST_QUIET_CLEAR: String(dailyDigestQuietClear),
     POSTAL_FROM: incidentFrom,
     POSTAL_TO: incidentTo,
     POSTAL_DIGEST_FROM: digestFrom,

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { TEMPORAL_REPORT_SCHEDULES } from "@shepherdjerred/ops-model/reports/schedule-catalog.ts";
 import { SCHEDULES } from "#schedules/schedule-definitions.ts";
 import {
   defaultReportGraceHours,
@@ -24,9 +25,27 @@ describe("report schedule registry", () => {
     }
   });
 
+  test("aligns with all 11 TEMPORAL_REPORT_SCHEDULES in ops-model", () => {
+    expect(TEMPORAL_REPORT_SCHEDULES).toHaveLength(11);
+    expect(REPORT_SCHEDULE_REGISTRY).toHaveLength(
+      TEMPORAL_REPORT_SCHEDULES.length,
+    );
+    const byId = new Map(
+      REPORT_SCHEDULE_REGISTRY.map((entry) => [entry.scheduleId, entry]),
+    );
+    for (const catalogSchedule of TEMPORAL_REPORT_SCHEDULES) {
+      expect(byId.get(catalogSchedule.scheduleId)).toMatchObject({
+        scheduleId: catalogSchedule.scheduleId,
+        reportType: catalogSchedule.reportType,
+        cadenceHours: catalogSchedule.cadenceHours,
+        graceHours: catalogSchedule.graceHours,
+      });
+    }
+  });
+
   test("anchors receipt enforcement to a rollout the schedule could meet", () => {
-    // Two activations: the original receipt-capable worker, and the rollout of
-    // the weekly scanner schedules added later.
+    // Three activations: the original receipt-capable worker, the weekly
+    // scanner schedules rollout, and the Hub catalog alignment rollout.
     expect(
       new Set(
         REPORT_SCHEDULE_REGISTRY.map(
@@ -34,7 +53,11 @@ describe("report schedule registry", () => {
         ),
       ),
     ).toEqual(
-      new Set(["2026-08-11T23:52:18.000Z", "2026-09-01T00:00:00.000Z"]),
+      new Set([
+        "2026-08-11T23:52:18.000Z",
+        "2026-09-01T00:00:00.000Z",
+        "2026-11-23T00:00:00.000Z",
+      ]),
     );
   });
 
@@ -61,6 +84,17 @@ describe("report schedule registry", () => {
       );
       expect(registration?.receiptRequiredAfter).toBe(
         "2026-09-01T00:00:00.000Z",
+      );
+    }
+    for (const scheduleId of [
+      "the-storm-promotion-daily",
+      "scout-lane-priors-weekly-refresh",
+    ]) {
+      const registration = REPORT_SCHEDULE_REGISTRY.find(
+        (candidate) => candidate.scheduleId === scheduleId,
+      );
+      expect(registration?.receiptRequiredAfter).toBe(
+        "2026-11-23T00:00:00.000Z",
       );
     }
   });

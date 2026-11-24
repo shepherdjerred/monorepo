@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { DAILY_CHANGED_TEMPORAL_FAMILIES } from "@shepherdjerred/ops-model/reports/schedule-catalog.ts";
 import { z } from "zod/v4";
 import {
   ReportEnvelopeV1Schema,
@@ -7,8 +8,7 @@ import {
 import { REPORT_SEND_CLAIM_TAKEOVER_MS } from "#shared/reports/report-delivery-policy.ts";
 
 const DAILY_NOTIFICATION_FAMILIES: Readonly<Record<string, string>> = {
-  "homelab-audit-daily": "homelab-audit",
-  "scout-queue-windows-daily": "scout-queue-windows",
+  ...DAILY_CHANGED_TEMPORAL_FAMILIES,
   "daily-notification-policy-canary": "daily-notification-policy-canary",
 };
 const REMINDER_MS = 7 * 24 * 60 * 60 * 1000;
@@ -139,9 +139,9 @@ export function notificationCondition(report: ReportEnvelopeV1): {
         required: check.required,
         // Collector failures have no stable finding identity. Preserve their
         // error text so a different failure cannot be hidden by the same ID.
-        ...(report.execution === "partial" && check.status !== "passed"
-          ? { summary: check.summary }
-          : {}),
+        ...(report.execution === "complete" || check.status === "passed"
+          ? {}
+          : { summary: check.summary }),
       }))
       .sort((a, b) => a.id.localeCompare(b.id)),
     findings: findings
@@ -159,6 +159,13 @@ export function notificationCondition(report: ReportEnvelopeV1): {
       )
       .sort(),
     limitations: [...report.limitations].sort(),
+    remediation:
+      report.remediation === undefined
+        ? undefined
+        : {
+            outcome: report.remediation.outcome,
+            prUrl: report.remediation.prUrl,
+          },
   };
   return {
     fingerprint: createHash("sha256")
@@ -201,9 +208,12 @@ function notificationReason(
 
 type AcceptedDelivery = { reportRunId: string; acceptedAt: string };
 
-function notificationSkipKey(
-  report: ReportEnvelopeV1,
-  namespace: string,
+export function notificationSkipKey(
+  report: Pick<
+    ReportEnvelopeV1,
+    "reportRunId" | "reportType" | "scheduleId" | "completedAt"
+  >,
+  namespace = "prod",
 ): string {
   return `${skippedNotificationPrefix(report, namespace)}${new Date(report.completedAt).toISOString()}-${safePart(report.reportRunId)}.json`;
 }

@@ -23,6 +23,7 @@ type ViewportName = keyof typeof VIEWPORTS;
 type PageBudget = {
   readonly path: string;
   readonly heading: string;
+  readonly readySelector?: string;
   /** Upper bounds on `scrollHeight`, in px. */
   readonly maxHeight: Record<ViewportName, number>;
   /** Upper bounds on how far down the Trends charts start, in px. */
@@ -38,6 +39,7 @@ type PageBudget = {
  *   /flow         2399 / 2632   4354 / 4586
  *   /maintenance  3543 / 2953   7363 / 6009
  *   /ai           2311 / 2311   4443 / 4443
+ *   /reports      2822 / 2822   6896 / 6896
  *
  * Before lists were capped, /flow (then /delivery) was 9284px at desktop
  * width on the same fixture (16295px on a phone). Home's lists were then on
@@ -77,6 +79,12 @@ const PAGES: readonly PageBudget[] = [
     heading: "AI usage & spend",
     maxHeight: { desktop: 3500, phone: 6700 },
   },
+  {
+    path: "/reports",
+    heading: "Reports",
+    readySelector: ".rep-schedule-row",
+    maxHeight: { desktop: 4250, phone: 10_350 },
+  },
 ];
 
 /**
@@ -107,7 +115,9 @@ async function open(page: Page, budget: PageBudget): Promise<void> {
   await expect(
     page.getByRole("heading", { level: 1, name: budget.heading }),
   ).toBeVisible();
-  await expect(page.locator(".signal").first()).toBeVisible();
+  await expect(
+    page.locator(budget.readySelector ?? ".signal").first(),
+  ).toBeVisible();
   // Charts fetch their series after the snapshot; measure the settled page.
   await page.waitForLoadState("networkidle");
 }

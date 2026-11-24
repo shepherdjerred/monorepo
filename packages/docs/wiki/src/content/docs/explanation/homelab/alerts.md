@@ -58,6 +58,24 @@ tokens), picks per-severity colour with static classes or fixed branches rather
 than template actions inside styles, and shows a status dot with a severity
 group heading per run of alerts.
 
+## Why email notifies while Hub holds the evidence
+
+Inbox volume degrades when routine clear checks, operational digests, and alert
+notifications compete for attention or embed sprawling raw logs. Hub's
+`/reports` explorer unifies scheduled Temporal reports, daily and weekly
+operational digests, ad-hoc agent task runs, and incident outbox mail in one
+durable SQLite ledger
+([`schema.prisma`](https://github.com/shepherdjerred/monorepo/blob/main/packages/alert-dashboard/prisma/schema.prisma)).
+
+Separating notification from inspection lets each medium do one job well.
+Unchanged clear daily checks and consecutive healthy daily digests stay quiet in
+Postal while still recording fresh heartbeats and 30-day Pacific history in Hub.
+When an email does send — for an incident opening, an automated pull request, or
+a weekly review — it stays concise and links straight to Hub for raw collector
+commands, excerpts, passing checks, sibling runs, and linked alert occurrences.
+See [Temporal report emails](/reference/temporal-report-emails/) for the
+schedule, routing, quiet-suppression, and deep-link contracts.
+
 ## SQLite persistence boundary
 
 Alerts runs one replica with a recreate deployment strategy. Both the migration

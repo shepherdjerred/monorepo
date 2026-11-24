@@ -21,8 +21,8 @@ The core module has two halves in one process:
   stale snapshot is never green), and renders Home (`/`), Services
   (`/services`), Cluster (`/cluster`), Flow (`/flow`), Monorepo (`/monorepo`),
   Renovate (`/renovate`), Product (`/product`), The Storm (`/the-storm`), AI
-  (`/ai`), Maintenance (`/maintenance`), and Review (`/review`) pages plus the
-  daily and weekly digest email. Home is the one overview page. In order it
+  (`/ai`), Maintenance (`/maintenance`), Review (`/review`), and Reports
+  (`/reports`) pages plus the daily and weekly digest email. Home is the one overview page. In order it
   shows the overall status; tiles for firing alerts, what waits on Jerred, and
   Tracker triage; a card per area; a "Needs attention" list beside what is new
   since the last visit; and a launcher for Tracker, Delivery, and the tools.
@@ -77,6 +77,25 @@ The core module has two halves in one process:
   resolutions also appear on the ops change timeline, derived from the ledger at
   read time, while daily and weekly Ops incident statistics exclude
   `category=household` chores.
+- **Reports & outbound mail ledger (`/reports`).** Temporal report delivery and
+  local backfill post `ReportRunIngestBatch` payloads (`ReportEnvelopeV1`,
+  rendered HTML/plain-text mail, semantic `@sjer.red` sender/recipient, and
+  Postal delivery or quiet-skip metadata) to `POST /internal/v1/reports/runs`,
+  stored idempotently in the SQLite `ReportRun` table and broadcast over the
+  SSE `changes` bus (`reason: "reports"`). Completed daily and weekly `DigestRun`
+  rows archive their `DigestReport` JSON, rendered HTML/plain-text bodies,
+  subject, severity, signal counts, and `skipReason`. `/reports`
+  (`src/client/reports/reports-page.tsx`) combines five headline KPIs, the
+  13-stream recurring schedule matrix (11 Temporal scheduled reports + daily and
+  weekly Ops digests with 30-day Pacific activity strips, freshness budgets, and
+  PR badges), and a unified filterable feed across scheduled reports, digests,
+  agent tasks, and incident outbox mail. Deep-dive inspectors at
+  `/reports/runs/:id`, `/reports/digests/:kind/:periodKey` (serving a live
+  preview for the active period before its scheduled send), and
+  `/reports/mail/:id` expose remediation pull requests, finding state filters,
+  all passed and failed checks, raw evidence commands and excerpts, sibling run
+  history, linked `/alerts/:id` occurrences, and a sandboxed HTML/plain-text
+  email preview.
 
 ### Facet-backed explorer routes & Visuals Kit
 
@@ -91,6 +110,7 @@ shared visual primitives:
 | `/renovate`  | `src/client/ops/pages/renovate-page.tsx`  | `renovate` facet + velocity presets: open PR concurrency and LLM delta coverage meters, `?tab=` queue buckets (`prs`, `approval`, `held`, `hygiene`, `merged`), and `?expand=` version-delta drawers             |
 | `/product`   | `src/client/ops/pages/product-page.tsx`   | `product` snapshot section + `posthog` facet: 24h/7d traffic KPIs, conversion funnels with step retention, site traffic & Core Web Vitals (`p75` LCP/INP, exceptions, rageclicks), and top pages/referrers       |
 | `/the-storm` | `src/client/ops/pages/the-storm-page.tsx` | `minecraft`, `storm-brain`, and `storm-forum` service health, `ts-mc.net` slice of the `posthog` facet, player/companion and `target="minecraft"` namespace presets, filtered signals/changes, `/promotion` link |
+| `/reports`   | `src/client/reports/reports-page.tsx`     | `ReportRun` + archived `DigestRun` + incident `EmailOutbox` ledger: 13-stream 30d Pacific schedule matrix, URL-synced unified feed, and `/reports/{runs/:id,digests/:kind/:periodKey,mail/:id}` inspectors       |
 
 These pages share the **Visuals Kit** (`src/client/visuals/`):
 
@@ -248,7 +268,13 @@ request claims it, sends through Postal with a stable message id, and marks
 it `sent` or `failed`. A repeated request for a sent period, or one skipped
 while sending was still flag-gated, returns
 `duplicate: true`, a failed period is retried by the next request, and a claim
-older than five minutes is presumed abandoned and may be reclaimed.
+older than five minutes is presumed abandoned and may be reclaimed. When
+`alert-dashboard-daily-digest-quiet-clear` is enabled (default on in beta and
+prod), a healthy, non-stale daily digest with zero `needsMe`, `attention`,
+`newSinceLast`, and opened incidents whose prior completed daily digest was also
+clear is recorded as `status = "skipped"` (`skipReason = "unchanged-clear"`)
+without calling Postal, while still archiving the rendered digest for `/reports`
+and advancing the `digest` cursor.
 
 Incident mail and Alertmanager's own mail are alternatives. Hub's outbox sends
 opening mail for ordinary warning and critical alerts (`alert-dashboard-email-enabled`
@@ -295,6 +321,12 @@ data.
 | `POST /internal/v1/alertmanager/events`         | Alertmanager v4 webhook (bearer `ALERT_DASHBOARD_WEBHOOK_TOKEN`)                                                                                                     |
 | `POST /internal/v1/ops/snapshots`               | Collector ingest `{snapshot, changes, facets?}` (bearer `OPS_INGEST_TOKEN`, 8 MiB limit); validates with `parseOpsIngest`, upserts `OpsFacet` rows & changes, prunes |
 | `POST /internal/v1/digests/:kind`               | `daily` or `weekly` digest (bearer `OPS_INGEST_TOKEN`); idempotent per Los Angeles date or ISO week                                                                  |
+| `POST /internal/v1/reports/runs`                | `ReportRunIngestBatch` upsert (bearer `OPS_INGEST_TOKEN`, 8 MiB limit); persists `ReportRun` envelopes/mail and emits `changes` (`"reports"`)                        |
+| `GET /api/v1/reports/overview`                  | `/reports` KPIs and 13 recurring report/digest schedules with freshness and 30-day Pacific activity cells                                                            |
+| `GET /api/v1/reports/feed`                      | Unified filterable feed (`tab`, `scheduleId`, `mailbox`, `verdict`, `delivery`, `hasPr`, `q`, `limit`) across reports, digests, agent tasks, and incident mail       |
+| `GET /api/v1/reports/runs/:id`                  | Full `ReportEnvelopeV1` inspector payload, rendered HTML/plain-text mail, Postal receipt/skip metadata, and recent sibling runs                                      |
+| `GET /api/v1/reports/digests/:kind/:periodKey`  | Archived `DigestRun` payload and rendered email, or a live preview when `:periodKey` is the active period                                                            |
+| `GET /api/v1/reports/incidents/:id`             | Incident `EmailOutbox` metadata, linked `/alerts/:id` occurrences, and rendered HTML/plain-text email                                                                |
 | `GET /api/v1/ops/snapshot?consumer=`            | Latest snapshot with freshness applied; `503 snapshot_unavailable` before the first ingest; `consumer=web` annotates `newSignalIds`                                  |
 | `GET /api/v1/ops/facets`                        | All stored latest-only facets `{generatedAt, receivedAt, stale, facets}` with the snapshot staleness budget applied                                                  |
 | `GET /api/v1/ops/facets/:key`                   | Single facet `{key, generatedAt, receivedAt, stale, data}` for a validated `FacetKey` (`data: null` before first ingest; `400` on invalid key)                       |

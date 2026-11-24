@@ -116,14 +116,18 @@
   outline: 3px solid var(--accent-ring);
   outline-offset: 2px;
 }
-/* Hub has three groups and sixteen pages, more than the shared sidebar's
-   group spacing fits beside a 720px-tall window; tighter gaps above each
-   group keep every row and the theme row on screen without scrolling. */
+/* Hub has three groups and seventeen pages, more than the shared sidebar's
+   default row height and group spacing fit beside a 720px-tall window; 28px
+   rows and tighter group gaps keep every row and the theme row on screen
+   without scrolling (the phone drawer overrides .ui-nav-item to 38px below). */
+.ui-nav-item {
+  height: 28px;
+}
 .ui-nav-group {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 .ui-nav-group:first-child {
-  margin-top: 6px;
+  margin-top: 4px;
 }
 /* Below 900px the shared sidebar hides; this bar and its drawer replace it. */
 .topbar {

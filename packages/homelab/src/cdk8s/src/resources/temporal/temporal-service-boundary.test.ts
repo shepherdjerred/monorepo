@@ -171,4 +171,48 @@ describe("Temporal internal service boundary", () => {
       },
     ]);
   });
+
+  test("wires Hub ingest endpoint, secret, and egress policy on the reports worker", () => {
+    const synthesized = resources();
+    const { container } = findTemporalWorkerContainer(
+      synthesized,
+      "temporal-temporal-reports-worker",
+    );
+    expect(container.env).toContainEqual({
+      name: "OPS_DASHBOARD_URL",
+      value:
+        "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",
+    });
+    const tokenEntry = container.env.find(
+      (variable) => variable.name === "OPS_INGEST_TOKEN",
+    );
+    expect(tokenEntry?.valueFrom?.secretKeyRef).toMatchObject({
+      key: "OPS_INGEST_TOKEN",
+    });
+    expect(tokenEntry?.valueFrom?.secretKeyRef.optional).toBeUndefined();
+
+    const policy = findTemporalResource(
+      synthesized,
+      "NetworkPolicy",
+      "temporal-reports-internal-netpol",
+    );
+    expect(policy.spec).toMatchObject({
+      podSelector: { matchLabels: { component: "reports-worker" } },
+      policyTypes: ["Egress"],
+      egress: expect.arrayContaining([
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "alert-dashboard",
+                },
+              },
+            },
+          ],
+          ports: [{ port: 7341, protocol: "TCP" }],
+        },
+      ]),
+    });
+  });
 });

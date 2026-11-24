@@ -20,7 +20,10 @@ import type {
   Signal,
   SourceId,
 } from "@shepherdjerred/ops-model/snapshot.ts";
-import { APP_HOSTS } from "@shepherdjerred/ops-model/tool-links.ts";
+import {
+  APP_HOSTS,
+  hubDigestRunUrl,
+} from "@shepherdjerred/ops-model/tool-links.ts";
 
 import { DIGEST_TIME_ZONE } from "#domain/ops-period";
 import {
@@ -354,6 +357,12 @@ export function buildDigestDocument(report: DigestReport): {
       label: "Open Hub",
       url: `${APP_HOSTS.hub}/`,
     },
+    secondaryActions: [
+      {
+        label: "Open in Hub",
+        url: hubDigestRunUrl(report.kind, report.periodKey),
+      },
+    ],
     details: [
       {
         label: "Window",

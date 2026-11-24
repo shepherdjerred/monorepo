@@ -137,12 +137,17 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
           input.emailEnabled &&
           (truncationOnly || newlyNotified.length > 0)
         ) {
+          const outboxId = OutboxIdSchema.parse(crypto.randomUUID());
           const message = truncationOnly
-            ? truncationEmail(input.payload.truncatedAlerts)
-            : openingEmail(newlyNotified, input.payload.truncatedAlerts);
+            ? truncationEmail(input.payload.truncatedAlerts, outboxId)
+            : openingEmail(
+                newlyNotified,
+                input.payload.truncatedAlerts,
+                outboxId,
+              );
           await transaction.emailOutbox.create({
             data: {
-              id: OutboxIdSchema.parse(crypto.randomUUID()),
+              id: outboxId,
               createdAtNs: input.receivedAtNs,
               nextAttemptAtNs: input.receivedAtNs,
               messageId: `<alerts-${deliveryId}@sjer.red>`,

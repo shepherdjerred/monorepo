@@ -1,8 +1,28 @@
 import AxeBuilder from "@axe-core/playwright";
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 export const PHONE = { width: 375, height: 812 };
 export const DESKTOP = { width: 1280, height: 720 };
+
+export async function gotoLoadedPage(page: Page, path: string): Promise<void> {
+  await page.goto(path);
+  await expect(page.locator("main h1")).toBeVisible();
+  await expect(page.locator(".loading-state")).toHaveCount(0);
+}
+
+export async function expectPagesFitViewport(
+  page: Page,
+  viewport: { readonly width: number; readonly height: number },
+  paths: readonly string[],
+): Promise<void> {
+  await page.setViewportSize(viewport);
+  for (const path of paths) {
+    await gotoLoadedPage(page, path);
+    const overflow = await horizontalOverflow(page);
+    expect(overflow.document, path).toBeLessThanOrEqual(0);
+    expect(overflow.main, path).toBeLessThanOrEqual(0);
+  }
+}
 
 /**
  * How far the page scrolls sideways, and how far the page's own `<main>`

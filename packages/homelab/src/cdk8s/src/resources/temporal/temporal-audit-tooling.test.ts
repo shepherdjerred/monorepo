@@ -531,6 +531,8 @@ describe("Temporal domain worker isolation", () => {
       "AWS_ACCESS_KEY_ID",
       "AWS_SECRET_ACCESS_KEY",
       "POSTAL_API_KEY",
+      "OPS_DASHBOARD_URL",
+      "OPS_INGEST_TOKEN",
     ]) {
       expect(reportsEnv).toContain(required);
       expect(gatewayEnv).not.toContain(required);

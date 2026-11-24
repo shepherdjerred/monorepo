@@ -6,6 +6,7 @@ type MetricName =
   | "alert_dashboard_homeassistant_attempt_total"
   | "alert_dashboard_ops_ingest_total"
   | "alert_dashboard_ops_digest_total"
+  | "alert_dashboard_report_ingest_total"
   | "feature_flag_evaluations_total"
   | "feature_flag_errors_total";
 

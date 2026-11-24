@@ -45,6 +45,7 @@ function opsOptions() {
   return {
     ops: fixture.ops,
     digests: fixture.digests,
+    reports: fixture.reports,
     opsIngestToken: "test-ops-ingest-token",
   };
 }

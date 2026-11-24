@@ -4652,6 +4652,30 @@
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
+    },
+    {
+      "key": "temporal-report-auto-remediation-enabled",
+      "owner": "temporal",
+      "namespace": "temporal",
+      "source": "temporal",
+      "purpose": "Enable automated Codex SDK + GitHub App PR follow-through on repo-fixable scheduled reports.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "alert-dashboard-daily-digest-quiet-clear",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "alert-dashboard",
+      "purpose": "Suppress sending the daily ops digest email when the snapshot is healthy and unchanged since the prior clear daily digest, while still recording the run in Hub.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     }
   ],
   "exemptions": [

@@ -10,7 +10,11 @@ import type {
 } from "@shepherdjerred/ops-model/snapshot.ts";
 
 import type { AlertLedgerChange } from "#domain/ops-changes";
-import type { ChangeView, CursorConsumer } from "#shared/ops-schema";
+import type {
+  ChangeView,
+  CursorConsumer,
+  DigestReport,
+} from "#shared/ops-schema";
 import type {
   AlertDetail,
   AlertDetailInput,
@@ -265,6 +269,24 @@ export type DigestClaim =
   | { outcome: "done"; status: "sent" | "skipped" }
   | { outcome: "busy" };
 
+export type DigestArchiveFields = {
+  severity?: DigestReport["status"]["severity"];
+  summary?: string;
+  needsMeCount?: number;
+  attentionCount?: number;
+  reportPayload?: DigestReport;
+  htmlBody?: string;
+  plainBody?: string;
+};
+
+export type CompletedDailyDigestSummary = {
+  periodKey: string;
+  status: "sent" | "skipped";
+  severity: string | null;
+  needsMeCount: number | null;
+  attentionCount: number | null;
+};
+
 export type OpsRepository = {
   storeSnapshot: (
     input: StoreOpsSnapshotInput,
@@ -299,9 +321,19 @@ export type OpsRepository = {
   ) => Promise<DigestClaim>;
   markDigestSent: (
     key: DigestRunKey,
-    input: { sentAtNs: bigint; subject: string },
+    input: { sentAtNs: bigint; subject: string } & DigestArchiveFields,
+  ) => Promise<void>;
+  markDigestSkipped: (
+    key: DigestRunKey,
+    input: {
+      skipReason: string;
+      subject: string;
+    } & Required<DigestArchiveFields>,
   ) => Promise<void>;
   markDigestFailed: (key: DigestRunKey, error: string) => Promise<void>;
+  previousCompletedDailyDigest: (
+    beforePeriodKey: string,
+  ) => Promise<CompletedDailyDigestSummary | null>;
 };
 
 export type SeriesRangeRequest = {

@@ -198,6 +198,10 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       egress: [
         { ports: [tcp(5000)] },
         monitoringEgress(ALERTMANAGER_GATEWAY_PORT),
+        {
+          to: [nsPeer("alert-dashboard")],
+          ports: [tcp(7341)],
+        },
       ],
     },
   });

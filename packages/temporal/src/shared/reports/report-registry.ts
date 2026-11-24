@@ -23,6 +23,7 @@ const REPORT_RECEIPT_ACTIVATION = "2026-08-11T23:52:18.000Z";
  * rollout slips past it.
  */
 const SCANNER_REPORT_ACTIVATION = "2026-09-01T00:00:00.000Z";
+const HUB_CATALOG_REPORT_ACTIVATION = "2026-11-23T00:00:00.000Z";
 
 export function defaultReportGraceHours(cadenceHours: number): number {
   if (cadenceHours < 24) return 0.5;
@@ -66,6 +67,13 @@ export const REPORT_SCHEDULE_REGISTRY: readonly ReportScheduleRegistration[] = [
     receiptRequiredAfter: REPORT_RECEIPT_ACTIVATION,
   },
   {
+    scheduleId: "scout-lane-priors-weekly-refresh",
+    reportType: "scout-lane-priors",
+    cadenceHours: 168,
+    graceHours: defaultReportGraceHours(168),
+    receiptRequiredAfter: HUB_CATALOG_REPORT_ACTIVATION,
+  },
+  {
     scheduleId: "scout-season-refresh-weekly",
     reportType: "scout-season-refresh",
     cadenceHours: 168,
@@ -92,5 +100,12 @@ export const REPORT_SCHEDULE_REGISTRY: readonly ReportScheduleRegistration[] = [
     cadenceHours: 168,
     graceHours: defaultReportGraceHours(168),
     receiptRequiredAfter: SCANNER_REPORT_ACTIVATION,
+  },
+  {
+    scheduleId: "the-storm-promotion-daily",
+    reportType: "storm-promotion",
+    cadenceHours: 24,
+    graceHours: defaultReportGraceHours(24),
+    receiptRequiredAfter: HUB_CATALOG_REPORT_ACTIVATION,
   },
 ];

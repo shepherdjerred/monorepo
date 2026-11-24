@@ -17,6 +17,7 @@ import {
   skippedNotificationPrefix,
   usesDailyNotificationPolicy,
 } from "./report-notification-policy.ts";
+import { runHubReportBackfillSafely } from "./report-hub-backfill.ts";
 
 export type ReportFreshnessStatus =
   | "fresh"
@@ -308,6 +309,7 @@ export async function inspectReportFreshness(): Promise<
     }
   }
   publishReportFreshnessMetrics(results);
+  await runHubReportBackfillSafely(storage);
   return results;
 }
 
