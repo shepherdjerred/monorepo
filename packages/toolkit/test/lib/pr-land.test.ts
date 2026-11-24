@@ -57,6 +57,14 @@ const observer = () => new CiObserver(new GitHubClient("test"), config);
 const noQuota = async () => null;
 afterEach(() => vi.unstubAllGlobals());
 
+function landPr99(deps: Parameters<typeof landPr>[2], opts = options) {
+  return landPr(
+    { number: 99, observer: observer(), signal: new AbortController().signal },
+    opts,
+    deps,
+  );
+}
+
 test("a ready PR is merged by branch and confirmed against GitHub", async () => {
   const merged = { value: false };
   stubPr(merged);
@@ -66,11 +74,11 @@ test("a ready PR is merged by branch and confirmed against GitHub", async () => 
     merged.value = true;
     return 0;
   });
-  const { result, mergeCommitSha } = await landPr(
-    { number: 99, observer: observer(), signal: new AbortController().signal },
-    options,
-    { wait, merge, quota: noQuota },
-  );
+  const { result, mergeCommitSha } = await landPr99({
+    wait,
+    merge,
+    quota: noQuota,
+  });
   expect(result.verdict.outcome).toBe("merged");
   expect(mergeCommitSha).toBe(MERGE_SHA);
   expect(result.verdict.commands).toEqual([
@@ -221,11 +229,11 @@ test("transient git-spice transport failures re-check readiness and retry up to 
     merged.value = true;
     return { code: 0, stderr: "" };
   });
-  const { result, mergeCommitSha } = await landPr(
-    { number: 99, observer: observer(), signal: new AbortController().signal },
-    options,
-    { wait, merge, quota: noQuota },
-  );
+  const { result, mergeCommitSha } = await landPr99({
+    wait,
+    merge,
+    quota: noQuota,
+  });
   expect(result.verdict.outcome).toBe("merged");
   expect(mergeCommitSha).toBe(MERGE_SHA);
   expect(wait).toHaveBeenCalledTimes(3);

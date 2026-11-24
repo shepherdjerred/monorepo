@@ -2,9 +2,11 @@ import { describe, expect, test } from "vitest";
 import {
   TOOLKIT_BUILD_INPUT_PATHS,
   computeInputTreeDigest,
-  formatToolkitVersion,
   type GitSyncRunner,
   type ToolkitBuildStamp,
+} from "#lib/version/build-stamp.ts";
+import {
+  formatToolkitVersion,
   warnIfInstalledBinaryStale,
 } from "#lib/version/staleness.ts";
 

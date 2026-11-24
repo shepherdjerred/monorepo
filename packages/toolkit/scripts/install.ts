@@ -2,13 +2,13 @@ import { $ } from "bun";
 import { chmod, mkdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { resolveToolkitBuildStamp } from "#lib/version/build-stamp.ts";
 import {
   buildSteps,
   codesignArgv,
   developerIdIdentity,
   installPaths,
   installPlatform,
-  resolveToolkitBuildStamp,
 } from "./install-core.ts";
 
 if (import.meta.main) {

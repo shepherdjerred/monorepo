@@ -1,39 +1,18 @@
-import { afterEach, describe, expect, test } from "vitest";
-import { mkdir, mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { describe, expect, test } from "vitest";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import {
   isBranchSubmitSubcommand,
   isSubmitSubcommand,
   runGitSpiceSubmit,
 } from "#lib/git-spice/submit.ts";
+import {
+  registerTempDirs,
+  runGit as git,
+  seedSpiceDataRef,
+} from "./spice-test-harness.ts";
 
-const temporaryDirectories: string[] = [];
-
-afterEach(async () => {
-  for (const directory of temporaryDirectories.splice(0)) {
-    await rm(directory, { recursive: true, force: true });
-  }
-});
-
-async function git(cwd: string, args: readonly string[]): Promise<string> {
-  const child = Bun.spawn(["git", ...args], {
-    cwd,
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(child.stdout).text(),
-    new Response(child.stderr).text(),
-    child.exited,
-  ]);
-  if (exitCode !== 0) {
-    const detail = stderr.length > 0 ? stderr : stdout;
-    throw new Error(`git ${args.join(" ")} failed: ${detail}`);
-  }
-  return stdout.trim();
-}
+const { makeTempDir } = registerTempDirs();
 
 async function gitExitCode(
   cwd: string,
@@ -48,28 +27,12 @@ async function gitExitCode(
   return child.exited;
 }
 
-async function writeSpiceData(
+function writeSpiceData(
   repoDir: string,
   repoConfig: Record<string, unknown>,
   branches: Record<string, Record<string, unknown>>,
 ): Promise<void> {
-  const staging = await mkdtemp(path.join(tmpdir(), "toolkit-spice-stage-"));
-  temporaryDirectories.push(staging);
-  await git(staging, ["init"]);
-  await git(staging, ["config", "commit.gpgsign", "false"]);
-  await git(staging, ["config", "user.email", "test@example.com"]);
-  await git(staging, ["config", "user.name", "Toolkit Test"]);
-  await Bun.write(path.join(staging, "repo"), JSON.stringify(repoConfig));
-  for (const [name, payload] of Object.entries(branches)) {
-    const filePath = path.join(staging, "branches", ...name.split("/"));
-    await mkdir(path.dirname(filePath), { recursive: true });
-    await Bun.write(filePath, JSON.stringify(payload));
-  }
-  await git(staging, ["add", "."]);
-  await git(staging, ["commit", "-m", "spice data"]);
-  const commitSha = await git(staging, ["rev-parse", "HEAD"]);
-  await git(repoDir, ["fetch", staging, commitSha]);
-  await git(repoDir, ["update-ref", "refs/spice/data", commitSha]);
+  return seedSpiceDataRef(repoDir, repoConfig, branches, { makeTempDir });
 }
 
 type TempGitSetup = {
@@ -82,8 +45,7 @@ async function createTempRepoWithOrigin(
   trunk = "main",
   remote = "origin",
 ): Promise<TempGitSetup> {
-  const root = await mkdtemp(path.join(tmpdir(), "toolkit-gs-submit-"));
-  temporaryDirectories.push(root);
+  const root = await makeTempDir("toolkit-gs-submit-");
   const origin = path.join(root, "origin.git");
   const repo = path.join(root, "repo");
   await mkdir(repo);

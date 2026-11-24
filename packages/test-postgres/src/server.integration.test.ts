@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, rm, stat } from "node:fs/promises";
+import { chmod, mkdtemp, readdir, rm, stat } from "node:fs/promises";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -14,7 +14,7 @@ import {
   sharedPostgresPort,
 } from "./index.ts";
 
-const PROTECTED_PORTS = new Set([5471, 5600]);
+const PROTECTED_PORTS = new Set([5471, 5472, 5600]);
 const activeClusters: string[] = [];
 const tempDirs: string[] = [];
 
@@ -55,6 +55,9 @@ afterEach(async () => {
 
 async function makeTempDir(prefix: string): Promise<string> {
   const dir = await mkdtemp(path.join(tmpdir(), prefix));
+  if (process.getuid?.() === 0) {
+    await chmod(dir, 0o755);
+  }
   tempDirs.push(dir);
   return dir;
 }
@@ -124,12 +127,16 @@ describe("isolated cluster discovery, conflict diagnostics, and WAL recovery", (
 
     const portA = await allocateFreePort();
     const portB = await allocateFreePort(new Set([portA]));
-    const dataDir = path.join(scratchCache, "monorepo-test-pg", "18", "pgdata");
+    const dataRoot = path.join(scratchCache, "monorepo-test-pg", "18");
+    const dataDir = path.join(dataRoot, "pgdata");
     activeClusters.push(dataDir);
+    const rootIsolation =
+      process.getuid?.() === 0 ? { TEST_POSTGRES_DATA_ROOT: dataRoot } : {};
 
     const started = ensureSharedPostgres({
       HOME: fakeHome,
       XDG_CACHE_HOME: scratchCache,
+      ...rootIsolation,
       LOCAL_TEST_PG_PORT: portA.toString(),
     });
     expect(started.port).toBe(portA);
@@ -143,6 +150,7 @@ describe("isolated cluster discovery, conflict diagnostics, and WAL recovery", (
     const envWithoutPort = {
       HOME: fakeHome,
       XDG_CACHE_HOME: scratchCache,
+      ...rootIsolation,
     };
     expect(sharedPostgresPort(envWithoutPort)).toBe(portA);
     const reused = ensureSharedPostgres(envWithoutPort);
@@ -154,10 +162,11 @@ describe("isolated cluster discovery, conflict diagnostics, and WAL recovery", (
       ensureSharedPostgres({
         HOME: fakeHome,
         XDG_CACHE_HOME: scratchCache,
+        ...rootIsolation,
         LOCAL_TEST_PG_PORT: portB.toString(),
       }),
     ).toThrow(
-      `PostgreSQL data directory ${dataDir} is already running on port ${portA.toString()} (PID ${String(pidInfo?.pid)}), but port ${portB.toString()} was requested; set LOCAL_TEST_PG_PORT=${portA.toString()} or isolate XDG_CACHE_HOME`,
+      `PostgreSQL data directory ${dataDir} is already running on port ${portA.toString()} (PID ${String(pidInfo?.pid)}), but port ${portB.toString()} was requested; set LOCAL_TEST_PG_PORT=${portA.toString()}`,
     );
 
     expect(psqlMaintenance("SELECT 1", { adminUrl: started.superUrl })).toBe(
@@ -175,6 +184,9 @@ describe("isolated cluster discovery, conflict diagnostics, and WAL recovery", (
 
     const env = {
       XDG_CACHE_HOME: scratchCache,
+      ...(process.getuid?.() === 0
+        ? { TEST_POSTGRES_DATA_ROOT: dataRoot }
+        : {}),
       LOCAL_TEST_PG_PORT: port.toString(),
     };
     const initial = ensureSharedPostgres(env);

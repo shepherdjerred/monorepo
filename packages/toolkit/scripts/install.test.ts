@@ -2,13 +2,15 @@ import { expect, test } from "vitest";
 import {
   TOOLKIT_BUILD_INPUT_PATHS,
   buildDefineFlags,
+  computeInputTreeDigest,
+  resolveToolkitBuildStamp,
+} from "#lib/version/build-stamp.ts";
+import {
   buildSteps,
   codesignArgv,
-  computeInputTreeDigest,
   developerIdIdentity,
   installPaths,
   installPlatform,
-  resolveToolkitBuildStamp,
 } from "./install-core.ts";
 
 test("installation remains scoped below the supplied home directory", () => {

@@ -123,8 +123,12 @@ export function managedPostgresDataRoots(
 
 export function sharedPostgresDataRoot(
   env: Readonly<Record<string, string | undefined>> = Bun.env,
+  options?: {
+    readonly isRoot?: boolean;
+    readonly platform?: NodeJS.Platform;
+  },
 ): string {
-  const roots = managedPostgresDataRoots(env);
+  const roots = managedPostgresDataRoots(env, options);
   for (const root of roots) {
     if (Bun.file(path.join(root, "pgdata", "PG_VERSION")).size > 0) {
       return root;

@@ -85,7 +85,7 @@ async function main(): Promise<void> {
   const { stage, minTurns, limit, write } = parsed;
 
   const datasetDir = path.dirname(defaultDatasetPinPath(stage, Bun.env));
-  const port = Bun.env["SCOUT_PG_PORT"] ?? "5471";
+  const port = Bun.env["SCOUT_PG_PORT"] ?? "5472";
   Bun.env["DATABASE_URL"] =
     `postgres://scout@127.0.0.1:${port}/scout_${stage}_snapshot`;
   Bun.env["REPORT_LAKE_DIR"] = path.join(datasetDir, "report-lake");

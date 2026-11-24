@@ -21,6 +21,18 @@ export type BranchCreateOptions = {
   readonly stdin?: "inherit" | "ignore" | undefined;
 };
 
+function hasTargetDependentInsertFlag(args: readonly string[]): boolean {
+  const boundary = args.indexOf("--");
+  const head = boundary === -1 ? args : args.slice(0, boundary);
+  return head.some(
+    (token) =>
+      token === "--below" ||
+      token.startsWith("--below=") ||
+      token === "--insert" ||
+      token.startsWith("--insert="),
+  );
+}
+
 function matchInlineTargetToken(token: string): string | undefined {
   if (token.startsWith("--target=")) {
     return token.slice("--target=".length);
@@ -221,7 +233,7 @@ async function reconcileAfterBranchCreate(options: {
   readonly wasCurrentTracked: boolean;
   readonly reparentNewBranchToTrunk: boolean;
   readonly spawnOptions: BranchCreateOptions;
-}): Promise<void> {
+}): Promise<number> {
   const {
     invocation,
     cwd,
@@ -246,16 +258,22 @@ async function reconcileAfterBranchCreate(options: {
         options: spawnOptions,
       });
     }
-    return;
+    return 0;
   }
 
+  let reparentExit = 0;
   if (reparentNewBranchToTrunk) {
-    await runInternalSpice({
+    reparentExit = await runInternalSpice({
       invocation,
       cwd,
       args: ["branch", "track", "--base", trunk, afterBranch],
       options: spawnOptions,
     });
+    if (reparentExit !== 0) {
+      console.error(
+        `toolkit git-spice: created branch '${afterBranch}', but reparenting onto '${trunk}' failed (exit ${String(reparentExit)}); run: toolkit spice branch track --base ${trunk} ${afterBranch}`,
+      );
+    }
   }
   await unsetTrunkUpstreamIfPointingAtTrunk(
     cwd,
@@ -279,6 +297,7 @@ async function reconcileAfterBranchCreate(options: {
       options: spawnOptions,
     });
   }
+  return reparentExit;
 }
 
 /**
@@ -289,9 +308,15 @@ export async function maybeHandleBranchCreate(
   invocation: PassthroughInvocation,
   options: BranchCreateOptions = {},
 ): Promise<number | null> {
-  if (!isBranchCreateCommand(invocation.args)) return null;
+  if (
+    !isBranchCreateCommand(invocation.args) ||
+    hasTargetDependentInsertFlag(invocation.args)
+  ) {
+    return null;
+  }
 
-  const cwd = effectiveCwd(invocation.args, options.cwd ?? process.cwd());
+  const baseCwd = options.cwd ?? process.cwd();
+  const cwd = effectiveCwd(invocation.args, baseCwd);
   const repoConfig = await readSpiceRepoConfig(cwd, invocation.env);
   if (repoConfig === null) return null;
 
@@ -341,22 +366,23 @@ export async function maybeHandleBranchCreate(
     if (trackExit !== 0) return trackExit;
   }
 
+  let createExit = 1;
   try {
-    return await spawnPassthroughInvocation(
+    createExit = await spawnPassthroughInvocation(
       {
         executable: invocation.executable,
         args: strippedArgs,
         env: invocation.env,
       },
       {
-        cwd,
+        cwd: baseCwd,
         stdoutToStderr: options.stdoutToStderr,
         signal: options.signal,
         stdin: options.stdin,
       },
     );
   } finally {
-    await reconcileAfterBranchCreate({
+    const reconcileExit = await reconcileAfterBranchCreate({
       invocation,
       cwd,
       trunk,
@@ -365,5 +391,9 @@ export async function maybeHandleBranchCreate(
       reparentNewBranchToTrunk: plan.reparentNewBranchToTrunk,
       spawnOptions: options,
     });
+    if (createExit === 0 && reconcileExit !== 0) {
+      createExit = reconcileExit;
+    }
   }
+  return createExit;
 }

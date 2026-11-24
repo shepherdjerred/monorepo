@@ -16,7 +16,7 @@
  */
 import { requireCliValue } from "#scripts/migration-core.ts";
 
-const DEFAULT_PG_PORT = "5471";
+const DEFAULT_PG_PORT = "5472";
 const LOCAL_DATABASE_PATTERN = /^[a-z][a-z0-9_]*$/;
 const CLIENT_VERSION_PATTERN = /(\d+)(?:\.\d+)*$/;
 

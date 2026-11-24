@@ -13,13 +13,14 @@
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
-  DEFAULT_SHARED_PG_PORT,
   ensureDatabase,
   ensurePostgresCluster,
   parsePortEnv,
   POSTGRES_MAJOR,
   sharedDatabaseUrl,
 } from "@shepherdjerred/test-postgres";
+
+export const DEFAULT_SCOUT_DEV_PG_PORT = 5472;
 
 function nonEmptyEnv(
   env: Readonly<Record<string, string | undefined>>,
@@ -64,7 +65,7 @@ export function scoutDurablePostgresPort(
 ): number {
   const raw = nonEmptyEnv(env, "SCOUT_PG_PORT");
   return raw === undefined
-    ? DEFAULT_SHARED_PG_PORT
+    ? DEFAULT_SCOUT_DEV_PG_PORT
     : parsePortEnv("SCOUT_PG_PORT", raw);
 }
 

@@ -14,9 +14,13 @@ import {
   withGitHubProxy,
   type StartGitHubProxyOptions,
 } from "./github-proxy.ts";
-import { isBranchMergeSubcommand, runGitSpiceBranchMerge } from "./merge.ts";
+import {
+  isBranchMergeSubcommand,
+  runGitSpiceBranchMerge,
+  type GitSpiceMergeOptions,
+} from "./merge.ts";
 import { maybeHandleRebaseContinue } from "./rebase-continue.ts";
-import { effectiveCwd, isMergeCommand, isSubmitCommand } from "./spice-args.ts";
+import { isMergeCommand, isSubmitCommand } from "./spice-args.ts";
 import { isSubmitSubcommand, runGitSpiceSubmit } from "./submit.ts";
 
 export type GitSpiceSubcommandHook = (
@@ -39,47 +43,38 @@ export type RunGitSpiceOptions = {
   readonly mergeHook?: GitSpiceSubcommandHook | undefined;
 };
 
-let defaultSubmitHook: GitSpiceSubcommandHook = async (
-  activeInvocation,
-  options,
-) => {
-  if (!isSubmitSubcommand(activeInvocation.args)) {
-    return null;
+function extractExplicitGithubToken(
+  args: readonly string[],
+): string | undefined {
+  const boundary = args.indexOf("--");
+  const head = boundary === -1 ? args : args.slice(0, boundary);
+  let explicit: string | undefined;
+  for (let i = 0; i < head.length; i += 1) {
+    const token = head[i];
+    if (token === "--github-token") {
+      const next = head[i + 1];
+      if (next !== undefined && next.trim().length > 0) {
+        explicit = next.trim();
+      }
+      i += 1;
+    } else if (token?.startsWith("--github-token=") === true) {
+      const val = token.slice("--github-token=".length).trim();
+      if (val.length > 0) explicit = val;
+    }
   }
-  return runGitSpiceSubmit(activeInvocation.args, {
-    cwd: options.cwd ?? process.cwd(),
-    env: activeInvocation.env,
-    githubToken: readPopulatedGitSpiceToken(activeInvocation.env),
-    githubApiUrl: activeInvocation.env["GITHUB_API_URL"],
-    stderr: options.writeStderr,
-    spawnGitSpice: (spawnArgs, ctx) =>
-      spawnPassthroughInvocation(
-        {
-          executable: activeInvocation.executable,
-          args: spawnArgs,
-          env: ctx.env,
-        },
-        {
-          cwd: ctx.cwd,
-          stdoutToStderr: options.stdoutToStderr,
-          signal: options.signal,
-          stdin: options.stdin,
-        },
-      ),
-  });
-};
+  return explicit;
+}
 
-let defaultMergeHook: GitSpiceSubcommandHook = async (
-  activeInvocation,
-  options,
-) => {
-  if (!isBranchMergeSubcommand(activeInvocation.args)) {
-    return null;
-  }
-  return runGitSpiceBranchMerge(activeInvocation.args, {
+function buildSubcommandOptions(
+  activeInvocation: PassthroughInvocation,
+  options: RunGitSpiceOptions,
+): GitSpiceMergeOptions {
+  return {
     cwd: options.cwd ?? process.cwd(),
     env: activeInvocation.env,
-    githubToken: readPopulatedGitSpiceToken(activeInvocation.env),
+    githubToken:
+      extractExplicitGithubToken(activeInvocation.args) ??
+      readPopulatedGitSpiceToken(activeInvocation.env),
     githubApiUrl: activeInvocation.env["GITHUB_API_URL"],
     stderr: options.writeStderr,
     spawnGitSpice: (spawnArgs, ctx) =>
@@ -96,8 +91,24 @@ let defaultMergeHook: GitSpiceSubcommandHook = async (
           stdin: options.stdin,
         },
       ),
-  });
-};
+  };
+}
+
+let defaultSubmitHook: GitSpiceSubcommandHook = (activeInvocation, options) =>
+  isSubmitSubcommand(activeInvocation.args)
+    ? runGitSpiceSubmit(
+        activeInvocation.args,
+        buildSubcommandOptions(activeInvocation, options),
+      )
+    : Promise.resolve(null);
+
+let defaultMergeHook: GitSpiceSubcommandHook = (activeInvocation, options) =>
+  isBranchMergeSubcommand(activeInvocation.args)
+    ? runGitSpiceBranchMerge(
+        activeInvocation.args,
+        buildSubcommandOptions(activeInvocation, options),
+      )
+    : Promise.resolve(null);
 
 export function registerGitSpiceExtensionHooks(hooks: {
   readonly submitHook?: GitSpiceSubcommandHook | undefined;
@@ -140,12 +151,11 @@ export async function runGitSpiceInvocation(
     options.envOptions,
   );
   const baseCwd = options.cwd ?? process.cwd();
-  const cwd = effectiveCwd(invocation.args, baseCwd);
 
   return withGitHubProxy(
     {
       args: invocation.args,
-      cwd,
+      cwd: baseCwd,
       env: populatedEnv,
       writeStderr: options.writeStderr,
     },

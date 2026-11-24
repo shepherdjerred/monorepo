@@ -99,7 +99,7 @@ async function main(): Promise<void> {
       ? path.join(datasetDir, "report-lake")
       : path.resolve(process.cwd(), parsed.lakeDir);
   const databaseName = `scout_${stage}_snapshot`;
-  const port = Bun.env["SCOUT_PG_PORT"] ?? "5471";
+  const port = Bun.env["SCOUT_PG_PORT"] ?? "5472";
   const databaseUrl = `postgres://scout@127.0.0.1:${port}/${databaseName}`;
 
   // Set before the dynamic imports below, for the same reason the replay entry

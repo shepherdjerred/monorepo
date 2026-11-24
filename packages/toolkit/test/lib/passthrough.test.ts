@@ -824,7 +824,7 @@ printf 'args:%s\npath:%s\n' "$*" "$PATH"
     );
 
     const entrypoint = path.resolve(import.meta.dir, "../../src/index.ts");
-    const child = Bun.spawn(
+    const proc = Bun.spawnSync(
       [process.execPath, entrypoint, "posthog", "--version"],
       {
         env: {
@@ -838,14 +838,12 @@ printf 'args:%s\npath:%s\n' "$*" "$PATH"
         stderr: "pipe",
       },
     );
-    const [stdout, stderr, code] = await Promise.all([
-      new Response(child.stdout).text(),
-      new Response(child.stderr).text(),
-      child.exited,
-    ]);
-    expect(code).toBe(0);
-    expect(stderr).toBe("");
-    const [argsLine = "", pathLine = ""] = stdout.trim().split("\n");
+    expect(proc.exitCode).toBe(0);
+    expect(proc.stderr.toString()).toBe("");
+    const [argsLine = "", pathLine = ""] = proc.stdout
+      .toString()
+      .trim()
+      .split("\n");
     expect(argsLine).toBe("args:--version");
     const childPathEntries = pathLine
       .slice("path:".length)

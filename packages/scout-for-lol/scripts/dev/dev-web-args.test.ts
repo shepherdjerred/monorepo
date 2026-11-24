@@ -46,7 +46,7 @@ test("parses isolated ports and database URL", () => {
 test("derives an isolated database for a non-default backend port", () => {
   expect(
     parseDevWebArgs(["--backend-port", "3001", "--web-port", "5181"], {
-      DATABASE_URL: "postgres://scout@127.0.0.1:5471/scout_dev_3000",
+      DATABASE_URL: "postgres://scout@127.0.0.1:5472/scout_dev_3000",
     }),
   ).toEqual({
     kind: "options",
@@ -55,7 +55,7 @@ test("derives an isolated database for a non-default backend port", () => {
       webPort: 5181,
       temporalPort: 7234,
       temporalUiPort: 8234,
-      databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3001",
+      databaseUrl: "postgres://scout@127.0.0.1:5472/scout_dev_3001",
       discordGatewayEnabled: false,
       backgroundJobsEnabled: true,
       webEnabled: true,
@@ -120,7 +120,7 @@ test("supports a stable secondary copy without the BETA gateway", () => {
       webPort: 5180,
       temporalPort: 7234,
       temporalUiPort: 8234,
-      databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3001",
+      databaseUrl: "postgres://scout@127.0.0.1:5472/scout_dev_3001",
       discordGatewayEnabled: false,
       backgroundJobsEnabled: true,
       webEnabled: true,
@@ -152,7 +152,7 @@ test("configures alternate surface origins for a second stack", () => {
       webPort: 5180,
       temporalPort: 7233,
       temporalUiPort: 8233,
-      databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3000",
+      databaseUrl: "postgres://scout@127.0.0.1:5472/scout_dev_3000",
       discordGatewayEnabled: false,
       backgroundJobsEnabled: true,
       webEnabled: true,
@@ -169,7 +169,7 @@ test("configures alternate surface origins for a second stack", () => {
 test("defaults a local boot to the consumer preview and dev login", () => {
   const parsed = parseDevWebArgs([], {
     ENVIRONMENT: "dev",
-    DATABASE_URL: "postgres://scout@127.0.0.1:5471/scout_dev_3000",
+    DATABASE_URL: "postgres://scout@127.0.0.1:5472/scout_dev_3000",
   });
 
   expect(parsed.kind).toBe("options");

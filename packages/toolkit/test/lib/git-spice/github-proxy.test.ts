@@ -1,7 +1,6 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import os from "node:os";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { afterEach, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   finalizeGitHubProxyOutcome,
@@ -14,29 +13,13 @@ import {
   findBranchesByPrGqlIds,
   readSpiceBranches,
 } from "#lib/git-spice/spice-state.ts";
+import {
+  registerTempDirs,
+  runGitSync,
+  seedSpiceDataRef,
+} from "./spice-test-harness.ts";
 
-const tempDirs: string[] = [];
-
-afterEach(async () => {
-  for (const dir of tempDirs.splice(0)) {
-    await rm(dir, { recursive: true, force: true });
-  }
-});
-
-async function makeTempDir(prefix: string): Promise<string> {
-  const dir = await mkdtemp(path.join(os.tmpdir(), prefix));
-  tempDirs.push(dir);
-  return dir;
-}
-
-function runGitSync(args: readonly string[], cwd: string): void {
-  const res = Bun.spawnSync(["git", ...args], { cwd, env: Bun.env });
-  if (res.exitCode !== 0) {
-    throw new Error(
-      `git ${args.join(" ")} failed (${String(res.exitCode)}): ${res.stderr.toString()}`,
-    );
-  }
-}
+const { makeTempDir, installGitSpiceShim } = registerTempDirs();
 
 function inputToUrlString(input: string | URL | Request): string {
   if (typeof input === "string") return input;
@@ -267,99 +250,40 @@ async function seedRepoWithMissingAndMergedPrs(root: string): Promise<{
   runGitSync(["add", "file.txt"], repo);
   runGitSync(["commit", "-m", "init"], repo);
   runGitSync(["push", "-u", "origin", "main"], repo);
+  const mainSha = runGitSync(["rev-parse", "main"], repo);
 
-  const initExit = Bun.spawnSync(
-    [
-      "git-spice",
-      "--no-prompt",
-      "repo",
-      "init",
-      "--trunk",
-      "main",
-      "--remote",
-      "origin",
-    ],
-    { cwd: repo, env: Bun.env },
-  );
-  expect(initExit.exitCode).toBe(0);
+  runGitSync(["checkout", "-b", "stale/missing-pr"], repo);
+  await Bun.write(path.join(repo, "stale.txt"), "stale\n");
+  runGitSync(["add", "stale.txt"], repo);
+  runGitSync(["commit", "-m", "stale"], repo);
 
-  Bun.spawnSync(
-    [
-      "git-spice",
-      "--no-prompt",
-      "branch",
-      "create",
-      "stale/missing-pr",
-      "-m",
-      "stale",
-    ],
-    { cwd: repo, env: Bun.env },
-  );
-  Bun.spawnSync(
-    [
-      "git-spice",
-      "--no-prompt",
-      "branch",
-      "create",
-      "feat/merged-pr",
-      "--target",
-      "main",
-      "-m",
-      "merged",
-    ],
-    { cwd: repo, env: Bun.env },
-  );
-  const featMergedSha = Bun.spawnSync(["git", "rev-parse", "feat/merged-pr"], {
-    cwd: repo,
-    env: Bun.env,
-  })
-    .stdout.toString()
-    .trim();
+  runGitSync(["checkout", "-b", "feat/merged-pr", "main"], repo);
+  await Bun.write(path.join(repo, "merged.txt"), "merged\n");
+  runGitSync(["add", "merged.txt"], repo);
+  runGitSync(["commit", "-m", "merged"], repo);
+  const featMergedSha = runGitSync(["rev-parse", "feat/merged-pr"], repo);
   runGitSync(["checkout", "main"], repo);
 
-  const mainSha = Bun.spawnSync(["git", "rev-parse", "main"], {
-    cwd: repo,
-    env: Bun.env,
-  })
-    .stdout.toString()
-    .trim();
-  const spiceWork = path.join(root, "spice-work");
-  runGitSync(["clone", repo, spiceWork], root);
-  runGitSync(
-    ["fetch", "origin", "refs/spice/data:refs/heads/spice-edit"],
-    spiceWork,
-  );
-  runGitSync(["checkout", "spice-edit"], spiceWork);
-  runGitSync(["config", "user.name", "Test"], spiceWork);
-  runGitSync(["config", "user.email", "test@example.com"], spiceWork);
-
-  await Bun.write(
-    path.join(spiceWork, "branches/stale/missing-pr"),
-    JSON.stringify({
+  const branches: Record<string, Record<string, unknown>> = {
+    "stale/missing-pr": {
       base: { name: "main", hash: mainSha },
       change: { github: { pr: { number: 3351, gqlID: "PR_missing_3351" } } },
-    }),
-  );
-  await Bun.write(
-    path.join(spiceWork, "branches/feat/merged-pr"),
-    JSON.stringify({
+    },
+    "feat/merged-pr": {
       base: { name: "main", hash: mainSha },
       change: { github: { pr: { number: 3352, gqlID: "PR_merged_3352" } } },
-    }),
-  );
+    },
+  };
   const refLines: string[] = [];
   for (let i = 0; i < 105; i += 1) {
     const name = `extra-${String(i)}`;
     refLines.push(`create refs/heads/${name} ${mainSha}`);
-    await Bun.write(
-      path.join(spiceWork, `branches/${name}`),
-      JSON.stringify({
-        base: { name: "main", hash: mainSha },
-        change: {
-          github: { pr: { number: 4000 + i, gqlID: `PR_extra_${String(i)}` } },
-        },
-      }),
-    );
+    branches[name] = {
+      base: { name: "main", hash: mainSha },
+      change: {
+        github: { pr: { number: 4000 + i, gqlID: `PR_extra_${String(i)}` } },
+      },
+    };
   }
   const updateRes = Bun.spawnSync(["git", "update-ref", "--stdin"], {
     cwd: repo,
@@ -367,24 +291,25 @@ async function seedRepoWithMissingAndMergedPrs(root: string): Promise<{
     stdin: new TextEncoder().encode(`${refLines.join("\n")}\n`),
   });
   expect(updateRes.exitCode).toBe(0);
-  runGitSync(["add", "."], spiceWork);
-  runGitSync(["commit", "-m", "seed spice metadata"], spiceWork);
-  runGitSync(["push", repo, "spice-edit:refs/spice/data"], spiceWork);
+  await seedSpiceDataRef(repo, { trunk: "main", remote: "origin" }, branches, {
+    makeTempDir,
+  });
   return { repo, mainSha, featMergedSha };
 }
 
 describe("github-proxy NOT_FOUND, retries, and configuration", () => {
   test("rewrites NOT_FOUND nodes, reports branch + PR warning from refs/spice/data, exits 1 on repo sync and 0 on merge (AI-103)", async () => {
     const root = await makeTempDir("toolkit-spice-ai103-");
+    const shimEnv = await installGitSpiceShim(Bun.env);
     const { repo, mainSha, featMergedSha } =
       await seedRepoWithMissingAndMergedPrs(root);
 
-    const spiceMap = await readSpiceBranches(repo, Bun.env);
+    const spiceMap = await readSpiceBranches(repo, shimEnv);
     expect(spiceMap.get("stale/missing-pr")?.prNumber).toBe(3351);
     const matched = await findBranchesByPrGqlIds(
       repo,
       ["PR_missing_3351"],
-      Bun.env,
+      shimEnv,
     );
     expect(matched).toEqual([
       { gqlId: "PR_missing_3351", branch: "stale/missing-pr", prNumber: 3351 },
@@ -394,7 +319,7 @@ describe("github-proxy NOT_FOUND, retries, and configuration", () => {
     const warnings: string[] = [];
     const syncExit = await runGitSpice(
       ["repo", "sync"],
-      { ...Bun.env, GH_TOKEN: "synthetic-token" },
+      { ...shimEnv, GH_TOKEN: "synthetic-token" },
       {
         cwd: repo,
         stdin: "ignore",
@@ -462,7 +387,9 @@ describe("github-proxy NOT_FOUND, retries, and configuration", () => {
     expect(mergeExit).toBe(0);
     expect(mergeWarnings[0]).toContain("stale/missing-pr");
   }, 25_000);
+});
 
+describe("github-proxy retries and configuration", () => {
   test("retries transient failures only for read-only REST and GraphQL queries, never mutations or REST writes (AI-155)", async () => {
     const delays: number[] = [];
     let queryAttempts = 0;
@@ -552,8 +479,10 @@ describe("github-proxy NOT_FOUND, retries, and configuration", () => {
     }
   });
 
-  test("honors explicit GITHUB_API_URL, --github-api-url, and spice.forge.github.apiUrl", async () => {
-    const dir = await makeTempDir("toolkit-spice-cfg-");
+  test("honors explicit GITHUB_API_URL, --github-api-url, spice.forge.github.apiUrl, and resolves relative -C once", async () => {
+    const parent = await makeTempDir("toolkit-spice-cfg-");
+    const dir = path.join(parent, "repo");
+    await mkdir(dir, { recursive: true });
     runGitSync(["init", "-b", "main"], dir);
 
     expect(await shouldStartGitHubProxy(["rs"], dir, {})).toBe(true);
@@ -575,12 +504,18 @@ describe("github-proxy NOT_FOUND, retries, and configuration", () => {
       dir,
     );
     expect(await shouldStartGitHubProxy(["rs"], dir, {})).toBe(false);
+    expect(await shouldStartGitHubProxy(["-C", "repo", "rs"], parent, {})).toBe(
+      false,
+    );
 
     let receivedEnv: Record<string, string | undefined> = {};
-    await withGitHubProxy({ args: ["rs"], cwd: dir, env: {} }, async (env) => {
-      receivedEnv = env;
-      return 0;
-    });
+    await withGitHubProxy(
+      { args: ["-C", "repo", "rs"], cwd: parent, env: {} },
+      async (env) => {
+        receivedEnv = env;
+        return 0;
+      },
+    );
     expect(receivedEnv["GITHUB_API_URL"]).toBeUndefined();
   });
 });

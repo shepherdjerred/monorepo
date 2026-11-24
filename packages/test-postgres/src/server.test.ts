@@ -16,18 +16,17 @@ import {
 const tempDirs: string[] = [];
 
 afterEach(async () => {
-  while (tempDirs.length > 0) {
-    const dir = tempDirs.pop();
-    if (dir !== undefined) {
-      await rm(dir, { recursive: true, force: true });
-    }
-  }
+  await Promise.all(
+    tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })),
+  );
 });
 
 async function makeTempDir(): Promise<string> {
-  const dir = await mkdtemp(path.join(tmpdir(), "test-postgres-server-unit-"));
-  tempDirs.push(dir);
-  return dir;
+  const created = await mkdtemp(
+    path.join(tmpdir(), "test-postgres-server-unit-"),
+  );
+  tempDirs.push(created);
+  return created;
 }
 
 describe("managedPostgresDataRoots & sharedPostgresDataRoot isolation", () => {
@@ -82,7 +81,7 @@ describe("managedPostgresDataRoots & sharedPostgresDataRoot isolation", () => {
     };
     const roots = managedPostgresDataRoots(env, { isRoot: false });
     expect(roots).toEqual([path.join(scratchCache, "monorepo-test-pg", "18")]);
-    expect(sharedPostgresDataRoot(env)).toBe(
+    expect(sharedPostgresDataRoot(env, { isRoot: false })).toBe(
       path.join(scratchCache, "monorepo-test-pg", "18"),
     );
   });

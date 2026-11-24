@@ -18,13 +18,10 @@ const STRIPPED_RESPONSE_HEADERS = new Set(
     " ",
   ),
 );
-const TRANSIENT_ERROR_PATTERNS = [
-  "econnreset",
-  "connection reset",
-  "etimedout",
-  "eai_again",
-  "socket connection was closed",
-] as const;
+const TRANSIENT_ERROR_PATTERNS =
+  "econnreset|connection reset|etimedout|eai_again|socket connection was closed".split(
+    "|",
+  );
 
 export type FetchLike = (
   input: string | URL | Request,
@@ -35,10 +32,10 @@ export type GitHubProxyState = {
   readonly missingGqlIds: Set<string>;
 };
 export type StartGitHubProxyOptions = {
-  readonly upstreamBaseUrl?: string | undefined;
-  readonly fetchImpl?: FetchLike | undefined;
-  readonly retryDelaysMs?: readonly number[] | undefined;
-  readonly sleepImpl?: ((ms: number) => Promise<void>) | undefined;
+  readonly upstreamBaseUrl?: string;
+  readonly fetchImpl?: FetchLike;
+  readonly retryDelaysMs?: readonly number[];
+  readonly sleepImpl?: (ms: number) => Promise<void>;
 };
 export type StartedGitHubProxy = {
   readonly url: string;
@@ -46,7 +43,6 @@ export type StartedGitHubProxy = {
   readonly state: GitHubProxyState;
   readonly stop: () => Promise<void>;
 };
-
 const ErrorShapeSchema = z.looseObject({
   name: z.string().optional(),
   message: z.string().optional(),
@@ -70,7 +66,6 @@ const GraphqlNodesResponseSchema = z.looseObject({
     .optional(),
   errors: z.array(GraphqlErrorEntrySchema).optional(),
 });
-
 function collectErrorStrings(error: unknown, depth = 0): string[] {
   if (error == null || depth > 4) return [];
   if (typeof error === "string") return [error];
@@ -168,8 +163,13 @@ async function fetchWithReadRetry(
   throw new Error("Upstream request exhausted retry attempts");
 }
 
+const BODYLESS_HTTP_STATUSES = new Set([204, 205, 304]);
+
 async function rebuildResponse(upstream: Response): Promise<Response> {
-  return new Response(await upstream.arrayBuffer(), {
+  const body = BODYLESS_HTTP_STATUSES.has(upstream.status)
+    ? null
+    : await upstream.arrayBuffer();
+  return new Response(body, {
     status: upstream.status,
     statusText: upstream.statusText,
     headers: copyFilteredHeaders(upstream.headers, STRIPPED_RESPONSE_HEADERS),
@@ -404,6 +404,17 @@ export function startGitHubProxy(
   };
 }
 
+function defaultStderr(line: string): void {
+  console.error(line);
+}
+
+type ProxyContext = {
+  readonly args: readonly string[];
+  readonly cwd: string;
+  readonly env: Readonly<Record<string, string | undefined>>;
+  readonly writeStderr?: ((line: string) => void) | undefined;
+};
+
 export async function shouldStartGitHubProxy(
   args: readonly string[],
   cwd: string,
@@ -411,28 +422,29 @@ export async function shouldStartGitHubProxy(
 ): Promise<boolean> {
   if (shouldSkipGitSpiceToken(args)) return false;
   const parsed = parseGitSpiceArgs(args, cwd);
-  if (parsed.hasGithubApiUrlFlag) return false;
-  const explicit = env["GITHUB_API_URL"]?.trim();
+  if (
+    parsed.hasGithubApiUrlFlag ||
+    (env["GITHUB_API_URL"]?.trim().length ?? 0) > 0
+  )
+    return false;
+  const [apiUrl, hostUrl] = await Promise.all([
+    readGitConfig(parsed.cwd, "spice.forge.github.apiUrl", env),
+    readGitConfig(parsed.cwd, "spice.forge.github.url", env),
+  ]);
+  const host = (hostUrl ?? "").trim().replace(/\/+$/u, "").toLowerCase();
   return (
-    (explicit === undefined || explicit.length === 0) &&
-    (await readGitConfig(parsed.cwd, "spice.forge.github.apiUrl", env)) === null
+    apiUrl === null && (host.length === 0 || host === "https://github.com")
   );
 }
 
-export async function finalizeGitHubProxyOutcome(options: {
-  readonly args: readonly string[];
-  readonly cwd: string;
-  readonly env: Readonly<Record<string, string | undefined>>;
-  readonly exitCode: number;
-  readonly state: GitHubProxyState;
-  readonly writeStderr?: ((line: string) => void) | undefined;
-}): Promise<number> {
+export async function finalizeGitHubProxyOutcome(
+  options: ProxyContext & {
+    readonly exitCode: number;
+    readonly state: GitHubProxyState;
+  },
+): Promise<number> {
   const { args, cwd, env, exitCode, state } = options;
-  const writeStderr =
-    options.writeStderr ??
-    ((line: string) => {
-      console.error(line);
-    });
+  const writeStderr = options.writeStderr ?? defaultStderr;
   if (state.missingGqlIds.size > 0) {
     for (const m of await findBranchesByPrGqlIds(
       cwd,
@@ -458,12 +470,7 @@ export async function finalizeGitHubProxyOutcome(options: {
 }
 
 export async function withGitHubProxy(
-  context: {
-    readonly args: readonly string[];
-    readonly cwd: string;
-    readonly env: Readonly<Record<string, string | undefined>>;
-    readonly writeStderr?: ((line: string) => void) | undefined;
-  },
+  context: ProxyContext,
   callback: (
     env: Record<string, string | undefined>,
     state: GitHubProxyState | null,
@@ -471,23 +478,22 @@ export async function withGitHubProxy(
   proxyOptions: StartGitHubProxyOptions = {},
 ): Promise<number> {
   const parsedCwd = parseGitSpiceArgs(context.args, context.cwd).cwd;
-  if (!(await shouldStartGitHubProxy(context.args, parsedCwd, context.env))) {
+  if (!(await shouldStartGitHubProxy(context.args, context.cwd, context.env))) {
     return callback({ ...context.env }, null);
   }
   const proxy = startGitHubProxy(proxyOptions);
-  let exitCode: number;
   try {
-    exitCode = await callback(
+    const exitCode = await callback(
       { ...context.env, GITHUB_API_URL: proxy.url },
       proxy.state,
     );
+    return await finalizeGitHubProxyOutcome({
+      ...context,
+      cwd: parsedCwd,
+      exitCode,
+      state: proxy.state,
+    });
   } finally {
     await proxy.stop();
   }
-  return finalizeGitHubProxyOutcome({
-    ...context,
-    cwd: parsedCwd,
-    exitCode,
-    state: proxy.state,
-  });
 }

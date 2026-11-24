@@ -101,6 +101,7 @@ export function createGitSpiceMerge(
         `toolkit: required executable not found: ${invocation.executable}`,
       );
     }
+    signal.throwIfAborted();
     const child = Bun.spawn([executable, ...invocation.args], {
       env: invocation.env,
       stdin: "ignore",

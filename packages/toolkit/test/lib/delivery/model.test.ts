@@ -720,52 +720,42 @@ describe("retire origin/main and helm-push guard", () => {
       ],
     });
     const cleanServices = JSON.stringify(baseServices);
+    const makeRetireDeps = (
+      pipelineNumber: number,
+      commit: string,
+      helmPushState: string,
+    ) => ({
+      findRepoRoot: () => Promise.resolve("/monorepo"),
+      fetchOriginMain: () => Promise.resolve(true),
+      readGitObject: (spec: string) =>
+        Promise.resolve(
+          spec.endsWith("catalog-document.json") ? retiredCore : cleanServices,
+        ),
+      latestCatalogCommitOnMain: () => Promise.resolve(removalSha),
+      isCommitAncestor: (anc: string, desc: string) =>
+        Promise.resolve(anc === removalSha && desc === descendantSha),
+      listMainPipelines: () =>
+        Promise.resolve([{ number: pipelineNumber, commit }]),
+      readMainPipeline: () =>
+        Promise.resolve({
+          number: pipelineNumber,
+          commit,
+          workflows: [{ name: "helm-push", state: helmPushState }],
+        }),
+    });
 
     await expect(
-      assertServiceRetirableOnMain("webring-legacy", {
-        findRepoRoot: () => Promise.resolve("/monorepo"),
-        fetchOriginMain: () => Promise.resolve(true),
-        readGitObject: (spec) =>
-          Promise.resolve(
-            spec.endsWith("catalog-document.json")
-              ? retiredCore
-              : cleanServices,
-          ),
-        latestCatalogCommitOnMain: () => Promise.resolve(removalSha),
-        isCommitAncestor: () => Promise.resolve(false),
-        listMainPipelines: () =>
-          Promise.resolve([{ number: 901, commit: removalSha }]),
-        readMainPipeline: () =>
-          Promise.resolve({
-            number: 901,
-            commit: removalSha,
-            workflows: [{ name: "helm-push", state: "running" }],
-          }),
-      }),
+      assertServiceRetirableOnMain(
+        "webring-legacy",
+        makeRetireDeps(901, removalSha, "running"),
+      ),
     ).rejects.toThrow(`toolkit ci wait --main --head ${removalSha}`);
 
     await expect(
-      assertServiceRetirableOnMain("webring-legacy", {
-        findRepoRoot: () => Promise.resolve("/monorepo"),
-        fetchOriginMain: () => Promise.resolve(true),
-        readGitObject: (spec) =>
-          Promise.resolve(
-            spec.endsWith("catalog-document.json")
-              ? retiredCore
-              : cleanServices,
-          ),
-        latestCatalogCommitOnMain: () => Promise.resolve(removalSha),
-        isCommitAncestor: (anc, desc) =>
-          Promise.resolve(anc === removalSha && desc === descendantSha),
-        listMainPipelines: () =>
-          Promise.resolve([{ number: 902, commit: descendantSha }]),
-        readMainPipeline: () =>
-          Promise.resolve({
-            number: 902,
-            commit: descendantSha,
-            workflows: [{ name: "helm-push", state: "success" }],
-          }),
-      }),
+      assertServiceRetirableOnMain(
+        "webring-legacy",
+        makeRetireDeps(902, descendantSha, "success"),
+      ),
     ).resolves.toBeUndefined();
   });
 });

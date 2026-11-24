@@ -6,6 +6,7 @@ import {
   missingKeychainItemError,
 } from "#lib/credential-gui-bridge.ts";
 import { lookupExecutable } from "#lib/passthrough.ts";
+import { spawnCapture } from "#lib/spawn-capture.ts";
 import {
   isForgeCommand,
   parseGitSpiceArgs,
@@ -33,18 +34,12 @@ function createDefaultRunner(
       ...extraEnvironment,
     };
     delete env["OP_SERVICE_ACCOUNT_TOKEN"];
-    const child = Bun.spawn(argv, {
-      env,
-      stdin: "ignore",
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    const [stdout, stderr, exit] = await Promise.all([
-      new Response(child.stdout).text(),
-      new Response(child.stderr).text(),
-      child.exited,
-    ]);
-    return { exit, stdout, stderr };
+    const result = await spawnCapture(argv, { env });
+    return {
+      exit: result.exitCode,
+      stdout: result.stdout,
+      stderr: result.stderr,
+    };
   };
 }
 

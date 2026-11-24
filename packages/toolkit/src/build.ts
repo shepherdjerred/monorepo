@@ -2,7 +2,7 @@ import path from "node:path";
 import {
   buildDefineFlags,
   resolveToolkitBuildStamp,
-} from "#lib/version/staleness.ts";
+} from "#lib/version/build-stamp.ts";
 
 type Command = readonly string[];
 
