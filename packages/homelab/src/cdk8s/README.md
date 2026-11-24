@@ -158,6 +158,24 @@ not model. `birmel`, both `starlight-karma-bot` stages, `streambot` and
 `arcade` use it. The two constructs share their container and NetworkPolicy
 types through `src/misc/first-party/workload-parts.ts`.
 
+## Temporal workers
+
+`createTemporalDomainWorker` (`src/resources/temporal/workers/domain-worker.ts`)
+renders a worker built from the shared Temporal worker or Delivery
+control-plane image: its ServiceAccount, a `Recreate` Deployment whose image
+the chart selects, `/healthz` probes on the app-metrics port, and Services and
+ServiceMonitors for both the SDK metrics port and the app-metrics port. Every
+Temporal client takes `TEMPORAL_ADDRESS` from `temporalAddressEnv` and
+`TEMPORAL_METRICS_ADDRESS` from `temporalMetricsAddressEnv`.
+
+Scout's stage workflow worker (`src/resources/scout/workflow-worker.ts`) stays
+outside the helper. It is a Delivery worker-rollout candidate of the
+`scout-for-lol` image with its own `sh -c` command, no ServiceAccount, one
+readiness probe that waits for a workflow-task poller, a read-only root
+filesystem, and a single SDK metrics Service selected through the Deployment.
+The helper fixes each of those, so adopting it would mean an opt-out per field;
+the two share only the Temporal client environment.
+
 ## LinuxServer apps
 
 `LinuxServerApp` (`src/misc/third-party/linuxserver-app.ts`) renders a

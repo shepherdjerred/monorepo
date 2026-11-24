@@ -1,3 +1,4 @@
+import { temporalMetricsAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import { createHash } from "node:crypto";
 import { ApiObject, JsonPatch, Size, type Chart } from "cdk8s";
@@ -369,7 +370,7 @@ export function createWoodpeckerMaintenanceWorker(chart: Chart): void {
         ...temporalFeatureFlagEnvironment(),
         ...temporalAddressEnv(),
         TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
-        TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+        ...temporalMetricsAddressEnv(),
         TEMPORAL_WORKER_ROLE: EnvValue.fromValue("maintenance"),
         ENVIRONMENT: EnvValue.fromValue("production"),
         ...telemetryEnv({ serviceName: WORKER_NAME }),

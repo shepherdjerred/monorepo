@@ -18,6 +18,7 @@ import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/pro
 import { ServiceMonitorSpecEndpointsMetricRelabelingsAction } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
+import { TEMPORAL_SDK_METRICS_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 
 export type TemporalDomainWorkerProps = {
   name: string;
@@ -100,7 +101,7 @@ export function createTemporalDomainWorker(
       name: props.name,
       image: `{{ required \`Delivery requires image:${selection}\` (get (get (.Values.delivery | default dict) "${field}" | default dict) "${selection}") }}`,
       ports: [
-        { number: 9464, name: "metrics" },
+        { number: TEMPORAL_SDK_METRICS_PORT, name: "metrics" },
         { number: 9465, name: "app-metrics" },
         ...(props.ports ?? []),
       ],
@@ -145,7 +146,7 @@ export function createTemporalDomainWorker(
   new Service(chart, `${props.name}-metrics-service`, {
     selector,
     metadata: { labels: { component: sdkMetricsComponent } },
-    ports: [{ port: 9464, name: "metrics" }],
+    ports: [{ port: TEMPORAL_SDK_METRICS_PORT, name: "metrics" }],
   });
   createServiceMonitor(chart, {
     name: `${props.name}-metrics`,

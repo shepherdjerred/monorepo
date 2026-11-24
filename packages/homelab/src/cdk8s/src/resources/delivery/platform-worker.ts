@@ -1,3 +1,4 @@
+import { temporalMetricsAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import { Size, type Chart } from "cdk8s";
 import { Cpu, EnvValue, Secret } from "cdk8s-plus-31";
@@ -62,7 +63,7 @@ export function createDeliveryPlatformWorker(
       ...temporalAddressEnv(serverServiceName),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("delivery-platform"),
-      TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+      ...temporalMetricsAddressEnv(),
       ENVIRONMENT: EnvValue.fromValue("production"),
       DELIVERY_API_URL: EnvValue.fromValue(
         "http://delivery.delivery.svc.cluster.local:7353",

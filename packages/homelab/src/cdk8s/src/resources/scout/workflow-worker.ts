@@ -1,3 +1,7 @@
+import {
+  TEMPORAL_SDK_METRICS_PORT,
+  temporalMetricsAddressEnv,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
@@ -18,6 +22,25 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 
+/**
+ * Scout's stage workflow worker stays outside `createTemporalDomainWorker`.
+ * That helper describes a worker built from the shared Temporal worker image;
+ * this one is a Delivery worker-rollout candidate of the Scout image and
+ * differs in every part the helper fixes:
+ *
+ * - image `scout-for-lol` and an `sh -c` command that prepares the SWC cache,
+ *   instead of the chart-selected Temporal image and its entrypoint;
+ * - no ServiceAccount (the pod uses the namespace default with no token);
+ * - one readiness probe that requires a live workflow-task poller on the SDK
+ *   metrics port, instead of the `/healthz` probes on the app-metrics port;
+ * - a read-only root filesystem that must run as non-root;
+ * - only the SDK metrics port, selected through the Deployment, labelled with
+ *   the worker's own component and without namespace relabelling or an
+ *   app-metrics Service.
+ *
+ * Bending the helper to emit this would add an opt-out for nearly each of its
+ * fields, so the two share only their Temporal client environment.
+ */
 export function createScoutWorkflowWorker(
   chart: Chart,
   stage: Stage,
@@ -60,7 +83,13 @@ export function createScoutWorkflowWorker(
       args: [
         "mkdir -p /tmp/swc-native && chmod 700 /tmp/swc-native && exec bun run src/temporal/workflow-worker.ts",
       ],
-      ports: [{ name: "metrics", number: 9464, protocol: Protocol.TCP }],
+      ports: [
+        {
+          name: "metrics",
+          number: TEMPORAL_SDK_METRICS_PORT,
+          protocol: Protocol.TCP,
+        },
+      ],
       readiness: Probe.fromCommand(
         [
           "bun",
@@ -88,7 +117,7 @@ export function createScoutWorkflowWorker(
         ...temporalAddressEnv(),
         SWC_NATIVE_BINDING_CACHE: EnvValue.fromValue("/tmp/swc-native"),
         SWC_NATIVE_BINDING_CACHE_SKIP_SECURITY_CHECK: EnvValue.fromValue("1"),
-        TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+        ...temporalMetricsAddressEnv(),
         // Workflow workers are isolated to the stage they serve.
         TEMPORAL_NAMESPACE: EnvValue.fromValue(stage),
         TEMPORAL_WORKER_DEPLOYMENT_NAME: EnvValue.fromValue(
@@ -107,7 +136,7 @@ export function createScoutWorkflowWorker(
       labels: { component },
     },
     selector: deployment,
-    ports: [{ name: "metrics", port: 9464 }],
+    ports: [{ name: "metrics", port: TEMPORAL_SDK_METRICS_PORT }],
   });
   createServiceMonitor(chart, {
     name: `${name}-metrics`,

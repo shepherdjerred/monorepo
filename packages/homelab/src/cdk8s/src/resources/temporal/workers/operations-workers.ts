@@ -1,3 +1,4 @@
+import { temporalMetricsAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
@@ -175,7 +176,7 @@ export function createTemporalOperationsWorkers(
     envVariables: {
       ...temporalAddressEnv(props.serverServiceName),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
-      TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+      ...temporalMetricsAddressEnv(),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("billing"),
       FEATURE_FLAGS_MODE: EnvValue.fromValue("disabled"),
       ENVIRONMENT: EnvValue.fromValue("production"),
