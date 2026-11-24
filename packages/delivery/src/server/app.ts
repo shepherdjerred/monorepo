@@ -475,6 +475,9 @@ export function createApp(options: Options) {
         message: "delivery_request_failed",
         requestId: c.get("requestId"),
         errorType: error.name,
+        ...("code" in error && typeof error.code === "string"
+          ? { errorCode: error.code }
+          : {}),
       }),
     );
     return c.json(
