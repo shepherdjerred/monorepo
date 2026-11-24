@@ -1,0 +1,20 @@
+msxml3: Do not indent an end tag that follows character data in MXXMLWriter.
+
+writer_dec_indent() cleared the text flag before endElement() decided
+whether to indent, so an indenting writer put a line break and tabs inside
+every text-only element. MSXML writes <Value>text</Value>. makepri.exe's
+dump output passes through this writer, and the Windows App SDK build reads
+those values as file paths.
+
+--- a/dlls/msxml3/mxwriter.c
++++ b/dlls/msxml3/mxwriter.c
+@@ -645,9 +645,6 @@ static inline void writer_inc_indent(mxwriter *This)
+ static inline void writer_dec_indent(mxwriter *This)
+ {
+     if (This->indent) This->indent--;
+-    /* depth is decreased only when element is closed, meaning it's not a text node
+-       at this point */
+-    This->text = FALSE;
+ }
+ 
+ static void set_element_name(mxwriter *This, const WCHAR *name, int len)

@@ -66,12 +66,23 @@ dotnet build -c Release -r win-x64 -p:Platform=x64 \
   -p:GenerateAppxPackageOnBuild=true -p:AppxPackageDir=/workspace/AppPackages/
 ```
 
+Self-contained unpackaged apps publish the same way:
+
+```bash
+dotnet publish -c Release -r win-x64 -p:Platform=x64 -p:SelfContained=true \
+  -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true \
+  -p:EnableMsixTooling=false -o /workspace/standalone/
+```
+
 The targets run the stock .NET Framework `XamlCompiler.exe` (which also
-compiles XAML to XBF) and the Windows SDK's `makepri` and `makeappx` under Wine
-through generated shims. Because the MSBuild process is .NET on Linux,
-packaged resources are mapped from `makepri dump` output instead of loading
-`MrmSupport.dll`, the path the MSIX tooling already takes where the resource
-indexer API is unavailable.
+compiles XAML to XBF) and the Windows SDK's `makepri`, `makeappx`, and `mt.exe`
+under Wine through generated shims. `mt.exe` receives absolute paths as Wine
+`Z:` paths, because it reads a leading `/` as an option. Because the MSBuild
+process is .NET on Linux, packaged resources are mapped from `makepri dump`
+output instead of loading `MrmSupport.dll`, the path the MSIX tooling already
+takes where the resource indexer API is unavailable. A PRI names its files
+case-insensitively, so the files an unpackaged build copies out of a
+referenced PRI are resolved against the case-sensitive file system.
 
 Wine 11.0 needs these patches (`wine-patches/`) for those tools:
 
@@ -83,6 +94,7 @@ Wine 11.0 needs these patches (`wine-patches/`) for those tools:
 | `ntdll` AVL generic tables                                                         | `makeappx` and its packaging DLLs |
 | `msxml3` SAX attribute types and XML declaration properties                        | `makeappx`                        |
 | `msxml3` schema collections compile across namespaces when `validateOnLoad` is off | `makeappx` manifest validation    |
+| `msxml3` `MXXMLWriter` does not indent an end tag that follows text                | `makepri dump`                    |
 
 ### Limitations
 

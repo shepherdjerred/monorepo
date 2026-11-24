@@ -1,7 +1,23 @@
 #!/bin/sh
 # Runs a Windows SDK or Windows App SDK build tool under the image's Wine.
-# Usage: windows-cross-wine-run [--xaml-compiler] <tool.exe> [argument...]
+# Usage: windows-cross-wine-run [--xaml-compiler | --windows-paths] <tool.exe> [argument...]
 set -eu
+
+if [ "$1" = "--windows-paths" ]; then
+  # Tools such as mt.exe read a leading '/' as an option, so pass absolute
+  # Linux paths, alone or as an `-option:` value, as Wine's Z: drive paths.
+  tool=$2
+  shift 2
+  for argument do
+    shift
+    case $argument in
+      /*) argument="Z:$(printf '%s' "$argument" | tr / "\\\\")" ;;
+      -*:/*) argument="${argument%%:/*}:Z:$(printf '%s' "/${argument#*:/}" | tr / "\\\\")" ;;
+    esac
+    set -- "$@" "$argument"
+  done
+  exec wine "$tool" "$@"
+fi
 
 if [ "$1" != "--xaml-compiler" ]; then
   # The SDK ships its packaging DLLs beside its tools; they replace
