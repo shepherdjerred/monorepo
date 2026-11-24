@@ -11,9 +11,11 @@ import {
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
+  tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
@@ -77,13 +79,40 @@ endpoint = "https://s3.us-west-004.backblazeb2.com"
 directory = "/"
 is_incremental = false
 s3_force_path_style = true
-# Always 64 MiB parts, not the source's chunk size: objects up to 625 GiB,
-# with at most 4 parts (256 MiB) buffered at once.
+# Always 16 MiB parts, not the source's chunk size: objects up to 156 GiB,
+# with at most 4 parts (64 MiB) buffered per object being uploaded.
 keep_part_size = false
-uploader_part_size = 64
+uploader_part_size = 16
 uploader_max_upload_parts = 10000
 uploader_concurrency = 4
 `;
+
+/** The filer `filer.backup` subscribes to: HTTP on 8888, gRPC on 18888. */
+const FILER_HOST = "seaweedfs-filer-client";
+const FILER_HTTP_PORT = 8888;
+const FILER_GRPC_PORT = 18_888;
+/** The volume servers, whose HTTP port serves the chunks `filer.backup` reads. */
+const VOLUME_HTTP_PORT = 8080;
+
+/** Objects `filer.backup` copies at once (`-concurrency`; upstream default 32). */
+export const SEAWEEDFS_BACKUP_CONCURRENCY = 4;
+
+/**
+ * Runs before `weed filer.backup`, in the same container so it also runs when
+ * the container restarts in place. `filer.backup` reads its checkpoint once at
+ * start, and if that read fails (no DNS for the filer, gRPC unavailable) it
+ * starts from 1970-01-01 and overwrites the saved checkpoint with the oldest
+ * retained changelog entry, replaying months of history. So nothing starts
+ * until the filer answers both its HTTP and gRPC ports. It never touches the
+ * checkpoint; `weed` then resumes from it as before.
+ */
+export const SEAWEEDFS_BACKUP_WAIT_FOR_FILER = `filer=${FILER_HOST}
+until curl -fsS -o /dev/null --max-time 5 "http://$filer:${String(FILER_HTTP_PORT)}/" &&
+  nc -z -w 5 "$filer" ${String(FILER_GRPC_PORT)}; do
+  echo "waiting for $filer to answer on ${String(FILER_HTTP_PORT)} and ${String(FILER_GRPC_PORT)}"
+  sleep 5
+done
+exec /usr/bin/weed "$@"`;
 
 /**
  * Copies SeaweedFS objects to Backblaze as they change. `filer.backup`
@@ -143,12 +172,14 @@ export function createSeaweedfsBackup(chart: Chart): Deployment {
   const container = deployment.addContainer({
     name: "filer-backup",
     image: `chrislusf/seaweedfs:${versions["chrislusf/seaweedfs"]}`,
-    command: ["/usr/bin/weed"],
+    // `sh -c <script> <$0> <args...>`: the args are `weed`'s.
+    command: ["/bin/sh", "-c", SEAWEEDFS_BACKUP_WAIT_FOR_FILER, "filer-backup"],
     args: [
       "filer.backup",
-      "-filer=seaweedfs-filer-client:8888",
+      `-filer=${FILER_HOST}:${String(FILER_HTTP_PORT)}`,
       "-filerPath=/buckets",
       `-filerExcludePaths=${excludedPaths.join(",")}`,
+      `-concurrency=${String(SEAWEEDFS_BACKUP_CONCURRENCY)}`,
       "-doDeleteFiles",
     ],
     envVariables: {
@@ -161,16 +192,14 @@ export function createSeaweedfsBackup(chart: Chart): Deployment {
         key: "B2_SECRET_ACCESS_KEY",
       }),
     },
-    securityContext: {
-      ensureNonRoot: true,
-      readOnlyRootFilesystem: true,
-      user: 1000,
-      group: 1000,
-    },
-    // TLS and request signing for every object make the walk CPU-bound: at a
-    // 1-CPU limit its five workers copied small objects at ~3 MB/s. Each
-    // worker can buffer up to four 64 MiB parts (1.25 GiB in all), which the
-    // limit covers. The request is the 14d p95 RSS to 2026-11-08 (0.37Gi).
+    securityContext: restrictedContainer(1000),
+    // TLS and request signing for every object make the copy CPU-bound. Upload
+    // buffers bound memory: four objects at once, each with up to four 16 MiB
+    // parts in flight, is about 256 MiB. With the upstream default of 32
+    // objects and 64 MiB parts the bound was 8 GiB, and a replay of a month
+    // of changes OOMed at the 2 GiB limit within seconds of every start. The
+    // request is the 14d p95 RSS to 2026-11-08 (0.37Gi); the admission
+    // webhook scales live requests by its overcommit annotation.
     resources: {
       cpu: { request: Cpu.millis(500), limit: Cpu.millis(4000) },
       memory: { request: Size.mebibytes(384), limit: Size.mebibytes(2048) },
@@ -187,31 +216,37 @@ export function createSeaweedfsBackup(chart: Chart): Deployment {
   deployment.addVolume(tmp);
   container.mount("/tmp", tmp);
 
-  // It follows the filer's metadata stream over gRPC, reads chunks from the
-  // volume servers the filer names, and writes to Backblaze B2 over HTTPS.
-  // The SeaweedFS components are the upstream chart's pods in this
-  // namespace. It serves nothing, but has no Ingress policy yet: other
-  // namespaces reach the S3 gateway through rules that name only this
-  // namespace, which would then answer for this pod too.
+  // It follows the filer's metadata stream over gRPC and reads its KMS key
+  // from the filer, reads chunks over HTTP from the volume servers the filer
+  // names, and writes to Backblaze B2 over HTTPS. It serves nothing and
+  // exposes no metrics: the filer reports its subscriber's progress.
   new KubeNetworkPolicy(chart, "seaweedfs-backup-netpol", {
     metadata: { name: "seaweedfs-backup-netpol", namespace: "seaweedfs" },
     spec: {
       podSelector: { matchLabels: deployment.matchLabels },
-      policyTypes: ["Egress"],
+      policyTypes: ["Ingress", "Egress"],
+      ingress: [],
       egress: [
         dnsEgressRule(),
         {
-          to: [
-            {
-              podSelector: {
-                matchLabels: { "app.kubernetes.io/name": "seaweedfs" },
-              },
-            },
-          ],
+          to: [{ podSelector: { matchLabels: seaweedfsComponent("filer") } }],
+          ports: [tcp(FILER_HTTP_PORT), tcp(FILER_GRPC_PORT)],
+        },
+        {
+          to: [{ podSelector: { matchLabels: seaweedfsComponent("volume") } }],
+          ports: [tcp(VOLUME_HTTP_PORT)],
         },
         externalHttpsEgressRule(),
       ],
     },
   });
   return deployment;
+}
+
+/** The labels of one component's pods in the upstream SeaweedFS chart. */
+function seaweedfsComponent(component: string) {
+  return {
+    "app.kubernetes.io/name": "seaweedfs",
+    "app.kubernetes.io/component": component,
+  };
 }

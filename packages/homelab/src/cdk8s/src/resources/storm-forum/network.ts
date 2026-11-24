@@ -14,6 +14,7 @@ import {
   tcp,
   tailscaleIngressRule,
   prometheusIngressRule,
+  seaweedfsEgress,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 export function createForumNetwork(chart: Chart, stage: "beta" | "prod"): void {
@@ -166,8 +167,8 @@ function forumEgress(component: "web" | "release") {
       ],
       ports: [tcp(3306)],
     },
+    seaweedfsEgress(),
     ...[
-      ["seaweedfs", 8333],
       ["postal", 25],
       ["flags", 7361],
     ].map(([name, number]) => ({

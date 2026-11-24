@@ -13,7 +13,10 @@ import {
 import {
   BACKBLAZE_SEAWEEDFS_BACKUPS_ITEM_ID,
   createSeaweedfsBackup,
+  SEAWEEDFS_BACKUP_CONCURRENCY,
   SEAWEEDFS_BACKUP_EXCLUDED_BUCKETS,
+  SEAWEEDFS_BACKUP_REPLICATION_TOML,
+  SEAWEEDFS_BACKUP_WAIT_FOR_FILER,
   SEAWEEDFS_RETIRED_BACKUP_EXCLUDED_BUCKETS,
 } from "./seaweedfs-backup.ts";
 
@@ -44,8 +47,12 @@ const DeploymentSpecSchema = z.object({
       containers: z.array(
         z.object({
           image: z.string(),
+          command: z.array(z.string()),
           args: z.array(z.string()),
           env: z.array(EnvSchema),
+          resources: z.object({
+            limits: z.object({ memory: z.string() }),
+          }),
         }),
       ),
     }),
@@ -53,6 +60,36 @@ const DeploymentSpecSchema = z.object({
 });
 
 const ItemSpecSchema = z.object({ itemPath: z.string() });
+
+const PortSchema = z.object({ port: z.number(), protocol: z.string() });
+const NetworkPolicySpecSchema = z.object({
+  policyTypes: z.array(z.string()),
+  ingress: z.array(z.unknown()),
+  egress: z.array(
+    z.object({
+      to: z.array(
+        z
+          .object({
+            podSelector: z
+              .object({ matchLabels: z.record(z.string(), z.string()) })
+              .optional(),
+            ipBlock: z.object({ cidr: z.string() }).optional(),
+          })
+          .loose(),
+      ),
+      ports: z.array(PortSchema),
+    }),
+  ),
+});
+
+/** A replication.toml `[sink.s3]` integer setting. */
+function sinkSetting(name: string): number {
+  const prefix = `${name} = `;
+  const line = SEAWEEDFS_BACKUP_REPLICATION_TOML.split("\n").find((entry) =>
+    entry.startsWith(prefix),
+  );
+  return Number(line?.slice(prefix.length));
+}
 
 function synthesize() {
   const app = new App();
@@ -175,5 +212,69 @@ describe("SeaweedFS backup to Backblaze", () => {
         key: "B2_SECRET_ACCESS_KEY",
       },
     });
+  });
+
+  test("upload buffers stay well inside the memory limit", () => {
+    const [container] = DeploymentSpecSchema.parse(
+      synthesize().find((resource) => resource.kind === "Deployment")?.spec,
+    ).template.spec.containers;
+    expect(container?.args).toContain(
+      `-concurrency=${String(SEAWEEDFS_BACKUP_CONCURRENCY)}`,
+    );
+    // Each object being copied buffers up to `uploader_concurrency` parts.
+    const bufferedMiB =
+      SEAWEEDFS_BACKUP_CONCURRENCY *
+      sinkSetting("uploader_concurrency") *
+      sinkSetting("uploader_part_size");
+    expect(bufferedMiB).toBe(256);
+    expect(container?.resources.limits.memory).toBe("2048Mi");
+    expect(bufferedMiB * 4).toBeLessThanOrEqual(2048);
+  });
+
+  test("filer.backup starts only once the filer answers, from its checkpoint", () => {
+    const [container] = DeploymentSpecSchema.parse(
+      synthesize().find((resource) => resource.kind === "Deployment")?.spec,
+    ).template.spec.containers;
+    // The wait runs in the container itself, so an in-place restart waits too.
+    expect(container?.command).toEqual([
+      "/bin/sh",
+      "-c",
+      SEAWEEDFS_BACKUP_WAIT_FOR_FILER,
+      "filer-backup",
+    ]);
+    expect(container?.args[0]).toBe("filer.backup");
+    expect(SEAWEEDFS_BACKUP_WAIT_FOR_FILER).toContain("http://$filer:8888/");
+    expect(SEAWEEDFS_BACKUP_WAIT_FOR_FILER).toContain('"$filer" 18888');
+    expect(SEAWEEDFS_BACKUP_WAIT_FOR_FILER).toMatch(
+      /\nexec \/usr\/bin\/weed "\$@"$/u,
+    );
+    // Nothing moves the checkpoint: no start offset, no snapshot.
+    expect(container?.args.some((arg) => arg.startsWith("-timeAgo"))).toBe(
+      false,
+    );
+  });
+
+  test("its NetworkPolicy admits nothing and reaches only the filer, volumes, DNS and HTTPS", () => {
+    const policy = synthesize().find(
+      (resource) => resource.kind === "NetworkPolicy",
+    );
+    const spec = NetworkPolicySpecSchema.parse(policy?.spec);
+    expect(spec.policyTypes).toEqual(["Ingress", "Egress"]);
+    expect(spec.ingress).toEqual([]);
+    const rules = spec.egress.map((rule) => ({
+      to: rule.to.map(
+        (peer) =>
+          peer.ipBlock?.cidr ??
+          peer.podSelector?.matchLabels["app.kubernetes.io/component"] ??
+          peer.podSelector?.matchLabels["k8s-app"],
+      ),
+      ports: rule.ports.map(({ port }) => port),
+    }));
+    expect(rules).toEqual([
+      { to: ["kube-dns"], ports: [53, 53] },
+      { to: ["filer"], ports: [8888, 18_888] },
+      { to: ["volume"], ports: [8080] },
+      { to: ["0.0.0.0/0"], ports: [443] },
+    ]);
   });
 });

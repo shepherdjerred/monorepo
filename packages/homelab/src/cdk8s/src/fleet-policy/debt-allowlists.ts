@@ -17,15 +17,14 @@
  */
 export const WORKLOADS_WITHOUT_INGRESS_POLICY: ReadonlySet<string> = new Set([
   // These share an upstream chart's namespace, and other namespaces' Egress
-  // rules into it (Prometheus, Alertmanager and Grafana; the SeaweedFS S3
-  // gateway) name only the namespace. Policing these pods' Ingress first
-  // needs those rules narrowed to the upstream pods they mean.
+  // rules into it (Prometheus, Alertmanager and Grafana) name only the
+  // namespace. Policing these pods' Ingress first needs those rules narrowed
+  // to the upstream pods they mean, as `seaweedfsEgress` names the S3 pods.
   "prometheus/kubernetes-event-exporter",
   "prometheus/nvme-metrics-collector",
   "prometheus/smartctl-collector",
   "prometheus/zfs-snapshots-collector",
   "prometheus/zfs-zpool-collector",
-  "seaweedfs/seaweedfs-backup",
 ]);
 
 /**
@@ -258,7 +257,6 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "scout-prod/scout-prod-scout-backend/main",
   "scout-prod/scout-prod-scout-gateway/main",
   "scout-prod/scout-prod-scout-workflow-worker-candidate/scout-workflow-worker-candidate",
-  "seaweedfs/seaweedfs-backup/filer-backup",
   "starlight-karma-bot-beta/starlight-karma-bot-beta-starlight-karma-bot-backend/main",
   "starlight-karma-bot-prod/starlight-karma-bot-prod-starlight-karma-bot-backend/main",
   "syncthing/syncthing/main",

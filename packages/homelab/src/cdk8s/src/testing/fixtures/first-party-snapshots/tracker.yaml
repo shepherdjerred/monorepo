@@ -348,6 +348,11 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: seaweedfs
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: s3
+              app.kubernetes.io/instance: seaweedfs
+              app.kubernetes.io/name: seaweedfs
     - ports:
         - port: 7361
           protocol: TCP

@@ -16,6 +16,7 @@ import {
   lokiOtlpEgress,
   otlpEgress,
   prometheusIngressRule,
+  seaweedfsEgress,
   talosApiEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import {
@@ -122,23 +123,7 @@ function createTemporalWorkersSeaweedfsEgressPolicy(chart: Chart): void {
         ],
       },
       policyTypes: ["Egress"],
-      egress: [
-        {
-          to: [
-            {
-              ...nsPeer("seaweedfs"),
-              podSelector: {
-                matchLabels: {
-                  "app.kubernetes.io/name": "seaweedfs",
-                  "app.kubernetes.io/instance": "seaweedfs",
-                  "app.kubernetes.io/component": "s3",
-                },
-              },
-            },
-          ],
-          ports: [tcp(8333)],
-        },
-      ],
+      egress: [seaweedfsEgress()],
     },
   });
 }
