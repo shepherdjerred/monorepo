@@ -17,6 +17,7 @@ import { LinuxServerApp } from "@shepherdjerred/homelab/cdk8s/src/misc/third-par
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { PINCHTAB_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 const providerSource = await Bun.file(
   new URL("../../../config/bazarr/subhd.py", import.meta.url),
@@ -129,9 +130,7 @@ export function createBazarrDeployment(
         ],
         envVariables: {
           TZ: EnvValue.fromValue(""),
-          SUBHD_PINCHTAB_URL: EnvValue.fromValue(
-            "http://pinchtab.pinchtab.svc.cluster.local:9867",
-          ),
+          SUBHD_PINCHTAB_URL: EnvValue.fromValue(PINCHTAB_ENDPOINT.url),
           SUBHD_PINCHTAB_PROFILE: EnvValue.fromValue("subhd"),
           SUBHD_PINCHTAB_TOKEN: EnvValue.fromSecretValue({
             secret: Secret.fromSecretName(

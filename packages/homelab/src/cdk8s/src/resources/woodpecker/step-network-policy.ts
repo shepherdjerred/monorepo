@@ -8,6 +8,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 import { CI_STEP_POD_LABEL } from "./pod-labels.ts";
+import { DELIVERY_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 export const DELIVERY_CI_API_STEPS = [
   "images",
@@ -70,13 +71,8 @@ export function createWoodpeckerStepNetworkPolicy(chart: Chart) {
       policyTypes: ["Egress"],
       egress: [
         {
-          to: [
-            {
-              ...nsPeer("delivery"),
-              podSelector: { matchLabels: { app: "delivery" } },
-            },
-          ],
-          ports: [tcp(7353)],
+          to: [DELIVERY_ENDPOINT.peer()],
+          ports: [DELIVERY_ENDPOINT.tcp()],
         },
       ],
     },

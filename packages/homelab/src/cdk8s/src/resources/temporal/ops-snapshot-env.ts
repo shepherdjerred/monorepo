@@ -1,5 +1,9 @@
 import { EnvValue, type ISecret } from "cdk8s-plus-31";
 import { tailnetService } from "homelab/src/platform-model.ts";
+import {
+  GOLINK_ENDPOINT,
+  TRACKER_ENDPOINT,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 /**
  * Environment for the ops-snapshot collector and digest trigger on the infra
@@ -16,18 +20,14 @@ export function opsSnapshotEnv(secret: ISecret): Record<string, EnvValue> {
     ALERTMANAGER_URL: EnvValue.fromValue(
       "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
     ),
-    GOLINK_URL: EnvValue.fromValue(
-      "http://golink.golink.svc.cluster.local:7352",
-    ),
+    GOLINK_URL: EnvValue.fromValue(GOLINK_ENDPOINT.url),
     LOKI_URL: EnvValue.fromValue("http://loki.loki.svc.cluster.local:3100"),
     TEMPO_URL: EnvValue.fromValue("http://tempo.tempo.svc.cluster.local:3200"),
     OPS_INGEST_TOKEN: EnvValue.fromSecretValue({
       secret,
       key: "OPS_INGEST_TOKEN",
     }),
-    TRACKER_URL: EnvValue.fromValue(
-      "http://tracker.tracker.svc.cluster.local:7351",
-    ),
+    TRACKER_URL: EnvValue.fromValue(TRACKER_ENDPOINT.url),
     TRACKER_PUBLIC_URL: EnvValue.fromValue(tailnetService("tracker").origin),
     POSTHOG_PERSONAL_API_KEY: EnvValue.fromSecretValue({
       secret,

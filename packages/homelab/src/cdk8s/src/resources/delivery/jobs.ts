@@ -33,6 +33,7 @@ import {
   DELIVERY_STAGE_WORKSPACE_PROFILES_BY_NAMESPACE,
   LEGACY_DELIVERY_STAGE_LOCAL_QUEUE,
 } from "homelab/src/delivery-stage-admission.ts";
+import { DELIVERY_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 export const DELIVERY_WORKER_JOBS_NAMESPACE = "delivery-worker-jobs";
 export const DELIVERY_PLATFORM_JOBS_NAMESPACE = "delivery-platform-jobs";
@@ -146,13 +147,8 @@ export function createDeliveryJobs(
           ? [
               kubernetesApiEgressRule(),
               {
-                to: [
-                  {
-                    ...nsPeer("delivery"),
-                    podSelector: { matchLabels: { app: "delivery" } },
-                  },
-                ],
-                ports: [tcp(7353)],
+                to: [DELIVERY_ENDPOINT.peer()],
+                ports: [DELIVERY_ENDPOINT.tcp()],
               },
             ]
           : []),

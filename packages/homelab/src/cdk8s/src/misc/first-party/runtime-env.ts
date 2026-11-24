@@ -5,6 +5,11 @@ import { consumedBucket, platformModel } from "homelab/src/platform-model.ts";
 import type { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import {
+  FLAGS_EVALUATION_ENDPOINT,
+  FLAGS_MANAGEMENT_ENDPOINT,
+  FLIPT_ENDPOINT,
+} from "./endpoint.ts";
 
 /**
  * Environment blocks every first-party workload repeats: the feature-flag
@@ -20,10 +25,10 @@ import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/ot
  */
 
 /** First-party Flags's in-cluster credentialless evaluation endpoint. */
-export const FLAGS_EVALUATION_URL = "http://flags.flags.svc.cluster.local:7361";
+export const FLAGS_EVALUATION_URL = FLAGS_EVALUATION_ENDPOINT.url;
 
 /** First-party Flags's in-cluster authenticated management endpoint. */
-export const FLAGS_MANAGEMENT_URL = "http://flags.flags.svc.cluster.local:7360";
+export const FLAGS_MANAGEMENT_URL = FLAGS_MANAGEMENT_ENDPOINT.url;
 
 export type FlagDeploymentId = (typeof flagDeployments)[number]["id"];
 
@@ -43,8 +48,7 @@ export function flagsEnv(props: {
 }
 
 /** Flipt's in-cluster evaluation endpoint. */
-export const FLIPT_URL =
-  "http://flipt-flipt-service.flipt.svc.cluster.local:8080";
+export const FLIPT_URL = FLIPT_ENDPOINT.url;
 
 type FliptKey = "FLIPT_NAMESPACE" | "FLIPT_ENVIRONMENT" | "FLIPT_URL";
 
