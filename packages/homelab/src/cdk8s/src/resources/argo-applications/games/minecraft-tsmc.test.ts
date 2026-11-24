@@ -234,6 +234,17 @@ describe("minecraft-tsmc runs The Storm's image", () => {
         },
       },
     });
+    expect(extraEnv["STORM_STATS_INGEST_URL"]).toBe(
+      "http://storm-stats.storm-stats.svc.cluster.local:7422/api/v1/ingest",
+    );
+    expect(extraEnv["STORM_STATS_INGEST_TOKEN"]).toEqual({
+      valueFrom: {
+        secretKeyRef: {
+          name: "minecraft-tsmc-storm-stats",
+          key: "STORM_STATS_INGEST_TOKEN",
+        },
+      },
+    });
   });
 
   test("uses PROXY-aware health probes for the PROXY-enabled Paper server", () => {

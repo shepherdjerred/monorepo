@@ -2704,13 +2704,17 @@
       ],
       "ops": {
         "kind": "product",
-        "namespaces": ["storm-stats"]
+        "namespaces": ["storm-stats"],
+        "argoApps": ["storm-stats"]
       },
       "legacy": {
-        "rootReleaseExclusions": {
-          "storm-stats": "inactive"
-        },
-        "charts": ["storm-stats"]
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/storm-stats",
+            "argoApp": "storm-stats"
+          }
+        ]
       }
     }
   ],
@@ -2940,7 +2944,7 @@
       "automatic": true,
       "promotionSourceEnvironmentId": "minecraft/sandbox",
       "recipeRevisionId": "minecraft-tsmc/9",
-      "configurationRevisionId": "minecraft-tsmc/10"
+      "configurationRevisionId": "minecraft-tsmc/11"
     },
     {
       "id": "mc-router/prod",
@@ -2957,6 +2961,14 @@
       "automatic": true,
       "recipeRevisionId": "tracker/prod/2",
       "configurationRevisionId": "tracker/prod/1"
+    },
+    {
+      "id": "storm-stats/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "storm-stats/prod/2",
+      "configurationRevisionId": "storm-stats/prod/1"
     },
     {
       "id": "storm-forum/prod",
@@ -3132,7 +3144,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/13"
+      "configurationRevisionId": "argocd/prod/14"
     },
     {
       "id": "chartmuseum/prod",
@@ -4910,6 +4922,41 @@
       "rule": "any-accepted"
     },
     {
+      "dependent": "storm-stats/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-stats/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-stats/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-stats/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-stats/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-stats/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "storm-stats/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
       "dependent": "streambot/prod",
       "prerequisite": "1password/prod",
       "rule": "any-accepted"
@@ -5201,6 +5248,11 @@
     },
     {
       "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "storm-stats/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
       "prerequisite": "streambot/prod",
       "rule": "any-accepted"
     },
@@ -5413,7 +5465,8 @@
       "minecraft-tsmc": "minecraft/tsmc",
       "glitter-boys-launcher": "glitter-boys-launcher/prod",
       "golink": "golink/prod",
-      "flags": "flags/prod"
+      "flags": "flags/prod",
+      "storm-stats": "storm-stats/prod"
     },
     "platformDeliveryDelegated": true
   }

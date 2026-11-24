@@ -86,6 +86,7 @@ describe("deployed registry derived from the service catalog", () => {
         "starlight-karma-bot beta shepherdjerred/starlight-karma-bot/beta starlight-karma-bot-beta",
         "starlight-karma-bot prod shepherdjerred/starlight-karma-bot/prod starlight-karma-bot-prod",
         "storm-brain default shepherdjerred/storm-brain storm-brain",
+        "storm-stats default shepherdjerred/storm-stats storm-stats",
         "streambot default shepherdjerred/streambot media",
         "tasknotes-server default shepherdjerred/tasknotes-server tasknotes",
         "the-storm tsmc shepherdjerred/the-storm-server minecraft-tsmc",

@@ -15,6 +15,10 @@
     {
       "id": "shepherdjerred/flags",
       "to": "docker_hub_repository.image[\"flags\"]"
+    },
+    {
+      "id": "shepherdjerred/storm-stats",
+      "to": "docker_hub_repository.image[\"storm-stats\"]"
     }
   ],
   "locals": {

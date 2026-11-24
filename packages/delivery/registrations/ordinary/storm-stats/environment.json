@@ -1,0 +1,10 @@
+{
+  "id": "storm-stats/prod",
+  "serviceId": "storm-stats",
+  "name": "prod",
+  "application": "storm-stats",
+  "pipelineRevisionId": "storm-stats/prod/1",
+  "configurationRevision": "storm-stats/prod/1",
+  "configuration": {},
+  "automatic": true
+}

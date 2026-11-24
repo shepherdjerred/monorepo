@@ -50,6 +50,7 @@ const CONSUMER_NAMESPACES = [
   "storm-brain",
   "storm-forum",
   "storm-forum-beta",
+  "storm-stats",
   "minecraft-tsmc",
   // The Woodpecker maintenance worker runs the shared temporal-worker image in `woodpecker-ci`.
   "woodpecker-ci",
