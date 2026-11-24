@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import { tailnetService } from "homelab/src/platform-model.ts";
 import { Size } from "cdk8s";
 import { Cpu, DeploymentStrategy, EnvValue, Secret } from "cdk8s-plus-31";
+import type { SingleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import {
@@ -15,33 +16,20 @@ import {
   flagsEgress,
   otlpEgress,
   seaweedfsEgress,
-  postgresEgress,
   dnsEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { requireFirstPartyImage } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
-function databaseUrl() {
-  const protocol = "postgresql";
-  const user = "$(DB_USER)";
-  const password = "$(DB_" + "PASSWORD)";
-  return `${protocol}://${user}:${password}@tracker-postgresql:5432/tracker_db`;
-}
-
 /** A synthesis recipe is replaced by the required PG image binding before packaging. */
-export function createTrackerDeployment(chart: Chart, image: string) {
+export function createTrackerDeployment(
+  chart: Chart,
+  image: string,
+  database: SingleAppDatabase,
+) {
   requireFirstPartyImage("tracker", image);
-  const pg = Secret.fromSecretName(
-    chart,
-    "tracker-pg",
-    "tracker.tracker-postgresql.credentials.postgresql.acid.zalan.do",
-  );
   const s3Item = seaweedfsS3.item(chart, "tracker-seaweedfs-1p");
   const s3 = Secret.fromSecretName(chart, "tracker-s3", s3Item.name);
-  const dbEnv = {
-    DB_USER: EnvValue.fromSecretValue({ secret: pg, key: "username" }),
-    DB_PASSWORD: EnvValue.fromSecretValue({ secret: pg, key: "password" }),
-    DATABASE_URL: EnvValue.fromValue(databaseUrl()),
-  };
+  const dbEnv = database.env;
   const securityContext = restrictedContainer(1000);
   return new FirstPartyWebService(chart, "tracker-web-service", {
     name: "tracker",
@@ -121,7 +109,7 @@ export function createTrackerDeployment(chart: Chart, image: string) {
         ],
         egress: [
           dnsEgressRule(),
-          postgresEgress("tracker-postgresql"),
+          database.egress,
           seaweedfsEgress(),
           flagsEgress(),
           otlpEgress(),

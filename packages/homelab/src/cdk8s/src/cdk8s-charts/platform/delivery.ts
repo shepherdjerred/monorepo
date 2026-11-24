@@ -15,7 +15,7 @@ import {
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { createDeliveryNamespace } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/namespace.ts";
-import { createSingleAppPostgreSQL } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/single-app-postgresql.ts";
+import { singleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 import { transitionRendering } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import {
   setRevisionHistoryLimit,
@@ -35,13 +35,6 @@ import { DELIVERY_TAILSCALE_INGRESS } from "@shepherdjerred/ops-model/delivery-i
 import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { DELIVERY_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
-function databaseUrl() {
-  const protocol = "postgresql";
-  const username = "$(DB_USER)";
-  const password = "$(DB_" + "PASSWORD)";
-  return `${protocol}://${username}:${password}@delivery-postgresql:5432/delivery_db`;
-}
-
 export function createDeliveryChart(
   app: App,
   activation: DeliveryActivation | undefined,
@@ -60,13 +53,13 @@ export function createDeliveryChart(
   // Namespace and the `delivery-postgresql` cluster this chart connects to.
   if (!transitionRendering())
     createDeliveryNamespace(chart, { retained: false });
-  if (!transitionRendering())
-    createSingleAppPostgreSQL(chart, { app: "delivery", userFlags: [] });
-  const database = Secret.fromSecretName(
-    chart,
-    "postgres",
-    "delivery.delivery-postgresql.credentials.postgresql.acid.zalan.do",
-  );
+  const database = transitionRendering()
+    ? singleAppDatabase(chart, { app: "delivery", provision: false })
+    : singleAppDatabase(chart, {
+        app: "delivery",
+        provision: true,
+        userFlags: [],
+      });
   const item = new OnePasswordItem(chart, "bootstrap", {
     spec: { itemPath: vaultItemPath(activation.serviceItemId) },
   });
@@ -107,14 +100,7 @@ export function createDeliveryChart(
     securityContext: { fsGroup: 1000 },
   });
   const observer = createDeliveryIngressObserver(deployment);
-  const dbEnv = {
-    DB_USER: EnvValue.fromSecretValue({ secret: database, key: "username" }),
-    DB_PASSWORD: EnvValue.fromSecretValue({
-      secret: database,
-      key: "password",
-    }),
-    DATABASE_URL: EnvValue.fromValue(databaseUrl()),
-  };
+  const dbEnv = database.env;
   const securityContext = {
     user: 1000,
     group: 1000,
@@ -229,7 +215,7 @@ export function createDeliveryChart(
     port: DELIVERY_ENDPOINT.port,
     probePath: "/healthz",
   });
-  createDeliveryNetworkPolicy(chart);
+  createDeliveryNetworkPolicy(chart, database);
   createDeliveryMonitoring(chart);
   return chart;
 }
