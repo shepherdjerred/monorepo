@@ -251,9 +251,12 @@ another host or to serve other content. A `404` is remembered in memory for ten
 minutes (at most 1024 file names; an entry expires when it is next read).
 
 The cache directory is the bootstrap setting `MEDIA_ARTWORK_CACHE_DIR`, which
-defaults to `/tmp/media-artwork`. In the cluster that is the API pod's
-`emptyDir`, so the cache starts empty on every deploy and pod restart until
-the deployment mounts a volume and points the variable at it. The API creates
+defaults to `/tmp/media-artwork`, inside the pod's disposable `emptyDir`. In
+the cluster the deployment mounts the 2 GiB `media-artwork-cache` volume at
+`/var/cache/media-artwork` and points the variable there, so the cache survives
+deploys and pod restarts. The volume is excluded from Velero backups: it holds
+only images the API can fetch again from TMDB, and losing it costs a cold
+cache, not data. The API creates
 the directory when it starts and refuses to start when it cannot create or
 write it; it never runs without the cache or moves it elsewhere. Files are
 stored as `<directory>/<size>/<file>`, written to a temporary file in the same

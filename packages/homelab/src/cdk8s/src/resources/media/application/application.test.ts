@@ -260,7 +260,12 @@ test("separates network credentials from writable media mounts", () => {
       expect(env).not.toContain("MEDIA_CREDENTIAL_KEY");
       expect(env).not.toContain("POSTAL_API_KEY");
       expect(env).not.toContain("TMDB_API_KEY");
-    } else expect(mounts.map((mount) => mount.mountPath)).toEqual(["/tmp"]);
+    } else
+      expect(mounts.map((mount) => mount.mountPath)).toEqual(
+        deployment.metadata.name.endsWith("media-api")
+          ? ["/var/cache/media-artwork", "/tmp"]
+          : ["/tmp"],
+      );
     if (deployment.metadata.name.endsWith("media-api")) {
       expect(container?.env).toContainEqual({
         name: "PLEX_SERVER_URL",
@@ -272,6 +277,60 @@ test("separates network credentials from writable media mounts", () => {
       expect(env).toContain("TMDB_API_KEY");
     }
   }
+});
+
+test("mounts the artwork cache from a backup-excluded volume and replaces the API pod rather than overlapping it", () => {
+  const manifests = resources();
+  expect(
+    manifests.find(
+      (resource) =>
+        resource.kind === "PersistentVolumeClaim" &&
+        resource.metadata.name === "media-artwork-cache",
+    ),
+  ).toMatchObject({
+    metadata: {
+      labels: {
+        "velero.io/backup": "disabled",
+        "velero.io/exclude-from-backup": "true",
+      },
+    },
+    spec: {
+      accessModes: ["ReadWriteOnce"],
+      resources: { requests: { storage: "2Gi" } },
+      storageClassName: "zfs-ssd-lz4",
+    },
+  });
+  const api = manifests.find(
+    (resource) =>
+      resource.kind === "Deployment" &&
+      resource.metadata.name === "media-media-api",
+  );
+  expect(api?.spec).toMatchObject({
+    replicas: 1,
+    strategy: { type: "Recreate" },
+    template: {
+      spec: {
+        securityContext: { fsGroup: 1000 },
+        volumes: expect.arrayContaining([
+          expect.objectContaining({
+            persistentVolumeClaim: expect.objectContaining({
+              claimName: "media-artwork-cache",
+            }),
+          }),
+        ]),
+        containers: [
+          expect.objectContaining({
+            env: expect.arrayContaining([
+              {
+                name: "MEDIA_ARTWORK_CACHE_DIR",
+                value: "/var/cache/media-artwork",
+              },
+            ]),
+          }),
+        ],
+      },
+    },
+  });
 });
 
 test("declares protected PostgreSQL and denies files worker external network access", () => {

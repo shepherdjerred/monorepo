@@ -13,6 +13,14 @@ import {
   mediaFeatureFlagEnvironment,
 } from "./environment.ts";
 
+/**
+ * The artwork cache's volume: the claim name is the backup policy's
+ * `media/media-artwork-cache` exclusion, and the API reads the mount path from
+ * `MEDIA_ARTWORK_CACHE_DIR`. The cache is rebuildable from TMDB.
+ */
+const ARTWORK_CACHE_CLAIM = "media-artwork-cache";
+const ARTWORK_CACHE_PATH = "/var/cache/media-artwork";
+
 export function createMediaApi(
   chart: Chart,
   props: {
@@ -41,6 +49,15 @@ export function createMediaApi(
         labels: { app: "media-api", [MEDIA_APPLICATION_LABEL]: "true" },
       },
       securityContext: { fsGroup: 1000 },
+    },
+    // A ReadWriteOnce claim cannot attach to a second pod, so this deployment
+    // stays `Recreate` with one replica: the old pod stops before the new one
+    // mounts the claim. 2 GiB holds the 1 GiB cache cap
+    // (`media-artwork-cache-max-bytes`) plus in-flight temporary files.
+    data: {
+      id: ARTWORK_CACHE_CLAIM,
+      storage: Size.gibibytes(2),
+      path: ARTWORK_CACHE_PATH,
     },
     containers: () => ({
       init: [
@@ -90,6 +107,7 @@ export function createMediaApi(
             `http://${props.plexServiceName}:32400`,
           ),
           HOME: EnvValue.fromValue("/tmp"),
+          MEDIA_ARTWORK_CACHE_DIR: EnvValue.fromValue(ARTWORK_CACHE_PATH),
           ...temporalAddressEnv(),
           TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
         },
