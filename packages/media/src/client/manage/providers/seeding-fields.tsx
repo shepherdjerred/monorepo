@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ProviderStatus } from "#shared/admin.ts";
+import { avistazFamilyTrackers, type ProviderStatus } from "#shared/admin.ts";
 import {
   CheckboxField,
   ChoiceField,
@@ -17,13 +17,6 @@ const cx = classNames(styles);
 
 type Policy = ProviderStatus["seedingPolicy"];
 type PrivatePolicy = Extract<Policy, { kind: "private" }>;
-
-/** The trackers whose rules are their own, not the public default. */
-const PRIVATE_TRACKERS: ReadonlySet<string> = new Set([
-  "privatehd",
-  "avistaz",
-  "animez",
-]);
 
 function SizeRuleFields({ rule }: { rule: PrivatePolicy["sizeRule"] }) {
   return (
@@ -105,10 +98,10 @@ function PrivateRuleFields({ kind, policy }: { kind: string; policy: Policy }) {
       />
       {kind === "privatehd" && (
         <p className={cx("note")}>
-          PrivateHD’s own formula works in decimal GB: 72 hours up to 1 GB, 72 +
-          2 × GB hours below 50 GB, and 100 × ln(GB) − 219.2023 hours above
-          that, rounded up to whole minutes. A ratio entered here is an
-          alternative to that time.
+          Required seeding time is rounded up to whole minutes. Using decimal
+          GB, it’s 72 hours up to 1 GB, 72 + 2 × GB hours above 1 GB and below
+          50 GB, and 100 × ln(GB) − 219.2023 hours from 50 GB. Meeting the
+          entered ratio also satisfies the requirement.
         </p>
       )}
       {kind === "private" && (
@@ -138,7 +131,7 @@ function PrivateRuleFields({ kind, policy }: { kind: string; policy: Policy }) {
 /** How long a tracker's downloads must keep seeding before they may be removed. */
 export function SeedingFields({ provider }: { provider: ProviderStatus }) {
   const [kind, setKind] = useState<string>(provider.seedingPolicy.kind);
-  const ownRules = PRIVATE_TRACKERS.has(provider.id);
+  const ownRules = avistazFamilyTrackers.has(provider.id);
   return (
     <FieldGroup legend="Seeding rules">
       <SelectField
@@ -152,8 +145,8 @@ export function SeedingFields({ provider }: { provider: ProviderStatus }) {
       >
         <option value="unknown">Not recorded yet</option>
         {!ownRules && <option value="public">Public tracker</option>}
-        {provider.id === "privatehd" && (
-          <option value="privatehd">PrivateHD’s size formula</option>
+        {ownRules && (
+          <option value="privatehd">AvistaZ network size formula</option>
         )}
         {ownRules && <option value="private">Rules I enter here</option>}
       </SelectField>

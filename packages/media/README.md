@@ -2761,6 +2761,11 @@ TPB and MagnetDownload provide title searches only and report
 bound to the current credential. Each invocation retains its own database lease
 and pacing; a deferred listing can reuse authentication on its next invocation.
 
+PrivateHD, AvistaZ, and AnimeZ can use the same size-based Hit & Run policy.
+For complete downloads, the verified policy permits cleanup once either its
+configured ratio or the size-based seeding time is met, subject to Media’s
+ownership and import checks. Incomplete downloads stay protected.
+
 Movie searches deferred by a local provider lease or cooldown retain the same
 scoped coordinator and wait durably before checking admission again. Each resumed
 Activity rechecks current intent, sponsorship, reservations and authority with its
