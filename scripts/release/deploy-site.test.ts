@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { chmod, copyFile, mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { prepareStaticSite } from "../lib/sites/build.ts";
 import {
   createCiArtifactArchive,
@@ -12,6 +13,93 @@ import {
   restoreStaticArchive,
 } from "../lib/static-site-archive.ts";
 
+const AWS_SHIM_SCRIPT = [
+  'console.error("unexpected remote AWS call");',
+  "process.exit(91);",
+  "",
+].join("\n");
+
+const GIT_SHIM_SCRIPT = [
+  "const args = process.argv.slice(2);",
+  'const changed = process.env.SELECTOR_CHANGED_PATH ?? "";',
+  'if (args[0] === "diff" && changed !== "") {',
+  "  for (const candidate of args) {",
+  "    if (",
+  '      candidate !== "" &&',
+  "      (changed === candidate || changed.startsWith(`${candidate}/`))",
+  "    ) {",
+  "      console.log(changed);",
+  "      break;",
+  "    }",
+  "  }",
+  "}",
+  "process.exit(0);",
+  "",
+].join("\n");
+
+async function writeCommandShim(
+  directory: string,
+  name: string,
+  script: string,
+): Promise<void> {
+  const shimPath = path.join(directory, `${name}-shim.mjs`);
+  await Bun.write(shimPath, script);
+  if (process.platform === "win32") {
+    await Bun.write(
+      path.join(directory, `${name}.cmd`),
+      `@echo off\r\n"${process.execPath}" "${shimPath}" %*\r\n`,
+    );
+  } else {
+    const wrapper = path.join(directory, name);
+    await Bun.write(
+      wrapper,
+      `#!/bin/sh\nexec "${process.execPath}" "${shimPath}" "$@"\n`,
+    );
+    await chmod(wrapper, 0o755);
+  }
+}
+
+function buildChildEnvironment(
+  directory: string,
+  environment: Record<string, string>,
+): Record<string, string> {
+  const passthroughKeys = [
+    "COMSPEC",
+    "ComSpec",
+    "PATHEXT",
+    "SYSTEMDRIVE",
+    "SystemDrive",
+    "SYSTEMROOT",
+    "SystemRoot",
+    "TEMP",
+    "TMP",
+    "WINDIR",
+    "windir",
+  ] as const;
+  const childEnv: Record<string, string> = {};
+  for (const key of passthroughKeys) {
+    const value = Bun.env[key];
+    if (value !== undefined) childEnv[key] = value;
+  }
+  for (const [key, value] of Object.entries(environment)) {
+    if (key.toUpperCase() !== "PATH") childEnv[key] = value;
+  }
+  const inheritedPath =
+    environment["PATH"] ??
+    environment["Path"] ??
+    Bun.env["PATH"] ??
+    Bun.env["Path"] ??
+    "";
+  const searchPath =
+    inheritedPath === ""
+      ? directory
+      : `${directory}${path.delimiter}${inheritedPath}`;
+  const pathKey = process.platform === "win32" ? "Path" : "PATH";
+  childEnv[pathKey] = searchPath;
+  if (pathKey !== "PATH") childEnv["PATH"] = searchPath;
+  return childEnv;
+}
+
 async function runSiteCommand(
   script: string,
   args: string[],
@@ -19,21 +107,11 @@ async function runSiteCommand(
 ) {
   const directory = await mkdtemp(path.join(tmpdir(), "site-build-contract-"));
   try {
-    const aws = path.join(directory, "aws");
-    await Bun.write(
-      aws,
-      "#!/bin/sh\necho 'unexpected remote AWS call' >&2\nexit 91\n",
-    );
-    await chmod(aws, 0o755);
-    const git = path.join(directory, "git");
-    await Bun.write(
-      git,
-      '#!/bin/sh\nif [ "$1" = diff ]; then\n  for path in "$@"; do\n    case "$SELECTOR_CHANGED_PATH" in "$path"|"$path"/*) printf "%s\\n" "$SELECTOR_CHANGED_PATH"; break;; esac\n  done\nfi\nexit 0\n',
-    );
-    await chmod(git, 0o755);
+    await writeCommandShim(directory, "aws", AWS_SHIM_SCRIPT);
+    await writeCommandShim(directory, "git", GIT_SHIM_SCRIPT);
     const child = Bun.spawn([process.execPath, script, ...args], {
-      cwd: new URL("../..", import.meta.url).pathname,
-      env: { ...environment, PATH: `${directory}:${Bun.env["PATH"] ?? ""}` },
+      cwd: fileURLToPath(new URL("../..", import.meta.url)),
+      env: buildChildEnvironment(directory, environment),
       stdout: "pipe",
       stderr: "pipe",
     });
@@ -44,7 +122,7 @@ async function runSiteCommand(
     ]);
     return { stdout, stderr, status };
   } finally {
-    await rm(directory, { recursive: true });
+    await rm(directory, { recursive: true, force: true });
   }
 }
 test.each(["ts-mc", "sjer.red", "glitter-boys"])(
@@ -122,7 +200,9 @@ test("Resume's PDF handoff packages only the served entrypoints and PDF", async 
     await Bun.write(path.join(producer, "packages/resume/resume.pdf"), pdf);
     for (const name of ["index.html", "404.html"])
       await copyFile(
-        new URL(`../../packages/resume/${name}`, import.meta.url),
+        fileURLToPath(
+          new URL(`../../packages/resume/${name}`, import.meta.url),
+        ),
         path.join(source, name),
       );
     await Bun.write(path.join(source, "AGENTS.md"), "private source guidance");

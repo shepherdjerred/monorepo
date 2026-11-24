@@ -17,6 +17,7 @@ import {
   workspaceDirectories,
   type TestStep,
   type TestTier,
+  type WorkspaceTests,
 } from "./test-manifest-schema.ts";
 import {
   gradleJUnitReportPaths,
@@ -25,240 +26,175 @@ import {
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
 
-/**
- * `--group <name>` selects one of a grouped workspace's step groups and
- * `--tier ci|extended` selects the test tier (default `ci`); either order.
- * Anything else is an error so a mistyped script never silently runs the
- * wrong steps.
- */
-function parseArguments(cliArguments: readonly string[]): {
-  requestedGroup: string | undefined;
-  requestedTier: TestTier;
-} {
+type SelectedStep = {
+  readonly index?: number | undefined;
+  readonly name: string;
+  readonly step: TestStep;
+};
+type StepResult = {
+  readonly exitCode: number;
+  readonly reportingError?: Error | undefined;
+};
+type StepContext = {
+  readonly step: TestStep;
+  readonly name: string;
+  readonly reportPath: string;
+  readonly rawCoverageDirectory: string;
+  readonly coverageEnabled: boolean;
+  readonly environment: Record<string, string | undefined>;
+};
+
+function parseArguments(cliArgs: readonly string[]) {
   let requestedGroup: string | undefined;
   let requestedTier: TestTier | undefined;
   const unknown: string[] = [];
-  for (let index = 0; index < cliArguments.length; index++) {
-    const flag = cliArguments[index];
-    const value = cliArguments[index + 1];
+  for (let i = 0; i < cliArgs.length; i++) {
+    const flag = cliArgs[i];
+    const val = cliArgs[i + 1];
     if (
       flag === "--group" &&
-      value !== undefined &&
+      val !== undefined &&
       requestedGroup === undefined
     ) {
-      requestedGroup = value;
-      index++;
+      requestedGroup = val;
+      i++;
     } else if (
       flag === "--tier" &&
       requestedTier === undefined &&
-      (value === "ci" || value === "extended")
+      (val === "ci" || val === "extended")
     ) {
-      requestedTier = value;
-      index++;
+      requestedTier = val;
+      i++;
     } else {
       unknown.push(flag ?? "");
     }
   }
-  if (unknown.length > 0) {
+  if (unknown.length > 0)
     throw new Error(`Unknown arguments: ${unknown.join(", ")}`);
-  }
   return { requestedGroup, requestedTier: requestedTier ?? "ci" };
 }
 
-const { requestedGroup, requestedTier } = parseArguments(process.argv.slice(2));
-const workspaceDirectory = path
-  .relative(repositoryRoot, process.cwd())
-  .split(path.sep)
-  .join("/");
-// Only this workspace's own file: an edit to another workspace's steps
-// never changes this task's inputs.
-const workspaceTests = await readWorkspaceTests(
-  repositoryRoot,
-  workspaceDirectory,
-);
-if (workspaceTests === undefined) {
-  throw new Error(
-    `No ${WORKSPACE_TESTS_FILE} declares CI tests for workspace ${workspaceDirectory}`,
-  );
-}
-const workspace = workspaceTests;
-const groups = new Set(
-  workspace.steps.flatMap((step) =>
-    step.group === undefined ? [] : [step.group],
-  ),
-);
-if (requestedGroup === undefined && groups.size > 0) {
-  throw new Error(
-    `${workspace.package} splits its CI tests into groups; pass --group with one of: ${[...groups].join(", ")}`,
-  );
-}
-if (requestedGroup !== undefined && !groups.has(requestedGroup)) {
-  throw new Error(
-    `${workspace.package} has no CI test group ${requestedGroup}`,
-  );
-}
-const selectedSteps = workspace.steps.filter(
-  (step) =>
-    step.group === requestedGroup && stepRunsInTier(step, requestedTier),
-);
-// A `test:<tier>` script whose tier has no steps would pass while running
-// nothing; `shared` prerequisites alone do not make a tier.
-if (!selectedSteps.some((step) => (step.tier ?? "ci") === requestedTier)) {
-  const scope =
-    requestedGroup === undefined ? "" : ` in group ${requestedGroup}`;
-  throw new Error(
-    `${workspace.package} has no ${requestedTier} steps${scope}; remove the test:${requestedTier} script`,
-  );
-}
-const allWorkspaceDirectories = await workspaceDirectories(repositoryRoot);
-const nestedWorkspaceDirectories = allWorkspaceDirectories
-  .filter((directory) => directory.startsWith(`${workspaceDirectory}/`))
-  .map((directory) => directory.slice(workspaceDirectory.length + 1));
-
-const outputDirectory = path.join(
-  repositoryRoot,
-  ".ci-reports",
-  "junit",
-  sanitizeWorkspace(workspace.package),
-);
-await Bun.$`mkdir -p ${outputDirectory}`;
-
-const environment = { ...Bun.env };
-applyDefaultEnvironment(environment, workspace.defaultEnv ?? {});
-const coverageEnabled = workspace.coverageAlways === true;
-let cachedDotnetExecutable: string | undefined;
-let cachedNodeExecutable: string | undefined;
-
-async function pinnedNodeExecutable(): Promise<string> {
-  if (cachedNodeExecutable !== undefined) {
-    return cachedNodeExecutable;
-  }
-  const result = Bun.spawnSync(["mise", "where", "node"], {
+async function resolveMiseTool(
+  miseBinary: string,
+  tool: "node" | "dotnet",
+  label: string,
+  relativeBinary: readonly string[],
+): Promise<string> {
+  const result = Bun.spawnSync([miseBinary, "where", tool], {
     cwd: repositoryRoot,
     stdout: "pipe",
     stderr: "inherit",
   });
   if (result.exitCode !== 0) {
     throw new Error(
-      `mise where node exited with status ${String(result.exitCode)}; run mise install.`,
+      `mise where ${tool} exited with status ${String(result.exitCode)}; run mise install.`,
     );
   }
-  const nodeRoot = new TextDecoder().decode(result.stdout).trim();
   const executable = path.join(
-    nodeRoot,
-    "bin",
-    process.platform === "win32" ? "node.exe" : "node",
+    new TextDecoder().decode(result.stdout).trim(),
+    ...relativeBinary,
   );
   if (!(await Bun.file(executable).exists())) {
-    throw new Error(`mise resolved a Node installation without ${executable}.`);
+    throw new Error(
+      `mise resolved a ${label} installation without ${executable}.`,
+    );
   }
-  cachedNodeExecutable = executable;
   return executable;
 }
 
-async function pinnedDotnetExecutable(): Promise<string> {
-  if (cachedDotnetExecutable !== undefined) {
-    return cachedDotnetExecutable;
-  }
+async function dotnetStepCommand(
+  step: Extract<TestStep, { runner: "dotnet" }>,
+  ctx: StepContext,
+): Promise<string[]> {
+  const [project, ...rest] = step.args;
+  if (project === undefined)
+    throw new Error("A .NET test project is required.");
   const wingetMise = path.join(
     Bun.env["LOCALAPPDATA"] ?? "",
-    "Microsoft",
-    "WinGet",
-    "Links",
-    "mise.exe",
+    "Microsoft/WinGet/Links/mise.exe",
   );
   const mise =
     process.platform === "win32" && (await Bun.file(wingetMise).exists())
       ? wingetMise
       : "mise";
-  const result = Bun.spawnSync([mise, "where", "dotnet"], {
-    cwd: repositoryRoot,
-    stdout: "pipe",
-    stderr: "inherit",
-  });
-  if (result.exitCode !== 0) {
-    throw new Error(
-      `mise where dotnet exited with status ${String(result.exitCode)}; run mise install.`,
-    );
-  }
-  const dotnetRoot = new TextDecoder().decode(result.stdout).trim();
-  const executable = path.join(
-    dotnetRoot,
+  const dotnetBin = await resolveMiseTool(mise, "dotnet", ".NET", [
     process.platform === "win32" ? "dotnet.exe" : "dotnet",
-  );
-  if (!(await Bun.file(executable).exists())) {
-    throw new Error(`mise resolved a .NET installation without ${executable}.`);
-  }
-  cachedDotnetExecutable = executable;
-  return executable;
-}
-
-function coverageDirectory(step: TestStep, index: number): string {
-  return path.join(
-    repositoryRoot,
-    ".ci-reports",
-    "coverage",
-    "raw",
-    sanitizeWorkspace(workspace.package),
-    testStepReportName(step, index),
-  );
-}
-
-function vitestCoverageArguments(rawCoverageDirectory: string): string[] {
-  return coverageEnabled
-    ? [
-        "--coverage",
-        "--coverage.provider=istanbul",
-        "--coverage.reporter=lcovonly",
-        `--coverage.reportsDirectory=${rawCoverageDirectory}`,
-      ]
+  ]);
+  const covArgs = ctx.coverageEnabled
+    ? dotnetCoverageArguments(step, ctx.rawCoverageDirectory, process.cwd())
     : [];
+  const cfgPath =
+    step.mstest === undefined
+      ? undefined
+      : await prepareMstestConfiguration({
+          ...step.mstest,
+          artifacts: ctx.rawCoverageDirectory,
+          seedRaw: ctx.environment["TASKNOTES_TEST_SEED"],
+        });
+  const cfgArgs =
+    cfgPath === undefined
+      ? []
+      : [
+          "--config-file",
+          cfgPath,
+          ..."--report-trx --report-trx-filename results.trx --crashdump --hangdump".split(
+            " ",
+          ),
+        ];
+  return [
+    dotnetBin,
+    "test",
+    path.resolve(process.cwd(), project),
+    ...rest,
+    ...cfgArgs,
+    ...covArgs,
+    ..."--report-junit --report-junit-filename".split(" "),
+    ctx.reportPath,
+  ];
 }
 
-async function commandForStep(
-  step: TestStep,
-  reportPath: string,
-  rawCoverageDirectory: string,
-): Promise<string[]> {
+async function commandForStep(ctx: StepContext): Promise<string[]> {
+  const { step, reportPath, rawCoverageDirectory, coverageEnabled } = ctx;
   switch (step.runner) {
-    case "vitest":
-      return step.runtime === "node"
+    case "vitest": {
+      const nodeBin =
+        step.runtime === "node"
+          ? await resolveMiseTool("mise", "node", "Node", [
+              "bin",
+              process.platform === "win32" ? "node.exe" : "node",
+            ])
+          : undefined;
+      const runtimeArgs = step.runtimeArgs ?? [];
+      const prefix =
+        nodeBin === undefined
+          ? ["bun", ...runtimeArgs, "--no-install", "--bun", "vitest"]
+          : [
+              nodeBin,
+              ...runtimeArgs,
+              path.join(process.cwd(), "node_modules/vitest/vitest.mjs"),
+            ];
+      const covArgs = coverageEnabled
         ? [
-            await pinnedNodeExecutable(),
-            ...(step.runtimeArgs ?? []),
-            path.join(process.cwd(), "node_modules", "vitest", "vitest.mjs"),
-            "--config",
-            path.join(repositoryRoot, "vitest.config.ts"),
-            "run",
-            ...(step.args ?? []),
-            "--reporter=default",
-            "--reporter=junit",
-            `--outputFile=${reportPath}`,
-            ...vitestCoverageArguments(rawCoverageDirectory),
+            ..."--coverage --coverage.provider=istanbul --coverage.reporter=lcovonly".split(
+              " ",
+            ),
+            `--coverage.reportsDirectory=${rawCoverageDirectory}`,
           ]
-        : [
-            "bun",
-            ...(step.runtimeArgs ?? []),
-            "--no-install",
-            "--bun",
-            "vitest",
-            "--config",
-            path.join(repositoryRoot, "vitest.config.ts"),
-            "run",
-            ...(step.args ?? []),
-            "--reporter=default",
-            "--reporter=junit",
-            `--outputFile=${reportPath}`,
-            ...vitestCoverageArguments(rawCoverageDirectory),
-          ];
+        : [];
+      return [
+        ...prefix,
+        "--config",
+        path.join(repositoryRoot, "vitest.config.ts"),
+        "run",
+        ...(step.args ?? []),
+        ..."--reporter=default --reporter=junit".split(" "),
+        `--outputFile=${reportPath}`,
+        ...covArgs,
+      ];
+    }
     case "go":
       return [
-        "go",
-        "tool",
-        "gotestsum",
-        "--format",
-        "standard-verbose",
-        "--junitfile",
+        ..."go tool gotestsum --format standard-verbose --junitfile".split(" "),
         reportPath,
         "--",
         ...step.args,
@@ -268,52 +204,12 @@ async function commandForStep(
       ];
     case "cargo":
       return [
-        "mise",
-        "exec",
-        "--",
-        "cargo",
-        "test",
+        ..."mise exec -- cargo test".split(" "),
         ...step.args,
-        "--",
-        "--format",
-        "pretty",
+        ..."-- --format pretty".split(" "),
       ];
-    case "dotnet": {
-      const [project, ...argumentsList] = step.args;
-      if (project === undefined) {
-        throw new Error("A .NET test project is required.");
-      }
-      const coverageArguments = coverageEnabled
-        ? dotnetCoverageArguments(step, rawCoverageDirectory, process.cwd())
-        : [];
-      const configurationArguments =
-        step.mstest === undefined
-          ? []
-          : [
-              "--config-file",
-              await prepareMstestConfiguration({
-                ...step.mstest,
-                artifacts: rawCoverageDirectory,
-                seedRaw: environment["TASKNOTES_TEST_SEED"],
-              }),
-              "--report-trx",
-              "--report-trx-filename",
-              "results.trx",
-              "--crashdump",
-              "--hangdump",
-            ];
-      return [
-        await pinnedDotnetExecutable(),
-        "test",
-        path.resolve(process.cwd(), project),
-        ...argumentsList,
-        ...configurationArguments,
-        ...coverageArguments,
-        "--report-junit",
-        "--report-junit-filename",
-        reportPath,
-      ];
-    }
+    case "dotnet":
+      return dotnetStepCommand(step, ctx);
     case "gradle":
       if (coverageEnabled) {
         throw new Error(
@@ -326,69 +222,112 @@ async function commandForStep(
   }
 }
 
-function expectedCoveragePath(
-  step: TestStep,
-  rawCoverageDirectory: string,
-): string | undefined {
-  const artifactFilename = coverageArtifactFilename(step);
-  return artifactFilename === undefined
-    ? undefined
-    : path.join(rawCoverageDirectory, artifactFilename);
+function formatPrerequisiteAbort(
+  packageName: string,
+  tier: TestTier,
+  failure: { readonly name: string; readonly exitCode: number },
+  remainingSteps: readonly SelectedStep[],
+): string {
+  const skipped = remainingSteps.map((candidate) => candidate.name);
+  const suffix = skipped.length === 0 ? "" : `: ${skipped.join(", ")}`;
+  return `[run-ci-test] ${packageName} (${tier}): prerequisite step ${failure.name} exited ${String(failure.exitCode)}; skipped ${String(skipped.length)} step(s)${suffix}`;
 }
 
-// Report names keep each step's index in ci-tests.json, so groups and tiers
-// never collide.
-for (const [index, step] of workspace.steps.entries()) {
-  if (!selectedSteps.includes(step)) continue;
-  const name = testStepReportName(step, index);
-  const reportPath = path.resolve(outputDirectory, `${name}.xml`);
-  await removeExistingReport(reportPath);
-  if (step.runner === "gradle") {
-    // Gradle's per-class results outlive the run; drop them so only this
-    // run's results are merged into the report.
-    for (const stalePath of await gradleJUnitReportPaths(
-      process.cwd(),
-      nestedWorkspaceDirectories,
-    )) {
-      await removeExistingReport(stalePath);
+export async function runSelectedTestSteps(options: {
+  readonly packageName: string;
+  readonly tier: TestTier;
+  readonly steps: readonly SelectedStep[];
+  readonly executeStep: (entry: SelectedStep) => Promise<StepResult>;
+  readonly logError?:
+    ((message: string, ...args: unknown[]) => void) | undefined;
+}): Promise<number> {
+  const logError = options.logError ?? console.error;
+  const failedSteps: { readonly name: string; readonly exitCode: number }[] =
+    [];
+  let firstExitCode: number | undefined;
+
+  for (const [position, entry] of options.steps.entries()) {
+    const { exitCode, reportingError } = await options.executeStep(entry);
+    if (exitCode === 0) {
+      if (reportingError !== undefined) throw reportingError;
+      continue;
     }
+    if (reportingError !== undefined) {
+      logError(
+        "%s test process exited with status %d, and its JUnit report could not be finalized:",
+        options.packageName,
+        exitCode,
+        reportingError,
+      );
+    }
+    if (entry.step.runner === "command") {
+      logError(
+        formatPrerequisiteAbort(
+          options.packageName,
+          options.tier,
+          { name: entry.name, exitCode },
+          options.steps.slice(position + 1),
+        ),
+      );
+      return exitCode;
+    }
+    failedSteps.push({ name: entry.name, exitCode });
+    firstExitCode ??= exitCode;
   }
-  const rawCoverageDirectory = coverageDirectory(step, index);
-  if (
-    coverageEnabled &&
-    expectedCoveragePath(step, rawCoverageDirectory) !== undefined
-  ) {
-    await Bun.$`mkdir -p ${rawCoverageDirectory}`;
-    const staleCoverage = expectedCoveragePath(step, rawCoverageDirectory);
-    if (staleCoverage !== undefined) await removeExistingReport(staleCoverage);
+
+  if (firstExitCode !== undefined) {
+    const details = failedSteps
+      .map((failure) => `${failure.name}: exit ${String(failure.exitCode)}`)
+      .join(", ");
+    logError(
+      `[run-ci-test] ${options.packageName} (${options.tier}): ${String(failedSteps.length)}/${String(options.steps.length)} step(s) failed (${details})`,
+    );
+    return firstExitCode;
   }
-  const startedAt = performance.now();
-  const command = await commandForStep(step, reportPath, rawCoverageDirectory);
-  const stepEnvironment =
-    step.runner === "dotnet"
+  return 0;
+}
+
+async function withCapturedReportingError(
+  exitCode: number,
+  writeReport: () => Promise<void>,
+): Promise<StepResult> {
+  try {
+    await writeReport();
+    return { exitCode };
+  } catch (error) {
+    return {
+      exitCode,
+      reportingError: error instanceof Error ? error : new Error(String(error)),
+    };
+  }
+}
+
+async function spawnStepProcess(
+  ctx: StepContext,
+  command: readonly string[],
+  startedAt: number,
+  nestedDirs: readonly string[],
+): Promise<StepResult> {
+  const stepEnv =
+    ctx.step.runner === "dotnet"
       ? {
-          ...environment,
+          ...ctx.environment,
           DOTNET_MULTILEVEL_LOOKUP: "0",
           DOTNET_ROOT: path.dirname(command[0] ?? ""),
-          // Matches packages/tasknotes-windows/scripts/dotnet.ts: the Linux CI
-          // image has no libicu, while Windows resource generation requires
-          // real locale data.
           ...(process.platform === "linux"
             ? { DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "1" }
             : {}),
         }
-      : environment;
-  let exitCode: number;
-  let reportingError: Error | undefined;
-  if (step.runner === "cargo") {
-    const child = Bun.spawn(command, {
+      : ctx.environment;
+  if (ctx.step.runner === "cargo") {
+    const child = Bun.spawn([...command], {
       cwd: process.cwd(),
-      env: stepEnvironment,
+      env: stepEnv,
       stdin: "inherit",
       stdout: "pipe",
       stderr: "pipe",
     });
-    const [cargoExitCode, stdout, stderr] = await Promise.all([
+    const [exitCode, stdout, stderr] = await Promise.all([
       child.exited,
       new Response(child.stdout).text(),
       new Response(child.stderr).text(),
@@ -397,89 +336,164 @@ for (const [index, step] of workspace.steps.entries()) {
       Bun.write(Bun.stdout, stdout),
       Bun.write(Bun.stderr, stderr),
     ]);
-    exitCode = cargoExitCode;
-    // Synthesizing and writing Cargo's report happens outside the
-    // completeJUnitReport try/catch, so a write failure here (e.g. a full
-    // report filesystem) must not crash the wrapper with its own status and
-    // mask Cargo's exit code. Capture it as a reporting error like the
-    // finalization path does.
-    try {
+    return withCapturedReportingError(exitCode, async () => {
+      const elapsed = (performance.now() - startedAt) / 1000;
       await Bun.write(
-        reportPath,
-        cargoTestJUnit(
-          { stdout, stderr },
-          name,
-          (performance.now() - startedAt) / 1000,
-          exitCode,
-        ),
+        ctx.reportPath,
+        cargoTestJUnit({ stdout, stderr }, ctx.name, elapsed, exitCode),
       );
-    } catch (error) {
-      reportingError =
-        error instanceof Error ? error : new Error(String(error));
-    }
-  } else {
-    const child = Bun.spawn(command, {
-      cwd: process.cwd(),
-      env: stepEnvironment,
-      stdin: "inherit",
-      stdout: "inherit",
-      stderr: "inherit",
     });
-    exitCode = await child.exited;
-    if (step.runner === "gradle") {
-      // Like Cargo's synthesized report, a merge failure must not mask
-      // Gradle's exit code.
-      try {
-        await writeGradleJUnitReport({
-          workspaceDirectory: process.cwd(),
-          nestedWorkspaceDirectories,
-          reportPath,
-          exitCode,
-        });
-      } catch (error) {
-        reportingError =
-          error instanceof Error ? error : new Error(String(error));
-      }
-    }
   }
-  const durationSeconds = (performance.now() - startedAt) / 1000;
-
-  // Only finalize (read back + namespace) when the raw report was written;
-  // if the Cargo write or Gradle merge failed there is nothing to finalize.
-  if (reportingError === undefined) {
-    const completed = await completeJUnitReport({
-      runner: step.runner,
-      reportPath,
-      workspace: workspace.package,
-      name,
-      durationSeconds,
+  const child = Bun.spawn([...command], {
+    cwd: process.cwd(),
+    env: stepEnv,
+    stdin: "inherit",
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+  const exitCode = await child.exited;
+  if (ctx.step.runner !== "gradle") return { exitCode };
+  return withCapturedReportingError(exitCode, () =>
+    writeGradleJUnitReport({
+      workspaceDirectory: process.cwd(),
+      nestedWorkspaceDirectories: nestedDirs,
+      reportPath: ctx.reportPath,
       exitCode,
-    });
-    reportingError = completed.reportingError;
-  }
+    }),
+  );
+}
 
-  const coveragePath = expectedCoveragePath(step, rawCoverageDirectory);
-  if (exitCode !== 0) {
-    if (reportingError !== undefined) {
-      console.error(
-        "%s test process exited with status %d, and its JUnit report could not be finalized:",
-        workspace.package,
-        exitCode,
-        reportingError,
-      );
+function selectWorkspaceSteps(
+  ws: WorkspaceTests,
+  group: string | undefined,
+  tier: TestTier,
+): SelectedStep[] {
+  const groups = new Set(
+    ws.steps.flatMap((s) => (s.group === undefined ? [] : [s.group])),
+  );
+  if (group === undefined && groups.size > 0) {
+    throw new Error(
+      `${ws.package} splits its CI tests into groups; pass --group with one of: ${[...groups].join(", ")}`,
+    );
+  }
+  if (group !== undefined && !groups.has(group)) {
+    throw new Error(`${ws.package} has no CI test group ${group}`);
+  }
+  const selected = ws.steps.flatMap((step, index) =>
+    step.group === group && stepRunsInTier(step, tier)
+      ? [{ name: testStepReportName(step, index), step }]
+      : [],
+  );
+  if (!selected.some(({ step }) => (step.tier ?? "ci") === tier)) {
+    const scope = group === undefined ? "" : ` in group ${group}`;
+    throw new Error(
+      `${ws.package} has no ${tier} steps${scope}; remove the test:${tier} script`,
+    );
+  }
+  return selected;
+}
+
+async function prepareAndRunStep(
+  workspace: WorkspaceTests,
+  ctx: StepContext,
+  nestedDirs: readonly string[],
+): Promise<StepResult> {
+  const artifact = coverageArtifactFilename(ctx.step);
+  const coveragePath =
+    artifact === undefined
+      ? undefined
+      : path.join(ctx.rawCoverageDirectory, artifact);
+  await removeExistingReport(ctx.reportPath);
+  if (ctx.step.runner === "gradle") {
+    for (const stale of await gradleJUnitReportPaths(
+      process.cwd(),
+      nestedDirs,
+    )) {
+      await removeExistingReport(stale);
     }
-    process.exit(exitCode);
   }
-  if (reportingError !== undefined) {
-    throw reportingError;
+  if (coveragePath !== undefined && ctx.coverageEnabled) {
+    await Bun.$`mkdir -p ${ctx.rawCoverageDirectory}`;
+    await removeExistingReport(coveragePath);
   }
-
-  if (coverageEnabled && coveragePath !== undefined) {
+  const startedAt = performance.now();
+  const command = await commandForStep(ctx);
+  const spawned = await spawnStepProcess(ctx, command, startedAt, nestedDirs);
+  const completed =
+    spawned.reportingError === undefined
+      ? await completeJUnitReport({
+          runner: ctx.step.runner,
+          reportPath: ctx.reportPath,
+          workspace: workspace.package,
+          name: ctx.name,
+          durationSeconds: (performance.now() - startedAt) / 1000,
+          exitCode: spawned.exitCode,
+        })
+      : undefined;
+  const reportingError = spawned.reportingError ?? completed?.reportingError;
+  if (
+    reportingError === undefined &&
+    coveragePath !== undefined &&
+    ctx.coverageEnabled &&
+    spawned.exitCode === 0
+  ) {
     const file = Bun.file(coveragePath);
     if (!(await file.exists()) || file.size === 0) {
       throw new Error(
-        `${workspace.package} step ${name} emitted no coverage report at ${coveragePath}`,
+        `${workspace.package} step ${ctx.name} emitted no coverage report at ${coveragePath}`,
       );
     }
   }
+  return { exitCode: spawned.exitCode, reportingError };
 }
+
+async function main(): Promise<void> {
+  const { requestedGroup: group, requestedTier: tier } = parseArguments(
+    process.argv.slice(2),
+  );
+  const workspaceDir = path
+    .relative(repositoryRoot, process.cwd())
+    .replaceAll(path.sep, "/");
+  const workspace = await readWorkspaceTests(repositoryRoot, workspaceDir);
+  if (workspace === undefined) {
+    throw new Error(
+      `No ${WORKSPACE_TESTS_FILE} declares CI tests for workspace ${workspaceDir}`,
+    );
+  }
+  const selectedSteps = selectWorkspaceSteps(workspace, group, tier);
+  const allWorkspaces = await workspaceDirectories(repositoryRoot);
+  const nestedDirs = allWorkspaces
+    .filter((dir) => dir.startsWith(`${workspaceDir}/`))
+    .map((dir) => dir.slice(workspaceDir.length + 1));
+  const sanitized = sanitizeWorkspace(workspace.package);
+  const reportsDir = path.join(repositoryRoot, ".ci-reports");
+  const junitDir = path.join(reportsDir, "junit", sanitized);
+  const covRoot = path.join(reportsDir, "coverage/raw", sanitized);
+  await Bun.$`mkdir -p ${junitDir}`;
+
+  const environment = { ...Bun.env };
+  applyDefaultEnvironment(environment, workspace.defaultEnv ?? {});
+  const coverageEnabled = workspace.coverageAlways === true;
+
+  const exitCode = await runSelectedTestSteps({
+    packageName: workspace.package,
+    tier,
+    steps: selectedSteps,
+    executeStep: ({ name, step }) =>
+      prepareAndRunStep(
+        workspace,
+        {
+          step,
+          name,
+          reportPath: path.resolve(junitDir, `${name}.xml`),
+          rawCoverageDirectory: path.join(covRoot, name),
+          coverageEnabled,
+          environment,
+        },
+        nestedDirs,
+      ),
+  });
+  if (exitCode !== 0) process.exit(exitCode);
+}
+
+if (import.meta.main) await main();

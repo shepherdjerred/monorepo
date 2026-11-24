@@ -59,7 +59,7 @@ candidates <ENVIRONMENT>               List accepted selections and why any is e
 rollback <ENVIRONMENT> <DEPLOYMENT_ID> Restore the selection that deployment froze
 rebind <ENVIRONMENT> --recipe <ID> --configuration <ID>  Keep the accepted set revision, change either revision
 monitor <ENVIRONMENT>                  Inspect the accepted deployment's monitor
-retire <SERVICE> --reason <TEXT> --machine  Retire a service and its environments
+retire <SERVICE> --reason <TEXT> --machine [--force-while-on-main]  Retire a service after its main removal completes helm-push
 catalog reconcile [--file <PATH>] --machine  Make the record agree with a catalog document (default: the committed catalog)
 attest <DEPLOYMENT_ID> --stage <NAME> --evidence <PATH> --machine  Record operator-attested stage evidence
 status [DEPLOYMENT_ID]                 Inspect one deployment or all environments
@@ -86,6 +86,7 @@ Options:
   --pending                            recovery: list pending intents instead of reading one
   --override                           start: ask for an override approval of a non-eligible deploy;
                                        approve/reject: decide that override approval
+  --force-while-on-main                retire: bypass the origin/main catalog and helm-push guard
   --step <NAME>                        Sub-step a recovery intent names
   --operation-id <UUID>                recover: the exact Argo operation inspected; settles the intent by readback
   --recipe <ID>                        Recipe revision a rebind moves to

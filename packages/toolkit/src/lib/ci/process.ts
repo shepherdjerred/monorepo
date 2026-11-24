@@ -1,4 +1,8 @@
+import os from "node:os";
+import path from "node:path";
 import type { z } from "zod";
+import { GUI_DELEGATED_ENVIRONMENT } from "#lib/credential-gui-bridge.ts";
+import { lookupExecutable } from "#lib/passthrough.ts";
 
 /** Capture subprocesses without inheriting secret-bearing stdout. */
 export async function capture(
@@ -24,10 +28,11 @@ export async function capture(
       child.exited,
     ]);
     signal?.throwIfAborted();
-    if (code !== 0)
+    if (code !== 0) {
       throw new Error(
         `${args[0] ?? "Command"} failed (${String(code)}): ${stderr.trim()}`,
       );
+    }
     return stdout;
   } finally {
     signal?.removeEventListener("abort", abort);
@@ -43,10 +48,89 @@ export async function captureJson<T>(
   return schema.parse(JSON.parse(await capture(args, signal, env)));
 }
 
-export async function githubToken(): Promise<string> {
-  const supplied = Bun.env["GH_TOKEN"];
-  const credential = supplied ?? (await capture(["gh", "auth", "token"]));
-  const token = credential.trim();
-  if (token.trim() === "") throw new Error("GitHub credential is empty");
+function withoutServiceAccount(
+  env: Readonly<Record<string, string | undefined>>,
+): Record<string, string | undefined> {
+  const copy = { ...env };
+  delete copy["OP_SERVICE_ACCOUNT_TOKEN"];
+  return copy;
+}
+
+async function delegateGhAuthToken(
+  gh: string,
+  env: Readonly<Record<string, string | undefined>>,
+): Promise<string | null> {
+  if (process.platform !== "darwin") {
+    return null;
+  }
+  if (env[GUI_DELEGATED_ENVIRONMENT] === "1") {
+    return null;
+  }
+  const home =
+    env["HOME"] !== undefined && env["HOME"].length > 0
+      ? env["HOME"]
+      : os.homedir();
+  const herdrCore = path.join(home, ".local", "bin", "herdr-core");
+  if (!(await Bun.file(herdrCore).exists())) {
+    return null;
+  }
+  const childEnv = withoutServiceAccount(env);
+  try {
+    await capture(
+      [herdrCore, "server", "status", "--json"],
+      AbortSignal.timeout(5000),
+      childEnv,
+    );
+    const raw = await capture(
+      [
+        herdrCore,
+        "exec",
+        "--env",
+        `${GUI_DELEGATED_ENVIRONMENT}=1`,
+        gh,
+        "auth",
+        "token",
+      ],
+      AbortSignal.timeout(10_000),
+      childEnv,
+    );
+    const delegated = raw.trim();
+    return delegated.length > 0 ? delegated : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function tryGithubToken(
+  env: Record<string, string | undefined> = Bun.env,
+): Promise<string | null> {
+  const supplied = env["GH_TOKEN"]?.trim();
+  if (supplied !== undefined && supplied.length > 0) {
+    return supplied;
+  }
+  const gh = lookupExecutable("gh", env["PATH"]) ?? "gh";
+  try {
+    const raw = await capture(
+      [gh, "auth", "token"],
+      undefined,
+      withoutServiceAccount(env),
+    );
+    const direct = raw.trim();
+    if (direct.length > 0) {
+      return direct;
+    }
+  } catch {
+    // Fall back to the GUI login session on macOS when Keychain is unreachable.
+  }
+  return delegateGhAuthToken(gh, env);
+}
+
+export async function githubToken(
+  env: Record<string, string | undefined> = Bun.env,
+): Promise<string> {
+  const token = await tryGithubToken(env);
+  if (token === null) {
+    throw new Error("GitHub credential is empty");
+  }
   return token;
 }

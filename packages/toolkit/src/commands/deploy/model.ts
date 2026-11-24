@@ -101,12 +101,18 @@ function validateAdmin(
 
 /** Flags that belong to one verb are refused on every other. */
 function validateVerbFlags(command: string, options: DeployOptions) {
-  if (options.override && !["start", "approve", "reject"].includes(command))
+  if (options.override && !["start", "approve", "reject"].includes(command)) {
     throw new Error("--override applies to deploy start, approve and reject");
-  if (command !== "recovery" && (options.abandon || options.pending))
+  }
+  if (command !== "retire" && options["force-while-on-main"]) {
+    throw new Error("--force-while-on-main applies to deploy retire");
+  }
+  if (command !== "recovery" && (options.abandon || options.pending)) {
     throw new Error("--abandon and --pending apply to deploy recovery");
-  if (options.pending && options.abandon)
+  }
+  if (options.pending && options.abandon) {
     throw new Error("--pending lists intents; --abandon closes one");
+  }
 }
 
 /**
@@ -277,6 +283,9 @@ async function administer(
 ): ModelResult {
   switch (command) {
     case "retire": {
+      if (!options["force-while-on-main"]) {
+        await options.assertServiceRetirableOnMain?.(target);
+      }
       const result = await client.retireService(target, {
         requestId: requestId(options),
         reason: required(options.reason).trim(),

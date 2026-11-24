@@ -152,16 +152,16 @@ describe("port and server identity", () => {
   });
 
   test("validates PostgreSQL 18 server identity and allowed directories", () => {
-    const primary = "/cache/monorepo-dev-pg/18/pgdata";
-    const legacy = "/local/scout-for-lol/postgres/18/pgdata";
+    const primary = "/cache/monorepo-test-pg/18/pgdata";
+    const secondary = "/custom/monorepo-test-pg/18/pgdata";
     expect(() =>
-      assertDevPostgresIdentity(180_006, legacy, primary, [legacy]),
+      assertDevPostgresIdentity(180_006, secondary, primary, [secondary]),
     ).not.toThrow();
     expect(() => assertDevPostgresIdentity(170_002, primary, primary)).toThrow(
       "requires major 18",
     );
     expect(() =>
-      assertDevPostgresIdentity(180_006, "/other/pgdata", primary, [legacy]),
+      assertDevPostgresIdentity(180_006, "/other/pgdata", primary, [secondary]),
     ).toThrow("port belongs to");
   });
 });

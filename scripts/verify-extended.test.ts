@@ -1,13 +1,15 @@
 import { describe, expect, test } from "vitest";
 import {
+  EXTENDED_CONCURRENCY,
   EXTENDED_TASK,
+  EXTENDED_VITEST_MAX_WORKERS,
   extendedEnvironment,
   extendedTurboCommand,
 } from "./verify-extended.ts";
-import { VERIFY_CONCURRENCY, VERIFY_VITEST_MAX_WORKERS } from "./verify.ts";
+import { VERIFY_CONCURRENCY } from "./verify.ts";
 
 describe("verify:extended", () => {
-  test("runs only the extended tier under verify's concurrency budget", () => {
+  test("runs the extended tier serially under its own bounded concurrency", () => {
     expect(extendedTurboCommand([])).toEqual([
       "bun",
       "x",
@@ -16,24 +18,27 @@ describe("verify:extended", () => {
       "run",
       "test:extended",
       "--continue",
-      `--concurrency=${String(VERIFY_CONCURRENCY)}`,
+      `--concurrency=${String(EXTENDED_CONCURRENCY)}`,
     ]);
     expect(EXTENDED_TASK).toBe("test:extended");
+    expect(EXTENDED_CONCURRENCY).toBe(1);
+    expect(EXTENDED_CONCURRENCY).toBeLessThan(VERIFY_CONCURRENCY);
+    expect(EXTENDED_VITEST_MAX_WORKERS).toBe(2);
   });
 
-  test("forwards Turbo arguments such as an affected filter", () => {
+  test("forwards Turbo arguments such as a three-dot affected filter", () => {
     expect(
       extendedTurboCommand([
-        "--filter=...[origin/main]",
+        "--filter=...[origin/main...HEAD]",
         "--summarize",
         "--output-logs=errors-only",
       ]),
     ).toEqual(
       expect.arrayContaining([
-        "--filter=...[origin/main]",
+        "--filter=...[origin/main...HEAD]",
         "--summarize",
         "--output-logs=errors-only",
-        `--concurrency=${String(VERIFY_CONCURRENCY)}`,
+        `--concurrency=${String(EXTENDED_CONCURRENCY)}`,
       ]),
     );
   });
@@ -50,10 +55,10 @@ describe("verify:extended", () => {
     ).toEqual(["--concurrency"]);
   });
 
-  test("caps Vitest workers like verify unless the caller set them", () => {
+  test("caps Vitest workers at EXTENDED_VITEST_MAX_WORKERS unless set", () => {
     expect(extendedEnvironment({ PATH: "/bin" })).toEqual({
       PATH: "/bin",
-      CI_VITEST_MAX_WORKERS: String(VERIFY_VITEST_MAX_WORKERS),
+      CI_VITEST_MAX_WORKERS: String(EXTENDED_VITEST_MAX_WORKERS),
     });
     expect(
       extendedEnvironment({ CI_VITEST_MAX_WORKERS: "4" })[

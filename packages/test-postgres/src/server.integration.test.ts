@@ -1,0 +1,257 @@
+import { mkdtemp, readdir, rm, stat } from "node:fs/promises";
+import { createServer } from "node:net";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { afterEach, describe, expect, test } from "vitest";
+import {
+  ensurePostgresCluster,
+  ensureSharedPostgres,
+  postgresBinaryPath,
+  psqlMaintenance,
+  readPostmasterPid,
+  runCommandSync,
+  SHARED_PG_ROLES,
+  sharedPostgresPort,
+} from "./index.ts";
+
+const PROTECTED_PORTS = new Set([5471, 5600]);
+const activeClusters: string[] = [];
+const tempDirs: string[] = [];
+
+function stopClusterIfRunning(
+  dataDir: string,
+  mode: "fast" | "immediate" = "fast",
+): void {
+  if (Bun.file(path.join(dataDir, "PG_VERSION")).size === 0) {
+    return;
+  }
+  runCommandSync([
+    postgresBinaryPath("pg_ctl"),
+    "-D",
+    dataDir,
+    "-m",
+    mode,
+    "-w",
+    "-t",
+    "15",
+    "stop",
+  ]);
+}
+
+afterEach(async () => {
+  while (activeClusters.length > 0) {
+    const dataDir = activeClusters.pop();
+    if (dataDir !== undefined) {
+      stopClusterIfRunning(dataDir, "immediate");
+    }
+  }
+  while (tempDirs.length > 0) {
+    const dir = tempDirs.pop();
+    if (dir !== undefined) {
+      await rm(dir, { recursive: true, force: true });
+    }
+  }
+});
+
+async function makeTempDir(prefix: string): Promise<string> {
+  const dir = await mkdtemp(path.join(tmpdir(), prefix));
+  tempDirs.push(dir);
+  return dir;
+}
+
+async function allocateFreePort(
+  exclude: ReadonlySet<number> = new Set(),
+): Promise<number> {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const port = await new Promise<number>((resolve, reject) => {
+      const srv = createServer();
+      srv.once("error", reject);
+      srv.listen(0, "127.0.0.1", () => {
+        const address = srv.address();
+        const chosen =
+          address !== null && typeof address === "object" ? address.port : 0;
+        srv.close((closeErr) => {
+          if (closeErr === undefined || closeErr === null) {
+            resolve(chosen);
+          } else {
+            reject(closeErr);
+          }
+        });
+      });
+    });
+    if (port > 0 && !PROTECTED_PORTS.has(port) && !exclude.has(port)) {
+      return port;
+    }
+  }
+  throw new Error("Could not allocate an isolated free port");
+}
+
+async function zeroOutWalSegments(dataDir: string): Promise<void> {
+  const walDir = path.join(dataDir, "pg_wal");
+  const entries = await readdir(walDir);
+  let corrupted = 0;
+  for (const entry of entries) {
+    if (!/^[0-9A-F]{24}$/u.test(entry)) {
+      continue;
+    }
+    const walFile = path.join(walDir, entry);
+    const info = await stat(walFile);
+    await Bun.write(walFile, new Uint8Array(info.size));
+    corrupted += 1;
+  }
+  expect(corrupted).toBeGreaterThan(0);
+}
+
+describe("isolated cluster discovery, conflict diagnostics, and WAL recovery", () => {
+  test("isolates XDG_CACHE_HOME from HOME/.cache, auto-discovers live postmaster.pid port, and reports port conflicts without stopping the server", async () => {
+    const fakeHome = await makeTempDir("test-pg-fake-home-");
+    const scratchCache = await makeTempDir("test-pg-scratch-cache-");
+
+    // Populate a dummy HOME/.cache/monorepo-test-pg/18/pgdata/PG_VERSION so any
+    // fallback to HOME/.cache would fail initdb / startup immediately.
+    await Bun.write(
+      path.join(
+        fakeHome,
+        ".cache",
+        "monorepo-test-pg",
+        "18",
+        "pgdata",
+        "PG_VERSION",
+      ),
+      "18\n",
+      { createPath: true },
+    );
+
+    const portA = await allocateFreePort();
+    const portB = await allocateFreePort(new Set([portA]));
+    const dataDir = path.join(scratchCache, "monorepo-test-pg", "18", "pgdata");
+    activeClusters.push(dataDir);
+
+    const started = ensureSharedPostgres({
+      HOME: fakeHome,
+      XDG_CACHE_HOME: scratchCache,
+      LOCAL_TEST_PG_PORT: portA.toString(),
+    });
+    expect(started.port).toBe(portA);
+
+    const pidInfo = readPostmasterPid(dataDir);
+    expect(pidInfo?.port).toBe(portA);
+    expect(pidInfo?.pid).toBeGreaterThan(0);
+
+    // Without LOCAL_TEST_PG_PORT or SCOUT_PG_PORT, both sharedPostgresPort and
+    // ensureSharedPostgres reuse the live postmaster.pid port automatically.
+    const envWithoutPort = {
+      HOME: fakeHome,
+      XDG_CACHE_HOME: scratchCache,
+    };
+    expect(sharedPostgresPort(envWithoutPort)).toBe(portA);
+    const reused = ensureSharedPostgres(envWithoutPort);
+    expect(reused.port).toBe(portA);
+
+    // Requesting a different explicit port against the active dataDir throws a
+    // clear diagnostic before pg_ctl start without disturbing the running server.
+    expect(() =>
+      ensureSharedPostgres({
+        HOME: fakeHome,
+        XDG_CACHE_HOME: scratchCache,
+        LOCAL_TEST_PG_PORT: portB.toString(),
+      }),
+    ).toThrow(
+      `PostgreSQL data directory ${dataDir} is already running on port ${portA.toString()} (PID ${String(pidInfo?.pid)}), but port ${portB.toString()} was requested; set LOCAL_TEST_PG_PORT=${portA.toString()} or isolate XDG_CACHE_HOME`,
+    );
+
+    expect(psqlMaintenance("SELECT 1", { adminUrl: started.superUrl })).toBe(
+      "1",
+    );
+    stopClusterIfRunning(dataDir, "fast");
+  }, 60_000);
+
+  test("auto-recovers disposable monorepo-test-pg/18/pgdata after a WAL checkpoint panic", async () => {
+    const scratchCache = await makeTempDir("test-pg-wal-panic-");
+    const port = await allocateFreePort();
+    const dataRoot = path.join(scratchCache, "monorepo-test-pg", "18");
+    const dataDir = path.join(dataRoot, "pgdata");
+    activeClusters.push(dataDir);
+
+    const env = {
+      XDG_CACHE_HOME: scratchCache,
+      LOCAL_TEST_PG_PORT: port.toString(),
+    };
+    const initial = ensureSharedPostgres(env);
+    psqlMaintenance("CREATE DATABASE pre_crash_sentinel", {
+      adminUrl: initial.superUrl,
+    });
+
+    stopClusterIfRunning(dataDir, "immediate");
+    await zeroOutWalSegments(dataDir);
+
+    const recovered = ensureSharedPostgres(env);
+    expect(recovered.port).toBe(port);
+    expect(
+      psqlMaintenance(
+        "SELECT 1 FROM pg_database WHERE datname = 'pre_crash_sentinel'",
+        { adminUrl: recovered.superUrl },
+      ),
+    ).toBe("");
+
+    const recoveredLog = await Bun.file(
+      path.join(dataRoot, "server.log.recovered"),
+    ).text();
+    expect(recoveredLog).toMatch(
+      /PANIC:|could not locate a valid checkpoint record/iu,
+    );
+
+    for (const role of SHARED_PG_ROLES) {
+      expect(
+        psqlMaintenance(`SELECT 1 FROM pg_roles WHERE rolname = '${role}'`, {
+          adminUrl: recovered.superUrl,
+        }),
+      ).toBe("1");
+    }
+    stopClusterIfRunning(dataDir, "fast");
+  }, 60_000);
+
+  test("runs durable clusters with fsync=on and full_page_writes=on and never auto-wipes on WAL panic", async () => {
+    const durableBase = await makeTempDir("test-pg-durable-");
+    const port = await allocateFreePort();
+    const dataRoot = path.join(durableBase, "scout-for-lol", "postgres", "18");
+    const dataDir = path.join(dataRoot, "pgdata");
+    activeClusters.push(dataDir);
+
+    const env = {
+      XDG_DATA_HOME: durableBase,
+      SCOUT_PG_PORT: port.toString(),
+    };
+    const clusterOptions = {
+      port,
+      explicitPortProvided: true,
+      dataRoot,
+      durability: "durable" as const,
+      allowWalPanicWipe: false,
+      allowedDataDirs: [dataDir],
+      env,
+      portEnvName: "SCOUT_PG_PORT",
+      isolationEnvName: "XDG_DATA_HOME",
+    };
+
+    const started = ensurePostgresCluster(clusterOptions);
+    expect(psqlMaintenance("SHOW fsync", { adminUrl: started.superUrl })).toBe(
+      "on",
+    );
+    expect(
+      psqlMaintenance("SHOW full_page_writes", {
+        adminUrl: started.superUrl,
+      }),
+    ).toBe("on");
+
+    stopClusterIfRunning(dataDir, "immediate");
+    await zeroOutWalSegments(dataDir);
+    const markerPath = path.join(dataDir, "DURABLE_MARKER_DO_NOT_WIPE");
+    await Bun.write(markerPath, "keep-durable-data\n");
+
+    expect(() => ensurePostgresCluster(clusterOptions)).toThrow(
+      "pg_ctl start failed",
+    );
+    expect(await Bun.file(markerPath).text()).toBe("keep-durable-data\n");
+  }, 60_000);
+});

@@ -1,7 +1,9 @@
+import http from "node:http";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { handleTendCommand } from "#commands/tend/tend.ts";
 import {
   acquireLease,
   listLeases,
@@ -280,5 +282,99 @@ describe("lease lifecycle and classification", () => {
     expect(exitCode).toBe(0);
     expect(observedDuringRun).toBe(1);
     expect(await listLeases({ paths })).toHaveLength(0);
+  });
+});
+
+describe("PinchTab lease teardown", () => {
+  it("closes orphaned PinchTab tabs and revokes orphaned PinchTab sessions during sweepLeases and tend lease release", async () => {
+    const rootDir = await makeTempTendDir();
+    const paths = resolveTendPaths({ tendDir: rootDir });
+    const nowMs = 1_760_000_000_000;
+    const pinchtabCalls: string[] = [];
+
+    const server = http.createServer((req, res) => {
+      pinchtabCalls.push(
+        `${req.method ?? "GET"} ${req.url ?? "/"} (${req.headers.authorization ?? ""})`,
+      );
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: true }));
+    });
+    await new Promise<void>((resolve) => {
+      server.listen(0, "127.0.0.1", () => resolve());
+    });
+
+    try {
+      const addr = server.address();
+      const port = addr !== null && typeof addr === "object" ? addr.port : 0;
+      const pinchtab = {
+        env: {
+          PINCHTAB_SERVER: `http://127.0.0.1:${String(port)}`,
+          PINCHTAB_TOKEN: "pt_reaper_tok",
+        },
+        homeDir: rootDir,
+      };
+
+      await acquireLease({
+        id: "pt-session-expired",
+        kind: "pinchtab",
+        target: "ses_orphan_1",
+        ownerPid: 7777,
+        processStart: "Mon Nov 15 08:00:00 2026",
+        ttl: "5m",
+        nowMs: nowMs - 600_000,
+        paths,
+      });
+      await acquireLease({
+        id: "pt-tab-dead-owner",
+        kind: "pinchtab",
+        target: "tab_orphan_1",
+        ownerPid: 7777,
+        processStart: "Mon Nov 15 08:00:00 2026",
+        ttl: "1h",
+        nowMs,
+        paths,
+      });
+
+      const swept = await sweepLeases({
+        paths,
+        nowMs,
+        processes: new Map(),
+        apply: true,
+        pinchtab,
+      });
+      expect(
+        swept.sweep.actions.filter((a) => a.status === "removed"),
+      ).toHaveLength(2);
+      // Tab is closed before session is deleted/revoked!
+      expect(pinchtabCalls).toEqual([
+        "POST /tabs/tab_orphan_1/close (Bearer pt_reaper_tok)",
+        "DELETE /sessions/ses_orphan_1 (Bearer pt_reaper_tok)",
+      ]);
+
+      await acquireLease({
+        id: "pt-manual-release",
+        kind: "pinchtab",
+        target: "ses_manual_2",
+        ownerPid: 8888,
+        processStart: "Mon Nov 15 09:00:00 2026",
+        ttl: "1h",
+        nowMs,
+        paths,
+      });
+      await handleTendCommand(
+        "lease",
+        ["release", "pt-manual-release", "--json"],
+        {
+          paths,
+          pinchtab,
+        },
+      );
+      expect(pinchtabCalls.at(-1)).toBe(
+        "DELETE /sessions/ses_manual_2 (Bearer pt_reaper_tok)",
+      );
+      expect(await listLeases({ paths })).toEqual([]);
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
   });
 });

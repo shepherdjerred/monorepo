@@ -1,8 +1,9 @@
 import { formatDurationCompact } from "#lib/tend/paths.ts";
-import type {
-  ClassifiedLease,
-  SurfaceSweepResult,
-  TendRunReport,
+import {
+  type ClassifiedLease,
+  formatGiB,
+  type SurfaceSweepResult,
+  type TendRunReport,
 } from "#lib/tend/types.ts";
 
 function padCell(value: string, width: number): string {
@@ -38,6 +39,22 @@ function formatHeaderLines(report: TendRunReport): string[] {
     `toolkit tend — ${modeBanner(report.mode)} on ${report.host} (worktree floor: ${formatDurationCompact(report.worktreeMinAgeMs)})`,
     `Liveness: Herdr terminals=${String(report.liveness.liveTerminalCount)} (${hcDesc}), Forum=${forumDesc}`,
   );
+
+  if (report.disk != null) {
+    lines.push(
+      `Disk (${report.disk.path}): ${formatGiB(report.disk.availableBytes)} free / ${formatGiB(report.disk.totalBytes)} total (${report.disk.level.toUpperCase()})`,
+    );
+  }
+  if (report.dockerDisk != null) {
+    const dockerSummary = report.dockerDisk.available
+      ? report.dockerDisk.rows
+          .map(
+            (row) => `${row.type}=${row.size} (reclaimable ${row.reclaimable})`,
+          )
+          .join(", ") || "empty"
+      : `unavailable (${report.dockerDisk.skippedReason ?? "docker daemon not running"})`;
+    lines.push(`Docker disk: ${dockerSummary}`);
+  }
 
   if (report.lastRun !== null) {
     const runMode = report.lastRun.apply ? "apply" : "dry-run";

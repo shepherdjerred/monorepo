@@ -19,6 +19,7 @@ import {
   workspaceDirectories as declaredWorkspaceDirectories,
   type TestStep,
 } from "./test-manifest-schema.ts";
+import { runSelectedTestSteps } from "./run-ci-test.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
 const RootPackageSchema = z.object({ workspaces: z.array(z.string()) });
@@ -657,9 +658,15 @@ describe("CI reporting manifest", () => {
 
 const RootTurboSchema = z.object({
   globalDependencies: z.array(z.string()),
+  globalPassThroughEnv: z.array(z.string()),
   tasks: z.record(
     z.string(),
-    z.object({ inputs: z.array(z.string()).optional() }).loose(),
+    z
+      .object({
+        dependsOn: z.array(z.string()).optional(),
+        inputs: z.array(z.string()).optional(),
+      })
+      .loose(),
   ),
 });
 
@@ -726,7 +733,7 @@ describe("test:ci runner inputs", () => {
     }
   });
 
-  test("defines the extended tier as an uncached task", async () => {
+  test("defines the extended tier as an uncached task and orders tests after ^generate", async () => {
     const root = await readRootTurbo();
     // The extended tier is uncached: its point is executing suites against
     // servers Turbo cannot hash, and PR verify never requests it.
@@ -736,9 +743,23 @@ describe("test:ci runner inputs", () => {
     });
     const extended = ExtendedTaskSchema.parse(root.tasks["test:extended"]);
     expect(extended.dependsOn).toEqual(
-      expect.arrayContaining(["^build", "generate"]),
+      expect.arrayContaining(["^build", "^generate", "generate"]),
     );
+    for (const task of ["test", "test:ci", "test:extended", "lint"]) {
+      expect(root.tasks[task]?.dependsOn, task).toEqual(
+        expect.arrayContaining(["^build", "^generate", "generate"]),
+      );
+    }
     expect(root.tasks["test:extended"]?.inputs).toBeUndefined();
+    expect(root.globalPassThroughEnv).toEqual(
+      expect.arrayContaining([
+        "LOCAL_TEST_PG_PORT",
+        "LOCAL_TEST_PG_USER",
+        "POSTGRES_BIN_DIR",
+        "SCOUT_PG_PORT",
+        "TEST_POSTGRES_DATA_ROOT",
+      ]),
+    );
   });
 
   test("package overrides keep the shared runner inputs", async () => {
@@ -774,5 +795,172 @@ describe("test:ci runner inputs", () => {
         ).toBe(true);
       }
     }
+  });
+});
+
+describe("runSelectedTestSteps", () => {
+  test("caps temporal integration workers to 1 in extended tier", async () => {
+    const manifest = await loadTestManifest(repositoryRoot);
+    const temporal = manifest.workspaces.find(
+      (entry) => entry.directory === "packages/temporal",
+    );
+    expect(temporal?.steps.find((step) => step.name === "integration")).toEqual(
+      {
+        runner: "vitest",
+        name: "integration",
+        tier: "extended",
+        args: ["--dir", "src", ".integration.test.ts", "--maxWorkers=1"],
+      },
+    );
+  });
+
+  test("continues running remaining test steps after a runner failure and aggregates exit status", async () => {
+    const executed: string[] = [];
+    const logged: string[] = [];
+    const reportDir = path.join(
+      repositoryRoot,
+      ".ci-reports",
+      `agg-${process.pid.toString()}`,
+    );
+    await Bun.$`mkdir -p ${reportDir}`;
+    try {
+      const steps: readonly {
+        readonly index: number;
+        readonly name: string;
+        readonly step: TestStep;
+      }[] = [
+        {
+          index: 0,
+          name: "ha-schema",
+          step: {
+            runner: "command",
+            name: "ha-schema",
+            tier: "shared",
+            command: ["true"],
+          },
+        },
+        {
+          index: 1,
+          name: "integration",
+          step: {
+            runner: "vitest",
+            name: "integration",
+            tier: "extended",
+            args: ["--dir", "src", ".integration.test.ts"],
+          },
+        },
+        {
+          index: 2,
+          name: "workflows",
+          step: {
+            runner: "vitest",
+            name: "workflows",
+            tier: "extended",
+            args: ["src/workflows"],
+          },
+        },
+      ];
+      const exitCode = await runSelectedTestSteps({
+        packageName: "@shepherdjerred/temporal",
+        tier: "extended",
+        steps,
+        logError: (message, ...args) => {
+          logged.push([message, ...args.map(String)].join(" "));
+        },
+        executeStep: async ({ name, step }) => {
+          executed.push(name);
+          const stepExit = name === "integration" ? 3 : 0;
+          const reportPath = path.join(reportDir, `${name}.xml`);
+          if (name === "workflows") {
+            await Bun.write(
+              reportPath,
+              '<testsuite name="workflows"><testcase classname="wf" name="passes"/></testsuite>',
+            );
+          }
+          const completed = await completeJUnitReport({
+            runner: step.runner,
+            reportPath,
+            workspace: "@shepherdjerred/temporal",
+            name,
+            durationSeconds: 0.2,
+            exitCode: stepExit,
+          });
+          return {
+            exitCode: stepExit,
+            reportingError: completed.reportingError,
+          };
+        },
+      });
+
+      expect(exitCode).toBe(3);
+      expect(executed).toEqual(["ha-schema", "integration", "workflows"]);
+      expect(logged).toEqual([
+        "[run-ci-test] @shepherdjerred/temporal (extended): 1/3 step(s) failed (integration: exit 3)",
+      ]);
+      expect(
+        await Bun.file(path.join(reportDir, "integration.xml")).text(),
+      ).toContain('message="command exited with status 3"');
+      expect(
+        await Bun.file(path.join(reportDir, "workflows.xml")).text(),
+      ).toContain('classname="@shepherdjerred/temporal::wf"');
+    } finally {
+      await Bun.$`rm -rf ${reportDir}`;
+    }
+  });
+
+  test("stops immediately and reports skipped steps when a command prerequisite fails", async () => {
+    const executed: string[] = [];
+    const logged: string[] = [];
+    const exitCode = await runSelectedTestSteps({
+      packageName: "@shepherdjerred/temporal",
+      tier: "extended",
+      steps: [
+        {
+          index: 0,
+          name: "media-native-tools",
+          step: {
+            runner: "command",
+            name: "media-native-tools",
+            tier: "extended",
+            command: ["false"],
+          },
+        },
+        {
+          index: 1,
+          name: "integration",
+          step: {
+            runner: "vitest",
+            name: "integration",
+            tier: "extended",
+            args: ["src"],
+          },
+        },
+        {
+          index: 2,
+          name: "workflows",
+          step: {
+            runner: "vitest",
+            name: "workflows",
+            tier: "extended",
+            args: ["src/workflows"],
+          },
+        },
+      ],
+      logError: (message) => {
+        logged.push(message);
+      },
+      executeStep: ({ name }) => {
+        executed.push(name);
+        return Promise.resolve({
+          exitCode: name === "media-native-tools" ? 2 : 0,
+        });
+      },
+    });
+
+    expect(exitCode).toBe(2);
+    expect(executed).toEqual(["media-native-tools"]);
+    expect(logged).toEqual([
+      "[run-ci-test] @shepherdjerred/temporal (extended): prerequisite step media-native-tools exited 2; skipped 2 step(s): integration, workflows",
+    ]);
   });
 });

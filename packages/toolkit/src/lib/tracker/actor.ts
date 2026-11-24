@@ -82,6 +82,22 @@ function isAgentPresent(
   );
 }
 
+export function isAgentEnvironment(env: ActorEnvironment): boolean {
+  let session: ReturnType<typeof sessionIdentity>;
+  try {
+    session = sessionIdentity(env);
+  } catch {
+    return true;
+  }
+  const kind = env["TRACKER_ACTOR_KIND"];
+  return (
+    isAgentPresent(env, session) ||
+    Boolean(env["CI"]) ||
+    kind === "agent" ||
+    kind === "runner"
+  );
+}
+
 function assertNotHumanInAgentSession(
   agentPresent: boolean,
   key: string | undefined,

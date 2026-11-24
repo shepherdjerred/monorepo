@@ -41,7 +41,7 @@
       "runner": "vitest",
       "name": "integration",
       "tier": "extended",
-      "args": ["--dir", "src", ".integration.test.ts"]
+      "args": ["--dir", "src", ".integration.test.ts", "--maxWorkers=1"]
     },
     {
       "runner": "vitest",

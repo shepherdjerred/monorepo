@@ -33,6 +33,7 @@ const BRIM_INSTALL_MIN_AGE_MS = 60 * 60 * 1000;
 const BRIM_INSTALL_KEEP_NEWEST_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const MC_ARTIFACT_MIN_AGE_MS = 72 * 60 * 60 * 1000;
 const TEMP_ARTIFACT_MIN_AGE_MS = 6 * 60 * 60 * 1000;
+const WORKTREE_TURBO_CACHE_MIN_AGE_MS = 48 * 60 * 60 * 1000;
 const PRISM_INSTANCE_PATTERN = /^storm-(?:capture|control)-/u;
 const MC_SUBDIRS = ["runs", "clients", "suites", "reviews", "evals"] as const;
 const TEMP_DIR_PATTERN =
@@ -86,8 +87,12 @@ function buildProtectedSet(
 ): Set<string> {
   const set = new Set<string>(liveness.protectedPaths);
   for (const item of leases) {
-    if (item.status === "active" && item.lease.kind === "dir") {
+    if (item.status !== "active") continue;
+    if (item.lease.kind === "dir") {
       set.add(normalizeHostPath(item.lease.target, liveness.platform));
+    }
+    if (item.lease.worktree !== undefined) {
+      set.add(normalizeHostPath(item.lease.worktree, liveness.platform));
     }
   }
   return set;
@@ -121,11 +126,8 @@ async function recordFsCandidate(
     await rm(candidate.target, { recursive: true, force: true });
     collector.actions.push({ candidate, status: "removed" });
   } catch (error: unknown) {
-    collector.actions.push({
-      candidate,
-      status: "failed",
-      detail: error instanceof Error ? error.message : String(error),
-    });
+    const detail = error instanceof Error ? error.message : String(error);
+    collector.actions.push({ candidate, status: "failed", detail });
   }
 }
 
@@ -138,20 +140,13 @@ async function sweepPrismInstances(ctx: ArtifactSweepContext): Promise<void> {
   }
   const instancesDir = path.join(
     ctx.homeDir,
-    "Library",
-    "Application Support",
-    "PrismLauncher",
-    "instances",
+    "Library/Application Support/PrismLauncher/instances",
   );
   for (const name of await readSortedNames(instancesDir)) {
-    if (!PRISM_INSTANCE_PATTERN.test(name)) {
-      continue;
-    }
+    if (!PRISM_INSTANCE_PATTERN.test(name)) continue;
     const target = path.join(instancesDir, name);
     const mtimeMs = await statDirectoryMtime(target);
-    if (mtimeMs === null) {
-      continue;
-    }
+    if (mtimeMs === null) continue;
     ctx.collector.inspected += 1;
     const ageMs = Math.max(0, ctx.nowMs - mtimeMs);
     if (
@@ -181,10 +176,7 @@ async function resolveSimulatorLastTouchMs(
   const lastTouchMs = Number.isNaN(parsedBoot) ? 0 : parsedBoot;
   const deviceDir = path.join(
     homeDir,
-    "Library",
-    "Developer",
-    "CoreSimulator",
-    "Devices",
+    "Library/Developer/CoreSimulator/Devices",
     device.udid,
   );
   const dirMtime = await statDirectoryMtime(deviceDir);
@@ -305,9 +297,7 @@ async function sweepMcArtifacts(ctx: ArtifactSweepContext): Promise<void> {
     for (const name of await readSortedNames(dir)) {
       const target = path.join(dir, name);
       const mtimeMs = await statDirectoryMtime(target);
-      if (mtimeMs === null) {
-        continue;
-      }
+      if (mtimeMs === null) continue;
       ctx.collector.inspected += 1;
       const ageMs = Math.max(0, ctx.nowMs - mtimeMs);
       if (ageMs < MC_ARTIFACT_MIN_AGE_MS || isArtifactPathHeld(target, ctx)) {
@@ -330,19 +320,13 @@ async function hasLiveOwnerPidInDir(
   processes: ReadonlyMap<number, OsProcessEntry>,
 ): Promise<boolean> {
   const ownerFile = Bun.file(path.join(dirPath, "owner.pid"));
-  if (!(await ownerFile.exists())) {
-    return false;
-  }
-  let rawText: string;
+  if (!(await ownerFile.exists())) return false;
   try {
-    rawText = await ownerFile.text();
+    const parsed = parseClusterOwnerPidFile(await ownerFile.text());
+    return parsed !== null && !isOwnerDeadOnThisHost(parsed, processes).dead;
   } catch {
     return false;
   }
-  const parsedOwner = parseClusterOwnerPidFile(rawText);
-  return (
-    parsedOwner !== null && !isOwnerDeadOnThisHost(parsedOwner, processes).dead
-  );
 }
 
 async function sweepSingleTempRoot(
@@ -350,31 +334,25 @@ async function sweepSingleTempRoot(
   ctx: ArtifactSweepContext,
 ): Promise<void> {
   for (const name of await readSortedNames(rootDir)) {
-    if (!TEMP_DIR_PATTERN.test(name)) {
-      continue;
-    }
+    if (!TEMP_DIR_PATTERN.test(name)) continue;
     const target = path.join(rootDir, name);
     const mtimeMs = await statDirectoryMtime(target);
-    if (mtimeMs === null) {
-      continue;
-    }
+    if (mtimeMs === null) continue;
     ctx.collector.inspected += 1;
     const ageMs = Math.max(0, ctx.nowMs - mtimeMs);
-    if (ageMs < TEMP_ARTIFACT_MIN_AGE_MS) {
-      continue;
-    }
-    const canonicalTarget = await canonicalizeExistingPath(
+    if (ageMs < TEMP_ARTIFACT_MIN_AGE_MS) continue;
+    const canonical = await canonicalizeExistingPath(
       target,
       ctx.liveness.platform,
     );
     if (
-      isArtifactPathHeld(canonicalTarget, ctx) ||
+      isArtifactPathHeld(canonical, ctx) ||
       (await hasLiveOwnerPidInDir(target, ctx.liveness.processes))
     ) {
       continue;
     }
     await recordFsCandidate(ctx.collector, {
-      id: `tmp-artifact:${canonicalTarget}`,
+      id: `tmp-artifact:${canonical}`,
       surface: "artifacts",
       kind: "temp-dir",
       target,
@@ -392,15 +370,71 @@ async function sweepTempDirectories(ctx: ArtifactSweepContext): Promise<void> {
       : [os.tmpdir()]);
   const seenRoots = new Set<string>();
   for (const rootDir of rawRoots) {
-    const canonicalRoot = await canonicalizeExistingPath(
+    const canonical = await canonicalizeExistingPath(
       rootDir,
       ctx.liveness.platform,
     );
-    if (canonicalRoot.length === 0 || seenRoots.has(canonicalRoot)) {
+    if (canonical.length === 0 || seenRoots.has(canonical)) {
       continue;
     }
-    seenRoots.add(canonicalRoot);
+    seenRoots.add(canonical);
     await sweepSingleTempRoot(rootDir, ctx);
+  }
+}
+
+async function latestTurboCacheTouchMs(
+  cacheDir: string,
+): Promise<number | null> {
+  const baseMtime = await statDirectoryMtime(cacheDir);
+  if (baseMtime === null) {
+    return null;
+  }
+  let newest = baseMtime;
+  for (const entry of await readSortedNames(cacheDir)) {
+    try {
+      const info = await stat(path.join(cacheDir, entry));
+      newest = Math.max(newest, info.mtimeMs);
+    } catch {
+      // Ignore vanished cache file.
+    }
+  }
+  return newest;
+}
+
+async function sweepWorktreeTurboCaches(
+  ctx: ArtifactSweepContext,
+): Promise<void> {
+  const worktreesRoot = path.join(ctx.homeDir, ".herdr", "worktrees");
+  for (const repoName of await readSortedNames(worktreesRoot)) {
+    const repoDir = path.join(worktreesRoot, repoName);
+    for (const wtName of await readSortedNames(repoDir)) {
+      const wtDir = path.join(repoDir, wtName);
+      const cacheDir = path.join(wtDir, ".turbo", "cache");
+      const lastTouchMs = await latestTurboCacheTouchMs(cacheDir);
+      if (lastTouchMs === null) {
+        continue;
+      }
+      ctx.collector.inspected += 1;
+      const ageMs = Math.max(0, ctx.nowMs - lastTouchMs);
+      if (ageMs <= WORKTREE_TURBO_CACHE_MIN_AGE_MS) {
+        continue;
+      }
+      const canonicalWt = await canonicalizeExistingPath(
+        wtDir,
+        ctx.liveness.platform,
+      );
+      if (isArtifactPathHeld(canonicalWt, ctx)) {
+        continue;
+      }
+      await recordFsCandidate(ctx.collector, {
+        id: `turbo-cache:${cacheDir}`,
+        surface: "artifacts",
+        kind: "turbo-cache",
+        target: cacheDir,
+        reason: `stale worktree .turbo/cache idle > 48h (${formatDurationCompact(ageMs)})`,
+        ageSeconds: Math.floor(ageMs / 1000),
+      });
+    }
   }
 }
 
@@ -448,6 +482,7 @@ export async function sweepArtifacts(
   await sweepBrimInstallArtifacts(ctx);
   await sweepMcArtifacts(ctx);
   await sweepTempDirectories(ctx);
+  await sweepWorktreeTurboCaches(ctx);
   return {
     surface: "artifacts",
     inspectedCount: collector.inspected,

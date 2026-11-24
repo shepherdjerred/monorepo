@@ -113,24 +113,25 @@ names the checksum. Renovate cannot compute it.
    bunx turbo run test --filter=@shepherdjerred/root-scripts
    ```
 
-3. Confirm Renovate extracts the pin. The run needs no token and writes
+3. Confirm Renovate extracts the pin. The wrapper needs no token and writes
    nothing to the repository:
 
    ```bash
-   RENOVATE_ALLOWED_ENV='["BUN_CONFIG_MAX_HTTP_REQUESTS"]' \
-   RENOVATE_SECRETS='{"DOCKERHUB_RENOVATE_TOKEN":"unused"}' \
-   bunx renovate --platform=local --dry-run=extract \
-     --report-type=file --report-path="$TMPDIR/renovate-extract.json"
+   bun run renovate-dry-run extract
    ```
 
-   The pin appears under `packageFiles.regex` for its file.
+   The report is written to `$TMPDIR/renovate-extract.json` (pass
+   `--report-path <path>` to override). The pin appears under
+   `packageFiles.regex` for its file. To also check upstream registry lookups,
+   run `bun run renovate-dry-run lookup`.
 
 :::caution
-The extract run above is safe. Never give a `--dry-run=lookup` run a
-placeholder Docker Hub secret. The `docker.io` host rule names the real
-account, so each Docker Hub lookup becomes a failed login. Docker Hub then
-locks the account, and image publishing on main fails. For a lookup, run
-against a copy of `renovate.json` with its `hostRules` entry removed.
+Always use `bun run renovate-dry-run [extract|lookup]` (`scripts/tools/renovate-dry-run.ts`)
+instead of invoking `renovate` directly with a placeholder
+`DOCKERHUB_RENOVATE_TOKEN`. The `docker.io` host rule names the real account,
+so a lookup with a placeholder token locks Docker Hub and breaks `main` builds.
+The wrapper rejects placeholder tokens and strips `hostRules` entries for
+unprovided secrets.
 :::
 
 ## Track a Minecraft plugin from Modrinth

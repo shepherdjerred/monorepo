@@ -69,8 +69,11 @@ export function psqlMaintenance(
   return psqlMaintenanceCommands([sql], options);
 }
 
-export function ensureDatabase(dbName: string): void {
-  const { superUrl } = ensureSharedPostgres();
+export function ensureDatabase(
+  dbName: string,
+  options?: { readonly adminUrl?: string | undefined },
+): void {
+  const superUrl = options?.adminUrl ?? ensureSharedPostgres().superUrl;
   const exists = psqlMaintenance(
     `SELECT 1 FROM pg_database WHERE datname = '${dbName.replaceAll("'", "''")}'`,
     { adminUrl: superUrl },

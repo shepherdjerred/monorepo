@@ -2,11 +2,16 @@
 
 import { requiredCredentialsFor } from "#lib/credential-commands.ts";
 import { resolveCredentials } from "#lib/credentials.ts";
+import { runGitSpiceInvocation } from "#lib/git-spice/run.ts";
 import {
   buildPassthroughInvocation,
   isCredentialFreePassthrough,
   runPassthrough,
 } from "#lib/passthrough.ts";
+import {
+  formatToolkitVersion,
+  warnIfInstalledBinaryStale,
+} from "#lib/version/staleness.ts";
 import {
   handleWoodpeckerPipelineLsJson,
   isWoodpeckerPipelineLsJson,
@@ -24,7 +29,7 @@ Usage:
 Platform commands (native CLI passthroughs):
   gh          GitHub CLI (GH_REPO=shepherdjerred/monorepo)
   woodpecker  Woodpecker CI CLI
-  git-spice   Stacked branch and PR workflow
+  git-spice   Stacked branch and PR workflow (alias: spice)
   posthog     PostHog CLI (project 549883)
   grafana     GCX (homelab Grafana, brokered token)
   prom        GCX metrics (homelab Grafana)
@@ -251,48 +256,10 @@ async function runBrokeredCommand(
   }
 }
 
-async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-  const command = args[0];
-
-  if (
-    command === "--help" ||
-    command === "-h" ||
-    command === undefined ||
-    command.length === 0
-  ) {
-    printUsage();
-    return;
-  }
-
-  if (command === "--version" || command === "version") {
-    console.log(`toolkit ${TOOLKIT_VERSION}`);
-    return;
-  }
-
-  const brokeredExit = await runBrokeredCommand(command, args.slice(1));
-  if (brokeredExit !== null) {
-    process.exit(brokeredExit);
-  }
-
-  if (!isCredentialFreePassthrough(command, args.slice(1))) {
-    await resolveCommandCredentials(command, args);
-  }
-
-  if (isWoodpeckerPipelineLsJson(command, args.slice(1))) {
-    await handleWoodpeckerPipelineLsJson(args.slice(1));
-    return;
-  }
-
-  const passthrough = buildPassthroughInvocation(
-    command,
-    args.slice(1),
-    Bun.env,
-  );
-  if (passthrough !== null) {
-    process.exit(await runPassthrough(passthrough));
-  }
-
+async function dispatchBuiltinCommand(
+  command: string,
+  args: readonly string[],
+): Promise<void> {
   const subcommand = args[1];
   const loadSubcommandHandler = SUBCOMMAND_HANDLERS.get(command);
   if (loadSubcommandHandler !== undefined) {
@@ -337,6 +304,56 @@ async function main(): Promise<void> {
       printUsage();
       process.exit(1);
   }
+}
+
+async function main(): Promise<void> {
+  const args = process.argv.slice(2);
+  const command = args[0];
+
+  if (
+    command === "--help" ||
+    command === "-h" ||
+    command === undefined ||
+    command.length === 0
+  ) {
+    printUsage();
+    return;
+  }
+
+  if (command === "--version" || command === "version") {
+    console.log(formatToolkitVersion(TOOLKIT_VERSION));
+    return;
+  }
+
+  const brokeredExit = await runBrokeredCommand(command, args.slice(1));
+  if (brokeredExit !== null) {
+    process.exit(brokeredExit);
+  }
+
+  if (!isCredentialFreePassthrough(command, args.slice(1))) {
+    await resolveCommandCredentials(command, args);
+  }
+
+  if (isWoodpeckerPipelineLsJson(command, args.slice(1))) {
+    await handleWoodpeckerPipelineLsJson(args.slice(1));
+    return;
+  }
+
+  const passthrough = buildPassthroughInvocation(
+    command,
+    args.slice(1),
+    Bun.env,
+  );
+  if (passthrough !== null) {
+    const code =
+      command === "git-spice" || command === "spice"
+        ? await runGitSpiceInvocation(passthrough)
+        : await runPassthrough(passthrough);
+    process.exit(code);
+  }
+
+  warnIfInstalledBinaryStale();
+  await dispatchBuiltinCommand(command, args);
 }
 
 try {

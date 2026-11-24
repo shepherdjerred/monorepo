@@ -19,47 +19,53 @@ test("help is available without credentials and describes the wait contract", as
   expect(output).toContain("--follow");
 });
 
-test("bad flags emit a single parseable JSON error and exit 2 before authentication", async () => {
-  for (const args of [
-    ["wait", "99", "--until", "anything"],
-    ["wait", "99", "--timeout", "0s"],
-    ["load", "--head", "a".repeat(40)],
-    ["timings", "99"],
-    ["timings", "--head", "a".repeat(40)],
-    ["timings", "--since", "0h"],
-    ["main", "--since", "1h"],
-    ["wait", "--main", "--until", "settled"],
-    ["wait", "--main", "99"],
-    ["main", "--head", "a".repeat(40)],
-    ["load", "--main"],
-    ["wait", "99", "--follow"],
-    ["explain", "--main", "--follow"],
-    ["wait", "--main", "--follow", "--head", "a".repeat(40)],
-  ]) {
+const BAD_FLAG_CASES = [
+  ["wait", "99", "--until", "anything"],
+  ["wait", "99", "--timeout", "0s"],
+  ["load", "--head", "a".repeat(40)],
+  ["timings", "99"],
+  ["timings", "--head", "a".repeat(40)],
+  ["timings", "--since", "0h"],
+  ["main", "--since", "1h"],
+  ["wait", "--main", "--until", "settled"],
+  ["wait", "--main", "99"],
+  ["main", "--head", "a".repeat(40)],
+  ["load", "--main"],
+  ["wait", "99", "--follow"],
+  ["explain", "--main", "--follow"],
+  ["wait", "--main", "--follow", "--head", "a".repeat(40)],
+].map((args) => ({ label: args.join(" "), args }));
+
+test.each(BAD_FLAG_CASES)(
+  "bad flags ($label) emit a single parseable JSON error and exit 2 before authentication",
+  async ({ args }) => {
     const { output, error, code } = await runCi([...args, "--json"]);
     expect(code, error).toBe(2);
     expect(JSON.parse(output)).toMatchObject({
       outcome: "error",
       ready: false,
     });
-  }
-});
+  },
+);
 
-test("benchmark help is credential-free and malformed evidence arguments fail before authentication", async () => {
-  for (const args of [
-    ["--help"],
-    ["evidence", "123", "--variant", "candidate"],
-    ["evidence", "123", "--head", "a".repeat(40), "--variant", "other"],
-    [
-      "evidence",
-      "123",
-      "456",
-      "--head",
-      "a".repeat(40),
-      "--variant",
-      "candidate",
-    ],
-  ]) {
+const BENCHMARK_CASES = [
+  ["--help"],
+  ["evidence", "123", "--variant", "candidate"],
+  ["evidence", "123", "--head", "a".repeat(40), "--variant", "other"],
+  [
+    "evidence",
+    "123",
+    "456",
+    "--head",
+    "a".repeat(40),
+    "--variant",
+    "candidate",
+  ],
+].map((args) => ({ label: args.join(" "), args }));
+
+test.each(BENCHMARK_CASES)(
+  "benchmark ($label) is credential-free and rejects malformed evidence arguments before authentication",
+  async ({ args }) => {
     const { output, error, code } = await runCi([
       "benchmark",
       ...args,
@@ -73,5 +79,5 @@ test("benchmark help is credential-free and malformed evidence arguments fail be
       expect(JSON.parse(output)).toMatchObject({ outcome: "error" });
     }
     expect(error).not.toContain("via service-account");
-  }
-});
+  },
+);

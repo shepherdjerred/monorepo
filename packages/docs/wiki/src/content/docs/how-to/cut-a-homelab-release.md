@@ -528,7 +528,20 @@ operator-only OpenTofu stacks, node upgrades and bootstrap
 
 ## Retire a service
 
-1. Confirm that no deployment of the service is owned or `recovery-required`.
+Retire a service in Delivery only after merging the change that removes or marks
+it retired in `packages/ops-model/catalog-document.json` and
+`packages/ops-model/services.json`, and after that `main` commit's `helm-push`
+workflow succeeds. Retiring earlier makes `helm-push` fail when querying
+retainable chart bases on `main`.
+
+1. Wait for the `main` removal commit (`COMMIT_SHA`) to finish verification and
+   `helm-push`:
+
+   ```bash
+   toolkit ci wait --main --head COMMIT_SHA --json
+   ```
+
+2. Confirm that no deployment of the service is owned or `recovery-required`.
    Retirement refuses otherwise
    ([S3](packages/delivery/docs/model.md#42-service)):
 
@@ -536,11 +549,18 @@ operator-only OpenTofu stacks, node upgrades and bootstrap
    toolkit deploy status --json
    ```
 
-2. Retire it:
+3. Retire it:
 
    ```bash
    toolkit deploy retire SERVICE --reason "Replaced by Arcade" --machine
    ```
+
+   `toolkit deploy retire` fetches `origin/main`, verifies the service is no
+   longer active in `catalog-document.json` or owned in `services.json`, and
+   checks that a `main` Woodpecker pipeline at or descending from the catalog
+   removal commit completed `helm-push` with `success`. Pass
+   `--force-while-on-main` only for an authorized break-glass retirement while
+   the service still appears on `main`.
 
 A retired service keeps each environment's accepted selection and retained
 hosts. It admits no further deployment

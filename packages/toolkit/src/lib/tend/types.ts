@@ -174,11 +174,128 @@ export const TendItemEventSchema = z.strictObject({
 });
 export type TendItemEvent = z.infer<typeof TendItemEventSchema>;
 
+const GIB_BYTES = 1024 ** 3;
+export const DISK_WARNING_THRESHOLD_BYTES = 20 * GIB_BYTES;
+export const DISK_CRITICAL_THRESHOLD_BYTES = 5 * GIB_BYTES;
+
+export type DiskCapacitySummary = {
+  readonly path: string;
+  readonly availableBytes: number;
+  readonly totalBytes: number;
+  readonly level: "ok" | "warning" | "critical";
+  readonly warning?: string | undefined;
+};
+
+export type DockerDiskUsageRow = {
+  readonly type: string;
+  readonly totalCount: string;
+  readonly active: string;
+  readonly size: string;
+  readonly reclaimable: string;
+};
+
+export type DockerDiskSummary = {
+  readonly available: boolean;
+  readonly rows: readonly DockerDiskUsageRow[];
+  readonly skippedReason?: string | undefined;
+};
+
+const DockerSystemDfRowSchema = z.looseObject({
+  Type: z.string(),
+  TotalCount: z.union([z.string(), z.number()]).transform(String),
+  Active: z.union([z.string(), z.number()]).transform(String),
+  Size: z.string(),
+  Reclaimable: z.string(),
+});
+
+export function formatGiB(bytes: number): string {
+  return `${(bytes / GIB_BYTES).toFixed(1)} GiB`;
+}
+
+export function evaluateDiskCapacity(
+  targetPath: string,
+  availableBytes: number,
+  totalBytes: number,
+): DiskCapacitySummary {
+  if (availableBytes < DISK_CRITICAL_THRESHOLD_BYTES) {
+    return {
+      path: targetPath,
+      availableBytes,
+      totalBytes,
+      level: "critical",
+      warning: `CRITICAL low disk space on ${targetPath}: ${formatGiB(availableBytes)} available (< 5 GiB)`,
+    };
+  }
+  if (availableBytes < DISK_WARNING_THRESHOLD_BYTES) {
+    return {
+      path: targetPath,
+      availableBytes,
+      totalBytes,
+      level: "warning",
+      warning: `Low disk space on ${targetPath}: ${formatGiB(availableBytes)} available (< 20 GiB)`,
+    };
+  }
+  return {
+    path: targetPath,
+    availableBytes,
+    totalBytes,
+    level: "ok",
+  };
+}
+
+export function parseDockerSystemDfOutput(
+  stdout: string,
+): DockerDiskUsageRow[] {
+  const trimmed = stdout.trim();
+  if (trimmed.length === 0) {
+    return [];
+  }
+  const mapRow = (
+    parsed: z.infer<typeof DockerSystemDfRowSchema>,
+  ): DockerDiskUsageRow => ({
+    type: parsed.Type,
+    totalCount: parsed.TotalCount,
+    active: parsed.Active,
+    size: parsed.Size,
+    reclaimable: parsed.Reclaimable,
+  });
+  if (trimmed.startsWith("[")) {
+    try {
+      const arrayParsed = z
+        .array(DockerSystemDfRowSchema)
+        .safeParse(JSON.parse(trimmed));
+      return arrayParsed.success
+        ? arrayParsed.data.map((item) => mapRow(item))
+        : [];
+    } catch {
+      return [];
+    }
+  }
+  const rows: DockerDiskUsageRow[] = [];
+  for (const line of trimmed.split(/\r?\n/u)) {
+    const clean = line.trim();
+    if (clean.length === 0) {
+      continue;
+    }
+    try {
+      const parsed = DockerSystemDfRowSchema.safeParse(JSON.parse(clean));
+      if (parsed.success) {
+        rows.push(mapRow(parsed.data));
+      }
+    } catch {
+      // Ignore unparseable line.
+    }
+  }
+  return rows;
+}
+
 export type TendRunReport = {
   readonly timestamp: string;
   readonly host: string;
   readonly mode: "status" | "dry-run" | "apply";
   readonly worktreeMinAgeMs: number;
+  readonly disk?: DiskCapacitySummary | null | undefined;
+  readonly dockerDisk?: DockerDiskSummary | null | undefined;
   readonly liveness: {
     readonly hcAvailable: boolean;
     readonly liveTerminalCount: number;

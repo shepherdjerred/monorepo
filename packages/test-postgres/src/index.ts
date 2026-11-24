@@ -1,6 +1,7 @@
 import * as binaries from "./binaries.ts";
 import * as databases from "./databases.ts";
 import * as owner from "./owner.ts";
+import * as postmaster from "./postmaster.ts";
 import * as server from "./server.ts";
 import * as sweep from "./sweep.ts";
 import * as templates from "./templates.ts";
@@ -16,6 +17,10 @@ export type ProcessProbe = owner.ProcessProbe;
 export type StaleTemplateDecision = owner.StaleTemplateDecision;
 export type SweepDecision = owner.SweepDecision;
 export type TemplateRebuildDecision = owner.TemplateRebuildDecision;
+
+export type PostmasterPidInfo = postmaster.PostmasterPidInfo;
+export type PostgresClusterDurability = postmaster.PostgresClusterDurability;
+export type EnsurePostgresClusterOptions = server.EnsurePostgresClusterOptions;
 
 export type ListedDatabaseRow = sweep.ListedDatabaseRow;
 export type SweepOptions = sweep.SweepOptions;
@@ -56,12 +61,25 @@ export const processIsAlive = owner.processIsAlive;
 export const processStartForPid = owner.processStartForPid;
 export const sqlLiteral = owner.sqlLiteral;
 
+export const DISPOSABLE_TEST_PG_DIR_NAME =
+  postmaster.DISPOSABLE_TEST_PG_DIR_NAME;
+export const assertDisposableTestPgDataDir =
+  postmaster.assertDisposableTestPgDataDir;
+export const hasStartupWalPanic = postmaster.hasStartupWalPanic;
+export const isDisposableTestPgDataDir = postmaster.isDisposableTestPgDataDir;
+export const parsePostmasterPid = postmaster.parsePostmasterPid;
+export const pgCtlOptionsForDurability = postmaster.pgCtlOptionsForDurability;
+export const readPostmasterPid = postmaster.readPostmasterPid;
+
 export const DEFAULT_SHARED_PG_PORT = server.DEFAULT_SHARED_PG_PORT;
 export const SHARED_PG_ROLES = server.SHARED_PG_ROLES;
 export const assertDevPostgresIdentity = server.assertDevPostgresIdentity;
 export const databaseUrlFromAdmin = server.databaseUrlFromAdmin;
+export const ensurePostgresCluster = server.ensurePostgresCluster;
 export const ensureSharedPostgres = server.ensureSharedPostgres;
+export const explicitPostgresPort = server.explicitPostgresPort;
 export const managedPostgresDataRoots = server.managedPostgresDataRoots;
+export const parsePortEnv = server.parsePortEnv;
 export const sharedDatabaseUrl = server.sharedDatabaseUrl;
 export const sharedPostgresDataRoot = server.sharedPostgresDataRoot;
 export const sharedPostgresPort = server.sharedPostgresPort;

@@ -37,10 +37,42 @@ import {
   checkRunState,
 } from "./github/schemas.ts";
 import { captureJson } from "./process.ts";
+import { sleep } from "./wait/sleep.ts";
 import { PullRequestSchema } from "#lib/github/schemas.ts";
 
 export const REPOSITORY = "shepherdjerred/monorepo";
 const API = "https://api.github.com";
+const TRANSIENT_GITHUB_TRANSPORT =
+  /ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|EHOSTUNREACH|ECONNREFUSED|ENETUNREACH|connection reset by peer|socket connection was closed|unable to connect|failed to fetch|TLS handshake timeout|unexpected EOF|network connection/iu;
+
+function errorSummary(value: unknown, depth = 0): string {
+  if (!(value instanceof Error) || depth > 3) {
+    return "";
+  }
+  const code =
+    "code" in value && typeof value.code === "string" ? value.code : "";
+  const cause =
+    value.cause === undefined ? "" : errorSummary(value.cause, depth + 1);
+  return `${value.message} ${code} ${cause}`;
+}
+
+export function isTransientGitHubTransportError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    error.name !== "GitHubRateLimitError" &&
+    error.name !== "AbortError" &&
+    TRANSIENT_GITHUB_TRANSPORT.test(errorSummary(error))
+  );
+}
+
+async function retryGitHubDelay(
+  attempt: number,
+  signal?: AbortSignal,
+): Promise<void> {
+  const ms = Bun.env.NODE_ENV === "test" ? 5 : 1000 * 2 ** (attempt - 1);
+  await (signal === undefined ? Bun.sleep(ms) : sleep(ms, signal));
+}
+
 export type GitHubClientOptions = {
   /** Where ETagged bodies, decisions, and rate-limit observations live. */
   store?: KeyValueStore;
@@ -118,30 +150,48 @@ export class GitHubClient {
     });
   }
 
-  async read<T>(
+  async #retry<T>(
+    operation: () => Promise<T>,
+    signal?: AbortSignal,
+  ): Promise<T> {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        await retryGitHubDelay(attempt, signal);
+      }
+      try {
+        return await operation();
+      } catch (error) {
+        const is5xx =
+          error instanceof Error &&
+          /^GitHub (?:request|GraphQL) failed \(5\d\d\)/u.test(error.message);
+        if (
+          attempt < 2 &&
+          signal?.aborted !== true &&
+          (is5xx || isTransientGitHubTransportError(error))
+        ) {
+          continue;
+        }
+        throw error;
+      }
+    }
+    throw new Error("GitHub retry budget exhausted");
+  }
+
+  read<T>(
     path: string,
     schema: z.ZodType<T>,
     signal?: AbortSignal,
     maxAgeMs = 0,
   ): Promise<T> {
-    for (let attempt = 0; attempt < 3; attempt++) {
-      if (attempt > 0) {
-        await Bun.sleep(
-          Bun.env.NODE_ENV === "test" ? 5 : 1000 * 2 ** (attempt - 1),
-        );
-      }
+    return this.#retry(async () => {
       const response = await this.response(path, signal, maxAgeMs);
       if (response.ok) {
         return schema.parse(await response.json());
       }
-      if (response.status >= 500 && response.status < 600 && attempt < 2) {
-        continue;
-      }
       throw new Error(
         `GitHub request failed (${String(response.status)}): ${path}`,
       );
-    }
-    throw new Error(`GitHub request failed: ${path}`);
+    }, signal);
   }
 
   async pages<T>(
@@ -178,7 +228,19 @@ export class GitHubClient {
   }
 
   /** One GraphQL query; quota refusals, including HTTP 200 ones, throw `GitHubRateLimitError`. */
-  async graphql<T>(
+  graphql<T>(
+    query: string,
+    variables: Record<string, unknown>,
+    schema: z.ZodType<T>,
+    signal?: AbortSignal,
+  ): Promise<T> {
+    return this.#retry(
+      () => this.#graphqlOnce(query, variables, schema, signal),
+      signal,
+    );
+  }
+
+  async #graphqlOnce<T>(
     query: string,
     variables: Record<string, unknown>,
     schema: z.ZodType<T>,

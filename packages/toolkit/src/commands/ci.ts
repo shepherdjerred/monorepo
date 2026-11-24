@@ -94,6 +94,30 @@ export function reportRateLimit(
   );
 }
 
+export function reportTransientError(
+  error: unknown,
+  attempt: number,
+  secrets: readonly string[] = [],
+): void {
+  const detail = sanitizeText(
+    error instanceof Error ? error.message : String(error),
+    secrets,
+  );
+  console.error(
+    `Transient CI read error (attempt ${String(attempt)}); retrying. This does not mean CI failed. ${detail}`,
+  );
+}
+
+function quotaCallbacks(observer: CiObserver) {
+  const secrets = [observer.github.token, observer.woodpecker.token];
+  return {
+    rateLimited: reportRateLimit,
+    transientError: (error: unknown, attempt: number) => {
+      reportTransientError(error, attempt, secrets);
+    },
+  };
+}
+
 /** The PR's current head, read through quota refusals until the deadline. */
 function initialPr(
   observer: CiObserver,
@@ -105,7 +129,7 @@ function initialPr(
     () => observer.github.pr(number, signal),
     signal,
     deadline,
-    reportRateLimit,
+    quotaCallbacks(observer),
   );
 }
 
@@ -193,7 +217,7 @@ export async function waitForPr(
             observer.notePrCommit(number, commit);
           },
         }),
-      rateLimited: reportRateLimit,
+      ...quotaCallbacks(observer),
       heartbeat: (snapshot) => {
         console.error(
           `Still waiting for PR #${String(number)}; pipeline ${snapshot?.pipeline?.status ?? "not created"}. Long waits are expected.`,
@@ -251,13 +275,14 @@ async function runMainWait(
     const follow = options.follow === true;
     // The pinned commit and its ancestry are GitHub reads too; a quota
     // refusal before the loop starts must wait, not end the command.
+    const callbacks = quotaCallbacks(observer);
     const sha =
       options.head ??
       (await readThroughQuota(
         () => readMainTip(observer.github, signal),
         signal,
         deadline,
-        reportRateLimit,
+        callbacks,
       ));
     const onMain =
       sha === null || follow
@@ -269,7 +294,7 @@ async function runMainWait(
             },
             signal,
             deadline,
-            reportRateLimit,
+            callbacks,
           );
     if (sha === null || onMain === null) {
       await reportMainWait(
@@ -315,7 +340,7 @@ async function runMainWait(
             fatal,
             prNumber: null,
           }),
-        rateLimited: reportRateLimit,
+        ...callbacks,
         heartbeat: (snapshot) => {
           console.error(
             `Still waiting for main @ ${(snapshot?.sha ?? sha).slice(0, 12)}; pipeline ${snapshot?.run?.status ?? "not created"}. Long waits are expected.`,

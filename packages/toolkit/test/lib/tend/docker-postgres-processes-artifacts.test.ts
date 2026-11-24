@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { handleTendCommand } from "#commands/tend/tend.ts";
+import { formatTendReport } from "#commands/tend/tend-format.ts";
 import { sweepArtifacts } from "#lib/tend/artifacts.ts";
 import {
   DOCKER_BUILDER_PRUNE_ARGV,
@@ -46,6 +47,7 @@ function makeLiveness(options: {
   readonly processes?: ReadonlyMap<number, OsProcessEntry>;
   readonly liveTerminalPids?: Iterable<number>;
   readonly holdSurfaces?: ReadonlyMap<TendSurface, string>;
+  readonly protectedPaths?: Iterable<string>;
 }): LivenessSnapshot {
   return {
     capturedAt: "2026-11-15T20:00:00Z",
@@ -54,7 +56,7 @@ function makeLiveness(options: {
     localHostAliases: new Set(["karpathy"]),
     hcAvailable: true,
     hcTerminals: [],
-    protectedPaths: new Set(),
+    protectedPaths: new Set(options.protectedPaths),
     processCwds: new Set(),
     herdrActivePaths: new Set(),
     forumNoticePaths: new Set(),
@@ -482,5 +484,125 @@ describe("sweepArtifacts, run.lock, and runTend dry-run default", () => {
     );
     const afterCliSummary = await readLastTendRunSummary(paths);
     expect(afterCliSummary?.apply).toBe(false);
+  });
+});
+
+describe("worktree turbo cache sweep and status disk telemetry", () => {
+  it("sweeps stale .turbo/cache (>48h) in inactive worktrees while preserving active/recent ones, and reports disk + docker df in status", async () => {
+    const homeDir = await makeTempDir();
+    const paths = resolveTendPaths({ homeDir });
+    const nowMs = 1_760_000_000_000;
+    const sixtyHoursAgo = new Date(nowMs - 60 * 3_600_000);
+    const twelveHoursAgo = new Date(nowMs - 12 * 3_600_000);
+
+    const staleCache = path.join(
+      homeDir,
+      ".herdr",
+      "worktrees",
+      "monorepo",
+      "wt-stale",
+      ".turbo",
+      "cache",
+    );
+    const protectedWt = path.join(
+      homeDir,
+      ".herdr",
+      "worktrees",
+      "monorepo",
+      "wt-active",
+    );
+    const protectedCache = path.join(protectedWt, ".turbo", "cache");
+    const recentCache = path.join(
+      homeDir,
+      ".herdr",
+      "worktrees",
+      "monorepo",
+      "wt-recent",
+      ".turbo",
+      "cache",
+    );
+
+    await mkdir(staleCache, { recursive: true });
+    await mkdir(protectedCache, { recursive: true });
+    await mkdir(recentCache, { recursive: true });
+
+    const staleEntry = path.join(staleCache, "a.tar.zst");
+    const protectedEntry = path.join(protectedCache, "b.tar.zst");
+    const recentEntry = path.join(recentCache, "c.tar.zst");
+    await Bun.write(staleEntry, "old");
+    await Bun.write(protectedEntry, "live");
+    await Bun.write(recentEntry, "fresh");
+
+    await utimes(staleEntry, sixtyHoursAgo, sixtyHoursAgo);
+    await utimes(staleCache, sixtyHoursAgo, sixtyHoursAgo);
+    await utimes(protectedEntry, sixtyHoursAgo, sixtyHoursAgo);
+    await utimes(protectedCache, sixtyHoursAgo, sixtyHoursAgo);
+    await utimes(recentEntry, twelveHoursAgo, twelveHoursAgo);
+    await utimes(recentCache, twelveHoursAgo, twelveHoursAgo);
+
+    const sweepRes = await sweepArtifacts({
+      liveness: makeLiveness({
+        protectedPaths: [path.join(protectedWt, "packages", "toolkit")],
+      }),
+      homeDir,
+      tempDirs: [],
+      apply: true,
+      nowMs,
+      runner: () => Promise.resolve({ exitCode: 1, stdout: "", stderr: "" }),
+    });
+
+    expect(
+      sweepRes.candidates
+        .filter((c) => c.kind === "turbo-cache")
+        .map((c) => c.target),
+    ).toEqual([staleCache]);
+    expect(await Bun.file(staleEntry).exists()).toBe(false);
+    expect(await Bun.file(protectedEntry).exists()).toBe(true);
+    expect(await Bun.file(recentEntry).exists()).toBe(true);
+
+    const gib = 1024 ** 3;
+    const statusWarn = await runTend({
+      mode: "status",
+      surfaces: ["docker"],
+      paths,
+      homeDir,
+      livenessOverride: makeLiveness({}),
+      statDisk: () =>
+        Promise.resolve({ availableBytes: 12 * gib, totalBytes: 500 * gib }),
+      runner: (argv) => {
+        if (argv[0] === "docker" && argv[1] === "system" && argv[2] === "df") {
+          return Promise.resolve({
+            exitCode: 0,
+            stdout:
+              '{"Type":"Images","TotalCount":"10","Active":"2","Size":"24.5GB","Reclaimable":"18.0GB (73%)"}\n' +
+              '{"Type":"Build Cache","TotalCount":"50","Active":"0","Size":"11.2GB","Reclaimable":"11.2GB"}\n',
+            stderr: "",
+          });
+        }
+        return Promise.resolve({ exitCode: 1, stdout: "", stderr: "" });
+      },
+      nowMs,
+    });
+    expect(statusWarn.disk?.level).toBe("warning");
+    expect(statusWarn.dockerDisk?.available).toBe(true);
+    expect(statusWarn.dockerDisk?.rows).toHaveLength(2);
+    const formatted = formatTendReport(statusWarn);
+    expect(formatted).toContain("12.0 GiB free / 500.0 GiB total (WARNING)");
+    expect(formatted).toContain("Images=24.5GB (reclaimable 18.0GB (73%))");
+
+    const statusCrit = await runTend({
+      mode: "status",
+      surfaces: ["leases"],
+      paths,
+      homeDir,
+      livenessOverride: makeLiveness({}),
+      statDisk: () =>
+        Promise.resolve({ availableBytes: 3 * gib, totalBytes: 500 * gib }),
+      nowMs,
+    });
+    expect(statusCrit.disk?.level).toBe("critical");
+    expect(
+      statusCrit.liveness.warnings.some((w) => w.includes("CRITICAL")),
+    ).toBe(true);
   });
 });

@@ -1,4 +1,5 @@
 import { run } from "../run.ts";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { copyFile, lstat, mkdir, rm } from "node:fs/promises";
 
@@ -342,8 +343,8 @@ export async function prepareStaticSite(
   const prebuilt = args.includes("--prebuilt");
   const site = selectSite(args);
 
-  const buildDir = `${root}/${site.buildDir}`;
-  const distDir = `${root}/${site.distDir}`;
+  const buildDir = path.join(root, site.buildDir);
+  const distDir = path.join(root, site.distDir);
 
   console.log(`--- Deploy ${site.name} -> ${site.bucket} (${site.url})`);
   console.log(dryRun ? "(dry run)" : "(live)");
@@ -354,7 +355,7 @@ export async function prepareStaticSite(
     // entrypoints with it, never the checkout's TeX sources or guidance links.
     const files = ["index.html", "404.html", "resume.pdf"];
     for (const file of files) {
-      const stats = await lstat(`${buildDir}/${file}`);
+      const stats = await lstat(path.join(buildDir, file));
       if (!stats.isFile())
         throw new Error(`Resume site requires a regular file: ${file}`);
     }
@@ -362,7 +363,7 @@ export async function prepareStaticSite(
     await mkdir(distDir, { recursive: true });
     await Promise.all(
       files.map((file) =>
-        copyFile(`${buildDir}/${file}`, `${distDir}/${file}`),
+        copyFile(path.join(buildDir, file), path.join(distDir, file)),
       ),
     );
   }
@@ -397,7 +398,7 @@ async function assertRequiredErrorPage(
     !["better-skill-capped", "cooklang-rich-preview"].includes(siteName)
   )
     return;
-  if (!(await Bun.file(`${distDir}/404.html`).exists())) {
+  if (!(await Bun.file(path.join(distDir, "404.html")).exists())) {
     throw new Error(
       `${siteName}: required 404.html is missing; refusing to publish an incomplete site`,
     );
@@ -409,7 +410,7 @@ async function assertSiteRoot(
   distDir: string,
   dryRun: boolean,
 ): Promise<void> {
-  if (!dryRun && !(await Bun.file(`${distDir}/index.html`).exists())) {
+  if (!dryRun && !(await Bun.file(path.join(distDir, "index.html")).exists())) {
     throw new Error(
       `${site.distDir}/index.html is missing — refusing to publish an incomplete site archive`,
     );

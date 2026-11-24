@@ -166,6 +166,14 @@ export const CREDENTIAL_REGISTRY: Record<string, CredentialSpec> = {
       ref: `${HOMELAB_VAULT_REF}/argocd-workstation-token/tokens/ARGOCD_AUTH_TOKEN`,
     },
   },
+  DELIVERY_PLATFORM_ARGOCD_TOKEN: {
+    description:
+      "ArgoCD delivery-platform API token for owned dispatch barrier patches (minted by the argocd OpenTofu stack)",
+    source: {
+      kind: "op",
+      ref: `${HOMELAB_VAULT_REF}/delivery-argocd-platform-token/tokens/ARGOCD_TOKEN`,
+    },
+  },
   DISCORD_USER_TOKEN: {
     description: "Discord user token",
     source: {

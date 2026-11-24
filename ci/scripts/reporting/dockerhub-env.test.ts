@@ -76,6 +76,29 @@ test("a failed login fails the lane", async () => {
   ).rejects.toThrow("Docker Hub login exited 1");
 });
 
+test.each([
+  'Get "https://registry-1.docker.io/v2/": toomanyrequests: too many failed login attempts for username or IP address',
+  "Error response from daemon: toomanyrequests: rate limit exceeded",
+  "Too many failed login attempts for publisher-fixture",
+])(
+  "reports Docker Hub lockout or rate limit distinctly without leaking credentials: %s",
+  async (stderr) => {
+    let thrown: unknown;
+    try {
+      await dockerHubLogin("publisher", publisher, async () => ({
+        exitCode: 1,
+        stderr,
+      }));
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(Error);
+    const message = thrown instanceof Error ? thrown.message : "";
+    expect(message).toContain("Docker Hub account lockout or rate limit");
+    expect(message).not.toContain(publisher.DOCKERHUB_PUBLISH_TOKEN);
+  },
+);
+
 function authConfig(
   auth: unknown,
   fields: Readonly<Record<string, string>> = {},

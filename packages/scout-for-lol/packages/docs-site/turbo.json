@@ -47,10 +47,10 @@
       "dependsOn": ["build", "^build", "^generate", "generate"]
     },
     "test": {
-      "dependsOn": ["build", "^build", "generate"]
+      "dependsOn": ["build", "^build", "^generate", "generate"]
     },
     "test:ci": {
-      "dependsOn": ["build", "^build", "generate"]
+      "dependsOn": ["build", "^build", "^generate", "generate"]
     }
   }
 }

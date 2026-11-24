@@ -1,5 +1,9 @@
+import { chmod, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { afterEach, expect, test, vi } from "vitest";
 import {
+  createGitSpiceMerge,
   gitSpiceMergeArgs,
   landPr,
   MERGE_GRAPHQL_RESERVE,
@@ -151,7 +155,7 @@ test("a failed or unconfirmed merge reports merge_failed", async () => {
   }
 });
 
-test("the merge squashes exactly the ready branch and checks GitHub once", () => {
+test("the merge squashes the ready branch without prompting and checks GitHub once", () => {
   expect(gitSpiceMergeArgs("feature")).toEqual([
     "branch",
     "merge",
@@ -159,9 +163,138 @@ test("the merge squashes exactly the ready branch and checks GitHub once", () =>
     "squash",
     "--ready-timeout",
     "0",
+    "--no-prompt",
     "--branch",
     "feature",
   ]);
+});
+
+test("a post-merge local trunk sync failure still reports merged when GitHub merged the PR", async () => {
+  const merged = { value: false };
+  stubPr(merged);
+  const errorSpy = vi.spyOn(console, "error").mockReturnValue();
+  const { result, mergeCommitSha } = await landPr(
+    { number: 99, observer: observer(), signal: new AbortController().signal },
+    options,
+    {
+      wait: async () => ready(),
+      merge: async () => {
+        merged.value = true;
+        return {
+          code: 1,
+          stderr:
+            "merge queue barrier: sync trunk: stash changes: stash create: exit status 1",
+        };
+      },
+      quota: noQuota,
+    },
+  );
+  expect(result.verdict.outcome).toBe("merged");
+  expect(mergeCommitSha).toBe(MERGE_SHA);
+  expect(result.verdict.commands).toEqual([
+    `toolkit ci wait --main --head ${MERGE_SHA}`,
+  ]);
+  expect(result.verdict.reasons).toEqual([
+    `Merged PR #99 as ${MERGE_SHA}.`,
+    "git-spice branch merge exited 1 during post-merge local trunk sync after GitHub merged PR #99.",
+  ]);
+  expect(errorSpy).toHaveBeenCalledWith(
+    "git-spice branch merge exited 1 during post-merge local trunk sync after GitHub merged PR #99.",
+  );
+  errorSpy.mockRestore();
+});
+
+test("transient git-spice transport failures re-check readiness and retry up to twice", async () => {
+  const merged = { value: false };
+  stubPr(merged);
+  const wait = vi.fn<typeof waitForPr>(async () => ready());
+  let attempts = 0;
+  const merge = vi.fn(async () => {
+    attempts += 1;
+    if (attempts < 3) {
+      return {
+        code: 1,
+        stderr:
+          'FTL git-spice: Post "https://api.github.com/graphql": read tcp 10.0.0.1:443: connection reset by peer',
+      };
+    }
+    merged.value = true;
+    return { code: 0, stderr: "" };
+  });
+  const { result, mergeCommitSha } = await landPr(
+    { number: 99, observer: observer(), signal: new AbortController().signal },
+    options,
+    { wait, merge, quota: noQuota },
+  );
+  expect(result.verdict.outcome).toBe("merged");
+  expect(mergeCommitSha).toBe(MERGE_SHA);
+  expect(wait).toHaveBeenCalledTimes(3);
+  expect(merge).toHaveBeenCalledTimes(3);
+});
+
+test("persistent git-spice transport failures stop after 2 retries and report merge_failed", async () => {
+  stubPr({ value: false });
+  const wait = vi.fn<typeof waitForPr>(async () => ready());
+  const merge = vi.fn(async () => ({
+    code: 1,
+    stderr: "TLS handshake timeout",
+  }));
+  const { result, mergeCommitSha } = await landPr(
+    { number: 99, observer: observer(), signal: new AbortController().signal },
+    options,
+    { wait, merge, quota: noQuota },
+  );
+  expect(result.verdict.outcome).toBe("merge_failed");
+  expect(mergeCommitSha).toBeNull();
+  expect(wait).toHaveBeenCalledTimes(3);
+  expect(merge).toHaveBeenCalledTimes(3);
+});
+
+test("createGitSpiceMerge closes stdin, passes GH_TOKEN, and captures stderr while teeing to stderr", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "toolkit-pr-land-"));
+  try {
+    const binPath = path.join(dir, "git-spice");
+    await Bun.write(
+      binPath,
+      [
+        "#!/bin/sh",
+        'stdin_data="$(cat)"',
+        'echo "args:$* token:${GH_TOKEN:-missing} stdin:${stdin_data}"',
+        'echo "simulated ECONNRESET on graphql" >&2',
+        "exit 1",
+      ].join("\n"),
+    );
+    await chmod(binPath, 0o755);
+    const writes: string[] = [];
+    const writeSpy = vi
+      .spyOn(process.stderr, "write")
+      .mockImplementation((chunk) => {
+        writes.push(
+          typeof chunk === "string" ? chunk : Buffer.from(chunk).toString(),
+        );
+        return true;
+      });
+    try {
+      const merger = createGitSpiceMerge({
+        PATH: `${dir}:/bin:/usr/bin`,
+        GH_TOKEN: "resolved-gh-token",
+      });
+      const outcome = await merger("feature", new AbortController().signal);
+      expect(outcome).toEqual({
+        code: 1,
+        stderr: "simulated ECONNRESET on graphql\n",
+      });
+      const teed = writes.join("");
+      expect(teed).toContain("--no-prompt");
+      expect(teed).toContain("token:resolved-gh-token");
+      expect(teed).toContain("stdin:\n");
+      expect(teed).toContain("simulated ECONNRESET on graphql");
+    } finally {
+      writeSpy.mockRestore();
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
 
 test("a cancelled merge reports the cancellation, not a merge result", async () => {
