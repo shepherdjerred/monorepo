@@ -163,8 +163,7 @@ export class ImportStaging {
       const partial = `${staged}.partial`;
       if (
         manifest.streamedPartial !== undefined &&
-        (manifest.phase !== "prepared" ||
-          manifest.preparedPartial !== undefined)
+        manifest.phase !== "prepared"
       )
         throw new FileOperationConflict("Invalid streamed partial receipt");
       const copied = await this.preparePartial(manifest, partial, staged);
@@ -205,8 +204,9 @@ export class ImportStaging {
         const verified = await content.verifiedFile(partial);
         const acknowledged = manifest.preparedPartial;
         if (acknowledged === undefined) {
-          // Only this invocation's actual completed copy may create its receipt.
-          // Cold callers must never adopt a pre-existing unacknowledged partial.
+          // This acknowledgment attests independently measured destination bytes.
+          // Retain the source receipt through staging so another invocation
+          // can finish without reading both large files in one window.
           this.context.beforeEffect();
           manifest = {
             ...manifest,
@@ -216,7 +216,6 @@ export class ImportStaging {
               identity,
             },
           };
-          delete manifest.streamedPartial;
           await journal.save(manifest, {
             validateBeforeInstall: async () => {
               await originalJournal.content.digest(journalPath);
@@ -261,7 +260,8 @@ export class ImportStaging {
         "Unacknowledged staged artifact requires recovery",
       );
     if (
-      manifest.preparedPartial !== undefined ||
+      (manifest.preparedPartial !== undefined &&
+        manifest.streamedPartial === undefined) ||
       this.context.contentProof !== undefined
     )
       await this.context.content.requireDigest(
@@ -351,6 +351,7 @@ export class ImportStaging {
         const result = { ...manifest, phase: "staged" as const };
         // The acknowledgment names the old partial inode/ctime. Once accepted,
         // ordinary staged/publication journals retain their original literal shape.
+        delete result.streamedPartial;
         delete result.preparedPartial;
         await saveManifest(journalPath, result, {
           beforeInstall: beforeEffect,

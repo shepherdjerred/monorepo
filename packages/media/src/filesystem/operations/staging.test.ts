@@ -255,29 +255,43 @@ it("prepares only an owned partial, then commits exact original staged manifest 
   expect(await readFile(f.journal, "utf8")).toBe(JSON.stringify(accepted));
 });
 
-it("a cold invocation reuses the exact acknowledged complete partial without replacing its inode", async () => {
-  const f = await fixture();
-  await f.files.prepareImport(f.input);
-  const before = await lstat(f.partial, { bigint: true });
-  const raw = await readFile(f.journal, "utf8");
-  expect(JSON.parse(raw)).toMatchObject({
-    preparedPartial: {
-      schemaVersion: 1,
-      sizeBytes: String(Buffer.byteLength(f.bytes)),
-      identity: { inode: before.ino.toString() },
-    },
-  });
-  const cold = new FileOperations(f.roots, f.options);
-  const prepared = await cold.prepareImport(f.input);
-  expect(await readFile(f.journal, "utf8")).toBe(raw);
-  await cold.commitPreparedImport(prepared, f.authority);
-  const after = await lstat(f.staged, { bigint: true });
-  expect({ inode: after.ino, device: after.dev }).toEqual({
-    inode: before.ino,
-    device: before.dev,
-  });
-  expect(await readFile(f.staged, "utf8")).toBe(f.bytes);
-});
+it.each(["streamed", "legacy"])(
+  "a cold invocation reuses an acknowledged %s partial without replacing its inode",
+  async (receipt) => {
+    const f = await fixture();
+    await f.files.prepareImport(f.input);
+    const before = await lstat(f.partial, { bigint: true });
+    let raw = await readFile(f.journal, "utf8");
+    expect(JSON.parse(raw)).toMatchObject({
+      preparedPartial: {
+        schemaVersion: 1,
+        sizeBytes: String(Buffer.byteLength(f.bytes)),
+        identity: { inode: before.ino.toString() },
+      },
+    });
+    if (receipt === "legacy") {
+      raw = JSON.stringify(JSON.parse(raw), (key, value: unknown) =>
+        key === "streamedPartial" ? undefined : value,
+      );
+      await writeFile(f.journal, raw);
+    }
+    const cold = new FileOperations(f.roots, f.options);
+    const source = path.join(f.roots.downloads, f.input.downloadPath);
+    observation.reads = [];
+    const prepared = await cold.prepareImport(f.input);
+    expect(observation.reads.some((read) => read.filename === source)).toBe(
+      receipt === "legacy",
+    );
+    expect(await readFile(f.journal, "utf8")).toBe(raw);
+    await cold.commitPreparedImport(prepared, f.authority);
+    const after = await lstat(f.staged, { bigint: true });
+    expect({ inode: after.ino, device: after.dev }).toEqual({
+      inode: before.ino,
+      device: before.dev,
+    });
+    expect(await readFile(f.staged, "utf8")).toBe(f.bytes);
+  },
+);
 
 it.each(["torn", "changed source"])(
   "cold recovery preserves an acknowledged partial when %s bytes fail fresh verification",
@@ -568,7 +582,7 @@ it("cold recovery rejects same-inode same-byte writes that changed the acknowled
   expect(after.ino).toBe(before.ino);
   await expect(
     new FileOperations(f.roots, f.options).prepareImport(f.input),
-  ).rejects.toThrow("Prepared import partial identity changed");
+  ).rejects.toThrow("Streamed copy identity changed");
   expect(await readFile(f.partial, "utf8")).toBe(f.bytes);
   expect(await readFile(f.journal, "utf8")).toBe(raw);
   await expect(access(f.staged)).rejects.toMatchObject({ code: "ENOENT" });
