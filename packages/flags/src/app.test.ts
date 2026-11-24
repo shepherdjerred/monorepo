@@ -1,8 +1,12 @@
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
 import { createFlagsApp, createFlagsEvaluationApp } from "./app.ts";
 import { authFromEnv } from "./auth.ts";
+import { createFlagsMetrics } from "./metrics.ts";
 import { FlagValueSchema } from "./schema.ts";
 import { FlagStore } from "./store.ts";
 
@@ -435,4 +439,164 @@ test("evaluation app serves health, snapshot, and evaluate without management ro
 
   const metricsOnEval = await app.request("/metrics");
   expect(metricsOnEval.status).toBe(404);
+});
+
+test("metrics serves Prometheus text before the SPA client fallback and shares counters across surfaces", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "flags-metrics-client-"));
+  try {
+    await Bun.write(
+      path.join(root, "index.html"),
+      "<!doctype html><title>Flags</title>",
+    );
+    await mkdir(path.join(root, "assets"));
+    await Bun.write(path.join(root, "assets", "bundle.js"), "export {};");
+
+    const store = FlagStore.open(":memory:");
+    store.seedFromInventory();
+    const metrics = createFlagsMetrics();
+    const managementApp = createFlagsApp({
+      store,
+      auth,
+      peerAddress: () => null,
+      clientRoot: root,
+      metrics,
+    });
+    const evaluationApp = createFlagsEvaluationApp({ store, metrics });
+
+    const page = await managementApp.request("/scout/prod");
+    expect(page.status).toBe(200);
+    expect(await page.text()).toContain("Flags");
+
+    const asset = await managementApp.request("/assets/bundle.js");
+    expect(asset.status).toBe(200);
+
+    const health = await managementApp.request("/healthz");
+    expect(health.status).toBe(200);
+
+    const unauthDeployments = await managementApp.request("/v1/deployments");
+    expect(unauthDeployments.status).toBe(401);
+
+    const listDeployments = await managementApp.request("/v1/deployments", {
+      headers: machineHeaders,
+    });
+    expect(listDeployments.status).toBe(200);
+
+    const malformed = await managementApp.request("/v1/evaluate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{bad json",
+    });
+    expect(malformed.status).toBe(400);
+
+    const unboundedUnknown = await managementApp.request(
+      "/v1/unknown/secret-token-12345",
+      { headers: machineHeaders },
+    );
+    expect(unboundedUnknown.status).toBe(200);
+
+    const evalSnapshot = await evaluationApp.request(
+      "/v1/deployments/scout/prod/snapshot",
+    );
+    expect(evalSnapshot.status).toBe(200);
+    const evalCached = await evaluationApp.request(
+      "/v1/deployments/scout/prod/snapshot",
+      {
+        headers: { "if-none-match": evalSnapshot.headers.get("etag") ?? "" },
+      },
+    );
+    expect(evalCached.status).toBe(304);
+
+    const evalFlag = await evaluationApp.request("/v1/evaluate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        deployment: "scout/prod",
+        key: "dares_enabled",
+      }),
+    });
+    expect(evalFlag.status).toBe(200);
+
+    const evalUnknown = await evaluationApp.request(
+      "/unbounded-eval-path-99999",
+    );
+    expect(evalUnknown.status).toBe(404);
+
+    const firstScrape = await managementApp.request("/metrics");
+    expect(firstScrape.status).toBe(200);
+    expect(firstScrape.headers.get("content-type")).toBe(
+      "text/plain; version=0.0.4; charset=utf-8",
+    );
+    expect(firstScrape.headers.get("cache-control")).toBe("no-store");
+    const body = await firstScrape.text();
+    expect(body).not.toContain("<!doctype html>");
+    expect(body).not.toContain("secret-token-12345");
+    expect(body).not.toContain("unbounded-eval-path-99999");
+    expect(body.endsWith("\n")).toBe(true);
+
+    const summaries = store.list();
+    const expectedDefined = summaries.reduce(
+      (sum, item) => sum + item.flagCount,
+      0,
+    );
+    expect(body).toContain(`flags_deployments ${String(summaries.length)}`);
+    expect(body).toContain(`flags_defined_total ${String(expectedDefined)}`);
+    const scoutSummary = summaries.find((item) => item.id === "scout/prod");
+    expect(scoutSummary).toBeDefined();
+    expect(body).toContain(
+      `flags_deployment_flags{deployment="scout/prod"} ${String(scoutSummary?.flagCount)}`,
+    );
+    expect(body).toContain(
+      `flags_deployment_revision{deployment="scout/prod"} 1`,
+    );
+
+    expect(body).toContain(
+      'flags_http_requests_total{surface="management",route="client",status="200"} 1',
+    );
+    expect(body).toContain(
+      'flags_http_requests_total{surface="management",route="assets",status="200"} 1',
+    );
+    expect(body).toContain(
+      'flags_http_requests_total{surface="management",route="healthz",status="200"} 1',
+    );
+    expect(body).toContain(
+      'flags_http_requests_total{surface="management",route="deployments",status="401"} 1',
+    );
+    expect(body).toContain(
+      'flags_http_requests_total{surface="management",route="deployments",status="200"} 1',
+    );
+    expect(body).toContain(
+      'flags_http_requests_total{surface="management",route="evaluate",status="400"} 1',
+    );
+    expect(body).toContain(
+      'flags_http_requests_total{surface="management",route="other",status="200"} 1',
+    );
+    expect(body).toContain(
+      'flags_http_requests_total{surface="evaluation",route="snapshot",status="200"} 1',
+    );
+    expect(body).toContain(
+      'flags_http_requests_total{surface="evaluation",route="snapshot",status="304"} 1',
+    );
+    expect(body).toContain(
+      'flags_http_requests_total{surface="evaluation",route="evaluate",status="200"} 1',
+    );
+    expect(body).toContain(
+      'flags_http_requests_total{surface="evaluation",route="other",status="404"} 1',
+    );
+
+    const created = store.createMissing("scout/prod", [added]);
+    expect(created.ok).toBe(true);
+    const secondScrape = await managementApp.request("/metrics");
+    const secondBody = await secondScrape.text();
+    expect(secondBody).toContain(
+      `flags_defined_total ${String(expectedDefined + 1)}`,
+    );
+    expect(secondBody).toContain(
+      `flags_deployment_revision{deployment="scout/prod"} 2`,
+    );
+    expect(secondBody).toContain(
+      'flags_http_requests_total{surface="management",route="metrics",status="200"} 1',
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });

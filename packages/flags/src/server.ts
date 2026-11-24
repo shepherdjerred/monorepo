@@ -1,5 +1,6 @@
 import { authFromEnv } from "./auth.ts";
 import { createFlagsApp, createFlagsEvaluationApp } from "./app.ts";
+import { createFlagsMetrics } from "./metrics.ts";
 import { FlagStore } from "./store.ts";
 
 const NON_NEGATIVE_INTEGER = /^(?:0|[1-9]\d*)$/u;
@@ -46,11 +47,12 @@ export async function startServer(
         unread: store.unreadDocuments(),
       }),
     );
+    const metrics = createFlagsMetrics();
     const clientRoot = `${import.meta.dir}/../dist/client`;
     const clientReady = await Bun.file(`${clientRoot}/index.html`).exists();
     const app = clientReady
-      ? createFlagsApp({ store, auth, peerAddress, clientRoot })
-      : createFlagsApp({ store, auth, peerAddress });
+      ? createFlagsApp({ store, auth, peerAddress, clientRoot, metrics })
+      : createFlagsApp({ store, auth, peerAddress, metrics });
     const server = Bun.serve({
       port,
       hostname,
@@ -65,7 +67,7 @@ export async function startServer(
     }
     let evaluationServer: ReturnType<typeof Bun.serve> | undefined;
     if (evaluationPort !== undefined) {
-      const evaluationApp = createFlagsEvaluationApp({ store });
+      const evaluationApp = createFlagsEvaluationApp({ store, metrics });
       try {
         evaluationServer = Bun.serve({
           port: evaluationPort,

@@ -276,10 +276,59 @@ describe("Temporal workflow outcome rules", () => {
 });
 
 describe("TemporalWorkflowTasksFailing", () => {
-  test("excludes benign UnhandledCommand retries", () => {
-    expect(findFailureRule("TemporalWorkflowTasksFailing")).toBe(
-      'increase(failed_workflow_tasks{exported_namespace=~"prod|beta",failure!="UnhandledCommand"}[1h]) > 0',
+  test("excludes benign UnhandledCommand and transient first-attempt failures while alerting on retries", async () => {
+    const expr = findFailureRule("TemporalWorkflowTasksFailing");
+    expect(expr).toBe(
+      'increase(failed_workflow_tasks{exported_namespace=~"prod|beta",failure!="UnhandledCommand",first_attempt="false"}[1h]) > 0',
     );
+    const rule = getTemporalRuleGroups()
+      .find((group) => group.name === "temporal-workflow-failures")
+      ?.rules?.find(
+        (candidate) => candidate.alert === "TemporalWorkflowTasksFailing",
+      );
+    expect(rule?.for).toBe("10m");
+
+    await runPromtoolFixture({
+      evaluation_interval: "1m",
+      tests: [
+        {
+          interval: "1m",
+          input_series: [
+            // Transient TMPRL1101 on Attempt 1 that succeeds on Attempt 2: ignored.
+            {
+              series:
+                'failed_workflow_tasks{exported_namespace="prod",failure="WorkflowWorkerUnhandledFailure",first_attempt="true"}',
+              values: "0 1 1x18",
+            },
+            // Benign UnhandledCommand retry: ignored.
+            {
+              series:
+                'failed_workflow_tasks{exported_namespace="prod",failure="UnhandledCommand",first_attempt="false"}',
+              values: "0 2 2x18",
+            },
+          ],
+          promql_expr_test: [{ expr, eval_time: "15m", exp_samples: [] }],
+        },
+        {
+          interval: "1m",
+          input_series: [
+            // Broken bundle or determinism error failing on retry: alerts.
+            {
+              series:
+                'failed_workflow_tasks{exported_namespace="prod",failure="WorkflowWorkerUnhandledFailure",first_attempt="false"}',
+              values: "0 1 2 2x17",
+            },
+          ],
+          promql_expr_test: [
+            {
+              expr: `count(${expr})`,
+              eval_time: "15m",
+              exp_samples: [{ labels: "{}", value: 1 }],
+            },
+          ],
+        },
+      ],
+    });
   });
 });
 

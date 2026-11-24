@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { verifyArgoRelease, waitForArgoRelease } from "./argocd.ts";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type * as Activity from "@temporalio/activity";
 import {
   isPruneOnlyOutOfSync,
   verifyPrunePendingArgoRelease,
@@ -8,6 +8,45 @@ import { DELIVERY_ENVIRONMENT_ANNOTATION } from "homelab/src/delivery-ownership.
 import { deliveryArgoParameters } from "homelab/scripts/argocd/argocd-delivery.ts";
 import { acknowledgeReconciledRelease } from "./reconcile-ack.ts";
 import { ApplicationFailure } from "@temporalio/common";
+
+const pruneMocks = vi.hoisted(() => {
+  const serviceProbesReleases: unknown[] = [];
+  return {
+    forumPrune: false,
+    arcadePrune: false,
+    hubPrune: false,
+    serviceProbesPrune: false,
+    serviceProbesReleases,
+  };
+});
+
+vi.mock("@temporalio/activity", async (importOriginal) => ({
+  ...(await importOriginal<typeof Activity>()),
+  Context: {
+    current: () => ({
+      cancellationSignal: new AbortController().signal,
+      heartbeat: vi.fn(),
+    }),
+  },
+}));
+vi.mock("#lib/delivery/forum-prune.ts", () => ({
+  forumSyncPrunes: () => Promise.resolve(pruneMocks.forumPrune),
+}));
+vi.mock("#lib/delivery/arcade/prune.ts", () => ({
+  arcadeSyncPrunes: () => Promise.resolve(pruneMocks.arcadePrune),
+}));
+vi.mock("#lib/delivery/alert-dashboard/prune.ts", () => ({
+  alertDashboardSyncPrunes: () => Promise.resolve(pruneMocks.hubPrune),
+}));
+vi.mock("#lib/delivery/service-probes/prune.ts", () => ({
+  serviceProbesSyncPrunes: (release: unknown) => {
+    pruneMocks.serviceProbesReleases.push(release);
+    return Promise.resolve(pruneMocks.serviceProbesPrune);
+  },
+}));
+
+const { syncArgoRelease, verifyArgoRelease, waitForArgoRelease } =
+  await import("./argocd.ts");
 
 const requestId = "11111111-1111-4111-8111-111111111111";
 const operationId = "22222222-2222-4222-8222-222222222222";
@@ -611,5 +650,83 @@ describe("prune-pending Argo release verification (AI-792)", () => {
         verifyPrunePendingArgoRelease(candidate, selection, requestId),
       ).toThrow("Operated worker recovery requires a Synced Application");
     }
+  });
+});
+
+describe("syncArgoRelease service-probes pruning", () => {
+  afterEach(() => {
+    pruneMocks.forumPrune = false;
+    pruneMocks.arcadePrune = false;
+    pruneMocks.hubPrune = false;
+    pruneMocks.serviceProbesPrune = false;
+    pruneMocks.serviceProbesReleases = [];
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it.each([true, false])(
+    "passes --prune=%s to sync-managed when serviceProbesSyncPrunes decides",
+    async (serviceProbesPrune) => {
+      pruneMocks.serviceProbesPrune = serviceProbesPrune;
+      const serviceProbesSelection = {
+        application: "service-probes",
+        environmentId: "service-probes/prod",
+        repository: "https://chartmuseum.sjer.red",
+        chart: "service-probes",
+        namespace: "prometheus",
+        revision: "1.0.0-12",
+        parameters: {},
+      };
+
+      const spawnedArgs: string[][] = [];
+      const realSpawn = Bun.spawn;
+      vi.spyOn(Bun, "spawn").mockImplementation((cmd) => {
+        if (Array.isArray(cmd)) {
+          spawnedArgs.push(cmd.map(String));
+        }
+        return realSpawn(["sh", "-c", "exit 0"], {
+          stdin: "ignore",
+          stdout: "ignore",
+          stderr: "pipe",
+        });
+      });
+
+      await syncArgoRelease(serviceProbesSelection, operationId);
+      expect(pruneMocks.serviceProbesReleases).toEqual([
+        expect.objectContaining({
+          application: "service-probes",
+          chart: "service-probes",
+          namespace: "prometheus",
+          environmentId: "service-probes/prod",
+          revision: "1.0.0-12",
+        }),
+      ]);
+      expect(spawnedArgs).toHaveLength(1);
+      expect(spawnedArgs[0]?.slice(2)).toEqual([
+        "sync-managed",
+        "service-probes",
+        "--revision",
+        "1.0.0-12",
+        "--request-id",
+        operationId,
+        ...(serviceProbesPrune ? ["--prune"] : []),
+        "--timeout",
+        "1200",
+      ]);
+    },
+  );
+
+  it("skips serviceProbesSyncPrunes when an earlier guard already prunes", async () => {
+    pruneMocks.hubPrune = true;
+    const realSpawn = Bun.spawn;
+    vi.spyOn(Bun, "spawn").mockImplementation(() =>
+      realSpawn(["sh", "-c", "exit 0"], {
+        stdin: "ignore",
+        stdout: "ignore",
+        stderr: "pipe",
+      }),
+    );
+    await syncArgoRelease(selection, operationId);
+    expect(pruneMocks.serviceProbesReleases).toEqual([]);
   });
 });

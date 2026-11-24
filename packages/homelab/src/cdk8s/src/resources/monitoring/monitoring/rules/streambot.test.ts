@@ -154,6 +154,77 @@ describe("Streambot pipeline alert activity matching", () => {
   });
 });
 
+describe("Streambot memory and queue alerts", () => {
+  test("StreambotExternalBufferHeavy requires >50% external/heap ratio, >256 MiB external memory, and an active stream", async () => {
+    const rule = requireRule("StreambotExternalBufferHeavy");
+    expect(rule.for).toBe("5m");
+    expect(rule.annotations?.["description"]).toContain("256 MiB");
+    const mib = 1024 * 1024;
+    const memorySeries = (
+      externalMiB: number,
+      heapMiB: number,
+      active: number,
+    ): Series[] => [
+      {
+        series:
+          'streambot_nodejs_external_memory_bytes{namespace="media",pod="streambot-active"}',
+        values: `${String(externalMiB * mib)}+0x10`,
+      },
+      {
+        series:
+          'streambot_nodejs_heap_size_used_bytes{namespace="media",pod="streambot-active"}',
+        values: `${String(heapMiB * mib)}+0x10`,
+      },
+      {
+        series:
+          'streambot_stream_active{namespace="media",pod="streambot-active"}',
+        values: `${String(active)}+0x10`,
+      },
+    ];
+
+    await runPromtoolFixture({
+      evaluation_interval: "1m",
+      tests: [
+        // Active stream with 300 MiB external and 400 MiB heap (0.75 > 0.5): fires.
+        firing(
+          "StreambotExternalBufferHeavy",
+          memorySeries(300, 400, 1),
+          "5m",
+          true,
+        ),
+        // Idle GC heap shrinkage (~31 MiB pooled Buffers vs ~60 MiB heap): does not fire.
+        firing(
+          "StreambotExternalBufferHeavy",
+          memorySeries(31, 60, 0),
+          "5m",
+          false,
+        ),
+        // Active stream with high ratio (0.64) but <= 256 MiB external memory: does not fire.
+        firing(
+          "StreambotExternalBufferHeavy",
+          memorySeries(64, 100, 1),
+          "5m",
+          false,
+        ),
+        // > 256 MiB external and > 0.5 ratio while no stream is active: does not fire.
+        firing(
+          "StreambotExternalBufferHeavy",
+          memorySeries(300, 400, 0),
+          "5m",
+          false,
+        ),
+        // Active stream with > 256 MiB external but healthy ratio (300 / 700 = 0.43): does not fire.
+        firing(
+          "StreambotExternalBufferHeavy",
+          memorySeries(300, 700, 1),
+          "5m",
+          false,
+        ),
+      ],
+    });
+  });
+});
+
 describe("Streambot voice alerts", () => {
   test("warns only when an active receive path stays unready", () => {
     const rule = requireRule("StreambotVoiceReceiveUnready");

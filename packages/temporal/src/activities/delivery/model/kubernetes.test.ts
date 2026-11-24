@@ -22,6 +22,7 @@ const calls = vi.hoisted(() => {
   const stages: { key: string; status: string; receipt: unknown }[] = [];
   const argoResponses = new Map<string, unknown[]>();
   const hubReleases: unknown[] = [];
+  const serviceProbesReleases: unknown[] = [];
   const credentialDecision: { credentialPrune: boolean | MediaIngressPruning } =
     { credentialPrune: false };
   return {
@@ -35,6 +36,8 @@ const calls = vi.hoisted(() => {
     credentialFailure: false,
     hubPrune: false,
     hubReleases,
+    serviceProbesPrune: false,
+    serviceProbesReleases,
     lapsed: false,
     refuse: false,
     failCreate: false,
@@ -153,6 +156,13 @@ vi.mock("#lib/delivery/alert-dashboard/prune.ts", () => ({
   },
 }));
 
+vi.mock("#lib/delivery/service-probes/prune.ts", () => ({
+  serviceProbesSyncPrunes: (release: unknown) => {
+    calls.serviceProbesReleases.push(release);
+    return Promise.resolve(calls.serviceProbesPrune);
+  },
+}));
+
 const { applySafety, sync } = await import("./kubernetes.ts");
 
 /** The forum release, its chart in a store the sync reads by version. */
@@ -184,6 +194,8 @@ afterEach(() => {
   calls.credentialFailure = false;
   calls.hubPrune = false;
   calls.hubReleases = [];
+  calls.serviceProbesPrune = false;
+  calls.serviceProbesReleases = [];
   calls.argoResponses.clear();
   calls.lapsed = false;
   calls.updates = [];
@@ -423,6 +435,34 @@ describe("Kubernetes steps of a forum release", () => {
     calls.reads = [application(false), application(true)];
     await sync(current, recipe, "step-sync");
     expect(calls.hubReleases).toEqual([]);
+    expect(calls.serviceProbesReleases).toEqual([]);
+  });
+
+  test("the service-probes guard authorizes pruning for the rendered release", async () => {
+    const { current, recipe } = fixture();
+    calls.serviceProbesPrune = true;
+    calls.reads = [application(false), application(true)];
+    await sync(current, recipe, "step-sync");
+    expect(
+      calls.events.find((event) => event.startsWith("sync-managed")),
+    ).toContain("--prune");
+    expect(calls.serviceProbesReleases).toEqual([
+      expect.objectContaining({
+        application: "storm-forum",
+        chart: "storm-forum",
+        namespace: "storm-forum",
+        environmentId: "storm-forum/prod",
+        revision: "1.0.1",
+      }),
+    ]);
+  });
+
+  test("the service-probes guard is not consulted once Hub prunes", async () => {
+    const { current, recipe } = fixture();
+    calls.hubPrune = true;
+    calls.reads = [application(false), application(true)];
+    await sync(current, recipe, "step-sync");
+    expect(calls.serviceProbesReleases).toEqual([]);
   });
 
   test("failed credential proof prevents the native sync", async () => {

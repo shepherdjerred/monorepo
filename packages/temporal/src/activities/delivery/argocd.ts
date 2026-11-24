@@ -7,6 +7,7 @@ import { observePendingArgoRelease } from "#lib/delivery/argocd-proof.ts";
 import { forumSyncPrunes } from "#lib/delivery/forum-prune.ts";
 import { arcadeSyncPrunes } from "#lib/delivery/arcade/prune.ts";
 import { alertDashboardSyncPrunes } from "#lib/delivery/alert-dashboard/prune.ts";
+import { serviceProbesSyncPrunes } from "#lib/delivery/service-probes/prune.ts";
 import { selectionRelease } from "#lib/delivery/retired-route-prune.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import {
@@ -34,10 +35,12 @@ export async function syncArgoRelease(
   selection: DeliverySelection,
   operationId: string,
 ) {
+  const release = selectionRelease(selection);
   const prune =
     (await forumSyncPrunes(selection, argoRequest)) ||
     (await arcadeSyncPrunes(selection, argoRequest)) ||
-    (await alertDashboardSyncPrunes(selectionRelease(selection), argoRequest));
+    (await alertDashboardSyncPrunes(release, argoRequest)) ||
+    (await serviceProbesSyncPrunes(release, argoRequest));
   await runGuardedArgoCommand(
     [
       "sync-managed",

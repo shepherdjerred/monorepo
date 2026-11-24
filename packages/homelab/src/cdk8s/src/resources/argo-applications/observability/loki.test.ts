@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import { App, Chart } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
-import { createLokiApp } from "./loki.ts";
+import { createLokiApp, createLokiResources } from "./loki.ts";
 
 const LokiApplicationSchema = z.object({
   kind: z.literal("Application"),
-  metadata: z.object({ name: z.literal("loki") }),
+  metadata: z.object({
+    name: z.literal("loki"),
+    annotations: z.record(z.string(), z.string()),
+  }),
   spec: z.object({
     ignoreDifferences: z.array(
       z.object({
@@ -19,6 +22,25 @@ const LokiApplicationSchema = z.object({
     ),
     syncPolicy: z.object({ syncOptions: z.array(z.string()) }),
   }),
+});
+
+const LokiPvcSchema = z.object({
+  kind: z.literal("PersistentVolumeClaim"),
+  metadata: z.object({
+    name: z.literal("storage-loki-0"),
+    namespace: z.literal("loki"),
+    labels: z.record(z.string(), z.string()),
+    annotations: z.record(z.string(), z.string()),
+  }),
+  spec: z
+    .object({
+      accessModes: z.array(z.string()),
+      storageClassName: z.string(),
+      resources: z.object({
+        requests: z.object({ storage: z.string() }),
+      }),
+    })
+    .loose(),
 });
 
 const LokiValuesSchema = z.object({
@@ -117,6 +139,9 @@ describe("Loki Argo CD application", () => {
       throw new Error("Loki Application was not synthesized");
     }
 
+    expect(manifest.data.metadata.annotations).toEqual({
+      "argocd.argoproj.io/compare-options": "ServerSideDiff=false",
+    });
     expect(manifest.data.spec.ignoreDifferences).toEqual([
       {
         group: "apps",
@@ -132,6 +157,40 @@ describe("Loki Argo CD application", () => {
     expect(manifest.data.spec.syncPolicy.syncOptions).not.toContain(
       "Replace=true",
     );
+  });
+
+  it("adopts and expands storage-loki-0 to 768Gi while keeping the Helm template size unchanged", () => {
+    const app = new App();
+    createLokiResources(new Chart(app, "loki-companion"));
+    const claim = parseAllDocuments(app.synthYaml())
+      .map((document) => LokiPvcSchema.safeParse(document.toJS()))
+      .find((result) => result.success);
+    if (!claim?.success) {
+      throw new Error("storage-loki-0 PVC was not synthesized");
+    }
+
+    expect(claim.data.metadata.annotations).toEqual({
+      "argocd.argoproj.io/sync-wave": "-1",
+      "argocd.argoproj.io/sync-options": "Prune=false",
+    });
+    expect(claim.data.metadata.labels).toEqual({
+      "velero.io/backup": "disabled",
+      "velero.io/exclude-from-backup": "true",
+    });
+    expect(claim.data.spec.accessModes).toEqual(["ReadWriteOnce"]);
+    expect(claim.data.spec.storageClassName).toBe("zfs-ssd");
+    expect(claim.data.spec.resources.requests.storage).toBe("768Gi");
+    expect(claim.data.spec).not.toHaveProperty("volumeName");
+    expect(claim.data.spec).not.toHaveProperty("selector");
+
+    const persistence = z
+      .object({
+        singleBinary: z.object({
+          persistence: z.object({ size: z.string() }),
+        }),
+      })
+      .parse(lokiValues());
+    expect(persistence.singleBinary.persistence.size).toBe("128Gi");
   });
 
   it("enables compactor retention whenever a retention period is set", () => {

@@ -3289,7 +3289,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "loki/prod/1",
+      "recipeRevisionId": "loki/prod/2",
       "configurationRevisionId": "loki/prod/3"
     },
     {
