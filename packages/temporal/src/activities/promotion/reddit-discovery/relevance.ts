@@ -15,6 +15,8 @@ export const REDDIT_DRAFT_WORKLOAD = "storm.reddit-outreach.draft";
 const REDDIT_MARKDOWN =
   /[*_`<>[\]\\^~\r\n]|^(?:#{1,6}|[-+]|\d+[.)])\s|&(?:#\w+|[a-z]+);/i;
 const REDDIT_LONG_DASH = /[–—]|--/;
+const MORE_SPECIFIC_SERVER_LOCATION =
+  /\b(?:seattle|washington|pacific northwest|pnw)\b/i;
 const UNQUALIFIED_DRAFT = "Upstream qualification does not permit drafting.";
 
 export const RedditInviteDraftSchema = z.strictObject({
@@ -61,7 +63,8 @@ const SYSTEM = [
   "Write one to three short, casual sentences in Jerred's voice, using the examples in the approved facts as a guide. Start with a friendly greeting like 'hi!', mention a detail they asked for, and offer a low-pressure invite like 'feel free to try us out :)'. Lowercase and a smiley are fine when they sound natural. Use periods and commas instead of em dashes, en dashes, double hyphens, and semicolons.",
   "Use the phrase 'our server' in the reply to disclose the affiliation. Do not pretend to be an unrelated player, invent personal experiences, ask for upvotes, or paste a generic feature list.",
   "Use one plain-text paragraph with no Markdown. Put the single bare invitation URL https://join.ts-mc.net/ on its own line at the end, without surrounding punctuation. Return evidence of the connection using exact requestQuote snippets from the supplied post and factQuote snippets from the approved facts.",
-  "For a partial fit, say so early and casually, such as 'hi! our server might fit some of what you're looking for.' Name one or two things our server offers and state any meaningful difference in plain terms. For example, say 'we're in Seattle' or 'PvP is on by default and you can turn it off.' Use short sentences. State optional features as optional. Each caveats entry must be an exact snippet in the reply. Use an empty caveats array when there is no meaningful difference to disclose.",
+  "For a partial fit, say so early and casually, such as 'hi! our server might fit some of what you're looking for.' Name one or two things our server offers and state any meaningful difference in plain terms. For example, say 'we're hosted in US West' or 'PvP is on by default and you can turn it off.' Use short sentences. State optional features as optional. Each caveats entry must be an exact snippet in the reply. Use an empty caveats array when there is no meaningful difference to disclose.",
+  "If hosting location matters, describe our server's location only as US West. Omit any more specific geography, even if the post mentions it.",
   "If the author asks for an adult-only or 18+ community, say plainly that our server is aimed at adults and other ages can join. Treat that difference as a caveat in the reply and in the caveats array.",
   "Even after qualification, decline by setting reply:null if you cannot honestly and usefully draft from the supplied facts, if any other hard requirement is unsupported or unknown, or if current rules forbid the reply, self-promotion, or automated comments. Explain why in reason. A decline does not alter the upstream qualification.",
 ].join("\n");
@@ -111,6 +114,8 @@ export function guardRedditInviteDraft(
   const draft = RedditInviteDraftSchema.parse(raw);
   const reply = draft.reply;
   if (reply === null) return draft;
+  if (MORE_SPECIFIC_SERVER_LOCATION.test(reply))
+    return declined("Draft used a more specific location than US West.");
   const request = `${input.post.title}\n${input.post.body}`;
   const evidenceSupported =
     draft.evidence.length > 0 &&
