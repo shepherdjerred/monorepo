@@ -214,8 +214,10 @@ function gridEnvironments(
 }
 
 /** The active services this server's catalog places, with their title and group, and those services' active environments. */
-export function listedRecord(
-  record: GridRecord,
+export function listedRecord<TEnv extends EnvironmentRow>(
+  record: Omit<GridRecord, "environments"> & {
+    environments: readonly TEnv[];
+  },
   catalog: CatalogCore = CATALOG_CORE,
 ) {
   const services = new Map<
@@ -342,9 +344,12 @@ export function buildGrid(
  * statements whatever the number of services: every row is read by set, never
  * per service or per environment, and no execution is traced.
  */
-export async function readGridRecord(
-  database: Database,
-): Promise<Omit<GridRecord, "builds"> & { builds: LatestBuildMap }> {
+export async function readGridRecord(database: Database): Promise<
+  Omit<GridRecord, "builds" | "environments"> & {
+    builds: LatestBuildMap;
+    environments: Prisma.EnvironmentGetPayload<object>[];
+  }
+> {
   const [services, environments, newest, before, builds, awaiting] =
     await Promise.all([
       database.service.findMany({ select: { id: true, lifecycle: true } }),

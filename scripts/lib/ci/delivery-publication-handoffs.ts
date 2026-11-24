@@ -158,7 +158,9 @@ type DeliveryFetch = (
 ) => Promise<Response>;
 
 const TRANSIENT_STATUSES = new Set([500, 502, 503, 504]);
-const RETRY_DELAYS_MS = [1000, 2000, 4000, 6000, 10_000] as const;
+const RETRY_DELAYS_MS = [
+  1000, 2000, 4000, 8000, 12_000, 15_000, 20_000, 30_000,
+] as const;
 
 /**
  * Retries transient Delivery 5xx and transport failures. Every request made

@@ -121,6 +121,7 @@ model VersionSet {
 
   @@unique([serviceId, revision])
   @@unique([migratedFromId, serviceId])
+  @@index([serviceId, createdAt(sort: Desc), id(sort: Desc)])
   @@index([serviceId, lineage, orderMajor, orderMinor], map: "VersionSet_serviceId_lineage_order_idx")
 }
 
@@ -263,6 +264,7 @@ model Deployment {
   @@index([environmentId, createdAt(sort: Desc), id(sort: Desc)])
   @@index([status, createdAt])
   @@index([versionSetRevisionId])
+  @@index([platformSourceBuildId])
   @@index([createdAt(sort: Desc), id(sort: Desc)])
   @@index([monitorState])
 }
