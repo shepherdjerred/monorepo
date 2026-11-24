@@ -45,15 +45,11 @@ const calls = vi.hoisted(() => {
     failRestore: false,
   };
 });
-vi.mock("@temporalio/activity", async (importOriginal) => ({
-  ...(await importOriginal<typeof Activity>()),
-  Context: {
-    current: () => ({
-      cancellationSignal: new AbortController().signal,
-      heartbeat: vi.fn(),
-    }),
-  },
-}));
+vi.mock("@temporalio/activity", async (importOriginal) => {
+  const { mockActivityModule } =
+    await import("#lib/delivery/model/step-testing.ts");
+  return await mockActivityModule(importOriginal<typeof Activity>);
+});
 // The forum chart's tag still resolves to its frozen digest; oci-chart.test.ts
 // covers a moved tag.
 vi.mock("./oci-chart.ts", async () => {

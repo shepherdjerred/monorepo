@@ -24,25 +24,6 @@ const LokiApplicationSchema = z.object({
   }),
 });
 
-const LokiPvcSchema = z.object({
-  kind: z.literal("PersistentVolumeClaim"),
-  metadata: z.object({
-    name: z.literal("storage-loki-0"),
-    namespace: z.literal("loki"),
-    labels: z.record(z.string(), z.string()),
-    annotations: z.record(z.string(), z.string()),
-  }),
-  spec: z
-    .object({
-      accessModes: z.array(z.string()),
-      storageClassName: z.string(),
-      resources: z.object({
-        requests: z.object({ storage: z.string() }),
-      }),
-    })
-    .loose(),
-});
-
 const LokiValuesSchema = z.object({
   kind: z.literal("Application"),
   metadata: z.object({ name: z.literal("loki") }),
@@ -163,25 +144,34 @@ describe("Loki Argo CD application", () => {
     const app = new App();
     createLokiResources(new Chart(app, "loki-companion"));
     const claim = parseAllDocuments(app.synthYaml())
-      .map((document) => LokiPvcSchema.safeParse(document.toJS()))
-      .find((result) => result.success);
-    if (!claim?.success) {
-      throw new Error("storage-loki-0 PVC was not synthesized");
-    }
-
-    expect(claim.data.metadata.annotations).toEqual({
-      "argocd.argoproj.io/sync-wave": "-1",
-      "argocd.argoproj.io/sync-options": "Prune=false",
+      .map((document) =>
+        z
+          .object({ kind: z.literal("PersistentVolumeClaim") })
+          .loose()
+          .safeParse(document.toJS()),
+      )
+      .find((result) => result.success)?.data;
+    expect(claim).toEqual({
+      apiVersion: "v1",
+      kind: "PersistentVolumeClaim",
+      metadata: {
+        name: "storage-loki-0",
+        namespace: "loki",
+        annotations: {
+          "argocd.argoproj.io/sync-wave": "-1",
+          "argocd.argoproj.io/sync-options": "Prune=false",
+        },
+        labels: {
+          "velero.io/backup": "disabled",
+          "velero.io/exclude-from-backup": "true",
+        },
+      },
+      spec: {
+        accessModes: ["ReadWriteOnce"],
+        storageClassName: "zfs-ssd",
+        resources: { requests: { storage: "768Gi" } },
+      },
     });
-    expect(claim.data.metadata.labels).toEqual({
-      "velero.io/backup": "disabled",
-      "velero.io/exclude-from-backup": "true",
-    });
-    expect(claim.data.spec.accessModes).toEqual(["ReadWriteOnce"]);
-    expect(claim.data.spec.storageClassName).toBe("zfs-ssd");
-    expect(claim.data.spec.resources.requests.storage).toBe("768Gi");
-    expect(claim.data.spec).not.toHaveProperty("volumeName");
-    expect(claim.data.spec).not.toHaveProperty("selector");
 
     const persistence = z
       .object({

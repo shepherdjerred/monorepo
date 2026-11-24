@@ -20,15 +20,11 @@ const pruneMocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("@temporalio/activity", async (importOriginal) => ({
-  ...(await importOriginal<typeof Activity>()),
-  Context: {
-    current: () => ({
-      cancellationSignal: new AbortController().signal,
-      heartbeat: vi.fn(),
-    }),
-  },
-}));
+vi.mock("@temporalio/activity", async (importOriginal) => {
+  const { mockActivityModule } =
+    await import("#lib/delivery/model/step-testing.ts");
+  return await mockActivityModule(importOriginal<typeof Activity>);
+});
 vi.mock("#lib/delivery/forum-prune.ts", () => ({
   forumSyncPrunes: () => Promise.resolve(pruneMocks.forumPrune),
 }));
