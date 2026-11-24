@@ -15,7 +15,10 @@
  *   recipe that deploys it;
  * - environments: `packages/delivery/registrations/v2/<env>/recipe.json`;
  * - Delivery delegations: `legacy.deliveryDelegations` equals the reviewed
- *   policy in `packages/homelab/src/delivery-target-policy.ts`;
+ *   policy in `packages/homelab/src/delivery-target-policy.ts`. That policy
+ *   derives from this checkout's catalog plus its pending delegations, so
+ *   here the comparison holds each pending delegation to its exemption; for
+ *   another root it compares that root's catalog with this checkout's policy;
  * - the owning package is a root workspace.
  *
  * On failure it prints the missing items as a checklist. Real, reviewed gaps

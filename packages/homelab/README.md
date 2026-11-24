@@ -191,6 +191,18 @@ explains CI change selection:
   Helm charts (`scripts/helm/helm-push.ts`) and archives with original
   provenance. Delivery qualifies them before executing a frozen release.
 
+Which Applications Delivery releases comes from the catalog's
+`legacy.deliveryDelegations` in
+[`catalog-document.json`](../ops-model/catalog-document.json).
+[`src/delivery-target-policy.ts`](src/delivery-target-policy.ts) derives its
+ordinary and specialized environment maps from that map and adds two reviewed
+facts the catalog does not hold: which Applications use a specialized Delivery
+adapter (the shared image-binding pass binds only ordinary charts), and
+delegations declared before their catalog environment exists
+(`storm-forum-beta`). A catalog delegation activates Delivery ownership, so a
+pending one cannot live there, and the adapter split only shapes how the
+homelab renders a chart.
+
 Delivery's private browser endpoint uses the existing Tailscale Kubernetes
 operator and an Ingress tagged `tag:delivery`. Its policy allows admins only.
 No application-side Tailscale credential or additional OAuth client is required.

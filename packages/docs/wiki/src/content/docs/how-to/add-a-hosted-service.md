@@ -93,10 +93,10 @@ service's name throughout.
 
    Make the same change to the `notes` entry and `deliveryDelegations` in
    [`services.json`](https://github.com/shepherdjerred/monorepo/blob/main/packages/ops-model/services.json).
+   [`delivery-target-policy.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/delivery-target-policy.ts)
+   derives the service's ordinary Delivery environment from this delegation.
 
-4. Add `notes: "notes/prod"` to `ORDINARY_DELIVERY_ENVIRONMENTS` in
-   [`delivery-target-policy.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/delivery-target-policy.ts).
-   Copy
+4. Copy
    [`registrations/ordinary/tracker`](https://github.com/shepherdjerred/monorepo/tree/main/packages/delivery/registrations/ordinary/tracker)
    to `registrations/ordinary/notes` and rename every `tracker` in both files.
 
