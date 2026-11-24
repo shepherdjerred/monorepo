@@ -111,7 +111,7 @@ export function Preview({
             <pre>{JSON.stringify(value.data, null, 2)}</pre>
           ) : (
             <>
-              <div className="mt-2">
+              <div className="query-chart">
                 <UplotChart
                   height={200}
                   label={`${title}: ${value.query}`}
@@ -119,8 +119,8 @@ export function Preview({
                   unit="count"
                 />
               </div>
-              <details className="mt-2">
-                <summary className="cursor-pointer text-xs text-[var(--muted)]">
+              <details className="query-raw">
+                <summary className="query-raw-summary">
                   Raw Prometheus JSON
                 </summary>
                 <pre>{JSON.stringify(value.data, null, 2)}</pre>

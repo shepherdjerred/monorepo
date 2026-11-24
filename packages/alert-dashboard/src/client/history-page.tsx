@@ -155,11 +155,7 @@ export function HistoryFilters({
         />
       </label>
       {filtered ? (
-        <Button
-          className="w-fit justify-self-start text-xs"
-          onClick={onClear}
-          type="button"
-        >
+        <Button className="filter-action" onClick={onClear} type="button">
           Clear filters
         </Button>
       ) : null}

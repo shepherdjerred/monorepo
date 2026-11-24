@@ -4,6 +4,8 @@ import type {
   FliptNamespaceStatus,
 } from "@shepherdjerred/ops-model/facets.ts";
 import type { Metric } from "@shepherdjerred/ops-model/snapshot.ts";
+import { CONSOLE_LINKS } from "@shepherdjerred/ops-model/tool-links.ts";
+import { ExternalLinkIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import {
@@ -300,6 +302,37 @@ function FlagsServiceView({
         }}
       </FacetSection>
     </div>
+  );
+}
+
+/** Services that are themselves a console, by catalog id → `CONSOLE_LINKS` id. */
+const SERVICE_CONSOLES: Readonly<Record<string, string>> = {
+  golink: "golink",
+  flags: "flags",
+};
+
+/**
+ * For a service that has its own console (Go link, Flags), a button for the
+ * service view's header that opens it; `null` for every other service.
+ */
+export function ServiceConsoleLink({
+  serviceId,
+}: {
+  readonly serviceId: string;
+}): React.JSX.Element | null {
+  const consoleId = SERVICE_CONSOLES[serviceId];
+  if (consoleId === undefined) return null;
+  const link = CONSOLE_LINKS.find((entry) => entry.id === consoleId);
+  if (link === undefined) {
+    throw new Error(
+      `No console link "${consoleId}" for service "${serviceId}"`,
+    );
+  }
+  return (
+    <a className="button" href={link.url} target="_blank" rel="noreferrer">
+      Open in {link.label}
+      <ExternalLinkIcon aria-hidden="true" />
+    </a>
   );
 }
 

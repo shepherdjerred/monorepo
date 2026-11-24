@@ -51,7 +51,7 @@ exports the raw tokens.
 | Export             | Renders                                                                                                 |
 | ------------------ | ------------------------------------------------------------------------------------------------------- |
 | `ShellFrame`       | Sidebar beside an inset panel. The document scrolls; the panel never does.                              |
-| `Sidebar`          | `<aside>` with a top row, a named `<nav>`, and a footer pinned to the bottom.                           |
+| `Sidebar`          | `<aside>` (named by `label`) with a top row, a named `<nav>`, and a footer pinned to the bottom.        |
 | `SidebarGroup`     | A muted label and a `<ul>` labelled by it.                                                              |
 | `SidebarItem`      | `<li><a>` with icon, label, optional count and `aria-current`. `renderLink` lets a router draw the `a`. |
 | `AppSwitcher`      | Workspace button opening a Base UI menu of `{ label, url, group }` links, same tab.                     |

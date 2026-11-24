@@ -25,7 +25,9 @@ export function ThemeRow({ store }: ThemeRowProps): React.JSX.Element {
       }}
     >
       <Icon className="ui-nav-icon" aria-hidden="true" />
-      <span className="ui-nav-text">Theme</span>
+      {/* The space keeps the visible words apart, so the accessible name
+          contains the visible text (WCAG 2.5.3, axe label-content-name-mismatch). */}
+      <span className="ui-nav-text">Theme</span>{" "}
       <span className="ui-nav-count">{preference}</span>
     </button>
   );

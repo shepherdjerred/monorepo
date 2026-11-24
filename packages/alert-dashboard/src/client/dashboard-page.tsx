@@ -254,7 +254,7 @@ export function DashboardPage(): React.JSX.Element {
         return (
           <Button
             aria-pressed={showWatchdog}
-            className="w-fit justify-self-start text-xs"
+            className="filter-action"
             disabled={forcedByFilter && params.get("watchdog") !== "1"}
             onClick={() => {
               update("watchdog", params.get("watchdog") === "1" ? "" : "1");

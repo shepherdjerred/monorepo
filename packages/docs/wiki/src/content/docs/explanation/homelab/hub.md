@@ -120,6 +120,26 @@ Hub's own page for pull requests and work is named **Flow** and served at
 `/delivery` URL redirects there. How Delivery presents a release is covered in
 [how the Delivery web app follows a change](/explanation/homelab/delivery-hub/).
 
+## Shared look, separate apps
+
+Hub, Go link and Flags look like one product: the same sidebar beside an
+inset panel, the same colours and type, and the same app switcher at the top
+of the sidebar. They are still three apps, each on its own host with its own
+deployment. What they share is `@shepherdjerred/console-ui`, a package of styles,
+tokens and small components that each app bundles into its own client.
+
+Sharing a package rather than a process keeps the reasons above intact. Go
+link and Flags own their own data and writes, as Delivery does, so folding
+them into Hub would mix trust levels in one process. A shared look costs them
+nothing at runtime: there is no shared server to call and no shared outage.
+
+The app switcher and Hub's launcher both read one list of consoles,
+`CONSOLE_LINKS` in
+[`tool-links.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/ops-model/src/tool-links.ts),
+so adding a console to that list adds it everywhere. Go link's own index is
+the catch-all for every other service. The tokens and the contrast pairs they
+must meet are listed in the [console UI reference](/reference/console-ui/).
+
 ## Why the deployed name is still `alert-dashboard`
 
 Hub is a product name. Everything that runs stays named `alert-dashboard`: the
@@ -144,4 +164,5 @@ the same path under `hub` does.
 - [Operations overview](/explanation/homelab/operations-overview/)
 - [Alerts and incident history](/explanation/homelab/alerts/)
 - [How the Delivery web app follows a change](/explanation/homelab/delivery-hub/)
+- [Console UI reference](/reference/console-ui/)
 - [Hub package README](https://github.com/shepherdjerred/monorepo/blob/main/packages/alert-dashboard/README.md)

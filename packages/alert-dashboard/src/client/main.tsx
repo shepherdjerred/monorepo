@@ -6,6 +6,7 @@ import { BrowserRouter } from "react-router";
 
 import { App } from "./app.tsx";
 import { trpcClient, TRPCProvider } from "./trpc.ts";
+import "@shepherdjerred/console-ui/styles/index.css";
 import "#styles/globals.css";
 
 const queryClient = new QueryClient({

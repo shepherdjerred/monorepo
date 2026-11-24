@@ -153,28 +153,25 @@ export function AlertTable({
   return (
     <>
       {groups.map((group) => (
-        <details
-          className="alert-group group border-b border-[var(--line-soft)]"
-          key={group.alertname}
-        >
-          <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2.5 px-3.5 py-2.5 hover:bg-[var(--row-hover)] focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-[var(--accent-ring)] [&::-webkit-details-marker]:hidden">
+        <details className="alert-group" key={group.alertname}>
+          <summary className="alert-group-summary">
             <ChevronRightIcon
               aria-hidden="true"
-              className="text-[var(--muted)] transition-transform group-open:rotate-90"
+              className="alert-group-chevron"
             />
             <span className={`severity severity-${group.severity}`}>
               {group.severity}
             </span>
-            <strong className="text-[0.85rem]">{group.alertname}</strong>
+            <strong className="alert-group-name">{group.alertname}</strong>
             <span className="count">{group.alerts.length} occurrences</span>
-            <span className="mono ml-auto text-xs text-[var(--muted)]">
+            <span className="mono alert-group-newest">
               newest{" "}
               <time dateTime={group.newestOpenedAt}>
                 {age(group.newestOpenedAt)}
               </time>
             </span>
           </summary>
-          <div className="border-t border-[var(--line-soft)] bg-[var(--panel-2)]">
+          <div className="alert-group-body">
             <AlertRowsTable alerts={group.alerts} />
           </div>
         </details>

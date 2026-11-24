@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StandalonePromotion } from "./standalone.tsx";
+import "@shepherdjerred/console-ui/styles/index.css";
 import "#styles/globals.css";
 import "./promotion.css";
 

@@ -1,0 +1,78 @@
+/*
+ * Hub's original custom property names, mapped onto the shared console
+ * tokens (`--ui-*` from @shepherdjerred/console-ui). The feature sheets still
+ * use these names; mapping them here repaints every page in both themes
+ * without editing those sheets. Pages move to the `ui-*` classes and tokens
+ * directly as they are rebuilt, and each name goes when nothing uses it.
+ *
+ * Most names point at a token, and the token itself switches with the theme,
+ * so one `:root` block covers light and dark. The few values that differ by
+ * theme in another way follow console-ui's theme selectors below.
+ */
+:root {
+  /* Geometry of the shell. The sidebar width matches `.ui-shell`. */
+  --sidebar-w: 228px;
+  --topbar-h: 52px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+
+  /* Surfaces. Pages sit on the inset panel, so the page colour is the panel. */
+  --bg: var(--ui-panel);
+  --panel: var(--ui-panel);
+  --panel-2: var(--ui-head);
+  --header-bg: color-mix(in srgb, var(--ui-panel) 90%, transparent);
+  --control-bg: var(--ui-panel);
+  --control-hover: var(--ui-hover);
+  --row-hover: var(--ui-hover);
+  --code-bg: var(--ui-track);
+  --meter-track: var(--ui-track);
+
+  /* Ink and lines. */
+  --ink: var(--ui-ink);
+  --muted: var(--ui-muted);
+  --line: var(--ui-line);
+  --line-soft: var(--ui-line-soft);
+  --accent: var(--ui-accent);
+  --accent-ring: color-mix(in srgb, var(--ui-accent) 35%, transparent);
+
+  /* Severity: tinted chips (`-bg` behind `-ink`) and solid status fills. */
+  --sev-ok-bg: var(--ui-sev-ok-soft);
+  --sev-ok-ink: var(--ui-sev-ok-text);
+  --sev-info-bg: var(--ui-sev-info-soft);
+  --sev-info-ink: var(--ui-sev-info-text);
+  --sev-unknown-bg: var(--ui-sev-unknown-soft);
+  --sev-unknown-ink: var(--ui-sev-unknown-text);
+  --sev-warning-bg: var(--ui-sev-warning-soft);
+  --sev-warning-ink: var(--ui-sev-warning-text);
+  --sev-error-bg: var(--ui-sev-error-soft);
+  --sev-error-ink: var(--ui-sev-error-text);
+  --status-good: var(--ui-sev-ok);
+  --status-info: var(--ui-sev-info);
+  --status-unknown: var(--ui-sev-unknown);
+  --status-warning: var(--ui-sev-warning);
+  --status-critical: var(--ui-sev-error);
+  --delta-good: var(--ui-sev-ok-text);
+  --delta-bad: var(--ui-sev-error-text);
+
+  /* The stale-data banner reads as a warning. */
+  --stale-bg: var(--ui-sev-warning-soft);
+  --stale-ink: var(--ui-sev-warning-text);
+  --stale-line: color-mix(in srgb, var(--ui-sev-warning) 40%, var(--ui-panel));
+
+  /* Raw JSON blocks stay dark in both themes. */
+  --pre-bg: var(--ui-ink);
+  --pre-ink: var(--ui-line);
+}
+
+:root[data-theme="dark"] {
+  --pre-bg: var(--ui-bg);
+  --pre-ink: var(--ui-ink-2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pre-bg: var(--ui-bg);
+    --pre-ink: var(--ui-ink-2);
+  }
+}

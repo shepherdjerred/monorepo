@@ -8,6 +8,8 @@ export type SidebarProps = {
   /** Pinned to the bottom, usually a `<ThemeRow>`. */
   readonly footer?: ReactNode;
   readonly navLabel?: string;
+  /** Names the `<aside>` landmark, usually the app's name. */
+  readonly label?: string;
 };
 
 export function Sidebar({
@@ -15,9 +17,10 @@ export function Sidebar({
   children,
   footer,
   navLabel = "Primary",
+  label,
 }: SidebarProps): React.JSX.Element {
   return (
-    <aside className="ui-side">
+    <aside className="ui-side" aria-label={label}>
       {top === undefined ? null : <div className="ui-side-top">{top}</div>}
       <nav className="ui-nav" aria-label={navLabel}>
         {children}
