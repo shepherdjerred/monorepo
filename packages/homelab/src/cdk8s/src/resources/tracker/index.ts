@@ -18,6 +18,7 @@ import {
   postgresEgress,
   dnsEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { requireFirstPartyImage } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 function databaseUrl() {
   const protocol = "postgresql";
@@ -28,11 +29,7 @@ function databaseUrl() {
 
 /** A synthesis recipe is replaced by the required PG image binding before packaging. */
 export function createTrackerDeployment(chart: Chart, image: string) {
-  if (
-    image !== "docker.io/shepherdjerred/tracker:delivery-recipe" &&
-    !/^docker\.io\/shepherdjerred\/tracker@sha256:[a-f0-9]{64}$/u.test(image)
-  )
-    throw new Error("Tracker requires a pinned public image digest");
+  requireFirstPartyImage("tracker", image);
   const pg = Secret.fromSecretName(
     chart,
     "tracker-pg",

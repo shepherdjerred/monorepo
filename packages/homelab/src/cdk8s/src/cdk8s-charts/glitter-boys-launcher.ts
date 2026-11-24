@@ -29,7 +29,11 @@ import {
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import {
+  firstPartyImageRecipe,
+  requireFirstPartyImage,
+} from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { closeActivationGate } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/activation.ts";
 import {
   launcherRelease,
   LauncherReleaseSchema,
@@ -50,16 +54,9 @@ export function createGlitterBoysLauncherChart(
   const releaseStateParsed = LauncherReleaseSchema.parse(releaseState);
   // Like storm-forum's release inventory, preparation renders no live workload.
   // Activate only after a real image and the Bugsink project grant exist.
-  if (releaseStateParsed.stage === "prepared") {
-    new ConfigMap(chart, "activation", { data: { active: "false" } });
-    return chart;
-  }
-  if (
-    image !== firstPartyImageRecipe("glitter-boys-launcher") &&
-    (!/^[\w.-]+@sha256:[a-f0-9]{64}$/.test(image) ||
-      image.endsWith("0".repeat(64)))
-  )
-    throw new Error("Publish the launcher service image before activation");
+  if (releaseStateParsed.stage === "prepared")
+    return closeActivationGate(chart);
+  requireFirstPartyImage(name, image);
   new Namespace(chart, "namespace", { metadata: { name } });
   const item = new OnePasswordItem(chart, "credentials", {
     spec: { itemPath: vaultItemPath("glitter-boys-launcher-credentials") },
@@ -72,9 +69,7 @@ export function createGlitterBoysLauncherChart(
   deployment.addContainer(
     withCommonProps({
       name,
-      image: image.startsWith("docker.io/")
-        ? image
-        : `docker.io/shepherdjerred/glitter-boys-launcher:${image}`,
+      image,
       ports: [
         { number: 8080, name: "http" },
         { number: 9091, name: "metrics" },

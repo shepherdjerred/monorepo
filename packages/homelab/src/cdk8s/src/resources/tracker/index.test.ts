@@ -179,5 +179,5 @@ test("admits only tailnet, monitoring and the infra worker to the unauthenticate
 test("rejects a mutable image before activation", () => {
   expect(() =>
     createTrackerChart(new App(), "docker.io/shepherdjerred/tracker:latest"),
-  ).toThrow("pinned public image digest");
+  ).toThrow("immutable image digest");
 });
