@@ -11,7 +11,10 @@ import {
   downloadChartArtifact,
   parsePublicationOptions,
 } from "./publish-delivery.ts";
-import { readPublicationHandoffs as readProducerHandoffs } from "../lib/ci/delivery-publication-handoffs.ts";
+import {
+  createRetryingDeliveryFetch,
+  readPublicationHandoffs as readProducerHandoffs,
+} from "../lib/ci/delivery-publication-handoffs.ts";
 import { publicationOwners } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 import { imageRuntimeDigests } from "../lib/ci/image-runtime-digests.ts";
 
@@ -852,5 +855,56 @@ describe("build owners before and after the window's catalog flip", () => {
       "image:woodpecker-config-extension": "woodpecker",
       "chart:woodpecker": "woodpecker",
     });
+  });
+});
+
+describe("transient Delivery API retry", () => {
+  test("retries transient 5xx and transport errors while returning 4xx immediately", async () => {
+    const waits: number[] = [];
+    let calls = 0;
+    const retrying = createRetryingDeliveryFetch({
+      delaysMs: [10, 25],
+      sleep: async (ms) => {
+        waits.push(ms);
+      },
+      fetch: async () => {
+        calls += 1;
+        if (calls === 1) throw new TypeError("ECONNRESET");
+        return calls === 2
+          ? Response.json(
+              {
+                error: { code: "INTERNAL", message: "Delivery request failed" },
+              },
+              { status: 500 },
+            )
+          : Response.json({ buildId: "ok" }, { status: 201 });
+      },
+    });
+    const ok = await retrying("https://delivery.example/api/v1/builds", {
+      method: "POST",
+    });
+    expect(ok.status).toBe(201);
+    expect(calls).toBe(3);
+    expect(waits).toEqual([10, 25]);
+
+    let conflictCalls = 0;
+    const conflictFetch = createRetryingDeliveryFetch({
+      delaysMs: [10, 25],
+      sleep: async () => {
+        throw new Error("4xx must not sleep or retry");
+      },
+      fetch: async () => {
+        conflictCalls += 1;
+        return Response.json(
+          { error: { code: "CONFLICT", message: "Conflict" } },
+          { status: 409 },
+        );
+      },
+    });
+    const conflict = await conflictFetch(
+      "https://delivery.example/api/v1/builds",
+    );
+    expect(conflict.status).toBe(409);
+    expect(conflictCalls).toBe(1);
   });
 });

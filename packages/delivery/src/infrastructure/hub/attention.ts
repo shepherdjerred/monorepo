@@ -87,36 +87,82 @@ export type AlarmedRelease = {
   alarmedAt: Date;
 };
 
-/** The newest deployment of every environment, by environment id. */
+const ATTENTION_DEPLOYMENT_FIELDS = {
+  id: true,
+  environmentId: true,
+  serviceId: true,
+  versionSetRevisionId: true,
+  kind: true,
+  requestedBy: true,
+  message: true,
+  status: true,
+  recoveryRequired: true,
+  createdAt: true,
+  startedAt: true,
+  finishedAt: true,
+} as const;
+
+const LATEST_DEPLOYMENT_FIELDS = {
+  ...ATTENTION_DEPLOYMENT_FIELDS,
+  platformSourceBuildId: true,
+} as const;
+
+const LATEST_BUILD_FIELDS = {
+  id: true,
+  requestId: true,
+  serviceId: true,
+  sourceRevision: true,
+  sourceKind: true,
+  ciUrl: true,
+  verifiedAt: true,
+  status: true,
+  qualificationReason: true,
+  qualificationCheckedAt: true,
+  repositoryId: true,
+  pipelineNumber: true,
+  registrationSequence: true,
+  createdAt: true,
+} as const;
+
+/** The newest deployment of every environment, by environment id, without JSON snapshots. */
 export async function latestDeployments(database: Database) {
   const rows = IdRowsSchema.parse(
     await database.$queryRaw`
-    SELECT DISTINCT ON ("environmentId") "id" FROM "Deployment"
-    ORDER BY "environmentId", "createdAt" DESC, "id" DESC
+    SELECT d."id"
+    FROM "Environment" e
+    CROSS JOIN LATERAL (
+      SELECT "id" FROM "Deployment"
+      WHERE "environmentId" = e."id"
+      ORDER BY "createdAt" DESC, "id" DESC
+      LIMIT 1
+    ) d
   `,
   );
   const deployments = await database.deployment.findMany({
     where: { id: { in: rows.map((row) => row.id) } },
+    select: LATEST_DEPLOYMENT_FIELDS,
   });
   return new Map(deployments.map((row) => [row.environmentId, row]));
 }
 
 /**
  * The deployments just before each environment's newest, newest first: up to
- * `STREAK_WINDOW` of them per environment, by environment id. One ranked
- * read for every environment, never one per environment.
+ * `STREAK_WINDOW` of them per environment, by environment id. Bounded index
+ * probes per environment rather than sorting the full deployment history.
  */
 export async function priorDeployments(database: Database) {
   const rows = PriorRowsSchema.parse(
     await database.$queryRaw`
-    SELECT "id", "environmentId", "status", "message", "recoveryRequired" FROM (
-      SELECT "id", "environmentId", "status", "message", "recoveryRequired",
-        ROW_NUMBER() OVER (
-          PARTITION BY "environmentId" ORDER BY "createdAt" DESC, "id" DESC
-        ) AS "rank" FROM "Deployment"
-    ) AS "ranked"
-    WHERE "rank" BETWEEN 2 AND ${STREAK_WINDOW + 1}
-    ORDER BY "environmentId", "rank"
+    SELECT d."id", e."id" AS "environmentId", d."status", d."message", d."recoveryRequired"
+    FROM "Environment" e
+    CROSS JOIN LATERAL (
+      SELECT "id", "status", "message", "recoveryRequired", "createdAt"
+      FROM "Deployment"
+      WHERE "environmentId" = e."id"
+      ORDER BY "createdAt" DESC, "id" DESC
+      OFFSET 1 LIMIT ${STREAK_WINDOW}
+    ) d
+    ORDER BY e."id", d."createdAt" DESC, d."id" DESC
   `,
   );
   const prior = new Map<string, PriorDeployment[]>();
@@ -179,6 +225,7 @@ export function awaitingDecisions(database: Database) {
   return database.deployment.findMany({
     where: { OR: [{ status: "awaiting_approval" }, AWAITING_PLAN_DECISION] },
     orderBy: { createdAt: "desc" },
+    select: ATTENTION_DEPLOYMENT_FIELDS,
   });
 }
 
@@ -202,16 +249,23 @@ export function decisionStatus(
     : DeploymentStatusSchema.parse(deployment.status);
 }
 
-/** The newest build of every service, by service id. */
+/** The newest build of every service, by service id, via per-service index probe. */
 export async function latestBuilds(database: Database) {
   const rows = IdRowsSchema.parse(
     await database.$queryRaw`
-    SELECT DISTINCT ON ("serviceId") "id" FROM "Build"
-    ORDER BY "serviceId", "createdAt" DESC, "id" DESC
+    SELECT b."id"
+    FROM "Service" s
+    CROSS JOIN LATERAL (
+      SELECT "id" FROM "Build"
+      WHERE "serviceId" = s."id"
+      ORDER BY "createdAt" DESC, "id" DESC
+      LIMIT 1
+    ) b
   `,
   );
   const builds = await database.build.findMany({
     where: { id: { in: rows.map((row) => row.id) } },
+    select: LATEST_BUILD_FIELDS,
   });
   return new Map(builds.map((row) => [row.serviceId, row]));
 }

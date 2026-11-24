@@ -196,7 +196,7 @@ test("only the API mounts a short-lived read-only observer projection, with unch
   });
   expect(deployment.containers[0]?.resources).toMatchObject({
     requests: { cpu: "50m", memory: "256Mi" },
-    limits: { cpu: "500m", memory: "768Mi" },
+    limits: { cpu: "500m", memory: "1024Mi" },
   });
   expect(
     deployment.initContainers.every((container) =>
