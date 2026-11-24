@@ -1,10 +1,10 @@
+import { ApprovalPolicySchema } from "#shared/contract.ts";
 import type { HubOverview, HubService } from "#shared/hub/hub-contract.ts";
 import type { Database } from "#infrastructure/database.ts";
-import { environment as readEnvironment } from "#infrastructure/delivery-data.ts";
 import { decisionStatus } from "./attention.ts";
 import { gridAttention, listedRecord, readGridRecord } from "./grid.ts";
 import { toolLinks } from "./links.ts";
-import { latestExecution } from "./executions.ts";
+import { latestExecutions } from "./executions.ts";
 import { promotionOrder } from "./topology.ts";
 import { activityEntry, buildView, serviceSummary } from "./views.ts";
 
@@ -23,10 +23,7 @@ export async function hubOverview(database: Database): Promise<HubOverview> {
     }),
   ]);
   const builds = record.builds;
-  const { services: listed, environments: rows } = listedRecord(record);
-  const environments = await Promise.all(
-    rows.map((row) => readEnvironment(database, row.id)),
-  );
+  const { services: listed, environments } = listedRecord(record);
   // A listed service with an environment or a build; others have no pipeline.
   const serviceIds = [
     ...new Set([
@@ -34,14 +31,7 @@ export async function hubOverview(database: Database): Promise<HubOverview> {
       ...[...builds.keys()].filter((id) => listed.has(id)),
     ]),
   ];
-  const executions = new Map(
-    await Promise.all(
-      serviceIds.map(
-        async (serviceId) =>
-          [serviceId, await latestExecution(database, serviceId)] as const,
-      ),
-    ),
-  );
+  const executions = await latestExecutions(database, serviceIds, builds);
   const revisionOf = (setId: string | null) =>
     setId === null ? null : (record.revisions.get(setId) ?? null);
   const services = serviceIds
@@ -64,8 +54,9 @@ export async function hubOverview(database: Database): Promise<HubOverview> {
                 : decisionStatus(deployment, record.awaiting),
             recoveryRequired: deployment?.recoveryRequired ?? false,
             acceptedRevision: revisionOf(env.acceptedVersionSetRevisionId),
-            observedAt: env.observedAt,
-            approvalRequired: env.approvalPolicy === "required",
+            observedAt: env.observedAt?.toISOString() ?? null,
+            approvalRequired:
+              ApprovalPolicySchema.parse(env.approvalPolicy) === "required",
             activeDeploymentId: env.activeDeploymentId,
             lastDeploymentAt:
               deployment === undefined

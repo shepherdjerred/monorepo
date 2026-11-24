@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   DeploymentSchema,
   DeploymentStatusSchema,
@@ -23,12 +24,42 @@ import { buildStatus, executionStatus } from "./status.ts";
 import { promotionOrder } from "./topology.ts";
 import { buildView, serviceSummary } from "./views.ts";
 
+type BuildViewInput = Parameters<typeof buildView>[0];
 type BuildRow = Prisma.BuildGetPayload<object>;
 type VersionRow = Prisma.VersionSetGetPayload<object>;
 type DeploymentRow = Prisma.DeploymentGetPayload<object>;
+type SummaryDeploymentRow = Pick<
+  DeploymentRow,
+  | "id"
+  | "environmentId"
+  | "versionSetRevisionId"
+  | "platformSourceBuildId"
+  | "kind"
+  | "status"
+  | "createdAt"
+  | "finishedAt"
+>;
 type Root =
-  | { kind: "build"; id: string; createdAt: Date; build: BuildRow }
-  | { kind: "version"; id: string; createdAt: Date; version: VersionRow };
+  | { kind: "build"; id: string; createdAt: Date; build: BuildViewInput }
+  | {
+      kind: "version";
+      id: string;
+      createdAt: Date;
+      version: Pick<VersionRow, "id" | "revision" | "createdAt">;
+    };
+
+const IdsSchema = z.array(z.object({ id: z.string() }));
+
+const SUMMARY_DEPLOYMENT_SELECT = {
+  id: true,
+  environmentId: true,
+  versionSetRevisionId: true,
+  platformSourceBuildId: true,
+  kind: true,
+  status: true,
+  createdAt: true,
+  finishedAt: true,
+} as const;
 
 /** The newest deployment of each environment, in input order. */
 export function latestPerEnvironment<
@@ -46,7 +77,9 @@ export function latestPerEnvironment<
   return [...latest.values()];
 }
 
-function deploymentStatuses(deployments: DeploymentRow[]): PipelineStatus[] {
+function deploymentStatuses(
+  deployments: Pick<DeploymentRow, "environmentId" | "createdAt" | "status">[],
+): PipelineStatus[] {
   return latestPerEnvironment(deployments).map((entry) =>
     DeploymentStatusSchema.parse(entry.status),
   );
@@ -69,22 +102,12 @@ async function executionDeployments(
   });
 }
 
-async function summarize(
-  database: Database,
+function toExecutionSummary(
   root: Root,
-): Promise<ExecutionSummary> {
+  selected: Pick<VersionRow, "id" | "revision"> | null,
+  deployments: SummaryDeploymentRow[],
+): ExecutionSummary {
   const build = root.kind === "build" ? root.build : null;
-  const selected =
-    root.kind === "version"
-      ? root.version
-      : await database.versionSet.findUnique({
-          where: { qualifiedBuildId: root.id },
-        });
-  const deployments = await executionDeployments(
-    database,
-    build,
-    selected?.id ?? null,
-  );
   return {
     id: `${root.kind}:${root.id}`,
     status: executionStatus(
@@ -108,7 +131,36 @@ async function summarize(
   };
 }
 
-function newestFirst(builds: BuildRow[], composed: VersionRow[]): Root[] {
+async function summarize(
+  database: Database,
+  root: Root,
+): Promise<ExecutionSummary> {
+  const build = root.kind === "build" ? root.build : null;
+  const selected =
+    root.kind === "version"
+      ? root.version
+      : await database.versionSet.findUnique({
+          where: { qualifiedBuildId: root.id },
+          select: { id: true, revision: true },
+        });
+  const clauses: Prisma.DeploymentWhereInput[] = [];
+  if (selected !== null) clauses.push({ versionSetRevisionId: selected.id });
+  if (build !== null) clauses.push({ platformSourceBuildId: build.id });
+  const deployments =
+    clauses.length === 0
+      ? []
+      : await database.deployment.findMany({
+          where: { OR: clauses },
+          orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+          select: SUMMARY_DEPLOYMENT_SELECT,
+        });
+  return toExecutionSummary(root, selected, deployments);
+}
+
+function newestFirst(
+  builds: BuildViewInput[],
+  composed: Pick<VersionRow, "id" | "revision" | "createdAt">[],
+): Root[] {
   return [
     ...builds.map((row) => ({
       kind: "build" as const,
@@ -138,6 +190,7 @@ export async function latestExecution(database: Database, serviceId: string) {
     database.versionSet.findFirst({
       where: { serviceId, qualifiedBuildId: null },
       orderBy: NEWEST,
+      select: { id: true, revision: true, createdAt: true },
     }),
   ]);
   const [root] = newestFirst(
@@ -145,6 +198,146 @@ export async function latestExecution(database: Database, serviceId: string) {
     composed === null ? [] : [composed],
   );
   return root === undefined ? null : summarize(database, root);
+}
+
+async function latestComposedRows(
+  database: Database,
+  serviceIds: readonly string[],
+) {
+  const composedIds = IdsSchema.parse(
+    await database.$queryRaw`
+      SELECT v."id"
+      FROM unnest(${[...serviceIds]}::text[]) AS s("serviceId")
+      CROSS JOIN LATERAL (
+        SELECT "id" FROM "VersionSet"
+        WHERE "serviceId" = s."serviceId" AND "qualifiedBuildId" IS NULL
+        ORDER BY "createdAt" DESC, "id" DESC
+        LIMIT 1
+      ) v
+    `,
+  ).map((row) => row.id);
+  if (composedIds.length === 0) return [];
+  return database.versionSet.findMany({
+    where: { id: { in: composedIds } },
+    select: { id: true, serviceId: true, revision: true, createdAt: true },
+  });
+}
+
+async function readSummaryDeployments(
+  database: Database,
+  setIds: string[],
+  buildRootIds: string[],
+) {
+  const clauses: Prisma.DeploymentWhereInput[] = [];
+  if (setIds.length > 0) clauses.push({ versionSetRevisionId: { in: setIds } });
+  if (buildRootIds.length > 0)
+    clauses.push({ platformSourceBuildId: { in: buildRootIds } });
+  if (clauses.length === 0) return [];
+  return database.deployment.findMany({
+    where: { OR: clauses },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+    select: SUMMARY_DEPLOYMENT_SELECT,
+  });
+}
+
+function indexDeployments(deployments: SummaryDeploymentRow[]) {
+  const byVersionSet = new Map<string, SummaryDeploymentRow[]>();
+  const byPlatformBuild = new Map<string, SummaryDeploymentRow[]>();
+  for (const row of deployments) {
+    const setList = byVersionSet.get(row.versionSetRevisionId) ?? [];
+    setList.push(row);
+    byVersionSet.set(row.versionSetRevisionId, setList);
+    if (row.platformSourceBuildId !== null) {
+      const buildList = byPlatformBuild.get(row.platformSourceBuildId) ?? [];
+      buildList.push(row);
+      byPlatformBuild.set(row.platformSourceBuildId, buildList);
+    }
+  }
+  return { byVersionSet, byPlatformBuild };
+}
+
+function mergeRootDeployments(
+  root: Root,
+  selected: { id: string; revision: number } | null,
+  indexed: ReturnType<typeof indexDeployments>,
+): SummaryDeploymentRow[] {
+  const fromSet =
+    selected === null ? [] : (indexed.byVersionSet.get(selected.id) ?? []);
+  const fromBuild =
+    root.kind === "build" ? (indexed.byPlatformBuild.get(root.id) ?? []) : [];
+  const deduped = new Map<string, SummaryDeploymentRow>();
+  for (const row of [...fromSet, ...fromBuild]) deduped.set(row.id, row);
+  return [...deduped.values()].toSorted(
+    (left, right) =>
+      left.createdAt.getTime() - right.createdAt.getTime() ||
+      left.id.localeCompare(right.id),
+  );
+}
+
+/**
+ * Batched newest execution per service for `/api/v1/hub` (three queries across
+ * all services instead of per-service N+1 queries).
+ */
+export async function latestExecutions(
+  database: Database,
+  serviceIds: readonly string[],
+  latestBuildsByService: ReadonlyMap<string, BuildViewInput>,
+): Promise<Map<string, ExecutionSummary>> {
+  if (serviceIds.length === 0) return new Map();
+  const composedRows = await latestComposedRows(database, serviceIds);
+  const composedByService = new Map(
+    composedRows.map((row) => [row.serviceId, row]),
+  );
+  const rootByService = new Map<string, Root>();
+  for (const serviceId of serviceIds) {
+    const build = latestBuildsByService.get(serviceId);
+    const composed = composedByService.get(serviceId);
+    const [root] = newestFirst(
+      build === undefined ? [] : [build],
+      composed === undefined ? [] : [composed],
+    );
+    if (root !== undefined) rootByService.set(serviceId, root);
+  }
+  const buildRootIds = [...rootByService.values()]
+    .filter((root) => root.kind === "build")
+    .map((root) => root.id);
+  const buildSets =
+    buildRootIds.length === 0
+      ? []
+      : await database.versionSet.findMany({
+          where: { qualifiedBuildId: { in: buildRootIds } },
+          select: { id: true, revision: true, qualifiedBuildId: true },
+        });
+  const setByBuildId = new Map(
+    buildSets.flatMap((row) =>
+      row.qualifiedBuildId === null ? [] : [[row.qualifiedBuildId, row]],
+    ),
+  );
+  const setIds = [
+    ...new Set([
+      ...composedRows.map((row) => row.id),
+      ...buildSets.map((row) => row.id),
+    ]),
+  ];
+  const indexed = indexDeployments(
+    await readSummaryDeployments(database, setIds, buildRootIds),
+  );
+  const summaries = new Map<string, ExecutionSummary>();
+  for (const [serviceId, root] of rootByService) {
+    const selected =
+      root.kind === "version"
+        ? root.version
+        : (setByBuildId.get(root.id) ?? null);
+    summaries.set(
+      serviceId,
+      toExecutionSummary(
+        root,
+        selected,
+        mergeRootDeployments(root, selected, indexed),
+      ),
+    );
+  }
+  return summaries;
 }
 
 /** Builds and hand-composed version sets of one service, newest first. */
