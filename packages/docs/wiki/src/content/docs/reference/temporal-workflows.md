@@ -177,10 +177,13 @@ Parameters for the sleep and morning routines are in
 
 ## GitHub PRs
 
-| Workflow             | Trigger             | Brain         | Output           |
-| -------------------- | ------------------- | ------------- | ---------------- |
-| merge-conflict check | PR push / main push | deterministic | required status  |
-| ci-pipeline-cancel   | PR close            | deterministic | cancelled builds |
+| Workflow                      | Trigger                        | Brain         | Output                                   |
+| ----------------------------- | ------------------------------ | ------------- | ---------------------------------------- |
+| merge-conflict check          | PR push / main push            | deterministic | required status                          |
+| pr-code-review                | PR open / sync / ready         | deterministic | required `ci/code-review` status         |
+| code-review-coordinator       | signalWithStart from PR review | deterministic | weighted provider assignment + cooldowns |
+| backfill-open-pr-code-reviews | operator                       | deterministic | per-PR review workflows                  |
+| ci-pipeline-cancel            | PR close                       | deterministic | cancelled builds                         |
 
 ## Agent tasks
 

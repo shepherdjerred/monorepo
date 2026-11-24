@@ -10,21 +10,52 @@
 
 import { githubGet } from "@shepherdjerred/code-review/github-request";
 import { z } from "zod";
+import { sanitizeText } from "#lib/ci/redaction.ts";
+import { requiredCredentialsFor } from "#lib/credential-commands.ts";
+import { resolveCredentials } from "#lib/credentials.ts";
+import {
+  buildPassthroughInvocation,
+  lookupExecutable,
+} from "#lib/passthrough.ts";
 
 const GITHUB_API = "https://api.github.com";
 
 /**
- * Status context the review gate posts.
+ * Status context posted by Temporal's PR code-review workflow.
+ */
+export const CODE_REVIEW_GATE_CONTEXT = "ci/code-review";
+
+/**
+ * Legacy status context posted by Woodpecker's pre-cutover review workflow.
  *
  * Woodpecker names a per-workflow status `ci/woodpecker/<event>/<workflow>`,
  * so this follows the generated lane's key rather than a hand-written label.
  */
 export const CODEX_GATE_CONTEXT = "ci/woodpecker/pr/codex-review-gate";
 
-/** The provider gate that must be harvested for a PR. */
+/** The legacy provider gate inspected when `ci/code-review` is absent. */
 export const REQUIRED_REVIEW_GATES = [
   { providerId: "codex", context: CODEX_GATE_CONTEXT },
 ] as const;
+
+/** Exact Temporal workflow ID matching `packages/temporal/src/shared/ci/code-review.ts`. */
+export function prCodeReviewWorkflowId(
+  repo: string,
+  prNumber: number,
+  headSha: string,
+): string {
+  const [owner, repoName, extra] = repo.split("/");
+  if (
+    owner === undefined ||
+    repoName === undefined ||
+    extra !== undefined ||
+    owner === "" ||
+    repoName === ""
+  ) {
+    throw new Error(`Expected <owner>/<repo>, got "${repo}"`);
+  }
+  return `pr-code-review/${owner}/${repoName}/${String(prNumber)}/${headSha}`;
+}
 
 const StatusSchema = z.object({
   state: z.string(),
@@ -145,4 +176,117 @@ export function harvestVerdict(input: {
   return pipelineNumber === null
     ? { retryable: false, reason: "gate status names no CI pipeline" }
     : { retryable: true, pipelineNumber };
+}
+
+export type CodeReviewHarvestVerdict =
+  { retryable: true } | { retryable: false; reason: string };
+
+/**
+ * Whether a failed `ci/code-review` status can be cleared by signaling
+ * Temporal's `recheckReview` handler because zero blocking findings remain.
+ */
+export function codeReviewHarvestVerdict(input: {
+  gate: GateStatus | null;
+  blockingCount: number;
+}): CodeReviewHarvestVerdict {
+  if (input.gate === null) {
+    return { retryable: false, reason: "no gate status" };
+  }
+  if (input.gate.state !== "failure") {
+    return { retryable: false, reason: `gate is ${input.gate.state}` };
+  }
+  if (input.blockingCount > 0) {
+    return {
+      retryable: false,
+      reason: `${String(input.blockingCount)} blocking finding(s) remain`,
+    };
+  }
+  return { retryable: true };
+}
+
+export type ReviewRecheckDeps = {
+  resolvePr?: (prNumber: string | undefined, repo: string) => Promise<number>;
+  getToken?: () => string;
+  fetchHead?: (input: {
+    repo: string;
+    number: number;
+    token: string;
+  }) => Promise<string>;
+  resolveTemporalCredentials?: () => Promise<void>;
+  lookupTemporalExecutable?: (
+    executable: string,
+    pathValue: string | undefined,
+  ) => string | null;
+  spawnSync?: (
+    cmd: string[],
+    options: {
+      env: Record<string, string | undefined>;
+      stdin: "ignore";
+      stdout: "pipe";
+      stderr: "pipe";
+    },
+  ) => {
+    exitCode: number;
+    stdout: Uint8Array;
+    stderr: Uint8Array;
+  };
+};
+
+export async function signalCodeReviewRecheck(
+  workflowId: string,
+  secrets: readonly string[] = [],
+  deps: ReviewRecheckDeps = {},
+): Promise<void> {
+  const resolveTemporal =
+    deps.resolveTemporalCredentials ??
+    (() =>
+      resolveCredentials(
+        requiredCredentialsFor("temporal", undefined, Bun.env, []),
+      ));
+  await resolveTemporal();
+  const invocation = buildPassthroughInvocation(
+    "temporal",
+    [
+      "--namespace",
+      "prod",
+      "workflow",
+      "signal",
+      "--workflow-id",
+      workflowId,
+      "--name",
+      "recheckReview",
+    ],
+    { ...Bun.env },
+  );
+  if (invocation === null) {
+    throw new Error("toolkit: unknown passthrough command: temporal");
+  }
+  const executable = (deps.lookupTemporalExecutable ?? lookupExecutable)(
+    invocation.executable,
+    invocation.env["PATH"],
+  );
+  if (executable === null) {
+    throw new Error(
+      `toolkit: required executable not found: ${invocation.executable}`,
+    );
+  }
+  const run = deps.spawnSync ?? Bun.spawnSync;
+  const result = run([executable, ...invocation.args], {
+    env: invocation.env,
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  if (result.exitCode !== 0) {
+    const stderr = sanitizeText(
+      new TextDecoder().decode(result.stderr).trim(),
+      secrets,
+    );
+    const stdout = sanitizeText(
+      new TextDecoder().decode(result.stdout).trim(),
+      secrets,
+    );
+    const detail = stderr || stdout || `exit code ${String(result.exitCode)}`;
+    throw new Error(`temporal workflow signal ${workflowId} failed: ${detail}`);
+  }
 }

@@ -76,12 +76,12 @@ export async function queueUnhealthy(input: {
       ) ?? [];
   const reviewOnlyFailure =
     failures.some((detail) =>
-      /^Workflow "(?:codex-review-gate|review-gate)" - (?:FAILURE|ERROR)$/.test(
+      /^(?:Workflow "(?:codex-review-gate|review-gate)"|GitHub check "ci\/code-review") - (?:FAILURE|ERROR)$/.test(
         detail,
       ),
     ) &&
     failures.every((detail) =>
-      /^Workflow "(?:codex-review-gate|review-gate|ci-complete)" - (?:FAILURE|ERROR)$/.test(
+      /^(?:Workflow "(?:codex-review-gate|review-gate|ci-complete)"|GitHub check "ci\/code-review") - (?:FAILURE|ERROR)$/.test(
         detail,
       ),
     );

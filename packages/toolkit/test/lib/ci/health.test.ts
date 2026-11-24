@@ -67,3 +67,55 @@ test("PR health reports a ready PR against a red main as main red", () => {
     "The PR is ready, but main is red",
   );
 });
+
+test.each([
+  {
+    githubState: "PENDING",
+    bucket: "pending",
+    snapshotState: "pending" as const,
+    expectedStatus: "PENDING" as const,
+  },
+  {
+    githubState: "FAILURE",
+    bucket: "fail",
+    snapshotState: "fail" as const,
+    expectedStatus: "UNHEALTHY" as const,
+  },
+])(
+  "PR health surfaces $githubState ci/code-review in CI Status and Merge Readiness",
+  ({ githubState, bucket, snapshotState, expectedStatus }) => {
+    const input = evidence();
+    if (input.snapshot === undefined)
+      throw new Error("Missing snapshot fixture");
+    input.snapshot.rules.checks.push({ name: "ci/code-review", appId: null });
+    input.snapshot.checks.push({
+      name: "ci/code-review",
+      state: snapshotState,
+      url: null,
+      appId: null,
+    });
+    const report = buildPrHealthReport({
+      ...input,
+      githubChecks: [
+        {
+          name: "ci/code-review",
+          state: githubState,
+          bucket,
+        },
+      ],
+    });
+    expect(report.overallStatus).toBe(expectedStatus);
+    const ciStatus = report.checks.find((check) => check.name === "CI Status");
+    expect(ciStatus?.status).toBe(expectedStatus);
+    expect(ciStatus?.details).toContain(
+      `GitHub check "ci/code-review" - ${githubState}`,
+    );
+    const readiness = report.checks.find(
+      (check) => check.name === "Merge Readiness",
+    );
+    expect(readiness?.status).toBe(expectedStatus);
+    if (expectedStatus === "UNHEALTHY") {
+      expect(readiness?.details).toContain("ci/code-review failed");
+    }
+  },
+);

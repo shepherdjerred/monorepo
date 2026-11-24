@@ -1,13 +1,24 @@
-import { describe, expect, test } from "vitest";
-import { parseMaxBlockingPriority } from "#commands/pr/review.ts";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import {
+  parseMaxBlockingPriority,
+  reviewRecheckCommand,
+} from "#commands/pr/review.ts";
+import { handlePrCommand } from "#handlers/pr.ts";
+import {
+  CODE_REVIEW_GATE_CONTEXT,
+  codeReviewHarvestVerdict,
   CODEX_GATE_CONTEXT,
   harvestVerdict,
   pipelineNumberFromTargetUrl,
+  prCodeReviewWorkflowId,
   nextPageUrl,
   REQUIRED_REVIEW_GATES,
   type GateStatus,
 } from "#lib/review/harvest.ts";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 /** Woodpecker restarts at pipeline granularity, so the retry unit is a number. */
 const PIPELINE = "9633";
@@ -16,11 +27,164 @@ const failed: GateStatus = {
   targetUrl: `https://woodpecker.sjer.red/repos/1/pipeline/${PIPELINE}`,
 };
 
-test("declares the required Codex gate context", () => {
+test("declares the required Temporal and legacy Codex gate contexts", () => {
+  expect(CODE_REVIEW_GATE_CONTEXT).toBe("ci/code-review");
   expect(CODEX_GATE_CONTEXT).toBe("ci/woodpecker/pr/codex-review-gate");
   expect(REQUIRED_REVIEW_GATES).toEqual([
     { providerId: "codex", context: CODEX_GATE_CONTEXT },
   ]);
+});
+
+describe("prCodeReviewWorkflowId", () => {
+  test("matches Temporal's per-PR workflow ID format", () => {
+    const sha = "a".repeat(40);
+    expect(prCodeReviewWorkflowId("shepherdjerred/monorepo", 42, sha)).toBe(
+      `pr-code-review/shepherdjerred/monorepo/42/${sha}`,
+    );
+  });
+
+  test("rejects malformed repository slugs", () => {
+    expect(() => prCodeReviewWorkflowId("monorepo", 42, "abc")).toThrow(
+      "Expected <owner>/<repo>",
+    );
+    expect(() => prCodeReviewWorkflowId("a/b/c", 42, "abc")).toThrow(
+      "Expected <owner>/<repo>",
+    );
+  });
+});
+
+describe("codeReviewHarvestVerdict", () => {
+  test("marks failing ci/code-review with zero blocking findings retryable", () => {
+    expect(
+      codeReviewHarvestVerdict({
+        gate: { state: "failure", targetUrl: null },
+        blockingCount: 0,
+      }),
+    ).toEqual({ retryable: true });
+  });
+
+  test("refuses non-failing or still-blocked ci/code-review statuses", () => {
+    expect(
+      codeReviewHarvestVerdict({
+        gate: { state: "failure", targetUrl: null },
+        blockingCount: 1,
+      }),
+    ).toEqual({ retryable: false, reason: "1 blocking finding(s) remain" });
+    expect(
+      codeReviewHarvestVerdict({
+        gate: { state: "pending", targetUrl: null },
+        blockingCount: 0,
+      }),
+    ).toEqual({ retryable: false, reason: "gate is pending" });
+    expect(
+      codeReviewHarvestVerdict({
+        gate: null,
+        blockingCount: 0,
+      }),
+    ).toEqual({ retryable: false, reason: "no gate status" });
+  });
+});
+
+describe("reviewRecheckCommand", () => {
+  const head = "b".repeat(40);
+
+  test("infers the open PR, signals Temporal recheckReview, and supports JSON output", async () => {
+    const logs: string[] = [];
+    vi.spyOn(console, "log").mockImplementation((...args: unknown[]) => {
+      logs.push(args.map(String).join(" "));
+    });
+    const spawned: {
+      cmd: string[];
+      env: Record<string, string | undefined>;
+    }[] = [];
+    await reviewRecheckCommand(
+      undefined,
+      { json: true },
+      {
+        resolvePr: async (prNumber, repo) => {
+          expect(prNumber).toBeUndefined();
+          expect(repo).toBe("shepherdjerred/monorepo");
+          return 128;
+        },
+        getToken: () => "ghs_secret_token_value",
+        fetchHead: async ({ repo, number, token }) => {
+          expect(repo).toBe("shepherdjerred/monorepo");
+          expect(number).toBe(128);
+          expect(token).toBe("ghs_secret_token_value");
+          return head;
+        },
+        resolveTemporalCredentials: () => Promise.resolve(),
+        lookupTemporalExecutable: (executable) => {
+          expect(executable).toBe("temporal");
+          return "/usr/local/bin/temporal";
+        },
+        spawnSync: (cmd, options) => {
+          spawned.push({ cmd, env: options.env });
+          return {
+            exitCode: 0,
+            stdout: new Uint8Array(),
+            stderr: new Uint8Array(),
+          };
+        },
+      },
+    );
+
+    expect(spawned).toHaveLength(1);
+    expect(spawned[0]?.cmd).toEqual([
+      "/usr/local/bin/temporal",
+      "--profile",
+      "homelab",
+      "--namespace",
+      "prod",
+      "workflow",
+      "signal",
+      "--workflow-id",
+      `pr-code-review/shepherdjerred/monorepo/128/${head}`,
+      "--name",
+      "recheckReview",
+    ]);
+    expect(JSON.parse(logs[0] ?? "{}")).toEqual({
+      repo: "shepherdjerred/monorepo",
+      pr: 128,
+      head,
+      workflowId: `pr-code-review/shepherdjerred/monorepo/128/${head}`,
+      signal: "recheckReview",
+      signaled: true,
+    });
+  });
+
+  test("redacts tokens from failed temporal signal stderr", async () => {
+    const secret = "ghs_super_secret_token_123456";
+    await expect(
+      reviewRecheckCommand(
+        "55",
+        {},
+        {
+          resolvePr: async () => 55,
+          getToken: () => secret,
+          fetchHead: async () => head,
+          resolveTemporalCredentials: () => Promise.resolve(),
+          lookupTemporalExecutable: () => "/usr/local/bin/temporal",
+          spawnSync: () => ({
+            exitCode: 1,
+            stdout: new Uint8Array(),
+            stderr: new TextEncoder().encode(
+              `workflow not found (auth ${secret})`,
+            ),
+          }),
+        },
+      ),
+    ).rejects.toThrow("workflow not found (auth [REDACTED])");
+  });
+
+  test("surfaces recheck in toolkit pr review --help", async () => {
+    const logs: string[] = [];
+    vi.spyOn(console, "log").mockImplementation((...args: unknown[]) => {
+      logs.push(args.map(String).join(" "));
+    });
+    await handlePrCommand("review", ["--help"]);
+    expect(logs.join("\n")).toContain("recheck [PR]");
+  });
 });
 
 test("rejects malformed blocking-priority configuration", () => {

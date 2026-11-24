@@ -128,6 +128,19 @@ export class GithubStack extends HomelabStack {
             // check. Ships in the same apply as the `push` event
             // subscription of the pr-bot webhook below.
             { context: "ci/merge-conflict" },
+            // ci/code-review is posted by Temporal's `prCodeReviewWorkflow` on
+            // `temporal-repo-worker` rather than by Woodpecker CI: it runs
+            // automated multi-provider code review outside PR CI pods and
+            // updates the commit status as findings arrive or are resolved.
+            //
+            // ROLLOUT ORDERING: do NOT apply this entry until BOTH
+            //   (1) `temporal/prod` is running the code-review workflows on
+            //       `temporal-repo-worker`, and
+            //   (2) `backfillOpenPrCodeReviewsWorkflow` has populated
+            //       `ci/code-review` on every open PR targeting `main`.
+            // Applying earlier blocks every open PR on a missing required
+            // check.
+            { context: "ci/code-review" },
             // The generated ci-complete workflow waits for every selected
             // blocking PR workflow and verifies their statuses belong to
             // that exact pipeline.

@@ -106,7 +106,7 @@ Scout site extraction and immutable image metadata verification receive only the
 the token through standard input. These grants are main-only; pull-request
 commands receive neither registry identity. Publishing and CI toolchain images
 use Docker Hub. The publisher verifies the registry catalog's visibility policy
-before recording original artifacts. The review-image parser accepts existing GHCR
+before recording original artifacts. The `CI_GATE_IMAGE` parser accepts existing GHCR
 extension digests during deployment transitions.
 
 Shared download caches are paired with explicit tool paths: Bun uses
@@ -397,26 +397,27 @@ Draft pushes run a three-minute preflight for formatting, frozen lockfile
 consistency, conflict markers and secrets in the proposed commit history.
 The filtered install includes root formatting plugins and script dependencies,
 with lifecycle scripts disabled.
-They create no merge verdict, browser/Tofu/rehearsal jobs or review poller.
+They create no merge verdict or browser/Tofu/rehearsal jobs.
 Hosted automation without exact-head approval keeps a credentialless preflight.
-Ready PRs run the full affected verification graph and automated review.
+Ready PRs run the full affected verification graph, while automated PR review runs
+outside Woodpecker in Temporal (`ci/code-review`).
 
 Deploy the ready-event compatibility path and server status-context template
 before enabling draft preflight. The server change requires a drained rollout;
 observe a real ready transition through full CI before changing draft coverage.
 
-`routing.ts` assigns Kubernetes workflows to PR, main, review, or completion
+`routing.ts` assigns Kubernetes workflows to PR, main, or completion
 agents. A PR targeting the default branch still uses the PR pool; only a push
 or manual run on that branch uses main capacity. Manual maintenance,
 benchmark and extended-tier runs on the default branch are background work:
 they use the PR pool at draft priority, below every ready PR, and leave main's
 reservation intact. Native workflows keep their host labels.
 
-Review and completion use their reserved pools only with the trusted policy
-image and no checkout or services. Each requests 250m CPU, 512 MiB memory, and
-1 GiB ephemeral storage, so all four slots fit the gate reserve together.
-The generator's exported step model includes the dynamic completion workflow
-in admission and credential checks.
+The checkout-free `ci-complete` workflow uses its reserved `completion` pool
+with the trusted `CI_GATE_IMAGE` policy image and no checkout or services. It
+requests 250m CPU, 512 MiB memory, and 1 GiB ephemeral storage within the gate
+reserve. The generator's exported step model includes the dynamic completion
+workflow in admission and credential checks.
 
 Signed `pr_draft` state selects draft preflight and admission priority. Main has the highest admission priority;
 Kueue preemption remains disabled and production pod priority is unchanged.
@@ -499,18 +500,15 @@ bot pipeline. The image delivery path below promotes that reviewed policy.
 
 ## Image delivery
 
-The deployed extension image also contains the bundled review poller at
-`/app/review-gate.js`. Its `CI_GATE_IMAGE` bootstrap value is the same digest
-as the running extension, supplied by the homelab chart. Review and completion
-therefore use trusted policy without cloning a PR or installing dependencies.
-The poller prints its baked `GIT_SHA` policy revision. Findings, timeouts, and
-API errors fail; only the existing unanimous provider-quota exception passes
-with an explicit message that no review ran.
+The deployed extension image supplies `CI_GATE_IMAGE` for the checkout-free
+`ci-complete` workflow in the `completion` pool. Its bootstrap value is the same
+digest as the running extension, supplied by the homelab chart, so completion
+evaluates pipeline status from trusted policy without cloning a PR or installing
+dependencies. Automated PR review runs separately in Temporal and posts the
+required `ci/code-review` commit status directly.
 
 Deploy the chart's bootstrap setting before promoting an image that requires
-it. Roll back the image and its matching bootstrap value together. Changes to
-the review scripts or their code-review dependency select this image for a
-rebuild. The persistent Codex auth volume is unused by bundled polling.
+it, and roll back the image and its matching bootstrap value together.
 
 The Paper E2E service loads the staged workspace plugin tree directly through
 `EXTRA_ARGS=--plugins .../sidecar-plugins` and copies Bukkit configuration through

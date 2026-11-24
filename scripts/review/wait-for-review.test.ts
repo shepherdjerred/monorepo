@@ -193,29 +193,12 @@ export function reviewGateStepBlockText(
   return reviewGateStepBlock(pipeline, stepKey).join("\n");
 }
 
-/**
- * How long the step spends on `toolchain.sh` and the filtered install before
- * wait-for-review.ts starts counting. Nothing bounds that preamble — a cold or
- * stale image pays for mise bootstrap and network downloads — so the margin is
- * deliberately generous. Getting it wrong reinstates the anonymous step-timeout
- * kill this whole change exists to prevent.
- */
-const PREAMBLE_MARGIN_SECONDS = 20 * 60;
-
-// Two timeouts govern this gate and only one of them explains itself. If the
-// STEP's is the smaller, the job dies with an anonymous step timeout and the
-// operator cannot tell a slow provider from a broken one, so the ordering is
-// part of the gate's contract rather than a coincidence of two constants.
 describe("review gate timeout budget", () => {
-  test("expires before the CI step that runs it", async () => {
+  test("omits codex-review-gate from generated Woodpecker steps because Temporal owns ci/code-review", async () => {
     const steps = await readGeneratedSteps(
       new URL("../..", import.meta.url).pathname,
     );
-    const gate = findGeneratedStep(steps, "codex-review-gate");
-    expect(gate).toBeDefined();
-    expect((gate?.timeoutMinutes ?? 0) * 60).toBeGreaterThanOrEqual(
-      DEFAULT_TIMEOUT_SECONDS + PREAMBLE_MARGIN_SECONDS,
-    );
+    expect(findGeneratedStep(steps, "codex-review-gate")).toBeUndefined();
   });
 
   test("reads review-gate's own timeout, not a later step's", () => {
@@ -310,48 +293,16 @@ describe("review gate timeout budget", () => {
   });
 });
 
-// The gate reads only GitHub state, never the PR's diff, so running it from the
-// PR's checkout buys nothing and costs correctness: `code-review` is a
-// workspace dependency, so the branch supplied its own grader. PR #1389 read 0
-// blocking findings against current main and 3 against its own 22-commit-stale
-// parser, and no change to that PR could have cleared it.
 describe("review gate source", () => {
-  test("the required Codex gate uses the trusted image without a PR checkout", async () => {
+  test("generated Woodpecker step JSON omits codex-review-gate", async () => {
     const steps = z
-      .array(
-        z.object({
-          key: z.string(),
-          image: z.string(),
-          commands: z.array(z.string()),
-          skipClone: z.boolean().optional(),
-        }),
-      )
+      .array(z.object({ key: z.string() }))
       .parse(
         await readGeneratedStepJson(new URL("../..", import.meta.url).pathname),
       );
-    const gate = steps.find((step) => step.key === "codex-review-gate");
-    expect(gate).toBeDefined();
-    // The immutable deployed policy image owns the grader. Neither a PR's
-    // checkout nor its dependency installation supplies executable gate code.
-    expect(gate?.image).toMatch(
-      /^docker\.io\/shepherdjerred\/woodpecker-config-extension@sha256:[a-f\d]{64}$/u,
-    );
-    expect(gate?.skipClone).toBe(true);
-    expect(gate?.commands).toEqual(["cd /app", "bun /app/review-gate.js"]);
-  });
-
-  /**
-   * Woodpecker runs each workflow independently, so the gate cannot be
-   * cancelled by a failing sibling as long as it depends on nothing: no other
-   * lane's failure can reach it.
-   */
-  test("the required gate cannot be cancelled by another lane failing", async () => {
-    const steps = await readGeneratedSteps(
-      new URL("../..", import.meta.url).pathname,
-    );
-    const gate = findGeneratedStep(steps, "codex-review-gate");
-    expect(gate).toBeDefined();
-    expect(gate?.dependsOn ?? []).toEqual([]);
+    expect(
+      steps.find((step) => step.key === "codex-review-gate"),
+    ).toBeUndefined();
   });
 
   test("the gate script checks out a ref and runs the gate from it", async () => {

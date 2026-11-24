@@ -64,14 +64,14 @@ test("rebuilds Temporal for every homelab source shipped in its runtime", async 
   }
 });
 
-test("rebuilds the bundled review policy when its source or library changes", async () => {
+test("routes code-review changes to Temporal rather than the Woodpecker config extension", async () => {
   for (const path of [
-    "scripts/review/bundled-review-gate.ts",
-    "scripts/lib/review/review-gate-poll.ts",
     "packages/code-review/src/gate.ts",
     "packages/temporal/src/lib/github-app-token.ts",
   ]) {
-    expect(await select([path])).toContain("woodpecker-config-extension");
+    const targets = await select([path]);
+    expect(targets, path).toContain("temporal-worker");
+    expect(targets, path).not.toContain("woodpecker-config-extension");
   }
 });
 

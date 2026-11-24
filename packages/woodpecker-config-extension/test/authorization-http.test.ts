@@ -449,9 +449,13 @@ describe("signed workflow routing", () => {
       const response = await app.request(await request({ pr_draft: draft }));
       expect(response.status).toBe(200);
       const result = ConfigResponseSchema.parse(await response.json());
+      expect(
+        result.configs.find(
+          (entry) => entry.name === ".woodpecker/codex-review-gate.yaml",
+        ),
+      ).toBeUndefined();
       for (const [key, pool] of [
         ["verify", "pr"],
-        ["codex-review-gate", "review"],
         ["ci-complete", "completion"],
       ] as const) {
         const config = result.configs.find(

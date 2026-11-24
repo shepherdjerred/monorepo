@@ -3,26 +3,16 @@ import { prGateSteps } from "#src/pipeline/lanes/pr-gates.ts";
 import { completionStep } from "#src/pipeline/completion.ts";
 import { TEST_IMAGES } from "./identity.ts";
 
-test("trusted policy image removes checkout, install, and persistent review auth", () => {
+test("trusted policy image runs checkout-free completion while PR gates omit codex-review-gate", () => {
   const image = `docker.io/shepherdjerred/woodpecker-config-extension@sha256:${"c".repeat(64)}`;
-  const review = prGateSteps(TEST_IMAGES, image).find(
-    (step) => step.key === "codex-review-gate",
-  );
-  expect(review?.image).toBe(image);
-  expect(review?.skipClone).toBe(true);
-  expect(review?.commands).toEqual(["cd /app", "bun /app/review-gate.js"]);
-  expect(review?.volumes).toEqual([]);
-  // Reads mint an App installation token; the owner's token only posts
-  // review requests; no toolchain bootstrap needs mise's download token.
-  expect(review?.secrets?.map((grant) => grant.env)).toEqual([
-    "GITHUB_REVIEW_TOKEN",
-    "GITHUB_APP_ID",
-    "GITHUB_APP_INSTALLATION_ID",
-    "GITHUB_APP_PRIVATE_KEY",
-  ]);
-  expect(review?.environment?.["REVIEW_PROVIDERS"]).toBe("codex,coderabbit");
-  if (review === undefined) throw new Error("missing review");
-  const complete = completionStep([review], image, "/app");
+  const gates = prGateSteps(TEST_IMAGES);
+  expect(gates.map((step) => step.key)).toEqual(["pr-dryrun"]);
+  expect(
+    gates.find((step) => step.key === "codex-review-gate"),
+  ).toBeUndefined();
+  const [dryRun] = gates;
+  if (dryRun === undefined) throw new Error("missing pr-dryrun");
+  const complete = completionStep([dryRun], image, "/app");
   expect(complete.image).toBe(image);
   expect(complete.commands[0]).toBe("cd /app");
   expect(complete.skipClone).toBe(true);

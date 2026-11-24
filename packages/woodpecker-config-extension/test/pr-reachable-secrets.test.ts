@@ -74,19 +74,17 @@ const defaultBranchPush = (steps: ReturnType<typeof allSteps>) =>
  * name means a pull request -- including one whose only purpose is to change
  * this pipeline -- can now read that credential.
  *
- * Everything below supports verification or build handoff access:
+ * Automated PR review moved to Temporal (`ci/code-review`), removing GitHub
+ * App and review-comment credentials from pull-request CI pods. Everything
+ * below supports verification or build handoff access:
  *
- * - `codex-review-gate` mints a review token.
+ * - `GITHUB_DOWNLOAD_TOKEN` downloads pinned release binaries for mise/checks.
  * - `SEAWEEDFS_HANDOFF_*` reaches only the `ci-handoff` bucket.
  * - OpenTofu validation is offline and has no provider or state credentials.
  * - `GRADLE_BUILD_CACHE_READ_PASSWORD` is the Gradle cache's read-only user.
  */
 const PR_REACHABLE_SECRETS = [
-  "GITHUB_APP_ID",
-  "GITHUB_APP_INSTALLATION_ID",
-  "GITHUB_APP_PRIVATE_KEY",
   "GITHUB_DOWNLOAD_TOKEN",
-  "GITHUB_REVIEW_TOKEN",
   "GRADLE_BUILD_CACHE_READ_PASSWORD",
   "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
   "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",

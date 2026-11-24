@@ -70,6 +70,7 @@
           "required_status_checks": {
             "required_check": [
               { "context": "ci/merge-conflict" },
+              { "context": "ci/code-review" },
               { "context": "${var.required_ci_status_context}" }
             ],
             "strict_required_status_checks_policy": false
