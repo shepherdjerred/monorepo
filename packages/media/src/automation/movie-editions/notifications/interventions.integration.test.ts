@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { createMovieWorkflowFixture } from "#testing/movie-workflow/fixture.ts";
+import { createMovieContinuationFixture } from "#testing/movie-workflow/retry-continuation-fixture.ts";
 import { retentionMovieFixtures } from "#testing/retention/movie-fixtures.ts";
 import { fixtureNotificationReceipts } from "#testing/retention-interest.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
@@ -516,6 +517,67 @@ test("repeated automatic checks preserve the first failure notice per recipient 
     ]),
   );
 }, 60_000);
+
+test.each(["prepared", "plex"] as const)(
+  "%s retries that fail before renewal retain separate failure notices",
+  async (phase) => {
+    const f = await createMovieContinuationFixture("default", {
+      bytes: movies.bytes(),
+      phase,
+    });
+    closers.push(f.close);
+    await f.settleOriginalFailure();
+    const before = await f.evidence();
+    if (before.attempt === null)
+      throw new Error("Actual continuation omitted its acquisition");
+    f.useDescriptions((id) =>
+      Promise.resolve({ status: "FAILED", runId: `synthetic-closed:${id}` }),
+    );
+    const owner = await f.db.mediaUser.findFirstOrThrow({
+      where: { role: "owner" },
+    });
+    for (const recipient of [f.actor, owner])
+      await f.db.notificationPreference.upsert({
+        where: { userId: recipient.id },
+        create: { userId: recipient.id, emailEnabled: true },
+        update: { emailEnabled: true },
+      });
+
+    const first = await f.retry();
+    await f.finishMediaOperation({
+      operationId: first.input.operationId,
+      status: "reconciling",
+      reason: "movie_retry_authority_changed",
+    });
+    const firstNotices = await deliveries(f);
+    expect(firstNotices).toHaveLength(2);
+
+    const second = await f.retry();
+    await f.finishMediaOperation({
+      operationId: second.input.operationId,
+      status: "reconciling",
+      reason: "movie_retry_authority_changed",
+    });
+    const allNotices = await deliveries(f);
+    expect(allNotices).toHaveLength(4);
+    expect(
+      allNotices.map(
+        ({ event }) =>
+          MovieInterventionNoticeV4Schema.parse(event.payload).source
+            .operationId,
+      ),
+    ).toEqual(
+      expect.arrayContaining([
+        first.input.operationId,
+        first.input.operationId,
+        second.input.operationId,
+        second.input.operationId,
+      ]),
+    );
+    expect(await f.evidence()).toMatchObject({ attempt: before.attempt });
+  },
+  60_000,
+);
 
 test("a genuine unchanged-generation retry renewal protects both old pending failure notices without another send", async () => {
   const f = await fixture();

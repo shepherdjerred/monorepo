@@ -118,10 +118,14 @@ function repeatedReconciliationKey(
     operation.kind !== "reconcile_movie_edition_v4"
   )
     return;
-  const retry = z
-    .object({ movieRetryV1: z.unknown().optional() })
-    .parse(operation.payload).movieRetryV1;
-  if (retry !== undefined) return;
+  const retries = z
+    .object({
+      movieRetryV1: z.unknown().optional(),
+      movieRetryV2: z.unknown().optional(),
+      movieRetryPlexAckV1: z.unknown().optional(),
+    })
+    .parse(operation.payload);
+  if (Object.values(retries).some((retry) => retry !== undefined)) return;
   return identityHash({
     scope: notice.source.scope,
     generation: notice.source.generation,
