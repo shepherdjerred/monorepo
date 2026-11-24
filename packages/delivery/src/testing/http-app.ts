@@ -2,6 +2,7 @@ import type { Delivery } from "#infrastructure/delivery.ts";
 import type { RuntimeConfig } from "#infrastructure/config.ts";
 import { createApp } from "#server/app.ts";
 import type { Drain } from "#server/drain.ts";
+import type { RequestLoad } from "#server/request-load.ts";
 import { fixtureEnrichment } from "./enrichment-fixture.ts";
 import { testOperator } from "./seed.ts";
 
@@ -33,11 +34,11 @@ export function createTestApp(
   delivery: Delivery,
   config: TestConfig,
   sourceRevision?: string,
-  drain?: Drain,
+  extras: { drain?: Drain; load?: RequestLoad } = {},
 ) {
   return createApp({
     ...(sourceRevision === undefined ? {} : { sourceRevision }),
-    ...(drain === undefined ? {} : { drain }),
+    ...extras,
     ...testIngress(delivery, config),
   });
 }

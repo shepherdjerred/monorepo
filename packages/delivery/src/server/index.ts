@@ -28,6 +28,7 @@ import { createWorkerRecoveryReader } from "#infrastructure/worker-pool/recovery
 import { createChangeListener } from "#infrastructure/change-feed/listener.ts";
 import { createEnrichment } from "#infrastructure/enrichment/enrichment.ts";
 import { createDrain } from "./drain.ts";
+import { createRequestLoad, MEMORY_WATCH_MS } from "./request-load.ts";
 import { createEndpointDrainObserver } from "#infrastructure/kubernetes/endpoint-reader.ts";
 
 const bootstrap = BootstrapSchema.parse(Bun.env);
@@ -91,8 +92,15 @@ const readApplication = createApplicationReader();
 const drain = createDrain({
   unrouted: createEndpointDrainObserver(hostname()),
 });
+const load = createRequestLoad();
+// The pod was OOM-killed under bursts nothing logged (FM-184): name what is in
+// flight whenever resident memory is high.
+setInterval(() => {
+  load.watchMemory(() => process.memoryUsage());
+}, MEMORY_WATCH_MS).unref();
 const app = createApp({
   drain,
+  load,
   delivery,
   workerRecoveryReaders: {
     readApplication,

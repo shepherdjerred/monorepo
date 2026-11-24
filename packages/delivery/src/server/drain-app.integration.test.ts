@@ -57,7 +57,7 @@ test("a request the app serves while draining extends the drain; a probe does no
       enabledEnvironments: async () => [],
     },
     undefined,
-    drain,
+    { drain },
   );
 
   await drain.untilDrained();
