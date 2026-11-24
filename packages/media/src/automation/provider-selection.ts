@@ -15,6 +15,14 @@ import {
 import { queueOperation } from "./store.ts";
 import { candidateDigest } from "#infrastructure/acquisition-identity/snapshot.ts";
 
+type CandidateAdmission = {
+  releaseId: string;
+  mediaId: string;
+  edition?: string;
+  rank: number;
+  profile: QualityProfile;
+};
+
 export function highestProviderQualityRank(profile: QualityProfile) {
   return profile.resolved === undefined
     ? profile.qualities.length - 1
@@ -50,20 +58,9 @@ export async function selectProviderCandidate(
 
 export async function providerCandidateAdmission(
   context: MediaAutomationContext,
-  input: {
-    releaseId: string;
-    mediaId: string;
-    edition?: string;
-    rank: number;
-    profile: QualityProfile;
-  },
+  input: CandidateAdmission,
   transaction?: Prisma.TransactionClient,
-): Promise<{
-  accepted: boolean;
-  reason: string | null;
-  eligibleAt: number | null;
-  priority: number;
-}> {
+): Promise<Awaited<ReturnType<typeof readProviderCandidateAdmission>>> {
   if (transaction === undefined)
     return context.db.$transaction((tx) =>
       providerCandidateAdmission(context, input, tx),
@@ -71,6 +68,24 @@ export async function providerCandidateAdmission(
   const budget =
     context.movieManagement?.budget ?? context.libraryManagement?.budget;
   budget?.consume(4);
+  const result = await readProviderCandidateAdmission(
+    context,
+    input,
+    transaction,
+  );
+  if (result.eligibleAt !== null) {
+    budget?.consume(2);
+    await queueDelayRecheck(transaction, input, new Date(result.eligibleAt));
+  }
+  return result;
+}
+
+/** Bounded search listings use this read-only policy preview. Reservation must recheck under its own lock and budget. */
+export async function readProviderCandidateAdmission(
+  context: MediaAutomationContext,
+  input: CandidateAdmission,
+  transaction: Prisma.TransactionClient = context.db,
+) {
   const release = await transaction.releaseCandidate.findUniqueOrThrow({
     where: { id: input.releaseId },
   });
@@ -157,10 +172,6 @@ export async function providerCandidateAdmission(
     highestQualityRank: highestProviderQualityRank(input.profile),
     rejected: failed !== null || rejectedAsset !== null,
   });
-  if (result.eligibleAt !== null) {
-    budget?.consume(2);
-    await queueDelayRecheck(transaction, input, new Date(result.eligibleAt));
-  }
   return { ...result, priority: policy.priority };
 }
 

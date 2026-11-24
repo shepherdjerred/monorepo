@@ -2,6 +2,7 @@ import {
   readRetainedProviderSource,
   retainedProviderSourceMatches,
 } from "#automation/acquisition-management/retained-source.ts";
+import { candidateSourceIdentity } from "#automation/candidate-evidence.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
 import { serializable } from "#automation/store.ts";
 import type { ProviderCandidate } from "#integrations/providers.ts";
@@ -29,6 +30,16 @@ import { collectResolvedEvidence } from "#migration/runtime-evidence.ts";
 import { prepareResolvedMovieEvidenceV4 } from "#migration/movie-evidence/prepare.ts";
 import { MediaError } from "#application/errors.ts";
 
+export class ObservedMovieSourceChanged extends MediaError {
+  constructor() {
+    super(
+      "identity_source_changed",
+      "Observed provider source differs from its retained snapshot",
+      409,
+    );
+  }
+}
+
 /** Reparse the actual retained source, never the old title interpretation or query's coverage. */
 export async function prepareMovieAssessment(
   context: MediaAutomationContext,
@@ -53,10 +64,10 @@ export async function prepareMovieAssessment(
     release.encryptedSource,
     release,
   );
-  if (!retainedProviderSourceMatches(source, release, input.observedSource))
+  if (!retainedProviderSourceMatches(source, release))
     throw new MediaError(
       "identity_source_changed",
-      "Observed provider source differs from its retained snapshot",
+      "Encrypted provider source differs from its retained snapshot",
       409,
     );
   const cutIdentity = await cutCanonical(context.db, [input.scope.mediaId]);
@@ -69,6 +80,12 @@ export async function prepareMovieAssessment(
       "Encrypted provider source differs from its retained public evidence",
       409,
     );
+  if (
+    input.observedSource !== undefined &&
+    candidateSourceIdentity(source) !==
+      candidateSourceIdentity(input.observedSource)
+  )
+    throw new ObservedMovieSourceChanged();
   const catalog = canonicalReferences(current.media);
   const attributes = matchMovieReleaseV4(
     {

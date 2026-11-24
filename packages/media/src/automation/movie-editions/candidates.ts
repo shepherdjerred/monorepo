@@ -31,18 +31,25 @@ import {
   type MovieEditionScope,
 } from "#shared/movie-editions/registry.ts";
 import type { MovieReleaseAssessmentRef } from "#shared/movie-editions/release-assessment.ts";
-import { assessRetainedMovieRelease } from "./release-assessment.ts";
+import {
+  assessRetainedMovieRelease,
+  ObservedMovieSourceChanged,
+} from "./release-assessment.ts";
 import { requireMovieAcquisitionAuthorityV4 } from "./acquisition-authority.ts";
 import { movieManagementContext } from "./management-context.ts";
 import { movieCurrentQuality } from "./current-quality.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
-import { providerCandidateAdmission } from "#automation/provider-selection.ts";
+import {
+  providerCandidateAdmission,
+  readProviderCandidateAdmission,
+} from "#automation/provider-selection.ts";
 import { compareProviderCandidates } from "#domain/provider-selection.ts";
 import type {
   MovieProviderSearchProgressV4,
   MovieReconcileOperationV4,
 } from "#shared/movie-editions/lifecycle/automation-v4.ts";
+import { queueMovieSearchDelay } from "./provider-search-delay.ts";
 
 export class MovieProviderSearchDeferredV4 extends ProviderAdmissionDeferred {
   constructor(
@@ -198,12 +205,12 @@ async function retainSource(
   return retained.id;
 }
 
-export async function storeMovieCandidateV4(
+async function rankMovieCandidateV4(
   context: MediaAutomationContext,
   input: MovieEditionScope,
   source: ProviderCandidate,
   matchedOnly = false,
-): Promise<MovieCandidateV4 | null> {
+) {
   const scope = MovieEditionScopeSchema.parse(input);
   const releaseId = await retainSource(context, scope, source, matchedOnly);
   if (releaseId === null) return null;
@@ -232,36 +239,79 @@ export async function storeMovieCandidateV4(
     title: source.title,
     ...current.value.attributes,
   };
+  const profile = {
+    id: current.current.profile.id,
+    version: current.current.profile.version,
+    ...current.current.rules,
+  };
   const chosen = chooseUpgrade({
     phase: "listing",
     candidate,
     current: await currentMovieReleaseV4(context.db, scope),
-    profile: {
-      id: current.current.profile.id,
-      version: current.current.profile.version,
-      ...current.current.rules,
-    },
+    profile,
     mediaIds: [scope.mediaId],
   });
-  if (!chosen.upgrade) return null;
+  return chosen.upgrade
+    ? {
+        profile,
+        releaseId,
+        assessment: assessment.ref,
+        rank: chosen.evaluation.qualityRank,
+        score: chosen.evaluation.score,
+      }
+    : null;
+}
+
+export async function storeMovieCandidateV4(
+  context: MediaAutomationContext,
+  scope: MovieEditionScope,
+  source: ProviderCandidate,
+  matchedOnly = false,
+): Promise<MovieCandidateV4 | null> {
+  const ranked = await rankMovieCandidateV4(
+    context,
+    scope,
+    source,
+    matchedOnly,
+  );
+  if (ranked === null) return null;
+  const { profile, ...candidate } = ranked;
   const admission = await providerCandidateAdmission(context, {
-    releaseId,
+    releaseId: candidate.releaseId,
     mediaId: scope.mediaId,
     edition: scope.edition,
-    rank: chosen.evaluation.qualityRank,
-    profile: {
-      id: current.current.profile.id,
-      version: current.current.profile.version,
-      ...current.current.rules,
-    },
+    rank: candidate.rank,
+    profile,
   });
-  if (!admission.accepted) return null;
+  return admission.accepted
+    ? { ...candidate, priority: admission.priority }
+    : null;
+}
+
+async function listMovieCandidateV4(
+  context: MediaAutomationContext,
+  scope: MovieEditionScope,
+  source: ProviderCandidate,
+) {
+  let ranked: Awaited<ReturnType<typeof rankMovieCandidateV4>>;
+  try {
+    ranked = await rankMovieCandidateV4(context, scope, source);
+  } catch (error) {
+    if (error instanceof ObservedMovieSourceChanged) return null;
+    throw error;
+  }
+  if (ranked === null) return null;
+  const { profile, ...candidate } = ranked;
+  const admission = await readProviderCandidateAdmission(context, {
+    releaseId: candidate.releaseId,
+    mediaId: scope.mediaId,
+    edition: scope.edition,
+    rank: candidate.rank,
+    profile,
+  });
   return {
-    releaseId,
-    assessment: assessment.ref,
-    rank: chosen.evaluation.qualityRank,
-    score: chosen.evaluation.score,
-    priority: admission.priority,
+    ...admission,
+    candidate: { ...candidate, priority: admission.priority },
   };
 }
 
@@ -279,14 +329,19 @@ async function assessProviderResults(
       422,
     );
   const accepted: MovieCandidateV4[] = [];
+  let earliest = Infinity;
   for (const source of sources) {
     if (source.providerId !== providerId)
       throw new Error("Movie provider returned another provider's source");
     if (rejected.has(source.infoHash.toLowerCase())) continue;
-    const selected = await storeMovieCandidateV4(context, scope, source);
-    if (selected !== null) accepted.push(selected);
+    context.plexBindingExecution().assertActive();
+    const admission = await listMovieCandidateV4(context, scope, source);
+    if (admission === null) continue;
+    if (admission.accepted) accepted.push(admission.candidate);
+    if (admission.eligibleAt !== null)
+      earliest = Math.min(earliest, admission.eligibleAt);
   }
-  return accepted;
+  return { accepted, earliest };
 }
 
 export async function searchMovieCandidatesV4(
@@ -341,6 +396,7 @@ export async function searchMovieCandidatesV4(
     criteriaDigest,
   );
   let deferred: ProviderAdmissionDeferred | undefined;
+  let earliest = Infinity;
   for (const provider of providers.filter((item) => !completed.has(item.id))) {
     try {
       const sources = await context.providers.withProvider(
@@ -356,12 +412,12 @@ export async function searchMovieCandidatesV4(
           return client.search(query);
         },
       );
-      accepted.push(
-        ...(await assessProviderResults(context, scope, provider.id, {
-          sources,
-          rejected,
-        })),
-      );
+      const listing = await assessProviderResults(context, scope, provider.id, {
+        sources,
+        rejected,
+      });
+      accepted.push(...listing.accepted);
+      earliest = Math.min(earliest, listing.earliest);
       completed.add(provider.id);
     } catch (error) {
       if (error instanceof ProviderAdmissionDeferred) {
@@ -377,6 +433,12 @@ export async function searchMovieCandidatesV4(
       } else throw error;
     }
   }
+  if (Number.isFinite(earliest))
+    await queueMovieSearchDelay(context, scope, {
+      profile: target.profile,
+      generation: continuation?.generation,
+      eligibleAt: new Date(earliest),
+    });
   if (deferred !== undefined && accepted.length === 0)
     throw new MovieProviderSearchDeferredV4(deferred, {
       criteriaDigest,
