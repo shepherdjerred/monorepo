@@ -6,7 +6,7 @@ import {
   createTimeseriesPanel as baseTimeseriesPanel,
 } from "./shared/dashboard-panels.ts";
 import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
-import { managedFlagInventory } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
+import { flagDeployments } from "@shepherdjerred/feature-flags/deployments.ts";
 
 const datasource = { type: "prometheus", uid: "prometheus" };
 const createStatPanel = (options: Parameters<typeof baseStatPanel>[0]) =>
@@ -40,9 +40,7 @@ export function createFeatureFlagsDashboard() {
       thresholds: [
         { value: 0, color: "red" },
         {
-          value:
-            managedFlagInventory.environments.length *
-            managedFlagInventory.namespaces.length,
+          value: flagDeployments.length,
           color: "green",
         },
       ],
@@ -52,7 +50,7 @@ export function createFeatureFlagsDashboard() {
   builder.withPanel(
     createStatPanel({
       title: "Expected inventory pairs",
-      query: `count(max by (${pair}) (feature_flag_inventory_expected))`,
+      query: `count(max by (${pair}) (feature_flag_inventory_expected{container="temporal-repo-worker"}))`,
       legend: "expected pairs",
       instant: true,
       gridPos: { x: 8, y: 0, w: 8, h: 4 },
@@ -75,7 +73,7 @@ export function createFeatureFlagsDashboard() {
     {
       title: "Live configured boolean state",
       description:
-        "Latest successful snapshot per Flipt pair, at most ten minutes old. ON, OFF, targeted, partial, missing and invalid are configuration states. Missing rows require checking observation freshness.",
+        "Latest successful snapshot per Flags deployment, at most ten minutes old. ON, OFF, targeted, partial, missing and invalid are configuration states. Missing rows require checking observation freshness.",
       query: LIVE_FLAG_STATES_QUERY,
     },
     {
@@ -87,7 +85,7 @@ export function createFeatureFlagsDashboard() {
     {
       title: "Running consumer provider identity",
       description:
-        "Only instrumented consumers appear. This proves their configured Flipt pair, not feature acceptance.",
+        "Only instrumented consumers appear. This proves their configured Flags deployment, not feature acceptance.",
       query: "feature_flag_provider_info == 1",
     },
   ];

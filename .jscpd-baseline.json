@@ -416,14 +416,6 @@
       "clones": 1,
       "tokens": 96
     },
-    "packages/homelab/src/cdk8s/src/resources/flipt/index.test.ts|packages/homelab/src/cdk8s/src/resources/freshrss/freshrss.test.ts": {
-      "clones": 1,
-      "tokens": 118
-    },
-    "packages/homelab/src/cdk8s/src/resources/flipt/index.test.ts|packages/homelab/src/cdk8s/src/resources/stash/index.test.ts": {
-      "clones": 2,
-      "tokens": 201
-    },
     "packages/homelab/src/cdk8s/src/resources/gradle-build-cache.ts|packages/homelab/src/cdk8s/src/resources/turbo-cache.ts": {
       "clones": 1,
       "tokens": 80
@@ -1623,10 +1615,6 @@
     "packages/media/src/infrastructure/action-authorization.integration.test.ts|packages/media/src/infrastructure/action-authorization.integration.test.ts": {
       "clones": 6,
       "tokens": 552
-    },
-    "packages/media/src/infrastructure/capacity/config.test.ts|packages/media/src/infrastructure/plex-events/config.test.ts": {
-      "clones": 1,
-      "tokens": 120
     },
     "packages/media/src/infrastructure/editions/command-cas.integration.test.ts|packages/media/src/infrastructure/editions/command-cas.integration.test.ts": {
       "clones": 2,

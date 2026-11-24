@@ -121,7 +121,7 @@ to identify the gameplay gates and their refresh boundaries. Confirm the
 production inventory before starting the released plugin:
 
 ```bash
-bun run check-flipt-flag-inventory -- --environment prod --namespace the-storm
+bun run check-flipt-flag-inventory -- --deployment minecraft/tsmc
 ```
 
 After changing the kit gate, disconnect and reconnect, complete a successful
@@ -129,7 +129,7 @@ After changing the kit gate, disconnect and reconnect, complete a successful
 match features. Verify bot chat, learning and archival independently using
 their entries in the reference.
 
-Do not toggle a flag in the Flipt UI alone; the inventory reconciler
+Do not toggle a flag in the Flags UI alone; the inventory reconciler
 reports that as drift. Reconciliation creates missing keys but preserves
 existing values and targeting, so an existing disabled key needs an explicit
 operator update followed by another inventory check. The
@@ -165,6 +165,6 @@ command and its failure modes.
 ## Related
 
 - [Cut a homelab release](/how-to/cut-a-homelab-release/)
-- [Check the Flipt flag inventory](/how-to/check-flipt-flag-inventory/)
+- [Operate feature flags and check the inventory](/how-to/check-flipt-flag-inventory/)
 - [Prepare The Storm companion RCON access](/how-to/prepare-the-storm-companion-rcon/)
   for the same 1Password snapshot and check sequence

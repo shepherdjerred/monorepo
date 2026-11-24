@@ -37,6 +37,7 @@ const SPECIFIC_APP_TITLES: Readonly<Record<string, string>> = {
   "cloudflare-tunnel": "Cloudflare Tunnel",
   "cert-manager": "TLS Certificates",
   ddns: "Dynamic DNS",
+  flags: "Feature Flags",
   flipt: "Feature Flags",
   "1password": "1Password Connect",
   postal: "Postal Mail",

@@ -2580,34 +2580,6 @@
       }
     },
     {
-      "id": "flipt",
-      "title": "Flipt",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "platform-services",
-      "components": [
-        {
-          "name": "chart:flipt",
-          "producer": "first-party"
-        },
-        {
-          "name": "image:caddy-s3proxy",
-          "producer": "reference",
-          "source": {
-            "service": "static-site-proxy",
-            "component": "image:caddy-s3proxy",
-            "mode": "pinned"
-          }
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["flipt"],
-        "argoApps": ["flipt"]
-      }
-    },
-    {
       "id": "intel-device-plugin-operator",
       "title": "Intel device plugin operator",
       "lifecycle": "active",
@@ -3126,7 +3098,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/12"
+      "configurationRevisionId": "argocd/prod/13"
     },
     {
       "id": "chartmuseum/prod",
@@ -3511,14 +3483,6 @@
       "automatic": true,
       "recipeRevisionId": "1password/prod/1",
       "configurationRevisionId": "1password/prod/1"
-    },
-    {
-      "id": "flipt/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "flipt/prod/1",
-      "configurationRevisionId": "flipt/prod/1"
     },
     {
       "id": "intel-device-plugin-operator/prod",
@@ -3988,36 +3952,6 @@
     },
     {
       "dependent": "flags/prod",
-      "prerequisite": "prometheus/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "flipt/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "flipt/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "flipt/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "flipt/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "flipt/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "flipt/prod",
       "prerequisite": "prometheus/prod",
       "rule": "any-accepted"
     },

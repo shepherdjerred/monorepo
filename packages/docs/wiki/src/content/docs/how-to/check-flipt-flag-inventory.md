@@ -1,160 +1,155 @@
 ---
-title: Check the Flipt flag inventory
-description: Compare the repository-managed runtime flag contract with the live Flipt evaluation snapshot.
+title: Operate feature flags and check the inventory
+description: Inspect, edit, and reconcile live deployment documents in the first-party Flags service against the repository inventory.
 sidebar:
   order: 9
 ---
 
-Run the operator-only inventory check when you change Flipt state or need to
-diagnose runtime flag drift. A Temporal workflow reconciles declared keys
-every two minutes, then publishes one independently labelled
-`FliptManagedFlagDrift` warning per environment and namespace; each alert
-resolves after that pair returns to an aligned snapshot.
+Use the Flags browser UI, `toolkit flags`, or the repository inventory check to
+inspect and update live flag deployments. A Temporal workflow reconciles missing
+and retired keys every two minutes and publishes one `FliptManagedFlagDrift`
+warning per drifted deployment until the live document matches the repository
+inventory.
 
-## 1. Set the endpoint
+## 1. Edit a flag in the operator UI
 
-Set `FLIPT_URL` to the reachable Flipt endpoint. The checker never guesses an
-endpoint and does not run during service startup or CI.
+Open `https://flags.tailnet-1a49.ts.net` from a signed-in tailnet device. The
+[operator shell](https://github.com/shepherdjerred/monorepo/blob/main/packages/flags/src/client/app.tsx)
+authenticates your Tailscale identity through the verified ingress proxy.
+
+1. Choose a deployment in the sidebar. Prod-only catalogs appear as one row;
+   `scout` and `starlight-karma-bot` group their `beta` and `prod` stages.
+2. Check the table's **State** (`On`, `Off`, or `Targeted` for booleans; the
+   current string value for variants) and **Type** (`boolean` or `variant`).
+3. Select a flag to open the
+   [revision-checked editor](https://github.com/shepherdjerred/monorepo/blob/main/packages/flags/src/client/editor.tsx).
+   Update a boolean's default or ordered segment constraints (`Property`,
+   `Value`, and segment result), or edit a variant's string value.
+4. Click **Review save**, compare the **Before** and **After** flag payloads in
+   the confirmation dialog, and click **Save**.
+5. If another write landed first, the save stops with **Revision conflict** and
+   writes nothing. Compare **Their flag** with **Your draft**, click **Load
+   their version**, and re-apply your intended edit.
+
+Changing a managed flag in the UI without updating
+[`managed-flag-inventory.json`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feature-flags/src/managed-flag-inventory.json)
+raises drift on the next reconciliation run.
+
+## 2. Inspect and apply changes with `toolkit flags`
+
+[`toolkit flags`](https://github.com/shepherdjerred/monorepo/blob/main/packages/toolkit/src/lib/flags/client.ts)
+calls the management API over the tailnet using your Tailscale identity, or
+brokers `FLAGS_MACHINE_TOKEN` from `flags-auth` when `--machine` is passed. The
+endpoint resolves from `--url`, `FLAGS_URL`, `[flags].url`, or
+`https://flags.tailnet-1a49.ts.net`.
+
+| Command                                          | Purpose                                                                                 |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `toolkit flags deployments [--json]`             | List every stored deployment, its current revision, and its flag count.                 |
+| `toolkit flags list <deployment> [--json]`       | List keys, types, and `on`/`off`/`targeted` or variant values in `<catalog>/<stage>`.   |
+| `toolkit flags get <deployment> <flag> [--json]` | Print one flag and the deployment's current `revision`.                                 |
+| `toolkit flags diff [--json]`                    | Compare all deployments against the inventory; exits `1` when any key is drifted.       |
+| `toolkit flags apply --file <json> [--machine]`  | Apply a reviewed JSON batch bound to `expectedRevision`; exits `2` on conflict (`409`). |
+
+Read the current revision first, then submit an exact JSON file:
 
 ```bash
-export FLIPT_URL="https://flipt.tailnet-1a49.ts.net"
+toolkit flags get scout/prod dares_enabled --json
+toolkit flags apply --file reviewed.json
 ```
 
-## 2. Run the check
+`reviewed.json` names the deployment, `expectedRevision`, and replacement flag
+entries (`{ "deployment": "scout/prod", "expectedRevision": 12, "flags": [...] }`).
+Use `--machine` in non-tailnet or automated sessions so toolkit injects the
+brokered bearer token without printing it.
 
-Run the repository command from the monorepo root:
+## 3. Run the snapshot inventory check
+
+Set `FLAGS_URL` (or pass `--url`) before running the
+[inventory checker](https://github.com/shepherdjerred/monorepo/blob/main/scripts/checks/check-flipt-flag-inventory.ts).
+The command reads credentialless evaluation snapshots and never guesses an
+endpoint:
 
 ```bash
+export FLAGS_URL="https://flags.tailnet-1a49.ts.net"
 bun run check-flipt-flag-inventory
 ```
 
-The command checks every environment and product namespace declared in
-`packages/feature-flags/src/managed-flag-inventory.json`. This includes the
-Justin namespace in both `beta` and `prod`.
-
-Filter either dimension independently:
+Without filters, it checks every active deployment in
+[`deployments.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feature-flags/src/deployments.ts).
+Scope to one deployment or filter by catalog and stage environment:
 
 ```bash
-bun run check-flipt-flag-inventory -- --environment beta
-bun run check-flipt-flag-inventory -- --namespace scout
+bun run check-flipt-flag-inventory -- --deployment scout/prod
+bun run check-flipt-flag-inventory -- --deployment minecraft/tsmc
 bun run check-flipt-flag-inventory -- --environment beta --namespace scout
 ```
 
-`FLIPT_ENVIRONMENT` and `FLIPT_NAMESPACE` are also accepted as exact filters.
-Without filters, the command checks every declared environment and namespace
-pair.
+`FLAGS_DEPLOYMENT` is also accepted as an exact deployment filter. The check
+exits non-zero when a snapshot differs from the projected inventory in its key
+set, flag type, boolean default, ordered segment constraints, or variant string
+value.
 
-## 3. Create missing declared keys
+## 4. Create missing declared keys
 
-Create inventory keys that Flipt does not yet have. The
-[operator fetcher](https://github.com/shepherdjerred/monorepo/blob/a8b39ec58e8833c5e7dde9037e1b36e83a4e83de/packages/feature-flags/src/flipt-operator-fetcher.ts)
-requires `FLIPT_OPERATOR_TOKEN` for management writes. The
-[Flipt authentication configuration](https://github.com/shepherdjerred/monorepo/blob/a8b39ec58e8833c5e7dde9037e1b36e83a4e83de/packages/homelab/src/cdk8s/src/resources/flipt/index.ts)
-keeps evaluation snapshot reads credentialless and declares the operator secret.
-Inject its existing `operator-token` field from the `flipt-auth` 1Password item
-into the process environment; never paste its value into a command or file.
-For example, substitute the item's vault name in this secret reference:
+Insert newly declared inventory keys before the next scheduled run without
+overwriting existing live values or targeting:
 
 ```bash
-FLIPT_OPERATOR_TOKEN='op://<vault>/flipt-auth/operator-token' \
-  scripts/onepassword/with-service-account.sh \
-  op run -- bun run check-flipt-flag-inventory -- --apply-missing
+FLAGS_URL="https://flags.tailnet-1a49.ts.net" \
+  toolkit run --env FLAGS_MACHINE_TOKEN -- \
+  bun run check-flipt-flag-inventory -- --apply-missing
 ```
 
-This creates absent namespaces, segments, and flags from the inventory
-contract. It does not change flags or segments that already exist, and it does
-not delete undeclared Flipt keys. Then it re-runs the complete check.
+`--apply-missing` calls `create-missing` on each selected deployment, leaves
+existing flags untouched, and re-runs the snapshot verification.
 
-The scheduled workflow also creates missing keys. Use the operator flag when
-you need the keys before the next run.
+Scheduled reconciliation also retires only the exact tuples listed in
+[`retired-flag-declarations.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feature-flags/src/retired-flag-declarations.ts).
+Audit deployed consumers before adding a retirement; any key still present in
+the managed inventory fails preflight before mutation.
 
-Scheduled reconciliation retires only the exact environment, namespace, and
-key tuples in
-`packages/feature-flags/src/retired-flag-declarations.ts`. Audit deployed and
-pinned consumers before declaring a retirement. Each deletion requires a
-current Flipt revision and a fresh read confirming absence. A retirement that
-is also present in the managed inventory fails before any mutation.
+## 5. Plan and apply a declared rollout
 
-## 4. Interpret failures
+Update `packages/feature-flags/src/managed-flag-inventory.json` before changing
+an existing rollout. Keep any non-global boolean's `defaultOffExceptions` scoped
+to its environment with a reason, `AI` issue, enablement criteria, and review
+date (or `noDeployedConsumer: true`).
 
-The check fails when Flipt still differs from the inventory in any of these
-areas:
-
-- managed key set;
-- boolean or variant type;
-- default value;
-- segment constraints and operators;
-- variant rules and distributions;
-- percentage threshold rollouts.
-
-Each diagnostic names the failing namespace and environment. Remaining missing
-keys after `--apply-missing` are an apply failure. Contract mismatches and
-undeclared Flipt keys need an inventory edit or an audited Flipt change.
-
-When environments intentionally differ, record a full behavioral override in
-the environment's inventory entry. An override replaces the flag's default,
-segment rollouts, variant rules, and threshold rollouts together. Partial
-overrides are rejected so an environment cannot inherit an accidental mixture
-of old and new behavior.
-
-Other undeclared keys remain in Flipt and continue to raise drift warnings.
-The scheduled workflow never edits the inventory or overwrites existing
-targeting. A failed retirement or snapshot request does not
-resolve an existing alert; the workflow fails so the Temporal failure watcher
-can report the unavailable check separately.
-
-## 5. Apply a reviewed rollout
-
-Update the managed declaration before changing an existing boolean or variant rollout.
-Keep each non-global boolean's `defaultOffExceptions` scoped to its environment,
-with a reason, AI issue, enablement criteria, and review date.
-
-Preview only the selected flags. Inject the same operator credential used above:
+Preview the selected keys for one deployment:
 
 ```bash
-bun run check-flipt-flag-inventory -- --plan-declared \
-  --environment prod --namespace streambot \
+FLAGS_URL="https://flags.tailnet-1a49.ts.net" \
+  bun run check-flipt-flag-inventory -- --plan-declared \
+  --deployment streambot/prod \
   --flag streambot-lol-esports-enabled --flag streambot-lol-autoplay-enabled --json
 ```
 
-Inspect the before and after behavior and current revision. Replace
-`--plan-declared` with `--apply-declared` to apply that declaration.
-Both modes require an explicit environment, namespace, and nonempty flag list.
-Both modes accept boolean and variant flags and never edit unselected flags or segments.
-For variants, review the default, complete variant definitions, attachments and distribution rules together.
-Every referenced shared segment must already match its declared audience.
-A missing or different segment blocks the complete selection before any write,
-including when the selected flag payloads are unchanged.
-
-The operator [command](https://github.com/shepherdjerred/monorepo/blob/main/scripts/checks/check-flipt-flag-inventory.ts)
-preflights every selected resource before writing. Each write uses the current
-revision and verifies a fresh readback. A conflict or failed readback stops the
-remaining writes. Inspect the per-flag results and re-plan before retrying.
-
-Use the Feature flags Grafana dashboard to compare live configuration with
-consumer evaluations, provider identity, and snapshot freshness.
-A configured ON state alone does not prove a healthy consumer or successful flow.
-Verify the feature through its application and inspect required Temporal schedules.
-
-## 6. Check the complete matrix
-
-The `beta` and `prod` repositories are independent. Each namespace has its own
-flag keyspace. A beta flag copy does not imply a deployed beta application.
-
-After the edit, check that environment first:
+Inspect the `before`, `after`, and `revisionBefore` fields, then apply with the
+brokered machine token:
 
 ```bash
-bun run check-flipt-flag-inventory -- --environment prod --namespace scout
+FLAGS_URL="https://flags.tailnet-1a49.ts.net" \
+  toolkit run --env FLAGS_MACHINE_TOKEN -- \
+  bun run check-flipt-flag-inventory -- --apply-declared \
+  --deployment streambot/prod \
+  --flag streambot-lol-esports-enabled --flag streambot-lol-autoplay-enabled --json
 ```
 
-Then run the unfiltered command. This catches accidental drift in every managed
-environment before the operator change is considered complete.
+Both modes require `--deployment <catalog/stage>` (or both `--environment` and
+`--namespace`) and at least one `--flag`. `--apply-declared` binds
+`expectedRevision`, writes only planned changes, and verifies a fresh readback.
+Re-run the unfiltered `bun run check-flipt-flag-inventory` command afterwards,
+check the Feature flags Grafana dashboard, and exercise the live application
+behavior.
 
 :::caution
-The evaluation snapshot used by this check remains credentialless for runtime
-compatibility. The Flipt UI and management API require the `operator` browser
-login from the `flipt-auth` 1Password item. Keep the endpoint private even
-with that gateway in place.
+In-cluster evaluation on port `7361` stays credentialless and rejects
+`Authorization` headers. Management routes on port `7360` require verified
+Tailscale operator identity or `FLAGS_MACHINE_TOKEN` from `flags-auth`, as
+wired in the
+[Flags deployment](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/flags/index.ts).
+Never place `FLAGS_MACHINE_TOKEN` in consumer configuration.
 :::
 
 ## Related

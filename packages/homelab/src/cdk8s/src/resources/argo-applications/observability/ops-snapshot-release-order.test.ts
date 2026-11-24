@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { applyApplicationReleasePolicy } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
-import { createFliptApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/flipt.ts";
+import { createFlagsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/flags.ts";
 import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/temporal.ts";
 import { createTrmnlDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/trmnl-dashboard.ts";
 import { createAlertDashboardApp } from "./alert-dashboard.ts";
@@ -24,7 +24,7 @@ test("both ops snapshot consumers reconcile before Temporal emits new source con
   createTemporalApp(chart);
   createTrmnlDashboardApp(chart);
   createAlertDashboardApp(chart);
-  createFliptApp(chart);
+  createFlagsApp(chart);
   // Exercise the final root policy, which is authoritative over annotations
   // declared by individual Application constructors.
   applyApplicationReleasePolicy(app);
@@ -46,6 +46,6 @@ test("both ops snapshot consumers reconcile before Temporal emits new source con
     expect(wave(consumer)).toBeLessThan(wave("temporal"));
     // The shared flag service precedes consumers; neither consumer requires
     // Temporal or upstream observations to become ready.
-    expect(wave("flipt")).toBeLessThanOrEqual(wave(consumer));
+    expect(wave("flags")).toBeLessThanOrEqual(wave(consumer));
   }
 });

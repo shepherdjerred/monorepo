@@ -19,7 +19,7 @@ const StaticOverridesSchema = z.record(
 function requireVariable(
   environment: Environment,
   name: string,
-  mode: "flags" | "flipt",
+  mode: "flags",
 ): string {
   const value = environment[name];
   if (value === undefined || value.length === 0) {
@@ -47,7 +47,7 @@ export function loadFeatureFlagConfiguration(
   const rawMode = environment["FEATURE_FLAGS_MODE"];
   if (rawMode === undefined || rawMode.length === 0) {
     throw new Error(
-      "FEATURE_FLAGS_MODE is required (flags | flipt | static | disabled). It has no default on purpose: a service that silently served call-site defaults would look healthy while ignoring every flag.",
+      "FEATURE_FLAGS_MODE is required (flags | static | disabled). It has no default on purpose: a service that silently served call-site defaults would look healthy while ignoring every flag.",
     );
   }
   const mode = FeatureFlagModeSchema.parse(rawMode);
@@ -65,24 +65,12 @@ export function loadFeatureFlagConfiguration(
     });
   }
 
-  if (mode === "flags") {
-    return FeatureFlagConfigurationSchema.parse({
-      mode,
-      url: requireVariable(environment, "FLAGS_URL", "flags"),
-      deployment: requireVariable(environment, "FLAGS_DEPLOYMENT", "flags"),
-      pollIntervalSeconds: parsePollInterval(
-        environment["FLAGS_POLL_INTERVAL_SECONDS"],
-      ),
-    });
-  }
-
   return FeatureFlagConfigurationSchema.parse({
     mode,
-    url: requireVariable(environment, "FLIPT_URL", "flipt"),
-    namespace: requireVariable(environment, "FLIPT_NAMESPACE", "flipt"),
-    environment: requireVariable(environment, "FLIPT_ENVIRONMENT", "flipt"),
+    url: requireVariable(environment, "FLAGS_URL", "flags"),
+    deployment: requireVariable(environment, "FLAGS_DEPLOYMENT", "flags"),
     pollIntervalSeconds: parsePollInterval(
-      environment["FLIPT_POLL_INTERVAL_SECONDS"],
+      environment["FLAGS_POLL_INTERVAL_SECONDS"],
     ),
   });
 }

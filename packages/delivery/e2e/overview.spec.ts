@@ -251,14 +251,16 @@ test("each kind is a panel with its counts, and a group of several has its own",
     /2 no environments$/u,
   ]);
   await expect(
-    group.getByRole("link", { name: "Flipt", exact: true }),
-  ).toHaveAttribute("href", "/pipelines/flipt");
+    group.getByRole("link", { name: "Node feature discovery", exact: true }),
+  ).toHaveAttribute("href", "/pipelines/nfd");
   await expect(tile(page, "1Password Connect")).toContainText(
     "No environments",
   );
   await expect(
-    tile(page, "Flipt").getByRole("link", { name: "prod not started" }),
-  ).toHaveAttribute("href", "/environments/flipt/prod");
+    tile(page, "Node feature discovery").getByRole("link", {
+      name: "prod not started",
+    }),
+  ).toHaveAttribute("href", "/environments/nfd/prod");
   await expectNoHorizontalOverflow(page);
 });
 
@@ -310,9 +312,9 @@ test("the overview filters through the URL", async ({ page }) => {
   const tiles = page.getByRole("main").locator(".overview-tile");
   await expect(tiles).toHaveCount(total);
   const filters = page.getByRole("search", { name: "Filter services" });
-  await filters.getByLabel("Service").fill("flipt");
+  await filters.getByLabel("Service").fill("nfd");
   await filters.getByRole("button", { name: "Filter" }).click();
-  await expect(page).toHaveURL(/\/\?q=flipt$/u);
+  await expect(page).toHaveURL(/\/\?q=nfd$/u);
   await expect(tiles).toHaveCount(1);
   await expect(page.getByRole("main")).toContainText(
     `1 of ${String(total)} services`,
@@ -327,7 +329,7 @@ test("the overview filters through the URL", async ({ page }) => {
 
   await filters.getByLabel("Newest deployment").selectOption("succeeded");
   await filters.getByRole("button", { name: "Filter" }).click();
-  await expect(page).toHaveURL(/\/\?q=flipt&status=succeeded$/u);
+  await expect(page).toHaveURL(/\/\?q=nfd&status=succeeded$/u);
   await expect(page.getByRole("main")).toContainText(
     "No services match these filters.",
   );
@@ -338,20 +340,20 @@ test("the overview filters through the URL", async ({ page }) => {
 
   // The controls follow the URL through history, not what was last chosen.
   await page.goBack();
-  await expect(page).toHaveURL(/\/\?q=flipt$/u);
+  await expect(page).toHaveURL(/\/\?q=nfd$/u);
   await expect(tiles).toHaveCount(1);
-  await expect(filters.getByLabel("Service")).toHaveValue("flipt");
+  await expect(filters.getByLabel("Service")).toHaveValue("nfd");
   await expect(filters.getByLabel("Newest deployment")).toHaveValue("");
   await page.goBack();
   await expect(filters.getByLabel("Service")).toHaveValue("");
   await expect(tiles).toHaveCount(total);
   await page.goForward();
-  await expect(page).toHaveURL(/\/\?q=flipt$/u);
-  await expect(filters.getByLabel("Service")).toHaveValue("flipt");
+  await expect(page).toHaveURL(/\/\?q=nfd$/u);
+  await expect(filters.getByLabel("Service")).toHaveValue("nfd");
   await expect(tiles).toHaveCount(1);
   await page.goForward();
-  await expect(page).toHaveURL(/\/\?q=flipt&status=succeeded$/u);
-  await expect(filters.getByLabel("Service")).toHaveValue("flipt");
+  await expect(page).toHaveURL(/\/\?q=nfd&status=succeeded$/u);
+  await expect(filters.getByLabel("Service")).toHaveValue("nfd");
   await expect(filters.getByLabel("Newest deployment")).toHaveValue(
     "succeeded",
   );
@@ -359,10 +361,10 @@ test("the overview filters through the URL", async ({ page }) => {
 
   // A submit trims what was typed, and the control still follows the URL.
   await openOverview(page);
-  await filters.getByLabel("Service").fill("  flipt ");
+  await filters.getByLabel("Service").fill("  nfd ");
   await filters.getByRole("button", { name: "Filter" }).click();
-  await expect(page).toHaveURL(/\/\?q=flipt$/u);
-  await expect(filters.getByLabel("Service")).toHaveValue("flipt");
+  await expect(page).toHaveURL(/\/\?q=nfd$/u);
+  await expect(filters.getByLabel("Service")).toHaveValue("nfd");
   await page.goBack();
   await expect(tiles).toHaveCount(total);
   await expect(filters.getByLabel("Service")).toHaveValue("");
@@ -372,7 +374,7 @@ test("the overview filters through the URL", async ({ page }) => {
   await expect(filters.getByLabel("Newest deployment")).toHaveValue(
     "not_started",
   );
-  await expect(tile(page, "Flipt")).toBeVisible();
+  await expect(tile(page, "Node feature discovery")).toBeVisible();
   await expect(tile(page, "1Password Connect")).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
 });

@@ -2,36 +2,16 @@ import { describe, expect, test } from "vitest";
 import { App } from "cdk8s";
 import { z } from "zod";
 import { createFreshRssChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/media/freshrss.ts";
+import {
+  findManifestByKindAndName as findManifest,
+  NamedManifestSchema as ManifestSchema,
+} from "@shepherdjerred/homelab/cdk8s/src/testing/pod-template-schema.ts";
 import { FreshRssDesiredManifestSchema } from "./freshrss-opml.ts";
-
-const ManifestSchema = z
-  .object({
-    kind: z.string(),
-    metadata: z.object({ name: z.string() }).loose(),
-  })
-  .loose();
 
 async function synthesize(): Promise<unknown[]> {
   const app = new App();
   await createFreshRssChart(app);
   return z.array(z.unknown()).parse(app.charts.at(0)?.toJson());
-}
-
-function findManifest(
-  manifests: unknown[],
-  kind: string,
-  name: string,
-): unknown {
-  const manifest = manifests.find((candidate) => {
-    const parsed = ManifestSchema.safeParse(candidate);
-    return (
-      parsed.success &&
-      parsed.data.kind === kind &&
-      parsed.data.metadata.name === name
-    );
-  });
-  if (manifest === undefined) throw new Error(`Missing ${kind}/${name}`);
-  return manifest;
 }
 
 describe("FreshRSS chart", () => {

@@ -3037,20 +3037,20 @@ Media digest. The chart constructor leaves the parallel application absent
 unless given an explicit image selection. Its synthesis recipe must be bound
 to an immutable artifact by Delivery before rendering a deployment.
 
-Before rolling out a qualified Media API image, set `FLIPT_URL` to the intended
+Before rolling out a qualified Media API image, set `FLAGS_URL` to the intended
 management endpoint and run this create-only bootstrap from the same qualified
 source. Verify the created-key list and fresh scoped readback before the consumer
 starts; preserve existing targeting and the acquisition hold through handoff.
-An older repo Activity image and Flipt's seed initializer do not backfill newly
-declared keys. Do not trigger the global inventory Workflow or use
+An older repo Activity image does not backfill newly declared keys before it
+updates. Do not trigger the global inventory Workflow or use
 `--apply-declared` for this step.
 
 ```sh
-FLIPT_OPERATOR_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/flipt-auth/operator-token' \
+FLAGS_MACHINE_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/dzcroze2qcoibfz3illceozbea/FLAGS_MACHINE_TOKEN' \
   scripts/onepassword/with-service-account.sh \
   op run -- env -u OP_SERVICE_ACCOUNT_TOKEN \
   bun run check-flipt-flag-inventory -- \
-  --apply-missing --environment prod --namespace media
+  --apply-missing --deployment media/prod
 ```
 
 The [API](src/server/index.ts) commits intent and an outbox row together. The

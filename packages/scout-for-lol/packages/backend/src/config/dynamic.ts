@@ -20,6 +20,7 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import { parseFlagsDeployment } from "@shepherdjerred/feature-flags/config/schema.ts";
 import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { z } from "zod";
 import type { RiotBudgetMode } from "#src/league/api/client/rate-budget.ts";
@@ -28,12 +29,15 @@ const logger = createLogger("config-dynamic");
 
 const EVIDENCE_RECOVERY_FLAG = "scout-evidence-recovery-enabled";
 
-/** The Flipt environment whose managed defaults a Scout process starts from. */
+/** The stage whose managed defaults a Scout process starts from. */
 function managedEnvironment(
   environment: Readonly<Record<string, string | undefined>>,
 ): "prod" | "beta" {
-  return (environment["FLIPT_ENVIRONMENT"] ?? environment["ENVIRONMENT"]) ===
-    "prod"
+  const deploymentStage =
+    environment["FLAGS_DEPLOYMENT"] === undefined
+      ? undefined
+      : parseFlagsDeployment(environment["FLAGS_DEPLOYMENT"])?.stage;
+  return (deploymentStage ?? environment["ENVIRONMENT"]) === "prod"
     ? "prod"
     : "beta";
 }

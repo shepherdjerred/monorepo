@@ -32,16 +32,16 @@ toolkit temporal --namespace prod schedule toggle \
   --reason 'Reviewing Woodpecker log retention manifest'
 ```
 
-Check the managed flags in Flipt's `temporal` namespace using
-[Check the Flipt flag inventory](/how-to/check-flipt-flag-inventory/).
+Check the managed flags in the `temporal/prod` deployment using
+[Operate feature flags and check the inventory](/how-to/check-flipt-flag-inventory/).
 Keep `woodpecker-log-retention-enabled` false during review.
 Keep `woodpecker-log-retention-days` at its default 30 days, or an approved longer period; the typed minimum is 30.
 These flags use targeting key `woodpecker-log-retention-prod` with `environment=prod`.
-Each write guard requires a fresh, validated Flipt snapshot, with the enabled and days flags resolved together.
-An unavailable Flipt snapshot disables deletion even if ordinary consumers can still read cached values.
+Each write guard requires a fresh, validated Flags snapshot, with the enabled and days flags resolved together.
+An unavailable snapshot disables deletion even if ordinary consumers can still read cached values.
 Disabled, uninitialized, and static providers cannot authorize deletion.
 Malformed successful snapshots or invalid typed policy values stop the Activity as contract failures.
-Both existing policy guards fetch afresh; keep the Flipt service reachable while applying a manifest.
+Both existing policy guards fetch afresh; keep the Flags service reachable while applying a manifest.
 
 The source contracts are `packages/temporal/src/schedules/woodpecker-retention-schedule.ts`
 and `packages/temporal/src/config/woodpecker-retention.ts`.
@@ -169,5 +169,5 @@ Inspect history and receipts before retrying the same reviewed plan.
 ## Related
 
 - [Roll out a Temporal Worker Deployment](/how-to/roll-out-a-temporal-worker-deployment/)
-- [Check the Flipt flag inventory](/how-to/check-flipt-flag-inventory/)
+- [Operate feature flags and check the inventory](/how-to/check-flipt-flag-inventory/)
 - [Pause or debug a schedule](/how-to/pause-or-debug-a-schedule/)

@@ -1,6 +1,0 @@
-apiVersion: v2
-name: flipt
-description: Flipt feature flag server
-type: application
-version: "$version"
-appVersion: "$appVersion"

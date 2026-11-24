@@ -126,16 +126,6 @@ export const FLAGS_EVALUATION_ENDPOINT = defineEndpoint({
   portName: "eval",
 });
 
-/** Flipt's authenticated gateway (`resources/flipt`). */
-export const FLIPT_ENDPOINT = defineEndpoint({
-  namespace: "flipt",
-  app: "flipt",
-  service: "flipt-flipt-service",
-  port: 8080,
-  portName: "http",
-  appLabel: false,
-});
-
 /** The OTLP/HTTP receiver on the trace gateway (`alloy-gateway` Helm chart). */
 export const OTLP_GATEWAY_ENDPOINT = defineEndpoint({
   namespace: "alloy-gateway",

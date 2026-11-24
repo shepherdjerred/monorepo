@@ -83,7 +83,7 @@ afterAll(async () => {
 
 describe("hub grid", () => {
   test("lists every active service under its catalog group, including a v2-only one", async () => {
-    await registerWithEnvironment("flipt", "prod");
+    await registerWithEnvironment("nfd", "prod");
     await cluster.database.service.update({
       where: { id: "birmel" },
       data: { lifecycle: "retired" },
@@ -97,7 +97,7 @@ describe("hub grid", () => {
         ...index.services
           .map((entry) => entry.id)
           .filter((id) => id !== "birmel"),
-        "flipt",
+        "nfd",
       ].toSorted(),
     );
     // Groups keep the catalog's order.
@@ -109,13 +109,13 @@ describe("hub grid", () => {
       overview.groups
         .find((group) => group.id === "platform-services")
         ?.services.map((entry) => entry.id),
-    ).toEqual(["flipt", "platform-services"]);
-    expect(service(overview, "flipt")).toEqual({
-      id: "flipt",
-      title: "Flipt",
+    ).toEqual(["nfd", "platform-services"]);
+    expect(service(overview, "nfd")).toEqual({
+      id: "nfd",
+      title: "Node feature discovery",
       environments: [
         {
-          id: "flipt/prod",
+          id: "nfd/prod",
           name: "prod",
           status: "not_started",
           request: null,
@@ -286,23 +286,25 @@ describe("hub attention across the pages", () => {
   test("Overview and Pipelines list the same items, and none for a retired service or environment", async () => {
     await registerWithEnvironment("tracker", "prod");
     await failDeployment("tracker", "tracker/prod");
-    await failDeployment("flipt", "flipt/prod");
+    await failDeployment("nfd", "nfd/prod");
     const before = await attentionOfBothPages();
     expect(before).toEqual(
       expect.arrayContaining([
         "Tracker prod requires recovery",
-        "Flipt prod requires recovery",
+        "Node feature discovery prod requires recovery",
       ]),
     );
     // A retired environment of a live service is on neither page, so neither
     // names its failure.
     await cluster.database.environment.update({
-      where: { id: "flipt/prod" },
+      where: { id: "nfd/prod" },
       data: { lifecycle: "retired" },
     });
     const environmentGone = await attentionOfBothPages();
     expect(environmentGone).toContain("Tracker prod requires recovery");
-    expect(environmentGone).not.toContain("Flipt prod requires recovery");
+    expect(environmentGone).not.toContain(
+      "Node feature discovery prod requires recovery",
+    );
     // So is a retired service's, however its deployments ended.
     await cluster.database.service.update({
       where: { id: "tracker" },

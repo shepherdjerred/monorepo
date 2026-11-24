@@ -46,7 +46,6 @@ import { createSyncthingApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createGolinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/golink.ts";
 import { createFreshrssApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/freshrss.ts";
 import { createPinchtabApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/pinchtab.ts";
-import { createFliptApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/flipt.ts";
 import { createArcadeApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/arcade.ts";
 import { createGickupApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/gickup.ts";
 import { createGrafanaDbApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-db.ts";
@@ -154,7 +153,6 @@ export async function createAppsChart(app: App) {
   createFreshrssApp(chart);
   createPinchtabApp(chart);
   createGlitterBoysLauncherApp(chart);
-  createFliptApp(chart);
   createArcadeApp(chart);
   createGickupApp(chart);
   createGrafanaDbApp(chart);

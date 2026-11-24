@@ -58,9 +58,9 @@ The brain token never lives in the file: `bearerTokenEnv` names the
 environment variable that holds it, and the module refuses to start without
 it.
 
-## Flipt flags
+## Feature flags
 
-Namespace `storm`, environment `prod`. Classification and triage are always
+Deployment `storm/prod` (catalog `storm`). Classification and triage are always
 on; the brain gates only conversation (`storm-brain-conversation-enabled`).
 
 | Flag                | Effect                                                     |
@@ -75,8 +75,8 @@ The source of truth is the [Storm server configuration](https://github.com/sheph
 
 | Boundary                                      | Behavior                                                                                                                                                        |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Screening rollout                             | `the-storm-content-safety-enabled`, namespace `the-storm`; production and beta on, Flipt-outage fallback off                                                    |
-| Async chat rollout                            | `the-storm-async-chat-moderation-enabled`, namespace `the-storm`; production and beta on, Flipt-outage fallback on                                              |
+| Screening rollout                             | `the-storm-content-safety-enabled`, deployment `minecraft/tsmc` (catalog `the-storm`); production and beta on, provider-outage fallback off                     |
+| Async chat rollout                            | `the-storm-async-chat-moderation-enabled`, deployment `minecraft/tsmc` (catalog `the-storm`); production and beta on, provider-outage fallback on               |
 | Correction rollout                            | `the-storm-anticheat-corrections-enabled`; default off in both environments                                                                                     |
 | Live chat and whispers                        | Synchronous Stage-1 block on credentials, egregious abuse, link spam, and bursts; 0 ms delivery; async Stage-2 `deleteMessage` and `#server` Discord retraction |
 | Persistent and gated text                     | Books, signs, item names, nicknames, town names, mail, tickets, and Discord ingress held until approved; outage rejects without a misconduct strike             |

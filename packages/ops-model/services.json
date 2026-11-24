@@ -790,13 +790,11 @@
       "aliases": [],
       "namespaces": [
         "1password",
-        "flipt",
         "intel-device-plugin-operator",
         "node-feature-discovery"
       ],
       "argoApps": [
         "1password",
-        "flipt",
         "intel-device-plugin-operator",
         "intel-gpu-device-plugin",
         "nfd"

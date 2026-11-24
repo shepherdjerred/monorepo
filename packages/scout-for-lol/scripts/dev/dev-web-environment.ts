@@ -7,7 +7,7 @@ export type DevAuthMode = "dev-login" | "oauth";
  * locally must be listed here or the read site throws. Values mirror each
  * flag's own registered default in
  * `packages/backend/src/configuration/flags.ts` (`FLAG_REGISTRY`), so a local
- * static-mode run behaves like a production Flipt outage rather than
+ * static-mode run behaves like a production Flags outage rather than
  * inventing new local-only behavior. Consumer profiles, Explore analysis and
  * the Explore model picker are enabled to exercise the beta features this
  * script boots by default.

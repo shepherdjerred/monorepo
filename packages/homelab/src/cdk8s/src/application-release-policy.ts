@@ -61,7 +61,7 @@ const PROVIDER_APPLICATIONS = new Set([
   "argocd",
   "cert-manager",
   "cloudflare-operator",
-  "flipt",
+  "flags",
   "intel-device-plugin-operator",
   "nfd",
   "openebs",

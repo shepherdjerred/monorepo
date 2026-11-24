@@ -261,13 +261,11 @@ const commands: Record<
       // where the Prisma engines EACCES crash-loop (#1682) surfaced. Booting
       // only far enough to fail Discord auth would not touch the database at
       // all, so an image that cannot create or query its schema used to pass.
-      // Production runs FEATURE_FLAGS_MODE=flipt, which the build sandbox cannot
+      // Production runs FEATURE_FLAGS_MODE=flags, which the build sandbox cannot
       // reach, so the boot below runs `disabled` rather than racing a network
       // timeout. Import the facade explicitly instead: its index statically
-      // pulls in FliptProvider and therefore @flipt-io/flipt-client-js, so this
-      // still proves the whole flag path survives a production-only install.
-      // (The Flipt client is feature-flags' own dependency — under the isolated
-      // linker it is deliberately NOT resolvable from this package.)
+      // pulls in FlagsProvider and @openfeature/server-sdk, so this still
+      // proves the whole flag path survives a production-only install.
       `bun -e 'await import("@shepherdjerred/feature-flags");'`,
       "bun scripts/migrate.ts",
       `bun -e 'import { prisma, disconnectPrisma } from "#src/db/index.ts";` +

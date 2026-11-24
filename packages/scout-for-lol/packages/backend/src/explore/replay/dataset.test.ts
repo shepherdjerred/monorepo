@@ -236,10 +236,10 @@ describe("replayEnvironmentIssues", () => {
     expect(issues).toEqual([expect.stringContaining("/somewhere/else")]);
   });
 
-  test("rejects a live Flipt, which would override the profile", () => {
+  test("rejects a live Flags provider, which would override the profile", () => {
     const issues = replayEnvironmentIssues({
       pin: PIN,
-      environment: environment({ FEATURE_FLAGS_MODE: "flipt" }),
+      environment: environment({ FEATURE_FLAGS_MODE: "flags" }),
       resolvedLakeDir,
     });
     expect(issues).toEqual([expect.stringContaining("FEATURE_FLAGS_MODE")]);

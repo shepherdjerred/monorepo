@@ -43,6 +43,35 @@ function etag(revision: number): string {
   return `"${String(revision)}"`;
 }
 
+function escapeMetricLabel(value: string): string {
+  return value
+    .replaceAll("\\", String.raw`\\`)
+    .replaceAll("\n", String.raw`\n`)
+    .replaceAll('"', String.raw`\"`);
+}
+
+function renderMetrics(store: FlagStore): string {
+  const deployments = store.list();
+  return [
+    "# HELP flags_deployments Stored feature-flag deployment documents.",
+    "# TYPE flags_deployments gauge",
+    `flags_deployments ${String(deployments.length)}`,
+    "# HELP flags_deployment_revision Current revision of each stored feature-flag deployment document.",
+    "# TYPE flags_deployment_revision gauge",
+    ...deployments.map(
+      (deployment) =>
+        `flags_deployment_revision{deployment="${escapeMetricLabel(deployment.id)}"} ${String(deployment.revision)}`,
+    ),
+    "# HELP flags_deployment_flags Number of flags stored in each feature-flag deployment document.",
+    "# TYPE flags_deployment_flags gauge",
+    ...deployments.map(
+      (deployment) =>
+        `flags_deployment_flags{deployment="${escapeMetricLabel(deployment.id)}"} ${String(deployment.flagCount)}`,
+    ),
+    "",
+  ].join("\n");
+}
+
 async function readBody(request: Request): Promise<unknown> {
   try {
     return await request.json();
@@ -136,6 +165,11 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
   attachErrorHandler(app);
 
   app.get("/healthz", (c) => c.text("ok"));
+  app.get("/metrics", (c) =>
+    c.text(renderMetrics(store), 200, {
+      "Content-Type": "text/plain; version=0.0.4; charset=utf-8",
+    }),
+  );
 
   app.use("/v1/*", async (c, next) => {
     const path = c.req.path;

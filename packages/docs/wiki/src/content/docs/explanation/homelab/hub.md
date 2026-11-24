@@ -143,8 +143,9 @@ must meet are listed in the [console UI reference](/reference/console-ui/).
 ## Why the deployed name is still `alert-dashboard`
 
 Hub is a product name. Everything that runs stays named `alert-dashboard`: the
-workspace package, namespace, Service, persistent volume claim, Flipt
-namespace, image, metrics, 1Password item, and Argo CD Application.
+workspace package, namespace, Service, persistent volume claim, flag catalog
+(`alert-dashboard/prod`), image, metrics, 1Password item, and Argo CD
+Application.
 
 Renaming the
 [Argo CD Application](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alert-dashboard.ts)

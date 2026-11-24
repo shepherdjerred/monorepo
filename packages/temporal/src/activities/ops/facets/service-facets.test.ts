@@ -302,7 +302,7 @@ describe("bugsink, tracker, and flipt facets", () => {
   });
 
   test("flipt facet emits unknown on static/500, detects live drift, and surfaces malformed snapshots", async () => {
-    const staticFacet = await collectFliptFacet({ fliptUrl: "", now });
+    const staticFacet = await collectFliptFacet({ flagsUrl: "", now });
     expect(() => FliptFacetSchema.parse(staticFacet)).not.toThrow();
     expect(staticFacet.namespaces).toHaveLength(16);
     expect(staticFacet.totalFlags).toBeGreaterThan(0);
@@ -311,7 +311,7 @@ describe("bugsink, tracker, and flipt facets", () => {
     ).toBe(true);
 
     const unavailableFacet = await collectFliptFacet({
-      fliptUrl: "http://flipt:8080",
+      flagsUrl: "http://flags:7361",
       now,
       fetcher: () =>
         Promise.resolve(new Response("upstream error", { status: 500 })),
@@ -321,18 +321,24 @@ describe("bugsink, tracker, and flipt facets", () => {
     ).toBe(true);
 
     const driftedFacet = await collectFliptFacet({
-      fliptUrl: "http://flipt:8080",
+      flagsUrl: "http://flags:7361",
       now,
-      fetcher: () => Promise.resolve(Response.json({ flags: [] })),
+      fetcher: createEmptyFlagsFetch,
     });
     expect(() => FliptFacetSchema.parse(driftedFacet)).not.toThrow();
     expect(
-      driftedFacet.namespaces.every((ns) => ns.prodStatus === "missing"),
+      driftedFacet.namespaces
+        .filter((ns) => ns.namespace !== "justin")
+        .every((ns) => ns.prodStatus === "missing"),
     ).toBe(true);
+    expect(
+      driftedFacet.namespaces.find((ns) => ns.namespace === "justin")
+        ?.prodStatus,
+    ).toBe("ok");
 
     await expect(
       collectFliptFacet({
-        fliptUrl: "http://flipt:8080",
+        flagsUrl: "http://flags:7361",
         now,
         fetcher: () =>
           Promise.resolve(Response.json({ flags: [{ key: 123 }] })),
@@ -340,6 +346,23 @@ describe("bugsink, tracker, and flipt facets", () => {
     ).rejects.toThrow();
   });
 });
+
+function createEmptyFlagsFetch(input: string | URL | Request) {
+  const href =
+    typeof input === "string"
+      ? input
+      : input instanceof URL
+        ? input.href
+        : input.url;
+  const match = /\/v1\/deployments\/([^/]+)\/([^/]+)\/snapshot$/u.exec(
+    new URL(href).pathname,
+  );
+  const deployment =
+    match === null
+      ? "unknown/prod"
+      : `${decodeURIComponent(match[1] ?? "")}/${decodeURIComponent(match[2] ?? "")}`;
+  return Promise.resolve(Response.json({ deployment, revision: 1, flags: [] }));
+}
 
 function createFakeCloudflareFetch(onRdap: () => void) {
   return (input: string | URL | Request) => {

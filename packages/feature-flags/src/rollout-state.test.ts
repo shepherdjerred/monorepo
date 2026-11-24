@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 import {
   classifyFlagBoolean,
   classifyManagedBoolean,
-  classifySnapshotBoolean,
 } from "./rollout-state.ts";
 import {
   defaultOnPolicyViolations,
@@ -10,9 +9,8 @@ import {
   ManagedFlagInventorySchema,
 } from "./managed-flag-inventory.ts";
 import type { ManagedFlag } from "./managed-flag-inventory.ts";
-import type { SnapshotFlag } from "./managed-flag-drift.ts";
-import { FliptProvider } from "./providers/flipt.ts";
-import { createFakeFetcher } from "./providers/fake-fetcher.ts";
+import type { FlagValue } from "./evaluate.ts";
+import { FlagsProvider } from "./providers/flags.ts";
 
 const baseline = {
   key: "test",
@@ -28,106 +26,66 @@ const baseline = {
 } as const satisfies ManagedFlag;
 
 describe("rollout classification", () => {
-  test("constant thresholds and ordered targeting agree with the real WASM evaluator", async () => {
-    const flags: SnapshotFlag[] = [0, 100].map((percentage) => ({
-      key: `threshold-${String(percentage)}`,
-      type: "BOOLEAN_FLAG_TYPE",
-      enabled: false,
-      rules: [],
-      rollouts: [
-        {
-          rank: 1,
-          type: "THRESHOLD_ROLLOUT_TYPE",
-          threshold: { percentage, value: true },
-        },
-      ],
-    }));
-    flags.push({
-      key: "ordered",
-      type: "BOOLEAN_FLAG_TYPE",
-      enabled: true,
-      rules: [],
-      rollouts: [
-        {
-          rank: 1,
-          type: "SEGMENT_ROLLOUT_TYPE",
-          segment: {
-            value: false,
-            segmentOperator: "OR_SEGMENT_OPERATOR",
-            segments: [
-              {
-                key: "pilot",
-                matchType: "ALL_SEGMENT_MATCH_TYPE",
-                constraints: [
-                  {
-                    type: "STRING_CONSTRAINT_COMPARISON_TYPE",
-                    property: "cohort",
-                    operator: "eq",
-                    value: "pilot",
-                  },
-                ],
-              },
-            ],
+  test("constant defaults and ordered segment targeting agree with FlagsProvider", async () => {
+    const flags: FlagValue[] = [
+      {
+        type: "boolean",
+        key: "constant-off",
+        default: false,
+        rollouts: [],
+      },
+      {
+        type: "boolean",
+        key: "constant-on",
+        default: true,
+        rollouts: [],
+      },
+      {
+        type: "boolean",
+        key: "ordered",
+        default: true,
+        rollouts: [
+          {
+            constraints: [{ property: "cohort", value: "pilot" }],
+            result: false,
           },
-        },
-        {
-          rank: 2,
-          type: "THRESHOLD_ROLLOUT_TYPE",
-          threshold: { percentage: 100, value: true },
-        },
-      ],
-    });
-    expect(flags.map((flag) => classifySnapshotBoolean(flag))).toEqual([
+        ],
+      },
+    ];
+    expect(flags.map((flag) => classifyFlagBoolean(flag))).toEqual([
       "off",
       "on",
       "targeted",
     ]);
-    const provider = new FliptProvider({
-      url: "http://flipt.invalid",
-      namespace: "default",
-      environment: "prod",
+    const provider = new FlagsProvider({
+      url: "http://flags.invalid:7361",
+      deployment: "scout/prod",
       pollIntervalSeconds: 300,
-      fetcher: createFakeFetcher({
-        kind: "snapshot",
-        body: {
-          namespace: { key: "default" },
-          digest: "fixture",
-          flags: flags.map((flag) => ({
-            ...flag,
-            name: flag.key,
-            description: "",
-            createdAt: "2026-11-07T00:00:00Z",
-            updatedAt: "2026-11-07T00:00:00Z",
-            rollouts: flag.rollouts.map((rollout) =>
-              rollout.type === "SEGMENT_ROLLOUT_TYPE"
-                ? {
-                    ...rollout,
-                    segment: {
-                      ...rollout.segment,
-                      segments: rollout.segment.segments.map((segment) => ({
-                        ...segment,
-                        name: segment.key,
-                        description: "",
-                      })),
-                    },
-                  }
-                : rollout,
-            ),
-          })),
-        },
-      }).fetcher,
+      fetcher: () =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          headers: { get: () => '"1"' },
+          json: () =>
+            Promise.resolve({
+              deployment: "scout/prod",
+              revision: 1,
+              flags,
+            }),
+        }),
     });
     try {
       await provider.initialize();
-      for (let index = 0; index < 2000; index++) {
+      for (let index = 0; index < 200; index++) {
         const context = { targetingKey: `entity-${String(index)}` };
         const off = await provider.resolveBooleanEvaluation(
-          "threshold-0",
+          "constant-off",
           true,
           context,
         );
         const on = await provider.resolveBooleanEvaluation(
-          "threshold-100",
+          "constant-on",
           false,
           context,
         );
@@ -189,18 +147,6 @@ describe("rollout classification", () => {
         thresholdRollouts: [{ rank: 1, percentage: 100, result: true }],
       }),
     ).toBe("on");
-  });
-  test("missing and incompatible live flags are visible", () => {
-    expect(classifySnapshotBoolean(undefined)).toBe("missing");
-    expect(
-      classifySnapshotBoolean({
-        key: "test",
-        enabled: true,
-        type: "VARIANT_FLAG_TYPE",
-        rules: [],
-        rollouts: [],
-      }),
-    ).toBe("invalid");
   });
 });
 

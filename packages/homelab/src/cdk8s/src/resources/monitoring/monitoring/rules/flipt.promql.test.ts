@@ -11,10 +11,19 @@ test("replacement observer OFF wins over old ON and stale observations disappear
   const failingProvider = rules.find(
     (rule) => rule.alert === "FeatureFlagProviderInitFailing",
   )?.expr.value;
+  const flagsDown = rules.find((rule) => rule.alert === "FlagsDown")?.expr
+    .value;
   if (typeof stale !== "string")
     throw new TypeError("Missing observation alert");
   if (typeof failingProvider !== "string")
     throw new TypeError("Missing provider readiness alert");
+  if (typeof flagsDown !== "string")
+    throw new TypeError("Missing FlagsDown alert");
+  expect(rules.find((rule) => rule.alert === "FliptDown")).toBeUndefined();
+  expect(flagsDown).toBe(
+    '(up{namespace="flags",service="flags"} == 0) or absent(up{namespace="flags",service="flags"})',
+  );
+  expect(rules.find((rule) => rule.alert === "FlagsDown")?.for).toBe("5m");
   expect(
     rules.find((rule) => rule.alert === "FeatureFlagExceptionReviewOverdue")
       ?.for,
@@ -43,7 +52,7 @@ test("replacement observer OFF wins over old ON and stale observations disappear
           })),
           {
             series:
-              'feature_flag_inventory_expected{flipt_environment="prod",flipt_namespace="test"}',
+              'feature_flag_inventory_expected{container="temporal-repo-worker",flipt_environment="prod",flipt_namespace="test"}',
             values: "1+0x30",
           },
           ...["old", "new"].flatMap((instance) => [
@@ -83,6 +92,11 @@ test("replacement observer OFF wins over old ON and stale observations disappear
           {
             expr: `count(${stale})`,
             eval_time: "20m",
+            exp_samples: [{ labels: "{}", value: 1 }],
+          },
+          {
+            expr: `count(${flagsDown})`,
+            eval_time: "5m",
             exp_samples: [{ labels: "{}", value: 1 }],
           },
         ],

@@ -251,9 +251,10 @@ proves they are drained.
    scheduled updates and outreach Schedules.
    Pause active affected Schedules and wait for their old Activities to finish.
    Preserve Schedules already paused by an operator.
-4. Enable the producer flag for beta through the existing Flipt management
-   path. Activation waits for requests already using the legacy path. Resume
-   only Schedules paused by this procedure, restoring their recorded state.
+4. Enable the producer flag in `scout/beta` through the
+   [Flags operator workflow](/how-to/check-flipt-flag-inventory/). Activation
+   waits for requests already using the legacy path. Resume only Schedules
+   paused by this procedure, restoring their recorded state.
 5. Exercise nonempty competition, weekly, and outreach cases in the existing
    beta guild.
    Interrupt an Activity after a persisted checkpoint and verify resumption.
