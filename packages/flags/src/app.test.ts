@@ -63,11 +63,33 @@ const Diff = z.object({
   ),
 });
 
-test("health and an unknown path", async () => {
-  const { app } = harness();
+test("health, metrics, and an unknown path", async () => {
+  const { app, store } = harness();
   const health = await app.request("/healthz");
   expect(health.status).toBe(200);
   expect(await health.text()).toBe("ok");
+  const initialMetrics = await app.request("/metrics");
+  expect(initialMetrics.status).toBe(200);
+  expect(initialMetrics.headers.get("content-type")).toContain(
+    "text/plain; version=0.0.4",
+  );
+  const initialBody = await initialMetrics.text();
+  expect(initialBody).toContain("# TYPE flags_deployments gauge");
+  expect(initialBody).toContain(
+    'flags_deployment_revision{deployment="scout/prod"} 1',
+  );
+  expect(initialBody).toMatch(
+    /flags_deployment_flags\{deployment="scout\/prod"\} [1-9]\d*/u,
+  );
+  const current = store.flag("scout/prod", "dares_enabled");
+  if (current === undefined) throw new Error("dares_enabled missing");
+  expect(store.apply("scout/prod", current.revision, [current.flag]).ok).toBe(
+    true,
+  );
+  const updatedMetrics = await app.request("/metrics");
+  expect(await updatedMetrics.text()).toContain(
+    'flags_deployment_revision{deployment="scout/prod"} 2',
+  );
   const missing = await app.request("/");
   expect(missing.status).toBe(404);
 });
@@ -410,4 +432,7 @@ test("evaluation app serves health, snapshot, and evaluate without management ro
     headers: { "tailscale-user-login": "operator@example.com" },
   });
   expect(operatorHeaderIgnored.status).toBe(404);
+
+  const metricsOnEval = await app.request("/metrics");
+  expect(metricsOnEval.status).toBe(404);
 });

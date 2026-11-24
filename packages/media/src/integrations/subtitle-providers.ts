@@ -9,6 +9,10 @@ import {
   type FetchTransport,
 } from "./http.ts";
 import { boundedBytes } from "./providers.ts";
+import {
+  OpenSubtitlesSessionSchema,
+  requestOpenSubtitlesApi,
+} from "./open-subtitles-http.ts";
 
 const OpenSubtitleSchema = z.object({
   id: z.string(),
@@ -35,7 +39,7 @@ const OpenSubtitleSchema = z.object({
 });
 
 export class OpenSubtitlesProvider {
-  private token: string | undefined;
+  private session: z.infer<typeof OpenSubtitlesSessionSchema> | undefined;
   constructor(
     private readonly config: { apiKey: string; userAgent: string },
     private readonly transport: FetchTransport = fetch,
@@ -46,12 +50,16 @@ export class OpenSubtitlesProvider {
     password: string,
     signal?: AbortSignal,
   ): Promise<void> {
+    this.session = undefined;
     const data = await this.call("login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
       ...(signal === undefined ? {} : { signal }),
     });
-    this.token = z.object({ token: z.string().min(1) }).parse(data).token;
+    const session = OpenSubtitlesSessionSchema.safeParse(data);
+    if (!session.success)
+      throw new IntegrationError("opensubtitles", "invalid-response");
+    this.session = session.data;
   }
 
   async search(
@@ -68,23 +76,22 @@ export class OpenSubtitlesProvider {
     },
     signal?: AbortSignal,
   ) {
-    z.string().trim().min(1).max(200).parse(input.query);
-    z.string()
+    const query = z.string().trim().min(1).max(200).parse(input.query);
+    const language = z
+      .string()
       .regex(/^[a-z]{2,3}(?:-[a-z]{2,4})?$/u)
-      .parse(input.language);
+      .parse(input.language.toLowerCase());
     const parameters = new URLSearchParams({
-      query: input.query,
-      languages: input.language,
+      query: query.toLowerCase(),
+      languages: language,
       ai_translated: "exclude",
-      machine_translated: "exclude",
-      page: String(
-        z
-          .number()
-          .int()
-          .positive()
-          .parse(input.page ?? 1),
-      ),
     });
+    // The provider excludes machine translations by default.
+    const page = z
+      .int()
+      .positive()
+      .parse(input.page ?? 1);
+    if (page !== 1) parameters.set("page", String(page));
     if (input.forced !== undefined)
       parameters.set("foreign_parts_only", input.forced ? "only" : "exclude");
     if (input.imdbId !== undefined)
@@ -109,12 +116,13 @@ export class OpenSubtitlesProvider {
             .slice(2),
         ).toString(),
       );
-    if (input.hearingImpaired !== undefined)
+    if (
+      input.hearingImpaired === "required" ||
+      input.hearingImpaired === "excluded"
+    )
       parameters.set(
         "hearing_impaired",
-        { required: "only", excluded: "exclude", any: "include" }[
-          input.hearingImpaired
-        ],
+        input.hearingImpaired === "required" ? "only" : "exclude",
       );
     if (input.season !== undefined)
       parameters.set(
@@ -126,6 +134,7 @@ export class OpenSubtitlesProvider {
         "episode_number",
         String(z.number().int().nonnegative().parse(input.episode)),
       );
+    parameters.sort();
     const data = await this.call(
       `subtitles?${parameters.toString()}`,
       signal === undefined ? {} : { signal },
@@ -180,17 +189,22 @@ export class OpenSubtitlesProvider {
   ): Promise<unknown> {
     const [pathname, query] = path.split("?");
     if (pathname === undefined) throw new Error("Missing subtitle API path");
-    const url = endpoint("https://api.opensubtitles.com/api/v1", pathname);
+    const session = this.session;
+    const url = endpoint(
+      `https://${session?.base_url ?? "api.opensubtitles.com"}/api/v1`,
+      pathname,
+    );
     if (query !== undefined) url.search = query;
-    const response = await request(this.transport, "opensubtitles", url, {
+    const response = await requestOpenSubtitlesApi(this.transport, url, {
       ...init,
       headers: {
+        Accept: "application/json",
         "Api-Key": this.config.apiKey,
         "User-Agent": this.config.userAgent,
         "Content-Type": "application/json",
-        ...(this.token === undefined
+        ...(session === undefined
           ? {}
-          : { Authorization: `Bearer ${this.token}` }),
+          : { Authorization: `Bearer ${session.token}` }),
       },
     });
     return await json(response, "opensubtitles");

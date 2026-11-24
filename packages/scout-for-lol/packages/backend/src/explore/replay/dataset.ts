@@ -102,7 +102,7 @@ export const StageDatasetPinSchema = z
      * Where the captured capabilities came from.
      *
      * `static` means the registry defaults plus static overrides, with no
-     * provider consulted; `provider` means the stage's own Flipt decisions. A
+     * provider consulted; `provider` means the stage's own Flags decisions. A
      * static capture is a faithful record of static configuration and nothing
      * more — where provider targeting differs, the replay would reproduce and
      * assert a capability the guild does not actually have.
@@ -312,7 +312,7 @@ export function replayEnvironmentIssues(input: {
 
   const flagsMode = input.environment["FEATURE_FLAGS_MODE"];
   if (flagsMode !== "disabled" && flagsMode !== "static") {
-    // With a live Flipt the profile's overrides are advisory and the run would
+    // With a live Flags provider the profile's overrides are advisory and the run would
     // silently inherit whatever the stage has switched on today.
     issues.push(
       `FEATURE_FLAGS_MODE is "${flagsMode ?? "unset"}"; a replay needs "disabled" or "static" so the profile decides capabilities`,

@@ -3,9 +3,7 @@ import {
   initFeatureFlags,
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
-import { FliptProvider } from "@shepherdjerred/feature-flags/providers/flipt.ts";
-import { createFakeFetcher } from "@shepherdjerred/feature-flags/providers/fake-fetcher.ts";
-import flagSnapshot from "@shepherdjerred/feature-flags/providers/fixtures/flipt-snapshot.default.json" with { type: "json" };
+import { FlagsProvider } from "@shepherdjerred/feature-flags/providers/flags.ts";
 import { woodpeckerRetentionConfig } from "#config/woodpecker-retention.ts";
 import { stopOnRetentionContractError } from "./woodpecker-retention-runtime.ts";
 import {
@@ -154,37 +152,55 @@ describe("Woodpecker retention repository identity", () => {
 });
 
 describe("Woodpecker retention fresh policy guards", () => {
-  test.each(["network", "corrupt"])(
+  test.each(["network", "corrupt"] as const)(
     "fresh policy at the final write guard prevents DELETE after a %s refresh failure and recovers",
     async (failure) => {
       const body = {
-        ...flagSnapshot,
-        flags: flagSnapshot.flags
-          .filter((flag) => ["plain-on", "model-name"].includes(flag.key))
-          .map((flag) => ({
-            ...flag,
-            key:
-              flag.key === "plain-on"
-                ? "woodpecker-log-retention-enabled"
-                : "woodpecker-log-retention-days",
-            rules: flag.rules.map((rule) => ({
-              ...rule,
-              distributions: rule.distributions.map((distribution) => ({
-                ...distribution,
-                variantKey: "30",
-              })),
-            })),
-          })),
+        deployment: "woodpecker/prod",
+        revision: 1,
+        flags: [
+          {
+            type: "boolean",
+            key: "woodpecker-log-retention-enabled",
+            default: true,
+            rollouts: [],
+          },
+          {
+            type: "variant",
+            key: "woodpecker-log-retention-days",
+            value: "30",
+          },
+        ],
       };
-      const fake = createFakeFetcher({ kind: "snapshot", body });
+      let mode: "ok" | "network" | "corrupt" = "ok";
+      let calls = 0;
       await initFeatureFlags({
         environment: { FEATURE_FLAGS_MODE: "disabled" },
-        provider: new FliptProvider({
-          url: "http://flipt.invalid:8080",
-          namespace: "default",
-          environment: "default",
+        provider: new FlagsProvider({
+          url: "http://flags.invalid:8080",
+          deployment: "woodpecker/prod",
           pollIntervalSeconds: 300,
-          fetcher: fake.fetcher,
+          fetcher: () => {
+            calls++;
+            if (mode === "network") {
+              return Promise.reject(new Error("offline"));
+            }
+            const responseBody =
+              mode === "corrupt"
+                ? {
+                    deployment: "woodpecker/prod",
+                    revision: 1,
+                    flags: "invalid",
+                  }
+                : body;
+            return Promise.resolve({
+              ok: true,
+              status: 200,
+              statusText: "OK",
+              headers: { get: () => null },
+              json: () => Promise.resolve(responseBody),
+            });
+          },
         }),
       });
       try {
@@ -192,15 +208,7 @@ describe("Woodpecker retention fresh policy guards", () => {
         let guards = 0;
         const enabled = async () => {
           guards++;
-          if (guards === 2)
-            fake.setBehavior(
-              failure === "network"
-                ? { kind: "network-error", message: "offline" }
-                : {
-                    kind: "snapshot",
-                    body: { namespace: { key: "default" }, flags: "invalid" },
-                  },
-            );
+          if (guards === 2) mode = failure;
           const policy = await woodpeckerRetentionConfig();
           return policy.enabled;
         };
@@ -223,16 +231,16 @@ describe("Woodpecker retention fresh policy guards", () => {
           });
         }
         expect(guards).toBe(2);
-        expect(fake.callCount()).toBe(3);
+        expect(calls).toBe(3);
         expect(f.deleted).toEqual([]);
-        fake.setBehavior({ kind: "snapshot", body });
+        mode = "ok";
         expect(
           await applyOutcome(input, f.client, hooks(), async () => {
             const policy = await woodpeckerRetentionConfig();
             return policy.enabled;
           }),
         ).toBe("deleted");
-        expect(fake.callCount()).toBe(5);
+        expect(calls).toBe(5);
         expect(f.deleted).toEqual(["/api/repos/1/logs/1"]);
       } finally {
         await shutdownFeatureFlags();

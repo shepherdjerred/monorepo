@@ -5,7 +5,6 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import {
   defineEndpoint,
-  FLIPT_ENDPOINT,
   PINCHTAB_ENDPOINT,
   TRACKER_ENDPOINT,
 } from "./endpoint.ts";
@@ -19,8 +18,15 @@ describe("defineEndpoint", () => {
   });
 
   test("an explicit service overrides the app name in the URL", () => {
-    expect(FLIPT_ENDPOINT.url).toBe(
-      "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+    const endpoint = defineEndpoint({
+      namespace: "example",
+      app: "example",
+      service: "example-http",
+      port: 8080,
+      portName: "http",
+    });
+    expect(endpoint.url).toBe(
+      "http://example-http.example.svc.cluster.local:8080",
     );
   });
 

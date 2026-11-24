@@ -138,11 +138,11 @@ test("the real synth child receives the parent's exact chart revision inventory"
   const previousVault = Bun.env["OP_SERVICE_ACCOUNT_TOKEN"];
   const code = `
     import { App, Chart } from "cdk8s";
-    import { createFliptApp } from "./src/resources/argo-applications/apps/flipt.ts";
+    import { createPinchtabApp } from "./src/resources/argo-applications/apps/pinchtab.ts";
     import { applyApplicationReleasePolicy } from "./src/application-release-policy.ts";
     const app = new App();
     const chart = new Chart(app, "apps");
-    createFliptApp(chart);
+    createPinchtabApp(chart);
     applyApplicationReleasePolicy(app);
     await Bun.write(${JSON.stringify(output)}, JSON.stringify({
       ...chart.toJson()[0].spec.source,
@@ -159,7 +159,7 @@ test("the real synth child receives the parent's exact chart revision inventory"
       targetRevision: "~2.0.0-0",
       vaultCredentialPresent: false,
     });
-    Bun.env[key] = JSON.stringify({ flipt: version });
+    Bun.env[key] = JSON.stringify({ pinchtab: version });
     await runCommand([process.execPath, "-e", code], {
       cwd: new URL("../../src/cdk8s/", import.meta.url).pathname,
     });

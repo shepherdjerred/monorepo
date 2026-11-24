@@ -38,7 +38,7 @@ The lake's ordinary schema fingerprint remains part of dataset coherence.
 | `accountRows`                            | Parquet and database account counts                                                                                                                                                                                           |
 | `database.snapshotId`                    | Hash of the rows a replay never writes; survives restoring the same dump ([source](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/scripts/explore-replay/snapshot-identity.ts)) |
 | `database.writableRows`                  | Per-table hash of what a replay can write ([source](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/scripts/explore-replay/writable-rows.ts))                                    |
-| `flagSource`                             | `provider` when Flipt was consulted, else `static`                                                                                                                                                                            |
+| `flagSource`                             | `provider` when the flag service was consulted, else `static`                                                                                                                                                                 |
 | `guilds`                                 | Per-guild captured capabilities and requester                                                                                                                                                                                 |
 
 A run refuses to start unless `DATABASE_URL` names the pinned database on
@@ -158,7 +158,7 @@ corpus ([`plan.ts`](https://github.com/shepherdjerred/monorepo/blob/main/package
   clarifying question from a drafted dare shaped like one needs to understand
   the text, so those rows are known noise rather than a wrong verdict.
 - `explore:capture-guilds` reads static flag configuration unless
-  `FEATURE_FLAGS_MODE=flipt` points it at the stage's provider. `flagSource`
+  `FEATURE_FLAGS_MODE=flags` points it at the stage's provider. `flagSource`
   records which, because a static capture is not evidence of live targeting.
 - A conversation case runs on the surface its turn was asked on, as recorded
   by that turn's own durable run. The conversation's `origin` cannot prove it:

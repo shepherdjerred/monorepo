@@ -207,8 +207,8 @@ function resolveScopeArguments(args: readonly string[] = Bun.argv) {
   }
   return {
     deploymentFilter: undefined,
-    namespaceFilter: Bun.env["FLIPT_NAMESPACE"],
-    environmentFilter: Bun.env["FLIPT_ENVIRONMENT"],
+    namespaceFilter: undefined,
+    environmentFilter: undefined,
   };
 }
 

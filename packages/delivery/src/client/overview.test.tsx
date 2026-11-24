@@ -87,8 +87,8 @@ const GROUPS: GridGroup[] = [
   group("gitops", "platform", [
     service("argocd"),
     service("secrets", []),
-    service("flipt", [
-      environment("flipt/prod", {
+    service("flags", [
+      environment("flags/prod", {
         status: "not_started",
         acceptedRevision: null,
         acceptedAt: null,
@@ -138,7 +138,7 @@ describe("overview panels model", () => {
           ["minecraft", ["router", "tsmc"]],
         ],
       ],
-      ["Platform", ["delivery"], [["gitops", ["argocd", "secrets", "flipt"]]]],
+      ["Platform", ["delivery"], [["gitops", ["argocd", "secrets", "flags"]]]],
     ]);
   });
 
@@ -154,7 +154,7 @@ describe("overview panels model", () => {
           ["sites", ["resume", "webring"]],
         ],
       ],
-      ["Platform", ["delivery"], [["gitops", ["argocd", "secrets", "flipt"]]]],
+      ["Platform", ["delivery"], [["gitops", ["argocd", "secrets", "flags"]]]],
     ]);
   });
 
@@ -175,7 +175,7 @@ describe("overview panels model", () => {
       ],
     ]);
     expect(filtered({ status: "not_started" })).toEqual([
-      ["Platform", [], [["gitops", ["flipt"]]]],
+      ["Platform", [], [["gitops", ["flags"]]]],
     ]);
     expect(filtered({ q: "no such service" })).toEqual([]);
   });

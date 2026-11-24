@@ -9,6 +9,7 @@ import {
   ProviderListSchema,
   ProviderConfigurationSchema,
   defaultProviderConfiguration,
+  avistazFamilyTrackers,
   ProviderSeedingPolicySchema,
   TrackerProviderIdSchema,
   MAX_MANUAL_SUBTITLE_BYTES,
@@ -35,13 +36,8 @@ import {
 } from "#shared/runtime/contract.ts";
 import { setManagedRuntime } from "#infrastructure/handoff/parallel-runtime.ts";
 
-const privateTrackers = new Set<AdminProviderId>([
-  "privatehd",
-  "avistaz",
-  "animez",
-]);
 const credentialProviders = new Set<AdminProviderId>([
-  ...privateTrackers,
+  ...avistazFamilyTrackers,
   "opensubtitles",
   "assrt",
   "subhd",
@@ -75,16 +71,17 @@ function validateProvider(
   id: AdminProviderId,
   input: SaveProvider,
 ): Record<string, string> | null | undefined {
-  if (privateTrackers.has(id) && input.seedingPolicy.kind === "public")
+  const avistazFamily = avistazFamilyTrackers.has(id);
+  if (avistazFamily && input.seedingPolicy.kind === "public")
     throw new MediaError(
       "private_policy_required",
       "Private trackers require a verified private policy or continued seeding",
       422,
     );
-  if (id !== "privatehd" && input.seedingPolicy.kind === "privatehd")
+  if (!avistazFamily && input.seedingPolicy.kind === "privatehd")
     throw new MediaError(
       "private_policy_mismatch",
-      "The PrivateHD formula only applies to PrivateHD",
+      "The size formula applies to PrivateHD, AvistaZ, and AnimeZ",
       422,
     );
   if (

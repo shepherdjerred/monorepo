@@ -1,6 +1,5 @@
 import { authFromEnv } from "./auth.ts";
 import { createFlagsApp, createFlagsEvaluationApp } from "./app.ts";
-import { importDeploymentDocuments } from "./import-flipt.ts";
 import { FlagStore } from "./store.ts";
 
 const NON_NEGATIVE_INTEGER = /^(?:0|[1-9]\d*)$/u;
@@ -38,19 +37,7 @@ export async function startServer(
   const databasePath = Bun.env["FLAGS_DATABASE_PATH"] ?? ":memory:";
   const store = FlagStore.open(databasePath);
   try {
-    const fliptUrl = Bun.env["FLAGS_FLIPT_URL"];
-    let seeded: { readonly seeded: readonly string[] };
-    if (fliptUrl === undefined || fliptUrl.length === 0) {
-      seeded = store.seedFromInventory();
-    } else {
-      const missing = store.missingDeployments();
-      seeded =
-        missing.length === 0
-          ? { seeded: [] }
-          : store.seedDocuments(
-              await importDeploymentDocuments(fliptUrl, undefined, missing),
-            );
-    }
+    const seeded = store.seedFromInventory();
     console.warn(
       JSON.stringify({
         message: "flag inventory seed",

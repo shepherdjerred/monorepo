@@ -115,7 +115,7 @@ describe("evidence-recovery gate", () => {
       await initializeDynamicConfig({
         environment: {
           FEATURE_FLAGS_MODE: "disabled",
-          FLIPT_ENVIRONMENT: environment,
+          FLAGS_DEPLOYMENT: `scout/${environment}`,
         },
         seed: SEED,
         startPolling: false,
@@ -134,7 +134,7 @@ describe("evidence-recovery gate", () => {
       await initializeDynamicConfig({
         environment: {
           FEATURE_FLAGS_MODE: "disabled",
-          FLIPT_ENVIRONMENT: environment,
+          FLAGS_DEPLOYMENT: `scout/${environment}`,
         },
         seed: SEED,
         startPolling: false,
@@ -156,7 +156,7 @@ describe("evidence-recovery gate", () => {
     await initializeDynamicConfig({
       environment: {
         FEATURE_FLAGS_MODE: "disabled",
-        FLIPT_ENVIRONMENT: "beta",
+        FLAGS_DEPLOYMENT: "scout/beta",
       },
       seed: SEED,
       startPolling: false,
@@ -174,7 +174,7 @@ describe("evidence-recovery gate", () => {
     await initializeDynamicConfig({
       environment: {
         FEATURE_FLAGS_MODE: "disabled",
-        FLIPT_ENVIRONMENT: "beta",
+        FLAGS_DEPLOYMENT: "scout/beta",
       },
       seed: SEED,
       startPolling: false,

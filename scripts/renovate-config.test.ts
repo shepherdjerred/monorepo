@@ -132,12 +132,6 @@ test("extracts every managed structured version-catalog field", async () => {
   });
 
   expect(actual).toEqual(expected);
-  expect(actual).toContainEqual(
-    expect.objectContaining({
-      depName: "flipt-io/flipt",
-      packageName: "flipt/flipt",
-    }),
-  );
   const nginx = expected.find((entry) => entry.depName === "library/nginx");
   if (nginx === undefined) {
     throw new Error("Managed nginx catalog entry is missing");

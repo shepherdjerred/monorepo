@@ -23,7 +23,7 @@ Bootstrap environment variables carry only listener addresses, storage paths, an
 - `STORM_STATS_INGEST_TOKEN` — required when `STORM_STATS_INGEST_PORT` is set (minimum 24 characters)
 - `STORM_STATS_DATABASE_PATH` — SQLite path (`:memory:` by default in dev/tests, `/var/lib/storm-stats/storm-stats.sqlite` in production)
 - `STORM_STATS_SEED_DEMO` — `"1"` / `"true"` populates deterministic 90-day demo data on an empty database for local development
-- `FEATURE_FLAGS_MODE` — `"flags"`, `"flipt"`, `"static"`, or `"disabled"`
+- `FEATURE_FLAGS_MODE` — `"flags"`, `"static"`, or `"disabled"`
 
 Operational behavior is resolved via `@shepherdjerred/config` and `@shepherdjerred/feature-flags` (`flag -> env -> default`):
 

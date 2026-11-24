@@ -7,8 +7,6 @@ import {
   flagsEnv,
   FLAGS_EVALUATION_URL,
   FLAGS_MANAGEMENT_URL,
-  fliptEnv,
-  FLIPT_URL,
   seaweedfsS3,
   telemetryEnv,
 } from "./runtime-env.ts";
@@ -74,36 +72,6 @@ describe("flagsEnv", () => {
     expect(FLAGS_MANAGEMENT_URL).toBe(
       "http://flags.flags.svc.cluster.local:7360",
     );
-  });
-});
-
-describe("fliptEnv", () => {
-  test("declares the mode first, then namespace, environment and URL", () => {
-    expect(
-      render(() => fliptEnv({ namespace: "tracker", environment: "prod" })),
-    ).toEqual([
-      "FEATURE_FLAGS_MODE=flipt",
-      "FLIPT_NAMESPACE=tracker",
-      "FLIPT_ENVIRONMENT=prod",
-      `FLIPT_URL=${FLIPT_URL}`,
-    ]);
-  });
-
-  test("an explicit order reproduces a workload's existing declaration order", () => {
-    expect(
-      render(() =>
-        fliptEnv({
-          namespace: "storm",
-          environment: "beta",
-          order: ["FLIPT_URL", "FLIPT_NAMESPACE", "FLIPT_ENVIRONMENT"],
-        }),
-      ),
-    ).toEqual([
-      "FEATURE_FLAGS_MODE=flipt",
-      `FLIPT_URL=${FLIPT_URL}`,
-      "FLIPT_NAMESPACE=storm",
-      "FLIPT_ENVIRONMENT=beta",
-    ]);
   });
 });
 

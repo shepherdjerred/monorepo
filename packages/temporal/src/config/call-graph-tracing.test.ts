@@ -1,27 +1,26 @@
 import { expect, test } from "vitest";
 import { callGraphTracingDefault } from "./call-graph-tracing.ts";
 
-test("a production process consuming beta Flipt retains the beta tracing default", () => {
+test("a production process consuming a beta Flags deployment retains the beta tracing default", () => {
   const bootstrap = {
-    FEATURE_FLAGS_MODE: "flipt",
-    FLIPT_URL: "http://flipt.invalid",
-    FLIPT_NAMESPACE: "temporal",
+    FEATURE_FLAGS_MODE: "flags",
+    FLAGS_URL: "http://flags.invalid:7361",
   };
   expect(
     callGraphTracingDefault(
-      { ...bootstrap, FLIPT_ENVIRONMENT: "beta" },
+      { ...bootstrap, FLAGS_DEPLOYMENT: "temporal/beta" },
       "production",
     ),
   ).toBe(false);
   expect(
     callGraphTracingDefault(
-      { ...bootstrap, FLIPT_ENVIRONMENT: "prod" },
+      { ...bootstrap, FLAGS_DEPLOYMENT: "temporal/prod" },
       "beta",
     ),
   ).toBe(true);
   expect(() =>
     callGraphTracingDefault(
-      { ...bootstrap, FLIPT_ENVIRONMENT: "unknown" },
+      { ...bootstrap, FLAGS_DEPLOYMENT: "temporal/unknown" },
       "production",
     ),
   ).toThrow("unknown managed environment");

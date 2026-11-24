@@ -236,9 +236,9 @@ These values are resolved through typed configuration at startup, so changing
 them requires a restart. The defaults route incident mail to `alerts@sjer.red`
 and digests to `digests@sjer.red`.
 
-The flag client needs its bootstrap variables: `FEATURE_FLAGS_MODE` (`flipt`
-in the cluster, `disabled` locally), plus `FLIPT_URL`, `FLIPT_NAMESPACE`
-(`alert-dashboard`), and `FLIPT_ENVIRONMENT` in `flipt` mode. Digests use the
+The flag client needs its bootstrap variables: `FEATURE_FLAGS_MODE` (`flags`
+in the cluster, `disabled` locally), plus `FLAGS_URL` and `FLAGS_DEPLOYMENT`
+(`alert-dashboard/prod`) in `flags` mode. Digests use the
 Postal settings whenever all four are present,
 independently of the incident-mail flag, and are sent synchronously with a
 per-period `DigestRun` claim rather than through the alert outbox, so enabling

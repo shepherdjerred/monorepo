@@ -5,38 +5,42 @@ description: Why the repo has five places a value can live, which one to pick, a
 
 Changing a value used to mean a deploy. Flipping a boolean in cdk8s costs the
 `verify` graph, two required review gates, a merge, a main pipeline run, and an
-ArgoCD sync — 45 to 90 minutes for a change you already know is correct.
+ArgoCD sync. That is 45 to 90 minutes for a change you already know is right.
 
-That is the right cost for most changes. GitOps deliberately routes state
-through review. But a feature flag is an explicit declaration that one piece of
-state does **not** need review, and that cannot live in the machine whose whole
+That cost is deliberate for most infrastructure changes because GitOps routes
+state through review. A feature flag is an explicit declaration that one piece
+of state does **not** need review, so it cannot live inside the machine whose
 purpose is enforcing review.
 
-So there is now a self-hosted [Flipt](https://www.flipt.io/) instance, and a
-layered resolver in front of it.
+First-party runtime behavior therefore lives in the repository's own
+[`@shepherdjerred/flags`](https://github.com/shepherdjerred/monorepo/blob/main/packages/flags/src/app.ts)
+service, with a layered resolver in front of it.
 
 ## The policy
 
 > For any app we wrote or control, environment variables are for **credentials
 > and bootstrap**. Everything else is a **feature flag**.
 
-Bootstrap is the part that cannot be a flag because it is needed to construct
-the thing that reads flags. `FLIPT_URL` locates the provider,
-`FLIPT_ENVIRONMENT` selects an isolated stage repository (`beta` or `prod`),
-and `FLIPT_NAMESPACE` selects the product-owned keyspace inside that
-environment. Every Flipt client sets both selectors explicitly so a missing
-deployment value fails loudly.
+Bootstrap is the configuration needed to construct the client that reads flags.
+Hosted workloads set `FEATURE_FLAGS_MODE=flags`, `FLAGS_URL`, and
+`FLAGS_DEPLOYMENT` as validated by
+[`schema.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feature-flags/src/config/schema.ts).
+Every client sets all three explicitly without defaults, so a missing bootstrap
+variable fails at startup rather than quietly serving call-site defaults.
 
-A Flipt namespace is not a Kubernetes namespace. The Kubernetes namespace is a
-network and workload boundary; the Flipt namespace is a flag-catalog boundary.
-For example, Scout beta runs against Flipt environment `beta` and namespace
-`scout`, while Temporal runs against environment `prod` and namespace
-`temporal`. Both Flipt environments contain the same six product namespaces so
-the inventory remains uniform even when a product has no beta consumer.
+The unit of runtime state is a **deployment** (`<catalog>/<stage>`), declared in
+[`deployments.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feature-flags/src/deployments.ts)
+— such as `scout/prod`, `scout/beta`, `streambot/prod`, or `minecraft/tsmc`.
+Flag definitions live once in
+[`managed-flag-inventory.json`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feature-flags/src/managed-flag-inventory.json),
+while values exist only on deployments a workload actually reads. Prod-only
+services keep one document rather than carrying unused `beta` copies, and
+co-deployed readers that share one contract — such as Storm forum and Storm
+brain — share `storm/prod`.
 
 The application `ENVIRONMENT` remains separate. It describes the application
-stage and may be passed as a targeting attribute. It does not choose where Flipt
-stores or reads flags. Other bootstrap values include `PORT`, `DATABASE_URL`,
+stage and may be passed as a targeting attribute. It does not choose which
+document Flags serves. Other bootstrap values include `PORT`, `DATABASE_URL`,
 and `TEMPORAL_WORKER_ROLE`.
 
 Shared service connections also belong to reviewed infrastructure wiring.
@@ -80,9 +84,9 @@ Database rows are not really configuration — they are product data an end user
 sets, like karma's per-guild recap channel or scout's `ServerPermission` grants.
 
 The `file` layer exists for **apps distributed to other people**. Someone
-self-hosting one of the Discord bots has neither Flipt nor Kubernetes env
-injection, so a config file is their entire interface. In our own deployments
-that layer is normally absent.
+self-hosting one of the Discord bots has neither the flag service nor Kubernetes
+env injection, so a config file is their entire interface. In our own
+deployments that layer is normally absent.
 
 ## What was here before
 
@@ -117,48 +121,50 @@ provenance is what answers it.
 
 ## Security boundary — read this part
 
-**Flipt runs with authentication disabled.** Reachability is the entire
-authorization model: a tailnet device or an allowed namespace can read and write
-every flag.
+Evaluation and management are separated by listener, NetworkPolicy, and
+authentication in the
+[Flags deployment](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/flags/index.ts)
+and
+[request authenticator](https://github.com/shepherdjerred/monorepo/blob/main/packages/flags/src/auth.ts):
 
-That is a deliberate trade for a single-operator homelab, and it has two
-consequences worth stating rather than leaving implicit in a policy file:
-
-- The **NetworkPolicy is the access control**. Ingress is limited to Tailscale
-  (the UI), Prometheus (scrape and probe), and an explicit list of consumer
-  namespaces. A namespace is added to that list in the same change that starts
-  reading flags from it. Egress is DNS-only — storage is a local git repo on a
-  PVC, there is no remote sync, and both the update check and telemetry are off,
-  so Flipt has no legitimate reason to reach the internet.
-- **Capability grants stay in Git.** birmel's `TRUSTED_USER_IDS` is the sole gate
-  for shell execution, repository writes, and every agent tool. As a flag, any
-  tailnet device could grant itself that. The test is blast radius, not
-  fail-open-versus-fail-closed. Ordinary allowlists — which guilds may use a
-  feature — are a _primary_ use case; ones that grant capability are not.
-  Similarly, streambot's `VOICE_CAPTURE_ENABLED` decides whether human audio is
-  persisted to S3, and stays in env for the same reason.
-
-If Flipt ever gains authentication, both of those are worth revisiting.
+- **Evaluation is credentialless and port-isolated.** Port `7361` mounts only
+  `/healthz`, `GET /v1/deployments/:catalog/:stage/snapshot`, and
+  `POST /v1/evaluate`. It exposes no management routes or UI, ignores operator
+  headers, and rejects any `Authorization` header with `401`. Consumer
+  NetworkPolicies open only `7361`, and consumer pods hold no management
+  credential.
+- **Management requires verified operator or machine identity.** Port `7360`
+  reaches only the Tailscale ingress proxy, Prometheus probes, and the Temporal
+  repo worker. Human requests require an allowed `Tailscale-User-Login` verified
+  through a read-only Kubernetes API double-fence on the Ingress UID, owning
+  StatefulSet, and ready proxy Pod IP, with same-origin enforcement on browser
+  writes. Automation uses the brokered `FLAGS_MACHINE_TOKEN` from the
+  `flags-auth` 1Password item.
+- **Capability grants stay in Git.** birmel's `TRUSTED_USER_IDS` gates shell
+  execution, repository writes, and agent tools. Streambot's
+  `VOICE_CAPTURE_ENABLED` decides whether human audio is persisted to S3. The
+  test is blast radius, not fail-open versus fail-closed: guild feature
+  allowlists belong in Flags, whereas grants that widen host or data capability
+  stay in reviewed Git configuration.
 
 ## Durability
 
-Flipt v2 defaults to **in-memory storage**. It accepts flag writes, serves them
-back, and silently loses every one on restart. The deployment therefore gives
-beta and production separate local git backends on a ZFS PVC backed up by
-Velero. Each repository begins from a validated declarative seed with all six
-product namespaces; subsequent restarts validate existing repositories and do
-not overwrite operator changes. Missing inventory keys are created through
-Flipt's management API; existing flags and targeting stay under operator
-control. Environment isolation prevents a beta model or
-rollout change from altering production, while namespaces keep product flag
-catalogs separate within a stage. Regression tests assert the storage and both
-client selectors, because any omission produces a service that looks healthy
-while reading the wrong contract.
+Flags stores deployment documents in SQLite (`/var/lib/flags/flags.sqlite`) on a
+dedicated `ReadWriteOnce` ZFS NVMe PVC backed up by Velero, as implemented in
+[`store.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/flags/src/store.ts).
+Startup seeds only deployments not yet stored in SQLite and leaves existing
+documents untouched across restarts.
+
+Missing declared inventory keys are inserted automatically through
+`create-missing` without overwriting live defaults or segment rollouts. Every
+mutation (`apply` and `retire`) binds `expectedRevision` and writes nothing when
+the stored revision has advanced, preventing stale browser tabs or concurrent
+automation from clobbering an intervening edit.
 
 ## Analytics has a different ownership boundary
 
 PostHog records behaviour. It is not the switch that decides whether behaviour
-exists. Product rollout therefore remains in Flipt, while PostHog's supported
+exists. Product rollout therefore remains in Flags, while PostHog's supported
 control-plane objects live in OpenTofu. That makes dashboards, insights,
 layouts, the project proxy, and their supported settings reviewable rather than
 personal UI state.
@@ -213,10 +219,7 @@ snapshot that is seeded with current values and refreshed in the background. Tha
 seeding matters: an empty allowlist in command registration does not disable a
 feature, it _unregisters_ the command in every guild.
 
-## Licensing
+## Related
 
-Flipt v2 is under the [Fair Core License](https://fcl.dev/): source-available
-rather than open source, converting to MIT two years after each release. Its
-SDKs remain MIT, so nothing in our application code is affected. The free tier
-covers the UI, local git storage, and evaluation; remote SCM sync and secrets
-managers are paid features we do not use.
+- [Operate feature flags and check the inventory](/how-to/check-flipt-flag-inventory/)
+- [Homelab control-plane access](/reference/homelab-control-plane-access/)

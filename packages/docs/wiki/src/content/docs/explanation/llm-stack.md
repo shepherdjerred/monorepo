@@ -190,7 +190,7 @@ series yet; its caps and Cloud Billing budget alerts cover it.
 
 The billing worker is a single-purpose Activity Worker: it holds the OpenAI and
 Anthropic organization admin keys and has Temporal, telemetry, and HTTPS egress,
-but no Flipt reachability or Kubernetes service-account token. The admin keys
+but no flag-service reachability or Kubernetes service-account token. The admin keys
 remain organization-wide at each provider despite that runtime isolation.
 
 ## Attribution

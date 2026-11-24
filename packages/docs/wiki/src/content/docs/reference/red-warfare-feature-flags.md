@@ -10,11 +10,11 @@ owns their declarations, environment overrides and targeting.
 
 ## Gameplay gates
 
-These flags use namespace `the-storm`. Every declaration defaults to `false`,
-without targeting rules. Admission, kits, rewards and the seven original match
-features override both `beta` and `prod` to `true`.
-Host settings and candidate visits also override both `beta` and `prod` to
-`true`.
+These flags live in catalog `the-storm` and project onto deployment
+`minecraft/tsmc`. Every declaration defaults to `false`, without targeting
+rules. Admission, kits, rewards and the seven original match features override
+both `beta` and `prod` to `true`. Host settings and candidate visits also
+override both `beta` and `prod` to `true`.
 
 | Flag                                     | Enabled behavior                                                                                                                                                                                                                                                         |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -69,7 +69,7 @@ implements player targeting;
 [Killstreaks](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/paper/Killstreaks.java)
 checks the flag when granting a reward. The same gate controls reward selection
 through the kit menu and `/rwf killstreaks`.
-Missing `FLIPT_URL` or `FLIPT_ENVIRONMENT` closes admission, kits and rewards,
+Missing `FLAGS_URL` or `FLAGS_DEPLOYMENT` closes admission, kits and rewards,
 and leaves match features off at startup, as wired by
 [RwfModule](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/RwfModule.java).
 A failed later match-feature refresh preserves the previous captured features.
@@ -80,11 +80,11 @@ These declarations also default to `false`. Environment values below include
 inherited defaults when no override exists; the inventory declares no targeting
 for these controls.
 
-| Flag                                      | Declared environment values                      |
-| ----------------------------------------- | ------------------------------------------------ |
-| `the-storm-rwfbots-chat-enabled`          | Namespace `the-storm`; beta and prod `true`.     |
-| `the-storm-rwfbots-learning-enabled`      | Namespace `the-storm`; beta and prod `false`.    |
-| `the-storm-rwf-recording-archive-enabled` | Namespace `temporal`; beta `false`, prod `true`. |
+| Flag                                      | Declared environment values                                      |
+| ----------------------------------------- | ---------------------------------------------------------------- |
+| `the-storm-rwfbots-chat-enabled`          | Catalog `the-storm` (`minecraft/tsmc`); beta and prod `true`.    |
+| `the-storm-rwfbots-learning-enabled`      | Catalog `the-storm` (`minecraft/tsmc`); beta and prod `false`.   |
+| `the-storm-rwf-recording-archive-enabled` | Catalog `temporal` (`temporal/prod`); beta `false`, prod `true`. |
 
 Bot speech also requires `chat.enabled` in `rwfbots.yml`.
 Bot chat uses fixed entity `the-storm-rwfbots-chat` with `world` context.
@@ -115,4 +115,4 @@ own its worker and storage contract.
 ## Related
 
 - [Provision the Search and Destroy worlds](/how-to/provision-the-storm-search-and-destroy-world/)
-- [Check the Flipt flag inventory](/how-to/check-flipt-flag-inventory/)
+- [Operate feature flags and check the inventory](/how-to/check-flipt-flag-inventory/)

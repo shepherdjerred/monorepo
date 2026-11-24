@@ -237,14 +237,17 @@ describe("subtitle provenance credits", () => {
   });
 });
 
-describe("subtitle provider boundaries", () => {
+describe("OpenSubtitles provider boundaries", () => {
   it("filters machine-labelled OpenSubtitles and downloads by exact file ID", async () => {
     const calls: string[] = [];
     const provider = new OpenSubtitlesProvider(
       { apiKey: "fixture", userAgent: "media-test v1" },
       async (url, init) => {
         calls.push(url.pathname);
-        if (url.pathname.endsWith("subtitles"))
+        if (url.pathname.endsWith("subtitles")) {
+          expect(url.search).toBe(
+            "?ai_translated=exclude&languages=en&query=fixture",
+          );
           return Response.json({
             total_pages: 1,
             data: [
@@ -265,8 +268,18 @@ describe("subtitle provider boundaries", () => {
                   files: [{ file_id: 42, file_name: "fixture.srt" }],
                 },
               },
+              {
+                id: "3",
+                attributes: {
+                  language: "en",
+                  release: "Fixture",
+                  ai_translated: true,
+                  files: [{ file_id: 43, file_name: "fixture.srt" }],
+                },
+              },
             ],
           });
+        }
         if (url.pathname.endsWith("download")) {
           expect(init.body).toBe(JSON.stringify({ file_id: 42 }));
           return Response.json({
@@ -278,7 +291,12 @@ describe("subtitle provider boundaries", () => {
         return new Response("subtitle bytes");
       },
     );
-    const results = await provider.search({ query: "Fixture", language: "en" });
+    const results = await provider.search({
+      query: "  Fixture  ",
+      language: "EN",
+      hearingImpaired: "any",
+      page: 1,
+    });
     expect(results.candidates.map((candidate) => candidate.id)).toEqual(["2"]);
     const download = await provider.download(42);
     expect(download.filename).toBe("fixture.srt");
@@ -289,6 +307,137 @@ describe("subtitle provider boundaries", () => {
     ]);
   });
 
+  it("follows one equivalent search redirect on the login-selected VIP host", async () => {
+    const calls: string[] = [];
+    const query =
+      "?ai_translated=exclude&episode_number=2&foreign_parts_only=exclude&hearing_impaired=only&languages=en&page=2&parent_imdb_id=123&query=fixture+show&season_number=1";
+    const location = `/api/v1/subtitles${query.replace("+", "%20")}`;
+    const provider = new OpenSubtitlesProvider(
+      { apiKey: "fixture", userAgent: "media-test v1" },
+      async (url, init) => {
+        calls.push(url.href);
+        const headers = new Headers(init.headers);
+        expect(headers.get("Api-Key")).toBe("fixture");
+        expect(init.redirect).toBe("manual");
+        if (url.pathname.endsWith("login")) {
+          expect(init.method).toBe("POST");
+          expect(headers.has("Authorization")).toBe(false);
+          return Response.json({
+            token: "fixture-token",
+            base_url: "vip-api.opensubtitles.com",
+          });
+        }
+        expect(headers.get("Authorization")).toBe("Bearer fixture-token");
+        if (calls.length === 2) {
+          expect(url.search).toBe(query);
+          return new Response(null, { status: 301, headers: { location } });
+        }
+        return Response.json({ total_pages: 3, data: [] });
+      },
+    );
+
+    await provider.login("fixture-user", "fixture-password");
+    await expect(
+      provider.search({
+        query: "Fixture Show",
+        language: "en",
+        parentImdbId: "tt0000123",
+        season: 1,
+        episode: 2,
+        forced: false,
+        hearingImpaired: "required",
+        page: 2,
+      }),
+    ).resolves.toEqual({ totalPages: 3, candidates: [] });
+    expect(calls).toEqual([
+      "https://api.opensubtitles.com/api/v1/login",
+      `https://vip-api.opensubtitles.com/api/v1/subtitles${query}`,
+      `https://vip-api.opensubtitles.com${location}`,
+    ]);
+  });
+
+  it.each([
+    "https://example.com/api/v1/subtitles?ai_translated=exclude&languages=en&query=fixture",
+    "https://vip-api.opensubtitles.com/api/v1/subtitles?ai_translated=exclude&languages=en&query=fixture",
+    "https://user@api.opensubtitles.com/api/v1/subtitles?ai_translated=exclude&languages=en&query=fixture",
+    "/api/v1/download?ai_translated=exclude&languages=en&query=fixture",
+    "/api/v1/subtitles?languages=en&query=fixture",
+    "/api/v1/subtitles?ai_translated=exclude&languages=en&query=fixture&query=other",
+  ])(
+    "rejects an OpenSubtitles search redirect that changes its destination or scope (%s)",
+    async (location) => {
+      const transport = vi.fn(
+        async () => new Response(null, { status: 301, headers: { location } }),
+      );
+      const provider = new OpenSubtitlesProvider(
+        { apiKey: "fixture", userAgent: "media-test v1" },
+        transport,
+      );
+      await expect(
+        provider.search({ query: "fixture", language: "en" }),
+      ).rejects.toMatchObject({ kind: "invalid-response", status: 301 });
+      expect(transport).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("stops an OpenSubtitles search after one redirect", async () => {
+    const transport = vi.fn(
+      async () =>
+        new Response(null, {
+          status: 301,
+          headers: {
+            location: "?ai_translated=exclude&languages=en&query=fixture",
+          },
+        }),
+    );
+    const provider = new OpenSubtitlesProvider(
+      { apiKey: "fixture", userAgent: "media-test v1" },
+      transport,
+    );
+    await expect(
+      provider.search({ query: "fixture", language: "en" }),
+    ).rejects.toMatchObject({ kind: "unavailable", status: 301 });
+    expect(transport).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects an unrecognized OpenSubtitles login host before storing its token", async () => {
+    const transport = vi.fn(async () =>
+      Response.json({ token: "fixture-token", base_url: "example.com" }),
+    );
+    const provider = new OpenSubtitlesProvider(
+      { apiKey: "fixture", userAgent: "media-test v1" },
+      transport,
+    );
+    await expect(
+      provider.login("fixture-user", "fixture-password"),
+    ).rejects.toMatchObject({ kind: "invalid-response" });
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not replay OpenSubtitles login or download POST requests on redirect", async () => {
+    const transport = vi.fn(
+      async (url: URL) =>
+        new Response(null, { status: 301, headers: { location: url.href } }),
+    );
+    const provider = new OpenSubtitlesProvider(
+      { apiKey: "fixture", userAgent: "media-test v1" },
+      transport,
+    );
+    await expect(
+      provider.login("fixture-user", "fixture-password"),
+    ).rejects.toMatchObject({ kind: "unavailable", status: 301 });
+    await expect(provider.download(42)).rejects.toMatchObject({
+      kind: "outcome-unknown",
+      status: 301,
+    });
+    expect(transport.mock.calls.map(([url]) => url.pathname)).toEqual([
+      "/api/v1/login",
+      "/api/v1/download",
+    ]);
+  });
+});
+
+describe("subtitle provider boundaries", () => {
   it("ASSRT accepts numeric and decimal-string file IDs and verifies detail identity", async () => {
     const calls: string[] = [];
     const provider = new AssrtProvider("fixture-token", async (url) => {

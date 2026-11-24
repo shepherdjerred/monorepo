@@ -4,10 +4,8 @@ import {
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
-import { FliptProvider } from "@shepherdjerred/feature-flags/providers/flipt.ts";
-import { createFakeFetcher } from "@shepherdjerred/feature-flags/providers/fake-fetcher.ts";
-import snapshot from "@shepherdjerred/feature-flags/providers/fixtures/flipt-snapshot.default.json" with { type: "json" };
 import { mediaBehaviorConfig } from "#infrastructure/config.ts";
+import { createToggleableFlagProvider } from "#infrastructure/flags/flag-test-provider.ts";
 
 const key = "media-plex-event-hints-enabled";
 afterEach(async () => {
@@ -51,30 +49,15 @@ test("malformed present value and missing active flag fail loudly", async () => 
   }
 });
 test("fresh flag source outage cannot reuse prior enabled snapshot", async () => {
-  const fake = createFakeFetcher({
-    kind: "snapshot",
-    body: {
-      ...snapshot,
-      flags: snapshot.flags.map((flag) => ({
-        ...flag,
-        key: flag.key === "plain-on" ? key : flag.key,
-      })),
-    },
-  });
+  const { provider, disconnect } = createToggleableFlagProvider(key);
   await initFeatureFlags({
     environment: { FEATURE_FLAGS_MODE: "disabled" },
-    provider: new FliptProvider({
-      url: "http://flipt.invalid:8080",
-      namespace: "default",
-      environment: "default",
-      pollIntervalSeconds: 300,
-      fetcher: fake.fetcher,
-    }),
+    provider,
   });
   expect(
     await mediaBehaviorConfig("production", true).get("plexEventHintsEnabled"),
   ).toMatchObject({ value: true, source: "flag" });
-  fake.setBehavior({ kind: "network-error", message: "offline" });
+  disconnect();
   expect(
     await mediaBehaviorConfig("production", true).get("plexEventHintsEnabled"),
   ).toMatchObject({ value: false, source: "default" });

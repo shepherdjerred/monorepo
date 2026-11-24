@@ -2,33 +2,36 @@
 
 The language-neutral [managed inventory](src/managed-flag-inventory.json) owns
 flag names, types, targeting, environment overrides, and default-off exceptions.
-New boolean features default on in production and beta. A non-global rollout
-requires an environment-scoped reason, AI issue, enablement criteria, and either
-a `reviewBy` date or `noDeployedConsumer: true` (when an environment has no
-deployed consumer) in `defaultOffExceptions`. A deferred owner decision is
-recorded as such.
+[Active deployments](src/deployments.ts) project that inventory onto one
+`<catalog>/<stage>` document per workload reader (`scout/beta`, `scout/prod`,
+`streambot/prod`, `minecraft/tsmc`, `storm/prod`, and the other hosted
+services). New boolean features default on in production and beta. A non-global
+rollout requires an environment-scoped reason, `AI` issue, enablement criteria,
+and either a `reviewBy` date or `noDeployedConsumer: true` (when an environment
+has no deployed consumer) in `defaultOffExceptions`. A deferred owner decision
+is recorded as such.
 
 ## Dynamic consumers
 
 Streambot's `streambot-web-ui-enabled` gate is evaluated per server and user on
 every authenticated media request in `src/config/media-features.ts`. It defaults
-on in production. Web credential and
-listener bootstrap stay outside Flipt.
+on in production. Web credential and listener bootstrap stay outside Flags.
 
 Web remote music search reads the variant `streambot-music-search-provider`
 (`youtube-music` or `musicbrainz`) per request in `src/config/media-features.ts`.
-The code default and the Flipt declaration are both `youtube-music` for
+The code default and the inventory declaration are both `youtube-music` for
 production and beta; an unknown value throws instead of falling back.
 
 Competitive LoL uses `streambot-lol-esports-enabled` for official schedules and
 broadcasts, and `streambot-lol-autoplay-enabled` for one-time automatic playback.
 Both are Boolean gates evaluated per server/user and default on in production.
 They also require `streambot-sports-streaming-enabled`.
-Scheduler credentials and the internal listener are bootstrap, outside Flipt.
-Streambot and The Storm have one deployed production service each. Their beta
-Flipt copies preserve targeting for testing and do not represent beta services.
+Scheduler credentials and the internal listener are bootstrap, outside Flags.
+Streambot and The Storm run one deployed service each and project only their
+active deployments (`streambot/prod`, `minecraft/tsmc`, and `storm/prod`) rather
+than storing unread beta documents.
 
-The Scout Client flags have no code-level production denial; Flipt decides.
+The Scout Client flags have no code-level production denial; Flags decides.
 Scout's `packages/backend/src/scout-client/access/policy.ts` first asks
 whether a flag answers true for the rollout's first audience (the owner's
 account and the owner's server segment), with no database read, so
@@ -39,7 +42,7 @@ segments target whole servers. Production stays off under a default-off
 exception (AI-553); its owner, owner's-server and everyone steps are explicit
 operator changes made on evidence.
 
-| Consumer  | Flipt keys                                                                                                                                                                                                                                                                                        | Type and targeting                                                                               | Current source                                        |
+| Consumer  | Flag keys                                                                                                                                                                                                                                                                                         | Type and targeting                                                                               | Current source                                        |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
 | Streambot | `player-card-enabled`, `subtitles-enabled`                                                                                                                                                                                                                                                        | Boolean; process snapshot                                                                        | `src/config/dynamic.ts`                               |
 | Streambot | `streambot-subtitle-languages`, `streambot-subtitles-include-auto-generated`                                                                                                                                                                                                                      | String/Boolean; process snapshot                                                                 | `src/config/schema.ts`                                |
@@ -78,11 +81,12 @@ operator changes made on evidence.
   native pause/resume lifecycle exists. The daily-post product gate is safe now
   because each scheduler tick reads the cached config.
 
-## Keep outside Flipt
+## Keep outside Flags
 
-- Credentials, feature-flag bootstrap variables, one-shot CLI options, and
-  infrastructure shape. Runtime telemetry and operational behavior use typed
-  flags; a flag cannot create a listener, worker, credential, or storage volume.
+- Credentials, feature-flag bootstrap variables (`FEATURE_FLAGS_MODE`,
+  `FLAGS_URL`, `FLAGS_DEPLOYMENT`), one-shot CLI options, and infrastructure
+  shape. Runtime telemetry and operational behavior use typed flags; a flag
+  cannot create a listener, worker, credential, or storage volume.
 - Birmel trusted-user grants, shell/browser/repository-editor capability, and
   Streambot voice activation plus Streambot voice capture. Evaluation access
   does not authorize persisting human audio.
@@ -94,7 +98,7 @@ operator changes made on evidence.
   What justified the env var was model verification being fatal at boot; Scout
   now loads models lazily on first use and proves the asset set in its image
   build instead, so the flag can own activation outright. Production stays
-  protected by `PRODUCTION_HARD_DISABLED_FLAGS` — a code-level gate Flipt
+  protected by `PRODUCTION_HARD_DISABLED_FLAGS` — a code-level gate Flags
   cannot override — rather than by an environment variable. Streambot has not
   had that lifecycle work done and keeps its env gate.
 
@@ -113,8 +117,10 @@ guild and sends an empty replacement payload when a policy is disabled,
 removing stale commands.
 
 The inventory observer publishes one-hot live configuration state and scoped
-exception metadata. Consumer metrics separately report evaluations, readiness,
-snapshot age, and configured Flipt identity. Configured ON is not live acceptance.
-The [operator how-to](../docs/wiki/src/content/docs/how-to/check-flipt-flag-inventory.md)
-describes explicit, revision-guarded changes to existing booleans. Scheduled
-reconciliation creates missing declarations and never overwrites targeting.
+exception metadata across active Flags deployments. Consumer metrics separately
+report evaluations, readiness, snapshot age, and configured deployment identity.
+Configured ON is not live acceptance. The
+[operator how-to](../docs/wiki/src/content/docs/how-to/check-flipt-flag-inventory.md)
+describes `toolkit flags`, the browser UI, and explicit revision-checked changes
+to existing flags. Scheduled reconciliation creates missing declarations via
+`create-missing` and never overwrites targeting.

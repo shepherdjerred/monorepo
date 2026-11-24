@@ -10,6 +10,7 @@ import {
   loadFeatureFlagConfiguration,
   type Environment,
 } from "@shepherdjerred/feature-flags/config/load.ts";
+import { parseFlagsDeployment } from "@shepherdjerred/feature-flags/config/schema.ts";
 
 const FLAG_KEY = "temporal-call-graph-tracing";
 const log = createStructuredLogger("config.call-graph-tracing");
@@ -19,12 +20,15 @@ export function callGraphTracingDefault(
   workloadEnvironment: string,
 ): boolean {
   const configuration = loadFeatureFlagConfiguration(bootstrap);
+  const configuredStage =
+    configuration.mode === "flags"
+      ? parseFlagsDeployment(configuration.deployment)?.stage
+      : undefined;
   const environment =
-    configuration.mode === "flipt"
-      ? configuration.environment
-      : workloadEnvironment === "prod" || workloadEnvironment === "production"
-        ? "prod"
-        : "beta";
+    configuredStage ??
+    (workloadEnvironment === "prod" || workloadEnvironment === "production"
+      ? "prod"
+      : "beta");
   return managedBooleanDefault(FLAG_KEY, environment);
 }
 

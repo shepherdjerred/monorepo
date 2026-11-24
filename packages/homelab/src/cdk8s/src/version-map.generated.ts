@@ -110,7 +110,6 @@ export const VersionMapSchema = z
     "library/busybox": z.string(),
     "mikefarah/yq": z.string(),
     "library/alpine": z.string(),
-    "alpine/git": z.string(),
     "mccloud/bazarr-openai-whisperbridge": z.string(),
     "library/debian": z.string(),
     "library/nginx": z.string(),
@@ -119,7 +118,6 @@ export const VersionMapSchema = z
     "temporalio/server": z.string(),
     "temporalio/ui": z.string(),
     "temporalio/admin-tools": z.string(),
-    "flipt-io/flipt": z.string(),
   })
   .catchall(z.string());
 

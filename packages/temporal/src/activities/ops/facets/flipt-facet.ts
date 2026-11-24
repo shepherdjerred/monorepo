@@ -1,14 +1,19 @@
 import {
-  compareManagedFlagInventory,
-  fetchFliptSnapshot,
-  type FliptFetcher,
-} from "@shepherdjerred/feature-flags/managed-flag-drift.ts";
+  flagDeploymentForSelector,
+  type FlagDeployment,
+} from "@shepherdjerred/feature-flags/deployments.ts";
+import {
+  compareDeploymentFlags,
+  fetchFlagsDeploymentSnapshot,
+  type FlagsHttpFetcher,
+} from "@shepherdjerred/feature-flags/flags-drift.ts";
 import {
   managedFlagInventory,
   materializeManagedNamespaceEnvironment,
   type ManagedFlag,
   type ManagedFlagInventory,
 } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
+import { projectDeploymentFlags } from "@shepherdjerred/feature-flags/project-deployment.ts";
 import { classifyManagedBoolean } from "@shepherdjerred/feature-flags/rollout-state.ts";
 import type {
   FliptFacet,
@@ -22,37 +27,36 @@ function isFlagEnabled(flag: ManagedFlag): boolean {
   return flag.type === "variant" || classifyManagedBoolean(flag) !== "off";
 }
 
-async function evaluateNamespaceEnvironment(input: {
-  fliptUrl: string;
-  namespace: string;
-  environment: "prod" | "beta";
-  expected: readonly ManagedFlag[];
-  fetcher: FliptFetcher;
+async function evaluateDeployment(input: {
+  flagsUrl: string;
+  deployment: FlagDeployment;
+  inventory: ManagedFlagInventory;
+  fetcher: FlagsHttpFetcher;
 }): Promise<FliptNamespaceStatus> {
+  const expected = projectDeploymentFlags(input.deployment, input.inventory);
   try {
-    const snapshot = await fetchFliptSnapshot({
-      url: input.fliptUrl,
-      namespace: input.namespace,
-      environment: input.environment,
+    const snapshot = await fetchFlagsDeploymentSnapshot({
+      url: input.flagsUrl,
+      deployment: input.deployment,
       fetcher: (url, init) =>
         input.fetcher(url, {
           ...init,
           signal: AbortSignal.timeout(SNAPSHOT_TIMEOUT_MS),
         }),
     });
-    if (snapshot.flags.length === 0 && input.expected.length > 0) {
+    if (snapshot.flags.length === 0 && expected.length > 0) {
       return "missing";
     }
-    const drift = compareManagedFlagInventory(snapshot, input.expected);
+    const drift = compareDeploymentFlags(snapshot.flags, expected);
     if (
-      drift.missingInFlipt.length === input.expected.length &&
-      input.expected.length > 0 &&
-      drift.undeclaredInInventory.length === 0
+      drift.missingFlags.length === expected.length &&
+      expected.length > 0 &&
+      drift.extraFlags.length === 0
     ) {
       return "missing";
     }
-    return drift.missingInFlipt.length > 0 ||
-      drift.undeclaredInInventory.length > 0 ||
+    return drift.missingFlags.length > 0 ||
+      drift.extraFlags.length > 0 ||
       drift.contractMismatches.length > 0
       ? "drift"
       : "ok";
@@ -66,14 +70,14 @@ async function evaluateNamespaceEnvironment(input: {
 }
 
 export async function collectFliptFacet(options?: {
-  fliptUrl?: string | undefined;
+  flagsUrl?: string | undefined;
   inventory?: ManagedFlagInventory;
-  fetcher?: FliptFetcher;
+  fetcher?: FlagsHttpFetcher;
   now?: Date;
 }): Promise<FliptFacet> {
   const inventory = options?.inventory ?? managedFlagInventory;
-  const fliptUrl = (options?.fliptUrl ?? Bun.env["FLIPT_URL"] ?? "").trim();
-  const fetcher: FliptFetcher =
+  const flagsUrl = (options?.flagsUrl ?? Bun.env["FLAGS_URL"] ?? "").trim();
+  const fetcher: FlagsHttpFetcher =
     options?.fetcher ?? ((input, init) => fetch(input, init));
   const todayIso = (options?.now ?? new Date()).toISOString().slice(0, 10);
 
@@ -144,42 +148,59 @@ export async function collectFliptFacet(options?: {
     };
   });
 
-  const namespaces: FliptFacet["namespaces"] = await Promise.all(
-    inventory.namespaces.map(async (ns) => {
-      const prodExpected = prodByNamespace.get(ns.key) ?? [];
-      const betaExpected = betaByNamespace.get(ns.key) ?? [];
-      if (fliptUrl === "") {
-        return {
-          namespace: ns.key,
-          name: ns.name,
-          flagCount: prodExpected.length,
-          prodStatus: "unknown" as const,
-          betaStatus: "unknown" as const,
-        };
-      }
-      const [prodStatus, betaStatus] = await Promise.all([
-        evaluateNamespaceEnvironment({
-          fliptUrl,
-          namespace: ns.key,
-          environment: "prod",
-          expected: prodExpected,
-          fetcher,
-        }),
-        evaluateNamespaceEnvironment({
-          fliptUrl,
-          namespace: ns.key,
-          environment: "beta",
-          expected: betaExpected,
-          fetcher,
-        }),
-      ]);
-      return {
+  if (flagsUrl === "") {
+    return {
+      totalFlags: inventory.flags.length,
+      prodEnabledCount,
+      betaEnabledCount,
+      defaultOffExceptionsCount,
+      overdueExceptionsCount,
+      namespaces: inventory.namespaces.map((ns) => ({
         namespace: ns.key,
         name: ns.name,
-        flagCount: prodExpected.length,
-        prodStatus,
-        betaStatus,
-      };
+        flagCount: (prodByNamespace.get(ns.key) ?? []).length,
+        prodStatus: "unknown" as const,
+        betaStatus: "unknown" as const,
+      })),
+      flags,
+    };
+  }
+
+  const activeTargets = inventory.namespaces.flatMap((ns) =>
+    (["prod", "beta"] as const).flatMap((environment) => {
+      const deployment = flagDeploymentForSelector(ns.key, environment);
+      return deployment === undefined
+        ? []
+        : [{ selector: `${ns.key}:${environment}`, deployment }];
+    }),
+  );
+  const evaluated = await Promise.all(
+    activeTargets.map(async (target) => ({
+      selector: target.selector,
+      status: await evaluateDeployment({
+        flagsUrl,
+        deployment: target.deployment,
+        inventory,
+        fetcher,
+      }),
+    })),
+  );
+  const statusBySelector = new Map(
+    evaluated.map((entry) => [entry.selector, entry.status]),
+  );
+  const undeployedStatus: FliptNamespaceStatus = evaluated.some(
+    (entry) => entry.status !== "unknown",
+  )
+    ? "ok"
+    : "unknown";
+
+  const namespaces: FliptFacet["namespaces"] = inventory.namespaces.map(
+    (ns) => ({
+      namespace: ns.key,
+      name: ns.name,
+      flagCount: (prodByNamespace.get(ns.key) ?? []).length,
+      prodStatus: statusBySelector.get(`${ns.key}:prod`) ?? undeployedStatus,
+      betaStatus: statusBySelector.get(`${ns.key}:beta`) ?? undeployedStatus,
     }),
   );
 

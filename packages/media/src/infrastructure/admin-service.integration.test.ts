@@ -4,7 +4,11 @@ import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { CredentialCipher } from "#application/security.ts";
 import { PrismaAdminApplication } from "./admin-service.ts";
 import type { MediaActor } from "#application/auth.ts";
-import type { SaveProvider, ManualSubtitle } from "#shared/admin.ts";
+import {
+  defaultProviderConfiguration,
+  type ManualSubtitle,
+  type SaveProvider,
+} from "#shared/admin.ts";
 
 let cluster: Awaited<ReturnType<typeof startMediaTestPostgres>>;
 let admin: PrismaAdminApplication;
@@ -149,6 +153,36 @@ test("requires owner access and prevents private trackers from using public clea
       seedingPolicy: { kind: "unknown" },
     }),
   ).rejects.toMatchObject({ code: "provider_credentials_required" });
+});
+
+test("accepts the size-based Hit & Run policy across the AvistaZ network", async () => {
+  const settings: SaveProvider = {
+    expectedUpdatedAt: null,
+    enabled: false,
+    configuration: defaultProviderConfiguration,
+    seedingPolicy: {
+      kind: "privatehd",
+      verified: true,
+      evidence: "Tracker Hit & Run rules for complete downloads",
+      ratio: 0.9,
+    },
+  };
+  const trackerIds = ["avistaz", "animez"] as const;
+  for (const id of trackerIds) {
+    await expect(
+      admin.saveProvider(owner, `seed-policy-${id}`, id, settings),
+    ).resolves.toMatchObject({ status: "completed" });
+  }
+  const providers = await admin.providers(owner);
+  for (const id of trackerIds) {
+    expect(providers.find((provider) => provider.id === id)).toMatchObject({
+      enabled: false,
+      seedingPolicy: settings.seedingPolicy,
+    });
+  }
+  expect(() =>
+    admin.saveProvider(owner, "wrong-seed-policy", "knaben", settings),
+  ).toThrow("The size formula applies to PrivateHD, AvistaZ, and AnimeZ");
 });
 
 async function uploadFixture(): Promise<ManualSubtitle> {

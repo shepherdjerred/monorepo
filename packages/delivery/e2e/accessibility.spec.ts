@@ -5,7 +5,7 @@ import { api, expectAccessible } from "./helpers.ts";
 
 const PAGES = [
   "/",
-  "/?q=flipt",
+  "/?q=nfd",
   "/pipelines",
   "/pipelines/scout-for-lol",
   "/pipelines/arcade/executions",
@@ -16,7 +16,7 @@ const PAGES = [
   "/artifacts",
   "/activity",
   "/deployments?service=No+such+service",
-  "/artifacts?service=flipt",
+  "/artifacts?service=nfd",
   "/deployments/not-a-uuid",
   "/commits/zzzz",
 ];

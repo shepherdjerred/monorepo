@@ -8,7 +8,6 @@ import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/ot
 import {
   FLAGS_EVALUATION_ENDPOINT,
   FLAGS_MANAGEMENT_ENDPOINT,
-  FLIPT_ENDPOINT,
 } from "./endpoint.ts";
 
 /**
@@ -45,46 +44,6 @@ export function flagsEnv(props: {
     FLAGS_DEPLOYMENT: EnvValue.fromValue(props.deployment),
     FLAGS_URL: EnvValue.fromValue(FLAGS_EVALUATION_URL),
   };
-}
-
-/** Flipt's in-cluster evaluation endpoint. */
-export const FLIPT_URL = FLIPT_ENDPOINT.url;
-
-type FliptKey = "FLIPT_NAMESPACE" | "FLIPT_ENVIRONMENT" | "FLIPT_URL";
-
-/** The order a workload declares its three Flipt variables in. */
-export type FliptEnvOrder = readonly [FliptKey, FliptKey, FliptKey];
-
-const FLIPT_ENV_ORDER: FliptEnvOrder = [
-  "FLIPT_NAMESPACE",
-  "FLIPT_ENVIRONMENT",
-  "FLIPT_URL",
-];
-
-/**
- * Bootstrap for the feature-flag client: `FEATURE_FLAGS_MODE=flipt` followed by
- * the Flipt namespace, environment and URL. These cannot come from a flag.
- *
- * `order` exists only to reproduce a workload's existing declaration order;
- * new workloads leave it unset.
- */
-export function fliptEnv(props: {
-  namespace: string;
-  environment: string;
-  order?: FliptEnvOrder;
-}): Record<string, EnvValue> {
-  const values: Record<FliptKey, string> = {
-    FLIPT_NAMESPACE: props.namespace,
-    FLIPT_ENVIRONMENT: props.environment,
-    FLIPT_URL,
-  };
-  const env: Record<string, EnvValue> = {
-    FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
-  };
-  for (const key of props.order ?? FLIPT_ENV_ORDER) {
-    env[key] = EnvValue.fromValue(values[key]);
-  }
-  return env;
 }
 
 /**

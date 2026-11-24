@@ -7,12 +7,12 @@ A document is a list of boolean flags with ordered segment rollouts, or
 variant flags whose value is one string.
 
 `FLAGS_ACTIVE` is `true`, so Delivery deploys `flags/prod` on its own ZFS NVMe
-SQLite volume at `/var/lib/flags`. Consumer reads and operator writes remain on
-Flipt until the consumer cutover change.
+SQLite volume at `/var/lib/flags` as the authoritative feature-flag service.
 
 ## HTTP
 
-`GET /healthz` answers the probes.
+`GET /healthz` answers the probes. `GET /metrics` exports Prometheus gauges for
+stored deployments, revisions, and flag counts on the primary listener.
 
 Credentialless routes reject an `Authorization` header:
 
@@ -44,14 +44,10 @@ combined with `FLAGS_INGRESS_IDENTITY_DIR`. Browser writes must be same-origin
 nothing when it does not match, including later flags in that request.
 `create-missing` inserts absent keys and leaves an existing body as it is.
 
-Startup copies each missing deployment once. When `FLAGS_FLIPT_URL` is set,
-only deployments not yet stored in SQLite are fetched from Flipt, and a
-percentage rollout, variant rule, or other unsupported construct stops the
-process before writing. Once all deployments are persisted in SQLite, restarts
-do not contact Flipt. Without `FLAGS_FLIPT_URL`, startup copies the managed
-inventory document for any missing deployment. A document already stored is left
-alone. Namespace and environment pairs that no deployment reads, including the
-unused beta copies, are reported and not imported.
+Startup seeds missing deployments from the managed inventory once. Any document
+already stored in SQLite is left alone across restarts. Namespace and
+environment pairs that no deployment reads, including unused beta copies, are
+reported and not seeded.
 
 ## Operator
 
@@ -74,6 +70,3 @@ Save writes that revision. A conflicting write is left unchanged: a warning
 above the form shows the other value beside the draft, with a button to load it.
 
 `toolkit flags` is the command surface. See `packages/toolkit/README.md`.
-
-The consumer cutover and removing Flipt are later changes; consumer reads and
-operator writes stay on Flipt until that cutover lands.

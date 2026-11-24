@@ -24,6 +24,7 @@ import { ciIdentity } from "#infrastructure/qualification.ts";
 import type { QualificationRequest } from "#infrastructure/qualification.ts";
 import type { createRecoveryInspector } from "#infrastructure/recovery.ts";
 import { registerWorkerRoutes } from "./worker-routes.ts";
+import { failedRequest, isUniqueViolation } from "./request-failure.ts";
 import { registerSelectionRoutes } from "./selection-routes.ts";
 import { retryRequest } from "#infrastructure/selection/request.ts";
 import {
@@ -61,6 +62,7 @@ import { registerEventsRoute } from "./events-route.ts";
 import type { ChangeFeed } from "#infrastructure/change-feed/feed.ts";
 import type { Enrichment } from "#infrastructure/enrichment/enrichment.ts";
 import type { Drain } from "./drain.ts";
+import { trackRequest, type RequestLoad } from "./request-load.ts";
 
 type Options = {
   sourceRevision?: string;
@@ -81,6 +83,8 @@ type Options = {
   enrichment?: Enrichment;
   /** The process's shutdown drain; a draining API reports itself unready. */
   drain?: Drain;
+  /** Counts requests in flight and logs slow ones, for the memory watch. */
+  load?: RequestLoad;
   qualifyBuild: (
     input: QualificationRequest,
   ) => Promise<"pending" | "verified" | "failed">;
@@ -96,9 +100,6 @@ export function invalidRequestMessage(error: z.ZodError | SyntaxError): string {
     .map((issue) => `${issue.path.join(".") || "(body)"}: ${issue.code}`);
   return `Invalid request: ${issues.join("; ")}`;
 }
-
-/** Prisma's unique-constraint violation (P2002). */
-const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
 
 export function createApp(options: Options) {
   const app = new Hono<{
@@ -132,7 +133,7 @@ export function createApp(options: Options) {
     const requestId = crypto.randomUUID();
     c.set("requestId", requestId);
     c.header("x-request-id", requestId);
-    await next();
+    await trackRequest(options.load, c.req.method, c.req.path, next);
   });
   app.get("/healthz", (c) => c.json({ status: "ok" }));
   app.get("/metrics", async (c) => {
@@ -459,7 +460,7 @@ export function createApp(options: Options) {
     }
     // A concurrent duplicate, such as a second pending recovery intent for
     // one deployment, is a conflict the caller can act on, not a crash.
-    if (UniqueViolationSchema.safeParse(error).success)
+    if (isUniqueViolation(error))
       return c.json(
         {
           error: {
@@ -470,26 +471,7 @@ export function createApp(options: Options) {
         },
         409,
       );
-    console.error(
-      JSON.stringify({
-        message: "delivery_request_failed",
-        requestId: c.get("requestId"),
-        errorType: error.name,
-        ...("code" in error && typeof error.code === "string"
-          ? { errorCode: error.code }
-          : {}),
-      }),
-    );
-    return c.json(
-      {
-        error: {
-          code: "INTERNAL",
-          message: "Delivery request failed",
-          requestId: c.get("requestId"),
-        },
-      },
-      500,
-    );
+    return failedRequest(c, error);
   });
   return app;
 }
