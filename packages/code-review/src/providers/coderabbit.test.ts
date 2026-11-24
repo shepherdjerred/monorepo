@@ -11,6 +11,7 @@ import type { ReviewThread } from "../types.ts";
 import {
   CODERABBIT_LOGIN,
   coderabbitProvider,
+  isCoderabbitBlockedCheckRun,
   isCoderabbitRateLimitedStatus,
   parseCoderabbitReviewBodies,
   parseCoderabbitSeverity,
@@ -298,6 +299,23 @@ describe("coderabbitProvider", () => {
     expect(matchesBlockedSignal(blocked!, INLINE_MAJOR)).toBe(false);
   });
 
+  test.each([
+    "<details><summary>Action not completed</summary>\n\nReview rate limited — please wait before requesting another review.\n</details>",
+    "<details><summary>Action not completed</summary>\n\nReview skipped: 430 changed files exceed the limit of 100 files.\n</details>",
+    "Review skipped: Too many files changed in this pull request.",
+  ])(
+    "detects action-not-completed and file-limit notices as usage-limited: %s",
+    (body) => {
+      const strategies = coderabbitProvider.detectBlocked ?? [];
+      const matched = strategies.find((strategy) =>
+        matchesBlockedSignal(strategy, body),
+      );
+      expect(matched?.reason).toBe("usage-limited");
+    },
+  );
+});
+
+describe("CodeRabbit status and check-run blocks", () => {
   test("identifies CodeRabbit rate-limited commit status", () => {
     expect(
       isCoderabbitRateLimitedStatus("CodeRabbit", "Review rate limited"),
@@ -318,5 +336,81 @@ describe("coderabbitProvider", () => {
       false,
     );
     expect(isCoderabbitRateLimitedStatus("CodeRabbit", null)).toBe(false);
+  });
+
+  test("identifies CodeRabbit blocked check runs", () => {
+    expect(
+      isCoderabbitBlockedCheckRun({
+        name: "CodeRabbit",
+        status: "completed",
+        title: "Review rate limited",
+        summary: null,
+      }),
+    ).toBe(true);
+    expect(
+      isCoderabbitBlockedCheckRun({
+        name: "coderabbit",
+        status: "completed",
+        title: "Action not completed",
+        summary: "Organization rate limit exceeded.",
+      }),
+    ).toBe(true);
+    expect(
+      isCoderabbitBlockedCheckRun({
+        name: "CodeRabbit",
+        status: "completed",
+        title: "Review skipped: Too many files",
+        summary: null,
+      }),
+    ).toBe(true);
+    expect(
+      isCoderabbitBlockedCheckRun({
+        name: "CodeRabbit",
+        status: "completed",
+        title: "Review skipped",
+        summary: "430 changed files exceed the limit for this plan.",
+      }),
+    ).toBe(true);
+    expect(
+      isCoderabbitBlockedCheckRun({
+        name: "CodeRabbit",
+        status: "in_progress",
+        title: "Review rate limited",
+        summary: null,
+      }),
+    ).toBe(false);
+    expect(
+      isCoderabbitBlockedCheckRun({
+        name: "OtherCheck",
+        status: "completed",
+        title: "Review rate limited",
+        summary: null,
+      }),
+    ).toBe(false);
+    expect(
+      isCoderabbitBlockedCheckRun({
+        name: "CodeRabbit",
+        status: "completed",
+        title: "Review completed",
+        summary: "No actionable findings.",
+      }),
+    ).toBe(false);
+    expect(
+      isCoderabbitBlockedCheckRun({
+        name: "CodeRabbit",
+        status: "completed",
+        title: "Review completed",
+        summary:
+          "Summary: hardened rate limit and too many files check-run handling.",
+      }),
+    ).toBe(false);
+    expect(
+      isCoderabbitBlockedCheckRun({
+        name: null,
+        status: "completed",
+        title: "Review rate limited",
+        summary: null,
+      }),
+    ).toBe(false);
   });
 });

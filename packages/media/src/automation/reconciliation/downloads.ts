@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { defaultScope } from "#shared/editions/scope.ts";
 import { targetWhere } from "#infrastructure/editions/targets.ts";
 import type { MediaAutomationContext } from "#automation/context.ts";
@@ -16,6 +17,10 @@ import { MediaError } from "#application/errors.ts";
 import { movieManagementContext } from "#automation/movie-editions/management-context.ts";
 import type { AcquisitionAttempt, Prisma } from "#generated/prisma/client.ts";
 import { queueTerminalMovieRetryV4 } from "#automation/movie-editions/retry/sweep.ts";
+import {
+  PLEX_EXCLUSION_PROOF_REQUIRED,
+  hasLibraryPlexExclusionDatabaseProof,
+} from "#automation/plex-exclusion/proof.ts";
 
 const failedStatuses = new Set([
   "FAILED",
@@ -118,6 +123,47 @@ async function sweepDownloadAttempt(
     });
     return;
   }
+  await sweepOrdinaryDownloadAttempt(context, attempt, runtime.epoch);
+}
+
+async function ordinaryExclusionGate(
+  context: MediaAutomationContext,
+  observedAttempt: AcquisitionAttempt,
+  coordinatorId: string,
+): Promise<{ allowed: boolean; blockedOnExclusion: boolean }> {
+  const coordinator = await context.db.operation.findUnique({
+    where: { id: coordinatorId },
+    select: { status: true, result: true },
+  });
+  const blockedOnExclusion =
+    coordinator?.status === "reconciling" &&
+    z
+      .object({ reason: z.literal(PLEX_EXCLUSION_PROOF_REQUIRED) })
+      .safeParse(coordinator.result).success;
+  if (observedAttempt.state === "imported")
+    return { allowed: true, blockedOnExclusion };
+  const item = await context.db.mediaItem.findFirst({
+    where: { id: { in: observedAttempt.mediaIds } },
+    select: { kind: true },
+  });
+  if (item === null) {
+    throw new Error(
+      `Acquisition attempt ${observedAttempt.id} has no existing media item`,
+    );
+  }
+  const libraryKind = item.kind === "movie" ? "movies" : "tv";
+  const allowed = await hasLibraryPlexExclusionDatabaseProof(
+    context.db,
+    libraryKind,
+  );
+  return { allowed, blockedOnExclusion };
+}
+
+async function sweepOrdinaryDownloadAttempt(
+  context: MediaAutomationContext,
+  attempt: Prisma.AcquisitionAttemptGetPayload<{ include: { torrent: true } }>,
+  epoch: number,
+) {
   await reconcileUnconfirmedSubmission(context, attempt.id);
   const observedAttempt = await context.db.acquisitionAttempt.findUniqueOrThrow(
     { where: { id: attempt.id }, include: { torrent: true } },
@@ -130,10 +176,21 @@ async function sweepDownloadAttempt(
       sourcePath: path.join(context.downloadRoot, "media", attempt.id),
     });
   const coordinatorId = attempt.coordinatorOperationId ?? attempt.operationId;
+  const gate = await ordinaryExclusionGate(
+    context,
+    observedAttempt,
+    coordinatorId,
+  );
+  if (!gate.allowed) return;
   const root = await context.describeWorkflow(
     `media-operation-${coordinatorId}`,
   );
-  if (root === null || !failedStatuses.has(root.status)) return;
+  if (
+    root === null ||
+    (!failedStatuses.has(root.status) &&
+      !(gate.blockedOnExclusion && root.status === "COMPLETED"))
+  )
+    return;
   const child = await context.describeWorkflow(`media-acquire-${attempt.id}`);
   if (
     child !== null &&
@@ -148,7 +205,7 @@ async function sweepDownloadAttempt(
     rootRunId: root.runId,
     rootStatus: root.status,
     childRunId: child?.runId ?? "unstarted",
-    epoch: runtime.epoch,
+    epoch,
   });
 }
 

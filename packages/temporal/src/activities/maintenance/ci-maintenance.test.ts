@@ -260,6 +260,58 @@ test("canceled native receipts are terminal failures, never verified main", () =
   expect(state.pending).toBeNull();
   expect(state.completed).toEqual({});
   expect(state.blocked["ci-images"]?.reason).toContain("ended canceled");
+  expect(state.blocked["ci-images"]?.blockedAt).toBeUndefined();
+  expect(nextMaintenanceCandidate(state, [candidate])).toBeUndefined();
+});
+
+test.each(["canceled", "error"])(
+  "pre-work %s receipts clear pending without blocking and retry next tick",
+  (status) => {
+    const state = initialMaintenanceState();
+    state.pending = pending();
+    recordMaintenanceObservation(state, {
+      enabled: true,
+      candidates: [],
+      busy: false,
+      observedAt: "2026-11-24T17:00:00.000Z",
+      pending: {
+        number: 17_812,
+        status,
+        source: candidate.source,
+        startedWork: false,
+      },
+    });
+    expect(state.pending).toBeNull();
+    expect(state.completed).toEqual({});
+    expect(state.blocked).toEqual({});
+    expect(state.observation).toBe(
+      `Pipeline 17812 ended ${status} before starting work; retrying next tick`,
+    );
+    expect(nextMaintenanceCandidate(state, [candidate])).toEqual(candidate);
+  },
+);
+
+test("started-work failures latch blocked with observedAt from inspection", () => {
+  const state = initialMaintenanceState();
+  state.pending = pending();
+  recordMaintenanceObservation(state, {
+    enabled: true,
+    candidates: [],
+    busy: false,
+    observedAt: "2026-11-24T17:05:00.000Z",
+    pending: {
+      number: 14_708,
+      status: "failure",
+      source: candidate.source,
+      startedWork: true,
+    },
+  });
+  expect(state.pending).toBeNull();
+  expect(state.blocked["ci-images"]).toEqual({
+    requestId: "request-1",
+    reason: "Pipeline 14708 ended failure; inspect before retrying",
+    blockedAt: "2026-11-24T17:05:00.000Z",
+  });
   expect(nextMaintenanceCandidate(state, [candidate])).toBeUndefined();
 });
 test("requires exactly one structured result receipt", () => {

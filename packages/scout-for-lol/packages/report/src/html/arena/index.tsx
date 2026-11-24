@@ -5,7 +5,12 @@ import {
   bunReportFonts,
   containsCjkText,
 } from "@scout-for-lol/design-system/satori/fonts";
-import { svgToPng } from "#src/html/index.tsx";
+import { svgToPngInThread } from "#src/html/index.tsx";
+import {
+  runPngRenderInWorker,
+  runSvgRenderInWorker,
+} from "#src/html/render-worker-client.ts";
+import { isRenderWorkerThread } from "#src/html/render-worker-protocol.ts";
 import {
   preloadChampionImages,
   preloadChampionLoadingImages,
@@ -42,7 +47,7 @@ function getCanvasDimensions(match: ArenaMatch): {
   return { width, height: BASE_HEIGHT };
 }
 
-export async function arenaMatchToSvg(match: ArenaMatch) {
+export async function arenaMatchToSvgInThread(match: ArenaMatch) {
   const trackedTeams = getTrackedTeams(match);
 
   const championNames: string[] = [];
@@ -75,8 +80,20 @@ export async function arenaMatchToSvg(match: ArenaMatch) {
   return svg;
 }
 
-export async function arenaMatchToImage(match: ArenaMatch) {
-  const svg = await arenaMatchToSvg(match);
-  const png = await svgToPng(svg, { crop: false });
+export async function arenaMatchToImageInThread(match: ArenaMatch) {
+  const svg = await arenaMatchToSvgInThread(match);
+  const png = await svgToPngInThread(svg, { crop: false });
   return png;
+}
+
+export async function arenaMatchToSvg(match: ArenaMatch) {
+  return isRenderWorkerThread()
+    ? await arenaMatchToSvgInThread(match)
+    : await runSvgRenderInWorker({ kind: "arenaMatchToSvg", match });
+}
+
+export async function arenaMatchToImage(match: ArenaMatch) {
+  return isRenderWorkerThread()
+    ? await arenaMatchToImageInThread(match)
+    : await runPngRenderInWorker({ kind: "arenaMatchToImage", match });
 }

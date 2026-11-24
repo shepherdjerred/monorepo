@@ -34,7 +34,13 @@ export const ciMaintenanceActivities = {
   ): Promise<MaintenanceObservation> {
     const enabled = await ciMaintenanceEnabled();
     if (!enabled && pending === null)
-      return { enabled, candidates: [], pending: null, busy: false };
+      return {
+        enabled,
+        candidates: [],
+        pending: null,
+        busy: false,
+        observedAt: new Date().toISOString(),
+      };
     const [manual, busy] = await Promise.all([
       pending === null ? [] : recentMaintenancePipelines("manual"),
       maintenanceAdmissionBusy(),
@@ -42,16 +48,29 @@ export const ciMaintenanceActivities = {
     const receipt =
       pending === null ? null : await findMaintenanceReceipt(pending, manual);
     if (!enabled || busy || pending !== null)
-      return { enabled, candidates: [], pending: receipt, busy };
+      return {
+        enabled,
+        candidates: [],
+        pending: receipt,
+        busy,
+        observedAt: new Date().toISOString(),
+      };
     const source = await newestVerifiedMaintenanceSource();
     if (source === undefined)
-      return { enabled, candidates: [], pending: null, busy: false };
+      return {
+        enabled,
+        candidates: [],
+        pending: null,
+        busy: false,
+        observedAt: new Date().toISOString(),
+      };
     const github = await maintenanceGithub();
     return {
       enabled,
       candidates: await maintenanceCandidates(github, source),
       pending: null,
       busy: false,
+      observedAt: new Date().toISOString(),
     };
   },
   async submitCiMaintenance(

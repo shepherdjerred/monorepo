@@ -21,6 +21,10 @@ import {
 } from "#infrastructure/plex-binding/freshness.ts";
 import { movieRetryTerminalV1 } from "./terminal.ts";
 import { refreshMovieAttemptRequesterAccessV4 } from "#automation/movie-editions/requester-access.ts";
+import {
+  PlexExclusionProofError,
+  requireLibraryPlexExclusionDatabaseProof,
+} from "#automation/plex-exclusion/proof.ts";
 
 /** Real movie identity selects this route for default and named attempts; ordinary recovery remains literal. */
 export async function queueTerminalMovieRetryV4(
@@ -42,6 +46,13 @@ export async function queueTerminalMovieRetryV4(
     );
     const source = selected.source;
     if (source.attempt.id !== input.attemptId) return;
+    if (
+      selected.kind === "initial" ||
+      (selected.kind === "continuation" &&
+        selected.capture.continuation.phase === "prepared")
+    ) {
+      await requireLibraryPlexExclusionDatabaseProof(context.db, "movies");
+    }
     const terminal = await movieRetryTerminalV1(
       context,
       {
@@ -134,6 +145,10 @@ export async function queueTerminalMovieRetryV4(
   } catch (error) {
     execution.assertActive();
     execution.signal.throwIfAborted();
-    if (!(error instanceof MediaError)) throw error;
+    if (
+      !(error instanceof MediaError) &&
+      !(error instanceof PlexExclusionProofError)
+    )
+      throw error;
   }
 }

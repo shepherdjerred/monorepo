@@ -11,6 +11,10 @@ import { assertMovieAcquisitionOperationV4 } from "#infrastructure/movie-edition
 import { runtimeAuthority } from "#infrastructure/handoff/authority.ts";
 import { MediaError } from "#application/errors.ts";
 import { externalLibraryProtected } from "#infrastructure/external-library/protection.ts";
+import {
+  PLEX_EXCLUSION_PROOF_REQUIRED,
+  hasLibraryPlexExclusionDatabaseProof,
+} from "#automation/plex-exclusion/proof.ts";
 import { ProviderAdmissionDeferred } from "#automation/providers.ts";
 import {
   searchMovieCandidatesV4,
@@ -109,6 +113,12 @@ export async function reconcileMovieIntentV4(
       status: "blocked",
       attemptId: null,
       reason: "acquisition_disabled",
+    };
+  if (!(await hasLibraryPlexExclusionDatabaseProof(context.db, "movies")))
+    return {
+      status: "blocked",
+      attemptId: null,
+      reason: PLEX_EXCLUSION_PROOF_REQUIRED,
     };
   if (await externalLibraryProtected(context.db, [input.mediaId]))
     return {

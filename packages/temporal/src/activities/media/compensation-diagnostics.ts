@@ -32,6 +32,7 @@ const conflictCodes = new Map([
 const reasons = new Set([
   "publication_authority_expired",
   "publication_storage_authority_expired",
+  "plex_exclusion_proof_required",
   "runtime_protected",
   "acquisition_obsolete",
   "intent_obsolete",

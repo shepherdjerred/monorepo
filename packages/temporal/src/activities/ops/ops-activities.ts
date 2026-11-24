@@ -16,7 +16,10 @@ import { PrometheusClient } from "@shepherdjerred/ops-clients/prometheus.ts";
 import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import type { SourceId } from "@shepherdjerred/ops-model/snapshot.ts";
 import type { DigestKind as OpsDigestKind } from "@shepherdjerred/ops-model/digest.ts";
-import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
+import {
+  parseTemporalNamespace,
+  temporalNamespacesForMonitoring,
+} from "#shared/infra/temporal-namespace.ts";
 import { captureCommand } from "#activities/command-runner.ts";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { collectAuxiliaryFacets } from "./facets/auxiliary-facets.ts";
@@ -58,6 +61,7 @@ import type {
 } from "./ops-types.ts";
 import { readTemporalScheduleHealth } from "./temporal-schedules-client.ts";
 import { collectTemporalSchedules } from "./temporal-schedules-collector.ts";
+import { collectCiMaintenanceBlockedSignals } from "./ci-maintenance/ci-maintenance-ops.ts";
 
 function requiredEnvironment(name: string): string {
   const value = Bun.env[name];
@@ -79,6 +83,25 @@ function requiredRepoId(): number {
     throw new Error("WOODPECKER_REPO_ID must be a positive integer");
   }
   return repoId;
+}
+
+function optionalWoodpeckerLinkConfig(): {
+  woodpeckerBaseUrl?: string;
+  woodpeckerRepoId?: number;
+} {
+  const baseUrl = optionalEnvironment("WOODPECKER_URL");
+  const rawRepoId = optionalEnvironment("WOODPECKER_REPO_ID");
+  if (rawRepoId === undefined) {
+    return baseUrl === undefined ? {} : { woodpeckerBaseUrl: baseUrl };
+  }
+  const repoId = Number(rawRepoId);
+  if (!Number.isInteger(repoId) || repoId <= 0) {
+    throw new Error("WOODPECKER_REPO_ID must be a positive integer");
+  }
+  return {
+    ...(baseUrl === undefined ? {} : { woodpeckerBaseUrl: baseUrl }),
+    woodpeckerRepoId: repoId,
+  };
 }
 
 /** Credentials whose values must never appear in a stored failure reason. */
@@ -372,16 +395,23 @@ export const opsActivities = {
     return await timed("temporal", async (context) => {
       const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);
       const k8sBase = kubernetesBaseUrl();
-      const [observations, workerDeployments] = await Promise.all([
-        readTemporalScheduleHealth(namespace, context.now),
-        k8sBase === undefined
-          ? Promise.resolve([])
-          : fetchTemporalWorkerDeployments({
-              baseUrl: k8sBase,
-              token: serviceAccountToken,
-              fetchImpl: clusterFetch,
-            }),
-      ]);
+      const [observations, workerDeployments, maintenanceSignals] =
+        await Promise.all([
+          readTemporalScheduleHealth(namespace, context.now),
+          k8sBase === undefined
+            ? Promise.resolve([])
+            : fetchTemporalWorkerDeployments({
+                baseUrl: k8sBase,
+                token: serviceAccountToken,
+                fetchImpl: clusterFetch,
+              }),
+          temporalNamespacesForMonitoring(namespace).includes("prod")
+            ? collectCiMaintenanceBlockedSignals({
+                now: context.now,
+                ...optionalWoodpeckerLinkConfig(),
+              })
+            : Promise.resolve([]),
+        ]);
       const collection = await collectTemporalSchedules(
         namespace,
         context,
@@ -396,6 +426,7 @@ export const opsActivities = {
       });
       return {
         ...collection,
+        signals: [...collection.signals, ...maintenanceSignals],
         facets: { temporal: temporalFacet },
       };
     });

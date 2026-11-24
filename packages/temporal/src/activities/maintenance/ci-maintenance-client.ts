@@ -40,7 +40,13 @@ export const MaintenancePipelineSchema = z.object({
         state: StatusSchema,
         children: z
           .array(
-            z.object({ id: z.number().int().positive(), name: z.string() }),
+            z.object({
+              id: z.number().int().positive(),
+              name: z.string(),
+              type: z.string().optional(),
+              state: StatusSchema.optional(),
+              started: z.number().int().nonnegative().optional(),
+            }),
           )
           .optional(),
       }),
@@ -330,13 +336,20 @@ export async function findMaintenanceReceipt(
   )
     ? receipt.commit
     : request.source;
+  const startedWork = receipt.workflows.some((workflow) =>
+    (workflow.children ?? []).some(
+      (child) => child.type === "commands" && (child.started ?? 0) > 0,
+    ),
+  );
   return {
     number: receipt.number,
     source,
     status: receipt.status,
-    ...(receipt.status === "success" && source === request.source
-      ? { deferred: await maintenanceWasDeferred(receipt, request.kind) }
-      : {}),
+    ...(receipt.status === "success"
+      ? source === request.source
+        ? { deferred: await maintenanceWasDeferred(receipt, request.kind) }
+        : {}
+      : { startedWork }),
   };
 }
 

@@ -89,4 +89,40 @@ describe("heartbeatWhile", () => {
 
     expect(heartbeats).toHaveLength(afterSettling);
   });
+
+  test("emits updated heartbeat details immediately and keeps them on later ticks", async () => {
+    vi.useFakeTimers();
+    let finish: () => void = unstarted;
+    const action = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    const running = heartbeatWhile(
+      { intentKey: "k-1", phase: "preparing-notification-v2" },
+      async (updateDetails) => {
+        await vi.advanceTimersByTimeAsync(1500);
+        updateDetails({ intentKey: "k-1", phase: "sending-to-discord-v2" });
+        await action;
+      },
+    );
+
+    await vi.advanceTimersByTimeAsync(5500);
+    finish();
+    await running;
+
+    expect(heartbeats[0]).toEqual({
+      intentKey: "k-1",
+      phase: "preparing-notification-v2",
+    });
+    expect(heartbeats[1]).toEqual({
+      intentKey: "k-1",
+      phase: "sending-to-discord-v2",
+    });
+    expect(heartbeats.slice(1)).toEqual(
+      Array.from({ length: heartbeats.length - 1 }, () => ({
+        intentKey: "k-1",
+        phase: "sending-to-discord-v2",
+      })),
+    );
+    expect(heartbeats.length).toBeGreaterThanOrEqual(3);
+  });
 });

@@ -31,6 +31,10 @@ import { authorizedMovieSubmissionV4 } from "./submission-authority.ts";
 import { MediaError } from "#application/errors.ts";
 import { claimMovieTransferReuseV1 } from "./transfer-reuse/claim.ts";
 import { refreshMovieAttemptRequesterAccessV4 } from "./requester-access.ts";
+import {
+  PLEX_EXCLUSION_PROOF_REQUIRED,
+  hasLibraryPlexExclusionDatabaseProof,
+} from "#automation/plex-exclusion/proof.ts";
 
 async function prepareMovieTorrent(
   context: MediaAutomationContext,
@@ -101,6 +105,27 @@ export async function validMovieAttemptV4(
   });
 }
 
+async function activeSubmissionGateV4(
+  context: MediaAutomationContext,
+  attempt: AcquisitionAttempt,
+  input: MovieAttemptOperationV4,
+): Promise<Awaited<
+  ReturnType<MediaNetworkActivities["submitMediaTorrent"]>
+> | null> {
+  if (!(await context.gates.acquisition()))
+    return { status: "blocked", reason: "acquisition_disabled" };
+  if (!(await hasLibraryPlexExclusionDatabaseProof(context.db, "movies")))
+    return { status: "blocked", reason: PLEX_EXCLUSION_PROOF_REQUIRED };
+  await refreshMovieAttemptRequesterAccessV4(context, input.scope, attempt);
+  if (await validMovieAttemptV4(context, input)) return null;
+  return attempt.filePlan === null
+    ? { status: "obsolete", reason: "intent_changed" }
+    : {
+        status: "blocked",
+        reason: "movie_publication_reconciliation_required",
+      };
+}
+
 async function submissionPrerequisiteV4(
   context: MediaAutomationContext,
   attempt: AcquisitionAttempt,
@@ -117,20 +142,7 @@ async function submissionPrerequisiteV4(
     return { status: "submitted", reason: "resume_committed_publication" };
   const recovering =
     attempt.state === "submitting" || attempt.state === "submission_unknown";
-  if (!recovering) {
-    if (!(await context.gates.acquisition()))
-      return { status: "blocked", reason: "acquisition_disabled" };
-    await refreshMovieAttemptRequesterAccessV4(context, input.scope, attempt);
-    if (!(await validMovieAttemptV4(context, input)))
-      return {
-        status: attempt.filePlan === null ? "obsolete" : "blocked",
-        reason:
-          attempt.filePlan === null
-            ? "intent_changed"
-            : "movie_publication_reconciliation_required",
-      };
-  }
-  return null;
+  return recovering ? null : activeSubmissionGateV4(context, attempt, input);
 }
 
 export async function submitMovieTorrentV4(

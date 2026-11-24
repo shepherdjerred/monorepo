@@ -10,6 +10,8 @@ import {
   echartsOptionToSvg,
   echartsSvgToImage,
 } from "#src/html/echarts-image.ts";
+import { runPngRenderInWorker } from "#src/html/render-worker-client.ts";
+import { isRenderWorkerThread } from "#src/html/render-worker-protocol.ts";
 
 export type CompetitionChartSeries = {
   playerName: string;
@@ -388,7 +390,7 @@ export function competitionChartToSvg(props: CompetitionChartProps): string {
   return echartsOptionToSvg(buildOption(props), WIDTH, HEIGHT);
 }
 
-export function competitionChartToImage(
+export async function competitionChartToImage(
   props: CompetitionChartProps,
 ): Promise<Buffer> {
   const fontFiles = containsCjkText(props)
@@ -399,7 +401,14 @@ export function competitionChartToImage(
         ),
       ]
     : FONT_FILE_PATHS;
-  return Promise.resolve(
-    echartsSvgToImage(competitionChartToSvg(props), fontFiles, BODY_FONT),
-  );
+  const svg = competitionChartToSvg(props);
+  if (isRenderWorkerThread()) {
+    return echartsSvgToImage(svg, fontFiles, BODY_FONT);
+  }
+  return await runPngRenderInWorker({
+    kind: "echartsSvgToPng",
+    svg,
+    fontFiles,
+    defaultFontFamily: BODY_FONT,
+  });
 }

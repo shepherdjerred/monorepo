@@ -163,3 +163,124 @@ test.each(["receipt", "absent"])(
   },
   60_000,
 );
+
+test("auto-retries pre-work cancellations and records blockedAt when started work fails", async () => {
+  const environment = await TestWorkflowEnvironment.createTimeSkipping();
+  const submitted: MaintenanceRequest[] = [];
+  const observation: MaintenanceObservation = {
+    enabled: true,
+    busy: false,
+    pending: null,
+    candidates: [
+      {
+        kind: "ci-images",
+        source: "b".repeat(40),
+        fingerprint: "images-v2",
+        frozen: false,
+      },
+      {
+        kind: "release-notes",
+        source: "b".repeat(40),
+        fingerprint: "release-v2",
+        frozen: false,
+      },
+    ],
+  };
+  try {
+    await runWorkflowWithActivityWorker(environment, {
+      workflowPath,
+      activityTaskQueue: TASK_QUEUES.REPO_AUTOMATION,
+      activities: {
+        inspectCiMaintenance: () => structuredClone(observation),
+        submitCiMaintenance: (request: MaintenanceRequest) => {
+          submitted.push(request);
+          return 100 + submitted.length;
+        },
+      },
+      execute: async () => {
+        const handle = await environment.client.workflow.start(
+          "runCiMaintenanceCoordinator",
+          {
+            workflowId: `maintenance-retry-${crypto.randomUUID()}`,
+            taskQueue: TASK_QUEUES.WORKFLOWS,
+          },
+        );
+        const state = async () => {
+          const description = await handle.describe();
+          return description.memo?.["ciMaintenance"];
+        };
+        try {
+          await vi.waitFor(() => expect(submitted).toHaveLength(1), {
+            timeout: 20_000,
+          });
+          expect(submitted[0]?.kind).toBe("release-notes");
+
+          // Pre-work cancel (#17812 style): clears pending without blocking.
+          observation.observedAt = "2026-11-24T17:00:00.000Z";
+          observation.pending = {
+            number: 101,
+            source: "b".repeat(40),
+            status: "canceled",
+            startedWork: false,
+          };
+          await handle.signal("maintenanceTick");
+          await vi.waitFor(async () => {
+            expect(await state()).toMatchObject({
+              blocked: {},
+            });
+            expect(submitted).toHaveLength(2);
+          });
+          // Alternates to ci-images while release-notes remains unblocked.
+          expect(submitted[1]?.kind).toBe("ci-images");
+
+          // Started-work failure (#14708 style): latches blocked with blockedAt.
+          observation.observedAt = "2026-11-24T17:05:00.000Z";
+          observation.pending = {
+            number: 102,
+            source: "b".repeat(40),
+            status: "failure",
+            startedWork: true,
+          };
+          await handle.signal("maintenanceTick");
+          await vi.waitFor(async () => {
+            expect(await state()).toMatchObject({
+              blocked: {
+                "ci-images": {
+                  requestId: submitted[1]?.requestId,
+                  blockedAt: "2026-11-24T17:05:00.000Z",
+                },
+              },
+            });
+            expect(submitted).toHaveLength(3);
+          });
+          // Unblocked release-notes automatically retries!
+          expect(submitted[2]?.kind).toBe("release-notes");
+
+          delete observation.observedAt;
+          observation.pending = {
+            number: 103,
+            source: "b".repeat(40),
+            status: "success",
+            deferred: false,
+          };
+          await handle.signal("maintenanceTick");
+          await vi.waitFor(async () => {
+            expect(await state()).toMatchObject({
+              completed: { "release-notes": "release-v2" },
+            });
+          });
+
+          const history = await handle.fetchHistory();
+          await Worker.runReplayHistory(
+            { workflowsPath: workflowPath },
+            history,
+          );
+        } finally {
+          await handle.terminate("Test complete");
+        }
+      },
+    });
+  } finally {
+    await environment.teardown();
+  }
+}, 60_000);

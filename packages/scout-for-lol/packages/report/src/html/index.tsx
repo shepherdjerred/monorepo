@@ -25,23 +25,31 @@ import {
   preloadChampionImages,
   preloadChampionSplashImages,
 } from "#src/dataDragon/image-cache.ts";
+import {
+  runPngRenderInWorker,
+  runSvgRenderInWorker,
+} from "#src/html/render-worker-client.ts";
+import {
+  isRenderWorkerThread,
+  type RenderSvgToPngOptions,
+} from "#src/html/render-worker-protocol.ts";
 
 export type MatchRenderOptions = {
   /**
    * Force a specific ranked design rather than the hash-derived pick. Only
    * applies when the queue is ranked solo/flex; ignored otherwise.
    */
-  designOverride?: RankedDesign;
+  designOverride?: RankedDesign | undefined;
   /**
    * Gate the new ranked banner/square designs. When `false`, ranked solo/flex
    * matches fall back to the legacy 4760×3500 report. Defaults to `true`.
    * The backend sets this to `false` outside local dev so the redesign stays
    * local-only until it's promoted.
    */
-  enableRankedDesigns?: boolean;
+  enableRankedDesigns?: boolean | undefined;
 };
 
-export async function matchToSvg(
+export async function matchToSvgInThread(
   match: CompletedMatch,
   options: MatchRenderOptions = {},
 ): Promise<string> {
@@ -113,9 +121,9 @@ export function standardReportHeight(match: CompletedMatch): number {
   );
 }
 
-export async function svgToPng(
+export async function svgToPngInThread(
   svg: string,
-  options: { crop?: boolean } = {},
+  options: RenderSvgToPngOptions = {},
 ): Promise<Buffer> {
   // Lazy load resvg only when needed (server-side only)
   const { Resvg } = await import("@resvg/resvg-js");
@@ -140,4 +148,30 @@ export async function svgToPng(
 
   const pngData = resvg.render();
   return pngData.asPng();
+}
+
+export async function matchToSvg(
+  match: CompletedMatch,
+  options: MatchRenderOptions = {},
+): Promise<string> {
+  return isRenderWorkerThread()
+    ? await matchToSvgInThread(match, options)
+    : await runSvgRenderInWorker({
+        kind: "matchToSvg",
+        match,
+        options,
+      });
+}
+
+export async function svgToPng(
+  svg: string,
+  options: RenderSvgToPngOptions = {},
+): Promise<Buffer> {
+  return isRenderWorkerThread()
+    ? await svgToPngInThread(svg, options)
+    : await runPngRenderInWorker({
+        kind: "svgToPng",
+        svg,
+        options,
+      });
 }

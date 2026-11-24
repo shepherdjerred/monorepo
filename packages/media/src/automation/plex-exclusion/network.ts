@@ -22,6 +22,7 @@ import {
   saveRun,
   type RunJournal,
 } from "./state.ts";
+import { wakeBlockedExclusionOperations } from "./wake.ts";
 
 type Context = {
   db: Database;
@@ -187,6 +188,12 @@ export function createPlexExclusionNetworkActivities(
           update: {},
         });
         await saveRun(tx, run.id, journal, "verified");
+        await wakeBlockedExclusionOperations(tx, {
+          runId: run.id,
+          recoveryEpoch: run.recoveryEpoch,
+          topologyKind: plan.topology.kind,
+          now: now(context),
+        });
         await tx.operation.update({
           where: { id: input.operationId },
           data: { status: "completed", result: { runId: run.id } },
@@ -202,11 +209,12 @@ async function requireTopology(
 ): Promise<void> {
   const current = await context.plex.topology(plan.topology.sectionId);
   const permitted = await context.permittedSections();
+  const expectedSection =
+    plan.topology.kind === "movie" ? permitted.movie : permitted.series;
   if (
     current.serverMachineId !== context.machineId ||
     configurationDigest(current) !== plan.configurationDigest ||
-    current.sectionId !==
-      (plan.topology.kind === "movie" ? permitted.movie : permitted.series)
+    current.sectionId !== expectedSection
   )
     throw new Error("Plex topology no longer matches the reviewed plan");
 }
@@ -219,32 +227,30 @@ async function reconcile(
   const initialize = await lockedRun(context.db, input, async (tx, run) => {
     const journal = RunJournalSchema.parse(run.journal);
     const plan = PlexExclusionPlanSchema.parse(run.plan);
-    const files = journal.files;
-    const completedAt = input.cleanup ? files?.cleanedAt : files?.stagedAt;
+    const completedAt = input.cleanup
+      ? journal.files?.cleanedAt
+      : journal.files?.stagedAt;
     if (completedAt == null)
       throw new Error("Plex probes are not ready for scan");
     if (journal[key] !== undefined) return { send: false, defer: false, plan };
-    // Plex exposes whole seconds. Never issue the scan in the second during
-    // which either probe was still being created (or removed).
+    // Plex exposes whole seconds. Never issue the scan in the second during which either probe was still being created (or removed).
     if (
       Math.floor(now(context).getTime() / 1000) <=
       Math.floor(Date.parse(completedAt) / 1000)
     )
       return { send: false, defer: true, plan };
+    const nextScan = {
+      requestedAt: now(context).toISOString(),
+      activityId: null,
+      first: null,
+      second: null,
+      state: "sending" as const,
+      reason: null,
+    };
     await saveRun(
       tx,
       run.id,
-      {
-        ...journal,
-        [key]: {
-          requestedAt: now(context).toISOString(),
-          activityId: null,
-          first: null,
-          second: null,
-          state: "sending",
-          reason: null,
-        },
-      },
+      { ...journal, [key]: nextScan },
       input.cleanup ? "cleanup_scanning" : "scanning",
     );
     return { send: true, defer: false, plan };

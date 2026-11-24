@@ -91,7 +91,7 @@ tokens, profiles, and generated config stay outside Git.
 
 The server requires a bearer token (`Authorization: Bearer <token>`) for all protected routes.
 
-- **Where the token lives:** at `.server.token` inside the config file selected by the `PINCHTAB_CONFIG` env var. If `PINCHTAB_CONFIG` is unset, the CLI defaults to `~/.pinchtab/config.json`; the launchd daemon pins it to `~/Library/Application Support/pinchtab/config.json` via its plist. **These can be two different files** — if their tokens drift you get `401 bad_token` from the CLI while the daemon itself is fine. On this machine `PINCHTAB_CONFIG` is exported in fish config to the Library path so the CLI, daemon, and install script all share one config.
+- **Where the token lives:** at `.server.token` inside the config file selected by the `PINCHTAB_CONFIG` env var. If `PINCHTAB_CONFIG` is unset, the CLI defaults to `~/.pinchtab/config.json`; the launchd daemon pins it to `~/Library/Application Support/pinchtab/config.json` via its plist. **These can be two different files** — if their tokens drift you get `401 bad_token` from the CLI while the daemon itself is fine. On macOS, `PINCHTAB_CONFIG` is exported (when unset) in fish config, `~/.zshenv`, and `~/.bash_env` to the Library path so interactive shells, non-interactive coding-agent shells, the CLI, the daemon, and the install script all share one config.
 - **CLI auth:** shorthand commands (`pinchtab nav`, `pinchtab health`, …) read the token from that config file. Setting `PINCHTAB_TOKEN` in the environment **overrides** the config-file token — handy for a one-off call, but if it's the only thing making the CLI work, you're masking a config split (fix the split instead).
 - **Agent sessions:** capture `session create` directly into `PINCHTAB_SESSION`; never print or persist its credential. Revoke the returned public session ID at cleanup. Use explicit `--tab` IDs so each command targets the intended tab even when another agent changes the default tab. These sessions are revocable credentials for trusted automation, not an isolation boundary.
 - **Diagnose a 401:** inspect the selected config path, verify the daemon's config path, and run health against that config. Never dump the full config or print its token:
@@ -101,15 +101,18 @@ pinchtab config path
 PINCHTAB_CONFIG="$HOME/Library/Application Support/pinchtab/config.json" pinchtab health
 ```
 
-- **REST clients:** load credentials in process memory from the canonical config or existing credential wrapper and set the authorization header there. Do not print tokens, put them in command arguments, or persist them in scripts or files.
+- **REST clients & `launchctl bootstrap` exit 5 fallback (`AI-26`):** if `pinchtab health` reports `ok` (or `GET http://127.0.0.1:<port>/health` succeeds) while `pinchtab session create` or `pinchtab nav` fails with `launchctl bootstrap gui/... exit status 5` (`refusing detached auto-start`), bypass the CLI's daemon-lifecycle check and call the running HTTP server directly. Read `.server.token` and `.server.port` (default `"9867"`) in process memory from the JSON file `PINCHTAB_CONFIG` points to, build `baseUrl = http://127.0.0.1:<port>`, and never print tokens, pass them in CLI arguments, or persist them to disk:
+  1. Mint a scoped session with `POST <baseUrl>/sessions` (`Authorization: Bearer <server-token>`, body `{"agentId": "<agent-id>"}`), holding `id` and `sessionToken` strictly in memory.
+  2. Open and navigate a dedicated tab via `POST <baseUrl>/navigate` (`{"url": "<url>", "newTab": true}` on the default instance, using `Authorization: Session <sessionToken>`) or `POST <baseUrl>/instances/{id}/tabs/open` (`{"url": "<url>"}` on a specific instance, using `Authorization: Bearer <server-token>`).
+  3. Drive `<baseUrl>/tabs/{tabId}/snapshot`, `<baseUrl>/tabs/{tabId}/action`, `<baseUrl>/tabs/{tabId}/screenshot`, and `POST <baseUrl>/tabs/{tabId}/close` with explicit `tabId`, then revoke the session via `POST <baseUrl>/sessions/{id}/revoke`.
 
 ## Critical: Multi-Instance Routing
 
-**Shorthand CLI commands route to the default instance.** When working with a non-default profile:
+**Shorthand CLI commands route to the default instance.** Do **not** use `pinchtab instance navigate <instanceId> <url>` — its orchestrator routing opens `about:blank` and fails with HTTP 404 `tab not found` (`AI-108`). When working with a non-default profile/instance:
 
-1. Get the instance ID: `pinchtab instances`
-2. Use instance-scoped CLI: `pinchtab instance navigate <instanceId> <url>`
-3. Or use REST API with instance-scoped routes (see API section below)
+1. Get the instance ID and its bridge port: `pinchtab instances` (or `GET /instances`)
+2. Open a tab in one REST step via `POST /instances/{id}/tabs/open` with body `{"url": "<url>"}`, capture the returned `tabId`, and drive `/tabs/{tabId}/snapshot`, `/tabs/{tabId}/action`, and `/tabs/{tabId}/screenshot`
+3. Or target the instance's bridge server directly with the CLI: `pinchtab --server http://127.0.0.1:<bridgePort> nav <url> --new-tab`
 
 The `always-on` strategy auto-respawns the default instance — stopping it is futile. To prevent this, change strategy to `explicit` in config:
 
@@ -200,15 +203,25 @@ in one helper and reuse it per scenario.
 ### Instance-Scoped Commands (target specific instance)
 
 ```bash
-pinchtab instance navigate <instanceId> <url>
+# Navigate a non-default instance via its bridge port (from `pinchtab instances`)
+pinchtab --server http://127.0.0.1:<bridgePort> nav <url> --new-tab
+# Or open a tab via REST: POST /instances/<instanceId>/tabs/open {"url": "<url>"}
 pinchtab instance logs <instanceId>
 pinchtab instance stop <instanceId>
 ```
 
 ## REST API Reference
 
-Base URL: `http://localhost:9867`
+Base URL: `http://127.0.0.1:9867`
 Auth: `Authorization: Bearer <token>`
+
+### Sessions & Default Shorthand
+
+| Method | Endpoint                | Description                                       |
+| ------ | ----------------------- | ------------------------------------------------- |
+| POST   | `/sessions`             | Create agent session (`{"agentId": "<id>"}`)      |
+| POST   | `/sessions/{id}/revoke` | Revoke agent session                              |
+| POST   | `/navigate`             | Navigate default instance (`{"url", "newTab"}`)   |
 
 ### Profiles
 
@@ -252,7 +265,7 @@ Auth: `Authorization: Bearer <token>`
 
 ## Config Reference
 
-Config location: the file `PINCHTAB_CONFIG` points at — default `~/.pinchtab/config.json`, but the daemon (and this machine's fish config) pin it to `~/Library/Application Support/pinchtab/config.json`. See the Authentication section above.
+Config location: the file `PINCHTAB_CONFIG` points at — default `~/.pinchtab/config.json`, but the macOS daemon, fish config, `~/.zshenv`, and `~/.bash_env` pin it to `~/Library/Application Support/pinchtab/config.json`. See the Authentication section above.
 
 Key settings:
 
@@ -261,6 +274,7 @@ Key settings:
   "server": { "token": "..." },
   "instanceDefaults": {
     "mode": "headed", // or "headless"
+    "noRestore": true, // avoid Chrome session-restore tabs hanging fresh navigations
     "stealthLevel": "full" // "light", "medium", "full"
   },
   "multiInstance": {
@@ -288,11 +302,11 @@ Key settings:
 ### Login to a site with CAPTCHA
 
 ```bash
-# 1. Start headed instance on a persistent profile
+# 1. Start headed instance on a persistent profile (note its id and bridge port)
 pinchtab instance start --profile <automation-profile> --mode headed
 
-# 2. Navigate to login page
-pinchtab instance navigate <instanceId> https://example.com/login
+# 2. Open login page via bridge-direct CLI (or POST /instances/<id>/tabs/open {"url": "<login-url>"})
+pinchtab --server http://127.0.0.1:<bridgePort> nav <login-url> --new-tab
 
 # 3. Fill credentials
 # Complete sign-in with the existing password-manager/browser flow.

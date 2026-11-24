@@ -72,27 +72,25 @@ Individual safe behaviors that become dangerous in combination. Think about the 
 - **Cross-component trust gaps**: Component A validates input and passes it to component B. Does B re-validate or trust A? What if A's validation is subtly different from what B needs (e.g., A allows 255 chars but B truncates at 128, creating a different string)? What about plugin/extension trust — can third-party code manipulate core state, bypass permission hooks, or access storage directly?
 - **Second-order attacks**: Data safe when stored but dangerous when used in a different context. A field name safe in SQL becomes a key in a JSON path expression. A slug safe in a URL becomes part of a file path. Content stored HTML-escaped gets double-escaped or rendered in a context that expects raw text. Config values stored as strings get parsed as URLs, regexes, or templates.
 - **Scope and capability escalation**: Tokens, API keys, or OAuth scopes that grant broader access than their name implies. A `read` scope that also allows listing draft content. Session cookies that survive a role downgrade. Plugin capabilities that provide a stepping stone to higher access. MCP or AI tool integrations that inherit the user's full session.
-- **Timing and ordering**: Can you use a feature before setup/migration is complete? Act on a resource between soft-delete and hard-delete? Use a token between revocation and cache expiry? Exploit the gap between two non-atomic operations (check-then-act, read-then-write, validate-then-use)?
-- **Rollback and recovery abuse**: What happens when an operation is undone? Undelete, restore from backup, revert a revision, cancel a pending action. Does the rollback restore more than intended? Does it bypass current permissions? Can you restore a resource into a state that's no longer valid?
+- **Timing and ordering**: Can a caller invoke a feature before setup/migration is complete? Act on a resource between soft-delete and hard-delete? Use a token between revocation and cache expiry? Trigger a race window between two non-atomic operations (check-then-act, read-then-write, validate-then-use)?
+- **Rollback and recovery handling**: What happens when an operation is undone? Undelete, restore from backup, revert a revision, cancel a pending action. Does the rollback restore more than intended? Does it bypass current permissions? Can restoring a resource place it into an invalid or unauthorized state?
 
 **Wildcard** (subagent_type: `general`)
-You are not given a category. You are given the codebase and told to break it.
+Review cross-cutting and uncategorized code paths outside the standard vulnerability classes covered by other reviewers. Focus on overlooked subsystems, unusual state interactions, and implicit assumptions in seemingly routine code.
 
-Ignore the standard vulnerability classes — other agents are covering those. Your job is to find the thing nobody thought to look for. Read code that looks boring. Follow functions that seem unrelated to security. Get curious about the weird stuff.
+Starting points for uncategorized analysis:
+- What is the most unusual or complex custom logic in the codebase? Why does it exist, and how does it handle untrusted or malformed inputs?
+- Are there experimental, partially implemented, or legacy features that received less security review or bypass standard middleware?
+- How do backend API handlers behave when called directly with inputs or sequences the frontend UI never sends? The UI constrains users, whereas the API must enforce invariants on its own.
+- Are there undocumented endpoints, parameters, headers, or feature flags? Inspect route registrations, middleware, and config definitions for surfaces absent from documentation.
+- How do independent features behave when combined (e.g., localization + preview + caching, import + plugins + webhooks, OAuth + impersonation + API keys)?
+- Are there security-relevant regressions in git history — reverted security fixes, commented-out auth checks, or credentials that were committed and later removed while remaining in history?
+- What is the blast radius of a compromised standard user account or scoped credential without privilege escalation? Check whether an authenticated low-privilege caller can corrupt shared state, poison caches, exhaust bounded resources, or leave cross-tenant or system state inconsistent without audit visibility.
+- Are there irreversible administrative or destructive operations that lack CSRF/origin checks, explicit target validation, or confirmation guards against cross-context invocation?
+- What environmental assumptions does the code rely on — that the database is local, that clocks never skew, that DNS is trustworthy, or that the filesystem is case-sensitive?
+- Inspect the test suite for coverage gaps: which security edge cases have explicit tests versus none?
 
-Some starting points, but don't limit yourself to these:
-- What's the strangest code in the codebase? Why does it exist? What happens if it's abused?
-- Are there any features that feel half-finished, experimental, or bolted on? Those have the weakest security because they got the least review.
-- What happens if you use the API in a way the frontend never would? The UI constrains users, but the API doesn't. What API calls are possible but never made by the client?
-- Are there any hidden or undocumented endpoints, parameters, headers, or features? Look at route registrations, middleware, and config for things that aren't in the docs.
-- What happens when you mix features that weren't designed to work together? Localization + preview + caching. Import + plugins + webhooks. OAuth + impersonation + API keys.
-- Is there anything interesting in the git history? Reverted security fixes, commented-out auth checks, secrets that were committed then removed (still in history).
-- What would you do if you had a valid account but wanted to cause maximum damage without being detected? Not escalation — sabotage. Corrupting data, poisoning caches, exhausting resources, creating confusing state.
-- Are there any operations that are irreversible? What if you trick an admin into performing one?
-- What assumptions does the code make about the environment? That the database is local, that the clock is accurate, that DNS is trustworthy, that the filesystem is case-sensitive?
-- Look at the test files — what are they NOT testing? What edge cases did the developer think about (tests exist) vs. what they didn't (no tests)?
-
-Follow rabbit holes. If something looks weird, dig. If a function has a comment explaining why it's safe, verify the explanation. If a variable is named `temp` or `hack` or `legacy`, read every line of it.
+Follow unusual control flow to completion. If a function has a comment explaining why an invariant holds, verify that invariant against every caller. If a variable or helper is named `temp`, `hack`, or `legacy`, inspect every path through it.
 
 **Obvious things** (subagent_type: `general`)
 The other agents are hunting for subtle bugs. This agent checks the dumb stuff that's easy to overlook because everyone assumes someone else already checked it:

@@ -391,3 +391,223 @@ describe("fetchBlockedReason commit status", () => {
     }
   });
 });
+
+describe("fetchBlockedReason CodeRabbit check-runs and comment blocks", () => {
+  test.each([codexProvider, greptileProvider, qodoProvider])(
+    "does not leak CodeRabbit commit statuses or check-runs into non-CodeRabbit provider $id",
+    async (provider) => {
+      const requestedUrls: string[] = [];
+      vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+        const url = requestUrl(input);
+        requestedUrls.push(url);
+        if (url.includes("/comments")) return Response.json([]);
+        if (url.includes("/statuses") || url.includes("/status")) {
+          return Response.json([
+            {
+              context: "CodeRabbit",
+              description: "Review rate limited",
+              state: "error",
+            },
+          ]);
+        }
+        if (url.includes("/check-runs")) {
+          return Response.json({
+            check_runs: [
+              {
+                name: "CodeRabbit",
+                status: "completed",
+                output: {
+                  title: "Review skipped: Too many files",
+                  summary: "",
+                },
+              },
+            ],
+          });
+        }
+        return Response.json({});
+      });
+
+      try {
+        await expect(
+          fetchBlockedReason({
+            repo: "o/r",
+            number: 1,
+            token: "token",
+            provider,
+            headPushedAt,
+            headSha: "head-cross-provider",
+          }),
+        ).resolves.toBeNull();
+        expect(
+          requestedUrls.some(
+            (url) =>
+              url.includes("/statuses") ||
+              url.includes("/status") ||
+              url.includes("/check-runs"),
+          ),
+        ).toBe(false);
+      } finally {
+        vi.restoreAllMocks();
+      }
+    },
+  );
+
+  test.each([
+    {
+      title: "Review rate limited",
+      summary: "Please wait before requesting another review.",
+    },
+    {
+      title: "Review skipped: Too many files",
+      summary: null,
+    },
+    {
+      title: "Action not completed",
+      summary: "Review skipped: 430 files exceed the limit of 100.",
+    },
+  ])(
+    "returns usage-limited when CodeRabbit check-run reports block ($title)",
+    async (output) => {
+      vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+        const url = requestUrl(input);
+        if (url.includes("/comments")) return Response.json([]);
+        if (url.includes("/statuses") || url.includes("/status")) {
+          return Response.json([]);
+        }
+        if (url.includes("/commits/head-cr/check-runs?per_page=100")) {
+          return Response.json({
+            check_runs: [
+              {
+                name: "CodeRabbit",
+                status: "completed",
+                output,
+              },
+            ],
+          });
+        }
+        return Response.json({});
+      });
+
+      try {
+        await expect(
+          fetchBlockedReason({
+            repo: "o/r",
+            number: 1,
+            token: "token",
+            provider: coderabbitProvider,
+            headPushedAt,
+            headSha: "head-cr",
+          }),
+        ).resolves.toBe("usage-limited");
+      } finally {
+        vi.restoreAllMocks();
+      }
+    },
+  );
+
+  test.each([
+    "<details><summary>Action not completed</summary>\n\nReview rate limited.\n</details>",
+    "<details><summary>Action not completed</summary>\n\nReview skipped: changed files exceed the limit.\n</details>",
+    "Review skipped: Too many files",
+  ])(
+    "returns usage-limited for CodeRabbit action-not-completed and file-limit comments",
+    async (body) => {
+      mockIssueComments([
+        {
+          login: "coderabbitai[bot]",
+          updated_at: afterPush,
+          body,
+        },
+      ]);
+      try {
+        await expect(
+          fetchBlockedReason({
+            repo: "o/r",
+            number: 1,
+            token: "token",
+            provider: coderabbitProvider,
+            headPushedAt,
+            headSha: "head-comment",
+          }),
+        ).resolves.toBe("usage-limited");
+      } finally {
+        vi.restoreAllMocks();
+      }
+    },
+  );
+
+  test("ignores blocked phrases quoted inside a completed clean CodeRabbit walkthrough comment", async () => {
+    const cleanSha = "a".repeat(40);
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = requestUrl(input);
+      if (url.includes("/comments")) {
+        return Response.json([
+          {
+            user: { login: "coderabbitai[bot]" },
+            updated_at: afterPush,
+            body:
+              "<!-- recent_review_start -->\n" +
+              "No actionable comments were generated in the recent review.\n" +
+              "<!-- recent_review_end -->\n" +
+              "Walkthrough: teaches parser to classify `Review skipped: Too many files`.\n" +
+              `<!-- final_review_risk_coverage:{"sourceCommitId":"${cleanSha}","coveredCommitId":"${cleanSha}","kind":"reviewed"} -->`,
+          },
+        ]);
+      }
+      if (url.includes("/statuses") || url.includes("/status")) {
+        return Response.json([]);
+      }
+      return url.includes("/check-runs")
+        ? Response.json({ check_runs: [] })
+        : Response.json({});
+    });
+
+    try {
+      await expect(
+        fetchBlockedReason({
+          repo: "o/r",
+          number: 1,
+          token: "token",
+          provider: coderabbitProvider,
+          headPushedAt,
+          headSha: cleanSha,
+        }),
+      ).resolves.toBeNull();
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+});
+
+describe("fetchBlockedReason clean-envelope head binding", () => {
+  test("does not let an earlier-head clean CodeRabbit envelope hide a later block notice", async () => {
+    const earlierSha = "a".repeat(40);
+    const currentSha = "b".repeat(40);
+    mockIssueComments([
+      {
+        login: "coderabbitai[bot]",
+        updated_at: afterPush,
+        body:
+          "<!-- recent_review_start -->\n" +
+          "No actionable comments were generated in the recent review.\n" +
+          "<!-- recent_review_end -->\n" +
+          "<details><summary>Action not completed</summary>\n\nReview rate limited.\n</details>\n" +
+          `<!-- final_review_risk_coverage:{"sourceCommitId":"${earlierSha}","coveredCommitId":"${earlierSha}","kind":"reviewed"} -->`,
+      },
+    ]);
+    try {
+      await expect(
+        fetchBlockedReason({
+          repo: "o/r",
+          number: 1,
+          token: "token",
+          provider: coderabbitProvider,
+          headPushedAt,
+          headSha: currentSha,
+        }),
+      ).resolves.toBe("usage-limited");
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+});

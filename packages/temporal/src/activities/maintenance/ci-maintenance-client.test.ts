@@ -232,3 +232,121 @@ test("a receipt at the branch tip reports the verified source the extension ran"
     status: "success",
   });
 });
+
+test("distinguishes pre-command errors and cancellations from started command failures", async () => {
+  const baseRequest: MaintenanceRequest = {
+    kind: "ci-images",
+    source: verifiedSource,
+    fingerprint: "image-v1",
+    frozen: false,
+    requestId: "request-started-work",
+    pipeline: null,
+  };
+  const basePipeline = {
+    ...canary,
+    branch: "main",
+    ref: "refs/heads/main",
+    message: "ci-maintenance/request-started-work",
+  };
+
+  // #16743: /ciconfig failure with empty workflows
+  servePipelines([], {
+    16_743: {
+      ...basePipeline,
+      number: 16_743,
+      status: "error",
+      workflows: [],
+    },
+  });
+  expect(
+    await findMaintenanceReceipt({ ...baseRequest, pipeline: 16_743 }, []),
+  ).toEqual({
+    number: 16_743,
+    source: verifiedSource,
+    status: "error",
+    startedWork: false,
+  });
+  vi.restoreAllMocks();
+
+  // #17812: canceled before any commands step started
+  servePipelines([], {
+    17_812: {
+      ...basePipeline,
+      number: 17_812,
+      status: "canceled",
+      workflows: [
+        {
+          name: "maintenance-ci-images",
+          state: "canceled",
+          children: [
+            {
+              id: 1,
+              name: "clone",
+              type: "clone",
+              state: "canceled",
+              started: 1_732_000_000,
+            },
+            {
+              id: 2,
+              name: "maintenance-ci-images",
+              type: "commands",
+              state: "skipped",
+              started: 0,
+            },
+          ],
+        },
+      ],
+    },
+  });
+  expect(
+    await findMaintenanceReceipt({ ...baseRequest, pipeline: 17_812 }, []),
+  ).toEqual({
+    number: 17_812,
+    source: verifiedSource,
+    status: "canceled",
+    startedWork: false,
+  });
+  vi.restoreAllMocks();
+
+  // #14708: failed after a commands step started
+  servePipelines([], {
+    14_708: {
+      ...basePipeline,
+      number: 14_708,
+      status: "failure",
+      workflows: [
+        {
+          name: "maintenance-release-notes",
+          state: "failure",
+          children: [
+            {
+              id: 1,
+              name: "clone",
+              type: "clone",
+              state: "success",
+              started: 1_732_000_000,
+            },
+            {
+              id: 2,
+              name: "maintenance-release-notes",
+              type: "commands",
+              state: "failure",
+              started: 1_732_000_015,
+            },
+          ],
+        },
+      ],
+    },
+  });
+  expect(
+    await findMaintenanceReceipt(
+      { ...baseRequest, kind: "release-notes", pipeline: 14_708 },
+      [],
+    ),
+  ).toEqual({
+    number: 14_708,
+    source: verifiedSource,
+    status: "failure",
+    startedWork: true,
+  });
+});

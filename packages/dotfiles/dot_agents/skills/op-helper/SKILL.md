@@ -337,6 +337,58 @@ op whoami
   `op item get <id> --format json | jq '.fields[] | {label, section: .section.label}'` —
   `section: null` is the real top-level field. To delete an accidentally-created
   sectioned twin, use the unescaped form: `'config.toml[delete]'`.
+- **`Bun.spawn` piped stdin is silently ignored by `op item edit` without `--template` (`AI-93`)**:
+  `1Password CLI` detects implicit piped JSON templates by statting `os.Stdin` for
+  `os.ModeNamedPipe` (`S_IFIFO`). On Unix/macOS, `Bun.spawn` backs `stdin: "pipe"` (and
+  `Blob`/`Uint8Array` stdin) with `socketpair(AF_UNIX, ...)` (`S_IFSOCK`), not `pipe(2)`
+  (`S_IFIFO`). Without `--template`, `op item edit <id>` sees no FIFO, treats stdin as
+  absent, performs a no-op edit, and **exits `0`** while leaving the item unchanged.
+  Always pass `--template /dev/fd/3` (or `--template=/dev/stdin`) so `op` explicitly opens
+  the descriptor instead of checking `os.ModeNamedPipe`, never touch disk or print secret
+  values, and verify every write with an independent `op item get --cache=false` readback.
+  Do **not** use `--template` edits on items that store a passkey (`type: "PASSKEY"` or passkey
+  credentials), because 1Password CLI template edits overwrite passkeys and field readback will
+  not detect the loss — use field-assignment `op item edit <id> 'section.field[type]=value'`
+  arguments (when no socketpair stdin is involved) or edit passkey-bearing items in 1Password Desktop:
+
+  ```ts
+  import { closeSync, writeSync } from "node:fs";
+
+  // 1. Refuse passkey-bearing items before using --template, then hand off JSON over fd 3
+  // (Bun's async FileSink leaves extra child fds open, so writeSync + closeSync is required for EOF).
+  const edit = Bun.spawn(
+    ["op", "item", "edit", itemId, "--vault", vaultId, "--template", "/dev/fd/3"],
+    { stdio: ["ignore", "ignore", "pipe", "pipe"] },
+  );
+  const fd3 = edit.stdio[3];
+  if (typeof fd3 !== "number") {
+    edit.kill();
+    throw new Error("Expected numeric child fd 3");
+  }
+  writeSync(fd3, updatedTemplateJson);
+  closeSync(fd3);
+  if ((await edit.exited) !== 0) {
+    throw new Error(`op item edit failed: ${await new Response(edit.stderr).text()}`);
+  }
+
+  // 2. Mandatory non-printing readback guard by field identity (never log or print revealed values).
+  const verify = Bun.spawn(
+    ["op", "item", "get", itemId, "--vault", vaultId, "--cache=false", "--reveal", "--format", "json"],
+    { stdin: "ignore", stdout: "pipe", stderr: "pipe" },
+  );
+  if ((await verify.exited) !== 0) {
+    throw new Error(`op item get readback failed: ${await new Response(verify.stderr).text()}`);
+  }
+  const fields = (JSON.parse(await new Response(verify.stdout).text()) as {
+    fields?: Array<{ id?: string; section?: { id?: string }; value?: string }>;
+  }).fields ?? [];
+  const readbackField = fields.find(
+    (f) => f.id === targetFieldId && (f.section?.id ?? null) === targetSectionId,
+  );
+  if (readbackField?.value !== expectedValue) {
+    throw new Error(`Readback mismatch on field ${targetFieldId} after op item edit`);
+  }
+  ```
 
 ## Examples
 

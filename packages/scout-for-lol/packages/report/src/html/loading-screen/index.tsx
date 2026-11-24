@@ -15,7 +15,12 @@ import {
   preloadChampionImages,
   preloadChampionSplashImages,
 } from "#src/dataDragon/image-cache.ts";
-import { svgToPng } from "#src/html/index.tsx";
+import { svgToPngInThread } from "#src/html/index.tsx";
+import {
+  runPngRenderInWorker,
+  runSvgRenderInWorker,
+} from "#src/html/render-worker-client.ts";
+import { isRenderWorkerThread } from "#src/html/render-worker-protocol.ts";
 
 // Standard/ARAM: one row of cards per side + header/bans. The width is derived
 // from the larger side so a tournament-code custom (teamSize 1-5) is not
@@ -171,7 +176,7 @@ async function preloadLoadingScreenImages(
   }
 }
 
-export async function loadingScreenToSvg(
+export async function loadingScreenToSvgInThread(
   data: LoadingScreenData,
 ): Promise<string> {
   await preloadLoadingScreenImages(data);
@@ -214,13 +219,29 @@ export async function loadingScreenToSvg(
   return svg;
 }
 
-export async function loadingScreenToImage(
+export async function loadingScreenToImageInThread(
   data: LoadingScreenData,
-): Promise<Uint8Array> {
-  const svg = await loadingScreenToSvg(data);
-  const png = await svgToPng(
+): Promise<Buffer> {
+  const svg = await loadingScreenToSvgInThread(data);
+  const png = await svgToPngInThread(
     svg,
     data.layout === "classic" || usesClashCanvas(data) ? { crop: false } : {},
   );
   return png;
+}
+
+export async function loadingScreenToSvg(
+  data: LoadingScreenData,
+): Promise<string> {
+  return isRenderWorkerThread()
+    ? await loadingScreenToSvgInThread(data)
+    : await runSvgRenderInWorker({ kind: "loadingScreenToSvg", data });
+}
+
+export async function loadingScreenToImage(
+  data: LoadingScreenData,
+): Promise<Uint8Array> {
+  return isRenderWorkerThread()
+    ? await loadingScreenToImageInThread(data)
+    : await runPngRenderInWorker({ kind: "loadingScreenToImage", data });
 }

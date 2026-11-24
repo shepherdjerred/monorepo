@@ -3,6 +3,7 @@ import { FileGuardError } from "#automation/files/types.ts";
 import { MediaError } from "#application/errors.ts";
 import { PlexBindingProtection } from "#infrastructure/plex-binding/errors.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
+import { PLEX_EXCLUSION_PROOF_REQUIRED } from "#automation/plex-exclusion/proof.ts";
 import type { PublicationExecution } from "#automation/publication-proof/invocation.ts";
 import type {
   MovieAttemptOperationV4,
@@ -176,6 +177,14 @@ function retentionInvocation(
 }
 
 function blockedMovieFile(error: unknown) {
+  if (
+    error instanceof FileOperationConflict &&
+    error.message.startsWith("Plex control exclusion")
+  )
+    return {
+      status: "blocked" as const,
+      reason: PLEX_EXCLUSION_PROOF_REQUIRED,
+    };
   if (error instanceof FileOperationConflict)
     return {
       status: "blocked" as const,

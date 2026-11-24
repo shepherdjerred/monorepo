@@ -563,9 +563,25 @@ async function prepareNotificationSend(
  * inside the Activity — and the Workflow treats that, and only that, as an
  * unobserved send.
  */
+export type DeliverNotificationOptions = {
+  /**
+   * Invoked immediately before the Discord send leaves this process, once
+   * every pre-send read and policy check has succeeded. The Activity wrapper
+   * uses this to advance heartbeat details from preparation to send so an
+   * operator or timeout log distinguishes pre-send stalls from Discord calls.
+   */
+  readonly onBeforeSend?: () => void;
+};
+
 export async function deliverNotification(
   input: ScoutIntentAttemptRef,
+  options?: DeliverNotificationOptions,
 ): Promise<ScoutNotificationDeliveryResult> {
+  logger.info("Preparing notification delivery", {
+    intentKey: input.intentKey,
+    attemptNonce: input.attemptNonce,
+    stage: input.stage,
+  });
   let prepared: PreparedSend;
   try {
     prepared = await withPreSendBudget(
@@ -597,17 +613,37 @@ export async function deliverNotification(
     });
   }
   if (prepared.phase === "failed") {
+    logger.info("Notification pre-send failed definitely before Discord", {
+      intentKey: input.intentKey,
+      attemptNonce: input.attemptNonce,
+      classification: prepared.failure.classification,
+      reason: prepared.failure.reason,
+    });
     return ScoutNotificationDeliveryResultSchema.parse({
       outcome: "failed",
       failure: prepared.failure,
     });
   }
   if (prepared.phase === "suppressed") {
+    logger.info("Notification suppressed before Discord send", {
+      intentKey: input.intentKey,
+      attemptNonce: input.attemptNonce,
+      reason: prepared.reason,
+    });
     return ScoutNotificationDeliveryResultSchema.parse({
       outcome: "suppressed",
       reason: prepared.reason,
     });
   }
+
+  options?.onBeforeSend?.();
+  logger.info("Dispatching prepared notification to Discord", {
+    intentKey: input.intentKey,
+    attemptNonce: input.attemptNonce,
+    kind: prepared.kind,
+    targetKind: prepared.target.kind,
+    ...(prepared.guildId === undefined ? {} : { guildId: prepared.guildId }),
+  });
 
   // The send, and nothing after it. A best-effort follow-up that ran here
   // would hold the Activity open past the outcome it has already established:
@@ -616,7 +652,7 @@ export async function deliverNotification(
   // message Discord accepted would reach the Workflow as an ambiguous send.
   // `afterNotificationDelivered` runs it in its own Activity, after this
   // outcome is durably recorded.
-  return ScoutNotificationDeliveryResultSchema.parse(
+  const result = ScoutNotificationDeliveryResultSchema.parse(
     await deliverToTarget({
       message: prepared.message,
       target: prepared.target,
@@ -628,4 +664,10 @@ export async function deliverNotification(
         : { reservation: prepared.reservation }),
     }),
   );
+  logger.info("Finished Discord notification delivery attempt", {
+    intentKey: input.intentKey,
+    attemptNonce: input.attemptNonce,
+    outcome: result.outcome,
+  });
+  return result;
 }

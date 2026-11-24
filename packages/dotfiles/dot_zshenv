@@ -17,6 +17,12 @@ for _front in "$HOME/.local/share/toolkit/shims" "$HOME/.local/share/agent-bin";
 done
 unset _front
 
+# PinchTab: point the CLI at the same config the macOS launchd daemon uses
+# (pinned in its plist) unless already set, avoiding ~/.pinchtab token drift.
+if [[ "${OSTYPE:-}" == darwin* && -z "${PINCHTAB_CONFIG:-}" ]]; then
+  export PINCHTAB_CONFIG="$HOME/Library/Application Support/pinchtab/config.json"
+fi
+
 # Keep Astro 7 dev/preview servers attached in the foreground instead of
 # detaching background daemons in coding-agent shells.
 export ASTRO_DEV_BACKGROUND=0

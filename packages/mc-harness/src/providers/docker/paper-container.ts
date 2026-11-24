@@ -3,7 +3,7 @@
  * harness and the harness's own sandboxes compose these; anything that knows
  * about a specific plugin's staging stays with its caller.
  */
-import { readdir, rm } from "node:fs/promises";
+import { mkdir, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import {
@@ -11,7 +11,9 @@ import {
   PAPER_DONE_PATTERN,
   PLUGIN_FAILURE_PATTERNS,
 } from "#sandbox/paper-log.ts";
-import { docker } from "./docker-cli.ts";
+import { BOOT_TIMEOUT_MS } from "#sandbox/boot.ts";
+import { DOCKER_CLI_TIMEOUT_MS, docker } from "./docker-cli.ts";
+import { formatExpiresAtMs, LABELS, type SandboxRow } from "./rows.ts";
 
 /**
  * Warm-cache mounts, host dir under the cache -> container path, for
@@ -156,4 +158,119 @@ export async function startAndAwaitDone(
   await docker(["start", containerId]);
   await waitForLog(containerId, PAPER_DONE_PATTERN, deadline);
   assertNoPluginFailures(await containerLogs(containerId), failurePatterns);
+}
+
+export async function seedSandboxContainer(options: {
+  id: string;
+  owner: string;
+  expiresAtMs: number;
+  containerId: string;
+  dir: string;
+  image: string;
+  publishedStorm: boolean;
+  hasMapSource: boolean;
+  seedFiles: readonly { source: string; target: string }[];
+}): Promise<void> {
+  const slow = { timeoutMs: BOOT_TIMEOUT_MS };
+  const helperLabels = [
+    "--label",
+    `${LABELS.sandbox}=${options.id}`,
+    "--label",
+    `${LABELS.expiresAt}=${formatExpiresAtMs(options.expiresAtMs)}`,
+    "--label",
+    `${LABELS.daemonPid}=${process.pid.toString()}`,
+    "--label",
+    `${LABELS.owner}=${options.owner}`,
+    "--label",
+    `${LABELS.keep}=false`,
+  ];
+  if (options.hasMapSource) {
+    await docker(
+      ["cp", path.join(options.dir, "world"), `${options.containerId}:/data/`],
+      slow,
+    );
+  }
+  if (options.publishedStorm) {
+    // Match the server chart's fsGroup on a fresh volume, as boot-check.sh
+    // does. The server itself stays unprivileged; only these short-lived
+    // helpers touch the disposable volume before the first boot.
+    for (const [command, value] of [
+      ["chown", "1000:2000"],
+      ["chmod", "2775"],
+    ] as const) {
+      await docker(
+        [
+          "run",
+          "--rm",
+          ...helperLabels,
+          "--user",
+          "0:0",
+          "--volumes-from",
+          options.containerId,
+          "--entrypoint",
+          command,
+          options.image,
+          value,
+          "/data",
+        ],
+        slow,
+      );
+    }
+  }
+  for (const seed of options.seedFiles) {
+    await docker(
+      ["cp", seed.source, `${options.containerId}:/data/${seed.target}`],
+      slow,
+    );
+  }
+  if (options.hasMapSource) {
+    const config = path.join(options.dir, "config");
+    await mkdir(config, { mode: 0o777 });
+    await Bun.write(
+      path.join(config, "paper-global.yml"),
+      "_version: 31\nproxies:\n  proxy-protocol: true\n",
+    );
+    await docker(["cp", config, `${options.containerId}:/data/`], slow);
+    await docker(
+      [
+        "run",
+        "--rm",
+        ...helperLabels,
+        "--volumes-from",
+        options.containerId,
+        "--entrypoint",
+        "chmod",
+        options.image,
+        "-R",
+        "a+rwX",
+        "/data/config",
+      ],
+      slow,
+    );
+  }
+}
+
+export async function cleanupFailedSandboxBoot(options: {
+  id: string;
+  containerId: string;
+  dir: string;
+  listRows: () => Promise<readonly SandboxRow[]>;
+}): Promise<void> {
+  const fast = { timeoutMs: DOCKER_CLI_TIMEOUT_MS };
+  const logs = await containerLogs(options.containerId).catch(() => "");
+  await Bun.write(path.join(options.dir, "failed-boot.log"), logs);
+  const rows = await options.listRows().catch(() => []);
+  const targets = new Set([
+    options.containerId,
+    ...rows
+      .filter((row) => row.id === options.id)
+      .map((row) => row.containerId),
+  ]);
+  for (const target of targets) {
+    try {
+      await docker(["rm", "-f", "-v", target], fast);
+    } catch {
+      // Best-effort cleanup when creation or boot timed out before container registration.
+    }
+  }
 }
