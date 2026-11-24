@@ -21,6 +21,7 @@ import {
   lokiOtlpEgress,
   prometheusIngressRule,
   nsPeer,
+  seaweedfsEgress,
   tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
@@ -146,14 +147,13 @@ export function createTemporalPromotionWorker(
           to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
           ports: [tcp(7233)],
         },
-        ...[
-          PINCHTAB_ENDPOINT,
-          { namespace: "seaweedfs", port: 8333 },
-          OTLP_GATEWAY_ENDPOINT,
-        ].map(({ namespace, port }) => ({
-          to: [nsPeer(namespace)],
-          ports: [tcp(port)],
-        })),
+        ...[PINCHTAB_ENDPOINT, OTLP_GATEWAY_ENDPOINT].map(
+          ({ namespace, port }) => ({
+            to: [nsPeer(namespace)],
+            ports: [tcp(port)],
+          }),
+        ),
+        seaweedfsEgress(),
         lokiOtlpEgress(),
         { ports: [tcp(443)] },
       ],

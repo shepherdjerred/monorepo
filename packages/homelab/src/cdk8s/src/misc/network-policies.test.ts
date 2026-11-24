@@ -124,7 +124,21 @@ describe("network policy peer library", () => {
       { to: [namespace("flags")], ports: [port(7361)] },
       { to: [namespace("flags")], ports: [port(7360)] },
       { to: [namespace("alloy-gateway")], ports: [port(4318)] },
-      { to: [namespace("seaweedfs")], ports: [port(8333)] },
+      {
+        to: [
+          {
+            ...namespace("seaweedfs"),
+            podSelector: {
+              matchLabels: {
+                "app.kubernetes.io/name": "seaweedfs",
+                "app.kubernetes.io/instance": "seaweedfs",
+                "app.kubernetes.io/component": "s3",
+              },
+            },
+          },
+        ],
+        ports: [port(8333)],
+      },
       {
         to: [
           {

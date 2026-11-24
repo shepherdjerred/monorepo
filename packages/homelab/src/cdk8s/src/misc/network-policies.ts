@@ -141,9 +141,27 @@ export function lokiOtlpEgress() {
   };
 }
 
-/** The SeaweedFS S3 gateway (`seaweedfs-s3.seaweedfs`, 8333). */
+/**
+ * The SeaweedFS S3 gateway (`seaweedfs-s3.seaweedfs`, 8333): the upstream
+ * chart's S3 pods only, so the rule names no other pod of the namespace, such
+ * as the policed `seaweedfs-backup`.
+ */
 export function seaweedfsEgress() {
-  return { to: [nsPeer("seaweedfs")], ports: [tcp(8333)] };
+  return {
+    to: [
+      {
+        ...nsPeer("seaweedfs"),
+        podSelector: {
+          matchLabels: {
+            "app.kubernetes.io/name": "seaweedfs",
+            "app.kubernetes.io/instance": "seaweedfs",
+            "app.kubernetes.io/component": "s3",
+          },
+        },
+      },
+    ],
+    ports: [tcp(8333)],
+  };
 }
 
 /**
