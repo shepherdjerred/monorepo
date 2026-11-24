@@ -40,7 +40,7 @@ test("a service filter by its display name keeps the page and filters by id", as
     await expect(
       page.getByRole("status").filter({
         hasText:
-          /^Showing (?:all |the )?\d+ (?:newest )?deployments? that match these filters\./u,
+          /^Showing (?:all |the )?\d+ (?:newest )?deployments? that match(?:es)? these filters\./u,
       }),
     ).toBeVisible();
     await expect(table.locator("tbody tr").first()).toContainText(
@@ -145,19 +145,20 @@ for (const { path, noun, values, filter } of [
 for (const { path, filters, filter, table } of [
   {
     path: "/activity?status=bogus",
-    filters: "Show, Time range, Action prefix, Actor, Entity",
+    filters:
+      "problems (Show), within (Time range), action (Action prefix), actor, entity",
     filter: "Filter activity",
     table: "ol.activity",
   },
   {
     path: "/deployments?severity=high",
-    filters: "Service, Environment, Status",
+    filters: "service, environment, status",
     filter: "Filter deployments",
     table: "table",
   },
   {
     path: "/artifacts?environment=arcade%2Fprod",
-    filters: "Service, Qualification",
+    filters: "service, status (Qualification)",
     filter: "Filter builds",
     table: "table",
   },
@@ -169,7 +170,7 @@ for (const { path, filters, filter, table } of [
     const main = page.getByRole("main");
     const name = /[?&]([^=]+)=/u.exec(path)?.[1] ?? "";
     await expect(main.getByRole("status")).toHaveText(
-      `“${decodeURIComponent(name)}” is not a filter on this page. Choose one of ${filters}.`,
+      `“${decodeURIComponent(name)}” is not a filter on this page. Use one of: ${filters}.`,
     );
     await expect(main.locator(table)).toHaveCount(0);
     await expect(page.getByRole("search", { name: filter })).toBeVisible();
@@ -185,7 +186,7 @@ test("an unknown search parameter on the overview and pipelines is named, not ig
     await page.goto(path);
     await expect(
       page.getByRole("main").getByRole("status").first(),
-    ).toContainText("“severity” is not a filter on this page. Choose one of");
+    ).toContainText("“severity” is not a filter on this page. Use one of:");
     await page
       .getByRole("main")
       .getByRole("link", { name: "Clear filters" })

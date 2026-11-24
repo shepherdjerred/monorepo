@@ -1,6 +1,10 @@
 import { expect, test } from "vitest";
 import {
   addSegment,
+  filterFlags,
+  flagState,
+  parseSearch,
+  searchSuffix,
   draftError,
   listState,
   parseRoute,
@@ -87,4 +91,40 @@ test("rejects a segment that cannot match", () => {
       { type: "boolean", key: "a", default: false, rollouts: [] },
     ),
   ).toBe(false);
+});
+
+test("search filters flags by key, ignoring case and surrounding spaces", () => {
+  const flags = [
+    { key: "Dares_Enabled" },
+    { key: "debug" },
+    { key: "llm-daily-token-budget" },
+  ];
+  expect(filterFlags(flags, "")).toEqual(flags);
+  expect(filterFlags(flags, "  ")).toEqual(flags);
+  expect(filterFlags(flags, "DARES")).toEqual([{ key: "Dares_Enabled" }]);
+  expect(filterFlags(flags, " d ")).toEqual(flags);
+  expect(filterFlags(flags, "token")).toEqual([
+    { key: "llm-daily-token-budget" },
+  ]);
+  expect(filterFlags(flags, "zzz")).toEqual([]);
+});
+
+test("the search round-trips through the page URL", () => {
+  expect(searchSuffix("")).toBe("");
+  expect(searchSuffix(" a b ")).toBe("?q=a%20b");
+  expect(parseSearch("?q=a%20b")).toBe("a b");
+  expect(parseSearch("")).toBe("");
+});
+
+test("flag state splits into a glyph kind and the word shown", () => {
+  expect(
+    flagState({ type: "boolean", key: "a", default: true, rollouts: [] }),
+  ).toEqual({ kind: "on", label: "On" });
+  expect(
+    flagState({ type: "boolean", key: "a", default: false, rollouts: [] }),
+  ).toEqual({ kind: "off", label: "Off" });
+  expect(flagState({ type: "variant", key: "v", value: "" })).toEqual({
+    kind: "variant",
+    label: "(empty)",
+  });
 });

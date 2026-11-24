@@ -6,7 +6,7 @@ import { duckDbColumnsSpec } from "#src/report-lake/schema.ts";
 import type { DuckDBSession } from "#src/reports/duckdb/instance.ts";
 import { PARQUET_COPY_OPTIONS } from "#src/reports/duckdb/writes/parquet.ts";
 
-const COPY_BATCH_BYTES = 64 * 1024 * 1024;
+const COPY_BATCH_BYTES = 32 * 1024 * 1024;
 const DISK_BUFFER_BYTES = 1024 * 1024;
 
 type EncodedRecord = { pieces: Uint8Array[]; bytes: number };
@@ -50,7 +50,7 @@ async function* ndjsonRecords(
 /**
  * Bound JSON input before DuckDB materializes a vector of wide documents.
  * Row groups and partition flush thresholds only bound the downstream writer.
- * Each COPY reads at most 64 MiB, except for one oversized record. APPEND
+ * Each COPY reads at most 32 MiB, except for one oversized record. APPEND
  * creates unique output files so successive batches retain every prior row.
  */
 export async function copyNdjsonToParquet(

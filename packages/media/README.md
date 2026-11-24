@@ -838,6 +838,20 @@ topic under `/manage`:
 | `/manage/recovery/native/:id?`        | Native file recovery, archives, and compensation |
 | `/manage/migration`                   | Migration captures and library import            |
 
+The native file recovery pages (`src/client/native-recovery/`) share one shape:
+what must be true first, the files or upgrades to choose, and the reviews
+prepared from them. A review says where it stands, what approving changes and
+what stays as it is, and asks in a dialog before the one approval that changes
+ownership or cleanup. Preparing a review changes nothing. Paths, checksums, and
+plan digests sit behind "Technical details". The fixture API serves the
+inventories, and file reviews in each state
+(`src/testing/fixture-api/fixtures/migration/native-recovery.ts`); the quarantine,
+archive, interrupted-upgrade (compensation), and series-pack reviews each have
+one waiting, one ready to approve, and one applied
+(`fixtures/migration/`: `quarantine.ts`, `archive.ts`, `compensation.ts`,
+`series-pack.ts`, built on `parts.ts`). A refused and a
+stale approval are written in `e2e/browser/manage/native-reviews.spec.ts`.
+
 Each Manage page is a lazy route, so its code is a separate chunk that a member
 never downloads; a member who opens a Manage address is sent to Home, as is
 anyone who opens an address that does not exist.
@@ -1249,6 +1263,22 @@ Expanse" and "Get Out" are leaving soon, "Silo" and "The Holdovers" are removed
 but restorable, and `/catalog/movie/155` and `/catalog/series/1398` are titles
 the household does not have.
 
+Opening a title from a poster card (Library, Discover, Home, and the Calendar's
+release rows) carries the card's poster to the page's poster, and back on Back.
+View transitions are Baseline Newly available, so this is an enhancement and
+the instant navigation is the fallback: `ui/motion/title-transition.ts` asks for a
+transition only where `document.startViewTransition` exists and the reader has
+not asked for reduced motion, through react-router's own `viewTransition` link
+prop and `useViewTransitionState`. Going back is the router's: it remembers
+which pages it moved between and repeats the transition on a history change.
+The browser takes exactly one element with a transition name from each page, so
+only the opened card's poster carries it, picked by its list (`PosterPlace`) and
+title; the name is a class (`poster.module.css`), never an inline style, which
+the Content-Security-Policy forbids. The card puts its poster in the link's
+state, and the title page shows it in place of the skeleton's block, because the
+title is read after the page opens and the transition ends before that. Tab
+switches, filters, and every other navigation have no transition.
+
 ### Calendar
 
 `/calendar` (`src/client/calendar/`) has Month, Week and Agenda views. It
@@ -1362,10 +1392,11 @@ confirms, so a mail scanner that opens the link changes nothing.
 ### Client styles and themes
 
 The client is styled with CSS in five cascade layers, lowest priority first:
-`reset`, `tokens`, `base`, `components`, `pages`. Most of it is global; the
-shell, the Manage pages, and the form primitives in `ui/` use CSS Modules
-(`*.module.css`, read through `ui/class-names.ts`), whose rules sit in
-`components` like the shared classes. A CSS Module scopes container names as
+`reset`, `tokens`, `base`, `components`, `pages`. A component's styles live in
+its CSS Module (`*.module.css`, read through `ui/class-names.ts`); only a class
+that two or more unrelated pages write by hand is global, in
+`styles/components.css`. A module's rules sit in `components` or `pages`, and a
+module reaches a shared class with `:global(.name)`. A CSS Module scopes container names as
 it does class names, so `@container <name>` only matches a container declared
 in the same file; a module that sizes itself against a container declared
 elsewhere uses an unnamed `@container (…)`.
@@ -1375,13 +1406,15 @@ elsewhere uses an unnamed `@container (…)`.
 | `src/client/styles/tokens.css`                           | `tokens`        | Every color, type size, radius, shadow, and spacing step. |
 | `src/client/styles/fonts.css`                            | none            | The `@font-face` rules for the self-hosted fonts.         |
 | `src/client/styles/base.css`                             | `reset`, `base` | Element defaults.                                         |
-| `src/client/styles.css`                                  | `components`    | The layer order, shell sizes, and the shared class rules. |
+| `src/client/styles/index.css`                            | `reset`         | The layer order, and the reduced-motion reset.            |
+| `src/client/styles/document.css`                         | `components`    | The shell sizes the document's scroll padding needs.      |
+| `src/client/styles/components.css`                       | `components`    | The classes two or more unrelated pages write by hand.    |
 | A feature's own stylesheet, such as `calendar/style.css` | `pages`         | Rules for one page or panel.                              |
 
 A rule in a later layer wins over an earlier one whatever its specificity, so a
 page rule never needs a longer selector to override a component. The browser
 fixes the layer order at the first `@layer` it reads, which is why `main.tsx`
-imports `styles.css` before the application.
+imports `styles/index.css` before the application.
 
 No stylesheet other than `tokens.css` holds a hex color. Semantic tokens such as
 `--surface` and `--text-muted` choose between raw palette values with
@@ -1527,7 +1560,7 @@ obfuscation, and Web Analytics injection stay off for this host.
 ### Client forms
 
 The owner's Manage pages are built from the primitives in `src/client/ui`.
-Pages outside Manage still use the shared classes in `styles.css`.
+Pages outside Manage still use the shared classes in `styles/components.css`.
 
 | Module                        | Provides                                                                                                                                         |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -3233,6 +3266,36 @@ same manager kind, instance, numeric media ID, and captured video path in a
 complete, stable combined bundle. Fresh handoff evidence additionally checks the
 actual worker/PVC roots and video bytes; matching path suffixes never suffice.
 
+### Frozen Seerr request capture
+
+Once the Seerr writer has stopped and SQLite's WAL has settled, read the
+existing database image with the original source-instance SHA-256 and the
+verified Seerr version.
+
+```sh
+bun packages/media/scripts/migration-seerr.ts \
+  --sqlite "$SEERR_DATABASE_PATH" \
+  --source-instance-id "$MEDIA_SOURCE_INSTANCE_HASH" \
+  --source-version "$MEDIA_SOURCE_VERSION" \
+  --writer-stopped
+```
+
+The reader works on a private in-memory copy and rejects a nonempty WAL,
+corrupt or changing files, dangling references, and conflicting requester
+identities. Upload the wrapper's `snapshot` through migration administration
+for owner review. It preserves exact request and season statuses, the original
+creation time where available, and the Plex account ID joined from the
+requester's Seerr account. A requester without a stored Plex ID remains
+unmapped. The export carries no credentials, sessions, or email addresses.
+
+The wrapper's `sqliteDigest` hashes the original bytes. Its
+`unassignedSeasonCount` counts season rows whose Seerr `requestId` is SQL
+`NULL`. Those rows stay in the frozen database and do not enter the request
+snapshot.
+`apiComparableDigest` clears the Plex identity fields for comparison with the
+final HTTP capture, which leaves those fields unmapped. A discrepancy calls
+for review of the original source captures.
+
 ### Personal state import contract
 
 The [personal migration service](src/migration/personal-state/service.ts) uses
@@ -3251,6 +3314,16 @@ only those reviewed requests. Omitted rows remain in the complete capture and
 unresolved requests retain their existing protections. `historyOnly` entries
 must belong to the selected requests when applying a scoped review.
 
+Set `deferUnboundRequesters: true` on both preview and apply to use the exact
+Plex account IDs in a frozen Seerr capture. The owner can approve the full
+request set before household members sign in. Media keeps each eligible
+request pending under the captured Plex account ID until that person signs in
+with current access to the relevant libraries. **My requests** also retries
+attachment for people who signed in before the library transition. A deferred
+request with unresolved catalog targets or a movie edition needs another
+review before it can attach. TV requests need current Media runtime authority.
+Newer reviewed history supersedes an earlier pending request.
+
 `POST /api/v1/admin/migration/personal/apply` takes the same selection,
 `previewHash`, `acknowledgeExistingLibraryKeep: true`, and
 `acknowledgeTemporaryFollowingClaims: true`, with an `Idempotency-Key` header.
@@ -3267,6 +3340,13 @@ not impersonate those accounts or create a native movie edition-choice audit.
 choice to the owner or the claim's own user. The requester makes that choice
 through the existing movie detail flow. TV imports preserve selected season
 requests, including explicitly selected specials.
+
+`GET /api/v1/requests/imported-history` reads reviewed history-only requests
+from the same source receipts. In **My requests**, the archive shows the
+original request date and status when the capture contains them. A person can
+see their own verified history. The owner can also see records whose requester
+has yet to be matched. Archived requests carry no acquisition or retention
+authority.
 
 The immutable `personal_state_imported` receipt accounts only its exact captured
 record digest, reviewed requester binding, and real native request identities.

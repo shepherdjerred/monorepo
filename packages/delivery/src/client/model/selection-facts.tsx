@@ -97,17 +97,24 @@ export function SelectionFacts({
 export function DeploymentLink({
   id,
   short = false,
+  label,
 }: {
   id: string;
   short?: boolean;
+  /** Words that name the deployment, such as "the deploy of r391", in place of its id. */
+  label?: string;
 }) {
-  return (
+  return label === undefined ? (
     <Link
       to="/deployments/$deploymentId"
       params={{ deploymentId: id }}
       className="mono"
     >
       {short ? <Identifier value={id} /> : id}
+    </Link>
+  ) : (
+    <Link to="/deployments/$deploymentId" params={{ deploymentId: id }}>
+      {label}
     </Link>
   );
 }

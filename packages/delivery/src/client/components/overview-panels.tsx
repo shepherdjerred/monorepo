@@ -71,15 +71,21 @@ function EnvironmentChip({ environment }: { environment: GridEnvironment }) {
         <Status value={STATUS_VALUE[newest]} label={statusLabel(newest)} />
       )}
       {environment.acceptedRevision !== null && (
-        <span className="overview-accepted">
-          <Revision revision={environment.acceptedRevision} />
-          {environment.acceptedAt !== null && (
-            <>
-              <span className="visually-hidden"> accepted </span>
-              <RelativeTime value={environment.acceptedAt} />
-            </>
-          )}
-        </span>
+        <>
+          {/* A newer request holds the chip's status, so the accepted release keeps its own. */}
+          {request !== null && <Status value="succeeded" label="accepted" />}
+          <span className="overview-accepted">
+            <Revision revision={environment.acceptedRevision} />
+            {environment.acceptedAt !== null && (
+              <>
+                {request === null && (
+                  <span className="visually-hidden"> accepted </span>
+                )}
+                <RelativeTime value={environment.acceptedAt} />
+              </>
+            )}
+          </span>
+        </>
       )}
       {environment.maintenance != null && (
         <Status
@@ -195,7 +201,7 @@ function TileRun({
       {open.length > 0 && <Tiles services={open} />}
       {settled.length > 0 && (
         <Disclosure
-          summary={`${open.length === 0 ? "All " : ""}${String(settled.length)} healthy`}
+          summary={`${open.length === 0 && settled.length > 2 ? "All " : ""}${String(settled.length)} healthy`}
         >
           <Tiles services={settled} />
         </Disclosure>

@@ -1,3 +1,4 @@
+import { temporalMetricsAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
@@ -34,7 +35,7 @@ function createWorkflowWorker(
     envVariables: {
       ...temporalAddressEnv(props.serverServiceName),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
-      TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+      ...temporalMetricsAddressEnv(),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("workflows"),
       TEMPORAL_WORKER_DEPLOYMENT_NAME: EnvValue.fromValue(DEPLOYMENT_NAME),
       ENVIRONMENT: EnvValue.fromValue("production"),

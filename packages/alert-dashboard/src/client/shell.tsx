@@ -1,15 +1,17 @@
+import { ShellFrame } from "@shepherdjerred/console-ui";
 import { useRef } from "react";
 import { Outlet } from "react-router";
 
 import { Changes } from "./changes.tsx";
 import type { ResolvedNavGroup } from "./platform/module.ts";
 import { CommandPalette } from "./platform/palette.tsx";
-import { Sidebar, Topbar } from "./shell-nav.tsx";
+import { HubSidebar, Topbar } from "./shell-nav.tsx";
 
 /**
- * The app frame around every page: a grouped sidebar beside the content, or
- * a top bar with a navigation drawer at phone width. Each page renders its
- * own `<main>`, so the content column here is a plain container.
+ * The app frame around every page: the shared console shell (a quiet
+ * sidebar beside an inset panel), or a top bar with a navigation drawer at
+ * phone width. Each page renders its own `<main>`, so the content container
+ * inside the panel is a plain element. The document scrolls, never the panel.
  */
 export function Shell({
   groups,
@@ -32,13 +34,12 @@ export function Shell({
       </a>
       <Changes />
       <CommandPalette />
-      <div className="app-layout">
-        <Sidebar groups={groups} />
-        <Topbar groups={groups} />
+      <Topbar groups={groups} />
+      <ShellFrame sidebar={<HubSidebar groups={groups} />}>
         <div className="app-content" id="content" ref={content} tabIndex={-1}>
           <Outlet />
         </div>
-      </div>
+      </ShellFrame>
     </>
   );
 }

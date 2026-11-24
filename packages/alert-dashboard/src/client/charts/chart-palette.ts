@@ -1,3 +1,5 @@
+import { tokens } from "@shepherdjerred/console-ui/tokens.ts";
+
 import type { Theme } from "#client/theme.ts";
 
 /**
@@ -28,12 +30,30 @@ export const CATEGORICAL: Record<Theme, readonly string[]> = {
   ],
 };
 
+function chrome(theme: Theme): {
+  axis: string;
+  grid: string;
+  baseline: string;
+} {
+  const values = tokens[theme];
+  return {
+    axis: values.faint,
+    grid: values.line,
+    baseline: values["btn-edge"],
+  };
+}
+
+/**
+ * Axis labels, grid lines and the zero line, from the shared console tokens
+ * so charts match the panel they sit on: axis text is the faint ink, the grid
+ * is the table line colour, and the baseline is the control edge.
+ */
 export const CHART_CHROME: Record<
   Theme,
   { axis: string; grid: string; baseline: string }
 > = {
-  light: { axis: "#6b6a65", grid: "#e1e0d9", baseline: "#c3c2b7" },
-  dark: { axis: "#a09f98", grid: "#2c2c2a", baseline: "#383835" },
+  light: chrome("light"),
+  dark: chrome("dark"),
 };
 
 export const STACKED_AREA_ALPHA: Record<Theme, number> = {
@@ -46,9 +66,16 @@ export const BAR_FILL_ALPHA: Record<Theme, number> = {
   dark: 0.3,
 };
 
+/** Threshold lines use the severity glyph colours of the shared tokens. */
 const THRESHOLD_TONE: Record<Theme, Record<"warning" | "error", string>> = {
-  light: { warning: "#b86e00", error: "#c7352e" },
-  dark: { warning: "#f5c65a", error: "#f57973" },
+  light: {
+    warning: tokens.light["sev-warning"],
+    error: tokens.light["sev-error"],
+  },
+  dark: {
+    warning: tokens.dark["sev-warning"],
+    error: tokens.dark["sev-error"],
+  },
 };
 
 export function seriesColor(theme: Theme, index: number): string {

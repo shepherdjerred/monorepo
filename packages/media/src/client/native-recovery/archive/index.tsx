@@ -1,11 +1,20 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import type { MediaUser } from "#shared/contract.ts";
 import { NativeArchiveInventorySchema } from "#shared/native-recovery/archive-view.ts";
 import { CommandResultSchema } from "#shared/api.ts";
-import { readApi, writeApi } from "#client/api.ts";
-import { PageTitle, Loading, ErrorNotice } from "#client/components.tsx";
+import { NotSentError, readApi, writeApi } from "#client/api.ts";
+import { PageTitle } from "#client/components.tsx";
+import { Button, ButtonLink, ButtonRow } from "#client/ui/button.tsx";
+import { LoadError } from "#client/ui/feedback.tsx";
+import { EmptyNote, Panel, SkeletonRows } from "#client/ui/panel.tsx";
+import { PickBox, PickList, WriteFailure } from "#client/ui/workflow.tsx";
+import {
+  CursorButtons,
+  Prerequisites,
+} from "#client/native-recovery/shell.tsx";
+import { when } from "#client/native-recovery/vocabulary.ts";
 import { archiveBytes, archiveReasons } from "./presentation.ts";
 
 export function NativeArchiveIndex({ user }: { user: MediaUser }) {
@@ -24,7 +33,7 @@ export function NativeArchiveIndex({ user }: { user: MediaUser }) {
     mutationFn: async () => {
       const data = inventory.data;
       if (data?.restoreOperationId == null)
-        throw new Error(
+        throw new NotSentError(
           "Complete the operator restore-to-observe procedure first",
         );
       return writeApi({
@@ -45,6 +54,7 @@ export function NativeArchiveIndex({ user }: { user: MediaUser }) {
         void navigate(`/manage/recovery/native/${result.nativeRecoveryId}`);
     },
   });
+  const data = inventory.data;
   return (
     <>
       <PageTitle title="Review upgrade archives">
@@ -53,108 +63,134 @@ export function NativeArchiveIndex({ user }: { user: MediaUser }) {
           The review includes retained dependencies and current playable files,
           without selecting them for deletion.
         </p>
+        <ButtonRow>
+          <ButtonLink to="/manage/recovery/native">
+            Native file recovery
+          </ButtonLink>
+          <ButtonLink to="/recovery">Household recovery protection</ButtonLink>
+        </ButtonRow>
       </PageTitle>
-      <p>
-        <Link to="/manage/recovery/native">Native file recovery</Link> ·{" "}
-        <Link to="/recovery">Household recovery protection</Link>
-      </p>
-      {inventory.isPending && <Loading />}
-      {inventory.error !== null && <ErrorNotice error={inventory.error} />}{" "}
-      {prepare.error !== null && <ErrorNotice error={prepare.error} />}
-      {inventory.data !== undefined && (
+      {inventory.isPending && (
+        <SkeletonRows label="Loading the archives" rows={3} tall />
+      )}
+      {inventory.error !== null && (
+        <LoadError
+          what="The upgrade archives"
+          error={inventory.error}
+          retry={() => {
+            void inventory.refetch();
+          }}
+        />
+      )}
+      {data !== undefined && (
         <>
-          <section className="panel">
-            <h2>Before archive review</h2>
-            <p>
-              The original seven-day rollback deadline is preserved. Approval
-              does not delete files, renew requests or release household holds.
-              Fresh Plex, storage and file checks remain required.
-            </p>
-            {inventory.data.prerequisites.map((reason) => (
-              <p key={reason}>{reason.replaceAll("_", " ")}</p>
-            ))}
-          </section>
-          <section className="panel">
-            <h2>Explicit cleanup selection</h2>
-            <p>
-              Select up to 25 pending cleanups. Dependencies are added only to
-              the read-only review.
-            </p>
-            {inventory.data.cleanups.map((item) => (
-              <label className="check-label" key={item.id}>
-                <input
-                  type="checkbox"
-                  checked={selected.includes(item.id)}
-                  disabled={
-                    item.reasons.length > 0 ||
-                    (!selected.includes(item.id) && selected.length >= 25)
-                  }
-                  onChange={(event) => {
-                    setSelected(
-                      event.target.checked
-                        ? [...selected, item.id]
-                        : selected.filter((id) => id !== item.id),
-                    );
-                  }}
-                />
-                <span>
-                  {item.titles.join(" · ") || "Unresolved coverage"}
-                  <small>
-                    {" "}
-                    · {archiveBytes(item.sizeBytes)} · Original expiry:{" "}
-                    {new Date(item.expiresAt).toLocaleString()}
-                  </small>
-                  {item.reasons.map((reason) => (
-                    <span className="muted" key={reason}>
-                      {archiveReasons[reason]}
-                    </span>
-                  ))}
-                </span>
-              </label>
-            ))}
-            {inventory.data.cleanups.length === 0 && (
-              <p>No upgrade archives on this page.</p>
+          <Prerequisites
+            title="Before archive review"
+            intro="The original seven-day rollback deadline is preserved. Approval does not delete files, renew requests, or release household holds. Fresh Plex, storage, and file checks remain required."
+            prerequisites={data.prerequisites}
+            done="No prerequisites are outstanding."
+          />
+          <Panel
+            id="cleanups"
+            title="Choose the cleanups to resume"
+            description={
+              <p>
+                Select up to 25 pending cleanups. Dependencies are added only to
+                the read-only review. Preparing changes nothing; you approve the
+                review on the next page.
+              </p>
+            }
+          >
+            {data.cleanups.length === 0 ? (
+              <EmptyNote>No upgrade archives on this page.</EmptyNote>
+            ) : (
+              <PickList
+                data-field="cleanups"
+                data-field-label="Cleanups"
+                tabIndex={-1}
+              >
+                {data.cleanups.map((item) => (
+                  <PickBox
+                    key={item.id}
+                    checked={selected.includes(item.id)}
+                    disabled={
+                      item.reasons.length > 0 ||
+                      (!selected.includes(item.id) && selected.length >= 25)
+                    }
+                    onChange={(checked) => {
+                      setSelected(
+                        checked
+                          ? [...selected, item.id]
+                          : selected.filter((id) => id !== item.id),
+                      );
+                    }}
+                  >
+                    {item.titles.join(", ") || "Unresolved coverage"}
+                    <br />
+                    <small>
+                      {archiveBytes(item.sizeBytes)}. Original expiry:{" "}
+                      {when(item.expiresAt)}
+                    </small>
+                    {item.reasons.map((reason) => (
+                      <small key={reason}>
+                        <br />
+                        {archiveReasons[reason]}
+                      </small>
+                    ))}
+                  </PickBox>
+                ))}
+              </PickList>
             )}
-            <button
-              className="button primary"
-              disabled={
-                selected.length === 0 ||
-                inventory.data.prerequisites.length > 0 ||
-                prepare.isPending
-              }
-              onClick={() => {
-                prepare.mutate();
+            <CursorButtons
+              hasPrevious={cursor !== null}
+              next={data.nextCursor}
+              nextLabel="Next archives"
+              onFirst={() => {
+                setCursor(null);
+                setSelected([]);
               }}
-            >
-              {prepare.isPending
-                ? "Preparing…"
-                : "Prepare exact archive review"}
-            </button>
-            <div className="button-row">
-              {cursor !== null && (
-                <button
-                  className="button"
-                  onClick={() => {
-                    setCursor(null);
-                    setSelected([]);
-                  }}
-                >
-                  First page
-                </button>
-              )}
-              {inventory.data.nextCursor !== null && (
-                <button
-                  className="button"
-                  onClick={() => {
-                    setCursor(inventory.data.nextCursor);
-                    setSelected([]);
-                  }}
-                >
-                  Next archives
-                </button>
-              )}
+              onNext={(next) => {
+                setCursor(next);
+                setSelected([]);
+              }}
+            />
+            <div>
+              <Button
+                variant="primary"
+                busy={prepare.isPending}
+                disabled={
+                  selected.length === 0 || data.prerequisites.length > 0
+                }
+                onClick={() => {
+                  prepare.mutate();
+                }}
+              >
+                {prepare.isPending
+                  ? "Preparing…"
+                  : "Prepare exact archive review"}
+              </Button>
             </div>
-          </section>
+            {prepare.error !== null && (
+              <WriteFailure
+                error={prepare.error}
+                refused={{
+                  title: "The review was not prepared",
+                  state: "Nothing was prepared and no file was changed.",
+                }}
+                unknown={{
+                  title: "Whether the review was prepared is not known",
+                  about: "whether the review was saved",
+                  check:
+                    "open the prepared reviews to see whether it is listed",
+                }}
+                action={
+                  <ButtonLink to="/manage/recovery/native#reviews">
+                    Open the prepared reviews
+                  </ButtonLink>
+                }
+              />
+            )}
+          </Panel>
         </>
       )}
     </>

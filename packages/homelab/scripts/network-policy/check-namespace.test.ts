@@ -13,12 +13,13 @@ import {
 } from "./enforcer-log.ts";
 import {
   breakGlassPolicy,
+  ciStepService,
   failedPod,
   fakeRunner,
+  gatedCiStepPod,
   items,
   otherPolicy,
   probe,
-  stagingPolicy,
 } from "./fixtures.ts";
 import { denialsFor } from "./namespace-denials.ts";
 
@@ -109,10 +110,8 @@ describe("arguments", () => {
   test("one namespace, with defaults", () => {
     expect(parseCheckArguments(["tracker"])).toEqual({
       target: { namespace: "tracker" },
-      allowUnstaged: [],
       json: false,
       sinceMinutes: 10,
-      expectStage: undefined,
       allowBreakGlass: false,
     });
   });
@@ -120,20 +119,16 @@ describe("arguments", () => {
   test("flags", () => {
     expect(
       parseCheckArguments([
-        "--all-staged",
+        "--all",
         "--json",
         "--since-minutes",
         "30",
-        "--expect-stage",
-        "enforced",
         "--allow-break-glass",
       ]),
     ).toEqual({
-      target: "all-staged",
-      allowUnstaged: [],
+      target: "all",
       json: true,
       sinceMinutes: 30,
-      expectStage: "enforced",
       allowBreakGlass: true,
     });
   });
@@ -141,81 +136,18 @@ describe("arguments", () => {
   test("refuses no target, two targets and bad values", () => {
     for (const argv of [
       [],
-      ["tracker", "--all-staged"],
+      ["tracker", "--all"],
       ["tracker", "media"],
       ["Tracker"],
       ["tracker", "--since-minutes", "0"],
-      ["tracker", "--expect-stage", "closed"],
       ["tracker", "--apply"],
-      ["tracker", "--coverage"],
-      ["--all-staged", "--coverage"],
-      ["tracker", "--allow-unstaged", "argocd"],
-      ["--coverage", "--allow-unstaged", "Bad_Name"],
+      // Removed flags are refused, not ignored.
+      ["tracker", "--expect-stage", "enforced"],
+      ["--all-staged"],
+      ["--coverage"],
     ]) {
       expect(() => parseCheckArguments(argv)).toThrow();
     }
-  });
-});
-
-function runningPods(...namespaces: string[]) {
-  return items(
-    ...namespaces.map((namespace) => ({
-      metadata: { namespace },
-      status: { phase: "Running" },
-    })),
-  );
-}
-
-describe("coverage", () => {
-  test("arguments", () => {
-    expect(
-      parseCheckArguments([
-        "--coverage",
-        "--allow-unstaged",
-        "argocd",
-        "--allow-unstaged",
-        "pg18-rehearsal-",
-      ]),
-    ).toMatchObject({
-      target: "coverage",
-      allowUnstaged: ["argocd", "pg18-rehearsal-"],
-    });
-  });
-
-  test("fails on an unstaged namespace with pods, reading only policies and pods", async () => {
-    const { run, calls } = fakeRunner([
-      [
-        "get networkpolicies",
-        items(
-          otherPolicy("argocd", "argocd-server"),
-          otherPolicy("tracker", "tracker-app"),
-          stagingPolicy("tracker", "open"),
-        ),
-      ],
-      ["get pods --all-namespaces", runningPods("argocd", "tracker")],
-    ]);
-    const failing = await runCheck(
-      parseCheckArguments(["--coverage"]),
-      dependencies(run),
-    );
-    expect(failing.exitCode).toBe(1);
-    expect(failing.output).toContain("FAIL (unstaged)");
-    expect(failing.output).toContain("no usable staging policy: argocd");
-    expect(calls.map(({ command }) => command.slice(0, 3).join(" "))).toEqual([
-      "kubectl get networkpolicies.networking.k8s.io",
-      "kubectl get pods",
-    ]);
-    const allowed = await runCheck(
-      parseCheckArguments([
-        "--coverage",
-        "--allow-unstaged",
-        "argocd",
-        "--json",
-      ]),
-      dependencies(run),
-    );
-    expect(allowed.exitCode).toBe(0);
-    expect(JSON.parse(allowed.output)).toMatchObject({ ok: true });
   });
 });
 
@@ -421,7 +353,7 @@ describe("enforcer denials from Loki", () => {
 describe("the gate", () => {
   test("reports one namespace and only ever reads", async () => {
     const { run, calls } = cluster(
-      [stagingPolicy("tracker", "enforced")],
+      [otherPolicy("tracker", "tracker-app")],
       [readyPod],
       [
         probe("probe-tracker", "http_2xx", "http://tracker.tracker:7351/", {
@@ -430,11 +362,13 @@ describe("the gate", () => {
       ],
     );
     const result = await runCheck(
-      parseCheckArguments(["tracker", "--expect-stage", "enforced"]),
+      parseCheckArguments(["tracker"]),
       dependencies(run),
     );
     expect(result.exitCode).toBe(0);
-    expect(result.output).toContain("INFO         stage     enforced");
+    expect(result.output).toContain(
+      "PASS         break-glass  no break-glass policy",
+    );
     expect(result.output).toContain("NOT CHECKED  probes");
     expect(result.output).toContain("Result: PASS (with unchecked)");
     for (const { command, stdin } of calls) {
@@ -447,7 +381,7 @@ describe("the gate", () => {
 
   test("reports the namespace's denials from Loki as a note", async () => {
     const { run, calls } = cluster(
-      [stagingPolicy("tracker", "enforced")],
+      [otherPolicy("tracker", "tracker-app")],
       [readyPod],
       [],
       [
@@ -469,7 +403,7 @@ describe("the gate", () => {
     );
     expect(result.exitCode).toBe(0);
     expect(result.output).toContain(
-      "INFO         denials   1 denials involving this namespace in the last 60m",
+      "INFO         denials      1 denials involving this namespace in the last 60m",
     );
     expect(result.output).toContain(
       `    - [kube-flannel-z6rmb] ${denied(9)} <- [kube-flannel-z6rmb] ${evaluating(9, "tracker/client", "media/server")}`,
@@ -481,7 +415,7 @@ describe("the gate", () => {
 
   test("an unreadable Loki leaves the denials not available, not zero", async () => {
     const { run } = cluster(
-      [stagingPolicy("tracker", "enforced")],
+      [otherPolicy("tracker", "tracker-app")],
       [readyPod],
       [],
       [
@@ -494,7 +428,7 @@ describe("the gate", () => {
       dependencies(run),
     );
     expect(result.output).toContain(
-      "INFO         denials   not available: toolkit loki query exited 1: Loki query failed (HTTP 400) query timed out",
+      "INFO         denials      not available: toolkit loki query exited 1: Loki query failed (HTTP 400) query timed out",
     );
     expect(result.output).not.toContain("0 denials");
   });
@@ -511,7 +445,7 @@ describe("the gate", () => {
     expect(failing.exitCode).toBe(1);
     expect(JSON.parse(failing.output)).toMatchObject({
       namespace: "tracker",
-      stage: "none",
+      breakGlass: "none",
       ok: false,
     });
     const { run } = fakeRunner([
@@ -525,24 +459,26 @@ describe("the gate", () => {
     ).rejects.toThrow("get namespace typo");
   });
 
-  test("--all-staged covers every staged namespace in one table", async () => {
+  test("--all covers every namespace with a policy in one table", async () => {
     const { run } = cluster([
-      stagingPolicy("tracker", "enforced"),
-      stagingPolicy("media", "open"),
+      otherPolicy("tracker", "tracker-app"),
+      otherPolicy("media", "plex"),
+      otherPolicy("tracker", "tracker-db"),
     ]);
     const result = await runCheck(
-      parseCheckArguments(["--all-staged"]),
+      parseCheckArguments(["--all"]),
       dependencies(run),
     );
     expect(result.exitCode).toBe(0);
-    expect(result.output).toMatch(/^media\s+open\s+PASS/mu);
-    expect(result.output).toMatch(/^tracker\s+enforced\s+PASS/mu);
+    expect(result.output).toMatch(/^NAMESPACE\s+BREAK-GLASS\s+PODS\s/mu);
+    expect(result.output).toMatch(/^media\s+PASS\s+PASS/mu);
+    expect(result.output).toMatch(/^tracker\s+PASS\s+PASS/mu);
     expect(result.output).toContain("2/2 namespaces pass");
   });
 
   test("a live break-glass policy fails the gate unless allowed", async () => {
     const policies = [
-      stagingPolicy("tracker", "enforced"),
+      otherPolicy("tracker", "tracker-app"),
       breakGlassPolicy("tracker"),
     ];
     const forgotten = await runCheck(
@@ -551,7 +487,7 @@ describe("the gate", () => {
     );
     expect(forgotten.exitCode).toBe(1);
     expect(forgotten.output).toContain(
-      "FAIL         stage     open (break-glass); staging policy: enforced",
+      "FAIL         break-glass  open (break-glass)",
     );
     expect(forgotten.output).toContain("netpol:open tracker --close --apply");
     const allowed = await runCheck(
@@ -560,27 +496,28 @@ describe("the gate", () => {
     );
     expect(allowed.exitCode).toBe(0);
     expect(allowed.output).toContain(
-      "INFO         stage     open (break-glass); staging policy: enforced",
+      "INFO         break-glass  open (break-glass)",
     );
   });
 
-  test("--all-staged also checks an unstaged namespace with a break-glass policy", async () => {
+  test("--all also checks a namespace whose only policy is a break-glass one", async () => {
     const result = await runCheck(
-      parseCheckArguments(["--all-staged"]),
+      parseCheckArguments(["--all"]),
       dependencies(
-        cluster([stagingPolicy("media", "open"), breakGlassPolicy("flipt")])
-          .run,
+        cluster([otherPolicy("media", "plex"), breakGlassPolicy("flipt")]).run,
       ),
     );
     expect(result.exitCode).toBe(1);
-    expect(result.output).toMatch(/^flipt\s+open \(break-glass\)\s.*FAIL$/mu);
-    expect(result.output).toMatch(/^media\s+open\s.*PASS/mu);
+    expect(result.output).toMatch(/^flipt\s+FAIL\s.*FAIL$/mu);
+    expect(result.output).toMatch(
+      /^media\s+PASS\s.*PASS \(with unchecked\)$/mu,
+    );
     expect(result.output).toContain("1/2 namespaces pass");
   });
 
-  test("--all-staged with nothing staged is not a pass", async () => {
+  test("--all with no policy anywhere is not a pass", async () => {
     const result = await runCheck(
-      parseCheckArguments(["--all-staged"]),
+      parseCheckArguments(["--all"]),
       dependencies(cluster([]).run),
     );
     expect(result.exitCode).toBe(1);
@@ -595,7 +532,7 @@ describe("what the gate does not count", () => {
       requested.push(url);
       return Promise.resolve({ status: 502, body: "" });
     };
-    const policies = [stagingPolicy("minecraft-shuxin", "open")];
+    const policies = [otherPolicy("minecraft-shuxin", "minecraft")];
     const finishedJob = { ...readyPod, status: { phase: "Succeeded" } };
     const scaledToZero = await runCheck(
       parseCheckArguments(["minecraft-shuxin"]),
@@ -620,7 +557,7 @@ describe("what the gate does not count", () => {
   });
 
   test("an old Failed pod is noted; one that failed in the window fails the gate", async () => {
-    const policies = [stagingPolicy("media", "open")];
+    const policies = [otherPolicy("media", "plex")];
     const stale = failedPod("plex-old", {
       created: "2026-11-19T10:00:00Z",
       transitioned: "2026-11-19T10:00:01Z",
@@ -645,5 +582,62 @@ describe("what the gate does not count", () => {
     );
     expect(failing.exitCode).toBe(1);
     expect(failing.output).toContain("    - backup-job: not Ready (Failed)");
+  });
+
+  test("Woodpecker step pods and their per-step Services are noted, not counted", async () => {
+    const policies = [otherPolicy("woodpecker-ci", "ci-step")];
+    const steps: Replies = [
+      [
+        "get services",
+        items(
+          {
+            metadata: { name: "worker-metrics" },
+            spec: { selector: { app: "app-0" } },
+          },
+          ciStepService("81909"),
+          ciStepService("81479"),
+        ),
+      ],
+      [
+        "get endpointslices",
+        items(
+          {
+            metadata: {
+              labels: { "kubernetes.io/service-name": "worker-metrics" },
+            },
+            endpoints: [{ conditions: { ready: true } }],
+          },
+          {
+            metadata: {
+              labels: { "kubernetes.io/service-name": "wp-hsvc-81479" },
+            },
+            endpoints: [{ conditions: { ready: false } }],
+          },
+        ),
+      ],
+    ];
+    const gated = gatedCiStepPod("wp-01gated", "81909");
+    const passing = await runCheck(
+      parseCheckArguments(["woodpecker-ci"]),
+      dependencies(cluster(policies, [readyPod, gated], [], steps).run),
+    );
+    expect(passing.exitCode).toBe(0);
+    expect(passing.output).toMatch(/^PASS\s+pods\s+1\/1 pods Ready/mu);
+    expect(passing.output).toMatch(/^PASS\s+services\s+1\/1 Services/mu);
+    expect(passing.output).toContain(
+      "    - wp-01gated: CI step pod, Pending (not counted)",
+    );
+    expect(passing.output).toContain(
+      "    - wp-hsvc-81479: CI step Service (not counted)",
+    );
+
+    // The namespace's long-lived pod is still checked.
+    const stuck = { ...readyPod, status: { phase: "Pending" } };
+    const failing = await runCheck(
+      parseCheckArguments(["woodpecker-ci"]),
+      dependencies(cluster(policies, [stuck, gated], [], steps).run),
+    );
+    expect(failing.exitCode).toBe(1);
+    expect(failing.output).toContain("    - app-0: not Ready (Pending)");
   });
 });

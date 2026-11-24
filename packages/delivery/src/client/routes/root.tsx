@@ -52,13 +52,19 @@ function Navigation() {
             <Link
               to={item.to}
               activeOptions={{ exact: item.exact, includeSearch: false }}
+              // One name, spoken as written: separate hidden spans would each
+              // be set apart by a space ("Approvals , 1").
+              aria-label={
+                item.to === "/approvals" && count > 0
+                  ? `${item.label}, ${String(count)} awaiting approval`
+                  : undefined
+              }
             >
               {item.label}
+              {item.to === "/approvals" && count > 0 && " "}
               {item.to === "/approvals" && count > 0 && (
-                <span className="nav-count">
-                  <span className="visually-hidden">, </span>
+                <span className="nav-count" aria-hidden="true">
                   {count}
-                  <span className="visually-hidden"> awaiting approval</span>
                 </span>
               )}
             </Link>

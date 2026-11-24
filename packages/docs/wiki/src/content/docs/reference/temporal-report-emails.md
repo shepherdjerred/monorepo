@@ -40,19 +40,22 @@ Every HTML and plain-text report projects `ReportEnvelopeV1` into the shared
 `EmailDocument` (`Hub Editorial`) layout in this order:
 
 1. Family eyebrow (`Homelab Check`, `Repo Dependencies`, `Scout Automation`,
-   `Security Scan`, `Link Check`, `TaskNotes Check`, or `Temporal Report`) and
-   top status pill.
+   `Security Scan`, `Link Check`, `TaskNotes Check`, or `Temporal Report`) in
+   muted text, with the run status at the right as a small coloured dot plus
+   the status word. There are no pill badges.
 2. Plain-English outcome heading and one-sentence summary (`lead`). Clear runs
    do not repeat a second "No action is needed" callout box.
 3. Operator guidance when needed: a single `Next step:` line for one action, or
    a `Next steps` callout list when multiple actions apply, followed by a
    primary **View workflow run** button (or **View source** when no Temporal URL
    is present).
-4. **Findings** cards when present, ordered `Critical`, `Warning`, then `Note`,
-   with optional section kickers and **View source** links.
+4. **Findings** as a hairline-separated list when present, ordered `Critical`,
+   `Warning`, then `Note`. Mixed severities get a group heading row such as
+   `Critical 2`; each row is a dot, title and muted body, with optional
+   kickers and **View source** links.
 5. Optional **Notes** (synthesis) and **Not covered** (limitations) prose
    sections.
-6. **Checks**, surfacing **Problem** and **Not checked** cards with **View
+6. **Checks**, surfacing **Problem** and **Not checked** rows with **View
    source** links while collapsing passing checks into a single
    `✓ N checks passed` summary.
 7. A quiet **Technical details** footer with `Completed`, `Source`, `Window`,
@@ -66,9 +69,12 @@ The status vocabulary is intentionally small:
 | Review needed    | The run is complete, but it found or created something to act on            |
 | Check incomplete | Collection, validation, publication, or delivery preparation did not finish |
 
-The HTML uses inline styles plus adaptive `light dark` color-scheme rules from
-the `Hub Editorial` palette, a 620-pixel maximum content width, and a
-single-column layout that shrinks cleanly to mobile viewports. It contains no
+The HTML uses inline styles plus adaptive `light dark` color-scheme rules. The
+palette in `packages/ops-model/src/email/themes.ts` holds literal copies of the shared console tokens (`packages/console-ui`), and a
+unit test fails when they drift. The look is a tan canvas, a white panel with a
+hairline border and 10-pixel radius, a 620-pixel maximum content width, system
+sans text, mono figures, and a primary button with a static darker bottom edge. It is a single-column
+layout that shrinks cleanly to mobile viewports. It contains no
 JavaScript or collapsible content. User-controlled text is escaped, and only
 validated HTTP or HTTPS links are rendered.
 

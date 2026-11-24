@@ -25,6 +25,32 @@ const HELD_SERVICE = "golink";
  * spec can request and cancel a newer deployment itself and repeat per project.
  */
 export const IDLE_FAILED = "golink/beta";
+/**
+ * Golink canary: tsmc's shape. Its second deploy ended with two steps still
+ * running and a settled recovery that read two Applications back, one naming
+ * a phase (Succeeded) and one naming none.
+ */
+export const INTERRUPTED = "golink/canary";
+/** The request id of the canary deploy recovery settled with those readbacks. */
+export const INTERRUPTED_REQUEST = "model/golink/canary/interrupted";
+/** The Application whose readback names a phase. */
+export const READ_BACK_APPLICATION = "golink-canary-companion";
+/** The request id of the canary deploy whose apply-safety check threw. */
+export const TRACED_REQUEST = "model/golink/canary/refused";
+/**
+ * What the apply-safety check recorded as evidence: the executor's words, a
+ * bundle excerpt run on after them, more excerpt lines, the error's own
+ * sentence and its stack frames, as the runtime printed them.
+ */
+export const APPLY_SAFETY_TRACE = [
+  "Apply-safety refused golink at 2.0.0-1018413 before any sync; restored the source Argo last synced (history 44).; 21895 | ${body}`);",
+  "21896 | }",
+  "21897 | const managed = ManagedResourcesSchema.parse(",
+  "error: Refusing golink sync because the read-only apply-safety preflight found:",
+  "- acid.zalan.do/postgresql golink/golink-postgresql changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
+  "      at assertApplySafe (/app/packages/temporal/dist/delivery-argocd.js:21900:11)",
+  "      at async main (/app/packages/temporal/dist/delivery-argocd.js:23688:30)",
+].join("\n");
 /** The request id of the refused deploy on Golink beta. */
 export const IDLE_FAILED_REQUEST = "model/golink/beta/refused";
 /** The request id of the r1 deploy the storageClass change refused. */
@@ -45,6 +71,7 @@ const GOLINK: Target = {
   image: "docker.io/shepherdjerred/golink",
 };
 const GOLINK_BETA: Target = { ...GOLINK, environment: IDLE_FAILED };
+const GOLINK_CANARY: Target = { ...GOLINK, environment: INTERRUPTED };
 /** The request id of the r4 deploy whose sync recovery read back as Succeeded. */
 export const APPLIED_REQUEST = "model/streambot/applied";
 /** The request id of the r2 deploy r3's acceptance superseded. */
@@ -55,10 +82,10 @@ const digest = (n: number) => `sha256:${String(n + 4).repeat(64)}`;
 /** The image ArgoCD reports running for Streambot: r4's, which recovery read back as applied. */
 export const RECOVERY_LIVE_IMAGE = `${IMAGE}@${digest(4)}`;
 
-/** Golink's recipe for its beta environment, whose Application and instance are its own (T6). */
-function betaRecipe() {
+/** Golink's recipe for another environment, whose Application and instance are its own (T6). */
+function golinkRecipe(suffix: string) {
   const recipe = applicationRecipe(HELD_SERVICE);
-  const name = `${HELD_SERVICE}-beta`;
+  const name = `${HELD_SERVICE}-${suffix}`;
   return {
     ...recipe,
     application: {
@@ -119,7 +146,7 @@ export function withRecovery<T extends Catalog>(document: T): T {
         recipeRevisionId: "streambot/1",
         configurationRevisionId: "streambot/1",
       },
-      ...[HELD_PROD, IDLE_FAILED].map((id, index) => ({
+      ...[HELD_PROD, IDLE_FAILED, INTERRUPTED].map((id, index) => ({
         id,
         role: "durable",
         approvalPolicy: "none",
@@ -132,7 +159,8 @@ export function withRecovery<T extends Catalog>(document: T): T {
       ...document.recipes,
       { id: "streambot/1", definition: applicationRecipe(SERVICE) },
       { id: "golink/1", definition: applicationRecipe(HELD_SERVICE) },
-      { id: "golink/2", definition: betaRecipe() },
+      { id: "golink/2", definition: golinkRecipe("beta") },
+      { id: "golink/3", definition: golinkRecipe("canary") },
     ],
     configurations: [
       ...document.configurations,
@@ -225,11 +253,14 @@ async function step(
   deploymentId: string,
   key: "step-apply-safety" | "step-sync",
   outcome:
-    "running" | "succeeded" | "failed" | { status: "failed"; message: string },
+    | "running"
+    | "succeeded"
+    | "failed"
+    | { status: "failed"; message: string; evidence?: string },
 ) {
-  const { status, message } =
+  const { status, message, evidence } =
     typeof outcome === "string"
-      ? { status: outcome, message: `${key}: ${outcome}` }
+      ? { status: outcome, message: `${key}: ${outcome}`, evidence: undefined }
       : outcome;
   await delivery.stage(
     deploymentId,
@@ -238,7 +269,10 @@ async function step(
       status,
       operationId: `${deploymentId}/request`,
       message,
-      evidence: [],
+      evidence:
+        evidence === undefined
+          ? []
+          : [{ kind: "preflight" as const, summary: evidence }],
     },
     testExecutor,
   );
@@ -301,12 +335,40 @@ async function settleApplied(
   database: Database,
   setId: string,
 ) {
-  const deployment = await start(delivery, database, {
-    requestId: APPLIED_REQUEST,
-    setId,
-  });
-  await step(delivery, deployment.id, "step-apply-safety", "succeeded");
-  await step(delivery, deployment.id, "step-sync", "running");
+  await settleInterrupted(
+    delivery,
+    database,
+    { requestId: APPLIED_REQUEST, setId },
+    {
+      running: ["step-sync"],
+      readbacks: (deploymentId) => [
+        `Independent Application readback: streambot, resourceVersion 330545892, request ${deploymentId}/request, operation 9, phase Succeeded, finished 2026-11-22T08:14:30Z`,
+      ],
+    },
+  );
+}
+
+/** What a deploy ended on: the steps still running, and the readbacks recovery then recorded. */
+type Interruption = {
+  running: ("step-apply-safety" | "step-sync")[];
+  readbacks: (deploymentId: string) => string[];
+};
+
+/**
+ * A deploy that ended with `running` steps still running and recovery
+ * required, then settled by an independent readback that recorded the
+ * `readbacks` it names.
+ */
+async function settleInterrupted(
+  delivery: Delivery,
+  database: Database,
+  input: Request,
+  { running, readbacks }: Interruption,
+) {
+  const { target = STREAMBOT } = input;
+  const deployment = await start(delivery, database, input);
+  for (const key of running)
+    await step(delivery, deployment.id, key, "running");
   await delivery.finish(
     deployment.id,
     {
@@ -319,12 +381,12 @@ async function settleApplied(
     testExecutor,
   );
   const env = await database.environment.findUniqueOrThrow({
-    where: { id: RECOVERY_PROD },
+    where: { id: target.environment },
   });
   const intent = await delivery.requestRecoveryIntent(
     deployment.id,
     {
-      requestId: `${APPLIED_REQUEST}/recovery`,
+      requestId: `${input.requestId}/recovery`,
       reason:
         "Opened automatically: the deployment ended recovery-required and its independent reader decides",
       expectedGeneration: env.generation,
@@ -335,13 +397,11 @@ async function settleApplied(
     intent.id,
     "Settled automatically by independent Application readback of the finished operation",
     testOperator,
-    [
-      {
-        kind: "reconciliation",
-        operationId: `${deployment.id}/operation-9`,
-        summary: `Independent Application readback: streambot, resourceVersion 330545892, request ${deployment.id}/request, operation 9, phase Succeeded, finished 2026-11-22T08:14:30Z`,
-      },
-    ],
+    readbacks(deployment.id).map((summary) => ({
+      kind: "reconciliation" as const,
+      operationId: `${deployment.id}/operation-9`,
+      summary,
+    })),
   );
 }
 
@@ -381,6 +441,29 @@ export async function seedHeldRetry(delivery: Delivery, database: Database) {
     setId: await publish(delivery, database, 3, GOLINK),
     target: GOLINK_BETA,
   });
+  // Canary failed twice: an apply-safety check that threw, then a deploy that
+  // ended mid-step.
+  await throwInApplySafety(delivery, database, {
+    requestId: TRACED_REQUEST,
+    setId: await publish(delivery, database, 4, GOLINK),
+    target: GOLINK_CANARY,
+  });
+  await settleInterrupted(
+    delivery,
+    database,
+    {
+      requestId: INTERRUPTED_REQUEST,
+      setId: await publish(delivery, database, 5, GOLINK),
+      target: GOLINK_CANARY,
+    },
+    {
+      running: ["step-apply-safety", "step-sync"],
+      readbacks: (deploymentId) => [
+        `Independent Application readback: ${READ_BACK_APPLICATION}, resourceVersion 7, request ${deploymentId}/other-request, operation 3, phase Succeeded, finished 2026-11-22T08:14:30Z`,
+        "Independent Application readback: golink-canary, resourceVersion 8, no operation recorded",
+      ],
+    },
+  );
 }
 
 /** A deploy whose sync the executor ended failed, with the refusal as a receipt. */
@@ -397,6 +480,30 @@ async function refuse(delivery: Delivery, database: Database, input: Request) {
       status: "failed",
       message:
         "Deployment stopped; inspect Workflow history and recorded evidence",
+      recoveryRequired: false,
+      evidence: [],
+    },
+    testExecutor,
+  );
+}
+
+/** A deploy whose apply-safety check threw, recording the error as the runtime printed it. */
+async function throwInApplySafety(
+  delivery: Delivery,
+  database: Database,
+  input: Request,
+) {
+  const thrown = await start(delivery, database, input);
+  await step(delivery, thrown.id, "step-apply-safety", {
+    status: "failed",
+    message: "step-apply-safety: failed",
+    evidence: APPLY_SAFETY_TRACE,
+  });
+  await delivery.finish(
+    thrown.id,
+    {
+      status: "failed",
+      message: "Deployment stopped",
       recoveryRequired: false,
       evidence: [],
     },

@@ -51,6 +51,8 @@ model Build {
   platformDeployments    Deployment[]             @relation("PlatformSource")
 
   @@index([serviceId, createdAt])
+  @@index([serviceId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([sourceRevision])
   @@index([createdAt(sort: Desc), id(sort: Desc)])
   @@index([serviceId, registrationSequence])
 }
@@ -119,6 +121,7 @@ model VersionSet {
 
   @@unique([serviceId, revision])
   @@unique([migratedFromId, serviceId])
+  @@index([serviceId, createdAt(sort: Desc), id(sort: Desc)])
   @@index([serviceId, lineage, orderMajor, orderMinor], map: "VersionSet_serviceId_lineage_order_idx")
 }
 
@@ -258,8 +261,10 @@ model Deployment {
   introducedWorkers                    WorkerVersion[]
 
   @@index([environmentId, createdAt])
+  @@index([environmentId, createdAt(sort: Desc), id(sort: Desc)])
   @@index([status, createdAt])
   @@index([versionSetRevisionId])
+  @@index([platformSourceBuildId])
   @@index([createdAt(sort: Desc), id(sort: Desc)])
   @@index([monitorState])
 }

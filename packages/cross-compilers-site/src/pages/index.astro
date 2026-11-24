@@ -11,7 +11,7 @@ const macosImage = "docker.io/shepherdjerred/macos-cross-compiler:27";
 // Digest-pinned: the Windows images are published by digest only. Sync with
 // packages/windows-cross-compiler/images/<image>/DIGEST.
 const windowsImage =
-  "docker.io/shepherdjerred/windows-cross-compiler@sha256:6b35945b08c90de420111c415145487de5885b6e926c7cd6d4fe54d6d4380617";
+  "docker.io/shepherdjerred/windows-cross-compiler@sha256:dd2cfece09ecb2eafffbf7c4d0dde4839b6345f0058403165cbcb4d947d331bd";
 
 const heroCode = `docker run --rm -v "$PWD:/workspace" \\
   ${macosImage} \\

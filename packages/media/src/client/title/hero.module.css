@@ -76,6 +76,7 @@
     font-size: var(--text-sm);
   }
   .trail a {
+    min-height: 24px;
     color: var(--text-accent);
     font-weight: 600;
   }

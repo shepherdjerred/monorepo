@@ -310,6 +310,28 @@ describe("the line under an action's title", () => {
     expect(actionDetail(action("stage:sync"))).toBeNull();
   });
 
+  it("shows a runtime error as its sentence, never its source excerpt or stack frames", () => {
+    expect(
+      actionDetail({
+        ...action("stage:apply-safety"),
+        detail: [
+          "Apply-safety refused the Application before any sync; 21895 | ${body}`);",
+          "21896 | }",
+          "error: Refusing golink sync: changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
+          "      at assertApplySafe (/app/packages/temporal/dist/delivery-argocd.js:21900:11)",
+        ].join("\n"),
+      }),
+    ).toBe(
+      "Apply-safety refused the Application before any sync; Refusing golink sync: changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
+    );
+    expect(
+      actionDetail({
+        ...action("stage:apply-safety"),
+        detail: "21895 |   throw new Error(body);",
+      }),
+    ).toBeNull();
+  });
+
   it("leaves a machine receipt to the deployment page", () => {
     expect(
       actionDetail({

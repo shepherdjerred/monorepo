@@ -5,7 +5,6 @@ import {
   fakeRunner,
   items,
   otherPolicy,
-  stagingPolicy,
   type Call,
 } from "./fixtures.ts";
 import {
@@ -17,7 +16,7 @@ import {
   reconcileInstruction,
   runOpen,
 } from "./open-namespace.ts";
-import type { NetworkPolicy } from "./staging-policy.ts";
+import type { NetworkPolicy } from "./policies.ts";
 
 const AppliedSchema = z.object({
   kind: z.string(),
@@ -87,14 +86,13 @@ describe("arguments", () => {
 });
 
 const policies = [
-  stagingPolicy("tracker", "enforced"),
   otherPolicy("tracker", "tracker-app-netpol"),
-  stagingPolicy("media", "open"),
+  otherPolicy("media", "media-netpol"),
   otherPolicy("flipt", "flipt-netpol"),
 ];
 
 describe("open plan", () => {
-  test("creates a break-glass policy per namespace and never names the staging policy", () => {
+  test("creates a break-glass policy per namespace, or refreshes the one there", () => {
     const plans = planOpen(
       ["flipt", "media", "tracker"],
       [...policies, breakGlassPolicy("media")],
@@ -103,30 +101,23 @@ describe("open plan", () => {
     expect(
       plans.map((plan) => [
         plan.namespace,
-        plan.staging,
         plan.before,
         plan.action,
         plan.manifest.metadata.name,
       ]),
     ).toEqual([
-      ["flipt", "none", "none", "create", "enforcement-break-glass-flipt"],
-      ["media", "open", "open", "refresh", "enforcement-break-glass-media"],
-      [
-        "tracker",
-        "enforced",
-        "none",
-        "create",
-        "enforcement-break-glass-tracker",
-      ],
+      ["flipt", "none", "create", "enforcement-break-glass-flipt"],
+      ["media", "open", "refresh", "enforcement-break-glass-media"],
+      ["tracker", "none", "create", "enforcement-break-glass-tracker"],
     ]);
   });
 
-  test("the reconcile instruction names the stage map entry and the close", () => {
+  test("the reconcile instruction names the source fix and the close", () => {
     const text = reconcileInstruction(["tracker"]);
     expect(text).toContain(
-      "packages/homelab/src/cdk8s/src/fleet-policy/enforcement-stages.ts",
+      "Allow the denied traffic in the policies of tracker",
     );
-    expect(text).toContain('"tracker": "open"');
+    expect(text).not.toContain("enforcement-stages");
     expect(text).toContain("bun run netpol:open tracker --close --apply");
     expect(reconcileInstruction(["flipt", "tracker"])).toContain(
       "bun run netpol:open --all --close --apply",
@@ -171,7 +162,7 @@ describe("open", () => {
     expect(result.exitCode).toBe(0);
     expect(result.output).toContain("DRY RUN: nothing is changed.");
     expect(result.output).toContain(
-      "Namespace tracker: create enforcement-break-glass-tracker (staging policy: enforced; break-glass before: none)",
+      "Namespace tracker: create enforcement-break-glass-tracker (break-glass before: none)",
     );
     expect(result.output).toContain("  name: enforcement-break-glass-tracker");
     expect(result.output).toContain('homelab.sjer.red/break-glass: "true"');
@@ -182,7 +173,6 @@ describe("open", () => {
       "homelab.sjer.red/break-glass-at: 2026-11-13T12:00:00.000Z",
     );
     expect(result.output).toContain("  podSelector: {}");
-    expect(result.output).not.toContain("enforcement-staging-tracker");
     expect(writes(calls)).toEqual([]);
   });
 
@@ -296,10 +286,9 @@ const broken = [
 describe("close", () => {
   test("the plan deletes only the labelled policy with the expected name", () => {
     expect(planClose(["argocd", "flipt", "media", "tracker"], broken)).toEqual([
-      { namespace: "argocd", staging: "none", deletable: false, refused: [] },
+      { namespace: "argocd", deletable: false, refused: [] },
       {
         namespace: "flipt",
-        staging: "none",
         deletable: false,
         refused: [
           "REFUSED flipt/enforcement-break-glass-flipt: has the break-glass name but not the label homelab.sjer.red/break-glass=true",
@@ -307,7 +296,6 @@ describe("close", () => {
       },
       {
         namespace: "media",
-        staging: "open",
         deletable: false,
         refused: [
           "REFUSED media/plex: carries the break-glass label but is not named enforcement-break-glass-media",
@@ -315,7 +303,6 @@ describe("close", () => {
       },
       {
         namespace: "tracker",
-        staging: "enforced",
         deletable: true,
         refused: [],
       },
@@ -345,7 +332,7 @@ describe("close", () => {
     expect(result.exitCode).toBe(0);
     expect(result.output).toContain("DRY RUN: nothing is changed.");
     expect(result.output).toContain(
-      "Namespace tracker: would delete tracker/enforcement-break-glass-tracker; the namespace is then governed by its staging policy: enforced",
+      "Namespace tracker: would delete tracker/enforcement-break-glass-tracker; its own policies govern it again",
     );
     expect(writes(calls)).toEqual([]);
     const none = await runOpen(

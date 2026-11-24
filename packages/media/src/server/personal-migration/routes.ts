@@ -14,7 +14,13 @@ export function registerPersonalMigrationRoutes(
   app: Hono<{ Variables: { actor: MediaActor; requestId: string } }>,
   migration: Pick<
     PrismaPersonalMigration,
-    "preview" | "apply" | "imported" | "reconcile" | "passive"
+    | "preview"
+    | "apply"
+    | "imported"
+    | "importedHistory"
+    | "attachImportedRequests"
+    | "reconcile"
+    | "passive"
   >,
 ) {
   app.get("/api/v1/admin/migration/personal/passive", async (c) =>
@@ -31,6 +37,14 @@ export function registerPersonalMigrationRoutes(
   );
   app.get("/api/v1/requests/imported", async (c) =>
     c.json(await migration.imported(c.get("actor"))),
+  );
+  app.get("/api/v1/requests/imported-history", async (c) =>
+    c.json(await migration.importedHistory(c.get("actor"))),
+  );
+  app.post("/api/v1/requests/imported/attach", async (c) =>
+    c.json({
+      attached: await migration.attachImportedRequests(c.get("actor")),
+    }),
   );
   app.post("/api/v1/admin/migration/personal/preview", async (c) =>
     c.json(

@@ -76,7 +76,7 @@ describe("cloudflare-tokens", () => {
     expect(terraform.required_version).toBe(">= 1.11.0");
     // The lock file records this constraint; a different one rewrites it.
     expect(terraform.required_providers).toEqual({
-      cloudflare: { source: "cloudflare/cloudflare", version: "~> 5.27.0" },
+      cloudflare: { source: "cloudflare/cloudflare", version: "~> 5.29.0" },
     });
     // Encrypted state records the key provider's address.
     expect(terraform.encryption).toMatchObject({

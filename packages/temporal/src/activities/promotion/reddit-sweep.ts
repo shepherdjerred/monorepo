@@ -9,6 +9,7 @@ import {
   type RedditOutreachSettings,
 } from "#config/reddit-outreach.ts";
 import { promotionConfig } from "#config/promotion.ts";
+import { PromotionSnapshotBlocked } from "./access/browser-snapshot.ts";
 import { promotionStore, type PromotionStore } from "./store.ts";
 import { eligibleRedditRequest } from "./reddit-discovery/index.ts";
 import {
@@ -364,7 +365,16 @@ async function assessThread(
   audit: RedditOutreachPost,
 ): Promise<"scored" | "skipped" | "deferred"> {
   const { browser, store, signal, config, settings, summary } = services;
-  const post = await browser.readThread(listing);
+  let post: RedditRequestPost;
+  try {
+    post = await browser.readThread(listing);
+  } catch (error) {
+    if (!(error instanceof PromotionSnapshotBlocked)) throw error;
+    audit.result = "skipped";
+    audit.reason = `PinchTab content scanner blocked ${error.selector ?? "the thread"}`;
+    recordSweepFailure(summary, listing.subreddit, error);
+    return "skipped";
+  }
   const rejection = threadRejection(post, listing, settings.maxPostAgeHours);
   if (rejection !== undefined) {
     countReason(summary, rejection);

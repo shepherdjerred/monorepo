@@ -19,6 +19,10 @@ import {
   resourceIdentity,
   type RenderedTarget,
 } from "homelab/scripts/argocd/argocd-rendered-targets.ts";
+import {
+  assertRetiredEnforcementStagingPolicy,
+  enforcementStagingNamespace,
+} from "#lib/delivery/network-policy/enforcement-staging-prune.ts";
 
 const VAULT = "vaults/v64ocnykdqju4ui6j6pua56xw4/items/";
 type Scope = {
@@ -223,14 +227,15 @@ async function readNativeResource(
 }
 
 async function assertCredentialPrunes(input: {
+  application: string;
   app: string;
   scope: Scope;
   namespace: string | undefined;
-  desired: readonly unknown[];
+  desired: readonly z.infer<typeof Resource>[];
   obsolete: readonly ManagedResource[];
   read: ArgoRead;
 }) {
-  const { app, scope, namespace, desired, obsolete, read } = input;
+  const { application, app, scope, namespace, desired, obsolete, read } = input;
   const consumers = new Map<string, Set<string>>();
   collectAuditConsumption(desired, consumers);
   if (consumers.has(scope.retired))
@@ -238,6 +243,18 @@ async function assertCredentialPrunes(input: {
   assertCanonicalBindings(desired, scope, namespace);
   const seen = new Set<string>();
   for (const resource of obsolete) {
+    const stagingNamespace = enforcementStagingNamespace(resource);
+    if (stagingNamespace !== null) {
+      await assertRetiredEnforcementStagingPolicy({
+        application,
+        resource: { ...resource, namespace: stagingNamespace },
+        desired,
+        defaultNamespace: namespace,
+        read,
+        seen,
+      });
+      continue;
+    }
     if (
       resource.group !== "onepassword.com" ||
       resource.kind !== "OnePasswordItem" ||
@@ -248,7 +265,7 @@ async function assertCredentialPrunes(input: {
     assertOwnedBinding(
       await readNativeResource(app, resource, "v1", read),
       parseObject(resource.liveState, resource, "liveState"),
-      { resource, application: app, item: scope.item, seen },
+      { resource, application, item: scope.item, seen },
     );
   }
 }
@@ -320,6 +337,7 @@ export async function credentialSyncPrunes(
     };
   } else {
     await assertCredentialPrunes({
+      application: selection.name,
       app,
       scope,
       namespace: selection.namespace,

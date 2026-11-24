@@ -33,6 +33,7 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { createDeliveryIngressObserver } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/ingress.ts";
 import { DELIVERY_TAILSCALE_INGRESS } from "@shepherdjerred/ops-model/delivery-ingress.ts";
 import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { DELIVERY_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 function databaseUrl() {
   const protocol = "postgresql";
@@ -146,25 +147,27 @@ export function createDeliveryChart(
       command: ["bun", "src/server/index.ts"],
       securityContext,
       volumeMounts: mounts,
-      ports: [{ name: "http", number: 7353 }],
+      ports: [
+        { name: DELIVERY_ENDPOINT.portName, number: DELIVERY_ENDPOINT.port },
+      ],
       resources: {
         cpu: { request: Cpu.millis(50), limit: Cpu.millis(500) },
-        // Measured working set (7d, 2026-10-31): p95 248Mi, max 456Mi.
-        memory: { request: Size.mebibytes(256), limit: Size.mebibytes(768) },
+        // Measured working set steady-state 185-270Mi; 1024Mi gives headroom for SSE/publication bursts.
+        memory: { request: Size.mebibytes(256), limit: Size.mebibytes(1024) },
       },
       startup: Probe.fromHttpGet("/healthz", {
-        port: 7353,
+        port: DELIVERY_ENDPOINT.port,
         periodSeconds: Duration.seconds(5),
         failureThreshold: 18,
       }),
-      readiness: Probe.fromHttpGet("/readyz", { port: 7353 }),
-      liveness: Probe.fromHttpGet("/healthz", { port: 7353 }),
+      readiness: Probe.fromHttpGet("/readyz", { port: DELIVERY_ENDPOINT.port }),
+      liveness: Probe.fromHttpGet("/healthz", { port: DELIVERY_ENDPOINT.port }),
       envVariables: {
         ...dbEnv,
         ...deliveryForumEnvironment(chart, activation),
         ...deliveryTrmnlEnvironment(chart, activation),
         HOST: EnvValue.fromValue("0.0.0.0"),
-        PORT: EnvValue.fromValue("7353"),
+        PORT: EnvValue.fromValue(String(DELIVERY_ENDPOINT.port)),
         HOME: EnvValue.fromValue("/tmp"),
         PUBLIC_ORIGIN: EnvValue.fromValue(tailnetService("delivery").origin),
         ENVIRONMENT: EnvValue.fromValue("production"),
@@ -215,15 +218,15 @@ export function createDeliveryChart(
   )
     attachNativeForumReader(deployment, observer);
   const service = new Service(chart, "service", {
-    metadata: { name: "delivery", labels: { app: "delivery" } },
+    metadata: { name: DELIVERY_ENDPOINT.service, labels: { app: "delivery" } },
     selector: deployment,
-    ports: [{ name: "http", port: 7353 }],
+    ports: [{ name: DELIVERY_ENDPOINT.portName, port: DELIVERY_ENDPOINT.port }],
   });
   new TailscaleIngress(chart, "operator-ingress", {
     metadata: { name: DELIVERY_TAILSCALE_INGRESS.name },
     host: tailnetService("delivery"),
     service,
-    port: 7353,
+    port: DELIVERY_ENDPOINT.port,
     probePath: "/healthz",
   });
   createDeliveryNetworkPolicy(chart);

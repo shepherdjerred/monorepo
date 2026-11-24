@@ -1,17 +1,20 @@
 import { describe, expect, test } from "vitest";
-import { failedPod, probe } from "./fixtures.ts";
+import { ciStepService, failedPod, gatedCiStepPod, probe } from "./fixtures.ts";
 import {
+  evaluateBreakGlass,
   evaluatePods,
   evaluateProbes,
   evaluateServices,
-  evaluateStage,
   evaluateUrlResponse,
   evaluateUrls,
   evaluateUrlsWithoutPods,
   failedAt,
+  isCiStepPod,
+  isCiStepService,
   namespaceReport,
   parseProbeSuccess,
   PodSchema,
+  ServiceSchema,
   type CheckResult,
   type Pod,
 } from "./namespace-checks.ts";
@@ -167,6 +170,43 @@ describe("pods", () => {
     ).toEqual(new Date("2026-11-12T02:00:00Z"));
   });
 
+  test("a Woodpecker step pod is noted, not counted; other CI pods still are", () => {
+    const gated = PodSchema.parse(gatedCiStepPod("wp-01gated", "81909"));
+    const running = PodSchema.parse({
+      ...gatedCiStepPod("wp-01running", "81910"),
+      status: { phase: "Running", conditions: [] },
+    });
+    expect(isCiStepPod(gated)).toBe(true);
+    expect(isCiStepPod(pod("temporal-maintenance-worker"))).toBe(false);
+
+    const result = evaluatePods(
+      [pod("temporal-maintenance-worker"), gated, running],
+      NOW,
+      10,
+    );
+    expect(result).toEqual({
+      check: "pods",
+      status: "pass",
+      summary: "1/1 pods Ready with no restart in the last 10m",
+      details: [
+        "wp-01gated: CI step pod, Pending (not counted)",
+        "wp-01running: CI step pod, Running (not counted)",
+      ],
+    });
+
+    // A long-lived pod of the CI namespace is judged as any other.
+    const stuck = evaluatePods(
+      [pod("temporal-maintenance-worker", { ready: false }), gated],
+      NOW,
+      10,
+    );
+    expect(stuck.status).toBe("fail");
+    expect(stuck.details).toEqual([
+      "temporal-maintenance-worker: not Ready (Running)",
+      "wp-01gated: CI step pod, Pending (not counted)",
+    ]);
+  });
+
   test("a Failed pod with no time at all is counted", () => {
     const timeless = PodSchema.parse({
       metadata: { name: "timeless" },
@@ -215,6 +255,53 @@ describe("services", () => {
     );
     expect(result.details).toEqual([
       "postgresql-repl: selects no pods (not counted)",
+    ]);
+  });
+});
+
+describe("CI step Services", () => {
+  test("a per-step Service is noted, not counted, with or without endpoints", () => {
+    const gatedStep = ServiceSchema.parse(ciStepService("81909"));
+    expect(isCiStepService(gatedStep)).toBe(true);
+    expect(
+      isCiStepService(ServiceSchema.parse(service("web", { app: "web" }))),
+    ).toBe(false);
+
+    const result = evaluateServices(
+      [
+        service("worker-metrics", { component: "maintenance-worker" }),
+        gatedStep,
+        ciStepService("81479"),
+      ],
+      [
+        slice("worker-metrics", [true]),
+        // A step whose pod exists but is not Ready yet.
+        slice("wp-hsvc-81479", [false]),
+      ],
+    );
+    expect(result).toEqual({
+      check: "services",
+      status: "pass",
+      summary: "1/1 Services backed by pods have ready endpoints",
+      details: [
+        "wp-hsvc-81909: CI step Service (not counted)",
+        "wp-hsvc-81479: CI step Service (not counted)",
+      ],
+    });
+  });
+
+  test("a long-lived Service of the CI namespace still fails without ready endpoints", () => {
+    const result = evaluateServices(
+      [
+        service("worker-metrics", { component: "maintenance-worker" }),
+        ciStepService("81909"),
+      ],
+      [slice("worker-metrics", [false])],
+    );
+    expect(result.status).toBe("fail");
+    expect(result.details).toEqual([
+      "worker-metrics: no ready endpoints",
+      "wp-hsvc-81909: CI step Service (not counted)",
     ]);
   });
 });
@@ -426,66 +513,40 @@ const result = (
   details: string[] = [],
 ): CheckResult => ({ check: id, status, summary: `${id} summary`, details });
 
-const STAGE = { expected: undefined, allowBreakGlass: false };
-
-describe("stage and aggregation", () => {
-  test("the stage is an observation unless unrecognized or unexpected", () => {
-    expect(evaluateStage("tracker", "none", "none", STAGE)).toEqual({
-      check: "stage",
-      status: "info",
-      summary: "no staging policy",
+describe("break-glass and aggregation", () => {
+  test("no break-glass policy passes", () => {
+    expect(evaluateBreakGlass("tracker", "none", false)).toEqual({
+      check: "break-glass",
+      status: "pass",
+      summary: "no break-glass policy",
       details: [],
     });
-    expect(
-      evaluateStage("tracker", "enforced", "none", {
-        ...STAGE,
-        expected: "enforced",
-      }).status,
-    ).toBe("info");
-    expect(evaluateStage("tracker", "unrecognized", "none", STAGE).status).toBe(
-      "fail",
-    );
-    expect(
-      evaluateStage("tracker", "open", "none", {
-        ...STAGE,
-        expected: "enforced",
-      }),
-    ).toMatchObject({ status: "fail", summary: "open, expected enforced" });
   });
 
-  test("a break-glass policy reads as open and fails unless allowed", () => {
-    const forgotten = evaluateStage("tracker", "enforced", "open", STAGE);
-    expect(forgotten.status).toBe("fail");
-    expect(forgotten.summary).toBe(
-      "open (break-glass); staging policy: enforced",
-    );
-    expect(forgotten.details).toEqual([
-      "a break-glass policy is live: reconcile the stage map, then run netpol:open tracker --close --apply (or pass --allow-break-glass)",
-    ]);
-    expect(
-      evaluateStage("tracker", "enforced", "open", {
-        ...STAGE,
-        allowBreakGlass: true,
-      }),
-    ).toMatchObject({
+  test("a break-glass policy fails unless allowed", () => {
+    expect(evaluateBreakGlass("tracker", "open", false)).toEqual({
+      check: "break-glass",
+      status: "fail",
+      summary: "open (break-glass)",
+      details: [
+        "a break-glass policy is live: fix the policy in source, then run netpol:open tracker --close --apply (or pass --allow-break-glass)",
+      ],
+    });
+    expect(evaluateBreakGlass("tracker", "open", true)).toEqual({
+      check: "break-glass",
       status: "info",
-      summary: "open (break-glass); staging policy: enforced",
+      summary: "open (break-glass)",
       details: [],
     });
-    expect(evaluateStage("tracker", "none", "open", STAGE).summary).toBe(
-      "open (break-glass); staging policy: none",
-    );
-    expect(
-      evaluateStage("tracker", "open", "unrecognized", STAGE),
-    ).toMatchObject({
+    expect(evaluateBreakGlass("tracker", "unrecognized", false)).toMatchObject({
       status: "fail",
-      summary: "open (unrecognized break-glass)",
+      summary: "unrecognized break-glass policy",
     });
   });
 
   test("a namespace passes unless a check failed; unchecked is called out", () => {
-    const passing = namespaceReport("tracker", "open", "none", [
-      result("stage", "info"),
+    const passing = namespaceReport("tracker", "none", [
+      result("break-glass", "pass"),
       result("pods", "pass"),
       result("probes", "not-checked"),
     ]);
@@ -493,13 +554,14 @@ describe("stage and aggregation", () => {
     expect(renderReport(passing)).toBe(
       [
         "Namespace tracker",
-        "INFO         stage   stage summary",
-        "PASS         pods    pods summary",
-        "NOT CHECKED  probes  probes summary",
+        "PASS         break-glass  break-glass summary",
+        "PASS         pods         pods summary",
+        "NOT CHECKED  probes       probes summary",
         "Result: PASS (with unchecked)",
       ].join("\n"),
     );
-    const failing = namespaceReport("media", "enforced", "open", [
+    const failing = namespaceReport("media", "open", [
+      result("break-glass", "info"),
       result("pods", "pass"),
       result("urls", "fail", ["public https://plex: HTTP 502"]),
     ]);
@@ -509,9 +571,9 @@ describe("stage and aggregation", () => {
     );
     expect(renderTable([passing, failing])).toBe(
       [
-        "NAMESPACE  STAGE               PODS  SERVICES  URLS  PROBES       DENIALS  RESULT",
-        "tracker    open                PASS  -         -     NOT CHECKED  -        PASS (with unchecked)",
-        "media      open (break-glass)  PASS  -         FAIL  -            -        FAIL",
+        "NAMESPACE  BREAK-GLASS  PODS  SERVICES  URLS  PROBES       DENIALS  RESULT",
+        "tracker    PASS         PASS  -         -     NOT CHECKED  -        PASS (with unchecked)",
+        "media      INFO         PASS  -         FAIL  -            -        FAIL",
         "",
         "media urls: urls summary",
         "    - public https://plex: HTTP 502",

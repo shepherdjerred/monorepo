@@ -10,8 +10,9 @@ import {
   externalHttpsEgressRule,
   blackboxProbeIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { PINCHTAB_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
-const PINCHTAB_PORT = 9867;
+const PINCHTAB_PORT = PINCHTAB_ENDPOINT.port;
 
 export function createPinchtabChart(app: App) {
   const chart = new Chart(app, "pinchtab", {

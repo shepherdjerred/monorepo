@@ -1,5 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+import { z } from "zod";
 import { extractSenderDisplayName } from "@shepherdjerred/ops-model/email/mailbox.ts";
 import { escapeHtml } from "@shepherdjerred/ops-model/email/primitives.ts";
 import { renderEmailHtml } from "@shepherdjerred/ops-model/email/render-html.ts";
@@ -31,6 +32,44 @@ type ScenarioBundle = {
 
 const bundles: ScenarioBundle[] = [];
 
+const AlertmanagerRenderSchema = z.object({
+  subject: z.string(),
+  html: z.string(),
+  text: z.string(),
+});
+type AlertmanagerRender = z.infer<typeof AlertmanagerRenderSchema>;
+
+/**
+ * Renders the real Alertmanager `ops-email.tmpl` through the Go harness the
+ * cdk8s routing test uses. Returns null (with a message) when `go` is missing.
+ */
+async function renderAlertmanagerTemplate(
+  scenario: "single" | "multi",
+): Promise<AlertmanagerRender | null> {
+  const goPath = Bun.which("go");
+  if (goPath === null) {
+    console.warn(
+      "go is not installed: skipping the real Alertmanager fallback scenarios (install Go via mise to render them)",
+    );
+    return null;
+  }
+  // Loaded in the cdk8s package's own context (ops-model must not import it).
+  const cdk8sDir = path.join(import.meta.dir, "../../homelab/src/cdk8s");
+  const tmplPath = path.join(OUT_DIR, "alertmanager-ops-email.tmpl");
+  await Bun.$`bun -e ${`import { ALERTMANAGER_EMAIL_TEMPLATE_RAW as t } from "./src/resources/argo-applications/observability/alertmanager-email-template.ts"; await Bun.write(${JSON.stringify(tmplPath)}, t);`}`.cwd(
+    cdk8sDir,
+  );
+  const harness = path.join(import.meta.dir, "alertmanager-render.go");
+  const raw =
+    await Bun.$`${goPath} run ${harness} ${tmplPath} ${scenario}`.text();
+  return AlertmanagerRenderSchema.parse(JSON.parse(raw));
+}
+
+/** The template only switches on `prefers-color-scheme`; make the dark block unconditional for previews. */
+function forceTemplateDark(html: string): string {
+  return html.replace("@media (prefers-color-scheme:dark){", "@media all{");
+}
+
 for (const scenario of scenarios) {
   const lightHtml = renderEmailHtml(scenario.document, {
     forceColorScheme: "light",
@@ -58,6 +97,47 @@ for (const scenario of scenarios) {
     legacySubject: scenario.legacySubject,
     legacyHtml: scenario.legacyHtml,
     text,
+    lightHtml,
+    darkHtml,
+  });
+}
+
+const fallbackScenario = scenarios.find((s) => s.id === "alert-fallback");
+for (const [id, label, kind] of [
+  [
+    "alert-fallback-alertmanager",
+    "3b. Alertmanager Fallback template (single alert, real Go template)",
+    "single",
+  ],
+  [
+    "alert-fallback-alertmanager-multi",
+    "3c. Alertmanager Fallback template (3 alerts, real Go template)",
+    "multi",
+  ],
+] as const) {
+  const rendered = await renderAlertmanagerTemplate(kind);
+  if (rendered === null || fallbackScenario === undefined) break;
+  const lightHtml = rendered.html;
+  const darkHtml = forceTemplateDark(rendered.html);
+  await Promise.all([
+    Bun.write(path.join(OUT_DIR, `${id}-light.html`), lightHtml),
+    Bun.write(path.join(OUT_DIR, `${id}-dark.html`), darkHtml),
+    Bun.write(path.join(OUT_DIR, `${id}.txt`), rendered.text),
+  ]);
+  bundles.push({
+    id,
+    category: "Alerts",
+    label,
+    senderName: extractSenderDisplayName(fallbackScenario.from),
+    from: fallbackScenario.from,
+    to: fallbackScenario.to,
+    subject: rendered.subject,
+    preheader: "Rendered from the real Alertmanager ops-email.tmpl",
+    legacyFrom: fallbackScenario.legacyFrom,
+    legacyTo: fallbackScenario.legacyTo,
+    legacySubject: fallbackScenario.legacySubject,
+    legacyHtml: fallbackScenario.legacyHtml,
+    text: rendered.text,
     lightHtml,
     darkHtml,
   });

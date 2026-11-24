@@ -7,6 +7,9 @@ import { ProviderListSchema, SubtitleTargetListSchema } from "#shared/admin.ts";
 import { CapacityViewSchema } from "#shared/capacity/view.ts";
 import { HandoffPlanDetailSchema } from "#client/library-import/plan-detail.ts";
 import { NativeRecoveryInventorySchema } from "#shared/native-recovery.ts";
+import { NativeArchiveInventorySchema } from "#shared/native-recovery/archive-view.ts";
+import { NativeCompensationInventorySchema } from "#shared/native-recovery/compensation-runtime.ts";
+import { NativeRecoveryDetailProtocolSchema } from "#shared/native-recovery/series-pack/detail.ts";
 import { BundleReviewProtocolSchema } from "#shared/handoff/library-bundle.ts";
 import { BundleReviewListSchema } from "#shared/migration-handoff.ts";
 import {
@@ -44,7 +47,13 @@ import {
   providerList,
   subtitleTargets,
 } from "#testing/fixture-api/fixtures/owner.ts";
-import { nativeRecoveryInventory } from "#testing/fixture-api/fixtures/migration/native-recovery.ts";
+import {
+  NATIVE_REVIEW_SAMPLES,
+  nativeArchiveInventory,
+  nativeCompensationInventory,
+  nativeReviewDetail,
+  nativeRecoveryInventory,
+} from "#testing/fixture-api/fixtures/migration/native-recovery.ts";
 import {
   REPLACEMENT_IDS,
   subtitleReplacementDetail,
@@ -181,6 +190,27 @@ const administration: readonly FixtureEndpoint[] = [
     schema: NativeRecoveryInventorySchema,
     respond: () => nativeRecoveryInventory(),
     samples: ["/admin/native-recovery"],
+  }),
+  endpoint({
+    path: "/admin/native-recovery/archives",
+    access: "owner",
+    schema: NativeArchiveInventorySchema,
+    respond: () => nativeArchiveInventory(),
+    samples: ["/admin/native-recovery/archives"],
+  }),
+  endpoint({
+    path: "/admin/native-recovery/compensations",
+    access: "owner",
+    schema: NativeCompensationInventorySchema,
+    respond: () => nativeCompensationInventory(),
+    samples: ["/admin/native-recovery/compensations"],
+  }),
+  endpoint({
+    path: "/admin/native-recovery/:id",
+    access: "owner",
+    schema: NativeRecoveryDetailProtocolSchema,
+    respond: (request) => nativeReviewDetail(request.param("id")),
+    samples: NATIVE_REVIEW_SAMPLES.map((id) => `/admin/native-recovery/${id}`),
   }),
   endpoint({
     path: "/admin/migration/bundles/:id",

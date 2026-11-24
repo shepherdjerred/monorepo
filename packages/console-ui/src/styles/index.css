@@ -1,0 +1,10 @@
+/*
+ * The console look. Every rule lives in a `ui.*` cascade layer, so an app's
+ * unlayered CSS always wins while it migrates onto these classes.
+ */
+@layer ui.reset, ui.tokens, ui.components;
+
+@import "./fonts.css";
+@import "./reset.css";
+@import "./tokens.css";
+@import "./components.css";

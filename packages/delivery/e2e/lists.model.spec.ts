@@ -50,7 +50,12 @@ test("an undecided approval reads awaiting approval and its release wraps with t
     .locator("td[data-label='Release']");
   await expect(release.locator("a").first()).toHaveText(/^r\d+$/u);
   const parts = release.locator(".release-parts");
-  await expect(parts).toContainText("recipe");
+  await expect(parts).toContainText(/recipe \S/u);
+  // Rows lead with display names; a slug is only ever a title.
+  await expect(waiting.locator("tbody th a").first()).toHaveText(
+    /^[A-Z][^/]* · [a-z]+$/u,
+  );
+  await expect(waiting).not.toContainText(/[a-z]+-[a-z]+\/(?:prod|beta)/u);
   // The ids are shown whole and wrap inside the cell.
   await expect(parts).not.toContainText("…");
   expect(
@@ -80,7 +85,7 @@ test("on a phone every destination and the waiting count are in sight", async ({
       nav.getByRole("link", { name: new RegExp(`^${name}`, "u") }),
     ).toBeInViewport({ ratio: 1 });
   const approvals = nav.getByRole("link", {
-    name: /^Approvals\s*, 2 awaiting approval$/u,
+    name: /^Approvals, 2 awaiting approval$/u,
   });
   await expect(approvals).toHaveAttribute("aria-current", "page");
   await expect(approvals.locator(".nav-count")).toBeInViewport({ ratio: 1 });

@@ -49,6 +49,22 @@ resources block pruning. Keep the 1Password items active until old consumers
 have drained and the bindings and their generated Kubernetes Secrets are gone;
 then archive the items without revoking credentials.
 
+Those prune-capable guards (retired routes, Forum release Jobs, credential
+grooming, and worker host retirement) also allow pruning inert
+`enforcement-staging-<namespace>` `NetworkPolicy` objects (`enforced` stage,
+`homelab.sjer.red/enforcement-staging: never` pod selector, `flipt` excluded)
+omitted after the staging-policy removal; open or pod-selecting policies remain
+refused.
+
+A pre-sync guard that refuses after the sync stage is recorded (a fence, or a
+prune decision that refuses unrelated or storage pruning) no longer leaves the
+deployment recovery-required. The step reads the Application back, proves its
+request never reached an operation (none pending, the recorded operation is
+another request's and quiescent, a synced history entry exists), restores the
+`spec.source` apply-safety wrote to that history entry, and records the sync
+stage `failed` (`DeliverySyncGuardRefused`). If the proof or the restore fails,
+the stage stays running and recovery decides as before (D5).
+
 The `delivery-dispatch` Schedule qualifies published builds against their exact
 terminal CI execution, reconciles automatic environment selections, and submits
 unacknowledged outbox rows. It starts paused until the service, executor
@@ -1402,12 +1418,13 @@ strictly above 0.80, an explicit request for a server, and support for every
 hard requirement. An applicable rule against bots, automated comments,
 promotional replies, or owner advertising blocks outreach. Silence or
 ambiguity about permission leaves an otherwise eligible request available for
-drafting. A separate model drafts the invite after the
-thread and account are checked. Drafts can acknowledge a soft preference the
-server only partly meets. Requests already answered by `the_storm_mc` and
-threads whose comments cannot be fully inspected are excluded. Assessments are
-cached against the request, community rules and approved facts. Edits or rule
-changes require a fresh assessment.
+drafting. Qualitative community preferences can qualify when The Storm offers
+a useful fit. Adult-only requests can qualify based on The Storm's adult
+audience. The reply says that players of other ages can join. A separate model
+drafts the invite after the thread and account are checked. Requests already
+answered by `the_storm_mc` and threads whose comments cannot be fully inspected
+are excluded. Assessments are cached against the request, community rules and
+approved facts. Edits or rule changes require a fresh assessment.
 
 `the-storm-reddit-outreach-enabled` and the typed JSON flag
 `the-storm-reddit-outreach-settings` control this schedule's publishing separately
@@ -1429,6 +1446,9 @@ incomplete window can also have unread pages and resumes at its checkpoint.
 Completed windows reach the time cutoff or the end of the feed.
 Run details also let operators open the observed posts and see each Reddit
 link, fit score when available, outcome, and recorded reason.
+A PinchTab content block on an individual thread records the blocked page and
+selector in the audit. The thread is skipped without a score or reply, and the
+sweep continues with the remaining posts.
 
 Per-post claims and Pacific daily reservations are conditional object-store
 writes. Uncertain submissions and filtered replies consume allowance and cannot

@@ -1,3 +1,4 @@
+import { temporalMetricsAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import { EnvValue, type ISecret } from "cdk8s-plus-31";
 import {
@@ -17,7 +18,7 @@ export function temporalRuntimeEnv(
   return {
     ...temporalAddressEnv(serverServiceName),
     TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
-    TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+    ...temporalMetricsAddressEnv(),
     TEMPORAL_WORKER_ROLE: EnvValue.fromValue(role),
     ENVIRONMENT: EnvValue.fromValue("production"),
     ...telemetryEnv({ serviceName }),

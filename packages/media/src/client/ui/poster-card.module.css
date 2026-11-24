@@ -92,8 +92,9 @@
   }
   .inRail .text,
   .railText {
-    height: calc(2 * 1.3 * var(--text-md) + 2 * (1.4 * var(--text-sm) + 2px));
-    overflow: hidden;
+    min-height: calc(
+      2 * 1.3 * var(--text-md) + 2 * (1.4 * var(--text-sm) + 2px)
+    );
   }
   .inRail .title {
     display: -webkit-box;
@@ -185,5 +186,11 @@
       linear-gradient(currentcolor, currentcolor) center / 100% 2px no-repeat,
       linear-gradient(currentcolor, currentcolor) center / 2px 100% no-repeat;
     transform: none;
+  }
+
+  @media (forced-colors: active) {
+    .state {
+      border: 1px solid CanvasText;
+    }
   }
 }

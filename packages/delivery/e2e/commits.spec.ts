@@ -51,16 +51,31 @@ test("a commit says deploying only once a deployment that carries it is claimed,
   await expect(header).not.toContainText("Not released");
   await expect(header).not.toContainText("Deploying");
   await expect(header).toContainText(
-    "Its changed service needs a manual release: Birmel prod.",
+    "The changed service needs a manual release: Birmel prod.",
   );
   await expect(
     service.getByRole("link", { name: "needs manual release prod" }),
   ).toHaveAttribute("href", "/environments/birmel/prod");
 
+  // By environment reads as a heading, one sentence and a row per service,
+  // not a run of glyphs and labels.
+  const byEnvironment = page.getByRole("region", { name: "prod" });
+  await expect(byEnvironment.getByRole("heading", { level: 3 })).toHaveText(
+    "prod",
+  );
+  await expect(byEnvironment.locator(".env-group-summary")).toContainText(
+    "0 of 1 service live.",
+  );
+  await expect(
+    byEnvironment.getByRole("link", {
+      name: "Birmel: needs manual release",
+    }),
+  ).toHaveAttribute("href", "/environments/birmel/prod");
+
   // The accepted one is live.
   const accepted = await openCommit(page, ACCEPTED_POSITION);
   await expect(accepted.locator(".page-header")).toContainText(
-    "Its 1 changed service is live.",
+    "The changed service is live.",
   );
   await expectNoHorizontalOverflow(page);
 });
@@ -132,7 +147,7 @@ test("a commit whose whole pipeline failed stands where the next passing commit'
     /Needs manual release/u,
   );
   await expect(header).toContainText(
-    `Its changed service needs a manual release: Birmel prod. CI failed for CI (Woodpecker) here, so it was not built on its own; included in ${carrier}, whose build of CI (Woodpecker) passed.`,
+    `The changed service needs a manual release: Birmel prod. Not built on its own; included in ${carrier} (whose build of CI (Woodpecker) passed).`,
   );
   const service = page.getByRole("region", { name: /^By service/u });
   await expect(service.getByRole("rowheader")).toHaveCount(1);
@@ -161,7 +176,7 @@ test("a commit whose whole pipeline failed stands where the next passing commit'
     /Needs manual release/u,
   );
   await expect(row).toContainText(
-    `Not built on its own; included in ${carrier}, whose build of CI (Woodpecker) passed`,
+    `Not built on its own; included in ${carrier} (whose build of CI (Woodpecker) passed)`,
   );
   await expect(row).toContainText("Birmel / prod: needs manual release");
   await expectNoHorizontalOverflow(page);
@@ -201,7 +216,7 @@ test("a commit whose CI failed for one service says its other change is live thr
   const header = main.locator(".page-header");
   await expect(header).toContainText("CI failed");
   await expect(header).toContainText(
-    "CI failed for Arcade, so Delivery published nothing for it. Its 1 changed service is live because newer commits include it.",
+    "CI failed for Arcade, so Delivery published nothing for it. The changed service is live because newer commits include it.",
   );
   await expect(header).not.toContainText(
     "nothing from this commit was published",
@@ -224,9 +239,17 @@ test("a commit whose CI failed for one service says its other change is live thr
   // Its Birmel release ran in prod, then a newer release of a new lineage
   // replaced it; that release still carries the change.
   const service = page.getByRole("region", { name: /^By service/u });
+  // The row names its own release and says so: superseded by the accepted
+  // release, which is deployed, never the service's plain "Deployed".
   await expect(
-    service.getByRole("link", { name: "live (newer) prod" }),
+    service.getByRole("link", {
+      name: /^superseded by r\d+, which is deployed prod$/u,
+    }),
   ).toBeVisible();
+  await expect(service.locator("tbody tr").first()).toContainText("Superseded");
+  await expect(service.locator("tbody tr").first()).not.toContainText(
+    "Deployed",
+  );
   await expect(service).not.toContainText("replaced");
   await expectNoHorizontalOverflow(page);
 });
@@ -241,14 +264,14 @@ test("a commit whose failed CI a newer passing commit includes says where its ch
   const row = await findRow(page, FAILED_POSITION);
   await expect(row.locator(".status").first()).toHaveText(/Deployed/u);
   await expect(row).toContainText(
-    `Not built on its own; included in ${carrier}, whose build of Birmel passed`,
+    `Not built on its own; included in ${carrier} (whose build of Birmel passed)`,
   );
   await expect(row).not.toContainText("CI failed");
 
   const main = await openCommit(page, FAILED_POSITION);
   const header = main.locator(".page-header");
   await expect(header).toContainText(
-    `CI failed for Birmel here, so it was not built on its own; included in ${carrier}, whose build of Birmel passed.`,
+    `Not built on its own; included in ${carrier} (whose build of Birmel passed).`,
   );
   const service = page.getByRole("region", { name: /^By service/u });
   await expect(service.getByRole("link", { name: release })).toBeVisible();
@@ -279,7 +302,7 @@ test("a carried CI failure does not outrank what actually blocks the commit", as
   );
   // The real blocker leads; the carried failure follows.
   await expect(header).toContainText(
-    `Its changed service needs a manual release: Birmel prod. CI failed for Golink here, so it was not built on its own; included in ${carrier}, whose build of Golink passed.`,
+    `The changed service needs a manual release: Birmel prod. Built on its own for 2 services; 1 service (Golink) was built by a later commit: included in ${carrier} (whose build of Golink passed).`,
   );
   // Golink has no environment, so its carried failure adds no row.
   const service = page.getByRole("region", { name: /^By service/u });
@@ -289,6 +312,11 @@ test("a carried CI failure does not outrank what actually blocks the commit", as
     /Needs manual release/u,
   );
   await expect(row).toContainText("Birmel / prod: needs manual release");
+  // Only Golink went through the carrier; the row says what the commit built itself.
+  await expect(row).toContainText(
+    `Built on its own for 2 services; 1 service (Golink) was built by a later commit: included in ${carrier} (whose build of Golink passed)`,
+  );
+  await expect(row).not.toContainText("Not built on its own");
 });
 
 test("the commit list lines its columns up and explains each environment tally", async ({

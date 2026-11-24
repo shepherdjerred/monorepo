@@ -14,9 +14,20 @@ const PluginsJsonSchema = z.object({
       version: z.string(),
       url: z.string(),
       sha256: z.string(),
+      file: z.string(),
     }),
   ),
 });
+
+// Renovate moves only the `url` of a Modrinth or GitHub release plugin
+// (renovate.json); the reviewer fills in version, file and sha256 by hand.
+const RENOVATE_TRACKED_HOSTS = new Set(["cdn.modrinth.com", "github.com"]);
+
+/** `name` carries exactly `version`, not a longer one it prefixes. */
+function namesVersion(name: string, version: string): boolean {
+  const escaped = version.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
+  return new RegExp(String.raw`-${escaped}(?![0-9]|\.[0-9])`, "u").test(name);
+}
 
 const packageRoot = path.resolve(import.meta.dirname, "..");
 const stormLane = path.resolve(
@@ -40,6 +51,24 @@ describe("pins", () => {
         url: pin.url,
         sha256: pin.sha256,
       });
+    }
+  });
+
+  it("names each Renovate-tracked plugin's version in its URL and file", async () => {
+    const { plugins } = await shipped();
+    const tracked = plugins.filter((plugin) =>
+      RENOVATE_TRACKED_HOSTS.has(new URL(plugin.url).hostname),
+    );
+    expect(tracked.length).toBeGreaterThan(0);
+    for (const plugin of tracked) {
+      const asset = new URL(plugin.url).pathname.split("/").at(-1) ?? "";
+      expect(namesVersion(asset, plugin.version), `${plugin.name} URL`).toBe(
+        true,
+      );
+      expect(
+        namesVersion(plugin.file, plugin.version),
+        `${plugin.name} file`,
+      ).toBe(true);
     }
   });
 

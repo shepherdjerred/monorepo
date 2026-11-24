@@ -2,7 +2,6 @@ import { z } from "zod";
 import { EvidenceInputSchema } from "#shared/evidence-contract.ts";
 import {
   failureReason,
-  readbackOutcome,
   readbackPhase,
   recoveryReading,
   type CauseStage,
@@ -52,19 +51,17 @@ export async function recoveryIntentsOf(
 }
 
 /**
- * The steps of each deployment whose settled recovery read the work back as
- * Succeeded, by deployment id: the cause of such a failure is the step it
- * ended on, which only the steps hold. One read for every such deployment.
+ * The steps of each deployment whose recovery settled, by deployment id:
+ * what recovery read back is never why the deployment failed; the step that
+ * failed or the one it ended on is, and only the steps hold that. One read
+ * for every such deployment.
  */
 export async function causeStagesOf(
   database: Database,
   intents: ReadonlyMap<string, readonly ReadableIntent[]>,
 ): Promise<ReadonlyMap<string, CauseStage[]>> {
   const ids = [...intents]
-    .filter(([, own]) => {
-      const reading = recoveryReading(own);
-      return reading !== null && readbackOutcome(reading) === "succeeded";
-    })
+    .filter(([, own]) => recoveryReading(own) !== null)
     .map(([id]) => id);
   if (ids.length === 0) return new Map();
   const rows = await database.stage.findMany({

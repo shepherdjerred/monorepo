@@ -1,13 +1,12 @@
 /** Test fixtures: live-shaped objects and a recording fake command runner. */
+import {
+  CI_STEP_POD_LABEL,
+  WOODPECKER_TASK_LABEL,
+} from "#cdk8s/src/resources/woodpecker/pod-labels.ts";
 import { BREAK_GLASS_LABEL, breakGlassPolicyName } from "./break-glass.ts";
 import type { CommandResult, CommandRunner } from "./command.ts";
 import type { Probe } from "./namespace-urls.ts";
-import {
-  NEVER_LABEL,
-  NEVER_VALUE,
-  stagingPolicyName,
-  type NetworkPolicy,
-} from "./staging-policy.ts";
+import type { NetworkPolicy } from "./policies.ts";
 
 const ALLOW_ALL = {
   policyTypes: ["Ingress", "Egress"],
@@ -15,17 +14,11 @@ const ALLOW_ALL = {
   egress: [{}],
 };
 
-export function stagingPolicy(
-  namespace: string,
-  stage: "open" | "enforced",
-): NetworkPolicy {
+/** An allow-all policy that is not a break-glass policy. */
+export function allowAllPolicy(namespace: string, name: string): NetworkPolicy {
   return {
-    metadata: { name: stagingPolicyName(namespace), namespace },
-    spec: {
-      podSelector:
-        stage === "open" ? {} : { matchLabels: { [NEVER_LABEL]: NEVER_VALUE } },
-      ...ALLOW_ALL,
-    },
+    metadata: { name, namespace },
+    spec: { podSelector: {}, ...ALLOW_ALL },
   };
 }
 
@@ -105,6 +98,46 @@ export function failedPod(
                 },
               },
             ],
+    },
+  };
+}
+
+/**
+ * A Woodpecker step pod CI admission still holds, as `kubectl get pods -o
+ * json` returns it: gated, so never scheduled and never Ready.
+ */
+export function gatedCiStepPod(name: string, task: string) {
+  return {
+    metadata: {
+      name,
+      labels: {
+        [CI_STEP_POD_LABEL]: "verify",
+        [WOODPECKER_TASK_LABEL]: task,
+        "woodpecker-ci.org/step": "verify",
+      },
+    },
+    status: {
+      phase: "Pending",
+      conditions: [
+        {
+          type: "PodScheduled",
+          status: "False",
+          reason: "SchedulingGated",
+          lastTransitionTime: "2026-11-23T07:18:06Z",
+        },
+      ],
+    },
+  };
+}
+
+/** The headless Service Woodpecker creates for one step: `wp-hsvc-<task>`. */
+export function ciStepService(task: string) {
+  return {
+    metadata: { name: `wp-hsvc-${task}` },
+    spec: {
+      type: "ClusterIP",
+      clusterIP: "None",
+      selector: { [WOODPECKER_TASK_LABEL]: task },
     },
   };
 }

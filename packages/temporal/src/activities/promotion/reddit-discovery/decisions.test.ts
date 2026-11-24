@@ -131,8 +131,8 @@ describe("Reddit Decisions qualification", () => {
       "hard_constraints",
     ]);
     const text = JSON.stringify(request);
-    expect(text).toContain("MAIN request");
-    expect(text).toContain("Unknown facts cannot support a match");
+    expect(text).toContain("main request");
+    expect(text).toContain("unknown facts cannot establish fit");
     expect(text).toContain("untrustedPost");
     expect(text).not.toContain("player-private-name");
     expect(text).not.toContain("createdAt");
@@ -140,6 +140,20 @@ describe("Reddit Decisions qualification", () => {
     expect(
       new Set(request.questions.map((question) => question.name)).size,
     ).toBe(REDDIT_DECISION_QUESTIONS.length);
+  });
+
+  it("treats adult-audience wording as flexible without relaxing community rules", () => {
+    const questions = buildRedditDecisionRequest(input()).questions;
+    expect(
+      questions.find(({ name }) => name === "strong_main_match")?.instructions,
+    ).toContain("including adults-only wording");
+    expect(
+      questions.find(({ name }) => name === "hard_constraints")?.instructions,
+    ).toContain("including adults-only wording");
+    expect(
+      questions.find(({ name }) => name === "community_reply_restriction")
+        ?.instructions,
+    ).toContain("Apply those rules even when the server is an excellent fit");
   });
 
   it("accepts a complete strong match and exposes cache-aware billable input usage", () => {

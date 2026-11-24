@@ -2,8 +2,8 @@
  * The break-glass NetworkPolicy, `enforcement-break-glass-<namespace>`: an
  * allow-all policy an operator applies by hand to open a namespace at once.
  *
- * It is a separate object, not an edit of the staging policy, because ArgoCD
- * self-heals the staging policy back to source within minutes. ArgoCD acts
+ * It is a separate object, not an edit of a rendered policy, because ArgoCD
+ * self-heals rendered policies back to source within minutes. ArgoCD acts
  * only on resources it tracks (the `argocd.argoproj.io/tracking-id`
  * annotation, or the `argocd.argoproj.io/instance` label), no AppProject
  * monitors orphaned resources, and prune removes only tracked resources that
@@ -13,10 +13,8 @@
 import {
   allowsEverythingForEveryPod,
   NamespaceNameSchema,
-  stageLabel,
   type NetworkPolicy,
-  type Stage,
-} from "./staging-policy.ts";
+} from "./policies.ts";
 
 const BREAK_GLASS_PREFIX = "enforcement-break-glass-";
 export const BREAK_GLASS_LABEL = "homelab.sjer.red/break-glass";
@@ -105,19 +103,6 @@ export function breakGlassNamespaces(
         .map((policy) => policy.metadata.namespace),
     ),
   ].toSorted();
-}
-
-/** What governs the namespace: a break-glass policy overrides the stage. */
-export function effectiveStageLabel(
-  stage: Stage,
-  breakGlass: BreakGlassState,
-): string {
-  if (breakGlass === "open") {
-    return "open (break-glass)";
-  }
-  return breakGlass === "unrecognized"
-    ? `${stageLabel(stage)} (unrecognized break-glass)`
-    : stageLabel(stage);
 }
 
 export type BreakGlassManifest = {

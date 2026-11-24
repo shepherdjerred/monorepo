@@ -24,6 +24,7 @@ import {
 } from "@shepherdjerred/ops-model/chart-publication.ts";
 import { firstPartyImageRepository } from "@shepherdjerred/version-catalog/image-registry";
 import {
+  createRetryingDeliveryFetch,
   readPublicationHandoffs,
   SitePublicationSchema,
 } from "../lib/ci/delivery-publication-handoffs.ts";
@@ -366,6 +367,7 @@ async function main() {
   const client = createDeliveryClient({
     baseUrl: requireEnv("DELIVERY_URL"),
     headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
+    fetch: createRetryingDeliveryFetch(),
   });
   const owners = publicationOwners(options.catalogV2 ? "v2" : "v1");
   const imageRegistry = parseDeliveryCatalogRegistry(

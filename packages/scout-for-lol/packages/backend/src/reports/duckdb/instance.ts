@@ -142,7 +142,7 @@ const GIB = 1024 ** 3;
  * The most the maintenance instance may spill.
  *
  * Every maintenance statement is a streaming COPY. Folds and rebuilds feed
- * NDJSON to Parquet in batches of at most 64 MiB, with partition writers
+ * NDJSON to Parquet in batches of at most 32 MiB, with partition writers
  * flushed every 2,048 rows and at most four open (writes/parquet.ts).
  * `compactCrawlDay` and `rebuildCrawlDay` read one ingest day, tens to low
  * hundreds of MB of Parquet at the top crawl budget, and write one file with

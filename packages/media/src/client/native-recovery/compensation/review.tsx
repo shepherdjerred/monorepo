@@ -1,168 +1,155 @@
 import type { z } from "zod";
-import { Link } from "react-router";
 import type { NativeCompensationScope } from "#shared/native-recovery/compensation.ts";
 import { FinishedNativeCompensationSchema } from "#shared/native-recovery/compensation.ts";
 import type { NativeLifecycleDetailSchema } from "#shared/native-recovery/lifecycle.ts";
-import { PageTitle, ErrorNotice, humanize } from "#client/components.tsx";
 import type { MediaUser } from "#shared/contract.ts";
+import { DataList, DataRow } from "#client/ui/data-list.tsx";
+import { Panel } from "#client/ui/panel.tsx";
+import { Code, Effects } from "#client/ui/workflow.tsx";
+import type { Approval, Header } from "#client/native-recovery/published.tsx";
+import {
+  ApprovalSection,
+  ProofDetails,
+  ReviewHeader,
+  StatePanel,
+} from "#client/native-recovery/shell.tsx";
 import { CompensationStatus } from "./status.tsx";
-import { RecoveryProofDetails } from "#client/native-recovery/proof-details.tsx";
+import { restorationSummary } from "./summary.ts";
 
+/** Restore the predecessor files of an interrupted upgrade, keeping the successor's bytes. */
 export function NativeCompensationReview({
   user,
   review,
   scope,
-  acknowledged,
-  onAcknowledge,
-  onApply,
-  pending,
-  error,
-  onRefresh,
-  refreshing,
+  approval,
+  header,
 }: {
   user: MediaUser;
   review: z.infer<typeof NativeLifecycleDetailSchema>;
   scope: NativeCompensationScope;
-  acknowledged: boolean;
-  onAcknowledge: (value: boolean) => void;
-  onApply: () => void;
-  pending: boolean;
-  error: Error | null;
-  onRefresh: () => void;
-  refreshing: boolean;
+  approval: Approval;
+  header: Header;
 }) {
   const plan =
     review.plan === null
       ? null
       : FinishedNativeCompensationSchema.parse(review.plan);
+  const continuations = review.compensationContinuations ?? [];
+  const restoration = restorationSummary(scope);
   return (
     <>
-      <PageTitle title="Restore reviewed predecessor files">
-        <p>
-          Restore the earlier files and their installed subtitles while
-          retaining successor bytes. This does not establish whether a successor
-          was published after the backup.
-        </p>
-      </PageTitle>
-      <p>
-        <Link to="/manage/recovery/native/compensations">
-          All interrupted upgrades
-        </Link>{" "}
-        · <Link to="/recovery">Household protection</Link>
-      </p>
-      <button className="button" disabled={refreshing} onClick={onRefresh}>
-        {refreshing ? "Refreshing…" : "Refresh restoration and playback status"}
-      </button>
-      {error !== null && <ErrorNotice error={error} />}
-      <section className="panel">
-        <h2>{humanize(review.state)}</h2>
+      <ReviewHeader
+        title="Restore reviewed predecessor files"
+        intro="Restore the earlier files and their installed subtitles while retaining successor bytes. This does not establish whether a successor was published after the backup."
+        back={{
+          to: "/manage/recovery/native/compensations",
+          label: "All interrupted upgrades",
+        }}
+        refreshLabel="Refresh restoration and playback status"
+        {...header}
+      />
+      <StatePanel state={review.state}>
         <p>
           Approval authorizes only the reviewed restoration. It changes no files
-          immediately, does not resume historical work and cannot release
+          immediately, does not resume historical work, and cannot release
           household holds.
         </p>
-        {review.state === "preparing" && (
-          <p>
-            Workers are checking the original intent, acknowledged changes,
-            exact file identities, storage and current playback.
-          </p>
-        )}
-      </section>
-      <section className="panel">
-        <h2>Complete upgrade coverage</h2>
-        {scope.entries.map((entry) => (
-          <article key={entry.entry.operationId}>
-            <h3>
-              {scope.media
+      </StatePanel>
+      <Panel id="coverage" title="Complete upgrade coverage">
+        <DataList label="Titles in this upgrade">
+          {scope.entries.map((entry) => (
+            <DataRow
+              key={entry.entry.operationId}
+              title={scope.media
                 .filter((media) => entry.entry.mediaIds.includes(media.id))
                 .map((media) => media.title)
-                .join(" · ")}
-            </h3>
-            <p>
-              Restore the predecessor and preserve{" "}
-              {entry.predecessor?.subtitles.filter(
-                (subtitle) => subtitle.state === "installed",
-              ).length ?? 0}{" "}
-              installed subtitle records with their recorded quality and
-              provenance. Retain successor bytes; no retained artifact is
-              selected for deletion.
-            </p>
-          </article>
-        ))}
-      </section>
-      {(review.compensationContinuations?.length ?? 0) > 0 && (
-        <section className="panel">
-          <h2>Restoration and playback</h2>
-          {review.compensationContinuations?.map((item) => (
-            <CompensationStatus
-              key={item.id}
-              user={user}
-              item={item}
-              onRefresh={onRefresh}
+                .join(", ")}
+              detail={
+                <p>
+                  Restore the predecessor and preserve{" "}
+                  {entry.predecessor?.subtitles.filter(
+                    (subtitle) => subtitle.state === "installed",
+                  ).length ?? 0}{" "}
+                  installed subtitle records with their recorded quality and
+                  provenance. Retain successor bytes; no retained artifact is
+                  selected for deletion.
+                </p>
+              }
             />
           ))}
-        </section>
-      )}
-      <section className="panel">
-        <h2>What this approval permits</h2>
-        <ul>
-          <li>
-            Reverse only the exactly recorded changes for this complete upgrade.
-          </li>
-          <li>
-            Retain successor files and new subtitle candidates for recovery; no
-            deletion or automatic replacement.
-          </li>
-          <li>
-            Preserve historical work, personal Keep choices, pins and household
-            protection.
-          </li>
-        </ul>
-        {review.state === "awaiting_review" && (
-          <>
-            <label className="check-label">
-              <input
-                type="checkbox"
-                checked={acknowledged}
-                onChange={(event) => {
-                  onAcknowledge(event.target.checked);
-                }}
+        </DataList>
+      </Panel>
+      {continuations.length > 0 && (
+        <Panel id="restoration" title="Restoration and playback">
+          <DataList label="Restoration status">
+            {continuations.map((item) => (
+              <CompensationStatus
+                key={item.id}
+                user={user}
+                item={item}
+                onRefresh={header.onRefresh}
               />
-              I reviewed the predecessor restoration, retained successor bytes
-              and complete title coverage. Household holds remain in force.
-            </label>
-            <button
-              className="button primary"
-              disabled={!acknowledged || pending}
-              onClick={onApply}
-            >
-              {pending
-                ? "Submitting approval…"
-                : "Approve this exact predecessor restoration"}
-            </button>
-          </>
+            ))}
+          </DataList>
+        </Panel>
+      )}
+      <Panel id="changes" title="What this approval permits">
+        <Effects
+          will={[
+            "Reverses only the exactly recorded changes for this complete upgrade.",
+          ]}
+          wontTitle="What stays as it is"
+          wont={[
+            "Successor files and new subtitle candidates are retained for recovery; nothing is deleted or automatically replaced.",
+            "Historical work, personal Keep choices, pins, and household protection are preserved.",
+          ]}
+        />
+        {review.state === "awaiting_review" && (
+          <ApprovalSection
+            summary={
+              <p>
+                Approving authorizes this exact restoration of the earlier
+                files. It changes no files immediately.
+              </p>
+            }
+            acknowledgement="I reviewed the predecessor restoration, retained successor bytes and complete title coverage. Household holds remain in force."
+            buttonLabel="Approve this exact predecessor restoration"
+            confirmTitle="Approve this predecessor restoration?"
+            confirmLabel="Approve restoration"
+            confirmBody={
+              <p>
+                The earlier files of{" "}
+                {restoration.upgrades === 1
+                  ? "this upgrade"
+                  : `${String(restoration.upgrades)} upgrades`}{" "}
+                ({restoration.files} file
+                {restoration.files === 1 ? "" : "s"}) will be authorized for
+                restoration, with successor bytes retained. Household holds stay
+                in force. This page cannot undo it.
+              </p>
+            }
+            {...approval}
+            onRefresh={header.onRefresh}
+          />
         )}
-        <RecoveryProofDetails
-          planHash={review.planHash}
-          expiresAt={review.expiresAt}
-        >
+        <ProofDetails planHash={review.planHash} expiresAt={review.expiresAt}>
           <p>
             Acknowledged effects:{" "}
-            {plan?.files.acknowledgedEffects.length ?? "Pending inspection"}.
+            {plan?.files.acknowledgedEffects.length ?? "pending inspection"}.
             Exact inverse steps:{" "}
-            {plan?.files.steps.length ?? "Pending inspection"}.
+            {plan?.files.steps.length ?? "pending inspection"}.
           </p>
           {scope.entries.map((entry) => (
             <p key={entry.entry.operationId}>
-              {entry.predecessor?.path}
+              <Code>{entry.predecessor?.path}</Code>
               <br />
-              Predecessor SHA-256: {entry.predecessor?.checksum}
+              Predecessor SHA-256 <Code>{entry.predecessor?.checksum}</Code>
               <br />
-              Retained successor SHA-256: {entry.entry.checksum}
+              Retained successor SHA-256 <Code>{entry.entry.checksum}</Code>
             </p>
           ))}
-        </RecoveryProofDetails>
-      </section>
+        </ProofDetails>
+      </Panel>
     </>
   );
 }

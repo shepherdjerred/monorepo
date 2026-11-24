@@ -1,18 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { expectNoHorizontalOverflow, showAllAttention } from "./helpers.ts";
+import { expectNoHorizontalOverflow, openOverview } from "./helpers.ts";
 
 // Served by e2e/model-server.ts: Arcade prod's accepted release has a firing
 // critical alarm under a hold policy, and Cloudflare's tofu stack has a saved
 // plan waiting for a decision.
-
-async function openOverview(page: Page) {
-  await page.goto("/");
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Overview", exact: true }),
-  ).toBeVisible();
-  await showAllAttention(page);
-  return page.getByRole("region", { name: "Needs attention" });
-}
 
 function tile(page: Page, title: string) {
   return page

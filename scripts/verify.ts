@@ -105,6 +105,15 @@ export const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/fonts/patch-berkeley-mono.py",
   "packages/toolkit/src/lib/brim/capture/engine.ts",
   "packages/the-storm/plugin/gradle/libs.versions.toml",
+  // renovate-mirrored-pins.test.ts extracts the Minecraft plugin, itzg mirror and
+  // ffsubsync pins from these files.
+  "packages/the-storm/server/plugins.json",
+  "packages/the-storm/tests/e2e/harness/pins.ts",
+  "packages/mc-harness/src/pins.ts",
+  "packages/the-storm/plugin/dist/build.gradle.kts",
+  "packages/the-storm/plugin/settings.gradle.kts",
+  "packages/woodpecker-config-extension/src/pipeline/lanes/storm-e2e.ts",
+  "packages/media/scripts/subtitle-requirements.txt",
 ] as const;
 
 async function validateBaseWithGit(

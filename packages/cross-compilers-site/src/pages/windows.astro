@@ -13,9 +13,9 @@ const sourceUrl =
 // Digest-pinned: the images are published by digest only. Sync with
 // packages/windows-cross-compiler/images/<image>/DIGEST.
 const image =
-  "docker.io/shepherdjerred/windows-cross-compiler@sha256:6b35945b08c90de420111c415145487de5885b6e926c7cd6d4fe54d6d4380617";
+  "docker.io/shepherdjerred/windows-cross-compiler@sha256:dd2cfece09ecb2eafffbf7c4d0dde4839b6345f0058403165cbcb4d947d331bd";
 const winuiImage =
-  "docker.io/shepherdjerred/windows-cross-compiler-winui@sha256:976070135674e22399d7384418fe975584de36fbdddceeefc09ecff3ddff2cef";
+  "docker.io/shepherdjerred/windows-cross-compiler-winui@sha256:24139a5765e3ffe757a1ce793c98c953c0a3b5997d52cbf536e088a362826350";
 const run = `docker run --rm -v "$PWD:/workspace" \\\n  ${image} \\\n`;
 const winuiRun = `docker run --rm -v "$PWD:/workspace" \\\n  ${winuiImage} \\\n`;
 
@@ -125,7 +125,7 @@ const toolchains = [
 const images = [
   {
     name: "windows-cross-compiler",
-    digest: "sha256:6b35945b08c9…",
+    digest: "sha256:dd2cfece09ec…",
     digestUrl:
       "https://github.com/shepherdjerred/monorepo/blob/main/packages/windows-cross-compiler/images/windows-cross-compiler/DIGEST",
     contents:
@@ -134,7 +134,7 @@ const images = [
   },
   {
     name: "windows-cross-compiler-winui",
-    digest: "sha256:976070135674…",
+    digest: "sha256:24139a5765e3…",
     digestUrl:
       "https://github.com/shepherdjerred/monorepo/blob/main/packages/windows-cross-compiler/images/windows-cross-compiler-winui/DIGEST",
     contents:

@@ -278,6 +278,7 @@
 }
 .p-outreach-receipts {
   padding-inline-start: 16px;
+  list-style: none;
 }
 @container (min-width: 900px) {
   .p-outreach-totals {

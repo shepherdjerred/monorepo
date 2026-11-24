@@ -1,13 +1,14 @@
 import { RotateCwIcon } from "lucide-react";
 import { ApiError, queryClient } from "#client/api.ts";
 import { Button } from "#client/ui/button.tsx";
-import { ActionFailure } from "#client/ui/workflow.tsx";
+import { WriteFailure } from "#client/ui/workflow.tsx";
 
 /**
- * A review command that was refused. The server refuses with
+ * A review command that did not go through. The server refuses with
  * `migration_review_stale` when the review, its report, or the runtime moved
- * on after the page loaded; nothing is saved then. Any other failure may have
- * left the review either way, so the page says to load it again.
+ * on after the page loaded; nothing is saved then, and neither is anything
+ * for any other refusal. When no answer came back, the review may or may not
+ * have been saved, so the page says it cannot tell.
  */
 export function ReviewFailure({
   error,
@@ -23,14 +24,19 @@ export function ReviewFailure({
   const stale =
     error instanceof ApiError && error.code === "migration_review_stale";
   return (
-    <ActionFailure
-      title={`The ${verb} was not recorded`}
+    <WriteFailure
       error={error}
-      state={
-        stale
+      refused={{
+        title: `The ${verb} was not recorded`,
+        state: stale
           ? "The review changed after you opened it, so nothing was saved. Load the current review and check it again before you decide."
-          : "As far as this page can tell, nothing was saved. Load the current review to confirm."
-      }
+          : "The request was refused, so nothing was saved. Load the current review to confirm.",
+      }}
+      unknown={{
+        title: `Whether the ${verb} was recorded is not known`,
+        about: `whether the ${verb} was saved`,
+        check: "load the current review to see its decision",
+      }}
       action={
         <Button
           onClick={() => {

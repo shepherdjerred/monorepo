@@ -1,4 +1,4 @@
-import { expect, type Page, type Request } from "@playwright/test";
+import { expect, type Page, type Request, type Route } from "@playwright/test";
 import {
   allowWrites,
   openSettled,
@@ -43,6 +43,35 @@ export async function answerWrites(
   /** The `/api/v<version>` the client writes this path under. */
   version = 1,
 ): Promise<Write[]> {
+  return interceptWrites(page, path, version, (route) =>
+    route.fulfill({
+      status: response?.status ?? 200,
+      json: response?.json ?? {},
+    }),
+  );
+}
+
+/**
+ * Drops the connection of every write to `path`: the page gets no answer at
+ * all, as when a response is lost after the server may have acted on it.
+ * Returns what was sent, so a test can tell the request did go out.
+ */
+export async function dropWrites(
+  page: Page,
+  path: string,
+  version = 1,
+): Promise<Write[]> {
+  return interceptWrites(page, path, version, (route) =>
+    route.abort("connectionreset"),
+  );
+}
+
+async function interceptWrites(
+  page: Page,
+  path: string,
+  version: number,
+  respond: (route: Route) => Promise<void>,
+): Promise<Write[]> {
   const writes: Write[] = [];
   await page.route(`**/api/v${String(version)}${path}`, async (route) => {
     const request = route.request();
@@ -51,10 +80,7 @@ export async function answerWrites(
       return;
     }
     writes.push(recorded(request));
-    await route.fulfill({
-      status: response?.status ?? 200,
-      json: response?.json ?? {},
-    });
+    await respond(route);
   });
   return writes;
 }

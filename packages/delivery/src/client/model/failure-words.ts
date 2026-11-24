@@ -1,4 +1,17 @@
 import { parseEvidenceSummary } from "#client/evidence.ts";
+import { hasTrace, plainCause } from "#shared/evidence/plain-cause.ts";
+
+/**
+ * The recorded texts, each once, that carry source excerpts or stack frames:
+ * as recorded, for a disclosure, while the prose says only their sentence.
+ */
+export function tracesOf(texts: readonly (string | null | undefined)[]) {
+  return [
+    ...new Set(
+      texts.flatMap((text) => (text != null && hasTrace(text) ? [text] : [])),
+    ),
+  ];
+}
 
 /** The receipt keys whose text states why the work was refused or failed. */
 const REASON_KEYS = new Set([
@@ -18,7 +31,11 @@ const REASON_KEYS = new Set([
  */
 export function spoken(summary: string, kind?: string) {
   const parsed = parseEvidenceSummary(summary);
-  if (parsed.kind === "text") return parsed.text;
+  if (parsed.kind === "text") {
+    // A runtime's source excerpt and stack frames are not words for a reader.
+    const words = plainCause(parsed.text);
+    return words === "" ? null : words;
+  }
   const reason = parsed.facts.find(
     (fact) => REASON_KEYS.has(fact.key) && fact.value.kind === "text",
   )?.value;
@@ -40,7 +57,7 @@ const REMEDY = /^(?:inspect|check|retry|fix|re-?run|request|look at|wait) /iu;
 function clauses(text: string) {
   return text
     .split(/(?<=[.;])\s+/u)
-    .map((part) => part.trim().replace(/[.;]$/u, ""))
+    .map((part) => part.trim().replace(/[.;]+$/u, ""))
     .filter((part) => part !== "");
 }
 
@@ -73,4 +90,33 @@ export function sayOnce() {
     },
     remedies,
   };
+}
+
+const JOB = /\bJob (?<job>[a-z0-9][\w.-]*\/[a-z0-9][\w.-]*)/u;
+const UID =
+  /\bUID (?<uid>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/iu;
+
+/**
+ * The Kubernetes Job and UID a failure's records name, so "inspect its
+ * recorded UID" points at one. Newest evidence first; each value once.
+ */
+export function failurePointers(detail: {
+  evidence: readonly { summary: string }[];
+  stages: readonly { message: string }[];
+}) {
+  const texts = [
+    ...detail.evidence.toReversed().map((item) => item.summary),
+    ...detail.stages.map((stage) => stage.message),
+  ];
+  const pointers: { label: "Job" | "UID"; value: string }[] = [];
+  for (const [label, pattern, group] of [
+    ["Job", JOB, "job"],
+    ["UID", UID, "uid"],
+  ] as const) {
+    const value = texts
+      .map((text) => pattern.exec(text)?.groups?.[group])
+      .find((found) => found !== undefined);
+    if (value !== undefined) pointers.push({ label, value });
+  }
+  return pointers;
 }

@@ -364,6 +364,10 @@ const app = createMediaApp({
       keepDays: keepDays.value,
       serverMachineId: bootstrap.PLEX_SERVER_MACHINE_ID,
       movieAccess,
+      sections: {
+        movie: permittedMovieSectionId.value,
+        series: permittedTvSectionId.value,
+      },
     },
   ),
   plexExclusionAdmin: new PrismaPlexExclusionAdministration(

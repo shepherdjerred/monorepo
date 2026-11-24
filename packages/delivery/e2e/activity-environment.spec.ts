@@ -110,6 +110,16 @@ test("repeated check-ins and worker retirements fold into counted rows that name
     retirement(3),
     retirement(8),
     retirement(13),
+    ...[14, 15, 16].map((minutes) =>
+      entry("worker.retirement_proved", "retired-deployment", minutes, {
+        target: { kind: "deployment", id: "retired-deployment" },
+        subject: {
+          serviceId: "scout-for-lol",
+          environmentId: "scout-for-lol/beta",
+          revision: 338,
+        },
+      }),
+    ),
     entry("worker.recovery_failed", "recovery-deployment", 20, {
       metadata: { message: "The pool read back a different build" },
       reason: "The pool read back a different build",
@@ -121,7 +131,17 @@ test("repeated check-ins and worker retirements fold into counted rows that name
   );
   await page.goto("/activity");
   const rows = page.locator("ol.activity > li");
-  await expect(rows).toHaveCount(4);
+  await expect(rows).toHaveCount(5);
+
+  // The proof recorded for one retirement deployment is one row too.
+  const retired = rows.filter({ hasText: "Worker retired" });
+  await expect(retired).toHaveCount(1);
+  await expect(retired).toContainText("×3");
+  await expect(retired).toContainText("3 proofs");
+  await expect(retired.getByRole("link")).toHaveAttribute(
+    "href",
+    "/deployments/retired-deployment",
+  );
 
   const checkIns = rows.filter({ hasText: "Executor checked in" });
   await expect(checkIns).toHaveCount(1);

@@ -17,6 +17,7 @@ import { mineTitles } from "./mine-model.ts";
 import { MineTitleEntry } from "./mine-title.tsx";
 import { PlexRequestHistory } from "./plex-request-history.tsx";
 import { interestsRead, REQUESTS_READ } from "./reads.ts";
+import { SeerrRequestHistory } from "./seerr-request-history.tsx";
 
 const cx = classNames(styles);
 
@@ -24,6 +25,7 @@ export function LibraryMine({ user }: { user: MediaUser }) {
   return (
     <>
       <MineRequests user={user} />
+      <SeerrRequestHistory userId={user.id} />
       <PlexRequestHistory key={user.id} userId={user.id} />
     </>
   );
@@ -103,7 +105,7 @@ function MineRequests({ user }: { user: MediaUser }) {
         {subject}
         <EmptyState
           icon={CompassIcon}
-          title="You have not asked for anything yet"
+          title="No current requests"
           action={
             <Link className="button primary" to="/discover">
               Find something to watch

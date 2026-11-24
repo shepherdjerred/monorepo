@@ -71,7 +71,7 @@ export async function createTrackedSnapshot(
       );
       archive.once("error", reject);
       archive.once("exit", (code) => {
-        resolve(code ?? 1);
+        resolve(typeof code === "number" ? code : 1);
       });
     });
     if (exitCode !== 0) {

@@ -15,19 +15,19 @@
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "argoproj-labs/argocd",
-      "version": "7.17.1",
+      "version": "7.18.0",
       "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "backblaze/b2",
-      "version": "0.14.0",
+      "version": "0.14.1",
       "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "cloudflare/cloudflare",
-      "version": "5.27.0",
+      "version": "5.29.0",
       "bindings": true
     },
     {
@@ -45,31 +45,31 @@
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "devopsarr/sonarr",
-      "version": "3.5.0",
+      "version": "3.6.0",
       "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "docker/docker",
-      "version": "0.7.0",
+      "version": "0.8.0",
       "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "hashicorp/aws",
-      "version": "6.68.0",
+      "version": "6.73.0",
       "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "hashicorp/google",
-      "version": "8.6.0",
+      "version": "8.12.0",
       "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "hashicorp/http",
-      "version": "3.6.2",
+      "version": "3.6.3",
       "bindings": true
     },
     {
@@ -87,26 +87,26 @@
     {
       "registryUrl": "https://registry.terraform.io",
       "source": "ippontech/anthropic",
-      "version": "1.60.0",
+      "version": "1.95.1",
       "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "jianyuan/openai",
-      "version": "0.7.0",
+      "version": "0.7.1",
       "bindings": true,
       "bindingsName": "openaikeys"
     },
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "openai/openai",
-      "version": "1.3.1",
+      "version": "1.6.0",
       "bindings": true
     },
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "posthog/posthog",
-      "version": "1.0.17",
+      "version": "1.0.32",
       "bindings": true
     },
     {
@@ -119,7 +119,7 @@
     {
       "registryUrl": "https://registry.opentofu.org",
       "source": "tailscale/tailscale",
-      "version": "0.29.2",
+      "version": "0.30.0",
       "bindings": true
     }
   ]

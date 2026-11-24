@@ -5,32 +5,71 @@ import { keysForChange } from "./change-keys.ts";
 
 export type FeedStatus = "connecting" | "live" | "reconnecting";
 
+const CHANGE_COALESCE_MS = 150;
+
+type EventSourceLike = Pick<EventTarget, "addEventListener">;
+
 /**
- * Server-Sent Events of committed Delivery changes. Each change refetches the
- * visible queries it can affect; a reconnect refetches everything, because
- * changes made while disconnected are not replayed.
+ * Server-Sent Events of committed Delivery changes. Rapid bursts (such as CI
+ * registering dozens of pending builds) coalesce into one deduplicated batch of
+ * query invalidations; a reconnect refetches everything, because changes made
+ * while disconnected are not replayed.
  */
-export function createChangeFeed(queryClient: QueryClient) {
+export function createChangeFeed(
+  queryClient: QueryClient,
+  options?: {
+    coalesceMs?: number;
+    openEventSource?: (url: string) => EventSourceLike;
+  },
+) {
+  const coalesceMs = options?.coalesceMs ?? CHANGE_COALESCE_MS;
+  const openSource =
+    options?.openEventSource ?? ((url: string) => new EventSource(url));
   let status: FeedStatus = "connecting";
   let missed = false;
+  let flushTimer: ReturnType<typeof setTimeout> | undefined;
+  const pendingKeys = new Map<string, readonly unknown[]>();
   const listeners = new Set<() => void>();
   function set(next: FeedStatus) {
     status = next;
     for (const listener of listeners) listener();
   }
+  function clearPending() {
+    if (flushTimer !== undefined) {
+      clearTimeout(flushTimer);
+      flushTimer = undefined;
+    }
+    pendingKeys.clear();
+  }
+  function flushPending() {
+    flushTimer = undefined;
+    const keys = [...pendingKeys.values()];
+    pendingKeys.clear();
+    for (const queryKey of keys)
+      void queryClient.invalidateQueries({ queryKey });
+  }
+  function scheduleInvalidations(keys: readonly (readonly unknown[])[]) {
+    for (const queryKey of keys)
+      pendingKeys.set(JSON.stringify(queryKey), queryKey);
+    flushTimer ??= setTimeout(flushPending, coalesceMs);
+  }
   function start() {
-    const source = new EventSource("/api/v1/events");
+    const source = openSource("/api/v1/events");
     source.addEventListener("ready", () => {
-      if (missed) void queryClient.invalidateQueries();
+      if (missed) {
+        clearPending();
+        void queryClient.invalidateQueries();
+      }
       missed = false;
       set("live");
     });
     source.addEventListener("change", (event) => {
+      if (!("data" in event)) return;
       const raw: unknown = JSON.parse(String(event.data));
-      for (const queryKey of keysForChange(ChangeEventSchema.parse(raw)))
-        void queryClient.invalidateQueries({ queryKey });
+      scheduleInvalidations(keysForChange(ChangeEventSchema.parse(raw)));
     });
     source.addEventListener("resync", () => {
+      clearPending();
       void queryClient.invalidateQueries();
     });
     source.addEventListener("error", () => {

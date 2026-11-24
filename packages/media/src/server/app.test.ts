@@ -397,20 +397,34 @@ describe("media HTTP security and errors", () => {
     expect(await response.text()).not.toContain("123");
     expect(dependencies.onError).toHaveBeenCalledOnce();
   });
+});
 
-  test("Plex login sets secure session cookies without exposing credentials", async () => {
-    const { dependencies } = fixture();
-    const app = createMediaApp(dependencies);
-    const response = await app.request("/api/v1/auth/plex/poll/login", {
-      method: "POST",
-      headers: {
-        Origin: headers.Origin,
-        Cookie: "__Host-media-login=browser-token",
-      },
-    });
-    expect(response.status).toBe(200);
-    expect(response.headers.get("Set-Cookie")).toContain("HttpOnly");
-    expect(response.headers.get("Set-Cookie")).toContain("Secure");
-    expect(await response.text()).not.toContain("session-token");
+test("Plex login attempts Seerr attachment and still sets secure cookies when attachment needs a retry", async () => {
+  const { dependencies } = fixture();
+  const attachImportedRequests = vi.fn(() =>
+    Promise.reject(new Error("Synthetic attachment failure")),
+  );
+  dependencies.migrationAdmin.personal = {
+    apply: unusedInterestRead,
+    passive: unusedInterestRead,
+    preview: unusedInterestRead,
+    reconcile: unusedInterestRead,
+    imported: unusedInterestRead,
+    importedHistory: unusedInterestRead,
+    attachImportedRequests,
+  };
+  const app = createMediaApp(dependencies);
+  const response = await app.request("/api/v1/auth/plex/poll/login", {
+    method: "POST",
+    headers: {
+      Origin: headers.Origin,
+      Cookie: "__Host-media-login=browser-token",
+    },
   });
+  expect(response.status).toBe(200);
+  expect(attachImportedRequests).toHaveBeenCalledExactlyOnceWith(actor);
+  expect(dependencies.onError).toHaveBeenCalledOnce();
+  expect(response.headers.get("Set-Cookie")).toContain("HttpOnly");
+  expect(response.headers.get("Set-Cookie")).toContain("Secure");
+  expect(await response.text()).not.toContain("session-token");
 });

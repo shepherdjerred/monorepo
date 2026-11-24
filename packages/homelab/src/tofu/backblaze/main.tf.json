@@ -216,7 +216,7 @@
       "state": { "enforced": true, "method": "method.aes_gcm.encrypted" }
     },
     "required_providers": {
-      "b2": { "source": "backblaze/b2", "version": "0.14.0" },
+      "b2": { "source": "backblaze/b2", "version": "0.14.1" },
       "onepassword": { "source": "1password/onepassword", "version": "~> 3.0" }
     },
     "required_version": ">= 1.11.0"

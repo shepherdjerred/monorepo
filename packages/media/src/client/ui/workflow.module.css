@@ -22,6 +22,7 @@
     counter-increment: step;
   }
   .stepLink {
+    min-height: 24px;
     font-weight: 600;
     color: var(--text);
     text-decoration: none;
@@ -73,6 +74,24 @@
     font-family: var(--font-mono);
     font-size: var(--text-xs);
     overflow-wrap: anywhere;
+  }
+
+  .effects {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: var(--space-5);
+    font-size: var(--text-sm);
+  }
+  .effects ul {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding-inline-start: var(--space-5);
+  }
+  .effectsTitle {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-md);
+    font-weight: 600;
   }
 
   .pickList {

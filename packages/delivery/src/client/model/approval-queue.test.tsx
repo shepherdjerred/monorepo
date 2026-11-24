@@ -37,6 +37,45 @@ describe("the approval queue", () => {
     expect(html).toContain('<span class="muted"> (1)</span>');
   });
 
+  it("says an id the catalog does not hold as words, with the slug in the title", () => {
+    const html = render(
+      <ApprovalQueue
+        items={[
+          {
+            ...first,
+            serviceId: "starlight-karma-bot",
+            environmentId: "starlight-karma-bot/prod",
+          },
+        ]}
+      />,
+    );
+    expect(html).toContain(">Starlight Karma Bot · prod</a>");
+    expect(html).toContain(
+      'title="starlight-karma-bot · starlight-karma-bot/prod"',
+    );
+    expect(html).not.toContain(">starlight-karma-bot");
+  });
+
+  it("names a numbered recipe and configuration by their number, the whole id in the title", () => {
+    const html = render(
+      <ApprovalQueue
+        items={[
+          {
+            ...first,
+            selection: first.selection && {
+              ...first.selection,
+              recipeRevisionId: "scout-prod/2",
+              configurationRevisionId: "scout-prod/7",
+            },
+          },
+        ]}
+      />,
+    );
+    expect(html).toContain('<span title="scout-prod/2">recipe 2</span>');
+    expect(html).toContain('<span title="scout-prod/7">configuration 7</span>');
+    expect(html).not.toContain(">scout-prod/2<");
+  });
+
   it("calls an undecided approval awaiting approval, as every other page does", () => {
     const html = render(
       <ApprovalQueue

@@ -104,4 +104,12 @@
       content: none;
     }
   }
+
+  @media (forced-colors: active) {
+    .link[aria-current="page"] {
+      background: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
+    }
+  }
 }

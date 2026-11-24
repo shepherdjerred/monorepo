@@ -37,7 +37,38 @@ describe("pageSummary", () => {
         older: false,
         more: false,
       }),
-    ).toBe("Showing all 1 deployment that match these filters.");
+    ).toBe("Showing 1 deployment that matches these filters.");
+    // "All" says nothing about a single result.
+    expect(
+      pageSummary({
+        count: 1,
+        noun: DEPLOYMENTS,
+        filtered: false,
+        older: false,
+        more: false,
+      }),
+    ).toBe("Showing 1 deployment.");
+    // The verb agrees with the count: several rows match, one matches.
+    expect(
+      pageSummary({
+        count: 2,
+        noun: DEPLOYMENTS,
+        filtered: true,
+        older: false,
+        more: false,
+      }),
+    ).toBe("Showing all 2 deployments that match these filters.");
+    expect(
+      pageSummary({
+        count: 1,
+        noun: DEPLOYMENTS,
+        filtered: true,
+        older: true,
+        more: false,
+      }),
+    ).toBe(
+      "Showing 1 deployment that matches these filters older than the previous page.",
+    );
   });
 
   it("describes a page behind a cursor as older than the previous one", () => {

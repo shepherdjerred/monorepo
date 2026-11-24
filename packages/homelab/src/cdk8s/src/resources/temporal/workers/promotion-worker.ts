@@ -1,3 +1,4 @@
+import { temporalMetricsAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import type { Chart } from "cdk8s";
 import { PROMOTION_POD_TERMINATION_SECONDS } from "@shepherdjerred/ops-model/promotion/drain-policy.ts";
@@ -31,6 +32,10 @@ import {
   telemetryEnv,
   seaweedfsS3,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import {
+  OTLP_GATEWAY_ENDPOINT,
+  PINCHTAB_ENDPOINT,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 export function createTemporalPromotionWorker(
   chart: Chart,
@@ -89,7 +94,7 @@ export function createTemporalPromotionWorker(
       PROMOTION_DISCORD_SOCKET: EnvValue.fromValue(
         "/tmp/storm-promotion-discord/daemon.sock",
       ),
-      TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+      ...temporalMetricsAddressEnv(),
       AGENT_PROVIDER_UID: EnvValue.fromValue("1001"),
       ENVIRONMENT: EnvValue.fromValue("production"),
       ...telemetryEnv({ serviceName: "temporal-promotion-worker" }),
@@ -104,9 +109,7 @@ export function createTemporalPromotionWorker(
         secret: props.temporalSecret,
         key: "AWS_SECRET_ACCESS_KEY",
       }),
-      PINCHTAB_BASE_URL: EnvValue.fromValue(
-        "http://pinchtab.pinchtab.svc.cluster.local:9867",
-      ),
+      PINCHTAB_BASE_URL: EnvValue.fromValue(PINCHTAB_ENDPOINT.url),
       PINCHTAB_TOKEN: EnvValue.fromSecretValue({
         secret: browserSecret,
         key: "PINCHTAB_TOKEN",
@@ -144,9 +147,9 @@ export function createTemporalPromotionWorker(
           ports: [tcp(7233)],
         },
         ...[
-          { namespace: "pinchtab", port: 9867 },
+          PINCHTAB_ENDPOINT,
           { namespace: "seaweedfs", port: 8333 },
-          { namespace: "alloy-gateway", port: 4318 },
+          OTLP_GATEWAY_ENDPOINT,
         ].map(({ namespace, port }) => ({
           to: [nsPeer(namespace)],
           ports: [tcp(port)],

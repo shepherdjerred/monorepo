@@ -1,0 +1,19 @@
+@layer pages {
+  .progress {
+    margin-block: var(--space-4);
+  }
+  .counts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    gap: var(--space-4);
+    margin-block: var(--space-4);
+  }
+  .counts dd {
+    margin: var(--space-1) 0;
+    font-size: var(--text-xl);
+  }
+  .muted {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+}

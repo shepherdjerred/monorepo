@@ -4,6 +4,7 @@ import {
   api,
   expectContainedInTiles,
   expectNoHorizontalOverflow,
+  expectPagesAgreeOnAttention,
   isPhone,
   openOverview,
   overviewTile as tile,
@@ -57,8 +58,7 @@ test("a long attention list collapses to five behind a Show all button, as on Pi
   await page.route("**/api/v1/hub/grid", (route) =>
     route.fulfill({ json: { ...grid, attention } }),
   );
-  await openOverview(page);
-  const region = page.getByRole("region", { name: "Needs attention" });
+  const region = await openOverview(page, "", { attention: "collapsed" });
   await expect(region).toContainText("7 items");
   await expect(region.getByRole("listitem")).toHaveCount(5);
   const toggle = region.getByRole("button", { name: "Show all 7" });
@@ -118,4 +118,10 @@ test("a queued worker retirement of the accepted release is not a pending releas
   await expectNoHorizontalOverflow(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await expectContainedInTiles(page);
+});
+
+test("the overview and the pipelines list name the same items needing attention", async ({
+  page,
+}) => {
+  await expectPagesAgreeOnAttention(page);
 });

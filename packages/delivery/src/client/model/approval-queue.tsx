@@ -25,6 +25,30 @@ export type ApprovalCatalog = readonly {
 /** A deployment whose list row carries its set revision's number. */
 export type KnownRevision = { id: string; versionSetRevision: number };
 
+/** A slug as words, for an id the catalog does not hold: `starlight-karma-bot` is "Starlight Karma Bot". */
+function slugWords(slug: string) {
+  return slug
+    .split("-")
+    .map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+    .join(" ");
+}
+
+/** The number a revision id ends in, `scout-prod/2` being 2, or null. */
+function revisionNumber(id: string) {
+  const [, digits] = /\/(\d+)$/u.exec(id) ?? [];
+  return digits === undefined ? null : Number(digits);
+}
+
+/** A recipe or configuration revision as people say it: `recipe 2`, its full id in the title. */
+function RevisionPart({ kind, id }: { kind: string; id: string }) {
+  const number = revisionNumber(id) ?? undefined;
+  return (
+    <span title={id}>
+      {kind} {number ?? <span className="mono">{id}</span>}
+    </span>
+  );
+}
+
 type Names = {
   service: (item: ApprovalQueueItem) => string;
   environment: (item: ApprovalQueueItem) => string;
@@ -50,9 +74,13 @@ function namesFrom(
     revisions.map((row) => [row.id, row.versionSetRevision]),
   );
   return {
-    service: (item) => titles.get(item.serviceId) ?? item.serviceId,
+    // An id the catalog does not hold (a retired service, a catalog not loaded
+    // yet) is still said as words, never as its slug.
+    service: (item) => titles.get(item.serviceId) ?? slugWords(item.serviceId),
     environment: (item) =>
-      environments.get(item.environmentId) ?? item.environmentId,
+      environments.get(item.environmentId) ??
+      item.environmentId.split("/").at(-1) ??
+      item.environmentId,
     revision: (item) => item.versionSetRevision ?? numbers.get(item.id),
   };
 }
@@ -110,9 +138,11 @@ function Release({
       </Link>
       {item.selection !== null && (
         <small className="release-parts">
-          recipe <span className="mono">{item.selection.recipeRevisionId}</span>{" "}
-          · configuration{" "}
-          <span className="mono">{item.selection.configurationRevisionId}</span>
+          <RevisionPart kind="recipe" id={item.selection.recipeRevisionId} /> ·{" "}
+          <RevisionPart
+            kind="configuration"
+            id={item.selection.configurationRevisionId}
+          />
         </small>
       )}
     </>
@@ -135,6 +165,7 @@ function ApprovalRow({
         <Link
           to="/deployments/$deploymentId"
           params={{ deploymentId: item.id }}
+          title={`${item.serviceId} · ${item.environmentId}`}
           aria-label={`Deployment to ${names.service(item)} · ${names.environment(item)} (${item.environmentId}), ${item.kind}${release}, requested ${relativeTime(item.createdAt, at)}`}
         >
           {names.service(item)} · {names.environment(item)}

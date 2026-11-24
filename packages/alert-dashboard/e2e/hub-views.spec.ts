@@ -214,6 +214,19 @@ test("deep /services/:id views render StatusMatrix, facet tables, and alias redi
   await expect(
     page.getByRole("table", { name: "Managed feature flags inventory" }),
   ).toContainText("scout-experimental-voice-recap");
+  // A service that is its own console links to it from the header.
+  await expect(
+    page.locator("main .page-heading").getByRole("link", {
+      name: "Open in Flags",
+    }),
+  ).toHaveAttribute("href", "https://flags.tailnet-1a49.ts.net");
+
+  await page.goto("/services/golink");
+  await expect(
+    page.locator("main .page-heading").getByRole("link", {
+      name: "Open in Go links",
+    }),
+  ).toHaveAttribute("href", "https://go.tailnet-1a49.ts.net");
 
   await page.goto("/services/bugsink");
   await expect(
@@ -222,6 +235,7 @@ test("deep /services/:id views render StatusMatrix, facet tables, and alias redi
   await expect(
     page.getByRole("table", { name: "Top unresolved Bugsink issues" }),
   ).toContainText("RiotUpstreamTimeoutError");
+  await expect(page.getByRole("link", { name: /^Open in / })).toHaveCount(0);
 
   await page.goto("/services/observability");
   await expect(

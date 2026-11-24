@@ -198,6 +198,15 @@ export function resolveChoice<T extends string>(
 export type FilterName = { name: string; label: string };
 
 /**
+ * A filter as the address writes it, with the name its control shows when
+ * that is another word: `status (Qualification)`, so a parameter and a label
+ * are never mistaken for each other.
+ */
+function filterWords({ name, label }: FilterName) {
+  return label.toLowerCase() === name ? name : `${name} (${label})`;
+}
+
+/**
  * One problem for each search parameter the page has no filter for, such as
  * `?status=` on a list that is not filtered by status, so a hand-edited
  * address is never silently half-applied. The paging cursor is not a filter.
@@ -207,13 +216,13 @@ export function unknownFilters(
   accepted: readonly FilterName[],
 ): { problem: string }[] {
   const known = new Set(["cursor", ...accepted.map((filter) => filter.name)]);
-  const names = accepted.map((filter) => filter.label).join(", ");
+  const names = accepted.map((filter) => filterWords(filter)).join(", ");
   return Object.entries(search).flatMap(([name, value]) =>
     value === undefined || known.has(name)
       ? []
       : [
           {
-            problem: `“${name}” is not a filter on this page. Choose one of ${names}.`,
+            problem: `“${name}” is not a filter on this page. Use one of: ${names}.`,
           },
         ],
   );

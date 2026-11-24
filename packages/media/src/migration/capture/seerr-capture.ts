@@ -12,7 +12,7 @@ import {
   type CapturePass,
 } from "./capture-passes.ts";
 
-const RequestWire = z.object({
+export const RequestWire = z.object({
   id: z.number().int().positive(),
   type: z.enum(["movie", "tv"]),
   status: z.union([
@@ -53,7 +53,7 @@ type Source = {
   baseUrl: string;
   apiKey: string;
 };
-function requestRecord(request: z.infer<typeof RequestWire>) {
+export function requestRecord(request: z.infer<typeof RequestWire>) {
   return MigrationRecordSchema.parse({
     kind: "request",
     sourceId: String(request.id),

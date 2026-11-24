@@ -39,10 +39,11 @@ import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/reso
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { tailnetService } from "homelab/src/platform-model.ts";
 import { createGolinkRbac, GOLINK_TAILSCALE_STATE_SECRET } from "./rbac.ts";
+import { GOLINK_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 export const GOLINK_FIRST_PARTY_ACTIVE = true;
 
-const GOLINK_HTTP_PORT = 7352;
+const GOLINK_HTTP_PORT = GOLINK_ENDPOINT.port;
 const TAILSCALE_HEALTH_PORT = 9002;
 const GOLINK_UID = 1000;
 const PINNED_GOLINK_IMAGE_PATTERN =

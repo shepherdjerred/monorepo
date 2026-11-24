@@ -11,11 +11,10 @@ import {
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
-import {
-  CI_STEP_POD_LABEL,
-  DELIVERY_CI_API_STEPS,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/step-network-policy.ts";
+import { CI_STEP_POD_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/pod-labels.ts";
+import { DELIVERY_CI_API_STEPS } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/step-network-policy.ts";
 import { DELIVERY_TAILSCALE_INGRESS } from "@shepherdjerred/ops-model/delivery-ingress.ts";
+import { DELIVERY_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 export function createDeliveryNetworkPolicy(chart: Chart) {
   new KubeNetworkPolicy(chart, "application-network", {
@@ -23,7 +22,7 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
       podSelector: { matchLabels: { app: "delivery" } },
       policyTypes: ["Ingress", "Egress"],
       ingress: [
-        prometheusIngressRule([7353]),
+        prometheusIngressRule([DELIVERY_ENDPOINT.port]),
         {
           from: [
             {
@@ -33,7 +32,7 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
               },
             },
           ],
-          ports: [tcp(7353)],
+          ports: [DELIVERY_ENDPOINT.tcp()],
         },
         {
           from: [
@@ -75,7 +74,7 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
               },
             },
           ],
-          ports: [tcp(7353)],
+          ports: [DELIVERY_ENDPOINT.tcp()],
         },
       ],
       egress: [

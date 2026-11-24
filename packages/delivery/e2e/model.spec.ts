@@ -339,9 +339,16 @@ test("an accepted promotion shows its steps, selection, previous selection and a
   });
   await expect(selection).toContainText("arcade/3");
   await expect(selection).toContainText("arcade/2");
-  await expect(
-    page.getByRole("region", { name: "Previous accepted selection" }),
-  ).toContainText("Accepted by");
+  // The deployment that accepted it is named, never shown as a bare UUID.
+  const previous = page.getByRole("region", {
+    name: "Previous accepted selection",
+  });
+  await expect(previous).toContainText(
+    /Accepted by the (?:deploy|rebind) of r\d+, requested by \S+/u,
+  );
+  await expect(previous).not.toContainText(
+    /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/u,
+  );
   await expect(
     page.getByRole("region", { name: "Approval" }).getByText("granted", {
       exact: true,
@@ -448,7 +455,7 @@ test("approvals show the waiting override, the waiting saved plan and recently d
   ).toHaveCount(6);
   await expect(
     page.getByRole("navigation", { name: "Main" }).getByRole("link", {
-      name: /^Approvals\s*, 2 awaiting approval$/u,
+      name: /^Approvals, 2 awaiting approval$/u,
     }),
   ).toBeVisible();
   await expectNoHorizontalOverflow(page);
@@ -472,7 +479,7 @@ test("the activity trail shows what each catalog reconcile changed", async ({
   await expect(entries.nth(1)).toContainText(
     "Configuration revisions created (1)",
   );
-  await expect(entries.nth(2)).toContainText("Environments created (10)");
+  await expect(entries.nth(2)).toContainText("Environments created (11)");
   await expectNoHorizontalOverflow(page);
 });
 

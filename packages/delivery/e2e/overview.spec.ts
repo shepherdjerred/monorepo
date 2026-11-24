@@ -59,10 +59,9 @@ test("the overview is home and says what it shows", async ({ page }) => {
 test("attention comes first and names the service and environment", async ({
   page,
 }) => {
-  await openOverview(page);
+  const attention = await openOverview(page, "", { attention: "collapsed" });
   const grid = await api(page, "/api/v1/hub/grid", HubGridSchema);
   expect(grid.attention.length).toBeGreaterThan(0);
-  const attention = page.getByRole("region", { name: "Needs attention" });
   // Like Pipelines, a long list shows its first five behind "Show all".
   await expect(attention.getByRole("listitem")).toHaveCount(
     Math.min(grid.attention.length, 5),
@@ -161,14 +160,17 @@ test("a chip shows the accepted release apart from a newer request, each with it
   const queued = `r${String(birmel.request.revision)}`;
   expect(accepted).not.toBe(queued);
   const chip = tile(page, "Birmel").getByRole("link", { name: /^prod / });
-  // The accepted release and its age, then the newer request's own number and status.
+  // The accepted release with its own status and age, then the newer request's own number and status.
   await expect(chip).toHaveAccessibleName(
-    new RegExp(`^prod ${accepted} accepted .+ ${queued} queued$`, "u"),
+    new RegExp(`^prod accepted ${accepted} .+ ${queued} queued$`, "u"),
   );
   await expect(chip).not.toContainText(`${accepted} queued`);
+  // Every chip carries a status glyph and words, a newer request or not.
+  await expect(chip.locator(".status")).toHaveCount(2);
+  for (const each of await page.locator("a.overview-chip").all())
+    await expect(each.locator(".status-glyph").first()).toHaveCount(1);
 
   // A deployment queued past the threshold with no stage started needs someone.
-  await showAllAttention(page);
   const attention = page.getByRole("region", { name: "Needs attention" });
   const item = attention
     .getByRole("listitem")
@@ -186,7 +188,6 @@ test("each attention item says what failed instead of the executor boilerplate",
   page,
 }) => {
   await openOverview(page);
-  await showAllAttention(page);
   const items = page
     .getByRole("region", { name: "Needs attention" })
     .getByRole("listitem");
@@ -275,7 +276,7 @@ test("a tile links its service and each environment chip", async ({ page }) => {
   });
   // Name, status words, accepted revision and when it was accepted.
   const prod = chips.getByRole("link", {
-    name: /^prod .*\br\d+ accepted \S/u,
+    name: /^prod accepted r\d+ \S|^prod .*\br\d+ accepted \S/u,
   });
   await expect(prod).toHaveAttribute(
     "href",
@@ -288,6 +289,12 @@ test("a tile links its service and each environment chip", async ({ page }) => {
   ).toBeVisible();
   await expect(page.locator("#main-heading")).toBeFocused();
   await page.goBack();
+  // Going back reloads the overview with the phone's fold closed again.
+  if (isPhone(page) && !(await scout.isVisible()))
+    await page
+      .getByRole("region", { name: "Products", exact: true })
+      .locator("summary", { hasText: "healthy" })
+      .click();
   await scout.getByRole("link", { name: "Scout for LoL", exact: true }).click();
   await expect(page).toHaveURL(/\/pipelines\/scout-for-lol$/u);
   await expect(page.locator("#main-heading")).toBeFocused();

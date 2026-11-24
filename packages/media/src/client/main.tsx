@@ -1,7 +1,7 @@
 // First, before the application: this stylesheet declares the cascade layer
 // order, which the browser fixes at the first `@layer` it meets. Feature
 // stylesheets arrive through the routes and must come after it.
-import "./styles.css";
+import "./styles/index.css";
 // Next, before any module that builds a schema.
 import "./startup/zod.ts";
 import { StrictMode } from "react";

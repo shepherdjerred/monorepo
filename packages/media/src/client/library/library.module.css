@@ -217,13 +217,13 @@
     margin: var(--space-2) 0;
   }
 
-  .plexHistory {
+  .requestHistory {
     margin-block-start: var(--space-7);
   }
-  .plexHistory > h2 {
+  .requestHistory > h2 {
     margin-block-end: var(--space-3);
   }
-  .plexHistoryRow {
+  .requestHistoryRow {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
@@ -233,7 +233,7 @@
     border-bottom: 1px solid var(--border);
     overflow-wrap: anywhere;
   }
-  .plexHistoryWhen {
+  .requestHistoryWhen {
     color: var(--text-muted);
     font-size: var(--text-sm);
   }

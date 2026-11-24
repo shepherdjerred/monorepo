@@ -108,7 +108,12 @@ export function pageSummary({
   more: boolean;
 }) {
   const [, plural] = noun;
-  const matching = filtered ? " that match these filters" : "";
+  // The verb agrees with the rows counted: "1 deployment that matches".
+  const matching = filtered
+    ? ` that ${count === 1 ? "matches" : "match"} these filters`
+    : "";
+  // "All" says nothing about a single result: "Showing 1 deployment".
+  const all = count === 1 ? "" : "all ";
   if (count === 0)
     return filtered ? `No ${plural} match these filters.` : `No ${plural} yet.`;
   if (entries !== undefined && entries.count !== count) {
@@ -116,13 +121,13 @@ export function pageSummary({
     if (older) return `Showing ${rows}, older than the previous page.`;
     return more
       ? `Showing ${rows}. Newest first. Older ones are on the next page.`
-      : `Showing all ${rows}. Newest first.`;
+      : `Showing ${all}${rows}. Newest first.`;
   }
   const rows = `${String(count)} ${pluralOf(noun, count)}${matching}`;
   if (older) return `Showing ${rows} older than the previous page.`;
   return more
     ? `Showing the ${String(count)} newest ${pluralOf(noun, count)}${matching}. Older ones are on the next page.`
-    : `Showing all ${rows}.`;
+    : `Showing ${all}${rows}.`;
 }
 
 /** The records a page's rows fold: how many, what to call them, and what was folded. */

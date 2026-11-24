@@ -13,12 +13,16 @@ import {
   commandNeedsReview,
 } from "#client/target-controls/errors.tsx";
 import { ErrorNotice, Notice, humanize } from "#client/components.tsx";
+import { classNames } from "#client/ui/class-names.ts";
 import { CoveragePicker } from "./coverage.tsx";
+import styles from "./identity.module.css";
 import { identityPreviewOptions } from "./preview.ts";
 import type {
   DefaultEditionDecision,
   CutReason,
 } from "#shared/editions/evidence.ts";
+
+const cx = classNames(styles);
 
 type ReviewProps = {
   user: MediaUser;
@@ -158,7 +162,7 @@ function ConfirmIdentity({
     }
   }
   return (
-    <form className="panel stack-form" onSubmit={submit}>
+    <form className={`${cx("panel")} stack-form`} onSubmit={submit}>
       <h4>
         {preview.canonicalTitle} ({preview.canonicalYear})
       </h4>
@@ -219,12 +223,12 @@ function ConfirmIdentity({
           placeholder="Explain the exact source and canonical episode mapping."
         />
       </label>
-      <label className="checkbox-label">
+      <label className="check-label">
         <input type="checkbox" required />I checked the release and every listed
         episode.
       </label>
       <button
-        className="button button-primary"
+        className="button primary"
         disabled={
           !preview.confirmationAllowed ||
           !preview.edition.accepted ||

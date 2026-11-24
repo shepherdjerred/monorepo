@@ -9,6 +9,7 @@ import {
 } from "./attention.ts";
 import {
   buildGrid,
+  gridAttention,
   type AcceptingDeployment,
   type GridDeployment,
   type GridRecord,
@@ -61,6 +62,13 @@ function deployment(
     ...overrides,
   };
 }
+
+/** An environment's id with a failed deployment of it, as `latest` holds them. */
+const stopped = (id: string, environmentId: string) =>
+  [
+    environmentId,
+    deployment(id, environmentId, { status: "failed", finishedAt: at(1) }),
+  ] as const;
 
 /** An accepting deployment no monitor alarm fired on. */
 const accepted = (finishedAt: Date) => ({
@@ -263,6 +271,32 @@ describe("overview grid record", () => {
     ).toEqual(["arcade/prod"]);
     // A retired environment admits no deployment, so its old failure is history.
     expect(grid.attention).toEqual([]);
+  });
+
+  it("names no failure of a retired service, an undeclared one, or a retired environment, for any page", () => {
+    const input = record({
+      services: [
+        ...active("arcade", "outside-the-catalog"),
+        { id: "birmel", lifecycle: "retired" },
+      ],
+      environments: [
+        environment("arcade/prod"),
+        environment("birmel/prod"),
+        environment("outside-the-catalog/prod"),
+        environment("arcade/old", { lifecycle: "retired" }),
+      ],
+      latest: new Map([
+        stopped("live", "arcade/prod"),
+        stopped("retired-service", "birmel/prod"),
+        stopped("undeclared", "outside-the-catalog/prod"),
+        stopped("retired-environment", "arcade/old"),
+      ]),
+    });
+    expect(gridAttention(input).map((item) => item.target.id)).toEqual([
+      "live",
+    ]);
+    // The grid carries exactly what every other page takes from this rule.
+    expect(buildGrid(input).attention).toEqual(gridAttention(input));
   });
 
   it("leaves out a service this server's catalog does not declare", () => {
@@ -624,7 +658,7 @@ describe("overview grid failing-repeatedly attention", () => {
     expect(
       newestAfter(
         newestFailed(
-          "Recovery intent 1 read the external operation back after the deployment ended: it ended in phase Succeeded.",
+          "Step step-sync was still running when the deployment ended",
         ),
         [failed("r347", null), failed("r346", null)],
       ),
@@ -633,7 +667,7 @@ describe("overview grid failing-repeatedly attention", () => {
         kind: "failed",
         title: "Flags prod is failing repeatedly",
         detail:
-          "The last 3 deployments failed, the newest with: Recovery intent 1 read the external operation back after the deployment ended: it ended in phase Succeeded. Nothing newer is queued.",
+          "The last 3 deployments failed, the newest with: Step step-sync was still running when the deployment ended. Nothing newer is queued.",
         at: at(9).toISOString(),
         target: { kind: "deployment", id: "newest" },
         serviceId: "flags",
@@ -758,12 +792,12 @@ describe("overview grid attention", () => {
       ["approval", "Scout for LoL prod awaits approval", "scout-for-lol"],
       ["build_failed", "Birmel build failed qualification", "birmel"],
       ["failed", "Arcade prod deployment failed", "arcade"],
-      [
-        "failed",
-        "outside-the-catalog prod deployment failed",
-        "outside-the-catalog",
-      ],
     ]);
+    // No page lists a service the catalog does not declare, so none names its
+    // failure: Overview and Pipelines both take attention from this one rule.
+    expect(grid.attention.map((item) => item.serviceId)).not.toContain(
+      "outside-the-catalog",
+    );
     // The executor's boilerplate is on the deployment page; the item says why once.
     expect(grid.attention[0]).toMatchObject({
       detail: "The deploy of r275 failed and left the environment locked.",

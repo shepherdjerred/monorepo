@@ -107,6 +107,14 @@
 .step-key {
   overflow-wrap: anywhere;
 }
+/* An interrupted step's state names what recovery read back, so it may wrap. */
+.step-head .status {
+  max-width: 100%;
+  white-space: normal;
+}
+.step-head .status-label {
+  overflow-wrap: anywhere;
+}
 .step-meta,
 .evidence-meta {
   color: var(--text-muted);

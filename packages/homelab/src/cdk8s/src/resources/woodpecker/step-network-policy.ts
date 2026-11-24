@@ -7,21 +7,9 @@ import {
   tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
+import { CI_STEP_POD_LABEL } from "./pod-labels.ts";
+import { DELIVERY_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
-/**
- * Label every generated CI step and service pod carries.
- *
- * Written by the configuration extension's emitter
- * (`packages/woodpecker-config-extension/src/pipeline/emit.ts`) on both a
- * step and its services; Woodpecker's own pod names (`wp-<ulid>`) carry
- * nothing selectable. The value varies per step, so the policy selects on the
- * key's existence. macOS lanes run on the local backend and produce no pod,
- * so they are correctly outside this.
- *
- * The same key is duplicated in the monitoring rules for the same reason. Do
- * not rename it in one place.
- */
-export const CI_STEP_POD_LABEL = "ci.sjer.red/step-key";
 export const DELIVERY_CI_API_STEPS = [
   "images",
   "ci-base-refresh",
@@ -83,13 +71,8 @@ export function createWoodpeckerStepNetworkPolicy(chart: Chart) {
       policyTypes: ["Egress"],
       egress: [
         {
-          to: [
-            {
-              ...nsPeer("delivery"),
-              podSelector: { matchLabels: { app: "delivery" } },
-            },
-          ],
-          ports: [tcp(7353)],
+          to: [DELIVERY_ENDPOINT.peer()],
+          ports: [DELIVERY_ENDPOINT.tcp()],
         },
       ],
     },

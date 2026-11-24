@@ -28,8 +28,9 @@ import {
   NET_ADMIN_FIREWALL_RESOURCES,
   netAdminFirewallSecurityContext,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/net-admin-firewall.ts";
+import { PINCHTAB_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
-const PINCHTAB_PORT = 9867;
+const PINCHTAB_PORT = PINCHTAB_ENDPOINT.port;
 
 // pinchtab's /health route requires the bearer token (its "guard" mode rejects
 // unauthenticated requests on every route except `/`). The probe runs inside the
@@ -228,7 +229,13 @@ ip6tables -L OUTPUT -n`,
         readOnlyRootFilesystem: false,
         allowPrivilegeEscalation: false,
       },
-      ports: [{ number: PINCHTAB_PORT, name: "http", protocol: Protocol.TCP }],
+      ports: [
+        {
+          number: PINCHTAB_PORT,
+          name: PINCHTAB_ENDPOINT.portName,
+          protocol: Protocol.TCP,
+        },
+      ],
       resources: {
         cpu: {
           request: Cpu.millis(250),
@@ -307,7 +314,7 @@ ip6tables -L OUTPUT -n`,
   // which is the PINCHTAB_BASE_URL birmel already points at.
   const service = new Service(chart, "pinchtab-service", {
     metadata: {
-      name: "pinchtab",
+      name: PINCHTAB_ENDPOINT.service,
     },
     selector: deployment,
     ports: [{ port: PINCHTAB_PORT, targetPort: PINCHTAB_PORT }],

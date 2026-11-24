@@ -12,6 +12,10 @@ import {
   parseObject,
   type ManagedResource,
 } from "homelab/scripts/argocd/argocd-apply-safety.ts";
+import {
+  assertRetiredEnforcementStagingPolicy,
+  enforcementStagingNamespace,
+} from "#lib/delivery/network-policy/enforcement-staging-prune.ts";
 
 /**
  * One application's reviewed route retirement: its exact registered scope and
@@ -176,6 +180,21 @@ export async function retiredRouteSyncPrunes(
   );
   const seen = new Set<string>();
   for (const resource of obsolete) {
+    const stagingNamespace = enforcementStagingNamespace(
+      resource,
+      rule.namespace,
+    );
+    if (stagingNamespace !== null) {
+      await assertRetiredEnforcementStagingPolicy({
+        application: rule.application,
+        resource: { ...resource, namespace: stagingNamespace },
+        desired,
+        defaultNamespace: rule.namespace,
+        read,
+        seen,
+      });
+      continue;
+    }
     const group = resource.group ?? "";
     if (
       resource.namespace !== rule.namespace ||

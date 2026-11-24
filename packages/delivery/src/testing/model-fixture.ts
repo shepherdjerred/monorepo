@@ -90,3 +90,19 @@ export async function requestOnProd(
     testOperator,
   );
 }
+
+/** Registers the arcade model recipe as revision `arcade/model-1` and selects it for the environment. */
+export async function selectArcadeModelRecipe(
+  database: Delivery["database"],
+  environmentId: string,
+) {
+  const definition = recipeFromPipeline(arcadePipeline);
+  await database.pipeline.create({
+    data: { id: "arcade/model-1", definition },
+  });
+  await database.environment.update({
+    where: { id: environmentId },
+    data: { pipelineRevisionId: "arcade/model-1" },
+  });
+  return definition;
+}

@@ -1,0 +1,136 @@
+/* The signed-out screen: the sign-in panel beside its artwork. */
+@layer pages {
+  .screen {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 60px 12%;
+  }
+  .panel h1 {
+    white-space: nowrap;
+  }
+  .panel h1 em {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    color: var(--text-accent);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    margin-bottom: 65px;
+  }
+  /* The mark is a drawn glyph: sized and cornered against its own box. */
+  .brandMark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 33px;
+    height: 35px;
+    margin-right: 10px;
+    border: 2px solid var(--text-accent);
+    color: var(--text-accent);
+    border-radius: 11px 11px 4px 4px;
+    font-size: 0.9em;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .brandDot {
+    color: var(--text-accent);
+  }
+  .description {
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    margin: var(--space-2) 0 var(--space-6);
+    max-width: 440px;
+  }
+  .signIn {
+    padding: var(--space-4) var(--space-5);
+    font-size: var(--text-md);
+  }
+  .note {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    margin-top: 40px;
+    max-width: 350px;
+  }
+  /* The login artwork is the same spruce set piece as the welcome card. */
+  .art {
+    background:
+      radial-gradient(ellipse at 15% 30%, var(--art-moss-500), transparent 60%),
+      linear-gradient(140deg, var(--art-pine-700), var(--art-pine-900));
+    position: relative;
+    overflow: hidden;
+  }
+  .filmFrame {
+    position: absolute;
+    width: 55%;
+    height: 52%;
+    border: 10px solid var(--art-tan);
+    border-radius: var(--radius-card);
+    background: repeating-linear-gradient(
+      150deg,
+      var(--art-sage-300) 0,
+      var(--art-sage-300) 40px,
+      var(--art-sage-400) 40px,
+      var(--art-sage-400) 80px
+    );
+    box-shadow: 25px 35px 60px var(--art-shadow);
+  }
+  .frameOne {
+    left: 13%;
+    top: 23%;
+    transform: rotate(-14deg);
+  }
+  .frameTwo {
+    left: 36%;
+    top: 39%;
+    transform: rotate(15deg);
+    background: radial-gradient(
+      circle at 50% 45%,
+      var(--art-tan) 0,
+      var(--art-tan) 28%,
+      var(--art-clay-300) 29%,
+      var(--art-clay-300) 55%,
+      var(--art-clay-500) 56%
+    );
+  }
+  .star {
+    position: absolute;
+    top: 13%;
+    left: 55%;
+    font-size: 6.25rem;
+    color: var(--art-cream);
+  }
+  @media (max-width: 760px) {
+    .screen {
+      grid-template-columns: 1fr;
+    }
+    .art {
+      display: none;
+    }
+    .panel {
+      padding: 50px 28px;
+    }
+    .panel h1 {
+      white-space: normal;
+    }
+    .brand {
+      font-size: var(--text-xl);
+      margin-bottom: 80px;
+    }
+    .brandMark {
+      width: 28px;
+      height: 30px;
+    }
+  }
+}

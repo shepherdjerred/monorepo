@@ -26,6 +26,7 @@ import {
   telemetryEnv,
   seaweedfsS3,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { PINCHTAB_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 const STREAMBOT_UID = 1000;
 const STREAMBOT_GID = 1000;
@@ -188,9 +189,7 @@ export function createStreambotDeployment(
             // last human exits. Sourced from the canonical map in resources/userbot-ids.ts.
             // Bootstrap for the flag client — cannot come from a flag.
             ...flagsEnv({ deployment: "streambot/prod" }),
-            PINCHTAB_BASE_URL: EnvValue.fromValue(
-              "http://pinchtab.pinchtab.svc.cluster.local:9867",
-            ),
+            PINCHTAB_BASE_URL: EnvValue.fromValue(PINCHTAB_ENDPOINT.url),
             PINCHTAB_TOKEN: EnvValue.fromSecretValue({
               secret: pinchtabSecret,
               key: "PINCHTAB_TOKEN",

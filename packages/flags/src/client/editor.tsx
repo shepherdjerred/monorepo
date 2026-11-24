@@ -1,10 +1,13 @@
 import { useRef, useState, type SubmitEvent } from "react";
+import { ArrowLeftIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { z } from "zod";
+import { Button, Chip, Field, IconButton } from "@shepherdjerred/console-ui";
 import type {
   BooleanFlagValue,
   FlagValue,
   VariantFlagValue,
 } from "@shepherdjerred/feature-flags/evaluate.ts";
+import { ConflictBanner } from "./conflict-banner.tsx";
 import { useApplyFlag, type DeploymentDocument } from "./api.ts";
 import {
   addConstraint,
@@ -25,11 +28,13 @@ export function Editor({
   stage,
   flagKey,
   document,
+  backHref,
 }: {
   catalog: string;
   stage: string;
   flagKey: string;
   document: DeploymentDocument;
+  backHref: string;
 }) {
   const stored = document.flags.find((flag) => flag.key === flagKey);
   const [draft, setDraft] = useState<FlagValue | undefined>(stored);
@@ -116,68 +121,75 @@ export function Editor({
   }
 
   return (
-    <section className="detail" aria-labelledby="flag-heading">
-      <h2 id="flag-heading">{flagKey}</h2>
-      <p className="muted">Revision {revision}</p>
-      <form onSubmit={review}>
+    <section className="fl-detail" aria-labelledby="flag-heading">
+      <div className="fl-detail-head">
+        <a className="fl-back" href={backHref}>
+          <ArrowLeftIcon aria-hidden="true" />
+          All flags
+        </a>
+        <h2 id="flag-heading" className="ui-mono fl-detail-title">
+          {flagKey}
+        </h2>
+        <p className="ui-muted">
+          {draft.type} flag · Revision {revision}
+        </p>
+      </div>
+      {conflict === undefined ? null : (
+        <ConflictBanner
+          revision={conflict.revision}
+          theirs={conflict.flag}
+          draft={draft}
+          onLoadTheirs={loadTheirs}
+        />
+      )}
+      <form className="fl-form" onSubmit={review}>
         {draft.type === "boolean" ? (
           <BooleanFields flag={draft} onChange={setDraft} />
         ) : (
           <VariantFields flag={draft} onChange={setDraft} />
         )}
-        <button type="submit">Review save</button>
-      </form>
-      {error === undefined ? null : (
-        <p role="alert" className="error">
-          {error}
-        </p>
-      )}
-      {saved ? <p>Saved.</p> : null}
-      {conflict === undefined ? null : (
-        <section className="conflict" aria-labelledby="conflict-title">
-          <h3 id="conflict-title">Revision conflict</h3>
-          <p>
-            Another write landed at revision {conflict.revision}. This save was
-            not applied.
+        {error === undefined ? null : (
+          <p role="alert" className="ui-field-error">
+            {error}
           </p>
-          <h4>Their flag</h4>
-          <pre>
-            {conflict.flag === undefined
-              ? "This flag is gone from their document."
-              : flagText(conflict.flag)}
-          </pre>
-          <h4>Your draft</h4>
-          <pre>{flagText(draft)}</pre>
-          {conflict.flag === undefined ? null : (
-            <button type="button" onClick={loadTheirs}>
-              Load their version
-            </button>
-          )}
-        </section>
-      )}
+        )}
+        {saved ? (
+          <p role="status" className="ui-muted">
+            Saved.
+          </p>
+        ) : null}
+        <div>
+          <Button type="submit" variant="primary">
+            Review save
+          </Button>
+        </div>
+      </form>
       <dialog
         ref={dialogRef}
+        className="fl-dialog"
         aria-labelledby="save-title"
         onClose={onDialogClose}
       >
-        <h2 id="save-title">Save {flagKey}</h2>
-        <div className="compare">
-          <section>
-            <h3>Before</h3>
+        <h2 id="save-title" className="fl-dialog-title">
+          Save <span className="ui-mono">{flagKey}</span>
+        </h2>
+        <div className="fl-compare">
+          <section aria-labelledby="save-before">
+            <h3 id="save-before">Before</h3>
             <pre>{flagText(baseFlag)}</pre>
           </section>
-          <section>
-            <h3>After</h3>
+          <section aria-labelledby="save-after">
+            <h3 id="save-after">After</h3>
             <pre>{flagText(draft)}</pre>
           </section>
         </div>
-        <form method="dialog">
-          <button type="submit" value="cancel">
+        <form method="dialog" className="fl-dialog-actions">
+          <Button type="submit" value="cancel">
             Cancel
-          </button>
-          <button type="submit" value="save">
+          </Button>
+          <Button type="submit" value="save" variant="primary">
             Save
-          </button>
+          </Button>
         </form>
       </dialog>
     </section>
@@ -193,9 +205,9 @@ function BooleanFields({
 }) {
   return (
     <>
-      <fieldset>
+      <fieldset className="fl-group">
         <legend>Default</legend>
-        <label>
+        <label className="fl-check">
           <input
             type="checkbox"
             checked={flag.default}
@@ -206,61 +218,76 @@ function BooleanFields({
           On when no segment matches
         </label>
       </fieldset>
-      <fieldset>
+      <fieldset className="fl-group">
         <legend>Segments</legend>
+        {flag.rollouts.length === 0 ? (
+          <p className="ui-muted">No segments.</p>
+        ) : null}
         {flag.rollouts.map((rollout, rolloutIndex) => (
-          <fieldset key={rolloutIndex}>
+          <fieldset className="fl-segment" key={rolloutIndex}>
             <legend>Segment {rolloutIndex + 1}</legend>
+            <p className="fl-chips" aria-label="Constraints">
+              {rollout.constraints.map((constraint, constraintIndex) => (
+                <Chip
+                  key={constraintIndex}
+                  label={constraint.property || "…"}
+                  value={constraint.value || "…"}
+                />
+              ))}
+            </p>
             {rollout.constraints.map((constraint, constraintIndex) => (
-              <div className="constraint" key={constraintIndex}>
-                <label>
-                  Property
-                  <input
-                    value={constraint.property}
-                    required
-                    onChange={(event) => {
-                      onChange(
-                        setConstraintField(flag, {
-                          rolloutIndex,
-                          constraintIndex,
-                          field: "property",
-                          value: event.target.value,
-                        }),
-                      );
-                    }}
-                  />
-                </label>
-                <label>
-                  Value
-                  <input
-                    value={constraint.value}
-                    required
-                    onChange={(event) => {
-                      onChange(
-                        setConstraintField(flag, {
-                          rolloutIndex,
-                          constraintIndex,
-                          field: "value",
-                          value: event.target.value,
-                        }),
-                      );
-                    }}
-                  />
-                </label>
-                <button
-                  type="button"
+              <div className="fl-constraint" key={constraintIndex}>
+                <Field label="Property">
+                  {(control) => (
+                    <input
+                      {...control}
+                      value={constraint.property}
+                      required
+                      onChange={(event) => {
+                        onChange(
+                          setConstraintField(flag, {
+                            rolloutIndex,
+                            constraintIndex,
+                            field: "property",
+                            value: event.target.value,
+                          }),
+                        );
+                      }}
+                    />
+                  )}
+                </Field>
+                <Field label="Value">
+                  {(control) => (
+                    <input
+                      {...control}
+                      value={constraint.value}
+                      required
+                      onChange={(event) => {
+                        onChange(
+                          setConstraintField(flag, {
+                            rolloutIndex,
+                            constraintIndex,
+                            field: "value",
+                            value: event.target.value,
+                          }),
+                        );
+                      }}
+                    />
+                  )}
+                </Field>
+                <IconButton
+                  icon={Trash2Icon}
+                  label={`Remove constraint ${String(constraintIndex + 1)} of segment ${String(rolloutIndex + 1)}`}
                   disabled={rollout.constraints.length === 1}
                   onClick={() => {
                     onChange(
                       removeConstraint(flag, rolloutIndex, constraintIndex),
                     );
                   }}
-                >
-                  Remove constraint
-                </button>
+                />
               </div>
             ))}
-            <label>
+            <label className="fl-check">
               <input
                 type="checkbox"
                 checked={rollout.result}
@@ -272,32 +299,38 @@ function BooleanFields({
               />
               Segment result is on
             </label>
-            <button
-              type="button"
-              onClick={() => {
-                onChange(addConstraint(flag, rolloutIndex));
-              }}
-            >
-              Add constraint
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                onChange(removeSegment(flag, rolloutIndex));
-              }}
-            >
-              Remove segment
-            </button>
+            <div className="fl-actions">
+              <Button
+                type="button"
+                onClick={() => {
+                  onChange(addConstraint(flag, rolloutIndex));
+                }}
+              >
+                <PlusIcon aria-hidden="true" />
+                Add constraint
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  onChange(removeSegment(flag, rolloutIndex));
+                }}
+              >
+                Remove segment
+              </Button>
+            </div>
           </fieldset>
         ))}
-        <button
-          type="button"
-          onClick={() => {
-            onChange(addSegment(flag));
-          }}
-        >
-          Add segment
-        </button>
+        <div className="fl-actions">
+          <Button
+            type="button"
+            onClick={() => {
+              onChange(addSegment(flag));
+            }}
+          >
+            <PlusIcon aria-hidden="true" />
+            Add segment
+          </Button>
+        </div>
       </fieldset>
     </>
   );
@@ -311,14 +344,16 @@ function VariantFields({
   onChange: (flag: VariantFlagValue) => void;
 }) {
   return (
-    <label>
-      Value
-      <input
-        value={flag.value}
-        onChange={(event) => {
-          onChange(setVariantValue(flag, event.target.value));
-        }}
-      />
-    </label>
+    <Field label="Value">
+      {(control) => (
+        <input
+          {...control}
+          value={flag.value}
+          onChange={(event) => {
+            onChange(setVariantValue(flag, event.target.value));
+          }}
+        />
+      )}
+    </Field>
   );
 }

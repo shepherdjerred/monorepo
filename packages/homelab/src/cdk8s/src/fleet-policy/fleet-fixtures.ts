@@ -78,7 +78,6 @@ export function fleetOf(
     objects: [],
     workloads: [],
     networkPolicies: [],
-    enforcementStagingPolicies: [],
     services: [],
     serviceSelectors: [],
     applicationNamespaces: new Set(),

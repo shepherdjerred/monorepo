@@ -51,8 +51,12 @@ use `Hub Digest <digests@sjer.red>` to `digests@sjer.red`. The retired
 [`prometheus.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/observability/prometheus.ts)
 mounts `ops-email.tmpl` from
 `packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alertmanager-email-template.ts`
-onto `postal-fallback`. Fallback messages therefore keep the Hub Editorial
-plain-English layout even while Hub is unreachable.
+onto `postal-fallback`. Fallback messages therefore keep the shared console
+look and plain-English layout even while Hub is unreachable. The template takes
+its colours from the ops-model email palette (itself pinned to the console-ui
+tokens), picks per-severity colour with static classes or fixed branches rather
+than template actions inside styles, and shows a status dot with a severity
+group heading per run of alerts.
 
 ## SQLite persistence boundary
 

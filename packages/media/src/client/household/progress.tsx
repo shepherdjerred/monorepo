@@ -3,7 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { readApi } from "#client/api.ts";
 import { ErrorNotice, Loading } from "#client/components.tsx";
 import { RequestInterestProgressSchema } from "#shared/household/progress.ts";
-import "./progress.css";
+import { classNames } from "#client/ui/class-names.ts";
+import styles from "./progress.module.css";
+
+const cx = classNames(styles);
 
 export function RequestInterestProgress({
   actorId,
@@ -56,7 +59,7 @@ export function RequestInterestProgress({
   };
   return (
     <details
-      className="interest-progress"
+      className={cx("progress")}
       onToggle={(event) => {
         setOpen(event.currentTarget.open);
       }}
@@ -69,7 +72,7 @@ export function RequestInterestProgress({
           {data !== undefined && (
             <>
               <p>{labels[data.status]}</p>
-              <dl className="interest-progress-counts">
+              <dl className={cx("counts")}>
                 {(
                   [
                     ["Requested", data.counts.requested],
@@ -89,11 +92,11 @@ export function RequestInterestProgress({
                 ))}
               </dl>
               {data.reason !== null && (
-                <p className="muted">
+                <p className={cx("muted")}>
                   {reasons[data.reason] ?? "This interest has been released."}
                 </p>
               )}
-              <p className="muted">
+              <p className={cx("muted")}>
                 Caught-up shows stay while you’re following them.
               </p>
             </>

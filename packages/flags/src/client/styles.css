@@ -1,323 +1,317 @@
-:root {
-  color-scheme: light dark;
-  --bg: #ffffff;
-  --sidebar: #f8f8fa;
-  --panel: #ffffff;
-  --hover: #efeff4;
-  --border: #e9e9ee;
-  --text: #27272e;
-  --muted: #666672;
-  --accent: #6a48cc;
-  --danger: #c22f3b;
-  --shadow: 0 18px 70px #17132925;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 14px;
-  line-height: 1.45;
-}
+/*
+ * What Flags needs on top of @shepherdjerred/console-ui: the two-pane body,
+ * the editor, the conflict banner and the review dialog. Every colour is a
+ * `--ui-*` token.
+ */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1b1b1f;
-    --sidebar: #17171a;
-    --panel: #222227;
-    --hover: #2c2c33;
-    --border: #303037;
-    --text: #ececf1;
-    --muted: #9a9aa7;
-    --accent: #ae96f3;
-    --danger: #ee7f87;
-    --shadow: 0 18px 70px #0007;
-  }
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-}
-
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.shell {
-  display: grid;
-  grid-template-columns: 16rem minmax(0, 1fr);
-  height: 100vh;
-  overflow: hidden;
-}
-
-.sidebar {
-  overflow: auto;
-  background: var(--sidebar);
-  border-inline-end: 1px solid var(--border);
-  padding: 1rem;
-}
-
-.brand {
-  margin: 0 0 1rem;
-  font-weight: 650;
-}
-
-.deployment-list,
-.deployment-list ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.deployment-list a,
-button {
-  min-block-size: 2.75rem;
-}
-
-.deployment-list a {
+.fl-workspace {
   display: flex;
-  align-items: center;
-  padding-inline: 0.6rem;
-  border-radius: 0.4rem;
-  color: inherit;
-  text-decoration: none;
+  flex-direction: column;
+  min-height: calc(100dvh - 18px);
 }
 
-.deployment-list a:hover,
-.deployment-list a[aria-current="page"] {
-  background: var(--hover);
+.fl-note {
+  padding: 4px 8px;
+  color: var(--ui-muted);
 }
 
-.catalog {
-  display: block;
-  padding: 0.7rem 0.6rem 0.2rem;
-  color: var(--muted);
+.fl-empty {
+  padding: 16px 20px;
+  color: var(--ui-muted);
 }
 
-.workspace {
+.fl-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem);
-  gap: 1.5rem;
-  min-block-size: 0;
-  overflow: auto;
-  padding: 1.25rem 1.5rem 2rem;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 30rem);
 }
 
-h1,
-h2,
-h3,
-h4 {
-  margin: 0 0 0.4rem;
-  font-weight: 650;
-}
-h1 {
-  font-size: 1.25rem;
-}
-.muted {
-  color: var(--muted);
-}
-.error {
-  color: var(--danger);
+.fl-list {
+  min-width: 0;
 }
 
-.table-wrapper {
-  overflow: auto;
-  max-inline-size: 100%;
-  max-block-size: min(32rem, 70vh);
-  container-type: inline-size;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
+.fl-list .ui-toolbar {
+  padding: 12px 20px;
 }
 
-table {
-  --label-2: "State";
-  --label-3: "Type";
-  border-collapse: separate;
-  border-spacing: 0;
-  inline-size: 100%;
+.fl-list input[type="search"] {
+  width: 240px;
 }
 
-caption {
-  caption-side: bottom;
-  padding: 0.5rem;
-  color: var(--muted);
-  text-align: start;
+.fl-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px 20px 24px;
+  border-left: 1px solid var(--ui-line);
 }
 
-thead {
-  position: sticky;
-  inset-block-start: 0;
-  z-index: 1;
-  background: var(--panel);
+p.fl-detail {
+  display: block;
+  padding: 16px 20px;
 }
 
-th,
-td {
-  padding: 0.55rem 0.7rem;
-  border-block-end: 1px solid var(--border);
-  text-align: start;
-  vertical-align: top;
+.fl-detail-head {
+  display: grid;
+  gap: 2px;
+}
+
+.fl-detail-title {
+  font-size: 15px;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 
-td:nth-child(2) {
-  max-inline-size: 16rem;
+.fl-back {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+  color: var(--ui-muted);
 }
 
-tbody th {
-  position: sticky;
-  inset-inline-start: 0;
-  background: var(--panel);
+.fl-back svg {
+  width: 14px;
+  height: 14px;
 }
 
-tr[data-current] {
-  background: var(--hover);
+/* The selected row stays highlighted; the whole row is the link's hit area. */
+.ui-table tbody tr {
+  position: relative;
 }
 
-.detail,
-.conflict {
-  align-self: start;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  padding: 1rem;
-  background: var(--panel);
+.ui-table tr[data-current] :is(th, td) {
+  background: var(--ui-active);
 }
 
-fieldset {
-  margin: 0 0 0.8rem;
-  border: 1px solid var(--border);
-  border-radius: 0.4rem;
-  padding: 0.7rem;
+.fl-key::after {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 
-label {
+.fl-key {
+  font-size: 12.5px;
+}
+
+.ui-table tbody th {
+  height: 36px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ui-line-soft);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ui-table tbody tr:hover th {
+  background: var(--ui-hover);
+}
+
+.fl-value {
+  display: inline-block;
+  max-width: 26ch;
+  overflow: hidden;
+  vertical-align: bottom;
+  text-overflow: ellipsis;
+}
+
+.ui-table .ui-glyph-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Editor */
+.fl-form {
   display: grid;
-  gap: 0.2rem;
-  margin-block-end: 0.5rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
 }
 
-input[type="checkbox"] {
-  inline-size: 1.1rem;
-  block-size: 1.1rem;
-}
-
-input:not([type="checkbox"]) {
-  inline-size: 100%;
-  min-block-size: 2.75rem;
-  padding-inline: 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 0.4rem;
-  background: var(--bg);
-  color: inherit;
-}
-
-button {
-  padding-inline: 0.8rem;
-  border: 1px solid var(--border);
-  border-radius: 0.4rem;
-  background: var(--panel);
-  color: inherit;
-}
-
-button[type="submit"] {
-  background: var(--accent);
-  color: #ffffff;
-  border-color: transparent;
-}
-
-.constraint {
+.fl-group,
+.fl-segment {
   display: grid;
-  gap: 0.4rem;
-  margin-block-end: 0.6rem;
-}
-
-pre {
-  overflow: auto;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
   margin: 0;
-  padding: 0.6rem;
-  border-radius: 0.4rem;
-  background: var(--sidebar);
-  white-space: pre-wrap;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
 }
 
-.compare {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.8rem;
-  margin-block-end: 0.8rem;
+.fl-segment {
+  background: var(--ui-head);
 }
 
-dialog[open] {
-  display: block;
-  inline-size: min(48rem, calc(100vw - 2rem));
-  border: 1px solid var(--border);
-  border-radius: 0.6rem;
-  background: var(--panel);
-  color: var(--text);
-  box-shadow: var(--shadow);
+.fl-group > legend,
+.fl-segment > legend {
+  padding: 0 4px;
+  color: var(--ui-muted);
+  font-size: 12px;
+  font-weight: 500;
 }
 
-dialog:modal {
-  overscroll-behavior: contain;
-}
-
-dialog::backdrop {
-  background: #17132966;
-}
-
-dialog form {
+.fl-check {
   display: flex;
-  justify-content: end;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 8px;
+}
+
+.fl-check input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--ui-accent);
+}
+
+.fl-constraint {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+}
+
+.fl-constraint .ui-field-control {
+  width: 100%;
+}
+
+.fl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.fl-chips .ui-chip {
+  margin-right: 0;
+}
+
+.fl-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Conflict banner and the compare columns it shares with the dialog */
+.fl-conflict {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--ui-sev-warning);
+  border-radius: 8px;
+  background: var(--ui-sev-warning-soft);
+}
+
+.fl-conflict-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-sev-warning-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fl-conflict-title svg {
+  width: 14px;
+  height: 14px;
+  color: var(--ui-sev-warning);
+}
+
+.fl-conflict .ui-btn {
+  justify-self: start;
+}
+
+.fl-compare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.fl-compare h3,
+.fl-compare h4 {
+  margin-bottom: 4px;
+  color: var(--ui-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.fl-compare pre {
+  max-height: 16rem;
+  margin: 0;
+  padding: 8px 10px;
+  overflow: auto;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
+  font: 12px/1.45 var(--ui-font-mono);
+  letter-spacing: 0;
+  white-space: pre;
+}
+
+/* Review dialog */
+.fl-dialog {
+  width: min(44rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 16px 18px;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--ui-ink) 22%, transparent);
+}
+
+.fl-dialog[open] {
+  display: grid;
+  gap: 12px;
+}
+
+.fl-dialog::backdrop {
+  background: color-mix(in srgb, var(--ui-ink) 35%, transparent);
+}
+
+.fl-dialog-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fl-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.fl-picker {
+  display: none;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ui-line);
 }
 
 @media (max-width: 900px) {
-  .shell {
-    grid-template-columns: 1fr;
-    height: auto;
-    overflow: visible;
+  .fl-workspace {
+    min-height: 0;
   }
-  .sidebar {
-    border-inline-end: 0;
-    border-block-end: 1px solid var(--border);
+  .fl-picker {
+    display: flex;
   }
-  .workspace {
-    grid-template-columns: 1fr;
+  .fl-body {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .workspace[data-flag] .flag-list {
+  .fl-workspace[data-flag] .fl-list {
     display: none;
   }
-  .workspace:not([data-flag]) .flag-detail {
+  .fl-workspace:not([data-flag]) .fl-detail {
     display: none;
   }
-  .compare {
-    grid-template-columns: 1fr;
+  .fl-detail {
+    border-left: 0;
   }
-}
-
-@container (width < 600px) {
-  table,
-  thead,
-  tbody,
-  tr,
-  th,
-  td {
-    display: block;
+  .fl-back {
+    display: inline-flex;
   }
-  thead {
-    display: none;
+  .fl-compare {
+    grid-template-columns: minmax(0, 1fr);
   }
-  tbody th {
-    position: sticky;
-    inset-block-start: 0;
-    z-index: 2;
-  }
-  td:nth-child(2)::before {
-    content: var(--label-2) ": ";
-  }
-  td:nth-child(3)::before {
-    content: var(--label-3) ": ";
+  .fl-list input[type="search"] {
+    width: 100%;
   }
 }

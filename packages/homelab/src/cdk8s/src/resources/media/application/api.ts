@@ -5,6 +5,7 @@ import { Size } from "cdk8s";
 import { Cpu, DeploymentStrategy, EnvValue, type ISecret } from "cdk8s-plus-31";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
+import { requireFirstPartyImage } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   MEDIA_APPLICATION_LABEL,
   MEDIA_PUBLIC_ORIGIN,
@@ -22,13 +23,7 @@ export function createMediaApi(
     plexServiceName: string;
   },
 ) {
-  if (
-    props.image !== "docker.io/shepherdjerred/media:delivery-recipe" &&
-    !/^docker\.io\/shepherdjerred\/media@sha256:[a-f0-9]{64}$/u.test(
-      props.image,
-    )
-  )
-    throw new Error("Media requires a pinned image digest");
+  requireFirstPartyImage("media", props.image);
   const securityContext = restrictedContainer(1000);
   const database = mediaDatabaseEnvironment(props.database);
   return new FirstPartyWebService(chart, "media-api-web-service", {

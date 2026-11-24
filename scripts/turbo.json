@@ -46,6 +46,15 @@
         "$TURBO_ROOT$/packages/fonts/patch-berkeley-mono.py",
         "$TURBO_ROOT$/packages/toolkit/src/lib/brim/capture/engine.ts",
         "$TURBO_ROOT$/packages/the-storm/plugin/gradle/libs.versions.toml",
+        // renovate-mirrored-pins.test.ts extracts the Minecraft plugin, itzg mirror
+        // and ffsubsync pins from these files.
+        "$TURBO_ROOT$/packages/the-storm/server/plugins.json",
+        "$TURBO_ROOT$/packages/the-storm/tests/e2e/harness/pins.ts",
+        "$TURBO_ROOT$/packages/mc-harness/src/pins.ts",
+        "$TURBO_ROOT$/packages/the-storm/plugin/dist/build.gradle.kts",
+        "$TURBO_ROOT$/packages/the-storm/plugin/settings.gradle.kts",
+        "$TURBO_ROOT$/packages/woodpecker-config-extension/src/pipeline/lanes/storm-e2e.ts",
+        "$TURBO_ROOT$/packages/media/scripts/subtitle-requirements.txt",
         // checks/service-registration.test.ts reads every place a hosted
         // service is registered.
         "$TURBO_ROOT$/package.json",
@@ -78,6 +87,13 @@
         "$TURBO_ROOT$/packages/fonts/patch-berkeley-mono.py",
         "$TURBO_ROOT$/packages/toolkit/src/lib/brim/capture/engine.ts",
         "$TURBO_ROOT$/packages/the-storm/plugin/gradle/libs.versions.toml",
+        "$TURBO_ROOT$/packages/the-storm/server/plugins.json",
+        "$TURBO_ROOT$/packages/the-storm/tests/e2e/harness/pins.ts",
+        "$TURBO_ROOT$/packages/mc-harness/src/pins.ts",
+        "$TURBO_ROOT$/packages/the-storm/plugin/dist/build.gradle.kts",
+        "$TURBO_ROOT$/packages/the-storm/plugin/settings.gradle.kts",
+        "$TURBO_ROOT$/packages/woodpecker-config-extension/src/pipeline/lanes/storm-e2e.ts",
+        "$TURBO_ROOT$/packages/media/scripts/subtitle-requirements.txt",
         "$TURBO_ROOT$/packages/discord-plays-pokemon/Dockerfile",
         "$TURBO_ROOT$/packages/streambot/Dockerfile",
         "$TURBO_ROOT$/packages/homelab/src/talos/liskov/patches/image.yaml",

@@ -15,6 +15,7 @@ import {
 import {
   HELD_PROD,
   IDLE_FAILED,
+  INTERRUPTED,
   RECOVERY_PROD,
   seedHeldRetry,
   seedRecovery,
@@ -40,6 +41,7 @@ export const MODEL_ENVIRONMENTS = [
   RECOVERY_PROD,
   HELD_PROD,
   IDLE_FAILED,
+  INTERRUPTED,
 ];
 
 type Document = Awaited<ReturnType<typeof catalogDocument>>;

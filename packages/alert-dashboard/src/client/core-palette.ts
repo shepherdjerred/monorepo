@@ -58,7 +58,7 @@ async function loadFacets(): Promise<OpsFacets | null> {
 /** The core module's palette commands: the apps and tools, and the theme. */
 export const coreCommands: readonly ModuleCommand[] = [
   ...[...APPS, ...TOOLS].map((entry) => ({
-    id: `open:${entry.label}`,
+    id: `open:${entry.id}`,
     label: `Open ${entry.label}`,
     icon: entry.icon,
     keywords: ["launch", "external"],

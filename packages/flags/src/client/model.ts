@@ -266,3 +266,39 @@ export function removeConstraint(
     ),
   };
 }
+
+/** Flags whose key contains `query`, ignoring case and surrounding spaces. */
+export function filterFlags<T extends { readonly key: string }>(
+  flags: readonly T[],
+  query: string,
+): T[] {
+  const needle = query.trim().toLowerCase();
+  return needle.length === 0
+    ? [...flags]
+    : flags.filter((flag) => flag.key.toLowerCase().includes(needle));
+}
+
+/** The `?q=` suffix that carries a search through a flag link; empty for no search. */
+export function searchSuffix(query: string): string {
+  const needle = query.trim();
+  return needle.length === 0 ? "" : `?q=${encodeURIComponent(needle)}`;
+}
+
+/** The search text a page URL carries, e.g. `?q=dares`. */
+export function parseSearch(search: string): string {
+  return new URLSearchParams(search).get("q") ?? "";
+}
+
+export type FlagState = {
+  readonly kind: "on" | "off" | "targeted" | "variant";
+  readonly label: string;
+};
+
+/** The list state of a flag, split into the kind that picks its glyph and the word shown. */
+export function flagState(flag: FlagValue): FlagState {
+  if (flag.type === "variant")
+    return { kind: "variant", label: listState(flag) };
+  const label = listState(flag);
+  const kind = label === "On" ? "on" : label === "Off" ? "off" : "targeted";
+  return { kind, label };
+}

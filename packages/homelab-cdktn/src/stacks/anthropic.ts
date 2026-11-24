@@ -23,7 +23,7 @@ export class AnthropicStack extends HomelabStack {
   constructor(scope: Construct) {
     super(scope, "anthropic", {
       requiredVersion: ">= 1.9.0",
-      providerConstraints: { anthropic: "1.60.0" },
+      providerConstraints: { anthropic: "1.95.1" },
     });
     encryptStateAndPlans(this, {
       description:

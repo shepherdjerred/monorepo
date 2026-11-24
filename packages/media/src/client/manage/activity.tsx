@@ -11,6 +11,10 @@ import {
   PageTitle,
   Status,
 } from "#client/components.tsx";
+import { classNames } from "#client/ui/class-names.ts";
+import styles from "./activity.module.css";
+
+const cx = classNames(styles);
 
 export function ActivityPage() {
   const activity = useQuery({
@@ -30,11 +34,11 @@ export function ActivityPage() {
           New requests, upgrades, and library changes will appear here.
         </EmptyState>
       )}
-      <div className="timeline">
+      <div className={cx("timeline")}>
         {activity.data?.map((operation) => (
-          <article className="timeline-item" key={operation.id}>
-            <span className="timeline-dot" aria-hidden="true" />
-            <div className="item-main">
+          <article className={cx("timelineItem")} key={operation.id}>
+            <span className={cx("timelineDot")} aria-hidden="true" />
+            <div className={cx("itemMain")}>
               <h2>{humanize(operation.kind)}</h2>
               <p>{dateLabel(operation.updatedAt)}</p>
               {operation.mediaId !== null && (

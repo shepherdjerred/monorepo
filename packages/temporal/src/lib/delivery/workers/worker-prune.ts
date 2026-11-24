@@ -13,6 +13,10 @@ import { ArgoResourceSchema } from "#lib/delivery/argocd-proof.ts";
 import { requireRenderedSource } from "#lib/delivery/model/application-proof.ts";
 import type { RenderedApplication } from "#lib/delivery/model/application.ts";
 import { deliveryWorkerPool, renderedWorkerPool } from "./worker-pool.ts";
+import {
+  assertRetiredEnforcementStagingPolicy,
+  enforcementStagingNamespace,
+} from "#lib/delivery/network-policy/enforcement-staging-prune.ts";
 
 /** The objects the worker chart renders for one retained host. */
 const HOST_KINDS = new Set([
@@ -97,6 +101,31 @@ function assertRetiredHostObject(
     );
 }
 
+function partitionObsoleteWorkerResources(
+  obsolete: readonly ManagedResource[],
+  namespace: string,
+  retired: ReadonlyMap<string, WorkerVersion>,
+  desired: ReadonlySet<string>,
+): {
+  proven: { resource: ManagedResource; worker: WorkerVersion }[];
+  staging: (ManagedResource & { namespace: string })[];
+} | null {
+  const proven: { resource: ManagedResource; worker: WorkerVersion }[] = [];
+  const staging: (ManagedResource & { namespace: string })[] = [];
+  for (const resource of obsolete) {
+    const stagingNs = enforcementStagingNamespace(resource, namespace);
+    if (stagingNs !== null) {
+      staging.push({ ...resource, namespace: stagingNs });
+      continue;
+    }
+    const worker = retiredHost(resource, namespace, retired);
+    // Another obsolete object stays prune-pending, as it did before.
+    if (worker === undefined || desired.has(resource.name)) return null;
+    proven.push({ resource, worker });
+  }
+  return proven.length === 0 ? null : { proven, staging };
+}
+
 /**
  * Whether the owned sync of a worker Application prunes. The rendered pool
  * leaves out every host an earlier retirement scaled to zero, so ArgoCD
@@ -136,18 +165,18 @@ export async function workerSyncPrunes(
     )
   )
     throw new Error("Worker host pruning requires a settled Application");
-  const desired = new Set(
-    z
-      .object({ manifests: z.array(z.string()) })
-      .parse(
-        await read(
-          `${app}/manifests?revision=${encodeURIComponent(rendered.revision)}`,
-        ),
-      )
-      .manifests.map(
-        (manifest) =>
-          ArgoResourceSchema.parse(JSON.parse(manifest)).metadata.name,
+  const desiredManifests = z
+    .object({ manifests: z.array(z.string()) })
+    .parse(
+      await read(
+        `${app}/manifests?revision=${encodeURIComponent(rendered.revision)}`,
       ),
+    )
+    .manifests.map((manifest) =>
+      ArgoResourceSchema.parse(JSON.parse(manifest)),
+    );
+  const desired = new Set(
+    desiredManifests.map((manifest) => manifest.metadata.name),
   );
   const obsolete = ManagedResourcesSchema.parse(
     await read(`${app}/managed-resources`),
@@ -156,16 +185,25 @@ export async function workerSyncPrunes(
       parseObject(resource.liveState, resource, "liveState") !== null &&
       parseObject(resource.targetState, resource, "targetState") === null,
   );
-  if (obsolete.length === 0) return false;
-  const proven: { resource: ManagedResource; worker: WorkerVersion }[] = [];
-  for (const resource of obsolete) {
-    const worker = retiredHost(resource, host.kubernetesNamespace, retired);
-    // Another obsolete object stays prune-pending, as it did before.
-    if (worker === undefined || desired.has(resource.name)) return false;
-    proven.push({ resource, worker });
-  }
+  const partitioned = partitionObsoleteWorkerResources(
+    obsolete,
+    host.kubernetesNamespace,
+    retired,
+    desired,
+  );
+  if (partitioned === null) return false;
   const seen = new Set<string>();
-  for (const { resource, worker } of proven) {
+  for (const resource of partitioned.staging) {
+    await assertRetiredEnforcementStagingPolicy({
+      application: rendered.name,
+      resource,
+      desired: desiredManifests,
+      defaultNamespace: host.kubernetesNamespace,
+      read,
+      seen,
+    });
+  }
+  for (const { resource, worker } of partitioned.proven) {
     const cached = Native.parse(
       parseObject(resource.liveState, resource, "liveState"),
     );

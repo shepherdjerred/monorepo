@@ -5,6 +5,7 @@ import { AVAILABILITY_COPY } from "#client/presentation/availability.ts";
 import { classNames } from "#client/ui/class-names.ts";
 import { Poster } from "#client/ui/poster.tsx";
 import { StatePill } from "#client/ui/poster-card.tsx";
+import { useOpensTitle } from "#client/ui/motion/title-transition.ts";
 import styles from "./calendar.module.css";
 import { releaseDetail, releaseShortDetail, releaseTitle } from "./events.ts";
 
@@ -17,6 +18,11 @@ function titleAddress(event: CalendarEvent): string {
 
 /** One release as a row of a list: poster, title, what it is, where it stands. */
 function ReleaseRow({ event }: { event: CalendarEvent }) {
+  const opens = useOpensTitle(
+    titleAddress(event),
+    { path: event.artwork.posterPath, title: releaseTitle(event) },
+    `row ${event.id}`,
+  );
   return (
     <li className={cx("release")}>
       <div className={cx("releasePoster")}>
@@ -24,10 +30,15 @@ function ReleaseRow({ event }: { event: CalendarEvent }) {
           path={event.artwork.posterPath}
           title={releaseTitle(event)}
           sizes="44px"
+          carries={opens.carries}
         />
       </div>
       <div className={cx("releaseText")}>
-        <Link className={cx("releaseLink")} to={titleAddress(event)}>
+        <Link
+          className={cx("releaseLink")}
+          to={titleAddress(event)}
+          {...opens.link}
+        >
           {releaseTitle(event)}
         </Link>
         <p className={cx("releaseDetail")}>{releaseDetail(event)}</p>
@@ -70,10 +81,16 @@ export function SquareRelease({
   reachable: boolean;
 }) {
   const state = AVAILABILITY_COPY[event.availability];
+  const opens = useOpensTitle(
+    titleAddress(event),
+    { path: event.artwork.posterPath, title: releaseTitle(event) },
+    `square ${event.id}`,
+  );
   return (
     <Link
       className={cx("square")}
       to={titleAddress(event)}
+      {...opens.link}
       tabIndex={reachable ? 0 : -1}
     >
       <div className={cx("squarePoster")}>
@@ -81,6 +98,7 @@ export function SquareRelease({
           path={event.artwork.posterPath}
           title={releaseTitle(event)}
           sizes="26px"
+          carries={opens.carries}
         />
       </div>
       <div className={cx("squareText")}>

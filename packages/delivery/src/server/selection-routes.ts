@@ -10,6 +10,7 @@ import {
 import { RecoveryIntentRequestSchema } from "#shared/model/route-contract.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
+import type { createRecoveryInspector } from "#infrastructure/recovery.ts";
 import { TargetRemovedSchema } from "#infrastructure/execution/removal.ts";
 import { environment } from "#infrastructure/delivery-data.ts";
 import { rollbackCandidates } from "#infrastructure/selection/candidates.ts";
@@ -74,6 +75,7 @@ export function registerSelectionRoutes(
   app: App,
   delivery: Delivery,
   writesEnabled: () => Promise<boolean>,
+  inspectRecovery?: ReturnType<typeof createRecoveryInspector>,
 ) {
   registerMonitorRoutes(app, delivery, writesEnabled);
   app.get("/api/v1/environments/:id/selection", async (c) => {
@@ -110,6 +112,7 @@ export function registerSelectionRoutes(
         c.req.param("id"),
         RecoveryIntentRequestSchema.parse(await c.req.json()),
         c.get("principal"),
+        inspectRecovery,
       ),
       201,
     ),

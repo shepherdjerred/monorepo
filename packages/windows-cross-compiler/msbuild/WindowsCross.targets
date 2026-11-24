@@ -22,6 +22,8 @@
     <_WindowsCrossSdkToolsDir>$(WindowsSDKBuildToolsBinVersionedFolder.Replace('\', '/'))/x64/</_WindowsCrossSdkToolsDir>
     <MakePriExeFullPath>$(_WindowsCrossShimDir)makepri.exe</MakePriExeFullPath>
     <MakeAppxExeFullPath>$(_WindowsCrossShimDir)makeappx.exe</MakeAppxExeFullPath>
+    <!-- Self-contained Windows App SDK builds merge the app manifest with mt.exe. -->
+    <ManifestTool>$(_WindowsCrossShimDir)mt.exe</ManifestTool>
     <!--
       Map packaged resources from makepri dump output, the path the MSIX tooling
       uses where the resource indexer API is unavailable, instead of loading
@@ -44,6 +46,11 @@
       Tool="$(_WindowsCrossXamlCompilerExe)" />
     <_WindowsCrossShim Include="$(MakePriExeFullPath)" Condition="'$(_WindowsCrossSdkToolsDir)' != ''" Tool="$(_WindowsCrossSdkToolsDir)makepri.exe" />
     <_WindowsCrossShim Include="$(MakeAppxExeFullPath)" Condition="'$(_WindowsCrossSdkToolsDir)' != ''" Tool="$(_WindowsCrossSdkToolsDir)makeappx.exe" />
+    <_WindowsCrossShim
+      Include="$(ManifestTool)"
+      Condition="'$(_WindowsCrossSdkToolsDir)' != ''"
+      Mode="--windows-paths"
+      Tool="$(_WindowsCrossSdkToolsDir)mt.exe" />
   </ItemGroup>
 
   <!-- The SDK's signtool.exe needs the x64 MFC runtime, which Wine does not provide. -->
@@ -63,4 +70,110 @@
 
   <!-- MrmSupport.dll stays unused; skip the lookup that requires an installed Windows SDK. -->
   <Target Name="_GetMrmSupportLibraryPath" />
+
+  <!--
+    Unpackaged builds copy the files a referenced PRI lists, such as
+    Microsoft.UI.Xaml's assets. A PRI records names case-insensitively
+    (NoiseAsset_256X256_PNG.png for NoiseAsset_256x256_PNG.png), so resolve
+    each listed path against the case-sensitive Linux file system.
+  -->
+  <UsingTask
+    TaskName="_WindowsCrossResolvePathCase"
+    TaskFactory="RoslynCodeTaskFactory"
+    AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <Resolved ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        var resolved = new List<ITaskItem>();
+        foreach (var file in Files)
+        {
+          var requested = file.GetMetadata("FullPath");
+          var path = Path.GetPathRoot(requested);
+          foreach (var segment in requested.Substring(path.Length).Split(new[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries))
+          {
+            var exact = Path.Combine(path, segment);
+            if (File.Exists(exact) || Directory.Exists(exact))
+            {
+              path = exact;
+              continue;
+            }
+            var matches = Directory.Exists(path)
+              ? Directory.GetFileSystemEntries(path).Where(entry => string.Equals(Path.GetFileName(entry), segment, StringComparison.OrdinalIgnoreCase)).ToArray()
+              : Array.Empty<string>();
+            if (matches.Length != 1)
+            {
+              Log.LogError("PRI payload file '{0}' matches {1} paths ignoring case.", requested, matches.Length);
+              path = null;
+              break;
+            }
+            path = matches[0];
+          }
+          if (path == null) continue;
+          var item = new TaskItem(path);
+          file.CopyMetadataTo(item);
+          resolved.Add(item);
+        }
+        Resolved = resolved.ToArray();
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <!--
+    makepri reads an absolute Linux path in a resfiles list as relative to the
+    project directory, so list referenced PRIs (Microsoft.UI.Xaml's, in
+    self-contained builds) by their Wine Z: drive paths.
+  -->
+  <UsingTask
+    TaskName="_WindowsCrossResfilesWindowsPaths"
+    TaskFactory="RoslynCodeTaskFactory"
+    AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.Text" />
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        foreach (var file in Files)
+        {
+          var path = file.GetMetadata("FullPath");
+          if (!File.Exists(path)) continue;
+          var bytes = File.ReadAllBytes(path);
+          // Keep the list's encoding and byte order mark as written.
+          Encoding encoding = bytes.Length >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE
+            ? new UnicodeEncoding(false, true)
+            : new UTF8Encoding(bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF);
+          var text = encoding.GetString(bytes, encoding.GetPreamble().Length, bytes.Length - encoding.GetPreamble().Length);
+          var windows = Regex.Replace(text, @"(?m)^/[^\r\n]*", match => "Z:" + match.Value.Replace('/', '\\'));
+          if (windows != text) File.WriteAllText(path, windows, encoding);
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target
+    Name="_WindowsCrossPriResfilesWindowsPaths"
+    AfterTargets="_GenerateProjectPriConfigurationFiles"
+    Condition="'$(_PriResfilesPath)' != ''">
+    <_WindowsCrossResfilesWindowsPaths Files="$(_PriResfilesPath)" />
+  </Target>
+
+  <Target
+    Name="_WindowsCrossResolvePriPayloadCase"
+    AfterTargets="AddPriPayloadFilesToCopyToOutputDirectoryItems"
+    Condition="'@(_ExtraPriPayloadFiles)' != ''">
+    <_WindowsCrossResolvePathCase Files="@(_ExtraPriPayloadFiles)">
+      <Output TaskParameter="Resolved" ItemName="_WindowsCrossPriPayload" />
+    </_WindowsCrossResolvePathCase>
+    <ItemGroup>
+      <_AllChildProjectItemsWithTargetPath Remove="@(_ExtraPriPayloadFiles)" />
+      <_AllChildProjectItemsWithTargetPath Include="@(_WindowsCrossPriPayload)" KeepMetadata="TargetPath">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </_AllChildProjectItemsWithTargetPath>
+    </ItemGroup>
+  </Target>
 </Project>

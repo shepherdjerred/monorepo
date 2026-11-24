@@ -4,12 +4,17 @@ import {
   DeploymentPageSchema,
   EnvironmentDetailSchema,
 } from "#shared/hub/hub-contract.ts";
-import { api, expectNoHorizontalOverflow } from "./helpers.ts";
+import { api, expectNoHorizontalOverflow, openOverview } from "./helpers.ts";
 import {
   APPLIED_REQUEST,
   HELD_PROD,
   IDLE_FAILED,
   IDLE_FAILED_REQUEST,
+  INTERRUPTED,
+  INTERRUPTED_REQUEST,
+  APPLY_SAFETY_TRACE,
+  TRACED_REQUEST,
+  READ_BACK_APPLICATION,
   RECOVERY_PROD,
   REFUSAL,
   REFUSED_REQUEST,
@@ -39,8 +44,7 @@ async function deploymentId(
 test("every page states what recovery read back, never the executor's stale words", async ({
   page,
 }) => {
-  await page.goto("/");
-  const attention = page.getByRole("region", { name: "Needs attention" });
+  const attention = await openOverview(page);
   const failing = attention
     .getByRole("listitem")
     .filter({ hasText: "prod is failing repeatedly" });
@@ -85,11 +89,10 @@ test("a release recovery read back as applied says so, and that Delivery never a
     /failed · applied, not accepted$/u,
   );
   const why = main.getByRole("region", { name: "Why it failed" });
-  // The step it ended on leads; the readback follows as what recovery found.
-  await expect(why).toContainText(
-    "was still running when the deployment ended; recovery has since read its outcome back",
+  // The step it ended on leads; what recovery found is folded into its sentence.
+  await expect(why.locator("p").first()).toContainText(
+    "Step step-sync was still running when the deployment ended; recovery intent 1 has since read the outcome back and found streambot ended in phase Succeeded, which does not say why it failed.",
   );
-  await expect(why).toContainText("it ended in phase Succeeded.");
   await expect(why).toContainText(
     "but Delivery never accepted r4: r3 is still accepted in streambot/prod",
   );
@@ -158,6 +161,110 @@ test("a failure with a newer request queued offers no retry, says why, and quote
   await expect(
     main.getByRole("button", { name: "Retry as a new deployment" }),
   ).toHaveCount(0);
+  await expectNoHorizontalOverflow(page);
+});
+
+// Golink canary is tsmc's shape: two steps still running when the deployment
+// ended, and a settled recovery that read two Applications back, one naming a
+// phase and one naming none. A readback is never why a deployment failed.
+const INTERRUPTED_CAUSE =
+  "Step step-apply-safety was still running when the deployment ended";
+
+test("every page leads a deployment that ended mid-step with that step, not with what recovery read back", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const attention = page.getByRole("region", { name: "Needs attention" });
+  const failing = attention
+    .getByRole("listitem")
+    .filter({ hasText: "Golink canary is failing repeatedly" });
+  await expect(failing).toContainText(
+    `The last 2 deployments failed, the newest with: ${INTERRUPTED_CAUSE}.`,
+  );
+  await expect(failing).not.toContainText("ended in phase");
+  await expect(failing).not.toContainText("Recovery intent");
+
+  await page.goto("/pipelines/golink");
+  const canary = page.getByRole("region", { name: "canary", exact: true });
+  await expect(canary).toContainText(INTERRUPTED_CAUSE);
+  await expect(canary).not.toContainText("Recovery intent 1 read");
+
+  await page.goto("/activity?action=deployment.failed");
+  const row = page
+    .getByRole("main")
+    .locator("ol.activity > li")
+    .filter({ hasText: "Golink canary" })
+    .first();
+  await expect(row).toContainText(INTERRUPTED_CAUSE);
+  await expect(row).not.toContainText("ended in phase");
+});
+
+test("a failure recorded as a runtime error shows its sentence, and the raw text only in a collapsed disclosure", async ({
+  page,
+}) => {
+  await page.goto(
+    `/deployments/${await deploymentId(page, TRACED_REQUEST, INTERRUPTED)}`,
+  );
+  const main = page.getByRole("main");
+  // The failure joins the parts as one sentence; the Evidence entry keeps
+  // the recorded sentence boundaries. Neither has stray punctuation.
+  const sentence =
+    "Apply-safety refused golink at 2.0.0-1018413 before any sync; restored the source Argo last synced (history 44); Refusing golink sync because the read-only apply-safety preflight found: acid.zalan.do/postgresql golink/golink-postgresql changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4";
+  const evidenceSentence =
+    "Apply-safety refused golink at 2.0.0-1018413 before any sync; restored the source Argo last synced (history 44). Refusing golink sync because the read-only apply-safety preflight found: acid.zalan.do/postgresql golink/golink-postgresql changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4";
+  const why = main.getByRole("region", { name: "Why it failed" });
+  await expect(why).toContainText(`failed: ${sentence}`, {
+    useInnerText: true,
+  });
+  // Nothing a person can see carries a source excerpt, a frame or a file path.
+  for (const fragment of [
+    "21895 |",
+    "21896 |",
+    "delivery-argocd.js",
+    "assertApplySafe",
+    "ManagedResourcesSchema",
+  ])
+    await expect(main).not.toContainText(fragment, { useInnerText: true });
+  // The Evidence entry opens on the sentence too.
+  const steps = main.getByRole("region", { name: "Steps" });
+  await expect(steps).toContainText(evidenceSentence, {
+    useInnerText: true,
+  });
+  for (const stray of [".;", "found;", "; -"])
+    await expect(main).not.toContainText(stray, { useInnerText: true });
+  // The raw text is in a disclosure that starts collapsed.
+  const raw = main
+    .locator("details.disclosure")
+    .filter({ hasText: "Full error text" });
+  await expect(raw.first()).not.toHaveAttribute("open", "");
+  await expect(raw.first().locator("pre").first()).toBeHidden();
+  await expect(raw.first().locator("pre").first()).toHaveText(
+    APPLY_SAFETY_TRACE,
+  );
+  await raw.first().locator("summary").click();
+  await expect(raw.first().locator("pre").first()).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
+test("the deployment page folds the readback into the step's sentence and names what it covers", async ({
+  page,
+}) => {
+  await page.goto(
+    `/deployments/${await deploymentId(page, INTERRUPTED_REQUEST, INTERRUPTED)}`,
+  );
+  const main = page.getByRole("main");
+  const why = main.getByRole("region", { name: "Why it failed" });
+  // The first sentence is the step; recovery's finding follows in the same one.
+  await expect(why.locator("p").first()).toContainText(
+    `${INTERRUPTED_CAUSE}; recovery intent 1 has since read the outcome back and found ${READ_BACK_APPLICATION} ended in phase Succeeded, which does not say why it failed.`,
+  );
+  await expect(why).not.toContainText("Recovery intent 1 read");
+  // A step the readback does not answer for says what it did read.
+  const steps = main.getByRole("region", { name: "Steps" });
+  await expect(steps).toContainText(
+    `interrupted · recovery intent 1 read back ${READ_BACK_APPLICATION}, golink-canary, not this step`,
+  );
+  await expect(steps).not.toContainText("settled by recovery intent");
   await expectNoHorizontalOverflow(page);
 });
 

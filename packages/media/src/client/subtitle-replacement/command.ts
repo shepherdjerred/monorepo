@@ -5,7 +5,7 @@ import type {
   ReconcileSubtitleReplacementSchema,
 } from "#shared/subtitle-replacement.ts";
 import { CommandResultSchema } from "#shared/api.ts";
-import { ApiError, writeApi } from "#client/api.ts";
+import { writeApi, writeOutcome } from "#client/api.ts";
 import { commandNeedsReview } from "#client/target-controls/errors.tsx";
 
 type Submission =
@@ -38,12 +38,7 @@ export function useSubtitleReplacementCommand(
     onSuccess: committed,
   });
   const unknown =
-    mutation.error !== null &&
-    !(
-      mutation.error instanceof ApiError &&
-      mutation.error.status >= 400 &&
-      mutation.error.status < 500
-    );
+    mutation.error !== null && writeOutcome(mutation.error) === "unknown";
   return {
     ...mutation,
     unknown,

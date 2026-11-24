@@ -1,13 +1,52 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
+import { z } from "zod";
 import {
   ImportedPersonalClaimsSchema,
   type ImportedPersonalClaim,
 } from "#shared/personal-migration/contract.ts";
-import { readApi } from "#client/api.ts";
+import { readApi, sessionBoundary, writeApi } from "#client/api.ts";
+
+const AttachImportedRequestsSchema = z.object({
+  attached: z.int().nonnegative(),
+});
+
+function useAttachImportedRequests(viewerUserId: string) {
+  const client = useQueryClient();
+  useQuery({
+    queryKey: ["attach-imported-requests", viewerUserId],
+    // Only mounting My requests should recheck whether attachment is ready.
+    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
+    queryFn: async () => {
+      const session = sessionBoundary.capture(viewerUserId);
+      const result = await writeApi({
+        actorId: viewerUserId,
+        path: "/requests/imported/attach",
+        body: {},
+        schema: AttachImportedRequestsSchema,
+      });
+      if (result.attached === 0) return result;
+      const reads = [
+        { queryKey: ["requests"] },
+        { queryKey: ["movie-requests", 4, viewerUserId] },
+        { queryKey: ["request-interests", viewerUserId] },
+        { queryKey: ["imported-requests", viewerUserId] },
+      ];
+      // An initial read may have started before attachment committed.
+      await Promise.all(reads.map((read) => client.cancelQueries(read)));
+      session.assertCurrent();
+      await Promise.all(reads.map((read) => client.invalidateQueries(read)));
+      return result;
+    },
+  });
+}
 
 /** Share one request-list query rather than fetching separately for every row. */
 export function useImportedRequests(viewerUserId: string) {
+  useAttachImportedRequests(viewerUserId);
   return useQuery({
     queryKey: ["imported-requests", viewerUserId],
     queryFn: () => readApi("/requests/imported", ImportedPersonalClaimsSchema),

@@ -546,6 +546,42 @@ describe("mergeByService", () => {
     expect(merged?.verdict).toBe("failed");
   });
 
+  it("names the newest release's own outcome when older builds' states are equally urgent", () => {
+    // r118 failed and r120 succeeded; both are superseded by r121 in prod, so
+    // the states tie. The r120 row must carry r120's outcome, not r118's.
+    const withRelease = (
+      revision: number,
+      status: "failed" | "succeeded",
+    ): CommitService => {
+      const base = entry(revision, [["prod", "superseded"]]);
+      return {
+        ...base,
+        environments: base.environments.map((row) => ({
+          ...row,
+          release: { revision, status, supersededBy: 121 },
+        })),
+      };
+    };
+    for (const order of [
+      [withRelease(118, "failed"), withRelease(120, "succeeded")],
+      [withRelease(120, "succeeded"), withRelease(118, "failed")],
+    ]) {
+      const [merged] = mergeByService(order);
+      expect(merged?.versionSet?.revision).toBe(120);
+      expect(merged?.environments[0]?.release).toEqual({
+        revision: 120,
+        status: "succeeded",
+        supersededBy: 121,
+      });
+    }
+    // A newest build with no release metadata leaves none, never an older one's.
+    const [bare] = mergeByService([
+      withRelease(118, "failed"),
+      entry(120, [["prod", "superseded"]]),
+    ]);
+    expect(bare?.environments[0]?.release).toBeUndefined();
+  });
+
   it("is not live where an older build's release is and the newest is not", () => {
     const [merged] = mergeByService([
       entry(118, [["prod", "live"]]),

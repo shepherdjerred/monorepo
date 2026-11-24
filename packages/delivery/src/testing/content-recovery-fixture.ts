@@ -1,4 +1,5 @@
 import type { Delivery } from "#infrastructure/delivery.ts";
+import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
 import { registerTestService } from "./services.ts";
 import {
   SERVICE_CATALOG,
@@ -228,4 +229,51 @@ export function contentObservation(
       })),
     ),
   };
+}
+
+/**
+ * A failed, recovery-required deployment of `recipe` that holds its
+ * environment, as a step leaves it after an ambiguous or refused effect.
+ */
+export async function failedHeldDeployment(
+  database: Delivery["database"],
+  fixture: {
+    environment: { id: string };
+    versionSet: { id: string };
+  },
+  id: string,
+  recipe: unknown,
+) {
+  const env = await database.environment.findUniqueOrThrow({
+    where: { id: fixture.environment.id },
+  });
+  await database.pipeline.create({
+    data: {
+      id: `${id}/recipe`,
+      definition: RecipeDefinitionSchema.parse(recipe),
+    },
+  });
+  await database.deployment.create({
+    data: {
+      id,
+      requestId: id,
+      environmentId: env.id,
+      serviceId: env.serviceId,
+      versionSetRevisionId: fixture.versionSet.id,
+      pipelineRevisionId: `${id}/recipe`,
+      configurationId: env.declaredConfigurationId,
+      catalogRevision: "test",
+      expectedGeneration: env.generation,
+      kind: "deploy",
+      status: "failed",
+      recoveryRequired: true,
+      requestedBy: testPublisher.id,
+      finishedAt: new Date(),
+    },
+  });
+  await database.environment.update({
+    where: { id: env.id },
+    data: { activeDeploymentId: id },
+  });
+  return env;
 }

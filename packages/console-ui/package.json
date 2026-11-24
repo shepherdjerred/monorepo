@@ -1,0 +1,46 @@
+{
+  "name": "@shepherdjerred/console-ui",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "bun build ./src/index.ts ./src/styles/index.css --target browser --outdir dist --external react --external react-dom --external react/jsx-runtime",
+    "generate": "bun scripts/generate-tokens.ts",
+    "lint": "bunx --no-install eslint --cache .",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles/index.css": "./src/styles/index.css",
+    "./tokens.json": "./src/tokens.json",
+    "./*": "./src/*"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.6.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.14.0"
+  },
+  "peerDependencies": {
+    "react": "19.3.1"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@tsconfig/node-lts": "^24.0.1",
+    "@tsconfig/recommended": "^1.0.13",
+    "@tsconfig/strictest": "^2.0.8",
+    "@types/bun": "1.4.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@vitest/coverage-istanbul": "5.0.5",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "^6.0.3",
+    "vitest": "5.0.5"
+  }
+}

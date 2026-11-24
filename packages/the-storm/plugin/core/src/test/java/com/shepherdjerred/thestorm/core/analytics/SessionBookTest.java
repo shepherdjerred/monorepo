@@ -5,10 +5,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 final class SessionBookTest {
+  private static long millis(AnalyticsEvent event, String key) {
+    return (Long) Objects.requireNonNull(event.properties().get(key));
+  }
+
   static final class Time implements InstantSource {
     private Instant now = Instant.parse("2026-10-10T06:59:30Z");
 
@@ -50,18 +55,14 @@ final class SessionBookTest {
     assertThat(intervals.getFirst().properties())
         .containsEntry("connected_ms", 30000L)
         .containsEntry("interval_end", "2026-10-10T07:00:00Z");
-    assertThat(
-            intervals.stream()
-                .mapToLong(event -> (Long) event.properties().get("connected_ms"))
-                .sum())
+    assertThat(intervals.stream().mapToLong(event -> millis(event, "connected_ms")).sum())
         .isEqualTo(90000);
-    assertThat(
-            intervals.stream().mapToLong(event -> (Long) event.properties().get("active_ms")).sum())
+    assertThat(intervals.stream().mapToLong(event -> millis(event, "active_ms")).sum())
         .isEqualTo(55000);
     assertThat(
             intervals.stream()
                 .filter(event -> "arena".equals(event.properties().get("mode")))
-                .mapToLong(event -> (Long) event.properties().get("connected_ms"))
+                .mapToLong(event -> millis(event, "connected_ms"))
                 .sum())
         .isEqualTo(30000);
     assertThat(events.getLast().properties())

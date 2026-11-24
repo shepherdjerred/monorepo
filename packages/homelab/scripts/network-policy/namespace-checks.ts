@@ -1,13 +1,16 @@
 /** Pure evaluation of one namespace's live facts into a pass/fail report. */
 import { z } from "zod";
 import {
+  CI_STEP_POD_LABEL,
+  WOODPECKER_TASK_LABEL,
+} from "#cdk8s/src/resources/woodpecker/pod-labels.ts";
+import {
   expectationOf,
   type HttpExpectation,
   type Probe,
   type UrlCheck,
 } from "./namespace-urls.ts";
-import { effectiveStageLabel, type BreakGlassState } from "./break-glass.ts";
-import type { Stage } from "./staging-policy.ts";
+import type { BreakGlassState } from "./break-glass.ts";
 
 /**
  * - `pass` / `fail`: the check ran.
@@ -17,7 +20,7 @@ import type { Stage } from "./staging-policy.ts";
 export type CheckStatus = "pass" | "fail" | "not-checked" | "info";
 
 export const CHECK_IDS = [
-  "stage",
+  "break-glass",
   "pods",
   "services",
   "urls",
@@ -35,9 +38,7 @@ export type CheckResult = {
 
 export type NamespaceReport = {
   namespace: string;
-  /** The stage of the staging policy. */
-  stage: Stage;
-  /** A break-glass policy overrides the stage while it exists. */
+  /** A break-glass policy opens the namespace while it exists. */
   breakGlass: BreakGlassState;
   ok: boolean;
   checks: CheckResult[];
@@ -65,30 +66,29 @@ function problems(items: readonly Item[]): string[] {
     .map((item) => item.detail);
 }
 
-export type StageExpectation = {
-  /** Fail when the staging policy's stage differs. */
-  expected: "open" | "enforced" | undefined;
-  /** Without this, a break-glass policy fails the check so it cannot hide. */
-  allowBreakGlass: boolean;
+const BREAK_GLASS_SUMMARIES: Record<BreakGlassState, string> = {
+  none: "no break-glass policy",
+  open: "open (break-glass)",
+  unrecognized: "unrecognized break-glass policy",
 };
 
-export function evaluateStage(
+/**
+ * Fails while any break-glass candidate exists, unless `allowBreakGlass`, so
+ * a forgotten break-glass cannot hide behind a passing gate.
+ */
+export function evaluateBreakGlass(
   namespace: string,
-  stage: Stage,
   breakGlass: BreakGlassState,
-  { expected, allowBreakGlass }: StageExpectation,
+  allowBreakGlass: boolean,
 ): CheckResult {
-  const unexpected = expected !== undefined && stage !== expected;
   const forgotten = breakGlass !== "none" && !allowBreakGlass;
-  const staging = breakGlass === "open" ? `; staging policy: ${stage}` : "";
   return {
-    check: "stage",
-    status:
-      stage === "unrecognized" || unexpected || forgotten ? "fail" : "info",
-    summary: `${effectiveStageLabel(stage, breakGlass)}${staging}${unexpected ? `, expected ${expected}` : ""}`,
+    check: "break-glass",
+    status: forgotten ? "fail" : breakGlass === "none" ? "pass" : "info",
+    summary: BREAK_GLASS_SUMMARIES[breakGlass],
     details: forgotten
       ? [
-          `a break-glass policy is live: reconcile the stage map, then run netpol:open ${namespace} --close --apply (or pass --allow-break-glass)`,
+          `a break-glass policy is live: fix the policy in source, then run netpol:open ${namespace} --close --apply (or pass --allow-break-glass)`,
         ]
       : [],
   };
@@ -115,6 +115,7 @@ export const PodSchema = z.object({
   metadata: z.object({
     name: z.string(),
     creationTimestamp: z.string().optional(),
+    labels: z.record(z.string(), z.string()).default({}),
   }),
   status: z.object({
     phase: z.string().optional(),
@@ -164,6 +165,15 @@ export function activePods(pods: readonly Pod[]): Pod[] {
   return pods.filter((pod) => pod.status.phase !== "Succeeded");
 }
 
+/**
+ * A Woodpecker pipeline step or service pod. It lives for one step: CI
+ * admission holds it `SchedulingGated` or `Pending` until capacity frees, and
+ * its pipeline's result, not this check, judges whether it ran.
+ */
+export function isCiStepPod(pod: Pod): boolean {
+  return CI_STEP_POD_LABEL in pod.metadata.labels;
+}
+
 function recentRestarts(pod: Pod, since: Date): string[] {
   return containersOf(pod)
     .filter((container) => {
@@ -181,7 +191,8 @@ function recentRestarts(pod: Pod, since: Date): string[] {
  * Every pod Ready, and no container restarted inside the window. A Failed pod
  * that terminated before the window (one a node reboot left behind, already
  * replaced by its controller) is noted and not counted; one that failed inside
- * the window, a Job's included, fails the check.
+ * the window, a Job's included, fails the check. Woodpecker step pods are
+ * noted and not counted; every other pod of the CI namespace is.
  */
 export function evaluatePods(
   pods: readonly Pod[],
@@ -191,8 +202,15 @@ export function evaluatePods(
   const since = new Date(now.getTime() - windowMinutes * 60_000);
   const window = `the last ${String(windowMinutes)}m`;
   const earlier: string[] = [];
+  const ciSteps: string[] = [];
   const items = activePods(pods).flatMap((pod): Item[] => {
     const name = pod.metadata.name;
+    if (isCiStepPod(pod)) {
+      ciSteps.push(
+        `${name}: CI step pod, ${pod.status.phase ?? "no phase"} (not counted)`,
+      );
+      return [];
+    }
     if (pod.status.phase === "Failed") {
       const at = failedAt(pod);
       if (at !== undefined && at < since) {
@@ -227,7 +245,7 @@ export function evaluatePods(
     check: "pods",
     status: worstStatus(items),
     summary: `${String(count(items, "pass"))}/${String(items.length)} pods Ready with no restart in ${window}`,
-    details: [...problems(items), ...earlier],
+    details: [...problems(items), ...earlier, ...ciSteps],
   };
 }
 
@@ -239,6 +257,15 @@ export const ServiceSchema = z.object({
   }),
 });
 export type Service = z.infer<typeof ServiceSchema>;
+
+/**
+ * The headless Service Woodpecker creates per step (`wp-hsvc-<task>`). It
+ * selects that one step's pods by task, so it has no endpoint while the step
+ * waits for admission and none after the step ends.
+ */
+export function isCiStepService(service: Service): boolean {
+  return WOODPECKER_TASK_LABEL in (service.spec.selector ?? {});
+}
 
 export const EndpointSliceSchema = z.object({
   metadata: z.object({
@@ -261,7 +288,8 @@ export type EndpointSlice = z.infer<typeof EndpointSliceSchema>;
  * Every Service backed by pods has at least one ready endpoint. A Service
  * whose selector matches no pod at all (a replica Service of a one-instance
  * database, a workload scaled to zero) is noted and not counted: an unready or
- * unschedulable pod is the pods check's failure, not this one's.
+ * unschedulable pod is the pods check's failure, not this one's. A
+ * Woodpecker per-step Service is noted and not counted either.
  */
 export function evaluateServices(
   services: readonly Service[],
@@ -274,7 +302,12 @@ export function evaluateServices(
       Object.keys(service.spec.selector ?? {}).length > 0,
   );
   const empty: string[] = [];
+  const ciSteps: string[] = [];
   const items = selecting.flatMap((service): Item[] => {
+    if (isCiStepService(service)) {
+      ciSteps.push(`${service.metadata.name}: CI step Service (not counted)`);
+      return [];
+    }
     const endpoints = slices
       .filter(
         (slice) =>
@@ -300,7 +333,7 @@ export function evaluateServices(
     check: "services",
     status: worstStatus(items),
     summary: `${String(count(items, "pass"))}/${String(items.length)} Services backed by pods have ready endpoints`,
-    details: [...problems(items), ...empty],
+    details: [...problems(items), ...empty, ...ciSteps],
   };
 }
 
@@ -491,13 +524,11 @@ export function evaluateProbes(
 /** A namespace passes when no check failed. */
 export function namespaceReport(
   namespace: string,
-  stage: Stage,
   breakGlass: BreakGlassState,
   checks: CheckResult[],
 ): NamespaceReport {
   return {
     namespace,
-    stage,
     breakGlass,
     ok: checks.every((check) => check.status !== "fail"),
     checks,

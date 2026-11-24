@@ -12,14 +12,20 @@ import {
   blackboxProbeIngressRule,
   flagsEgress,
   flagsManagementEgress,
+  fliptEgress,
   lokiOtlpEgress,
   otlpEgress,
   prometheusIngressRule,
+  talosApiEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import {
   ALERTMANAGER_GATEWAY_PORT,
   PROMETHEUS_GATEWAY_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
+import {
+  GOLINK_ENDPOINT,
+  TRACKER_ENDPOINT,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 /**
  * The gateway's public webhook listeners (GitHub, agent tasks, Xcode Cloud,
@@ -151,6 +157,10 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         dnsEgressRule(),
         temporalServerEgress(),
         flagsEgress(),
+        // Retained `delivery-wf-retained-*` hosts run pinned builds that
+        // predate the Flipt-to-Flags cutover (#4948) and still evaluate flags
+        // against Flipt. Remove this rule when Flipt retires (#4969, FM-59).
+        fliptEgress(),
         otlpEgress(),
         lokiOtlpEgress(),
       ],
@@ -231,8 +241,9 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
   });
 
   // Kubernetes API, Prometheus, and the alert/ops dashboard for the audit
-  // collectors; Alertmanager, Tracker and Loki for the ops-snapshot collector.
-  // PostHog, GitHub, Woodpecker, and Bugsink ride the shared 443 rule.
+  // collectors; Alertmanager, Tracker and Loki for the ops-snapshot collector;
+  // the Talos API for both, which run talosctl. PostHog, GitHub, Woodpecker,
+  // and Bugsink ride the shared 443 rule.
   new KubeNetworkPolicy(chart, "temporal-infra-api-netpol", {
     metadata: { name: "temporal-infra-api-netpol" },
     spec: {
@@ -240,26 +251,11 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       policyTypes: ["Egress"],
       egress: [
         { ports: [tcp(6443)] },
+        talosApiEgressRule(),
         monitoringEgress(PROMETHEUS_GATEWAY_PORT),
         { ports: [tcp(7341)] },
-        {
-          to: [
-            {
-              ...nsPeer("tracker"),
-              podSelector: { matchLabels: { app: "tracker" } },
-            },
-          ],
-          ports: [tcp(7351)],
-        },
-        {
-          to: [
-            {
-              ...nsPeer("golink"),
-              podSelector: { matchLabels: { app: "golink" } },
-            },
-          ],
-          ports: [tcp(7352)],
-        },
+        { to: [TRACKER_ENDPOINT.peer()], ports: [TRACKER_ENDPOINT.tcp()] },
+        { to: [GOLINK_ENDPOINT.peer()], ports: [GOLINK_ENDPOINT.tcp()] },
         {
           to: [
             {

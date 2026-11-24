@@ -251,7 +251,7 @@ describe("the evidence no listed step recorded", () => {
         />,
       ),
     ).toBe(
-      '<p class="muted">All 2 pieces of evidence are shown under the steps that recorded them.</p>',
+      '<p class="muted">Both pieces of evidence are shown under the steps that recorded them.</p>',
     );
   });
 
@@ -480,10 +480,11 @@ describe("why a deployment failed", () => {
     const html = render(<WhyItFailed detail={settled} />);
     expect(html).not.toContain("may still be active");
     expect(html).not.toContain("outcome is unknown");
+    // One sentence: the step the deployment ended on, then what recovery found.
     expect(html).toContain(
-      "read the external operation back after the deployment ended: it ended in phase Failed.",
+      'was still running when the deployment ended; <a href="/recovery-intents/argo/auto-flags">recovery intent 1</a> has since read the outcome back and found flags ended in phase Failed, which does not say why it failed.',
     );
-    expect(html).toContain('href="/recovery-intents/argo/auto-flags"');
+    expect(html).not.toContain("read the external operation back");
     // The timeline drops the stale running line and reports the reading.
     const timeline = render(<StepTimeline detail={settled} />);
     expect(timeline).not.toContain("step-sync: running");
@@ -516,7 +517,7 @@ describe("why a deployment failed", () => {
     );
     const html = render(<WhyItFailed detail={settled} />);
     expect(html).toContain(
-      "read each external operation back after the deployment ended: web ended in phase Succeeded; api ended in phase Failed.",
+      "has since read the outcome back and found web ended in phase Succeeded; api ended in phase Failed, which does not say why it failed.",
     );
     // A step no readback answers for does not borrow another's phase.
     const unmatched = settledDetail(
@@ -524,7 +525,7 @@ describe("why a deployment failed", () => {
       settled.recoveryIntents[0]?.evidence.map((entry) => entry.summary) ?? [],
     );
     expect(render(<StepTimeline detail={unmatched} />)).toContain(
-      "interrupted · settled by recovery intent 1",
+      "interrupted · recovery intent 1 read back web, api, not this step",
     );
   });
 
@@ -677,7 +678,7 @@ describe("what is true of a failed deployment beyond its status", () => {
     expect(offersRetry(applied)).toBe(true);
     const html = render(<WhyItFailed detail={applied} />);
     expect(html).toContain("Why it failed");
-    expect(html).toContain("it ended in phase Succeeded.");
+    expect(html).toContain("found media ended in phase Succeeded");
     expect(html).toContain("change was applied, but Delivery never accepted");
     expect(html).toContain("r345 is still accepted in");
     expect(html).not.toContain("Fix the cause");
@@ -863,11 +864,11 @@ describe("what a failed deployment says while a newer request waits, and about t
     };
     const html = render(<WhyItFailed detail={refused} />);
     expect(html).toContain(
-      "failed: storageClass zfs-ssd to zfs-ssd-lz4 is immutable</p>",
+      "failed: storageClass zfs-ssd to zfs-ssd-lz4 is immutable.</p>",
     );
   });
 
-  it("leads with the step the deployment ended on, not with a readback of Succeeded", () => {
+  it("folds what recovery found into the sentence about the step, never leading with it", () => {
     const settled = settledDetail(
       [stage("step-sync", "running", "step-sync: running")],
       [
@@ -875,13 +876,165 @@ describe("what a failed deployment says while a newer request waits, and about t
       ],
     );
     const html = render(<WhyItFailed detail={settled} />);
-    expect(
-      html.indexOf("was still running when the deployment ended"),
-    ).toBeLessThan(html.indexOf("it ended in phase Succeeded"));
-    expect(failureStory(settled)).toMatchObject({
-      caused: false,
-      readbackFinished: true,
+    expect(html).toContain(
+      'was still running when the deployment ended; <a href="/recovery-intents/argo/auto-flags">recovery intent 1</a> has since read the outcome back and found web ended in phase Succeeded, which does not say why it failed.',
+    );
+    // One paragraph, not a step line then a "No cause" line then the readback.
+    expect(html).not.toContain("Recovery intent 1</a>");
+    expect(failureStory(settled)).toMatchObject({ caused: false });
+    // With no step to name, the sentence says no cause was recorded.
+    const stepless = { ...settled, stages: [] };
+    expect(render(<WhyItFailed detail={stepless} />)).toContain(
+      'No cause was recorded; <a href="/recovery-intents/argo/auto-flags">recovery intent 1</a> has since read the outcome back',
+    );
+  });
+
+  it("names what a readback covers on a step it does not answer for", () => {
+    // A tsmc-style intent: one Application read back with a phase, another without.
+    const settled = settledDetail(
+      [
+        {
+          ...stage("sub2-step-players-offline", "running", ""),
+          operationId: "request-players",
+        },
+      ],
+      [
+        "Independent Application readback: minecraft-tsmc-companion, resourceVersion 7, request request-companion, operation 3, phase Succeeded, finished 2026-11-22T03:27:16Z",
+        "Independent Application readback: minecraft-tsmc, resourceVersion 8, no operation recorded",
+      ],
+    );
+    const timeline = render(<StepTimeline detail={settled} />);
+    expect(timeline).toContain(
+      "interrupted · recovery intent 1 read back minecraft-tsmc-companion, minecraft-tsmc, not this step",
+    );
+    expect(timeline).not.toContain("settled by recovery intent");
+  });
+
+  it("states a runtime error as its sentence and keeps the source excerpt and stack frames in a disclosure", () => {
+    const text = [
+      "21893 |   const response = await fetch(url, init);",
+      "21894 |   if (!response.ok) {",
+      "21895 |     throw new Error(`apply-safety refused: ${body}`);",
+      "                    ^",
+      "error: Apply-safety refused golink: changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
+      "      at assertApplySafe (/app/packages/temporal/dist/delivery-argocd.js:21900:11)",
+      "      at async runStep (/app/packages/temporal/dist/delivery-argocd.js:22110:5)",
+    ].join("\n");
+    const refused = {
+      ...ended,
+      deployment: { ...ended.deployment, message: null },
+      stages: [stage("step-apply-safety", "failed", "")],
+      evidence: [evidence("stage/step-apply-safety/0", text, "preflight")],
+    };
+    const story = failureStory(refused);
+    expect(story).toMatchObject({
+      step: {
+        key: "step-apply-safety",
+        outcome: "failed",
+        message:
+          "Apply-safety refused golink: changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
+      },
+      evidence: null,
+      traces: [text],
     });
-    expect(html).toContain("No cause was recorded.");
+    const html = render(<WhyItFailed detail={refused} />);
+    expect(html).toContain(
+      'Step <strong class="mono">step-apply-safety</strong> failed: Apply-safety refused golink: changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4.',
+    );
+    // The excerpt and frames appear only inside the collapsed disclosure.
+    const [prose = "", disclosure = ""] = html.split(
+      '<details class="disclosure"',
+    );
+    expect(prose).not.toContain("assertApplySafe");
+    expect(prose).not.toContain("21895");
+    expect(disclosure).toContain("assertApplySafe");
+    expect(disclosure).not.toContain(" open");
+  });
+});
+
+describe("a failure whose evidence is a runtime error", () => {
+  /** Golink's apply-safety evidence as recorded, run-on excerpt and all. */
+  const RECORDED = [
+    "Delivery apply-safety refused the Application before any sync; 21895 | ${body}`);",
+    "21896 | }",
+    "21897 | const managed = ManagedResourcesSchema.parse(",
+    "error: Refusing golink sync because the desired state changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
+    "      at assertApplySafe (/app/packages/temporal/dist/delivery-argocd.js:21900:11)",
+    "      at async main (/app/packages/temporal/dist/delivery-argocd.js:23688:30)",
+  ].join("\n");
+  const SENTENCE =
+    "Delivery apply-safety refused the Application before any sync; Refusing golink sync because the desired state changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4";
+  const refused = {
+    ...ended,
+    deployment: { ...ended.deployment, message: null },
+    stages: [stage("step-apply-safety", "failed", "step-apply-safety: failed")],
+    evidence: [evidence("stage/step-apply-safety/0", RECORDED, "preflight")],
+  };
+
+  it("says the sentence in the prose and the Evidence entry, never the excerpt or frames", () => {
+    const html = render(
+      <>
+        <WhyItFailed detail={refused} />
+        <StepTimeline detail={refused} />
+      </>,
+    );
+    // Only a <pre> inside a collapsed disclosure holds the raw text.
+    const visible = html.replaceAll(/<pre[^>]*>[\s\S]*?<\/pre>/gu, "");
+    for (const fragment of [
+      "21895",
+      "21896",
+      "delivery-argocd.js",
+      "assertApplySafe",
+      "ManagedResourcesSchema",
+    ])
+      expect(visible).not.toContain(fragment);
+    expect(visible).toContain(`failed: ${SENTENCE}`);
+    expect(html.match(/<pre class="receipt-json">/gu)?.length).toBeGreaterThan(
+      0,
+    );
+    expect(html).toContain("assertApplySafe");
+  });
+
+  it("opens no disclosure on the raw text", () => {
+    const html = render(<StepTimeline detail={refused} />);
+    const opening = /<details class="disclosure"( open="")?>/gu;
+    const raw = html.split("Full error text");
+    expect(raw.length).toBeGreaterThan(1);
+    // The tag just before each "Full error text" summary carries no `open`.
+    for (const before of raw.slice(0, -1)) {
+      const tags = [...before.matchAll(opening)];
+      expect(tags.at(-1)?.[1]).toBeUndefined();
+    }
+  });
+
+  it("reads the live Golink refusal as clean prose in the failure, the Last evidence and the Evidence entry", () => {
+    const live = [
+      "Apply-safety refused golink at 2.0.0-1018413 before any sync; restored the source Argo last synced (history 44).; 21895 | ${body}`);",
+      "21896 | }",
+      "error: Refusing golink sync because the read-only apply-safety preflight found:",
+      "- acid.zalan.do/postgresql golink/golink-postgresql changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
+      "      at assertApplySafe (/app/packages/temporal/dist/delivery-argocd.js:21900:11)",
+    ].join("\n");
+    const golink = {
+      ...refused,
+      evidence: [evidence("stage/step-apply-safety/0", live, "preflight")],
+    };
+    const html = render(
+      <>
+        <WhyItFailed detail={golink} />
+        <StepTimeline detail={golink} />
+      </>,
+    );
+    const visible = html.replaceAll(/<pre[^>]*>[\s\S]*?<\/pre>/gu, "");
+    // The failure prose says each part once, joined as one sentence.
+    expect(visible).toContain(
+      "failed: Apply-safety refused golink at 2.0.0-1018413 before any sync; restored the source Argo last synced (history 44); Refusing golink sync because the read-only apply-safety preflight found: acid.zalan.do/postgresql golink/golink-postgresql changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4.",
+    );
+    // The Evidence entry keeps the sentence boundaries.
+    expect(visible).toContain(
+      "(history 44). Refusing golink sync because the read-only apply-safety preflight found: acid.zalan.do/postgresql",
+    );
+    for (const stray of [".;", "found;", "; -", ";;", ".."])
+      expect(visible).not.toContain(stray);
   });
 });

@@ -24,9 +24,12 @@ export function createFliptChart(app: App) {
 
   createFliptDeployment(chart);
 
-  // All flag consumers now evaluate against first-party `flags`. While Flipt
-  // stays deployed idle ahead of retirement, only Tailscale and Prometheus
-  // reach its gateway.
+  // Current flag consumers evaluate against first-party `flags`. While Flipt
+  // stays deployed ahead of retirement, Tailscale and Prometheus reach its
+  // gateway, and so do the retained Temporal workflow hosts
+  // (`delivery-wf-retained-*`), whose pinned builds predate the Flipt-to-Flags
+  // cutover (#4948). The retained-host rule goes when Flipt retires (#4969,
+  // FM-59).
   new KubeNetworkPolicy(chart, "flipt-ingress-netpol", {
     metadata: { name: "flipt-ingress-netpol" },
     spec: {
@@ -35,6 +38,17 @@ export function createFliptChart(app: App) {
       ingress: [
         {
           from: [nsPeer("tailscale"), nsPeer("prometheus")],
+          ports: [tcp(FLIPT_PORT)],
+        },
+        {
+          from: [
+            {
+              ...nsPeer("temporal"),
+              podSelector: {
+                matchLabels: { "worker-family": "central-workflows" },
+              },
+            },
+          ],
           ports: [tcp(FLIPT_PORT)],
         },
       ],
@@ -50,6 +64,27 @@ export function createFliptChart(app: App) {
       podSelector: {},
       policyTypes: ["Egress"],
       egress: [dnsEgressRule()],
+    },
+  });
+
+  // Flipt alone stays open until the namespace is retired: enforcing it
+  // dropped callers whose Delivery releases still pointed here. This
+  // allow-all overrides the two policies above. It keeps the name it had as
+  // the namespace's enforcement staging policy, so the live object is updated
+  // in place rather than replaced.
+  new KubeNetworkPolicy(chart, "enforcement-staging-flipt", {
+    metadata: {
+      name: "enforcement-staging-flipt",
+      annotations: {
+        "homelab.sjer.red/description":
+          "Allows all traffic for every Flipt pod until the namespace is retired.",
+      },
+    },
+    spec: {
+      podSelector: {},
+      policyTypes: ["Ingress", "Egress"],
+      ingress: [{}],
+      egress: [{}],
     },
   });
 }

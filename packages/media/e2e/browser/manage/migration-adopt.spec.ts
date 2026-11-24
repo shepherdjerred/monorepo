@@ -1,4 +1,4 @@
-import { expect } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import {
   BUNDLE_IDS,
   CAPTURES,
@@ -9,7 +9,7 @@ import { PROFILE_IDS } from "#testing/fixture-api/fixtures/profiles.ts";
 import { sha256 } from "#testing/fixture-api/support.ts";
 import { horizontalOverflow, test } from "#e2e/browser/support.ts";
 import { bundleSummary, openReport } from "./migration-support.ts";
-import { answerWrites, openManage, violations } from "./support.ts";
+import { answerWrites, dropWrites, openManage, violations } from "./support.ts";
 
 test.describe("the library report", () => {
   test("is built from the chosen captures and the library locations", async ({
@@ -357,16 +357,7 @@ test.describe("preparing files and adopting them", () => {
       page,
       `/manage/migration?handoff=${HANDOFF_IDS.awaitingReview}`,
     );
-    await page
-      .getByRole("checkbox", { name: /I approve these file classifications/u })
-      .check();
-    await page
-      .getByRole("button", { name: "Adopt files and correct Plex labels" })
-      .click();
-    await page
-      .getByRole("dialog", { name: "Adopt these files?" })
-      .getByRole("button", { name: "Adopt files" })
-      .click();
+    await adoptFiles(page);
     const alert = page.getByRole("alert");
     await expect(alert).toContainText("The adoption was not submitted");
     await expect(alert).toContainText("The plan changed; prepare it again");
@@ -374,3 +365,40 @@ test.describe("preparing files and adopting them", () => {
     expect(await violations(page)).toEqual([]);
   });
 });
+
+test("says the outcome is unknown, not that nothing was adopted, when the adoption's response is lost", async ({
+  page,
+}) => {
+  const writes = await dropWrites(
+    page,
+    `/admin/handoffs/${HANDOFF_IDS.awaitingReview}/apply`,
+  );
+  await openManage(
+    page,
+    `/manage/migration?handoff=${HANDOFF_IDS.awaitingReview}`,
+  );
+  await adoptFiles(page);
+  await expect.poll(() => writes.length).toBe(1);
+  const alert = page.getByRole("alert");
+  await expect(alert).toContainText(
+    "cannot tell whether the adoption was submitted",
+  );
+  await expect(alert).not.toContainText("nothing was adopted");
+  await expect(
+    alert.getByRole("button", { name: "Refresh the plan" }),
+  ).toBeVisible();
+});
+
+/** Acknowledges the classifications and confirms the adoption in the dialog. */
+async function adoptFiles(page: Page) {
+  await page
+    .getByRole("checkbox", { name: /I approve these file classifications/u })
+    .check();
+  await page
+    .getByRole("button", { name: "Adopt files and correct Plex labels" })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Adopt these files?" })
+    .getByRole("button", { name: "Adopt files" })
+    .click();
+}

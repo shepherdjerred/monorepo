@@ -1,4 +1,7 @@
-import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
+import {
+  SERVICE_CATALOG,
+  ServiceIndex,
+} from "@shepherdjerred/ops-model/catalog.ts";
 import { STATIC_SITE_DESTINATIONS } from "@shepherdjerred/ops-model/static-release-targets.ts";
 
 export const STATIC_BUCKET_RELEASE_POLICIES: Readonly<Record<string, string>> =
@@ -6,38 +9,78 @@ export const STATIC_BUCKET_RELEASE_POLICIES: Readonly<Record<string, string>> =
     ...STATIC_SITE_DESTINATIONS,
   };
 
-/** Reviewed application release boundaries; these declarations do not activate writers. */
+/**
+ * Applications whose v1 Delivery registration declares a specialized
+ * execution adapter (`packages/delivery/registrations/specialized/`). Every
+ * other delegated Application is ordinary: its v1 registration lives under
+ * `registrations/ordinary/`, and the shared pass in
+ * `cdk8s/src/ordinary-delivery-image-bindings.ts` binds its workload images
+ * to its catalog images. Specialized charts bind their own images, apart from
+ * `temporal` and `delivery-control-plane`, which that pass handles by name.
+ *
+ * The catalog's `legacy.deliveryDelegations` names only each Application's
+ * environment, so this split stays here: only the homelab reads it, and
+ * `legacy` is the transitional v1 section deleted with the root release.
+ */
+const SPECIALIZED_DELIVERY_APPLICATIONS: ReadonlySet<string> = new Set([
+  "temporal",
+  "delivery-control-plane",
+  "scout-beta",
+  "scout-prod",
+  "storm-forum",
+  "storm-forum-beta",
+  "minecraft-tsmc",
+]);
+
+/**
+ * Delegations reviewed ahead of their catalog environment. A catalog
+ * delegation activates Delivery ownership, so an Application whose chart is
+ * still inactive is declared here first and moves to the catalog when its
+ * environment exists. The completeness check exempts each entry by name in
+ * `scripts/checks/service-registration-exemptions.json`.
+ */
+const PENDING_DELIVERY_DELEGATIONS: Readonly<Record<string, string>> = {
+  "storm-forum-beta": "storm-forum/beta",
+};
+
+function reviewedDelegations(): Readonly<Record<string, string>> {
+  const active = SERVICE_CATALOG.deliveryDelegations ?? {};
+  for (const application of Object.keys(PENDING_DELIVERY_DELEGATIONS))
+    if (active[application] !== undefined)
+      throw new Error(
+        `Pending Delivery delegation ${application} is in the catalog now; delete it from PENDING_DELIVERY_DELEGATIONS`,
+      );
+  const reviewed = { ...active, ...PENDING_DELIVERY_DELEGATIONS };
+  for (const application of SPECIALIZED_DELIVERY_APPLICATIONS)
+    if (reviewed[application] === undefined)
+      throw new Error(
+        `Specialized Delivery application ${application} has no catalog or pending delegation`,
+      );
+  return reviewed;
+}
+
+function delegationsWhere(
+  specialized: boolean,
+): Readonly<Record<string, string>> {
+  return Object.fromEntries(
+    Object.entries(reviewedDelegations()).filter(
+      ([application]) =>
+        SPECIALIZED_DELIVERY_APPLICATIONS.has(application) === specialized,
+    ),
+  );
+}
+
+/**
+ * Reviewed application release boundaries, derived from the catalog's
+ * delegations and the pending ones above; these declarations do not activate
+ * writers.
+ */
 export const ORDINARY_DELIVERY_ENVIRONMENTS: Readonly<Record<string, string>> =
-  {
-    arcade: "arcade/prod",
-    birmel: "birmel/prod",
-    tasknotes: "tasknotes-server/prod",
-    tracker: "tracker/prod",
-    golink: "golink/prod",
-    flags: "flags/prod",
-    delivery: "delivery/prod",
-    "trmnl-dashboard": "trmnl-dashboard/prod",
-    "alert-dashboard": "ops-dashboard/prod",
-    "storm-brain": "storm-brain/prod",
-    "starlight-karma-bot-beta": "starlight-karma-bot/beta",
-    "starlight-karma-bot-prod": "starlight-karma-bot/prod",
-    redlib: "self-hosted-apps/redlib",
-    media: "streambot/prod",
-    "s3-static-sites": "static-sites/proxy",
-    "glitter-boys-launcher": "glitter-boys-launcher/prod",
-  };
+  delegationsWhere(false);
 
 export const SPECIALIZED_DELIVERY_ENVIRONMENTS: Readonly<
   Record<string, string>
-> = {
-  temporal: "temporal/prod",
-  "delivery-control-plane": "delivery-control-plane/prod",
-  "scout-beta": "scout-for-lol/beta",
-  "scout-prod": "scout-for-lol/prod",
-  "storm-forum": "storm-forum/prod",
-  "storm-forum-beta": "storm-forum/beta",
-  "minecraft-tsmc": "minecraft/tsmc",
-};
+> = delegationsWhere(true);
 
 const INFRASTRUCTURE_SERVICE_OWNERS = new Set([
   "gitops",

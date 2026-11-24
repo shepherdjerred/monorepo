@@ -774,7 +774,12 @@ compound recipe made only of Applications is read Application by
 Application: each sub-recipe's recorded sync request must match its
 Application, the supplied UUID may be any one of their operations, and each
 Application records its own evidence; a sub-recipe whose sync was never
-recorded keeps ownership. It
+recorded keeps ownership. A sync stage that was recorded but whose request
+never reached an operation (a pre-sync guard refused, AI-884) settles only when
+the Application is quiescent, its last operation carries an earlier request and
+finished before the sync stage started, and its `spec.source` is either the
+last synced history entry or exactly this deployment's selected chart; any
+other source keeps ownership. It
 rechecks the intent's binding generation and refuses an intent already
 settled. Every other kind is refused there and settled by its own reader.
 Settlement records what it found and releases ownership without accepting the

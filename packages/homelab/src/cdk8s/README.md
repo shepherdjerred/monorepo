@@ -158,6 +158,24 @@ not model. `birmel`, both `starlight-karma-bot` stages, `streambot` and
 `arcade` use it. The two constructs share their container and NetworkPolicy
 types through `src/misc/first-party/workload-parts.ts`.
 
+## Temporal workers
+
+`createTemporalDomainWorker` (`src/resources/temporal/workers/domain-worker.ts`)
+renders a worker built from the shared Temporal worker or Delivery
+control-plane image: its ServiceAccount, a `Recreate` Deployment whose image
+the chart selects, `/healthz` probes on the app-metrics port, and Services and
+ServiceMonitors for both the SDK metrics port and the app-metrics port. Every
+Temporal client takes `TEMPORAL_ADDRESS` from `temporalAddressEnv` and
+`TEMPORAL_METRICS_ADDRESS` from `temporalMetricsAddressEnv`.
+
+Scout's stage workflow worker (`src/resources/scout/workflow-worker.ts`) stays
+outside the helper. It is a Delivery worker-rollout candidate of the
+`scout-for-lol` image with its own `sh -c` command, no ServiceAccount, one
+readiness probe that waits for a workflow-task poller, a read-only root
+filesystem, and a single SDK metrics Service selected through the Deployment.
+The helper fixes each of those, so adopting it would mean an opt-out per field;
+the two share only the Temporal client environment.
+
 ## LinuxServer apps
 
 `LinuxServerApp` (`src/misc/third-party/linuxserver-app.ts`) renders a
@@ -235,60 +253,6 @@ one service at a time:
 violation that is not listed and on a listed entry that no longer violates, so
 the lists only shrink: fix the workload and delete its entry. Do not add an
 entry to make a new workload pass.
-
-## NetworkPolicy enforcement staging
-
-The cluster does not enforce `NetworkPolicy` yet, and the engine that will has
-no audit mode, so enforcement is staged per namespace with a policy.
-`applyEnforcementStaging` (`src/enforcement-staging.ts`) runs over the finished
-app and gives every namespace the charts render a `NetworkPolicy` into exactly
-one policy named `enforcement-staging-<namespace>`, which allows all ingress and egress.
-Policies are additive, so while that policy selects every pod the namespace
-behaves as if nothing were enforced.
-
-`src/fleet-policy/enforcement-stages.ts` records each namespace's stage:
-
-| Stage      | Staging policy `podSelector`                           | Effect once the cluster enforces |
-| ---------- | ------------------------------------------------------ | -------------------------------- |
-| `open`     | `{}` (every pod)                                       | all traffic allowed              |
-| `enforced` | `homelab.sjer.red/enforcement-staging: never` (no pod) | the namespace's policies decide  |
-
-To cut one namespace over, change its entry from `"open"` to `"enforced"` and
-release it; to revert, change it back. Only the selector of an existing object
-changes, so neither direction depends on the Application pruning. The operator
-procedure and its live checks are the wiki how-to
-`how-to/cut-a-namespace-over-to-enforced-policies`.
-
-A namespace that gains its first policy fails synthesis until it has an
-`"open"` entry, and an entry whose namespace has no policy left fails the fleet
-tests. When several charts render policies into one namespace, one of them
-carries the staging policy (`SHARED_NAMESPACE_OWNERS`). The fleet rules above
-never read a staging policy, so an open namespace cannot hide a workload with
-no policy or a closed probe port.
-
-The stage map covers three sources of policy, and each has its own guard:
-
-- **Policies these charts render.** Derived from synthesis; the fleet tests
-  hold the map and the rendered staging policies to exactly this set.
-- **Policies an upstream Helm chart renders** (`argocd`, `prometheus`).
-  Synthesis cannot see them, so `STAGED_WITHOUT_RENDERED_POLICY` declares the
-  namespace, its Application, and the charts that carry the staging policy:
-  the root chart and the Application's companion. The Helm render test
-  (`HELM_RENDER_TEST=1 bun run test -- src/argocd-helm-render.test.ts`) fails
-  when an upstream chart renders a `NetworkPolicy` into a namespace with no
-  stage entry.
-- **Policies that exist only in the cluster** (`live-only` entries of the same
-  list), for a namespace whose pods still run after its source was removed.
-  No test can derive these.
-
-`ENFORCED_WITHOUT_STAGING` lists the namespaces that keep a policy and are
-deliberately left unstaged: leftover isolation policies of finished rehearsals
-and recoveries, with no pods.
-
-None of this proves coverage of the running cluster. The authoritative check
-before enforcement is switched on is live: every namespace that has at least
-one `NetworkPolicy` and at least one pod must have its
-`enforcement-staging-<namespace>` policy.
 
 ## Commands
 

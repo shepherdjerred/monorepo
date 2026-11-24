@@ -27,13 +27,15 @@ COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/alert-dashboard'
 
 FROM deps AS build
-# `@shepherdjerred/loaded` and the ops packages export TypeScript source rather
-# than a built dist, so having their package.json present for the install is
-# not enough — the client build has to be able to read the files their export
-# maps point at.
+# `@shepherdjerred/loaded`, the ops packages and `@shepherdjerred/console-ui`
+# export TypeScript source rather than a built dist, so having their
+# package.json present for the install is not enough — the client build has to
+# be able to read the files their export maps point at. console-ui is bundled
+# into the client, so the runtime stage below does not need it.
 COPY --parents \
   tsconfig.base.json \
   packages/alert-dashboard \
+  packages/console-ui \
   packages/eslint-config \
   packages/loaded \
   packages/ops-model \

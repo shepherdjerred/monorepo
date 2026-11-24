@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import rawCatalog from "@shepherdjerred/version-catalog/catalog.json";
 import { parseVersionCatalog } from "@shepherdjerred/version-catalog";
 import { VersionMapSchema } from "./version-map.generated.ts";
-import versions from "./versions.ts";
+import versions, {
+  firstPartyImageRecipe,
+  requireFirstPartyImage,
+} from "./versions.ts";
 
 const SEMVER_PATTERN = /^v?\d+\.\d+\.\d+(?:-[\w.]+)?$/;
 const COERCED_SEMVER_PATTERN = /^v?\d+\.\d+(?:\.\d+)?(?:-[\w.]+)?$/;
@@ -13,6 +16,7 @@ const DATASOURCES = new Set([
   "docker",
   "github-releases",
   "npm",
+  "pypi",
   "custom.mc2discord-forge-1-12-2",
   "custom.papermc",
 ]);
@@ -22,6 +26,7 @@ const VERSIONING = new Set([
   "docker",
   "loose",
   "npm",
+  "pep440",
   "regex:^https://cdn[.]modrinth[.]com/data/Cfbcv7uF/versions/[A-Za-z0-9]+/mc2discord-forge-1[.]12[.]2-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)[.]jar$",
   "regex:^version-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)-nonroot$",
   // tonistiigi/binfmt tags are `qemu-vX.Y.Z`, beside moving tags like `latest`.
@@ -96,5 +101,29 @@ describe("version catalog static validation", () => {
       }
       expect(entry.management.packageName).toBeDefined();
     }
+  });
+});
+
+const digest = (fill: string) => `sha256:${fill.repeat(64)}`;
+
+describe("requireFirstPartyImage", () => {
+  it("accepts the recipe and a published digest of the same repository", () => {
+    const pinned = `docker.io/shepherdjerred/tracker@${digest("a")}`;
+    expect(requireFirstPartyImage("tracker", pinned)).toBe(pinned);
+    const recipe = firstPartyImageRecipe("tracker");
+    expect(requireFirstPartyImage("tracker", recipe)).toBe(recipe);
+  });
+
+  it.each([
+    "docker.io/shepherdjerred/tracker:latest",
+    `docker.io/shepherdjerred/tracker@${digest("0")}`,
+    `docker.io/shepherdjerred/media@${digest("a")}`,
+    `docker.io/shepherdjerred/tracker:1.0.0@${digest("a")}`,
+    `tracker@${digest("a")}`,
+    `docker.io/shepherdjerred/tracker@sha256:${"A".repeat(64)}`,
+  ])("rejects %s", (image) => {
+    expect(() => requireFirstPartyImage("tracker", image)).toThrow(
+      "immutable image digest",
+    );
   });
 });

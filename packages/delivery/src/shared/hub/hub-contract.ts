@@ -14,6 +14,7 @@ import {
   VersionSetRevisionSchema,
 } from "#shared/contract.ts";
 import { DeploymentKindV2Schema } from "#shared/deployment-request-contract.ts";
+import * as releases from "./commit-release-contract.ts";
 
 const TimestampSchema = z.iso.datetime();
 
@@ -493,6 +494,8 @@ export const CommitEnvironmentSchema = z.object({
   name: z.string(),
   state: CommitEnvironmentStateSchema,
   deploymentId: IdentifierSchema.nullable(),
+  /** Set for a version-set release; absent for a platform change and from servers that predate it. */
+  release: releases.CommitEnvironmentReleaseSchema.optional(),
 });
 export type CommitEnvironment = z.infer<typeof CommitEnvironmentSchema>;
 
@@ -577,6 +580,12 @@ export const CarriedFailureSchema = z.object({
   releaseVerdict: CommitVerdictSchema.optional(),
   /** The carrying release's version set revision; absent for a platform release. */
   releaseRevision: z.number().int().positive().optional(),
+  /**
+   * The carrying commit's own verdict, so a row that says it was carried by a
+   * commit can say where that commit stands (it may need approval or have
+   * failed) without the reader opening it. Absent from servers that predate it.
+   */
+  includedInVerdict: CommitVerdictSchema.optional(),
 });
 export type CarriedFailure = z.infer<typeof CarriedFailureSchema>;
 
@@ -594,17 +603,6 @@ export const CommitBlockerSchema = z.object({
 });
 export type CommitBlocker = z.infer<typeof CommitBlockerSchema>;
 
-/**
- * What Woodpecker's stored pipeline says about a commit whose own record
- * holds no title or author: the pipeline's message title and its author.
- */
-export const CommitPipelineNoteSchema = z.object({
-  number: z.number().int().positive(),
-  title: z.string().nullable(),
-  author: z.string().nullable(),
-});
-export type CommitPipelineNote = z.infer<typeof CommitPipelineNoteSchema>;
-
 export const CommitStatusSchema = z.object({
   sha: z.string().min(7),
   /**
@@ -620,7 +618,7 @@ export const CommitStatusSchema = z.object({
    * message title and author of the Woodpecker pipeline of one of its builds,
    * as Delivery last stored it. Absent when Delivery stored none.
    */
-  pipeline: CommitPipelineNoteSchema.optional(),
+  pipeline: releases.CommitPipelineNoteSchema.optional(),
   verdict: CommitVerdictSchema,
   /** A build of this commit, for its source panel; null if unseen. */
   buildId: IdentifierSchema.nullable(),
@@ -632,6 +630,12 @@ export const CommitStatusSchema = z.object({
   changed: z.array(CommitServiceSchema),
   /** Services whose build passed with nothing to deploy. */
   unchangedCount: z.number().int().nonnegative(),
+  /**
+   * Services this commit's own pipeline built and passed, whether or not
+   * they changed anything. Zero means no service was built on its own, so a
+   * carried failure is the whole commit; absent from servers that predate it.
+   */
+  builtCount: z.number().int().nonnegative().optional(),
   /** Builds that failed or are still running, whether or not they changed anything. */
   failedBuilds: z.array(CommitBuildSchema),
   /**
@@ -640,6 +644,8 @@ export const CommitStatusSchema = z.object({
    * commit's change. Such a failure does not decide the verdict.
    */
   carriedFailures: z.array(CarriedFailureSchema).optional(),
+  /** The carried changes' releases that have landed, by their own outcome; see CarriedReleaseSchema. */
+  carriedReleases: z.array(releases.CarriedReleaseSchema).optional(),
   pendingBuilds: z.array(CommitBuildSchema),
   /**
    * The most urgent environment of a changed service that does not have the
@@ -661,6 +667,8 @@ export const CommitSummarySchema = CommitStatusSchema.pick({
   blocker: true,
   blockers: true,
   carriedFailures: true,
+  carriedReleases: true,
+  builtCount: true,
 }).extend({
   /** The services whose CI failed with nothing carrying it, by title, each once. */
   failedServices: z.array(z.string()).optional(),

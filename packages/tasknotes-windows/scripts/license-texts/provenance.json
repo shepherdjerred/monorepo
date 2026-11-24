@@ -24,17 +24,17 @@
     },
     {
       "repository": "https://github.com/microsoft/WinAppCli.git",
-      "commit": "d9a8d0f8ef192fa3ce07febdbe178606ea5fb4f5",
-      "source": "https://raw.githubusercontent.com/microsoft/WinAppCli/d9a8d0f8ef192fa3ce07febdbe178606ea5fb4f5/LICENSE",
+      "commit": "e5cedcc04921f6f74535cf45668292203e439d45",
+      "source": "https://raw.githubusercontent.com/microsoft/WinAppCli/e5cedcc04921f6f74535cf45668292203e439d45/LICENSE",
       "file": "upstream-3.txt",
       "sha256": "c421b2a5e0ee627bb1c5d859bbca37d7654c02f63d626e753644484a9054c2d1"
     }
   ],
   "publisherLicenses": [
     {
-      "dependency": "Microsoft.Windows.SDK.BuildTools/10.0.28000.2526",
-      "packageSha512": "voeXXRC5EKuvnUCkPxkEhCbNuv/FM1RzjCQ3lj58Ju5AlVzh/9Lg+a7hqy57mh/00BH/9YNZCJRUjIZJrzTJ4w==",
-      "nuspecSha256": "ddc6d5120c90741ed1383a21fba5f5c8788fc9fc3c3bfd6f893df3959bf0e06c",
+      "dependency": "Microsoft.Windows.SDK.BuildTools/10.0.28000.2957",
+      "packageSha512": "nTsRheC9AO+if3BykWkRJ4QXkIMfkqufnBFPIcSEOj7rnX60fqiGrORnxzVFnIXJvsMIjlDOvs/K5EzMLA2RKQ==",
+      "nuspecSha256": "d1821ecb97cc9f69890ccd43837970146385ee1554473d10bf9a5cb88d3cd977",
       "licenseUrl": "https://aka.ms/WinSDKLicenseURL",
       "source": "https://download.microsoft.com/download/0/F/F/0FF2B061-47DD-4F55-89B6-FD1D8C44F14D/sdk_license.rtf",
       "sourceSha256": "dd07eb178e00c6bba4148457fc00ff77cd4887eb521d504186fe59c9ec8bbe62",

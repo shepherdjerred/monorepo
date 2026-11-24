@@ -8,16 +8,17 @@ import {
   flagsEnv,
   seaweedfsS3,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { TRACKER_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   nsPeer,
-  tcp,
   flagsEgress,
   otlpEgress,
   seaweedfsEgress,
   postgresEgress,
   dnsEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { requireFirstPartyImage } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 function databaseUrl() {
   const protocol = "postgresql";
@@ -28,11 +29,7 @@ function databaseUrl() {
 
 /** A synthesis recipe is replaced by the required PG image binding before packaging. */
 export function createTrackerDeployment(chart: Chart, image: string) {
-  if (
-    image !== "docker.io/shepherdjerred/tracker:delivery-recipe" &&
-    !/^docker\.io\/shepherdjerred\/tracker@sha256:[a-f0-9]{64}$/u.test(image)
-  )
-    throw new Error("Tracker requires a pinned public image digest");
+  requireFirstPartyImage("tracker", image);
   const pg = Secret.fromSecretName(
     chart,
     "tracker-pg",
@@ -48,7 +45,7 @@ export function createTrackerDeployment(chart: Chart, image: string) {
   const securityContext = restrictedContainer(1000);
   return new FirstPartyWebService(chart, "tracker-web-service", {
     name: "tracker",
-    port: 7351,
+    port: TRACKER_ENDPOINT.port,
     probes: {
       live: "/healthz",
       ready: "/readyz",
@@ -85,7 +82,7 @@ export function createTrackerDeployment(chart: Chart, image: string) {
           ...dbEnv,
           HOME: EnvValue.fromValue("/tmp"),
           HOST: EnvValue.fromValue("0.0.0.0"),
-          PORT: EnvValue.fromValue("7351"),
+          PORT: EnvValue.fromValue(String(TRACKER_ENDPOINT.port)),
           ENVIRONMENT: EnvValue.fromValue("production"),
           S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
           ...seaweedfsS3.bucketEnv("S3_BUCKET", "tracker"),
@@ -110,7 +107,7 @@ export function createTrackerDeployment(chart: Chart, image: string) {
         ingress: [
           {
             from: [nsPeer("tailscale"), nsPeer("prometheus")],
-            ports: [tcp(7351)],
+            ports: [TRACKER_ENDPOINT.tcp()],
           },
           {
             from: [
@@ -119,7 +116,7 @@ export function createTrackerDeployment(chart: Chart, image: string) {
                 podSelector: { matchLabels: { component: "infra-worker" } },
               },
             ],
-            ports: [tcp(7351)],
+            ports: [TRACKER_ENDPOINT.tcp()],
           },
         ],
         egress: [

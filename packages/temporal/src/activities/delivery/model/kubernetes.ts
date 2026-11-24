@@ -18,13 +18,11 @@ import {
 } from "homelab/scripts/argocd/argocd-media-ingress-prunes.ts";
 import {
   SyncedArgoHistorySchema,
-  latestArgoSyncedHistory,
   unchangedArgoHistoryId,
 } from "#lib/delivery/argocd-proof.ts";
 import { verifyOciChart } from "./oci-chart.ts";
 import {
   createArgoApplication,
-  deleteArgoApplication,
   getArgoApplication,
   setArgoSelfHeal,
   updateArgoApplication,
@@ -46,12 +44,14 @@ import {
   workerRetirementFence,
   workerRolloutPreflight,
 } from "./worker-rollout.ts";
-import { minecraftSyncFence } from "./minecraft-upgrade.ts";
-import { forumBaselineFence, forumSyncPrune } from "./forum-bundle.ts";
-import { credentialSyncPrunes } from "#lib/delivery/credential-prune.ts";
-import { workerSyncPrunes } from "#lib/delivery/workers/worker-prune.ts";
-import { alertDashboardSyncPrunes } from "#lib/delivery/alert-dashboard/prune.ts";
-import { renderedRelease } from "#lib/delivery/retired-route-prune.ts";
+import { forumBaselineFence } from "./forum-bundle.ts";
+import {
+  EVIDENCE_SUMMARY_LIMIT,
+  restoreWrittenBody,
+  settleRefusedSyncGuard,
+  syncPruneDecision,
+  type ApplicationStep,
+} from "./refused-sync.ts";
 
 const READBACK_ATTEMPTS = 120;
 const READBACK_INTERVAL_MS = 5000;
@@ -175,59 +175,8 @@ async function writeBody(
   return "updated";
 }
 
-type ApplySafetyStep = {
-  current: DeploymentDetail;
-  rendered: RenderedApplication;
-  key: string;
-  operationId: string;
-};
-
-/**
- * Undoes the apply-safety step's only effect, the body it wrote: a created
- * Application is removed without touching resources (nothing was synced), and
- * an updated one gets back the source Argo last synced. Automation stays off;
- * the next release writes its own body. Resolves what was done.
- */
-async function restoreWrittenBody(
-  rendered: RenderedApplication,
-  written: "created" | "updated",
-): Promise<string> {
-  if (written === "created") {
-    await deleteArgoApplication(
-      rendered.name,
-      { environmentId: rendered.environmentId, cascade: false },
-      { signal: effectSignal() },
-    );
-    return "removed the Application it had created";
-  }
-  const current = SyncedArgoHistorySchema.parse(
-    await readCandidateApplication(rendered),
-  );
-  const latest = latestArgoSyncedHistory(current.status?.history);
-  if (latest === null)
-    throw new Error(
-      `Application ${rendered.name} has no synced source to restore`,
-    );
-  await updateArgoApplication(
-    rendered.name,
-    {
-      ...rendered.body,
-      metadata: {
-        ...rendered.body.metadata,
-        resourceVersion: current.metadata.resourceVersion,
-      },
-      spec: { ...rendered.body.spec, source: latest.source },
-    },
-    { environmentId: rendered.environmentId },
-    { signal: effectSignal() },
-  );
-  return `restored the source Argo last synced (history ${latest.id.toString()})`;
-}
-
-const EVIDENCE_SUMMARY_LIMIT = 4000;
-
 async function settleRefusedApplySafety(
-  step: ApplySafetyStep,
+  step: ApplicationStep,
   outcome: string,
   error: unknown,
 ): Promise<never> {
@@ -284,7 +233,7 @@ async function proveUnwrittenBody(
 }
 
 async function writeBodyOrRefuse(
-  step: ApplySafetyStep,
+  step: ApplicationStep,
 ): Promise<"created" | "updated"> {
   let priorRead: { read: false } | { read: true; value: unknown } = {
     read: false,
@@ -468,31 +417,15 @@ async function syncOwned(
   // deployment under a live lease (D7), which a read cannot prove.
   await recordStage(current, key, "running", { operationId: requestId });
   if (!before.requested) {
-    // A preserved world switches images only with fresh preservation proof.
-    minecraftSyncFence(current, recipe);
-    // A forum release replaces the prior release's terminal migration Job;
-    // Hub's release removes its retired alerts and ops Ingresses; a worker
-    // release removes the hosts earlier retirements scaled to zero.
-    const applicationPrune = (await forumSyncPrune(
-      current,
-      recipe,
-      argoRequest,
-    ))
-      ? true
-      : await credentialSyncPrunes(
-          {
-            ...rendered,
-            namespace: rendered.body.spec.destination.namespace,
-          },
-          argoRequest,
-        );
-    const prune =
-      applicationPrune === false
-        ? (await alertDashboardSyncPrunes(
-            renderedRelease(rendered),
-            argoRequest,
-          )) || (await workerSyncPrunes(current, rendered, argoRequest))
-        : applicationPrune;
+    let prune: Awaited<ReturnType<typeof syncPruneDecision>>;
+    try {
+      prune = await syncPruneDecision(current, recipe, rendered);
+    } catch (error) {
+      return await settleRefusedSyncGuard(
+        { current, rendered, key, operationId: requestId },
+        error,
+      );
+    }
     await runGuardedArgoCommand(
       [
         "sync-managed",

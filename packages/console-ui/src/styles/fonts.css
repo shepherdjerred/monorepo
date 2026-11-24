@@ -1,0 +1,14 @@
+/*
+ * Inter is bundled through Fontsource. Berkeley Mono is licensed: it is only
+ * named here and loads when installed locally. Never commit its files.
+ */
+@import "@fontsource-variable/inter" layer(ui.tokens);
+
+@layer ui.tokens {
+  :root {
+    --ui-font-sans:
+      "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+      sans-serif;
+    --ui-font-mono: "Berkeley Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+}

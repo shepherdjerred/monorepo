@@ -66,12 +66,23 @@ dotnet build -c Release -r win-x64 -p:Platform=x64 \
   -p:GenerateAppxPackageOnBuild=true -p:AppxPackageDir=/workspace/AppPackages/
 ```
 
+Self-contained unpackaged apps publish the same way:
+
+```bash
+dotnet publish -c Release -r win-x64 -p:Platform=x64 -p:SelfContained=true \
+  -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true \
+  -p:EnableMsixTooling=false -o /workspace/standalone/
+```
+
 The targets run the stock .NET Framework `XamlCompiler.exe` (which also
-compiles XAML to XBF) and the Windows SDK's `makepri` and `makeappx` under Wine
-through generated shims. Because the MSBuild process is .NET on Linux,
-packaged resources are mapped from `makepri dump` output instead of loading
-`MrmSupport.dll`, the path the MSIX tooling already takes where the resource
-indexer API is unavailable.
+compiles XAML to XBF) and the Windows SDK's `makepri`, `makeappx`, and `mt.exe`
+under Wine through generated shims. `mt.exe` receives absolute paths as Wine
+`Z:` paths, because it reads a leading `/` as an option. Because the MSBuild
+process is .NET on Linux, packaged resources are mapped from `makepri dump`
+output instead of loading `MrmSupport.dll`, the path the MSIX tooling already
+takes where the resource indexer API is unavailable. A PRI names its files
+case-insensitively, so the files an unpackaged build copies out of a
+referenced PRI are resolved against the case-sensitive file system.
 
 Wine 11.0 needs these patches (`wine-patches/`) for those tools:
 
@@ -83,6 +94,7 @@ Wine 11.0 needs these patches (`wine-patches/`) for those tools:
 | `ntdll` AVL generic tables                                                         | `makeappx` and its packaging DLLs |
 | `msxml3` SAX attribute types and XML declaration properties                        | `makeappx`                        |
 | `msxml3` schema collections compile across namespaces when `validateOnLoad` is off | `makeappx` manifest validation    |
+| `msxml3` `MXXMLWriter` does not indent an end tag that follows text                | `makepri dump`                    |
 
 ### Limitations
 
@@ -97,7 +109,11 @@ Wine 11.0 needs these patches (`wine-patches/`) for those tools:
   read version resources from native executables, so the manifest's build
   metadata omits the MakePri version.
 - The `winui` image needs a linux/amd64 host. Building it runs 32-bit Wine
-  code, which Docker's Rosetta emulation on Apple silicon cannot execute.
+  code, which Docker's Rosetta emulation on Apple silicon cannot execute, and
+  running its XAML compiler under emulation there aborts in Wine
+  (`anon_mmap_fixed: Assertion ... host_page_mask`). On Apple silicon, run
+  WinUI builds on a linux/amd64 host, such as the cluster's BuildKit through
+  the port-forward below.
 
 ## Development
 
@@ -112,3 +128,33 @@ docker buildx build -f packages/windows-cross-compiler/Dockerfile --target selft
 Compiler image self-tests and image refreshes are paused in CI. The Dockerfile
 targets above remain available for local validation, and existing
 `images/*/DIGEST` pins remain unchanged until an explicit image release.
+
+### Releasing an image by hand
+
+Rebuild both images whenever the Dockerfile's pins change (for example
+`DOTNET_SDK_VERSION` after `global.json` moves): `winui` builds from `base`.
+Build on the cluster's BuildKit, which is linux/amd64, through a port-forward.
+BuildKit pushes with the client's Docker credentials, which must have push
+scope: use the `ci-dockerhub-publisher-credentials` item from the homelab
+vault (`DOCKERHUB_USERNAME`, `DOCKERHUB_PUBLISH_TOKEN`) through
+`scripts/onepassword/with-service-account.sh op run`, served by a credential
+helper or a throwaway `DOCKER_CONFIG`. A read-only Docker Hub token fails the
+push with `401 Unauthorized: access token has insufficient scopes`.
+`CI_RELEASE_NUMBER` must exceed the pinned `buildNumber`; use the main pipeline
+number of the source commit.
+
+```bash
+kubectl -n buildkitd port-forward svc/buildkitd-buildkitd-service 21234:1234 &
+docker buildx create --name ci --driver remote tcp://127.0.0.1:21234
+export CI_COMMIT_SHA=$(git rev-parse HEAD) CI_RELEASE_NUMBER=<main pipeline number>
+for image in windows-cross-compiler windows-cross-compiler-winui; do
+  bun ci/scripts/images/build-ci-image.ts --image "$image" --candidate-out "/tmp/$image.json"
+done
+bun ci/scripts/images/selftest-ci-image.ts
+docker buildx rm ci
+kill %1
+```
+
+Each candidate file holds the `images/<image>/STATE.json` fields (with
+`schema` set to `ci-image-pin-state/v1`) and the digest for `DIGEST`. Update
+both files, and the digests on `packages/cross-compilers-site`, in one PR.

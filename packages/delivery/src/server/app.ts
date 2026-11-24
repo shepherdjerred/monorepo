@@ -272,7 +272,12 @@ export function createApp(options: Options) {
   registerWorkerRoutes(app, { delivery, enabled });
   registerPlatformRoutes(app, { delivery, enabled });
   registerClaimRoute(app, delivery, enabled);
-  registerSelectionRoutes(app, delivery, options.config.writesEnabled);
+  registerSelectionRoutes(
+    app,
+    delivery,
+    options.config.writesEnabled,
+    options.inspectRecovery,
+  );
   registerTrmnlRepairRoute(app, delivery, enabled);
   registerControlPlaneRoutes(app, delivery, enabled);
   registerForumRoutes(app, delivery, {
@@ -470,6 +475,9 @@ export function createApp(options: Options) {
         message: "delivery_request_failed",
         requestId: c.get("requestId"),
         errorType: error.name,
+        ...("code" in error && typeof error.code === "string"
+          ? { errorCode: error.code }
+          : {}),
       }),
     );
     return c.json(

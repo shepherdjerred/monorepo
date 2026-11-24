@@ -61,7 +61,8 @@ const SYSTEM = [
   "Use the phrase 'our server' in the reply to disclose the affiliation. Do not pretend to be an unrelated player, invent personal experiences, ask for upvotes, or paste a generic feature list.",
   "Use one plain-text paragraph with no Markdown. Put the single bare invitation URL https://join.ts-mc.net/ on its own line at the end, without surrounding punctuation. Return evidence of the connection using exact requestQuote snippets from the supplied post and factQuote snippets from the approved facts.",
   "Caveat only a meaningful difference from what this person asked for. Each caveats entry must be an exact snippet in the reply. Use an empty caveats array when no preference needs a caveat.",
-  "Even after qualification, decline by setting reply:null if you cannot honestly and usefully draft from the supplied facts, if a hard requirement is unsupported or unknown, or if current rules forbid the reply, self-promotion, or automated comments. Explain why in reason. A decline does not alter the upstream qualification.",
+  "If the author asks for an adult-only or 18+ community, say plainly that our server is aimed at adults and other ages can join. Treat that difference as a caveat in the reply and in the caveats array.",
+  "Even after qualification, decline by setting reply:null if you cannot honestly and usefully draft from the supplied facts, if any other hard requirement is unsupported or unknown, or if current rules forbid the reply, self-promotion, or automated comments. Explain why in reason. A decline does not alter the upstream qualification.",
 ].join("\n");
 
 export function redditInviteDraftPrompt(input: RedditInviteDraftInput): string {

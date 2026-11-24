@@ -1,7 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { expect, test } from "vitest";
 import { fileSize, fileSummary, subtitleName } from "./files.tsx";
+import { InRouter } from "#client/in-router.test-support.tsx";
 import { Hero } from "./hero.tsx";
+import { TitleSkeleton } from "./states.tsx";
 
 const art = {
   posterPath: "/poster123.jpg",
@@ -10,15 +12,17 @@ const art = {
 
 function hero(artwork: typeof art | { posterPath: null; backdropPath: null }) {
   return renderToStaticMarkup(
-    <Hero
-      title="Dune: Part Two"
-      artwork={artwork}
-      meta={["Film", "2024"]}
-      state={{ label: "Ready to watch", tone: "ok" }}
-      overview="Paul Atreides unites with the Fremen."
-    >
-      <button type="button">Request</button>
-    </Hero>,
+    <InRouter>
+      <Hero
+        title="Dune: Part Two"
+        artwork={artwork}
+        meta={["Film", "2024"]}
+        state={{ label: "Ready to watch", tone: "ok" }}
+        overview="Paul Atreides unites with the Fremen."
+      >
+        <button type="button">Request</button>
+      </Hero>
+    </InRouter>,
   );
 }
 
@@ -86,4 +90,23 @@ test("a subtitle is named by its language and what kind it is", () => {
   expect(subtitleName({ ...plain, language: "zh-Hans" })).toBe(
     "Chinese (Simplified)",
   );
+});
+
+test("a page opened from a poster card shows that poster while it loads", () => {
+  const opened = renderToStaticMarkup(
+    <InRouter
+      address="/media/abc"
+      state={{ openedPoster: { path: "/poster123.jpg", title: "Dune" } }}
+    >
+      <TitleSkeleton />
+    </InRouter>,
+  );
+  expect(opened).toContain("/api/v1/artwork/w342/poster123.jpg");
+  // Opened from anywhere else, it holds the place with a block.
+  const direct = renderToStaticMarkup(
+    <InRouter address="/media/abc">
+      <TitleSkeleton />
+    </InRouter>,
+  );
+  expect(direct).not.toContain("<img");
 });

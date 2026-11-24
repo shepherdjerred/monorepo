@@ -13,6 +13,11 @@ export const TOOL_HOSTS = {
   temporal: "https://temporal-ui.tailnet-1a49.ts.net",
   bugsink: "https://bugsink.sjer.red",
   chartmuseum: "https://chartmuseum.tailnet-1a49.ts.net",
+  phoenix: "https://phoenix.tailnet-1a49.ts.net",
+  posthog: "https://us.posthog.com",
+  prometheus: "https://prometheus.tailnet-1a49.ts.net",
+  alertmanager: "https://alertmanager.tailnet-1a49.ts.net",
+  homeassistant: "https://homeassistant.tailnet-1a49.ts.net",
 } as const;
 
 /**
@@ -23,7 +28,88 @@ export const APP_HOSTS = {
   hub: "https://hub.tailnet-1a49.ts.net",
   tracker: "https://tracker.tailnet-1a49.ts.net",
   delivery: "https://delivery.tailnet-1a49.ts.net",
+  flags: "https://flags.tailnet-1a49.ts.net",
+  golink: "https://go.tailnet-1a49.ts.net",
+  media: "https://media.tailnet-1a49.ts.net",
+  tasknotes: "https://tasknotes.tailnet-1a49.ts.net",
 } as const;
+
+const POSTHOG_PROJECT_ID = 549_883;
+
+export type ConsoleLinkGroup = "Apps" | "Tools";
+
+/**
+ * One entry in the app switcher shared by Hub, Go link and Flags, and in
+ * Hub's launcher and command palette. `id` is stable so each console can
+ * mark itself as current and attach its own icon.
+ */
+export type ConsoleLink = {
+  readonly id: string;
+  readonly label: string;
+  readonly url: string;
+  readonly group: ConsoleLinkGroup;
+};
+
+/**
+ * Every first-party app and outside tool the consoles link to, in display
+ * order. Go link lists every other tailnet service, so it is the catch-all
+ * for anything not named here.
+ */
+export const CONSOLE_LINKS: readonly ConsoleLink[] = [
+  { id: "hub", label: "Hub", url: APP_HOSTS.hub, group: "Apps" },
+  { id: "delivery", label: "Delivery", url: APP_HOSTS.delivery, group: "Apps" },
+  { id: "flags", label: "Flags", url: APP_HOSTS.flags, group: "Apps" },
+  { id: "golink", label: "Go links", url: APP_HOSTS.golink, group: "Apps" },
+  { id: "tracker", label: "Tracker", url: APP_HOSTS.tracker, group: "Apps" },
+  { id: "media", label: "Media", url: APP_HOSTS.media, group: "Apps" },
+  {
+    id: "tasknotes",
+    label: "TaskNotes",
+    url: APP_HOSTS.tasknotes,
+    group: "Apps",
+  },
+  { id: "grafana", label: "Grafana", url: TOOL_HOSTS.grafana, group: "Tools" },
+  { id: "argocd", label: "Argo CD", url: TOOL_HOSTS.argocd, group: "Tools" },
+  {
+    id: "temporal",
+    label: "Temporal",
+    url: TOOL_HOSTS.temporal,
+    group: "Tools",
+  },
+  {
+    id: "woodpecker",
+    label: "Woodpecker",
+    url: TOOL_HOSTS.woodpecker,
+    group: "Tools",
+  },
+  { id: "github", label: "GitHub", url: TOOL_HOSTS.github, group: "Tools" },
+  { id: "bugsink", label: "Bugsink", url: TOOL_HOSTS.bugsink, group: "Tools" },
+  { id: "phoenix", label: "Phoenix", url: TOOL_HOSTS.phoenix, group: "Tools" },
+  {
+    id: "posthog",
+    label: "PostHog",
+    url: `${TOOL_HOSTS.posthog}/project/${String(POSTHOG_PROJECT_ID)}`,
+    group: "Tools",
+  },
+  {
+    id: "prometheus",
+    label: "Prometheus",
+    url: TOOL_HOSTS.prometheus,
+    group: "Tools",
+  },
+  {
+    id: "alertmanager",
+    label: "Alertmanager",
+    url: TOOL_HOSTS.alertmanager,
+    group: "Tools",
+  },
+  {
+    id: "homeassistant",
+    label: "Home Assistant",
+    url: TOOL_HOSTS.homeassistant,
+    group: "Tools",
+  },
+];
 
 const WOODPECKER_REPOSITORY_ID = 1;
 const TEMPORAL_NAMESPACE = "prod";
