@@ -46,12 +46,13 @@ load and native client suites are `excludedSuites`, outside both tiers.
 
 ## Commands
 
-| Command                                                               | Scope                                                                          |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `bunx turbo run test:extended --filter='...[origin/main]' --continue` | Extended steps of the workspaces a branch changed and their dependents         |
-| `bun run verify:extended -- --filter=<package>`                       | One workspace, at verify's concurrency and Vitest worker cap                   |
-| `bun run verify:extended`                                             | Every extended step, uncached; what the nightly runs                           |
-| `bun <rel>/scripts/ci/run-ci-test.ts --tier extended [--group <g>]`   | The `test:extended[:<group>]` package script; fails when the tier has no steps |
+| Command                                                                      | Scope                                                                              |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `bun run verify:extended -- --filter='...[origin/main...HEAD]'`              | Extended steps of the workspaces a branch changed and their dependents (bounded)   |
+| `bunx turbo run test:extended --filter='...[origin/main...HEAD]' --continue` | Same affected selection directly through Turbo                                     |
+| `bun run verify:extended -- --filter=<package>`                              | One workspace under `verify:extended`'s serial concurrency and 2-worker Vitest cap |
+| `bun run verify:extended`                                                    | Every extended step, uncached; what the nightly runs                               |
+| `bun <rel>/scripts/ci/run-ci-test.ts --tier extended [--group <g>]`          | The `test:extended[:<group>]` package script; fails when the tier has no steps     |
 
 `test:extended` is `cache: false` in the root `turbo.json`: the run exists to
 execute suites against servers Turbo cannot hash.

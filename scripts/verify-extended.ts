@@ -8,14 +8,18 @@
  *
  * Extra arguments reach Turbo unchanged, so a local run narrows itself:
  *
- *   bun run verify:extended -- --filter='...[origin/main]' --summarize
+ *   bun run verify:extended -- --filter='...[origin/main...HEAD]' --summarize
  *
  * Unlike scripts/verify.ts there are no root checks and no affected-filter
  * logic: the caller's filter (or none, for the nightly) decides the scope.
+ * Extended suites spawn private PostgreSQL clusters, Temporal test servers,
+ * Node workflow workers and ffmpeg, so packages run serially by default rather
+ * than sharing verify's 6-slot CPU budget (preventing @shepherdjerred/media
+ * and @shepherdjerred/temporal from starving each other concurrently).
  */
-import { VERIFY_CONCURRENCY, VERIFY_VITEST_MAX_WORKERS } from "./verify.ts";
-
 export const EXTENDED_TASK = "test:extended";
+export const EXTENDED_CONCURRENCY = 1;
+export const EXTENDED_VITEST_MAX_WORKERS = 2;
 
 export function extendedTurboCommand(
   forwardedArgs: readonly string[],
@@ -34,7 +38,7 @@ export function extendedTurboCommand(
     "--continue",
     ...(hasConcurrencyOverride
       ? []
-      : [`--concurrency=${String(VERIFY_CONCURRENCY)}`]),
+      : [`--concurrency=${String(EXTENDED_CONCURRENCY)}`]),
     ...forwardedArgs,
   ];
 }
@@ -45,7 +49,8 @@ export function extendedEnvironment(
   return {
     ...environment,
     CI_VITEST_MAX_WORKERS:
-      environment["CI_VITEST_MAX_WORKERS"] ?? String(VERIFY_VITEST_MAX_WORKERS),
+      environment["CI_VITEST_MAX_WORKERS"] ??
+      String(EXTENDED_VITEST_MAX_WORKERS),
   };
 }
 

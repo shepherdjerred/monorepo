@@ -1,18 +1,12 @@
 import path from "node:path";
+import {
+  buildDefineFlags,
+  resolveToolkitBuildStamp,
+} from "#lib/version/build-stamp.ts";
 
 type Command = readonly string[];
 
 type RunCommand = (command: Command, cwd: string) => Promise<void>;
-
-const compileCommand: Command = [
-  "bun",
-  "build",
-  "./src/index.ts",
-  "--compile",
-  "--external",
-  "ffmpeg-static",
-  "--outfile=dist/toolkit",
-];
 
 const signCommand: Command = [
   "codesign",
@@ -24,7 +18,18 @@ const signCommand: Command = [
 
 export function buildCommands(
   platform: NodeJS.Platform = process.platform,
+  defineFlags: readonly string[] = [],
 ): readonly Command[] {
+  const compileCommand: Command = [
+    "bun",
+    "build",
+    "./src/index.ts",
+    "--compile",
+    ...defineFlags,
+    "--external",
+    "ffmpeg-static",
+    "--outfile=dist/toolkit",
+  ];
   return platform === "darwin"
     ? [compileCommand, signCommand]
     : [compileCommand];
@@ -49,7 +54,9 @@ export async function buildToolkit(
   platform: NodeJS.Platform = process.platform,
   run: RunCommand = runCommand,
 ): Promise<void> {
-  for (const command of buildCommands(platform)) {
+  const stamp = resolveToolkitBuildStamp(root);
+  const defineFlags = buildDefineFlags(stamp);
+  for (const command of buildCommands(platform, defineFlags)) {
     await run(command, root);
   }
 }

@@ -70,7 +70,7 @@ RIOT_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/ssqmtsrp
 # Shared local dev Postgres (postgres-server.ts): dev-web derives
 # scout_dev_<backend-port> when this matches the default; --database-url or
 # SCOUT_DEV_DATABASE_URL override it (e.g. a restored beta snapshot database).
-DATABASE_URL=postgres://scout@127.0.0.1:5471/scout_dev_3000
+DATABASE_URL=postgres://scout@127.0.0.1:5472/scout_dev_3000
 
 # Raw match JSON for a local report-lake rebuild (explore reads the lake, not
 # the database). `dev:web` copies the machine-wide seed into this checkout

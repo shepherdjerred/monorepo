@@ -1,4 +1,6 @@
 import { parseArgs } from "node:util";
+import { reapPinchtabLeaseTarget } from "#lib/pinchtab-cli/client.ts";
+import type { PinchtabClientOptions } from "#lib/pinchtab-cli/http.ts";
 import {
   acquireLease,
   listLeases,
@@ -138,6 +140,7 @@ async function runLeaseReleaseAction(
   args: readonly string[],
   paths: TendPaths,
   runner: CommandRunner,
+  pinchtab?: PinchtabClientOptions,
 ): Promise<void> {
   const { values, positionals } = parseArgs({
     args: [...args],
@@ -155,6 +158,14 @@ async function runLeaseReleaseAction(
       existing.lease.target,
       runner,
     );
+  } else if (existing?.lease.kind === "pinchtab") {
+    const teardown = await reapPinchtabLeaseTarget(
+      existing.lease.target,
+      pinchtab,
+    );
+    if (!teardown.ok && teardown.detail !== undefined) {
+      console.error(`Warning: ${teardown.detail}`);
+    }
   }
   const released = await releaseLease(leaseId, { paths });
   if (values.json) {
@@ -261,6 +272,7 @@ async function handleLeaseSubcommand(
   options: {
     readonly paths?: TendPaths | undefined;
     readonly runner?: CommandRunner | undefined;
+    readonly pinchtab?: PinchtabClientOptions | undefined;
   } = {},
 ): Promise<void> {
   const action = args[0];
@@ -283,7 +295,7 @@ async function handleLeaseSubcommand(
       await runLeaseListAction(tail, paths, runner);
       return;
     case "release":
-      await runLeaseReleaseAction(tail, paths, runner);
+      await runLeaseReleaseAction(tail, paths, runner, options.pinchtab);
       return;
     case "acquire":
       await runLeaseAcquireAction(tail, paths, runner);
@@ -302,6 +314,7 @@ export async function handleTendCommand(
   injected: {
     readonly runner?: CommandRunner | undefined;
     readonly paths?: TendPaths | undefined;
+    readonly pinchtab?: PinchtabClientOptions | undefined;
   } = {},
 ): Promise<void> {
   if (
@@ -357,6 +370,7 @@ export async function handleTendCommand(
     offline: values.offline,
     paths: injected.paths,
     runner: injected.runner,
+    pinchtab: injected.pinchtab,
   });
 
   console.log(

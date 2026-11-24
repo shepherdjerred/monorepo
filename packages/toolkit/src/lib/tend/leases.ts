@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readdir, rename, rm } from "node:fs/promises";
 import path from "node:path";
+import {
+  type PinchtabLeaseTeardownResult,
+  reapPinchtabLeaseTarget,
+} from "#lib/pinchtab-cli/client.ts";
+import type { PinchtabClientOptions } from "#lib/pinchtab-cli/http.ts";
 import { parseDurationMs, resolveTendPaths, type TendPaths } from "./paths.ts";
 import { processStartsMatch, readSingleProcessStart } from "./process-probe.ts";
 import {
@@ -179,11 +184,59 @@ export async function listLeases(
   return results;
 }
 
+function leaseTeardownOrder(item: ClassifiedLease): number {
+  if (item.lease.kind !== "pinchtab") {
+    return 2;
+  }
+  const target = item.lease.target.trim();
+  return target.startsWith("ses_") || target.startsWith("session:") ? 1 : 0;
+}
+
+async function applyInactiveLeaseSweep(options: {
+  readonly item: ClassifiedLease;
+  readonly candidate: TendCandidate;
+  readonly apply: boolean;
+  readonly paths?: TendPaths | undefined;
+  readonly reapPinchtab: (
+    target: string,
+  ) => Promise<PinchtabLeaseTeardownResult>;
+  readonly warnings: string[];
+}): Promise<TendActionOutcome> {
+  if (!options.apply) {
+    return { candidate: options.candidate, status: "planned" };
+  }
+  if (options.item.lease.kind === "pinchtab") {
+    const teardown = await options.reapPinchtab(options.item.lease.target);
+    if (!teardown.ok) {
+      return {
+        candidate: options.candidate,
+        status: "failed",
+        ...(teardown.detail === undefined ? {} : { detail: teardown.detail }),
+      };
+    }
+    if (teardown.skipped === true && teardown.detail !== undefined) {
+      options.warnings.push(
+        `PinchTab lease ${options.item.lease.id} (${options.item.lease.target}): ${teardown.detail}`,
+      );
+    }
+  }
+  const removed = await releaseLease(options.item.lease.id, {
+    paths: options.paths,
+  });
+  return {
+    candidate: options.candidate,
+    status: removed ? "removed" : "skipped",
+  };
+}
+
 export async function sweepLeases(options: {
   readonly paths?: TendPaths | undefined;
   readonly nowMs?: number | undefined;
   readonly processes: ReadonlyMap<number, OsProcessEntry>;
   readonly apply: boolean;
+  readonly pinchtab?: PinchtabClientOptions | undefined;
+  readonly reapPinchtab?:
+    ((target: string) => Promise<PinchtabLeaseTeardownResult>) | undefined;
 }): Promise<{
   readonly sweep: SurfaceSweepResult;
   readonly classified: readonly ClassifiedLease[];
@@ -196,13 +249,16 @@ export async function sweepLeases(options: {
   });
   const candidates: TendCandidate[] = [];
   const actions: TendActionOutcome[] = [];
+  const warnings: string[] = [];
+  const reapPinchtab =
+    options.reapPinchtab ??
+    ((target: string) => reapPinchtabLeaseTarget(target, options.pinchtab));
 
-  for (const item of classified) {
-    if (item.status === "active") {
-      continue;
-    }
-    // Leave tailscale-serve expired leases for tailscale-serve sweeper if selected,
-    // or clean lease files whose status is expired/dead-owner when sweeping leases.
+  const inactive = classified
+    .filter((item) => item.status !== "active")
+    .sort((a, b) => leaseTeardownOrder(a) - leaseTeardownOrder(b));
+
+  for (const item of inactive) {
     const createdMs = Date.parse(item.lease.createdAt);
     const ageSeconds = Number.isNaN(createdMs)
       ? undefined
@@ -216,15 +272,16 @@ export async function sweepLeases(options: {
       ...(ageSeconds === undefined ? {} : { ageSeconds }),
     };
     candidates.push(candidate);
-    if (!options.apply) {
-      actions.push({ candidate, status: "planned" });
-      continue;
-    }
-    const removed = await releaseLease(item.lease.id, { paths: options.paths });
-    actions.push({
-      candidate,
-      status: removed ? "removed" : "skipped",
-    });
+    actions.push(
+      await applyInactiveLeaseSweep({
+        item,
+        candidate,
+        apply: options.apply,
+        paths: options.paths,
+        reapPinchtab,
+        warnings,
+      }),
+    );
   }
 
   return {
@@ -234,7 +291,7 @@ export async function sweepLeases(options: {
       inspectedCount: classified.length,
       candidates,
       actions,
-      warnings: [],
+      warnings,
     },
   };
 }

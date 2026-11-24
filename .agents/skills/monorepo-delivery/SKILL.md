@@ -5,9 +5,12 @@ description: Deliver changes in this monorepo through Git-Spice, focused checks,
 
 # Monorepo delivery
 
-Use `toolkit git-spice` for every feature branch and PR operation. A single PR
-is a stack of one. Never use `gs` from non-interactive shells, hand-roll a stack
-rebase, or create a feature PR with `gh pr create`.
+Use `toolkit git-spice` (or its `toolkit spice` alias in isolated Claude
+worktrees, where the worktree guard refuses `git-spice` operands) for every
+feature branch and PR operation. A single PR is a stack of one. Always pass
+`--no-prompt` in agent shells so PTY sessions never block on interactive input,
+and never use `gs`, hand-roll a stack rebase, or create a feature PR with
+`gh pr create`.
 
 ## Work locally
 
@@ -16,7 +19,8 @@ rebase, or create a feature PR with `gh pr create`.
 2. Run focused package tasks with Turbo while iterating.
 3. Run the extended test tier for affected workspaces; Woodpecker does not run
    it on pull requests:
-   `bunx turbo run test:extended --filter='...[origin/main]' --continue`.
+   `bun run verify:extended -- --filter='...[origin/main...HEAD]'` (or
+   `bunx turbo run test:extended --filter='...[origin/main...HEAD]' --continue`).
 4. Capture `Demo` material so a reviewer skimming the PR immediately sees what
    changed and that it works (when a prior state exists, capture `before` from
    `main` first — before editing, from a `main` worktree, or `git stash` — with
@@ -48,17 +52,20 @@ Create the draft PR, upload `Demo` media, embed it in `## Demo`, then mark
 ready (`Why`, `What`, `Demo`, and `Verification` in the PR body):
 
 ```bash
-toolkit git-spice branch submit --draft --no-web --title "type(scope): outcome" --body "$(cat /tmp/pr-body.md)"
+toolkit git-spice branch submit --draft --no-prompt --no-web --title "type(scope): outcome" --body-file /tmp/pr-body.md
 toolkit pr asset before.png after.png --profile seaweedfs --markdown
 # Embed printed markdown in ## Demo of /tmp/pr-body.md, then mark ready:
-toolkit git-spice branch submit --no-draft --no-web --body "$(cat /tmp/pr-body.md)"
+toolkit git-spice branch submit --no-draft --no-prompt --no-web --body-file /tmp/pr-body.md
 toolkit ci wait --json
 ```
 
-Draft pushes run bounded preflight; `toolkit git-spice stack submit --update-only`
-updates an existing stack. A green draft preflight is not merge evidence: wait
-for full verification of the current head after marking it ready, and keep PR
-metadata based on the whole branch, not the latest commit.
+Pass `--body-file` rather than `--body "$(cat ...)"` so worktree guards never
+reject command substitution (`toolkit spice` accepts the same flags in isolated
+Claude worktrees). Draft pushes run bounded preflight;
+`toolkit git-spice stack submit --update-only --no-prompt` updates an existing
+stack. A green draft preflight is not merge evidence: wait for full verification
+of the current head after marking it ready, and keep PR metadata based on the
+whole branch, not the latest commit.
 
 ## Prove readiness
 

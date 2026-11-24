@@ -196,7 +196,7 @@ function structuralVerdict(
     return {
       outcome: "failure",
       reasons: ["PR has merge conflicts"],
-      commands: ["toolkit git-spice repo sync --restack=aboves"],
+      commands: ["toolkit git-spice repo sync --no-prompt --restack=aboves"],
     };
   const human = reviewBlockers(snapshot);
   if (human.length > 0)
@@ -209,7 +209,7 @@ function structuralVerdict(
     ? {
         outcome: "failure",
         reasons: ["Required checks must run on a branch current with its base"],
-        commands: ["toolkit git-spice repo sync --restack=aboves"],
+        commands: ["toolkit git-spice repo sync --no-prompt --restack=aboves"],
       }
     : null;
 }

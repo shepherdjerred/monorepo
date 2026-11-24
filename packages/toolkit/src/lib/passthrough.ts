@@ -3,11 +3,13 @@ import os, { tmpdir } from "node:os";
 import path from "node:path";
 import { protectArgoTokenDefault } from "./argocd-options.ts";
 import { isArgoHelpCommand } from "./argocd-metadata.ts";
+import { isAgentEnvironment } from "./tracker/actor.ts";
 
 export const PASSTHROUGH_COMMANDS = [
   "gh",
   "woodpecker",
   "git-spice",
+  "spice",
   "posthog",
   "grafana",
   "prom",
@@ -24,6 +26,9 @@ type DefaultArgument = {
   readonly overrideFlags: readonly string[];
   readonly overrideEnvironment?: readonly string[] | undefined;
   readonly skipWhenFirstArgumentIs?: readonly string[] | undefined;
+  readonly whenEnvironment?:
+    ((env: Record<string, string | undefined>) => boolean) | undefined;
+  readonly position?: "prepend" | "append" | undefined;
 };
 
 type DefaultEnvironment = {
@@ -81,6 +86,29 @@ function gcxSpec(prefixArgs?: readonly string[]): PassthroughSpec {
   };
 }
 
+const GIT_SPICE_SPEC: PassthroughSpec = {
+  executable: "git-spice",
+  defaultArgs: [
+    {
+      args: ["--no-prompt"],
+      overrideFlags: ["--prompt", "--no-prompt"],
+      skipWhenFirstArgumentIs: [
+        "--help",
+        "-h",
+        "--version",
+        "version",
+        "auth",
+        "shell",
+      ],
+      whenEnvironment: isAgentEnvironment,
+      // git-spice expands shorthands (`bc`, `bs`, `rs`, `rbc`, `bm`) only when
+      // they appear as argv[1]; appending `--no-prompt` before `--` preserves
+      // shorthand expansion while still disabling interactive prompts.
+      position: "append",
+    },
+  ],
+};
+
 export const PASSTHROUGH_REGISTRY: ReadonlyMap<string, PassthroughSpec> =
   new Map([
     [
@@ -116,7 +144,8 @@ export const PASSTHROUGH_REGISTRY: ReadonlyMap<string, PassthroughSpec> =
         ],
       },
     ],
-    ["git-spice", { executable: "git-spice" }],
+    ["git-spice", GIT_SPICE_SPEC],
+    ["spice", GIT_SPICE_SPEC],
     [
       "posthog",
       {
@@ -242,31 +271,62 @@ function hasEnvironmentValue(
   return value !== undefined && value.length > 0;
 }
 
-export function buildPassthroughInvocation(
+function appendBeforeBoundary(
+  args: readonly string[],
+  appended: readonly string[],
+): string[] {
+  if (appended.length === 0) return [...args];
+  const boundary = args.indexOf("--");
+  return boundary === -1
+    ? [...args, ...appended]
+    : [...args.slice(0, boundary), ...appended, ...args.slice(boundary)];
+}
+
+function shouldIncludeDefaultArg(
+  entry: DefaultArgument,
+  args: readonly string[],
+  environment: Record<string, string | undefined>,
+): boolean {
+  if (
+    entry.whenEnvironment !== undefined &&
+    !entry.whenEnvironment(environment)
+  ) {
+    return false;
+  }
+  const overriddenByEnvironment = (entry.overrideEnvironment ?? []).some(
+    (name) => hasEnvironmentValue(environment, name),
+  );
+  if (overriddenByEnvironment) return false;
+  const skippedForRootFlag =
+    args[0] !== undefined &&
+    (entry.skipWhenFirstArgumentIs ?? []).includes(args[0]);
+  return !skippedForRootFlag && !hasFlag(args, entry.overrideFlags);
+}
+
+function selectDefaultArguments(
+  spec: PassthroughSpec,
+  args: readonly string[],
+  environment: Record<string, string | undefined>,
+): { prepended: string[]; appended: string[] } {
+  const prepended: string[] = [];
+  const appended: string[] = [];
+  for (const entry of spec.defaultArgs ?? []) {
+    if (!shouldIncludeDefaultArg(entry, args, environment)) continue;
+    if (entry.position === "append") {
+      appended.push(...entry.args);
+    } else {
+      prepended.push(...entry.args);
+    }
+  }
+  return { prepended, appended };
+}
+
+function applySpecEnvironment(
+  spec: PassthroughSpec,
   command: string,
   args: readonly string[],
   environment: Record<string, string | undefined>,
-): PassthroughInvocation | null {
-  const spec = PASSTHROUGH_REGISTRY.get(command);
-  if (spec === undefined) {
-    return null;
-  }
-
-  const help = command === "argocd" && isArgoHelpCommand(args);
-  const forwardedArgs = help ? withoutHelpCredentials(args) : args;
-  const defaultArgs = (spec.defaultArgs ?? []).flatMap((entry) => {
-    const overriddenByEnvironment = (entry.overrideEnvironment ?? []).some(
-      (name) => hasEnvironmentValue(environment, name),
-    );
-    const skippedForRootFlag =
-      args[0] !== undefined &&
-      (entry.skipWhenFirstArgumentIs ?? []).includes(args[0]);
-    return overriddenByEnvironment ||
-      skippedForRootFlag ||
-      hasFlag(args, entry.overrideFlags)
-      ? []
-      : entry.args;
-  });
+): Record<string, string | undefined> {
   const env = { ...environment };
   // The 1Password service-account token unlocks every brokered credential;
   // no vendor CLI needs it, so no passthrough child inherits it.
@@ -289,10 +349,35 @@ export function buildPassthroughInvocation(
       env[entry.name] = value;
     }
   }
+  return env;
+}
+
+export function buildPassthroughInvocation(
+  command: string,
+  args: readonly string[],
+  environment: Record<string, string | undefined>,
+): PassthroughInvocation | null {
+  const spec = PASSTHROUGH_REGISTRY.get(command);
+  if (spec === undefined) {
+    return null;
+  }
+
+  const help = command === "argocd" && isArgoHelpCommand(args);
+  const forwardedArgs = help ? withoutHelpCredentials(args) : args;
+  const { prepended, appended } = selectDefaultArguments(
+    spec,
+    args,
+    environment,
+  );
+  const env = applySpecEnvironment(spec, command, args, environment);
 
   return {
     executable: spec.executable,
-    args: [...defaultArgs, ...(spec.prefixArgs ?? []), ...forwardedArgs],
+    args: [
+      ...prepended,
+      ...(spec.prefixArgs ?? []),
+      ...appendBeforeBoundary(forwardedArgs, appended),
+    ],
     env,
   };
 }
@@ -300,6 +385,16 @@ export function buildPassthroughInvocation(
 /** Where chezmoi installs the plain-name shims that call back into toolkit. */
 export function shimDirectory(home: string = os.homedir()): string {
   return path.join(home, ".local", "share", "toolkit", "shims");
+}
+
+const SHIM_DIRECTORY_SUFFIX = `${path.sep}${path.join(".local", "share", "toolkit", "shims")}`;
+
+function isShimDirectoryEntry(
+  entry: string,
+  blocked: ReadonlySet<string>,
+): boolean {
+  const resolved = path.resolve(entry);
+  return blocked.has(resolved) || resolved.endsWith(SHIM_DIRECTORY_SUFFIX);
 }
 
 /**
@@ -312,13 +407,13 @@ export function trustedSearchPath(
   pathValue: string,
   home: string = os.homedir(),
 ): string {
-  const shims = shimDirectory(home);
+  const blocked = new Set([shimDirectory(os.homedir()), shimDirectory(home)]);
   return pathValue
     .split(path.delimiter)
     .filter(
       (entry) =>
         path.isAbsolute(entry) &&
-        path.resolve(entry) !== shims &&
+        !isShimDirectoryEntry(entry, blocked) &&
         !entry.split(path.sep).includes("node_modules"),
     )
     .join(path.delimiter);
@@ -327,14 +422,24 @@ export function trustedSearchPath(
 export function lookupExecutable(
   executable: string,
   pathValue: string | undefined,
+  home?: string,
 ): string | null {
-  const searchPath = trustedSearchPath(pathValue ?? Bun.env["PATH"] ?? "");
+  const effectiveHome =
+    home !== undefined && home.length > 0 ? home : os.homedir();
+  const searchPath = trustedSearchPath(
+    pathValue ?? Bun.env["PATH"] ?? "",
+    effectiveHome,
+  );
   // An empty cwd keeps Bun.which from resolving relative to the caller.
   return Bun.which(executable, { cwd: "/", PATH: searchPath });
 }
 
 function resolveExecutable(invocation: PassthroughInvocation): string | null {
-  return lookupExecutable(invocation.executable, invocation.env["PATH"]);
+  return lookupExecutable(
+    invocation.executable,
+    invocation.env["PATH"],
+    invocation.env["HOME"] ?? Bun.env["HOME"],
+  );
 }
 
 /**
@@ -345,8 +450,27 @@ function isolatedConfigHome(): Promise<string> {
   return mkdtemp(path.join(tmpdir(), "toolkit-argocd-help-"));
 }
 
+function withoutShimDirectories(
+  pathValue: string,
+  invocationHome: string | undefined,
+): string {
+  const blocked = new Set([shimDirectory(os.homedir())]);
+  if (invocationHome !== undefined && invocationHome.length > 0) {
+    blocked.add(shimDirectory(invocationHome));
+  }
+  return pathValue
+    .split(path.delimiter)
+    .filter(
+      (entry) => entry.length === 0 || !isShimDirectoryEntry(entry, blocked),
+    )
+    .join(path.delimiter);
+}
+
 async function nativeEnvironment(invocation: PassthroughInvocation) {
   const env = { ...invocation.env };
+  if (env["PATH"] !== undefined) {
+    env["PATH"] = withoutShimDirectories(env["PATH"], invocation.env["HOME"]);
+  }
   if (invocation.executable !== "argocd") return env;
   const options = env["ARGOCD_OPTS"] ?? "";
   // ArgoCD's flag default and API client independently read the token. An
@@ -403,7 +527,12 @@ export async function runPassthrough(
  */
 export async function spawnPassthroughInvocation(
   invocation: PassthroughInvocation,
-  options: { stdoutToStderr?: boolean; signal?: AbortSignal } = {},
+  options: {
+    cwd?: string | undefined;
+    stdoutToStderr?: boolean | undefined;
+    signal?: AbortSignal | undefined;
+    stdin?: "inherit" | "ignore" | undefined;
+  } = {},
 ): Promise<number> {
   const executable = resolveExecutable(invocation);
   if (executable === null) {
@@ -412,13 +541,14 @@ export async function spawnPassthroughInvocation(
     );
   }
   const child = Bun.spawn([executable, ...invocation.args], {
+    ...(options.cwd === undefined ? {} : { cwd: options.cwd }),
     env: await nativeEnvironment(invocation),
     // Cancelling the caller terminates the child; `exited` still resolves.
     ...(options.signal === undefined ? {} : { signal: options.signal }),
     // A caller that reserves stdout for its own report streams the child's
     // stdout to stderr instead.
     stdio: [
-      "inherit",
+      options.stdin ?? "inherit",
       options.stdoutToStderr === true ? 2 : "inherit",
       "inherit",
     ],

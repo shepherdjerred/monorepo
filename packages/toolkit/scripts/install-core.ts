@@ -1,4 +1,8 @@
 import path from "node:path";
+import {
+  buildDefineFlags,
+  type ToolkitBuildStamp,
+} from "#lib/version/build-stamp.ts";
 
 export type InstallPlatform = "darwin" | "linux" | "win32";
 
@@ -40,8 +44,10 @@ export type BuildStep = {
 export function buildSteps(
   home: string,
   platform: InstallPlatform,
+  stamp?: ToolkitBuildStamp | null,
 ): BuildStep[] {
   const paths = installPaths(home, platform);
+  const defines = buildDefineFlags(stamp);
   if (platform === "win32") {
     return [
       {
@@ -50,6 +56,7 @@ export function buildSteps(
           "build",
           "./src/index.ts",
           "--compile",
+          ...defines,
           "--target=bun-windows-x64",
           "--external",
           "ffmpeg-static",
@@ -79,6 +86,7 @@ export function buildSteps(
         "build",
         "./src/index.ts",
         "--compile",
+        ...defines,
         "--external",
         "ffmpeg-static",
         "--outfile=dist/toolkit",

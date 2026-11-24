@@ -9,7 +9,9 @@ import {
   validateDeployCommand,
 } from "#commands/deploy/deploy.ts";
 import { parseDeployArgs } from "#commands/deploy/common.ts";
+import { assertServiceRetirableOnMain } from "#commands/deploy/model-io.ts";
 import { deployMachineCredential } from "#commands/deploy/forum.ts";
+import { CREDENTIAL_REGISTRY } from "#lib/credential-registry.ts";
 import {
   CatalogDocumentSchema,
   catalogRevision,
@@ -88,6 +90,12 @@ describe("model verbs refuse incomplete requests before credentials", () => {
     ],
     ["retire", ["webring-legacy"], ["--reason", "Replaced"], "--machine"],
     ["retire", ["webring-legacy"], ["--machine"], "--reason"],
+    [
+      "promote",
+      [fixtures.BETA, fixtures.PROD],
+      ["--force-while-on-main"],
+      "--force-while-on-main applies to deploy retire",
+    ],
     ["catalog", ["apply"], ["--machine"], "deploy catalog reconcile"],
     ["catalog", ["reconcile"], ["--file", "catalog.json"], "--machine"],
     ["promote", [fixtures.BETA, fixtures.PROD], ["--override"], "--override"],
@@ -232,6 +240,18 @@ describe("admin and operator verbs", () => {
       requestId: "request/retire",
       reason: "Replaced by the webring channel",
     });
+  });
+
+  test("registers DELIVERY_PLATFORM_ARGOCD_TOKEN in the credential registry", () => {
+    const vaultRef = "op://v64ocnykdqju4ui6j6pua56xw4";
+    expect(CREDENTIAL_REGISTRY["DELIVERY_PLATFORM_ARGOCD_TOKEN"]).toMatchObject(
+      {
+        source: {
+          kind: "op",
+          ref: `${vaultRef}/delivery-argocd-platform-token/tokens/ARGOCD_TOKEN`,
+        },
+      },
+    );
   });
 
   test("catalog reconcile posts the parsed document and fails on a refusal", async () => {
@@ -564,5 +584,178 @@ describe("override approvals", () => {
       reason: "Reviewed the ineligible set revision",
       override: true,
     });
+  });
+});
+
+describe("retire origin/main and helm-push guard", () => {
+  test("retire invokes assertServiceRetirableOnMain unless --force-while-on-main is passed", async () => {
+    const guarded = delivery({
+      "POST /services/webring-legacy/retire": fixtures.retiredService,
+    });
+    const refusedArgs = parseDeployArgs([
+      "webring-legacy",
+      "--machine",
+      "--reason",
+      "Replaced",
+    ]);
+    await expect(
+      runDeployCommand(guarded.client, "retire", refusedArgs.positionals, {
+        ...refusedArgs.values,
+        assertServiceRetirableOnMain: () =>
+          Promise.reject(new Error("still active on origin/main")),
+      }),
+    ).rejects.toThrow("still active on origin/main");
+    expect(guarded.sent).toEqual([]);
+
+    const forcedArgs = parseDeployArgs([
+      "webring-legacy",
+      "--machine",
+      "--reason",
+      "Break-glass retirement",
+      "--force-while-on-main",
+      "--request-id",
+      "request/forced-retire",
+    ]);
+    const forced = await runDeployCommand(
+      guarded.client,
+      "retire",
+      forcedArgs.positionals,
+      {
+        ...forcedArgs.values,
+        assertServiceRetirableOnMain: () =>
+          Promise.reject(new Error("must not be called")),
+      },
+    );
+    expect(forced.exitCode).toBe(0);
+    expect(guarded.sent[0]?.body).toEqual({
+      requestId: "request/forced-retire",
+      reason: "Break-glass retirement",
+    });
+  });
+
+  test("assertServiceRetirableOnMain checks origin/main catalogs and helm-push completion", async () => {
+    const baseCore = {
+      groups: [{ id: "arcade", title: "Arcade", kind: "product" }],
+      services: [
+        {
+          id: "arcade",
+          title: "Arcade",
+          lifecycle: "active",
+          selfHosted: false,
+          group: "arcade",
+          components: [],
+        },
+      ],
+      environments: [],
+      edges: [],
+    };
+    const baseServices = {
+      services: [
+        {
+          id: "arcade",
+          title: "Arcade",
+          kind: "product",
+          aliases: [],
+          namespaces: ["arcade"],
+          argoApps: ["arcade"],
+          charts: [],
+          images: [],
+          bootstrapImages: [],
+          bugsinkProjects: [],
+          analyticsSites: [],
+          grafanaDashboards: [],
+          deploy: [],
+        },
+      ],
+    };
+    const removalSha = "1111111111111111111111111111111111111111";
+    const descendantSha = "2222222222222222222222222222222222222222";
+
+    await expect(
+      assertServiceRetirableOnMain("arcade", {
+        findRepoRoot: () => Promise.resolve("/monorepo"),
+        fetchOriginMain: () => Promise.resolve(true),
+        readGitObject: (spec) =>
+          Promise.resolve(
+            spec.endsWith("catalog-document.json")
+              ? JSON.stringify(baseCore)
+              : JSON.stringify(baseServices),
+          ),
+      }),
+    ).rejects.toThrow(/still lifecycle "active".*--force-while-on-main/);
+
+    await expect(
+      assertServiceRetirableOnMain("arcade", {
+        findRepoRoot: () => Promise.resolve("/monorepo"),
+        fetchOriginMain: () => Promise.resolve(true),
+        readGitObject: (spec) =>
+          Promise.resolve(
+            spec.endsWith("catalog-document.json")
+              ? JSON.stringify({
+                  ...baseCore,
+                  services: baseCore.services.map((s) => ({
+                    ...s,
+                    lifecycle: "retired",
+                  })),
+                })
+              : JSON.stringify(baseServices),
+          ),
+      }),
+    ).rejects.toThrow(
+      /still owned in origin\/main:packages\/ops-model\/services\.json/,
+    );
+
+    const retiredCore = JSON.stringify({
+      ...baseCore,
+      services: [
+        ...baseCore.services,
+        {
+          id: "webring-legacy",
+          title: "Webring",
+          lifecycle: "retired",
+          selfHosted: false,
+          group: "arcade",
+          components: [],
+        },
+      ],
+    });
+    const cleanServices = JSON.stringify(baseServices);
+    const makeRetireDeps = (
+      pipelineNumber: number,
+      commit: string,
+      helmPushState: string,
+    ) => ({
+      findRepoRoot: () => Promise.resolve("/monorepo"),
+      fetchOriginMain: () => Promise.resolve(true),
+      readGitObject: (spec: string) =>
+        Promise.resolve(
+          spec.endsWith("catalog-document.json") ? retiredCore : cleanServices,
+        ),
+      latestCatalogCommitOnMain: () => Promise.resolve(removalSha),
+      isCommitAncestor: (anc: string, desc: string) =>
+        Promise.resolve(anc === removalSha && desc === descendantSha),
+      listMainPipelines: () =>
+        Promise.resolve([{ number: pipelineNumber, commit }]),
+      readMainPipeline: () =>
+        Promise.resolve({
+          number: pipelineNumber,
+          commit,
+          workflows: [{ name: "helm-push", state: helmPushState }],
+        }),
+    });
+
+    await expect(
+      assertServiceRetirableOnMain(
+        "webring-legacy",
+        makeRetireDeps(901, removalSha, "running"),
+      ),
+    ).rejects.toThrow(`toolkit ci wait --main --head ${removalSha}`);
+
+    await expect(
+      assertServiceRetirableOnMain(
+        "webring-legacy",
+        makeRetireDeps(902, descendantSha, "success"),
+      ),
+    ).resolves.toBeUndefined();
   });
 });

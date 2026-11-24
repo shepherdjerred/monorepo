@@ -1,4 +1,5 @@
 import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
+import { isTransientGitHubTransportError } from "#lib/ci/github.ts";
 import { RESUME_SPREAD_MS } from "#lib/ci/github/budget.ts";
 import { sleep } from "#lib/ci/wait/sleep.ts";
 import {
@@ -7,6 +8,7 @@ import {
   type Snapshot,
   type Verdict,
 } from "#lib/ci/readiness.ts";
+import { WoodpeckerHttpError } from "#lib/woodpecker/ci.ts";
 
 type Subscribe = (
   signal: AbortSignal,
@@ -27,12 +29,15 @@ export type WaitLoopDependencies<S> = {
   heartbeat: (snapshot: S | null) => void;
   /** Reports that GitHub refused a read on quota and when polling resumes. */
   rateLimited?: (error: GitHubRateLimitError, resumeAt: number) => void;
+  /** Reports a retriable upstream HTTP/transport failure during polling. */
+  transientError?: (error: unknown, attempt: number) => void;
 };
 export type WaitLoopOptions = {
   timeoutMs?: number;
   signal?: AbortSignal;
   pollMs?: number;
   heartbeatMs?: number;
+  maxConsecutiveErrors?: number;
   /**
    * Event bursts coalesce: a wake within this long of the previous
    * event-driven snapshot waits out the rest of the gap. Default 5s.
@@ -72,21 +77,31 @@ export function timeoutResult<S>(
 }
 
 const TRANSIENT_NETWORK =
-  /unable to connect|failed to fetch|socket connection was closed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENETUNREACH|EAI_AGAIN|network connection/iu;
+  /unable to connect|failed to fetch|socket connection was closed|connection reset by peer|TLS handshake timeout|unexpected EOF|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|EHOSTUNREACH|ENETUNREACH|network connection/iu;
+
+const MAX_CONSECUTIVE_SNAPSHOT_ERRORS = 20;
+const MAX_TRANSIENT_QUOTA_READ_RETRIES = 3;
 
 /**
- * A 30s snapshot deadline or a dropped connection is not a CI result. The
- * Woodpecker event-stream connect timer uses a different message and must
- * end the wait. Caller abort is checked separately.
+ * A 30s snapshot deadline, upstream 5xx/429 gateway blip, or dropped socket is
+ * not a CI result. The Woodpecker event-stream connect timer uses a different
+ * message and must end the wait. Caller abort is checked separately.
  */
 export function isRetriableSnapshotError(error: unknown): boolean {
-  return (
-    error instanceof Error &&
-    error.message !== "Woodpecker event connection timed out" &&
-    (error.name === "TimeoutError" ||
-      error.message === "The operation timed out." ||
-      (error instanceof TypeError && TRANSIENT_NETWORK.test(error.message)))
-  );
+  if (
+    !(error instanceof Error) ||
+    error.name === "AbortError" ||
+    error.message === "Woodpecker event connection timed out"
+  ) {
+    return false;
+  }
+  return error instanceof WoodpeckerHttpError
+    ? error.status >= 500 || error.status === 429
+    : /^GitHub (?:request|GraphQL) failed \(5\d\d\)/u.test(error.message) ||
+        error.name === "TimeoutError" ||
+        error.message === "The operation timed out." ||
+        isTransientGitHubTransportError(error) ||
+        TRANSIENT_NETWORK.test(error.message);
 }
 
 /**
@@ -106,8 +121,100 @@ export async function sleepUntilRateLimitReset(
   await sleep(Math.max(0, resumeAt - Date.now()), signal);
 }
 
+export type ReadThroughQuotaCallbacks =
+  | ((error: GitHubRateLimitError, resumeAt: number) => void)
+  | {
+      rateLimited?:
+        ((error: GitHubRateLimitError, resumeAt: number) => void) | undefined;
+      transientError?: ((error: unknown, attempt: number) => void) | undefined;
+    };
+
+function normalizeQuotaCallbacks(callbacks?: ReadThroughQuotaCallbacks): {
+  rateLimited?:
+    ((error: GitHubRateLimitError, resumeAt: number) => void) | undefined;
+  transientError?: ((error: unknown, attempt: number) => void) | undefined;
+} {
+  if (callbacks === undefined) {
+    return {};
+  }
+  return typeof callbacks === "function"
+    ? { rateLimited: callbacks }
+    : callbacks;
+}
+
+async function waitTransientQuotaRetry(options: {
+  error: unknown;
+  attempt: number;
+  signal: AbortSignal;
+  deadline: number | null;
+  onTransient?: ((error: unknown, attempt: number) => void) | undefined;
+}): Promise<"retry" | "timeout"> {
+  const { error, attempt, signal, deadline, onTransient } = options;
+  if (deadline !== null && Date.now() >= deadline) {
+    return "timeout";
+  }
+  onTransient?.(error, attempt);
+  const baseMs = Bun.env.NODE_ENV === "test" ? 5 : 1000 * 2 ** (attempt - 1);
+  const waitMs =
+    deadline === null
+      ? baseMs
+      : Math.max(0, Math.min(baseMs, deadline - Date.now()));
+  await sleep(waitMs, signal);
+  return deadline !== null && Date.now() >= deadline ? "timeout" : "retry";
+}
+
+async function waitRateLimitQuotaRetry(
+  error: GitHubRateLimitError,
+  signal: AbortSignal,
+  deadline: number | null,
+  onWait?: (error: GitHubRateLimitError, resumeAt: number) => void,
+): Promise<"retry" | "timeout"> {
+  if (deadline !== null && error.resumeAt > deadline) {
+    return "timeout";
+  }
+  await sleepUntilRateLimitReset(error, signal, onWait);
+  return deadline !== null && Date.now() >= deadline ? "timeout" : "retry";
+}
+
+async function handleQuotaReadError(options: {
+  error: unknown;
+  transientAttempts: number;
+  signal: AbortSignal;
+  deadline: number | null;
+  rateLimited?:
+    ((error: GitHubRateLimitError, resumeAt: number) => void) | undefined;
+  transientError?: ((error: unknown, attempt: number) => void) | undefined;
+}): Promise<{ step: "retry" | "timeout"; transientAttempts: number }> {
+  const { error, transientAttempts, signal, deadline } = options;
+  if (error instanceof GitHubRateLimitError) {
+    const step = await waitRateLimitQuotaRetry(
+      error,
+      signal,
+      deadline,
+      options.rateLimited,
+    );
+    return { step, transientAttempts: 0 };
+  }
+  const canRetry =
+    !signal.aborted &&
+    transientAttempts < MAX_TRANSIENT_QUOTA_READ_RETRIES &&
+    isRetriableSnapshotError(error);
+  if (!canRetry) {
+    throw error;
+  }
+  const attempt = transientAttempts + 1;
+  const step = await waitTransientQuotaRetry({
+    error,
+    attempt,
+    signal,
+    deadline,
+    onTransient: options.transientError,
+  });
+  return { step, transientAttempts: attempt };
+}
+
 /**
- * One GitHub read that waits out quota refusals like every later poll.
+ * One GitHub read that waits out quota refusals and bounded transient errors.
  * Returns null when the caller's deadline arrives first, so the caller can
  * report a timeout instead of an error.
  */
@@ -115,16 +222,26 @@ export async function readThroughQuota<T>(
   read: () => Promise<T>,
   signal: AbortSignal,
   deadline: number | null,
-  onWait?: (error: GitHubRateLimitError, resumeAt: number) => void,
+  callbacks?: ReadThroughQuotaCallbacks,
 ): Promise<T | null> {
+  const { rateLimited, transientError } = normalizeQuotaCallbacks(callbacks);
+  let transientAttempts = 0;
   for (;;) {
     try {
       return await read();
     } catch (error) {
-      if (!(error instanceof GitHubRateLimitError)) throw error;
-      if (deadline !== null && error.resumeAt > deadline) return null;
-      await sleepUntilRateLimitReset(error, signal, onWait);
-      if (deadline !== null && Date.now() >= deadline) return null;
+      const outcome = await handleQuotaReadError({
+        error,
+        transientAttempts,
+        signal,
+        deadline,
+        rateLimited,
+        transientError,
+      });
+      if (outcome.step === "timeout") {
+        return null;
+      }
+      transientAttempts = outcome.transientAttempts;
     }
   }
 }
@@ -237,8 +354,42 @@ async function candidate(
   };
 }
 
+async function handleSnapshotError<S>(
+  context: WaitContext<S>,
+  error: unknown,
+  consecutiveErrors: number,
+  maxConsecutiveErrors: number,
+): Promise<number> {
+  if (error instanceof GitHubRateLimitError) {
+    await sleepUntilRateLimitReset(
+      error,
+      context.signal,
+      context.dependencies.rateLimited,
+    );
+    return consecutiveErrors;
+  }
+  // A snapshot's own 30s timer, upstream 5xx/429, or dropped socket is retried
+  // up to maxConsecutiveErrors. Caller aborts, contract errors, and the
+  // initial event-stream connect timeout fail immediately.
+  if (!context.signal.aborted && isRetriableSnapshotError(error)) {
+    const next = consecutiveErrors + 1;
+    if (next >= maxConsecutiveErrors) {
+      throw error;
+    }
+    context.dependencies.transientError?.(error, next);
+    const backoffMs =
+      context.options.pollMs ?? Math.min(30_000, 1000 * 2 ** (next - 1));
+    await context.updates.wait(backoffMs, context.signal);
+    return next;
+  }
+  throw error;
+}
+
 async function runLoop<S>(context: WaitContext<S>): Promise<LoopResult<S>> {
   let heartbeatAt = context.started;
+  let consecutiveErrors = 0;
+  const maxConsecutiveErrors =
+    context.options.maxConsecutiveErrors ?? MAX_CONSECUTIVE_SNAPSHOT_ERRORS;
   for (;;) {
     context.signal.throwIfAborted();
     assertStream(context);
@@ -250,26 +401,15 @@ async function runLoop<S>(context: WaitContext<S>): Promise<LoopResult<S>> {
       );
       result = await context.dependencies.evaluate(current, context.signal);
     } catch (error) {
-      if (error instanceof GitHubRateLimitError) {
-        await sleepUntilRateLimitReset(
-          error,
-          context.signal,
-          context.dependencies.rateLimited,
-        );
-        continue;
-      }
-      // The snapshot's own 30s timer aborts that read. The wait itself is
-      // still running, so the next poll tries again. A caller abort, a real
-      // CI failure, and the event-stream connect timeout do not.
-      if (!context.signal.aborted && isRetriableSnapshotError(error)) {
-        await context.updates.wait(
-          context.options.pollMs ?? 30_000,
-          context.signal,
-        );
-        continue;
-      }
-      throw error;
+      consecutiveErrors = await handleSnapshotError(
+        context,
+        error,
+        consecutiveErrors,
+        maxConsecutiveErrors,
+      );
+      continue;
     }
+    consecutiveErrors = 0;
     context.snapshot = result.snapshot;
     context.signal.throwIfAborted();
     assertStream(context);

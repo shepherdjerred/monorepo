@@ -1,5 +1,11 @@
 import { expect, test } from "vitest";
 import {
+  TOOLKIT_BUILD_INPUT_PATHS,
+  buildDefineFlags,
+  computeInputTreeDigest,
+  resolveToolkitBuildStamp,
+} from "#lib/version/build-stamp.ts";
+import {
   buildSteps,
   codesignArgv,
   developerIdIdentity,
@@ -93,4 +99,79 @@ test("signing fails loudly without exactly one Developer ID identity", () => {
   );
   const twice = `${IDENTITY_OUTPUT}\n  3) 3333333333333333333333333333333333333333 "Developer ID Application: Other (CCCCCCCCCC)"`;
   expect(() => developerIdIdentity(twice)).toThrow(/found 2/);
+});
+
+test("embeds compile-time commit, input digest, and timestamp defines", () => {
+  expect(buildDefineFlags()).toEqual([]);
+  expect(TOOLKIT_BUILD_INPUT_PATHS).toContain("packages/toolkit");
+  expect(TOOLKIT_BUILD_INPUT_PATHS).toContain("packages/ops-model");
+  expect(TOOLKIT_BUILD_INPUT_PATHS).toContain("packages/mc-harness");
+
+  const digest = computeInputTreeDigest(
+    "040000 tree abc123\tpackages/toolkit\n",
+  );
+  expect(digest).toMatch(/^[0-9a-f]{64}$/u);
+
+  const stamp = {
+    commit: "1111111111111111111111111111111111111111",
+    inputDigest: digest,
+    builtAt: "2026-11-24T17:00:00.000Z",
+  };
+  const darwinSteps = buildSteps("/Users/test", "darwin", stamp);
+  expect(darwinSteps[0]?.argv).toEqual([
+    "bun",
+    "build",
+    "./src/index.ts",
+    "--compile",
+    "--define",
+    'TOOLKIT_BUILD_COMMIT="1111111111111111111111111111111111111111"',
+    "--define",
+    `TOOLKIT_BUILD_INPUT_DIGEST=${JSON.stringify(digest)}`,
+    "--define",
+    'TOOLKIT_BUILT_AT="2026-11-24T17:00:00.000Z"',
+    "--external",
+    "ffmpeg-static",
+    "--outfile=dist/toolkit",
+  ]);
+  const winSteps = buildSteps(String.raw`C:\Users\Test`, "win32", stamp);
+  expect(winSteps[0]?.argv).toContain(
+    'TOOLKIT_BUILD_COMMIT="1111111111111111111111111111111111111111"',
+  );
+});
+
+test("resolves live git build stamp from checkout and returns null on git failures", () => {
+  const fixedNow = new Date("2026-11-24T18:00:00.000Z");
+  const liveStamp = resolveToolkitBuildStamp(import.meta.dir, {
+    now: fixedNow,
+  });
+  expect(liveStamp).not.toBeNull();
+  expect(liveStamp?.commit).toMatch(/^[0-9a-f]{40}$/u);
+  expect(liveStamp?.inputDigest).toMatch(/^[0-9a-f]{64}$/u);
+  expect(liveStamp?.builtAt).toBe("2026-11-24T18:00:00.000Z");
+
+  expect(
+    resolveToolkitBuildStamp("/nonexistent", {
+      runGit: () => ({ exitCode: 128, stdout: "" }),
+    }),
+  ).toBeNull();
+  expect(
+    resolveToolkitBuildStamp("/repo", {
+      runGit: (args) =>
+        args[1] === "--show-toplevel"
+          ? { exitCode: 0, stdout: "/repo\n" }
+          : { exitCode: 128, stdout: "" },
+    }),
+  ).toBeNull();
+  expect(
+    resolveToolkitBuildStamp("/repo", {
+      runGit: (args) => {
+        if (args[1] === "--show-toplevel") {
+          return { exitCode: 0, stdout: "/repo\n" };
+        }
+        return args[0] === "rev-parse"
+          ? { exitCode: 0, stdout: "deadbeef\n" }
+          : { exitCode: 1, stdout: "" };
+      },
+    }),
+  ).toBeNull();
 });

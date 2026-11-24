@@ -1,102 +1,21 @@
 /**
- * Thin wrapper around the `pinchtab` CLI binary (a persistent, real Chrome
- * instance already running on this machine, controlled via a REST daemon —
- * see the `pinchtab-helper` skill). Toolkit shells out to the CLI itself
- * (same pattern as `lib/github/client.ts`'s `gh` wrapper) rather than
- * reimplementing PinchTab's own auth/config-file resolution: the binary
- * already knows where its token lives.
- *
- * Every call scopes itself to a dedicated agent session (`session create` /
- * `session revoke`) via the `PINCHTAB_SESSION` env var passed to that one
- * subprocess invocation — never mutates the parent toolkit process's own
- * environment, so concurrent/unrelated PinchTab usage on the same machine
- * is unaffected.
+ * Direct HTTP REST client for the local PinchTab daemon (`AI-26`, `AI-464`).
  */
-import { $ } from "bun";
+import { mkdir } from "node:fs/promises";
+import path from "node:path";
 import { z } from "zod";
-
-export type PinchtabResult<T> = {
-  success: boolean;
-  data?: T | undefined;
-  error?: string | undefined;
-};
-
-function wrapError(exitCode: number, stderr: string): PinchtabResult<never> {
-  const message = stderr.trim();
-  return {
-    success: false,
-    error:
-      message.length > 0
-        ? message
-        : `pinchtab exited with code ${String(exitCode)}`,
-  };
-}
-
-/**
- * Build the subprocess environment for one pinchtab call. Always starts from a
- * copy of the parent env with any inherited `PINCHTAB_SESSION` removed, then
- * adds this call's own token (if any). This matters because passing
- * `.env(undefined)` would let Bun Shell inherit the parent's env verbatim — so
- * an unscoped admin call (`session create`/`revoke`/`health`) launched from a
- * shell that already has `PINCHTAB_SESSION` set (e.g. another agent's session)
- * would silently run under that foreign session.
- */
-function pinchtabEnv(sessionToken: string | undefined): Record<string, string> {
-  const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(Bun.env)) {
-    if (key !== "PINCHTAB_SESSION" && value !== undefined) {
-      env[key] = value;
-    }
-  }
-  if (sessionToken !== undefined) {
-    env["PINCHTAB_SESSION"] = sessionToken;
-  }
-  return env;
-}
-
-async function runJson<T>(
-  args: string[],
-  schema: z.ZodType<T>,
-  sessionToken?: string,
-): Promise<PinchtabResult<T>> {
-  const result = await $`pinchtab ${args}`
-    .nothrow()
-    .quiet()
-    .env(pinchtabEnv(sessionToken));
-  if (result.exitCode !== 0) {
-    return wrapError(result.exitCode, result.stderr.toString());
-  }
-  let json: unknown;
-  try {
-    json = JSON.parse(result.stdout.toString().trim());
-  } catch (error) {
-    return {
-      success: false,
-      error: `pinchtab returned non-JSON output: ${String(error)}`,
-    };
-  }
-  const parsed = schema.safeParse(json);
-  if (!parsed.success) {
-    return {
-      success: false,
-      error: `pinchtab output failed schema validation: ${parsed.error.message}`,
-    };
-  }
-  return { success: true, data: parsed.data };
-}
-
-async function runRaw(
-  args: string[],
-  sessionToken?: string,
-): Promise<PinchtabResult<string>> {
-  const result = await $`pinchtab ${args}`
-    .nothrow()
-    .quiet()
-    .env(pinchtabEnv(sessionToken));
-  return result.exitCode === 0
-    ? { success: true, data: result.stdout.toString().trim() }
-    : wrapError(result.exitCode, result.stderr.toString());
-}
+import {
+  formatHttpFailure,
+  requestJson,
+  requestText,
+  resolvePinchtabConnection,
+  sendRequest,
+  tabRoute,
+  type HttpRequestSpec,
+  type PinchtabClientOptions,
+  type PinchtabConnection,
+  type PinchtabResult,
+} from "./http.ts";
 
 const SessionSchema = z.object({
   id: z.string(),
@@ -106,118 +25,311 @@ const SessionSchema = z.object({
 });
 export type PinchtabSession = z.infer<typeof SessionSchema>;
 
-const CountSchema = z.object({ selector: z.string(), count: z.number() });
+const NavigateResponseSchema = z.looseObject({
+  tabId: z.string().min(1).optional(),
+  id: z.string().min(1).optional(),
+});
+const CountResponseSchema = z.looseObject({
+  selector: z.string().optional(),
+  count: z.number(),
+});
+const UrlResponseSchema = z.looseObject({ url: z.string() });
+const ScreenshotJsonSchema = z.looseObject({ data: z.string().min(1) });
 
-/** `pinchtab health` — quick daemon reachability check. */
-export async function health(): Promise<PinchtabResult<string>> {
-  return runRaw(["health"]);
-}
-
-/** `pinchtab session create --agent-id <agentId>` — mints a scoped session. */
-export async function createSession(
-  agentId: string,
-  label?: string,
-): Promise<PinchtabResult<PinchtabSession>> {
-  const args = ["session", "create", "--agent-id", agentId, "--json"];
-  if (label !== undefined) {
-    args.push("--label", label);
-  }
-  return runJson(args, SessionSchema);
-}
-
-/** `pinchtab session revoke <id>` — releases a session created above. */
-export async function revokeSession(
-  id: string,
-): Promise<PinchtabResult<string>> {
-  return runRaw(["session", "revoke", id]);
-}
-
-/**
- * `pinchtab nav <url> --new-tab --print-tab-id` — navigates in a fresh tab
- * within the given session, returning the new tab's ID.
- */
-export async function navigateNewTab(
+function postTabOk(
+  routePath: string,
+  body: unknown,
   sessionToken: string,
-  url: string,
+  options: PinchtabClientOptions,
 ): Promise<PinchtabResult<string>> {
-  return runRaw(["nav", url, "--new-tab", "--print-tab-id"], sessionToken);
-}
-
-/**
- * `pinchtab nav <url> --tab <id>` — navigates an already-open tab. Used to
- * load the real target *after* viewport/media emulation is configured, so the
- * page sees the emulated `prefers-color-scheme` during its first paint/init.
- */
-export async function navigateTab(
-  sessionToken: string,
-  tabId: string,
-  url: string,
-): Promise<PinchtabResult<string>> {
-  return runRaw(["nav", url, "--tab", tabId], sessionToken);
-}
-
-/** `pinchtab set viewport <width> <height> --tab <id>`. */
-export async function setViewport(
-  sessionToken: string,
-  tabId: string,
-  width: number,
-  height: number,
-): Promise<PinchtabResult<string>> {
-  return runRaw(
-    ["set", "viewport", String(width), String(height), "--tab", tabId],
-    sessionToken,
+  return requestText(
+    { method: "POST", routePath, body, sessionToken },
+    options,
   );
 }
 
-/** `pinchtab set media <feature> <value> --tab <id>`, e.g. prefers-color-scheme dark. */
-export async function setMedia(
-  sessionToken: string,
-  tabId: string,
-  feature: string,
-  value: string,
-): Promise<PinchtabResult<string>> {
-  return runRaw(["set", "media", feature, value, "--tab", tabId], sessionToken);
-}
-
-/** `pinchtab count <selector> --tab <id> --json` — used to poll for readiness. */
-export async function countSelector(
-  sessionToken: string,
-  tabId: string,
-  selector: string,
-): Promise<PinchtabResult<{ selector: string; count: number }>> {
-  return runJson(
-    ["count", selector, "--tab", tabId, "--json"],
-    CountSchema,
-    sessionToken,
+async function deleteOrRevokeSession(
+  connection: PinchtabConnection,
+  sessionId: string,
+  options: PinchtabClientOptions,
+): Promise<PinchtabResult<Response>> {
+  const encoded = encodeURIComponent(sessionId);
+  const delSent = await sendRequest(
+    connection,
+    connection.token,
+    { method: "DELETE", routePath: `/sessions/${encoded}` },
+    options,
   );
+  return delSent.success && delSent.data?.status === 405
+    ? sendRequest(
+        connection,
+        connection.token,
+        { method: "POST", routePath: `/sessions/${encoded}/revoke` },
+        options,
+      )
+    : delSent;
 }
 
-/** `pinchtab screenshot --tab <id> --format png -o <outPath> [--beyond-viewport]`. */
-export async function screenshot(
+async function captureTabScreenshotBytes(
   sessionToken: string,
   tabId: string,
   outPath: string,
-  options?: { fullPage?: boolean | undefined },
+  options: PinchtabClientOptions & { readonly fullPage?: boolean | undefined },
 ): Promise<PinchtabResult<string>> {
-  const args = ["screenshot", "--tab", tabId, "--format", "png", "-o", outPath];
-  if (options?.fullPage === true) {
-    args.push("--beyond-viewport");
+  const params = new URLSearchParams({ format: "png", raw: "true" });
+  if (options.fullPage === true) params.set("beyondViewport", "true");
+  const routePath = tabRoute(tabId, `/screenshot?${params.toString()}`);
+  const connection = await resolvePinchtabConnection(options);
+  const sent = await sendRequest(
+    connection,
+    sessionToken,
+    { method: "GET", routePath },
+    options,
+  );
+  if (!sent.success || sent.data === undefined) {
+    return { success: false, error: sent.error };
   }
-  return runRaw(args, sessionToken);
+  if (!sent.data.ok) {
+    return formatHttpFailure(
+      "GET",
+      routePath,
+      sent.data.status,
+      await sent.data.text(),
+    );
+  }
+  const contentType = sent.data.headers.get("content-type") ?? "";
+  let bytes: Uint8Array;
+  if (contentType.includes("application/json")) {
+    const parsed = ScreenshotJsonSchema.safeParse(
+      JSON.parse(await sent.data.text()),
+    );
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: "pinchtab JSON screenshot response missing base64 data",
+      };
+    }
+    bytes = Buffer.from(parsed.data.data, "base64");
+  } else {
+    bytes = new Uint8Array(await sent.data.arrayBuffer());
+  }
+  await mkdir(path.dirname(outPath), { recursive: true });
+  await Bun.write(outPath, bytes);
+  return { success: true, data: outPath };
 }
 
-/** `pinchtab url --tab <id>` — the tab's current URL (after redirects/SPA nav). */
-export async function currentUrl(
-  sessionToken: string,
-  tabId: string,
-): Promise<PinchtabResult<string>> {
-  return runRaw(["url", "--tab", tabId], sessionToken);
+export function createPinchtabHttpClient(options: PinchtabClientOptions = {}) {
+  return {
+    health: async (): Promise<PinchtabResult<string>> => {
+      const res = await requestText(
+        { method: "GET", routePath: "/health" },
+        options,
+      );
+      return res.success
+        ? { success: true, data: (res.data ?? "").length > 0 ? res.data : "ok" }
+        : res;
+    },
+    createSession: (
+      agentId: string,
+      label?: string,
+    ): Promise<PinchtabResult<PinchtabSession>> =>
+      requestJson(
+        {
+          method: "POST",
+          routePath: "/sessions",
+          body: { agentId, ...(label === undefined ? {} : { label }) },
+        },
+        SessionSchema,
+        options,
+      ),
+    revokeSession: async (id: string): Promise<PinchtabResult<string>> => {
+      const connection = await resolvePinchtabConnection(options);
+      const sent = await deleteOrRevokeSession(connection, id, options);
+      if (!sent.success || sent.data === undefined) {
+        return { success: false, error: sent.error };
+      }
+      const text = await sent.data.text();
+      return sent.data.ok
+        ? { success: true, data: text.trim() || "revoked" }
+        : formatHttpFailure(
+            "DELETE",
+            `/sessions/${encodeURIComponent(id)}`,
+            sent.data.status,
+            text,
+          );
+    },
+    navigateNewTab: async (
+      sessionToken: string,
+      url: string,
+    ): Promise<PinchtabResult<string>> => {
+      const req: HttpRequestSpec = {
+        method: "POST",
+        routePath: "/navigate",
+        body: { url, newTab: true },
+        sessionToken,
+      };
+      const res = await requestJson(req, NavigateResponseSchema, options);
+      if (!res.success || res.data === undefined) {
+        return { success: false, error: res.error };
+      }
+      const tabId = res.data.tabId ?? res.data.id;
+      return tabId === undefined
+        ? {
+            success: false,
+            error: "pinchtab /navigate response did not include tabId",
+          }
+        : { success: true, data: tabId };
+    },
+    navigateTab: async (s: string, tabId: string, url: string) => {
+      const res = await postTabOk(
+        tabRoute(tabId, "/navigate"),
+        { url },
+        s,
+        options,
+      );
+      return res.success ? { success: true, data: tabId } : res;
+    },
+    setViewport: async (s: string, tabId: string, w: number, h: number) => {
+      const res = await postTabOk(
+        tabRoute(tabId, "/emulation/viewport"),
+        { width: w, height: h },
+        s,
+        options,
+      );
+      return res.success
+        ? { success: true, data: `${String(w)}x${String(h)}` }
+        : res;
+    },
+    setMedia: async (s: string, tabId: string, feature: string, v: string) => {
+      const res = await postTabOk(
+        tabRoute(tabId, "/emulation/media"),
+        { feature, value: v },
+        s,
+        options,
+      );
+      return res.success ? { success: true, data: "ok" } : res;
+    },
+    countSelector: async (s: string, tabId: string, selector: string) => {
+      const q = new URLSearchParams({ selector }).toString();
+      const res = await requestJson(
+        {
+          method: "GET",
+          routePath: tabRoute(tabId, `/count?${q}`),
+          sessionToken: s,
+        },
+        CountResponseSchema,
+        options,
+      );
+      return res.success && res.data !== undefined
+        ? {
+            success: true,
+            data: {
+              selector: res.data.selector ?? selector,
+              count: res.data.count,
+            },
+          }
+        : { success: false, error: res.error };
+    },
+    screenshot: (
+      s: string,
+      tabId: string,
+      outPath: string,
+      shotOptions?: { fullPage?: boolean | undefined },
+    ) =>
+      captureTabScreenshotBytes(s, tabId, outPath, {
+        ...options,
+        fullPage: shotOptions?.fullPage,
+      }),
+    currentUrl: async (s: string, tabId: string) => {
+      const res = await requestText(
+        { method: "GET", routePath: tabRoute(tabId, "/url"), sessionToken: s },
+        options,
+      );
+      if (!res.success || res.data === undefined) return res;
+      try {
+        const parsed = UrlResponseSchema.safeParse(JSON.parse(res.data));
+        if (parsed.success) return { success: true, data: parsed.data.url };
+      } catch {
+        // Plain-text URL response.
+      }
+      return { success: true, data: res.data };
+    },
+    closeTab: async (s: string, tabId: string) => {
+      const res = await postTabOk(
+        tabRoute(tabId, "/close"),
+        undefined,
+        s,
+        options,
+      );
+      return res.success ? { success: true, data: "closed" } : res;
+    },
+  };
 }
 
-/** `pinchtab tab close <id>`. */
-export async function closeTab(
-  sessionToken: string,
-  tabId: string,
-): Promise<PinchtabResult<string>> {
-  return runRaw(["tab", "close", tabId], sessionToken);
+export const {
+  health,
+  createSession,
+  revokeSession,
+  navigateNewTab,
+  navigateTab,
+  setViewport,
+  setMedia,
+  countSelector,
+  screenshot,
+  currentUrl,
+  closeTab,
+} = createPinchtabHttpClient();
+
+export type PinchtabLeaseTeardownResult = {
+  readonly ok: boolean;
+  readonly skipped?: boolean | undefined;
+  readonly detail?: string | undefined;
+};
+
+function classifyTeardownResponse(
+  sent: PinchtabResult<Response>,
+  label: string,
+): PinchtabLeaseTeardownResult {
+  if (!sent.success || sent.data === undefined) {
+    return { ok: true, skipped: true, detail: sent.error };
+  }
+  if (sent.data.ok || sent.data.status === 404) {
+    return {
+      ok: true,
+      ...(sent.data.status === 404 ? { detail: "already absent" } : {}),
+    };
+  }
+  return {
+    ok: false,
+    detail: `${label} returned HTTP ${String(sent.data.status)}`,
+  };
+}
+
+export async function reapPinchtabLeaseTarget(
+  rawTarget: string,
+  options: PinchtabClientOptions = {},
+): Promise<PinchtabLeaseTeardownResult> {
+  const target = rawTarget.trim();
+  if (target.length === 0) {
+    return { ok: true, skipped: true, detail: "empty pinchtab target" };
+  }
+  const connection = await resolvePinchtabConnection(options);
+  if (connection.token === undefined || connection.token.length === 0) {
+    return { ok: true, skipped: true, detail: "PinchTab token not configured" };
+  }
+  if (target.startsWith("ses_") || target.startsWith("session:")) {
+    const id = target.startsWith("session:") ? target.slice(8) : target;
+    return classifyTeardownResponse(
+      await deleteOrRevokeSession(connection, id, options),
+      "PinchTab session revoke",
+    );
+  }
+  const tabId = target.startsWith("tab:") ? target.slice(4) : target;
+  const sent = await sendRequest(
+    connection,
+    connection.token,
+    { method: "POST", routePath: tabRoute(tabId, "/close") },
+    options,
+  );
+  return classifyTeardownResponse(sent, "PinchTab tab close");
 }

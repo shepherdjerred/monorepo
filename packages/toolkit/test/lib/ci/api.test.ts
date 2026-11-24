@@ -1,6 +1,13 @@
+import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { afterEach, expect, test, vi } from "vitest";
 import { GitHubRateLimitError } from "@shepherdjerred/code-review/github-request";
-import { GitHubClient } from "#lib/ci/github.ts";
+import {
+  GitHubClient,
+  isTransientGitHubTransportError,
+} from "#lib/ci/github.ts";
+import { githubToken, tryGithubToken } from "#lib/ci/process.ts";
 import {
   getWoodpeckerPipelineForCommit,
   getPipeline,
@@ -508,30 +515,188 @@ test("GraphQL quota refusals answered with HTTP 200 raise the typed error", asyn
   expect(failure).toBeInstanceOf(GitHubRateLimitError);
 });
 
+function openPrJsonResponse(): Response {
+  return Response.json({
+    number: 1,
+    html_url: "https://github.com/o/r/pull/1",
+    state: "open",
+    merged: false,
+    draft: false,
+    mergeable: true,
+    mergeable_state: "clean",
+    head: { sha: CI_HEAD },
+    base: { sha: "b".repeat(40), ref: "main" },
+  });
+}
+
 test("GitHub transient 500 server error retries and recovers", async () => {
   let callCount = 0;
   vi.stubGlobal(
     "fetch",
     vi.fn(async () => {
       callCount++;
-      if (callCount === 1) {
-        return new Response("Internal Server Error", { status: 500 });
-      }
-      return Response.json({
-        number: 1,
-        html_url: "https://github.com/o/r/pull/1",
-        state: "open",
-        merged: false,
-        draft: false,
-        mergeable: true,
-        mergeable_state: "clean",
-        head: { sha: CI_HEAD },
-        base: { sha: "b".repeat(40), ref: "main" },
-      });
+      return callCount === 1
+        ? new Response("Internal Server Error", { status: 500 })
+        : openPrJsonResponse();
     }),
   );
   const github = new GitHubClient("test");
   const result = await github.pr(1);
   expect(result.number).toBe(1);
   expect(callCount).toBe(2);
+});
+
+test("isTransientGitHubTransportError classifies socket/DNS failures and excludes rate limits and 4xx errors", () => {
+  for (const message of [
+    "read ECONNRESET",
+    "connect ETIMEDOUT",
+    "getaddrinfo ENOTFOUND api.github.com",
+    "getaddrinfo EAI_AGAIN api.github.com",
+    "connect EHOSTUNREACH",
+    "The socket connection was closed unexpectedly",
+    "Unable to connect. Is the computer able to access the url?",
+    "Failed to fetch",
+  ]) {
+    expect(isTransientGitHubTransportError(new Error(message))).toBe(true);
+  }
+  const wrapped = new TypeError("fetch failed", {
+    cause: Object.assign(new Error("socket hang up"), { code: "ECONNRESET" }),
+  });
+  expect(isTransientGitHubTransportError(wrapped)).toBe(true);
+
+  const abortError = new Error("aborted");
+  abortError.name = "AbortError";
+  expect(isTransientGitHubTransportError(abortError)).toBe(false);
+  expect(
+    isTransientGitHubTransportError(
+      new GitHubRateLimitError("/graphql", {
+        status: 403,
+        resource: "graphql",
+        limit: 5000,
+        used: 5000,
+        remaining: 0,
+        resetAt: new Date(Date.now() + 60_000),
+        retryAfterSeconds: null,
+      }),
+    ),
+  ).toBe(false);
+  expect(
+    isTransientGitHubTransportError(
+      new Error("GitHub request failed (404): /repos/o/r/pulls/1"),
+    ),
+  ).toBe(false);
+});
+
+test("GitHubClient.read retries thrown transient socket errors up to 3 attempts", async () => {
+  let calls = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => {
+      calls += 1;
+      if (calls < 3) {
+        throw new TypeError("The socket connection was closed unexpectedly");
+      }
+      return openPrJsonResponse();
+    }),
+  );
+  const result = await new GitHubClient("test").pr(1);
+  expect(result.number).toBe(1);
+  expect(calls).toBe(3);
+});
+
+test("GitHubClient.graphql retries HTTP 5xx and transient socket errors across 3 attempts", async () => {
+  let calls = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => {
+      calls += 1;
+      if (calls === 1) {
+        return new Response("Bad Gateway", { status: 502 });
+      }
+      if (calls === 2) {
+        throw new Error("read ECONNRESET");
+      }
+      return Response.json({
+        data: {
+          repository: {
+            pullRequest: {
+              headRefOid: CI_HEAD,
+              baseRefOid: "b".repeat(40),
+              reviewDecision: "APPROVED",
+            },
+          },
+        },
+      });
+    }),
+  );
+  const decision = await new GitHubClient("test").decision(1);
+  expect(decision.reviewDecision).toBe("APPROVED");
+  expect(calls).toBe(3);
+});
+
+test("tryGithubToken resolves GH_TOKEN, gh auth token, and macOS herdr-core GUI delegation", async () => {
+  expect(await tryGithubToken({ GH_TOKEN: "  env-token  " })).toBe("env-token");
+
+  const dir = await mkdtemp(path.join(tmpdir(), "toolkit-gh-token-"));
+  try {
+    const binDir = path.join(dir, "bin");
+    const homeCoreDir = path.join(dir, "home", ".local", "bin");
+    await mkdir(binDir, { recursive: true });
+    await mkdir(homeCoreDir, { recursive: true });
+
+    const ghPath = path.join(binDir, "gh");
+    await Bun.write(
+      ghPath,
+      [
+        "#!/bin/sh",
+        'if [ "${VIA_HERDR_CORE:-}" = "1" ] && [ "${TOOLKIT_GUI_SESSION_DELEGATED:-}" = "1" ]; then',
+        '  echo "gui-keychain-token"',
+        "  exit 0",
+        "fi",
+        'echo "keychain locked" >&2',
+        "exit 1",
+      ].join("\n"),
+    );
+    await chmod(ghPath, 0o755);
+
+    const herdrCorePath = path.join(homeCoreDir, "herdr-core");
+    await Bun.write(
+      herdrCorePath,
+      [
+        "#!/bin/sh",
+        'if [ "$1" = "server" ] && [ "$2" = "status" ]; then',
+        '  echo "{}"',
+        "  exit 0",
+        "fi",
+        'if [ "$1" = "exec" ] && [ "$2" = "--env" ]; then',
+        '  export "$3"',
+        "  export VIA_HERDR_CORE=1",
+        "  shift 3",
+        '  exec "$@"',
+        "fi",
+        "exit 1",
+      ].join("\n"),
+    );
+    await chmod(herdrCorePath, 0o755);
+
+    const env = {
+      GH_TOKEN: "   ",
+      HOME: path.join(dir, "home"),
+      PATH: `${binDir}:/bin:/usr/bin`,
+    };
+    if (process.platform === "darwin") {
+      expect(await githubToken(env)).toBe("gui-keychain-token");
+    }
+    const blockedEnv = {
+      ...env,
+      HOME: path.join(dir, "missing-home"),
+      TOOLKIT_GUI_SESSION_DELEGATED: "1",
+    };
+    expect(await tryGithubToken(blockedEnv)).toBeNull();
+    await expect(githubToken(blockedEnv)).rejects.toThrow(
+      "GitHub credential is empty",
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

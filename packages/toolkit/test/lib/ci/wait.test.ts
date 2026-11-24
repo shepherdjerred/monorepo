@@ -7,6 +7,7 @@ import {
   waitForCi,
   type WaitDependencies,
 } from "#lib/ci/wait/wait.ts";
+import { WoodpeckerHttpError } from "#lib/woodpecker/ci.ts";
 import { ciFixture, pendingCi, CI_HEAD } from "./fixtures.ts";
 
 function subscription(
@@ -344,7 +345,7 @@ describe("snapshot timeouts during a wait", () => {
     expect(calls).toBe(1);
   });
 
-  test("does not retry a contract error or the event-stream connect timeout", () => {
+  test("classifies transient Woodpecker/GitHub 5xx/429 and socket errors without masking contract or abort errors", () => {
     expect(
       isRetriableSnapshotError(new Error("snapshot schema mismatch")),
     ).toBe(false);
@@ -353,7 +354,98 @@ describe("snapshot timeouts during a wait", () => {
         new Error("Woodpecker event connection timed out"),
       ),
     ).toBe(false);
+    const abortError = new Error("The operation was aborted.");
+    abortError.name = "AbortError";
+    expect(isRetriableSnapshotError(abortError)).toBe(false);
     expect(isRetriableSnapshotError(snapshotTimeout())).toBe(true);
+
+    for (const status of [500, 502, 503, 504, 429]) {
+      expect(
+        isRetriableSnapshotError(
+          new WoodpeckerHttpError(status, "/api/repos/1/pipelines"),
+        ),
+      ).toBe(true);
+    }
+    for (const status of [400, 401, 403, 404]) {
+      expect(
+        isRetriableSnapshotError(
+          new WoodpeckerHttpError(status, "/api/repos/1/pipelines"),
+        ),
+      ).toBe(false);
+    }
+
+    expect(
+      isRetriableSnapshotError(
+        new Error("GitHub request failed (502): /repos/o/r/pulls/1"),
+      ),
+    ).toBe(true);
+    expect(
+      isRetriableSnapshotError(new Error("GitHub GraphQL failed (503)")),
+    ).toBe(true);
+    expect(
+      isRetriableSnapshotError(
+        new Error("GitHub request failed (404): /repos/o/r/pulls/1"),
+      ),
+    ).toBe(false);
+
+    for (const message of [
+      "read ECONNRESET",
+      "connect ETIMEDOUT",
+      "getaddrinfo ENOTFOUND api.github.com",
+      "getaddrinfo EAI_AGAIN api.github.com",
+      "connect EHOSTUNREACH",
+      "The socket connection was closed unexpectedly",
+      "connection reset by peer",
+    ]) {
+      expect(isRetriableSnapshotError(new Error(message))).toBe(true);
+    }
+  });
+});
+
+describe("transient upstream errors during a wait", () => {
+  test("retries Woodpecker 502 gateway errors, notifies transientError, and resets consecutive count on recovery", async () => {
+    let calls = 0;
+    const transientError = vi.fn();
+    const deps = dependencies(async () => {
+      calls += 1;
+      if (calls <= 15) {
+        throw new WoodpeckerHttpError(502, "/api/repos/1/pipelines");
+      }
+      if (calls === 16) {
+        return pendingCi();
+      }
+      if (calls <= 31) {
+        throw new WoodpeckerHttpError(503, "/api/repos/1/pipelines");
+      }
+      return ciFixture();
+    });
+    deps.transientError = transientError;
+    const result = await waitForCi(
+      { head: CI_HEAD, until: "first-failure", pollMs: 1 },
+      deps,
+    );
+    expect(result.verdict.outcome).toBe("ready");
+    expect(transientError).toHaveBeenCalledTimes(30);
+    // Attempt counter resets to 1 after the successful pending snapshot at call 16.
+    expect(transientError.mock.calls[0]?.[1]).toBe(1);
+    expect(transientError.mock.calls[14]?.[1]).toBe(15);
+    expect(transientError.mock.calls[15]?.[1]).toBe(1);
+    expect(transientError.mock.calls[29]?.[1]).toBe(15);
+  });
+
+  test("fails after 20 consecutive retriable snapshot errors", async () => {
+    let calls = 0;
+    const transientError = vi.fn();
+    const deps = dependencies(async () => {
+      calls += 1;
+      throw new WoodpeckerHttpError(502, "/api/repos/1/pipelines");
+    });
+    deps.transientError = transientError;
+    await expect(
+      waitForCi({ head: CI_HEAD, until: "first-failure", pollMs: 1 }, deps),
+    ).rejects.toThrow("Woodpecker request failed (502)");
+    expect(calls).toBe(20);
+    expect(transientError).toHaveBeenCalledTimes(19);
   });
   test("a ready PR keeps waiting through a red main when main is required", async () => {
     let calls = 0;
@@ -456,5 +548,38 @@ describe("one-shot reads before a wait", () => {
         null,
       ),
     ).rejects.toThrow("contract");
+  });
+  test("bounded transient errors retry in readThroughQuota and recover", async () => {
+    let calls = 0;
+    const transientError = vi.fn();
+    const value = await readThroughQuota(
+      async () => {
+        calls += 1;
+        if (calls < 3) {
+          throw new Error("GitHub request failed (502): /repos/o/r/pulls/1");
+        }
+        return "recovered";
+      },
+      new AbortController().signal,
+      null,
+      { transientError },
+    );
+    expect(value).toBe("recovered");
+    expect(calls).toBe(3);
+    expect(transientError).toHaveBeenCalledTimes(2);
+  });
+  test("persistent transient errors in readThroughQuota fail after bounded retries", async () => {
+    let calls = 0;
+    await expect(
+      readThroughQuota(
+        async () => {
+          calls += 1;
+          throw new WoodpeckerHttpError(503, "/api/repos/1/pipelines");
+        },
+        new AbortController().signal,
+        null,
+      ),
+    ).rejects.toThrow("503");
+    expect(calls).toBe(4);
   });
 });

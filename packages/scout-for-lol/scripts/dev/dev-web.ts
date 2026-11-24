@@ -33,7 +33,7 @@ Options:
   --backend-port <port>  Backend port (default: 3000)
   --web-port <port>      Vite SPA port (default: 5180)
   --database-url <url>   Postgres URL (default: scout_dev_<backend-port> on
-                         the shared local dev server, port 5471 / SCOUT_PG_PORT)
+                         the shared local dev server, port 5472 / SCOUT_PG_PORT)
   --temporal-port <port> Temporal gRPC port (default: backend port + 4233)
   --temporal-ui-port <port> Temporal UI port (default: backend port + 5233)
   --discord-gateway      Own the BETA Discord gateway (default: off). Runs the

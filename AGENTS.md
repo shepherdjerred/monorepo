@@ -144,8 +144,9 @@ machinery.
 Steps marked `tier: "extended"` in a workspace's `ci-tests.json` (suites that
 start PostgreSQL, the Temporal test server, ffmpeg or a game server, or exceed
 a three-minute p50) do not run on pull requests. Before marking a PR ready, run
-`bunx turbo run test:extended --filter='...[origin/main]' --continue` and
-record the command and result in the PR body's Verification. The nightly
+`bun run verify:extended -- --filter='...[origin/main...HEAD]'` (or
+`bunx turbo run test:extended --filter='...[origin/main...HEAD]' --continue`)
+and record the command and result in the PR body's Verification. The nightly
 `ci-extended-verify` run on main is the safety net, not a substitute.
 
 Verify claims from the live tree before reporting them. Preserve unrelated

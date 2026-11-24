@@ -1,19 +1,30 @@
 import { dockerHubCredentials } from "../../../scripts/lib/dockerhub-credentials.ts";
+import { teeOutputTail } from "./command-output.ts";
+
+type LoginExecutionResult =
+  number | { readonly exitCode: number; readonly stderr?: string };
 
 type LoginExecutor = (
   command: readonly string[],
   password: string,
-) => Promise<number>;
+) => Promise<LoginExecutionResult>;
+
+const DOCKERHUB_LOCKOUT_RE = /toomanyrequests|too many failed login attempts/iu;
+
 async function executeLogin(
   command: readonly string[],
   password: string,
-): Promise<number> {
+): Promise<{ readonly exitCode: number; readonly stderr: string }> {
   const login = Bun.spawn([...command], {
     stdin: new Blob([password]),
     stdout: "inherit",
-    stderr: "inherit",
+    stderr: "pipe",
   });
-  return login.exited;
+  const [stderr, exitCode] = await Promise.all([
+    teeOutputTail(login.stderr, (chunk) => Bun.stderr.write(chunk)),
+    login.exited,
+  ]);
+  return { exitCode, stderr };
 }
 
 /** Authenticate only with the credential explicitly granted to this lane. */
@@ -23,7 +34,7 @@ export async function dockerHubLogin(
   execute: LoginExecutor = executeLogin,
 ): Promise<void> {
   const credentials = dockerHubCredentials(mode, environment);
-  const exitCode = await execute(
+  const result = await execute(
     [
       "docker",
       "login",
@@ -34,8 +45,16 @@ export async function dockerHubLogin(
     ],
     credentials.password,
   );
-  if (exitCode !== 0)
+  const exitCode = typeof result === "number" ? result : result.exitCode;
+  const stderr = typeof result === "number" ? "" : (result.stderr ?? "");
+  if (exitCode !== 0) {
+    if (DOCKERHUB_LOCKOUT_RE.test(stderr)) {
+      throw new Error(
+        `Docker Hub login failed (exit ${exitCode.toString()}): Docker Hub account lockout or rate limit (toomanyrequests / too many failed login attempts)`,
+      );
+    }
     throw new Error(`Docker Hub login exited ${exitCode.toString()}`);
+  }
 }
 
 if (import.meta.main) {

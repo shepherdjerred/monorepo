@@ -22,18 +22,36 @@ const BANNED_ENVIRONMENT_VARIABLES: ReadonlyMap<string, string> = new Map([
 // rather than a path fragment, and it waives only the two gcx spellings. Every
 // other banned variable is still reported in these files, so an unrelated
 // non-canonical name cannot ride in behind the vendor boundary.
-const VENDOR_INTERFACE_FILES = [
-  "packages/temporal/src/activities/gcx-context.ts",
+const GCX_VENDOR_VARIABLES: ReadonlySet<string> = new Set([
+  "GRAFANA_SERVER",
+  "GRAFANA_TOKEN",
+]);
+const GIT_SPICE_VENDOR_VARIABLES: ReadonlySet<string> = new Set([
+  "GITHUB_TOKEN",
+]);
+
+const VENDOR_INTERFACE_FILES: ReadonlyMap<
+  string,
+  ReadonlySet<string>
+> = new Map([
+  ["packages/temporal/src/activities/gcx-context.ts", GCX_VENDOR_VARIABLES],
   // The test asserts the exact variable gcx reads, which is the point of the
   // assertion — a test that spelled it differently would not pin the contract.
-  "packages/temporal/src/activities/gcx-context.test.ts",
+  [
+    "packages/temporal/src/activities/gcx-context.test.ts",
+    GCX_VENDOR_VARIABLES,
+  ],
   // `toolkit grafana|prom|loki|tempo` hand gcx its server and brokered token
   // through the same runtime overrides, so nothing is written to gcx config.
-  "packages/toolkit/src/lib/passthrough.ts",
-  "packages/toolkit/test/lib/credential-broker.test.ts",
-];
-
-const VENDOR_INTERFACE_VARIABLES = new Set(["GRAFANA_SERVER", "GRAFANA_TOKEN"]);
+  ["packages/toolkit/src/lib/passthrough.ts", GCX_VENDOR_VARIABLES],
+  ["packages/toolkit/test/lib/credential-broker.test.ts", GCX_VENDOR_VARIABLES],
+  // `git-spice` reads its GitHub credential exclusively from `GITHUB_TOKEN`.
+  ["packages/toolkit/src/lib/git-spice/env.ts", GIT_SPICE_VENDOR_VARIABLES],
+  [
+    "packages/toolkit/test/lib/git-spice/env.test.ts",
+    GIT_SPICE_VENDOR_VARIABLES,
+  ],
+]);
 
 const GITHUB_TOKEN_EXCLUSIONS = [
   "TOFU_GITHUB_TOKEN",
@@ -58,13 +76,13 @@ export function findEnvironmentVariableViolations(
   source: string,
 ): EnvironmentVariableViolation[] {
   const violations: EnvironmentVariableViolation[] = [];
-  const vendorInterface = VENDOR_INTERFACE_FILES.some((file) =>
-    path.endsWith(file),
-  );
+  const allowedVendorVariables = [...VENDOR_INTERFACE_FILES.entries()].find(
+    ([file]) => path.endsWith(file),
+  )?.[1];
   for (const [index, text] of source.split("\n").entries()) {
     const upper = text.toUpperCase();
     for (const [pattern, replacement] of BANNED_ENVIRONMENT_VARIABLES) {
-      if (vendorInterface && VENDOR_INTERFACE_VARIABLES.has(pattern)) {
+      if (allowedVendorVariables?.has(pattern) === true) {
         continue;
       }
       if (upper.includes(pattern)) {
@@ -81,6 +99,7 @@ export function findEnvironmentVariableViolations(
 
     if (
       text.includes("GITHUB_TOKEN") &&
+      allowedVendorVariables?.has("GITHUB_TOKEN") !== true &&
       !GITHUB_TOKEN_EXCLUSIONS.some(
         (exclusion) => path.includes(exclusion) || text.includes(exclusion),
       )

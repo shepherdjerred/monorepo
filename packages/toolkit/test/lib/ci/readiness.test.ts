@@ -38,7 +38,11 @@ describe("merge readiness", () => {
     snapshot.pr.mergeable_state = "behind";
     expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("ready");
     snapshot.rules.strict = true;
-    expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("failure");
+    const behindVerdict = evaluateReadiness(snapshot, CI_HEAD);
+    expect(behindVerdict.outcome).toBe("failure");
+    expect(behindVerdict.commands).toEqual([
+      "toolkit git-spice repo sync --no-prompt --restack=aboves",
+    ]);
   });
   test("an early workflow failure returns while sibling checks still run", () => {
     const snapshot = pendingCi();
@@ -222,7 +226,11 @@ describe("review and structural readiness", () => {
     expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("failure");
     snapshot.main.state = "green";
     snapshot.pr.mergeable = false;
-    expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("failure");
+    const conflictVerdict = evaluateReadiness(snapshot, CI_HEAD);
+    expect(conflictVerdict.outcome).toBe("failure");
+    expect(conflictVerdict.commands).toEqual([
+      "toolkit git-spice repo sync --no-prompt --restack=aboves",
+    ]);
     snapshot.pr.mergeable = true;
     snapshot.pr.draft = true;
     expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("human_action");

@@ -1,14 +1,25 @@
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
-  binariesHint,
   discoverPostgresBinDir,
   POSTGRES_MAJOR,
   postgresBinaryPath,
   runCommandSync,
-  type RunResult,
 } from "./binaries.ts";
-import { readFileTextSync } from "./read-sync.ts";
+import {
+  acquireLock,
+  canonicalPathIfExists,
+  DISPOSABLE_TEST_PG_DIR_NAME,
+  ensureDirectorySync,
+  initializeAndStartCluster,
+  lockIsStale,
+  pgCtlServerRunning,
+  type PostgresClusterDurability,
+  readPostmasterPid,
+  releaseLock,
+  runsAsRoot,
+  serverIsUp,
+} from "./postmaster.ts";
 
 export const DEFAULT_SHARED_PG_PORT = 5471;
 export const SHARED_PG_ROLES = [
@@ -19,10 +30,22 @@ export const SHARED_PG_ROLES = [
   "postgres",
 ] as const;
 
+export type EnsurePostgresClusterOptions = {
+  readonly port: number;
+  readonly explicitPortProvided: boolean;
+  readonly dataRoot: string;
+  readonly durability: PostgresClusterDurability;
+  readonly allowWalPanicWipe: boolean;
+  readonly allowedDataDirs?: readonly string[];
+  readonly env?: Readonly<Record<string, string | undefined>>;
+  readonly portEnvName?: string;
+  readonly isolationEnvName?: string;
+};
+
 const LOCK_STALE_MS = 120_000;
 const START_WAIT_MS = 120_000;
 
-function parsePortEnv(name: string, raw: string): number {
+export function parsePortEnv(name: string, raw: string): number {
   const parsed = Number.parseInt(raw, 10);
   if (Number.isNaN(parsed) || parsed < 1 || parsed > 65_535) {
     throw new Error(`${name} must be a port number, got: ${raw}`);
@@ -30,65 +53,51 @@ function parsePortEnv(name: string, raw: string): number {
   return parsed;
 }
 
-export function sharedPostgresPort(
+function trimmedEnv(
+  env: Readonly<Record<string, string | undefined>>,
+  key: string,
+): string | undefined {
+  const value = env[key]?.trim();
+  return value === undefined || value === "" ? undefined : value;
+}
+
+export function explicitPostgresPort(
   env: Readonly<Record<string, string | undefined>> = Bun.env,
-): number {
+): number | undefined {
   const localPort = env["LOCAL_TEST_PG_PORT"];
   if (localPort !== undefined && localPort !== "") {
     return parsePortEnv("LOCAL_TEST_PG_PORT", localPort);
   }
   const scoutPort = env["SCOUT_PG_PORT"];
   return scoutPort === undefined || scoutPort === ""
-    ? DEFAULT_SHARED_PG_PORT
+    ? undefined
     : parsePortEnv("SCOUT_PG_PORT", scoutPort);
 }
 
-export function sharedDatabaseUrl(
-  dbName: string,
-  options?: { readonly user?: string; readonly port?: number },
-): string {
-  const port = options?.port ?? sharedPostgresPort();
-  const user = options?.user ?? "scout";
-  return `postgres://${user}@127.0.0.1:${port.toString()}/${dbName}`;
-}
-
-export function databaseUrlFromAdmin(adminUrl: string, dbName: string): string {
-  const parsed = new URL(adminUrl);
-  parsed.pathname = `/${dbName}`;
-  return parsed.toString();
-}
-
-function runsAsRoot(): boolean {
-  return process.getuid?.() === 0;
-}
-
-function nonEmptyEnv(
+function defaultNonRootDataRoots(
   env: Readonly<Record<string, string | undefined>>,
-  key: string,
-): string | undefined {
-  const value = env[key];
-  return value === undefined || value === "" ? undefined : value;
-}
-
-function resolveUserBaseDirs(
-  env: Readonly<Record<string, string | undefined>>,
-  platform: NodeJS.Platform = process.platform,
-): { readonly cacheBase?: string; readonly dataBase?: string } {
-  const home = nonEmptyEnv(env, "HOME") ?? nonEmptyEnv(env, "USERPROFILE");
+  platform: NodeJS.Platform,
+  major: string,
+): string[] {
+  const home = trimmedEnv(env, "HOME") ?? trimmedEnv(env, "USERPROFILE");
   const winAppData =
-    platform === "win32" ? nonEmptyEnv(env, "LOCALAPPDATA") : undefined;
-  const cacheBase =
-    nonEmptyEnv(env, "XDG_CACHE_HOME") ??
-    winAppData ??
-    (home === undefined ? undefined : path.join(home, ".cache"));
-  const dataBase =
-    nonEmptyEnv(env, "XDG_DATA_HOME") ??
-    winAppData ??
-    (home === undefined ? undefined : path.join(home, ".local", "share"));
-  return {
-    ...(cacheBase === undefined ? {} : { cacheBase }),
-    ...(dataBase === undefined ? {} : { dataBase }),
-  };
+    platform === "win32" ? trimmedEnv(env, "LOCALAPPDATA") : undefined;
+
+  const candidates: string[] = [];
+  if (winAppData !== undefined) {
+    candidates.push(path.join(winAppData, DISPOSABLE_TEST_PG_DIR_NAME, major));
+  }
+  if (home !== undefined) {
+    candidates.push(
+      path.join(home, ".cache", DISPOSABLE_TEST_PG_DIR_NAME, major),
+    );
+  }
+  if (candidates.length === 0) {
+    throw new Error(
+      "Neither TEST_POSTGRES_DATA_ROOT, XDG_CACHE_HOME, nor HOME is set",
+    );
+  }
+  return [...new Set(candidates)];
 }
 
 export function managedPostgresDataRoots(
@@ -99,42 +108,27 @@ export function managedPostgresDataRoots(
   },
 ): string[] {
   const major = POSTGRES_MAJOR.toString();
+  const explicitDataRoot = trimmedEnv(env, "TEST_POSTGRES_DATA_ROOT");
+  if (explicitDataRoot !== undefined) {
+    return [path.resolve(explicitDataRoot)];
+  }
   if (options?.isRoot ?? runsAsRoot()) {
-    const temp = tmpdir();
-    return [
-      path.join(temp, "monorepo-dev-pg", major),
-      path.join(temp, "scout-for-lol", "postgres", major),
-    ];
+    return [path.join(tmpdir(), DISPOSABLE_TEST_PG_DIR_NAME, major)];
   }
-  const { cacheBase, dataBase } = resolveUserBaseDirs(env, options?.platform);
-  const home = nonEmptyEnv(env, "HOME") ?? nonEmptyEnv(env, "USERPROFILE");
-  if (cacheBase === undefined && dataBase === undefined) {
-    throw new Error("Neither XDG_DATA_HOME, XDG_CACHE_HOME, nor HOME is set");
-  }
-  const candidates: string[] = [];
-  if (cacheBase !== undefined) {
-    candidates.push(path.join(cacheBase, "monorepo-dev-pg", major));
-  }
-  if (dataBase !== undefined) {
-    candidates.push(path.join(dataBase, "scout-for-lol", "postgres", major));
-  }
-  if (cacheBase !== undefined) {
-    candidates.push(path.join(cacheBase, "scout-dev-pg", major));
-  }
-  if (home !== undefined) {
-    candidates.push(
-      path.join(home, ".cache", "monorepo-dev-pg", major),
-      path.join(home, ".local", "share", "scout-for-lol", "postgres", major),
-      path.join(home, ".cache", "scout-dev-pg", major),
-    );
-  }
-  return [...new Set(candidates)];
+  const explicitCache = trimmedEnv(env, "XDG_CACHE_HOME");
+  return explicitCache === undefined
+    ? defaultNonRootDataRoots(env, options?.platform ?? process.platform, major)
+    : [path.join(explicitCache, DISPOSABLE_TEST_PG_DIR_NAME, major)];
 }
 
 export function sharedPostgresDataRoot(
   env: Readonly<Record<string, string | undefined>> = Bun.env,
+  options?: {
+    readonly isRoot?: boolean;
+    readonly platform?: NodeJS.Platform;
+  },
 ): string {
-  const roots = managedPostgresDataRoots(env);
+  const roots = managedPostgresDataRoots(env, options);
   for (const root of roots) {
     if (Bun.file(path.join(root, "pgdata", "PG_VERSION")).size > 0) {
       return root;
@@ -147,14 +141,52 @@ export function sharedPostgresDataRoot(
   return primary;
 }
 
-function canonicalPathIfExists(targetPath: string): string {
-  if (process.platform === "win32") {
-    return path.resolve(targetPath);
+export function sharedPostgresPort(
+  env: Readonly<Record<string, string | undefined>> = Bun.env,
+): number {
+  const explicit = explicitPostgresPort(env);
+  if (explicit !== undefined) {
+    return explicit;
   }
-  const resolved = runCommandSync(["realpath", targetPath]);
-  return resolved.exitCode === 0
-    ? resolved.stdout.trim()
-    : path.resolve(targetPath);
+  let dataRoot: string;
+  try {
+    dataRoot = sharedPostgresDataRoot(env);
+  } catch {
+    return DEFAULT_SHARED_PG_PORT;
+  }
+  const dataDir = path.join(dataRoot, "pgdata");
+  const pidInfo = readPostmasterPid(dataDir);
+  if (pidInfo === undefined) {
+    return DEFAULT_SHARED_PG_PORT;
+  }
+  try {
+    if (serverIsUp(pidInfo.port)) {
+      verifyRunningServer(pidInfo.port, dataDir, env);
+      return pidInfo.port;
+    }
+  } catch {
+    // Stale postmaster.pid or an unrelated listener on pidPort; fall back to default.
+  }
+  return DEFAULT_SHARED_PG_PORT;
+}
+
+export function sharedDatabaseUrl(
+  dbName: string,
+  options?: {
+    readonly user?: string;
+    readonly port?: number;
+    readonly env?: Readonly<Record<string, string | undefined>>;
+  },
+): string {
+  const port = options?.port ?? sharedPostgresPort(options?.env);
+  const user = options?.user ?? "scout";
+  return `postgres://${user}@127.0.0.1:${port.toString()}/${dbName}`;
+}
+
+export function databaseUrlFromAdmin(adminUrl: string, dbName: string): string {
+  const parsed = new URL(adminUrl);
+  parsed.pathname = `/${dbName}`;
+  return parsed.toString();
 }
 
 /** Refuse another major or an unrelated server without stopping either. */
@@ -180,36 +212,6 @@ export function assertDevPostgresIdentity(
   }
 }
 
-function asPostgresOwner(cmd: readonly string[]): string[] {
-  if (!runsAsRoot()) {
-    return [...cmd];
-  }
-  const su = Bun.which("su");
-  if (su === null) {
-    throw new Error("Root-hosted Postgres tests require su");
-  }
-  const quoted = cmd
-    .map((value) => `'${value.replaceAll("'", String.raw`'\''`)}'`)
-    .join(" ");
-  return [su, "-s", "/bin/sh", "nobody", "-c", quoted];
-}
-
-function runAsPostgresOwner(cmd: readonly string[]): RunResult {
-  return runCommandSync(asPostgresOwner(cmd));
-}
-
-function serverIsUp(port: number): boolean {
-  const args = [
-    postgresBinaryPath("pg_isready"),
-    "-h",
-    "127.0.0.1",
-    "-p",
-    port.toString(),
-    "-q",
-  ];
-  return runCommandSync(args).exitCode === 0;
-}
-
 function localPsqlArgs(port: number, user: string, sql: string): string[] {
   return [
     postgresBinaryPath("psql"),
@@ -230,22 +232,22 @@ function localPsqlArgs(port: number, user: string, sql: string): string[] {
   ];
 }
 
-const verifiedPortUsers = new Map<number, string>();
+const verifiedClusterUsers = new Map<string, string>();
 
-function probeSuperuser(port: number): string {
-  const cached = verifiedPortUsers.get(port);
-  if (cached !== undefined) return cached;
-
-  const explicitUser = nonEmptyEnv(Bun.env, "LOCAL_TEST_PG_USER")?.trim();
+function probeSuperuser(
+  port: number,
+  env: Readonly<Record<string, string | undefined>>,
+): string {
+  const explicitUser = trimmedEnv(env, "LOCAL_TEST_PG_USER");
   const candidates =
-    explicitUser === undefined || explicitUser === ""
-      ? ["scout", "postgres"]
-      : [explicitUser];
+    explicitUser === undefined ? ["scout", "postgres"] : [explicitUser];
 
   let lastError = "";
   for (const user of candidates) {
     const probe = runCommandSync(localPsqlArgs(port, user, "SELECT 1"));
-    if (probe.exitCode === 0) return user;
+    if (probe.exitCode === 0) {
+      return user;
+    }
     lastError = probe.stderr.trim();
   }
   throw new Error(
@@ -270,9 +272,14 @@ function ensureSharedRoles(port: number, bootstrapUser: string): void {
   }
 }
 
-function verifyRunningServer(port: number, expectedDataDir: string): string {
-  const bootstrapUser = probeSuperuser(port);
-  const query = String.raw`SELECT current_setting('server_version_num') || E'\n' || current_setting('data_directory')`;
+function verifyRunningServer(
+  port: number,
+  expectedDataDir: string,
+  env: Readonly<Record<string, string | undefined>> = Bun.env,
+  explicitAllowedDataDirs?: readonly string[],
+): string {
+  const bootstrapUser = probeSuperuser(port, env);
+  const query = String.raw`SELECT current_setting('server_version_num') || E'\n' || current_setting('data_directory') || E'\n' || (SELECT system_identifier::text FROM pg_control_system())`;
   const result = runCommandSync(localPsqlArgs(port, bootstrapUser, query));
   if (result.exitCode !== 0) {
     throw new Error(
@@ -282,13 +289,16 @@ function verifyRunningServer(port: number, expectedDataDir: string): string {
   const lines = result.stdout.trim().split(/\r?\n/u);
   const version = Number(lines[0]);
   const liveDirectory = lines[1];
+  const systemId = lines[2] ?? "";
   if (liveDirectory === undefined || !Number.isInteger(version)) {
     throw new Error("Dev PostgreSQL returned an invalid server identity");
   }
 
-  const allowedDirs = managedPostgresDataRoots().map((root) =>
-    canonicalPathIfExists(path.join(root, "pgdata")),
-  );
+  const allowedDirs = (
+    explicitAllowedDataDirs ??
+    managedPostgresDataRoots(env).map((root) => path.join(root, "pgdata"))
+  ).map((dir) => canonicalPathIfExists(dir));
+
   assertDevPostgresIdentity(
     version,
     canonicalPathIfExists(liveDirectory),
@@ -296,128 +306,124 @@ function verifyRunningServer(port: number, expectedDataDir: string): string {
     allowedDirs,
   );
 
-  if (!verifiedPortUsers.has(port)) {
+  const cacheKey = `${port.toString()}:${systemId}`;
+  if (!verifiedClusterUsers.has(cacheKey)) {
     ensureSharedRoles(port, bootstrapUser);
-    verifiedPortUsers.set(port, "scout");
+    verifiedClusterUsers.set(cacheKey, "scout");
   }
-  return verifiedPortUsers.get(port) ?? bootstrapUser;
+  return verifiedClusterUsers.get(cacheKey) ?? bootstrapUser;
 }
 
-function ensureDirectorySync(dir: string): void {
-  const cmd =
-    process.platform === "win32"
-      ? ["cmd.exe", "/c", "if", "not", "exist", dir, "mkdir", dir]
-      : ["mkdir", "-p", dir];
-  runCommandSync(cmd);
-}
-
-function acquireLock(lockDir: string): boolean {
-  const cmd =
-    process.platform === "win32"
-      ? ["cmd.exe", "/c", "mkdir", lockDir]
-      : ["mkdir", lockDir];
-  if (runCommandSync(cmd).exitCode !== 0) {
-    return false;
-  }
-  const pidPath = path.join(lockDir, "pid");
-  const writeCmd =
-    process.platform === "win32"
-      ? ["cmd.exe", "/c", `echo ${process.pid.toString()}> "${pidPath}"`]
-      : [
-          "sh",
-          "-c",
-          String.raw`printf '%s\n' "${process.pid.toString()}" > "${pidPath}"`,
-        ];
-  runCommandSync(writeCmd);
-  return true;
-}
-
-function releaseLock(lockDir: string): void {
-  const cmd =
-    process.platform === "win32"
-      ? ["cmd.exe", "/c", "rmdir", "/s", "/q", lockDir]
-      : ["rm", "-rf", lockDir];
-  runCommandSync(cmd);
-}
-
-function lockIsStale(lockDir: string): boolean {
-  const pidMtime = Bun.file(path.join(lockDir, "pid")).lastModified;
-  const mtime = pidMtime > 0 ? pidMtime : Bun.file(lockDir).lastModified;
-  return mtime > 0 && Date.now() - mtime > LOCK_STALE_MS;
-}
-
-function initializeAndStartCluster(
-  port: number,
-  dataRoot: string,
-  dataDir: string,
-): void {
-  if (runsAsRoot()) {
-    const ownership = runCommandSync(["chown", "-R", "nobody", dataRoot]);
-    if (ownership.exitCode !== 0) {
-      throw binariesHint(
-        `chown failed for the Postgres data root: ${ownership.stderr}`,
-      );
-    }
-  }
-
-  const versionFile = path.join(dataDir, "PG_VERSION");
-  if (Bun.file(versionFile).size > 0) {
-    const stored = readFileTextSync(versionFile).trim();
-    if (stored !== POSTGRES_MAJOR.toString()) {
-      throw new Error(
-        `Refusing to start an unreadable or different PostgreSQL major (${stored}) from ${dataDir}`,
-      );
-    }
-  } else {
-    const init = runAsPostgresOwner([
-      postgresBinaryPath("initdb"),
-      "-D",
-      dataDir,
-      "-U",
-      "scout",
-      "--auth=trust",
-      "--encoding=UTF8",
-      "--no-locale",
-      "--data-checksums",
-    ]);
-    if (init.exitCode !== 0) {
-      throw binariesHint(`initdb failed: ${init.stderr}`);
-    }
-  }
-
-  const logPath = path.join(dataRoot, "server.log");
-  const start = runAsPostgresOwner([
-    postgresBinaryPath("pg_ctl"),
-    "-D",
+function resolvePostmasterState(input: {
+  readonly port: number;
+  readonly explicitPortProvided: boolean;
+  readonly dataDir: string;
+  readonly allowedDataDirs?: readonly string[];
+  readonly env: Readonly<Record<string, string | undefined>>;
+  readonly portEnvName: string;
+  readonly isolationEnvName: string;
+}): { readonly port: number; readonly superUrl: string } | undefined {
+  const {
+    port,
+    explicitPortProvided,
     dataDir,
-    "-w",
-    "-t",
-    "30",
-    "-l",
-    logPath,
-    "-o",
-    `-p ${port.toString()} -c listen_addresses=127.0.0.1 -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c max_connections=200`,
-    "start",
-  ]);
-  if (start.exitCode !== 0 && !serverIsUp(port)) {
-    throw binariesHint(
-      `pg_ctl start failed: ${start.stderr} (log: ${logPath})`,
+    allowedDataDirs,
+    env,
+    portEnvName,
+    isolationEnvName,
+  } = input;
+  const pidInfo = readPostmasterPid(dataDir);
+  if (pidInfo === undefined) {
+    return undefined;
+  }
+
+  if (!explicitPortProvided) {
+    if (!serverIsUp(pidInfo.port)) {
+      return undefined;
+    }
+    try {
+      const user = verifyRunningServer(
+        pidInfo.port,
+        dataDir,
+        env,
+        allowedDataDirs,
+      );
+      return {
+        port: pidInfo.port,
+        superUrl: sharedDatabaseUrl("postgres", { user, port: pidInfo.port }),
+      };
+    } catch {
+      return undefined;
+    }
+  }
+
+  if (pidInfo.port === port) {
+    return undefined;
+  }
+
+  let activeOnPidPort = pgCtlServerRunning(dataDir);
+  if (!activeOnPidPort && serverIsUp(pidInfo.port)) {
+    try {
+      verifyRunningServer(pidInfo.port, dataDir, env, allowedDataDirs);
+      activeOnPidPort = true;
+    } catch {
+      activeOnPidPort = false;
+    }
+  }
+  if (activeOnPidPort) {
+    throw new Error(
+      `PostgreSQL data directory ${dataDir} is already running on port ${pidInfo.port.toString()} (PID ${pidInfo.pid.toString()}), but port ${port.toString()} was requested; set ${portEnvName}=${pidInfo.port.toString()} or isolate ${isolationEnvName}`,
     );
   }
+  return undefined;
 }
 
-export function ensureSharedPostgres(): {
+export function ensurePostgresCluster(options: EnsurePostgresClusterOptions): {
   readonly port: number;
   readonly superUrl: string;
 } {
-  discoverPostgresBinDir();
-  const port = sharedPostgresPort();
-  const dataRoot = sharedPostgresDataRoot();
+  const env = options.env ?? Bun.env;
+  discoverPostgresBinDir(env === Bun.env ? {} : { env });
+  const {
+    port,
+    explicitPortProvided,
+    dataRoot,
+    durability,
+    allowWalPanicWipe,
+  } = options;
   const dataDir = path.join(dataRoot, "pgdata");
+  const postmasterCheckInput = {
+    port,
+    explicitPortProvided,
+    dataDir,
+    ...(options.allowedDataDirs === undefined
+      ? {}
+      : { allowedDataDirs: options.allowedDataDirs }),
+    env,
+    portEnvName: options.portEnvName ?? "LOCAL_TEST_PG_PORT",
+    isolationEnvName: options.isolationEnvName ?? "XDG_CACHE_HOME",
+  };
 
-  if (serverIsUp(port)) {
-    const user = verifyRunningServer(port, dataDir);
-    return { port, superUrl: sharedDatabaseUrl("postgres", { user, port }) };
+  const preCheck = (): { port: number; superUrl: string } | undefined => {
+    const fromPid = resolvePostmasterState(postmasterCheckInput);
+    if (fromPid !== undefined) {
+      return fromPid;
+    }
+    if (serverIsUp(port)) {
+      const user = verifyRunningServer(
+        port,
+        dataDir,
+        env,
+        options.allowedDataDirs,
+      );
+      return { port, superUrl: sharedDatabaseUrl("postgres", { user, port }) };
+    }
+    return undefined;
+  };
+
+  const existing = preCheck();
+  if (existing !== undefined) {
+    return existing;
   }
 
   ensureDirectorySync(dataRoot);
@@ -425,12 +431,14 @@ export function ensureSharedPostgres(): {
   const deadline = Date.now() + START_WAIT_MS;
 
   for (;;) {
-    if (serverIsUp(port)) {
-      const user = verifyRunningServer(port, dataDir);
-      return { port, superUrl: sharedDatabaseUrl("postgres", { user, port }) };
+    const ready = preCheck();
+    if (ready !== undefined) {
+      return ready;
     }
-    if (acquireLock(lockDir)) break;
-    if (lockIsStale(lockDir)) {
+    if (acquireLock(lockDir)) {
+      break;
+    }
+    if (lockIsStale(lockDir, LOCK_STALE_MS)) {
       releaseLock(lockDir);
       continue;
     }
@@ -443,12 +451,51 @@ export function ensureSharedPostgres(): {
   }
 
   try {
-    if (!serverIsUp(port)) {
-      initializeAndStartCluster(port, dataRoot, dataDir);
+    const reused = resolvePostmasterState(postmasterCheckInput);
+    if (reused !== undefined) {
+      return reused;
     }
-    const user = verifyRunningServer(port, dataDir);
+    if (!serverIsUp(port)) {
+      initializeAndStartCluster({
+        port,
+        dataRoot,
+        dataDir,
+        durability,
+        allowWalPanicWipe,
+      });
+    }
+    const user = verifyRunningServer(
+      port,
+      dataDir,
+      env,
+      options.allowedDataDirs,
+    );
     return { port, superUrl: sharedDatabaseUrl("postgres", { user, port }) };
   } finally {
     releaseLock(lockDir);
   }
+}
+
+export function ensureSharedPostgres(
+  env: Readonly<Record<string, string | undefined>> = Bun.env,
+): {
+  readonly port: number;
+  readonly superUrl: string;
+} {
+  const explicitPort = explicitPostgresPort(env);
+  const dataRoot = sharedPostgresDataRoot(env);
+  const allowedDataDirs = managedPostgresDataRoots(env).map((root) =>
+    path.join(root, "pgdata"),
+  );
+  return ensurePostgresCluster({
+    port: explicitPort ?? DEFAULT_SHARED_PG_PORT,
+    explicitPortProvided: explicitPort !== undefined,
+    dataRoot,
+    durability: "disposable",
+    allowWalPanicWipe: true,
+    allowedDataDirs,
+    env,
+    portEnvName: "LOCAL_TEST_PG_PORT",
+    isolationEnvName: "XDG_CACHE_HOME",
+  });
 }

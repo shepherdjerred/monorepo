@@ -21,6 +21,11 @@
         "$TURBO_ROOT$/ci/scripts/images/image-targets.ts"
       ]
     },
+    // No codegen command: scope ^generate transit hashing so CLI-only scripts
+    // do not invalidate downstream test/lint caches.
+    "generate": {
+      "inputs": ["package.json"]
+    },
     "typecheck": {
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/ci/scripts/**/*.ts"]
     },

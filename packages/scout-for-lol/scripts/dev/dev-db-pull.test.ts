@@ -40,7 +40,7 @@ describe("parseDevDbPullArgs", () => {
       stage: "beta",
       target: STAGES.beta,
       localDatabase: "scout_beta_snapshot",
-      databaseUrl: "postgres://scout@127.0.0.1:5471/scout_beta_snapshot",
+      databaseUrl: "postgres://scout@127.0.0.1:5472/scout_beta_snapshot",
       dumpPath: "/home/dev/.local/share/scout-for-lol/db-pull/beta.dump",
     });
   });
@@ -64,7 +64,7 @@ describe("parseDevDbPullArgs", () => {
     ]);
     expect(parsed.localDatabase).toBe("scout_scratch");
     expect(parsed.databaseUrl).toBe(
-      "postgres://scout@127.0.0.1:5471/scout_scratch",
+      "postgres://scout@127.0.0.1:5472/scout_scratch",
     );
     expect(parsed.dumpPath).toBe("/tmp/one.dump");
   });
@@ -125,7 +125,7 @@ describe("localDatabaseUrl and defaultDumpPath", () => {
 
   test("build a loopback URL for the shared dev server", () => {
     expect(localDatabaseUrl("scout_dev_3000", {})).toBe(
-      "postgres://scout@127.0.0.1:5471/scout_dev_3000",
+      "postgres://scout@127.0.0.1:5472/scout_dev_3000",
     );
   });
 });
@@ -275,7 +275,7 @@ describe("assertRestoredTables", () => {
 describe("handoffMessage", () => {
   test("prints the dev:web command for the restored database", () => {
     expect(handoffMessage(options())).toContain(
-      "bun run dev:web -- --database-url postgres://scout@127.0.0.1:5471/scout_beta_snapshot",
+      "bun run dev:web -- --database-url postgres://scout@127.0.0.1:5472/scout_beta_snapshot",
     );
   });
 });

@@ -61,7 +61,7 @@ describe("cross-platform synchronous migration hashing and version reads", () =>
     expect(readFileTextSync(versionFile).trim()).toBe("18");
   });
 
-  test("managedPostgresDataRoots retains home legacy paths alongside LOCALAPPDATA", () => {
+  test("managedPostgresDataRoots isolates Windows test data to monorepo-test-pg without Scout dev paths", () => {
     const roots = managedPostgresDataRoots(
       {
         LOCALAPPDATA: String.raw`C:\Users\Jerred\AppData\Local`,
@@ -69,22 +69,18 @@ describe("cross-platform synchronous migration hashing and version reads", () =>
       },
       { isRoot: false, platform: "win32" },
     );
-    expect(roots).toContain(
+    expect(roots).toEqual([
       path.join(
         String.raw`C:\Users\Jerred\AppData\Local`,
-        "monorepo-dev-pg",
+        "monorepo-test-pg",
         "18",
       ),
-    );
-    expect(roots).toContain(
       path.join(
         String.raw`C:\Users\Jerred`,
-        ".local",
-        "share",
-        "scout-for-lol",
-        "postgres",
+        ".cache",
+        "monorepo-test-pg",
         "18",
       ),
-    );
+    ]);
   });
 });

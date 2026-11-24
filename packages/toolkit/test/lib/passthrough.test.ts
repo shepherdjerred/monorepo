@@ -1,12 +1,15 @@
 import { afterEach, describe, expect, test } from "vitest";
 import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import os, { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
 import {
   buildPassthroughInvocation,
+  lookupExecutable,
+  shimDirectory,
   spawnPassthroughInvocation,
 } from "#lib/passthrough.ts";
+import { isAgentEnvironment } from "#lib/tracker/actor.ts";
 
 const HelpReport = z.object({
   args: z.array(z.string()),
@@ -37,6 +40,7 @@ describe("passthrough registry", () => {
     ["gh", "gh", []],
     ["woodpecker", "woodpecker-cli", []],
     ["git-spice", "git-spice", []],
+    ["spice", "git-spice", []],
     ["posthog", "posthog-cli", []],
     ["grafana", "gcx", []],
     ["prom", "gcx", ["metrics"]],
@@ -154,6 +158,67 @@ describe("passthrough registry", () => {
   test("returns null for non-platform commands", () => {
     expect(buildPassthroughInvocation("history", [], {})).toBeNull();
     expect(buildPassthroughInvocation("gf", [], {})).toBeNull();
+  });
+
+  test("injects --no-prompt for git-spice and spice only in agent/CI environments", () => {
+    expect(isAgentEnvironment({})).toBe(false);
+    expect(isAgentEnvironment({ CLAUDECODE: "1" })).toBe(true);
+    expect(isAgentEnvironment({ CI: "true" })).toBe(true);
+    expect(isAgentEnvironment({ TRACKER_ACTOR_KIND: "agent" })).toBe(true);
+    expect(isAgentEnvironment({ TRACKER_ACTOR_KIND: "runner" })).toBe(true);
+    expect(isAgentEnvironment({ TRACKER_ACTOR_HARNESS: "codex" })).toBe(true);
+
+    for (const command of ["git-spice", "spice"] as const) {
+      expect(
+        buildPassthroughInvocation(command, ["branch", "submit"], {})?.args,
+      ).toEqual(["branch", "submit"]);
+
+      expect(
+        buildPassthroughInvocation(command, ["branch", "submit"], {
+          CLAUDECODE: "1",
+        })?.args,
+      ).toEqual(["branch", "submit", "--no-prompt"]);
+
+      expect(
+        buildPassthroughInvocation(command, ["repo", "sync"], {
+          CI: "1",
+        })?.args,
+      ).toEqual(["repo", "sync", "--no-prompt"]);
+
+      expect(
+        buildPassthroughInvocation(command, ["bs", "--", "--literal"], {
+          CLAUDECODE: "1",
+        })?.args,
+      ).toEqual(["bs", "--no-prompt", "--", "--literal"]);
+
+      expect(
+        buildPassthroughInvocation(command, ["--prompt", "branch", "submit"], {
+          ANTIGRAVITY_AGENT: "1",
+        })?.args,
+      ).toEqual(["--prompt", "branch", "submit"]);
+
+      expect(
+        buildPassthroughInvocation(
+          command,
+          ["branch", "submit", "--no-prompt"],
+          { ANTIGRAVITY_AGENT: "1" },
+        )?.args,
+      ).toEqual(["branch", "submit", "--no-prompt"]);
+
+      for (const skipped of [
+        ["--help"],
+        ["-h"],
+        ["--version"],
+        ["version"],
+        ["auth", "login"],
+        ["shell", "completion"],
+      ]) {
+        expect(
+          buildPassthroughInvocation(command, skipped, { CLAUDECODE: "1" })
+            ?.args,
+        ).toEqual(skipped);
+      }
+    }
   });
 });
 
@@ -700,5 +765,113 @@ describe("unsupported commands", () => {
     );
     expect(result.code).toBe(1);
     expect(result.stderr).toContain("Unknown option '--repo'");
+  });
+});
+
+describe("shim recursion and stdin options", () => {
+  test("strips toolkit shim directories from child PATH so mise fallback never recurses (AI-722)", async () => {
+    const customHome = await fakePath();
+    const customShimDir = shimDirectory(customHome);
+    const defaultShimDir = shimDirectory(os.homedir());
+    const miseShimDir = await fakePath();
+    const realBinDir = await fakePath();
+    await mkdir(customShimDir, { recursive: true });
+
+    // Toolkit shim that would fail loudly if mise ever resolved back into it.
+    await writeExecutable(
+      customShimDir,
+      "posthog-cli",
+      "#!/bin/sh\nprintf 'RECURSED_INTO_TOOLKIT_SHIM\\n' >&2\nexit 99\n",
+    );
+    // Simulate mise shim fallback: strip its own dir from PATH and exec the next posthog-cli.
+    await writeExecutable(
+      miseShimDir,
+      "posthog-cli",
+      `#!/bin/sh
+NEW_PATH=""
+OLD_IFS="$IFS"
+IFS=":"
+for dir in $PATH; do
+  if [ "$dir" != ${JSON.stringify(miseShimDir)} ]; then
+    NEW_PATH="\${NEW_PATH:+$NEW_PATH:}$dir"
+  fi
+done
+IFS="$OLD_IFS"
+PATH="$NEW_PATH"
+export PATH
+exec posthog-cli "$@"
+`,
+    );
+    await writeExecutable(
+      realBinDir,
+      "posthog-cli",
+      String.raw`#!/bin/sh
+printf 'args:%s\npath:%s\n' "$*" "$PATH"
+`,
+    );
+
+    const compositePath = [
+      customShimDir,
+      defaultShimDir,
+      miseShimDir,
+      realBinDir,
+      "/usr/bin",
+      "/bin",
+    ].join(path.delimiter);
+
+    expect(lookupExecutable("posthog-cli", compositePath, customHome)).toBe(
+      path.join(miseShimDir, "posthog-cli"),
+    );
+
+    const entrypoint = path.resolve(import.meta.dir, "../../src/index.ts");
+    const proc = Bun.spawnSync(
+      [process.execPath, entrypoint, "posthog", "--version"],
+      {
+        env: {
+          ...Bun.env,
+          HOME: customHome,
+          PATH: compositePath,
+          POSTHOG_CLI_API_KEY: "phx_synthetic",
+        },
+        stdin: "ignore",
+        stdout: "pipe",
+        stderr: "pipe",
+      },
+    );
+    expect(proc.exitCode).toBe(0);
+    expect(proc.stderr.toString()).toBe("");
+    const [argsLine = "", pathLine = ""] = proc.stdout
+      .toString()
+      .trim()
+      .split("\n");
+    expect(argsLine).toBe("args:--version");
+    const childPathEntries = pathLine
+      .slice("path:".length)
+      .split(path.delimiter);
+    expect(childPathEntries).not.toContain(customShimDir);
+    expect(childPathEntries).not.toContain(defaultShimDir);
+  });
+
+  test("spawnPassthroughInvocation supports stdin: ignore without blocking (AI-552)", async () => {
+    const directory = await fakePath();
+    await writeExecutable(
+      directory,
+      "git-spice",
+      `#!${process.execPath}
+const text = await Bun.stdin.text();
+if (text.length !== 0) process.exit(2);
+process.exit(0);
+`,
+    );
+
+    const code = await spawnPassthroughInvocation(
+      {
+        executable: "git-spice",
+        args: ["branch", "merge"],
+        env: { ...Bun.env, PATH: `${directory}:/usr/bin:/bin` },
+      },
+      { stdin: "ignore" },
+    );
+    expect(code).toBe(0);
   });
 });

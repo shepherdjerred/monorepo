@@ -2,6 +2,7 @@ import { $ } from "bun";
 import { chmod, mkdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { resolveToolkitBuildStamp } from "#lib/version/build-stamp.ts";
 import {
   buildSteps,
   codesignArgv,
@@ -15,7 +16,13 @@ if (import.meta.main) {
   const platform = installPlatform(process.platform);
   const root = path.dirname(import.meta.dir);
   const paths = installPaths(home, platform);
-  const steps = buildSteps(home, platform);
+  const stamp = resolveToolkitBuildStamp(root);
+  if (stamp === null) {
+    throw new Error(
+      "install:local must run inside a git checkout of the monorepo",
+    );
+  }
+  const steps = buildSteps(home, platform, stamp);
   // Resolve the signing identity before building so a missing certificate
   // fails before anything is replaced.
   const identity =

@@ -4,6 +4,7 @@ import {
   validateDeployCommand,
 } from "#commands/deploy/deploy.ts";
 import { parseDeployArgs } from "#commands/deploy/common.ts";
+import { assertServiceRetirableOnMain } from "#commands/deploy/model-io.ts";
 import { deliveryClient, deliveryUrl } from "#lib/delivery/client.ts";
 import { resolveCredentials } from "#lib/credentials.ts";
 import { loadToolkitConfig } from "#lib/toolkit-config.ts";
@@ -43,6 +44,8 @@ export async function handleDeployCommand(
       catalogNotice: (revision) => {
         console.error(`Catalog revision: ${revision}`);
       },
+      assertServiceRetirableOnMain: (serviceId) =>
+        assertServiceRetirableOnMain(serviceId),
     },
   );
   console.log(JSON.stringify(result, null, values.json ? undefined : 2));

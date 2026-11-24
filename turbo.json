@@ -35,6 +35,10 @@
     "GOLANGCI_LINT_CACHE",
     "GOMODCACHE",
     "GRADLE_USER_HOME",
+    // Disposable PostgreSQL overrides for test-postgres and extended suites;
+    // they choose where local test servers listen/store data, not task outputs.
+    "LOCAL_TEST_PG_PORT",
+    "LOCAL_TEST_PG_USER",
     "MISE_DATA_DIR",
     // mise resolves claim-installed tool versions through these three; shims
     // inside tasks need them or a tool a stale CI image lacks goes missing.
@@ -43,9 +47,12 @@
     "MISE_LOCKED",
     "MISE_SHARED_INSTALL_DIRS",
     "NUGET_PACKAGES",
+    "POSTGRES_BIN_DIR",
     "RUSTC_WRAPPER",
     "SCCACHE_CACHE_SIZE",
     "SCCACHE_DIR",
+    "SCOUT_PG_PORT",
+    "TEST_POSTGRES_DATA_ROOT",
     "TMPDIR",
     "UV_CACHE_DIR",
     "UV_PYTHON_INSTALL_DIR",
@@ -113,7 +120,7 @@
       "dependsOn": ["^build", "^generate", "generate"]
     },
     "test": {
-      "dependsOn": ["^build", "generate"],
+      "dependsOn": ["^build", "^generate", "generate"],
       "env": ["NODE_ENV"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/vitest.config.ts"]
     },
@@ -128,7 +135,7 @@
     "test:ci": {
       "env": ["NODE_ENV"],
       "passThroughEnv": ["MISE_DATA_DIR"],
-      "dependsOn": ["^build", "generate"],
+      "dependsOn": ["^build", "^generate", "generate"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/scripts/ci/ci-reporting.ts",
@@ -149,7 +156,7 @@
     "test:extended": {
       "env": ["NODE_ENV"],
       "passThroughEnv": ["MISE_DATA_DIR"],
-      "dependsOn": ["^build", "generate"],
+      "dependsOn": ["^build", "^generate", "generate"],
       "cache": false
     },
     "lint": {
@@ -159,7 +166,7 @@
       // build 5789: scout backend, 3863 CI-only no-unsafe-assignment errors
       // from lint racing generate on a cold cache (clean locally where
       // generate had already run).
-      "dependsOn": ["^build", "generate"]
+      "dependsOn": ["^build", "^generate", "generate"]
     },
     // Browser-driven e2e (Playwright). Not in the default `test` chain and
     // uncached by default. Deterministic browser suites opt in from their

@@ -14,7 +14,7 @@ const basePrisma = new PrismaClient({
   adapter: new PrismaPg({
     connectionString:
       Bun.env["DATABASE_URL"] ??
-      `postgres://scout@127.0.0.1:${Bun.env["SCOUT_PG_PORT"] ?? "5471"}/scout_dev_3000`,
+      `postgres://scout@127.0.0.1:${Bun.env["SCOUT_PG_PORT"] ?? "5472"}/scout_dev_3000`,
   }),
 });
 

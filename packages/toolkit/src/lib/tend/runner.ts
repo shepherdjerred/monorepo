@@ -1,5 +1,7 @@
-import { appendFile, mkdir, open, rm } from "node:fs/promises";
+import { appendFile, mkdir, open, rm, statfs } from "node:fs/promises";
+import os from "node:os";
 import { z } from "zod";
+import type { PinchtabClientOptions } from "#lib/pinchtab-cli/http.ts";
 import { sweepArtifacts } from "./artifacts.ts";
 import { sweepDocker } from "./docker.ts";
 import { listLeases, sweepLeases } from "./leases.ts";
@@ -25,7 +27,11 @@ import { type ProcessSignaler, sweepProcesses } from "./processes.ts";
 import { sweepTailscaleServe } from "./tailscale-serve.ts";
 import {
   type CommandRunner,
+  type DiskCapacitySummary,
+  type DockerDiskSummary,
+  evaluateDiskCapacity,
   type LivenessSnapshot,
+  parseDockerSystemDfOutput,
   type SurfaceSweepResult,
   type TcpPortProbe,
   TEND_SURFACES,
@@ -44,8 +50,7 @@ const LockOwnerSchema = z.strictObject({
 });
 
 function isEexistError(error: unknown): boolean {
-  const ErrnoSchema = z.looseObject({ code: z.string() });
-  const parsed = ErrnoSchema.safeParse(error);
+  const parsed = z.looseObject({ code: z.string() }).safeParse(error);
   return parsed.success && parsed.data.code === "EEXIST";
 }
 
@@ -75,23 +80,20 @@ export async function acquireTendRunLock(options: {
     `unknown-${String(ownerPid)}`;
 
   await mkdir(paths.rootDir, { recursive: true, mode: 0o700 });
-
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
       const handle = await open(paths.lockFile, "wx", 0o600);
       try {
-        const payload = `${JSON.stringify({
+        const payload = JSON.stringify({
           pid: ownerPid,
           processStart: ownStart,
           acquiredAt: new Date().toISOString(),
-        })}\n`;
-        await handle.writeFile(payload, "utf8");
+        });
+        await handle.writeFile(`${payload}\n`, "utf8");
       } finally {
         await handle.close();
       }
-      return async () => {
-        await rm(paths.lockFile, { force: true });
-      };
+      return () => rm(paths.lockFile, { force: true });
     } catch (error: unknown) {
       if (!isEexistError(error)) {
         throw error;
@@ -99,12 +101,7 @@ export async function acquireTendRunLock(options: {
       if (attempt > 0) {
         break;
       }
-      const stale = await isLockFileStale(
-        paths.lockFile,
-        checkAlive,
-        readStart,
-      );
-      if (!stale) {
+      if (!(await isLockFileStale(paths.lockFile, checkAlive, readStart))) {
         throw new Error(
           `Another toolkit tend --apply run is active (${paths.lockFile})`,
           { cause: error },
@@ -122,22 +119,18 @@ async function isLockFileStale(
   readStart: (pid: number) => Promise<string | undefined>,
 ): Promise<boolean> {
   try {
-    const raw: unknown = JSON.parse(await Bun.file(lockFile).text());
-    const parsed = LockOwnerSchema.safeParse(raw);
-    if (!parsed.success) {
+    const text = await Bun.file(lockFile).text();
+    const parsed = LockOwnerSchema.safeParse(JSON.parse(text));
+    if (!parsed.success || !checkAlive(parsed.data.pid)) {
       return true;
     }
-    const { pid, processStart } = parsed.data;
-    if (!checkAlive(pid)) {
-      return true;
-    }
-    if (processStart.startsWith("unknown-")) {
+    if (parsed.data.processStart.startsWith("unknown-")) {
       return false;
     }
-    const currentStart = await readStart(pid);
+    const currentStart = await readStart(parsed.data.pid);
     return currentStart === undefined
-      ? !checkAlive(pid)
-      : !processStartsMatch(currentStart, processStart);
+      ? !checkAlive(parsed.data.pid)
+      : !processStartsMatch(currentStart, parsed.data.processStart);
   } catch {
     return true;
   }
@@ -207,8 +200,58 @@ export type RunTendOptions = {
   readonly sharedPostgresAdapter?: SharedPostgresAdapter | undefined;
   readonly processSignaler?: ProcessSignaler | undefined;
   readonly livenessOverride?: LivenessSnapshot | undefined;
+  readonly pinchtab?: PinchtabClientOptions | undefined;
+  readonly statDisk?:
+    | ((
+        targetPath: string,
+      ) => Promise<{ availableBytes: number; totalBytes: number } | null>)
+    | undefined;
   readonly nowMs?: number | undefined;
 };
+
+async function collectHostDiskCapacity(
+  homeDir: string,
+  statDisk: RunTendOptions["statDisk"],
+): Promise<DiskCapacitySummary | null> {
+  try {
+    const raw =
+      statDisk === undefined
+        ? await statfs(homeDir).then((s) => ({
+            availableBytes: s.bavail * s.bsize,
+            totalBytes: s.blocks * s.bsize,
+          }))
+        : await statDisk(homeDir);
+    return raw === null
+      ? null
+      : evaluateDiskCapacity(homeDir, raw.availableBytes, raw.totalBytes);
+  } catch {
+    return null;
+  }
+}
+
+async function collectDockerDiskSummary(
+  mode: "status" | "run",
+  selectedSurfaces: readonly TendSurface[],
+  runner: CommandRunner,
+): Promise<DockerDiskSummary | null> {
+  if (mode !== "status" || !selectedSurfaces.includes("docker")) {
+    return null;
+  }
+  const res = await runner(["docker", "system", "df", "--format", "json"], {
+    timeoutMs: 3000,
+  });
+  if (res.exitCode !== 0) {
+    return {
+      available: false,
+      rows: [],
+      skippedReason:
+        res.timedOut === true
+          ? "docker system df timed out"
+          : "docker daemon not running",
+    };
+  }
+  return { available: true, rows: parseDockerSystemDfOutput(res.stdout) };
+}
 
 async function executeSelectedSurface(
   surface: TendSurface,
@@ -291,6 +334,7 @@ async function executeSelectedSurface(
         nowMs: ctx.nowMs,
         processes: ctx.liveness.processes,
         apply: ctx.apply,
+        pinchtab: ctx.options.pinchtab,
       });
       return res.sweep;
     }
@@ -302,12 +346,7 @@ function summarizeSurfaceResults(options: {
   readonly tsIso: string;
   readonly host: string;
   readonly apply: boolean;
-}): {
-  readonly candidateCount: number;
-  readonly removedCount: number;
-  readonly failedCount: number;
-  readonly itemEvents: TendItemEvent[];
-} {
+}) {
   let candidateCount = 0;
   let removedCount = 0;
   let failedCount = 0;
@@ -335,8 +374,17 @@ function summarizeSurfaceResults(options: {
       });
     }
   }
-
   return { candidateCount, removedCount, failedCount, itemEvents };
+}
+
+function resolveReportMode(
+  mode: "status" | "run",
+  apply: boolean,
+): TendRunReport["mode"] {
+  if (mode === "status") {
+    return "status";
+  }
+  return apply ? "apply" : "dry-run";
 }
 
 export async function runTend(options: RunTendOptions): Promise<TendRunReport> {
@@ -349,11 +397,9 @@ export async function runTend(options: RunTendOptions): Promise<TendRunReport> {
   const worktreeMinAgeMs =
     options.worktreeMinAgeMs ?? DEFAULT_WORKTREE_MIN_AGE_MS;
   const selectedSurfaces = options.surfaces ?? TEND_SURFACES;
-
-  let releaseLock: (() => Promise<void>) | undefined;
-  if (apply) {
-    releaseLock = await acquireTendRunLock({ paths, runner });
-  }
+  const releaseLock = apply
+    ? await acquireTendRunLock({ paths, runner })
+    : undefined;
 
   try {
     const lastRunBefore = await readLastTendRunSummary(paths);
@@ -366,12 +412,12 @@ export async function runTend(options: RunTendOptions): Promise<TendRunReport> {
         homeDir: options.homeDir,
         nowMs,
       }));
-
-    const classifiedLeases = await listLeases({
-      paths,
-      nowMs,
-      processes: liveness.processes,
-    });
+    const homeDir = options.homeDir ?? Bun.env["HOME"] ?? os.homedir();
+    const [disk, dockerDisk, classifiedLeases] = await Promise.all([
+      collectHostDiskCapacity(homeDir, options.statDisk),
+      collectDockerDiskSummary(options.mode, selectedSurfaces, runner),
+      listLeases({ paths, nowMs, processes: liveness.processes }),
+    ]);
 
     const surfaceResults: SurfaceSweepResult[] = [];
     for (const surface of selectedSurfaces) {
@@ -398,43 +444,46 @@ export async function runTend(options: RunTendOptions): Promise<TendRunReport> {
         host: liveness.localHost,
         apply,
       });
-
-    const holdRecord: Record<string, string> = Object.fromEntries(
-      liveness.holdSurfaces,
-    );
+    const holdRecord = Object.fromEntries(liveness.holdSurfaces);
 
     if (options.mode === "run") {
-      const summaryEvent: TendRunSummaryEvent = {
-        type: "run",
-        ts: tsIso,
-        host: liveness.localHost,
-        apply,
-        surfaces: [...selectedSurfaces],
-        candidateCount,
-        removedCount,
-        failedCount,
-        heldSurfaces: holdRecord,
-        durationMs: Math.max(0, Date.now() - startedMs),
-      };
       await appendTendEvents({
         paths,
-        summary: summaryEvent,
+        summary: {
+          type: "run",
+          ts: tsIso,
+          host: liveness.localHost,
+          apply,
+          surfaces: [...selectedSurfaces],
+          candidateCount,
+          removedCount,
+          failedCount,
+          heldSurfaces: holdRecord,
+          durationMs: Math.max(0, Date.now() - startedMs),
+        },
         items: itemEvents,
       });
     }
 
+    const warnings =
+      disk?.warning === undefined
+        ? liveness.warnings
+        : [...liveness.warnings, disk.warning];
+
     return {
       timestamp: tsIso,
       host: liveness.localHost,
-      mode: options.mode === "status" ? "status" : apply ? "apply" : "dry-run",
+      mode: resolveReportMode(options.mode, apply),
       worktreeMinAgeMs,
+      disk,
+      ...(dockerDisk === null ? {} : { dockerDisk }),
       liveness: {
         hcAvailable: liveness.hcAvailable,
         liveTerminalCount: liveness.hcTerminals.length,
         forumAvailable: liveness.forumAvailable,
         activeHostNotices: liveness.forumNotices,
         holdSurfaces: holdRecord,
-        warnings: liveness.warnings,
+        warnings,
       },
       surfaces: surfaceResults,
       totals: {
@@ -445,8 +494,6 @@ export async function runTend(options: RunTendOptions): Promise<TendRunReport> {
       lastRun: lastRunBefore,
     };
   } finally {
-    if (releaseLock !== undefined) {
-      await releaseLock();
-    }
+    await releaseLock?.();
   }
 }

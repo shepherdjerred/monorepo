@@ -1,7 +1,17 @@
-import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
+import http from "node:http";
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import nodePath from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { createPinchtabHttpClient } from "#lib/pinchtab-cli/client.ts";
+import { resolvePinchtabConnection } from "#lib/pinchtab-cli/http.ts";
 import {
   captureScreenshot,
   type PinchtabDriverClient,
@@ -181,5 +191,201 @@ describe("pinchtab lease tracking & tab cleanup", () => {
 
     const remaining = await readdir(nodePath.join(tempTendDir, "leases"));
     expect(remaining).toEqual([]);
+  });
+});
+
+describe("PinchTab direct HTTP REST client", () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    while (tempDirs.length > 0) {
+      const dir = tempDirs.pop();
+      if (dir !== undefined) {
+        await rm(dir, { recursive: true, force: true });
+      }
+    }
+  });
+
+  test("resolves port and token across PINCHTAB_CONFIG, macOS Library config, ~/.pinchtab/config.json, PINCHTAB_SERVER, and PINCHTAB_TOKEN", async () => {
+    const homeDir = await mkdtemp(nodePath.join(os.tmpdir(), "pt-home-"));
+    tempDirs.push(homeDir);
+
+    const dotDir = nodePath.join(homeDir, ".pinchtab");
+    await mkdir(dotDir, { recursive: true });
+    await writeFile(
+      nodePath.join(dotDir, "config.json"),
+      JSON.stringify({ server: { port: "9901", token: "dot-token" } }),
+    );
+    expect(await resolvePinchtabConnection({ env: {}, homeDir })).toEqual({
+      baseUrl: "http://127.0.0.1:9901",
+      token: "dot-token",
+    });
+
+    const libDir = nodePath.join(
+      homeDir,
+      "Library",
+      "Application Support",
+      "pinchtab",
+    );
+    await mkdir(libDir, { recursive: true });
+    await writeFile(
+      nodePath.join(libDir, "config.json"),
+      JSON.stringify({ server: { port: "9902", token: "lib-token" } }),
+    );
+    expect(await resolvePinchtabConnection({ env: {}, homeDir })).toEqual({
+      baseUrl: "http://127.0.0.1:9902",
+      token: "lib-token",
+    });
+
+    const explicitCfg = nodePath.join(homeDir, "explicit.json");
+    await writeFile(
+      explicitCfg,
+      JSON.stringify({ server: { port: "9903", token: "explicit-token" } }),
+    );
+    expect(
+      await resolvePinchtabConnection({
+        env: {
+          PINCHTAB_CONFIG: explicitCfg,
+          PINCHTAB_SERVER: "http://127.0.0.1:9999/",
+          PINCHTAB_TOKEN: "env-override-token",
+          PINCHTAB_SESSION: "foreign-session-must-be-ignored",
+        },
+        homeDir,
+      }),
+    ).toEqual({
+      baseUrl: "http://127.0.0.1:9999",
+      token: "env-override-token",
+    });
+  });
+
+  test("drives full captureScreenshot lifecycle over HTTP REST without spawning pinchtab CLI", async () => {
+    const dir = await mkdtemp(nodePath.join(os.tmpdir(), "pt-http-"));
+    tempDirs.push(dir);
+    const pngBytes = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+    const recorded: {
+      method: string;
+      url: string;
+      auth: string;
+      body: string;
+    }[] = [];
+
+    const server = http.createServer((req, res) => {
+      const chunks: Buffer[] = [];
+      req.on("data", (chunk: Buffer) => chunks.push(chunk));
+      req.on("end", () => {
+        const body = Buffer.concat(chunks).toString("utf8");
+        const reqUrl = req.url ?? "/";
+        recorded.push({
+          method: req.method ?? "GET",
+          url: reqUrl,
+          auth: req.headers.authorization ?? "",
+          body,
+        });
+        if (reqUrl === "/health") {
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(JSON.stringify({ status: "ok" }));
+          return;
+        }
+        if (reqUrl === "/sessions" && req.method === "POST") {
+          res.writeHead(201, { "content-type": "application/json" });
+          res.end(
+            JSON.stringify({
+              id: "ses_http_1",
+              agentId: "toolkit-screenshot",
+              sessionToken: "stok_http_1",
+              status: "active",
+            }),
+          );
+          return;
+        }
+        if (reqUrl === "/sessions/ses_http_1" && req.method === "DELETE") {
+          // Simulate PinchTab 0.15.2 returning 405 on DELETE so fallback to /revoke is exercised too.
+          res.writeHead(405);
+          res.end("Method Not Allowed");
+          return;
+        }
+        if (reqUrl === "/sessions/ses_http_1/revoke" && req.method === "POST") {
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(JSON.stringify({ status: "ok" }));
+          return;
+        }
+        if (reqUrl === "/navigate" && req.method === "POST") {
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(JSON.stringify({ tabId: "tab_http_1" }));
+          return;
+        }
+        if (reqUrl.startsWith("/tabs/tab_http_1/count")) {
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(JSON.stringify({ selector: "main", count: 1 }));
+          return;
+        }
+        if (reqUrl === "/tabs/tab_http_1/url") {
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(JSON.stringify({ url: "http://localhost:4321/" }));
+          return;
+        }
+        if (reqUrl.startsWith("/tabs/tab_http_1/screenshot")) {
+          res.writeHead(200, { "content-type": "image/png" });
+          res.end(pngBytes);
+          return;
+        }
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify({ ok: true }));
+      });
+    });
+
+    await new Promise<void>((resolve) => {
+      server.listen(0, "127.0.0.1", () => resolve());
+    });
+
+    try {
+      const addr = server.address();
+      const port = addr !== null && typeof addr === "object" ? addr.port : 0;
+      const opts = {
+        env: {
+          PINCHTAB_SERVER: `http://127.0.0.1:${String(port)}`,
+          PINCHTAB_TOKEN: "admin_tok_1",
+          PATH: "",
+        },
+        homeDir: dir,
+      };
+
+      const httpClient = createPinchtabHttpClient(opts);
+      const healthRes = await httpClient.health();
+      expect(healthRes.success).toBe(true);
+
+      const outPath = nodePath.join(dir, "shot.png");
+      await captureScreenshot({
+        baseUrl: "http://localhost:4321",
+        route: "/",
+        outPath,
+        theme: "dark",
+        viewport: { width: 1280, height: 720 },
+        fullPage: true,
+        waitForSelector: "main",
+        client: httpClient,
+      });
+
+      const written = new Uint8Array(await readFile(outPath));
+      expect([...written]).toEqual([...pngBytes]);
+      expect(recorded.map((r) => `${r.method} ${r.url}`)).toEqual([
+        "GET /health",
+        "POST /sessions",
+        "POST /navigate",
+        "POST /tabs/tab_http_1/emulation/viewport",
+        "POST /tabs/tab_http_1/emulation/media",
+        "POST /tabs/tab_http_1/navigate",
+        "GET /tabs/tab_http_1/count?selector=main",
+        "GET /tabs/tab_http_1/screenshot?format=png&raw=true&beyondViewport=true",
+        "POST /tabs/tab_http_1/close",
+        "DELETE /sessions/ses_http_1",
+        "POST /sessions/ses_http_1/revoke",
+      ]);
+      expect(recorded[1]?.auth).toBe("Bearer admin_tok_1");
+      expect(recorded[2]?.auth).toBe("Bearer stok_http_1");
+      expect(recorded.at(-1)?.auth).toBe("Bearer admin_tok_1");
+    } finally {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
   });
 });
