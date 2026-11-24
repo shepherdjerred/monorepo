@@ -249,7 +249,7 @@ export const RULES: readonly Rule[] = [
   },
   {
     id: "tailnetNamesWithoutDefinition",
-    name: "every tailnet name either side mentions is a declared tailnet service",
+    name: "every tailnet name used by Kubernetes or a runnable stack is declared",
     violations: ({ definitions, kubernetes, openTofu }) => {
       const { domain } = definitions.model.tailnet;
       const hosts = new Set(
@@ -263,7 +263,10 @@ export const RULES: readonly Rule[] = [
             .filter((name) => undeclared(name))
             .map((name) => `kubernetes: ${name.host}.${name.domain}`),
           ...openTofu.tailnetNames
-            .filter((name) => undeclared(name))
+            .filter(
+              (name) =>
+                !openTofu.retiredStacks.has(name.stack) && undeclared(name),
+            )
             .map(
               (name) => `opentofu ${name.stack}: ${name.host}.${name.domain}`,
             ),

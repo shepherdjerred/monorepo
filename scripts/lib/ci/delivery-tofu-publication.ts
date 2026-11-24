@@ -95,7 +95,7 @@ export function parseTofuArchivePublications(
   });
 }
 
-/** One pending Delivery build per `tofu-<stack>` service, each owning its stack's exact archive. */
+/** Every archive is validated; only active catalog owners admit new builds. */
 export function attachTofuArchivePublications(
   publications: readonly PublishBuild[],
   artifacts: unknown,
@@ -119,11 +119,11 @@ export function attachTofuArchivePublications(
       throw new Error(
         `OpenTofu archive ${entry.artifact.component} requires a service catalog owner ${entry.serviceId}`,
       );
-    if (owner.lifecycle !== "active") return [];
     if (publications.some((build) => build.serviceId === entry.serviceId))
       throw new Error(
         `One CI pipeline cannot publish ${entry.serviceId} twice`,
       );
+    if (owner.lifecycle !== "active") return [];
     return [
       PublishBuildSchema.parse({
         requestId: `ci/${String(input.repositoryId)}/${String(input.pipelineNumber)}/${entry.serviceId}`,

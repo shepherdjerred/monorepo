@@ -7,7 +7,7 @@ import {
   EnvValue,
   EnvFieldPaths,
   type ISecret,
-  type PersistentVolumeClaim,
+  PersistentVolumeClaim,
   Volume,
 } from "cdk8s-plus-31";
 import { createTemporalDomainWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/domain-worker.ts";
@@ -133,6 +133,36 @@ export function createMediaActivityWorkers(
       MEDIA_TV_CONTROL_ROOT: EnvValue.fromValue("/data/tv/.media-control"),
     },
     volumeMounts: [
+      {
+        path: "/migration/seerr",
+        // Files mounts the stopped writer's claim read-only at CSI so kubelet
+        // skips its recursive fsGroup ownership change on retained data.
+        volume: Volume.fromPersistentVolumeClaim(
+          chart,
+          "media-files-seerr-requests",
+          PersistentVolumeClaim.fromClaimName(
+            chart,
+            "media-files-seerr-claim",
+            "seerr-pvc",
+          ),
+          { readOnly: true },
+        ),
+        readOnly: true,
+      },
+      {
+        path: "/migration/tautulli",
+        volume: Volume.fromPersistentVolumeClaim(
+          chart,
+          "media-files-tautulli-history",
+          PersistentVolumeClaim.fromClaimName(
+            chart,
+            "media-files-tautulli-claim",
+            "tautulli-pvc",
+          ),
+          { readOnly: true },
+        ),
+        readOnly: true,
+      },
       {
         path: "/downloads",
         volume: Volume.fromPersistentVolumeClaim(

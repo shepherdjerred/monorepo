@@ -3018,11 +3018,28 @@ Imported-library household-history holds still require review before cleanup.
 Cleanup policy time is independent of the original SDK, verification, storage,
 writer and SQL deadlines; advancing policy time cannot renew an effect's proof.
 
-Acquisition, source cleanup, quarantine, and permanent purge have separate
-configuration gates, all disabled by default. Each effect still requires current
-ownership, intent, and policy checks. Tests against injected service responses
-establish adapter behavior, not live tracker compatibility or production
-acceptance.
+Before the first legacy handoff, point `FLAGS_URL` at the live Flags service.
+From the qualified cutover checkout, preview the acquisition hold for `media/prod`.
+
+```sh
+bun run check-flipt-flag-inventory -- --plan-declared \
+  --deployment media/prod --flag media-acquisition-enabled --json
+```
+
+Confirm the declaration is false with no rollout rules. Run the same command
+with `--apply-declared`, prefixed by
+`toolkit run --env FLAGS_MACHINE_TOKEN --`, to apply it with a revision check.
+Verify the fresh `media/prod` snapshot and the installed Network worker's
+acquisition decision both report false before handing off ownership. The
+worker requires a fresh affirmative flag evaluation before allowing effects.
+Keep the hold until every legacy handoff is complete and each imported profile
+has its selected guide version. Then remove the production override and its
+default-off exception and plan, apply, and verify the restored declaration
+for the same deployment and flag.
+Source cleanup, quarantine, and permanent purge default to disabled. Each
+effect still requires current ownership, intent, and policy checks.
+Tests against injected service responses establish adapter behavior, not live
+tracker compatibility or production acceptance.
 
 ## Runtime boundaries
 
@@ -3032,21 +3049,24 @@ Media digest. The chart constructor leaves the parallel application absent
 unless given an explicit image selection. Its synthesis recipe must be bound
 to an immutable artifact by Delivery before rendering a deployment.
 
-Before rolling out a qualified Media API image, set `FLIPT_URL` to the intended
-management endpoint and run this create-only bootstrap from the same qualified
-source. Verify the created-key list and fresh scoped readback before the consumer
-starts; preserve existing targeting and the acquisition hold through handoff.
-An older repo Activity image and Flipt's seed initializer do not backfill newly
-declared keys. Do not trigger the global inventory Workflow or use
-`--apply-declared` for this step.
+The Media API, Network, and Files roles read the first-party Flags deployment
+`media/prod`. Streambot uses its own deployment. The Media version set tracks
+the worker accepted in `temporal/prod`. Before rollout, check that its selected
+`image:temporal-worker` supports `FEATURE_FLAGS_MODE=flags`. Use the recomposed
+Media version set after Temporal accepts a compatible worker. Check that both
+Ready Media workers run the selected image before starting legacy handoff.
+
+If any declared Media flags are missing before rollout, use the qualified
+release checkout and `FLAGS_URL` to create the missing keys for Media only.
 
 ```sh
-FLIPT_OPERATOR_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/flipt-auth/operator-token' \
-  scripts/onepassword/with-service-account.sh \
-  op run -- env -u OP_SERVICE_ACCOUNT_TOKEN \
-  bun run check-flipt-flag-inventory -- \
-  --apply-missing --environment prod --namespace media
+toolkit run --env FLAGS_MACHINE_TOKEN -- \
+  bun run check-flipt-flag-inventory -- --apply-missing --deployment media/prod
 ```
+
+Verify the created keys and fresh scoped inventory before starting the consumer.
+The create-only command preserves existing targeting. Use the separate reviewed
+rollout procedure above to change an existing acquisition flag.
 
 The [API](src/server/index.ts) commits intent and an outbox row together. The
 [outbox dispatcher](src/automation/store.ts) starts workflows using stable IDs;
@@ -3392,7 +3412,9 @@ is empty/settled. Stdin is bounded and deserialized read-only in memory; no
 credential-bearing database file is written. The flag acknowledges observed
 source evidence and does not itself prove the writer stopped.
 
-After the Network worker observes the stopped writers, run the frozen reader.
+After the Network worker observes the stopped writers, verify the writer's
+Tautulli mount is unpublished and Files has a read-only CSI source and container
+mount. Then run the frozen reader.
 It opens SQLite read-only, requires zero active sessions, preserves every
 ungrouped history ID, and returns validated rows, the observation boundary
 (`through`), row count, and canonical snapshot digest. Import those rows in
@@ -3441,6 +3463,44 @@ at import. Replay the same batches after an account is verified to attach
 previously unbound records. Changing account mappings never transfers prior
 history to a different person. Plex history does not affect downloads,
 library retention, or the play counts and watch time supplied by timed sessions.
+
+### Final stopped Seerr capture
+
+After Seerr's writer pod has stopped and its old mount is unpublished, the
+surviving Files role can read `seerr-pvc` at `/migration/seerr/db/db.sqlite3`.
+Confirm the actual PVC/node identity, sole reader with a read-only CSI source
+and container mount, and settled WAL before capturing. The command leaves
+writer shutdown and WAL settlement to the operator. A nonempty WAL, corrupt
+image or changing source fails the capture.
+From the application repository root, supply the original source-instance
+SHA-256 identifier and independently verified source version:
+
+```sh
+bun packages/media/scripts/migration-seerr.ts \
+  --sqlite /migration/seerr/db/db.sqlite3 \
+  --source-instance-id "$MEDIA_SOURCE_INSTANCE_HASH" \
+  --source-version "$MEDIA_SOURCE_VERSION" \
+  --writer-stopped
+```
+
+The wrapper's `snapshot` is the filtered migration capture. `sqliteDigest` hashes
+the original database bytes and `sqliteBytes` records their bounded size
+(at most 256 MiB). `transport: "frozen-sqlite"` identifies this read path.
+Compare `apiComparableDigest` with the final API capture's `requests` endpoint
+digest as described in [Frozen Seerr request capture](#frozen-seerr-request-capture).
+Review any discrepancy against both original captures and upload the genuine
+frozen snapshot through migration administration. Use its exact capture ID and
+`deferUnboundRequesters: true` in both personal migration preview and apply.
+Eligible requests can attach after verified Plex sign-in with current library
+access and the required Media runtime authority. A stored Plex ID alone cannot
+authorize a claim or establish consent.
+
+Review requests that appear only in an older capture and have no live
+counterpart in the final stopped capture. Use that older capture's exact
+`selectedSeerrRequests` pairs and include those same provenance keys in
+`historyOnly` in both preview and apply. Apply only a preview that accounts
+for these rows as history. Each apply uses its own reviewed `previewHash`.
+Keep each capture's original source identity and provenance.
 
 ### Legacy subtitle adoption and policy
 
