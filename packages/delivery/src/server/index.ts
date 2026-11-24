@@ -143,6 +143,9 @@ const app = createApp({
 const server = Bun.serve({
   hostname: bootstrap.HOST,
   port: bootstrap.PORT,
+  // SSE streams send 8 s heartbeats; 60 s prevents transient event-loop pauses
+  // from severing open EventSource connections and triggering resync storms.
+  idleTimeout: 60,
   fetch: app.fetch,
 });
 console.warn(`Delivery listening on ${String(server.port)}`);

@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { QueryClient } from "@tanstack/react-query";
+import { describe, expect, it, vi } from "vitest";
+import { createChangeFeed } from "./change-feed.ts";
 import {
   deploymentEvidenceCount,
   groupEvidence,
@@ -278,5 +280,65 @@ describe("groupEvidence", () => {
     );
     expect(deploymentEvidenceCount(groups)).toBe(9);
     expect(underSteps + deploymentEvidenceCount(groups)).toBe(evidence.length);
+  });
+});
+
+describe("createChangeFeed", () => {
+  it("coalesces rapid change events into one deduplicated invalidation batch and flushes resync immediately", async () => {
+    vi.useFakeTimers();
+    try {
+      const queryClient = new QueryClient();
+      const invalidate = vi
+        .spyOn(queryClient, "invalidateQueries")
+        .mockResolvedValue();
+      const target = new EventTarget();
+      const feed = createChangeFeed(queryClient, {
+        coalesceMs: 150,
+        openEventSource: () => target,
+      });
+      feed.start();
+      const emit = (type: string, data?: unknown) => {
+        const event =
+          data === undefined
+            ? new Event(type)
+            : new MessageEvent(type, { data: JSON.stringify(data) });
+        target.dispatchEvent(event);
+      };
+
+      emit("ready");
+      expect(feed.getSnapshot()).toBe("live");
+      expect(invalidate).not.toHaveBeenCalled();
+
+      for (const entityId of ["b1", "b2", "b3"])
+        emit("change", {
+          id: entityId,
+          domain: "build",
+          action: "build.verified",
+          entityId,
+        });
+      expect(invalidate).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(150);
+      const hubCalls = invalidate.mock.calls.filter(
+        ([filters]) => JSON.stringify(filters?.queryKey) === '["hub"]',
+      );
+      expect(hubCalls).toHaveLength(1);
+
+      invalidate.mockClear();
+      emit("change", {
+        id: "b4",
+        domain: "build",
+        action: "build.verified",
+        entityId: "b4",
+      });
+      emit("resync");
+      expect(invalidate).toHaveBeenCalledTimes(1);
+      expect(invalidate).toHaveBeenLastCalledWith();
+
+      await vi.advanceTimersByTimeAsync(150);
+      expect(invalidate).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
