@@ -186,7 +186,7 @@ describe("Reddit Decisions assessment caching", () => {
 });
 
 describe("Reddit Decisions qualification threshold", () => {
-  it.each([0, 0.79, 0.8])(
+  it.each([0, 0.59, 0.599999])(
     "declines a match probability of %s",
     (judgeScore) => {
       expect(qualifiesForRedditDraft({ ...qualification, judgeScore })).toBe(
@@ -194,10 +194,10 @@ describe("Reddit Decisions qualification threshold", () => {
       );
     },
   );
-  it("accepts only a strict score above .80 with all other gates satisfied", () => {
-    expect(
-      qualifiesForRedditDraft({ ...qualification, judgeScore: 0.801 }),
-    ).toBe(true);
+  it("accepts .60 or higher with all other gates satisfied", () => {
+    expect(qualifiesForRedditDraft({ ...qualification, judgeScore: 0.6 })).toBe(
+      true,
+    );
     for (const change of [
       { decision: "no-match" as const },
       { explicitlySeekingServer: false },

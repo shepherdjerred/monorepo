@@ -182,8 +182,8 @@ describe("Reddit Decisions qualification", () => {
     );
   });
 
-  it.each([0, 0.79, 0.8])(
-    "requires main fit strictly above .80: %s",
+  it.each([0, 0.59, 0.599999])(
+    "requires main fit of at least .60: %s",
     (score) => {
       const raw = response();
       raw.answers[1] = predicate("strong_main_match", score);
@@ -193,9 +193,9 @@ describe("Reddit Decisions qualification", () => {
     },
   );
 
-  it("accepts a main-fit probability just above .80", () => {
+  it("accepts a useful partial fit at .60", () => {
     const raw = response();
-    raw.answers[1] = predicate("strong_main_match", 0.800001);
+    raw.answers[1] = predicate("strong_main_match", 0.6);
     expect(parseRedditDecisionResponse(raw).qualification.decision).toBe(
       "match",
     );
@@ -208,9 +208,9 @@ describe("Reddit Decisions qualification", () => {
         "hard_constraints",
         ["satisfied", "unmet", "unknown"],
         "satisfied",
-        0.82,
+        0.76,
       ),
-      confidence: 0.73,
+      confidence: 0.64,
     };
     expect(parseRedditDecisionResponse(raw).qualification.decision).toBe(
       "match",
@@ -223,6 +223,20 @@ describe("Reddit Decisions qualification", () => {
     expect(parseRedditDecisionResponse(raw).qualification.decision).toBe(
       "no-match",
     );
+  });
+
+  it("declines when support for hard requirements is too uncertain", () => {
+    const raw = response();
+    raw.answers[4] = choice(
+      "hard_constraints",
+      ["satisfied", "unmet", "unknown"],
+      "satisfied",
+      0.7,
+    );
+    expect(parseRedditDecisionResponse(raw).qualification).toMatchObject({
+      decision: "no-match",
+      hardConstraintsSatisfied: false,
+    });
   });
 
   it("accepts an eligible request when no concrete rule restricts the reply", () => {

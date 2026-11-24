@@ -36,7 +36,7 @@ export function countDecisionRejections(
             !qualification.communityAllowsReply && "rules-exclude-replies",
             !qualification.hardConstraintsSatisfied &&
               "requirements-unconfirmed",
-            qualification.judgeScore <= REDDIT_MATCH_THRESHOLD &&
+            qualification.judgeScore < REDDIT_MATCH_THRESHOLD &&
               "score-too-low",
           ] as const
         ).filter((reason) => reason !== false);

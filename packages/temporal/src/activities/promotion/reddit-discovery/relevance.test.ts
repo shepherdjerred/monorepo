@@ -64,7 +64,7 @@ describe("Reddit invite drafting", () => {
     );
   });
 
-  it.each([0, 0.79, 0.8])(
+  it.each([0, 0.59, 0.599999])(
     "never invokes a writer model at judge score %s",
     async (judgeScore) => {
       const provider = vi.fn(async () => ({ draft: invite, usage }));
@@ -78,14 +78,14 @@ describe("Reddit invite drafting", () => {
     },
   );
 
-  it("accepts a score strictly above .80 without rescoring it", async () => {
-    const qualification = { ...input.qualification, judgeScore: 0.801 };
+  it("drafts a partial fit at .60 without rescoring it", async () => {
+    const qualification = { ...input.qualification, judgeScore: 0.6 };
     const outcome = await draftRedditInvite(
       { ...input, qualification },
       async () => ({ draft: invite, usage }),
     );
     expect(outcome.draft.reply).toBe(invite.reply);
-    expect(qualification.judgeScore).toBe(0.801);
+    expect(qualification.judgeScore).toBe(0.6);
     expect(outcome.draft).not.toHaveProperty("score");
   });
 
@@ -155,11 +155,11 @@ describe("Reddit draft evidence contract", () => {
     expect(guardRedditInviteDraft(invite, input)).toEqual(invite);
   });
 
-  it("accepts casual copy with an ordinary hyphen and the invite on its own line", () => {
+  it("accepts a greeting, three short sentences, and the invite on its own line", () => {
     const draft = {
       ...invite,
       reply:
-        "hi! our server supports Java and Bedrock cross-play. feel free to try us out :)\nhttps://join.ts-mc.net/",
+        "hi! our server supports Java and Bedrock cross-play. we have optional quests too. feel free to try us out :)\nhttps://join.ts-mc.net/",
     };
     expect(guardRedditInviteDraft(draft, input)).toEqual(draft);
   });
@@ -188,7 +188,7 @@ describe("Reddit draft evidence contract", () => {
     },
     {
       reply:
-        "hi! our server has quests. we have towns. come join. https://join.ts-mc.net/",
+        "hi! our server has quests. we have towns. the world is permanent. come join. https://join.ts-mc.net/",
     },
     { evidence: [] },
     {
