@@ -156,17 +156,6 @@ export const ACQUIRED_IMAGE_PARAMETERS: Readonly<
   "minecraft-tsmc": {
     "initContainers[0].image": "image:minecraft-server",
   },
-  "minecraft-sjerred": {
-    "image.tag": "image:minecraft-server-java8",
-    "initContainers[0].image": "image:busybox",
-    "initContainers[1].image": "image:minecraft-server-java8",
-    "sidecarContainers[0].image": "image:haproxy",
-  },
-  "minecraft-shuxin": {
-    "image.tag": "image:minecraft-server",
-    "initContainers[0].image": "image:yq",
-    "initContainers[1].image": "image:busybox",
-  },
   velero: {
     "initContainers[0].image": "image:velero-plugin-for-aws",
     "kubectl.image.tag": "image:kubectl",

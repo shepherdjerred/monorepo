@@ -283,7 +283,7 @@ test("asks Modrinth for the Minecraft version each server runs", async () => {
   expect(datasources["modrinth"]?.transformTemplates).toEqual([
     expect.stringContaining('[$[version_type = "release"].'),
   ]);
-  for (const name of ["papermc", "modrinth"]) {
+  for (const name of ["modrinth"]) {
     const transforms = datasources[name]?.transformTemplates;
     expect(transforms, name).toBeDefined();
     for (const transform of transforms ?? []) {

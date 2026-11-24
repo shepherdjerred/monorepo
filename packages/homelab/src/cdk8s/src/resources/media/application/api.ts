@@ -5,11 +5,11 @@ import { Size } from "cdk8s";
 import { Cpu, DeploymentStrategy, EnvValue, type ISecret } from "cdk8s-plus-31";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
+import type { SingleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 import { requireFirstPartyImage } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   MEDIA_APPLICATION_LABEL,
   MEDIA_PUBLIC_ORIGIN,
-  mediaDatabaseEnvironment,
   mediaFeatureFlagEnvironment,
 } from "./environment.ts";
 
@@ -17,7 +17,7 @@ export function createMediaApi(
   chart: Chart,
   props: {
     image: string;
-    database: ISecret;
+    database: SingleAppDatabase;
     bootstrap: ISecret;
     discord: ISecret;
     plexServiceName: string;
@@ -25,7 +25,7 @@ export function createMediaApi(
 ) {
   requireFirstPartyImage("media", props.image);
   const securityContext = restrictedContainer(1000);
-  const database = mediaDatabaseEnvironment(props.database);
+  const database = props.database.env;
   return new FirstPartyWebService(chart, "media-api-web-service", {
     name: "media-api",
     port: 7352,

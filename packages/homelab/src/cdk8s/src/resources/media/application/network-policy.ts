@@ -8,16 +8,16 @@ import {
   flagsEgress,
   lokiOtlpEgress,
   otlpEgress,
-  postgresEgress,
-  postgresOperatorIngressRule,
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
-import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
+import type { SingleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 import { MEDIA_APPLICATION_LABEL } from "./environment.ts";
 import { PINCHTAB_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
-export function createMediaApplicationNetworkPolicies(chart: Chart): void {
-  const database = postgresEgress("media-postgresql");
+export function createMediaApplicationNetworkPolicies(
+  chart: Chart,
+  database: SingleAppDatabase,
+): void {
   const flags = flagsEgress();
   const telemetry = otlpEgress();
   new KubeNetworkPolicy(chart, "media-api-netpol", {
@@ -32,7 +32,7 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
       ],
       egress: [
         dnsEgressRule(),
-        database,
+        database.egress,
         flags,
         telemetry,
         externalHttpsEgressRule(),
@@ -58,7 +58,7 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
         ingress: [prometheusIngressRule([9464, 9465])],
         egress: [
           dnsEgressRule(),
-          database,
+          database.egress,
           flags,
           telemetry,
           // The Temporal worker image ships its logs to Loki by default.
@@ -96,35 +96,7 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
       },
     });
   }
-  new KubeNetworkPolicy(chart, "media-postgresql-netpol", {
-    spec: {
-      podSelector: {
-        matchLabels: postgresClusterPodLabels("media-postgresql"),
-      },
-      policyTypes: ["Ingress"],
-      ingress: [
-        {
-          from: [
-            {
-              podSelector: {
-                matchLabels: { [MEDIA_APPLICATION_LABEL]: "true" },
-              },
-            },
-          ],
-          ports: [tcp(5432)],
-        },
-        postgresOperatorIngressRule(),
-        {
-          from: [
-            {
-              podSelector: {
-                matchLabels: postgresClusterPodLabels("media-postgresql"),
-              },
-            },
-          ],
-          ports: [tcp(5432), tcp(8008)],
-        },
-      ],
-    },
+  database.createClusterIngressPolicy("media-postgresql-netpol", {
+    [MEDIA_APPLICATION_LABEL]: "true",
   });
 }

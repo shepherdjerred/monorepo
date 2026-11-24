@@ -2,7 +2,7 @@ import type { Chart } from "cdk8s";
 import { type ISecret, Secret } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { createSingleAppPostgreSQL } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/single-app-postgresql.ts";
+import { singleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 import { createMediaApi } from "./api.ts";
 import {
   createMediaActivityWorkers,
@@ -19,12 +19,11 @@ export function createUnifiedMediaApplication(
     plex: { serviceName: string; tokenSecret: ISecret };
   },
 ) {
-  createSingleAppPostgreSQL(chart, { app: "media", userFlags: [] });
-  const database = Secret.fromSecretName(
-    chart,
-    "media-application-pg",
-    "media.media-postgresql.credentials.postgresql.acid.zalan.do",
-  );
+  const database = singleAppDatabase(chart, {
+    app: "media",
+    provision: true,
+    userFlags: [],
+  });
   const item = new OnePasswordItem(chart, "media-config", {
     spec: { itemPath: vaultItemPath("rmutlb6qv2h7pkasbhpxbpdhie") },
   });
@@ -67,6 +66,6 @@ export function createUnifiedMediaApplication(
     claims: props.claims,
     plex: props.plex,
   });
-  createMediaApplicationNetworkPolicies(chart);
+  createMediaApplicationNetworkPolicies(chart, database);
   return { api, ...workers };
 }

@@ -532,28 +532,25 @@ describe("what the gate does not count", () => {
       requested.push(url);
       return Promise.resolve({ status: 502, body: "" });
     };
-    const policies = [otherPolicy("minecraft-shuxin", "minecraft")];
+    const policies = [otherPolicy("freshrss", "freshrss")];
     const finishedJob = { ...readyPod, status: { phase: "Succeeded" } };
-    const scaledToZero = await runCheck(
-      parseCheckArguments(["minecraft-shuxin"]),
-      {
-        ...dependencies(cluster(policies, [finishedJob]).run),
-        fetchUrl: badGateway,
-      },
-    );
+    const scaledToZero = await runCheck(parseCheckArguments(["freshrss"]), {
+      ...dependencies(cluster(policies, [finishedJob]).run),
+      fetchUrl: badGateway,
+    });
     expect(scaledToZero.exitCode).toBe(0);
     expect(scaledToZero.output).toMatch(
       /^INFO\s+urls\s+namespace runs no pods; 2 URLs not checked$/mu,
     );
     expect(requested).toEqual([]);
 
-    const running = await runCheck(parseCheckArguments(["minecraft-shuxin"]), {
+    const running = await runCheck(parseCheckArguments(["freshrss"]), {
       ...dependencies(cluster(policies, [readyPod]).run),
       fetchUrl: badGateway,
     });
     expect(running.exitCode).toBe(1);
     expect(running.output).toMatch(/^FAIL\s+urls\s+0\/2 URLs/mu);
-    expect(requested).toEqual(["https://shuxin-bluemap.sjer.red/"]);
+    expect(requested).toEqual(["https://freshrss.sjer.red/"]);
   });
 
   test("an old Failed pod is noted; one that failed in the window fails the gate", async () => {

@@ -768,88 +768,6 @@
       ]
     },
     {
-      "id": "minecraft-shuxin",
-      "title": "Minecraft shuxin server",
-      "lifecycle": "retired",
-      "selfHosted": false,
-      "group": "minecraft",
-      "components": [
-        {
-          "name": "chart:minecraft",
-          "producer": "acquisition"
-        },
-        {
-          "name": "image:minecraft-server",
-          "producer": "acquisition"
-        },
-        {
-          "name": "image:yq",
-          "producer": "acquisition"
-        },
-        {
-          "name": "image:busybox",
-          "producer": "acquisition"
-        },
-        {
-          "name": "chart:minecraft-shuxin-companion",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "product",
-        "namespaces": ["minecraft-shuxin"],
-        "argoApps": ["minecraft-shuxin"]
-      },
-      "legacy": {
-        "rootReleaseExclusions": {
-          "minecraft-shuxin": "upstream",
-          "minecraft-shuxin-companion": "inactive"
-        },
-        "charts": ["minecraft-shuxin-companion"]
-      }
-    },
-    {
-      "id": "minecraft-sjerred",
-      "title": "Minecraft sjerred server",
-      "lifecycle": "retired",
-      "selfHosted": false,
-      "group": "minecraft",
-      "components": [
-        {
-          "name": "chart:minecraft",
-          "producer": "acquisition"
-        },
-        {
-          "name": "image:minecraft-server-java8",
-          "producer": "acquisition"
-        },
-        {
-          "name": "image:busybox",
-          "producer": "acquisition"
-        },
-        {
-          "name": "image:haproxy",
-          "producer": "acquisition"
-        },
-        {
-          "name": "chart:minecraft-sjerred-companion",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "product",
-        "namespaces": ["minecraft-sjerred"],
-        "argoApps": ["minecraft-sjerred"]
-      },
-      "legacy": {
-        "rootReleaseExclusions": {
-          "minecraft-sjerred": "upstream",
-          "minecraft-sjerred-companion": "inactive"
-        },
-        "charts": ["minecraft-sjerred-companion"]
-      }
-    },
-    {
       "id": "minecraft",
       "title": "Minecraft (The Storm)",
       "package": "the-storm",
@@ -3036,24 +2954,6 @@
       "configurationRevisionId": "cross-compilers/prod/1"
     },
     {
-      "id": "minecraft-shuxin/prod",
-      "role": "durable",
-      "lifecycle": "retired",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "minecraft-shuxin/prod/1",
-      "configurationRevisionId": "minecraft-shuxin/prod/2"
-    },
-    {
-      "id": "minecraft-sjerred/prod",
-      "role": "durable",
-      "lifecycle": "retired",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "minecraft-sjerred/prod/1",
-      "configurationRevisionId": "minecraft-sjerred/prod/2"
-    },
-    {
       "id": "minecraft/sandbox",
       "role": "qualification",
       "approvalPolicy": "none",
@@ -3260,7 +3160,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/11"
+      "configurationRevisionId": "argocd/prod/12"
     },
     {
       "id": "chartmuseum/prod",
@@ -4446,66 +4346,6 @@
       "rule": "any-accepted"
     },
     {
-      "dependent": "minecraft-shuxin/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "minecraft-shuxin/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "minecraft-shuxin/prod",
-      "prerequisite": "cloudflare-operator/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "minecraft-shuxin/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "minecraft-shuxin/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "minecraft-shuxin/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "minecraft-sjerred/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "minecraft-sjerred/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "minecraft-sjerred/prod",
-      "prerequisite": "cloudflare-operator/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "minecraft-sjerred/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "minecraft-sjerred/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "minecraft-sjerred/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
       "dependent": "minecraft/sandbox",
       "prerequisite": "1password/prod",
       "rule": "any-accepted"
@@ -5408,16 +5248,6 @@
     {
       "dependent": "tofu-cloudflare/prod",
       "prerequisite": "home/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "minecraft-shuxin/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "minecraft-sjerred/prod",
       "rule": "any-accepted"
     },
     {

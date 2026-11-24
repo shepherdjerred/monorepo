@@ -239,31 +239,10 @@
       "kind": "product",
       "package": "the-storm",
       "aliases": [],
-      "namespaces": [
-        "minecraft-shuxin",
-        "minecraft-sjerred",
-        "minecraft-tsmc",
-        "mc-router",
-        "mc-sandbox"
-      ],
-      "argoApps": [
-        "minecraft-shuxin",
-        "minecraft-sjerred",
-        "minecraft-tsmc",
-        "mc-router",
-        "mc-sandbox"
-      ],
-      "charts": [
-        "minecraft-shuxin-companion",
-        "minecraft-sjerred-companion",
-        "minecraft",
-        "minecraft-tsmc-companion"
-      ],
+      "namespaces": ["minecraft-tsmc", "mc-router", "mc-sandbox"],
+      "argoApps": ["minecraft-tsmc", "mc-router", "mc-sandbox"],
+      "charts": ["minecraft", "minecraft-tsmc-companion"],
       "rootReleaseExclusions": {
-        "minecraft-shuxin": "upstream",
-        "minecraft-shuxin-companion": "inactive",
-        "minecraft-sjerred": "upstream",
-        "minecraft-sjerred-companion": "inactive",
         "minecraft": "upstream",
         "minecraft-tsmc": "upstream",
         "minecraft-tsmc-companion": "inactive",

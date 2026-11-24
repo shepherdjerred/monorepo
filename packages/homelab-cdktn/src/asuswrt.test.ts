@@ -33,7 +33,6 @@ const ADDRESSES = {
   "asuswrt_dhcp_static_lease.plex_host": "router",
   "asuswrt_port_forward.mario_kart_http": "router",
   "asuswrt_port_forward.mario_kart_https": "router",
-  "asuswrt_port_forward.minecraft_bedrock": "router",
   "asuswrt_port_forward.minecraft_mc_router": "router",
   "asuswrt_port_forward.minecraft_tsmc_bedrock": "router",
   "asuswrt_port_forward.plex": "router",
@@ -104,10 +103,6 @@ test("asuswrt never manages a wireless passphrase or the BE86U backhaul radios",
     expect(network, name).not.toHaveProperty("wpa_passphrase");
     expect(network.provider, name).not.toBe("asuswrt.ap_be86u");
   }
-  // Misspelled on the device; the name is the rule's identity.
-  expect(resource["asuswrt_port_forward"]?.["minecraft_bedrock"]).toMatchObject(
-    { name: "Mineraft Bedrock" },
-  );
 });
 
 test("asuswrt requires exactly the provider version built from this repository", async () => {

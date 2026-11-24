@@ -60,7 +60,7 @@ export function createMcRouterApp(chart: Chart) {
   };
 
   // DNS records (SRV, CNAME) are managed by OpenTofu (src/tofu/cloudflare/)
-  // DDNS-related records (mc.sjer.red, shuxin.sjer.red, mc.ts-mc.net) are excluded from tofu
+  // DDNS-related records (mc.ts-mc.net) are excluded from tofu
 
   return helmApplication(chart, {
     name: "mc-router",

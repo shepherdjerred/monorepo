@@ -8,7 +8,6 @@ import {
   cname,
   fastmailAutodiscovery,
   mx,
-  srvRecords,
   tunnelCnames,
   txt,
 } from "#src/stacks/cloudflare/records.ts";
@@ -126,22 +125,6 @@ function mail(stack: TerraformStack, zone: Zone): void {
 
 function services(stack: TerraformStack, zone: Zone): void {
   fastmailAutodiscovery(stack, zone, "sjer_red");
-  srvRecords(stack, zone, {
-    sjer_red_srv_minecraft: {
-      name: "_minecraft._tcp",
-      priority: 0,
-      weight: 5,
-      port: 30_000,
-      target: "mc.sjer.red",
-    },
-    sjer_red_srv_minecraft_shuxin: {
-      name: "_minecraft._tcp.shuxin",
-      priority: 0,
-      weight: 5,
-      port: 30_000,
-      target: "shuxin.sjer.red",
-    },
-  });
 }
 
 function settings(stack: TerraformStack, zone: Zone): void {

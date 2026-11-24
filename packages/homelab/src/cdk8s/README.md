@@ -176,6 +176,17 @@ filesystem, and a single SDK metrics Service selected through the Deployment.
 The helper fixes each of those, so adopting it would mean an opt-out per field;
 the two share only the Temporal client environment.
 
+## First-party databases
+
+`singleAppDatabase` (`src/misc/first-party/postgres-database.ts`) gives an app
+its own `createSingleAppPostgreSQL` cluster (`<app>-postgresql`, database
+`<app>_db`) and the pieces that connect to it: the operator's credentials
+Secret, an `env` of `DB_USER`, `DB_PASSWORD` and the `DATABASE_URL` that
+expands them, the app-side `egress` rule, and `createClusterIngressPolicy` for
+the cluster's own Ingress policy. `provision: false` connects to a cluster
+another chart owns, as Delivery does with its `delivery-data` chart.
+`tracker`, `golink`, `media` and `delivery` use it.
+
 ## LinuxServer apps
 
 `LinuxServerApp` (`src/misc/third-party/linuxserver-app.ts`) renders a

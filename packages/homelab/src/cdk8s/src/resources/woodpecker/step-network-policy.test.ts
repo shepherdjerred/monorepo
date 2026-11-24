@@ -6,6 +6,7 @@ import { z } from "zod";
 import { createWoodpeckerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/woodpecker.ts";
 import { createWoodpeckerStepNetworkPolicy } from "./step-network-policy.ts";
 import { createDeliveryNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/delivery/network-policy.ts";
+import { singleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 
 async function emittedApiConsumers() {
   const process = Bun.spawn(
@@ -165,7 +166,10 @@ describe("CI step pod network boundary", () => {
     const ci = new Chart(new App(), "ci-network", {
       namespace: "woodpecker-ci",
     });
-    createDeliveryNetworkPolicy(api);
+    createDeliveryNetworkPolicy(
+      api,
+      singleAppDatabase(api, { app: "delivery", provision: false }),
+    );
     createWoodpeckerStepNetworkPolicy(ci);
     const apiPolicy = NetworkPolicySchema.parse(api.toJson()[0]);
     const ciPolicy = z

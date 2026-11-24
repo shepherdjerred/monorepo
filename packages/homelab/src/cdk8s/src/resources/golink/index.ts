@@ -10,10 +10,10 @@ import {
   Secret,
   Volume,
 } from "cdk8s-plus-31";
-import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import type { SingleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import {
   FirstPartyWebService,
@@ -28,14 +28,11 @@ import {
   kubernetesApiEgressRule,
   nsPeer,
   otlpEgress,
-  postgresEgress,
-  postgresOperatorIngressRule,
   prometheusIngressRule,
   tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { tailnetTags } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { tailnetService } from "homelab/src/platform-model.ts";
 import { createGolinkRbac, GOLINK_TAILSCALE_STATE_SECRET } from "./rbac.ts";
@@ -78,30 +75,6 @@ const TAILSCALE_SERVE_CONFIG_JSON = JSON.stringify(
   null,
   2,
 );
-
-function golinkDatabaseUrl(): string {
-  const credentialRef = ["$(DB_USER)", "$(DB_" + "PASSWORD)"].join(":");
-  return `postgresql://${credentialRef}@golink-postgresql:5432/golink_db`;
-}
-
-function buildGolinkDatabaseEnv(chart: Chart): Record<string, EnvValue> {
-  const credentialsSecret = Secret.fromSecretName(
-    chart,
-    "golink-pg",
-    "golink.golink-postgresql.credentials.postgresql.acid.zalan.do",
-  );
-  return {
-    DB_USER: EnvValue.fromSecretValue({
-      secret: credentialsSecret,
-      key: "username",
-    }),
-    DB_PASSWORD: EnvValue.fromSecretValue({
-      secret: credentialsSecret,
-      key: "password",
-    }),
-    DATABASE_URL: EnvValue.fromValue(golinkDatabaseUrl()),
-  };
-}
 
 function golinkContainerResources(spec: {
   readonly cpuRequestMillis: number;
@@ -255,36 +228,11 @@ function buildTailscaleSidecarContainer(
   };
 }
 
-function createGolinkPostgreSQLNetworkPolicy(chart: Chart): void {
-  new KubeNetworkPolicy(chart, "golink-postgresql-netpol", {
-    metadata: { name: "golink-postgresql-netpol" },
-    spec: {
-      podSelector: {
-        matchLabels: postgresClusterPodLabels("golink-postgresql"),
-      },
-      policyTypes: ["Ingress"],
-      ingress: [
-        {
-          from: [{ podSelector: { matchLabels: { app: "golink" } } }],
-          ports: [tcp(5432)],
-        },
-        postgresOperatorIngressRule(),
-        {
-          from: [
-            {
-              podSelector: {
-                matchLabels: postgresClusterPodLabels("golink-postgresql"),
-              },
-            },
-          ],
-          ports: [tcp(5432), tcp(8008)],
-        },
-      ],
-    },
-  });
-}
-
-export function createFirstPartyGolinkDeployment(chart: Chart, image: string) {
+export function createFirstPartyGolinkDeployment(
+  chart: Chart,
+  image: string,
+  database: SingleAppDatabase,
+) {
   if (
     image !== "docker.io/shepherdjerred/golink:delivery-recipe" &&
     !PINNED_GOLINK_IMAGE_PATTERN.test(image)
@@ -296,7 +244,7 @@ export function createFirstPartyGolinkDeployment(chart: Chart, image: string) {
     metadata: { name: "golink-tailscale-serve" },
     data: { "serve.json": TAILSCALE_SERVE_CONFIG_JSON },
   });
-  const dbEnv = buildGolinkDatabaseEnv(chart);
+  const dbEnv = database.env;
   const goTailnet = tailnetService("go");
   const tags = tailnetTags(goTailnet);
 
@@ -367,7 +315,7 @@ export function createFirstPartyGolinkDeployment(chart: Chart, image: string) {
         ],
         egress: [
           dnsEgressRule(),
-          postgresEgress("golink-postgresql"),
+          database.egress,
           flagsEgress(),
           otlpEgress(),
           kubernetesApiEgressRule(),
@@ -382,7 +330,11 @@ export function createFirstPartyGolinkDeployment(chart: Chart, image: string) {
     ],
   });
 
-  createGolinkPostgreSQLNetworkPolicy(chart);
+  database.createClusterIngressPolicy(
+    "golink-postgresql-netpol",
+    { app: "golink" },
+    { name: "golink-postgresql-netpol" },
+  );
 
   const tailscaleContainer = webService.deployment.containers.find(
     (container) => container.name === "tailscale",

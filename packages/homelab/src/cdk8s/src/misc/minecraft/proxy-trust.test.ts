@@ -15,11 +15,7 @@ describe("Minecraft proxy trust", () => {
     const chart = new Chart(app, "test", {
       disableResourceNameHashes: true,
     });
-    const namespaces = [
-      "minecraft-sjerred",
-      "minecraft-shuxin",
-      "minecraft-tsmc",
-    ];
+    const namespaces = ["minecraft-tsmc", "minecraft-staging"];
     for (const namespace of namespaces) {
       createMinecraftProxyTrust(chart, namespace, 25_565);
     }

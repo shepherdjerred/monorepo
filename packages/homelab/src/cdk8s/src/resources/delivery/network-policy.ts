@@ -7,7 +7,6 @@ import {
   nsPeer,
   tcp,
   flagsEgress,
-  postgresEgress,
   prometheusIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
@@ -15,8 +14,12 @@ import { CI_STEP_POD_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/w
 import { DELIVERY_CI_API_STEPS } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/step-network-policy.ts";
 import { DELIVERY_TAILSCALE_INGRESS } from "@shepherdjerred/ops-model/delivery-ingress.ts";
 import { DELIVERY_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
+import type { SingleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 
-export function createDeliveryNetworkPolicy(chart: Chart) {
+export function createDeliveryNetworkPolicy(
+  chart: Chart,
+  database: SingleAppDatabase,
+) {
   new KubeNetworkPolicy(chart, "application-network", {
     spec: {
       podSelector: { matchLabels: { app: "delivery" } },
@@ -81,7 +84,7 @@ export function createDeliveryNetworkPolicy(chart: Chart) {
         dnsEgressRule(),
         externalHttpsEgressRule(),
         kubernetesApiEgressRule(),
-        postgresEgress("delivery-postgresql"),
+        database.egress,
         flagsEgress(),
         {
           to: ["storm-forum", "storm-forum-beta"].map((name) => ({
