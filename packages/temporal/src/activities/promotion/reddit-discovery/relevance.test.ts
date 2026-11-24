@@ -155,6 +155,27 @@ describe("Reddit draft evidence contract", () => {
     expect(guardRedditInviteDraft(invite, input)).toEqual(invite);
   });
 
+  it.each(["Seattle", "Washington", "Pacific Northwest", "PNW"])(
+    "declines drafts that repeat the more specific location %s",
+    (location) => {
+      const reply = `hi! our server supports Java and Bedrock and is hosted in ${location}.\nhttps://join.ts-mc.net/`;
+      expect(guardRedditInviteDraft({ ...invite, reply }, input)).toMatchObject(
+        {
+          reply: null,
+          reason: "Draft used a more specific location than US West.",
+        },
+      );
+    },
+  );
+
+  it("accepts US West as the hosting region", () => {
+    const reply =
+      "hi! our server supports Java and Bedrock and is hosted in US West.\nhttps://join.ts-mc.net/";
+    expect(guardRedditInviteDraft({ ...invite, reply }, input).reply).toBe(
+      reply,
+    );
+  });
+
   it("accepts a greeting, three short sentences, and the invite on its own line", () => {
     const draft = {
       ...invite,

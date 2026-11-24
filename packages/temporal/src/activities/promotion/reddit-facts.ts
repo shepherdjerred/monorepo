@@ -11,7 +11,7 @@ Land claims work for solo players and groups. The Storm uses its own plugin call
 not Towny. Players can claim land without joining or creating a town.
 The server rules prohibit griefing, and staff can roll it back.
 Spawn is PvP-free. PvP is enabled by default outside spawn and toggleable per player.
-The dedicated server is in Seattle, Washington (Pacific Northwest, US West).
+The dedicated server is hosted in US West.
 The owner is a software engineer and runs dedicated hardware the owner owns outright.
 It is set up to run 24/7 with backups and high availability.
 There are no paid features or cosmetics, and the owner has no plans to add them.
