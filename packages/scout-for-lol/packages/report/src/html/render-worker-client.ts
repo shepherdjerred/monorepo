@@ -92,28 +92,41 @@ export function createRenderWorkerClient(
 
   let activeCount = 0;
   let nextRequestId = 1;
+  let disposed = false;
   let handle: ActiveWorkerHandle | undefined;
-  const waitQueue: (() => void)[] = [];
+  const waitQueue: {
+    readonly grant: () => void;
+    readonly reject: (error: Error) => void;
+  }[] = [];
   const pending = new Map<number, PendingRequest>();
 
   const acquireSlot = async (): Promise<void> => {
+    if (disposed) {
+      throw new Error("Report render worker client disposed");
+    }
     if (activeCount < maxConcurrency) {
       activeCount += 1;
       return;
     }
-    await new Promise<void>((resolve) => {
-      waitQueue.push(() => {
-        activeCount += 1;
-        resolve();
+    await new Promise<void>((resolve, reject) => {
+      waitQueue.push({
+        grant: () => {
+          activeCount += 1;
+          resolve();
+        },
+        reject,
       });
     });
   };
 
   const releaseSlot = (): void => {
     activeCount = Math.max(0, activeCount - 1);
+    if (disposed) {
+      return;
+    }
     const next = waitQueue.shift();
     if (next !== undefined) {
-      next();
+      next.grant();
     }
   };
 
@@ -197,7 +210,8 @@ export function createRenderWorkerClient(
     });
 
     created.addEventListener("close", () => {
-      if (handle?.worker === created) {
+      const isCurrent = handle?.worker === created;
+      if (isCurrent) {
         handle = undefined;
       }
       const error = new Error(
@@ -206,7 +220,7 @@ export function createRenderWorkerClient(
       if (!isReady) {
         rejectReady?.(error);
       }
-      if (pending.size > 0) {
+      if (isCurrent && pending.size > 0) {
         failAllPending(error);
       }
     });
@@ -220,6 +234,9 @@ export function createRenderWorkerClient(
   ): Promise<Extract<RenderWorkerResponse, { ok: true }>> => {
     await acquireSlot();
     try {
+      if (disposed) {
+        throw new Error("Report render worker client disposed");
+      }
       const active = ensureWorker();
       refWorker(active.worker);
       await active.ready;
@@ -273,7 +290,13 @@ export function createRenderWorkerClient(
       return Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     },
     dispose: () => {
-      failAllPending(new Error("Report render worker client disposed"));
+      disposed = true;
+      const error = new Error("Report render worker client disposed");
+      const queued = waitQueue.splice(0);
+      for (const waiter of queued) {
+        waiter.reject(error);
+      }
+      failAllPending(error);
     },
   };
 }

@@ -101,10 +101,10 @@ pinchtab config path
 PINCHTAB_CONFIG="$HOME/Library/Application Support/pinchtab/config.json" pinchtab health
 ```
 
-- **REST clients & `launchctl bootstrap` exit 5 fallback (`AI-26`):** if `pinchtab health` reports `ok` (or `GET http://127.0.0.1:9867/health` succeeds) while `pinchtab session create` or `pinchtab nav` fails with `launchctl bootstrap gui/... exit status 5` (`refusing detached auto-start`), bypass the CLI's daemon-lifecycle check and call the running HTTP server directly. Read `.server.token` and `.server.port` (default `"9867"`) in process memory from the JSON file `PINCHTAB_CONFIG` points to — never print tokens, pass them in CLI arguments, or persist them to disk:
-  1. Mint a scoped session with `POST http://127.0.0.1:9867/sessions` (`Authorization: Bearer <server-token>`, body `{"agentId": "<agent-id>"}`), holding `id` and `sessionToken` strictly in memory.
-  2. Open and navigate a dedicated tab via `POST /navigate` (`{"url": "<url>", "newTab": true}` on the default instance, using `Authorization: Bearer <sessionToken>`) or `POST /instances/{id}/tabs/open` (`{"url": "<url>"}` on a specific instance, using the server token).
-  3. Drive `/tabs/{tabId}/snapshot`, `/tabs/{tabId}/action`, `/tabs/{tabId}/screenshot`, and `POST /tabs/{tabId}/close` with explicit `tabId`, then revoke the session via `POST /sessions/{id}/revoke`.
+- **REST clients & `launchctl bootstrap` exit 5 fallback (`AI-26`):** if `pinchtab health` reports `ok` (or `GET http://127.0.0.1:<port>/health` succeeds) while `pinchtab session create` or `pinchtab nav` fails with `launchctl bootstrap gui/... exit status 5` (`refusing detached auto-start`), bypass the CLI's daemon-lifecycle check and call the running HTTP server directly. Read `.server.token` and `.server.port` (default `"9867"`) in process memory from the JSON file `PINCHTAB_CONFIG` points to, build `baseUrl = http://127.0.0.1:<port>`, and never print tokens, pass them in CLI arguments, or persist them to disk:
+  1. Mint a scoped session with `POST <baseUrl>/sessions` (`Authorization: Bearer <server-token>`, body `{"agentId": "<agent-id>"}`), holding `id` and `sessionToken` strictly in memory.
+  2. Open and navigate a dedicated tab via `POST <baseUrl>/navigate` (`{"url": "<url>", "newTab": true}` on the default instance, using `Authorization: Session <sessionToken>`) or `POST <baseUrl>/instances/{id}/tabs/open` (`{"url": "<url>"}` on a specific instance, using `Authorization: Bearer <server-token>`).
+  3. Drive `<baseUrl>/tabs/{tabId}/snapshot`, `<baseUrl>/tabs/{tabId}/action`, `<baseUrl>/tabs/{tabId}/screenshot`, and `POST <baseUrl>/tabs/{tabId}/close` with explicit `tabId`, then revoke the session via `POST <baseUrl>/sessions/{id}/revoke`.
 
 ## Critical: Multi-Instance Routing
 

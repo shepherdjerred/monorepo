@@ -36,8 +36,8 @@ Use the platform's equivalent capabilities while preserving the specified roles,
 
 ## Delegation safety and refusal policy
 
-1. **Mandatory Authorization & Scope preamble on every subagent prompt**: Every delegated prompt in Phases 1, 2, 3, and 6 — including any nested `research` subagent spawned by a Phase 2 `general` agent — MUST open with an explicit **Authorized Defensive Review Scope** preamble naming `<path>`:
-   - State that this is an owner-authorized defensive static and local code review of the checked-out source tree at `<path>` to identify and remediate software defects.
+1. **Mandatory Authorization & Scope preamble on every subagent prompt**: Confirm authorization for `<path>` in Setup whenever it is not already established by the user's request on their checked-out workspace. Once established, every delegated prompt in Phases 1, 2, 3, and 6 — including any nested `research` subagent spawned by a Phase 2 `general` agent — MUST open with an explicit **Authorized Defensive Review Scope** preamble naming `<path>`:
+   - State the verified authorization for defensive static and local code review of the checked-out source tree at `<path>` to identify and remediate software defects.
    - State that any dynamic verification (when locally buildable) is strictly restricted to isolated, local, non-destructive test harnesses and never targets live, shared, or external infrastructure.
 2. **Zero retries on safety or policy refusals (`retries = 0`)**: A `cyber_policy` or platform safety refusal is a terminal platform signal, never a transient tool, network, or task failure.
    - Quote the exact refusal message immediately.

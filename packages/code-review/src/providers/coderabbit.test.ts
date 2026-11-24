@@ -397,6 +397,15 @@ describe("CodeRabbit status and check-run blocks", () => {
     ).toBe(false);
     expect(
       isCoderabbitBlockedCheckRun({
+        name: "CodeRabbit",
+        status: "completed",
+        title: "Review completed",
+        summary:
+          "Summary: hardened rate limit and too many files check-run handling.",
+      }),
+    ).toBe(false);
+    expect(
+      isCoderabbitBlockedCheckRun({
         name: null,
         status: "completed",
         title: "Review rate limited",

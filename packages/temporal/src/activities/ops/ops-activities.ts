@@ -91,12 +91,16 @@ function optionalWoodpeckerLinkConfig(): {
 } {
   const baseUrl = optionalEnvironment("WOODPECKER_URL");
   const rawRepoId = optionalEnvironment("WOODPECKER_REPO_ID");
-  const repoId = rawRepoId === undefined ? undefined : Number(rawRepoId);
+  if (rawRepoId === undefined) {
+    return baseUrl === undefined ? {} : { woodpeckerBaseUrl: baseUrl };
+  }
+  const repoId = Number(rawRepoId);
+  if (!Number.isInteger(repoId) || repoId <= 0) {
+    throw new Error("WOODPECKER_REPO_ID must be a positive integer");
+  }
   return {
     ...(baseUrl === undefined ? {} : { woodpeckerBaseUrl: baseUrl }),
-    ...(repoId !== undefined && Number.isInteger(repoId) && repoId > 0
-      ? { woodpeckerRepoId: repoId }
-      : {}),
+    woodpeckerRepoId: repoId,
   };
 }
 

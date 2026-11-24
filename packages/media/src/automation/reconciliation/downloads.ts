@@ -146,7 +146,12 @@ async function ordinaryExclusionGate(
     where: { id: { in: observedAttempt.mediaIds } },
     select: { kind: true },
   });
-  const libraryKind = item?.kind === "movie" ? "movies" : "tv";
+  if (item === null) {
+    throw new Error(
+      `Acquisition attempt ${observedAttempt.id} has no existing media item`,
+    );
+  }
+  const libraryKind = item.kind === "movie" ? "movies" : "tv";
   const allowed = await hasLibraryPlexExclusionDatabaseProof(
     context.db,
     libraryKind,

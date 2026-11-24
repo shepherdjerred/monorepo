@@ -3,6 +3,7 @@ import type {
   PlatformRecoveryContext,
   PlatformRecoveryIntent,
 } from "@shepherdjerred/delivery/contract";
+import { stepStageKey } from "@shepherdjerred/delivery/model-contract";
 import {
   DeliveryJobArchiveSchema,
   type DeliveryJobRequest,
@@ -96,4 +97,27 @@ export function recoveryExecutionJob(
       ...(pipeline.kind === "tofu" ? { stack: pipeline.stack } : {}),
     }),
   };
+}
+
+/**
+ * True when a model tofu deployment failed before saving a plan and before
+ * any apply stage started, so no external OpenTofu mutation could have been
+ * authorized or submitted.
+ */
+export function isUnappliedModelTofuDeployment(
+  detail: PlatformRecoveryContext["deployment"],
+): boolean {
+  if (detail.deployment.platformSnapshot !== null) return false;
+  const recipe = modelRecipe(detail);
+  if (recipe?.kind !== "tofu") return false;
+  const savedPlan =
+    ("savedPlan" in detail && detail.savedPlan != null) ||
+    detail.stages.some(
+      (stage) =>
+        stage.key === stepStageKey("step", "plan") &&
+        stage.status === "succeeded",
+    );
+  return (
+    !savedPlan && detail.stages.every((stage) => !stage.key.endsWith("apply"))
+  );
 }

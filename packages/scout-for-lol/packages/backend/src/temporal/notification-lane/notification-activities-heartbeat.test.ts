@@ -339,7 +339,7 @@ describe("worker-offloaded report rendering under burst load", () => {
 
   test("renders identically through bundled dist/render-worker.js when built", async () => {
     const bundledWorkerUrl = new URL(
-      "../../../../dist/render-worker.js",
+      "../../../dist/render-worker.js",
       import.meta.url,
     );
     if (!(await Bun.file(bundledWorkerUrl).exists())) {

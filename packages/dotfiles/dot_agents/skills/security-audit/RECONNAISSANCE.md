@@ -6,7 +6,7 @@ Before looking for bugs, understand what you're auditing. This requires depth, n
 
 **Agent 1a: Overview, tech stack, and comparable baseline**
 ```
-Authorized Defensive Review Scope: This is an owner-authorized defensive static and local code review of the checked-out source at <path> to identify and remediate software defects. Restrict inspection to local repository files; never target live or external infrastructure.
+Authorized Defensive Review Scope: Verified defensive static and local code review of the checked-out source at <path> (within the authorization established in Setup) to identify and remediate software defects. Restrict inspection to local repository files; never target live or external infrastructure.
 
 Explore the codebase at <path>. Answer:
 1. What is this application? What kind of software? (web app, API, CLI tool, library, daemon, desktop app, mobile backend, etc.)
@@ -19,7 +19,7 @@ Return specific file paths for key entry points.
 
 **Agent 1b: Trust boundaries and access control**
 ```
-Authorized Defensive Review Scope: This is an owner-authorized defensive static and local code review of the checked-out source at <path> to identify and remediate software defects. Restrict inspection to local repository files; never target live or external infrastructure.
+Authorized Defensive Review Scope: Verified defensive static and local code review of the checked-out source at <path> (within the authorization established in Setup) to identify and remediate software defects. Restrict inspection to local repository files; never target live or external infrastructure.
 
 Explore the codebase at <path>. Find and read ALL code related to:
 1. Trust boundaries — where does untrusted input enter the system? (HTTP requests, CLI args, file reads, IPC, message queues, environment variables, config files, etc.)
@@ -32,7 +32,7 @@ Return the trust model: who are the actors, what can each do by design, and whic
 
 **Agent 1c: Input surface inventory**
 ```
-Authorized Defensive Review Scope: This is an owner-authorized defensive static and local code review of the checked-out source at <path> to identify and remediate software defects. Restrict inspection to local repository files; never target live or external infrastructure.
+Authorized Defensive Review Scope: Verified defensive static and local code review of the checked-out source at <path> (within the authorization established in Setup) to identify and remediate software defects. Restrict inspection to local repository files; never target live or external infrastructure.
 
 Explore the codebase at <path>. Produce a complete inventory of where external input enters the system:
 1. Network-facing surfaces (HTTP endpoints, gRPC services, WebSocket handlers, TCP/UDP listeners, etc.) — list each with method/verb and purpose

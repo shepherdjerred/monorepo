@@ -270,11 +270,18 @@ export function isCoderabbitBlockedCheckRun(input: {
   ) {
     return false;
   }
-  const combined = `${input.title ?? ""}\n${input.summary ?? ""}`.toLowerCase();
+  const title = (input.title ?? "").toLowerCase();
+  if (title.includes("review completed")) return false;
+  const combined = `${title}\n${(input.summary ?? "").toLowerCase()}`;
   return (
-    combined.includes("rate limit") ||
-    combined.includes("rate limited") ||
-    combined.includes("too many files") ||
+    combined.includes("review rate limited") ||
+    combined.includes("rate limited by coderabbit.ai") ||
+    combined.includes("review limit reached") ||
+    combined.includes("review skipped: too many files") ||
+    (combined.includes("action not completed") &&
+      (combined.includes("rate limit") ||
+        combined.includes("too many files") ||
+        combined.includes("exceed the limit"))) ||
     (combined.includes("review skipped") &&
       combined.includes("exceed the limit"))
   );

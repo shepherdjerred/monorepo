@@ -299,7 +299,7 @@ export class BridgeClient {
         authorization: `Bearer ${this.endpoint.token}`,
         ...(body === undefined ? {} : { "content-type": "application/json" }),
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       signal: AbortSignal.timeout(timeoutMs),
     });
     if (response.ok) {

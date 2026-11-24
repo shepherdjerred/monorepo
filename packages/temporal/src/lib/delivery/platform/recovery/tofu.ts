@@ -28,14 +28,17 @@ import {
   readDiscordApplications,
 } from "./tofu-original.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
-import { modelRecipe, requireModelRecipe } from "#lib/delivery/model/recipe.ts";
+import { requireModelRecipe } from "#lib/delivery/model/recipe.ts";
 import {
   modelTofuDesiredState,
   modelTofuSource,
 } from "#lib/delivery/model/tofu.ts";
 import { tofuStackOptions } from "#lib/delivery/platform/tofu-input.ts";
 import type { DeliveryJobReceipt } from "#shared/delivery-job.ts";
-import type { RecoveryAction } from "./request.ts";
+import {
+  isUnappliedModelTofuDeployment,
+  type RecoveryAction,
+} from "./request.ts";
 type Snapshot = Extract<
   PlatformReleaseSnapshot,
   { kind: "tofu-plan" | "tofu-apply" }
@@ -198,29 +201,6 @@ async function inspectOriginalTarget(
     observedAt: new Date().toISOString(),
     proofSummary: `Original target from authenticated saved plan ${snapshot.plan.planDigest}; same lineage ${before.lineage}, original serial ${String(snapshot.plan.state.serial)}, stable current serial ${String(before.serial)}; complete managed before and independent application values match baseline ${nativeBefore}; state history and acceptance unchanged by this settlement`,
   };
-}
-
-/**
- * True when a model tofu deployment failed before saving a plan and before
- * any apply stage started, so no external OpenTofu mutation could have been
- * authorized or submitted.
- */
-export function isUnappliedModelTofuDeployment(
-  detail: PlatformRecoveryContext["deployment"],
-): boolean {
-  if (detail.deployment.platformSnapshot !== null) return false;
-  const recipe = modelRecipe(detail);
-  if (recipe?.kind !== "tofu") return false;
-  const savedPlan =
-    ("savedPlan" in detail && detail.savedPlan != null) ||
-    detail.stages.some(
-      (stage) =>
-        stage.key === stepStageKey("step", "plan") &&
-        stage.status === "succeeded",
-    );
-  return (
-    !savedPlan && detail.stages.every((stage) => !stage.key.endsWith("apply"))
-  );
 }
 
 /**

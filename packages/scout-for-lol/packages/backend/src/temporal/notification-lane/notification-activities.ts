@@ -157,17 +157,17 @@ export function createScoutNotificationActivities(): ScoutNotificationActivities
                 async () => await preloadNotificationDelivery(),
               );
             } catch (error) {
-              if (error instanceof PreSendBudgetExpiredError) {
-                logger.error(error.message, {
-                  intentKey: input.intentKey,
-                  attemptNonce: input.attemptNonce,
-                });
-              } else {
+              if (!(error instanceof PreSendBudgetExpiredError)) {
                 logger.error(
                   `Loading notification delivery module for ${input.intentKey} failed before any send`,
                   error,
                 );
+                throw error;
               }
+              logger.error(error.message, {
+                intentKey: input.intentKey,
+                attemptNonce: input.attemptNonce,
+              });
               return ScoutNotificationDeliveryResultSchema.parse({
                 outcome: "failed",
                 failure: {

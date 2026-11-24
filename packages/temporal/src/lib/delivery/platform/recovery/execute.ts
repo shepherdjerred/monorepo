@@ -11,8 +11,11 @@ import { deliveryRequest } from "#lib/delivery/client.ts";
 import type { runDeliveryJob } from "#lib/delivery/job.ts";
 import { modelRecipe } from "#lib/delivery/model/recipe.ts";
 import type { DeliveryJobReceipt } from "#shared/delivery-job.ts";
-import { recoveryExecutionJob, type RecoveryAction } from "./request.ts";
-import { isUnappliedModelTofuDeployment } from "./tofu.ts";
+import {
+  isUnappliedModelTofuDeployment,
+  recoveryExecutionJob,
+  type RecoveryAction,
+} from "./request.ts";
 
 const Inspection = z.strictObject({
   state: z.enum(["desired", "prior", "readonly", "original"]),

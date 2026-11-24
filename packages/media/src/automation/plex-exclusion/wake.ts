@@ -77,23 +77,38 @@ export async function wakeBlockedExclusionOperations(
     "reconcile_media",
     "acquire_release",
   ];
-  const operations = await tx.operation.findMany({
-    where: {
-      status: "reconciling",
-      result: { path: ["reason"], equals: PLEX_EXCLUSION_PROOF_REQUIRED },
-      payload: { path: ["recoveryEpoch"], equals: input.recoveryEpoch },
-      kind: {
-        in:
-          input.topologyKind === "movie"
-            ? movieKinds
-            : ["reconcile_media", "acquire_release"],
+  let cursor: { createdAt: Date; id: string } | undefined;
+  for (;;) {
+    const operations = await tx.operation.findMany({
+      where: {
+        status: "reconciling",
+        result: { path: ["reason"], equals: PLEX_EXCLUSION_PROOF_REQUIRED },
+        payload: { path: ["recoveryEpoch"], equals: input.recoveryEpoch },
+        kind: {
+          in:
+            input.topologyKind === "movie"
+              ? movieKinds
+              : ["reconcile_media", "acquire_release"],
+        },
+        ...(cursor === undefined
+          ? {}
+          : {
+              OR: [
+                { createdAt: { gt: cursor.createdAt } },
+                { createdAt: cursor.createdAt, id: { gt: cursor.id } },
+              ],
+            }),
       },
-    },
-    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-    take: 100,
-  });
-  for (const op of operations)
-    await wakeSingleExclusionOperation(tx, op, input);
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      take: 100,
+    });
+    const last = operations.at(-1);
+    if (last === undefined) break;
+    for (const op of operations)
+      await wakeSingleExclusionOperation(tx, op, input);
+    cursor = { createdAt: last.createdAt, id: last.id };
+    if (operations.length < 100) break;
+  }
 }
 
 async function wakeSingleExclusionOperation(

@@ -40,10 +40,10 @@ vi.mock("#lib/delivery/client.ts", () => ({
     },
   ),
 }));
-const { recoveryExecutionJob } = await import("./request.ts");
+const { isUnappliedModelTofuDeployment, recoveryExecutionJob } =
+  await import("./request.ts");
 const { provePlatformNativeJobs } = await import("./native-proof.ts");
-const { isUnappliedModelTofuDeployment, runTofuRecoveryInWorkspace } =
-  await import("./tofu.ts");
+const { runTofuRecoveryInWorkspace } = await import("./tofu.ts");
 const { executePlatformRecoveryAction } = await import("./execute.ts");
 
 afterEach(() => {

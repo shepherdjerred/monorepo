@@ -578,3 +578,36 @@ describe("fetchBlockedReason CodeRabbit check-runs and comment blocks", () => {
     }
   });
 });
+
+describe("fetchBlockedReason clean-envelope head binding", () => {
+  test("does not let an earlier-head clean CodeRabbit envelope hide a later block notice", async () => {
+    const earlierSha = "a".repeat(40);
+    const currentSha = "b".repeat(40);
+    mockIssueComments([
+      {
+        login: "coderabbitai[bot]",
+        updated_at: afterPush,
+        body:
+          "<!-- recent_review_start -->\n" +
+          "No actionable comments were generated in the recent review.\n" +
+          "<!-- recent_review_end -->\n" +
+          "<details><summary>Action not completed</summary>\n\nReview rate limited.\n</details>\n" +
+          `<!-- final_review_risk_coverage:{"sourceCommitId":"${earlierSha}","coveredCommitId":"${earlierSha}","kind":"reviewed"} -->`,
+      },
+    ]);
+    try {
+      await expect(
+        fetchBlockedReason({
+          repo: "o/r",
+          number: 1,
+          token: "token",
+          provider: coderabbitProvider,
+          headPushedAt,
+          headSha: currentSha,
+        }),
+      ).resolves.toBe("usage-limited");
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+});

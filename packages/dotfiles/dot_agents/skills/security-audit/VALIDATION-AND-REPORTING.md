@@ -71,7 +71,7 @@ The schema supports two verdict types via `oneOf`:
 
 The structured output from Phase 5 forces self-validation, but the same agent that wrote the finding also wrote the JSON — it won't catch its own blind spots. This phase uses a fresh agent to independently verify every claim in `findings.json`.
 
-Launch **one `research` agent per confirmed finding** via the Task tool, all in parallel (or sequentially in the parent session if fan-out is restricted; `retries = 0` on any safety refusal). Each agent gets exactly one finding from `findings.json` and verifies it independently. Give each agent the JSON object for its finding and this prompt:
+Launch **one `research` agent per confirmed finding** via the Task tool, all in parallel (or sequentially via fresh `research` agents when parallel fan-out is restricted — never self-verify in the session that authored the finding, and report Phase 6 as incomplete if independent subagents are unavailable; `retries = 0` on any safety refusal). Each agent gets exactly one finding from `findings.json` and verifies it independently. Give each agent the JSON object for its finding and this prompt:
 
 ```
 Authorized Defensive Review Scope: This is an owner-authorized defensive static code review of the checked-out source at <path> to verify defect accuracy and proposed code remediations. Restrict inspection to local repository files; never target live or external infrastructure.

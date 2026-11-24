@@ -36,9 +36,11 @@ import {
 } from "#sandbox/record.ts";
 import { DOCKER_CLI_TIMEOUT_MS, docker } from "./docker-cli.ts";
 import {
+  cleanupFailedSandboxBoot,
   containerLogs,
   envArgs,
   publishedPort,
+  seedSandboxContainer,
   startAndAwaitDone,
   warmMountArgs,
   warmMounts,
@@ -236,85 +238,35 @@ export class DockerSandboxProvider implements SandboxProvider {
     const expiresAtMs = started + request.ttlSeconds * 1000;
     const expiresAt = new Date(expiresAtMs).toISOString();
     const slow = { timeoutMs: BOOT_TIMEOUT_MS };
-    const fast = { timeoutMs: DOCKER_CLI_TIMEOUT_MS };
-    const { stdout } = await docker(
-      dockerCreateArgs({
-        id,
-        profileName: request.profile,
-        profile,
-        pluginsDir,
-        cacheDir: this.cacheDir,
-        expiresAt: expiresAtMs,
-        daemonPid: process.pid,
-        owner: this.owner,
-        keep: request.keep,
-      }),
-      slow,
-    );
-    const containerId = stdout.trim();
+    let containerId = `mc-harness-${id}`;
     try {
+      const { stdout } = await docker(
+        dockerCreateArgs({
+          id,
+          profileName: request.profile,
+          profile,
+          pluginsDir,
+          cacheDir: this.cacheDir,
+          expiresAt: expiresAtMs,
+          daemonPid: process.pid,
+          owner: this.owner,
+          keep: request.keep,
+        }),
+        slow,
+      );
+      containerId = stdout.trim();
       await this.copySavedWorld(request, dir, containerId, progress);
-      if (mapSource !== undefined)
-        await docker(
-          ["cp", path.join(dir, "world"), `${containerId}:/data/`],
-          slow,
-        );
-      if (isPublishedStorm(request.profile)) {
-        // Match the server chart's fsGroup on a fresh volume, as boot-check.sh
-        // does. The server itself stays unprivileged; only these short-lived
-        // helpers touch the disposable volume before the first boot.
-        for (const [command, value] of [
-          ["chown", "1000:2000"],
-          ["chmod", "2775"],
-        ] as const) {
-          await docker(
-            [
-              "run",
-              "--rm",
-              "--user",
-              "0:0",
-              "--volumes-from",
-              containerId,
-              "--entrypoint",
-              command,
-              profile.image,
-              value,
-              "/data",
-            ],
-            slow,
-          );
-        }
-      }
-      for (const seed of seedFiles) {
-        await docker(
-          ["cp", seed.source, `${containerId}:/data/${seed.target}`],
-          slow,
-        );
-      }
-      if (mapSource !== undefined) {
-        const config = path.join(dir, "config");
-        await mkdir(config, { mode: 0o777 });
-        await Bun.write(
-          path.join(config, "paper-global.yml"),
-          "_version: 31\nproxies:\n  proxy-protocol: true\n",
-        );
-        await docker(["cp", config, `${containerId}:/data/`], slow);
-        await docker(
-          [
-            "run",
-            "--rm",
-            "--volumes-from",
-            containerId,
-            "--entrypoint",
-            "chmod",
-            profile.image,
-            "-R",
-            "a+rwX",
-            "/data/config",
-          ],
-          slow,
-        );
-      }
+      await seedSandboxContainer({
+        id,
+        owner: this.owner,
+        expiresAtMs,
+        containerId,
+        dir,
+        image: profile.image,
+        publishedStorm: isPublishedStorm(request.profile),
+        hasMapSource: mapSource !== undefined,
+        seedFiles,
+      });
       progress("booting Paper");
       const deadline = started + BOOT_TIMEOUT_MS;
       await startAndAwaitDone(containerId, deadline);
@@ -364,9 +316,12 @@ export class DockerSandboxProvider implements SandboxProvider {
       return record;
     } catch (error) {
       this.closeProxy(id);
-      const logs = await containerLogs(containerId).catch(() => "");
-      await Bun.write(path.join(dir, "failed-boot.log"), logs);
-      await docker(["rm", "-f", "-v", containerId], fast);
+      await cleanupFailedSandboxBoot({
+        id,
+        containerId,
+        dir,
+        listRows: () => this.queryRows(this.owner),
+      });
       throw error;
     }
   }
