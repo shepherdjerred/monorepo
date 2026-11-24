@@ -143,6 +143,16 @@ export function blockingPolicyForThreshold(
 }
 
 /**
+ * Strict P0/P1 blocking policy for single-reviewer round-robin gates: P0 and
+ * P1 findings always block; P2 and P3 findings are advisory on every round.
+ */
+export const STRICT_P0_P1_POLICY: BlockingPolicy = {
+  alwaysBlockingPriority: 1,
+  maxBlockingPriority: 1,
+  lowSeverity: "always",
+};
+
+/**
  * One blocking thread as a reader needs it: what the finding is, then where.
  *
  * The title matters most and is why this is not just a location. Findings

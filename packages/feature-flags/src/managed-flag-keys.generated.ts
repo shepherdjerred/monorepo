@@ -376,6 +376,7 @@ export const TEMPORAL_BOOLEAN_FLAG_KEYS = [
   "the-storm-reddit-outreach-enabled",
   "the-storm-rwf-recording-archive-enabled",
   "temporal-renovate-llm-delta-enabled",
+  "temporal-code-review-enabled",
 ] as const;
 
 export type TemporalBooleanFlagKey =
@@ -392,6 +393,7 @@ export const TEMPORAL_VARIANT_FLAG_KEYS = [
   "woodpecker-log-retention-days",
   "the-storm-promotion-settings",
   "the-storm-reddit-outreach-settings",
+  "temporal-code-review-settings",
 ] as const;
 
 export type TemporalVariantFlagKey =

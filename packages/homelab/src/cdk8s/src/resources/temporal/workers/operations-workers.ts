@@ -65,6 +65,7 @@ export type TemporalOperationsWorkerProps = {
   serverServiceName: string;
   secret: ISecret;
   flagsAuthSecret: ISecret;
+  ciGithubSecret: ISecret;
   infraServiceAccount: ServiceAccount;
   homelabAuditEnvironment: Record<string, EnvValue>;
   talosConfigVolume: Volume;
@@ -211,6 +212,12 @@ export function createTemporalOperationsWorkers(
       ),
       ...s3Env(props.secret),
       ...githubEnv(props.secret),
+      // Providers like Codex only honor review trigger comments posted by the
+      // linked user account; reads and commit statuses continue using GITHUB_APP_*.
+      GITHUB_REVIEW_TOKEN: EnvValue.fromSecretValue({
+        secret: props.ciGithubSecret,
+        key: "GITHUB_REVIEW_TOKEN",
+      }),
       ...llmArchiveEnvVars(),
       DOCKERHUB_READ_CONFIG_JSON: EnvValue.fromSecretValue({
         secret: Secret.fromSecretName(
@@ -264,6 +271,10 @@ export function createTemporalOperationsWorkers(
       },
     ],
   });
+  repoDeployment.metadata.addAnnotation(
+    "operator.1password.io/auto-restart",
+    "true",
+  );
 
   const scoutDeployment = createTemporalDomainWorker(chart, {
     name: "temporal-scout-worker",

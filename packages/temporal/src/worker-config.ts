@@ -2,6 +2,7 @@ import {
   agentActivities,
   agentChatDispatchWorkerActivities,
   agentChatReceiptWorkerActivities,
+  codeReviewWorkerActivities,
   agentChatDeliveryActivities,
   agentChatIngressActivities,
   photonAgentChatActivities,
@@ -219,6 +220,13 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     taskQueue: TASK_QUEUES.REPO_AUTOMATION,
     activities: repoActivities,
     maxConcurrentActivityTaskExecutions: 1,
+  },
+  {
+    kind: "activity",
+    role: "repo",
+    taskQueue: TASK_QUEUES.CODE_REVIEW,
+    activities: codeReviewWorkerActivities,
+    maxConcurrentActivityTaskExecutions: 8,
   },
   {
     kind: "activity",

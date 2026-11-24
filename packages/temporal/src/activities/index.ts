@@ -58,6 +58,7 @@ import { woodpeckerRetentionActivities } from "./maintenance/woodpecker-retentio
 import { ciMaintenanceActivities } from "./maintenance/ci-maintenance.ts";
 import { ciExtendedVerifyActivities } from "./maintenance/ci-extended-verify.ts";
 import { trackerAttachmentActivities } from "./maintenance/tracker-attachments.ts";
+import { codeReviewActivities } from "./ci/code-review.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -125,6 +126,10 @@ export const agentChatDispatchWorkerActivities = {
 
 export const agentChatReceiptWorkerActivities = {
   ...agentChatReceiptActivities,
+};
+
+export const codeReviewWorkerActivities = {
+  ...codeReviewActivities,
 };
 
 export const scoutActivities = {

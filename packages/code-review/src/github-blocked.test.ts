@@ -3,6 +3,7 @@ import { fetchBlockedReason, matchesBlockedSignal } from "./github-blocked.ts";
 import { codexProvider } from "./providers/codex.ts";
 import { greptileProvider } from "./providers/greptile.ts";
 import { coderabbitProvider } from "./providers/coderabbit.ts";
+import { qodoProvider } from "./providers/qodo.ts";
 
 const headPushedAt = "2026-09-23T18:00:00Z";
 const afterPush = "2026-09-23T18:01:00Z";
@@ -206,11 +207,45 @@ describe("fetchBlockedReason", () => {
           repo: "o/r",
           number: 1,
           token: "token",
-          provider: greptileProvider,
+          provider: { ...greptileProvider, detectBlocked: null },
           headPushedAt,
         }),
       ).resolves.toBeNull();
       expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
+  test.each([
+    [
+      greptileProvider,
+      "greptile-apps[bot]",
+      "You have exhausted your free credits for this month.",
+    ],
+    [
+      qodoProvider,
+      "qodo-code-review[bot]",
+      "Qodo usage limit reached for this repository.",
+    ],
+  ])("detects usage-limit blocks for $id", async (provider, login, body) => {
+    mockIssueComments([
+      {
+        body,
+        updated_at: afterPush,
+        login,
+      },
+    ]);
+    try {
+      await expect(
+        fetchBlockedReason({
+          repo: "o/r",
+          number: 1,
+          token: "token",
+          provider,
+          headPushedAt,
+        }),
+      ).resolves.toBe("usage-limited");
     } finally {
       vi.restoreAllMocks();
     }

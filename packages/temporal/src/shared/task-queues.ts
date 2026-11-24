@@ -34,6 +34,8 @@ export const TASK_QUEUES = {
   STORM_FORUM_PROD: "storm-forum-prod",
   /** Repository refreshes, CI analysis, and GitHub event automation. */
   REPO_AUTOMATION: "repo-automation",
+  /** Weighted round-robin PR code-review inspection, triggering, and status checks. */
+  CODE_REVIEW: "monorepo-code-review",
   /** Scout refresh and competition workflows. */
   SCOUT: "scout",
   /** Serial direct subprocess maintenance against the CI cache PVCs. */
@@ -93,6 +95,7 @@ export const TaskQueueSchema = z.enum([
   TASK_QUEUES.STORM_FORUM_BETA,
   TASK_QUEUES.STORM_FORUM_PROD,
   TASK_QUEUES.REPO_AUTOMATION,
+  TASK_QUEUES.CODE_REVIEW,
   TASK_QUEUES.SCOUT,
   TASK_QUEUES.MAINTENANCE,
   TASK_QUEUES.BILLING,

@@ -20,6 +20,12 @@ const ResourceSchema = z.object({
       annotations: z.record(z.string(), z.string()).optional(),
     })
     .optional(),
+  spec: z
+    .object({
+      itemPath: z.string().optional(),
+    })
+    .loose()
+    .optional(),
   data: z.record(z.string(), z.string()).optional(),
   rules: z.array(RuleSchema).optional(),
   roleRef: z.object({ kind: z.string(), name: z.string() }).optional(),
@@ -594,7 +600,41 @@ describe("Temporal operations worker isolation", () => {
     expect(repoEnv).toContain("FRESHRSS_API_PASSWORD_FILE");
     expect(repoEnv).toContain("WOODPECKER_TOKEN");
     expect(repoEnv).toContain("OPENAI_API_KEY");
+    expect(repoEnv).toContain("GITHUB_REVIEW_TOKEN");
     expect(scoutEnv).toContain("OPENAI_API_KEY");
+
+    const reviewToken = repo.spec.template.spec.containers[0]?.env.find(
+      (entry) => entry.name === "GITHUB_REVIEW_TOKEN",
+    );
+    expect(reviewToken?.valueFrom?.secretKeyRef).toEqual({
+      name: "temporal-ci-github-credentials",
+      key: "GITHUB_REVIEW_TOKEN",
+    });
+    expect(repo.metadata.annotations).toMatchObject({
+      "operator.1password.io/auto-restart": "true",
+    });
+
+    const resources = parseResources(await synthesizeApp());
+    const ciGithubItem = resources.find(
+      (resource) =>
+        resource.kind === "OnePasswordItem" &&
+        resource.metadata?.name === "temporal-ci-github-credentials",
+    );
+    expect(ciGithubItem?.metadata?.namespace).toBe("temporal");
+    expect(ciGithubItem?.spec?.itemPath).toMatch(
+      /\/items\/34gzcrhwdm34lpadyly3rcsu44$/u,
+    );
+
+    for (const nonReviewWorker of [
+      infra,
+      scout,
+      requireDeployment(deployments, "temporal-temporal-billing-worker"),
+      requireDeployment(deployments, "temporal-temporal-gateway"),
+      requireDeployment(deployments, "temporal-temporal-workflows-candidate"),
+    ]) {
+      expect(envNames(nonReviewWorker)).not.toContain("GITHUB_REVIEW_TOKEN");
+    }
+
     for (const retiredControl of [
       "SCOUT_BRYAN_BUCKS_CONTROL_URL",
       "SCOUT_BRYAN_BUCKS_CONTROL_TOKEN",
@@ -723,6 +763,7 @@ describe("temporal homelab audit tooling access boundaries", () => {
       "GITHUB_APP_ID",
       "GITHUB_APP_INSTALLATION_ID",
       "GITHUB_APP_PRIVATE_KEY",
+      "GITHUB_REVIEW_TOKEN",
       "GITHUB_WEBHOOK_SECRET",
       "GRAFANA_API_KEY",
       "HA_TOKEN",
