@@ -1,3 +1,4 @@
+import { temporalMetricsAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
@@ -43,7 +44,7 @@ export function createMediaActivityWorkers(
     ...mediaFeatureFlagEnvironment(),
     ...temporalAddressEnv(),
     TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
-    TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+    ...temporalMetricsAddressEnv(),
     ENVIRONMENT: EnvValue.fromValue("production"),
     ...telemetryEnv(),
   };

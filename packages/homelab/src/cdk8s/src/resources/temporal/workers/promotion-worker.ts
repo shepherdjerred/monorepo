@@ -1,3 +1,4 @@
+import { temporalMetricsAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
 import type { Chart } from "cdk8s";
 import { PROMOTION_POD_TERMINATION_SECONDS } from "@shepherdjerred/ops-model/promotion/drain-policy.ts";
@@ -89,7 +90,7 @@ export function createTemporalPromotionWorker(
       PROMOTION_DISCORD_SOCKET: EnvValue.fromValue(
         "/tmp/storm-promotion-discord/daemon.sock",
       ),
-      TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+      ...temporalMetricsAddressEnv(),
       AGENT_PROVIDER_UID: EnvValue.fromValue("1001"),
       ENVIRONMENT: EnvValue.fromValue("production"),
       ...telemetryEnv({ serviceName: "temporal-promotion-worker" }),
