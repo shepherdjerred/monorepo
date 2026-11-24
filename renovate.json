@@ -190,20 +190,6 @@
     }
   ],
   "customDatasources": {
-    "papermc": {
-      "defaultRegistryUrlTemplate": "https://fill.papermc.io/v3/projects/paper",
-      "format": "json",
-      "transformTemplates": [
-        "{\"releases\": [$map($filter($reduce($each(versions, function($v) { $v }), $append, []), function($v) { $not($contains($v, \"-\")) }), function($v) { {\"version\": $v} })], \"sourceUrl\": \"https://github.com/PaperMC/Paper\", \"homepage\": \"https://papermc.io\"}"
-      ]
-    },
-    "mc2discord-forge-1-12-2": {
-      "defaultRegistryUrlTemplate": "https://api.modrinth.com/v2/project/Cfbcv7uF/version?game_versions=%5B%221.12.2%22%5D&loaders=%5B%22forge%22%5D&include_changelog=false",
-      "format": "json",
-      "transformTemplates": [
-        "{\"releases\": $map($filter($, function($v) { $v.version_type = \"release\" }), function($v) { {\"version\": $v.files[primary = true][0].url, \"releaseTimestamp\": $v.date_published} }), \"sourceUrl\": \"https://github.com/DenisD3D/Mc2Discord\", \"homepage\": \"https://modrinth.com/mod/mc2discord\"}"
-      ]
-    },
     "modrinth": {
       "defaultRegistryUrlTemplate": "https://api.modrinth.com/v2/project/{{packageName}}/version?include_changelog=false",
       "format": "json",
@@ -236,7 +222,6 @@
     {
       "description": "Critical infrastructure - no delay, no automerge",
       "matchPackageNames": [
-        "paper",
         "siderolabs/talos",
         "ghcr.io/siderolabs/installer",
         "kubernetes/kubernetes",
@@ -278,12 +263,7 @@
     },
     {
       "description": "Minecraft - no delay, no automerge",
-      "matchPackageNames": [
-        "itzg/minecraft-server",
-        "mc2discord-forge-1.12.2",
-        "minecraft",
-        "mc-router"
-      ],
+      "matchPackageNames": ["itzg/minecraft-server", "minecraft", "mc-router"],
       "automerge": false,
       "minimumReleaseAge": "0 days",
       "schedule": ["at any time"]

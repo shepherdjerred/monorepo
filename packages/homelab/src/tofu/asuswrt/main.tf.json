@@ -81,14 +81,6 @@
         "protocol": "TCP",
         "provider": "asuswrt.router"
       },
-      "minecraft_bedrock": {
-        "external_port": "30003",
-        "internal_ip": "192.168.1.81",
-        "internal_port": "30003",
-        "name": "Mineraft Bedrock",
-        "protocol": "UDP",
-        "provider": "asuswrt.router"
-      },
       "minecraft_mc_router": {
         "external_port": "30000",
         "internal_ip": "192.168.1.81",

@@ -20,13 +20,12 @@ export function getServiceProbeRuleGroups(): PrometheusRuleSpecGroups[] {
               "The HTTP health probe on {{ $labels.path }} for service {{ $labels.service }} in namespace {{ $labels.namespace }} has failed for over 10 minutes, indicating the service endpoint is down or returning errors. Check pod status, container logs, and ingress or service routing in namespace {{ $labels.namespace }}.",
             ),
           },
-          // The minecraft namespaces hibernate at 0 desired replicas
-          // (mc-router scales them up on player connect), so their web-map
-          // probes are EXPECTED to fail while the namespace sleeps. Suppress
-          // the alert whenever every StatefulSet in a minecraft-* namespace
-          // has 0 desired replicas; the 10m `for` absorbs wake-up time once
-          // mc-router sets desired replicas back to 1. Scoped to minecraft-*
-          // so an accidental scale-to-zero anywhere else still pages.
+          // Deliberate maintenance can scale a minecraft-* StatefulSet to 0
+          // desired replicas, and its web-map probes are expected to fail while
+          // stopped. Suppress the alert whenever every StatefulSet in a
+          // minecraft-* namespace has 0 desired replicas; the 10m `for` absorbs
+          // startup time once desired replicas return to 1. Scoped to
+          // minecraft-* so an accidental scale-to-zero anywhere else still pages.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             'probe_success{job=~"probe-.*"} == 0 unless on(namespace) (sum by(namespace) (kube_statefulset_replicas{namespace=~"minecraft-.*"}) == 0)',
           ),

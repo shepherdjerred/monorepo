@@ -105,9 +105,7 @@ describe("platform-sites derivation", () => {
 
     for (const excluded of [
       "clauderon",
-      "dynmap",
       "pr-bot",
-      "shuxin-bluemap",
       "temporal-agent-tasks",
       "temporal-sleep",
       "tsmc-livemap",
@@ -115,7 +113,7 @@ describe("platform-sites derivation", () => {
     ]) {
       expect(shorts.has(excluded), excluded).toBe(false);
     }
-    expect(EXCLUDED_PLATFORM_HOSTNAMES.size).toBe(8);
+    expect(EXCLUDED_PLATFORM_HOSTNAMES.size).toBe(6);
   });
 });
 

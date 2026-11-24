@@ -64,9 +64,8 @@ Container limits bound selected bursty apps so one outlier cannot consume the wh
 The [workload resource definitions](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/misc/container-resources.test.ts) preserve these explicit decisions.
 
 Because requests run close to allocatable by design, the share of memory reserved is not itself a problem.
-The consequence that matters is a hibernated Minecraft server that cannot be scheduled when a player joins.
-`ProductionWakeCapacityInsufficient` fires when unreserved memory, counting batch pods as reclaimable, falls below the largest wake request.
-Stuck Pending pods and node memory pressure have their own alerts.
+The standing Minecraft server runs continuously with its full reservation instead of waking from zero.
+Alerts therefore watch actual available memory and stuck Pending pods rather than unreserved request percentage.
 
 Interactive games and Plex can reclaim reservations from the two background Glitter workers.
 They cannot preempt equal-priority normal services, including databases.

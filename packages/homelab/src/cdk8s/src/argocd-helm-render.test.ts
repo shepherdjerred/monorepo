@@ -109,7 +109,7 @@ const MountedContainerSchema = z.object({
 
 const MinecraftStatefulSetSchema = z.object({
   kind: z.literal("StatefulSet"),
-  metadata: z.object({ name: z.literal("minecraft-sjerred") }),
+  metadata: z.object({ name: z.literal("minecraft-tsmc") }),
   spec: z.object({
     template: z.object({
       spec: z.object({
@@ -126,6 +126,13 @@ const MinecraftStatefulSetSchema = z.object({
         ),
       }),
     }),
+    volumeClaimTemplates: z
+      .array(
+        z.object({
+          metadata: z.object({ name: z.string() }),
+        }),
+      )
+      .optional(),
   }),
 });
 
@@ -415,6 +422,62 @@ function upstreamRequestDebt(outcomes: readonly RenderOutcome[]): {
   };
 }
 
+function expectMinecraftStatefulSetMounts(outcomes: readonly RenderOutcome[]) {
+  const outcome = outcomes.find(
+    ({ chart }) => chart.appName === "minecraft-tsmc",
+  );
+  if (!outcome) {
+    throw new Error("Minecraft tsmc chart was not discovered");
+  }
+  expect(outcome.result.exitCode, outcome.result.stderr).toBe(0);
+  const workload = parseAllDocuments(outcome.result.stdout)
+    .map((document) => MinecraftStatefulSetSchema.safeParse(document.toJSON()))
+    .find((result) => result.success);
+  if (!workload?.success) {
+    throw new Error("Minecraft chart did not render its StatefulSet");
+  }
+  const pod = workload.data.spec.template.spec;
+  expect(pod.initContainers).toEqual(
+    expect.arrayContaining([
+      {
+        name: "migrate-bluemap",
+        volumeMounts: [
+          { name: "datadir" },
+          { name: "bluemap" },
+          { name: "bluemap-migration" },
+        ],
+      },
+    ]),
+  );
+  expect(pod.volumes).toEqual(
+    expect.arrayContaining([
+      {
+        name: "bluemap",
+        persistentVolumeClaim: { claimName: "minecraft-tsmc-bluemap" },
+      },
+      {
+        name: "bluemap-migration",
+        configMap: { name: "minecraft-tsmc-bluemap-migration" },
+      },
+    ]),
+  );
+  const claimNames = (workload.data.spec.volumeClaimTemplates ?? []).map(
+    (claim) => claim.metadata.name,
+  );
+  expect(claimNames).toContain("datadir");
+  const volumeNames = new Set([
+    ...pod.volumes.map((volume) => volume.name),
+    ...claimNames,
+  ]);
+  for (const container of [...pod.containers, ...(pod.initContainers ?? [])]) {
+    for (const mount of container.volumeMounts ?? []) {
+      expect(
+        volumeNames.has(mount.name),
+        `${container.name} mounts undeclared volume ${mount.name}`,
+      ).toBe(true);
+    }
+  }
+}
 const describeFn = shouldRun ? describe : describe.skip;
 
 describeFn("ArgoCD Helm Render - External Charts", () => {
@@ -577,57 +640,8 @@ describeFn("ArgoCD Helm Render - External Charts", () => {
     );
   });
 
-  it("renders the Minecraft proxy volume and resolves every container mount", () => {
-    const outcome = outcomes.find(
-      ({ chart }) => chart.appName === "minecraft-sjerred",
-    );
-    if (!outcome) {
-      throw new Error("Minecraft sjerred chart was not discovered");
-    }
-    expect(outcome.result.exitCode, outcome.result.stderr).toBe(0);
-    const workload = parseAllDocuments(outcome.result.stdout)
-      .map((document) =>
-        MinecraftStatefulSetSchema.safeParse(document.toJSON()),
-      )
-      .find((result) => result.success);
-    if (!workload?.success) {
-      throw new Error("Minecraft chart did not render its StatefulSet");
-    }
-    const pod = workload.data.spec.template.spec;
-    expect(pod.containers).toEqual(
-      expect.arrayContaining([
-        {
-          name: "proxy-header-adapter",
-          volumeMounts: [{ name: "proxy-config" }],
-        },
-      ]),
-    );
-    expect(pod.volumes).toEqual(
-      expect.arrayContaining([
-        {
-          name: "proxy-config",
-          configMap: { name: "minecraft-sjerred-proxy" },
-        },
-        {
-          name: "datadir",
-          persistentVolumeClaim: {
-            claimName: "minecraft-sjerred-rlcraft-data",
-          },
-        },
-      ]),
-    );
-    const volumeNames = new Set(pod.volumes.map((volume) => volume.name));
-    for (const container of [
-      ...pod.containers,
-      ...(pod.initContainers ?? []),
-    ]) {
-      for (const mount of container.volumeMounts ?? []) {
-        expect(
-          volumeNames.has(mount.name),
-          `${container.name} mounts undeclared volume ${mount.name}`,
-        ).toBe(true);
-      }
-    }
+  it("renders the Minecraft StatefulSet and resolves every container mount", () => {
+    expectMinecraftStatefulSetMounts(outcomes);
   });
 });
 

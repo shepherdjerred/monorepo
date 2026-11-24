@@ -52,14 +52,11 @@ const DOMAIN_SUFFIX_PREFIXES: readonly {
  * - Retired / duplicate public hostnames (`clauderon.com` 301s to `sjer.red`;
  *   `livemap.ts-mc.net` duplicates `bluemap.ts-mc.net`).
  * - Non-browser webhook / API receivers.
- * - Scaled-to-zero Minecraft map endpoints (`minecraft-sjerred`, `minecraft-shuxin`).
  */
 export const EXCLUDED_PLATFORM_HOSTNAMES: ReadonlySet<string> = new Set([
   "clauderon.com",
-  "dynmap.sjer.red",
   "livemap.ts-mc.net",
   "pr-bot.sjer.red",
-  "shuxin-bluemap.sjer.red",
   "temporal-agent-tasks.sjer.red",
   "temporal-sleep.sjer.red",
   "xcode-cloud-webhook.sjer.red",

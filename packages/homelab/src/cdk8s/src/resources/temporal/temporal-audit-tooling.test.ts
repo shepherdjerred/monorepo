@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { App } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
@@ -83,13 +83,13 @@ const DeploymentSchema = z.object({
 
 type SynthesizedDeployment = z.infer<typeof DeploymentSchema>;
 
-async function synthesizeApp(): Promise<string> {
-  const app = new App({ outdir: ".test-synth" });
-  await setupCharts(app);
-  return app.synthYaml();
-}
+let cachedYaml = "";
+let cachedResources: z.infer<typeof ResourceSchema>[] = [];
+let cachedDeployments: SynthesizedDeployment[] = [];
 
-function parseResources(yaml: string): z.infer<typeof ResourceSchema>[] {
+function parseResourcesUncached(
+  yaml: string,
+): z.infer<typeof ResourceSchema>[] {
   const resources: z.infer<typeof ResourceSchema>[] = [];
   for (const document of parseAllDocuments(yaml)) {
     const parsed = ResourceSchema.safeParse(document.toJSON());
@@ -100,7 +100,7 @@ function parseResources(yaml: string): z.infer<typeof ResourceSchema>[] {
   return resources;
 }
 
-function parseDeployments(yaml: string): SynthesizedDeployment[] {
+function parseDeploymentsUncached(yaml: string): SynthesizedDeployment[] {
   const deployments: SynthesizedDeployment[] = [];
   for (const document of parseAllDocuments(yaml)) {
     const parsed = DeploymentSchema.safeParse(document.toJSON());
@@ -109,6 +109,28 @@ function parseDeployments(yaml: string): SynthesizedDeployment[] {
     }
   }
   return deployments;
+}
+
+beforeAll(async () => {
+  const app = new App({ outdir: ".test-synth" });
+  await setupCharts(app);
+  cachedYaml = app.synthYaml();
+  cachedResources = parseResourcesUncached(cachedYaml);
+  cachedDeployments = parseDeploymentsUncached(cachedYaml);
+}, 30_000);
+
+function synthesizeApp(): Promise<string> {
+  return Promise.resolve(cachedYaml);
+}
+
+function parseResources(yaml: string): z.infer<typeof ResourceSchema>[] {
+  return yaml === cachedYaml ? cachedResources : parseResourcesUncached(yaml);
+}
+
+function parseDeployments(yaml: string): SynthesizedDeployment[] {
+  return yaml === cachedYaml
+    ? cachedDeployments
+    : parseDeploymentsUncached(yaml);
 }
 
 function requireDeployment(
