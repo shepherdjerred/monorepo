@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MainVulnScanResult } from "#activities/maintenance/main-vuln-scan.ts";
+import type { ReportRemediationV1 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runMainVulnScanWorkflow } from "./main-vuln-scan.ts";
 import * as scannerTest from "#workflows/scanner-workflow-test-support.ts";
@@ -29,9 +30,15 @@ const CRITICAL_VULNERABILITY = {
   target: "bun.lock",
 };
 
+const FIXABLE_CRITICAL_VULNERABILITY = {
+  ...CRITICAL_VULNERABILITY,
+  fixedVersion: "1.3.1",
+};
+
 async function runWorkflow(
   overrides: {
     scan?: () => Promise<MainVulnScanResult>;
+    remediate?: (input: MainVulnScanResult) => Promise<ReportRemediationV1>;
     publish?: () => Promise<void>;
   },
   vulnerabilities: MainVulnScanResult["vulnerabilities"] = [],
@@ -56,6 +63,20 @@ async function runWorkflow(
         },
       },
       {
+        taskQueue: TASK_QUEUES.REPO_AUTOMATION,
+        activities: {
+          remediateMainVulnerabilities:
+            overrides.remediate ??
+            (async () => ({
+              outcome: "no-changes" as const,
+              changedFiles: [],
+              resolvedCount: 0,
+              unresolvedCount: 1,
+              summary: "No upgrade verified.",
+            })),
+        },
+      },
+      {
         taskQueue: TASK_QUEUES.MAINTENANCE,
         activities: {
           scanMainForVulnerabilities:
@@ -75,12 +96,58 @@ describe("runMainVulnScanWorkflow", () => {
     scannerTest.expectCompleteScannerReport(harness, "clear", 0, REPO_SHA);
   }, 60_000);
 
-  it("fires the alert with the critical count when findings exist", async () => {
-    const { harness, failure } = await runWorkflow({}, [
-      CRITICAL_VULNERABILITY,
-    ]);
+  it("fires the alert with the critical count without calling remediation when no fixedVersion exists", async () => {
+    let remediationCalled = false;
+    const { harness, failure } = await runWorkflow(
+      {
+        remediate: () => {
+          remediationCalled = true;
+          return Promise.resolve({ outcome: "no-changes", changedFiles: [] });
+        },
+      },
+      [CRITICAL_VULNERABILITY],
+    );
+    expect(failure).toBeUndefined();
+    expect(remediationCalled).toBe(false);
+    scannerTest.expectCompleteScannerReport(harness, "attention", 1, REPO_SHA);
+  }, 60_000);
+
+  it("opens a review remediation PR for fixable advisories while still firing critical Alertmanager alert until main is clean", async () => {
+    const { harness, failure } = await runWorkflow(
+      {
+        remediate: () =>
+          Promise.resolve({
+            outcome: "pr-created",
+            prUrl: "https://github.com/shepherdjerred/monorepo/pull/800",
+            branchName: "chore/vuln-remediation-12345678",
+            commitSha: "1234567890ab",
+            autoMergeEnabled: false,
+            changedFiles: ["bun.lock"],
+            resolvedCount: 1,
+            unresolvedCount: 0,
+            summary: "Upgraded left-pad to 1.3.1.",
+          }),
+      },
+      [FIXABLE_CRITICAL_VULNERABILITY],
+    );
     expect(failure).toBeUndefined();
     scannerTest.expectCompleteScannerReport(harness, "attention", 1, REPO_SHA);
+    expect(harness.reports[0]?.remediation?.prUrl).toBe(
+      "https://github.com/shepherdjerred/monorepo/pull/800",
+    );
+    expect(harness.reports[0]?.remediation?.autoMergeEnabled).toBe(false);
+  }, 60_000);
+
+  it("isolates remediation errors so scan report and critical Alertmanager alert still publish", async () => {
+    const { harness, failure } = await runWorkflow(
+      {
+        remediate: () => Promise.reject(new Error("Codex timeout")),
+      },
+      [FIXABLE_CRITICAL_VULNERABILITY],
+    );
+    expect(failure).toBeUndefined();
+    scannerTest.expectCompleteScannerReport(harness, "attention", 1, REPO_SHA);
+    expect(harness.reports[0]?.remediation?.outcome).toBe("partial");
   }, 60_000);
 
   it("delivers a failed report before rethrowing a scan failure", async () => {

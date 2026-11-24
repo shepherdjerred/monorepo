@@ -1907,6 +1907,50 @@ occurrence.
 Publishing still requires the production flag and a target allowlist; these
 source capabilities do not establish production deployment or live acceptance.
 
+### Scheduled report PR remediation
+
+`temporal-report-auto-remediation-enabled` (`src/config/report-remediation.ts`,
+targeting key `temporal-remediation-<stage>`, default `true`) gates automated
+Codex SDK and GitHub App pull-request follow-through across four scheduled
+reports. Setting the flag to `false` returns `{ outcome: "skipped" }` without
+cloning the repository or invoking the model; report delivery and alerting
+continue unchanged.
+
+The shared bot-PR runner (`src/activities/remediation/codex-pr-remediation.ts`)
+executes on `repo-automation` (`temporal-repo-worker`) inside an isolated
+`/tmp` clone. Only `OPENAI_API_KEY` reaches the Codex subprocess (`gpt-6-luna`);
+GitHub App, Postal, S3, Alertmanager, and Temporal credentials are stripped from
+its environment. Post-turn guardrails run outside the model: out-of-scope paths
+are reverted, formatting-only diffs are discarded, domain verifiers drop
+unverified files, and verified diffs publish to a content-addressed
+`chore/<slug>-<sha256_8>` branch so retries and subsequent weekly runs reuse an
+open PR instead of creating duplicates. Remediation failures are caught inside
+each Workflow so the underlying scan or summary report always delivers.
+
+- `link-rot-scan-weekly` (`remediateLinkRot`, `link-rot-remediation-v1` patch):
+  edits only `.lycheeignore` (requiring a preceding `#` rationale comment and a
+  host-anchored regex) and exact Markdown sources from `deadLinks`, re-runs
+  `lychee`, and arms `autoMerge: true` only when zero dead links remain.
+- `main-vuln-scan-weekly` (`remediateMainVulnerabilities`,
+  `main-vuln-remediation-v1` patch): edits only dependency manifests, lockfiles,
+  and `packages/version-catalog/src/catalog.json` (never `.trivyignore`), proves
+  `bun install --frozen-lockfile` and touched-package typechecks, and opens a
+  plain review PR (`autoMerge: false`) while keeping critical Alertmanager
+  occurrences active until `main` scans clean.
+- `deps-summary-weekly` (`proposeMissingReleaseNoteOverrides`,
+  `deps-summary-release-notes-pr-v1` patch): edits only `releaseNotesOverride`
+  on missing entries in `packages/version-catalog/src/catalog.json`, verifies
+  every added URL returns HTTP 200, opens a plain review PR (`autoMerge: false`),
+  and feeds verified notes into the weekly synthesis.
+- `scout-queue-windows-daily` (`refreshScoutQueueWindows`): when sparse-queue
+  liveness confirms `ended` with a valid `endedOn` date (`start <= endedOn <= today`)
+  and a reachable `https://` source returning HTTP 200, closes the open window
+  in `queue-windows.json`, validates Scout's data schema tests, and opens or
+  updates a plain review PR (`autoMerge: false`) on `chore/scout-queue-windows`.
+  All PR-opening Scout report workflows (`scout-queue-windows`,
+  `scout-data-dragon`, `scout-lane-priors`, and `scout-season-refresh`) attach
+  `ReportRemediationV1` metadata whenever `prUrl` is present.
+
 ## Documentation
 
 - [Temporal overview](../docs/wiki/src/content/docs/explanation/temporal/overview.md)

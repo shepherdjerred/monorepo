@@ -1,4 +1,6 @@
 import { describe, expect, test } from "vitest";
+import { reportSubject } from "#shared/reports/report-presentation.ts";
+import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
 import {
   buildLinkRotExcerpt,
   parseLycheeReport,
@@ -308,6 +310,135 @@ describe("buildLinkRotReport", () => {
     expect(report.actions).toEqual([
       "Retry timed-out links or investigate their reachability before treating them as dead or adding an exclusion.",
     ]);
+  });
+});
+
+describe("buildLinkRotReport with remediation", () => {
+  test("marks verdict changed and downgrades findings to info/observing when PR resolves all dead links", () => {
+    const result = scanResult({
+      totalLinks: 20,
+      successfulLinks: 19,
+      excludedLinks: 0,
+      ignoredRootRelativeLinks: 0,
+      deadLinks: [
+        {
+          url: "https://example.org/old",
+          source: "README.md",
+          status: "404 Not Found",
+          statusCode: 404,
+          line: 10,
+        },
+      ],
+      timedOutLinks: [],
+    });
+    const report = buildLinkRotReport("2026-08-23T11:55:00.000Z", result, {
+      outcome: "pr-created",
+      prUrl: "https://github.com/shepherdjerred/monorepo/pull/501",
+      branchName: "chore/link-rot-12345678",
+      commitSha: "abcdef123456",
+      autoMergeEnabled: true,
+      changedFiles: ["README.md"],
+      resolvedCount: 1,
+      unresolvedCount: 0,
+      summary: "lychee verified 1/1 dead links resolved (0 remaining).",
+    });
+    const envelope = ReportEnvelopeV1Schema.parse({
+      ...report,
+      schemaVersion: 1,
+      reportRunId: "link-rot-scan:run-1",
+      completedAt: "2026-08-23T12:05:00.000Z",
+      provenance: {
+        ...report.provenance,
+        workflowId: "wf-1",
+        runId: "run-1",
+      },
+    });
+    expect(envelope.verdict).toBe("changed");
+    expect(reportSubject(envelope)).toBe("Link check: Dead-link fix PR opened");
+    expect(envelope.findings[0]).toMatchObject({
+      severity: "info",
+      state: "observing",
+    });
+    expect(envelope.evidence).toContainEqual(
+      expect.objectContaining({
+        id: "link-rot-remediation",
+        url: "https://github.com/shepherdjerred/monorepo/pull/501",
+      }),
+    );
+  });
+
+  test("keeps verdict attention when remediation PR leaves unresolved dead links", () => {
+    const report = buildLinkRotReport(
+      "2026-08-23T11:55:00.000Z",
+      scanResult(parseLycheeReport(LYCHEE_FIXTURE)),
+      {
+        outcome: "pr-created",
+        prUrl: "https://github.com/shepherdjerred/monorepo/pull/502",
+        branchName: "chore/link-rot-87654321",
+        commitSha: "fedcba654321",
+        autoMergeEnabled: false,
+        changedFiles: [
+          "packages/docs/wiki/src/content/docs/reference/homelab.md",
+        ],
+        resolvedCount: 1,
+        unresolvedCount: 1,
+        summary: "lychee verified 1/2 dead links resolved (1 remaining).",
+      },
+    );
+    expect(report.verdict).toBe("attention");
+    expect(report.findings.map((finding) => finding.severity)).toEqual([
+      "info",
+      "warning",
+      "info",
+    ]);
+
+    // Multi-link single file where only the SECOND link was repaired: must downgrade ONLY link B
+    const sameFileScan = scanResult({
+      totalLinks: 5,
+      successfulLinks: 3,
+      excludedLinks: 0,
+      ignoredRootRelativeLinks: 0,
+      deadLinks: [
+        {
+          url: "https://example.org/broken-first",
+          source: "docs/guide.md",
+          status: "404 Not Found",
+          statusCode: 404,
+          line: 4,
+        },
+        {
+          url: "https://example.org/repaired-second",
+          source: "docs/guide.md",
+          status: "404 Not Found",
+          statusCode: 404,
+          line: 18,
+        },
+      ],
+      timedOutLinks: [],
+    });
+    const sameFileReport = buildLinkRotReport(
+      "2026-08-23T11:55:00.000Z",
+      sameFileScan,
+      {
+        outcome: "pr-created",
+        prUrl: "https://github.com/shepherdjerred/monorepo/pull/503",
+        branchName: "chore/link-rot-11223344",
+        commitSha: "11223344",
+        autoMergeEnabled: false,
+        changedFiles: ["docs/guide.md"],
+        resolvedCount: 1,
+        unresolvedCount: 1,
+        summary: "lychee verified 1/2 dead links resolved (1 remaining).",
+        resolvedLinkKeys: [
+          "docs/guide.md\u{0}https://example.org/repaired-second",
+        ],
+      },
+    );
+    expect(sameFileReport.findings[0]?.severity).toBe("warning");
+    expect(sameFileReport.findings[1]).toMatchObject({
+      severity: "info",
+      state: "observing",
+    });
   });
 });
 

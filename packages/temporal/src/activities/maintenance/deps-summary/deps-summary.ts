@@ -13,6 +13,7 @@ import {
   fetchDependencyReleaseNotes,
   synthesizeDependencyChanges,
 } from "./deps-summary-release-notes.ts";
+import { proposeMissingReleaseNoteOverrides } from "./deps-summary-remediation.ts";
 import type {
   DependencyChange,
   DependencyChangeKind,
@@ -50,7 +51,7 @@ export const CatalogEntrySchema = z.object({
     .object({ url: z.url().optional(), summary: z.string().min(1) })
     .optional(),
 });
-const CatalogSchema = z.object({
+export const CatalogSchema = z.object({
   schemaVersion: z.literal(1),
   entries: z.array(CatalogEntrySchema),
 });
@@ -382,6 +383,7 @@ export type DepsSummaryActivities = typeof depsSummaryActivities;
 export const depsSummaryActivities = {
   collectDependencyChanges,
   fetchDependencyReleaseNotes,
+  proposeMissingReleaseNoteOverrides,
   synthesizeDependencyChanges,
   advanceDependencySummaryCheckpoint,
 };

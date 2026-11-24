@@ -2,11 +2,12 @@ import {
   REPORT_DELIVERY_ACTIVITY_RETRY,
   REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
 } from "#shared/reports/report-delivery-policy.ts";
-import { proxyActivities } from "@temporalio/workflow";
+import { patched, proxyActivities } from "@temporalio/workflow";
 import type {
   MainVulnScanActivities,
   MainVulnScanResult,
 } from "#activities/maintenance/main-vuln-scan.ts";
+import type { MainVulnRemediationActivities } from "#activities/maintenance/main-vuln-remediation.ts";
 import type { MainVulnScanAlertActivities } from "#activities/maintenance/main-vuln-scan-alerts.ts";
 import type { ReportDeliveryActivities } from "#activities/reports/report-delivery.ts";
 import {
@@ -14,6 +15,7 @@ import {
   buildMainVulnScanReport,
   countCriticalVulnerabilities,
 } from "#activities/maintenance/main-vuln-scan-report.ts";
+import type { ReportRemediationV1 } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const RETRY = {
@@ -32,6 +34,21 @@ const { scanMainForVulnerabilities } = proxyActivities<MainVulnScanActivities>({
   heartbeatTimeout: "90 seconds",
   retry: RETRY,
 });
+
+// Plain review PR creation runs on REPO_AUTOMATION, which owns the OpenAI
+// project credential and GitHub App installation credentials.
+const { remediateMainVulnerabilities } =
+  proxyActivities<MainVulnRemediationActivities>({
+    taskQueue: TASK_QUEUES.REPO_AUTOMATION,
+    startToCloseTimeout: "45 minutes",
+    heartbeatTimeout: "90 seconds",
+    retry: {
+      maximumAttempts: 2,
+      initialInterval: "1 minute",
+      backoffCoefficient: 2,
+      maximumInterval: "5 minutes",
+    },
+  });
 
 // Delivery and alert publication run on the reports worker: Postal,
 // report-state S3, and ALERTMANAGER_URL deliberately never reach the
@@ -71,8 +88,34 @@ export async function runMainVulnScanWorkflow(): Promise<void> {
     );
     throw error;
   }
+
+  const hasFixableVulnerability = result.vulnerabilities.some(
+    (vulnerability) => vulnerability.fixedVersion !== undefined,
+  );
+  let remediation: ReportRemediationV1 | undefined;
+  if (hasFixableVulnerability && patched("main-vuln-remediation-v1")) {
+    try {
+      remediation = await remediateMainVulnerabilities(result);
+    } catch (error) {
+      const cause =
+        error instanceof Error && error.cause instanceof Error
+          ? error.cause.message
+          : error instanceof Error
+            ? error.message
+            : String(error);
+      remediation = {
+        outcome: "partial",
+        changedFiles: [],
+        summary: `Automated vulnerability remediation failed: ${cause}`.slice(
+          0,
+          500,
+        ),
+      };
+    }
+  }
+
   await deliveryActivities.deliverActivityReport(
-    buildMainVulnScanReport(startedAt, result),
+    buildMainVulnScanReport(startedAt, result, remediation),
   );
   await alertActivities.publishMainVulnScanAlerts({
     criticalCount: countCriticalVulnerabilities(result),

@@ -1,4 +1,6 @@
 import { describe, expect, test } from "vitest";
+import { reportSubject } from "#shared/reports/report-presentation.ts";
+import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
 import {
   buildScanExcerpt,
   parseTrivyReport,
@@ -227,6 +229,76 @@ describe("buildMainVulnScanReport", () => {
     expect(report.headline).toContain("2 CRITICAL and 0 HIGH");
     expect(report.headline).toContain("3 affected package/target rows");
     expect(countCriticalVulnerabilities(result)).toBe(2);
+  });
+
+  test("attaches remediation PR metadata while keeping critical findings active until main scans clean", () => {
+    const result = scanResult(parseTrivyReport(TRIVY_FIXTURE));
+    const report = buildMainVulnScanReport("2026-08-23T11:55:00.000Z", result, {
+      outcome: "pr-created",
+      prUrl: "https://github.com/shepherdjerred/monorepo/pull/701",
+      branchName: "chore/vuln-remediation-12345678",
+      commitSha: "1234567890ab",
+      autoMergeEnabled: false,
+      changedFiles: ["bun.lock"],
+      resolvedCount: 1,
+      unresolvedCount: 1,
+      summary: "Addressed 1/2 advisories.",
+    });
+    const envelope = ReportEnvelopeV1Schema.parse({
+      ...report,
+      schemaVersion: 1,
+      reportRunId: "main-vuln-scan:run-1",
+      completedAt: "2026-08-23T12:05:00.000Z",
+      provenance: {
+        ...report.provenance,
+        workflowId: "wf-1",
+        runId: "run-1",
+      },
+    });
+    expect(envelope.verdict).toBe("attention");
+    expect(countCriticalVulnerabilities(result)).toBe(1);
+    expect(envelope.remediation?.prUrl).toBe(
+      "https://github.com/shepherdjerred/monorepo/pull/701",
+    );
+
+    const highOnly = scanResult([
+      {
+        vulnerabilityId: "CVE-2026-5678",
+        pkgName: "chalk",
+        installedVersion: "5.0.0",
+        fixedVersion: "5.0.1",
+        severity: "HIGH",
+        target: "bun.lock",
+      },
+    ]);
+    const highReport = buildMainVulnScanReport(
+      "2026-08-23T11:55:00.000Z",
+      highOnly,
+      {
+        outcome: "pr-created",
+        prUrl: "https://github.com/shepherdjerred/monorepo/pull/702",
+        autoMergeEnabled: false,
+        changedFiles: ["bun.lock"],
+        resolvedCount: 1,
+        unresolvedCount: 0,
+        summary: "Addressed 1/1 advisories.",
+      },
+    );
+    const highEnvelope = ReportEnvelopeV1Schema.parse({
+      ...highReport,
+      schemaVersion: 1,
+      reportRunId: "main-vuln-scan:run-2",
+      completedAt: "2026-08-23T12:05:00.000Z",
+      provenance: {
+        ...highReport.provenance,
+        workflowId: "wf-2",
+        runId: "run-2",
+      },
+    });
+    expect(highEnvelope.verdict).toBe("changed");
+    expect(reportSubject(highEnvelope)).toBe(
+      "Security scan: Vulnerability fix PR opened",
+    );
   });
 });
 

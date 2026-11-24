@@ -156,6 +156,26 @@ function report(
     actions: state.autoMergeFailed
       ? ["Review and merge the lane-prior PR manually when green."]
       : [],
+    ...(result.prUrl === undefined
+      ? {}
+      : {
+          remediation: {
+            outcome:
+              result.reason === "pr-already-open"
+                ? ("pr-reused" as const)
+                : ("pr-created" as const),
+            prUrl: result.prUrl,
+            ...(result.branchName === undefined
+              ? {}
+              : { branchName: result.branchName }),
+            ...(result.commitHash === undefined
+              ? {}
+              : { commitSha: result.commitHash }),
+            autoMergeEnabled: result.autoMergeConfigured === true,
+            changedFiles: result.changedFiles,
+            summary: `Updated ${String(result.changedFiles.length)} lane-prior ${result.changedFiles.length === 1 ? "artifact" : "artifacts"}.`,
+          },
+        }),
     provenance: {
       source: "Scout lane-prior artifacts and evaluation report",
       query: "weekly-refresh",

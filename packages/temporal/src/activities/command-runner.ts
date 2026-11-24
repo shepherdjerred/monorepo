@@ -1,6 +1,7 @@
 export type RawCommandOptions = {
   cwd: string;
   env?: Record<string, string | undefined>;
+  signal?: AbortSignal;
 };
 
 export type CommandCapture = {
@@ -27,22 +28,42 @@ export function mergeCommandEnvironment(
   return merged;
 }
 
-export async function captureCommand(
+async function spawnPipeCommand<TStdout>(
   command: string[],
   options: RawCommandOptions,
-): Promise<CommandCapture> {
-  const process = Bun.spawn(command, {
+  readStdout: (stream: ReadableStream<Uint8Array>) => Promise<TStdout>,
+): Promise<{ stdout: TStdout; stderr: string; exitCode: number }> {
+  options.signal?.throwIfAborted();
+  const child = Bun.spawn(command, {
     cwd: options.cwd,
     env: mergeCommandEnvironment(Bun.env, options.env),
     stdout: "pipe",
     stderr: "pipe",
   });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(process.stdout).text(),
-    new Response(process.stderr).text(),
-    process.exited,
-  ]);
-  return { stdout, stderr, exitCode };
+  const onAbort = (): void => {
+    child.kill();
+  };
+  options.signal?.addEventListener("abort", onAbort, { once: true });
+  try {
+    const [stdout, stderr, exitCode] = await Promise.all([
+      readStdout(child.stdout),
+      new Response(child.stderr).text(),
+      child.exited,
+    ]);
+    options.signal?.throwIfAborted();
+    return { stdout, stderr, exitCode };
+  } finally {
+    options.signal?.removeEventListener("abort", onAbort);
+  }
+}
+
+export async function captureCommand(
+  command: string[],
+  options: RawCommandOptions,
+): Promise<CommandCapture> {
+  return spawnPipeCommand(command, options, (stream) =>
+    new Response(stream).text(),
+  );
 }
 
 export type BinaryCommandCapture = {
@@ -55,16 +76,7 @@ export async function captureBinaryCommand(
   command: string[],
   options: RawCommandOptions,
 ): Promise<BinaryCommandCapture> {
-  const process = Bun.spawn(command, {
-    cwd: options.cwd,
-    env: mergeCommandEnvironment(Bun.env, options.env),
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(process.stdout).bytes(),
-    new Response(process.stderr).text(),
-    process.exited,
-  ]);
-  return { stdout, stderr, exitCode };
+  return spawnPipeCommand(command, options, (stream) =>
+    new Response(stream).bytes(),
+  );
 }

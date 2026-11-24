@@ -14,7 +14,7 @@ export const SECURITY_SCHEDULES = schedulesInNamespace("prod", [
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "2 hours",
+    workflowExecutionTimeout: "3 hours",
     memo: "Weekly Trivy HIGH/CRITICAL vulnerability scan of main with report delivery",
   },
   {

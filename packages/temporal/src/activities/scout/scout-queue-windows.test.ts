@@ -1,7 +1,16 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import nodePath from "node:path";
+import { z } from "zod/v4";
 import { describe, expect, test } from "vitest";
+import { canAutoMerge } from "./scout-queue-windows-pr-body.ts";
 import { nextWarningState } from "./scout-queue-windows.ts";
+import { applyConfirmedEndedQueueCloses } from "./scout-queue-window-close-remediation.ts";
 import { unverifiedWarnings } from "./scout-queue-window-liveness.ts";
-import { queueWarningFinding } from "./scout-queue-windows-report.ts";
+import {
+  queueWarningFinding,
+  type QueueWindowsReport,
+} from "./scout-queue-windows-report.ts";
 
 const FINGERPRINT = "a".repeat(64);
 
@@ -119,5 +128,203 @@ describe("Scout queue liveness filtering", () => {
     expect(unverifiedWarnings([sparse], [check("ended")])).toEqual([sparse]);
     expect(unverifiedWarnings([sparse], [check("unknown")])).toEqual([sparse]);
     expect(unverifiedWarnings([sparse], [])).toEqual([sparse]);
+  });
+});
+
+const UpdatedQueueWindowsSchema = z.object({
+  queues: z.record(
+    z.string(),
+    z.array(z.object({ start: z.string(), end: z.string().nullable() })),
+  ),
+});
+
+async function writeTempQueueWindows(
+  contents: unknown,
+): Promise<{ file: string; cleanup: () => Promise<void> }> {
+  const dir = await mkdtemp(nodePath.join(tmpdir(), "queue-close-test-"));
+  const file = `${dir}/queue-windows.json`;
+  await Bun.write(file, JSON.stringify(contents, null, 2));
+  return {
+    file,
+    cleanup: () => rm(dir, { recursive: true, force: true }),
+  };
+}
+
+describe("applyConfirmedEndedQueueCloses", () => {
+  test("sets end on open window and appends non-auto-merging close edit when endedOn and https source are valid", async () => {
+    const temp = await writeTempQueueWindows({
+      queues: {
+        arurf: [{ start: "2026-08-01", end: null, source: "observed" }],
+      },
+    });
+    const report: QueueWindowsReport = {
+      edits: [],
+      warnings: [],
+      unknownQueueIds: [],
+      patchNotes: { titles: [] },
+    };
+
+    try {
+      const applied = await applyConfirmedEndedQueueCloses({
+        queueWindowsFile: temp.file,
+        report,
+        today: "2026-09-01",
+        isRemediationEnabled: () => Promise.resolve(true),
+        verifyHttpsSourceReachable: (url) =>
+          Promise.resolve(
+            url === "https://www.leagueoflegends.com/en-us/news/patch-26-17/",
+          ),
+        livenessChecks: [
+          {
+            findingId: "f-1",
+            queue: "arurf",
+            status: "ended",
+            endedOn: "2026-08-25",
+            rationale: "Patch 26.17 rotated ARURF out.",
+            sources: [
+              "https://www.leagueoflegends.com/en-us/news/patch-26-17/",
+            ],
+            searchedSources: [
+              "https://www.leagueoflegends.com/en-us/news/patch-26-17/",
+            ],
+          },
+        ],
+      });
+
+      expect(applied).toHaveLength(1);
+      expect(report.edits).toEqual([
+        {
+          queue: "arurf",
+          kind: "close",
+          date: "2026-08-25",
+          message:
+            "LLM web-search confirmed ended (Patch 26.17 rotated ARURF out.; sources: https://www.leagueoflegends.com/en-us/news/patch-26-17/)",
+        },
+      ]);
+      expect(canAutoMerge(report.edits)).toBe(false);
+      const updated = UpdatedQueueWindowsSchema.parse(
+        await Bun.file(temp.file).json(),
+      );
+      expect(updated.queues["arurf"]?.[0]?.end).toBe("2026-08-25");
+    } finally {
+      await temp.cleanup();
+    }
+  });
+
+  test("ignores ended verdicts with unsearched citations, future dates, dates before start, unreachable URLs, errorClass, or disabled flag", async () => {
+    const temp = await writeTempQueueWindows({
+      queues: {
+        arurf: [{ start: "2026-08-10", end: null, source: "observed" }],
+      },
+    });
+    const report: QueueWindowsReport = {
+      edits: [],
+      warnings: [],
+      unknownQueueIds: [],
+      patchNotes: { titles: [] },
+    };
+
+    try {
+      const unsearchedCitation = await applyConfirmedEndedQueueCloses({
+        queueWindowsFile: temp.file,
+        report,
+        today: "2026-09-01",
+        isRemediationEnabled: () => Promise.resolve(true),
+        verifyHttpsSourceReachable: () => Promise.resolve(true),
+        livenessChecks: [
+          {
+            findingId: "f-unsearched",
+            queue: "arurf",
+            status: "ended",
+            endedOn: "2026-08-20",
+            rationale: "Cited a real URL that web search never returned",
+            sources: ["https://www.leagueoflegends.com/en-us/news/unrelated/"],
+          },
+        ],
+      });
+      expect(unsearchedCitation).toEqual([]);
+
+      const unreachable = await applyConfirmedEndedQueueCloses({
+        queueWindowsFile: temp.file,
+        report,
+        today: "2026-09-01",
+        isRemediationEnabled: () => Promise.resolve(true),
+        verifyHttpsSourceReachable: () => Promise.resolve(false),
+        livenessChecks: [
+          {
+            findingId: "f-1",
+            queue: "arurf",
+            status: "ended",
+            endedOn: "2026-08-20",
+            rationale: "Ended",
+            sources: ["https://www.leagueoflegends.com/dead"],
+            searchedSources: ["https://www.leagueoflegends.com/dead"],
+          },
+        ],
+      });
+      expect(unreachable).toEqual([]);
+
+      const outOfRange = await applyConfirmedEndedQueueCloses({
+        queueWindowsFile: temp.file,
+        report,
+        today: "2026-09-01",
+        isRemediationEnabled: () => Promise.resolve(true),
+        verifyHttpsSourceReachable: () => Promise.resolve(true),
+        livenessChecks: [
+          {
+            findingId: "f-2",
+            queue: "arurf",
+            status: "ended",
+            endedOn: "2026-08-05",
+            rationale: "Before start",
+            sources: ["https://www.leagueoflegends.com/ok"],
+            searchedSources: ["https://www.leagueoflegends.com/ok"],
+          },
+          {
+            findingId: "f-3",
+            queue: "arurf",
+            status: "ended",
+            endedOn: "2026-09-10",
+            rationale: "After today",
+            sources: ["https://www.leagueoflegends.com/ok"],
+            searchedSources: ["https://www.leagueoflegends.com/ok"],
+          },
+          {
+            findingId: "f-4",
+            queue: "arurf",
+            status: "ended",
+            endedOn: "2026-08-20",
+            errorClass: "TimeoutError",
+            rationale: "Errored",
+            sources: ["https://www.leagueoflegends.com/ok"],
+            searchedSources: ["https://www.leagueoflegends.com/ok"],
+          },
+        ],
+      });
+      expect(outOfRange).toEqual([]);
+
+      const flagOff = await applyConfirmedEndedQueueCloses({
+        queueWindowsFile: temp.file,
+        report,
+        today: "2026-09-01",
+        isRemediationEnabled: () => Promise.resolve(false),
+        verifyHttpsSourceReachable: () => Promise.resolve(true),
+        livenessChecks: [
+          {
+            findingId: "f-5",
+            queue: "arurf",
+            status: "ended",
+            endedOn: "2026-08-20",
+            rationale: "Valid",
+            sources: ["https://www.leagueoflegends.com/ok"],
+            searchedSources: ["https://www.leagueoflegends.com/ok"],
+          },
+        ],
+      });
+      expect(flagOff).toEqual([]);
+      expect(report.edits).toEqual([]);
+    } finally {
+      await temp.cleanup();
+    }
   });
 });

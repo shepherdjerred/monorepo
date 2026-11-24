@@ -3,11 +3,13 @@ import { z } from "zod/v4";
 import { Worker } from "@temporalio/worker";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import type { PatchActivationCallback } from "@temporalio/worker";
+import { ReportRemediationV1Schema } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
 import type { TaskQueue } from "#shared/task-queues.ts";
 
 const DeliveredReportSchema = z.object({
   execution: z.string().min(1),
   verdict: z.string().min(1),
+  remediation: ReportRemediationV1Schema.optional(),
 });
 const PublishedAlertSchema = z.object({
   criticalCount: z.number().int().nonnegative(),
@@ -156,11 +158,13 @@ export async function runScannerWorkflow(
 
 export function expectCompleteScannerReport(
   harness: ScannerWorkflowHarness,
-  verdict: "attention" | "clear",
+  verdict: "attention" | "changed" | "clear",
   criticalCount: number,
   repoSha: string,
 ): void {
-  expect(harness.reports).toEqual([{ execution: "complete", verdict }]);
+  expect(harness.reports).toEqual([
+    expect.objectContaining({ execution: "complete", verdict }),
+  ]);
   expect(harness.alerts).toEqual([{ criticalCount, repoSha }]);
 }
 
@@ -168,16 +172,18 @@ export function expectFailedScannerReport(
   harness: ScannerWorkflowHarness,
 ): void {
   expect(harness.reports).toEqual([
-    { execution: "failed", verdict: "inconclusive" },
+    expect.objectContaining({ execution: "failed", verdict: "inconclusive" }),
   ]);
   expect(harness.alerts).toEqual([]);
 }
 
 export function expectNoContradictoryFailureReport(
   harness: ScannerWorkflowHarness,
-  verdict: "attention" | "clear",
+  verdict: "attention" | "changed" | "clear",
 ): void {
-  expect(harness.reports).toEqual([{ execution: "complete", verdict }]);
+  expect(harness.reports).toEqual([
+    expect.objectContaining({ execution: "complete", verdict }),
+  ]);
   expect(harness.reports.some((report) => report.execution === "failed")).toBe(
     false,
   );
