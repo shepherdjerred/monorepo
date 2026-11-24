@@ -24,22 +24,31 @@ import type { TofuRecoveryTarget } from "./tofu.ts";
 
 const api = vi.hoisted(() => {
   const paths: string[] = [];
-  return { paths, responses: new Map<string, unknown>() };
+  const bodies: { route: string; body: unknown }[] = [];
+  return { paths, bodies, responses: new Map<string, unknown>() };
 });
 vi.mock("#lib/delivery/client.ts", () => ({
   deliveryRequest: vi.fn(
-    (route: string, schema: { parse: (raw: unknown) => unknown }) => {
+    (
+      route: string,
+      schema: { parse: (raw: unknown) => unknown },
+      body?: unknown,
+    ) => {
       api.paths.push(route);
+      if (body !== undefined) api.bodies.push({ route, body });
       return Promise.resolve(schema.parse(api.responses.get(route)));
     },
   ),
 }));
 const { recoveryExecutionJob } = await import("./request.ts");
 const { provePlatformNativeJobs } = await import("./native-proof.ts");
-const { runTofuRecoveryInWorkspace } = await import("./tofu.ts");
+const { isUnappliedModelTofuDeployment, runTofuRecoveryInWorkspace } =
+  await import("./tofu.ts");
+const { executePlatformRecoveryAction } = await import("./execute.ts");
 
 afterEach(() => {
   api.paths.splice(0);
+  api.bodies.splice(0);
   api.responses.clear();
 });
 
@@ -261,5 +270,110 @@ describe("model tofu platform recovery (X8)", () => {
     } finally {
       await rm(workspace, { recursive: true, force: true });
     }
+  });
+});
+
+describe("pre-effect OpenTofu recovery (AI-423)", () => {
+  it("settles an unapplied model tofu failure readonly without re-running the broken archive", async () => {
+    const readonlyFingerprint = "c".repeat(64);
+    const jobUid = "11111111-1111-4111-8111-111111111111";
+    const base = quarantined([{ request: planRequest, status: "running" }]);
+    base.deployment.stages[0]!.message = JSON.stringify({
+      ...receiptOf(planRequest),
+      uid: jobUid,
+    });
+    const unapplied = {
+      ...base,
+      expectedSettlements: {
+        desired: "b".repeat(64),
+        readonly: readonlyFingerprint,
+      },
+    };
+    expect(isUnappliedModelTofuDeployment(unapplied.deployment)).toBe(true);
+
+    api.responses.set("platform-recovery/recovery%2F1", unapplied);
+    api.responses.set("platform-recovery/recovery%2F1/complete", {});
+    const runJob = vi.fn(() => {
+      throw new Error("Broken frozen archive must not be re-executed");
+    });
+    const planJobManifest: V1Job = deliveryJobManifest(planRequest);
+    planJobManifest.metadata = structuredClone(planJobManifest.metadata) ?? {};
+    planJobManifest.metadata.uid = jobUid;
+    planJobManifest.status = {
+      active: 0,
+      conditions: [{ type: "Failed", status: "True" }],
+    };
+    const planJobs = {
+      read: async (name: string) => {
+        if (name !== planJobManifest.metadata?.name)
+          throw Object.assign(new Error("absent"), { code: 404 });
+        return planJobManifest;
+      },
+      pods: async () => [],
+    };
+
+    await expect(
+      executePlatformRecoveryAction("recovery/1", "plan", {
+        runJob,
+        closedWorkflow: async () => ({
+          workflowId: "delivery/deployment/1",
+          status: "FAILED",
+        }),
+        nativeJobs: async (ctx) =>
+          await provePlatformNativeJobs(ctx, {
+            job: planJobs.read,
+            pods: planJobs.pods,
+          }),
+      }),
+    ).rejects.toThrow(
+      "Read-only plan failures cannot authorize recovery mutations",
+    );
+    expect(runJob).not.toHaveBeenCalled();
+
+    const settled = await executePlatformRecoveryAction(
+      "recovery/1",
+      "inspect",
+      {
+        runJob,
+        closedWorkflow: async (id) => ({
+          workflowId: `delivery/${id}`,
+          status: "FAILED",
+        }),
+        nativeJobs: async (ctx) =>
+          await provePlatformNativeJobs(ctx, {
+            job: planJobs.read,
+            pods: planJobs.pods,
+          }),
+      },
+    );
+    expect(settled).toEqual({
+      status: "settled",
+      originalDeploymentResult: "unchanged",
+    });
+    expect(runJob).not.toHaveBeenCalled();
+    expect(api.bodies).toEqual([
+      {
+        route: "platform-recovery/recovery%2F1/complete",
+        body: expect.objectContaining({
+          settlement: { state: "readonly", fingerprint: readonlyFingerprint },
+          sourceWorkflow: {
+            workflowId: "delivery/deployment/1",
+            status: "FAILED",
+          },
+          nativeJobs: [
+            expect.objectContaining({
+              name: receiptOf(planRequest).name,
+              uid: jobUid,
+              status: "Failed",
+            }),
+          ],
+        }),
+      },
+    ]);
+
+    const afterPlan = quarantined([
+      { request: planRequest, status: "succeeded" },
+    ]);
+    expect(isUnappliedModelTofuDeployment(afterPlan.deployment)).toBe(false);
   });
 });

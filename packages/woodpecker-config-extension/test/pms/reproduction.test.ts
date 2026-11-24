@@ -51,23 +51,30 @@ test("PMS preview retains both actual containers and requires separate execution
   expect(result.plan.steps.map((step) => step.name)).toEqual([
     "clear-golden",
     "clone",
+    "finalize-clone",
     "media-pms-wire",
     "media-pms-native",
   ]);
   expect(result.plan.steps.map((step) => step.uuid)).toEqual(
-    [0, 1, 2, 3].map(
+    [0, 1, 2, 3, 4].map(
       (index) => `d10ddcc4-2245-4774-b49a-a4a51abcfaf8-${index.toString()}`,
     ),
   );
-  expect(result.plan.steps.slice(0, 2)).toMatchObject([
+  expect(result.plan.steps.slice(0, 3)).toMatchObject([
     {
       name: "clear-golden",
       image: SOURCE_CACHE_PREPARATION_IMAGE,
       commands: [
         "if [ -e .ci-golden ]; then find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +; fi",
+        "chown 0:0 .",
       ],
     },
     { name: "clone", image: ORDINARY_CLONE_IMAGE, commands: [] },
+    {
+      name: "finalize-clone",
+      image: SOURCE_CACHE_PREPARATION_IMAGE,
+      commands: ["test -d .git", "test ! -L .git", "chown 0:0 . .git"],
+    },
   ]);
   expect(
     PmsReproductionProtocol.safeParse({

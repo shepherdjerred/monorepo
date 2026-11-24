@@ -302,6 +302,31 @@ function emitCommand(
   };
 }
 
+function finalizeCloneStep(
+  step: CiStep,
+  identity: PipelineIdentity,
+): Record<string, unknown> {
+  return {
+    name: "finalize-clone",
+    image: SOURCE_CACHE_PREPARATION_IMAGE,
+    // Build images run as root. Git checks the owners of both the worktree and
+    // its Git directory before allowing later fetches. Transfer only those
+    // private roots; cached objects stay under UID 1000 and this container
+    // cannot mount the source cache.
+    commands: ["test -d .git", "test ! -L .git", "chown 0:0 . .git"],
+    backend_options: {
+      kubernetes: {
+        ...podOptions(step, identity, LIGHT_TIER),
+        securityContext: {
+          runAsUser: 0,
+          runAsGroup: 0,
+          allowPrivilegeEscalation: false,
+        },
+      },
+    },
+  };
+}
+
 function ordinaryCloneConfiguration(
   step: CiStep,
   identity: PipelineIdentity,
@@ -313,17 +338,23 @@ function ordinaryCloneConfiguration(
     clone: [
       {
         // A workspace may be a golden clone (workspace-clone-policy.ts in
-        // homelab); the Git plugin expects an empty directory. Deleting the
-        // clone's files writes nothing back to the pool.
+        // homelab) owned by UID 1000; the Git plugin expects an empty directory
+        // and build containers run as root. Deleting the clone's files writes
+        // nothing back to the pool.
         name: "clear-golden",
         image: SOURCE_CACHE_PREPARATION_IMAGE,
         commands: [
           `if [ -e ${GOLDEN_MARKER} ]; then find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +; fi`,
+          "chown 0:0 .",
         ],
         backend_options: {
           kubernetes: {
             ...podOptions(step, identity, LIGHT_TIER),
-            securityContext: { allowPrivilegeEscalation: false },
+            securityContext: {
+              runAsUser: 0,
+              runAsGroup: 0,
+              allowPrivilegeEscalation: false,
+            },
           },
         },
       },
@@ -339,6 +370,7 @@ function ordinaryCloneConfiguration(
           kubernetes: podOptions(step, identity, LIGHT_TIER),
         },
       },
+      finalizeCloneStep(step, identity),
     ],
   };
 }
@@ -459,25 +491,7 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
                 },
               },
             },
-            {
-              name: "finalize-clone",
-              image: SOURCE_CACHE_PREPARATION_IMAGE,
-              // Build images run as root. Git checks the owners of both the
-              // worktree and its Git directory before allowing later fetches.
-              // Transfer only those private roots; cached objects stay under
-              // UID 1000 and this container cannot mount the source cache.
-              commands: ["test -d .git", "test ! -L .git", "chown 0:0 . .git"],
-              backend_options: {
-                kubernetes: {
-                  ...podOptions(step, identity, LIGHT_TIER),
-                  securityContext: {
-                    runAsUser: 0,
-                    runAsGroup: 0,
-                    allowPrivilegeEscalation: false,
-                  },
-                },
-              },
-            },
+            finalizeCloneStep(step, identity),
           ],
         }),
     ...(step.runOnFailure === true

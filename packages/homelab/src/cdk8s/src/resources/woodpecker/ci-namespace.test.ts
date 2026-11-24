@@ -436,6 +436,55 @@ describe("Woodpecker CI namespace", () => {
   });
 });
 
+describe("Woodpecker config extension workload", () => {
+  it("rolls out without downtime on the control-plane node alongside woodpecker-server", () => {
+    const ConfigExtensionDeploymentSchema = z.object({
+      spec: z.object({
+        strategy: z.object({
+          type: z.string(),
+          rollingUpdate: z
+            .object({
+              maxSurge: z.union([z.number(), z.string()]),
+              maxUnavailable: z.union([z.number(), z.string()]),
+            })
+            .optional(),
+        }),
+        template: z.object({
+          spec: z
+            .object({
+              nodeSelector: z.record(z.string(), z.string()).optional(),
+              affinity: z.unknown().optional(),
+              tolerations: z.array(z.unknown()).optional(),
+            })
+            .loose(),
+        }),
+      }),
+    });
+    const extension = ConfigExtensionDeploymentSchema.parse(
+      find("Deployment", "woodpecker-woodpecker-config-extension"),
+    );
+    const server = ConfigExtensionDeploymentSchema.parse(
+      find("Deployment", "woodpecker-woodpecker-server"),
+    );
+
+    expect(extension.spec.strategy).toEqual({
+      type: "RollingUpdate",
+      rollingUpdate: {
+        maxSurge: 1,
+        maxUnavailable: 0,
+      },
+    });
+    expect(extension.spec.template.spec.nodeSelector).toBeUndefined();
+    expect(extension.spec.template.spec.affinity).toBeUndefined();
+    expect(extension.spec.template.spec.tolerations).toEqual(
+      server.spec.template.spec.tolerations,
+    );
+    expect(JSON.stringify(extension.spec.template.spec)).not.toContain(
+      "liskov",
+    );
+  });
+});
+
 describe("CI workspace storage", () => {
   it("deletes each workspace with its claim, and only provisions on liskov", () => {
     const app = new App();

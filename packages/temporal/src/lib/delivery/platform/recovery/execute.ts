@@ -9,8 +9,10 @@ import {
 import { canonicalJson } from "homelab/scripts/canonical-json.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
 import type { runDeliveryJob } from "#lib/delivery/job.ts";
+import { modelRecipe } from "#lib/delivery/model/recipe.ts";
 import type { DeliveryJobReceipt } from "#shared/delivery-job.ts";
 import { recoveryExecutionJob, type RecoveryAction } from "./request.ts";
+import { isUnappliedModelTofuDeployment } from "./tofu.ts";
 
 const Inspection = z.strictObject({
   state: z.enum(["desired", "prior", "readonly", "original"]),
@@ -27,6 +29,47 @@ export type PlatformRecoveryExecutor = {
   ) => Promise<CompletePlatformRecovery["nativeJobs"]>;
 };
 
+async function settleUnappliedModelTofu(
+  base: string,
+  action: RecoveryAction,
+  context: PlatformRecoveryContext,
+  effects: PlatformRecoveryExecutor,
+) {
+  if (action !== "inspect")
+    throw new Error(
+      "Read-only plan failures cannot authorize recovery mutations",
+    );
+  const sourceWorkflow = await effects.closedWorkflow(
+    context.deployment.deployment.id,
+  );
+  const nativeJobs = await effects.nativeJobs(context);
+  const current = await deliveryRequest(base, PlatformRecoveryContextSchema);
+  const fingerprint = current.expectedSettlements.readonly;
+  if (
+    fingerprint === undefined ||
+    !isUnappliedModelTofuDeployment(current.deployment)
+  )
+    throw new Error(
+      "No immutable settlement fingerprint exists for the observed target",
+    );
+  const recipe = modelRecipe(current.deployment);
+  const stack = recipe?.kind === "tofu" ? recipe.stack : "tofu";
+  const proof = CompletePlatformRecoverySchema.parse({
+    expectedEnvironmentGeneration: current.intent.expectedEnvironmentGeneration,
+    snapshotFingerprint: current.intent.snapshotFingerprint,
+    observedAt: new Date().toISOString(),
+    sourceWorkflow,
+    nativeJobs,
+    settlement: { state: "readonly", fingerprint },
+    proofSummary: `Pre-effect OpenTofu ${stack} settlement: closed source Workflow (${sourceWorkflow.status}), ${String(nativeJobs.length)} terminal native Job(s) proved, no saved plan and zero apply stages`,
+  });
+  await deliveryRequest(`${base}/complete`, z.unknown(), proof);
+  return {
+    status: "settled" as const,
+    originalDeploymentResult: "unchanged" as const,
+  };
+}
+
 /** Activity and outage CLI use this same receipt, saved-plan and final independent CAS boundary. */
 export async function executePlatformRecoveryAction(
   id: string,
@@ -37,6 +80,11 @@ export async function executePlatformRecoveryAction(
   const context = await deliveryRequest(base, PlatformRecoveryContextSchema);
   if (context.intent.status !== "pending")
     throw new Error("Recovery intent is not pending");
+  if (
+    context.expectedSettlements.readonly !== undefined &&
+    isUnappliedModelTofuDeployment(context.deployment)
+  )
+    return await settleUnappliedModelTofu(base, action, context, effects);
   const priorIndex =
     action === "inspect"
       ? -1

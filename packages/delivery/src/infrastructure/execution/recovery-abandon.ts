@@ -1,3 +1,4 @@
+import { Prisma } from "#generated/prisma/client.ts";
 import { DeliveryError } from "#domain/error.ts";
 import type { Principal } from "#shared/contract.ts";
 import { requireScope } from "#infrastructure/auth.ts";
@@ -85,10 +86,15 @@ export async function abandonRecoveryIntent(
   });
 }
 
-/** Every pending recovery intent, oldest first, for an operator to settle or close. */
+/** Every pending recovery intent or unrestored producer barrier, oldest first, for an operator to settle or close. */
 export async function pendingRecoveryIntents(this: Delivery) {
   const rows = await this.database.recoveryIntent.findMany({
-    where: { status: "pending" },
+    where: {
+      OR: [
+        { status: "pending" },
+        { barrier: { not: Prisma.DbNull }, barrierRestoredAt: null },
+      ],
+    },
     orderBy: { createdAt: "asc" },
   });
   return rows.map((row) => recoveryIntentView(row));

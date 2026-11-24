@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, test } from "vitest";
+import { afterAll, beforeAll, expect, test, vi } from "vitest";
 import { createTestDatabase } from "#testing/postgres.ts";
 import { Delivery } from "#infrastructure/delivery.ts";
 import { createTestApp } from "#testing/http-app.ts";
@@ -65,4 +65,35 @@ test("a request the app serves while draining extends the drain; a probe does no
   // does not, so the drain ends at 3s rather than 2s or 4.5s.
   expect(clock).toBe(3000);
   expect(statuses).toEqual({ "/api/v1/overview": 403, "/readyz": 503 });
+});
+
+test("readiness verifies initial PostgreSQL connectivity once, then serves probes without holding pool connections", async () => {
+  const delivery = new Delivery(cluster.database);
+  const querySpy = vi.spyOn(delivery.database, "$queryRaw");
+  try {
+    const app = createTestApp(delivery, {
+      machineCredentials: [],
+      writesEnabled: async () => true,
+      enabledEnvironments: async () => [],
+    });
+    querySpy.mockRejectedValueOnce(new Error("startup connection pending"));
+    const unready = await app.request("/readyz");
+    expect(unready.status).toBe(503);
+    expect(await unready.json()).toEqual({ status: "unavailable" });
+    expect(querySpy).toHaveBeenCalledTimes(1);
+
+    const ready = await app.request("/readyz");
+    expect(ready.status).toBe(200);
+    expect(await ready.json()).toEqual({ status: "ok" });
+    expect(querySpy).toHaveBeenCalledTimes(2);
+
+    // Subsequent readiness ticks do not contend for a pool connection.
+    querySpy.mockRejectedValueOnce(new Error("pool contended"));
+    const steady = await app.request("/readyz");
+    expect(steady.status).toBe(200);
+    expect(await steady.json()).toEqual({ status: "ok" });
+    expect(querySpy).toHaveBeenCalledTimes(2);
+  } finally {
+    querySpy.mockRestore();
+  }
 });

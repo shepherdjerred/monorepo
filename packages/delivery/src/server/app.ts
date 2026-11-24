@@ -135,6 +135,24 @@ export function createApp(options: Options) {
     c.header("x-request-id", requestId);
     await trackRequest(options.load, c.req.method, c.req.path, next);
   });
+  let databaseReady = false;
+  let readinessProbe: Promise<boolean> | null = null;
+  async function probeDatabase(): Promise<boolean> {
+    try {
+      await options.delivery.database.$queryRaw`SELECT 1`;
+      databaseReady = true;
+      return true;
+    } catch {
+      return false;
+    } finally {
+      readinessProbe = null;
+    }
+  }
+  async function ensureDatabaseReady(): Promise<boolean> {
+    if (databaseReady) return true;
+    readinessProbe ??= probeDatabase();
+    return await readinessProbe;
+  }
   app.get("/healthz", (c) => c.json({ status: "ok" }));
   app.get("/metrics", async (c) => {
     c.header("Content-Type", "text/plain; version=0.0.4; charset=utf-8");
@@ -143,12 +161,9 @@ export function createApp(options: Options) {
   app.get("/readyz", async (c) => {
     if (options.drain?.draining() === true)
       return c.json({ status: "draining" }, 503);
-    try {
-      await options.delivery.database.$queryRaw`SELECT 1`;
-      return c.json({ status: "ok" });
-    } catch {
-      return c.json({ status: "unavailable" }, 503);
-    }
+    return (await ensureDatabaseReady())
+      ? c.json({ status: "ok" })
+      : c.json({ status: "unavailable" }, 503);
   });
   app.use("/api/*", async (c, next) => {
     const principal = await authenticate(

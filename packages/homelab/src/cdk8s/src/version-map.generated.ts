@@ -71,6 +71,7 @@ export const VersionMapSchema = z
     "grafana/tempo": z.string(),
     "minio/mc": z.string(),
     "minio/minio": z.string(),
+    "pgsty/silo": z.string(),
     "aquasec/trivy": z.string(),
     "semgrep/semgrep": z.string(),
     "woodpeckerci/woodpecker-server": z.string(),

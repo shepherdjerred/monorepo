@@ -16,6 +16,8 @@ import {
   hasLiveLegacyMediaIngresses,
   MEDIA_INGRESS_PRUNE_FLAG,
 } from "homelab/scripts/argocd/argocd-media-ingress-prunes.ts";
+import { childSyncTimeoutSeconds } from "homelab/scripts/argocd/argocd-child-sync-timeout.ts";
+import { CHILD_SYNC_TIMEOUT_FLOORS } from "homelab/scripts/argocd/argocd.ts";
 import {
   SyncedArgoHistorySchema,
   unchangedArgoHistoryId,
@@ -439,7 +441,11 @@ async function syncOwned(
           ? []
           : [MEDIA_INGRESS_PRUNE_FLAG, JSON.stringify(prune)]),
         "--timeout",
-        "1200",
+        childSyncTimeoutSeconds(
+          rendered.name,
+          1200,
+          CHILD_SYNC_TIMEOUT_FLOORS,
+        ).toString(),
       ],
       { operationId: requestId, application: rendered.name },
     );

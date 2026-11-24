@@ -29,8 +29,33 @@ completed rotation.
 Mint the replacement identity with the provider, then update only the matching
 field in its dedicated CI 1Password item — the items are listed in
 `packages/homelab/src/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts`.
-Use the 1Password app or a non-printing `op item edit` invocation. Do not place
-the value in a shell argument, file, snapshot, command output, or chat.
+Do not place the value in a shell argument, file, snapshot, command output, or
+chat, and do not pipe a template into `op item edit` through `Bun.spawn` stdin
+(`op` ignores socket-backed stdin on macOS).
+
+- For an OpenTofu-managed token (`cloudflare-tokens` or `openai`), preview and
+  write the unit from a clean `main` checkout with
+  [`credential-handoff.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/tofu/credential-handoff.ts):
+
+  ```bash
+  scripts/onepassword/with-service-account.sh \
+    op run --env-file packages/homelab/src/tofu/service-account.env -- \
+    bun packages/homelab/scripts/tofu/credential-handoff.ts cloudflare-tokens apply "$(git rev-parse HEAD)" --unit <token-key> --dry-run
+
+  scripts/onepassword/with-service-account.sh \
+    op run --env-file packages/homelab/src/tofu/service-account.env -- \
+    bun packages/homelab/scripts/tofu/credential-handoff.ts cloudflare-tokens apply "$(git rev-parse HEAD)" --unit <token-key>
+  ```
+
+- For a credential minted outside OpenTofu, pipe the secret on standard input
+  into `packages/homelab/scripts/tofu/secret-write.ts` (`--dry-run` first, then
+  without `--dry-run` to write over `/dev/fd/3` and verify an independent
+  readback), or update the field in the 1Password app:
+
+  ```bash
+  scripts/onepassword/with-service-account.sh \
+    bun packages/homelab/scripts/tofu/secret-write.ts --item <vault-item-id> --field <field-label> --dry-run
+  ```
 
 Keep the previous identity active until the replacement passes the live checks
 below.

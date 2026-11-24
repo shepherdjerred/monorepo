@@ -22,6 +22,13 @@ const STALLED_DISPATCH_RUNBOOK =
  */
 export const DELIVERY_QUEUE_STALL_SECONDS = 3 * 60 * 60;
 
+/**
+ * A foreground content recovery repairs or inspects its target and restores
+ * `temporal-delivery-worker` within minutes; a barrier held past fifteen
+ * minutes, or held by an intent that is no longer pending, is stuck.
+ */
+export const DELIVERY_CONTENT_BARRIER_STUCK_SECONDS = 15 * 60;
+
 /** Only rendered with an activated service, so absent bootstrap targets do not alert. */
 /**
  * Delivery's post-acceptance monitor (model 4.19) raised an alarm: a firing
@@ -147,6 +154,23 @@ export function deliveryAlertRules(transition: boolean) {
         ),
         message: escapePrometheusTemplate(
           "The shared-resources platform lock has been held for {{ $value | humanizeDuration }} by a {{ $labels.holder_status }} deployment of {{ $labels.environment }} (service {{ $labels.service_id }}) that is not running, not recovery-required and holds no content producer barrier. Finish and every recovery settlement release it, and the sweep on every delivery-dispatch tick releases any a settled holder kept, so a lock that stays held means that sweep is not running: check the delivery-dispatch Schedule and the reconcile activity. Every deployment needing the platform lock (OpenTofu stacks, cluster admission, delivery-control-plane) answers BUSY and stays queued. Find the holder with `toolkit deploy status --json`, then follow the runbook. Do not start another platform operation until the lock is released.",
+        ),
+        runbook_url: STALLED_DISPATCH_RUNBOOK,
+      },
+    },
+    {
+      alert: "DeliveryContentBarrierStuck",
+      expr: expr(
+        `max by (environment, service_id, intent_status) (delivery_content_barrier_held_seconds{${DELIVERY_TARGET}} > ${String(DELIVERY_CONTENT_BARRIER_STUCK_SECONDS)} or delivery_content_barrier_held_seconds{${DELIVERY_TARGET},intent_status!="pending"})`,
+      ),
+      for: "5m",
+      labels: { severity: "warning" },
+      annotations: {
+        summary: escapePrometheusTemplate(
+          "{{ $labels.environment }} holds an unrestored Delivery content producer barrier ({{ $labels.intent_status }})",
+        ),
+        message: escapePrometheusTemplate(
+          "A content recovery intent for {{ $labels.environment }} (service {{ $labels.service_id }}, intent status {{ $labels.intent_status }}) has held the global producer barrier for {{ $value | humanizeDuration }} without restoring temporal-delivery-worker. Every Delivery claim answers BUSY until the barrier is restored. Inspect `toolkit deploy recovery --pending --json` (producerBarrierHeld) and finish or restore the same intent with `bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent <INTENT_ID> --context admin@torvalds --action inspect` (or `--action repair` when pending).",
         ),
         runbook_url: STALLED_DISPATCH_RUNBOOK,
       },

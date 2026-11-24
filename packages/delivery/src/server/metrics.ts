@@ -11,6 +11,12 @@ import {
   IdentifierSchema,
   MonitorStateSchema,
 } from "#shared/contract.ts";
+import { RecoveryIntentSchema } from "#shared/recovery-intent.ts";
+
+export type MetricsDatabase = Pick<
+  Database,
+  "deployment" | "build" | "workerVersion" | "environment" | "$queryRaw"
+>;
 
 const Value = z.number().nonnegative();
 const StateSchema = z.object({
@@ -44,6 +50,14 @@ const PlatformLockSchema = z
     }),
   )
   .max(1);
+const ContentBarrierSchema = z.array(
+  z.object({
+    environment: IdentifierSchema,
+    service: IdentifierSchema,
+    intentStatus: RecoveryIntentSchema.shape.status,
+    value: Value,
+  }),
+);
 
 /**
  * The single shared-resources platform lock (T1), with its holder's status.
@@ -52,15 +66,37 @@ const PlatformLockSchema = z
  * journaled producer barrier until the producer is restored. Any other
  * holder stranded the lock, and every platform deployment stays queued.
  */
-function platformLock(database: Database) {
+function platformLock(database: MetricsDatabase) {
   return database.$queryRaw`
     SELECT d."environmentId" AS environment, d."serviceId" AS service,
       d.status AS status, d."recoveryRequired" AS "recoveryRequired",
       EXISTS (SELECT 1 FROM "RecoveryIntent" r
         WHERE r."deploymentId" = d.id AND r.barrier IS NOT NULL
           AND r."barrierRestoredAt" IS NULL) AS "producerBarrier",
-      GREATEST(EXTRACT(EPOCH FROM (now() - p."createdAt")), 0)::float8 AS value
+      GREATEST(EXTRACT(EPOCH FROM (now() - (p."createdAt" AT TIME ZONE 'UTC'))), 0)::float8 AS value
     FROM "PlatformLock" p JOIN "Deployment" d ON d.id = p."deploymentId"
+  `;
+}
+
+/**
+ * Journaled content-recovery producer barriers that have not yet restored
+ * `temporal-delivery-worker`; while any row exists, every Delivery claim
+ * answers BUSY (`requireNoContentBarrier`).
+ */
+function contentBarrierHeld(database: MetricsDatabase) {
+  return database.$queryRaw`
+    SELECT d."environmentId" AS environment, d."serviceId" AS service,
+      r.status AS "intentStatus",
+      MAX(GREATEST(EXTRACT(EPOCH FROM (now() - (
+        COALESCE(
+          (SELECT MIN(a."occurredAt") FROM "Audit" a
+            WHERE a."entityId" = r.id AND a.action = 'content.recovery_barrier'),
+          r."createdAt"
+        ) AT TIME ZONE 'UTC'
+      ))), 0))::float8 AS value
+    FROM "RecoveryIntent" r JOIN "Deployment" d ON d.id = r."deploymentId"
+    WHERE r.barrier IS NOT NULL AND r."barrierRestoredAt" IS NULL
+    GROUP BY 1, 2, 3 ORDER BY 1, 2, 3
   `;
 }
 
@@ -70,7 +106,7 @@ function platformLock(database: Database) {
  * and any holder blocks every self-hosted claim. One series per target makes
  * a new holder a new alert instead of an unchanged value on an old one.
  */
-function recoveryRequired(database: Database) {
+function recoveryRequired(database: MetricsDatabase) {
   return database.$queryRaw`
     SELECT d."environmentId" AS environment, d."serviceId" AS service,
       s."selfHosted" AS "selfHosted", count(*)::float8 AS value
@@ -87,7 +123,7 @@ function recoveryRequired(database: Database) {
  * not restart the wait: a superseded request no later claim in its
  * environment served still counts from its own creation (D3).
  */
-function queuedWait(database: Database) {
+function queuedWait(database: MetricsDatabase) {
   return database.$queryRaw`
     WITH queued AS (
       SELECT d."environmentId", MIN(o."createdAt") AS since
@@ -105,14 +141,14 @@ function queuedWait(database: Database) {
       GROUP BY 1
     )
     SELECT q."environmentId" AS environment,
-      GREATEST(EXTRACT(EPOCH FROM (now() - LEAST(q.since, s.since))), 0)::float8 AS value
+      GREATEST(EXTRACT(EPOCH FROM (now() - (LEAST(q.since, s.since) AT TIME ZONE 'UTC'))), 0)::float8 AS value
     FROM queued q LEFT JOIN superseded s ON s."environmentId" = q."environmentId"
     ORDER BY 1
   `;
 }
 
 /** Durable count of queued automatic requests a newer set revision canceled (D3). */
-function superseded(database: Database) {
+function superseded(database: MetricsDatabase) {
   return database.$queryRaw`
     SELECT d."environmentId" AS environment, count(*)::float8 AS value
     FROM "Deployment" d
@@ -131,7 +167,7 @@ const StaleOwnershipSchema = z.array(
  * deployment. Finish and every settlement release it themselves, so each
  * count is a path that still leaks; the audit rows name the deployment.
  */
-function staleOwnershipReleased(database: Database) {
+function staleOwnershipReleased(database: MetricsDatabase) {
   return database.$queryRaw`
     SELECT a.metadata->>'kind' AS kind, count(*)::float8 AS value
     FROM "Audit" a WHERE a.action = ${STALE_OWNERSHIP_RELEASED}
@@ -140,7 +176,9 @@ function staleOwnershipReleased(database: Database) {
 }
 
 /** Database gauges survive restarts; labels are closed enums, never request IDs. */
-export async function deliveryMetrics(database: Database): Promise<string> {
+export async function deliveryMetrics(
+  database: MetricsDatabase,
+): Promise<string> {
   const [
     deployments,
     builds,
@@ -151,6 +189,7 @@ export async function deliveryMetrics(database: Database): Promise<string> {
     waits,
     supersessions,
     platform,
+    contentBarriers,
     staleOwnership,
   ] = await Promise.all([
     database.deployment.groupBy({
@@ -172,11 +211,11 @@ export async function deliveryMetrics(database: Database): Promise<string> {
       SELECT
         (SELECT count(*)::float8 FROM "Outbox" o JOIN "Deployment" d ON d.id = o."deploymentId"
           WHERE o."submittedAt" IS NULL AND d.status NOT IN ('succeeded','failed','canceled')) AS "outboxPending",
-        (SELECT COALESCE(EXTRACT(EPOCH FROM (now() - MIN(o."createdAt"))),0)::float8
+        (SELECT GREATEST(COALESCE(EXTRACT(EPOCH FROM (now() - (MIN(o."createdAt") AT TIME ZONE 'UTC'))), 0), 0)::float8
           FROM "Outbox" o JOIN "Deployment" d ON d.id = o."deploymentId"
           WHERE o."submittedAt" IS NULL AND d.status NOT IN ('succeeded','failed','canceled')) AS "outboxAge",
         (SELECT count(*)::float8 FROM "TargetLock") AS locks,
-        (SELECT COALESCE(EXTRACT(EPOCH FROM (now() - MIN("acquiredAt"))),0)::float8 FROM "TargetLock") AS "lockAge",
+        (SELECT GREATEST(COALESCE(EXTRACT(EPOCH FROM (now() - (MIN("acquiredAt") AT TIME ZONE 'UTC'))), 0), 0)::float8 FROM "TargetLock") AS "lockAge",
         (SELECT count(*)::float8 FROM "Deployment" WHERE "recoveryRequired" = true) AS "recoveryRequired",
         (SELECT count(*)::float8 FROM "RecoveryIntent" WHERE status = 'pending' OR
            (barrier IS NOT NULL AND "barrierRestoredAt" IS NULL)) AS "recoveriesPending"
@@ -194,6 +233,7 @@ export async function deliveryMetrics(database: Database): Promise<string> {
     queuedWait(database),
     superseded(database),
     platformLock(database),
+    contentBarrierHeld(database),
     staleOwnershipReleased(database),
   ]);
   const [state] = z.array(StateSchema).length(1).parse(raw);
@@ -301,6 +341,18 @@ export async function deliveryMetrics(database: Database): Promise<string> {
         holder_status: row.status,
         recovery_required: String(row.recoveryRequired),
         producer_barrier: String(row.producerBarrier),
+      },
+      value: row.value,
+    })),
+  );
+  metric(
+    "delivery_content_barrier_held_seconds",
+    "Age of an unrestored content-recovery producer barrier, labeled by target environment, service and recovery intent status; absent when free.",
+    ContentBarrierSchema.parse(contentBarriers).map((row) => ({
+      labels: {
+        environment: row.environment,
+        service_id: row.service,
+        intent_status: row.intentStatus,
       },
       value: row.value,
     })),

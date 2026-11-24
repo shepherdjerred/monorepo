@@ -55,12 +55,12 @@ process.stdout.write(JSON.stringify(result));
 	for _, stage := range config.Stages {
 		for _, step := range stage.Steps {
 			names = append(names, step.Name)
-			if len(names) <= 2 && step.Type != backend.StepTypeClone {
-				t.Fatal("golden cleanup and native Git must retain actual clone roles")
+			if len(names) <= 3 && step.Type != backend.StepTypeClone {
+				t.Fatal("golden cleanup, native Git and clone finalizer must retain actual clone roles")
 			}
 		}
 	}
-	if !reflect.DeepEqual(names, []string{"clear-golden", "clone", "media-pms-wire", "media-pms-native"}) {
+	if !reflect.DeepEqual(names, []string{"clear-golden", "clone", "finalize-clone", "media-pms-wire", "media-pms-native"}) {
 		t.Fatalf("actual compiled steps changed: %v", names)
 	}
 	for _, name := range []string{"missing cleanup", "unknown step"} {

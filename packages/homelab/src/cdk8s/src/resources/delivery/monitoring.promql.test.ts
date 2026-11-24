@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect, test } from "vitest";
 import {
+  DELIVERY_CONTENT_BARRIER_STUCK_SECONDS,
   DELIVERY_QUEUE_STALL_SECONDS,
   deliveryAlertRules,
 } from "./monitoring.ts";
@@ -14,6 +15,7 @@ const ALERTS = new Set([
   "DeliveryQueueStalled",
   "DeliveryRecoveryIntentsPending",
   "DeliveryPlatformLockStranded",
+  "DeliveryContentBarrierStuck",
   "DeliveryStaleOwnershipReleased",
 ]);
 
@@ -101,6 +103,23 @@ const stranded = (environment: string, status: string) => ({
     environment,
     service_id: environment.split("/")[0] ?? "",
     holder_status: status,
+  },
+});
+const contentBarrier = (
+  environment: string,
+  intentStatus: string,
+  values: string,
+  namespace = "delivery",
+) => ({
+  series: `delivery_content_barrier_held_seconds{namespace="${namespace}",service="delivery",environment="${environment}",service_id="${environment.split("/")[0] ?? ""}",intent_status="${intentStatus}"}`,
+  values,
+});
+const stuckBarrier = (environment: string, intentStatus: string) => ({
+  exp_labels: {
+    severity: "warning",
+    environment,
+    service_id: environment.split("/")[0] ?? "",
+    intent_status: intentStatus,
   },
 });
 
@@ -344,6 +363,45 @@ test("stalled-dispatch alerts fire on held targets, queue age and stranded platf
               },
             ],
           },
+          {
+            name: "a content barrier alerts past 900s while pending or after 5m once settled without restoration",
+            interval: "1m",
+            input_series: [
+              contentBarrier(
+                "resume/prod",
+                "pending",
+                `${String(DELIVERY_CONTENT_BARRIER_STUCK_SECONDS - 180)}+60x20`,
+              ),
+              contentBarrier("blog/prod", "pending", "60+60x8 _x15"),
+              contentBarrier("storm-forum/prod", "succeeded", "10+60x20"),
+              contentBarrier(
+                "other/prod",
+                "succeeded",
+                "10+60x20",
+                "elsewhere",
+              ),
+            ],
+            alert_rule_test: [
+              {
+                alertname: "DeliveryContentBarrierStuck",
+                eval_time: "4m",
+                exp_alerts: [],
+              },
+              {
+                alertname: "DeliveryContentBarrierStuck",
+                eval_time: "6m",
+                exp_alerts: [stuckBarrier("storm-forum/prod", "succeeded")],
+              },
+              {
+                alertname: "DeliveryContentBarrierStuck",
+                eval_time: "12m",
+                exp_alerts: [
+                  stuckBarrier("resume/prod", "pending"),
+                  stuckBarrier("storm-forum/prod", "succeeded"),
+                ],
+              },
+            ],
+          },
         ],
       }),
     );
@@ -385,4 +443,13 @@ test("the stranded platform lock alert names its holder and consequence", () => 
       "respond-to-a-stalled-delivery-dispatch",
     ),
   });
+});
+
+test("the stuck content barrier alert names BUSY claims, pending intent lookup and restoration", () => {
+  const rule = deliveryAlertRules(true).find(
+    (candidate) => candidate.alert === "DeliveryContentBarrierStuck",
+  );
+  expect(rule?.annotations.message).toContain("BUSY");
+  expect(rule?.annotations.message).toContain("producerBarrierHeld");
+  expect(rule?.annotations.message).toContain("content-delivery-recovery.ts");
 });

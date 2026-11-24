@@ -5,7 +5,7 @@
   "application": "scout-prod",
   "pipelineRevisionId": "scout-prod/1",
   "configurationRevision": "scout-prod/1",
-  "configuration": {},
+  "configuration": { "scout.reportLakeSchemaEpoch": "2" },
   "automatic": true,
   "promotionSourceEnvironmentId": "scout-for-lol/beta"
 }

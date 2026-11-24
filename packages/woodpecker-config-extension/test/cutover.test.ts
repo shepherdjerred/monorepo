@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
+import { z } from "zod";
 import { changedFilesSince } from "#src/github-compare.ts";
 import {
   CHECK_STATUSES,
@@ -14,42 +15,70 @@ const SHA = "a".repeat(40);
 const BASE = "b".repeat(40);
 const PIPELINE = "https://woodpecker.sjer.red/repos/1/pipeline/1200";
 
-type CommitStatus = { context: string; state: string; target_url: string };
+type CommitStatus = {
+  context: string;
+  state: string;
+  description?: string;
+  target_url: string;
+};
+
+type CheckResult = {
+  code: number;
+  stderr: string;
+  sleeps: number[];
+  ifNoneMatchHeaders: (string | null)[];
+};
 
 async function check(
   states: Readonly<Record<string, string>>,
   wrongPipeline = false,
   pageSize = 100,
-): Promise<{ code: number; stderr: string }> {
+): Promise<CheckResult> {
   const statuses = Object.entries(states).map(([context, state], index) => ({
     context,
     state,
     target_url: `${wrongPipeline ? PIPELINE + "-old" : PIPELINE}/${(index + 1).toString()}`,
   }));
-  return runCheckStatuses(statuses, pageSize);
+  return runCheckStatuses([statuses], pageSize);
 }
 
 /** Runs the ci-complete script against a paginated GitHub statuses fake. */
 async function runCheckStatuses(
-  statuses: readonly CommitStatus[],
+  timeline: readonly (readonly CommitStatus[])[],
   pageSize: number,
-): Promise<{ code: number; stderr: string }> {
+  useEtags = false,
+): Promise<CheckResult> {
   const source = [
-    `const statuses = ${JSON.stringify(statuses)};`,
+    `const timeline = ${JSON.stringify(timeline)};`,
     `const pageSize = ${String(pageSize)};`,
-    `globalThis.fetch = async (input) => {
+    `const useEtags = ${String(useEtags)};`,
+    `const sleeps = [];`,
+    `const ifNoneMatchHeaders = [];`,
+    `let pollIndex = 0;`,
+    `Bun.sleep = async (ms) => { sleeps.push(ms); pollIndex += 1; };`,
+    String.raw`process.on("exit", () => { console.error("\n__META__:" + JSON.stringify({ sleeps, ifNoneMatchHeaders }) + "\n"); });`,
+    `globalThis.fetch = async (input, init) => {
       const url = new URL(String(input));
       const page = Number(url.searchParams.get("page") ?? "1");
+      const statuses = timeline[Math.min(pollIndex, timeline.length - 1)];
       const start = (page - 1) * pageSize;
       const slice = statuses.slice(start, start + pageSize);
+      const reqHeaders = new Headers(init?.headers);
+      const inm = reqHeaders.get("if-none-match");
+      ifNoneMatchHeaders.push(inm);
+      const etag = 'W/"' + Bun.hash(JSON.stringify(slice)).toString(16) + '"';
+      if (useEtags && inm === etag) {
+        return new Response(null, { status: 304 });
+      }
       const headers = new Headers();
+      if (useEtags) headers.set("etag", etag);
       if (start + pageSize < statuses.length) {
         url.searchParams.set("page", String(page + 1));
         headers.set("link", "<" + url.toString() + '>; rel="next"');
       }
       return new Response(JSON.stringify(slice), { headers });
     };`,
-    CHECK_STATUSES.replace("Bun.sleep(3000)", "Bun.sleep(0)"),
+    CHECK_STATUSES,
   ].join("\n");
   const child = Bun.spawn(["bun", "-e", source], {
     env: {
@@ -66,12 +95,27 @@ async function runCheckStatuses(
     stdout: "pipe",
     stderr: "pipe",
   });
-  const [code, stderr] = await Promise.all([
+  const [code, rawStderr] = await Promise.all([
     child.exited,
     new Response(child.stderr).text(),
     new Response(child.stdout).text(),
   ]);
-  return { code, stderr };
+  const metaMatch = /^__META__:(.+)$/mu.exec(rawStderr);
+  if (metaMatch?.[1] === undefined) {
+    return { code, stderr: rawStderr, sleeps: [], ifNoneMatchHeaders: [] };
+  }
+  const meta = z
+    .object({
+      sleeps: z.array(z.number()),
+      ifNoneMatchHeaders: z.array(z.string().nullable()),
+    })
+    .parse(JSON.parse(metaMatch[1]));
+  return {
+    code,
+    stderr: rawStderr.replaceAll(/^__META__:.+$/gmu, ""),
+    sleeps: meta.sleeps,
+    ifNoneMatchHeaders: meta.ifNoneMatchHeaders,
+  };
 }
 
 describe("cutover event selection", () => {
@@ -153,6 +197,7 @@ describe("complete PR status", () => {
       ["verify", "pr-dryrun"].includes(step.key),
     );
     const complete = completionStep(selected, TEST_IMAGES.base);
+    expect(complete.timeoutMinutes).toBe(95);
     const emitted: unknown = parse(emitWorkflow(complete, TEST_IDENTITY));
     expect(emitted).toMatchObject({
       depends_on: ["verify", "pr-dryrun"],
@@ -163,7 +208,9 @@ describe("complete PR status", () => {
       JSON.parse(complete.environment?.["CI_EXPECTED_CONTEXTS"] ?? "[]"),
     ).toEqual(["ci/woodpecker/pr/verify", "ci/woodpecker/pr/pr-dryrun"]);
   });
+});
 
+describe("complete PR status polling", () => {
   const good = {
     "ci/woodpecker/pr/verify": "success",
     "ci/woodpecker/pr/pr-dryrun": "success",
@@ -198,19 +245,127 @@ describe("complete PR status", () => {
         target_url: `${PIPELINE}/1`,
       },
     ];
-    const newest = await runCheckStatuses(staleNewer, 1);
+    const newest = await runCheckStatuses([staleNewer], 1);
     expect(newest.code).toBe(0);
   });
 
-  test("fails closed on failure or a missing status", async () => {
-    const failed = await check({
-      ...good,
-      "ci/woodpecker/pr/verify": "failure",
-    });
-    expect(failed.code).not.toBe(0);
-    expect(failed.stderr).toContain("Required workflows failed");
+  test("fails closed immediately on failure, error, or terminal Woodpecker descriptions", async () => {
+    for (const badState of ["failure", "error"]) {
+      const failed = await check({
+        ...good,
+        "ci/woodpecker/pr/verify": badState,
+      });
+      expect(failed.code).not.toBe(0);
+      expect(failed.sleeps).toEqual([]);
+      expect(failed.stderr).toContain("Required workflows failed");
+    }
+
+    for (const description of [
+      "Pipeline was canceled",
+      "Pipeline was skipped",
+      "Pipeline was rejected",
+    ]) {
+      const terminal = await runCheckStatuses(
+        [
+          [
+            {
+              context: "ci/woodpecker/pr/verify",
+              state: "pending",
+              description,
+              target_url: `${PIPELINE}/1`,
+            },
+            {
+              context: "ci/woodpecker/pr/pr-dryrun",
+              state: "success",
+              target_url: `${PIPELINE}/2`,
+            },
+          ],
+        ],
+        100,
+      );
+      expect(terminal.code).not.toBe(0);
+      expect(terminal.sleeps).toEqual([]);
+      expect(terminal.stderr).toContain("Required workflows failed");
+    }
+  });
+
+  test("fails after 60s (20 * 3s) when an expected context is missing", async () => {
     const missing = await check({ "ci/woodpecker/pr/verify": "success" });
     expect(missing.code).not.toBe(0);
+    expect(missing.sleeps).toEqual(Array.from({ length: 20 }, () => 3000));
+    expect(missing.stderr).toContain("no completed status");
+  });
+
+  test("continues polling every 10s while running or pending and caches pages via ETag", async () => {
+    const runningPoll = [
+      {
+        context: "ci/woodpecker/pr/verify",
+        state: "pending",
+        description: "Pipeline is running",
+        target_url: `${PIPELINE}/1`,
+      },
+      {
+        context: "ci/woodpecker/pr/pr-dryrun",
+        state: "pending",
+        description: "Pipeline is pending",
+        target_url: `${PIPELINE}/2`,
+      },
+    ];
+    const finishedPoll = [
+      {
+        context: "ci/woodpecker/pr/verify",
+        state: "success",
+        description: "Pipeline was successful",
+        target_url: `${PIPELINE}/1`,
+      },
+      {
+        context: "ci/woodpecker/pr/pr-dryrun",
+        state: "success",
+        description: "Pipeline was successful",
+        target_url: `${PIPELINE}/2`,
+      },
+    ];
+    // 10 polls * 10s = 100s (> 60s missing timeout), with pageSize=1 to exercise
+    // multi-page Link preservation across HTTP 304 Not Modified responses.
+    const timeline = [
+      ...Array.from({ length: 10 }, () => runningPoll),
+      finishedPoll,
+    ];
+    const eventual = await runCheckStatuses(timeline, 1, true);
+    expect(eventual.code).toBe(0);
+    expect(eventual.sleeps).toEqual(Array.from({ length: 10 }, () => 10_000));
+    expect(eventual.ifNoneMatchHeaders.slice(0, 2)).toEqual([null, null]);
+    expect(
+      eventual.ifNoneMatchHeaders.slice(2).every((value) => value !== null),
+    ).toBe(true);
+  });
+
+  test("bounds active pending waits at 5400s", async () => {
+    const stuckRunning = await runCheckStatuses(
+      [
+        [
+          {
+            context: "ci/woodpecker/pr/verify",
+            state: "pending",
+            description: "Pipeline is running",
+            target_url: `${PIPELINE}/1`,
+          },
+          {
+            context: "ci/woodpecker/pr/pr-dryrun",
+            state: "success",
+            target_url: `${PIPELINE}/2`,
+          },
+        ],
+      ],
+      100,
+      true,
+    );
+    expect(stuckRunning.code).not.toBe(0);
+    expect(stuckRunning.sleeps).toHaveLength(540);
+    expect(stuckRunning.sleeps.reduce((sum, ms) => sum + ms, 0)).toBe(
+      5_400_000,
+    );
+    expect(stuckRunning.stderr).toContain("no completed status");
   });
 });
 

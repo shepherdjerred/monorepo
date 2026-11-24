@@ -341,7 +341,7 @@ test.each(["push", "pull_request", "tag"])(
           z.object({
             name: z.literal("clear-golden"),
             image: z.literal(SOURCE_CACHE_PREPARATION_IMAGE),
-            commands: z.tuple([z.string()]),
+            commands: z.tuple([z.string(), z.string()]),
           }),
           z.object({
             image: z.string(),
@@ -353,6 +353,11 @@ test.each(["push", "pull_request", "tag"])(
             commands: z.never().optional(),
             environment: z.never().optional(),
           }),
+          z
+            .object({
+              name: z.literal("finalize-clone"),
+            })
+            .loose(),
         ]),
       })
       .parse(parse(emitWorkflow(step, { ...TEST_IDENTITY, event })));

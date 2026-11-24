@@ -21,39 +21,104 @@ const headers = {
   accept: "application/vnd.github+json",
   "x-github-api-version": "2022-11-28",
 };
+const TERMINAL_DESCRIPTIONS = [
+  "Pipeline was canceled",
+  "Pipeline was skipped",
+  "Pipeline was rejected",
+];
+const ACTIVE_PENDING_DESCRIPTIONS = [
+  "Pipeline is pending",
+  "Pipeline is running",
+];
+const MISSING_POLL_MS = 3000;
+const MISSING_TIMEOUT_MS = 60_000;
+const PENDING_POLL_MS = 10_000;
+const PENDING_TIMEOUT_MS = 5_400_000;
+const pageCache = new Map();
 // Combined /status stops at 100 contexts. The list endpoint is newest-first
 // and paginated; the first state we see for a context is the current one.
 async function statusesForPipeline() {
   const latest = new Map();
   let next = "https://api.github.com/repos/" + repository + "/commits/" + commit + "/statuses?per_page=100";
   while (next) {
-    const response = await fetch(next, { headers });
-    if (!response.ok) throw new Error("GitHub status read failed: HTTP " + response.status);
-    const page = await response.json();
-    if (!Array.isArray(page)) throw new Error("GitHub returned no status list");
+    const cached = pageCache.get(next);
+    const requestHeaders = cached?.etag ? { ...headers, "if-none-match": cached.etag } : headers;
+    const response = await fetch(next, { headers: requestHeaders });
+    let page;
+    let link;
+    if (response.status === 304) {
+      if (!cached) throw new Error("GitHub returned HTTP 304 without cached status page");
+      page = cached.page;
+      link = response.headers.get("link") ?? cached.link;
+    } else {
+      if (!response.ok) throw new Error("GitHub status read failed: HTTP " + response.status);
+      page = await response.json();
+      if (!Array.isArray(page)) throw new Error("GitHub returned no status list");
+      link = response.headers.get("link") ?? "";
+      const etag = response.headers.get("etag") ?? "";
+      if (etag) pageCache.set(next, { etag, page, link });
+    }
     for (const status of page) {
       if (typeof status.context !== "string") continue;
       if (typeof status.target_url !== "string" || !status.target_url.startsWith(pipeline + "/")) continue;
       if (latest.has(status.context)) continue;
-      latest.set(status.context, status.state);
+      latest.set(status.context, {
+        state: typeof status.state === "string" ? status.state : "",
+        description: typeof status.description === "string" ? status.description : "",
+      });
     }
-    const link = response.headers.get("link") ?? "";
     const match = /<([^>]+)>;\s*rel="next"/u.exec(link);
     next = match?.[1] ?? "";
   }
   return latest;
 }
-for (let attempt = 0; attempt < 20; attempt++) {
+let elapsedMs = 0;
+let missingMs = 0;
+while (true) {
   const current = await statusesForPipeline();
-  const failed = expected.filter((context) => ["failure", "error"].includes(current.get(context)));
+  const failed = expected.filter((context) => {
+    const entry = current.get(context);
+    return (
+      entry !== undefined &&
+      (["failure", "error"].includes(entry.state) ||
+        TERMINAL_DESCRIPTIONS.includes(entry.description))
+    );
+  });
   if (failed.length > 0) throw new Error("Required workflows failed: " + failed.join(", "));
-  const incomplete = expected.filter((context) => current.get(context) !== "success");
+  const incomplete = expected.filter((context) => current.get(context)?.state !== "success");
   if (incomplete.length === 0) {
     console.log("All " + expected.length + " required workflows passed in this pipeline");
     process.exit(0);
   }
-  if (attempt === 19) throw new Error("Required workflows have no completed status: " + incomplete.join(", "));
-  await Bun.sleep(3000);
+  const allActivelyPending = incomplete.every((context) => {
+    const entry = current.get(context);
+    return (
+      entry !== undefined &&
+      entry.state === "pending" &&
+      ACTIVE_PENDING_DESCRIPTIONS.includes(entry.description)
+    );
+  });
+  if (allActivelyPending) {
+    missingMs = 0;
+    if (elapsedMs >= PENDING_TIMEOUT_MS) {
+      throw new Error("Required workflows have no completed status: " + incomplete.join(", "));
+    }
+    const delayMs = Math.min(PENDING_POLL_MS, PENDING_TIMEOUT_MS - elapsedMs);
+    await Bun.sleep(delayMs);
+    elapsedMs += delayMs;
+  } else {
+    if (missingMs >= MISSING_TIMEOUT_MS || elapsedMs >= PENDING_TIMEOUT_MS) {
+      throw new Error("Required workflows have no completed status: " + incomplete.join(", "));
+    }
+    const delayMs = Math.min(
+      MISSING_POLL_MS,
+      MISSING_TIMEOUT_MS - missingMs,
+      PENDING_TIMEOUT_MS - elapsedMs,
+    );
+    await Bun.sleep(delayMs);
+    missingMs += delayMs;
+    elapsedMs += delayMs;
+  }
 }
 `;
 
@@ -86,7 +151,7 @@ export function completionStep(
       ),
     },
     dependsOn: blocking.map((step) => step.key),
-    timeoutMinutes: 3,
+    timeoutMinutes: 95,
     resources: workingDirectory === "/app" ? GATE_TIER : LIGHT_TIER,
     skipClone: true,
     runOnFailure: true,

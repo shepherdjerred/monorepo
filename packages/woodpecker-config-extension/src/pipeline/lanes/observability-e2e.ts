@@ -47,8 +47,8 @@ export function observabilityE2eSteps(images: CiImages): CiStep[] {
         },
         {
           name: "minio",
-          image: images.catalog["minio/minio"],
-          commands: ["minio server /data --console-address :9001"],
+          image: images.catalog["pgsty/silo"],
+          commands: ["silo server /data --console-address :9001"],
           environment: {
             MINIO_ROOT_USER: MINIO_ROOT,
             MINIO_ROOT_PASSWORD: MINIO_ROOT,

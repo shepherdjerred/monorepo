@@ -146,8 +146,14 @@ export function createDeliveryChart(
         periodSeconds: Duration.seconds(5),
         failureThreshold: 18,
       }),
-      readiness: Probe.fromHttpGet("/readyz", { port: DELIVERY_ENDPOINT.port }),
-      liveness: Probe.fromHttpGet("/healthz", { port: DELIVERY_ENDPOINT.port }),
+      readiness: Probe.fromHttpGet("/readyz", {
+        port: DELIVERY_ENDPOINT.port,
+        timeoutSeconds: Duration.seconds(5),
+      }),
+      liveness: Probe.fromHttpGet("/healthz", {
+        port: DELIVERY_ENDPOINT.port,
+        timeoutSeconds: Duration.seconds(5),
+      }),
       envVariables: {
         ...dbEnv,
         ...deliveryForumEnvironment(chart, activation),

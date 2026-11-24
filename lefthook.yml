@@ -45,6 +45,10 @@ pre-commit:
                 - name: check-suppressions
                   run: bun scripts/checks/check-suppressions.ts
 
+                - name: service-registration
+                  glob: "packages/{delivery/registrations/v2/**/{recipe,configuration}.json,ops-model/catalog-document.json}"
+                  run: bun scripts/checks/service-registration.ts
+
                 - name: check-agent-guidance
                   glob: "**/*"
                   run: bun run check-agent-guidance -- --staged

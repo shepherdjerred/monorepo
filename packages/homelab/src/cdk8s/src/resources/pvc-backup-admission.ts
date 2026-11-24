@@ -34,6 +34,8 @@ const EPHEMERAL_CI_WORKSPACE_EXPRESSION = `object.metadata.namespace == '${WOODP
 const EPHEMERAL_MC_CAPTURE_EXPRESSION = `object.metadata.namespace == 'minecraft-tsmc' && object.metadata.name.startsWith('mc-capture-') && has(object.spec.storageClassName) && object.spec.storageClassName == '${MC_CAPTURE_STORAGE_CLASS}'`;
 const INCLUDED_EXPRESSION = `${toCelList(INCLUDED_PVC_KEYS)}.exists(key, key == variables.policyKey)`;
 const EXCLUDED_EXPRESSION = `${toCelList(EXCLUDED_PVC_KEYS)}.exists(key, key == variables.policyKey) || (${EPHEMERAL_CI_WORKSPACE_EXPRESSION}) || (${EPHEMERAL_MC_CAPTURE_EXPRESSION})`;
+const EXPLICIT_LABELS_EXPRESSION =
+  "has(object.metadata.labels) && 'velero.io/backup' in object.metadata.labels && 'velero.io/exclude-from-backup' in object.metadata.labels && ((object.metadata.labels['velero.io/backup'] == 'enabled' && object.metadata.labels['velero.io/exclude-from-backup'] == 'false') || (object.metadata.labels['velero.io/backup'] == 'disabled' && object.metadata.labels['velero.io/exclude-from-backup'] == 'true'))";
 export const PVC_BACKUP_ADMISSION_POLICY_SYNC_WAVE = "-30";
 export const PVC_BACKUP_ADMISSION_BINDING_SYNC_WAVE = "-29";
 
@@ -159,10 +161,15 @@ export function createPvcBackupAdmissionPolicies(chart: Chart): void {
           name: "excluded",
           expression: EXCLUDED_EXPRESSION,
         },
+        {
+          name: "explicitLabels",
+          expression: EXPLICIT_LABELS_EXPRESSION,
+        },
       ],
       validations: [
         {
-          expression: "variables.included || variables.excluded",
+          expression:
+            "variables.included || variables.excluded || variables.explicitLabels",
           message:
             "PVC is absent from the explicit backup policy; classify it before creation or update",
           reason: "Forbidden",

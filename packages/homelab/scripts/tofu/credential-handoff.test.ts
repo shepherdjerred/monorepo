@@ -1,5 +1,5 @@
-import { describe, expect, test } from "vitest";
-import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
+import { describe, expect, test, vi } from "vitest";
+import { chmod, mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
@@ -12,6 +12,7 @@ import {
 import catalogSchema from "#tofu/application-secrets/desired-state.schema.json" with { type: "json" };
 import {
   previewAdoption,
+  selectHandoffWrites,
   targetValue,
   verifyHandoffs,
   main,
@@ -21,7 +22,13 @@ import {
   R2_S3_CREDENTIAL_FIELDS,
 } from "./credential-handoff.ts";
 import { collectOnePasswordTargets } from "#scripts/platform-desired-state.ts";
-import { parsePrivateJson, capturedRead } from "./secret-read.ts";
+import {
+  capturedRead,
+  parsePrivateJson,
+  updateJsonCredential,
+} from "./secret-read.ts";
+import { runSecretWriteCli, writeSecretTargets } from "./secret-write.ts";
+import { VAULT_ID } from "#cdk8s/scripts/onepassword-lib.ts";
 import { z } from "zod";
 
 const target = {
@@ -691,5 +698,634 @@ describe("canonical catalog ownership", () => {
         },
       }).success,
     ).toBe(false);
+  });
+});
+
+async function createMockOpHarness(options?: {
+  ignoreTemplateOnEdit?: boolean;
+  failEditWithPrivateStderr?: boolean;
+}) {
+  const fixture = await mkdtemp(path.join(tmpdir(), "mock-op-handoff-"));
+  const binDir = path.join(fixture, "bin");
+  const homeDir = path.join(fixture, "home");
+  const statePath = path.join(fixture, "vault.json");
+  const callsPath = path.join(fixture, "calls.jsonl");
+  await mkdir(binDir, { recursive: true });
+  await mkdir(homeDir, { recursive: true });
+
+  await Bun.write(
+    statePath,
+    JSON.stringify({
+      items: {
+        du6dxzjfiml7f7qnj2peyff3ba: {
+          id: "du6dxzjfiml7f7qnj2peyff3ba",
+          title: "personal-archives-r2",
+          vault: { id: VAULT_ID },
+          version: 4,
+          category: "API_CREDENTIAL",
+          tags: ["managed"],
+          fields: [
+            { id: "tok", label: "CLOUDFLARE_API_TOKEN", value: "old-r2-token" },
+            {
+              id: "ak",
+              label: "CLOUDFLARE_R2_ACCESS_KEY_ID",
+              value: "old-r2-id",
+            },
+            {
+              id: "sk",
+              label: "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
+              value: "old-r2-digest",
+            },
+            {
+              id: "cfg",
+              label: "CONFIG_JSON",
+              value: '{"nested":{"token":"old-json"},"keep":"preserved"}',
+            },
+          ],
+        },
+        djl2blalora2unjogqnsadlokq: {
+          id: "djl2blalora2unjogqnsadlokq",
+          title: "woodpecker-cloudflare",
+          vault: { id: VAULT_ID },
+          version: 2,
+          fields: [
+            {
+              id: "cf",
+              label: "CLOUDFLARE_API_TOKEN",
+              value: "old-woodpecker-token",
+            },
+          ],
+        },
+      },
+    }),
+  );
+
+  const mockOp = path.join(binDir, "op");
+  await Bun.write(
+    mockOp,
+    String.raw`#!${process.execPath}
+import { appendFileSync, fstatSync, readFileSync, writeFileSync } from "node:fs";
+
+const args = process.argv.slice(2);
+const stateFile = ${JSON.stringify(statePath)};
+const callsFile = ${JSON.stringify(callsPath)};
+const ignoreTemplate = ${JSON.stringify(options?.ignoreTemplateOnEdit === true)};
+const failEdit = ${JSON.stringify(options?.failEditWithPrivateStderr === true)};
+
+const state = JSON.parse(readFileSync(stateFile, "utf8"));
+
+if (args[0] === "item" && args[1] === "get") {
+  const id = args[2];
+  appendFileSync(callsFile, JSON.stringify({ cmd: "get", args }) + "\n");
+  const found = state.items[id];
+  if (!found) {
+    process.stderr.write("missing item\n");
+    process.exit(1);
+  }
+  process.stdout.write(JSON.stringify(found));
+  process.exit(0);
+}
+
+if (args[0] === "--cache=false" && args[1] === "item" && args[2] === "get") {
+  const id = args[3];
+  appendFileSync(callsFile, JSON.stringify({ cmd: "get-nocache", args }) + "\n");
+  const found = state.items[id];
+  if (!found) {
+    process.stderr.write("missing item\n");
+    process.exit(1);
+  }
+  process.stdout.write(JSON.stringify(found));
+  process.exit(0);
+}
+
+if (args[0] === "--cache=false" && args[1] === "item" && args[2] === "edit") {
+  const id = args[3];
+  const templateIdx = args.indexOf("--template");
+  const templateArg = templateIdx >= 0 ? args[templateIdx + 1] : null;
+  const dryRun = args.includes("--dry-run");
+  if (templateArg !== "/dev/fd/3") {
+    process.stderr.write("expected --template /dev/fd/3\n");
+    process.exit(2);
+  }
+  // Verify stdin (fd 0) is ignored (/dev/null), NOT a socket/pipe that triggers op's stdin check!
+  const fd0Stat = fstatSync(0);
+  if (fd0Stat.isSocket() || fd0Stat.isFIFO()) {
+    process.stderr.write("fd 0 must be ignored when --template /dev/fd/3 is used\n");
+    process.exit(3);
+  }
+  const fd3Stat = fstatSync(3);
+  if (!fd3Stat.isFIFO() || fd3Stat.isSocket()) {
+    process.stderr.write("fd 3 must be a POSIX FIFO so Linux /dev/fd/3 reopen succeeds\n");
+    process.exit(4);
+  }
+  const rawTemplate = readFileSync("/dev/fd/3", "utf8");
+  appendFileSync(
+    callsFile,
+    JSON.stringify({
+      cmd: "edit",
+      args,
+      dryRun,
+      stdinIgnored: !fd0Stat.isSocket() && !fd0Stat.isFIFO(),
+    }) + "\n",
+  );
+  if (failEdit) {
+    process.stderr.write("op error containing sensitive-probe-stderr-value\n");
+    process.exit(1);
+  }
+  const parsed = JSON.parse(rawTemplate);
+  if (!dryRun && !ignoreTemplate) {
+    state.items[id] = { ...parsed, version: (state.items[id]?.version ?? 0) + 1 };
+    writeFileSync(stateFile, JSON.stringify(state));
+  }
+  process.stdout.write(JSON.stringify(parsed));
+  process.exit(0);
+}
+
+process.stderr.write("unexpected op args: " + JSON.stringify(args) + "\n");
+process.exit(1);
+`,
+  );
+  await chmod(mockOp, 0o755);
+
+  const env = {
+    ...Bun.env,
+    HOME: homeDir,
+    PATH: `${binDir}:${Bun.env["PATH"] ?? ""}`,
+    OP_SERVICE_ACCOUNT_TOKEN: "fixture-sa-token",
+  };
+
+  return {
+    fixture,
+    binDir,
+    homeDir,
+    statePath,
+    callsPath,
+    env,
+    async readCalls() {
+      if (!(await Bun.file(callsPath).exists())) return [];
+      const text = await Bun.file(callsPath).text();
+      return text
+        .trim()
+        .split("\n")
+        .filter((line) => line.length > 0)
+        .map((line) =>
+          z
+            .object({
+              cmd: z.string(),
+              args: z.array(z.string()),
+              dryRun: z.boolean().optional(),
+              stdinIgnored: z.boolean().optional(),
+            })
+            .parse(JSON.parse(line)),
+        );
+    },
+    async readStoredItem(id: string) {
+      const parsed = z
+        .object({ items: z.record(z.string(), z.unknown()) })
+        .parse(await Bun.file(statePath).json());
+      return parsed.items[id];
+    },
+    async cleanup() {
+      await rm(fixture, { recursive: true, force: true });
+    },
+  };
+}
+
+describe("non-printing 1Password template writes (AI-93)", () => {
+  test("updates plain and JSON-pointer fields over /dev/fd/3 with independent readback and preserves sibling metadata", async () => {
+    const harness = await createMockOpHarness();
+    const secretA = "replacement-r2-secret-value";
+    const secretJson = "replacement-nested-json-secret";
+    try {
+      vi.stubEnv("HOME", harness.homeDir);
+      vi.stubEnv("PATH", harness.env.PATH);
+      vi.stubEnv("OP_SERVICE_ACCOUNT_TOKEN", "fixture-sa-token");
+
+      const results = await writeSecretTargets(
+        [
+          {
+            unit: "personal-archives-r2",
+            target: {
+              vault_item_id: "du6dxzjfiml7f7qnj2peyff3ba",
+              vault_field: "CLOUDFLARE_API_TOKEN",
+            },
+            value: secretA,
+          },
+          {
+            unit: "json-unit",
+            target: {
+              vault_item_id: "du6dxzjfiml7f7qnj2peyff3ba",
+              vault_field: "CONFIG_JSON",
+              vault_json_path: "/nested/token",
+            },
+            value: secretJson,
+          },
+        ],
+        { env: harness.env },
+      );
+
+      expect(results).toEqual([
+        {
+          unit: "personal-archives-r2",
+          target: {
+            vault_item_id: "du6dxzjfiml7f7qnj2peyff3ba",
+            vault_field: "CLOUDFLARE_API_TOKEN",
+          },
+          resolved_item_id: "du6dxzjfiml7f7qnj2peyff3ba",
+          dry_run: false,
+          changed: true,
+          verified_readback: true,
+        },
+        {
+          unit: "json-unit",
+          target: {
+            vault_item_id: "du6dxzjfiml7f7qnj2peyff3ba",
+            vault_field: "CONFIG_JSON",
+            vault_json_path: "/nested/token",
+          },
+          resolved_item_id: "du6dxzjfiml7f7qnj2peyff3ba",
+          dry_run: false,
+          changed: true,
+          verified_readback: true,
+        },
+      ]);
+      expect(JSON.stringify(results)).not.toContain(secretA);
+      expect(JSON.stringify(results)).not.toContain(secretJson);
+
+      const calls = await harness.readCalls();
+      const editCall = calls.find((call) => call.cmd === "edit");
+      expect(editCall).toBeDefined();
+      expect(editCall?.stdinIgnored).toBe(true);
+      expect(editCall?.dryRun).toBe(false);
+      expect(editCall?.args).toEqual([
+        "--cache=false",
+        "item",
+        "edit",
+        "du6dxzjfiml7f7qnj2peyff3ba",
+        "--vault",
+        VAULT_ID,
+        "--template",
+        "/dev/fd/3",
+        "--format",
+        "json",
+      ]);
+      expect(calls.at(-1)?.cmd).toBe("get");
+
+      const stored = z
+        .object({
+          tags: z.array(z.string()),
+          category: z.string(),
+          fields: z.array(z.object({ label: z.string(), value: z.string() })),
+        })
+        .parse(await harness.readStoredItem("du6dxzjfiml7f7qnj2peyff3ba"));
+      expect(stored.tags).toEqual(["managed"]);
+      expect(stored.category).toBe("API_CREDENTIAL");
+      expect(
+        stored.fields.find((field) => field.label === "CONFIG_JSON")?.value,
+      ).toBe(`{"nested":{"token":"${secretJson}"},"keep":"preserved"}`);
+    } finally {
+      vi.unstubAllEnvs();
+      await harness.cleanup();
+    }
+  });
+
+  test("supports --dry-run preview via op item edit --dry-run without mutating vault state", async () => {
+    const harness = await createMockOpHarness();
+    const probeValue = "dry-run-replacement-value";
+    try {
+      vi.stubEnv("HOME", harness.homeDir);
+      vi.stubEnv("PATH", harness.env.PATH);
+      vi.stubEnv("OP_SERVICE_ACCOUNT_TOKEN", "fixture-sa-token");
+
+      const results = await runSecretWriteCli(
+        [
+          "--item",
+          "djl2blalora2unjogqnsadlokq",
+          "--field",
+          "CLOUDFLARE_API_TOKEN",
+          "--dry-run",
+        ],
+        {
+          env: harness.env,
+          readSecret: async () => probeValue,
+        },
+      );
+
+      expect(results).toEqual([
+        {
+          unit: null,
+          target: {
+            vault_item_id: "djl2blalora2unjogqnsadlokq",
+            vault_field: "CLOUDFLARE_API_TOKEN",
+          },
+          resolved_item_id: "djl2blalora2unjogqnsadlokq",
+          dry_run: true,
+          changed: true,
+          verified_readback: false,
+        },
+      ]);
+      expect(JSON.stringify(results)).not.toContain(probeValue);
+
+      const calls = await harness.readCalls();
+      const editCall = calls.find((call) => call.cmd === "edit");
+      expect(editCall?.dryRun).toBe(true);
+      expect(editCall?.args).toContain("--dry-run");
+
+      const stored = z
+        .object({
+          fields: z.array(z.object({ label: z.string(), value: z.string() })),
+        })
+        .parse(await harness.readStoredItem("djl2blalora2unjogqnsadlokq"));
+      expect(stored.fields[0]?.value).toBe("old-woodpecker-token");
+    } finally {
+      vi.unstubAllEnvs();
+      await harness.cleanup();
+    }
+  });
+});
+
+describe("non-printing 1Password readback & error hygiene (AI-93)", () => {
+  test("catches silent template ignore via independent readVaultItem readback and withholds raw op stderr", async () => {
+    const staleHarness = await createMockOpHarness({
+      ignoreTemplateOnEdit: true,
+    });
+    try {
+      vi.stubEnv("HOME", staleHarness.homeDir);
+      vi.stubEnv("PATH", staleHarness.env.PATH);
+      vi.stubEnv("OP_SERVICE_ACCOUNT_TOKEN", "fixture-sa-token");
+
+      await expect(
+        writeSecretTargets(
+          [
+            {
+              unit: "woodpecker",
+              target: {
+                vault_item_id: "djl2blalora2unjogqnsadlokq",
+                vault_field: "CLOUDFLARE_API_TOKEN",
+              },
+              value: "probe-ignored-secret",
+            },
+          ],
+          { env: staleHarness.env },
+        ),
+      ).rejects.toThrow(
+        "Independent 1Password readback did not match intended credential update.",
+      );
+    } finally {
+      vi.unstubAllEnvs();
+      await staleHarness.cleanup();
+    }
+
+    const failingHarness = await createMockOpHarness({
+      failEditWithPrivateStderr: true,
+    });
+    try {
+      vi.stubEnv("HOME", failingHarness.homeDir);
+      vi.stubEnv("PATH", failingHarness.env.PATH);
+      vi.stubEnv("OP_SERVICE_ACCOUNT_TOKEN", "fixture-sa-token");
+
+      let caughtMessage = "";
+      try {
+        await writeSecretTargets(
+          [
+            {
+              unit: "woodpecker",
+              target: {
+                vault_item_id: "djl2blalora2unjogqnsadlokq",
+                vault_field: "CLOUDFLARE_API_TOKEN",
+              },
+              value: "probe-failing-secret",
+            },
+          ],
+          { env: failingHarness.env },
+        );
+      } catch (error) {
+        caughtMessage = error instanceof Error ? error.message : String(error);
+      }
+      expect(caughtMessage).toBe(
+        "1Password template update failed; no credential values were logged.",
+      );
+      expect(caughtMessage).not.toContain("sensitive-probe-stderr-value");
+      expect(caughtMessage).not.toContain("probe-failing-secret");
+    } finally {
+      vi.unstubAllEnvs();
+      await failingHarness.cleanup();
+    }
+  });
+});
+
+describe("credential-handoff apply/write CLI (AI-93)", () => {
+  test("selectHandoffWrites validates declared units and rejects unknown --unit names", async () => {
+    const desired = handoffDesiredState(
+      {
+        cloudflare_api_tokens: {
+          woodpecker: {
+            vault_item_id: "djl2blalora2unjogqnsadlokq",
+            vault_field: "CLOUDFLARE_API_TOKEN",
+          },
+          "delivery-static-cache": {
+            vault_item_id: "la7gkfl5eqtxiiv2hq3qujx2gi",
+            vault_field: "credential",
+          },
+        },
+      },
+      "cloudflare-tokens",
+    );
+    const targets = collectOnePasswordTargets(desired).map((reference) =>
+      CredentialTargetSchema.parse(reference),
+    );
+    const owners = new Map([
+      [
+        JSON.stringify([
+          "djl2blalora2unjogqnsadlokq",
+          "CLOUDFLARE_API_TOKEN",
+          null,
+        ]),
+        "woodpecker",
+      ],
+      [
+        JSON.stringify(["la7gkfl5eqtxiiv2hq3qujx2gi", "credential", null]),
+        "delivery-static-cache",
+      ],
+    ]);
+    const handoffPayload = {
+      woodpecker: {
+        api_token: "cf-new-woodpecker",
+        vault_item_id: "djl2blalora2unjogqnsadlokq",
+        vault_field: "CLOUDFLARE_API_TOKEN",
+      },
+      "delivery-static-cache": {
+        api_token: "cf-new-cache",
+        vault_item_id: "la7gkfl5eqtxiiv2hq3qujx2gi",
+        vault_field: "credential",
+      },
+    };
+
+    expect(
+      selectHandoffWrites(handoffPayload, targets, owners, ["woodpecker"]),
+    ).toEqual([
+      {
+        unit: "woodpecker",
+        target: {
+          vault_item_id: "djl2blalora2unjogqnsadlokq",
+          vault_field: "CLOUDFLARE_API_TOKEN",
+        },
+        value: "cf-new-woodpecker",
+      },
+    ]);
+    expect(() =>
+      selectHandoffWrites(handoffPayload, targets, owners, ["nonexistent"]),
+    ).toThrow("Unknown handoff unit: nonexistent");
+    expect(
+      updateJsonCredential('{"a":{"b":"old"},"keep":1}', "/a/b", "new"),
+    ).toEqual({
+      updated: '{"a":{"b":"new"},"keep":1}',
+      changed: true,
+    });
+    vi.stubEnv("CI", "true");
+    try {
+      await expect(main(["openai", "apply", "not-a-sha"])).rejects.toThrow(
+        "Credential handoff writes are operator-only.",
+      );
+      vi.stubEnv("CI", "");
+      await expect(main(["openai", "import"])).rejects.toThrow("disabled");
+      await expect(main(["openai", "apply", "not-a-sha"])).rejects.toThrow(
+        "Apply requires the current expected source revision",
+      );
+      await expect(main(["openai", "preview", "--dry-run"])).rejects.toThrow(
+        "--unit and --dry-run are supported only with apply or write",
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+});
+
+describe("credential-handoff apply/write end-to-end (AI-93)", () => {
+  test("credential-handoff apply/write enforces clean-source guards and writes selected units end-to-end", async () => {
+    const harness = await createMockOpHarness();
+    const fakeHead = "a".repeat(40);
+    const mockGit = path.join(harness.binDir, "git");
+    const mockTofu = path.join(harness.binDir, "tofu");
+    const dirtyFlag = path.join(harness.fixture, "dirty");
+    try {
+      await Bun.write(
+        mockGit,
+        String.raw`#!${process.execPath}
+import { existsSync } from "node:fs";
+const args = process.argv.slice(2);
+if (args[0] === "rev-parse") {
+  process.stdout.write(${JSON.stringify(`${fakeHead}\n`)});
+  process.exit(0);
+}
+if (args[0] === "status") {
+  if (existsSync(${JSON.stringify(dirtyFlag)})) {
+    process.stdout.write(" M packages/homelab/scripts/tofu/credential-handoff.ts\n");
+  }
+  process.exit(0);
+}
+if (args[0] === "ls-files") {
+  process.exit(0);
+}
+process.exit(1);
+`,
+      );
+      await chmod(mockGit, 0o755);
+
+      await Bun.write(
+        mockTofu,
+        `#!${process.execPath}
+process.stdout.write(JSON.stringify({
+  "delivery-static-cache": {
+    api_token: "unused-cache-token",
+    vault_item_id: "la7gkfl5eqtxiiv2hq3qujx2gi",
+    vault_field: "credential"
+  },
+  "personal-archives-r2": {
+    api_token: "unused-r2-token",
+    vault_item_id: "du6dxzjfiml7f7qnj2peyff3ba",
+    vault_field: "CLOUDFLARE_API_TOKEN"
+  },
+  "personal-archives-r2.s3-access-key-id": {
+    value: "unused-r2-id",
+    vault_item_id: "du6dxzjfiml7f7qnj2peyff3ba",
+    vault_field: "CLOUDFLARE_R2_ACCESS_KEY_ID"
+  },
+  "personal-archives-r2.s3-secret-access-key": {
+    value: "unused-r2-secret",
+    vault_item_id: "du6dxzjfiml7f7qnj2peyff3ba",
+    vault_field: "CLOUDFLARE_R2_SECRET_ACCESS_KEY"
+  },
+  woodpecker: {
+    api_token: "rotated-woodpecker-token-secret",
+    vault_item_id: "djl2blalora2unjogqnsadlokq",
+    vault_field: "CLOUDFLARE_API_TOKEN"
+  }
+}));
+`,
+      );
+      await chmod(mockTofu, 0o755);
+
+      vi.stubEnv("HOME", harness.homeDir);
+      vi.stubEnv("PATH", harness.env.PATH);
+      vi.stubEnv("CI", "");
+      vi.stubEnv("OP_SERVICE_ACCOUNT_TOKEN", "fixture-sa-token");
+      vi.stubEnv("SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID", "fixture-state-id");
+      vi.stubEnv("SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY", "fixture-state-key");
+      vi.stubEnv("TOFU_STATE_ENCRYPTION_PASSPHRASE", "fixture-passphrase");
+
+      await Bun.write(dirtyFlag, "dirty");
+      await expect(
+        main(["cloudflare-tokens", "write", fakeHead, "--unit", "woodpecker"]),
+      ).rejects.toThrow("Verify requires clean owning source");
+      await rm(dirtyFlag);
+      expect(await harness.readCalls()).toEqual([]);
+
+      const logged: string[] = [];
+      const logSpy = vi
+        .spyOn(console, "log")
+        .mockImplementation((...messages: unknown[]) => {
+          logged.push(messages.map(String).join(" "));
+        });
+      try {
+        await main([
+          "cloudflare-tokens",
+          "apply",
+          fakeHead,
+          "--unit",
+          "woodpecker",
+        ]);
+      } finally {
+        logSpy.mockRestore();
+      }
+
+      const outputJson = logged.join("\n");
+      expect(outputJson).not.toContain("rotated-woodpecker-token-secret");
+      const parsedReport = z
+        .object({
+          source_revision: z.string(),
+          action: z.literal("apply"),
+          dry_run: z.literal(false),
+          selected_units: z.array(z.string()),
+          results: z.array(
+            z.object({
+              unit: z.string(),
+              verified_readback: z.boolean(),
+            }),
+          ),
+        })
+        .parse(JSON.parse(outputJson));
+      expect(parsedReport.source_revision).toBe(fakeHead);
+      expect(parsedReport.selected_units).toEqual(["woodpecker"]);
+      expect(parsedReport.results).toEqual([
+        expect.objectContaining({
+          unit: "woodpecker",
+          verified_readback: true,
+        }),
+      ]);
+    } finally {
+      vi.unstubAllEnvs();
+      await harness.cleanup();
+    }
   });
 });

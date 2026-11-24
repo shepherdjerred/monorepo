@@ -4,6 +4,8 @@ import type { KubeConfig } from "@kubernetes/client-node";
 import { z } from "zod";
 import {
   ContentRecoveryContextSchema,
+  DeploymentDetailSchema,
+  deliveryWorkflowId,
   type ContentRecoveryContext,
 } from "@shepherdjerred/delivery/contract";
 import { stepRecipeOf } from "@shepherdjerred/delivery/model-contract";
@@ -111,6 +113,46 @@ async function modelBackend(
   if (forumWeb) await forumWebReady(context, rendered.name, rendered.revision);
 }
 
+/**
+ * Once a content recovery intent has journaled its global producer barrier
+ * (`dispatchBarrier !== null && barrierRestoredAt === null`), PostgreSQL
+ * refuses every deployment claim with `BUSY` (`requireNoContentBarrier`). A
+ * running `deliveryDeploymentWorkflow` whose deployment is still `queued` with
+ * `workflowId === null` and zero stages has never claimed and cannot claim
+ * until restoration, so operator recovery does not deadlock on it.
+ */
+export async function isBarrierFencedDeploymentWorkflow(
+  context: ContentRecoveryContext,
+  execution: { type: string; workflowId: string },
+  api: typeof deliveryRequest = deliveryRequest,
+): Promise<boolean> {
+  if (
+    context.intent.dispatchBarrier === null ||
+    context.intent.barrierRestoredAt !== null ||
+    execution.type !== "deliveryDeploymentWorkflow" ||
+    !execution.workflowId.startsWith("delivery/") ||
+    execution.workflowId.endsWith("/successor")
+  )
+    return false;
+  const deploymentId = execution.workflowId.slice("delivery/".length);
+  if (
+    deploymentId === "" ||
+    deliveryWorkflowId(deploymentId) !== execution.workflowId ||
+    deploymentId === context.deployment.deployment.id
+  )
+    return false;
+  const detail = await api(
+    `deployments/${encodeURIComponent(deploymentId)}`,
+    DeploymentDetailSchema,
+  );
+  return (
+    detail.deployment.id === deploymentId &&
+    detail.deployment.status === "queued" &&
+    detail.deployment.workflowId === null &&
+    detail.stages.length === 0
+  );
+}
+
 /** Foreground operator capability only; never registered on a worker or Workflow. */
 export async function recoverContentWithOperator(
   id: string,
@@ -131,7 +173,7 @@ export async function recoverContentWithOperator(
     connection: runtime.connection,
     namespace: "prod",
   });
-  const paused = async () => {
+  const paused = async (current: ContentRecoveryContext) => {
     const schedule = await client.schedule
       .getHandle("delivery-dispatch")
       .describe();
@@ -144,10 +186,11 @@ export async function recoverContentWithOperator(
       throw new Error(
         "Pause the Delivery dispatch Schedule and wait for its running actions to finish before operator recovery",
       );
-    for await (const _open of client.workflow.list({
+    for await (const open of client.workflow.list({
       query: `ExecutionStatus = 'Running' AND TaskQueue = '${TASK_QUEUES.DELIVERY_WORKFLOWS}'`,
       pageSize: 100,
     })) {
+      if (await isBarrierFencedDeploymentWorkflow(current, open)) continue;
       throw new Error(
         "Wait for or explicitly settle open Delivery Workflows before operator recovery",
       );
@@ -157,7 +200,7 @@ export async function recoverContentWithOperator(
     context: ContentRecoveryContext,
     activeUIDs: string[] = [],
   ) => {
-    await paused();
+    await paused(context);
     await closedPlatformWorkflow(
       runtime.connection,
       context.deployment.deployment.id,

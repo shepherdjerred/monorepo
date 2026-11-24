@@ -13,7 +13,7 @@ import {
 import type { ContentAction } from "./request.ts";
 
 export type ContentOperatorEffects = {
-  paused: () => Promise<void>;
+  paused: (context: ContentRecoveryContext) => Promise<void>;
   original: (context: ContentRecoveryContext) => Promise<void>;
   fence: (context: ContentRecoveryContext) => Promise<void>;
   barrier: (
@@ -42,7 +42,7 @@ export async function executeContentRecovery(
   const base = `content-recovery/${encodeURIComponent(id)}`;
   const load = async () => await api(base, ContentRecoveryContextSchema);
   let context = await load();
-  await effects.paused();
+  await effects.paused(context);
   if (context.intent.status === "succeeded") {
     if (
       context.intent.dispatchBarrier !== null &&
@@ -62,7 +62,7 @@ export async function executeContentRecovery(
       current.intent.snapshotFingerprint !== context.intent.snapshotFingerprint
     )
       throw new Error("Original content quarantine changed");
-    await effects.paused();
+    await effects.paused(current);
     await effects.fence(current);
   };
   await fence();
