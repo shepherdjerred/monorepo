@@ -70,7 +70,8 @@
     font-size: var(--text-xs);
     font-weight: 500;
     line-height: 1.4;
-    white-space: nowrap;
+    /* A long phrase wraps inside the pill instead of leaving the screen. */
+    max-width: 100%;
   }
   .badge svg {
     flex: none;
@@ -92,5 +93,11 @@
   .badge[data-tone="danger"] {
     background: var(--danger-soft);
     color: var(--danger);
+  }
+
+  @media (forced-colors: active) {
+    .badge {
+      border: 1px solid CanvasText;
+    }
   }
 }

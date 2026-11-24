@@ -223,7 +223,9 @@
     gap: 2px;
     min-width: 0;
   }
+  /* The box is drawn 20px; its label is the same control at 24px. */
   .checkLabel {
+    min-height: 24px;
     color: var(--text);
     font-size: var(--text-md);
     line-height: var(--leading-normal);
@@ -316,6 +318,21 @@
     .choice {
       min-height: 44px;
       align-items: center;
+    }
+  }
+
+  /* A checked box or radio is a filled shape; a user's colors drop the fill. */
+  @media (forced-colors: active) {
+    .check:checked,
+    .radio:checked {
+      border-color: Highlight;
+      background: Highlight;
+      forced-color-adjust: none;
+    }
+    .check::before,
+    .radio::before {
+      background: HighlightText;
+      forced-color-adjust: none;
     }
   }
 }

@@ -56,4 +56,16 @@
       min-height: 40px;
     }
   }
+
+  @media (forced-colors: active) {
+    .segment[aria-current] {
+      border-color: Highlight;
+      background: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
+    }
+    .segment[aria-current] .count {
+      color: HighlightText;
+    }
+  }
 }

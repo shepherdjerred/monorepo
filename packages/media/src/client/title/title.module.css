@@ -195,6 +195,7 @@
   .rowText {
     flex: 1;
     min-width: 12ch;
+    min-height: 24px;
     font-weight: 600;
     overflow-wrap: anywhere;
   }

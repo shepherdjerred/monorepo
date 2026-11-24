@@ -97,4 +97,11 @@
       font-size: var(--text-sm);
     }
   }
+
+  /* A status badge keeps its pill when the colors are the user's. */
+  @media (forced-colors: active) {
+    .status {
+      border: 1px solid CanvasText;
+    }
+  }
 }

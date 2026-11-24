@@ -14,7 +14,8 @@
  * never by setting `color-scheme` from script.
  *
  * Text and status pairs meet WCAG 4.5:1 and control boundaries 3:1 in both
- * themes. The canvas values are repeated in the `theme-color` metas in
+ * themes, on every surface they sit on (`styles/contrast.test.ts` computes
+ * them). The canvas values are repeated in the `theme-color` metas in
  * `index.html`.
  */
 @layer tokens {
@@ -28,12 +29,12 @@
     --spruce-850: #1b231e;
     --spruce-800: #232d27;
     --spruce-700: #303934;
-    --spruce-500: #5b6a5f;
+    --spruce-500: #6f7f73;
     --paper-50: #fbfcf8;
     --paper-100: #f3f5ee;
     --paper-200: #e8ece1;
     --paper-300: #d5dccf;
-    --paper-500: #7c897f;
+    --paper-500: #78857b;
     --ink: #17211c;
     --mist: #eef0e9;
     --lamp: #e9b878;

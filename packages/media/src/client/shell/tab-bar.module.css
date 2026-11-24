@@ -66,4 +66,15 @@
     border-radius: 0 0 3px 3px;
     background: var(--accent-strong);
   }
+
+  @media (forced-colors: active) {
+    .tab[aria-current] {
+      background: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
+    }
+    .tab[aria-current] svg {
+      color: HighlightText;
+    }
+  }
 }
