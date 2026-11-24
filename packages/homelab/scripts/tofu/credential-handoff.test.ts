@@ -813,6 +813,11 @@ if (args[0] === "--cache=false" && args[1] === "item" && args[2] === "edit") {
     process.stderr.write("fd 0 must be ignored when --template /dev/fd/3 is used\n");
     process.exit(3);
   }
+  const fd3Stat = fstatSync(3);
+  if (!fd3Stat.isFIFO() || fd3Stat.isSocket()) {
+    process.stderr.write("fd 3 must be a POSIX FIFO so Linux /dev/fd/3 reopen succeeds\n");
+    process.exit(4);
+  }
   const rawTemplate = readFileSync("/dev/fd/3", "utf8");
   appendFileSync(
     callsFile,
@@ -1177,15 +1182,26 @@ describe("credential-handoff apply/write CLI (AI-93)", () => {
       updated: '{"a":{"b":"new"},"keep":1}',
       changed: true,
     });
-    await expect(main(["openai", "import"])).rejects.toThrow("disabled");
-    await expect(main(["openai", "apply", "not-a-sha"])).rejects.toThrow(
-      "Apply requires the current expected source revision",
-    );
-    await expect(main(["openai", "preview", "--dry-run"])).rejects.toThrow(
-      "--unit and --dry-run are supported only with apply or write",
-    );
+    vi.stubEnv("CI", "true");
+    try {
+      await expect(main(["openai", "apply", "not-a-sha"])).rejects.toThrow(
+        "Credential handoff writes are operator-only.",
+      );
+      vi.stubEnv("CI", "");
+      await expect(main(["openai", "import"])).rejects.toThrow("disabled");
+      await expect(main(["openai", "apply", "not-a-sha"])).rejects.toThrow(
+        "Apply requires the current expected source revision",
+      );
+      await expect(main(["openai", "preview", "--dry-run"])).rejects.toThrow(
+        "--unit and --dry-run are supported only with apply or write",
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
+});
 
+describe("credential-handoff apply/write end-to-end (AI-93)", () => {
   test("credential-handoff apply/write enforces clean-source guards and writes selected units end-to-end", async () => {
     const harness = await createMockOpHarness();
     const fakeHead = "a".repeat(40);

@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 import { parseArgs } from "node:util";
 import { z } from "zod";
 import {
@@ -101,9 +101,28 @@ async function readRawVaultItem(
 }
 
 /**
- * Updates a 1Password item via `node:child_process.spawn` and `/dev/fd/3` so
- * `op` reads an explicit template descriptor instead of checking `os.ModeNamedPipe`
- * against `Bun.spawn`'s `S_IFSOCK` stdin.
+ * Bun implements child_process `"pipe"` descriptors with `socketpair` (`S_IFSOCK`).
+ * Linux `/proc/self/fd/3` refuses `open()` on sockets (`ENXIO`), whereas a shell
+ * pipeline allocates a kernel `pipe(2)` (`S_IFIFO`) that `/dev/fd/3` can reopen
+ * on both Linux and macOS while keeping stdin bound to `/dev/null`.
+ */
+const OP_TEMPLATE_PIPE_BRIDGE =
+  '{ PATH="$PATH:/usr/bin:/bin" cat <&4; } | exec "$0" "$@" 3<&0 </dev/null 4<&-';
+
+function killTemplateProcessTree(child: ChildProcess, detached: boolean): void {
+  if (detached && child.pid !== undefined) {
+    try {
+      process.kill(-child.pid, "SIGKILL");
+    } catch {
+      // Process group may already have exited.
+    }
+  }
+  child.kill("SIGKILL");
+}
+
+/**
+ * Updates a 1Password item via `/dev/fd/3` backed by a POSIX FIFO so `op` reads
+ * an explicit template descriptor on both Linux and macOS without touching disk.
  */
 export async function editVaultItemTemplate(options: {
   itemId: string;
@@ -132,15 +151,21 @@ export async function editVaultItemTemplate(options: {
     "json",
   ];
 
-  const child = spawn(opExecutable, args, {
-    cwd: repositoryRoot,
-    env,
-    stdio: ["ignore", "pipe", "pipe", "pipe"],
-  });
+  const detached = process.platform !== "win32";
+  const child = spawn(
+    "/bin/sh",
+    ["-c", OP_TEMPLATE_PIPE_BRIDGE, opExecutable, ...args],
+    {
+      cwd: repositoryRoot,
+      env,
+      detached,
+      stdio: ["ignore", "pipe", "pipe", "ignore", "pipe"],
+    },
+  );
 
-  const input = child.stdio[3];
+  const input = child.stdio[4];
   if (!input || !("end" in input)) {
-    child.kill("SIGKILL");
+    killTemplateProcessTree(child, detached);
     throw new Error("Credential template pipe is unavailable.");
   }
   input.on("error", () => {
@@ -156,7 +181,7 @@ export async function editVaultItemTemplate(options: {
   child.stderr?.resume();
 
   const timer = setTimeout(() => {
-    child.kill("SIGKILL");
+    killTemplateProcessTree(child, detached);
   }, timeoutMs);
   timer.unref();
 
