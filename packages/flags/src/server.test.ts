@@ -169,6 +169,24 @@ test("starts FLAGS_EVALUATION_PORT with credentialless evaluation only and stops
           }),
         });
         expect(credentialed.status).toBe(401);
+
+        const evalMetrics = await fetch(`${evalBase}/metrics`);
+        expect(evalMetrics.status).toBe(404);
+
+        const primaryMetrics = await fetch(
+          `http://127.0.0.1:${String(started.port)}/metrics`,
+        );
+        expect(primaryMetrics.status).toBe(200);
+        expect(primaryMetrics.headers.get("content-type")).toContain(
+          "text/plain; version=0.0.4",
+        );
+        const metricsText = await primaryMetrics.text();
+        expect(metricsText).toContain(
+          'flags_http_requests_total{surface="evaluation",route="evaluate",status="200"} 1',
+        );
+        expect(metricsText).toContain(
+          'flags_http_requests_total{surface="evaluation",route="evaluate",status="401"} 1',
+        );
       } finally {
         await started.stop(true);
       }

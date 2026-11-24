@@ -335,18 +335,20 @@ export function getStreambotRuleGroups(): PrometheusRuleSpecGroups[] {
           },
         },
         // In Bun/Node process.memoryUsage(), `external` counts native Buffer-backed bytes;
-        // a healthy steady-state Streambot pipeline keeps external / heapUsed below 0.3.
+        // a healthy active stream keeps external / heapUsed below 0.3. Require > 256 MiB of
+        // external memory and an active stream so idle GC heap shrinkage (~60 MiB heapUsed
+        // alongside ~31 MiB of pooled native Buffers) cannot trip the ratio on harmless idle state.
         {
           alert: "StreambotExternalBufferHeavy",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "streambot_nodejs_external_memory_bytes / streambot_nodejs_heap_size_used_bytes > 0.5",
+            "streambot_nodejs_external_memory_bytes / streambot_nodejs_heap_size_used_bytes > 0.5 and streambot_nodejs_external_memory_bytes > 256 * 1024 * 1024 and on(namespace, pod) streambot_stream_active > 0",
           ),
           for: "5m",
           labels: { severity: "warning", category: "streaming" },
           annotations: {
             summary: "Streambot media buffer memory is backing up",
             description: escapePrometheusTemplate(
-              "Streambot's native Buffer memory exceeds half of its JS heap size, indicating media frames are backing up in JS stream queues and risking GC stalls. Check encoder readrate settings and RTP send-loop throughput on the Streambot dashboard.",
+              "Streambot's native Buffer memory exceeds 256 MiB and half of its JS heap size during an active stream, indicating media frames are backing up in JS stream queues and risking GC stalls. Check encoder readrate settings and RTP send-loop throughput on the Streambot dashboard.",
             ),
           },
         },

@@ -348,10 +348,14 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           // schedule's own execution timeout hours later. A weekly schedule in
           // the same state produced two failures total and no alert at all.
           //
-          // A healthy deployment fails no Workflow Tasks outside benign
-          // `UnhandledCommand` optimistic-concurrency retries when a Signal or
-          // event arrives mid-completion; any other sustained rate means
-          // "something here cannot run" and the Temporal UI says what.
+          // Scope to `first_attempt="false"` as well as excluding benign
+          // `UnhandledCommand` optimistic-concurrency retries: Temporal
+          // Server's internal Go scheduler (`temporal-sys-scheduler-workflow`)
+          // occasionally trips 1s `[TMPRL1101]` deadlock detection on Attempt 1
+          // under transient CPU load and succeeds immediately on Attempt 2,
+          // which would otherwise hold `increase([1h]) > 0` positive for ~50m.
+          // Any genuinely broken bundle or determinism failure fails again on
+          // its very first retry (`first_attempt="false"`).
           //
           // `for` must stay well under the lookback window. A burst of
           // failures keeps increase(...[1h]) positive for only about an hour,
@@ -362,11 +366,11 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Temporal workflows are failing before tasks start",
             description: escapePrometheusTemplate(
-              "Workflow tasks in namespace {{ $labels.exported_namespace }} failed {{ $value }} times in the last hour, stalling workflows before activities can run. Check the Temporal UI for bundle or determinism errors and verify the active worker deployment exports every registered workflow.",
+              "Workflow tasks in namespace {{ $labels.exported_namespace }} failed {{ $value }} retry attempts in the last hour, stalling workflows before activities can run. Check the Temporal UI for bundle or determinism errors and verify the active worker deployment exports every registered workflow.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(failed_workflow_tasks{exported_namespace=~"prod|beta",failure!="UnhandledCommand"}[1h]) > 0',
+            'increase(failed_workflow_tasks{exported_namespace=~"prod|beta",failure!="UnhandledCommand",first_attempt="false"}[1h]) > 0',
           ),
           for: "10m",
           labels: {

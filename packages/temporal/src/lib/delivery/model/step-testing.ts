@@ -25,6 +25,23 @@ export const heldLease = {
     await run(),
 };
 
+/** `@temporalio/activity` module mock with an uncancelled heartbeat context. */
+export async function mockActivityModule<T extends Record<string, unknown>>(
+  importOriginal: () => Promise<T>,
+) {
+  return {
+    ...(await importOriginal()),
+    Context: {
+      current: () => ({
+        cancellationSignal: new AbortController().signal,
+        heartbeat: () => {
+          // No-op in unit tests.
+        },
+      }),
+    },
+  };
+}
+
 /** The written Application, before and after this deployment's owned sync. */
 export function argoApplication(
   current: DeploymentDetail,

@@ -17,6 +17,7 @@ import { argoRequest } from "#activities/delivery/argocd.ts";
 import { credentialSyncPrunes } from "#lib/delivery/credential-prune.ts";
 import { workerSyncPrunes } from "#lib/delivery/workers/worker-prune.ts";
 import { alertDashboardSyncPrunes } from "#lib/delivery/alert-dashboard/prune.ts";
+import { serviceProbesSyncPrunes } from "#lib/delivery/service-probes/prune.ts";
 import { renderedRelease } from "#lib/delivery/retired-route-prune.ts";
 import { recordStage } from "./stages.ts";
 import { minecraftSyncFence } from "./minecraft-upgrade.ts";
@@ -95,8 +96,9 @@ export async function syncPruneDecision(
   // A preserved world switches images only with fresh preservation proof.
   minecraftSyncFence(current, recipe);
   // A forum release replaces the prior release's terminal migration Job;
-  // Hub's release removes its retired alerts and ops Ingresses; a worker
-  // release removes the hosts earlier retirements scaled to zero.
+  // Hub's release removes its retired alerts and ops Ingresses; service-probes
+  // removes retired Probe CRs; a worker release removes the hosts earlier
+  // retirements scaled to zero.
   const applicationPrune = (await forumSyncPrune(current, recipe, argoRequest))
     ? true
     : await credentialSyncPrunes(
@@ -106,12 +108,13 @@ export async function syncPruneDecision(
         },
         argoRequest,
       );
-  return applicationPrune === false
-    ? (await alertDashboardSyncPrunes(
-        renderedRelease(rendered),
-        argoRequest,
-      )) || (await workerSyncPrunes(current, rendered, argoRequest))
-    : applicationPrune;
+  if (applicationPrune !== false) return applicationPrune;
+  const release = renderedRelease(rendered);
+  return (
+    (await alertDashboardSyncPrunes(release, argoRequest)) ||
+    (await serviceProbesSyncPrunes(release, argoRequest)) ||
+    (await workerSyncPrunes(current, rendered, argoRequest))
+  );
 }
 
 const NeverRequestedSchema = z.object({

@@ -293,24 +293,27 @@ export function getNvmeRuleGroups(): PrometheusRuleSpecGroups[] {
         // drive's rated life is gone; these fire on the trend, while there is
         // still time to cut writes or schedule a replacement.
         //
-        // The write budget covers every NVMe, OS disks included, over a
-        // trailing 24h window: a new workload that lands on a node's OS disk
-        // crosses it the same day instead of surfacing in a wear review weeks
-        // later.
+        // The write budget covers every NVMe, OS disks included, over a 7-day
+        // rolling daily write average rather than a single 24h window: a single
+        // busy day or overnight lull near the 5-year budget does not flap the
+        // alert, while sustained multi-day over-budget writes (including a new
+        // workload landing on an OS disk) still surface within days rather than
+        // waiting weeks for SMART wear percentages to step up.
         {
           alert: "NvmeWriteBudgetExceeded",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `${NVME_DRIVE_WRITTEN_BYTES_24H} > on(node, instance, serial, model) ${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY}`,
+            `${NVME_DRIVE_WRITTEN_BYTES_PER_DAY_7D} > on(node, instance, serial, model) ${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY}`,
           ),
-          for: "30m",
+          for: "2h",
+          keepFiringFor: "6h",
           labels: {
             severity: "warning",
             category: "hardware",
           },
           annotations: {
-            summary: "SSD daily writes exceeded its 5-year budget",
+            summary: "SSD 7-day write rate exceeded its 5-year budget",
             description: escapePrometheusTemplate(
-              `NVMe drive {{ $labels.model }} (serial {{ $labels.serial }}) on {{ $labels.node }} received {{ $value | humanize }}B of physical writes in the last 24h, exceeding the daily budget needed for a ${String(WRITE_BUDGET_YEARS)}-year lifespan. Inspect the top-datasets panel on the SMART Monitoring dashboard to identify and reduce the heaviest writers.`,
+              `NVMe drive {{ $labels.model }} (serial {{ $labels.serial }}) on {{ $labels.node }} averaged {{ $value | humanize }}B/day of physical writes over the last 7 days, exceeding the daily budget needed for a ${String(WRITE_BUDGET_YEARS)}-year lifespan. Inspect the top-datasets panel on the SMART Monitoring dashboard to identify and reduce the heaviest writers.`,
             ),
           },
         },

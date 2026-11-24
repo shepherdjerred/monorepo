@@ -16,6 +16,13 @@ import {
   EvaluateBodySchema,
   RetireBodySchema,
 } from "./schema.ts";
+import {
+  classifyFlagsRoute,
+  createFlagsMetrics,
+  PROMETHEUS_CONTENT_TYPE,
+  type FlagsMetrics,
+  type FlagsSurface,
+} from "./metrics.ts";
 import type { FlagStore } from "./store.ts";
 
 const SNAPSHOT = /^\/v1\/deployments\/[^/]+\/[^/]+\/snapshot$/u;
@@ -25,6 +32,7 @@ const CREDENTIALLESS_REJECTION = {
 
 export type FlagsEvaluationAppDependencies = {
   readonly store: FlagStore;
+  readonly metrics?: FlagsMetrics;
 };
 
 export type FlagsAppDependencies = {
@@ -33,6 +41,7 @@ export type FlagsAppDependencies = {
   readonly peerAddress?: (request: Request) => string | null;
   /** Built operator client. Absent in tests and before `vite build`. */
   readonly clientRoot?: string;
+  readonly metrics?: FlagsMetrics;
 };
 
 function deploymentId(catalog: string, stage: string): string {
@@ -41,35 +50,6 @@ function deploymentId(catalog: string, stage: string): string {
 
 function etag(revision: number): string {
   return `"${String(revision)}"`;
-}
-
-function escapeMetricLabel(value: string): string {
-  return value
-    .replaceAll("\\", String.raw`\\`)
-    .replaceAll("\n", String.raw`\n`)
-    .replaceAll('"', String.raw`\"`);
-}
-
-function renderMetrics(store: FlagStore): string {
-  const deployments = store.list();
-  return [
-    "# HELP flags_deployments Stored feature-flag deployment documents.",
-    "# TYPE flags_deployments gauge",
-    `flags_deployments ${String(deployments.length)}`,
-    "# HELP flags_deployment_revision Current revision of each stored feature-flag deployment document.",
-    "# TYPE flags_deployment_revision gauge",
-    ...deployments.map(
-      (deployment) =>
-        `flags_deployment_revision{deployment="${escapeMetricLabel(deployment.id)}"} ${String(deployment.revision)}`,
-    ),
-    "# HELP flags_deployment_flags Number of flags stored in each feature-flag deployment document.",
-    "# TYPE flags_deployment_flags gauge",
-    ...deployments.map(
-      (deployment) =>
-        `flags_deployment_flags{deployment="${escapeMetricLabel(deployment.id)}"} ${String(deployment.flagCount)}`,
-    ),
-    "",
-  ].join("\n");
 }
 
 async function readBody(request: Request): Promise<unknown> {
@@ -135,6 +115,24 @@ function registerEvaluationRoutes(app: Hono, store: FlagStore): void {
   });
 }
 
+function attachRequestMetrics(
+  app: Hono,
+  metrics: FlagsMetrics,
+  surface: FlagsSurface,
+  hasClient: boolean,
+): void {
+  app.use("*", async (c, next) => {
+    await next();
+    const route = classifyFlagsRoute(
+      surface,
+      c.req.method,
+      c.req.path,
+      hasClient,
+    );
+    metrics.recordRequest(surface, route, c.res.status);
+  });
+}
+
 /**
  * Credentialless evaluation surface for the dedicated in-cluster port. Serves
  * health, snapshots, and boolean evaluation only; management routes, static UI
@@ -142,9 +140,11 @@ function registerEvaluationRoutes(app: Hono, store: FlagStore): void {
  */
 export function createFlagsEvaluationApp({
   store,
+  metrics = createFlagsMetrics(),
 }: FlagsEvaluationAppDependencies) {
   const app = new Hono();
   attachErrorHandler(app);
+  attachRequestMetrics(app, metrics, "evaluation", false);
   app.get("/healthz", (c) => c.text("ok"));
   app.use("/v1/*", async (c, next) =>
     c.req.header("authorization") === undefined
@@ -160,14 +160,18 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
     parseTrustedProxyBlockList(dependencies.auth.trustedProxyAddresses);
   }
   const { store } = dependencies;
+  const metrics = dependencies.metrics ?? createFlagsMetrics();
+  const clientRoot = dependencies.clientRoot;
   const app = new Hono();
 
   attachErrorHandler(app);
+  attachRequestMetrics(app, metrics, "management", clientRoot !== undefined);
 
   app.get("/healthz", (c) => c.text("ok"));
   app.get("/metrics", (c) =>
-    c.text(renderMetrics(store), 200, {
-      "Content-Type": "text/plain; version=0.0.4; charset=utf-8",
+    c.body(metrics.render(store), 200, {
+      "Content-Type": PROMETHEUS_CONTENT_TYPE,
+      "Cache-Control": "no-store",
     }),
   );
 
@@ -258,7 +262,6 @@ export function createFlagsApp(dependencies: FlagsAppDependencies) {
     return c.json({ revision: result.revision });
   });
 
-  const clientRoot = dependencies.clientRoot;
   if (clientRoot !== undefined) serveClient(app, clientRoot);
 
   return app;

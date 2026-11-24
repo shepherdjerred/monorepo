@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import { App, Chart } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
-import { createLokiApp } from "./loki.ts";
+import { createLokiApp, createLokiResources } from "./loki.ts";
 
 const LokiApplicationSchema = z.object({
   kind: z.literal("Application"),
-  metadata: z.object({ name: z.literal("loki") }),
+  metadata: z.object({
+    name: z.literal("loki"),
+    annotations: z.record(z.string(), z.string()),
+  }),
   spec: z.object({
     ignoreDifferences: z.array(
       z.object({
@@ -117,6 +120,9 @@ describe("Loki Argo CD application", () => {
       throw new Error("Loki Application was not synthesized");
     }
 
+    expect(manifest.data.metadata.annotations).toEqual({
+      "argocd.argoproj.io/compare-options": "ServerSideDiff=false",
+    });
     expect(manifest.data.spec.ignoreDifferences).toEqual([
       {
         group: "apps",
@@ -132,6 +138,49 @@ describe("Loki Argo CD application", () => {
     expect(manifest.data.spec.syncPolicy.syncOptions).not.toContain(
       "Replace=true",
     );
+  });
+
+  it("adopts and expands storage-loki-0 to 768Gi while keeping the Helm template size unchanged", () => {
+    const app = new App();
+    createLokiResources(new Chart(app, "loki-companion"));
+    const claim = parseAllDocuments(app.synthYaml())
+      .map((document) =>
+        z
+          .object({ kind: z.literal("PersistentVolumeClaim") })
+          .loose()
+          .safeParse(document.toJS()),
+      )
+      .find((result) => result.success)?.data;
+    expect(claim).toEqual({
+      apiVersion: "v1",
+      kind: "PersistentVolumeClaim",
+      metadata: {
+        name: "storage-loki-0",
+        namespace: "loki",
+        annotations: {
+          "argocd.argoproj.io/sync-wave": "-1",
+          "argocd.argoproj.io/sync-options": "Prune=false",
+        },
+        labels: {
+          "velero.io/backup": "disabled",
+          "velero.io/exclude-from-backup": "true",
+        },
+      },
+      spec: {
+        accessModes: ["ReadWriteOnce"],
+        storageClassName: "zfs-ssd",
+        resources: { requests: { storage: "768Gi" } },
+      },
+    });
+
+    const persistence = z
+      .object({
+        singleBinary: z.object({
+          persistence: z.object({ size: z.string() }),
+        }),
+      })
+      .parse(lokiValues());
+    expect(persistence.singleBinary.persistence.size).toBe("128Gi");
   });
 
   it("enables compactor retention whenever a retention period is set", () => {

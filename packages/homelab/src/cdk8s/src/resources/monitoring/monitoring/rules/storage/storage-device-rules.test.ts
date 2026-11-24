@@ -77,7 +77,7 @@ describe("stable storage-device identity joins", () => {
     }
   });
 
-  it("replaces the flat drive-writes-per-day limit with a per-drive budget", () => {
+  it("replaces the flat drive-writes-per-day limit with a per-drive 7-day average budget", () => {
     const rules = getNvmeRuleGroups().flatMap((group) => group.rules ?? []);
     expect(
       rules.find((rule) => rule.alert === "NvmeWriteRateAboveEndurance"),
@@ -86,8 +86,10 @@ describe("stable storage-device identity joins", () => {
       (rule) => rule.alert === "NvmeWriteBudgetExceeded",
     );
     expect(String(budget?.expr.value)).toBe(
-      `${NVME_DRIVE_WRITTEN_BYTES_24H} > on(node, instance, serial, model) ${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY}`,
+      `${NVME_DRIVE_WRITTEN_BYTES_PER_DAY_7D} > on(node, instance, serial, model) ${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY}`,
     );
+    expect(budget?.for).toBe("2h");
+    expect(budget?.keepFiringFor).toBe("6h");
     // No drive filter: OS disks are budgeted like pool disks.
     expect(String(budget?.expr.value)).not.toContain("serial=");
   });

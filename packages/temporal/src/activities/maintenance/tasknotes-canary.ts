@@ -170,7 +170,7 @@ function baselineStore(): Store {
   };
 }
 
-async function readBaseline(store: Store): Promise<{
+export async function readBaseline(store: Store): Promise<{
   value: TasknotesBaseline | undefined;
   raw: string | undefined;
 }> {
@@ -188,7 +188,11 @@ async function readBaseline(store: Store): Promise<{
         }),
       );
       for (const object of listed.Contents ?? []) {
-        if (object.Key !== undefined) {
+        if (
+          object.Key !== undefined &&
+          object.Key.endsWith(".json") &&
+          !object.Key.endsWith(".send-claim.json")
+        ) {
           objects.push({
             key: object.Key,
             modifiedAt: object.LastModified?.getTime() ?? 0,

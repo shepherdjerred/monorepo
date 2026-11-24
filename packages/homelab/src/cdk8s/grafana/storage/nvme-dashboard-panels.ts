@@ -155,7 +155,7 @@ export function addNvmePanels(builder: dashboard.DashboardBuilder): void {
     createStatPanel({
       title: "NVMe 5-Year Write Budget Used (24h)",
       description:
-        "Physical writes in the last 24h as a share of the daily budget that lasts each drive's remaining life 5 more years. The budget uses the faster of observed wear per byte and rated endurance (600 TBW per TB). Above 100% fires NvmeWriteBudgetExceeded.",
+        "Physical writes in the last 24h as a share of the daily budget that lasts each drive's remaining life 5 more years. The budget uses the faster of observed wear per byte and rated endurance (600 TBW per TB). A sustained 7-day average above 100% fires NvmeWriteBudgetExceeded.",
       query: `${NVME_DRIVE_WRITTEN_BYTES_24H}{${SERIAL_FILTER}} / on(node, instance, serial, model) ${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY}`,
       legend: "{{node}} · {{serial}}",
       gridPos: { x: 8, y: 86, w: 8, h: 4 },

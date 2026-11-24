@@ -10,12 +10,15 @@ import {
   getNvmeRuleGroups,
   NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY,
   NVME_DRIVE_WRITTEN_BYTES_24H,
+  NVME_DRIVE_WRITTEN_BYTES_PER_DAY_7D,
   ZFS_POOL_WRITE_AMPLIFICATION_24H,
 } from "./nvme.ts";
 
 const DATA_UNIT_BYTES = 512_000;
 const STEPS_PER_DAY = 288; // 5-minute samples
-const EVAL_HOURS = 30;
+// Span > 7 days (168h) so the 7d rolling average subquery covers a full week.
+const EVAL_HOURS = 174;
+const DIP_SWAP_HOURS = 30;
 
 type Drive = {
   node: string;
@@ -203,7 +206,13 @@ function expectedBudgetGb(drive: Drive): number {
   );
 }
 
-test("NVMe write budget follows observed or rated wear and pages over-budget drives", async () => {
+async function evaluateNvmeBudgetPromql(
+  prefix: string,
+  buildScenario: (alertExpr: string) => {
+    input_series: unknown[];
+    promql_expr_test: unknown[];
+  },
+): Promise<void> {
   const groups = getNvmeRuleGroups();
   const budgetGroup = groups.find(
     (group) => group.name === "nvme-write-budget.rules",
@@ -214,23 +223,8 @@ test("NVMe write budget follows observed or rated wear and pages over-budget dri
   if (budgetGroup === undefined || alert === undefined) {
     throw new Error("Missing NVMe write-budget rules");
   }
-
-  const evalTime = `${String(EVAL_HOURS)}h`;
-  const torvaldsPool = drives[0];
-  const liskovPool = drives[1];
-  const osDisk = drives[2];
-  if (
-    torvaldsPool === undefined ||
-    liskovPool === undefined ||
-    osDisk === undefined
-  ) {
-    throw new Error("Missing test drives");
-  }
-  // 250 GB/day of logical writes into the torvalds pool: 4x amplification.
-  const logicalPerStep = Math.round(250e9 / STEPS_PER_DAY);
-  const steps = String(EVAL_HOURS * 12 + 12);
-
-  const directory = await mkdtemp(path.join(tmpdir(), "nvme-budget-promql-"));
+  const scenario = buildScenario(String(alert.expr.value));
+  const directory = await mkdtemp(path.join(tmpdir(), prefix));
   try {
     await Bun.write(
       path.join(directory, "rules.json"),
@@ -253,116 +247,141 @@ test("NVMe write budget follows observed or rated wear and pages over-budget dri
       JSON.stringify({
         rule_files: ["rules.json"],
         evaluation_interval: "5m",
-        tests: [
-          {
-            interval: "5m",
-            input_series: [
-              ...drives.flatMap((drive) => driveSeries(drive)),
-              {
-                series:
-                  'node_zfs_zpool_dataset_nwritten{node="torvalds",zpool="zfspv-pool-nvme",dataset="zfspv-pool-nvme/pvc-a"}',
-                values: `0+${String(logicalPerStep)}x${steps}`,
-              },
-              // Outside the 24h window at eval time: not counted.
-              claim("wp-old", { from: 0, steps: 12 }),
-              claim("wp-a", { from: 240, steps: 12 }),
-              claim("wp-b", { from: 300, steps: EVAL_HOURS * 12 - 300 }),
-              claim("wp-c", { from: 200, steps: 100 }),
-              // wp-old's 9 GB is outside the window; wp-a wrote 5.5 GB and
-              // wp-b 2 GB, each counted once despite its clone pod.
-              ...workspace(
-                "wp-old",
-                "verify",
-                { from: 0, steps: 12 },
-                "0+1000000000x9",
-              ),
-              ...workspace(
-                "wp-a",
-                "verify",
-                { from: 240, steps: 12 },
-                "_x240 0+500000000x11",
-              ),
-              ...workspace(
-                "wp-b",
-                "playwright-e2e",
-                { from: 300, steps: EVAL_HOURS * 12 - 300 },
-                "_x300 0+100000000x20",
-              ),
-              // wp-c's 3 GB belongs to the workflow's own step, the first
-              // step pod created: media-pms-wire, even though
-              // media-pms-native sorts first.
-              ...orderedWorkspace(
-                "wp-c",
-                ["media-pms-wire", "media-pms-native"],
-                { from: 200, steps: 100 },
-                "_x200 0+300000000x10",
-              ),
-            ],
-            promql_expr_test: [
-              {
-                expr: `round(${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY} / 1e9)`,
-                eval_time: evalTime,
-                exp_samples: drives.map((drive) => ({
-                  labels: `{node="${drive.node}",instance="${drive.node}:9100",serial="${drive.serial}",model="Samsung SSD 990 PRO"}`,
-                  value: expectedBudgetGb(drive),
-                })),
-              },
-              {
-                expr: `count by (serial) (${String(alert.expr.value)})`,
-                eval_time: evalTime,
-                exp_samples: [torvaldsPool, osDisk].map((drive) => ({
-                  labels: `{serial="${drive.serial}"}`,
-                  value: 1,
-                })),
-              },
-              {
-                expr: `round(${ZFS_POOL_WRITE_AMPLIFICATION_24H}{node="torvalds"})`,
-                eval_time: evalTime,
-                exp_samples: [
-                  {
-                    labels: '{node="torvalds",zpool="zfspv-pool-nvme"}',
-                    value: 4,
-                  },
-                ],
-              },
-              // 400 GB/day over three claims in the window.
-              {
-                expr: `round(${CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H} / 1e9)`,
-                eval_time: evalTime,
-                exp_samples: [
-                  {
-                    labels: '{node="liskov",zpool="zfspv-pool-nvme"}',
-                    value: 133,
-                  },
-                ],
-              },
-              {
-                expr: `${CI_STEP_WORKSPACE_LOGICAL_BYTES_24H} / 1e8`,
-                eval_time: evalTime,
-                exp_samples: [
-                  { labels: '{step="verify"}', value: 55 },
-                  { labels: '{step="playwright-e2e"}', value: 20 },
-                  { labels: '{step="media-pms-wire"}', value: 30 },
-                ],
-              },
-              {
-                expr: `${CI_STEP_WORKSPACES_24H} + 0`,
-                eval_time: evalTime,
-                exp_samples: [
-                  { labels: '{step="verify"}', value: 1 },
-                  { labels: '{step="playwright-e2e"}', value: 1 },
-                  { labels: '{step="media-pms-wire"}', value: 1 },
-                ],
-              },
-            ],
-          },
-        ],
+        tests: [{ interval: "5m", ...scenario }],
       }),
     );
     await expectPromtoolRulesPass(testFile);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+}
+
+test("NVMe write budget follows observed or rated wear and pages over-budget drives", async () => {
+  const evalTime = `${String(EVAL_HOURS)}h`;
+  const torvaldsPool = drives[0];
+  const liskovPool = drives[1];
+  const osDisk = drives[2];
+  if (
+    torvaldsPool === undefined ||
+    liskovPool === undefined ||
+    osDisk === undefined
+  ) {
+    throw new Error("Missing test drives");
+  }
+  // 250 GB/day of logical writes into the torvalds pool: 4x amplification.
+  const logicalPerStep = Math.round(250e9 / STEPS_PER_DAY);
+  const steps = String(EVAL_HOURS * 12 + 12);
+  // Anchor active CI workspace claims in the final 30h window so they fall
+  // inside [evalTime - 24h, evalTime] just as wp-old stays well outside it.
+  const recentBase = (EVAL_HOURS - 30) * 12;
+  const wpAFrom = recentBase + 240;
+  const wpBFrom = recentBase + 300;
+  const wpCFrom = recentBase + 200;
+
+  await evaluateNvmeBudgetPromql("nvme-budget-promql-", (alertExpr) => ({
+    input_series: [
+      ...drives.flatMap((drive) => driveSeries(drive)),
+      {
+        series:
+          'node_zfs_zpool_dataset_nwritten{node="torvalds",zpool="zfspv-pool-nvme",dataset="zfspv-pool-nvme/pvc-a"}',
+        values: `0+${String(logicalPerStep)}x${steps}`,
+      },
+      // Outside the 24h window at eval time: not counted.
+      claim("wp-old", { from: 0, steps: 12 }),
+      claim("wp-a", { from: wpAFrom, steps: 12 }),
+      claim("wp-b", {
+        from: wpBFrom,
+        steps: EVAL_HOURS * 12 - wpBFrom,
+      }),
+      claim("wp-c", { from: wpCFrom, steps: 100 }),
+      // wp-old's 9 GB is outside the window; wp-a wrote 5.5 GB and
+      // wp-b 2 GB, each counted once despite its clone pod.
+      ...workspace(
+        "wp-old",
+        "verify",
+        { from: 0, steps: 12 },
+        "0+1000000000x9",
+      ),
+      ...workspace(
+        "wp-a",
+        "verify",
+        { from: wpAFrom, steps: 12 },
+        `_x${String(wpAFrom)} 0+500000000x11`,
+      ),
+      ...workspace(
+        "wp-b",
+        "playwright-e2e",
+        { from: wpBFrom, steps: EVAL_HOURS * 12 - wpBFrom },
+        `_x${String(wpBFrom)} 0+100000000x20`,
+      ),
+      // wp-c's 3 GB belongs to the workflow's own step, the first
+      // step pod created: media-pms-wire, even though
+      // media-pms-native sorts first.
+      ...orderedWorkspace(
+        "wp-c",
+        ["media-pms-wire", "media-pms-native"],
+        { from: wpCFrom, steps: 100 },
+        `_x${String(wpCFrom)} 0+300000000x10`,
+      ),
+    ],
+    promql_expr_test: [
+      {
+        expr: `round(${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY} / 1e9)`,
+        eval_time: evalTime,
+        exp_samples: drives.map((drive) => ({
+          labels: `{node="${drive.node}",instance="${drive.node}:9100",serial="${drive.serial}",model="Samsung SSD 990 PRO"}`,
+          value: expectedBudgetGb(drive),
+        })),
+      },
+      {
+        expr: `count by (serial) (${alertExpr})`,
+        eval_time: evalTime,
+        exp_samples: [torvaldsPool, osDisk].map((drive) => ({
+          labels: `{serial="${drive.serial}"}`,
+          value: 1,
+        })),
+      },
+      {
+        expr: `round(${ZFS_POOL_WRITE_AMPLIFICATION_24H}{node="torvalds"})`,
+        eval_time: evalTime,
+        exp_samples: [
+          {
+            labels: '{node="torvalds",zpool="zfspv-pool-nvme"}',
+            value: 4,
+          },
+        ],
+      },
+      // 400 GB/day over three claims in the window.
+      {
+        expr: `round(${CI_WORKSPACE_PHYSICAL_BYTES_PER_PVC_24H} / 1e9)`,
+        eval_time: evalTime,
+        exp_samples: [
+          {
+            labels: '{node="liskov",zpool="zfspv-pool-nvme"}',
+            value: 133,
+          },
+        ],
+      },
+      {
+        expr: `${CI_STEP_WORKSPACE_LOGICAL_BYTES_24H} / 1e8`,
+        eval_time: evalTime,
+        exp_samples: [
+          { labels: '{step="verify"}', value: 55 },
+          { labels: '{step="playwright-e2e"}', value: 20 },
+          { labels: '{step="media-pms-wire"}', value: 30 },
+        ],
+      },
+      {
+        expr: `${CI_STEP_WORKSPACES_24H} + 0`,
+        eval_time: evalTime,
+        exp_samples: [
+          { labels: '{step="verify"}', value: 1 },
+          { labels: '{step="playwright-e2e"}', value: 1 },
+          { labels: '{step="media-pms-wire"}', value: 1 },
+        ],
+      },
+    ],
+  }));
 });
 
 type ExporterSegmentOptions = {
@@ -438,6 +457,9 @@ function serializeAllRuleGroups(groups: ReturnType<typeof getNvmeRuleGroups>) {
               alert: rule.alert,
               expr: rule.expr.value,
               for: rule.for,
+              ...(rule.keepFiringFor === undefined
+                ? {}
+                : { keep_firing_for: rule.keepFiringFor }),
               labels: rule.labels,
               annotations: rule.annotations,
             }
@@ -573,7 +595,7 @@ test("NVMe rules survive unsafe-shutdown firmware counter dips and overlapping r
     throw new Error("Missing NvmeWriteBudgetExceeded alert");
   }
 
-  const totalSamples = EVAL_HOURS * 12 + 1; // indices 0..360 (0h..30h at 5m)
+  const totalSamples = DIP_SWAP_HOURS * 12 + 1; // indices 0..360 (0h..30h at 5m)
   const rebootStep = 200; // 16h40m ("1000m"), inside the [6h, 30h] 24h window
   const torvaldsPoolStart = Math.round(100e12 / DATA_UNIT_BYTES);
   const torvaldsOsStart = Math.round(10e12 / DATA_UNIT_BYTES);
@@ -660,4 +682,76 @@ test("NVMe rules survive unsafe-shutdown firmware counter dips and overlapping r
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test("NvmeWriteBudgetExceeded ignores single-day write bursts when the 7-day average stays within budget", async () => {
+  // 2 TB drive at 7% wear (~612 GB/day 5-year budget): 6 days at 300 GB/day
+  // followed by 1 busy day at 900 GB/day. The 24h counter exceeds the daily
+  // budget (900 GB > 612 GB), while the 7d average ((6*300 + 900)/7 = 386 GB)
+  // stays well below budget so NvmeWriteBudgetExceeded does not flap.
+  const calmSteps = 6 * STEPS_PER_DAY;
+  const burstSteps = STEPS_PER_DAY;
+  const totalSamples = calmSteps + burstSteps + 1;
+  const startUnits = Math.round(129e12 / DATA_UNIT_BYTES);
+  const calmUnitsPerStep = Math.round(300e9 / STEPS_PER_DAY / DATA_UNIT_BYTES);
+  const burstUnitsPerStep = Math.round(900e9 / STEPS_PER_DAY / DATA_UNIT_BYTES);
+  const writtenValues = Array.from({ length: totalSamples }, (_, step) =>
+    step <= calmSteps
+      ? String(startUnits + step * calmUnitsPerStep)
+      : String(
+          startUnits +
+            calmSteps * calmUnitsPerStep +
+            (step - calmSteps) * burstUnitsPerStep,
+        ),
+  ).join(" ");
+  const baseLabels =
+    'node="liskov",instance="liskov:9100",pod="node-exporter-a",device="nvme1n1"';
+  const constant = (value: number) =>
+    `${String(value)}x${String(totalSamples)}`;
+
+  await evaluateNvmeBudgetPromql("nvme-burst-promql-", (alertExpr) => ({
+    input_series: [
+      {
+        series: `nvme_device_info{${baseLabels},serial="S7L9NJ0L312632A",model="Samsung SSD 990 PRO"}`,
+        values: constant(1),
+      },
+      {
+        series: `nvme_data_units_written_total{${baseLabels}}`,
+        values: writtenValues,
+      },
+      {
+        series: `nvme_percentage_used_ratio{${baseLabels}}`,
+        values: constant(0.07),
+      },
+      {
+        series: `nvme_physical_size_bytes{${baseLabels}}`,
+        values: constant(2e12),
+      },
+    ],
+    promql_expr_test: [
+      // Single-day writes genuinely cross the 5-year daily budget (~900 GB > ~612 GB)...
+      {
+        expr: `count(${NVME_DRIVE_WRITTEN_BYTES_24H} > on(node, instance, serial, model) ${NVME_DRIVE_WRITE_BUDGET_BYTES_PER_DAY})`,
+        eval_time: "168h",
+        exp_samples: [{ labels: "{}", value: 1 }],
+      },
+      // ...while the 7-day rolling average stays around 386 GB/day, so the alert stays quiet.
+      {
+        expr: `round(${NVME_DRIVE_WRITTEN_BYTES_PER_DAY_7D} / 1e9)`,
+        eval_time: "168h",
+        exp_samples: [
+          {
+            labels:
+              '{node="liskov",instance="liskov:9100",serial="S7L9NJ0L312632A",model="Samsung SSD 990 PRO"}',
+            value: 386,
+          },
+        ],
+      },
+      {
+        expr: alertExpr,
+        eval_time: "168h",
+        exp_samples: [],
+      },
+    ],
+  }));
 });

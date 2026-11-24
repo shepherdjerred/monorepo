@@ -18,18 +18,29 @@ import {
 } from "#lib/delivery/network-policy/enforcement-staging-prune.ts";
 
 /**
- * One application's reviewed route retirement: its exact registered scope and
- * the `group/Kind/name` identities its owned sync may prune. `label` names the
- * application in refusals.
+ * One application's reviewed resource retirement: its exact registered scope
+ * and either the explicit `group/Kind/name` route identities or a bounded
+ * predicate over `{ group, kind, name }` that its owned sync may prune. `label`
+ * names the application in refusals; `resourceNoun` defaults to `"route"`.
  */
-export type RetiredRouteRule = {
+type RetiredRouteRuleBase = {
   application: string;
   chart: string;
   namespace: string;
   environmentId: string;
-  routes: ReadonlySet<string>;
   label: string;
+  resourceNoun?: string;
 };
+
+export type RetiredRouteRule =
+  | (RetiredRouteRuleBase & { routes: ReadonlySet<string> })
+  | (RetiredRouteRuleBase & {
+      matches: (resource: {
+        group: string;
+        kind: string;
+        name: string;
+      }) => boolean;
+    });
 
 /**
  * The release about to be synced, from either Delivery generation. `source`
@@ -110,6 +121,7 @@ function assertOwnedRoute(
 ) {
   const { rule, resource, seen } = context;
   const group = resource.group ?? "";
+  const noun = rule.resourceNoun ?? "route";
   const uid = native.metadata.uid;
   if (
     uid === undefined ||
@@ -118,15 +130,18 @@ function assertOwnedRoute(
     native.apiVersion !== cached.apiVersion ||
     apiGroup(native.apiVersion) !== group ||
     native.kind !== resource.kind ||
+    cached.kind !== resource.kind ||
     native.metadata.name !== resource.name ||
+    cached.metadata.name !== resource.name ||
     native.metadata.namespace !== rule.namespace ||
+    cached.metadata.namespace !== rule.namespace ||
     native.metadata.deletionTimestamp !== undefined ||
     native.metadata.annotations?.["argocd.argoproj.io/hook"] !== undefined ||
     native.metadata.annotations?.["argocd.argoproj.io/tracking-id"] !==
       `${rule.application}:${group}/${resource.kind}:${rule.namespace}/${resource.name}`
   )
     throw new Error(
-      `Retired ${rule.label} route is not the exact owned resource`,
+      `Retired ${rule.label} ${noun} is not the exact owned resource`,
     );
   seen.add(uid);
 }
@@ -180,10 +195,10 @@ export async function retiredRouteSyncPrunes(
   );
   const seen = new Set<string>();
   for (const resource of obsolete) {
-    const stagingNamespace = enforcementStagingNamespace(
-      resource,
-      rule.namespace,
-    );
+    const stagingNamespace =
+      "routes" in rule
+        ? enforcementStagingNamespace(resource, rule.namespace)
+        : null;
     if (stagingNamespace !== null) {
       await assertRetiredEnforcementStagingPolicy({
         application: rule.application,
@@ -196,10 +211,11 @@ export async function retiredRouteSyncPrunes(
       continue;
     }
     const group = resource.group ?? "";
-    if (
-      resource.namespace !== rule.namespace ||
-      !rule.routes.has(`${group}/${resource.kind}/${resource.name}`)
-    )
+    const allowed =
+      "routes" in rule
+        ? rule.routes.has(`${group}/${resource.kind}/${resource.name}`)
+        : rule.matches({ group, kind: resource.kind, name: resource.name });
+    if (!allowed || resource.namespace !== rule.namespace)
       throw new Error(
         `${rule.label} sync refuses unrelated or storage pruning`,
       );

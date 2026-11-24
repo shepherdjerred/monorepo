@@ -1,7 +1,15 @@
 import type { Chart } from "cdk8s";
 import { tailnetService } from "homelab/src/platform-model.ts";
 import { Size } from "cdk8s";
+import {
+  KubePersistentVolumeClaim,
+  Quantity,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import {
+  getPvcBackupLabels,
+  getPvcBackupPolicy,
+} from "@shepherdjerred/homelab/cdk8s/src/backup-policy/pvc-backup-policy.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
@@ -268,6 +276,26 @@ export function createLokiAlertRules(chart: Chart): ConfigMap {
 
 /** Objects the root renders beside the Application; the `loki-companion` companion chart renders the same objects under transition rendering. */
 export function createLokiResources(chart: Chart): void {
+  // Adopt and expand the existing claim before changing the immutable Helm
+  // claim template. Preserve its name and binding; the root release owns quota
+  // changes, while Loki continues mounting the same dataset.
+  new KubePersistentVolumeClaim(chart, "storage-loki-0-capacity", {
+    metadata: {
+      name: "storage-loki-0",
+      namespace: "loki",
+      labels: getPvcBackupLabels(getPvcBackupPolicy("loki", "storage-loki-0")),
+      annotations: {
+        "argocd.argoproj.io/sync-wave": "-1",
+        "argocd.argoproj.io/sync-options": "Prune=false",
+      },
+    },
+    spec: {
+      accessModes: ["ReadWriteOnce"],
+      storageClassName: NVME_STORAGE_CLASS,
+      resources: { requests: { storage: Quantity.fromString("768Gi") } },
+    },
+  });
+
   createIngress(chart, "loki-ingress", {
     namespace: "loki",
     service: "loki",
@@ -302,6 +330,9 @@ export function createLokiApp(chart: Chart) {
       },
       persistence: {
         storageClass: NVME_STORAGE_CLASS,
+        // Keep the immutable StatefulSet claim template at its existing size
+        // while the explicit root-owned claim above expands; template sizes stay
+        // unchanged in the volume-expansion release.
         size: Size.gibibytes(128).asString(),
         labels: {
           "velero.io/backup": "disabled",
@@ -453,6 +484,16 @@ export function createLokiApp(chart: Chart) {
   return helmApplication(chart, {
     name: "loki",
     namespace: "loki",
+    // ServerSideApply=true enables Argo CD's server-side diff by default, which
+    // dry-run applies StatefulSet/loki without honoring ignoreDifferences on
+    // /spec/volumeClaimTemplates and leaves loki in ComparisonError. Client-side
+    // diff honors the ignored immutable template path while sync still uses
+    // server-side apply.
+    metadata: {
+      annotations: {
+        "argocd.argoproj.io/compare-options": "ServerSideDiff=false",
+      },
+    },
     chart: "loki",
     // https://github.com/grafana/loki/tree/main/production/helm/loki
     repoUrl: "https://grafana.github.io/helm-charts",
