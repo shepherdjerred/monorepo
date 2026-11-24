@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { createMovieWorkflowFixture } from "#testing/movie-workflow/fixture.ts";
+import { createMovieContinuationFixture } from "#testing/movie-workflow/retry-continuation-fixture.ts";
 import { retentionMovieFixtures } from "#testing/retention/movie-fixtures.ts";
 import { fixtureNotificationReceipts } from "#testing/retention-interest.ts";
 import { grantTestRequesterAccess } from "#testing/authority.ts";
@@ -8,6 +9,7 @@ import { testPlexBindingExecution } from "#testing/plex-binding-execution.ts";
 import { MovieLifecycleCommands } from "#infrastructure/movie-editions/lifecycle/commands.ts";
 import { createNotificationActivities } from "#automation/notifications.ts";
 import { createMovieNetworkFacetV4 } from "#automation/movie-editions/activities.ts";
+import { queueOperation } from "#automation/store.ts";
 import { MovieOperationV4Schema } from "#shared/movie-editions/lifecycle/automation-v4.ts";
 import { identityHash } from "#infrastructure/acquisition-identity/snapshot.ts";
 import { MovieInterventionNoticeV4Schema } from "#shared/movie-editions/intervention/v4.ts";
@@ -104,7 +106,7 @@ async function fixture(
 }
 type Fixture = Awaited<ReturnType<typeof fixture>>;
 
-async function deliveries(f: Fixture) {
+async function deliveries(f: Pick<Fixture, "db" | "input">) {
   return f.db.notificationDelivery.findMany({
     where: {
       event: {
@@ -427,6 +429,155 @@ test("SQL retains the actual failure notice selection and its exact recipient", 
   ).rejects.toThrow("Movie intervention recipient and source are immutable");
   expect(await deliveries(f)).toEqual(notices);
 }, 60_000);
+
+test("repeated automatic checks preserve the first failure notice per recipient and surface a new failure", async () => {
+  const f = await createMovieWorkflowFixture("default", {
+    bytes: movies.bytes(),
+  });
+  closers.push(f.close);
+  const { db, user } = f.source;
+  const owner = await db.mediaUser.findFirstOrThrow({
+    where: { role: "owner" },
+  });
+  for (const recipient of [user, owner]) {
+    await db.mediaUser.update({
+      where: { id: recipient.id },
+      data: {
+        role: "owner",
+        notificationPreference: { create: { emailEnabled: true } },
+      },
+    });
+  }
+  const failure = {
+    status: "reconciling" as const,
+    reason: "archive_transition_reconciliation_required",
+  };
+  await f.finishMediaOperation({
+    ...failure,
+    operationId: f.input.operationId,
+  });
+  const notices = () => deliveries({ db, input: f.input });
+  const first = await notices();
+  const summaries = (rows: Awaited<ReturnType<typeof notices>>) =>
+    rows.map(({ event, userId }) => {
+      const notice = MovieInterventionNoticeV4Schema.parse(event.payload);
+      return {
+        userId,
+        kind: event.kind,
+        operationId: notice.source.operationId,
+      };
+    });
+  expect(summaries(first)).toEqual(
+    expect.arrayContaining([
+      {
+        userId: user.id,
+        kind: "acquisition_failed",
+        operationId: f.input.operationId,
+      },
+      {
+        userId: owner.id,
+        kind: "system_intervention",
+        operationId: f.input.operationId,
+      },
+    ]),
+  );
+  expect(first).toHaveLength(2);
+
+  const queueCheck = () =>
+    db.$transaction((tx) =>
+      queueOperation(tx, {
+        key: crypto.randomUUID(),
+        kind: "reconcile_movie_edition_v4",
+        targetId: f.input.mediaId,
+        payload: {
+          schemaVersion: 4,
+          mediaId: f.input.mediaId,
+          scope: f.input.scope,
+          generation: f.input.generation,
+        },
+      }),
+    );
+  const repeated = await queueCheck();
+  await f.finishMediaOperation({ ...failure, operationId: repeated });
+  expect(await notices()).toEqual(first);
+
+  const changed = await queueCheck();
+  await f.finishMediaOperation({
+    ...failure,
+    operationId: changed,
+    reason: "identity_source_changed",
+  });
+  const all = await notices();
+  expect(all).toHaveLength(4);
+  expect(summaries(all)).toEqual(
+    expect.arrayContaining([
+      ...summaries(first),
+      { userId: user.id, kind: "acquisition_failed", operationId: changed },
+      { userId: owner.id, kind: "system_intervention", operationId: changed },
+    ]),
+  );
+}, 60_000);
+
+test.each(["prepared", "plex"] as const)(
+  "%s retries that fail before renewal retain separate failure notices",
+  async (phase) => {
+    const f = await createMovieContinuationFixture("default", {
+      bytes: movies.bytes(),
+      phase,
+    });
+    closers.push(f.close);
+    await f.settleOriginalFailure();
+    const before = await f.evidence();
+    if (before.attempt === null)
+      throw new Error("Actual continuation omitted its acquisition");
+    f.useDescriptions((id) =>
+      Promise.resolve({ status: "FAILED", runId: `synthetic-closed:${id}` }),
+    );
+    const owner = await f.db.mediaUser.findFirstOrThrow({
+      where: { role: "owner" },
+    });
+    for (const recipient of [f.actor, owner])
+      await f.db.notificationPreference.upsert({
+        where: { userId: recipient.id },
+        create: { userId: recipient.id, emailEnabled: true },
+        update: { emailEnabled: true },
+      });
+
+    const first = await f.retry();
+    await f.finishMediaOperation({
+      operationId: first.input.operationId,
+      status: "reconciling",
+      reason: "movie_retry_authority_changed",
+    });
+    const firstNotices = await deliveries(f);
+    expect(firstNotices).toHaveLength(2);
+
+    const second = await f.retry();
+    await f.finishMediaOperation({
+      operationId: second.input.operationId,
+      status: "reconciling",
+      reason: "movie_retry_authority_changed",
+    });
+    const allNotices = await deliveries(f);
+    expect(allNotices).toHaveLength(4);
+    expect(
+      allNotices.map(
+        ({ event }) =>
+          MovieInterventionNoticeV4Schema.parse(event.payload).source
+            .operationId,
+      ),
+    ).toEqual(
+      expect.arrayContaining([
+        first.input.operationId,
+        first.input.operationId,
+        second.input.operationId,
+        second.input.operationId,
+      ]),
+    );
+    expect(await f.evidence()).toMatchObject({ attempt: before.attempt });
+  },
+  60_000,
+);
 
 test("a genuine unchanged-generation retry renewal protects both old pending failure notices without another send", async () => {
   const f = await fixture();
