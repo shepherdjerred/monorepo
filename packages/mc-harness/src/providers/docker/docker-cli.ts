@@ -18,27 +18,29 @@ export function defaultDockerTimeoutMs(args: readonly string[]): number {
     : DOCKER_CLI_TIMEOUT_MS;
 }
 
-async function killTimedOutDockerChild(
-  subprocess: ReturnType<typeof Bun.spawn>,
-): Promise<void> {
+function tryKill(
+  child: ReturnType<typeof Bun.spawn>,
+  signal: "SIGTERM" | "SIGKILL",
+): boolean {
   try {
-    subprocess.kill("SIGTERM");
+    child.kill(signal);
+    return true;
   } catch {
-    return;
+    return false;
   }
-  const exitedOnTerm = await Promise.race([
-    subprocess.exited.then(() => true),
+}
+
+async function stopWedgedDockerProcess(
+  child: ReturnType<typeof Bun.spawn>,
+): Promise<void> {
+  if (!tryKill(child, "SIGTERM")) return;
+  const terminated = await Promise.race([
+    child.exited.then(() => true),
     Bun.sleep(250).then(() => false),
   ]);
-  if (exitedOnTerm) {
-    return;
+  if (!terminated && tryKill(child, "SIGKILL")) {
+    await Promise.race([child.exited, Bun.sleep(500)]);
   }
-  try {
-    subprocess.kill("SIGKILL");
-  } catch {
-    return;
-  }
-  await Promise.race([subprocess.exited, Bun.sleep(500)]);
 }
 
 /** Runs a docker CLI command with a bounded deadline and fails loudly on timeout or non-zero exit. */
@@ -48,55 +50,44 @@ export async function docker(
 ): Promise<CommandResult> {
   const timeoutMs = options?.timeoutMs ?? defaultDockerTimeoutMs(args);
   const subcommand = args[0] ?? "";
-  const executable =
+  const binary =
     Bun.which("docker", { PATH: Bun.env["PATH"] ?? "" }) ?? "docker";
-  const subprocess = Bun.spawn([executable, ...args], {
+  const child = Bun.spawn([binary, ...args], {
     env: Bun.env,
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
   });
 
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const outcome = await Promise.race([
-    Promise.all([
-      new Response(subprocess.stdout).text(),
-      new Response(subprocess.stderr).text(),
-      subprocess.exited,
-    ]).then(([stdout, stderr, exitCode]) => ({
-      kind: "exited" as const,
-      stdout,
-      stderr,
-      exitCode,
-    })),
-    new Promise<{ kind: "timeout" }>((resolve) => {
-      timer = setTimeout(() => {
-        resolve({ kind: "timeout" });
-      }, timeoutMs);
-      timer.unref();
-    }),
-  ]);
-  if (timer !== undefined) {
-    clearTimeout(timer);
-  }
+  const state: { timedOut: boolean; reaper?: Promise<void> } = {
+    timedOut: false,
+  };
+  const deadlineTimer = setTimeout(() => {
+    state.timedOut = true;
+    state.reaper = stopWedgedDockerProcess(child);
+  }, timeoutMs);
+  deadlineTimer.unref();
 
-  if (outcome.kind === "timeout") {
-    await Promise.allSettled([
-      subprocess.stdout.cancel(),
-      subprocess.stderr.cancel(),
-      killTimedOutDockerChild(subprocess),
-    ]);
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(child.stdout).text().catch(() => ""),
+    new Response(child.stderr).text().catch(() => ""),
+    child.exited,
+  ]).finally(() => {
+    clearTimeout(deadlineTimer);
+  });
+
+  if (state.timedOut) {
+    await state.reaper;
     throw new Error(
       `docker ${subcommand} timed out after ${timeoutMs.toString()}ms`,
     );
   }
-
-  if (outcome.exitCode !== 0) {
+  if (exitCode !== 0) {
     throw new Error(
-      `docker ${subcommand} failed (${outcome.exitCode.toString()}): ${outcome.stderr.trim()}`,
+      `docker ${subcommand} failed (${exitCode.toString()}): ${stderr.trim()}`,
     );
   }
-  return { stdout: outcome.stdout, stderr: outcome.stderr };
+  return { stdout, stderr };
 }
 
 type ServerLogSource =

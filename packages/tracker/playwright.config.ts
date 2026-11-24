@@ -4,9 +4,27 @@ import { listenerCwd, selectE2ePort } from "./src/e2e-port.ts";
 
 const checkout = path.resolve(import.meta.dir, "../..");
 const ci = Bun.env["CI"] === "true";
-const port = selectE2ePort(checkout, ci, (candidate) =>
-  ci ? null : listenerCwd(candidate),
-);
+
+function resolveCiTrackerPort(repoRoot: string): number {
+  const resolver = path.join(repoRoot, "scripts/lib/e2e/e2e-port.ts");
+  const out = Bun.spawnSync(
+    [process.execPath, resolver, repoRoot, "TRACKER_E2E_PORT"],
+    { env: Bun.env, stdout: "pipe", stderr: "pipe" },
+  );
+  if (out.exitCode !== 0) {
+    throw new Error(out.stderr.toString() || "Failed to allocate Tracker port");
+  }
+  const selected = Number.parseInt(
+    out.stdout.toString().split(":")[0] ?? "",
+    10,
+  );
+  Bun.env["_PLAYWRIGHT_RESOLVED_TRACKER_E2E_PORT"] = String(selected);
+  return selected;
+}
+
+const port = ci
+  ? resolveCiTrackerPort(checkout)
+  : selectE2ePort(checkout, false, listenerCwd);
 const baseURL = `http://127.0.0.1:${String(port)}`;
 
 export default defineConfig({
