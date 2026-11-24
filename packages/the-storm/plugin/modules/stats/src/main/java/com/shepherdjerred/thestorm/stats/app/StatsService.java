@@ -192,7 +192,7 @@ public final class StatsService implements AutoCloseable {
     if (stopped || transport == null) {
       return;
     }
-    pendingServerSnapshot.set(serverSnapshot);
+    putServerSnapshot(serverSnapshot);
     for (var snapshot : playerSnapshots) {
       putPlayerSnapshot(snapshot);
     }
@@ -203,6 +203,19 @@ public final class StatsService implements AutoCloseable {
       return;
     }
     putPlayerSnapshot(snapshot);
+  }
+
+  private void putServerSnapshot(StatsWire.ServerSnapshot incoming) {
+    while (true) {
+      var existing = pendingServerSnapshot.get();
+      if (existing != null
+          && Instant.parse(incoming.capturedAt()).isBefore(Instant.parse(existing.capturedAt()))) {
+        return;
+      }
+      if (pendingServerSnapshot.compareAndSet(existing, incoming)) {
+        return;
+      }
+    }
   }
 
   private void putPlayerSnapshot(StatsWire.PlayerGameplaySnapshot snapshot) {
@@ -333,7 +346,7 @@ public final class StatsService implements AutoCloseable {
       StatsWire.@Nullable ServerSnapshot serverSnap,
       List<StatsWire.PlayerGameplaySnapshot> playerSnaps) {
     if (serverSnap != null) {
-      pendingServerSnapshot.compareAndSet(null, serverSnap);
+      putServerSnapshot(serverSnap);
     }
     for (var snap : playerSnaps) {
       putPlayerSnapshot(snap);

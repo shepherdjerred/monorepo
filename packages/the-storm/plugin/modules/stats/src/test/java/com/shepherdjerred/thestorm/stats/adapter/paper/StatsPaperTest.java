@@ -216,22 +216,19 @@ final class StatsPaperTest {
     assertThat(storedAlice.connectedMs()).isGreaterThanOrEqualTo(60_000L);
 
     // Execute /stats and /stats Alice and /stats player Alice
-    alice.nextComponentMessage(); // drain any prior messages
+    drainMessages(alice);
     assertThat(server.dispatchCommand(alice, "stats")).isTrue();
-    waitForAsyncDb(statsService);
-    server.getScheduler().performTicks(2L);
-    var overviewReply = alice.nextComponentMessage();
+    var overviewReply = awaitNextMessage(alice);
     assertThat(overviewReply).isNotNull();
 
+    drainMessages(alice);
     assertThat(server.dispatchCommand(alice, "stats Alice")).isTrue();
-    waitForAsyncDb(statsService);
-    server.getScheduler().performTicks(2L);
-    var profileHeader = alice.nextComponentMessage();
+    var profileHeader = awaitNextMessage(alice);
     assertThat(profileHeader).isNotNull();
 
+    drainMessages(alice);
     assertThat(server.dispatchCommand(alice, "stats player UnknownPerson")).isTrue();
-    waitForAsyncDb(statsService);
-    server.getScheduler().performTicks(2L);
+    assertThat(awaitNextMessage(alice)).isNotNull();
 
     // Kick Bob -> bounce + kick session end
     server
@@ -395,30 +392,51 @@ final class StatsPaperTest {
           assertThat(carolSummary.connectedMs()).isEqualTo(50_000L);
           assertThat(carolSummary.activeMs()).isEqualTo(25_000L);
 
-          // Simulate a late completion from an earlier periodic sample — must NOT overwrite quit!
-          customService.bufferPlayerSnapshot(
-              new StatsWire.PlayerGameplaySnapshot(
-                  carol.getUniqueId().toString(),
-                  "Carol",
+          // Simulate a late completion from an earlier periodic sample — must NOT overwrite quit
+          // or a newer empty-server snapshot!
+          var newerEmptyServer =
+              new StatsWire.ServerSnapshot(now.get().toString(), List.of(), 64, 0, List.of());
+          var stalePopulatedServer =
+              new StatsWire.ServerSnapshot(
                   now.get().minusSeconds(15).toString(),
-                  null,
-                  "default",
-                  99L,
-                  null,
-                  null,
+                  List.of(
+                      new StatsWire.OnlinePlayerSummary(
+                          carol.getUniqueId().toString(),
+                          "Carol",
+                          "survival",
+                          "world",
+                          false,
+                          20,
+                          now.get().minusSeconds(50).toString())),
+                  64,
                   0,
-                  0,
-                  null,
-                  0,
-                  Map.of(),
-                  null,
-                  null,
-                  Map.of(),
-                  0,
-                  0,
-                  0,
-                  0,
-                  0));
+                  List.of());
+          customService.bufferSnapshots(newerEmptyServer, List.of());
+          customService.bufferSnapshots(
+              stalePopulatedServer,
+              List.of(
+                  new StatsWire.PlayerGameplaySnapshot(
+                      carol.getUniqueId().toString(),
+                      "Carol",
+                      now.get().minusSeconds(15).toString(),
+                      null,
+                      "default",
+                      99L,
+                      null,
+                      null,
+                      0,
+                      0,
+                      null,
+                      0,
+                      Map.of(),
+                      null,
+                      null,
+                      Map.of(),
+                      0,
+                      0,
+                      0,
+                      0,
+                      0)));
 
           customService.flush().get();
           var quitSnapshots =
@@ -428,6 +446,13 @@ final class StatsPaperTest {
               .containsExactly(1900L);
           assertThat(quitSnapshots.getFirst().questsCompleted()).isEqualTo(7);
           assertThat(quitSnapshots.getFirst().arenaBestWaves()).containsEntry("colosseum", 20);
+          var exportedServer =
+              exportedBatches.stream()
+                  .map(StatsWire.IngestBatch::serverSnapshot)
+                  .filter(java.util.Objects::nonNull)
+                  .findFirst()
+                  .orElseThrow();
+          assertThat(exportedServer.onlinePlayers()).isEmpty();
         } finally {
           org.bukkit.event.HandlerList.unregisterAll(listener);
           org.bukkit.event.HandlerList.unregisterAll(siblingQuitListener);
@@ -452,6 +477,25 @@ final class StatsPaperTest {
         };
     server.addPlayer(player);
     return player;
+  }
+
+  private Component awaitNextMessage(PlayerMock player) {
+    long deadlineNanos = System.nanoTime() + Duration.ofSeconds(5).toNanos();
+    while (System.nanoTime() < deadlineNanos) {
+      server.getScheduler().performTicks(1L);
+      var msg = player.nextComponentMessage();
+      if (msg != null) {
+        return msg;
+      }
+      java.util.concurrent.locks.LockSupport.parkNanos(2_000_000L);
+    }
+    throw new AssertionError("Timed out waiting for async /stats command reply");
+  }
+
+  private static void drainMessages(PlayerMock player) {
+    while (player.nextComponentMessage() != null) {
+      // Drain buffered chat messages
+    }
   }
 
   private static void waitForAsyncDb(StatsService service) throws Exception {
