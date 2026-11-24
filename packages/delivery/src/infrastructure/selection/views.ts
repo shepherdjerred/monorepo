@@ -103,6 +103,8 @@ export function recoveryIntentView(row: RecoveryIntent) {
       expectedGeneration: row.expectedGeneration,
       fingerprint: row.fingerprint,
       evidence: z.array(EvidenceInputSchema).parse(row.evidence),
+      producerBarrierHeld:
+        row.barrier !== null && row.barrierRestoredAt === null,
       outcome:
         row.status === "succeeded" || row.status === "failed"
           ? row.status

@@ -247,6 +247,14 @@ function configurationContent(
     // every content key but `helm.valuesObject` is a Helm parameter.
     forwardOnly.push("/helm/parameters/forum.xenforoVersion");
   }
+  const reportLakeEpoch = content["scout.reportLakeSchemaEpoch"];
+  if (reportLakeEpoch !== undefined) {
+    if (!/^[1-9]\d*$/u.test(reportLakeEpoch))
+      throw new Error(
+        "The Scout configuration must set scout.reportLakeSchemaEpoch to a positive integer epoch",
+      );
+    forwardOnly.push("/helm/parameters/scout.reportLakeSchemaEpoch");
+  }
   if (Object.keys(values).length > 0)
     content["helm.valuesObject"] = JSON.stringify(values);
   return { content, forwardOnly };

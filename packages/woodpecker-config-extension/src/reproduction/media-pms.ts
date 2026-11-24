@@ -92,6 +92,7 @@ export function renderPmsReproduction(
       clone: z.tuple([
         emittedContainer.extend({ name: z.literal("clear-golden") }),
         emittedContainer.extend({ name: z.literal("clone") }),
+        emittedContainer.extend({ name: z.literal("finalize-clone") }),
       ]),
       steps: z.tuple([emittedContainer, emittedContainer]),
     })

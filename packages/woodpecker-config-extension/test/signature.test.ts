@@ -60,8 +60,7 @@ describe("ci image resolution", () => {
       { name: "trmnl/trmnlp", value: "v0.11.0" },
       { name: "grafana/tempo", value: "3.0.3" },
       { name: "mikefarah/yq", value: "latest" },
-      { name: "minio/mc", value: "RELEASE" },
-      { name: "minio/minio", value: "RELEASE" },
+      { name: "pgsty/silo", value: "RELEASE" },
       {
         name: "plexinc/pms-docker",
         value: `1.43.4.10903-e5521bd8c-amd64@sha256:${"c".repeat(64)}`,

@@ -14,8 +14,7 @@ const TEST_IMAGES = {
     "trmnl/trmnlp": "trmnlp-image",
     "grafana/tempo": "tempo-image",
     "mikefarah/yq": "yq-image",
-    "minio/mc": "mc-image",
-    "minio/minio": "minio-image",
+    "pgsty/silo": "silo-image",
     "plexinc/pms-docker": `plexinc/pms-docker:1.43.4.10903-e5521bd8c-amd64@sha256:${"c".repeat(64)}`,
   },
 };

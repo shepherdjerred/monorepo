@@ -111,6 +111,18 @@ export function duckDbEmptySelect(
  * union by name, so a cosmetic reorder is read-compatible and should not cost a
  * full rebuild; a rename, addition, removal, or type change is not, and does.
  */
+/**
+ * Monotonic forward-only epoch of the physical report-lake Parquet layout.
+ *
+ * Bumped in lockstep whenever `lakeSchemaFingerprint()` changes (adding,
+ * removing, renaming, or retyping any lake column). Delivery's Scout
+ * configuration carries this value as `scout.reportLakeSchemaEpoch` under
+ * `forwardOnly` so monitor rollback holds (`hold`) instead of rolling back to
+ * an older image that refuses to boot against the upgraded on-PVC lake
+ * (`AI-658`).
+ */
+export const LAKE_SCHEMA_EPOCH = 2;
+
 export function lakeSchemaFingerprint(): string {
   return lakeSchemaFingerprintOf(LAKE_TABLE_COLUMNS);
 }

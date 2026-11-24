@@ -1,4 +1,8 @@
-import { e2eEnvironment, waitForTempo } from "./run-core.ts";
+import {
+  createArchiveBucket,
+  e2eEnvironment,
+  waitForTempo,
+} from "./run-core.ts";
 
 const root = import.meta.dir.replace(/\/test\/e2e$/, "");
 const compose = ["docker", "compose", "-f", "test/e2e/compose.yaml"];
@@ -31,7 +35,7 @@ async function main(): Promise<void> {
       );
       return response?.ok === true;
     });
-    await run([...compose, "run", "--rm", "minio-init"]);
+    await createArchiveBucket("http://localhost:9000");
     // Compose publishes both services on localhost.
     await run(
       [

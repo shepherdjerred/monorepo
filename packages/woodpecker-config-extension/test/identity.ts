@@ -31,8 +31,7 @@ export const TEST_IMAGES: CiImages = {
     "trmnl/trmnlp": "trmnl/trmnlp:v0.11.0",
     "grafana/tempo": "grafana/tempo:3.0.3",
     "mikefarah/yq": "mikefarah/yq:latest",
-    "minio/mc": "minio/mc:RELEASE",
-    "minio/minio": "minio/minio:RELEASE",
+    "pgsty/silo": "pgsty/silo:RELEASE",
     "plexinc/pms-docker": `plexinc/pms-docker:1.43.4.10903-e5521bd8c-amd64@sha256:${"c".repeat(64)}`,
   },
 };

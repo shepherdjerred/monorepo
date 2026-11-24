@@ -202,12 +202,13 @@ const RenderedResourceSchema = z
 // no-op instead of applying the resource. Keep this table limited to the
 // cluster-scoped kinds emitted directly by the root chart; child charts are
 // reconciled as complete Applications and never use these selectors.
-const CLUSTER_SCOPED_ROOT_RESOURCE_KINDS = new Set([
+export const CLUSTER_SCOPED_ROOT_RESOURCE_KINDS: ReadonlySet<string> = new Set([
   "/Namespace",
   "admissionregistration.k8s.io/MutatingAdmissionPolicy",
   "admissionregistration.k8s.io/MutatingAdmissionPolicyBinding",
   "admissionregistration.k8s.io/ValidatingAdmissionPolicy",
   "admissionregistration.k8s.io/ValidatingAdmissionPolicyBinding",
+  "cert-manager.io/ClusterIssuer",
   "kueue.x-k8s.io/ClusterQueue",
   "kueue.x-k8s.io/ResourceFlavor",
   "kueue.x-k8s.io/WorkloadPriorityClass",
@@ -1035,6 +1036,7 @@ type ExpectedSyncResultIdentities = {
   readonly desired: ReadonlySet<string>;
   readonly pruned: ReadonlySet<string>;
   readonly nonApplicationPrunes?: readonly SyncOperationResource[];
+  readonly selective?: boolean;
 };
 
 async function getExpectedSyncResultIdentities(
@@ -1114,7 +1116,7 @@ function appsPruneRecoveryIdentitiesFrom(
         "Selective root pruning must cover exactly its persisted non-Application candidates",
       );
     }
-    return { desired: new Set(), pruned };
+    return { desired: new Set(), pruned, selective: true };
   }
   return rootPruneRecoveryIdentities(pruned);
 }
@@ -2094,6 +2096,7 @@ async function sync(
         expectedResourceIdentities = {
           desired: new Set(),
           pruned: operationResourceIdentities(options.resources ?? []),
+          selective: true,
         };
       } else if (verifiedRootDesiredIdentities === undefined) {
         expectedResourceIdentities = rootExpectedResourceIdentities;
@@ -2151,6 +2154,7 @@ async function sync(
       expectedResourceIdentities = {
         desired: unique,
         pruned: new Set(),
+        selective: true,
       };
     }
   }
@@ -2565,70 +2569,175 @@ function syncResultRevision(
   return typeof revision === "string" ? revision : undefined;
 }
 
+type SyncResultInspection = {
+  readonly everyReportedResourceApplied: boolean;
+  readonly hasResources: boolean;
+  readonly prunedIdentities: ReadonlySet<string>;
+  readonly revisionMatches: boolean;
+  readonly skippedIdentities: ReadonlySet<string>;
+  readonly syncedIdentities: ReadonlySet<string>;
+};
+
+const SyncResultResourceSchema = z.object({
+  group: z.string().optional(),
+  hookPhase: z.string().optional(),
+  hookType: z.string().nullable().optional(),
+  kind: z.string(),
+  name: z.string(),
+  status: z.enum(["Synced", "Pruned", "Skipped"]),
+});
+
+function parseAppliedResourceEntry(resource: unknown): {
+  readonly identity: string;
+  readonly status: "Synced" | "Pruned" | "Skipped";
+} | null {
+  const parsed = SyncResultResourceSchema.safeParse(resource);
+  if (!parsed.success) {
+    return null;
+  }
+  const { group, hookPhase, hookType, kind, name, status } = parsed.data;
+  if (
+    hookType !== undefined &&
+    hookType !== null &&
+    (hookPhase === "Failed" || hookPhase === "Error")
+  ) {
+    return null;
+  }
+  return {
+    identity: resourceIdentity(group ?? "", kind, name),
+    status,
+  };
+}
+
+function inspectSyncResult(
+  operationStateValue: Record<string, unknown>,
+  revision: string,
+): SyncResultInspection {
+  const revisionMatches = syncResultRevision(operationStateValue) === revision;
+  const syncResult = isRecord(operationStateValue["syncResult"])
+    ? operationStateValue["syncResult"]
+    : {};
+  const resources = syncResult["resources"];
+  const syncedIdentities = new Set<string>();
+  const skippedIdentities = new Set<string>();
+  const prunedIdentities = new Set<string>();
+  if (!Array.isArray(resources) || resources.length === 0) {
+    return {
+      everyReportedResourceApplied: false,
+      hasResources: false,
+      prunedIdentities,
+      revisionMatches,
+      skippedIdentities,
+      syncedIdentities,
+    };
+  }
+  let everyReportedResourceApplied = true;
+  for (const resource of resources) {
+    const parsed = parseAppliedResourceEntry(resource);
+    if (parsed === null) {
+      everyReportedResourceApplied = false;
+      continue;
+    }
+    if (parsed.status === "Synced") {
+      syncedIdentities.add(parsed.identity);
+    } else if (parsed.status === "Skipped") {
+      skippedIdentities.add(parsed.identity);
+    } else {
+      prunedIdentities.add(parsed.identity);
+    }
+  }
+  return {
+    everyReportedResourceApplied,
+    hasResources: true,
+    prunedIdentities,
+    revisionMatches,
+    skippedIdentities,
+    syncedIdentities,
+  };
+}
+
+function unappliedExpectedIdentities(
+  inspection: SyncResultInspection,
+  expected: ExpectedSyncResultIdentities,
+): { readonly desired: readonly string[]; readonly pruned: readonly string[] } {
+  const allowSkippedDesired =
+    expected.selective !== true || expected.pruned.size > 0;
+  const desired = [...expected.desired]
+    .filter(
+      (identity) =>
+        !inspection.syncedIdentities.has(identity) &&
+        !(allowSkippedDesired && inspection.skippedIdentities.has(identity)),
+    )
+    .sort();
+  const pruned = [...expected.pruned]
+    .filter((identity) => !inspection.prunedIdentities.has(identity))
+    .sort();
+  return { desired, pruned };
+}
+
 function syncResultApplied(
   operationStateValue: Record<string, unknown>,
   revision: string,
   expectedResourceIdentities: ExpectedSyncResultIdentities | undefined,
 ): boolean {
-  if (syncResultRevision(operationStateValue) !== revision) {
+  const inspection = inspectSyncResult(operationStateValue, revision);
+  if (
+    !inspection.revisionMatches ||
+    !inspection.hasResources ||
+    !inspection.everyReportedResourceApplied
+  ) {
     return false;
   }
-  const syncResult = isRecord(operationStateValue["syncResult"])
-    ? operationStateValue["syncResult"]
-    : {};
-  const resources = syncResult["resources"];
-  if (!Array.isArray(resources) || resources.length === 0) {
-    return false;
+  if (expectedResourceIdentities === undefined) {
+    return true;
   }
-  const appliedResourceIdentities = new Set<string>();
-  const prunedResourceIdentities = new Set<string>();
-  const everyReportedResourceApplied = resources.every((resource: unknown) => {
-    if (!isRecord(resource)) {
-      return false;
-    }
-    const status = resource["status"];
-    const hookType = resource["hookType"];
-    const hookPhase = resource["hookPhase"];
-    const group = resource["group"];
-    const kind = resource["kind"];
-    const name = resource["name"];
-    if (
-      (group !== undefined && typeof group !== "string") ||
-      typeof kind !== "string" ||
-      typeof name !== "string"
-    ) {
-      return false;
-    }
-    if (
-      hookType !== undefined &&
-      hookType !== null &&
-      typeof hookType !== "string"
-    ) {
-      return false;
-    }
-    const identity = resourceIdentity(group ?? "", kind, name);
-    appliedResourceIdentities.add(identity);
-    if (status === "Pruned") {
-      prunedResourceIdentities.add(identity);
-    }
-    return (
-      (status === "Synced" || status === "Pruned" || status === "Skipped") &&
-      !(
-        hookType !== undefined &&
-        hookType !== null &&
-        (hookPhase === "Failed" || hookPhase === "Error")
-      )
+  const unapplied = unappliedExpectedIdentities(
+    inspection,
+    expectedResourceIdentities,
+  );
+  return unapplied.desired.length === 0 && unapplied.pruned.length === 0;
+}
+
+function assertSucceededSyncResultApplied(options: {
+  readonly appName: string;
+  readonly expectedResourceIdentities: ExpectedSyncResultIdentities | undefined;
+  readonly revision: string | undefined;
+  readonly state: Record<string, unknown>;
+}): void {
+  const { appName, expectedResourceIdentities, revision, state } = options;
+  if (expectedResourceIdentities === undefined || revision === undefined) {
+    return;
+  }
+  if (syncResultApplied(state, revision, expectedResourceIdentities)) {
+    return;
+  }
+  const inspection = inspectSyncResult(state, revision);
+  const unapplied = unappliedExpectedIdentities(
+    inspection,
+    expectedResourceIdentities,
+  );
+  const details: string[] = [];
+  if (!inspection.revisionMatches) {
+    details.push(
+      `syncResult revision ${syncResultRevision(state) ?? "missing"} !== ${revision}`,
     );
-  });
-  return (
-    everyReportedResourceApplied &&
-    (expectedResourceIdentities === undefined ||
-      ([...expectedResourceIdentities.desired].every((identity) =>
-        appliedResourceIdentities.has(identity),
-      ) &&
-        [...expectedResourceIdentities.pruned].every((identity) =>
-          prunedResourceIdentities.has(identity),
-        )))
+  }
+  if (unapplied.desired.length > 0) {
+    const formatted = unapplied.desired.map((identity) =>
+      inspection.skippedIdentities.has(identity)
+        ? `${identity} (Skipped)`
+        : identity,
+    );
+    details.push(`unapplied desired resources: ${formatted.join(", ")}`);
+  }
+  if (unapplied.pruned.length > 0) {
+    details.push(`unapplied pruned resources: ${unapplied.pruned.join(", ")}`);
+  }
+  if (details.length === 0) {
+    details.push("syncResult resources were empty or reported a failed hook");
+  }
+  throw new Error(
+    `Sync operation Succeeded for ${appName} at ${revision} without applying expected resources (${details.join("; ")})`,
   );
 }
 
@@ -2644,17 +2753,77 @@ type WaitForIdentifiedOperationOptions = {
   readonly token: string;
 };
 
-async function waitForIdentifiedOperation({
-  appName,
-  expectedResourceIdentities,
-  operationId,
-  requestId,
-  revision,
-  releasePhase,
-  terminateAfterApplied,
-  timeoutSeconds,
-  token,
-}: WaitForIdentifiedOperationOptions): Promise<void> {
+const TIMED_OUT_OPERATION_CLEAR_TIMEOUT_S = 60;
+
+async function terminateTimedOutChildOperation(
+  options: WaitForIdentifiedOperationOptions,
+): Promise<string> {
+  const {
+    appName,
+    operationId,
+    releasePhase,
+    requestId,
+    revision,
+    timeoutSeconds,
+    token,
+  } = options;
+  if (appName === "apps") {
+    return "";
+  }
+  try {
+    const application = await getApplication(appName, token);
+    const current = observeOperation(application);
+    if (
+      current.phase !== "Running" ||
+      !liveOperationMatches(
+        current,
+        requestId,
+        revision,
+        operationId,
+        releasePhase,
+      )
+    ) {
+      return "";
+    }
+    const requested = await requestOperationTermination(appName, token);
+    if (!requested.ok) {
+      return `; orphan operation termination failed: ${requested.detail}`;
+    }
+    console.log(`terminated timed-out sync operation: ${appName}`);
+    await waitForOperationToClear(
+      appName,
+      token,
+      requestId,
+      revision,
+      operationId,
+      current.startedAt,
+      Math.min(
+        TIMED_OUT_OPERATION_CLEAR_TIMEOUT_S,
+        Math.max(timeoutSeconds, 1),
+      ),
+      async () => requestOperationTermination(appName, token),
+    );
+    return "";
+  } catch (error: unknown) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return `; orphan operation cleanup failed: ${detail}`;
+  }
+}
+
+async function waitForIdentifiedOperation(
+  options: WaitForIdentifiedOperationOptions,
+): Promise<void> {
+  const {
+    appName,
+    expectedResourceIdentities,
+    operationId,
+    requestId,
+    revision,
+    releasePhase,
+    terminateAfterApplied,
+    timeoutSeconds,
+    token,
+  } = options;
   const deadline = Date.now() + timeoutSeconds * 1000;
   let exactOperationSeen = false;
   while (Date.now() < deadline) {
@@ -2692,6 +2861,12 @@ async function waitForIdentifiedOperation({
     );
     if (exactOperationSeen && isExpected) {
       if (current.phase === "Succeeded") {
+        assertSucceededSyncResultApplied({
+          appName,
+          expectedResourceIdentities,
+          revision,
+          state: current.state,
+        });
         if (current.hasLiveOperation) {
           await waitForOperationToClear(
             appName,
@@ -2741,8 +2916,9 @@ async function waitForIdentifiedOperation({
       deadline - timeoutSeconds * 1000,
     );
   }
+  const cleanupSuffix = await terminateTimedOutChildOperation(options);
   throw new Error(
-    `Timeout: sync operation for ${appName} did not complete within ${timeoutSeconds.toString()}s`,
+    `Timeout: sync operation for ${appName} did not complete within ${timeoutSeconds.toString()}s${cleanupSuffix}`,
   );
 }
 
@@ -3045,6 +3221,12 @@ async function finalizeAsyncSync(
       !current.hasLiveOperation &&
       current.phase === "Succeeded"
     ) {
+      assertSucceededSyncResultApplied({
+        appName,
+        expectedResourceIdentities,
+        revision: exactRevision,
+        state: current.state,
+      });
       console.log(`async sync operation already finalized: ${appName}`);
       return;
     }
@@ -3296,7 +3478,7 @@ async function assertReleaseInventoryIsComplete(
  * pipeline `--timeout`: Temporal's schema migration and Scout's cold report-lake
  * startup. Each floor shares its budget with the workload's own deadline.
  */
-const CHILD_SYNC_TIMEOUT_FLOORS: ReadonlyMap<string, number> = new Map([
+export const CHILD_SYNC_TIMEOUT_FLOORS: ReadonlyMap<string, number> = new Map([
   ["temporal", TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS],
   ...SCOUT_CHILD_SYNC_TIMEOUT_FLOORS,
 ]);

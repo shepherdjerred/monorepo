@@ -12,8 +12,10 @@ import {
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 } from "@scout-for-lol/data";
 import { MATCH_MIGRATION_GATED_COLUMNS } from "@scout-for-lol/data/model/reports/match-rebuild-gated-columns.ts";
+import { z } from "zod";
 import {
   LAKE_PREDECESSOR_SCHEMA_FINGERPRINT,
+  LAKE_SCHEMA_EPOCH,
   LAKE_TABLE_COLUMNS,
   lakeSchemaFingerprint,
   lakeSchemaFingerprintOf,
@@ -74,9 +76,80 @@ describe("lakeSchemaFingerprint", () => {
 
   test("changes when a covered table's columns change", () => {
     const before = lakeSchemaFingerprint();
-    // Sanity: the fingerprint is derived, not a frozen literal.
     expect(before).toHaveLength(16);
     expect(before).toMatch(/^[0-9a-f]{16}$/u);
+    const alteredColumnType = lakeSchemaFingerprintOf({
+      ...LAKE_TABLE_COLUMNS,
+      matches: {
+        ...MATCH_LAKE_COLUMNS,
+        game_duration_seconds: "BIGINT",
+      },
+    });
+    const addedColumn = lakeSchemaFingerprintOf({
+      ...LAKE_TABLE_COLUMNS,
+      matches: {
+        ...MATCH_LAKE_COLUMNS,
+        synthetic_new_column: "VARCHAR",
+      },
+    });
+    expect(alteredColumnType).not.toBe(before);
+    expect(addedColumn).not.toBe(before);
+  });
+
+  test("moves LAKE_SCHEMA_EPOCH in lockstep with lakeSchemaFingerprint (AI-658)", async () => {
+    // Bumping lake columns/types changes `lakeSchemaFingerprint()` and forces
+    // an irreversible on-PVC report-lake rebuild. Update `LAKE_SCHEMA_EPOCH`
+    // and Scout's forward-only Delivery configuration (`scout.reportLakeSchemaEpoch`)
+    // together so monitor rollback holds instead of rolling back across an
+    // incompatible Parquet schema.
+    expect({
+      epoch: LAKE_SCHEMA_EPOCH,
+      fingerprint: lakeSchemaFingerprint(),
+    }).toEqual({
+      epoch: 2,
+      fingerprint: "0d22d548965ee58c",
+    });
+
+    const SpecializedSchema = z.object({
+      configuration: z.object({
+        "scout.reportLakeSchemaEpoch": z.string(),
+      }),
+    });
+    const CatalogConfigSchema = z.object({
+      content: z.object({
+        "scout.reportLakeSchemaEpoch": z.string(),
+      }),
+      forwardOnly: z.array(z.string()),
+    });
+    for (const stage of ["beta", "prod"] as const) {
+      const v1File = Bun.file(
+        new URL(
+          `../../../../../delivery/registrations/specialized/scout-${stage}/environment.json`,
+          import.meta.url,
+        ),
+      );
+      if (await v1File.exists()) {
+        const parsedV1 = SpecializedSchema.parse(await v1File.json());
+        expect(parsedV1.configuration["scout.reportLakeSchemaEpoch"]).toBe(
+          String(LAKE_SCHEMA_EPOCH),
+        );
+      }
+      const v2File = Bun.file(
+        new URL(
+          `../../../../../delivery/registrations/v2/scout-for-lol/${stage}/configuration.json`,
+          import.meta.url,
+        ),
+      );
+      if (await v2File.exists()) {
+        const parsedV2 = CatalogConfigSchema.parse(await v2File.json());
+        expect(parsedV2.content["scout.reportLakeSchemaEpoch"]).toBe(
+          String(LAKE_SCHEMA_EPOCH),
+        );
+        expect(parsedV2.forwardOnly).toContain(
+          "/helm/parameters/scout.reportLakeSchemaEpoch",
+        );
+      }
+    }
   });
 });
 

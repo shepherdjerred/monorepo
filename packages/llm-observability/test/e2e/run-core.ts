@@ -1,6 +1,8 @@
+import { signedFetch } from "./signed-fetch.ts";
+
 /**
- * Where the suite finds Tempo and MinIO, handed from the runner that started
- * them to the vitest process through its environment.
+ * Where the suite finds Tempo and Silo (MinIO-compatible S3), handed from the
+ * runner that started them to the vitest process through its environment.
  *
  * The two runners differ here and nowhere else: docker compose publishes both
  * on localhost (`run.ts`), while in Woodpecker each is its own pod, reached by
@@ -43,4 +45,40 @@ export async function waitForTempo(
     await Bun.sleep(delayMilliseconds);
   }
   throw new Error(`Tempo did not become ready within ${attempts.toString()}s`);
+}
+
+export async function createArchiveBucket(
+  minioEndpoint: string,
+  attempts = 60,
+  delayMilliseconds = 1000,
+): Promise<void> {
+  let ready = false;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const response = await fetch(`${minioEndpoint}/minio/health/live`).catch(
+      () => null,
+    );
+    if (response?.ok === true) {
+      ready = true;
+      break;
+    }
+    await Bun.sleep(delayMilliseconds);
+  }
+  if (!ready) {
+    throw new Error(
+      `S3 service did not become ready within ${attempts.toString()}s`,
+    );
+  }
+
+  const response = await signedFetch({
+    url: `${minioEndpoint}/llm-archive`,
+    method: "PUT",
+    accessKeyId: "minioadmin",
+    secretAccessKey: "minioadmin",
+    region: "us-east-1",
+  });
+  if (!response.ok) {
+    throw new Error(
+      `Archive bucket creation failed: ${response.status.toString()} ${await response.text()}`,
+    );
+  }
 }

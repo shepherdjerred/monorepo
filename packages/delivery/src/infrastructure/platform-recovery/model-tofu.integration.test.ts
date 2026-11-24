@@ -110,8 +110,11 @@ test("a failed model tofu deployment settles through platform recovery at its fr
   );
   const desired = recovery.expectedSettlements.desired;
   if (desired === undefined) throw new Error("Expected a desired settlement");
-  // Recovery converges forward: no read-only or prior settlement exists.
-  expect(Object.keys(recovery.expectedSettlements)).toEqual(["desired"]);
+  // Before a plan is saved or apply starts, both desired and pre-effect readonly settlements exist.
+  expect(Object.keys(recovery.expectedSettlements).sort()).toEqual([
+    "desired",
+    "readonly",
+  ]);
   const proof = {
     expectedEnvironmentGeneration:
       recovery.intent.expectedEnvironmentGeneration,
@@ -207,4 +210,104 @@ test("a model tofu recovery plan binds the frozen stack archive and follows the 
     message:
       "Only existing reviewed-plan stack policy requires recovery approval",
   });
+});
+
+test("an unapplied model tofu deployment settles readonly without re-planning, while a saved plan requires forward convergence", async () => {
+  const { deployment, intent } = await quarantinedStack();
+  const recovery = await context.delivery.platformRecovery(
+    intent.id,
+    testOperator,
+  );
+  const readonly = recovery.expectedSettlements.readonly;
+  if (readonly === undefined)
+    throw new Error("Expected pre-effect readonly settlement");
+  await context.delivery.completePlatformRecovery(
+    intent.id,
+    {
+      expectedEnvironmentGeneration:
+        recovery.intent.expectedEnvironmentGeneration,
+      snapshotFingerprint: recovery.intent.snapshotFingerprint,
+      observedAt: new Date().toISOString(),
+      sourceWorkflow: {
+        workflowId: `delivery/${deployment.id}`,
+        status: "FAILED",
+      },
+      nativeJobs: [
+        {
+          ...stackPlanJob,
+          requestId: deployment.id,
+          status: "Failed",
+          podsAbsent: true,
+        },
+      ],
+      settlement: { state: "readonly", fingerprint: readonly },
+      proofSummary:
+        "Pre-effect OpenTofu cloudflare settlement: closed source Workflow, failed plan Job proved, no saved plan and zero apply stages",
+    },
+    testExecutor,
+  );
+  const settled = await context.delivery.detail(deployment.id);
+  expect(settled.deployment).toMatchObject({
+    status: "failed",
+    recoveryRequired: false,
+  });
+  expect(settled.environment.activeDeploymentId).toBeNull();
+  expect(settled.environment.acceptedDeploymentId).toBeNull();
+  expect(await context.cluster.database.platformLock.count()).toBe(0);
+
+  // Once a plan is saved (`step-plan` succeeded), readonly settlement is no longer offered.
+  const next = await context.delivery.createDeployment(
+    {
+      requestId: "stack/after-readonly",
+      environmentId: "tofu-cloudflare/prod",
+      versionSetRevisionId: deployment.versionSetRevisionId,
+      expectedGeneration: settled.environment.generation,
+      kind: "deploy",
+    },
+    testOperator,
+  );
+  await startStackPlan(context, next.id);
+  await context.delivery.recordTofuPlan(
+    savedStackPlan(
+      next.id,
+      settled.versionSet.components["archive:tofu-cloudflare"]!.buildId,
+    ),
+    testExecutor,
+  );
+  await context.delivery.stage(
+    next.id,
+    {
+      key: "step-plan",
+      status: "succeeded",
+      operationId: stackPlanJob.name,
+      message: JSON.stringify({ ...stackPlanJob, requestId: next.id }),
+      evidence: [],
+    },
+    testExecutor,
+  );
+  await context.delivery.finish(
+    next.id,
+    {
+      status: "failed",
+      message: "Failed after plan was saved",
+      recoveryRequired: true,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  const nextDetail = await context.delivery.detail(next.id);
+  const nextIntent = await context.delivery.requestRecoveryIntent(
+    next.id,
+    {
+      requestId: "stack/recovery/planned",
+      reason: "Inspect the stack after its saved plan step succeeded",
+      expectedGeneration: nextDetail.environment.generation,
+    },
+    testOperator,
+  );
+  const plannedRecovery = await context.delivery.platformRecovery(
+    nextIntent.id,
+    testOperator,
+  );
+  expect(Object.keys(plannedRecovery.expectedSettlements)).toEqual(["desired"]);
 });

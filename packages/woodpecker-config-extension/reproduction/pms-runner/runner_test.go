@@ -66,7 +66,7 @@ func (f *fakeBackend) WaitStep(context.Context, *backend.Step, string) (*backend
 }
 func testPlan() Plan {
 	p := Plan{Kind: "pms-plan", SchemaVersion: 1, Source: strings.Repeat("a", 40), Branch: "feature/media", RequestID: "d10ddcc4-2245-4774-b49a-a4a51abcfaf8", JobImagePullSecrets: []string{"dockerhub-pull-woodpecker-ci"}}
-	for i, name := range []string{"clear-golden", "clone", "media-pms-wire", "media-pms-native"} {
+	for i, name := range []string{"clear-golden", "clone", "finalize-clone", "media-pms-wire", "media-pms-native"} {
 		p.Steps = append(p.Steps, PlannedStep{Name: name, UUID: p.RequestID + "-" + string(rune('0'+i))})
 	}
 	return p
@@ -197,7 +197,7 @@ func TestExistingNameAndCreateConflictDoNotGrantOwnership(t *testing.T) {
 func TestLedgerRestartCleansOnlyOriginalUIDAndNeverSharedCaches(t *testing.T) {
 	b, a, path := harness(t)
 	ctx := context.Background()
-	b.plan.Steps[2].Volumes = []string{"woodpecker-bun-cache:/cache/bun"}
+	b.plan.Steps[3].Volumes = []string{"woodpecker-bun-cache:/cache/bun"}
 	a.uids["persistentvolumeclaims/woodpecker-bun-cache"] = "shared-original"
 	if err := b.reserve(ctx); err != nil {
 		t.Fatal(err)
@@ -261,7 +261,7 @@ func TestActualKubernetesDeleteCarriesExactUIDPrecondition(t *testing.T) {
 }
 func TestCompiledPolicyRejectsCredentialPlacementAndResourceDrift(t *testing.T) {
 	p := testPlan()
-	e := p.Steps[2]
+	e := p.Steps[3]
 	e.Image = "image@sha256:" + strings.Repeat("c", 64)
 	e.Commands = []string{"exact reviewed command"}
 	e.Resources = map[string]map[string]string{"requests": {"cpu": "1", "memory": "2Gi", "ephemeral-storage": "1Gi"}, "limits": {"cpu": "2", "memory": "4Gi", "ephemeral-storage": "4Gi"}}
@@ -310,7 +310,7 @@ func TestCompiledPolicyRejectsCredentialPlacementAndResourceDrift(t *testing.T) 
 // pull refs into the pod. No pull credential value or service-account token is mounted.
 func defaultedJobPod() (Plan, *core.ServiceAccount, *core.Pod) {
 	p := testPlan()
-	step := &p.Steps[2]
+	step := &p.Steps[3]
 	step.Image = "image@sha256:" + strings.Repeat("c", 64)
 	step.Resources = map[string]map[string]string{
 		"requests": {"cpu": "1", "memory": "2Gi", "ephemeral-storage": "1Gi"},
@@ -371,14 +371,14 @@ func TestDefaultedJobPullSecretIsOwnedAndCleaned(t *testing.T) {
 	}
 	client := fake.NewSimpleClientset(pod)
 	b.api = &kubeResources{client: client, plan: p}
-	r := p.resources(b.hash)[2]
+	r := p.resources(b.hash)[3]
 	if err := b.capture(ctx, []Record{r}, nil); err != nil {
 		t.Fatal(err)
 	}
 	if got := b.ledger.records[key(r)]; got.State != "owned" || got.UID != string(pod.UID) {
 		t.Fatalf("defaulted pod did not retain its exact owned UID: %+v", got)
 	}
-	if err := b.DestroyStep(ctx, &backend.Step{UUID: p.Steps[2].UUID}, p.RequestID); err != nil {
+	if err := b.DestroyStep(ctx, &backend.Step{UUID: p.Steps[3].UUID}, p.RequestID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := client.CoreV1().Pods(namespace).Get(ctx, pod.Name, metav1.GetOptions{}); !apierrors.IsNotFound(err) {
@@ -434,7 +434,7 @@ func TestAdmittedPodRejectsUnapprovedPullReferencesAndMountedCredentials(t *test
 			changed := pod.DeepCopy()
 			change(changed)
 			k := &kubeResources{client: fake.NewSimpleClientset(changed), plan: p}
-			uid, err := k.UID(context.Background(), p.resources(strings.Repeat("b", 64))[2])
+			uid, err := k.UID(context.Background(), p.resources(strings.Repeat("b", 64))[3])
 			if err == nil || uid != "" {
 				t.Fatalf("unreviewed pod granted ownership: %q, %v", uid, err)
 			}
@@ -444,16 +444,17 @@ func TestAdmittedPodRejectsUnapprovedPullReferencesAndMountedCredentials(t *test
 
 func TestGoldenCleanupPodRequiresPrivilegeEscalationDisabled(t *testing.T) {
 	p, _, pod := defaultedJobPod()
-	p.Steps[0].Image = p.Steps[2].Image
-	p.Steps[0].Resources = p.Steps[2].Resources
+	p.Steps[0].Image = p.Steps[3].Image
+	p.Steps[0].Resources = p.Steps[3].Resources
 	pod.Name = "wp-" + p.Steps[0].UUID
 	disabled := false
-	pod.Spec.Containers[0].SecurityContext = &core.SecurityContext{AllowPrivilegeEscalation: &disabled}
+	zero := int64(0)
+	pod.Spec.Containers[0].SecurityContext = &core.SecurityContext{RunAsUser: &zero, RunAsGroup: &zero, AllowPrivilegeEscalation: &disabled}
 	k := &kubeResources{plan: p}
 	if err := k.validPod(pod); err != nil {
 		t.Fatal(err)
 	}
-	for _, field := range []string{"missing context", "missing value", "enabled"} {
+	for _, field := range []string{"missing context", "missing value", "enabled", "non-root user"} {
 		t.Run(field, func(t *testing.T) {
 			changed := pod.DeepCopy()
 			switch field {
@@ -464,6 +465,9 @@ func TestGoldenCleanupPodRequiresPrivilegeEscalationDisabled(t *testing.T) {
 			case "enabled":
 				enabled := true
 				changed.Spec.Containers[0].SecurityContext.AllowPrivilegeEscalation = &enabled
+			case "non-root user":
+				uid := int64(1000)
+				changed.Spec.Containers[0].SecurityContext.RunAsUser = &uid
 			}
 			if err := k.validPod(changed); err == nil {
 				t.Fatal("golden cleanup privilege escalation policy changed")
@@ -475,15 +479,15 @@ func TestGoldenCleanupPodRequiresPrivilegeEscalationDisabled(t *testing.T) {
 func TestPlanReservesEveryPodBeforeServiceAndWorkspace(t *testing.T) {
 	p := testPlan()
 	resources := p.resources(strings.Repeat("b", 64))
-	if len(resources) != 6 {
-		t.Fatalf("expected four pods, one service and one workspace, got %d resources", len(resources))
+	if len(resources) != 7 {
+		t.Fatalf("expected five pods, one service and one workspace, got %d resources", len(resources))
 	}
 	for i, step := range p.Steps {
 		if resources[i].Resource != "pods" || resources[i].Name != "wp-"+step.UUID {
 			t.Fatal("step lost its separate resource ownership")
 		}
 	}
-	if resources[4].Resource != "services" || resources[5].Resource != "persistentvolumeclaims" {
+	if resources[5].Resource != "services" || resources[6].Resource != "persistentvolumeclaims" {
 		t.Fatal("workflow resource ordering changed")
 	}
 }

@@ -40,6 +40,7 @@ const calls = vi.hoisted(() => {
     serviceProbesReleases,
     lapsed: false,
     refuse: false,
+    failSync: "",
     failCreate: false,
     failUpdate: false,
     failRestore: false,
@@ -97,6 +98,14 @@ vi.mock("#activities/delivery/argocd.ts", async (importOriginal) => {
     },
     runGuardedArgoCommand: (args: string[]) => {
       calls.events.push(args.join(" "));
+      if (calls.failSync !== "" && args[0] === "sync-managed")
+        return Promise.reject(
+          new original.GuardedArgoCommandError(
+            "sync-managed",
+            1,
+            calls.failSync,
+          ),
+        );
       return calls.refuse && args[0] === "assert-apply-safe"
         ? Promise.reject(
             new original.GuardedArgoCommandError(
@@ -197,6 +206,7 @@ afterEach(() => {
   calls.updates = [];
   calls.stages = [];
   calls.refuse = false;
+  calls.failSync = "";
   calls.failCreate = false;
   calls.failUpdate = false;
   calls.failRestore = false;
@@ -806,6 +816,88 @@ describe("a pre-sync guard refusal (AI-884)", () => {
     await expect(sync(current, recipe, "step-sync")).rejects.toThrow(
       "Credential retirement proof failed",
     );
+    expect(calls.stages.map(({ status }) => status)).toEqual(["running"]);
+  });
+});
+
+describe("Scout child sync timeout floor (AI-658)", () => {
+  test.each([
+    ["scout-beta", "scout-for-lol/beta", "2700"],
+    ["scout-prod", "scout-for-lol/prod", "2700"],
+    ["storm-forum", "storm-forum/prod", "1200"],
+  ] as const)(
+    "sync-managed uses childSyncTimeoutSeconds floor for %s",
+    async (appName, environmentId, expectedTimeout) => {
+      const initial = fixture();
+      const current = {
+        ...initial.current,
+        deployment: {
+          ...initial.current.deployment,
+          environmentId,
+        },
+      };
+      const recipe = {
+        ...initial.recipe,
+        application: {
+          ...initial.recipe.application,
+          name: appName,
+          destination: {
+            ...initial.recipe.application.destination,
+            namespace: appName,
+          },
+          source: { ...initial.recipe.application.source, chart: appName },
+        },
+        steps: initial.recipe.steps.filter(
+          ({ kind }) => kind !== "forum-bundle",
+        ),
+      };
+      calls.reads = [
+        argoApplication(current, recipe, false),
+        argoApplication(current, recipe, true),
+      ];
+      await sync(current, recipe, "step-sync");
+      expect(
+        calls.events.find((event) => event.startsWith("sync-managed")),
+      ).toBe(
+        [
+          `sync-managed ${appName} --revision 1.0.1 --request-id`,
+          deliveryOperationId(current.deployment.id),
+          `--timeout ${expectedTimeout}`,
+        ].join(" "),
+      );
+    },
+  );
+
+  test("a timed-out Scout sync keeps its stage running for recovery after guarded sync exits", async () => {
+    const initial = fixture();
+    const current = {
+      ...initial.current,
+      deployment: {
+        ...initial.current.deployment,
+        environmentId: "scout-for-lol/prod",
+      },
+    };
+    const recipe = {
+      ...initial.recipe,
+      application: {
+        ...initial.recipe.application,
+        name: "scout-prod",
+        destination: {
+          ...initial.recipe.application.destination,
+          namespace: "scout-prod",
+        },
+        source: { ...initial.recipe.application.source, chart: "scout-prod" },
+      },
+      steps: initial.recipe.steps.filter(({ kind }) => kind !== "forum-bundle"),
+    };
+    calls.reads = [argoApplication(current, recipe, false)];
+    calls.failSync =
+      "Timeout: sync operation for scout-prod did not complete within 2700s";
+    await expect(sync(current, recipe, "step-sync")).rejects.toMatchObject({
+      name: "GuardedArgoCommandError",
+      output:
+        "Timeout: sync operation for scout-prod did not complete within 2700s",
+    });
     expect(calls.stages.map(({ status }) => status)).toEqual(["running"]);
   });
 });

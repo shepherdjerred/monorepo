@@ -28,7 +28,7 @@ import {
   readDiscordApplications,
 } from "./tofu-original.ts";
 import { deliveryRequest } from "#lib/delivery/client.ts";
-import { requireModelRecipe } from "#lib/delivery/model/recipe.ts";
+import { modelRecipe, requireModelRecipe } from "#lib/delivery/model/recipe.ts";
 import {
   modelTofuDesiredState,
   modelTofuSource,
@@ -201,9 +201,32 @@ async function inspectOriginalTarget(
 }
 
 /**
+ * True when a model tofu deployment failed before saving a plan and before
+ * any apply stage started, so no external OpenTofu mutation could have been
+ * authorized or submitted.
+ */
+export function isUnappliedModelTofuDeployment(
+  detail: PlatformRecoveryContext["deployment"],
+): boolean {
+  if (detail.deployment.platformSnapshot !== null) return false;
+  const recipe = modelRecipe(detail);
+  if (recipe?.kind !== "tofu") return false;
+  const savedPlan =
+    ("savedPlan" in detail && detail.savedPlan != null) ||
+    detail.stages.some(
+      (stage) =>
+        stage.key === stepStageKey("step", "plan") &&
+        stage.status === "succeeded",
+    );
+  return (
+    !savedPlan && detail.stages.every((stage) => !stage.key.endsWith("apply"))
+  );
+}
+
+/**
  * A model tofu deployment as a recovery target: its frozen stack archive,
  * the plan its plan step saved (an apply exists only after one), and
- * forward convergence to that source (`tofu-apply`).
+ * forward convergence to that source (`tofu-apply`) once planned.
  */
 async function modelRecoveryTarget(
   detail: PlatformRecoveryContext["deployment"],
@@ -212,6 +235,7 @@ async function modelRecoveryTarget(
   if (recipe.kind !== "tofu")
     throw new Error("Recovery has no frozen OpenTofu source");
   const source = modelTofuSource(detail, recipe);
+  const unapplied = isUnappliedModelTofuDeployment(detail);
   const planned = detail.stages.some(
     (stage) =>
       stage.key === stepStageKey("step", "plan") &&
@@ -224,7 +248,7 @@ async function modelRecoveryTarget(
       )
     : null;
   return {
-    kind: "tofu-apply",
+    kind: unapplied ? "tofu-plan" : "tofu-apply",
     stack: recipe.stack,
     sourceBuildId: source.sourceBuildId,
     sourceRevision: source.sourceRevision,

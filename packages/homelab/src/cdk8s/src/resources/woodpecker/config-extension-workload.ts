@@ -6,6 +6,7 @@ import {
   Deployment,
   DeploymentStrategy,
   EnvValue,
+  PercentOrAbsolute,
   Probe,
   Secret,
   Service,
@@ -15,11 +16,6 @@ import {
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import {
-  CI_NODE_HOSTNAME,
-  ciNodeTaintedNode,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
-import { Node, NodeLabelQuery } from "cdk8s-plus-31";
 import { WOODPECKER_PUBLIC_HOST } from "@shepherdjerred/homelab/cdk8s/src/misc/woodpecker.ts";
 import {
   CONFIG_EXTENSION_APP_LABEL,
@@ -37,9 +33,10 @@ import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/run
  * The service that generates every build's pipeline.
  *
  * Woodpecker calls this before any step exists, so nothing runs without it —
- * it is not an optional extra. It is pinned to the CI node with the rest of
- * CI: the server can only reach it in-cluster, and keeping the whole CI path
- * on one node means a CI outage cannot be caused by the production node.
+ * it is not an optional extra. It runs alongside `woodpecker-server` on the
+ * control-plane node (`torvalds`) rather than `liskov`, so a CI worker outage
+ * does not fail pipeline config resolution, and rolls out with surge-before-stop
+ * so `/ciconfig` stays reachable throughout deployments.
  *
  * It holds a read-only Woodpecker API token (to resolve the last green commit
  * on the default branch) and nothing else. It never sees a step's credentials:
@@ -59,16 +56,12 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
 
   const deployment = new Deployment(chart, "woodpecker-config-extension", {
     replicas: 1,
-    // A rolling second replica would be harmless, but the signing key is
-    // fetched once per process and the service is idle between builds, so
-    // there is nothing to gain from overlapping them.
-    strategy: DeploymentStrategy.recreate(),
+    strategy: DeploymentStrategy.rollingUpdate({
+      maxSurge: PercentOrAbsolute.absolute(1),
+      maxUnavailable: PercentOrAbsolute.absolute(0),
+    }),
     podMetadata: { labels: { app: CONFIG_EXTENSION_APP_LABEL } },
   });
-  deployment.scheduling.attract(
-    Node.labeled(NodeLabelQuery.is("kubernetes.io/hostname", CI_NODE_HOSTNAME)),
-  );
-  deployment.scheduling.tolerate(ciNodeTaintedNode());
 
   deployment.addContainer(
     withCommonProps({

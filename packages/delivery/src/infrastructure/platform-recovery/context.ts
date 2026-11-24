@@ -25,6 +25,7 @@ import {
 } from "#infrastructure/platform/policy.ts";
 import { modelTofuSource } from "#infrastructure/platform/plans.ts";
 import { RecipeDefinitionSchema } from "#shared/model/recipe-contract.ts";
+import { stepStageKey } from "#shared/model/stage-keys.ts";
 
 // Root releases are retired (X6); none can be quarantined after the cutover.
 export const platformRecoveryKinds = new Set([
@@ -193,10 +194,32 @@ export function platformSettlements(
     };
   // A model tofu recovery converges forward: the stack equals its frozen
   // archive with zero proposed changes, directly or after an exact recovery
-  // plan is approved by stack policy and applied.
+  // plan is approved by stack policy and applied. When no plan was saved and
+  // zero apply stages exist, pre-effect read-only settlement is also allowed.
   const model = modelTofuTarget(detail);
-  if (model !== null)
-    return { desired: fingerprint({ kind: "tofu", ...model }) };
+  if (model !== null) {
+    const savedPlan =
+      ("savedPlan" in detail && detail.savedPlan != null) ||
+      detail.stages.some(
+        (stage) =>
+          stage.key === stepStageKey("step", "plan") &&
+          stage.status === "succeeded",
+      );
+    const unapplied =
+      !savedPlan &&
+      detail.stages.every((stage) => !stage.key.endsWith("apply"));
+    return {
+      desired: fingerprint({ kind: "tofu", ...model }),
+      ...(unapplied
+        ? {
+            readonly: fingerprint({
+              kind: "tofu-plan-unapplied",
+              ...model,
+            }),
+          }
+        : {}),
+    };
+  }
   const snapshot = PlatformReleaseSnapshotSchema.parse(
     detail.deployment.platformSnapshot,
   );

@@ -81,7 +81,7 @@ func compilePlan(p Plan, yaml []byte) (*backend.Config, error) {
 }
 func validateStep(p Plan, expected PlannedStep, s *backend.Step) error {
 	expectedType := backend.StepTypeCommands
-	if expected.Name == "clear-golden" || expected.Name == "clone" {
+	if expected.Name == "clear-golden" || expected.Name == "clone" || expected.Name == "finalize-clone" {
 		expectedType = backend.StepTypeClone
 	}
 	if s.Type != expectedType {
@@ -103,7 +103,9 @@ func validateStep(p Plan, expected PlannedStep, s *backend.Step) error {
 			Labels             map[string]string            `json:"labels"`
 			Annotations        map[string]string            `json:"annotations"`
 			SecurityContext    *struct {
-				AllowPrivilegeEscalation *bool `json:"allowPrivilegeEscalation"`
+				RunAsUser                *int64 `json:"runAsUser"`
+				RunAsGroup               *int64 `json:"runAsGroup"`
+				AllowPrivilegeEscalation *bool  `json:"allowPrivilegeEscalation"`
 			} `json:"securityContext"`
 		} `json:"kubernetes"`
 	}
@@ -117,8 +119,8 @@ func validateStep(p Plan, expected PlannedStep, s *backend.Step) error {
 		return err
 	}
 	o := options.Kubernetes
-	if expected.Name == "clear-golden" {
-		if o.SecurityContext == nil || o.SecurityContext.AllowPrivilegeEscalation == nil || *o.SecurityContext.AllowPrivilegeEscalation {
+	if expected.Name == "clear-golden" || expected.Name == "finalize-clone" {
+		if o.SecurityContext == nil || o.SecurityContext.RunAsUser == nil || *o.SecurityContext.RunAsUser != 0 || o.SecurityContext.RunAsGroup == nil || *o.SecurityContext.RunAsGroup != 0 || o.SecurityContext.AllowPrivilegeEscalation == nil || *o.SecurityContext.AllowPrivilegeEscalation {
 			return errors.New("golden cleanup security context differs")
 		}
 	} else if o.SecurityContext != nil {

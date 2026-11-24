@@ -296,6 +296,10 @@
       "clones": 1,
       "tokens": 115
     },
+    "packages/homelab/scripts/tofu/secret-read.ts|packages/homelab/scripts/tofu/secret-read.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
     "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts": {
       "clones": 3,
       "tokens": 281
@@ -377,8 +381,8 @@
       "tokens": 72
     },
     "packages/homelab/src/cdk8s/src/argocd-release-reconciliation.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
-      "clones": 3,
-      "tokens": 227
+      "clones": 2,
+      "tokens": 160
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
       "clones": 8,
@@ -390,15 +394,15 @@
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
       "clones": 3,
-      "tokens": 281
+      "tokens": 277
     },
     "packages/homelab/src/cdk8s/src/argocd-script-support.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
       "clones": 3,
       "tokens": 267
     },
     "packages/homelab/src/cdk8s/src/argocd-script.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
-      "clones": 8,
-      "tokens": 668
+      "clones": 3,
+      "tokens": 259
     },
     "packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts|packages/homelab/src/cdk8s/src/argocd-sync-managed.test.ts": {
       "clones": 6,

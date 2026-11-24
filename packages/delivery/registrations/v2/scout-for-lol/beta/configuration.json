@@ -1,1 +1,5 @@
-{ "id": "scout-beta/1", "content": {}, "forwardOnly": [] }
+{
+  "id": "scout-beta/2",
+  "content": { "scout.reportLakeSchemaEpoch": "2" },
+  "forwardOnly": ["/helm/parameters/scout.reportLakeSchemaEpoch"]
+}

@@ -88,29 +88,122 @@ const ImageRegistrySchema = z.looseObject({
 });
 
 const RootPackageSchema = z.looseObject({ workspaces: z.array(z.string()) });
+const RevisionRecordSchema = z.record(z.string(), z.unknown());
+
+export function nextRevisionId(revisionId: string): string {
+  const match = /^(.+)\/(\d+)$/u.exec(revisionId);
+  return match?.[1] === undefined || match[2] === undefined
+    ? `${revisionId}/2`
+    : `${match[1]}/${String(Number(match[2]) + 1)}`;
+}
+
+function canonicalJsonValue(value: unknown): unknown {
+  if (Array.isArray(value))
+    return value.map((item) => canonicalJsonValue(item));
+  if (typeof value !== "object" || value === null) return value;
+  const record = RevisionRecordSchema.parse(value);
+  return Object.fromEntries(
+    Object.keys(record)
+      .toSorted()
+      .map((key) => [key, canonicalJsonValue(record[key])]),
+  );
+}
+
+function splitRevisionJson(raw: unknown) {
+  const { id, ...rest } = RevisionRecordSchema.parse(raw);
+  return {
+    id: typeof id === "string" ? id : undefined,
+    payloadKey: JSON.stringify(canonicalJsonValue(rest)),
+  };
+}
+
+function runGit(
+  root: string,
+  args: readonly string[],
+  env: Readonly<Record<string, string | undefined>>,
+): { exitCode: number; stdout: string } {
+  const res = Bun.spawnSync(["git", ...args], {
+    cwd: root,
+    env,
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  return { exitCode: res.exitCode, stdout: res.stdout.toString("utf8") };
+}
+
+export function resolveImmutableRevisionBase(
+  root: string = REPOSITORY_ROOT,
+  env: Readonly<Record<string, string | undefined>> = Bun.env,
+): string | undefined {
+  const req = env["CI_CHANGED_BASE"]?.trim();
+  const baseRef = req !== undefined && req.length > 0 ? req : "origin/main";
+  for (const args of [
+    ["merge-base", baseRef, "HEAD"],
+    ["rev-parse", "--verify", "HEAD"],
+  ] as const) {
+    const res = runGit(root, args, env);
+    if (res.exitCode === 0 && res.stdout.trim().length > 0)
+      return res.stdout.trim();
+  }
+  return undefined;
+}
+
+export async function immutableRevisionFindings(
+  options: {
+    root?: string;
+    env?: Readonly<Record<string, string | undefined>>;
+  } = {},
+): Promise<Finding[]> {
+  const root = options.root ?? REPOSITORY_ROOT;
+  const env = options.env ?? Bun.env;
+  const base = resolveImmutableRevisionBase(root, env);
+  if (base === undefined) return [];
+  const diff = runGit(
+    root,
+    ["diff", "--name-only", base, "--", RECIPE_ROOT],
+    env,
+  );
+  if (diff.exitCode !== 0) return [];
+  const findings: Finding[] = [];
+  const pattern =
+    /^packages\/delivery\/registrations\/v2\/(.+)\/(recipe|configuration)\.json$/u;
+  for (const rel of diff.stdout
+    .split("\n")
+    .map((s) => s.trim())
+    .toSorted()) {
+    const m = pattern.exec(rel);
+    if (m?.[1] === undefined || m[2] === undefined) continue;
+    const file = Bun.file(path.join(root, rel));
+    if (!(await file.exists())) continue;
+    const blob = runGit(root, ["show", `${base}:${rel}`], env);
+    if (blob.exitCode !== 0) continue;
+    const baseRev = splitRevisionJson(JSON.parse(blob.stdout));
+    const currRev = splitRevisionJson(JSON.parse(await file.text()));
+    if (baseRev.id === undefined || currRev.id !== baseRev.id) continue;
+    if (currRev.payloadKey === baseRev.payloadKey) continue;
+    const field =
+      m[2] === "recipe" ? "recipeRevisionId" : "configurationRevisionId";
+    findings.push({
+      subject: m[1],
+      item: `${rel}: immutable ${m[2]} revision "${baseRev.id}" changed in place relative to ${base.slice(0, 12)}; bump "id" and ${field} in ${CATALOG} to "${nextRevisionId(baseRev.id)}"`,
+    });
+  }
+  return findings;
+}
 
 export type CatalogService = {
   id: string;
   package?: string | undefined;
-  /** First-party image component names, without the `image:` prefix. */
   images: readonly string[];
-  /** First-party chart component names, without the `chart:` prefix. */
   charts: readonly string[];
 };
 
-/** A bake target as far as this check reads it. */
-export type BakeTarget = {
-  /** Repository-relative Dockerfile path. */
-  dockerfile: string;
-  hasSmokeStage: boolean;
-};
+export type BakeTarget = { dockerfile: string; hasSmokeStage: boolean };
 
 export type RegistrationInputs = {
   services: readonly CatalogService[];
   environments: readonly string[];
-  /** Argo Application to the (possibly pre-cutover) environment id it is delegated to. */
   deliveryDelegations: Readonly<Record<string, string>>;
-  /** The catalog environment a delegation's environment id names today. */
   catalogEnvironmentOf: (environmentId: string) => string;
   registryImages: ReadonlySet<string>;
   applicationTargets: ReadonlySet<string>;
@@ -118,9 +211,7 @@ export type RegistrationInputs = {
   bakeTargets: ReadonlyMap<string, BakeTarget>;
   smokeCommands: ReadonlySet<string>;
   helmCharts: ReadonlySet<string>;
-  /** Environment ids that have a committed `recipe.json`. */
   recipeEnvironments: ReadonlySet<string>;
-  /** Chart names some committed recipe deploys. */
   recipeCharts: ReadonlySet<string>;
   policyDelegations: Readonly<Record<string, string>>;
   workspaces: ReadonlySet<string>;
@@ -131,131 +222,93 @@ export type RegistrationInputs = {
   };
 };
 
-export type Finding = {
-  /** Catalog service id, or `catalog` for a repository-wide item. */
-  subject: string;
-  /** What to do, phrased as one checklist line. */
-  item: string;
-};
+export type Finding = { subject: string; item: string };
 
 function imageFindings(
-  service: CatalogService,
+  s: CatalogService,
   inputs: RegistrationInputs,
 ): Finding[] {
   const findings: Finding[] = [];
-  const missing = (item: string) => {
-    findings.push({ subject: service.id, item });
-  };
-  for (const image of service.images) {
-    if (!inputs.registryImages.has(image))
-      missing(`image:${image}: add it to ${IMAGE_REGISTRY}`);
-    if (image in inputs.exemptions.imagesBuiltOutsideBake) continue;
-
-    const application = inputs.applicationTargets.has(image);
-    if (!application && !inputs.infrastructureTargets.has(image))
+  const missing = (item: string) => findings.push({ subject: s.id, item });
+  for (const img of s.images) {
+    if (!inputs.registryImages.has(img))
+      missing(`image:${img}: add it to ${IMAGE_REGISTRY}`);
+    if (img in inputs.exemptions.imagesBuiltOutsideBake) continue;
+    const app = inputs.applicationTargets.has(img);
+    if (!app && !inputs.infrastructureTargets.has(img))
       missing(
-        `image:${image}: register it in ${IMAGE_TARGETS} (IMAGE_TARGET_REGISTRY or INFRASTRUCTURE_IMAGE_TARGETS)`,
+        `image:${img}: register it in ${IMAGE_TARGETS} (IMAGE_TARGET_REGISTRY or INFRASTRUCTURE_IMAGE_TARGETS)`,
       );
-    const target = inputs.bakeTargets.get(image);
+    const target = inputs.bakeTargets.get(img);
     if (target === undefined) {
-      missing(`image:${image}: add target "${image}" to ${BAKE_FILE}`);
+      missing(`image:${img}: add target "${img}" to ${BAKE_FILE}`);
       continue;
     }
     if (!target.hasSmokeStage)
-      missing(`image:${image}: add a \`smoke\` stage to ${target.dockerfile}`);
-    if (application && !inputs.smokeCommands.has(image))
+      missing(`image:${img}: add a \`smoke\` stage to ${target.dockerfile}`);
+    if (app && !inputs.smokeCommands.has(img))
       missing(
-        `image:${image}: add an in-image smoke command to ${SMOKE_COMMANDS}`,
-      );
-  }
-  return findings;
-}
-
-function chartFindings(
-  service: CatalogService,
-  inputs: RegistrationInputs,
-): Finding[] {
-  const findings: Finding[] = [];
-  const missing = (item: string) => {
-    findings.push({ subject: service.id, item });
-  };
-  for (const chart of service.charts) {
-    if (!inputs.helmCharts.has(chart))
-      missing(`chart:${chart}: add ${HELM_ROOT}/${chart}/Chart.yaml`);
-    if (
-      !inputs.recipeCharts.has(chart) &&
-      !(chart in inputs.exemptions.chartsWithoutRecipe)
-    )
-      missing(
-        `chart:${chart}: no recipe under ${RECIPE_ROOT} deploys it; register an environment and run \`bun run --cwd packages/homelab/src/cdk8s generate:catalog\``,
+        `image:${img}: add an in-image smoke command to ${SMOKE_COMMANDS}`,
       );
   }
   return findings;
 }
 
 function serviceFindings(
-  service: CatalogService,
+  s: CatalogService,
   inputs: RegistrationInputs,
 ): Finding[] {
-  const findings = [
-    ...imageFindings(service, inputs),
-    ...chartFindings(service, inputs),
-  ];
-  for (const environment of inputs.environments)
+  const findings = imageFindings(s, inputs);
+  const missing = (item: string) => findings.push({ subject: s.id, item });
+  for (const ch of s.charts) {
+    if (!inputs.helmCharts.has(ch))
+      missing(`chart:${ch}: add ${HELM_ROOT}/${ch}/Chart.yaml`);
     if (
-      environment.startsWith(`${service.id}/`) &&
-      !inputs.recipeEnvironments.has(environment)
+      !inputs.recipeCharts.has(ch) &&
+      !(ch in inputs.exemptions.chartsWithoutRecipe)
     )
-      findings.push({
-        subject: service.id,
-        item: `environment ${environment}: add ${RECIPE_ROOT}/${environment}/recipe.json (\`generate:catalog\`)`,
-      });
+      missing(
+        `chart:${ch}: no recipe under ${RECIPE_ROOT} deploys it; register an environment and run \`bun run --cwd packages/homelab/src/cdk8s generate:catalog\``,
+      );
+  }
+  for (const env of inputs.environments)
+    if (env.startsWith(`${s.id}/`) && !inputs.recipeEnvironments.has(env))
+      missing(
+        `environment ${env}: add ${RECIPE_ROOT}/${env}/recipe.json (\`generate:catalog\`)`,
+      );
   if (
-    service.package !== undefined &&
-    !inputs.workspaces.has(`packages/${service.package}`)
+    s.package !== undefined &&
+    !inputs.workspaces.has(`packages/${s.package}`)
   )
-    findings.push({
-      subject: service.id,
-      item: `package ${service.package}: add packages/${service.package} to the root package.json workspaces`,
-    });
+    missing(
+      `package ${s.package}: add packages/${s.package} to the root package.json workspaces`,
+    );
   return findings;
 }
 
 function delegationFindings(inputs: RegistrationInputs): Finding[] {
   const findings: Finding[] = [];
-  const catalog = (item: string) => {
-    findings.push({ subject: "catalog", item });
-  };
-  const environments = new Set(inputs.environments);
-  const { policyOnlyDelegations } = inputs.exemptions;
-
-  for (const [application, environment] of Object.entries(
-    inputs.deliveryDelegations,
-  )) {
-    const current = inputs.catalogEnvironmentOf(environment);
-    if (!environments.has(current))
-      catalog(
-        `delegation ${application}: ${current} is not a catalog environment`,
-      );
-    const policy = inputs.policyDelegations[application];
+  const catalog = (item: string) => findings.push({ subject: "catalog", item });
+  const envs = new Set(inputs.environments);
+  for (const [app, env] of Object.entries(inputs.deliveryDelegations)) {
+    const current = inputs.catalogEnvironmentOf(env);
+    if (!envs.has(current))
+      catalog(`delegation ${app}: ${current} is not a catalog environment`);
+    const policy = inputs.policyDelegations[app];
     if (policy === undefined)
+      catalog(`delegation ${app}: add it to ${DELIVERY_POLICY} as ${env}`);
+    else if (policy !== env)
       catalog(
-        `delegation ${application}: add it to ${DELIVERY_POLICY} as ${environment}`,
-      );
-    else if (policy !== environment)
-      catalog(
-        `delegation ${application}: ${CATALOG} says ${environment} but ${DELIVERY_POLICY} says ${policy}`,
+        `delegation ${app}: ${CATALOG} says ${env} but ${DELIVERY_POLICY} says ${policy}`,
       );
   }
-  for (const [application, environment] of Object.entries(
-    inputs.policyDelegations,
-  ))
+  for (const [app, env] of Object.entries(inputs.policyDelegations))
     if (
-      inputs.deliveryDelegations[application] === undefined &&
-      !(application in policyOnlyDelegations)
+      inputs.deliveryDelegations[app] === undefined &&
+      !(app in inputs.exemptions.policyOnlyDelegations)
     )
       catalog(
-        `delegation ${application}: add it to legacy.deliveryDelegations in ${CATALOG} as ${environment}`,
+        `delegation ${app}: add it to legacy.deliveryDelegations in ${CATALOG} as ${env}`,
       );
   return findings;
 }
@@ -269,60 +322,48 @@ function staleExemptionFindings(inputs: RegistrationInputs): Finding[] {
       item: `${table}["${key}"]: ${why}; delete the exemption from ${EXEMPTIONS}`,
     });
   };
-  const images = new Set(inputs.services.flatMap((service) => service.images));
-  const charts = new Set(inputs.services.flatMap((service) => service.charts));
+  const images = new Set(inputs.services.flatMap((s) => s.images));
+  const charts = new Set(inputs.services.flatMap((s) => s.charts));
   const { exemptions } = inputs;
-
-  for (const image of Object.keys(exemptions.imagesBuiltOutsideBake)) {
-    if (!images.has(image))
-      stale("imagesBuiltOutsideBake", image, "not a first-party catalog image");
-    else if (inputs.bakeTargets.has(image))
-      stale("imagesBuiltOutsideBake", image, "it has a bake target now");
+  for (const img of Object.keys(exemptions.imagesBuiltOutsideBake)) {
+    if (!images.has(img))
+      stale("imagesBuiltOutsideBake", img, "not a first-party catalog image");
+    else if (inputs.bakeTargets.has(img))
+      stale("imagesBuiltOutsideBake", img, "it has a bake target now");
   }
-  for (const chart of Object.keys(exemptions.chartsWithoutRecipe)) {
-    if (!charts.has(chart))
-      stale("chartsWithoutRecipe", chart, "not a first-party catalog chart");
-    else if (inputs.recipeCharts.has(chart))
-      stale("chartsWithoutRecipe", chart, "a recipe deploys it now");
+  for (const ch of Object.keys(exemptions.chartsWithoutRecipe)) {
+    if (!charts.has(ch))
+      stale("chartsWithoutRecipe", ch, "not a first-party catalog chart");
+    else if (inputs.recipeCharts.has(ch))
+      stale("chartsWithoutRecipe", ch, "a recipe deploys it now");
   }
-  for (const application of Object.keys(exemptions.policyOnlyDelegations)) {
-    if (inputs.policyDelegations[application] === undefined)
+  for (const app of Object.keys(exemptions.policyOnlyDelegations)) {
+    if (inputs.policyDelegations[app] === undefined)
       stale(
         "policyOnlyDelegations",
-        application,
+        app,
         "the Delivery policy no longer names it",
       );
-    else if (inputs.deliveryDelegations[application] !== undefined)
-      stale(
-        "policyOnlyDelegations",
-        application,
-        "the catalog delegates it now",
-      );
+    else if (inputs.deliveryDelegations[app] !== undefined)
+      stale("policyOnlyDelegations", app, "the catalog delegates it now");
   }
   return findings;
 }
 
 export function registrationFindings(inputs: RegistrationInputs): Finding[] {
-  const catalogImages = new Set(
-    inputs.services.flatMap((service) => service.images),
-  );
-  const orphans: Finding[] = [
-    ...[...inputs.registryImages]
-      .filter((image) => !catalogImages.has(image))
-      .map((image) => ({
-        subject: "catalog",
-        item: `image ${image} is in ${IMAGE_REGISTRY} but no catalog service has a first-party image:${image} component`,
-      })),
-    ...[...inputs.applicationTargets, ...inputs.infrastructureTargets]
-      .filter((image) => !catalogImages.has(image))
-      .map((image) => ({
-        subject: "catalog",
-        item: `image ${image} is a build target in ${IMAGE_TARGETS} but no catalog service has a first-party image:${image} component`,
-      })),
-  ];
+  const catalogImages = new Set(inputs.services.flatMap((s) => s.images));
+  const orphan = (image: string, where: string): Finding => ({
+    subject: "catalog",
+    item: `image ${image} is ${where} but no catalog service has a first-party image:${image} component`,
+  });
   return [
     ...inputs.services.flatMap((service) => serviceFindings(service, inputs)),
-    ...orphans,
+    ...[...inputs.registryImages]
+      .filter((img) => !catalogImages.has(img))
+      .map((img) => orphan(img, `in ${IMAGE_REGISTRY}`)),
+    ...[...inputs.applicationTargets, ...inputs.infrastructureTargets]
+      .filter((img) => !catalogImages.has(img))
+      .map((img) => orphan(img, `a build target in ${IMAGE_TARGETS}`)),
     ...delegationFindings(inputs),
     ...staleExemptionFindings(inputs),
   ];
@@ -334,29 +375,24 @@ export function formatChecklist(findings: readonly Finding[]): string {
   for (const { subject, item } of findings)
     bySubject.set(subject, [...(bySubject.get(subject) ?? []), item]);
   return [...bySubject]
-    .map(
-      ([subject, items]) =>
-        `${subject}\n${items.map((item) => `  [ ] ${item}`).join("\n")}`,
-    )
+    .map(([s, items]) => `${s}\n${items.map((i) => `  [ ] ${i}`).join("\n")}`)
     .join("\n\n");
 }
 
-/**
- * The `target "<name>" { ... }` blocks of a bake file with the Dockerfile
- * each one builds. Targets whose name starts with `_` are templates.
- */
+/** The `target "<name>" { ... }` blocks of a bake file, skipping `_` templates. */
 export function parseBakeTargets(
   bake: string,
 ): Map<string, { dockerfile: string }> {
   const targets = new Map<string, { dockerfile: string }>();
-  for (const match of bake.matchAll(/^target "([^"]+)" \{\n(.*?)^\}/gmsu)) {
-    const [, name, body] = match;
+  for (const [, name, body] of bake.matchAll(
+    /^target "([^"]+)" \{\n(.*?)^\}/gmsu,
+  )) {
     if (name === undefined || body === undefined || name.startsWith("_"))
       continue;
-    const context = /^\s*context\s*=\s*"([^"]+)"/mu.exec(body)?.[1] ?? ".";
-    const dockerfile =
+    const ctx = /^\s*context\s*=\s*"([^"]+)"/mu.exec(body)?.[1] ?? ".";
+    const df =
       /^\s*dockerfile\s*=\s*"([^"]+)"/mu.exec(body)?.[1] ?? "Dockerfile";
-    targets.set(name, { dockerfile: path.join(context, dockerfile) });
+    targets.set(name, { dockerfile: path.join(ctx, df) });
   }
   return targets;
 }
@@ -365,8 +401,8 @@ export function parseBakeTargets(
 export function parseSmokeCommands(source: string): Set<string> {
   const table = /^const commands:.+?^\};/msu.exec(source)?.[0] ?? "";
   return new Set(
-    [...table.matchAll(/^ {2}"?([a-z0-9-]+)"?: \{$/gmu)].flatMap((match) =>
-      match[1] === undefined ? [] : [match[1]],
+    [...table.matchAll(/^ {2}"?([a-z0-9-]+)"?: \{$/gmu)].flatMap((m) =>
+      m[1] === undefined ? [] : [m[1]],
     ),
   );
 }
@@ -374,13 +410,13 @@ export function parseSmokeCommands(source: string): Set<string> {
 /** Every `chartComponent` in a recipe, including a compound recipe's parts. */
 export function recipeChartComponents(value: unknown): string[] {
   if (Array.isArray(value))
-    return value.flatMap((item) => recipeChartComponents(item));
-  const record = z.record(z.string(), z.unknown()).safeParse(value);
-  return record.success
-    ? Object.entries(record.data).flatMap(([key, child]) =>
-        key === "chartComponent" && typeof child === "string"
-          ? [child]
-          : recipeChartComponents(child),
+    return value.flatMap((v) => recipeChartComponents(v));
+  const rec = RevisionRecordSchema.safeParse(value);
+  return rec.success
+    ? Object.entries(rec.data).flatMap(([k, v]) =>
+        k === "chartComponent" && typeof v === "string"
+          ? [v]
+          : recipeChartComponents(v),
       )
     : [];
 }
@@ -397,34 +433,39 @@ function componentsOf(
     .map(({ name }) => name.slice(kind.length + 1));
 }
 
-async function readText(root: string, file: string): Promise<string> {
-  return Bun.file(path.join(root, file)).text();
-}
-
-async function readJson(root: string, file: string): Promise<unknown> {
-  return JSON.parse(await readText(root, file));
-}
+const readText = (root: string, file: string) =>
+  Bun.file(path.join(root, file)).text();
+const readJson = async (root: string, file: string): Promise<unknown> =>
+  JSON.parse(await readText(root, file));
 
 export async function loadRegistrationInputs(
   root: string = REPOSITORY_ROOT,
 ): Promise<RegistrationInputs> {
-  const catalog = CatalogSchema.parse(await readJson(root, CATALOG));
-  const registry = ImageRegistrySchema.parse(
-    await readJson(root, IMAGE_REGISTRY),
-  );
-  const rootPackage = RootPackageSchema.parse(
-    await readJson(root, "package.json"),
-  );
-  const exemptions = ExemptionsSchema.parse(await readJson(root, EXEMPTIONS));
-  // The build-target tables are code; load the given root's copy of them.
-  const imageTargets = ImageTargetsSchema.parse(
-    await import(path.join(root, IMAGE_TARGETS)),
-  );
-
+  const [
+    catalogRaw,
+    registryRaw,
+    pkgRaw,
+    exemptionsRaw,
+    imageTargets,
+    bakeText,
+    smokeText,
+  ] = await Promise.all([
+    readJson(root, CATALOG),
+    readJson(root, IMAGE_REGISTRY),
+    readJson(root, "package.json"),
+    readJson(root, EXEMPTIONS),
+    import(path.join(root, IMAGE_TARGETS)).then((mod: unknown) =>
+      ImageTargetsSchema.parse(mod),
+    ),
+    readText(root, BAKE_FILE),
+    readText(root, SMOKE_COMMANDS),
+  ]);
+  const catalog = CatalogSchema.parse(catalogRaw);
+  const registry = ImageRegistrySchema.parse(registryRaw);
+  const rootPackage = RootPackageSchema.parse(pkgRaw);
+  const exemptions = ExemptionsSchema.parse(exemptionsRaw);
   const bakeTargets = new Map<string, BakeTarget>();
-  for (const [name, { dockerfile }] of parseBakeTargets(
-    await readText(root, BAKE_FILE),
-  )) {
+  for (const [name, { dockerfile }] of parseBakeTargets(bakeText)) {
     const file = Bun.file(path.join(root, dockerfile));
     bakeTargets.set(name, {
       dockerfile,
@@ -433,45 +474,45 @@ export async function loadRegistrationInputs(
         /^FROM \S+ AS smoke$/imu.test(await file.text()),
     });
   }
-
-  const helmCharts = await Array.fromAsync(
-    new Bun.Glob("*/Chart.yaml").scan({ cwd: path.join(root, HELM_ROOT) }),
-  );
-  const recipeFiles = await Array.fromAsync(
-    new Bun.Glob("**/recipe.json").scan({ cwd: path.join(root, RECIPE_ROOT) }),
-  );
+  const [helmCharts, recipeFiles] = await Promise.all([
+    Array.fromAsync(
+      new Bun.Glob("*/Chart.yaml").scan({ cwd: path.join(root, HELM_ROOT) }),
+    ),
+    Array.fromAsync(
+      new Bun.Glob("**/recipe.json").scan({
+        cwd: path.join(root, RECIPE_ROOT),
+      }),
+    ),
+  ]);
   const recipes = await Promise.all(
     recipeFiles.map((file) => readJson(root, path.join(RECIPE_ROOT, file))),
   );
-
   return {
     services: catalog.services
-      .map((service) => ({
-        id: service.id,
-        package: service.package,
-        images: componentsOf(service.components, "image"),
-        charts: componentsOf(service.components, "chart"),
+      .map((s) => ({
+        id: s.id,
+        package: s.package,
+        images: componentsOf(s.components, "image"),
+        charts: componentsOf(s.components, "chart"),
       }))
-      .filter(
-        (service) => service.images.length > 0 || service.charts.length > 0,
-      ),
-    environments: catalog.environments.map((environment) => environment.id),
+      .filter((s) => s.images.length > 0 || s.charts.length > 0),
+    environments: catalog.environments.map((e) => e.id),
     deliveryDelegations: catalog.legacy.deliveryDelegations,
     catalogEnvironmentOf,
-    registryImages: new Set(registry.images.map((image) => image.name)),
+    registryImages: new Set(registry.images.map((i) => i.name)),
     applicationTargets: new Set(
       Object.keys(imageTargets.IMAGE_TARGET_REGISTRY),
     ),
     infrastructureTargets: new Set(imageTargets.INFRASTRUCTURE_IMAGE_TARGETS),
     bakeTargets,
-    smokeCommands: parseSmokeCommands(await readText(root, SMOKE_COMMANDS)),
+    smokeCommands: parseSmokeCommands(smokeText),
     helmCharts: new Set(helmCharts.map((file) => path.dirname(file))),
     recipeEnvironments: new Set(recipeFiles.map((file) => path.dirname(file))),
     recipeCharts: new Set(
       recipes
-        .flatMap((recipe) => recipeChartComponents(recipe))
-        .filter((component) => component.startsWith("chart:"))
-        .map((component) => component.slice("chart:".length)),
+        .flatMap((r) => recipeChartComponents(r))
+        .filter((c) => c.startsWith("chart:"))
+        .map((c) => c.slice("chart:".length)),
     ),
     policyDelegations: {
       ...ORDINARY_DELIVERY_ENVIRONMENTS,
@@ -483,7 +524,11 @@ export async function loadRegistrationInputs(
 }
 
 if (import.meta.main) {
-  const findings = registrationFindings(await loadRegistrationInputs());
+  const [inputs, revisionFindings] = await Promise.all([
+    loadRegistrationInputs(),
+    immutableRevisionFindings(),
+  ]);
+  const findings = [...registrationFindings(inputs), ...revisionFindings];
   if (findings.length > 0) {
     console.error(
       `Service registration is incomplete (${String(findings.length)} item(s)):\n\n${formatChecklist(findings)}`,

@@ -48,6 +48,7 @@ export const RecoveryIntentV2Schema = z
     /** Snapshot of the deployment and environment at creation (I2). */
     fingerprint: z.string().regex(/^sha256:[a-f0-9]{64}$/u),
     evidence: z.array(EvidenceInputSchema).default([]),
+    producerBarrierHeld: z.boolean().default(false).optional(),
     outcome: z.enum(["pending", "succeeded", "failed"]),
     createdAt: z.iso.datetime(),
     settledAt: z.iso.datetime().nullable().default(null),

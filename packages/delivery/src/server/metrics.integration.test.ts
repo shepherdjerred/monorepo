@@ -183,3 +183,136 @@ test("the platform lock gauge names its holder's status, so a stranded lock is v
   expect(Number(age)).toBeLessThan(3660);
   expect(stranded).not.toContain(deployment.id);
 });
+
+test("timestamp gauges anchor naive UTC columns in non-UTC sessions and clamp future clock skew to zero", async () => {
+  const database = context.cluster.database;
+  const twoMinutesAgo = new Date(Date.now() - 120_000);
+  const queued = await context.delivery.createDeployment(
+    context.input("deploy/tz-queued"),
+    testOperator,
+  );
+  await database.deployment.update({
+    where: { id: queued.id },
+    data: { createdAt: twoMinutesAgo },
+  });
+  await database.outbox.update({
+    where: { deploymentId: queued.id },
+    data: { createdAt: twoMinutesAgo },
+  });
+
+  const { deployment: stack } = await requestStackDeployment(context);
+  await context.delivery.claim(stack.id, testExecutor);
+  await database.targetLock.updateMany({
+    where: { deploymentId: stack.id },
+    data: { acquiredAt: twoMinutesAgo },
+  });
+  await database.platformLock.update({
+    where: { id: "platform" },
+    data: { createdAt: twoMinutesAgo },
+  });
+  const stackDetail = await context.delivery.detail(stack.id);
+  await context.delivery.finish(
+    stack.id,
+    {
+      status: "failed",
+      message: "Quarantined for timezone and barrier metric test",
+      recoveryRequired: true,
+      evidence: [],
+    },
+    testExecutor,
+  );
+  const barrierIntent = await database.recoveryIntent.create({
+    data: {
+      id: "content/barrier/tz",
+      kind: "content",
+      deploymentId: stack.id,
+      sequence: 1,
+      requestedBy: testOperator.id,
+      reason: "Journaled content producer barrier for metric verification",
+      expectedGeneration: stackDetail.environment.generation,
+      fingerprint: `sha256:${"a".repeat(64)}`,
+      status: "succeeded",
+      finishedAt: twoMinutesAgo,
+      barrier: {
+        adapter: "control-plane-dispatch-barrier/v1",
+        deploymentUID: "uid-1",
+        templateFingerprint: "b".repeat(64),
+        priorReplicas: 1,
+        podUIDs: [],
+        replicaSetUIDs: [],
+      },
+      barrierRestoredAt: null,
+      createdAt: twoMinutesAgo,
+    },
+  });
+
+  // Settled intent holding an unrestored producer barrier still surfaces in --pending.
+  const pendingIntents = await context.delivery.pendingRecoveryIntents();
+  expect(pendingIntents).toEqual([
+    expect.objectContaining({
+      id: barrierIntent.id,
+      outcome: "succeeded",
+      producerBarrierHeld: true,
+    }),
+  ]);
+
+  const pacific = await database.$transaction(async (tx) => {
+    await tx.$executeRaw`SET LOCAL TimeZone = 'America/Los_Angeles'`;
+    return await deliveryMetrics(tx);
+  });
+  for (const pattern of [
+    /delivery_outbox_oldest_seconds ([\d.]+)/u,
+    /delivery_queued_oldest_seconds\{environment="arcade\/prod"\} ([\d.]+)/u,
+    /delivery_application_lock_oldest_seconds ([\d.]+)/u,
+    /delivery_platform_lock_held_seconds\{[^}]+\} ([\d.]+)/u,
+    /delivery_content_barrier_held_seconds\{environment="tofu-cloudflare\/prod",service_id="tofu-cloudflare",intent_status="succeeded"\} ([\d.]+)/u,
+  ]) {
+    const measured = Number(pattern.exec(pacific)?.[1]);
+    expect(measured).toBeGreaterThanOrEqual(115);
+    expect(measured).toBeLessThan(180);
+  }
+
+  const fiveSecondsAhead = new Date(Date.now() + 5000);
+  await database.deployment.update({
+    where: { id: queued.id },
+    data: { createdAt: fiveSecondsAhead },
+  });
+  await database.outbox.update({
+    where: { deploymentId: queued.id },
+    data: { createdAt: fiveSecondsAhead },
+  });
+  await database.targetLock.updateMany({
+    where: { deploymentId: stack.id },
+    data: { acquiredAt: fiveSecondsAhead },
+  });
+  await database.platformLock.update({
+    where: { id: "platform" },
+    data: { createdAt: fiveSecondsAhead },
+  });
+  await database.recoveryIntent.update({
+    where: { id: barrierIntent.id },
+    data: { createdAt: fiveSecondsAhead },
+  });
+
+  const skewed = await deliveryMetrics(database);
+  expect(skewed).toContain("delivery_outbox_oldest_seconds 0\n");
+  expect(skewed).toContain(
+    'delivery_queued_oldest_seconds{environment="arcade/prod"} 0\n',
+  );
+  expect(skewed).toContain("delivery_application_lock_oldest_seconds 0\n");
+  expect(skewed).toContain(
+    'delivery_platform_lock_held_seconds{environment="tofu-cloudflare/prod",service_id="tofu-cloudflare",holder_status="failed",recovery_required="true",producer_barrier="true"} 0\n',
+  );
+  expect(skewed).toContain(
+    'delivery_content_barrier_held_seconds{environment="tofu-cloudflare/prod",service_id="tofu-cloudflare",intent_status="succeeded"} 0\n',
+  );
+
+  await database.recoveryIntent.update({
+    where: { id: barrierIntent.id },
+    data: { barrierRestoredAt: new Date() },
+  });
+  expect(await deliveryMetrics(database)).not.toContain(
+    "delivery_content_barrier_held_seconds{",
+  );
+  expect(await context.delivery.pendingRecoveryIntents()).toEqual([]);
+});

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   formatChecklist,
+  immutableRevisionFindings,
   loadRegistrationInputs,
   parseBakeTargets,
   parseSmokeCommands,
@@ -330,5 +331,6 @@ describe("this repository", () => {
     expect(inputs.smokeCommands.size).toBeGreaterThan(10);
     expect(inputs.recipeCharts.size).toBeGreaterThan(50);
     expect(formatChecklist(registrationFindings(inputs))).toBe("");
+    expect(await immutableRevisionFindings()).toEqual([]);
   });
 });

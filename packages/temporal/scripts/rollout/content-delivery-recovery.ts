@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ForumStepAcknowledgementSchema } from "@shepherdjerred/ops-model/forum-recovery.ts";
 import { resolveCredentials } from "@shepherdjerred/toolkit/lib/credentials.ts";
 import { deliveryUrl } from "@shepherdjerred/toolkit/lib/delivery/client.ts";
+import { TOOLKIT_CONFIG_DEFINITION } from "@shepherdjerred/toolkit/lib/toolkit-config.ts";
 import {
   parseFlagArguments,
   requiredParsedArgument,
@@ -53,9 +54,12 @@ async function main() {
     .literal("admin@torvalds")
     .parse(requiredParsedArgument(flags, "--context"));
   Bun.env["DELIVERY_API_URL"] = deliveryUrl(
-    requiredParsedArgument(flags, "--url"),
+    flags.get("--url") ?? TOOLKIT_CONFIG_DEFINITION.deliveryUrl.default,
   );
-  await resolveCredentials(["DELIVERY_EXECUTOR_TOKEN", "ARGOCD_AUTH_TOKEN"]);
+  await resolveCredentials([
+    "DELIVERY_EXECUTOR_TOKEN",
+    "DELIVERY_PLATFORM_ARGOCD_TOKEN",
+  ]);
   const selected = await deliveryRequest(
     `content-recovery/${encodeURIComponent(id)}`,
     ContentRecoveryContextSchema,
@@ -69,7 +73,11 @@ async function main() {
       "DELIVERY_SITE_ACTIVATOR_SECRET_ACCESS_KEY",
       ...(action === "repair" ? ["CLOUDFLARE_API_TOKEN"] : []),
     ]);
-  Bun.env["ARGOCD_TOKEN"] = requiredEnvironment(Bun.env, "ARGOCD_AUTH_TOKEN");
+  Bun.env["ARGOCD_TOKEN"] = requiredEnvironment(
+    Bun.env,
+    "DELIVERY_PLATFORM_ARGOCD_TOKEN",
+  );
+  delete Bun.env["DELIVERY_PLATFORM_ARGOCD_TOKEN"];
   Bun.env["ARGOCD_SERVER_URL"] = "https://argocd.sjer.red";
   const { kubernetes, connection } = await openOperatorRecovery(context);
   try {
@@ -88,6 +96,7 @@ async function main() {
                 ![
                   "OP_SERVICE_ACCOUNT_TOKEN",
                   "DELIVERY_EXECUTOR_TOKEN",
+                  "DELIVERY_PLATFORM_ARGOCD_TOKEN",
                   "ARGOCD_AUTH_TOKEN",
                   "ARGOCD_TOKEN",
                 ].includes(key),
@@ -112,10 +121,14 @@ async function main() {
 try {
   await main();
 } catch (error) {
+  const detail =
+    error instanceof Error && error.message.length > 0
+      ? ` (${error.message})`
+      : "";
   console.error(
     error instanceof ContentOperatorError
       ? error.message
-      : "Independent content recovery refused or remains incomplete. Preserve the exact native receipts, original backup and quarantine; inspect the same intent before retrying.",
+      : `Independent content recovery refused or remains incomplete${detail}. Preserve the exact native receipts, original backup and quarantine; inspect the same intent before retrying.`,
   );
   process.exitCode = 1;
 }

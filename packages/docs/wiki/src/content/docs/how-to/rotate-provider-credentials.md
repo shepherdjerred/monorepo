@@ -23,9 +23,12 @@ Each workload's 1Password target is in its stack's `desired-state.json` under
 The stack runner injects that file as variables, so the edits below need no
 re-synthesis. To change a stack's resources instead, see
 [Change an OpenTofu stack](/how-to/change-an-opentofu-stack/).
-For the OpenAI handoff, put values into 1Password with the app or a
-non-printing `op item edit`. Never place a key in a shell argument, file,
-command output, or chat.
+For the OpenAI handoff, write values into 1Password with
+[`credential-handoff.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/tofu/credential-handoff.ts),
+which streams the item template over `/dev/fd/3` and checks an independent
+readback without printing values. Never place a key in a shell argument, file,
+command output, or chat, and do not pipe a template into `op item edit` over
+`Bun.spawn` stdin (`op` ignores socket-backed stdin on macOS).
 
 ## 1. Rotate an OpenAI project key
 
@@ -36,8 +39,24 @@ command output, or chat.
    plan. Review that plan and
    [approve it](/how-to/cut-a-homelab-release/#approve-or-reject-an-opentofu-plan)
    before it expires. Delivery then applies the exact approved plan.
-3. Read the new key from the stack's sensitive `openai_service_account_handoffs`
-   output and write it to the target field.
+3. From a clean `main` checkout at the applied commit, preview and apply the
+   unit's handoff from `openai_service_account_handoffs` to its target field,
+   then confirm `verify` reports `matches`:
+
+   ```bash
+   scripts/onepassword/with-service-account.sh \
+     op run --env-file packages/homelab/src/tofu/service-account.env -- \
+     bun packages/homelab/scripts/tofu/credential-handoff.ts openai apply "$(git rev-parse HEAD)" --unit <service-account-key> --dry-run
+
+   scripts/onepassword/with-service-account.sh \
+     op run --env-file packages/homelab/src/tofu/service-account.env -- \
+     bun packages/homelab/scripts/tofu/credential-handoff.ts openai apply "$(git rev-parse HEAD)" --unit <service-account-key>
+
+   scripts/onepassword/with-service-account.sh \
+     op run --env-file packages/homelab/src/tofu/service-account.env -- \
+     bun packages/homelab/scripts/tofu/credential-handoff.ts openai verify "$(git rev-parse HEAD)"
+   ```
+
 4. Wait for the 1Password Connect operator to refresh the Kubernetes Secret, then
    restart the workload.
 5. Confirm a live call succeeds and its project shows usage in the OpenAI

@@ -538,38 +538,42 @@ registered environments. These buckets require immutable artifact publication
 and cannot fall back to a legacy writer; unknown or mismatched owners refuse.
 
 Static archives and Forum releases use a foreground maintenance command rather
-than an automatic recovery worker. Pause `delivery-dispatch`, wait for every open
-Delivery Workflow and original native Job/Pod to finish, and request a content
-recovery intent with `toolkit deploy sites recover` or `toolkit deploy forum
-recover`. The command checkpoints and stops the exact ordinary Activity host;
-do not scale it down before the first invocation. API/PostgreSQL, ArgoCD,
-Kubernetes and the Temporal server must remain reachable. A loopback-only
-Temporal port-forward supports a worker outage without exporting a server key:
+than an automatic recovery worker. Pause `delivery-dispatch`, wait for every
+claimed Delivery Workflow and original native Job/Pod to finish (once a content
+barrier is journaled, queued `deliveryDeploymentWorkflow` runs with no claim or
+stages stay fenced by `requireNoContentBarrier` and must not be terminated), and
+request a content recovery intent with `toolkit deploy sites recover` or
+`toolkit deploy forum recover`. The command checkpoints and stops the exact
+ordinary Activity host; do not scale it down before the first invocation.
+API/PostgreSQL, ArgoCD, Kubernetes and the Temporal server must remain
+reachable. A loopback-only Temporal port-forward supports a worker outage
+without exporting a server key:
 
 ```bash
 kubectl --context admin@torvalds -n temporal port-forward service/temporal-temporal-server-service 17233:7233 --address 127.0.0.1
 ```
 
-In a second terminal:
+In a second terminal (`--url` defaults to `https://delivery.tailnet-1a49.ts.net`):
 
 ```bash
-env -u TEMPORAL_API_KEY TEMPORAL_ADDRESS=127.0.0.1:17233 TEMPORAL_TLS=false bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url DELIVERY_URL --context admin@torvalds --action repair
+env -u OP_SERVICE_ACCOUNT_TOKEN -u TEMPORAL_API_KEY TEMPORAL_ADDRESS=127.0.0.1:17233 TEMPORAL_TLS=false bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url https://delivery.tailnet-1a49.ts.net --context admin@torvalds --action repair
 ```
 
-The existing credential broker resolves the scoped executor, local operator
-Argo identity and, only for static targets, the registered static activator and
-cache-purge fields. It never substitutes the broad Cloudflare operator token.
-Static repair reapplies the frozen archive then independently checks bucket and
-public bytes; Scout also requires its exact healthy backend and settled worker
-routes. Forum repair copies the original Job under the operator's existing
-Kubernetes authority, preserves its image/environment/volumes, and checkpoints
-the suspended child before admission. No new service account or delegated
-cluster authority is installed. Only journaled idempotent steps may repeat;
-uncertain installation, add-on or content/account migration remains locked for
-native inspection with the original backup. If the failed historical Job keeps
-the web wave pending, the command prints the exact selective-sync instruction
-for the already selected web Deployment and requires the same intent to be
-rerun. It never changes an Argo source or restores a production database.
+The existing credential broker resolves the scoped executor, platform Argo
+barrier identity (`DELIVERY_PLATFORM_ARGOCD_TOKEN`) and, only for static
+targets, the registered static activator and cache-purge fields. It never
+substitutes the broad Cloudflare operator token. Static repair reapplies the
+frozen archive then independently checks bucket and public bytes; Scout also
+requires its exact healthy backend and settled worker routes. Forum repair
+copies the original Job under the operator's existing Kubernetes authority,
+preserves its image/environment/volumes, and checkpoints the suspended child
+before admission. No new service account or delegated cluster authority is
+installed. Only journaled idempotent steps may repeat; uncertain installation,
+add-on or content/account migration remains locked for native inspection with
+the original backup. If the failed historical Job keeps the web wave pending,
+the command prints the exact selective-sync instruction for the already selected
+web Deployment and requires the same intent to be rerun. It never changes an
+Argo source or restores a production database.
 
 For an interrupted non-repeatable Forum step, `inspect` reports its step and
 exact journal SHA256. Follow the Forum package's manual repair procedure while
@@ -577,7 +581,7 @@ the same maintenance owner and original backup remain held. After the native
 operation is independently complete and its operator Pod has terminated, use:
 
 ```bash
-bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url DELIVERY_URL --context admin@torvalds --action repair --acknowledge-step STEP --expected-journal-sha256 EXACT_JOURNAL_SHA256
+env -u OP_SERVICE_ACCOUNT_TOKEN bun packages/temporal/scripts/rollout/content-delivery-recovery.ts --intent RECOVERY_INTENT_ID --url https://delivery.tailnet-1a49.ts.net --context admin@torvalds --action repair --acknowledge-step STEP --expected-journal-sha256 EXACT_JOURNAL_SHA256
 ```
 
 The fixed read-only verifier must prove that exact step complete. The command
