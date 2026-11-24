@@ -2513,6 +2513,7 @@
         "@scout-for-lol/temporal": "workspace:*",
         "@sentry/bun": "^11.16.0",
         "@shepherdjerred/bugsink-config": "workspace:*",
+        "@shepherdjerred/code-review": "workspace:*",
         "@shepherdjerred/config": "workspace:*",
         "@shepherdjerred/delivery": "workspace:*",
         "@shepherdjerred/feature-flags": "workspace:*",

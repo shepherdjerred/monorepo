@@ -1,11 +1,12 @@
 # @shepherdjerred/code-review
 
 Provider-neutral library for reasoning about automated PR code review: which
-bots post reviews (Codex, Greptile, Qodo, CodeRabbit), whether each has
+bots post reviews (Codex, Greptile, Qodo, CodeRabbit, Cubic, CodeAnt AI), whether each has
 finished reviewing the head commit, and whether their unresolved findings
 should block. It is the single shared vocabulary behind the review-gate
 CI step
-([scripts/review/wait-for-review.ts](../../scripts/review/wait-for-review.ts)) and the PR
+([scripts/review/wait-for-review.ts](../../scripts/review/wait-for-review.ts)), Temporal's
+weighted round-robin PR review workflow, and the PR
 fleet controller ([packages/pr-fleet-controller](../pr-fleet-controller/)).
 
 ## Model
@@ -84,11 +85,12 @@ the resolved `ReviewState` (`reviewing` | `reviewed` | `errored`), and the PR's
 review threads, it returns `waiting`, `passed`, or `failed`. A thread blocks
 iff it is authored by the active provider, unresolved, not outdated, and
 carries a severity at or above the threshold (`priority <=
-maxBlockingPriority`; the CI gate reads `REVIEW_MAX_BLOCKING_PRIORITY`).
-Threads without a severity badge never block. `errored` review jobs fail the
-gate rather than being trusted; when the error carries a recognised block
-reason (e.g. `usage-limited`), the failure names the operator's remediation
-instead of asking for a re-trigger.
+maxBlockingPriority`; the CI gate reads `REVIEW_MAX_BLOCKING_PRIORITY`;
+`STRICT_P0_P1_POLICY` blocks unconditionally on P0/P1 while keeping P2/P3
+advisory). Threads without a severity badge never block. `errored` review jobs
+fail the gate rather than being trusted; when the error carries a recognised
+block reason (e.g. `usage-limited`), the failure names the operator's
+remediation instead of asking for a re-trigger.
 
 `evaluateMultiGate` combines one pass across providers: any `passed` provider
 passes the gate unless an unresolved, current, provider-authored P0 stands
@@ -99,27 +101,35 @@ the advisory path (`usage-limited` → exit 42); a missing seat or findings fail
 among them fails hard (exit 1) with the blocked providers noted as ignored.
 A block is never a pass: no review happened.
 
+### Smooth weighted round-robin
+
+`selectNextWeightedProvider` and `applyProviderCooldown`
+(`src/weighted-round-robin.ts`) implement deterministic Nginx Smooth Weighted
+Round-Robin across configured providers (`ProviderWeights`). Selection filters
+out providers incompatible with the PR author (`reviewGateSkipReasonForAuthor`),
+per-PR excluded providers, and providers with active cooldowns
+(`cooldownUntilMs > nowMs`), while preserving `currentWeights` across temporary
+exclusions so fairness recovers cleanly.
+
 ## Providers
 
 Registered in `src/providers/registry.ts`: **`codex`** (the default,
-`DEFAULT_PROVIDER_ID`), **`greptile`**, **`qodo`**, and **`coderabbit`**.
+`DEFAULT_PROVIDER_ID`), **`greptile`**, **`qodo`**, **`coderabbit`**,
+**`cubic`**, and **`codeant`**.
 `resolveProvider(id)` throws on an unknown id — a typo'd provider id fails
-loudly instead of gating against the wrong bot. The CI gate selects its
-enabled set with `REVIEW_PROVIDERS` (comma-separated; the resolver default is
-`codex`). Every enabled provider must have its GitHub App installed and
-reviewing: silence is neither a pass nor a block, so a missing provider holds
-each PR at the deadline instead of passing it. Only confirmed-active reviewers
-belong in the production set — today `codex,coderabbit`. Qodo and Greptile
-stay registered for optional/manual review and rejoin the gate once their apps
-are installed and observed reviewing.
+loudly instead of gating against the wrong bot. Every provider declares an
+explicit manual review command (`requestReview`) so Temporal's weighted
+round-robin controller can trigger only the assigned reviewer while repository
+bot configs disable automatic push triggers.
 
 ## Entry points
 
-| Import                                       | Contents                                                                                                                                        |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@shepherdjerred/code-review`                | Pure core: types, severity/identity parsing, `evaluateGate`, providers, and the `review-signal/v1` observability event schema (`src/signal.ts`) |
-| `@shepherdjerred/code-review/github`         | GitHub I/O: fetch PR author, review threads, skip reasons, latest provider review/reaction, and `resolveReviewState`                            |
-| `@shepherdjerred/code-review/head-pushed-at` | Resolve when the head commit was pushed (review-latency measurement)                                                                            |
+| Import                                             | Contents                                                                                                                                                             |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@shepherdjerred/code-review`                      | Pure core: types, severity/identity parsing, `evaluateGate`, `STRICT_P0_P1_POLICY`, smooth weighted round-robin, providers, and `review-signal/v1` (`src/signal.ts`) |
+| `@shepherdjerred/code-review/weighted-round-robin` | Pure Nginx Smooth Weighted Round-Robin selection (`selectNextWeightedProvider`, `applyProviderCooldown`)                                                             |
+| `@shepherdjerred/code-review/github`               | GitHub I/O: fetch PR author, review threads, skip reasons, latest provider review/reaction, and `resolveReviewState`                                                 |
+| `@shepherdjerred/code-review/head-pushed-at`       | Resolve when the head commit was pushed (review-latency measurement)                                                                                                 |
 
 The split is deliberate: pure consumers don't pull in the GitHub layer.
 

@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://cubic.dev/schema/cubic-repository-config.schema.json
+# Cubic review scope and trigger mode. Automatic reviews are disabled so
+# Temporal's weighted round-robin gate requests `@cubic-dev-ai review this PR`
+# manually on selected PRs. Vendored upstream modern-web-guidance files are excluded.
+version: 1
+
+reviews:
+  enabled: false
+  check_drafts: false
+  incremental_commits: false
+  ignore:
+    files:
+      - "packages/dotfiles/dot_agents/skills/modern-web-guidance/**"
+      - "packages/dotfiles-windows/dot_agents/skills/modern-web-guidance/**"

@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, test } from "vitest";
+import { codeantProvider } from "./providers/codeant.ts";
 import { codexProvider } from "./providers/codex.ts";
+import { cubicProvider } from "./providers/cubic.ts";
 import { greptileProvider } from "./providers/greptile.ts";
 import { qodoProvider } from "./providers/qodo.ts";
 import {
@@ -184,9 +186,28 @@ describe("requestReviewAtHead", () => {
   test("never asks a provider that reviews automatically", async () => {
     const posted = stubGitHub([]);
     expect(
-      await requestReviewAtHead({ ...request, provider: greptileProvider }),
+      await requestReviewAtHead({
+        ...request,
+        provider: { ...greptileProvider, requestReview: null },
+      }),
     ).toBe("unsupported");
     expect(posted).toHaveLength(0);
+  });
+
+  test.each([
+    [greptileProvider, "@greptileai"],
+    [cubicProvider, "@cubic-dev-ai review this PR"],
+    [codeantProvider, "@codeant-ai: review"],
+  ])("posts the manual trigger for $id", async (provider, expectedCommand) => {
+    const posted = stubGitHub([]);
+    expect(await requestReviewAtHead({ ...request, provider })).toBe(
+      "requested",
+    );
+    expect(posted).toHaveLength(1);
+    expect(JSON.stringify(posted[0]?.body)).toContain(expectedCommand);
+    expect(JSON.stringify(posted[0]?.body)).toContain(
+      `<!-- review-request:${provider.id}:${HEAD} -->`,
+    );
   });
 
   test("uses the configured provider's own trigger, never another's", async () => {

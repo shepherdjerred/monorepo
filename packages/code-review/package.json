@@ -37,6 +37,10 @@
     "./qodo": {
       "types": "./src/providers/qodo.ts",
       "default": "./src/providers/qodo.ts"
+    },
+    "./weighted-round-robin": {
+      "types": "./src/weighted-round-robin.ts",
+      "default": "./src/weighted-round-robin.ts"
     }
   },
   "scripts": {

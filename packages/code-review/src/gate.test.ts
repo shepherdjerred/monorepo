@@ -8,6 +8,7 @@ import {
   isBlocking,
   REVIEW_GATE_BLOCKED_EXIT_CODE,
   REVIEW_GATE_FAILURE_EXIT_CODE,
+  STRICT_P0_P1_POLICY,
   type LowSeverityPolicy,
   reviewGateSkipReasonForAuthor,
   type ProviderGateSnapshot,
@@ -266,6 +267,43 @@ describe("isBlocking — low-severity policy", () => {
         thread({ priority: 2, raisedInReview: p1 }),
         codexProvider,
         policy(1),
+      ),
+    ).toBe(false);
+  });
+
+  test("STRICT_P0_P1_POLICY blocks P0 and P1 unconditionally and ignores P2/P3", () => {
+    expect(
+      isBlocking(
+        thread({
+          priority: 0,
+          raisedInReview: { ordinal: 3, hadBlockingSeverity: false },
+        }),
+        codexProvider,
+        STRICT_P0_P1_POLICY,
+      ),
+    ).toBe(true);
+    expect(
+      isBlocking(
+        thread({
+          priority: 1,
+          raisedInReview: { ordinal: 3, hadBlockingSeverity: false },
+        }),
+        codexProvider,
+        STRICT_P0_P1_POLICY,
+      ),
+    ).toBe(true);
+    expect(
+      isBlocking(
+        thread({ priority: 2, raisedInReview: p1 }),
+        codexProvider,
+        STRICT_P0_P1_POLICY,
+      ),
+    ).toBe(false);
+    expect(
+      isBlocking(
+        thread({ priority: 3, raisedInReview: null }),
+        codexProvider,
+        STRICT_P0_P1_POLICY,
       ),
     ).toBe(false);
   });

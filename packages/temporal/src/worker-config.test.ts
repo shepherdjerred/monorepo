@@ -4,6 +4,7 @@ import {
   agentChatDeliveryActivities,
   agentChatDispatchWorkerActivities,
   agentChatReceiptWorkerActivities,
+  codeReviewWorkerActivities,
   agentChatIngressActivities,
   opsWorkerActivities,
   reportActivities,
@@ -283,9 +284,19 @@ describe("Temporal capability boundaries", () => {
     const repoWorkers = getWorkerRoleContract("repo").workers;
     expect(repoWorkers.map((worker) => worker.taskQueue)).toEqual([
       TASK_QUEUES.REPO_AUTOMATION,
+      TASK_QUEUES.CODE_REVIEW,
       TASK_QUEUES.AGENT_CHAT_DISPATCH,
       TASK_QUEUES.AGENT_CHAT_RECEIPTS,
     ]);
+    const codeReviewWorker = repoWorkers.find(
+      (worker) => worker.taskQueue === TASK_QUEUES.CODE_REVIEW,
+    );
+    expect(codeReviewWorker).toMatchObject({
+      kind: "activity",
+      role: "repo",
+      activities: codeReviewWorkerActivities,
+      maxConcurrentActivityTaskExecutions: 8,
+    });
     const dispatchWorker = repoWorkers.find(
       (worker) => worker.taskQueue === TASK_QUEUES.AGENT_CHAT_DISPATCH,
     );

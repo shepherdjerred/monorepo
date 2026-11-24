@@ -11,7 +11,6 @@ import {
   asRecord,
   type CheckConclusion,
   conclusionField,
-  eachIssueComment,
   GITHUB_API_URL,
   getJsonWithLink,
   recordField,
@@ -21,6 +20,11 @@ import {
 import { reactionBoundToHead } from "./head-pushed-at.ts";
 import { fetchBlockedReason } from "./github-blocked.ts";
 import { fetchCleanCompletionComment } from "./github-clean-comments.ts";
+import {
+  findSkipReason,
+  resolveUnblockedSkip,
+  skipStateForReason,
+} from "./github-skip.ts";
 import {
   fetchLatestProviderIssueComment,
   resolveIssueCommentReview,
@@ -213,21 +217,9 @@ export async function fetchSkipReason(input: {
   number: number;
   token: string;
   provider: ReviewProvider;
+  headPushedAt?: string | null | undefined;
 }): Promise<string | null> {
-  const skip = input.provider.detectSkip;
-  if (skip === null) return null;
-  for await (const item of eachIssueComment(input)) {
-    const user = recordField(item, "user");
-    const login = user === null ? null : stringField(user, "login");
-    if (!isProviderAuthor(input.provider, login)) continue;
-    const body = stringField(item, "body");
-    if (body === null) continue;
-    if (!body.includes(skip.marker)) continue;
-    for (const { match, reason } of skip.reasons) {
-      if (body.includes(match)) return reason;
-    }
-  }
-  return null;
+  return findSkipReason(input);
 }
 
 // ---------------------------------------------------------------------------
@@ -595,13 +587,21 @@ async function resolveReviewAtHeadState(input: {
     headPushedAt,
     headSha: head,
   });
+  const skipReason = await resolveUnblockedSkip({
+    blockedReason,
+    repo,
+    number: prNumber,
+    token,
+    provider,
+    headPushedAt,
+  });
   return {
-    state: blockedReason === null ? "reviewing" : "errored",
+    state: blockedReason === null ? skipStateForReason(skipReason) : "errored",
     completionSignal: "none",
     reviewedCommit: review?.commitId ?? null,
     reviewedAt: review?.submittedAt ?? null,
     staleReaction: thumbsUp !== null,
-    skipReason: null,
+    skipReason,
     blockedReason,
     priorRound: earlierRound,
   };

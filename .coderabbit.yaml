@@ -1,8 +1,11 @@
-# CodeRabbit review scope. The vendored modern-web-guidance guides are
-# upstream content pinned by commit (see
-# packages/dotfiles/dot_agents/skills/public-sources.json); excluding them
-# keeps reviews focused on first-party changes and under plan file limits.
+# CodeRabbit review scope and trigger mode. Automatic reviews are disabled so
+# Temporal's weighted round-robin gate requests `@coderabbitai review` manually
+# on selected PRs. The vendored modern-web-guidance guides are upstream content
+# pinned by commit (see packages/dotfiles/dot_agents/skills/public-sources.json);
+# excluding them keeps reviews focused on first-party changes and under plan file limits.
 reviews:
+  auto_review:
+    enabled: false
   path_filters:
     - "!packages/dotfiles/dot_agents/skills/modern-web-guidance/**"
     - "!packages/dotfiles-windows/dot_agents/skills/modern-web-guidance/**"

@@ -27,7 +27,18 @@ export const greptileProvider: ReviewProvider = {
   findingKey: null,
   parseReviewBodyFindings: null,
   completion: { kind: "check-run", namePattern: /greptile/iu },
-  detectBlocked: null,
+  detectBlocked: [
+    {
+      matches: ["free credits"],
+      reason: "usage-limited",
+      remediation: "Wait for Greptile monthly credits to reset",
+    },
+    {
+      matches: ["rate limit"],
+      reason: "usage-limited",
+      remediation: "Wait for Greptile rate limit to reset",
+    },
+  ],
   detectSkip: {
     marker: "<!-- greptile-status -->",
     reasons: [
@@ -39,7 +50,7 @@ export const greptileProvider: ReviewProvider = {
       },
     ],
   },
-  // Greptile reviews automatically on every push; there is no manual trigger
-  // comment to post.
-  requestReview: null,
+  // With `.greptile/config.json` setting `"autoReview": []`, reviews are
+  // triggered manually on selected PRs via `@greptileai`.
+  requestReview: { command: "@greptileai" },
 };

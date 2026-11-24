@@ -221,11 +221,9 @@ export async function generateDependencySummary(
 ): Promise<void> {
   return _generateDependencySummary(daysBack, reportTaskQueue);
 }
-
 export async function runDnsAudit(): Promise<void> {
   return _runDnsAudit();
 }
-
 export const goodMorningPreheat = (): Promise<void> => _goodMorningPreheat();
 export const goodMorningWakeUp = (): Promise<void> => _goodMorningWakeUp();
 export const goodMorningGetUp = (): Promise<void> => _goodMorningGetUp();
@@ -237,36 +235,28 @@ export const reconcileLock = (): Promise<void> => _reconcileLock();
 export const reconcileRoborock = (): Promise<void> => _reconcileRoborock();
 export const petCareAlerts = (s: PetCareAlertsState = {}) => _petCareAlerts(s);
 export const runVacuumIfNotHome = (): Promise<void> => _runVacuumIfNotHome();
-
 export async function motionLight(room: MotionLightRoom): Promise<void> {
   return _motionLight(room);
 }
-
 export async function sleepMusic(input?: SleepAutomationInput): Promise<void> {
   return _sleepMusic(input);
 }
-
 export async function sleepAc(input?: SleepAutomationInput): Promise<void> {
   return _sleepAc(input);
 }
-
 export const runZfsMaintenanceWorkflow = () => _runZfsMaintenanceWorkflow();
 export const reconcileStormCompanionsWorkflow = () => reconcileCompanions();
-
 export const runStormPlotReconciliationWorkflow = () =>
   _runStormPlotReconciliationWorkflow();
 export const runRwfRecordingArchiveWorkflow = () => archiveRwfRecordings();
-
 export async function runBugsinkHousekeepingWorkflow(): Promise<void> {
   return _runBugsinkHousekeepingWorkflow();
 }
-
 export async function runScoutImageGcWorkflow(
   input: ScoutImageGcInput = {},
 ): Promise<ScoutImageGcResult> {
   return _runScoutImageGcWorkflow(input);
 }
-
 export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
   return _runVeleroOrphanAuditWorkflow();
 }
@@ -417,6 +407,14 @@ export const scheduledAgentChatTurnWorkflow =
   agentChat.scheduledAgentChatTurnWorkflow;
 export const discordAgentChatWorkflow = agentChat.discordAgentChatWorkflow;
 export const httpAgentChatWorkflow = agentChat.httpAgentChatWorkflow;
+import * as codeReviewCoordinator from "./ci/code-review-coordinator.ts";
+import * as prCodeReview from "./ci/pr-code-review.ts";
+import * as backfillPrCodeReviews from "./ci/backfill-pr-code-reviews.ts";
+export const codeReviewCoordinatorWorkflow =
+  codeReviewCoordinator.codeReviewCoordinatorWorkflow;
+export const prCodeReviewWorkflow = prCodeReview.prCodeReviewWorkflow;
+export const backfillOpenPrCodeReviewsWorkflow =
+  backfillPrCodeReviews.backfillOpenPrCodeReviewsWorkflow;
 import * as delivery from "./delivery.ts";
 export const {
   deliveryDeploymentWorkflow,

@@ -7,8 +7,10 @@ export * from "./severity.ts";
 export * from "./identity.ts";
 export * from "./gate.ts";
 export * from "./signal.ts";
+export * from "./weighted-round-robin.ts";
 export {
   PROVIDERS,
+  ProviderIdSchema,
   DEFAULT_PROVIDER_ID,
   REQUIRED_REVIEW_PROVIDER_ID,
   resolveProvider,
@@ -18,6 +20,17 @@ export {
 export { greptileProvider } from "./providers/greptile.ts";
 export { codexProvider } from "./providers/codex.ts";
 export { coderabbitProvider } from "./providers/coderabbit.ts";
+export {
+  cubicProvider,
+  parseCubicFindingTitle,
+  parseCubicSeverity,
+} from "./providers/cubic.ts";
+export {
+  codeantProvider,
+  parseCodeantCleanHead,
+  parseCodeantFindingTitle,
+  parseCodeantSeverity,
+} from "./providers/codeant.ts";
 export {
   markQodoFindingResolved,
   qodoProvider,

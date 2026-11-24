@@ -79,6 +79,17 @@ export function createTemporalWorkerDeployment(
     "temporal-flags-auth-secret",
     flagsAuthItem.name,
   );
+  const ciGithubItem = onePasswordSecret(
+    chart,
+    "temporal-ci-github-credentials-1p",
+    "34gzcrhwdm34lpadyly3rcsu44",
+    { name: "temporal-ci-github-credentials" },
+  );
+  const ciGithubSecret = Secret.fromSecretName(
+    chart,
+    "temporal-ci-github-credentials-secret",
+    ciGithubItem.name,
+  );
   // The read-only `homelab-audit` ArgoCD account's token, minted by
   // the argocd OpenTofu stack (homelab-cdktn/src/stacks/argocd.ts). The
   // construct id keeps the generated item and Secret names stable.
@@ -338,6 +349,7 @@ export function createTemporalWorkerDeployment(
     serverServiceName: props.serverServiceName,
     secret,
     flagsAuthSecret,
+    ciGithubSecret,
     infraServiceAccount,
     homelabAuditEnvironment: homelabAuditEnv(
       secret,

@@ -36,6 +36,7 @@ const EXECUTION_DOMAINS_BY_TASK_QUEUE: Readonly<
   [TASK_QUEUES.STORM_FORUM_BETA]: "infra",
   [TASK_QUEUES.STORM_FORUM_PROD]: "infra",
   [TASK_QUEUES.REPO_AUTOMATION]: "repo",
+  [TASK_QUEUES.CODE_REVIEW]: "repo",
   [TASK_QUEUES.SCOUT]: "scout",
   [TASK_QUEUES.MAINTENANCE]: "maintenance",
   [TASK_QUEUES.BILLING]: "platform",
@@ -133,6 +134,9 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runPokeemeraldDataRefresh: "repo",
   cancelCiPipelinesWorkflow: "repo",
   checkPrMergeConflictsWorkflow: "repo",
+  codeReviewCoordinatorWorkflow: "repo",
+  prCodeReviewWorkflow: "repo",
+  backfillOpenPrCodeReviewsWorkflow: "repo",
 
   // TASK_QUEUES.REPORTS
   pollWorkflowFailuresWorkflow: "reports",

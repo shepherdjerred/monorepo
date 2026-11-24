@@ -768,3 +768,53 @@ describe("Temporal Renovate LLM delta enrichment rollout", () => {
     );
   });
 });
+
+describe("Temporal weighted round-robin PR code review rollout", () => {
+  test("enables temporal-code-review-enabled and configures default SWRR weights in beta and prod", () => {
+    assertGloballyEnabledBooleanFlag(
+      "temporal",
+      "temporal-code-review-enabled",
+      {
+        owner: "temporal",
+        namespace: "temporal",
+        source: "code",
+      },
+    );
+
+    for (const environment of ["beta", "prod"] as const) {
+      const settings = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        environment,
+        "temporal",
+      ).find((candidate) => candidate.key === "temporal-code-review-settings");
+      if (settings?.type !== "variant") {
+        throw new Error(
+          `temporal-code-review-settings missing in ${environment}`,
+        );
+      }
+      expect(settings).toMatchObject({
+        owner: "temporal",
+        namespace: "temporal",
+        source: "code",
+        type: "variant",
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [],
+      });
+      expect(JSON.parse(settings.default)).toEqual({
+        weights: {
+          coderabbit: 3,
+          codex: 1,
+          cubic: 0,
+          codeant: 0,
+          qodo: 0,
+          greptile: 0,
+        },
+        quotaCooldownSeconds: 3600,
+        timeoutCooldownSeconds: 900,
+        requestRetrySeconds: 720,
+        providerTimeoutSeconds: 1500,
+      });
+    }
+  });
+});

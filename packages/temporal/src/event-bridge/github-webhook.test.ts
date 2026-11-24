@@ -1,6 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
 import { sign } from "@octokit/webhooks-methods";
+import {
+  WorkflowIdConflictPolicy,
+  WorkflowIdReusePolicy,
+  WorkflowNotFoundError,
+} from "@temporalio/common";
 import { buildWebhookApp } from "./github-webhook.ts";
+import {
+  startPrCodeReviewFromWebhook,
+  stopPrCodeReviewFromWebhook,
+  type CodeReviewPrStartArgs,
+  type CodeReviewPrStopArgs,
+  type WebhookCodeReviewTemporalClient,
+} from "./code-review-starts.ts";
 import type { CancelCiPipelinesInput } from "#shared/schemas.ts";
 
 const SECRET = "test-webhook-secret-do-not-use-anywhere";
@@ -339,5 +351,156 @@ describe("buildWebhookApp PR closed", () => {
       makeBaseEvent({ action: "closed", merged: true }),
     );
     expect(res.status).toBe(500);
+  });
+});
+
+describe("buildWebhookApp PR code review orchestration", () => {
+  it("starts code review when a ready PR is opened targeting main", async () => {
+    const startCodeReviewPr = vi.fn(
+      (_args: CodeReviewPrStartArgs): Promise<void> => RESOLVED,
+    );
+    const app = buildWebhookApp(SECRET, { startCodeReviewPr });
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ action: "opened", draft: false }),
+    );
+    expect(res.status).toBe(200);
+    expect(startCodeReviewPr).toHaveBeenCalledTimes(1);
+    expect(startCodeReviewPr).toHaveBeenCalledWith({
+      owner: "shepherdjerred",
+      repo: "monorepo",
+      prNumber: 42,
+      headSha: "ab".repeat(20),
+      baseRef: "main",
+    });
+  });
+
+  it("ignores opened draft PRs", async () => {
+    const startCodeReviewPr = vi.fn(
+      (_args: CodeReviewPrStartArgs): Promise<void> => RESOLVED,
+    );
+    const app = buildWebhookApp(SECRET, { startCodeReviewPr });
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ action: "opened", draft: true }),
+    );
+    expect(res.status).toBe(200);
+    expect(startCodeReviewPr).not.toHaveBeenCalled();
+  });
+
+  it("starts code review on ready_for_review and synchronize", async () => {
+    const startCodeReviewPr = vi.fn(
+      (_args: CodeReviewPrStartArgs): Promise<void> => RESOLVED,
+    );
+    const app = buildWebhookApp(SECRET, { startCodeReviewPr });
+
+    const readyRes = await postWebhook(
+      app,
+      makeBaseEvent({ action: "ready_for_review", draft: false }),
+    );
+    expect(readyRes.status).toBe(200);
+
+    const syncRes = await postWebhook(
+      app,
+      makeBaseEvent({
+        action: "synchronize",
+        draft: false,
+        headSha: "cd".repeat(20),
+      }),
+    );
+    expect(syncRes.status).toBe(200);
+    expect(startCodeReviewPr).toHaveBeenCalledTimes(2);
+    expect(startCodeReviewPr).toHaveBeenLastCalledWith(
+      expect.objectContaining({ headSha: "cd".repeat(20) }),
+    );
+  });
+
+  it("stops code review on converted_to_draft", async () => {
+    const stopCodeReviewPr = vi.fn(
+      (_args: CodeReviewPrStopArgs): Promise<void> => RESOLVED,
+    );
+    const app = buildWebhookApp(SECRET, { stopCodeReviewPr });
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ action: "converted_to_draft", draft: true }),
+    );
+    expect(res.status).toBe(200);
+    expect(stopCodeReviewPr).toHaveBeenCalledTimes(1);
+    expect(stopCodeReviewPr).toHaveBeenCalledWith({
+      owner: "shepherdjerred",
+      repo: "monorepo",
+      prNumber: 42,
+      headSha: "ab".repeat(20),
+      reason: "pull_request.converted_to_draft",
+    });
+  });
+
+  it("stops code review alongside handleClosedPr when a PR is closed", async () => {
+    const stopCodeReviewPr = vi.fn(
+      (_args: CodeReviewPrStopArgs): Promise<void> => RESOLVED,
+    );
+    const cancel = vi.fn(noopCancel);
+    const app = buildWebhookApp(SECRET, {
+      startCancel: cancel,
+      stopCodeReviewPr,
+    });
+    const res = await postWebhook(
+      app,
+      makeBaseEvent({ action: "closed", merged: true }),
+    );
+    expect(res.status).toBe(200);
+    expect(stopCodeReviewPr).toHaveBeenCalledTimes(1);
+    expect(stopCodeReviewPr).toHaveBeenCalledWith({
+      owner: "shepherdjerred",
+      repo: "monorepo",
+      prNumber: 42,
+      headSha: "ab".repeat(20),
+      reason: "pull_request.closed",
+    });
+    expect(cancel).toHaveBeenCalledTimes(1);
+  });
+
+  it("starts head-scoped runs with USE_EXISTING and signals recheckReview on stop", async () => {
+    const start = vi.fn(async () => ({}));
+    const signal = vi.fn(async () => {
+      throw new WorkflowNotFoundError(
+        "not found",
+        `pr-code-review/shepherdjerred/monorepo/42/${"ab".repeat(20)}`,
+        undefined,
+      );
+    });
+    const clientStub: WebhookCodeReviewTemporalClient = {
+      workflow: {
+        start,
+        getHandle: () => ({ signal }),
+      },
+    };
+
+    await startPrCodeReviewFromWebhook(clientStub, {
+      owner: "shepherdjerred",
+      repo: "monorepo",
+      prNumber: 42,
+      headSha: "ab".repeat(20),
+      baseRef: "main",
+    });
+    expect(start).toHaveBeenCalledWith(
+      "prCodeReviewWorkflow",
+      expect.objectContaining({
+        workflowId: `pr-code-review/shepherdjerred/monorepo/42/${"ab".repeat(20)}`,
+        workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
+        workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
+      }),
+    );
+
+    await expect(
+      stopPrCodeReviewFromWebhook(clientStub, {
+        owner: "shepherdjerred",
+        repo: "monorepo",
+        prNumber: 42,
+        headSha: "ab".repeat(20),
+        reason: "pull_request.closed",
+      }),
+    ).resolves.toBeUndefined();
+    expect(signal).toHaveBeenCalledWith("recheckReview");
   });
 });

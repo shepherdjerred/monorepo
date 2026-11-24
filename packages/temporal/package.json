@@ -72,6 +72,7 @@
     "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/temporal": "workspace:*",
     "@sentry/bun": "^11.16.0",
+    "@shepherdjerred/code-review": "workspace:*",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/glitter-context": "workspace:*",

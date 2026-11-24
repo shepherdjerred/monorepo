@@ -4628,6 +4628,30 @@
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
+    },
+    {
+      "key": "temporal-code-review-enabled",
+      "owner": "temporal",
+      "namespace": "temporal",
+      "source": "code",
+      "purpose": "Enable Temporal weighted round-robin PR code review orchestration and ci/code-review commit status publication.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "temporal-code-review-settings",
+      "owner": "temporal",
+      "namespace": "temporal",
+      "source": "code",
+      "purpose": "JSON configuration for Temporal PR code review Smooth Weighted Round-Robin weights and provider cooldown/timeout bounds.",
+      "type": "variant",
+      "default": "{\"weights\":{\"coderabbit\":3,\"codex\":1,\"cubic\":0,\"codeant\":0,\"qodo\":0,\"greptile\":0},\"quotaCooldownSeconds\":3600,\"timeoutCooldownSeconds\":900,\"requestRetrySeconds\":720,\"providerTimeoutSeconds\":1500}",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     }
   ],
   "exemptions": [

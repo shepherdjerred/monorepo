@@ -211,6 +211,18 @@ export async function resolveIssueCommentReview(input: {
     since: input.headPushedAt ?? undefined,
   });
   const { acknowledgement } = scanned;
+  const ackCommits =
+    acknowledgement === null
+      ? new Set<string>()
+      : commitsNamedBy(acknowledgement.body);
+  const reviewedEarlierCommit = [...ackCommits].some(
+    (sha) => sha !== input.head,
+  );
+  const earlierReviewComment =
+    scanned.review !== null &&
+    input.headPushedAt !== null &&
+    !reactionBoundToHead(scanned.review.updatedAt, input.headPushedAt);
+  const priorRound = reviewedEarlierCommit || earlierReviewComment;
   // The scan walks pages, so the review comment and the acknowledgement can
   // come from different pages and straddle a re-review that finished mid-scan:
   // an early page yields the body as it was rendered BEFORE the re-review while
@@ -219,16 +231,14 @@ export async function resolveIssueCommentReview(input: {
   // findings the re-review added would be missing when the gate passes. Once an
   // acknowledgement for this head is in hand, re-read the comment so the
   // snapshot the gate blocks on postdates it.
-  const comment =
-    acknowledgement !== null &&
-    commitsNamedBy(acknowledgement.body).has(input.head)
-      ? await fetchLatestProviderIssueComment({
-          repo: input.repo,
-          number: input.prNumber,
-          token: input.token,
-          provider: input.provider,
-        })
-      : scanned.review;
+  const comment = ackCommits.has(input.head)
+    ? await fetchLatestProviderIssueComment({
+        repo: input.repo,
+        number: input.prNumber,
+        token: input.token,
+        provider: input.provider,
+      })
+    : scanned.review;
   const { completion } = input.provider;
   const reportsFindings =
     comment !== null &&
@@ -260,6 +270,7 @@ export async function resolveIssueCommentReview(input: {
       skipReason: null,
       blockedReason: null,
       issueComment: comment,
+      priorRound,
     };
   }
   // The comment is not bound to this head. Before reporting `reviewing`, check
@@ -283,6 +294,7 @@ export async function resolveIssueCommentReview(input: {
       skipReason: null,
       blockedReason,
       issueComment: comment,
+      priorRound,
     };
   }
   return {
@@ -294,5 +306,6 @@ export async function resolveIssueCommentReview(input: {
     skipReason: null,
     blockedReason: null,
     issueComment: comment,
+    priorRound,
   };
 }

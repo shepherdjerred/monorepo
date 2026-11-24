@@ -22,6 +22,15 @@ import {
   startCheckPrMergeConflictsForMain,
   startCheckPrMergeConflictsForPr,
 } from "./conflict-check-starts.ts";
+import {
+  captureCodeReviewWebhookError,
+  CODE_REVIEW_START_ACTIONS,
+  CODE_REVIEW_STOP_ACTIONS,
+  startPrCodeReviewFromWebhook,
+  stopPrCodeReviewFromWebhook,
+  type CodeReviewPrStartArgs,
+  type CodeReviewPrStopArgs,
+} from "./code-review-starts.ts";
 
 const DEFAULT_PORT = 9466;
 
@@ -42,9 +51,15 @@ export type ConflictCheckPrStartFn = (args: {
   headSha: string;
   baseRef: string;
 }) => Promise<void>;
+export type CodeReviewPrStartFn = (
+  args: CodeReviewPrStartArgs,
+) => Promise<void>;
+export type CodeReviewPrStopFn = (args: CodeReviewPrStopArgs) => Promise<void>;
 const noopCancel: CancelStartFn = () => Promise.resolve();
 const noopConflictMain: ConflictCheckMainStartFn = () => Promise.resolve();
 const noopConflictPr: ConflictCheckPrStartFn = () => Promise.resolve();
+const noopCodeReviewStart: CodeReviewPrStartFn = () => Promise.resolve();
+const noopCodeReviewStop: CodeReviewPrStopFn = () => Promise.resolve();
 
 /**
  * Verify the `X-Hub-Signature-256` HMAC. Returns a `Response` to return on
@@ -194,6 +209,71 @@ async function maybeStartConflictCheckPr(
   }
 }
 
+async function maybeReconcileCodeReviewPr(
+  hooks: {
+    startCodeReviewPr: CodeReviewPrStartFn;
+    stopCodeReviewPr: CodeReviewPrStopFn;
+  },
+  args: {
+    owner: string;
+    repo: string;
+    prNumber: number;
+    headSha: string;
+    baseRef: string;
+    draft: boolean;
+    action: string;
+    deliveryId: string;
+  },
+): Promise<void> {
+  if (CODE_REVIEW_STOP_ACTIONS.has(args.action)) {
+    try {
+      await hooks.stopCodeReviewPr({
+        owner: args.owner,
+        repo: args.repo,
+        prNumber: args.prNumber,
+        headSha: args.headSha,
+        reason: `pull_request.${args.action}`,
+      });
+    } catch (error: unknown) {
+      captureCodeReviewWebhookError(error, {
+        deliveryId: args.deliveryId,
+        action: args.action,
+        owner: args.owner,
+        repo: args.repo,
+        prNumber: args.prNumber,
+      });
+    }
+    return;
+  }
+
+  if (
+    !CODE_REVIEW_START_ACTIONS.has(args.action) ||
+    args.draft ||
+    args.baseRef !== "main"
+  ) {
+    return;
+  }
+
+  try {
+    await hooks.startCodeReviewPr({
+      owner: args.owner,
+      repo: args.repo,
+      prNumber: args.prNumber,
+      headSha: args.headSha,
+      baseRef: args.baseRef,
+    });
+  } catch (error: unknown) {
+    captureCodeReviewWebhookError(error, {
+      deliveryId: args.deliveryId,
+      action: args.action,
+      owner: args.owner,
+      repo: args.repo,
+      prNumber: args.prNumber,
+      headSha: args.headSha,
+    });
+  }
+}
+
 /**
  * Optional hooks supplied to `buildWebhookApp` — bundled so the test-time
  * call sites stay legible and the function signature stays under the params
@@ -203,6 +283,8 @@ export type WebhookHooks = {
   startCancel?: CancelStartFn;
   startConflictCheckMain?: ConflictCheckMainStartFn;
   startConflictCheckPr?: ConflictCheckPrStartFn;
+  startCodeReviewPr?: CodeReviewPrStartFn;
+  stopCodeReviewPr?: CodeReviewPrStopFn;
 };
 
 /**
@@ -210,9 +292,10 @@ export type WebhookHooks = {
  * directly without binding a real port.
  *
  * Scope: the GitHub webhook server is the ingress for the merge-conflict
- * check (`push` to main + per-PR `pull_request` actions) and for cancelling
- * still-running CI pipelines when a PR is `closed`. It no longer starts
- * any PR review/summary/babysit workflow.
+ * check (`push` to main + per-PR `pull_request` actions), weighted round-robin
+ * PR code-review orchestration (`prCodeReviewWorkflow` on ready PRs targeting
+ * `main`, stopped on close or conversion to draft), and cancelling
+ * still-running CI pipelines when a PR is `closed`.
  */
 export function buildWebhookApp(
   secret: string,
@@ -222,6 +305,8 @@ export function buildWebhookApp(
   const startConflictCheckMain =
     hooks.startConflictCheckMain ?? noopConflictMain;
   const startConflictCheckPr = hooks.startConflictCheckPr ?? noopConflictPr;
+  const startCodeReviewPr = hooks.startCodeReviewPr ?? noopCodeReviewStart;
+  const stopCodeReviewPr = hooks.stopCodeReviewPr ?? noopCodeReviewStop;
   const app = new Hono();
 
   app.get("/healthz", (c) => c.text("ok\n"));
@@ -279,6 +364,20 @@ export function buildWebhookApp(
     const action = parsed.action;
     prWebhookReceivedTotal.inc({ event: "pull_request", action });
 
+    await maybeReconcileCodeReviewPr(
+      { startCodeReviewPr, stopCodeReviewPr },
+      {
+        owner: parsed.repository.owner.login,
+        repo: parsed.repository.name,
+        prNumber: parsed.pull_request.number,
+        headSha: parsed.pull_request.head.sha,
+        baseRef: parsed.pull_request.base.ref,
+        draft: parsed.pull_request.draft ?? false,
+        action,
+        deliveryId,
+      },
+    );
+
     // PR closed (merged or plain close): stop any still-active CI pipelines
     // for the head branch. Delegated to handleClosedPr — it does not skip draft
     // or bot PRs (Renovate branches churn the most CI).
@@ -321,6 +420,8 @@ export function startGithubWebhook(client: Client): WebhookHandle {
       startCheckPrMergeConflictsForMain(client, args),
     startConflictCheckPr: (args) =>
       startCheckPrMergeConflictsForPr(client, args),
+    startCodeReviewPr: (args) => startPrCodeReviewFromWebhook(client, args),
+    stopCodeReviewPr: (args) => stopPrCodeReviewFromWebhook(client, args),
   });
 
   const server = Bun.serve({
