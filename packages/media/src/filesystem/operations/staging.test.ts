@@ -28,6 +28,7 @@ import type * as ContentProofModule from "#filesystem/content-proof.ts";
 const observation = vi.hoisted(
   (): {
     afterStat: ((filename: string) => void) | null;
+    afterSync: ((filename: string) => void) | null;
     beforeCapture: ((filename: string) => Promise<void>) | null;
     reads:
       | {
@@ -37,6 +38,7 @@ const observation = vi.hoisted(
       | null;
   } => ({
     afterStat: null,
+    afterSync: null,
     beforeCapture: null,
     reads: null,
   }),
@@ -51,6 +53,14 @@ vi.mock("node:fs/promises", async (importOriginal) => {
         filename: String(args[0]),
         read: vi.spyOn(handle, "read"),
       });
+      const afterSync = observation.afterSync;
+      if (afterSync !== null) {
+        const sync = handle.sync.bind(handle);
+        vi.spyOn(handle, "sync").mockImplementation(async () => {
+          await sync();
+          afterSync(String(args[0]));
+        });
+      }
       return handle;
     },
     lstat: async (...args: Parameters<typeof actual.lstat>) => {
@@ -83,6 +93,7 @@ const directories: string[] = [];
 afterEach(async () => {
   vi.restoreAllMocks();
   observation.afterStat = null;
+  observation.afterSync = null;
   observation.beforeCapture = null;
   observation.reads = null;
   for (const directory of directories.splice(0))
@@ -289,27 +300,25 @@ it.each(["torn", "changed source"])(
   },
 );
 
-it("expiry before the completed-copy acknowledgment leaves an unproven partial protected from cold adoption", async () => {
+it("expiry before the streamed-copy receipt leaves the unproven partial protected from cold adoption", async () => {
   const f = await fixture();
-  let copyStarted = false;
-  let copied = false;
+  let recording = false;
+  observation.afterSync = (filename) => {
+    if (filename === f.partial) recording = true;
+  };
   const files = new FileOperations(f.roots, {
     ...f.options,
-    checkpoint: (phase) => {
-      if (phase === "copying") copyStarted = true;
-      if (phase === "hashing" && copyStarted) copied = true;
-      return Promise.resolve();
-    },
     beforeEffect: () => {
-      if (copied) throw new Error("Expired before copy acknowledgment");
+      if (recording) throw new Error("Expired before copy acknowledgment");
     },
   });
   await expect(files.prepareImport(f.input)).rejects.toThrow(
     "Expired before copy acknowledgment",
   );
-  expect(copied).toBe(true);
+  expect(recording).toBe(true);
   const before = await lstat(f.partial, { bigint: true });
   const raw = await readFile(f.journal, "utf8");
+  expect(JSON.parse(raw)).not.toHaveProperty("streamedPartial");
   expect(JSON.parse(raw)).not.toHaveProperty("preparedPartial");
   await expect(
     new FileOperations(f.roots, f.options).prepareImport(f.input),
@@ -319,6 +328,62 @@ it("expiry before the completed-copy acknowledgment leaves an unproven partial p
   expect(await readFile(f.partial, "utf8")).toBe(f.bytes);
   expect(await readFile(f.journal, "utf8")).toBe(raw);
 });
+
+it.each(["unchanged", "changed source", "changed partial"])(
+  "resuming an interrupted target readback with %s media",
+  async (change) => {
+    const f = await fixture();
+    const source = path.join(f.roots.downloads, f.input.downloadPath);
+    let readingBack = false;
+    observation.beforeCapture = (filename) => {
+      if (filename === f.partial) readingBack = true;
+      return Promise.resolve();
+    };
+    const files = new FileOperations(f.roots, {
+      ...f.options,
+      beforeEffect: () => {
+        if (readingBack) throw new Error("Authority expired during readback");
+      },
+    });
+    await expect(files.prepareImport(f.input)).rejects.toThrow(
+      "Authority expired during readback",
+    );
+    const before = await lstat(f.partial, { bigint: true });
+    const raw = await readFile(f.journal, "utf8");
+    expect(JSON.parse(raw)).toHaveProperty("streamedPartial");
+    expect(JSON.parse(raw)).not.toHaveProperty("preparedPartial");
+    await expect(access(f.staged)).rejects.toMatchObject({ code: "ENOENT" });
+    if (change === "changed source") await writeFile(source, f.bytes);
+    if (change === "changed partial") await writeFile(f.partial, f.bytes);
+    observation.beforeCapture = null;
+    observation.reads = [];
+    const cold = new FileOperations(f.roots, f.options);
+    if (change !== "unchanged") {
+      await expect(cold.prepareImport(f.input)).rejects.toThrow(
+        "Streamed copy identity changed",
+      );
+      expect(await readFile(f.journal, "utf8")).toBe(raw);
+      return;
+    }
+    const prepared = await cold.prepareImport(f.input);
+    expect(observation.reads.some((read) => read.filename === source)).toBe(
+      false,
+    );
+    expect(
+      observation.reads.some(
+        (read) =>
+          read.filename === f.partial && read.read.mock.calls.length > 0,
+      ),
+    ).toBe(true);
+    await cold.commitPreparedImport(prepared, f.authority);
+    const after = await lstat(f.staged, { bigint: true });
+    expect(after.ino).toBe(before.ino);
+    expect(await readFile(f.staged, "utf8")).toBe(f.bytes);
+    expect(JSON.parse(await readFile(f.journal, "utf8"))).not.toHaveProperty(
+      "streamedPartial",
+    );
+  },
+);
 
 it.each(["path swap", "same-inode rewrite"])(
   "fresh copying rejects a same-byte source %s without acknowledging the partial",

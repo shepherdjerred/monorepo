@@ -8,6 +8,8 @@ import { contentIO } from "#filesystem/content-io.ts";
 import type { OperationJournal } from "./journal.ts";
 import type { OperationLocks } from "#filesystem/operation-locks.ts";
 import {
+  assertExclusiveCopyReceipt,
+  ExclusiveCopyReceiptSchema,
   requireFileIdentity,
   copyVerifiedExclusive,
   type VerifiedFileProof,
@@ -35,6 +37,7 @@ import {
 export type PreparedImport = Readonly<{ operationId: string }>;
 /** Only the prepared-copy reader consumes this ACK; ordinary manifests stay literal v1. */
 const PreparedImportJournalSchema = ManifestSchema.extend({
+  streamedPartial: ExclusiveCopyReceiptSchema.optional(),
   preparedPartial: z
     .strictObject({
       schemaVersion: z.literal(1),
@@ -149,7 +152,7 @@ export class ImportStaging {
       )
         throw new FileOperationConflict("Prepared import journal changed");
       // Retain the actual original journal before any long copy/hash awaits.
-      const originalJournal = await capturePreparedJournal(
+      let originalJournal = await capturePreparedJournal(
         journalPath,
         manifest,
         () => this.context.checkpoint("hashing"),
@@ -158,13 +161,38 @@ export class ImportStaging {
         `staging/${input.operationId}`,
       );
       const partial = `${staged}.partial`;
-      const assertCopied = await this.preparePartial(manifest, partial, staged);
+      if (
+        manifest.streamedPartial !== undefined &&
+        (manifest.phase !== "prepared" ||
+          manifest.preparedPartial !== undefined)
+      )
+        throw new FileOperationConflict("Invalid streamed partial receipt");
+      const copied = await this.preparePartial(manifest, partial, staged);
+      if (copied?.receipt !== undefined) {
+        // Retain the actual exclusive, fsynced copy before the independent
+        // target hash. A fresh invocation can finish verification if this
+        // invocation expires during readback.
+        await syncDirectory(nodePath.dirname(partial));
+        this.context.beforeEffect();
+        manifest = { ...manifest, streamedPartial: copied.receipt };
+        await journal.save(manifest, {
+          validateBeforeInstall: async () => {
+            await originalJournal.content.digest(journalPath);
+            await copied.assertUnchanged();
+          },
+        });
+        originalJournal = await capturePreparedJournal(
+          journalPath,
+          manifest,
+          () => this.context.checkpoint("hashing"),
+        );
+      }
       const content = new ContentProof();
-      await assertCopied?.();
+      await copied?.assertUnchanged();
       for (const path of [partial, staged])
         await content.capture(path, () => this.context.checkpoint("hashing"));
       content.seal();
-      await assertCopied?.();
+      await copied?.assertUnchanged();
       if (
         (await content.digest(
           manifest.phase === "staged" ? staged : partial,
@@ -188,10 +216,11 @@ export class ImportStaging {
               identity,
             },
           };
+          delete manifest.streamedPartial;
           await journal.save(manifest, {
             validateBeforeInstall: async () => {
-              await assertCopied?.();
               await originalJournal.content.digest(journalPath);
+              await copied?.assertUnchanged();
             },
           });
         } else if (
@@ -239,6 +268,13 @@ export class ImportStaging {
         manifest.source,
         manifest.sha256,
       );
+    if (manifest.streamedPartial !== undefined) {
+      const receipt = manifest.streamedPartial;
+      const assertUnchanged = () =>
+        assertExclusiveCopyReceipt(manifest.source, partial, receipt);
+      await assertUnchanged();
+      return { assertUnchanged, receipt: undefined };
+    }
     if (manifest.preparedPartial !== undefined) return null;
     const source = await lstat(manifest.source);
     await requireCapacity(partial, source.size, this.context.minimumFreeBytes);
