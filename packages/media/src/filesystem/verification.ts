@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { constants, lstat, open, realpath } from "node:fs/promises";
 import nodePath from "node:path";
+import { z } from "zod";
+import { NativeFileIdentitySchema } from "#shared/native-subtitles.ts";
 import { writeChunk } from "./operations-io.ts";
 import { DigestSchema, FileOperationConflict } from "./operations-types.ts";
 
@@ -20,6 +22,16 @@ export type VerifiedFileProof = Readonly<
     ctimeNs: bigint;
   }
 >;
+
+const CopiedFileIdentitySchema = NativeFileIdentitySchema.extend({
+  sizeBytes: z.string().regex(/^\d+$/u),
+});
+export const ExclusiveCopyReceiptSchema = z.strictObject({
+  schemaVersion: z.literal(1),
+  source: CopiedFileIdentitySchema,
+  partial: CopiedFileIdentitySchema,
+});
+type ExclusiveCopyReceipt = z.infer<typeof ExclusiveCopyReceiptSchema>;
 
 /** Verify one pinned descriptor and prove the path still names that unchanged regular file. */
 export async function verifyStableFile(
@@ -145,12 +157,20 @@ export async function copyVerifiedExclusive(
       beforeEffect();
       // Read-only, invocation-local witness: retain the actual streamed file
       // and directory identities through the caller's first journal ACK.
-      return async () => {
+      const assertUnchanged = async () => {
         await assertCopyParents(parents);
         requireSameFile(before, await lstat(source, { bigint: true }));
         requireSameFile(copied, await lstat(target, { bigint: true }));
         await assertCopyParents(parents);
         beforeEffect();
+      };
+      return {
+        assertUnchanged,
+        receipt: {
+          schemaVersion: 1 as const,
+          source: copiedFileIdentity(source, before, parents),
+          partial: copiedFileIdentity(target, copied, parents),
+        },
       };
     } finally {
       await output.close();
@@ -158,6 +178,55 @@ export async function copyVerifiedExclusive(
   } finally {
     await input.close();
   }
+}
+
+/** A cold retry may check which files were copied, then must independently hash the partial. */
+export async function assertExclusiveCopyReceipt(
+  source: string,
+  partial: string,
+  receipt: ExclusiveCopyReceipt,
+): Promise<void> {
+  const parents = await captureCopyParents([source, partial]);
+  for (const [filename, expected, conflict] of [
+    [source, receipt.source, "Streamed copy source identity changed"],
+    [partial, receipt.partial, "Prepared import partial identity changed"],
+  ] as const) {
+    const info = await lstat(filename, { bigint: true });
+    if (
+      !info.isFile() ||
+      JSON.stringify(copiedFileIdentity(filename, info, parents)) !==
+        JSON.stringify(expected)
+    )
+      throw new FileOperationConflict(conflict);
+  }
+  await assertCopyParents(parents);
+}
+
+function copiedFileIdentity(
+  filename: string,
+  info: FileIdentity,
+  parents: ReadonlyMap<string, { dev: bigint; ino: bigint }>,
+): z.infer<typeof CopiedFileIdentitySchema> {
+  const ancestors = [];
+  for (let path = nodePath.dirname(filename); ; path = nodePath.dirname(path)) {
+    const identity = parents.get(path);
+    if (identity === undefined)
+      throw new FileOperationConflict("Copy ancestor identity is missing");
+    ancestors.push({
+      path,
+      device: identity.dev.toString(),
+      inode: identity.ino.toString(),
+    });
+    if (nodePath.dirname(path) === path) break;
+  }
+  return {
+    device: info.dev.toString(),
+    inode: info.ino.toString(),
+    mtimeNs: info.mtimeNs.toString(),
+    ctimeNs: info.ctimeNs.toString(),
+    ancestors,
+    sizeBytes: info.size.toString(),
+  };
 }
 
 async function captureCopyParents(paths: readonly string[]) {
