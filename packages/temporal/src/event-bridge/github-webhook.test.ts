@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { sign } from "@octokit/webhooks-methods";
-import { WorkflowNotFoundError } from "@temporalio/common";
+import {
+  WorkflowIdConflictPolicy,
+  WorkflowIdReusePolicy,
+  WorkflowNotFoundError,
+} from "@temporalio/common";
 import { buildWebhookApp } from "./github-webhook.ts";
 import {
   startPrCodeReviewFromWebhook,
@@ -426,6 +430,7 @@ describe("buildWebhookApp PR code review orchestration", () => {
       owner: "shepherdjerred",
       repo: "monorepo",
       prNumber: 42,
+      headSha: "ab".repeat(20),
       reason: "pull_request.converted_to_draft",
     });
   });
@@ -449,24 +454,25 @@ describe("buildWebhookApp PR code review orchestration", () => {
       owner: "shepherdjerred",
       repo: "monorepo",
       prNumber: 42,
+      headSha: "ab".repeat(20),
       reason: "pull_request.closed",
     });
     expect(cancel).toHaveBeenCalledTimes(1);
   });
 
-  it("starts with TERMINATE_EXISTING and ignores WorkflowNotFoundError on stop", async () => {
+  it("starts head-scoped runs with USE_EXISTING and signals recheckReview on stop", async () => {
     const start = vi.fn(async () => ({}));
-    const terminate = vi.fn(async () => {
+    const signal = vi.fn(async () => {
       throw new WorkflowNotFoundError(
         "not found",
-        "pr-code-review-shepherdjerred-monorepo-42",
+        `pr-code-review/shepherdjerred/monorepo/42/${"ab".repeat(20)}`,
         undefined,
       );
     });
     const clientStub: WebhookCodeReviewTemporalClient = {
       workflow: {
         start,
-        getHandle: () => ({ terminate }),
+        getHandle: () => ({ signal }),
       },
     };
 
@@ -480,7 +486,9 @@ describe("buildWebhookApp PR code review orchestration", () => {
     expect(start).toHaveBeenCalledWith(
       "prCodeReviewWorkflow",
       expect.objectContaining({
-        workflowId: "pr-code-review-shepherdjerred-monorepo-42",
+        workflowId: `pr-code-review/shepherdjerred/monorepo/42/${"ab".repeat(20)}`,
+        workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
+        workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
       }),
     );
 
@@ -489,9 +497,10 @@ describe("buildWebhookApp PR code review orchestration", () => {
         owner: "shepherdjerred",
         repo: "monorepo",
         prNumber: 42,
+        headSha: "ab".repeat(20),
         reason: "pull_request.closed",
       }),
     ).resolves.toBeUndefined();
-    expect(terminate).toHaveBeenCalledWith("pull_request.closed");
+    expect(signal).toHaveBeenCalledWith("recheckReview");
   });
 });

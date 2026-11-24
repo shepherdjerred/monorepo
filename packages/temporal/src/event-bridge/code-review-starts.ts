@@ -39,6 +39,7 @@ export type CodeReviewPrStopArgs = {
   owner: string;
   repo: string;
   prNumber: number;
+  headSha: string;
   reason: string;
 };
 
@@ -55,7 +56,7 @@ export type WebhookCodeReviewTemporalClient = {
       },
     ) => Promise<unknown>;
     getHandle: (workflowId: string) => {
-      terminate: (reason?: string) => Promise<unknown>;
+      signal: (signalName: string) => Promise<unknown>;
     };
   };
 };
@@ -76,12 +77,13 @@ export async function startPrCodeReviewFromWebhook(
     input.owner,
     input.repo,
     input.prNumber,
+    input.headSha,
   );
   await client.workflow.start("prCodeReviewWorkflow", {
     taskQueue: TASK_QUEUES.WORKFLOWS,
     workflowId,
     workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
-    workflowIdConflictPolicy: WorkflowIdConflictPolicy.TERMINATE_EXISTING,
+    workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
     args: [input],
   });
   jsonLog("info", "Started PR code-review workflow", {
@@ -101,13 +103,15 @@ export async function stopPrCodeReviewFromWebhook(
     args.owner,
     args.repo,
     args.prNumber,
+    args.headSha,
   );
   try {
-    await client.workflow.getHandle(workflowId).terminate(args.reason);
-    jsonLog("info", "Stopped PR code-review workflow", {
+    await client.workflow.getHandle(workflowId).signal("recheckReview");
+    jsonLog("info", "Signaled PR code-review workflow to recheck lifecycle", {
       owner: args.owner,
       repo: args.repo,
       prNumber: args.prNumber,
+      headSha: args.headSha,
       reason: args.reason,
       workflowId,
     });

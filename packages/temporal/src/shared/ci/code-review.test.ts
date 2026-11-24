@@ -17,8 +17,11 @@ describe("shared code-review contracts", () => {
   it("defines stable status context and workflow IDs", () => {
     expect(CODE_REVIEW_STATUS_CONTEXT).toBe("ci/code-review");
     expect(CODE_REVIEW_COORDINATOR_WORKFLOW_ID).toBe("code-review-coordinator");
-    expect(prCodeReviewWorkflowId("shepherdjerred", "monorepo", 2401)).toBe(
-      "pr-code-review-shepherdjerred-monorepo-2401",
+    expect(
+      prCodeReviewWorkflowId("shepherdjerred", "monorepo", 2401, "abc1234"),
+    ).toBe("pr-code-review/shepherdjerred/monorepo/2401/abc1234");
+    expect(prCodeReviewWorkflowId("org-a", "b", 1, "sha1")).not.toBe(
+      prCodeReviewWorkflowId("org", "a-b", 1, "sha1"),
     );
   });
 

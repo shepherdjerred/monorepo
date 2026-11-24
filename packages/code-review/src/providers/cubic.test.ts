@@ -75,6 +75,18 @@ describe("parseCubicFindingTitle", () => {
   });
 });
 
+function mockGitHubFetch(handler: (url: string) => Response): void {
+  vi.spyOn(globalThis, "fetch").mockImplementation(
+    Object.assign(
+      async (input: string | URL | Request) => {
+        const url = input instanceof Request ? input.url : input.toString();
+        return handler(url);
+      },
+      { preconnect: globalThis.fetch.preconnect },
+    ),
+  );
+}
+
 describe("cubicProvider", () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -123,40 +135,31 @@ describe("cubicProvider", () => {
 
   test("detects a clean COMMENTED review at head and skips oversized diffs", async () => {
     const head = "302503932631f49dd910ad03ce7b8aa4e0ef9e0c";
-    const headPushedAt = "2026-11-24T00:00:00Z";
+    const baseInput = {
+      provider: cubicProvider,
+      repo: "o/r",
+      head,
+      prNumber: 42,
+      token: "token",
+      headPushedAt: "2026-11-24T00:00:00Z",
+    };
 
-    vi.spyOn(globalThis, "fetch").mockImplementation(
-      Object.assign(
-        async (input: string | URL | Request) => {
-          const url = input instanceof Request ? input.url : input.toString();
-          if (url.includes("/reviews?")) {
-            return Response.json([
-              {
-                id: 10,
-                user: { login: "cubic-dev-ai[bot]" },
-                state: "COMMENTED",
-                commit_id: head,
-                submitted_at: "2026-11-24T00:02:00Z",
-                body: CLEAN_REVIEW_SUMMARY,
-              },
-            ]);
-          }
-          return Response.json([]);
-        },
-        { preconnect: globalThis.fetch.preconnect },
-      ),
+    mockGitHubFetch((url) =>
+      url.includes("/reviews?")
+        ? Response.json([
+            {
+              id: 10,
+              user: { login: "cubic-dev-ai[bot]" },
+              state: "COMMENTED",
+              commit_id: head,
+              submitted_at: "2026-11-24T00:02:00Z",
+              body: CLEAN_REVIEW_SUMMARY,
+            },
+          ])
+        : Response.json([]),
     );
 
-    await expect(
-      resolveReviewState({
-        provider: cubicProvider,
-        repo: "o/r",
-        head,
-        prNumber: 42,
-        token: "token",
-        headPushedAt,
-      }),
-    ).resolves.toMatchObject({
+    await expect(resolveReviewState(baseInput)).resolves.toMatchObject({
       state: "reviewed",
       completionSignal: "review-at-head",
       reviewedCommit: head,
@@ -164,38 +167,20 @@ describe("cubicProvider", () => {
     });
 
     vi.restoreAllMocks();
-    vi.spyOn(globalThis, "fetch").mockImplementation(
-      Object.assign(
-        async (input: string | URL | Request) => {
-          const url = input instanceof Request ? input.url : input.toString();
-          if (url.includes("/reviews?")) {
-            return Response.json([]);
-          }
-          if (url.includes("/comments")) {
-            return Response.json([
-              {
-                user: { login: "cubic-dev-ai[bot]" },
-                updated_at: "2026-11-24T00:01:00Z",
-                body: "Skipped review: PR exceeds Cubic's technical review maximum of 50,000 reviewable lines.",
-              },
-            ]);
-          }
-          return Response.json([]);
-        },
-        { preconnect: globalThis.fetch.preconnect },
-      ),
-    );
+    mockGitHubFetch((url) => {
+      if (url.includes("/comments")) {
+        return Response.json([
+          {
+            user: { login: "cubic-dev-ai[bot]" },
+            updated_at: "2026-11-24T00:01:00Z",
+            body: "Skipped review: PR exceeds Cubic's technical review maximum of 50,000 reviewable lines.",
+          },
+        ]);
+      }
+      return Response.json([]);
+    });
 
-    await expect(
-      resolveReviewState({
-        provider: cubicProvider,
-        repo: "o/r",
-        head,
-        prNumber: 42,
-        token: "token",
-        headPushedAt,
-      }),
-    ).resolves.toMatchObject({
+    await expect(resolveReviewState(baseInput)).resolves.toMatchObject({
       state: "reviewed",
       completionSignal: "none",
       skipReason: "too-many-files",

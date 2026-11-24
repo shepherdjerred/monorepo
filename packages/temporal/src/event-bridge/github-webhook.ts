@@ -231,6 +231,7 @@ async function maybeReconcileCodeReviewPr(
         owner: args.owner,
         repo: args.repo,
         prNumber: args.prNumber,
+        headSha: args.headSha,
         reason: `pull_request.${args.action}`,
       });
     } catch (error: unknown) {

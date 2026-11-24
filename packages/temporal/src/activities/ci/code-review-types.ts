@@ -21,6 +21,7 @@ export type CodeReviewOutcomeReason =
   | "clean"
   | "prior-round"
   | "quota-exempt"
+  | "provider-timeout"
   | "all-skipped"
   | "threads-resolved"
   | "blocking-findings"

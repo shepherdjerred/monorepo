@@ -132,8 +132,8 @@ async function watchForThreadResolution(args: {
 /**
  * Per-PR weighted round-robin code-review workflow. Assigns one review provider
  * via `codeReviewCoordinatorWorkflow`, fails over on quota/timeout, passes
- * advisories if all providers are quota-exhausted, and watches blocking P0/P1
- * threads until resolved.
+ * advisories if all providers are quota-exhausted or timed out, and watches
+ * blocking P0/P1 threads across a bounded window (`MAX_WATCH_ITERATIONS`, ~78h).
  */
 export async function prCodeReviewWorkflow(
   input: PrCodeReviewWorkflowInput,

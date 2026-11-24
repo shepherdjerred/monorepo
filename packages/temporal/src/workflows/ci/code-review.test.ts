@@ -99,17 +99,40 @@ function realTimeWorkflowClient(
   return new WorkflowClient({ connection: environment.connection });
 }
 
+async function startPrReview(
+  workflowClient: WorkflowClient,
+  prNumber: number,
+  headSha?: string,
+) {
+  const input = makePrInput(prNumber, headSha);
+  return await workflowClient.start("prCodeReviewWorkflow", {
+    workflowId: prCodeReviewWorkflowId(
+      input.owner,
+      input.repo,
+      input.prNumber,
+      input.headSha,
+    ),
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    args: [input],
+  });
+}
+
 async function executePrReview(
   workflowClient: WorkflowClient,
   prNumber: number,
   headSha?: string,
 ): Promise<void> {
-  const input = makePrInput(prNumber, headSha);
-  await workflowClient.execute("prCodeReviewWorkflow", {
-    workflowId: prCodeReviewWorkflowId(input.owner, input.repo, input.prNumber),
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    args: [input],
-  });
+  const handle = await startPrReview(workflowClient, prNumber, headSha);
+  await handle.result();
+}
+
+function recordObservedProvider(
+  observedByPr: Map<number, ProviderId[]>,
+  call: TriggerAndObserveProviderInput,
+): void {
+  const list = observedByPr.get(call.prNumber) ?? [];
+  list.push(call.providerId);
+  observedByPr.set(call.prNumber, list);
 }
 
 function buildCoordinatorBridgeActivities(
@@ -187,16 +210,7 @@ describe("PR code-review assignment and quota failover", () => {
         execute: async () => {
           const workflowClient = realTimeWorkflowClient(environment);
           try {
-            const input = makePrInput(101);
-            const handle = await workflowClient.start("prCodeReviewWorkflow", {
-              workflowId: prCodeReviewWorkflowId(
-                input.owner,
-                input.repo,
-                input.prNumber,
-              ),
-              taskQueue: TASK_QUEUES.WORKFLOWS,
-              args: [input],
-            });
+            const handle = await startPrReview(workflowClient, 101);
             await handle.result();
 
             expect(triggerCalls).toHaveLength(1);
@@ -260,16 +274,7 @@ describe("PR code-review assignment and quota failover", () => {
         execute: async () => {
           const workflowClient = realTimeWorkflowClient(environment);
           try {
-            const input = makePrInput(102);
-            await workflowClient.execute("prCodeReviewWorkflow", {
-              workflowId: prCodeReviewWorkflowId(
-                input.owner,
-                input.repo,
-                input.prNumber,
-              ),
-              taskQueue: TASK_QUEUES.WORKFLOWS,
-              args: [input],
-            });
+            await executePrReview(workflowClient, 102);
 
             expect(triedProviders).toEqual(["coderabbit", "codex"]);
             expect(statuses.map((s) => s.state)).toEqual([
@@ -303,9 +308,7 @@ describe("PR code-review assignment and quota failover", () => {
         activityTaskQueue: TASK_QUEUES.CODE_REVIEW,
         activities: buildCoordinatorBridgeActivities(environment, {
           triggerAndObserveProvider: async (call) => {
-            const list = observedByPr.get(call.prNumber) ?? [];
-            list.push(call.providerId);
-            observedByPr.set(call.prNumber, list);
+            recordObservedProvider(observedByPr, call);
             return call.providerId === "coderabbit"
               ? usageLimitedObservation()
               : reviewedObservation();
@@ -370,16 +373,7 @@ describe("PR code-review blocking thread watch and prior-round gates", () => {
         execute: async () => {
           const workflowClient = realTimeWorkflowClient(environment);
           try {
-            const input = makePrInput(301);
-            const handle = await workflowClient.start("prCodeReviewWorkflow", {
-              workflowId: prCodeReviewWorkflowId(
-                input.owner,
-                input.repo,
-                input.prNumber,
-              ),
-              taskQueue: TASK_QUEUES.WORKFLOWS,
-              args: [input],
-            });
+            const handle = await startPrReview(workflowClient, 301);
 
             await vi.waitFor(() => {
               expect(statuses.some((s) => s.state === "failure")).toBe(true);
@@ -464,16 +458,7 @@ describe("PR code-review prior-round policy and P0/P1 veto retention", () => {
         execute: async () => {
           const workflowClient = realTimeWorkflowClient(environment);
           try {
-            const cleanFollowup = makePrInput(401, "sha-401");
-            await workflowClient.execute("prCodeReviewWorkflow", {
-              workflowId: prCodeReviewWorkflowId(
-                cleanFollowup.owner,
-                cleanFollowup.repo,
-                cleanFollowup.prNumber,
-              ),
-              taskQueue: TASK_QUEUES.WORKFLOWS,
-              args: [cleanFollowup],
-            });
+            await executePrReview(workflowClient, 401, "sha-401");
 
             expect(triggerCalls).toHaveLength(0);
             expect(statusesBySha.get("sha-401")).toEqual([
@@ -484,18 +469,10 @@ describe("PR code-review prior-round policy and P0/P1 veto retention", () => {
               }),
             ]);
 
-            const vetoFollowup = makePrInput(402, "sha-402");
-            const vetoHandle = await workflowClient.start(
-              "prCodeReviewWorkflow",
-              {
-                workflowId: prCodeReviewWorkflowId(
-                  vetoFollowup.owner,
-                  vetoFollowup.repo,
-                  vetoFollowup.prNumber,
-                ),
-                taskQueue: TASK_QUEUES.WORKFLOWS,
-                args: [vetoFollowup],
-              },
+            const vetoHandle = await startPrReview(
+              workflowClient,
+              402,
+              "sha-402",
             );
 
             await vi.waitFor(() => {
@@ -520,16 +497,7 @@ describe("PR code-review prior-round policy and P0/P1 veto retention", () => {
               reason: "threads-resolved",
             });
 
-            const reReviewedFollowup = makePrInput(403, "sha-403");
-            await workflowClient.execute("prCodeReviewWorkflow", {
-              workflowId: prCodeReviewWorkflowId(
-                reReviewedFollowup.owner,
-                reReviewedFollowup.repo,
-                reReviewedFollowup.prNumber,
-              ),
-              taskQueue: TASK_QUEUES.WORKFLOWS,
-              args: [reReviewedFollowup],
-            });
+            await executePrReview(workflowClient, 403, "sha-403");
             expect(statusesBySha.get("sha-403")).toEqual([
               expect.objectContaining({
                 state: "success",
@@ -601,16 +569,7 @@ describe("PR code-review first-round P0/P1 veto retention", () => {
         execute: async () => {
           const workflowClient = realTimeWorkflowClient(environment);
           try {
-            const input = makePrInput(410, "sha-410");
-            const handle = await workflowClient.start("prCodeReviewWorkflow", {
-              workflowId: prCodeReviewWorkflowId(
-                input.owner,
-                input.repo,
-                input.prNumber,
-              ),
-              taskQueue: TASK_QUEUES.WORKFLOWS,
-              args: [input],
-            });
+            const handle = await startPrReview(workflowClient, 410, "sha-410");
 
             await vi.waitFor(() => {
               expect(
@@ -661,7 +620,7 @@ describe("PR code-review first-round P0/P1 veto retention", () => {
 describe("codeReviewCoordinatorWorkflow continueAsNew", () => {
   test("coordinator resets processedCount across continueAsNew while preserving weighted state", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
-    const observedByPr = new Map<number, ProviderId[]>();
+    const coordinatorObserved = new Map<number, ProviderId[]>();
 
     try {
       await runWorkflowWithActivityWorker(environment, {
@@ -669,9 +628,7 @@ describe("codeReviewCoordinatorWorkflow continueAsNew", () => {
         activityTaskQueue: TASK_QUEUES.CODE_REVIEW,
         activities: buildCoordinatorBridgeActivities(environment, {
           triggerAndObserveProvider: async (call) => {
-            const list = observedByPr.get(call.prNumber) ?? [];
-            list.push(call.providerId);
-            observedByPr.set(call.prNumber, list);
+            recordObservedProvider(coordinatorObserved, call);
             return reviewedObservation();
           },
         }),
@@ -710,10 +667,10 @@ describe("codeReviewCoordinatorWorkflow continueAsNew", () => {
 
             const afterFollowupDesc = await latestHandle.describe();
             expect(afterFollowupDesc.runId).toBe(continuedRunId);
-            expect(observedByPr.get(420)).toEqual(["coderabbit"]);
+            expect(coordinatorObserved.get(420)).toEqual(["coderabbit"]);
             expect([
-              ...(observedByPr.get(421) ?? []),
-              ...(observedByPr.get(422) ?? []),
+              ...(coordinatorObserved.get(421) ?? []),
+              ...(coordinatorObserved.get(422) ?? []),
             ]).toContain("codex");
           } finally {
             await terminateCoordinatorIfRunning(environment);

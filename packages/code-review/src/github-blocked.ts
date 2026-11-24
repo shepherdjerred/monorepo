@@ -35,6 +35,21 @@ export function matchesBlockedSignal(
  * quoting the notice cannot trip it), carrying the blocked signal, and posted
  * at/after the head push.
  */
+function isIssueCommentCompletionBody(
+  provider: ReviewProvider,
+  body: string | null,
+): boolean {
+  const { completion } = provider;
+  return (
+    body !== null &&
+    completion.kind === "issue-comment" &&
+    (body.includes(completion.marker) ||
+      body.includes(completion.acknowledgement.marker) ||
+      (completion.inProgress !== null &&
+        body.includes(completion.inProgress.marker)))
+  );
+}
+
 function isBoundBlockedComment(input: {
   strategy: BlockedSignalStrategy;
   provider: ReviewProvider;
@@ -45,6 +60,7 @@ function isBoundBlockedComment(input: {
 }): boolean {
   return (
     isProviderAuthor(input.provider, input.login) &&
+    !isIssueCommentCompletionBody(input.provider, input.body) &&
     matchesBlockedSignal(input.strategy, input.body) &&
     // The binding rule is the one the clean-review 👍 shares: a commit-less
     // signal only answers for a head it postdates.

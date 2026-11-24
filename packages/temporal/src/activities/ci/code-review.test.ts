@@ -162,7 +162,8 @@ describe("codeReviewActivities.inspectPrReviewContext", () => {
     });
   });
 
-  it("detects priorRoundCompleted from earlier provider-authored threads", async () => {
+  it("detects priorRoundCompleted only from outdated threads, not current-head reviewing threads", async () => {
+    let outdated = false;
     const activities = createCodeReviewActivities(
       makeBaseDeps({
         fetchSharedProviderThreads: () =>
@@ -170,7 +171,13 @@ describe("codeReviewActivities.inspectPrReviewContext", () => {
             byProvider: new Map([
               [
                 "greptile",
-                [makeThread({ authorLogin: "greptile-apps", priority: 2 })],
+                [
+                  makeThread({
+                    authorLogin: "greptile-apps",
+                    priority: 1,
+                    isOutdated: outdated,
+                  }),
+                ],
               ],
             ]),
             headRefOid: "head-sha-1",
@@ -178,14 +185,26 @@ describe("codeReviewActivities.inspectPrReviewContext", () => {
       }),
     );
 
-    const result = await activities.inspectPrReviewContext({
+    const reviewingCurrentHead = await activities.inspectPrReviewContext({
       owner: "shepherdjerred",
       repo: "monorepo",
       prNumber: 42,
       expectedHeadSha: "head-sha-1",
     });
+    expect(reviewingCurrentHead).toMatchObject({
+      active: true,
+      priorRoundCompleted: false,
+      p0VetoCount: 0,
+    });
 
-    expect(result).toMatchObject({
+    outdated = true;
+    const outdatedEarlierHead = await activities.inspectPrReviewContext({
+      owner: "shepherdjerred",
+      repo: "monorepo",
+      prNumber: 42,
+      expectedHeadSha: "head-sha-1",
+    });
+    expect(outdatedEarlierHead).toMatchObject({
       active: true,
       priorRoundCompleted: true,
       p0VetoCount: 0,
@@ -471,7 +490,7 @@ describe("codeReviewActivities Temporal & commit-status effects", () => {
     expect(start).toHaveBeenCalledWith(
       "prCodeReviewWorkflow",
       expect.objectContaining({
-        workflowId: "pr-code-review-shepherdjerred-monorepo-101",
+        workflowId: "pr-code-review/shepherdjerred/monorepo/101/sha-101",
       }),
     );
   });

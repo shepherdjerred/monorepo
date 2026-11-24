@@ -252,6 +252,38 @@ describe("fetchBlockedReason", () => {
   });
 });
 
+describe("fetchBlockedReason issue-comment markers", () => {
+  test("ignores rate-limit and usage-limit phrases inside Qodo persistent review and acknowledgement comments", async () => {
+    mockIssueComments([
+      {
+        login: "qodo-code-review[bot]",
+        updated_at: afterPush,
+        body:
+          "<h3>Code Review by Qodo</h3>\n" +
+          "Missing rate limit and usage limit enforcement on webhook ingress.",
+      },
+      {
+        login: "qodo-code-review[bot]",
+        updated_at: afterPush,
+        body: "[Code review](https://github.com/o/r/pull/1#issuecomment-1) by qodo was updated up to the latest commit abcdef0: rate limit check.",
+      },
+    ]);
+    try {
+      await expect(
+        fetchBlockedReason({
+          repo: "o/r",
+          number: 1,
+          token: "token",
+          provider: qodoProvider,
+          headPushedAt,
+        }),
+      ).resolves.toBeNull();
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+});
+
 function mockStatusFetch(
   statuses: { context: string; description: string; state: string }[],
 ) {

@@ -162,9 +162,10 @@ export function createCodeReviewActivities(deps: CodeReviewActivityDeps = {}) {
           validated.owner,
           validated.repo,
           validated.prNumber,
+          validated.headSha,
         ),
         workflowIdReusePolicy: WorkflowIdReusePolicy.ALLOW_DUPLICATE,
-        workflowIdConflictPolicy: WorkflowIdConflictPolicy.TERMINATE_EXISTING,
+        workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
         args: [validated],
       });
     },

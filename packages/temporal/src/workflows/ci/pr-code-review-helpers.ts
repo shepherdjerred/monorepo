@@ -1,6 +1,8 @@
 import {
+  ActivityFailure,
   condition,
   proxyActivities,
+  TimeoutFailure,
   uuid4,
   workflowInfo,
 } from "@temporalio/workflow";
@@ -12,6 +14,7 @@ import {
 } from "@shepherdjerred/code-review";
 import type { CodeReviewActivities } from "#activities/ci/code-review.ts";
 import type {
+  CodeReviewOutcomeReason,
   TriggerAndObserveProviderResult,
   VerifyAndCheckBlockingThreadsResult,
 } from "#activities/ci/code-review-types.ts";
@@ -24,6 +27,7 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 export const codeReviewActivitiesProxy = proxyActivities<CodeReviewActivities>({
   taskQueue: TASK_QUEUES.CODE_REVIEW,
   startToCloseTimeout: "2 minutes",
+  scheduleToCloseTimeout: "5 minutes",
   retry: {
     maximumAttempts: 4,
     initialInterval: "5 seconds",
@@ -40,7 +44,8 @@ type ProviderPollOutcome =
   | { kind: "inactive" }
   | { kind: "completed"; providerId: ProviderId }
   | { kind: "skipped" }
-  | { kind: "quota-or-error" };
+  | { kind: "usage-limited" }
+  | { kind: "timed-out" };
 
 export type FailoverResult =
   | { kind: "done" }
@@ -100,7 +105,7 @@ async function handleObservedError(args: {
       cooldownMs: args.settings.quotaCooldownSeconds * 1000,
       nowMs: Date.now(),
     });
-    return { kind: "quota-or-error" };
+    return { kind: "usage-limited" };
   }
   if (args.blockedReason === "missing-seat") {
     await codeReviewActivitiesProxy.reportCoordinatorOutcome({
@@ -117,7 +122,7 @@ async function handleObservedError(args: {
     cooldownMs: args.settings.timeoutCooldownSeconds * 1000,
     nowMs: Date.now(),
   });
-  return { kind: "quota-or-error" };
+  return { kind: "timed-out" };
 }
 
 async function evaluateObservedProviderState(args: {
@@ -174,16 +179,27 @@ async function pollAssignedProvider(args: {
   while (Date.now() - providerStartedAt < providerTimeoutMs) {
     const attempt = Date.now() - providerStartedAt >= retryAfterMs ? 2 : 1;
     const shouldRequest = attempt > lastRequestedAttempt;
-    const observed = await codeReviewActivitiesProxy.triggerAndObserveProvider({
-      owner: input.owner,
-      repo: input.repo,
-      prNumber: input.prNumber,
-      headSha: input.headSha,
-      headPushedAt: args.headPushedAt,
-      providerId,
-      attempt,
-      shouldRequest,
-    });
+    let observed: TriggerAndObserveProviderResult;
+    try {
+      observed = await codeReviewActivitiesProxy.triggerAndObserveProvider({
+        owner: input.owner,
+        repo: input.repo,
+        prNumber: input.prNumber,
+        headSha: input.headSha,
+        headPushedAt: args.headPushedAt,
+        providerId,
+        attempt,
+        shouldRequest,
+      });
+    } catch (error: unknown) {
+      if (
+        error instanceof ActivityFailure &&
+        error.cause instanceof TimeoutFailure
+      ) {
+        break;
+      }
+      throw error;
+    }
     if (shouldRequest) {
       lastRequestedAttempt = attempt;
     }
@@ -211,27 +227,45 @@ async function pollAssignedProvider(args: {
     cooldownMs: settings.timeoutCooldownSeconds * 1000,
     nowMs: Date.now(),
   });
-  return { kind: "quota-or-error" };
+  return { kind: "timed-out" };
 }
 
-function isSkippedExhaustion(
-  reason: "all-blocked" | "all-skipped" | "no-configured-providers",
-  sawSkip: boolean,
-  sawQuotaOrTimeout: boolean,
-): boolean {
-  return (
-    !sawQuotaOrTimeout &&
-    (reason === "all-skipped" ||
-      reason === "no-configured-providers" ||
-      sawSkip)
-  );
+function resolveExhaustionNotice(args: {
+  reason: "all-blocked" | "all-skipped" | "no-configured-providers";
+  sawSkip: boolean;
+  sawQuota: boolean;
+  sawTimeout: boolean;
+}): { description: string; statusReason: CodeReviewOutcomeReason } {
+  const skippedAll =
+    !args.sawQuota &&
+    !args.sawTimeout &&
+    (args.reason === "all-skipped" ||
+      args.reason === "no-configured-providers" ||
+      args.sawSkip);
+  if (skippedAll) {
+    return {
+      description: "Review skipped: no eligible reviewer for PR",
+      statusReason: "all-skipped",
+    };
+  }
+  if (args.sawQuota) {
+    return {
+      description: "All review providers quota-limited; passing advisories",
+      statusReason: "quota-exempt",
+    };
+  }
+  return {
+    description: "All review providers timed out; passing advisories",
+    statusReason: "provider-timeout",
+  };
 }
 
 async function handleExhaustedSelection(args: {
   input: PrCodeReviewWorkflowInput;
   reason: "all-blocked" | "all-skipped" | "no-configured-providers";
   sawSkip: boolean;
-  sawQuotaOrTimeout: boolean;
+  sawQuota: boolean;
+  sawTimeout: boolean;
   elapsedSeconds: () => number;
 }): Promise<FailoverResult> {
   const p0Check = await codeReviewActivitiesProxy.verifyAndCheckBlockingThreads(
@@ -254,20 +288,14 @@ async function handleExhaustedSelection(args: {
     };
   }
 
-  const skippedAll = isSkippedExhaustion(
-    args.reason,
-    args.sawSkip,
-    args.sawQuotaOrTimeout,
-  );
+  const { description, statusReason } = resolveExhaustionNotice(args);
   await codeReviewActivitiesProxy.postCodeReviewCommitStatus({
     owner: args.input.owner,
     repo: args.input.repo,
     sha: args.input.headSha,
     state: "success",
-    description: skippedAll
-      ? "Review skipped: no eligible reviewer for PR"
-      : "All review providers quota-limited; passing advisories",
-    reason: skippedAll ? "all-skipped" : "quota-exempt",
+    description,
+    reason: statusReason,
     durationSeconds: args.elapsedSeconds(),
   });
   return { kind: "done" };
@@ -294,7 +322,8 @@ export async function runFailoverAssignmentLoop(args: {
   elapsedSeconds: () => number;
 }): Promise<FailoverResult> {
   const triedProviders: ProviderId[] = [];
-  let sawQuotaOrTimeout = false;
+  let sawQuota = false;
+  let sawTimeout = false;
   let sawSkip = false;
 
   for (;;) {
@@ -312,7 +341,8 @@ export async function runFailoverAssignmentLoop(args: {
         input: args.input,
         reason: selection.reason,
         sawSkip,
-        sawQuotaOrTimeout,
+        sawQuota,
+        sawTimeout,
         elapsedSeconds: args.elapsedSeconds,
       });
     }
@@ -332,8 +362,10 @@ export async function runFailoverAssignmentLoop(args: {
     }
     if (outcome.kind === "skipped") {
       sawSkip = true;
+    } else if (outcome.kind === "usage-limited") {
+      sawQuota = true;
     } else {
-      sawQuotaOrTimeout = true;
+      sawTimeout = true;
     }
   }
 }

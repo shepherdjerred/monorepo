@@ -150,12 +150,11 @@ function hasPriorRoundCompleted(
     }
     const provider = PROVIDERS[id];
     const threads = byProvider.get(id) ?? [];
-    const hasEarlierThreads = threads.some(
+    const hasOutdatedThreads = threads.some(
       (thread) =>
-        isProviderAuthor(provider, thread.authorLogin) &&
-        (state.state !== "reviewed" || thread.isOutdated),
+        isProviderAuthor(provider, thread.authorLogin) && thread.isOutdated,
     );
-    if (hasEarlierThreads) {
+    if (hasOutdatedThreads) {
       return true;
     }
   }
@@ -174,30 +173,67 @@ function requireReviewToken(deps: CodeReviewActivityDeps): string {
   return trimmed;
 }
 
+type ActivePrSession =
+  | { active: false; reason: InactivePrReason }
+  | {
+      active: true;
+      token: string;
+      pr: PullRequestMetadata;
+      repoSlug: string;
+    };
+
+async function resolveActivePrSession(
+  target: {
+    owner: string;
+    repo: string;
+    prNumber: number;
+    headSha: string;
+  },
+  deps: CodeReviewActivityDeps,
+): Promise<ActivePrSession> {
+  const createToken =
+    deps.createInstallationToken ?? createGitHubAppInstallationToken;
+  const getPr = deps.getPullRequest ?? defaultGetPullRequest;
+  const { token } = await createToken();
+  const pr = await getPr(token, {
+    owner: target.owner,
+    repo: target.repo,
+    prNumber: target.prNumber,
+  });
+  const inactiveReason = checkActivePullRequest(pr, target.headSha);
+  if (inactiveReason !== null) {
+    return { active: false, reason: inactiveReason };
+  }
+  return {
+    active: true,
+    token,
+    pr,
+    repoSlug: `${target.owner}/${target.repo}`,
+  };
+}
+
 export async function inspectPrReviewContextImpl(
   input: InspectPrReviewContextInput,
   deps: CodeReviewActivityDeps,
 ): Promise<InspectPrReviewContextResult> {
-  const createToken =
-    deps.createInstallationToken ?? createGitHubAppInstallationToken;
-  const getPr = deps.getPullRequest ?? defaultGetPullRequest;
   const getHeadPushedAt = deps.fetchHeadPushedAt ?? defaultFetchHeadPushedAt;
   const resolveState = deps.resolveReviewState ?? defaultResolveReviewState;
   const getSharedThreads =
     deps.fetchSharedProviderThreads ?? defaultFetchSharedProviderThreads;
 
-  const { token } = await createToken();
-  const pr = await getPr(token, {
-    owner: input.owner,
-    repo: input.repo,
-    prNumber: input.prNumber,
-  });
-  const inactiveReason = checkActivePullRequest(pr, input.expectedHeadSha);
-  if (inactiveReason !== null) {
-    return { active: false, reason: inactiveReason };
+  const session = await resolveActivePrSession(
+    {
+      owner: input.owner,
+      repo: input.repo,
+      prNumber: input.prNumber,
+      headSha: input.expectedHeadSha,
+    },
+    deps,
+  );
+  if (!session.active) {
+    return session;
   }
-
-  const repoSlug = `${input.owner}/${input.repo}`;
+  const { token, pr, repoSlug } = session;
   const headPushedAt = await getHeadPushedAt({
     repo: repoSlug,
     sha: input.expectedHeadSha,
@@ -259,27 +295,17 @@ export async function triggerAndObserveProviderImpl(
   input: TriggerAndObserveProviderInput,
   deps: CodeReviewActivityDeps,
 ): Promise<TriggerAndObserveProviderResult> {
-  const createToken =
-    deps.createInstallationToken ?? createGitHubAppInstallationToken;
-  const getPr = deps.getPullRequest ?? defaultGetPullRequest;
   const resolveState = deps.resolveReviewState ?? defaultResolveReviewState;
   const getSharedThreads =
     deps.fetchSharedProviderThreads ?? defaultFetchSharedProviderThreads;
   const requestReview = deps.requestReviewAtHead ?? defaultRequestReviewAtHead;
 
-  const { token } = await createToken();
-  const pr = await getPr(token, {
-    owner: input.owner,
-    repo: input.repo,
-    prNumber: input.prNumber,
-  });
-  const inactiveReason = checkActivePullRequest(pr, input.headSha);
-  if (inactiveReason !== null) {
-    return { active: false, reason: inactiveReason };
+  const session = await resolveActivePrSession(input, deps);
+  if (!session.active) {
+    return session;
   }
-
+  const { token, repoSlug } = session;
   const provider = resolveProvider(input.providerId);
-  const repoSlug = `${input.owner}/${input.repo}`;
 
   // Safety invariant: resolve completion BEFORE fetching threads.
   const state = await resolveState({
@@ -353,26 +379,16 @@ export async function verifyAndCheckBlockingThreadsImpl(
   input: VerifyAndCheckBlockingThreadsInput,
   deps: CodeReviewActivityDeps,
 ): Promise<VerifyAndCheckBlockingThreadsResult> {
-  const createToken =
-    deps.createInstallationToken ?? createGitHubAppInstallationToken;
-  const getPr = deps.getPullRequest ?? defaultGetPullRequest;
   const getHeadPushedAt = deps.fetchHeadPushedAt ?? defaultFetchHeadPushedAt;
   const resolveState = deps.resolveReviewState ?? defaultResolveReviewState;
   const getSharedThreads =
     deps.fetchSharedProviderThreads ?? defaultFetchSharedProviderThreads;
 
-  const { token } = await createToken();
-  const pr = await getPr(token, {
-    owner: input.owner,
-    repo: input.repo,
-    prNumber: input.prNumber,
-  });
-  const inactiveReason = checkActivePullRequest(pr, input.headSha);
-  if (inactiveReason !== null) {
-    return { active: false, reason: inactiveReason };
+  const session = await resolveActivePrSession(input, deps);
+  if (!session.active) {
+    return session;
   }
-
-  const repoSlug = `${input.owner}/${input.repo}`;
+  const { token, repoSlug } = session;
   const provider =
     input.providerId === null ? null : resolveProvider(input.providerId);
 

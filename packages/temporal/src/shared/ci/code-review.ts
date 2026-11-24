@@ -15,8 +15,9 @@ export function prCodeReviewWorkflowId(
   owner: string,
   repo: string,
   prNumber: number,
+  headSha: string,
 ): string {
-  return `pr-code-review-${owner}-${repo}-${String(prNumber)}`;
+  return `pr-code-review/${owner}/${repo}/${String(prNumber)}/${headSha}`;
 }
 
 const NonNegativeWeightSchema = z.number().int().min(0);
@@ -120,14 +121,12 @@ export type ProviderAssignmentPayload = {
   selection: WeightedSelectionOutcome;
 };
 
-export const ProviderOutcomeKindSchema = z.enum([
+const ProviderOutcomeKindSchema = z.enum([
   "completed",
   "usage-limited",
   "timed-out",
   "skipped",
 ]);
-
-export type ProviderOutcomeKind = z.infer<typeof ProviderOutcomeKindSchema>;
 
 export const ReportProviderOutcomePayloadSchema = z.strictObject({
   providerId: ProviderIdSchema,
