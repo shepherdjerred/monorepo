@@ -9,12 +9,13 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 import { publicHostname, tailnetService } from "homelab/src/platform-model.ts";
 
+const MetadataEntries = z.record(z.string(), z.string());
 const Resource = z.looseObject({
   kind: z.string(),
   metadata: z.looseObject({
     name: z.string(),
-    labels: z.record(z.string(), z.string()).optional(),
-    annotations: z.record(z.string(), z.string()).optional(),
+    labels: MetadataEntries.optional(),
+    annotations: MetadataEntries.optional(),
   }),
   spec: z.unknown().optional(),
 });
