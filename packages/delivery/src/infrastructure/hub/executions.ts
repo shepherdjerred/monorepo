@@ -181,25 +181,6 @@ function newestFirst(
   );
 }
 
-const NEWEST = [{ createdAt: "desc" as const }, { id: "desc" as const }];
-
-/** The newest build or hand-composed version set of one service. */
-export async function latestExecution(database: Database, serviceId: string) {
-  const [build, composed] = await Promise.all([
-    database.build.findFirst({ where: { serviceId }, orderBy: NEWEST }),
-    database.versionSet.findFirst({
-      where: { serviceId, qualifiedBuildId: null },
-      orderBy: NEWEST,
-      select: { id: true, revision: true, createdAt: true },
-    }),
-  ]);
-  const [root] = newestFirst(
-    build === null ? [] : [build],
-    composed === null ? [] : [composed],
-  );
-  return root === undefined ? null : summarize(database, root);
-}
-
 async function latestComposedRows(
   database: Database,
   serviceIds: readonly string[],
