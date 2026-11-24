@@ -14,6 +14,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 import { MEDIA_APPLICATION_LABEL } from "./environment.ts";
+import { PINCHTAB_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 export function createMediaApplicationNetworkPolicies(chart: Chart): void {
   const database = postgresEgress("media-postgresql");
@@ -85,7 +86,10 @@ export function createMediaApplicationNetworkPolicies(chart: Chart): void {
                   ],
                   ports: [tcp(8080)],
                 },
-                { to: [nsPeer("pinchtab")], ports: [tcp(9867)] },
+                {
+                  to: [PINCHTAB_ENDPOINT.namespacePeer()],
+                  ports: [PINCHTAB_ENDPOINT.tcp()],
+                },
                 { to: [nsPeer("postal")], ports: [tcp(5000)] },
               ]),
         ],

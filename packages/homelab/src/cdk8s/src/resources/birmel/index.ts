@@ -19,8 +19,6 @@ import {
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   dnsEgressRule,
-  nsPeer,
-  tcp,
   flagsEgress,
   lokiOtlpEgress,
   otlpEgress,
@@ -44,6 +42,7 @@ import {
   type FirstPartyWorkerInitContainer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/worker.ts";
 import type { FirstPartyContainerSpec } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/workload-parts.ts";
+import { PINCHTAB_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 export function createBirmelDeployment(chart: Chart) {
   const worker = new FirstPartyWorker(chart, "birmel-worker", {
@@ -108,8 +107,8 @@ export function createBirmelDeployment(chart: Chart) {
           flagsEgress(),
           // PinchTab browser automation (pinchtab.pinchtab.svc.cluster.local:9867)
           {
-            to: [nsPeer("pinchtab")],
-            ports: [tcp(9867)],
+            to: [PINCHTAB_ENDPOINT.namespacePeer()],
+            ports: [PINCHTAB_ENDPOINT.tcp()],
           },
           // SeaweedFS S3 (`S3_ENDPOINT`,
           // seaweedfs-s3.seaweedfs.svc.cluster.local:8333)
@@ -295,9 +294,7 @@ done`,
       // General configuration
       LOG_LEVEL: EnvValue.fromValue("info"),
       WEB_SEARCH_PROVIDER: EnvValue.fromValue("openai"),
-      PINCHTAB_BASE_URL: EnvValue.fromValue(
-        "http://pinchtab.pinchtab.svc.cluster.local:9867",
-      ),
+      PINCHTAB_BASE_URL: EnvValue.fromValue(PINCHTAB_ENDPOINT.url),
       PINCHTAB_PROFILE: EnvValue.fromValue("birmel"),
       // Token comes from the shared "PinchTab" 1Password item (synced into the
       // birmel namespace via pinchtabCreds), the same item the in-cluster

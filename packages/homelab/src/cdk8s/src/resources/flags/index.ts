@@ -17,11 +17,15 @@ import {
   createFlagsIngressObserver,
   FLAGS_TAILSCALE_INGRESS,
 } from "./ingress.ts";
+import {
+  FLAGS_EVALUATION_ENDPOINT,
+  FLAGS_MANAGEMENT_ENDPOINT,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 export const FLAGS_ACTIVE = true;
 
-const FLAGS_HTTP_PORT = 7360;
-const FLAGS_EVALUATION_PORT = 7361;
+const FLAGS_HTTP_PORT = FLAGS_MANAGEMENT_ENDPOINT.port;
+const FLAGS_EVALUATION_PORT = FLAGS_EVALUATION_ENDPOINT.port;
 const FLAGS_ITEM_ID = "dzcroze2qcoibfz3illceozbea";
 
 /**
@@ -165,8 +169,13 @@ export function createFlagsDeployment(chart: Chart) {
   if (serverContainer === undefined) {
     throw new Error("Expected server container on flags Deployment");
   }
-  serverContainer.addPort({ name: "eval", number: FLAGS_EVALUATION_PORT });
-  webService.service.bind(FLAGS_EVALUATION_PORT, { name: "eval" });
+  serverContainer.addPort({
+    name: FLAGS_EVALUATION_ENDPOINT.portName,
+    number: FLAGS_EVALUATION_PORT,
+  });
+  webService.service.bind(FLAGS_EVALUATION_PORT, {
+    name: FLAGS_EVALUATION_ENDPOINT.portName,
+  });
 
   return webService;
 }

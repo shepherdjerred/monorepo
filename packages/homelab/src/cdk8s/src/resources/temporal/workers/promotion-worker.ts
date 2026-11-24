@@ -32,6 +32,10 @@ import {
   telemetryEnv,
   seaweedfsS3,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import {
+  OTLP_GATEWAY_ENDPOINT,
+  PINCHTAB_ENDPOINT,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 export function createTemporalPromotionWorker(
   chart: Chart,
@@ -105,9 +109,7 @@ export function createTemporalPromotionWorker(
         secret: props.temporalSecret,
         key: "AWS_SECRET_ACCESS_KEY",
       }),
-      PINCHTAB_BASE_URL: EnvValue.fromValue(
-        "http://pinchtab.pinchtab.svc.cluster.local:9867",
-      ),
+      PINCHTAB_BASE_URL: EnvValue.fromValue(PINCHTAB_ENDPOINT.url),
       PINCHTAB_TOKEN: EnvValue.fromSecretValue({
         secret: browserSecret,
         key: "PINCHTAB_TOKEN",
@@ -145,9 +147,9 @@ export function createTemporalPromotionWorker(
           ports: [tcp(7233)],
         },
         ...[
-          { namespace: "pinchtab", port: 9867 },
+          PINCHTAB_ENDPOINT,
           { namespace: "seaweedfs", port: 8333 },
-          { namespace: "alloy-gateway", port: 4318 },
+          OTLP_GATEWAY_ENDPOINT,
         ].map(({ namespace, port }) => ({
           to: [nsPeer(namespace)],
           ports: [tcp(port)],

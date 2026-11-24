@@ -1,4 +1,10 @@
 import { IntOrString } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  FLAGS_EVALUATION_ENDPOINT,
+  FLAGS_MANAGEMENT_ENDPOINT,
+  FLIPT_ENDPOINT,
+  OTLP_GATEWAY_ENDPOINT,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 import { PROD_NODE_INTERNAL_IP } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { postgresClusterPodLabels } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/cluster-label.ts";
 
@@ -100,22 +106,28 @@ export function intraNamespaceRule() {
 
 /** Credentialless flag evaluation against Flags (`flags.flags`, HTTP 7361). */
 export function flagsEgress() {
-  return { to: [nsPeer("flags")], ports: [tcp(7361)] };
+  const flags = FLAGS_EVALUATION_ENDPOINT;
+  return { to: [flags.namespacePeer()], ports: [flags.tcp()] };
 }
 
 /** Authenticated flag management against Flags (`flags.flags`, HTTP 7360). */
 export function flagsManagementEgress() {
-  return { to: [nsPeer("flags")], ports: [tcp(7360)] };
+  const flags = FLAGS_MANAGEMENT_ENDPOINT;
+  return { to: [flags.namespacePeer()], ports: [flags.tcp()] };
 }
 
 /** Flag evaluation against Flipt (`flipt-flipt-service.flipt`, HTTP 8080). */
 export function fliptEgress() {
-  return { to: [nsPeer("flipt")], ports: [tcp(8080)] };
+  return {
+    to: [FLIPT_ENDPOINT.namespacePeer()],
+    ports: [FLIPT_ENDPOINT.tcp()],
+  };
 }
 
 /** OTLP/HTTP to the trace gateway (`alloy-gateway.alloy-gateway`, 4318). */
 export function otlpEgress() {
-  return { to: [nsPeer("alloy-gateway")], ports: [tcp(4318)] };
+  const gateway = OTLP_GATEWAY_ENDPOINT;
+  return { to: [gateway.namespacePeer()], ports: [gateway.tcp()] };
 }
 
 /**

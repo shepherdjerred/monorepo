@@ -25,6 +25,7 @@ import {
   temporalTelemetryEnvironment,
   temporalTelemetryEgressRules,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
+import { DELIVERY_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 export function createDeliveryWorker(
   chart: Chart,
@@ -171,9 +172,7 @@ export function createDeliveryWorker(
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("delivery"),
       ...temporalMetricsAddressEnv(),
       ENVIRONMENT: EnvValue.fromValue("production"),
-      DELIVERY_API_URL: EnvValue.fromValue(
-        "http://delivery.delivery.svc.cluster.local:7353",
-      ),
+      DELIVERY_API_URL: EnvValue.fromValue(DELIVERY_ENDPOINT.url),
       DELIVERY_EXECUTOR_TOKEN: EnvValue.fromSecretValue({
         secret,
         key: "DELIVERY_EXECUTOR_TOKEN",
@@ -201,7 +200,10 @@ export function createDeliveryWorker(
           to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
           ports: [tcp(7233)],
         },
-        { to: [nsPeer("delivery")], ports: [tcp(7353)] },
+        {
+          to: [DELIVERY_ENDPOINT.namespacePeer()],
+          ports: [DELIVERY_ENDPOINT.tcp()],
+        },
         flagsEgress(),
         // Worker poller proofs query Prometheus. NetworkPolicy matches the pod
         // port, the authenticated gateway's, not the Service's 9090.

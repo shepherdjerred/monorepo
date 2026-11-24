@@ -8,7 +8,6 @@ import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepasswor
 import {
   dnsEgressRule,
   kubernetesApiEgressRule,
-  nsPeer,
   tcp,
   flagsEgress,
   prometheusIngressRule,
@@ -19,6 +18,7 @@ import {
   temporalTelemetryEnvironment,
   temporalTelemetryEgressRules,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
+import { DELIVERY_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 const ports = (...numbers: number[]) => numbers.map((port) => tcp(port));
 
 /** No ordinary worker queue or worker Job capability shares this provider-bearing account. */
@@ -65,9 +65,7 @@ export function createDeliveryPlatformWorker(
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("delivery-platform"),
       ...temporalMetricsAddressEnv(),
       ENVIRONMENT: EnvValue.fromValue("production"),
-      DELIVERY_API_URL: EnvValue.fromValue(
-        "http://delivery.delivery.svc.cluster.local:7353",
-      ),
+      DELIVERY_API_URL: EnvValue.fromValue(DELIVERY_ENDPOINT.url),
       DELIVERY_EXECUTOR_TOKEN: EnvValue.fromSecretValue({
         secret,
         key: "DELIVERY_EXECUTOR_TOKEN",
@@ -88,7 +86,10 @@ export function createDeliveryPlatformWorker(
           to: [{ podSelector: { matchLabels: { app: "temporal-server" } } }],
           ports: ports(7233),
         },
-        { to: [nsPeer("delivery")], ports: ports(7353) },
+        {
+          to: [DELIVERY_ENDPOINT.namespacePeer()],
+          ports: [DELIVERY_ENDPOINT.tcp()],
+        },
         flagsEgress(),
       ],
     },

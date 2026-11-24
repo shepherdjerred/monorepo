@@ -22,6 +22,10 @@ import {
   ALERTMANAGER_GATEWAY_PORT,
   PROMETHEUS_GATEWAY_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
+import {
+  GOLINK_ENDPOINT,
+  TRACKER_ENDPOINT,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 /**
  * The gateway's public webhook listeners (GitHub, agent tasks, Xcode Cloud,
@@ -250,24 +254,8 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         talosApiEgressRule(),
         monitoringEgress(PROMETHEUS_GATEWAY_PORT),
         { ports: [tcp(7341)] },
-        {
-          to: [
-            {
-              ...nsPeer("tracker"),
-              podSelector: { matchLabels: { app: "tracker" } },
-            },
-          ],
-          ports: [tcp(7351)],
-        },
-        {
-          to: [
-            {
-              ...nsPeer("golink"),
-              podSelector: { matchLabels: { app: "golink" } },
-            },
-          ],
-          ports: [tcp(7352)],
-        },
+        { to: [TRACKER_ENDPOINT.peer()], ports: [TRACKER_ENDPOINT.tcp()] },
+        { to: [GOLINK_ENDPOINT.peer()], ports: [GOLINK_ENDPOINT.tcp()] },
         {
           to: [
             {
