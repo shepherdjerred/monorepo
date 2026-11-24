@@ -20,6 +20,7 @@ import {
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import {
@@ -144,6 +145,14 @@ export async function createFreshRssDeployment(chart: Chart): Promise<void> {
         ensureNonRoot: false,
         readOnlyRootFilesystem: false,
       },
+      // FreshRSS has no health endpoint. Readiness renders the anonymous page
+      // through PHP; liveness fetches a static file, so a slow PHP request
+      // does not restart Apache.
+      ...httpProbes(80, {
+        live: "/robots.txt",
+        ready: "/i/",
+        startup: { failureThreshold: 60, periodSeconds: 5 },
+      }),
       envVariables: {
         // Enable cron for automatic feed updates every hour
         CRON_MIN: EnvValue.fromValue("13"), // Run at minute 13 of every hour

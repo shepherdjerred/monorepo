@@ -132,14 +132,8 @@ export const UPSTREAM_NAMESPACES_WITHOUT_EGRESS_POLICY: ReadonlySet<string> =
  * a startup probe (`<namespace>/<workload>/<container>`).
  */
 export const PORT_CONTAINERS_WITHOUT_PROBE: ReadonlySet<string> = new Set([
-  "gickup/gickup/main",
-  "home/home-homeassistant/main",
-  "media/media-plex/main",
   "media/media-plex/plex-exporter",
   "media/media-qbittorrent/qbittorrent-exporter",
-  "postal/postal-postal-smtp/postal-smtp",
-  "postal/postal-postal-web/postal-web",
-  "postal/postal-postal-worker/postal-worker",
   "postal/postal-postal-worker/postfix-relay",
 ]);
 
@@ -147,21 +141,12 @@ export const PORT_CONTAINERS_WITHOUT_PROBE: ReadonlySet<string> = new Set([
  * Workloads behind a Service in which no container has a readiness or startup
  * probe (`<namespace>/<workload>`).
  */
-export const SERVED_WORKLOADS_WITHOUT_PROBE: ReadonlySet<string> = new Set([
-  "freshrss/freshrss",
-  "gickup/gickup",
-  "home/home-homeassistant",
-  "media/media-plex",
-  "postal/postal-postal-smtp",
-  "postal/postal-postal-web",
-  "postal/postal-postal-worker",
-]);
+export const SERVED_WORKLOADS_WITHOUT_PROBE: ReadonlySet<string> = new Set();
 
 /**
  * Containers that do not set `allowPrivilegeEscalation: false`
- * (`<namespace>/<workload>/<container>`). All but
- * `kubernetes-event-exporter` are privileged by design (host device, kernel or
- * firewall access).
+ * (`<namespace>/<workload>/<container>`). Each is privileged by design (host
+ * device, kernel or firewall access).
  */
 export const CONTAINERS_ALLOWING_PRIVILEGE_ESCALATION: ReadonlySet<string> =
   new Set([
@@ -170,7 +155,6 @@ export const CONTAINERS_ALLOWING_PRIVILEGE_ESCALATION: ReadonlySet<string> =
     "home/home-zwave-js-ui/main",
     "media/media-qbittorrent/gluetun",
     "node-tuning/cpu-power-cap/cpu-power-cap",
-    "prometheus/kubernetes-event-exporter/event-exporter",
     "prometheus/nvme-metrics-collector/nvme-metrics-collector",
     "prometheus/smartctl-collector/smartctl-collector",
     "prometheus/zfs-snapshots-collector/zfs-snapshots-collector",
@@ -183,14 +167,9 @@ export const CONTAINERS_ALLOWING_PRIVILEGE_ESCALATION: ReadonlySet<string> =
  * `RuntimeDefault` baseline; hardening PRs remove entries service by service.
  */
 export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
-  "arcade/arcade/main",
   "birmel/birmel/code-sandbox",
   "birmel/birmel/install-code-sandbox-firewall",
   "birmel/birmel/main",
-  "bugsink/bugsink/bugsink",
-  "bugsink/bugsink/migrate",
-  "bugsink/bugsink/migrate-snappea",
-  "bugsink/bugsink/snappea-worker",
   "buildkitd/buildkitd/binfmt",
   "buildkitd/buildkitd/buildkitd",
   "ddns/ddns/ipv4-ddns",
@@ -199,7 +178,6 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "delivery/delivery/migrate",
   "freshrss/freshrss/main",
   "gickup/gickup/main",
-  "glitter-boys-launcher/glitter-boys-launcher-service/glitter-boys-launcher",
   "gradle-build-cache/gradle-build-cache/gradle-build-cache",
   "gradle-build-cache/gradle-build-cache/prepare",
   "home/home-eufy-security-ws/main",
@@ -218,7 +196,6 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "home/home-zwave-js-ui/main",
   "media/media-bazarr/configure-subtitle-providers",
   "media/media-bazarr/main",
-  "media/media-maintainerr/main",
   "media/media-media-files/media-files",
   "media/media-media-network/media-network",
   "media/media-plex/main",
@@ -232,12 +209,10 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "media/media-recyclarr/main",
   "media/media-recyclarr/render-config",
   "media/media-sonarr/main",
-  "media/media-streambot/streambot",
   "media/media-tautulli/main",
   "media/media-whisperbridge/main",
   "node-tuning/cpu-power-cap/cpu-power-cap",
   "pinchtab/pinchtab/install-browser-firewall",
-  "pinchtab/pinchtab/main",
   "postal/postal-postal-smtp/postal-smtp",
   "postal/postal-postal-web/postal-web",
   "postal/postal-postal-worker/postal-worker",
@@ -283,7 +258,6 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "temporal/temporal-temporal-streambot-worker/temporal-streambot-worker",
   "temporal/temporal-temporal-ui/temporal-ui",
   "temporal/temporal-temporal-workflows-candidate/temporal-workflows-candidate",
-  "trmnl-dashboard/trmnl-dashboard/trmnl-dashboard",
   "turbo-cache/turbo-cache/turbo-cache",
   "woodpecker-ci/temporal-maintenance-worker/copy-kometa-config",
   "woodpecker-ci/temporal-maintenance-worker/temporal-maintenance-worker",

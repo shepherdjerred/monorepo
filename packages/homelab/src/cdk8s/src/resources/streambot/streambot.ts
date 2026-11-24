@@ -13,6 +13,7 @@ import {
 } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { FirstPartyWorker } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/worker.ts";
+import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { analyticsCaptureDestination } from "@shepherdjerred/homelab/cdk8s/src/misc/analytics.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
@@ -264,12 +265,10 @@ export function createStreambotDeployment(
             ...scheduling.ports,
           ],
           ...(web === undefined ? {} : streambotWebProbes()),
+          // Bun's install cache and ffmpeg's temp files need a writable root.
           securityContext: {
-            user: STREAMBOT_UID,
-            group: STREAMBOT_GID,
-            ensureNonRoot: true,
+            ...restrictedContainer(STREAMBOT_UID, STREAMBOT_GID),
             readOnlyRootFilesystem: false,
-            allowPrivilegeEscalation: false,
           },
           resources: {
             // 4K remuxes (e.g. 2160p Blu-ray) are demanding even with VAAPI: bursty CPU for demux +

@@ -1,9 +1,10 @@
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { Duration, Size } from "cdk8s";
 import {
   ConfigMap,
   Deployment,
   DeploymentStrategy,
+  Probe,
   Secret,
   Service,
   Volume,
@@ -19,6 +20,7 @@ import { fileURLToPath } from "node:url";
 import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import path from "node:path";
 
+const METRICS_PORT = 6178;
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);
 const CURRENT_DIRNAME = path.dirname(CURRENT_FILENAME);
 
@@ -76,7 +78,25 @@ export async function createGickupDeployment(chart: Chart) {
       // non-critical usage; see the 2026-06-12 right-sizing plan.
       resources: {},
       image: `ghcr.io/cooperspencer/gickup:${versions["cooperspencer/gickup"]}`,
-      ports: [{ number: 6178, name: "metrics" }],
+      ports: [{ number: METRICS_PORT, name: "metrics" }],
+      // gickup serves only /metrics, with no health endpoint. With a cron
+      // schedule it opens the listener once the jobs are scheduled, before
+      // any backup runs, so the listener is the liveness signal.
+      startup: Probe.fromTcpSocket({
+        port: METRICS_PORT,
+        periodSeconds: Duration.seconds(5),
+        failureThreshold: 60,
+      }),
+      liveness: Probe.fromTcpSocket({
+        port: METRICS_PORT,
+        periodSeconds: Duration.seconds(30),
+        failureThreshold: 3,
+      }),
+      readiness: Probe.fromTcpSocket({
+        port: METRICS_PORT,
+        periodSeconds: Duration.seconds(10),
+        failureThreshold: 3,
+      }),
       securityContext: {
         user: UID,
         group: GID,
@@ -126,7 +146,7 @@ export async function createGickupDeployment(chart: Chart) {
       },
     },
     selector: deployment,
-    ports: [{ name: "metrics", port: 6178 }],
+    ports: [{ name: "metrics", port: METRICS_PORT }],
   });
 
   // Create ServiceMonitor for Prometheus to scrape gickup metrics

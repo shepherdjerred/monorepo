@@ -27,6 +27,7 @@ import {
 import {
   withCommonProps,
   setRevisionHistoryLimit,
+  restrictedContainer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
@@ -77,13 +78,7 @@ export function createGlitterBoysLauncherChart(
       envVariables: {
         ...bugsinkEnv(secret),
       },
-      securityContext: {
-        user: 1000,
-        group: 1000,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-        allowPrivilegeEscalation: false,
-      },
+      securityContext: restrictedContainer(1000),
       resources: {
         cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
         memory: { request: Size.mebibytes(32), limit: Size.mebibytes(128) },

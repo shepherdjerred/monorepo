@@ -16,6 +16,7 @@ import {
   Volume,
 } from "cdk8s-plus-31";
 import {
+  restrictedContainer,
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
@@ -221,13 +222,12 @@ ip6tables -L OUTPUT -n`,
   deployment.addContainer(
     withCommonProps({
       image: `pinchtab/pinchtab:${versions["pinchtab/pinchtab"]}`,
+      // The image's `pinchtab` user is 1000:1000. Chrome writes user-data and
+      // cache under $HOME, so the root FS stays writable; it runs with
+      // --no-sandbox, so it needs no namespace syscalls or capabilities.
       securityContext: {
-        ensureNonRoot: false,
-        // Chrome writes user-data/cache under $HOME; keep the root FS writable.
-        // Can be hardened to readOnlyRootFilesystem with extra writable mounts
-        // later if desired.
+        ...restrictedContainer(1000),
         readOnlyRootFilesystem: false,
-        allowPrivilegeEscalation: false,
       },
       ports: [
         {
