@@ -21,6 +21,11 @@ export const AdminProviderIdSchema = z.enum([
   ...SubtitleProviderIdSchema.options,
 ]);
 export type AdminProviderId = z.infer<typeof AdminProviderIdSchema>;
+export const avistazFamilyTrackers: ReadonlySet<AdminProviderId> = new Set([
+  "privatehd",
+  "avistaz",
+  "animez",
+]);
 export const ProviderSelectionSchema = z.strictObject({
   priority: z.int().min(1).max(50),
   minimumSeeders: z.int().min(0).max(1000),
@@ -46,6 +51,7 @@ export const ProviderSeedingPolicySchema = z
   .discriminatedUnion("kind", [
     z.object({ kind: z.literal("unknown") }).strict(),
     z.object({ kind: z.literal("public") }).strict(),
+    // Retain the stored kind used for the original PrivateHD policy.
     z
       .object({
         kind: z.literal("privatehd"),
