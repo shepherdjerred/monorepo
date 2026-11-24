@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { assertPromotionTaskReceipt } from "./task-receipt.ts";
 import { promotionTarget } from "#activities/promotion/manifest.ts";
+import { REDDIT_OUTREACH_LINK } from "#activities/promotion/reddit-discovery/relevance.ts";
 import type { PromotionAttempt } from "#shared/promotion/model.ts";
 
 const target = promotionTarget("reddit-mcservers");
@@ -28,6 +29,42 @@ const receipt = {
 };
 
 describe("task receipt validation", () => {
+  it("accepts a fresh public Reddit reply whose rendered quote joins the invite line", () => {
+    const thread = new URL("comments/post1/", target.url);
+    const url = new URL("comment/reply1/", thread).href;
+    const contentExcerpt = `hi! our server has permanent survival worlds.\n${REDDIT_OUTREACH_LINK}`;
+    const quote = contentExcerpt.replace("\n", " ");
+    const input = {
+      target: { ...target, action: "reply" as const, url: thread.href },
+      pending: { ...pending, contentExcerpt },
+      receipt: { ...receipt, url, quote },
+      page: {
+        url,
+        text: quote,
+        redditComment: {
+          id: "reply1",
+          author: "the_storm_mc",
+          parentId: "t3_post1",
+          createdAt: page.publishedAt,
+          body: quote,
+        },
+      },
+    };
+    expect(() => assertPromotionTaskReceipt(input)).not.toThrow();
+    expect(() =>
+      assertPromotionTaskReceipt({
+        ...input,
+        page: {
+          ...input.page,
+          redditComment: {
+            ...input.page.redditComment,
+            body: `${quote} Extra.`,
+          },
+        },
+      }),
+    ).toThrow("complete text entered");
+  });
+
   it.each(['Your listing "The Storm" was bumped', "Saved \\ path\nToday"])(
     "decodes native receipt text and checks freshness consistently: %s",
     (quote) => {

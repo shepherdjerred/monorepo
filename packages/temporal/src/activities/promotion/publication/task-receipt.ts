@@ -48,10 +48,12 @@ export function assertPromotionTaskReceipt(input: {
   if (receipt.status !== "verified") return;
   if (target.discord !== undefined)
     assertFreshDiscordReceipt(page.publishedAt, pending.attemptedAt);
-  if (
-    target.action !== "bump" &&
-    pending.contentExcerpt?.includes(receipt.quote) !== true
-  )
+  const { contentExcerpt } = pending;
+  const quoteMatches =
+    typeof contentExcerpt === "string" && target.action === "reply"
+      ? normalized(contentExcerpt).includes(normalized(receipt.quote))
+      : contentExcerpt?.includes(receipt.quote) === true;
+  if (!quoteMatches && target.action !== "bump")
     throw new Error(
       "Receipt quote must match content entered by this occurrence",
     );
