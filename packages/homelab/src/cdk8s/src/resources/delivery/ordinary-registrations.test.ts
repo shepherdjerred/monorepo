@@ -141,7 +141,7 @@ function activeChart(name: string): Chart {
   }
   const fixture = new App();
   resetProbeRegistry();
-  const image = `0.0.1@sha256:${"f".repeat(64)}`;
+  const image = `docker.io/shepherdjerred/glitter-boys-launcher@sha256:${"f".repeat(64)}`;
   const chart =
     name === "delivery"
       ? createDeliveryChart(fixture, {

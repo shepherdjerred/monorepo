@@ -13,6 +13,32 @@ export function firstPartyImageRecipe(name: string): string {
   return `${firstPartyImageRepository(name)}:delivery-recipe`;
 }
 
+const IMMUTABLE_DIGEST = /^sha256:[a-f0-9]{64}$/u;
+const PLACEHOLDER_DIGEST = `sha256:${"0".repeat(64)}`;
+
+/**
+ * The image a first-party chart may render: its synthesis recipe, or a
+ * published immutable digest of its own repository
+ * (`docker.io/shepherdjerred/<name>@sha256:…`). A mutable tag, another
+ * repository or the all-zero placeholder digest fails synthesis.
+ */
+export function requireFirstPartyImage(name: string, image: string): string {
+  if (image === firstPartyImageRecipe(name)) return image;
+  const prefix = `${firstPartyImageRepository(name)}@`;
+  const digest = image.startsWith(prefix)
+    ? image.slice(prefix.length)
+    : undefined;
+  if (
+    digest === undefined ||
+    digest === PLACEHOLDER_DIGEST ||
+    !IMMUTABLE_DIGEST.test(digest)
+  )
+    throw new Error(
+      `${name} requires its Delivery recipe or a published immutable image digest, not ${image}`,
+    );
+  return image;
+}
+
 /**
  * SHA-256 of the GitHub release tarball for `fuatakgun/eufy_security`, pinned
  * to the version above. Verified at install time by the Home Assistant init

@@ -56,7 +56,10 @@ describe("launcher service release", () => {
     }
   });
   it("rejects unpublished and mutable images before activation", () => {
-    for (const image of ["latest", `0.1.0@sha256:${"0".repeat(64)}`]) {
+    for (const image of [
+      "latest",
+      `docker.io/shepherdjerred/glitter-boys-launcher@sha256:${"0".repeat(64)}`,
+    ]) {
       expect(() =>
         createGlitterBoysLauncherChart(
           new App(),
@@ -72,7 +75,7 @@ describe("launcher service release", () => {
       createGlitterBoysLauncherChart(
         new App(),
         { schemaVersion: 1, stage: "active" },
-        `0.1.0@sha256:${"a".repeat(64)}`,
+        `docker.io/shepherdjerred/glitter-boys-launcher@sha256:${"a".repeat(64)}`,
       ),
     );
     const json = JSON.stringify(resources);

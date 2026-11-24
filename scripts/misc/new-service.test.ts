@@ -159,7 +159,7 @@ describe("scaffoldService", () => {
     expect(worker).not.toContain("tailscale");
 
     expect(await read("cdk8s-charts/fixture-notes.ts")).toContain(
-      'new ConfigMap(chart, "activation", { data: { active: "false" } });',
+      "if (!active) return closeActivationGate(chart);",
     );
     const application = await read(
       "resources/argo-applications/apps/fixture-notes.ts",

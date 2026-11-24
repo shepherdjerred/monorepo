@@ -297,7 +297,8 @@ function chartSource({ name }: ServiceOptions): string {
   const gate = activationConstant(name);
   return `import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
-import { ConfigMap, Namespace } from "cdk8s-plus-31";
+import { Namespace } from "cdk8s-plus-31";
+import { closeActivationGate } from "${HOMELAB}/misc/first-party/activation.ts";
 import {
   ${gate},
   create${pascal}Deployment,
@@ -309,10 +310,7 @@ export function create${pascal}Chart(app: App, active = ${gate}) {
     namespace: "${name}",
     disableResourceNameHashes: true,
   });
-  if (!active) {
-    new ConfigMap(chart, "activation", { data: { active: "false" } });
-    return chart;
-  }
+  if (!active) return closeActivationGate(chart);
   new Namespace(chart, "${name}-namespace", { metadata: { name: "${name}" } });
   create${pascal}Deployment(chart);
   return chart;
