@@ -11,6 +11,7 @@ import {
   bugsinkEnv,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
+import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import {
   dnsEgressRule,
   flagsEgress,
@@ -85,13 +86,7 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
         // securityContext is runAsNonRoot with no runAsUser, which the kubelet
         // cannot verify against a named user → CreateContainerConfigError. Pin
         // the numeric uid/gid (bun = 1000, same pattern as streambot).
-        securityContext: {
-          user: 1000,
-          group: 1000,
-          ensureNonRoot: true,
-          readOnlyRootFilesystem: true,
-          allowPrivilegeEscalation: false,
-        },
+        securityContext: restrictedContainer(1000),
         resources: {
           cpu: {
             request: Cpu.millis(50),

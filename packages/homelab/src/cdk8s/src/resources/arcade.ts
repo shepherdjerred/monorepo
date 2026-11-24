@@ -10,7 +10,10 @@ import {
   Secret,
   Volume,
 } from "cdk8s-plus-31";
-import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import {
+  restrictedContainer,
+  withCommonProps,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { FirstPartyWorker } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/worker.ts";
 import type { FirstPartyContainerSpec } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/workload-parts.ts";
@@ -246,11 +249,8 @@ model = "gpt-6.1-sol"
       LLM_ARCHIVE_S3_PREFIX: EnvValue.fromValue("goals/arcade"),
     },
     securityContext: {
-      ensureNonRoot: true,
-      user: 1000,
-      group: 1000,
+      ...restrictedContainer(1000),
       readOnlyRootFilesystem: false,
-      allowPrivilegeEscalation: false,
     },
     resources: {
       cpu: { request: Cpu.units(2), limit: Cpu.units(12) },

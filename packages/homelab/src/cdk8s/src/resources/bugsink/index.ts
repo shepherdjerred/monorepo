@@ -17,6 +17,7 @@ import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src
 import {
   withCommonProps,
   setRevisionHistoryLimit,
+  restrictedContainer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
@@ -47,6 +48,12 @@ export function createBugsinkDeployment(chart: Chart) {
   // Bugsink v2.0.7+ runs as non-root user with UID 14237
   const UID = 14_237;
   const GID = 14_237;
+  // Every container runs the Bugsink image, whose Django runtime needs a
+  // writable root (see the kube-linter exemption below).
+  const securityContext = {
+    ...restrictedContainer(UID, GID),
+    readOnlyRootFilesystem: false,
+  };
 
   // 1Password secret containing:
   // - SECRET_KEY: Django secret key (64+ chars, use: openssl rand -base64 64)
@@ -135,13 +142,7 @@ export function createBugsinkDeployment(chart: Chart) {
       image: `bugsink/bugsink:${versions["bugsink/bugsink"]}`,
       command: ["/bin/sh", "-c"],
       args: ["bugsink-manage migrate --noinput"],
-      securityContext: {
-        user: UID,
-        group: GID,
-        ensureNonRoot: true,
-        allowPrivilegeEscalation: false,
-        readOnlyRootFilesystem: false,
-      },
+      securityContext,
       envVariables: {
         ...dbEnv,
         SECRET_KEY: EnvValue.fromSecretValue({
@@ -165,13 +166,7 @@ export function createBugsinkDeployment(chart: Chart) {
       image: `bugsink/bugsink:${versions["bugsink/bugsink"]}`,
       command: ["/bin/sh", "-c"],
       args: ["bugsink-manage migrate --database=snappea --noinput"],
-      securityContext: {
-        user: UID,
-        group: GID,
-        ensureNonRoot: true,
-        allowPrivilegeEscalation: false,
-        readOnlyRootFilesystem: false,
-      },
+      securityContext,
       envVariables: {
         ...dbEnv,
         SECRET_KEY: EnvValue.fromSecretValue({
@@ -233,13 +228,7 @@ export function createBugsinkDeployment(chart: Chart) {
         // User registration - disable to prevent race condition vulnerability
         USER_REGISTRATION: EnvValue.fromValue("CB_NOBODY"),
       },
-      securityContext: {
-        user: UID,
-        group: GID,
-        ensureNonRoot: true,
-        allowPrivilegeEscalation: false,
-        readOnlyRootFilesystem: false,
-      },
+      securityContext,
       volumeMounts: [
         {
           path: "/tmp",
@@ -307,13 +296,7 @@ export function createBugsinkDeployment(chart: Chart) {
         EMAIL_USE_SSL: EnvValue.fromValue("False"),
         DEFAULT_FROM_EMAIL: EnvValue.fromValue("Bugsink <bugsink@sjer.red>"),
       },
-      securityContext: {
-        user: UID,
-        group: GID,
-        ensureNonRoot: true,
-        allowPrivilegeEscalation: false,
-        readOnlyRootFilesystem: false,
-      },
+      securityContext,
       volumeMounts: [
         {
           path: "/tmp",

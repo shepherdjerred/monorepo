@@ -25,6 +25,7 @@ import {
   createPruneStaleComponentsInitContainer,
   HA_CUSTOM_COMPONENTS,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/home/ha-custom-components.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 import { Glob } from "bun";
 
 export async function createHomeAssistantDeployment(chart: Chart) {
@@ -127,6 +128,15 @@ export async function createHomeAssistantDeployment(chart: Chart) {
           protocol: Protocol.TCP,
         },
       ],
+      // The pod uses the host network, so the kubelet probes 8123 on the node
+      // address, where Home Assistant listens too. `/manifest.json` is served
+      // without authentication. Bootstrap can wait several minutes on slow
+      // integrations, so startup allows twenty.
+      ...httpProbes(8123, {
+        live: "/manifest.json",
+        ready: "/manifest.json",
+        startup: { failureThreshold: 120, periodSeconds: 10 },
+      }),
       volumeMounts: [
         {
           path: "/config",

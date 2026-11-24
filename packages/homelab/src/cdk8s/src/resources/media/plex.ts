@@ -32,6 +32,7 @@ import {
   udp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 
 export function createPlexDeployment(
   chart: Chart,
@@ -154,6 +155,14 @@ export function createPlexDeployment(
           protocol: Protocol.UDP,
         },
       ],
+      // `/identity` is Plex's unauthenticated identity endpoint. Plex can spend
+      // minutes migrating its library database after an upgrade before it
+      // listens, so startup allows fifteen.
+      ...httpProbes(32_400, {
+        live: "/identity",
+        ready: "/identity",
+        startup: { failureThreshold: 90, periodSeconds: 10 },
+      }),
       // GPU access comes from the gpu.intel.com/i915 device plugin (injects
       // /dev/dri), not from privileged. Verified live: with privileged:false the
       // pod stays Ready and /dev/dri/renderD128 is present + readable, so HW

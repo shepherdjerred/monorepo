@@ -1,9 +1,11 @@
 import {
   ConfigMap,
+  type ContainerProps,
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
+  Probe,
   Protocol,
   Secret,
   Service,
@@ -11,7 +13,7 @@ import {
 } from "cdk8s-plus-31";
 import { tailnetService } from "homelab/src/platform-model.ts";
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { Duration, Size } from "cdk8s";
 import {
   withCommonProps,
   setRevisionHistoryLimit,
@@ -25,6 +27,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 import type { PostalMariaDB } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/postal-mariadb.ts";
 import {
   PATCHED_SMTP_CLIENT_SERVER,
@@ -42,6 +45,52 @@ export type PostalDeploymentProps = {
    */
   mariadb: PostalMariaDB;
 };
+
+/**
+ * Postal's health server, which answers `GET /health` with `OK`. Each process
+ * binds its own default port: 9090 for the worker and 9091 for the SMTP
+ * server. The web server runs none.
+ */
+const WORKER_HEALTH_PORT = 9090;
+const SMTP_HEALTH_PORT = 9091;
+const WEB_PORT = 5000;
+
+/**
+ * `postal initialize` migrates the database before the web server binds, and
+ * every process first waits up to `WAIT_FOR_TIMEOUT` (60s) for MariaDB. Five
+ * minutes covers both.
+ */
+const POSTAL_STARTUP = { failureThreshold: 60, periodSeconds: 5 };
+
+/**
+ * The web server has no health endpoint, and Rails answers 403 to any Host
+ * but POSTAL_WEB_HOSTNAME. Readiness loads the login page under that name;
+ * startup and liveness only need the listener, so a MariaDB outage takes the
+ * UI out of the Service without restarting it.
+ */
+function postalWebProbes(): Pick<
+  ContainerProps,
+  "startup" | "liveness" | "readiness"
+> {
+  return {
+    startup: Probe.fromTcpSocket({
+      port: WEB_PORT,
+      periodSeconds: Duration.seconds(POSTAL_STARTUP.periodSeconds),
+      failureThreshold: POSTAL_STARTUP.failureThreshold,
+    }),
+    liveness: Probe.fromTcpSocket({
+      port: WEB_PORT,
+      periodSeconds: Duration.seconds(30),
+      failureThreshold: 3,
+    }),
+    readiness: Probe.fromHttpGet("/login", {
+      port: WEB_PORT,
+      httpHeaders: [{ name: "Host", value: tailnetService("postal").fqdn }],
+      periodSeconds: Duration.seconds(10),
+      failureThreshold: 3,
+    }),
+  };
+}
 
 export function createPostalDeployment(
   chart: Chart,
@@ -185,10 +234,11 @@ export function createPostalDeployment(
       ports: [
         {
           name: "web",
-          number: 5000,
+          number: WEB_PORT,
           protocol: Protocol.TCP,
         },
       ],
+      ...postalWebProbes(),
       envVariables: {
         ...commonEnv,
         // Bind to all interfaces so the service can reach the container
@@ -258,6 +308,11 @@ export function createPostalDeployment(
           protocol: Protocol.TCP,
         },
       ],
+      ...httpProbes(SMTP_HEALTH_PORT, {
+        live: "/health",
+        ready: "/health",
+        startup: POSTAL_STARTUP,
+      }),
       envVariables: {
         ...commonEnv,
         ...POSTAL_SMTP_TLS_ENV,
@@ -327,10 +382,15 @@ export function createPostalDeployment(
       ports: [
         {
           name: "metrics",
-          number: 9090,
+          number: WORKER_HEALTH_PORT,
           protocol: Protocol.TCP,
         },
       ],
+      ...httpProbes(WORKER_HEALTH_PORT, {
+        live: "/health",
+        ready: "/health",
+        startup: POSTAL_STARTUP,
+      }),
       envVariables: {
         ...commonEnv,
         // Use the local Postfix sidecar as SMTP relay (port 25 blocked externally)

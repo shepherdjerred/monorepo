@@ -194,6 +194,7 @@ receivers:
               securityContext: {
                 runAsNonRoot: true,
                 readOnlyRootFilesystem: true,
+                allowPrivilegeEscalation: false,
                 runAsUser: 65_534,
                 runAsGroup: 65_534,
               },
