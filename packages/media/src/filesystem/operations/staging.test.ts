@@ -374,7 +374,9 @@ it.each(["unchanged", "changed source", "changed partial"])(
     const cold = new FileOperations(f.roots, f.options);
     if (change !== "unchanged") {
       await expect(cold.prepareImport(f.input)).rejects.toThrow(
-        "Streamed copy identity changed",
+        change === "changed source"
+          ? "Streamed copy source identity changed"
+          : "Prepared import partial identity changed",
       );
       expect(await readFile(f.journal, "utf8")).toBe(raw);
       return;
@@ -582,7 +584,7 @@ it("cold recovery rejects same-inode same-byte writes that changed the acknowled
   expect(after.ino).toBe(before.ino);
   await expect(
     new FileOperations(f.roots, f.options).prepareImport(f.input),
-  ).rejects.toThrow("Streamed copy identity changed");
+  ).rejects.toThrow("Prepared import partial identity changed");
   expect(await readFile(f.partial, "utf8")).toBe(f.bytes);
   expect(await readFile(f.journal, "utf8")).toBe(raw);
   await expect(access(f.staged)).rejects.toMatchObject({ code: "ENOENT" });

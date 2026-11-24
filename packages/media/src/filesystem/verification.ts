@@ -187,9 +187,9 @@ export async function assertExclusiveCopyReceipt(
   receipt: ExclusiveCopyReceipt,
 ): Promise<void> {
   const parents = await captureCopyParents([source, partial]);
-  for (const [filename, expected] of [
-    [source, receipt.source],
-    [partial, receipt.partial],
+  for (const [filename, expected, conflict] of [
+    [source, receipt.source, "Streamed copy source identity changed"],
+    [partial, receipt.partial, "Prepared import partial identity changed"],
   ] as const) {
     const info = await lstat(filename, { bigint: true });
     if (
@@ -197,7 +197,7 @@ export async function assertExclusiveCopyReceipt(
       JSON.stringify(copiedFileIdentity(filename, info, parents)) !==
         JSON.stringify(expected)
     )
-      throw new FileOperationConflict("Streamed copy identity changed");
+      throw new FileOperationConflict(conflict);
   }
   await assertCopyParents(parents);
 }
