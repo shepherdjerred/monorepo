@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 import { promotionPublicUrl } from "./redaction.ts";
+import { PromotionBrowserHttpError } from "./access/browser-http-error.ts";
 import {
   readPromotionBrowserSnapshot,
   type SnapshotScope,
@@ -50,13 +51,6 @@ const CloudflareResultSchema = z.object({
   handoff: z.literal("paused_handoff").optional(),
 });
 
-class PromotionBrowserHttpError extends Error {
-  readonly status: number;
-  constructor(suffix: string, status: number, detail: string) {
-    super(`Promotion browser ${suffix} HTTP ${String(status)}: ${detail}`);
-    this.status = status;
-  }
-}
 /** Authenticated transport for native PinchTab operations on one owned tab. */
 export class PromotionBrowser {
   private readonly target: PromotionTarget;
@@ -217,6 +211,7 @@ export class PromotionBrowser {
     this.controls.clear();
     const url = await this.currentUrl();
     const { nodes, text, publishedAt } = await readPromotionBrowserSnapshot({
+      url,
       scope,
       reddit: this.target.id.startsWith("reddit-"),
       options: this.options,

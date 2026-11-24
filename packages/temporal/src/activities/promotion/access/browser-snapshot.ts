@@ -1,5 +1,9 @@
 import { z } from "zod/v4";
-import { redactPromotionUrls } from "#activities/promotion/redaction.ts";
+import {
+  promotionPublicUrl,
+  redactPromotionUrls,
+} from "#activities/promotion/redaction.ts";
+import { PromotionBrowserHttpError } from "./browser-http-error.ts";
 import { checkRedditAccountRead } from "./reddit-account.ts";
 import type { PromotionBrowserOptions } from "./browser-profile.ts";
 
@@ -23,7 +27,33 @@ export type SnapshotScope = {
   depth?: number | undefined;
 };
 
+const IdpiBlockResponseSchema = z.object({
+  error: z.string().startsWith("snapshot blocked by IDPI scanner:"),
+});
+
+export class PromotionSnapshotBlocked extends Error {
+  constructor(
+    readonly url: string,
+    readonly selector: string | null,
+  ) {
+    super(
+      `PinchTab content scanner blocked ${selector ?? "the page"} at ${url}`,
+    );
+    this.name = "PromotionSnapshotBlocked";
+  }
+}
+
+function isPinchTabSnapshotBlock(status: number, detail: string) {
+  if (status !== 403) return false;
+  try {
+    return IdpiBlockResponseSchema.safeParse(JSON.parse(detail)).success;
+  } catch {
+    return false;
+  }
+}
+
 export async function readPromotionBrowserSnapshot(input: {
+  url: string;
   scope: SnapshotScope | undefined;
   reddit: boolean;
   options: PromotionBrowserOptions;
@@ -31,6 +61,21 @@ export async function readPromotionBrowserSnapshot(input: {
   evaluate: (script: string) => Promise<unknown>;
 }) {
   const { scope } = input;
+  async function readScannedSnapshot(parameters: URLSearchParams) {
+    try {
+      return SnapshotSchema.parse(await input.readSnapshot(parameters));
+    } catch (error) {
+      if (
+        error instanceof PromotionBrowserHttpError &&
+        isPinchTabSnapshotBlock(error.status, error.detail)
+      )
+        throw new PromotionSnapshotBlocked(
+          promotionPublicUrl(input.url),
+          parameters.get("selector"),
+        );
+      throw error;
+    }
+  }
   // PinchTab's snapshot performs its content scanning/wrapping before data
   // enters an agent prompt. Keep that endpoint in the observation path.
   const parameters = new URLSearchParams({
@@ -38,14 +83,12 @@ export async function readPromotionBrowserSnapshot(input: {
     ...(scope?.selector === undefined ? {} : { selector: scope.selector }),
     ...(scope?.depth === undefined ? {} : { depth: String(scope.depth) }),
   });
-  const snapshot = SnapshotSchema.parse(await input.readSnapshot(parameters));
+  const snapshot = await readScannedSnapshot(parameters);
   await checkRedditAccountRead({
     options: input.options,
-    scan: async () =>
-      SnapshotSchema.parse(
-        await input.readSnapshot(
-          new URLSearchParams({ format: "json", selector: "body", depth: "3" }),
-        ),
+    scan: () =>
+      readScannedSnapshot(
+        new URLSearchParams({ format: "json", selector: "body", depth: "3" }),
       ),
     evaluate: (script) => input.evaluate(script),
   });

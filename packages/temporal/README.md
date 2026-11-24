@@ -1446,6 +1446,9 @@ incomplete window can also have unread pages and resumes at its checkpoint.
 Completed windows reach the time cutoff or the end of the feed.
 Run details also let operators open the observed posts and see each Reddit
 link, fit score when available, outcome, and recorded reason.
+A PinchTab content block on an individual thread records the blocked page and
+selector in the audit. The thread is skipped without a score or reply, and the
+sweep continues with the remaining posts.
 
 Per-post claims and Pacific daily reservations are conditional object-store
 writes. Uncertain submissions and filtered replies consume allowance and cannot
