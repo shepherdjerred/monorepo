@@ -69,6 +69,8 @@ export const VersionMapSchema = z
     "pinchtab/pinchtab": z.string(),
     "texlive/texlive": z.string(),
     "grafana/tempo": z.string(),
+    "minio/mc": z.string(),
+    "minio/minio": z.string(),
     "pgsty/silo": z.string(),
     "aquasec/trivy": z.string(),
     "semgrep/semgrep": z.string(),

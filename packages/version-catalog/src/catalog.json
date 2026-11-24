@@ -823,6 +823,30 @@
       "value": "3.1.0@sha256:3076b8dcdfb32fd6bc5ccef85e7b7313e6199b9cb84366257fc17ecb696db5fd"
     },
     {
+      "name": "minio/mc",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "RELEASE.2025-04-03T17-07-56Z@sha256:69fb6e6ca209008ae3cacf9f63c2524f68a1322dc921c8992ba2cc99c5bef3c6"
+    },
+    {
+      "name": "minio/minio",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "RELEASE.2025-04-08T15-41-24Z@sha256:8834ae47a2de3509b83e0e70da9369c24bbbc22de42f2a2eddc530eee88acd1b"
+    },
+    {
       "name": "pgsty/silo",
       "category": "upstream",
       "artifactType": "image",
