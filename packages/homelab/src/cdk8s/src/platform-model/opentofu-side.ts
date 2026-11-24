@@ -1,9 +1,8 @@
 import path from "node:path";
 import { z } from "zod";
-import { literalString, objectEntries } from "./hcl.ts";
 import {
   TOFU_ROOT,
-  blocksOf,
+  literalString,
   readStack,
   stackNames,
   text,
@@ -17,10 +16,10 @@ import { readTailscale } from "./tailscale-side.ts";
  * What the OpenTofu stacks declare for the facts in the platform model.
  *
  * `readOpenTofuSide` is the only way the "rendered on both sides" test sees
- * OpenTofu. A stack is read from its committed `main.tf.json` when the CDK
- * Terrain app has ported it, otherwise from its `.tf` files. When the stacks
- * render the platform model directly, this reader is replaced by the model
- * and its callers do not change.
+ * OpenTofu. Every stack is read from the `main.tf.json` the CDK Terrain app
+ * synthesizes and commits; nothing reads HCL. When the stacks render the
+ * platform model directly, this reader is replaced by the model and its
+ * callers do not change.
  */
 export type OpenTofuSide = {
   /** Every DNS record that points at a Cloudflare Tunnel. */
@@ -156,9 +155,9 @@ function cachedPrefixes(ruleset: Resource): string[] {
 function readCloudflare(
   stack: Stack,
 ): Pick<OpenTofuSide, "tunnelRecords" | "immutablePathPrefixesByZone"> {
-  if (stack.blocks.length > 0 || stack.modules.length > 0)
+  if (stack.modules.length > 0)
     throw new Error(
-      "cloudflare: expected a synthesized main.tf.json without module calls; update readCloudflare",
+      "cloudflare: expected a main.tf.json without module calls; update readCloudflare",
     );
   const zoneOf = zoneResolver(stack);
   return {
@@ -225,10 +224,7 @@ function readSeaweedfs(
   };
 }
 
-/**
- * A reference attribute such as `var.x` or `each.value.y`: bare in HCL, and a
- * `"${...}"` string in a synthesized stack's JSON.
- */
+/** A reference attribute such as `var.x`, synthesized as a `"${...}"` string. */
 function unwrapInterpolation(
   expression: string | undefined,
 ): string | undefined {
@@ -250,22 +246,10 @@ function onePasswordTitles(stack: Stack, item: Resource): string[] {
   const rawSource = item.attributes.get("for_each");
   const source = unwrapInterpolation(rawSource);
   if (title === "each.value.title" && rawSource?.startsWith("{") === true) {
-    // A synthesized stack inlines the for_each map as a JSON object.
+    // The synthesized stack inlines the for_each map as a JSON object.
     return Object.values(TitledEntriesSchema.parse(JSON.parse(rawSource))).map(
       (entry) => entry.title,
     );
-  }
-  if (title === "each.value.title" && source?.startsWith("local.") === true) {
-    const entries = blocksOf(stack.blocks, "locals")
-      .map((locals) =>
-        objectEntries(locals.attributes.get(source.slice("local.".length))),
-      )
-      .find((found) => found !== undefined);
-    const titles = [...(entries ?? new Map<string, string>()).values()].map(
-      (entry) => literalString(objectEntries(entry)?.get("title")),
-    );
-    if (titles.length > 0 && titles.every((value) => value !== undefined))
-      return titles;
   }
   if (
     title === "each.value.onepassword_item_title" &&
@@ -291,18 +275,7 @@ async function readOnePasswordItems(
     (resource) => resource.type === "onepassword_item",
   )) {
     const resource = `onepassword_item.${item.name}`;
-    const vaultExpression = item.attributes.get("vault");
-    const vault =
-      literalString(vaultExpression) ??
-      blocksOf(stack.blocks, "locals")
-        .map((locals) =>
-          literalString(
-            locals.attributes.get(
-              (vaultExpression ?? "").replace(/^local\./, ""),
-            ),
-          ),
-        )
-        .find((found) => found !== undefined);
+    const vault = literalString(item.attributes.get("vault"));
     if (vault === undefined)
       throw new Error(`${stack.name}: ${resource} has no resolvable vault`);
     const titles = onePasswordTitles(stack, item);

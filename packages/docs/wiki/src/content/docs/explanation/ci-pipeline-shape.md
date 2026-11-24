@@ -487,10 +487,11 @@ the gateway to the buckets its job touches:
 
 `SEAWEEDFS_TOFU_ADMIN_*` is deliberately unscoped: the `seaweedfs` OpenTofu
 stack manages the buckets themselves, and SeaweedFS requires unscoped `Admin`
-to create one. It is the credential `tofu-plan-seaweedfs` holds, which makes
-that step the one pull-request-reachable holder of a broad SeaweedFS key.
-Narrowing it means moving bucket management off the pull-request path, not
-changing a grant.
+to create one. No CI step holds it: only the Delivery platform Job that plans
+and applies `tofu-seaweedfs` receives it, through the grant in
+`packages/homelab/src/delivery-platform-grants.ts`, and
+`packages/woodpecker-config-extension/test/delivery-boundary.test.ts` fails if
+any step of the CI graph is given it.
 
 The scoping lives in the identities config the S3 gateway loads through
 `existingConfigSecret`, which exists only in a 1Password item. No repository
