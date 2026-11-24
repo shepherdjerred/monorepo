@@ -408,7 +408,9 @@ describe("PR code-review blocking thread watch and prior-round gates", () => {
       await environment.teardown();
     }
   }, 60_000);
+});
 
+describe("PR code-review prior-round policy and P0/P1 veto retention", () => {
   test("priorRoundCompleted: passes immediately with 0 P0s without requesting review, while a standing P0 vetoes with failure", async () => {
     const environment = await TestWorkflowEnvironment.createTimeSkipping();
     const statusesBySha = new Map<string, PostCodeReviewCommitStatusInput[]>();
@@ -426,6 +428,14 @@ describe("PR code-review blocking thread watch and prior-round gates", () => {
             p0VetoCount: prNumber === 402 ? 1 : 0,
             p0VetoSummary:
               prNumber === 402 ? "1 unresolved P0 finding(s) (Codex)" : null,
+            completedAtHead:
+              prNumber === 403
+                ? {
+                    providerId: "coderabbit",
+                    blockingCount: 1,
+                    message: "1 unresolved P0/P1 finding(s) from CodeRabbit",
+                  }
+                : null,
           }),
           triggerAndObserveProvider: async (call) => {
             triggerCalls.push(call);
@@ -509,6 +519,202 @@ describe("PR code-review blocking thread watch and prior-round gates", () => {
               state: "success",
               reason: "threads-resolved",
             });
+
+            const reReviewedFollowup = makePrInput(403, "sha-403");
+            await workflowClient.execute("prCodeReviewWorkflow", {
+              workflowId: prCodeReviewWorkflowId(
+                reReviewedFollowup.owner,
+                reReviewedFollowup.repo,
+                reReviewedFollowup.prNumber,
+              ),
+              taskQueue: TASK_QUEUES.WORKFLOWS,
+              args: [reReviewedFollowup],
+            });
+            expect(statusesBySha.get("sha-403")).toEqual([
+              expect.objectContaining({
+                state: "success",
+                description: "Prior round reviewed; no unresolved P0 findings",
+                reason: "prior-round",
+              }),
+            ]);
+          } finally {
+            await terminateCoordinatorIfRunning(environment);
+          }
+        },
+      });
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+});
+
+describe("PR code-review first-round P0/P1 veto retention", () => {
+  test("first-round review with both P0 and P1 retains assignedProvider so resolving P0 still blocks on P1", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const statuses: PostCodeReviewCommitStatusInput[] = [];
+    const checkedProviders: (ProviderId | null)[] = [];
+    let p0Open = true;
+    let p1Open = true;
+
+    try {
+      await runWorkflowWithActivityWorker(environment, {
+        workflowPath,
+        activityTaskQueue: TASK_QUEUES.CODE_REVIEW,
+        activities: buildCoordinatorBridgeActivities(environment, {
+          postCodeReviewCommitStatus: async (status) => {
+            statuses.push(status);
+          },
+          triggerAndObserveProvider: async () => ({
+            ...reviewedObservation(),
+            p0VetoCount: 1,
+            p0VetoMessage: "1 unresolved P0 finding(s) (CodeRabbit)",
+            decisionState: "failed",
+            decisionMessage: "2 unresolved P0/P1 findings",
+            blockingCount: 2,
+          }),
+          verifyAndCheckBlockingThreads: async ({ providerId }) => {
+            checkedProviders.push(providerId);
+            if (p0Open) {
+              return {
+                active: true,
+                passed: false,
+                failureReason: "p0-veto",
+                description: "1 unresolved P0 finding(s) (CodeRabbit)",
+              };
+            }
+            if (providerId !== null && p1Open) {
+              return {
+                active: true,
+                passed: false,
+                failureReason: "blocking-findings",
+                description: "1 unresolved P0/P1 finding(s) from CodeRabbit",
+              };
+            }
+            return {
+              active: true,
+              passed: true,
+              failureReason: null,
+              description: "CodeRabbit reviewed clean",
+            };
+          },
+        }),
+        execute: async () => {
+          const workflowClient = realTimeWorkflowClient(environment);
+          try {
+            const input = makePrInput(410, "sha-410");
+            const handle = await workflowClient.start("prCodeReviewWorkflow", {
+              workflowId: prCodeReviewWorkflowId(
+                input.owner,
+                input.repo,
+                input.prNumber,
+              ),
+              taskQueue: TASK_QUEUES.WORKFLOWS,
+              args: [input],
+            });
+
+            await vi.waitFor(() => {
+              expect(
+                statuses.some(
+                  (s) => s.state === "failure" && s.reason === "p0-veto",
+                ),
+              ).toBe(true);
+            });
+
+            p0Open = false;
+            await handle.signal("recheckReview");
+
+            await vi.waitFor(() => {
+              expect(
+                statuses.some(
+                  (s) =>
+                    s.state === "failure" &&
+                    s.description.includes(
+                      "1 unresolved P0/P1 finding(s) from CodeRabbit",
+                    ),
+                ),
+              ).toBe(true);
+            });
+            expect(statuses.some((s) => s.state === "success")).toBe(false);
+
+            p1Open = false;
+            await handle.signal("recheckReview");
+            await handle.result();
+
+            expect(checkedProviders.every((id) => id === "coderabbit")).toBe(
+              true,
+            );
+            expect(statuses.at(-1)).toMatchObject({
+              state: "success",
+              reason: "threads-resolved",
+            });
+          } finally {
+            await terminateCoordinatorIfRunning(environment);
+          }
+        },
+      });
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+});
+
+describe("codeReviewCoordinatorWorkflow continueAsNew", () => {
+  test("coordinator resets processedCount across continueAsNew while preserving weighted state", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const observedByPr = new Map<number, ProviderId[]>();
+
+    try {
+      await runWorkflowWithActivityWorker(environment, {
+        workflowPath,
+        activityTaskQueue: TASK_QUEUES.CODE_REVIEW,
+        activities: buildCoordinatorBridgeActivities(environment, {
+          triggerAndObserveProvider: async (call) => {
+            const list = observedByPr.get(call.prNumber) ?? [];
+            list.push(call.providerId);
+            observedByPr.set(call.prNumber, list);
+            return reviewedObservation();
+          },
+        }),
+        execute: async () => {
+          const workflowClient = realTimeWorkflowClient(environment);
+          try {
+            const coordHandle = await workflowClient.start(
+              "codeReviewCoordinatorWorkflow",
+              {
+                workflowId: CODE_REVIEW_COORDINATOR_WORKFLOW_ID,
+                taskQueue: TASK_QUEUES.WORKFLOWS,
+                args: [
+                  {
+                    weighted: { currentWeights: {}, cooldownUntilMs: {} },
+                    processedCount: 499,
+                  },
+                ],
+              },
+            );
+            const initialDesc = await coordHandle.describe();
+
+            await executePrReview(workflowClient, 420, "sha-420");
+
+            const latestHandle = workflowClient.getHandle(
+              CODE_REVIEW_COORDINATOR_WORKFLOW_ID,
+            );
+            let continuedRunId = initialDesc.runId;
+            await vi.waitFor(async () => {
+              const desc = await latestHandle.describe();
+              expect(desc.runId).not.toBe(initialDesc.runId);
+              continuedRunId = desc.runId;
+            });
+
+            await executePrReview(workflowClient, 421, "sha-421");
+            await executePrReview(workflowClient, 422, "sha-422");
+
+            const afterFollowupDesc = await latestHandle.describe();
+            expect(afterFollowupDesc.runId).toBe(continuedRunId);
+            expect(observedByPr.get(420)).toEqual(["coderabbit"]);
+            expect([
+              ...(observedByPr.get(421) ?? []),
+              ...(observedByPr.get(422) ?? []),
+            ]).toContain("codex");
           } finally {
             await terminateCoordinatorIfRunning(environment);
           }

@@ -180,16 +180,6 @@ export async function prCodeReviewWorkflow(
     return;
   }
 
-  if (context.completedAtHead !== null) {
-    await watchForThreadResolution({
-      input,
-      assignedProvider: context.completedAtHead.providerId,
-      recheck,
-      elapsedSeconds,
-    });
-    return;
-  }
-
   if (context.priorRoundCompleted) {
     if (context.p0VetoCount === 0) {
       await codeReviewActivitiesProxy.postCodeReviewCommitStatus({
@@ -206,6 +196,16 @@ export async function prCodeReviewWorkflow(
     await watchForThreadResolution({
       input,
       assignedProvider: null,
+      recheck,
+      elapsedSeconds,
+    });
+    return;
+  }
+
+  if (context.completedAtHead !== null) {
+    await watchForThreadResolution({
+      input,
+      assignedProvider: context.completedAtHead.providerId,
       recheck,
       elapsedSeconds,
     });

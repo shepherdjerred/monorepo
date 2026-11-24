@@ -125,7 +125,10 @@ export async function codeReviewCoordinatorWorkflow(
       outcomeQueue.length === 0 &&
       allHandlersFinished()
     ) {
-      return await continueAsNew<typeof codeReviewCoordinatorWorkflow>(state);
+      return await continueAsNew<typeof codeReviewCoordinatorWorkflow>({
+        weighted: state.weighted,
+        processedCount: 0,
+      });
     }
 
     await condition(() => claimQueue.length > 0 || outcomeQueue.length > 0);

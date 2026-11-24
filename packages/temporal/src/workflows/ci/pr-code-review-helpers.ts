@@ -38,7 +38,6 @@ export type RecheckState = {
 
 type ProviderPollOutcome =
   | { kind: "inactive" }
-  | { kind: "p0-veto" }
   | { kind: "completed"; providerId: ProviderId }
   | { kind: "skipped" }
   | { kind: "quota-or-error" };
@@ -129,9 +128,6 @@ async function evaluateObservedProviderState(args: {
   const { observed, providerId, settings } = args;
   if (!observed.active) {
     return { kind: "inactive" };
-  }
-  if (observed.p0VetoCount > 0) {
-    return { kind: "p0-veto" };
   }
   if (observed.reviewState === "reviewed") {
     const skipped = observed.skipReason !== null;
@@ -282,9 +278,6 @@ function terminalFailoverOutcome(
 ): FailoverResult | null {
   if (outcome.kind === "inactive") {
     return { kind: "done" };
-  }
-  if (outcome.kind === "p0-veto") {
-    return { kind: "watch", assignedProvider: null };
   }
   return outcome.kind === "completed"
     ? { kind: "watch", assignedProvider: outcome.providerId }
