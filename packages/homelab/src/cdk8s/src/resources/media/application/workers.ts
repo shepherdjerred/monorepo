@@ -16,10 +16,10 @@ import { createLegacyObserverAccount } from "./legacy-observer.ts";
 import {
   MEDIA_APPLICATION_LABEL,
   MEDIA_PUBLIC_ORIGIN,
-  mediaDatabaseEnvironment,
   mediaFeatureFlagEnvironment,
 } from "./environment.ts";
 import { telemetryEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import type { SingleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 
 export type MediaApplicationClaims = {
   movies: PersistentVolumeClaim;
@@ -30,7 +30,7 @@ export type MediaApplicationClaims = {
 export function createMediaActivityWorkers(
   chart: Chart,
   props: {
-    database: ISecret;
+    database: SingleAppDatabase;
     bootstrap: ISecret;
     discord: ISecret;
     postal: ISecret;
@@ -40,7 +40,7 @@ export function createMediaActivityWorkers(
   },
 ) {
   const shared = {
-    ...mediaDatabaseEnvironment(props.database),
+    ...props.database.env,
     ...mediaFeatureFlagEnvironment(),
     ...temporalAddressEnv(),
     TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
