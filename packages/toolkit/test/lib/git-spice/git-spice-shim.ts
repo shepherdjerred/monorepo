@@ -51,10 +51,7 @@ type SpiceSnapshot = {
   continuations: ContEntry[];
 };
 
-function gitOut(
-  cwd: string,
-  args: readonly string[],
-): { exit: number; stdout: string; stderr: string } {
+function gitOut(cwd: string, args: readonly string[]) {
   const proc = Bun.spawnSync(["git", ...args], {
     cwd,
     env: Bun.env,
@@ -71,9 +68,8 @@ function gitOut(
 
 function mustGit(cwd: string, args: readonly string[]): string {
   const res = gitOut(cwd, args);
-  if (res.exit !== 0) {
+  if (res.exit !== 0)
     throw new Error(`shim git ${args.join(" ")} failed: ${res.stderr}`);
-  }
   return res.stdout;
 }
 
@@ -83,30 +79,21 @@ function readSpiceSnapshot(cwd: string): SpiceSnapshot {
     repoShow.exit === 0
       ? SpiceRepoFileSchema.parse(JSON.parse(repoShow.stdout))
       : { trunk: "main", remote: "origin" };
-
   const branches = new Map<string, BranchEntry>();
-  const lsTree = gitOut(cwd, [
-    "ls-tree",
-    "-r",
-    "--name-only",
-    "refs/spice/data",
-    "--",
-    "branches",
-  ]);
-  if (lsTree.exit === 0 && lsTree.stdout.length > 0) {
-    for (const filePath of lsTree.stdout.split("\n")) {
-      if (!filePath.startsWith("branches/")) continue;
-      const branchName = filePath.slice("branches/".length);
-      const blob = gitOut(cwd, ["show", `refs/spice/data:${filePath}`]);
-      if (blob.exit === 0 && blob.stdout.length > 0) {
-        branches.set(
-          branchName,
-          SpiceBranchEntrySchema.parse(JSON.parse(blob.stdout)),
-        );
-      }
+  const lsTree = gitOut(
+    cwd,
+    "ls-tree -r --name-only refs/spice/data -- branches".split(" "),
+  );
+  for (const fp of lsTree.exit === 0 ? lsTree.stdout.split("\n") : []) {
+    if (!fp.startsWith("branches/")) continue;
+    const blob = gitOut(cwd, ["show", `refs/spice/data:${fp}`]);
+    if (blob.exit === 0 && blob.stdout.length > 0) {
+      branches.set(
+        fp.slice(9),
+        SpiceBranchEntrySchema.parse(JSON.parse(blob.stdout)),
+      );
     }
   }
-
   const contShow = gitOut(cwd, ["show", "refs/spice/data:rebase-continue"]);
   const parsedCont =
     contShow.exit === 0 && contShow.stdout.length > 0
@@ -116,7 +103,6 @@ function readSpiceSnapshot(cwd: string): SpiceSnapshot {
     command: [...item.command],
     branch: item.branch,
   }));
-
   return { repo, branches, continuations };
 }
 
@@ -302,7 +288,12 @@ async function handleBranchCreate(
     }
   }
 
-  mustGit(cli.cwd, ["checkout", "-b", newBranch]);
+  mustGit(
+    cli.cwd,
+    target === undefined
+      ? ["checkout", "-b", newBranch]
+      : ["checkout", "-b", newBranch, target],
+  );
   if (baseBranch === snap.repo.trunk) {
     mustGit(cli.cwd, ["config", `branch.${newBranch}.remote`, "."]);
     mustGit(cli.cwd, [

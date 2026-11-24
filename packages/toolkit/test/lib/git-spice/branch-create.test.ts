@@ -189,4 +189,80 @@ describe("branch create in agent worktrees (AI-755 & AI-2)", () => {
       await readGitConfig(stackWt, "branch.feat/part-1.merge", shimEnv),
     ).toBeNull();
   });
+
+  test("preserves trunk base commit without leaking feature commits when --target main or -t origin/main is run from a branch ahead of trunk", async () => {
+    const { root, primary, originMainSha, shimEnv } =
+      await setupPrimaryAndWorktree();
+
+    // 1. Ordinary checkout (no other worktree holding main): standing on a tracked
+    // feature branch ahead of main, --target main creates from refs/heads/main.
+    const mainSha = git(["rev-parse", "main"], primary);
+    git(["checkout", "-b", "feat/ahead-single"], primary);
+    await Bun.write(path.join(primary, "ahead.ts"), "export const a = 1;\n");
+    git(["add", "ahead.ts"], primary);
+    git(["commit", "-m", "feat: ahead"], primary);
+    await runGitSpice(
+      ["branch", "track", "--base", "main", "feat/ahead-single"],
+      { ...shimEnv },
+      { cwd: primary, stdin: "ignore" },
+    );
+
+    await Bun.write(path.join(primary, "clean-b.ts"), "export const b = 2;\n");
+    git(["add", "clean-b.ts"], primary);
+    const singleExit = await runGitSpice(
+      [
+        "branch",
+        "create",
+        "feat/from-main",
+        "--target",
+        "main",
+        "-m",
+        "feat: b",
+      ],
+      { ...shimEnv },
+      { cwd: primary, stdin: "ignore" },
+    );
+    expect(singleExit).toBe(0);
+    expect(git(["rev-parse", "feat/from-main~1"], primary)).toBe(mainSha);
+    expect(await Bun.file(path.join(primary, "ahead.ts")).exists()).toBe(false);
+
+    // Put primary back on main so main IS checked out in primary worktree.
+    git(["checkout", "main"], primary);
+
+    // 2. Linked worktree standing on a branch ahead of origin/main: both
+    // --target main and -t origin/main branch from the requested target, not HEAD.
+    const wt = path.join(root, "wt-ahead");
+    git(["worktree", "add", "-b", "feat/ahead-wt", wt, "origin/main"], primary);
+    await Bun.write(path.join(wt, "wt-ahead.ts"), "export const w = 1;\n");
+    git(["add", "wt-ahead.ts"], wt);
+    git(["commit", "-m", "feat: wt ahead"], wt);
+    await runGitSpice(
+      ["branch", "track", "--base", "main", "feat/ahead-wt"],
+      { ...shimEnv },
+      { cwd: wt, stdin: "ignore" },
+    );
+
+    await Bun.write(path.join(wt, "wt-c.ts"), "export const c = 3;\n");
+    git(["add", "wt-c.ts"], wt);
+    const wtMainExit = await runGitSpice(
+      ["bc", "feat/wt-from-main", "--target", "main", "-m", "feat: c"],
+      { ...shimEnv },
+      { cwd: wt, stdin: "ignore" },
+    );
+    expect(wtMainExit).toBe(0);
+    expect(git(["rev-parse", "feat/wt-from-main~1"], wt)).toBe(mainSha);
+    expect(await Bun.file(path.join(wt, "wt-ahead.ts")).exists()).toBe(false);
+
+    git(["checkout", "feat/ahead-wt"], wt);
+    await Bun.write(path.join(wt, "wt-d.ts"), "export const d = 4;\n");
+    git(["add", "wt-d.ts"], wt);
+    const wtOriginExit = await runGitSpice(
+      ["bc", "feat/wt-from-origin", "-t", "origin/main", "-m", "feat: d"],
+      { ...shimEnv },
+      { cwd: wt, stdin: "ignore" },
+    );
+    expect(wtOriginExit).toBe(0);
+    expect(git(["rev-parse", "feat/wt-from-origin~1"], wt)).toBe(originMainSha);
+    expect(await Bun.file(path.join(wt, "wt-ahead.ts")).exists()).toBe(false);
+  });
 });
