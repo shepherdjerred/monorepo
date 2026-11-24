@@ -595,13 +595,14 @@ To import existing Cloudflare records into state, use [`cf-terraforming`](https:
 ## State Backend
 
 State is stored in a self-hosted SeaweedFS S3 bucket
-(`homelab-tofu-state`), split by module. The new `openai`, `anthropic`,
-`discord`, `anthropic-federation`, `google`, and `cloudflare-tokens` states
-enforce client-side
-AES-GCM encryption for state and saved plans from their first write. They have
-no plaintext fallback because no prior remote object exists.
+(`homelab-tofu-state`), split by module. The `anthropic`,
+`anthropic-federation`, `application-secrets`, `backblaze`,
+`cloudflare-tokens`, `discord`, `dockerhub`, `dockerhub-tokens`, `google`,
+`openai`, and `posthog` states enforce client-side AES-GCM encryption for
+state and saved plans, with no plaintext fallback.
 
-The eight established plaintext states are deliberately unchanged. Migrating
+The seven plaintext states (`argocd`, `arr`, `asuswrt`, `cloudflare`,
+`github`, `seaweedfs`, and `tailscale`) are deliberately unchanged. Migrating
 one needs its own backup, migration, restore proof, and enforcement change;
 do not add a fallback or flip enforcement casually in an unrelated provider
 change.
