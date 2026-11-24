@@ -55,6 +55,8 @@ import {
 
 import { createFlagsChart } from "./cdk8s-charts/flags.ts";
 
+import { createStormStatsChart } from "./cdk8s-charts/storm-stats.ts";
+
 /**
  * Sets up all charts for the application
  */
@@ -122,6 +124,8 @@ export async function setupCharts(app: App): Promise<void> {
   createStormForumCharts(app);
 
   createFlagsChart(app);
+
+  createStormStatsChart(app);
 
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.

@@ -628,5 +628,11 @@
     "name": "flags-data",
     "backup": "enabled",
     "reason": "Flags SQLite documents"
+  },
+  {
+    "namespace": "storm-stats",
+    "name": "storm-stats-data",
+    "backup": "enabled",
+    "reason": "Storm player and gameplay analytics SQLite ledger"
   }
 ]

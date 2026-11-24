@@ -834,6 +834,17 @@
           "argoApp": "flags"
         }
       ]
+    },
+    {
+      "id": "storm-stats",
+      "rootReleaseExclusions": { "storm-stats": "inactive" },
+      "images": ["storm-stats"],
+      "charts": ["storm-stats"],
+      "title": "Storm Stats",
+      "kind": "product",
+      "package": "storm-stats",
+      "namespaces": ["storm-stats"],
+      "argoApps": []
     }
   ]
 }

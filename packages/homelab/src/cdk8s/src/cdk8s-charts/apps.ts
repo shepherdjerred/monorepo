@@ -82,6 +82,8 @@ import { deliveryExecutorActivation } from "@shepherdjerred/homelab/cdk8s/src/re
 
 import { createFlagsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/flags.ts";
 
+import { createStormStatsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/storm-stats.ts";
+
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
     namespace: "argocd",
@@ -180,6 +182,8 @@ export async function createAppsChart(app: App) {
   createStormForumApplications(chart);
 
   createFlagsApp(chart);
+
+  createStormStatsApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);

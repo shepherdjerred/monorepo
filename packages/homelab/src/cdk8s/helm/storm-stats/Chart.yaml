@@ -1,0 +1,6 @@
+apiVersion: v2
+name: storm-stats
+description: Storm Stats
+type: application
+version: "$version"
+appVersion: "$appVersion"

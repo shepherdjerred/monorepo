@@ -461,6 +461,7 @@ export const THE_STORM_BOOLEAN_FLAG_KEYS = [
   "the-storm-rwf-spectator-tools-enabled",
   "the-storm-rwf-bomb-effects-enabled",
   "the-storm-rwf-stats-enabled",
+  "the-storm-stats-export-enabled",
 ] as const;
 
 export type TheStormBooleanFlagKey =
@@ -482,6 +483,8 @@ export const STORM_BOOLEAN_FLAG_KEYS = [
   "storm-forum-registration-enabled",
   "storm-forum-calendar-enabled",
   "storm-brain-conversation-enabled",
+  "storm-stats-ingest-enabled",
+  "storm-stats-public-enabled",
 ] as const;
 
 export type StormBooleanFlagKey = (typeof STORM_BOOLEAN_FLAG_KEYS)[number];

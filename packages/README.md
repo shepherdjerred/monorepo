@@ -25,6 +25,7 @@ hold only scoped invariants that agents must keep in context.
 | [trmnl-dashboard](trmnl-dashboard/)                             | TRMNL e-ink dashboard backend aggregating home/homelab status                                             |
 | [storm-brain](storm-brain/)                                     | LLM classify/triage brain for The Storm's AI staff agent (Bun + Hono)                                     |
 | [storm-forum](storm-forum/)                                     | XenForo runtime, owned community portal, release configuration and Activity worker                        |
+| [storm-stats](storm-stats/)                                     | Plan-style player and gameplay analytics for The Storm (`stats.ts-mc.net` + tailnet staff views)          |
 | [storm-theme](storm-theme/)                                     | Shared Storm calendar, palettes, artwork, preferences, and social-card renderer                           |
 
 ## Discord streaming

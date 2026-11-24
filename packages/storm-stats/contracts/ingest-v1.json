@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "maxEventsPerBatch": 200,
+  "maxPlayerSnapshotsPerBatch": 100,
+  "platforms": ["java", "bedrock"],
+  "modes": ["survival", "creative", "arena", "rwf"],
+  "worlds": [
+    "world",
+    "world_nether",
+    "world_the_end",
+    "skylands",
+    "creative",
+    "arena",
+    "rwf",
+    "other"
+  ],
+  "combatKinds": ["pvp", "pve_kill", "pve_death", "env_death"],
+  "endReasons": ["disconnect", "kick", "shutdown", "interrupted"],
+  "bounceCategories": [
+    "banned",
+    "allowlist",
+    "maintenance",
+    "full",
+    "kicked",
+    "other"
+  ],
+  "eventTypes": [
+    "session_started",
+    "session_interval",
+    "session_ended",
+    "combat_event",
+    "connection_bounce"
+  ],
+  "batchFields": [
+    "schemaVersion",
+    "batchId",
+    "serverName",
+    "sentAt",
+    "events",
+    "playerSnapshots",
+    "serverSnapshot"
+  ],
+  "eventFields": {
+    "session_started": [
+      "type",
+      "eventId",
+      "occurredAt",
+      "sessionId",
+      "playerUuid",
+      "playerName",
+      "firstSeenAt",
+      "platform",
+      "clientVersion",
+      "clientBrand",
+      "joinAddress",
+      "countryCode",
+      "countryName"
+    ],
+    "session_interval": [
+      "type",
+      "eventId",
+      "occurredAt",
+      "intervalEnd",
+      "sessionId",
+      "playerUuid",
+      "playerName",
+      "world",
+      "mode",
+      "connectedMs",
+      "activeMs",
+      "pingMs"
+    ],
+    "session_ended": [
+      "type",
+      "eventId",
+      "occurredAt",
+      "sessionId",
+      "playerUuid",
+      "playerName",
+      "startedAt",
+      "connectedMs",
+      "activeMs",
+      "endReason",
+      "pingMinMs",
+      "pingAvgMs",
+      "pingMaxMs"
+    ],
+    "combat_event": [
+      "type",
+      "eventId",
+      "occurredAt",
+      "sessionId",
+      "combatKind",
+      "killerUuid",
+      "killerName",
+      "victimUuid",
+      "victimName",
+      "mobType",
+      "weapon",
+      "world"
+    ],
+    "connection_bounce": [
+      "type",
+      "eventId",
+      "occurredAt",
+      "playerUuid",
+      "playerName",
+      "category",
+      "reason",
+      "joinAddress"
+    ]
+  },
+  "playerSnapshotFields": [
+    "playerUuid",
+    "playerName",
+    "capturedAt",
+    "nickname",
+    "primaryGroup",
+    "coins",
+    "townName",
+    "townRole",
+    "townClaims",
+    "powerLevel",
+    "topSkill",
+    "topSkillLevel",
+    "skills",
+    "tracks",
+    "questsCompleted",
+    "arenaBestWaves",
+    "rwfMatches",
+    "rwfWins",
+    "rwfLosses",
+    "rwfKills",
+    "rwfDeaths"
+  ],
+  "serverSnapshotFields": [
+    "capturedAt",
+    "onlinePlayers",
+    "maxPlayers",
+    "townsCount",
+    "towns"
+  ],
+  "onlinePlayerFields": [
+    "uuid",
+    "name",
+    "mode",
+    "world",
+    "afk",
+    "pingMs",
+    "sessionStartedAt"
+  ],
+  "townSummaryFields": ["name", "members", "claims", "kind"]
+}

@@ -175,6 +175,7 @@
     "packages/stocks-sjer-red",
     "packages/storm-brain",
     "packages/storm-forum",
+    "packages/storm-stats",
     "packages/storm-theme",
     "packages/streambot",
     "packages/facet-protocol",

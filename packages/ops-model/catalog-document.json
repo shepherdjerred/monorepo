@@ -203,6 +203,12 @@
       "title": "Flags",
       "kind": "product",
       "package": "flags"
+    },
+    {
+      "id": "storm-stats",
+      "title": "Storm Stats",
+      "kind": "product",
+      "package": "storm-stats"
     }
   ],
   "services": [
@@ -2677,6 +2683,34 @@
             "argoApp": "flags"
           }
         ]
+      }
+    },
+    {
+      "id": "storm-stats",
+      "title": "Storm Stats",
+      "package": "storm-stats",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "storm-stats",
+      "components": [
+        {
+          "name": "image:storm-stats",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:storm-stats",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["storm-stats"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "storm-stats": "inactive"
+        },
+        "charts": ["storm-stats"]
       }
     }
   ],

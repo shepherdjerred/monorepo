@@ -36,8 +36,8 @@ fixtures_jar=$repo/packages/the-storm/plugin/dist/build/libs/TheStormFixtures.ja
 manifest=$(docker run --rm --entrypoint cat "$image" /opt/the-storm/plugins.json)
 mapfile -t plugins < <(jq -r '.plugins[].name' <<<"$manifest")
 plugins+=(TheStorm MCBridge)
-# The modules owned/plugins/TheStorm/config.yml enables: all 27 registered.
-enabled_modules=(advancements agent arena chat companions creative discord economy essentials mail mechanics messages mobs npcs qol quests reset rwf rwfbots safety seasonal shards shops skills skylands spells stargates tickets towns tracks world)
+# The modules owned/plugins/TheStorm/config.yml enables: all 33 registered.
+enabled_modules=(advancements agent arena chat companions creative discord economy essentials mail mechanics messages mobs npcs qol quests reset rwf rwfbots safety seasonal shards shops skills skylands skytravel spells stargates stats tickets towns tracks world)
 # Non-secret fixture: MCBridge disables itself without a token of >= 32 chars.
 bridge_token=storm-boot-check-bridge-fixture-token
 

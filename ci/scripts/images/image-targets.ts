@@ -41,6 +41,7 @@ export const IMAGE_TARGET_REGISTRY: Readonly<
     owner: "@shepherdjerred/woodpecker-config-extension",
   },
   flags: { owner: "@shepherdjerred/flags" },
+  "storm-stats": { owner: "@shepherdjerred/storm-stats" },
 } as const satisfies Readonly<Record<string, ImageTargetRegistration>>;
 
 export const IMAGE_TARGET_OWNERS: Readonly<Record<string, string>> =

@@ -103,6 +103,7 @@ group "app" {
     "storm-forum",
     "woodpecker-config-extension",
     "flags",
+    "storm-stats",
   ]
 }
 
@@ -286,6 +287,14 @@ target "flags" {
   tags       = imagetags("flags")
   cache-from = cachefrom("flags")
   cache-to   = cacheto("flags")
+}
+
+target "storm-stats" {
+  inherits   = ["_app"]
+  dockerfile = "packages/storm-stats/Dockerfile"
+  tags       = imagetags("storm-stats")
+  cache-from = cachefrom("storm-stats")
+  cache-to   = cacheto("storm-stats")
 }
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────
