@@ -33,7 +33,7 @@ export async function requestOpenSubtitlesApi(
 
   const location = response.headers.get("location");
   await response.body?.cancel();
-  const target = location === null ? null : URL.parse(location, url);
+  const target = location === null ? null : URL.parse(location, url.href);
   if (
     target?.origin !== url.origin ||
     target.pathname !== url.pathname ||
