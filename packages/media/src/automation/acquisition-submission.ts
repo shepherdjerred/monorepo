@@ -34,6 +34,10 @@ import {
   validManagedAttempt,
   projectManagedSubmission,
 } from "./acquisition-management/attempt.ts";
+import {
+  PLEX_EXCLUSION_PROOF_REQUIRED,
+  hasLibraryPlexExclusionDatabaseProof,
+} from "./plex-exclusion/proof.ts";
 const GenerationsSchema = z.record(z.string(), z.number().int().nonnegative());
 const ProfileSnapshotSchema = z.object({
   profileId: z.string(),
@@ -228,9 +232,18 @@ async function submissionPrerequisite(
   if (!runtime.active) return "runtime_observe";
   if (!recovering && !(await validAttempt(context, attempt.id)))
     return "intent_changed";
-  return recovering || (await context.gates.acquisition())
-    ? null
-    : "acquisition_disabled";
+  if (!recovering && !(await context.gates.acquisition()))
+    return "acquisition_disabled";
+  if (
+    !recovering &&
+    !["imported", "completed"].includes(attempt.state) &&
+    !(await hasLibraryPlexExclusionDatabaseProof(
+      context.db,
+      context.libraryManagement === undefined ? "movies" : "tv",
+    ))
+  )
+    return PLEX_EXCLUSION_PROOF_REQUIRED;
+  return null;
 }
 
 async function prepareAndSubmit(

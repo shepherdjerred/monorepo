@@ -69,17 +69,26 @@ function heartbeatIntervalMs(heartbeatTimeoutMs: number | undefined): number {
       );
 }
 
+export type HeartbeatDetailsUpdater = (
+  nextDetails: Record<string, unknown>,
+) => void;
+
 export async function heartbeatWhile<T>(
   details: Record<string, unknown>,
-  action: () => Promise<T>,
+  action: (updateDetails: HeartbeatDetailsUpdater) => Promise<T>,
 ): Promise<T> {
   const context = Context.current();
-  context.heartbeat(details);
+  let currentDetails = details;
+  const updateDetails: HeartbeatDetailsUpdater = (nextDetails) => {
+    currentDetails = nextDetails;
+    context.heartbeat(currentDetails);
+  };
+  context.heartbeat(currentDetails);
   const timer = setInterval(() => {
-    context.heartbeat(details);
+    context.heartbeat(currentDetails);
   }, heartbeatIntervalMs(context.info.heartbeatTimeoutMs));
   try {
-    return await action();
+    return await action(updateDetails);
   } finally {
     clearInterval(timer);
   }

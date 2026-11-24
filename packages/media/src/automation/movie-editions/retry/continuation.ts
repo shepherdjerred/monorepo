@@ -31,6 +31,10 @@ import { movieRetryTorrentV1 } from "#automation/movie-editions/retry/torrent.ts
 import { MediaError } from "#application/errors.ts";
 import { CandidateSourceEvidenceSchema } from "#shared/acquisition/identity.ts";
 import { refreshMovieAttemptRequesterAccessV4 } from "#automation/movie-editions/requester-access.ts";
+import {
+  PLEX_EXCLUSION_PROOF_REQUIRED,
+  hasLibraryPlexExclusionDatabaseProof,
+} from "#automation/plex-exclusion/proof.ts";
 
 /** Explicit prepared/imported continuation preserves its actual plan and original physical publication history. */
 export async function reconcileMovieContinuationV2(
@@ -102,6 +106,15 @@ export async function reconcileMovieContinuationV2(
       status: "waiting" as const,
       attemptId: null,
       reason: "movie_retry_previous_workflow_not_closed",
+    };
+  if (
+    observed.capture.continuation.phase === "prepared" &&
+    !(await hasLibraryPlexExclusionDatabaseProof(context.db, "movies"))
+  )
+    return {
+      status: "blocked" as const,
+      attemptId: null,
+      reason: PLEX_EXCLUSION_PROOF_REQUIRED,
     };
   const transfer =
     observed.capture.continuation.phase === "prepared"

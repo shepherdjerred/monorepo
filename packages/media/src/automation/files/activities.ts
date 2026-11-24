@@ -22,6 +22,7 @@ import { installSubtitle } from "./subtitles.ts";
 import { prepareSubtitleSpeechV1 } from "./subtitle-lifecycle/speech.ts";
 import { MediaToolError } from "#filesystem/media-tools.ts";
 import { FileOperationConflict } from "#filesystem/operations-types.ts";
+import { PLEX_EXCLUSION_PROOF_REQUIRED } from "#automation/plex-exclusion/proof.ts";
 import { rollbackPromotion } from "./rollback.ts";
 import { cleanupUpgrade } from "./upgrade-cleanup.ts";
 import { compensateRejectedCut } from "./editions/recovery.ts";
@@ -243,6 +244,11 @@ export function createMediaFileActivities(
 }
 
 function physicalError(error: unknown): unknown {
+  if (
+    error instanceof FileOperationConflict &&
+    error.message.startsWith("Plex control exclusion")
+  )
+    return new FileGuardError(PLEX_EXCLUSION_PROOF_REQUIRED);
   if (error instanceof NativeArchiveScopeProtection)
     return new FileGuardError(error.code);
   if (error instanceof HistoricalMovieRetentionProtection)

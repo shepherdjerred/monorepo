@@ -254,6 +254,32 @@ export function isCoderabbitRateLimitedStatus(
   );
 }
 
+/**
+ * True when a completed CodeRabbit GitHub check run reports a rate-limit or
+ * file-count plan block instead of a completed review.
+ */
+export function isCoderabbitBlockedCheckRun(input: {
+  readonly name: string | null | undefined;
+  readonly status: string | null | undefined;
+  readonly title: string | null | undefined;
+  readonly summary: string | null | undefined;
+}): boolean {
+  if (
+    input.name?.toLowerCase() !== "coderabbit" ||
+    input.status?.toLowerCase() !== "completed"
+  ) {
+    return false;
+  }
+  const combined = `${input.title ?? ""}\n${input.summary ?? ""}`.toLowerCase();
+  return (
+    combined.includes("rate limit") ||
+    combined.includes("rate limited") ||
+    combined.includes("too many files") ||
+    (combined.includes("review skipped") &&
+      combined.includes("exceed the limit"))
+  );
+}
+
 export const coderabbitProvider: ReviewProvider = {
   id: "coderabbit",
   displayName: "CodeRabbit",
@@ -286,6 +312,31 @@ export const coderabbitProvider: ReviewProvider = {
       reason: "usage-limited",
       remediation:
         "Wait for CodeRabbit review capacity to refill or add usage credits, then comment `@coderabbitai review`",
+    },
+    {
+      matches: [
+        "<summary>Action not completed</summary>",
+        "Review rate limited",
+      ],
+      reason: "usage-limited",
+      remediation:
+        "Wait for CodeRabbit review capacity to refill, then comment `@coderabbitai review`",
+    },
+    {
+      matches: [
+        "<summary>Action not completed</summary>",
+        "Review skipped:",
+        "exceed the limit",
+      ],
+      reason: "usage-limited",
+      remediation:
+        "Reduce changed files under CodeRabbit's plan limit or exclude generated paths in `.coderabbit.yaml`, then comment `@coderabbitai review`",
+    },
+    {
+      matches: ["Review skipped: Too many files"],
+      reason: "usage-limited",
+      remediation:
+        "Reduce changed files under CodeRabbit's plan limit or exclude generated paths in `.coderabbit.yaml`, then comment `@coderabbitai review`",
     },
     {
       matches: [

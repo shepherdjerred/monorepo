@@ -1,6 +1,8 @@
 import type { FileContext } from "#automation/files/types.ts";
 import { FileGuardError } from "#automation/files/types.ts";
 import { MediaError } from "#application/errors.ts";
+import { FileOperationConflict } from "#filesystem/operations-types.ts";
+import { PLEX_EXCLUSION_PROOF_REQUIRED } from "#automation/plex-exclusion/proof.ts";
 import type { PublicationExecution } from "#automation/publication-proof/invocation.ts";
 import type { PublicationAuthorityReadBudget } from "#infrastructure/publication-proof/read-budget.ts";
 import type { MediaAttemptOperation } from "#shared/automation.ts";
@@ -15,6 +17,11 @@ import { sealSeriesPackStagingV1 } from "./seal.ts";
 function stagingFailure(
   error: unknown,
 ): Exclude<SeriesPackStagingSealResultV1, { status: "staged" }> {
+  if (
+    error instanceof FileOperationConflict &&
+    error.message.startsWith("Plex control exclusion")
+  )
+    return { status: "blocked", reason: PLEX_EXCLUSION_PROOF_REQUIRED };
   if (error instanceof FileGuardError)
     return {
       status: error.reason.includes("obsolete") ? "obsolete" : "blocked",

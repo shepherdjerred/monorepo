@@ -2,7 +2,10 @@ import { readRuntimeProof } from "#infrastructure/handoff/runtime-proof.ts";
 import { z } from "zod";
 import { FileGuardError, type Transaction } from "#automation/files/types.ts";
 import { storedFilePath } from "#automation/files/paths/locations.ts";
-import { requirePlexExclusionDatabaseProof } from "#automation/plex-exclusion/proof.ts";
+import {
+  PLEX_EXCLUSION_PROOF_REQUIRED,
+  requirePlexExclusionDatabaseProof,
+} from "#automation/plex-exclusion/proof.ts";
 import {
   assertPublicationActive,
   publicationDeadline,
@@ -56,7 +59,11 @@ export async function publicationAuthorityDeadline(
     const evidence = z
       .object({ topologyCheckedAt: z.iso.datetime() })
       .parse(proof.evidence);
-    deadlines.push(Date.parse(evidence.topologyCheckedAt) + 900_000);
+    const exclusionExpiresAtMs =
+      Date.parse(evidence.topologyCheckedAt) + 900_000;
+    if (exclusionExpiresAtMs <= Date.now())
+      throw new FileGuardError(PLEX_EXCLUSION_PROOF_REQUIRED);
+    deadlines.push(exclusionExpiresAtMs);
   }
   const deadline = publicationDeadline(
     context.execution,

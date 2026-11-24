@@ -9,14 +9,21 @@ import {
   preloadChampionImages,
   preloadChampionSplashImages,
 } from "#src/dataDragon/image-cache.ts";
-import { svgToPng } from "#src/html/index.tsx";
+import { svgToPngInThread } from "#src/html/index.tsx";
+import {
+  runPngRenderInWorker,
+  runSvgRenderInWorker,
+} from "#src/html/render-worker-client.ts";
+import { isRenderWorkerThread } from "#src/html/render-worker-protocol.ts";
 import {
   ClassicMatchReport,
   CLASSIC_MATCH_WIDTH,
   classicMatchHeight,
 } from "./report.tsx";
 
-export async function classicMatchToSvg(match: ClassicMatch): Promise<string> {
+export async function classicMatchToSvgInThread(
+  match: ClassicMatch,
+): Promise<string> {
   const championNames = [
     ...match.teams.blue.map((champion) => champion.championName),
     ...match.teams.red.map((champion) => champion.championName),
@@ -40,8 +47,24 @@ export async function classicMatchToSvg(match: ClassicMatch): Promise<string> {
   });
 }
 
+export async function classicMatchToImageInThread(
+  match: ClassicMatch,
+): Promise<Buffer> {
+  return await svgToPngInThread(await classicMatchToSvgInThread(match), {
+    crop: false,
+  });
+}
+
+export async function classicMatchToSvg(match: ClassicMatch): Promise<string> {
+  return isRenderWorkerThread()
+    ? await classicMatchToSvgInThread(match)
+    : await runSvgRenderInWorker({ kind: "classicMatchToSvg", match });
+}
+
 export async function classicMatchToImage(
   match: ClassicMatch,
 ): Promise<Buffer> {
-  return svgToPng(await classicMatchToSvg(match), { crop: false });
+  return isRenderWorkerThread()
+    ? await classicMatchToImageInThread(match)
+    : await runPngRenderInWorker({ kind: "classicMatchToImage", match });
 }

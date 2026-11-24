@@ -171,6 +171,24 @@ test.each([
     },
   },
   {
+    name: "revoked Plex exclusion scanner proof guard",
+    error: () =>
+      Object.assign(
+        new Error(
+          "CAPABILITY_CANARY Plex exclusion requires a completed scanner proof",
+        ),
+        {
+          name: "FileGuardError",
+          reason: "plex_exclusion_proof_required",
+        },
+      ),
+    diagnostic: {
+      schemaVersion: 1,
+      code: "file_guard_rejected",
+      reason: "plex_exclusion_proof_required",
+    },
+  },
+  {
     name: "original local invocation expiry",
     error: () =>
       ApplicationFailure.create({

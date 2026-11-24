@@ -1,8 +1,16 @@
-import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import { dockerCreateArgs } from "#providers/docker/provider.ts";
+import {
+  defaultDockerTimeoutMs,
+  DOCKER_CLI_TIMEOUT_MS,
+  docker,
+} from "#providers/docker/docker-cli.ts";
+import {
+  dockerCreateArgs,
+  DockerSandboxProvider,
+} from "#providers/docker/provider.ts";
 import { reapManagedContainers } from "#providers/docker/reap.ts";
 import {
   currentDockerEndpoints,
@@ -10,7 +18,7 @@ import {
   parseSandboxRows,
   type SandboxRow,
 } from "#providers/docker/rows.ts";
-import { newSandboxId } from "#sandbox/boot.ts";
+import { BOOT_TIMEOUT_MS, newSandboxId } from "#sandbox/boot.ts";
 import { parsePortBinding } from "#providers/docker/paper-container.ts";
 import { resolveProfile } from "#sandbox/profiles.ts";
 import { SandboxStore } from "#sandbox/record.ts";
@@ -281,5 +289,74 @@ describe("paper profile", () => {
       "WorldEdit",
       "Citizens",
     ]);
+  });
+});
+
+describe("docker CLI timeouts", () => {
+  it("uses 15_000ms for fast probes and BOOT_TIMEOUT_MS for create/run/cp", () => {
+    for (const fast of ["info", "ps", "port", "logs", "rm"]) {
+      expect(defaultDockerTimeoutMs([fast])).toBe(DOCKER_CLI_TIMEOUT_MS);
+      expect(defaultDockerTimeoutMs([fast])).toBe(15_000);
+    }
+    for (const slow of ["create", "run", "cp"]) {
+      expect(defaultDockerTimeoutMs([slow])).toBe(BOOT_TIMEOUT_MS);
+    }
+  });
+
+  it("kills wedged docker children cleanly when timeoutMs expires", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "mc-docker-timeout-"));
+    const pidFile = path.join(root, "docker.pid");
+    const fakeDocker = path.join(root, "docker");
+    try {
+      await Bun.write(
+        fakeDocker,
+        `#!${process.execPath}
+import { writeFileSync } from "node:fs";
+writeFileSync(${JSON.stringify(pidFile)}, String(process.pid));
+setInterval(() => {}, 10_000);
+`,
+      );
+      await chmod(fakeDocker, 0o755);
+      vi.stubEnv("PATH", `${root}:${Bun.env["PATH"] ?? ""}`);
+
+      await expect(
+        docker(["info", "--format", "{{.ServerVersion}}"], { timeoutMs: 300 }),
+      ).rejects.toThrow("docker info timed out after 300ms");
+
+      const pidText = await Bun.file(pidFile).text();
+      const childPid = Number(pidText.trim());
+      expect(Number.isInteger(childPid)).toBe(true);
+      expect(() => process.kill(childPid, 0)).toThrow();
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("surfaces non-zero docker preflight failures with context", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "mc-docker-preflight-"));
+    const fakeDocker = path.join(root, "docker");
+    try {
+      await Bun.write(
+        fakeDocker,
+        String.raw`#!${process.execPath}
+process.stderr.write("Cannot connect to the Docker daemon\n");
+process.exit(1);
+`,
+      );
+      await chmod(fakeDocker, 0o755);
+      vi.stubEnv("PATH", `${root}:${Bun.env["PATH"] ?? ""}`);
+
+      const provider = new DockerSandboxProvider({
+        repoRoot: root,
+        store: new SandboxStore(path.join(root, "sandboxes")),
+      });
+      await expect(provider.preflight()).rejects.toThrow(
+        "Docker is not available for sandboxes: docker info failed (1): Cannot connect to the Docker daemon",
+      );
+    } finally {
+      vi.unstubAllEnvs();
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });

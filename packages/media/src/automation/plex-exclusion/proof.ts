@@ -2,6 +2,8 @@ import { z } from "zod";
 import { constants, open } from "node:fs/promises";
 import type { Database } from "#infrastructure/database.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
+import { FileGuardError } from "#automation/files/types.ts";
+import { MANAGED_STORAGE_APPROVAL } from "#infrastructure/handoff/managed-storage-approval.ts";
 import { currentPlexExclusionProof } from "./lookup.ts";
 import type { PlexMaintenanceClient } from "#integrations/plex-maintenance.ts";
 import {
@@ -16,6 +18,18 @@ import {
   evaluateScan,
   textDigest,
 } from "./evidence.ts";
+
+export const PLEX_EXCLUSION_PROOF_REQUIRED =
+  "plex_exclusion_proof_required" as const;
+
+export class PlexExclusionProofError extends FileGuardError {
+  constructor(message: string) {
+    super(PLEX_EXCLUSION_PROOF_REQUIRED);
+    this.message = message;
+  }
+}
+
+const ExcludedLibraryRow = z.strictObject({ excluded: z.boolean() });
 
 const ProofEvidenceSchema = PlexExclusionEvidenceSchema.extend({
   filesCleanedAt: z.iso.datetime(),
@@ -95,7 +109,9 @@ export async function requirePlexExclusionProof(
     rootHash !== proof.rootMarkerSha256 ||
     controlHash !== proof.controlMarkerSha256
   )
-    throw new Error("Plex exclusion markers changed after proof");
+    throw new PlexExclusionProofError(
+      "Plex exclusion markers changed after proof",
+    );
 }
 
 /** API precondition only; files worker must also revalidate the actual marker bytes. */
@@ -106,7 +122,9 @@ export async function requirePlexExclusionDatabaseProof(
   const runtime = await currentPlexExclusionProof(db, roots);
   const { proof } = runtime;
   if (proof?.run.state !== "verified")
-    throw new Error("Plex exclusion requires a completed scanner proof");
+    throw new PlexExclusionProofError(
+      "Plex exclusion requires a completed scanner proof",
+    );
   const plan = PlexExclusionPlanSchema.parse(proof.run.plan);
   const evidence = ProofEvidenceSchema.parse(proof.evidence);
   const age = Date.now() - Date.parse(evidence.topologyCheckedAt);
@@ -122,7 +140,9 @@ export async function requirePlexExclusionDatabaseProof(
     proof.rootMarkerSha256 !== evidence.rootMarkerSha256 ||
     proof.controlMarkerSha256 !== evidence.controlMarkerSha256
   )
-    throw new Error("Plex exclusion proof is stale or mismatched");
+    throw new PlexExclusionProofError(
+      "Plex exclusion proof is stale or mismatched",
+    );
   if (
     evaluateScan({
       plan,
@@ -140,17 +160,80 @@ export async function requirePlexExclusionDatabaseProof(
       cleanup: true,
     }).state !== "verified"
   )
-    throw new Error("Plex scanner evidence is incomplete");
+    throw new PlexExclusionProofError("Plex scanner evidence is incomplete");
   return proof;
+}
+
+/** Readiness check for canonical Plex-excluded libraries; disjoint synthetic test roots are unaffected. */
+export async function isPlexExcludedLibrary(
+  db: Pick<Prisma.TransactionClient, "$queryRaw">,
+  kind: "movies" | "tv",
+): Promise<boolean> {
+  const library = `/data/${kind}`;
+  const rows = await db.$queryRaw`
+    SELECT (
+      EXISTS (
+        SELECT 1 FROM "PlexExclusionProof" p
+        WHERE p."libraryRoot" = ${library}
+      )
+      OR EXISTS (
+        SELECT 1 FROM "PlexExclusionRun" r
+        WHERE r.plan->>'libraryRoot' = ${library}
+           OR r.plan->>'kind' = ${kind}
+      )
+      OR EXISTS (
+        SELECT 1 FROM "MediaStorageAuthority" s
+        WHERE s."rootPath" = ${library}
+          AND s."workerPodUid" <> 'synthetic-files-worker'
+      )
+      OR EXISTS (
+        SELECT 1 FROM "ApplicationEvent" e
+        WHERE e.kind = ${MANAGED_STORAGE_APPROVAL}
+      )
+    ) AS excluded`;
+  const [row] = z.tuple([ExcludedLibraryRow]).parse(rows);
+  return row.excluded;
+}
+
+export async function requireLibraryPlexExclusionDatabaseProof(
+  db: Pick<Prisma.TransactionClient, "$queryRaw">,
+  kind: "movies" | "tv",
+): Promise<void> {
+  if (!(await isPlexExcludedLibrary(db, kind))) return;
+  const library = `/data/${kind}`;
+  await requirePlexExclusionDatabaseProof(db, {
+    library,
+    control: `${library}/.media-control`,
+  });
+}
+
+export async function hasLibraryPlexExclusionDatabaseProof(
+  db: Pick<Prisma.TransactionClient, "$queryRaw">,
+  kind: "movies" | "tv",
+): Promise<boolean> {
+  try {
+    await requireLibraryPlexExclusionDatabaseProof(db, kind);
+    return true;
+  } catch (error) {
+    if (error instanceof PlexExclusionProofError) return false;
+    throw error;
+  }
 }
 
 async function markerHash(root: string): Promise<string> {
   const path = await safePath(root, ".plexignore", false);
-  const handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+  let handle;
+  try {
+    handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+  } catch (error) {
+    if (z.object({ code: z.literal("ENOENT") }).safeParse(error).success)
+      throw new PlexExclusionProofError("Plex exclusion marker is missing");
+    throw error;
+  }
   try {
     const info = await handle.stat();
     if (!info.isFile() || info.size > 64 * 1024)
-      throw new Error("Invalid Plex exclusion marker");
+      throw new PlexExclusionProofError("Invalid Plex exclusion marker");
     return textDigest(await handle.readFile());
   } finally {
     await handle.close();

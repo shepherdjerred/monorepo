@@ -2,10 +2,12 @@
 
 ### Phase 1: Understand the application
 
-Before looking for bugs, understand what you're auditing. This requires depth, not just a directory listing. Launch **multiple `research` agents in parallel** to map different aspects of the codebase:
+Before looking for bugs, understand what you're auditing. This requires depth, not just a directory listing. Launch **multiple `research` agents in parallel** to map different aspects of the codebase (or run sequentially in a single session on harnesses sensitive to parallel fan-out; never retry a `cyber_policy` or safety refusal — `retries = 0`):
 
 **Agent 1a: Overview, tech stack, and comparable baseline**
 ```
+Authorized Defensive Review Scope: This is an owner-authorized defensive static and local code review of the checked-out source at <path> to identify and remediate software defects. Restrict inspection to local repository files; never target live or external infrastructure.
+
 Explore the codebase at <path>. Answer:
 1. What is this application? What kind of software? (web app, API, CLI tool, library, daemon, desktop app, mobile backend, etc.)
 2. Who uses it and how? (end users, developers, operators, other services)
@@ -17,6 +19,8 @@ Return specific file paths for key entry points.
 
 **Agent 1b: Trust boundaries and access control**
 ```
+Authorized Defensive Review Scope: This is an owner-authorized defensive static and local code review of the checked-out source at <path> to identify and remediate software defects. Restrict inspection to local repository files; never target live or external infrastructure.
+
 Explore the codebase at <path>. Find and read ALL code related to:
 1. Trust boundaries — where does untrusted input enter the system? (HTTP requests, CLI args, file reads, IPC, message queues, environment variables, config files, etc.)
 2. Authentication — how do callers prove identity? (sessions, tokens, API keys, mTLS, Unix sockets, etc.) If there's no authentication, note that.
@@ -28,6 +32,8 @@ Return the trust model: who are the actors, what can each do by design, and whic
 
 **Agent 1c: Input surface inventory**
 ```
+Authorized Defensive Review Scope: This is an owner-authorized defensive static and local code review of the checked-out source at <path> to identify and remediate software defects. Restrict inspection to local repository files; never target live or external infrastructure.
+
 Explore the codebase at <path>. Produce a complete inventory of where external input enters the system:
 1. Network-facing surfaces (HTTP endpoints, gRPC services, WebSocket handlers, TCP/UDP listeners, etc.) — list each with method/verb and purpose
 2. File-based input (file uploads, config file parsing, log ingestion, import/export, etc.)
@@ -43,4 +49,4 @@ Collect all three agents' outputs and synthesize them into `<output-dir>/archite
 - Include the key file paths from all agents — these become the starting points for Phase 2
 - This document is injected verbatim into every Phase 2 agent prompt
 
-If Phase 1 agents reveal the codebase is larger or more complex than expected (e.g., plugin system, multi-tenant architecture, complex auth chains, multiple deployment targets), launch additional `research` agents to map those areas before proceeding. The quality of Phase 2 depends entirely on the quality of Phase 1.
+If Phase 1 agents reveal the codebase is larger or more complex than expected (e.g., plugin system, multi-tenant architecture, complex auth chains, multiple deployment targets), launch additional `research` agents (each opening with the same `Authorized Defensive Review Scope` preamble) to map those areas before proceeding. The quality of Phase 2 depends entirely on the quality of Phase 1.

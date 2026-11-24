@@ -7,9 +7,16 @@ the first-party `@shepherdjerred/flags` service. Load the repository
 - Hosted workloads bootstrap with `FEATURE_FLAGS_MODE=flags`, `FLAGS_URL`, and
   `FLAGS_DEPLOYMENT` (`<catalog>/<stage>`). Missing or malformed bootstrap
   values fail at startup.
-- A missing flag (`FLAG_NOT_FOUND`) on an active provider is an error and fails
-  loudly (`FlagNotFoundError`). Transport outages or disabled mode
-  (`PROVIDER_NOT_READY`) degrade to lower configuration layers.
+- Direct flag evaluations treat a missing flag (`FLAG_NOT_FOUND`) on an active
+  provider as an error (`FlagNotFoundError`), and `createFlagConfigSource`
+  keeps undeclared or wrong-kind keys and missing `StaticProvider` overrides
+  fatal (`ConfigSourceFatalError`). When an active `FlagsProvider` reports
+  `FlagNotFoundError` for a valid inventory-declared key (for example when a
+  consumer pod rolls out ahead of `flags` seeding), `createFlagConfigSource`
+  records the evaluation error, invokes `onUnavailable`, and returns `undefined`
+  so `@shepherdjerred/config` falls through to the aligned code default while
+  drift alerts surface persistent skew. Transport outages or disabled mode
+  (`PROVIDER_NOT_READY`) also degrade to lower configuration layers.
 - A successful `false` is an answer and must never fall through.
 - Malformed successful values fail loudly.
 - Keep the dependency direction from this package to `config`, never the

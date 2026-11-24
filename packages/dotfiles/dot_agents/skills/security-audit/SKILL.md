@@ -8,7 +8,7 @@ license: MIT
 
 This vendored workflow is complementary to the repo-owned `review` skill. Use
 `review` for implementation completeness and repository policy; use this skill
-for the six-phase adversarial security audit and its structured findings.
+for the six-phase security audit and its structured findings.
 
 ## Local execution boundary
 
@@ -33,6 +33,17 @@ This skill is agent-neutral. In the methodology:
 - **`subagent_type`** means the equivalent delegated-agent role supported by the current platform.
 
 Use the platform's equivalent capabilities while preserving the specified roles, parallelism, prompts, and independence boundaries.
+
+## Delegation safety and refusal policy
+
+1. **Mandatory Authorization & Scope preamble on every subagent prompt**: Every delegated prompt in Phases 1, 2, 3, and 6 — including any nested `research` subagent spawned by a Phase 2 `general` agent — MUST open with an explicit **Authorized Defensive Review Scope** preamble naming `<path>`:
+   - State that this is an owner-authorized defensive static and local code review of the checked-out source tree at `<path>` to identify and remediate software defects.
+   - State that any dynamic verification (when locally buildable) is strictly restricted to isolated, local, non-destructive test harnesses and never targets live, shared, or external infrastructure.
+2. **Zero retries on safety or policy refusals (`retries = 0`)**: A `cyber_policy` or platform safety refusal is a terminal platform signal, never a transient tool, network, or task failure.
+   - Quote the exact refusal message immediately.
+   - Do **not** retry a refused subagent call (`retries = 0`), re-dispatch the parallel fan-out, or rephrase prompts to bypass or work around the safety filter.
+   - Either complete read-only static code inspection of the affected scope directly in the parent session within platform policy, or stop that scope and report the exact refusal and unreviewed scope to the user.
+3. **Reduced-fan-out mode**: On harnesses sensitive to wide parallel fan-out, consolidate Phase 1 and Phase 2 into **3–4 subsystem-scoped defensive review agents** (or perform a single-session sequential static review) instead of launching 8–12+ narrow category subagents concurrently.
 
 ## Setup
 

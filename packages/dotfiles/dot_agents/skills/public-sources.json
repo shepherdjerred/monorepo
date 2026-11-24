@@ -146,13 +146,13 @@
       "repository": "https://github.com/cloudflare/security-audit-skill",
       "commit": "8bac42001ddd90a4dcd8d5a5045199283a8eba75",
       "license": "MIT",
-      "reviewDate": "2026-08-16",
+      "reviewDate": "2026-11-24",
       "imports": [
         {
           "upstreamSkillPath": "skills/security-audit",
           "localSkillPath": "security-audit",
-          "integration": "vendored",
-          "notes": "Preserved the six phases, bundled references, report schema, and validator; added only local output/tool boundaries."
+          "integration": "adapted",
+          "notes": "Preserved the six phases, domain references, report schema, and validator; adapted SKILL.md, RECONNAISSANCE.md, HUNTING.md, ATTACK-CLASSES.md, and VALIDATION-AND-REPORTING.md with local output boundaries, explicit authorized defensive review scope preambles on delegated prompts, defensive vulnerability-analysis framing, reduced-fan-out guidance, and a zero-retry cyber_policy refusal rule."
         }
       ]
     },

@@ -16,7 +16,10 @@ import {
 } from "./github-http.ts";
 import { reactionBoundToHead } from "./head-pushed-at.ts";
 import { isProviderAuthor } from "./identity.ts";
-import { isCoderabbitRateLimitedStatus } from "./providers/coderabbit.ts";
+import {
+  isCoderabbitBlockedCheckRun,
+  isCoderabbitRateLimitedStatus,
+} from "./providers/coderabbit.ts";
 import type { BlockedSignalStrategy, ReviewProvider } from "./types.ts";
 
 /** True when `body` carries every marker of the provider's blocked signal. */
@@ -39,14 +42,19 @@ function isIssueCommentCompletionBody(
   provider: ReviewProvider,
   body: string | null,
 ): boolean {
+  if (body === null) return false;
   const { completion } = provider;
+  const isCleanReviewAtHead =
+    completion.kind === "review-at-head" &&
+    typeof completion.cleanSignal === "object" &&
+    completion.cleanSignal.parseReviewedHead(body) !== null;
   return (
-    body !== null &&
-    completion.kind === "issue-comment" &&
-    (body.includes(completion.marker) ||
-      body.includes(completion.acknowledgement.marker) ||
-      (completion.inProgress !== null &&
-        body.includes(completion.inProgress.marker)))
+    isCleanReviewAtHead ||
+    (completion.kind === "issue-comment" &&
+      (body.includes(completion.marker) ||
+        body.includes(completion.acknowledgement.marker) ||
+        (completion.inProgress !== null &&
+          body.includes(completion.inProgress.marker))))
   );
 }
 
@@ -181,6 +189,48 @@ async function checkCommitStatusRateLimit(input: {
   return null;
 }
 
+function payloadHasBlockedCheckRun(payload: unknown): boolean {
+  const rec = asRecord(payload);
+  if (rec === null || !Array.isArray(rec["check_runs"])) return false;
+  for (const rawRun of rec["check_runs"]) {
+    const run = asRecord(rawRun);
+    if (run === null) continue;
+    const output = recordField(run, "output");
+    if (
+      isCoderabbitBlockedCheckRun({
+        name: stringField(run, "name"),
+        status: stringField(run, "status"),
+        title: output === null ? null : stringField(output, "title"),
+        summary: output === null ? null : stringField(output, "summary"),
+      })
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+async function checkCoderabbitCheckRunsBlocked(input: {
+  repo: string;
+  token: string;
+  headSha: string;
+}): Promise<string | null> {
+  let url: string | null =
+    `${GITHUB_API_URL}/repos/${input.repo}/commits/${input.headSha}/check-runs?per_page=100`;
+  while (url !== null) {
+    let payload: unknown;
+    let linkNext: string | null;
+    try {
+      ({ payload, linkNext } = await getJsonWithLink(url, input.token));
+    } catch {
+      return null;
+    }
+    if (payloadHasBlockedCheckRun(payload)) return "usage-limited";
+    url = linkNext;
+  }
+  return null;
+}
+
 /**
  * The provider's blocked reason for this head, or null when no block applies.
  *
@@ -204,14 +254,21 @@ export async function fetchBlockedReason(input: {
   const commentReason = await checkIssueCommentBlocked(input, blocked);
   if (commentReason !== null) return commentReason;
 
-  const headSha = await fetchHeadSha(input);
-  if (headSha !== null) {
-    return checkCommitStatusRateLimit({
-      repo: input.repo,
-      token: input.token,
-      headSha,
-    });
-  }
+  if (input.provider.id !== "coderabbit") return null;
 
-  return null;
+  const headSha = await fetchHeadSha(input);
+  if (headSha === null) return null;
+
+  const statusReason = await checkCommitStatusRateLimit({
+    repo: input.repo,
+    token: input.token,
+    headSha,
+  });
+  if (statusReason !== null) return statusReason;
+
+  return checkCoderabbitCheckRunsBlocked({
+    repo: input.repo,
+    token: input.token,
+    headSha,
+  });
 }

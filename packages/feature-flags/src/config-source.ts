@@ -1,3 +1,4 @@
+import { OpenFeature } from "@openfeature/server-sdk";
 import {
   isEnabled,
   numberValue,
@@ -13,7 +14,10 @@ import {
   ManagedBooleanFlagKeySchema,
   ManagedVariantFlagKeySchema,
 } from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
+import { FlagsProvider } from "@shepherdjerred/feature-flags/providers/flags.ts";
 import { z } from "zod";
+
+const CLIENT_NAME = "shepherdjerred-feature-flags";
 
 /**
  * Structural mirror of `@shepherdjerred/config`'s source contract.
@@ -136,17 +140,19 @@ export function createFlagConfigSource(
           : { attributes: options.attributes }),
       };
 
+      const parsed = ManagedSourceKeySchema.safeParse({
+        kind,
+        flag: names.flag,
+      });
+      if (!parsed.success) {
+        const fatal = new Error(
+          `flag "${names.flag}" evaluation failed: flag "${names.flag}" is not defined for kind "${kind}" in managed-flag-inventory.json`,
+        );
+        fatal.name = FATAL_SOURCE_ERROR_NAME;
+        throw fatal;
+      }
+
       try {
-        const parsed = ManagedSourceKeySchema.safeParse({
-          kind,
-          flag: names.flag,
-        });
-        if (!parsed.success) {
-          throw new FlagNotFoundError(
-            names.flag,
-            `flag "${names.flag}" is not defined for kind "${kind}" in managed-flag-inventory.json`,
-          );
-        }
         if (options.requireFreshSnapshot === true) {
           freshSnapshot ??= freshSnapshotOrContractError();
           if (!(await freshSnapshot)) {
@@ -179,6 +185,10 @@ export function createFlagConfigSource(
         }
       } catch (error) {
         if (error instanceof FlagNotFoundError) {
+          if (OpenFeature.getProvider(CLIENT_NAME) instanceof FlagsProvider) {
+            options.onUnavailable?.(names.flag);
+            return undefined;
+          }
           const fatal = new Error(
             `flag "${names.flag}" evaluation failed: ${error.message}`,
           );

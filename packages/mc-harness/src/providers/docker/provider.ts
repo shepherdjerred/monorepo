@@ -34,7 +34,7 @@ import {
   type SandboxRecord,
   type SandboxStore,
 } from "#sandbox/record.ts";
-import { docker } from "./docker-cli.ts";
+import { DOCKER_CLI_TIMEOUT_MS, docker } from "./docker-cli.ts";
 import {
   containerLogs,
   envArgs,
@@ -174,7 +174,9 @@ export class DockerSandboxProvider implements SandboxProvider {
 
   async preflight(): Promise<void> {
     try {
-      await docker(["info", "--format", "{{.ServerVersion}}"]);
+      await docker(["info", "--format", "{{.ServerVersion}}"], {
+        timeoutMs: DOCKER_CLI_TIMEOUT_MS,
+      });
     } catch (error) {
       throw new Error(
         `Docker is not available for sandboxes: ${error instanceof Error ? error.message : String(error)}`,
@@ -233,6 +235,8 @@ export class DockerSandboxProvider implements SandboxProvider {
     const createdAt = new Date(started).toISOString();
     const expiresAtMs = started + request.ttlSeconds * 1000;
     const expiresAt = new Date(expiresAtMs).toISOString();
+    const slow = { timeoutMs: BOOT_TIMEOUT_MS };
+    const fast = { timeoutMs: DOCKER_CLI_TIMEOUT_MS };
     const { stdout } = await docker(
       dockerCreateArgs({
         id,
@@ -245,12 +249,16 @@ export class DockerSandboxProvider implements SandboxProvider {
         owner: this.owner,
         keep: request.keep,
       }),
+      slow,
     );
     const containerId = stdout.trim();
     try {
       await this.copySavedWorld(request, dir, containerId, progress);
       if (mapSource !== undefined)
-        await docker(["cp", path.join(dir, "world"), `${containerId}:/data/`]);
+        await docker(
+          ["cp", path.join(dir, "world"), `${containerId}:/data/`],
+          slow,
+        );
       if (isPublishedStorm(request.profile)) {
         // Match the server chart's fsGroup on a fresh volume, as boot-check.sh
         // does. The server itself stays unprivileged; only these short-lived
@@ -259,27 +267,29 @@ export class DockerSandboxProvider implements SandboxProvider {
           ["chown", "1000:2000"],
           ["chmod", "2775"],
         ] as const) {
-          await docker([
-            "run",
-            "--rm",
-            "--user",
-            "0:0",
-            "--volumes-from",
-            containerId,
-            "--entrypoint",
-            command,
-            profile.image,
-            value,
-            "/data",
-          ]);
+          await docker(
+            [
+              "run",
+              "--rm",
+              "--user",
+              "0:0",
+              "--volumes-from",
+              containerId,
+              "--entrypoint",
+              command,
+              profile.image,
+              value,
+              "/data",
+            ],
+            slow,
+          );
         }
       }
       for (const seed of seedFiles) {
-        await docker([
-          "cp",
-          seed.source,
-          `${containerId}:/data/${seed.target}`,
-        ]);
+        await docker(
+          ["cp", seed.source, `${containerId}:/data/${seed.target}`],
+          slow,
+        );
       }
       if (mapSource !== undefined) {
         const config = path.join(dir, "config");
@@ -288,19 +298,22 @@ export class DockerSandboxProvider implements SandboxProvider {
           path.join(config, "paper-global.yml"),
           "_version: 31\nproxies:\n  proxy-protocol: true\n",
         );
-        await docker(["cp", config, `${containerId}:/data/`]);
-        await docker([
-          "run",
-          "--rm",
-          "--volumes-from",
-          containerId,
-          "--entrypoint",
-          "chmod",
-          profile.image,
-          "-R",
-          "a+rwX",
-          "/data/config",
-        ]);
+        await docker(["cp", config, `${containerId}:/data/`], slow);
+        await docker(
+          [
+            "run",
+            "--rm",
+            "--volumes-from",
+            containerId,
+            "--entrypoint",
+            "chmod",
+            profile.image,
+            "-R",
+            "a+rwX",
+            "/data/config",
+          ],
+          slow,
+        );
       }
       progress("booting Paper");
       const deadline = started + BOOT_TIMEOUT_MS;
@@ -350,11 +363,10 @@ export class DockerSandboxProvider implements SandboxProvider {
       await this.options.store.write(record);
       return record;
     } catch (error) {
-      this.proxies.get(id)?.close();
-      this.proxies.delete(id);
+      this.closeProxy(id);
       const logs = await containerLogs(containerId).catch(() => "");
       await Bun.write(path.join(dir, "failed-boot.log"), logs);
-      await docker(["rm", "-f", "-v", containerId]);
+      await docker(["rm", "-f", "-v", containerId], fast);
       throw error;
     }
   }
@@ -369,12 +381,14 @@ export class DockerSandboxProvider implements SandboxProvider {
     progress("copying saved world into the stopped container");
     const world = path.join(dir, "seed-world");
     await stageWorldDirectory(request.worldDirectory, world);
-    await docker(["cp", world, `${containerId}:/data/world`]);
+    await docker(["cp", world, `${containerId}:/data/world`], {
+      timeoutMs: BOOT_TIMEOUT_MS,
+    });
   }
 
   async list(): Promise<SandboxRecord[]> {
     const records = await this.options.store.listFor("docker");
-    const rows = await this.rows();
+    const rows = await this.queryRows(this.owner);
     const running = new Map(
       rows
         .filter((row) => row.running)
@@ -429,15 +443,18 @@ export class DockerSandboxProvider implements SandboxProvider {
     return this.lifecycle.run(id, () => this.destroyNow(id));
   }
 
-  private async destroyNow(id: string): Promise<void> {
+  private closeProxy(id: string): void {
     this.proxies.get(id)?.close();
     this.proxies.delete(id);
+  }
+
+  private async destroyNow(id: string): Promise<void> {
+    this.closeProxy(id);
     const record = await this.options.store.read(id);
-    const allRows = await this.rows();
+    const allRows = await this.queryRows(this.owner);
     const rows = allRows.filter((row) => row.id === id);
-    if (record === null && rows.length === 0) {
+    if (record === null && rows.length === 0)
       throw new Error(`No sandbox ${id}`);
-    }
     // Labels find the container even when the record is gone; `docker ps`
     // reports short ids, so the record's full id is only a fallback.
     const containers =
@@ -446,7 +463,9 @@ export class DockerSandboxProvider implements SandboxProvider {
         : [record === null ? "" : dockerContainerId(record)];
     for (const container of containers) {
       try {
-        await docker(["rm", "-f", "-v", container]);
+        await docker(["rm", "-f", "-v", container], {
+          timeoutMs: DOCKER_CLI_TIMEOUT_MS,
+        });
       } catch (error) {
         if (!(error instanceof Error && error.message.includes("No such"))) {
           throw error;
@@ -464,10 +483,9 @@ export class DockerSandboxProvider implements SandboxProvider {
       store: this.options.store,
       lifecycle: this.lifecycle,
       listRows: (ownerFilter) =>
-        ownerFilter === undefined ? this.allManagedRows() : this.rows(),
+        this.queryRows(ownerFilter === undefined ? undefined : this.owner),
       onDestroyLocal: (id) => {
-        this.proxies.get(id)?.close();
-        this.proxies.delete(id);
+        this.closeProxy(id);
       },
     });
   }
@@ -477,29 +495,19 @@ export class DockerSandboxProvider implements SandboxProvider {
     return text.split("\n").filter((line) => line.length > 0);
   }
 
-  private async rows() {
-    const { stdout } = await docker([
+  private async queryRows(ownerFilter?: string) {
+    const args = [
       "ps",
       "-a",
       "--filter",
       `label=${LABELS.sandbox}`,
-      "--filter",
-      `label=${LABELS.owner}=${this.owner}`,
+      ...(ownerFilter === undefined
+        ? []
+        : ["--filter", `label=${LABELS.owner}=${ownerFilter}`]),
       "--format",
       SANDBOX_ROW_FORMAT,
-    ]);
-    return parseSandboxRows(stdout);
-  }
-
-  private async allManagedRows() {
-    const { stdout } = await docker([
-      "ps",
-      "-a",
-      "--filter",
-      `label=${LABELS.sandbox}`,
-      "--format",
-      SANDBOX_ROW_FORMAT,
-    ]);
+    ];
+    const { stdout } = await docker(args, { timeoutMs: DOCKER_CLI_TIMEOUT_MS });
     return parseSandboxRows(stdout);
   }
 }

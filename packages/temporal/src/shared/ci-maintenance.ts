@@ -19,11 +19,14 @@ export type MaintenanceRequest = MaintenanceCandidate & {
   requestId: string;
   pipeline: number | null;
 };
+export type BlockedMaintenanceStream = {
+  requestId: string;
+  reason: string;
+  blockedAt?: string;
+};
 export type MaintenanceState = {
   completed: Partial<Record<CiMaintenanceKind, string>>;
-  blocked: Partial<
-    Record<CiMaintenanceKind, { requestId: string; reason: string }>
-  >;
+  blocked: Partial<Record<CiMaintenanceKind, BlockedMaintenanceStream>>;
   pending: MaintenanceRequest | null;
   /**
    * A golden refresh that succeeded but whose claim is not yet snapshotted and
@@ -48,8 +51,10 @@ export type MaintenanceObservation = {
     status: string;
     source: string;
     deferred?: boolean;
+    startedWork?: boolean;
   } | null;
   busy: boolean;
+  observedAt?: string;
 };
 
 export function isActiveMaintenanceStatus(status: string): boolean {
@@ -126,10 +131,15 @@ export function recordMaintenanceObservation(
   } else if (receipt.status === "success") {
     state.completed[request.kind] = request.fingerprint;
     state.observation = `Completed ${request.kind} at ${request.source}`;
+  } else if (receipt.startedWork === false) {
+    state.observation = `Pipeline ${receipt.number.toString()} ended ${receipt.status} before starting work; retrying next tick`;
   } else {
     state.blocked[request.kind] = {
       requestId: request.requestId,
       reason: `Pipeline ${receipt.number.toString()} ended ${receipt.status}; inspect before retrying`,
+      ...(observed.observedAt === undefined
+        ? {}
+        : { blockedAt: observed.observedAt }),
     };
     state.observation =
       state.blocked[request.kind]?.reason ?? "Maintenance failed";

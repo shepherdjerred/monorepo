@@ -28,6 +28,10 @@ import { acknowledgeManagedAcquisition } from "./acquisition-management/acknowle
 import { selectSeriesPackV1 } from "./acquisition-management/series-pack/select.ts";
 import { seriesPackIdentityV1 } from "#shared/acquisition/library-management.ts";
 import { assertNoExternalLibrary } from "#infrastructure/external-library/protection.ts";
+import {
+  PLEX_EXCLUSION_PROOF_REQUIRED,
+  hasLibraryPlexExclusionDatabaseProof,
+} from "./plex-exclusion/proof.ts";
 type AcquisitionActivities = Pick<
   MediaNetworkActivities,
   "reconcileMediaIntent" | "submitMediaTorrent" | "observeMediaAcquisition"
@@ -35,10 +39,25 @@ type AcquisitionActivities = Pick<
 
 async function inactiveRuntimeHold(
   context: MediaAutomationContext,
-  runtime: { active: boolean },
+  runtime: { active: boolean; epoch: number },
+  target: {
+    automationEpoch: number;
+    libraryKind: "movies" | "tv";
+    skipExclusionProof: boolean;
+  },
 ): Promise<
   | { status: "waiting"; attemptId: null; reason: "runtime_observe" }
   | { status: "blocked"; attemptId: null; reason: "acquisition_disabled" }
+  | {
+      status: "blocked";
+      attemptId: null;
+      reason: "intent_ownership_unconfirmed";
+    }
+  | {
+      status: "blocked";
+      attemptId: null;
+      reason: typeof PLEX_EXCLUSION_PROOF_REQUIRED;
+    }
   | null
 > {
   // Observe mode has not started an external write. Defer so the due sweep
@@ -50,6 +69,24 @@ async function inactiveRuntimeHold(
       status: "blocked",
       attemptId: null,
       reason: "acquisition_disabled",
+    };
+  if (target.automationEpoch !== runtime.epoch)
+    return {
+      status: "blocked",
+      attemptId: null,
+      reason: "intent_ownership_unconfirmed",
+    };
+  if (
+    !target.skipExclusionProof &&
+    !(await hasLibraryPlexExclusionDatabaseProof(
+      context.db,
+      target.libraryKind,
+    ))
+  )
+    return {
+      status: "blocked",
+      attemptId: null,
+      reason: PLEX_EXCLUSION_PROOF_REQUIRED,
     };
   return null;
 }
@@ -92,15 +129,18 @@ async function reconcile(
     intent.media.airDate.getTime() > Date.now()
   )
     return { status: "waiting", attemptId: null, reason: "not_yet_aired" };
+  const existingReservation =
+    await context.db.acquisitionReservation.findUnique({
+      where: targetWhere(defaultScope(input.mediaId)),
+      select: { attempt: { select: { state: true } } },
+    });
   const runtime = await requireActiveRuntime(context.db);
-  const hold = await inactiveRuntimeHold(context, runtime);
+  const hold = await inactiveRuntimeHold(context, runtime, {
+    automationEpoch: intent.automationEpoch,
+    libraryKind: intent.media.kind === "movie" ? "movies" : "tv",
+    skipExclusionProof: existingReservation?.attempt.state === "imported",
+  });
   if (hold !== null) return hold;
-  if (intent.automationEpoch !== runtime.epoch)
-    return {
-      status: "blocked",
-      attemptId: null,
-      reason: "intent_ownership_unconfirmed",
-    };
   await assertNoExternalLibrary(context.db, [input.mediaId]);
   const profile = await loadProfile(context.db, input.mediaId);
   if (profile === null)

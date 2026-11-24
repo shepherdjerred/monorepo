@@ -204,7 +204,7 @@ describe("flag config source", () => {
     await expect(source.get(NAMES)).resolves.toEqual({ value: false });
   });
 
-  test("an undefined flag in provider throws so the resolver does not silently descend", async () => {
+  test("an undefined flag in StaticProvider throws so local static overrides do not silently drift", async () => {
     await initFeatureFlags({
       environment: { FEATURE_FLAGS_MODE: "disabled" },
       provider: new StaticProvider({}),
@@ -214,6 +214,67 @@ describe("flag config source", () => {
       kinds: { featureOn: "boolean" },
     });
     await expect(source.get(NAMES)).rejects.toThrow(/evaluation failed/);
+  });
+
+  test("an inventory-declared key missing from an active FlagsProvider degrades via onUnavailable while undeclared keys stay fatal", async () => {
+    const fake = createFlagsTestFetcher({
+      kind: "snapshot",
+      body: {
+        deployment: "scout/prod",
+        revision: 1,
+        flags: [],
+      },
+    });
+    const events: unknown[] = [];
+    await initFeatureFlags({
+      environment: { FEATURE_FLAGS_MODE: "disabled" },
+      provider: new FlagsProvider({
+        url: "http://flags.invalid:8080",
+        deployment: "scout/prod",
+        pollIntervalSeconds: 300,
+        fetcher: fake.fetcher,
+      }),
+      onEvaluation: (event) => events.push(event),
+    });
+    const onUnavailable = vi.fn();
+    const source = createFlagConfigSource({
+      targetingKey: "service",
+      kinds: {
+        featureOn: "boolean",
+        model: "string",
+        budget: "number",
+        undeclared: "boolean",
+      },
+      onUnavailable,
+    });
+
+    await expect(source.get(NAMES)).resolves.toBeUndefined();
+    await expect(
+      source.get({ key: "model", flag: "scout-report-ai-model" }),
+    ).resolves.toBeUndefined();
+    await expect(
+      source.get({ key: "budget", flag: "llm-hourly-token-budget" }),
+    ).resolves.toBeUndefined();
+
+    expect(onUnavailable).toHaveBeenCalledTimes(3);
+    expect(onUnavailable).toHaveBeenNthCalledWith(1, NAMES.flag);
+    expect(onUnavailable).toHaveBeenNthCalledWith(2, "scout-report-ai-model");
+    expect(onUnavailable).toHaveBeenNthCalledWith(3, "llm-hourly-token-budget");
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        flag: NAMES.flag,
+        errorCode: "FLAG_NOT_FOUND",
+        value: "error",
+      }),
+    );
+
+    await expect(
+      source.get({ key: "undeclared", flag: "not-in-managed-inventory" }),
+    ).rejects.toMatchObject({
+      name: "ConfigSourceFatalError",
+      message: expect.stringContaining("is not defined for kind"),
+    });
+    expect(onUnavailable).toHaveBeenCalledTimes(3);
   });
 
   test("an unavailable provider reports absence so the resolver descends", async () => {

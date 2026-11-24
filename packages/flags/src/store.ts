@@ -107,14 +107,47 @@ export class FlagStore {
     this.db.close();
   }
 
-  /** Inserts each deployment that is not already stored. Existing rows stay. */
-  seedFromInventory(): { readonly seeded: readonly string[] } {
-    return this.seedDocuments(
-      flagDeployments.map((deployment) => ({
-        id: deployment.id,
-        flags: projectDeploymentFlags(deployment),
-      })),
+  private insertDeploymentIfAbsent(
+    id: string,
+    flags: readonly FlagValue[],
+  ): boolean {
+    const insertDeployment = this.db.query(
+      "INSERT INTO deployment (id, revision) VALUES (?, 1) ON CONFLICT DO NOTHING",
     );
+    const insertFlag = this.db.query(
+      "INSERT INTO flag (deployment_id, key, body) VALUES (?, ?, ?)",
+    );
+    const runTx = this.db.transaction(() => {
+      if (insertDeployment.run(id).changes === 0) return false;
+      for (const flag of flags) {
+        insertFlag.run(id, flag.key, JSON.stringify(flag));
+      }
+      return true;
+    });
+    return runTx();
+  }
+
+  /**
+   * Inserts each deployment that is not already stored, and creates any newly
+   * declared inventory keys on existing deployments without overwriting stored
+   * flag values or targeting rules.
+   */
+  seedFromInventory(): { readonly seeded: readonly string[] } {
+    const seeded: string[] = [];
+    for (const deployment of flagDeployments) {
+      const flags = projectDeploymentFlags(deployment);
+      if (this.insertDeploymentIfAbsent(deployment.id, flags)) {
+        seeded.push(deployment.id);
+      } else {
+        const created = this.createMissing(deployment.id, flags);
+        if (!created.ok) {
+          throw new Error(
+            `failed to seed missing flags for ${deployment.id}: ${created.failure.kind}`,
+          );
+        }
+      }
+    }
+    return { seeded };
   }
 
   /**
@@ -125,24 +158,10 @@ export class FlagStore {
     documents: readonly { id: string; flags: readonly FlagValue[] }[],
   ): { readonly seeded: readonly string[] } {
     const seeded: string[] = [];
-    const insertDeployment = this.db.query(
-      "INSERT INTO deployment (id, revision) VALUES (?, 1) ON CONFLICT DO NOTHING",
-    );
-    const insertFlag = this.db.query(
-      "INSERT INTO flag (deployment_id, key, body) VALUES (?, ?, ?)",
-    );
-    const seed = this.db.transaction(
-      (id: string, flags: readonly FlagValue[]) => {
-        const result = insertDeployment.run(id);
-        if (result.changes === 0) return false;
-        for (const flag of flags) {
-          insertFlag.run(id, flag.key, JSON.stringify(flag));
-        }
-        return true;
-      },
-    );
     for (const document of documents) {
-      if (seed(document.id, document.flags)) seeded.push(document.id);
+      if (this.insertDeploymentIfAbsent(document.id, document.flags)) {
+        seeded.push(document.id);
+      }
     }
     return { seeded };
   }

@@ -9,6 +9,9 @@ import {
 } from "#shared/movie-editions/registry.ts";
 import { MediaError } from "#application/errors.ts";
 import { movieManagementContext } from "#automation/movie-editions/management-context.ts";
+import { queueTerminalMovieRetryV4 } from "#automation/movie-editions/retry/sweep.ts";
+import { hasLibraryPlexExclusionDatabaseProof } from "#automation/plex-exclusion/proof.ts";
+import { inspectMovieReservationBlock } from "#automation/plex-exclusion/wake.ts";
 import { movieTargetAfter } from "./movie-cursor.ts";
 
 export const LIBRARY_MOVIE_DUE_CURSOR = "library-movie-due:";
@@ -41,7 +44,7 @@ export async function queueLibraryMovieDue(
       "Existing-library management has competing import approvals",
       409,
     );
-  return serializable(context.db, async (tx) => {
+  const outcome = await serializable(context.db, async (tx) => {
     const { target } = await lockMovieCommand(tx, scope);
     const runtime = await tx.mediaRuntimeState.findUniqueOrThrow({
       where: { id: "singleton" },
@@ -55,6 +58,13 @@ export async function queueLibraryMovieDue(
       target.automationEpoch !== runtime.recoveryEpoch ||
       !(await lockRuntimeAuthority(tx, runtime.recoveryEpoch))
     )
+      return null;
+    const reservationState = await inspectMovieReservationBlock(tx, scope);
+    if (reservationState.kind === "exclusion_blocked") {
+      return { kind: "retry" as const, attemptId: reservationState.attemptId };
+    }
+    if (reservationState.kind === "active") return null;
+    if (!(await hasLibraryPlexExclusionDatabaseProof(tx, "movies")))
       return null;
     const bucket = Math.floor(invocation.execution.observed.wall / 21_600_000);
     const id = await queueOperation(tx, {
@@ -71,8 +81,16 @@ export async function queueLibraryMovieDue(
       },
     });
     invocation.execution.assertActive();
-    return id;
+    return { kind: "queued" as const, id };
   });
+  if (outcome?.kind === "retry") {
+    await queueTerminalMovieRetryV4(context, {
+      attemptId: outcome.attemptId,
+      scope,
+    });
+    return null;
+  }
+  return outcome?.id ?? null;
 }
 
 export async function sweepLibraryMovieDue(

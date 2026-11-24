@@ -4,24 +4,27 @@
 
 Collect all findings from Phase 2 agents and **consolidate duplicates first**. Phase 2 deliberately overlaps agent scopes, so the same issue is frequently reported by more than one hunter — merge findings that share a root cause before validating, or you'll validate and report the same bug multiple times. For each remaining finding, launch a **separate `research` validation agent** that tries to disprove it. The hunting agents are biased toward finding things; the validation agents are biased toward killing false positives. This adversarial step is critical.
 
-For findings from the same attack surface, batch them into one validation agent. Launch validation agents in parallel where they cover independent areas.
+For findings from the same attack surface, batch them into one validation agent. Launch validation agents in parallel where they cover independent areas (never retry a `cyber_policy` or safety refusal — `retries = 0`).
 
 Each validation agent prompt should:
-1. State the specific finding being validated (title, claimed attack, claimed impact)
-2. Ask the agent to read the exact code paths and verify each step of the trace
-3. Ask it to apply these tests (the adversarial, Phase 3 form of the canonical validation rules in [HUNTING.md](HUNTING.md) — here a separate agent tries to make each one fail):
+1. Open with the `Authorized Defensive Review Scope` preamble (with `<path>` filled in)
+2. State the specific finding being validated (title, claimed reproduction scenario, claimed impact)
+3. Ask the agent to read the exact code paths and verify each step of the trace
+4. Ask it to apply these tests (the Phase 3 verification form of the canonical validation rules in [HUNTING.md](HUNTING.md) — here an independent agent checks whether any step fails):
 
 **Validation tests:**
-1. **Exploitation test**: Read the actual code at each step of the trace. Does the data flow work as claimed? Can you construct the exact input (HTTP request, CLI invocation, API call, crafted file, etc.) that triggers this?
-2. **Impact test**: What does the attacker actually get? If the answer is "they learn field names" or "they cause an error", that's not meaningful impact — not a finding on its own (at most a building block for a chain).
+1. **Reachability and reproduction test**: Read the actual code at each step of the trace. Does the data flow work as claimed? Can you construct the exact input (HTTP request, CLI invocation, API call, crafted file, etc.) that triggers this?
+2. **Impact test**: What is the concrete security impact? If the answer is "learn field names" or "cause an error", that's not meaningful impact — not a finding on its own (at most a building block for a chain).
 3. **Baseline test**: Does the identified comparable have the same pattern? If yes, has it been exploited? If never exploited in years of production use, understand why before reporting.
 4. **Mitigation test**: Is there another layer that prevents exploitation? Check middleware, database constraints, framework defaults.
-5. **Parser/runtime behavior test**: If the exploit depends on how a parser or runtime handles specific input, verify against the actual spec or implementation — do not reason from intuition.
+5. **Parser/runtime behavior test**: If the scenario depends on how a parser or runtime handles specific input, verify against the actual spec or local implementation — do not reason from intuition.
 
 Tell each validation agent:
 
 ```
-Your job is to DISPROVE this finding. Read the actual source code at every step. If you cannot disprove it, confirm it with the exact code that makes it exploitable. Return one of:
+Authorized Defensive Review Scope: This is an owner-authorized defensive static and local code review of the checked-out source at <path> to validate candidate software defects for remediation. Restrict inspection to local repository files and isolated, local, non-destructive checks; never target live or external infrastructure.
+
+Your job is to DISPROVE this candidate finding through rigorous code verification. Read the actual source code at every step. If you cannot disprove it, confirm it with the exact code that makes the defect reachable and impactful. Return one of:
 - "CONFIRMED: [explanation of why it's real, with code evidence]"
 - "REJECTED: [explanation of what the finding got wrong, with code evidence]"
 ```
@@ -68,9 +71,11 @@ The schema supports two verdict types via `oneOf`:
 
 The structured output from Phase 5 forces self-validation, but the same agent that wrote the finding also wrote the JSON — it won't catch its own blind spots. This phase uses a fresh agent to independently verify every claim in `findings.json`.
 
-Launch **one `research` agent per confirmed finding** via the Task tool, all in parallel. Each agent gets exactly one finding from `findings.json` and verifies it independently. Give each agent the JSON object for its finding and this prompt:
+Launch **one `research` agent per confirmed finding** via the Task tool, all in parallel (or sequentially in the parent session if fan-out is restricted; `retries = 0` on any safety refusal). Each agent gets exactly one finding from `findings.json` and verifies it independently. Give each agent the JSON object for its finding and this prompt:
 
 ```
+Authorized Defensive Review Scope: This is an owner-authorized defensive static code review of the checked-out source at <path> to verify defect accuracy and proposed code remediations. Restrict inspection to local repository files; never target live or external infrastructure.
+
 You are an independent verifier. You did NOT write this finding. Your job is to read the actual source code and verify that every factual claim is correct.
 
 1. Read the file and line number cited in EVERY trace step. Verify:

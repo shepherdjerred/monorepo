@@ -8,6 +8,9 @@ import { eligibleAcquisitionSponsors } from "#infrastructure/movie-editions/auth
 import { lockMovieCommand } from "#infrastructure/movie-editions/locks.ts";
 import { MediaError } from "#application/errors.ts";
 import { refreshMovieScopeRequestersV4 } from "#automation/movie-editions/requester-access.ts";
+import { queueTerminalMovieRetryV4 } from "#automation/movie-editions/retry/sweep.ts";
+import { hasLibraryPlexExclusionDatabaseProof } from "#automation/plex-exclusion/proof.ts";
+import { inspectMovieReservationBlock } from "#automation/plex-exclusion/wake.ts";
 import { movieTargetAfter } from "./movie-cursor.ts";
 import {
   bindPlexTransactionDeadline,
@@ -39,7 +42,7 @@ async function queuePersonalMovieDueV4(
       "Personal movie due target lost its configured movie access",
     );
   await refreshMovieScopeRequestersV4(context, scope);
-  await serializable(context.db, async (tx) => {
+  const blockedAttemptId = await serializable(context.db, async (tx) => {
     const { target } = await lockMovieCommand(tx, scope);
     if (
       target === null ||
@@ -50,11 +53,12 @@ async function queuePersonalMovieDueV4(
       target.intentionallyRemovedAt !== null ||
       !(await lockRuntimeAuthority(tx, target.automationEpoch))
     )
-      return;
-    const reserved = await tx.acquisitionReservation.count({
-      where: { mediaId: scope.mediaId, edition: scope.edition },
-    });
-    if (reserved !== 0) return;
+      return null;
+    const reservationState = await inspectMovieReservationBlock(tx, scope);
+    if (reservationState.kind === "exclusion_blocked") {
+      return reservationState.attemptId;
+    }
+    if (reservationState.kind === "active") return null;
     const profile = await tx.qualityProfile.findUniqueOrThrow({
       where: { id: target.profileId },
       select: { id: true, version: true },
@@ -67,7 +71,7 @@ async function queuePersonalMovieDueV4(
       budget,
     });
     const sponsor = sponsors[0];
-    if (sponsor === undefined) return;
+    if (sponsor === undefined) return null;
     const lease = await readRuntimeProof(tx);
     const freshness = plexBindingFreshness({
       observed: execution.observed,
@@ -79,6 +83,8 @@ async function queuePersonalMovieDueV4(
       guards: [execution, ...sponsors.map((value) => value.freshness)],
     });
     await bindPlexTransactionDeadline(tx, freshness);
+    if (!(await hasLibraryPlexExclusionDatabaseProof(tx, "movies")))
+      return null;
     const bucket = Math.floor(execution.observed.wall / 21_600_000);
     await queueOperation(tx, {
       key: `personal-movie-due-v4:${scope.mediaId}:${scope.edition}:${String(target.generation)}:${profile.id}:${String(profile.version)}:${String(bucket)}`,
@@ -97,7 +103,13 @@ async function queuePersonalMovieDueV4(
       },
     });
     freshness.assertActive();
+    return null;
   });
+  if (blockedAttemptId !== null)
+    await queueTerminalMovieRetryV4(context, {
+      attemptId: blockedAttemptId,
+      scope,
+    });
 }
 
 /** One exact chosen target per Activity retains the original shared100 and bounded cursor progress. */

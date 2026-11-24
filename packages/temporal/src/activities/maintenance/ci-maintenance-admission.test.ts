@@ -75,6 +75,7 @@ test("inspection defers an active canary, then resumes naturally on its terminal
     candidates: [],
     pending: null,
     busy: true,
+    observedAt: expect.any(String),
   });
   expect(mocks.github).not.toHaveBeenCalled();
   expect(await ciMaintenanceActivities.inspectCiMaintenance(null)).toEqual({
@@ -82,6 +83,7 @@ test("inspection defers an active canary, then resumes naturally on its terminal
     candidates: [candidate],
     pending: null,
     busy: false,
+    observedAt: expect.any(String),
   });
   expect(mocks.pipelines).not.toHaveBeenCalled();
   expect(mocks.admission).toHaveBeenCalledTimes(2);
@@ -110,6 +112,7 @@ test("a canary does not prevent reconciliation of an existing maintenance reques
     candidates: [],
     pending: receipt,
     busy: true,
+    observedAt: expect.any(String),
   });
   expect(mocks.pipelines).toHaveBeenCalledWith("manual");
   expect(mocks.receipt).toHaveBeenCalledWith(request, [maintenance]);
@@ -165,6 +168,7 @@ test("without a verified main build there are no candidates and no GitHub reads"
     candidates: [],
     pending: null,
     busy: false,
+    observedAt: expect.any(String),
   });
   expect(mocks.github).not.toHaveBeenCalled();
 });

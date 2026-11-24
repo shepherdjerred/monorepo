@@ -20,8 +20,13 @@ pinchtab config set browser.binary \
 # Merge only the policy: preserve the daemon's token, profiles, and state.
 # Website access includes local/LAN/tailnet hosts; task authorization still
 # governs which sites an agent uses and which account actions it performs.
+# instanceDefaults.noRestore avoids Chrome session-restore tabs wedging fresh
+# loopback navigations on shared agent hosts.
 pinchtab config patch '{
   "server": { "bind": "127.0.0.1" },
+  "instanceDefaults": {
+    "noRestore": true
+  },
   "security": {
     "allowedDomains": ["*"],
     "allowEvaluate": true,

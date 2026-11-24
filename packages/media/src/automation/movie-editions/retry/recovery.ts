@@ -34,12 +34,46 @@ import { submitMovieTorrentV4 } from "#automation/movie-editions/submission.ts";
 import { resumeMovieAttempt } from "./resume.ts";
 import { nativeJson } from "#infrastructure/native-recovery/snapshots.ts";
 import { refreshMovieAttemptRequesterAccessV4 } from "#automation/movie-editions/requester-access.ts";
+import {
+  PLEX_EXCLUSION_PROOF_REQUIRED,
+  hasLibraryPlexExclusionDatabaseProof,
+} from "#automation/plex-exclusion/proof.ts";
 
 type Input = {
   command: MovieOperationV4;
   operation: Operation;
   capture: MovieRetryCaptureV1;
 };
+
+async function resumeCompletedRenewalV1(
+  context: MediaAutomationContext,
+  input: Input,
+  budget: NonNullable<MediaAutomationContext["movieManagement"]>["budget"],
+): Promise<Awaited<
+  ReturnType<MovieNetworkActivitiesV4["reconcileMovieIntentV4"]>
+> | null> {
+  const completed = readMovieRetryRenewalV1(
+    input.operation.result,
+    input.command,
+  );
+  if (completed === null) return null;
+  if (
+    completed.commandHash !== identityHash(input.operation.payload) ||
+    identityHash(completed.capture) !== identityHash(input.capture)
+  )
+    throw new Error(
+      "Movie retry renewal lost its immutable coordinator selection",
+    );
+  const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
+    where: { id: input.capture.attemptId },
+  });
+  budget.consume(1);
+  if (movieRetryBirthHash(attempt) !== input.capture.birthHash)
+    throw new Error(
+      "Movie retry renewal changed its original acquisition birth",
+    );
+  return resumeMovieAttempt(context, input.command, attempt, budget);
+}
 
 /** A new coordinator can only continue its exact original acquisition after both actual predecessors are closed. */
 export async function reconcileMovieRetryV4(
@@ -54,33 +88,12 @@ export async function reconcileMovieRetryV4(
   const execution = invocation.execution;
   execution.assertActive();
   assertRetryCommand(input);
-  const completed = readMovieRetryRenewalV1(
-    input.operation.result,
-    input.command,
+  const resumed = await resumeCompletedRenewalV1(
+    context,
+    input,
+    invocation.budget,
   );
-  if (completed !== null) {
-    if (
-      completed.commandHash !== identityHash(input.operation.payload) ||
-      identityHash(completed.capture) !== identityHash(input.capture)
-    )
-      throw new Error(
-        "Movie retry renewal lost its immutable coordinator selection",
-      );
-    const attempt = await context.db.acquisitionAttempt.findUniqueOrThrow({
-      where: { id: input.capture.attemptId },
-    });
-    invocation.budget.consume(1);
-    if (movieRetryBirthHash(attempt) !== input.capture.birthHash)
-      throw new Error(
-        "Movie retry renewal changed its original acquisition birth",
-      );
-    return resumeMovieAttempt(
-      context,
-      input.command,
-      attempt,
-      invocation.budget,
-    );
-  }
+  if (resumed !== null) return resumed;
   try {
     let source = await readMovieRetrySourceV4(
       context.db,
@@ -108,6 +121,15 @@ export async function reconcileMovieRetryV4(
         status: "waiting",
         attemptId: null,
         reason: "movie_retry_previous_workflow_not_closed",
+      };
+    if (
+      !["submitting", "submission_unknown"].includes(source.state) &&
+      !(await hasLibraryPlexExclusionDatabaseProof(context.db, "movies"))
+    )
+      return {
+        status: "blocked",
+        attemptId: null,
+        reason: PLEX_EXCLUSION_PROOF_REQUIRED,
       };
     if (["submitting", "submission_unknown"].includes(source.state)) {
       const observed = await submitMovieTorrentV4(context, {
