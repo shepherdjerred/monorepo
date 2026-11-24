@@ -12,6 +12,7 @@ import { createMediaChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts
 import { createScoutChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 import { createStarlightKarmaBotChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/starlight-karma-bot.ts";
 import { createStormBrainChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/storm-brain.ts";
+import { createStormStatsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/storm-stats.ts";
 import { createDeliveryChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/delivery.ts";
 import { createGolinkChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/golink.ts";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
@@ -216,6 +217,7 @@ describe("First-party Flags consumer deployments", () => {
       (app: App) => createArcadeChart(app),
       (app: App) => createWoodpeckerChart(app),
       (app: App) => createStormBrainChart(app),
+      (app: App) => createStormStatsChart(app),
       (app: App) => createStormForumCharts(app),
       (app: App) =>
         createGolinkChart(app, {

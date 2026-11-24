@@ -30,12 +30,33 @@ test("an activated service renders its multi-port workload, PVC, and network pol
     expect.arrayContaining([
       "Namespace",
       "Deployment",
+      "OnePasswordItem",
       "PersistentVolumeClaim",
       "NetworkPolicy",
       "Service",
       "Ingress",
+      "TunnelBinding",
     ]),
   );
+
+  const secretItem = manifests.find((m) => m.kind === "OnePasswordItem");
+  expect(secretItem).toMatchObject({
+    metadata: { name: "storm-stats-secrets" },
+    spec: { itemPath: expect.stringMatching(/\/items\/storm-stats$/u) },
+  });
+
+  const ingress = manifests.find((m) => m.kind === "Ingress");
+  expect(ingress).toMatchObject({
+    spec: {
+      defaultBackend: {
+        service: {
+          name: "storm-stats-admin",
+          port: { number: 7421 },
+        },
+      },
+      tls: [{ hosts: ["storm-stats"] }],
+    },
+  });
 
   const deployment = manifests.find((m) => m.kind === "Deployment");
   expect(deployment).toMatchObject({
@@ -75,15 +96,26 @@ test("an activated service renders its multi-port workload, PVC, and network pol
     },
   });
 
-  const service = manifests.find((m) => m.kind === "Service");
+  const service = manifests.find(
+    (m) => m.kind === "Service" && m.metadata?.name === "storm-stats",
+  );
   expect(service).toMatchObject({
     metadata: { name: "storm-stats" },
     spec: {
       ports: expect.arrayContaining([
         expect.objectContaining({ name: "http", port: 7420 }),
-        expect.objectContaining({ name: "admin", port: 7421 }),
         expect.objectContaining({ name: "ingest", port: 7422 }),
       ]),
+    },
+  });
+
+  const adminService = manifests.find(
+    (m) => m.kind === "Service" && m.metadata?.name === "storm-stats-admin",
+  );
+  expect(adminService).toMatchObject({
+    metadata: { name: "storm-stats-admin" },
+    spec: {
+      ports: [expect.objectContaining({ name: "admin", port: 7421 })],
     },
   });
 

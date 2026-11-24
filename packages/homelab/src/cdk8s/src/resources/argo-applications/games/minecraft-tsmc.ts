@@ -46,6 +46,7 @@ const analytics = siteAnalyticsConfiguration("ts-mc");
 const SECRET_NAME = "minecraft-tsmc-discord";
 const RCON_SECRET_NAME = "minecraft-tsmc-brain";
 const BRAIN_SECRET_NAME = "minecraft-tsmc-storm-brain";
+const STATS_SECRET_NAME = "minecraft-tsmc-storm-stats";
 const RWF_RECORDING_SECRET_NAME = "minecraft-tsmc-rwf-recording";
 const COREPROTECT_SECRET_NAME = "minecraft-tsmc-coreprotect";
 // MCBridge agent API (packages/the-storm/plugin/bridge); port-forward only.
@@ -105,6 +106,13 @@ export function createMinecraftTsmcResources(chart: Chart): void {
   new OnePasswordItem(chart, "minecraft-tsmc-storm-brain-1p", {
     spec: { itemPath: vaultItemPath("storm-brain") },
     metadata: { name: BRAIN_SECRET_NAME, namespace: NAMESPACE },
+  });
+
+  // The Storm stats outbox exporter authenticates to storm-stats:7422 with the
+  // same bearer token mounted in the storm-stats namespace.
+  new OnePasswordItem(chart, "minecraft-tsmc-storm-stats-1p", {
+    spec: { itemPath: vaultItemPath("storm-stats") },
+    metadata: { name: STATS_SECRET_NAME, namespace: NAMESPACE },
   });
 
   // Search and Destroy recordings pseudonymise players with an HMAC over this
@@ -286,6 +294,16 @@ export function createMinecraftTsmcApp(chart: Chart) {
           secretKeyRef: {
             name: BRAIN_SECRET_NAME,
             key: "STORM_BRAIN_BEARER_TOKEN",
+          },
+        },
+      },
+      STORM_STATS_INGEST_URL:
+        "http://storm-stats.storm-stats.svc.cluster.local:7422/api/v1/ingest",
+      STORM_STATS_INGEST_TOKEN: {
+        valueFrom: {
+          secretKeyRef: {
+            name: STATS_SECRET_NAME,
+            key: "STORM_STATS_INGEST_TOKEN",
           },
         },
       },

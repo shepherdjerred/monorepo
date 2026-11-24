@@ -22,7 +22,8 @@
     "minecraft-tsmc": "minecraft/tsmc",
     "glitter-boys-launcher": "glitter-boys-launcher/prod",
     "golink": "golink/prod",
-    "flags": "flags/prod"
+    "flags": "flags/prod",
+    "storm-stats": "storm-stats/prod"
   },
   "platformDeliveryDelegated": true,
   "services": [
@@ -837,14 +838,25 @@
     },
     {
       "id": "storm-stats",
-      "rootReleaseExclusions": { "storm-stats": "inactive" },
-      "images": ["storm-stats"],
-      "charts": ["storm-stats"],
       "title": "Storm Stats",
       "kind": "product",
       "package": "storm-stats",
+      "aliases": [],
       "namespaces": ["storm-stats"],
-      "argoApps": []
+      "argoApps": ["storm-stats"],
+      "charts": [],
+      "images": ["storm-stats"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/storm-stats",
+          "argoApp": "storm-stats"
+        }
+      ]
     }
   ]
 }

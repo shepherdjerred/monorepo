@@ -4604,6 +4604,14 @@
         "type": "CNAME",
         "zone_id": "${cloudflare_zone.ts_mc_net.id}"
       },
+      "ts_mc_net_cname_stats": {
+        "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
+        "name": "stats",
+        "proxied": true,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
+      },
       "ts_mc_net_srv_minecraft": {
         "data": {
           "port": 30000,

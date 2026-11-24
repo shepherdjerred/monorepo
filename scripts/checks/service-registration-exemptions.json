@@ -7,8 +7,7 @@
     "windows-cross-compiler-winui": "public toolchain image, built by the CI-image pipeline"
   },
   "chartsWithoutRecipe": {
-    "storm-forum-beta": "inactive chart: the catalog has no storm-forum/beta environment yet, so no recipe exists",
-    "storm-stats": "prepared service: STORM_STATS_ACTIVE is false, so no Application renders and no recipe exists until activation"
+    "storm-forum-beta": "inactive chart: the catalog has no storm-forum/beta environment yet, so no recipe exists"
   },
   "policyOnlyDelegations": {
     "storm-forum-beta": "inactive chart: policy declares storm-forum/beta ahead of the catalog environment and delegation"

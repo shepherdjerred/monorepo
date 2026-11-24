@@ -92,6 +92,11 @@
       "service": "media-seerr-service"
     },
     {
+      "hostname": "stats.ts-mc.net",
+      "namespace": "storm-stats",
+      "service": "storm-stats"
+    },
+    {
       "hostname": "streambot.sjer.red",
       "namespace": "media",
       "service": "streambot-web"
@@ -396,6 +401,11 @@
     {
       "host": "storm-forum-admin",
       "namespace": "storm-forum",
+      "exposure": "ingress"
+    },
+    {
+      "host": "storm-stats",
+      "namespace": "storm-stats",
       "exposure": "ingress"
     },
     {

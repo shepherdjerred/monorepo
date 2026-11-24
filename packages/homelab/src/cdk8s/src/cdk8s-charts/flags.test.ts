@@ -228,6 +228,7 @@ test("an activated service scopes network policy ingress and egress", () => {
             "storm-brain",
             "storm-forum",
             "storm-forum-beta",
+            "storm-stats",
             "minecraft-tsmc",
             "woodpecker-ci",
             "woodpecker",

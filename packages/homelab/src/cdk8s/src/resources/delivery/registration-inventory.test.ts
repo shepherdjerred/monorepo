@@ -76,7 +76,7 @@ test("every rendered Application and every catalog application has a reviewed re
       expect(applicationReleasePolicy(name)).toBeDefined();
   for (const [name, environment] of Object.entries(DELIVERY_ACTIVE_DELEGATIONS))
     expect(DELIVERY_DELEGATION_DEFINITIONS[name]).toBe(environment);
-  expect(Object.keys(DELIVERY_ACTIVE_DELEGATIONS)).toHaveLength(22);
+  expect(Object.keys(DELIVERY_ACTIVE_DELEGATIONS)).toHaveLength(23);
   expect(DELIVERY_ACTIVE_DELEGATIONS).toHaveProperty(
     "glitter-boys-launcher",
     "glitter-boys-launcher/prod",
