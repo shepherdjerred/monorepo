@@ -19,6 +19,8 @@ const INLINE_SOURCE = /[;,]?\s+\d{3,}\s+\|\s.*$/u;
 const FRAME_SOURCE = String.raw`\s+at\s+(?:async\s+)?(?:[^\s()]+\s+)?\(?[^\s()]+?:\d+:\d+\)?`;
 const INLINE_FRAME = new RegExp(FRAME_SOURCE, "gu");
 const HAS_INLINE_FRAME = new RegExp(FRAME_SOURCE, "u");
+/** A list marker a line may start with: `- `, `* ` or `• `. */
+const BULLET = /^[-*•]\s+/u;
 /** The error name or `error:` a runtime puts before the sentence. */
 const ERROR_PREFIX = /^(?:[A-Za-z]*Error|error)\s*:\s*/u;
 
@@ -47,22 +49,37 @@ function cleanLine(line: string) {
     .replaceAll(INLINE_FRAME, "")
     .trim()
     .replace(ERROR_PREFIX, "")
-    .replace(/[;,:]\s*$/u, "");
+    .replace(BULLET, "")
+    .replace(/[;,]+\s*$/u, "");
+}
+
+/**
+ * Lines as one text: a line that ends a sentence or introduces a list (with
+ * a colon) is followed by a space, any other by a semicolon, so no
+ * punctuation is doubled or left hanging.
+ */
+function joinLines(lines: readonly string[]) {
+  return lines.reduce((joined, line) => {
+    if (joined === "") return line;
+    return `${joined}${/[:.!?]$/u.test(joined) ? " " : "; "}${line}`;
+  }, "");
 }
 
 /**
  * The human sentence of a recorded error: its lines that are neither source
  * excerpt nor stack frame, each without an excerpt or frames run on after
- * its words and without the runtime's error prefix, joined. A text with no
- * trace in it is returned as written. Empty when nothing but trace is left.
+ * its words, the runtime's error prefix or a list marker, joined as prose. A
+ * text with no trace in it is returned as written. Empty when nothing but
+ * trace is left.
  */
 export function plainCause(text: string) {
   return hasTrace(text)
-    ? text
-        .split("\n")
-        .filter((line) => !isTraceLine(line))
-        .map((line) => cleanLine(line))
-        .filter((line) => line !== "")
-        .join("; ")
+    ? joinLines(
+        text
+          .split("\n")
+          .filter((line) => !isTraceLine(line))
+          .map((line) => cleanLine(line))
+          .filter((line) => line !== ""),
+      )
     : text;
 }

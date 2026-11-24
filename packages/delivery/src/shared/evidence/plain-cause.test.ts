@@ -57,6 +57,36 @@ describe("the human sentence of a recorded error", () => {
     expect(plainCause(frames)).toBe("The sync was refused");
   });
 
+  it("joins the lines as prose: no doubled punctuation, no dangling colon or list marker", () => {
+    // The apply-safety evidence of the live Golink refusal.
+    const live = [
+      "Apply-safety refused golink at 2.0.0-1018413 before any sync; restored the source Argo last synced (history 44).; 21895 | ${body}`);",
+      "21896 | }",
+      "error: Refusing golink sync because the read-only apply-safety preflight found:",
+      "- acid.zalan.do/postgresql golink/golink-postgresql changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
+      "      at assertApplySafe (/app/packages/temporal/dist/delivery-argocd.js:21900:11)",
+    ].join("\n");
+    const joined = plainCause(live);
+    expect(joined).toBe(
+      "Apply-safety refused golink at 2.0.0-1018413 before any sync; restored the source Argo last synced (history 44). Refusing golink sync because the read-only apply-safety preflight found: acid.zalan.do/postgresql golink/golink-postgresql changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
+    );
+    for (const stray of [".;", "found;", "; -", ";;"])
+      expect(joined).not.toContain(stray);
+    // Several list items after a colon read as one list.
+    expect(
+      plainCause(
+        [
+          "21895 | throw",
+          "error: The preflight found:",
+          "- a changes /x from 1 to 2",
+          "- b changes /y from 3 to 4",
+        ].join("\n"),
+      ),
+    ).toBe(
+      "The preflight found: a changes /x from 1 to 2; b changes /y from 3 to 4",
+    );
+  });
+
   it("returns a text with no trace as written, and nothing when only trace is left", () => {
     expect(hasTrace("Sync timed out at the 5 minute deadline")).toBe(false);
     expect(plainCause("Sync timed out at the 5 minute deadline")).toBe(

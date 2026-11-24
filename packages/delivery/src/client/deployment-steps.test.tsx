@@ -1006,4 +1006,35 @@ describe("a failure whose evidence is a runtime error", () => {
       expect(tags.at(-1)?.[1]).toBeUndefined();
     }
   });
+
+  it("reads the live Golink refusal as clean prose in the failure, the Last evidence and the Evidence entry", () => {
+    const live = [
+      "Apply-safety refused golink at 2.0.0-1018413 before any sync; restored the source Argo last synced (history 44).; 21895 | ${body}`);",
+      "21896 | }",
+      "error: Refusing golink sync because the read-only apply-safety preflight found:",
+      "- acid.zalan.do/postgresql golink/golink-postgresql changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
+      "      at assertApplySafe (/app/packages/temporal/dist/delivery-argocd.js:21900:11)",
+    ].join("\n");
+    const golink = {
+      ...refused,
+      evidence: [evidence("stage/step-apply-safety/0", live, "preflight")],
+    };
+    const html = render(
+      <>
+        <WhyItFailed detail={golink} />
+        <StepTimeline detail={golink} />
+      </>,
+    );
+    const visible = html.replaceAll(/<pre[^>]*>[\s\S]*?<\/pre>/gu, "");
+    // The failure prose says each part once, joined as one sentence.
+    expect(visible).toContain(
+      "failed: Apply-safety refused golink at 2.0.0-1018413 before any sync; restored the source Argo last synced (history 44); Refusing golink sync because the read-only apply-safety preflight found: acid.zalan.do/postgresql golink/golink-postgresql changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4.",
+    );
+    // The Evidence entry keeps the sentence boundaries.
+    expect(visible).toContain(
+      "(history 44). Refusing golink sync because the read-only apply-safety preflight found: acid.zalan.do/postgresql",
+    );
+    for (const stray of [".;", "found;", "; -", ";;", ".."])
+      expect(visible).not.toContain(stray);
+  });
 });

@@ -455,7 +455,7 @@ test("approvals show the waiting override, the waiting saved plan and recently d
   ).toHaveCount(6);
   await expect(
     page.getByRole("navigation", { name: "Main" }).getByRole("link", {
-      name: /^Approvals\s*, 2 awaiting approval$/u,
+      name: /^Approvals, 2 awaiting approval$/u,
     }),
   ).toBeVisible();
   await expectNoHorizontalOverflow(page);

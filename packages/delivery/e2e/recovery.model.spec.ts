@@ -206,8 +206,12 @@ test("a failure recorded as a runtime error shows its sentence, and the raw text
     `/deployments/${await deploymentId(page, TRACED_REQUEST, INTERRUPTED)}`,
   );
   const main = page.getByRole("main");
+  // The failure joins the parts as one sentence; the Evidence entry keeps
+  // the recorded sentence boundaries. Neither has stray punctuation.
   const sentence =
-    "Delivery apply-safety refused the Application before any sync; Refusing golink sync because the desired state changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4";
+    "Apply-safety refused golink at 2.0.0-1018413 before any sync; restored the source Argo last synced (history 44); Refusing golink sync because the read-only apply-safety preflight found: acid.zalan.do/postgresql golink/golink-postgresql changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4";
+  const evidenceSentence =
+    "Apply-safety refused golink at 2.0.0-1018413 before any sync; restored the source Argo last synced (history 44). Refusing golink sync because the read-only apply-safety preflight found: acid.zalan.do/postgresql golink/golink-postgresql changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4";
   const why = main.getByRole("region", { name: "Why it failed" });
   await expect(why).toContainText(`failed: ${sentence}`, {
     useInnerText: true,
@@ -223,7 +227,11 @@ test("a failure recorded as a runtime error shows its sentence, and the raw text
     await expect(main).not.toContainText(fragment, { useInnerText: true });
   // The Evidence entry opens on the sentence too.
   const steps = main.getByRole("region", { name: "Steps" });
-  await expect(steps).toContainText(sentence, { useInnerText: true });
+  await expect(steps).toContainText(evidenceSentence, {
+    useInnerText: true,
+  });
+  for (const stray of [".;", "found;", "; -"])
+    await expect(main).not.toContainText(stray, { useInnerText: true });
   // The raw text is in a disclosure that starts collapsed.
   const raw = main
     .locator("details.disclosure")

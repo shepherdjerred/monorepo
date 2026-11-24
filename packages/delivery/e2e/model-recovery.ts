@@ -43,10 +43,11 @@ export const TRACED_REQUEST = "model/golink/canary/refused";
  * sentence and its stack frames, as the runtime printed them.
  */
 export const APPLY_SAFETY_TRACE = [
-  "Delivery apply-safety refused the Application before any sync; 21895 | ${body}`);",
+  "Apply-safety refused golink at 2.0.0-1018413 before any sync; restored the source Argo last synced (history 44).; 21895 | ${body}`);",
   "21896 | }",
   "21897 | const managed = ManagedResourcesSchema.parse(",
-  "error: Refusing golink sync because the desired state changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
+  "error: Refusing golink sync because the read-only apply-safety preflight found:",
+  "- acid.zalan.do/postgresql golink/golink-postgresql changes /spec/volume/storageClass from zfs-ssd to zfs-ssd-lz4",
   "      at assertApplySafe (/app/packages/temporal/dist/delivery-argocd.js:21900:11)",
   "      at async main (/app/packages/temporal/dist/delivery-argocd.js:23688:30)",
 ].join("\n");
