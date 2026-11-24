@@ -341,12 +341,20 @@ describe("LinuxServerApp exposure", () => {
     });
   });
 
-  test("policies select the namespace and render last, typed by their directions", () => {
+  test("policies render last, typed by their directions, selecting the namespace or the app", () => {
     const { app, identities, of } = render({
       tailscale: { host: tailnetService("prowlarr") },
       policies: [
-        { name: "app-ingress-netpol", ingress: [tailscaleIngressRule()] },
-        { name: "app-egress-netpol", egress: [dnsEgressRule()] },
+        {
+          name: "app-ingress-netpol",
+          selects: "namespace",
+          ingress: [tailscaleIngressRule()],
+        },
+        {
+          name: "app-egress-netpol",
+          selects: "app",
+          egress: [dnsEgressRule()],
+        },
       ],
     });
     expect(identities.slice(-3)).toEqual([
@@ -356,7 +364,10 @@ describe("LinuxServerApp exposure", () => {
     ]);
     expect(of("NetworkPolicy").map((policy) => policy["spec"])).toMatchObject([
       { podSelector: {}, policyTypes: ["Ingress"] },
-      { podSelector: {}, policyTypes: ["Egress"] },
+      {
+        podSelector: { matchLabels: app.deployment.matchLabels },
+        policyTypes: ["Egress"],
+      },
     ]);
     expect(app.policies).toHaveLength(2);
   });

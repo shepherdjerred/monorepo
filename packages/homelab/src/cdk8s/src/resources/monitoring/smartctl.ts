@@ -9,6 +9,7 @@ import {
   Probe,
 } from "cdk8s-plus-31";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { createHostCollectorNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/host-collector-network-policy.ts";
 import { ciNodeTaintedNode } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 
 export async function createSmartctlMonitoring(chart: Chart) {
@@ -190,6 +191,8 @@ export async function createSmartctlMonitoring(chart: Chart) {
     "/host/var/lib/node_exporter/textfile_collector",
     textfileCollectorVolume,
   );
+
+  createHostCollectorNetworkPolicy(chart, smartctlDaemonSet);
 
   return { serviceAccount, smartmonScript, smartctlDaemonSet };
 }

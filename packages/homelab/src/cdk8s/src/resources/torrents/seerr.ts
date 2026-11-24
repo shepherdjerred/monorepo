@@ -22,6 +22,12 @@ import {
 import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
 import { createMailSmtpClientCaVolume } from "@shepherdjerred/homelab/cdk8s/src/resources/mail/mail-smtp.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  nsPeer,
+  tcp,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { mediaAppEgress } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/media-app-egress.ts";
 
 const SEERR_PORT = 5055;
 const SEERR_SMTP_CA_MOUNT_PATH = "/etc/seerr/smtp-ca";
@@ -110,5 +116,26 @@ export function createSeerrDeployment(chart: Chart) {
   createCloudflareTunnelBinding(chart, "seerr-cf-tunnel", {
     serviceName: service.name,
     port: SEERR_PORT,
+  });
+
+  new KubeNetworkPolicy(chart, "seerr-egress-netpol", {
+    metadata: { name: "seerr-egress-netpol" },
+    spec: {
+      podSelector: { matchLabels: deployment.matchLabels },
+      policyTypes: ["Egress"],
+      egress: mediaAppEgress([
+        // Email notifications, configured in Seerr's own settings, go to
+        // Postal's SMTP Service.
+        {
+          to: [
+            {
+              ...nsPeer("postal"),
+              podSelector: { matchLabels: { app: "postal-smtp" } },
+            },
+          ],
+          ports: [tcp(25)],
+        },
+      ]),
+    },
   });
 }

@@ -18,7 +18,15 @@ import {
 import { ConfigMap } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { prometheusIngressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
+  dnsEgressRule,
+  flagsEgress,
+  nsPeer,
+  prometheusIngressRule,
+  publicWebEgressRule,
+  tcp,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { temporalTelemetryEgressRules } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
@@ -454,9 +462,15 @@ export function createWoodpeckerMaintenanceWorker(chart: Chart): void {
     matchLabels: { component: "maintenance-worker-app-metrics" },
   });
 
-  // Only Prometheus connects, to the two metrics ports. Egress stays
-  // unpoliced: the link-rot scan's lychee follows every web link in the
-  // repository, on whatever scheme and port the link names.
+  // Only Prometheus connects, to the two metrics ports.
+  //
+  // Egress names the cluster peers, then opens the public web broadly. The
+  // link-rot scan's lychee checks every http and https link in the
+  // repository's Markdown, so its destinations are whatever the docs link to;
+  // Kometa, the Trivy DB refresh and the scans' git clones also fetch over
+  // HTTPS. lychee.toml already skips private and tailnet hosts, which this
+  // rule leaves closed. A link on a port other than 443 or 80 is reported
+  // unreachable rather than checked.
   new KubeNetworkPolicy(chart, "temporal-maintenance-worker-netpol", {
     metadata: {
       name: "temporal-maintenance-worker-netpol",
@@ -464,8 +478,27 @@ export function createWoodpeckerMaintenanceWorker(chart: Chart): void {
     },
     spec: {
       podSelector: { matchLabels: { component: "maintenance-worker" } },
-      policyTypes: ["Ingress"],
+      policyTypes: ["Ingress", "Egress"],
       ingress: [prometheusIngressRule([9464, 9465])],
+      egress: [
+        dnsEgressRule(),
+        {
+          to: [
+            {
+              ...nsPeer("temporal"),
+              podSelector: { matchLabels: { app: "temporal-server" } },
+            },
+          ],
+          ports: [tcp(7233)],
+        },
+        flagsEgress(),
+        ...temporalTelemetryEgressRules(),
+        // `/v8/clean` on the Turborepo cache (TURBO_CACHE_CLEAN_URL).
+        { to: [nsPeer("turbo-cache")], ports: [tcp(3000)] },
+        // Kometa's Plex API (KOMETA_CONFIG).
+        { to: [nsPeer("media")], ports: [tcp(32_400)] },
+        publicWebEgressRule(),
+      ],
     },
   });
 }
