@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { commitStatus } from "#infrastructure/hub/commits.ts";
+import { commitPage, commitStatus } from "#infrastructure/hub/commits.ts";
 import {
   acceptedDeployment,
   useDeliveryFixture,
@@ -453,5 +453,26 @@ describe("a release a row names shows its own state", () => {
     // The accepted release itself is live, with no outcome to report.
     const live = await commitStatus(database, sha("3"));
     expect(live.changed[0]?.environments[0]?.state).toBe("live");
+  });
+
+  test("a commit counts the services it built itself, so a partly carried one says so", async () => {
+    // sha 9 built Arcade on its own and Golink failed; sha 5 built only a
+    // failed Golink. A later commit's Golink carries both failures.
+    await publish("arcade", sha("9"), 1600, "verified");
+    await publish("golink", sha("9"), 1600, "failed");
+    await publish("golink", sha("5"), 1601, "failed");
+    await publish("golink", sha("6"), 1602, "verified");
+    const database = context.cluster.database;
+    const partly = await commitStatus(database, sha("9"));
+    expect(partly.builtCount).toBe(1);
+    expect(partly.carriedFailures).toHaveLength(1);
+    const wholly = await commitStatus(database, sha("5"));
+    expect(wholly.builtCount).toBe(0);
+    expect(wholly.carriedFailures).toHaveLength(1);
+    // The list row carries the same count.
+    const page = await commitPage(database, {});
+    expect(page.items.find((item) => item.sha === sha("9"))?.builtCount).toBe(
+      1,
+    );
   });
 });
