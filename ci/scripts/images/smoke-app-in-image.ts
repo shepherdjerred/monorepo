@@ -517,6 +517,10 @@ const commands: Record<
     command: "cd /app/packages/mail && bun src/smoke.ts",
     env: {},
   },
+  feeds: {
+    command: "cd /app/packages/feeds && bun src/smoke.ts",
+    env: {},
+  },
 };
 
 /** The command and environment the in-image runner executes for `target`. */

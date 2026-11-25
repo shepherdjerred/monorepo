@@ -215,6 +215,12 @@
       "title": "Storm Stats",
       "kind": "product",
       "package": "storm-stats"
+    },
+    {
+      "id": "feeds",
+      "title": "Feeds",
+      "kind": "product",
+      "package": "feeds"
     }
   ],
   "services": [
@@ -2753,6 +2759,34 @@
             "argoApp": "storm-stats"
           }
         ]
+      }
+    },
+    {
+      "id": "feeds",
+      "title": "Feeds",
+      "package": "feeds",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "feeds",
+      "components": [
+        {
+          "name": "image:feeds",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:feeds",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["feeds"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "feeds": "inactive"
+        },
+        "charts": ["feeds"]
       }
     }
   ],

@@ -105,6 +105,7 @@ group "app" {
     "flags",
     "storm-stats",
     "mail",
+    "feeds",
   ]
 }
 
@@ -304,6 +305,14 @@ target "mail" {
   tags       = imagetags("mail")
   cache-from = cachefrom("mail")
   cache-to   = cacheto("mail")
+}
+
+target "feeds" {
+  inherits   = ["_app"]
+  dockerfile = "packages/feeds/Dockerfile"
+  tags       = imagetags("feeds")
+  cache-from = cachefrom("feeds")
+  cache-to   = cacheto("feeds")
 }
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────

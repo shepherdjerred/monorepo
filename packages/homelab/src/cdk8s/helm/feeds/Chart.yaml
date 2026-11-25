@@ -1,0 +1,6 @@
+apiVersion: v2
+name: feeds
+description: Feeds
+type: application
+version: "$version"
+appVersion: "$appVersion"
