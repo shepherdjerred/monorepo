@@ -64,6 +64,10 @@
         "bucket": "delivery-artifacts",
         "lifecycle": { "prevent_destroy": true }
       },
+      "git_backups": {
+        "bucket": "git-backups",
+        "lifecycle": { "prevent_destroy": true }
+      },
       "glitter_boys": { "bucket": "glitter-boys" },
       "glitter_boys_ppl": { "bucket": "glitter-boys-ppl" },
       "glitter_discord_corpus": {

@@ -36,6 +36,8 @@ export const runWoodpeckerLogRetention = (
 ) => _runWoodpeckerLogRetention(input);
 import { generateDependencySummary as _generateDependencySummary } from "./deps-summary.ts";
 import { runDnsAudit as _runDnsAudit } from "./homelab/dns-audit.ts";
+import { runDdnsSyncWorkflow as _runDdnsSyncWorkflow } from "./infra/ddns-workflow.ts";
+import { runGitBackupWorkflow as _runGitBackupWorkflow } from "./repo/git-backup-workflow.ts";
 import {
   goodMorningGetUp as _goodMorningGetUp,
   goodMorningPreheat as _goodMorningPreheat,
@@ -227,6 +229,9 @@ export async function generateDependencySummary(
 export async function runDnsAudit(): Promise<void> {
   return _runDnsAudit();
 }
+export const runDdnsSyncWorkflow = () => _runDdnsSyncWorkflow();
+export const runGitBackupWorkflow = (reportTaskQueue?: string) =>
+  _runGitBackupWorkflow(reportTaskQueue);
 export const goodMorningPreheat = (): Promise<void> => _goodMorningPreheat();
 export const goodMorningWakeUp = (): Promise<void> => _goodMorningWakeUp();
 export const goodMorningGetUp = (): Promise<void> => _goodMorningGetUp();

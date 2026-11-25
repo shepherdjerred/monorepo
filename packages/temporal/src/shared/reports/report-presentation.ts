@@ -4,6 +4,7 @@ import type { ReportEnvelopeV1 } from "./report.ts";
 export const TAILORED_REPORT_TYPES = [
   "agent-task",
   "dependency-summary",
+  "git-backup",
   "homelab-audit",
   "link-rot-scan",
   "main-vuln-scan",
@@ -21,6 +22,8 @@ export function reportEyebrow(reportType: string): string {
   switch (reportType) {
     case "homelab-audit":
       return "Homelab Check";
+    case "git-backup":
+      return "Git Backup";
     case "dependency-summary":
       return "Repo Dependencies";
     case "scout-data-dragon":
@@ -113,6 +116,16 @@ const SUBJECT_POLICIES = {
       inconclusive: "Dependencies: Check incomplete",
       partial: "Dependencies: Check incomplete",
       failed: "Dependencies: Check failed",
+    }),
+  "git-backup": (report) =>
+    subjectFromCopy(report, {
+      clear: "Git backup: All repositories backed up",
+      changed: "Git backup: Snapshots updated",
+      attention: "Git backup: Repository failures need review",
+      pending: "Git backup: Still pending",
+      inconclusive: "Git backup: Could not finish",
+      partial: "Git backup: Partial backup needs review",
+      failed: "Git backup: Run failed",
     }),
   "homelab-audit": (report) =>
     subjectFromCopy(report, {

@@ -24,6 +24,7 @@ const REPORT_RECEIPT_ACTIVATION = "2026-08-11T23:52:18.000Z";
  */
 const SCANNER_REPORT_ACTIVATION = "2026-09-01T00:00:00.000Z";
 const HUB_CATALOG_REPORT_ACTIVATION = "2026-11-23T00:00:00.000Z";
+const GIT_BACKUP_REPORT_ACTIVATION = "2026-11-25T00:00:00.000Z";
 
 export function defaultReportGraceHours(cadenceHours: number): number {
   if (cadenceHours < 24) return 0.5;
@@ -107,5 +108,12 @@ export const REPORT_SCHEDULE_REGISTRY: readonly ReportScheduleRegistration[] = [
     cadenceHours: 24,
     graceHours: defaultReportGraceHours(24),
     receiptRequiredAfter: HUB_CATALOG_REPORT_ACTIVATION,
+  },
+  {
+    scheduleId: "git-backup-daily",
+    reportType: "git-backup",
+    cadenceHours: 24,
+    graceHours: 4,
+    receiptRequiredAfter: GIT_BACKUP_REPORT_ACTIVATION,
   },
 ];

@@ -39,6 +39,15 @@ describe("findEnvironmentVariableViolations", () => {
     ).toEqual([]);
   });
 
+  test("permits the scoped Git backup token file path", () => {
+    expect(
+      findEnvironmentVariableViolations(
+        "example.ts",
+        "const GIT_BACKUP_GITHUB_TOKEN_FILE = value",
+      ),
+    ).toEqual([]);
+  });
+
   test("permits a vendor CLI's own spelling at the gcx boundary", () => {
     expect(
       findEnvironmentVariableViolations(

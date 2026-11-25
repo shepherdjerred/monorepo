@@ -123,6 +123,27 @@ const SUBJECT_CASES = [
     expected: "Dependencies: Check incomplete",
   },
   {
+    reportType: "git-backup",
+    title: "Daily Git repository backup",
+    execution: "complete",
+    verdict: "clear",
+    expected: "Git backup: All repositories backed up",
+  },
+  {
+    reportType: "git-backup",
+    title: "Daily Git repository backup",
+    execution: "partial",
+    verdict: "attention",
+    expected: "Git backup: Partial backup needs review",
+  },
+  {
+    reportType: "git-backup",
+    title: "Daily Git repository backup",
+    execution: "failed",
+    verdict: "inconclusive",
+    expected: "Git backup: Run failed",
+  },
+  {
     reportType: "homelab-audit",
     title: "Daily homelab audit",
     execution: "complete",
@@ -347,11 +368,12 @@ describe("ReportEnvelopeV1", () => {
         }),
       ).toBe(subjectCase.expected);
     }
-    expect(TAILORED_REPORT_TYPES).toHaveLength(11);
+    expect(TAILORED_REPORT_TYPES).toHaveLength(12);
     expect(TAILORED_REPORT_TYPES.every(hasTailoredReportPresentation)).toBe(
       true,
     );
     expect(reportEyebrow("storm-promotion")).toBe("The Storm Promotion");
+    expect(reportEyebrow("git-backup")).toBe("Git Backup");
   });
 
   test("derives PR-aware changed subjects when remediation includes a PR URL", () => {

@@ -110,6 +110,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runLinkRotScanWorkflow: "maintenance",
 
   // TASK_QUEUES.INFRA
+  runDdnsSyncWorkflow: "infra",
   runBugsinkHousekeepingWorkflow: "infra",
   runVeleroOrphanAuditWorkflow: "infra",
   runZfsMaintenanceWorkflow: "infra",
@@ -125,6 +126,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   maintainStormForumWorkflow: "infra",
 
   // TASK_QUEUES.REPO_AUTOMATION
+  runGitBackupWorkflow: "repo",
   runLlmCatalogRefresh: "repo",
   fetchSkillCappedManifest: "repo",
   runFreshRssSyncWorkflow: "repo",

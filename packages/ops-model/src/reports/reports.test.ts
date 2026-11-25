@@ -295,15 +295,15 @@ describe("ReportRunIngestBatchSchema", () => {
 });
 
 describe("RECURRING_REPORT_SCHEDULES catalog", () => {
-  test("declares all 13 recurring streams with schema-valid metadata and aligned mailboxes", () => {
-    expect(RECURRING_REPORT_SCHEDULES).toHaveLength(13);
-    expect(TEMPORAL_REPORT_SCHEDULES).toHaveLength(11);
+  test("declares all 14 recurring streams with schema-valid metadata and aligned mailboxes", () => {
+    expect(RECURRING_REPORT_SCHEDULES).toHaveLength(14);
+    expect(TEMPORAL_REPORT_SCHEDULES).toHaveLength(12);
     expect(OPS_DIGEST_SCHEDULES).toHaveLength(2);
 
     const ids = RECURRING_REPORT_SCHEDULES.map(
       (schedule) => schedule.scheduleId,
     );
-    expect(new Set(ids).size).toBe(13);
+    expect(new Set(ids).size).toBe(14);
 
     for (const schedule of RECURRING_REPORT_SCHEDULES) {
       expect(RecurringReportScheduleSchema.parse(schedule)).toEqual(schedule);
@@ -326,6 +326,7 @@ describe("RECURRING_REPORT_SCHEDULES catalog", () => {
     expect(DAILY_CHANGED_TEMPORAL_FAMILIES).toEqual({
       "the-storm-promotion-daily": "storm-promotion",
       "homelab-audit-daily": "homelab-audit",
+      "git-backup-daily": "git-backup",
       "scout-data-dragon-version-check": "scout-data-dragon",
       "scout-queue-windows-daily": "scout-queue-windows",
     });

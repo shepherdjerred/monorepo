@@ -117,6 +117,7 @@ export function reportMailboxForType(reportType: string): MailboxPair {
     case "dependency-summary":
       return OPS_MAILBOXES.reports.dependencies;
     case "homelab-audit":
+    case "git-backup":
     case "tasknotes-canary":
       return OPS_MAILBOXES.reports.ops;
     case "scout-data-dragon":

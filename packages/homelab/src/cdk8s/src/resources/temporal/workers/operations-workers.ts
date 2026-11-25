@@ -71,8 +71,11 @@ export type TemporalOperationsWorkerProps = {
   infraServiceAccount: ServiceAccount;
   homelabAuditEnvironment: Record<string, EnvValue>;
   talosConfigVolume: Volume;
+  ddnsApiTokenVolume: Volume;
   freshRssManifestVolume: Volume;
   freshRssCredentialVolume: Volume;
+  gitBackupTokenVolume: Volume;
+  gitMirrorCacheVolume: Volume;
   billingSecret: ISecret;
 };
 
@@ -148,6 +151,9 @@ export function createTemporalOperationsWorkers(
       ...opsSnapshotEnv(props.secret),
       // The mining-reset queue's Red Warfare recording archive.
       ...rwfArchiveEnv(props.secret),
+      CLOUDFLARE_DDNS_API_TOKEN_FILE: EnvValue.fromValue(
+        "/run/secrets/ddns/api-token",
+      ),
     },
     volumeMounts: [
       {
@@ -162,6 +168,11 @@ export function createTemporalOperationsWorkers(
       {
         path: "/etc/talos",
         volume: props.talosConfigVolume,
+        readOnly: true,
+      },
+      {
+        path: "/run/secrets/ddns",
+        volume: props.ddnsApiTokenVolume,
         readOnly: true,
       },
     ],
@@ -264,6 +275,11 @@ export function createTemporalOperationsWorkers(
       FRESHRSS_API_PASSWORD_FILE: EnvValue.fromValue(
         "/run/secrets/freshrss/password",
       ),
+      ...seaweedfsS3.bucketEnv("GIT_BACKUP_S3_BUCKET", "temporal"),
+      GIT_BACKUP_GITHUB_TOKEN_FILE: EnvValue.fromValue(
+        "/run/secrets/git-backup/password",
+      ),
+      GIT_BACKUP_MIRROR_DIR: EnvValue.fromValue("/var/lib/git-backups/mirrors"),
     },
     volumeMounts: [
       {
@@ -275,6 +291,15 @@ export function createTemporalOperationsWorkers(
         path: "/run/secrets/freshrss",
         volume: props.freshRssCredentialVolume,
         readOnly: true,
+      },
+      {
+        path: "/run/secrets/git-backup",
+        volume: props.gitBackupTokenVolume,
+        readOnly: true,
+      },
+      {
+        path: "/var/lib/git-backups/mirrors",
+        volume: props.gitMirrorCacheVolume,
       },
     ],
   });
