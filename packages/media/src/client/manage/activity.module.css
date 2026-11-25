@@ -21,9 +21,6 @@
     color: var(--text-muted);
     margin: 6px 0 0;
   }
-  .timeline {
-    margin-top: var(--space-3);
-  }
   .timelineItem {
     display: flex;
     gap: 18px;

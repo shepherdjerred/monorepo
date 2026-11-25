@@ -73,8 +73,9 @@ export type LegacyActivityEvent = z.infer<typeof LegacyActivityEventSchema>;
 
 export const LEGACY_ACTIVITY_BATCH_SIZE = 500;
 export const LEGACY_ACTIVITY_PAGE_SIZE = 50;
+export const LEGACY_ACTIVITY_EVENT_KIND = "legacy_activity";
 export const LegacyActivityImportSchema = z.strictObject({
-  kind: z.literal("legacy_activity"),
+  kind: z.literal(LEGACY_ACTIVITY_EVENT_KIND),
   events: z
     .array(LegacyActivityEventSchema)
     .min(1)
@@ -90,7 +91,11 @@ export type LegacyActivityQuery = z.infer<typeof LegacyActivityQuerySchema>;
 
 export const LegacyActivityPageSchema = z.strictObject({
   items: z.array(
-    z.strictObject({ id: z.uuid(), event: LegacyActivityEventSchema }),
+    z.strictObject({
+      id: z.uuid(),
+      event: LegacyActivityEventSchema,
+      media: z.strictObject({ id: z.uuid(), title: z.string() }).optional(),
+    }),
   ),
   nextCursor: z.uuid().nullable(),
 });

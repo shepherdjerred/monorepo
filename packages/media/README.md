@@ -3459,11 +3459,13 @@ library retention, or the play counts and watch time supplied by timed sessions.
 
 ### Historical download and subtitle activity
 
-**Manage → Activity** shows archived Sonarr, Radarr, and Bazarr activity to the
-owner. Use the activity source filter to browse all imports or a single
-source. Events retain their source instance, original row ID, time, and any
-available file, provider, and subtitle facts. Source title IDs remain visible
-when a canonical title was absent from the archive.
+**Manage → Activity** shows Media operations and archived Sonarr, Radarr, and
+Bazarr activity in timestamp order for the owner. Use the source filter to
+browse Media activity, all imports, or a single source. Events retain their
+source instance, original row ID, time, and available file, provider, and
+subtitle facts. Sonarr events can link to a Media episode when a stored
+capture confirms the exact series identity and episode numbering. The
+original source IDs remain visible on every event that has them.
 
 Prepare the verified private activity archive with the
 [activity adapter](scripts/migration-legacy-activity.ts). It checks source

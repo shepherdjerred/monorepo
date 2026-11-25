@@ -2,8 +2,11 @@ import type {
   LegacyActivityPage,
   LegacyActivityQuery,
 } from "#shared/legacy-activity/contract.ts";
+import { ago, MINUTE } from "#testing/fixture-api/support.ts";
+import { episodeItem, titleNamed } from "./titles.ts";
 
 const movieId = "f6e1ef3f-62e2-4373-9b73-57ffeec95696";
+const sampleEpisode = episodeItem(titleNamed("The Bear"), 1, 1);
 const manager = {
   table: "history",
   provider: null,
@@ -15,12 +18,13 @@ const manager = {
 const fixturePage: LegacyActivityPage["items"] = [
   {
     id: "1d29b7ce-a8bc-4d3f-a536-eca3792e57ee",
+    media: { id: sampleEpisode.id, title: sampleEpisode.title },
     event: {
       ...manager,
       source: "sonarr",
       sourceInstanceId: "9fb8d288-6de6-4a25-8891-949b7be9641b",
       originalId: 438,
-      sourceDate: "2026-09-28T22:18:01Z",
+      sourceDate: ago(7 * MINUTE),
       action: "downloadFolderImported",
       episodeId: 63,
       seriesId: 27,

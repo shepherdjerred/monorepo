@@ -3,6 +3,7 @@ import type { MediaActor } from "#application/auth.ts";
 import { MediaError, requireOwner } from "#application/errors.ts";
 import {
   LEGACY_ACTIVITY_PAGE_SIZE,
+  LEGACY_ACTIVITY_EVENT_KIND,
   LegacyActivityEventSchema,
   type LegacyActivityImport,
   type LegacyActivityPage,
@@ -12,8 +13,7 @@ import {
 import type { Database } from "#infrastructure/database.ts";
 import { lockCommandActor } from "#infrastructure/editions/command-actor.ts";
 import { repeatableRead } from "#infrastructure/locks.ts";
-
-const EVENT_KIND = "legacy_activity";
+import { sonarrActivityLinks } from "./sonarr.ts";
 
 function conflict() {
   return new MediaError(
@@ -36,11 +36,13 @@ export async function importLegacyActivity(
 
   return await db.$transaction(async (tx) => {
     requireOwner(await lockCommandActor(tx, actor));
+    const links = await sonarrActivityLinks(tx, input.events);
     // Insert identical key sets in a consistent order across concurrent imports.
     const records = input.events
       .map((event) => ({
         dedupeKey: legacyActivityKey(event),
-        kind: EVENT_KIND,
+        mediaId: links.get(legacyActivityKey(event)) ?? null,
+        kind: LEGACY_ACTIVITY_EVENT_KIND,
         createdAt: new Date(event.sourceDate),
         payload: event,
       }))
@@ -51,7 +53,7 @@ export async function importLegacyActivity(
       skipDuplicates: true,
     });
     const stored = await tx.applicationEvent.findMany({
-      where: { dedupeKey: { in: keys }, kind: EVENT_KIND },
+      where: { dedupeKey: { in: keys }, kind: LEGACY_ACTIVITY_EVENT_KIND },
       select: { dedupeKey: true, payload: true },
     });
     if (
@@ -79,7 +81,7 @@ export async function readLegacyActivity(
   return await repeatableRead(db, async (tx) => {
     requireOwner(await lockCommandActor(tx, actor));
     const where = {
-      kind: EVENT_KIND,
+      kind: LEGACY_ACTIVITY_EVENT_KIND,
       ...(query.source === "imported"
         ? {}
         : { payload: { path: ["source"], equals: query.source } }),
@@ -111,12 +113,30 @@ export async function readLegacyActivity(
       },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: LEGACY_ACTIVITY_PAGE_SIZE + 1,
-      select: { id: true, payload: true },
+      select: { id: true, payload: true, mediaId: true },
     });
-    const items = rows.slice(0, LEGACY_ACTIVITY_PAGE_SIZE).map((row) => ({
-      id: row.id,
-      event: LegacyActivityEventSchema.parse(row.payload),
-    }));
+    const visible = rows.slice(0, LEGACY_ACTIVITY_PAGE_SIZE);
+    const ids = [
+      ...new Set(
+        visible.flatMap((row) => (row.mediaId === null ? [] : [row.mediaId])),
+      ),
+    ];
+    const titles =
+      ids.length === 0
+        ? []
+        : await tx.mediaItem.findMany({
+            where: { id: { in: ids } },
+            select: { id: true, title: true },
+          });
+    const byId = new Map(titles.map((title) => [title.id, title]));
+    const items = visible.map((row) => {
+      const media = row.mediaId === null ? undefined : byId.get(row.mediaId);
+      return {
+        id: row.id,
+        event: LegacyActivityEventSchema.parse(row.payload),
+        ...(media === undefined ? {} : { media }),
+      };
+    });
     return {
       items,
       nextCursor:
