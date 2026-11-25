@@ -41,6 +41,11 @@ export const flagDeployments = [
     stage: "prod",
   },
   {
+    id: "errors/prod",
+    catalog: "errors",
+    stage: "prod",
+  },
+  {
     id: "feeds/prod",
     catalog: "feeds",
     stage: "prod",

@@ -159,6 +159,11 @@ test("admits only tailnet, monitoring and the infra worker to the unauthenticate
             matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
           },
         },
+        {
+          namespaceSelector: {
+            matchLabels: { "kubernetes.io/metadata.name": "errors" },
+          },
+        },
       ],
       ports: [{ port: 7351 }],
     },

@@ -348,6 +348,8 @@ export function createBugsinkDeployment(chart: Chart) {
             nsPeer("tailscale"),
             // Cloudflare tunnel
             cloudflareTunnelPeer(),
+            // First-party errors importer
+            nsPeer("errors"),
           ],
           ports: [tcp(8000)],
         },

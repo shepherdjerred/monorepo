@@ -200,40 +200,28 @@ export const runCiWorkspaceReaperWorkflow =
   maintenanceWorkflows.runCiWorkspaceReaperWorkflow;
 export const runTrackerAttachmentCleanup = maintenanceWorkflows.trackerCleanup;
 export const runLinkRotScanWorkflow = linkRotScan.runLinkRotScanWorkflow;
-export async function runScheduleRehearsalWorkflow(): Promise<ScheduleRehearsalResult> {
-  return runScheduleRehearsalWorkflowImplementation();
-}
-export async function runBunCacheGcWorkflow(): Promise<void> {
-  return runBunCacheGcWorkflowImplementation();
-}
-export async function runUvCachePruneWorkflow(): Promise<void> {
-  return runUvCachePruneWorkflowImplementation();
-}
-export async function runTrivyDbRefreshWorkflow(): Promise<void> {
-  return runTrivyDbRefreshWorkflowImplementation();
-}
-export async function runTurboCacheCleanWorkflow(): Promise<void> {
-  return runTurboCacheCleanWorkflowImplementation();
-}
-export async function runFreshRssSyncWorkflow(): Promise<void> {
-  return _runFreshRssSyncWorkflow();
-}
-export async function runFeedsRefreshWorkflow(): Promise<FeedsRefreshSummary> {
-  return _runFeedsRefreshWorkflow();
-}
-export async function runFlagInventorySync(): Promise<FlagInventoryResult[]> {
-  return _runFlagInventorySync();
-}
-
-export async function generateDependencySummary(
+export const runScheduleRehearsalWorkflow =
+  (): Promise<ScheduleRehearsalResult> =>
+    runScheduleRehearsalWorkflowImplementation();
+export const runBunCacheGcWorkflow = (): Promise<void> =>
+  runBunCacheGcWorkflowImplementation();
+export const runUvCachePruneWorkflow = (): Promise<void> =>
+  runUvCachePruneWorkflowImplementation();
+export const runTrivyDbRefreshWorkflow = (): Promise<void> =>
+  runTrivyDbRefreshWorkflowImplementation();
+export const runTurboCacheCleanWorkflow = (): Promise<void> =>
+  runTurboCacheCleanWorkflowImplementation();
+export const runFreshRssSyncWorkflow = (): Promise<void> =>
+  _runFreshRssSyncWorkflow();
+export const runFeedsRefreshWorkflow = (): Promise<FeedsRefreshSummary> =>
+  _runFeedsRefreshWorkflow();
+export const runFlagInventorySync = (): Promise<FlagInventoryResult[]> =>
+  _runFlagInventorySync();
+export const generateDependencySummary = (
   daysBack = 7,
   reportTaskQueue?: string,
-): Promise<void> {
-  return _generateDependencySummary(daysBack, reportTaskQueue);
-}
-export async function runDnsAudit(): Promise<void> {
-  return _runDnsAudit();
-}
+): Promise<void> => _generateDependencySummary(daysBack, reportTaskQueue);
+export const runDnsAudit = (): Promise<void> => _runDnsAudit();
 export const runDdnsSyncWorkflow = () => _runDdnsSyncWorkflow();
 export const runGitBackupWorkflow = (reportTaskQueue?: string) =>
   _runGitBackupWorkflow(reportTaskQueue);

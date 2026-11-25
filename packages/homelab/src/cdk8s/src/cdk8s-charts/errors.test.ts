@@ -25,10 +25,13 @@ test("an activated service renders its workload", () => {
   expect(kinds).toEqual(
     expect.arrayContaining([
       "Namespace",
+      "postgresql",
+      "OnePasswordItem",
       "Deployment",
       "NetworkPolicy",
       "Service",
       "Ingress",
+      "TunnelBinding",
     ]),
   );
 });

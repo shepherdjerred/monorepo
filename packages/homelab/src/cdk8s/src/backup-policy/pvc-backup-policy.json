@@ -652,5 +652,11 @@
     "name": "ci-cache-liskov",
     "backup": "disabled",
     "reason": "Rebuildable Turborepo, Gradle, and sccache artifact cache on liskov"
+  },
+  {
+    "namespace": "errors",
+    "name": "pgdata-errors-postgresql-0",
+    "backup": "enabled",
+    "reason": "Errors PostgreSQL database"
   }
 ]

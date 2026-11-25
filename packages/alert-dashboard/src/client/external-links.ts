@@ -5,6 +5,7 @@ import {
 } from "@shepherdjerred/ops-model/tool-links.ts";
 import {
   ActivityIcon,
+  AlertOctagonIcon,
   BellRingIcon,
   BugIcon,
   ChartLineIcon,
@@ -41,6 +42,7 @@ export type ExternalEntry = {
  */
 const ICONS: Readonly<Record<string, LucideIcon>> = {
   delivery: RocketIcon,
+  errors: AlertOctagonIcon,
   flags: FlagIcon,
   feeds: RssIcon,
   golink: LinkIcon,

@@ -154,6 +154,13 @@ describe("createMailChart", () => {
             },
             {
               namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "errors",
+                },
+              },
+            },
+            {
+              namespaceSelector: {
                 matchLabels: { "kubernetes.io/metadata.name": "media" },
               },
               podSelector: { matchLabels: { component: "media-network" } },

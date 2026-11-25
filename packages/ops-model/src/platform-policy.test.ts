@@ -31,7 +31,7 @@ test("root selection uses canonical chart owners and excludes upstream, inactive
   expect(delegated).toEqual(charts.filter((chart) => chart.name !== "arcade"));
   const activated = new ServiceIndex().rootReleaseCharts();
   expect(Object.keys(SERVICE_CATALOG.deliveryDelegations ?? {})).toHaveLength(
-    25,
+    26,
   );
   for (const name of Object.keys(SERVICE_CATALOG.deliveryDelegations ?? {}))
     expect(activated.map((chart) => chart.name)).not.toContain(name);

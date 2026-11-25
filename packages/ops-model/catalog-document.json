@@ -2857,13 +2857,17 @@
       ],
       "ops": {
         "kind": "product",
-        "namespaces": ["errors"]
+        "namespaces": ["errors"],
+        "argoApps": ["errors"]
       },
       "legacy": {
-        "rootReleaseExclusions": {
-          "errors": "inactive"
-        },
-        "charts": ["errors"]
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/errors",
+            "argoApp": "errors"
+          }
+        ]
       }
     }
   ],
@@ -3264,6 +3268,14 @@
       "configurationRevisionId": "golink/prod/1"
     },
     {
+      "id": "errors/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "errors/prod/2",
+      "configurationRevisionId": "errors/prod/1"
+    },
+    {
       "id": "flags/prod",
       "role": "durable",
       "approvalPolicy": "none",
@@ -3309,7 +3321,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/17"
+      "configurationRevisionId": "argocd/prod/18"
     },
     {
       "id": "chartmuseum/prod",
@@ -4130,6 +4142,46 @@
     },
     {
       "dependent": "delivery/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "errors/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "errors/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "errors/prod",
+      "prerequisite": "cloudflare-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "errors/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "errors/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "errors/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "errors/prod",
+      "prerequisite": "postgres-operator/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "errors/prod",
       "prerequisite": "prometheus/prod",
       "rule": "any-accepted"
     },
@@ -5430,6 +5482,11 @@
     },
     {
       "dependent": "tofu-cloudflare/prod",
+      "prerequisite": "errors/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "tofu-cloudflare/prod",
       "prerequisite": "feeds/prod",
       "rule": "any-accepted"
     },
@@ -5685,7 +5742,8 @@
       "flags": "flags/prod",
       "storm-stats": "storm-stats/prod",
       "mail": "outbound-mail/prod",
-      "feeds": "feeds/prod"
+      "feeds": "feeds/prod",
+      "errors": "errors/prod"
     },
     "platformDeliveryDelegated": true
   }

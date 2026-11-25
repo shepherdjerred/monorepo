@@ -117,6 +117,7 @@ export function createMailDeployment(chart: Chart) {
           {
             from: [
               nsPeer("alert-dashboard"),
+              nsPeer("errors"),
               {
                 ...nsPeer("media"),
                 podSelector: { matchLabels: { component: "media-network" } },

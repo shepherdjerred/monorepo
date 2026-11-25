@@ -3897,6 +3897,14 @@
         "type": "CNAME",
         "zone_id": "${cloudflare_zone.sjer_red.id}"
       },
+      "sjer_red_cname_logging": {
+        "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
+        "name": "logging",
+        "proxied": true,
+        "ttl": 1,
+        "type": "CNAME",
+        "zone_id": "${cloudflare_zone.sjer_red.id}"
+      },
       "sjer_red_cname_overseerr": {
         "content": "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com",
         "name": "overseerr",

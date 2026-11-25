@@ -94,7 +94,7 @@ export function createTrackerDeployment(
         selects: "app",
         ingress: [
           {
-            from: [nsPeer("tailscale"), nsPeer("prometheus")],
+            from: [nsPeer("tailscale"), nsPeer("prometheus"), nsPeer("errors")],
             ports: [TRACKER_ENDPOINT.tcp()],
           },
           {

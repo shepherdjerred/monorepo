@@ -6,6 +6,7 @@
     "tasknotes": "tasknotes-server/prod",
     "tracker": "tracker/prod",
     "feeds": "feeds/prod",
+    "errors": "errors/prod",
     "delivery": "delivery/prod",
     "trmnl-dashboard": "trmnl-dashboard/prod",
     "alert-dashboard": "ops-dashboard/prod",
@@ -912,14 +913,25 @@
     },
     {
       "id": "errors",
-      "rootReleaseExclusions": { "errors": "inactive" },
-      "images": ["errors"],
-      "charts": ["errors"],
       "title": "Errors",
       "kind": "product",
       "package": "errors",
+      "aliases": [],
       "namespaces": ["errors"],
-      "argoApps": []
+      "argoApps": ["errors"],
+      "charts": [],
+      "images": ["errors"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/errors",
+          "argoApp": "errors"
+        }
+      ]
     }
   ]
 }
