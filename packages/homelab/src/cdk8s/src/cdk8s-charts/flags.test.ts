@@ -234,6 +234,7 @@ test("an activated service scopes network policy ingress and egress", () => {
             "tracker",
             "golink",
             "mail",
+            "feeds",
           ].map((namespace) => ({
             namespaceSelector: {
               matchLabels: { "kubernetes.io/metadata.name": namespace },

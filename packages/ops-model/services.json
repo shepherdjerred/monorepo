@@ -5,6 +5,7 @@
     "birmel": "birmel/prod",
     "tasknotes": "tasknotes-server/prod",
     "tracker": "tracker/prod",
+    "feeds": "feeds/prod",
     "delivery": "delivery/prod",
     "trmnl-dashboard": "trmnl-dashboard/prod",
     "alert-dashboard": "ops-dashboard/prod",
@@ -867,14 +868,25 @@
     },
     {
       "id": "feeds",
-      "rootReleaseExclusions": { "feeds": "inactive" },
-      "images": ["feeds"],
-      "charts": ["feeds"],
       "title": "Feeds",
       "kind": "product",
       "package": "feeds",
+      "aliases": [],
       "namespaces": ["feeds"],
-      "argoApps": []
+      "argoApps": ["feeds"],
+      "charts": [],
+      "images": ["feeds"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/feeds",
+          "argoApp": "feeds"
+        }
+      ]
     }
   ]
 }

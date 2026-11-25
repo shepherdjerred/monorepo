@@ -556,6 +556,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "maintainStormForumWorkflow",
   "fetchSkillCappedManifest",
   "runFreshRssSyncWorkflow",
+  "runFeedsRefreshWorkflow",
   "runFlagInventorySync",
   "runLlmBilledCostReconciliation",
   // Fans out one bounded collector Activity per source in parallel, then one

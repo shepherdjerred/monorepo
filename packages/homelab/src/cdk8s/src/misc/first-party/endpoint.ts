@@ -126,6 +126,14 @@ export const FLAGS_EVALUATION_ENDPOINT = defineEndpoint({
   portName: "eval",
 });
 
+/** Feeds's Tailscale listing console and authenticated refresh API (`resources/feeds`). */
+export const FEEDS_ENDPOINT = defineEndpoint({
+  namespace: "feeds",
+  app: "feeds",
+  port: 7430,
+  portName: "http",
+});
+
 /** The OTLP/HTTP receiver on the trace gateway (`alloy-gateway` Helm chart). */
 export const OTLP_GATEWAY_ENDPOINT = defineEndpoint({
   namespace: "alloy-gateway",

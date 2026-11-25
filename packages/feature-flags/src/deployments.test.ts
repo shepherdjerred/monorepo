@@ -7,12 +7,13 @@ describe("flag deployments", () => {
     const selectors = flagDeployments.map(
       (deployment) => `${deployment.catalog}/${deployment.stage}`,
     );
-    expect(flagDeployments).toHaveLength(18);
+    expect(flagDeployments).toHaveLength(19);
     expect(ids).toEqual([...ids].toSorted());
     expect(new Set(ids).size).toBe(ids.length);
     expect(new Set(selectors).size).toBe(selectors.length);
     expect(flagDeploymentForSelector("golink", "prod")?.id).toBe("golink/prod");
     expect(flagDeploymentForSelector("mail", "prod")?.id).toBe("mail/prod");
+    expect(flagDeploymentForSelector("feeds", "prod")?.id).toBe("feeds/prod");
   });
 
   test("only Scout and Karma have a second stage", () => {

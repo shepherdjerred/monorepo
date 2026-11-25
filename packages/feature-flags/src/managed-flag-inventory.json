@@ -82,6 +82,11 @@
       "description": "Tailnet shortlink service feature flags."
     },
     {
+      "key": "feeds",
+      "name": "Feeds",
+      "description": "First-party RSS/Atom feed reader runtime controls."
+    },
+    {
       "key": "mail",
       "name": "Mail",
       "description": "First-party outbound mail broker controls."
@@ -1059,6 +1064,18 @@
       "namespace": "golink",
       "source": "golink",
       "purpose": "Enable golink OpenTelemetry tracing at process startup.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "feeds-refresh-enabled",
+      "owner": "feeds",
+      "namespace": "feeds",
+      "source": "feeds",
+      "purpose": "Allow scheduled and manual upstream RSS/Atom feed polling in @shepherdjerred/feeds.",
       "type": "boolean",
       "default": true,
       "rollouts": [],

@@ -19,6 +19,7 @@ export const MANAGED_NAMESPACES = [
   "the-storm",
   "storm",
   "golink",
+  "feeds",
   "mail",
 ] as const;
 
@@ -529,6 +530,21 @@ export const GOLINK_FLAG_KEYS = [
 
 export type GolinkFlagKey = (typeof GOLINK_FLAG_KEYS)[number];
 
+export const FEEDS_BOOLEAN_FLAG_KEYS = ["feeds-refresh-enabled"] as const;
+
+export type FeedsBooleanFlagKey = (typeof FEEDS_BOOLEAN_FLAG_KEYS)[number];
+
+export const FEEDS_VARIANT_FLAG_KEYS = [] as const;
+
+export type FeedsVariantFlagKey = (typeof FEEDS_VARIANT_FLAG_KEYS)[number];
+
+export const FEEDS_FLAG_KEYS = [
+  ...FEEDS_BOOLEAN_FLAG_KEYS,
+  ...FEEDS_VARIANT_FLAG_KEYS,
+] as const;
+
+export type FeedsFlagKey = (typeof FEEDS_FLAG_KEYS)[number];
+
 export const MAIL_BOOLEAN_FLAG_KEYS = ["mail-relay-enabled"] as const;
 
 export type MailBooleanFlagKey = (typeof MAIL_BOOLEAN_FLAG_KEYS)[number];
@@ -561,6 +577,7 @@ export const MANAGED_FLAG_KEYS = [
   ...THE_STORM_FLAG_KEYS,
   ...STORM_FLAG_KEYS,
   ...GOLINK_FLAG_KEYS,
+  ...FEEDS_FLAG_KEYS,
   ...MAIL_FLAG_KEYS,
 ] as const;
 
@@ -583,6 +600,7 @@ export const MANAGED_BOOLEAN_FLAG_KEYS = [
   ...THE_STORM_BOOLEAN_FLAG_KEYS,
   ...STORM_BOOLEAN_FLAG_KEYS,
   ...GOLINK_BOOLEAN_FLAG_KEYS,
+  ...FEEDS_BOOLEAN_FLAG_KEYS,
   ...MAIL_BOOLEAN_FLAG_KEYS,
 ] as const;
 
@@ -605,6 +623,7 @@ export const MANAGED_VARIANT_FLAG_KEYS = [
   ...THE_STORM_VARIANT_FLAG_KEYS,
   ...STORM_VARIANT_FLAG_KEYS,
   ...GOLINK_VARIANT_FLAG_KEYS,
+  ...FEEDS_VARIANT_FLAG_KEYS,
   ...MAIL_VARIANT_FLAG_KEYS,
 ] as const;
 

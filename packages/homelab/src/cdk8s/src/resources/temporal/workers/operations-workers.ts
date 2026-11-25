@@ -21,6 +21,7 @@ import {
   seaweedfsS3,
   FLAGS_MANAGEMENT_URL,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { FEEDS_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 function s3Env(secret: ISecret): Record<string, EnvValue> {
   return {
@@ -65,6 +66,7 @@ export type TemporalOperationsWorkerProps = {
   serverServiceName: string;
   secret: ISecret;
   flagsAuthSecret: ISecret;
+  feedsAuthSecret: ISecret;
   ciGithubSecret: ISecret;
   infraServiceAccount: ServiceAccount;
   homelabAuditEnvironment: Record<string, EnvValue>;
@@ -247,6 +249,11 @@ export function createTemporalOperationsWorkers(
       FLAGS_MACHINE_TOKEN: EnvValue.fromSecretValue({
         secret: props.flagsAuthSecret,
         key: "FLAGS_MACHINE_TOKEN",
+      }),
+      FEEDS_URL: EnvValue.fromValue(FEEDS_ENDPOINT.url),
+      FEEDS_MACHINE_TOKEN: EnvValue.fromSecretValue({
+        secret: props.feedsAuthSecret,
+        key: "FEEDS_MACHINE_TOKEN",
       }),
       FRESHRSS_API_URL: EnvValue.fromValue(
         "http://freshrss-service.freshrss.svc.cluster.local/api/greader.php",

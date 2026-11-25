@@ -13,28 +13,20 @@ const K8sManifestHeaderSchema = z.looseObject({
 beforeEach(resetProbeRegistry);
 
 describe("feeds cdk8s chart", () => {
-  test("stays gated inactive by default and emits only the inactive ConfigMap marker", () => {
-    expect(FEEDS_ACTIVE).toBe(false);
-    const rendered = createFeedsChart(new App()).toJson();
-    expect(rendered).toEqual([
-      expect.objectContaining({
-        kind: "ConfigMap",
-        metadata: expect.objectContaining({ namespace: "feeds" }),
-        data: { active: "false" },
-      }),
-    ]);
-  });
-
-  test("renders feeds namespace, deployment, service, tailscale ingress, and network policy when active", () => {
+  test("is active by default and renders console + public reader services, tunnel binding, PVC, and network policy", () => {
+    expect(FEEDS_ACTIVE).toBe(true);
     const summaries = z
       .array(K8sManifestHeaderSchema)
-      .parse(createFeedsChart(new App(), true).toJson())
+      .parse(createFeedsChart(new App()).toJson())
       .map((obj) => `${obj.kind}/${obj.metadata.name}`);
 
     expect(summaries).toEqual(
       expect.arrayContaining([
         "Namespace/feeds",
         "Service/feeds",
+        "Service/feeds-reader-service",
+        "OnePasswordItem/feeds-auth",
+        "PersistentVolumeClaim/feeds-data",
         "NetworkPolicy/feeds-app-netpol",
       ]),
     );
@@ -42,5 +34,19 @@ describe("feeds cdk8s chart", () => {
       true,
     );
     expect(summaries.some((entry) => entry.startsWith("Ingress/"))).toBe(true);
+    expect(summaries.some((entry) => entry.startsWith("TunnelBinding/"))).toBe(
+      true,
+    );
+  });
+
+  test("emits only the inactive ConfigMap marker when explicitly gated off", () => {
+    const rendered = createFeedsChart(new App(), false).toJson();
+    expect(rendered).toEqual([
+      expect.objectContaining({
+        kind: "ConfigMap",
+        metadata: expect.objectContaining({ namespace: "feeds" }),
+        data: { active: "false" },
+      }),
+    ]);
   });
 });

@@ -30,6 +30,7 @@ export const APP_HOSTS = {
   delivery: "https://delivery.tailnet-1a49.ts.net",
   flags: "https://flags.tailnet-1a49.ts.net",
   golink: "https://go.tailnet-1a49.ts.net",
+  feeds: "https://feeds.tailnet-1a49.ts.net",
   media: "https://media.tailnet-1a49.ts.net",
   tasknotes: "https://tasknotes.tailnet-1a49.ts.net",
   mail: "https://mail.tailnet-1a49.ts.net",
@@ -61,6 +62,7 @@ export const CONSOLE_LINKS: readonly ConsoleLink[] = [
   { id: "delivery", label: "Delivery", url: APP_HOSTS.delivery, group: "Apps" },
   { id: "flags", label: "Flags", url: APP_HOSTS.flags, group: "Apps" },
   { id: "golink", label: "Go links", url: APP_HOSTS.golink, group: "Apps" },
+  { id: "feeds", label: "Feeds", url: APP_HOSTS.feeds, group: "Apps" },
   { id: "tracker", label: "Tracker", url: APP_HOSTS.tracker, group: "Apps" },
   { id: "media", label: "Media", url: APP_HOSTS.media, group: "Apps" },
   {

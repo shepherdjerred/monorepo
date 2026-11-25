@@ -1,0 +1,16 @@
+{
+  "kind": "argocd",
+  "application": "feeds",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "feeds",
+  "chartComponent": "chart:feeds",
+  "namespace": "feeds",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.feeds": "image:feeds"
+  },
+  "verification": {
+    "url": "https://feeds.tailnet-1a49.ts.net/healthz",
+    "expectedStatus": 200
+  }
+}

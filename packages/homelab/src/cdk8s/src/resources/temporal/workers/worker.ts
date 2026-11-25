@@ -79,6 +79,17 @@ export function createTemporalWorkerDeployment(
     "temporal-flags-auth-secret",
     flagsAuthItem.name,
   );
+  const feedsAuthItem = onePasswordSecret(
+    chart,
+    "temporal-feeds-auth-1p",
+    "hs2u3hto2k2e77sdjceh6pkuru",
+    { name: "feeds-auth" },
+  );
+  const feedsAuthSecret = Secret.fromSecretName(
+    chart,
+    "temporal-feeds-auth-secret",
+    feedsAuthItem.name,
+  );
   const ciGithubItem = onePasswordSecret(
     chart,
     "temporal-ci-github-credentials-1p",
@@ -349,6 +360,7 @@ export function createTemporalWorkerDeployment(
     serverServiceName: props.serverServiceName,
     secret,
     flagsAuthSecret,
+    feedsAuthSecret,
     ciGithubSecret,
     infraServiceAccount,
     homelabAuditEnvironment: homelabAuditEnv(

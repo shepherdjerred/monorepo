@@ -79,6 +79,23 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     memo: "Hourly FreshRSS Repo Stack reconciliation before feed refresh",
   },
   {
+    id: "feeds-refresh",
+    workflowType: "runFeedsRefreshWorkflow",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "13,43 * * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: "5 minutes",
+    workflowExecutionTimeout: "5 minutes",
+    memo: "Every-30-minute @shepherdjerred/feeds upstream RSS/Atom refresh",
+    initialPauseNote:
+      "Awaiting 100% candidate traffic for runFeedsRefreshWorkflow; stable workers do not register this Workflow",
+  },
+  {
     id: "flag-inventory-sync",
     workflowType: "runFlagInventorySync",
     args: [],

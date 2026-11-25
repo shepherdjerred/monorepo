@@ -23,6 +23,7 @@ import {
   PROMETHEUS_GATEWAY_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
 import {
+  FEEDS_ENDPOINT,
   GOLINK_ENDPOINT,
   MAIL_API_ENDPOINT,
   TRACKER_ENDPOINT,
@@ -288,6 +289,15 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
           ports: [tcp(80)],
         },
       ],
+    },
+  });
+
+  new KubeNetworkPolicy(chart, "temporal-worker-feeds-netpol", {
+    metadata: { name: "temporal-worker-feeds-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "repo-worker" } },
+      policyTypes: ["Egress"],
+      egress: [{ to: [FEEDS_ENDPOINT.peer()], ports: [FEEDS_ENDPOINT.tcp()] }],
     },
   });
 
