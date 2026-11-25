@@ -412,11 +412,11 @@ IP enforcement additionally requires a verified public address forwarded by
 a trusted private PROXY-protocol peer. Private, loopback, link-local,
 multicast and shared carrier addresses cannot become ban targets. An enabled
 IP gate rejects unverified connections and unavailable login checks. The
-server image accepts PROXY protocol; mc-router supplies it, Geyser forwards
-Bedrock addresses, and the RLCraft HAProxy sidecar strips the header for Forge.
+server image accepts PROXY protocol; `mc-router` supplies it for Java connections and Geyser forwards
+Bedrock client addresses.
 NodePort services preserve source addresses with `externalTrafficPolicy: Local`.
 Backend gameplay ingress is restricted to the router, with Bedrock UDP and
-existing management ports preserved. Roll out router and backends together;
+existing management ports preserved. Roll out router and backend together;
 the staff and IP flags are independent of that network change.
 
 ## Skills

@@ -19,7 +19,7 @@ function statefulSetMigration(name: string, syncOptions: string) {
   return {
     group: "apps",
     kind: "StatefulSet",
-    namespace: "minecraft-sjerred",
+    namespace: "minecraft-tsmc",
     name,
     liveState: database([{ metadata: { name: "datadir" } }]),
     targetState: state({
@@ -102,8 +102,8 @@ describe("ArgoCD apply safety", () => {
         {
           group: "apps",
           kind: "StatefulSet",
-          namespace: "minecraft-sjerred",
-          name: "minecraft-sjerred",
+          namespace: "minecraft-tsmc",
+          name: "minecraft-tsmc",
           liveState: database([{ metadata: { name: "datadir" } }]),
           targetState: state({
             metadata: {
@@ -128,8 +128,8 @@ describe("ArgoCD apply safety", () => {
         statefulSetMigration("replace-only", "Replace=true"),
       ]),
     ).toEqual([
-      "apps/StatefulSet minecraft-sjerred/force-only changes immutable /spec/volumeClaimTemplates",
-      "apps/StatefulSet minecraft-sjerred/replace-only changes immutable /spec/volumeClaimTemplates",
+      "apps/StatefulSet minecraft-tsmc/force-only changes immutable /spec/volumeClaimTemplates",
+      "apps/StatefulSet minecraft-tsmc/replace-only changes immutable /spec/volumeClaimTemplates",
     ]);
   });
 
@@ -256,18 +256,18 @@ describe("ArgoCD apply safety on explicit nulls", () => {
         {
           group: "apps",
           kind: "StatefulSet",
-          namespace: "minecraft-sjerred",
+          namespace: "minecraft-tsmc",
           name: "existing-claim",
           liveState: state({
             spec: {
-              serviceName: "minecraft-sjerred",
-              selector: { matchLabels: { app: "minecraft-sjerred" } },
+              serviceName: "minecraft-tsmc",
+              selector: { matchLabels: { app: "minecraft-tsmc" } },
             },
           }),
           targetState: state({
             spec: {
-              serviceName: "minecraft-sjerred",
-              selector: { matchLabels: { app: "minecraft-sjerred" } },
+              serviceName: "minecraft-tsmc",
+              selector: { matchLabels: { app: "minecraft-tsmc" } },
               volumeClaimTemplates: null,
             },
           }),
@@ -275,7 +275,7 @@ describe("ArgoCD apply safety on explicit nulls", () => {
         {
           group: "apps",
           kind: "StatefulSet",
-          namespace: "minecraft-sjerred",
+          namespace: "minecraft-tsmc",
           name: "removed-template",
           liveState: database([{ metadata: { name: "datadir" } }]),
           targetState: state({
@@ -288,7 +288,7 @@ describe("ArgoCD apply safety on explicit nulls", () => {
         },
       ]),
     ).toEqual([
-      "apps/StatefulSet minecraft-sjerred/removed-template changes immutable /spec/volumeClaimTemplates",
+      "apps/StatefulSet minecraft-tsmc/removed-template changes immutable /spec/volumeClaimTemplates",
     ]);
   });
 });

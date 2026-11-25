@@ -232,7 +232,7 @@ describe("TSMC routine upgrade preservation boundary", () => {
     expect(() =>
       minecraftRuntimeImage({
         ...detail,
-        environment: { application: "minecraft-shuxin" },
+        environment: { application: "other-application" },
       }),
     ).toThrow("reviewed TSMC target");
   });

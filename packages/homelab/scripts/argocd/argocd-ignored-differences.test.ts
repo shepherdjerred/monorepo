@@ -25,21 +25,21 @@ function statefulSet(serviceName: string, chartVersion: string): string {
   return state({
     spec: {
       serviceName,
-      selector: { matchLabels: { app: "minecraft-sjerred" } },
+      selector: { matchLabels: { app: "minecraft-tsmc" } },
       volumeClaimTemplates: [claimTemplate(chartVersion)],
     },
   });
 }
 
 function minecraftStatefulSet(
-  targetState: string = statefulSet("minecraft-sjerred", "5.1.3"),
+  targetState: string = statefulSet("minecraft-tsmc", "5.1.3"),
 ) {
   return {
     group: "apps",
     kind: "StatefulSet",
-    namespace: "minecraft-sjerred",
-    name: "minecraft-sjerred",
-    liveState: statefulSet("minecraft-sjerred", "5.1.0"),
+    namespace: "minecraft-tsmc",
+    name: "minecraft-tsmc",
+    liveState: statefulSet("minecraft-tsmc", "5.1.0"),
     targetState,
   };
 }
@@ -58,7 +58,7 @@ const claimTemplateRule = {
 };
 
 const CLAIM_TEMPLATE_FINDING =
-  "apps/StatefulSet minecraft-sjerred/minecraft-sjerred changes immutable /spec/volumeClaimTemplates";
+  "apps/StatefulSet minecraft-tsmc/minecraft-tsmc changes immutable /spec/volumeClaimTemplates";
 
 describe("ArgoCD ignored differences", () => {
   test("does not refuse a change the sync will never send", () => {
@@ -97,7 +97,7 @@ describe("ArgoCD ignored differences", () => {
         ),
       ),
     ).toEqual([
-      "apps/StatefulSet minecraft-sjerred/minecraft-sjerred changes immutable /spec/serviceName",
+      "apps/StatefulSet minecraft-tsmc/minecraft-tsmc changes immutable /spec/serviceName",
     ]);
   });
 
@@ -107,7 +107,7 @@ describe("ArgoCD ignored differences", () => {
         withIgnoredDifferencesApplied(
           [minecraftStatefulSet()],
           application(
-            [{ ...claimTemplateRule, name: "minecraft-tsmc" }],
+            [{ ...claimTemplateRule, name: "other-statefulset" }],
             ["RespectIgnoreDifferences=true"],
           ),
         ),

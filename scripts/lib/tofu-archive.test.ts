@@ -160,7 +160,6 @@ describe("OpenTofu stack archives", () => {
     expect(await tofuStackArchiveFiles("cloudflare", repository)).toEqual([
       TOFU_ARCHIVE_LAYOUT,
       `${TOFU_STACK_ROOT}/cloudflare/.terraform.lock.hcl`,
-      `${TOFU_STACK_ROOT}/cloudflare/dns-audit-2026-02-04.md`,
       `${TOFU_STACK_ROOT}/cloudflare/main.tf.json`,
     ]);
     const anthropic = await tofuStackArchiveFiles("anthropic", repository);

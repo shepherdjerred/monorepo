@@ -13,15 +13,15 @@ Use the [command and permission contract](https://github.com/shepherdjerred/mono
 
 3. Rehearse jail release and timed expiry across reconnects. Confirm the return location, retained communication and blocked travel. Set runtime destinations only while standing at safe locations. Restart and confirm the destinations survive without changing owned YAML.
 
-4. Schedule a maintenance window for the routing cutover. Stop admitting new connections and drain active sessions before changing protocol expectations. Merge the Storm and Shuxin Paper backends, Geyser settings, RLCraft header adapter, network policies and mc-router configuration as one source change. Then deploy each affected environment through Delivery within the window, following [Cut a homelab release](/how-to/cut-a-homelab-release/#deploy-a-set-revision).
+4. Schedule a maintenance window for the routing cutover. Stop admitting new connections and drain active sessions before changing protocol expectations. Merge The Storm Paper backend, Geyser settings, network policies and `mc-router` configuration as one source change. Then deploy each affected environment through Delivery within the window, following [Cut a homelab release](/how-to/cut-a-homelab-release/#deploy-a-set-revision).
 
-5. Confirm ArgoCD reconciles the intended revisions and every awake backend becomes healthy. Exercise Java hostname routing and wake-on-join for each backend. Confirm RLCraft accepts ordinary Forge traffic through its header adapter. Route public TCP and Bedrock UDP to nodes with local service endpoints after enabling source preservation.
+5. Confirm ArgoCD reconciles the intended revisions and the backend becomes healthy. Exercise Java hostname routing (`mc.ts-mc.net`) through `mc-router`. Route public TCP and Bedrock UDP to nodes with local service endpoints after enabling source preservation.
 
 6. Join Storm with a Java client and a Bedrock client using different public addresses. Keep IP enforcement disabled until both trusted paths report the actual client address. Verify direct gameplay access to the backend is blocked. Rehearse public-address bans and temporary expiry on disposable accounts before enabling enforcement.
 
 7. Enable staff tools, identity and letters through managed targeting after accepting their behavior. Enable IP enforcement separately after accepting routing and both client paths. Confirm existing reward claims still work and a full letter inbox refuses new mail without deleting older letters.
 
-8. If gameplay acceptance fails, turn off the affected capability through managed targeting. If routing fails, stop admissions and roll back router forwarding, Paper expectations, Geyser forwarding, header-adapter routing and network policy to the previously accepted revisions together. Keep IP enforcement disabled. Recheck Java, Bedrock, RLCraft and wake-on-join before reopening admissions.
+8. If gameplay acceptance fails, turn off the affected capability through managed targeting. If routing fails, stop admissions and roll back router forwarding, Paper expectations, Geyser forwarding and network policy to the previously accepted revisions together. Keep IP enforcement disabled. Recheck Java and Bedrock paths before reopening admissions.
 
 ## Related
 
