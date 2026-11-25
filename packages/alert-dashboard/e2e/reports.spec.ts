@@ -9,7 +9,7 @@ import {
   violations,
 } from "./helpers.ts";
 
-test("/reports renders KPIs, 13-stream matrix, feed filters, and navigates into run, digest, and incident inspectors", async ({
+test("/reports renders KPIs, 14-stream matrix, feed filters, and navigates into run, digest, and incident inspectors", async ({
   page,
 }) => {
   await page.setViewportSize(DESKTOP);
@@ -29,17 +29,17 @@ test("/reports renders KPIs, 13-stream matrix, feed filters, and navigates into 
   ).toContainText("2");
   await expect(
     page.locator(".eng-kpi-card", { hasText: "Schedule Freshness" }),
-  ).toContainText("13 / 13");
+  ).toContainText("14 / 14");
   await expect(
     page.locator(".eng-kpi-card", { hasText: "Incident Outbox" }),
   ).toContainText("0 pending · 0 failed");
 
-  // 13-stream schedule matrix
+  // 14-stream schedule matrix
   const matrix = page.getByRole("region", {
     name: "Recurring report schedules",
   });
   await expect(matrix).toBeVisible();
-  await expect(matrix.locator(".rep-schedule-row")).toHaveCount(13);
+  await expect(matrix.locator(".rep-schedule-row")).toHaveCount(14);
   await expect(matrix).toContainText("Weekly link-rot scan");
   await expect(matrix).toContainText("The Storm promotion summary");
   await expect(matrix).toContainText("Auto-merge PR");

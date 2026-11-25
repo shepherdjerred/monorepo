@@ -32,7 +32,7 @@
   text-transform: uppercase;
 }
 
-/* ---- 13-Stream Recurring Schedule Matrix ---- */
+/* ---- Recurring Schedule Matrix ---- */
 .rep-matrix-panel {
   display: grid;
   gap: 0;

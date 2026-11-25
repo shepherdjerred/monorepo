@@ -25,13 +25,13 @@ async function setup() {
 }
 
 describe("ReportService", () => {
-  it("computes overview KPIs and enriches all 13 recurring schedules", async () => {
+  it("computes overview KPIs and enriches all 14 recurring schedules", async () => {
     const { fixture } = await setup();
     const overview = await fixture.reports.overview();
 
     expect(overview.schedules).toHaveLength(RECURRING_REPORT_SCHEDULES.length);
-    expect(overview.kpis.totalSchedules).toBe(13);
-    expect(overview.kpis.freshSchedules).toBe(13);
+    expect(overview.kpis.totalSchedules).toBe(14);
+    expect(overview.kpis.freshSchedules).toBe(14);
     expect(overview.kpis.autoPrCount7d).toBe(2);
     expect(overview.kpis.quietSkips7d).toBeGreaterThanOrEqual(5);
     // `main-vuln-scan-weekly` has verdict="attention" and autoMergeEnabled=false.

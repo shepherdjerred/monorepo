@@ -115,7 +115,7 @@ describe("report routes", () => {
     const overview = ReportsOverviewResponseSchema.parse(
       await overviewRes.json(),
     );
-    expect(overview.schedules).toHaveLength(13);
+    expect(overview.schedules).toHaveLength(14);
 
     const feedRes = await app.request(
       "/api/v1/reports/feed?tab=reports&hasPr=1&q=&scheduleId=",

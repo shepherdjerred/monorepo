@@ -86,7 +86,7 @@ The core module has two halves in one process:
   rows archive their `DigestReport` JSON, rendered HTML/plain-text bodies,
   subject, severity, signal counts, and `skipReason`. `/reports`
   (`src/client/reports/reports-page.tsx`) combines five headline KPIs, the
-  13-stream recurring schedule matrix (11 Temporal scheduled reports + daily and
+  14-stream recurring schedule matrix (12 Temporal scheduled reports + daily and
   weekly Ops digests with 30-day Pacific activity strips, freshness budgets, and
   PR badges), and a unified filterable feed across scheduled reports, digests,
   agent tasks, and incident outbox mail. Deep-dive inspectors at
@@ -110,7 +110,7 @@ shared visual primitives:
 | `/renovate`  | `src/client/ops/pages/renovate-page.tsx`  | `renovate` facet + velocity presets: open PR concurrency and LLM delta coverage meters, `?tab=` queue buckets (`prs`, `approval`, `held`, `hygiene`, `merged`), and `?expand=` version-delta drawers             |
 | `/product`   | `src/client/ops/pages/product-page.tsx`   | `product` snapshot section + `posthog` facet: 24h/7d traffic KPIs, conversion funnels with step retention, site traffic & Core Web Vitals (`p75` LCP/INP, exceptions, rageclicks), and top pages/referrers       |
 | `/the-storm` | `src/client/ops/pages/the-storm-page.tsx` | `minecraft`, `storm-brain`, and `storm-forum` service health, `ts-mc.net` slice of the `posthog` facet, player/companion and `target="minecraft"` namespace presets, filtered signals/changes, `/promotion` link |
-| `/reports`   | `src/client/reports/reports-page.tsx`     | `ReportRun` + archived `DigestRun` + incident `EmailOutbox` ledger: 13-stream 30d Pacific schedule matrix, URL-synced unified feed, and `/reports/{runs/:id,digests/:kind/:periodKey,mail/:id}` inspectors       |
+| `/reports`   | `src/client/reports/reports-page.tsx`     | `ReportRun` + archived `DigestRun` + incident `EmailOutbox` ledger: 14-stream 30d Pacific schedule matrix, URL-synced unified feed, and `/reports/{runs/:id,digests/:kind/:periodKey,mail/:id}` inspectors       |
 
 These pages share the **Visuals Kit** (`src/client/visuals/`):
 
@@ -322,7 +322,7 @@ data.
 | `POST /internal/v1/ops/snapshots`               | Collector ingest `{snapshot, changes, facets?}` (bearer `OPS_INGEST_TOKEN`, 8 MiB limit); validates with `parseOpsIngest`, upserts `OpsFacet` rows & changes, prunes |
 | `POST /internal/v1/digests/:kind`               | `daily` or `weekly` digest (bearer `OPS_INGEST_TOKEN`); idempotent per Los Angeles date or ISO week                                                                  |
 | `POST /internal/v1/reports/runs`                | `ReportRunIngestBatch` upsert (bearer `OPS_INGEST_TOKEN`, 8 MiB limit); persists `ReportRun` envelopes/mail and emits `changes` (`"reports"`)                        |
-| `GET /api/v1/reports/overview`                  | `/reports` KPIs and 13 recurring report/digest schedules with freshness and 30-day Pacific activity cells                                                            |
+| `GET /api/v1/reports/overview`                  | `/reports` KPIs and 14 recurring report/digest schedules with freshness and 30-day Pacific activity cells                                                            |
 | `GET /api/v1/reports/feed`                      | Unified filterable feed (`tab`, `scheduleId`, `mailbox`, `verdict`, `delivery`, `hasPr`, `q`, `limit`) across reports, digests, agent tasks, and incident mail       |
 | `GET /api/v1/reports/runs/:id`                  | Full `ReportEnvelopeV1` inspector payload, rendered HTML/plain-text mail, Mail receipt/skip metadata, and recent sibling runs                                        |
 | `GET /api/v1/reports/digests/:kind/:periodKey`  | Archived `DigestRun` payload and rendered email, or a live preview when `:periodKey` is the active period                                                            |
