@@ -23,6 +23,11 @@ import { CONSOLE_LINKS } from "@shepherdjerred/ops-model/tool-links.ts";
 import type { NamespaceCounts, NamespaceFilter } from "./types.ts";
 
 export const SWITCHER_CURRENT = { label: "CI cache", mark: "cc" } as const;
+const SWITCHER_APPS = CONSOLE_LINKS.map(({ label, url, group }) => ({
+  label,
+  url,
+  group,
+}));
 
 export const NAMESPACE_OPTIONS: readonly {
   readonly value: NamespaceFilter;
@@ -45,115 +50,6 @@ export function parseNamespaceFilter(raw: string | null): NamespaceFilter {
 export function namespaceFilterLabel(filter: NamespaceFilter): string {
   return (
     NAMESPACE_OPTIONS.find((item) => item.value === filter)?.label ?? "Overview"
-  );
-}
-
-function SwitcherForCiCache() {
-  return (
-    <AppSwitcher
-      current={SWITCHER_CURRENT}
-      apps={CONSOLE_LINKS.map(({ label, url, group }) => ({
-        label,
-        url,
-        group,
-      }))}
-    />
-  );
-}
-
-function NamespaceButton({
-  className,
-  "aria-current": ariaCurrent,
-  children,
-  onSelect,
-}: SidebarLinkProps & { onSelect: () => void }) {
-  return (
-    <button
-      type="button"
-      className={className}
-      aria-current={ariaCurrent}
-      onClick={onSelect}
-    >
-      {children}
-    </button>
-  );
-}
-
-export function NamespacesSidebar({
-  counts,
-  selected,
-  theme,
-  onSelect,
-}: {
-  counts: NamespaceCounts;
-  selected: NamespaceFilter;
-  theme: ThemeStore;
-  onSelect: (next: NamespaceFilter) => void;
-}) {
-  return (
-    <Sidebar
-      top={<SwitcherForCiCache />}
-      navLabel="CI cache namespaces"
-      footer={<ThemeRow store={theme} />}
-    >
-      <SidebarGroup label="Namespaces">
-        {NAMESPACE_OPTIONS.map((option) => (
-          <SidebarItem
-            key={option.value}
-            href={option.value === "overview" ? "/" : `/?ns=${option.value}`}
-            label={option.label}
-            icon={option.icon}
-            count={counts[option.value]}
-            current={selected === option.value}
-            renderLink={(props) => (
-              <NamespaceButton
-                {...props}
-                onSelect={() => {
-                  onSelect(option.value);
-                }}
-              />
-            )}
-          />
-        ))}
-      </SidebarGroup>
-    </Sidebar>
-  );
-}
-
-/** Below 900px the sidebar hides; keep switcher, namespace filter, and theme row accessible. */
-export function MobileBar({
-  counts,
-  selected,
-  theme,
-  onSelect,
-}: {
-  counts: NamespaceCounts;
-  selected: NamespaceFilter;
-  theme: ThemeStore;
-  onSelect: (next: NamespaceFilter) => void;
-}) {
-  return (
-    <div className="ci-cache-mobile-bar">
-      <SwitcherForCiCache />
-      <Field label="Namespace" layout="inline">
-        {(control) => (
-          <select
-            {...control}
-            value={selected}
-            onChange={(event) => {
-              onSelect(parseNamespaceFilter(event.target.value));
-            }}
-          >
-            {NAMESPACE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label} ({String(counts[option.value])})
-              </option>
-            ))}
-          </select>
-        )}
-      </Field>
-      <ThemeRow store={theme} />
-    </div>
   );
 }
 
@@ -212,5 +108,112 @@ export function CacheHeader({
         </>
       }
     />
+  );
+}
+
+function NamespaceButton({
+  className,
+  "aria-current": ariaCurrent,
+  children,
+  onSelect,
+}: SidebarLinkProps & { onSelect: () => void }) {
+  return (
+    <button
+      type="button"
+      className={className}
+      aria-current={ariaCurrent}
+      onClick={onSelect}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function NamespacesSidebar({
+  counts,
+  selected,
+  theme,
+  onSelect,
+}: {
+  counts: NamespaceCounts;
+  selected: NamespaceFilter;
+  theme: ThemeStore;
+  onSelect: (next: NamespaceFilter) => void;
+}) {
+  return (
+    <Sidebar
+      top={<AppSwitcher current={SWITCHER_CURRENT} apps={SWITCHER_APPS} />}
+      navLabel="CI cache namespaces"
+      footer={<ThemeRow store={theme} />}
+    >
+      <SidebarGroup label="Namespaces">
+        {NAMESPACE_OPTIONS.map((option) => (
+          <SidebarItem
+            key={option.value}
+            href={option.value === "overview" ? "/" : `/?ns=${option.value}`}
+            label={option.label}
+            icon={option.icon}
+            count={counts[option.value]}
+            current={selected === option.value}
+            renderLink={(props) => (
+              <NamespaceButton
+                {...props}
+                onSelect={() => {
+                  onSelect(option.value);
+                }}
+              />
+            )}
+          />
+        ))}
+      </SidebarGroup>
+    </Sidebar>
+  );
+}
+
+function renderNamespaceOption(
+  value: NamespaceFilter,
+  label: string,
+  count: number,
+) {
+  return (
+    <option key={value} value={value}>
+      {`${label} (${String(count)})`}
+    </option>
+  );
+}
+
+/** Below 900px the sidebar hides; keep switcher, namespace filter, and theme row accessible. */
+export function MobileBar({
+  counts,
+  selected,
+  theme,
+  onSelect,
+}: {
+  counts: NamespaceCounts;
+  selected: NamespaceFilter;
+  theme: ThemeStore;
+  onSelect: (next: NamespaceFilter) => void;
+}) {
+  const options = NAMESPACE_OPTIONS.map(({ value, label }) =>
+    renderNamespaceOption(value, label, counts[value]),
+  );
+  return (
+    <div className="ci-cache-mobile-bar">
+      <AppSwitcher current={SWITCHER_CURRENT} apps={SWITCHER_APPS} />
+      <Field label="Namespace" layout="inline">
+        {(control) => (
+          <select
+            {...control}
+            value={selected}
+            onChange={(event) => {
+              onSelect(parseNamespaceFilter(event.target.value));
+            }}
+          >
+            {options}
+          </select>
+        )}
+      </Field>
+      <ThemeRow store={theme} />
+    </div>
   );
 }

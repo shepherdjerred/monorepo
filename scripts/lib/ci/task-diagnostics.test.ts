@@ -692,6 +692,16 @@ test("stdin transfer rejects oversized evidence before parsing", async () => {
   ).rejects.toThrow("Diagnostic payload too large");
 });
 
+async function retainWithRustcWrapper(root: string, wrapperPath: string) {
+  vi.stubEnv("RUSTC_WRAPPER", wrapperPath);
+  const upload = vi
+    .fn<NonNullable<Parameters<typeof retainDiagnostics>[3]>>()
+    .mockResolvedValue(undefined);
+  expect(await retainDiagnostics(identity, new Set(), root, upload)).toBe(0);
+  expect(upload).toHaveBeenCalledTimes(1);
+  return upload.mock.calls[0]?.[0];
+}
+
 test("best-effort sccache collection captures JSON stats when RUSTC_WRAPPER=sccache and redacts URL credentials", async () => {
   const root = await repository();
   const fakeBinDir = path.join(root, "bin");
@@ -708,11 +718,9 @@ exit 1
 `,
   );
   await chmod(fakeSccache, 0o755);
-  vi.stubEnv("RUSTC_WRAPPER", fakeSccache);
 
-  const upload = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
-  expect(await retainDiagnostics(identity, new Set(), root, upload)).toBe(0);
-  expect(upload).toHaveBeenCalledWith({
+  const retained = await retainWithRustcWrapper(root, fakeSccache);
+  expect(retained).toEqual({
     ...identity,
     collectionFailed: false,
     turbo: [],
@@ -727,15 +735,16 @@ exit 1
       version: "0.19.0",
     },
   });
-  expect(JSON.stringify(upload.mock.calls)).not.toContain("sentinel-secret");
+  expect(JSON.stringify(retained)).not.toContain("sentinel-secret");
 });
 
 test("best-effort sccache collection never fails diagnostics when sccache is absent or stopped", async () => {
   const root = await repository();
-  vi.stubEnv("RUSTC_WRAPPER", path.join(root, "missing/sccache"));
-  const upload = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
-  expect(await retainDiagnostics(identity, new Set(), root, upload)).toBe(0);
-  expect(upload).toHaveBeenCalledWith({
+  const retained = await retainWithRustcWrapper(
+    root,
+    path.join(root, "missing/sccache"),
+  );
+  expect(retained).toEqual({
     ...identity,
     collectionFailed: false,
     turbo: [],

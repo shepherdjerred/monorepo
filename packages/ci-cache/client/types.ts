@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const SummaryEntrySchema = z.object({
+const SummaryEntrySchema = z.object({
   namespace: z.string(),
   protocol: z.string(),
   key: z.string(),
@@ -15,7 +15,7 @@ export const SummaryEntrySchema = z.object({
 
 export type SummaryEntry = z.infer<typeof SummaryEntrySchema>;
 
-export const SummaryNamespaceSchema = z.object({
+const SummaryNamespaceSchema = z.object({
   namespace: z.string(),
   protocol: z.string(),
   entries: z.number().nonnegative(),
@@ -31,7 +31,7 @@ export const SummaryNamespaceSchema = z.object({
 
 export type SummaryNamespace = z.infer<typeof SummaryNamespaceSchema>;
 
-export const SummaryWindow24hSchema = z.object({
+const SummaryWindow24hSchema = z.object({
   hits: z.number().nonnegative(),
   misses: z.number().nonnegative(),
   hitRate: z.number().nonnegative(),
@@ -40,8 +40,6 @@ export const SummaryWindow24hSchema = z.object({
   puts: z.number().nonnegative(),
   evictions: z.number().nonnegative(),
 });
-
-export type SummaryWindow24h = z.infer<typeof SummaryWindow24hSchema>;
 
 export const SummaryResponseSchema = z.object({
   generatedAt: z.number(),

@@ -331,16 +331,13 @@ async fn http_request(
     }
     head.push_str("\r\n");
 
+    let mut request_bytes = Vec::with_capacity(head.len() + body.len());
+    request_bytes.extend_from_slice(head.as_bytes());
+    request_bytes.extend_from_slice(body);
     stream
-        .write_all(head.as_bytes())
+        .write_all(&request_bytes)
         .await
-        .map_err(|err| format!("write request head failed: {err}"))?;
-    if !body.is_empty() {
-        stream
-            .write_all(body)
-            .await
-            .map_err(|err| format!("write request body failed: {err}"))?;
-    }
+        .map_err(|err| format!("write request failed: {err}"))?;
     stream
         .flush()
         .await

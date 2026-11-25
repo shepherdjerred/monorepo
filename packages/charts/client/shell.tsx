@@ -17,9 +17,18 @@ import {
   type ThemeStore,
 } from "@shepherdjerred/console-ui";
 import { CONSOLE_LINKS } from "@shepherdjerred/ops-model/tool-links.ts";
-import type { CatalogCounts, CatalogFilter } from "./model.ts";
+import {
+  parseCatalogFilter,
+  type CatalogCounts,
+  type CatalogFilter,
+} from "./model.ts";
 
 const SWITCHER_CURRENT = { label: "Charts", mark: "ch" } as const;
+const SWITCHER_APPS = CONSOLE_LINKS.map(({ label, url, group }) => ({
+  label,
+  url,
+  group,
+}));
 
 export const CATALOG_FILTER_OPTIONS: readonly {
   readonly value: CatalogFilter;
@@ -31,15 +40,26 @@ export const CATALOG_FILTER_OPTIONS: readonly {
   { value: "upstream", label: "Upstream mirrors", icon: GlobeIcon },
 ];
 
-function SwitcherForCharts(): React.JSX.Element {
+export function ChartsHeader({
+  catalogRevision,
+}: {
+  readonly catalogRevision: number | null;
+}): React.JSX.Element {
   return (
-    <AppSwitcher
-      current={SWITCHER_CURRENT}
-      apps={CONSOLE_LINKS.map(({ label, url, group }) => ({
-        label,
-        url,
-        group,
-      }))}
+    <HeaderBar
+      title="Charts"
+      {...(catalogRevision === null
+        ? {}
+        : { meta: `Revision ${String(catalogRevision)}` })}
+      actions={
+        <>
+          <span className="ui-chip">Read-only</span>
+          <a className="ui-btn" href="/index.yaml">
+            <FileCode2Icon aria-hidden="true" />
+            index.yaml
+          </a>
+        </>
+      }
     />
   );
 }
@@ -75,7 +95,7 @@ export function ChartsSidebar({
 }): React.JSX.Element {
   return (
     <Sidebar
-      top={<SwitcherForCharts />}
+      top={<AppSwitcher current={SWITCHER_CURRENT} apps={SWITCHER_APPS} />}
       navLabel="Charts catalog"
       footer={<ThemeRow store={theme} />}
     >
@@ -110,6 +130,18 @@ export function ChartsSidebar({
   );
 }
 
+function renderCatalogOption(
+  value: CatalogFilter,
+  label: string,
+  count: number,
+): React.JSX.Element {
+  return (
+    <option key={value} value={value}>
+      {`${label} (${String(count)})`}
+    </option>
+  );
+}
+
 /** Below 900px the sidebar hides; this bar preserves app switching, filter, and theme. */
 export function MobileBar({
   filter,
@@ -122,56 +154,26 @@ export function MobileBar({
   readonly theme: ThemeStore;
   readonly onFilterChange: (next: CatalogFilter) => void;
 }): React.JSX.Element {
+  const options = CATALOG_FILTER_OPTIONS.map(({ value, label }) =>
+    renderCatalogOption(value, label, counts[value]),
+  );
   return (
     <div className="ch-mobile-bar">
-      <SwitcherForCharts />
+      <AppSwitcher current={SWITCHER_CURRENT} apps={SWITCHER_APPS} />
       <Field label="Catalog" layout="inline">
         {(control) => (
           <select
             {...control}
             value={filter}
             onChange={(event) => {
-              const matched = CATALOG_FILTER_OPTIONS.find(
-                (option) => option.value === event.target.value,
-              );
-              if (matched !== undefined) {
-                onFilterChange(matched.value);
-              }
+              onFilterChange(parseCatalogFilter(event.target.value));
             }}
           >
-            {CATALOG_FILTER_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label} ({String(counts[option.value])})
-              </option>
-            ))}
+            {options}
           </select>
         )}
       </Field>
       <ThemeRow store={theme} />
     </div>
-  );
-}
-
-export function ChartsHeader({
-  catalogRevision,
-}: {
-  readonly catalogRevision: number | null;
-}): React.JSX.Element {
-  return (
-    <HeaderBar
-      title="Charts"
-      {...(catalogRevision === null
-        ? {}
-        : { meta: `Revision ${String(catalogRevision)}` })}
-      actions={
-        <>
-          <span className="ui-chip">Read-only</span>
-          <a className="ui-btn" href="/index.yaml">
-            <FileCode2Icon aria-hidden="true" />
-            index.yaml
-          </a>
-        </>
-      }
-    />
   );
 }

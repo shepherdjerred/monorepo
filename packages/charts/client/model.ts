@@ -198,12 +198,14 @@ export function formatUtcTimestamp(iso: string): string {
   return `${String(parsed.getUTCFullYear())}-${pad(parsed.getUTCMonth() + 1)}-${pad(parsed.getUTCDate())} ${pad(parsed.getUTCHours())}:${pad(parsed.getUTCMinutes())} UTC`;
 }
 
+export function parseCatalogFilter(raw: string | null): CatalogFilter {
+  return raw === "first-party" || raw === "upstream" ? raw : "all";
+}
+
 export function parseUrlState(search: string): UrlState {
   const params = new URLSearchParams(search);
   const query = params.get("q") ?? "";
-  const rawKind = params.get("kind");
-  const filter: CatalogFilter =
-    rawKind === "first-party" || rawKind === "upstream" ? rawKind : "all";
+  const filter = parseCatalogFilter(params.get("kind"));
   const rawFixture = params.get("fixture");
   const fixture: FixtureMode | null =
     rawFixture === "demo" || rawFixture === "empty" ? rawFixture : null;

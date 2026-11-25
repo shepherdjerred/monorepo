@@ -16,7 +16,7 @@ use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 
 use crate::archive::{MAX_ARCHIVE_BYTES, parse_chart_archive};
-use crate::auth::{BasicAuthCredentials, RequireBasicAuth};
+use crate::auth::{BasicAuthCredentials, verify_request_auth};
 use crate::error::AppError;
 use crate::index_yaml::if_none_match_matches;
 use crate::metrics::AppMetrics;
@@ -264,12 +264,20 @@ async fn handle_summary(State(state): State<AppState>) -> Result<impl IntoRespon
     Ok((StatusCode::OK, Json(summary)))
 }
 
+const AUTH_REJECT_DRAIN_BYTES: usize = 64 * 1024;
+
 async fn handle_upload_chart(
     State(state): State<AppState>,
-    _auth: RequireBasicAuth,
     headers: HeaderMap,
     body: Body,
 ) -> Result<impl IntoResponse, AppError> {
+    if let Err(err) = verify_request_auth(&headers, state.basic_auth.as_ref()) {
+        // Drain bounded body bytes so small unauthenticated uploads receive a clean
+        // 401 + WWW-Authenticate response instead of TCP RST from unread socket data.
+        let _ = to_bytes(body, AUTH_REJECT_DRAIN_BYTES).await;
+        return Err(err);
+    }
+
     if let Some(cl_header) = headers.get(header::CONTENT_LENGTH)
         && let Ok(cl_str) = cl_header.to_str()
         && let Ok(cl) = cl_str.parse::<usize>()

@@ -1,13 +1,10 @@
-use axum::extract::FromRequestParts;
-use axum::http::header;
-use axum::http::request::Parts;
+use axum::http::{HeaderMap, header};
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD;
 use sha2::{Digest as _, Sha256};
 use subtle::ConstantTimeEq as _;
 
 use crate::error::AppError;
-use crate::routes::AppState;
 
 #[derive(Clone)]
 pub struct BasicAuthCredentials {
@@ -71,30 +68,24 @@ fn sha256_bytes(input: &[u8]) -> [u8; 32] {
     out
 }
 
-/// Extractor that verifies HTTP Basic Auth before consuming any request body bytes.
-pub struct RequireBasicAuth;
-
-impl FromRequestParts<AppState> for RequireBasicAuth {
-    type Rejection = AppError;
-
-    async fn from_request_parts(
-        parts: &mut Parts,
-        state: &AppState,
-    ) -> Result<Self, Self::Rejection> {
-        let Some(credentials) = &state.basic_auth else {
-            return Err(AppError::Unauthorized);
-        };
-        let Some(raw_header) = parts.headers.get(header::AUTHORIZATION) else {
-            return Err(AppError::Unauthorized);
-        };
-        let Ok(header_str) = raw_header.to_str() else {
-            return Err(AppError::Unauthorized);
-        };
-        if !credentials.verify_header(header_str) {
-            return Err(AppError::Unauthorized);
-        }
-        Ok(Self)
+/// Verifies HTTP Basic Auth against the configured publisher credentials.
+pub fn verify_request_auth(
+    headers: &HeaderMap,
+    configured: Option<&BasicAuthCredentials>,
+) -> Result<(), AppError> {
+    let Some(credentials) = configured else {
+        return Err(AppError::Unauthorized);
+    };
+    let Some(raw_header) = headers.get(header::AUTHORIZATION) else {
+        return Err(AppError::Unauthorized);
+    };
+    let Ok(header_str) = raw_header.to_str() else {
+        return Err(AppError::Unauthorized);
+    };
+    if !credentials.verify_header(header_str) {
+        return Err(AppError::Unauthorized);
     }
+    Ok(())
 }
 
 #[cfg(test)]

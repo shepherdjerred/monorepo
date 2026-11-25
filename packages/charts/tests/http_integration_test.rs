@@ -3,6 +3,11 @@ use std::error::Error;
 use std::io::Write as _;
 use std::net::SocketAddr;
 
+use axum::Router;
+use axum::body::Body;
+use axum::http::Request;
+use base64::Engine as _;
+use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use charts::archive::{MAX_ARCHIVE_BYTES, build_chart_tgz};
 use charts::auth::BasicAuthCredentials;
 use charts::index_yaml::{CatalogSummaryResponse, ChartKind, ChartReleaseView, HelmIndexDocument};
@@ -16,11 +21,16 @@ use reqwest::{Client, StatusCode, header};
 use sha2::{Digest as _, Sha256};
 use tar::{Builder, EntryType, Header};
 use tempfile::TempDir;
-use tokio::net::TcpListener;
+use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
+use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::oneshot;
+use tokio_util::io::ReaderStream;
+use tower::ServiceExt as _;
 
 struct TestServer {
+    addr: SocketAddr,
     base_url: String,
+    router: Router,
     data_dir: std::path::PathBuf,
     _temp_dir: TempDir,
     shutdown_tx: Option<oneshot::Sender<()>>,
@@ -53,6 +63,7 @@ impl TestServer {
             basic_auth,
             static_dir,
         });
+        let router = app.clone();
 
         let listener = TcpListener::bind("127.0.0.1:0").await?;
         let addr: SocketAddr = listener.local_addr()?;
@@ -66,7 +77,9 @@ impl TestServer {
         });
 
         Ok(Self {
+            addr,
             base_url: format!("http://{addr}"),
+            router,
             data_dir,
             _temp_dir: temp_dir,
             shutdown_tx: Some(shutdown_tx),
@@ -349,15 +362,38 @@ async fn rejects_oversized_body_tar_slip_symlinks_and_duplicate_chart_yaml()
     let server = TestServer::start().await?;
     let client = Client::new();
 
-    // 1. >16 MiB body -> 413 Payload Too Large
-    let oversized = vec![0_u8; MAX_ARCHIVE_BYTES + 1024];
-    let resp_413 = client
-        .post(format!("{}/api/charts", server.base_url))
-        .basic_auth("ci-publisher", Some("ci-secret"))
-        .body(oversized)
-        .send()
+    // 1. >16 MiB body -> 413 Payload Too Large (both Content-Length fast-reject over TCP
+    //    without flooding unread socket bytes after close, and streaming body limit).
+    let auth_header = format!("Basic {}", BASE64_STANDARD.encode("ci-publisher:ci-secret"));
+    let oversized_len = MAX_ARCHIVE_BYTES + 1024;
+    let mut tcp = TcpStream::connect(server.addr).await?;
+    let raw_req = format!(
+        "POST /api/charts HTTP/1.1\r\nHost: {}\r\nAuthorization: {auth_header}\r\nContent-Length: {oversized_len}\r\nConnection: close\r\n\r\n",
+        server.addr,
+    );
+    tcp.write_all(raw_req.as_bytes()).await?;
+    let mut raw_resp = String::new();
+    tcp.read_to_string(&mut raw_resp).await?;
+    assert!(
+        raw_resp.starts_with("HTTP/1.1 413 "),
+        "expected HTTP/1.1 413 response, got: {raw_resp}"
+    );
+
+    let stream_body = Body::from_stream(ReaderStream::new(
+        tokio::io::repeat(0_u8).take(oversized_len as u64),
+    ));
+    let stream_resp = server
+        .router
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method("POST")
+                .uri("/api/charts")
+                .header(header::AUTHORIZATION, &auth_header)
+                .body(stream_body)?,
+        )
         .await?;
-    assert_eq!(resp_413.status(), StatusCode::PAYLOAD_TOO_LARGE);
+    assert_eq!(stream_resp.status(), StatusCode::PAYLOAD_TOO_LARGE);
 
     // 2. Tar-slip path (`../evil`) -> 400 Bad Request
     let tar_slip = build_raw_tar_gz(|tar_bytes| {

@@ -1,9 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { expect, test } from "vitest";
-import {
-  createThemeStore,
-  type ThemeEnvironment,
-} from "@shepherdjerred/console-ui";
+import { createThemeStore } from "@shepherdjerred/console-ui";
 import { App } from "./app.tsx";
 import {
   DEMO_SUMMARY,
@@ -19,14 +16,12 @@ const noop = (): void => {
   // Static render does not dispatch DOM events.
 };
 
-const environment: ThemeEnvironment = {
+const theme = createThemeStore("ci-cache-theme", {
   storage: () => ({ getItem: () => null, setItem: noop, removeItem: noop }),
   darkQuery: { matches: false, addEventListener: noop },
   root: { dataset: {} },
   onStorage: noop,
-};
-
-const theme = createThemeStore("ci-cache-theme", environment);
+});
 
 test("renders full CI cache console shell, headline figures, watermark meter, and tables", () => {
   const html = renderToStaticMarkup(

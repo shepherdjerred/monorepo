@@ -1,9 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
-import {
-  createThemeStore,
-  type ThemeEnvironment,
-} from "@shepherdjerred/console-ui";
+import type { ThemeStore } from "@shepherdjerred/console-ui";
 import { CatalogWorkspace } from "./app.tsx";
 import { DEMO_CATALOG_SUMMARY, EMPTY_CATALOG_SUMMARY } from "./fixtures.ts";
 
@@ -11,14 +8,14 @@ const noop = (): void => {
   // Static markup rendering never fires DOM events.
 };
 
-const environment: ThemeEnvironment = {
-  storage: () => ({ getItem: () => null, setItem: noop, removeItem: noop }),
-  darkQuery: { matches: false, addEventListener: noop },
-  root: { dataset: {} },
-  onStorage: noop,
+const theme: ThemeStore = {
+  getPreference: () => "system",
+  getResolvedTheme: () => "light",
+  setThemePreference: noop,
+  subscribe: () => noop,
+  useThemePreference: () => "system",
+  useResolvedTheme: () => "light",
 };
-
-const theme = createThemeStore("charts-theme-test", environment);
 
 describe("Charts console-ui rendering", () => {
   test("renders populated catalog with sidebar counts, figure strip, quota meter, and rows", () => {
