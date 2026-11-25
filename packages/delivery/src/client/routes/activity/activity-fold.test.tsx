@@ -448,7 +448,7 @@ describe("what an activity row says", () => {
     );
     expect(run.match(/>step-apply-safety</gu)).toHaveLength(1);
     expect(run).toMatch(
-      /step-apply-safety<\/span><span class="status status-succeeded">.*2 updates/u,
+      /step-apply-safety<\/span><span class="status status-succeeded" data-sev="ok">.*2 updates/u,
     );
     expect(run).toContain(">step-sync<");
   });

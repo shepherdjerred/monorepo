@@ -3,6 +3,7 @@ import { DeploymentDetailSchema } from "#shared/contract.ts";
 import {
   confirm,
   expectNoHorizontalOverflow,
+  mainNav,
   openDeployment,
 } from "./helpers.ts";
 
@@ -104,10 +105,8 @@ test("select an immutable release, inspect queued execution, and cancel safely",
     main.getByRole("button", { name: "Request cancellation" }),
   ).toHaveCount(0);
   await expect(page.locator("#main-heading")).toBeFocused();
-  await page
-    .getByRole("navigation", { name: "Main" })
-    .getByRole("link", { name: "Artifacts" })
-    .click();
+  const nav = await mainNav(page);
+  await nav.getByRole("link", { name: "Artifacts" }).click();
   await expect(
     page.getByRole("heading", { name: "Build qualification" }),
   ).toBeVisible();

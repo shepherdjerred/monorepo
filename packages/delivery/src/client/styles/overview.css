@@ -1,26 +1,24 @@
 /*
  * The overview: every active service as a tile, in one panel per catalog
- * kind. Tiles flow in an auto-fill grid, so a hundred services take a few
- * screens on a desktop and two narrow columns on a phone, with no table and no
- * sideways scroll.
+ * kind, styled with console-ui surfaces and severity borders.
  */
 
 /* What needs a person comes first and is edged in the tone of its worst item. */
 .attention-failed,
 .attention-waiting {
-  border-inline-start-width: 4px;
+  border-inline-start-width: 3px;
 }
 .attention-failed {
-  border-color: var(--failed);
+  border-inline-start-color: var(--ui-sev-error);
 }
 .attention-waiting {
-  border-color: var(--waiting);
+  border-inline-start-color: var(--ui-sev-warning);
 }
 .attention .section-heading {
-  margin-bottom: 0;
+  margin-bottom: var(--space-1);
 }
 .attention-count {
-  color: var(--text-muted);
+  color: var(--ui-faint);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
 }
@@ -29,12 +27,12 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: end;
+  align-items: center;
   gap: var(--space-2) var(--space-4);
 }
 .overview-total {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--ui-muted);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
 }
@@ -52,7 +50,7 @@
 .overview-counts {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
+  gap: var(--space-2);
 }
 /* A catalog group of several services: a labelled run of tiles in its panel. */
 .overview-group {
@@ -61,14 +59,12 @@
 .overview-group .section-heading {
   margin-bottom: var(--space-1);
 }
-/* A group title labels the tiles under it, as a column header labels its cells. */
 .overview-group h3 {
   margin: 0;
-  font-size: var(--text-2xs);
+  font-size: var(--text-sm);
   line-height: var(--leading-snug);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-label);
-  color: var(--text-muted);
+  font-weight: var(--weight-semibold);
+  color: var(--ui-muted);
   overflow-wrap: anywhere;
 }
 /* Every run of tiles in a panel shares one track size, so their columns line up. */
@@ -81,28 +77,32 @@
 /* One service: its name, then where it runs. */
 .overview-tile {
   min-width: 0;
-  padding: var(--row-pad-y) var(--space-2) var(--space-2);
+  padding: 8px 10px;
+  border: 1px solid var(--ui-line);
+  border-inline-start: 3px solid var(--ui-line);
   border-radius: var(--radius-small);
-  background: var(--surface-sunken);
-  /* The edge carries the standing without moving the content. */
-  border-inline-start: 3px solid transparent;
+  background: var(--ui-head);
 }
 .overview-standing-failed,
 .overview-standing-recovery_required,
 .overview-standing-alarmed {
-  border-inline-start-color: var(--failed);
+  border-inline-start-color: var(--ui-sev-error);
 }
 .overview-standing-awaiting_approval,
 .overview-standing-queued {
-  border-inline-start-color: var(--waiting);
+  border-inline-start-color: var(--ui-sev-warning);
 }
 .overview-standing-running {
-  border-inline-start-color: var(--running);
+  border-inline-start-color: var(--ui-sev-info);
+}
+.overview-standing-succeeded {
+  border-inline-start-color: var(--ui-sev-ok);
 }
 /* A tile's title is its own line, never a link inside prose, so its color and weight mark it. */
 .overview-service {
   display: block;
   margin-bottom: var(--space-1);
+  color: var(--ui-ink);
   font-weight: var(--weight-semibold);
   line-height: var(--leading-snug);
   text-decoration: none;
@@ -114,7 +114,7 @@
 .overview-none {
   margin: 0;
   min-height: var(--target-min);
-  color: var(--text-muted);
+  color: var(--ui-muted);
   font-size: var(--text-xs);
   line-height: var(--target-min);
 }
@@ -131,47 +131,40 @@
   max-width: 100%;
 }
 .overview-arrow {
-  color: var(--text-muted);
+  color: var(--ui-muted);
 }
 /* An environment as a link: name, standing, accepted revision and its age. */
 .overview-chip {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0 var(--space-1);
+  gap: 0 5px;
   min-height: var(--target-min);
   min-width: 0;
-  /* A long status wraps inside the chip, never past the tile's edge. */
   max-width: 100%;
-  padding: 1px var(--row-pad-y);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-small);
-  background: var(--surface);
-  color: var(--text);
+  padding: 1px 6px;
+  border: 1px solid var(--ui-line);
+  border-radius: var(--radius-chip);
+  background: var(--ui-panel);
+  color: var(--ui-ink);
   font-size: var(--text-xs);
   line-height: var(--leading-snug);
   text-decoration: none;
 }
 .overview-chip:hover {
-  border-color: var(--border-strong);
+  background: var(--ui-hover);
+  border-color: var(--ui-btn-edge);
+  text-decoration: none;
 }
 .overview-chip .env-name {
   font-weight: var(--weight-semibold);
 }
 .overview-chip .status {
-  padding: 0 var(--space-1);
   max-width: 100%;
   white-space: normal;
   overflow-wrap: anywhere;
-  border-radius: var(--radius-small);
-  /* Contains the hidden words of a settled chip. */
   position: relative;
 }
-/*
- * A check says "succeeded" at a glance; the words stay for assistive
- * technology. Other facts on a settled chip, such as an alarm or a queued
- * worker retirement, keep their words in sight.
- */
 .overview-chip-succeeded > .status-succeeded .status-label {
   position: absolute;
   width: 1px;
@@ -181,35 +174,34 @@
   white-space: nowrap;
 }
 .overview-chip time {
-  color: var(--text-muted);
+  color: var(--ui-muted);
 }
-/* The accepted release and its age read as one fact, apart from a newer request's status. */
 .overview-accepted {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0 var(--space-1);
+  min-width: 0;
+  max-width: 100%;
 }
-/* A deployment that waits too long for its first stage is a wait, not a failure. */
 .badge-queued {
-  background: var(--waiting-soft);
-  color: var(--waiting);
+  background: var(--ui-sev-warning-soft);
+  color: var(--ui-sev-warning-text);
 }
-/*
- * On a phone the tiles sit two to a row and tighten, and healthy services
- * fold behind a counted disclosure (overview-panels.tsx), so a screen holds
- * what needs a person instead of one long column.
- */
+
 @media (width <= 600px) {
   .overview-tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-1);
+    gap: 6px;
   }
   .overview-tile {
-    padding: var(--space-1);
+    padding: 6px 8px;
   }
   .overview-service {
     font-size: var(--text-sm);
+  }
+  .overview-chip {
+    padding-inline: var(--space-1);
   }
   .overview-kind .disclosure {
     margin-top: var(--space-1);

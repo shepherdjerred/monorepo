@@ -6,14 +6,21 @@
     <meta name="color-scheme" content="light dark" />
     <meta
       name="theme-color"
-      content="#ffffff"
+      content="#ecede6"
       media="(prefers-color-scheme: light)"
     />
     <meta
       name="theme-color"
-      content="#10141a"
+      content="#111210"
       media="(prefers-color-scheme: dark)"
     />
+    <script>
+      try {
+        const t = localStorage.getItem("delivery-theme");
+        if (t === "light" || t === "dark")
+          document.documentElement.dataset.theme = t;
+      } catch {}
+    </script>
     <meta
       name="description"
       content="Homelab CI/CD: builds, artifacts, deployments, and approvals."

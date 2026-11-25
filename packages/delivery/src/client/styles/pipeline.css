@@ -1,12 +1,8 @@
 /*
- * CodePipeline-style stage graph: an ordered list of stage cards.
- *
- * Narrow, the stages stack with their transitions between them. Wide, each
- * stage is a column sharing the row's width: the transitions run along one
- * rail above the cards, and every card is as tall as its own content.
+ * CodePipeline-style stage graph: an ordered list of stage cards on the
+ * console-ui palette.
  */
 .pipeline-scroll {
-  /* Only a graph with more stages than the width holds scrolls. */
   overflow-x: auto;
   padding: var(--space-2) var(--space-0) var(--space-4);
   scroll-snap-type: x proximity;
@@ -31,10 +27,10 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  min-height: 52px;
+  min-height: 44px;
   font-size: var(--text-xs);
   line-height: var(--leading-tight);
-  color: var(--text-muted);
+  color: var(--ui-muted);
 }
 .transition-label {
   min-width: 0;
@@ -43,9 +39,9 @@
 .transition-arrow {
   flex: none;
   display: block;
-  width: 2px;
-  height: 36px;
-  background: var(--border-strong);
+  width: 1.5px;
+  height: 32px;
+  background: var(--ui-btn-edge);
   position: relative;
 }
 .transition-arrow::after {
@@ -53,51 +49,49 @@
   position: absolute;
   left: -4px;
   bottom: -1px;
-  border: 5px solid transparent;
-  border-top: 7px solid var(--border-strong);
+  border: 4.5px solid transparent;
+  border-top: 6px solid var(--ui-btn-edge);
   border-bottom: 0;
 }
 .transition-approval .transition-label {
-  color: var(--waiting);
+  color: var(--ui-sev-warning-text);
   font-weight: var(--weight-semibold);
 }
 .transition-disabled .transition-arrow {
   background: repeating-linear-gradient(
     180deg,
-    var(--border-strong) 0 6px,
+    var(--ui-btn-edge) 0 6px,
     transparent 6px 10px
   );
 }
 .transition-disabled .transition-label {
-  color: var(--failed);
+  color: var(--ui-sev-error-text);
 }
 .stage-card {
   min-width: 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-top: 4px solid var(--neutral);
+  background: var(--ui-panel);
+  border: 1px solid var(--ui-line);
+  border-top: 3px solid var(--ui-sev-unknown);
   border-radius: var(--radius);
   padding: var(--space-3);
-  box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
 .stage-succeeded {
-  border-top-color: var(--succeeded);
+  border-top-color: var(--ui-sev-ok);
 }
 .stage-failed {
-  border-top-color: var(--failed);
+  border-top-color: var(--ui-sev-error);
 }
 .stage-running {
-  border-top-color: var(--running);
+  border-top-color: var(--ui-sev-info);
 }
 .stage-awaiting_approval,
 .stage-queued,
 .stage-pending {
-  border-top-color: var(--waiting);
+  border-top-color: var(--ui-sev-warning);
 }
-/* A narrow column drops the status under the stage's name. */
 .stage-header {
   display: flex;
   flex-wrap: wrap;
@@ -111,12 +105,16 @@
 }
 .stage-header h3 a {
   color: inherit;
+  text-decoration: none;
+}
+.stage-header h3 a:hover {
+  text-decoration: underline;
 }
 .stage-revision {
-  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
   margin: 0;
 }
-/* An environment's status line: what it runs and what is ready for it. */
 .stage-standing {
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
@@ -125,10 +123,9 @@
 }
 .stage-summary {
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--ui-muted);
   margin: 0;
 }
-/* A long list's summary: its outcomes, with the list behind it. */
 .stage-card .disclosure > summary {
   font-size: var(--text-sm);
   line-height: var(--leading-snug);
@@ -145,26 +142,24 @@
   padding: 0;
   margin: 0;
   display: grid;
-  gap: var(--space-2);
+  gap: 6px;
 }
 .action {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: var(--space-2);
-  padding: var(--space-2);
+  padding: 8px;
+  border: 1px solid var(--ui-line-soft);
   border-radius: var(--radius-small);
-  background: var(--surface-sunken);
+  background: var(--ui-head);
   font-size: var(--text-sm);
   line-height: var(--leading-snug);
 }
-/* The pill shows its glyph only here; components.css clips its words. */
 .action > .status {
   align-self: start;
-  /* Contains the hidden label, so it scrolls with the graph. */
   position: relative;
-  padding-inline: var(--space-1);
+  margin-top: 2px;
 }
-/* The second line and the duration share a line while both fit. */
 .action-body {
   display: flex;
   flex-wrap: wrap;
@@ -177,9 +172,16 @@
   flex: 0 0 100%;
   min-width: 0;
 }
+.action-body strong a {
+  color: var(--ui-ink);
+  text-decoration: none;
+}
+.action-body strong a:hover {
+  text-decoration: underline;
+}
 .action-body p {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--ui-muted);
   overflow-wrap: anywhere;
 }
 .action-body strong {
@@ -188,27 +190,26 @@
 .action-meta {
   font-size: var(--text-xs);
 }
-/* A name longer than its column wraps instead of widening the stage. */
 .action .tool-link {
   white-space: normal;
   overflow-wrap: anywhere;
   line-height: var(--leading-snug);
-  padding-block: var(--space-1);
+  padding-block: 2px;
+  font-size: var(--text-xs);
 }
-/* The arrow stays with the link's last word. */
 .action .tool-link > span {
   white-space: nowrap;
 }
+
 @container (width > 720px) {
   /*
-   * One column per stage, sharing the width down to 10rem each: seven stages
-   * fit a 1280px window. Two rows shared by every column: the transition
-   * rail, then the cards.
+   * One column per stage, sharing the width down to 7.75rem each so seven
+   * stages fit inside the 1280px console panel beside the 228px sidebar.
    */
   .pipeline {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(10rem, 1fr);
+    grid-auto-columns: minmax(7.75rem, 1fr);
     grid-template-rows: auto auto;
     column-gap: var(--stage-gap);
   }
@@ -217,7 +218,6 @@
     display: grid;
     grid-template-rows: subgrid;
   }
-  /* A tall stage leaves its neighbours at their own height. */
   .stage-card {
     grid-row: 2;
     align-self: start;
@@ -229,27 +229,27 @@
     min-height: 0;
     padding: 0 0 var(--space-2);
   }
-  /* The arrow starts at the previous card's edge and crosses the gap. */
   .transition-arrow {
     width: calc(var(--stage-gap) + var(--space-4));
-    height: 2px;
+    height: 1.5px;
     margin-inline-start: calc(-1 * var(--stage-gap));
-    /* Centres the line on the label's first line. */
-    margin-block-start: calc((var(--text-xs) * var(--leading-tight) - 2px) / 2);
+    margin-block-start: calc(
+      (var(--text-xs) * var(--leading-tight) - 1.5px) / 2
+    );
   }
   .transition-arrow::after {
     left: auto;
     bottom: auto;
     right: -1px;
     top: -4px;
-    border: 5px solid transparent;
-    border-left: 7px solid var(--border-strong);
+    border: 4.5px solid transparent;
+    border-left: 6px solid var(--ui-btn-edge);
     border-right: 0;
   }
   .transition-disabled .transition-arrow {
     background: repeating-linear-gradient(
       90deg,
-      var(--border-strong) 0 6px,
+      var(--ui-btn-edge) 0 6px,
       transparent 6px 10px
     );
   }

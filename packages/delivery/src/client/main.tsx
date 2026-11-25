@@ -5,6 +5,8 @@ import { RouterProvider } from "@tanstack/react-router";
 import { DeliveryClientError } from "#shared/client.ts";
 import { createChangeFeed } from "./change-feed.ts";
 import { createDeliveryRouter } from "./router.tsx";
+import "@shepherdjerred/console-ui/styles/index.css";
+import "./shell/theme.ts";
 import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/layout.css";

@@ -3,7 +3,9 @@ import { HubOverviewSchema } from "#shared/hub/hub-contract.ts";
 import {
   api,
   expectNoHorizontalOverflow,
+  mainNav,
   requestArcadeDeployment,
+  usesNavDrawer,
 } from "./helpers.ts";
 import { FAILED_COMMIT_TITLE, LONG_COMMIT_TITLE } from "./commits.ts";
 
@@ -228,29 +230,37 @@ test("keyboard activation of a navigation link moves focus to the page heading l
   page,
 }) => {
   await page.goto("/");
-  const main = page.getByRole("navigation", { name: "Main" });
   // Enter on a focused link.
-  await main.getByRole("link", { name: "Activity" }).focus();
+  const firstNav = await mainNav(page);
+  await firstNav.getByRole("link", { name: "Activity" }).focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/activity$/u);
   await expect(
     page.getByRole("heading", { level: 1, name: "Activity", exact: true }),
   ).toBeVisible();
   await expect(page.locator("#main-heading")).toBeFocused();
-  await main.getByRole("link", { name: "Artifacts" }).focus();
+  const secondNav = await mainNav(page);
+  await secondNav.getByRole("link", { name: "Artifacts" }).focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/artifacts$/u);
   await expect(page.locator("#main-heading")).toBeFocused();
-  // The brand link is a link too.
-  await page.getByRole("link", { name: "Delivery", exact: true }).focus();
+  const thirdNav = await mainNav(page);
+  await thirdNav.getByRole("link", { name: "Overview" }).focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/$/u);
   await expect(page.locator("#main-heading")).toBeFocused();
-  // A navigation that does not change the page keeps focus where it was.
+  // A navigation that does not change the page keeps focus away from the heading.
   await page.goto("/pipelines");
-  await main.getByRole("link", { name: "Pipelines" }).focus();
+  const sameNav = await mainNav(page);
+  await sameNav.getByRole("link", { name: "Pipelines" }).focus();
   await page.keyboard.press("Enter");
-  await expect(main.getByRole("link", { name: "Pipelines" })).toBeFocused();
+  if (usesNavDrawer(page)) {
+    await expect(page.locator("#main-heading")).not.toBeFocused();
+  } else {
+    await expect(
+      sameNav.getByRole("link", { name: "Pipelines" }),
+    ).toBeFocused();
+  }
 });
 
 for (const activation of ["keyboard", "click"] as const)
@@ -264,9 +274,8 @@ for (const activation of ["keyboard", "click"] as const)
     });
     await page.goto("/");
     await expect(page.locator("#main-heading")).toBeVisible();
-    const link = page
-      .getByRole("navigation", { name: "Main" })
-      .getByRole("link", { name: "Activity" });
+    const nav = await mainNav(page);
+    const link = nav.getByRole("link", { name: "Activity" });
     if (activation === "keyboard") {
       await link.focus();
       await page.keyboard.press("Enter");
@@ -284,9 +293,8 @@ test("focus reaches the heading of a page that was slow to load", async ({
     await new Promise((resolve) => setTimeout(resolve, 600));
     await route.continue();
   });
-  const link = page
-    .getByRole("navigation", { name: "Main" })
-    .getByRole("link", { name: "Artifacts" });
+  const nav = await mainNav(page);
+  const link = nav.getByRole("link", { name: "Artifacts" });
   await link.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/artifacts$/u);

@@ -66,12 +66,22 @@ test("an undecided approval reads awaiting approval and its release wraps with t
   await expectNoHorizontalOverflow(page);
 });
 
-test("on a phone every destination and the waiting count are in sight", async ({
+test("on a phone the waiting count is in the top bar and every destination is in sight in the drawer", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/approvals");
-  const nav = page.getByRole("navigation", { name: "Main" });
+  const topbarApprovals = page
+    .getByRole("banner")
+    .getByRole("link", { name: /^Approvals, 2 awaiting approval$/u });
+  await expect(topbarApprovals).toBeInViewport({ ratio: 1 });
+  await expect(topbarApprovals.locator(".nav-count")).toBeInViewport({
+    ratio: 1,
+  });
+
+  await page.getByRole("button", { name: "Open navigation" }).click();
+  const drawer = page.getByRole("dialog", { name: "Navigation" });
+  const nav = drawer.getByRole("navigation", { name: "Main" });
   for (const name of [
     "Overview",
     "Commits",

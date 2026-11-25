@@ -1,10 +1,8 @@
 /*
  * The deployment page's steps and evidence, and the activity trail's stage
- * runs. Long ids, digests and JSON wrap inside their own box, so neither page
- * grows wider than the device.
+ * runs, using console-ui surfaces and severity tokens.
  */
 
-/* Steps take the room; the evidence no step recorded sits beside them and drops below when narrow. */
 .deployment-record {
   display: flex;
   flex-wrap: wrap;
@@ -18,12 +16,11 @@
   flex: 1 1 20rem;
 }
 
-/* The timeline: one marker per step, colored by what the step became. */
 .step-timeline {
   list-style: none;
   margin: 0;
   padding: 0;
-  border-inline-start: 2px solid var(--border);
+  border-inline-start: 1.5px solid var(--ui-line);
 }
 .step-timeline > .step {
   position: relative;
@@ -33,31 +30,29 @@
 .step-timeline > .step::before {
   content: "";
   position: absolute;
-  inset-inline-start: -6px;
+  inset-inline-start: -5.5px;
   top: 12px;
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: var(--neutral);
+  background: var(--ui-sev-unknown);
 }
 .step-timeline > .step-succeeded::before {
-  background: var(--succeeded);
+  background: var(--ui-sev-ok);
 }
 .step-timeline > .step-failed::before {
-  background: var(--failed);
+  background: var(--ui-sev-error);
 }
 .step-timeline > .step-running::before {
-  background: var(--running);
+  background: var(--ui-sev-info);
 }
-/* Still recorded as running when its deployment ended: an open marker, outcome unknown. */
 .step-timeline > .step-interrupted::before {
-  background: var(--surface);
-  border: 2px solid var(--neutral);
+  background: var(--ui-panel);
+  border: 2px solid var(--ui-sev-unknown);
 }
 
-/* Why a failed or locked deployment failed, at the top of its page. */
 .panel-failed {
-  border-color: var(--failed);
+  border-color: var(--ui-sev-error);
 }
 .failure-message {
   font-weight: var(--weight-semibold);
@@ -67,7 +62,6 @@
   margin: 0 0 var(--space-2);
   padding-left: var(--space-4);
 }
-/* The Job and UID a failure names, each whole and copyable. */
 .failure-pointers {
   display: grid;
   gap: var(--space-1);
@@ -107,7 +101,6 @@
 .step-key {
   overflow-wrap: anywhere;
 }
-/* An interrupted step's state names what recovery read back, so it may wrap. */
 .step-head .status {
   max-width: 100%;
   white-space: normal;
@@ -117,7 +110,7 @@
 }
 .step-meta,
 .evidence-meta {
-  color: var(--text-muted);
+  color: var(--ui-muted);
   font-size: var(--text-xs);
 }
 .evidence-meta {
@@ -133,12 +126,10 @@
 .step-record {
   margin-bottom: var(--space-2);
 }
-/* A step's last piece of evidence closes with the step, not with a rule. */
 .step .evidence > li:last-child {
   border-bottom: 0;
 }
 
-/* A receipt's adapter names it; its fields follow as facts. */
 .evidence-adapter {
   font-family: var(--font-mono);
   font-size: var(--text-mono);
@@ -147,14 +138,12 @@
 .receipt .facts {
   margin: var(--space-1) 0 0;
 }
-/* A sentence or a link among the facts takes a row of its own. */
 .receipt-wide .facts {
   grid-template-columns: minmax(0, 1fr);
 }
 .receipt-nested {
   margin: 0;
 }
-/* Formatted JSON wraps where it must, so it never scrolls sideways. */
 .receipt-json {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -164,7 +153,6 @@
   margin-bottom: 0;
 }
 
-/* Activity: the entity and what the action recorded share one cell and wrap. */
 .activity-subject {
   display: flex;
   flex-wrap: wrap;
@@ -172,7 +160,6 @@
   align-items: baseline;
   min-width: 0;
 }
-/* A deployment's stage run reads as one wrapping line of stage and status. */
 .activity .activity-stages {
   display: flex;
   flex-wrap: wrap;
@@ -189,7 +176,6 @@
   padding: 0;
   border: 0;
 }
-/* A folded run of one build action: each build and what it recorded, one per line. */
 .activity .activity-repeated {
   list-style: none;
   margin: 0;
@@ -205,17 +191,17 @@
   border: 0;
 }
 .activity-count {
-  color: var(--text-muted);
+  color: var(--ui-muted);
   font-variant-numeric: tabular-nums;
 }
-/* Where an entity belongs: its environment or service, and its release. */
 .activity-where {
   margin-inline-start: var(--space-2);
-  color: var(--text-muted);
+  color: var(--ui-muted);
 }
-/* Wide, a row's clock reading sits on its own line above its age, so rows sort by eye. */
 .activity-when .clock {
   display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
   font-variant-numeric: tabular-nums;
 }
 .activity-when .clock > [aria-hidden="true"] {

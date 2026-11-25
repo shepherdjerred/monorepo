@@ -5,6 +5,7 @@ import {
   expectContainedInTiles,
   expectNoHorizontalOverflow,
   isPhone,
+  mainNav,
   openOverview,
   overviewTile as tile,
   requestArcadeDeployment,
@@ -28,7 +29,7 @@ test("the overview is home and says what it shows", async ({ page }) => {
   await expect(page.getByRole("main")).toContainText(
     "This is the deployment record, not live runtime health.",
   );
-  const main = page.getByRole("navigation", { name: "Main" });
+  const main = await mainNav(page);
   // Approvals carries a count of what waits, so the names are matched by their start.
   const links = main.getByRole("link");
   await expect(links).toHaveCount(NAVIGATION.length);
@@ -37,19 +38,28 @@ test("the overview is home and says what it shows", async ({ page }) => {
   await expect(
     main.getByRole("link", { name: "Overview", exact: true }),
   ).toHaveAttribute("aria-current", "page");
+  const drawer = page.getByRole("dialog", { name: "Navigation" });
+  if (await drawer.isVisible()) {
+    await page.keyboard.press("Escape");
+    await expect(drawer).toBeHidden();
+  }
   await expectNoHorizontalOverflow(page);
 
-  // The seventh item is reachable where the masthead navigation scrolls.
-  await main.getByRole("link", { name: "Activity", exact: true }).click();
+  // The seventh item is reachable from primary navigation.
+  const navBeforeClick = await mainNav(page);
+  await navBeforeClick
+    .getByRole("link", { name: "Activity", exact: true })
+    .click();
   await expect(page).toHaveURL(/\/activity$/u);
   await expect(page.locator("#main-heading")).toBeFocused();
+  const afterNav = await mainNav(page);
   await expect(
-    main.getByRole("link", { name: "Overview", exact: true }),
+    afterNav.getByRole("link", { name: "Overview", exact: true }),
   ).not.toHaveAttribute("aria-current", "page");
-  await expectNoHorizontalOverflow(page);
-  await page.getByRole("link", { name: "Delivery", exact: true }).click();
+  await afterNav.getByRole("link", { name: "Overview", exact: true }).click();
   await expect(page).toHaveURL(/\/$/u);
   await expect(page.locator("#main-heading")).toBeFocused();
+  await expectNoHorizontalOverflow(page);
 
   await page.goto("/no/such/page");
   await page.getByRole("link", { name: "Return to the overview" }).click();

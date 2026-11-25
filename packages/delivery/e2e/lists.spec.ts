@@ -3,15 +3,25 @@ import {
   expectNoHorizontalOverflow,
   expectStackedTable,
   isPhone,
+  usesNavDrawer,
 } from "./helpers.ts";
 
-/** The app's own layout: skip link, header, main navigation and main landmark. */
+/** The app's console shell: skip link, sidebar (or phone topbar) and main landmark. */
 async function expectShell(page: Page) {
   await expect(page.getByRole("link", { name: "Skip to content" })).toHaveCount(
     1,
   );
-  await expect(page.getByRole("banner").first()).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
+  if (usesNavDrawer(page)) {
+    await expect(page.getByRole("banner")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Open navigation" }),
+    ).toBeVisible();
+  } else {
+    await expect(
+      page.getByRole("complementary", { name: "Delivery" }),
+    ).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
+  }
   await expect(page.getByRole("main")).toBeVisible();
 }
 

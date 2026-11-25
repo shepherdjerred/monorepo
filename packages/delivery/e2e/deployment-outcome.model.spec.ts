@@ -28,9 +28,9 @@ test("a failed deployment says why at the top and what the operator can do", asy
   await page.goto(`/deployments/${await quarantined(page)}`);
   const main = page.getByRole("main");
   // Only the status is live; the relative time beside it is not.
-  await expect(main.locator(".page-header").getByRole("status")).toHaveText(
-    /^\S\s*failed$/u,
-  );
+  const headerStatus = main.locator(".page-header").getByRole("status");
+  await expect(headerStatus).toHaveText("failed");
+  await expect(headerStatus.locator("svg.status-glyph")).toBeVisible();
   const why = main.getByRole("region", { name: "Why it failed" });
   await expect(why).toContainText(
     "The sync outlived the executor; its result is unknown",

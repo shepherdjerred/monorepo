@@ -54,7 +54,9 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
+    "@base-ui/react": "^1.6.0",
     "@playwright/test": "1.64.0",
+    "@shepherdjerred/console-ui": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@shepherdjerred/test-postgres": "workspace:*",
     "@types/bun": "1.4.5",
@@ -66,6 +68,7 @@
     "@vitest/coverage-istanbul": "5.0.5",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
+    "lucide-react": "^1.14.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.11",
     "vitest": "5.0.5"
