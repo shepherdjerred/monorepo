@@ -2801,13 +2801,17 @@
       ],
       "ops": {
         "kind": "product",
-        "namespaces": ["charts"]
+        "namespaces": ["charts"],
+        "argoApps": ["charts"]
       },
       "legacy": {
-        "rootReleaseExclusions": {
-          "charts": "inactive"
-        },
-        "charts": ["charts"]
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/charts",
+            "argoApp": "charts"
+          }
+        ]
       }
     },
     {
@@ -2829,13 +2833,17 @@
       ],
       "ops": {
         "kind": "product",
-        "namespaces": ["ci-cache"]
+        "namespaces": ["ci-cache"],
+        "argoApps": ["ci-cache"]
       },
       "legacy": {
-        "rootReleaseExclusions": {
-          "ci-cache": "inactive"
-        },
-        "charts": ["ci-cache"]
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/ci-cache",
+            "argoApp": "ci-cache"
+          }
+        ]
       }
     },
     {
@@ -3321,7 +3329,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/18"
+      "configurationRevisionId": "argocd/prod/19"
     },
     {
       "id": "chartmuseum/prod",
@@ -3722,6 +3730,22 @@
       "automatic": true,
       "recipeRevisionId": "nfd/prod/1",
       "configurationRevisionId": "nfd/prod/1"
+    },
+    {
+      "id": "charts/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "charts/prod/2",
+      "configurationRevisionId": "charts/prod/1"
+    },
+    {
+      "id": "ci-cache/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "ci-cache/prod/2",
+      "configurationRevisionId": "ci-cache/prod/1"
     }
   ],
   "edges": [
@@ -3953,6 +3977,66 @@
     {
       "dependent": "chartmuseum/prod",
       "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "charts/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "charts/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "charts/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "charts/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "charts/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "charts/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ci-cache/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ci-cache/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ci-cache/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ci-cache/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ci-cache/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ci-cache/prod",
+      "prerequisite": "prometheus/prod",
       "rule": "any-accepted"
     },
     {
@@ -5743,7 +5827,9 @@
       "storm-stats": "storm-stats/prod",
       "mail": "outbound-mail/prod",
       "feeds": "feeds/prod",
-      "errors": "errors/prod"
+      "errors": "errors/prod",
+      "charts": "charts/prod",
+      "ci-cache": "ci-cache/prod"
     },
     "platformDeliveryDelegated": true
   }

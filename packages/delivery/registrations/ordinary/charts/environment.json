@@ -1,0 +1,10 @@
+{
+  "id": "charts/prod",
+  "serviceId": "charts",
+  "name": "prod",
+  "application": "charts",
+  "pipelineRevisionId": "charts/prod/1",
+  "configurationRevision": "charts/prod/1",
+  "configuration": {},
+  "automatic": true
+}

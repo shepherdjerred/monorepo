@@ -9,6 +9,7 @@ import {
   Volume,
   type ISecret,
 } from "cdk8s-plus-31";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
@@ -26,7 +27,7 @@ import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/version
  * service is a reviewed change of its own: see the wiki how-to "Add a hosted
  * service".
  */
-export const CHARTS_ACTIVE = false;
+export const CHARTS_ACTIVE = true;
 
 const CHARTS_PORT = 7370;
 const CHARTS_UID = 1000;
@@ -120,14 +121,7 @@ export function createChartsDeployment(chart: Chart) {
       hosts: [
         {
           id: "charts-ingress",
-          // A prepared service renders nothing, so the platform model cannot
-          // declare its tailnet name yet. Activation declares "charts" in
-          // platform-model.json and replaces this with tailnetService("charts").
-          host: {
-            host: "charts",
-            namespace: "charts",
-            exposure: "ingress",
-          },
+          host: tailnetService("charts"),
         },
       ],
     },

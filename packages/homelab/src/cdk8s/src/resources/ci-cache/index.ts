@@ -9,6 +9,7 @@ import {
   NodeLabelQuery,
   Secret,
 } from "cdk8s-plus-31";
+import { tailnetService } from "homelab/src/platform-model.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
@@ -31,7 +32,7 @@ import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/version
  * service is a reviewed change of its own: see the wiki how-to "Add a hosted
  * service".
  */
-export const CI_CACHE_ACTIVE = false;
+export const CI_CACHE_ACTIVE = true;
 
 const CI_CACHE_PORT = 7380;
 const CI_TURBO_CACHE_ITEM_ID = "mzvcz4pqqbda75ufu7l5myd4ey";
@@ -122,14 +123,7 @@ export function createCiCacheDeployment(chart: Chart) {
       hosts: [
         {
           id: "ci-cache-ingress",
-          // A prepared service renders nothing, so the platform model cannot
-          // declare its tailnet name yet. Activation declares "ci-cache" in
-          // platform-model.json and replaces this with tailnetService("ci-cache").
-          host: {
-            host: "ci-cache",
-            namespace: "ci-cache",
-            exposure: "ingress",
-          },
+          host: tailnetService("ci-cache"),
         },
       ],
     },

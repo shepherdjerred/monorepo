@@ -277,6 +277,13 @@ export function createTemporalWorkerDeployment(
     "temporal-git-mirror-cache",
     { storage: Size.gibibytes(128) },
   );
+  // Apply alongside Deployment/temporal-temporal-repo-worker (wave 3): zfs-hdd
+  // uses WaitForFirstConsumer, so a wave-0 claim stays Progressing until its
+  // first pod mounts it.
+  gitMirrorCachePvc.claim.metadata.addAnnotation(
+    "argocd.argoproj.io/sync-wave",
+    "3",
+  );
   const gitMirrorCacheVolume = Volume.fromPersistentVolumeClaim(
     chart,
     "temporal-git-mirror-cache-volume",

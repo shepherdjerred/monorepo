@@ -1,0 +1,10 @@
+{
+  "id": "ci-cache/prod",
+  "serviceId": "ci-cache",
+  "name": "prod",
+  "application": "ci-cache",
+  "pipelineRevisionId": "ci-cache/prod/1",
+  "configurationRevision": "ci-cache/prod/1",
+  "configuration": {},
+  "automatic": true
+}
