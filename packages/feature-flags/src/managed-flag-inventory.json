@@ -90,6 +90,11 @@
       "key": "mail",
       "name": "Mail",
       "description": "First-party outbound mail broker controls."
+    },
+    {
+      "key": "errors",
+      "name": "Errors",
+      "description": "First-party Sentry-envelope error tracker feature flags."
     }
   ],
   "flags": [
@@ -1076,6 +1081,54 @@
       "namespace": "feeds",
       "source": "feeds",
       "purpose": "Allow scheduled and manual upstream RSS/Atom feed polling in @shepherdjerred/feeds.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "errors-ingest-enabled",
+      "owner": "errors",
+      "namespace": "errors",
+      "source": "errors",
+      "purpose": "Accept Sentry SDK envelopes on the public and cluster ingest listener.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "errors-email-notifications-enabled",
+      "owner": "errors",
+      "namespace": "errors",
+      "source": "errors",
+      "purpose": "Dispatch transactional outbox alert emails for new and regressed error issues via @shepherdjerred/mail.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "errors-tracker-creation-enabled",
+      "owner": "errors",
+      "namespace": "errors",
+      "source": "errors",
+      "purpose": "Allow creating and linking Tracker AI issues from error issues.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "errors-telemetry-enabled",
+      "owner": "errors",
+      "namespace": "errors",
+      "source": "errors",
+      "purpose": "Enable OpenTelemetry tracing for the errors service at process startup.",
       "type": "boolean",
       "default": true,
       "rollouts": [],

@@ -134,7 +134,10 @@ test("/reports renders KPIs, 14-stream matrix, feed filters, and navigates into 
     .click();
   await page.getByRole("tab", { name: "Digests" }).click();
   await expect(page).toHaveURL(/tab=digests/u);
-  await feedTable.locator("tbody a.rep-feed-subject-link").first().click();
+  await feedTable
+    .locator('tbody a.rep-feed-subject-link[href^="/reports/digests/"]')
+    .first()
+    .click();
   await expect(page).toHaveURL(/\/reports\/digests\/(daily|weekly)\//u);
   await expect(page.getByRole("heading", { name: "Incidents" })).toBeVisible();
   await page.getByRole("tab", { name: "Rendered Email" }).click();

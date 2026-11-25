@@ -81,12 +81,13 @@ describe("application image reproducibility", () => {
 
   test("every application install sees only its projected closure", async () => {
     const dockerfiles = await applicationDockerfiles();
-    expect(dockerfiles).toHaveLength(22);
+    expect(dockerfiles).toHaveLength(23);
     expect(dockerfiles).toContain("packages/feeds/Dockerfile");
     expect(dockerfiles).toContain("packages/charts/Dockerfile");
     expect(dockerfiles).toContain("packages/ci-cache/Dockerfile");
     expect(dockerfiles).toContain("packages/flags/Dockerfile");
     expect(dockerfiles).toContain("packages/mail/Dockerfile");
+    expect(dockerfiles).toContain("packages/errors/Dockerfile");
     expect(dockerfiles).toContain("packages/media/Dockerfile");
     for (const file of dockerfiles) {
       const stages = dockerStages(await read(file));

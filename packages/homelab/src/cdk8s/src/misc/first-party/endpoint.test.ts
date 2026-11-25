@@ -5,6 +5,8 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import {
   defineEndpoint,
+  ERRORS_ADMIN_ENDPOINT,
+  ERRORS_INGEST_ENDPOINT,
   PINCHTAB_ENDPOINT,
   TRACKER_ENDPOINT,
 } from "./endpoint.ts";
@@ -53,5 +55,22 @@ describe("defineEndpoint", () => {
   test("refuses a pod peer for pods without an app label", () => {
     expect(() => PINCHTAB_ENDPOINT.peer()).toThrow(/no app label/u);
     expect(PINCHTAB_ENDPOINT.namespacePeer()).toStrictEqual(nsPeer("pinchtab"));
+  });
+
+  test("declares errors admin and ingest endpoints on distinct services and ports", () => {
+    expect(ERRORS_ADMIN_ENDPOINT.url).toBe(
+      "http://errors.errors.svc.cluster.local:7370",
+    );
+    expect(ERRORS_ADMIN_ENDPOINT.portName).toBe("http");
+    expect(ERRORS_ADMIN_ENDPOINT.tcp()).toStrictEqual(tcp(7370));
+    expect(ERRORS_INGEST_ENDPOINT.url).toBe(
+      "http://errors-ingest.errors.svc.cluster.local:7371",
+    );
+    expect(ERRORS_INGEST_ENDPOINT.portName).toBe("ingest");
+    expect(ERRORS_INGEST_ENDPOINT.tcp()).toStrictEqual(tcp(7371));
+    expect(ERRORS_INGEST_ENDPOINT.peer()).toStrictEqual({
+      ...nsPeer("errors"),
+      podSelector: { matchLabels: { app: "errors" } },
+    });
   });
 });

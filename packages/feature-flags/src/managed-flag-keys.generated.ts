@@ -21,6 +21,7 @@ export const MANAGED_NAMESPACES = [
   "golink",
   "feeds",
   "mail",
+  "errors",
 ] as const;
 
 export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
@@ -560,6 +561,26 @@ export const MAIL_FLAG_KEYS = [
 
 export type MailFlagKey = (typeof MAIL_FLAG_KEYS)[number];
 
+export const ERRORS_BOOLEAN_FLAG_KEYS = [
+  "errors-ingest-enabled",
+  "errors-email-notifications-enabled",
+  "errors-tracker-creation-enabled",
+  "errors-telemetry-enabled",
+] as const;
+
+export type ErrorsBooleanFlagKey = (typeof ERRORS_BOOLEAN_FLAG_KEYS)[number];
+
+export const ERRORS_VARIANT_FLAG_KEYS = [] as const;
+
+export type ErrorsVariantFlagKey = (typeof ERRORS_VARIANT_FLAG_KEYS)[number];
+
+export const ERRORS_FLAG_KEYS = [
+  ...ERRORS_BOOLEAN_FLAG_KEYS,
+  ...ERRORS_VARIANT_FLAG_KEYS,
+] as const;
+
+export type ErrorsFlagKey = (typeof ERRORS_FLAG_KEYS)[number];
+
 export const MANAGED_FLAG_KEYS = [
   ...DELIVERY_FLAG_KEYS,
   ...MEDIA_FLAG_KEYS,
@@ -579,6 +600,7 @@ export const MANAGED_FLAG_KEYS = [
   ...GOLINK_FLAG_KEYS,
   ...FEEDS_FLAG_KEYS,
   ...MAIL_FLAG_KEYS,
+  ...ERRORS_FLAG_KEYS,
 ] as const;
 
 export type ManagedFlagKey = (typeof MANAGED_FLAG_KEYS)[number];
@@ -602,6 +624,7 @@ export const MANAGED_BOOLEAN_FLAG_KEYS = [
   ...GOLINK_BOOLEAN_FLAG_KEYS,
   ...FEEDS_BOOLEAN_FLAG_KEYS,
   ...MAIL_BOOLEAN_FLAG_KEYS,
+  ...ERRORS_BOOLEAN_FLAG_KEYS,
 ] as const;
 
 export type ManagedBooleanFlagKey = (typeof MANAGED_BOOLEAN_FLAG_KEYS)[number];
@@ -625,6 +648,7 @@ export const MANAGED_VARIANT_FLAG_KEYS = [
   ...GOLINK_VARIANT_FLAG_KEYS,
   ...FEEDS_VARIANT_FLAG_KEYS,
   ...MAIL_VARIANT_FLAG_KEYS,
+  ...ERRORS_VARIANT_FLAG_KEYS,
 ] as const;
 
 export type ManagedVariantFlagKey = (typeof MANAGED_VARIANT_FLAG_KEYS)[number];

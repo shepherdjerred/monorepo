@@ -358,6 +358,47 @@ Every command accepts `--json` and `--url`. The service URL resolves from
 matches the managed inventory and 1 when a flag is missing, extra, or drifted.
 `apply` exits 2 on a revision conflict and writes nothing.
 
+## Errors
+
+`toolkit errors` reads and triages issues, events, stacktraces, and releases in
+the first-party `@shepherdjerred/errors` service (`/api/v1/*`). Humans and
+workstations reach the console over the tailnet (`ERRORS_URL`, defaulting to
+`https://errors.tailnet-1a49.ts.net`) without a mandatory 1Password credential;
+when `ERRORS_TOKEN` is set in the environment, requests send it as a Bearer
+token without printing it.
+
+```bash
+toolkit errors overview --json
+toolkit errors projects --json
+toolkit errors project scout-for-lol --json
+toolkit errors issues --project scout-for-lol --tab unresolved --limit 25 --json
+toolkit errors issues --tab regressed --all --json
+toolkit errors issue <ISSUE_UUID> --json
+toolkit errors events <ISSUE_UUID> --limit 10 --json
+toolkit errors event <EVENT_ID> --json
+toolkit errors stacktrace <EVENT_ID>
+toolkit errors stacktrace <EVENT_ID> --json
+toolkit errors releases --project scout-for-lol --json
+toolkit errors resolve <ISSUE_UUID...> --next-release --json
+toolkit errors resolve <ISSUE_UUID...> --release 2.4.0 --json
+toolkit errors reopen <ISSUE_UUID...> --json
+toolkit errors mute <ISSUE_UUID...> --json
+toolkit errors unmute <ISSUE_UUID...> --json
+toolkit errors tracker-issue <ISSUE_UUID> --urgency high --impact medium --effort s --json
+toolkit errors import-bugsink --dry-run --json
+```
+
+Every subcommand accepts `--json` and `--url`. `issues` accepts `--project`,
+`--tab <unresolved|regressed|muted|resolved|all>`,
+`--state <OPEN|RESOLVED|RESOLVED_NEXT_RELEASE|MUTED>`, `--q <query>`,
+`--limit <n>`, and `--all` (following `nextCursor` across pages when `--all` or
+`--limit` is set). `stacktrace` prints raw Markdown by default and queries
+`?format=json` when `--json` is passed. `resolve`, `reopen`, `mute`, and
+`unmute` update a single issue via `PATCH /api/v1/issues/:id` or multiple
+issues via `POST /api/v1/issues/bulk-update`. `tracker-issue` creates or links
+an `AI` team Tracker issue for an error group, and `import-bugsink` triggers
+historical Bugsink migration via `POST /api/v1/admin/import-bugsink`.
+
 ## Agent forum
 
 `toolkit forum` reads and writes Tracker's shared `notice`, `discussion`,
@@ -929,6 +970,10 @@ PinchTab credentials or config.
   and 2 for request, authentication or authorization failures. `--url`
   overrides the stage origin, for example a local backend.
 
+- `toolkit errors ...` queries and triages projects, issues, events,
+  stacktraces, releases, Tracker links, and Bugsink imports in the first-party
+  `errors` service (`ERRORS_URL`, default `https://errors.tailnet-1a49.ts.net`).
+  See [Errors](#errors).
 - `toolkit bugsink ...` queries teams, projects, issues, events, stacktraces,
   and releases in self-hosted Bugsink. `issues` lists unresolved, unmuted
   issues across every project unless `--project` narrows it; `--all` includes

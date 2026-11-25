@@ -909,6 +909,17 @@
       "package": "ci-cache",
       "namespaces": ["ci-cache"],
       "argoApps": []
+    },
+    {
+      "id": "errors",
+      "rootReleaseExclusions": { "errors": "inactive" },
+      "images": ["errors"],
+      "charts": ["errors"],
+      "title": "Errors",
+      "kind": "product",
+      "package": "errors",
+      "namespaces": ["errors"],
+      "argoApps": []
     }
   ]
 }

@@ -67,6 +67,7 @@ Monorepo workflows:
   ops summary [--needs-me]     Summarize the homelab ops snapshot
   scout ops <ACTION>           Operate Scout's durable pipeline without a browser
   promotion <ACTION> [TARGET]  Operate The Storm promotion agents and posting history
+  errors <SUBCOMMAND>          Query and triage first-party error tracking
   bugsink <SUBCOMMAND>         Query self-hosted error tracking
   flags <COMMAND>              Read and apply deployment flag documents
   discord <SUBCOMMAND>         Use the local Discord session daemon
@@ -133,6 +134,11 @@ const SUBCOMMAND_HANDLERS = new Map<string, () => Promise<SubcommandHandler>>([
   [
     "scout",
     () => import("./handlers/scout.ts").then((m) => m.handleScoutCommand),
+  ],
+  [
+    "errors",
+    () =>
+      import("./handlers/errors/index.ts").then((m) => m.handleErrorsCommand),
   ],
   [
     "bugsink",

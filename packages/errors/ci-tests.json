@@ -1,0 +1,33 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/errors",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": [
+        "src/shared",
+        "src/domain",
+        "src/infrastructure",
+        "src/client",
+        "src/server/app.test.ts",
+        "src/architecture-boundaries.test.ts",
+        "--testTimeout",
+        "30000",
+        "--hookTimeout",
+        "30000"
+      ]
+    },
+    {
+      "runner": "vitest",
+      "name": "postgres-integration",
+      "tier": "extended",
+      "args": [
+        "src/server/postgres.integration.test.ts",
+        "--testTimeout",
+        "60000",
+        "--hookTimeout",
+        "60000"
+      ]
+    }
+  ]
+}

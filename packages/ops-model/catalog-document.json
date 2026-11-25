@@ -228,6 +228,12 @@
       "title": "CI cache",
       "kind": "product",
       "package": "ci-cache"
+    },
+    {
+      "id": "errors",
+      "title": "Errors",
+      "kind": "product",
+      "package": "errors"
     }
   ],
   "services": [
@@ -2830,6 +2836,34 @@
           "ci-cache": "inactive"
         },
         "charts": ["ci-cache"]
+      }
+    },
+    {
+      "id": "errors",
+      "title": "Errors",
+      "package": "errors",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "errors",
+      "components": [
+        {
+          "name": "image:errors",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:errors",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["errors"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "errors": "inactive"
+        },
+        "charts": ["errors"]
       }
     }
   ],
