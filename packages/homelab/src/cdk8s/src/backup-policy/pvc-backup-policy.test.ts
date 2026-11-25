@@ -128,18 +128,18 @@ it("excludes Media's artwork cache from Velero; the API refetches it from TMDB",
   });
 });
 
-it("classifies 55 included and 52 excluded PVCs, including the separate BlueMap and Git mirror caches", () => {
+it("classifies 56 included and 53 excluded PVCs, including the separate BlueMap and Git mirror caches", () => {
   const keys = PVC_BACKUP_POLICY.map((entry) =>
     pvcBackupPolicyKey(entry.namespace, entry.name),
   );
-  expect(keys).toHaveLength(107);
-  expect(new Set(keys).size).toBe(107);
+  expect(keys).toHaveLength(109);
+  expect(new Set(keys).size).toBe(109);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "enabled"),
-  ).toHaveLength(55);
+  ).toHaveLength(56);
   expect(
     PVC_BACKUP_POLICY.filter((entry) => entry.backup === "disabled"),
-  ).toHaveLength(52);
+  ).toHaveLength(53);
   expect(
     getPvcBackupPolicy("temporal", "temporal-git-mirror-cache").backup,
   ).toBe("disabled");

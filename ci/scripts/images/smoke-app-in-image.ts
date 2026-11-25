@@ -521,6 +521,14 @@ const commands: Record<
     command: "cd /app/packages/feeds && bun src/smoke.ts",
     env: {},
   },
+  charts: {
+    command: "/usr/local/bin/charts --smoke",
+    env: {},
+  },
+  "ci-cache": {
+    command: "/usr/local/bin/ci-cache --smoke",
+    env: {},
+  },
 };
 
 /** The command and environment the in-image runner executes for `target`. */

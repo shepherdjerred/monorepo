@@ -640,5 +640,17 @@
     "name": "feeds-data",
     "backup": "enabled",
     "reason": "Feeds SQLite database, user subscriptions, and read/starred entry state"
+  },
+  {
+    "namespace": "charts",
+    "name": "charts-data",
+    "backup": "enabled",
+    "reason": "Published Helm chart archives and SQLite metadata index; Delivery set revisions and accepted selections reference them by digest (PC1)"
+  },
+  {
+    "namespace": "ci-cache",
+    "name": "ci-cache-liskov",
+    "backup": "disabled",
+    "reason": "Rebuildable Turborepo, Gradle, and sccache artifact cache on liskov"
   }
 ]

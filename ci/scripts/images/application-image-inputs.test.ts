@@ -106,9 +106,37 @@ describe("application image inputs", () => {
     expect(missing).toEqual([]);
   });
 
-  test("ships the local in-image smoke harness", async () => {
+  test("ships the local in-image smoke harness with fallback Bun binary for pure-Rust images", async () => {
     const dockerfile = await read("ci/application-image-smoke.Dockerfile");
-    expect(dockerfile).toContain("ci/scripts/images/smoke-app-in-image.ts");
+    expect(dockerfile).toContain(
+      "FROM oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61 AS bun-harness",
+    );
+    expect(dockerfile).toContain("/tmp/smoke-bun");
+    expect(dockerfile).toContain(
+      'exec "$(command -v bun || echo /tmp/smoke-bun)" /app/ci/scripts/images/smoke-app-in-image.ts',
+    );
+  });
+
+  test("pins and verifies mozilla/sccache for both architectures in Rust Dockerfiles", async () => {
+    const versions: string[] = [];
+    for (const path of [
+      "packages/charts/Dockerfile",
+      "packages/ci-cache/Dockerfile",
+      "packages/glitter-boys-launcher/Dockerfile",
+    ]) {
+      const dockerfile = await read(path);
+      const version = /^ARG SCCACHE_VERSION=(\S+)$/m.exec(dockerfile);
+      expect(version).not.toBeNull();
+      versions.push(version?.[1] ?? "");
+      expect(dockerfile).toContain(
+        "# renovate: datasource=github-releases depName=mozilla/sccache",
+      );
+      expect(dockerfile).toContain("SCCACHE_SHA256_AMD64=");
+      expect(dockerfile).toContain("SCCACHE_SHA256_ARM64=");
+      expect(dockerfile).toContain("sha256sum -c -");
+      expect(dockerfile).toContain("RUSTC_WRAPPER=/usr/local/bin/sccache");
+    }
+    expect(new Set(versions)).toEqual(new Set(["0.19.0"]));
   });
 
   test("keeps Storm Forum PHP-FPM in the foreground with stderr logging", async () => {

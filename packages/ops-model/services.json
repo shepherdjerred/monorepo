@@ -887,6 +887,28 @@
           "argoApp": "feeds"
         }
       ]
+    },
+    {
+      "id": "charts",
+      "rootReleaseExclusions": { "charts": "inactive" },
+      "images": ["charts"],
+      "charts": ["charts"],
+      "title": "Charts",
+      "kind": "product",
+      "package": "charts",
+      "namespaces": ["charts"],
+      "argoApps": []
+    },
+    {
+      "id": "ci-cache",
+      "rootReleaseExclusions": { "ci-cache": "inactive" },
+      "images": ["ci-cache"],
+      "charts": ["ci-cache"],
+      "title": "CI cache",
+      "kind": "product",
+      "package": "ci-cache",
+      "namespaces": ["ci-cache"],
+      "argoApps": []
     }
   ]
 }

@@ -43,8 +43,14 @@ describe("buildkitd cache sizing and two-tier GC policy", () => {
     const ephemeralRule = [
       "[[worker.oci.gcpolicy]]",
       '    keepDuration = "48h"',
-      `    maxUsedSpace = ${String(96 * 1024 * 1024 * 1024)}`,
-      '    filters = ["type==source.local", "type==exec.cachemount", "type==source.git.checkout"]',
+      `    maxUsedSpace = ${String(48 * 1024 * 1024 * 1024)}`,
+      '    filters = ["type==source.local", "type==source.git.checkout"]',
+    ].join("\n");
+    const cacheMountRule = [
+      "[[worker.oci.gcpolicy]]",
+      '    keepDuration = "336h"',
+      `    maxUsedSpace = ${String(48 * 1024 * 1024 * 1024)}`,
+      '    filters = ["type==exec.cachemount"]',
     ].join("\n");
     const catchAllRule = [
       "[[worker.oci.gcpolicy]]",
@@ -55,8 +61,12 @@ describe("buildkitd cache sizing and two-tier GC policy", () => {
     ].join("\n");
 
     expect(toml).toContain(ephemeralRule);
+    expect(toml).toContain(cacheMountRule);
     expect(toml).toContain(catchAllRule);
     expect(toml.indexOf(ephemeralRule)).toBeLessThan(
+      toml.indexOf(cacheMountRule),
+    );
+    expect(toml.indexOf(cacheMountRule)).toBeLessThan(
       toml.indexOf(catchAllRule),
     );
   });

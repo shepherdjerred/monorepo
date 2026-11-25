@@ -1,0 +1,14 @@
+{
+  "$schema": "../../scripts/ci-tests.schema.json",
+  "package": "@shepherdjerred/ci-cache",
+  "steps": [
+    {
+      "runner": "vitest",
+      "args": ["client"]
+    },
+    {
+      "runner": "cargo",
+      "args": ["--workspace", "--locked"]
+    }
+  ]
+}

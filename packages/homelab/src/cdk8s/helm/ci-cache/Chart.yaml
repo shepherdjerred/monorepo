@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ci-cache
+description: CI cache
+type: application
+version: "$version"
+appVersion: "$appVersion"

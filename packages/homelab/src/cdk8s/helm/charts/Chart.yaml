@@ -1,0 +1,6 @@
+apiVersion: v2
+name: charts
+description: Charts
+type: application
+version: "$version"
+appVersion: "$appVersion"

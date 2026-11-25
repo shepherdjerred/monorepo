@@ -6,7 +6,7 @@ import { startBenchmarkResources } from "./benchmark-resources.ts";
 
 type Identity = Omit<
   TaskDiagnostics,
-  "turbo" | "browserSelection" | "collectionFailed" | "testTimings"
+  "turbo" | "browserSelection" | "collectionFailed" | "testTimings" | "sccache"
 >;
 
 /**
@@ -99,6 +99,42 @@ async function measureTestTimings(
   }
 }
 
+/** Best effort: collect `sccache --show-stats --stats-format=json` when `RUSTC_WRAPPER` is `sccache`. */
+export async function measureSccache(
+  env: Readonly<Record<string, string | undefined>> = Bun.env,
+): Promise<unknown> {
+  const wrapper = env["RUSTC_WRAPPER"]?.trim() ?? "";
+  if (wrapper === "" || path.basename(wrapper) !== "sccache") {
+    return undefined;
+  }
+  try {
+    const { sanitizeSccacheStats } =
+      await import("../lib/ci/task-diagnostics.ts");
+    const child = Bun.spawn([wrapper, "--show-stats", "--stats-format=json"], {
+      stdin: "ignore",
+      stdout: "pipe",
+      stderr: "ignore",
+      env: { ...Bun.env, ...env },
+    });
+    const timer = setTimeout(() => {
+      child.kill();
+    }, 5000);
+    try {
+      const [stdout, exitCode] = await Promise.all([
+        new Response(child.stdout).text(),
+        child.exited,
+      ]);
+      return exitCode === 0 && stdout.trim() !== ""
+        ? sanitizeSccacheStats(JSON.parse(stdout))
+        : undefined;
+    } finally {
+      clearTimeout(timer);
+    }
+  } catch {
+    return undefined;
+  }
+}
+
 export async function retainDiagnostics(
   identity: Identity,
   before: ReadonlySet<string>,
@@ -117,8 +153,12 @@ export async function retainDiagnostics(
     );
     report = { ...identity, collectionFailed: true, turbo: [] };
   }
-  const testTimings = await measureTestTimings(root);
+  const [testTimings, sccache] = await Promise.all([
+    measureTestTimings(root),
+    measureSccache(),
+  ]);
   if (testTimings !== undefined) report = { ...report, testTimings };
+  if (sccache !== undefined) report = { ...report, sccache };
   try {
     await upload(report);
     console.log(
@@ -184,6 +224,7 @@ async function retainFromArgs(args: string[]): Promise<number> {
       collectionFailed: true,
       workspaceUsage: true,
       testTimings: true,
+      sccache: true,
     }).parse(identity);
     const root = process.cwd();
     const workspaceUsage = await measureWorkspace(root);

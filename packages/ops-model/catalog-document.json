@@ -216,6 +216,18 @@
       "title": "Feeds",
       "kind": "product",
       "package": "feeds"
+    },
+    {
+      "id": "charts",
+      "title": "Charts",
+      "kind": "product",
+      "package": "charts"
+    },
+    {
+      "id": "ci-cache",
+      "title": "CI cache",
+      "kind": "product",
+      "package": "ci-cache"
     }
   ],
   "services": [
@@ -2762,6 +2774,62 @@
             "argoApp": "feeds"
           }
         ]
+      }
+    },
+    {
+      "id": "charts",
+      "title": "Charts",
+      "package": "charts",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "charts",
+      "components": [
+        {
+          "name": "image:charts",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:charts",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["charts"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "charts": "inactive"
+        },
+        "charts": ["charts"]
+      }
+    },
+    {
+      "id": "ci-cache",
+      "title": "CI cache",
+      "package": "ci-cache",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "ci-cache",
+      "components": [
+        {
+          "name": "image:ci-cache",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:ci-cache",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["ci-cache"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "ci-cache": "inactive"
+        },
+        "charts": ["ci-cache"]
       }
     }
   ],
