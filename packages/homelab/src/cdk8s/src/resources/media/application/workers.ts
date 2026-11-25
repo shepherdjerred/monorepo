@@ -1,6 +1,6 @@
 import { temporalMetricsAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
-import { tailnetService } from "homelab/src/platform-model.ts";
+import { MAIL_API_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import {
@@ -33,7 +33,7 @@ export function createMediaActivityWorkers(
     database: SingleAppDatabase;
     bootstrap: ISecret;
     discord: ISecret;
-    postal: ISecret;
+    mail: ISecret;
     plex: { serviceName: string; tokenSecret: ISecret };
     qbittorrent: ISecret;
     claims: MediaApplicationClaims;
@@ -75,14 +75,11 @@ export function createMediaActivityWorkers(
         secret: props.bootstrap,
         key: "TMDB_API_KEY",
       }),
-      POSTAL_API_KEY: EnvValue.fromSecretValue({
-        secret: props.postal,
-        key: "POSTAL_API_KEY",
+      MAIL_API_TOKEN: EnvValue.fromSecretValue({
+        secret: props.mail,
+        key: "MAIL_API_TOKEN",
       }),
-      POSTAL_HOST: EnvValue.fromValue(
-        "http://postal-postal-web-service.postal.svc.cluster.local:5000",
-      ),
-      POSTAL_HOST_HEADER: EnvValue.fromValue(tailnetService("postal").fqdn),
+      MAIL_API_URL: EnvValue.fromValue(MAIL_API_ENDPOINT.url),
       PLEX_SERVER_URL: EnvValue.fromValue(
         `http://${props.plex.serviceName}.media.svc.cluster.local:32400`,
       ),

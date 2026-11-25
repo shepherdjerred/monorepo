@@ -770,22 +770,6 @@
       "deploy": []
     },
     {
-      "id": "mail",
-      "title": "Postal mail",
-      "kind": "platform",
-      "aliases": [],
-      "namespaces": ["postal"],
-      "argoApps": ["postal", "postal-mariadb"],
-      "charts": [],
-      "rootReleaseExclusions": { "postal-mariadb": "upstream" },
-      "images": [],
-      "bootstrapImages": [],
-      "bugsinkProjects": [],
-      "analyticsSites": [],
-      "grafanaDashboards": [],
-      "deploy": []
-    },
-    {
       "id": "outbound-mail",
       "title": "Mail",
       "kind": "platform",

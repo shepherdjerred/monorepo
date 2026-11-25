@@ -37,13 +37,13 @@ export function createUnifiedMediaApplication(
     "media-application-discord",
     "media-streambot-config",
   );
-  const postalItem = new OnePasswordItem(chart, "media-postal", {
-    spec: { itemPath: vaultItemPath("sx4zk4gmjf6hgjophwzwhss5je") },
+  const mailItem = new OnePasswordItem(chart, "media-mail", {
+    spec: { itemPath: vaultItemPath("media-mail") },
   });
-  const postal = Secret.fromSecretName(
+  const mail = Secret.fromSecretName(
     chart,
-    "media-application-postal",
-    postalItem.name,
+    "media-application-mail",
+    mailItem.name,
   );
   const qbittorrent = Secret.fromSecretName(
     chart,
@@ -61,7 +61,7 @@ export function createUnifiedMediaApplication(
     database,
     bootstrap,
     discord,
-    postal,
+    mail,
     qbittorrent,
     claims: props.claims,
     plex: props.plex,

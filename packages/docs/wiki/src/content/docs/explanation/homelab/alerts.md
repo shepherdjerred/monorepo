@@ -1,6 +1,6 @@
 ---
 title: Alerts and incident history
-description: Alertmanager remains authoritative for live alert state, while Alerts adds durable history, a dashboard, bounded Grafana previews, and Postal opening email.
+description: Alertmanager remains authoritative for live alert state, while Alerts adds durable history, a dashboard, bounded Grafana previews, and Mail opening email.
 ---
 
 Alerts is the human-facing ledger for the homelab's Alertmanager data.
@@ -12,7 +12,7 @@ routing, grouping, inhibition, silences, or current-state authority.
 ```mermaid
 flowchart LR
   accTitle: Alert routing and durable history
-  accDescr: Alertmanager remains authoritative for live state. Its authenticated webhook and snapshots feed a WAL-mode SQLite ledger on a single-writer PVC; the dashboard, read-only API, toolkit, Grafana previews, and Postal opening email use that ledger. Alertmanager also submits fallback mail to Postal over STARTTLS.
+  accDescr: Alertmanager remains authoritative for live state. Its authenticated webhook and snapshots feed a WAL-mode SQLite ledger on a single-writer PVC; the dashboard, read-only API, toolkit, Grafana previews, and Mail opening email use that ledger. Alertmanager also submits fallback mail to Mail over STARTTLS.
 
   AM[Alertmanager\nrouting and live state]
   LEDGER[Alerts service\nwebhook and reconciliation]
@@ -20,30 +20,31 @@ flowchart LR
   UI[Dashboard and\nread-only APIs]
   CLI[toolkit alerts]
   GRAFANA[Grafana previews\nPrometheus Loki Tempo]
-  POSTAL[Postal\nopening email]
+  MAIL["@shepherdjerred/mail\nopening and fallback email"]
 
   AM --> LEDGER
   LEDGER --> DB
   DB --> UI
   UI --> CLI
   LEDGER --> GRAFANA
-  LEDGER --> POSTAL
-  AM -->|STARTTLS fallback| POSTAL
+  LEDGER -->|"/v1/messages :7371"| MAIL
+  AM -->|"STARTTLS :25 mail-fallback"| MAIL
 ```
 
 ## Current deployment boundary
 
 Hub (`alert-dashboard`) owns durable incident history and sends grouped opening
 emails for ordinary warning and critical alerts through its SQLite outbox over
-Postal's HTTP API (`alert-dashboard-email-enabled` on by default). Alertmanager's
-`alerts` receiver delivers webhook events to Hub without duplicating email, while
-`postal-fallback` retains an independent notification path for alerts that
-diagnose Hub or its webhook.
+`@shepherdjerred/mail`'s HTTP API (`POST /v1/messages` on `:7371`, with
+`alert-dashboard-email-enabled` on by default). Alertmanager's `alerts` receiver
+delivers webhook events to Hub without duplicating email, while `mail-fallback`
+retains an independent notification path for alerts that diagnose Hub or its
+webhook.
 
-Alertmanager's Postal fallback does not use that HTTP API. It submits mail
-through Postal's inbound SMTP listener and requires STARTTLS with cluster-CA
-validation — see [Postal SMTP TLS](/explanation/homelab/postal-smtp-tls/).
-Both the dashboard outbox and `postal-fallback` send operator alert mail from
+Alertmanager's `mail-fallback` receiver does not use that HTTP API. It submits
+mail through `@shepherdjerred/mail`'s `:25` SMTP listener and requires `STARTTLS`
+with cluster-CA validation — see [Mail SMTP TLS](/explanation/homelab/mail-smtp-tls/).
+Both the dashboard outbox and `mail-fallback` send operator alert mail from
 `Hub Alerts <alerts@sjer.red>` to `alerts@sjer.red`, while operational summaries
 use `Hub Digest <digests@sjer.red>` to `digests@sjer.red`. The retired
 `claude@sjer.red` and `dependencies@sjer.red` mailboxes are no longer used.
@@ -51,7 +52,7 @@ use `Hub Digest <digests@sjer.red>` to `digests@sjer.red`. The retired
 [`prometheus.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/observability/prometheus.ts)
 mounts `ops-email.tmpl` from
 `packages/homelab/src/cdk8s/src/resources/argo-applications/observability/alertmanager-email-template.ts`
-onto `postal-fallback`. Fallback messages therefore keep the shared console
+onto `mail-fallback`. Fallback messages therefore keep the shared console
 look and plain-English layout even while Hub is unreachable. The template takes
 its colours from the ops-model email palette (itself pinned to the console-ui
 tokens), picks per-severity colour with static classes or fixed branches rather
@@ -69,7 +70,7 @@ durable SQLite ledger
 
 Separating notification from inspection lets each medium do one job well.
 Unchanged clear daily checks and consecutive healthy daily digests stay quiet in
-Postal while still recording fresh heartbeats and 30-day Pacific history in Hub.
+Mail while still recording fresh heartbeats and 30-day Pacific history in Hub.
 When an email does send — for an incident opening, an automated pull request, or
 a weekly review — it stays concise and links straight to Hub for raw collector
 commands, excerpts, passing checks, sibling runs, and linked alert occurrences.
@@ -120,5 +121,5 @@ part of this service.
   [operations overview](/explanation/homelab/operations-overview/).
 - Deployment definitions: `packages/homelab/src/cdk8s/src/resources/alert-dashboard/`.
 - Operator CLI: `packages/toolkit/src/handlers/alerts.ts`.
-- Postal SMTP fallback TLS: [Postal SMTP TLS](/explanation/homelab/postal-smtp-tls/).
+- Mail SMTP fallback TLS: [Mail SMTP TLS](/explanation/homelab/mail-smtp-tls/).
 - Activation and retention work: Tracker.

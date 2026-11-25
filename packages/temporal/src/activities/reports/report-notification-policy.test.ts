@@ -369,7 +369,7 @@ test("a failed send neither suppresses a changed report nor advances last accept
   h.faults.failSend = true;
   await expect(
     deliverDailyNotification(first, h.deps(first.completedAt)),
-  ).rejects.toThrow("Postal unavailable");
+  ).rejects.toThrow("Mail API unavailable");
   expect([...h.families.values()][0]?.value.lastAccepted).toBeUndefined();
   h.faults.failSend = false;
   const next = report(2, "backup-failure");

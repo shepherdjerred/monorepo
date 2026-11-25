@@ -191,7 +191,9 @@ export function failureReason(error: unknown): string {
   if (message.includes("bun install")) {
     return "install-failed";
   }
-  return message.includes("Postal") || message.includes("email configuration")
+  return message.includes("Mail API") ||
+    message.includes("Postal") ||
+    message.includes("email configuration")
     ? "email-failed"
     : "exception";
 }

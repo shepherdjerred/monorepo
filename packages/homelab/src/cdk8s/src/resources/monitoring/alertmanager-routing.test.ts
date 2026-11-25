@@ -329,28 +329,26 @@ describe("rendered Alerts receiver", () => {
     expect(renderedApps).toContain(
       "secrets:\n              - alert-dashboard-secrets",
     );
-    expect(renderedApps).toContain("- alertmanager-postal-smtp");
+    expect(renderedApps).toContain("- alertmanager-mail-smtp");
     expect(renderedApps).toContain("smtp_from: Hub Alerts <alerts@sjer.red>");
     expect(renderedApps).toContain("smtp_auth_username: alertmanager");
     expect(renderedApps).toContain(
-      "smtp_auth_password_file: /etc/alertmanager/secrets/alertmanager-postal-smtp/SMTP_PASSWORD",
+      "smtp_auth_password_file: /etc/alertmanager/secrets/alertmanager-mail-smtp/SMTP_PASSWORD",
     );
     expect(renderedApps).toContain("smtp_require_tls: true");
     expect(renderedApps).toContain(
-      "ca_file: /etc/alertmanager/secrets/alertmanager-postal-smtp-ca/ca.crt",
+      "ca_file: /etc/alertmanager/secrets/alertmanager-mail-smtp-ca/ca.crt",
     );
-    expect(renderedApps).toContain(
-      "server_name: postal-postal-smtp-service.postal.svc.cluster.local",
-    );
+    expect(renderedApps).toContain("server_name: mail.mail.svc.cluster.local");
     expect(renderedApps).toContain("insecure_skip_verify: false");
-    expect(renderedApps).toContain("- alertmanager-postal-smtp-ca");
+    expect(renderedApps).toContain("- alertmanager-mail-smtp-ca");
     expect(renderedApps).not.toContain("claude@sjer.red");
     expect(renderedApps).not.toContain("smtp_require_tls: false");
     expect(renderedApps).not.toMatch(/smtp_auth_password:\s+[^_]/u);
   });
 
-  it("keeps an independent Postal fallback for dashboard health alerts", () => {
-    const receiver = findReceiverNamed(renderedApps, "postal-fallback");
+  it("keeps an independent mail fallback for dashboard health alerts", () => {
+    const receiver = findReceiverNamed(renderedApps, "mail-fallback");
     expect(receiver["email_configs"]).toEqual([EXPECTED_EMAIL_CONFIG]);
     // The whole point of this receiver: it reports on the webhook, so it must
     // not depend on the webhook to be delivered.
@@ -498,24 +496,24 @@ describe("Alerts route selection", () => {
     ).toBe("alerts");
   });
 
-  it("routes dashboard health alerts to Postal", () => {
+  it("routes dashboard health alerts to mail-fallback", () => {
     expect(
       resolveReceiver(route, {
         alertname: "AlertDashboardDown",
         severity: "critical",
         alert_dashboard_fallback: "true",
       }),
-    ).toBe("postal-fallback");
+    ).toBe("mail-fallback");
     expect(
       resolveReceiver(route, {
         alertname: "ServiceProbeDown",
         namespace: "alert-dashboard",
         severity: "warning",
       }),
-    ).toBe("postal-fallback");
+    ).toBe("mail-fallback");
   });
 
-  it("keeps info-level dashboard-namespace alerts suppressed instead of paging Postal", () => {
+  it("keeps info-level dashboard-namespace alerts suppressed instead of paging mail-fallback", () => {
     expect(
       resolveReceiver(route, {
         alertname: "SomethingInfo",
@@ -525,7 +523,7 @@ describe("Alerts route selection", () => {
     ).toBe("null");
   });
 
-  it("routes only webhook-integration delivery failures to Postal", () => {
+  it("routes only webhook-integration delivery failures to mail-fallback", () => {
     expect(
       resolveReceiver(route, {
         alertname: "AlertmanagerFailedToSendAlerts",
@@ -533,17 +531,17 @@ describe("Alerts route selection", () => {
         severity: "warning",
         integration: "webhook",
       }),
-    ).toBe("postal-fallback");
+    ).toBe("mail-fallback");
     expect(
       resolveReceiver(route, {
         alertname: "PrometheusErrorSendingAlertsToSomeAlertmanagers",
         namespace: "prometheus",
         severity: "warning",
       }),
-    ).toBe("postal-fallback");
+    ).toBe("mail-fallback");
   });
 
-  it("routes the cluster-wide webhook delivery-failure alert to Postal alongside its single-instance sibling", () => {
+  it("routes the cluster-wide webhook delivery-failure alert to mail-fallback alongside its single-instance sibling", () => {
     expect(
       resolveReceiver(route, {
         alertname: "AlertmanagerClusterFailedToSendAlerts",
@@ -551,10 +549,10 @@ describe("Alerts route selection", () => {
         severity: "critical",
         integration: "webhook",
       }),
-    ).toBe("postal-fallback");
+    ).toBe("mail-fallback");
   });
 
-  it("keeps email-integration delivery failures off the broken Postal path", () => {
+  it("keeps email-integration delivery failures off the broken mail SMTP path", () => {
     expect(
       resolveReceiver(route, {
         alertname: "AlertmanagerFailedToSendAlerts",
@@ -565,7 +563,7 @@ describe("Alerts route selection", () => {
     ).toBe("alerts");
   });
 
-  it("does not blanket-route unrelated Alertmanager health alerts to Postal", () => {
+  it("does not blanket-route unrelated Alertmanager health alerts to mail-fallback", () => {
     expect(
       resolveReceiver(route, {
         alertname: "AlertmanagerConfigInconsistent",

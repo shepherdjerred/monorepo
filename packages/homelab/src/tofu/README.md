@@ -276,8 +276,7 @@ MTA-STS policy source for both OpenTofu and Caddy, read at synthesis. Every
 managed zone needs a registry entry: synthesis fails when the zones and the
 registry differ. The Tunnel DNS coverage guard checks every zone's `mta-sts`
 CNAME in the synthesized configuration.
-Keep existing application records, Postal selectors, and `rp` routing outside
-the baseline. Wildcard inbound MX does not authorize arbitrary subdomain senders.
+Keep existing application records outside the baseline. Wildcard inbound MX does not authorize arbitrary subdomain senders.
 
 Fastmail account onboarding precedes MX cutover: add each domain, preserve
 existing addresses, add `root@domain`, and direct its catch-all to the existing

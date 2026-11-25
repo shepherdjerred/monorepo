@@ -1,7 +1,4 @@
 import { expect, test } from "vitest";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import { fileURLToPath } from "node:url";
 import { createNotificationTransport } from "./notification-transport.ts";
 
 const message = {
@@ -11,55 +8,58 @@ const message = {
   text: "Fixture body",
   idempotencyKey: "notification1",
 } satisfies Parameters<ReturnType<typeof createNotificationTransport>>[0];
-test("Postal acceptance requires successful envelope and the exact recipient receipt", async () => {
+
+test("Mail acceptance sends Bearer auth without Host override and returns message id", async () => {
   const config = {
-    postal: {
-      baseUrl: "https://postal.example.com",
-      apiKey: "fixture-secret",
+    mail: {
+      baseUrl: "https://mail.example.com",
+      token: "fixture-secret",
       from: "media@example.com",
-      hostHeader: "postal.fixture.internal",
     },
   };
   const send = createNotificationTransport(config, async (url, init) => {
-    expect(url.pathname).toBe("/api/v1/send/message");
-    expect(new Headers(init.headers).get("X-Server-API-Key")).toBe(
-      "fixture-secret",
-    );
-    expect(new Headers(init.headers).get("host")).toBe(
-      "postal.fixture.internal",
-    );
-    return Response.json({
-      status: "success",
-      data: {
-        message_id: "fixture-id",
-        messages: { "fixture@example.com": { id: 42 } },
-      },
+    expect(url.pathname).toBe("/v1/messages");
+    const headers = new Headers(init.headers);
+    expect(headers.get("Authorization")).toBe("Bearer fixture-secret");
+    expect(headers.get("host")).toBeNull();
+    if (typeof init.body !== "string")
+      throw new TypeError("Expected JSON body");
+    expect(JSON.parse(init.body)).toEqual({
+      to: ["fixture@example.com"],
+      from: "media@example.com",
+      subject: "Fixture",
+      plainBody: "Fixture body",
+      tag: "media-notification1",
+      idempotencyKey: "notification1",
     });
+    return Response.json(
+      {
+        id: "msg_42",
+        rfcMessageId: "<msg-42@example.com>",
+        status: "queued",
+        deduplicated: false,
+      },
+      { status: 202 },
+    );
   });
-  await expect(send(message)).resolves.toEqual({ receipt: "fixture-id:42" });
+  await expect(send(message)).resolves.toEqual({ receipt: "msg_42" });
+
   const rejected = createNotificationTransport(config, async () =>
-    Response.json({ status: "error", data: { message: "sensitive details" } }),
+    Response.json({ error: "Invalid message request" }, { status: 400 }),
   );
   await expect(rejected(message)).rejects.toMatchObject({
+    service: "mail",
     kind: "interaction-required",
+    status: 400,
   });
+
   const ambiguous = createNotificationTransport(config, async () =>
-    Response.json({
-      status: "success",
-      data: { message_id: "fixture-id", messages: {} },
-    }),
+    Response.json({ id: "" }, { status: 200 }),
   );
   await expect(ambiguous(message)).rejects.toMatchObject({
+    service: "mail",
     kind: "outcome-unknown",
   });
-});
-
-test("the Node worker fetch preserves Postal's virtual host override", async () => {
-  await promisify(execFile)(
-    "node",
-    [fileURLToPath(new URL("postal-host.fixture.ts", import.meta.url))],
-    { timeout: 10_000 },
-  );
 });
 
 test("Discord creates the linked user's DM and disables mention expansion", async () => {

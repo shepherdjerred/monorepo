@@ -160,7 +160,7 @@ inheriting the worker environment.
 | `HOME`                                      | the throwaway workdir, not the worker image home         |
 | Prometheus and alert-dashboard URLs         | present without API credentials                          |
 | Kubernetes service address and mounted SA   | address present; owner-only token unreadable by provider |
-| Postal, S3, GitHub App, and ingress secrets | absent; delivery executes on the reports worker queue    |
+| Mail, S3, GitHub App, and ingress secrets   | absent; delivery executes on the reports worker queue    |
 | ArgoCD, Grafana, Woodpecker, HA, Cloudflare | absent                                                   |
 
 The trusted, source-controlled agent is the exception. The Scout season refresh

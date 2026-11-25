@@ -11,12 +11,12 @@ import {
   reportDeliveryTotal,
   reportLastAcceptedTimestampSeconds,
 } from "#observability/metrics-report.ts";
-import { resolvePostalAddressesForReport } from "#config/postal.ts";
+import { resolveMailAddressesForReport } from "#config/mail.ts";
 import {
-  sendPostalEmail,
-  type PostalSendInput,
-  type PostalSendResult,
-} from "#shared/infra/postal.ts";
+  sendMailEmail,
+  type MailSendInput,
+  type MailSendResult,
+} from "#shared/infra/mail.ts";
 import {
   assertReportSendStillOwned,
   claimReportSend,
@@ -97,7 +97,7 @@ export type ReportDeliveryBackend = {
 export type ReportDeliveryDependencies = {
   backend: ReportDeliveryBackend;
   addresses: { recipient: string; sender: string };
-  send: (input: PostalSendInput) => Promise<PostalSendResult>;
+  send: (input: MailSendInput) => Promise<MailSendResult>;
   now: () => string;
   owner: string;
   attemptStartedAt: string;
@@ -249,8 +249,8 @@ async function activityDeliveryDependencies(
   }
   return {
     backend: deliveryBackend(store),
-    addresses: await resolvePostalAddressesForReport(reportType),
-    send: (input) => sendPostalEmail(input),
+    addresses: await resolveMailAddressesForReport(reportType),
+    send: (input) => sendMailEmail(input),
     now: () => new Date().toISOString(),
     owner: `${execution.workflowId}/${execution.runId}/${info.activityId}/${String(info.attempt)}`,
     attemptStartedAt,
@@ -358,6 +358,7 @@ export async function deliverReportWithDependencies(
           : { "X-Report-Schedule-ID": report.scheduleId }),
       },
       tag: report.reportType,
+      idempotencyKey: report.reportRunId,
       // Keep inside send args so pre-send state writes cannot extend the lease.
       signal: reportSendAbortSignal({
         reportRunId: report.reportRunId,

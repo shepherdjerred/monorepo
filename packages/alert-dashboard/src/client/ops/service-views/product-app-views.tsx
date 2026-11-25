@@ -135,12 +135,12 @@ const SIMPLE_SERVICE_VIEWS: Readonly<
       { preset: "namespace-cpu", target: "media" },
     ],
   },
-  mail: {
-    heading: "Postal mail pipeline",
+  "outbound-mail": {
+    heading: "Outbound mail pipeline",
     charts: [
-      { preset: "postal-queued" },
-      { preset: "namespace-cpu", target: "postal" },
-      { preset: "namespace-memory", target: "postal" },
+      { preset: "mail-outbox" },
+      { preset: "namespace-cpu", target: "mail" },
+      { preset: "namespace-memory", target: "mail" },
     ],
   },
   minecraft: {

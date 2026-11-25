@@ -164,47 +164,47 @@ export function hasSuppressionPattern(line: string): boolean {
   return SUPPRESSION_PATTERNS.some((pattern) => pattern.test(line));
 }
 
-const POSTAL_BOUNDARY_FILES = new Set([
+const MAIL_BOUNDARY_FILES = new Set([
   "packages/temporal/src/activities/reports/report-delivery.ts",
-  "packages/temporal/src/shared/infra/postal.test.ts",
-  "packages/temporal/src/shared/infra/postal.ts",
+  "packages/temporal/src/shared/infra/mail.test.ts",
+  "packages/temporal/src/shared/infra/mail.ts",
 ]);
 
-export function isPostalBoundaryViolation(
+export function isMailBoundaryViolation(
   path: string,
   contents: string,
 ): boolean {
   const normalizedPath = path.replaceAll("\\", "/");
   return (
-    contents.includes("sendPostalEmail") &&
-    !POSTAL_BOUNDARY_FILES.has(normalizedPath)
+    contents.includes("sendMailEmail") &&
+    !MAIL_BOUNDARY_FILES.has(normalizedPath)
   );
 }
 
-async function checkPostalBoundary(): Promise<void> {
+async function checkMailBoundary(): Promise<void> {
   const violations: string[] = [];
   const glob = new Bun.Glob("packages/temporal/src/**/*.ts");
   for await (const path of glob.scan({ cwd: ".", onlyFiles: true })) {
-    if (isPostalBoundaryViolation(path, await Bun.file(path).text())) {
+    if (isMailBoundaryViolation(path, await Bun.file(path).text())) {
       violations.push(path);
     }
   }
   if (violations.length > 0) {
     throw new Error(
-      `Direct Postal delivery is restricted to the shared report sender: ${violations.join(", ")}`,
+      `Direct Mail delivery is restricted to the shared report sender: ${violations.join(", ")}`,
     );
   }
 }
 
 async function main(): Promise<void> {
   console.log("Checking for new code quality suppressions...\n");
-  await checkPostalBoundary();
+  await checkMailBoundary();
   await checkExclusionsAreLive();
 
   // In CI mode, skip staged-diff check (quality-ratchet enforces total counts)
   if (process.argv.includes("--ci")) {
     console.log(
-      "Postal boundary and exclusions passed; staged suppression diff is covered elsewhere in CI",
+      "Mail boundary and exclusions passed; staged suppression diff is covered elsewhere in CI",
     );
     return;
   }

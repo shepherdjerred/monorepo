@@ -56,7 +56,7 @@ const DECLARED_EDGES: readonly [dependent: string, prerequisite: string][] = [
   // The self-hosted applications run on their operator-run data layers.
   ["delivery/prod", "delivery-data/prod"],
   ["temporal/prod", "temporal-data/prod"],
-  // The cluster CA issues the certificate Alertmanager requires for Postal SMTP.
+  // The cluster CA issues the certificate Alertmanager requires for mail SMTP.
   ["prometheus/prod", PLATFORM],
   // CI and Delivery's stage Jobs run under the queues Kueue's service declares.
   ["woodpecker/prod", "kueue/prod"],

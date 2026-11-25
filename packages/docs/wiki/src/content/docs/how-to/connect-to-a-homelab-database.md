@@ -114,14 +114,6 @@ Use a high local port such as `15432` rather than `5432`, matching the
 convention used elsewhere in the repo, so the forward never collides with a
 local PostgreSQL install.
 
-:::note[postal-mariadb is not PostgreSQL]
-[`resources/postgres/postal-mariadb.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/postgres/postal-mariadb.ts)
-lives in the same directory but deploys **MariaDB** in namespace `postal`. It
-needs a MySQL client, and its credentials come from 1Password
-(`postal-mariadb-credentials`) rather than from an operator-generated secret.
-Reach it with `kubectl exec -n postal -it postal-mariadb-0 -- mariadb -u postal -p`.
-:::
-
 ## Related
 
 - [Pull a Scout database into local dev](/how-to/pull-a-scout-database-into-local-dev/)

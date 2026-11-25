@@ -14,7 +14,7 @@ test("HTTP retries enforce recipient, version and exact health authority; DTO ex
   const f = await health.setup();
   const delivery = await health.delivery(f.user.id);
   f.ctx.notify = async () => {
-    throw new IntegrationError("postal", "authentication");
+    throw new IntegrationError("mail", "authentication");
   };
   await createNotificationActivities(f.ctx).deliverMediaNotification({
     operationId: crypto.randomUUID(),

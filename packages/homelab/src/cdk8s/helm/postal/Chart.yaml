@@ -1,6 +1,0 @@
-apiVersion: v2
-name: postal
-description: Postal mail server
-type: application
-version: "$version"
-appVersion: "$appVersion"

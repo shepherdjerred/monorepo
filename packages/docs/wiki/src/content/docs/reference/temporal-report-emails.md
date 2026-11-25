@@ -20,7 +20,7 @@ and `packages/ops-model/src/reports/schedule-catalog.ts`.
 
 ## Semantic `@sjer.red` routing
 
-Report delivery resolves its sender and recipient per `reportType` through [`mailbox.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/ops-model/src/email/mailbox.ts) and `resolvePostalAddressesForReport`:
+Report delivery resolves its sender and recipient per `reportType` through [`mailbox.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/ops-model/src/email/mailbox.ts) and `resolveMailAddressesForReport`:
 
 | Report families                                                                           | From (`Display Name <address>`)       | To                 |
 | ----------------------------------------------------------------------------------------- | ------------------------------------- | ------------------ |
@@ -66,10 +66,10 @@ Sources:
 
 | Policy or flag                                | Owner             | Behavior                                                                                                                                                                                      |
 | --------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cadence`                                     | Temporal reports  | Sends Postal mail on every scheduled run.                                                                                                                                                     |
+| `cadence`                                     | Temporal reports  | Sends report email through Mail on every scheduled run.                                                                                                                                       |
 | `daily-changed`                               | Temporal + Hub    | Suppresses unchanged clear runs (`deliveryStatus: "skipped"`) and records full run state in Hub.                                                                                              |
 | `temporal-daily-report-notifications-enabled` | `temporal`        | Enables `daily-changed` suppression for daily Temporal report schedules (`homelab-audit-daily`, `scout-queue-windows-daily`, `the-storm-promotion-daily`, `scout-data-dragon-version-check`). |
-| `alert-dashboard-daily-digest-quiet-clear`    | `alert-dashboard` | Skips Postal delivery (`skipReason: "unchanged-clear"`) when a daily Ops digest and its prior daily digest are both clear.                                                                    |
+| `alert-dashboard-daily-digest-quiet-clear`    | `alert-dashboard` | Skips Mail delivery (`skipReason: "unchanged-clear"`) when a daily Ops digest and its prior daily digest are both clear.                                                                      |
 
 ## Automated remediation
 

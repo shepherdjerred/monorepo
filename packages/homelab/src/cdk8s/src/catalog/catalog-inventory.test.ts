@@ -128,12 +128,9 @@ const RenderedApplicationSchema = z.looseObject({
 
 /**
  * Rendered Applications no environment owns: the root, which the window
- * orphans, and postal-mariadb, which rides inside chart:postal.
+ * orphans.
  */
-const UNOWNED_APPLICATIONS: ReadonlySet<string> = new Set([
-  "apps",
-  "postal-mariadb",
-]);
+const UNOWNED_APPLICATIONS: ReadonlySet<string> = new Set(["apps"]);
 
 function applicationOwners(): Map<string, string[]> {
   const owners = new Map<string, string[]>();

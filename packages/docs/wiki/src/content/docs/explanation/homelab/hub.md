@@ -122,14 +122,14 @@ Hub's own page for pull requests and work is named **Flow** and served at
 
 ## Shared look, separate apps
 
-Hub, Go link and Flags look like one product: the same sidebar beside an
+Hub, Go link, Flags and Mail look like one product: the same sidebar beside an
 inset panel, the same colours and type, and the same app switcher at the top
-of the sidebar. They are still three apps, each on its own host with its own
+of the sidebar. They are still four apps, each on its own host with its own
 deployment. What they share is `@shepherdjerred/console-ui`, a package of styles,
 tokens and small components that each app bundles into its own client.
 
 Sharing a package rather than a process keeps the reasons above intact. Go
-link and Flags own their own data and writes, as Delivery does, so folding
+link, Flags and Mail own their own data and writes, as Delivery does, so folding
 them into Hub would mix trust levels in one process. A shared look costs them
 nothing at runtime: there is no shared server to call and no shared outage.
 

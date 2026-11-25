@@ -128,6 +128,11 @@ describe("forum isolation and release resources", () => {
     expect(json).toContain(
       "auth_basic_user_file /etc/storm-forum/staging.htpasswd",
     );
+    expect(json).toContain('"/etc/storm-forum/smtp-ca"');
+    expect(json).toContain('"MAIL_SMTP_USERNAME"');
+    expect(json).toContain('"MAIL_SMTP_PASSWORD"');
+    expect(json).not.toContain("POSTAL_");
+    expect(json).not.toContain("/etc/postal");
     expect(json).toContain('"type":"Recreate"');
     expect(json).toContain('"runAsNonRoot":true');
     expect(json).toContain('"storage":"32Gi"');

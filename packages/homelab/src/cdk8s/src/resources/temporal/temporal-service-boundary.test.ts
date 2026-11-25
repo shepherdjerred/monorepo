@@ -171,8 +171,10 @@ describe("Temporal internal service boundary", () => {
       },
     ]);
   });
+});
 
-  test("wires Hub ingest endpoint, secret, and egress policy on the reports worker", () => {
+describe("Temporal reports worker internal endpoints", () => {
+  test("wires Hub ingest and mail API endpoints, secrets, and egress policy on the reports worker", () => {
     const synthesized = resources();
     const { container } = findTemporalWorkerContainer(
       synthesized,
@@ -183,6 +185,10 @@ describe("Temporal internal service boundary", () => {
       value:
         "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",
     });
+    expect(container.env).toContainEqual({
+      name: "MAIL_API_URL",
+      value: "http://mail.mail.svc.cluster.local:7371",
+    });
     const tokenEntry = container.env.find(
       (variable) => variable.name === "OPS_INGEST_TOKEN",
     );
@@ -190,6 +196,13 @@ describe("Temporal internal service boundary", () => {
       key: "OPS_INGEST_TOKEN",
     });
     expect(tokenEntry?.valueFrom?.secretKeyRef.optional).toBeUndefined();
+    const mailTokenEntry = container.env.find(
+      (variable) => variable.name === "MAIL_API_TOKEN",
+    );
+    expect(mailTokenEntry?.valueFrom?.secretKeyRef).toMatchObject({
+      key: "MAIL_API_TOKEN",
+    });
+    expect(mailTokenEntry?.valueFrom?.secretKeyRef.optional).toBeUndefined();
 
     const policy = findTemporalResource(
       synthesized,
@@ -200,6 +213,17 @@ describe("Temporal internal service boundary", () => {
       podSelector: { matchLabels: { component: "reports-worker" } },
       policyTypes: ["Egress"],
       egress: expect.arrayContaining([
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "mail" },
+              },
+              podSelector: { matchLabels: { app: "mail" } },
+            },
+          ],
+          ports: [{ port: 7371, protocol: "TCP" }],
+        },
         {
           to: [
             {

@@ -344,11 +344,6 @@
       "exposure": "ingress"
     },
     {
-      "host": "postal",
-      "namespace": "postal",
-      "exposure": "ingress"
-    },
-    {
       "host": "prometheus",
       "namespace": "prometheus",
       "exposure": "ingress"

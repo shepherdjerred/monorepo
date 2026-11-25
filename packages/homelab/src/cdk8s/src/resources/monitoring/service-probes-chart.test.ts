@@ -70,9 +70,9 @@ describe("createServiceProbesChart", () => {
 
   test("backend tcp_connect probe target is host:port with no path even when one is registered", () => {
     registerBackendProbe({
-      namespace: "postal",
-      serviceName: "postal-web-service",
-      port: 5000,
+      namespace: "mail",
+      serviceName: "mail",
+      port: 25,
       module: "tcp_connect",
       path: "/ignored",
     });
@@ -80,7 +80,7 @@ describe("createServiceProbesChart", () => {
     const [probe] = synthProbes();
     expect(probe?.spec.module).toBe("tcp_connect");
     expect(probe?.spec.targets.staticConfig.static).toEqual([
-      "postal-web-service.postal.svc.cluster.local:5000",
+      "mail.mail.svc.cluster.local:25",
     ]);
   });
 

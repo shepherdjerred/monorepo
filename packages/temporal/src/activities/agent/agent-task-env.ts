@@ -60,6 +60,8 @@ const AGENT_TASK_COMMON_ENVIRONMENT = new Set([
   "USER",
 ]);
 const REPORT_DELIVERY_BOUNDARY_ENVIRONMENT = new Set([
+  "MAIL_API_TOKEN",
+  "MAIL_API_URL",
   "RECIPIENT_EMAIL",
   "SENDER_EMAIL",
   "AGENT_TASK_API_TOKEN",
@@ -69,7 +71,9 @@ const REPORT_DELIVERY_BOUNDARY_ENVIRONMENT = new Set([
 
 export function isReportDeliveryBoundaryEnvironmentKey(key: string): boolean {
   return (
-    key.startsWith("POSTAL_") || REPORT_DELIVERY_BOUNDARY_ENVIRONMENT.has(key)
+    key.startsWith("MAIL_") ||
+    key.startsWith("POSTAL_") ||
+    REPORT_DELIVERY_BOUNDARY_ENVIRONMENT.has(key)
   );
 }
 
@@ -266,7 +270,7 @@ export async function refreshAgentTaskSecretTokenStateInBackground(
 // child process inherits nothing by default: only basic process/TLS settings,
 // non-secret evidence endpoints, the dedicated read-only Kubernetes identity,
 // and the one provider credential its own SDK needs. Every other
-// worker credential — Postal, S3, GitHub, Temporal, Talos — stays out, so a
+// worker credential — Mail, S3, GitHub, Temporal, Talos — stays out, so a
 // prompt-injected agent has nothing to exfiltrate from its own environment.
 export function envForProvider(
   provider: AgentTaskProvider,

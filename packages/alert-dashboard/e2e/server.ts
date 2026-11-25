@@ -300,7 +300,7 @@ class FixtureRepository implements AlertLedgerRepository {
         database: "ok",
         alertmanager: "ok",
         grafana: "ok",
-        postal: "disabled",
+        mail: "disabled",
         emailEnabled: false,
         pendingEmails: 0,
         failedEmails: 0,
@@ -323,7 +323,7 @@ class FixtureRepository implements AlertLedgerRepository {
 const service = new AlertService({
   repository: new FixtureRepository(),
   alertmanager: { activeAlerts: () => Promise.resolve([]) },
-  postal: { send: () => Promise.resolve() },
+  mail: { send: () => Promise.resolve() },
   previews: {
     health: () => Promise.resolve(true),
     previews: () =>

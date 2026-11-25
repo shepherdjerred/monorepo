@@ -34,7 +34,7 @@ function setup() {
     service: new AlertService({
       repository: ledger,
       alertmanager: { activeAlerts: unexpected },
-      postal: { send: unexpected },
+      mail: { send: unexpected },
       previews: { previews: unexpected, health: unexpected },
       clock,
       emailEnabled: false,
@@ -269,7 +269,7 @@ describe("digest route", () => {
       method: "POST",
     });
     expect(unauthorized.status).toBe(401);
-    expect(fixture.postal.sent).toHaveLength(0);
+    expect(fixture.mail.sent).toHaveLength(0);
     const unknownKind = await app.request("/internal/v1/digests/monthly", {
       method: "POST",
       headers: { authorization: `Bearer ${TOKEN}` },
@@ -292,7 +292,7 @@ describe("digest route", () => {
       duplicate: false,
     });
     expect(await readJson(send())).toMatchObject({ duplicate: true });
-    expect(fixture.postal.sent).toHaveLength(1);
+    expect(fixture.mail.sent).toHaveLength(1);
     expect(metrics.render()).toContain(
       'alert_dashboard_ops_digest_total{kind="weekly",result="sent"} 1',
     );

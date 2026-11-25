@@ -1,11 +1,15 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { type PostalConfig, sendPostalEmail } from "./postal.ts";
+import {
+  type MailConfig,
+  readMailConfigFromEnv,
+  sendMailEmail,
+} from "./mail.ts";
 
 const ORIGINAL_FETCH = globalThis.fetch;
 
-const TEST_CONFIG: PostalConfig = {
-  host: "https://postal.example.com",
-  apiKey: "test-key",
+const TEST_CONFIG: MailConfig = {
+  baseUrl: "https://mail.example.com/",
+  token: "test-token",
 };
 
 afterEach(() => {
@@ -25,18 +29,13 @@ function urlToString(input: string | URL | Request): string {
   return input instanceof URL ? input.toString() : input.url;
 }
 
-/**
- * Replace `globalThis.fetch` with a mock that records the call's url, body,
- * and headers in a typed shape so test assertions don't widen through
- * `any` / `as unknown as` to inspect mock.calls.
- */
 type FetchResponseSpec =
   | { kind: "json"; body: unknown; status?: number }
   | { kind: "text"; body: string; status: number };
 
 function buildResponse(spec: FetchResponseSpec): Response {
   return spec.kind === "json"
-    ? Response.json(spec.body, { status: spec.status ?? 200 })
+    ? Response.json(spec.body, { status: spec.status ?? 202 })
     : new Response(spec.body, { status: spec.status });
 }
 
@@ -54,139 +53,123 @@ function captureFetch(spec: FetchResponseSpec): { calls: CapturedCall[] } {
   return { calls };
 }
 
-describe("sendPostalEmail", () => {
-  it("returns the parsed message id and recipient id on success", async () => {
+describe("sendMailEmail", () => {
+  it("posts to /v1/messages with Bearer auth and returns parsed message id", async () => {
     const captured = captureFetch({
       kind: "json",
+      status: 202,
       body: {
-        status: "success",
-        data: {
-          message_id: "msg-1",
-          messages: { "to@example.com": { id: 42, token: "t" } },
-        },
+        id: "msg-1",
+        rfcMessageId: "<msg-1@example.com>",
+        status: "queued",
+        deduplicated: false,
       },
     });
 
-    const result = await sendPostalEmail(
+    const result = await sendMailEmail(
       {
         to: "to@example.com",
         from: "from@example.com",
         subject: "hi",
         htmlBody: "<p>hi</p>",
         tag: "test",
+        idempotencyKey: "run-1",
       },
       TEST_CONFIG,
     );
 
-    expect(result.messageId).toBe("msg-1");
-    expect(result.recipientId).toBe(42);
-    expect(result.tag).toBe("test");
+    expect(result).toEqual({
+      messageId: "msg-1",
+      recipientId: "unknown",
+      subject: "hi",
+      tag: "test",
+    });
 
     expect(captured.calls).toHaveLength(1);
     const call = captured.calls[0];
     if (call === undefined) {
       throw new TypeError("expected exactly one fetch call");
     }
-    expect(call.url).toBe("https://postal.example.com/api/v1/send/message");
+    expect(call.url).toBe("https://mail.example.com/v1/messages");
+    expect(call.headers.get("Authorization")).toBe("Bearer test-token");
+    expect(call.headers.get("Host")).toBeNull();
     if (call.body === undefined) {
       throw new TypeError("expected request body");
     }
-    const body: unknown = JSON.parse(call.body);
-    expect(body).toEqual({
+    expect(JSON.parse(call.body)).toEqual({
       to: ["to@example.com"],
       from: "from@example.com",
       subject: "hi",
-      html_body: "<p>hi</p>",
+      htmlBody: "<p>hi</p>",
       tag: "test",
+      idempotencyKey: "run-1",
     });
   });
 
-  it("throws when Postal returns 200 but envelope status is not success", async () => {
+  it("accepts 200 deduplicated responses", async () => {
     captureFetch({
       kind: "json",
-      body: { status: "parameter-error", data: { message: "bad" } },
-    });
-
-    await expect(
-      sendPostalEmail(
-        {
-          to: "to@example.com",
-          from: "from@example.com",
-          subject: "hi",
-          htmlBody: "<p>hi</p>",
-          tag: "test",
-        },
-        TEST_CONFIG,
-      ),
-    ).rejects.toThrow(/Postal rejected message \(status=parameter-error\)/);
-  });
-
-  it("throws on non-2xx", async () => {
-    captureFetch({ kind: "text", body: "oops", status: 500 });
-
-    await expect(
-      sendPostalEmail(
-        {
-          to: "to@example.com",
-          from: "from@example.com",
-          subject: "hi",
-          htmlBody: "<p>hi</p>",
-          tag: "test",
-        },
-        TEST_CONFIG,
-      ),
-    ).rejects.toThrow(/Postal API error \(500\)/);
-  });
-
-  it("includes the optional Host header when config.hostHeader is set", async () => {
-    const captured = captureFetch({
-      kind: "json",
+      status: 200,
       body: {
-        status: "success",
-        data: {
-          message_id: "msg-2",
-          messages: { "to@example.com": { id: 7, token: "t" } },
-        },
+        id: "msg-dedup",
+        rfcMessageId: "<msg-dedup@example.com>",
+        status: "sent",
+        deduplicated: true,
       },
     });
 
-    await sendPostalEmail(
+    const result = await sendMailEmail(
       {
         to: "to@example.com",
         from: "from@example.com",
         subject: "hi",
         htmlBody: "<p>hi</p>",
         tag: "test",
+        idempotencyKey: "run-dedup",
       },
-      { ...TEST_CONFIG, hostHeader: "postal.internal" },
+      TEST_CONFIG,
     );
 
-    const call = captured.calls[0];
-    if (call === undefined) {
-      throw new TypeError("expected exactly one fetch call");
-    }
-    expect(call.headers.get("Host")).toBe("postal.internal");
+    expect(result.messageId).toBe("msg-dedup");
+    expect(result.recipientId).toBe("unknown");
   });
 
-  it("sends plain text and stable report headers when provided", async () => {
+  it("throws on non-2xx", async () => {
+    captureFetch({ kind: "text", body: "oops", status: 500 });
+
+    await expect(
+      sendMailEmail(
+        {
+          to: "to@example.com",
+          from: "from@example.com",
+          subject: "hi",
+          htmlBody: "<p>hi</p>",
+          tag: "test",
+        },
+        TEST_CONFIG,
+      ),
+    ).rejects.toThrow(/Mail API error \(500\)/);
+  });
+
+  it("sends plainBody, messageId, and stable report headers when provided", async () => {
     const captured = captureFetch({
       kind: "json",
       body: {
-        status: "success",
-        data: {
-          message_id: "msg-3",
-          messages: { "to@example.com": { id: 8, token: "t" } },
-        },
+        id: "msg-3",
+        rfcMessageId: "<msg-3@example.com>",
+        status: "queued",
+        deduplicated: false,
       },
     });
 
-    await sendPostalEmail(
+    await sendMailEmail(
       {
         to: "to@example.com",
         from: "from@example.com",
         subject: "[OK] report",
         htmlBody: "<p>ok</p>",
         plainBody: "ok\n",
+        messageId: "<report-run-1@sjer.red>",
         headers: { "X-Report-Run-ID": "report:run-1" },
         tag: "report",
       },
@@ -197,9 +180,9 @@ describe("sendPostalEmail", () => {
     if (call?.body === undefined) {
       throw new TypeError("expected request body");
     }
-    const body: unknown = JSON.parse(call.body);
-    expect(body).toMatchObject({
-      plain_body: "ok\n",
+    expect(JSON.parse(call.body)).toMatchObject({
+      plainBody: "ok\n",
+      messageId: "<report-run-1@sjer.red>",
       headers: { "X-Report-Run-ID": "report:run-1" },
     });
   });
@@ -208,15 +191,14 @@ describe("sendPostalEmail", () => {
     const captured = captureFetch({
       kind: "json",
       body: {
-        status: "success",
-        data: {
-          message_id: "msg-4",
-          messages: { "ops@sjer.red": { id: 91, token: "tok" } },
-        },
+        id: "msg-4",
+        rfcMessageId: "<msg-4@sjer.red>",
+        status: "queued",
+        deduplicated: false,
       },
     });
 
-    const result = await sendPostalEmail(
+    const result = await sendMailEmail(
       {
         to: "ops@sjer.red",
         from: "Homelab Audit <ops@sjer.red>",
@@ -227,7 +209,7 @@ describe("sendPostalEmail", () => {
       TEST_CONFIG,
     );
 
-    expect(result.recipientId).toBe(91);
+    expect(result.recipientId).toBe("unknown");
     const call = captured.calls[0];
     if (call?.body === undefined) {
       throw new TypeError("expected request body");
@@ -236,6 +218,21 @@ describe("sendPostalEmail", () => {
       to: ["ops@sjer.red"],
       from: "Homelab Audit <ops@sjer.red>",
       subject: "Homelab check: All clear",
+    });
+  });
+
+  it("requires MAIL_API_URL and MAIL_API_TOKEN from environment", () => {
+    expect(() => readMailConfigFromEnv({})).toThrow(
+      "Missing email configuration: MAIL_API_URL, MAIL_API_TOKEN",
+    );
+    expect(
+      readMailConfigFromEnv({
+        MAIL_API_URL: "http://mail.mail.svc:7371/",
+        MAIL_API_TOKEN: "secret-token",
+      }),
+    ).toEqual({
+      baseUrl: "http://mail.mail.svc:7371",
+      token: "secret-token",
     });
   });
 });

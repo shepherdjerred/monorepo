@@ -450,18 +450,6 @@
     "reason": "Replaceable browser automation state"
   },
   {
-    "namespace": "postal",
-    "name": "data-postal-mariadb-0",
-    "backup": "enabled",
-    "reason": "Postal MariaDB database"
-  },
-  {
-    "namespace": "postal",
-    "name": "postal-pvc",
-    "backup": "enabled",
-    "reason": "Postal application state"
-  },
-  {
     "namespace": "prometheus",
     "name": "alertmanager-prometheus-kube-prometheus-alertmanager-db-alertmanager-prometheus-kube-prometheus-alertmanager-0",
     "backup": "enabled",

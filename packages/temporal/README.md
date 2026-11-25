@@ -1326,7 +1326,7 @@ recipient (`deps@sjer.red`, `ops@sjer.red`, `scout@sjer.red`, or
 `temporal-email-sender` through typed configuration for each delivery activity.
 Non-default Flags values override the per-family mailbox; defaults preserve
 semantic homelab routing during a flag-provider outage.
-Postal credentials stay in 1Password; service endpoints and host routing are
+Mail API credentials stay in 1Password (`MAIL_API_TOKEN`); service endpoints (`MAIL_API_URL`) are
 reviewed homelab bootstrap settings. Workflow histories contain no credentials.
 
 `temporal-daily-report-notifications-enabled` resolves per Activity and defaults
@@ -1350,7 +1350,7 @@ lease-aware retry policy so an immediate failure cannot exhaust retries
 inside the claim's takeover window. An exhausted delivery fails the Workflow
 without creating a synthetic collection-failure report; actual collector
 failures retain their failure report. A patch marker preserves older recorded
-failure paths during replay. Skips have explicit records and no Postal
+failure paths during replay. Skips have explicit records and no Mail
 message ID or acceptance time. The freshness monitor counts completed skips
 separately from mail acceptance, using the report's original observation time.
 Each family has a conditional latest-heartbeat index beside its immutable
@@ -1362,13 +1362,13 @@ finishes, an otherwise missing or stale result is `indexing`, while a validated
 recent record can already establish freshness. After migration, each scan reads
 only the index and its original record for each family.
 Manual reports, dependency checkpoints, digests, other canaries, and other schedules
-retain their existing delivery behavior. Postal acceptance still does not
+retain their existing delivery behavior. Mail broker acceptance still does not
 establish inbox delivery.
 
 `daily-notification-policy-canary` is declared only in `beta` and starts paused.
 After promoting a central Workflow candidate containing `runDailyNotificationCanary`
 and deploying the reports worker with beta polling, trigger the paused schedule
-twice with its declared `attention` input: the first run must have a real Postal
+twice with its declared `attention` input: the first run must have a real Mail
 receipt and the second an explicit unchanged skip. Start the same Workflow in
 `beta` with `condition: "clear"` to verify recovery mail. Inspect the immutable
 reports, family state, skip record, and actual acceptance receipts; a completed
@@ -1897,7 +1897,7 @@ solver key and account-keyed login map; profiles are named
 `storm-promotion-<account>`. Browser, solver, storage, site-login and report
 credentials stay outside the provider subprocess. The separate promotion worker
 uses the shared agent runner. Daily reports and deduplicated actionable alerts
-use the existing reports worker and Postal recipient. Production Discord tasks
+use the existing reports worker and Mail recipient. Production Discord tasks
 bootstrap the isolated outreach daemon through the packaged toolkit. They pass
 only the outreach login and one current TOTP into that child. Approved variants
 are supplied as JSON and checked before dispatch; rate limits reject rather than
@@ -1923,7 +1923,7 @@ continue unchanged.
 The shared bot-PR runner (`src/activities/remediation/codex-pr-remediation.ts`)
 executes on `repo-automation` (`temporal-repo-worker`) inside an isolated
 `/tmp` clone. Only `OPENAI_API_KEY` reaches the Codex subprocess (`gpt-6-luna`);
-GitHub App, Postal, S3, Alertmanager, and Temporal credentials are stripped from
+GitHub App, Mail, S3, Alertmanager, and Temporal credentials are stripped from
 its environment. Post-turn guardrails run outside the model: out-of-scope paths
 are reverted, formatting-only diffs are discarded, domain verifiers drop
 unverified files, and verified diffs publish to a content-addressed

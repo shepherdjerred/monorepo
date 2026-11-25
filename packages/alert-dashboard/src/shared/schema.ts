@@ -202,7 +202,7 @@ export const SystemStatusSchema = z.object({
   database: z.enum(["ok", "error"]),
   alertmanager: z.enum(["ok", "stale", "error", "pending"]),
   grafana: z.enum(["ok", "error", "pending"]),
-  postal: z.enum(["ok", "error", "disabled", "pending"]),
+  mail: z.enum(["ok", "error", "disabled", "pending"]),
   emailEnabled: z.boolean(),
   pendingEmails: z.number().int().nonnegative(),
   failedEmails: z.number().int().nonnegative(),

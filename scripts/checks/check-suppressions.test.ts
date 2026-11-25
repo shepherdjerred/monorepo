@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   hasSuppressionPattern,
-  isPostalBoundaryViolation,
+  isMailBoundaryViolation,
   staleExclusions,
 } from "./check-suppressions.ts";
 
@@ -31,33 +31,33 @@ describe("hasSuppressionPattern", () => {
   });
 });
 
-describe("isPostalBoundaryViolation", () => {
+describe("isMailBoundaryViolation", () => {
   test("rejects direct high-level sends outside the report sender", () => {
     expect(
-      isPostalBoundaryViolation(
+      isMailBoundaryViolation(
         "packages/temporal/src/activities/other.ts",
-        "sendPostalEmail({})",
+        "sendMailEmail({})",
       ),
     ).toBe(true);
   });
 
-  test("permits the shared sender and Postal adapter tests", () => {
+  test("permits the shared sender and Mail adapter tests", () => {
     expect(
-      isPostalBoundaryViolation(
+      isMailBoundaryViolation(
         "packages/temporal/src/activities/reports/report-delivery.ts",
-        "sendPostalEmail({})",
+        "sendMailEmail({})",
       ),
     ).toBe(false);
     expect(
-      isPostalBoundaryViolation(
-        "packages/temporal/src/shared/infra/postal.test.ts",
-        "sendPostalEmail({})",
+      isMailBoundaryViolation(
+        "packages/temporal/src/shared/infra/mail.test.ts",
+        "sendMailEmail({})",
       ),
     ).toBe(false);
     expect(
-      isPostalBoundaryViolation(
-        String.raw`packages\temporal\src\shared\infra\postal.ts`,
-        "sendPostalEmail({})",
+      isMailBoundaryViolation(
+        String.raw`packages\temporal\src\shared\infra\mail.ts`,
+        "sendMailEmail({})",
       ),
     ).toBe(false);
   });

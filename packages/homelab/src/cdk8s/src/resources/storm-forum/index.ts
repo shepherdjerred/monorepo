@@ -109,8 +109,8 @@ export function createStormForumChart(
       ...bootstrap,
       ...credentials([
         "DB_PASSWORD",
-        "POSTAL_SMTP_USERNAME",
-        "POSTAL_SMTP_PASSWORD",
+        "MAIL_SMTP_USERNAME",
+        "MAIL_SMTP_PASSWORD",
         "TURNSTILE_SITE_KEY",
         "TURNSTILE_SECRET_KEY",
       ]),
@@ -145,7 +145,11 @@ export function createStormForumChart(
         ],
         volumeMounts: [
           ...sharedMounts,
-          { name: "smtp-ca", mountPath: "/etc/postal", readOnly: true },
+          {
+            name: "smtp-ca",
+            mountPath: "/etc/storm-forum/smtp-ca",
+            readOnly: true,
+          },
         ],
       },
     ],

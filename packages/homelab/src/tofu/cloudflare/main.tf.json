@@ -4034,43 +4034,6 @@
         "type": "CNAME",
         "zone_id": "${cloudflare_zone.sjer_red.id}"
       },
-      "sjer_red_dkim_postal_aoolxx": {
-        "content": "v=DKIM1; t=s; h=sha256; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDFfuKrHpylh2b4GmkgNWYNOkD5LypiaG8T4rDFR/3erk8ZE2fT7Z5ycQcyt+WdVlaN4VhT4phGNLr1rdXNRpUMFZV6uvOFqy2vzvHLaYSiNaYGONdhBe8L1af67XXMsxUbNO8kbyVkSkvpPS9hnz7/qZBfd0glRoGdNI64NQyHlwIDAQAB;",
-        "name": "postal-aoolxx._domainkey",
-        "ttl": 1,
-        "type": "TXT",
-        "zone_id": "${cloudflare_zone.sjer_red.id}"
-      },
-      "sjer_red_dkim_postal_isna7c": {
-        "content": "v=DKIM1; t=s; h=sha256; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC55pcuuiIJO3bp3vDbFn2Hjr0z/W+1hJ0QOzsFm2elKfTujgIj1ExZ7B2nTCsNzv+OLZr8jNhk6dy6az0hafC7JV+Cm0z+N7P99Fj7+R6hfkVuOuXlhG3XsL16/RXdowAxjmXi9mDPHy3l0hqlMyfUmcrtdhydbLR4E2X4FdKQHwIDAQAB;",
-        "name": "postal-isna7c._domainkey",
-        "ttl": 1,
-        "type": "TXT",
-        "zone_id": "${cloudflare_zone.sjer_red.id}"
-      },
-      "sjer_red_mx_rp1": {
-        "content": "in1-smtp.messagingengine.com",
-        "name": "rp",
-        "priority": 10,
-        "ttl": 1,
-        "type": "MX",
-        "zone_id": "${cloudflare_zone.sjer_red.id}"
-      },
-      "sjer_red_mx_rp2": {
-        "content": "in2-smtp.messagingengine.com",
-        "name": "rp",
-        "priority": 20,
-        "ttl": 1,
-        "type": "MX",
-        "zone_id": "${cloudflare_zone.sjer_red.id}"
-      },
-      "sjer_red_spf_rp": {
-        "content": "v=spf1 include:spf.messagingengine.com -all",
-        "name": "rp",
-        "ttl": 1,
-        "type": "TXT",
-        "zone_id": "${cloudflare_zone.sjer_red.id}"
-      },
       "sjer_red_srv_caldav": {
         "data": { "port": 0, "priority": 0, "target": ".", "weight": 0 },
         "name": "_caldav._tcp",
@@ -4350,28 +4313,6 @@
         "ttl": 1,
         "type": "CNAME",
         "zone_id": "${cloudflare_zone.statically_typed_com.id}"
-      },
-      "storm_forum_postal_dkim": {
-        "content": "v=DKIM1; t=s; h=sha256; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDP3gYfobFff0FOxghUPTZ+k6J8IUhHcRa2PKQEFA+/zEo0Qeon8v5F0rjPXUdqenBEPgA/F/NPx8D6pZuVB8YAbUmFLCTfzrInT7M4jpOKLgV1bo2V0quSXuxs1vydu/UFmmRezH35GFt9aXcsUqWu+YlUVz9KLbfIv/P0aSCYmQIDAQAB;",
-        "name": "postal-pucwal._domainkey",
-        "ttl": 1,
-        "type": "TXT",
-        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
-      },
-      "storm_forum_postal_return_path": {
-        "content": "rp.sjer.red",
-        "name": "psrp",
-        "proxied": false,
-        "ttl": 1,
-        "type": "CNAME",
-        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
-      },
-      "storm_forum_postal_verification": {
-        "content": "postal-verification HKCOMItuyiZSPNzqI7kWzJ1JIpBZobWX",
-        "name": "ts-mc.net",
-        "ttl": 1,
-        "type": "TXT",
-        "zone_id": "${cloudflare_zone.ts_mc_net.id}"
       },
       "ts_mc_net_baseline_caa_iodef": {
         "data": {

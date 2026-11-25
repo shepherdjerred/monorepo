@@ -1,7 +1,7 @@
 <?php
 try {
     if (file_exists('/var/lib/storm-forum/.maintenance')) { throw new RuntimeException('Maintenance active'); }
-    foreach (['POSTAL_SMTP_USERNAME', 'POSTAL_SMTP_PASSWORD', 'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY'] as $key) {
+    foreach (['MAIL_SMTP_USERNAME', 'MAIL_SMTP_PASSWORD', 'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY'] as $key) {
         if (!getenv($key)) { throw new RuntimeException('Runtime credentials unavailable'); }
     }
     require '/app/forum/src/XF.php';

@@ -7,7 +7,6 @@ import {
   request,
   type FetchTransport,
 } from "#integrations/http.ts";
-import { postalHttp } from "#integrations/postal-http.ts";
 import type { NotificationTransportConfig } from "#integrations/notification-transport.ts";
 
 export type ReceiptQuery = {
@@ -28,65 +27,48 @@ export function createNotificationReceiptReader(
   return async (input) => {
     if (input.channel !== "email")
       return discordReceipt(config, input, transport ?? fetch);
-    if (config.postal === undefined)
-      throw new IntegrationError("postal", "interaction-required");
-    const match = /^(?:[^\s:]{1,900}:)?([1-9]\d{0,14})$/u.exec(input.receipt);
-    if (match?.[1] === undefined)
-      throw new IntegrationError("postal", "invalid-response");
-    const envelope = z.object({ status: z.string(), data: z.unknown() }).parse(
-      await json(
-        await request(
-          transport ?? postalHttp,
-          "postal",
-          endpoint(config.postal.baseUrl, "api/v1/messages/message"),
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Server-API-Key": config.postal.apiKey,
-              ...(config.postal.hostHeader === undefined
-                ? {}
-                : { Host: config.postal.hostHeader }),
-            },
-            body: JSON.stringify({
-              id: Number(match[1]),
-              _expansions: ["status", "details"],
-            }),
-          },
-        ),
-        "postal",
-      ),
-    );
-    if (envelope.status !== "success")
+    if (config.mail === undefined)
+      throw new IntegrationError("mail", "interaction-required");
+    const receiptId = input.receipt;
+    if (!/^[\w-]{1,128}$/u.test(receiptId))
       return { status: "unknown", recipient: null };
+    const response = await request(
+      transport ?? fetch,
+      "mail",
+      endpoint(
+        config.mail.baseUrl,
+        `v1/messages/${encodeURIComponent(receiptId)}`,
+      ),
+      {
+        method: "GET",
+        acceptedStatuses: [404],
+        headers: {
+          Authorization: `Bearer ${config.mail.token}`,
+        },
+      },
+    );
+    if (response.status === 404) return { status: "unknown", recipient: null };
     const message = z
       .object({
-        id: z.number().int(),
-        status: z.object({ status: z.string(), held: z.boolean() }),
-        details: z.object({
-          rcpt_to: z.email(),
-          tag: z.string().nullable(),
-          direction: z.string(),
-          bounce: z.boolean(),
-        }),
+        id: z.string().min(1),
+        status: z.enum(["queued", "sending", "retrying", "sent", "failed"]),
+        recipients: z.array(z.email()),
+        tag: z.string().nullable(),
       })
-      .parse(envelope.data);
+      .parse(await json(response, "mail"));
     if (
-      message.id !== Number(match[1]) ||
-      message.details.tag !== `media-${input.idempotencyKey}` ||
-      message.details.direction !== "outgoing"
+      message.id !== receiptId ||
+      message.tag !== `media-${input.idempotencyKey}` ||
+      message.recipients.length !== 1
     )
       return { status: "unknown", recipient: null };
     const status =
-      message.details.bounce ||
-      ["Bounced", "HardFail"].includes(message.status.status)
-        ? "bounced"
-        : message.status.status === "Sent"
-          ? "delivered"
-          : ["Pending", "Held", "SoftFail"].includes(message.status.status)
-            ? "accepted"
-            : "unknown";
-    return { status, recipient: message.details.rcpt_to };
+      message.status === "sent"
+        ? "delivered"
+        : message.status === "failed"
+          ? "bounced"
+          : "accepted";
+    return { status, recipient: message.recipients[0] ?? null };
   };
 }
 

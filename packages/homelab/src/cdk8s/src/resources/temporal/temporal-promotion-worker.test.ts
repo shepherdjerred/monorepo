@@ -309,7 +309,7 @@ describe("promotion worker authority", () => {
       name: "PROMOTION_DISCORD_SOCKET",
       value: "/tmp/storm-promotion-discord/daemon.sock",
     });
-    expect(names).not.toContain("POSTAL_API_KEY");
+    expect(names).not.toContain("MAIL_API_TOKEN");
     expect(names).not.toContain("GH_TOKEN");
     expect(names).not.toContain("CLAUDE_CODE_OAUTH_TOKEN");
     expect(container.env).toContainEqual({

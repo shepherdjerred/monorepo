@@ -189,11 +189,6 @@
       "kind": "platform"
     },
     {
-      "id": "mail",
-      "title": "Postal mail",
-      "kind": "platform"
-    },
-    {
       "id": "outbound-mail",
       "title": "Mail",
       "kind": "platform",
@@ -2551,30 +2546,6 @@
       }
     },
     {
-      "id": "postal",
-      "title": "Postal",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "mail",
-      "components": [
-        {
-          "name": "chart:postal",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["postal"],
-        "argoApps": ["postal", "postal-mariadb"]
-      },
-      "legacy": {
-        "rootReleaseExclusions": {
-          "postal-mariadb": "upstream"
-        }
-      }
-    },
-    {
       "id": "outbound-mail",
       "title": "Mail",
       "package": "mail",
@@ -3224,7 +3195,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/15"
+      "configurationRevisionId": "argocd/prod/16"
     },
     {
       "id": "chartmuseum/prod",
@@ -3376,7 +3347,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "prometheus/prod/1",
-      "configurationRevisionId": "prometheus/prod/10"
+      "configurationRevisionId": "prometheus/prod/11"
     },
     {
       "id": "prometheus-adapter/prod",
@@ -3595,14 +3566,6 @@
       "configurationRevisionId": "ddns/prod/1"
     },
     {
-      "id": "postal/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "postal/prod/1",
-      "configurationRevisionId": "postal/prod/1"
-    },
-    {
       "id": "1password/prod",
       "role": "durable",
       "approvalPolicy": "none",
@@ -3774,6 +3737,11 @@
     {
       "dependent": "bugsink/prod",
       "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "bugsink/prod",
+      "prerequisite": "cert-manager/prod",
       "rule": "any-accepted"
     },
     {
@@ -4572,41 +4540,6 @@
       "rule": "any-accepted"
     },
     {
-      "dependent": "postal/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "postal/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "postal/prod",
-      "prerequisite": "cert-manager/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "postal/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "postal/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "postal/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "postal/prod",
-      "prerequisite": "prometheus/prod",
-      "rule": "any-accepted"
-    },
-    {
       "dependent": "postgres-operator/prod",
       "prerequisite": "argocd/prod",
       "rule": "any-accepted"
@@ -5079,6 +5012,11 @@
     {
       "dependent": "streambot/prod",
       "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "streambot/prod",
+      "prerequisite": "cert-manager/prod",
       "rule": "any-accepted"
     },
     {

@@ -4,7 +4,8 @@ import type { AlertmanagerPort } from "#application/ports";
 import { AlertmanagerSnapshotAlertSchema } from "#shared/schema";
 
 const AlertmanagerResponseSchema = z.array(AlertmanagerSnapshotAlertSchema);
-const LEDGER_RECEIVER_PATTERN = "^(alerts|alerts-ledger-only|postal-fallback)$";
+const LEDGER_RECEIVER_PATTERN =
+  "^(alerts|alerts-ledger-only|postal-fallback|mail-fallback)$";
 
 export class AlertmanagerClient implements AlertmanagerPort {
   readonly #baseUrl: string;

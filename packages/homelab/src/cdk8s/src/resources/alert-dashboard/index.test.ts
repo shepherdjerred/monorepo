@@ -83,8 +83,7 @@ const PersistentVolumeClaimSchema = z.object({
 
 const DATA_PATH = "/data";
 const DATABASE_URL = "file:/data/alert-dashboard.db";
-const POSTAL_HOST =
-  "http://postal-postal-web-service.postal.svc.cluster.local:5000";
+const MAIL_API_URL = "http://mail.mail.svc.cluster.local:7371";
 
 function synthesizeDeployment(): z.infer<typeof DeploymentSchema> {
   const app = new App();
@@ -191,16 +190,25 @@ describe("Alert Dashboard deployment", () => {
     }
   });
 
-  test("uses the rendered Postal web service for email delivery", () => {
+  test("uses the outbound mail broker HTTP API for email delivery", () => {
     const podSpec = synthesizeDeployment().spec.template.spec;
     const dashboardContainer = podSpec.containers.find(
       (container) => container.name === "alert-dashboard",
     );
 
     expect(
-      dashboardContainer?.env?.find((entry) => entry.name === "POSTAL_HOST")
+      dashboardContainer?.env?.find((entry) => entry.name === "MAIL_API_URL")
         ?.value,
-    ).toBe(POSTAL_HOST);
+    ).toBe(MAIL_API_URL);
+    expect(
+      dashboardContainer?.env?.find((entry) => entry.name === "MAIL_API_TOKEN")
+        ?.valueFrom?.secretKeyRef,
+    ).toMatchObject({ key: "MAIL_API_TOKEN" });
+    expect(
+      dashboardContainer?.env?.some((entry) =>
+        entry.name.startsWith("POSTAL_"),
+      ),
+    ).toBe(false);
   });
 
   test("serves Hub on the hub tailnet host only", () => {

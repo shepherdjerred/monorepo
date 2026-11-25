@@ -3,7 +3,7 @@ import {
   ReportRunIngestItemSchema,
   type ReportRunIngestItem,
 } from "@shepherdjerred/ops-model/reports/report-ingest.ts";
-import { resolvePostalAddressesForReport } from "#config/postal.ts";
+import { resolveMailAddressesForReport } from "#config/mail.ts";
 import { log } from "#observability/log.ts";
 import { reportHubIngestTotal } from "#observability/metrics-report.ts";
 import {
@@ -201,7 +201,7 @@ export async function pushSkippedReportNotificationToHub(input: {
   pushToHub?: PushReportRunToHubFn;
 }): Promise<{ pushed: number }> {
   const resolveAddresses =
-    input.resolveAddresses ?? resolvePostalAddressesForReport;
+    input.resolveAddresses ?? resolveMailAddressesForReport;
   const pushToHub = input.pushToHub ?? tryPushReportRunToHub;
   const archivedReport =
     input.skipped.completedAt === input.report.completedAt

@@ -140,7 +140,6 @@ test("/cluster renders Nodes, Workloads retained toggle, Databases, and Storage 
     name: "PostgreSQL and MariaDB clusters",
   });
   await expect(dbTable).toContainText("delivery-postgresql");
-  await expect(dbTable).toContainText("postal-mariadb");
 
   await page.getByRole("tab", { name: "Storage, ZFS & NVMe" }).click();
   await expect(page).toHaveURL(/tab=storage/u);

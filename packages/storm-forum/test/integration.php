@@ -23,7 +23,7 @@ $check(array_map(fn($reaction) => (string)$reaction->title, array_values($reacti
 $check($map['reaction:like'] === 1, 'Native Like ID changed');
 $check($app->em()->find('XF:Reaction', $map['reaction:disagree'])->reaction_score === 0, 'Disagree should not punish reputation');
 $check($app->options()->registrationSetup['enabled'] === false, 'Registration must begin closed');
-foreach (['POSTAL_SMTP_PASSWORD', 'TURNSTILE_SECRET_KEY'] as $key) {
+foreach (['MAIL_SMTP_PASSWORD', 'TURNSTILE_SECRET_KEY'] as $key) {
     $check(!str_contains($app->db()->fetchOne('SELECT GROUP_CONCAT(option_value) FROM xf_option'), getenv($key)), 'Credential leaked into options');
 }
 echo "Configuration repeatability and secret storage assertions passed.\n";

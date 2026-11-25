@@ -6,6 +6,7 @@ import { createTemporalDomainWorker } from "./domain-worker.ts";
 import { sleepWebhookEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/http-services.ts";
 import { temporalRuntimeEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/runtime-env.ts";
 import { createTemporalWorkerHttpServices } from "./worker-http-services.ts";
+import { MAIL_API_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 import { seaweedfsS3 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 
 export function createTemporalIngressWorkers(
@@ -137,13 +138,10 @@ export function createTemporalIngressWorkers(
         secret: props.secret,
         key: "AWS_SECRET_ACCESS_KEY",
       }),
-      POSTAL_HOST: EnvValue.fromValue(
-        "http://postal-postal-web-service.postal.svc.cluster.local:5000",
-      ),
-      POSTAL_HOST_HEADER: EnvValue.fromValue(tailnetService("postal").fqdn),
-      POSTAL_API_KEY: EnvValue.fromSecretValue({
+      MAIL_API_URL: EnvValue.fromValue(MAIL_API_ENDPOINT.url),
+      MAIL_API_TOKEN: EnvValue.fromSecretValue({
         secret: props.secret,
-        key: "POSTAL_API_KEY",
+        key: "MAIL_API_TOKEN",
       }),
       ALERTMANAGER_URL: EnvValue.fromValue(
         "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",

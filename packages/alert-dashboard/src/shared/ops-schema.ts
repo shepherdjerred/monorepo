@@ -131,7 +131,7 @@ export const SERIES_PRESET_IDS = [
   "llm-token-cache-mix",
   "llm-p95-latency",
   "temporal-schedules-by-state",
-  "postal-queued",
+  "mail-outbox",
   // Target-parameterized service/namespace presets
   "namespace-cpu",
   "namespace-memory",

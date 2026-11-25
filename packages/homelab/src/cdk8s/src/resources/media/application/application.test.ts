@@ -258,7 +258,7 @@ test("separates network credentials from writable media mounts", () => {
       expect(env).not.toContain("QBITTORRENT_PASSWORD");
       expect(env).not.toContain("PLEX_SERVER_TOKEN");
       expect(env).not.toContain("MEDIA_CREDENTIAL_KEY");
-      expect(env).not.toContain("POSTAL_API_KEY");
+      expect(env).not.toContain("MAIL_API_TOKEN");
       expect(env).not.toContain("TMDB_API_KEY");
     } else
       expect(mounts.map((mount) => mount.mountPath)).toEqual(
@@ -275,6 +275,11 @@ test("separates network credentials from writable media mounts", () => {
     }
     if (deployment.metadata.name.endsWith("media-network")) {
       expect(env).toContain("TMDB_API_KEY");
+      expect(env).toContain("MAIL_API_TOKEN");
+      expect(container?.env).toContainEqual({
+        name: "MAIL_API_URL",
+        value: "http://mail.mail.svc.cluster.local:7371",
+      });
     }
   }
 });

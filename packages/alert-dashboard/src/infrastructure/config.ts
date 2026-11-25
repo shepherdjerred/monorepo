@@ -30,13 +30,12 @@ const EnvironmentSchema = z
       .default("http://promotion-status.temporal.svc.cluster.local:7343"),
     PROMETHEUS_URL: z.url(),
     PORT: z.coerce.number().int().min(1).max(65_535).default(7341),
-    POSTAL_API_KEY: z.string().min(1).optional(),
-    POSTAL_FROM: MailboxAddressSchema.optional(),
-    POSTAL_TO: z.email().optional(),
-    POSTAL_DIGEST_FROM: MailboxAddressSchema.optional(),
-    POSTAL_DIGEST_TO: z.email().optional(),
-    POSTAL_HOST: z.url().optional(),
-    POSTAL_HOST_HEADER: z.string().min(1).optional(),
+    MAIL_API_TOKEN: z.string().min(1).optional(),
+    MAIL_API_URL: z.url().optional(),
+    MAIL_FROM: MailboxAddressSchema.optional(),
+    MAIL_TO: z.email().optional(),
+    MAIL_DIGEST_FROM: MailboxAddressSchema.optional(),
+    MAIL_DIGEST_TO: z.email().optional(),
     TELEMETRY_ENABLED: BooleanTextSchema.default(false),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
     OTEL_SERVICE_NAME: z.string().min(1).default("alert-dashboard"),
@@ -55,10 +54,10 @@ const EnvironmentSchema = z
     }
     if (!value.EMAIL_ENABLED) return;
     for (const key of [
-      "POSTAL_API_KEY",
-      "POSTAL_FROM",
-      "POSTAL_HOST",
-      "POSTAL_TO",
+      "MAIL_API_TOKEN",
+      "MAIL_API_URL",
+      "MAIL_FROM",
+      "MAIL_TO",
     ] as const) {
       if (value[key] === undefined) {
         context.addIssue({
@@ -71,8 +70,8 @@ const EnvironmentSchema = z
   })
   .transform((value) => ({
     ...value,
-    POSTAL_DIGEST_FROM: value.POSTAL_DIGEST_FROM ?? value.POSTAL_FROM,
-    POSTAL_DIGEST_TO: value.POSTAL_DIGEST_TO ?? value.POSTAL_TO,
+    MAIL_DIGEST_FROM: value.MAIL_DIGEST_FROM ?? value.MAIL_FROM,
+    MAIL_DIGEST_TO: value.MAIL_DIGEST_TO ?? value.MAIL_TO,
   }));
 
 export type AlertDashboardConfig = z.infer<typeof EnvironmentSchema>;

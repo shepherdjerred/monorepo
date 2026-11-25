@@ -42,7 +42,7 @@ describe("AlertmanagerClient", () => {
     expect(requests).toHaveLength(1);
     expect(requests[0]?.pathname).toBe("/api/v2/alerts");
     expect(requests[0]?.searchParams.get("receiver")).toBe(
-      "^(alerts|alerts-ledger-only|postal-fallback)$",
+      "^(alerts|alerts-ledger-only|postal-fallback|mail-fallback)$",
     );
     expect(alerts[0]?.receivers).toEqual([{ name: "alerts" }]);
   });

@@ -35,7 +35,7 @@ export class DigestInProgressError extends Error {
 
 export class DigestMailerUnconfiguredError extends Error {
   constructor() {
-    super("Digest email is enabled but Postal is not configured");
+    super("Digest email is enabled but Mail is not configured");
     this.name = "DigestMailerUnconfiguredError";
   }
 }

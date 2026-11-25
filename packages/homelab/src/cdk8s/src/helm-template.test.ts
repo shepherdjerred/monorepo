@@ -569,16 +569,14 @@ describe("Helm Escaping - E2E Content Verification (dist/)", () => {
       );
       expect(result.stdout).toContain("send_resolved: true");
       expect(result.stdout).toContain(
-        "smtp_smarthost: postal-postal-smtp-service.postal.svc.cluster.local:25",
+        "smtp_smarthost: mail.mail.svc.cluster.local:25",
       );
       expect(result.stdout).toContain("smtp_require_tls: true");
       expect(result.stdout).toContain(
-        "ca_file: /etc/alertmanager/secrets/alertmanager-postal-smtp-ca/ca.crt",
+        "ca_file: /etc/alertmanager/secrets/alertmanager-mail-smtp-ca/ca.crt",
       );
       expect(result.stdout).not.toContain("smtp_require_tls: false");
-      expect(result.stdout).not.toContain(
-        "smtp_smarthost: postal-smtp-service.postal.svc.cluster.local:25",
-      );
+      expect(result.stdout).not.toContain("postal");
       expect(result.stdout).not.toContain("alert: KubeMemoryOvercommit");
       expect(result.stdout).not.toContain("alert: KubeCPUOvercommit");
       expect(result.stdout).not.toContain("alert: NodeMemoryMajorPagesFaults");

@@ -1,57 +1,92 @@
+import { createHash } from "node:crypto";
 import { expect, test } from "vitest";
 import { createNotificationReceiptReader } from "./receipts.ts";
-import { createHash } from "node:crypto";
+
 const config = {
-  postal: {
-    baseUrl: "http://postal.fixture",
-    apiKey: "fixture",
+  mail: {
+    baseUrl: "http://mail.fixture",
+    token: "fixture",
     from: "media@example.test",
   },
 };
-test("Postal reads only exact receipt status and validates the original attempt tag", async () => {
-  let tag = "media-attempt";
-  let status = "Sent";
+
+test("Mail reads exact receipt status and validates the original attempt tag and single recipient", async () => {
+  let tag: string | null = "media-attempt";
+  let status: "queued" | "sending" | "retrying" | "sent" | "failed" = "sent";
+  let recipients = ["fixture@example.test"];
   const read = createNotificationReceiptReader(config, async (url, init) => {
-    expect(url.pathname).toBe("/api/v1/messages/message");
-    expect(init.method).toBe("POST");
-    expect(init.body).toBe(
-      JSON.stringify({ id: 42, _expansions: ["status", "details"] }),
+    expect(url.pathname).toBe("/v1/messages/msg_42");
+    expect(init.method).toBe("GET");
+    expect(new Headers(init.headers).get("Authorization")).toBe(
+      "Bearer fixture",
     );
     return Response.json({
-      status: "success",
-      data: {
-        id: 42,
-        status: { status, held: false },
-        details: {
-          rcpt_to: "fixture@example.test",
-          tag,
-          direction: "outgoing",
-          bounce: false,
-        },
-      },
+      id: "msg_42",
+      rfcMessageId: "<msg-42@example.test>",
+      status,
+      recipients,
+      tag,
+      createdAt: "2026-11-25T00:00:00.000Z",
+      sentAt: status === "sent" ? "2026-11-25T00:00:01.000Z" : null,
+      failedAt: status === "failed" ? "2026-11-25T00:00:01.000Z" : null,
+      lastSmtpCode: 250,
+      error: null,
     });
   });
   const input = {
     channel: "email" as const,
-    receipt: "message-id:42",
+    receipt: "msg_42",
     idempotencyKey: "attempt",
   };
   expect(await read(input)).toEqual({
     status: "delivered",
     recipient: "fixture@example.test",
   });
-  status = "HardFail";
+  for (const active of ["queued", "sending", "retrying"] as const) {
+    status = active;
+    expect(await read(input)).toEqual({
+      status: "accepted",
+      recipient: "fixture@example.test",
+    });
+  }
+  status = "failed";
   expect(await read(input)).toMatchObject({ status: "bounced" });
   tag = "other-attempt";
   expect(await read(input)).toEqual({ status: "unknown", recipient: null });
+  tag = "media-attempt";
+  recipients = ["fixture@example.test", "other@example.test"];
+  expect(await read(input)).toEqual({ status: "unknown", recipient: null });
 });
-test("missing provider receipt remains unknown and missing credentials remain explicit", async () => {
-  const read = createNotificationReceiptReader(config, async () =>
-    Response.json({ status: "error", data: { code: "MessageNotFound" } }),
-  );
+
+test("missing or legacy provider receipts remain unknown and missing credentials remain explicit", async () => {
+  let requests = 0;
+  const read = createNotificationReceiptReader(config, async () => {
+    requests += 1;
+    return Response.json({ error: "Message not found" }, { status: 404 });
+  });
   expect(
-    await read({ channel: "email", receipt: "42", idempotencyKey: "attempt" }),
+    await read({
+      channel: "email",
+      receipt: "msg_missing",
+      idempotencyKey: "attempt",
+    }),
   ).toEqual({ status: "unknown", recipient: null });
+  expect(requests).toBe(1);
+  expect(
+    await read({
+      channel: "email",
+      receipt: "legacy-postal:42",
+      idempotencyKey: "attempt",
+    }),
+  ).toEqual({ status: "unknown", recipient: null });
+  expect(requests).toBe(1);
+  await expect(
+    createNotificationReceiptReader({})({
+      channel: "email",
+      receipt: "msg_42",
+      idempotencyKey: "attempt",
+    }),
+  ).rejects.toMatchObject({ service: "mail", kind: "interaction-required" });
   await expect(
     createNotificationReceiptReader({})({
       channel: "discord",

@@ -2596,7 +2596,7 @@ Each send has a durable attempt identity, keyed recipient fingerprint, and immut
 birth recovery epoch. Unknown outcomes are never resent automatically. The notification
 workflow makes two bounded receipt observations after acceptance; retention additionally
 refreshes exact personal receipts before authorizing removal. A bounce or unknown
-receipt protects the files. Postal receipt reads validate the original attempt tag;
+receipt protects the files. Mail receipt reads validate the original attempt tag;
 Discord reads validate the bot identity, message nonce, channel, and recipient.
 
 Retention repeats bounded watch, playback, and personal receipt observations while

@@ -272,7 +272,7 @@ test.each(["movie", "episode"] as const)(
       db: elapsedDb,
       notify: async () => {
         sends++;
-        if (sends === 1) throw new IntegrationError("postal", "authentication");
+        if (sends === 1) throw new IntegrationError("mail", "authentication");
         return { receipt: "fixture:42" };
       },
     };
@@ -439,7 +439,7 @@ test("a rejected readiness delivery cannot be retried after actual revocation le
   const activities = createNotificationActivities({
     ...context(),
     notify: () =>
-      Promise.reject(new IntegrationError("postal", "authentication")),
+      Promise.reject(new IntegrationError("mail", "authentication")),
   });
   expect(
     await activities.deliverMediaNotification({
@@ -510,7 +510,7 @@ test("unknown sends never retry; exact receipt reconciliation cannot cross a res
     ...context(),
     notify: async () => {
       sends++;
-      throw new IntegrationError("postal", "outcome-unknown");
+      throw new IntegrationError("mail", "outcome-unknown");
     },
     reconcileNotification: async () => ({
       status: "accepted" as const,

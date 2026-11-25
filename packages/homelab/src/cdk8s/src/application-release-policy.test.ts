@@ -213,9 +213,9 @@ describe("applyApplicationReleasePolicy", () => {
       spec: { ca: { secretName: "homelab-cluster-ca" } },
     });
     const leaf = new Certificate(chart, "leaf", {
-      metadata: { name: "postal-smtp-tls", namespace: "postal" },
+      metadata: { name: "mail-smtp-tls", namespace: "mail" },
       spec: {
-        secretName: "postal-smtp-tls",
+        secretName: "mail-smtp-tls",
         issuerRef: { name: "homelab-ca-issuer", kind: "ClusterIssuer" },
       },
     });

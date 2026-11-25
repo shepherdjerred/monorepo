@@ -5,9 +5,11 @@ import {
   KubeRole,
   KubeRoleBinding,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { MAIL_SMTP_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 import {
   dnsEgressRule,
   externalHttpsEgressRule,
+  flagsEgress,
   kubernetesApiEgressRule,
   nsPeer,
   cloudflareTunnelPeer,
@@ -168,13 +170,11 @@ function forumEgress(component: "web" | "release") {
       ports: [tcp(3306)],
     },
     seaweedfsEgress(),
-    ...[
-      ["postal", 25],
-      ["flags", 7361],
-    ].map(([name, number]) => ({
-      to: [nsPeer(String(name))],
-      ports: [tcp(Number(number))],
-    })),
+    {
+      to: [MAIL_SMTP_ENDPOINT.peer()],
+      ports: [MAIL_SMTP_ENDPOINT.tcp()],
+    },
+    flagsEgress(),
     ...(component === "web" ? [temporalEgress()] : []),
   ];
 }

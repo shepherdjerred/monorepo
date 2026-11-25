@@ -13,6 +13,7 @@ import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/fir
 import {
   dnsEgressRule,
   flagsEgress,
+  nsPeer,
   prometheusIngressRule,
   tailscaleIngressRule,
   tcp,
@@ -113,6 +114,36 @@ export function createMailDeployment(chart: Chart) {
         ingress: [
           tailscaleIngressRule([MAIL_UI_ENDPOINT.port]),
           prometheusIngressRule([MAIL_UI_ENDPOINT.port]),
+          {
+            from: [
+              nsPeer("alert-dashboard"),
+              {
+                ...nsPeer("media"),
+                podSelector: { matchLabels: { component: "media-network" } },
+              },
+              {
+                ...nsPeer("temporal"),
+                podSelector: { matchLabels: { component: "reports-worker" } },
+              },
+            ],
+            ports: [MAIL_API_ENDPOINT.tcp()],
+          },
+          {
+            from: [
+              nsPeer("bugsink"),
+              ...["storm-forum", "storm-forum-beta"].flatMap((namespace) =>
+                ["web", "release"].map((component) => ({
+                  ...nsPeer(namespace),
+                  podSelector: {
+                    matchLabels: { app: "storm-forum", component },
+                  },
+                })),
+              ),
+              nsPeer("prometheus"),
+              nsPeer("media"),
+            ],
+            ports: [MAIL_SMTP_ENDPOINT.tcp()],
+          },
         ],
         egress: [
           dnsEgressRule(),

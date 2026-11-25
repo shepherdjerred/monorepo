@@ -17,10 +17,10 @@ describe("dashboard mail configuration", () => {
     expect(await alertEmailConfig()).toEqual({
       EMAIL_ENABLED: "true",
       DAILY_DIGEST_QUIET_CLEAR: "true",
-      POSTAL_FROM: OPS_MAILBOXES.alerts.from,
-      POSTAL_TO: OPS_MAILBOXES.alerts.to,
-      POSTAL_DIGEST_FROM: OPS_MAILBOXES.digests.from,
-      POSTAL_DIGEST_TO: OPS_MAILBOXES.digests.to,
+      MAIL_FROM: OPS_MAILBOXES.alerts.from,
+      MAIL_TO: OPS_MAILBOXES.alerts.to,
+      MAIL_DIGEST_FROM: OPS_MAILBOXES.digests.from,
+      MAIL_DIGEST_TO: OPS_MAILBOXES.digests.to,
     });
   });
 
@@ -39,10 +39,10 @@ describe("dashboard mail configuration", () => {
     expect(await alertEmailConfig()).toEqual({
       EMAIL_ENABLED: "false",
       DAILY_DIGEST_QUIET_CLEAR: "false",
-      POSTAL_FROM: "Custom Alerts <incident@example.test>",
-      POSTAL_TO: "incident@example.test",
-      POSTAL_DIGEST_FROM: "digest@example.test",
-      POSTAL_DIGEST_TO: "digest-inbox@example.test",
+      MAIL_FROM: "Custom Alerts <incident@example.test>",
+      MAIL_TO: "incident@example.test",
+      MAIL_DIGEST_FROM: "digest@example.test",
+      MAIL_DIGEST_TO: "digest-inbox@example.test",
     });
   });
 
@@ -61,10 +61,10 @@ describe("dashboard mail configuration", () => {
       expect(config).toEqual({
         EMAIL_ENABLED: "true",
         DAILY_DIGEST_QUIET_CLEAR: "true",
-        POSTAL_FROM: OPS_MAILBOXES.alerts.from,
-        POSTAL_TO: OPS_MAILBOXES.alerts.to,
-        POSTAL_DIGEST_FROM: OPS_MAILBOXES.digests.from,
-        POSTAL_DIGEST_TO: OPS_MAILBOXES.digests.to,
+        MAIL_FROM: OPS_MAILBOXES.alerts.from,
+        MAIL_TO: OPS_MAILBOXES.alerts.to,
+        MAIL_DIGEST_FROM: OPS_MAILBOXES.digests.from,
+        MAIL_DIGEST_TO: OPS_MAILBOXES.digests.to,
       });
       expect(warn).toHaveBeenCalled();
     } finally {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { PostalSendInput } from "#shared/infra/postal.ts";
+import type { MailSendInput } from "#shared/infra/mail.ts";
 import type { ReportEnvelopeV1 } from "#shared/reports/report.ts";
 import {
   REPORT_SEND_CLAIM_FIRST_RETRY_AT_MS,
@@ -128,14 +128,14 @@ describe("report delivery", () => {
       },
       ...claimBackend(new Map()),
     };
-    const sent: PostalSendInput[] = [];
+    const sent: MailSendInput[] = [];
     const dependencies = {
       backend,
       addresses: {
         recipient: "recipient@example.com",
         sender: "sender@example.com",
       },
-      send: async (input: PostalSendInput) => {
+      send: async (input: MailSendInput) => {
         sent.push(input);
         return {
           messageId: "postal-message-1",
@@ -157,6 +157,7 @@ describe("report delivery", () => {
     expect(sent).toHaveLength(1);
     expect(retried.deduplicated).toBe(true);
     expect(retried.messageId).toBe("postal-message-1");
+    expect(sent[0]?.idempotencyKey).toBe("test-report:run-1");
     expect(sent[0]?.headers).toEqual({
       "X-Report-Run-ID": "test-report:run-1",
       "X-Report-Type": "test-report",
@@ -172,7 +173,7 @@ describe("report delivery", () => {
 function scenario(claims: Map<string, StoredClaim>) {
   const receipts = new Map<string, ReportDeliveryReceiptV1>();
   const states = new Map<string, ReportStateV1>();
-  const sent: PostalSendInput[] = [];
+  const sent: MailSendInput[] = [];
   const backend: ReportDeliveryBackend = {
     readReceipt: async (key) => receipts.get(key),
     writeReceipt: async (key, receipt) => {
@@ -196,7 +197,7 @@ function scenario(claims: Map<string, StoredClaim>) {
         recipient: "recipient@example.com",
         sender: "sender@example.com",
       },
-      send: async (input: PostalSendInput) => {
+      send: async (input: MailSendInput) => {
         sent.push(input);
         return {
           messageId: `postal-${String(sent.length)}`,
@@ -320,7 +321,7 @@ describe("report send ownership", () => {
     // A slow pending-state write spends the attempt's send budget. Measuring
     // the deadline before that write and arming the timeout after it let the
     // request outlive the lease and duplicate a report the successor sent.
-    const sent: PostalSendInput[] = [];
+    const sent: MailSendInput[] = [];
     const receipts = new Map<string, ReportDeliveryReceiptV1>();
     const states = new Map<string, ReportStateV1>();
     let clock = NOW;
@@ -343,7 +344,7 @@ describe("report send ownership", () => {
           recipient: "recipient@example.com",
           sender: "sender@example.com",
         },
-        send: async (input: PostalSendInput) => {
+        send: async (input: MailSendInput) => {
           sent.push(input);
           return {
             messageId: "postal-1",
@@ -396,7 +397,7 @@ describe("report send ownership", () => {
     const owner = dependencies("workflow/run-1/activity-1/1", NOW);
     const takenOver: typeof owner = {
       ...owner,
-      send: async (input: PostalSendInput) => {
+      send: async (input: MailSendInput) => {
         const result = await owner.send(input);
         // A successor takes the lease while this attempt is still persisting.
         installSuccessorClaim(claims, claimKey);
@@ -425,7 +426,7 @@ describe("report send ownership", () => {
     const owner = dependencies("workflow/run-1/activity-1/1", NOW);
     const racing: typeof owner = {
       ...owner,
-      send: async (input: PostalSendInput) => {
+      send: async (input: MailSendInput) => {
         const result = await owner.send(input);
         // The successor takes the lease AND records its delivery after this
         // attempt's ownership check has already passed.

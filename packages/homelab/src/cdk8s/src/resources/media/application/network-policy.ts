@@ -12,7 +12,10 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import type { SingleAppDatabase } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/postgres-database.ts";
 import { MEDIA_APPLICATION_LABEL } from "./environment.ts";
-import { PINCHTAB_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
+import {
+  MAIL_API_ENDPOINT,
+  PINCHTAB_ENDPOINT,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
 export function createMediaApplicationNetworkPolicies(
   chart: Chart,
@@ -90,7 +93,10 @@ export function createMediaApplicationNetworkPolicies(
                   to: [PINCHTAB_ENDPOINT.namespacePeer()],
                   ports: [PINCHTAB_ENDPOINT.tcp()],
                 },
-                { to: [nsPeer("postal")], ports: [tcp(5000)] },
+                {
+                  to: [MAIL_API_ENDPOINT.peer()],
+                  ports: [MAIL_API_ENDPOINT.tcp()],
+                },
               ]),
         ],
       },

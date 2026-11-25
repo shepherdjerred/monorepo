@@ -8,6 +8,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import { MAIL_API_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
@@ -126,9 +127,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
               "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
             ),
             ...flagsEnv({ deployment: "alert-dashboard/prod" }),
-            POSTAL_HOST: EnvValue.fromValue(
-              "http://postal-postal-web-service.postal.svc.cluster.local:5000",
-            ),
+            MAIL_API_URL: EnvValue.fromValue(MAIL_API_ENDPOINT.url),
             ALERT_DASHBOARD_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
               secret,
               key: "WEBHOOK_TOKEN",
@@ -144,13 +143,10 @@ export function createAlertDashboardDeployment(chart: Chart) {
               secret,
               key: "GRAFANA_API_KEY",
             }),
-            POSTAL_API_KEY: EnvValue.fromSecretValue({
+            MAIL_API_TOKEN: EnvValue.fromSecretValue({
               secret,
-              key: "POSTAL_API_KEY",
+              key: "MAIL_API_TOKEN",
             }),
-            POSTAL_HOST_HEADER: EnvValue.fromValue(
-              tailnetService("postal").fqdn,
-            ),
             OTEL_EXPORTER_OTLP_ENDPOINT: EnvValue.fromValue(
               OTLP_GATEWAY_BASE_URL,
             ),
@@ -204,8 +200,8 @@ export function createAlertDashboardDeployment(chart: Chart) {
           },
           flagsEgress(),
           {
-            to: [nsPeer("postal")],
-            ports: [tcp(5000)],
+            to: [MAIL_API_ENDPOINT.peer()],
+            ports: [MAIL_API_ENDPOINT.tcp()],
           },
           homeAssistantEgressRule(),
           otlpEgress(),

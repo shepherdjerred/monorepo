@@ -152,14 +152,14 @@ describe("TheStormPage", () => {
     expect(html).toContain("minecraft-tsmc promoted survival build 1.21.4");
   });
 
-  it("renders targeted service views for streambot, mail, minecraft, storm-brain, storm-forum, and null for unknown ids", () => {
+  it("renders targeted service views for streambot, outbound-mail, minecraft, storm-brain, storm-forum, and null for unknown ids", () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
 
     for (const [id, expectedTarget] of [
       ["streambot", "media"],
-      ["mail", "postal"],
+      ["outbound-mail", "mail"],
       ["minecraft", "minecraft"],
       ["storm-brain", "storm-brain"],
       ["storm-forum", "storm-forum"],

@@ -32,6 +32,7 @@ export const APP_HOSTS = {
   golink: "https://go.tailnet-1a49.ts.net",
   media: "https://media.tailnet-1a49.ts.net",
   tasknotes: "https://tasknotes.tailnet-1a49.ts.net",
+  mail: "https://mail.tailnet-1a49.ts.net",
 } as const;
 
 const POSTHOG_PROJECT_ID = 549_883;
@@ -68,6 +69,7 @@ export const CONSOLE_LINKS: readonly ConsoleLink[] = [
     url: APP_HOSTS.tasknotes,
     group: "Apps",
   },
+  { id: "mail", label: "Mail", url: APP_HOSTS.mail, group: "Apps" },
   { id: "grafana", label: "Grafana", url: TOOL_HOSTS.grafana, group: "Tools" },
   { id: "argocd", label: "Argo CD", url: TOOL_HOSTS.argocd, group: "Tools" },
   {

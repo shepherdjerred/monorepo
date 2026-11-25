@@ -20,7 +20,7 @@ Use the [OpenTofu infrastructure contract](https://github.com/shepherdjerred/mon
    Set `fastmailReady: true` after confirming account-side domain onboarding; keep it false until then.
    Add the existing Cloudflare zone and its declarative import to the stack's `zones.ts`; its baseline follows from the registry entry.
    Re-synthesize the stack and commit `cloudflare/main.tf.json`.
-   Preserve website records, redirects, existing subdomain mail routing, and Postal selectors.
+   Preserve website records, redirects, and existing subdomain mail routing.
    Enable wildcard inbound MX only when using Fastmail subdomain addressing.
 
 4. Run the focused OpenTofu, CDK8s, Caddy, and Tunnel DNS coverage checks from the infrastructure contract.
@@ -61,10 +61,10 @@ Use the [OpenTofu infrastructure contract](https://github.com/shepherdjerred/mon
 
 9. With the mailbox owner's participation, send and receive mail at `root@domain` and a fresh random catch-all address.
    Inspect external message headers for SPF, DKIM, and DMARC passes.
-   Confirm existing aliases and Postal delivery still work.
+   Confirm existing aliases and outbound Mail delivery still work.
    Run a subsequent full OpenTofu plan and require no changes.
 
 ## Related
 
 - [Homelab architecture](/explanation/homelab/overview/)
-- [Postal SMTP transport](/explanation/homelab/postal-smtp-tls/)
+- [Mail SMTP transport](/explanation/homelab/mail-smtp-tls/)

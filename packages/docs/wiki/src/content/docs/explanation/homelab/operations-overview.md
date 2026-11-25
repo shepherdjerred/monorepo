@@ -239,7 +239,7 @@ summarize the stored snapshots. Alertmanager remains the only paging path.
 
 ## Why it lives beside the alert ledger
 
-The alert ledger already had the durable SQLite store, the Postal outbox,
+The alert ledger already had the durable SQLite store, the Mail outbox,
 Grafana deep links, and a tailnet UI. The overview extended that service in
 place rather than adding a sibling. Together they are the `core` module of
 Hub. [Why Hub is one app built from modules](/explanation/homelab/hub/)

@@ -5,7 +5,7 @@ import type {
   AlertLedgerRepository,
   AlertmanagerPort,
   HomeAssistantPort,
-  PostalPort,
+  MailPort,
   PreviewPort,
   RetentionResult,
 } from "#application/ports";
@@ -57,7 +57,7 @@ const JsonTextSchema = z.string().transform((text, context) => {
 export type AlertServiceOptions = {
   repository: AlertLedgerRepository;
   alertmanager: AlertmanagerPort;
-  postal: PostalPort;
+  mail: MailPort;
   homeAssistant?: HomeAssistantPort | null;
   previews: PreviewPort;
   clock: Clock;
@@ -67,7 +67,7 @@ export type AlertServiceOptions = {
 export class AlertService {
   readonly #repository: AlertLedgerRepository;
   readonly #alertmanager: AlertmanagerPort;
-  readonly #postal: PostalPort;
+  readonly #mail: MailPort;
   readonly #homeAssistant: HomeAssistantPort | null;
   readonly #previews: PreviewPort;
   readonly #clock: Clock;
@@ -77,7 +77,7 @@ export class AlertService {
   constructor(options: AlertServiceOptions) {
     this.#repository = options.repository;
     this.#alertmanager = options.alertmanager;
-    this.#postal = options.postal;
+    this.#mail = options.mail;
     this.#homeAssistant = options.homeAssistant ?? null;
     this.#previews = options.previews;
     this.#clock = options.clock;
@@ -208,7 +208,7 @@ export class AlertService {
     );
     for (const message of messages) {
       try {
-        await this.#postal.send(message);
+        await this.#mail.send(message);
         await this.#repository.markEmailSent({
           id: message.id,
           sendClaimId: message.sendClaimId,
