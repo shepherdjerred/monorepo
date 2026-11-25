@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   CatalogDetailSchema,
   CatalogSearchSchema,
@@ -20,6 +21,7 @@ import {
   PlaybackHistorySchema,
   PlaybackPeopleSchema,
   PlaybackStatisticsSchema,
+  PlaybackTimelineSchema,
 } from "#shared/household/playback.ts";
 import { PlexHistoricalViewsSchema } from "#shared/household/plex-history.ts";
 import { RequestInterestProgressSchema } from "#shared/household/progress.ts";
@@ -49,6 +51,7 @@ import {
   playbackHistory,
   playbackPeople,
   playbackStatistics,
+  playbackTimeline,
 } from "#testing/fixture-api/fixtures/playback.ts";
 import { plexRequestHistory } from "#testing/fixture-api/fixtures/migration/plex-history.ts";
 import {
@@ -267,12 +270,17 @@ const calendar: readonly FixtureEndpoint[] = [
 const playback: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/playback/history",
-    schema: PlaybackHistorySchema,
-    respond: (request) => playbackHistory(request.query, request),
+    schema: z.union([PlaybackTimelineSchema, PlaybackHistorySchema]),
+    respond: (request) =>
+      request.query.get("view") === "timeline"
+        ? playbackTimeline(request)
+        : playbackHistory(request.query, request),
     samples: [
       "/playback/history",
       "/playback/history?search=bear",
       "/playback/history?limit=25",
+      "/playback/history?view=timeline",
+      "/playback/history?view=timeline&source=plex&search=bear",
     ],
   }),
   endpoint({
