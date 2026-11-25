@@ -3357,6 +3357,12 @@ see their own verified history. The owner can also see records whose requester
 has yet to be matched. Archived requests carry no acquisition or retention
 authority.
 
+While Seerr still accepts requests, set `recordHistoryOnly: true` in both
+preview and apply. Select the exact requests and include every selected
+provenance key in `historyOnly`, with an empty `movieEditions` list. The
+entries appear in **My requests** with the captured date and status. This mode
+leaves active requests, Keep policies, approvals, and recovery holds untouched.
+
 The immutable `personal_state_imported` receipt accounts only its exact captured
 record digest, reviewed requester binding, and real native request identities.
 Once all relevant approved claims reconcile and library Keep defaults are
