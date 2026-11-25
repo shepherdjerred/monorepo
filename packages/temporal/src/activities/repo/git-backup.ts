@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -10,11 +11,7 @@ import {
   gitBackupRepoSuccess,
 } from "#observability/metrics-ops-schedules.ts";
 import {
-  computeMirrorRefDigest,
-  createZstdGitBundle,
   redactGitSecrets,
-  syncBareMirror,
-  syncWikiMirror,
   withGitAuthEnvironment,
   type GitAuthContext,
   type GitSubprocessHooks,
@@ -32,9 +29,16 @@ import {
   type GitBackupResult,
 } from "./git-backup-report.ts";
 import {
+  buildSnapshotId,
+  isSnapshotStateUnchanged,
+  observeRepositoryMirrors,
+  pruneExpiredSnapshots,
+  resolveSnapshotArtifacts,
+} from "./git-backup-snapshot.ts";
+import {
   createS3GitBackupStore,
-  selectSnapshotKeysToPrune,
   snapshotObjectKeys,
+  type GitBackupLatestManifest,
   type GitBackupObjectStore,
 } from "./git-backup-store.ts";
 
@@ -47,7 +51,11 @@ type FetchIssuesFn = (args: {
   capturedAt: string;
   auth: GitAuthContext;
   hooks: GitSubprocessHooks;
-}) => Promise<{ compressed: Uint8Array; issueCount: number }>;
+}) => Promise<{
+  compressed: Uint8Array;
+  issueCount: number;
+  contentDigest?: string | undefined;
+}>;
 
 export type GitBackupDependencies = {
   readonly config?: GitBackupConfig | undefined;
@@ -78,80 +86,68 @@ async function backupSingleRepository(input: {
   readonly fetchIssues: FetchIssuesFn;
   readonly resolveLfsBinary?: (() => string | null) | undefined;
 }): Promise<Exclude<GitBackupRepoOutcome, { status: "failed" }>> {
-  const { repo, config, mirrorRootDir, store, auth, hooks } = input;
-  const mirrorPath = path.join(mirrorRootDir, repo.owner, `${repo.name}.git`);
-
-  await syncBareMirror({
-    mirrorPath,
-    cloneUrl: repo.cloneUrl,
-    repoLabel: repo.fullName,
-    includeLfs: config.includeLfs,
+  const { repo, config, store, auth, hooks } = input;
+  const observation = await observeRepositoryMirrors({
+    repo,
+    config,
+    mirrorRootDir: input.mirrorRootDir,
     auth,
     hooks,
     resolveLfsBinary: input.resolveLfsBinary,
   });
 
-  let wikiStatus: "mirrored" | "uninitialized" | "disabled" = "disabled";
-  if (config.includeWiki && repo.hasWiki && repo.wikiCloneUrl !== undefined) {
-    const wikiMirrorPath = path.join(
-      mirrorRootDir,
-      repo.owner,
-      `${repo.name}.wiki.git`,
-    );
-    wikiStatus = await syncWikiMirror({
-      wikiMirrorPath,
-      wikiCloneUrl: repo.wikiCloneUrl,
-      repoLabel: repo.fullName,
-      auth,
-      hooks,
-    });
-  }
-
-  const { refCount, refDigest } = await computeMirrorRefDigest({
-    mirrorPath,
-    repoLabel: repo.fullName,
+  const capturedAt = input.now().toISOString();
+  const issuesArchive = await input.fetchIssues({
+    owner: repo.owner,
+    repo: repo.name,
+    capturedAt,
     auth,
     hooks,
   });
+  const issuesDigest =
+    issuesArchive.contentDigest ??
+    createHash("sha256").update(issuesArchive.compressed).digest("hex");
 
   const existingLatest = await store.readLatest(repo.owner, repo.name);
-  if (existingLatest?.refDigest === refDigest) {
+  if (
+    existingLatest !== undefined &&
+    isSnapshotStateUnchanged(existingLatest, observation, issuesDigest)
+  ) {
+    const prefix = snapshotObjectKeys(
+      repo.owner,
+      repo.name,
+      existingLatest.snapshotId,
+    ).prefix;
+    const prunedKeysCount = await pruneExpiredSnapshots({
+      store,
+      prefix,
+      keepSnapshots: config.keepSnapshots,
+      manifest: existingLatest,
+    });
     return {
       owner: repo.owner,
       name: repo.name,
       status: "unchanged",
-      refDigest,
-      refCount,
+      refDigest: observation.refDigest,
+      refCount: observation.refCount,
       snapshotId: existingLatest.snapshotId,
-      prunedKeysCount: 0,
-      wikiStatus,
+      prunedKeysCount,
+      wikiStatus: observation.wikiStatus,
     };
   }
 
-  const capturedAt = input.now().toISOString();
-  const snapshotId = `${capturedAt.slice(0, 10)}-${refDigest.slice(0, 12)}`;
+  const snapshotId = buildSnapshotId(capturedAt, observation, issuesDigest);
   const keys = snapshotObjectKeys(repo.owner, repo.name, snapshotId);
-
   const scratchDir = await mkdtemp(path.join(tmpdir(), "git-backup-bundle-"));
-  let bundleKey: string | null = null;
+  let manifest: GitBackupLatestManifest;
   try {
-    if (refCount > 0) {
-      const localBundleZst = path.join(scratchDir, `${snapshotId}.bundle.zst`);
-      await createZstdGitBundle({
-        mirrorPath,
-        outputZstPath: localBundleZst,
-        repoLabel: repo.fullName,
-        auth,
-        hooks,
-      });
-      await store.putFile(keys.bundleKey, localBundleZst, "application/zstd");
-      bundleKey = keys.bundleKey;
-    }
-
-    const issuesArchive = await input.fetchIssues({
-      owner: repo.owner,
-      repo: repo.name,
-      capturedAt,
+    const artifacts = await resolveSnapshotArtifacts({
+      repo,
+      snapshotId,
+      observation,
+      existingLatest,
+      store,
+      scratchDir,
       auth,
       hooks,
     });
@@ -160,43 +156,47 @@ async function backupSingleRepository(input: {
       issuesArchive.compressed,
       "application/zstd",
     );
-
-    await store.writeLatest({
+    manifest = {
       schemaVersion: 1,
       owner: repo.owner,
       repo: repo.name,
-      refDigest,
-      refCount,
+      refDigest: observation.refDigest,
+      refCount: observation.refCount,
       snapshotId,
-      bundleKey,
+      bundleKey: artifacts.bundleKey,
+      lfsDigest: observation.lfsInventory.digest,
+      lfsKey: artifacts.lfsKey,
+      lfsObjectCount: observation.lfsInventory.objectCount,
+      wikiRefDigest: observation.wikiRefDigest,
+      wikiRefCount: observation.wikiRefCount,
+      wikiBundleKey: artifacts.wikiBundleKey,
       issuesKey: keys.issuesKey,
+      issuesDigest,
       issueCount: issuesArchive.issueCount,
-      wikiStatus,
+      wikiStatus: observation.wikiStatus,
       updatedAt: capturedAt,
-    });
+    };
+    await store.writeLatest(manifest);
   } finally {
     await rm(scratchDir, { recursive: true, force: true });
   }
 
-  const allSnapshotKeys = await store.listKeys(keys.prefix);
-  const keysToDelete = selectSnapshotKeysToPrune({
-    keys: allSnapshotKeys,
-    keep: config.keepSnapshots,
-    currentSnapshotId: snapshotId,
+  const prunedKeysCount = await pruneExpiredSnapshots({
+    store,
+    prefix: keys.prefix,
+    keepSnapshots: config.keepSnapshots,
+    manifest,
   });
-  if (keysToDelete.length > 0) {
-    await store.deleteKeys(keysToDelete);
-  }
 
   return {
     owner: repo.owner,
     name: repo.name,
     status: "snapshotted",
-    refDigest,
-    refCount,
+    refDigest: observation.refDigest,
+    refCount: observation.refCount,
     snapshotId,
-    prunedKeysCount: keysToDelete.length,
-    wikiStatus,
+    prunedKeysCount,
+    wikiStatus: observation.wikiStatus,
   };
 }
 
@@ -247,9 +247,9 @@ async function processRepositoryBatch(input: {
         resolveLfsBinary: deps.resolveLfsBinary,
       });
       gitBackupRepoSuccess.set({ owner: repo.owner, repository: repo.name }, 1);
+      prunedKeysCount += outcome.prunedKeysCount;
       if (outcome.status === "snapshotted") {
         snapshottedCount += 1;
-        prunedKeysCount += outcome.prunedKeysCount;
       } else {
         unchangedCount += 1;
       }

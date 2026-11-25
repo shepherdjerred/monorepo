@@ -3,7 +3,6 @@ import { chmod, mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { zstdCompressSync } from "node:zlib";
-import { log } from "#observability/log.ts";
 
 const HEARTBEAT_INTERVAL_MS = 15_000;
 const CANCELLATION_GRACE_MS = 1000;
@@ -289,19 +288,25 @@ export async function syncBareMirror(input: {
   ) {
     const lfsBin = (input.resolveLfsBinary ?? (() => Bun.which("git-lfs")))();
     if (lfsBin === null) {
-      log(
-        "info",
-        "Repository references Git LFS but git-lfs is not installed; skipping LFS fetch",
-        {
-          module: "git-backup",
-          repository: input.repoLabel,
-        },
+      throw new Error(
+        `Repository ${input.repoLabel} references Git LFS, but git-lfs is not installed`,
       );
-      return;
     }
+    const existingPath = input.auth.env["PATH"] ?? "";
+    const lfsDir = path.dirname(lfsBin);
+    const lfsAuth: GitAuthContext = {
+      ...input.auth,
+      env: {
+        ...input.auth.env,
+        PATH:
+          existingPath === ""
+            ? lfsDir
+            : `${lfsDir}${path.delimiter}${existingPath}`,
+      },
+    };
     await runGitSubprocess({
       args: ["-C", input.mirrorPath, "lfs", "fetch", "--all"],
-      auth: input.auth,
+      auth: lfsAuth,
       hooks: input.hooks,
       stepLabel: `lfs-fetch:${input.repoLabel}`,
     });

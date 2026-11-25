@@ -5,7 +5,11 @@ import {
   temporalDdnsLastSuccessTimestampSeconds,
   temporalDdnsUpdatesTotal,
 } from "#observability/metrics-ops-schedules.ts";
-import { parseCloudflareTraceIp } from "./ddns-trace.ts";
+import {
+  parseCloudflareTraceIp,
+  readTraceResponse,
+  type TraceResponseStream,
+} from "./ddns-trace.ts";
 import {
   reconcileDdnsWithDependencies,
   type CloudflareFetch,
@@ -374,5 +378,94 @@ describe("DDNS IPv6 fallback and failure safety", () => {
     expect(metricsText).toContain(
       'temporal_ddns_updates_total{target="ddns.sjer.red",action="failed",outcome="failed",component="temporal-worker"} 1',
     );
+  });
+
+  test("rejects trace stream when response closes prematurely or emits an error", async () => {
+    function createFakeResponse() {
+      const dataListeners: ((chunk: Buffer) => void)[] = [];
+      const endListeners: (() => void)[] = [];
+      const closeListeners: (() => void)[] = [];
+      const errorListeners: ((error: Error) => void)[] = [];
+      const state = { complete: false, statusCode: 200 };
+      const stream: TraceResponseStream = {
+        get complete() {
+          return state.complete;
+        },
+        get statusCode() {
+          return state.statusCode;
+        },
+        on(
+          event: "data" | "end" | "close" | "error",
+          listener: (...args: any[]) => void,
+        ) {
+          switch (event) {
+            case "data": {
+              dataListeners.push(listener);
+              break;
+            }
+            case "end": {
+              endListeners.push(listener);
+              break;
+            }
+            case "close": {
+              closeListeners.push(listener);
+              break;
+            }
+            case "error": {
+              errorListeners.push(listener);
+              break;
+            }
+          }
+          return stream;
+        },
+      };
+      return {
+        stream,
+        setComplete(value: boolean) {
+          state.complete = value;
+        },
+        emitData(chunk: Buffer) {
+          for (const fn of dataListeners) {
+            fn(chunk);
+          }
+        },
+        emitEnd() {
+          for (const fn of endListeners) {
+            fn();
+          }
+        },
+        emitClose() {
+          for (const fn of closeListeners) {
+            fn();
+          }
+        },
+        emitError(err: Error) {
+          for (const fn of errorListeners) {
+            fn(err);
+          }
+        },
+      };
+    }
+
+    const truncated = createFakeResponse();
+    const truncatedPromise = readTraceResponse(truncated.stream, 4);
+    truncated.emitData(Buffer.from("fl=12f\n", "utf8"));
+    truncated.emitClose();
+    await expect(truncatedPromise).rejects.toThrow(
+      "Cloudflare IPv4 trace response closed before completion",
+    );
+
+    const errored = createFakeResponse();
+    const erroredPromise = readTraceResponse(errored.stream, 6);
+    errored.emitError(new Error("socket reset mid-body"));
+    await expect(erroredPromise).rejects.toThrow("socket reset mid-body");
+
+    const normal = createFakeResponse();
+    const normalPromise = readTraceResponse(normal.stream, 4);
+    normal.emitData(Buffer.from("ip=203.0.113.42\n", "utf8"));
+    normal.setComplete(true);
+    normal.emitEnd();
+    normal.emitClose();
+    await expect(normalPromise).resolves.toBe("ip=203.0.113.42\n");
   });
 });

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { zstdCompressSync } from "node:zlib";
 import { z } from "zod/v4";
 import {
@@ -201,7 +202,11 @@ export async function fetchCompressedIssuesArchive(input: {
   readonly token: string;
   readonly secrets: readonly string[];
   readonly hooks: GitSubprocessHooks;
-}): Promise<{ compressed: Uint8Array; issueCount: number }> {
+}): Promise<{
+  compressed: Uint8Array;
+  issueCount: number;
+  contentDigest: string;
+}> {
   const repoPath = `${encodeURIComponent(input.owner)}/${encodeURIComponent(input.repo)}`;
   const issues = input.includeIssues
     ? await fetchPaginatedGitHubArray({
@@ -227,6 +232,9 @@ export async function fetchCompressedIssuesArchive(input: {
         })
       : [];
 
+  const contentDigest = createHash("sha256")
+    .update(JSON.stringify({ issues, comments }), "utf8")
+    .digest("hex");
   const payload = JSON.stringify({
     schemaVersion: 1,
     repository: `${input.owner}/${input.repo}`,
@@ -237,5 +245,5 @@ export async function fetchCompressedIssuesArchive(input: {
   const compressed = new Uint8Array(
     zstdCompressSync(Buffer.from(payload, "utf8")),
   );
-  return { compressed, issueCount: issues.length };
+  return { compressed, issueCount: issues.length, contentDigest };
 }

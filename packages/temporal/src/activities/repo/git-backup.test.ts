@@ -1,4 +1,11 @@
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import {
+  chmod,
+  mkdtemp,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { zstdDecompressSync } from "node:zlib";
@@ -23,6 +30,7 @@ import {
   GIT_BACKUP_CONFIG,
 } from "./git-backup-report.ts";
 import {
+  assertNoDeleteObjectsErrors,
   GitBackupLatestManifestSchema,
   type GitBackupLatestManifest,
   type GitBackupObjectStore,
@@ -384,6 +392,342 @@ describe("git-backup mirror, bundle, and retention", () => {
       k.includes("/snapshots/"),
     );
     expect(remainingSnapshotKeys).toHaveLength(20);
+  });
+});
+
+describe("git-backup wiki and issue incremental snapshots", () => {
+  beforeEach(resetGitBackupMetrics);
+  afterEach(cleanupTempDirs);
+
+  test("archives wiki mirror bundles and snapshots wiki-only updates while reusing unchanged main bundle", async () => {
+    const root = await makeTempDir("git-backup-wiki-");
+    const mirrorRootDir = path.join(root, "mirrors");
+    const { bareDir } = await createUpstreamBareRepoWithCommit(
+      root,
+      "wiki-app",
+      { "README.md": "# Main repo\n" },
+    );
+    const wikiRepo = await createUpstreamBareRepoWithCommit(
+      root,
+      "wiki-app.wiki",
+      { "Home.md": "# Wiki v1\n" },
+    );
+
+    const memoryStore = createInMemoryBackupStore();
+    const discovered = [
+      {
+        owner: "shepherdjerred",
+        name: "wiki-app",
+        fullName: "shepherdjerred/wiki-app",
+        cloneUrl: bareDir,
+        wikiCloneUrl: wikiRepo.bareDir,
+        hasWiki: true,
+        hasIssues: false,
+        archived: false,
+        fork: false,
+      },
+    ];
+
+    const firstRun = await runGitBackupWithDependencies({
+      mirrorRootDir,
+      readToken: () => Promise.resolve("ghp_test_token"),
+      store: () => memoryStore.store,
+      githubFetch: () => Promise.resolve(Response.json([])),
+      discoverRepositories: () => Promise.resolve(discovered),
+      hooks: noopHooks,
+      now: () => new Date("2026-11-25T10:00:00.000Z"),
+    });
+    expect(firstRun.snapshottedCount).toBe(1);
+    const firstManifest = await memoryStore.store.readLatest(
+      "shepherdjerred",
+      "wiki-app",
+    );
+    expect(firstManifest?.wikiStatus).toBe("mirrored");
+    expect(firstManifest?.wikiBundleKey).toBe(
+      `shepherdjerred/wiki-app/snapshots/${String(firstManifest?.snapshotId)}.wiki.bundle.zst`,
+    );
+
+    await writeFile(
+      path.join(wikiRepo.workDir, "Home.md"),
+      "# Wiki v2\n",
+      "utf8",
+    );
+    execGit(["add", "Home.md"], wikiRepo.workDir);
+    execGit(["commit", "-m", "Update wiki home"], wikiRepo.workDir);
+    execGit(["push", "origin", "main"], wikiRepo.workDir);
+
+    const secondRun = await runGitBackupWithDependencies({
+      mirrorRootDir,
+      readToken: () => Promise.resolve("ghp_test_token"),
+      store: () => memoryStore.store,
+      githubFetch: () => Promise.resolve(Response.json([])),
+      discoverRepositories: () => Promise.resolve(discovered),
+      hooks: noopHooks,
+      now: () => new Date("2026-11-25T14:00:00.000Z"),
+    });
+    expect(secondRun.snapshottedCount).toBe(1);
+    const secondManifest = await memoryStore.store.readLatest(
+      "shepherdjerred",
+      "wiki-app",
+    );
+    expect(secondManifest?.snapshotId).not.toBe(firstManifest?.snapshotId);
+    expect(secondManifest?.bundleKey).toBe(firstManifest?.bundleKey);
+    expect(secondManifest?.wikiBundleKey).not.toBe(
+      firstManifest?.wikiBundleKey,
+    );
+
+    const compressedWiki = memoryStore.objects.get(
+      secondManifest?.wikiBundleKey ?? "",
+    );
+    if (compressedWiki === undefined) {
+      throw new Error("Missing uploaded wiki bundle");
+    }
+    const restoredWikiBundle = path.join(root, "restored.wiki.bundle");
+    const restoredWikiClone = path.join(root, "restored-wiki");
+    await writeFile(restoredWikiBundle, zstdDecompressSync(compressedWiki));
+    execGit(["clone", restoredWikiBundle, restoredWikiClone]);
+    expect(
+      await readFile(path.join(restoredWikiClone, "Home.md"), "utf8"),
+    ).toBe("# Wiki v2\n");
+  });
+
+  test("refreshes issue archives with immutable snapshot IDs when Git refs are unchanged, protects reused bundleKey during retention, and retries cleanup on unchanged runs", async () => {
+    const root = await makeTempDir("git-backup-issues-");
+    const mirrorRootDir = path.join(root, "mirrors");
+    const { bareDir } = await createUpstreamBareRepoWithCommit(
+      root,
+      "issues-app",
+      { "README.md": "# Stable Git refs\n" },
+    );
+
+    let failNextDelete = false;
+    const innerStore = createInMemoryBackupStore();
+    const storeWithToggle: GitBackupObjectStore = {
+      ...innerStore.store,
+      async deleteKeys(keys) {
+        if (failNextDelete) {
+          failNextDelete = false;
+          throw new Error("Simulated S3 delete failure");
+        }
+        await innerStore.store.deleteKeys(keys);
+      },
+    };
+
+    const discovered = [
+      {
+        owner: "shepherdjerred",
+        name: "issues-app",
+        fullName: "shepherdjerred/issues-app",
+        cloneUrl: bareDir,
+        hasWiki: false,
+        hasIssues: true,
+        archived: false,
+        fork: false,
+      },
+    ];
+
+    let issueGeneration = 1;
+    const runAt = (iso: string) =>
+      runGitBackupWithDependencies({
+        config: { ...GIT_BACKUP_CONFIG, keepSnapshots: 2 },
+        mirrorRootDir,
+        readToken: () => Promise.resolve("ghp_test_token"),
+        store: () => storeWithToggle,
+        discoverRepositories: () => Promise.resolve(discovered),
+        githubFetch: (url) => {
+          const parsed = new URL(url);
+          if (parsed.pathname.endsWith("/issues")) {
+            return Promise.resolve(
+              Response.json([
+                {
+                  id: issueGeneration,
+                  number: 1,
+                  title: `Issue rev ${String(issueGeneration)}`,
+                  state: "open",
+                },
+              ]),
+            );
+          }
+          return Promise.resolve(Response.json([]));
+        },
+        hooks: noopHooks,
+        now: () => new Date(iso),
+      });
+
+    const run1 = await runAt("2026-11-25T01:00:00.000Z");
+    expect(run1.snapshottedCount).toBe(1);
+    const manifest1 = await innerStore.store.readLatest(
+      "shepherdjerred",
+      "issues-app",
+    );
+    const originalBundleKey = manifest1?.bundleKey ?? "";
+    expect(originalBundleKey).not.toBe("");
+
+    issueGeneration = 2;
+    const run2 = await runAt("2026-11-25T02:00:00.000Z");
+    expect(run2.snapshottedCount).toBe(1);
+    const manifest2 = await innerStore.store.readLatest(
+      "shepherdjerred",
+      "issues-app",
+    );
+    expect(manifest2?.snapshotId).not.toBe(manifest1?.snapshotId);
+    expect(manifest2?.bundleKey).toBe(originalBundleKey);
+    expect(innerStore.objects.has(manifest1?.issuesKey ?? "")).toBe(true);
+
+    // Run 3 creates a 3rd snapshot on the same day with keepSnapshots = 2, and fails deleteKeys after writeLatest.
+    issueGeneration = 3;
+    failNextDelete = true;
+    const run3FailedCleanup = await runAt("2026-11-25T03:00:00.000Z");
+    expect(run3FailedCleanup.failedCount).toBe(1);
+
+    // Run 4 has NO changes (issueGeneration still 3, Git refs unchanged): retries retention cleanup!
+    const run4Recovered = await runAt("2026-11-25T04:00:00.000Z");
+    expect(run4Recovered.unchangedCount).toBe(1);
+    expect(run4Recovered.failedCount).toBe(0);
+    expect(run4Recovered.prunedKeysCount).toBe(1);
+    // Snapshot 1's stale issues archive was pruned, while Snapshot 1's still-referenced bundleKey was protected!
+    expect(innerStore.objects.has(manifest1?.issuesKey ?? "")).toBe(false);
+    expect(innerStore.objects.has(originalBundleKey)).toBe(true);
+
+    expect(() =>
+      assertNoDeleteObjectsErrors([
+        {
+          Key: "shepherdjerred/issues-app/snapshots/2026-11-25T010000Z-aaaa.issues.json.zst",
+          Code: "AccessDenied",
+          Message: "Access Denied",
+        },
+      ]),
+    ).toThrow("Failed to delete 1 Git backup snapshot object(s)");
+  });
+});
+
+describe("git-backup LFS enforcement and offline restoration", () => {
+  beforeEach(resetGitBackupMetrics);
+  afterEach(cleanupTempDirs);
+
+  test("fails LFS repo when git-lfs is missing and archives + restores LFS objects offline when present", async () => {
+    const root = await makeTempDir("git-backup-lfs-");
+    const mirrorRootDir = path.join(root, "mirrors");
+    const lfsRepo = await createUpstreamBareRepoWithCommit(root, "lfs-repo", {
+      ".gitattributes": "*.bin filter=lfs diff=lfs merge=lfs -text\n",
+      "asset.bin":
+        "version https://git-lfs.github.com/spec/v1\noid sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\nsize 16\n",
+    });
+    const plainRepo = await createUpstreamBareRepoWithCommit(
+      root,
+      "plain-repo",
+      { "README.md": "# Plain\n" },
+    );
+
+    const memoryStore = createInMemoryBackupStore();
+    const discovered = [
+      {
+        owner: "shepherdjerred",
+        name: "lfs-repo",
+        fullName: "shepherdjerred/lfs-repo",
+        cloneUrl: lfsRepo.bareDir,
+        hasWiki: false,
+        hasIssues: false,
+        archived: false,
+        fork: false,
+      },
+      {
+        owner: "shepherdjerred",
+        name: "plain-repo",
+        fullName: "shepherdjerred/plain-repo",
+        cloneUrl: plainRepo.bareDir,
+        hasWiki: false,
+        hasIssues: false,
+        archived: false,
+        fork: false,
+      },
+    ];
+
+    const missingLfsRun = await runGitBackupWithDependencies({
+      mirrorRootDir,
+      readToken: () => Promise.resolve("ghp_test_token"),
+      store: () => memoryStore.store,
+      githubFetch: () => Promise.resolve(Response.json([])),
+      discoverRepositories: () => Promise.resolve(discovered),
+      resolveLfsBinary: () => null,
+      hooks: noopHooks,
+      now: () => new Date("2026-11-25T10:00:00.000Z"),
+    });
+    expect(missingLfsRun.failedCount).toBe(1);
+    expect(missingLfsRun.snapshottedCount).toBe(1);
+    const failedEntry = missingLfsRun.repositories.find(
+      (entry) => entry.name === "lfs-repo",
+    );
+    expect(failedEntry).toMatchObject({
+      status: "failed",
+      error: expect.stringContaining("git-lfs is not installed"),
+    });
+
+    // Install a fake git-lfs executable that populates lfs/objects during `git lfs fetch --all`.
+    const fakeBinDir = path.join(root, "fake-bin");
+    const fakeGitLfs = path.join(fakeBinDir, "git-lfs");
+    const lfsOid =
+      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+    await Bun.$`mkdir -p ${fakeBinDir}`.quiet();
+    await writeFile(
+      fakeGitLfs,
+      `#!/bin/sh\nset -eu\nmkdir -p "lfs/objects/01/23"\nprintf 'BINARY_LFS_BYTES' > "lfs/objects/01/23/${lfsOid}"\n`,
+      "utf8",
+    );
+    await chmod(fakeGitLfs, 0o755);
+
+    const withLfsRun = await runGitBackupWithDependencies({
+      mirrorRootDir,
+      readToken: () => Promise.resolve("ghp_test_token"),
+      store: () => memoryStore.store,
+      githubFetch: () => Promise.resolve(Response.json([])),
+      discoverRepositories: () => Promise.resolve([discovered[0]!]),
+      resolveLfsBinary: () => fakeGitLfs,
+      hooks: noopHooks,
+      now: () => new Date("2026-11-25T11:00:00.000Z"),
+    });
+    expect(withLfsRun.failedCount).toBe(0);
+    expect(withLfsRun.snapshottedCount).toBe(1);
+
+    const manifest = await memoryStore.store.readLatest(
+      "shepherdjerred",
+      "lfs-repo",
+    );
+    expect(manifest?.lfsObjectCount).toBe(1);
+    expect(manifest?.lfsKey).not.toBeNull();
+
+    // Delete both upstream and mirror cache to prove offline restoration from archived bytes alone.
+    await rm(lfsRepo.bareDir, { recursive: true, force: true });
+    await rm(lfsRepo.workDir, { recursive: true, force: true });
+    await rm(mirrorRootDir, { recursive: true, force: true });
+
+    const bundleBytes = memoryStore.objects.get(manifest?.bundleKey ?? "");
+    const lfsTarZstBytes = memoryStore.objects.get(manifest?.lfsKey ?? "");
+    if (bundleBytes === undefined || lfsTarZstBytes === undefined) {
+      throw new Error("Missing archived bundle or LFS tar");
+    }
+
+    const offlineBundlePath = path.join(root, "offline.bundle");
+    const offlineLfsTarPath = path.join(root, "offline.lfs.tar");
+    const offlineCloneDir = path.join(root, "offline-restored");
+    await writeFile(offlineBundlePath, zstdDecompressSync(bundleBytes));
+    await writeFile(offlineLfsTarPath, zstdDecompressSync(lfsTarZstBytes));
+
+    execGit(["clone", offlineBundlePath, offlineCloneDir]);
+    const tarProc = Bun.spawnSync([
+      "tar",
+      "-xf",
+      offlineLfsTarPath,
+      "-C",
+      path.join(offlineCloneDir, ".git"),
+    ]);
+    expect(tarProc.exitCode).toBe(0);
+
+    const restoredLfsPayload = await readFile(
+      path.join(offlineCloneDir, ".git", "lfs", "objects", "01", "23", lfsOid),
+      "utf8",
+    );
+    expect(restoredLfsPayload).toBe("BINARY_LFS_BYTES");
   });
 });
 

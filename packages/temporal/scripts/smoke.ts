@@ -28,6 +28,7 @@ const CONTAINER = `smoke-temporal-worker-${String(process.pid)}`;
 // runnable without credentials or network. All exit 0 on success.
 const CLI_CHECKS: readonly { name: string; args: readonly string[] }[] = [
   { name: "gh", args: ["gh", "--version"] },
+  { name: "git-lfs", args: ["git-lfs", "--version"] },
   { name: "kubectl", args: ["kubectl", "version", "--client"] },
   { name: "github-mcp-server", args: ["github-mcp-server", "--version"] },
   { name: "talosctl", args: ["talosctl", "version", "--client"] },

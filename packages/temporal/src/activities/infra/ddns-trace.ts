@@ -64,6 +64,66 @@ export function parseCloudflareTraceIp(
   );
 }
 
+export type TraceResponseStream = {
+  readonly complete: boolean;
+  readonly statusCode?: number | undefined;
+  readonly on: {
+    (event: "data", listener: (chunk: Buffer) => void): unknown;
+    (event: "end" | "close", listener: () => void): unknown;
+    (event: "error", listener: (error: Error) => void): unknown;
+  };
+};
+
+function attachTraceResponseHandlers(input: {
+  readonly response: TraceResponseStream;
+  readonly family: 4 | 6;
+  readonly resolve: (body: string) => void;
+  readonly reject: (error: Error) => void;
+}): void {
+  const { response, family, resolve, reject } = input;
+  const chunks: Buffer[] = [];
+  response.on("error", (error) => {
+    reject(error);
+  });
+  response.on("close", () => {
+    if (!response.complete) {
+      reject(
+        new Error(
+          `Cloudflare IPv${String(family)} trace response closed before completion`,
+        ),
+      );
+    }
+  });
+  response.on("data", (chunk: Buffer) => {
+    chunks.push(chunk);
+  });
+  response.on("end", () => {
+    const body = Buffer.concat(chunks).toString("utf8");
+    if (
+      response.statusCode === undefined ||
+      response.statusCode < 200 ||
+      response.statusCode >= 300
+    ) {
+      reject(
+        new Error(
+          `Cloudflare IPv${String(family)} trace returned HTTP ${String(response.statusCode)}`,
+        ),
+      );
+      return;
+    }
+    resolve(body);
+  });
+}
+
+export function readTraceResponse(
+  response: TraceResponseStream,
+  family: 4 | 6,
+): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    attachTraceResponseHandlers({ response, family, resolve, reject });
+  });
+}
+
 export function fetchPublicIpTrace(family: 4 | 6): Promise<string> {
   const targetUrl = new URL(family === 4 ? IPV4_TRACE_URL : IPV6_TRACE_URL);
   return new Promise<string>((resolve, reject) => {
@@ -80,26 +140,7 @@ export function fetchPublicIpTrace(family: 4 | 6): Promise<string> {
         },
       },
       (response) => {
-        const chunks: Buffer[] = [];
-        response.on("data", (chunk: Buffer) => {
-          chunks.push(chunk);
-        });
-        response.on("end", () => {
-          const body = Buffer.concat(chunks).toString("utf8");
-          if (
-            response.statusCode === undefined ||
-            response.statusCode < 200 ||
-            response.statusCode >= 300
-          ) {
-            reject(
-              new Error(
-                `Cloudflare IPv${String(family)} trace returned HTTP ${String(response.statusCode)}`,
-              ),
-            );
-            return;
-          }
-          resolve(body);
-        });
+        attachTraceResponseHandlers({ response, family, resolve, reject });
       },
     );
     request.on("timeout", () => {
