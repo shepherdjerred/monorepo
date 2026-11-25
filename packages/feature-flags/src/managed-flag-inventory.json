@@ -80,6 +80,11 @@
       "key": "golink",
       "name": "Golink",
       "description": "Tailnet shortlink service feature flags."
+    },
+    {
+      "key": "mail",
+      "name": "Mail",
+      "description": "First-party outbound mail broker controls."
     }
   ],
   "flags": [
@@ -4673,6 +4678,30 @@
       "purpose": "Suppress sending the daily ops digest email when the snapshot is healthy and unchanged since the prior clear daily digest, while still recording the run in Hub.",
       "type": "boolean",
       "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "mail-relay-enabled",
+      "owner": "mail",
+      "namespace": "mail",
+      "source": "mail",
+      "purpose": "Drain queued outbound mail from SQLite WAL to Fastmail SMTP submission.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "mail-settings",
+      "owner": "mail",
+      "namespace": "mail",
+      "source": "mail",
+      "purpose": "JSON operational settings for outbound mail retention days, per-caller 10-minute rate limit, and in-cluster SMTP cleartext auth compatibility.",
+      "type": "variant",
+      "default": "{\"retentionDays\":30,\"maxPerClientPerTenMinutes\":200,\"allowCleartextSmtpAuth\":false}",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []

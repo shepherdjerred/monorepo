@@ -145,6 +145,7 @@
     "packages/loaded",
     "packages/macos-ai-subscription-tracker",
     "packages/macos-cross-compiler",
+    "packages/mail",
     "packages/mc-build",
     "packages/mc-harness",
     "packages/media",

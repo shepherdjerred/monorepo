@@ -13,6 +13,7 @@ hold only scoped invariants that agents must keep in context.
 | [delivery](delivery/)                                           | Deployment catalog, immutable version sets, approvals, and durable release execution                      |
 | [golink](golink/)                                               | Tailnet shortlink service with live cluster/platform dynamic aliases and manual overrides                 |
 | [flags](flags/)                                                 | Deployment flag documents, credentialless evaluation, and operator edits                                  |
+| [mail](mail/)                                                   | Outbound mail broker — SQLite WAL outbox, REST submission API, cluster STARTTLS SMTP, and console UI      |
 | [birmel](birmel/)                                               | Discord bot on an explicit AI SDK agent runtime                                                           |
 | [glitter-boys-launcher](glitter-boys-launcher/)                 | Native Rust/egui game installer and launcher for Windows x64                                              |
 | [monarch](monarch/)                                             | AI transaction categorization pipeline for Monarch Money                                                  |

@@ -15,6 +15,7 @@
     { "name": "glitter-boys-launcher", "visibility": "private" },
     { "name": "golink", "visibility": "private" },
     { "name": "macos-cross-compiler", "visibility": "public" },
+    { "name": "mail", "visibility": "private" },
     { "name": "media", "visibility": "private" },
     { "name": "redlib", "visibility": "private" },
     { "name": "scout-for-lol", "visibility": "private" },

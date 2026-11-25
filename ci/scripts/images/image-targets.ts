@@ -42,6 +42,7 @@ export const IMAGE_TARGET_REGISTRY: Readonly<
   },
   flags: { owner: "@shepherdjerred/flags" },
   "storm-stats": { owner: "@shepherdjerred/storm-stats" },
+  mail: { owner: "@shepherdjerred/mail" },
 } as const satisfies Readonly<Record<string, ImageTargetRegistration>>;
 
 export const IMAGE_TARGET_OWNERS: Readonly<Record<string, string>> =

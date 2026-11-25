@@ -1,0 +1,50 @@
+{
+  "name": "@shepherdjerred/mail",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "smoke": "bun src/smoke.ts",
+    "start": "bun src/index.ts",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "bunx eslint --cache . --max-warnings=0"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.6.0",
+    "@hono/bun": "^1.0.1",
+    "@shepherdjerred/feature-flags": "workspace:*",
+    "@shepherdjerred/ops-model": "workspace:*",
+    "@tanstack/react-query": "^5.101.2",
+    "hono": "^4.12.18",
+    "lucide-react": "^1.14.0",
+    "nodemailer": "^10.6.1",
+    "postal-mime": "^4.2.1",
+    "prom-client": "^15.1.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router": "8.4.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@shepherdjerred/console-ui": "workspace:*",
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/bun": "1.4.5",
+    "@types/nodemailer": "^8.0.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-istanbul": "5.0.5",
+    "eslint": "^10.7.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.11",
+    "vitest": "5.0.5"
+  }
+}

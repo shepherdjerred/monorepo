@@ -304,6 +304,7 @@ describe("ManagedFlagInventorySchema", () => {
       "the-storm",
       "storm",
       "golink",
+      "mail",
     ]);
     expect(
       materializeManagedNamespaceEnvironment(
