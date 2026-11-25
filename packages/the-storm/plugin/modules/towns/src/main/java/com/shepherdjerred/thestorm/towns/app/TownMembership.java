@@ -13,4 +13,9 @@ public interface TownMembership {
   default boolean isMember(UUID player, UUID townId) {
     return townIdOf(player).filter(townId::equals).isPresent();
   }
+
+  /** Whether the player manages (owns or assists) the identified town. */
+  default boolean manages(UUID player, UUID townId) {
+    return false;
+  }
 }

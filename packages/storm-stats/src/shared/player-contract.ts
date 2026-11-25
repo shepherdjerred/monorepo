@@ -10,6 +10,7 @@ import {
   NonNegIntSchema,
   NullablePingSchema,
   PlatformSchema,
+  PlayerHomeKindSchema,
   PlayerUuidSchema,
   SessionSummarySchema,
   WeaponStatSchema,
@@ -31,8 +32,10 @@ export type PlayerCombatSummary = z.infer<typeof PlayerCombatSummarySchema>;
 
 export const PlayerGameplayCardSchema = z.strictObject({
   capturedAt: IsoTimestampSchema,
-  coins: NonNegIntSchema,
+  crystals: NonNegIntSchema,
+  rwfCredits: NonNegIntSchema,
   townName: z.string().nullable(),
+  townKind: PlayerHomeKindSchema.nullable(),
   townRole: z.string().nullable(),
   townClaims: NonNegIntSchema,
   powerLevel: NonNegIntSchema,

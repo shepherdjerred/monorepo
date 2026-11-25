@@ -146,6 +146,8 @@ final class IngestContractTest {
             null,
             "default",
             500L,
+            75L,
+            null,
             null,
             null,
             0,
@@ -174,7 +176,7 @@ final class IngestContractTest {
 
     var batch =
         new StatsWire.IngestBatch(
-            1,
+            StatsWire.SCHEMA_VERSION,
             id,
             "The Storm",
             ts,

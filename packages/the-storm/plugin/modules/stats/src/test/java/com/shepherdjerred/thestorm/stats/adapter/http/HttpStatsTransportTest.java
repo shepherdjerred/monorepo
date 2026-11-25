@@ -163,7 +163,7 @@ final class HttpStatsTransportTest {
         assertThat(store.pendingEvents(10).get()).isEmpty();
 
         var delivered = receivedBodies.getLast();
-        assertThat(delivered.required("schemaVersion").asInt()).isEqualTo(1);
+        assertThat(delivered.required("schemaVersion").asInt()).isEqualTo(2);
         assertThat(delivered.required("serverName").asString()).isEqualTo("The Storm");
         assertThat(delivered.required("events").size()).isEqualTo(1);
         assertThat(delivered.required("serverSnapshot").isNull()).isFalse();

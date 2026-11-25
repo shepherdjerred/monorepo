@@ -366,11 +366,11 @@ export function PlayersDirectoryTable({
           />
           <th scope="col">Town</th>
           <SortableTh
-            label="Coins"
+            label="Crystals"
             numeric
-            direction={directionFor("coins")}
+            direction={directionFor("crystals")}
             onActivate={() => {
-              onSort("coins", "Coins");
+              onSort("crystals", "Crystals");
             }}
           />
           <SortableTh
@@ -434,9 +434,15 @@ export function PlayersDirectoryTable({
             <td data-label="Sessions" className="num-col">
               {formatInt(row.sessionsCount)}
             </td>
-            <td data-label="Town">{row.townName ?? "—"}</td>
-            <td data-label="Coins" className="num-col">
-              <span className="pill pill-gold">{formatInt(row.coins)}</span>
+            <td data-label="Town">
+              {row.townName === null
+                ? "—"
+                : row.townKind === "camp"
+                  ? `${row.townName} (Camp)`
+                  : row.townName}
+            </td>
+            <td data-label="Crystals" className="num-col">
+              <span className="pill pill-gold">{formatInt(row.crystals)}</span>
             </td>
             <td data-label="Skill Power" className="num-col">
               {formatInt(row.powerLevel)}

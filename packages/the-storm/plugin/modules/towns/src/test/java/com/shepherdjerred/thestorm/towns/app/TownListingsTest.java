@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.towns.app;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import java.time.Instant;
@@ -21,6 +22,17 @@ final class TownListingsTest {
     var listing = new TownListings(state).list(1);
     assertThat(listing.total()).isEqualTo(2);
     assertThat(listing.towns()).containsExactly(new TownRead.TownSummary("Aegis", 1, 0));
+    assertThat(listing.towns().getFirst().isPlayerTown()).isTrue();
+    assertThat(
+            new TownRead.TownSummary(
+                    "Spawn", 0, 0, HeritageSite.Kind.SERVER, 4, "Staff", "Admin region")
+                .isPlayerTown())
+        .isFalse();
+    assertThat(
+            new TownRead.TownSummary(
+                    "Museum", 0, 0, HeritageSite.Kind.HERITAGE, 2, "Staff", "Archive")
+                .isPlayerTown())
+        .isFalse();
   }
 
   @Test

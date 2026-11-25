@@ -10,7 +10,7 @@ import org.jspecify.annotations.Nullable;
  */
 public final class StatsWire {
 
-  public static final int SCHEMA_VERSION = 1;
+  public static final int SCHEMA_VERSION = 2;
   public static final int MAX_EVENTS_PER_BATCH = 200;
   public static final int MAX_PLAYER_SNAPSHOTS_PER_BATCH = 100;
 
@@ -122,8 +122,10 @@ public final class StatsWire {
       String capturedAt,
       @Nullable String nickname,
       String primaryGroup,
-      long coins,
+      long crystals,
+      long rwfCredits,
       @Nullable String townName,
+      @Nullable String townKind,
       @Nullable String townRole,
       int townClaims,
       int powerLevel,

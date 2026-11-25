@@ -212,7 +212,7 @@ function generatePlayerSessionEvents(
     totalConnected += durMs;
     totalActive += activeMs;
 
-    const world = s === 0 || ctx.rand() < 0.7 ? player.favWorld : "world";
+    const world = s === 0 || ctx.rand() < 0.7 ? player.favWorld : "frontier";
     const mode = s === 0 || ctx.rand() < 0.75 ? player.favMode : "survival";
 
     events.push({
@@ -270,7 +270,7 @@ function flushEventChunks(
   let batches = 0;
   for (let i = 0; i < events.length; i += maxChunk) {
     const batch: IngestBatch = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       batchId: nextBatchId(),
       serverName: "The Storm",
       sentAt,
@@ -358,7 +358,7 @@ export function seedDemoData(
           sessionStartedAt: new Date(dayBaseMs - 2 * HOUR_MS).toISOString(),
         }));
       store.ingestBatch({
-        schemaVersion: 1,
+        schemaVersion: 2,
         batchId: nextBatchId(),
         serverName: "The Storm",
         sentAt: snapTime,
@@ -394,7 +394,7 @@ export function seedDemoData(
   }));
 
   store.ingestBatch({
-    schemaVersion: 1,
+    schemaVersion: 2,
     batchId: nextBatchId(),
     serverName: "The Storm",
     sentAt: nowIso,

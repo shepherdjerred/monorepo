@@ -205,17 +205,19 @@ function applyPlayerSnapshot(db: Database, snap: PlayerGameplaySnapshot): void {
 
   db.query(
     `INSERT INTO player_gameplay (
-      player_uuid, player_name, captured_at, coins,
-      town_name, town_role, town_claims, power_level,
+      player_uuid, player_name, captured_at, crystals, rwf_credits,
+      town_name, town_kind, town_role, town_claims, power_level,
       top_skill, top_skill_level, skills_json, tracks_json,
       quests_completed, arena_waves_json,
       rwf_matches, rwf_wins, rwf_losses, rwf_kills, rwf_deaths
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(player_uuid) DO UPDATE SET
       player_name = excluded.player_name,
       captured_at = excluded.captured_at,
-      coins = excluded.coins,
+      crystals = excluded.crystals,
+      rwf_credits = excluded.rwf_credits,
       town_name = excluded.town_name,
+      town_kind = excluded.town_kind,
       town_role = excluded.town_role,
       town_claims = excluded.town_claims,
       power_level = excluded.power_level,
@@ -234,8 +236,10 @@ function applyPlayerSnapshot(db: Database, snap: PlayerGameplaySnapshot): void {
     snap.playerUuid,
     snap.playerName,
     snap.capturedAt,
-    snap.coins,
+    snap.crystals,
+    snap.rwfCredits,
     snap.townName,
+    snap.townKind,
     snap.townRole,
     snap.townClaims,
     snap.powerLevel,

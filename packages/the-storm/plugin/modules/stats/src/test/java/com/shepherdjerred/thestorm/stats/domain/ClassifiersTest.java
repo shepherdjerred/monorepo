@@ -33,7 +33,9 @@ final class ClassifiersTest {
 
   @Test
   void worldAndModeClassifiersCoverEveryStormWorldAndMinigame() {
+    assertThat(WorldClassifier.classifyWorld("frontier", false)).isEqualTo(WorldBucket.FRONTIER);
     assertThat(WorldClassifier.classifyWorld("world", false)).isEqualTo(WorldBucket.WORLD);
+    assertThat(WorldClassifier.classifyWorld("map2", false)).isEqualTo(WorldBucket.MAP2);
     assertThat(WorldClassifier.classifyWorld("world_nether", false))
         .isEqualTo(WorldBucket.WORLD_NETHER);
     assertThat(WorldClassifier.classifyWorld("world_the_end", false))
@@ -45,19 +47,30 @@ final class ClassifiersTest {
     assertThat(WorldClassifier.classifyWorld("world", true)).isEqualTo(WorldBucket.ARENA);
     assertThat(WorldClassifier.classifyWorld("arena_colosseum", false))
         .isEqualTo(WorldBucket.ARENA);
-    assertThat(WorldClassifier.classifyWorld("frontier", false)).isEqualTo(WorldBucket.OTHER);
+    assertThat(WorldClassifier.classifyWorld("settlement", false)).isEqualTo(WorldBucket.ARENA);
+    assertThat(WorldClassifier.classifyWorld("rustworks", false)).isEqualTo(WorldBucket.ARENA);
+    assertThat(WorldClassifier.classifyWorld("unmapped_custom", false))
+        .isEqualTo(WorldBucket.OTHER);
 
+    assertThat(WorldClassifier.classifyMode(WorldBucket.FRONTIER, false, false))
+        .isEqualTo(GameModeBucket.SURVIVAL);
+    assertThat(WorldClassifier.classifyMode(WorldBucket.MAP2, false, false))
+        .isEqualTo(GameModeBucket.SURVIVAL);
     assertThat(WorldClassifier.classifyMode(WorldBucket.WORLD, false, false))
         .isEqualTo(GameModeBucket.SURVIVAL);
     assertThat(WorldClassifier.classifyMode(WorldBucket.WORLD, false, true))
         .isEqualTo(GameModeBucket.CREATIVE);
     assertThat(WorldClassifier.classifyMode(WorldBucket.CREATIVE, false, false))
         .isEqualTo(GameModeBucket.CREATIVE);
+    assertThat(WorldClassifier.classifyMode(WorldBucket.ARENA, false, false))
+        .isEqualTo(GameModeBucket.ARENA);
     assertThat(WorldClassifier.classifyMode(WorldBucket.ARENA, true, false))
         .isEqualTo(GameModeBucket.ARENA);
     assertThat(WorldClassifier.classifyMode(WorldBucket.RWF, false, false))
         .isEqualTo(GameModeBucket.RWF);
 
+    assertThat(WorldClassifier.isSurvivalCombatWorld(WorldBucket.FRONTIER, false)).isTrue();
+    assertThat(WorldClassifier.isSurvivalCombatWorld(WorldBucket.MAP2, false)).isTrue();
     assertThat(WorldClassifier.isSurvivalCombatWorld(WorldBucket.WORLD, false)).isTrue();
     assertThat(WorldClassifier.isSurvivalCombatWorld(WorldBucket.OTHER, false)).isTrue();
     assertThat(WorldClassifier.isSurvivalCombatWorld(WorldBucket.WORLD, true)).isFalse();

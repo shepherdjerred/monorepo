@@ -2,14 +2,15 @@ import type { Database } from "bun:sqlite";
 import {
   GAME_MODES,
   GameModeSchema,
+  MODE_LABELS,
   WORLD_BUCKETS,
+  WORLD_LABELS,
   WorldBucketSchema,
   type GameMode,
   type ModeShare,
   type WorldBucket,
   type WorldShare,
 } from "@shepherdjerred/storm-stats/shared/contract.ts";
-import { MODE_LABELS, WORLD_LABELS } from "./schema.ts";
 import { msToHours, safePercent } from "./time.ts";
 
 export function buildWorldShares(

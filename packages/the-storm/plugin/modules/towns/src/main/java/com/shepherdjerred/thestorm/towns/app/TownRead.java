@@ -52,5 +52,9 @@ public interface TownRead {
           "Player town",
           "Player claims");
     }
+
+    public boolean isPlayerTown() {
+      return kind == com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite.Kind.PLAYER;
+    }
   }
 }

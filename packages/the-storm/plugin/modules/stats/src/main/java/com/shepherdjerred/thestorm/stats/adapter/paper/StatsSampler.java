@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -38,8 +37,10 @@ import org.slf4j.Logger;
 public final class StatsSampler {
 
   private static final int TOWN_PAGE_SIZE = 25;
-  private static final int MAX_TOWN_PAGES = 4;
+  private static final int MAX_TOWN_PAGES = 20;
+  private static final int MAX_TOWN_SUMMARIES = 200;
   private static final int MAX_ONLINE_SUMMARY = 256;
+  private static final long MAX_BALANCE = 9_000_000_000_000_000L;
 
   private final Server server;
   private final StatsService service;
@@ -132,7 +133,9 @@ public final class StatsSampler {
     }
     var initialAt = Instant.ofEpochMilli(time.instant().toEpochMilli());
     var townNamesById =
-        ports.townMembership().flatMap(m -> m.townIdOf(player.getUniqueId())).isPresent()
+        ports.townMembership().isPresent()
+                && !(ports.townMembership().orElseThrow() instanceof TownsState)
+                && ports.townMembership().flatMap(m -> m.townIdOf(player.getUniqueId())).isPresent()
             ? readTownsOnMainThread().namesById()
             : Map.<UUID, String>of();
     var capture = captureMainThreadPlayer(player, initialAt, townNamesById);
@@ -163,49 +166,87 @@ public final class StatsSampler {
     var townRead = ports.townRead().orElseThrow();
     var summaries = new ArrayList<StatsWire.TownSummarySnapshot>();
     var namesById = new HashMap<UUID, String>();
-    int total = 0;
+    int scanned = 0;
     for (int page = 1; page <= MAX_TOWN_PAGES; page++) {
       var listing = townRead.page(page, TOWN_PAGE_SIZE);
-      total = listing.total();
       if (listing.towns().isEmpty()) {
         break;
       }
       for (var summary : listing.towns()) {
-        summaries.add(toTownWire(summary));
+        scanned++;
         ports
             .townDirectory()
             .flatMap(dir -> dir.named(summary.name()))
             .map(NamedTown::id)
             .ifPresent(id -> namesById.put(id, summary.name()));
+        if (summary.isPlayerTown() && summaries.size() < MAX_TOWN_SUMMARIES) {
+          summaries.add(toTownWire(summary));
+        }
       }
-      if (summaries.size() >= total) {
+      if (scanned >= listing.total()) {
         break;
       }
     }
-    return new TownsCapture(Math.max(0, total), List.copyOf(summaries), Map.copyOf(namesById));
+    var immutableSummaries = List.copyOf(summaries);
+    return new TownsCapture(immutableSummaries.size(), immutableSummaries, Map.copyOf(namesById));
   }
 
   private static StatsWire.TownSummarySnapshot toTownWire(TownRead.TownSummary summary) {
-    var name = summary.name().strip();
+    var name = boundTownName(summary.name());
     if (name.isEmpty()) {
       name = "Unknown";
-    } else if (name.length() > 80) {
-      name = name.substring(0, 80);
     }
-    Object rawKind = summary.kind();
-    var kind = String.valueOf(rawKind).toLowerCase(Locale.ROOT);
-    if (kind.isEmpty()) {
-      kind = "player";
-    } else if (kind.length() > 40) {
-      kind = kind.substring(0, 40);
-    }
+    int totalClaims = Math.max(0, summary.claims() + summary.protectedChunks());
     return new StatsWire.TownSummarySnapshot(
-        name, Math.max(0, summary.members()), Math.max(0, summary.claims()), kind);
+        name, Math.max(0, summary.members()), totalClaims, "player");
+  }
+
+  private static String boundTownName(String rawName) {
+    var stripped = rawName.strip();
+    return stripped.length() > 80 ? stripped.substring(0, 80) : stripped;
   }
 
   private MainThreadPlayerCapture captureMainThreadPlayer(
       Player player, Instant capturedAt, Map<UUID, String> townNamesById) {
     var uuid = player.getUniqueId();
+    var affiliation = resolvePlayerAffiliation(uuid, townNamesById);
+    return new MainThreadPlayerCapture(
+        uuid,
+        CombatClassifier.boundName(player.getName()),
+        capturedAt,
+        stateReader.nickname(player),
+        stateReader.primaryGroup(player),
+        affiliation,
+        captureTracks(player),
+        captureQuestsCompleted(uuid));
+  }
+
+  private PlayerAffiliation resolvePlayerAffiliation(UUID uuid, Map<UUID, String> townNamesById) {
+    if (ports.townMembership().isEmpty()) {
+      return PlayerAffiliation.NONE;
+    }
+    var membership = ports.townMembership().orElseThrow();
+    if (membership instanceof TownsState state) {
+      return resolveFromTownsState(state, uuid);
+    }
+    return resolveFromFallbackPorts(uuid, townNamesById);
+  }
+
+  private static PlayerAffiliation resolveFromTownsState(TownsState state, UUID uuid) {
+    var residency = state.memberResidency(uuid);
+    if (residency.isEmpty()) {
+      return PlayerAffiliation.NONE;
+    }
+    var found = residency.orElseThrow();
+    var townName = boundTownName(found.name());
+    if (townName.isEmpty()) {
+      return PlayerAffiliation.NONE;
+    }
+    return new PlayerAffiliation(
+        townName, found.kind(), found.role(), Math.max(0, found.totalClaims()));
+  }
+
+  private PlayerAffiliation resolveFromFallbackPorts(UUID uuid, Map<UUID, String> townNamesById) {
     int townClaims =
         ports
             .townRead()
@@ -214,26 +255,19 @@ public final class StatsSampler {
             .map(OptionalInt::getAsInt)
             .orElse(0);
     var townId = ports.townMembership().flatMap(m -> m.townIdOf(uuid));
-    @Nullable String townName = null;
-    @Nullable String townRole = null;
-    if (townId.isPresent()) {
-      var resolvedName = townNamesById.get(townId.orElseThrow());
-      if (resolvedName != null && !resolvedName.isBlank()) {
-        townName = resolvedName.length() > 80 ? resolvedName.substring(0, 80) : resolvedName;
-        townRole = resolveTownRole(uuid, townId.orElseThrow());
-      }
+    if (townId.isEmpty()) {
+      return new PlayerAffiliation(null, null, null, Math.max(0, townClaims));
     }
-    return new MainThreadPlayerCapture(
-        uuid,
-        CombatClassifier.boundName(player.getName()),
-        capturedAt,
-        stateReader.nickname(player),
-        stateReader.primaryGroup(player),
-        townName,
-        townRole,
-        Math.max(0, townClaims),
-        captureTracks(player),
-        captureQuestsCompleted(uuid));
+    var resolvedName = townNamesById.get(townId.orElseThrow());
+    if (resolvedName == null || resolvedName.isBlank()) {
+      return new PlayerAffiliation(null, null, null, Math.max(0, townClaims));
+    }
+    var townName = boundTownName(resolvedName);
+    var townRole =
+        ports.townMembership().orElseThrow().manages(uuid, townId.orElseThrow())
+            ? "assistant"
+            : "member";
+    return new PlayerAffiliation(townName, "town", townRole, Math.max(0, townClaims));
   }
 
   private @Nullable Map<String, Integer> captureTracks(Player player) {
@@ -259,38 +293,30 @@ public final class StatsSampler {
     return counted.isPresent() ? Math.max(0, counted.getAsInt()) : null;
   }
 
-  private String resolveTownRole(UUID playerUuid, UUID townId) {
-    if (ports.townMembership().isPresent()
-        && ports.townMembership().orElseThrow() instanceof TownsState state
-        && state.manages(playerUuid, townId)) {
-      return "officer";
-    }
-    return "member";
-  }
-
   private CompletableFuture<StatsWire.PlayerGameplaySnapshot> enrichOffThread(
       MainThreadPlayerCapture base) {
-    var coinsFuture = readCoins(base.playerUuid());
+    var balancesFuture = readBalances(base.playerUuid());
     var skillsFuture = readSkills(base.playerUuid());
     var wavesFuture = readArenaWaves(base.playerUuid());
     var rwfFuture = readRwfTotals(base.playerUuid());
 
-    return coinsFuture
-        .thenCombine(skillsFuture, CoinsAndSkills::new)
+    return balancesFuture
+        .thenCombine(skillsFuture, BalancesAndSkills::new)
         .thenCombine(
-            wavesFuture, (cs, waves) -> new EnrichedProgress(cs.coins(), cs.skills(), waves))
+            wavesFuture, (bs, waves) -> new EnrichedProgress(bs.balances(), bs.skills(), waves))
         .thenCombine(rwfFuture, (progress, rwf) -> buildPlayerSnapshot(base, progress, rwf));
   }
 
-  private CompletableFuture<Long> readCoins(UUID playerUuid) {
+  private CompletableFuture<WalletBalances> readBalances(UUID playerUuid) {
     if (ports.wallets().isEmpty()) {
-      return CompletableFuture.completedFuture(0L);
+      return CompletableFuture.completedFuture(WalletBalances.ZERO);
     }
-    return ports
-        .wallets()
-        .orElseThrow()
-        .balance(new AccountId.Player(playerUuid), CurrencyId.CRYSTALS)
-        .thenApply(Money::amount);
+    var wallets = ports.wallets().orElseThrow();
+    var account = new AccountId.Player(playerUuid);
+    var crystalsFuture = wallets.balance(account, CurrencyId.CRYSTALS).thenApply(Money::amount);
+    var rwfCreditsFuture =
+        wallets.balance(account, CurrencyId.RWF_CREDITS).thenApply(Money::amount);
+    return crystalsFuture.thenCombine(rwfCreditsFuture, WalletBalances::new);
   }
 
   private CompletableFuture<SkillSnapshot> readSkills(UUID playerUuid) {
@@ -357,7 +383,8 @@ public final class StatsSampler {
     int rwfLosses = rwfTotals.map(t -> Math.max(0, t.losses())).orElse(0);
     int rwfKills = rwfTotals.map(t -> Math.max(0, t.kills())).orElse(0);
     int rwfDeaths = rwfTotals.map(t -> Math.max(0, t.deaths())).orElse(0);
-    long clampedCoins = Math.clamp(progress.coins(), 0L, 9_000_000_000_000_000L);
+    long clampedCrystals = Math.clamp(progress.balances().crystals(), 0L, MAX_BALANCE);
+    long clampedRwfCredits = Math.clamp(progress.balances().rwfCredits(), 0L, MAX_BALANCE);
 
     return new StatsWire.PlayerGameplaySnapshot(
         base.playerUuid().toString(),
@@ -365,10 +392,12 @@ public final class StatsSampler {
         base.capturedAt().toString(),
         base.nickname(),
         base.primaryGroup(),
-        clampedCoins,
-        base.townName(),
-        base.townRole(),
-        base.townClaims(),
+        clampedCrystals,
+        clampedRwfCredits,
+        base.affiliation().townName(),
+        base.affiliation().townKind(),
+        base.affiliation().townRole(),
+        base.affiliation().townClaims(),
         progress.skills().powerLevel(),
         progress.skills().topSkill(),
         progress.skills().topSkillLevel(),
@@ -386,15 +415,21 @@ public final class StatsSampler {
   private record TownsCapture(
       int totalTowns, List<StatsWire.TownSummarySnapshot> summaries, Map<UUID, String> namesById) {}
 
+  private record PlayerAffiliation(
+      @Nullable String townName,
+      @Nullable String townKind,
+      @Nullable String townRole,
+      int townClaims) {
+    static final PlayerAffiliation NONE = new PlayerAffiliation(null, null, null, 0);
+  }
+
   private record MainThreadPlayerCapture(
       UUID playerUuid,
       String playerName,
       Instant capturedAt,
       @Nullable String nickname,
       String primaryGroup,
-      @Nullable String townName,
-      @Nullable String townRole,
-      int townClaims,
+      PlayerAffiliation affiliation,
       @Nullable Map<String, Integer> tracks,
       @Nullable Integer questsCompleted) {
     MainThreadPlayerCapture withCapturedAt(Instant updatedAt) {
@@ -404,9 +439,7 @@ public final class StatsSampler {
           updatedAt,
           nickname,
           primaryGroup,
-          townName,
-          townRole,
-          townClaims,
+          affiliation,
           tracks,
           questsCompleted);
     }
@@ -417,8 +450,12 @@ public final class StatsSampler {
     static final SkillSnapshot EMPTY = new SkillSnapshot(0, null, 0, Map.of());
   }
 
-  private record CoinsAndSkills(long coins, SkillSnapshot skills) {}
+  private record WalletBalances(long crystals, long rwfCredits) {
+    static final WalletBalances ZERO = new WalletBalances(0L, 0L);
+  }
+
+  private record BalancesAndSkills(WalletBalances balances, SkillSnapshot skills) {}
 
   private record EnrichedProgress(
-      long coins, SkillSnapshot skills, Map<String, Integer> arenaWaves) {}
+      WalletBalances balances, SkillSnapshot skills, Map<String, Integer> arenaWaves) {}
 }

@@ -15,3 +15,14 @@ dependencies {
   testImplementation(libs.findLibrary("luckperms-api").get())
   testImplementation(libs.findLibrary("mockito").get())
 }
+
+tasks.test {
+  inputs
+      .file(layout.projectDirectory.file("../../../server/owned/plugins/TheStorm/stats.yml"))
+      .withPathSensitivity(PathSensitivity.RELATIVE)
+      .withPropertyName("ownedStatsConfig")
+  inputs
+      .file(layout.projectDirectory.file("../../../../storm-stats/contracts/ingest-v1.json"))
+      .withPathSensitivity(PathSensitivity.RELATIVE)
+      .withPropertyName("ingestContract")
+}

@@ -110,10 +110,11 @@ function formatTownBadge(gameplay: PlayerGameplayCard | null): string | null {
   if (townName === null) {
     return null;
   }
+  const campPrefix = gameplay?.townKind === "camp" ? "Camp · " : "";
   const townRole = gameplay?.townRole ?? null;
   return townRole === null
-    ? townName
-    : `${townName} · ${formatTitleIdentifier(townRole)}`;
+    ? `${campPrefix}${townName}`
+    : `${campPrefix}${townName} · ${formatTitleIdentifier(townRole)}`;
 }
 
 function PlayerIdentityHeader({
@@ -239,7 +240,9 @@ function PlayerProfileLoaded({
       tabDomId: gameplayTabDomId,
       label: "Storm Gameplay",
       badge:
-        gameplay === null ? undefined : `Lv ${formatInt(gameplay.powerLevel)}`,
+        gameplay === null || gameplay.powerLevel === 0
+          ? undefined
+          : `Power ${formatInt(gameplay.powerLevel)}`,
     },
     {
       id: "combat",

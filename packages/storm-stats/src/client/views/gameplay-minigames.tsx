@@ -1,9 +1,9 @@
 import { Swords, Trophy } from "lucide-react";
 import type { GameplayOverviewResponse } from "@shepherdjerred/storm-stats/shared/gameplay-contract.ts";
 import {
+  formatArenaLabel,
   formatInt,
   formatKdr,
-  formatTitleIdentifier,
 } from "@shepherdjerred/storm-stats/client/format.ts";
 import type { ColumnAccessor } from "@shepherdjerred/storm-stats/client/sort.ts";
 import {
@@ -32,7 +32,7 @@ const RWF_ACCESSORS: Readonly<
 const ARENA_ACCESSORS: Readonly<
   Record<"arena" | "name" | "bestWave", ColumnAccessor<ArenaRow>>
 > = {
-  arena: { kind: "text", getValue: (row) => row.arena },
+  arena: { kind: "text", getValue: (row) => formatArenaLabel(row.arena) },
   name: { kind: "text", getValue: (row) => row.name },
   bestWave: { kind: "number", getValue: (row) => row.bestWave },
 };
@@ -71,13 +71,15 @@ export function RwfLeaderboardCard({
             aria-hidden="true"
             style={{ verticalAlign: "-3px" }}
           />{" "}
-          Search &amp; Destroy (RWF)
+          Search and Destroy
         </h2>
       </div>
       {sortedRows.length === 0 ? (
-        <p className="panel-subtitle">No RWF career records yet.</p>
+        <p className="panel-subtitle">
+          No Search and Destroy match records yet.
+        </p>
       ) : (
-        <ResponsiveTable caption="Search and Destroy RWF leaderboard" compact>
+        <ResponsiveTable caption="Search and Destroy leaderboard" compact>
           <thead>
             <tr>
               <SortableTh label="Player" {...headerProps("name")} />
@@ -152,7 +154,7 @@ export function MobArenaCard({ rows }: { readonly rows: readonly ArenaRow[] }) {
           <tbody>
             {sortedRows.map((row) => (
               <tr key={`${row.arena}-${row.uuid}`}>
-                <th scope="row">{formatTitleIdentifier(row.arena)}</th>
+                <th scope="row">{formatArenaLabel(row.arena)}</th>
                 <td data-label="Champion">
                   <PlayerIdentityLink uuid={row.uuid} name={row.name} />
                 </td>

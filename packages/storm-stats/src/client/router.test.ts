@@ -47,7 +47,7 @@ describe("client router and API URL builders", () => {
   test("parses and round-trips players directory query parameters", () => {
     const parsed = parseRoute(
       "/players",
-      "?q=Jerred&group=regular&platform=java&sort=coins&dir=asc&page=3&pageSize=50",
+      "?q=Jerred&group=regular&platform=java&sort=crystals&dir=asc&page=3&pageSize=50",
     );
     expect(parsed).toEqual({
       kind: "players",
@@ -55,7 +55,7 @@ describe("client router and API URL builders", () => {
         q: "Jerred",
         group: "regular",
         platform: "java",
-        sort: "coins",
+        sort: "crystals",
         dir: "asc",
         page: 3,
         pageSize: 50,
@@ -64,10 +64,10 @@ describe("client router and API URL builders", () => {
 
     if (parsed.kind === "players") {
       expect(buildRouteHref(parsed)).toBe(
-        "/players?q=Jerred&group=regular&platform=java&sort=coins&dir=asc&page=3&pageSize=50",
+        "/players?q=Jerred&group=regular&platform=java&sort=crystals&dir=asc&page=3&pageSize=50",
       );
       expect(buildPlayersApiUrl(parsed.query)).toBe(
-        "/api/v1/players?q=Jerred&group=regular&platform=java&sort=coins&dir=asc&page=3&pageSize=50",
+        "/api/v1/players?q=Jerred&group=regular&platform=java&sort=crystals&dir=asc&page=3&pageSize=50",
       );
     }
 
@@ -79,7 +79,7 @@ describe("client router and API URL builders", () => {
   test("parses and builds staff query builder filters", () => {
     const parsed = parseRoute(
       "/staff/query",
-      "?registeredAfter=2026-01-01&minPlaytimeHours=10&activityGroups=regular,active&platform=bedrock&town=Spawn&countryCode=us&hasBounce=true",
+      "?registeredAfter=2026-01-01&minPlaytimeHours=10&activityGroups=regular,active&platform=bedrock&town=Altaria&countryCode=us&hasBounce=true",
     );
     expect(parsed).toEqual({
       kind: "staff-query",
@@ -89,7 +89,7 @@ describe("client router and API URL builders", () => {
         minPlaytimeHours: "10",
         activityGroups: ["regular", "active"],
         platform: "bedrock",
-        town: "Spawn",
+        town: "Altaria",
         countryCode: "US",
         hasBounce: true,
       },
@@ -102,7 +102,7 @@ describe("client router and API URL builders", () => {
       expect(Object.fromEntries(urlObj.searchParams.entries())).toEqual({
         registeredAfter: "2026-01-01",
         minPlaytimeHours: "10",
-        town: "Spawn",
+        town: "Altaria",
         countryCode: "US",
         activityGroups: "regular,active",
         platform: "bedrock",

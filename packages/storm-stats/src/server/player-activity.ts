@@ -1,11 +1,13 @@
 import type { Database } from "bun:sqlite";
 import {
   GameModeSchema,
+  PlayerHomeKindSchema,
   WorldBucketSchema,
   type ActivityGroup,
   type GameMode,
   type OnlinePlayerSummary,
   type PlayerDirectoryRow,
+  type PlayerHomeKind,
   type PlayerbaseBreakdown,
   type SessionSummary,
   type ViewerRole,
@@ -325,6 +327,16 @@ export type DirectoryRowBuildContext = {
   readonly viewer: ViewerRole;
 };
 
+export function parsePlayerHomeKind(
+  raw: string | null | undefined,
+): PlayerHomeKind | null {
+  if (raw === null || raw === undefined) {
+    return null;
+  }
+  const parsed = PlayerHomeKindSchema.safeParse(raw);
+  return parsed.success ? parsed.data : null;
+}
+
 export function buildPlayerDirectoryRow(
   row: PlayerRow,
   ctx: DirectoryRowBuildContext,
@@ -357,8 +369,9 @@ export function buildPlayerDirectoryRow(
       ctx.primaryWorldByUuid.get(row.uuid) ?? onlineEntry?.world ?? "world",
     primaryMode:
       ctx.primaryModeByUuid.get(row.uuid) ?? onlineEntry?.mode ?? "survival",
-    coins: gameplay?.coins ?? 0,
+    crystals: gameplay?.crystals ?? 0,
     townName: gameplay?.town_name ?? null,
+    townKind: parsePlayerHomeKind(gameplay?.town_kind),
     powerLevel: gameplay?.power_level ?? 0,
     pvpKills: row.pvp_kills,
     pvpDeaths: row.pvp_deaths,

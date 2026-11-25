@@ -89,8 +89,8 @@ export function PvpView() {
             PvP &amp; PvE Combat
           </h1>
           <p className="page-subtitle">
-            Survival &amp; arena combat leaderboards, deadliest weapons, mob
-            encounters, and the latest 100 combat events.
+            Survival PvP &amp; PvE combat leaderboards, deadliest weapons, mob
+            encounters, and the latest 40 combat events.
           </p>
         </div>
       </div>
