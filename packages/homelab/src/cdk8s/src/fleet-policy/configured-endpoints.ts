@@ -60,6 +60,15 @@ const UPSTREAM_BACKENDS: readonly UpstreamBackend[] = [
       "app.kubernetes.io/component": "gateway",
     },
   },
+  {
+    namespace: "tempo",
+    service: "tempo",
+    ports: new Map([[3200, 3200]]),
+    labels: {
+      "app.kubernetes.io/name": "tempo",
+      "app.kubernetes.io/instance": "tempo",
+    },
+  },
 ];
 
 /** Loki's OTLP/HTTP logs receiver, through its gateway. */

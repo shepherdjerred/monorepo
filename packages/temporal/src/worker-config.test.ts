@@ -275,7 +275,11 @@ describe("Ops activity isolation", () => {
     expect(Object.keys(opsWorkerActivities)).not.toContain(
       "refreshHomelabCrdImports",
     );
+    expect(Object.keys(opsWorkerActivities)).not.toContain(
+      "syncLlmArchiveIndex",
+    );
     expect(activityNamesFor("infra")).toContain("collectOpsKubernetes");
+    expect(activityNamesFor("infra")).toContain("syncLlmArchiveIndex");
   });
 });
 

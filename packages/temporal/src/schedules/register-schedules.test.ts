@@ -485,6 +485,29 @@ describe("ops overview schedules", () => {
       paused: false,
     });
   });
+
+  test("llm-archive-index runs every 15 minutes in UTC and starts paused until cutover", () => {
+    const schedule = findScheduleById("llm-archive-index");
+    expect(schedule).toMatchObject({
+      workflowType: "runLlmArchiveIndex",
+      args: [{}],
+      timing: {
+        kind: "cron",
+        expression: "*/15 * * * *",
+        timezone: "UTC",
+      },
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      overlap: ScheduleOverlapPolicy.SKIP,
+      workflowExecutionTimeout: "25 minutes",
+      memo: "Every-15-minute SeaweedFS llm-archive S3 metadata sync into Hub SQLite index",
+      initialPauseNote:
+        "Awaiting 100% candidate traffic for runLlmArchiveIndex; stable workers do not register this Workflow",
+    });
+    expect(buildScheduleState(schedule, {})).toEqual({
+      paused: true,
+      note: schedule.initialPauseNote,
+    });
+  });
 });
 
 test.each([
@@ -568,6 +591,9 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // Awaits a single bounded enrichRenovateVersionDeltas Activity on the ops
   // queue. No workflow-level sleeps.
   "runRenovateDeltaEnrichment",
+  // Loops up to five bounded syncLlmArchiveIndex Activities on the infra queue
+  // and continues as new if more objects remain; no workflow-level sleeps.
+  "runLlmArchiveIndex",
   // These workflows await one direct maintenance activity; the activity
   // timeout and retry policy are the relevant execution budget.
   "runBunCacheGcWorkflow",

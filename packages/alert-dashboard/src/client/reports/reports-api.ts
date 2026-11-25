@@ -29,7 +29,7 @@ export function isReportsNotFound(error: unknown): boolean {
   return error instanceof ReportsApiError && error.status === 404;
 }
 
-async function fetchReportsJson<T extends z.ZodType>(
+export async function fetchReportsJson<T extends z.ZodType>(
   path: string,
   schema: T,
   signal?: AbortSignal,

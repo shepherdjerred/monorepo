@@ -1088,6 +1088,17 @@ continuation cursors and deletion receipts remain in Workflow results; logs alon
 are deleted. See the [operator procedure](../docs/wiki/src/content/docs/how-to/retain-woodpecker-logs.md)
 for candidate rollout, dry-run review and activation.
 
+The `llm-archive-index` schedule runs every 15 minutes in UTC (`SKIP` overlap,
+initially paused during candidate rollout), executing `runLlmArchiveIndex` on
+`monorepo-workflows` and `syncLlmArchiveIndex` on the serial `infra` queue. It
+reads per-`<prefix>/<service>/<provider>` date watermarks from Hub
+(`GET /api/traces/internal/watermarks`), scans gzipped envelopes in SeaweedFS
+`llm-archive` (overlapping yesterday and today UTC so late midnight writes are
+caught), extracts compact span metadata while discarding prompt/response bodies
+after parsing, posts 200-row batches with 366-day retention pruning to
+`POST /api/traces/internal/ingest`, and continues as new across bounded
+5-chunk runs during multi-month backfills.
+
 The agent worker keeps the Temporal poller at UID 0 and launches provider
 subprocesses at UID 1001. The owner firewall blocks provider access to Temporal.
 The worker retains only `SETUID`, `SETGID`, `CHOWN`, `DAC_OVERRIDE`, and

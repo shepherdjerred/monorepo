@@ -34,6 +34,7 @@ import {
   redditOutreachPostsFixture,
 } from "#test-fixtures/promotion";
 import { seedReportFixtures } from "#test-fixtures/reports-fixture";
+import { createFixtureTracesServerModule } from "../src/modules/traces/fixtures.ts";
 
 const alert = AlertDetailSchema.parse({
   id: `alert_${"a".repeat(32)}`,
@@ -401,6 +402,9 @@ opsFixture.repository.alertLedger = [
     summary: "scout-beta worker restarted repeatedly",
   },
 ];
+const tracesFixture = createFixtureTracesServerModule({
+  opsIngestToken: "fixture-ops-ingest-token-with-32-characters",
+});
 const app = createApp({
   service,
   changes: new ChangeBus(),
@@ -410,6 +414,7 @@ const app = createApp({
   digests: opsFixture.digests,
   reports: opsFixture.reports,
   opsIngestToken: "fixture-ops-ingest-token-with-32-characters",
+  modules: [tracesFixture.module],
 });
 const port = Number(
   Bun.argv[2] ?? Bun.env["ALERT_DASHBOARD_E2E_PORT"] ?? "17341",

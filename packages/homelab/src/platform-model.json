@@ -537,6 +537,11 @@
     },
     {
       "bucket": "llm-archive",
+      "namespace": "alert-dashboard",
+      "env": "LLM_ARCHIVE_S3_BUCKET"
+    },
+    {
+      "bucket": "llm-archive",
       "namespace": "arcade",
       "env": "LLM_ARCHIVE_S3_BUCKET"
     },

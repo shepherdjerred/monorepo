@@ -9,22 +9,22 @@ schema mismatches with an `UpstreamError`. The error message is bounded and
 never includes the upstream body, so callers can show it in a snapshot
 without leaking payloads.
 
-| Module            | Upstream and what it reads                                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `prometheus.ts`   | Instant and range PromQL queries.                                                                                         |
-| `kubernetes.ts`   | Nodes, non-completed pods, ArgoCD history, and Velero Schedules with required owner-published monitoring annotations.     |
-| `alertmanager.ts` | Unsilenced, uninhibited firing alerts and active silences (v2 API).                                                       |
-| `bugsink.ts`      | Projects, unresolved issues, and bounded-concurrency project summaries on the configured origin only.                     |
-| `github.ts`       | GraphQL + REST: open PRs (exact-head review), merged PRs, rate limits, PR bodies, upstream releases, and commit compares. |
-| `renovate.ts`     | Pure parser for Dependency Dashboard markers, Ignored/Blocked items, deprecations, lookup warnings, and truncation.       |
-| `tracker.ts`      | Credentialless tRPC: open issues, active forum notices/questions, per-project counts, and 7d completed throughput.        |
-| `posthog.ts`      | HogQL: 24h pageviews, top pages, 7d site traffic summaries, p75 web vitals, external referrers, and funnel windows.       |
-| `loki.ts`         | Instant LogQL queries (severity error lines, 24h byte volume, 1h Kubernetes warning events) and Ruler rule counts.        |
-| `cloudflare.ts`   | Zones, DNSSEC + SPF/DMARC/MX/MTA-STS baselines, R2 buckets + GraphQL storage metrics, Tunnel routes, and RDAP expiry.     |
-| `tailscale.ts`    | Tailnet devices (`?fields=all`) via API key or OAuth client credentials with normalized control status and key expiry.    |
-| `golink.ts`       | Golink `/api/links` directory normalized by slug, tier, clicks, and shadowed target metadata.                             |
-| `tempo.ts`        | TraceQL search for error and slow traces; flags a full result page as truncated.                                          |
-| `woodpecker.ts`   | The newest push pipeline and the newest verdict of a branch.                                                              |
+| Module            | Upstream and what it reads                                                                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prometheus.ts`   | Instant and range PromQL queries.                                                                                                                                               |
+| `kubernetes.ts`   | Nodes, non-completed pods, ArgoCD history, and Velero Schedules with required owner-published monitoring annotations.                                                           |
+| `alertmanager.ts` | Unsilenced, uninhibited firing alerts and active silences (v2 API).                                                                                                             |
+| `bugsink.ts`      | Projects, unresolved issues, and bounded-concurrency project summaries on the configured origin only.                                                                           |
+| `github.ts`       | GraphQL + REST: open PRs (exact-head review), merged PRs, rate limits, PR bodies, upstream releases, and commit compares.                                                       |
+| `renovate.ts`     | Pure parser for Dependency Dashboard markers, Ignored/Blocked items, deprecations, lookup warnings, and truncation.                                                             |
+| `tracker.ts`      | Credentialless tRPC: open issues, active forum notices/questions, per-project counts, and 7d completed throughput.                                                              |
+| `posthog.ts`      | HogQL: 24h pageviews, top pages, 7d site traffic summaries, p75 web vitals, external referrers, and funnel windows.                                                             |
+| `loki.ts`         | Instant LogQL queries (severity error lines, 24h byte volume, 1h Kubernetes warning events) and Ruler rule counts.                                                              |
+| `cloudflare.ts`   | Zones, DNSSEC + SPF/DMARC/MX/MTA-STS baselines, R2 buckets + GraphQL storage metrics, Tunnel routes, and RDAP expiry.                                                           |
+| `tailscale.ts`    | Tailnet devices (`?fields=all`) via API key or OAuth client credentials with normalized control status and key expiry.                                                          |
+| `golink.ts`       | Golink `/api/links` directory normalized by slug, tier, clicks, and shadowed target metadata.                                                                                   |
+| `tempo.ts`        | TraceQL search (with `spss` span-set and `serviceStats` enrichment), OTLP JSON `getTrace`, `/ready` health check, and `buildLlmTraceQl`; flags a full result page as truncated. |
+| `woodpecker.ts`   | The newest push pipeline and the newest verdict of a branch.                                                                                                                    |
 
 Unknown enum values from an upstream (a new Argo health, a Woodpecker status,
 a Tracker state type) fail schema validation instead of being guessed.

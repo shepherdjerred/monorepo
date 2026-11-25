@@ -39,6 +39,16 @@ const EnvironmentSchema = z
     TELEMETRY_ENABLED: BooleanTextSchema.default(false),
     OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
     OTEL_SERVICE_NAME: z.string().min(1).default("alert-dashboard"),
+    TEMPO_URL: z.url().optional(),
+    TRACES_INDEX_DB_PATH: z
+      .string()
+      .min(1)
+      .default("/data/llm-traces-index.db"),
+    LLM_ARCHIVE_S3_BUCKET: z.string().min(1).optional(),
+    LLM_ARCHIVE_S3_PREFIX: z.string().min(1).default("llm"),
+    S3_ENDPOINT: z.url().optional(),
+    AWS_ACCESS_KEY_ID: z.string().min(1).optional(),
+    AWS_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   })
   .superRefine((value, context) => {
     if (
@@ -51,6 +61,24 @@ const EnvironmentSchema = z
           "OTEL_EXPORTER_OTLP_ENDPOINT is required when TELEMETRY_ENABLED=true",
         path: ["OTEL_EXPORTER_OTLP_ENDPOINT"],
       });
+    }
+    const archiveKeys = [
+      "LLM_ARCHIVE_S3_BUCKET",
+      "S3_ENDPOINT",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+    ] as const;
+    const anyArchiveSet = archiveKeys.some((key) => value[key] !== undefined);
+    if (anyArchiveSet) {
+      for (const key of archiveKeys) {
+        if (value[key] === undefined) {
+          context.addIssue({
+            code: "custom",
+            message: `${key} is required when any LLM archive S3 setting is provided`,
+            path: [key],
+          });
+        }
+      }
     }
     if (!value.EMAIL_ENABLED) return;
     for (const key of [

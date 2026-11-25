@@ -45,6 +45,17 @@ const config = [
     files: ["playwright.config.ts", "prisma.config.ts"],
     rules: { "custom-rules/prefer-bun-apis": "off" },
   },
+  {
+    files: [
+      "src/client/modules.ts",
+      "src/server/modules.ts",
+      "e2e/server.ts",
+      "e2e/traces.spec.ts",
+    ],
+    // `package.json#imports` has no `#modules/*` alias; composition roots and
+    // E2E harnesses mount feature modules from `src/modules/<id>/`.
+    rules: { "custom-rules/no-parent-imports": "off" },
+  },
 ];
 
 export default config;

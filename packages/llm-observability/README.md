@@ -103,6 +103,21 @@ unchanged; a `sampleRate` can skip archiving (bodies stay on the span). `buildAr
 `loadLlmObservabilityConfig` assemble the processor from environment
 configuration.
 
+## Archive index and trajectory normalization
+
+Two subpath exports serve Hub's `/traces` module without pulling `bun:sqlite` or
+`@shepherdjerred/llm-models` into producer processes:
+
+- `./archive-index` (`LlmTraceArchiveStore`): self-contained `bun:sqlite` WAL
+  store (`archived_spans`, `archived_traces`, `archive_watermarks`) supporting
+  transactional batch upserts, 366-day retention pruning, facet summaries,
+  keyset-paginated search, and per-trace span lookups.
+- `./trajectory` (`normalizeOtlpTrace`, `normalizeArchivedTrace`): pure
+  normalizers that build the parent-child span waterfall, leaf-only token and
+  catalog-cost rollups, and typed trajectory steps across the repository's four
+  LLM instrumentation shapes (`ai-sdk-chat`/`ai-sdk-embed`, `openai-decision`,
+  `claude-agent`, and `codex-agent`).
+
 ## Development
 
 ```bash

@@ -88,6 +88,15 @@ describe("configuredConnections", () => {
       "seaweedfs/seaweedfs-s3:8333",
     ]);
   });
+
+  test("reads the upstream Tempo Service from its recorded backend", () => {
+    const fleet = fleetWith({
+      TEMPO_URL: "http://tempo.tempo.svc.cluster.local:3200",
+    });
+    expect(configuredConnections(fleet).map(({ target }) => target)).toEqual([
+      "tempo/tempo:3200",
+    ]);
+  });
 });
 
 function egressTo(port: number) {

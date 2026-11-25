@@ -256,6 +256,73 @@ export function hubIncidentMailLink(outboxId: string): Link {
   };
 }
 
+export function hubTracesUrl(): string {
+  return url(APP_HOSTS.hub, "traces");
+}
+
+export function hubTraceDetailUrl(traceId: string): string {
+  return url(APP_HOSTS.hub, `traces/${encodeURIComponent(traceId)}`);
+}
+
+export function hubTracesLink(): Link {
+  return {
+    kind: "hub",
+    label: "Hub Traces",
+    url: hubTracesUrl(),
+  };
+}
+
+export function hubTraceDetailLink(traceId: string): Link {
+  return {
+    kind: "hub",
+    label: `Hub trace ${traceId.slice(0, 8)}`,
+    url: hubTraceDetailUrl(traceId),
+  };
+}
+
+function buildGrafanaExploreUrl(grafanaUrl: string, panes: unknown): string {
+  const explore = new URL("explore", `${grafanaUrl.replace(/\/+$/u, "")}/`);
+  explore.searchParams.set("schemaVersion", "1");
+  explore.searchParams.set("orgId", "1");
+  explore.searchParams.set("panes", JSON.stringify(panes));
+  return explore.toString();
+}
+
+/**
+ * Grafana Explore Loki log query targeting correlated logs (`llm.provider.response`
+ * and structured span logs) for a given `traceId`.
+ */
+export function grafanaLokiTraceExploreUrl(input: {
+  grafanaUrl: string;
+  traceId: string;
+  fromMs?: number;
+  toMs?: number;
+}): string {
+  const datasource = { type: "loki", uid: "loki" };
+  const range =
+    input.fromMs === undefined || input.toMs === undefined
+      ? { from: "now-24h", to: "now" }
+      : {
+          from: String(Math.max(0, input.fromMs - 5 * 60_000)),
+          to: String(input.toMs + 5 * 60_000),
+        };
+  return buildGrafanaExploreUrl(input.grafanaUrl, {
+    a: {
+      datasource: datasource.uid,
+      queries: [
+        {
+          refId: "A",
+          datasource,
+          editorMode: "code",
+          queryType: "range",
+          expr: `{namespace=~".+"} |= ${JSON.stringify(input.traceId)}`,
+        },
+      ],
+      range,
+    },
+  });
+}
+
 /** Chartmuseum chart-version metadata for a chart published there. */
 export function chartmuseumChartLink(name: string, version: string): Link {
   return {
@@ -297,12 +364,5 @@ export function grafanaPyroscopeExploreUrl(input: {
       range: { from: "now-1h", to: "now" },
     },
   };
-  const explore = new URL(
-    "explore",
-    `${input.grafanaUrl.replace(/\/+$/u, "")}/`,
-  );
-  explore.searchParams.set("schemaVersion", "1");
-  explore.searchParams.set("orgId", "1");
-  explore.searchParams.set("panes", JSON.stringify(panes));
-  return explore.toString();
+  return buildGrafanaExploreUrl(input.grafanaUrl, panes);
 }

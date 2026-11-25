@@ -85,6 +85,40 @@ function setOrDelete(
   }
 }
 
+export type EngKpiStripItem = {
+  readonly label: string;
+  readonly val: string;
+  readonly hint: string;
+  readonly sev: Parameters<typeof SeverityIcon>[0]["severity"];
+};
+
+export function EngKpiStrip({
+  className,
+  items,
+}: {
+  readonly className?: string | undefined;
+  readonly items: readonly EngKpiStripItem[];
+}): React.JSX.Element {
+  return (
+    <div
+      className={`eng-kpi-grid${className === undefined ? "" : ` ${className}`}`}
+    >
+      {items.map((kpi) => (
+        <div key={kpi.label} className={`eng-kpi-card eng-kpi-${kpi.sev}`}>
+          <div className="eng-kpi-top">
+            <span className="eng-kpi-label">{kpi.label}</span>
+            {kpi.sev === "ok" || kpi.sev === "info" ? null : (
+              <SeverityIcon severity={kpi.sev} className="visual-meter-flag" />
+            )}
+          </div>
+          <strong className="eng-kpi-value">{kpi.val}</strong>
+          <span className="eng-kpi-hint">{kpi.hint}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function ReportsPage(): React.JSX.Element {
   const [params, setParams] = useSearchParams();
   const feedQuery = useMemo(() => parseReportsFeedParams(params), [params]);
@@ -151,26 +185,7 @@ export function ReportsPage(): React.JSX.Element {
           return (
             <>
               <StaleNotice errors={meta.errors} />
-              <div className="eng-kpi-grid rep-kpi-grid">
-                {kpis.map((kpi) => (
-                  <div
-                    key={kpi.label}
-                    className={`eng-kpi-card eng-kpi-${kpi.sev}`}
-                  >
-                    <div className="eng-kpi-top">
-                      <span className="eng-kpi-label">{kpi.label}</span>
-                      {kpi.sev === "ok" || kpi.sev === "info" ? null : (
-                        <SeverityIcon
-                          severity={kpi.sev}
-                          className="visual-meter-flag"
-                        />
-                      )}
-                    </div>
-                    <strong className="eng-kpi-value">{kpi.val}</strong>
-                    <span className="eng-kpi-hint">{kpi.hint}</span>
-                  </div>
-                ))}
-              </div>
+              <EngKpiStrip className="rep-kpi-grid" items={kpis} />
 
               <ScheduleMatrix
                 schedules={overviewData.schedules}

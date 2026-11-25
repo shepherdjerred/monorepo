@@ -44,6 +44,7 @@ import { freshrssActivities } from "./maintenance/freshrss.ts";
 import { flagInventoryActivities } from "./flag-inventory-sync.ts";
 import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
+import { llmArchiveIndexActivities } from "./ops/llm-archive/llm-archive-index.ts";
 import { renovateDeltaActivities } from "./ops/renovate-delta/renovate-delta.ts";
 import { stormPlotActivities } from "./homelab/storm-plots.ts";
 import { rwfRecordingArchiveActivities } from "./homelab/rwf/recording-archive.ts";
@@ -94,6 +95,7 @@ export const infraActivities = {
   ...ciWorkspaceReaperActivities,
   ...ciWorkspaceGoldenActivities,
   ...opsActivities,
+  ...llmArchiveIndexActivities,
   ...renovateDeltaActivities,
 };
 

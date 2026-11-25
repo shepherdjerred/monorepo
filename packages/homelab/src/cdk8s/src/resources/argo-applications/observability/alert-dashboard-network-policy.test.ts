@@ -299,4 +299,17 @@ describe("alert dashboard network paths", () => {
     expect(yaml).not.toContain("alert-dashboard-postgresql");
     expect(yaml).not.toContain("alert-dashboard-postgres-netpol");
   });
+
+  it("reaches Tempo and the SeaweedFS S3 gateway for the LLM trace viewer", () => {
+    const dashboard = findPolicy(
+      synthesize(
+        createAlertDashboardChart,
+        ".test-synth-alert-dashboard-traces",
+      ),
+      "alert-dashboard-app-netpol",
+    );
+
+    expect(allowsEgress(dashboard.spec.egress, "tempo", 3200)).toBe(true);
+    expect(allowsEgress(dashboard.spec.egress, "seaweedfs", 8333)).toBe(true);
+  });
 });

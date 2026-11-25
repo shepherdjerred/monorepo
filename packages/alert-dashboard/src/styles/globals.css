@@ -116,15 +116,15 @@
   outline: 3px solid var(--accent-ring);
   outline-offset: 2px;
 }
-/* Hub has three groups and seventeen pages, more than the shared sidebar's
-   default row height and group spacing fit beside a 720px-tall window; 28px
+/* Hub has three groups and eighteen pages, more than the shared sidebar's
+   default row height and group spacing fit beside a 720px-tall window; 26px
    rows and tighter group gaps keep every row and the theme row on screen
    without scrolling (the phone drawer overrides .ui-nav-item to 38px below). */
 .ui-nav-item {
-  height: 28px;
+  height: 26px;
 }
 .ui-nav-group {
-  margin-top: 8px;
+  margin-top: 6px;
 }
 .ui-nav-group:first-child {
   margin-top: 4px;
