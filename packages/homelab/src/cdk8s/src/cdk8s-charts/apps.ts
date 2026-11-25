@@ -85,7 +85,7 @@ import { createStormStatsApp } from "@shepherdjerred/homelab/cdk8s/src/resources
 
 import { createMailApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/mail.ts";
 import { createFeedsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/feeds.ts";
-import { createErrorsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/errors.ts";
+import { createErrorsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/errors.ts";
 
 import { createChartsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/charts.ts";
 
