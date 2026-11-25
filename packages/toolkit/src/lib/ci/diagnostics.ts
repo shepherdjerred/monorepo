@@ -1,4 +1,5 @@
 import {
+  nonWarningPipelineErrors,
   woodpeckerJson,
   pipelineUrl,
   type WoodpeckerConfig,
@@ -110,5 +111,27 @@ export async function pipelineDiagnostics(
     diagnostics.push(
       await diagnosticFor(workflow, { pipeline, config, secrets, signal }),
     );
+  if (
+    diagnostics.length < 3 &&
+    (isFailure(pipeline.status) || failed.length > 0)
+  ) {
+    for (const entry of nonWarningPipelineErrors(pipeline).slice(
+      0,
+      3 - diagnostics.length,
+    )) {
+      diagnostics.push({
+        workflow:
+          entry.type === "generic" ? "pipeline" : `pipeline (${entry.type})`,
+        step: null,
+        stepId: null,
+        exitCode: null,
+        error: sanitizeText(entry.message, [config.token, ...secrets]),
+        logs: "",
+        truncated: false,
+        url: pipelineUrl(pipeline, config),
+        command: `toolkit woodpecker pipeline show shepherdjerred/monorepo ${String(pipeline.number)}`,
+      });
+    }
+  }
   return diagnostics;
 }

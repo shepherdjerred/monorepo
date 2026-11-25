@@ -1,6 +1,11 @@
 import { afterEach, expect, test, vi } from "vitest";
 import { GitHubClient } from "#lib/ci/github.ts";
-import { getMainRun, getMainStatus } from "#lib/ci/main.ts";
+import {
+  getFollowedMainSnapshot,
+  getMainRun,
+  getMainStatus,
+  resolveMainHeadSha,
+} from "#lib/ci/main.ts";
 import type { WoodpeckerPipeline } from "#lib/woodpecker/ci.ts";
 import { CI_HEAD } from "./fixtures.ts";
 
@@ -216,4 +221,94 @@ test("a pinned main wait reads past a partial manual run to the commit's push ru
   const result = await pinned(CI_HEAD);
   expect(result.run?.number).toBe(100);
   expect(result.run?.event).toBe("push");
+});
+
+test("resolveMainHeadSha expands short hex prefixes via GitHub commits API and passes 40-char SHAs through", async () => {
+  const fetchSpy = vi.fn(async (input: URL) => {
+    const url = new URL(input);
+    expect(url.pathname).toBe(
+      `/repos/shepherdjerred/monorepo/commits/${CI_HEAD.slice(0, 12)}`,
+    );
+    return Response.json({ sha: CI_HEAD.toUpperCase() });
+  });
+  vi.stubGlobal("fetch", fetchSpy);
+  const github = new GitHubClient("test");
+  expect(await resolveMainHeadSha(github, CI_HEAD.toUpperCase())).toBe(CI_HEAD);
+  expect(fetchSpy).not.toHaveBeenCalled();
+  expect(await resolveMainHeadSha(github, CI_HEAD.slice(0, 12))).toBe(CI_HEAD);
+  expect(fetchSpy).toHaveBeenCalledTimes(1);
+});
+
+function mockFollowedApi(tipSha: string, pages: WoodpeckerPipeline[]): void {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: URL) => {
+      const url = new URL(input);
+      if (url.pathname.endsWith("/branches/main")) {
+        return Response.json({ commit: { sha: tipSha } });
+      }
+      const num = /\/pipelines\/(\d+)$/u.exec(url.pathname)?.[1];
+      return num === undefined
+        ? Response.json(pages)
+        : Response.json(pages.find((item) => item.number === Number(num)));
+    }),
+  );
+}
+
+test("getFollowedMainSnapshot returns a passing recovery at or after startSha even while newer main tips are running", async () => {
+  const startSha = "1".repeat(40);
+  const recoverySha = "2".repeat(40);
+  const newestTip = "3".repeat(40);
+  mockFollowedApi(newestTip, [
+    { ...pipeline(20, "push", "running"), commit: newestTip },
+    { ...pipeline(19, "push", "success"), commit: recoverySha },
+    { ...pipeline(18, "push", "failure"), commit: startSha },
+  ]);
+  const snap = await getFollowedMainSnapshot(
+    new GitHubClient("test"),
+    config,
+    startSha,
+  );
+  expect(snap.sha).toBe(recoverySha);
+  expect(snap.tipSha).toBe(newestTip);
+  expect(snap.run?.number).toBe(19);
+  expect(snap.run?.status).toBe("success");
+});
+
+test("getFollowedMainSnapshot keeps waiting when a newer main run after a passing recovery has failed", async () => {
+  const startSha = "1".repeat(40);
+  const recoverySha = "2".repeat(40);
+  const failedTip = "3".repeat(40);
+  mockFollowedApi(failedTip, [
+    { ...pipeline(20, "push", "failure"), commit: failedTip },
+    { ...pipeline(19, "push", "success"), commit: recoverySha },
+    { ...pipeline(18, "push", "failure"), commit: startSha },
+  ]);
+  const snap = await getFollowedMainSnapshot(
+    new GitHubClient("test"),
+    config,
+    startSha,
+  );
+  expect(snap.sha).toBe(failedTip);
+  expect(snap.run?.number).toBe(20);
+  expect(snap.run?.status).toBe("failure");
+});
+
+test("getFollowedMainSnapshot ignores passing commits older than startSha", async () => {
+  const olderGreen = "0".repeat(40);
+  const startSha = "1".repeat(40);
+  const runningTip = "2".repeat(40);
+  mockFollowedApi(runningTip, [
+    { ...pipeline(20, "push", "running"), commit: runningTip },
+    { ...pipeline(18, "push", "failure"), commit: startSha },
+    { ...pipeline(17, "push", "success"), commit: olderGreen },
+  ]);
+  const snap = await getFollowedMainSnapshot(
+    new GitHubClient("test"),
+    config,
+    startSha,
+  );
+  expect(snap.sha).toBe(runningTip);
+  expect(snap.run?.number).toBe(20);
+  expect(snap.run?.status).toBe("running");
 });

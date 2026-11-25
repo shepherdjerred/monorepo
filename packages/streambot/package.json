@@ -13,6 +13,7 @@
     "#music-fixture": "./test/music/fixture.ts",
     "#youtube-music-fixture": "./test/music/youtube-music-fixture.ts",
     "#architecture": "./architecture.config.ts",
+    "#scripts/*": "./scripts/*",
     "#web-fixture": "./test/web/web-fixture.ts",
     "#numbered-fixture": "./test/session/numbered-fixture.ts"
   },
@@ -22,10 +23,11 @@
   "scripts": {
     "build": "vite build",
     "web:dev": "vite",
+    "preview:web": "vite build && bun test/web/preview.ts",
     "start": "bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test/ src/sports/",
-    "test:integration": "bun --no-install --bun vitest --config ../../vitest.config.ts run --testTimeout 120000 integration/",
+    "test:integration": "bun run scripts/run-integration.ts",
     "e2e": "bun run e2e/run.ts",
     "e2e:sports": "bun run e2e/sports-live.ts",
     "e2e:voice-assistant": "bun run e2e/voice-assistant.ts",
@@ -44,7 +46,8 @@
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && PATH=node_modules/@typescript/native/bin:$PATH tsc --project src/web/client/tsconfig.json --noEmit",
     "lint": "eslint . && check-architecture",
     "docker:build": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/streambot:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t streambot:dev -f Dockerfile ../..",
-    "smoke": "bun scripts/smoke.ts",
+    "docker:build:smoke": "docker buildx build --cache-from type=registry,ref=docker.io/shepherdjerred/streambot:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --target smoke --load -t streambot:smoke -f Dockerfile ../..",
+    "smoke": "bun run scripts/smoke.ts",
     "ytmusic:probe": "bun scripts/ytmusic-probe.ts",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts"
   },

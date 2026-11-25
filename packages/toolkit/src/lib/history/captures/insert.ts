@@ -69,10 +69,15 @@ export function usageJson(
 export function storeResponse(
   store: CaptureStore,
   response: ParsedResponse | null,
-): string | null {
-  return response === null
-    ? null
-    : store.putBlob(JSON.stringify(redactJsonValues(response.value).value));
+): { hash: string | null; secrets: number } {
+  if (response === null) {
+    return { hash: null, secrets: 0 };
+  }
+  const redacted = redactJsonValues(response.value);
+  return {
+    hash: store.putBlob(JSON.stringify(redacted.value)),
+    secrets: redacted.secrets,
+  };
 }
 
 const CwdRowSchema = z.object({ cwd: z.string().nullable() });
@@ -89,9 +94,13 @@ function captureCwd(store: CaptureStore, capture: NewCapture): string | null {
   return row == null ? null : CwdRowSchema.parse(row).cwd;
 }
 
-function insertRow(store: CaptureStore, capture: NewCapture): number | null {
+function insertRow(
+  store: CaptureStore,
+  capture: NewCapture,
+): { id: number | null; secrets: number } {
   const { request, response } = capture;
   const envelope = request?.envelope ?? null;
+  const storedResponse = storeResponse(store, response);
   const { changes, lastInsertRowid } = store.run(
     `INSERT OR IGNORE INTO captures (
        flow_id, seq, connection_id, cli, transport, host, path, format,
@@ -122,12 +131,14 @@ function insertRow(store: CaptureStore, capture: NewCapture): number | null {
     capture.contextComplete ? 1 : 0,
     usageJson(response?.usage),
     envelope === null ? null : store.putBlob(JSON.stringify(envelope)),
-    storeResponse(store, response),
+    storedResponse.hash,
     capture.rawRequestHash,
     capture.rawResponseHash,
     request?.warmup === true ? 1 : 0,
   );
-  return changes === 0 ? null : lastInsertRowid;
+  return changes === 0
+    ? { id: null, secrets: 0 }
+    : { id: lastInsertRowid, secrets: storedResponse.secrets };
 }
 
 /** Stores each block with whether it was new, so pruning cannot change it. */
@@ -165,13 +176,14 @@ function isWarmup(store: CaptureStore, id: number): boolean {
   );
 }
 
-/** Inserts a capture and its blocks; null when it was already ingested. */
+/** Inserts a capture and its blocks; id is null when it was already ingested. */
 export function insertCapture(
   store: CaptureStore,
   capture: NewCapture,
-): number | null {
-  const id = insertRow(store, capture);
-  if (id === null) return null;
+): { id: number | null; secrets: number } {
+  const inserted = insertRow(store, capture);
+  if (inserted.id === null) return inserted;
+  const { id } = inserted;
   // A warm-up holds no conversation, so it is never what a request is
   // diffed against, even when the request chains from it.
   const previous =
@@ -197,7 +209,7 @@ export function insertCapture(
     diff.newKeys.size,
     id,
   );
-  return id;
+  return inserted;
 }
 
 const ChainRowSchema = z.object({

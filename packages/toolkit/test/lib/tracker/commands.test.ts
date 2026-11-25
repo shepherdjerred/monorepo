@@ -1,3 +1,6 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { afterEach, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { trackerClient, trackerUrl } from "#lib/tracker/client.ts";
@@ -20,8 +23,12 @@ test("tracker commands never request Linear or other platform credentials", () =
 });
 
 const servers: ReturnType<typeof Bun.serve>[] = [];
+const tempDirs: string[] = [];
 afterEach(async () => {
   for (const server of servers.splice(0)) await server.stop(true);
+  for (const dir of tempDirs.splice(0)) {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
 function fixture() {
   const requests: { procedure: string; input: unknown; method: string }[] = [];
@@ -654,4 +661,192 @@ test("urgency, impact, effort filters and sorts reach list, search and help", as
   expect(help).toContain("--priority <0..4|auto>");
   expect(help).toContain("due|number|title");
   expect(help).toContain("--sort-dir asc|desc");
+});
+
+test("issue create/update alias --body and --body-file and reject ambiguous or bulk-update body flags (AI-878)", async () => {
+  const { context, requests, actor } = fixture();
+  const dir = await mkdtemp(path.join(tmpdir(), "tracker-body-"));
+  tempDirs.push(dir);
+  const bodyFile = path.join(dir, "issue.md");
+  await Bun.write(bodyFile, "Body loaded from file");
+
+  await issueCommand(
+    context,
+    ["create"],
+    parseTrackerArgs([
+      "--team",
+      "AI",
+      "--title",
+      "Inline body",
+      "--body",
+      "Inline markdown description",
+    ]).values,
+  );
+  await issueCommand(
+    context,
+    ["create"],
+    parseTrackerArgs([
+      "--team",
+      "AI",
+      "--title",
+      "File body",
+      "--body-file",
+      bodyFile,
+    ]).values,
+  );
+  await issueCommand(
+    context,
+    ["update", "AI-42"],
+    parseTrackerArgs(["--body", "Updated inline"]).values,
+  );
+  await issueCommand(
+    context,
+    ["update", "AI-42"],
+    parseTrackerArgs(["--body-file", bodyFile]).values,
+  );
+
+  expect(requests).toMatchObject([
+    {
+      procedure: "issues.create",
+      input: {
+        title: "Inline body",
+        description: "Inline markdown description",
+      },
+    },
+    {
+      procedure: "issues.create",
+      input: { title: "File body", description: "Body loaded from file" },
+    },
+    {
+      procedure: "issues.update",
+      input: { identifier: "AI-42", description: "Updated inline" },
+    },
+    {
+      procedure: "issues.update",
+      input: { identifier: "AI-42", description: "Body loaded from file" },
+    },
+  ]);
+
+  actor.mockClear();
+  for (const dualFlags of [
+    ["--description", "A", "--body", "B"],
+    ["--description-file", bodyFile, "--body", "B"],
+    ["--description", "A", "--body-file", bodyFile],
+    ["--body", "A", "--body-file", bodyFile],
+  ]) {
+    await expect(
+      issueCommand(
+        context,
+        ["create"],
+        parseTrackerArgs(["--team", "AI", "--title", "Ambiguous", ...dualFlags])
+          .values,
+      ),
+    ).rejects.toThrow("not both");
+    await expect(
+      issueCommand(
+        context,
+        ["update", "AI-42"],
+        parseTrackerArgs(dualFlags).values,
+      ),
+    ).rejects.toThrow("not both");
+  }
+  await expect(
+    issueCommand(
+      context,
+      ["bulk-update", "AI-42"],
+      parseTrackerArgs(["--body", "No per-issue body"]).values,
+    ),
+  ).rejects.toThrow("bulk-update does not take --body");
+  await expect(
+    issueCommand(
+      context,
+      ["bulk-update", "AI-42"],
+      parseTrackerArgs(["--body-file", bodyFile]).values,
+    ),
+  ).rejects.toThrow("bulk-update does not take --body-file");
+  expect(actor).not.toHaveBeenCalled();
+});
+
+test("tRPC client surfaces HTTP status, content-type, sanitized snippet, and mutation read-back warning on non-JSON or non-tRPC responses (AI-630)", async () => {
+  let responseMode: "html-502" | "empty-503" | "proxy-json-502" = "html-502";
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    fetch() {
+      if (responseMode === "html-502") {
+        const longPadding = "upstream gateway timeout ".repeat(10);
+        return new Response(
+          `<!doctype html><html><head><style>body{color:red}</style></head><body><h1>502 Bad Gateway</h1><p>Authorization: Bearer secret-jwt-value token=raw-token-123 op://homelab/item/secret ${longPadding}</p></body></html>`,
+          {
+            status: 502,
+            headers: { "Content-Type": "text/html; charset=utf-8" },
+          },
+        );
+      }
+      if (responseMode === "empty-503") {
+        return new Response("   ", {
+          status: 503,
+          headers: { "Content-Type": "text/plain" },
+        });
+      }
+      return Response.json({ message: "Bad Gateway" }, { status: 502 });
+    },
+  });
+  servers.push(server);
+  const client = trackerClient(server.url.toString());
+  const actor = {
+    key: "codex:session",
+    kind: "agent" as const,
+    name: "Codex",
+    metadata: {},
+  };
+
+  let mutationError: unknown;
+  try {
+    await client.comments.create.mutate({
+      actor,
+      identifier: "AI-622",
+      body: "Progress note",
+    });
+  } catch (error) {
+    mutationError = error;
+  }
+  expect(mutationError).toBeInstanceOf(Error);
+  const mutationMessage =
+    mutationError instanceof Error ? mutationError.message : "";
+  expect(mutationMessage).toContain("HTTP 502");
+  expect(mutationMessage).toContain("content-type: text/html; charset=utf-8");
+  expect(mutationMessage).toContain("body=html");
+  expect(mutationMessage).toContain("502 Bad Gateway");
+  expect(mutationMessage).toContain(
+    "Mutation completion is uncertain; verify state via read-back before retrying.",
+  );
+  expect(mutationMessage).not.toContain("secret-jwt-value");
+  expect(mutationMessage).not.toContain("raw-token-123");
+  expect(mutationMessage).not.toContain("op://homelab/item/secret");
+  expect(mutationMessage).toContain("[REDACTED]");
+
+  responseMode = "empty-503";
+  let queryError: unknown;
+  try {
+    await client.issues.byIdentifier.query({ identifier: "AI-622" });
+  } catch (error) {
+    queryError = error;
+  }
+  const queryMessage = queryError instanceof Error ? queryError.message : "";
+  expect(queryMessage).toContain("HTTP 503");
+  expect(queryMessage).toContain("content-type: text/plain");
+  expect(queryMessage).toContain("body=empty");
+  expect(queryMessage).not.toContain("Mutation completion is uncertain");
+
+  responseMode = "proxy-json-502";
+  await expect(
+    client.comments.create.mutate({
+      actor,
+      identifier: "AI-622",
+      body: "Progress note",
+    }),
+  ).rejects.toThrow(
+    /not a valid tRPC envelope.*HTTP 502.*body=non-trpc-json.*Mutation completion is uncertain/u,
+  );
 });

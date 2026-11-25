@@ -51,6 +51,19 @@ describe("screenshot dev-server port allocation", () => {
       String(astroLaunch.port),
     ]);
 
+    const docsWikiLaunch = await buildIsolatedDevLaunch(
+      resolvePackage("docs-wiki"),
+    );
+    expect(docsWikiLaunch.command).toEqual([
+      "bun",
+      "run",
+      "dev",
+      "--",
+      "--ignore-lock",
+      "--port",
+      String(docsWikiLaunch.port),
+    ]);
+
     const viteLaunch = await buildIsolatedDevLaunch(
       resolvePackage("mario-kart-frontend"),
     );
@@ -63,6 +76,38 @@ describe("screenshot dev-server port allocation", () => {
       String(viteLaunch.port),
       "--strictPort",
     ]);
+  });
+
+  test("injects PORT environment variable for port-env entries (streambot)", async () => {
+    const launch = await buildIsolatedDevLaunch(resolvePackage("streambot"));
+    expect(launch.command).toEqual(["bun", "run", "preview:web"]);
+    expect(launch.env["PORT"]).toBe(String(launch.port));
+    expect(launch.port).toBeGreaterThanOrEqual(1);
+    expect(launch.port).toBeLessThanOrEqual(65_535);
+
+    const overridden = await buildIsolatedDevLaunch(
+      resolvePackage("streambot"),
+      { PORT: "5299" },
+    );
+    expect(overridden.port).toBe(5299);
+    expect(overridden.env["PORT"]).toBe("5299");
+  });
+
+  test("allocates 2 distinct Hub fixture ports while preserving OPS_FIXTURE", async () => {
+    const launch = await buildIsolatedDevLaunch(
+      resolvePackage("alert-dashboard"),
+      { OPS_FIXTURE: "volume-aggregate" },
+    );
+    const webPort = Number(launch.env["PORT"]);
+    const apiPort = Number(launch.env["API_PORT"]);
+    expect(launch.command).toEqual(["bun", "run", "dev:fixture"]);
+    expect(webPort).toBe(launch.port);
+    expect(webPort).not.toBe(apiPort);
+    expect(webPort).toBeGreaterThanOrEqual(1);
+    expect(webPort).toBeLessThanOrEqual(65_535);
+    expect(apiPort).toBeGreaterThanOrEqual(1);
+    expect(apiPort).toBeLessThanOrEqual(65_535);
+    expect(launch.env["OPS_FIXTURE"]).toBe("volume-aggregate");
   });
 
   test("allocates 4 distinct Scout dev ports in environment overrides", async () => {

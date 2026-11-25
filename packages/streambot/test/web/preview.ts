@@ -87,7 +87,8 @@ class PreviewSpotify extends SpotifyMetadata {
 if (import.meta.main) {
   startPreviewTracing();
   disablePreviewUsageAnalytics();
-  const port = Number(Bun.argv[2] ?? 5188);
+  const rawPort = Bun.argv[2] ?? Bun.env["PORT"];
+  const port = rawPort === undefined || rawPort === "" ? 5188 : Number(rawPort);
   const origin = "http://127.0.0.1:" + String(port);
   const history = new MediaHistoryStore(":memory:");
   const upcoming = {

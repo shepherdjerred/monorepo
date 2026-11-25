@@ -40,6 +40,23 @@ export type AssetOptions = {
   createClient?: ((profile: string) => Promise<ObjectStore>) | undefined;
 };
 
+/**
+ * Default PR asset uploads to `agent-share` unless an explicit `--profile`,
+ * `AWS_PROFILE`, or static `AWS_ACCESS_KEY_ID` environment is active.
+ */
+export function resolveAssetProfile(
+  profile?: string,
+  env: Readonly<Record<string, string | undefined>> = Bun.env,
+): string | undefined {
+  if (profile !== undefined && profile.length > 0) return profile;
+  const envProfile = env["AWS_PROFILE"];
+  if (envProfile !== undefined && envProfile.length > 0) return envProfile;
+  return env["AWS_ACCESS_KEY_ID"] !== undefined &&
+    env["AWS_ACCESS_KEY_ID"].length > 0
+    ? undefined
+    : AGENT_SHARE_PROFILE;
+}
+
 const USAGE =
   "Usage: toolkit pr asset [pr-number] <file|dir...> [--markdown] [--profile <name>] (default profile: agent-share)";
 
@@ -260,10 +277,13 @@ export async function assetCommand(
       return;
     }
 
-    const profile = options.profile ?? AGENT_SHARE_PROFILE;
+    const profile = resolveAssetProfile(options.profile);
     let client: ObjectStore;
     try {
-      client = await (options.createClient ?? createUploadClient)(profile);
+      client =
+        options.createClient !== undefined
+          ? await options.createClient(profile ?? AGENT_SHARE_PROFILE)
+          : await createUploadClient(profile ?? null);
     } catch (error) {
       if (!(error instanceof UploadSetupError)) {
         throw error;

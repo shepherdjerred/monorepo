@@ -107,6 +107,38 @@ export const PACKAGES: PackageEntry[] = [
     // read so a capture never lands on the sign-in screen.
     readyPath: "/api/v1/me",
   },
+  {
+    alias: "streambot",
+    cwd: "packages/streambot",
+    // Builds `dist/web` and starts `test/web/preview.ts` with simulated Discord
+    // OAuth (`/api/auth/discord/start?returnTo=<route>`), multi-slot playback,
+    // playlists, sports, and history.
+    devCommand: ["bun", "run", "preview:web"],
+    devRunner: "port-env",
+    expectedPort: 5188,
+    defaultRoute: "/",
+    requiresAuth: "streambot-preview-login",
+  },
+  {
+    alias: "alert-dashboard",
+    cwd: "packages/alert-dashboard",
+    // Credential-free Hub fixture mode (`src/dev.ts --fixture`): boots the
+    // in-memory fixture API (`API_PORT`) + Vite (`PORT`). Pass
+    // `--env OPS_FIXTURE=default|volume|volume-aggregate` to switch datasets.
+    devCommand: ["bun", "run", "dev:fixture"],
+    devRunner: "hub-dev-fixture",
+    expectedPort: 7342,
+    defaultRoute: "/",
+    readyPath: "/api/v1/summary",
+  },
+  {
+    alias: "docs-wiki",
+    cwd: "packages/docs/wiki",
+    devCommand: ["bun", "run", "dev"],
+    devRunner: "astro",
+    expectedPort: 4321,
+    defaultRoute: "/",
+  },
 ];
 
 export function resolvePackage(alias: string): PackageEntry {

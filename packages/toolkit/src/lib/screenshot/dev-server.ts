@@ -12,6 +12,7 @@ export type DevServerHandle = {
   stop: () => Promise<void>;
 };
 
+const HUB_DEFAULT_API_PORT = 7341;
 const SCOUT_DEFAULT_BACKEND_PORT = 3000;
 const SCOUT_TEMPORAL_PORT_OFFSET = 4233;
 const SCOUT_TEMPORAL_UI_PORT_OFFSET = 5233;
@@ -165,40 +166,35 @@ function parseExplicitPortOverride(
   return port >= 1 && port <= 65_535 ? port : undefined;
 }
 
-export async function buildIsolatedDevLaunch(
+async function buildHubDevFixtureLaunch(
   entry: PackageEntry,
-  envOverrides: Record<string, string> = {},
+  envOverrides: Record<string, string>,
 ): Promise<{ port: number; command: string[]; env: Record<string, string> }> {
-  if (entry.devRunner === "astro") {
-    const port = await allocateFreePort(entry.expectedPort);
-    return {
-      port,
-      command: [
-        ...entry.devCommand,
-        "--",
-        "--ignore-lock",
-        "--port",
-        String(port),
-      ],
-      env: { ...envOverrides },
-    };
-  }
+  const used = new Set<number>();
+  const webPort =
+    parseExplicitPortOverride(envOverrides["PORT"]) ??
+    (await allocateFreePort(entry.expectedPort, used));
+  used.add(webPort);
 
-  if (entry.devRunner === "vite") {
-    const port = await allocateFreePort(entry.expectedPort);
-    return {
-      port,
-      command: [
-        ...entry.devCommand,
-        "--",
-        "--port",
-        String(port),
-        "--strictPort",
-      ],
-      env: { ...envOverrides },
-    };
-  }
+  const apiPort =
+    parseExplicitPortOverride(envOverrides["API_PORT"]) ??
+    (await allocateFreePort(HUB_DEFAULT_API_PORT, used));
 
+  return {
+    port: webPort,
+    command: [...entry.devCommand],
+    env: {
+      ...envOverrides,
+      PORT: String(webPort),
+      API_PORT: String(apiPort),
+    },
+  };
+}
+
+async function buildScoutDevWebLaunch(
+  entry: PackageEntry,
+  envOverrides: Record<string, string>,
+): Promise<{ port: number; command: string[]; env: Record<string, string> }> {
   // `scout-dev-web` (`bun scripts/dev/dev-web.ts`) starts Vite, the Scout API
   // backend, and Temporal dev + UI listeners. Allocate 4 distinct free ports so
   // concurrent worktrees never collide on any of the 4 sockets.
@@ -241,6 +237,59 @@ export async function buildIsolatedDevLaunch(
       SCOUT_DEV_TEMPORAL_UI_PORT: String(temporalUiPort),
     },
   };
+}
+
+export async function buildIsolatedDevLaunch(
+  entry: PackageEntry,
+  envOverrides: Record<string, string> = {},
+): Promise<{ port: number; command: string[]; env: Record<string, string> }> {
+  switch (entry.devRunner) {
+    case "astro": {
+      const port = await allocateFreePort(entry.expectedPort);
+      return {
+        port,
+        command: [
+          ...entry.devCommand,
+          "--",
+          "--ignore-lock",
+          "--port",
+          String(port),
+        ],
+        env: { ...envOverrides },
+      };
+    }
+    case "vite": {
+      const port = await allocateFreePort(entry.expectedPort);
+      return {
+        port,
+        command: [
+          ...entry.devCommand,
+          "--",
+          "--port",
+          String(port),
+          "--strictPort",
+        ],
+        env: { ...envOverrides },
+      };
+    }
+    case "port-env": {
+      const port =
+        parseExplicitPortOverride(envOverrides["PORT"]) ??
+        (await allocateFreePort(entry.expectedPort));
+      return {
+        port,
+        command: [...entry.devCommand],
+        env: {
+          ...envOverrides,
+          PORT: String(port),
+        },
+      };
+    }
+    case "hub-dev-fixture":
+      return buildHubDevFixtureLaunch(entry, envOverrides);
+    case "scout-dev-web":
+      return buildScoutDevWebLaunch(entry, envOverrides);
+  }
 }
 
 async function terminateProcessGroup(

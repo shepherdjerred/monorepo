@@ -164,6 +164,36 @@ describe("merge readiness", () => {
     });
     expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("failure");
   });
+  test("pipeline-level Woodpecker errors surface in failure reasons when workflows list is empty", () => {
+    const snapshot = pendingCi();
+    snapshot.pipeline = {
+      number: 17_341,
+      commit: CI_HEAD,
+      status: "error",
+      event: "pull_request",
+      workflows: [],
+      errors: [
+        {
+          type: "generic",
+          message:
+            "could not load config from forge: failed to fetch config via http",
+          is_warning: false,
+        },
+        {
+          type: "Warning",
+          message: "benign deprecation notice",
+          is_warning: true,
+        },
+      ],
+    };
+    const verdict = evaluateReadiness(snapshot, CI_HEAD);
+    expect(verdict.outcome).toBe("failure");
+    expect(verdict.reasons).toContain("Woodpecker pipeline #17341 failed");
+    expect(verdict.reasons).toContain(
+      "could not load config from forge: failed to fetch config via http",
+    );
+    expect(verdict.reasons.join(" ")).not.toContain("benign deprecation");
+  });
 });
 
 describe("review and structural readiness", () => {

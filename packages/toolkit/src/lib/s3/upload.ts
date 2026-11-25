@@ -197,12 +197,20 @@ export async function renderGifs(
  * request to AWS itself.
  */
 export async function createUploadClient(
-  profile: string = AGENT_SHARE_PROFILE,
+  profile: string | null = AGENT_SHARE_PROFILE,
 ): Promise<ObjectStore> {
   const environment = Bun.env;
   const hasEnvEndpoint =
     (environment["AWS_ENDPOINT_URL_S3"] ?? environment["AWS_ENDPOINT_URL"]) !==
     undefined;
+  if (profile === null) {
+    if (!hasEnvEndpoint) {
+      throw new UploadSetupError(
+        "Static AWS credentials require AWS_ENDPOINT_URL_S3 or AWS_ENDPOINT_URL to target SeaweedFS",
+      );
+    }
+    return s3ObjectStore(await createS3Client());
+  }
   if (!hasEnvEndpoint && (await profileEndpointUrl(profile)) === undefined) {
     throw new UploadSetupError(
       `AWS profile '${profile}' is not configured with a SeaweedFS endpoint_url in ~/.aws/config`,

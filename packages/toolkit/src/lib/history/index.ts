@@ -1,9 +1,11 @@
 import { Database } from "bun:sqlite";
 import { chmod, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { MODELS, type Catalog } from "@shepherdjerred/llm-models";
 import { z } from "zod";
 import type { HistoryRuntimePaths } from "./paths.ts";
 import { ftsQuery } from "./query/query.ts";
+import { reconcileUsagePricing } from "./usage-cost.ts";
 import {
   parseHistorySourceName,
   type HistoryRuntimeRef,
@@ -245,6 +247,10 @@ function createSchema(database: Database): void {
     CREATE INDEX tool_calls_document_id_idx ON tool_calls(document_id);
     CREATE INDEX usage_events_document_id_idx ON usage_events(document_id);
     CREATE INDEX usage_events_occurred_at_idx ON usage_events(occurred_at);
+    CREATE TABLE index_meta (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
     PRAGMA user_version = ${String(INDEX_SCHEMA_VERSION)};
   `);
 }
@@ -256,6 +262,7 @@ function rebuildSchemaCore(database: Database): void {
     DROP TABLE IF EXISTS tool_calls;
     DROP TABLE IF EXISTS documents;
     DROP TABLE IF EXISTS source_state;
+    DROP TABLE IF EXISTS index_meta;
   `);
   createSchema(database);
 }
@@ -269,15 +276,18 @@ function rebuildSchema(database: Database): void {
 export class HistoryIndex {
   readonly #database: Database;
   readonly #indexPath: string;
+  readonly #models: Catalog;
 
-  private constructor(database: Database, indexPath: string) {
+  private constructor(database: Database, indexPath: string, models: Catalog) {
     this.#database = database;
     this.#indexPath = indexPath;
+    this.#models = models;
   }
 
   static async open(
     runtimePaths: HistoryRuntimePaths,
     readonly = false,
+    options?: { readonly models?: Catalog },
   ): Promise<HistoryIndex> {
     if (!readonly) {
       await mkdir(path.dirname(runtimePaths.indexDb), {
@@ -301,13 +311,17 @@ export class HistoryIndex {
         `History index schema is v${String(version)} without the current tables; restart the daemon to rebuild v${String(INDEX_SCHEMA_VERSION)}.`,
       );
     }
-    const index = new HistoryIndex(database, runtimePaths.indexDb);
+    const models = options?.models ?? MODELS;
+    const index = new HistoryIndex(database, runtimePaths.indexDb, models);
     if (!readonly) {
       try {
         index.#database.run("PRAGMA journal_mode = WAL;");
         if (!current) {
           rebuildSchema(index.#database);
         }
+        index.#database.transaction(() => {
+          reconcileUsagePricing(index.#database, models);
+        })();
         await secureIndexFiles(runtimePaths.indexDb);
       } catch (error) {
         index.close();
@@ -337,6 +351,11 @@ export class HistoryIndex {
         rebuildSchemaCore(this.#database);
       }
       ingestResults(this.#database, results, force);
+      reconcileUsagePricing(
+        this.#database,
+        this.#models,
+        this.#models !== MODELS,
+      );
     })();
     await secureIndexFiles(this.#indexPath);
   }
