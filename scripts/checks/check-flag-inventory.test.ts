@@ -89,7 +89,7 @@ describe("check-flag-inventory", () => {
     }
   });
 
-  test("checks all 17 active flag deployments by default", async () => {
+  test("checks all 18 active flag deployments by default", async () => {
     const loaded: string[] = [];
     const messages = await checkManagedFlagMatrix({
       loadSnapshot: (deployment) => {
@@ -99,8 +99,8 @@ describe("check-flag-inventory", () => {
     });
 
     expect(loaded).toEqual(flagDeployments.map((deployment) => deployment.id));
-    expect(loaded).toHaveLength(17);
-    expect(messages).toHaveLength(17);
+    expect(loaded).toHaveLength(18);
+    expect(messages).toHaveLength(18);
   });
 
   test("filters by --deployment or mapped --environment/--namespace and rejects unread pairs", async () => {

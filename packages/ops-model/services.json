@@ -773,11 +773,14 @@
       "title": "Postal mail",
       "kind": "platform",
       "aliases": [],
-      "namespaces": ["postal"],
+      "namespaces": ["postal", "mail"],
       "argoApps": ["postal", "postal-mariadb"],
-      "charts": [],
-      "rootReleaseExclusions": { "postal-mariadb": "upstream" },
-      "images": [],
+      "charts": ["mail"],
+      "rootReleaseExclusions": {
+        "postal-mariadb": "upstream",
+        "mail": "inactive"
+      },
+      "images": ["mail"],
       "bootstrapImages": [],
       "bugsinkProjects": [],
       "analyticsSites": [],

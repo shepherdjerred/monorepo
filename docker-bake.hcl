@@ -104,6 +104,7 @@ group "app" {
     "woodpecker-config-extension",
     "flags",
     "storm-stats",
+    "mail",
   ]
 }
 
@@ -295,6 +296,14 @@ target "storm-stats" {
   tags       = imagetags("storm-stats")
   cache-from = cachefrom("storm-stats")
   cache-to   = cacheto("storm-stats")
+}
+
+target "mail" {
+  inherits   = ["_app"]
+  dockerfile = "packages/mail/Dockerfile"
+  tags       = imagetags("mail")
+  cache-from = cachefrom("mail")
+  cache-to   = cacheto("mail")
 }
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────

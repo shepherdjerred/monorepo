@@ -2563,6 +2563,34 @@
       }
     },
     {
+      "id": "mail",
+      "title": "Mail",
+      "package": "mail",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "mail",
+      "components": [
+        {
+          "name": "image:mail",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:mail",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "platform",
+        "namespaces": ["mail"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "mail": "inactive"
+        },
+        "charts": ["mail"]
+      }
+    },
+    {
       "id": "1password",
       "title": "1Password Connect",
       "lifecycle": "active",
