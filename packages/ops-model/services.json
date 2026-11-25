@@ -23,7 +23,8 @@
     "glitter-boys-launcher": "glitter-boys-launcher/prod",
     "golink": "golink/prod",
     "flags": "flags/prod",
-    "storm-stats": "storm-stats/prod"
+    "storm-stats": "storm-stats/prod",
+    "mail": "outbound-mail/prod"
   },
   "platformDeliveryDelegated": true,
   "services": [
@@ -773,19 +774,38 @@
       "title": "Postal mail",
       "kind": "platform",
       "aliases": [],
-      "namespaces": ["postal", "mail"],
+      "namespaces": ["postal"],
       "argoApps": ["postal", "postal-mariadb"],
-      "charts": ["mail"],
-      "rootReleaseExclusions": {
-        "postal-mariadb": "upstream",
-        "mail": "inactive"
-      },
-      "images": ["mail"],
+      "charts": [],
+      "rootReleaseExclusions": { "postal-mariadb": "upstream" },
+      "images": [],
       "bootstrapImages": [],
       "bugsinkProjects": [],
       "analyticsSites": [],
       "grafanaDashboards": [],
       "deploy": []
+    },
+    {
+      "id": "outbound-mail",
+      "title": "Mail",
+      "kind": "platform",
+      "package": "mail",
+      "aliases": [],
+      "namespaces": ["mail"],
+      "argoApps": ["mail"],
+      "charts": [],
+      "images": ["mail"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/mail",
+          "argoApp": "mail"
+        }
+      ]
     },
     {
       "id": "platform-services",

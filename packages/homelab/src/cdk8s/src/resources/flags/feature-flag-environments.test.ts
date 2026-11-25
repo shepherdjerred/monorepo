@@ -210,7 +210,7 @@ describe("First-party Flags consumer deployments", () => {
       (app: App) => createWoodpeckerChart(app),
       (app: App) => createStormBrainChart(app),
       (app: App) => createStormStatsChart(app),
-      (app: App) => createMailChart(app, true),
+      (app: App) => createMailChart(app),
       (app: App) => createStormForumCharts(app),
       (app: App) =>
         createGolinkChart(app, {

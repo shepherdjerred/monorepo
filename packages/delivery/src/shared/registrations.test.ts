@@ -33,7 +33,7 @@ test("reviewed registration pairs use canonical services, image owners and promo
   );
   expect(environments.size).toBe(definitions.length);
   // Shared-site and root registrations are retired (X4, X6).
-  expect(definitions).toHaveLength(22);
+  expect(definitions).toHaveLength(23);
   for (const { file, pipeline, environment } of definitions) {
     expect(catalog.byId(environment.serviceId)?.id, file).toBe(
       environment.serviceId,

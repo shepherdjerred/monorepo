@@ -81,6 +81,7 @@ describe("deployed registry derived from the service catalog", () => {
         "golink default shepherdjerred/golink golink",
         "homelab default shepherdjerred/caddy-s3proxy s3-static-sites",
         "homelab redlib shepherdjerred/redlib redlib",
+        "mail default shepherdjerred/mail mail",
         "scout-for-lol beta shepherdjerred/scout-for-lol/beta scout-beta",
         "scout-for-lol prod shepherdjerred/scout-for-lol/prod scout-prod",
         "starlight-karma-bot beta shepherdjerred/starlight-karma-bot/beta starlight-karma-bot-beta",

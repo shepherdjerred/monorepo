@@ -309,6 +309,11 @@
       "exposure": "ingress"
     },
     {
+      "host": "mail",
+      "namespace": "mail",
+      "exposure": "ingress"
+    },
+    {
       "host": "media",
       "namespace": "media",
       "exposure": "ingress"

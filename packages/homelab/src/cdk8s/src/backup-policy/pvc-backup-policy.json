@@ -634,5 +634,11 @@
     "name": "storm-stats-data",
     "backup": "enabled",
     "reason": "Storm player and gameplay analytics SQLite ledger"
+  },
+  {
+    "namespace": "mail",
+    "name": "mail-data",
+    "backup": "enabled",
+    "reason": "Outbound mail broker SQLite WAL outbox and delivery attempt ledger"
   }
 ]

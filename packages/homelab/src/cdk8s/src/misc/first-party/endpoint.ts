@@ -143,3 +143,27 @@ export const PINCHTAB_ENDPOINT = defineEndpoint({
   portName: "http",
   appLabel: false,
 });
+
+/** Outbound mail broker UI, health probes, and Prometheus metrics (`resources/mail`). */
+export const MAIL_UI_ENDPOINT = defineEndpoint({
+  namespace: "mail",
+  app: "mail",
+  port: 7370,
+  portName: "http",
+});
+
+/** Outbound mail broker authenticated HTTP submission and receipt API (`resources/mail`). */
+export const MAIL_API_ENDPOINT = defineEndpoint({
+  namespace: "mail",
+  app: "mail",
+  port: 7371,
+  portName: "api",
+});
+
+/** Outbound mail broker in-cluster STARTTLS ESMTP submission listener (`resources/mail`). */
+export const MAIL_SMTP_ENDPOINT = defineEndpoint({
+  namespace: "mail",
+  app: "mail",
+  port: 25,
+  portName: "smtp",
+});
