@@ -1,0 +1,135 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  runtime      = "bun"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum IssueState {
+  OPEN
+  RESOLVED
+  RESOLVED_NEXT_RELEASE
+  MUTED
+}
+
+enum OutboxKind {
+  NEW_ISSUE
+  REGRESSION
+}
+
+model Project {
+  id                 Int                @id @default(autoincrement())
+  slug               String             @unique
+  name               String
+  publicKey          String             @unique @map("public_key")
+  digestedEventCount BigInt             @default(0) @map("digested_event_count")
+  storedEventCount   Int                @default(0) @map("stored_event_count")
+  alertOnNewIssue    Boolean            @default(true) @map("alert_on_new_issue")
+  alertOnRegression  Boolean            @default(true) @map("alert_on_regression")
+  retentionMaxEvents Int                @default(50) @map("retention_max_events")
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  issues             Issue[]
+  fingerprints       IssueFingerprint[]
+  events             Event[]
+  releases           Release[]
+
+  @@map("projects")
+}
+
+model Issue {
+  id                     String               @id @default(uuid()) @db.Uuid
+  projectId              Int                  @map("project_id")
+  primaryFingerprint     String               @map("primary_fingerprint")
+  type                   String
+  value                  String
+  transaction            String               @default("")
+  level                  String               @default("error")
+  state                  IssueState           @default(OPEN)
+  resolvedInRelease      String?              @map("resolved_in_release")
+  regressedCount         Int                  @default(0) @map("regressed_count")
+  digestedEventCount     BigInt               @default(1) @map("digested_event_count")
+  storedEventCount       Int                  @default(0) @map("stored_event_count")
+  firstSeen              DateTime             @map("first_seen") @db.Timestamptz(6)
+  lastSeen               DateTime             @map("last_seen") @db.Timestamptz(6)
+  lastRelease            String?              @map("last_release")
+  lastAlertedAt          DateTime?            @map("last_alerted_at") @db.Timestamptz(6)
+  trackerIssueIdentifier String?              @map("tracker_issue_identifier")
+  revision               Int                  @default(1)
+  project                Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fingerprints           IssueFingerprint[]
+  events                 Event[]
+  outbox                 NotificationOutbox[]
+
+  @@index([projectId, state, lastSeen(sort: Desc)])
+  @@index([state, lastSeen(sort: Desc)])
+  @@map("issues")
+}
+
+model IssueFingerprint {
+  projectId   Int      @map("project_id")
+  fingerprint String
+  issueId     String   @map("issue_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  issue       Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, fingerprint])
+  @@index([issueId])
+  @@map("issue_fingerprints")
+}
+
+model Event {
+  id           String   @id @default(uuid()) @db.Uuid
+  eventId      String   @map("event_id")
+  issueId      String   @map("issue_id") @db.Uuid
+  projectId    Int      @map("project_id")
+  timestamp    DateTime @db.Timestamptz(6)
+  ingestedAt   DateTime @default(now()) @map("ingested_at") @db.Timestamptz(6)
+  release      String?
+  environment  String?
+  platform     String?
+  level        String   @default("error")
+  transaction  String   @default("")
+  data         Json
+  stacktraceMd String   @map("stacktrace_md")
+  issue        Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, eventId])
+  @@index([issueId, timestamp(sort: Desc)])
+  @@index([timestamp(sort: Desc)])
+  @@map("events")
+}
+
+model Release {
+  id         String   @id @default(uuid()) @db.Uuid
+  projectId  Int      @map("project_id")
+  version    String
+  releasedAt DateTime @default(now()) @map("released_at") @db.Timestamptz(6)
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, version])
+  @@index([projectId, releasedAt(sort: Desc)])
+  @@map("releases")
+}
+
+model NotificationOutbox {
+  id            String     @id @default(uuid()) @db.Uuid
+  issueId       String     @map("issue_id") @db.Uuid
+  eventId       String     @map("event_id")
+  kind          OutboxKind
+  messageId     String     @unique @map("message_id")
+  attempts      Int        @default(0)
+  nextAttemptAt DateTime   @default(now()) @map("next_attempt_at") @db.Timestamptz(6)
+  sentAt        DateTime?  @map("sent_at") @db.Timestamptz(6)
+  lastError     String?    @map("last_error")
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  issue         Issue      @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@index([sentAt, nextAttemptAt])
+  @@map("notification_outbox")
+}

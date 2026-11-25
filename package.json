@@ -124,6 +124,7 @@
     "packages/discord-video-stream",
     "packages/docs/wiki",
     "packages/dotfiles",
+    "packages/errors",
     "packages/eslint-config",
     "packages/feature-flags",
     "packages/feeds",

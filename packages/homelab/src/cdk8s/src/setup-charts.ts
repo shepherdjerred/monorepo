@@ -58,6 +58,7 @@ import { createStormStatsChart } from "./cdk8s-charts/storm-stats.ts";
 
 import { createMailChart } from "./cdk8s-charts/mail.ts";
 import { createFeedsChart } from "./cdk8s-charts/feeds.ts";
+import { createErrorsChart } from "./cdk8s-charts/errors.ts";
 
 import { createChartsChart } from "./cdk8s-charts/charts.ts";
 
@@ -134,6 +135,7 @@ export async function setupCharts(app: App): Promise<void> {
 
   createMailChart(app);
   createFeedsChart(app);
+  createErrorsChart(app);
 
   createChartsChart(app);
 

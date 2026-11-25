@@ -479,6 +479,7 @@
         "@homelab/cdktn#generate",
         "@shepherdjerred/alert-dashboard#generate",
         "@shepherdjerred/delivery#generate",
+        "@shepherdjerred/errors#generate",
         "@shepherdjerred/golink#generate",
         "@shepherdjerred/tracker#generate",
         "@shepherdjerred/media#generate",

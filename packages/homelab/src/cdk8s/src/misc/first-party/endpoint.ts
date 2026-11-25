@@ -134,6 +134,23 @@ export const FEEDS_ENDPOINT = defineEndpoint({
   portName: "http",
 });
 
+/** Errors's tailnet console and admin API (`resources/errors`). */
+export const ERRORS_ADMIN_ENDPOINT = defineEndpoint({
+  namespace: "errors",
+  app: "errors",
+  port: 7370,
+  portName: "http",
+});
+
+/** Errors's public Sentry-envelope ingest listener (`resources/errors`). */
+export const ERRORS_INGEST_ENDPOINT = defineEndpoint({
+  namespace: "errors",
+  app: "errors",
+  service: "errors-ingest",
+  port: 7371,
+  portName: "ingest",
+});
+
 /** The OTLP/HTTP receiver on the trace gateway (`alloy-gateway` Helm chart). */
 export const OTLP_GATEWAY_ENDPOINT = defineEndpoint({
   namespace: "alloy-gateway",

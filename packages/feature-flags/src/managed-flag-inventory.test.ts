@@ -306,6 +306,7 @@ describe("ManagedFlagInventorySchema", () => {
       "golink",
       "feeds",
       "mail",
+      "errors",
     ]);
     expect(
       materializeManagedNamespaceEnvironment(
