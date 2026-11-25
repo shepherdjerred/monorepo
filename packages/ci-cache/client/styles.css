@@ -1,0 +1,137 @@
+/*
+ * CI cache's own rules on top of @shepherdjerred/console-ui. Unlayered, so they
+ * win over the shared `ui.*` layers; every colour is a `--ui-*` token.
+ */
+
+.ci-cache-search form {
+  margin: 0;
+}
+.ci-cache-search .ui-field-box {
+  min-width: min(290px, 38vw);
+}
+.ci-cache-search .ui-field-control {
+  flex: 1;
+  min-width: 0;
+}
+.ci-cache-search .ui-field-control:focus-visible {
+  outline: 0;
+}
+
+.ci-cache-mobile-bar {
+  display: none;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ui-line);
+}
+.ci-cache-mobile-bar .ui-workspace {
+  flex: 1;
+}
+.ci-cache-mobile-bar .ui-field-control {
+  height: 26px;
+}
+
+.ci-cache-capacity-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--ui-line);
+}
+
+.ci-cache-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 12px 20px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--ui-line);
+  border-left: 3px solid var(--ui-sev, var(--ui-line));
+  border-radius: 6px;
+  background: var(--ui-head);
+  color: var(--ui-ink);
+}
+
+.ci-cache-loading,
+.ci-cache-empty {
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.ci-cache-table {
+  table-layout: auto;
+}
+.ci-cache-table tbody th {
+  border-bottom: 1px solid var(--ui-line-soft);
+  font-weight: 400;
+  white-space: nowrap;
+}
+.ci-cache-table tbody tr:hover th {
+  background: var(--ui-hover);
+}
+
+.ci-cache-rate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ci-cache-entries-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ci-cache-entries-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ci-cache-key {
+  max-width: 36ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ci-cache-integrity {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .ci-cache-mobile-bar {
+    display: flex;
+    border-bottom: 0;
+  }
+  .ci-cache-search .ui-field-box {
+    min-width: 0;
+    width: 100%;
+  }
+  .ui-header {
+    flex-wrap: wrap;
+    padding-block: 8px;
+  }
+  .ui-header-actions {
+    display: contents;
+  }
+  .ui-header-title {
+    flex: 1;
+  }
+  .ui-header .ui-chip {
+    order: 2;
+  }
+  .ci-cache-search {
+    order: 3;
+    flex-basis: 100%;
+  }
+  .ci-cache-capacity-bar {
+    padding-inline: 12px;
+  }
+}

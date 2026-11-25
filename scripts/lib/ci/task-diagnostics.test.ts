@@ -1,4 +1,5 @@
 import {
+  chmod,
   cp,
   mkdtemp,
   mkdir,
@@ -79,6 +80,7 @@ test("input auditing keeps file hashes and variable names while removing secret-
 });
 afterEach(async () => {
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
   await Promise.all(
     directories
       .splice(0)
@@ -271,6 +273,7 @@ test("removes stale browser selection before execution and accepts fresh reports
 test.each([0, 42])(
   "publishes even when the task exits %i",
   async (exitCode) => {
+    vi.stubEnv("RUSTC_WRAPPER", "");
     const root = await repository();
     const upload = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
     expect(
@@ -338,6 +341,7 @@ test("attaches suite timings from JUnit reports without their test-case bodies",
   await mkdir(path.dirname(report), { recursive: true });
   await Bun.write(report, junitReport);
   const upload = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+  vi.stubEnv("RUSTC_WRAPPER", "");
   expect(await retainDiagnostics(identity, new Set(), root, upload)).toBe(0);
   expect(upload).toHaveBeenCalledWith({
     ...identity,
@@ -349,6 +353,7 @@ test("attaches suite timings from JUnit reports without their test-case bodies",
 });
 
 test("a failed timing collection is omitted and never changes the result", async () => {
+  vi.stubEnv("RUSTC_WRAPPER", "");
   const root = await repository();
   // A file where the JUnit directory belongs makes the scan fail (ENOTDIR).
   await mkdir(path.join(root, ".ci-reports"));
@@ -395,6 +400,7 @@ test("malformed summaries publish explicit failure metadata without parser value
   );
   const upload = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
   const error = vi.spyOn(console, "error").mockImplementation(vi.fn());
+  vi.stubEnv("RUSTC_WRAPPER", "");
   expect(
     await retainDiagnostics(
       { ...identity, exitCode: 42 },
@@ -414,6 +420,7 @@ test("malformed summaries publish explicit failure metadata without parser value
 });
 
 test("invalid input hashes fail collection explicitly instead of publishing partial audit evidence", async () => {
+  vi.stubEnv("RUSTC_WRAPPER", "");
   const root = await repository();
   const raw = summary();
   const task = raw.tasks[0];
@@ -683,4 +690,64 @@ test("stdin transfer rejects oversized evidence before parsing", async () => {
   await expect(
     readDiagnosticInput(new Blob(["x".repeat(1024 * 1024 + 1)]).stream()),
   ).rejects.toThrow("Diagnostic payload too large");
+});
+
+async function retainWithRustcWrapper(root: string, wrapperPath: string) {
+  vi.stubEnv("RUSTC_WRAPPER", wrapperPath);
+  const upload = vi
+    .fn<NonNullable<Parameters<typeof retainDiagnostics>[3]>>()
+    .mockResolvedValue(undefined);
+  expect(await retainDiagnostics(identity, new Set(), root, upload)).toBe(0);
+  expect(upload).toHaveBeenCalledTimes(1);
+  return upload.mock.calls[0]?.[0];
+}
+
+test("best-effort sccache collection captures JSON stats when RUSTC_WRAPPER=sccache and redacts URL credentials", async () => {
+  const root = await repository();
+  const fakeBinDir = path.join(root, "bin");
+  await mkdir(fakeBinDir, { recursive: true });
+  const fakeSccache = path.join(fakeBinDir, "sccache");
+  await Bun.write(
+    fakeSccache,
+    String.raw`#!/bin/sh
+if [ "$1" = "--show-stats" ] && [ "$2" = "--stats-format=json" ]; then
+  printf '%s\n' '{"stats":{"compile_requests":8,"cache_hits":{"counts":{"Rust":7}},"cache_writes":1},"cache_location":"Webdav: https://ci-main:sentinel-secret@ci-cache.tailnet-1a49.ts.net/sccache/","version":"0.19.0"}'
+  exit 0
+fi
+exit 1
+`,
+  );
+  await chmod(fakeSccache, 0o755);
+
+  const retained = await retainWithRustcWrapper(root, fakeSccache);
+  expect(retained).toEqual({
+    ...identity,
+    collectionFailed: false,
+    turbo: [],
+    testTimings: noSuites,
+    sccache: {
+      stats: {
+        compile_requests: 8,
+        cache_hits: { counts: { Rust: 7 } },
+        cache_writes: 1,
+      },
+      cache_location: "Webdav: https://ci-cache.tailnet-1a49.ts.net/sccache/",
+      version: "0.19.0",
+    },
+  });
+  expect(JSON.stringify(retained)).not.toContain("sentinel-secret");
+});
+
+test("best-effort sccache collection never fails diagnostics when sccache is absent or stopped", async () => {
+  const root = await repository();
+  const retained = await retainWithRustcWrapper(
+    root,
+    path.join(root, "missing/sccache"),
+  );
+  expect(retained).toEqual({
+    ...identity,
+    collectionFailed: false,
+    turbo: [],
+    testTimings: noSuites,
+  });
 });

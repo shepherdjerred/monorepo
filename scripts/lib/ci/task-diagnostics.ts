@@ -143,11 +143,26 @@ export const TaskDiagnosticsSchema = z.object({
   workspaceUsage: WorkspaceUsageSchema.optional(),
   /** Per-suite JUnit wall time; absent when its best-effort collection failed. */
   testTimings: TestTimingsSchema.optional(),
+  /** Best-effort `sccache --show-stats --stats-format=json` snapshot when `RUSTC_WRAPPER` is `sccache`. */
+  sccache: z.unknown().optional(),
   turbo: z.array(TurboDiagnosticSchema),
   browserSelection: BrowserSelectionSchema.optional(),
 });
 
 export type TaskDiagnostics = z.infer<typeof TaskDiagnosticsSchema>;
+
+/** Sanitize `sccache --show-stats --stats-format=json`, redacting any URL userinfo. */
+export function sanitizeSccacheStats(raw: unknown): Record<string, unknown> {
+  const parsed = z.record(z.string(), z.unknown()).parse(raw);
+  const out: Record<string, unknown> = { ...parsed };
+  if (typeof out["cache_location"] === "string") {
+    out["cache_location"] = out["cache_location"].replaceAll(
+      /(https?:\/\/)[^/\s@]+@/giu,
+      "$1",
+    );
+  }
+  return out;
+}
 
 /** Read hashes and declared variable names, never environment values. */
 export function sanitizeTurboInputs(raw: unknown): unknown {

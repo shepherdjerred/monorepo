@@ -1,0 +1,164 @@
+/*
+ * Charts console rules on top of @shepherdjerred/console-ui.
+ * Unlayered so they sit cleanly above ui.*; every colour uses a --ui-* token.
+ */
+
+.ch-main {
+  min-width: 0;
+}
+
+.ch-mobile-bar {
+  display: none;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ui-line);
+}
+
+.ch-mobile-bar .ui-workspace {
+  flex: 1;
+}
+
+.ch-mobile-bar .ui-field-control {
+  height: 26px;
+}
+
+.ch-toolbar {
+  border-bottom: 1px solid var(--ui-line);
+}
+
+.ch-search form {
+  margin: 0;
+}
+
+.ch-search .ui-field-box {
+  min-width: min(280px, 44vw);
+}
+
+.ch-search .ui-field-control {
+  flex: 1;
+  min-width: 0;
+}
+
+.ch-search .ui-field-control:focus-visible {
+  outline: 0;
+}
+
+.ch-quota-meter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  font-size: 12px;
+}
+
+.ch-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 12px 20px;
+  padding: 8px 12px;
+  border: 1px solid var(--ui-line);
+  border-left: 3px solid var(--ui-sev, var(--ui-line));
+  border-radius: 6px;
+  background: var(--ui-head);
+  color: var(--ui-ink);
+}
+
+.ch-empty {
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.ch-table tbody th,
+.ch-table tbody td {
+  height: 44px;
+  padding-block: 6px;
+  vertical-align: middle;
+}
+
+.ch-table tbody th {
+  border-bottom: 1px solid var(--ui-line-soft);
+  font-weight: 400;
+}
+
+.ch-table tbody tr:hover th {
+  background: var(--ui-hover);
+}
+
+.ch-chart-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.ch-chart-head .ui-twist {
+  margin-top: 1px;
+  flex: none;
+}
+
+.ch-chart-head .ui-twist:hover {
+  background: var(--ui-hover);
+  color: var(--ui-ink);
+}
+
+.ch-chart-meta {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ch-desc {
+  max-width: 38ch;
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+}
+
+.ch-identity {
+  display: grid;
+  gap: 1px;
+}
+
+.ch-sub {
+  display: block;
+  font-size: 11.5px;
+}
+
+.ch-child-lead {
+  padding-left: 44px;
+  font-size: 12px;
+}
+
+.ch-meta-link {
+  color: var(--ui-ink);
+  text-decoration: none;
+}
+
+.ch-meta-link:hover {
+  color: var(--ui-accent);
+  text-decoration: underline;
+}
+
+.ch-dl-btn {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+@media (max-width: 900px) {
+  .ch-mobile-bar {
+    display: flex;
+  }
+  .ch-search .ui-field-box {
+    min-width: 0;
+    width: 100%;
+  }
+  .ch-quota-meter {
+    margin-left: 0;
+  }
+}

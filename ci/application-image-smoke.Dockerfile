@@ -7,12 +7,22 @@
 # `scratch` keeps static Dockerfile checks valid; an invocation that forgets
 # the required candidate argument still fails at the first RUN instruction.
 ARG CANDIDATE_IMAGE=scratch
+
+# Pure-Rust debian:trixie-slim application images (e.g. charts, ci-cache) ship
+# no Bun runtime in production. Stage a standalone Bun binary only inside this
+# ephemeral smoke harness so `smoke-app-in-image.ts` runs identically across all
+# candidate images.
+FROM oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61 AS bun-harness
+
 FROM ${CANDIDATE_IMAGE}
 
 ARG SMOKE_TARGET
 ARG EXPECTED_CONTRACT_HASH
 
 USER 0:0
+COPY --from=bun-harness --chown=1000:1000 --chmod=0755 \
+  /usr/local/bin/bun \
+  /tmp/smoke-bun
 COPY --chown=1000:1000 \
   ci/scripts/images/smoke-app-in-image.ts \
   /app/ci/scripts/images/
@@ -38,4 +48,4 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 ENV EXPECTED_CONTRACT_HASH=${EXPECTED_CONTRACT_HASH}
 ENV HOME=/tmp
 USER 1000:1000
-RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
+RUN sh -c 'exec "$(command -v bun || echo /tmp/smoke-bun)" /app/ci/scripts/images/smoke-app-in-image.ts'

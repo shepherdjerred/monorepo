@@ -86,6 +86,10 @@ import { createStormStatsApp } from "@shepherdjerred/homelab/cdk8s/src/resources
 import { createMailApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/mail.ts";
 import { createFeedsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/feeds.ts";
 
+import { createChartsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/charts.ts";
+
+import { createCiCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/ci-cache.ts";
+
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
     namespace: "argocd",
@@ -188,6 +192,10 @@ export async function createAppsChart(app: App) {
 
   createMailApp(chart);
   createFeedsApp(chart);
+
+  createChartsApp(chart);
+
+  createCiCacheApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);

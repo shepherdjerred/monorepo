@@ -106,6 +106,8 @@ group "app" {
     "storm-stats",
     "mail",
     "feeds",
+    "charts",
+    "ci-cache",
   ]
 }
 
@@ -313,6 +315,22 @@ target "feeds" {
   tags       = imagetags("feeds")
   cache-from = cachefrom("feeds")
   cache-to   = cacheto("feeds")
+}
+
+target "charts" {
+  inherits   = ["_app"]
+  dockerfile = "packages/charts/Dockerfile"
+  tags       = imagetags("charts")
+  cache-from = cachefrom("charts")
+  cache-to   = cacheto("charts")
+}
+
+target "ci-cache" {
+  inherits   = ["_app"]
+  dockerfile = "packages/ci-cache/Dockerfile"
+  tags       = imagetags("ci-cache")
+  cache-from = cachefrom("ci-cache")
+  cache-to   = cacheto("ci-cache")
 }
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────

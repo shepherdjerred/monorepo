@@ -15,6 +15,8 @@ hold only scoped invariants that agents must keep in context.
 | [feeds](feeds/)                                                 | Tailnet feed listing console and isolated NetNewsWire Reader API over SQLite + FTS5                       |
 | [flags](flags/)                                                 | Deployment flag documents, credentialless evaluation, and operator edits                                  |
 | [mail](mail/)                                                   | Outbound mail broker — SQLite WAL outbox, REST submission API, cluster STARTTLS SMTP, and console UI      |
+| [charts](charts/)                                               | Helm chart registry (`index.yaml`, `/api/charts*`, SQLite WAL index) and read-only console UI             |
+| [ci-cache](ci-cache/)                                           | Streaming Rust remote cache for Turborepo (`/v8/*`), Gradle (`/cache/*`), and `sccache` WebDAV            |
 | [birmel](birmel/)                                               | Discord bot on an explicit AI SDK agent runtime                                                           |
 | [glitter-boys-launcher](glitter-boys-launcher/)                 | Native Rust/egui game installer and launcher for Windows x64                                              |
 | [monarch](monarch/)                                             | AI transaction categorization pipeline for Monarch Money                                                  |

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!**/README.md",
+        "!**/*.test.ts",
+        "!**/*.test.tsx",
+        "!target/**"
+      ],
+      "outputs": ["dist/**"],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "^generate", "generate"],
+      "inputs": ["$TURBO_DEFAULT$", "!target/**"],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "lint": {
+      "dependsOn": ["^build", "^generate", "generate"],
+      "inputs": ["$TURBO_DEFAULT$", "!target/**"],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    },
+    "test": {
+      "dependsOn": ["^build", "^generate", "generate"],
+      "env": ["NODE_ENV"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/vitest.config.ts",
+        "!target/**"
+      ],
+      "passThroughEnv": ["MISE_DATA_DIR"]
+    }
+  }
+}

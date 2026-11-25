@@ -47,11 +47,14 @@ const DEBUG_PORT = 6060;
 
 // Keep the on-disk build cache bounded well under the PVC size so BuildKit's GC
 // always has headroom and the volume can never fill. Limit usage to 480 GiB of
-// a 600 GiB PVC, retaining 120 GiB of free space for active solves and metadata,
-// and sweep short-lived build contexts and cache mounts first (96 GiB / 48h)
-// before evicting reusable base and toolchain layers.
+// a 600 GiB PVC, retaining 120 GiB of free space for active solves and metadata:
+// sweep short-lived build contexts and git checkouts first (48 GiB / 48h), retain
+// `RUN --mount=type=cache` mounts (`sccache-rust`, `cargo-registry`, `cargo-git`)
+// across weekends and multi-day gaps (48 GiB / 336h = 14d), and then enforce the
+// overall ceiling before evicting reusable base and toolchain layers.
 const CACHE_PVC = Size.gibibytes(600);
-const GC_EPHEMERAL_MAX_USED_BYTES = 96 * 1024 * 1024 * 1024;
+const GC_EPHEMERAL_MAX_USED_BYTES = 48 * 1024 * 1024 * 1024;
+const GC_CACHEMOUNT_MAX_USED_BYTES = 48 * 1024 * 1024 * 1024;
 const GC_MAX_USED_BYTES = 480 * 1024 * 1024 * 1024;
 const GC_MIN_FREE_BYTES = 120 * 1024 * 1024 * 1024;
 
@@ -72,15 +75,20 @@ debug = false
   # 12Gi limit (PR #1668 build 6303). Every fan-out needs a concurrency
   # bound; 8 matches the CPU limit and keeps peak memory proportional.
   max-parallelism = 8
-  # Sweep short-lived build contexts, git checkouts, and cache mounts first so
-  # reusable base and toolchain layers stay warm, then enforce both an upper
-  # cache bound and free-space reserve across all records. keepBytes is a
-  # retention floor, not a capacity ceiling, and therefore cannot prevent a
-  # warm cache from filling the PVC.
+  # Sweep short-lived build contexts and git checkouts after 48h, keep
+  # RUN --mount=type=cache mounts (sccache-rust, cargo-registry, cargo-git) warm
+  # for 14 days (336h), then enforce both an upper cache bound and free-space
+  # reserve across all records. keepBytes is a retention floor, not a capacity
+  # ceiling, and therefore cannot prevent a warm cache from filling the PVC.
   [[worker.oci.gcpolicy]]
     keepDuration = "48h"
     maxUsedSpace = ${String(GC_EPHEMERAL_MAX_USED_BYTES)}
-    filters = ["type==source.local", "type==exec.cachemount", "type==source.git.checkout"]
+    filters = ["type==source.local", "type==source.git.checkout"]
+
+  [[worker.oci.gcpolicy]]
+    keepDuration = "336h"
+    maxUsedSpace = ${String(GC_CACHEMOUNT_MAX_USED_BYTES)}
+    filters = ["type==exec.cachemount"]
 
   [[worker.oci.gcpolicy]]
     maxUsedSpace = ${String(GC_MAX_USED_BYTES)}

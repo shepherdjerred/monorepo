@@ -1,0 +1,38 @@
+{
+  "name": "@shepherdjerred/charts",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "First-party Helm chart repository and read-only console UI",
+  "exports": {
+    "./*": "./client/*"
+  },
+  "scripts": {
+    "build": "vite build",
+    "build:client": "vite build",
+    "dev": "vite",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run client && mise exec rust sccache -- cargo test --workspace --locked",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && mise exec rust sccache -- cargo check --workspace --all-targets --locked",
+    "lint": "bunx eslint --cache . --max-warnings=0 && mise exec rust sccache -- cargo fmt --all -- --check && mise exec rust sccache -- cargo clippy --workspace --all-targets --locked -- -D warnings"
+  },
+  "devDependencies": {
+    "@shepherdjerred/console-ui": "workspace:*",
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/ops-model": "workspace:*",
+    "@types/bun": "1.4.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-istanbul": "5.0.5",
+    "eslint": "^10.7.0",
+    "lucide-react": "^1.14.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.11",
+    "vitest": "5.0.5",
+    "zod": "^4.4.3"
+  }
+}
