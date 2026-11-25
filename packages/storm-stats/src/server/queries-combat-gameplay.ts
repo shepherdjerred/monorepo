@@ -1,5 +1,8 @@
 import type { Database } from "bun:sqlite";
-import type { WeaponStat } from "@shepherdjerred/storm-stats/shared/contract.ts";
+import type {
+  TownSummarySnapshot,
+  WeaponStat,
+} from "@shepherdjerred/storm-stats/shared/contract.ts";
 import type {
   GameplayOverviewResponse,
   MobCombatRow,
@@ -187,13 +190,14 @@ export function queryGameplayOverview(
 
   const economyTop = [...gameplayRows]
     .sort(
-      (a, b) => b.coins - a.coins || a.player_name.localeCompare(b.player_name),
+      (a, b) =>
+        b.crystals - a.crystals || a.player_name.localeCompare(b.player_name),
     )
     .slice(0, 20)
     .map((r) => ({
       uuid: r.player_uuid,
       name: r.player_name,
-      coins: r.coins,
+      crystals: r.crystals,
       townName: r.town_name,
     }));
 
@@ -206,7 +210,7 @@ export function queryGameplayOverview(
   if (towns.length === 0) {
     const derived = new Map<string, { members: number; claims: number }>();
     for (const r of gameplayRows) {
-      if (r.town_name === null) {
+      if (r.town_name === null || r.town_kind === "camp") {
         continue;
       }
       const existing = derived.get(r.town_name) ?? { members: 0, claims: 0 };
@@ -215,11 +219,11 @@ export function queryGameplayOverview(
       derived.set(r.town_name, existing);
     }
     towns = [...derived.entries()]
-      .map(([name, info]) => ({
+      .map(([name, info]): TownSummarySnapshot => ({
         name,
         members: info.members,
         claims: info.claims,
-        kind: "settlement",
+        kind: "player",
       }))
       .sort((a, b) => b.members - a.members || a.name.localeCompare(b.name));
   }

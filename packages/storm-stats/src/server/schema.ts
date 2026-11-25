@@ -3,33 +3,26 @@ import { z } from "zod";
 import {
   OnlinePlayerSummarySchema,
   TownSummarySnapshotSchema,
-  type GameMode,
   type OnlinePlayerSummary,
   type TownSummarySnapshot,
-  type WorldBucket,
 } from "@shepherdjerred/storm-stats/shared/contract.ts";
-
-export const WORLD_LABELS: Readonly<Record<WorldBucket, string>> = {
-  world: "Overworld",
-  world_nether: "The Nether",
-  world_the_end: "The End",
-  skylands: "Skylands",
-  creative: "Creative",
-  arena: "Mob Arena",
-  rwf: "Race for Wool",
-  other: "Other Worlds",
-};
-
-export const MODE_LABELS: Readonly<Record<GameMode, string>> = {
-  survival: "Survival",
-  creative: "Creative",
-  arena: "Arena",
-  rwf: "Race for Wool",
-};
 
 const OnlinePlayersArraySchema = z.array(OnlinePlayerSummarySchema);
 const TownsArraySchema = z.array(TownSummarySnapshotSchema);
 const NumberRecordSchema = z.record(z.string(), z.number().int().min(0));
+const RawJsonArraySchema = z.array(z.unknown());
+const RawTownKindSchema = z.looseObject({ kind: z.unknown() });
+
+function filterPlayerTownEntries(parsed: unknown): unknown {
+  const arr = RawJsonArraySchema.safeParse(parsed);
+  if (!arr.success) {
+    return parsed;
+  }
+  return arr.data.filter((item) => {
+    const checked = RawTownKindSchema.safeParse(item);
+    return checked.success && checked.data.kind === "player";
+  });
+}
 
 export function parseOnlinePlayersJson(raw: string): OnlinePlayerSummary[] {
   const parsed: unknown = JSON.parse(raw);
@@ -38,7 +31,7 @@ export function parseOnlinePlayersJson(raw: string): OnlinePlayerSummary[] {
 
 export function parseTownsJson(raw: string): TownSummarySnapshot[] {
   const parsed: unknown = JSON.parse(raw);
-  return TownsArraySchema.parse(parsed);
+  return TownsArraySchema.parse(filterPlayerTownEntries(parsed));
 }
 
 export function parseNumberRecordJson(raw: string): Record<string, number> {
@@ -109,8 +102,10 @@ export type PlayerGameplayRow = {
   readonly player_uuid: string;
   readonly player_name: string;
   readonly captured_at: string;
-  readonly coins: number;
+  readonly crystals: number;
+  readonly rwf_credits: number;
   readonly town_name: string | null;
+  readonly town_kind: string | null;
   readonly town_role: string | null;
   readonly town_claims: number;
   readonly power_level: number;
@@ -280,8 +275,10 @@ CREATE TABLE IF NOT EXISTS player_gameplay (
   player_uuid TEXT PRIMARY KEY REFERENCES players(uuid) ON DELETE CASCADE,
   player_name TEXT NOT NULL,
   captured_at TEXT NOT NULL,
-  coins INTEGER NOT NULL DEFAULT 0,
+  crystals INTEGER NOT NULL DEFAULT 0,
+  rwf_credits INTEGER NOT NULL DEFAULT 0,
   town_name TEXT,
+  town_kind TEXT,
   town_role TEXT,
   town_claims INTEGER NOT NULL DEFAULT 0,
   power_level INTEGER NOT NULL DEFAULT 0,
@@ -298,7 +295,6 @@ CREATE TABLE IF NOT EXISTS player_gameplay (
   rwf_deaths INTEGER NOT NULL DEFAULT 0
 );
 
-CREATE INDEX IF NOT EXISTS idx_gameplay_coins ON player_gameplay(coins DESC);
 CREATE INDEX IF NOT EXISTS idx_gameplay_power ON player_gameplay(power_level DESC);
 CREATE INDEX IF NOT EXISTS idx_gameplay_town ON player_gameplay(town_name);
 
@@ -324,6 +320,63 @@ CREATE TABLE IF NOT EXISTS online_peaks (
 );
 `;
 
+function migratePlayerGameplayColumns(db: Database): void {
+  const cols = db
+    .query<{ name: string }, []>("PRAGMA table_info(player_gameplay)")
+    .all();
+  const names = new Set(cols.map((col) => col.name));
+
+  if (names.has("coins") && !names.has("crystals")) {
+    db.run(
+      "DROP INDEX IF EXISTS idx_gameplay_coins; ALTER TABLE player_gameplay RENAME COLUMN coins TO crystals;",
+    );
+  }
+  if (!names.has("rwf_credits")) {
+    db.run(
+      "ALTER TABLE player_gameplay ADD COLUMN rwf_credits INTEGER NOT NULL DEFAULT 0;",
+    );
+  }
+  if (!names.has("town_kind")) {
+    db.run("ALTER TABLE player_gameplay ADD COLUMN town_kind TEXT;");
+  }
+  db.run(
+    "UPDATE player_gameplay SET town_role = 'assistant' WHERE town_role = 'officer';",
+  );
+  db.run(
+    "CREATE INDEX IF NOT EXISTS idx_gameplay_crystals ON player_gameplay(crystals DESC);",
+  );
+}
+
+function scrubLegacyServerStateTowns(db: Database): void {
+  const row = db
+    .query<{ towns_json: string }, []>(
+      "SELECT towns_json FROM server_state WHERE id = 1",
+    )
+    .get();
+  if (row === null) {
+    return;
+  }
+  try {
+    const rawParsed: unknown = JSON.parse(row.towns_json);
+    const rawArr = RawJsonArraySchema.safeParse(rawParsed);
+    if (!rawArr.success) {
+      return;
+    }
+    const playerOnly = TownsArraySchema.parse(
+      filterPlayerTownEntries(rawArr.data),
+    );
+    if (playerOnly.length !== rawArr.data.length) {
+      db.query("UPDATE server_state SET towns_json = ? WHERE id = 1").run(
+        JSON.stringify(playerOnly),
+      );
+    }
+  } catch {
+    db.query("UPDATE server_state SET towns_json = '[]' WHERE id = 1").run();
+  }
+}
+
 export function initializeSchema(db: Database): void {
   db.run(SCHEMA_DDL);
+  migratePlayerGameplayColumns(db);
+  scrubLegacyServerStateTowns(db);
 }

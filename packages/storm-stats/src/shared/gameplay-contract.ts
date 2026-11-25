@@ -50,7 +50,7 @@ export const GameplayOverviewResponseSchema = z.strictObject({
     z.strictObject({
       uuid: PlayerUuidSchema,
       name: z.string(),
-      coins: NonNegIntSchema,
+      crystals: NonNegIntSchema,
       townName: z.string().nullable(),
     }),
   ),

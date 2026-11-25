@@ -11,6 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.towns.domain.Fixtures;
+import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageIndex;
+import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite;
 import com.shepherdjerred.thestorm.towns.domain.land.Claim;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlags;
@@ -20,9 +22,12 @@ import com.shepherdjerred.thestorm.towns.domain.protection.Action;
 import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
 import com.shepherdjerred.thestorm.towns.domain.protection.TrustLevel;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
+import com.shepherdjerred.thestorm.towns.domain.region.RegionProfile;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -89,7 +94,11 @@ final class TownsStateTest {
   void membershipPortReflectsRemovedMembersAndTownIdentity() {
     TownMembership membership = state;
     assertThat(membership.isMember(ASSISTANT, TOWN_A)).isTrue();
+    assertThat(membership.manages(ASSISTANT, TOWN_A)).isTrue();
     assertThat(membership.isMember(ASSISTANT, TOWN_B)).isFalse();
+    assertThat(membership.manages(ASSISTANT, TOWN_B)).isFalse();
+    TownMembership minimalDouble = player -> Optional.empty();
+    assertThat(minimalDouble.manages(ASSISTANT, TOWN_A)).isFalse();
     state.replaceTown(Fixtures.townA().withoutMember(ASSISTANT));
     assertThat(membership.isMember(ASSISTANT, TOWN_A)).isFalse();
   }
@@ -180,5 +189,47 @@ final class TownsStateTest {
         .isInstanceOf(IllegalStateException.class);
     assertThatThrownBy(() -> state.load(new TownsSnapshot(List.of(), List.of())))
         .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  void memberResidencySummarizesTownRolesCampsAndHeritageFootprint() {
+    var member = UUID.randomUUID();
+    state.replaceTown(Fixtures.townA().withMember(member, TownRole.MEMBER));
+
+    var campFounder = UUID.randomUUID();
+    var campId = UUID.randomUUID();
+    state.addTown(Town.camp(campId, "Camper", Fixtures.FOUNDED, campFounder));
+    state.addClaim(claim(campId, 40, 40));
+
+    var heritageOwner = UUID.randomUUID();
+    var site =
+        new HeritageSite(
+            "haven-keep",
+            "Haven",
+            HeritageSite.Kind.PLAYER,
+            "Haven",
+            "world",
+            RegionProfile.PRESERVE,
+            Set.of(new HeritageSite.Chunk(60, 60), new HeritageSite.Chunk(60, 61)),
+            List.of(),
+            Set.of(new HeritageSite.Chunk(60, 60)),
+            List.of(new HeritageSite.Editor(heritageOwner, "Mayor")),
+            "Imported player town");
+    state.attachHeritage(new HeritageIndex(List.of(site)));
+    var heritageTownId = site.activeTownId().orElseThrow();
+    state.addTown(Town.found(heritageTownId, "Haven", Fixtures.FOUNDED, heritageOwner));
+    state.addClaim(claim(heritageTownId, 61, 60));
+
+    assertThat(state.memberResidency(OWNER))
+        .contains(new TownsState.MemberResidency("Aegis", "town", "owner", 1));
+    assertThat(state.memberResidency(ASSISTANT))
+        .contains(new TownsState.MemberResidency("Aegis", "town", "assistant", 1));
+    assertThat(state.memberResidency(member))
+        .contains(new TownsState.MemberResidency("Aegis", "town", "member", 1));
+    assertThat(state.memberResidency(campFounder))
+        .contains(new TownsState.MemberResidency("Camper", "camp", "owner", 1));
+    assertThat(state.memberResidency(heritageOwner))
+        .contains(new TownsState.MemberResidency("Haven", "town", "owner", 3));
+    assertThat(state.memberResidency(NOMAD)).isEmpty();
   }
 }

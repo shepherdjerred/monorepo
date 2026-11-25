@@ -3,8 +3,11 @@ import {
   activityGroupLabel,
   buildAvatarDescriptor,
   formatActiveRatio,
+  formatArenaLabel,
   formatBounceCategory,
   formatCombatKind,
+  formatCredits,
+  formatCrystals,
   formatDateTime,
   formatDurationMs,
   formatHours,
@@ -16,6 +19,7 @@ import {
   formatPing,
   formatPlatform,
   formatRelativeTime,
+  formatTrackLevel,
   formatWorldLabel,
 } from "./format.ts";
 
@@ -52,6 +56,26 @@ describe("duration and numeric formatters", () => {
     expect(formatKdr(9, 4)).toBe("2.25");
   });
 
+  test("formats Storm currencies, track levels, and arena labels", () => {
+    expect(formatCrystals(0)).toBe("0 crystals");
+    expect(formatCrystals(1)).toBe("1 crystal");
+    expect(formatCrystals(12_450)).toBe("12,450 crystals");
+
+    expect(formatCredits(0)).toBe("0 Credits");
+    expect(formatCredits(1)).toBe("1 Credit");
+    expect(formatCredits(450)).toBe("450 Credits");
+
+    expect(formatTrackLevel(0)).toBe("Unstarted");
+    expect(formatTrackLevel(1)).toBe("Level I");
+    expect(formatTrackLevel(2)).toBe("Level II");
+    expect(formatTrackLevel(3)).toBe("Level III");
+    expect(formatTrackLevel(4)).toBe("Level IV");
+    expect(formatTrackLevel(5)).toBe("Level V");
+
+    expect(formatArenaLabel("colosseum")).toBe("The Colosseum");
+    expect(formatArenaLabel("custom_ring")).toBe("Custom Ring");
+  });
+
   test("formats timestamps in Pacific Time and relative elapsed labels", () => {
     expect(formatDateTime(null)).toBe("—");
     expect(formatDateTime("2026-07-04T19:30:00Z")).toContain("Jul 4, 2026");
@@ -65,10 +89,15 @@ describe("duration and numeric formatters", () => {
   });
 
   test("maps domain enums and deterministic symmetric Minecraft avatars", () => {
-    expect(formatPlatform("java", "1.21.4")).toBe("Java 1.21.4");
+    expect(formatPlatform("java", "26.3")).toBe("Java 26.3");
     expect(formatPlatform("bedrock")).toBe("Bedrock");
+    expect(formatWorldLabel("frontier")).toBe("Frontier");
+    expect(formatWorldLabel("world")).toBe("Spawn (Main Map 1)");
+    expect(formatWorldLabel("map2")).toBe("Main Map 2");
     expect(formatWorldLabel("skylands")).toBe("Skylands");
-    expect(formatModeLabel("rwf")).toBe("Search & Destroy");
+    expect(formatWorldLabel("rwf")).toBe("Search and Destroy");
+    expect(formatModeLabel("rwf")).toBe("Search and Destroy");
+    expect(formatModeLabel("arena")).toBe("Mob Arena");
     expect(formatCombatKind("pve_death")).toBe("Killed by Mob");
     expect(formatBounceCategory("allowlist")).toBe("Allowlist");
     expect(activityGroupLabel("regular")).toBe("Regular");

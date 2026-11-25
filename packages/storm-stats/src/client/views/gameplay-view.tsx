@@ -1,10 +1,11 @@
-import { Coins, Compass, Crown, Sparkles, Swords } from "lucide-react";
+import { Compass, Crown, Gem, Sparkles, Swords } from "lucide-react";
 import {
   GameplayOverviewResponseSchema,
   type GameplayOverviewResponse,
 } from "@shepherdjerred/storm-stats/shared/gameplay-contract.ts";
 import { useApiQuery } from "@shepherdjerred/storm-stats/client/api.ts";
 import {
+  formatCrystals,
   formatInt,
   formatTitleIdentifier,
 } from "@shepherdjerred/storm-stats/client/format.ts";
@@ -29,10 +30,10 @@ type TownRow = GameplayOverviewResponse["towns"][number];
 type SkillRow = GameplayOverviewResponse["skillsTop"][number];
 
 const ECON_ACCESSORS: Readonly<
-  Record<"name" | "coins", ColumnAccessor<EconomyRow>>
+  Record<"name" | "crystals", ColumnAccessor<EconomyRow>>
 > = {
   name: { kind: "text", getValue: (row) => row.name },
-  coins: { kind: "number", getValue: (row) => row.coins },
+  crystals: { kind: "number", getValue: (row) => row.crystals },
 };
 
 const TOWN_ACCESSORS: Readonly<
@@ -62,8 +63,8 @@ export function GameplayView() {
             Storm Gameplay
           </h1>
           <p className="page-subtitle">
-            First-party Storm plugin analytics across Economy, Towns, Retro
-            Skills, Search &amp; Destroy (RWF), Mob Arena, and Quests.
+            First-party Storm progression and minigame leaderboards across
+            Crystals, Towns, Skills, Search and Destroy, Mob Arena, and Quests.
           </p>
         </div>
       </div>
@@ -84,39 +85,39 @@ function GameplayContent({
 }: {
   readonly data: GameplayOverviewResponse;
 }) {
-  const topCoinHolder = data.economyTop[0];
+  const topHolder = data.economyTop[0];
   const topPowerHolder = data.skillsTop[0];
   const topRwfHolder = data.rwfTop[0];
+  const totalChunks = formatInt(
+    data.towns.reduce((sum, town) => sum + town.claims, 0),
+  );
 
   return (
     <div className="stack-lg">
       <section aria-label="Gameplay highlights" className="kpi-grid">
         <div className="kpi-card">
           <div className="kpi-label">
-            <span>Richest Balance</span>
-            <Coins size={16} aria-hidden="true" />
+            <span>Top Crystal Balance</span>
+            <Gem size={16} aria-hidden="true" />
           </div>
           <div className="kpi-value">
-            {topCoinHolder === undefined
-              ? "—"
-              : `${formatInt(topCoinHolder.coins)} coins`}
+            {topHolder === undefined ? "—" : formatCrystals(topHolder.crystals)}
           </div>
           <div className="kpi-detail">
-            {topCoinHolder === undefined
-              ? "No economy snapshots yet"
-              : `Held by ${topCoinHolder.name}`}
+            {topHolder === undefined
+              ? "No crystal balances yet"
+              : `Held by ${topHolder.name}`}
           </div>
         </div>
 
         <div className="kpi-card">
           <div className="kpi-label">
-            <span>Active Towns</span>
+            <span>Player Towns</span>
             <Compass size={16} aria-hidden="true" />
           </div>
           <div className="kpi-value">{formatInt(data.towns.length)}</div>
           <div className="kpi-detail">
-            {formatInt(data.towns.reduce((sum, town) => sum + town.claims, 0))}{" "}
-            claimed chunks total
+            {totalChunks} protected &amp; claimed chunks
           </div>
         </div>
 
@@ -133,13 +134,13 @@ function GameplayContent({
           <div className="kpi-detail">
             {topPowerHolder === undefined
               ? "No skill snapshots yet"
-              : `${topPowerHolder.name} (${topPowerHolder.topSkill ?? "Balanced"})`}
+              : `${topPowerHolder.name} (${topPowerHolder.topSkill === null ? "Balanced" : formatTitleIdentifier(topPowerHolder.topSkill)})`}
           </div>
         </div>
 
         <div className="kpi-card">
           <div className="kpi-label">
-            <span>Search &amp; Destroy Leader</span>
+            <span>Search and Destroy Leader</span>
             <Swords size={16} aria-hidden="true" />
           </div>
           <div className="kpi-value">
@@ -149,19 +150,19 @@ function GameplayContent({
           </div>
           <div className="kpi-detail">
             {topRwfHolder === undefined
-              ? "No RWF matches yet"
+              ? "No Search and Destroy matches yet"
               : `${topRwfHolder.name} (${formatInt(topRwfHolder.matches)} matches)`}
           </div>
         </div>
       </section>
 
       <div className="grid-2">
-        <EconomyCard rows={data.economyTop} />
+        <CrystalBalancesCard rows={data.economyTop} />
         <TownsDirectoryCard rows={data.towns} />
       </div>
 
       <div className="grid-2">
-        <RetroSkillsCard rows={data.skillsTop} />
+        <SkillsCard rows={data.skillsTop} />
         <RwfLeaderboardCard rows={data.rwfTop} />
       </div>
 
@@ -173,35 +174,39 @@ function GameplayContent({
   );
 }
 
-function EconomyCard({ rows }: { readonly rows: readonly EconomyRow[] }) {
+function CrystalBalancesCard({
+  rows,
+}: {
+  readonly rows: readonly EconomyRow[];
+}) {
   const { sortedRows, headerProps } = useClientTableSort({
     rows,
-    initial: { column: "coins", direction: "descending" },
+    initial: { column: "crystals", direction: "descending" },
     accessors: ECON_ACCESSORS,
-    labels: { name: "Player", coins: "Coins" },
+    labels: { name: "Player", crystals: "Crystals" },
   });
 
   return (
     <div className="panel">
       <div className="panel-header">
         <h2>
-          <Coins
-            size={17}
-            aria-hidden="true"
-            style={{ verticalAlign: "-3px" }}
-          />{" "}
-          Economy (Top Coin Balances)
+          <Gem size={17} aria-hidden="true" style={{ verticalAlign: "-3px" }} />{" "}
+          Crystal Balances (/baltop)
         </h2>
       </div>
       {sortedRows.length === 0 ? (
-        <p className="panel-subtitle">No economy balances captured yet.</p>
+        <p className="panel-subtitle">No crystal balances captured yet.</p>
       ) : (
-        <ResponsiveTable caption="Top player coin balances" compact>
+        <ResponsiveTable caption="Top player crystal balances" compact>
           <thead>
             <tr>
               <SortableTh label="Player" {...headerProps("name")} />
               <th scope="col">Town</th>
-              <SortableTh label="Coins" numeric {...headerProps("coins")} />
+              <SortableTh
+                label="Crystals"
+                numeric
+                {...headerProps("crystals")}
+              />
             </tr>
           </thead>
           <tbody>
@@ -209,8 +214,10 @@ function EconomyCard({ rows }: { readonly rows: readonly EconomyRow[] }) {
               <tr key={row.uuid}>
                 <PlayerRowHeader uuid={row.uuid} name={row.name} />
                 <td data-label="Town">{row.townName ?? "—"}</td>
-                <td data-label="Coins" className="num-col">
-                  <span className="pill pill-gold">{formatInt(row.coins)}</span>
+                <td data-label="Crystals" className="num-col">
+                  <span className="pill pill-gold">
+                    {formatInt(row.crystals)}
+                  </span>
                 </td>
               </tr>
             ))}
@@ -226,7 +233,7 @@ function TownsDirectoryCard({ rows }: { readonly rows: readonly TownRow[] }) {
     rows,
     initial: { column: "members", direction: "descending" },
     accessors: TOWN_ACCESSORS,
-    labels: { name: "Town", members: "Residents", claims: "Claimed Chunks" },
+    labels: { name: "Town", members: "Residents", claims: "Chunks" },
   });
 
   return (
@@ -238,42 +245,32 @@ function TownsDirectoryCard({ rows }: { readonly rows: readonly TownRow[] }) {
             aria-hidden="true"
             style={{ verticalAlign: "-3px" }}
           />{" "}
-          Towns Directory
+          Player Towns (/town list)
         </h2>
       </div>
       {sortedRows.length === 0 ? (
         <p className="panel-subtitle">No towns registered yet.</p>
       ) : (
-        <ResponsiveTable caption="Server towns directory" compact>
+        <ResponsiveTable caption="Server player towns directory" compact>
           <thead>
             <tr>
               <SortableTh label="Town" {...headerProps("name")} />
-              <th scope="col">Kind</th>
               <SortableTh
                 label="Residents"
                 numeric
                 {...headerProps("members")}
               />
-              <SortableTh
-                label="Claimed Chunks"
-                numeric
-                {...headerProps("claims")}
-              />
+              <SortableTh label="Chunks" numeric {...headerProps("claims")} />
             </tr>
           </thead>
           <tbody>
             {sortedRows.map((row) => (
               <tr key={row.name}>
                 <th scope="row">{row.name}</th>
-                <td data-label="Kind">
-                  <span className="pill pill-neutral">
-                    {formatTitleIdentifier(row.kind)}
-                  </span>
-                </td>
                 <td data-label="Residents" className="num-col">
                   {formatInt(row.members)}
                 </td>
-                <td data-label="Claimed Chunks" className="num-col">
+                <td data-label="Chunks" className="num-col">
                   {formatInt(row.claims)}
                 </td>
               </tr>
@@ -285,7 +282,7 @@ function TownsDirectoryCard({ rows }: { readonly rows: readonly TownRow[] }) {
   );
 }
 
-function RetroSkillsCard({ rows }: { readonly rows: readonly SkillRow[] }) {
+function SkillsCard({ rows }: { readonly rows: readonly SkillRow[] }) {
   const { sortedRows, headerProps } = useClientTableSort({
     rows,
     initial: { column: "powerLevel", direction: "descending" },
@@ -306,13 +303,13 @@ function RetroSkillsCard({ rows }: { readonly rows: readonly SkillRow[] }) {
             aria-hidden="true"
             style={{ verticalAlign: "-3px" }}
           />{" "}
-          Retro Skills Power Leaderboard
+          Skills Power Leaderboard (/skills top)
         </h2>
       </div>
       {sortedRows.length === 0 ? (
-        <p className="panel-subtitle">No Retro Skills snapshots yet.</p>
+        <p className="panel-subtitle">No skill snapshots yet.</p>
       ) : (
-        <ResponsiveTable caption="Retro Skills top power levels" compact>
+        <ResponsiveTable caption="Skills top power levels" compact>
           <thead>
             <tr>
               <SortableTh label="Player" {...headerProps("name")} />

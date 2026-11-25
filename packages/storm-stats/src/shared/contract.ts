@@ -2,20 +2,19 @@ import { z } from "zod";
 import ingestContractJson from "#contracts/ingest-v1.json" with { type: "json" };
 
 export const INGEST_CONTRACT = { ...ingestContractJson } as const;
-
 export const PLATFORMS = ["java", "bedrock"] as const;
 export type Platform = (typeof PLATFORMS)[number];
 export const PlatformSchema = z.enum(PLATFORMS);
-
 export const GAME_MODES = ["survival", "creative", "arena", "rwf"] as const;
 export type GameMode = (typeof GAME_MODES)[number];
 export const GameModeSchema = z.enum(GAME_MODES);
-
 export const WORLD_BUCKETS = [
+  "frontier",
   "world",
+  "map2",
+  "skylands",
   "world_nether",
   "world_the_end",
-  "skylands",
   "creative",
   "arena",
   "rwf",
@@ -23,7 +22,53 @@ export const WORLD_BUCKETS = [
 ] as const;
 export type WorldBucket = (typeof WORLD_BUCKETS)[number];
 export const WorldBucketSchema = z.enum(WORLD_BUCKETS);
-
+export const WORLD_LABELS: Readonly<Record<WorldBucket, string>> = {
+  frontier: "Frontier",
+  world: "Spawn (Main Map 1)",
+  map2: "Main Map 2",
+  skylands: "Skylands",
+  world_nether: "The Nether",
+  world_the_end: "The End",
+  creative: "Creative",
+  arena: "Mob Arena",
+  rwf: "Search and Destroy",
+  other: "Other",
+};
+export const MODE_LABELS: Readonly<Record<GameMode, string>> = {
+  survival: "Survival",
+  creative: "Creative",
+  arena: "Mob Arena",
+  rwf: "Search and Destroy",
+};
+export const STORM_SKILLS = [
+  "mining",
+  "woodcutting",
+  "excavation",
+  "herbalism",
+  "fishing",
+  "swords",
+  "axes",
+  "archery",
+  "unarmed",
+  "acrobatics",
+  "repair",
+] as const;
+export type StormSkill = (typeof STORM_SKILLS)[number];
+export const STORM_TRACKS = [
+  "shopkeeper",
+  "mechanic",
+  "engineer",
+  "spellcaster",
+  "governor",
+] as const;
+export type StormTrack = (typeof STORM_TRACKS)[number];
+export const MAX_TRACK_LEVEL = 5;
+export const PLAYER_HOME_KINDS = ["town", "camp"] as const;
+export type PlayerHomeKind = (typeof PLAYER_HOME_KINDS)[number];
+export const PlayerHomeKindSchema = z.enum(PLAYER_HOME_KINDS);
+export const ARENA_LABELS: Readonly<Record<string, string>> = {
+  colosseum: "The Colosseum",
+};
 export const COMBAT_KINDS = [
   "pvp",
   "pve_kill",
@@ -32,7 +77,6 @@ export const COMBAT_KINDS = [
 ] as const;
 export type CombatKind = (typeof COMBAT_KINDS)[number];
 export const CombatKindSchema = z.enum(COMBAT_KINDS);
-
 export const END_REASONS = [
   "disconnect",
   "kick",
@@ -41,7 +85,6 @@ export const END_REASONS = [
 ] as const;
 export type EndReason = (typeof END_REASONS)[number];
 export const EndReasonSchema = z.enum(END_REASONS);
-
 export const BOUNCE_CATEGORIES = [
   "banned",
   "allowlist",
@@ -52,7 +95,6 @@ export const BOUNCE_CATEGORIES = [
 ] as const;
 export type BounceCategory = (typeof BOUNCE_CATEGORIES)[number];
 export const BounceCategorySchema = z.enum(BOUNCE_CATEGORIES);
-
 export const ACTIVITY_GROUPS = [
   "regular",
   "active",
@@ -61,11 +103,9 @@ export const ACTIVITY_GROUPS = [
 ] as const;
 export type ActivityGroup = (typeof ACTIVITY_GROUPS)[number];
 export const ActivityGroupSchema = z.enum(ACTIVITY_GROUPS);
-
 export const VIEWER_ROLES = ["public", "staff"] as const;
 export type ViewerRole = (typeof VIEWER_ROLES)[number];
 export const ViewerRoleSchema = z.enum(VIEWER_ROLES);
-
 export function normalizeIsoTimestamp(value: string): string {
   const parsedMs = Date.parse(value);
   if (Number.isNaN(parsedMs)) {
@@ -73,7 +113,6 @@ export function normalizeIsoTimestamp(value: string): string {
   }
   return new Date(parsedMs).toISOString();
 }
-
 export const IsoTimestampSchema = z.iso
   .datetime({ offset: true })
   .transform((value) => normalizeIsoTimestamp(value));
@@ -88,13 +127,9 @@ export const NonNegIntSchema = z.number().int().min(0);
 export const NonNegFloatSchema = z.number().min(0);
 export const PercentSchema = z.number().min(0).max(100);
 export const NonNegativeMsSchema = z.number().int().min(0).max(31_536_000_000);
-export const NullablePingSchema = z
-  .number()
-  .int()
-  .min(0)
-  .max(60_000)
-  .nullable();
-
+const PingMsSchema = z.number().int().min(0).max(60_000);
+export const NullablePingSchema = PingMsSchema.nullable();
+const IsoCountryCodeSchema = z.string().regex(/^[A-Z]{2}$/u);
 export const SessionStartedEventSchema = z.strictObject({
   type: z.literal("session_started"),
   eventId: UuidSchema,
@@ -107,13 +142,9 @@ export const SessionStartedEventSchema = z.strictObject({
   clientVersion: z.string().min(1).max(64),
   clientBrand: z.string().min(1).max(64).nullable(),
   joinAddress: z.string().min(1).max(255).nullable(),
-  countryCode: z
-    .string()
-    .regex(/^[A-Z]{2}$/u)
-    .nullable(),
+  countryCode: IsoCountryCodeSchema.nullable(),
   countryName: z.string().min(1).max(80).nullable(),
 });
-
 export const SessionIntervalEventSchema = z.strictObject({
   type: z.literal("session_interval"),
   eventId: UuidSchema,
@@ -128,7 +159,6 @@ export const SessionIntervalEventSchema = z.strictObject({
   activeMs: NonNegativeMsSchema,
   pingMs: NullablePingSchema,
 });
-
 export const SessionEndedEventSchema = z.strictObject({
   type: z.literal("session_ended"),
   eventId: UuidSchema,
@@ -144,7 +174,6 @@ export const SessionEndedEventSchema = z.strictObject({
   pingAvgMs: NullablePingSchema,
   pingMaxMs: NullablePingSchema,
 });
-
 export const CombatEventSchema = z.strictObject({
   type: z.literal("combat_event"),
   eventId: UuidSchema,
@@ -159,7 +188,6 @@ export const CombatEventSchema = z.strictObject({
   weapon: z.string().min(1).max(80),
   world: WorldBucketSchema,
 });
-
 export const ConnectionBounceEventSchema = z.strictObject({
   type: z.literal("connection_bounce"),
   eventId: UuidSchema,
@@ -170,7 +198,6 @@ export const ConnectionBounceEventSchema = z.strictObject({
   reason: z.string().max(240),
   joinAddress: z.string().min(1).max(255).nullable(),
 });
-
 export const IngestEventSchema = z.discriminatedUnion("type", [
   SessionStartedEventSchema,
   SessionIntervalEventSchema,
@@ -179,15 +206,16 @@ export const IngestEventSchema = z.discriminatedUnion("type", [
   ConnectionBounceEventSchema,
 ]);
 export type IngestEvent = z.infer<typeof IngestEventSchema>;
-
 export const PlayerGameplaySnapshotSchema = z.strictObject({
   playerUuid: PlayerUuidSchema,
   playerName: BoundedNameSchema,
   capturedAt: IsoTimestampSchema,
   nickname: z.string().min(1).max(64).nullable(),
   primaryGroup: z.string().min(1).max(64),
-  coins: NonNegIntSchema,
+  crystals: NonNegIntSchema,
+  rwfCredits: NonNegIntSchema,
   townName: z.string().min(1).max(80).nullable(),
+  townKind: PlayerHomeKindSchema.nullable(),
   townRole: z.string().min(1).max(40).nullable(),
   townClaims: NonNegIntSchema,
   powerLevel: NonNegIntSchema,
@@ -206,7 +234,6 @@ export const PlayerGameplaySnapshotSchema = z.strictObject({
 export type PlayerGameplaySnapshot = z.infer<
   typeof PlayerGameplaySnapshotSchema
 >;
-
 export const OnlinePlayerSummarySchema = z.strictObject({
   uuid: PlayerUuidSchema,
   name: BoundedNameSchema,
@@ -217,15 +244,13 @@ export const OnlinePlayerSummarySchema = z.strictObject({
   sessionStartedAt: IsoTimestampSchema,
 });
 export type OnlinePlayerSummary = z.infer<typeof OnlinePlayerSummarySchema>;
-
 export const TownSummarySnapshotSchema = z.strictObject({
   name: z.string().min(1).max(80),
   members: NonNegIntSchema,
   claims: NonNegIntSchema,
-  kind: z.string().min(1).max(40),
+  kind: z.literal("player"),
 });
 export type TownSummarySnapshot = z.infer<typeof TownSummarySnapshotSchema>;
-
 export const ServerSnapshotSchema = z.strictObject({
   capturedAt: IsoTimestampSchema,
   onlinePlayers: z.array(OnlinePlayerSummarySchema).max(256),
@@ -234,9 +259,8 @@ export const ServerSnapshotSchema = z.strictObject({
   towns: z.array(TownSummarySnapshotSchema).max(200),
 });
 export type ServerSnapshot = z.infer<typeof ServerSnapshotSchema>;
-
 export const IngestBatchSchema = z.strictObject({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
   batchId: UuidSchema,
   serverName: z.string().min(1).max(80),
   sentAt: IsoTimestampSchema,
@@ -247,14 +271,12 @@ export const IngestBatchSchema = z.strictObject({
   serverSnapshot: ServerSnapshotSchema.nullable(),
 });
 export type IngestBatch = z.infer<typeof IngestBatchSchema>;
-
 export const IngestBatchAckSchema = z.strictObject({
   acceptedEvents: NonNegIntSchema,
   duplicateEvents: NonNegIntSchema,
   updatedPlayers: NonNegIntSchema,
 });
 export type IngestBatchAck = z.infer<typeof IngestBatchAckSchema>;
-
 export const ViewerInfoSchema = z.strictObject({
   role: ViewerRoleSchema,
   serverName: z.string(),
@@ -262,7 +284,6 @@ export const ViewerInfoSchema = z.strictObject({
   generatedAt: IsoTimestampSchema,
 });
 export type ViewerInfo = z.infer<typeof ViewerInfoSchema>;
-
 export const DailyActivityPointSchema = z.strictObject({
   day: DayStringSchema,
   uniquePlayers: NonNegIntSchema,
@@ -273,7 +294,6 @@ export const DailyActivityPointSchema = z.strictObject({
   sessions: NonNegIntSchema,
 });
 export type DailyActivityPoint = z.infer<typeof DailyActivityPointSchema>;
-
 export const PlayerbaseBreakdownSchema = z.strictObject({
   regular: NonNegIntSchema,
   active: NonNegIntSchema,
@@ -282,7 +302,6 @@ export const PlayerbaseBreakdownSchema = z.strictObject({
   total: NonNegIntSchema,
 });
 export type PlayerbaseBreakdown = z.infer<typeof PlayerbaseBreakdownSchema>;
-
 export const WorldShareSchema = z.strictObject({
   world: WorldBucketSchema,
   label: z.string(),
@@ -291,7 +310,6 @@ export const WorldShareSchema = z.strictObject({
   sharePercent: PercentSchema,
 });
 export type WorldShare = z.infer<typeof WorldShareSchema>;
-
 export const ModeShareSchema = z.strictObject({
   mode: GameModeSchema,
   label: z.string(),
@@ -301,7 +319,6 @@ export const ModeShareSchema = z.strictObject({
   sharePercent: PercentSchema,
 });
 export type ModeShare = z.infer<typeof ModeShareSchema>;
-
 export const SessionSummarySchema = z.strictObject({
   sessionId: UuidSchema,
   playerUuid: PlayerUuidSchema,
@@ -319,7 +336,6 @@ export const SessionSummarySchema = z.strictObject({
   deaths: NonNegIntSchema,
 });
 export type SessionSummary = z.infer<typeof SessionSummarySchema>;
-
 export const ServerOverviewKpisSchema = z.strictObject({
   uniquePlayers24h: NonNegIntSchema,
   uniquePlayers7d: NonNegIntSchema,
@@ -344,7 +360,6 @@ export const ServerOverviewKpisSchema = z.strictObject({
   peakOnlineAt: IsoTimestampSchema.nullable(),
 });
 export type ServerOverviewKpis = z.infer<typeof ServerOverviewKpisSchema>;
-
 export const ServerOverviewResponseSchema = z.strictObject({
   serverName: z.string(),
   generatedAt: IsoTimestampSchema,
@@ -362,7 +377,6 @@ export const ServerOverviewResponseSchema = z.strictObject({
 export type ServerOverviewResponse = z.infer<
   typeof ServerOverviewResponseSchema
 >;
-
 export const PunchcardCellSchema = z.strictObject({
   dayOfWeek: z.number().int().min(0).max(6),
   hour: z.number().int().min(0).max(23),
@@ -371,7 +385,6 @@ export const PunchcardCellSchema = z.strictObject({
   sessions: NonNegIntSchema,
 });
 export type PunchcardCell = z.infer<typeof PunchcardCellSchema>;
-
 export const RetentionCohortRowSchema = z.strictObject({
   cohortWeek: DayStringSchema,
   newPlayers: NonNegIntSchema,
@@ -383,7 +396,6 @@ export const RetentionCohortRowSchema = z.strictObject({
   week4Percent: PercentSchema,
 });
 export type RetentionCohortRow = z.infer<typeof RetentionCohortRowSchema>;
-
 export const FirstSessionEngagementSchema = z.strictObject({
   completedFirstSessions: NonNegIntSchema,
   meanActiveMinutes: NonNegFloatSchema,
@@ -393,7 +405,6 @@ export const FirstSessionEngagementSchema = z.strictObject({
 export type FirstSessionEngagement = z.infer<
   typeof FirstSessionEngagementSchema
 >;
-
 export const OnlineActivityResponseSchema = z.strictObject({
   generatedAt: IsoTimestampSchema,
   timeZone: z.literal("America/Los_Angeles"),
@@ -407,7 +418,6 @@ export const OnlineActivityResponseSchema = z.strictObject({
 export type OnlineActivityResponse = z.infer<
   typeof OnlineActivityResponseSchema
 >;
-
 export const PLAYER_SORT_FIELDS = [
   "activePlaytime",
   "connectedPlaytime",
@@ -415,14 +425,13 @@ export const PLAYER_SORT_FIELDS = [
   "lastSeen",
   "firstSeen",
   "activityIndex",
-  "coins",
+  "crystals",
   "powerLevel",
   "pvpKills",
   "name",
 ] as const;
 export type PlayerSortField = (typeof PLAYER_SORT_FIELDS)[number];
 export const PlayerSortFieldSchema = z.enum(PLAYER_SORT_FIELDS);
-
 export const StaffPlayerRowSummarySchema = z.strictObject({
   countryCode: z.string().nullable(),
   countryName: z.string().nullable(),
@@ -430,7 +439,6 @@ export const StaffPlayerRowSummarySchema = z.strictObject({
   bouncesCount: NonNegIntSchema,
 });
 export type StaffPlayerRowSummary = z.infer<typeof StaffPlayerRowSummarySchema>;
-
 export const PlayerDirectoryRowSchema = z.strictObject({
   uuid: PlayerUuidSchema,
   name: z.string(),
@@ -448,8 +456,9 @@ export const PlayerDirectoryRowSchema = z.strictObject({
   lastSeenAt: IsoTimestampSchema,
   primaryWorld: WorldBucketSchema,
   primaryMode: GameModeSchema,
-  coins: NonNegIntSchema,
+  crystals: NonNegIntSchema,
   townName: z.string().nullable(),
+  townKind: PlayerHomeKindSchema.nullable(),
   powerLevel: NonNegIntSchema,
   pvpKills: NonNegIntSchema,
   pvpDeaths: NonNegIntSchema,
@@ -457,7 +466,6 @@ export const PlayerDirectoryRowSchema = z.strictObject({
   staff: StaffPlayerRowSummarySchema.optional(),
 });
 export type PlayerDirectoryRow = z.infer<typeof PlayerDirectoryRowSchema>;
-
 export const PlayersDirectoryResponseSchema = z.strictObject({
   items: z.array(PlayerDirectoryRowSchema),
   total: NonNegIntSchema,
@@ -467,14 +475,12 @@ export const PlayersDirectoryResponseSchema = z.strictObject({
 export type PlayersDirectoryResponse = z.infer<
   typeof PlayersDirectoryResponseSchema
 >;
-
 export const WeaponStatSchema = z.strictObject({
   weapon: z.string(),
   kills: NonNegIntSchema,
   sharePercent: PercentSchema,
 });
 export type WeaponStat = z.infer<typeof WeaponStatSchema>;
-
 export const CombatFeedRowSchema = z.strictObject({
   eventId: UuidSchema,
   occurredAt: IsoTimestampSchema,

@@ -64,8 +64,7 @@ export function StaffNetworkView() {
           </h1>
           <p className="page-subtitle">
             Tailnet-only country distribution, regional latency, and Minecraft
-            join hostnames (<code>ts-mc.net</code>, <code>mc.ts-mc.net</code>,{" "}
-            <code>join.ts-mc.net</code>).
+            join hostnames (<code>ts-mc.net</code>, <code>mc.ts-mc.net</code>).
           </p>
         </div>
         <span className="staff-banner-badge">

@@ -322,6 +322,26 @@ public final class TownsState
     return town != null && town.roleOf(player).map(role -> role.manages()).orElse(false);
   }
 
+  /**
+   * The camp or town {@code player} belongs to, with lowercase role and heritage-inclusive claims.
+   */
+  public Optional<MemberResidency> memberResidency(UUID player) {
+    var found = townOf(player);
+    if (found.isEmpty()) {
+      return Optional.empty();
+    }
+    var town = found.orElseThrow();
+    var kind = town.isCamp() ? "camp" : "town";
+    var role = town.roleOf(player).map(r -> r.name().toLowerCase(Locale.ROOT)).orElse("member");
+    int heritageChunks =
+        heritage.sites().stream()
+            .filter(site -> site.activeTownId().equals(Optional.of(town.id())))
+            .mapToInt(site -> site.footprint().size())
+            .sum();
+    int totalClaims = Math.max(0, claimCount(town.id()) + heritageChunks);
+    return Optional.of(new MemberResidency(town.name(), kind, role, totalClaims));
+  }
+
   /** The id of the town {@code player} belongs to. */
   @Override
   public Optional<UUID> townIdOf(UUID player) {
@@ -433,4 +453,7 @@ public final class TownsState
     }
     return Optional.of(removed.claim());
   }
+
+  /** Main-thread residency summary for sibling modules without exposing domain types. */
+  public record MemberResidency(String name, String kind, String role, int totalClaims) {}
 }

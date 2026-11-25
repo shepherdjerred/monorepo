@@ -1,10 +1,13 @@
-import type {
-  ActivityGroup,
-  BounceCategory,
-  CombatKind,
-  GameMode,
-  Platform,
-  WorldBucket,
+import {
+  ARENA_LABELS,
+  MODE_LABELS,
+  WORLD_LABELS,
+  type ActivityGroup,
+  type BounceCategory,
+  type CombatKind,
+  type GameMode,
+  type Platform,
+  type WorldBucket,
 } from "@shepherdjerred/storm-stats/shared/contract.ts";
 
 const INT_FORMAT = new Intl.NumberFormat("en-US", {
@@ -186,38 +189,45 @@ export function formatPlatform(platform: Platform, version?: string): string {
     : `${base} ${version}`;
 }
 
+const TRACK_ROMAN_NUMERALS: Readonly<Record<number, string>> = {
+  1: "I",
+  2: "II",
+  3: "III",
+  4: "IV",
+  5: "V",
+};
+
 export function formatWorldLabel(world: WorldBucket): string {
-  switch (world) {
-    case "world":
-      return "Overworld";
-    case "world_nether":
-      return "Nether";
-    case "world_the_end":
-      return "The End";
-    case "skylands":
-      return "Skylands";
-    case "creative":
-      return "Creative";
-    case "arena":
-      return "Mob Arena";
-    case "rwf":
-      return "Search & Destroy";
-    case "other":
-      return "Other";
-  }
+  return WORLD_LABELS[world];
 }
 
 export function formatModeLabel(mode: GameMode): string {
-  switch (mode) {
-    case "survival":
-      return "Survival";
-    case "creative":
-      return "Creative";
-    case "arena":
-      return "Mob Arena";
-    case "rwf":
-      return "Search & Destroy";
+  return MODE_LABELS[mode];
+}
+
+export function formatCrystals(value: number): string {
+  const rounded = Math.round(value);
+  return rounded === 1 ? "1 crystal" : `${INT_FORMAT.format(rounded)} crystals`;
+}
+
+export function formatCredits(value: number): string {
+  const rounded = Math.round(value);
+  return rounded === 1 ? "1 Credit" : `${INT_FORMAT.format(rounded)} Credits`;
+}
+
+export function formatTrackLevel(level: number): string {
+  const rounded = Math.round(level);
+  if (rounded <= 0) {
+    return "Unstarted";
   }
+  const roman = TRACK_ROMAN_NUMERALS[rounded];
+  return roman === undefined
+    ? `Level ${INT_FORMAT.format(rounded)}`
+    : `Level ${roman}`;
+}
+
+export function formatArenaLabel(id: string): string {
+  return ARENA_LABELS[id] ?? formatTitleIdentifier(id);
 }
 
 export function formatCombatKind(kind: CombatKind): string {

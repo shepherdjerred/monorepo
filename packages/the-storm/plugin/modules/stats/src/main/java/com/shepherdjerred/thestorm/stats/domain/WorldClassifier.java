@@ -21,11 +21,14 @@ public final class WorldClassifier {
       return WorldBucket.ARENA;
     }
     return switch (normalized) {
+      case "frontier" -> WorldBucket.FRONTIER;
       case "world" -> WorldBucket.WORLD;
+      case "map2" -> WorldBucket.MAP2;
+      case "skylands" -> WorldBucket.SKYLANDS;
       case "world_nether" -> WorldBucket.WORLD_NETHER;
       case "world_the_end" -> WorldBucket.WORLD_THE_END;
-      case "skylands" -> WorldBucket.SKYLANDS;
       case "creative" -> WorldBucket.CREATIVE;
+      case "settlement", "rustworks" -> WorldBucket.ARENA;
       default -> WorldBucket.OTHER;
     };
   }

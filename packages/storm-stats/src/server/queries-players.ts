@@ -22,6 +22,7 @@ import {
   loadAllPlayerActivityScores,
   loadPrimaryWorldAndModeByPlayer,
   loadServerState,
+  parsePlayerHomeKind,
   toSessionSummaries,
 } from "./player-activity.ts";
 import { buildModeShares, buildWorldShares } from "./queries-shares.ts";
@@ -104,8 +105,8 @@ export function compareDirectoryRows(
     case "activityIndex":
       diff = left.activityIndex - right.activityIndex;
       break;
-    case "coins":
-      diff = left.coins - right.coins;
+    case "crystals":
+      diff = left.crystals - right.crystals;
       break;
     case "powerLevel":
       diff = left.powerLevel - right.powerLevel;
@@ -376,8 +377,10 @@ function toGameplayCard(
   }
   return {
     capturedAt: row.captured_at,
-    coins: row.coins,
+    crystals: row.crystals,
+    rwfCredits: row.rwf_credits,
     townName: row.town_name,
+    townKind: parsePlayerHomeKind(row.town_kind),
     townRole: row.town_role,
     townClaims: row.town_claims,
     powerLevel: row.power_level,

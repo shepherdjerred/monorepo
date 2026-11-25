@@ -1,5 +1,5 @@
 serverName: The Storm
-publicUrl: https://ts-mc.net
+publicUrl: https://stats.ts-mc.net
 ingestUrlEnv: STORM_STATS_INGEST_URL
 ingestTokenEnv: STORM_STATS_INGEST_TOKEN
 flushIntervalSeconds: 15

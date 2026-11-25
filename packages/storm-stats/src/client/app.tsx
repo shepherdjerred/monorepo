@@ -176,7 +176,7 @@ function StormSidebarHeader({
           <span>
             Online:{" "}
             {liveOverview === undefined
-              ? "— / 20"
+              ? "—"
               : `${formatInt(liveOverview.onlineNow)} / ${formatInt(liveOverview.maxPlayers)}`}
           </span>
         </div>

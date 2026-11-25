@@ -1,31 +1,87 @@
-import { Coins, Compass, Skull, Sparkles, Swords, Trophy } from "lucide-react";
+import { Compass, Gem, Skull, Sparkles, Swords, Trophy } from "lucide-react";
+import {
+  STORM_SKILLS,
+  STORM_TRACKS,
+} from "@shepherdjerred/storm-stats/shared/contract.ts";
 import type {
   PlayerCombatSummary,
   PlayerGameplayCard,
 } from "@shepherdjerred/storm-stats/shared/player-contract.ts";
 import {
+  formatArenaLabel,
+  formatCredits,
+  formatCrystals,
   formatDecimal,
   formatInt,
   formatKdr,
   formatRelativeTime,
   formatTitleIdentifier,
+  formatTrackLevel,
 } from "@shepherdjerred/storm-stats/client/format.ts";
 import { ShareBreakdownPanel } from "@shepherdjerred/storm-stats/client/components/charts-matrix.tsx";
 import { CombatFeedTable } from "@shepherdjerred/storm-stats/client/components/combat-feed-table.tsx";
 
-const RETRO_SKILLS_CANONICAL = [
-  "mining",
-  "woodcutting",
-  "excavation",
-  "farming",
-  "fishing",
-  "combat",
-  "archery",
-  "defense",
-  "agility",
-  "enchanting",
-  "alchemy",
-] as const;
+const CANONICAL_SKILL_INDEX = new Map<string, number>(
+  STORM_SKILLS.map((skill, idx) => [skill, idx]),
+);
+
+const CANONICAL_TRACK_INDEX = new Map<string, number>(
+  STORM_TRACKS.map((track, idx) => [track, idx]),
+);
+
+function buildSortedSkillEntries(
+  skills: Readonly<Record<string, number>>,
+): { readonly skill: string; readonly level: number }[] {
+  const keys = new Set<string>([...STORM_SKILLS, ...Object.keys(skills)]);
+  const entries = [...keys].map((skill) => ({
+    skill,
+    level: skills[skill] ?? 0,
+  }));
+  entries.sort((left, right) => {
+    if (right.level !== left.level) {
+      return right.level - left.level;
+    }
+    const leftIdx =
+      CANONICAL_SKILL_INDEX.get(left.skill) ?? Number.MAX_SAFE_INTEGER;
+    const rightIdx =
+      CANONICAL_SKILL_INDEX.get(right.skill) ?? Number.MAX_SAFE_INTEGER;
+    return leftIdx - rightIdx || left.skill.localeCompare(right.skill);
+  });
+  return entries;
+}
+
+function buildSortedTrackEntries(
+  tracks: Readonly<Record<string, number>>,
+): { readonly track: string; readonly level: number }[] {
+  const keys = new Set<string>([...STORM_TRACKS, ...Object.keys(tracks)]);
+  const entries = [...keys].map((track) => ({
+    track,
+    level: tracks[track] ?? 0,
+  }));
+  entries.sort((left, right) => {
+    if (right.level !== left.level) {
+      return right.level - left.level;
+    }
+    const leftIdx =
+      CANONICAL_TRACK_INDEX.get(left.track) ?? Number.MAX_SAFE_INTEGER;
+    const rightIdx =
+      CANONICAL_TRACK_INDEX.get(right.track) ?? Number.MAX_SAFE_INTEGER;
+    return leftIdx - rightIdx || left.track.localeCompare(right.track);
+  });
+  return entries;
+}
+
+function formatCampOrTownDetail(gameplay: PlayerGameplayCard): string {
+  if (gameplay.townName === null) {
+    return "No camp or town";
+  }
+  const homeKind = gameplay.townKind === "camp" ? "Camp" : "Town";
+  const rolePart =
+    gameplay.townRole === null
+      ? ""
+      : ` · ${formatTitleIdentifier(gameplay.townRole)}`;
+  return `${homeKind}${rolePart} · ${formatInt(gameplay.townClaims)} chunks`;
+}
 
 export function PlayerGameplayPanel({
   gameplay,
@@ -43,19 +99,8 @@ export function PlayerGameplayPanel({
     );
   }
 
-  const skillKeys = new Set<string>([
-    ...RETRO_SKILLS_CANONICAL,
-    ...Object.keys(gameplay.skills),
-  ]);
-  const skillEntries = [...skillKeys].map((skill) => ({
-    skill,
-    level: gameplay.skills[skill] ?? 0,
-  }));
-  skillEntries.sort((left, right) => right.level - left.level);
-
-  const trackEntries = Object.entries(gameplay.tracks);
-  trackEntries.sort((left, right) => right[1] - left[1]);
-
+  const skillEntries = buildSortedSkillEntries(gameplay.skills);
+  const trackEntries = buildSortedTrackEntries(gameplay.tracks);
   const arenaEntries = Object.entries(gameplay.arenaBestWaves);
   arenaEntries.sort((left, right) => right[1] - left[1]);
 
@@ -64,10 +109,10 @@ export function PlayerGameplayPanel({
       <section aria-label="Player gameplay metrics" className="kpi-grid">
         <div className="kpi-card">
           <div className="kpi-label">
-            <span>Economy Balance</span>
-            <Coins size={16} aria-hidden="true" />
+            <span>Crystal Balance</span>
+            <Gem size={16} aria-hidden="true" />
           </div>
-          <div className="kpi-value">{formatInt(gameplay.coins)} coins</div>
+          <div className="kpi-value">{formatCrystals(gameplay.crystals)}</div>
           <div className="kpi-detail">
             Snapshot {formatRelativeTime(gameplay.capturedAt)}
           </div>
@@ -75,15 +120,11 @@ export function PlayerGameplayPanel({
 
         <div className="kpi-card">
           <div className="kpi-label">
-            <span>Town &amp; Claims</span>
+            <span>Camp &amp; Town</span>
             <Compass size={16} aria-hidden="true" />
           </div>
           <div className="kpi-value">{gameplay.townName ?? "Wilderness"}</div>
-          <div className="kpi-detail">
-            {gameplay.townRole === null
-              ? "No town membership"
-              : `${formatTitleIdentifier(gameplay.townRole)} · ${formatInt(gameplay.townClaims)} chunks`}
-          </div>
+          <div className="kpi-detail">{formatCampOrTownDetail(gameplay)}</div>
         </div>
 
         <div className="kpi-card">
@@ -114,7 +155,7 @@ export function PlayerGameplayPanel({
 
       <div className="panel">
         <div className="panel-header">
-          <h2>Retro Skills Breakdown</h2>
+          <h2>Skills</h2>
           <span className="panel-subtitle">
             Power Level {formatInt(gameplay.powerLevel)} across{" "}
             {formatInt(skillEntries.length)} skills
@@ -135,7 +176,7 @@ export function PlayerGameplayPanel({
       <div className="grid-3">
         <div className="panel">
           <div className="panel-header">
-            <h2>Search &amp; Destroy (RWF)</h2>
+            <h2>Search and Destroy</h2>
             <Swords size={16} aria-hidden="true" />
           </div>
           <div className="share-list">
@@ -162,6 +203,12 @@ export function PlayerGameplayPanel({
                 ({formatKdr(gameplay.rwfKills, gameplay.rwfDeaths)} K/D)
               </span>
             </div>
+            <div className="share-row-head">
+              <span>Credits</span>
+              <span className="pill pill-gold">
+                {formatCredits(gameplay.rwfCredits)}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -176,7 +223,7 @@ export function PlayerGameplayPanel({
             <div className="share-list">
               {arenaEntries.map(([arena, wave]) => (
                 <div key={arena} className="share-row-head">
-                  <span>{formatTitleIdentifier(arena)}</span>
+                  <span>{formatArenaLabel(arena)}</span>
                   <span className="pill pill-active">
                     Wave {formatInt(wave)}
                   </span>
@@ -188,22 +235,22 @@ export function PlayerGameplayPanel({
 
         <div className="panel">
           <div className="panel-header">
-            <h2>Progression Tracks</h2>
+            <h2>Tracks &amp; Perks</h2>
           </div>
-          {trackEntries.length === 0 ? (
-            <p className="panel-subtitle">
-              No progression tracks unlocked yet.
-            </p>
-          ) : (
-            <div className="share-list">
-              {trackEntries.map(([track, tier]) => (
-                <div key={track} className="share-row-head">
-                  <span>{formatTitleIdentifier(track)}</span>
-                  <strong>Tier {formatInt(tier)}</strong>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="share-list">
+            {trackEntries.map(({ track, level }) => (
+              <div key={track} className="share-row-head">
+                <span>{formatTitleIdentifier(track)}</span>
+                <span
+                  className={
+                    level > 0 ? "pill pill-active" : "pill pill-inactive"
+                  }
+                >
+                  {formatTrackLevel(level)}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

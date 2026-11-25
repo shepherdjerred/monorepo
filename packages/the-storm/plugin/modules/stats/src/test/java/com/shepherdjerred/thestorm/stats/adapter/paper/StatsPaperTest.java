@@ -29,7 +29,19 @@ import com.shepherdjerred.thestorm.stats.app.StatsConfig;
 import com.shepherdjerred.thestorm.stats.app.StatsService;
 import com.shepherdjerred.thestorm.stats.app.StatsTransport;
 import com.shepherdjerred.thestorm.stats.app.StatsWire;
+import com.shepherdjerred.thestorm.towns.app.TownListings;
+import com.shepherdjerred.thestorm.towns.app.TownMembership;
 import com.shepherdjerred.thestorm.towns.app.TownRead;
+import com.shepherdjerred.thestorm.towns.app.TownsState;
+import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageIndex;
+import com.shepherdjerred.thestorm.towns.domain.heritage.HeritageSite;
+import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
+import com.shepherdjerred.thestorm.towns.domain.land.Claim;
+import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlags;
+import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
+import com.shepherdjerred.thestorm.towns.domain.region.RegionProfile;
+import com.shepherdjerred.thestorm.towns.domain.town.Town;
+import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
 import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -275,8 +287,12 @@ final class StatsPaperTest {
     var wallets = mock(Wallets.class);
     when(wallets.balance(new AccountId.Player(carol.getUniqueId()), CurrencyId.CRYSTALS))
         .thenReturn(CompletableFuture.completedFuture(Money.crystals(1250L)));
+    when(wallets.balance(new AccountId.Player(carol.getUniqueId()), CurrencyId.RWF_CREDITS))
+        .thenReturn(CompletableFuture.completedFuture(Money.rwfCredits(340L)));
     when(wallets.balance(new AccountId.Player(dan.getUniqueId()), CurrencyId.CRYSTALS))
         .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("wallet db offline")));
+    when(wallets.balance(new AccountId.Player(dan.getUniqueId()), CurrencyId.RWF_CREDITS))
+        .thenReturn(CompletableFuture.completedFuture(Money.rwfCredits(15L)));
     customServices.provide(Wallets.class, wallets);
 
     var siblingCacheCleared = new java.util.concurrent.atomic.AtomicBoolean(false);
@@ -316,7 +332,7 @@ final class StatsPaperTest {
     var customConfig =
         new StatsConfig(
             "The Storm",
-            "https://ts-mc.net",
+            "https://stats.ts-mc.net",
             "STORM_STATS_INGEST_URL",
             "STORM_STATS_INGEST_TOKEN",
             15,
@@ -368,11 +384,14 @@ final class StatsPaperTest {
           assertThat(sampledSnapshots)
               .extracting(StatsWire.PlayerGameplaySnapshot::playerName)
               .containsExactly("Carol");
-          assertThat(sampledSnapshots.getFirst().coins()).isEqualTo(1250L);
+          assertThat(sampledSnapshots.getFirst().crystals()).isEqualTo(1250L);
+          assertThat(sampledSnapshots.getFirst().rwfCredits()).isEqualTo(340L);
 
           exportedBatches.clear();
           when(wallets.balance(new AccountId.Player(carol.getUniqueId()), CurrencyId.CRYSTALS))
               .thenReturn(CompletableFuture.completedFuture(Money.crystals(1900L)));
+          when(wallets.balance(new AccountId.Player(carol.getUniqueId()), CurrencyId.RWF_CREDITS))
+              .thenReturn(CompletableFuture.completedFuture(Money.rwfCredits(420L)));
 
           // Carol earns crystals and quits before the next 60s sampler tick
           now.set(now.get().plusSeconds(5));
@@ -422,6 +441,8 @@ final class StatsPaperTest {
                       null,
                       "default",
                       99L,
+                      10L,
+                      null,
                       null,
                       null,
                       0,
@@ -442,8 +463,11 @@ final class StatsPaperTest {
           var quitSnapshots =
               exportedBatches.stream().flatMap(b -> b.playerSnapshots().stream()).toList();
           assertThat(quitSnapshots)
-              .extracting(StatsWire.PlayerGameplaySnapshot::coins)
+              .extracting(StatsWire.PlayerGameplaySnapshot::crystals)
               .containsExactly(1900L);
+          assertThat(quitSnapshots)
+              .extracting(StatsWire.PlayerGameplaySnapshot::rwfCredits)
+              .containsExactly(420L);
           assertThat(quitSnapshots.getFirst().questsCompleted()).isEqualTo(7);
           assertThat(quitSnapshots.getFirst().arenaBestWaves()).containsEntry("colosseum", 20);
           var exportedServer =
@@ -458,6 +482,213 @@ final class StatsPaperTest {
           org.bukkit.event.HandlerList.unregisterAll(siblingQuitListener);
           unsub.run();
         }
+      }
+    }
+  }
+
+  @Test
+  void samplesCrystalsRwfCreditsCampsTownRolesAndFilteredMultiPageTownSummaries() throws Exception {
+    var exportedBatches = new ArrayList<StatsWire.IngestBatch>();
+    StatsTransport recordingTransport =
+        new StatsTransport() {
+          @Override
+          public CompletableFuture<Void> send(StatsWire.IngestBatch batch) {
+            exportedBatches.add(batch);
+            return CompletableFuture.completedFuture(null);
+          }
+
+          @Override
+          public void close() {}
+        };
+
+    var campOwner = addHumanPlayer("CampFounder");
+    var townOwner = addHumanPlayer("MayorBob");
+    var townAssistant = addHumanPlayer("DeputyCarol");
+    var townMember = addHumanPlayer("CitizenDan");
+    var nomad = addHumanPlayer("NomadEve");
+
+    var state = new TownsState(new RegionIndex(List.of()));
+    var aegisSite =
+        new HeritageSite(
+            "aegis-keep",
+            "Aegis",
+            HeritageSite.Kind.PLAYER,
+            "Aegis",
+            "world",
+            RegionProfile.PRESERVE,
+            Set.of(new HeritageSite.Chunk(0, 0), new HeritageSite.Chunk(0, 1)),
+            List.of(),
+            Set.of(new HeritageSite.Chunk(0, 0)),
+            List.of(new HeritageSite.Editor(townOwner.getUniqueId(), "MayorBob")),
+            "Imported player town");
+    var museumSite =
+        new HeritageSite(
+            "dragon-house",
+            "_D_R_A_G_O_N's House",
+            HeritageSite.Kind.HERITAGE,
+            "",
+            "world",
+            RegionProfile.PRESERVE,
+            Set.of(new HeritageSite.Chunk(50, 50)),
+            List.of(),
+            Set.of(),
+            List.of(),
+            "Archive museum site");
+    var spawnSite =
+        new HeritageSite(
+            "spawn-plaza",
+            "Spawn",
+            HeritageSite.Kind.SERVER,
+            "",
+            "world",
+            RegionProfile.PRESERVE,
+            Set.of(new HeritageSite.Chunk(100, 100), new HeritageSite.Chunk(100, 101)),
+            List.of(),
+            Set.of(),
+            List.of(),
+            "Server admin region");
+    state.attachHeritage(new HeritageIndex(List.of(aegisSite, museumSite, spawnSite)));
+
+    var campId = java.util.UUID.randomUUID();
+    var camp = Town.camp(campId, "CampFounder", now.get(), campOwner.getUniqueId());
+    state.addTown(camp);
+    state.addClaim(new Claim(new ChunkPos("world", 30, 30), campId, ClaimFlags.none()));
+
+    var aegisId = aegisSite.activeTownId().orElseThrow();
+    var aegisTown =
+        Town.found(aegisId, "Aegis", now.get(), townOwner.getUniqueId())
+            .withMember(townAssistant.getUniqueId(), TownRole.ASSISTANT)
+            .withMember(townMember.getUniqueId(), TownRole.MEMBER);
+    state.addTown(aegisTown);
+    state.addClaim(new Claim(new ChunkPos("world", 10, 10), aegisId, ClaimFlags.none()));
+    state.addClaim(new Claim(new ChunkPos("world", 10, 11), aegisId, ClaimFlags.none()));
+    state.addClaim(new Claim(new ChunkPos("world", 10, 12), aegisId, ClaimFlags.none()));
+
+    // Add 26 additional player towns so TownListings spans 2 pages (> 25 total directory entries).
+    for (int i = 1; i <= 26; i++) {
+      var extraTownId = java.util.UUID.randomUUID();
+      var extraFounder = java.util.UUID.randomUUID();
+      var extraTown =
+          Town.found(extraTownId, String.format("Outpost%02d", i), now.get(), extraFounder);
+      state.addTown(extraTown);
+      state.addClaim(
+          new Claim(new ChunkPos("world", 200 + i, 200), extraTownId, ClaimFlags.none()));
+    }
+
+    var customServices = new Services();
+    customServices.provide(TownMembership.class, state);
+    customServices.provide(TownRead.class, new TownListings(state));
+
+    var wallets = mock(Wallets.class);
+    for (var p : List.of(campOwner, townOwner, townAssistant, townMember, nomad)) {
+      long crystals = p.equals(townOwner) ? 4_500L : 800L;
+      long rwfCredits = p.equals(townOwner) ? 1_275L : 95L;
+      when(wallets.balance(new AccountId.Player(p.getUniqueId()), CurrencyId.CRYSTALS))
+          .thenReturn(CompletableFuture.completedFuture(Money.crystals(crystals)));
+      when(wallets.balance(new AccountId.Player(p.getUniqueId()), CurrencyId.RWF_CREDITS))
+          .thenReturn(CompletableFuture.completedFuture(Money.rwfCredits(rwfCredits)));
+    }
+    customServices.provide(Wallets.class, wallets);
+
+    var customConfig =
+        new StatsConfig(
+            "The Storm",
+            "https://stats.ts-mc.net",
+            "STORM_STATS_INGEST_URL",
+            "STORM_STATS_INGEST_TOKEN",
+            15,
+            60);
+    var rng = new SplittableRandom(77L);
+    var logger = mock(org.slf4j.Logger.class);
+    try (var customDatabase = StormDatabase.open(tempDir.resolve("domain-alignment-stats.db"))) {
+      customDatabase.migrate("stats", JooqStatsStore.class.getClassLoader());
+      var customStore = new JooqStatsStore(customDatabase);
+      try (var customService =
+          new StatsService(
+              new StatsService.Dependencies(
+                  customConfig,
+                  customStore,
+                  recordingTransport,
+                  () -> CompletableFuture.completedFuture(true)),
+              new StatsService.Clocks(
+                  now::get, () -> new java.util.UUID(rng.nextLong(), rng.nextLong()), logger))) {
+        var ports = StatsPaperPorts.discover(customServices);
+        var reader = new PlayerStateReader(server, ports, now::get);
+        var sampler =
+            new StatsSampler(
+                new StatsSampler.Context(server, customService, ports, reader), now::get, logger);
+
+        sampler.sample();
+        customService.flush().get();
+
+        assertThat(exportedBatches).hasSize(1);
+        var batch = exportedBatches.getFirst();
+        assertThat(batch.schemaVersion()).isEqualTo(2);
+
+        var byName =
+            batch.playerSnapshots().stream()
+                .collect(
+                    java.util.stream.Collectors.toUnmodifiableMap(
+                        StatsWire.PlayerGameplaySnapshot::playerName, s -> s));
+
+        var campSnap = java.util.Objects.requireNonNull(byName.get("CampFounder"));
+        assertThat(campSnap.crystals()).isEqualTo(800L);
+        assertThat(campSnap.rwfCredits()).isEqualTo(95L);
+        assertThat(campSnap.townName()).isEqualTo("CampFounder");
+        assertThat(campSnap.townKind()).isEqualTo("camp");
+        assertThat(campSnap.townRole()).isEqualTo("owner");
+        assertThat(campSnap.townClaims()).isEqualTo(1);
+
+        var ownerSnap = java.util.Objects.requireNonNull(byName.get("MayorBob"));
+        assertThat(ownerSnap.crystals()).isEqualTo(4_500L);
+        assertThat(ownerSnap.rwfCredits()).isEqualTo(1_275L);
+        assertThat(ownerSnap.townName()).isEqualTo("Aegis");
+        assertThat(ownerSnap.townKind()).isEqualTo("town");
+        assertThat(ownerSnap.townRole()).isEqualTo("owner");
+        // 3 regular claims + 2 protected heritage chunks = 5
+        assertThat(ownerSnap.townClaims()).isEqualTo(5);
+
+        var assistantSnap = java.util.Objects.requireNonNull(byName.get("DeputyCarol"));
+        assertThat(assistantSnap.townName()).isEqualTo("Aegis");
+        assertThat(assistantSnap.townKind()).isEqualTo("town");
+        assertThat(assistantSnap.townRole()).isEqualTo("assistant");
+        assertThat(assistantSnap.townClaims()).isEqualTo(5);
+
+        var memberSnap = java.util.Objects.requireNonNull(byName.get("CitizenDan"));
+        assertThat(memberSnap.townName()).isEqualTo("Aegis");
+        assertThat(memberSnap.townKind()).isEqualTo("town");
+        assertThat(memberSnap.townRole()).isEqualTo("member");
+        assertThat(memberSnap.townClaims()).isEqualTo(5);
+
+        var nomadSnap = java.util.Objects.requireNonNull(byName.get("NomadEve"));
+        assertThat(nomadSnap.townName()).isNull();
+        assertThat(nomadSnap.townKind()).isNull();
+        assertThat(nomadSnap.townRole()).isNull();
+        assertThat(nomadSnap.townClaims()).isZero();
+
+        assertThat(batch.playerSnapshots())
+            .extracting(StatsWire.PlayerGameplaySnapshot::townRole)
+            .doesNotContain("officer");
+
+        var serverSnap = java.util.Objects.requireNonNull(batch.serverSnapshot());
+        // 1 heritage PLAYER town (Aegis) + 26 player towns = 27 PLAYER towns across 2 pages;
+        // Spawn (SERVER), _D_R_A_G_O_N's House (HERITAGE), and CampFounder (camp) are excluded!
+        assertThat(serverSnap.townsCount()).isEqualTo(27);
+        assertThat(serverSnap.towns()).hasSize(27);
+        assertThat(serverSnap.towns())
+            .extracting(StatsWire.TownSummarySnapshot::name)
+            .doesNotContain("Spawn", "_D_R_A_G_O_N's House", "CampFounder")
+            .contains("Aegis", "Outpost01", "Outpost26");
+        assertThat(serverSnap.towns())
+            .extracting(StatsWire.TownSummarySnapshot::kind)
+            .containsOnly("player");
+        var aegisSummary =
+            serverSnap.towns().stream()
+                .filter(t -> t.name().equals("Aegis"))
+                .findFirst()
+                .orElseThrow();
+        assertThat(aegisSummary.members()).isEqualTo(3);
+        assertThat(aegisSummary.claims()).isEqualTo(5);
       }
     }
   }
@@ -508,6 +739,10 @@ final class StatsPaperTest {
             org.mockito.ArgumentMatchers.any(),
             org.mockito.ArgumentMatchers.eq(CurrencyId.CRYSTALS)))
         .thenReturn(CompletableFuture.completedFuture(Money.crystals(750L)));
+    when(wallets.balance(
+            org.mockito.ArgumentMatchers.any(),
+            org.mockito.ArgumentMatchers.eq(CurrencyId.RWF_CREDITS)))
+        .thenReturn(CompletableFuture.completedFuture(Money.rwfCredits(50L)));
     services.provide(Wallets.class, wallets);
 
     var skills = mock(SkillLevels.class);

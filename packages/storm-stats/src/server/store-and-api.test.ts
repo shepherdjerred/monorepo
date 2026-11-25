@@ -1,11 +1,18 @@
+import os from "node:os";
+import path from "node:path";
+import { Database } from "bun:sqlite";
 import type { Hono } from "hono";
 import { expect, test } from "vitest";
 import {
+  INGEST_CONTRACT,
   IngestBatchAckSchema,
   OnlineActivityResponseSchema,
+  PlayerGameplaySnapshotSchema,
   PlayersDirectoryResponseSchema,
+  STORM_SKILLS,
   ServerOverviewResponseSchema,
   ViewerInfoSchema,
+  WORLD_BUCKETS,
   type IngestBatch,
 } from "@shepherdjerred/storm-stats/shared/contract.ts";
 import {
@@ -26,11 +33,20 @@ import { StormStatsStore } from "./store.ts";
 const FIXED_NOW = new Date("2026-11-22T20:00:00Z");
 const TEST_TOKEN = "storm-stats-unit-test-bearer-token-0001";
 
-async function requestJson(app: Hono, path: string): Promise<unknown> {
-  const response = await app.request(path);
+async function requestJson(app: Hono, pathName: string): Promise<unknown> {
+  const response = await app.request(pathName);
   expect(response.status).toBe(200);
   return response.json();
 }
+
+test("shared Zod contract aligns field-for-field with contracts/ingest-v1.json", () => {
+  expect(INGEST_CONTRACT.schemaVersion).toBe(2);
+  expect([...WORLD_BUCKETS]).toEqual(INGEST_CONTRACT.worlds);
+  expect(Object.keys(PlayerGameplaySnapshotSchema.shape)).toEqual(
+    INGEST_CONTRACT.playerSnapshotFields,
+  );
+  expect(STORM_SKILLS).toHaveLength(11);
+});
 
 test("public v1 endpoints validate strictly against contract Zod schemas on seeded data", async () => {
   const store = StormStatsStore.open(":memory:");
@@ -61,6 +77,12 @@ test("public v1 endpoints validate strictly against contract Zod schemas on seed
     expect(overview.playerbaseGroups.regular).toBeGreaterThan(0);
     expect(overview.playerbaseGroups.inactive).toBeGreaterThan(0);
     expect(overview.kpis.peakOnline30d).toBeGreaterThanOrEqual(6);
+    expect(overview.worldBreakdown.some((w) => w.label === "Frontier")).toBe(
+      true,
+    );
+    expect(
+      overview.modeBreakdown.some((m) => m.label === "Search and Destroy"),
+    ).toBe(true);
 
     const activity = OnlineActivityResponseSchema.parse(
       await requestJson(publicApp, "/api/v1/activity"),
@@ -77,11 +99,12 @@ test("public v1 endpoints validate strictly against contract Zod schemas on seed
     const pubPlayers = PlayersDirectoryResponseSchema.parse(
       await requestJson(
         publicApp,
-        "/api/v1/players?sort=activityIndex&pageSize=10",
+        "/api/v1/players?sort=activityIndex&pageSize=28",
       ),
     );
     expect(pubPlayers.total).toBe(28);
-    expect(pubPlayers.items).toHaveLength(10);
+    expect(pubPlayers.items).toHaveLength(28);
+    expect(pubPlayers.items.some((r) => r.townKind === "camp")).toBe(true);
     for (const row of pubPlayers.items) {
       expect(row.staff).toBeUndefined();
     }
@@ -96,12 +119,16 @@ test("public v1 endpoints validate strictly against contract Zod schemas on seed
     );
     expect(profileByUuid.calendar365d).toHaveLength(365);
     expect(profileByUuid.gameplay).not.toBeNull();
+    expect(Object.keys(profileByUuid.gameplay?.skills ?? {})).toHaveLength(11);
 
     const profileByName = PlayerProfileResponseSchema.parse(
       await requestJson(publicApp, "/api/v1/players/jerred"),
     );
     expect(profileByName.player.name).toBe("Jerred");
     expect(profileByName.player.online).toBe(true);
+    expect(profileByName.gameplay?.townName).toBe("Altaria");
+    expect(profileByName.gameplay?.townKind).toBe("town");
+    expect(profileByName.gameplay?.townRole).toBe("owner");
 
     const missingProfile = await publicApp.request(
       "/api/v1/players/nonexistent_player_xyz",
@@ -120,9 +147,11 @@ test("public v1 endpoints validate strictly against contract Zod schemas on seed
     );
     expect(gameplay.economyTop.length).toBeGreaterThan(0);
     expect(gameplay.towns).toHaveLength(5);
+    expect(gameplay.towns.every((t) => t.kind === "player")).toBe(true);
     expect(gameplay.skillsTop.length).toBeGreaterThan(0);
     expect(gameplay.rwfTop.length).toBeGreaterThan(0);
     expect(gameplay.arenaTop.length).toBeGreaterThan(0);
+    expect(gameplay.arenaTop.every((a) => a.arena === "colosseum")).toBe(true);
     expect(gameplay.questsTop.length).toBeGreaterThan(0);
   } finally {
     store.close();
@@ -151,7 +180,7 @@ test("staff endpoints & publicEnabled gate validate cleanly against contract sch
     expect(staffViewer.role).toBe("staff");
 
     const staffPlayers = PlayersDirectoryResponseSchema.parse(
-      await requestJson(staffApp, "/api/v1/players?sort=coins&pageSize=10"),
+      await requestJson(staffApp, "/api/v1/players?sort=crystals&pageSize=10"),
     );
     expect(staffPlayers.items).toHaveLength(10);
     for (const row of staffPlayers.items) {
@@ -163,7 +192,11 @@ test("staff endpoints & publicEnabled gate validate cleanly against contract sch
       await requestJson(staffApp, "/api/staff/network"),
     );
     expect(staffNetwork.countries.length).toBeGreaterThan(3);
-    expect(staffNetwork.joinAddresses.length).toBeGreaterThanOrEqual(3);
+    expect(
+      staffNetwork.joinAddresses
+        .map((j) => j.joinAddress)
+        .sort((a, b) => a.localeCompare(b)),
+    ).toEqual(["mc.ts-mc.net", "ts-mc.net"]);
 
     const staffBounces = StaffBouncesResponseSchema.parse(
       await requestJson(staffApp, "/api/staff/bounces"),
@@ -229,7 +262,7 @@ test("ingest endpoint enforces auth, ingestEnabled flag, payload size limit, sch
     const playerUuid = "11111111-1111-4000-8000-000000000001";
     const sessionId = "22222222-2222-4000-8000-000000000001";
     const validBatch: IngestBatch = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       batchId: "33333333-3333-4000-8000-000000000001",
       serverName: "The Storm",
       sentAt: "2026-11-22T19:05:00Z",
@@ -243,7 +276,7 @@ test("ingest endpoint enforces auth, ingestEnabled flag, payload size limit, sch
           playerName: "TestPilot",
           firstSeenAt: "2026-11-22T18:00:00Z",
           platform: "java",
-          clientVersion: "1.21.4",
+          clientVersion: "26.3",
           clientBrand: "fabric",
           joinAddress: "ts-mc.net",
           countryCode: "US",
@@ -257,7 +290,7 @@ test("ingest endpoint enforces auth, ingestEnabled flag, payload size limit, sch
           sessionId,
           playerUuid,
           playerName: "TestPilot",
-          world: "skylands",
+          world: "frontier",
           mode: "survival",
           connectedMs: 1_800_000,
           activeMs: 1_500_000,
@@ -306,7 +339,7 @@ test("ingest endpoint enforces auth, ingestEnabled flag, payload size limit, sch
 
     const brokenJsonRes = await postBatch("{broken-json");
     expect(brokenJsonRes.status).toBe(400);
-    const badSchemaRes = await postBatch(JSON.stringify({ schemaVersion: 99 }));
+    const badSchemaRes = await postBatch(JSON.stringify({ schemaVersion: 1 }));
     expect(badSchemaRes.status).toBe(400);
 
     const firstRes = await postBatch(JSON.stringify(validBatch));
@@ -331,6 +364,7 @@ test("ingest endpoint enforces auth, ingestEnabled flag, payload size limit, sch
     expect(profile?.player.connectedMs).toBe(1_800_000);
     expect(profile?.player.activeMs).toBe(1_500_000);
     expect(profile?.player.sessionsCount).toBe(1);
+    expect(profile?.worldBreakdown[0]?.label).toBe("Frontier");
   } finally {
     store.close();
   }
@@ -343,7 +377,7 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
     const sessionId = "66666666-6666-4000-8000-000000000006";
 
     store.ingestBatch({
-      schemaVersion: 1,
+      schemaVersion: 2,
       batchId: "77777777-7777-4000-8000-000000000001",
       serverName: "The Storm",
       sentAt: "2026-11-22T12:00:00Z",
@@ -375,7 +409,7 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
           victimName: null,
           mobType: "Zombie",
           weapon: "Diamond Sword",
-          world: "world",
+          world: "frontier",
         },
       ],
       playerSnapshots: [
@@ -385,15 +419,17 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
           capturedAt: "2026-11-22T12:00:00Z",
           nickname: null,
           primaryGroup: "default",
-          coins: 500,
+          crystals: 500,
+          rwfCredits: 120,
           townName: null,
+          townKind: null,
           townRole: null,
           townClaims: 0,
           powerLevel: 10,
           topSkill: null,
           topSkillLevel: 0,
           skills: {},
-          tracks: { explorer: 4 },
+          tracks: { engineer: 4 },
           questsCompleted: 9,
           arenaBestWaves: {},
           rwfMatches: 0,
@@ -410,7 +446,7 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
             uuid: playerUuid,
             name: "Chrono",
             mode: "survival",
-            world: "world",
+            world: "frontier",
             afk: false,
             pingMs: 32,
             sessionStartedAt: "2026-11-22T12:00:00Z",
@@ -422,10 +458,10 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
       },
     });
 
-    // Sub-second snapshot 50ms after whole-second "12:00:00Z" must supersede 500 -> 950 coins
+    // Sub-second snapshot 50ms after whole-second "12:00:00Z" must supersede 500 -> 950 crystals
     // while null unloaded tracks/questsCompleted preserve existing progression!
     store.ingestBatch({
-      schemaVersion: 1,
+      schemaVersion: 2,
       batchId: "77777777-7777-4000-8000-000000000002",
       serverName: "The Storm",
       sentAt: "2026-11-22T12:00:00.050Z",
@@ -437,10 +473,12 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
           capturedAt: "2026-11-22T12:00:00.050Z",
           nickname: "ChronoPrime",
           primaryGroup: "vip",
-          coins: 950,
-          townName: null,
-          townRole: null,
-          townClaims: 0,
+          crystals: 950,
+          rwfCredits: 240,
+          townName: "Chrono",
+          townKind: "camp",
+          townRole: "owner",
+          townClaims: 6,
           powerLevel: 12,
           topSkill: null,
           topSkillLevel: 0,
@@ -458,9 +496,9 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
       serverSnapshot: null,
     });
 
-    // Late arrival of an older periodic snapshot must not overwrite nickname, group, or coins
+    // Late arrival of an older periodic snapshot must not overwrite nickname, group, or crystals
     store.ingestBatch({
-      schemaVersion: 1,
+      schemaVersion: 2,
       batchId: "77777777-7777-4000-8000-000000000003",
       serverName: "The Storm",
       sentAt: "2026-11-22T12:00:00.090Z",
@@ -472,8 +510,10 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
           capturedAt: "2026-11-22T12:00:00.010Z",
           nickname: "StaleNick",
           primaryGroup: "default",
-          coins: 10,
+          crystals: 10,
+          rwfCredits: 0,
           townName: null,
+          townKind: null,
           townRole: null,
           townClaims: 0,
           powerLevel: 1,
@@ -499,10 +539,13 @@ test("normalizes mixed-precision and offset timestamps and expires stale online 
     expect(freshProfile?.player.lastSeenAt).toBe("2026-11-22T12:00:00.500Z");
     expect(freshProfile?.player.nickname).toBe("ChronoPrime");
     expect(freshProfile?.player.primaryGroup).toBe("vip");
-    expect(freshProfile?.gameplay?.coins).toBe(950);
-    expect(freshProfile?.gameplay?.tracks).toEqual({ explorer: 4 });
+    expect(freshProfile?.gameplay?.crystals).toBe(950);
+    expect(freshProfile?.gameplay?.rwfCredits).toBe(240);
+    expect(freshProfile?.gameplay?.townKind).toBe("camp");
+    expect(freshProfile?.gameplay?.tracks).toEqual({ engineer: 4 });
     expect(freshProfile?.gameplay?.questsCompleted).toBe(9);
     expect(freshProfile?.player.online).toBe(true);
+    expect(store.getGameplayOverview(freshNow).towns).toEqual([]);
     expect(store.getOverview(freshNow).onlineNow).toBe(1);
     expect(store.onlineCount(freshNow)).toBe(1);
 
@@ -539,7 +582,7 @@ test("accepts Floodgate Bedrock player UUIDs while keeping RFC checks for batch 
     const sessionId = "99999999-9999-4000-8000-000000000001";
 
     const bedrockBatch = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       batchId: "99999999-9999-4000-8000-000000000002",
       serverName: "The Storm",
       sentAt: "2026-11-22T18:00:00Z",
@@ -553,9 +596,9 @@ test("accepts Floodgate Bedrock player UUIDs while keeping RFC checks for batch 
           playerName: ".BedrockBuilder",
           firstSeenAt: "2026-11-22T18:00:00Z",
           platform: "bedrock",
-          clientVersion: "1.21.50",
+          clientVersion: "bedrock",
           clientBrand: "Geyser",
-          joinAddress: "bedrock.ts-mc.net",
+          joinAddress: "ts-mc.net",
           countryCode: null,
           countryName: null,
         },
@@ -567,7 +610,7 @@ test("accepts Floodgate Bedrock player UUIDs while keeping RFC checks for batch 
           playerName: ".BedrockBuilder",
           category: "full",
           reason: "Server full",
-          joinAddress: "bedrock.ts-mc.net",
+          joinAddress: "ts-mc.net",
         },
       ],
       playerSnapshots: [
@@ -577,8 +620,10 @@ test("accepts Floodgate Bedrock player UUIDs while keeping RFC checks for batch 
           capturedAt: "2026-11-22T18:00:00Z",
           nickname: null,
           primaryGroup: "default",
-          coins: 300,
+          crystals: 300,
+          rwfCredits: 0,
           townName: null,
+          townKind: null,
           townRole: null,
           townClaims: 0,
           powerLevel: 8,
@@ -602,7 +647,7 @@ test("accepts Floodgate Bedrock player UUIDs while keeping RFC checks for batch 
             uuid: bedrockUuid,
             name: ".BedrockBuilder",
             mode: "survival",
-            world: "world",
+            world: "frontier",
             afk: false,
             pingMs: 45,
             sessionStartedAt: "2026-11-22T18:00:00Z",
@@ -656,5 +701,143 @@ test("accepts Floodgate Bedrock player UUIDs while keeping RFC checks for batch 
     expect(parsedOverview.onlinePlayers[0]?.uuid).toBe(normalizedBedrockUuid);
   } finally {
     store.close();
+  }
+});
+
+test("migrates legacy v1 SQLite database on disk cleanly to v2 schema and scrubs non-player towns", async () => {
+  const dbPath = path.join(
+    os.tmpdir(),
+    `storm-stats-v1-migration-${crypto.randomUUID()}.sqlite`,
+  );
+  const playerUuid = "aaaaaaaa-aaaa-4000-8000-000000000001";
+
+  const legacyDb = new Database(dbPath, { create: true });
+  legacyDb.run(`
+    CREATE TABLE players (
+      uuid TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      name_lower TEXT NOT NULL,
+      nickname TEXT,
+      first_seen_at TEXT NOT NULL,
+      last_seen_at TEXT NOT NULL,
+      platform TEXT NOT NULL DEFAULT 'java',
+      client_version TEXT NOT NULL DEFAULT 'unknown',
+      primary_group TEXT NOT NULL DEFAULT 'default',
+      connected_ms INTEGER NOT NULL DEFAULT 0,
+      active_ms INTEGER NOT NULL DEFAULT 0,
+      sessions_count INTEGER NOT NULL DEFAULT 0,
+      longest_session_ms INTEGER NOT NULL DEFAULT 0,
+      ping_min_ms INTEGER,
+      ping_sum_ms INTEGER NOT NULL DEFAULT 0,
+      ping_count INTEGER NOT NULL DEFAULT 0,
+      ping_max_ms INTEGER,
+      pvp_kills INTEGER NOT NULL DEFAULT 0,
+      pvp_deaths INTEGER NOT NULL DEFAULT 0,
+      mob_kills INTEGER NOT NULL DEFAULT 0,
+      mob_deaths INTEGER NOT NULL DEFAULT 0,
+      env_deaths INTEGER NOT NULL DEFAULT 0,
+      last_country_code TEXT,
+      last_country_name TEXT,
+      last_join_address TEXT,
+      bounces_count INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE player_gameplay (
+      player_uuid TEXT PRIMARY KEY REFERENCES players(uuid) ON DELETE CASCADE,
+      player_name TEXT NOT NULL,
+      captured_at TEXT NOT NULL,
+      coins INTEGER NOT NULL DEFAULT 0,
+      town_name TEXT,
+      town_role TEXT,
+      town_claims INTEGER NOT NULL DEFAULT 0,
+      power_level INTEGER NOT NULL DEFAULT 0,
+      top_skill TEXT,
+      top_skill_level INTEGER NOT NULL DEFAULT 0,
+      skills_json TEXT NOT NULL DEFAULT '{}',
+      tracks_json TEXT NOT NULL DEFAULT '{}',
+      quests_completed INTEGER NOT NULL DEFAULT 0,
+      arena_waves_json TEXT NOT NULL DEFAULT '{}',
+      rwf_matches INTEGER NOT NULL DEFAULT 0,
+      rwf_wins INTEGER NOT NULL DEFAULT 0,
+      rwf_losses INTEGER NOT NULL DEFAULT 0,
+      rwf_kills INTEGER NOT NULL DEFAULT 0,
+      rwf_deaths INTEGER NOT NULL DEFAULT 0
+    );
+
+    CREATE INDEX idx_gameplay_coins ON player_gameplay(coins DESC);
+
+    CREATE TABLE server_state (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      server_name TEXT NOT NULL DEFAULT 'The Storm',
+      last_ingest_at TEXT,
+      snapshot_captured_at TEXT,
+      max_players INTEGER NOT NULL DEFAULT 64,
+      online_players_json TEXT NOT NULL DEFAULT '[]',
+      peak_online_all_time INTEGER NOT NULL DEFAULT 0,
+      peak_online_at TEXT,
+      towns_json TEXT NOT NULL DEFAULT '[]'
+    );
+  `);
+
+  legacyDb
+    .query(
+      `INSERT INTO players (uuid, name, name_lower, first_seen_at, last_seen_at)
+       VALUES (?, 'LegacyPlayer', 'legacyplayer', '2026-10-01T00:00:00Z', '2026-11-20T00:00:00Z')`,
+    )
+    .run(playerUuid);
+
+  legacyDb
+    .query(
+      `INSERT INTO player_gameplay (
+         player_uuid, player_name, captured_at, coins, town_name, town_role, town_claims, power_level
+       ) VALUES (?, 'LegacyPlayer', '2026-11-20T00:00:00Z', 500, 'Altaria', 'officer', 32, 140)`,
+    )
+    .run(playerUuid);
+
+  legacyDb
+    .query(
+      `INSERT INTO server_state (id, server_name, max_players, online_players_json, peak_online_all_time, towns_json)
+       VALUES (1, 'The Storm', 64, '[]', 12, ?)`,
+    )
+    .run(
+      JSON.stringify([
+        { name: "Altaria", members: 7, claims: 64, kind: "player" },
+        { name: "OldHeritage", members: 2, claims: 15, kind: "heritage" },
+        { name: "SpawnProtected", members: 0, claims: 25, kind: "server" },
+      ]),
+    );
+  legacyDb.close(false);
+
+  const store = StormStatsStore.open(dbPath);
+  try {
+    const publicApp = createPublicApp({
+      store,
+      publicEnabled: async () => true,
+      now: () => FIXED_NOW,
+    });
+
+    const profile = PlayerProfileResponseSchema.parse(
+      await requestJson(publicApp, `/api/v1/players/${playerUuid}`),
+    );
+    expect(profile.gameplay?.crystals).toBe(500);
+    expect(profile.gameplay?.rwfCredits).toBe(0);
+    expect(profile.gameplay?.townRole).toBe("assistant");
+    expect(profile.gameplay?.townKind).toBeNull();
+
+    const gameplay = GameplayOverviewResponseSchema.parse(
+      await requestJson(publicApp, "/api/v1/gameplay"),
+    );
+    expect(gameplay.economyTop[0]?.crystals).toBe(500);
+    expect(gameplay.towns).toEqual([
+      { name: "Altaria", members: 7, claims: 64, kind: "player" },
+    ]);
+  } finally {
+    store.close();
+    for (const candidate of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`]) {
+      const file = Bun.file(candidate);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    }
   }
 });

@@ -39,7 +39,7 @@ const QUERY_ROW_ACCESSORS: Readonly<
   activePlaytime: { kind: "number", getValue: (row) => row.activeMs },
   connectedPlaytime: { kind: "number", getValue: (row) => row.connectedMs },
   sessions: { kind: "number", getValue: (row) => row.sessionsCount },
-  coins: { kind: "number", getValue: (row) => row.coins },
+  crystals: { kind: "number", getValue: (row) => row.crystals },
   powerLevel: { kind: "number", getValue: (row) => row.powerLevel },
   pvpKills: { kind: "number", getValue: (row) => row.pvpKills },
   lastSeen: {
@@ -58,7 +58,7 @@ const QUERY_ROW_LABELS: Readonly<Record<PlayerSortField, string>> = {
   activePlaytime: "Active Playtime",
   connectedPlaytime: "Connected",
   sessions: "Sessions",
-  coins: "Coins",
+  crystals: "Crystals",
   powerLevel: "Skill Power",
   pvpKills: "PvP K/D",
   lastSeen: "Last Seen",
@@ -313,7 +313,7 @@ function QueryBuilderForm({
                 id="sq-town"
                 name="town"
                 type="text"
-                placeholder="e.g. Spawn"
+                placeholder="e.g. Altaria"
                 autoCorrect="off"
                 autoCapitalize="none"
                 spellCheck={false}

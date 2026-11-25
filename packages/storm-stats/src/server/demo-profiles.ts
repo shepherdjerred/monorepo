@@ -2,13 +2,18 @@ import {
   ActivityGroupSchema,
   BounceCategorySchema,
   GameModeSchema,
+  MAX_TRACK_LEVEL,
   PlatformSchema,
+  PlayerHomeKindSchema,
+  STORM_SKILLS,
+  STORM_TRACKS,
   WorldBucketSchema,
   type ActivityGroup,
   type GameMode,
   type IngestEvent,
   type Platform,
   type PlayerGameplaySnapshot,
+  type PlayerHomeKind,
   type TownSummarySnapshot,
   type WorldBucket,
 } from "@shepherdjerred/storm-stats/shared/contract.ts";
@@ -24,7 +29,9 @@ export type DemoPlayerSeed = {
   readonly clientBrand: string | null;
   readonly primaryGroup: string;
   readonly townName: string | null;
+  readonly townKind: PlayerHomeKind | null;
   readonly townRole: string | null;
+  readonly campClaims: number;
   readonly countryCode: string;
   readonly countryName: string;
   readonly joinAddress: string;
@@ -37,46 +44,51 @@ export type DemoPlayerSeed = {
 };
 
 export const DEMO_TOWNS: readonly TownSummarySnapshot[] = [
-  { name: "Windmill", members: 9, claims: 64, kind: "settlement" },
-  { name: "Skylands Haven", members: 7, claims: 52, kind: "sky-citadel" },
-  { name: "Rustworks", members: 5, claims: 41, kind: "industrial" },
-  { name: "Frostpeak", members: 4, claims: 28, kind: "outpost" },
-  { name: "Coral Reach", members: 3, claims: 19, kind: "port" },
+  { name: "Altaria", members: 7, claims: 64, kind: "player" },
+  { name: "Karthil", members: 5, claims: 52, kind: "player" },
+  { name: "Frost Falls", members: 4, claims: 41, kind: "player" },
+  { name: "Starvationville", members: 4, claims: 28, kind: "player" },
+  { name: "Leronfell", members: 3, claims: 19, kind: "player" },
 ];
 
 const COMPACT_SPECS = [
-  "1, Jerred, Stormwarden, regular, java, 1.21.4, fabric, admin, Windmill, mayor, US, United States, ts-mc.net, 24, world, survival, Netherite Sword, 89, 1",
-  "2, AetherialKite, Kite, regular, java, 1.21.4, fabric, mod, Skylands Haven, mayor, CA, Canada, mc.ts-mc.net, 38, skylands, survival, Power V Bow, 86, 1",
-  "3, Cinder Forge, Cinder, regular, java, 1.21.4, sodium, supporter, Rustworks, mayor, US, United States, ts-mc.net, 31, world_nether, survival, Mace, 82, 1",
-  "4, WoolRunnerX, Runner, regular, java, 1.21.4, lunarclient:v2.18.1, supporter, Windmill, officer, US, United States, join.ts-mc.net, 29, rwf, rwf, Netherite Sword, 78, 1",
-  "5, ValkyrieFrost, Val, regular, java, 1.21.4, fabric, default, Frostpeak, mayor, SE, Sweden, mc.ts-mc.net, 112, arena, arena, Diamond Axe, 74, 1",
-  "6, Tidecaller Kai, -, regular, bedrock, 1.21.50, Geyser, supporter, Coral Reach, mayor, US, United States, bedrock.ts-mc.net, 46, world, survival, Trident, 70, 1",
-  "7, RedstoneMira, Mira, active, java, 1.21.4, fabric, default, Rustworks, engineer, DE, Germany, ts-mc.net, 108, world, survival, Crossbow, 65, 0",
-  "8, BreezeHunter, -, active, java, 1.21.4, vanilla, default, Skylands Haven, resident, GB, United Kingdom, ts-mc.net, 94, skylands, survival, Mace, 60, 0",
-  "9, OpalArchitect, Opal, active, java, 1.21.4, fabric, builder, Windmill, builder, US, United States, mc.ts-mc.net, 34, creative, creative, Diamond Sword, 55, 0",
-  "10, NetherNomad, -, active, java, 1.21.3, sodium, default, Rustworks, resident, CA, Canada, join.ts-mc.net, 42, world_nether, survival, Netherite Axe, 51, 0",
-  "11, EnderScribe, Scribe, active, java, 1.21.4, vanilla, default, Skylands Haven, officer, NL, Netherlands, ts-mc.net, 103, world_the_end, survival, Netherite Sword, 46, 0",
-  "12, PocketMiner99, -, active, bedrock, 1.21.50, Geyser, default, Windmill, resident, US, United States, bedrock.ts-mc.net, 52, world, survival, Diamond Sword, 40, 0",
-  "13, GlacierSpear, -, active, java, 1.21.4, lunarclient:v2.18.1, default, Frostpeak, officer, AU, Australia, mc.ts-mc.net, 178, rwf, rwf, Power V Bow, 34, 0",
-  "14, MossyCobble, Moss, irregular, java, 1.21.4, vanilla, default, Windmill, resident, US, United States, ts-mc.net, 39, world, survival, Iron Sword, 62, 0",
-  "15, SakuraLantern, -, irregular, java, 1.21.4, fabric, default, Coral Reach, resident, JP, Japan, ts-mc.net, 142, world, survival, Diamond Sword, 48, 0",
-  "16, CopperGolemFan, -, irregular, java, 1.21.3, vanilla, default, Rustworks, resident, US, United States, join.ts-mc.net, 44, arena, arena, Diamond Axe, 30, 0",
-  "17, SkyPirateZed, Zed, irregular, java, 1.21.4, sodium, default, Skylands Haven, resident, BR, Brazil, mc.ts-mc.net, 136, skylands, survival, Crossbow, 26, 0",
-  "18, BedrockBerry, -, irregular, bedrock, 1.21.50, Geyser, default, Windmill, resident, CA, Canada, bedrock.ts-mc.net, 58, world, survival, Trident, 20, 0",
-  "19, DeepslateDelver, -, irregular, java, 1.21.4, fabric, default, Frostpeak, resident, US, United States, ts-mc.net, 36, world, survival, Netherite Sword, 15, 0",
-  "20, SproutNewbie, -, irregular, java, 1.21.4, vanilla, default, -, -, US, United States, join.ts-mc.net, 41, world, survival, Iron Sword, 5, 0",
-  "21, AutumnWanderer, -, inactive, java, 1.21.3, vanilla, default, Windmill, resident, US, United States, ts-mc.net, 47, world, survival, Diamond Sword, 88, 0",
-  "22, QuartzMason, -, inactive, java, 1.21.3, fabric, default, Skylands Haven, resident, GB, United Kingdom, mc.ts-mc.net, 99, creative, creative, Iron Sword, 84, 0",
-  "23, BlazeRodBaron, Baron, inactive, java, 1.21.3, sodium, default, Rustworks, resident, DE, Germany, ts-mc.net, 115, world_nether, survival, Diamond Axe, 79, 0",
-  "24, SnowfoxScout, -, inactive, bedrock, 1.21.44, Geyser, default, Frostpeak, resident, CA, Canada, bedrock.ts-mc.net, 63, world, survival, Power V Bow, 72, 0",
-  "25, CoralDiver, -, inactive, java, 1.21.3, vanilla, default, Coral Reach, resident, AU, Australia, join.ts-mc.net, 184, world, survival, Trident, 68, 0",
-  "26, PhantomSlayer, -, inactive, java, 1.21.3, lunarclient:v2.18.1, default, Skylands Haven, resident, US, United States, ts-mc.net, 33, rwf, rwf, Netherite Sword, 64, 0",
-  "27, BirchLogger, -, inactive, java, 1.21.3, vanilla, default, -, -, US, United States, join.ts-mc.net, 51, world, survival, Iron Sword, 56, 0",
-  "28, OneLookTourist, -, inactive, java, 1.21.3, vanilla, default, -, -, NL, Netherlands, ts-mc.net, 110, world, survival, Stone Sword, 44, 0",
+  "1, Jerred, Stormwarden, regular, java, 26.3, fabric, admin, Altaria, town, owner, 0, US, United States, ts-mc.net, 24, frontier, survival, Netherite Sword, 89, 1",
+  "2, AetherialKite, Kite, regular, java, 26.3, fabric, mod, Karthil, town, owner, 0, CA, Canada, mc.ts-mc.net, 38, skylands, survival, Power V Bow, 86, 1",
+  "3, Cinder Forge, Cinder, regular, java, 26.3, sodium, supporter, Starvationville, town, owner, 0, US, United States, ts-mc.net, 31, world_nether, survival, Mace, 82, 1",
+  "4, FuseRunner, Runner, regular, java, 26.3, lunarclient:v2.18.1, supporter, Altaria, town, assistant, 0, US, United States, ts-mc.net, 29, rwf, rwf, Netherite Sword, 78, 1",
+  "5, ValkyrieFrost, Val, regular, java, 26.3, fabric, default, Frost Falls, town, owner, 0, SE, Sweden, mc.ts-mc.net, 112, arena, arena, Diamond Axe, 74, 1",
+  "6, Tidecaller Kai, -, regular, bedrock, bedrock, Geyser, supporter, Leronfell, town, owner, 0, US, United States, ts-mc.net, 46, frontier, survival, Trident, 70, 1",
+  "7, RedstoneMira, Mira, active, java, 26.3, fabric, default, Starvationville, town, assistant, 0, DE, Germany, ts-mc.net, 108, frontier, survival, Crossbow, 65, 0",
+  "8, BreezeHunter, -, active, java, 26.3, vanilla, default, Karthil, town, member, 0, GB, United Kingdom, ts-mc.net, 94, skylands, survival, Mace, 60, 0",
+  "9, OpalArchitect, Opal, active, java, 26.3, fabric, supporter, Altaria, town, member, 0, US, United States, mc.ts-mc.net, 34, creative, creative, Diamond Sword, 55, 0",
+  "10, NetherNomad, -, active, java, 26.3, sodium, default, NetherNomad, camp, owner, 9, CA, Canada, mc.ts-mc.net, 42, world_nether, survival, Netherite Axe, 51, 0",
+  "11, EnderScribe, Scribe, active, java, 26.3, vanilla, default, Karthil, town, assistant, 0, NL, Netherlands, ts-mc.net, 103, world_the_end, survival, Netherite Sword, 46, 0",
+  "12, PocketMiner99, -, active, bedrock, bedrock, Geyser, default, Altaria, town, member, 0, US, United States, ts-mc.net, 52, frontier, survival, Diamond Sword, 40, 0",
+  "13, GlacierSpear, -, active, java, 26.3, lunarclient:v2.18.1, default, Frost Falls, town, assistant, 0, AU, Australia, mc.ts-mc.net, 178, rwf, rwf, Power V Bow, 34, 0",
+  "14, MossyCobble, Moss, irregular, java, 26.3, vanilla, default, Altaria, town, member, 0, US, United States, ts-mc.net, 39, world, survival, Iron Sword, 62, 0",
+  "15, SakuraLantern, -, irregular, java, 26.3, fabric, default, Leronfell, town, member, 0, JP, Japan, ts-mc.net, 142, map2, survival, Diamond Sword, 48, 0",
+  "16, CopperGolemFan, -, irregular, java, 26.3, vanilla, default, Starvationville, town, member, 0, US, United States, mc.ts-mc.net, 44, arena, arena, Diamond Axe, 30, 0",
+  "17, SkyPirateZed, Zed, irregular, java, 26.3, sodium, default, Karthil, town, member, 0, BR, Brazil, mc.ts-mc.net, 136, skylands, survival, Crossbow, 26, 0",
+  "18, BedrockBerry, -, irregular, bedrock, bedrock, Geyser, default, Altaria, town, member, 0, CA, Canada, ts-mc.net, 58, frontier, survival, Trident, 20, 0",
+  "19, DeepslateDelver, -, irregular, java, 26.3, fabric, default, NetherNomad, camp, member, 9, US, United States, ts-mc.net, 36, frontier, survival, Netherite Sword, 15, 0",
+  "20, SproutNewbie, -, irregular, java, 26.3, vanilla, default, SproutNewbie, camp, owner, 4, US, United States, mc.ts-mc.net, 41, frontier, survival, Iron Sword, 5, 0",
+  "21, AutumnWanderer, -, inactive, java, 1.21.11, vanilla, default, Altaria, town, member, 0, US, United States, ts-mc.net, 47, world, survival, Diamond Sword, 88, 0",
+  "22, QuartzMason, -, inactive, java, 26.3, fabric, default, Karthil, town, member, 0, GB, United Kingdom, mc.ts-mc.net, 99, creative, creative, Iron Sword, 84, 0",
+  "23, BlazeRodBaron, Baron, inactive, java, 1.21.11, sodium, default, Starvationville, town, member, 0, DE, Germany, ts-mc.net, 115, world_nether, survival, Diamond Axe, 79, 0",
+  "24, SnowfoxScout, -, inactive, bedrock, bedrock, Geyser, default, Frost Falls, town, member, 0, CA, Canada, ts-mc.net, 63, map2, survival, Power V Bow, 72, 0",
+  "25, CoralDiver, -, inactive, java, 1.21.11, vanilla, default, Leronfell, town, member, 0, AU, Australia, mc.ts-mc.net, 184, frontier, survival, Trident, 68, 0",
+  "26, PhantomSlayer, -, inactive, java, 26.3, lunarclient:v2.18.1, default, Frost Falls, town, member, 0, US, United States, ts-mc.net, 33, rwf, rwf, Netherite Sword, 64, 0",
+  "27, BirchLogger, -, inactive, java, 1.21.11, vanilla, default, -, -, -, 0, US, United States, mc.ts-mc.net, 51, world, survival, Iron Sword, 56, 0",
+  "28, OneLookTourist, -, inactive, java, 26.3, vanilla, default, -, -, -, 0, NL, Netherlands, ts-mc.net, 110, frontier, survival, Stone Sword, 44, 0",
 ] as const;
 
 function nullableField(raw: string | undefined): string | null {
   return raw === undefined || raw === "-" ? null : raw;
+}
+
+function nullableHomeKind(raw: string | undefined): PlayerHomeKind | null {
+  const value = nullableField(raw);
+  return value === null ? null : PlayerHomeKindSchema.parse(value);
 }
 
 function parseCompactPlayer(spec: string): DemoPlayerSeed {
@@ -87,20 +99,22 @@ function parseCompactPlayer(spec: string): DemoPlayerSeed {
     nickname: nullableField(parts[2]),
     archetype: ActivityGroupSchema.parse(parts[3]),
     platform: PlatformSchema.parse(parts[4]),
-    clientVersion: parts[5] ?? "1.21.4",
+    clientVersion: parts[5] ?? "26.3",
     clientBrand: nullableField(parts[6]),
     primaryGroup: parts[7] ?? "default",
     townName: nullableField(parts[8]),
-    townRole: nullableField(parts[9]),
-    countryCode: parts[10] ?? "US",
-    countryName: parts[11] ?? "United States",
-    joinAddress: parts[12] ?? "ts-mc.net",
-    basePingMs: Number(parts[13]),
-    favWorld: WorldBucketSchema.parse(parts[14]),
-    favMode: GameModeSchema.parse(parts[15]),
-    favWeapon: parts[16] ?? "Iron Sword",
-    firstSeenDaysAgo: Number(parts[17]),
-    onlineNow: parts[18] === "1",
+    townKind: nullableHomeKind(parts[9]),
+    townRole: nullableField(parts[10]),
+    campClaims: Number(parts[11] ?? "0"),
+    countryCode: parts[12] ?? "US",
+    countryName: parts[13] ?? "United States",
+    joinAddress: parts[14] ?? "ts-mc.net",
+    basePingMs: Number(parts[15]),
+    favWorld: WorldBucketSchema.parse(parts[16]),
+    favMode: GameModeSchema.parse(parts[17]),
+    favWeapon: parts[18] ?? "Iron Sword",
+    firstSeenDaysAgo: Number(parts[19]),
+    onlineNow: parts[20] === "1",
   };
 }
 
@@ -118,17 +132,6 @@ export function playerUuidFor(index: number): string {
   return deterministicUuid("57040000", index);
 }
 
-const SKILLS = [
-  "mining",
-  "woodcutting",
-  "excavation",
-  "swords",
-  "archery",
-  "acrobatics",
-  "alchemy",
-  "fishing",
-] as const;
-
 function tierMultiplierFor(player: DemoPlayerSeed): number {
   switch (player.archetype) {
     case "regular":
@@ -142,6 +145,53 @@ function tierMultiplierFor(player: DemoPlayerSeed): number {
   }
 }
 
+function buildDemoTracks(
+  player: DemoPlayerSeed,
+  rand: () => number,
+): Record<string, number> {
+  const primaryTrackIndex = player.index % STORM_TRACKS.length;
+  let primaryCeiling = 1;
+  switch (player.archetype) {
+    case "regular":
+      primaryCeiling = MAX_TRACK_LEVEL;
+      break;
+    case "active":
+      primaryCeiling = 4;
+      break;
+    case "irregular":
+      primaryCeiling = 2;
+      break;
+    case "inactive":
+      primaryCeiling = 1;
+      break;
+  }
+
+  const tracks: Record<string, number> = {};
+  for (const [idx, track] of STORM_TRACKS.entries()) {
+    if (player.index === 28) {
+      tracks[track] = 0;
+    } else if (idx === primaryTrackIndex) {
+      tracks[track] = Math.min(
+        MAX_TRACK_LEVEL,
+        Math.max(1, Math.round(primaryCeiling * (0.7 + rand() * 0.3))),
+      );
+    } else {
+      const secondaryCap = player.archetype === "regular" ? 2 : 1;
+      tracks[track] = rand() < 0.45 ? Math.round(rand() * secondaryCap) : 0;
+    }
+  }
+  return tracks;
+}
+
+function resolveHomeClaims(player: DemoPlayerSeed): number {
+  if (player.townName === null) {
+    return 0;
+  }
+  return player.townKind === "camp"
+    ? player.campClaims
+    : (DEMO_TOWNS.find((t) => t.name === player.townName)?.claims ?? 16);
+}
+
 export function buildDemoGameplaySnapshot(
   player: DemoPlayerSeed,
   capturedAt: string,
@@ -153,8 +203,8 @@ export function buildDemoGameplaySnapshot(
   let topSkill: string | null = null;
   let topSkillLevel = 0;
 
-  for (const skill of SKILLS) {
-    const level = Math.max(5, Math.round((25 + rand() * 190) * mult));
+  for (const skill of STORM_SKILLS) {
+    const level = Math.max(5, Math.round((18 + rand() * 145) * mult));
     skills[skill] = level;
     powerLevel += level;
     if (level > topSkillLevel) {
@@ -163,10 +213,7 @@ export function buildDemoGameplaySnapshot(
     }
   }
 
-  const townClaims =
-    player.townName === null
-      ? 0
-      : (DEMO_TOWNS.find((t) => t.name === player.townName)?.claims ?? 16);
+  const townClaims = resolveHomeClaims(player);
   const rwfMatches =
     player.favMode === "rwf" || player.archetype === "regular"
       ? Math.round((4 + rand() * 22) * (mult / 2))
@@ -175,13 +222,15 @@ export function buildDemoGameplaySnapshot(
     rwfMatches,
     Math.round(rwfMatches * (0.42 + rand() * 0.35)),
   );
-  const arenaBestWaves: Record<string, number> = {
-    catacombs: Math.round((6 + rand() * 28) * (mult / 2)),
-    frost_citadel: Math.round((4 + rand() * 22) * (mult / 2)),
-  };
-  if (player.archetype === "regular" || player.favMode === "arena") {
-    arenaBestWaves["ember_pit"] = Math.round(14 + rand() * 26);
-  }
+  const rwfCredits =
+    rwfMatches > 0 ? rwfMatches * Math.round(18 + rand() * 42) : 0;
+
+  const colosseumWave =
+    player.index === 28
+      ? 0
+      : Math.min(72, Math.max(1, Math.round((4 + rand() * 14) * mult)));
+  const arenaBestWaves: Record<string, number> =
+    colosseumWave > 0 ? { colosseum: colosseumWave } : {};
 
   return {
     playerUuid: playerUuidFor(player.index),
@@ -189,19 +238,17 @@ export function buildDemoGameplaySnapshot(
     capturedAt,
     nickname: player.nickname,
     primaryGroup: player.primaryGroup,
-    coins: Math.round((850 + rand() * 24_000) * mult),
+    crystals: Math.round((120 + rand() * 4200) * mult),
+    rwfCredits,
     townName: player.townName,
+    townKind: player.townKind,
     townRole: player.townRole,
     townClaims,
     powerLevel,
     topSkill,
     topSkillLevel,
     skills,
-    tracks: {
-      explorer: Math.min(10, Math.max(1, Math.round(mult * 2.2))),
-      builder: Math.min(10, Math.max(1, Math.round(mult * 1.9))),
-      gladiator: Math.min(10, Math.max(1, Math.round(mult * 1.7))),
-    },
+    tracks: buildDemoTracks(player, rand),
     questsCompleted: Math.round((5 + rand() * 38) * mult),
     arenaBestWaves,
     rwfMatches,
@@ -214,13 +261,13 @@ export function buildDemoGameplaySnapshot(
 
 const BOUNCE_SPECS = [
   "1|-|GriefBot_404|banned|Suspended: automated grief client signature|ts-mc.net",
-  "2|-|CuriousFriend|allowlist|Apply on Discord to join The Storm allowlist|join.ts-mc.net",
-  "4|4|WoolRunnerX|maintenance|Paper 1.21.4 rolling restart in progress|join.ts-mc.net",
-  "6|12|PocketMiner99|kicked|Geyser Floodgate session expired; please reconnect|bedrock.ts-mc.net",
-  "9|-|UnlistedVisitor|allowlist|Apply on Discord to join The Storm allowlist|ts-mc.net",
-  "12|3|Cinder Forge|maintenance|Scheduled backup window|ts-mc.net",
-  "15|17|SkyPirateZed|full|RWF tournament lobby is at capacity|mc.ts-mc.net",
-  "19|-|AltScanner99|banned|IP enforcement policy block|ts-mc.net",
+  "2|16|CopperGolemFan|kicked|Timed out waiting for keepalive packet|mc.ts-mc.net",
+  "4|4|FuseRunner|maintenance|Paper 26.3 rolling restart in progress|ts-mc.net",
+  "6|12|PocketMiner99|kicked|Geyser Floodgate session expired; please reconnect|ts-mc.net",
+  "9|24|SnowfoxScout|kicked|Geyser bedrock protocol mismatch; reconnect on latest release|ts-mc.net",
+  "12|3|Cinder Forge|maintenance|Paper 26.3 scheduled maintenance window|ts-mc.net",
+  "15|17|SkyPirateZed|full|Server is currently full (64/64)|mc.ts-mc.net",
+  "19|-|AltScanner99|banned|Suspended: compromised client network signature|ts-mc.net",
 ] as const;
 
 export function createDemoBounceEvents(
