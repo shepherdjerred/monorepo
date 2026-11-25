@@ -57,10 +57,10 @@ export async function assembleBundle(): Promise<void> {
     const systemCa = await Bun.file(
       "/etc/ssl/certs/ca-certificates.crt",
     ).text();
-    const postalCa = await Bun.file("/etc/postal/ca.crt").text();
+    const smtpCa = await Bun.file("/etc/storm-forum/smtp-ca/ca.crt").text();
     await Bun.write(
       "/tmp/storm-forum/ca-bundle.crt",
-      `${systemCa}\n${postalCa}\n`,
+      `${systemCa}\n${smtpCa}\n`,
     );
     await Bun.write(path, client.file(env.BUNDLE_KEY));
     const digest = createHash("sha256");

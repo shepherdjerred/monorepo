@@ -134,7 +134,6 @@ export const UPSTREAM_NAMESPACES_WITHOUT_EGRESS_POLICY: ReadonlySet<string> =
 export const PORT_CONTAINERS_WITHOUT_PROBE: ReadonlySet<string> = new Set([
   "media/media-plex/plex-exporter",
   "media/media-qbittorrent/qbittorrent-exporter",
-  "postal/postal-postal-worker/postfix-relay",
 ]);
 
 /**
@@ -213,10 +212,6 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "media/media-whisperbridge/main",
   "node-tuning/cpu-power-cap/cpu-power-cap",
   "pinchtab/pinchtab/install-browser-firewall",
-  "postal/postal-postal-smtp/postal-smtp",
-  "postal/postal-postal-web/postal-web",
-  "postal/postal-postal-worker/postal-worker",
-  "postal/postal-postal-worker/postfix-relay",
   "prometheus/kubernetes-event-exporter/event-exporter",
   "prometheus/nvme-metrics-collector/nvme-metrics-collector",
   "prometheus/smartctl-collector/smartctl-collector",

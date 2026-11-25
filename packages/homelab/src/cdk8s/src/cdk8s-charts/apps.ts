@@ -41,7 +41,6 @@ import { createBirmelApp } from "@shepherdjerred/homelab/cdk8s/src/resources/arg
 import { createCloudflareTunnelApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/cloudflare-tunnel.ts";
 import { createMediaApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/media/media.ts";
 import { createHomeApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/home.ts";
-import { createPostalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/postal.ts";
 import { createSyncthingApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/media/syncthing.ts";
 import { createGolinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/golink.ts";
 import { createFreshrssApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/freshrss.ts";
@@ -152,7 +151,6 @@ export async function createAppsChart(app: App) {
   // Service apps with dedicated namespaces
   createMediaApp(chart);
   createHomeApp(chart);
-  createPostalApp(chart);
   createSyncthingApp(chart);
   createGolinkApp(chart);
   createFreshrssApp(chart);

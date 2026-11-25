@@ -183,18 +183,18 @@ export type AlertmanagerPort = {
   activeAlerts: () => Promise<readonly AlertmanagerSnapshotAlert[]>;
 };
 
-export type PostalMessage = {
+export type MailMessage = {
   messageId: string;
   subject: string;
   htmlBody: string;
   /** Plain-text alternative sent alongside the HTML body. */
   plainBody?: string;
-  /** Postal tag; defaults to the alert-opening tag. */
+  /** Mail tag; defaults to the alert-opening tag. */
   tag?: string;
 };
 
-export type PostalPort = {
-  send: (input: PostalMessage) => Promise<void>;
+export type MailPort = {
+  send: (input: MailMessage) => Promise<void>;
 };
 
 export type PreviewPort = {

@@ -63,7 +63,7 @@ The core module has two halves in one process:
   `severity=info`, and `null`-only receivers at ingest), serves the Ops Active
   (`/alerts`), House (`/house`), History (`/history` with `Ops`/`House`/`All`
   scope links), and System (`/system`) pages, sends grouped opening email
-  through Postal, pushes eligible non-`pet-care` `category=household` chores and
+  through `@shepherdjerred/mail`, pushes eligible non-`pet-care` `category=household` chores and
   dismissals durably to Home Assistant (`HomeAssistantOutbox`) when
   `HOMEASSISTANT_URL` and `HOMEASSISTANT_TOKEN` are configured, and renders
   bounded Grafana-backed Prometheus, Loki, and Tempo previews for firing alerts.
@@ -80,7 +80,7 @@ The core module has two halves in one process:
 - **Reports & outbound mail ledger (`/reports`).** Temporal report delivery and
   local backfill post `ReportRunIngestBatch` payloads (`ReportEnvelopeV1`,
   rendered HTML/plain-text mail, semantic `@sjer.red` sender/recipient, and
-  Postal delivery or quiet-skip metadata) to `POST /internal/v1/reports/runs`,
+  Mail delivery or quiet-skip metadata) to `POST /internal/v1/reports/runs`,
   stored idempotently in the SQLite `ReportRun` table and broadcast over the
   SSE `changes` bus (`reason: "reports"`). Completed daily and weekly `DigestRun`
   rows archive their `DigestReport` JSON, rendered HTML/plain-text bodies,
@@ -244,9 +244,9 @@ Required configuration is validated at startup: `DATABASE_URL` (a SQLite
 `file:` URL), `ALERTMANAGER_URL`, `ALERT_DASHBOARD_WEBHOOK_TOKEN`,
 `GRAFANA_URL`, `GRAFANA_API_KEY`, `OPS_INGEST_TOKEN` (at least 32 characters;
 the bearer token the Temporal workflow presents), and `PROMETHEUS_URL` (the
-in-cluster Prometheus, `http://prometheus-operated.prometheus:9090`). Postal
-uses the credential `POSTAL_API_KEY` and bootstrap connection settings
-`POSTAL_HOST` / `POSTAL_HOST_HEADER`.
+in-cluster Prometheus, `http://prometheus-operated.prometheus:9090`). Outbound
+mail uses the credential `MAIL_API_TOKEN` and bootstrap connection setting
+`MAIL_API_URL`.
 
 Incident mail uses `alert-dashboard-email-enabled` (default on). Incident
 sender and recipient come from `alert-dashboard-incident-email-from` /
@@ -259,12 +259,12 @@ and digests to `digests@sjer.red`.
 The flag client needs its bootstrap variables: `FEATURE_FLAGS_MODE` (`flags`
 in the cluster, `disabled` locally), plus `FLAGS_URL` and `FLAGS_DEPLOYMENT`
 (`alert-dashboard/prod`) in `flags` mode. Digests use the
-Postal settings whenever all four are present,
+Mail settings whenever all four are present,
 independently of the incident-mail flag, and are sent synchronously with a
 per-period `DigestRun` claim rather than through the alert outbox, so enabling
 digests cannot drain alert email that was queued while incident mail was
 off. The `DigestRun` row for each `(kind, period)` is the digest's ledger: a
-request claims it, sends through Postal with a stable message id, and marks
+request claims it, sends through `@shepherdjerred/mail` with a stable message id, and marks
 it `sent` or `failed`. A repeated request for a sent period, or one skipped
 while sending was still flag-gated, returns
 `duplicate: true`, a failed period is retried by the next request, and a claim
@@ -273,13 +273,13 @@ older than five minutes is presumed abandoned and may be reclaimed. When
 prod), a healthy, non-stale daily digest with zero `needsMe`, `attention`,
 `newSinceLast`, and opened incidents whose prior completed daily digest was also
 clear is recorded as `status = "skipped"` (`skipReason = "unchanged-clear"`)
-without calling Postal, while still archiving the rendered digest for `/reports`
+without calling Mail, while still archiving the rendered digest for `/reports`
 and advancing the `digest` cursor.
 
 Incident mail and Alertmanager's own mail are alternatives. Hub's outbox sends
 opening mail for ordinary warning and critical alerts (`alert-dashboard-email-enabled`
 on), while Alertmanager's `alerts` receiver delivers webhook-only and
-`postal-fallback` retains direct Postal STARTTLS mail for alerts that diagnose
+`mail-fallback` retains direct Mail STARTTLS mail for alerts that diagnose
 Hub or its webhook (`packages/homelab/src/cdk8s/src/resources/argo-applications/observability/prometheus.ts`).
 If `alert-dashboard-email-enabled` is turned off, `AlertDashboardOutboxStranded`
 reports any rows queued before it was disabled, since those can neither drain
@@ -324,7 +324,7 @@ data.
 | `POST /internal/v1/reports/runs`                | `ReportRunIngestBatch` upsert (bearer `OPS_INGEST_TOKEN`, 8 MiB limit); persists `ReportRun` envelopes/mail and emits `changes` (`"reports"`)                        |
 | `GET /api/v1/reports/overview`                  | `/reports` KPIs and 13 recurring report/digest schedules with freshness and 30-day Pacific activity cells                                                            |
 | `GET /api/v1/reports/feed`                      | Unified filterable feed (`tab`, `scheduleId`, `mailbox`, `verdict`, `delivery`, `hasPr`, `q`, `limit`) across reports, digests, agent tasks, and incident mail       |
-| `GET /api/v1/reports/runs/:id`                  | Full `ReportEnvelopeV1` inspector payload, rendered HTML/plain-text mail, Postal receipt/skip metadata, and recent sibling runs                                      |
+| `GET /api/v1/reports/runs/:id`                  | Full `ReportEnvelopeV1` inspector payload, rendered HTML/plain-text mail, Mail receipt/skip metadata, and recent sibling runs                                        |
 | `GET /api/v1/reports/digests/:kind/:periodKey`  | Archived `DigestRun` payload and rendered email, or a live preview when `:periodKey` is the active period                                                            |
 | `GET /api/v1/reports/incidents/:id`             | Incident `EmailOutbox` metadata, linked `/alerts/:id` occurrences, and rendered HTML/plain-text email                                                                |
 | `GET /api/v1/ops/snapshot?consumer=`            | Latest snapshot with freshness applied; `503 snapshot_unavailable` before the first ingest; `consumer=web` annotates `newSignalIds`                                  |
@@ -405,12 +405,12 @@ generates inline.
 uncanceled outbox messages created in the explicit window where every linked
 occurrence is `TemporalWorkflowFailed`. Confirmed cancellations atomically
 record their time, operator, and reason; they do not delete ledger evidence.
-The email worker atomically claims an outbox row before calling Postal, and
+The email worker atomically claims an outbox row before calling Mail, and
 cancellation matches active unclaimed rows plus claims expired for five
 minutes, so an in-flight send cannot race cancellation while an abandoned
 claim can still be cleaned up. Claims are reclaimable after a process restart.
-Delivery is therefore at-least-once: reclaiming a claim can duplicate a Postal
-message if the original worker was still alive, but the claim token prevents
+Delivery is therefore at-least-once: reclaiming a claim takes advantage of the
+mail broker's `idempotencyKey`, and the claim token prevents
 that stale worker from recording the reclaimed row's result.
 
 ```bash
@@ -441,7 +441,7 @@ dependency-cruiser (`dependency-cruiser.config.cjs`, run via
 
 - `src/domain` — pure domain types and logic; may not import any other layer
 - `src/application` — use cases over domain types; may not import adapters
-- `src/infrastructure` — Prisma, Alertmanager, Grafana, and Postal adapters;
+- `src/infrastructure` — Prisma, Alertmanager, Grafana, and Mail adapters;
   may not import transports
 - `src/server` — Hono HTTP server and tRPC router; may not import the client
 - `src/client` — React UI; may only take type-only imports from the server

@@ -43,7 +43,7 @@ export function SystemPage(): React.JSX.Element {
               { name: "Database", state: value.database },
               { name: "Alertmanager", state: value.alertmanager },
               { name: "Grafana", state: value.grafana },
-              { name: "Postal", state: value.postal },
+              { name: "Mail", state: value.mail },
             ].map(({ name, state }) => (
               <article className="health-card" key={name}>
                 <span className={`health-dot ${state}`} />

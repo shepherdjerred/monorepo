@@ -22,7 +22,7 @@ import {
   initializeTracing,
   shutdownTracing,
 } from "#infrastructure/observability";
-import { PostalClient, disabledPostal } from "#infrastructure/postal-client";
+import { MailClient, disabledMail } from "#infrastructure/mail-client";
 import { createPrismaRepositories } from "#infrastructure/prisma-repositories";
 import { PrometheusSeries } from "#infrastructure/prometheus-series";
 import { createApp } from "#server/app";
@@ -96,35 +96,32 @@ const previews: PreviewPort = {
   },
 };
 
-/** Postal when every setting for the mailbox pair is present. */
-function configuredPostal(
+/** Mail client when every setting for the mailbox pair is present. */
+function configuredMail(
   from: string | undefined,
   to: string | undefined,
-): PostalClient | null {
-  const { POSTAL_API_KEY, POSTAL_HOST, POSTAL_HOST_HEADER } = config;
+): MailClient | null {
+  const { MAIL_API_TOKEN, MAIL_API_URL } = config;
   if (
-    POSTAL_API_KEY === undefined ||
-    POSTAL_HOST === undefined ||
+    MAIL_API_TOKEN === undefined ||
+    MAIL_API_URL === undefined ||
     from === undefined ||
     to === undefined
   ) {
     return null;
   }
-  return new PostalClient({
-    apiKey: POSTAL_API_KEY,
+  return new MailClient({
+    baseUrl: MAIL_API_URL,
+    token: MAIL_API_TOKEN,
     from,
-    host: POSTAL_HOST,
     to,
-    ...(POSTAL_HOST_HEADER === undefined
-      ? {}
-      : { hostHeader: POSTAL_HOST_HEADER }),
   });
 }
 
-function incidentPostalClient(): PostalClient {
-  const postal = configuredPostal(config.POSTAL_FROM, config.POSTAL_TO);
-  if (postal === null) throw new Error("Postal configuration is incomplete");
-  return postal;
+function incidentMailClient(): MailClient {
+  const mail = configuredMail(config.MAIL_FROM, config.MAIL_TO);
+  if (mail === null) throw new Error("Mail configuration is incomplete");
+  return mail;
 }
 
 function configuredHomeAssistant(): HomeAssistantClient | null {
@@ -141,7 +138,7 @@ function configuredHomeAssistant(): HomeAssistantClient | null {
 const service = new AlertService({
   repository,
   alertmanager,
-  postal: config.EMAIL_ENABLED ? incidentPostalClient() : disabledPostal,
+  mail: config.EMAIL_ENABLED ? incidentMailClient() : disabledMail,
   homeAssistant: configuredHomeAssistant(),
   previews,
   clock: systemClock,
@@ -163,7 +160,7 @@ const digests = new DigestService({
   repository: opsRepository,
   ops,
   series,
-  mailer: configuredPostal(config.POSTAL_DIGEST_FROM, config.POSTAL_DIGEST_TO),
+  mailer: configuredMail(config.MAIL_DIGEST_FROM, config.MAIL_DIGEST_TO),
   clock: systemClock,
   dailyDigestQuietClear: config.DAILY_DIGEST_QUIET_CLEAR,
 });
@@ -172,12 +169,12 @@ const reports = new ReportService({
   digests,
   clock: systemClock,
   digestMailbox: {
-    from: config.POSTAL_DIGEST_FROM ?? OPS_MAILBOXES.digests.from,
-    to: config.POSTAL_DIGEST_TO ?? OPS_MAILBOXES.digests.to,
+    from: config.MAIL_DIGEST_FROM ?? OPS_MAILBOXES.digests.from,
+    to: config.MAIL_DIGEST_TO ?? OPS_MAILBOXES.digests.to,
   },
   incidentMailbox: {
-    from: config.POSTAL_FROM ?? OPS_MAILBOXES.alerts.from,
-    to: config.POSTAL_TO ?? OPS_MAILBOXES.alerts.to,
+    from: config.MAIL_FROM ?? OPS_MAILBOXES.alerts.from,
+    to: config.MAIL_TO ?? OPS_MAILBOXES.alerts.to,
   },
 });
 const changes = new ChangeBus();

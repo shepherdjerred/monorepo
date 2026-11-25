@@ -1,5 +1,5 @@
 import type { ReportEnvelopeV1 } from "#shared/reports/report.ts";
-import type { PostalSendInput } from "#shared/infra/postal.ts";
+import type { MailSendInput } from "#shared/infra/mail.ts";
 import {
   deliverReportWithDependencies,
   reportReceiptKey,
@@ -14,7 +14,7 @@ import type {
   SkippedNotification,
 } from "./report-notification-policy.ts";
 
-/** In-memory CAS and Postal boundary; notification and delivery logic are real. */
+/** In-memory CAS and Mail boundary; notification and delivery logic are real. */
 export function notificationDeliveryHarness() {
   const observations = new Map<string, ReportEnvelopeV1>();
   const skips = new Map<string, SkippedNotification>();
@@ -82,15 +82,15 @@ export function notificationDeliveryHarness() {
         recipient: "recipient@example.com",
         sender: "sender@example.com",
       },
-      send: (input: PostalSendInput) => {
-        if (faults.failSend) throw new Error("Postal unavailable");
+      send: (input: MailSendInput) => {
+        if (faults.failSend) throw new Error("Mail API unavailable");
         const reportRunId = input.headers?.["X-Report-Run-ID"];
         if (reportRunId === undefined)
           throw new Error("Missing report run header");
         sent.push(reportRunId);
         return Promise.resolve({
           messageId: `mail-${String(sent.length)}`,
-          recipientId: 42,
+          recipientId: "unknown" as const,
           subject: input.subject,
           tag: input.tag,
         });

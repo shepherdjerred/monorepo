@@ -15,9 +15,9 @@ import type {
   DigestClaim,
   DigestRunKey,
   IncidentWindowStats,
+  MailMessage,
+  MailPort,
   OpsRepository,
-  PostalMessage,
-  PostalPort,
   SeriesPort,
   SeriesRangeRequest,
   StoreOpsSnapshotInput,
@@ -475,11 +475,11 @@ export class FixtureSeries implements SeriesPort {
   }
 }
 
-export class RecordingPostal implements PostalPort {
-  readonly sent: PostalMessage[] = [];
+export class RecordingMail implements MailPort {
+  readonly sent: MailMessage[] = [];
   failWith: Error | undefined;
 
-  async send(input: PostalMessage): Promise<void> {
+  async send(input: MailMessage): Promise<void> {
     if (this.failWith !== undefined) {
       throw this.failWith;
     }

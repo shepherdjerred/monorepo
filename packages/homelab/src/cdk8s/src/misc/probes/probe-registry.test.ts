@@ -134,17 +134,17 @@ describe("registerBackendProbe", () => {
 
   test("throws on a duplicate registration with a conflicting module", () => {
     registerBackendProbe({
-      namespace: "postal",
-      serviceName: "postal-web-service",
-      port: 5000,
+      namespace: "mail",
+      serviceName: "mail",
+      port: 7370,
       module: "tcp_connect",
     });
 
     expect(() => {
       registerBackendProbe({
-        namespace: "postal",
-        serviceName: "postal-web-service",
-        port: 5000,
+        namespace: "mail",
+        serviceName: "mail",
+        port: 7370,
         module: "http_2xx",
       });
     }).toThrow(/conflicting duplicate registration/);

@@ -97,7 +97,7 @@ export function registerOpsRepositoryCases(): void {
       expect(await opsRepository.claimDigestRun(DAILY, 500n, 200n)).toEqual({
         outcome: "claimed",
       });
-      await opsRepository.markDigestFailed(DAILY, "Postal returned 500");
+      await opsRepository.markDigestFailed(DAILY, "Mail API returned 500");
       expect(await opsRepository.claimDigestRun(DAILY, 510n, 400n)).toEqual({
         outcome: "claimed",
       });

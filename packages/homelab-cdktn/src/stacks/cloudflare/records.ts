@@ -85,22 +85,6 @@ export function txt(
   });
 }
 
-export function mx(
-  stack: TerraformStack,
-  id: string,
-  zone: Zone,
-  record: { name: string; content: string; priority: number },
-): DnsRecord {
-  return new DnsRecord(stack, id, {
-    zoneId: zone.id,
-    ttl: 1,
-    name: record.name,
-    type: "MX",
-    content: record.content,
-    priority: record.priority,
-  });
-}
-
 type Service = {
   name: string;
   priority: number;

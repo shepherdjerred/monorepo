@@ -60,8 +60,8 @@ describe("digest runs", () => {
       status: "sent",
       duplicate: true,
     });
-    expect(ops.postal.sent).toHaveLength(1);
-    const [message] = ops.postal.sent;
+    expect(ops.mail.sent).toHaveLength(1);
+    const [message] = ops.mail.sent;
     expect(message?.messageId).toBe("<ops-digest-daily-2026-09-28@sjer.red>");
     expect(message?.subject).toBe("Daily digest: 4 items need your review");
     expect(message?.plainBody).toContain("Waiting on you");
@@ -76,14 +76,14 @@ describe("digest runs", () => {
 
   it("marks a failed send and lets a retry send it", async () => {
     const ops = await fixture();
-    ops.postal.failWith = new Error("Postal returned 500");
+    ops.mail.failWith = new Error("Mail API returned 500");
     await expect(ops.digests.run("weekly")).rejects.toBeInstanceOf(
       DigestSendError,
     );
     expect(ops.repository.digests.get("weekly:2026-W40")?.status).toBe(
       "failed",
     );
-    ops.postal.failWith = undefined;
+    ops.mail.failWith = undefined;
     expect(await ops.digests.run("weekly")).toMatchObject({
       status: "sent",
       duplicate: false,
@@ -137,7 +137,7 @@ describe("digest runs", () => {
       status: "sent",
       duplicate: false,
     });
-    expect(ops.postal.sent).toHaveLength(1);
+    expect(ops.mail.sent).toHaveLength(1);
     expect(ops.repository.digests.get("daily:2026-09-28")).toMatchObject({
       status: "sent",
       severity: "ok",
@@ -154,7 +154,7 @@ describe("digest runs", () => {
       status: "skipped",
       duplicate: false,
     });
-    expect(ops.postal.sent).toHaveLength(1);
+    expect(ops.mail.sent).toHaveLength(1);
     const skippedRow = ops.repository.digests.get("daily:2026-09-29");
     expect(skippedRow).toMatchObject({
       status: "skipped",
@@ -182,7 +182,7 @@ describe("digest runs", () => {
       status: "sent",
       duplicate: false,
     });
-    expect(ops.postal.sent).toHaveLength(2);
+    expect(ops.mail.sent).toHaveLength(2);
 
     // Day 4 (recovery back to clear after attention day): MUST send recovery email!
     currentInstant = currentInstant.add({ hours: 24 });
@@ -193,7 +193,7 @@ describe("digest runs", () => {
       status: "sent",
       duplicate: false,
     });
-    expect(ops.postal.sent).toHaveLength(3);
+    expect(ops.mail.sent).toHaveLength(3);
 
     // Day 5 (second clear day after recovery): skips again.
     currentInstant = currentInstant.add({ hours: 24 });
@@ -204,7 +204,7 @@ describe("digest runs", () => {
       status: "skipped",
       duplicate: false,
     });
-    expect(ops.postal.sent).toHaveLength(3);
+    expect(ops.mail.sent).toHaveLength(3);
   });
 
   it("sends consecutive clear daily digests when dailyDigestQuietClear is false or changes occurred", async () => {
@@ -219,7 +219,7 @@ describe("digest runs", () => {
     currentInstant = currentInstant.add({ hours: 24 });
     await ingestClearSnapshot(ops, currentInstant);
     expect(await ops.digests.run("daily")).toMatchObject({ status: "sent" });
-    expect(ops.postal.sent).toHaveLength(2);
+    expect(ops.mail.sent).toHaveLength(2);
 
     const quietOps = createOpsFixture(
       { now: () => currentInstant },

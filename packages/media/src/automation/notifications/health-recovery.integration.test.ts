@@ -55,7 +55,7 @@ test("unknown outcomes never resend and known rejection requires an explicit cur
   let sends = 0;
   f.ctx.notify = async () => {
     sends++;
-    throw new IntegrationError("postal", "authentication");
+    throw new IntegrationError("mail", "authentication");
   };
   const activity = createNotificationActivities(f.ctx);
   const input = {
@@ -84,7 +84,7 @@ test("unknown outcomes never resend and known rejection requires an explicit cur
   }
   f.ctx.notify = async () => {
     sends++;
-    throw new IntegrationError("postal", "outcome-unknown");
+    throw new IntegrationError("mail", "outcome-unknown");
   };
   expect(await activity.deliverMediaNotification(input)).toMatchObject({
     status: "unknown",
@@ -119,9 +119,9 @@ test.each(["pending", "rejected", "accepted", "unknown"] as const)(
     f.ctx.notify = async () => {
       sends++;
       if (state === "rejected")
-        throw new IntegrationError("postal", "authentication");
+        throw new IntegrationError("mail", "authentication");
       if (state === "unknown")
-        throw new IntegrationError("postal", "outcome-unknown");
+        throw new IntegrationError("mail", "outcome-unknown");
       return { receipt: "old-health-receipt" };
     };
     if (state !== "pending")

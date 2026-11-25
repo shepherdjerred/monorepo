@@ -8,8 +8,8 @@ import type {
   HomeAssistantSendFailureInput,
   HomeAssistantSendSuccessInput,
   IngestWebhookInput,
-  PostalMessage,
-  PostalPort,
+  MailMessage,
+  MailPort,
   PreviewPort,
 } from "#application/ports";
 import { readinessOnlyLedger } from "#test-fixtures/alert-ledger";
@@ -40,7 +40,7 @@ describe("webhook evidence", () => {
       checkDatabase: unexpected,
     };
     const alertmanager: AlertmanagerPort = { activeAlerts: unexpected };
-    const postal: PostalPort = { send: unexpected };
+    const mail: MailPort = { send: unexpected };
     const previews: PreviewPort = {
       previews: unexpected,
       health: unexpected,
@@ -48,7 +48,7 @@ describe("webhook evidence", () => {
     const service = new AlertService({
       repository,
       alertmanager,
-      postal,
+      mail,
       previews,
       clock: fixedClock("2026-08-08T18:00:01Z"),
       emailEnabled: false,
@@ -98,8 +98,8 @@ describe("webhook evidence", () => {
     expect(ingested.payload).not.toHaveProperty("futureTopLevelField");
   });
 
-  it("forwards plainBody from claimed outbox rows to Postal", async () => {
-    const sent: PostalMessage[] = [];
+  it("forwards plainBody from claimed outbox rows to Mail", async () => {
+    const sent: MailMessage[] = [];
     const markedSent: string[] = [];
     const repository: AlertLedgerRepository = {
       ...readinessOnlyLedger(),
@@ -124,7 +124,7 @@ describe("webhook evidence", () => {
     const service = new AlertService({
       repository,
       alertmanager: { activeAlerts: unexpected },
-      postal: {
+      mail: {
         send: (message) => {
           sent.push(message);
           return Promise.resolve();
@@ -147,7 +147,7 @@ describe("Home Assistant outbox drain", () => {
     const service = new AlertService({
       repository: readinessOnlyLedger(),
       alertmanager: { activeAlerts: unexpected },
-      postal: { send: unexpected },
+      mail: { send: unexpected },
       homeAssistant: null,
       previews: { previews: unexpected, health: unexpected },
       clock: fixedClock("2026-08-08T18:00:01Z"),
@@ -198,7 +198,7 @@ describe("Home Assistant outbox drain", () => {
     const service = new AlertService({
       repository,
       alertmanager: { activeAlerts: unexpected },
-      postal: { send: unexpected },
+      mail: { send: unexpected },
       homeAssistant: {
         send: (notification) => {
           if (notification.action === "dismiss") {
@@ -291,7 +291,7 @@ describe("Home Assistant outbox drain", () => {
     const service = new AlertService({
       repository,
       alertmanager: { activeAlerts: unexpected },
-      postal: { send: unexpected },
+      mail: { send: unexpected },
       homeAssistant: {
         send: async (notification) => {
           events.push(`send-${notification.action}`);

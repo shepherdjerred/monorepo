@@ -7,7 +7,6 @@ import published from "#src/stacks/cloudflare/published-txt-records.json" with {
 import {
   cname,
   fastmailAutodiscovery,
-  mx,
   tunnelCnames,
   txt,
 } from "#src/stacks/cloudflare/records.ts";
@@ -80,39 +79,13 @@ export function sjerRed(stack: TerraformStack, zone: Zone): void {
     },
   });
 
-  mail(stack, zone);
+  acmeChallenges(stack, zone);
   services(stack, zone);
   settings(stack, zone);
 }
 
-/** Postal bounce routing and sender authentication on `rp.sjer.red`. */
-function mail(stack: TerraformStack, zone: Zone): void {
-  mx(stack, "sjer_red_mx_rp1", zone, {
-    name: "rp",
-    content: "in1-smtp.messagingengine.com",
-    priority: 10,
-  });
-  mx(stack, "sjer_red_mx_rp2", zone, {
-    name: "rp",
-    content: "in2-smtp.messagingengine.com",
-    priority: 20,
-  });
-  txt(stack, "sjer_red_spf_rp", zone, {
-    name: "rp",
-    content: "v=spf1 include:spf.messagingengine.com -all",
-  });
-
-  // Postal DKIM keys.
-  txt(stack, "sjer_red_dkim_postal_aoolxx", zone, {
-    name: "postal-aoolxx._domainkey",
-    content: published.sjer_red_dkim_postal_aoolxx,
-  });
-  txt(stack, "sjer_red_dkim_postal_isna7c", zone, {
-    name: "postal-isna7c._domainkey",
-    content: published.sjer_red_dkim_postal_isna7c,
-  });
-
-  // Legacy ACME challenges (Tailscale certs).
+/** Legacy ACME challenges (Tailscale certs) on `sjer.red`. */
+function acmeChallenges(stack: TerraformStack, zone: Zone): void {
   txt(stack, "sjer_red_acme_influxdb", zone, {
     name: "_acme-challenge.influxdb.ts.zeus",
     content: published.sjer_red_acme_influxdb,

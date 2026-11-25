@@ -7,7 +7,6 @@ import {
   request,
   type FetchTransport,
 } from "./http.ts";
-import { postalHttp } from "./postal-http.ts";
 
 type Message = {
   channel: "email" | "discord" | "discord_shared";
@@ -18,11 +17,10 @@ type Message = {
 };
 export type NotificationMutation = { beforeMutation: () => void };
 export type NotificationTransportConfig = {
-  postal?: {
+  mail?: {
     baseUrl: string;
-    apiKey: string;
+    token: string;
     from: string;
-    hostHeader?: string;
   };
   discord?: { botToken: string };
 };
@@ -36,49 +34,42 @@ export function createNotificationTransport(
 ) => Promise<{ receipt: string }> {
   return async (message, mutation) => {
     if (message.channel === "email") {
-      if (config.postal === undefined)
-        throw new IntegrationError("postal", "interaction-required");
+      if (config.mail === undefined)
+        throw new IntegrationError("mail", "interaction-required");
       mutation?.beforeMutation();
       const response = await request(
-        transport ?? postalHttp,
-        "postal",
-        endpoint(config.postal.baseUrl, "api/v1/send/message"),
+        transport ?? fetch,
+        "mail",
+        endpoint(config.mail.baseUrl, "v1/messages"),
         {
           method: "POST",
           mutation: true,
+          acceptedStatuses: [400],
           headers: {
             "Content-Type": "application/json",
-            "X-Server-API-Key": config.postal.apiKey,
-            ...(config.postal.hostHeader === undefined
-              ? {}
-              : { Host: config.postal.hostHeader }),
+            Authorization: `Bearer ${config.mail.token}`,
           },
           body: JSON.stringify({
             to: [z.email().parse(message.recipient)],
-            from: config.postal.from,
+            from: config.mail.from,
             subject: message.subject,
-            plain_body: message.text,
+            plainBody: message.text,
             tag: `media-${message.idempotencyKey}`,
+            idempotencyKey: message.idempotencyKey,
           }),
         },
       );
-      const envelope = z
-        .object({ status: z.string(), data: z.unknown() })
-        .parse(await json(response, "postal"));
-      if (envelope.status === "error")
-        throw new IntegrationError("postal", "interaction-required");
-      if (envelope.status !== "success")
-        throw new IntegrationError("postal", "outcome-unknown");
-      const data = z
+      if (response.status === 400)
+        throw new IntegrationError("mail", "interaction-required", 400);
+      const parsed = z
         .object({
-          message_id: z.string().min(1),
-          messages: z.record(z.string(), z.object({ id: z.number().int() })),
+          id: z.string().min(1),
+          status: z.enum(["queued", "sending", "retrying", "sent", "failed"]),
         })
-        .parse(envelope.data);
-      const recipient = data.messages[message.recipient];
-      if (recipient === undefined)
-        throw new IntegrationError("postal", "outcome-unknown");
-      return { receipt: `${data.message_id}:${String(recipient.id)}` };
+        .safeParse(await json(response, "mail"));
+      if (!parsed.success)
+        throw new IntegrationError("mail", "outcome-unknown");
+      return { receipt: parsed.data.id };
     }
     if (config.discord === undefined)
       throw new IntegrationError("discord", "interaction-required");

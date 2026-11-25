@@ -41,7 +41,7 @@ allowlisted environment. The runtime boundary consists of:
 - no GitHub credential, so the clone cannot push,
 - exactly one service-scoped inference credential and nothing else from the
   worker's own environment,
-- no Postal, S3, ArgoCD, Grafana, Woodpecker, Home Assistant, Bugsink, or
+- no Mail, S3, ArgoCD, Grafana, Woodpecker, Home Assistant, Bugsink, or
   Cloudflare credential,
 - a dedicated Kubernetes service account with read-only audit RBAC and no
   `pods/exec` permission, whose owner-only token is readable by the root poller

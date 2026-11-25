@@ -65,8 +65,8 @@ spec:
               value: alert-dashboard/prod
             - name: FLAGS_URL
               value: http://flags.flags.svc.cluster.local:7361
-            - name: POSTAL_HOST
-              value: http://postal-postal-web-service.postal.svc.cluster.local:5000
+            - name: MAIL_API_URL
+              value: http://mail.mail.svc.cluster.local:7371
             - name: ALERT_DASHBOARD_WEBHOOK_TOKEN
               valueFrom:
                 secretKeyRef:
@@ -82,13 +82,11 @@ spec:
                 secretKeyRef:
                   key: GRAFANA_API_KEY
                   name: alert-dashboard-alert-dashboard-1p
-            - name: POSTAL_API_KEY
+            - name: MAIL_API_TOKEN
               valueFrom:
                 secretKeyRef:
-                  key: POSTAL_API_KEY
+                  key: MAIL_API_TOKEN
                   name: alert-dashboard-alert-dashboard-1p
-            - name: POSTAL_HOST_HEADER
-              value: postal.tailnet-1a49.ts.net
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: http://alloy-gateway.alloy-gateway.svc.cluster.local:4318
             - name: OTEL_SERVICE_NAME
@@ -333,12 +331,15 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: flags
     - ports:
-        - port: 5000
+        - port: 7371
           protocol: TCP
       to:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: postal
+              kubernetes.io/metadata.name: mail
+          podSelector:
+            matchLabels:
+              app: mail
     - ports:
         - port: 8123
           protocol: TCP

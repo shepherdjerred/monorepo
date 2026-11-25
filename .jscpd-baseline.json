@@ -412,14 +412,6 @@
       "clones": 1,
       "tokens": 91
     },
-    "packages/homelab/src/cdk8s/src/resources/bugsink/index.ts|packages/homelab/src/cdk8s/src/resources/bugsink/index.ts": {
-      "clones": 1,
-      "tokens": 83
-    },
-    "packages/homelab/src/cdk8s/src/resources/delivery/network/temporal.test.ts|packages/homelab/src/cdk8s/src/resources/media/application/postal-network-policy.test.ts": {
-      "clones": 1,
-      "tokens": 96
-    },
     "packages/homelab/src/cdk8s/src/resources/gradle-build-cache.ts|packages/homelab/src/cdk8s/src/resources/turbo-cache.ts": {
       "clones": 1,
       "tokens": 80

@@ -45,7 +45,8 @@ const SERVICE_ALIASES: Readonly<Record<string, string>> = {
   argocd: "gitops",
   scout: "scout-for-lol",
   media: "streambot",
-  postal: "mail",
+  postal: "outbound-mail",
+  mail: "outbound-mail",
 };
 
 function Facts({

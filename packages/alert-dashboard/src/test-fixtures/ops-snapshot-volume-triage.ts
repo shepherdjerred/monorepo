@@ -73,9 +73,9 @@ const ALERTS: readonly AlertRow[] = [
     hours: 70,
   },
   {
-    alertname: "PostalQueueLatencyHigh",
-    namespace: "postal",
-    summary: "Postal queue latency is above 5 minutes",
+    alertname: "MailOutboxQueueLatencyHigh",
+    namespace: "mail",
+    summary: "Mail outbox queue latency is above 5 minutes",
     hours: 88,
   },
   {

@@ -4,10 +4,7 @@ const flag = vi.hoisted(() => vi.fn());
 vi.mock("@shepherdjerred/feature-flags/config-source.ts", () => ({
   createFlagConfigSource: () => ({ name: "flag", get: flag }),
 }));
-import {
-  postalAddressesConfig,
-  resolvePostalAddressesForReport,
-} from "./postal.ts";
+import { mailAddressesConfig, resolveMailAddressesForReport } from "./mail.ts";
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -16,7 +13,7 @@ beforeEach(() => {
 
 describe("report mail routing", () => {
   test("preserves existing addresses on absence", async () => {
-    expect(await postalAddressesConfig()).toEqual({
+    expect(await mailAddressesConfig()).toEqual({
       recipient: "dependencies@sjer.red",
       sender: "deps@sjer.red",
     });
@@ -30,7 +27,7 @@ describe("report mail routing", () => {
           : { value: "ops@sjer.red" },
       ),
     );
-    expect(await postalAddressesConfig()).toEqual({
+    expect(await mailAddressesConfig()).toEqual({
       recipient: "ops@sjer.red",
       sender: "Homelab Audit <ops@sjer.red>",
     });
@@ -38,38 +35,36 @@ describe("report mail routing", () => {
 
   test("maps report families to semantic @sjer.red mailboxes by default", async () => {
     await expect(
-      resolvePostalAddressesForReport("dependency-summary"),
+      resolveMailAddressesForReport("dependency-summary"),
     ).resolves.toEqual({
       recipient: "deps@sjer.red",
       sender: "Repo Dependencies <deps@sjer.red>",
     });
     await expect(
-      resolvePostalAddressesForReport("homelab-audit"),
+      resolveMailAddressesForReport("homelab-audit"),
     ).resolves.toEqual({
       recipient: "ops@sjer.red",
       sender: "Homelab Audit <ops@sjer.red>",
     });
     await expect(
-      resolvePostalAddressesForReport("tasknotes-canary"),
+      resolveMailAddressesForReport("tasknotes-canary"),
     ).resolves.toEqual({
       recipient: "ops@sjer.red",
       sender: "Homelab Audit <ops@sjer.red>",
     });
     await expect(
-      resolvePostalAddressesForReport("scout-data-dragon"),
+      resolveMailAddressesForReport("scout-data-dragon"),
     ).resolves.toEqual({
       recipient: "scout@sjer.red",
       sender: "Scout Automation <scout@sjer.red>",
     });
     await expect(
-      resolvePostalAddressesForReport("main-vuln-scan"),
+      resolveMailAddressesForReport("main-vuln-scan"),
     ).resolves.toEqual({
       recipient: "reports@sjer.red",
       sender: "Temporal Reports <reports@sjer.red>",
     });
-    await expect(
-      resolvePostalAddressesForReport("agent-task"),
-    ).resolves.toEqual({
+    await expect(resolveMailAddressesForReport("agent-task")).resolves.toEqual({
       recipient: "reports@sjer.red",
       sender: "Temporal Reports <reports@sjer.red>",
     });
@@ -84,7 +79,7 @@ describe("report mail routing", () => {
       ),
     );
     await expect(
-      resolvePostalAddressesForReport("homelab-audit"),
+      resolveMailAddressesForReport("homelab-audit"),
     ).resolves.toEqual({
       recipient: "override@sjer.red",
       sender: "Homelab Audit <ops@sjer.red>",
@@ -98,7 +93,7 @@ describe("report mail routing", () => {
       ),
     );
     await expect(
-      resolvePostalAddressesForReport("scout-lane-priors"),
+      resolveMailAddressesForReport("scout-lane-priors"),
     ).resolves.toEqual({
       recipient: "scout@sjer.red",
       sender: "Custom Sender <custom@sjer.red>",
@@ -109,20 +104,20 @@ describe("report mail routing", () => {
     flag.mockImplementation(({ key }: { key: string }) =>
       Promise.resolve({ value: `${key}@example.test` }),
     );
-    expect(await postalAddressesConfig()).toEqual({
+    expect(await mailAddressesConfig()).toEqual({
       recipient: "recipient@example.test",
       sender: "sender@example.test",
     });
     flag.mockImplementation(({ key }: { key: string }) =>
       Promise.resolve({ value: `${key}-updated@example.test` }),
     );
-    const updated = await postalAddressesConfig();
+    const updated = await mailAddressesConfig();
     expect(updated.recipient).toBe("recipient-updated@example.test");
   });
 
   test("rejects invalid present addresses", async () => {
     flag.mockResolvedValue({ value: "invalid" });
-    await expect(postalAddressesConfig()).rejects.toThrow();
+    await expect(mailAddressesConfig()).rejects.toThrow();
   });
 
   test("observes outages while preserving routing", async () => {
@@ -131,7 +126,7 @@ describe("report mail routing", () => {
     });
     flag.mockRejectedValue(new Error("unavailable"));
     try {
-      const config = await postalAddressesConfig();
+      const config = await mailAddressesConfig();
       expect(config.sender).toBe("deps@sjer.red");
       expect(warn).toHaveBeenCalled();
     } finally {

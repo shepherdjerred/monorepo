@@ -219,11 +219,11 @@ export const PLATFORM_SERIES_PRESETS = {
       ],
     ],
   ),
-  "postal-queued": single(
-    "Postal MariaDB connections & queue activity",
+  "mail-outbox": single(
+    "Mail outbox messages by status",
     "count",
-    'max(mysql_global_status_threads_running{job="postal-mariadb"}) or sum(rate(postal_message_queue_latency_count[{window}]))',
-    { name: "queued" },
+    "sum by (status) (mail_outbox_messages)",
+    { legendLabel: "status", name: "messages" },
   ),
 
   // Target-parameterized service/namespace presets

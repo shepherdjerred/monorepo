@@ -988,7 +988,7 @@
       "value": "v0.35.1@sha256:baf6138eb8c37644800c7c913fba051e840ebb9ba13eaf92d92ef9a1712d0b4c",
       "notes": [
         "Persistent BuildKit daemon backing CI image builds (bounded-GC cache on a",
-        "compressed ZFS PVC, replacing the per-run throwaway builder inside dind \u2014",
+        "compressed ZFS PVC, replacing the per-run throwaway builder inside dind —",
         "moves the build-layer write storm off the xfs /var system disk)."
       ]
     },
@@ -1243,54 +1243,6 @@
       ]
     },
     {
-      "name": "mariadb",
-      "category": "upstream",
-      "artifactType": "helm-chart",
-      "management": {
-        "managed": true,
-        "datasource": "helm",
-        "registryUrl": "https://charts.bitnami.com/bitnami",
-        "versioning": "semver"
-      },
-      "value": "28.1.6"
-    },
-    {
-      "name": "bitnami/mariadb",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "docker"
-      },
-      "value": "latest@sha256:687181819d6e3f04124a21aec1aeef1d8a5d6a924c0d8e8f0cf66b8f0ce15a7c"
-    },
-    {
-      "name": "bitnami/mysqld-exporter",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "docker"
-      },
-      "value": "latest@sha256:6d49e9b6da985db2a70d932076ed465fa8aefe16f8514443fc92724eae46bea6"
-    },
-    {
-      "name": "postalserver/postal",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://ghcr.io",
-        "versioning": "semver"
-      },
-      "value": "3.4.0@sha256:7eb37cdce9fdeeeadd21b3ffb7b426564e5a1c0d2ade6fe0d62af5b618938bd3"
-    },
-    {
       "name": "library/php",
       "category": "upstream",
       "artifactType": "image",
@@ -1313,18 +1265,6 @@
         "versioning": "semver"
       },
       "value": "11.8@sha256:e1d5495f445654134f226f55a41ce0da227116f6f27f283101f405c794d841fc"
-    },
-    {
-      "name": "boky/postfix",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "docker"
-      },
-      "value": "latest@sha256:0632783c64183446c4edeae9092a2e015fdc0c4e8a3976bdf8878a7fc2146361"
     },
     {
       "name": "library/busybox",

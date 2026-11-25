@@ -39,5 +39,7 @@ export const wikiRedirects = {
     "/how-to/route-a-service-to-phoenix/",
   "/how-to/cut-a-namespace-over-to-enforced-policies/":
     "/how-to/check-a-namespace-under-enforced-policies/",
+  "/explanation/homelab/postal-smtp-tls/":
+    "/explanation/homelab/mail-smtp-tls/",
   "/how-to/check-flipt-flag-inventory/": "/how-to/check-flag-inventory/",
 };

@@ -38,7 +38,6 @@ export const ZFS_NVME_UNCOMPRESSED_CLAIMS: ReadonlySet<string> = new Set([
   "media/streambot-subs-cache-pvc",
   "media/tautulli-pvc",
   "pinchtab/pinchtab-data",
-  "postal/postal-pvc",
   "scout-beta/scout-storage-claim",
   "scout-prod/scout-storage-claim",
   "starlight-karma-bot-beta/starlight-karma-bot-storage-claim",

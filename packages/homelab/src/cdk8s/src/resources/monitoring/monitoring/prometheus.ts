@@ -13,7 +13,7 @@ import { getStaticSitesRuleGroups } from "./rules/static-sites.ts";
 import { getServiceProbeRuleGroups } from "./rules/service-probes.ts";
 import { getBugsinkRuleGroups } from "./rules/bugsink.ts";
 import { getSeaweedfsRuleGroups } from "./rules/storage/seaweedfs.ts";
-import { getPostalRuleGroups } from "./rules/postal.ts";
+import { getMailRuleGroups } from "./rules/mail.ts";
 import { getScoutRuleGroups } from "./rules/scout.ts";
 import { getTasknotesRuleGroups } from "./rules/tasknotes.ts";
 import { getClusterHygieneRuleGroups } from "./rules/platform/cluster-hygiene.ts";
@@ -267,15 +267,15 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
   });
 
-  // Create Postal rules
-  new PrometheusRule(chart, "prometheus-postal-rules", {
+  // Create Mail rules
+  new PrometheusRule(chart, "prometheus-mail-rules", {
     metadata: {
-      name: "prometheus-postal-rules",
-      namespace: "postal",
+      name: "prometheus-mail-rules",
+      namespace: "prometheus",
       labels: { release: "prometheus" },
     },
     spec: {
-      groups: getPostalRuleGroups(),
+      groups: getMailRuleGroups(),
     },
   });
 

@@ -46,6 +46,12 @@ describe("tool links", () => {
     expect(CONSOLE_LINKS.find((link) => link.id === "posthog")?.url).toBe(
       "https://us.posthog.com/project/549883",
     );
+    expect(CONSOLE_LINKS.find((link) => link.id === "mail")).toEqual({
+      id: "mail",
+      label: "Mail",
+      url: "https://mail.tailnet-1a49.ts.net",
+      group: "Apps",
+    });
   });
 
   it("builds Woodpecker pipeline and step URLs", () => {

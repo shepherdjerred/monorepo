@@ -18,8 +18,8 @@ final class Listener
     {
         $settings = (require '/opt/storm-forum/runtime/manifest.php')();
         $transport = new \Storm\Forum\Mail\RequiredStartTlsTransport($settings['smtpHost'], $settings['smtpPort'], false);
-        $transport->setUsername(self::credential('POSTAL_SMTP_USERNAME'));
-        $transport->setPassword(self::credential('POSTAL_SMTP_PASSWORD'));
+        $transport->setUsername(self::credential('MAIL_SMTP_USERNAME'));
+        $transport->setPassword(self::credential('MAIL_SMTP_PASSWORD'));
     }
 
     public static function appSetup(\XF\App $app): void
@@ -31,8 +31,8 @@ final class Listener
             'smtpHost' => $settings['smtpHost'],
             'smtpPort' => $settings['smtpPort'],
             'smtpSsl' => false,
-            'smtpLoginUsername' => self::credential('POSTAL_SMTP_USERNAME'),
-            'smtpLoginPassword' => self::credential('POSTAL_SMTP_PASSWORD'),
+            'smtpLoginUsername' => self::credential('MAIL_SMTP_USERNAME'),
+            'smtpLoginPassword' => self::credential('MAIL_SMTP_PASSWORD'),
         ];
         $options->extraCaptchaKeys = array_replace($options->extraCaptchaKeys, [
             'turnstileSiteKey' => self::credential('TURNSTILE_SITE_KEY'),

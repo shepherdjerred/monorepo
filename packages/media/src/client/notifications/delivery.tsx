@@ -144,7 +144,7 @@ export function DeliveryDetail({
               <input
                 id={receiptId}
                 value={receipt}
-                placeholder="Postal message ID or Discord receipt"
+                placeholder="Mail message ID or Discord receipt"
                 onChange={(event) => {
                   setReceipt(event.target.value);
                 }}

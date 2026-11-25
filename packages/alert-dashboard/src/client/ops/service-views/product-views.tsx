@@ -309,6 +309,7 @@ function FlagsServiceView({
 const SERVICE_CONSOLES: Readonly<Record<string, string>> = {
   golink: "golink",
   flags: "flags",
+  "outbound-mail": "mail",
 };
 
 /**

@@ -184,7 +184,7 @@ export function ProvenanceAndHistoryPanel({
             </dd>
           </div>
           <div>
-            <dt>Postal message ID</dt>
+            <dt>Mail message ID</dt>
             <dd className="mono">{detail.messageId ?? "—"}</dd>
           </div>
           <div>

@@ -411,7 +411,7 @@ export class PrismaReadRepository {
       database: "ok",
       alertmanager,
       grafana: "pending",
-      postal: emailEnabled ? (failedEmails > 0 ? "error" : "ok") : "disabled",
+      mail: emailEnabled ? (failedEmails > 0 ? "error" : "ok") : "disabled",
       emailEnabled,
       pendingEmails,
       failedEmails,

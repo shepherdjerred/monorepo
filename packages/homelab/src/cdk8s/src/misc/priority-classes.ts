@@ -29,7 +29,7 @@ export function createPriorityClasses(chart: Chart) {
     value: 100_000,
     globalDefault: true,
     preemptionPolicy: "Never",
-    description: "Standard services: homeassistant, plex, postal, etc.",
+    description: "Standard services: homeassistant, plex, mail, etc.",
   });
 
   new KubePriorityClass(chart, "batch-low", {

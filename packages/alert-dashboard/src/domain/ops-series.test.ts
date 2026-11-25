@@ -111,9 +111,10 @@ describe("series presets", () => {
     expect(SERIES_PRESETS["delivery-outcomes"].queries[0]?.promql).toContain(
       'job="delivery"',
     );
-    expect(SERIES_PRESETS["postal-queued"].queries[0]?.promql).toContain(
-      'job="postal-mariadb"',
-    );
+    expect(SERIES_PRESETS["mail-outbox"].queries[0]).toMatchObject({
+      promql: "sum by (status) (mail_outbox_messages)",
+      legendLabel: "status",
+    });
     expect(SERIES_PRESETS["scout-guilds"].queries[0]?.promql).toContain(
       "max by (environment)",
     );

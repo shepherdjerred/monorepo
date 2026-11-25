@@ -6,7 +6,6 @@ import { z } from "zod";
 import { createAlertDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/alert-dashboard.ts";
 import { createBugsinkChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/bugsink.ts";
 import { createPhoenixChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/phoenix.ts";
-import { createPostalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/postal.ts";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 import { createTemporalDataChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal-data.ts";
 import { createWoodpeckerChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/woodpecker.ts";
@@ -91,18 +90,6 @@ describe("database NetworkPolicy selectors", () => {
       }
     },
   );
-
-  it("selects Postal's MariaDB pod by the chart's labels", () => {
-    const labels = policies(
-      synthesize(createPostalChart, ".test-synth-pg-selectors-postal"),
-    ).flatMap((policy) => selectors(policy));
-
-    expect(labels).not.toContainEqual({ app: "postal-mariadb" });
-    expect(labels).toContainEqual({
-      "app.kubernetes.io/instance": "postal-mariadb",
-      "app.kubernetes.io/name": "mariadb",
-    });
-  });
 
   it("labels the alert dashboard pod the way its policy selects it", () => {
     const documents = synthesize(

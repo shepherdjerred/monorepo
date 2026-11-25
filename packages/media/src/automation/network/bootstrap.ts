@@ -59,14 +59,13 @@ export const DeliveryBootstrapSchema = z
   .object({
     TEMPORAL_ADDRESS: z.string().min(1),
     TEMPORAL_NAMESPACE: z.string().min(1),
-    POSTAL_HOST: z.url().optional(),
-    POSTAL_API_KEY: z.string().min(1).optional(),
-    POSTAL_HOST_HEADER: z.string().min(1).optional(),
+    MAIL_API_URL: z.url().optional(),
+    MAIL_API_TOKEN: z.string().min(1).optional(),
     DISCORD_BOT_TOKEN: z.string().min(1).optional(),
   })
   .refine(
     (value) =>
-      (value.POSTAL_HOST === undefined) ===
-      (value.POSTAL_API_KEY === undefined),
-    { message: "Both Postal bootstrap credentials must be supplied together" },
+      (value.MAIL_API_URL === undefined) ===
+      (value.MAIL_API_TOKEN === undefined),
+    { message: "Both Mail bootstrap credentials must be supplied together" },
   );

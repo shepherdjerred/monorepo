@@ -3,7 +3,7 @@ import { App, Chart } from "cdk8s";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 import { createAlertDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/alert-dashboard.ts";
-import { createPostalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/postal.ts";
+import { createMailChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/mail.ts";
 import { createAppsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/apps.ts";
 import { createFlagsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/flags.ts";
 import { createTrmnlDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts";
@@ -146,15 +146,23 @@ describe("alert dashboard network paths", () => {
     );
   });
 
-  it("allows primary and fallback delivery into Postal", () => {
-    const app = new App({ outdir: ".test-synth-alert-dashboard-postal" });
-    createPostalChart(app);
-    const yaml = app.synthYaml();
-    const web = findPolicy(yaml, "postal-web-netpol");
-    const smtp = findPolicy(yaml, "postal-smtp-netpol");
+  it("allows primary and fallback delivery into mail", () => {
+    const app = new App({ outdir: ".test-synth-alert-dashboard-mail" });
+    createMailChart(app, true);
+    const mail = findPolicy(app.synthYaml(), "mail-app-netpol");
+    const dashboard = findPolicy(
+      synthesize(
+        createAlertDashboardChart,
+        ".test-synth-alert-dashboard-mail-egress",
+      ),
+      "alert-dashboard-app-netpol",
+    );
 
-    expect(allowsIngress(web.spec.ingress, "alert-dashboard", 5000)).toBe(true);
-    expect(allowsIngress(smtp.spec.ingress, "prometheus", 25)).toBe(true);
+    expect(allowsEgress(dashboard.spec.egress, "mail", 7371)).toBe(true);
+    expect(allowsIngress(mail.spec.ingress, "alert-dashboard", 7371)).toBe(
+      true,
+    );
+    expect(allowsIngress(mail.spec.ingress, "prometheus", 25)).toBe(true);
   });
 
   it("admits the migrated runtime consumers", () => {

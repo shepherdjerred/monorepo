@@ -24,6 +24,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
 import {
   GOLINK_ENDPOINT,
+  MAIL_API_ENDPOINT,
   TRACKER_ENDPOINT,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 
@@ -196,7 +197,10 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       podSelector: { matchLabels: { component: "reports-worker" } },
       policyTypes: ["Egress"],
       egress: [
-        { ports: [tcp(5000)] },
+        {
+          to: [MAIL_API_ENDPOINT.peer()],
+          ports: [MAIL_API_ENDPOINT.tcp()],
+        },
         monitoringEgress(ALERTMANAGER_GATEWAY_PORT),
         {
           to: [nsPeer("alert-dashboard")],

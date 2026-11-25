@@ -2,8 +2,7 @@ import { TerraformOutput } from "cdktn";
 import type { TerraformStack, TerraformVariable } from "cdktn";
 import { TurnstileWidget } from "#generated/providers/cloudflare/turnstile-widget/index.ts";
 import type { Zone } from "#generated/providers/cloudflare/zone/index.ts";
-import published from "#src/stacks/cloudflare/published-txt-records.json" with { type: "json" };
-import { cname, srvRecords, txt } from "#src/stacks/cloudflare/records.ts";
+import { cname, srvRecords } from "#src/stacks/cloudflare/records.ts";
 import { moved } from "#src/state-migrations.ts";
 
 /**
@@ -42,26 +41,6 @@ export function tsMcNet(stack: TerraformStack, zone: Zone): void {
       name: "_minecraft._tcp.join",
       ...minecraft,
     },
-  });
-}
-
-/**
- * Postal's public ownership challenge and DKIM key for forum@ts-mc.net. The
- * domain already publishes Fastmail SPF, matching Postal's relay provider.
- */
-export function stormForumMail(stack: TerraformStack, zone: Zone): void {
-  txt(stack, "storm_forum_postal_verification", zone, {
-    name: "ts-mc.net",
-    content: published.storm_forum_postal_verification,
-  });
-  txt(stack, "storm_forum_postal_dkim", zone, {
-    name: "postal-pucwal._domainkey",
-    content: published.storm_forum_postal_dkim,
-  });
-  cname(stack, "storm_forum_postal_return_path", zone, {
-    name: "psrp",
-    content: "rp.sjer.red",
-    proxied: false,
   });
 }
 

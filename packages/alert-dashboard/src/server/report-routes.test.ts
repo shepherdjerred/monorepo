@@ -50,7 +50,7 @@ async function setup(seed = true) {
     service: new AlertService({
       repository: readinessOnlyLedger(),
       alertmanager: { activeAlerts: unexpected },
-      postal: { send: unexpected },
+      mail: { send: unexpected },
       previews: { previews: unexpected, health: unexpected },
       clock,
       emailEnabled: false,

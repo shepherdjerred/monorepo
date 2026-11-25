@@ -41,7 +41,7 @@ export const APPLICATION_SYNC_WAVES = {
   certificateAuthority: "-4",
   clusterIssuer: "-3",
   certificate: "-2",
-  // After the cluster CA so Alertmanager can require postal-smtp-ca.
+  // After the cluster CA so Alertmanager can require alertmanager-mail-smtp-ca.
   prometheus: "-1",
   // Accept the current ops snapshot contract before Activity workers emit it.
   opsSnapshotConsumer: "-1",

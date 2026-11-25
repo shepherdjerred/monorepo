@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 
 import { readConfig } from "#infrastructure/config";
-import { PostalClient } from "#infrastructure/postal-client";
+import { MailClient } from "#infrastructure/mail-client";
 
 const base = {
   ALERTMANAGER_URL: "http://alertmanager.monitoring.svc:9093",
@@ -21,8 +21,8 @@ describe("environment boundary", () => {
     expect(config.DAILY_DIGEST_QUIET_CLEAR).toBe(true);
     expect(config.PORT).toBe(7341);
     expect(config.GRAFANA_LOKI_DATASOURCE_UID).toBe("loki");
-    expect(config.POSTAL_DIGEST_FROM).toBeUndefined();
-    expect(config.POSTAL_DIGEST_TO).toBeUndefined();
+    expect(config.MAIL_DIGEST_FROM).toBeUndefined();
+    expect(config.MAIL_DIGEST_TO).toBeUndefined();
     expect(
       readConfig({ ...base, DAILY_DIGEST_QUIET_CLEAR: "false" })
         .DAILY_DIGEST_QUIET_CLEAR,
@@ -37,7 +37,7 @@ describe("environment boundary", () => {
     expect(() => readConfig(withoutPrometheus)).toThrow();
   });
 
-  test("requires every Postal setting when email is enabled", () => {
+  test("requires every Mail setting when email is enabled", () => {
     expect(() => readConfig({ ...base, EMAIL_ENABLED: "true" })).toThrow();
   });
 
@@ -45,43 +45,47 @@ describe("environment boundary", () => {
     const fallbackConfig = readConfig({
       ...base,
       EMAIL_ENABLED: "true",
-      POSTAL_HOST: "http://postal.postal.svc:5000",
-      POSTAL_API_KEY: "postal-secret",
-      POSTAL_FROM: "Hub Alerts <alerts@sjer.red>",
-      POSTAL_TO: "alerts@sjer.red",
+      MAIL_API_URL: "http://mail.mail.svc:7371",
+      MAIL_API_TOKEN: "mail-secret",
+      MAIL_FROM: "Hub Alerts <alerts@sjer.red>",
+      MAIL_TO: "alerts@sjer.red",
     });
-    expect(fallbackConfig.POSTAL_FROM).toBe("Hub Alerts <alerts@sjer.red>");
-    expect(fallbackConfig.POSTAL_TO).toBe("alerts@sjer.red");
-    expect(fallbackConfig.POSTAL_DIGEST_FROM).toBe(
+    expect(fallbackConfig.MAIL_FROM).toBe("Hub Alerts <alerts@sjer.red>");
+    expect(fallbackConfig.MAIL_TO).toBe("alerts@sjer.red");
+    expect(fallbackConfig.MAIL_DIGEST_FROM).toBe(
       "Hub Alerts <alerts@sjer.red>",
     );
-    expect(fallbackConfig.POSTAL_DIGEST_TO).toBe("alerts@sjer.red");
+    expect(fallbackConfig.MAIL_DIGEST_TO).toBe("alerts@sjer.red");
 
     const splitConfig = readConfig({
       ...base,
-      POSTAL_HOST: "http://postal.postal.svc:5000",
-      POSTAL_API_KEY: "postal-secret",
-      POSTAL_FROM: "Hub Alerts <alerts@sjer.red>",
-      POSTAL_TO: "alerts@sjer.red",
-      POSTAL_DIGEST_FROM: "Hub Digest <digests@sjer.red>",
-      POSTAL_DIGEST_TO: "digests@sjer.red",
+      MAIL_API_URL: "http://mail.mail.svc:7371",
+      MAIL_API_TOKEN: "mail-secret",
+      MAIL_FROM: "Hub Alerts <alerts@sjer.red>",
+      MAIL_TO: "alerts@sjer.red",
+      MAIL_DIGEST_FROM: "Hub Digest <digests@sjer.red>",
+      MAIL_DIGEST_TO: "digests@sjer.red",
     });
-    expect(splitConfig.POSTAL_DIGEST_FROM).toBe(
-      "Hub Digest <digests@sjer.red>",
-    );
-    expect(splitConfig.POSTAL_DIGEST_TO).toBe("digests@sjer.red");
+    expect(splitConfig.MAIL_DIGEST_FROM).toBe("Hub Digest <digests@sjer.red>");
+    expect(splitConfig.MAIL_DIGEST_TO).toBe("digests@sjer.red");
   });
 
-  test("PostalClient accepts RFC 5322 display-name sender and sends plain_body", async () => {
-    const fetchSpy = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(
-        Response.json({ status: "success", data: { message_id: "msg-1" } }),
-      );
+  test("MailClient accepts RFC 5322 display-name sender and sends plainBody with idempotencyKey", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json(
+        {
+          id: "msg-1",
+          rfcMessageId: "<alerts-1@sjer.red>",
+          status: "queued",
+          deduplicated: false,
+        },
+        { status: 202 },
+      ),
+    );
     try {
-      const client = new PostalClient({
-        host: "http://postal.postal.svc:5000/",
-        apiKey: "postal-key",
+      const client = new MailClient({
+        baseUrl: "http://mail.mail.svc:7371/",
+        token: "mail-token",
         from: "Hub Alerts <alerts@sjer.red>",
         to: "alerts@sjer.red",
       });
@@ -92,17 +96,31 @@ describe("environment boundary", () => {
         plainBody: "Disk full\n",
       });
       expect(fetchSpy).toHaveBeenCalledOnce();
-      const [, init] = fetchSpy.mock.calls[0] ?? [];
+      const [url, init] = fetchSpy.mock.calls[0] ?? [];
+      expect(url).toBe("http://mail.mail.svc:7371/v1/messages");
+      const headers = new Headers(init?.headers);
+      expect(headers.get("Authorization")).toBe("Bearer mail-token");
+      expect(headers.get("Host")).toBeNull();
       const payload = z
         .object({
           from: z.string(),
           to: z.array(z.string()),
-          plain_body: z.string(),
+          htmlBody: z.string(),
+          plainBody: z.string(),
+          idempotencyKey: z.string(),
+          messageId: z.string(),
+          tag: z.string(),
         })
         .parse(JSON.parse(z.string().parse(init?.body)));
-      expect(payload.from).toBe("Hub Alerts <alerts@sjer.red>");
-      expect(payload.to).toEqual(["alerts@sjer.red"]);
-      expect(payload.plain_body).toBe("Disk full\n");
+      expect(payload).toEqual({
+        from: "Hub Alerts <alerts@sjer.red>",
+        to: ["alerts@sjer.red"],
+        htmlBody: "<p>Disk full</p>",
+        plainBody: "Disk full\n",
+        idempotencyKey: "<alerts-1@sjer.red>",
+        messageId: "<alerts-1@sjer.red>",
+        tag: "alert-dashboard-opening",
+      });
     } finally {
       fetchSpy.mockRestore();
     }

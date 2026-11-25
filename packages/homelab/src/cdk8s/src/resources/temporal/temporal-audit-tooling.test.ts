@@ -530,7 +530,8 @@ describe("Temporal domain worker isolation", () => {
     for (const required of [
       "AWS_ACCESS_KEY_ID",
       "AWS_SECRET_ACCESS_KEY",
-      "POSTAL_API_KEY",
+      "MAIL_API_URL",
+      "MAIL_API_TOKEN",
       "OPS_DASHBOARD_URL",
       "OPS_INGEST_TOKEN",
     ]) {
@@ -769,7 +770,7 @@ describe("temporal homelab audit tooling access boundaries", () => {
       "GITHUB_WEBHOOK_SECRET",
       "GRAFANA_API_KEY",
       "HA_TOKEN",
-      "POSTAL_API_KEY",
+      "MAIL_API_TOKEN",
       "RECIPIENT_EMAIL",
       "SENDER_EMAIL",
       "XCODE_CLOUD_WEBHOOK_TOKEN",

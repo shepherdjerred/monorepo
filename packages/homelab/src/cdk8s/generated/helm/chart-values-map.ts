@@ -24,7 +24,6 @@ import type { VeleroHelmValues } from "./velero.types.ts";
 import type { PostgresoperatorHelmValues } from "./postgres-operator.types.ts";
 import type { RedisHelmValues } from "./redis.types.ts";
 import type { SeaweedfsHelmValues } from "./seaweedfs.types.ts";
-import type { MariadbHelmValues } from "./mariadb.types.ts";
 
 export type HelmChartValuesMap = {
   connect: ConnectHelmValues;
@@ -51,5 +50,4 @@ export type HelmChartValuesMap = {
   "postgres-operator": PostgresoperatorHelmValues;
   redis: RedisHelmValues;
   seaweedfs: SeaweedfsHelmValues;
-  mariadb: MariadbHelmValues;
 };

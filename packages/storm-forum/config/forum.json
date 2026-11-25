@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "title": "The Storm",
   "joinAddress": "ts-mc.net",
-  "smtpHost": "postal-postal-smtp-service.postal.svc.cluster.local",
+  "smtpHost": "mail.mail.svc.cluster.local",
   "smtpPort": 25,
   "sender": "forum@ts-mc.net",
   "stages": {

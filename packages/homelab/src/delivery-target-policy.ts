@@ -89,7 +89,6 @@ const INFRASTRUCTURE_SERVICE_OWNERS = new Set([
   "ci",
   "storage",
   "networking",
-  "mail",
   "platform-services",
   "home",
   "self-hosted-apps",

@@ -3,7 +3,7 @@ import { tailnetService } from "homelab/src/platform-model.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { createAlertmanagerPostalSmtpCa } from "@shepherdjerred/homelab/cdk8s/src/resources/mail/postal-smtp.ts";
+import { createAlertmanagerMailSmtpCa } from "@shepherdjerred/homelab/cdk8s/src/resources/mail/mail-smtp.ts";
 import { createMonitoringApiAuth } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/monitoring-auth-gateways.ts";
 
 function createPrometheusIngresses(chart: Chart): void {
@@ -25,13 +25,13 @@ function createPrometheusIngresses(chart: Chart): void {
   });
 }
 
-function createAlertmanagerPostalSmtpSecret(chart: Chart): OnePasswordItem {
-  return new OnePasswordItem(chart, "alertmanager-postal-smtp-onepassword", {
+function createAlertmanagerMailSmtpSecret(chart: Chart): OnePasswordItem {
+  return new OnePasswordItem(chart, "alertmanager-mail-smtp-onepassword", {
     spec: {
-      itemPath: vaultItemPath("cb2p2ogrqzdzz4it43jq3wyrei"),
+      itemPath: vaultItemPath("alertmanager-mail-smtp"),
     },
     metadata: {
-      name: "alertmanager-postal-smtp",
+      name: "alertmanager-mail-smtp",
       namespace: "prometheus",
     },
   });
@@ -47,7 +47,7 @@ export const PROMETHEUS_VAULT_ITEM_ID = "42fn7x3zaemfenz35en27thw5u";
 /** Objects the root renders beside the Application; the `prometheus-companion` companion chart renders the same objects under transition rendering. */
 export function createPrometheusResources(chart: Chart): {
   alertDashboardSecrets: OnePasswordItem;
-  alertmanagerPostalSmtp: OnePasswordItem;
+  alertmanagerMailSmtp: OnePasswordItem;
   prometheusSecrets: OnePasswordItem;
   monitoringApiAuth: OnePasswordItem;
 } {
@@ -72,8 +72,8 @@ export function createPrometheusResources(chart: Chart): {
     },
   );
 
-  const alertmanagerPostalSmtp = createAlertmanagerPostalSmtpSecret(chart);
-  createAlertmanagerPostalSmtpCa(chart);
+  const alertmanagerMailSmtp = createAlertmanagerMailSmtpSecret(chart);
+  createAlertmanagerMailSmtpCa(chart);
 
   const prometheusSecrets = new OnePasswordItem(
     chart,
@@ -90,7 +90,7 @@ export function createPrometheusResources(chart: Chart): {
   );
   return {
     alertDashboardSecrets,
-    alertmanagerPostalSmtp,
+    alertmanagerMailSmtp,
     prometheusSecrets,
     monitoringApiAuth: createMonitoringApiAuth(chart),
   };

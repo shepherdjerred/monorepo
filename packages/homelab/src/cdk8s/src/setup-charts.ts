@@ -9,7 +9,6 @@ import { createBirmelChart } from "./cdk8s-charts/birmel.ts";
 import { createCloudflareTunnelChart } from "./cdk8s-charts/platform/cloudflare-tunnel.ts";
 import { createMediaChart } from "./cdk8s-charts/media/media.ts";
 import { createHomeChart } from "./cdk8s-charts/home.ts";
-import { createPostalChart } from "./cdk8s-charts/platform/postal.ts";
 import { createSyncthingChart } from "./cdk8s-charts/media/syncthing.ts";
 import { createGolinkChart } from "./cdk8s-charts/platform/golink.ts";
 import { createFreshRssChart } from "./cdk8s-charts/media/freshrss.ts";
@@ -102,7 +101,6 @@ export async function setupCharts(app: App): Promise<void> {
   // Torvalds namespace charts (separate apps for easier future migration)
   await createMediaChart(app, firstPartyImageRecipe("media"));
   await createHomeChart(app);
-  createPostalChart(app);
   createSyncthingChart(app);
   createGolinkChart(app, { image: firstPartyImageRecipe("golink") });
   await createFreshRssChart(app);

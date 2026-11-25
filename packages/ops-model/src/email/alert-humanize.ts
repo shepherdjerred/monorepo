@@ -39,7 +39,7 @@ const SPECIFIC_APP_TITLES: Readonly<Record<string, string>> = {
   ddns: "Dynamic DNS",
   flags: "Feature Flags",
   "1password": "1Password Connect",
-  postal: "Postal Mail",
+  mail: "Mail",
   prometheus: "Prometheus",
   loki: "Loki",
   tempo: "Tempo",

@@ -63,8 +63,8 @@ describe("cloudflare stack", () => {
       ),
     ).toEqual({
       cloudflare_ct_alerting: 10,
-      // 88 application records and 208 of the ten baselines.
-      cloudflare_dns_record: 296,
+      // 80 application records and 208 of the ten baselines.
+      cloudflare_dns_record: 288,
       cloudflare_r2_bucket: 4,
       cloudflare_r2_bucket_lifecycle: 4,
       cloudflare_r2_custom_domain: 2,

@@ -82,15 +82,6 @@ export const CLUSTER_FIXTURE_FACETS = {
         capacityBytes: 21_474_836_480,
         veleroBackedUp: true,
       },
-      {
-        name: "postal-mariadb",
-        namespace: "postal",
-        engine: "mariadb",
-        ready: true,
-        usedBytes: 1_610_612_736,
-        capacityBytes: 10_737_418_240,
-        veleroBackedUp: true,
-      },
     ],
     zpools: [
       {

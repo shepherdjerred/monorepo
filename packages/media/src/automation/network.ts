@@ -336,17 +336,14 @@ export async function createMediaNetworkRuntime(
   const deliveryConfig = async () => {
     const sender = await behavior.get("emailSender");
     return {
-      ...(config.POSTAL_HOST === undefined ||
-      config.POSTAL_API_KEY === undefined
+      ...(config.MAIL_API_URL === undefined ||
+      config.MAIL_API_TOKEN === undefined
         ? {}
         : {
-            postal: {
-              baseUrl: config.POSTAL_HOST,
-              apiKey: config.POSTAL_API_KEY,
+            mail: {
+              baseUrl: config.MAIL_API_URL,
+              token: config.MAIL_API_TOKEN,
               from: sender.value,
-              ...(config.POSTAL_HOST_HEADER === undefined
-                ? {}
-                : { hostHeader: config.POSTAL_HOST_HEADER }),
             },
           }),
       ...(config.DISCORD_BOT_TOKEN === undefined

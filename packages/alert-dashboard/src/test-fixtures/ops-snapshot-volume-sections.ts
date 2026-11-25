@@ -205,7 +205,7 @@ export function observabilitySignals(): SignalInput[] {
     ["temporal", 118],
     ["birmel", 64],
     ["woodpecker", 37],
-    ["postal", 9],
+    ["mail", 9],
   ] as const;
   const traces = [
     ["error-traces", "scout-for-lol", 23, "error trace", 2140],

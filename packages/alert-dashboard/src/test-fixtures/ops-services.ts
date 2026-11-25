@@ -10,7 +10,7 @@ import type { Clock } from "#shared/time";
 import {
   FixtureSeries,
   InMemoryOpsRepository,
-  RecordingPostal,
+  RecordingMail,
 } from "#test-fixtures/ops-memory";
 import { MemoryReportRepository } from "#test-fixtures/reports-memory";
 
@@ -18,7 +18,7 @@ export type OpsFixture = {
   repository: InMemoryOpsRepository;
   reportsRepository: MemoryReportRepository;
   series: FixtureSeries;
-  postal: RecordingPostal;
+  mail: RecordingMail;
   ops: OpsService;
   digests: DigestService;
   reports: ReportService;
@@ -32,7 +32,7 @@ export function createOpsFixture(
   const repository = new InMemoryOpsRepository();
   const reportsRepository = new MemoryReportRepository(repository);
   const series = new FixtureSeries();
-  const postal = new RecordingPostal();
+  const mail = new RecordingMail();
   const ops = new OpsService({
     repository,
     series,
@@ -44,7 +44,7 @@ export function createOpsFixture(
     repository,
     ops,
     series,
-    mailer: options.mailer === false ? null : postal,
+    mailer: options.mailer === false ? null : mail,
     clock,
     ...(options.dailyDigestQuietClear === undefined
       ? {}
@@ -59,7 +59,7 @@ export function createOpsFixture(
     repository,
     reportsRepository,
     series,
-    postal,
+    mail,
     ops,
     digests,
     reports,

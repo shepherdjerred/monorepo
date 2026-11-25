@@ -247,7 +247,6 @@ describe("ClusterPage URL-synced explorer tabs", () => {
   it("switches cleanly between databases and storage (NVMe + ZFS) tabs via ?tab=", () => {
     const dbHtml = renderClusterAt("/cluster?tab=databases");
     expect(dbHtml).toContain("delivery-postgresql");
-    expect(dbHtml).toContain("postal-mariadb");
     expect(dbHtml).toContain("Backed up");
 
     const storageHtml = renderClusterAt("/cluster?tab=storage");

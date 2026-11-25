@@ -40,8 +40,8 @@ const env = {
   ADMIN_EMAIL: "local@example.test",
   ADMIN_PASSWORD: randomBytes(32).toString("hex"),
   FORUM_URL: "http://127.0.0.1:18796",
-  POSTAL_SMTP_USERNAME: "local-test",
-  POSTAL_SMTP_PASSWORD: randomBytes(32).toString("hex"),
+  MAIL_SMTP_USERNAME: "local-test",
+  MAIL_SMTP_PASSWORD: randomBytes(32).toString("hex"),
   TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
   TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
 };
@@ -67,7 +67,7 @@ const run = async (args: string[]) => {
       env.DB_PASSWORD,
       env.MARIADB_ROOT_PASSWORD,
       env.ADMIN_PASSWORD,
-      env.POSTAL_SMTP_PASSWORD,
+      env.MAIL_SMTP_PASSWORD,
       env.TURNSTILE_SECRET_KEY,
     ]) {
       diagnostics = diagnostics.replaceAll(value, "<redacted>");
@@ -153,8 +153,8 @@ try {
   if ((await database.exited) !== 0) {
     throw new Error("Disposable database startup failed");
   }
-  const credentials = Object.keys(env).flatMap((key) =>
-    /^(?:DB_|ADMIN_|FORUM_URL|POSTAL_|TURNSTILE_)/.test(key) ? ["-e", key] : [],
+  const credentials = Object.keys(env).flatMap((k) =>
+    /^(?:DB_|ADMIN_|FORUM_URL|MAIL_SMTP_|TURNSTILE_)/.test(k) ? ["-e", k] : [],
   );
   await run([
     "run",

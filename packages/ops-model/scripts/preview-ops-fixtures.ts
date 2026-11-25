@@ -308,7 +308,7 @@ const HOMELAB_AUDIT_DOC: EmailDocument = {
         "SSD health & wear",
         "Nightly backups",
         "Object storage",
-        "Postal mail queue",
+        "Mail outbox queue",
         "Public HTTPS & tunnels",
         "Scheduled jobs",
         "Feature flags",

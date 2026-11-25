@@ -16,9 +16,9 @@ import { createPrometheusResources } from "@shepherdjerred/homelab/cdk8s/src/res
 import { createPrometheusExporters } from "@shepherdjerred/homelab/cdk8s/src/resources/cluster-baseline/observability.ts";
 import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/blackbox-modules.ts";
 import {
-  ALERTMANAGER_POSTAL_SMTP_CA_SECRET,
-  ALERTMANAGER_POSTAL_SMTP_TLS,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/mail/postal-smtp.ts";
+  ALERTMANAGER_MAIL_SMTP_CA_SECRET,
+  ALERTMANAGER_MAIL_SMTP_TLS,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/mail/mail-smtp.ts";
 import {
   ALERTMANAGER_GATEWAY_PORT,
   createMonitoringAuthGateways,
@@ -35,10 +35,10 @@ const ALERTMANAGER_GLOBAL = {
   smtp_from: "Hub Alerts <alerts@sjer.red>",
   smtp_auth_username: "alertmanager",
   smtp_auth_password_file:
-    "/etc/alertmanager/secrets/alertmanager-postal-smtp/SMTP_PASSWORD",
-  smtp_smarthost: ALERTMANAGER_POSTAL_SMTP_TLS.smtp_smarthost,
-  smtp_require_tls: ALERTMANAGER_POSTAL_SMTP_TLS.smtp_require_tls,
-  smtp_tls_config: ALERTMANAGER_POSTAL_SMTP_TLS.smtp_tls_config,
+    "/etc/alertmanager/secrets/alertmanager-mail-smtp/SMTP_PASSWORD",
+  smtp_smarthost: ALERTMANAGER_MAIL_SMTP_TLS.smtp_smarthost,
+  smtp_require_tls: ALERTMANAGER_MAIL_SMTP_TLS.smtp_require_tls,
+  smtp_tls_config: ALERTMANAGER_MAIL_SMTP_TLS.smtp_tls_config,
 };
 
 const INHIBITED_TEMPORAL_ACTIVITY_ALERTS = [
@@ -85,8 +85,8 @@ function alertmanagerReceivers(alertDashboardSecretName: string) {
       // Hub (`alert-dashboard`) owns incident opening emails for ordinary
       // warning and critical alerts via its SQLite outbox (`alert-dashboard-email-enabled`).
       // Keeping `email_configs` off this receiver ensures each alert mails once
-      // through Hub rather than twice; `postal-fallback` below retains direct
-      // Postal STARTTLS delivery for alerts that diagnose Hub or its webhook.
+      // through Hub rather than twice; `mail-fallback` below retains direct
+      // mail STARTTLS delivery for alerts that diagnose Hub or its webhook.
     },
     {
       // Routine household warnings (vacuums, litter, feeders, batteries) enter
@@ -97,7 +97,7 @@ function alertmanagerReceivers(alertDashboardSecretName: string) {
     },
     {
       // Reports on the webhook, so it must not depend on the webhook.
-      name: "postal-fallback",
+      name: "mail-fallback",
       email_configs: OPERATOR_EMAIL_CONFIGS,
     },
   ];
@@ -114,7 +114,7 @@ export async function createPrometheusApp(chart: Chart) {
   };
   const {
     alertDashboardSecrets,
-    alertmanagerPostalSmtp,
+    alertmanagerMailSmtp,
     prometheusSecrets,
     monitoringApiAuth,
   } = createPrometheusResources(chart);
@@ -277,8 +277,8 @@ export async function createPrometheusApp(chart: Chart) {
         },
         secrets: [
           alertDashboardSecrets.name,
-          alertmanagerPostalSmtp.name,
-          ALERTMANAGER_POSTAL_SMTP_CA_SECRET,
+          alertmanagerMailSmtp.name,
+          ALERTMANAGER_MAIL_SMTP_CA_SECRET,
         ],
         volumes: [{ name: "auth-gateway-tmp", emptyDir: {} }],
         containers: [monitoringAuthGateways.alertmanagerContainer],
@@ -335,7 +335,7 @@ export async function createPrometheusApp(chart: Chart) {
           receiver: "alerts",
           routes: [
             {
-              receiver: "postal-fallback",
+              receiver: "mail-fallback",
               matchers: ['alert_dashboard_fallback = "true"'],
             },
             {
@@ -347,7 +347,7 @@ export async function createPrometheusApp(chart: Chart) {
               // it cannot outrun the info/Watchdog suppression routes below by
               // matching first — an info-level alert in this namespace must
               // still land on the null receiver.
-              receiver: "postal-fallback",
+              receiver: "mail-fallback",
               matchers: [
                 'namespace = "alert-dashboard"',
                 'severity =~ "critical|warning"',
@@ -362,9 +362,9 @@ export async function createPrometheusApp(chart: Chart) {
               // Only route the webhook integration's failures here — that's
               // the one this fallback exists to diagnose. Email-integration
               // failures must stay on the normal Alerts receiver: routing a
-              // "Postal is broken" diagnostic through Postal itself would
+              // "mail SMTP is broken" diagnostic through mail SMTP itself would
               // mean it never arrives.
-              receiver: "postal-fallback",
+              receiver: "mail-fallback",
               matchers: [
                 'alertname =~ "AlertmanagerFailedToSendAlerts|AlertmanagerClusterFailedToSendAlerts"',
                 'integration = "webhook"',
@@ -378,7 +378,7 @@ export async function createPrometheusApp(chart: Chart) {
               // health alerts (e.g. AlertmanagerConfigInconsistent) that have
               // nothing to do with notification delivery and should notify
               // through the normal Alerts receiver like any other alert.
-              receiver: "postal-fallback",
+              receiver: "mail-fallback",
               matchers: [
                 'alertname =~ "PrometheusErrorSendingAlertsTo.*|PrometheusNotConnectedToAlertmanagers"',
               ],

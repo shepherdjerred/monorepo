@@ -6,7 +6,7 @@ import { z } from "zod";
 import { AlertService } from "#application/alert-service";
 import type {
   AlertmanagerPort,
-  PostalPort,
+  MailPort,
   PreviewPort,
 } from "#application/ports";
 import { createApp } from "#server/app";
@@ -21,7 +21,7 @@ const ErrorResponseSchema = z.object({ error: z.string() });
 function createTestService(): AlertService {
   const repository = readinessOnlyLedger();
   const alertmanager: AlertmanagerPort = { activeAlerts: unexpected };
-  const postal: PostalPort = { send: unexpected };
+  const mail: MailPort = { send: unexpected };
   const previews: PreviewPort = {
     previews: unexpected,
     health: unexpected,
@@ -29,7 +29,7 @@ function createTestService(): AlertService {
   return new AlertService({
     repository,
     alertmanager,
-    postal,
+    mail,
     previews,
     clock: {
       now: () => Temporal.Instant.from("2026-08-08T12:00:00Z"),

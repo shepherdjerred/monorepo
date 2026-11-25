@@ -1,6 +1,6 @@
 ---
 title: Console UI reference
-description: The colour tokens, severity vocabulary, contrast pairs, cascade layers and breakpoints shared by the Hub, Go link and Flags consoles and the ops emails.
+description: The colour tokens, severity vocabulary, contrast pairs, cascade layers and breakpoints shared by the Hub, Go link, Flags and Mail consoles and the ops emails.
 ---
 
 `@shepherdjerred/console-ui` is the shared look of the ops consoles and the

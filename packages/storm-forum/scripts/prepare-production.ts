@@ -23,13 +23,6 @@ const ItemSchema = z
   })
   .loose();
 type Item = z.infer<typeof ItemSchema>;
-const PostalSchema = z.object({
-  smtpPassword: z.string().min(1),
-  dkimName: z.string(),
-  dkimRecord: z.string(),
-  verificationRecord: z.string(),
-});
-type Postal = z.infer<typeof PostalSchema>;
 type Bundle = { archivePath: string; bundleSha256: string; bundleKey: string };
 
 export async function productionCommand(
@@ -185,42 +178,11 @@ async function loadStorage(): Promise<{
   return { gateway, releases, siteKey, captchaKey };
 }
 
-async function preparePostal(): Promise<Postal> {
-  const postalOutput = await productionCommand(
-    [
-      "kubectl",
-      "exec",
-      "-i",
-      "-n",
-      "postal",
-      "deployment/postal-postal-web",
-      "--",
-      "bin/rails",
-      "runner",
-      "-",
-    ],
-    `
-server = Server.find_by!(permalink: 'jerred')
-domain = Domain.find_or_create_by!(owner: server, name: 'ts-mc.net') do |record|
-  record.verification_method = 'DNS'
-  record.incoming = false
-  record.outgoing = true
-end
-credential = Credential.find_or_create_by!(server: server, name: 'storm-forum-prod') do |record|
-  record.type = 'SMTP'
-end
-puts({smtpPassword: credential.key, dkimName: domain.dkim_record_name, dkimRecord: domain.dkim_record, verificationRecord: domain.dns_verification_string}.to_json)
-`,
-  );
-  return PostalSchema.parse(
-    JSON.parse(postalOutput.trim().split("\n").at(-1) ?? ""),
-  );
-}
-
+// Outbound SMTP authenticates as "storm-forum-prod" against @shepherdjerred/mail;
+// the matching client credential lives in 1Password item mail-secrets (MAIL_CLIENTS_JSON).
 async function prepareRuntime(
   siteKey: string,
   captchaKey: string,
-  postal: Postal,
 ): Promise<Item> {
   const listed = z
     .array(z.object({ id: z.string(), title: z.string() }))
@@ -228,11 +190,12 @@ async function prepareRuntime(
   const existing = listed.find((entry) => entry.title === title);
   if (existing !== undefined) {
     const runtime = ItemSchema.parse(await op(["get", existing.id]));
-    if (field(runtime, "POSTAL_SMTP_PASSWORD") !== postal.smtpPassword) {
+    if (field(runtime, "MAIL_SMTP_USERNAME") !== title) {
       throw new Error(
-        "The stored Postal credential does not match the named production credential",
+        "The stored Mail SMTP username does not match the named production client",
       );
     }
+    field(runtime, "MAIL_SMTP_PASSWORD");
     return runtime;
   }
   const values = {
@@ -240,8 +203,8 @@ async function prepareRuntime(
     MARIADB_ROOT_PASSWORD: randomBytes(32).toString("hex"),
     BUNDLE_ACCESS_KEY: randomBytes(16).toString("hex"),
     BUNDLE_SECRET_KEY: randomBytes(32).toString("hex"),
-    POSTAL_SMTP_USERNAME: "XX",
-    POSTAL_SMTP_PASSWORD: postal.smtpPassword,
+    MAIL_SMTP_USERNAME: title,
+    MAIL_SMTP_PASSWORD: randomBytes(32).toString("hex"),
     TURNSTILE_SITE_KEY: siteKey,
     TURNSTILE_SECRET_KEY: captchaKey,
     ADMIN_USERNAME: "Jerred",
@@ -418,8 +381,7 @@ async function main(): Promise<void> {
     return;
   }
   const { gateway, releases, siteKey, captchaKey } = await loadStorage();
-  const postal = await preparePostal();
-  const runtime = await prepareRuntime(siteKey, captchaKey, postal);
+  const runtime = await prepareRuntime(siteKey, captchaKey);
   const changed = await prepareGateway(gateway, runtime);
   await uploadBundle(releases, bundle);
   const prepared = {
@@ -427,11 +389,6 @@ async function main(): Promise<void> {
     bundleSha256: bundle.bundleSha256,
     bundleKey: bundle.bundleKey,
     trustedConnectorCidr: "10.244.0.0/24",
-    postal: {
-      dkimName: postal.dkimName,
-      dkimRecord: postal.dkimRecord,
-      verificationRecord: postal.verificationRecord,
-    },
     gatewayReloadRequired: changed,
   };
   await Bun.write(

@@ -379,6 +379,8 @@ describe("agent task environment boundary", () => {
         PROMETHEUS_URL: "http://prometheus.local",
         CLAUDE_CODE_OAUTH_TOKEN: "claude-secret",
         OPENAI_API_KEY: "codex-secret",
+        MAIL_API_TOKEN: "mail-secret",
+        MAIL_API_URL: "http://mail.mail.svc:7371",
         POSTAL_API_KEY: "postal-secret",
         AGENT_TASK_API_TOKEN: "api-secret",
       }),
@@ -405,6 +407,8 @@ describe("agent task environment boundary", () => {
       HOME: "/home/worker",
       OPENAI_API_KEY: "codex-credential",
       ALERT_DASHBOARD_URL: "http://alerts.local",
+      MAIL_API_TOKEN: "mail-secret",
+      MAIL_API_URL: "http://mail.mail.svc:7371",
       POSTAL_API_KEY: "postal-secret",
       SENDER_EMAIL: "sender@example.test",
       GITHUB_WEBHOOK_SECRET: "webhook-secret",
@@ -424,6 +428,8 @@ describe("agent task environment boundary", () => {
     expect(environment).not.toHaveProperty("CLAUDE_CODE_OAUTH_TOKEN");
     expect(environment).not.toHaveProperty("GH_TOKEN");
     expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
+    expect(environment).not.toHaveProperty("MAIL_API_TOKEN");
+    expect(environment).not.toHaveProperty("MAIL_API_URL");
     expect(environment).not.toHaveProperty("POSTAL_API_KEY");
     expect(environment).not.toHaveProperty("SENDER_EMAIL");
     expect(environment).not.toHaveProperty("GITHUB_WEBHOOK_SECRET");
@@ -451,6 +457,9 @@ describe("agent task environment boundary", () => {
         GH_TOKEN: "worker-token",
         GITHUB_APP_PRIVATE_KEY: "private-key",
         // Delivery stays in the parent.
+        MAIL_API_TOKEN: "mail-secret",
+        MAIL_API_URL: "http://mail.mail.svc:7371",
+        MAIL_FROM: "reports@sjer.red",
         POSTAL_API_KEY: "postal-secret",
         RECIPIENT_EMAIL: "recipient@example.test",
       },
@@ -468,7 +477,10 @@ describe("agent task environment boundary", () => {
     expect(environment).toHaveProperty("OPENAI_API_KEY", "openai-agent-key");
     expect(environment).not.toHaveProperty("ANTHROPIC_API_KEY");
     expect(environment).not.toHaveProperty("GITHUB_APP_PRIVATE_KEY");
+    expect(environment).not.toHaveProperty("MAIL_API_TOKEN");
+    expect(environment).not.toHaveProperty("MAIL_API_URL");
     expect(environment).not.toHaveProperty("POSTAL_API_KEY");
+    expect(environment).not.toHaveProperty("MAIL_FROM");
     expect(environment).not.toHaveProperty("RECIPIENT_EMAIL");
   });
 

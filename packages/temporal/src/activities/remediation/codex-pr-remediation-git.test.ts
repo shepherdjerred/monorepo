@@ -26,7 +26,7 @@ function createGitHelperRepo() {
 }
 
 describe("remediationAgentEnv and remediationDenyReadPaths", () => {
-  test("allowlists safe runtime keys while stripping provider, CI, flag, GitHub, Postal, S3, and Temporal secrets", () => {
+  test("allowlists safe runtime keys while stripping provider, CI, flag, GitHub, Mail, S3, and Temporal secrets", () => {
     const env = remediationAgentEnv({
       PATH: "/usr/bin",
       HOME: "/tmp/home",
@@ -34,6 +34,8 @@ describe("remediationAgentEnv and remediationDenyReadPaths", () => {
       GH_TOKEN: "dummy-gh",
       GITHUB_APP_ID: "123",
       GITHUB_APP_PRIVATE_KEY: "dummy-pem",
+      MAIL_API_TOKEN: "dummy-mail-token",
+      MAIL_API_URL: "http://mail.mail.svc:7371",
       POSTAL_API_KEY: "dummy-postal",
       AWS_ACCESS_KEY_ID: "dummy-aws-id",
       AWS_SECRET_ACCESS_KEY: "dummy-aws",
@@ -52,6 +54,8 @@ describe("remediationAgentEnv and remediationDenyReadPaths", () => {
     expect(env["GH_TOKEN"]).toBeUndefined();
     expect(env["GITHUB_APP_ID"]).toBeUndefined();
     expect(env["GITHUB_APP_PRIVATE_KEY"]).toBeUndefined();
+    expect(env["MAIL_API_TOKEN"]).toBeUndefined();
+    expect(env["MAIL_API_URL"]).toBeUndefined();
     expect(env["POSTAL_API_KEY"]).toBeUndefined();
     expect(env["AWS_ACCESS_KEY_ID"]).toBeUndefined();
     expect(env["AWS_SECRET_ACCESS_KEY"]).toBeUndefined();

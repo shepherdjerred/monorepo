@@ -110,10 +110,10 @@ export async function alertEmailConfig() {
   return {
     EMAIL_ENABLED: String(enabled),
     DAILY_DIGEST_QUIET_CLEAR: String(dailyDigestQuietClear),
-    POSTAL_FROM: incidentFrom,
-    POSTAL_TO: incidentTo,
-    POSTAL_DIGEST_FROM: digestFrom,
-    POSTAL_DIGEST_TO: digestTo,
+    MAIL_FROM: incidentFrom,
+    MAIL_TO: incidentTo,
+    MAIL_DIGEST_FROM: digestFrom,
+    MAIL_DIGEST_TO: digestTo,
   };
 }
 

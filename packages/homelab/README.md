@@ -6,7 +6,7 @@
 This package contains everything that runs my homelab. The cluster has two
 Talos Linux nodes: `torvalds` (control plane, all production workloads) and
 `liskov` (CI-only worker). Services are deployed across multiple namespaces
-(media, home, postal, etc.) using an app-of-apps pattern in ArgoCD.
+(media, home, mail, etc.) using an app-of-apps pattern in ArgoCD.
 
 See the [homelab overview](../docs/wiki/src/content/docs/explanation/homelab/overview.md)
 for topology and the wiki how-to guides for operator workflows.

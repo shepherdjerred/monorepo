@@ -14,7 +14,6 @@ import {
 } from "#src/stacks/cloudflare/platform.ts";
 import { sjerRed } from "#src/stacks/cloudflare/sjer-red.ts";
 import {
-  stormForumMail,
   stormForumTurnstile,
   tsMcNet,
 } from "#src/stacks/cloudflare/ts-mc-net.ts";
@@ -55,7 +54,6 @@ export class CloudflareStack extends HomelabStack {
     smallerZones(this, managed);
     sjerRed(this, managed["sjer.red"]);
     tsMcNet(this, managed["ts-mc.net"]);
-    stormForumMail(this, managed["ts-mc.net"]);
     stormForumTurnstile(this, accountId);
     domainBaseline(this, managed);
     buckets(this, accountId, managed);

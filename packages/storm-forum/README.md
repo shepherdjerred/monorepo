@@ -69,7 +69,7 @@ volumes are the only backup.
 
 | Command                   | Behavior                                                                                                                                                                                              |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bun src/cli.ts assemble` | Verify and unpack the private bundle; combine the system and Postal certificate authorities.                                                                                                          |
+| `bun src/cli.ts assemble` | Verify and unpack the private bundle; combine the system and Mail SMTP certificate authorities.                                                                                                       |
 | `bun src/cli.ts release`  | Take an exclusive release lock, close requests, install pinned dependencies, configure, import styles/history, retire generated launch content, apply the authorized account merge, and rebuild jobs. |
 | `bun src/cli.ts worker`   | Poll the stage's Temporal activity queue for housekeeping.                                                                                                                                            |
 
@@ -258,8 +258,9 @@ during outages.
 Production prerequisites can be prepared with
 `scripts/onepassword/with-service-account.sh bun packages/storm-forum/scripts/prepare-production.ts <fresh-upload> <style-exports> <private-output-directory> --apply`.
 It verifies and uploads the private bundle, provisions the dedicated runtime item
-and scoped storage identities, and emits only release pins and public mail DNS
-records. Credentials travel through process pipes and memory. Reload the S3
+and scoped storage identities, and emits only release pins. Credentials travel
+through process pipes and memory; the matching `"storm-forum-prod"` SMTP client
+entry lives in `mail-secrets` (`MAIL_CLIENTS_JSON`). Reload the S3
 gateway after its mounted identity configuration updates, then commit the
 production release entry using the image digest published by CI.
 For an existing installation, `--publish-only` packages, uploads and checks the
@@ -267,14 +268,14 @@ new private bundle without changing runtime credentials or storage identities.
 
 The dedicated stage-specific 1Password item supplies these required fields:
 
-| Fields                                            | Consumer                                            |
-| ------------------------------------------------- | --------------------------------------------------- |
-| `DB_PASSWORD`, `MARIADB_ROOT_PASSWORD`            | Forum and database bootstrap                        |
-| `BUNDLE_ACCESS_KEY`, `BUNDLE_SECRET_KEY`          | Private bundle reader, scoped to the release bucket |
-| `POSTAL_SMTP_USERNAME`, `POSTAL_SMTP_PASSWORD`    | Postal STARTTLS authentication                      |
-| `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`      | Required registration challenge                     |
-| `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Fresh-install administrator, release job only       |
-| `STAGING_HTTP_AUTH`                               | Beta ingress password file                          |
+| Fields                                            | Consumer                                                                |
+| ------------------------------------------------- | ----------------------------------------------------------------------- |
+| `DB_PASSWORD`, `MARIADB_ROOT_PASSWORD`            | Forum and database bootstrap                                            |
+| `BUNDLE_ACCESS_KEY`, `BUNDLE_SECRET_KEY`          | Private bundle reader, scoped to the release bucket                     |
+| `MAIL_SMTP_USERNAME`, `MAIL_SMTP_PASSWORD`        | `@shepherdjerred/mail` (`mail.mail.svc.cluster.local:25`) STARTTLS auth |
+| `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`      | Required registration challenge                                         |
+| `ADMIN_USERNAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Fresh-install administrator, release job only                           |
+| `STAGING_HTTP_AUTH`                               | Beta ingress password file                                              |
 
 Database, bundle, and Temporal connection locations are bootstrap inputs
 declared by the homelab chart. Credentials are references in configuration and
@@ -324,8 +325,9 @@ exercise all 42 managed styles, parent migration, inherited palettes, repeated
 imports, preserved member choices, follower transitions and rejection of missing
 styles or altered/incompatible archives.
 The optional preview
-binds only localhost. Ctrl-C removes its exact containers and network. Postal
-delivery still requires deployment acceptance.
+binds only localhost. Ctrl-C removes its exact containers and network. Outbound
+delivery through `@shepherdjerred/mail` (`mail.mail.svc.cluster.local:25`) still
+requires deployment acceptance.
 
 Homelab charts and ArgoCD applications consume static stage policy at
 `packages/homelab/src/cdk8s/src/resources/storm-forum/releases.json`: storage,

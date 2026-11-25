@@ -42,7 +42,7 @@ type Data struct {
 
 func singleData() Data {
 	return Data{
-		Receiver: "postal-fallback",
+		Receiver: "mail-fallback",
 		Status:   "firing",
 		CommonLabels: map[string]string{
 			"alertname":                "TemporalWorkflowNondeterministic",
@@ -77,7 +77,7 @@ func singleData() Data {
 
 func multiData() Data {
 	return Data{
-		Receiver: "postal-fallback",
+		Receiver: "mail-fallback",
 		Status:   "firing",
 		CommonLabels: map[string]string{
 			"alert_dashboard_fallback": "true",

@@ -1,4 +1,4 @@
-import { resolvePostalAddressesForReport } from "#config/postal.ts";
+import { resolveMailAddressesForReport } from "#config/mail.ts";
 import { dailyReportNotificationsConfig } from "#config/report-notifications.ts";
 import {
   ReportEnvelopeV1Schema,
@@ -165,7 +165,7 @@ export async function deliverEnvelopeWithDailyPolicy<
       resolveAddresses: async (reportType) =>
         reportType === input.report.reportType
           ? deps.addresses
-          : resolvePostalAddressesForReport(reportType),
+          : resolveMailAddressesForReport(reportType),
       readObservation: backend.readObservation,
     });
   }

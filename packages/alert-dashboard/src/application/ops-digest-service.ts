@@ -17,8 +17,8 @@ import {
 import type {
   CompletedDailyDigestSummary,
   DigestRunKey,
+  MailPort,
   OpsRepository,
-  PostalPort,
   SeriesPort,
 } from "#application/ports";
 import {
@@ -52,8 +52,8 @@ export type DigestServiceOptions = {
   repository: OpsRepository;
   ops: OpsService;
   series: SeriesPort;
-  /** `null` when Postal is not configured for this process. */
-  mailer: PostalPort | null;
+  /** `null` when Mail is not configured for this process. */
+  mailer: MailPort | null;
   clock: Clock;
   dailyDigestQuietClear?: boolean;
 };
@@ -117,7 +117,7 @@ export class DigestService {
   readonly #repository: OpsRepository;
   readonly #ops: OpsService;
   readonly #series: SeriesPort;
-  readonly #mailer: PostalPort | null;
+  readonly #mailer: MailPort | null;
   readonly #clock: Clock;
   readonly #dailyDigestQuietClear: boolean;
 
@@ -185,7 +185,7 @@ export class DigestService {
     kind: DigestKind,
     period: DigestPeriod,
     key: DigestRunKey,
-    mailer: PostalPort,
+    mailer: MailPort,
   ): Promise<"sent" | "skipped"> {
     const latest = await this.#ops.freshSnapshot();
     const report = await this.#report(period, latest?.fresh ?? null);

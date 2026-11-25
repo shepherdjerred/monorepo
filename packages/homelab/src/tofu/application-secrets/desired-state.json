@@ -156,19 +156,6 @@
           "vault_field_id": "password"
         }
       ]
-    },
-    "postal": {
-      "revision": 0,
-      "environment": "production",
-      "consumer_probe": "Postal login and message delivery",
-      "onepassword_targets": [
-        {
-          "vault_item_id": "n3tfwq24v3rstfedrloupgzaqe",
-          "vault_field": "RAILS_SECRET_KEY",
-          "vault_section_id": "add more",
-          "vault_field_id": "z3afurpgm2xow6lnlt2v5dyl2m"
-        }
-      ]
     }
   }
 }

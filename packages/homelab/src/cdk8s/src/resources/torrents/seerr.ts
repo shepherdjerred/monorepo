@@ -20,9 +20,11 @@ import {
   restrictedContainer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/kubelet-probes.ts";
+import { createMailSmtpClientCaVolume } from "@shepherdjerred/homelab/cdk8s/src/resources/mail/mail-smtp.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const SEERR_PORT = 5055;
+const SEERR_SMTP_CA_MOUNT_PATH = "/etc/seerr/smtp-ca";
 
 export function createSeerrDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "seerr", {
@@ -40,6 +42,11 @@ export function createSeerrDeployment(chart: Chart) {
   const localPathVolume = new ZfsNvmeVolume(chart, "seerr-pvc", {
     storage: Size.gibibytes(8),
   });
+  const smtpCaVolume = createMailSmtpClientCaVolume(chart, {
+    name: "seerr-smtp-ca",
+    namespace: "media",
+    dnsName: "seerr.media.svc.cluster.local",
+  });
 
   deployment.addContainer(
     withCommonProps({
@@ -47,6 +54,9 @@ export function createSeerrDeployment(chart: Chart) {
       ports: [{ number: SEERR_PORT, name: "http", protocol: Protocol.TCP }],
       envVariables: {
         LOG_LEVEL: EnvValue.fromValue("info"),
+        NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
+          `${SEERR_SMTP_CA_MOUNT_PATH}/ca.crt`,
+        ),
       },
       securityContext: {
         ...restrictedContainer(1000),
@@ -60,6 +70,11 @@ export function createSeerrDeployment(chart: Chart) {
             "seerr-config-volume",
             localPathVolume.claim,
           ),
+        },
+        {
+          path: SEERR_SMTP_CA_MOUNT_PATH,
+          volume: smtpCaVolume,
+          readOnly: true,
         },
       ],
       resources: {

@@ -20,6 +20,12 @@ const webNetwork = z.object({
         ),
       }),
     ),
+    egress: z.array(
+      z.object({
+        to: z.array(z.unknown()),
+        ports: z.array(z.object({ port: z.number(), protocol: z.string() })),
+      }),
+    ),
   }),
 });
 
@@ -58,5 +64,17 @@ test.each(["beta", "prod"] as const)(
         ),
       ),
     ).toEqual([observer]);
+    expect(policy.spec.egress).toContainEqual({
+      to: [
+        {
+          namespaceSelector: {
+            matchLabels: { "kubernetes.io/metadata.name": "mail" },
+          },
+          podSelector: { matchLabels: { app: "mail" } },
+        },
+      ],
+      ports: [{ port: 25, protocol: "TCP" }],
+    });
+    expect(JSON.stringify(policy)).not.toContain("postal");
   },
 );
