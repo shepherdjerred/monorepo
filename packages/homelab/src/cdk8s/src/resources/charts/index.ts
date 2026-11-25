@@ -55,14 +55,14 @@ function buildChartsEnv(authSecret: ISecret): Record<string, EnvValue> {
   };
 }
 
+// Policed workloads in `delivery` and `temporal` reach Charts over tailnet
+// HTTPS (`tailscale`), not direct in-cluster HTTP on port 7370.
 const CONSUMER_NAMESPACES = [
   "tailscale",
   "argocd",
-  "delivery",
   "delivery-platform-jobs",
   "delivery-worker-jobs",
   "woodpecker-ci",
-  "temporal",
 ] as const;
 
 export function createChartsDeployment(chart: Chart) {
