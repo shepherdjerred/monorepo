@@ -142,4 +142,17 @@ describe("application image inputs", () => {
     expect(runtime).toContain("packages/scout-for-lol/packages/design-system");
     expect(runtime).toContain("packages/scout-for-lol/packages/report");
   });
+
+  test("derives storm-stats smoke ingest schemaVersion from contracts/ingest-v1.json", async () => {
+    const smoke = await read("ci/scripts/images/smoke-app-in-image.ts");
+    expect(smoke).toContain(
+      'const contract = await Bun.file("./contracts/ingest-v1.json").json();',
+    );
+    expect(smoke).toContain("schemaVersion: contract.schemaVersion");
+    const contractText = await read(
+      "packages/storm-stats/contracts/ingest-v1.json",
+    );
+    const contract: unknown = JSON.parse(contractText);
+    expect(contract).toMatchObject({ schemaVersion: expect.any(Number) });
+  });
 });
