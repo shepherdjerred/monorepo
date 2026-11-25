@@ -143,11 +143,18 @@ function applicationOwners(): Map<string, string[]> {
   return owners;
 }
 
-async function formatted(value: unknown, file: string): Promise<string> {
-  return prettier.format(JSON.stringify(value), {
-    ...(await prettier.resolveConfig(file)),
-    filepath: file,
-  });
+async function formatted(
+  value: unknown,
+  file: string,
+  expanded = false,
+): Promise<string> {
+  return prettier.format(
+    expanded ? JSON.stringify(value, undefined, 2) : JSON.stringify(value),
+    {
+      ...(await prettier.resolveConfig(file)),
+      filepath: file,
+    },
+  );
 }
 
 const RevisionRecordSchema = z.record(z.string(), z.unknown());
@@ -293,9 +300,7 @@ async function resolveMergeBase(): Promise<string | undefined> {
   return;
 }
 
-const RawCatalogDocumentSchema = z.looseObject({
-  environments: z.array(z.looseObject({ id: z.string() })),
-});
+const EnvironmentEntrySchema = z.looseObject({ id: z.string() });
 
 async function writeBumpedCatalogDocument(
   bumped: ReadonlyMap<
@@ -304,17 +309,18 @@ async function writeBumpedCatalogDocument(
   >,
 ): Promise<void> {
   const catalogFile = fileURLToPath(CATALOG_DOCUMENT);
-  const raw = RawCatalogDocumentSchema.parse(
-    await Bun.file(catalogFile).json(),
-  );
+  const raw = RevisionRecordSchema.parse(await Bun.file(catalogFile).json());
+  const environments = z
+    .array(EnvironmentEntrySchema)
+    .parse(raw["environments"]);
   const updated = {
     ...raw,
-    environments: raw.environments.map((env) => ({
+    environments: environments.map((env) => ({
       ...env,
       ...bumped.get(env.id),
     })),
   };
-  await Bun.write(catalogFile, await formatted(updated, catalogFile));
+  await Bun.write(catalogFile, await formatted(updated, catalogFile, true));
 }
 
 let activeCore: CatalogCore = CATALOG_CORE;

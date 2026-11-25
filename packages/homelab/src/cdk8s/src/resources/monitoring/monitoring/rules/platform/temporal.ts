@@ -219,11 +219,11 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Background workflow tasks are failing repeatedly",
             description: escapePrometheusTemplate(
-              "Activity {{ $labels.activityType }} in workflow {{ $labels.workflowType }} failed {{ $value }} times in the last 30 minutes, delaying or blocking workflow completion. Inspect the failing workflow execution in the Temporal UI and check worker logs for the error.",
+              "Activity {{ $labels.activityType }} in workflow {{ $labels.workflowType }} failed {{ $value }} times in the last 20 minutes, delaying or blocking workflow completion. Inspect the failing workflow execution in the Temporal UI and check worker logs for the error.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(activity_task_fail{exported_namespace=~"prod|beta",workflowType!~"deliveryDeploymentWorkflow|deliveryWorkerRecoveryWorkflow"}[30m]) > 5',
+            'increase(activity_task_fail{exported_namespace=~"prod|beta",workflowType!~"deliveryDeploymentWorkflow|deliveryWorkerRecoveryWorkflow|temporal_sys_worker_deployment_workflow"}[20m]) > 10',
           ),
           for: "15m",
           labels: {

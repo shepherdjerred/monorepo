@@ -24,6 +24,12 @@ test("sticky fallback stays quiet while Activity timeouts and Workflow starvatio
         workflows: false,
       },
       {
+        operations: ["ActivityRolloutBurst"],
+        activities: false,
+        backlogAge: 5,
+        workflows: false,
+      },
+      {
         operations: ["Activity"],
         activities: true,
         backlogAge: 5,
@@ -46,8 +52,13 @@ test("sticky fallback stays quiet while Activity timeouts and Workflow starvatio
       input_series: [
         ...entry.operations.flatMap((operation) =>
           ["prod", "dev"].map((namespace) => ({
-            series: `schedule_to_start_timeout{exported_namespace="${namespace}",operation="TimerActiveTask${operation}Timeout"}`,
-            values: operation === "Activity" ? "0+1x60" : "0 1+0x60",
+            series: `schedule_to_start_timeout{exported_namespace="${namespace}",operation="TimerActiveTask${operation === "ActivityRolloutBurst" ? "Activity" : operation}Timeout"}`,
+            values:
+              operation === "Activity"
+                ? "0+1x60"
+                : operation === "ActivityRolloutBurst"
+                  ? "0x20 2+0x40"
+                  : "0 1+0x60",
           })),
         ),
         {

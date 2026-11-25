@@ -485,17 +485,20 @@ const repoLatencyBucket = (le: string, values: string) => ({
 });
 
 describe("Delivery state-machine exclusion", () => {
-  test("excludes Delivery deployment and worker-recovery workflows from generic activity failure rules", () => {
+  test("excludes Delivery deployment, worker-recovery, and Temporal system worker-deployment GC workflows from generic activity failure rules", () => {
     const retriesRule = getTemporalRuleGroups()
       .find((group) => group.name === "temporal-platform-health")
       ?.rules?.find(
         (rule) => rule.alert === "TemporalActivityRetriesExhausted",
       );
     expect(retriesRule?.expr.value).toContain(
-      'workflowType!~"deliveryDeploymentWorkflow|deliveryWorkerRecoveryWorkflow"',
+      'workflowType!~"deliveryDeploymentWorkflow|deliveryWorkerRecoveryWorkflow|temporal_sys_worker_deployment_workflow"',
     );
-    expect(findFailureRule("TemporalWorkflowActivityFailing")).toContain(
-      'workflowType!~"deliveryDeploymentWorkflow|deliveryWorkerRecoveryWorkflow"',
+    const activityFailingExpr = findFailureRule(
+      "TemporalWorkflowActivityFailing",
+    );
+    expect(activityFailingExpr).toBe(
+      'increase(activity_task_fail{exported_namespace=~"prod|beta",workflowType!~"deliveryDeploymentWorkflow|deliveryWorkerRecoveryWorkflow|temporal_sys_worker_deployment_workflow"}[20m]) > 10',
     );
   });
 });

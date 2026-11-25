@@ -3296,7 +3296,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "prometheus/prod/1",
-      "configurationRevisionId": "prometheus/prod/9"
+      "configurationRevisionId": "prometheus/prod/10"
     },
     {
       "id": "prometheus-adapter/prod",

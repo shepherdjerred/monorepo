@@ -13,15 +13,23 @@ test("replacement observer OFF wins over old ON and stale observations disappear
   )?.expr.value;
   const flagsDown = rules.find((rule) => rule.alert === "FlagsDown")?.expr
     .value;
+  const snapshotStale = rules.find(
+    (rule) => rule.alert === "FeatureFlagSnapshotStale",
+  )?.expr.value;
   if (typeof stale !== "string")
     throw new TypeError("Missing observation alert");
   if (typeof failingProvider !== "string")
     throw new TypeError("Missing provider readiness alert");
   if (typeof flagsDown !== "string")
     throw new TypeError("Missing FlagsDown alert");
+  if (typeof snapshotStale !== "string")
+    throw new TypeError("Missing FeatureFlagSnapshotStale alert");
   expect(rules.find((rule) => rule.alert === "FliptDown")).toBeUndefined();
   expect(flagsDown).toBe(
     '(up{namespace="flags",service="flags"} == 0) or absent(up{namespace="flags",service="flags"})',
+  );
+  expect(snapshotStale).toBe(
+    'feature_flag_snapshot_age_seconds{pod!~".*-delivery-wf-retained-.*"} > 3600',
   );
   expect(rules.find((rule) => rule.alert === "FlagsDown")?.for).toBe("5m");
   expect(
@@ -65,8 +73,29 @@ test("replacement observer OFF wins over old ON and stale observations disappear
               values: `${(instance === "old") === (state === "on") ? "1" : "0"}+0x30`,
             })),
           ]),
+          {
+            series:
+              'feature_flag_snapshot_age_seconds{job="temporal",instance="10.244.0.1:9090",pod="temporal-delivery-wf-retained-cc39fe6dcb6a-abcde"}',
+            values: "7200+0x30",
+          },
+          {
+            series:
+              'feature_flag_snapshot_age_seconds{job="temporal",instance="10.244.0.2:9090",pod="temporal-workflows-candidate-abcde"}',
+            values: "7200+0x30",
+          },
         ],
         promql_expr_test: [
+          {
+            expr: snapshotStale,
+            eval_time: "5m",
+            exp_samples: [
+              {
+                labels:
+                  'feature_flag_snapshot_age_seconds{instance="10.244.0.2:9090",job="temporal",pod="temporal-workflows-candidate-abcde"}',
+                value: 7200,
+              },
+            ],
+          },
           {
             expr: failingProvider,
             eval_time: "5m",

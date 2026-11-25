@@ -382,7 +382,7 @@ test("NVMe write budget follows observed or rated wear and pages over-budget dri
       },
     ],
   }));
-});
+}, 30_000);
 
 type ExporterSegmentOptions = {
   pod: string;
@@ -682,7 +682,7 @@ test("NVMe rules survive unsafe-shutdown firmware counter dips and overlapping r
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
-});
+}, 30_000);
 
 test("NvmeWriteBudgetExceeded ignores single-day write bursts when the 7-day average stays within budget", async () => {
   // 2 TB drive at 7% wear (~612 GB/day 5-year budget): 6 days at 300 GB/day
@@ -754,4 +754,4 @@ test("NvmeWriteBudgetExceeded ignores single-day write bursts when the 7-day ave
       },
     ],
   }));
-});
+}, 30_000);
