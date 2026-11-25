@@ -378,6 +378,9 @@ time {
   padding: 6px 0;
   border-block: 1px solid var(--ui-line);
 }
+.activity-when time {
+  white-space: normal;
+}
 .activity-action {
   font-weight: var(--weight-medium);
   overflow-wrap: anywhere;

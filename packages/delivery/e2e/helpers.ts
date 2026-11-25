@@ -189,14 +189,23 @@ export function usesNavDrawer(page: Page) {
  * above 900px, or by opening the modal navigation drawer at narrower widths.
  */
 export async function mainNav(page: Page) {
-  const trigger = page.getByRole("button", { name: "Open navigation" });
-  if (await trigger.isVisible()) {
+  if (usesNavDrawer(page)) {
+    await expect(page.locator(".topbar")).toBeVisible();
+    const openDrawer = page.locator(".nav-drawer[data-open]");
     const drawer = page.getByRole("dialog", { name: "Navigation" });
-    if (!(await drawer.isVisible())) await trigger.click();
+    if (!(await openDrawer.isVisible())) {
+      await expect(drawer).toBeHidden();
+      const trigger = page.getByRole("button", { name: "Open navigation" });
+      await expect(trigger).toBeVisible();
+      await trigger.click();
+    }
+    await expect(openDrawer).toBeVisible();
     await expect(drawer).toBeVisible();
     return drawer.getByRole("navigation", { name: "Main" });
   }
-  return page.getByRole("navigation", { name: "Main" });
+  const nav = page.getByRole("navigation", { name: "Main" });
+  await expect(nav).toBeVisible();
+  return nav;
 }
 
 /** Verify the `Approvals` navigation link carries the waiting count, then close any mobile drawer. */

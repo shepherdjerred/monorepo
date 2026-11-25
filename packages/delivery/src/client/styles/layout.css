@@ -507,6 +507,7 @@ main .filters > label > :is(input, select):focus-visible {
     align-items: baseline;
   }
   .stack-table td > * {
+    grid-column: 2;
     min-width: 0;
     max-width: 100%;
     overflow-wrap: anywhere;
