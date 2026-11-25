@@ -93,8 +93,8 @@ unmigrated database, resolves the verified baseline when appropriate, and runs
 ## Observability
 
 Bugsink receives errors through the Sentry SDK. The typed configuration requires
-`BUGSINK_TRACES_SAMPLE_RATE=0`; OpenTelemetry owns traces sent to Tempo and
-Phoenix. Bugsink initialization uses the shared data collection policy from
+`BUGSINK_TRACES_SAMPLE_RATE=0`; OpenTelemetry owns traces sent to Tempo and the
+SeaweedFS LLM archive. Bugsink initialization uses the shared data collection policy from
 `@shepherdjerred/bugsink-config` to retain the existing privacy defaults during
 SDK upgrades.
 

@@ -1,6 +1,0 @@
-apiVersion: v2
-name: phoenix
-description: Arize Phoenix LLM trace and eval UI
-type: application
-version: "$version"
-appVersion: "$appVersion"
