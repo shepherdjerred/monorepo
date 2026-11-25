@@ -19,7 +19,7 @@ import { ProviderAdmissionDeferred } from "#automation/providers.ts";
 import {
   searchMovieCandidatesV4,
   MovieProviderSearchDeferredV4,
-} from "./candidates.ts";
+} from "./candidate-search.ts";
 import { assessRetainedMovieRelease } from "./release-assessment.ts";
 import { reserveMovieCandidateV4 } from "./reservation.ts";
 import { resumeMovieAttempt } from "./retry/resume.ts";

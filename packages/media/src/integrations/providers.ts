@@ -1,8 +1,7 @@
 import { z } from "zod";
-import {
-  ProviderEditionEvidenceSchema,
-  type ProviderReference,
-  type ProviderEditionEvidence,
+import type {
+  ProviderEditionEvidence,
+  ProviderReference,
 } from "#shared/acquisition/catalog.ts";
 import {
   endpoint,
@@ -12,6 +11,8 @@ import {
   boundedBytes as readBoundedBytes,
   type FetchTransport,
 } from "./http.ts";
+import { releaseTitleEvidence } from "./provider-title-evidence.ts";
+import type { TrackerProviderIdSchema } from "#shared/admin.ts";
 export function boundedBytes(
   response: Response,
   maximum: number,
@@ -45,17 +46,17 @@ export type ProviderRecentPage = {
   scanned: number;
   nextPage: number | null;
 };
+export type ProviderSearchPage = {
+  candidates: ProviderCandidate[];
+  /** Raw listing identifiers, including rows omitted from candidate normalization. */
+  listingIds: string[];
+  nextPage: number | null;
+};
 
-/** Activity-local only: private download URLs can contain passkeys. Never emit this type into workflow history or UI responses. */
+/** Activity-local only: private download URLs can contain passkeys. */
 export type ProviderCandidate = {
   availabilityObservedAtV1?: string | undefined;
-  providerId:
-    | "knaben"
-    | "thepiratebay"
-    | "magnetdownload"
-    | "privatehd"
-    | "avistaz"
-    | "animez";
+  providerId: (typeof TrackerProviderIdSchema.options)[number];
   providerReleaseId: string;
   title: string;
   sizeBytes: number;
@@ -68,26 +69,6 @@ export type ProviderCandidate = {
   /** Attributed text is evidence for quality rules, never a requested-edition declaration. */
   editionEvidence?: readonly ProviderEditionEvidence[] | undefined;
 };
-
-/** Preserve each actual title field independently; title text is not structured cut metadata. */
-export function releaseTitleEvidence(
-  providerId: ProviderCandidate["providerId"],
-  fields: readonly { field: string; text: string | null | undefined }[],
-): ProviderEditionEvidence[] {
-  const result = z
-    .array(ProviderEditionEvidenceSchema)
-    .max(20)
-    .safeParse(
-      fields.flatMap(({ field, text }) =>
-        text === undefined || text === null || text.length === 0
-          ? []
-          : [{ text, provenance: { kind: "release-title", field } }],
-      ),
-    );
-  if (!result.success)
-    throw new IntegrationError(providerId, "invalid-response");
-  return result.data;
-}
 
 const KnabenResponseSchema = z.object({
   hits: z.array(
@@ -111,6 +92,14 @@ export class KnabenProvider {
     input: ProviderSearch,
     signal?: AbortSignal,
   ): Promise<ProviderCandidate[]> {
+    const { candidates } = await this.searchPage(input, signal);
+    return candidates;
+  }
+
+  async searchPage(
+    input: ProviderSearch,
+    signal?: AbortSignal,
+  ): Promise<ProviderSearchPage> {
     const query = SearchSchema.parse(input);
     const url = endpoint("https://api.knaben.org", "v2/search");
     url.search = new URLSearchParams({
@@ -120,7 +109,13 @@ export class KnabenProvider {
       o: "seeders",
     }).toString();
     const response = await this.readPage(url, signal);
-    return this.candidates(response);
+    if (response.hits.length > 100)
+      throw new IntegrationError("knaben", "invalid-response");
+    return {
+      candidates: this.candidates(response),
+      listingIds: response.hits.map(({ id }) => id),
+      nextPage: response.hits.length === 100 ? query.page + 1 : null,
+    };
   }
 
   /** Native date-ordered browsing; no title query or seeded-search substitute. */
@@ -358,6 +353,21 @@ export class AvistazFamilyProvider {
         : { in: "1", type: query.kind === "movie" ? "1" : "2" }),
     }).toString();
     return this.readPage(url, signal);
+  }
+
+  async searchPage(
+    input: ProviderSearch,
+    signal?: AbortSignal,
+  ): Promise<ProviderSearchPage> {
+    const query = SearchSchema.parse(input);
+    const candidates = await this.search(query, signal);
+    if (candidates.length > 50)
+      throw new IntegrationError(this.config.providerId, "invalid-response");
+    return {
+      candidates,
+      listingIds: candidates.map((candidate) => candidate.providerReleaseId),
+      nextPage: candidates.length === 50 ? query.page + 1 : null,
+    };
   }
 
   /** The family's empty search is its actual recent listing; AnimeZ has no in/type parameters. */
