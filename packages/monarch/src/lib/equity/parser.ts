@@ -92,3 +92,32 @@ export function parseEquityAwardsCsv(text: string): VestEvent[] {
     a.vestDate.localeCompare(b.vestDate),
   );
 }
+
+// Exports cover a trailing window, so successive downloads overlap and
+// neither alone reaches as far back as the pair. Merge by vest date and
+// dedupe the awards the overlap repeats.
+export function mergeVestEvents(...eventLists: VestEvent[][]): VestEvent[] {
+  const byDate = new Map<string, VestEvent>();
+  const awardKeys = new Map<string, Set<string>>();
+  for (const events of eventLists) {
+    for (const event of events) {
+      const merged = byDate.get(event.vestDate) ?? {
+        vestDate: event.vestDate,
+        symbol: event.symbol,
+        awards: [],
+      };
+      const keys = awardKeys.get(event.vestDate) ?? new Set<string>();
+      for (const award of event.awards) {
+        const key = `${award.awardId}|${String(award.quantity)}|${String(award.fairMarketValue)}`;
+        if (keys.has(key)) continue;
+        keys.add(key);
+        merged.awards.push(award);
+      }
+      byDate.set(event.vestDate, merged);
+      awardKeys.set(event.vestDate, keys);
+    }
+  }
+  return [...byDate.values()].sort((a, b) =>
+    a.vestDate.localeCompare(b.vestDate),
+  );
+}

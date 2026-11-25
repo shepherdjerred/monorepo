@@ -35,7 +35,7 @@ async function extractLines(pdfPath: string): Promise<string[]> {
 const ITEM_ROW = /^[EF]?\s*(\d{2,})\s+(\S.*?\S|\S)\s+(\d+\.\d{2})\s*[NYny]?$/;
 const BARE_ITEM_ROW = /^[EF]?\s*(\d{2,})\s+(\d+\.\d{2})\s*[NY]?$/;
 const QTY_ROW = /^(\d+)\s*@\s*(\d+\.\d{2})$/;
-const DISCOUNT_ROW = /^(\d+)\s*\/\s*(\S+)\s+(\d+\.\d{2})-$/;
+const DISCOUNT_ROW = /^(\d+)\s*\/\s*(.+?)\s+(\d+\.\d{2})-$/;
 const SUBTOTAL_ROW = /^SUBTOTAL\s+(\d+\.\d{2})$/;
 const TOTAL_ROW = /^\*{4} TOTAL\s+(\d+\.\d{2})$/;
 
@@ -74,12 +74,15 @@ function parseWarehouse(name: string, lines: string[]): Order {
       continue;
     }
 
-    // "coupon / item-number-or-name-fragment amount-"
+    // "coupon / item-number-or-name-fragment amount-" — the fragment can
+    // span words ("TEE 2PK"), so fall back to its first word ("TEE").
     const disc = DISCOUNT_ROW.exec(line);
     if (disc?.[2] !== undefined && disc[3] !== undefined) {
+      const fragment = disc[2];
       const target =
-        byNumber.get(disc[2]) ??
-        items.find((it) => it.title.includes(disc[2] ?? ""));
+        byNumber.get(fragment) ??
+        items.find((it) => it.title.includes(fragment)) ??
+        items.find((it) => it.title.includes(fragment.split(" ")[0] ?? ""));
       if (!target) {
         throw new Error(`${name}: discount for unknown item ${disc[2]}`);
       }

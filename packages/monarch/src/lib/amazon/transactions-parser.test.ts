@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   foldTransactionRows,
+  transactionRowsFromLinkText,
   type TransactionRow,
 } from "./transactions-parser.ts";
 
@@ -94,5 +95,43 @@ describe("foldTransactionRows", () => {
   test("ignores transactions before any date header", () => {
     const folded = foldTransactionRows([txnRow("-$10.00")]);
     expect(folded.byOrder.size).toBe(0);
+  });
+});
+
+describe("transactionRowsFromLinkText", () => {
+  // The rebuilt payments page renders each transaction as one link whose
+  // text is: "Mon DD, YYYY·Merchant", payment method, "Order #...", the
+  // signed amount, then the status.
+  test("parses a charged transaction link", () => {
+    const rows = transactionRowsFromLinkText(
+      "Nov 9, 2026·AMZN Mktp US\nPrime Visa••••8620\nOrder #112-0943984-8705017\n-$6.58\nCharged",
+    );
+    const folded = foldTransactionRows(rows);
+    expect(folded.byOrder.get("112-0943984-8705017")).toEqual([
+      { date: "2026-11-09", amount: 6.58, description: "Prime Visa••••8620" },
+    ]);
+    expect(folded.oldestDate).toBe("2026-11-09");
+  });
+
+  test("parses a refund as money back", () => {
+    const rows = transactionRowsFromLinkText(
+      "Nov 7, 2026·AMZN Mktp US\nPlatinum Card®••••1008\nOrder #112-8419012-7032205\n+$18.78\nRefunded",
+    );
+    const folded = foldTransactionRows(rows);
+    expect(folded.byOrder.get("112-8419012-7032205")?.[0]?.amount).toBe(-18.78);
+  });
+
+  test("gift-card movements still skip", () => {
+    const rows = transactionRowsFromLinkText(
+      "Nov 3, 2026·Amazon.com\nAmazon Gift Card\nOrder #112-9866095-4455458\n-$66.20\nCharged",
+    );
+    const folded = foldTransactionRows(rows);
+    expect(folded.byOrder.size).toBe(0);
+    expect(folded.skippedGiftCard).toBe(1);
+  });
+
+  test("returns no rows for text that is not a transaction", () => {
+    expect(transactionRowsFromLinkText("Load more")).toEqual([]);
+    expect(transactionRowsFromLinkText("")).toEqual([]);
   });
 });

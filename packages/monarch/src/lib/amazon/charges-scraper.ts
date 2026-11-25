@@ -2,6 +2,7 @@ import type { Locator, Page } from "playwright";
 import type { AmazonCharge } from "./types.ts";
 import {
   foldTransactionRows,
+  transactionRowsFromLinkText,
   type TransactionRow,
 } from "./transactions-parser.ts";
 import { log } from "../logger.ts";
@@ -19,6 +20,15 @@ export async function scrapeTransactionHistory(
 ): Promise<Map<string, AmazonCharge[]>> {
   await page.goto(TRANSACTIONS_URL);
   await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(1000);
+
+  // The rebuilt payments page renders transactions as append-on-scroll
+  // links instead of the classic paged table; detect it by its test id
+  // and fall back to the classic path when the old markup is served.
+  const linkCount = await page
+    .locator('[data-testid="transaction-link"]')
+    .count();
+  if (linkCount > 0) return scrapeLinkedTransactions(page, sinceDate);
 
   const byOrder = new Map<string, AmazonCharge[]>();
   let pageNum = 0;
@@ -53,6 +63,69 @@ export async function scrapeTransactionHistory(
   );
   log.info(
     `Transaction history: ${String(chargeCount)} card charges across ${String(byOrder.size)} orders (${String(pageNum)} pages)`,
+  );
+  return byOrder;
+}
+
+// Append-on-scroll variant: each batch renders ~20 more transaction
+// links. Links already read are never re-read (the fold would double
+// their charges), and scrolling the last link into view is what loads
+// the next batch — there is no usable pager control.
+async function scrapeLinkedTransactions(
+  page: Page,
+  sinceDate: string,
+): Promise<Map<string, AmazonCharge[]>> {
+  const links = page.locator('[data-testid="transaction-link"]');
+  const byOrder = new Map<string, AmazonCharge[]>();
+  let processed = 0;
+  let batches = 0;
+  let oldestDate: string | undefined;
+
+  for (;;) {
+    batches++;
+    if (batches > MAX_PAGES) {
+      throw new Error(
+        `Transaction history exceeded ${String(MAX_PAGES)} batches without reaching ${sinceDate}`,
+      );
+    }
+    const count = await links.count();
+    const rows: TransactionRow[] = [];
+    for (let i = processed; i < count; i++) {
+      rows.push(...transactionRowsFromLinkText(await links.nth(i).innerText()));
+    }
+    processed = count;
+
+    const folded = foldTransactionRows(rows);
+    mergeCharges(byOrder, folded.byOrder);
+    if (
+      folded.oldestDate !== undefined &&
+      (oldestDate === undefined || folded.oldestDate < oldestDate)
+    ) {
+      oldestDate = folded.oldestDate;
+    }
+    if (oldestDate !== undefined && oldestDate < sinceDate) break;
+
+    await links
+      .last()
+      .scrollIntoViewIfNeeded()
+      .catch(() => {
+        // A detached last link just means no further batch rendered.
+      });
+    await page.waitForTimeout(1500);
+    if ((await links.count()) === processed) {
+      log.warn(
+        `Transaction history ended at ${oldestDate ?? "an unknown date"} before reaching ${sinceDate}`,
+      );
+      break;
+    }
+  }
+
+  const chargeCount = [...byOrder.values()].reduce(
+    (sum, list) => sum + list.length,
+    0,
+  );
+  log.info(
+    `Transaction history: ${String(chargeCount)} card charges across ${String(byOrder.size)} orders (${String(batches)} batches)`,
   );
   return byOrder;
 }

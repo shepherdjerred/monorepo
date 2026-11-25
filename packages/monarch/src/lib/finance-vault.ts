@@ -105,7 +105,10 @@ export function latestSclCsv(): string | undefined {
   return latestVaultFile(SCL_DIR, "*Seattle_City_Light*.csv");
 }
 
-// Schwab names its Equity Award Center export with a YYYYMMDDHHMMSS suffix.
-export function latestEquityCsv(): string | undefined {
-  return latestVaultFile(EQUITY_DIR, "EquityAwardsCenter_Transactions_*.csv");
+// Schwab names its Equity Award Center exports with a YYYYMMDDHHMMSS suffix.
+// Every Equity Award Center export. Each covers only a trailing window, so
+// reading just the newest silently drops vests an earlier export covered;
+// the equity path merges them (see mergeVestEvents).
+export function allEquityCsvs(): string[] {
+  return allVaultFiles(EQUITY_DIR, "EquityAwardsCenter_Transactions_*.csv");
 }

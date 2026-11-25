@@ -109,6 +109,32 @@ export async function loadCachedOrdersIgnoringAge(): Promise<AmazonOrder[]> {
   return cache?.orders ?? [];
 }
 
+export type AmazonCacheSnapshot = {
+  scrapedAt: string;
+  orders: AmazonOrder[];
+};
+
+// The cache plus when it was taken. A re-scrape only needs to reconsider
+// orders that could still change after that moment, which is what makes an
+// incremental sweep possible.
+export async function loadCacheSnapshot(): Promise<AmazonCacheSnapshot | null> {
+  const cache = await readCacheFile();
+  return cache === null
+    ? null
+    : { scrapedAt: cache.scrapedAt, orders: cache.orders };
+}
+
+// Orders are immutable once placed; what can still move after a scrape is
+// late-posting card charges, shipments, and returns. A 30-day overlap before
+// the last scrape covers all of that, so months older than the cutoff never
+// need their listing pages re-walked.
+export const INCREMENTAL_OVERLAP_MS = 30 * 24 * 60 * 60 * 1000;
+
+export function incrementalSinceDate(scrapedAt: string): string {
+  const sinceMs = new Date(scrapedAt).getTime() - INCREMENTAL_OVERLAP_MS;
+  return new Date(sinceMs).toISOString().split("T")[0] ?? "";
+}
+
 function isPlaceholder(order: AmazonOrder): boolean {
   return order.items.every((item) => item.title === UNKNOWN_ITEM_TITLE);
 }

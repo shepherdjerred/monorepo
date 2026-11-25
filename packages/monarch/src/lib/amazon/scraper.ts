@@ -4,8 +4,9 @@ import path from "node:path";
 import { homedir } from "node:os";
 import type { AmazonOrder, AmazonItem, AmazonCharge } from "./types.ts";
 import {
+  incrementalSinceDate,
   loadCache,
-  loadCachedOrdersIgnoringAge,
+  loadCacheSnapshot,
   saveMergedCache,
 } from "./cache.ts";
 import { scrapeTransactionHistory } from "./charges-scraper.ts";
@@ -63,11 +64,24 @@ export async function scrapeAmazonOrders(
   // needs new orders re-detailed. --force-scrape means "distrust the cache
   // entirely," so it gets an empty map and re-fetches everything.
   let existingByOrderId = new Map<string, AmazonOrder>();
+  // Incremental watermark: with a prior cache, only orders placed in the
+  // overlap window before the last scrape can have gained charges or
+  // returns since, so older years are never re-listed. --force-scrape
+  // distrusts the cache entirely and always does the full sweep. A year
+  // never scraped before is only reachable via --force-scrape; the log
+  // below names any year this skips.
+  let sinceDate: string | undefined;
   if (!forceScrape) {
-    const existingOrders = await loadCachedOrdersIgnoringAge();
-    existingByOrderId = new Map(
-      existingOrders.map((order) => [order.orderId, order]),
-    );
+    const snapshot = await loadCacheSnapshot();
+    if (snapshot !== null && snapshot.orders.length > 0) {
+      sinceDate = incrementalSinceDate(snapshot.scrapedAt);
+      existingByOrderId = new Map(
+        snapshot.orders.map((order) => [order.orderId, order]),
+      );
+      log.info(
+        `Incremental scrape: reconsidering orders since ${sinceDate} (30d overlap before the ${snapshot.scrapedAt} cache); older orders are reused from cache`,
+      );
+    }
   }
 
   log.info("Launching browser...");
@@ -82,36 +96,24 @@ export async function scrapeAmazonOrders(
     await page.goto("https://www.amazon.com/gp/css/order-history");
     await page.waitForLoadState("domcontentloaded");
 
-    // Amazon serves the signed-in orders page from both /your-orders/ and
-    // /gp/css/order-history, so detect login by page content, not URL.
-    if (await isOnOrdersPage(page)) {
-      log.info("Logged in with saved session");
-    } else {
-      log.info("Login required, using 1Password for credentials...");
-      await autoLogin(page);
-      // Generous window: a captcha shown in the headed browser can be
-      // solved manually and the scrape continues.
-      await waitForOrdersPage(page, 120_000);
-      log.info("Login successful, session saved for next time");
-    }
+    await ensureLoggedIn(page);
     await saveBrowserState(context);
 
-    const summaries: OrderSummary[] = [];
+    const summaries = await collectSummaries(page, years, sinceDate);
 
-    for (const year of years) {
-      log.info(`Collecting orders for ${String(year)}...`);
-      const yearSummaries = await collectOrderSummaries(page, year);
-      summaries.push(...yearSummaries);
+    if (sinceDate !== undefined && summaries.length === 0) {
       log.info(
-        `  Found ${String(yearSummaries.length)} orders for ${String(year)}`,
+        "No orders since the incremental cutoff; keeping the cached orders",
       );
+      await saveBrowserState(context);
+      return await saveMergedCache([]);
     }
 
     log.info("Scraping card charges from the transaction history...");
     const earliestYear = Math.min(...years);
     const chargesByOrder = await scrapeTransactionHistory(
       page,
-      `${String(earliestYear)}-01-01`,
+      sinceDate ?? `${String(earliestYear)}-01-01`,
     );
     // Zero charges parsed off the payments page is parse drift. Asserting it
     // here rather than on the per-order join means an old scrape whose charges
@@ -138,6 +140,30 @@ export async function scrapeAmazonOrders(
   }
 }
 
+async function ensureLoggedIn(page: Page): Promise<void> {
+  // Amazon serves the signed-in orders page from both /your-orders/ and
+  // /gp/css/order-history, so detect login by page content, not URL.
+  if (await isOnOrdersPage(page)) {
+    log.info("Logged in with saved session");
+    return;
+  }
+  log.info("Login required, using 1Password for credentials...");
+  try {
+    await autoLogin(page);
+  } catch (error) {
+    // Desktop op authorization (Touch ID) is timed and easily missed
+    // while enrichment runs. The browser is headed, so fall back to a
+    // manual login instead of aborting the whole run.
+    log.warn(
+      `1Password auto-login failed (${error instanceof Error ? error.message : String(error)}); log in manually in the browser window`,
+    );
+  }
+  // Generous window: a captcha shown in the headed browser can be
+  // solved manually and the scrape continues.
+  await waitForOrdersPage(page, 300_000);
+  log.info("Login successful, session saved for next time");
+}
+
 async function launchBrowser(): Promise<Browser> {
   try {
     return await chromium.launch({ channel: "chrome", headless: false });
@@ -146,9 +172,39 @@ async function launchBrowser(): Promise<Browser> {
   }
 }
 
+async function collectSummaries(
+  page: Page,
+  years: number[],
+  sinceDate: string | undefined,
+): Promise<OrderSummary[]> {
+  const summaries: OrderSummary[] = [];
+  const sinceYear =
+    sinceDate === undefined ? undefined : Number(sinceDate.slice(0, 4));
+  for (const year of years) {
+    if (sinceYear !== undefined && year < sinceYear) {
+      log.info(
+        `Skipping ${String(year)} orders (before the incremental cutoff; use --force-scrape for a full backfill)`,
+      );
+      continue;
+    }
+    log.info(`Collecting orders for ${String(year)}...`);
+    const yearSummaries = await collectOrderSummaries(
+      page,
+      year,
+      sinceYear === year ? sinceDate : undefined,
+    );
+    summaries.push(...yearSummaries);
+    log.info(
+      `  Found ${String(yearSummaries.length)} orders for ${String(year)}`,
+    );
+  }
+  return summaries;
+}
+
 async function collectOrderSummaries(
   page: Page,
   year: number,
+  earliestDate?: string,
 ): Promise<OrderSummary[]> {
   const summaries: OrderSummary[] = [];
 
@@ -167,9 +223,20 @@ async function collectOrderSummaries(
     if (cards.length === 0) break;
 
     const before = summaries.length;
-    for (const card of cards) {
-      const summary = await extractOrderSummary(card);
-      if (summary) summaries.push(summary);
+    const pageResult = await extractPageSummaries(cards, earliestDate);
+    summaries.push(...pageResult.kept);
+    const pageOldest = pageResult.pageOldest;
+    // The listing is newest-first, so once a page reaches orders older
+    // than the cutoff every later page is older still.
+    if (
+      earliestDate !== undefined &&
+      pageOldest !== undefined &&
+      pageOldest < earliestDate
+    ) {
+      log.debug(
+        `  Reached orders before ${earliestDate} at startIndex=${String(startIndex)}; stopping the incremental sweep`,
+      );
+      break;
     }
     if (summaries.length === before) {
       // Real order cards that all fail to parse means the listing markup
@@ -191,6 +258,26 @@ async function collectOrderSummaries(
   }
 
   return summaries;
+}
+
+async function extractPageSummaries(
+  cards: Locator[],
+  earliestDate: string | undefined,
+): Promise<{ kept: OrderSummary[]; pageOldest: string | undefined }> {
+  const kept: OrderSummary[] = [];
+  let pageOldest: string | undefined;
+  for (const card of cards) {
+    const summary = await extractOrderSummary(card);
+    if (!summary) continue;
+    pageOldest =
+      pageOldest === undefined || summary.date < pageOldest
+        ? summary.date
+        : pageOldest;
+    if (earliestDate === undefined || summary.date >= earliestDate) {
+      kept.push(summary);
+    }
+  }
+  return { kept, pageOldest };
 }
 
 async function getOrderCards(
