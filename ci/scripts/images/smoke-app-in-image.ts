@@ -183,20 +183,12 @@ const commands: Record<
     },
   },
   tracker: {
-    command: [
-      "set -eu",
-      "cd /app/packages/tracker",
-      "bun src/server/index.ts >/tmp/tracker-smoke.log 2>&1 &",
-      "pid=$!",
-      "trap 'if kill -0 $pid; then kill $pid; wait $pid || test $? -eq 143; fi' EXIT",
-      "for _ in $(seq 1 30); do",
-      String.raw`  if bun -e 'const health = await fetch("http://127.0.0.1:17351/healthz"); const page = await fetch("http://127.0.0.1:17351/issues/AI-1"); const html = await page.text(); if (!health.ok || !page.ok || !html.includes("<div id=\"root\"></div>")) process.exit(1); const asset = html.match(/src="([^"]+\.js)"/u)?.[1]; if (!asset || !(await fetch(new URL(asset, page.url))).ok) process.exit(1);' ; then exit 0; fi`,
-      "  if ! kill -0 $pid; then cat /tmp/tracker-smoke.log; exit 1; fi",
-      "  sleep 1",
-      "done",
-      "cat /tmp/tracker-smoke.log",
-      "exit 1",
-    ].join("\n"),
+    command: backgroundProbeSmoke(
+      "tracker",
+      "src/server/index.ts",
+      "tracker",
+      String.raw`const health = await fetch("http://127.0.0.1:17351/healthz"); const page = await fetch("http://127.0.0.1:17351/issues/AI-1"); const html = await page.text(); if (!health.ok || !page.ok || !html.includes("<div id=\"root\"></div>")) process.exit(1); const asset = html.match(/src="([^"]+\.js)"/u)?.[1]; if (!asset || !(await fetch(new URL(asset, page.url))).ok) process.exit(1);`,
+    ),
     env: {
       DATABASE_URL: "postgresql://smoke:smoke@127.0.0.1:15432/tracker",
       HOST: "127.0.0.1",
@@ -210,20 +202,12 @@ const commands: Record<
     },
   },
   "storm-brain": {
-    command: [
-      "set -eu",
-      "cd /app/packages/storm-brain",
-      "bun src/index.ts >/tmp/storm-brain-smoke.log 2>&1 &",
-      "pid=$!",
-      "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
-      "for _ in $(seq 1 30); do",
-      `  if bun -e 'const app = await fetch("http://127.0.0.1:18794/readyz"); const metrics = await fetch("http://127.0.0.1:18795/metrics"); if (!app.ok || !metrics.ok || !(await metrics.text()).includes("storm_brain_requests_total")) process.exit(1);'; then exit 0; fi`,
-      "  if ! kill -0 $pid; then cat /tmp/storm-brain-smoke.log; exit 1; fi",
-      "  sleep 1",
-      "done",
-      "cat /tmp/storm-brain-smoke.log",
-      "exit 1",
-    ].join("\n"),
+    command: backgroundProbeSmoke(
+      "storm-brain",
+      "src/index.ts",
+      "storm-brain",
+      'const app = await fetch("http://127.0.0.1:18794/readyz"); const metrics = await fetch("http://127.0.0.1:18795/metrics"); if (!app.ok || !metrics.ok || !(await metrics.text()).includes("storm_brain_requests_total")) process.exit(1);',
+    ),
     env: {
       FEATURE_FLAGS_MODE: "disabled",
       METRICS_PORT: "18795",
