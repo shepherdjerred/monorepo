@@ -128,6 +128,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runLlmCatalogRefresh: "repo",
   fetchSkillCappedManifest: "repo",
   runFreshRssSyncWorkflow: "repo",
+  runFeedsRefreshWorkflow: "repo",
   runFlagInventorySync: "repo",
   runLlmBilledCostReconciliation: "platform",
   generateDependencySummary: "repo",

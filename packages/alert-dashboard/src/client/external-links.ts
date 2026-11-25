@@ -20,6 +20,7 @@ import {
   NotebookPenIcon,
   RefreshCwIcon,
   RocketIcon,
+  RssIcon,
   ScanSearchIcon,
   SquareActivityIcon,
   WorkflowIcon,
@@ -41,6 +42,7 @@ export type ExternalEntry = {
 const ICONS: Readonly<Record<string, LucideIcon>> = {
   delivery: RocketIcon,
   flags: FlagIcon,
+  feeds: RssIcon,
   golink: LinkIcon,
   tracker: ListTodoIcon,
   media: ClapperboardIcon,

@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import {
   initFeatureFlags,
+  isEnabled,
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import {
@@ -9,9 +10,13 @@ import {
   type ReaderCredentialsConfig,
 } from "./server/app.ts";
 import { authFromEnv } from "./server/auth.ts";
-import { createFeedsMetrics } from "./server/metrics.ts";
-import { createFeedsPoller } from "./server/poller.ts";
+import { createFeedsMetrics, type FeedsMetrics } from "./server/metrics.ts";
+import {
+  createFeedsPoller,
+  type CreateFeedsPollerDeps,
+} from "./server/poller.ts";
 import { FeedsStore } from "./server/store.ts";
+import type { FeedsPoller, FeedsRepository } from "./server/types.ts";
 
 const NON_NEGATIVE_INTEGER = /^(?:0|[1-9]\d*)$/u;
 const peers = new WeakMap<Request, string | null>();
@@ -70,7 +75,76 @@ export type FeedsServer = {
 export type StartServerOptions = {
   readonly env?: NodeJS.ProcessEnv | undefined;
   readonly shouldRefresh?: (() => Promise<boolean>) | undefined;
+  readonly fetchFeed?: CreateFeedsPollerDeps["fetchFeed"] | undefined;
 };
+
+async function evaluateRefreshFlag(): Promise<boolean> {
+  const evaluated = await isEnabled("feeds-refresh-enabled", {
+    default: true,
+    targetingKey: "feeds",
+  });
+  return evaluated.value;
+}
+
+function resolveShouldRefresh(
+  useFlags: boolean,
+  custom: (() => Promise<boolean>) | undefined,
+): (() => Promise<boolean>) | undefined {
+  if (custom !== undefined) return custom;
+  return useFlags ? evaluateRefreshFlag : undefined;
+}
+
+async function startOptionalReaderServer(options: {
+  readonly readerPort: number | undefined;
+  readonly reader: ReaderCredentialsConfig | undefined;
+  readonly hostname: string;
+  readonly store: FeedsRepository;
+  readonly poller: FeedsPoller;
+  readonly metrics: FeedsMetrics;
+  readonly consoleServer: ReturnType<typeof Bun.serve>;
+}): Promise<ReturnType<typeof Bun.serve> | undefined> {
+  const {
+    readerPort,
+    reader,
+    hostname,
+    store,
+    poller,
+    metrics,
+    consoleServer,
+  } = options;
+  if (readerPort === undefined || reader === undefined) {
+    return undefined;
+  }
+  const readerApp = createFeedsReaderApp({
+    store,
+    poller,
+    reader,
+    metrics,
+  });
+  let readerServer: ReturnType<typeof Bun.serve>;
+  try {
+    readerServer = Bun.serve({
+      port: readerPort,
+      hostname,
+      fetch: readerApp.fetch,
+    });
+  } catch (error) {
+    await consoleServer.stop(true);
+    throw error;
+  }
+  if (readerServer.port === undefined) {
+    await Promise.all([consoleServer.stop(true), readerServer.stop(true)]);
+    throw new Error("feeds reader server did not bind a TCP port");
+  }
+  console.warn(`feeds reader listening on :${String(readerServer.port)}`);
+  return readerServer;
+}
+
+async function shutdownOptionalFlags(useFlags: boolean): Promise<void> {
+  if (useFlags) {
+    await shutdownFeatureFlags();
+  }
+}
 
 export async function startServer(
   port: number,
@@ -104,7 +178,8 @@ export async function startServer(
     const metrics = createFeedsMetrics();
     const poller = createFeedsPoller({
       store,
-      shouldRefresh: options.shouldRefresh,
+      shouldRefresh: resolveShouldRefresh(useFlags, options.shouldRefresh),
+      fetchFeed: options.fetchFeed,
     });
     const clientRoot = `${import.meta.dir}/../dist/client`;
     const clientReady = await Bun.file(`${clientRoot}/index.html`).exists();
@@ -130,30 +205,15 @@ export async function startServer(
       throw new Error("feeds server did not bind a TCP port");
     }
 
-    let readerServer: ReturnType<typeof Bun.serve> | undefined;
-    if (readerPort !== undefined && reader !== undefined) {
-      const readerApp = createFeedsReaderApp({
-        store,
-        poller,
-        reader,
-        metrics,
-      });
-      try {
-        readerServer = Bun.serve({
-          port: readerPort,
-          hostname,
-          fetch: readerApp.fetch,
-        });
-      } catch (error) {
-        await server.stop(true);
-        throw error;
-      }
-      if (readerServer.port === undefined) {
-        await Promise.all([server.stop(true), readerServer.stop(true)]);
-        throw new Error("feeds reader server did not bind a TCP port");
-      }
-      console.warn(`feeds reader listening on :${String(readerServer.port)}`);
-    }
+    const readerServer = await startOptionalReaderServer({
+      readerPort,
+      reader,
+      hostname,
+      store,
+      poller,
+      metrics,
+      consoleServer: server,
+    });
 
     console.warn(`feeds listening on :${String(server.port)}`);
     return {
@@ -166,16 +226,12 @@ export async function startServer(
           readerServer?.stop(closeActiveConnections),
         ]);
         store.close();
-        if (useFlags) {
-          await shutdownFeatureFlags();
-        }
+        await shutdownOptionalFlags(useFlags);
       },
     };
   } catch (error) {
     store.close();
-    if (useFlags) {
-      await shutdownFeatureFlags();
-    }
+    await shutdownOptionalFlags(useFlags);
     throw error;
   }
 }

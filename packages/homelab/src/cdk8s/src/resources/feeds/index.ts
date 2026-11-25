@@ -1,72 +1,128 @@
 import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
-import { Cpu, EnvValue } from "cdk8s-plus-31";
+import {
+  Cpu,
+  DeploymentStrategy,
+  EnvValue,
+  Secret,
+  Service,
+} from "cdk8s-plus-31";
+import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { FEEDS_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
+import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
-  FirstPartyWebService,
-  type FirstPartyServerContainer,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
-import {
+  blackboxProbeIngressRule,
+  cloudflareTunnelIngressRule,
   dnsEgressRule,
+  flagsEgress,
+  kubernetesApiEgressRule,
   nsPeer,
+  prometheusIngressRule,
   tcp,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { onePasswordSecret } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { tailnetService } from "homelab/src/platform-model.ts";
+import {
+  createFeedsIngressObserver,
+  FEEDS_TAILSCALE_INGRESS,
+} from "./ingress.ts";
 
-/**
- * Activation gate. While it is false the chart publishes an inactive marker
- * and the root renders no Argo Application, so nothing deploys. Activating the
- * service is a reviewed change of its own: see the wiki how-to "Add a hosted
- * service".
- */
-export const FEEDS_ACTIVE = false;
+export const FEEDS_ACTIVE = true;
 
-const FEEDS_CONSOLE_PORT = 7430;
+const FEEDS_HTTP_PORT = FEEDS_ENDPOINT.port;
 const FEEDS_READER_PORT = 7431;
-const FEEDS_UID = 1000;
+const FEEDS_ITEM_ID = "hs2u3hto2k2e77sdjceh6pkuru";
+const FEEDS_READER_SERVICE_NAME = "feeds-reader-service";
 
-function buildFeedsServerContainer(): FirstPartyServerContainer {
-  const containerSecurity = restrictedContainer(FEEDS_UID);
-  const envVariables: Record<string, EnvValue> = {
-    ENVIRONMENT: EnvValue.fromValue("production"),
-    FEEDS_READER_PORT: EnvValue.fromValue(String(FEEDS_READER_PORT)),
-    HOME: EnvValue.fromValue("/tmp"),
-    HOST: EnvValue.fromValue("0.0.0.0"),
-    PORT: EnvValue.fromValue(String(FEEDS_CONSOLE_PORT)),
-  };
-  return {
-    image: firstPartyImageRecipe("feeds"),
-    securityContext: containerSecurity,
-    resources: {
-      cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
-      memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
-    },
-    envVariables,
-  };
-}
+/** Public HTTP/HTTPS feed polling excluding RFC1918, CGNAT/Tailscale, and link-local ranges. */
+const PUBLIC_FEED_EGRESS_BLOCK_EXCEPTIONS = [
+  "10.0.0.0/8",
+  "172.16.0.0/12",
+  "192.168.0.0/16",
+  "100.64.0.0/10",
+  "169.254.0.0/16",
+];
 
 export function createFeedsDeployment(chart: Chart) {
-  return new FirstPartyWebService(chart, "feeds-web-service", {
+  const feedsTailnet = tailnetService("feeds");
+  const webService = new FirstPartyWebService(chart, "feeds-web-service", {
     name: "feeds",
-    port: FEEDS_CONSOLE_PORT,
+    port: FEEDS_HTTP_PORT,
     probes: { live: "/healthz", ready: "/healthz" },
-    containers: () => ({
-      server: buildFeedsServerContainer(),
-    }),
+    deployment: {
+      strategy: DeploymentStrategy.recreate(),
+      automountServiceAccountToken: false,
+      securityContext: { fsGroup: 1000 },
+    },
+    containers: () => {
+      const authItem = onePasswordSecret(
+        chart,
+        "feeds-auth-1p",
+        FEEDS_ITEM_ID,
+        { name: "feeds-auth" },
+      );
+      const authSecret = Secret.fromSecretName(
+        chart,
+        "feeds-auth-secret",
+        authItem.name,
+      );
+      return {
+        server: {
+          image: firstPartyImageRecipe("feeds"),
+          securityContext: restrictedContainer(1000),
+          resources: {
+            cpu: { request: Cpu.millis(25), limit: Cpu.millis(500) },
+            memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
+          },
+          envVariables: {
+            HOME: EnvValue.fromValue("/tmp"),
+            HOST: EnvValue.fromValue("0.0.0.0"),
+            PORT: EnvValue.fromValue(String(FEEDS_HTTP_PORT)),
+            FEEDS_READER_PORT: EnvValue.fromValue(String(FEEDS_READER_PORT)),
+            ENVIRONMENT: EnvValue.fromValue("production"),
+            FEEDS_DATABASE_PATH: EnvValue.fromValue(
+              "/var/lib/feeds/feeds.sqlite",
+            ),
+            FEEDS_PUBLIC_ORIGIN: EnvValue.fromValue(feedsTailnet.origin),
+            FEEDS_OPERATOR_LOGINS: EnvValue.fromValue(
+              "shepherdjerred@gmail.com",
+            ),
+            FEEDS_INGRESS_IDENTITY_DIR: EnvValue.fromValue(
+              FEEDS_TAILSCALE_INGRESS.directory,
+            ),
+            FEEDS_READER_USER: EnvValue.fromValue("sjerred"),
+            FEEDS_MACHINE_TOKEN: EnvValue.fromSecretValue({
+              secret: authSecret,
+              key: "FEEDS_MACHINE_TOKEN",
+            }),
+            FEEDS_READER_PASSWORD: EnvValue.fromSecretValue({
+              secret: authSecret,
+              key: "FEEDS_READER_PASSWORD",
+            }),
+            FEEDS_WRITE_TOKEN_SECRET: EnvValue.fromSecretValue({
+              secret: authSecret,
+              key: "FEEDS_WRITE_TOKEN_SECRET",
+            }),
+            ...flagsEnv({ deployment: "feeds/prod" }),
+          },
+        },
+      };
+    },
+    data: {
+      id: "feeds-data",
+      storage: Size.gibibytes(2),
+      path: "/var/lib/feeds",
+    },
     serviceName: "feeds",
     tailscale: {
       probePath: "/healthz",
       hosts: [
         {
           id: "feeds-ingress",
-          // A prepared service renders nothing, so the platform model cannot
-          // declare its tailnet name yet. Activation declares "feeds" in
-          // platform-model.json and replaces this with tailnetService("feeds").
-          host: {
-            host: "feeds",
-            namespace: "feeds",
-            exposure: "ingress",
-          },
+          host: feedsTailnet,
         },
       ],
     },
@@ -75,13 +131,69 @@ export function createFeedsDeployment(chart: Chart) {
         name: "feeds-app-netpol",
         selects: "app",
         ingress: [
+          prometheusIngressRule([FEEDS_HTTP_PORT]),
+          blackboxProbeIngressRule(FEEDS_HTTP_PORT),
           {
-            from: [nsPeer("tailscale"), nsPeer("prometheus")],
-            ports: [tcp(FEEDS_CONSOLE_PORT)],
+            from: [
+              {
+                ...nsPeer(FEEDS_TAILSCALE_INGRESS.proxyNamespace),
+                podSelector: {
+                  matchLabels: FEEDS_TAILSCALE_INGRESS.parentLabels,
+                },
+              },
+              {
+                ...nsPeer("temporal"),
+                podSelector: { matchLabels: { component: "repo-worker" } },
+              },
+            ],
+            ports: [tcp(FEEDS_HTTP_PORT)],
+          },
+          cloudflareTunnelIngressRule([FEEDS_READER_PORT]),
+          blackboxProbeIngressRule(FEEDS_READER_PORT),
+        ],
+        egress: [
+          dnsEgressRule(),
+          kubernetesApiEgressRule(),
+          flagsEgress(),
+          {
+            to: [
+              {
+                ipBlock: {
+                  cidr: "0.0.0.0/0",
+                  except: PUBLIC_FEED_EGRESS_BLOCK_EXCEPTIONS,
+                },
+              },
+            ],
+            ports: [tcp(80), tcp(443)],
           },
         ],
-        egress: [dnsEgressRule()],
       },
     ],
   });
+
+  createFeedsIngressObserver(webService.deployment);
+
+  const serverContainer = webService.deployment.containers[0];
+  if (serverContainer === undefined) {
+    throw new Error("Expected server container on feeds Deployment");
+  }
+  serverContainer.addPort({
+    name: "reader",
+    number: FEEDS_READER_PORT,
+  });
+
+  const readerService = new Service(chart, "feeds-reader-service", {
+    metadata: { name: FEEDS_READER_SERVICE_NAME },
+    selector: webService.deployment,
+    ports: [{ name: "reader", port: FEEDS_READER_PORT }],
+  });
+
+  createCloudflareTunnelBinding(chart, "feeds-cf-tunnel", {
+    serviceName: readerService.name,
+    port: FEEDS_READER_PORT,
+    probePath: "/healthz",
+    publicProbePath: "/healthz",
+  });
+
+  return webService;
 }

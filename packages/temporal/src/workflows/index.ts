@@ -138,6 +138,8 @@ import {
   runTurboCacheCleanWorkflow as runTurboCacheCleanWorkflowImplementation,
 } from "./maintenance.ts";
 import { runFreshRssSyncWorkflow as _runFreshRssSyncWorkflow } from "./homelab/freshrss.ts";
+import { runFeedsRefreshWorkflow as _runFeedsRefreshWorkflow } from "./homelab/feeds-refresh.ts";
+import type { FeedsRefreshSummary } from "#activities/maintenance/feeds/feeds.ts";
 import { runFlagInventorySync as _runFlagInventorySync } from "./flag-inventory-sync.ts";
 import type { FlagInventoryResult } from "#activities/flag-inventory-sync.ts";
 import {
@@ -208,6 +210,9 @@ export async function runTurboCacheCleanWorkflow(): Promise<void> {
 }
 export async function runFreshRssSyncWorkflow(): Promise<void> {
   return _runFreshRssSyncWorkflow();
+}
+export async function runFeedsRefreshWorkflow(): Promise<FeedsRefreshSummary> {
+  return _runFeedsRefreshWorkflow();
 }
 export async function runFlagInventorySync(): Promise<FlagInventoryResult[]> {
   return _runFlagInventorySync();

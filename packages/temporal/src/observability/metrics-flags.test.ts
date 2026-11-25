@@ -153,9 +153,10 @@ test("sets expected gauges only for active flagDeployments and matches observed 
     .map((v) => String(v.labels["deployment"]))
     .toSorted();
 
-  expect(expectedPairs).toHaveLength(18);
+  expect(expectedPairs).toHaveLength(19);
   expect(observedPairs).toEqual(expectedPairs);
   expect(expectedPairs).toContain("golink/prod");
+  expect(expectedPairs).toContain("feeds/prod");
   expect(expectedPairs).toContain("storm/prod");
   expect(expectedPairs).not.toContain("temporal/beta");
   expect(expectedPairs).not.toContain("justin/prod");

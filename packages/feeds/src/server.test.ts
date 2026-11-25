@@ -157,3 +157,111 @@ describe("feeds dual-listener isolation and end-to-end HTTP surfaces", () => {
     );
   });
 });
+
+function baseConsoleEnv(
+  overrides: Record<string, string | undefined>,
+): NodeJS.ProcessEnv {
+  return {
+    FEEDS_DATABASE_PATH: ":memory:",
+    FEEDS_PUBLIC_ORIGIN: "https://feeds.tailnet-1a49.ts.net",
+    FEEDS_TRUSTED_PROXIES: "127.0.0.1",
+    FEEDS_OPERATOR_LOGINS: "shepherdjerred@gmail.com",
+    FEEDS_MACHINE_TOKEN: "machine-secret-token",
+    ...overrides,
+  };
+}
+
+async function bootFlaggedConsoleServer(
+  overrides: Record<string, string | undefined>,
+): Promise<{ server: FeedsServer; getFetchCalls: () => number }> {
+  let fetchCalls = 0;
+  const server = await startServer(0, "127.0.0.1", {
+    env: baseConsoleEnv(overrides),
+    fetchFeed: (url) => {
+      fetchCalls += 1;
+      return Promise.resolve({
+        status: 304,
+        finalUrl: url,
+        headers: new Headers(),
+        body: "",
+      });
+    },
+  });
+  activeServers.push(server);
+  return { server, getFetchCalls: () => fetchCalls };
+}
+
+async function postInternalRefresh(port: number): Promise<Response> {
+  return fetch(`http://127.0.0.1:${String(port)}/internal/refresh`, {
+    method: "POST",
+    headers: { authorization: "Bearer machine-secret-token" },
+  });
+}
+
+describe("feeds-refresh-enabled feature-flag evaluation", () => {
+  test("skips polling when feeds-refresh-enabled resolves to explicit false", async () => {
+    const { server, getFetchCalls } = await bootFlaggedConsoleServer({
+      FEATURE_FLAGS_MODE: "static",
+      FEATURE_FLAGS_STATIC_OVERRIDES: JSON.stringify({
+        "feeds-refresh-enabled": false,
+      }),
+    });
+
+    const res = await postInternalRefresh(server.port);
+    expect(res.status).toBe(200);
+    const summary = PollRunSummarySchema.parse(await res.json());
+    expect(summary.skippedByFlag).toBe(true);
+    expect(getFetchCalls()).toBe(0);
+  });
+
+  test("polls all catalog feeds when feeds-refresh-enabled resolves to true", async () => {
+    const { server, getFetchCalls } = await bootFlaggedConsoleServer({
+      FEATURE_FLAGS_MODE: "static",
+      FEATURE_FLAGS_STATIC_OVERRIDES: JSON.stringify({
+        "feeds-refresh-enabled": true,
+      }),
+    });
+
+    const res = await postInternalRefresh(server.port);
+    expect(res.status).toBe(200);
+    const summary = PollRunSummarySchema.parse(await res.json());
+    expect(summary.skippedByFlag).toBe(false);
+    expect(summary.notModified).toBe(65);
+    expect(getFetchCalls()).toBe(65);
+  });
+
+  test("falls back to default true when the flags service is unreachable", async () => {
+    const { server, getFetchCalls } = await bootFlaggedConsoleServer({
+      FEATURE_FLAGS_MODE: "flags",
+      FLAGS_URL: "http://127.0.0.1:1",
+      FLAGS_DEPLOYMENT: "feeds/prod",
+    });
+
+    const res = await postInternalRefresh(server.port);
+    expect(res.status).toBe(200);
+    const summary = PollRunSummarySchema.parse(await res.json());
+    expect(summary.skippedByFlag).toBe(false);
+    expect(getFetchCalls()).toBe(65);
+  });
+
+  test("fails loudly when feeds-refresh-enabled is absent from static inventory or overrides are invalid", async () => {
+    await expect(
+      startServer(0, "127.0.0.1", {
+        env: baseConsoleEnv({
+          FEATURE_FLAGS_MODE: "static",
+          FEATURE_FLAGS_STATIC_OVERRIDES: JSON.stringify({
+            "feeds-refresh-enabled": { nested: true },
+          }),
+        }),
+      }),
+    ).rejects.toThrow();
+
+    const { server } = await bootFlaggedConsoleServer({
+      FEATURE_FLAGS_MODE: "static",
+      FEATURE_FLAGS_STATIC_OVERRIDES: "{}",
+    });
+
+    const res = await postInternalRefresh(server.port);
+    expect(res.status).toBe(500);
+  });
+});

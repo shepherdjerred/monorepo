@@ -139,7 +139,7 @@ function buildFakeFlagsService() {
 }
 
 describe("Flags inventory reconciler activity", () => {
-  test("retires unused keys, creates missing keys, updates metrics for 18 deployments, and posts drift alerts", async () => {
+  test("retires unused keys, creates missing keys, updates metrics for 19 deployments, and posts drift alerts", async () => {
     const fake = buildFakeFlagsService();
     const registry = new Registry();
     const metrics = createFlagInventoryMetrics(registry);
@@ -159,7 +159,7 @@ describe("Flags inventory reconciler activity", () => {
       now: () => fixedNow,
     });
 
-    expect(results).toHaveLength(18);
+    expect(results).toHaveLength(19);
     expect(
       fake.authHeaders.every((header) => header === "Bearer machine-secret"),
     ).toBe(true);
@@ -188,7 +188,7 @@ describe("Flags inventory reconciler activity", () => {
       "dares_enabled: expected default false, got true",
     ]);
 
-    expect(postedAlerts).toHaveLength(18);
+    expect(postedAlerts).toHaveLength(19);
     const scoutProdAlert = postedAlerts.find(
       (alert) => alert.labels["deployment"] === "scout/prod",
     );

@@ -57,6 +57,11 @@
       "service": "chartmuseum"
     },
     {
+      "hostname": "feeds.sjer.red",
+      "namespace": "feeds",
+      "service": "feeds-reader-service"
+    },
+    {
       "hostname": "freshrss.sjer.red",
       "namespace": "freshrss",
       "service": "freshrss-service"
@@ -261,6 +266,11 @@
       "namespace": "delivery",
       "exposure": "ingress",
       "tags": ["tag:delivery"]
+    },
+    {
+      "host": "feeds",
+      "namespace": "feeds",
+      "exposure": "ingress"
     },
     {
       "host": "flags",

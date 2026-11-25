@@ -628,5 +628,11 @@
     "name": "mail-data",
     "backup": "enabled",
     "reason": "Outbound mail broker SQLite WAL outbox and delivery attempt ledger"
+  },
+  {
+    "namespace": "feeds",
+    "name": "feeds-data",
+    "backup": "enabled",
+    "reason": "Feeds SQLite database, user subscriptions, and read/starred entry state"
   }
 ]

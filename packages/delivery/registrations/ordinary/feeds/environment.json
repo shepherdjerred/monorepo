@@ -1,0 +1,10 @@
+{
+  "id": "feeds/prod",
+  "serviceId": "feeds",
+  "name": "prod",
+  "application": "feeds",
+  "pipelineRevisionId": "feeds/prod/1",
+  "configurationRevision": "feeds/prod/1",
+  "configuration": {},
+  "automatic": true
+}
