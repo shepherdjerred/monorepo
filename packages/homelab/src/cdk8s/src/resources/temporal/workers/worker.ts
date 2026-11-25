@@ -1,6 +1,7 @@
 import { temporalMetricsAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/telemetry.ts";
 import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/address.ts";
-import type { Chart } from "cdk8s";
+import { Size, type Chart } from "cdk8s";
+import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-sata-volume.ts";
 import { codexApiKeyEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import {
   ConfigMap,
@@ -229,6 +230,58 @@ export function createTemporalWorkerDeployment(
     freshRssCredential,
     { items: { password: { path: "password" } } },
   );
+  const ddnsApiTokenItem = onePasswordSecret(
+    chart,
+    "temporal-ddns-api-token-1p",
+    "nhyb6lnjpvjsau2gkmb7n42oeq",
+    { name: "temporal-ddns-api-token" },
+  );
+  const ddnsApiTokenSecret = Secret.fromSecretName(
+    chart,
+    "temporal-ddns-api-token-secret",
+    ddnsApiTokenItem.name,
+  );
+  const ddnsApiTokenVolume = Volume.fromSecret(
+    chart,
+    "temporal-ddns-api-token-volume",
+    ddnsApiTokenSecret,
+    {
+      name: "ddns-api-token",
+      items: { api_token: { path: "api-token" } },
+      defaultMode: 0o400,
+    },
+  );
+  const gitBackupTokenItem = onePasswordSecret(
+    chart,
+    "temporal-git-backup-github-token-1p",
+    "zshiow4egtiuec5n7stcskyxmm",
+    { name: "temporal-git-backup-github-token" },
+  );
+  const gitBackupTokenSecret = Secret.fromSecretName(
+    chart,
+    "temporal-git-backup-github-token-secret",
+    gitBackupTokenItem.name,
+  );
+  const gitBackupTokenVolume = Volume.fromSecret(
+    chart,
+    "temporal-git-backup-github-token-volume",
+    gitBackupTokenSecret,
+    {
+      name: "git-backup-github-token",
+      items: { password: { path: "password" } },
+      defaultMode: 0o400,
+    },
+  );
+  const gitMirrorCachePvc = new ZfsSataVolume(
+    chart,
+    "temporal-git-mirror-cache",
+    { storage: Size.gibibytes(128) },
+  );
+  const gitMirrorCacheVolume = Volume.fromPersistentVolumeClaim(
+    chart,
+    "temporal-git-mirror-cache-volume",
+    gitMirrorCachePvc.claim,
+  );
   const agentDeployment = createTemporalAgentWorker(chart, {
     serviceAccount: agentServiceAccount,
     envVariables: {
@@ -369,8 +422,11 @@ export function createTemporalWorkerDeployment(
       bugsinkSecret,
     ),
     talosConfigVolume,
+    ddnsApiTokenVolume,
     freshRssManifestVolume,
     freshRssCredentialVolume,
+    gitBackupTokenVolume,
+    gitMirrorCacheVolume,
     billingSecret: openAiUsageMonitorSecret,
   });
 

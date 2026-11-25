@@ -198,8 +198,8 @@ export function ScheduleMatrix(p: {
             <span className="eng-tab-count">{visibleSchedules.length}</span>
           </h2>
           <p className="rep-panel-sub">
-            13 scheduled Temporal report &amp; Ops digest streams across 30
-            Pacific days
+            {schedules.length} scheduled Temporal report &amp; Ops digest
+            streams across 30 Pacific days
           </p>
         </div>
 

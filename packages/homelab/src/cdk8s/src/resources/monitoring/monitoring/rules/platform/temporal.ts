@@ -7,6 +7,7 @@ import {
   buildRetainedWorkflowWorkerHealthRules,
   buildTemporalDomainWorkerHealthRules,
 } from "./temporal-worker-health.ts";
+import { getTemporalOpsScheduleRuleGroups } from "./temporal-ops-schedules.ts";
 
 type PrometheusRule = NonNullable<PrometheusRuleSpecGroups["rules"]>[number];
 
@@ -518,5 +519,6 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
         },
       ],
     },
+    ...getTemporalOpsScheduleRuleGroups(),
   ];
 }

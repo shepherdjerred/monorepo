@@ -541,6 +541,11 @@
       "env": "S3_BUCKET_NAME"
     },
     {
+      "bucket": "git-backups",
+      "namespace": "temporal",
+      "env": "GIT_BACKUP_S3_BUCKET"
+    },
+    {
       "bucket": "glitter-discord-corpus",
       "namespace": "temporal",
       "env": "GLITTER_CORPUS_S3_BUCKET"

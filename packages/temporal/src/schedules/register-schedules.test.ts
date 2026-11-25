@@ -592,6 +592,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "generateDependencySummary",
   "runTasknotesCanary",
   "runDnsAudit",
+  "runDdnsSyncWorkflow",
+  "runGitBackupWorkflow",
   "runHomelabAuditWorkflow",
   "agentTaskWorkflow",
   "runScoutDataDragonVersionCheck",

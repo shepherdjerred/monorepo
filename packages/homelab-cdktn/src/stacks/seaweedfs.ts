@@ -268,6 +268,15 @@ export class SeaweedfsStack extends HomelabStack {
     // copy. No expiry.
     this.consumed({ env: "RWF_ARCHIVE_S3_BUCKET" }, { protected: true });
 
+    // Private. Daily Git repository zstd bundles, GitHub issue archives, and
+    // latest manifests written by Temporal's git-backup-daily schedule and
+    // replicated to Backblaze B2 by filer.backup. Retention (keep = 10 per
+    // repository) is owned by the activity; the bucket itself is protected.
+    this.consumed(
+      { env: "GIT_BACKUP_S3_BUCKET", namespace: "temporal" },
+      { protected: true },
+    );
+
     // Public artifact bucket, served at https://public.sjer.red via Caddy
     // s3proxy. PR screenshots live under the `pr/assets/<number>/` prefix
     // (365-day TTL, below); the bucket root is seeded with a landing + 404

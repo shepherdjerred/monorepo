@@ -5,7 +5,7 @@ sidebar:
   order: 4
 ---
 
-Temporal sends eleven source-defined scheduled reports plus report-only agent task results.
+Temporal sends twelve source-defined scheduled reports plus report-only agent task results.
 Schedule definitions own timing, while shared report contracts govern routing, quiet suppression, remediation, and Hub archival.
 
 Sources:
@@ -25,7 +25,7 @@ Report delivery resolves its sender and recipient per `reportType` through [`mai
 | Report families                                                                           | From (`Display Name <address>`)       | To                 |
 | ----------------------------------------------------------------------------------------- | ------------------------------------- | ------------------ |
 | `dependency-summary`                                                                      | `Repo Dependencies <deps@sjer.red>`   | `deps@sjer.red`    |
-| `homelab-audit`, `tasknotes-canary`                                                       | `Homelab Audit <ops@sjer.red>`        | `ops@sjer.red`     |
+| `homelab-audit`, `git-backup`, `tasknotes-canary`                                         | `Homelab Audit <ops@sjer.red>`        | `ops@sjer.red`     |
 | `scout-data-dragon`, `scout-lane-priors`, `scout-queue-windows`, `scout-season-refresh`   | `Scout Automation <scout@sjer.red>`   | `scout@sjer.red`   |
 | `main-vuln-scan`, `link-rot-scan`, `storm-promotion`, `agent-task`, and unmapped families | `Temporal Reports <reports@sjer.red>` | `reports@sjer.red` |
 
@@ -39,6 +39,7 @@ Subjects use `<Topic>: <plain outcome>` grammar without camelCase identifiers or
 
 | Schedule                           | Cadence & policy                | Mailbox            | Automation       | Subjects (clear / changed or action)                                                |
 | ---------------------------------- | ------------------------------- | ------------------ | ---------------- | ----------------------------------------------------------------------------------- |
+| `git-backup-daily`                 | daily 02:00 (`daily-changed`)   | `ops@sjer.red`     | Diagnostic       | Git backup: All repositories backed up · Git backup: Snapshots updated              |
 | `homelab-audit-daily`              | daily 06:30 (`daily-changed`)   | `ops@sjer.red`     | Diagnostic       | Homelab check: All clear · Homelab check: Issues need review                        |
 | `scout-queue-windows-daily`        | daily 06:45 (`daily-changed`)   | `scout@sjer.red`   | LLM review PR    | Scout queues: Windows up to date · Scout queues: Warnings need review               |
 | `the-storm-promotion-daily`        | daily 08:00 (`daily-changed`)   | `reports@sjer.red` | Diagnostic       | The Storm promotion summary: All clear · The Storm promotion summary: Action needed |
@@ -64,12 +65,12 @@ Sources:
 [`ops-digest-service.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/alert-dashboard/src/application/ops-digest-service.ts),
 [`managed-flag-inventory.json`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feature-flags/src/managed-flag-inventory.json).
 
-| Policy or flag                                | Owner             | Behavior                                                                                                                                                                                      |
-| --------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cadence`                                     | Temporal reports  | Sends report email through Mail on every scheduled run.                                                                                                                                       |
-| `daily-changed`                               | Temporal + Hub    | Suppresses unchanged clear runs (`deliveryStatus: "skipped"`) and records full run state in Hub.                                                                                              |
-| `temporal-daily-report-notifications-enabled` | `temporal`        | Enables `daily-changed` suppression for daily Temporal report schedules (`homelab-audit-daily`, `scout-queue-windows-daily`, `the-storm-promotion-daily`, `scout-data-dragon-version-check`). |
-| `alert-dashboard-daily-digest-quiet-clear`    | `alert-dashboard` | Skips Mail delivery (`skipReason: "unchanged-clear"`) when a daily Ops digest and its prior daily digest are both clear.                                                                      |
+| Policy or flag                                | Owner             | Behavior                                                                                                                                                                                                          |
+| --------------------------------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cadence`                                     | Temporal reports  | Sends report email through Mail on every scheduled run.                                                                                                                                                           |
+| `daily-changed`                               | Temporal + Hub    | Suppresses unchanged clear runs (`deliveryStatus: "skipped"`) and records full run state in Hub.                                                                                                                  |
+| `temporal-daily-report-notifications-enabled` | `temporal`        | Enables `daily-changed` suppression for daily Temporal report schedules (`homelab-audit-daily`, `git-backup-daily`, `scout-queue-windows-daily`, `the-storm-promotion-daily`, `scout-data-dragon-version-check`). |
+| `alert-dashboard-daily-digest-quiet-clear`    | `alert-dashboard` | Skips Mail delivery (`skipReason: "unchanged-clear"`) when a daily Ops digest and its prior daily digest are both clear.                                                                                          |
 
 ## Automated remediation
 
@@ -91,7 +92,7 @@ Sources: [`tool-links.ts`](https://github.com/shepherdjerred/monorepo/blob/main/
 | Surface                          | Path or label                       | Contract                                                                                                          |
 | -------------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Ingest endpoint                  | `POST /internal/v1/reports/runs`    | Accepts `ReportRunIngestBatch` (`OPS_INGEST_TOKEN`), upserts `ReportRun` rows, and publishes SSE `"reports"`.     |
-| Hub overview                     | `/reports`                          | Lists 13 recurring report and digest streams, 30-day Pacific strips, KPIs, and the unified outbound mail feed.    |
+| Hub overview                     | `/reports`                          | Lists 14 recurring report and digest streams, 30-day Pacific strips, KPIs, and the unified outbound mail feed.    |
 | Report deep link (`Open in Hub`) | `/reports/runs/:id`                 | Renders remediation metadata, state-filtered findings, all checks, raw evidence commands/excerpts, and HTML mail. |
 | Digest deep link (`Open in Hub`) | `/reports/digests/:kind/:periodKey` | Renders archived or live-preview `DigestReport` panels alongside the exact HTML and plain-text digest email.      |
 | Incident mail inspector          | `/reports/mail/:id`                 | Renders `EmailOutbox` delivery state, linked `/alerts/:id` occurrences, and the stored incident email.            |

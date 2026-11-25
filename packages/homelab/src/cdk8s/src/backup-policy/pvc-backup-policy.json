@@ -594,6 +594,12 @@
     "reason": "Temporal PostgreSQL database"
   },
   {
+    "namespace": "temporal",
+    "name": "temporal-git-mirror-cache",
+    "backup": "disabled",
+    "reason": "Disposable bare Git mirror working cache for git-backup-daily; durable repository bundles and issues snapshots live in SeaweedFS bucket git-backups and replicate to Backblaze B2 via filer.backup"
+  },
+  {
     "namespace": "tracker",
     "name": "pgdata-tracker-postgresql-0",
     "backup": "enabled",

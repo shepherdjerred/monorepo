@@ -25,8 +25,8 @@ describe("report schedule registry", () => {
     }
   });
 
-  test("aligns with all 11 TEMPORAL_REPORT_SCHEDULES in ops-model", () => {
-    expect(TEMPORAL_REPORT_SCHEDULES).toHaveLength(11);
+  test("aligns with all 12 TEMPORAL_REPORT_SCHEDULES in ops-model", () => {
+    expect(TEMPORAL_REPORT_SCHEDULES).toHaveLength(12);
     expect(REPORT_SCHEDULE_REGISTRY).toHaveLength(
       TEMPORAL_REPORT_SCHEDULES.length,
     );
@@ -44,8 +44,9 @@ describe("report schedule registry", () => {
   });
 
   test("anchors receipt enforcement to a rollout the schedule could meet", () => {
-    // Three activations: the original receipt-capable worker, the weekly
-    // scanner schedules rollout, and the Hub catalog alignment rollout.
+    // Four activations: the original receipt-capable worker, the weekly
+    // scanner schedules rollout, the Hub catalog alignment rollout, and
+    // git-backup-daily rollout.
     expect(
       new Set(
         REPORT_SCHEDULE_REGISTRY.map(
@@ -57,6 +58,7 @@ describe("report schedule registry", () => {
         "2026-08-11T23:52:18.000Z",
         "2026-09-01T00:00:00.000Z",
         "2026-11-23T00:00:00.000Z",
+        "2026-11-25T00:00:00.000Z",
       ]),
     );
   });

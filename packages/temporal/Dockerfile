@@ -235,7 +235,7 @@ ARG POSTGRESQL_BINARIES_VERSION=18.7.0
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl ffmpeg git iptables libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libxml2 procps socat tini tzdata util-linux xz-utils; \
+    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl ffmpeg git git-lfs iptables libgssapi-krb5-2 libicu76 libssl3t64 libstdc++6 libxml2 procps socat tini tzdata util-linux xz-utils; \
     rm -rf /var/lib/apt/lists/* /var/log/apt/* /var/log/dpkg.log /var/log/alternatives.log /var/cache/ldconfig/aux-cache
 
 # Use the same upstream 7zz artifact as local and CI tests. Debian's 7zip
@@ -607,6 +607,7 @@ RUN ln -s /opt/media-regex/RegexOracle /usr/local/bin/RegexOracle
 # runs here because it writes into the source tree.
 RUN toolkit --version \
     && bun packages/temporal/scripts/homelab/ensure-ha-schema.ts \
+    && git-lfs --version >/dev/null \
     && ffprobe -version >/dev/null \
     && ffmpeg -version >/dev/null \
     && 7zz i >/dev/null \

@@ -5268,6 +5268,11 @@
     },
     {
       "dependent": "temporal/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "temporal/prod",
       "prerequisite": "prometheus/prod",
       "rule": "any-accepted"
     },

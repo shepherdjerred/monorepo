@@ -62,6 +62,8 @@ import { ciMaintenanceActivities } from "./maintenance/ci-maintenance.ts";
 import { ciExtendedVerifyActivities } from "./maintenance/ci-extended-verify.ts";
 import { trackerAttachmentActivities } from "./maintenance/tracker-attachments.ts";
 import { codeReviewActivities } from "./ci/code-review.ts";
+import { ddnsActivities } from "./infra/ddns.ts";
+import { gitBackupActivities } from "./repo/git-backup.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -81,6 +83,7 @@ export const reportActivities = {
 };
 
 export const infraActivities = {
+  ...ddnsActivities,
   ...trackerAttachmentActivities,
   ...stormCompanionActivities,
   ...woodpeckerRetentionActivities,
@@ -111,6 +114,7 @@ export const opsWorkerActivities = {
 };
 
 export const repoActivities = {
+  ...gitBackupActivities,
   ...ciMaintenanceActivities,
   ...ciExtendedVerifyActivities,
   ...fetcherActivities,

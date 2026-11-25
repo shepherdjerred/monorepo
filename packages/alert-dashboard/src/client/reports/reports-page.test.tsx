@@ -117,7 +117,7 @@ describe("Reports URL parsing and formatting helpers", () => {
 });
 
 describe("ReportsPage and deep-dive inspector rendering", () => {
-  it("renders the 5 KPI cards, 13-stream schedule matrix, remediation badges, and filtered feed", async () => {
+  it("renders the 5 KPI cards, 14-stream schedule matrix, remediation badges, and filtered feed", async () => {
     const { fixture } = await seededFixture();
     const overview = await fixture.reports.overview();
     const feed = await fixture.reports.feed({});
@@ -144,7 +144,7 @@ describe("ReportsPage and deep-dive inspector rendering", () => {
     expect(html).toContain("Auto-merge PR");
     expect(html).toContain("LLM Review PR");
     expect(html).toContain("Quiet in Hub");
-    expect(html).toContain("13 / 13");
+    expect(html).toContain("14 / 14");
     expect(html).toContain("0 pending · 0 failed");
   });
 
