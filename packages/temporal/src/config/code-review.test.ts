@@ -21,7 +21,7 @@ describe("code-review dynamic configuration", () => {
     });
   });
 
-  it("preserves explicit false kill-switch from Flipt", async () => {
+  it("preserves explicit false kill-switch from Flags", async () => {
     source.get.mockImplementation((names) =>
       Promise.resolve(
         names.flag === "temporal-code-review-enabled"
@@ -93,7 +93,7 @@ describe("code-review dynamic configuration", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {
       // Suppress expected warning output during outage fallback test.
     });
-    source.get.mockRejectedValue(new Error("flipt unavailable"));
+    source.get.mockRejectedValue(new Error("flags unavailable"));
     try {
       expect(await codeReviewConfig()).toEqual({
         enabled: true,

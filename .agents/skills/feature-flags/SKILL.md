@@ -31,7 +31,7 @@ Before adding a key:
    and tracked follow-up with enablement criteria. Missing declared keys are
    created in live Flags deployments automatically; existing targeting needs an
    explicit revision-checked rollout change via `toolkit flags` or
-   `bun run check-flipt-flag-inventory`.
+   `bun run check-flag-inventory`.
 5. Test absence, explicit false/zero, invalid values, source failures, and
    provenance.
 
@@ -52,5 +52,5 @@ NetworkPolicy ports. Evaluation is credentialless and rejects `Authorization`
 headers. Management writes require verified Tailscale operator identity or the
 brokered `FLAGS_MACHINE_TOKEN` (`flags-auth` in 1Password, resolved via
 `toolkit flags --machine` or `toolkit run --env FLAGS_MACHINE_TOKEN`); follow
-the [flag inventory operator how-to](../../packages/docs/wiki/src/content/docs/how-to/check-flipt-flag-inventory.md)
+the [flag inventory operator how-to](../../packages/docs/wiki/src/content/docs/how-to/check-flag-inventory.md)
 and never put management credentials in consumer configuration.

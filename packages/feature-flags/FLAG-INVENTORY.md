@@ -120,7 +120,7 @@ The inventory observer publishes one-hot live configuration state and scoped
 exception metadata across active Flags deployments. Consumer metrics separately
 report evaluations, readiness, snapshot age, and configured deployment identity.
 Configured ON is not live acceptance. The
-[operator how-to](../docs/wiki/src/content/docs/how-to/check-flipt-flag-inventory.md)
+[operator how-to](../docs/wiki/src/content/docs/how-to/check-flag-inventory.md)
 describes `toolkit flags`, the browser UI, and explicit revision-checked changes
 to existing flags. Scheduled reconciliation creates missing declarations via
 `create-missing` and never overwrites targeting.

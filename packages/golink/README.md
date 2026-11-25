@@ -19,7 +19,7 @@ Every `GET /:short` and `GET /:short/*` request evaluates five deterministic tie
    - `commit/<sha>` -> `https://github.com/shepherdjerred/monorepo/commit/<sha>`
    - `ai/<num>` | `ai-<num>`, `sj/<num>` | `sj-<num>`, `fm/<num>` | `fm-<num>` -> Tracker issues and forum threads.
 
-Tiers 1–4 forward any request subpath and merge query parameters onto the destination URL. Tiers 2–5 are gated together by the `golink-dynamic-aliases-enabled` Flipt flag.
+Tiers 1–4 forward any request subpath and merge query parameters onto the destination URL. Tiers 2–5 are gated together by the `golink-dynamic-aliases-enabled` feature flag.
 
 ## HTTP Surface
 

@@ -8,7 +8,7 @@ import {
 import {
   bugsinkFacetShape,
   cloudflareFacetShape,
-  fliptFacetShape,
+  flagsFacetShape,
   gitHubFacetShape,
   gitHubRateLimitBucketShape,
   golinkFacetShape,
@@ -22,7 +22,7 @@ export const FACET_KEYS = [
   "github",
   "posthog",
   "bugsink",
-  "flipt",
+  "flags",
   "tracker",
   "cloudflare",
   "tailscale",
@@ -188,18 +188,18 @@ export type BugsinkFacet = z.infer<typeof BugsinkFacetSchema>;
 export type BugsinkProjectSummary = BugsinkFacet["projects"][number];
 export type BugsinkTopIssue = BugsinkFacet["topIssues"][number];
 
-/** Flipt managed inventory, drift status, and default-off exceptions. */
-export const FliptNamespaceStatusSchema = z.enum([
+/** Flags managed inventory, drift status, and default-off exceptions. */
+export const FlagsNamespaceStatusSchema = z.enum([
   "ok",
   "drift",
   "missing",
   "unknown",
 ]);
-export type FliptNamespaceStatus = z.infer<typeof FliptNamespaceStatusSchema>;
-export const FliptFacetSchema = z.object(fliptFacetShape);
-export type FliptFacet = z.infer<typeof FliptFacetSchema>;
-export type FliptNamespaceSummary = FliptFacet["namespaces"][number];
-export type FliptFlagSummary = FliptFacet["flags"][number];
+export type FlagsNamespaceStatus = z.infer<typeof FlagsNamespaceStatusSchema>;
+export const FlagsFacetSchema = z.object(flagsFacetShape);
+export type FlagsFacet = z.infer<typeof FlagsFacetSchema>;
+export type FlagsNamespaceSummary = FlagsFacet["namespaces"][number];
+export type FlagsFlagSummary = FlagsFacet["flags"][number];
 
 /** Tracker open work, triage queue, active Forum notices, and projects. */
 export const TrackerFacetSchema = z.object(trackerFacetShape);
@@ -277,7 +277,7 @@ export const FACET_SCHEMAS = {
   github: GitHubFacetSchema,
   posthog: PostHogFacetSchema,
   bugsink: BugsinkFacetSchema,
-  flipt: FliptFacetSchema,
+  flags: FlagsFacetSchema,
   tracker: TrackerFacetSchema,
   cloudflare: CloudflareFacetSchema,
   tailscale: TailscaleFacetSchema,
@@ -297,7 +297,7 @@ export const OpsFacetsSchema = z.object({
   github: GitHubFacetSchema.optional(),
   posthog: PostHogFacetSchema.optional(),
   bugsink: BugsinkFacetSchema.optional(),
-  flipt: FliptFacetSchema.optional(),
+  flags: FlagsFacetSchema.optional(),
   tracker: TrackerFacetSchema.optional(),
   cloudflare: CloudflareFacetSchema.optional(),
   tailscale: TailscaleFacetSchema.optional(),

@@ -23,7 +23,7 @@ that close over the application's client and registry; the library owns neither.
 `createFlagMetricsRecorder` adapts those metrics. Evaluation values are bounded
 to `true`, `false`, `non_boolean`, and `error`. Variant values and targeting
 identifiers are never labels. `feature_flag_provider_info` identifies the
-configured deployment's catalog and stage and is cleared at shutdown.
+configured deployment and is cleared at shutdown.
 
 The inventory schema validates exception metadata and rejects obsolete
 exceptions. `defaultOnPolicyViolations` enforces coverage for every environment
@@ -33,7 +33,7 @@ order and prove constant outcomes conservatively.
 
 Operator management (`7360`, via `https://flags.tailnet-1a49.ts.net` or
 `toolkit flags`) is isolated from credentialless evaluation (`7361`). The
-[inventory how-to](../docs/wiki/src/content/docs/how-to/check-flipt-flag-inventory.md)
+[inventory how-to](../docs/wiki/src/content/docs/how-to/check-flag-inventory.md)
 covers the operator UI, `toolkit flags`, missing-key reconciliation, and
 revision-checked declared rollout writes.
 

@@ -28,10 +28,9 @@ import {
  *   designed degraded path — refuse to arm voice, log loudly, count an error —
  *   which is a behavior change, not a rewiring. It deserves its own change.
  * - `VOICE_CAPTURE_ENABLED` decides whether human audio is persisted to S3.
- *   Flipt runs without authentication, so moving it would let any tailnet
- *   device turn on recording. That is the sharpest instance of the accepted
- *   auth trade-off and should be a deliberate decision, not a side effect of a
- *   migration commit.
+ *   Capability grants that persist human audio stay in reviewed Git config
+ *   rather than runtime Flags, so turning on recording remains a deliberate
+ *   reviewed decision, not a runtime toggle.
  *
  * Encoder settings are also absent, and would be misleading if present: ffmpeg
  * arguments are fixed for the process's lifetime, so flipping one changes

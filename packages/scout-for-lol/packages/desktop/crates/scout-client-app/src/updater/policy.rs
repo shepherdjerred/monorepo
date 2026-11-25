@@ -22,7 +22,7 @@ pub fn install_allowed(phase: &GameflowPhase) -> bool {
 
 /// The updater's tunables. They are product behaviour, so they live here as
 /// typed values rather than environment variables. The client cannot reach the
-/// backend's Flipt, so a change is a release.
+/// backend's Flags service, so a change is a release.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UpdateConfig {
     /// How long after start the first check waits, so it never competes with

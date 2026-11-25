@@ -27,7 +27,7 @@ vi.mock("#src/configuration/flags.ts", async (original) => ({
   ...(await original()),
   isFeatureHardDisabled: () => io.production,
 }));
-// Production's Flipt answer while the Scout Client is off for everyone.
+// Production's Flags answer while the Scout Client is off for everyone.
 vi.mock("#src/scout-client/access/policy.ts", async (original) => ({
   ...(await original()),
   isScoutClientLive: async () => !io.production,

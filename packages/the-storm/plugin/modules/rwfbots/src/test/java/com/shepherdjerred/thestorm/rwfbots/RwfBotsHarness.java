@@ -157,7 +157,7 @@ public final class RwfBotsHarness implements AutoCloseable {
                       public CompletableFuture<Decision> evaluate(Context context) {
                         learningEvaluations.incrementAndGet();
                         return CompletableFuture.completedFuture(
-                            new Decision(learningFlag.get(), Source.FLIPT));
+                            new Decision(learningFlag.get(), Source.FLAGS));
                       }
 
                       @Override

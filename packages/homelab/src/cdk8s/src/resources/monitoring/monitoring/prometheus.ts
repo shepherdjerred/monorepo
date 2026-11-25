@@ -24,7 +24,7 @@ import { getStreambotRuleGroups } from "./rules/streambot.ts";
 import { getMediaRuleGroups } from "./rules/media/automation.ts";
 import { getDiscordPlaysGoalRuleGroups } from "./rules/discord-plays-goal.ts";
 import { getAlertDashboardRuleGroups } from "./rules/alert-dashboard.ts";
-import { getFliptRuleGroups } from "./rules/flipt.ts";
+import { getFlagsRuleGroups } from "./rules/flags.ts";
 import { getLlmRuleGroups } from "./rules/llm.ts";
 import { createWoodpeckerMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/woodpecker.ts";
 import { getOpsSnapshotRuleGroups } from "./rules/ops-snapshot.ts";
@@ -239,7 +239,7 @@ export function createPrometheusMonitoring(chart: Chart) {
       labels: { release: "prometheus" },
     },
     spec: {
-      groups: getFliptRuleGroups(),
+      groups: getFlagsRuleGroups(),
     },
   });
 

@@ -96,8 +96,6 @@ test("Storm analytics uses the shared direct capture bootstrap and production st
   expect(env["POSTHOG_PROJECT_TOKEN"] === analytics.projectToken).toBe(true);
   expect(env["FLAGS_URL"]).toBe("http://flags.flags.svc.cluster.local:7361");
   expect(env["FLAGS_DEPLOYMENT"]).toBe("minecraft/tsmc");
-  expect(env["FLIPT_URL"]).toBeUndefined();
-  expect(env["FLIPT_ENVIRONMENT"]).toBeUndefined();
 });
 
 function synthTsmc(): unknown[] {

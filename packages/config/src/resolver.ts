@@ -118,7 +118,7 @@ export function createResolver<D extends Record<string, ConfigKeyDefinition>>(
   }
 
   // A bootstrap key (`sources: ["env"]`) simply never lists the flag layer, so
-  // it cannot wait on a flag client that itself needs FLIPT_URL to exist. And a
+  // it cannot wait on a flag client that itself needs FLAGS_URL to exist. And a
   // key listing "flag" when no flag source is supplied is not an error — that
   // is exactly FEATURE_FLAGS_MODE=disabled, and the key falls through to its
   // remaining layers. Both fall out of the loop below; neither needs a guard.

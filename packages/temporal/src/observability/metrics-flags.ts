@@ -20,15 +20,14 @@ import {
 } from "@shepherdjerred/feature-flags/rollout-state.ts";
 import { register } from "./metrics.ts";
 
-const pairLabels = ["flipt_environment", "flipt_namespace"] as const;
+const pairLabels = ["deployment"] as const;
 const flagLabels = [...pairLabels, "flag"] as const;
 const exceptionLabels = [...flagLabels, "issue"] as const;
 
 function recordScopedException(
   entry: DefaultOffException,
   flagIdentity: {
-    flipt_environment: string;
-    flipt_namespace: string;
+    deployment: string;
     flag: string;
   },
   gauges: {
@@ -79,7 +78,7 @@ export function createFlagInventoryMetrics(
   });
   const expected = new Gauge({
     name: "feature_flag_inventory_expected",
-    help: "Expected Flipt environment and namespace observations",
+    help: "Expected Flags deployment inventory observations",
     labelNames: pairLabels,
     registers: [registry],
   });
@@ -89,8 +88,7 @@ export function createFlagInventoryMetrics(
   for (const deployment of deployments) {
     expected.set(
       {
-        flipt_environment: deployment.fliptEnvironment,
-        flipt_namespace: deployment.catalog,
+        deployment: deployment.id,
       },
       1,
     );
@@ -108,7 +106,7 @@ export function createFlagInventoryMetrics(
       }
       const declared = materializeManagedNamespaceEnvironment(
         inventory,
-        deployment.fliptEnvironment,
+        deployment.stage,
         deployment.catalog,
       );
       const live = new Map(liveFlags.map((flag) => [flag.key, flag]));
@@ -122,8 +120,7 @@ export function createFlagInventoryMetrics(
         throw new TypeError("Invalid flag observation timestamp");
       }
       const labels = {
-        flipt_environment: deployment.fliptEnvironment,
-        flipt_namespace: deployment.catalog,
+        deployment: deployment.id,
       };
       const key = deployment.id;
       for (const old of previous.get(key) ?? []) {
@@ -148,7 +145,7 @@ export function createFlagInventoryMetrics(
           );
         }
         const scopedExceptions = (item.flag.defaultOffExceptions ?? []).filter(
-          (entry) => entry.environment === deployment.fliptEnvironment,
+          (entry) => entry.environment === deployment.stage,
         );
         for (const entry of scopedExceptions) {
           exceptions.push(

@@ -1,0 +1,78 @@
+import { describe, expect, test } from "vitest";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { runFlagInventorySync } from "./flag-inventory-sync.ts";
+import { TestWorkflowEnvironment } from "@temporalio/testing";
+import { runWorkflowWithActivityWorker } from "./test-support.ts";
+
+describe("runFlagInventorySync", () => {
+  test("routes the check to the repo automation queue", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const observed: unknown[] = [];
+    const activities = {
+      checkFlagInventory: async () => {
+        const result = [
+          {
+            deployment: "scout/beta",
+            namespace: "scout",
+            environment: "beta",
+            revision: 1,
+            missingFlags: [],
+            extraFlags: [],
+            contractMismatches: [],
+            createdFlags: [],
+            retiredFlags: [],
+            observedAt: "2026-08-28T15:00:00.000Z",
+          },
+        ];
+        observed.push(result);
+        return result;
+      },
+    };
+
+    const execution = () =>
+      environment.client.workflow.execute(runFlagInventorySync, {
+        args: [],
+        taskQueue: TASK_QUEUES.WORKFLOWS,
+        workflowId: `test-flag-inventory-sync-${crypto.randomUUID()}`,
+      });
+    try {
+      await runWorkflowWithActivityWorker(environment, {
+        activityTaskQueue: TASK_QUEUES.REPO_AUTOMATION,
+        workflowPath: new URL("index.ts", import.meta.url).pathname,
+        activities,
+        execute: execution,
+      });
+      expect(observed).toHaveLength(1);
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+
+  test("propagates an inventory check failure", async () => {
+    const environment = await TestWorkflowEnvironment.createTimeSkipping();
+    const activities = {
+      checkFlagInventory: async () => {
+        throw new Error("Flags snapshot unavailable");
+      },
+    };
+
+    const execution = () =>
+      environment.client.workflow.execute(runFlagInventorySync, {
+        args: [],
+        taskQueue: TASK_QUEUES.WORKFLOWS,
+        workflowId: `test-flag-inventory-sync-failure-${crypto.randomUUID()}`,
+      });
+    try {
+      await expect(
+        runWorkflowWithActivityWorker(environment, {
+          activityTaskQueue: TASK_QUEUES.REPO_AUTOMATION,
+          workflowPath: new URL("index.ts", import.meta.url).pathname,
+          activities,
+          execute: execution,
+        }),
+      ).rejects.toThrow("Workflow execution failed");
+    } finally {
+      await environment.teardown();
+    }
+  }, 60_000);
+});

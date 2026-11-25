@@ -105,7 +105,7 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
             // the guild. This is an identity, not a credential.
             //
             // KARMA_ADMIN_USER_ID and KARMA_EMOJI are now the ENV LAYER beneath
-            // their flags: a Flipt value for `karma-admin-user-id` or `karma-emoji`
+            // their flags: a Flags value for `karma-admin-user-id` or `karma-emoji`
             // outranks these, and with no flag defined they still apply. Keeping
             // them is what makes the migration a no-op until someone creates the
             // flag.

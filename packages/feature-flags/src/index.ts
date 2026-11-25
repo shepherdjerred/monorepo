@@ -66,12 +66,7 @@ function observeProviderIdentity(
   if (configuration.mode === "flags") {
     const parsed = parseFlagsDeployment(configuration.deployment);
     metrics?.observeProviderInfo(
-      parsed === undefined
-        ? undefined
-        : {
-            flipt_environment: parsed.stage,
-            flipt_namespace: parsed.catalog,
-          },
+      parsed === undefined ? undefined : { deployment: parsed.id },
     );
     return;
   }

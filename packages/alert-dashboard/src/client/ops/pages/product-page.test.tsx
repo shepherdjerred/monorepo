@@ -177,18 +177,18 @@ describe("ProductPage", () => {
   });
 });
 
-describe("renderProductServiceView (Flipt, Bugsink, Golink, Scout)", () => {
-  it("renders Flipt flags KPIs, rollout StackedMeter, drift StatusMatrix, and inventory DataTable", () => {
-    const flipt = FIXTURE_OPS_FACETS.flipt;
-    expect(flipt).toBeDefined();
+describe("renderProductServiceView (Flags, Bugsink, Golink, Scout)", () => {
+  it("renders Flags KPIs, rollout StackedMeter, drift StatusMatrix, and inventory DataTable", () => {
+    const flags = FIXTURE_OPS_FACETS.flags;
+    expect(flags).toBeDefined();
     const withDrift =
-      flipt === undefined
+      flags === undefined
         ? null
         : {
-            ...flipt,
+            ...flags,
             overdueExceptionsCount: 1,
             namespaces: [
-              ...flipt.namespaces,
+              ...flags.namespaces,
               {
                 namespace: "legacy",
                 name: "Legacy Ops",
@@ -198,7 +198,7 @@ describe("renderProductServiceView (Flipt, Bugsink, Golink, Scout)", () => {
               },
             ],
             flags: [
-              ...flipt.flags,
+              ...flags.flags,
               {
                 namespace: "legacy",
                 key: "legacy-kill-switch",
@@ -214,8 +214,8 @@ describe("renderProductServiceView (Flipt, Bugsink, Golink, Scout)", () => {
     expect(view).not.toBeNull();
     const html = renderWithQueryClient(view ?? <div />, (client) => {
       client.setQueryData(
-        opsKeys.facet("flipt"),
-        facetEnvelope("flipt", withDrift),
+        opsKeys.facet("flags"),
+        facetEnvelope("flags", withDrift),
       );
     });
 

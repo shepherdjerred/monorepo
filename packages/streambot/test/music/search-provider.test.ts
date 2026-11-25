@@ -91,7 +91,7 @@ describe("provider selection", () => {
     expect(seen).toEqual(["3", "4"]);
   });
 
-  test("the code default is the declared Flipt default for production and beta", () => {
+  test("the code default is the declared Flags default for production and beta", () => {
     const flag = managedFlagInventory.flags.find(
       (candidate) => candidate.key === "streambot-music-search-provider",
     );

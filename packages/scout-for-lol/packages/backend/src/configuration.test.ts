@@ -320,7 +320,7 @@ describe("parseVoiceAssistantConfiguration", () => {
     });
   });
 
-  // Activation is the `voice_assistant_enabled` Flipt flag, so a missing
+  // Activation is the `voice_assistant_enabled` feature flag, so a missing
   // credential is a runtime answer ("not configured here"), never a parse or
   // boot failure — a deployment that will not serve voice simply omits it.
   test("a missing credential parses cleanly instead of throwing", () => {

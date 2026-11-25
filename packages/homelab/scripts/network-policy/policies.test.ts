@@ -48,7 +48,7 @@ describe("allow-all detection", () => {
   test("parses the selector shapes kubectl prints", () => {
     const parsed = NetworkPolicySchema.parse({
       apiVersion: "networking.k8s.io/v1",
-      metadata: { name: "enforcement-staging-flipt", namespace: "flipt" },
+      metadata: { name: "enforcement-staging-flags", namespace: "flags" },
       spec: {
         podSelector: {},
         policyTypes: ["Ingress", "Egress"],
@@ -66,7 +66,7 @@ test("namespaces with policies are every namespace with any policy", () => {
       otherPolicy("tracker", "tracker-app-netpol"),
       otherPolicy("media", "plex"),
       otherPolicy("tracker", "tracker-db-netpol"),
-      allowAllPolicy("flipt", "enforcement-staging-flipt"),
+      allowAllPolicy("flags", "enforcement-staging-flags"),
     ]),
-  ).toEqual(["flipt", "media", "tracker"]);
+  ).toEqual(["flags", "media", "tracker"]);
 });

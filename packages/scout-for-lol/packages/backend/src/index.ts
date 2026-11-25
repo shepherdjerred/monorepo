@@ -68,7 +68,7 @@ logger.info("📊 Initializing metrics system");
 logger.info("🖼️  Validating startup assets before starting runtime services");
 // Before the HTTP server and the Discord gateway: guild command registration
 // reads the explore allowlist, and it must see a resolved value. Seeded with
-// the env-derived values, so an unreachable Flipt changes nothing.
+// the env-derived values, so an unreachable Flags service changes nothing.
 const { initializeDynamicConfig } = await import("#src/config/dynamic.ts");
 await initializeDynamicConfig({
   seed: {

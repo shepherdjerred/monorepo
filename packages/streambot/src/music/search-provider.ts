@@ -19,7 +19,7 @@ export type MusicSearchProviderName = z.infer<
   typeof MusicSearchProviderNameSchema
 >;
 
-/** The code default; the Flipt declaration carries the same value for production and beta. */
+/** The code default; the Flags declaration carries the same value for production and beta. */
 export const DEFAULT_MUSIC_SEARCH_PROVIDER: MusicSearchProviderName =
   "youtube-music";
 

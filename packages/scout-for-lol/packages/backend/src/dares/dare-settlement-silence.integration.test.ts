@@ -20,7 +20,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
  * The Dare settlement silence gate's WIRING.
  *
  * Dares cannot run in production — the surface is
- * hard-disabled there ahead of Flipt — but in beta they are one operator
+ * hard-disabled there ahead of Flags — but in beta they are one operator
  * toggle away, and they deliver to individuals by DM. What is worth proving is
  * not the logic, but that the disposition the settlement was handed REACHES
  * this writer at all.

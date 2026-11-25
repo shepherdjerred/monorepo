@@ -2,10 +2,10 @@ import { describe, expect, test } from "vitest";
 import { flagDeploymentForSelector, flagDeployments } from "./deployments.ts";
 
 describe("flag deployments", () => {
-  test("ids and Flipt selectors are unique", () => {
+  test("ids and catalog/stage selectors are unique", () => {
     const ids = flagDeployments.map((deployment) => deployment.id);
     const selectors = flagDeployments.map(
-      (deployment) => `${deployment.catalog}/${deployment.fliptEnvironment}`,
+      (deployment) => `${deployment.catalog}/${deployment.stage}`,
     );
     expect(flagDeployments).toHaveLength(17);
     expect(ids).toEqual([...ids].toSorted());
@@ -16,7 +16,7 @@ describe("flag deployments", () => {
 
   test("only Scout and Karma have a second stage", () => {
     const beta = flagDeployments
-      .filter((deployment) => deployment.fliptEnvironment === "beta")
+      .filter((deployment) => deployment.stage === "beta")
       .map((deployment) => deployment.catalog)
       .toSorted();
     expect(beta).toEqual(["scout", "starlight-karma-bot"]);

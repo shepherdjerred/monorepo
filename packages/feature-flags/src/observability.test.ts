@@ -104,15 +104,14 @@ describe("evaluation instrumentation", () => {
       { flag: "scout-report-ai-model", reason: "STATIC", value: "non_boolean" },
     ]);
     expect(providerIdentities).toContainEqual({
-      flipt_environment: "prod",
-      flipt_namespace: "scout",
+      deployment: "scout/prod",
       value: 1,
     });
     await shutdownFeatureFlags();
     expect(providerIdentities.at(-1)).toBeNull();
   });
 
-  test("reports provider identity in flags mode using catalog and stage and clears on shutdown", async () => {
+  test("reports provider identity in flags mode using deployment id and clears on shutdown", async () => {
     const { recorder, providerIdentities } = createTestMetricsRecorder();
     await initFeatureFlags({
       environment: {
@@ -124,8 +123,7 @@ describe("evaluation instrumentation", () => {
       metrics: recorder,
     });
     expect(providerIdentities).toContainEqual({
-      flipt_environment: "beta",
-      flipt_namespace: "scout",
+      deployment: "scout/beta",
       value: 1,
     });
     await shutdownFeatureFlags();

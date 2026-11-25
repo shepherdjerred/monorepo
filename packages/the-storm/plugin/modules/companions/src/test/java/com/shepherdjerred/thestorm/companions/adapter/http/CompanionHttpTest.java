@@ -50,7 +50,7 @@ final class CompanionHttpTest {
   void evaluatesTheManagedGameplayFlagInTheRightDeployment() throws Exception {
     var exchanges = new ArrayList<Exchange>();
     try (var server = server(new Script(200, "{\"enabled\":true}"), exchanges);
-        var gate = new FliptCompanionGate(server.address(), "the-storm/beta")) {
+        var gate = new FlagsCompanionGate(server.address(), "the-storm/beta")) {
       assertThat(gate.enabled().get(5, TimeUnit.SECONDS)).isTrue();
     }
     assertThat(exchanges).hasSize(1);
@@ -66,7 +66,7 @@ final class CompanionHttpTest {
         java.util.List.of(
             new Script(503, "unavailable"), new Script(200, "{\"enabled\":\"true\"}"))) {
       try (var server = server(script, new ArrayList<>());
-          var gate = new FliptCompanionGate(server.address(), "minecraft/tsmc")) {
+          var gate = new FlagsCompanionGate(server.address(), "minecraft/tsmc")) {
         assertThatThrownBy(() -> gate.enabled().get(5, TimeUnit.SECONDS))
             .hasRootCauseInstanceOf(IllegalStateException.class);
       }

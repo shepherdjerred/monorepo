@@ -76,7 +76,7 @@ function exploreAccessRefusal(error: unknown): DesktopExploreAuthResult | null {
 /**
  * Whether a flag is on for a device owner: a user-targeted answer first, then
  * each server the owner may use Explore in, so a rollout or a disable can
- * target either. Flipt alone answers, with no database read; the guilds are
+ * target either. Flags alone answers, with no database read; the guilds are
  * the ones Explore access already resolved.
  */
 export async function isOwnerFlagEnabled(

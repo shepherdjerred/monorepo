@@ -132,11 +132,11 @@ type FlagOverride = {
   /**
    * Early access outside production, and nothing more.
    *
-   * The registry is the fail-closed fallback for when Flipt is unavailable,
+   * The registry is the fail-closed fallback for when Flags is unavailable,
    * and the beta guild carries the same Discord id in both deployments. An
    * unqualified rollout here would therefore switch a surface on in production
    * for that guild the moment its hard disable is lifted. Marking the override
-   * beta-only keeps the fallback matching Flipt's production state, where the
+   * beta-only keeps the fallback matching Flags's production state, where the
    * same flags carry no rollout at all.
    */
   betaOnly?: true;
@@ -176,12 +176,12 @@ export type FlagName =
   | "voice_assistant_enabled";
 
 /**
- * Compile-time proof that every local flag name remains a Flipt boolean flag:
- * adding a name here that Flipt does not know fails typecheck at this line.
+ * Compile-time proof that every local flag name remains a managed boolean flag:
+ * adding a name here that Flags does not know fails typecheck at this line.
  */
 type AssertFlagNameSubset<T extends ScoutBooleanFlagKey> = T;
 
-/** Flipt is authoritative when available. The registry remains a fail-closed
+/** Flags is authoritative when available. The registry remains a fail-closed
  * compatibility seed and test fixture for provider-unavailable evaluations. */
 export type PolicyFlagName = AssertFlagNameSubset<FlagName>;
 
@@ -210,7 +210,7 @@ export function isFeatureHardDisabled(name: FlagName): boolean {
  * Production drops every beta-only rollout, so a flag whose only affirmative
  * entry is beta early access falls back to its default there. This is what
  * keeps lifting a hard disable from switching a surface on by itself: the
- * production decision moves to Flipt rather than arriving with the deploy.
+ * production decision moves to Flags rather than arriving with the deploy.
  */
 function applicableOverrides(config: FlagConfig): FlagOverride[] {
   return resolveEnvironment() === "prod"
@@ -296,7 +296,7 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
    * One flag covers all three kinds: which entities a given person may create
    * is already decided by per-entity RBAC at confirm time, so a per-kind flag
    * would only duplicate that. Deliberately absent from
-   * `PRODUCTION_HARD_DISABLED_FLAGS` — this is meant to ramp through Flipt
+   * `PRODUCTION_HARD_DISABLED_FLAGS` — this is meant to ramp through Flags
    * rather than stay beta-only. It is re-read at confirm time, so revoking it
    * blocks intents that were already prepared.
    */
@@ -322,7 +322,7 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
    *
    * Deliberately absent from `PRODUCTION_HARD_DISABLED_FLAGS`: an operations
    * console that cannot exist in production is an operations console for the
-   * environment that needs it least. It ramps through Flipt instead, and is
+   * environment that needs it least. It ramps through Flags instead, and is
    * re-read at confirm time so revoking it also blocks intents already
    * prepared.
    */
@@ -344,7 +344,7 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
    * The Scout Client: pairing, ingestion, and every read of stored client
    * evidence. `scout-client/access/policy.ts` is the only reader.
    *
-   * Flipt owns the rollout in both environments: on for everyone in beta, and
+   * Flags owns the rollout in both environments: on for everyone in beta, and
    * in production off until the owner-first rollout steps target the owner,
    * then the owner's server, then everyone. This fallback mirrors those managed
    * defaults, so a provider outage in production fails closed rather than
@@ -364,7 +364,7 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
    * `scout-client/desktop/`. `authenticateDesktopExplore` is the only reader.
    *
    * On everywhere: a player opts in by pairing the desktop with the `explore`
-   * scope. The flag is the kill switch; Flipt turns it off for a user or
+   * scope. The flag is the kill switch; Flags turns it off for a user or
    * server, and the same answer is this fallback when the provider is down.
    */
   scout_desktop_explore_enabled: { default: true, overrides: [] },
@@ -411,7 +411,7 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
    * Never in production. Riot's published policy prohibits unprompted alerts
    * from live game state, so production hard-disables this flag above and
    * `coach/proactive-policy.ts` refuses the route there before reading it; no
-   * Flipt value changes that. Beta has it on for everyone, matching Flipt.
+   * Flags value changes that. Beta has it on for everyone, matching Flags.
    */
   scout_coach_proactive: {
     default: false,
@@ -424,7 +424,7 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
    * activation gate: it decides where the subcommands register, whether
    * `/scout join` may load the voice pipeline and start a session, and whether
    * an active session may keep capturing audio. Production's hard-disable
-   * policy wins before this registry or Flipt is evaluated.
+   * policy wins before this registry or Flags is evaluated.
    */
   voice_assistant_enabled: {
     default: false,

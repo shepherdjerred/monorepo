@@ -139,7 +139,7 @@ carry both `agent:codex` and `agent:autonomous`. The host also resolves the
 typed `justin_autonomous_devex_enabled` flag before work, publication, and
 merge. Its default and production rollout are off; beta targets AI-104.
 For local development with the flag provider disabled, explicitly list issue
-identifiers in `autonomy.enabledIssueIdentifiers`. A resolved Flipt `false`
+identifiers in `autonomy.enabledIssueIdentifiers`. A resolved Flags `false`
 overrides that file authorization.
 
 The host checks the entire branch against the base revision's workspace

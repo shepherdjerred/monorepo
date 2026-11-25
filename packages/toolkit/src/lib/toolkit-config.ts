@@ -15,7 +15,7 @@ import type { Environment } from "@shepherdjerred/config/sources/env.ts";
  * Layered toolkit settings: `env -> ~/.toolkit/config.toml -> default`.
  *
  * Toolkit runs on a workstation, not in the cluster, so there is no flag
- * layer: the Flipt client is cluster-internal and toolkit does not carry
+ * layer: the Flags evaluation client is cluster-internal and toolkit does not carry
  * `@shepherdjerred/feature-flags`. The file layer exists because the history
  * daemon runs under launchd, whose plist carries no environment; a TOML file
  * is the durable way to turn behavior on for it.

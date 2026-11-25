@@ -215,7 +215,7 @@ final class MatchLearningTest {
     gate.answers.add(late);
     gate.answers.add(
         CompletableFuture.completedFuture(
-            new LearningGate.Decision(false, LearningGate.Source.FLIPT)));
+            new LearningGate.Decision(false, LearningGate.Source.FLAGS)));
     var loads = new AtomicInteger();
     var learning =
         new MatchLearning(
@@ -229,7 +229,7 @@ final class MatchLearningTest {
     learning.startTick(1);
     learning.end();
     learning.begin(context(NEXT));
-    late.complete(new LearningGate.Decision(true, LearningGate.Source.FLIPT));
+    late.complete(new LearningGate.Decision(true, LearningGate.Source.FLAGS));
     learning.startTick(2);
     assertThat(loads).hasValue(0);
     assertThat(learning.active(NEXT)).isFalse();
@@ -242,10 +242,10 @@ final class MatchLearningTest {
     var gate = new Gate();
     gate.answers.add(
         CompletableFuture.completedFuture(
-            new LearningGate.Decision(true, LearningGate.Source.FLIPT)));
+            new LearningGate.Decision(true, LearningGate.Source.FLAGS)));
     gate.answers.add(
         CompletableFuture.completedFuture(
-            new LearningGate.Decision(false, LearningGate.Source.FLIPT)));
+            new LearningGate.Decision(false, LearningGate.Source.FLAGS)));
     var loading = new CompletableFuture<BatchedInference>();
     var learning = new MatchLearning(parts(gate, () -> loading));
     learning.begin(context(MATCH));
@@ -273,7 +273,7 @@ final class MatchLearningTest {
     var gate = new Gate();
     gate.answers.add(
         CompletableFuture.completedFuture(
-            new LearningGate.Decision(true, LearningGate.Source.FLIPT)));
+            new LearningGate.Decision(true, LearningGate.Source.FLAGS)));
     var learning = new MatchLearning(parts(gate, () -> CompletableFuture.completedFuture(model)));
     learning.begin(context(MATCH));
     learning.startTick(1);
@@ -341,7 +341,7 @@ final class MatchLearningTest {
     var gate = new Gate();
     gate.answers.add(
         CompletableFuture.completedFuture(
-            new LearningGate.Decision(true, LearningGate.Source.FLIPT)));
+            new LearningGate.Decision(true, LearningGate.Source.FLAGS)));
     var learning = new MatchLearning(parts(gate, () -> CompletableFuture.completedFuture(model)));
     learning.begin(context(MATCH));
     learning.startTick(1);
@@ -382,7 +382,7 @@ final class MatchLearningTest {
     var gate = new Gate();
     gate.answers.add(
         CompletableFuture.completedFuture(
-            new LearningGate.Decision(true, LearningGate.Source.FLIPT)));
+            new LearningGate.Decision(true, LearningGate.Source.FLAGS)));
     var learning = new MatchLearning(parts(gate, () -> CompletableFuture.completedFuture(model)));
     learning.begin(context(MATCH));
     learning.startTick(1);
@@ -408,7 +408,7 @@ final class MatchLearningTest {
     gate.answers.add(CompletableFuture.failedFuture(flagFailure));
     gate.answers.add(
         CompletableFuture.completedFuture(
-            new LearningGate.Decision(true, LearningGate.Source.FLIPT)));
+            new LearningGate.Decision(true, LearningGate.Source.FLAGS)));
     var learning =
         new MatchLearning(
             new MatchLearning.Parts(
@@ -474,7 +474,7 @@ final class MatchLearningTest {
     var gate = new Gate();
     gate.answers.add(
         CompletableFuture.completedFuture(
-            new LearningGate.Decision(true, LearningGate.Source.FLIPT)));
+            new LearningGate.Decision(true, LearningGate.Source.FLAGS)));
     var learning =
         new MatchLearning(
             parts(

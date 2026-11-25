@@ -82,7 +82,7 @@ export const VoiceConfigSchema = z
  * branded (parsed, not cast) at this boundary.
  */
 export const ConfigSchema = z.strictObject({
-  /** Plex is an optional server/credential bootstrap; artwork rollout is controlled by Flipt. */
+  /** Plex is an optional server/credential bootstrap; artwork rollout is controlled by Flags. */
   plex: z
     .strictObject({
       baseUrl: z.url().refine((value) => {
@@ -141,7 +141,7 @@ export const ConfigSchema = z.strictObject({
      */
     peerUserbotIds: z.array(UserIdSchema).default([]),
   }),
-  /** PinchTab is browser bootstrap/credential config; sports playback itself is gated by Flipt. */
+  /** PinchTab is browser bootstrap/credential config; sports playback itself is gated by Flags. */
   pinchtab: z
     .strictObject({
       baseUrl: z.url().optional(),

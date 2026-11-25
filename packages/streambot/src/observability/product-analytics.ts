@@ -108,7 +108,7 @@ export type UsageAnalytics = {
 
 export type UsageAnalyticsOptions = {
   identities: AnalyticsIdentityStore;
-  /** Read on every capture so the Flipt-backed value takes effect without a restart. */
+  /** Read on every capture so the Flags-backed value takes effect without a restart. */
   enabled: () => boolean;
   /** Absent while the destination is not configured; events are then counted as disabled. */
   transport?: UsageTransport | undefined;

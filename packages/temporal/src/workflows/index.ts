@@ -138,8 +138,8 @@ import {
   runTurboCacheCleanWorkflow as runTurboCacheCleanWorkflowImplementation,
 } from "./maintenance.ts";
 import { runFreshRssSyncWorkflow as _runFreshRssSyncWorkflow } from "./homelab/freshrss.ts";
-import { runFliptFlagInventory as _runFliptFlagInventory } from "./flipt-flag-inventory.ts";
-import type { FliptFlagInventoryResult } from "#activities/flipt-flag-inventory.ts";
+import { runFlagInventorySync as _runFlagInventorySync } from "./flag-inventory-sync.ts";
+import type { FlagInventoryResult } from "#activities/flag-inventory-sync.ts";
 import {
   workerDeploymentCanaryWorkflow as workerDeploymentCanaryWorkflowImplementation,
   type WorkerDeploymentCanaryInput,
@@ -209,10 +209,8 @@ export async function runTurboCacheCleanWorkflow(): Promise<void> {
 export async function runFreshRssSyncWorkflow(): Promise<void> {
   return _runFreshRssSyncWorkflow();
 }
-export async function runFliptFlagInventory(): Promise<
-  FliptFlagInventoryResult[]
-> {
-  return _runFliptFlagInventory();
+export async function runFlagInventorySync(): Promise<FlagInventoryResult[]> {
+  return _runFlagInventorySync();
 }
 
 export async function generateDependencySummary(

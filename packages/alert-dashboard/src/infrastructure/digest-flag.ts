@@ -122,9 +122,7 @@ export type FlagMetricSink = {
   countError: (operation: string) => void;
   providerReady: (ready: boolean) => void;
   snapshotAge: (seconds: number) => void;
-  providerInfo: (
-    info: { flipt_environment: string; flipt_namespace: string } | undefined,
-  ) => void;
+  providerInfo: (info: { deployment: string } | undefined) => void;
 };
 
 export function flagMetricsRecorder(sink: FlagMetricSink): FlagMetricsRecorder {

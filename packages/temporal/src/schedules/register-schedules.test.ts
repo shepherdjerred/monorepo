@@ -336,9 +336,9 @@ test("FreshRSS sync keeps its bounded pre-refresh schedule", () => {
   expect(schedule.workflowExecutionTimeout).toBe("6 minutes");
 });
 
-test("Flipt inventory drift starts on the shared Workflow queue", () => {
-  expect(findScheduleById("flipt-flag-inventory-daily")).toMatchObject({
-    workflowType: "runFliptFlagInventory",
+test("Flags inventory sync starts on the shared Workflow queue", () => {
+  expect(findScheduleById("flag-inventory-sync")).toMatchObject({
+    workflowType: "runFlagInventorySync",
     args: [],
     timing: {
       kind: "cron",
@@ -556,7 +556,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "maintainStormForumWorkflow",
   "fetchSkillCappedManifest",
   "runFreshRssSyncWorkflow",
-  "runFliptFlagInventory",
+  "runFlagInventorySync",
   "runLlmBilledCostReconciliation",
   // Fans out one bounded collector Activity per source in parallel, then one
   // publish Activity. No workflow-level sleeps; Activity timeouts and retry
@@ -882,6 +882,7 @@ test("terminates workflows for schedules being removed", async () => {
     'WorkflowType = "backupStormForumWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runVeleroR2OrphanAuditWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "syncGolinks" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runFliptFlagInventory" AND ExecutionStatus = "Running"',
   ]);
 });
 

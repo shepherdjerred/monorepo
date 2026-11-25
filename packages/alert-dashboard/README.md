@@ -4,7 +4,7 @@
 personal tools, composed of [modules](#modules). Its built-in `core` module is
 the ops overview and the durable, read-only alert ledger.
 
-Hub is the product name only. The package, namespace, Service, PVC, Flipt
+Hub is the product name only. The package, namespace, Service, PVC, Flags
 namespace, image, metrics, 1Password item, Argo CD Application, and webhook URL
 all stay `alert-dashboard`, so the ledger history is kept. The app is served on
 the `hub`, `ops`, and `alerts` tailnet hosts. The wiki's
@@ -308,7 +308,7 @@ client tests. Both carry a week of changes, about ninety, so the Review and
 service timelines run past their cap. `FIXTURE_OPS_FACETS`
 (`src/test-fixtures/ops-facets.ts`) provides schema-validated sample payloads
 across all 13 `OpsFacets` keys (`renovate`, `github`, `posthog`, `bugsink`,
-`flipt`, `tracker`, `cloudflare`, `tailscale`, `golink`, `monorepo`, `cluster`,
+`flags`, `tracker`, `cloudflare`, `tailscale`, `golink`, `monorepo`, `cluster`,
 `observability`, `temporal`); `src/dev.ts` attaches it to the local fixture
 ingest and the unit, route, and SQLite integration suites share it. While
 `OPS_FIXTURE` is set the fixture server re-ingests its snapshot every five

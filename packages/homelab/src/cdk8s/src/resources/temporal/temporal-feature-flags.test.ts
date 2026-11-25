@@ -119,11 +119,6 @@ describe("Temporal feature-flag boundary", () => {
       } else {
         expect(machineToken).toBeUndefined();
       }
-      expect(
-        deployment.spec.template.spec.containers[0]?.env.find(
-          (entry) => entry.name === "FLIPT_OPERATOR_TOKEN",
-        ),
-      ).toBeUndefined();
     }
   });
 

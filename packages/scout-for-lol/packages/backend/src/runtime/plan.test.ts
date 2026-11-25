@@ -61,7 +61,7 @@ describe("runtime boot order", () => {
       "http-server",
     ]);
     // Voice is not booted at all: activation is the `voice_assistant_enabled`
-    // Flipt flag, so the models load on first `/scout join` instead. A boot
+    // feature flag, so the models load on first `/scout join` instead. A boot
     // step here would only take effect on the next restart.
     expect(steps).not.toContain("voice-assistant");
     // The lake is settled before the shard connects too: this role answers

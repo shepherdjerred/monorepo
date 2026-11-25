@@ -457,7 +457,7 @@ describe("denials", () => {
   const a = "[kube-flannel-a]";
   const b = "[kube-flannel-b]";
   const [evalA7, deniedA7, evalB7, deniedB7, evalA8, limited] = [
-    `${a} I1114 12:00:00.1 1 logging.go:67] "Evaluating packet" id=7 direction="egress" srcPod="tracker/tracker-0" dstPod="flipt/flipt-0"`,
+    `${a} I1114 12:00:00.1 1 logging.go:67] "Evaluating packet" id=7 direction="egress" srcPod="tracker/tracker-0" dstPod="flags/flags-0"`,
     `${a} I1114 12:00:00.2 1 engine.go:57] "Packet denied by egress policy" id=7`,
     `${b} I1114 12:00:00.3 1 logging.go:67] "Evaluating packet" id=7 direction="ingress" srcPod="my-tracker/x" dstPod="media/plex-0"`,
     `${b} I1114 12:00:00.4 1 engine.go:68] "Packet denied by ingress policy" id=7`,
@@ -470,7 +470,7 @@ describe("denials", () => {
     // A deny-all visit is not a verdict: another policy may still allow it.
     expect(denialsFor("tracker", lines)).toEqual([`${deniedA7} <- ${evalA7}`]);
     expect(denialsFor("media", lines)).toEqual([`${deniedB7} <- ${evalB7}`]);
-    expect(denialsFor("flipt", lines)).toEqual([`${deniedA7} <- ${evalA7}`]);
+    expect(denialsFor("flags", lines)).toEqual([`${deniedA7} <- ${evalA7}`]);
     expect(denialsFor("my", lines)).toEqual([]);
     expect(denialsFor("kube-system", lines)).toEqual([]);
   });

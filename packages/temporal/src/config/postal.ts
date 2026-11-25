@@ -47,7 +47,7 @@ export async function postalAddressesConfig() {
 
 /**
  * Resolve semantic `@sjer.red` sender and recipient for a report family while
- * honoring explicit non-default Flipt overrides on either flag.
+ * honoring explicit non-default Flags overrides on either flag.
  */
 export async function resolvePostalAddressesForReport(
   reportType: string,

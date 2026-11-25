@@ -62,8 +62,8 @@ const ALERTS: readonly AlertRow[] = [
   },
   {
     alertname: "FeatureFlagSnapshotStale",
-    namespace: "flipt",
-    summary: "Flipt flag snapshot is stale for alert-dashboard",
+    namespace: "flags",
+    summary: "Flags snapshot is stale for alert-dashboard",
     hours: 63,
     state: "suppressed",
   },

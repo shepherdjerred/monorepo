@@ -15,7 +15,7 @@ import com.shepherdjerred.thestorm.towns.adapter.db.JooqPvpStore;
 import com.shepherdjerred.thestorm.towns.adapter.db.JooqRecoveryStore;
 import com.shepherdjerred.thestorm.towns.adapter.db.JooqTownsStore;
 import com.shepherdjerred.thestorm.towns.adapter.paper.TownsPaper;
-import com.shepherdjerred.thestorm.towns.adapter.remote.FliptRentalGate;
+import com.shepherdjerred.thestorm.towns.adapter.remote.FlagsRentalGate;
 import com.shepherdjerred.thestorm.towns.app.CampRenames;
 import com.shepherdjerred.thestorm.towns.app.Clocks;
 import com.shepherdjerred.thestorm.towns.app.LockBook;
@@ -60,7 +60,7 @@ public final class TownsModule implements StormModule {
   private static final long LOAD_TIMEOUT_SECONDS = 30;
 
   private @Nullable Runnable stopMap;
-  private @Nullable FliptRentalGate rentalGate;
+  private @Nullable FlagsRentalGate rentalGate;
 
   @Override
   public String id() {
@@ -120,7 +120,7 @@ public final class TownsModule implements StormModule {
     if (base == null || base.isBlank() || deployment == null || deployment.isBlank()) {
       gate = player -> CompletableFuture.completedFuture(false);
     } else {
-      var remote = new FliptRentalGate(URI.create(base), deployment);
+      var remote = new FlagsRentalGate(URI.create(base), deployment);
       rentalGate = remote;
       gate = remote;
     }

@@ -43,7 +43,7 @@ flowchart LR
   accTitle: Operations overview data flow
   accDescr: Temporal schedules enrich Renovate version deltas in SeaweedFS S3 llm-archive and collect every upstream plus ci-handoff Turborepo diagnostics into one OpsIngest posted to Hub. Hub stores hourly snapshots, latest-only facets, changes, and alerts in SQLite and serves named Prometheus series presets to the web UI, including /cluster, /monorepo, /renovate, and /product, alongside TRMNL, the email digest, and the toolkit CLI.
 
-  SRC["Upstreams\nAlertmanager, Kubernetes, Argo CD, Talos,\nGitHub, Renovate, Tracker, Bugsink, PostHog,\nCloudflare, Tailscale, Flipt, Golink, Loki, Tempo"]
+  SRC["Upstreams\nAlertmanager, Kubernetes, Argo CD, Talos,\nGitHub, Renovate, Tracker, Bugsink, PostHog,\nCloudflare, Tailscale, Flags, Golink, Loki, Tempo"]
   DELTA["Temporal renovate-delta-enrichment\nevery 30 minutes"]
   S3[("SeaweedFS S3\nllm-archive & ci-handoff")]
   TEMPORAL["Temporal ops-snapshot\nevery 5 minutes"]

@@ -19,7 +19,7 @@ import {
  * against the NetworkPolicies on both ends.
  *
  * A literal env value that names an in-cluster Service with a port
- * (`http://flipt.flipt:8080`, `temporal-server:7233`) is a connection the
+ * (`http://flags.flags:7361`, `temporal-server:7233`) is a connection the
  * container is configured to make. It is resolved the way kube-proxy resolves
  * it, to the Service's backend pods and target port, because NetworkPolicy
  * matches the pod and its port, never the Service.

@@ -195,7 +195,7 @@ describe("unreciprocatedRules within one namespace", () => {
           ingress: [{ peers: [{ podSelector: {} }], ports: [tcpPort(3000)] }],
         }),
         policy("notes", undefined, {
-          egress: [{ peers: [namespacePeer("flipt")], ports: [tcpPort(8080)] }],
+          egress: [{ peers: [namespacePeer("flags")], ports: [tcpPort(7361)] }],
         }),
       ],
     });

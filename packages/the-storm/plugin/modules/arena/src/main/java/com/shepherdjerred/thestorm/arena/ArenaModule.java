@@ -10,7 +10,7 @@ import com.shepherdjerred.thestorm.arena.adapter.discord.ArenaTopCommand;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ArenaPaper;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ChunkKeeper;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ServerHooks;
-import com.shepherdjerred.thestorm.arena.adapter.remote.FliptSurvivalGate;
+import com.shepherdjerred.thestorm.arena.adapter.remote.FlagsSurvivalGate;
 import com.shepherdjerred.thestorm.arena.app.ArenaCatalog;
 import com.shepherdjerred.thestorm.arena.app.ArenaEvents;
 import com.shepherdjerred.thestorm.arena.app.ArenaIds;
@@ -44,7 +44,7 @@ public final class ArenaModule implements StormModule {
 
   private final Function<ModuleContext, ServerHooks> hooks;
   private @Nullable ArenaPaper paper;
-  private @Nullable FliptSurvivalGate gate;
+  private @Nullable FlagsSurvivalGate gate;
   private ArenaEvents.@Nullable Subscription discordPosts;
 
   /** Arena chunks are held through core's shared {@link ChunkTickets}. */
@@ -87,9 +87,7 @@ public final class ArenaModule implements StormModule {
     if (flagsUrl == null || flagsUrl.isBlank() || deployment == null || deployment.isBlank()) {
       rollout = _ -> java.util.concurrent.CompletableFuture.completedFuture(false);
     } else {
-      var remote =
-          new com.shepherdjerred.thestorm.arena.adapter.remote.FliptSurvivalGate(
-              java.net.URI.create(flagsUrl), deployment);
+      var remote = new FlagsSurvivalGate(java.net.URI.create(flagsUrl), deployment);
       gate = remote;
       rollout = remote;
     }

@@ -14,7 +14,7 @@
  *
  * The image has no PostHog project. Usage capture defaults on and refuses to
  * start without a destination, so the smoke turns it off the same way it
- * disables Flipt: the sandbox cannot reach that service. The probe still
+ * disables Flags: the sandbox cannot reach that service. The probe still
  * requires the process to reach Discord authentication.
  */
 export const streambotImageSmokeEnv = {

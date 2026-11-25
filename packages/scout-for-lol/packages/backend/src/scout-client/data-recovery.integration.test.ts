@@ -15,10 +15,10 @@ vi.doMock("#src/database/index.ts", async (original) => ({
   ...(await original()),
   prisma,
 }));
-const flipt = { scoutClient: true };
+const flagState = { scoutClient: true };
 vi.doMock("#src/configuration/flags.ts", async (original) => ({
   ...(await original()),
-  isPolicyEnabled: () => Promise.resolve(flipt.scoutClient),
+  isPolicyEnabled: () => Promise.resolve(flagState.scoutClient),
 }));
 const dispatch = vi.fn(() => Promise.resolve());
 const spectator = vi.fn(() => Promise.resolve({ kind: "not-in-game" }));
@@ -453,12 +453,12 @@ test("Clash history excludes stored client results while retaining Riot results 
     resultSource: "RIOT",
   });
   expect(await clashHistoryGameIds()).toEqual(["7101", "7102"]);
-  // Production's Flipt answer until the owner-first rollout begins.
-  flipt.scoutClient = false;
+  // Production's Flags answer until the owner-first rollout begins.
+  flagState.scoutClient = false;
   try {
     expect(await clashHistoryGameIds()).toEqual(["7102"]);
   } finally {
-    flipt.scoutClient = true;
+    flagState.scoutClient = true;
   }
 });
 

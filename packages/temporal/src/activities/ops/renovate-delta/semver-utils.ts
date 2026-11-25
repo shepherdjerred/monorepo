@@ -43,7 +43,7 @@ export function normalizeVersionString(
 
 /**
  * Extract normalized repository path and version tag from a container image
- * reference such as `ghcr.io/flipt-io/flipt:v2.14.2@sha256:abc...`.
+ * reference such as `ghcr.io/org/app:v2.14.2@sha256:abc...`.
  */
 export function parseContainerImageReference(imageRef: string): {
   readonly repository: string;

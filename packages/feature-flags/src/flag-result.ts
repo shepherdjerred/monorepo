@@ -49,9 +49,10 @@ export type FlagResult<T> = {
 };
 
 /**
- * Attribute values a caller may attach to an evaluation. Scalars only: Flipt's
- * evaluation context is `Record<string, string>`, and silently stringifying an
- * object would produce targeting rules that match on "[object Object]".
+ * Attribute values a caller may attach to an evaluation. Scalars only: the
+ * Flags evaluation context is `Record<string, string>`, and silently
+ * stringifying an object would produce targeting rules that match on
+ * "[object Object]".
  */
 export type FlagAttributes = Readonly<
   Record<string, string | number | boolean>
@@ -63,7 +64,7 @@ export type FlagEvaluationOptions<T> = {
    * behavior: it is what a cold start and a provider outage both resolve to.
    */
   readonly default: T;
-  /** Flipt's `entityId`. Required — it is the bucketing key for ramp-ups. */
+  /** Evaluation `entityId`. Required — it is the bucketing key for ramp-ups. */
   readonly targetingKey: string;
   readonly attributes?: FlagAttributes;
 };
@@ -72,7 +73,7 @@ export class FlagNotFoundError extends Error {
   readonly flagKey: string;
 
   constructor(flagKey: string, message?: string) {
-    super(message ?? `Feature flag "${flagKey}" not found in Flipt`);
+    super(message ?? `Feature flag "${flagKey}" not found in Flags`);
     this.name = "FlagNotFoundError";
     this.flagKey = flagKey;
   }
@@ -86,7 +87,7 @@ export class FlagNotFoundError extends Error {
  * 4xx/5xx, timeout), so it cannot know.
  *
  * Everything else, including `FLAG_NOT_FOUND`, `GENERAL`, and `PARSE_ERROR`,
- * is treated as a contract error or evaluation failure. When Flipt is reachable,
+ * is treated as a contract error or evaluation failure. When Flags is reachable,
  * a missing declared key must fail loudly rather than silently falling back.
  */
 export function isAbsent(result: FlagResult<unknown>): boolean {

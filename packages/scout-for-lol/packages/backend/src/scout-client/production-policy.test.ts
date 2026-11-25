@@ -95,7 +95,7 @@ type EvaluationContext = Parameters<
 >[2];
 
 /**
- * Flipt with one segment rollout on both client flags: true when the
+ * Flags with one segment rollout on both client flags: true when the
  * evaluation context carries the targeted attribute, the flag's default
  * (false) otherwise. Other keys answer from a fixed map.
  */
@@ -192,7 +192,7 @@ test.each([
   ["POST", "replays/7101/offer"],
   ["PUT", "replays/7101"],
 ])(
-  "a Flipt false refuses %s %s before pairing or authentication",
+  "a Flags false refuses %s %s before pairing or authentication",
   async (method, path) => {
     const request = new Request(
       `https://scout.invalid/api/scout-client/v1/${path}`,
@@ -212,7 +212,7 @@ test.each([
   },
 );
 
-test("a Flipt false closes every owner decision without a guild lookup", async () => {
+test("a Flags false closes every owner decision without a guild lookup", async () => {
   for (const flag of CLIENT_FLAGS) {
     expect(await isScoutClientLive(flag)).toBe(false);
     expect(await isScoutClientEnabledFor(flag, owner)).toBe(false);
@@ -221,7 +221,7 @@ test("a Flipt false closes every owner decision without a guild lookup", async (
   expect(mocks.databaseAccess).not.toHaveBeenCalled();
 });
 
-test("a Flipt false ignores stored client artifacts and writes none", async () => {
+test("a Flags false ignores stored client artifacts and writes none", async () => {
   expect(await readSelectedLocalCanonicalMatch(matchId)).toBeNull();
   expect(await resolveLocalCanonicalMatch(matchId)).toBeNull();
   expect(await readTimelineSelection(matchId)).toEqual({ source: "RIOT" });
@@ -253,7 +253,7 @@ test("a Flipt false ignores stored client artifacts and writes none", async () =
   expect(mocks.databaseAccess).not.toHaveBeenCalled();
 });
 
-test("a Flipt false learns no aliases from a Riot-published game", async () => {
+test("a Flags false learns no aliases from a Riot-published game", async () => {
   const riotMatch = await riotMatchWithSeats(matchId, [
     { participantId: 1, teamId: 100, championId: 1, puuid },
   ]);
@@ -261,7 +261,7 @@ test("a Flipt false learns no aliases from a Riot-published game", async () => {
   expect(mocks.databaseAccess).not.toHaveBeenCalled();
 });
 
-test("a Flipt false keeps the Riot prematch path available", async () => {
+test("a Flags false keeps the Riot prematch path available", async () => {
   const riot = { kind: "not-in-game" };
   expect(await getActiveGameWithClientEvidence(puuid, "AMERICA_NORTH")).toEqual(
     riot,

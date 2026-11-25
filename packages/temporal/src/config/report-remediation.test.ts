@@ -62,7 +62,7 @@ describe("reportRemediationConfig", () => {
 
   test("falls back to declared default when flag source throws", async () => {
     flagMocks.getFlagValue.mockRejectedValue(
-      new Error("flipt snapshot unavailable"),
+      new Error("flags snapshot unavailable"),
     );
     expect(await reportRemediationConfig("prod")).toMatchObject({
       value: true,

@@ -162,7 +162,7 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: `Rolling 24h LLM spend exceeded $${LLM_DAILY_SPEND_CRITICAL_USD.toString()} critical ceiling`,
             description: escapePrometheusTemplate(
-              `Catalog-priced 24-hour LLM token spend reached \${{ $value | humanize }}, exceeding the $${LLM_DAILY_SPEND_CRITICAL_USD.toString()} critical ceiling and indicating a likely runaway loop or model-pin regression. Identify the top workload on the AI Provider dashboard and disable its Flipt feature flag to stop spend immediately.`,
+              `Catalog-priced 24-hour LLM token spend reached \${{ $value | humanize }}, exceeding the $${LLM_DAILY_SPEND_CRITICAL_USD.toString()} critical ceiling and indicating a likely runaway loop or model-pin regression. Identify the top workload on the AI Provider dashboard and disable its feature flag to stop spend immediately.`,
             ),
           },
         },

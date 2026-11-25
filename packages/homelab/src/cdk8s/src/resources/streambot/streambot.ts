@@ -229,7 +229,7 @@ export function createStreambotDeployment(
             VIDEOS_DIR: EnvValue.fromValue("/data/videos"),
             MEDIA_DIRS: EnvValue.fromValue("/media/movies,/media/tv"),
             // Public PostHog capture destination for pseudonymous usage events; whether events are
-            // sent is the Flipt flag `streambot-usage-analytics-enabled`.
+            // sent is the feature flag `streambot-usage-analytics-enabled`.
             POSTHOG_PROJECT_TOKEN: EnvValue.fromValue(
               analyticsCaptureDestination().projectToken,
             ),

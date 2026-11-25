@@ -252,7 +252,7 @@ proves they are drained.
    Pause active affected Schedules and wait for their old Activities to finish.
    Preserve Schedules already paused by an operator.
 4. Enable the producer flag in `scout/beta` through the
-   [Flags operator workflow](/how-to/check-flipt-flag-inventory/). Activation
+   [Flags operator workflow](/how-to/check-flag-inventory/). Activation
    waits for requests already using the legacy path. Resume only Schedules
    paused by this procedure, restoring their recorded state.
 5. Exercise nonempty competition, weekly, and outreach cases in the existing

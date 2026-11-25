@@ -52,7 +52,7 @@ then archive the items without revoking credentials.
 Those prune-capable guards (retired routes, Forum release Jobs, credential
 grooming, and worker host retirement) also allow pruning inert
 `enforcement-staging-<namespace>` `NetworkPolicy` objects (`enforced` stage,
-`homelab.sjer.red/enforcement-staging: never` pod selector, `flipt` excluded)
+`homelab.sjer.red/enforcement-staging: never` pod selector)
 omitted after the staging-policy removal; open or pod-selecting policies remain
 refused.
 
@@ -401,7 +401,7 @@ chart and reject historical archives that contain protected control-plane
 workloads. Image equality alone could not protect commands, probes, credentials
 or other template fields across application rollback.
 
-Both Flipt-consuming control-plane Activity roles export telemetry through the
+Both Flags-consuming control-plane Activity roles export telemetry through the
 internal OTLP collector. Their exporter bootstrap and collector egress belong
 to the control-plane chart, so changing them uses the same independent upgrade
 path, including chart-only upgrades that retain the original Temporal image.
@@ -864,7 +864,7 @@ The `streambot-lol-playback` Schedule reconciles explicitly selected LoL series
 through the isolated `streambot` Activity queue. The worker receives only its
 internal Streambot endpoint and dedicated scheduler credential. Its tracing
 bootstrap sends spans to the internal OTLP collector on port 4318; it has no
-Flipt management access or media user credentials. Streambot owns
+Flags management access or media user credentials. Streambot owns
 the durable schedules, Discord authorization, media resolution, and playback
 effects. The Schedule starts paused until both consumers are deployed and healthy;
 its next execution reconciles uncertain prior effects from persisted playback
@@ -1324,7 +1324,7 @@ The reports worker maps each `reportType` to its semantic `@sjer.red` sender and
 recipient (`deps@sjer.red`, `ops@sjer.red`, `scout@sjer.red`, or
 `reports@sjer.red`) and resolves `temporal-email-recipient` and
 `temporal-email-sender` through typed configuration for each delivery activity.
-Non-default Flipt values override the per-family mailbox; defaults preserve
+Non-default Flags values override the per-family mailbox; defaults preserve
 semantic homelab routing during a flag-provider outage.
 Postal credentials stay in 1Password; service endpoints and host routing are
 reviewed homelab bootstrap settings. Workflow histories contain no credentials.

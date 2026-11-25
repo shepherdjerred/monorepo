@@ -15,7 +15,7 @@ describe("loadFeatureFlagConfiguration", () => {
       loadFeatureFlagConfiguration({ FEATURE_FLAGS_MODE: "maybe" }),
     ).toThrow();
     expect(() =>
-      loadFeatureFlagConfiguration({ FEATURE_FLAGS_MODE: "flipt" }),
+      loadFeatureFlagConfiguration({ FEATURE_FLAGS_MODE: "remote" }),
     ).toThrow();
   });
 
@@ -35,11 +35,10 @@ describe("loadFeatureFlagConfiguration", () => {
 });
 
 describe("loadFeatureFlagConfiguration — flags mode", () => {
-  test("flags mode requires FLAGS_URL and never falls back to FLIPT_URL", () => {
+  test("flags mode requires FLAGS_URL and rejects missing or blank values", () => {
     expect(() =>
       loadFeatureFlagConfiguration({
         FEATURE_FLAGS_MODE: "flags",
-        FLIPT_URL: "http://flipt.flipt.svc.cluster.local:8080",
         FLAGS_DEPLOYMENT: "scout/prod",
       }),
     ).toThrow(/FLAGS_URL is required when FEATURE_FLAGS_MODE=flags/);
@@ -52,13 +51,18 @@ describe("loadFeatureFlagConfiguration — flags mode", () => {
     ).toThrow(/FLAGS_URL is required when FEATURE_FLAGS_MODE=flags/);
   });
 
-  test("flags mode requires FLAGS_DEPLOYMENT and never aliases FLIPT_NAMESPACE or FLIPT_ENVIRONMENT", () => {
+  test("flags mode requires FLAGS_DEPLOYMENT and rejects missing or blank values", () => {
     expect(() =>
       loadFeatureFlagConfiguration({
         FEATURE_FLAGS_MODE: "flags",
         FLAGS_URL: "http://flags.flags.svc.cluster.local:8080",
-        FLIPT_NAMESPACE: "scout",
-        FLIPT_ENVIRONMENT: "prod",
+      }),
+    ).toThrow(/FLAGS_DEPLOYMENT is required when FEATURE_FLAGS_MODE=flags/);
+    expect(() =>
+      loadFeatureFlagConfiguration({
+        FEATURE_FLAGS_MODE: "flags",
+        FLAGS_URL: "http://flags.flags.svc.cluster.local:8080",
+        FLAGS_DEPLOYMENT: "",
       }),
     ).toThrow(/FLAGS_DEPLOYMENT is required when FEATURE_FLAGS_MODE=flags/);
   });
@@ -108,7 +112,6 @@ describe("loadFeatureFlagConfiguration — flags mode", () => {
         FEATURE_FLAGS_MODE: "flags",
         FLAGS_URL: "https://flags.example.test",
         FLAGS_DEPLOYMENT: "scout/beta",
-        FLIPT_POLL_INTERVAL_SECONDS: "15",
       }),
     ).toEqual({
       mode: "flags",

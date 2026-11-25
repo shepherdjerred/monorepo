@@ -76,7 +76,7 @@ export const DEFAULT_PARTICIPANT_CRAWL_DAILY_MATCH_BUDGET = 1000;
  * The oldest Scout Client build check-in and observation batch accept.
  *
  * Every build released so far is 0.1.0, so the default refuses none of them.
- * Raising it is an operator Flipt change; a build below it gets the typed
+ * Raising it is an operator Flags change; a build below it gets the typed
  * `client_upgrade_required` refusal and keeps its outbox until it upgrades.
  */
 export const DEFAULT_SCOUT_CLIENT_MINIMUM_VERSION = "0.1.0";
@@ -236,7 +236,7 @@ const DEFINITION = {
    *
    * Boot-pinned: the value is captured once after the first refresh and never
    * moves for the life of the process, so one worker never mixes two
-   * processing contracts. A Flipt change takes effect on the next restart. Its
+   * processing contracts. A Flags change takes effect on the next restart. Its
    * default is the managed environment default (on in beta, off in prod),
    * independent of `scout_client_ingestion`.
    */

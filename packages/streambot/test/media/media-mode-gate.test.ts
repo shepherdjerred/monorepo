@@ -89,7 +89,7 @@ describe("music-over-voice rollout gate", () => {
   test("an explicit video request needs no flag lookup", async () => {
     const { service, lookups } = createGatedService({ musicOverVoice: true });
     expect(await service.resolveMediaMode(USER, "video")).toBe("video");
-    // It asks for exactly the behaviour the disabled flag falls back to, so consulting Flipt would
+    // It asks for exactly the behaviour the disabled flag falls back to, so consulting Flags would
     // be a network round trip that cannot change the answer.
     expect(lookups).toEqual([]);
   });

@@ -37,8 +37,8 @@ export function createFeatureFlagMetrics(): FeatureFlagMetrics {
 
   const providerInfo = new Gauge({
     name: FEATURE_FLAG_METRICS.providerInfo,
-    help: "The Flipt environment and namespace consumed by this process",
-    labelNames: ["flipt_environment", "flipt_namespace"] as const,
+    help: "The Flags deployment consumed by this process",
+    labelNames: ["deployment"] as const,
     registers: [registry],
   });
 

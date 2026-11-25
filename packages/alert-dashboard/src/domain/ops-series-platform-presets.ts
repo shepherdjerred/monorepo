@@ -62,7 +62,7 @@ export const PLATFORM_SERIES_PRESETS = {
     "max by (project) (bugsink_project_digested_events) or max by (project) (bugsink_issues_unresolved)",
     { legendLabel: "project", name: "events" },
   ),
-  "flipt-evaluations": single(
+  "flags-evaluations": single(
     "Feature flag evaluations",
     "count",
     "sum by (reason) (rate(feature_flag_evaluations_total[{window}]))",

@@ -63,7 +63,7 @@ check uses that graph to verify coexistence with ordinary workflows.
 Source caching is controlled by the typed `woodpecker-source-cache-enabled`
 flag. The production inventory enables it; the runtime fallback remains off.
 Branches under `ci-canary/` have beta targeting. The
-configuration service uses the `woodpecker` Flipt namespace; unavailable flags
+configuration service uses the `woodpecker/prod` Flags deployment; unavailable flags
 keep ordinary checkout active and invalid values fail visibly.
 
 Ordinary Kubernetes checkouts explicitly use the trusted deployed catalog's

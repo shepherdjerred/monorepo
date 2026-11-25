@@ -13,14 +13,14 @@ public interface LearningGate extends AutoCloseable {
   }
 
   enum Source {
-    FLIPT,
+    FLAGS,
     ABSENT,
     UNAVAILABLE
   }
 
   record Decision(boolean enabled, Source source) {
     public Decision {
-      if (enabled && source != Source.FLIPT)
+      if (enabled && source != Source.FLAGS)
         throw new IllegalArgumentException("default learning decision must be off");
     }
   }

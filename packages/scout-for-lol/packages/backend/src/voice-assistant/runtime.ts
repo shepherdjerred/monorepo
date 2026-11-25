@@ -92,7 +92,7 @@ async function loadRuntime(): Promise<VoiceRuntimeStatus> {
 /**
  * Load the voice pipeline on first use, once per process.
  *
- * Activation is the `voice_assistant_enabled` Flipt flag, evaluated per guild
+ * Activation is the `voice_assistant_enabled` feature flag, evaluated per guild
  * at the call site; this function answers the separate question of whether
  * this deployment can serve a session at all. Loading here rather than at boot
  * is what makes that flag meaningful — a boot-time gate only takes effect on

@@ -78,7 +78,7 @@ Source: [`managed-flag-inventory.json`](https://github.com/shepherdjerred/monore
 
 | Flag or schedule                                                                                           | Mode             | PR behavior                                                                             |
 | ---------------------------------------------------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------- |
-| `temporal-report-auto-remediation-enabled`                                                                 | Flipt gate       | Enables automated branch and pull request creation for LLM-remediated report workflows. |
+| `temporal-report-auto-remediation-enabled`                                                                 | Flags gate       | Enables automated branch and pull request creation for LLM-remediated report workflows. |
 | `link-rot-scan-weekly`                                                                                     | Auto-merge PR    | Opens a pull request for verified link updates with `autoMergeEnabled: true`.           |
 | `main-vuln-scan-weekly`, `deps-summary-weekly`, `scout-queue-windows-daily`, `scout-season-refresh-weekly` | LLM review PR    | Opens a pull request with `autoMergeEnabled: false` for human review before merge.      |
 | `scout-data-dragon-version-check`, `scout-data-dragon-weekly-refresh`, `scout-lane-priors-weekly-refresh`  | Deterministic PR | Opens deterministic data-refresh pull requests without LLM code synthesis.              |

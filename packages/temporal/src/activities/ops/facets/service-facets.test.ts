@@ -6,7 +6,7 @@ import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import {
   BugsinkFacetSchema,
   CloudflareFacetSchema,
-  FliptFacetSchema,
+  FlagsFacetSchema,
   GitHubFacetSchema,
   GolinkFacetSchema,
   PostHogFacetSchema,
@@ -23,7 +23,7 @@ import {
   clearRdapCacheForTests,
   collectCloudflareFacet,
 } from "./cloudflare-facet.ts";
-import { collectFliptFacet } from "./flipt-facet.ts";
+import { collectFlagsFacet } from "./flags-facet.ts";
 import { buildGitHubFacet } from "./github-facet.ts";
 import { collectGolinkFacet } from "./golink-facet.ts";
 import {
@@ -147,7 +147,7 @@ describe("github and posthog facets", () => {
   });
 });
 
-describe("bugsink, tracker, and flipt facets", () => {
+describe("bugsink, tracker, and flags facets", () => {
   test("bugsink facet summarizes active, stale, muted, digested events, and sets gauge", async () => {
     const facet = buildBugsinkFacet({
       projectsWithIssues: [
@@ -301,16 +301,16 @@ describe("bugsink, tracker, and flipt facets", () => {
     expect(facet.urgentIssues[0]?.identifier).toBe("SJ-10");
   });
 
-  test("flipt facet emits unknown on static/500, detects live drift, and surfaces malformed snapshots", async () => {
-    const staticFacet = await collectFliptFacet({ flagsUrl: "", now });
-    expect(() => FliptFacetSchema.parse(staticFacet)).not.toThrow();
+  test("flags facet emits unknown on static/500, detects live drift, and surfaces malformed snapshots", async () => {
+    const staticFacet = await collectFlagsFacet({ flagsUrl: "", now });
+    expect(() => FlagsFacetSchema.parse(staticFacet)).not.toThrow();
     expect(staticFacet.namespaces).toHaveLength(16);
     expect(staticFacet.totalFlags).toBeGreaterThan(0);
     expect(
       staticFacet.namespaces.every((ns) => ns.prodStatus === "unknown"),
     ).toBe(true);
 
-    const unavailableFacet = await collectFliptFacet({
+    const unavailableFacet = await collectFlagsFacet({
       flagsUrl: "http://flags:7361",
       now,
       fetcher: () =>
@@ -320,12 +320,12 @@ describe("bugsink, tracker, and flipt facets", () => {
       unavailableFacet.namespaces.every((ns) => ns.prodStatus === "unknown"),
     ).toBe(true);
 
-    const driftedFacet = await collectFliptFacet({
+    const driftedFacet = await collectFlagsFacet({
       flagsUrl: "http://flags:7361",
       now,
       fetcher: createEmptyFlagsFetch,
     });
-    expect(() => FliptFacetSchema.parse(driftedFacet)).not.toThrow();
+    expect(() => FlagsFacetSchema.parse(driftedFacet)).not.toThrow();
     expect(
       driftedFacet.namespaces
         .filter((ns) => ns.namespace !== "justin")
@@ -337,7 +337,7 @@ describe("bugsink, tracker, and flipt facets", () => {
     ).toBe("ok");
 
     await expect(
-      collectFliptFacet({
+      collectFlagsFacet({
         flagsUrl: "http://flags:7361",
         now,
         fetcher: () =>

@@ -341,7 +341,7 @@ describe("classifyShouldRespond Decisions API thresholds and caching", () => {
   });
 });
 
-describe("classifyShouldRespond refusal, errors, and Flipt rollback", () => {
+describe("classifyShouldRespond refusal, errors, and Flags rollback", () => {
   test("fails closed (false) and marks classifier.refusal when Decisions API returns a refusal", async () => {
     const refusalBefore = await admissionOutcomeCount("refusal");
     installTestRuntime(() =>

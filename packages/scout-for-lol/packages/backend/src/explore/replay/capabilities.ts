@@ -20,7 +20,7 @@ import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
  *
  * That second call is only trustworthy because the harness pins flags
  * statically and reads one frozen database snapshot: nothing can change
- * between this call and the agent's. Against a live Flipt it would be a race,
+ * between this call and the agent's. Against a live Flags service it would be a race,
  * which is one of the reasons the environment guard refuses to start without
  * static flags.
  */

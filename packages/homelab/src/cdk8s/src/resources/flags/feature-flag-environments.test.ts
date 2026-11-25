@@ -81,19 +81,10 @@ async function flagsConsumers(
             const env = new Map(
               (container.env ?? []).map((entry) => [entry.name, entry.value]),
             );
-            for (const legacy of [
-              "FLIPT_NAMESPACE",
-              "FLIPT_ENVIRONMENT",
-              "FLIPT_URL",
-              "FLIPT_OPERATOR_TOKEN",
-            ]) {
-              expect(
-                env.has(legacy),
-                `${parsed.data.metadata.name} still sets ${legacy}`,
-              ).toBe(false);
-            }
             const mode = env.get("FEATURE_FLAGS_MODE");
-            expect(mode).not.toBe("flipt");
+            if (mode !== undefined) {
+              expect(["flags", "disabled"]).toContain(mode);
+            }
             if (mode !== "flags") return [];
             return [
               {
@@ -278,8 +269,6 @@ describe("First-party Flags consumer deployments", () => {
       .parse(minecraftApp).spec.source.helm.valuesObject.extraEnv;
     expect(minecraftEnv["FLAGS_URL"]).toBe(FLAGS_EVALUATION_URL);
     expect(minecraftEnv["FLAGS_DEPLOYMENT"]).toBe("minecraft/tsmc");
-    expect(minecraftEnv["FLIPT_URL"]).toBeUndefined();
-    expect(minecraftEnv["FLIPT_ENVIRONMENT"]).toBeUndefined();
     selected.add(String(minecraftEnv["FLAGS_DEPLOYMENT"]));
     expect([...selected].sort()).toEqual(
       flagDeployments.map((deployment) => deployment.id).sort(),

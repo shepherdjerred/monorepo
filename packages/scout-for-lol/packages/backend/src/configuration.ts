@@ -58,7 +58,7 @@ export type Environment = z.infer<typeof EnvironmentSchema>;
  * bootstrap only, per the repo's configuration policy.
  *
  * There is deliberately no `enabled` flag here. Activation is the
- * `voice_assistant_enabled` Flipt flag and nothing else: it already decides
+ * `voice_assistant_enabled` feature flag and nothing else: it already decides
  * whether `/scout join` may open a session and tears down live sessions when
  * it flips off, so a second env gate duplicated that authority without adding
  * any. What used to justify the env var — model verification being fatal at

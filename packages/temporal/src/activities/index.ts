@@ -41,7 +41,7 @@ import { reportFreshnessActivities } from "./reports/report-freshness.ts";
 import { ciWorkspaceReaperActivities } from "./maintenance/ci-workspace-reaper.ts";
 import { ciWorkspaceGoldenActivities } from "./maintenance/ci-workspace-golden.ts";
 import { freshrssActivities } from "./maintenance/freshrss.ts";
-import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
+import { flagInventoryActivities } from "./flag-inventory-sync.ts";
 import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
 import { renovateDeltaActivities } from "./ops/renovate-delta/renovate-delta.ts";
@@ -121,7 +121,7 @@ export const repoActivities = {
   ...llmCatalogRefreshActivities,
   ...pokeemeraldDataRefreshActivities,
   ...freshrssActivities,
-  ...fliptFlagInventoryActivities,
+  ...flagInventoryActivities,
 };
 
 export const agentChatDispatchWorkerActivities = {

@@ -158,7 +158,7 @@ spans share that trace id.
 
 ### Usage analytics
 
-When the Flipt flag `streambot-usage-analytics-enabled` is on (default on),
+When the feature flag `streambot-usage-analytics-enabled` is on (default on),
 Streambot sends pseudonymous usage events to PostHog Cloud:
 `streambot_play_requested` (surface, outcome, placement, batch, web-only
 selection kind), `streambot_command_used` (web action, outcome, code; plays are
@@ -219,7 +219,7 @@ to `connect-src` only when `/api/me` hands out a DSN.
 ## Music discovery and playlists
 
 The web remote searches music through a provider chosen by the
-`streambot-music-search-provider` Flipt flag (`youtube-music`, the default, or
+`streambot-music-search-provider` feature flag (`youtube-music`, the default, or
 `musicbrainz`; any other value is an error). A YouTube Music result is the
 playable item: its `music.youtube.com` watch page becomes the source, so there
 is no YouTube search-and-match step. The adapter in
@@ -397,9 +397,9 @@ The assistant adds pause, resume, restart, previous, play-now, richer subtitle
 selection, favorites, saved queues, “my usual,” and local-series continuation.
 The matching slash groups are `/stream playback`, `/stream history`, and
 `/stream personal`. Assistant V2 and durable history are independently guarded
-by typed Flipt flags and default off outside their rollout targets.
+by typed feature flags and default off outside their rollout targets.
 
-Sports listings and live sports playback are a separate, default-off Flipt
+Sports listings and live sports playback are a separate, default-off Flags
 feature. `/stream playback sports` shows today's games in a paginated Discord
 embed with live, unconfirmed, and upcoming status. Its private dropdown queues
 a live or unconfirmed game in your current voice channel, checking availability
@@ -475,7 +475,7 @@ Schedules persist independently of playback history. Temporal's declarative
 and Streambot's authenticated internal listener. The Schedule starts paused;
 activate it only after the dedicated worker and listener are healthy. The
 `streambot-lol-esports-enabled` and `streambot-lol-autoplay-enabled` gates default
-on in production and require the existing sports gate. Beta Flipt copies do not
+on in production and require the existing sports gate. Beta environment overrides do not
 represent a deployed beta service. `STREAMBOT_SCHEDULER_TOKEN` is credential
 bootstrap; the homelab projects its dedicated 1Password item into the two consumers.
 The package's `e2e:sports` harness accepts `E2E_LOL_LEAGUE=worlds` (or another

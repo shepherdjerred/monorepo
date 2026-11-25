@@ -38,26 +38,26 @@ export const MANAGED_FLAG_GATES: readonly ManagedFlagGate[] = [
   },
   {
     flagSource: "the-storm-stargates",
-    keyFile: `${REMOTE}/mechanics/src/main/java/com/shepherdjerred/thestorm/mechanics/adapter/remote/FliptStargatesGate.java`,
+    keyFile: `${REMOTE}/mechanics/src/main/java/com/shepherdjerred/thestorm/mechanics/adapter/remote/FlagsStargatesGate.java`,
   },
   {
     flagSource: "the-storm-rwfbots-chat",
-    keyFile: `${rwfbots}/FliptChatGate.java`,
+    keyFile: `${rwfbots}/FlagsChatGate.java`,
   },
   {
     flagSource: "the-storm-rwfbots-learning",
-    keyFile: `${rwfbots}/FliptLearningGate.java`,
+    keyFile: `${rwfbots}/FlagsLearningGate.java`,
   },
-  { flagSource: "the-storm-world", keyFile: `${world}/FliptCrierGate.java` },
+  { flagSource: "the-storm-world", keyFile: `${world}/FlagsCrierGate.java` },
   {
     flagSource: "the-storm-merchant",
-    keyFile: `${world}/FliptMerchantGate.java`,
+    keyFile: `${world}/FlagsMerchantGate.java`,
   },
-  { flagSource: "the-storm-rwf", keyFile: `${rwf}/FliptRwfGate.java` },
-  { flagSource: "the-storm-rwf-kits", keyFile: `${rwf}/FliptRwfKitsGate.java` },
+  { flagSource: "the-storm-rwf", keyFile: `${rwf}/FlagsRwfGate.java` },
+  { flagSource: "the-storm-rwf-kits", keyFile: `${rwf}/FlagsRwfKitsGate.java` },
   {
     flagSource: "the-storm-rwf-killstreaks",
-    keyFile: `${rwf}/FliptRwfKillstreaksGate.java`,
+    keyFile: `${rwf}/FlagsRwfKillstreaksGate.java`,
   },
   ...(
     [
@@ -73,7 +73,7 @@ export const MANAGED_FLAG_GATES: readonly ManagedFlagGate[] = [
     ] as const
   ).map(([flagSource, keyConstant]) => ({
     flagSource,
-    keyFile: `${rwf}/FliptRwfFeatures.java`,
+    keyFile: `${rwf}/FlagsRwfFeatures.java`,
     keyConstant,
   })),
 ];

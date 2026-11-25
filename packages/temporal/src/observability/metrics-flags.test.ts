@@ -15,7 +15,6 @@ const testDeployment: FlagDeployment = {
   id: "test/prod",
   catalog: "test",
   stage: "prod",
-  fliptEnvironment: "prod",
 };
 
 test("publishes bounded one-hot states, missing flags, scoped exceptions and fresh timestamps", async () => {
@@ -82,15 +81,15 @@ test("publishes bounded one-hot states, missing flags, scoped exceptions and fre
   expect(text).toContain('flag="missing",state="missing"} 1');
   expect(text).toContain('flag="first",issue="AI-1"} 1');
   expect(text).toContain(
-    'feature_flag_exception_review_timestamp_seconds{flipt_environment="prod",flipt_namespace="test",flag="first",issue="AI-1"}',
+    'feature_flag_exception_review_timestamp_seconds{deployment="test/prod",flag="first",issue="AI-1"}',
   );
   expect(text).toContain('flag="missing",issue="AI-2"} 1');
   expect(text).not.toContain(
-    'feature_flag_exception_review_timestamp_seconds{flipt_environment="prod",flipt_namespace="test",flag="missing",issue="AI-2"}',
+    'feature_flag_exception_review_timestamp_seconds{deployment="test/prod",flag="missing",issue="AI-2"}',
   );
   expect(text).not.toContain("unmanaged");
   expect(text).toContain(
-    `feature_flag_inventory_observed_timestamp_seconds{flipt_environment="prod",flipt_namespace="test"} ${String(at.getTime() / 1000)}`,
+    `feature_flag_inventory_observed_timestamp_seconds{deployment="test/prod"} ${String(at.getTime() / 1000)}`,
   );
   metrics.observeDeployment(
     testDeployment,
@@ -114,7 +113,6 @@ test("publishes bounded one-hot states, missing flags, scoped exceptions and fre
         id: "unknown/prod",
         catalog: "unknown",
         stage: "prod",
-        fliptEnvironment: "prod",
       },
       [],
       at,
@@ -149,22 +147,16 @@ test("sets expected gauges only for active flagDeployments and matches observed 
       entry.name === "feature_flag_inventory_observed_timestamp_seconds",
   );
   const expectedPairs = (expectedMetric?.values ?? [])
-    .map(
-      (v) =>
-        `${String(v.labels["flipt_environment"])}/${String(v.labels["flipt_namespace"])}`,
-    )
+    .map((v) => String(v.labels["deployment"]))
     .toSorted();
   const observedPairs = (observedMetric?.values ?? [])
-    .map(
-      (v) =>
-        `${String(v.labels["flipt_environment"])}/${String(v.labels["flipt_namespace"])}`,
-    )
+    .map((v) => String(v.labels["deployment"]))
     .toSorted();
 
   expect(expectedPairs).toHaveLength(17);
   expect(observedPairs).toEqual(expectedPairs);
-  expect(expectedPairs).toContain("prod/golink");
-  expect(expectedPairs).toContain("prod/the-storm");
-  expect(expectedPairs).not.toContain("beta/temporal");
-  expect(expectedPairs).not.toContain("prod/justin");
+  expect(expectedPairs).toContain("golink/prod");
+  expect(expectedPairs).toContain("storm/prod");
+  expect(expectedPairs).not.toContain("temporal/beta");
+  expect(expectedPairs).not.toContain("justin/prod");
 });

@@ -33,7 +33,7 @@ export type FileSourceOptions = {
  *
  * This layer exists for **apps we distribute to other people**. In our own
  * Kubernetes deployments it is normally absent: someone self-hosting one of
- * these bots has neither Flipt nor env injection, so the file is their entire
+ * these bots has neither Flags nor env injection, so the file is their entire
  * configuration interface.
  *
  * A missing file is absent, not an error — the common case for our own

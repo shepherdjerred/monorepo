@@ -48,7 +48,7 @@ test("errors fire on failures but never on steady states", () => {
   expect(errors).toContain(
     'storm_brain_requests_total{outcome=~"error|upstream_error"}',
   );
-  // Disabled is a Flipt-off flow, not a failure.
+  // Disabled is a flag-off flow, not a failure.
   expect(errors).not.toContain("disabled");
 
   const rejected = alert(groups, "StormBrainRequestsRejected");

@@ -62,7 +62,6 @@
       <outline text="Helm Blog" type="rss" xmlUrl="https://helm.sh/blog/index.xml" htmlUrl="https://helm.sh/blog/"/>
       <outline text="OpenTofu Blog" type="rss" xmlUrl="https://opentofu.org/blog/rss.xml" htmlUrl="https://opentofu.org/blog/"/>
       <outline text="Talos Releases" type="rss" xmlUrl="https://github.com/siderolabs/talos/releases.atom" htmlUrl="https://github.com/siderolabs/talos/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
-      <outline text="Flipt Releases" type="rss" xmlUrl="https://github.com/flipt-io/flipt/releases.atom" htmlUrl="https://github.com/flipt-io/flipt/releases" frss:filtersActionRead="intitle:/\b(alpha|beta|rc|canary|dev|nightly|preview|pre)\b/i"/>
       <outline text="Tailscale Blog" type="rss" xmlUrl="https://tailscale.com/blog/index.xml" htmlUrl="https://tailscale.com/blog/"/>
       <outline text="Tailscale Changelog" type="rss" xmlUrl="https://tailscale.com/changelog/index.xml" htmlUrl="https://tailscale.com/changelog"/>
       <outline text="Cloudflare Blog" type="rss" xmlUrl="https://blog.cloudflare.com/rss/" htmlUrl="https://blog.cloudflare.com/"/>

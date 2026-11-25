@@ -166,7 +166,7 @@ async function main(): Promise<void> {
     "-e",
     "TEMPORAL_WORKER_ROLE=control",
     // The control role resolves feature flags at startup and refuses to boot
-    // without an explicit mode. There is no Flipt to reach from a smoke
+    // without an explicit mode. There is no Flags service to reach from a smoke
     // container, and this harness asserts the worker boots and then fails on
     // Temporal — not how flags resolve — so it runs on call-site defaults.
     "-e",

@@ -62,7 +62,7 @@ export type ConfigSource = {
 export type ConfigKeyNames = {
   /** The camelCase key as declared. */
   readonly key: string;
-  /** Flipt flag key. Convention: kebab-case. */
+  /** Feature flag key. Convention: kebab-case. */
   readonly flag: string;
   /** Environment variable. Convention: SCREAMING_SNAKE_CASE. */
   readonly env: string;

@@ -17,7 +17,7 @@ import {
   type FlagValue,
 } from "@shepherdjerred/feature-flags/evaluate.ts";
 import { FlagsDeploymentSnapshotSchema } from "@shepherdjerred/feature-flags/flags-drift.ts";
-import { toFliptInputs } from "@shepherdjerred/feature-flags/providers/flipt-context.ts";
+import { toEvaluationInputs } from "@shepherdjerred/feature-flags/providers/evaluation-inputs.ts";
 import {
   createFreshSnapshotGate,
   observeCompletion,
@@ -388,7 +388,7 @@ export class FlagsProvider implements Provider {
     if (flags === undefined || this.closed) {
       return notReady(defaultValue);
     }
-    const inputs = toFliptInputs(context);
+    const inputs = toEvaluationInputs(context);
     if (inputs === undefined) {
       return {
         value: defaultValue,

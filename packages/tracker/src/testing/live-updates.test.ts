@@ -338,7 +338,7 @@ it("returns 404 and opens no LISTEN connection while the flag is off", async () 
   expect(await hubConnections()).toBe(0);
 });
 
-it("defaults on in code and in every declared Flipt environment", async () => {
+it("defaults on in code and in every declared flag environment", async () => {
   expect(managedBooleanDefault("tracker-live-updates-enabled", "prod")).toBe(
     true,
   );

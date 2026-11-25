@@ -7,7 +7,7 @@ import { getArgoCDRuleGroups } from "./argocd.ts";
 import { getEtcdCustomRuleGroups } from "./etcd-custom.ts";
 import { getResourceMonitoringRuleGroups } from "./resource-monitoring.ts";
 import { getBuildkitdRuleGroups } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/buildkitd.ts";
-import { getFliptRuleGroups } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/flipt.ts";
+import { getFlagsRuleGroups } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/flags.ts";
 
 describe("production burst-memory headroom alerts", () => {
   it.each([
@@ -325,7 +325,7 @@ describe("dedicated BuildKit cache capacity alert", () => {
 
 describe("feature flag provider readiness alert", () => {
   it("uses the recoverable readiness gauge instead of historical errors", () => {
-    const alert = getFliptRuleGroups()
+    const alert = getFlagsRuleGroups()
       .flatMap((group) => group.rules ?? [])
       .find((rule) => rule.alert === "FeatureFlagProviderInitFailing");
     expect(alert?.expr.value).toBe(

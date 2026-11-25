@@ -151,7 +151,7 @@ describe("Hey Scout voice deployment boundary", () => {
     );
   });
 
-  // Activation belongs to the `voice_assistant_enabled` Flipt flag. A resurrected
+  // Activation belongs to the `voice_assistant_enabled` feature flag. A resurrected
   // env gate would silently take authority back from it.
   test("no environment sets an activation env gate", () => {
     for (const stage of ["beta", "prod"] as const) {
@@ -179,7 +179,7 @@ describe("Hey Scout voice deployment boundary", () => {
    *    the user.
    * 2. Voice is NOT a boot step. `runtime/plan.ts` records that models load
    *    lazily on first `/scout join`, because activation is the
-   *    `voice_assistant_enabled` Flipt flag and a boot-time gate "would only
+   *    `voice_assistant_enabled` feature flag and a boot-time gate "would only
    *    take the pod down"; the asset set is verified in the image's
    *    `voice-smoke` build stage, which fails the build rather than the pod.
    * 3. This volume lives on the GATEWAY pod, which owns the Discord shard. A required Secret leaves a pod

@@ -420,8 +420,6 @@ describe("Paper smoke lane", () => {
     if (typeof pluginPath !== "string")
       throw new TypeError(`missing plugin path for ${lane}`);
     expect(candidate.environment["STORM_E2E_FULL"]).toBe("0");
-    expect(paper.environment["FLIPT_URL"]).toBeUndefined();
-    expect(paper.environment["FLIPT_ENVIRONMENT"]).toBeUndefined();
     expect(paper.environment["FLAGS_URL"]).toBe("http://storm-brain:18081");
     expect(paper.environment["FLAGS_DEPLOYMENT"]).toBe("minecraft/tsmc");
   });

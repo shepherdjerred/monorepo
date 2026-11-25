@@ -15,27 +15,27 @@ const createTimeseriesPanel = (
   options: Parameters<typeof baseTimeseriesPanel>[0],
 ) => baseTimeseriesPanel(options).datasource(datasource);
 
-const pair = "flipt_environment, flipt_namespace";
-// Choose the latest observer per pair before aggregating away worker identity.
+const scope = "deployment";
+// Choose the latest observer per deployment before aggregating away worker identity.
 // Otherwise an old worker's ON can outvote the replacement worker's OFF.
 const observations = "feature_flag_inventory_observed_timestamp_seconds";
-const latest = `(${observations} == on (${pair}) group_left() max by (${pair}) (${observations})) and (${observations} > time() - 600)`;
-export const LIVE_FLAG_STATES_QUERY = `max by (${pair}, flag, state) (feature_flag_rollout_state and on (job, instance, ${pair}) (${latest})) == 1`;
+const latest = `(${observations} == on (${scope}) group_left() max by (${scope}) (${observations})) and (${observations} > time() - 600)`;
+export const LIVE_FLAG_STATES_QUERY = `max by (${scope}, flag, state) (feature_flag_rollout_state and on (job, instance, ${scope}) (${latest})) == 1`;
 
 export function createFeatureFlagsDashboard() {
   const builder = new dashboard.DashboardBuilder("Feature flags")
     .uid("feature-flags")
-    .tags(["feature-flags", "flipt"])
+    .tags(["feature-flags", "flags"])
     .time({ from: "now-6h", to: "now" })
     .refresh("30s")
     .timezone("browser");
   builder.withPanel(
     createStatPanel({
-      title: "Fresh inventory pairs",
+      title: "Fresh inventory deployments",
       description:
         "A configured flag state does not prove a running consumer or successful user flow.",
-      query: `count(max by (${pair}) (${observations}) > time() - 600) or vector(0)`,
-      legend: "fresh pairs",
+      query: `count(max by (${scope}) (${observations}) > time() - 600) or vector(0)`,
+      legend: "fresh deployments",
       instant: true,
       thresholds: [
         { value: 0, color: "red" },
@@ -49,9 +49,9 @@ export function createFeatureFlagsDashboard() {
   );
   builder.withPanel(
     createStatPanel({
-      title: "Expected inventory pairs",
-      query: `count(max by (${pair}) (feature_flag_inventory_expected{container="temporal-repo-worker"}))`,
-      legend: "expected pairs",
+      title: "Expected inventory deployments",
+      query: `count(max by (${scope}) (feature_flag_inventory_expected{container="temporal-repo-worker",pod!~".*-wf-retained-.*"}))`,
+      legend: "expected deployments",
       instant: true,
       gridPos: { x: 8, y: 0, w: 8, h: 4 },
     }),
@@ -59,7 +59,7 @@ export function createFeatureFlagsDashboard() {
   builder.withPanel(
     createStatPanel({
       title: "Overdue exception reviews",
-      query: `count(max by (${pair}, flag, issue) (feature_flag_exception_review_timestamp_seconds) < time()) or vector(0)`,
+      query: `count(max by (${scope}, flag, issue) (feature_flag_exception_review_timestamp_seconds) < time()) or vector(0)`,
       legend: "reviews",
       instant: true,
       thresholds: [
@@ -80,7 +80,7 @@ export function createFeatureFlagsDashboard() {
       title: "Default-off exceptions and review deadlines",
       description:
         "Review dates are UTC. Each issue identifies the enablement criteria; beta copies do not imply deployed beta services.",
-      query: `1000 * max by (${pair}, flag, issue) (feature_flag_exception_review_timestamp_seconds)`,
+      query: `1000 * max by (${scope}, flag, issue) (feature_flag_exception_review_timestamp_seconds)`,
     },
     {
       title: "Running consumer provider identity",
@@ -106,16 +106,14 @@ export function createFeatureFlagsDashboard() {
           options: {
             excludeByName: { Time: true, Value: index !== 1 },
             indexByName: {
-              flipt_environment: 0,
-              flipt_namespace: 1,
-              flag: 2,
-              state: 3,
-              issue: 3,
-              Value: 4,
+              deployment: 0,
+              flag: 1,
+              state: 2,
+              issue: 2,
+              Value: 3,
             },
             renameByName: {
-              flipt_environment: "Environment",
-              flipt_namespace: "Namespace",
+              deployment: "Deployment",
               flag: "Flag",
               state: "State",
               issue: "Issue",
@@ -124,8 +122,7 @@ export function createFeatureFlagsDashboard() {
           },
         })
         .overrideByName("Flag", [{ id: "custom.width", value: 450 }])
-        .overrideByName("Environment", [{ id: "custom.width", value: 120 }])
-        .overrideByName("Namespace", [{ id: "custom.width", value: 150 }])
+        .overrideByName("Deployment", [{ id: "custom.width", value: 200 }])
         .overrideByName("Issue", [{ id: "custom.width", value: 80 }])
         .overrideByName("Review by (UTC)", [
           { id: "custom.width", value: 230 },
@@ -179,8 +176,8 @@ export function createFeatureFlagsDashboard() {
       title: "Inventory observation age",
       targets: [
         {
-          query: `time() - max by (${pair}) (${observations})`,
-          legend: "{{flipt_environment}} / {{flipt_namespace}}",
+          query: `time() - max by (${scope}) (${observations})`,
+          legend: "{{deployment}}",
         },
       ],
       unit: "s",
