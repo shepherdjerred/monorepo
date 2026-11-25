@@ -62,7 +62,6 @@ export const VersionMapSchema = z
     alloy: z.string(),
     "grafana/grafana-image-renderer": z.string(),
     openebs: z.string(),
-    "freshrss/freshrss": z.string(),
     "oven/bun": z.string(),
     "pinchtab/pinchtab": z.string(),
     "texlive/texlive": z.string(),

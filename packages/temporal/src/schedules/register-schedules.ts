@@ -130,6 +130,8 @@ export const DELETED_SCHEDULE_IDS = [
   "golink-sync",
   // Replaced by `flag-inventory-sync` after the first-party Flags rename.
   "flipt-flag-inventory-daily",
+  // Replaced by `feeds-refresh` and `@shepherdjerred/feeds` startup catalog reconciliation.
+  "freshrss-sync-hourly",
 ] as const;
 
 /**

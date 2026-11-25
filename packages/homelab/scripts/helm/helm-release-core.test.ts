@@ -21,7 +21,6 @@ test("release pruning is limited to charts with intentional resource removal", (
     [
       "arcade",
       "birmel",
-      "freshrss",
       "media",
       "s3-static-sites",
       "scout-beta",
@@ -35,7 +34,6 @@ test("release pruning is limited to charts with intentional resource removal", (
   ).toEqual([
     "arcade",
     "birmel",
-    "freshrss",
     "media",
     "s3-static-sites",
     "scout-beta",
