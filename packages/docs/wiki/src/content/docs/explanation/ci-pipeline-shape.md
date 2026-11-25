@@ -347,13 +347,14 @@ Free public-repository tiers (`cubic`, `coderabbit`, `codeant`, `qodo`, and
 Requesting one provider per pull request avoids burning every quota on the same
 diff.
 
-Provider failures stay isolated in the coordinator. Rate-limited, seat-blocked,
-skipped, or timed-out providers enter a temporary cooldown, and the workflow
-fails over to the next eligible reviewer
+Provider failures stay isolated in the coordinator. Rate-limited and timed-out
+providers enter a temporary cooldown, while seat-blocked or skipped outcomes
+fail over to the next eligible reviewer without cooling down the provider for
+other pull requests
 ([`pr-code-review-helpers.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/ci/pr-code-review-helpers.ts)).
-When every configured provider is quota-blocked or times out, `ci/code-review`
-passes advisories unless an unresolved P0 stands. Billing states must not stop
-unrelated merges.
+When every configured provider is quota-blocked, times out, is skipped, or none
+are configured, `ci/code-review` passes unless an unresolved P0 stands. Billing
+states and bot-skip rules must not stop unrelated merges.
 
 Binding to the exact head commit remains mandatory. A review from an earlier
 push judged different code, so accepting it on round one would approve
@@ -372,14 +373,13 @@ starve local `gh` or agent sessions. Only review-request comments use
 ignore bot-authored trigger comments
 ([`code-review-octokit.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/ci/code-review-octokit.ts)).
 
-The installation bucket still needs bounded GraphQL spend. Conditional REST
-reads return uncharged `304` responses when reviews and comments have not
-changed
-([`github-review-listing-cache.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/code-review/src/github-review-listing-cache.ts)).
-The cache re-reads GraphQL threads only after a REST change or every five
-minutes to catch thread resolution. Terminal verdicts still verify against a
-fresh read, while `toolkit pr review resolve` signals `recheckReview` for
-immediate re-evaluation.
+The installation bucket still needs bounded GraphQL spend. Each Temporal
+observation fetches one provider-agnostic GraphQL thread and review listing and
+partitions it across all providers in memory rather than querying per provider
+([`github-review-snapshot.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/code-review/src/github-review-snapshot.ts)).
+Polling runs on bounded Temporal timers (30 seconds while awaiting a review, 60
+seconds while watching blocking threads), while `toolkit pr review resolve` and
+`toolkit pr review recheck` signal `recheckReview` for immediate re-evaluation.
 
 ## Handoffs go through object storage
 

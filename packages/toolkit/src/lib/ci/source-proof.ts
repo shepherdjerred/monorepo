@@ -108,6 +108,41 @@ function evidenceIdentity(snapshot: Snapshot) {
   });
 }
 
+function requireReviewChecks(
+  snapshot: Snapshot,
+  pipeline: NonNullable<Snapshot["pipeline"]>,
+) {
+  const hasLegacyReviewGate = pipeline.workflows.some(
+    (workflow) =>
+      workflow.name === "codex-review-gate" && workflow.state === "success",
+  );
+  const codeReviewChecks = snapshot.checks.filter(
+    (check) => check.name === "ci/code-review",
+  );
+  if (codeReviewChecks.some((check) => check.state !== "pass"))
+    throw new Error(
+      "Exact source required checks have not all passed on its selected pipeline",
+    );
+  const allChecks = requiredChecks(snapshot);
+  const checks =
+    hasLegacyReviewGate && codeReviewChecks.length === 0
+      ? allChecks.filter((check) => check.name !== "ci/code-review")
+      : allChecks;
+  if (checks.length === 0 || checks.some((check) => check.state !== "pass"))
+    throw new Error(
+      "Exact source required checks have not all passed on its selected pipeline",
+    );
+  const hasReviewGate =
+    checks.some(
+      (check) => check.name === "ci/code-review" && check.state === "pass",
+    ) || hasLegacyReviewGate;
+  if (!hasReviewGate)
+    throw new Error(
+      "Exact source requires passing ci/code-review or legacy native review gate",
+    );
+  return checks;
+}
+
 function requireSource(snapshot: Snapshot, source: string) {
   if (
     snapshot.consistent !== true ||
@@ -141,23 +176,7 @@ function requireSource(snapshot: Snapshot, source: string) {
   const blockers = reviewBlockers(snapshot);
   if (blockers.length > 0)
     throw new Error(`Exact source review is blocked: ${blockers.join("; ")}`);
-  const checks = requiredChecks(snapshot);
-  if (checks.length === 0 || checks.some((check) => check.state !== "pass"))
-    throw new Error(
-      "Exact source required checks have not all passed on its selected pipeline",
-    );
-  const hasReviewGate =
-    checks.some(
-      (check) => check.name === "ci/code-review" && check.state === "pass",
-    ) ||
-    pipeline.workflows.some(
-      (workflow) =>
-        workflow.name === "codex-review-gate" && workflow.state === "success",
-    );
-  if (!hasReviewGate)
-    throw new Error(
-      "Exact source requires passing ci/code-review or legacy native review gate",
-    );
+  const checks = requireReviewChecks(snapshot, pipeline);
   if (snapshot.pipelineUrl === undefined || snapshot.pipelineUrl === null)
     throw new Error("Exact source native pipeline URL is unavailable");
   return { pipeline, checks, pipelineUrl: snapshot.pipelineUrl };

@@ -43,23 +43,23 @@ function merged(): Snapshot {
   return snapshot;
 }
 
-function legacyMerged(): Snapshot {
-  const snapshot = ciFixture();
-  snapshot.pr.merged = true;
-  snapshot.pr.merge_commit_sha = MERGE;
-  snapshot.pr.state = "closed";
-  snapshot.pr.mergeable = null;
+function legacyMerged(postCutoverRules = true): Snapshot {
+  const snapshot = merged();
   if (snapshot.pipeline === null)
     throw new Error("Expected native fixture pipeline");
-  snapshot.pipeline.finished = 1234;
-  snapshot.pipeline = WoodpeckerPipelineSchema.parse({
-    ...snapshot.pipeline,
-    workflows: [
-      { name: "verify", state: "success" },
-      { name: "codex-review-gate", state: "success" },
-      { name: "ci-complete", state: "success" },
-    ],
-  });
+  snapshot.pipeline.workflows = [
+    { name: "verify", state: "success" },
+    { name: "codex-review-gate", state: "success" },
+    { name: "ci-complete", state: "success" },
+  ];
+  if (!postCutoverRules) {
+    snapshot.rules.checks = snapshot.rules.checks.filter(
+      (check) => check.name !== "ci/code-review",
+    );
+  }
+  snapshot.checks = snapshot.checks.filter(
+    (check) => check.name !== "ci/code-review",
+  );
   return snapshot;
 }
 function effects(snapshot = merged(), after = snapshot) {
@@ -406,24 +406,35 @@ test("unrelated main verdict remains evidence rather than replacing the exact-so
     mainState: "red",
   });
 });
-test("legacy pre-cutover pipelines satisfy review proof only with native codex-review-gate", async () => {
-  const validLegacy = legacyMerged();
-  await expect(prove(validLegacy)).resolves.toMatchObject({
-    sourceRevision: CI_HEAD,
-    reviewEvidence: {
-      requiredChecks: [
-        { name: "ci/merge-conflict", state: "pass" },
-        { name: "ci/woodpecker/pr/ci-complete", state: "pass" },
-      ],
-    },
-  });
+test("legacy pre-cutover pipelines satisfy review proof under both pre- and post-cutover rulesets", async () => {
+  for (const postCutoverRules of [true, false]) {
+    await expect(prove(legacyMerged(postCutoverRules))).resolves.toMatchObject({
+      sourceRevision: CI_HEAD,
+      reviewEvidence: {
+        requiredChecks: [
+          { name: "ci/merge-conflict", state: "pass" },
+          { name: "ci/woodpecker/pr/ci-complete", state: "pass" },
+        ],
+      },
+    });
+  }
 
   const missingLegacy = legacyMerged();
   if (missingLegacy.pipeline === null) throw new Error("Expected fixture");
   missingLegacy.pipeline.workflows = missingLegacy.pipeline.workflows.filter(
     (workflow) => workflow.name !== "codex-review-gate",
   );
-  await expect(prove(missingLegacy)).rejects.toThrow("native review gate");
+  await expect(prove(missingLegacy)).rejects.toThrow("required checks");
+  const missingLegacyPreCutover = legacyMerged(false);
+  if (missingLegacyPreCutover.pipeline === null)
+    throw new Error("Expected fixture");
+  missingLegacyPreCutover.pipeline.workflows =
+    missingLegacyPreCutover.pipeline.workflows.filter(
+      (workflow) => workflow.name !== "codex-review-gate",
+    );
+  await expect(prove(missingLegacyPreCutover)).rejects.toThrow(
+    "native review gate",
+  );
 
   const failedLegacy = legacyMerged();
   if (failedLegacy.pipeline === null) throw new Error("Expected fixture");
@@ -435,7 +446,7 @@ test("legacy pre-cutover pipelines satisfy review proof only with native codex-r
   );
   await expect(prove(failedLegacy)).rejects.toThrow();
 
-  const inventedAlias = legacyMerged();
+  const inventedAlias = legacyMerged(false);
   if (inventedAlias.pipeline === null) throw new Error("Expected fixture");
   inventedAlias.pipeline.workflows = inventedAlias.pipeline.workflows.map(
     (workflow) =>
@@ -445,17 +456,17 @@ test("legacy pre-cutover pipelines satisfy review proof only with native codex-r
   );
   await expect(prove(inventedAlias)).rejects.toThrow("native review gate");
 
-  const transitionalFailing = merged();
-  if (transitionalFailing.pipeline === null)
-    throw new Error("Expected fixture");
-  transitionalFailing.pipeline.workflows.push({
-    name: "codex-review-gate",
-    state: "success",
-  });
-  transitionalFailing.checks = transitionalFailing.checks.map((check) =>
-    check.name === "ci/code-review" ? { ...check, state: "fail" } : check,
-  );
-  await expect(prove(transitionalFailing)).rejects.toThrow(
-    "required checks have not all passed",
-  );
+  for (const state of ["fail", "pending"] as const) {
+    const transitional = legacyMerged(false);
+    if (transitional.pipeline === null) throw new Error("Expected fixture");
+    transitional.checks.push({
+      name: "ci/code-review",
+      state,
+      url: null,
+      appId: null,
+    });
+    await expect(prove(transitional)).rejects.toThrow(
+      "required checks have not all passed",
+    );
+  }
 });

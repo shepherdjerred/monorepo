@@ -191,6 +191,13 @@ describe("review provider outages", () => {
     {
       failures: [
         'GitHub check "ci/code-review" - FAILURE',
+        'GitHub check "external-test" - PENDING',
+      ],
+      retryableBlock: true,
+    },
+    {
+      failures: [
+        'GitHub check "ci/code-review" - FAILURE',
         'Workflow "verify" - FAILURE',
       ],
       retryableBlock: false,

@@ -71,9 +71,19 @@ export async function queueUnhealthy(input: {
   const failures =
     input.health.checks
       .find((check) => check.name === "CI Status")
-      ?.details.filter((detail) =>
-        /^(?:Workflow|GitHub check) "/.test(detail),
-      ) ?? [];
+      ?.details.filter((detail) => {
+        const match = /^(?:Workflow|GitHub check) ".+" - (\S+)$/.exec(detail);
+        return (
+          match?.[1] !== undefined &&
+          ![
+            "PENDING",
+            "IN_PROGRESS",
+            "QUEUED",
+            "WAITING",
+            "REQUESTED",
+          ].includes(match[1])
+        );
+      }) ?? [];
   const reviewOnlyFailure =
     failures.some((detail) =>
       /^(?:Workflow "(?:codex-review-gate|review-gate)"|GitHub check "ci\/code-review") - (?:FAILURE|ERROR)$/.test(

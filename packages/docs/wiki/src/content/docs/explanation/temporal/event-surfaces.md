@@ -76,12 +76,14 @@ house, "eventually consistent" is not good enough.
 What a redelivered webhook does depends on each target's workflow-ID policy. The
 merge-conflict check is keyed per PR and _supersedes_ an in-flight run.
 
-Code review is keyed by PR and head SHA with `USE_EXISTING`, while close and
-draft events signal `recheckReview` to stop obsolete runs
+Code review is keyed by PR and head SHA: `USE_EXISTING` reuses an in-flight run,
+`ALLOW_DUPLICATE` lets post-completion deliveries re-evaluate the head, and
+close or draft events signal `recheckReview` to stop obsolete runs
 ([`code-review-starts.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/event-bridge/code-review-starts.ts)).
 CI cancel is keyed by commit and no-ops duplicates.
 
-Every path is idempotent, though each deduplicates at a different boundary.
+Each path bounds duplicate deliveries at the workflow boundary that fits its
+lifecycle.
 
 ## A removed fleet
 

@@ -89,6 +89,8 @@ describe("reviewRecheckCommand", () => {
   const head = "b".repeat(40);
 
   test("infers the open PR, signals Temporal recheckReview, and supports JSON output", async () => {
+    const priorTemporalAddress = Bun.env["TEMPORAL_ADDRESS"];
+    delete Bun.env["TEMPORAL_ADDRESS"];
     const logs: string[] = [];
     vi.spyOn(console, "log").mockImplementation((...args: unknown[]) => {
       logs.push(args.map(String).join(" "));
@@ -97,37 +99,45 @@ describe("reviewRecheckCommand", () => {
       cmd: string[];
       env: Record<string, string | undefined>;
     }[] = [];
-    await reviewRecheckCommand(
-      undefined,
-      { json: true },
-      {
-        resolvePr: async (prNumber, repo) => {
-          expect(prNumber).toBeUndefined();
-          expect(repo).toBe("shepherdjerred/monorepo");
-          return 128;
+    try {
+      await reviewRecheckCommand(
+        undefined,
+        { json: true },
+        {
+          resolvePr: async (prNumber, repo) => {
+            expect(prNumber).toBeUndefined();
+            expect(repo).toBe("shepherdjerred/monorepo");
+            return 128;
+          },
+          getToken: () => "ghs_secret_token_value",
+          fetchHead: async ({ repo, number, token }) => {
+            expect(repo).toBe("shepherdjerred/monorepo");
+            expect(number).toBe(128);
+            expect(token).toBe("ghs_secret_token_value");
+            return head;
+          },
+          resolveTemporalCredentials: () => Promise.resolve(),
+          lookupTemporalExecutable: (executable) => {
+            expect(executable).toBe("temporal");
+            return "/usr/local/bin/temporal";
+          },
+          spawnSync: (cmd, options) => {
+            spawned.push({ cmd, env: options.env });
+            return {
+              exitCode: 0,
+              stdout: new Uint8Array(),
+              stderr: new Uint8Array(),
+            };
+          },
         },
-        getToken: () => "ghs_secret_token_value",
-        fetchHead: async ({ repo, number, token }) => {
-          expect(repo).toBe("shepherdjerred/monorepo");
-          expect(number).toBe(128);
-          expect(token).toBe("ghs_secret_token_value");
-          return head;
-        },
-        resolveTemporalCredentials: () => Promise.resolve(),
-        lookupTemporalExecutable: (executable) => {
-          expect(executable).toBe("temporal");
-          return "/usr/local/bin/temporal";
-        },
-        spawnSync: (cmd, options) => {
-          spawned.push({ cmd, env: options.env });
-          return {
-            exitCode: 0,
-            stdout: new Uint8Array(),
-            stderr: new Uint8Array(),
-          };
-        },
-      },
-    );
+      );
+    } finally {
+      if (priorTemporalAddress === undefined) {
+        delete Bun.env["TEMPORAL_ADDRESS"];
+      } else {
+        Bun.env["TEMPORAL_ADDRESS"] = priorTemporalAddress;
+      }
+    }
 
     expect(spawned).toHaveLength(1);
     expect(spawned[0]?.cmd).toEqual([
@@ -151,6 +161,38 @@ describe("reviewRecheckCommand", () => {
       signal: "recheckReview",
       signaled: true,
     });
+
+    await reviewRecheckCommand(
+      "128",
+      {},
+      {
+        env: { PATH: "/usr/local/bin", TEMPORAL_ADDRESS: "127.0.0.1:7233" },
+        resolvePr: async () => 128,
+        getToken: () => "ghs_secret_token_value",
+        fetchHead: async () => head,
+        resolveTemporalCredentials: () => Promise.resolve(),
+        lookupTemporalExecutable: () => "/usr/local/bin/temporal",
+        spawnSync: (cmd, options) => {
+          spawned.push({ cmd, env: options.env });
+          return {
+            exitCode: 0,
+            stdout: new Uint8Array(),
+            stderr: new Uint8Array(),
+          };
+        },
+      },
+    );
+    expect(spawned[1]?.cmd).toEqual([
+      "/usr/local/bin/temporal",
+      "--namespace",
+      "prod",
+      "workflow",
+      "signal",
+      "--workflow-id",
+      `pr-code-review/shepherdjerred/monorepo/128/${head}`,
+      "--name",
+      "recheckReview",
+    ]);
   });
 
   test("redacts tokens from failed temporal signal stderr", async () => {

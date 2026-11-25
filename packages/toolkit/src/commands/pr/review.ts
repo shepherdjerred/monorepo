@@ -370,6 +370,9 @@ export async function reviewHarvestCommand(
       token,
       retry: options.all === true,
     });
+    if (handledCodeReview) {
+      continue;
+    }
     for (const gateDefinition of REQUIRED_REVIEW_GATES) {
       const provider = resolveProvider(gateDefinition.providerId);
       const gate = await gateStatusFor({
@@ -378,9 +381,6 @@ export async function reviewHarvestCommand(
         token,
         context: gateDefinition.context,
       });
-      if (gate === null && handledCodeReview) {
-        continue;
-      }
       if (gate?.state !== "failure") {
         const reason =
           gate === null ? "no gate status" : `gate is ${gate.state}`;

@@ -205,6 +205,7 @@ export function codeReviewHarvestVerdict(input: {
 }
 
 export type ReviewRecheckDeps = {
+  env?: Record<string, string | undefined>;
   resolvePr?: (prNumber: string | undefined, repo: string) => Promise<number>;
   getToken?: () => string;
   fetchHead?: (input: {
@@ -256,7 +257,7 @@ export async function signalCodeReviewRecheck(
       "--name",
       "recheckReview",
     ],
-    { ...Bun.env },
+    deps.env ?? { ...Bun.env },
   );
   if (invocation === null) {
     throw new Error("toolkit: unknown passthrough command: temporal");
