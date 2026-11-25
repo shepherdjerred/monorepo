@@ -57,8 +57,7 @@ const MC_BRIDGE_PORT = 25_580;
  * chart's VERSION env overrides the image's, and itzg reads the Paper config
  * defaults from /opt/paper-defaults/<VERSION>, so this must equal the image's
  * Paper (packages/the-storm/server/plugins.json; minecraft-tsmc.test.ts checks
- * it). It deliberately does not follow the catalog's `paper` pin, which moves
- * the other servers.
+ * it).
  */
 export const THE_STORM_PAPER_VERSION = "26.3";
 
