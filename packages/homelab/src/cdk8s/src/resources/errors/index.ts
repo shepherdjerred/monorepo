@@ -6,7 +6,10 @@ import {
   ERRORS_ADMIN_ENDPOINT,
   ERRORS_INGEST_ENDPOINT,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
-import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
+import {
+  FirstPartyWebService,
+  type FirstPartyServerContainer,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   cloudflareTunnelIngressRule,
   dnsEgressRule,
@@ -22,31 +25,35 @@ import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/version
  */
 export const ERRORS_ACTIVE = false;
 
+const ERRORS_UID = 1000;
+
+function buildErrorsServerContainer(): FirstPartyServerContainer {
+  const containerSecurity = restrictedContainer(ERRORS_UID);
+  const envVariables: Record<string, EnvValue> = {
+    ENVIRONMENT: EnvValue.fromValue("production"),
+    ERRORS_INGEST_PORT: EnvValue.fromValue(String(ERRORS_INGEST_ENDPOINT.port)),
+    HOME: EnvValue.fromValue("/tmp"),
+    HOST: EnvValue.fromValue("0.0.0.0"),
+    PORT: EnvValue.fromValue(String(ERRORS_ADMIN_ENDPOINT.port)),
+  };
+  return {
+    image: firstPartyImageRecipe("errors"),
+    securityContext: containerSecurity,
+    resources: {
+      cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
+      memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
+    },
+    envVariables,
+  };
+}
+
 export function createErrorsDeployment(chart: Chart) {
   const webService = new FirstPartyWebService(chart, "errors-web-service", {
     name: ERRORS_ADMIN_ENDPOINT.app,
     port: ERRORS_ADMIN_ENDPOINT.port,
     probes: { live: "/healthz", ready: "/healthz" },
     containers: () => ({
-      server: {
-        image: firstPartyImageRecipe("errors"),
-        securityContext: restrictedContainer(1000),
-        resources: {
-          cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
-          memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
-        },
-        envVariables: {
-          // Bun writes runtime state under $HOME; the root filesystem is
-          // read-only, so HOME points at the writable emptyDir.
-          HOME: EnvValue.fromValue("/tmp"),
-          HOST: EnvValue.fromValue("0.0.0.0"),
-          PORT: EnvValue.fromValue(String(ERRORS_ADMIN_ENDPOINT.port)),
-          ERRORS_INGEST_PORT: EnvValue.fromValue(
-            String(ERRORS_INGEST_ENDPOINT.port),
-          ),
-          ENVIRONMENT: EnvValue.fromValue("production"),
-        },
-      },
+      server: buildErrorsServerContainer(),
     }),
     serviceName: ERRORS_ADMIN_ENDPOINT.service,
     tailscale: {

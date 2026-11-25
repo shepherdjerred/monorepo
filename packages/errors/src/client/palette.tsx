@@ -1,27 +1,18 @@
 import { Dialog } from "@base-ui/react/dialog";
-import {
-  nextThemePreference,
-  type ThemeStore,
-} from "@shepherdjerred/console-ui";
-import { CONSOLE_LINKS } from "@shepherdjerred/ops-model/tool-links.ts";
+import type { ThemeStore } from "@shepherdjerred/console-ui";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ActivityIcon,
-  AlertCircleIcon,
-  CornerDownLeftIcon,
-  ExternalLinkIcon,
-  FolderIcon,
-  FolderKeyIcon,
-  RotateCcwIcon,
-  SearchIcon,
-  SunMoonIcon,
-  TagIcon,
-  type LucideIcon,
-} from "lucide-react";
+import { CornerDownLeftIcon, SearchIcon } from "lucide-react";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useNavigate } from "react-router";
-import type { IssueListItem, ProjectSummary } from "#shared/contract.ts";
+import type { ProjectSummary } from "#shared/contract.ts";
 import { fetchIssues } from "./api.ts";
+import {
+  buildStaticSections,
+  issueToPaletteItem,
+  matchesQuery,
+  type PaletteItem,
+  type PaletteSection,
+} from "./palette-model.ts";
 import {
   themeStore as defaultThemeStore,
   useThemePreference,
@@ -93,148 +84,117 @@ function debounce(delayMs: number, signal: AbortSignal): Promise<void> {
   });
 }
 
-type PaletteItem = {
-  readonly id: string;
-  readonly label: string;
-  readonly detail?: string | undefined;
-  readonly keywords: string;
-  readonly icon: LucideIcon;
-  readonly run: (navigate: (to: string) => void) => void;
+type IndexedPaletteEntry = {
+  readonly item: PaletteItem;
+  readonly flatIndex: number;
 };
 
-type PaletteSection = {
+type IndexedPaletteGroup = {
   readonly heading: string;
-  readonly items: readonly PaletteItem[];
+  readonly entries: readonly IndexedPaletteEntry[];
 };
 
-function matchesQuery(item: PaletteItem, normalizedTerm: string): boolean {
-  if (normalizedTerm.length === 0) {
-    return true;
-  }
-  const haystack =
-    `${item.label} ${item.detail ?? ""} ${item.keywords}`.toLowerCase();
-  return normalizedTerm
-    .split(/\s+/u)
-    .every((token) => haystack.includes(token));
+function indexPaletteSections(
+  sections: readonly PaletteSection[],
+): readonly IndexedPaletteGroup[] {
+  let cursor = 0;
+  return sections.map((section) => ({
+    heading: section.heading,
+    entries: section.items.map((item) => {
+      const entry: IndexedPaletteEntry = { item, flatIndex: cursor };
+      cursor += 1;
+      return entry;
+    }),
+  }));
 }
 
-function buildStaticSections(
-  projects: readonly ProjectSummary[],
-  store: ThemeStore,
-  preference: string,
-): readonly PaletteSection[] {
-  const triageItems: readonly PaletteItem[] = [
-    {
-      id: "nav-overview",
-      label: "Overview",
-      detail: "/",
-      keywords: "home dashboard summary attention",
-      icon: ActivityIcon,
-      run: (navigate) => {
-        navigate("/");
-      },
-    },
-    {
-      id: "nav-unresolved",
-      label: "Unresolved issues",
-      detail: "/issues",
-      keywords: "inbox open triage errors bugs",
-      icon: AlertCircleIcon,
-      run: (navigate) => {
-        navigate("/issues");
-      },
-    },
-    {
-      id: "nav-regressed",
-      label: "Regressed issues",
-      detail: "/issues?tab=regressed",
-      keywords: "regressions reopened",
-      icon: RotateCcwIcon,
-      run: (navigate) => {
-        navigate("/issues?tab=regressed");
-      },
-    },
-    {
-      id: "nav-releases",
-      label: "Releases",
-      detail: "/releases",
-      keywords: "versions deploys tags",
-      icon: TagIcon,
-      run: (navigate) => {
-        navigate("/releases");
-      },
-    },
-    {
-      id: "nav-projects",
-      label: "Projects & DSNs",
-      detail: "/projects",
-      keywords: "dsn keys ingest retention alerts settings",
-      icon: FolderKeyIcon,
-      run: (navigate) => {
-        navigate("/projects");
-      },
-    },
-  ];
-
-  const projectItems: readonly PaletteItem[] = projects.map((project) => ({
-    id: `project-${project.slug}`,
-    label: project.name,
-    detail: `${project.slug} · ${String(project.unresolvedCount)} open`,
-    keywords: `project ${project.slug} ${project.name}`,
-    icon: FolderIcon,
-    run: (navigate) => {
-      navigate(`/projects/${encodeURIComponent(project.slug)}`);
-    },
-  }));
-
-  const nextTheme = nextThemePreference(store.getPreference());
-  const commandItems: readonly PaletteItem[] = [
-    {
-      id: "cmd-theme",
-      label: `Cycle theme (${preference} → ${nextTheme})`,
-      detail: "Appearance",
-      keywords: "theme dark light system mode color",
-      icon: SunMoonIcon,
-      run: () => {
-        store.setThemePreference(nextThemePreference(store.getPreference()));
-      },
-    },
-  ];
-
-  const consoleItems: readonly PaletteItem[] = CONSOLE_LINKS.map((link) => ({
-    id: `console-${link.id}`,
-    label: `Open ${link.label}`,
-    detail: link.group,
-    keywords: `console app tool ${link.id} ${link.label} ${link.group}`,
-    icon: ExternalLinkIcon,
-    run: () => {
-      globalThis.location.assign(link.url);
-    },
-  }));
-
-  return [
-    { heading: "Triage", items: triageItems },
-    ...(projectItems.length > 0
-      ? [{ heading: "Projects", items: projectItems }]
-      : []),
-    { heading: "Commands", items: commandItems },
-    { heading: "Consoles", items: consoleItems },
-  ];
+function PaletteOptionRow({
+  entry,
+  selectedIndex,
+  onSelectIndex,
+  onPickItem,
+}: {
+  readonly entry: IndexedPaletteEntry;
+  readonly selectedIndex: number;
+  readonly onSelectIndex: (index: number) => void;
+  readonly onPickItem: (item: PaletteItem) => void;
+}): React.JSX.Element {
+  const Glyph = entry.item.icon;
+  return (
+    <button
+      id={optionId(entry.flatIndex)}
+      type="button"
+      role="option"
+      tabIndex={-1}
+      aria-selected={entry.flatIndex === selectedIndex}
+      className="palette-option"
+      onMouseMove={() => {
+        onSelectIndex(entry.flatIndex);
+      }}
+      onClick={() => {
+        onPickItem(entry.item);
+      }}
+    >
+      <Glyph aria-hidden="true" />
+      <span className="palette-label">{entry.item.label}</span>
+      {entry.item.detail === undefined ? null : (
+        <span className="palette-detail">{entry.item.detail}</span>
+      )}
+    </button>
+  );
 }
 
-function issueToPaletteItem(issue: IssueListItem): PaletteItem {
-  const headline =
-    issue.value.length > 0 ? `${issue.type}: ${issue.value}` : issue.type;
-  return {
-    id: `issue-${issue.id}`,
-    label: headline,
-    detail: issue.projectSlug,
-    keywords: `${issue.type} ${issue.value} ${issue.projectSlug} ${issue.primaryFingerprint}`,
-    icon: AlertCircleIcon,
-    run: (navigate) => {
-      navigate(`/issues/${encodeURIComponent(issue.id)}`);
-    },
-  };
+function PaletteSearchField({
+  query,
+  activeDescendantId,
+  onChangeQuery,
+  onKeyNavigation,
+}: {
+  readonly query: string;
+  readonly activeDescendantId?: string | undefined;
+  readonly onChangeQuery: (nextQuery: string) => void;
+  readonly onKeyNavigation: (event: React.KeyboardEvent) => void;
+}): React.JSX.Element {
+  return (
+    <div className="palette-search">
+      <SearchIcon aria-hidden="true" />
+      <input
+        role="combobox"
+        aria-label="Search and commands"
+        aria-expanded="true"
+        aria-controls={LISTBOX_ID}
+        aria-autocomplete="list"
+        aria-activedescendant={activeDescendantId}
+        placeholder="Jump to project, search issues, or run a command…"
+        autoComplete="off"
+        spellCheck={false}
+        value={query}
+        onChange={(event) => {
+          onChangeQuery(event.target.value);
+        }}
+        onKeyDown={onKeyNavigation}
+      />
+    </div>
+  );
+}
+
+function PaletteKeyboardHints(): React.JSX.Element {
+  return (
+    <div className="palette-footer" aria-hidden="true">
+      <span>
+        <kbd>↑</kbd> <kbd>↓</kbd> navigate
+      </span>
+      <span>
+        <kbd>
+          <CornerDownLeftIcon />
+        </kbd>{" "}
+        select
+      </span>
+      <span>
+        <kbd>Esc</kbd> dismiss
+      </span>
+    </div>
+  );
 }
 
 function PaletteBody({
@@ -288,6 +248,10 @@ function PaletteBody({
     ];
   }, [issueSearch.data, normalizedTerm, preference, projects, store, term]);
 
+  const indexedGroups = useMemo(
+    () => indexPaletteSections(sections),
+    [sections],
+  );
   const items = sections.flatMap((section) => section.items);
   const active = items.length === 0 ? 0 : Math.min(selected, items.length - 1);
 
@@ -338,93 +302,46 @@ function PaletteBody({
     }
   };
 
-  const starts = sections.map((_, sectionIndex) =>
-    sections
-      .slice(0, sectionIndex)
-      .reduce((count, section) => count + section.items.length, 0),
-  );
+  const statusText =
+    term.length >= 2 && issueSearch.isFetching
+      ? "Searching issues…"
+      : items.length === 0
+        ? "No matching pages, projects, or issues."
+        : "";
 
   return (
     <>
-      <div className="palette-search">
-        <SearchIcon aria-hidden="true" />
-        <input
-          role="combobox"
-          aria-label="Search and commands"
-          aria-expanded="true"
-          aria-controls={LISTBOX_ID}
-          aria-autocomplete="list"
-          {...(items.length === 0
-            ? {}
-            : { "aria-activedescendant": optionId(active) })}
-          placeholder="Jump to project, search issues, or run a command…"
-          autoComplete="off"
-          spellCheck={false}
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setSelected(0);
-          }}
-          onKeyDown={handleKeyDown}
-        />
-      </div>
+      <PaletteSearchField
+        query={query}
+        activeDescendantId={items.length === 0 ? undefined : optionId(active)}
+        onChangeQuery={(nextQuery) => {
+          setQuery(nextQuery);
+          setSelected(0);
+        }}
+        onKeyNavigation={handleKeyDown}
+      />
       <div className="palette-results" id={LISTBOX_ID} role="listbox">
-        {sections.map((section, sectionIndex) => (
-          <div key={section.heading} role="group" aria-label={section.heading}>
+        {indexedGroups.map((group) => (
+          <div key={group.heading} role="group" aria-label={group.heading}>
             <p className="palette-heading" aria-hidden="true">
-              {section.heading}
+              {group.heading}
             </p>
-            {section.items.map((item, position) => {
-              const itemIndex = (starts[sectionIndex] ?? 0) + position;
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  id={optionId(itemIndex)}
-                  type="button"
-                  role="option"
-                  tabIndex={-1}
-                  aria-selected={itemIndex === active}
-                  className="palette-option"
-                  onMouseMove={() => {
-                    setSelected(itemIndex);
-                  }}
-                  onClick={() => {
-                    choose(item);
-                  }}
-                >
-                  <Icon aria-hidden="true" />
-                  <span className="palette-label">{item.label}</span>
-                  {item.detail === undefined ? null : (
-                    <span className="palette-detail">{item.detail}</span>
-                  )}
-                </button>
-              );
-            })}
+            {group.entries.map((entry) => (
+              <PaletteOptionRow
+                key={entry.item.id}
+                entry={entry}
+                selectedIndex={active}
+                onSelectIndex={setSelected}
+                onPickItem={choose}
+              />
+            ))}
           </div>
         ))}
         <p className="palette-status" role="status">
-          {term.length >= 2 && issueSearch.isFetching
-            ? "Searching issues…"
-            : items.length === 0
-              ? "No matching pages, projects, or issues."
-              : ""}
+          {statusText}
         </p>
       </div>
-      <div className="palette-footer" aria-hidden="true">
-        <span>
-          <kbd>↑</kbd> <kbd>↓</kbd> navigate
-        </span>
-        <span>
-          <kbd>
-            <CornerDownLeftIcon />
-          </kbd>{" "}
-          open
-        </span>
-        <span>
-          <kbd>Esc</kbd> close
-        </span>
-      </div>
+      <PaletteKeyboardHints />
     </>
   );
 }
@@ -436,13 +353,13 @@ export function CommandPalette({
   readonly projects: readonly ProjectSummary[];
   readonly store?: ThemeStore | undefined;
 }): React.JSX.Element {
-  const open = useSyncExternalStore(
+  const isDialogOpen = useSyncExternalStore(
     subscribe,
     getPaletteOpen,
     getServerPaletteOpen,
   );
   return (
-    <Dialog.Root open={open} onOpenChange={setPaletteOpen}>
+    <Dialog.Root open={isDialogOpen} onOpenChange={setPaletteOpen}>
       <Dialog.Portal>
         <Dialog.Backdrop className="palette-backdrop" />
         <Dialog.Popup className="palette">

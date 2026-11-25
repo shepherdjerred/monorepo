@@ -3,10 +3,10 @@ import {
   dispatchErrorsSubcommand,
   handleErrorsCommand,
 } from "#handlers/errors/index.ts";
-
-const ORIGINAL_FETCH = globalThis.fetch;
-const ORIGINAL_URL = Bun.env["ERRORS_URL"];
-const ORIGINAL_TOKEN = Bun.env["ERRORS_TOKEN"];
+import {
+  ORIGINAL_ERRORS_FETCH,
+  restoreErrorsTestEnvironment,
+} from "#test/lib/errors/test-env.ts";
 
 const ISSUE_A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const ISSUE_B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -77,24 +77,13 @@ function installFetch(
   ) => Promise<Response>,
 ): void {
   const mockFetch: typeof fetch = Object.assign(impl, {
-    preconnect: ORIGINAL_FETCH.preconnect,
+    preconnect: ORIGINAL_ERRORS_FETCH.preconnect,
   });
   globalThis.fetch = mockFetch;
 }
 
 afterEach(() => {
-  vi.restoreAllMocks();
-  globalThis.fetch = ORIGINAL_FETCH;
-  if (ORIGINAL_URL === undefined) {
-    Reflect.deleteProperty(Bun.env, "ERRORS_URL");
-  } else {
-    Bun.env["ERRORS_URL"] = ORIGINAL_URL;
-  }
-  if (ORIGINAL_TOKEN === undefined) {
-    Reflect.deleteProperty(Bun.env, "ERRORS_TOKEN");
-  } else {
-    Bun.env["ERRORS_TOKEN"] = ORIGINAL_TOKEN;
-  }
+  restoreErrorsTestEnvironment();
 });
 
 describe("toolkit errors CLI read subcommands", () => {

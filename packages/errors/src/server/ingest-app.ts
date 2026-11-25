@@ -62,54 +62,51 @@ function extractClientIp(c: Context): string {
   return realIp !== undefined && realIp.length > 0 ? realIp : "unknown";
 }
 
+function concatByteChunks(
+  chunks: readonly Uint8Array[],
+  totalBytes: number,
+): Uint8Array {
+  const combined = new Uint8Array(totalBytes);
+  let cursor = 0;
+  for (const part of chunks) {
+    combined.set(part, cursor);
+    cursor += part.byteLength;
+  }
+  return combined;
+}
+
 async function readBoundedRequestBody(
   request: Request,
   maxBytes: number,
 ): Promise<Uint8Array> {
-  const contentLengthRaw = request.headers.get("Content-Length");
-  if (contentLengthRaw !== null && /^\d+$/u.test(contentLengthRaw.trim())) {
-    const declared = Number.parseInt(contentLengthRaw.trim(), 10);
-    if (declared > maxBytes) {
-      throw new PayloadTooLargeError(
-        "Content-Length exceeds 1 MiB envelope limit.",
-      );
-    }
+  const contentLengthRaw = request.headers.get("Content-Length")?.trim();
+  if (
+    contentLengthRaw !== undefined &&
+    /^\d+$/u.test(contentLengthRaw) &&
+    Number.parseInt(contentLengthRaw, 10) > maxBytes
+  ) {
+    throw new PayloadTooLargeError(
+      "Content-Length exceeds 1 MiB envelope limit.",
+    );
   }
 
   if (request.body === null) {
     return new Uint8Array(0);
   }
 
-  const reader = request.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let totalBytes = 0;
-
-  try {
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      totalBytes += value.byteLength;
-      if (totalBytes > maxBytes) {
-        await reader.cancel();
-        throw new PayloadTooLargeError(
-          "Compressed envelope payload exceeds 1 MiB limit.",
-        );
-      }
-      chunks.push(value);
+  const collected: Uint8Array[] = [];
+  let seenBytes = 0;
+  for await (const chunk of request.body) {
+    seenBytes += chunk.byteLength;
+    if (seenBytes > maxBytes) {
+      throw new PayloadTooLargeError(
+        "Compressed envelope payload exceeds 1 MiB limit.",
+      );
     }
-  } finally {
-    reader.releaseLock();
+    collected.push(chunk);
   }
 
-  const merged = new Uint8Array(totalBytes);
-  let offset = 0;
-  for (const chunk of chunks) {
-    merged.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return merged;
+  return concatByteChunks(collected, seenBytes);
 }
 
 export type ResolvedIngestRuntime = {

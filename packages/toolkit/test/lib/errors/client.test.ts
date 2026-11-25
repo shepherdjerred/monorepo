@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 import { requiredCredentialsFor } from "#lib/credential-commands.ts";
 import {
   createTrackerIssue,
@@ -16,10 +16,10 @@ import {
   updateIssuesState,
 } from "#lib/errors/client.ts";
 import { buildErrorsApiUrl, errorsBaseUrl } from "#lib/errors/http.ts";
-
-const ORIGINAL_FETCH = globalThis.fetch;
-const ORIGINAL_URL = Bun.env["ERRORS_URL"];
-const ORIGINAL_TOKEN = Bun.env["ERRORS_TOKEN"];
+import {
+  ORIGINAL_ERRORS_FETCH,
+  restoreErrorsTestEnvironment,
+} from "./test-env.ts";
 
 const ISSUE_ID_1 = "11111111-1111-4111-8111-111111111111";
 const ISSUE_ID_2 = "22222222-2222-4222-8222-222222222222";
@@ -53,7 +53,7 @@ function installFetchMock(
       recorded.push(entry);
       return handler(entry);
     },
-    { preconnect: ORIGINAL_FETCH.preconnect },
+    { preconnect: ORIGINAL_ERRORS_FETCH.preconnect },
   );
   globalThis.fetch = fetchMock;
   return recorded;
@@ -159,18 +159,7 @@ function makeEventDetail(id = EVENT_UUID_1) {
 }
 
 afterEach(() => {
-  vi.restoreAllMocks();
-  globalThis.fetch = ORIGINAL_FETCH;
-  if (ORIGINAL_URL === undefined) {
-    Reflect.deleteProperty(Bun.env, "ERRORS_URL");
-  } else {
-    Bun.env["ERRORS_URL"] = ORIGINAL_URL;
-  }
-  if (ORIGINAL_TOKEN === undefined) {
-    Reflect.deleteProperty(Bun.env, "ERRORS_TOKEN");
-  } else {
-    Bun.env["ERRORS_TOKEN"] = ORIGINAL_TOKEN;
-  }
+  restoreErrorsTestEnvironment();
 });
 
 describe("errors credential and URL configuration", () => {

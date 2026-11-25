@@ -6,7 +6,10 @@ import {
 import { evaluateIssueIngestion } from "#domain/lifecycle.ts";
 import { renderStacktraceMarkdown } from "#domain/stacktrace-markdown.ts";
 import type { Prisma, PrismaClient } from "#generated/prisma/client.ts";
-import { constantTimeStringEquals } from "#infrastructure/repository-helpers.ts";
+import {
+  buildNewIssueAttributes,
+  constantTimeStringEquals,
+} from "#infrastructure/repository-helpers.ts";
 import type {
   IngestEventInput,
   IngestEventResult,
@@ -202,23 +205,13 @@ export async function executePrismaIngestEvent(
     const isNewIssue = existingIssue === null;
     if (existingIssue === null) {
       const createdIssue = await tx.issue.create({
-        data: {
+        data: buildNewIssueAttributes({
           projectId: project.id,
           primaryFingerprint: fingerprint,
-          type: summary.type,
-          value: summary.value,
-          transaction: summary.transaction,
-          level: summary.level,
-          state: decision.state,
-          resolvedInRelease: decision.resolvedInRelease,
-          regressedCount: decision.regressedCount,
-          digestedEventCount: 1n,
-          storedEventCount: 1,
-          firstSeen: normalizedEvent.timestamp,
-          lastSeen: normalizedEvent.timestamp,
-          lastRelease: normalizedEvent.release,
-          lastAlertedAt: decision.lastAlertedAt,
-        },
+          summary,
+          decision,
+          normalizedEvent,
+        }),
       });
       issueId = createdIssue.id;
       await tx.issueFingerprint.create({

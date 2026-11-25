@@ -5,18 +5,21 @@ import type {
   ErrorsRepository,
 } from "#infrastructure/repository-types.ts";
 
-const MailSendResponseSchema = z.object({
+const MailOutboxConfigSchema = z.object({
+  baseUrl: z.url().transform((url) => url.replace(/\/+$/u, "")),
+  token: z.string().min(1),
+  from: z.string().trim().min(3),
+  to: z.email(),
+});
+
+const MailQueuedReceiptSchema = z.object({
   id: z.string().min(1),
   rfcMessageId: z.string().min(1),
   status: z.enum(["queued", "sending", "retrying", "sent", "failed"]),
   deduplicated: z.boolean(),
 });
 
-export type MailClientOptions = {
-  readonly baseUrl: string;
-  readonly token: string;
-  readonly from: string;
-  readonly to: string;
+export type MailClientOptions = z.input<typeof MailOutboxConfigSchema> & {
   readonly fetchFn?: FetchLike | undefined;
 };
 
@@ -104,23 +107,20 @@ export function renderOutboxAlertEmail(
 }
 
 export function createMailOutboxClient(options: MailClientOptions): MailSender {
-  const normalizedBaseUrl = z.url().parse(options.baseUrl).replace(/\/+$/u, "");
-  const token = z.string().min(1).parse(options.token);
-  const from = z.string().trim().min(3).parse(options.from);
-  const to = z.email().parse(options.to);
+  const config = MailOutboxConfigSchema.parse(options);
   const fetchFn = options.fetchFn ?? globalThis.fetch;
 
   return {
     send: async (message) => {
-      const response = await fetchFn(`${normalizedBaseUrl}/v1/messages`, {
+      const response = await fetchFn(`${config.baseUrl}/v1/messages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${config.token}`,
         },
         body: JSON.stringify({
-          to: [to],
-          from,
+          to: [config.to],
+          from: config.from,
           subject: message.subject,
           htmlBody: message.htmlBody,
           plainBody: message.plainBody,
@@ -138,7 +138,7 @@ export function createMailOutboxClient(options: MailClientOptions): MailSender {
         );
       }
       const parsedJson: unknown = JSON.parse(bodyText);
-      MailSendResponseSchema.parse(parsedJson);
+      MailQueuedReceiptSchema.parse(parsedJson);
     },
   };
 }

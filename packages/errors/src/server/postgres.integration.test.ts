@@ -1,13 +1,11 @@
 import path from "node:path";
 import { PrismaPg } from "@prisma/adapter-pg";
 import {
-  currentDatabaseOwner,
-  databaseUrlFromAdmin,
+  createEmptyTestDatabase,
   ensureSharedPostgres,
   envWithPostgresBin,
-  ownerCommentSql,
-  psqlMaintenanceCommandsAsync,
   runCommandAsync,
+  type OwnedTestDatabaseHandle,
 } from "@shepherdjerred/test-postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { normalizeSentryEventPayload } from "#domain/envelope-normalize.ts";
@@ -26,33 +24,28 @@ import {
 } from "#shared/contract.ts";
 
 const packageRoot = path.resolve(import.meta.dir, "../..");
-const dbSuffix = crypto.randomUUID().replaceAll("-", "");
-const dbName = `tracker_test_errors_${dbSuffix}`;
 
-let superUrl = "";
+let dbHandle: OwnedTestDatabaseHandle | undefined;
 let databaseUrl = "";
 let prisma: PrismaClient | undefined;
 
 beforeAll(async () => {
   const shared = ensureSharedPostgres();
-  superUrl = shared.superUrl;
-  databaseUrl = databaseUrlFromAdmin(superUrl, dbName);
-
-  await psqlMaintenanceCommandsAsync(
-    [
-      `CREATE DATABASE "${dbName}"`,
-      ownerCommentSql(dbName, currentDatabaseOwner()),
-    ],
-    { adminUrl: superUrl },
-  );
+  dbHandle = await createEmptyTestDatabase({
+    prefix: "tracker",
+    kind: "test",
+    adminUrl: shared.superUrl,
+  });
+  databaseUrl = dbHandle.url;
 
   const migrate = await runCommandAsync(["bun", "run", "migrate:deploy"], {
     cwd: packageRoot,
     env: envWithPostgresBin({ DATABASE_URL: databaseUrl }),
   });
   if (migrate.exitCode !== 0) {
-    const detail = migrate.stderr.length > 0 ? migrate.stderr : migrate.stdout;
-    throw new Error(`errors prisma migrate deploy failed: ${detail}`);
+    throw new Error(
+      `errors prisma migrate deploy failed: ${migrate.stderr || migrate.stdout}`,
+    );
   }
 
   prisma = new PrismaClient({
@@ -64,11 +57,8 @@ afterAll(async () => {
   if (prisma !== undefined) {
     await prisma.$disconnect();
   }
-  if (superUrl !== "") {
-    await psqlMaintenanceCommandsAsync(
-      [`DROP DATABASE IF EXISTS "${dbName}" WITH (FORCE)`],
-      { adminUrl: superUrl },
-    );
+  if (dbHandle !== undefined) {
+    await dbHandle.drop();
   }
 });
 

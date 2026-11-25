@@ -23,7 +23,7 @@ import {
   TrackerTriageEffortSchema,
   TrackerTriageImpactSchema,
   TrackerTriageUrgencySchema,
-} from "#lib/errors/schemas.ts";
+} from "@shepherdjerred/errors/contract";
 import { parseArgs } from "node:util";
 
 const HELP_TEXT = `

@@ -304,7 +304,7 @@ describe("bugsink, tracker, and flags facets", () => {
   test("flags facet emits unknown on static/500, detects live drift, and surfaces malformed snapshots", async () => {
     const staticFacet = await collectFlagsFacet({ flagsUrl: "", now });
     expect(() => FlagsFacetSchema.parse(staticFacet)).not.toThrow();
-    expect(staticFacet.namespaces).toHaveLength(18);
+    expect(staticFacet.namespaces).toHaveLength(19);
     expect(staticFacet.totalFlags).toBeGreaterThan(0);
     expect(
       staticFacet.namespaces.every((ns) => ns.prodStatus === "unknown"),
@@ -328,11 +328,15 @@ describe("bugsink, tracker, and flags facets", () => {
     expect(() => FlagsFacetSchema.parse(driftedFacet)).not.toThrow();
     expect(
       driftedFacet.namespaces
-        .filter((ns) => ns.namespace !== "justin")
+        .filter((ns) => ns.namespace !== "justin" && ns.namespace !== "errors")
         .every((ns) => ns.prodStatus === "missing"),
     ).toBe(true);
     expect(
       driftedFacet.namespaces.find((ns) => ns.namespace === "justin")
+        ?.prodStatus,
+    ).toBe("ok");
+    expect(
+      driftedFacet.namespaces.find((ns) => ns.namespace === "errors")
         ?.prodStatus,
     ).toBe("ok");
 

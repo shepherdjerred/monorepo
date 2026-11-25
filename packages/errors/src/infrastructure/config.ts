@@ -9,96 +9,78 @@ import {
   DEFAULT_TRACKER_BASE_URL,
 } from "#shared/contract.ts";
 
-function emptyStringToUndefined(value: unknown): unknown {
+function emptyToUndefined(value: unknown): unknown {
   return value === "" ? undefined : value;
 }
+
+const optionalNonEmptyString = z.preprocess(
+  emptyToUndefined,
+  z.string().min(1).optional(),
+);
+const optionalHttpUrl = z.preprocess(emptyToUndefined, z.url().optional());
+const tcpPortNumber = z.coerce.number().int().min(0).max(65_535);
 
 export const BootstrapSchema = z.object({
   DATABASE_URL: z.url(),
   HOST: z.string().min(1).default("0.0.0.0"),
-  PORT: z.coerce.number().int().min(0).max(65_535).default(7370),
-  ERRORS_INGEST_PORT: z.preprocess(
-    emptyStringToUndefined,
-    z.coerce.number().int().min(0).max(65_535).optional(),
-  ),
+  PORT: tcpPortNumber.default(7370),
+  ERRORS_INGEST_PORT: z.preprocess(emptyToUndefined, tcpPortNumber.optional()),
   PUBLIC_INGEST_ORIGIN: z.url().default(DEFAULT_PUBLIC_INGEST_HOST),
   CONSOLE_PUBLIC_ORIGIN: z.url().default(DEFAULT_TAILNET_CONSOLE_URL),
-  ERRORS_MACHINE_TOKEN: z.preprocess(
-    emptyStringToUndefined,
-    z.string().min(1).optional(),
-  ),
+  ERRORS_MACHINE_TOKEN: optionalNonEmptyString,
   TRACKER_API_URL: z
     .url()
     .default("http://tracker.tracker.svc.cluster.local:7351"),
   TRACKER_PUBLIC_URL: z.url().default(DEFAULT_TRACKER_BASE_URL),
-  MAIL_API_URL: z.preprocess(emptyStringToUndefined, z.url().optional()),
-  MAIL_API_TOKEN: z.preprocess(
-    emptyStringToUndefined,
-    z.string().min(1).optional(),
-  ),
+  MAIL_API_URL: optionalHttpUrl,
+  MAIL_API_TOKEN: optionalNonEmptyString,
   MAIL_FROM: z.string().min(3).default("Errors <errors@sjer.red>"),
   MAIL_TO: z.email().default("alerts@sjer.red"),
-  BUGSINK_IMPORT_URL: z.preprocess(emptyStringToUndefined, z.url().optional()),
-  BUGSINK_IMPORT_TOKEN: z.preprocess(
-    emptyStringToUndefined,
-    z.string().min(1).optional(),
-  ),
+  BUGSINK_IMPORT_URL: optionalHttpUrl,
+  BUGSINK_IMPORT_TOKEN: optionalNonEmptyString,
   FEATURE_FLAGS_MODE: z.preprocess(
-    emptyStringToUndefined,
+    emptyToUndefined,
     FeatureFlagModeSchema.optional(),
   ),
-  OTEL_EXPORTER_OTLP_ENDPOINT: z.preprocess(
-    emptyStringToUndefined,
-    z.url().optional(),
-  ),
+  OTEL_EXPORTER_OTLP_ENDPOINT: optionalHttpUrl,
   ENVIRONMENT: z
     .enum(["production", "beta", "development", "test"])
     .default("production"),
 });
 export type Bootstrap = z.infer<typeof BootstrapSchema>;
 
+type BooleanFlagKey = Parameters<typeof managedBooleanDefault>[0];
+
+function booleanFlagDefinition(
+  flagKey: BooleanFlagKey,
+  environment: "prod" | "beta",
+) {
+  return {
+    schema: z.boolean(),
+    sources: ["flag", "default"] as const,
+    default: managedBooleanDefault(flagKey, environment),
+    names: { flag: flagKey },
+  };
+}
+
 export function behaviorConfig(stage: string, disabled = false) {
-  const flagEnvironment =
-    stage === "production" || stage === "prod" ? "prod" : "beta";
+  const flagEnv = stage === "production" || stage === "prod" ? "prod" : "beta";
 
   return defineConfig({
     definition: {
-      ingestEnabled: {
-        schema: z.boolean(),
-        sources: ["flag", "default"],
-        default: managedBooleanDefault(
-          "errors-ingest-enabled",
-          flagEnvironment,
-        ),
-        names: { flag: "errors-ingest-enabled" },
-      },
-      emailNotificationsEnabled: {
-        schema: z.boolean(),
-        sources: ["flag", "default"],
-        default: managedBooleanDefault(
-          "errors-email-notifications-enabled",
-          flagEnvironment,
-        ),
-        names: { flag: "errors-email-notifications-enabled" },
-      },
-      trackerCreationEnabled: {
-        schema: z.boolean(),
-        sources: ["flag", "default"],
-        default: managedBooleanDefault(
-          "errors-tracker-creation-enabled",
-          flagEnvironment,
-        ),
-        names: { flag: "errors-tracker-creation-enabled" },
-      },
-      telemetryEnabled: {
-        schema: z.boolean(),
-        sources: ["flag", "default"],
-        default: managedBooleanDefault(
-          "errors-telemetry-enabled",
-          flagEnvironment,
-        ),
-        names: { flag: "errors-telemetry-enabled" },
-      },
+      ingestEnabled: booleanFlagDefinition("errors-ingest-enabled", flagEnv),
+      emailNotificationsEnabled: booleanFlagDefinition(
+        "errors-email-notifications-enabled",
+        flagEnv,
+      ),
+      trackerCreationEnabled: booleanFlagDefinition(
+        "errors-tracker-creation-enabled",
+        flagEnv,
+      ),
+      telemetryEnabled: booleanFlagDefinition(
+        "errors-telemetry-enabled",
+        flagEnv,
+      ),
     },
     sources: disabled
       ? {}

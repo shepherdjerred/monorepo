@@ -126,26 +126,52 @@ function closeDrawer(): void {
   setNavDrawerOpen(false);
 }
 
+function TopbarIconControl({
+  icon,
+  label,
+  title,
+  keyShortcuts,
+  onClick,
+}: {
+  readonly icon: LucideIcon;
+  readonly label: string;
+  readonly title?: string | undefined;
+  readonly keyShortcuts?: string | undefined;
+  readonly onClick: () => void;
+}): React.JSX.Element {
+  const Icon = icon;
+  return (
+    <button
+      className="icon-button"
+      type="button"
+      aria-label={label}
+      {...(title === undefined ? {} : { title })}
+      {...(keyShortcuts === undefined
+        ? {}
+        : { "aria-keyshortcuts": keyShortcuts })}
+      onClick={onClick}
+    >
+      <Icon aria-hidden="true" />
+    </button>
+  );
+}
+
 function ThemeToggle({
   store,
 }: {
   readonly store: ThemeStore;
 }): React.JSX.Element {
-  const preference = useThemePreference(store);
-  const next = nextThemePreference(preference);
-  const Icon = THEME_ICON[preference];
+  const currentPref = useThemePreference(store);
+  const upcomingPref = nextThemePreference(currentPref);
   return (
-    <button
-      className="icon-button"
-      type="button"
-      aria-label={`Theme: ${preference}. Switch to ${next}.`}
-      title={`Theme: ${preference}`}
+    <TopbarIconControl
+      icon={THEME_ICON[currentPref]}
+      label={`Theme: ${currentPref}. Switch to ${upcomingPref}.`}
+      title={`Theme: ${currentPref}`}
       onClick={() => {
-        store.setThemePreference(next);
+        store.setThemePreference(upcomingPref);
       }}
-    >
-      <Icon aria-hidden="true" />
-    </button>
+    />
   );
 }
 
@@ -306,31 +332,38 @@ export function ErrorsSidebar({
   );
 }
 
+function TopbarHeaderBar({
+  store,
+}: {
+  readonly store: ThemeStore;
+}): React.JSX.Element {
+  return (
+    <header className="topbar">
+      <Dialog.Trigger className="icon-button" aria-label="Open navigation">
+        <MenuIcon aria-hidden="true" />
+      </Dialog.Trigger>
+      <AppSwitcher current={CURRENT_APP} apps={SWITCHER_APPS} />
+      <TopbarIconControl
+        icon={SearchIcon}
+        label={SEARCH_LABEL}
+        keyShortcuts={SEARCH_SHORTCUT}
+        onClick={openPalette}
+      />
+      <ThemeToggle store={store} />
+    </header>
+  );
+}
+
 export function Topbar({
   projects,
   totalUnresolved,
   totalRegressed,
   store = defaultThemeStore,
 }: ShellNavProps): React.JSX.Element {
-  const open = useNavDrawerOpen();
+  const drawerVisible = useNavDrawerOpen();
   return (
-    <Dialog.Root open={open} onOpenChange={setNavDrawerOpen}>
-      <header className="topbar">
-        <Dialog.Trigger className="icon-button" aria-label="Open navigation">
-          <MenuIcon aria-hidden="true" />
-        </Dialog.Trigger>
-        <AppSwitcher current={CURRENT_APP} apps={SWITCHER_APPS} />
-        <button
-          className="icon-button"
-          type="button"
-          aria-label={SEARCH_LABEL}
-          aria-keyshortcuts={SEARCH_SHORTCUT}
-          onClick={openPalette}
-        >
-          <SearchIcon aria-hidden="true" />
-        </button>
-        <ThemeToggle store={store} />
-      </header>
+    <Dialog.Root open={drawerVisible} onOpenChange={setNavDrawerOpen}>
+      <TopbarHeaderBar store={store} />
       <Dialog.Portal>
         <Dialog.Backdrop className="nav-backdrop" />
         <Dialog.Popup className="nav-drawer">

@@ -1,11 +1,4 @@
 import {
-  collectCursorPages,
-  errorsGetJson,
-  errorsGetText,
-  errorsSendJson,
-  type ErrorsRequestOptions,
-} from "./http.ts";
-import {
   BulkUpdateIssuesResponseSchema,
   BugsinkImportResultSchema,
   CreateTrackerIssueResponseSchema,
@@ -14,11 +7,7 @@ import {
   IssueDetailSchema,
   IssueListResponseSchema,
   OverviewResponseSchema,
-  ProjectListResponseSchema,
-  ProjectResponseSchema,
   ReleaseListResponseSchema,
-  SingleIssueUpdateResponseSchema,
-  StacktraceJsonResponseSchema,
   type BulkUpdateIssuesResponse,
   type BugsinkImportResult,
   type CreateTrackerIssueResponse,
@@ -34,6 +23,19 @@ import {
   type TrackerTriageEffort,
   type TrackerTriageImpact,
   type TrackerTriageUrgency,
+} from "@shepherdjerred/errors/contract";
+import {
+  collectCursorPages,
+  errorsGetJson,
+  errorsGetText,
+  errorsSendJson,
+  type ErrorsRequestOptions,
+} from "./http.ts";
+import {
+  ProjectListResponseSchema,
+  ProjectResponseSchema,
+  SingleIssueUpdateResponseSchema,
+  StacktraceJsonResponseSchema,
 } from "./schemas.ts";
 
 export async function getOverview(

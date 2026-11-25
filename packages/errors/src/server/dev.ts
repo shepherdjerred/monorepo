@@ -112,32 +112,34 @@ console.warn(
   }),
 );
 
-const shouldSpawnVite =
-  Bun.env["ERRORS_NO_VITE"] !== "1" && !args.has("--no-vite");
-const viteChild = shouldSpawnVite
-  ? Bun.spawn(["bunx", "--no-install", "vite"], {
-      cwd: packageRoot,
-      env: Bun.env,
-      stdout: "inherit",
-      stderr: "inherit",
-    })
-  : undefined;
+function launchOptionalViteDev(
+  cwd: string,
+  cliFlags: ReadonlySet<string>,
+): ReturnType<typeof Bun.spawn> | undefined {
+  if (Bun.env["ERRORS_NO_VITE"] === "1" || cliFlags.has("--no-vite")) {
+    return undefined;
+  }
+  return Bun.spawn(["bunx", "--no-install", "vite"], {
+    cwd,
+    env: Bun.env,
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+}
 
-async function shutdown(): Promise<void> {
-  viteChild?.kill();
-  if (viteChild !== undefined) {
-    await viteChild.exited;
+const viteProcess = launchOptionalViteDev(packageRoot, args);
+
+async function closeDevServers(): Promise<void> {
+  if (viteProcess !== undefined) {
+    viteProcess.kill();
+    await viteProcess.exited;
   }
-  if (ingestServer !== undefined) {
-    await ingestServer.stop();
-  }
-  await adminServer.stop();
+  await Promise.all([ingestServer?.stop(), adminServer.stop()]);
   await repo.close();
 }
 
-process.once("SIGINT", () => {
-  void shutdown();
-});
-process.once("SIGTERM", () => {
-  void shutdown();
-});
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.once(signal, () => {
+    void closeDevServers();
+  });
+}

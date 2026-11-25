@@ -152,8 +152,13 @@ export type BulkUpdateIssuesResponse = z.infer<
 >;
 
 export const TrackerTriageUrgencySchema = z.enum(["high", "medium", "low"]);
+export type TrackerTriageUrgency = z.infer<typeof TrackerTriageUrgencySchema>;
+
 export const TrackerTriageImpactSchema = z.enum(["high", "medium", "low"]);
+export type TrackerTriageImpact = z.infer<typeof TrackerTriageImpactSchema>;
+
 export const TrackerTriageEffortSchema = z.enum(["xs", "s", "m", "l", "xl"]);
+export type TrackerTriageEffort = z.infer<typeof TrackerTriageEffortSchema>;
 
 export const CreateTrackerIssueInputSchema = z.object({
   title: z.string().trim().min(1).max(300).optional(),

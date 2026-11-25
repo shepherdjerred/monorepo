@@ -4,7 +4,6 @@ import {
   SpanKind,
   SpanStatusCode,
   trace,
-  type Span,
 } from "@opentelemetry/api";
 import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
@@ -114,26 +113,6 @@ export function initializeTelemetry(
   tracingActive = true;
 }
 
-async function executeServerSpan<T>(
-  span: Span,
-  method: string,
-  route: string,
-  operation: () => Promise<T>,
-): Promise<T> {
-  span.setAttributes({
-    "http.request.method": method,
-    "http.route": route,
-  });
-  try {
-    return await operation();
-  } catch (error) {
-    span.setStatus({ code: SpanStatusCode.ERROR });
-    throw error;
-  } finally {
-    span.end();
-  }
-}
-
 export async function traceRequest<T>(
   request: Request,
   route: string,
@@ -142,11 +121,30 @@ export async function traceRequest<T>(
   if (!tracingActive) {
     return operation();
   }
-  const carrier = Object.fromEntries(request.headers);
-  const extractedContext = propagation.extract(context.active(), carrier);
-  return context.with(extractedContext, () =>
-    errorsTracer.startActiveSpan(route, { kind: SpanKind.SERVER }, (span) =>
-      executeServerSpan(span, request.method, route, operation),
+  const inboundContext = propagation.extract(
+    context.active(),
+    Object.fromEntries(request.headers),
+  );
+  return context.with(inboundContext, () =>
+    errorsTracer.startActiveSpan(
+      route,
+      {
+        kind: SpanKind.SERVER,
+        attributes: {
+          "http.request.method": request.method,
+          "http.route": route,
+        },
+      },
+      async (span) => {
+        try {
+          return await operation();
+        } catch (error) {
+          span.setStatus({ code: SpanStatusCode.ERROR });
+          throw error;
+        } finally {
+          span.end();
+        }
+      },
     ),
   );
 }

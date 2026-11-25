@@ -1,5 +1,8 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
+import type { NormalizedSentryEvent } from "#domain/envelope-normalize.ts";
+import type { extractIssueSummary } from "#domain/fingerprint.ts";
+import type { evaluateIssueIngestion } from "#domain/lifecycle.ts";
 import { extractEventDetailViews } from "#domain/stacktrace-markdown.ts";
 import type { RepositoryUrlOptions } from "#infrastructure/repository-types.ts";
 import {
@@ -273,5 +276,33 @@ export function toEventDetail(event: StoredEventRow): EventDetail {
     request: views.request,
     sdk: views.sdk,
     rawData,
+  };
+}
+
+export function buildNewIssueAttributes(options: {
+  readonly projectId: number;
+  readonly primaryFingerprint: string;
+  readonly summary: ReturnType<typeof extractIssueSummary>;
+  readonly decision: ReturnType<typeof evaluateIssueIngestion>;
+  readonly normalizedEvent: NormalizedSentryEvent;
+}) {
+  const { projectId, primaryFingerprint, summary, decision, normalizedEvent } =
+    options;
+  return {
+    projectId,
+    primaryFingerprint,
+    type: summary.type,
+    value: summary.value,
+    transaction: summary.transaction,
+    level: summary.level,
+    state: decision.state,
+    resolvedInRelease: decision.resolvedInRelease,
+    regressedCount: decision.regressedCount,
+    digestedEventCount: 1n,
+    storedEventCount: 1,
+    firstSeen: normalizedEvent.timestamp,
+    lastSeen: normalizedEvent.timestamp,
+    lastRelease: normalizedEvent.release,
+    lastAlertedAt: decision.lastAlertedAt,
   };
 }

@@ -9,6 +9,7 @@ import {
 } from "#domain/lifecycle.ts";
 import { renderStacktraceMarkdown } from "#domain/stacktrace-markdown.ts";
 import {
+  buildNewIssueAttributes,
   constantTimeStringEquals,
   parsePositiveIntId,
   shouldPreferCandidateIssueForFingerprint,
@@ -143,21 +144,13 @@ function upsertIngestedInMemoryIssue(options: {
     const issueId = crypto.randomUUID();
     store.issues.set(issueId, {
       id: issueId,
-      projectId: project.id,
-      primaryFingerprint: fp,
-      type: summary.type,
-      value: summary.value,
-      transaction: summary.transaction,
-      level: summary.level,
-      state: decision.state,
-      resolvedInRelease: decision.resolvedInRelease,
-      regressedCount: decision.regressedCount,
-      digestedEventCount: 1n,
-      storedEventCount: 1,
-      firstSeen: normalizedEvent.timestamp,
-      lastSeen: normalizedEvent.timestamp,
-      lastRelease: normalizedEvent.release,
-      lastAlertedAt: decision.lastAlertedAt,
+      ...buildNewIssueAttributes({
+        projectId: project.id,
+        primaryFingerprint: fp,
+        summary,
+        decision,
+        normalizedEvent,
+      }),
       trackerIssueIdentifier: null,
       revision: 1,
     });

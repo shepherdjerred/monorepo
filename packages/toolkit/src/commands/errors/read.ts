@@ -9,7 +9,7 @@ import type {
   OverviewResponse,
   ProjectSummary,
   ReleaseItem,
-} from "#lib/errors/schemas.ts";
+} from "@shepherdjerred/errors/contract";
 import { formatJson } from "#lib/output/formatter.ts";
 
 export type ReadCommandOptions = ErrorsRequestOptions & {

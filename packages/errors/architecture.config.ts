@@ -1,43 +1,50 @@
 import { defineArchitecture } from "@shepherdjerred/architecture";
 
-const architecture = defineArchitecture({
-  boundaries: [
-    {
-      name: "shared-is-contract-only",
-      comment:
-        "Shared wire schemas and constants are imported by both browser and server layers and must remain pure.",
-      from: "shared",
-      to: ["domain", "infrastructure", "server", "client"],
-    },
-    {
-      name: "domain-is-pure",
-      comment:
-        "Domain envelope parsing, fingerprinting, stacktrace formatting, and lifecycle transitions run deterministically without storage, HTTP, or UI dependencies.",
-      from: "domain",
-      to: ["infrastructure", "server", "client"],
-    },
-    {
-      name: "infrastructure-is-transport-agnostic",
-      comment:
-        "Database, Bugsink import, outbound mail outbox, Tracker client, flag, and telemetry adapters must not depend on HTTP routes or browser UI code.",
-      from: "infrastructure",
-      to: ["server", "client"],
-    },
-    {
-      name: "server-does-not-depend-on-client",
-      comment:
-        "Server code serves compiled static assets and must never import React or DOM client modules.",
-      from: "server",
-      to: ["client"],
-    },
-    {
-      name: "client-imports-contract-only",
-      comment:
-        "The React SPA communicates over HTTP and must only import shared contract types and validators.",
-      from: "client",
-      to: ["domain", "infrastructure", "server"],
-    },
-  ],
-});
+type LayerSpec = readonly [
+  name: string,
+  from: string,
+  forbiddenTargets: readonly string[],
+  comment: string,
+];
 
-export default architecture;
+const ERRORS_LAYER_SPECS: readonly LayerSpec[] = [
+  [
+    "shared-is-contract-only",
+    "shared",
+    ["domain", "infrastructure", "server", "client"],
+    "Wire contracts and DSN helpers stay free of domain, persistence, HTTP, and browser imports.",
+  ],
+  [
+    "domain-is-pure",
+    "domain",
+    ["infrastructure", "server", "client"],
+    "Envelope normalization, fingerprinting, and issue lifecycle rules stay pure.",
+  ],
+  [
+    "infrastructure-is-transport-agnostic",
+    "infrastructure",
+    ["server", "client"],
+    "Persistence, Bugsink import, mail outbox, Tracker, and telemetry adapters stay below Hono and React.",
+  ],
+  [
+    "server-does-not-depend-on-client",
+    "server",
+    ["client"],
+    "Hono ingest and admin servers serve built SPA assets without importing browser components.",
+  ],
+  [
+    "client-imports-contract-only",
+    "client",
+    ["domain", "infrastructure", "server"],
+    "Browser triage UI talks to the backend over /api/v1 using shared contract schemas only.",
+  ],
+];
+
+export default defineArchitecture({
+  boundaries: ERRORS_LAYER_SPECS.map(([name, from, to, comment]) => ({
+    name,
+    comment,
+    from,
+    to: [...to],
+  })),
+});

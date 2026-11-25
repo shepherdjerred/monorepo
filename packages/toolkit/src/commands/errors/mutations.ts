@@ -6,7 +6,10 @@ import {
   type ImportBugsinkArgs,
 } from "#lib/errors/client.ts";
 import type { ErrorsRequestOptions } from "#lib/errors/http.ts";
-import type { BugsinkImportResult, IssueState } from "#lib/errors/schemas.ts";
+import type {
+  BugsinkImportResult,
+  IssueState,
+} from "@shepherdjerred/errors/contract";
 import { formatJson } from "#lib/output/formatter.ts";
 
 export type MutationCommandOptions = ErrorsRequestOptions & {

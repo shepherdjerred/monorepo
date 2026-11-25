@@ -2840,6 +2840,7 @@
         "@shepherdjerred/code-review": "workspace:*",
         "@shepherdjerred/config": "workspace:*",
         "@shepherdjerred/delivery": "workspace:*",
+        "@shepherdjerred/errors": "workspace:*",
         "@shepherdjerred/llm-models": "workspace:*",
         "@shepherdjerred/ops-model": "workspace:*",
         "@shepherdjerred/tracker": "workspace:*",

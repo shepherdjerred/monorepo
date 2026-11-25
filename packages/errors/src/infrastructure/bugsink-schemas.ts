@@ -50,18 +50,10 @@ export const BugsinkEventListItemSchema = z
   })
   .loose();
 
-export const BugsinkEventDetailSchema = z
-  .object({
-    id: z.uuid(),
-    event_id: z.string().min(1),
-    issue: z.uuid(),
-    project: z.number().int().positive(),
-    timestamp: z.string(),
-    ingested_at: z.string().optional(),
-    data: z.record(z.string(), z.unknown()),
-    stacktrace_md: z.string().default(""),
-  })
-  .loose();
+export const BugsinkEventDetailSchema = BugsinkEventListItemSchema.extend({
+  data: z.record(z.string(), z.unknown()),
+  stacktrace_md: z.string().default(""),
+}).loose();
 
 export function createPaginatedSchema<T extends z.ZodType>(itemSchema: T) {
   return z.object({

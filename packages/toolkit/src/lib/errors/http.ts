@@ -1,6 +1,6 @@
+import { DEFAULT_TAILNET_CONSOLE_URL } from "@shepherdjerred/errors/contract";
 import { z } from "zod";
 import { optionalEnv } from "#lib/config.ts";
-import { DEFAULT_ERRORS_URL } from "./schemas.ts";
 
 const MAX_SERVER_PAGE_SIZE = 200;
 const DEFAULT_MAX_PAGES = 100;
@@ -10,7 +10,8 @@ export type ErrorsRequestOptions = {
 };
 
 export function errorsBaseUrl(explicitUrl?: string): string {
-  const raw = explicitUrl ?? optionalEnv("ERRORS_URL") ?? DEFAULT_ERRORS_URL;
+  const raw =
+    explicitUrl ?? optionalEnv("ERRORS_URL") ?? DEFAULT_TAILNET_CONSOLE_URL;
   const parsed = new URL(raw);
   if (parsed.username.length > 0 || parsed.password.length > 0) {
     throw new Error("ERRORS_URL must not include credentials");
@@ -75,12 +76,11 @@ async function readApiError(response: Response): Promise<Error> {
   return new Error(`Errors API error (${String(response.status)}): ${text}`);
 }
 
-export async function errorsGetJson<T>(
+async function fetchErrorsGet(
   endpoint: string,
-  schema: z.ZodType<T>,
   query?: Record<string, string>,
   options?: ErrorsRequestOptions,
-): Promise<T> {
+): Promise<Response> {
   const baseUrl = errorsBaseUrl(options?.baseUrl);
   const url = buildErrorsApiUrl(baseUrl, endpoint, query);
   const response = await fetch(url.toString(), {
@@ -90,6 +90,16 @@ export async function errorsGetJson<T>(
   if (!response.ok) {
     throw await readApiError(response);
   }
+  return response;
+}
+
+export async function errorsGetJson<T>(
+  endpoint: string,
+  schema: z.ZodType<T>,
+  query?: Record<string, string>,
+  options?: ErrorsRequestOptions,
+): Promise<T> {
+  const response = await fetchErrorsGet(endpoint, query, options);
   const json: unknown = await response.json();
   return schema.parse(json);
 }
@@ -99,15 +109,7 @@ export async function errorsGetText(
   query?: Record<string, string>,
   options?: ErrorsRequestOptions,
 ): Promise<string> {
-  const baseUrl = errorsBaseUrl(options?.baseUrl);
-  const url = buildErrorsApiUrl(baseUrl, endpoint, query);
-  const response = await fetch(url.toString(), {
-    method: "GET",
-    headers: buildHeaders(baseUrl, false, false),
-  });
-  if (!response.ok) {
-    throw await readApiError(response);
-  }
+  const response = await fetchErrorsGet(endpoint, query, options);
   return response.text();
 }
 
