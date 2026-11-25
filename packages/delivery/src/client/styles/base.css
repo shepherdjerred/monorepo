@@ -1,149 +1,172 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+/*
+ * Delivery's base element rules. Kept inside `ui.reset` where they target bare
+ * tags, or scoped to `main` / `dialog`, so console-ui's `ui.components` layer
+ * (`Sidebar`, `AppSwitcher`, `ThemeRow`, `.ui-menu`) keeps its own geometry
+ * and colours untouched.
+ */
+@layer ui.reset {
+  html {
+    scroll-padding-top: var(--masthead-clearance);
+  }
 }
-html {
-  scroll-padding-top: var(--masthead-clearance);
-  font-family: var(--font-sans);
-  line-height: var(--leading-normal);
-  color: var(--text);
-  background: var(--canvas);
-  text-size-adjust: 100%;
-}
-body {
-  margin: 0;
-  font-size: var(--text-md);
-  background: var(--canvas);
-}
-/* One page title, one panel heading, one sub-heading. */
-h1,
-h2,
-h3 {
+
+main h1,
+main h2,
+main h3,
+dialog h2 {
   line-height: var(--leading-tight);
   font-weight: var(--weight-semibold);
+  color: var(--ui-ink);
   margin: 0;
 }
-h1 {
+main h1 {
   font-size: var(--text-xl);
-  font-weight: var(--weight-bold);
-  letter-spacing: var(--tracking-title);
+  letter-spacing: -0.01em;
 }
-h2 {
+main h2,
+dialog h2 {
   font-size: var(--text-lg);
 }
-h3 {
+main h3 {
   font-size: var(--text-md);
 }
-p {
+main p,
+dialog p {
   margin: 0 0 var(--space-2);
   overflow-wrap: anywhere;
 }
-small {
+main small {
   font-size: var(--text-xs);
 }
-a {
-  color: var(--link);
+main a,
+dialog a {
+  color: var(--ui-accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentcolor 45%, transparent);
   text-underline-offset: 2px;
 }
-a:hover {
-  text-decoration-thickness: 2px;
+main a:hover,
+dialog a:hover {
+  text-decoration-color: currentcolor;
 }
-:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
-button,
-input,
-select,
-textarea {
-  font: inherit;
-  color: inherit;
-}
-input,
-select,
-textarea {
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
+main :is(input:not([type="checkbox"]), select, textarea),
+dialog :is(input:not([type="checkbox"]), select, textarea) {
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  border: 1px solid var(--ui-btn-edge);
   border-radius: var(--radius-small);
-  padding: var(--space-1) var(--control-pad-x);
+  padding: 3px var(--control-pad-x);
   min-height: var(--control-height);
   max-width: 100%;
-}
-textarea {
-  width: 100%;
-  resize: vertical;
-}
-input:user-invalid,
-select:user-invalid,
-textarea:user-invalid {
-  border-color: var(--failed);
-}
-label {
-  display: grid;
-  /* The control may be narrower than its longest option, so it never widens the page. */
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-1);
-  font-weight: var(--weight-semibold);
   font-size: var(--text-sm);
 }
-table {
+main :is(input:not([type="checkbox"]), select, textarea)::placeholder,
+dialog :is(input:not([type="checkbox"]), select, textarea)::placeholder {
+  color: var(--ui-faint);
+}
+main :is(input:not([type="checkbox"]), select, textarea):focus-visible,
+dialog :is(input:not([type="checkbox"]), select, textarea):focus-visible {
+  border-color: var(--ui-accent);
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 1px;
+}
+main textarea,
+dialog textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 6px var(--control-pad-x);
+  resize: vertical;
+}
+main :is(input, select, textarea):user-invalid,
+dialog :is(input, select, textarea):user-invalid {
+  border-color: var(--ui-sev-error);
+}
+main label,
+dialog label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-1);
+  color: var(--ui-muted);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+}
+main table {
   width: 100%;
   border-collapse: collapse;
   line-height: var(--leading-snug);
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
 }
-th,
-td {
+main th,
+main td {
   text-align: start;
   vertical-align: top;
   padding: var(--row-pad-y) var(--row-pad-x);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-line-soft);
 }
-/* The outer cells line up with the heading above the table. */
-:is(th, td):first-child {
-  padding-inline-start: 0;
+main :is(th, td):first-child {
+  padding-inline-start: var(--panel-pad-x);
 }
-:is(th, td):last-child {
-  padding-inline-end: 0;
+main :is(th, td):last-child {
+  padding-inline-end: var(--panel-pad-x);
 }
-tbody th {
+main tbody tr:hover > :is(th, td) {
+  background: var(--ui-hover);
+}
+main tbody th {
+  font-weight: var(--weight-medium);
+  color: var(--ui-ink);
+}
+main tbody th a {
+  color: var(--ui-ink);
   font-weight: var(--weight-semibold);
+  text-decoration: none;
+}
+main tbody th a:hover {
+  text-decoration: underline;
 }
 /*
- * One label treatment: a column header, a facts label and an eyebrow all name
- * the value beside them, so they share a size, a case and a color.
+ * Sentence-case labels across column headers, definition terms and eyebrows,
+ * matching console-ui's `.ui-table thead th` and `.ui-field-label`.
  */
-thead th,
+main thead th,
 .activity-columns,
 .facts dt,
 .eyebrow {
   font-size: var(--text-2xs);
   line-height: var(--leading-snug);
-  font-weight: var(--weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-label);
-  color: var(--text-muted);
+  font-weight: var(--weight-medium);
+  color: var(--ui-muted);
 }
-thead th {
-  vertical-align: bottom;
-  border-bottom-color: var(--border-strong);
+main thead th {
+  height: 30px;
+  padding-block: 0;
+  vertical-align: middle;
+  background: var(--ui-head);
+  border-block: 1px solid var(--ui-line);
 }
-td small,
-th small {
+main td small,
+main th small {
   display: block;
-  color: var(--text-muted);
+  color: var(--ui-muted);
   font-weight: var(--weight-regular);
 }
-pre {
+main pre,
+dialog pre {
   font-family: var(--font-mono);
   font-size: var(--text-mono);
   line-height: var(--leading-snug);
-  background: var(--surface-sunken);
+  background: var(--ui-head);
+  color: var(--ui-ink);
+  border: 1px solid var(--ui-line);
   border-radius: var(--radius-small);
   padding: var(--space-2) var(--space-3);
   margin: var(--space-2) 0;
-  overflow: auto;
-  max-width: 100%;
+  overflow-x: auto;
+}
+code {
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
 }
 /* A disclosure is a target: at least 24px (WCAG 2.5.8), 44px under touch. */
 details > summary {
@@ -155,43 +178,42 @@ abbr[title] {
   text-decoration: none;
 }
 dialog {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface-raised);
-  color: var(--text);
-  padding: var(--space-5);
-  width: min(480px, calc(100vw - 32px));
+  margin: auto;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  padding: 18px 20px 16px;
+  width: min(460px, calc(100vw - 32px));
   box-shadow: var(--shadow-overlay);
 }
-/* A scroll over the open dialog or its backdrop stays off the page behind. */
 dialog:modal {
   overscroll-behavior: contain;
 }
 dialog::backdrop {
   background: var(--backdrop);
-  overflow: hidden;
   overscroll-behavior: contain;
 }
 dialog h2 {
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 .mono {
   font-family: var(--font-mono);
   font-size: var(--text-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
   overflow-wrap: anywhere;
 }
-/* A row header names its row: its column is as wide as the name. */
-tbody th.mono {
+main tbody th.mono {
   overflow-wrap: break-word;
 }
-/* Mono inside a second line takes that line's size. */
 small.mono,
 small .mono,
 .mono small {
   font-size: var(--text-xs);
 }
 .muted {
-  color: var(--text-muted);
+  color: var(--ui-muted);
 }
 .visually-hidden {
   position: absolute;

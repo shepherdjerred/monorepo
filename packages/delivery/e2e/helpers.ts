@@ -174,9 +174,44 @@ export async function expectContainedInTiles(page: Page) {
   expect(escapes).toEqual([]);
 }
 
-/** Whether the page has a phone's width, where tables stack and the nav wraps. */
+/** Whether the page has a phone's width, where tables stack and healthy tiles fold. */
 export function isPhone(page: Page) {
   return (page.viewportSize()?.width ?? 0) < 600;
+}
+
+/** Whether console-ui hides the persistent sidebar in favour of the topbar drawer. */
+export function usesNavDrawer(page: Page) {
+  return (page.viewportSize()?.width ?? 1280) <= 900;
+}
+
+/**
+ * Return the `Main` navigation landmark: directly from the persistent sidebar
+ * above 900px, or by opening the modal navigation drawer at narrower widths.
+ */
+export async function mainNav(page: Page) {
+  const trigger = page.getByRole("button", { name: "Open navigation" });
+  if (await trigger.isVisible()) {
+    const drawer = page.getByRole("dialog", { name: "Navigation" });
+    if (!(await drawer.isVisible())) await trigger.click();
+    await expect(drawer).toBeVisible();
+    return drawer.getByRole("navigation", { name: "Main" });
+  }
+  return page.getByRole("navigation", { name: "Main" });
+}
+
+/** Verify the `Approvals` navigation link carries the waiting count, then close any mobile drawer. */
+export async function expectApprovalsNavCount(page: Page, count: number) {
+  const nav = await mainNav(page);
+  await expect(
+    nav.getByRole("link", {
+      name: new RegExp(`^Approvals, ${String(count)} awaiting approval$`, "u"),
+    }),
+  ).toBeVisible();
+  const drawer = page.getByRole("dialog", { name: "Navigation" });
+  if (await drawer.isVisible()) {
+    await page.keyboard.press("Escape");
+    await expect(drawer).toBeHidden();
+  }
 }
 
 /**

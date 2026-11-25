@@ -1,45 +1,35 @@
-/* Status: a glyph, words and a color, so no channel carries it alone. */
+/* Status: console-ui severity glyph + words, so no channel carries it alone. */
 .status {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: 5px;
   font-size: var(--text-xs);
   line-height: var(--leading-snug);
-  font-weight: var(--weight-semibold);
-  padding: 1px var(--space-2) 1px var(--row-pad-y);
-  border-radius: var(--radius-pill);
+  font-weight: var(--weight-medium);
+  color: var(--ui-sev-ink, var(--ui-muted));
   white-space: nowrap;
-  background: var(--neutral-soft);
-  color: var(--neutral);
-  border: 1px solid transparent;
+  vertical-align: middle;
 }
-.status-succeeded,
-.status-verified,
-.status-settled,
-.status-granted {
-  background: var(--succeeded-soft);
-  color: var(--succeeded);
+.status-glyph {
+  width: 13.5px;
+  height: 13.5px;
+  flex: none;
+  color: var(--ui-sev, var(--ui-muted));
 }
-.status-failed,
-.status-alarmed,
-.status-rejected {
-  background: var(--failed-soft);
-  color: var(--failed);
+.status-not_started,
+.status-unmonitored,
+.status-canceled,
+.status-expired {
+  color: var(--ui-muted);
 }
-.status-running,
-.status-watching {
-  background: var(--running-soft);
-  color: var(--running);
+.status-not_started .status-glyph,
+.status-unmonitored .status-glyph,
+.status-canceled .status-glyph,
+.status-expired .status-glyph {
+  color: var(--ui-muted);
 }
 .status-running .status-glyph {
-  animation: spin 1.6s linear infinite;
-  display: inline-block;
-}
-.status-awaiting_approval,
-.status-queued,
-.status-pending {
-  background: var(--waiting-soft);
-  color: var(--waiting);
+  animation: spin 1.4s linear infinite;
 }
 @keyframes spin {
   to {
@@ -57,54 +47,85 @@
   white-space: nowrap;
 }
 @media (forced-colors: active) {
-  .status {
-    border-color: CanvasText;
-  }
   .stage-card {
     border-top-width: 4px;
     border-top-color: CanvasText;
   }
 }
+
+/* Buttons matching console-ui's `.ui-btn` tactile pressable edge. */
 .primary-button,
 .secondary-button {
+  --btn-edge: var(--ui-btn-edge);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   border-radius: var(--radius-small);
-  padding: var(--space-1) var(--space-3);
+  padding: 3px 10px;
   min-height: var(--control-height);
-  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
   cursor: pointer;
-  border: 1px solid var(--border-strong);
-  background: var(--surface);
+  border: 1px solid var(--btn-edge);
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  box-shadow: 0 2px 0 var(--btn-edge);
+  transition:
+    transform 0.08s,
+    box-shadow 0.08s;
+}
+.primary-button:hover,
+.secondary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 var(--btn-edge);
+}
+.primary-button:active,
+.secondary-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 var(--btn-edge);
 }
 .primary-button {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--on-solid);
+  --btn-edge: color-mix(in srgb, var(--ui-accent) 65%, black);
+  background: var(--ui-accent);
+  border-color: var(--btn-edge);
+  color: var(--ui-on-accent);
 }
 .primary-button.danger {
-  background: var(--failed);
-  border-color: var(--failed);
+  --btn-edge: color-mix(in srgb, var(--ui-sev-error-text) 65%, black);
+  background: var(--ui-sev-error-text);
+  border-color: var(--btn-edge);
+  color: var(--ui-on-accent);
 }
 .secondary-button.danger {
-  color: var(--failed);
-  border-color: var(--failed);
+  --btn-edge: var(--ui-sev-error);
+  color: var(--ui-sev-error-text);
+  border-color: var(--ui-sev-error);
 }
-button:disabled,
-button[aria-disabled="true"] {
-  opacity: 0.5;
+main button:disabled,
+main button[aria-disabled="true"],
+dialog button:disabled,
+dialog button[aria-disabled="true"] {
+  opacity: 0.55;
   cursor: not-allowed;
 }
 /*
- * A control that cannot be used loses its fill and its accent, in both
- * themes: a bright blue button at half opacity still reads as live.
+ * A control that cannot be used loses its fill, accent and pressable shadow in
+ * both themes so it never reads as live.
  */
 :is(.primary-button, .secondary-button):is(:disabled, [aria-disabled="true"]) {
-  background: var(--surface-sunken);
-  border-color: var(--border);
-  color: var(--text-muted);
+  background: var(--ui-head);
+  border-color: var(--ui-line);
+  color: var(--ui-muted);
+  box-shadow: none;
+  transform: none;
   opacity: 1;
 }
 .text-button {
-  font-weight: var(--weight-semibold);
+  color: var(--ui-accent);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
 }
 .button-row {
   display: flex;
@@ -116,61 +137,62 @@ button[aria-disabled="true"] {
 .detail-actions {
   justify-content: flex-start;
 }
+
+/* Notices: console-ui banner look (head surface + 3px severity accent bar). */
 .notice {
-  border-left: 4px solid var(--waiting);
-  background: var(--waiting-soft);
-  padding: var(--row-pad-y) var(--space-3);
+  border: 1px solid var(--ui-line);
+  border-inline-start: 3px solid var(--ui-sev-warning);
+  background: var(--ui-head);
+  color: var(--ui-ink);
+  padding: 8px 12px;
   border-radius: var(--radius-small);
   overflow-wrap: anywhere;
 }
 .notice.error {
-  border-left-color: var(--failed);
-  background: var(--failed-soft);
+  border-inline-start-color: var(--ui-sev-error);
 }
 .notice.info {
-  border-left-color: var(--neutral);
-  background: var(--neutral-soft);
+  border-inline-start-color: var(--ui-sev-info);
 }
 .notice.success {
-  border-left-color: var(--succeeded);
-  background: var(--succeeded-soft);
+  border-inline-start-color: var(--ui-sev-ok);
 }
+
 .empty {
-  color: var(--text-muted);
-  font-style: italic;
+  color: var(--ui-muted);
 }
 .pending,
 .integration-unavailable {
-  color: var(--text-muted);
+  color: var(--ui-muted);
 }
 .tool-links {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1) var(--space-3);
   list-style: none;
-  margin: 0;
   padding: 0;
-  font-size: var(--text-sm);
+  margin: 0;
 }
 .tool-link {
-  white-space: nowrap;
-  display: inline-block;
-  min-height: var(--target-min);
-  line-height: var(--target-min);
-}
-.detail-summary {
   display: inline-flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-1) var(--space-3);
+  min-height: var(--target-min);
+  white-space: nowrap;
 }
-/* A duration, a count or a revision keeps its width as its digits change. */
-.duration,
-.revision,
-.status-label {
+.pipeline-table .tool-links {
+  gap: 0 var(--space-2);
+  font-size: var(--text-xs);
+}
+.pipeline-table .tool-link {
+  padding-inline: var(--space-0);
+}
+time {
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 .revision {
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
   white-space: nowrap;
 }
 .pipeline-table td {
@@ -199,23 +221,25 @@ button[aria-disabled="true"] {
 /* An environment as a link: its state as a glyph, then its name. */
 .env-pill {
   display: inline-flex;
-  gap: var(--space-1);
+  gap: 5px;
   align-items: center;
   min-height: var(--target-min);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-small);
-  padding: 1px var(--row-pad-y) 1px var(--space-0);
+  border: 1px solid var(--ui-line);
+  border-radius: var(--radius-chip);
+  background: var(--ui-panel);
+  padding: 1px 7px 1px 5px;
   text-decoration: none;
-  color: var(--text);
+  color: var(--ui-ink);
   font-size: var(--text-xs);
   line-height: var(--leading-snug);
 }
+.env-pill:hover {
+  background: var(--ui-hover);
+  text-decoration: none;
+}
 .env-pill .status {
-  padding: 0 var(--space-1);
-  /* Contains the hidden label, so it scrolls with a scrolling table. */
   position: relative;
 }
-/* A pill whose state needs a person spells it out: a glyph alone cannot tell "needs manual release" from "waiting". */
 .env-pill.env-pill-spelled .status-label {
   position: static;
   width: auto;
@@ -253,38 +277,54 @@ button[aria-disabled="true"] {
 .intents li,
 .commit-row {
   padding: var(--row-pad-y) 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-line-soft);
   line-height: var(--leading-snug);
+}
+.attention li:last-child,
+.activity li:last-child,
+.alarms li:last-child,
+.candidates > li:last-child,
+.intents li:last-child {
+  border-bottom: 0;
 }
 .image-checks ul {
   margin: var(--space-1) 0 0;
   padding-left: var(--space-5);
 }
-/* Kind, lead, summary and time sit in the same columns on every row, so a long summary wraps inside its own column instead of pushing the time to another line. */
+/* Kind, lead, summary and time sit in the same columns on every row. */
 .attention li {
   display: grid;
-  grid-template-columns: 6.5rem minmax(0, 24rem) minmax(0, 1fr) 9rem;
+  grid-template-columns: 6rem minmax(0, 22rem) minmax(0, 1fr) 8.5rem;
   gap: var(--space-1) var(--space-3);
   align-items: baseline;
 }
 .attention li > .badge {
   justify-self: start;
 }
+.attention-lead a {
+  color: var(--ui-ink);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+.attention-lead a:hover {
+  text-decoration: underline;
+}
 .attention-lead,
 .attention-summary {
   overflow-wrap: anywhere;
 }
-.attention-when {
+.attention time {
   grid-column: 4;
   justify-self: end;
   text-align: end;
+  color: var(--ui-muted);
+  font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
 }
 .attention-toggle {
   margin-top: var(--space-2);
 }
 @media (width <= 720px) {
-  /* Narrow: the kind and its time on one line, then the lead, then the summary. */
   .attention li {
     grid-template-columns: auto minmax(0, 1fr);
   }
@@ -292,372 +332,390 @@ button[aria-disabled="true"] {
   .attention-summary {
     grid-column: 1 / -1;
   }
-  .attention-when {
+  .attention time {
     grid-column: 2;
     grid-row: 1;
   }
 }
+
+/* Badges: sentence case mono tags matching Hub's `.change-kind`. */
 .badge {
-  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
   line-height: var(--leading-snug);
-  font-weight: var(--weight-bold);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-label);
-  padding: 1px var(--row-pad-y);
-  border-radius: var(--radius-small);
-  background: var(--failed-soft);
-  color: var(--failed);
+  font-weight: var(--weight-semibold);
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--ui-sev-error-soft);
+  color: var(--ui-sev-error-text);
 }
 .badge-approval {
-  background: var(--waiting-soft);
-  color: var(--waiting);
+  background: var(--ui-sev-warning-soft);
+  color: var(--ui-sev-warning-text);
 }
 .badge-override {
-  background: var(--running-soft);
-  color: var(--running);
+  background: var(--ui-sev-info-soft);
+  color: var(--ui-sev-info-text);
 }
 .badge-current {
-  background: var(--succeeded-soft);
-  color: var(--succeeded);
+  background: var(--ui-sev-ok-soft);
+  color: var(--ui-sev-ok-text);
   margin-inline-start: var(--space-2);
 }
+
 /* Activity: when, what, who, then what it was about, under one row of labels. */
 .activity-columns,
 .activity li {
   display: grid;
-  grid-template-columns: 7.5rem minmax(10rem, 15rem) minmax(6rem, 11rem) minmax(
-      0,
-      1fr
-    );
-  gap: var(--space-3);
+  grid-template-columns: 7.5rem minmax(0, 14rem) minmax(0, 8rem) minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  align-items: baseline;
 }
 .activity li {
   font-size: var(--text-sm);
 }
 .activity-columns {
-  padding-bottom: var(--row-pad-y);
-  border-bottom: 1px solid var(--border-strong);
+  padding: 6px 0;
+  border-block: 1px solid var(--ui-line);
 }
 .activity-action {
   font-weight: var(--weight-medium);
   overflow-wrap: anywhere;
 }
 .activity-actor {
-  color: var(--text-muted);
+  color: var(--ui-muted);
   overflow-wrap: anywhere;
 }
 .activity-entity {
   overflow-wrap: anywhere;
 }
-.catalog-result {
-  grid-column: 1 / -1;
-}
-.inline-list li {
-  margin-bottom: var(--space-1);
-}
-/* Facts: a definition list of labelled values (components/facts.tsx). */
+/* Facts: labelled values in one definition list (components/facts.tsx). */
 .facts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   gap: var(--space-2) var(--space-4);
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-3);
+  line-height: var(--leading-snug);
+}
+.facts > div {
+  min-width: 0;
+}
+.facts dt {
+  margin-bottom: var(--space-0);
 }
 .facts dd {
   margin: 0;
   font-weight: var(--weight-medium);
+  color: var(--ui-ink);
   overflow-wrap: anywhere;
 }
 .catalog-result .facts,
-.candidates .facts {
-  margin: 0;
+.facts:last-child {
+  margin-bottom: 0;
 }
-/* Disclosure: a native details with a chevron and a count (components/disclosure.tsx). */
+/* Disclosure: a native details with an optional count (components/disclosure.tsx). */
 .disclosure > summary {
-  display: flex;
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   list-style: none;
   font-weight: var(--weight-medium);
+  color: var(--ui-ink);
 }
 .disclosure > summary::-webkit-details-marker {
   display: none;
 }
-/* The chevron is drawn, so it is the same shape in every font. */
 .disclosure > summary::before {
   content: "";
   flex: none;
   margin-inline: var(--space-1);
   border-block: 4px solid transparent;
-  border-inline-start: 6px solid var(--text-muted);
+  border-inline-start: 6px solid var(--ui-muted);
 }
 .disclosure[open] > summary::before {
   transform: rotate(90deg);
 }
-/* A long summary wraps beside its chevron instead of pushing the count out. */
 .disclosure-label {
   min-width: 0;
   overflow-wrap: anywhere;
 }
 .disclosure-count {
-  padding: 0 var(--row-pad-y);
+  padding: 0 6px;
   border-radius: var(--radius-pill);
-  background: var(--neutral-soft);
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
+  background: var(--ui-track);
+  color: var(--ui-muted);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: var(--weight-medium);
   line-height: var(--leading-snug);
   font-variant-numeric: tabular-nums;
 }
 .disclosure-body {
-  padding: var(--space-1) 0 var(--space-2) var(--space-5);
+  padding: var(--space-2) 0 var(--space-1) var(--space-4);
 }
 /* Identifier: a short id that keeps its full value (components/identifier.tsx). */
 .identifier {
-  /* Contains the hidden full value, so it scrolls with a scrolling table. */
   position: relative;
   white-space: nowrap;
 }
-.component-list {
-  display: grid;
-  gap: var(--space-2);
-  margin: var(--space-2) 0;
+.inline-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
 }
-.component-list > div {
-  display: grid;
-  grid-template-columns: minmax(8rem, 14rem) minmax(0, 1fr);
+.component-list {
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--space-3);
 }
 .component-list dt {
-  color: var(--text-muted);
+  color: var(--ui-muted);
 }
 .component-list dd {
   margin: 0;
-  overflow-wrap: anywhere;
+  font-weight: var(--weight-semibold);
 }
 .component-list small {
   display: block;
-  color: var(--text-muted);
+  color: var(--ui-muted);
 }
 .workflows > li {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-line-soft);
   padding: var(--space-1) 0;
 }
 .workflows summary {
+  cursor: pointer;
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
   align-items: center;
+  gap: var(--space-2);
 }
-.steps li {
+.steps {
+  padding-left: var(--space-5);
+  margin-top: var(--space-1);
+}
+.steps > li {
+  padding: var(--space-0) 0;
   display: flex;
   gap: var(--space-2);
   align-items: center;
-  padding: var(--space-0) 0 var(--space-0) var(--space-4);
-  font-size: var(--text-sm);
 }
 .ci-group h3 {
   margin: var(--space-3) 0 var(--space-1);
 }
-/* The commit's first line, above who wrote it. */
 .source-headline {
   font-size: var(--text-md);
   margin-bottom: var(--space-1);
 }
-.commit-body {
-  white-space: pre-wrap;
+.release-form {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
 }
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: var(--space-3);
-  align-items: end;
 }
 .input-readonly {
   margin: 0;
   min-height: var(--control-height);
-  padding: var(--space-1) var(--control-pad-x);
-  border: 1px dashed var(--border-strong);
+  padding: 3px var(--control-pad-x);
+  border: 1px dashed var(--ui-line);
   border-radius: var(--radius-small);
+  background: var(--ui-head);
+  color: var(--ui-muted);
 }
 .form-footer {
   display: flex;
   flex-wrap: wrap;
+  gap: var(--space-3);
   justify-content: space-between;
   align-items: center;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
 }
 .form-footer p {
   margin: 0;
+  flex: 1 1 20rem;
 }
-.diff li {
-  display: grid;
-  gap: var(--space-0);
-  padding: var(--space-1) 0;
+.approval-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: end;
+}
+.approval-row label {
+  flex: 1 1 16rem;
 }
 .approval-form {
   display: grid;
   gap: var(--space-3);
-  background: var(--waiting-soft);
-  border: 1px solid var(--waiting);
+  background: var(--ui-head);
+  border: 1px solid var(--ui-line);
+  border-inline-start: 3px solid var(--ui-sev-warning);
   border-radius: var(--radius);
   padding: var(--panel-pad-y) var(--panel-pad-x);
 }
-.approval-form .button-row {
-  justify-content: flex-start;
+.approval-form h3 {
+  margin: 0;
 }
 .dialog-body {
   margin-bottom: var(--space-4);
-  color: var(--text-muted);
+  color: var(--ui-muted);
 }
 .digest abbr {
   white-space: nowrap;
 }
-.evidence-meter {
+.artifact-list {
   display: grid;
   gap: var(--space-1);
 }
-.evidence-meter meter {
-  inline-size: 100%;
-  min-inline-size: 0;
-}
-.candidates > li {
-  display: grid;
-  gap: var(--space-1);
-}
-.candidate-heading {
+.artifact-list li {
   display: flex;
   flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
   align-items: baseline;
+}
+.candidate-row {
+  display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  align-items: start;
+  gap: var(--space-2);
+}
+.candidate-row > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
 }
 .candidate-excluded {
-  color: var(--text-muted);
+  color: var(--ui-muted);
 }
 .candidate-reason {
   margin: 0;
   font-size: var(--text-sm);
 }
 .differs {
-  color: var(--waiting);
+  color: var(--ui-sev-warning-text);
   font-weight: var(--weight-semibold);
 }
 label.checkbox {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  color: var(--ui-ink);
   font-weight: var(--weight-regular);
   margin-block: var(--space-2);
 }
 label.checkbox input {
   min-height: 0;
-  inline-size: 18px;
-  block-size: 18px;
+  inline-size: 16px;
+  block-size: 16px;
   flex: none;
+  accent-color: var(--ui-accent);
 }
-/*
- * Commits: a verdict, the commit, where it stands, and who and when. Every
- * row shares the table's columns through subgrid, so each column starts at
- * the same x on every row however wide one row's words are.
- */
+
+/* Commits subgrid table. */
 .commit-table {
   display: grid;
   grid-template-columns: max-content minmax(0, 2fr) minmax(0, 1.5fr) max-content;
-  column-gap: var(--space-4);
+  column-gap: var(--space-3);
 }
 .commit-columns,
 .commit-list,
 .commit-row {
-  display: grid;
   grid-column: 1 / -1;
+  display: grid;
   grid-template-columns: subgrid;
 }
+.commit-columns,
 .commit-row {
   align-items: baseline;
 }
 .commit-columns {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  padding-bottom: var(--row-pad-y);
-  border-bottom: 1px solid var(--border-strong);
+  color: var(--ui-muted);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  padding: 6px 0;
+  border-block: 1px solid var(--ui-line);
 }
 .commit-columns > :last-child {
   text-align: end;
 }
-/* The verdict is a pill as wide as its words, not as its column. */
 .commit-row > .status {
   justify-self: start;
 }
-/* A title is free text: one long token must wrap, not widen the page. */
+.commit-subject {
+  color: var(--ui-ink);
+  text-decoration: none;
+}
+.commit-subject:hover {
+  text-decoration: underline;
+}
 .commit-subject,
 .commit-title,
 .commit-author,
-.commit-byline {
+.commit-note {
   overflow-wrap: anywhere;
 }
 .commit-headline {
   margin-inline-start: var(--space-1);
+  font-weight: var(--weight-medium);
 }
 .commit-detail {
   display: grid;
-  gap: var(--space-0);
-  font-size: var(--text-sm);
+  gap: var(--space-1);
 }
 .tallies {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-2);
+  gap: var(--space-1);
   align-items: center;
 }
 .commit-meta {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-xs);
   display: flex;
   flex-wrap: wrap;
   gap: 0 var(--space-2);
   justify-content: flex-end;
 }
 .commit-title {
-  color: var(--text);
+  color: var(--ui-ink);
   display: block;
   font-weight: var(--weight-semibold);
 }
-.commit-byline {
-  display: block;
-  margin-block-end: var(--space-1);
+.commit-row .commit-note {
+  font-size: var(--text-xs);
 }
 .commit-row:last-child {
   border-bottom: 0;
 }
-/* The finder's hint takes its own line under the field and turns red when a paste is not a SHA. */
 .commit-find-hint {
   flex-basis: 100%;
   margin: 0;
-  color: var(--text-muted);
-  font-size: var(--text-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-xs);
 }
 .commit-find-error {
-  color: var(--failed);
-  font-weight: var(--weight-semibold);
+  color: var(--ui-sev-error-text);
+  font-weight: var(--weight-medium);
 }
 .commit-statement,
 .commit-builds {
   overflow-wrap: anywhere;
 }
 .commit-table + .pager:not(:empty) {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ui-line);
   padding-top: var(--space-2);
 }
-/* The environment groups stack under their own heading, outside a panel. */
 .env-group {
   margin-top: var(--space-2);
 }
-.env-group h3 {
+.panel .env-group > h3 {
   margin-top: 0;
   margin-bottom: var(--space-1);
 }
-/* The verdict and the count read as one sentence under the environment's name. */
 .env-group-summary {
   margin: 0 0 var(--space-2);
 }
@@ -665,12 +723,11 @@ label.checkbox input {
   .activity-columns {
     display: none;
   }
-  /* Narrow: the time, then the action with its actor on one line, then the subject. */
   .activity li {
     grid-template-columns: minmax(0, auto) minmax(0, 1fr);
     gap: 0 var(--space-2);
   }
-  .activity :is(.activity-when, .activity-subject) {
+  .activity-subject {
     grid-column: 1 / -1;
   }
   .commit-columns {
@@ -679,15 +736,11 @@ label.checkbox input {
   .commit-table {
     grid-template-columns: minmax(0, 1fr);
   }
-  .commit-row {
-    row-gap: var(--space-0);
-  }
   .commit-meta {
     justify-content: flex-start;
   }
 }
 
-/* A release cell wraps its recipe and configuration ids rather than cutting them. */
 .release-parts {
   overflow-wrap: anywhere;
 }

@@ -5,115 +5,32 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { useQuery, type QueryClient } from "@tanstack/react-query";
-import { queries } from "#client/queries.ts";
-import { useFeedStatus, type ChangeFeed } from "#client/change-feed.ts";
+import type { QueryClient } from "@tanstack/react-query";
+import { ShellFrame } from "@shepherdjerred/console-ui";
+import type { ChangeFeed } from "#client/change-feed.ts";
 import { ConfirmDialogProvider } from "#client/components/confirm-dialog.tsx";
 import { PageHeader } from "#client/components/page-header.tsx";
+import { DeliverySidebar, Topbar } from "#client/shell/shell-nav.tsx";
 import { DeliveryClientError } from "#shared/client.ts";
-import { awaitsDecision } from "#client/model/view.ts";
 
 export type RouterContext = { queryClient: QueryClient; feed: ChangeFeed };
-
-const NAVIGATION = [
-  { to: "/", label: "Overview", exact: true },
-  { to: "/commits", label: "Commits", exact: false },
-  { to: "/pipelines", label: "Pipelines", exact: false },
-  { to: "/deployments", label: "Deployments", exact: false },
-  { to: "/approvals", label: "Approvals", exact: false },
-  { to: "/artifacts", label: "Artifacts", exact: false },
-  { to: "/activity", label: "Activity", exact: false },
-] as const;
-
-function FeedIndicator({ feed }: { feed: ChangeFeed }) {
-  const status = useFeedStatus(feed);
-  const label = {
-    connecting: "Connecting…",
-    live: "Live",
-    reconnecting: "Reconnecting…",
-  }[status];
-  return (
-    <p className={`feed feed-${status}`} role="status">
-      <span className="dot" aria-hidden="true" />
-      {label}
-    </p>
-  );
-}
-
-function Navigation() {
-  const approvals = useQuery(queries.approvals());
-  const count =
-    approvals.data?.filter((item) => awaitsDecision(item)).length ?? 0;
-  return (
-    <nav aria-label="Main">
-      <ul>
-        {NAVIGATION.map((item) => (
-          <li key={item.to}>
-            <Link
-              to={item.to}
-              activeOptions={{ exact: item.exact, includeSearch: false }}
-              // One name, spoken as written: separate hidden spans would each
-              // be set apart by a space ("Approvals , 1").
-              aria-label={
-                item.to === "/approvals" && count > 0
-                  ? `${item.label}, ${String(count)} awaiting approval`
-                  : undefined
-              }
-            >
-              {item.label}
-              {item.to === "/approvals" && count > 0 && " "}
-              {item.to === "/approvals" && count > 0 && (
-                <span className="nav-count" aria-hidden="true">
-                  {count}
-                </span>
-              )}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
-}
-
-function Identity() {
-  const identity = useQuery(queries.identity());
-  return (
-    <p className="identity">
-      {identity.data === undefined
-        ? identity.error === null
-          ? "Checking identity…"
-          : "Authentication required"
-        : identity.data.id}
-    </p>
-  );
-}
 
 function RootLayout() {
   const { feed } = Route.useRouteContext();
   return (
-    <div>
+    <>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <header className="masthead">
-        <Link to="/" className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            ⟶
-          </span>
-          Delivery
-        </Link>
-        <Navigation />
-        <div className="masthead-end">
-          <FeedIndicator feed={feed} />
-          <Identity />
-        </div>
-      </header>
-      <main id="main" tabIndex={-1}>
-        <ConfirmDialogProvider>
-          <Outlet />
-        </ConfirmDialogProvider>
-      </main>
-    </div>
+      <Topbar feed={feed} />
+      <ShellFrame sidebar={<DeliverySidebar feed={feed} />}>
+        <main id="main" tabIndex={-1}>
+          <ConfirmDialogProvider>
+            <Outlet />
+          </ConfirmDialogProvider>
+        </main>
+      </ShellFrame>
+    </>
   );
 }
 

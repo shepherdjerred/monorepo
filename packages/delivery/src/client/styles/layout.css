@@ -1,123 +1,236 @@
 .skip-link {
-  position: absolute;
-  left: var(--space-3);
-  top: -100px;
-  z-index: 10;
-  background: var(--surface-raised);
-  padding: var(--space-2) var(--space-3);
+  position: fixed;
+  left: 8px;
+  top: 8px;
+  z-index: 60;
+  padding: 6px 12px;
+  border: 1px solid var(--ui-line);
   border-radius: var(--radius-small);
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  transform: translateY(-200%);
 }
 .skip-link:focus {
-  top: var(--space-3);
+  transform: none;
 }
+
 /* The skip link's target takes focus so the next Tab starts inside the page; the landmark is not a control, so it draws no ring. */
 #main:focus {
   outline: none;
 }
-.masthead {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-1) var(--space-5);
-  padding: var(--space-1) var(--page-pad-x);
-  background: var(--masthead);
-  border-bottom: 1px solid var(--border);
+
+/* Sidebar footer: live feed indicator + viewer principal above ThemeRow. */
+.side-footer {
+  display: grid;
+  gap: 6px;
 }
-.brand {
-  font-weight: var(--weight-bold);
-  font-size: var(--text-lg);
-  color: var(--text);
-  text-decoration: none;
-  display: inline-flex;
-  gap: var(--space-2);
-  align-items: center;
+.side-meta {
+  display: grid;
+  gap: 2px;
+  padding: 6px 8px;
+  border-top: 1px solid var(--ui-line);
+  color: var(--ui-muted);
+  font-size: 12px;
 }
-.brand-mark {
-  color: var(--accent);
-}
-.masthead nav ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.masthead nav a {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: var(--control-height);
-  padding: var(--space-1) var(--control-pad-x);
-  border-radius: var(--radius-small);
-  color: var(--text);
-  text-decoration: none;
-  font-weight: var(--weight-medium);
-  /* Contains the count's hidden words, so they never widen the page. */
-  position: relative;
-}
-.masthead nav a:hover {
-  background: var(--neutral-soft);
-}
-.masthead nav a[aria-current="page"] {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-.nav-count {
-  min-width: 20px;
-  padding: 0 var(--row-pad-y);
-  border-radius: var(--radius-pill);
-  background: var(--waiting);
-  color: var(--surface);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-  text-align: center;
-}
-.masthead-end {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-}
-.masthead-end p {
+.side-meta p,
+.drawer-meta p {
   margin: 0;
 }
-/* A signed-in address is one long token; it wraps before it widens the page. */
 .identity {
+  color: var(--ui-muted);
+  font-size: 12px;
   overflow-wrap: anywhere;
 }
 .feed {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 6px;
+  color: var(--ui-muted);
+  font-size: 12px;
+  white-space: nowrap;
 }
 .dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
+  flex: none;
   border-radius: 50%;
-  background: var(--neutral);
+  background: var(--ui-sev-unknown);
   display: inline-block;
 }
 .feed-live .dot {
-  background: var(--succeeded);
+  background: var(--ui-sev-ok);
 }
 .feed-reconnecting .dot {
-  background: var(--waiting);
+  background: var(--ui-sev-warning);
 }
+.nav-count {
+  margin-left: auto;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--ui-sev-warning-soft);
+  color: var(--ui-sev-warning-text);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.topbar-approvals .nav-count {
+  margin-left: 0;
+}
+.ui-nav-item:hover .nav-count,
+.ui-nav-item[aria-current] .nav-count {
+  color: var(--ui-sev-warning-text);
+}
+
+/* Phone top bar and modal navigation drawer below 900px, matching Hub. */
+.brand {
+  font-weight: var(--weight-semibold);
+  font-size: 14px;
+  color: var(--ui-ink);
+  text-decoration: none;
+}
+.icon-button {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  color: var(--ui-ink-2);
+  cursor: pointer;
+}
+.icon-button svg {
+  width: 16px;
+  height: 16px;
+}
+.icon-button:hover {
+  background: var(--ui-side-hover);
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--topbar-height);
+  padding: 0 6px;
+  border-bottom: 1px solid var(--ui-line);
+  background: color-mix(in srgb, var(--ui-bg) 92%, transparent);
+  backdrop-filter: blur(12px);
+}
+.topbar .ui-workspace {
+  flex: 0 1 auto;
+  margin-right: auto;
+}
+.topbar .feed {
+  padding-inline: 4px;
+}
+.topbar-approvals {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--ui-line);
+  border-radius: var(--radius-small);
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font-size: 12px;
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.topbar-approvals:hover {
+  background: var(--ui-hover);
+}
+.nav-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--backdrop);
+}
+.nav-drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 41;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: min(300px, calc(100vw - 56px));
+  padding: 4px 8px 12px;
+  overflow-y: auto;
+  border-right: 1px solid var(--ui-line);
+  background: var(--ui-bg);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.28);
+}
+.nav-drawer:focus-visible {
+  outline: none;
+}
+.nav-drawer-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding-left: 8px;
+  margin-right: -4px;
+}
+.nav-drawer .ui-nav {
+  flex: none;
+}
+.nav-drawer .ui-nav-item {
+  height: 38px;
+}
+.drawer-meta {
+  display: grid;
+  gap: 4px;
+  margin-top: auto;
+  padding: 10px 8px 0;
+  border-top: 1px solid var(--ui-line);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .nav-drawer {
+    animation: drawer-slide-in 160ms ease-out;
+  }
+  .nav-backdrop {
+    animation: backdrop-fade-in 160ms ease-out;
+  }
+}
+@keyframes drawer-slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes backdrop-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (forced-colors: active) {
+  .ui-nav-item[aria-current="page"] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+@media (max-width: 900px) {
+  .topbar {
+    display: flex;
+  }
+}
+
+/* Main content inside console-ui's inset `.ui-panel`. */
 main {
-  max-width: var(--content-width);
-  margin: 0 auto;
-  padding: var(--space-4) var(--page-pad-x) var(--space-6);
+  padding: 0 var(--page-pad-x) var(--space-6);
   display: grid;
   gap: var(--page-gap);
+  align-content: start;
   min-width: 0;
 }
-/* The grid's gap spaces the page's blocks; an empty block takes no row. */
 main > * {
   min-width: 0;
   margin-block: 0;
@@ -125,35 +238,62 @@ main > * {
 main > :empty {
   display: none;
 }
-/* Eyebrow, title, then one line of description. */
+
+/* Page header: console-ui's HeaderBar proportion across the top of the panel. */
 .page-header {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-2) var(--space-4);
+  min-height: 48px;
+  margin-inline: calc(-1 * var(--page-pad-x));
+  padding: 10px var(--page-pad-x);
+  border-bottom: 1px solid var(--ui-line);
+  background: var(--ui-panel);
 }
 .page-header h1:focus {
   outline: none;
 }
-/* The ring sits on the heading's box and clears the eyebrow above it. */
 .page-header h1:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 0;
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
 }
 .eyebrow {
   margin-bottom: var(--space-0);
 }
 .page-header .eyebrow {
-  margin-bottom: var(--space-1);
+  margin-bottom: 2px;
 }
 .subtitle {
-  color: var(--text-muted);
-  margin: var(--space-1) 0 0;
+  color: var(--ui-muted);
+  font-size: var(--text-sm);
+  margin: 2px 0 0;
 }
 .header-actions {
   max-width: 100%;
 }
+.header-actions .tool-links {
+  gap: 6px;
+}
+.header-actions .tool-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--ui-line);
+  border-radius: var(--radius-small);
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  font-size: 12px;
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+.header-actions .tool-link:hover {
+  background: var(--ui-hover);
+  text-decoration: none;
+}
+
 .section-heading {
   display: flex;
   flex-wrap: wrap;
@@ -162,54 +302,92 @@ main > :empty {
   gap: var(--space-2);
   margin-bottom: var(--space-2);
 }
+
 .panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--ui-panel);
+  border: 1px solid var(--ui-line);
   border-radius: var(--radius);
   padding: var(--panel-pad-y) var(--panel-pad-x);
-  box-shadow: var(--shadow);
   min-width: 0;
+  overflow: clip;
 }
 .panel > h2 {
   margin-bottom: var(--space-2);
 }
-/* The panel's own padding closes it, not its last child's margin. */
 .panel > :last-child {
   margin-bottom: 0;
 }
-/* A sub-heading inside a panel opens a new group of content. */
 .panel h3 {
   margin: var(--space-3) 0 var(--space-1);
 }
-/* A panel's border may carry the state of what it holds. */
 .panel-waiting {
-  border-color: var(--waiting);
+  border-color: var(--ui-sev-warning);
 }
+
+/* Tables directly inside a panel run flush to its edges, like console-ui tables. */
+.panel > .table-scroll {
+  width: calc(100% + 2 * var(--panel-pad-x));
+  max-width: calc(100% + 2 * var(--panel-pad-x));
+  margin-inline: calc(-1 * var(--panel-pad-x));
+}
+.panel > .table-scroll:last-child tbody tr:last-child > :is(th, td) {
+  border-bottom: 0;
+}
+.disclosure-body > .table-scroll {
+  border: 1px solid var(--ui-line);
+  border-radius: var(--radius-small);
+}
+.disclosure-body > .table-scroll thead th {
+  border-top: 0;
+}
+.disclosure-body > .table-scroll tbody tr:last-child > :is(th, td) {
+  border-bottom: 0;
+}
+
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
   gap: var(--page-gap);
-  /* Panels in a row share its height, so a short one beside a tall one leaves no blank gap under it. */
   align-items: stretch;
 }
+
+/* Underlined view tabs matching console-ui's `.ui-tabs` and Hub's `.scope-switch`. */
 .tabs {
   display: flex;
-  gap: var(--space-1);
-  border-bottom: 1px solid var(--border);
+  gap: 18px;
+  margin-inline: calc(-1 * var(--page-pad-x));
+  padding: 0 var(--page-pad-x);
+  border-bottom: 1px solid var(--ui-line);
+}
+.page-header + .tabs {
+  margin-top: calc(-1 * var(--page-gap));
 }
 .tabs a {
-  padding: var(--row-pad-y) var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 2px;
   text-decoration: none;
-  color: var(--text-muted);
-  font-weight: var(--weight-semibold);
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  color: var(--ui-muted);
+  font-weight: var(--weight-medium);
+  box-shadow: inset 0 -2px 0 transparent;
+}
+.tabs a:hover {
+  color: var(--ui-ink);
 }
 .tabs a[aria-current="page"] {
-  color: var(--text);
-  border-bottom-color: var(--accent);
+  color: var(--ui-ink);
+  font-weight: var(--weight-semibold);
+  box-shadow: inset 0 -2px 0 var(--ui-accent);
 }
+@media (forced-colors: active) {
+  .tabs a[aria-current="page"] {
+    border-bottom: 2px solid Highlight;
+  }
+}
+
 .table-scroll {
+  position: relative;
   overflow-x: auto;
   max-width: 100%;
 }
@@ -217,7 +395,53 @@ main > :empty {
   display: flex;
   gap: var(--space-4);
 }
-.filters,
+
+/* Inline bordered filter toolbars matching console-ui's `.ui-field[data-layout="inline"]`. */
+main .filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+main .filters > label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--control-height);
+  padding: 0 0 0 9px;
+  border: 1px solid var(--ui-line);
+  border-radius: var(--radius-small);
+  background: var(--ui-panel);
+  color: var(--ui-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+main .filters > label:focus-within {
+  border-color: var(--ui-accent);
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 1px;
+}
+main .filters > label:has(:user-invalid, [aria-invalid="true"]) {
+  border-color: var(--ui-sev-error);
+}
+main .filters > label > :is(input, select) {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: calc(var(--control-height) - 2px);
+  padding: 0 9px 0 0;
+  border: 0;
+  border-radius: 0 5px 5px 0;
+  background: transparent;
+  color: var(--ui-ink);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+}
+main .filters > label > :is(input, select):focus-visible {
+  outline: 0;
+}
 .inline-form {
   display: flex;
   flex-wrap: wrap;
@@ -227,19 +451,19 @@ main > :empty {
 .panel > .filters {
   margin-bottom: var(--space-3);
 }
-/* A list page's result line: the count, that none match, or why a filter cannot be used. */
 .result-summary {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-1) var(--space-3);
   margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
 }
 .result-summary p {
   margin: 0;
 }
 .list-panel .pager:not(:empty) {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ui-line);
   padding-top: var(--space-2);
   margin-top: var(--space-2);
 }
@@ -247,11 +471,12 @@ main > :empty {
   outline: none;
 }
 .list-panel h2:focus-visible {
-  outline: 2px solid var(--focus);
+  outline: 2px solid var(--ui-accent);
 }
+
 /*
- * A table of records that, narrower than about 600px, reads as one stacked
- * block per row: the row header, then each cell under its `data-label`.
+ * A table of records that, narrower than 600px, reads as one stacked block per
+ * row: the row header, then each cell under its `data-label`.
  */
 .stack-table {
   container-type: inline-size;
@@ -264,49 +489,36 @@ main > :empty {
     display: block;
   }
   .stack-table tr {
-    padding: var(--space-2) 0;
-    border-bottom: 1px solid var(--border);
+    padding: var(--space-2) var(--panel-pad-x);
+    border-bottom: 1px solid var(--ui-line-soft);
   }
   .stack-table :is(th, td) {
     border: 0;
     padding: var(--space-1) 0;
   }
+  .stack-table :is(th, td):first-child,
+  .stack-table :is(th, td):last-child {
+    padding-inline: 0;
+  }
   .stack-table td {
     display: grid;
     grid-template-columns: 6rem minmax(0, 1fr);
-    column-gap: var(--space-2);
-    justify-items: start;
+    gap: var(--space-2);
+    align-items: baseline;
   }
   .stack-table td > * {
-    grid-column: 2;
-  }
-  .stack-table tr:last-child {
-    border-bottom: 0;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
   }
   .stack-table td::before {
     content: attr(data-label);
     font-size: var(--text-xs);
-    color: var(--text-muted);
+    color: var(--ui-muted);
   }
 }
+
 @media (width <= 720px) {
-  .masthead {
-    position: static;
-  }
-  /* Every destination and the waiting count stay in sight: the links wrap. */
-  .masthead nav {
-    order: 3;
-    width: 100%;
-  }
-  .masthead nav ul {
-    column-gap: 0;
-  }
-  .masthead nav a {
-    padding-inline: var(--space-2);
-  }
-  main {
-    padding-top: var(--space-3);
-  }
   .build-catalog thead,
   .pipeline-table thead {
     display: none;
@@ -314,35 +526,41 @@ main > :empty {
   .build-catalog tr,
   .pipeline-table tr {
     display: block;
-    padding: var(--space-2) 0;
-    border-bottom: 1px solid var(--border);
+    padding: var(--space-2) var(--panel-pad-x);
+    border-bottom: 1px solid var(--ui-line-soft);
+  }
+  .build-catalog :is(th, td):first-child,
+  .build-catalog :is(th, td):last-child,
+  .pipeline-table :is(th, td):first-child,
+  .pipeline-table :is(th, td):last-child {
+    padding-inline: 0;
   }
   .build-catalog td,
   .pipeline-table td {
     display: grid;
-    grid-template-columns: 6rem minmax(0, 1fr);
+    grid-template-columns: 7.5rem minmax(0, 1fr);
     gap: var(--space-2);
+    align-items: baseline;
     border: 0;
     padding: var(--space-1) 0;
   }
-  .pipeline-table th {
+  .build-catalog th {
     display: block;
     border: 0;
-    padding: var(--space-1) 0;
+    padding: 0 0 var(--space-1);
   }
   .build-catalog td::before,
   .pipeline-table td::before {
     content: attr(data-label);
     font-size: var(--text-xs);
-    color: var(--text-muted);
+    color: var(--ui-muted);
   }
 }
+
 @media (pointer: coarse) {
-  button,
+  main button,
+  dialog button,
   details > summary {
     min-height: var(--control-height);
-  }
-  details > summary {
-    padding-block: calc((var(--control-height) - var(--target-min)) / 2);
   }
 }

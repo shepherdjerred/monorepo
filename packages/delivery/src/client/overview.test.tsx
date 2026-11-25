@@ -273,10 +273,8 @@ describe("overview panels markup", () => {
   });
 
   it("states each count as glyph, words and color", () => {
-    expect(html).toContain(
-      '<ul class="overview-counts" aria-label="Products by status">' +
-        '<li><span class="status status-succeeded"><span class="status-glyph" aria-hidden="true">✓</span>' +
-        '<span class="status-label">1 ok</span></span></li>',
+    expect(html).toMatch(
+      /<ul class="overview-counts" aria-label="Products by status"><li><span class="status status-succeeded" data-sev="ok"><svg[^>]*class="[^"]*status-glyph" aria-hidden="true">.*?<\/svg><span class="status-label">1 ok<\/span><\/span><\/li>/u,
     );
     expect(html).toContain(
       '<span class="status-label">1 recovery required</span>',
@@ -312,18 +310,12 @@ describe("overview panels markup", () => {
   });
 
   it("keeps a chip's status words, revision and age in its accessible text", () => {
-    expect(html).toContain(
-      '<a class="overview-chip overview-chip-succeeded" href="/environments/arcade/prod">' +
-        '<span class="env-name">prod</span>' +
-        '<span class="status status-succeeded"><span class="status-glyph" aria-hidden="true">✓</span>' +
-        '<span class="status-label">succeeded</span></span>' +
-        '<span class="overview-accepted"><span class="revision">r274</span>' +
-        '<span class="visually-hidden"> accepted </span>',
+    expect(html).toMatch(
+      /<a class="overview-chip overview-chip-succeeded" href="\/environments\/arcade\/prod"><span class="env-name">prod<\/span><span class="status status-succeeded" data-sev="ok"><svg[^>]*aria-hidden="true">.*?<\/svg><span class="status-label">succeeded<\/span><\/span><span class="overview-accepted"><span class="revision">r274<\/span><span class="visually-hidden"> accepted <\/span>/u,
     );
     // Recovery outranks the failed status it was left with.
-    expect(html).toContain(
-      '<span class="status status-failed"><span class="status-glyph" aria-hidden="true">✕</span>' +
-        '<span class="status-label">recovery required</span></span>',
+    expect(html).toMatch(
+      /<span class="status status-failed" data-sev="error"><svg[^>]*aria-hidden="true">.*?<\/svg><span class="status-label">recovery required<\/span><\/span>/u,
     );
     // Nothing accepted: no revision and no age to show.
     expect(html).toContain(
@@ -349,18 +341,12 @@ describe("overview panels markup", () => {
         )}
       />,
     );
-    expect(chips).toContain(
-      '<a class="overview-chip overview-chip-request" href="/environments/scout/prod">' +
-        '<span class="env-name">prod</span>' +
-        // The accepted release keeps a status of its own beside the newer request's.
-        '<span class="status status-succeeded"><span class="status-glyph" aria-hidden="true">✓</span>' +
-        '<span class="status-label">accepted</span></span>' +
-        '<span class="overview-accepted"><span class="revision">r274</span>' +
-        "<time",
+    // The accepted release keeps a status of its own beside the newer request's.
+    expect(chips).toMatch(
+      /<a class="overview-chip overview-chip-request" href="\/environments\/scout\/prod"><span class="env-name">prod<\/span><span class="status status-succeeded" data-sev="ok"><svg[^>]*aria-hidden="true">.*?<\/svg><span class="status-label">accepted<\/span><\/span><span class="overview-accepted"><span class="revision">r274<\/span><time/u,
     );
-    expect(chips).toContain(
-      '<span class="status status-canceled"><span class="status-glyph" aria-hidden="true">⊘</span>' +
-        '<span class="status-label">r293 canceled</span></span></a>',
+    expect(chips).toMatch(
+      /<span class="status status-canceled" data-sev="unknown"><svg[^>]*aria-hidden="true">.*?<\/svg><span class="status-label">r293 canceled<\/span><\/span><\/a>/u,
     );
     // The accepted release never borrows the request's status.
     expect(chips).not.toContain("r274 canceled");
@@ -386,9 +372,8 @@ describe("overview panels markup", () => {
     );
     expect(chip).toContain("overview-chip-succeeded");
     expect(chip).toContain('<span class="revision">r338</span>');
-    expect(chip).toContain(
-      '<span class="status status-queued"><span class="status-glyph" aria-hidden="true">○</span>' +
-        '<span class="status-label">worker retirement queued</span></span>',
+    expect(chip).toMatch(
+      /<span class="status status-queued" data-sev="warning"><svg[^>]*aria-hidden="true">.*?<\/svg><span class="status-label">worker retirement queued<\/span><\/span>/u,
     );
     expect(chip).not.toContain("r338 queued");
   });
@@ -415,9 +400,8 @@ describe("overview panels markup", () => {
           panels={kindPanels([group("arcade", "product", [alarmed])], [])}
         />,
       ),
-    ).toContain(
-      '<span class="status status-alarmed"><span class="status-glyph" aria-hidden="true">!</span>' +
-        '<span class="status-label">alarm firing</span></span>',
+    ).toMatch(
+      /<span class="status status-alarmed" data-sev="error"><svg[^>]*aria-hidden="true">.*?<\/svg><span class="status-label">alarm firing<\/span><\/span>/u,
     );
   });
 

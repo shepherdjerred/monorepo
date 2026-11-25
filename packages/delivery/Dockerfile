@@ -45,7 +45,9 @@ COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/delivery'
 
 FROM deps AS build
-COPY --parents tsconfig.base.json packages/delivery packages/config packages/feature-flags packages/ops-model packages/ops-clients packages/version-catalog packages/eslint-config ./
+# console-ui exports TypeScript source the client build bundles; it is a
+# devDependency, so the runtime image never needs it.
+COPY --parents tsconfig.base.json packages/delivery packages/console-ui packages/config packages/feature-flags packages/ops-model packages/ops-clients packages/version-catalog packages/eslint-config ./
 RUN cd packages/delivery && bun run generate && bun run build
 
 FROM base AS prod-deps

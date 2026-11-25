@@ -1,6 +1,6 @@
 ---
 title: Console UI reference
-description: The colour tokens, severity vocabulary, contrast pairs, cascade layers and breakpoints shared by the Hub, Go link, Flags and Mail consoles and the ops emails.
+description: The colour tokens, severity vocabulary, contrast pairs, cascade layers and breakpoints shared by the Hub, Delivery, Go link, Flags and Mail consoles and the ops emails.
 ---
 
 `@shepherdjerred/console-ui` is the shared look of the ops consoles and the
@@ -48,7 +48,8 @@ them to `src/styles/tokens.css` as `--ui-<name>` custom properties.
 `createThemeStore(storageKey)` in
 [`src/theme.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/console-ui/src/theme.ts)
 stores `light` or `dark` under the key, removes it for `system`, and sets or
-removes `data-theme`. Hub uses the key `ops-theme`.
+removes `data-theme`. Hub uses `ops-theme`; Delivery, Go link and Flags use
+`delivery-theme`, `golink-theme` and `flags-theme`.
 
 ## Severity vocabulary
 

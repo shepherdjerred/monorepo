@@ -8,7 +8,6 @@
   text-decoration: underline;
 }
 
-/* The lock or the deployment in flight, right under the summary line. */
 .environment-notice > p {
   margin: 0;
 }
@@ -16,7 +15,6 @@
   margin-top: var(--space-1);
 }
 
-/* The release form's footer: what happens next and what to check, beside the button. */
 .release-notes {
   display: grid;
   gap: var(--space-2);
@@ -25,14 +23,13 @@
 }
 .override-reason {
   margin: 0 0 var(--space-2);
-  color: var(--text-muted);
+  color: var(--ui-muted);
   font-size: var(--text-sm);
 }
 .diff-digests small {
   overflow-wrap: anywhere;
 }
 
-/* A rollback candidate: what it restores, then when and by which deployment. */
 .candidate-heading {
   align-items: center;
 }
@@ -46,10 +43,9 @@
   overflow-wrap: anywhere;
 }
 .candidate-origin {
-  color: var(--text-muted);
+  color: var(--ui-muted);
   font-size: var(--text-xs);
 }
-/* Every deployment that accepted one selection, newest first, one per line. */
 .candidate-deployments {
   list-style: none;
   margin: 0;
@@ -58,7 +54,6 @@
 .candidate-origin .disclosure > summary {
   font-size: var(--text-xs);
 }
-/* The builds a shared worker row stands for, each with its own details. */
 .worker-group {
   list-style: none;
   margin: 0;
@@ -66,13 +61,11 @@
   display: grid;
   gap: var(--space-1);
 }
-/* The older candidates continue the list above them. */
 .candidates + .disclosure > .disclosure-body {
   padding-inline-start: 0;
   padding-bottom: 0;
 }
 
-/* A worker build: its short build and digest, then its host as a disclosure. */
 .worker-table td {
   vertical-align: middle;
 }
@@ -89,15 +82,14 @@
   gap: 0 var(--space-3);
 }
 .worker-build > .identifier {
-  color: var(--text-muted);
+  color: var(--ui-muted);
   font-size: var(--text-xs);
 }
 .worker-table .disclosure > summary {
-  color: var(--text-muted);
+  color: var(--ui-muted);
   font-size: var(--text-xs);
   font-weight: var(--weight-regular);
 }
-/* Every identity the row abbreviates, one labelled value per line. */
 .worker-provenance .facts {
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-1);
@@ -112,18 +104,13 @@
 .worker-provenance .facts dd {
   font-weight: var(--weight-regular);
 }
-/* A long image reference fills its line before it breaks. */
 .worker-provenance .facts dd.mono {
   word-break: break-all;
 }
 .worker-route {
   display: block;
 }
-/*
- * On a phone a worker row stacks: its identity on a line of its own, then its
- * desired hosts beside its retirement. The column headers stay for assistive
- * technology and leave the screen.
- */
+
 @media (width <= 720px) {
   .worker-table,
   .worker-table tbody {
@@ -142,10 +129,12 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-1) var(--space-3);
-    padding: var(--row-pad-y) 0;
-    border-bottom: 1px solid var(--border);
+    padding: var(--row-pad-y) var(--panel-pad-x);
+    border-bottom: 1px solid var(--ui-line-soft);
   }
-  .worker-table td {
+  .worker-table td,
+  .worker-table td:first-child,
+  .worker-table td:last-child {
     padding: 0;
     border: 0;
   }

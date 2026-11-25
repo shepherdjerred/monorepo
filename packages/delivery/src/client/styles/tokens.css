@@ -1,104 +1,80 @@
 /*
- * Design tokens. Every color resolves for both schemes via light-dark().
+ * Layout, spacing and type-scale aliases on top of @shepherdjerred/console-ui.
+ * Every colour comes from `--ui-*` in console-ui/styles/tokens.css; no hex
+ * colour lives here.
  *
- * One viewport breakpoint: `(width <= 720px)` is the phone layout. A custom
- * property cannot be read inside a media or container condition, so the
- * stylesheets repeat that one literal form.
+ * Viewport breakpoints:
+ * - `(max-width: 900px)`: console-ui hides `.ui-side`; `.topbar` + `.nav-drawer` take over.
+ * - `(width <= 720px)`: compact page padding and stacked list tables.
+ * - `(width <= 600px)`: overview tiles pair up and healthy services fold.
  */
 :root {
-  color-scheme: light dark;
-  --font-sans:
-    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --font-mono:
-    ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace;
+  --font-sans: var(--ui-font-sans);
+  --font-mono: var(--ui-font-mono);
 
-  /* Type scale, in rem so it follows the reader's font-size preference. */
-  --text-2xs: 0.6875rem; /* 11px: uppercase labels */
-  --text-xs: 0.75rem; /* 12px: pills, badges and second lines */
-  --text-sm: 0.8125rem; /* 13px: dense lists and supporting text */
-  --text-md: 0.875rem; /* 14px: body and table cells */
-  --text-lg: 1rem; /* 16px: panel headings */
-  --text-xl: 1.375rem; /* 22px: the page title */
-  --text-mono: 0.8125rem; /* 13px: identifiers and code */
-  --leading-tight: 1.25; /* headings */
-  --leading-snug: 1.4; /* rows, pills and lists */
-  --leading-normal: 1.5; /* prose */
+  /* Type scale aligned with console-ui (13px base, 12px mono/labels, 15px page header). */
+  --text-2xs: 0.75rem; /* 12px: labels and column headers */
+  --text-xs: 0.75rem; /* 12px: chips, badges and second lines */
+  --text-sm: 0.78125rem; /* 12.5px: supporting copy and controls */
+  --text-md: 0.8125rem; /* 13px: body and table cells */
+  --text-lg: 0.875rem; /* 14px: section headings */
+  --text-xl: 0.9375rem; /* 15px: panel header bar title */
+  --text-mono: 0.75rem; /* 12px: identifiers, revisions and code */
+  --leading-tight: 1.3;
+  --leading-snug: 1.4;
+  --leading-normal: 1.45;
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
-  --weight-bold: 700;
-  --tracking-title: -0.015em;
-  --tracking-label: 0.05em;
-
-  --canvas: light-dark(#f3f4f6, #0e1116);
-  --surface: light-dark(#ffffff, #161b22);
-  --surface-raised: light-dark(#ffffff, #1c222b);
-  --surface-sunken: light-dark(#eceef2, #0b0e13);
-  --border: light-dark(#d5d9e0, #2d3440);
-  --border-strong: light-dark(#a9b0bc, #4a5363);
-  --text: light-dark(#1b1f24, #e6e9ee);
-  --text-muted: light-dark(#5a6270, #9aa3b2);
-  --link: light-dark(#0b5cad, #6cb2ff);
-  --focus: light-dark(#0b5cad, #8cc4ff);
-  --masthead: light-dark(#ffffff, #10141a);
-
-  /* The accent marks the brand, the current page and the primary action. */
-  --accent: light-dark(#0550ae, #58a6ff);
-  --accent-soft: light-dark(#e7f0fd, #0f2036);
-  --on-solid: light-dark(#ffffff, #0b1220);
-
-  /* Status colors say what state something is in, and nothing else. */
-  --succeeded: light-dark(#116329, #4ac26b);
-  --succeeded-soft: light-dark(#e6f4ea, #12261a);
-  --failed: light-dark(#b31d28, #ff7b72);
-  --failed-soft: light-dark(#fdebec, #2d1517);
-  --running: light-dark(#0550ae, #58a6ff);
-  --running-soft: light-dark(#e7f0fd, #0f2036);
-  --waiting: light-dark(#7d4e00, #e3b341);
-  --waiting-soft: light-dark(#fff6dc, #2a2312);
-  --neutral: light-dark(#57606a, #8b949e);
-  --neutral-soft: light-dark(#eef0f3, #1d232c);
+  --weight-bold: 600;
 
   --radius: 8px;
-  --radius-small: 5px;
+  --radius-small: 6px;
+  --radius-chip: 5px;
   --radius-pill: 999px;
-  --shadow: 0 1px 2px light-dark(rgb(15 23 42 / 8%), rgb(0 0 0 / 40%));
-  --shadow-overlay: 0 16px 48px rgb(0 0 0 / 30%);
-  --backdrop: rgb(0 0 0 / 45%);
+  --shadow-overlay: 0 12px 40px rgb(0 0 0 / 0.25);
+  --backdrop: rgb(10 12 10 / 0.45);
 
   --space-0: 2px;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
-  --space-5: 24px;
+  --space-5: 20px;
   --space-6: 32px;
-  --content-width: 1440px;
 
-  /* Density: how tall a control, a row and a panel are. */
-  --target-min: 24px; /* WCAG 2.5.8: the smallest pointer target */
-  --control-height: 32px;
-  --control-pad-x: 10px;
-  --row-pad-y: 6px;
-  --row-pad-x: var(--space-3);
-  --panel-pad-y: var(--space-3);
-  --panel-pad-x: var(--space-4);
-  --page-pad-x: var(--space-5);
-  --page-gap: var(--space-4);
-  /* Room an anchor target keeps clear of the sticky masthead. */
-  --masthead-clearance: 64px;
+  /* Density: console-ui's 28px controls, 30px table headers, compact panel rhythm. */
+  --target-min: 24px; /* WCAG 2.5.8 minimum pointer target */
+  --control-height: 28px;
+  --control-pad-x: 9px;
+  --row-pad-y: 7px;
+  --row-pad-x: 12px;
+  --panel-pad-y: 14px;
+  --panel-pad-x: 16px;
+  --page-pad-x: 20px;
+  --page-gap: 16px;
+  --topbar-height: 52px;
+  --masthead-clearance: 16px;
 }
-@media (width <= 720px) {
+
+@media (max-width: 900px) {
   :root {
-    --text-xl: 1.25rem;
-    --panel-pad-x: var(--space-3);
-    --page-pad-x: var(--space-3);
-    --page-gap: var(--space-3);
+    --masthead-clearance: 64px;
   }
 }
+
+@media (width <= 720px) {
+  :root {
+    --panel-pad-x: 12px;
+    --page-pad-x: 14px;
+    --page-gap: 12px;
+  }
+}
+
 /* Under touch every control is a 44px target. */
 @media (pointer: coarse) {
   :root {
+    --target-min: 44px;
     --control-height: 44px;
   }
 }

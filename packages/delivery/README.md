@@ -280,16 +280,16 @@ fresh or stale state. The runtime panel is the live read.
 A notice is amber when it asks for a decision or flags a risk, red for a
 failure, neutral for plain information and green for a positive outcome.
 
-The client's styles are plain CSS under `src/client/styles/`, with no
-framework. `tokens.css` holds every color (resolved for both schemes through
-`light-dark()`), the type scale (`--text-2xs` to `--text-xl`, `--text-mono`,
-line heights and weights) and the density tokens: control height, table row
-padding, panel padding and page gap. The other stylesheets take sizes and
-colors from those tokens. The status colors mean a state and nothing else; the
-brand mark, the current page and the primary action use `--accent`. One
-viewport breakpoint, `(width <= 720px)`, is the phone layout; the overview
-alone tightens further at `(width <= 600px)`, where its tiles pair up and
-healthy services fold. A coarse pointer raises every control to a 44px target.
+The client shares the ops console look (`@shepherdjerred/console-ui`): a sticky
+sidebar (`DeliverySidebar` with `AppSwitcher` over `CONSOLE_LINKS`, grouped
+`Main` navigation, live feed status, viewer identity, and `ThemeRow` persisted
+under `delivery-theme`) beside an inset content panel whose document scrolls.
+Below `900px` the sidebar gives way to a sticky top bar and modal navigation
+drawer (`Topbar`). Page stylesheets under `src/client/styles/` build on
+`console-ui`'s `--ui-*` colour and font tokens; `tokens.css` holds only layout,
+type-scale and density variables (28px controls, raised to 44px under a coarse
+pointer). List tables stack below `720px`, and the overview tightens further at
+`(width <= 600px)`, where its tiles pair up and healthy services fold.
 
 Pages share these components from `src/client/components/`:
 

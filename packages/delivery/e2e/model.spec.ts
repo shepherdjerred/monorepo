@@ -8,6 +8,7 @@ import {
   api,
   confirm,
   expectAccessible,
+  expectApprovalsNavCount,
   expectNoHorizontalOverflow,
   expectNoViolations,
 } from "./helpers.ts";
@@ -180,8 +181,11 @@ test("the page leads with what runs here and what is in flight, then the release
   const main = page.getByRole("main");
   // The summary ends with the deployment in flight, named with its state.
   await expect(main.locator(".page-header")).toContainText(
-    /Accepted r3 · Approval required · generation 6 · In flight: \Sdeploy r4 awaiting approval/u,
+    /Accepted r3 · Approval required · generation 6 · In flight: deploy r4 awaiting approval/u,
   );
+  await expect(
+    main.locator(".page-header .environment-in-flight svg.status-glyph"),
+  ).toBeVisible();
   await expect(main.locator(".environment-notice")).toContainText(
     /^In flight: deployment \S+ is awaiting approval\. Requests, rebinds and rollbacks are refused until it finishes or is canceled\.$/u,
   );
@@ -453,11 +457,7 @@ test("approvals show the waiting override, the waiting saved plan and recently d
       .getByText("granted", { exact: true }),
     // Three promotions, two re-assertions and the rebind.
   ).toHaveCount(6);
-  await expect(
-    page.getByRole("navigation", { name: "Main" }).getByRole("link", {
-      name: /^Approvals, 2 awaiting approval$/u,
-    }),
-  ).toBeVisible();
+  await expectApprovalsNavCount(page, 2);
   await expectNoHorizontalOverflow(page);
   await waiting.getByRole("link", { name: PROD }).click();
   await expect(

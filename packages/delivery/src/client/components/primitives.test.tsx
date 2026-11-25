@@ -100,22 +100,23 @@ describe("Revision", () => {
 });
 
 describe("Status", () => {
-  it("keeps the value's glyph and color under a page's own words", () => {
-    expect(
-      renderToStaticMarkup(<Status value="failed" label="CI failed" />),
-    ).toBe(
-      '<span class="status status-failed">' +
-        '<span class="status-glyph" aria-hidden="true">✕</span>' +
-        '<span class="status-label">CI failed</span></span>',
+  it("keeps the value's glyph and severity under a page's own words", () => {
+    const html = renderToStaticMarkup(
+      <Status value="failed" label="CI failed" />,
     );
+    expect(html).toContain('class="status status-failed" data-sev="error"');
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain("lucide-octagon-alert");
+    expect(html).toContain('<span class="status-label">CI failed</span>');
   });
 
-  it("marks a state it has not seen yet with a question mark", () => {
+  it("marks a state it has not seen yet with the unknown help glyph", () => {
     const html = renderToStaticMarkup(
       <Status value="unknown" label="Not seen yet" />,
     );
-    expect(html).toContain('class="status status-unknown"');
-    expect(html).toContain(">?</span>");
+    expect(html).toContain('class="status status-unknown" data-sev="unknown"');
+    expect(html).toContain("lucide-circle-help");
+    expect(html).toContain('<span class="status-label">Not seen yet</span>');
   });
 });
 
