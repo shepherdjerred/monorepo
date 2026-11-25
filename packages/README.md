@@ -12,6 +12,7 @@ hold only scoped invariants that agents must keep in context.
 | [tracker](tracker/)                                             | Issue tracker — teams, projects, board, session actors, votes, attachments and audit history              |
 | [delivery](delivery/)                                           | Deployment catalog, immutable version sets, approvals, and durable release execution                      |
 | [golink](golink/)                                               | Tailnet shortlink service with live cluster/platform dynamic aliases and manual overrides                 |
+| [feeds](feeds/)                                                 | Tailnet feed listing console and isolated NetNewsWire Reader API over SQLite + FTS5                       |
 | [flags](flags/)                                                 | Deployment flag documents, credentialless evaluation, and operator edits                                  |
 | [mail](mail/)                                                   | Outbound mail broker — SQLite WAL outbox, REST submission API, cluster STARTTLS SMTP, and console UI      |
 | [birmel](birmel/)                                               | Discord bot on an explicit AI SDK agent runtime                                                           |

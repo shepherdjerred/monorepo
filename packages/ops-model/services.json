@@ -880,6 +880,17 @@
           "argoApp": "storm-stats"
         }
       ]
+    },
+    {
+      "id": "feeds",
+      "rootReleaseExclusions": { "feeds": "inactive" },
+      "images": ["feeds"],
+      "charts": ["feeds"],
+      "title": "Feeds",
+      "kind": "product",
+      "package": "feeds",
+      "namespaces": ["feeds"],
+      "argoApps": []
     }
   ]
 }

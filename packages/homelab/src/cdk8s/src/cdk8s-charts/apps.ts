@@ -85,6 +85,7 @@ import { createFlagsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo
 import { createStormStatsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/storm-stats.ts";
 
 import { createMailApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/mail.ts";
+import { createFeedsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/feeds.ts";
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -188,6 +189,7 @@ export async function createAppsChart(app: App) {
   createStormStatsApp(chart);
 
   createMailApp(chart);
+  createFeedsApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);
