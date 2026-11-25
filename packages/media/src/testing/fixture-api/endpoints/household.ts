@@ -70,6 +70,11 @@ import { FEATURED, titleNamed } from "#testing/fixture-api/fixtures/titles.ts";
 import { KIDS, OWNER } from "#testing/fixture-api/personas.ts";
 import { FixtureFailure } from "#testing/fixture-api/scenario.ts";
 import { NOW } from "#testing/fixture-api/support.ts";
+import {
+  LegacyActivityPageSchema,
+  LegacyActivityQuerySchema,
+} from "#shared/legacy-activity/contract.ts";
+import { importedActivityPage } from "#testing/fixture-api/fixtures/imported-activity.ts";
 
 function subjectOf(request: FixtureRequest): string {
   return request.query.get("subjectUserId") ?? request.user.id;
@@ -325,8 +330,23 @@ const removals: readonly FixtureEndpoint[] = [
 const notifications: readonly FixtureEndpoint[] = [
   endpoint({
     path: "/activity",
-    schema: OperationListSchema,
-    respond: () => operationList(),
+    schema: z.union([OperationListSchema, LegacyActivityPageSchema]),
+    respond: ({ persona, query }) => {
+      const source = query.get("source");
+      if (source === null) return operationList();
+      if (persona !== "owner")
+        throw new FixtureFailure(
+          403,
+          "forbidden",
+          "Library owner access is required.",
+        );
+      return importedActivityPage(
+        LegacyActivityQuerySchema.parse({
+          source,
+          before: query.get("before") ?? undefined,
+        }),
+      );
+    },
     samples: ["/activity"],
   }),
   endpoint({

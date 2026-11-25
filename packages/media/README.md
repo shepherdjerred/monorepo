@@ -3457,6 +3457,30 @@ previously unbound records. Changing account mappings never transfers prior
 history to a different person. Plex history does not affect downloads,
 library retention, or the play counts and watch time supplied by timed sessions.
 
+### Historical download and subtitle activity
+
+**Manage → Activity** shows archived Sonarr, Radarr, and Bazarr activity to the
+owner. Use the activity source filter to browse all imports or a single
+source. Events retain their source instance, original row ID, time, and any
+available file, provider, and subtitle facts. Source title IDs remain visible
+when a canonical title was absent from the archive.
+
+Prepare the verified private activity archive with the
+[activity adapter](scripts/migration-legacy-activity.ts). It checks source
+digests and the exact row identities of provider and language supplements,
+then emits bounded JSON request bodies on stdout. Keep that output private.
+
+```sh
+bun scripts/migration-legacy-activity.ts --directory "$activity_archive"
+```
+
+Send each JSON line to the existing `POST /api/v1/admin/migration` endpoint
+with the Media owner session and CSRF token. Verify that `imported + unchanged`
+equals the batch size. Repeating a batch leaves the original events unchanged.
+A conflict in a source event's facts rejects the batch. The import writes
+application history only and creates no downloads, notifications, or
+ownership changes.
+
 ### Legacy subtitle adoption and policy
 
 Include each subtitle or preference provenance key in the existing handoff

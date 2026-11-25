@@ -1,5 +1,13 @@
 /* The activity list: one dot and line per operation. */
 @layer components {
+  .sourceFilter {
+    margin-block-end: var(--space-3);
+  }
+  .list {
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+  }
   .itemMain {
     flex: 1;
     min-width: 0;
