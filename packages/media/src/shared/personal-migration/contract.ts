@@ -46,6 +46,7 @@ export const PersonalMigrationInputSchema = z.strictObject({
     .max(1000)
     .refine((ids) => new Set(ids).size === ids.length),
   deferUnboundRequesters: z.literal(true).optional(),
+  recordHistoryOnly: z.literal(true).optional(),
   selectedSeerrRequests: z
     .array(SeerrRequestReferenceSchema)
     .min(1)
