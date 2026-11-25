@@ -1,5 +1,10 @@
 import type { z } from "zod";
-import type { MovieAdmissionReasonV4Schema } from "#shared/movie-editions/lifecycle/public-v4.ts";
+import type {
+  MovieAdmissionReasonV4Schema,
+  MovieDiscoveryStatus,
+  MovieTargetContextV4,
+} from "#shared/movie-editions/lifecycle/public-v4.ts";
+import type { Copy } from "#client/presentation/copy.ts";
 import { movieEditionReasons } from "./presentation.ts";
 
 const reasons: Record<z.infer<typeof MovieAdmissionReasonV4Schema>, string> = {
@@ -23,4 +28,37 @@ export function movieAdmissionReasonV4(
   reason: z.infer<typeof MovieAdmissionReasonV4Schema>,
 ): string {
   return reasons[reason];
+}
+
+type DiscoveryCopy = Copy & { detail?: string };
+const discoveryCopy: Record<MovieDiscoveryStatus, DiscoveryCopy> = {
+  searching: { label: "Looking for a release", tone: "progress" },
+  retrying: { label: "Retrying the download", tone: "progress" },
+  waiting_for_release: {
+    label: "Waiting for a matching release",
+    tone: "neutral",
+  },
+  plex_exclusion_proof_required: {
+    label: "Plex scanner setup needed",
+    tone: "warn",
+    detail:
+      "The library owner needs to verify the Plex scanner setup for Movies before downloads can start.",
+  },
+  acquisition_disabled: {
+    label: "Downloads paused",
+    tone: "warn",
+    detail: "The library owner needs to enable downloads for this edition.",
+  },
+  external_library_protected: {
+    label: "External library protection",
+    tone: "warn",
+    detail:
+      "The library owner needs to review which library manages this title.",
+  },
+};
+
+export function movieDiscoveryCopy(target: MovieTargetContextV4 | undefined) {
+  const status =
+    target?.access === "detail" ? target.progress?.discovery : undefined;
+  return status === undefined ? undefined : discoveryCopy[status];
 }
