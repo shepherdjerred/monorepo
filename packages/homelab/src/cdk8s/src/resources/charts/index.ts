@@ -7,6 +7,7 @@ import {
   FsGroupChangePolicy,
   Secret,
   Volume,
+  type ISecret,
 } from "cdk8s-plus-31";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
@@ -28,6 +29,30 @@ import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/version
 export const CHARTS_ACTIVE = false;
 
 const CHARTS_PORT = 7370;
+const CHARTS_UID = 1000;
+const CHARTS_DATA_PATH = "/var/lib/charts";
+const CHARTS_AUTH_MOUNT_PATH = "/run/secrets/charts-auth";
+
+const CHARTS_RESOURCES = {
+  cpu: { request: Cpu.millis(25), limit: Cpu.millis(500) },
+  memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
+};
+
+function buildChartsEnv(authSecret: ISecret): Record<string, EnvValue> {
+  return {
+    HOME: EnvValue.fromValue("/tmp"),
+    HOST: EnvValue.fromValue("0.0.0.0"),
+    PORT: EnvValue.fromValue(String(CHARTS_PORT)),
+    CHARTS_DATA_DIR: EnvValue.fromValue(CHARTS_DATA_PATH),
+    CHARTS_BASIC_AUTH_USER: EnvValue.fromSecretValue({
+      secret: authSecret,
+      key: "username",
+    }),
+    CHARTS_BASIC_AUTH_PASS_FILE: EnvValue.fromValue(
+      `${CHARTS_AUTH_MOUNT_PATH}/password`,
+    ),
+  };
+}
 
 const CONSUMER_NAMESPACES = [
   "tailscale",
@@ -49,14 +74,14 @@ export function createChartsDeployment(chart: Chart) {
       strategy: DeploymentStrategy.recreate(),
       automountServiceAccountToken: false,
       securityContext: {
-        fsGroup: 1000,
+        fsGroup: CHARTS_UID,
         fsGroupChangePolicy: FsGroupChangePolicy.ON_ROOT_MISMATCH,
       },
     },
     data: {
       id: "charts-data",
       storage: Size.gibibytes(8),
-      path: "/var/lib/charts",
+      path: CHARTS_DATA_PATH,
     },
     containers: () => {
       const authItem = onePasswordSecret(
@@ -83,24 +108,9 @@ export function createChartsDeployment(chart: Chart) {
       return {
         server: {
           image: firstPartyImageRecipe("charts"),
-          securityContext: restrictedContainer(1000),
-          resources: {
-            cpu: { request: Cpu.millis(25), limit: Cpu.millis(500) },
-            memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
-          },
-          envVariables: {
-            HOME: EnvValue.fromValue("/tmp"),
-            HOST: EnvValue.fromValue("0.0.0.0"),
-            PORT: EnvValue.fromValue(String(CHARTS_PORT)),
-            CHARTS_DATA_DIR: EnvValue.fromValue("/var/lib/charts"),
-            CHARTS_BASIC_AUTH_USER: EnvValue.fromSecretValue({
-              secret: authSecret,
-              key: "username",
-            }),
-            CHARTS_BASIC_AUTH_PASS_FILE: EnvValue.fromValue(
-              "/run/secrets/charts-auth/password",
-            ),
-          },
+          securityContext: restrictedContainer(CHARTS_UID),
+          resources: CHARTS_RESOURCES,
+          envVariables: buildChartsEnv(authSecret),
         },
       };
     },
@@ -141,7 +151,7 @@ export function createChartsDeployment(chart: Chart) {
   if (serverContainer === undefined || authVolume === undefined) {
     throw new Error("Expected server container and auth volume on charts");
   }
-  serverContainer.mount("/run/secrets/charts-auth", authVolume, {
+  serverContainer.mount(CHARTS_AUTH_MOUNT_PATH, authVolume, {
     readOnly: true,
   });
 
