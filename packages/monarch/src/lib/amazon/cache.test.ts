@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { mergeOrders, parseAmazonCache, AmazonCacheSchema } from "./cache.ts";
+import {
+  incrementalSinceDate,
+  mergeOrders,
+  parseAmazonCache,
+  AmazonCacheSchema,
+} from "./cache.ts";
 import type { AmazonOrder } from "./types.ts";
 
 function order(
@@ -142,5 +147,15 @@ describe("parseAmazonCache", () => {
     expect(() =>
       AmazonCacheSchema.parse(parseAmazonCache(legacy)),
     ).not.toThrow();
+  });
+});
+
+describe("incrementalSinceDate", () => {
+  test("reconsiders only the 30 days before the last scrape", () => {
+    expect(incrementalSinceDate("2026-09-24T19:06:55.000Z")).toBe("2026-08-25");
+  });
+
+  test("crosses month and year boundaries", () => {
+    expect(incrementalSinceDate("2026-01-15T00:00:00.000Z")).toBe("2025-12-16");
   });
 });

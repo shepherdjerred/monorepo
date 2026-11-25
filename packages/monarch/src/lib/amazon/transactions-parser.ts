@@ -27,6 +27,47 @@ export type TransactionRow =
       orderText: string;
     };
 
+const LINK_STATUSES = new Set(["Charged", "Refunded", "Pending"]);
+
+// The rebuilt payments page renders each transaction as a single link
+// whose text lines are: "Mon DD, YYYY·Merchant", the payment method,
+// "Order #...", the signed amount, and the status. Turn one link's text
+// into the same row shape the classic markup produced so the fold below
+// (and its charge/refund/gift-card rules) applies unchanged.
+export function transactionRowsFromLinkText(text: string): TransactionRow[] {
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line !== "");
+  const dateLine = lines.find((line) => line.includes("·"));
+  const amountLine = lines.find((line) => /\$[\d,]+\.\d{2}/.test(line));
+  const orderLine = lines.find((line) => line.includes("Order #"));
+  if (
+    dateLine === undefined ||
+    amountLine === undefined ||
+    orderLine === undefined
+  ) {
+    return [];
+  }
+  const paymentLine = lines.find(
+    (line) =>
+      line !== dateLine &&
+      line !== amountLine &&
+      line !== orderLine &&
+      !LINK_STATUSES.has(line),
+  );
+  if (paymentLine === undefined) return [];
+  return [
+    { kind: "date", text: dateLine.split("·")[0] ?? "" },
+    {
+      kind: "txn",
+      amountText: amountLine,
+      paymentMethod: paymentLine,
+      orderText: orderLine,
+    },
+  ];
+}
+
 export type FoldedTransactions = {
   byOrder: Map<string, AmazonCharge[]>;
   oldestDate: string | undefined;

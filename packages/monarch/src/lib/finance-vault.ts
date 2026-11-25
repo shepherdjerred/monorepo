@@ -109,3 +109,10 @@ export function latestSclCsv(): string | undefined {
 export function latestEquityCsv(): string | undefined {
   return latestVaultFile(EQUITY_DIR, "EquityAwardsCenter_Transactions_*.csv");
 }
+
+// Every Equity Award Center export. Each covers only a trailing window, so
+// reading just the newest silently drops vests an earlier export covered;
+// the equity path merges them (see mergeVestEvents).
+export function allEquityCsvs(): string[] {
+  return allVaultFiles(EQUITY_DIR, "EquityAwardsCenter_Transactions_*.csv");
+}

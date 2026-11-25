@@ -1,7 +1,7 @@
 import type { MonarchTransaction } from "../monarch/types.ts";
 import type { TransactionEnrichment } from "../enrichment/types.ts";
-import { latestEquityCsv, EQUITY_DIR } from "../finance-vault.ts";
-import { parseEquityAwardsCsv } from "./parser.ts";
+import { allEquityCsvs, EQUITY_DIR } from "../finance-vault.ts";
+import { mergeVestEvents, parseEquityAwardsCsv } from "./parser.ts";
 import { matchVestEvents, vestTotals } from "./matcher.ts";
 import { log } from "../logger.ts";
 
@@ -13,21 +13,27 @@ export type EquityEnrichResult = {
 export async function enrichEquity(
   equityTransactions: MonarchTransaction[],
 ): Promise<EquityEnrichResult> {
-  const csvPath = latestEquityCsv();
-  if (csvPath === undefined) {
+  const csvPaths = allEquityCsvs();
+  if (csvPaths.length === 0) {
     throw new Error(
       `No Equity Award Center export in ${EQUITY_DIR}. Download it from Schwab (Equity Awards > Transactions > Export) and save it there.`,
     );
   }
 
-  const events = parseEquityAwardsCsv(await Bun.file(csvPath).text());
+  const events = mergeVestEvents(
+    ...(await Promise.all(
+      csvPaths.map(async (csvPath) =>
+        parseEquityAwardsCsv(await Bun.file(csvPath).text()),
+      ),
+    )),
+  );
   // An export that parses to nothing is a changed layout or a truncated
   // download, not an account with no vests — these transactions were selected
   // because they are vests. Reporting 0/N matched as success would hand them
   // to classification without the evidence this path exists to supply.
   if (events.length === 0) {
     throw new Error(
-      `No vest events parsed from ${csvPath}. The export is empty or its layout changed; re-download it from Schwab (Equity Awards > Transactions > Export), or pass --skip-equity`,
+      `No vest events parsed from ${csvPaths.join(", ")}. The export is empty or its layout changed; re-download it from Schwab (Equity Awards > Transactions > Export), or pass --skip-equity`,
     );
   }
   const result = matchVestEvents(equityTransactions, events);

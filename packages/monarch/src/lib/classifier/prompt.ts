@@ -19,7 +19,11 @@ Rules:
 - Use temporal context: transactions on the same day or nearby days can inform each other (e.g., a Venmo payment near a restaurant charge is likely for that meal)
 - If you have a web search tool available, use it to look up merchants you don't recognize before classifying. This is especially important for unfamiliar merchant names — search to find out what they sell or what industry they are in.
 - If you are unsure or cannot confidently determine the category even after searching, use the "Uncategorized" category
-- Do NOT guess a category when you have low confidence — use Uncategorized instead`;
+- Do NOT guess a category when you have low confidence — use Uncategorized instead
+- Never replace a specific existing category with "Uncategorized" unless the existing category is clearly impossible for this merchant. An existing category — especially a reviewed one — carries evidence; when it is plausible, keep it rather than un-categorizing.
+- Prefer the current category when a merchant has been consistently categorized one way. Only move a transaction when the new category is clearly better, and apply the same category to identical merchants unless the account or bank description differs materially.
+- Category conventions: dedicated apparel/footwear brands are "Clothing"; "Shopping" is for general retail and marketplaces. Credit-card interest and card fees are "Financial Fees"; "Loan Interest" is only interest on installment loans (auto, personal, student).
+- Large amounts skew reports the most. For large transactions, be conservative: keep the current category unless the evidence for moving is strong.`;
 
   if (userHints === "") return base;
   return `${base}

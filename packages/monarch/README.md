@@ -121,6 +121,55 @@ keeps no copies. Parsers read straight from these folders:
 
 Each deep source has its own classify/match/parse pipeline under `src/lib/<name>/`.
 
+### Refreshing downloaded documents before a run
+
+Amazon, Apple, loans, Monarch itself, and the merchant KB refresh
+automatically. Everything below is a manual download, and only the period
+after the newest file already in the folder needs fetching — overlapping
+exports are safe (Venmo merges by transaction ID, brokerage dedupes by
+date/amount, Costco and payroll rebuild from every PDF present).
+
+| Source                    | Where to get it                                                                                                                                              | Save to (in `~/Sync/Sync/Finances/`)                                                                                                                                |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| USAA insurance statements | [usaa.com documents](https://www.usaa.com/my/documents?0&wa_ref=pri_global_tools_addlservices_viewdocs)                                                      | `USAA/YYYY-MM-DD_Auto_and_Property_Insurance_Statement.pdf`                                                                                                         |
+| Costco receipts           | [Costco orders & purchases](https://www.costco.com/myaccount/#/app/4900eb1f-0c10-4bd9-99c3-c59e6c1ecebf/ordersandpurchases) — save/print each receipt as PDF | `Costco/YYYY-MM-DD_Costco_<location>_Warehouse_Receipt_<total>.pdf` (online orders: `_Online_Order_..._<total>.pdf`), then `bun run scripts/build-costco-orders.ts` |
+| Venmo statement           | `https://account.venmo.com/api/statement/download?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&csv=true` while logged in                                          | `Venmo/*Venmo*.csv`                                                                                                                                                 |
+| Schwab brokerage history  | [Schwab transaction history](https://client.schwab.com/retail/accounts/history/#/) with the account dropdown set to **Individual (...284)**                  | `Schwab/*.csv` (any name; the parser sniffs history vs gain/loss)                                                                                                   |
+| Schwab equity awards      | Same history page with the account dropdown set to **Equity Award Center**                                                                                   | `Equity/EquityAwardsCenter_Transactions_*.csv` (newest wins)                                                                                                        |
+| Workday payslips          | Workday: Pay > Payslips > Print (a multi-payslip bundle is fine)                                                                                             | `Payroll/*.pdf`, then `bun run scripts/build-payslips.ts`                                                                                                           |
+
+Credentials for a run: Monarch via `bun run login`, Amazon auto-login from
+the `Amazon` item in 1Password (manual login in the headed browser also
+works and is saved), and the model key from the `OpenAI API Key` item in
+1Password injected with `op run` — never pasted or written to disk.
+
+## Full grooming run
+
+A grooming run means all of this, in order — classification alone is not
+the whole job:
+
+1. Refresh the downloaded documents above (only periods after the newest
+   vault file per source).
+2. `bun run login` if the Monarch session is missing or expired.
+3. Classify: dry run with `--output` using a model that supports web
+   search (e.g. `--model gpt-6.1-terra`; the `gpt-6-luna` default cannot
+   do web search, so it needs `--skip-research`). Review proposals by
+   dollar impact first, encode merchant policies in `hints.txt` instead of
+   re-litigating them, and apply a curated subset — never blanket-apply:
+   no Uncategorized moves over reviewed categories, no
+   inconsistent-merchant flags (only cross-group flags are real signal).
+4. Vendor notes: `bun run src/index.ts --notes-only --apply` (Amazon,
+   Apple, Costco, loan and other document-derived breakdowns).
+5. Email notes: `OPENAI_API_KEY='op://Private/OpenAI API Key/credential'
+op run -- bun run scripts/match-emails.ts --apply --notes-only`.
+   Judgments checkpoint to the vault, so re-runs only judge new or
+   changed shortlists. `--notes-only` keeps email-suggested category
+   changes out; review those separately before ever applying them.
+6. Verify against a fresh fetch: category spot-checks on the largest
+   applied changes, split children present, `needsReview` count, and
+   note coverage. Report what was _not_ enriched (no describing
+   email/document) rather than inventing descriptions.
+
 ## Pipeline stages
 
 Beyond fetch and classification, three stages persist context across runs: a merchant **knowledge base** (`src/lib/knowledge/`, rebuilt with `--rebuild-kb`), an **enrichment** pipeline that routes transactions to deep sources (`src/lib/enrichment/`, skipped with `--skip-enrich`), and a **verification** pass that checks classifications and emits suggestions (`src/lib/verification/`). See [ARCHITECTURE.md](ARCHITECTURE.md) for phases, matching tolerances, and caching.

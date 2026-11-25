@@ -20,10 +20,21 @@ export function verifyClassifications(
   const verified: ProposedChange[] = [];
   const flagged: ProposedChange[] = [];
 
-  // Group changes by merchant for cross-transaction consistency
+  // Group changes by merchant AND account for cross-transaction
+  // consistency. A merchant name can span accounts where different
+  // categories are correct per account (Apple Savings interest vs Apple
+  // Card payments); grouping by name alone flags all of them.
+  const accountByTxn = new Map(
+    enrichedTransactions.map((e) => [
+      e.transaction.id,
+      e.transaction.account.id,
+    ]),
+  );
+  const groupKey = (change: ProposedChange): string =>
+    `${change.merchantName.toLowerCase()}|${accountByTxn.get(change.transactionId) ?? ""}`;
   const merchantChanges = new Map<string, ProposedChange[]>();
   for (const change of changes) {
-    const key = change.merchantName.toLowerCase();
+    const key = groupKey(change);
     const list = merchantChanges.get(key);
     if (list) {
       list.push(change);
@@ -36,7 +47,7 @@ export function verifyClassifications(
     const issues: string[] = [];
 
     // Cross-transaction consistency: same merchant should generally get same category
-    const samemerchant = merchantChanges.get(change.merchantName.toLowerCase());
+    const samemerchant = merchantChanges.get(groupKey(change));
     if (samemerchant && samemerchant.length > 1) {
       const categories = new Set(samemerchant.map((c) => c.proposedCategory));
       if (categories.size > 1 && change.type !== "split") {

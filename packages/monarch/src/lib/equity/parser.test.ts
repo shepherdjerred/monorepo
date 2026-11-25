@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { parseEquityAwardsCsv } from "./parser.ts";
+import { mergeVestEvents, parseEquityAwardsCsv } from "./parser.ts";
 
 const HEADER =
   '"Date","Action","Symbol","Description","Quantity","FeesAndCommissions","DisbursementElection","Amount","AwardDate","AwardId","FairMarketValuePrice","SalePrice","SharesSoldWithheldForTaxes","NetSharesDeposited","Taxes"';
@@ -49,5 +49,32 @@ describe("parseEquityAwardsCsv", () => {
       '"06/20/2026","Lapse","PINS","Restricted Stock Lapse","711","","","","","","","","","",""',
     ].join("\n");
     expect(parseEquityAwardsCsv(orphan)).toEqual([]);
+  });
+});
+
+describe("mergeVestEvents", () => {
+  // Schwab exports cover a trailing window, so consecutive exports
+  // overlap: the June 2026 lapse appears in both the September and the
+  // November export. Reading only the newest silently drops March.
+  test("unions windows and dedupes overlapping events", () => {
+    const older = parseEquityAwardsCsv(SAMPLE);
+    const newer = parseEquityAwardsCsv(
+      [
+        HEADER,
+        '"09/20/2026","Lapse","PINS","Restricted Stock Lapse","711","","","","","","","","","",""',
+        '"","","","","","","","","10/10/2024","200947983","$18.60","","280","431","$5,208.00"',
+        '"06/20/2026","Lapse","PINS","Restricted Stock Lapse","711","","","","","","","","","",""',
+        '"","","","","","","","","10/10/2024","200947983","$20.27","","324","387","$6,567.48"',
+        '"06/20/2026","Lapse","PINS","Restricted Stock Lapse","213","","","","","","","","","",""',
+        '"","","","","","","","","04/09/2025","200964430","$20.27","","97","116","$1,966.19"',
+      ].join("\n"),
+    );
+    const merged = mergeVestEvents(older, newer);
+    expect(merged.map((e) => e.vestDate)).toEqual([
+      "2026-03-20",
+      "2026-06-20",
+      "2026-09-20",
+    ]);
+    expect(merged[1]?.awards).toHaveLength(2);
   });
 });

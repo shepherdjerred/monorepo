@@ -20,9 +20,23 @@ async function getAmazonCredentials(): Promise<{
   password: string;
 }> {
   log.info("Fetching Amazon credentials from 1Password...");
-  const [email, password] = await Promise.all([
-    runOp(["item", "get", "Amazon", "--fields", "username", "--reveal"]),
-    runOp(["item", "get", "Amazon", "--fields", "password", "--reveal"]),
+  // Sequential: parallel op calls race two desktop biometric prompts, and
+  // approving one dismisses the other ("authorization prompt dismissed").
+  const email = await runOp([
+    "item",
+    "get",
+    "Amazon",
+    "--fields",
+    "username",
+    "--reveal",
+  ]);
+  const password = await runOp([
+    "item",
+    "get",
+    "Amazon",
+    "--fields",
+    "password",
+    "--reveal",
   ]);
   return { email, password };
 }
