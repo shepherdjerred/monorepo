@@ -87,6 +87,13 @@ describe("PVC fill projection", () => {
               initialUsedBytes: 400_000_000_000,
               growthPerHourBytes: 1_000_000_000,
             }),
+            // BuildKit cache bounded by [[worker.oci.gcpolicy]] at 80% of PVC: skipped.
+            ...growingClaim({
+              namespace: "buildkitd",
+              claim: "buildkitd-cache-liskov",
+              initialUsedBytes: 400_000_000_000,
+              growthPerHourBytes: 2_500_000_000,
+            }),
             // Another >=50% claim in the same namespace is not exempt.
             ...growingClaim({
               namespace: WOODPECKER_CI_NAMESPACE,

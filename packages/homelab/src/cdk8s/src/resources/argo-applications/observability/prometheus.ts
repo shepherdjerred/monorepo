@@ -165,6 +165,12 @@ export async function createPrometheusApp(chart: Chart) {
         // stayed under 0.13%. HighMemoryPressure, LowMemoryAvailable and the
         // per-node memory rules measure actual memory shortage instead.
         NodeMemoryMajorPagesFaults: true,
+        // Replaced by repo-owned EtcdHighFragmentation (< 0.2 for 1h in
+        // rules/platform/etcd-custom.ts). Upstream's < 0.5 threshold compares
+        // live bytes against BoltDB's high-water mmap file size rather than the
+        // 2 GiB backend quota, flapping whenever compaction shrinks live keys
+        // below half of a prior ~400 MiB peak.
+        etcdDatabaseHighFragmentationRatio: true,
       },
     },
     kubeProxy: {

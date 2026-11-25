@@ -94,8 +94,12 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
         // Both come from the server, so `namespace` is the *Kubernetes*
         // namespace it was scraped in ("temporal") and the Temporal namespace
         // is `exported_namespace`.
+        // Temporal Server's built-in `temporal_sys_worker_deployment_workflow`
+        // periodically calls `DeleteWorkerDeploymentVersion` and hits an
+        // expected non-retryable `FailedPrecondition` (`MaximumAttempts: 1`)
+        // while retained worker versions still hold workflows.
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'increase(activity_fail{exported_namespace=~"prod|beta",workflowType!~"deliveryDeploymentWorkflow|deliveryWorkerRecoveryWorkflow"}[15m]) > 0',
+          'increase(activity_fail{exported_namespace=~"prod|beta",workflowType!~"deliveryDeploymentWorkflow|deliveryWorkerRecoveryWorkflow|temporal_sys_worker_deployment_workflow"}[15m]) > 0',
         ),
         for: "1m",
         labels: { severity: "warning" },

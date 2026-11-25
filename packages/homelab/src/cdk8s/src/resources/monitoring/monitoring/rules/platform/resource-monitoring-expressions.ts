@@ -9,11 +9,12 @@ export const memoryLeakExpression = [
 ].join("");
 
 /**
- * Claims a scheduled prune empties on a fixed cadence. Between prunes the
- * claim only grows, so a seven-day `deriv` sees the rising edge and projects
- * a fill that the next prune always prevents. Each entry names the schedule
- * that bounds it; a claim belongs here only while that schedule exists.
- * Absolute usage still alerts through PVCStorageHigh and ZfsPVCStorageHigh.
+ * Claims bounded by a scheduled prune or built-in daemon GC cap. While warming
+ * or between prunes the claim grows monotonically, so a seven-day `deriv` sees
+ * the rising edge and projects a fill that the configured prune/GC prevents.
+ * Each entry names the schedule or policy that bounds it; a claim belongs here
+ * only while that bound exists. Absolute usage still alerts through
+ * PVCStorageHigh and ZfsPVCStorageHigh.
  */
 export const PERIODICALLY_PRUNED_PVCS = [
   {
@@ -27,6 +28,12 @@ export const PERIODICALLY_PRUNED_PVCS = [
     claim: "turbo-cache-liskov",
     // packages/temporal/src/schedules/schedule-definitions-early.ts
     prunedBy: "turbo-cache-clean-daily",
+  },
+  {
+    namespace: "buildkitd",
+    claim: "buildkitd-cache-liskov",
+    // packages/homelab/src/cdk8s/src/resources/buildkitd.ts ([[worker.oci.gcpolicy]] caps at 480 GiB / 600 GiB)
+    prunedBy: "buildkitd-oci-gcpolicy",
   },
 ] as const;
 

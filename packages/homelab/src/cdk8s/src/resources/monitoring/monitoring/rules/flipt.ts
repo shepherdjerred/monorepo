@@ -77,9 +77,12 @@ export function getFliptRuleGroups(): PrometheusRuleSpecGroups[] {
           // so evaluations still succeed and error rates stay flat. Age is the
           // only thing that moves, which is why per-evaluation reporting was
           // deliberately not used: it would emit one event per flag read and
-          // bury this.
+          // bury this. Retained Temporal worker-deployment replay pods
+          // (`*-delivery-wf-retained-*`) run frozen historical builds solely to
+          // drain pinned workflows; live Flags polling is covered by current
+          // and candidate workers.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "feature_flag_snapshot_age_seconds > 3600",
+            'feature_flag_snapshot_age_seconds{pod!~".*-delivery-wf-retained-.*"} > 3600',
           ),
           for: "10m",
           labels: { severity: "warning" },

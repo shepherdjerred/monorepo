@@ -76,7 +76,7 @@ describe("SeaweedFS data-preserving capacity migration", () => {
       expect(spec.resources.requests.storage).toBe(
         claim.metadata.name === "data-filer-seaweedfs-filer-0"
           ? "4Gi"
-          : "1536Gi",
+          : "2048Gi",
       );
       expect(claim.spec).not.toHaveProperty("volumeName");
       expect(claim.spec).not.toHaveProperty("selector");
