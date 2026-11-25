@@ -1,0 +1,16 @@
+{
+  "kind": "argocd",
+  "application": "mail",
+  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartName": "mail",
+  "chartComponent": "chart:mail",
+  "namespace": "mail",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.mail": "image:mail"
+  },
+  "verification": {
+    "url": "https://mail.tailnet-1a49.ts.net/readyz",
+    "expectedStatus": 200
+  }
+}

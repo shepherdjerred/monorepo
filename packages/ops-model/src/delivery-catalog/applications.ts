@@ -19,6 +19,7 @@ export const ENVIRONMENT_APPLICATIONS: Readonly<Record<string, string>> = {
   "minecraft/sandbox": "mc-sandbox",
   "minecraft/tsmc": "minecraft-tsmc",
   "ops-dashboard/prod": "alert-dashboard",
+  "outbound-mail/prod": "mail",
 };
 
 /**

@@ -57,6 +57,7 @@ const CONSUMER_NAMESPACES = [
   "woodpecker",
   "tracker",
   "golink",
+  "mail",
 ] as const;
 
 export function createFlagsDeployment(chart: Chart) {

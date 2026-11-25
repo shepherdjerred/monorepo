@@ -194,6 +194,12 @@
       "kind": "platform"
     },
     {
+      "id": "outbound-mail",
+      "title": "Mail",
+      "kind": "platform",
+      "package": "mail"
+    },
+    {
       "id": "platform-services",
       "title": "Platform services",
       "kind": "platform"
@@ -2563,12 +2569,12 @@
       }
     },
     {
-      "id": "mail",
+      "id": "outbound-mail",
       "title": "Mail",
       "package": "mail",
       "lifecycle": "active",
       "selfHosted": false,
-      "group": "mail",
+      "group": "outbound-mail",
       "components": [
         {
           "name": "image:mail",
@@ -2581,13 +2587,17 @@
       ],
       "ops": {
         "kind": "platform",
-        "namespaces": ["mail"]
+        "namespaces": ["mail"],
+        "argoApps": ["mail"]
       },
       "legacy": {
-        "rootReleaseExclusions": {
-          "mail": "inactive"
-        },
-        "charts": ["mail"]
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/mail",
+            "argoApp": "mail"
+          }
+        ]
       }
     },
     {
@@ -2999,6 +3009,14 @@
       "configurationRevisionId": "storm-stats/prod/1"
     },
     {
+      "id": "outbound-mail/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "outbound-mail/prod/2",
+      "configurationRevisionId": "outbound-mail/prod/1"
+    },
+    {
       "id": "storm-forum/prod",
       "role": "durable",
       "approvalPolicy": "none",
@@ -3172,7 +3190,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/14"
+      "configurationRevisionId": "argocd/prod/15"
     },
     {
       "id": "chartmuseum/prod",
@@ -4425,6 +4443,41 @@
       "rule": "any-accepted"
     },
     {
+      "dependent": "outbound-mail/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "outbound-mail/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "outbound-mail/prod",
+      "prerequisite": "cert-manager/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "outbound-mail/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "outbound-mail/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "outbound-mail/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "outbound-mail/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
       "dependent": "phoenix/prod",
       "prerequisite": "1password/prod",
       "rule": "any-accepted"
@@ -5494,7 +5547,8 @@
       "glitter-boys-launcher": "glitter-boys-launcher/prod",
       "golink": "golink/prod",
       "flags": "flags/prod",
-      "storm-stats": "storm-stats/prod"
+      "storm-stats": "storm-stats/prod",
+      "mail": "outbound-mail/prod"
     },
     "platformDeliveryDelegated": true
   }

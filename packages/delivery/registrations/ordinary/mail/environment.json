@@ -1,0 +1,10 @@
+{
+  "id": "outbound-mail/prod",
+  "serviceId": "outbound-mail",
+  "name": "prod",
+  "application": "mail",
+  "pipelineRevisionId": "outbound-mail/prod/1",
+  "configurationRevision": "outbound-mail/prod/1",
+  "configuration": {},
+  "automatic": true
+}

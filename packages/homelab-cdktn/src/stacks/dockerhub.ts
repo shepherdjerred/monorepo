@@ -94,6 +94,11 @@ export class DockerhubStack extends HomelabStack {
       'docker_hub_repository.image["storm-stats"]',
       "shepherdjerred/storm-stats",
     );
+    importInstance(
+      this,
+      'docker_hub_repository.image["mail"]',
+      "shepherdjerred/mail",
+    );
 
     // Arcade replaced the Discord Plays Pokémon and Mario Kart deployments,
     // so their images left the registry. OpenTofu forgets the two
