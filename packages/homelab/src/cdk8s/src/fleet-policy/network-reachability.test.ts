@@ -93,7 +93,7 @@ describe("peerSelects", () => {
 
 describe("namespaceNamedBy", () => {
   test("reads the namespace name label, when the peer selects on it", () => {
-    expect(namespaceNamedBy(nsPeer("flipt"))).toBe("flipt");
+    expect(namespaceNamedBy(nsPeer("flags"))).toBe("flags");
     expect(namespaceNamedBy({ namespaceSelector: {} })).toBeUndefined();
     expect(namespaceNamedBy({ podSelector: {} })).toBeUndefined();
   });
@@ -105,7 +105,7 @@ describe("peerNamespace", () => {
   });
 
   test("a namespaceSelector names the namespace it selects by name", () => {
-    expect(peerNamespace(nsPeer("flipt"), "tasknotes")).toBe("flipt");
+    expect(peerNamespace(nsPeer("flags"), "tasknotes")).toBe("flags");
     expect(peerNamespace(nsPeer("tasknotes"), "tasknotes")).toBe("tasknotes");
   });
 

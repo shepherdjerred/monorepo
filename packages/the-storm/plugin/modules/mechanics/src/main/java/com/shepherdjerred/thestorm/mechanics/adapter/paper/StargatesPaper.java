@@ -2,7 +2,7 @@ package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.mechanics.adapter.db.JooqStargateStore;
-import com.shepherdjerred.thestorm.mechanics.adapter.remote.FliptStargatesGate;
+import com.shepherdjerred.thestorm.mechanics.adapter.remote.FlagsStargatesGate;
 import com.shepherdjerred.thestorm.mechanics.app.StargateAccess;
 import com.shepherdjerred.thestorm.mechanics.app.StargateBook;
 import com.shepherdjerred.thestorm.mechanics.domain.stargate.StargateConfig;
@@ -16,13 +16,13 @@ import org.jspecify.annotations.Nullable;
 public final class StargatesPaper {
   private final StargatePortals portals;
   private final StargateServerHub serverHub;
-  private final @Nullable FliptStargatesGate rollout;
+  private final @Nullable FlagsStargatesGate rollout;
   private final AtomicBoolean enabled;
 
   private StargatesPaper(
       StargatePortals portals,
       StargateServerHub serverHub,
-      @Nullable FliptStargatesGate rollout,
+      @Nullable FlagsStargatesGate rollout,
       AtomicBoolean enabled) {
     this.portals = portals;
     this.serverHub = serverHub;
@@ -69,7 +69,7 @@ public final class StargatesPaper {
   }
 
   public static StargatesPaper start(
-      ModuleContext context, StargateConfig config, @Nullable FliptStargatesGate rollout) {
+      ModuleContext context, StargateConfig config, @Nullable FlagsStargatesGate rollout) {
     var enabled = new AtomicBoolean(false);
     var storage = new WorldStargateStore(context, new JooqStargateStore(context.database()));
     var book = new StargateBook(storage, context.scheduler().mainThread());

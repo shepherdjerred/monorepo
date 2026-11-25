@@ -230,7 +230,7 @@ and analysis capability as well as guild policies. `test:explore:replay` uses
 those values by default; `--analysis on|off` and `--model <id>` explicitly select
 a candidate and are recorded in its manifest. Capture and replay reject a lake
 whose schema fingerprint differs from the checkout before model calls. A
-provider capture requires a reachable Flipt provider.
+provider capture requires a reachable Flags provider.
 
 Bundles retain full tool inputs, outputs, and materialized datasets in private
 case files. `explore:judge` reads the captured analysis outputs alongside the
@@ -847,11 +847,11 @@ promotion path.
 
 The evidence-recovery contract for Riot match processing is one rollout
 boundary: `evidenceRecoveryEnabled()` in `src/evidence/recovery-gate.ts`, backed
-by the managed Flipt boolean `scout-evidence-recovery-enabled`. It gates
+by the managed Flags boolean `scout-evidence-recovery-enabled`. It gates
 admission, history recovery, the timeline deadline, raw Riot payload capture,
 Riot 403 absence handling, lake eligibility and report scoreboards. The backend
 resolves it once when dynamic config initializes and pins that decision for the
-life of the process, so a Flipt change takes effect on the next restart and one
+life of the process, so a Flags change takes effect on the next restart and one
 worker never mixes two processing contracts. The managed default is on in beta
 and off in production; a process that never initializes dynamic config, such
 as a script, uses the same default for its `ENVIRONMENT`. Where this README
@@ -861,7 +861,7 @@ contract, it means this gate is off there. The gate is independent of
 production's Riot processing, and promoting the gate does not open client
 ingress.
 
-Flipt alone decides where the Scout Client runs; there is no code-level
+Flags alone decides where the Scout Client runs; there is no code-level
 production denial. `scout_client_ingestion` and `scout_client_result_recovery`
 default on in beta and off in production, where the managed declarations carry
 a default-off exception (AI-553) until the owner-first rollout passes its
@@ -874,7 +874,7 @@ questions:
   pairing, authentication or reading a body, and every read of stored client
   evidence (prematch, canonical match, timeline, mastery, teammates, Clash,
   bot rosters, alias learning, archive and recovery queues) uses it as its
-  gate. A Flipt `false` therefore closes every path without touching the
+  gate. A Flags `false` therefore closes every path without touching the
   database, and accepted historical observations supply no enrichment.
 - Is it on for this device owner? A user-targeted rule decides first, as
   before. Otherwise the flag is evaluated with `{ server }` for each guild
@@ -884,7 +884,7 @@ questions:
 
 Every rollout step keeps the owner and the owner's server, so the first
 question stays true once any step is taken. The steps themselves are operator
-changes in Flipt, made on evidence: owner, then the owner's server, then
+changes in Flags, made on evidence: owner, then the owner's server, then
 everyone. Existing immutable archives stay readable, and devices can still
 revoke their own credentials while the client is off. Riot evidence recovery
 follows its own gate above.
@@ -1181,7 +1181,7 @@ to Postgres before acknowledging it. The existing Temporal ingestion
 reconciliation activity drains bounded pages of 100 archive jobs with four
 concurrent uploads. Archival is independent of result normalization, per-user
 enrichment flags, and canonical match selection. While `scout_client_ingestion`
-is off in Flipt, this worker neither reads nor writes the client archive queue.
+is off in Flags, this worker neither reads nor writes the client archive queue.
 
 Objects use `scout-client/observations/YYYY/MM/DD/<device>/<observation>/<sha256>.json`
 in the configured private bucket. Each versioned document contains the payload,
@@ -1390,7 +1390,7 @@ pins the record's timeline missing instead of waiting, a managed custom game
 with only a record goes to review (its result needs the complete match), and
 history recovery abandons the record's timeline at once. No Workflow command
 changed. The dispatch runs only behind `scout_client_ingestion`, which is off
-in production until its owner-first Flipt rollout.
+in production until its owner-first Flags rollout.
 
 Effect consumers either work on the record or refuse it with a typed outcome,
 never a failure:
@@ -2354,7 +2354,7 @@ measured.
 `/scout join`/`leave` subcommands register, whether a join may open a session,
 and — rechecked mid-join and swept periodically — whether a live session keeps
 running. Production is hard-disabled in code
-(`PRODUCTION_HARD_DISABLED_FLAGS`), which unauthenticated Flipt cannot
+(`PRODUCTION_HARD_DISABLED_FLAGS`), which Flags cannot
 override.
 
 There is deliberately no second `VOICE_ASSISTANT_ENABLED` env gate. It used to

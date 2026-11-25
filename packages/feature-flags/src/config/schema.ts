@@ -17,6 +17,7 @@ export const FeatureFlagModeSchema = z.enum(["flags", "static", "disabled"]);
 export type FeatureFlagMode = z.infer<typeof FeatureFlagModeSchema>;
 
 export type ParsedFlagsDeployment = {
+  readonly id: string;
   readonly catalog: string;
   readonly stage: string;
 };
@@ -55,7 +56,9 @@ export function parseFlagsDeployment(
     catalog.length === 0 ||
     stage.length === 0 ||
     /\s/u.test(deployment);
-  return invalidSegment ? undefined : { catalog, stage };
+  return invalidSegment
+    ? undefined
+    : { id: `${catalog}/${stage}`, catalog, stage };
 }
 
 export const FlagsUrlSchema = z.url().superRefine((value, context) => {

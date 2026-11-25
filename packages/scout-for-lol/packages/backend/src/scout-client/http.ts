@@ -351,7 +351,7 @@ export async function handleScoutClientRoute(
   );
   if (scopeRequestResponse !== null) return scopeRequestResponse;
   const replayMatch = REPLAY_PATH.exec(url.pathname);
-  // Decided from Flipt before any pairing, authentication or body read, so a
+  // Decided from Flags before any pairing, authentication or body read, so a
   // closed environment touches no database. Self-revocation stays open: a
   // device must always be able to give up its own credential.
   if (

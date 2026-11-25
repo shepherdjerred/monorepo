@@ -368,7 +368,7 @@ export function selectFlagDeployments(options: {
   const matched = deployments.filter(
     (deployment) =>
       (options.environmentFilter === undefined ||
-        deployment.fliptEnvironment === options.environmentFilter) &&
+        deployment.stage === options.environmentFilter) &&
       (options.namespaceFilter === undefined ||
         deployment.catalog === options.namespaceFilter),
   );

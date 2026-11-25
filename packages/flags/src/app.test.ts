@@ -114,7 +114,7 @@ test("seeds deployments once and leaves an existing flag alone", () => {
   });
   const unread = store
     .unreadDocuments()
-    .map((document) => `${document.catalog}/${document.fliptEnvironment}`);
+    .map((document) => `${document.catalog}/${document.stage}`);
   expect(unread).toContain("delivery/beta");
   expect(unread).not.toContain("scout/prod");
 });

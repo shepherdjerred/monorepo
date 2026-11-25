@@ -21,11 +21,11 @@ import com.shepherdjerred.thestorm.rwf.adapter.paper.RwfWorlds;
 import com.shepherdjerred.thestorm.rwf.adapter.paper.ServerHooks;
 import com.shepherdjerred.thestorm.rwf.adapter.record.GzipRecorder;
 import com.shepherdjerred.thestorm.rwf.adapter.record.Retention;
-import com.shepherdjerred.thestorm.rwf.adapter.remote.FliptPlayerFlag;
-import com.shepherdjerred.thestorm.rwf.adapter.remote.FliptRwfFeatures;
-import com.shepherdjerred.thestorm.rwf.adapter.remote.FliptRwfGate;
-import com.shepherdjerred.thestorm.rwf.adapter.remote.FliptRwfKillstreaksGate;
-import com.shepherdjerred.thestorm.rwf.adapter.remote.FliptRwfKitsGate;
+import com.shepherdjerred.thestorm.rwf.adapter.remote.FlagsPlayerFlag;
+import com.shepherdjerred.thestorm.rwf.adapter.remote.FlagsRwfFeatures;
+import com.shepherdjerred.thestorm.rwf.adapter.remote.FlagsRwfGate;
+import com.shepherdjerred.thestorm.rwf.adapter.remote.FlagsRwfKillstreaksGate;
+import com.shepherdjerred.thestorm.rwf.adapter.remote.FlagsRwfKitsGate;
 import com.shepherdjerred.thestorm.rwf.app.CombatantActions;
 import com.shepherdjerred.thestorm.rwf.app.FeatureGates;
 import com.shepherdjerred.thestorm.rwf.app.JoinGate;
@@ -107,8 +107,8 @@ public final class RwfModule implements StormModule {
   private final Hooks hooks;
   private @Nullable RwfPaper paper;
   private @Nullable Recorder recorder;
-  private @Nullable FliptRwfGate flipt;
-  private final List<FliptPlayerFlag> featureFlags = new ArrayList<>();
+  private @Nullable FlagsRwfGate flagsGate;
+  private final List<FlagsPlayerFlag> featureFlags = new ArrayList<>();
   private MatchEvents.@Nullable Subscription discordPosts;
   private RwfFeatures.@Nullable Source features;
 
@@ -308,9 +308,9 @@ public final class RwfModule implements StormModule {
       return new FeatureGates(closed, closed);
     }
     var uri = URI.create(base.orElseThrow());
-    var kits = FliptRwfKitsGate.create(uri, deployment.orElseThrow(), config.worlds().maps());
+    var kits = FlagsRwfKitsGate.create(uri, deployment.orElseThrow(), config.worlds().maps());
     var killstreaks =
-        FliptRwfKillstreaksGate.create(uri, deployment.orElseThrow(), config.worlds().maps());
+        FlagsRwfKillstreaksGate.create(uri, deployment.orElseThrow(), config.worlds().maps());
     featureFlags.add(kits);
     featureFlags.add(killstreaks);
     return new FeatureGates(kits, killstreaks);
@@ -386,7 +386,7 @@ public final class RwfModule implements StormModule {
       return RwfFeatures.Source.fixed(RwfFeatures.NONE);
     }
     var source =
-        new FliptRwfFeatures(
+        new FlagsRwfFeatures(
             URI.create(base.orElseThrow()), deployment.orElseThrow(), config.worlds().maps());
     features = source;
     return source;
@@ -406,9 +406,9 @@ public final class RwfModule implements StormModule {
       return player -> CompletableFuture.completedFuture(false);
     }
     var gate =
-        new FliptRwfGate(
+        new FlagsRwfGate(
             URI.create(base.orElseThrow()), deployment.orElseThrow(), config.worlds().maps());
-    flipt = gate;
+    flagsGate = gate;
     return gate;
   }
 
@@ -435,11 +435,11 @@ public final class RwfModule implements StormModule {
         Bukkit.getLogger().warning("rwf recordings did not flush in time: " + e.getMessage());
       }
     }
-    if (flipt != null) {
-      flipt.close();
-      flipt = null;
+    if (flagsGate != null) {
+      flagsGate.close();
+      flagsGate = null;
     }
-    featureFlags.forEach(FliptPlayerFlag::close);
+    featureFlags.forEach(FlagsPlayerFlag::close);
     featureFlags.clear();
     if (features != null) {
       features.close();

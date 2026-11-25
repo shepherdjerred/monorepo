@@ -36,13 +36,13 @@ pools are declared in
 [rwf.yml](packages/the-storm/server/owned/plugins/TheStorm/rwf.yml).
 
 Admission is implemented by
-[FliptRwfGate](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FliptRwfGate.java).
+[FlagsRwfGate](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfGate.java).
 The nine match features are declared by
-[FliptRwfFeatures](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FliptRwfFeatures.java)
+[FlagsRwfFeatures](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfFeatures.java)
 and applied by
 [MatchRunner](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/paper/MatchRunner.java).
 The kit gate and restricted access are defined by
-[FliptRwfKitsGate](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FliptRwfKitsGate.java)
+[FlagsRwfKitsGate](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsRwfKitsGate.java)
 and [Armory](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/paper/Armory.java).
 Reward thresholds come from
 [Killstreak](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/domain/killstreak/Killstreak.java).
@@ -64,7 +64,7 @@ can also load the armory. An ordinary server login does not load it;
 [PlayerListener](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/paper/PlayerListener.java)
 clears the cache on quit.
 
-[FliptPlayerFlag](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FliptPlayerFlag.java)
+[FlagsPlayerFlag](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/remote/FlagsPlayerFlag.java)
 implements player targeting;
 [Killstreaks](packages/the-storm/plugin/modules/rwf/src/main/java/com/shepherdjerred/thestorm/rwf/adapter/paper/Killstreaks.java)
 checks the flag when granting a reward. The same gate controls reward selection
@@ -91,7 +91,7 @@ Bot chat uses fixed entity `the-storm-rwfbots-chat` with `world` context.
 Its answer refreshes every `chat.flagRefreshSeconds`; the
 [shipped configuration](packages/the-storm/server/owned/plugins/TheStorm/rwfbots.yml)
 enables chat and sets that interval to 30 seconds.
-[FliptChatGate](packages/the-storm/plugin/modules/rwfbots/src/main/java/com/shepherdjerred/thestorm/rwfbots/adapter/remote/FliptChatGate.java)
+[FlagsChatGate](packages/the-storm/plugin/modules/rwfbots/src/main/java/com/shepherdjerred/thestorm/rwfbots/adapter/remote/FlagsChatGate.java)
 and [RwfBotsPaper](packages/the-storm/plugin/modules/rwfbots/src/main/java/com/shepherdjerred/thestorm/rwfbots/adapter/paper/RwfBotsPaper.java)
 implement the gate and refresh loop.
 
@@ -100,7 +100,7 @@ from ordinary authored bots. It is evaluated once at the live transition, with t
 entity and match, map and world context. It also requires an accepted model
 bundle; changing the flag does not publish or install that artifact. These
 contracts live in
-[FliptLearningGate](packages/the-storm/plugin/modules/rwfbots/src/main/java/com/shepherdjerred/thestorm/rwfbots/adapter/remote/FliptLearningGate.java)
+[FlagsLearningGate](packages/the-storm/plugin/modules/rwfbots/src/main/java/com/shepherdjerred/thestorm/rwfbots/adapter/remote/FlagsLearningGate.java)
 and [MatchLearning](packages/the-storm/plugin/modules/rwfbots/src/main/java/com/shepherdjerred/thestorm/rwfbots/app/learning/MatchLearning.java).
 
 The archive copies finished recordings; its gate does not control the plugin's
@@ -115,4 +115,4 @@ own its worker and storage contract.
 ## Related
 
 - [Provision the Search and Destroy worlds](/how-to/provision-the-storm-search-and-destroy-world/)
-- [Operate feature flags and check the inventory](/how-to/check-flipt-flag-inventory/)
+- [Operate feature flags and check the inventory](/how-to/check-flag-inventory/)

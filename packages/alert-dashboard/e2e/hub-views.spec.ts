@@ -213,10 +213,10 @@ test("deep /services/:id views render StatusMatrix, facet tables, and alias redi
   ).toBeVisible();
 
   await page.goto("/services/flags");
-  const fliptMatrix = page.getByRole("table", {
-    name: "Flipt namespace sync status across prod and beta",
+  const flagsMatrix = page.getByRole("table", {
+    name: "Flags namespace sync status across prod and beta",
   });
-  await expect(fliptMatrix).toContainText("Scout for LoL");
+  await expect(flagsMatrix).toContainText("Scout for LoL");
   await expect(
     page.getByRole("table", { name: "Managed feature flags inventory" }),
   ).toContainText("scout-experimental-voice-recap");

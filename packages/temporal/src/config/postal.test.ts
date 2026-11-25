@@ -75,7 +75,7 @@ describe("report mail routing", () => {
     });
   });
 
-  test("honors explicit non-default Flipt overrides per field", async () => {
+  test("honors explicit non-default Flags overrides per field", async () => {
     flag.mockImplementation(({ key }: { key: string }) =>
       Promise.resolve(
         key === "recipient"

@@ -60,7 +60,7 @@ export function projectDeploymentFlags(
 ): FlagValue[] {
   return materializeManagedNamespaceEnvironment(
     inventory,
-    deployment.fliptEnvironment,
+    deployment.stage,
     deployment.catalog,
   ).map((flag) => projectFlag(flag));
 }
@@ -78,13 +78,11 @@ export function projectDeploymentById(
 
 export function deploymentForCatalog(
   catalog: string,
-  fliptEnvironment: string,
+  stage: string,
 ): FlagDeployment {
-  const deployment = flagDeploymentForSelector(catalog, fliptEnvironment);
+  const deployment = flagDeploymentForSelector(catalog, stage);
   if (deployment === undefined) {
-    throw new Error(
-      `no flag deployment reads ${catalog} in Flipt environment ${fliptEnvironment}`,
-    );
+    throw new Error(`no flag deployment reads ${catalog} in stage ${stage}`);
   }
   return deployment;
 }

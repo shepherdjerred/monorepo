@@ -80,7 +80,7 @@ export function searchControls() {
       setMusicOverVoice: (value: boolean) => {
         listen = value;
       },
-      /** The value the default registry reads, as the Flipt flag would answer. */
+      /** The value the default registry reads, as the feature flag would answer. */
       setSearchProvider: (value: string) => {
         provider = value;
       },

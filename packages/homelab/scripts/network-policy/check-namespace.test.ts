@@ -183,7 +183,7 @@ describe("enforcer denials from Loki", () => {
         'pod="kube-flannel-a"',
         loki({
           "kube-flannel-a": [
-            ["100", evaluating(7, "tracker/tracker-0", "flipt/flipt-0")],
+            ["100", evaluating(7, "tracker/tracker-0", "flags/flags-0")],
           ],
         }),
       ],
@@ -211,7 +211,7 @@ describe("enforcer denials from Loki", () => {
     expect(log).toEqual({
       available: true,
       lines: [
-        `[kube-flannel-a] ${evaluating(7, "tracker/tracker-0", "flipt/flipt-0")}`,
+        `[kube-flannel-a] ${evaluating(7, "tracker/tracker-0", "flags/flags-0")}`,
         `[kube-flannel-a] ${denied(7)}`,
         `[kube-flannel-b] ${evaluating(7, "my-tracker/x", "media/plex-0")}`,
         `[kube-flannel-b] ${denied(7)}`,
@@ -504,11 +504,11 @@ describe("the gate", () => {
     const result = await runCheck(
       parseCheckArguments(["--all"]),
       dependencies(
-        cluster([otherPolicy("media", "plex"), breakGlassPolicy("flipt")]).run,
+        cluster([otherPolicy("media", "plex"), breakGlassPolicy("flags")]).run,
       ),
     );
     expect(result.exitCode).toBe(1);
-    expect(result.output).toMatch(/^flipt\s+FAIL\s.*FAIL$/mu);
+    expect(result.output).toMatch(/^flags\s+FAIL\s.*FAIL$/mu);
     expect(result.output).toMatch(
       /^media\s+PASS\s.*PASS \(with unchecked\)$/mu,
     );

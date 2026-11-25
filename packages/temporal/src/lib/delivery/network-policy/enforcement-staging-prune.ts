@@ -59,8 +59,7 @@ function apiGroup(apiVersion: string): string {
 /**
  * Returns the target namespace when `resource` names a retired per-namespace
  * NetworkPolicy enforcement-staging object (#5035), optionally scoped to
- * `expectedNamespace`. Flipt retains its open policy until namespace
- * retirement and is never a staging-prune candidate.
+ * `expectedNamespace`.
  */
 export function enforcementStagingNamespace(
   resource: Pick<ManagedResource, "group" | "kind" | "name" | "namespace">,
@@ -69,7 +68,7 @@ export function enforcementStagingNamespace(
   const parsed = StagingCandidateSchema.safeParse(resource);
   if (!parsed.success) return null;
   const { namespace, name } = parsed.data;
-  if (namespace === "flipt" || name !== `${PREFIX}${namespace}`) return null;
+  if (name !== `${PREFIX}${namespace}`) return null;
   return expectedNamespace === undefined || namespace === expectedNamespace
     ? namespace
     : null;

@@ -16,7 +16,7 @@ export const PROVIDER_ISSUE_KINDS = [
  * labelled "openrouter"; calling providers directly means the label can name
  * the one that actually refused. `unknown` is for a failure that carries no
  * request URL, which is honest where a guess from configuration would not be —
- * the model a call used can be changed at runtime through Flipt.
+ * the model a call used can be changed at runtime through Flags.
  *
  * Lives here rather than beside the recorder because the metric seeds import
  * it, and the recorder imports the metrics module: keeping it in this leaf

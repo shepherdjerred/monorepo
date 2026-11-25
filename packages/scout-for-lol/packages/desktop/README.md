@@ -253,7 +253,7 @@ is also retained in start-at-login registration. Remote origins must use
 HTTPS. Without `--server`, the backend is the compiled-in release profile's
 (see "Release profiles").
 
-Preview packages' ingestion flag is on for everyone on beta. Production enables the client in Flipt, owner first,
+Preview packages' ingestion flag is on for everyone on beta. Production enables the client in Flags, owner first,
 then the owner's server, then everyone. Before the first step every device
 route answers `403 scout_client_disabled`; after it, a device whose owner no
 step reaches yet is refused as `401 unauthorized`, as in beta.
@@ -654,7 +654,7 @@ on its own tokio runtime.
 **What it does**
 
 1. Thirty seconds after start, and then every six hours (`UpdateConfig`, typed
-   config in `updater/policy.rs`; the client cannot reach the backend's Flipt),
+   config in `updater/policy.rs`; the client cannot reach the backend's Flags service),
    it fetches `https://download.scout-for-lol.com/<channel>.json` for the
    compiled-in profile's channel. The manifest is validated against the shared
    contract (below) and must name the same channel.
@@ -813,7 +813,7 @@ notes.md [--minimum-version X.Y.Z]`. The script publishes whichever
      `If-Match` ETag precondition, so a concurrent publisher is refused, and
      reads it back from the public host. Until that last write no client can
      see the release.
-5. Raise the backend's minimum version in Flipt only after every platform is
+5. Raise the backend's minimum version in Flags only after every platform is
    public, when the old builds must update.
 
 Rollback is roll-forward: publish a newer version that contains the fix. A

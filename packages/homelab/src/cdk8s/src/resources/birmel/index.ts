@@ -90,7 +90,7 @@ export function createBirmelDeployment(chart: Chart) {
           prometheusIngressRule([8080]),
         ],
       },
-      // Allow egress to DNS, Flipt, the OTLP trace gateway, Loki's OTLP logs
+      // Allow egress to DNS, Flags, the OTLP trace gateway, Loki's OTLP logs
       // receiver, PinchTab, SeaweedFS S3, and external HTTPS
       {
         name: "birmel-egress-netpol",

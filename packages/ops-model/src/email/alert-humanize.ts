@@ -38,7 +38,6 @@ const SPECIFIC_APP_TITLES: Readonly<Record<string, string>> = {
   "cert-manager": "TLS Certificates",
   ddns: "Dynamic DNS",
   flags: "Feature Flags",
-  flipt: "Feature Flags",
   "1password": "1Password Connect",
   postal: "Postal Mail",
   prometheus: "Prometheus",

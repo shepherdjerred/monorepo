@@ -6,7 +6,7 @@ import {
   FACET_KEYS,
   FACET_SCHEMAS,
   FacetKeySchema,
-  FliptFacetSchema,
+  FlagsFacetSchema,
   GitHubFacetSchema,
   GolinkFacetSchema,
   MonorepoFacetSchema,
@@ -189,8 +189,8 @@ function sampleDeliveryFacets(): Pick<
       catalogPinsCount: 92,
       audits: [
         {
-          id: "flipt-drift",
-          label: "Flipt declaration alignment",
+          id: "flags-drift",
+          label: "Flags declaration alignment",
           status: "ok",
           lastRunAt: "2026-11-21T21:30:00Z",
         },
@@ -201,7 +201,7 @@ function sampleDeliveryFacets(): Pick<
 
 function sampleProductFacets(): Pick<
   Required<OpsFacetsInput>,
-  "posthog" | "bugsink" | "flipt" | "tracker"
+  "posthog" | "bugsink" | "flags" | "tracker"
 > {
   return {
     posthog: {
@@ -267,7 +267,7 @@ function sampleProductFacets(): Pick<
         },
       ],
     },
-    flipt: {
+    flags: {
       totalFlags: 120,
       prodEnabledCount: 84,
       betaEnabledCount: 91,
@@ -586,7 +586,7 @@ describe("Hub 2.0 OpsFacets schemas", () => {
       "github",
       "posthog",
       "bugsink",
-      "flipt",
+      "flags",
       "tracker",
       "cloudflare",
       "tailscale",
@@ -668,7 +668,7 @@ describe("Hub 2.0 OpsFacets schemas", () => {
     expect(GitHubFacetSchema).toBe(FACET_SCHEMAS.github);
     expect(PostHogFacetSchema).toBe(FACET_SCHEMAS.posthog);
     expect(BugsinkFacetSchema).toBe(FACET_SCHEMAS.bugsink);
-    expect(FliptFacetSchema).toBe(FACET_SCHEMAS.flipt);
+    expect(FlagsFacetSchema).toBe(FACET_SCHEMAS.flags);
     expect(TrackerFacetSchema).toBe(FACET_SCHEMAS.tracker);
     expect(CloudflareFacetSchema).toBe(FACET_SCHEMAS.cloudflare);
     expect(TailscaleFacetSchema).toBe(FACET_SCHEMAS.tailscale);

@@ -30,7 +30,7 @@ export type Stage = "prod" | "beta";
  *
  * Shared rather than cloned per role because the roles' needs turned out to be
  * the same set, not a subset: the gateway role answers `/scout ask` in process,
- * so it reaches Postgres, Temporal, Flipt, the OTLP gateway, SeaweedFS (LLM
+ * so it reaches Postgres, Temporal, Flags, the OTLP gateway, SeaweedFS (LLM
  * archive) and external HTTPS exactly like the application role does. Cloning
  * the list would be duplicate text that drifts, not a tighter policy.
  *
@@ -156,7 +156,7 @@ export function createScoutChart(app: App, stage: Stage) {
     },
   });
 
-  // NetworkPolicy: Allow egress to DNS, the OTLP trace gateway, Flipt, SeaweedFS S3, PostgreSQL, and external HTTPS
+  // NetworkPolicy: Allow egress to DNS, the OTLP trace gateway, Flags, SeaweedFS S3, PostgreSQL, and external HTTPS
   new KubeNetworkPolicy(chart, "scout-egress-netpol", {
     metadata: { name: "scout-egress-netpol" },
     spec: {

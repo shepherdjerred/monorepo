@@ -360,7 +360,7 @@ describe("validateSafePublicImageUrl", () => {
     ).rejects.toThrow("Forbidden image URL");
     await expect(
       validateSafePublicImageUrl(
-        "https://flipt.flipt.svc.cluster.local/test.png",
+        "https://flags.flags.svc.cluster.local/test.png",
       ),
     ).rejects.toThrow("Forbidden image URL");
   });

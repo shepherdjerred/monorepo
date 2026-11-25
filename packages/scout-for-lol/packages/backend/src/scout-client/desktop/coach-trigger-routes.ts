@@ -39,7 +39,7 @@ import {
  * so this is the most tightly held coach route:
  *
  * - production answers `feature_disabled` before the body is parsed or any
- *   flag is read, whatever Flipt says (`coach/proactive-policy.ts`);
+ *   flag is read, whatever Flags says (`coach/proactive-policy.ts`);
  * - elsewhere the turn needs `scout_desktop_coach`, `scout_coach_live_answers`
  *   and `scout_coach_proactive` for the owner;
  * - the body is a trigger kind, its evidence and the live snapshot, never

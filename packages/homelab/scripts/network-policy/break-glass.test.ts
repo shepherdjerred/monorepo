@@ -83,7 +83,7 @@ describe("break-glass detection", () => {
     breakGlassPolicy("tracker"),
     // The label on another name, and the name without the label.
     breakGlassPolicy("media", { name: "plex" }),
-    breakGlassPolicy("flipt", { labelled: false }),
+    breakGlassPolicy("flags", { labelled: false }),
     // Named for another namespace: a label match only.
     breakGlassPolicy("redlib", { name: "enforcement-break-glass-tracker" }),
     otherPolicy("argocd", "argocd-server"),
@@ -109,7 +109,7 @@ describe("break-glass detection", () => {
     expect(refusals("media")).toEqual([
       "carries the break-glass label but is not named enforcement-break-glass-media",
     ]);
-    expect(refusals("flipt")).toEqual([
+    expect(refusals("flags")).toEqual([
       "has the break-glass name but not the label homelab.sjer.red/break-glass=true",
     ]);
     expect(refusals("redlib")).toEqual([
@@ -121,7 +121,7 @@ describe("break-glass detection", () => {
   test("state is open only for the real allow-all policy", () => {
     expect(breakGlassState(policies, "tracker")).toBe("open");
     expect(breakGlassState(policies, "media")).toBe("unrecognized");
-    expect(breakGlassState(policies, "flipt")).toBe("unrecognized");
+    expect(breakGlassState(policies, "flags")).toBe("unrecognized");
     expect(breakGlassState(policies, "argocd")).toBe("none");
     const narrowed = breakGlassPolicy("tracker");
     narrowed.spec.egress = [];
@@ -130,7 +130,7 @@ describe("break-glass detection", () => {
 
   test("namespaces with any candidate are found", () => {
     expect(breakGlassNamespaces(policies)).toEqual([
-      "flipt",
+      "flags",
       "media",
       "redlib",
       "tracker",

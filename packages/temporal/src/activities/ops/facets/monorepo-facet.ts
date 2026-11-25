@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import type {
   BugsinkFacet,
-  FliptFacet,
+  FlagsFacet,
   GitHubFacet,
   MonorepoAudit,
   MonorepoFacet,
@@ -212,7 +212,7 @@ function buildCrossPackageCounts(input: {
   github?: GitHubFacet | undefined;
   renovate?: RenovateFacet | undefined;
   bugsink?: BugsinkFacet | undefined;
-  flipt?: FliptFacet | undefined;
+  flags?: FlagsFacet | undefined;
 }) {
   const bugsinkByService = new Map<string, number>();
   for (const proj of input.bugsink?.projects ?? []) {
@@ -228,7 +228,7 @@ function buildCrossPackageCounts(input: {
   }
 
   const flagsByService = new Map<string, number>();
-  for (const flag of input.flipt?.flags ?? []) {
+  for (const flag of input.flags?.flags ?? []) {
     const svc = input.services.byId(flag.namespace);
     if (svc !== undefined) {
       flagsByService.set(svc.id, (flagsByService.get(svc.id) ?? 0) + 1);
@@ -255,23 +255,23 @@ function buildCrossPackageCounts(input: {
 
 function buildAudits(input: {
   nowIso: string;
-  flipt?: FliptFacet | undefined;
+  flags?: FlagsFacet | undefined;
   renovate?: RenovateFacet | undefined;
 }): MonorepoAudit[] {
   const audits: MonorepoAudit[] = [];
-  if (input.flipt !== undefined) {
-    const hasDrift = input.flipt.namespaces.some(
+  if (input.flags !== undefined) {
+    const hasDrift = input.flags.namespaces.some(
       (ns) => ns.prodStatus !== "ok" || ns.betaStatus !== "ok",
     );
     audits.push({
-      id: "flipt-drift",
-      label: "Flipt declaration alignment",
+      id: "flags-drift",
+      label: "Flags declaration alignment",
       status:
-        hasDrift || input.flipt.overdueExceptionsCount > 0 ? "warning" : "ok",
+        hasDrift || input.flags.overdueExceptionsCount > 0 ? "warning" : "ok",
       lastRunAt: input.nowIso,
-      ...(input.flipt.overdueExceptionsCount > 0
+      ...(input.flags.overdueExceptionsCount > 0
         ? {
-            detail: `${String(input.flipt.overdueExceptionsCount)} overdue default-off exception(s)`,
+            detail: `${String(input.flags.overdueExceptionsCount)} overdue default-off exception(s)`,
           }
         : {}),
     });
@@ -297,7 +297,7 @@ export async function collectMonorepoFacet(input: {
   github?: GitHubFacet | undefined;
   renovate?: RenovateFacet | undefined;
   bugsink?: BugsinkFacet | undefined;
-  flipt?: FliptFacet | undefined;
+  flags?: FlagsFacet | undefined;
 }): Promise<MonorepoFacet> {
   const now = input.now ?? new Date();
   const [inventory, diagnostics] = await Promise.all([
@@ -339,7 +339,7 @@ export async function collectMonorepoFacet(input: {
     catalogPinsCount: inventory.catalogPinsCount,
     audits: buildAudits({
       nowIso: now.toISOString(),
-      flipt: input.flipt,
+      flags: input.flags,
       renovate: input.renovate,
     }),
   };

@@ -106,7 +106,7 @@ export const SERIES_PRESET_IDS = [
   "golink-redirects",
   // Bugs / Flags / Cloud / Edge / Storage
   "bugsink-events-by-project",
-  "flipt-evaluations",
+  "flags-evaluations",
   "cloudflare-r2-bytes",
   "cloudflare-probe-latency",
   "tailscale-devices-online",

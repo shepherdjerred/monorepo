@@ -73,8 +73,8 @@ Every newly added or rewritten URL must return HTTP 200 before commit.
 For first-party applications, environment variables are for credentials and
 bootstrap only. Product and operational behavior uses the typed configuration
 and feature-flag packages. Load the `feature-flags` skill before changing that
-boundary. For a working feature, its Flipt flag on in the intended live
-environment is part of done unless that skill's default-off exception applies.
+boundary. For a working feature, its feature flag on in the intended live Flags
+deployment is part of done unless that skill's default-off exception applies.
 
 Never print, paste, or persist secrets; use existing 1Password-backed commands.
 Toolkit resolves registered credentials automatically (`packages/toolkit/README.md`);

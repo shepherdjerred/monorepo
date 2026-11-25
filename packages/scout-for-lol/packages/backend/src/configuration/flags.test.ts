@@ -31,7 +31,7 @@ const PRODUCTION_DENIED_FLAGS = [
   "scout_coach_proactive",
 ] as const;
 
-/** Off in production by Flipt's managed state, not by a code-level denial. */
+/** Off in production by Flags's managed state, not by a code-level denial. */
 const SCOUT_CLIENT_FLAGS = [
   "scout_client_ingestion",
   "scout_client_result_recovery",
@@ -39,7 +39,7 @@ const SCOUT_CLIENT_FLAGS = [
 
 /**
  * Surfaces the policy deliberately does NOT deny: they are beta today by
- * ordinary flag state, so production access is a Flipt decision. Without this
+ * ordinary flag state, so production access is a Flags decision. Without this
  * list the denial test passes just as well when the policy denies everything.
  */
 const PRODUCTION_ALLOWED_FLAGS = [
@@ -147,7 +147,7 @@ describe("production hard-disable policy", () => {
   });
 
   test.each([true, false])(
-    "leaves the Scout Client to Flipt in production when it answers %s",
+    "leaves the Scout Client to Flags in production when it answers %s",
     async (answer) => {
       Bun.env["ENVIRONMENT"] = "prod";
       resetConfigurationForTests();

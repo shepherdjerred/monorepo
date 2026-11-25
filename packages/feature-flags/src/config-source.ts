@@ -24,8 +24,8 @@ const CLIENT_NAME = "shepherdjerred-feature-flags";
  *
  * Declared here rather than imported so the dependency points one way:
  * `@shepherdjerred/config` must not depend on this package, because its `file`
- * layer exists for apps distributed to people who have no Flipt, and importing
- * the flag client would ship them a WASM engine they never load.
+ * layer exists for apps distributed to people who have no Flags service, and
+ * importing the flag client would ship them runtime dependencies they never load.
  */
 export type FlagSourceKeyNames = {
   readonly key: string;
@@ -44,7 +44,7 @@ export type FlagConfigSource = {
 
 export type FlagSourceOptions = {
   /**
-   * Flipt's `entityId`. Required — it is the bucketing key, and a shared
+   * Evaluation `entityId`. Required — it is the bucketing key, and a shared
    * constant would put the whole fleet in one hash slot, turning any percentage
    * rollout into 0% or 100%.
    */
@@ -57,7 +57,7 @@ export type FlagSourceOptions = {
   readonly kinds: Readonly<Record<string, "boolean" | "string" | "number">>;
   readonly attributes?: Readonly<Record<string, string | number | boolean>>;
   /**
-   * Require one freshly fetched Flipt snapshot for this source's resolutions.
+   * Require one freshly fetched Flags snapshot for this source's resolutions.
    * Concurrent keys share that check. Construct a new source for each write
    * guard; unavailable, disabled, and static providers cannot authorize writes.
    * Invalid successful snapshots remain fatal contract failures.

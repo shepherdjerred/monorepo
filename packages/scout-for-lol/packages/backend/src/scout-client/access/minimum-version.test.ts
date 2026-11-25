@@ -98,7 +98,7 @@ describe("clientUpgradeRequired", () => {
     },
   );
 
-  test("follows a raised minimum from Flipt", async () => {
+  test("follows a raised minimum from Flags", async () => {
     await startConfig({ "scout-client-minimum-version": "0.2.0" });
     expect(clientUpgradeRequired("0.2.0")).toBeNull();
     expect(clientUpgradeRequired("0.1.9")).toEqual({

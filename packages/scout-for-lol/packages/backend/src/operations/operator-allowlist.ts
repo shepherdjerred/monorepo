@@ -11,7 +11,7 @@ import {
  *
  * This is authorization, so it is Git-managed: changing who can re-drive a
  * notification or resolve an unknown delivery is a reviewed commit, never a
- * Flipt ramp, a dashboard toggle or an environment variable. A feature flag
+ * Flags ramp, a dashboard toggle or an environment variable. A feature flag
  * can only ever take the operations surface AWAY (see
  * `scout_operations_console_enabled`); it can never put someone on this list.
  *

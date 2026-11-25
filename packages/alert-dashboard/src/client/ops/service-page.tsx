@@ -31,7 +31,6 @@ import type { ServiceDetail } from "#shared/ops-schema";
 const SERVICE_ALIASES: Readonly<Record<string, string>> = {
   woodpecker: "ci",
   turbo: "ci",
-  flipt: "flags",
   cloudflare: "networking",
   tailscale: "networking",
   seaweedfs: "storage",

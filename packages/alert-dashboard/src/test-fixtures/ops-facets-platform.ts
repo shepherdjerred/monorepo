@@ -3,7 +3,7 @@ const TRACKER_BASE = "https://tracker.tailnet-1a49.ts.net";
 const GRAFANA_BASE = "https://grafana.tailnet-1a49.ts.net";
 
 export const PLATFORM_FIXTURE_FACETS = {
-  flipt: {
+  flags: {
     totalFlags: 34,
     prodEnabledCount: 31,
     betaEnabledCount: 33,

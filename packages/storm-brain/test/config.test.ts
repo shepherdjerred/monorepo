@@ -131,7 +131,7 @@ describe("storm-brain config", () => {
         flagSource: {
           name: "flag",
           get: async () => {
-            throw new Error("flipt snapshot unavailable");
+            throw new Error("flags snapshot unavailable");
           },
         },
       }),

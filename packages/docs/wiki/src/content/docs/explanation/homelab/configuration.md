@@ -221,5 +221,5 @@ feature, it _unregisters_ the command in every guild.
 
 ## Related
 
-- [Operate feature flags and check the inventory](/how-to/check-flipt-flag-inventory/)
+- [Operate feature flags and check the inventory](/how-to/check-flag-inventory/)
 - [Homelab control-plane access](/reference/homelab-control-plane-access/)

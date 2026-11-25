@@ -120,11 +120,11 @@ function computeFlagCount(
   if (pkgMatch !== undefined) {
     return pkgMatch.flagCount;
   }
-  if (facets.flipt === undefined) {
+  if (facets.flags === undefined) {
     return null;
   }
   const keys = new Set([service.id, ...service.aliases]);
-  const nsMatches = facets.flipt.namespaces.filter((ns) =>
+  const nsMatches = facets.flags.namespaces.filter((ns) =>
     keys.has(ns.namespace),
   );
   return nsMatches.length === 0

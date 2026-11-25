@@ -357,7 +357,7 @@ describe("ManagedFlagInventorySchema", () => {
 });
 
 describe("Managed flag inventory validation", () => {
-  test("enables Scout Client capture and recovery in beta and leaves production to an owner-first Flipt rollout", () => {
+  test("enables Scout Client capture and recovery in beta and leaves production to an owner-first Flags rollout", () => {
     for (const key of [
       "scout_client_ingestion",
       "scout_client_result_recovery",
@@ -375,7 +375,7 @@ describe("Managed flag inventory validation", () => {
       });
       // Production stays off in this declaration. Reconciliation never
       // overwrites live targeting, so the owner, owner's-server and everyone
-      // steps are operator Flipt changes taken on evidence.
+      // steps are operator Flags changes taken on evidence.
       const production = scoutPolicyFlag("prod", key);
       if (production.type !== "boolean") throw new Error(`${key} type`);
       expect(production).toMatchObject({
@@ -499,7 +499,7 @@ describe("Managed flag inventory validation", () => {
     ).toBe(false);
   });
 
-  test("rejects empty variant keys before Flipt seed validation", () => {
+  test("rejects empty variant keys before Flags seed validation", () => {
     const value = inventory();
     const flag = value.flags[0];
     if (flag === undefined) throw new Error("test inventory is empty");

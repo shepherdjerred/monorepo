@@ -56,7 +56,7 @@ describe("resolveMvpVotesCapability", () => {
     ).resolves.toBeNull();
   });
 
-  test("production Flipt enablement is not dropped by the beta-only registry", async () => {
+  test("production Flags enablement is not dropped by the beta-only registry", async () => {
     const previous = Bun.env["ENVIRONMENT"];
     Bun.env["ENVIRONMENT"] = "prod";
     resetConfigurationForTests();

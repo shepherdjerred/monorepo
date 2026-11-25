@@ -5,7 +5,7 @@ import { unreadFlagDocuments } from "./unread-documents.ts";
 test("reports inventory documents no deployment reads", () => {
   const unread = unreadFlagDocuments();
   const keys = unread.map(
-    (document) => `${document.catalog}/${document.fliptEnvironment}`,
+    (document) => `${document.catalog}/${document.stage}`,
   );
   expect(keys).toContain("justin/prod");
   expect(keys).toContain("justin/beta");
@@ -17,8 +17,6 @@ test("reports inventory documents no deployment reads", () => {
   expect(keys).not.toContain("temporal/prod");
   expect(keys).not.toContain("minecraft/tsmc");
   for (const deployment of flagDeployments) {
-    expect(keys).not.toContain(
-      `${deployment.catalog}/${deployment.fliptEnvironment}`,
-    );
+    expect(keys).not.toContain(`${deployment.catalog}/${deployment.stage}`);
   }
 });

@@ -6,7 +6,7 @@ import type { OpsFacets } from "@shepherdjerred/ops-model/facets.ts";
 import type { OpsCollectorOutcome } from "#activities/ops/ops-publish.ts";
 import { collectCloudflareFacet } from "./cloudflare-facet.ts";
 import { collectClusterFacet } from "./cluster-facet.ts";
-import { collectFliptFacet } from "./flipt-facet.ts";
+import { collectFlagsFacet } from "./flags-facet.ts";
 import { collectGolinkFacet } from "./golink-facet.ts";
 import { collectMonorepoFacet } from "./monorepo-facet.ts";
 import { collectObservabilityFacet } from "./observability-facet.ts";
@@ -65,9 +65,9 @@ export async function collectAuxiliaryFacets(input: {
       ? undefined
       : await settledTimeout(() => k8s.listPods(), 6000);
 
-  const [flipt, cloudflare, tailscale, golink, cluster, observability] =
+  const [flags, cloudflare, tailscale, golink, cluster, observability] =
     await Promise.all([
-      settledTimeout(() => collectFliptFacet({ now })),
+      settledTimeout(() => collectFlagsFacet({ now })),
       settledTimeout(() => collectCloudflareFacet({ now })),
       settledTimeout(() =>
         collectTailscaleFacet({
@@ -100,12 +100,12 @@ export async function collectAuxiliaryFacets(input: {
       github: sourceFacets.github,
       renovate: sourceFacets.renovate,
       bugsink: sourceFacets.bugsink,
-      flipt,
+      flags,
     }),
   );
 
   return {
-    ...(flipt === undefined ? {} : { flipt }),
+    ...(flags === undefined ? {} : { flags }),
     ...(cloudflare === undefined ? {} : { cloudflare }),
     ...(tailscale === undefined ? {} : { tailscale }),
     ...(golink === undefined ? {} : { golink }),

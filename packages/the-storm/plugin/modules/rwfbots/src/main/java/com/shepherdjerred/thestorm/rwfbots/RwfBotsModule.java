@@ -12,8 +12,8 @@ import com.shepherdjerred.thestorm.rwfbots.adapter.inference.AcceptedModels;
 import com.shepherdjerred.thestorm.rwfbots.adapter.inference.DiagnosticModels;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.Bodies;
 import com.shepherdjerred.thestorm.rwfbots.adapter.paper.RwfBotsPaper;
-import com.shepherdjerred.thestorm.rwfbots.adapter.remote.FliptChatGate;
-import com.shepherdjerred.thestorm.rwfbots.adapter.remote.FliptLearningGate;
+import com.shepherdjerred.thestorm.rwfbots.adapter.remote.FlagsChatGate;
+import com.shepherdjerred.thestorm.rwfbots.adapter.remote.FlagsLearningGate;
 import com.shepherdjerred.thestorm.rwfbots.app.ChatGate;
 import com.shepherdjerred.thestorm.rwfbots.app.NavCatalog;
 import com.shepherdjerred.thestorm.rwfbots.app.StatsCache;
@@ -142,7 +142,7 @@ public final class RwfBotsModule implements StormModule {
     var learning =
         new MatchLearning(
             new MatchLearning.Parts(
-                hooks.learningGate().orElseGet(() -> fliptLearningGate(context)),
+                hooks.learningGate().orElseGet(() -> flagsLearningGate(context)),
                 accepted,
                 decision -> {
                   if (decision.source() == LearningGate.Source.UNAVAILABLE)
@@ -154,7 +154,7 @@ public final class RwfBotsModule implements StormModule {
                     context.logger().error("rwfbots: learning failed for this match", failure)));
     var chatGate =
         config.chat().enabled()
-            ? hooks.chatGate().orElseGet(() -> fliptChatGate(context, world))
+            ? hooks.chatGate().orElseGet(() -> flagsChatGate(context, world))
             : ChatGate.closed();
     paper =
         RwfBotsPaper.start(
@@ -201,7 +201,7 @@ public final class RwfBotsModule implements StormModule {
   }
 
   /** The managed chat flag from the environment; closed, with a warning, when Flags is unset. */
-  private static ChatGate fliptChatGate(ModuleContext context, World world) {
+  private static ChatGate flagsChatGate(ModuleContext context, World world) {
     var base = Optional.ofNullable(System.getenv("FLAGS_URL")).filter(v -> !v.isBlank());
     var deployment =
         Optional.ofNullable(System.getenv("FLAGS_DEPLOYMENT")).filter(v -> !v.isBlank());
@@ -211,11 +211,11 @@ public final class RwfBotsModule implements StormModule {
           .warn("rwfbots: FLAGS_URL or FLAGS_DEPLOYMENT is unset; bots stay silent in chat");
       return ChatGate.closed();
     }
-    return new FliptChatGate(
+    return new FlagsChatGate(
         URI.create(base.orElseThrow()), deployment.orElseThrow(), world.getName());
   }
 
-  private static LearningGate fliptLearningGate(ModuleContext context) {
+  private static LearningGate flagsLearningGate(ModuleContext context) {
     var base = Optional.ofNullable(System.getenv("FLAGS_URL")).filter(v -> !v.isBlank());
     var deployment =
         Optional.ofNullable(System.getenv("FLAGS_DEPLOYMENT")).filter(v -> !v.isBlank());
@@ -225,7 +225,7 @@ public final class RwfBotsModule implements StormModule {
           .info("rwfbots: learning flag bootstrap absent; ordinary matches stay authored");
       return LearningGate.absent();
     }
-    return new FliptLearningGate(URI.create(base.orElseThrow()), deployment.orElseThrow());
+    return new FlagsLearningGate(URI.create(base.orElseThrow()), deployment.orElseThrow());
   }
 
   /** One of the worlds rwf runs in, as its config names it. */

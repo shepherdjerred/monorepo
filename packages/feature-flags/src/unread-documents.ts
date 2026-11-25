@@ -3,7 +3,7 @@ import { managedFlagInventory } from "./managed-flag-inventory.ts";
 
 export type UnreadFlagDocument = {
   readonly catalog: string;
-  readonly fliptEnvironment: string;
+  readonly stage: string;
 };
 
 /**
@@ -17,7 +17,7 @@ export function unreadFlagDocuments(): UnreadFlagDocument[] {
         ? [
             {
               catalog: namespace.key,
-              fliptEnvironment: environment.key,
+              stage: environment.key,
             },
           ]
         : [],

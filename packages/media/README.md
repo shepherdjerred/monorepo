@@ -3052,7 +3052,7 @@ updates. Do not trigger the global inventory Workflow or use
 FLAGS_MACHINE_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/dzcroze2qcoibfz3illceozbea/FLAGS_MACHINE_TOKEN' \
   scripts/onepassword/with-service-account.sh \
   op run -- env -u OP_SERVICE_ACCOUNT_TOKEN \
-  bun run check-flipt-flag-inventory -- \
+  bun run check-flag-inventory -- \
   --apply-missing --deployment media/prod
 ```
 

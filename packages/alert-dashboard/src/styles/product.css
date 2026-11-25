@@ -315,7 +315,7 @@
   min-inline-size: 0;
 }
 
-/* Allow multi-namespace filter pill bars (e.g. 16 Flipt namespaces) to wrap cleanly on 375px */
+/* Allow multi-namespace filter pill bars (e.g. 16 Flags namespaces) to wrap cleanly on 375px */
 .product-scope .visual-filter-pills {
   flex-wrap: wrap;
   max-inline-size: 100%;

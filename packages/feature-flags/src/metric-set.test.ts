@@ -46,8 +46,7 @@ test("applications retain independent metric ownership and bounded shared labels
   });
   first.recorder.observeProviderReady(true);
   first.recorder.observeProviderInfo({
-    flipt_environment: "prod",
-    flipt_namespace: "test",
+    deployment: "test/prod",
   });
   first.recorder.observeProviderInfo(undefined);
 
@@ -58,6 +57,11 @@ test("applications retain independent metric ownership and bounded shared labels
     help: "Feature flag evaluations by bounded result",
     labelNames: ["flag", "reason", "value"],
   });
+  expect(first.definitions).toContainEqual({
+    name: "feature_flag_provider_info",
+    help: "Configured Flags deployment",
+    labelNames: ["deployment"],
+  });
   expect(first.observations).toEqual([
     [
       "feature_flag_evaluations_total",
@@ -65,11 +69,7 @@ test("applications retain independent metric ownership and bounded shared labels
     ],
     ["feature_flag_provider_ready", 1, undefined],
     ["feature_flag_provider_info", "reset"],
-    [
-      "feature_flag_provider_info",
-      { flipt_environment: "prod", flipt_namespace: "test" },
-      1,
-    ],
+    ["feature_flag_provider_info", { deployment: "test/prod" }, 1],
     ["feature_flag_provider_info", "reset"],
   ]);
 });

@@ -79,8 +79,8 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     memo: "Hourly FreshRSS Repo Stack reconciliation before feed refresh",
   },
   {
-    id: "flipt-flag-inventory-daily",
-    workflowType: "runFliptFlagInventory",
+    id: "flag-inventory-sync",
+    workflowType: "runFlagInventorySync",
     args: [],
     timing: {
       kind: "cron",
@@ -91,7 +91,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     catchupWindow: "5 minutes",
     workflowExecutionTimeout: "15 minutes",
-    memo: "Create missing managed Flipt flags, then alert on remaining inventory drift",
+    memo: "Create missing managed Flags definitions, then alert on remaining inventory drift",
   },
   {
     id: "ci-bun-cache-gc",

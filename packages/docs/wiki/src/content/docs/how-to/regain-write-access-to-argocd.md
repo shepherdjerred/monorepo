@@ -22,7 +22,7 @@ homelab.
 
 Delivery re-applies each Application's full body and self-heals drift. Turn
 `delivery-writes-enabled` off in the `delivery/prod` Flags deployment, as in
-[Operate feature flags and check the inventory](/how-to/check-flipt-flag-inventory/). Delivery
+[Operate feature flags and check the inventory](/how-to/check-flag-inventory/). Delivery
 then admits no new deployment, but a running deployment can still finish and
 re-apply an Application this procedure changes.
 
@@ -136,4 +136,4 @@ is the only evidence.
 
 - [Set the ArgoCD operator password](/how-to/set-the-argocd-operator-password/)
 - [Cut a homelab release](/how-to/cut-a-homelab-release/)
-- [Operate feature flags and check the inventory](/how-to/check-flipt-flag-inventory/)
+- [Operate feature flags and check the inventory](/how-to/check-flag-inventory/)

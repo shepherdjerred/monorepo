@@ -71,7 +71,7 @@ export async function executeHelp(interaction: HelpInteraction): Promise<void> {
  * so `/help` lists each one only where its flag is on — the same rationale as
  * registration: a globally advertised command that answers "not available
  * here" is a confusing dead end. `deploymentGate` covers gates that live
- * outside Flipt: voice additionally requires the boot-time
+ * outside Flags: voice additionally requires the boot-time
  * `VOICE_ASSISTANT_ENABLED` audio-pipeline gate, and a flag-on guild in a
  * deployment without it would still get "not switched on" from the command.
  */

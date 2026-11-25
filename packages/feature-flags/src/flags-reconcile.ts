@@ -106,7 +106,7 @@ function retiredKeysForDeployment(deployment: FlagDeployment): string[] {
         .filter(
           (declaration) =>
             declaration.namespace === deployment.catalog &&
-            declaration.environment === deployment.fliptEnvironment,
+            declaration.environment === deployment.stage,
         )
         .map((declaration) => declaration.key),
     ),

@@ -51,7 +51,7 @@ export async function isRenovateLlmDeltaEnabled(
     configuration.mode === "flags"
       ? parseFlagsDeployment(configuration.deployment)
       : undefined;
-  const fliptEnv =
+  const stage =
     parsedDeployment?.stage === "beta"
       ? "beta"
       : parsedDeployment?.stage === "prod"
@@ -61,7 +61,7 @@ export async function isRenovateLlmDeltaEnabled(
           : "beta";
   const defaultEnabled = managedBooleanDefault(
     RENOVATE_LLM_DELTA_FLAG_KEY,
-    fliptEnv,
+    stage,
   );
 
   try {
@@ -69,7 +69,7 @@ export async function isRenovateLlmDeltaEnabled(
       default: defaultEnabled,
       targetingKey: "temporal-renovate-delta-enrichment",
       attributes: {
-        environment: fliptEnv,
+        environment: stage,
         namespace: "temporal",
       },
     });

@@ -124,14 +124,14 @@ export const bugsinkFacetShape = {
   ),
 };
 
-const FliptNamespaceStatusInternalSchema = z.enum([
+const FlagsNamespaceStatusInternalSchema = z.enum([
   "ok",
   "drift",
   "missing",
   "unknown",
 ]);
 
-export const fliptFacetShape = {
+export const flagsFacetShape = {
   totalFlags: z.number(),
   prodEnabledCount: z.number(),
   betaEnabledCount: z.number(),
@@ -142,8 +142,8 @@ export const fliptFacetShape = {
       namespace: z.string(),
       name: z.string(),
       flagCount: z.number(),
-      prodStatus: FliptNamespaceStatusInternalSchema,
-      betaStatus: FliptNamespaceStatusInternalSchema,
+      prodStatus: FlagsNamespaceStatusInternalSchema,
+      betaStatus: FlagsNamespaceStatusInternalSchema,
     }),
   ),
   flags: z.array(

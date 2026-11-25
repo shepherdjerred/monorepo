@@ -91,7 +91,7 @@ const policies: NetworkPolicy[] = [
   otherPolicy("tracker", "tracker"),
   // Allow-all policies isolate nothing, so their namespaces need no restart.
   allowAllPolicy("redlib", "redlib-open"),
-  breakGlassPolicy("flipt"),
+  breakGlassPolicy("flags"),
   selecting("woodpecker-ci", "steps", {
     matchExpressions: [{ key: "ci.sjer.red/step-key", operator: "Exists" }],
   }),
@@ -111,7 +111,7 @@ const replicaSets = [
   ),
   replicaSet("tracker", "tracker-6f", "tracker"),
   replicaSet("redlib", "redlib-1a", "redlib"),
-  replicaSet("flipt", "flipt-2b", "flipt"),
+  replicaSet("flags", "flags-2b", "flags"),
   replicaSet("media", "sonarr-3c", "sonarr"),
 ];
 
@@ -168,7 +168,7 @@ const pods: RestartPod[] = [
     owner: statefulSet("plex"),
   }),
   pod("redlib", "redlib-1a-x", { owner: viaReplicaSet("redlib-1a") }),
-  pod("flipt", "flipt-2b-x", { owner: viaReplicaSet("flipt-2b") }),
+  pod("flags", "flags-2b-x", { owner: viaReplicaSet("flags-2b") }),
   pod("woodpecker-ci", "wp-step", {
     labels: { "ci.sjer.red/step-key": "lint" },
   }),
@@ -250,7 +250,7 @@ describe("restart plan", () => {
     expect(names).not.toContain("plex");
     // Only an allow-all or a break-glass policy selects these.
     expect(names).not.toContain("redlib");
-    expect(names).not.toContain("flipt");
+    expect(names).not.toContain("flags");
     // Policies do not apply to a host-network pod.
     expect(names).not.toContain("homeassistant");
   });

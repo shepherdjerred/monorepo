@@ -774,7 +774,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -810,7 +810,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -846,7 +846,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -882,7 +882,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -945,7 +945,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -981,7 +981,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -1089,7 +1089,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -1110,7 +1110,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -1131,7 +1131,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -1180,7 +1180,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -1302,7 +1302,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -1338,7 +1338,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -1374,7 +1374,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -1453,7 +1453,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -1489,7 +1489,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -1510,7 +1510,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -1546,7 +1546,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -1622,7 +1622,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -1705,7 +1705,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -2067,7 +2067,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -2110,7 +2110,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -2153,7 +2153,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -2181,7 +2181,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -2267,7 +2267,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -2307,7 +2307,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -2328,7 +2328,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -2371,7 +2371,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -2414,7 +2414,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -2526,7 +2526,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -2677,7 +2677,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -2797,7 +2797,7 @@
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Beta-only proactive coach turns: Scout Desktop's beta build asks for a turn when a deterministic scoreboard detector fires (coach/triggers). Evaluated per device owner beside scout_desktop_coach and scout_coach_live_answers. Production refuses the route and hard-disables this flag in code whatever Flipt answers, because Riot's published policy prohibits unprompted alerts from live game state.",
+      "purpose": "Beta-only proactive coach turns: Scout Desktop's beta build asks for a turn when a deterministic scoreboard detector fires (coach/triggers). Evaluated per device owner beside scout_desktop_coach and scout_coach_live_answers. Production refuses the route and hard-disables this flag in code whatever Flags answers, because Riot's published policy prohibits unprompted alerts from live game state.",
       "type": "boolean",
       "default": false,
       "rollouts": [],
@@ -3052,7 +3052,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -3073,7 +3073,7 @@
       "defaultOffExceptions": [
         {
           "environment": "prod",
-          "reason": "Production rollout gated on owner-first evidence (AI-553): the client reaches the owner, then the owner's server, then everyone, each step taken in Flipt only on evidence.",
+          "reason": "Production rollout gated on owner-first evidence (AI-553): the client reaches the owner, then the owner's server, then everyone, each step taken in Flags only on evidence.",
           "issue": "AI-553",
           "enableWhen": "1. scout-evidence-recovery-enabled is on in prod with workflow replay clean, every new match getting an admission row, and live intents per match unchanged. 2. The lake migration rebuild publishes and a known Riot match reads identically before and after. 3. Owner only: one real game each of Classic, ARAM Mayhem, bot custom and human custom reaches Discord once and appears on its match page. 4. Owner's server, then everyone: no duplicate posts, quarantines explained, backlogs draining, with AI-524 (unknown deliveries) fixed before widening past the owner.",
           "reviewBy": "2026-12-12"
@@ -3094,7 +3094,7 @@
       "defaultOffExceptions": [
         {
           "environment": "prod",
-          "reason": "Production rollout gated on owner-first evidence (AI-553): recovery follows scout_client_ingestion to the owner, then the owner's server, then everyone, each step taken in Flipt only on evidence.",
+          "reason": "Production rollout gated on owner-first evidence (AI-553): recovery follows scout_client_ingestion to the owner, then the owner's server, then everyone, each step taken in Flags only on evidence.",
           "issue": "AI-553",
           "enableWhen": "1. scout-evidence-recovery-enabled is on in prod with workflow replay clean, every new match getting an admission row, and live intents per match unchanged. 2. The lake migration rebuild publishes and a known Riot match reads identically before and after. 3. Owner only: one real game each of Classic, ARAM Mayhem, bot custom and human custom reaches Discord once and appears on its match page. 4. Owner's server, then everyone: no duplicate posts, quarantines explained, backlogs draining, with AI-524 (unknown deliveries) fixed before widening past the owner.",
           "reviewBy": "2026-12-12"
@@ -3115,7 +3115,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -3234,7 +3234,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -3284,7 +3284,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -3348,7 +3348,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -3422,7 +3422,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -3458,7 +3458,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -3695,7 +3695,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -3745,7 +3745,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -3795,7 +3795,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -4003,7 +4003,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -4335,7 +4335,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"
@@ -4567,7 +4567,7 @@
       "defaultOffExceptions": [
         {
           "environment": "beta",
-          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flipt copy is not a deployed beta service.",
+          "reason": "Existing beta configuration is retained during a production-only rollout; a stored Flags projection is not a deployed beta service.",
           "issue": "AI-442",
           "enableWhen": "A real beta consumer and its rollout are authorized and accepted; otherwise retain the recorded targeting.",
           "reviewBy": "2026-12-07"

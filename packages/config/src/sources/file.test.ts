@@ -83,7 +83,7 @@ describe("file source", () => {
 
   test("a missing file is absent, not an error", async () => {
     // The normal case for our own Kubernetes deployments: this layer exists
-    // for apps distributed to people who have neither Flipt nor env injection.
+    // for apps distributed to people who have neither Flags nor env injection.
     const resolver = defineConfig({
       definition: DEFINITION,
       sources: {

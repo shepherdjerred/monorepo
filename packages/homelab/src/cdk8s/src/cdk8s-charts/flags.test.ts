@@ -130,7 +130,6 @@ test("an activated service renders its workload and evaluation port", () => {
       },
     },
   });
-  expect(JSON.stringify(deployment)).not.toContain("FLAGS_FLIPT_URL");
   expect(JSON.stringify(deployment)).not.toContain("FLAGS_TRUSTED_PROXIES");
 
   const service = manifests.find((manifest) => manifest.kind === "Service");
@@ -243,5 +242,4 @@ test("an activated service scopes network policy ingress and egress", () => {
       ],
     },
   });
-  expect(JSON.stringify(netpol)).not.toContain("flipt");
 });

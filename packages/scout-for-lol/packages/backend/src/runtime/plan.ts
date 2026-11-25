@@ -16,7 +16,7 @@
  *   before it can be reached in a state where it renders broken output.
  * - Voice models are deliberately NOT a boot step. They load on first
  *   `/scout join` (`voice-assistant/runtime.ts`), because activation is the
- *   `voice_assistant_enabled` Flipt flag and a boot-time gate would only take
+ *   `voice_assistant_enabled` feature flag and a boot-time gate would only take
  *   effect on the next restart. The verification that used to justify booting
  *   them — proving the pinned asset set actually loads — now happens in the
  *   image's `voice-smoke` build stage, which fails the build rather than the

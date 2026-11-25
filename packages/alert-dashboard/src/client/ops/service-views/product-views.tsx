@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type {
-  FliptFlagSummary,
-  FliptNamespaceStatus,
+  FlagsFlagSummary,
+  FlagsNamespaceStatus,
 } from "@shepherdjerred/ops-model/facets.ts";
 import type { Metric } from "@shepherdjerred/ops-model/snapshot.ts";
 import { CONSOLE_LINKS } from "@shepherdjerred/ops-model/tool-links.ts";
@@ -33,7 +33,7 @@ import {
 import type { SeriesRange } from "#shared/ops-schema";
 import "#styles/product.css";
 
-function mapFliptCell(status: FliptNamespaceStatus): StatusMatrixCell {
+function mapFlagsCell(status: FlagsNamespaceStatus): StatusMatrixCell {
   switch (status) {
     case "ok":
       return { status: "ok", label: "OK" };
@@ -69,7 +69,7 @@ function enabledPill(enabled: boolean): React.JSX.Element {
   );
 }
 
-const FLIPT_FLAG_COLUMNS: readonly DataTableColumn<FliptFlagSummary>[] = [
+const FLAGS_INVENTORY_COLUMNS: readonly DataTableColumn<FlagsFlagSummary>[] = [
   txtCol(
     "key",
     "Flag key",
@@ -124,7 +124,7 @@ const FLIPT_FLAG_COLUMNS: readonly DataTableColumn<FliptFlagSummary>[] = [
 ];
 
 function matchesFlagState(
-  flag: FliptFlagSummary,
+  flag: FlagsFlagSummary,
   stateFilter: string,
 ): boolean {
   switch (stateFilter) {
@@ -140,7 +140,7 @@ function matchesFlagState(
 }
 
 function FlagsInventorySection(props: {
-  readonly flags: readonly FliptFlagSummary[];
+  readonly flags: readonly FlagsFlagSummary[];
   readonly namespaces: readonly string[];
 }): React.JSX.Element {
   const [nsFilter, setNsFilter] = useState("all");
@@ -161,7 +161,7 @@ function FlagsInventorySection(props: {
       hideCaption
       rows={filtered}
       rowKey={(f) => `${f.namespace}:${f.key}`}
-      columns={FLIPT_FLAG_COLUMNS}
+      columns={FLAGS_INVENTORY_COLUMNS}
       defaultSort={{ key: "key", direction: "ascending" }}
       searchPlaceholder="Search flag key, namespace, or exception reason…"
       searchText={(f) => `${f.namespace} ${f.key} ${f.defaultOffReason ?? ""}`}
@@ -202,38 +202,38 @@ function FlagsServiceView({
 }): React.JSX.Element {
   return (
     <div className="product-scope product-service-stack">
-      <FacetSection facetKey="flipt" label="Flipt">
-        {(flipt) => {
+      <FacetSection facetKey="flags" label="Flags">
+        {(flags) => {
           const betaOnly = Math.max(
             0,
-            flipt.betaEnabledCount - flipt.prodEnabledCount,
+            flags.betaEnabledCount - flags.prodEnabledCount,
           );
           const offBoth = Math.max(
             0,
-            flipt.totalFlags -
-              Math.max(flipt.prodEnabledCount, flipt.betaEnabledCount),
+            flags.totalFlags -
+              Math.max(flags.prodEnabledCount, flags.betaEnabledCount),
           );
           const kpis: readonly Metric[] = [
-            kpi("flipt.total", "Total Flags", flipt.totalFlags),
-            kpi("flipt.prod", "Prod Enabled", flipt.prodEnabledCount),
-            kpi("flipt.beta", "Beta Enabled", flipt.betaEnabledCount),
+            kpi("flags.total", "Total Flags", flags.totalFlags),
+            kpi("flags.prod", "Prod Enabled", flags.prodEnabledCount),
+            kpi("flags.beta", "Beta Enabled", flags.betaEnabledCount),
             kpi(
-              "flipt.exceptions",
+              "flags.exceptions",
               "Default-Off Exceptions",
-              flipt.defaultOffExceptionsCount,
-              { severity: flipt.defaultOffExceptionsCount > 0 ? "info" : "ok" },
+              flags.defaultOffExceptionsCount,
+              { severity: flags.defaultOffExceptionsCount > 0 ? "info" : "ok" },
             ),
             kpi(
-              "flipt.overdue",
+              "flags.overdue",
               "Overdue Exceptions",
-              flipt.overdueExceptionsCount,
-              { severity: flipt.overdueExceptionsCount > 0 ? "error" : "ok" },
+              flags.overdueExceptionsCount,
+              { severity: flags.overdueExceptionsCount > 0 ? "error" : "ok" },
             ),
           ];
           const nsNames = [
             ...new Set([
-              ...flipt.namespaces.map((n) => n.namespace),
-              ...flipt.flags.map((f) => f.namespace),
+              ...flags.namespaces.map((n) => n.namespace),
+              ...flags.flags.map((f) => f.namespace),
             ]),
           ];
           return (
@@ -250,7 +250,7 @@ function FlagsServiceView({
                     {
                       key: "prod",
                       label: "Prod enabled",
-                      value: flipt.prodEnabledCount,
+                      value: flags.prodEnabledCount,
                       color: "var(--status-good)",
                     },
                     {
@@ -272,31 +272,31 @@ function FlagsServiceView({
                 heading="Evaluation throughput"
                 syncKey="flags"
                 range={range}
-                charts={[{ preset: "flipt-evaluations" }]}
+                charts={[{ preset: "flags-evaluations" }]}
               />
               <h2 className="block-heading">
                 Namespace prod / beta drift matrix
               </h2>
               <StatusMatrix
-                caption="Flipt namespace sync status across prod and beta"
+                caption="Flags namespace sync status across prod and beta"
                 hideCaption
                 rowHeaderLabel="Namespace"
                 columns={[
                   { key: "prod", label: "Prod" },
                   { key: "beta", label: "Beta" },
                 ]}
-                rows={flipt.namespaces.map((ns) => ({
+                rows={flags.namespaces.map((ns) => ({
                   key: ns.namespace,
                   label: ns.name,
                   meta: `${ns.namespace} · ${String(ns.flagCount)} flags`,
                   cells: {
-                    prod: mapFliptCell(ns.prodStatus),
-                    beta: mapFliptCell(ns.betaStatus),
+                    prod: mapFlagsCell(ns.prodStatus),
+                    beta: mapFlagsCell(ns.betaStatus),
                   },
                 }))}
               />
               <h2 className="block-heading">Managed flags inventory</h2>
-              <FlagsInventorySection flags={flipt.flags} namespaces={nsNames} />
+              <FlagsInventorySection flags={flags.flags} namespaces={nsNames} />
             </>
           );
         }}

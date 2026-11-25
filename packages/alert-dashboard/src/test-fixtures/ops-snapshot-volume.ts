@@ -54,7 +54,7 @@ const DOCKER = `postgres redis grafana/grafana grafana/loki grafana/tempo
 const HELM =
   `argo-cd cert-manager kube-prometheus-stack loki tempo alloy pyroscope
   velero openebs tailscale-operator external-dns cloudflare-tunnel
-  postgres-operator flipt kueue seaweedfs node-feature-discovery
+  postgres-operator flags kueue seaweedfs node-feature-discovery
   intel-device-plugins-operator connect chartmuseum`.split(/\s+/u);
 const TOOLS = `bun node kubectl talosctl helm mise python rust go gradle ktlint
   swiftformat`.split(/\s+/u);

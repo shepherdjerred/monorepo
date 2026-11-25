@@ -192,7 +192,7 @@ function sampleOpenPr(
 ): OpenPullRequest {
   return {
     number: 512,
-    title: "chore(deps): update flipt-io/flipt docker tag to v2.16.0",
+    title: "chore(deps): update helm/chartmuseum docker tag to v0.16.0",
     url: "https://github.com/shepherdjerred/monorepo/pull/512",
     author: { login: "renovate", kind: "bot" },
     draft: false,
@@ -200,7 +200,7 @@ function sampleOpenPr(
     updatedAt: "2026-11-21T12:00:00Z",
     reviewDecision: null,
     mergeable: "MERGEABLE",
-    branch: "renovate/flipt-2.x",
+    branch: "renovate/chartmuseum-0.x",
     baseRefName: "main",
     headOid: "abc123",
     exactHeadApproved: false,
@@ -216,13 +216,13 @@ function buildSampleManifestMap(): Map<string, RepoPinEntry> {
     JSON.stringify({
       entries: [
         {
-          name: "flipt-io/flipt",
+          name: "ghcr.io/helm/chartmuseum",
           value:
-            "v2.14.2@sha256:121830e237c3a0d2b875f73905944d6ff301fdd7881c5abdec5f24f5549537e8",
+            "v0.14.0@sha256:121830e237c3a0d2b875f73905944d6ff301fdd7881c5abdec5f24f5549537e8",
           management: {
             managed: true,
             datasource: "docker",
-            packageName: "flipt/flipt",
+            packageName: "helm/chartmuseum",
           },
         },
         {
@@ -276,7 +276,7 @@ describe("Renovate version-delta dual resolver & manifests", () => {
     const byKey = buildSampleManifestMap();
     const cluster: LiveClusterSnapshot = {
       podImages: [
-        "docker.io/flipt-io/flipt:v2.13.0@sha256:9999999999999999999999999999999999999999999999999999999999999999",
+        "ghcr.io/helm/chartmuseum:v0.13.0@sha256:9999999999999999999999999999999999999999999999999999999999999999",
       ],
       argoImages: [],
       argoChartVersions: new Map([["argo-cd", "10.17.0"]]),
@@ -286,12 +286,12 @@ describe("Renovate version-delta dual resolver & manifests", () => {
 
     expect(
       resolveRunningVersion({
-        packageName: "flipt-io/flipt",
-        aliases: byKey.get("flipt-io/flipt")?.aliases ?? [],
+        packageName: "helm/chartmuseum",
+        aliases: byKey.get("helm/chartmuseum")?.aliases ?? [],
         ecosystem: "docker",
         snapshot: cluster,
       }),
-    ).toBe("2.13.0");
+    ).toBe("0.13.0");
     expect(
       resolveRunningVersion({
         packageName: "argo-cd",
@@ -317,7 +317,7 @@ describe("Renovate version-delta dual resolver & manifests", () => {
     const byKey = buildSampleManifestMap();
     const cluster: LiveClusterSnapshot = {
       podImages: [
-        "docker.io/flipt-io/flipt:v2.13.0@sha256:9999999999999999999999999999999999999999999999999999999999999999",
+        "ghcr.io/helm/chartmuseum:v0.13.0@sha256:9999999999999999999999999999999999999999999999999999999999999999",
       ],
       argoImages: [],
       argoChartVersions: new Map([["argo-cd", "10.17.0"]]),
@@ -336,13 +336,13 @@ describe("Renovate version-delta dual resolver & manifests", () => {
         512,
         {
           number: 512,
-          title: "chore(deps): update flipt-io/flipt docker tag to v2.16.0",
-          headRefName: "renovate/flipt-2.x",
+          title: "chore(deps): update helm/chartmuseum docker tag to v0.16.0",
+          headRefName: "renovate/chartmuseum-0.x",
           url: "https://github.com/shepherdjerred/monorepo/pull/512",
           body: [
             "| Package | Change |",
             "| --- | --- |",
-            "| [flipt-io/flipt](https://github.com/flipt-io/flipt) | [`v2.14.2` -> `v2.16.0`](https://github.com/flipt-io/flipt/compare/v2.14.2...v2.16.0) |",
+            "| [helm/chartmuseum](https://github.com/helm/chartmuseum) | [`v0.14.0` -> `v0.16.0`](https://github.com/helm/chartmuseum/compare/v0.14.0...v0.16.0) |",
             "",
             "Touched `packages/feature-flags/src/index.ts`.",
           ].join("\n"),
@@ -359,13 +359,15 @@ describe("Renovate version-delta dual resolver & manifests", () => {
     });
 
     expect(candidates).toHaveLength(4);
-    const flipt = candidates.find((c) => c.branch === "renovate/flipt-2.x");
-    expect(flipt).toMatchObject({
-      packageName: "flipt-io/flipt",
-      runningVersion: "2.13.0",
-      pinnedVersion: "2.14.2",
-      effectiveFromVersion: "2.13.0",
-      targetVersion: "2.16.0",
+    const chartmuseum = candidates.find(
+      (c) => c.branch === "renovate/chartmuseum-0.x",
+    );
+    expect(chartmuseum).toMatchObject({
+      packageName: "helm/chartmuseum",
+      runningVersion: "0.13.0",
+      pinnedVersion: "0.14.0",
+      effectiveFromVersion: "0.13.0",
+      targetVersion: "0.16.0",
       versionsBehindCount: 3,
       priorityRank: 0,
       consumers: [
@@ -517,55 +519,55 @@ describe("Multi-registry cumulative changelog & compare diff fetcher", () => {
   test("fetches cumulative releases strictly in (effectiveFromVersion, targetVersion] and falls back to compareCommits", async () => {
     const releases: GitHubReleaseNote[] = [
       {
-        tagName: "v2.17.0-rc.1",
-        name: "v2.17.0-rc.1",
+        tagName: "v0.17.0-rc.1",
+        name: "v0.17.0-rc.1",
         body: "Prerelease should be excluded",
-        url: "https://github.com/flipt-io/flipt/releases/tag/v2.17.0-rc.1",
+        url: "https://github.com/helm/chartmuseum/releases/tag/v0.16.2",
         prerelease: true,
         publishedAt: "2026-11-21T00:00:00Z",
       },
       {
-        tagName: "v2.16.0",
-        name: "v2.16.0",
+        tagName: "v0.16.0",
+        name: "v0.16.0",
         body: "- Added OIDC token caching",
-        url: "https://github.com/flipt-io/flipt/releases/tag/v2.16.0",
+        url: "https://github.com/helm/chartmuseum/releases/tag/v0.16.0",
         prerelease: false,
         publishedAt: "2026-11-20T00:00:00Z",
       },
       {
-        tagName: "v2.15.0",
-        name: "v2.15.0",
-        body: "BREAKING CHANGE: Removed deprecated v1 grpc flag endpoint",
-        url: "https://github.com/flipt-io/flipt/releases/tag/v2.15.0",
+        tagName: "v0.15.0",
+        name: "v0.15.0",
+        body: "BREAKING CHANGE: Removed deprecated v1 storage flag endpoint",
+        url: "https://github.com/helm/chartmuseum/releases/tag/v0.15.0",
         prerelease: false,
         publishedAt: "2026-11-15T00:00:00Z",
       },
       {
-        tagName: "v2.14.0",
-        name: "v2.14.0",
-        body: "- Added snapshot ETag header",
-        url: "https://github.com/flipt-io/flipt/releases/tag/v2.14.0",
+        tagName: "v0.14.0",
+        name: "v0.14.0",
+        body: "- Added index ETag header",
+        url: "https://github.com/helm/chartmuseum/releases/tag/v0.14.0",
         prerelease: false,
         publishedAt: "2026-11-10T00:00:00Z",
       },
       {
-        tagName: "v2.13.0",
-        name: "v2.13.0",
+        tagName: "v0.13.0",
+        name: "v0.13.0",
         body: "Already running in cluster; must NOT be included",
-        url: "https://github.com/flipt-io/flipt/releases/tag/v2.13.0",
+        url: "https://github.com/helm/chartmuseum/releases/tag/v0.13.0",
         prerelease: false,
         publishedAt: "2026-11-01T00:00:00Z",
       },
     ];
 
     const candidate = {
-      branch: "renovate/flipt-2.x",
-      title: "update flipt",
-      packageName: "flipt-io/flipt",
-      targetVersion: "2.16.0",
-      runningVersion: "2.13.0",
-      pinnedVersion: "2.14.0",
-      effectiveFromVersion: "2.13.0",
+      branch: "renovate/chartmuseum-0.x",
+      title: "update chartmuseum",
+      packageName: "helm/chartmuseum",
+      targetVersion: "0.16.0",
+      runningVersion: "0.13.0",
+      pinnedVersion: "0.14.0",
+      effectiveFromVersion: "0.13.0",
       versionsBehindCount: 3,
       consumers: ["version-catalog", "packages/homelab"],
       ecosystem: "docker",
@@ -574,9 +576,9 @@ describe("Multi-registry cumulative changelog & compare diff fetcher", () => {
       isOpenPr: true,
       priorityRank: 0,
       cacheKey: computeDeltaCacheKey({
-        packageName: "flipt-io/flipt",
-        effectiveFromVersion: "2.13.0",
-        targetVersion: "2.16.0",
+        packageName: "helm/chartmuseum",
+        effectiveFromVersion: "0.13.0",
+        targetVersion: "0.16.0",
         consumers: ["version-catalog", "packages/homelab"],
       }),
     };
@@ -593,15 +595,15 @@ describe("Multi-registry cumulative changelog & compare diff fetcher", () => {
 
     expect(cumulative.evidenceSource).toBe("github-releases");
     expect(cumulative.intermediateReleaseCount).toBe(3);
-    expect(cumulative.text).toContain("v2.14.0");
-    expect(cumulative.text).toContain("v2.15.0");
-    expect(cumulative.text).toContain("v2.16.0");
-    expect(cumulative.text).not.toContain("v2.13.0");
-    expect(cumulative.text).not.toContain("v2.17.0-rc.1");
+    expect(cumulative.text).toContain("v0.14.0");
+    expect(cumulative.text).toContain("v0.15.0");
+    expect(cumulative.text).toContain("v0.16.0");
+    expect(cumulative.text).not.toContain("v0.13.0");
+    expect(cumulative.text).not.toContain("v0.17.0-rc.1");
     expect(cumulative.releaseUrls).toEqual([
-      "https://github.com/flipt-io/flipt/releases/tag/v2.14.0",
-      "https://github.com/flipt-io/flipt/releases/tag/v2.15.0",
-      "https://github.com/flipt-io/flipt/releases/tag/v2.16.0",
+      "https://github.com/helm/chartmuseum/releases/tag/v0.14.0",
+      "https://github.com/helm/chartmuseum/releases/tag/v0.15.0",
+      "https://github.com/helm/chartmuseum/releases/tag/v0.16.0",
     ]);
 
     const compareFallback = await fetchCandidateChangelogEvidence({
@@ -610,11 +612,11 @@ describe("Multi-registry cumulative changelog & compare diff fetcher", () => {
         releasesBetween: async () => [],
         compareCommits: async ({ base, head }) => ({
           aheadBy: 2,
-          htmlUrl: `https://github.com/flipt-io/flipt/compare/${base}...${head}`,
+          htmlUrl: `https://github.com/helm/chartmuseum/compare/${base}...${head}`,
           commits: [
             {
               sha: "111",
-              headline: "feat: support snapshot compression",
+              headline: "feat: support index compression",
               committedAt: "2026-11-19T00:00:00Z",
             },
           ],
@@ -624,9 +626,9 @@ describe("Multi-registry cumulative changelog & compare diff fetcher", () => {
 
     expect(compareFallback.evidenceSource).toBe("github-compare");
     expect(compareFallback.compareUrl).toBe(
-      "https://github.com/flipt-io/flipt/compare/v2.13.0...v2.16.0",
+      "https://github.com/helm/chartmuseum/compare/v0.13.0...v0.16.0",
     );
-    expect(compareFallback.text).toContain("support snapshot compression");
+    expect(compareFallback.text).toContain("support index compression");
   });
 });
 
@@ -724,7 +726,7 @@ function makePriorityPipelineDependencies(options: {
   };
 }
 
-describe("Flipt flag gating, LLM synthesis fallback, and S3 pipeline", () => {
+describe("Feature flag gating, LLM synthesis fallback, and S3 pipeline", () => {
   afterEach(async () => {
     await shutdownFeatureFlags();
   });
@@ -759,13 +761,13 @@ describe("Flipt flag gating, LLM synthesis fallback, and S3 pipeline", () => {
 
   test("falls back deterministically when LLM output is invalid or throws", async () => {
     const candidate = {
-      branch: "renovate/flipt-2.x",
-      title: "update flipt",
-      packageName: "flipt-io/flipt",
-      targetVersion: "2.16.0",
-      runningVersion: "2.13.0",
-      pinnedVersion: "2.14.2",
-      effectiveFromVersion: "2.13.0",
+      branch: "renovate/chartmuseum-0.x",
+      title: "update chartmuseum",
+      packageName: "helm/chartmuseum",
+      targetVersion: "0.16.0",
+      runningVersion: "0.13.0",
+      pinnedVersion: "0.14.0",
+      effectiveFromVersion: "0.13.0",
       versionsBehindCount: 3,
       consumers: ["packages/homelab", "version-catalog"],
       ecosystem: "docker",
@@ -774,9 +776,9 @@ describe("Flipt flag gating, LLM synthesis fallback, and S3 pipeline", () => {
       isOpenPr: true,
       priorityRank: 0,
       cacheKey: computeDeltaCacheKey({
-        packageName: "flipt-io/flipt",
-        effectiveFromVersion: "2.13.0",
-        targetVersion: "2.16.0",
+        packageName: "helm/chartmuseum",
+        effectiveFromVersion: "0.13.0",
+        targetVersion: "0.16.0",
         consumers: ["packages/homelab", "version-catalog"],
       }),
     };
@@ -785,10 +787,12 @@ describe("Flipt flag gating, LLM synthesis fallback, and S3 pipeline", () => {
       candidate,
       evidence: {
         evidenceSource: "github-releases",
-        text: "BREAKING CHANGE: Removed legacy v1 evaluation endpoint\n- Added OIDC caching",
+        text: "BREAKING CHANGE: Removed legacy v1 storage endpoint\n- Added OIDC caching",
         compareUrl:
-          "https://github.com/flipt-io/flipt/compare/v2.13.0...v2.16.0",
-        releaseUrls: ["https://github.com/flipt-io/flipt/releases/tag/v2.16.0"],
+          "https://github.com/helm/chartmuseum/compare/v0.13.0...v0.16.0",
+        releaseUrls: [
+          "https://github.com/helm/chartmuseum/releases/tag/v0.16.0",
+        ],
         intermediateReleaseCount: 3,
       },
       now: new Date("2026-11-21T22:00:00.000Z"),

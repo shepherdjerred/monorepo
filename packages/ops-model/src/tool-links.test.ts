@@ -141,7 +141,7 @@ describe("tool links", () => {
       "profiles",
       "cloudflare",
       "tailscale",
-      "flipt",
+      "flags",
       "golink",
     ] as const) {
       expect(LINK_KINDS).toContain(kind);

@@ -42,7 +42,7 @@ function discordErrorCode(error: unknown): number | undefined {
  * indistinguishable from the 1,439 that changed nothing.
  *
  * The poll itself has to keep running: `dares_enabled` and
- * server-scoped product flags are evaluated per guild against Flipt, not
+ * server-scoped product flags are evaluated per guild against Flags, not
  * carried in the config snapshot, so nothing short of recomputing the payload
  * can notice an operator flipping one. What is skippable is the write. The
  * payload is deterministic — a fixed group order over static `toJSON()`

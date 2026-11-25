@@ -2,7 +2,7 @@ package com.shepherdjerred.thestorm.companions;
 
 import com.shepherdjerred.thestorm.companions.adapter.coreprotect.NaturalBlockAudit;
 import com.shepherdjerred.thestorm.companions.adapter.db.JooqCompanionStore;
-import com.shepherdjerred.thestorm.companions.adapter.http.FliptCompanionGate;
+import com.shepherdjerred.thestorm.companions.adapter.http.FlagsCompanionGate;
 import com.shepherdjerred.thestorm.companions.adapter.http.HttpConversation;
 import com.shepherdjerred.thestorm.companions.adapter.paper.CompanionsPaper;
 import com.shepherdjerred.thestorm.companions.domain.CompanionsConfig;
@@ -34,7 +34,7 @@ public final class CompanionsModule implements StormModule {
     if (!(plugin instanceof CoreProtect coreProtect))
       throw new IllegalStateException("Companions require CoreProtect");
     var gate =
-        new FliptCompanionGate(URI.create(required("FLAGS_URL")), required("FLAGS_DEPLOYMENT"));
+        new FlagsCompanionGate(URI.create(required("FLAGS_URL")), required("FLAGS_DEPLOYMENT"));
     running =
         new CompanionsPaper(
             context,

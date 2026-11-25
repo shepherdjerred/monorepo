@@ -25,8 +25,8 @@ import type { ConfigKeyDefinition } from "@shepherdjerred/config/definition.ts";
  * ## Why this package does not depend on `@shepherdjerred/feature-flags`
  *
  * The `file` layer exists for apps we hand to other people, who have neither
- * Flipt nor Kubernetes env injection. If this package imported the flag client,
- * every distributed copy would carry a WASM engine it never loads. The flag
+ * Flags nor Kubernetes env injection. If this package imported the flag client,
+ * every distributed copy would carry the HTTP flag client it never loads. The flag
  * layer arrives as an injected `ConfigSource` instead, and the flags package
  * supplies the adapter.
  */

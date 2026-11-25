@@ -109,8 +109,6 @@ function expectRetainedFlagMode(deployment: unknown, buildId: string) {
     buildId === THIRD ? "flags" : "disabled",
   );
   expect(variables.get("FLAGS_DEPLOYMENT")).toBe("temporal/prod");
-  expect(variables.has("FLIPT_NAMESPACE")).toBe(false);
-  expect(variables.has("FLIPT_URL")).toBe(false);
 }
 
 function synth(chartName: string, stage?: "beta" | "prod") {

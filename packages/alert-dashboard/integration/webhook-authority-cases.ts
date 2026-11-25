@@ -137,16 +137,16 @@ function syntheticResolvedHeartbeat(
   const base = webhook(fingerprint, "resolved", startsAt);
   return AlertmanagerWebhookSchema.parse({
     ...base,
-    groupKey: '{}:{alertname="FliptManagedFlagDrift"}',
-    groupLabels: { alertname: "FliptManagedFlagDrift" },
+    groupKey: '{}:{alertname="FlagsManagedFlagDrift"}',
+    groupLabels: { alertname: "FlagsManagedFlagDrift" },
     commonLabels: {
-      alertname: "FliptManagedFlagDrift",
+      alertname: "FlagsManagedFlagDrift",
       severity: "warning",
     },
     alerts: base.alerts.map((alert) => ({
       ...alert,
       labels: {
-        alertname: "FliptManagedFlagDrift",
+        alertname: "FlagsManagedFlagDrift",
         severity: "warning",
         namespace: "temporal",
       },

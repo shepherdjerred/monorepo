@@ -35,5 +35,5 @@ command arguments.
 ## Related
 
 - [Configuration layers](/explanation/homelab/configuration/)
-- [Operate feature flags and check the inventory](/how-to/check-flipt-flag-inventory/)
+- [Operate feature flags and check the inventory](/how-to/check-flag-inventory/)
 - [Why Temporal](/explanation/temporal/overview/)

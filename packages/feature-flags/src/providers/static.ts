@@ -33,11 +33,11 @@ function mismatch<T>(
 
 /**
  * Serves a fixed map of flag values. Used by tests and by local development
- * where reaching a real Flipt is neither possible nor desirable.
+ * where reaching a live Flags service is neither possible nor desirable.
  *
  * A key present in the map RESOLVES — including when its value is `false`. A
  * key absent from the map reports `FLAG_NOT_FOUND` so callers fall through.
- * Keeping that distinction here, rather than only in the Flipt provider, is
+ * Keeping that distinction here, rather than only in the Flags provider, is
  * what lets a test exercise the waterfall without a network.
  *
  * A stored value of the wrong type reports `TYPE_MISMATCH` rather than

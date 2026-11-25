@@ -149,7 +149,7 @@ export async function resumeSession(
     await deleteState(filePath);
     return "nothing";
   }
-  // Evaluated BEFORE acquiring: this awaits a Flipt lookup that can reject, and between
+  // Evaluated BEFORE acquiring: this awaits a Flags lookup that can reject, and between
   // `pool.acquire()` and `spawn()` nothing owns the entry, so a throw there would leave a userbot
   // marked busy with no session to release it — the pool is bounded, so that is permanent
   // exhaustion until the process restarts.

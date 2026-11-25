@@ -73,7 +73,7 @@ export const LINK_KINDS = [
   "registry",
   "cloudflare",
   "tailscale",
-  "flipt",
+  "flags",
   "golink",
 ] as const;
 

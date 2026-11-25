@@ -45,7 +45,7 @@ export type CatalogMigration = {
 };
 export const V1_CATALOG_MIGRATION: CatalogMigration = {
   renames: V1_ENVIRONMENT_RENAMES,
-  retired: [...V1_RETIRED_ENVIRONMENTS, "flipt/prod"],
+  retired: V1_RETIRED_ENVIRONMENTS,
 };
 type Lifecycle = "active" | "retired" | "removed";
 const LIFECYCLE_RANK = new Map<string, number>([

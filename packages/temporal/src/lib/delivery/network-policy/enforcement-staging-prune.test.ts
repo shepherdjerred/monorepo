@@ -68,7 +68,7 @@ function stagingManagedResource(
 }
 
 describe("enforcementStagingNamespace", () => {
-  it("recognizes only non-flipt per-namespace enforcement-staging NetworkPolicies", () => {
+  it("recognizes per-namespace enforcement-staging NetworkPolicies", () => {
     expect(
       enforcementStagingNamespace({
         group: "networking.k8s.io",
@@ -87,14 +87,6 @@ describe("enforcementStagingNamespace", () => {
         },
         "other-ns",
       ),
-    ).toBeNull();
-    expect(
-      enforcementStagingNamespace({
-        group: "networking.k8s.io",
-        kind: "NetworkPolicy",
-        namespace: "flipt",
-        name: "enforcement-staging-flipt",
-      }),
     ).toBeNull();
     expect(
       enforcementStagingNamespace({

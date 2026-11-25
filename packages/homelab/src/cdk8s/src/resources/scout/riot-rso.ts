@@ -2,7 +2,7 @@ import { EnvValue, type ISecret } from "cdk8s-plus-31";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 
 // Credential bootstrap only. Set a stage true after provisioning both fields
-// and refreshing the vault snapshot. Product rollout belongs to Flipt.
+// and refreshing the vault snapshot. Product rollout belongs to Flags.
 export const SCOUT_RSO_PROVISIONED: Readonly<Record<Stage, boolean>> = {
   beta: true,
   prod: true,

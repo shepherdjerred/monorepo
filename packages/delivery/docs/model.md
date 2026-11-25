@@ -739,7 +739,7 @@ order; order keys do.
 - Z3. Edges replace sync waves, the root prerequisites list, and the
   site-before-edge rules. Every ordering that is a real contract today is an
   edge in the catalog. Orderings that are application compatibility (a flag
-  consumer reading Flipt at startup, a snapshot consumer accepting a new
+  consumer reading Flags at startup, a snapshot consumer accepting a new
   contract before its producer) are compatibility tests, not edges.
 
 ### 4.19 Monitor

@@ -16,7 +16,7 @@ site and returns both value and provenance. See `README.md` for the API.
 - Mark credentials `sensitive` so diagnostics emit only provenance and digest.
 - Mark per-entity keys `targeted`; cache observations by key and targeting key,
   but never put a targeting key in metric labels.
-- Do not add a dependency on `@shepherdjerred/feature-flags`. The Flipt adapter
+- Do not add a dependency on `@shepherdjerred/feature-flags`. The Flags adapter
   is injected from the feature-flags package so distributed apps stay light.
 - Evaluate whether the read is per-call, session-scoped, or boot-wired. A
   boot-wired flag still requires a restart.

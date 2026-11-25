@@ -5,7 +5,7 @@ import {
 } from "@shepherdjerred/feature-flags/config-source.ts";
 
 /**
- * The mocked Flipt source the config readers resolve through. Each test file
+ * The mocked Flags source the config readers resolve through. Each test file
  * still declares `vi.mock("@shepherdjerred/feature-flags/config-source.ts")`
  * itself, because Vitest hoists that call per file; this installs the shared
  * lifecycle on top of it and hands back the mocks to assert against.

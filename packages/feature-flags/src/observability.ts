@@ -30,22 +30,16 @@ export const FEATURE_FLAG_METRIC_LABELS = {
   errors: ["operation"],
   providerReady: [],
   snapshotAge: [],
-  providerInfo: ["flipt_environment", "flipt_namespace"],
+  providerInfo: ["deployment"],
 } as const;
 
 export type FlagOperation = "initialize" | "refresh" | "evaluate" | "shutdown";
 
 export type FlagEvaluationValue = "true" | "false" | "non_boolean" | "error";
-/**
- * Configured provider identity labels. During the Flipt -> Flags cutover,
- * `FEATURE_FLAGS_MODE=flags` maps `<catalog>/<stage>` onto
- * `{ flipt_namespace: catalog, flipt_environment: stage }` so existing consumer
- * Prometheus gauges and `FeatureFlagProviderInitFailing` alerts continue
- * working without breaking label sets until `flipt` is retired in PR 3.
- */
+
+/** Configured Flags deployment identity (`<catalog>/<stage>`). */
 export type FlagProviderInfo = {
-  readonly flipt_environment: string;
-  readonly flipt_namespace: string;
+  readonly deployment: string;
 };
 
 export type EvaluationEvent = {
@@ -129,7 +123,7 @@ export function createFlagMetricSet(factory: FlagMetricFactory) {
     }),
     providerInfo: factory.gauge({
       name: FEATURE_FLAG_METRICS.providerInfo,
-      help: "Configured Flipt environment and namespace",
+      help: "Configured Flags deployment",
       labelNames: FEATURE_FLAG_METRIC_LABELS.providerInfo,
     }),
   };

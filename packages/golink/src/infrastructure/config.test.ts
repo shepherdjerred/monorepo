@@ -20,7 +20,7 @@ describe("BootstrapSchema feature-flag mode", () => {
     expect(parsed.FEATURE_FLAGS_MODE).toBeUndefined();
   });
 
-  test.each(["flipt", "maybe"] as const)(
+  test.each(["legacy", "maybe"] as const)(
     "rejects %s outside the shared flag client contract",
     (mode) => {
       expect(() =>

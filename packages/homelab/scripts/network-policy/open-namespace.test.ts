@@ -88,13 +88,13 @@ describe("arguments", () => {
 const policies = [
   otherPolicy("tracker", "tracker-app-netpol"),
   otherPolicy("media", "media-netpol"),
-  otherPolicy("flipt", "flipt-netpol"),
+  otherPolicy("flags", "flags-netpol"),
 ];
 
 describe("open plan", () => {
   test("creates a break-glass policy per namespace, or refreshes the one there", () => {
     const plans = planOpen(
-      ["flipt", "media", "tracker"],
+      ["flags", "media", "tracker"],
       [...policies, breakGlassPolicy("media")],
       RECORD,
     );
@@ -106,7 +106,7 @@ describe("open plan", () => {
         plan.manifest.metadata.name,
       ]),
     ).toEqual([
-      ["flipt", "none", "create", "enforcement-break-glass-flipt"],
+      ["flags", "none", "create", "enforcement-break-glass-flags"],
       ["media", "open", "refresh", "enforcement-break-glass-media"],
       ["tracker", "none", "create", "enforcement-break-glass-tracker"],
     ]);
@@ -119,7 +119,7 @@ describe("open plan", () => {
     );
     expect(text).not.toContain("enforcement-stages");
     expect(text).toContain("bun run netpol:open tracker --close --apply");
-    expect(reconcileInstruction(["flipt", "tracker"])).toContain(
+    expect(reconcileInstruction(["flags", "tracker"])).toContain(
       "bun run netpol:open --all --close --apply",
     );
     expect(reconcileInstruction([])).toContain("nothing to reconcile");
@@ -225,7 +225,7 @@ describe("open", () => {
   });
 
   test("--all opens every namespace with policies and writes nothing else", async () => {
-    const opened = ["flipt", "media", "tracker"].map((namespace) =>
+    const opened = ["flags", "media", "tracker"].map((namespace) =>
       breakGlassPolicy(namespace),
     );
     const { run, calls } = cluster(policies, [...policies, ...opened]);
@@ -245,7 +245,7 @@ describe("open", () => {
         return `${kind} ${metadata.namespace}/${metadata.name}`;
       }),
     ).toEqual([
-      "NetworkPolicy flipt/enforcement-break-glass-flipt",
+      "NetworkPolicy flags/enforcement-break-glass-flags",
       "NetworkPolicy media/enforcement-break-glass-media",
       "NetworkPolicy tracker/enforcement-break-glass-tracker",
     ]);
@@ -280,18 +280,18 @@ const broken = [
   ...policies,
   breakGlassPolicy("tracker"),
   breakGlassPolicy("media", { name: "plex" }),
-  breakGlassPolicy("flipt", { labelled: false }),
+  breakGlassPolicy("flags", { labelled: false }),
 ];
 
 describe("close", () => {
   test("the plan deletes only the labelled policy with the expected name", () => {
-    expect(planClose(["argocd", "flipt", "media", "tracker"], broken)).toEqual([
+    expect(planClose(["argocd", "flags", "media", "tracker"], broken)).toEqual([
       { namespace: "argocd", deletable: false, refused: [] },
       {
-        namespace: "flipt",
+        namespace: "flags",
         deletable: false,
         refused: [
-          "REFUSED flipt/enforcement-break-glass-flipt: has the break-glass name but not the label homelab.sjer.red/break-glass=true",
+          "REFUSED flags/enforcement-break-glass-flags: has the break-glass name but not the label homelab.sjer.red/break-glass=true",
         ],
       },
       {
@@ -363,7 +363,7 @@ describe("close", () => {
     );
     expect(result.output).toContain("REFUSED media/plex");
     expect(result.output).toContain(
-      "REFUSED flipt/enforcement-break-glass-flipt",
+      "REFUSED flags/enforcement-break-glass-flags",
     );
     // A refusal is not a silent success.
     expect(result.exitCode).toBe(1);

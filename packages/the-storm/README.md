@@ -2108,7 +2108,7 @@ A match moves through `Lobby`, `Countdown`, `Preparing` (only while the chosen
 map is still loading), `Preview`, `Freeze`, `Live`, `Ended` and `Resetting`.
 The [Red Warfare feature flags reference](../docs/wiki/src/content/docs/reference/red-warfare-feature-flags.md)
 owns the gameplay gates, environment values, targeting and refresh boundaries.
-`FliptRwfFeatures` supplies the immutable feature snapshot used by `MatchRunner`.
+`FlagsRwfFeatures` supplies the immutable feature snapshot used by `MatchRunner`.
 
 With match flow and candidate visits enabled, up to three candidate terrains
 prepare serially before a 90-second voting opportunity. Members independently
@@ -2202,7 +2202,7 @@ listeners. Every kit's state lives in the match this way, the Rewind kit's
 Time Machine trail and cooldown included (`kits/Rewind.java`): a tick's
 `Ground` re-reads whether each kept spot is still a safe landing.
 
-`FliptPlayerFlag` supplies the player gate used by `Armory`, `StreakPicker`
+`FlagsPlayerFlag` supplies the player gate used by `Armory`, `StreakPicker`
 and `Killstreaks`; their declarations and cache behavior are in the feature
 flags reference above.
 
@@ -3875,7 +3875,7 @@ its way somewhere, as a player would, but not while working a fuse. Warden liste
 reports are automatic device observations. A new context is a new `ChatMoment`
 with its own line pool and the same delivery limits.
 
-`adapter.remote.FliptChatGate` evaluates the independent managed chat gate off
+`adapter.remote.FlagsChatGate` evaluates the independent managed chat gate off
 the main thread. `RwfBotsPaper` wires its refresh loop into the chat director;
 the settings, targeting and environment values are in the feature flags
 reference above. `scripts/check-managed-flags.ts` checks the client's keys

@@ -5,7 +5,7 @@ import {
 import { isPolicyEnabled, ME, MY_SERVER } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 
-/** The two Flipt flags that gate the Scout Client. */
+/** The two feature flags that gate the Scout Client. */
 export type ScoutClientFlag =
   "scout_client_ingestion" | "scout_client_result_recovery";
 
@@ -24,7 +24,7 @@ function rolloutCanary() {
 /**
  * Whether a Scout Client flag is live in this environment at all.
  *
- * Answered from Flipt alone, with no database access, so a Flipt `false` (no
+ * Answered from Flags alone, with no database access, so a Flags `false` (no
  * rollout reaches the owner or the owner's server) closes every path before it
  * reads a device, an observation or a guild membership. Read paths that are
  * not tied to one device owner (stored client evidence for a match, a PUUID or
@@ -48,7 +48,7 @@ export async function isScoutClientEvidenceLive(): Promise<boolean> {
  * evaluated for each guild where the owner has a `Player`, so a rollout can
  * target the owner's server and reach every member's devices there. The guild
  * lookup is the only database read, and it runs only once the flag is live in
- * this environment: a Flipt `false` answers before it.
+ * this environment: a Flags `false` answers before it.
  */
 export async function isScoutClientEnabledFor(
   flag: ScoutClientFlag,

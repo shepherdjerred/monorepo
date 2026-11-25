@@ -326,7 +326,7 @@ export function createScoutDeployment(
       : baseEnvVariables;
 
   // Hey Scout's credential and bootstrap surface. Activation itself is the
-  // `voice_assistant_enabled` Flipt flag and lives nowhere here: the backend
+  // `voice_assistant_enabled` feature flag and lives nowhere here: the backend
   // loads its models lazily on first `/scout join`, so there is no env gate to
   // duplicate the flag's authority. Production omits these because it has no
   // voice credential and is hard-disabled for the flag in code.

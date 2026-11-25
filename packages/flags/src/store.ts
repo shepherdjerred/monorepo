@@ -152,7 +152,7 @@ export class FlagStore {
 
   /**
    * Inserts deployments that are not already stored. A later call does not
-   * replace a document, so an imported live value stays after Flipt is gone.
+   * replace an existing document, preserving live stored values across restarts.
    */
   seedDocuments(
     documents: readonly { id: string; flags: readonly FlagValue[] }[],

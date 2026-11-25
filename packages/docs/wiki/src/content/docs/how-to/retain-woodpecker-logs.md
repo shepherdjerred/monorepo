@@ -33,7 +33,7 @@ toolkit temporal --namespace prod schedule toggle \
 ```
 
 Check the managed flags in the `temporal/prod` deployment using
-[Operate feature flags and check the inventory](/how-to/check-flipt-flag-inventory/).
+[Operate feature flags and check the inventory](/how-to/check-flag-inventory/).
 Keep `woodpecker-log-retention-enabled` false during review.
 Keep `woodpecker-log-retention-days` at its default 30 days, or an approved longer period; the typed minimum is 30.
 These flags use targeting key `woodpecker-log-retention-prod` with `environment=prod`.
@@ -169,5 +169,5 @@ Inspect history and receipts before retrying the same reviewed plan.
 ## Related
 
 - [Roll out a Temporal Worker Deployment](/how-to/roll-out-a-temporal-worker-deployment/)
-- [Operate feature flags and check the inventory](/how-to/check-flipt-flag-inventory/)
+- [Operate feature flags and check the inventory](/how-to/check-flag-inventory/)
 - [Pause or debug a schedule](/how-to/pause-or-debug-a-schedule/)

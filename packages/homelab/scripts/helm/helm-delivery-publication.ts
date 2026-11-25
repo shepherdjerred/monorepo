@@ -193,7 +193,7 @@ export function bindChartImageDependencies(
 /**
  * The producer image digests helm-push freezes into chart bytes. Before the
  * window's catalog flip, v1 binds each chart's Delivery dependencies (Arcade,
- * Temporal, Flipt) and mc-sandbox's Storm allowlist from them. Under the v2
+ * Temporal, Flags) and mc-sandbox's Storm allowlist from them. Under the v2
  * catalog (`woodpecker-delivery-catalog-v2-enabled`) a deployment parameter
  * is the only source of a first-party image, so helm-push freezes none and
  * each chart keeps its `required` Delivery templates.
