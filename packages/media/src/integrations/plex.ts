@@ -12,6 +12,15 @@ import {
   request,
   type FetchTransport,
 } from "./http.ts";
+import {
+  PlexCollectionSchema,
+  PlexCollectionContentsSchema,
+  type PlexCollectionTarget,
+} from "./plex-collections/contract.ts";
+import {
+  PlexDecimalIdSchema,
+  PlexServerIdSchema,
+} from "#shared/plex-events/contract.ts";
 
 const ItemSchema = z.object({
   ratingKey: z.string(),
@@ -50,6 +59,7 @@ const ItemSchema = z.object({
 const PageSchema = z.object({
   MediaContainer: z.object({
     size: z.number().int().nonnegative(),
+    librarySectionID: z.int().positive().optional(),
     totalSize: z.number().int().nonnegative().optional(),
     Metadata: z.array(ItemSchema).optional(),
   }),
@@ -172,6 +182,11 @@ export class PlexClient {
   }
 
   async metadata(ratingKey: string, signal?: AbortSignal): Promise<PlexItem> {
+    const { item } = await this.metadataPage(ratingKey, signal);
+    return item;
+  }
+
+  private async metadataPage(ratingKey: string, signal?: AbortSignal) {
     z.string().regex(/^\d+$/u).parse(ratingKey);
     const page = parsePage(
       await this.get(
@@ -187,7 +202,7 @@ export class PlexClient {
       page.Metadata?.length !== 1
     )
       throw new IntegrationError("plex", "invalid-response");
-    return item;
+    return { item, sectionId: page.librarySectionID };
   }
 
   async observeWatch(
@@ -255,6 +270,97 @@ export class PlexClient {
         ...(signal === undefined ? {} : { signal }),
       },
     );
+  }
+
+  async collection(target: PlexCollectionTarget, signal: AbortSignal) {
+    const path = `library/metadata/${PlexDecimalIdSchema.parse(target.ratingKey)}`;
+    const identity = PlexCollectionSchema.safeParse(
+      await this.get(path, {}, signal),
+    );
+    if (!identity.success)
+      throw new IntegrationError("plex", "invalid-response");
+    const {
+      Metadata: [item],
+      librarySectionID,
+    } = identity.data.MediaContainer;
+    if (
+      (librarySectionID !== undefined &&
+        item.librarySectionID !== undefined &&
+        librarySectionID !== item.librarySectionID) ||
+      item.ratingKey !== target.ratingKey ||
+      String(item.librarySectionID ?? librarySectionID) !== target.sectionId ||
+      item.title !== target.title ||
+      item.subtype !== target.sectionType
+    )
+      throw new IntegrationError("plex", "unsupported-target");
+    const contents = PlexCollectionContentsSchema.safeParse(
+      await this.get(
+        path + "/children",
+        { "X-Plex-Container-Start": "0", "X-Plex-Container-Size": "1001" },
+        signal,
+      ),
+    );
+    if (!contents.success)
+      throw new IntegrationError("plex", "invalid-response");
+    const {
+      size,
+      totalSize = size,
+      Metadata: members = [],
+    } = contents.data.MediaContainer;
+    const memberKeys = new Set(members.map(({ ratingKey }) => ratingKey));
+    if (
+      totalSize !== size ||
+      item.childCount !== size ||
+      memberKeys.size !== members.length ||
+      members.length !== size ||
+      members.some(({ type }) => type !== target.sectionType)
+    )
+      throw new IntegrationError("plex", "conflict");
+    return { guid: item.guid, memberKeys };
+  }
+
+  async collectionMember(ratingKey: string, signal: AbortSignal) {
+    const { item, sectionId } = await this.metadataPage(ratingKey, signal);
+    if (
+      sectionId !== undefined &&
+      item.librarySectionID !== undefined &&
+      sectionId !== item.librarySectionID
+    )
+      throw new IntegrationError("plex", "conflict");
+    return { item, sectionId: item.librarySectionID ?? sectionId };
+  }
+
+  async setCollectionMembership(
+    input: {
+      serverMachineId: string;
+      collection: string;
+      member: string;
+      present: boolean;
+    },
+    signal: AbortSignal,
+  ): Promise<void> {
+    const { serverMachineId, collection, member, present } = input;
+    PlexServerIdSchema.parse(serverMachineId);
+    PlexDecimalIdSchema.parse(collection);
+    PlexDecimalIdSchema.parse(member);
+    signal.throwIfAborted();
+    const items = `library/collections/${collection}/items`;
+    const url = endpoint(
+      this.config.baseUrl,
+      present ? items : `${items}/${member}`,
+    );
+    if (present)
+      url.searchParams.set(
+        "uri",
+        `server://${serverMachineId}/com.plexapp.plugins.library/library/metadata/${member}`,
+      );
+    const response = await request(this.transport, "plex", url, {
+      method: present ? "PUT" : "DELETE",
+      headers: this.headers(),
+      mutation: true,
+      signal,
+    });
+    await response.body?.cancel();
   }
 
   /** One existing movie only. The caller owns approval, effect checkpoints and readback. */
