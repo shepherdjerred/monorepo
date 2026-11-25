@@ -428,15 +428,18 @@ describe("git-backup wiki and issue incremental snapshots", () => {
       },
     ];
 
-    const firstRun = await runGitBackupWithDependencies({
-      mirrorRootDir,
-      readToken: () => Promise.resolve("ghp_test_token"),
-      store: () => memoryStore.store,
-      githubFetch: () => Promise.resolve(Response.json([])),
-      discoverRepositories: () => Promise.resolve(discovered),
-      hooks: noopHooks,
-      now: () => new Date("2026-11-25T10:00:00.000Z"),
-    });
+    const runWikiBackupAt = (iso: string) =>
+      runGitBackupWithDependencies({
+        mirrorRootDir,
+        readToken: () => Promise.resolve("ghp_test_token"),
+        store: () => memoryStore.store,
+        githubFetch: () => Promise.resolve(Response.json([])),
+        discoverRepositories: () => Promise.resolve(discovered),
+        hooks: noopHooks,
+        now: () => new Date(iso),
+      });
+
+    const firstRun = await runWikiBackupAt("2026-11-25T10:00:00.000Z");
     expect(firstRun.snapshottedCount).toBe(1);
     const firstManifest = await memoryStore.store.readLatest(
       "shepherdjerred",
@@ -456,15 +459,7 @@ describe("git-backup wiki and issue incremental snapshots", () => {
     execGit(["commit", "-m", "Update wiki home"], wikiRepo.workDir);
     execGit(["push", "origin", "main"], wikiRepo.workDir);
 
-    const secondRun = await runGitBackupWithDependencies({
-      mirrorRootDir,
-      readToken: () => Promise.resolve("ghp_test_token"),
-      store: () => memoryStore.store,
-      githubFetch: () => Promise.resolve(Response.json([])),
-      discoverRepositories: () => Promise.resolve(discovered),
-      hooks: noopHooks,
-      now: () => new Date("2026-11-25T14:00:00.000Z"),
-    });
+    const secondRun = await runWikiBackupAt("2026-11-25T14:00:00.000Z");
     expect(secondRun.snapshottedCount).toBe(1);
     const secondManifest = await memoryStore.store.readLatest(
       "shepherdjerred",
@@ -643,16 +638,27 @@ describe("git-backup LFS enforcement and offline restoration", () => {
       },
     ];
 
-    const missingLfsRun = await runGitBackupWithDependencies({
-      mirrorRootDir,
-      readToken: () => Promise.resolve("ghp_test_token"),
-      store: () => memoryStore.store,
-      githubFetch: () => Promise.resolve(Response.json([])),
-      discoverRepositories: () => Promise.resolve(discovered),
-      resolveLfsBinary: () => null,
-      hooks: noopHooks,
-      now: () => new Date("2026-11-25T10:00:00.000Z"),
-    });
+    const runLfsBackup = (
+      repos: typeof discovered,
+      lfsPath: string | null,
+      iso: string,
+    ) =>
+      runGitBackupWithDependencies({
+        mirrorRootDir,
+        readToken: () => Promise.resolve("ghp_test_token"),
+        store: () => memoryStore.store,
+        githubFetch: () => Promise.resolve(Response.json([])),
+        discoverRepositories: () => Promise.resolve(repos),
+        resolveLfsBinary: () => lfsPath,
+        hooks: noopHooks,
+        now: () => new Date(iso),
+      });
+
+    const missingLfsRun = await runLfsBackup(
+      discovered,
+      null,
+      "2026-11-25T10:00:00.000Z",
+    );
     expect(missingLfsRun.failedCount).toBe(1);
     expect(missingLfsRun.snapshottedCount).toBe(1);
     const failedEntry = missingLfsRun.repositories.find(
@@ -676,16 +682,11 @@ describe("git-backup LFS enforcement and offline restoration", () => {
     );
     await chmod(fakeGitLfs, 0o755);
 
-    const withLfsRun = await runGitBackupWithDependencies({
-      mirrorRootDir,
-      readToken: () => Promise.resolve("ghp_test_token"),
-      store: () => memoryStore.store,
-      githubFetch: () => Promise.resolve(Response.json([])),
-      discoverRepositories: () => Promise.resolve([discovered[0]!]),
-      resolveLfsBinary: () => fakeGitLfs,
-      hooks: noopHooks,
-      now: () => new Date("2026-11-25T11:00:00.000Z"),
-    });
+    const withLfsRun = await runLfsBackup(
+      [discovered[0]!],
+      fakeGitLfs,
+      "2026-11-25T11:00:00.000Z",
+    );
     expect(withLfsRun.failedCount).toBe(0);
     expect(withLfsRun.snapshottedCount).toBe(1);
 
