@@ -12,12 +12,12 @@ state changes.
 Each public HTTP surface is a Cloudflare Tunnel to a dedicated port on the
 worker.
 
-| Surface                 | Public host                     | Triggers                                     |
-| ----------------------- | ------------------------------- | -------------------------------------------- |
-| GitHub webhook receiver | `pr-bot.sjer.red`               | merge-conflict check, CI pipeline cancel     |
-| Agent-task/chat API     | `temporal-agent-tasks.sjer.red` | agent tasks and durable chats (bearer-token) |
-| Sleep webhook           | `temporal-sleep.sjer.red`       | sleep workflows (bearer-token)               |
-| Xcode Cloud webhook     | `xcode-cloud-webhook.sjer.red`  | iOS build failures → Alertmanager alerts     |
+| Surface                 | Public host                     | Triggers                                                                   |
+| ----------------------- | ------------------------------- | -------------------------------------------------------------------------- |
+| GitHub webhook receiver | `pr-bot.sjer.red`               | merge-conflict check, weighted round-robin code review, CI pipeline cancel |
+| Agent-task/chat API     | `temporal-agent-tasks.sjer.red` | agent tasks and durable chats (bearer-token)                               |
+| Sleep webhook           | `temporal-sleep.sjer.red`       | sleep workflows (bearer-token)                                             |
+| Xcode Cloud webhook     | `xcode-cloud-webhook.sjer.red`  | iOS build failures → Alertmanager alerts                                   |
 
 ## Events for state, crons for wall-clock
 
@@ -33,25 +33,30 @@ So presence-driven automation is event-driven and time-of-day routines are
 
 ## Why webhooks and not polling
 
-GitHub and Xcode Cloud push events land in seconds and cost nothing when idle.
-Nothing here polls.
+GitHub and Xcode Cloud events land in seconds and cost nothing when no build or
+pull request is active.
 
 For a homelab that is running continuously, an idle cost of zero is worth more
 than it would be in a system that scales down.
 
 ## The one place the homelab blocks merging
 
-The merge-conflict check posts the `ci/merge-conflict` commit status, which is a
-**required** check in the repo's rulesets.
+Temporal posts two **required** commit statuses in the repository's ruleset:
+`ci/merge-conflict` and `ci/code-review`
+([`github-webhook.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/event-bridge/github-webhook.ts)).
 
-That means the worker being down blocks merges. It is the single place the
-homelab sits in the merge path, and it is a deliberate accepted coupling rather
-than an oversight.
+A worker outage therefore blocks merges. Keeping both checks on the always-on
+worker is a deliberate coupling rather than an oversight.
 
-Conflicts are computed with a real local `git merge-tree --write-tree` in a bare
-workdir — never GitHub's lazy `mergeable` field. Building a required check on an
-unreliable upstream signal is exactly what the repo's engineering principles say
-not to do.
+Conflicts come from a local `git merge-tree --write-tree` in a bare workdir,
+never GitHub's lazy `mergeable` field
+([`check-pr-merge-conflicts.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/ci/check-pr-merge-conflicts.ts)).
+Main pushes recompute every open pull request without starting CI pods.
+
+Automated review orchestration belongs here for the same reason
+([`pr-code-review.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/ci/pr-code-review.ts)).
+Provider fairness, cooldowns, and thread-resolution watches outlive any single
+pipeline pod; see [How CI selects work](/explanation/ci-pipeline-shape/#the-review-gate-waits-for-the-exact-head).
 
 ## Debouncing presence
 
@@ -68,22 +73,26 @@ house, "eventually consistent" is not good enough.
 
 ## Redelivery is safe, but not uniformly
 
-What a redelivered webhook does depends on the target's workflow-ID policy. The
-merge-conflict check is keyed per PR and _supersedes_ an in-flight run; CI
-cancel is keyed by commit and no-ops a duplicate.
+What a redelivered webhook does depends on each target's workflow-ID policy. The
+merge-conflict check is keyed per PR and _supersedes_ an in-flight run.
 
-Both are safe. They are not the same kind of safe, which is worth knowing before
-assuming a replay is free.
+Code review is keyed by PR and head SHA: `USE_EXISTING` reuses an in-flight run,
+`ALLOW_DUPLICATE` lets post-completion deliveries re-evaluate the head, and
+close or draft events signal `recheckReview` to stop obsolete runs
+([`code-review-starts.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/event-bridge/code-review-starts.ts)).
+CI cancel is keyed by commit and no-ops duplicates.
+
+Each path bounds duplicate deliveries at the workflow boundary that fits its
+lifecycle.
 
 ## A removed fleet
 
-An in-house PR review and babysit bot fleet lived here until 2026-07-31. It was
-removed in favour of the CI review gate
+An in-house LLM reviewer and PR babysitter fleet lived here until 2026-07-31
 ([#1863](https://github.com/shepherdjerred/monorepo/pull/1863)).
 
-The review bot never left dry-run, babysit sat dormant, and together they carried
-about 120 source files plus a dedicated Redis, dashboards, and alert rules. The
-three workflows that remain are the ones that earned their keep.
+That reviewer never left dry-run, babysit sat dormant, and together they carried
+120 source files plus a dedicated Redis. Current PR code-review workflows only
+coordinate external review providers and store state in Temporal itself.
 
 ## Related
 

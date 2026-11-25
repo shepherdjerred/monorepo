@@ -120,8 +120,6 @@ export type PipelineInputs = {
    */
   readonly deliveryCatalogV2?: boolean;
   readonly images: CiImages;
-  /** Image of the deployed policy service, supplied by trusted bootstrap. */
-  readonly trustedGateImage?: string | undefined;
   /**
    * Newest commit on the default branch whose pipeline succeeded, or undefined
    * when the branch has never gone green.
@@ -142,7 +140,6 @@ export function buildPipelineSteps({
   deliveryPublication = false,
   deliveryCatalogV2 = false,
   images,
-  trustedGateImage,
   changedBase = "",
   verifyBase = changedBase,
   imageReleaseBase = "",
@@ -212,7 +209,7 @@ export function buildPipelineSteps({
     // editions need a Plex Pass server admin, and the disposable server is
     // deliberately unclaimed, so the lane cannot pass here (AI-375). Operators
     // run it through reproduction/pms-runner.
-    ...prGateSteps(images, trustedGateImage),
+    ...prGateSteps(images),
   ];
 
   // Each workflow has its own container and environment. The in-step

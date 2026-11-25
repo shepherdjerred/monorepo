@@ -150,12 +150,13 @@ reports the single required `ci/woodpecker/pr/ci-complete` status. This avoids a
 ruleset that names a status Woodpecker never emits. The cluster's CI admission
 quota also bounds concurrent workflow pods and their aggregate storage request.
 
-Review and completion use reserved agent slots and admission capacity, so long
-builds cannot occupy every place that can report a merge verdict. Their code
-comes from the deployed policy image, with no PR checkout. PR and main work
-have separate agent pools; main receives the highest admission priority.
+`ci-complete` uses a reserved completion pool and admission capacity, so long
+builds cannot occupy every slot that reports the Woodpecker verdict. Its code
+comes from the deployed policy image without a PR checkout. Automated review
+runs outside Woodpecker on Temporal. PR and main work have separate agent
+pools, and main receives the highest admission priority.
 [Admission limits](/explanation/homelab/ci-admission/) still bound the combined
-resource requests, without preempting production workloads.
+resource requests without preempting production workloads.
 
 New verification replaces older work for the same PR, including ready events
 and target-branch changes. The extension checks pipeline identity again before
@@ -330,75 +331,61 @@ and still look green.
 
 ## The review gate waits for the exact head
 
-The required PR review gate is multi-provider: one enabled reviewer (Codex,
-CodeRabbit — selected by `REVIEW_PROVIDERS`, default Codex) must finish
-reviewing the exact head commit with no blocking findings, while
-an unresolved P0 from any enabled provider vetoes the pass. Qodo and Greptile
-stay registered but out of the enabled set until their apps are installed and
-observed reviewing: an enabled-but-silent provider holds every PR at the
-deadline instead of passing it. Codex names the
-head in its latest PR review, and a clean Codex review is represented by its
-receipt comment or its 👍 reaction; each provider's completion signal is
-documented in `packages/code-review`. The gate is
-[`wait-for-review.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/review/wait-for-review.ts).
+Temporal orchestrates the required `ci/code-review` commit status instead of a
+90-minute Woodpecker polling pod
+([`pr-code-review.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/ci/pr-code-review.ts)).
+Waiting on external reviewers is durable state coordination, not container
+compute. Holding a CI pod open for ninety minutes wasted admission slots and
+required pipeline restarts whenever a review arrived late.
 
-Only the first round of review is a full quality gate. Once a provider has
-finished reviewing an earlier commit of the pull request, later heads never
-wait on it, and only an unresolved P0 still blocks. Waiting on every
-re-review cost hours on stacked pull requests, mostly for later-round P2s and
-for re-reviews the gate failed to recognise; the first round is where review
-pays for itself. The rule lives in `judgedSnapshot` in
-[`gate.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/code-review/src/gate.ts).
+Repository configs disable automatic push reviews on every provider. Instead,
+[`codeReviewCoordinatorWorkflow`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/ci/code-review-coordinator.ts)
+assigns one reviewer per pull request through Smooth Weighted Round-Robin
+([`weighted-round-robin.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/code-review/src/weighted-round-robin.ts)).
+Free public-repository tiers (`cubic`, `coderabbit`, `codeant`, `qodo`, and
+`greptile`) carry normal review load while `codex` stays a low-weight reserve.
+Requesting one provider per pull request avoids burning every quota on the same
+diff.
 
-Binding to the head commit is the whole point. A review comment from an earlier
-push is evidence about code that is no longer proposed, and accepting it would
-make the gate approve unreviewed changes.
+Provider failures stay isolated in the coordinator. Rate-limited and timed-out
+providers enter a temporary cooldown, while seat-blocked or skipped outcomes
+fail over to the next eligible reviewer without cooling down the provider for
+other pull requests
+([`pr-code-review-helpers.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/ci/pr-code-review-helpers.ts)).
+When every configured provider is quota-blocked, times out, is skipped, or none
+are configured, `ci/code-review` passes unless an unresolved P0 stands. Billing
+states and bot-skip rules must not stop unrelated merges.
 
-The gate reads GitHub as the GitHub App installation, not as Jerred. It polls
-every open pull request for up to an hour, several GraphQL and REST reads per
-tick, and on his personal token that polling shared one GraphQL bucket with
-every agent session and `gh` call on his account, so each could exhaust it
-for the other. An installation has its own buckets, so the gate mints an
-installation token from the step's `GITHUB_APP_*` grant and refreshes it
-before its one-hour expiry
-([`review-gate-credentials.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/review/review-gate-credentials.ts)).
-The only write, the `@codex review`-style request comment, stays on
-`GITHUB_REVIEW_TOKEN`: Codex answers that command from a Codex-linked user,
-not from an App bot. A gate that cannot mint fails rather than falling back to
-the personal token, because falling back would silently restore the shared
-bucket.
+Binding to the exact head commit remains mandatory. A review from an earlier
+push judged different code, so accepting it on round one would approve
+unreviewed changes. Round one blocks strictly on unresolved P0 and P1 findings
+under `STRICT_P0_P1_POLICY`, leaving P2 and P3 findings advisory
+([`gate.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/code-review/src/gate.ts)).
+Once any provider has reviewed an earlier commit, later pushes skip re-review
+and block only on an unresolved P0. Waiting on every follow-up push previously
+spent hours reviewing churn from earlier feedback.
 
-Moving the gate to the installation only helps if the gate also fits in the
-installation's bucket. Re-reading the review threads and reviews over GraphQL
-on every 30-second poll cost about eight points a minute per pull request,
-and with thirty agents' pull requests open at once that is about 14,400 points
-an hour against a 5,000-point bucket. GraphQL has no conditional requests, but
-the REST views of the same records do, and an unchanged page is an uncharged
-`304`. So the gate re-reads the listing only when the pull request's reviews
-or newest review comment change, and otherwise every five minutes
-([`github-review-listing-cache.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/code-review/src/github-review-listing-cache.ts)).
-The five-minute re-read exists for the one change no REST view records: a
-thread being resolved or unresolved. Thirty idle gates now spend about 720
-points an hour.
+Reads run as the GitHub App installation rather than Jerred's personal account
+([`github-app-token.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/lib/github-app-token.ts)).
+An installation has its own API quota, so polling open pull requests cannot
+starve local `gh` or agent sessions. Only review-request comments use
+`GITHUB_REVIEW_TOKEN` on `temporal-repo-worker`, because providers like Codex
+ignore bot-authored trigger comments
+([`code-review-octokit.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/ci/code-review-octokit.ts)).
 
-Reuse may delay what the gate sees, but it never decides the outcome. A pass
-is re-read fresh before it is accepted, and a failure decided on a reused
-listing is decided again on a fresh one, so a thread resolved in the meantime
-cannot fail the gate.
+The installation bucket still needs bounded GraphQL spend. Each Temporal
+observation fetches one provider-agnostic GraphQL thread and review listing and
+partitions it across all providers in memory rather than querying per provider
+([`github-review-snapshot.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/code-review/src/github-review-snapshot.ts)).
+Polling runs on bounded Temporal timers (30 seconds while awaiting a review, 60
+seconds while watching blocking threads), while `toolkit pr review resolve` and
+`toolkit pr review recheck` signal `recheckReview` for immediate re-evaluation.
 
 ## Handoffs go through object storage
 
 Steps pass values to later steps through a build-scoped SeaweedFS prefix,
 `s3://ci-handoff/<pipeline number>/<key>.json`, written and read by
 [`ci-handoff.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/ci/ci-handoff.ts).
-
-A provider running out of quota is not a review failure. No review happened,
-and blocking every merge on a billing state would stop the rest of CI from
-counting. One blocked provider is ignored while the rest review; when every
-enabled provider posts its usage-limit notice for the exact head, the gate
-exits with status 42, and the step treats that status alone as advisory.
-Findings, unresolved threads, timeouts, and every other error exit with
-another status and still fail the required gate.
 
 There is one path rather than two. Woodpecker has no build metadata store or
 artifact store. One storage path with no size threshold is simpler than

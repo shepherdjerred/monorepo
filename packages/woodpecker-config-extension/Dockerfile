@@ -19,7 +19,7 @@ COPY --parents \
   ci/scripts/selectors/select-image-targets-lockfile.ts \
   /tools/
 RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
-  '@shepherdjerred/woodpecker-config-extension' '@shepherdjerred/root-scripts'
+  '@shepherdjerred/woodpecker-config-extension'
 
 FROM base AS prod-deps
 COPY --parents bun.lock bunfig.toml patches/ ./
@@ -30,12 +30,6 @@ RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/woodpec
 COPY ci/scripts/images/complete-bin-links.ts /tools/
 RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
-FROM prod-deps AS review-build
-RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/root-scripts'
-COPY --parents scripts/lib/ scripts/review/ packages/code-review/ \
-  packages/temporal/src/lib/github-app-token.ts ./
-RUN bun build scripts/review/bundled-review-gate.ts --target bun --outfile /review-gate.js
-
 FROM base AS runtime
 # Both the service and its checkout-free gate use this trusted image. The
 # generated workflow wraps commands with bash and GNU timeout.
@@ -43,7 +37,6 @@ FROM base AS runtime
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends bash coreutils git ca-certificates util-linux \
     && rm -rf /var/lib/apt/lists/* /var/log/apt/* /var/log/dpkg.log /var/log/alternatives.log /var/cache/ldconfig/aux-cache
 COPY --from=prod-deps --exclude=package.json --exclude=bun.lock --exclude=bunfig.toml --exclude=patches /app/ /app/
-COPY --from=review-build /review-gate.js /app/review-gate.js
 COPY --parents \
   tsconfig.base.json \
   packages/version-catalog/src \

@@ -143,7 +143,6 @@ describe("application image reproducibility", () => {
         const { instructions } = stage;
         for (const [index, instruction] of instructions.entries()) {
           if (
-            stage.name === "review-build" ||
             !instruction.startsWith(
               "RUN bun install --frozen-lockfile --production",
             )

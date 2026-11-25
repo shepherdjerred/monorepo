@@ -35,19 +35,13 @@ export function routeSteps(
     const gate =
       trustedGateImage !== undefined &&
       step.image === trustedGateImage &&
-      (step.key === "codex-review-gate" || step.key === "ci-complete");
+      step.key === "ci-complete";
     if (gate && (step.skipClone !== true || (step.services?.length ?? 0) > 0)) {
       throw new Error(
         `${step.key}: reserved gate capacity requires no checkout or services`,
       );
     }
-    const pool = gate
-      ? step.key === "ci-complete"
-        ? "completion"
-        : "review"
-      : main
-        ? "main"
-        : "pr";
+    const pool = gate ? "completion" : main ? "main" : "pr";
     return {
       ...step,
       agentLabels: {

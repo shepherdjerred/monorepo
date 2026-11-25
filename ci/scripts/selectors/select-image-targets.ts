@@ -53,13 +53,6 @@ const SHARED_APPLICATION_IMAGE_INPUTS = [
 
 export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
   {
-    // The bundled review gate also compiles in the GitHub App token minter,
-    // which lives in temporal but is not a workspace dependency of the image.
-    "woodpecker-config-extension": [
-      "scripts/review/",
-      "scripts/lib/review/",
-      "packages/temporal/src/lib/github-app-token.ts",
-    ],
     "scout-for-lol": [
       "packages/scout-for-lol/scripts/contract-hash.ts",
       "packages/scout-for-lol/tsconfig.base.json",

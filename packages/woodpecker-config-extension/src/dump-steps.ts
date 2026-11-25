@@ -47,7 +47,6 @@ const steps = buildPipelineSteps({
   deliveryPublication: true,
   deliveryCatalogV2: Bun.argv.includes("--delivery-catalog-v2"),
   images: PLACEHOLDER_IMAGES,
-  trustedGateImage: gateImage,
   changedBase: "",
   imageReleaseBase: "",
 });

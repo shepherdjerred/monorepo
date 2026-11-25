@@ -473,7 +473,6 @@ export function createApp(options: AppOptions): Hono {
     }
     const steps = buildPipelineSteps({
       images,
-      trustedGateImage: options.trustedGateImage,
       deliveryPublication: await publishDelivery(pipeline.branch),
       deliveryCatalogV2: await catalogV2(pipeline.branch),
       changedBase,

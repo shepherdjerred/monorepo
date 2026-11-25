@@ -12,12 +12,18 @@ import {
   resolveFinding,
 } from "#lib/review/findings.ts";
 import {
+  CODE_REVIEW_GATE_CONTEXT,
+  codeReviewHarvestVerdict,
   gateStatusFor,
   harvestVerdict,
+  prCodeReviewWorkflowId,
   REQUIRED_REVIEW_GATES,
+  signalCodeReviewRecheck,
+  type ReviewRecheckDeps,
 } from "#lib/review/harvest.ts";
 import {
   resolveProvider,
+  STRICT_P0_P1_POLICY,
   type ReviewProvider,
 } from "@shepherdjerred/code-review";
 import { listReviewFeedback } from "#lib/review/feedback.ts";
@@ -64,6 +70,13 @@ export function parseMaxBlockingPriority(raw: string | undefined): number {
 
 function maxBlockingPriority(): number {
   return parseMaxBlockingPriority(Bun.env["REVIEW_MAX_BLOCKING_PRIORITY"]);
+}
+
+function codeReviewMaxBlockingPriority(): number {
+  const raw = Bun.env["REVIEW_MAX_BLOCKING_PRIORITY"]?.trim();
+  return raw === undefined || raw === ""
+    ? STRICT_P0_P1_POLICY.maxBlockingPriority
+    : parseMaxBlockingPriority(raw);
 }
 
 function selectedProvider(options: ReviewOptions): ReviewProvider | undefined {
@@ -159,7 +172,7 @@ export async function reviewResolveCommand(
 
   const token = requireToken();
   const provider = selectedProvider(options);
-  const { findings } = await listFindings({
+  const { head, findings } = await listFindings({
     repo,
     number,
     token,
@@ -218,6 +231,122 @@ export async function reviewResolveCommand(
         ? "resolved the review thread"
         : "review thread already resolved";
   console.log(`${finding.title ?? finding.key}: ${comment}, ${thread}`);
+  if (repo === DEFAULT_REPO) {
+    try {
+      await signalCodeReviewRecheck(
+        prCodeReviewWorkflowId(repo, number, head),
+        [token],
+      );
+    } catch {
+      // Best-effort wakeup: Temporal rechecks blocking threads every 60s, and
+      // `toolkit pr review recheck <PR>` remains available explicitly.
+    }
+  }
+}
+
+export async function reviewRecheckCommand(
+  prNumber: string | undefined,
+  options: ReviewOptions = {},
+  deps: ReviewRecheckDeps = {},
+): Promise<void> {
+  const repo = options.repo ?? DEFAULT_REPO;
+  const number = await (deps.resolvePr ?? resolvePrNumber)(prNumber, repo);
+  const token = (deps.getToken ?? requireToken)();
+  const headSha = await (deps.fetchHead ?? fetchHeadSha)({
+    repo,
+    number,
+    token,
+  });
+  const workflowId = prCodeReviewWorkflowId(repo, number, headSha);
+  await signalCodeReviewRecheck(workflowId, [token], deps);
+  const output =
+    options.json === true
+      ? JSON.stringify(
+          {
+            repo,
+            pr: number,
+            head: headSha,
+            workflowId,
+            signal: "recheckReview",
+            signaled: true,
+          },
+          null,
+          2,
+        )
+      : `${repo}#${String(number)} @ ${headSha.slice(0, 12)}: signaled ${workflowId} (recheckReview)`;
+  console.log(sanitizeText(output, [token]));
+}
+
+async function harvestCodeReviewGate(input: {
+  repo: string;
+  number: number;
+  prHead: string;
+  token: string;
+  retry: boolean;
+}): Promise<boolean> {
+  const gate = await gateStatusFor({
+    repo: input.repo,
+    ref: input.prHead,
+    token: input.token,
+    context: CODE_REVIEW_GATE_CONTEXT,
+  });
+  if (gate === null) {
+    return false;
+  }
+  if (gate.state !== "failure") {
+    console.log(
+      `#${String(input.number)} ${CODE_REVIEW_GATE_CONTEXT}: not retryable — gate is ${gate.state}`,
+    );
+    return true;
+  }
+  const threshold = codeReviewMaxBlockingPriority();
+  const report = await listReviewFeedback({
+    repo: input.repo,
+    number: input.number,
+    token: input.token,
+  });
+  const blockingCount = report.findings.filter(
+    (finding) =>
+      finding.provider !== null &&
+      !finding.isResolved &&
+      !finding.isOutdated &&
+      finding.priority !== null &&
+      finding.priority <= threshold,
+  ).length;
+  const verdict = codeReviewHarvestVerdict({ gate, blockingCount });
+  if (!verdict.retryable) {
+    console.log(
+      `#${String(input.number)} ${CODE_REVIEW_GATE_CONTEXT}: not retryable — ${verdict.reason}`,
+    );
+    return true;
+  }
+  const latestHead = await fetchHeadSha({
+    repo: input.repo,
+    number: input.number,
+    token: input.token,
+  });
+  if (report.head !== input.prHead || latestHead !== input.prHead) {
+    console.log(
+      `#${String(input.number)} ${CODE_REVIEW_GATE_CONTEXT}: not retryable — PR head changed during harvest; run harvest again`,
+    );
+    return true;
+  }
+  if (!input.retry) {
+    console.log(
+      `#${String(input.number)} ${CODE_REVIEW_GATE_CONTEXT}: retryable — toolkit pr review recheck ${String(input.number)}`,
+    );
+    return true;
+  }
+  const workflowId = prCodeReviewWorkflowId(
+    input.repo,
+    input.number,
+    input.prHead,
+  );
+  await signalCodeReviewRecheck(workflowId, [input.token]);
+  console.log(
+    `#${String(input.number)} ${CODE_REVIEW_GATE_CONTEXT}: signaled ${workflowId} (recheckReview)`,
+  );
+  return true;
 }
 
 export async function reviewHarvestCommand(
@@ -234,6 +363,16 @@ export async function reviewHarvestCommand(
 
   for (const number of numbers) {
     const prHead = await fetchHeadSha({ repo, number, token });
+    const handledCodeReview = await harvestCodeReviewGate({
+      repo,
+      number,
+      prHead,
+      token,
+      retry: options.all === true,
+    });
+    if (handledCodeReview) {
+      continue;
+    }
     for (const gateDefinition of REQUIRED_REVIEW_GATES) {
       const provider = resolveProvider(gateDefinition.providerId);
       const gate = await gateStatusFor({

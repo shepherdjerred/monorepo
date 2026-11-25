@@ -180,6 +180,35 @@ describe("review provider outages", () => {
       ],
       retryableBlock: false,
     },
+    {
+      failures: ['GitHub check "ci/code-review" - FAILURE'],
+      retryableBlock: true,
+    },
+    {
+      failures: ['GitHub check "ci/code-review" - ERROR'],
+      retryableBlock: true,
+    },
+    {
+      failures: [
+        'GitHub check "ci/code-review" - FAILURE',
+        'GitHub check "external-test" - PENDING',
+      ],
+      retryableBlock: true,
+    },
+    {
+      failures: [
+        'GitHub check "ci/code-review" - FAILURE',
+        'Workflow "verify" - FAILURE',
+      ],
+      retryableBlock: false,
+    },
+    {
+      failures: [
+        'GitHub check "ci/code-review" - FAILURE',
+        'GitHub check "external-test" - FAILURE',
+      ],
+      retryableBlock: false,
+    },
   ])("classifies $failures", async ({ failures, retryableBlock }) => {
     const github = new GitHubClient(
       "owner/repo",

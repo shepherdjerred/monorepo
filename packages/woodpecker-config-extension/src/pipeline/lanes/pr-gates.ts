@@ -1,16 +1,12 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
-import {
-  GATE_TIER,
-  MEDIUM_TIER,
-  PR_DRY_RUN_TIER,
-} from "#src/pipeline/tiers.ts";
+import { PR_DRY_RUN_TIER } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
-import { GITHUB_DOWNLOAD, grant } from "#src/pipeline/lanes/tofu.ts";
+import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
 
 /**
- * Pull-request-only gates: the release rehearsal and the automated review.
+ * Pull-request-only release rehearsal gate; automated code review runs via Temporal (ci/code-review).
  */
 
 const DRY_RUN_SITES = [
@@ -30,10 +26,7 @@ const DRY_RUN_SITES = [
   "scout-design-system",
 ];
 
-export function prGateSteps(
-  images: CiImages,
-  trustedGateImage?: string,
-): CiStep[] {
+export function prGateSteps(images: CiImages): CiStep[] {
   return [
     {
       key: "pr-dryrun",
@@ -86,47 +79,6 @@ export function prGateSteps(
       },
       secrets: [GITHUB_DOWNLOAD],
       volumes: [BUN_CACHE, BUN_CACHE_CONTROL],
-    },
-    {
-      key: "codex-review-gate",
-      label: "automated review gate",
-      image: trustedGateImage ?? images.base,
-      commands:
-        trustedGateImage === undefined
-          ? [". ci/scripts/toolchain.sh", "ci/scripts/review-gate.sh"]
-          : ["cd /app", "bun /app/review-gate.js"],
-      ...(trustedGateImage === undefined ? {} : { skipClone: true }),
-      // Multi-provider OR gate: one clean review from any enabled provider
-      // passes, a P0 from any of them vetoes, and unanimous quota blocks
-      // stay advisory. Only providers confirmed reviewing in production
-      // belong here — a silent provider holds every PR at the deadline.
-      // The step key stays `codex-review-gate` so the required-check
-      // ruleset does not churn.
-      environment: {
-        REVIEW_PROVIDERS: "codex,coderabbit",
-      },
-      timeoutMinutes: 90,
-      resources: trustedGateImage === undefined ? MEDIUM_TIER : GATE_TIER,
-      events: ["pull_request"],
-      // Codex's auth bundle carries a refresh token, so it must outlive the
-      // ephemeral step pod.
-      volumes:
-        trustedGateImage === undefined
-          ? [{ claim: "woodpecker-codex-auth", path: "/woodpecker/codex-auth" }]
-          : [],
-      // Every GitHub read uses an installation token the gate mints from the
-      // App credentials, which has its own rate-limit bucket.
-      // GITHUB_REVIEW_TOKEN, the owner's token, only posts review-request
-      // comments, since Codex does not answer a GitHub App bot. The bundled
-      // gate runs no toolchain bootstrap, so only the checkout path needs
-      // mise's download token.
-      secrets: [
-        ...(trustedGateImage === undefined ? [GITHUB_DOWNLOAD] : []),
-        grant("ci-github-credentials", "GITHUB_REVIEW_TOKEN"),
-        grant("ci-github-credentials", "GITHUB_APP_ID"),
-        grant("ci-github-credentials", "GITHUB_APP_INSTALLATION_ID"),
-        grant("ci-github-credentials", "GITHUB_APP_PRIVATE_KEY"),
-      ],
     },
   ];
 }

@@ -2,7 +2,7 @@ import { expect, test, vi } from "vitest";
 import { collectSourceProof } from "#lib/ci/source-proof.ts";
 import { SourceProofSchema } from "@shepherdjerred/ops-model/ci-source-proof.ts";
 import { evaluateReadiness, type Snapshot } from "#lib/ci/readiness.ts";
-import { ciFixture, CI_BASE, CI_HEAD } from "./fixtures.ts";
+import { ciFixture, CI_BASE, CI_HEAD, CI_PIPELINE_URL } from "./fixtures.ts";
 import { WoodpeckerPipelineSchema } from "#lib/woodpecker/ci.ts";
 
 const MERGE = "c".repeat(40);
@@ -20,14 +20,46 @@ function merged(): Snapshot {
   snapshot.pipeline.finished = 1234;
   snapshot.pipeline = WoodpeckerPipelineSchema.parse({
     ...snapshot.pipeline,
-    // Native pipeline identities from the generator and observed CI; the API
-    // schema preserves these keys without translating the review workflow.
     workflows: [
       { name: "verify", state: "success" },
-      { name: "codex-review-gate", state: "success" },
       { name: "ci-complete", state: "success" },
     ],
   });
+  snapshot.rules.checks = [
+    { name: "ci/merge-conflict", appId: null },
+    { name: "ci/code-review", appId: null },
+    { name: "ci/woodpecker/pr/ci-complete", appId: null },
+  ];
+  snapshot.checks = [
+    { name: "ci/merge-conflict", state: "pass", url: null, appId: null },
+    { name: "ci/code-review", state: "pass", url: null, appId: null },
+    {
+      name: "ci/woodpecker/pr/ci-complete",
+      state: "pass",
+      url: `${CI_PIPELINE_URL}/2`,
+      appId: null,
+    },
+  ];
+  return snapshot;
+}
+
+function legacyMerged(postCutoverRules = true): Snapshot {
+  const snapshot = merged();
+  if (snapshot.pipeline === null)
+    throw new Error("Expected native fixture pipeline");
+  snapshot.pipeline.workflows = [
+    { name: "verify", state: "success" },
+    { name: "codex-review-gate", state: "success" },
+    { name: "ci-complete", state: "success" },
+  ];
+  if (!postCutoverRules) {
+    snapshot.rules.checks = snapshot.rules.checks.filter(
+      (check) => check.name !== "ci/code-review",
+    );
+  }
+  snapshot.checks = snapshot.checks.filter(
+    (check) => check.name !== "ci/code-review",
+  );
   return snapshot;
 }
 function effects(snapshot = merged(), after = snapshot) {
@@ -86,7 +118,11 @@ test("post-merge proof retains exact reviewed head identity independently of mer
     reviewEvidence: {
       headRevision: CI_HEAD,
       requiredApprovals: 0,
-      requiredChecks: [{ state: "pass" }, { state: "pass" }],
+      requiredChecks: [
+        { name: "ci/merge-conflict", state: "pass" },
+        { name: "ci/code-review", state: "pass" },
+        { name: "ci/woodpecker/pr/ci-complete", state: "pass" },
+      ],
     },
   });
   expect(evaluateReadiness(snapshot, CI_HEAD).outcome).toBe("pr_closed");
@@ -98,7 +134,9 @@ test.each([
   "merge-sha",
   "failed-ci",
   "missing-review",
+  "unrequired-review",
   "failed-review",
+  "pending-review",
   "pending-check",
   "draft",
   "human-review",
@@ -125,16 +163,28 @@ test.each([
         snapshot.pipeline.status = "failure";
         break;
       case "missing-review":
-        snapshot.pipeline.workflows = snapshot.pipeline.workflows.filter(
-          (workflow) => workflow.name !== "codex-review-gate",
+        snapshot.rules.checks = snapshot.rules.checks.filter(
+          (check) => check.name !== "ci/code-review",
+        );
+        snapshot.checks = snapshot.checks.filter(
+          (check) => check.name !== "ci/code-review",
+        );
+        break;
+      case "unrequired-review":
+        snapshot.rules.checks = snapshot.rules.checks.filter(
+          (check) => check.name !== "ci/code-review",
         );
         break;
       case "failed-review":
-        snapshot.pipeline.workflows = snapshot.pipeline.workflows.map(
-          (workflow) =>
-            workflow.name === "codex-review-gate"
-              ? { ...workflow, state: "failure" }
-              : workflow,
+        snapshot.checks = snapshot.checks.map((check) =>
+          check.name === "ci/code-review" ? { ...check, state: "fail" } : check,
+        );
+        break;
+      case "pending-review":
+        snapshot.checks = snapshot.checks.map((check) =>
+          check.name === "ci/code-review"
+            ? { ...check, state: "pending" }
+            : check,
         );
         break;
       case "pending-check":
@@ -277,7 +327,7 @@ test.each(["merge", "pipeline", "checks", "reviews"])(
     if (change === "pipeline") {
       after.pipeline.number++;
       after.pipelineUrl = `https://woodpecker.sjer.red/repos/1/pipeline/${String(after.pipeline.number)}`;
-      after.checks[1]!.url = `${after.pipelineUrl}/2`;
+      after.checks[2]!.url = `${after.pipelineUrl}/2`;
     }
     if (change === "checks")
       after.checks[0]!.url = "https://github.com/shepherdjerred/monorepo";
@@ -356,13 +406,67 @@ test("unrelated main verdict remains evidence rather than replacing the exact-so
     mainState: "red",
   });
 });
-test("a successful invented review alias cannot replace the native codex-review-gate workflow", async () => {
-  const snapshot = merged();
-  if (snapshot.pipeline === null) throw new Error("Expected fixture");
-  snapshot.pipeline.workflows = snapshot.pipeline.workflows.map((workflow) =>
-    workflow.name === "codex-review-gate"
-      ? { ...workflow, name: "code-review" }
-      : workflow,
+test("legacy pre-cutover pipelines satisfy review proof under both pre- and post-cutover rulesets", async () => {
+  for (const postCutoverRules of [true, false]) {
+    await expect(prove(legacyMerged(postCutoverRules))).resolves.toMatchObject({
+      sourceRevision: CI_HEAD,
+      reviewEvidence: {
+        requiredChecks: [
+          { name: "ci/merge-conflict", state: "pass" },
+          { name: "ci/woodpecker/pr/ci-complete", state: "pass" },
+        ],
+      },
+    });
+  }
+
+  const missingLegacy = legacyMerged();
+  if (missingLegacy.pipeline === null) throw new Error("Expected fixture");
+  missingLegacy.pipeline.workflows = missingLegacy.pipeline.workflows.filter(
+    (workflow) => workflow.name !== "codex-review-gate",
   );
-  await expect(prove(snapshot)).rejects.toThrow("native review gate");
+  await expect(prove(missingLegacy)).rejects.toThrow("required checks");
+  const missingLegacyPreCutover = legacyMerged(false);
+  if (missingLegacyPreCutover.pipeline === null)
+    throw new Error("Expected fixture");
+  missingLegacyPreCutover.pipeline.workflows =
+    missingLegacyPreCutover.pipeline.workflows.filter(
+      (workflow) => workflow.name !== "codex-review-gate",
+    );
+  await expect(prove(missingLegacyPreCutover)).rejects.toThrow(
+    "native review gate",
+  );
+
+  const failedLegacy = legacyMerged();
+  if (failedLegacy.pipeline === null) throw new Error("Expected fixture");
+  failedLegacy.pipeline.workflows = failedLegacy.pipeline.workflows.map(
+    (workflow) =>
+      workflow.name === "codex-review-gate"
+        ? { ...workflow, state: "failure" }
+        : workflow,
+  );
+  await expect(prove(failedLegacy)).rejects.toThrow();
+
+  const inventedAlias = legacyMerged(false);
+  if (inventedAlias.pipeline === null) throw new Error("Expected fixture");
+  inventedAlias.pipeline.workflows = inventedAlias.pipeline.workflows.map(
+    (workflow) =>
+      workflow.name === "codex-review-gate"
+        ? { ...workflow, name: "code-review" }
+        : workflow,
+  );
+  await expect(prove(inventedAlias)).rejects.toThrow("native review gate");
+
+  for (const state of ["fail", "pending"] as const) {
+    const transitional = legacyMerged(false);
+    if (transitional.pipeline === null) throw new Error("Expected fixture");
+    transitional.checks.push({
+      name: "ci/code-review",
+      state,
+      url: null,
+      appId: null,
+    });
+    await expect(prove(transitional)).rejects.toThrow(
+      "required checks have not all passed",
+    );
+  }
 });

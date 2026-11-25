@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 import { routeSteps, type RoutingContext } from "#src/pipeline/routing.ts";
 import { completionStep, noWorkStep } from "#src/pipeline/completion.ts";
+import { prGateSteps } from "#src/pipeline/lanes/pr-gates.ts";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
 import { emitWorkflow } from "#src/pipeline/emit.ts";
 import { GATE_TIER } from "#src/pipeline/tiers.ts";
@@ -16,16 +17,22 @@ const context: RoutingContext = {
 };
 const steps = buildPipelineSteps({
   images: TEST_IMAGES,
-  trustedGateImage: image,
   changedBase: "",
 });
 const verify = steps.find((step) => step.key === "verify");
-const review = steps.find((step) => step.key === "codex-review-gate");
-if (verify === undefined || review === undefined)
-  throw new Error("missing gate fixtures");
-const complete = completionStep([verify, review], image, "/app");
+if (verify === undefined) throw new Error("missing gate fixtures");
+const complete = completionStep([verify], image, "/app");
 
 describe("agent pool routing", () => {
+  test("prGateSteps no longer emits codex-review-gate", () => {
+    expect(
+      prGateSteps(TEST_IMAGES).find((step) => step.key === "codex-review-gate"),
+    ).toBeUndefined();
+    expect(
+      steps.find((step) => step.key === "codex-review-gate"),
+    ).toBeUndefined();
+  });
+
   test("keeps a PR targeting main in the PR pool", () => {
     expect(routeSteps([verify], context, image)[0]?.agentLabels).toEqual({
       "ci-pool": "pr",
@@ -77,10 +84,9 @@ describe("agent pool routing", () => {
     ).toBe(true);
   });
 
-  test("reserves separate checkout-free slots for review and completion", () => {
-    const routed = routeSteps([review, complete], context, image);
+  test("reserves a checkout-free slot for completion", () => {
+    const routed = routeSteps([complete], context, image);
     expect(routed.map((step) => step.agentLabels?.["ci-pool"])).toEqual([
-      "review",
       "completion",
     ]);
     for (const step of routed) {
@@ -96,23 +102,15 @@ describe("agent pool routing", () => {
     }
   });
 
-  test("keeps source-based review and unrelated no-ops out of gate slots", () => {
-    const fallback = buildPipelineSteps({
-      images: TEST_IMAGES,
-      changedBase: "",
-    }).find((step) => step.key === "codex-review-gate");
-    if (fallback === undefined) throw new Error("missing fallback review");
-    expect(fallback.commands).toEqual([
-      ". ci/scripts/toolchain.sh",
-      "ci/scripts/review-gate.sh",
-    ]);
-    expect(fallback.skipClone).not.toBe(true);
+  test("keeps non-trusted completion and unrelated no-ops out of gate slots", () => {
+    const fallback = completionStep([verify], TEST_IMAGES.base, "/workspace");
     const routed = routeSteps(
-      [fallback, noWorkStep(TEST_IMAGES.base)],
+      [fallback, noWorkStep(TEST_IMAGES.base), noWorkStep(image)],
       context,
       image,
     );
     expect(routed.map((step) => step.agentLabels?.["ci-pool"])).toEqual([
+      "pr",
       "pr",
       "pr",
     ]);
@@ -120,7 +118,7 @@ describe("agent pool routing", () => {
 
   test("rejects checkout or services in a reserved gate", () => {
     expect(() =>
-      routeSteps([{ ...review, skipClone: false }], context, image),
+      routeSteps([{ ...complete, skipClone: false }], context, image),
     ).toThrow("no checkout or services");
     expect(() =>
       routeSteps(

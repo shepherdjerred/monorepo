@@ -837,7 +837,12 @@ unresolved feedback across human reviewers and registered providers. Each item
 includes author, provider, nullable priority, full contents, path/line,
 resolution state, and a `toolkit gh api` command for the original surface.
 Omitting PR infers the current branch; `--all` includes resolved/outdated items.
-`resolve` and `harvest` retain the existing provider finding handles.
+`resolve` and `harvest` retain the existing provider finding handles, and
+`resolve` signals Temporal on `shepherdjerred/monorepo` as a best-effort wakeup.
+`toolkit pr review recheck [PR] [--repo <owner/repo>] [--json]` resolves the
+exact PR head SHA (inferring the current branch's open PR when `PR` is omitted)
+and sends the `recheckReview` signal to `pr-code-review/<owner>/<repo>/<pr>/<sha>`
+in Temporal's `prod` namespace so `ci/code-review` re-evaluates immediately.
 `toolkit pr asset [PR] <file|dir...> [--markdown]` uploads PR demo media
 (before/after screenshots, recordings, HTML previews, static directories, and
 casts; omitting `PR` infers the current branch's open PR) to `public.sjer.red`;

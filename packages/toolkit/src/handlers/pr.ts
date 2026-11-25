@@ -3,6 +3,7 @@ import { assetCommand } from "#commands/pr/asset.ts";
 import {
   reviewHarvestCommand,
   reviewListCommand,
+  reviewRecheckCommand,
   reviewResolveCommand,
 } from "#commands/pr/review.ts";
 import { healthCommand } from "#commands/pr/health.ts";
@@ -36,11 +37,12 @@ function printAssetUsage(): void {
 }
 
 function printReviewUsage(): void {
-  console.log(`Usage: toolkit pr review <ACTION> <PR> [OPTIONS]
+  console.log(`Usage: toolkit pr review <ACTION> [PR] [OPTIONS]
 
 Actions:
-  list <PR>     List provider findings
+  list [PR]     List provider findings
   resolve <PR>  Resolve a finding (--finding and --evidence required)
+  recheck [PR]  Signal Temporal to recheck ci/code-review immediately
   harvest <PR>  Report late review-gate failures (--retry to rerun)
 
 Options:
@@ -197,7 +199,9 @@ async function handleReview(args: string[]): Promise<void> {
   // `never`, so a `break` there is unreachable code while its absence reads as
   // a fallthrough.
   if (action === undefined) {
-    console.error("Usage: toolkit pr review <list|resolve|harvest> <pr>");
+    console.error(
+      "Usage: toolkit pr review <list|resolve|recheck|harvest> [pr]",
+    );
     process.exit(1);
   }
   switch (action) {
@@ -207,12 +211,15 @@ async function handleReview(args: string[]): Promise<void> {
     case "resolve":
       await reviewResolveCommand(rest[0], options);
       return;
+    case "recheck":
+      await reviewRecheckCommand(rest[0], options);
+      return;
     case "harvest":
       await reviewHarvestCommand(rest, options);
       return;
     default:
       console.error(
-        `Unknown pr review action: ${action}. Expected list, resolve, or harvest.`,
+        `Unknown pr review action: ${action}. Expected list, resolve, recheck, or harvest.`,
       );
       process.exit(1);
   }
@@ -246,6 +253,7 @@ Subcommands:
                        priority, contents, source handles, and raw API command
   review resolve <PR>  Clear one finding on every surface at once
                        (--finding <key|title> --evidence <text>)
+  review recheck [PR]  Signal Temporal to recheck ci/code-review immediately
   review harvest <PR…> Report gates that failed only because the review
                        landed late; --retry to actually re-run them
 

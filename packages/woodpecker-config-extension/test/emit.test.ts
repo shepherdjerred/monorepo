@@ -3,6 +3,7 @@ import path from "node:path";
 import { parse, parseDocument } from "yaml";
 import { z } from "zod";
 import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
+import { completionStep } from "#src/pipeline/completion.ts";
 import { SOURCE_CACHE_PREPARATION_IMAGE } from "#src/pipeline/source-cache.ts";
 import type { CiCommandStep, CiStep } from "#src/pipeline/model.ts";
 import {
@@ -11,7 +12,7 @@ import {
   wrapCommands,
 } from "#src/pipeline/emit.ts";
 import { substitute } from "./envsubst.ts";
-import { TEST_IDENTITY, testPipelineSteps } from "./identity.ts";
+import { TEST_IDENTITY, TEST_IMAGES, testPipelineSteps } from "./identity.ts";
 
 const EmittedCommand = z.object({
   name: z.string(),
@@ -43,16 +44,13 @@ const EmittedStep = z.object({
 });
 
 test("checkout-free startup uses the existing workspace mount instead of creating a checkout", () => {
-  const step = testPipelineSteps().find(
-    (candidate) => candidate.key === "codex-review-gate",
-  );
-  if (step === undefined) throw new Error("Review gate fixture missing");
+  const step = completionStep(testPipelineSteps(), TEST_IMAGES.base, "/app");
   const emitted = z
     .object({
       workspace: z.object({ base: z.string(), path: z.string() }),
       skip_clone: z.literal(true),
     })
-    .parse(parse(emitWorkflow({ ...step, skipClone: true }, TEST_IDENTITY)));
+    .parse(parse(emitWorkflow(step, TEST_IDENTITY)));
   // Woodpecker joins these fields before its startup mkdir/cd. A fresh RWX
   // volume permits a non-root process to enter its root but not create children.
   expect(path.posix.join(emitted.workspace.base, emitted.workspace.path)).toBe(
@@ -199,10 +197,6 @@ function assertBunCacheEnvironment(
   const shared =
     cacheClaims.has(BUN_CACHE.claim) &&
     cacheClaims.has(BUN_CACHE_CONTROL.claim);
-
-  if (command.key === "codex-review-gate") {
-    expect(shared).toBe(false);
-  }
 
   expect(environment["BUN_INSTALL_LOCK_MODE"], command.key).toBe(
     shared ? "shared" : "local",
@@ -398,28 +392,5 @@ describe("service entrypoints", () => {
       "-config.file=/woodpecker/src/github.com/shepherdjerred/monorepo/packages/llm-observability/test/tempo.yaml",
     ]);
     expect(tempo?.commands).toBeUndefined();
-  });
-});
-
-describe("review gate providers", () => {
-  test("the gate step enables every confirmed-reviewing provider", () => {
-    const step = testPipelineSteps().find(
-      (candidate) => candidate.key === "codex-review-gate",
-    );
-    expect(step).toBeDefined();
-    if (step === undefined) return;
-    // The key stays stable for the required-check ruleset; the env selects
-    // the multi-provider OR gate (one clean review passes, a P0 vetoes).
-    expect(step.environment?.["REVIEW_PROVIDERS"]).toBe("codex,coderabbit");
-    const emitted = z
-      .object({
-        steps: z.tuple([
-          z.object({ environment: z.record(z.string(), z.string()) }),
-        ]),
-      })
-      .parse(parse(substitute(emitWorkflow(step, TEST_IDENTITY))));
-    expect(emitted.steps[0].environment["REVIEW_PROVIDERS"]).toBe(
-      "codex,coderabbit",
-    );
   });
 });

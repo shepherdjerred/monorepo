@@ -185,6 +185,8 @@ export function ciHealth(
 ): HealthCheck {
   const { ciStatus, details, commands } = pipelineHealth(headSha, pipeline);
   const ownCiChecks = githubChecks.filter((check) => isOwnCiCheck(check));
+  // `ci/merge-conflict` has its own Merge Conflicts card; `ci/code-review`
+  // stays here so Temporal's pending or failing review status surfaces in CI Status.
   const externalChecks = githubChecks.filter(
     (check) => !isOwnCiCheck(check) && check.name !== "ci/merge-conflict",
   );
