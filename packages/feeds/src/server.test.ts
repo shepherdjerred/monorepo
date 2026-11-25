@@ -93,7 +93,7 @@ describe("feeds dual-listener isolation and end-to-end HTTP surfaces", () => {
       .split("\n")
       .find((line) => line.startsWith("Auth="))
       ?.slice(5);
-    expect(authToken).toBeTruthy();
+    expect(authToken).toMatch(/^[0-9a-f]{64}$/u);
 
     const subsRes = await fetch(
       `${readerOrigin}/api/greader.php/reader/api/0/subscription/list?output=json`,

@@ -1,9 +1,7 @@
 import { Database } from "bun:sqlite";
 import { z } from "zod";
-import {
-  FeedsStore,
-  type RawImportedEntry,
-} from "@shepherdjerred/feeds/server/store.ts";
+import { FeedsStore } from "@shepherdjerred/feeds/server/store.ts";
+import type { RawImportedEntry } from "@shepherdjerred/feeds/server/store-mutations.ts";
 import type { Enclosure } from "@shepherdjerred/feeds/shared/contract.ts";
 
 export type ImportSummary = {

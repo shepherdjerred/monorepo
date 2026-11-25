@@ -1,5 +1,6 @@
 import { isIP } from "node:net";
 import { z } from "zod";
+import { readResponseStreamBounded } from "./ssrf.ts";
 
 /** Fixed operator-owned human ingress; verified independently on each human request. */
 export const FEEDS_TAILSCALE_INGRESS = {
@@ -24,26 +25,31 @@ export class FeedsIngressIdentityError extends Error {
   override readonly name = "FeedsIngressIdentityError";
 }
 
-const MAX_RESPONSE_BYTES = 1024 * 1024;
-const MAX_POD_ITEMS = 1000;
-const POD_LIST_LIMIT = 50;
-const KUBE_DNS_NAME = /^[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?$/u;
-const StringMap = z.record(z.string(), z.string());
-const CodedFailure = z.object({ code: z.string() });
+const K8S_RESPONSE_BYTE_CAP = 1024 * 1024;
+const PROXY_NAMESPACE_POD_CAP = 1000;
+const PROXY_POD_PAGE_LIMIT = 50;
+const DNS_SUBDOMAIN_PATTERN = /^[a-z0-9](?:[-a-z0-9.]*[a-z0-9])?$/u;
+const VERIFICATION_FAILED_MESSAGE =
+  "private ingress identity could not be verified";
+const VERIFICATION_UNAVAILABLE_MESSAGE =
+  "private ingress identity verification unavailable";
 
-function kubeObjectHeader() {
-  return z.looseObject({
-    name: z.string().regex(KUBE_DNS_NAME),
-    namespace: z.string().regex(KUBE_DNS_NAME),
-    uid: z.string().min(1),
-    resourceVersion: z.string().min(1),
-    deletionTimestamp: z.string().nullable().optional(),
-    labels: StringMap.default({}),
-  });
-}
+const LabelRecordSchema = z.record(z.string(), z.string());
+const ErrorWithCodeSchema = z.object({ code: z.string() });
 
-const FeedsIngressDocument = z.looseObject({
-  metadata: kubeObjectHeader().extend({ annotations: StringMap.default({}) }),
+const ResourceMetadataSchema = z.looseObject({
+  name: z.string().regex(DNS_SUBDOMAIN_PATTERN),
+  namespace: z.string().regex(DNS_SUBDOMAIN_PATTERN),
+  uid: z.string().min(1),
+  resourceVersion: z.string().min(1),
+  deletionTimestamp: z.string().nullable().optional(),
+  labels: LabelRecordSchema.default({}),
+});
+
+const TailscaleIngressResourceSchema = z.looseObject({
+  metadata: ResourceMetadataSchema.extend({
+    annotations: LabelRecordSchema.default({}),
+  }),
   spec: z.looseObject({
     ingressClassName: z.literal("tailscale"),
     defaultBackend: z.looseObject({
@@ -61,64 +67,94 @@ const FeedsIngressDocument = z.looseObject({
   }),
 });
 
-const ProxyControllerOwner = z.looseObject({
+const OwnerRefSchema = z.looseObject({
   apiVersion: z.string(),
   kind: z.string(),
-  name: z.string().regex(KUBE_DNS_NAME),
+  name: z.string().regex(DNS_SUBDOMAIN_PATTERN),
   uid: z.string().min(1),
   controller: z.boolean().optional(),
 });
 
-const PodConditionEntry = z.looseObject({
+const PodConditionItemSchema = z.looseObject({
   type: z.string(),
   status: z.string(),
 });
 
-const PodIpEntry = z.object({ ip: z.string() });
+const PodAddressItemSchema = z.object({ ip: z.string() });
 
-const PodRuntimeStatus = z.looseObject({
-  conditions: z.array(PodConditionEntry).default([]),
-  podIPs: z.array(PodIpEntry).optional(),
-  podIP: z.string().optional(),
-  phase: z.string().optional(),
-});
+const NormalizedPodStatusSchema = z
+  .looseObject({
+    conditions: z.array(PodConditionItemSchema).optional(),
+    phase: z.string().optional(),
+    podIP: z.string().optional(),
+    podIPs: z.array(PodAddressItemSchema).optional(),
+  })
+  .transform((raw) => {
+    const uniqueIps = new Set<string>();
+    if (raw.podIP !== undefined) {
+      uniqueIps.add(raw.podIP);
+    }
+    for (const entry of raw.podIPs ?? []) {
+      uniqueIps.add(entry.ip);
+    }
+    const trueTypes = new Set(
+      (raw.conditions ?? [])
+        .filter((item) => item.status === "True")
+        .map((item) => item.type),
+    );
+    return {
+      primaryIp: raw.podIP,
+      allIps: [...uniqueIps],
+      runningAndReady:
+        raw.phase === "Running" &&
+        trueTypes.has("Ready") &&
+        trueTypes.has("ContainersReady"),
+    };
+  });
 
-const ProxyPodDocument = z.looseObject({
-  metadata: kubeObjectHeader().extend({
-    ownerReferences: z.array(ProxyControllerOwner).default([]),
+const TailscalePodResourceSchema = z.looseObject({
+  metadata: ResourceMetadataSchema.extend({
+    ownerReferences: z.array(OwnerRefSchema).default([]),
   }),
-  status: PodRuntimeStatus.optional(),
+  status: NormalizedPodStatusSchema.optional(),
 });
 
-const ProxyStatefulSetDocument = z.looseObject({
-  metadata: kubeObjectHeader(),
+const TailscaleStatefulSetSchema = z.looseObject({
+  metadata: ResourceMetadataSchema,
   spec: z.looseObject({
     selector: z.object({
-      matchLabels: StringMap,
+      matchLabels: LabelRecordSchema,
       matchExpressions: z.array(z.unknown()).max(0).optional(),
     }),
     template: z.looseObject({
-      metadata: z.looseObject({ labels: StringMap }),
+      metadata: z.looseObject({ labels: LabelRecordSchema }),
     }),
   }),
 });
 
-const PodListPage = z.looseObject({
+const PaginatedPodListSchema = z.looseObject({
   metadata: z.looseObject({ continue: z.string().optional() }).optional(),
   items: z.array(z.record(z.string(), z.unknown())),
 });
 
-function failVerification(reason: string): never {
-  throw new FeedsIngressIdentityError(reason);
-}
+type TailscalePodResource = z.infer<typeof TailscalePodResourceSchema>;
+type VerifiedProxyIdentity = {
+  readonly podUid: string;
+  readonly address: string;
+  readonly controllerUid: string;
+  readonly selectorFingerprint: string;
+};
 
-function assertVerified(condition: boolean): void {
-  if (!condition) {
-    failVerification("private ingress identity could not be verified");
+function requireInvariant(
+  ok: boolean,
+  message = VERIFICATION_FAILED_MESSAGE,
+): void {
+  if (!ok) {
+    throw new FeedsIngressIdentityError(message);
   }
 }
 
-function isActiveResource(meta: {
+function isNonDeleting(meta: {
   readonly deletionTimestamp?: string | null | undefined;
 }): boolean {
   return (
@@ -126,229 +162,198 @@ function isActiveResource(meta: {
   );
 }
 
-function hasParentLabels(labels: Readonly<Record<string, string>>): boolean {
-  for (const [key, expected] of Object.entries(
-    FEEDS_TAILSCALE_INGRESS.parentLabels,
-  )) {
-    if (labels[key] !== expected) return false;
-  }
-  return true;
-}
-
-async function readBoundedText(
-  response: Response,
-  bound: number,
-): Promise<string> {
-  const declared = Number(response.headers.get("content-length"));
-  if (Number.isFinite(declared) && declared > bound) {
-    throw new Error("RESPONSE_TOO_LARGE");
-  }
-  if (response.body === null) return "";
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  const parts: string[] = [];
-  let total = 0;
-  try {
-    for (;;) {
-      const step = await reader.read();
-      if (step.done) break;
-      total += step.value.byteLength;
-      if (total > bound) {
-        await reader.cancel();
-        throw new Error("RESPONSE_TOO_LARGE");
-      }
-      parts.push(decoder.decode(step.value, { stream: true }));
-    }
-    parts.push(decoder.decode());
-    return parts.join("");
-  } finally {
-    reader.releaseLock();
-  }
+function matchesFeedsParentLabels(
+  labels: Readonly<Record<string, string>>,
+): boolean {
+  return Object.entries(FEEDS_TAILSCALE_INGRESS.parentLabels).every(
+    ([labelKey, expectedValue]) => labels[labelKey] === expectedValue,
+  );
 }
 
 /** Lazy projected, read-only identity. Health, reader, and bearer requests never load Kubernetes credentials. */
 export function createProjectedFeedsKubernetesReader(
   directory: string = FEEDS_TAILSCALE_INGRESS.directory,
-  bound: number = MAX_RESPONSE_BYTES,
+  bound: number = K8S_RESPONSE_BYTE_CAP,
 ): FeedsKubernetesReader {
-  return async (path) => {
+  return async (resourcePath) => {
     try {
-      const [token, ca] = await Promise.all([
+      const [rawToken, caBundle] = await Promise.all([
         Bun.file(`${directory}/token`).text(),
         Bun.file(`${directory}/ca.crt`).text(),
       ]);
-      const response = await fetch(
-        new URL(path, "https://kubernetes.default.svc"),
+      const kubeResponse = await fetch(
+        new URL(resourcePath, "https://kubernetes.default.svc"),
         {
-          headers: { authorization: `Bearer ${token.trim()}` },
-          tls: { ca },
+          headers: { authorization: `Bearer ${rawToken.trim()}` },
+          tls: { ca: caBundle },
           signal: AbortSignal.timeout(5000),
         },
       );
-      if (response.status !== 200) {
-        throw new Error(`KUBE_HTTP_${String(response.status)}`);
+      if (kubeResponse.status !== 200) {
+        throw new Error(`KUBE_HTTP_${String(kubeResponse.status)}`);
       }
-      const rawText = await readBoundedText(response, bound);
-      const decoded: unknown = JSON.parse(rawText);
-      return decoded;
+      const payload = await readResponseStreamBounded(kubeResponse, bound);
+      return JSON.parse(payload) as unknown;
     } catch (error) {
-      const coded = CodedFailure.safeParse(error);
+      const maybeCoded = ErrorWithCodeSchema.safeParse(error);
       console.error(
         JSON.stringify({
           message: "feeds_kubernetes_read_failed",
           service: "feeds",
-          path: path.split("?", 1)[0] ?? path,
+          path: resourcePath.split("?", 1)[0] ?? resourcePath,
           errorType: error instanceof Error ? error.name : typeof error,
-          ...(coded.success ? { code: coded.data.code } : {}),
+          ...(maybeCoded.success ? { code: maybeCoded.data.code } : {}),
         }),
       );
-      return failVerification(
-        "private ingress identity verification unavailable",
-      );
+      throw new FeedsIngressIdentityError(VERIFICATION_UNAVAILABLE_MESSAGE);
     }
   };
 }
 
-async function collectProxyNamespacePods(
-  read: FeedsKubernetesReader,
-): Promise<z.infer<typeof ProxyPodDocument>[]> {
-  const endpoint = `/api/v1/namespaces/${FEEDS_TAILSCALE_INGRESS.proxyNamespace}/pods`;
-  const rawItems: Record<string, unknown>[] = [];
-  let cursor: string | undefined;
-  do {
-    const params = new URLSearchParams({ limit: String(POD_LIST_LIMIT) });
-    if (cursor !== undefined) params.set("continue", cursor);
-    const page = PodListPage.parse(
-      await read(`${endpoint}?${params.toString()}`),
-    );
-    rawItems.push(...page.items);
-    if (rawItems.length > MAX_POD_ITEMS) {
-      failVerification("private ingress identity verification unavailable");
+async function listAllProxyNamespacePods(
+  readK8s: FeedsKubernetesReader,
+): Promise<TailscalePodResource[]> {
+  const collected: Record<string, unknown>[] = [];
+  let continuation: string | undefined;
+  for (;;) {
+    const query = new URLSearchParams({ limit: String(PROXY_POD_PAGE_LIMIT) });
+    if (continuation !== undefined) {
+      query.set("continue", continuation);
     }
-    const nextCursor = page.metadata?.continue;
-    cursor =
-      nextCursor === undefined || nextCursor.length === 0
-        ? undefined
-        : nextCursor;
-  } while (cursor !== undefined);
-  return z.array(ProxyPodDocument).max(MAX_POD_ITEMS).parse(rawItems);
-}
-
-function isReadyProxyCandidate(pod: z.infer<typeof ProxyPodDocument>): boolean {
-  if (!hasParentLabels(pod.metadata.labels)) return false;
-  if (!isActiveResource(pod.metadata) || pod.status?.phase !== "Running") {
-    return false;
+    const rawPage = await readK8s(
+      `/api/v1/namespaces/${FEEDS_TAILSCALE_INGRESS.proxyNamespace}/pods?${query.toString()}`,
+    );
+    const page = PaginatedPodListSchema.parse(rawPage);
+    collected.push(...page.items);
+    requireInvariant(
+      collected.length <= PROXY_NAMESPACE_POD_CAP,
+      VERIFICATION_UNAVAILABLE_MESSAGE,
+    );
+    const nextToken = page.metadata?.continue;
+    if (nextToken === undefined || nextToken.length === 0) {
+      break;
+    }
+    continuation = nextToken;
   }
-  const trueConditions = new Set(
-    pod.status.conditions
-      .filter((entry) => entry.status === "True")
-      .map((entry) => entry.type),
-  );
-  return trueConditions.has("Ready") && trueConditions.has("ContainersReady");
+  return z
+    .array(TailscalePodResourceSchema)
+    .max(PROXY_NAMESPACE_POD_CAP)
+    .parse(collected);
 }
 
-function assertUniqueNamespaceAddresses(
-  pods: readonly z.infer<typeof ProxyPodDocument>[],
+function validateDisjointNamespacePodIps(
+  pods: readonly TailscalePodResource[],
 ): void {
-  const seenIps = new Set<string>();
+  const claimedAddresses = new Set<string>();
   for (const pod of pods) {
-    assertVerified(
+    requireInvariant(
       pod.metadata.namespace === FEEDS_TAILSCALE_INGRESS.proxyNamespace,
     );
-    const podAddresses = new Set<string>();
-    if (pod.status?.podIP !== undefined) podAddresses.add(pod.status.podIP);
-    for (const entry of pod.status?.podIPs ?? []) podAddresses.add(entry.ip);
-    for (const ip of podAddresses) {
-      assertVerified(isIP(ip) !== 0 && !seenIps.has(ip));
-      seenIps.add(ip);
+    for (const ip of pod.status?.allIps ?? []) {
+      requireInvariant(isIP(ip) !== 0 && !claimedAddresses.has(ip));
+      claimedAddresses.add(ip);
     }
   }
 }
 
-async function verifyProxyPodController(
-  read: FeedsKubernetesReader,
-  pod: z.infer<typeof ProxyPodDocument>,
-  ingressUid: string,
-): Promise<{
-  readonly podUid: string;
-  readonly address: string;
-  readonly controllerUid: string;
-  readonly selectorEntries: readonly (readonly [string, string])[];
-}> {
-  assertVerified(pod.metadata.labels["app"] === ingressUid);
-  const controllers = pod.metadata.ownerReferences.filter(
-    (ref) => ref.controller === true,
+function isEligibleFeedsProxyPod(pod: TailscalePodResource): boolean {
+  return (
+    matchesFeedsParentLabels(pod.metadata.labels) &&
+    isNonDeleting(pod.metadata) &&
+    pod.status?.runningAndReady === true
   );
-  const primaryOwner = controllers[0];
+}
+
+async function resolveVerifiedPodIdentity(
+  readK8s: FeedsKubernetesReader,
+  pod: TailscalePodResource,
+  expectedIngressUid: string,
+): Promise<VerifiedProxyIdentity> {
+  requireInvariant(pod.metadata.labels["app"] === expectedIngressUid);
+  const controllerRefs = pod.metadata.ownerReferences.filter(
+    (entry) => entry.controller === true,
+  );
+  const owner = controllerRefs[0];
   if (
-    controllers.length !== 1 ||
-    primaryOwner?.apiVersion !== "apps/v1" ||
-    primaryOwner.kind !== "StatefulSet"
+    controllerRefs.length !== 1 ||
+    owner?.apiVersion !== "apps/v1" ||
+    owner.kind !== "StatefulSet"
   ) {
-    failVerification("private ingress identity could not be verified");
+    throw new FeedsIngressIdentityError(VERIFICATION_FAILED_MESSAGE);
   }
-  const statefulSet = ProxyStatefulSetDocument.parse(
-    await read(
-      `/apis/apps/v1/namespaces/${FEEDS_TAILSCALE_INGRESS.proxyNamespace}/statefulsets/${encodeURIComponent(primaryOwner.name)}`,
+  const rawSts = await readK8s(
+    `/apis/apps/v1/namespaces/${FEEDS_TAILSCALE_INGRESS.proxyNamespace}/statefulsets/${encodeURIComponent(owner.name)}`,
+  );
+  const sts = TailscaleStatefulSetSchema.parse(rawSts);
+  const selector = sts.spec.selector.matchLabels;
+  const podTemplateLabels = sts.spec.template.metadata.labels;
+  const controllerMatches =
+    sts.metadata.name === owner.name &&
+    sts.metadata.namespace === FEEDS_TAILSCALE_INGRESS.proxyNamespace &&
+    sts.metadata.uid === owner.uid &&
+    isNonDeleting(sts.metadata) &&
+    matchesFeedsParentLabels(sts.metadata.labels) &&
+    selector["app"] === expectedIngressUid &&
+    podTemplateLabels["app"] === expectedIngressUid &&
+    matchesFeedsParentLabels(podTemplateLabels) &&
+    Object.entries(selector).every(
+      ([labelKey, labelValue]) => pod.metadata.labels[labelKey] === labelValue,
+    );
+  requireInvariant(controllerMatches);
+
+  const podAddress = pod.status?.primaryIp;
+  if (podAddress === undefined || isIP(podAddress) === 0) {
+    throw new FeedsIngressIdentityError(VERIFICATION_FAILED_MESSAGE);
+  }
+  const selectorFingerprint = JSON.stringify(
+    Object.entries(selector).toSorted(([left], [right]) =>
+      left.localeCompare(right),
     ),
   );
-  const selectorLabels = statefulSet.spec.selector.matchLabels;
-  const templateLabels = statefulSet.spec.template.metadata.labels;
-  assertVerified(
-    statefulSet.metadata.name === primaryOwner.name &&
-      statefulSet.metadata.namespace ===
-        FEEDS_TAILSCALE_INGRESS.proxyNamespace &&
-      statefulSet.metadata.uid === primaryOwner.uid &&
-      isActiveResource(statefulSet.metadata) &&
-      hasParentLabels(statefulSet.metadata.labels) &&
-      selectorLabels["app"] === ingressUid &&
-      templateLabels["app"] === ingressUid &&
-      hasParentLabels(templateLabels) &&
-      Object.entries(selectorLabels).every(
-        ([key, expected]) => pod.metadata.labels[key] === expected,
-      ),
-  );
-  const address = pod.status?.podIP;
-  if (address === undefined || isIP(address) === 0) {
-    failVerification("private ingress identity could not be verified");
-  }
   return {
     podUid: pod.metadata.uid,
-    address,
-    controllerUid: statefulSet.metadata.uid,
-    selectorEntries: Object.entries(selectorLabels).toSorted(([a], [b]) =>
-      a.localeCompare(b),
-    ),
+    address: podAddress,
+    controllerUid: sts.metadata.uid,
+    selectorFingerprint,
   };
 }
 
-async function snapshotProxyState(read: FeedsKubernetesReader) {
-  const ingressPath = `/apis/networking.k8s.io/v1/namespaces/${FEEDS_TAILSCALE_INGRESS.namespace}/ingresses/${FEEDS_TAILSCALE_INGRESS.name}`;
-  const [rawIngress, pods] = await Promise.all([
-    read(ingressPath),
-    collectProxyNamespacePods(read),
+async function readFencedClusterSnapshot(readK8s: FeedsKubernetesReader) {
+  const ingressEndpoint = `/apis/networking.k8s.io/v1/namespaces/${FEEDS_TAILSCALE_INGRESS.namespace}/ingresses/${FEEDS_TAILSCALE_INGRESS.name}`;
+  const [ingressPayload, namespacePods] = await Promise.all([
+    readK8s(ingressEndpoint),
+    listAllProxyNamespacePods(readK8s),
   ]);
-  const ingress = FeedsIngressDocument.parse(rawIngress);
-  assertVerified(
+  const ingress = TailscaleIngressResourceSchema.parse(ingressPayload);
+  requireInvariant(
     ingress.metadata.name === FEEDS_TAILSCALE_INGRESS.name &&
       ingress.metadata.namespace === FEEDS_TAILSCALE_INGRESS.namespace &&
-      isActiveResource(ingress.metadata) &&
+      isNonDeleting(ingress.metadata) &&
       ingress.metadata.annotations["tailscale.com/funnel"] !== "true",
   );
-  assertUniqueNamespaceAddresses(pods);
-  const readyPods = pods.filter((pod) => isReadyProxyCandidate(pod));
-  assertVerified(readyPods.length > 0);
-  const verified = await Promise.all(
-    readyPods.map((pod) =>
-      verifyProxyPodController(read, pod, ingress.metadata.uid),
+
+  validateDisjointNamespacePodIps(namespacePods);
+  const candidates = namespacePods.filter((pod) =>
+    isEligibleFeedsProxyPod(pod),
+  );
+  requireInvariant(candidates.length > 0);
+
+  const verifiedProxies = await Promise.all(
+    candidates.map((pod) =>
+      resolveVerifiedPodIdentity(readK8s, pod, ingress.metadata.uid),
     ),
   );
-  const controllerUids = new Set(verified.map((item) => item.controllerUid));
-  assertVerified(controllerUids.size === 1);
+  const uniqueControllers = new Set(
+    verifiedProxies.map((entry) => entry.controllerUid),
+  );
+  requireInvariant(uniqueControllers.size === 1);
+
   return {
     ingressUid: ingress.metadata.uid,
-    tags: ingress.metadata.annotations["tailscale.com/tags"] ?? "",
-    proxies: verified.toSorted((a, b) => a.podUid.localeCompare(b.podUid)),
+    tagsAnnotation: ingress.metadata.annotations["tailscale.com/tags"] ?? "",
+    proxies: verifiedProxies.toSorted((left, right) =>
+      left.podUid.localeCompare(right.podUid),
+    ),
   };
 }
 
@@ -358,15 +363,15 @@ export function createFeedsTrustedProxyAddresses(
 ): () => Promise<readonly string[]> {
   return async () => {
     try {
-      const first = await snapshotProxyState(read);
-      const second = await snapshotProxyState(read);
-      assertVerified(Bun.deepEquals(first, second));
-      return second.proxies.map((proxy) => proxy.address);
+      const before = await readFencedClusterSnapshot(read);
+      const after = await readFencedClusterSnapshot(read);
+      requireInvariant(Bun.deepEquals(before, after));
+      return after.proxies.map((entry) => entry.address);
     } catch (error) {
-      if (error instanceof FeedsIngressIdentityError) throw error;
-      return failVerification(
-        "private ingress identity verification unavailable",
-      );
+      if (error instanceof FeedsIngressIdentityError) {
+        throw error;
+      }
+      throw new FeedsIngressIdentityError(VERIFICATION_UNAVAILABLE_MESSAGE);
     }
   };
 }

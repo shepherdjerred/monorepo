@@ -101,12 +101,28 @@ function normalizeMappedIpv4(ip: string): string {
   return ip;
 }
 
+export type NormalizedIpEndpoint = {
+  readonly address: string;
+  readonly family: "ipv4" | "ipv6";
+};
+
+export function resolveNormalizedIp(
+  raw: string,
+): NormalizedIpEndpoint | undefined {
+  const candidate = normalizeMappedIpv4(stripBracketsAndZone(raw));
+  const version = isIP(candidate);
+  if (version === 4) {
+    return { address: candidate, family: "ipv4" };
+  }
+  return version === 6 ? { address: candidate, family: "ipv6" } : undefined;
+}
+
 export function isPrivateOrReservedIp(ip: string): boolean {
-  const normalized = normalizeMappedIpv4(stripBracketsAndZone(ip));
-  const version = isIP(normalized);
-  return version === 4
-    ? PRIVATE_BLOCK_LIST.check(normalized, "ipv4")
-    : version !== 6 || PRIVATE_BLOCK_LIST.check(normalized, "ipv6");
+  const endpoint = resolveNormalizedIp(ip);
+  return (
+    endpoint === undefined ||
+    PRIVATE_BLOCK_LIST.check(endpoint.address, endpoint.family)
+  );
 }
 
 async function defaultLookupHost(hostname: string): Promise<readonly string[]> {
@@ -206,16 +222,16 @@ async function cancelQuietly(
   }
 }
 
-async function readStreamBounded(
+export async function readResponseStreamBounded(
   response: Response,
   maxBytes: number,
-  abortController: AbortController,
+  abortController?: AbortController,
 ): Promise<string> {
   const contentLength = response.headers.get("content-length");
   if (contentLength !== null && /^\d+$/u.test(contentLength)) {
     const declaredBytes = Number(contentLength);
     if (declaredBytes > maxBytes) {
-      abortController.abort();
+      abortController?.abort();
       await cancelQuietly(response.body?.cancel());
       throw new Error(
         `Response Content-Length (${String(declaredBytes)}) exceeds limit of ${String(maxBytes)} bytes`,
@@ -236,7 +252,7 @@ async function readStreamBounded(
       }
       totalBytes += chunk.value.byteLength;
       if (totalBytes > maxBytes) {
-        abortController.abort();
+        abortController?.abort();
         await cancelQuietly(reader.cancel());
         throw new Error(
           `Response body exceeded maximum size of ${String(maxBytes)} bytes`,
@@ -321,7 +337,11 @@ export async function safeFetch(
       continue;
     }
 
-    const body = await readStreamBounded(response, maxBytes, abortController);
+    const body = await readResponseStreamBounded(
+      response,
+      maxBytes,
+      abortController,
+    );
     return {
       status: response.status,
       headers: response.headers,

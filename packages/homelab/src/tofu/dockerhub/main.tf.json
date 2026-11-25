@@ -37,6 +37,7 @@
         { "name": "ci-base", "visibility": "private" },
         { "name": "ci-playwright", "visibility": "private" },
         { "name": "delivery", "visibility": "private" },
+        { "name": "feeds", "visibility": "private" },
         { "name": "flags", "visibility": "private" },
         { "name": "glitter-boys-launcher", "visibility": "private" },
         { "name": "golink", "visibility": "private" },

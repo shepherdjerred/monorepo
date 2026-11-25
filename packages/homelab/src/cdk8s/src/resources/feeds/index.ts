@@ -2,7 +2,10 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Cpu, EnvValue } from "cdk8s-plus-31";
 import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
+import {
+  FirstPartyWebService,
+  type FirstPartyServerContainer,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   dnsEgressRule,
   nsPeer,
@@ -18,28 +21,37 @@ import { firstPartyImageRecipe } from "@shepherdjerred/homelab/cdk8s/src/version
  */
 export const FEEDS_ACTIVE = false;
 
+const FEEDS_CONSOLE_PORT = 7430;
+const FEEDS_READER_PORT = 7431;
+const FEEDS_UID = 1000;
+
+function buildFeedsServerContainer(): FirstPartyServerContainer {
+  const containerSecurity = restrictedContainer(FEEDS_UID);
+  const envVariables: Record<string, EnvValue> = {
+    ENVIRONMENT: EnvValue.fromValue("production"),
+    FEEDS_READER_PORT: EnvValue.fromValue(String(FEEDS_READER_PORT)),
+    HOME: EnvValue.fromValue("/tmp"),
+    HOST: EnvValue.fromValue("0.0.0.0"),
+    PORT: EnvValue.fromValue(String(FEEDS_CONSOLE_PORT)),
+  };
+  return {
+    image: firstPartyImageRecipe("feeds"),
+    securityContext: containerSecurity,
+    resources: {
+      cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
+      memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
+    },
+    envVariables,
+  };
+}
+
 export function createFeedsDeployment(chart: Chart) {
   return new FirstPartyWebService(chart, "feeds-web-service", {
     name: "feeds",
-    port: 7430,
+    port: FEEDS_CONSOLE_PORT,
     probes: { live: "/healthz", ready: "/healthz" },
     containers: () => ({
-      server: {
-        image: firstPartyImageRecipe("feeds"),
-        securityContext: restrictedContainer(1000),
-        resources: {
-          cpu: { request: Cpu.millis(25), limit: Cpu.millis(250) },
-          memory: { request: Size.mebibytes(64), limit: Size.mebibytes(256) },
-        },
-        envVariables: {
-          // Bun writes runtime state under $HOME; the root filesystem is
-          // read-only, so HOME points at the writable emptyDir.
-          HOME: EnvValue.fromValue("/tmp"),
-          HOST: EnvValue.fromValue("0.0.0.0"),
-          PORT: EnvValue.fromValue("7430"),
-          ENVIRONMENT: EnvValue.fromValue("production"),
-        },
-      },
+      server: buildFeedsServerContainer(),
     }),
     serviceName: "feeds",
     tailscale: {
@@ -65,10 +77,9 @@ export function createFeedsDeployment(chart: Chart) {
         ingress: [
           {
             from: [nsPeer("tailscale"), nsPeer("prometheus")],
-            ports: [tcp(7430)],
+            ports: [tcp(FEEDS_CONSOLE_PORT)],
           },
         ],
-        // Add an egress rule for each dependency the service calls.
         egress: [dnsEgressRule()],
       },
     ],

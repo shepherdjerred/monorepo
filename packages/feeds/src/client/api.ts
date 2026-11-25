@@ -27,45 +27,53 @@ export type EntriesFilter = {
   readonly q?: string | undefined;
 };
 
-const ErrorBodySchema = z.object({ error: z.string() });
+const ApiErrorEnvelopeSchema = z.object({ error: z.string() });
 
-async function readJson(response: Response): Promise<unknown> {
-  const text = await response.text();
-  return text.length === 0 ? undefined : (JSON.parse(text) as unknown);
-}
-
-function errorMessage(body: unknown, status: number): string {
-  const parsed = ErrorBodySchema.safeParse(body);
-  return parsed.success
-    ? parsed.data.error
-    : `Request failed (${String(status)})`;
-}
-
-async function getJson<T>(path: string, schema: z.ZodType<T>): Promise<T> {
-  const response = await fetch(path);
-  const body = await readJson(response);
-  if (!response.ok) throw new Error(errorMessage(body, response.status));
-  return schema.parse(body);
-}
-
-async function sendJson(
-  path: string,
-  method: "POST" | "PATCH" | "DELETE",
-  payload?: unknown,
+async function fetchFeedsApi(
+  endpoint: string,
+  options?: {
+    readonly method?: "GET" | "POST" | "PATCH" | "DELETE";
+    readonly jsonBody?: unknown;
+  },
 ): Promise<unknown> {
-  const response = await fetch(
-    path,
-    payload === undefined
-      ? { method }
-      : {
-          method,
+  const method = options?.method ?? "GET";
+  const hasJson = options?.jsonBody !== undefined;
+  const response = await fetch(endpoint, {
+    method,
+    ...(hasJson
+      ? {
           headers: { "content-type": "application/json" },
-          body: JSON.stringify(payload),
-        },
-  );
-  const body = await readJson(response);
-  if (!response.ok) throw new Error(errorMessage(body, response.status));
-  return body;
+          body: JSON.stringify(options.jsonBody),
+        }
+      : {}),
+  });
+  const rawText = await response.text();
+  const decoded =
+    rawText.length === 0 ? undefined : (JSON.parse(rawText) as unknown);
+  if (!response.ok) {
+    const errEnvelope = ApiErrorEnvelopeSchema.safeParse(decoded);
+    throw new Error(
+      errEnvelope.success
+        ? errEnvelope.data.error
+        : `Request failed (${String(response.status)})`,
+    );
+  }
+  return decoded;
+}
+
+async function fetchParsedFeedsApi<T>(
+  endpoint: string,
+  schema: z.ZodType<T>,
+): Promise<T> {
+  return schema.parse(await fetchFeedsApi(endpoint));
+}
+
+function invalidateFeedsConsoleQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+): void {
+  for (const key of ["summary", "entries", "feeds"] as const) {
+    void queryClient.invalidateQueries({ queryKey: [key] });
+  }
 }
 
 function entriesQueryPath(
@@ -86,7 +94,8 @@ function entriesQueryPath(
 export function useSummary() {
   return useQuery({
     queryKey: ["summary"],
-    queryFn: () => getJson("/api/v1/summary", SummaryResponseSchema),
+    queryFn: () =>
+      fetchParsedFeedsApi("/api/v1/summary", SummaryResponseSchema),
   });
 }
 
@@ -94,7 +103,8 @@ export function useFeedsList(enabled = true) {
   return useQuery({
     queryKey: ["feeds"],
     enabled,
-    queryFn: () => getJson("/api/v1/feeds", FeedsListResponseSchema),
+    queryFn: () =>
+      fetchParsedFeedsApi("/api/v1/feeds", FeedsListResponseSchema),
   });
 }
 
@@ -116,7 +126,7 @@ export function useEntries(filter: EntriesFilter, enabled = true) {
     enabled,
     initialPageParam: null,
     queryFn: ({ pageParam }) =>
-      getJson(
+      fetchParsedFeedsApi(
         entriesQueryPath(filter, pageParam ?? undefined),
         EntriesResponseSchema,
       ),
@@ -128,7 +138,10 @@ export function useUpdateEntriesState() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: UpdateEntriesStateBody) => {
-      await sendJson("/api/v1/entries/state", "POST", input);
+      await fetchFeedsApi("/api/v1/entries/state", {
+        method: "POST",
+        jsonBody: input,
+      });
     },
     onMutate: async (input) => {
       await queryClient.cancelQueries({ queryKey: ["entries"] });
@@ -156,9 +169,7 @@ export function useUpdateEntriesState() {
       );
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ["summary"] });
-      void queryClient.invalidateQueries({ queryKey: ["entries"] });
-      void queryClient.invalidateQueries({ queryKey: ["feeds"] });
+      invalidateFeedsConsoleQueries(queryClient);
     },
   });
 }
@@ -167,12 +178,13 @@ export function useMarkAllRead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: MarkAllReadBody) => {
-      await sendJson("/api/v1/entries/mark-all-read", "POST", input);
+      await fetchFeedsApi("/api/v1/entries/mark-all-read", {
+        method: "POST",
+        jsonBody: input,
+      });
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["summary"] });
-      void queryClient.invalidateQueries({ queryKey: ["entries"] });
-      void queryClient.invalidateQueries({ queryKey: ["feeds"] });
+      invalidateFeedsConsoleQueries(queryClient);
     },
   });
 }
@@ -181,14 +193,12 @@ export function useRefreshFeeds() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (): Promise<PollRunSummary | undefined> => {
-      const body = await sendJson("/api/v1/refresh", "POST");
+      const body = await fetchFeedsApi("/api/v1/refresh", { method: "POST" });
       const parsed = PollRunSummarySchema.safeParse(body);
       return parsed.success ? parsed.data : undefined;
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["summary"] });
-      void queryClient.invalidateQueries({ queryKey: ["entries"] });
-      void queryClient.invalidateQueries({ queryKey: ["feeds"] });
+      invalidateFeedsConsoleQueries(queryClient);
     },
   });
 }
@@ -197,12 +207,10 @@ export function useCreateUserFeed() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: CreateUserFeedBody) => {
-      await sendJson("/api/v1/feeds", "POST", input);
+      await fetchFeedsApi("/api/v1/feeds", { method: "POST", jsonBody: input });
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["feeds"] });
-      void queryClient.invalidateQueries({ queryKey: ["summary"] });
-      void queryClient.invalidateQueries({ queryKey: ["entries"] });
+      invalidateFeedsConsoleQueries(queryClient);
     },
   });
 }
@@ -214,16 +222,13 @@ export function useUpdateUserFeed() {
       readonly id: number;
       readonly body: UpdateUserFeedBody;
     }) => {
-      await sendJson(
+      await fetchFeedsApi(
         `/api/v1/feeds/${encodeURIComponent(String(input.id))}`,
-        "PATCH",
-        input.body,
+        { method: "PATCH", jsonBody: input.body },
       );
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["feeds"] });
-      void queryClient.invalidateQueries({ queryKey: ["summary"] });
-      void queryClient.invalidateQueries({ queryKey: ["entries"] });
+      invalidateFeedsConsoleQueries(queryClient);
     },
   });
 }
@@ -232,15 +237,12 @@ export function useDeleteUserFeed() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: number) => {
-      await sendJson(
-        `/api/v1/feeds/${encodeURIComponent(String(id))}`,
-        "DELETE",
-      );
+      await fetchFeedsApi(`/api/v1/feeds/${encodeURIComponent(String(id))}`, {
+        method: "DELETE",
+      });
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["feeds"] });
-      void queryClient.invalidateQueries({ queryKey: ["summary"] });
-      void queryClient.invalidateQueries({ queryKey: ["entries"] });
+      invalidateFeedsConsoleQueries(queryClient);
     },
   });
 }

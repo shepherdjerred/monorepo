@@ -4,7 +4,6 @@ import type {
   CategorySummary,
   CreateUserFeedBody,
   DeclaredFeed,
-  Enclosure,
   EntriesResponse,
   FeedSource,
   FeedsListResponse,
@@ -24,6 +23,7 @@ import {
   upsertImportedUserFeedInDb,
   upsertRawEntryInDb,
   validateReaderSessionInDb,
+  type RawImportedEntry,
 } from "./store-mutations.ts";
 import {
   editEntryTagsInDb,
@@ -60,21 +60,6 @@ import type {
   StoredFeed,
   StoreMutationFailure,
 } from "./types.ts";
-
-export type RawImportedEntry = {
-  readonly id: number;
-  readonly feedId: number;
-  readonly guid: string;
-  readonly url: string;
-  readonly title: string;
-  readonly author: string;
-  readonly contentHtml: string;
-  readonly publishedAt: number;
-  readonly crawledAtMs: number;
-  readonly enclosures: readonly Enclosure[];
-  readonly isRead: boolean;
-  readonly isStarred: boolean;
-};
 
 export class FeedsStore implements FeedsRepository {
   #lastEntryId: number;

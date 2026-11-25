@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { createFeedsPoller } from "./poller.ts";
 import type { SafeFetchOptions, SafeFetchResult } from "./ssrf.ts";
+import {
+  buildStubUserFeedRecord,
+  createNoopConsoleQueries,
+} from "./test-repo-stub.ts";
 import type { FeedsRepository, ParsedFeedEntry, StoredFeed } from "./types.ts";
 
 function createFakeStore(initialFeeds: readonly StoredFeed[] = []) {
@@ -92,47 +96,17 @@ function createFakeStore(initialFeeds: readonly StoredFeed[] = []) {
       }
       failureRecords.push(input);
     },
-    summary: () => ({
-      views: { unread: 0, all: 0, starred: 0, autoRead: 0 },
-      categories: [],
-      stats: {
-        totalFeeds: feeds.size,
-        codeFeeds: 0,
-        userFeeds: feeds.size,
-        failingFeeds: 0,
-        lastPolledAt: null,
-      },
-    }),
-    listCategories: () => [],
-    listFeedsHealth: () => ({ feeds: [], categories: [] }),
-    queryEntries: () => ({ items: [], totalMatching: 0, nextCursor: null }),
-    updateEntriesState: () => 0,
-    markAllRead: () => 0,
+    ...createNoopConsoleQueries(() => ({
+      totalFeeds: feeds.size,
+      codeFeeds: 0,
+      userFeeds: feeds.size,
+    })),
     createUserFeed: (body) => {
       const existing = [...feeds.values()].find((f) => f.url === body.url);
       if (existing !== undefined) {
         return { ok: false, kind: "conflict", message: "Feed already exists" };
       }
-      const created: StoredFeed = {
-        id: nextFeedId,
-        url: body.url,
-        title: body.title ?? body.url,
-        categoryId: 1,
-        categoryLabel: body.category,
-        htmlUrl: body.htmlUrl ?? null,
-        description: null,
-        source: "user",
-        hidden: body.hidden,
-        autoRead: body.autoRead ?? null,
-        etag: null,
-        lastModified: null,
-        lastPolledAt: null,
-        lastSuccessAt: null,
-        lastStatus: null,
-        lastError: null,
-        consecutiveFailures: 0,
-        nextPollAfter: null,
-      };
+      const created = buildStubUserFeedRecord(nextFeedId, 1, body);
       nextFeedId += 1;
       feeds.set(created.id, created);
       return { ok: true, feed: created };

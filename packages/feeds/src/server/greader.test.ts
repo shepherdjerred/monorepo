@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { parseReaderItemId, toLongItemId } from "./greader-ids.ts";
 import { createGoogleReaderRoutes } from "./greader.ts";
+import {
+  buildStubUserFeedRecord,
+  createNoopConsoleQueries,
+} from "./test-repo-stub.ts";
 import type {
   FeedsPoller,
   FeedsRepository,
@@ -317,44 +321,17 @@ function createInMemoryReaderWorld(initialNow: number) {
     recordPollFailure: () => {
       /* noop */
     },
-    summary: () => ({
-      views: { unread: 0, all: 0, starred: 0, autoRead: 0 },
-      categories: [],
-      stats: {
-        totalFeeds: feeds.size,
-        codeFeeds: 2,
-        userFeeds: 1,
-        failingFeeds: 0,
-        lastPolledAt: null,
-      },
-    }),
-    listCategories: () => [],
-    listFeedsHealth: () => ({ feeds: [], categories: [] }),
-    queryEntries: () => ({ items: [], totalMatching: 0, nextCursor: null }),
-    updateEntriesState: () => 0,
-    markAllRead: () => 0,
+    ...createNoopConsoleQueries(() => ({
+      totalFeeds: feeds.size,
+      codeFeeds: 2,
+      userFeeds: 1,
+    })),
     createUserFeed: (body) => {
       const catId = ensureCategory(body.category);
-      const created: StoredFeed = {
-        id: nextFeedId,
-        url: body.url,
-        title: body.title ?? body.url,
-        categoryId: catId,
-        categoryLabel: body.category,
-        htmlUrl: body.htmlUrl ?? null,
-        description: null,
-        source: "user",
-        hidden: body.hidden,
-        autoRead: null,
-        etag: null,
-        lastModified: null,
-        lastPolledAt: null,
-        lastSuccessAt: null,
-        lastStatus: null,
-        lastError: null,
-        consecutiveFailures: 0,
-        nextPollAfter: null,
-      };
+      const created = buildStubUserFeedRecord(nextFeedId, catId, {
+        ...body,
+        autoRead: undefined,
+      });
       nextFeedId += 1;
       etagCounter += 1;
       feeds.set(created.id, created);
@@ -625,23 +602,23 @@ describe("Google Reader auth, token retry, and ETag caching", () => {
   });
 });
 
+async function bootLoggedInReaderHarness(initialNow = 1_760_000_000) {
+  const world = createInMemoryReaderWorld(initialNow);
+  const app = createGoogleReaderRoutes({
+    store: world.store,
+    poller: world.poller,
+    readerUser: "jerred",
+    readerPassword: "pw",
+    writeTokenSecret: "secret",
+    nowSeconds: world.nowSeconds,
+  });
+  const tokens = await loginAndFetchTokens(app, "jerred", "pw");
+  return { world, app, ...tokens };
+}
+
 describe("Google Reader streams and contents", () => {
   test("serves stream/items/ids (hidden stream isolation + continuation) and stream/items/contents in requested order", async () => {
-    const world = createInMemoryReaderWorld(1_760_000_000);
-    const app = createGoogleReaderRoutes({
-      store: world.store,
-      poller: world.poller,
-      readerUser: "jerred",
-      readerPassword: "pw",
-      writeTokenSecret: "secret",
-      nowSeconds: world.nowSeconds,
-    });
-
-    const { authHeader, writeToken } = await loginAndFetchTokens(
-      app,
-      "jerred",
-      "pw",
-    );
+    const { app, authHeader, writeToken } = await bootLoggedInReaderHarness();
 
     const readingListRes = await app.request(
       "/api/greader.php/reader/api/0/stream/items/ids?s=user/-/state/com.google/reading-list&xt=user/-/state/com.google/read&n=1",
@@ -709,21 +686,8 @@ describe("Google Reader streams and contents", () => {
 
 describe("Google Reader subscriptions, categories, and OPML", () => {
   test("supports quickadd, user feed/category edits, OPML redaction, and 403 rejection on code-owned feeds/categories", async () => {
-    const world = createInMemoryReaderWorld(1_760_000_000);
-    const app = createGoogleReaderRoutes({
-      store: world.store,
-      poller: world.poller,
-      readerUser: "jerred",
-      readerPassword: "pw",
-      writeTokenSecret: "secret",
-      nowSeconds: world.nowSeconds,
-    });
-
-    const { authHeader, writeToken } = await loginAndFetchTokens(
-      app,
-      "jerred",
-      "pw",
-    );
+    const { world, app, authHeader, writeToken } =
+      await bootLoggedInReaderHarness();
 
     const quickRes = await app.request(
       "/api/greader.php/reader/api/0/subscription/quickadd",

@@ -69,28 +69,32 @@ const EntriesQueryParamsSchema = z.strictObject({
 
 const FeedIdParamSchema = z.coerce.number().int().positive();
 
-async function readJsonBody(request: Request): Promise<unknown> {
+async function parseJsonPayload(request: Request): Promise<unknown> {
+  const rawBody = await request.text();
   try {
-    return await request.json();
+    return JSON.parse(rawBody) as unknown;
   } catch {
     throw new HTTPException(400, { message: "request body is not JSON" });
   }
 }
 
-function attachErrorHandler(app: Hono): void {
-  app.onError((error, c) => {
-    if (error instanceof HTTPException) {
-      return c.json({ error: error.message }, error.status);
+function registerFeedsErrorBoundary(app: Hono, surface: FeedsSurface): void {
+  app.onError((caught, c) => {
+    if (caught instanceof HTTPException) {
+      return c.json({ error: caught.message }, caught.status);
     }
-    if (error instanceof ZodError) {
+    if (caught instanceof ZodError) {
       return c.json({ error: "invalid request" }, 400);
     }
     console.error(
       JSON.stringify({
         level: "error",
-        message: "feeds request failed",
         service: "feeds",
-        error: error instanceof Error ? error.message : "unknown error",
+        surface,
+        method: c.req.method,
+        path: c.req.path,
+        message: "feeds_unhandled_request_error",
+        error: caught instanceof Error ? caught.message : String(caught),
       }),
     );
     return c.json({ error: "internal error" }, 500);
@@ -168,7 +172,7 @@ export function createFeedsReaderApp(
 ): Hono {
   const metrics = dependencies.metrics ?? createFeedsMetrics();
   const app = new Hono();
-  attachErrorHandler(app);
+  registerFeedsErrorBoundary(app, "reader");
   attachRequestMetrics(app, metrics, "reader", false);
   app.get("/healthz", (c) => c.text("ok"));
   app.route(
@@ -201,14 +205,14 @@ function registerConsoleV1Routes(
 
   app.post("/api/v1/entries/state", async (c) => {
     const body = UpdateEntriesStateBodySchema.parse(
-      await readJsonBody(c.req.raw),
+      await parseJsonPayload(c.req.raw),
     );
     const updated = store.updateEntriesState(body);
     return c.json({ updated });
   });
 
   app.post("/api/v1/entries/mark-all-read", async (c) => {
-    const body = MarkAllReadBodySchema.parse(await readJsonBody(c.req.raw));
+    const body = MarkAllReadBodySchema.parse(await parseJsonPayload(c.req.raw));
     const updated = store.markAllRead(body);
     return c.json({ updated });
   });
@@ -224,7 +228,9 @@ function registerConsoleV1Routes(
   );
 
   app.post("/api/v1/feeds", async (c) => {
-    const body = CreateUserFeedBodySchema.parse(await readJsonBody(c.req.raw));
+    const body = CreateUserFeedBodySchema.parse(
+      await parseJsonPayload(c.req.raw),
+    );
     if (body.title === undefined) {
       const discovered = await poller.discoverAndSubscribe({
         url: body.url,
@@ -253,7 +259,9 @@ function registerConsoleV1Routes(
 
   app.patch("/api/v1/feeds/:id", async (c) => {
     const id = FeedIdParamSchema.parse(c.req.param("id"));
-    const body = UpdateUserFeedBodySchema.parse(await readJsonBody(c.req.raw));
+    const body = UpdateUserFeedBodySchema.parse(
+      await parseJsonPayload(c.req.raw),
+    );
     const updated = store.updateUserFeed(id, body);
     return updated.ok
       ? c.json({ id: updated.feed.id })
@@ -269,6 +277,16 @@ function registerConsoleV1Routes(
   });
 }
 
+function isNonClientConsolePath(pathname: string): boolean {
+  return (
+    pathname === "/healthz" ||
+    pathname === "/metrics" ||
+    pathname === "/internal/refresh" ||
+    pathname === "/api" ||
+    pathname.startsWith("/api/")
+  );
+}
+
 function serveAuthenticatedClient(
   app: Hono,
   clientRoot: string,
@@ -276,13 +294,7 @@ function serveAuthenticatedClient(
   peerAddress: ((request: Request) => string | null) | undefined,
 ): void {
   app.use("*", async (c, next) => {
-    if (
-      c.req.path === "/healthz" ||
-      c.req.path === "/metrics" ||
-      c.req.path === "/internal/refresh" ||
-      c.req.path === "/api" ||
-      c.req.path.startsWith("/api/")
-    ) {
+    if (isNonClientConsolePath(c.req.path)) {
       return next();
     }
     const principal = await authenticateConsole(
@@ -295,26 +307,23 @@ function serveAuthenticatedClient(
       : next();
   });
 
-  app.use(
-    "/assets/*",
-    serveStatic({
-      root: clientRoot,
-      onFound(_path, context) {
-        context.header("Cache-Control", "public, max-age=31536000, immutable");
-      },
-    }),
-  );
+  const hashedAssetsMiddleware = serveStatic({
+    root: clientRoot,
+    onFound: (_assetPath, c) => {
+      c.header("Cache-Control", "public, max-age=31536000, immutable");
+    },
+  });
+  const spaShellMiddleware = serveStatic({
+    root: clientRoot,
+    path: "index.html",
+    onFound: (_docPath, c) => {
+      c.header("Cache-Control", "no-cache");
+    },
+  });
+
+  app.use("/assets/*", hashedAssetsMiddleware);
   app.all("/assets/*", (c) => c.notFound());
-  app.get(
-    "*",
-    serveStatic({
-      root: clientRoot,
-      path: "index.html",
-      onFound(_path, context) {
-        context.header("Cache-Control", "no-cache");
-      },
-    }),
-  );
+  app.get("*", spaShellMiddleware);
 }
 
 export function createFeedsConsoleApp(
@@ -327,7 +336,7 @@ export function createFeedsConsoleApp(
   const metrics = dependencies.metrics ?? createFeedsMetrics();
   const app = new Hono();
 
-  attachErrorHandler(app);
+  registerFeedsErrorBoundary(app, "console");
   attachRequestMetrics(app, metrics, "console", clientRoot !== undefined);
 
   app.get("/healthz", (c) => c.text("ok"));
