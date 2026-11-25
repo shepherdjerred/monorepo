@@ -61,6 +61,7 @@
     "zod": "^4.4.3",
     "@shepherdjerred/ops-model": "workspace:*",
     "@shepherdjerred/ops-clients": "workspace:*",
+    "@shepherdjerred/llm-observability": "workspace:*",
     "uplot": "^1.6.32",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*"

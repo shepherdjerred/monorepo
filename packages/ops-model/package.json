@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "bun build ./src/assemble.ts ./src/catalog.ts ./src/facets/index.ts --target bun --outdir dist",
+    "build": "bun build ./src/assemble.ts ./src/catalog.ts ./src/facets/index.ts ./src/llm-traces/index.ts --target bun --outdir dist",
     "lint": "bunx --no-install eslint --cache .",
     "preview:emails": "bun run scripts/preview-ops-emails.ts",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
@@ -35,6 +35,7 @@
     "./catalog-document.schema.json": "./catalog-document.schema.json",
     "./catalog-document.json": "./catalog-document.json",
     "./facets.ts": "./src/facets/index.ts",
+    "./llm-traces.ts": "./src/llm-traces/index.ts",
     "./*": "./src/*"
   }
 }

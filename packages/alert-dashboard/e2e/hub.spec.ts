@@ -17,7 +17,7 @@ test("the palette opens from the keyboard and the sidebar, and closes on Escape"
   await expect(input).toBeFocused();
   await expect(
     palette.getByRole("group", { name: "Pages" }).getByRole("option"),
-  ).toHaveCount(17);
+  ).toHaveCount(18);
   await expect(
     palette.getByRole("option", { name: "Open Tracker" }),
   ).toBeVisible();

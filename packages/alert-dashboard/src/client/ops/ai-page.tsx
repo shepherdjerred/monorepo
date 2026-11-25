@@ -6,6 +6,7 @@ import type {
   Section,
   SnapshotResponse,
 } from "@shepherdjerred/ops-model/snapshot.ts";
+import { Link } from "react-router";
 
 import { QuotaPanel } from "./ai-quota-table.tsx";
 import { ToolSpendPanel } from "./ai-tool-spend.tsx";
@@ -111,9 +112,14 @@ function AiBody({
   return (
     <>
       <PageHeading eyebrow="AI budget" title="AI usage & spend">
-        <div className="page-status">
-          <SeverityBadge severity={section.severity} large />
-          {section.severity === "ok" ? null : <p>{section.summary}</p>}
+        <div className="heading-actions">
+          <Link className="button" to="/traces">
+            Explore LLM traces
+          </Link>
+          <div className="page-status">
+            <SeverityBadge severity={section.severity} large />
+            {section.severity === "ok" ? null : <p>{section.summary}</p>}
+          </div>
         </div>
       </PageHeading>
       <div className="ai-row">

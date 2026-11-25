@@ -141,4 +141,46 @@ describe("environment boundary", () => {
     );
     expect(configured.HOMEASSISTANT_TOKEN).toBe("ha-token");
   });
+
+  test("supplies LLM trace index defaults and requires all four S3 settings together", () => {
+    const defaults = readConfig(base);
+    expect(defaults.TEMPO_URL).toBeUndefined();
+    expect(defaults.TRACES_INDEX_DB_PATH).toBe("/data/llm-traces-index.db");
+    expect(defaults.LLM_ARCHIVE_S3_PREFIX).toBe("llm");
+    expect(defaults.LLM_ARCHIVE_S3_BUCKET).toBeUndefined();
+    expect(defaults.S3_ENDPOINT).toBeUndefined();
+
+    expect(() =>
+      readConfig({
+        ...base,
+        LLM_ARCHIVE_S3_BUCKET: "llm-archive",
+      }),
+    ).toThrow();
+    expect(() =>
+      readConfig({
+        ...base,
+        LLM_ARCHIVE_S3_BUCKET: "llm-archive",
+        S3_ENDPOINT: "http://seaweedfs-s3.seaweedfs.svc:8333",
+        AWS_ACCESS_KEY_ID: "key-id",
+      }),
+    ).toThrow();
+
+    const full = readConfig({
+      ...base,
+      TEMPO_URL: "http://tempo.tempo.svc:3200",
+      TRACES_INDEX_DB_PATH: "/tmp/traces.db",
+      LLM_ARCHIVE_S3_BUCKET: "llm-archive",
+      LLM_ARCHIVE_S3_PREFIX: "prod-llm",
+      S3_ENDPOINT: "http://seaweedfs-s3.seaweedfs.svc:8333",
+      AWS_ACCESS_KEY_ID: "key-id",
+      AWS_SECRET_ACCESS_KEY: "secret-key",
+    });
+    expect(full.TEMPO_URL).toBe("http://tempo.tempo.svc:3200");
+    expect(full.TRACES_INDEX_DB_PATH).toBe("/tmp/traces.db");
+    expect(full.LLM_ARCHIVE_S3_BUCKET).toBe("llm-archive");
+    expect(full.LLM_ARCHIVE_S3_PREFIX).toBe("prod-llm");
+    expect(full.S3_ENDPOINT).toBe("http://seaweedfs-s3.seaweedfs.svc:8333");
+    expect(full.AWS_ACCESS_KEY_ID).toBe("key-id");
+    expect(full.AWS_SECRET_ACCESS_KEY).toBe("secret-key");
+  });
 });

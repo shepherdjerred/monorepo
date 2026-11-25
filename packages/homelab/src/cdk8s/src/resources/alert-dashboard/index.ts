@@ -9,7 +9,10 @@ import { restrictedContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/comm
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { MAIL_API_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
-import { flagsEnv } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
+import {
+  flagsEnv,
+  seaweedfsS3,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/runtime-env.ts";
 import { FirstPartyWebService } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/web-service.ts";
 import {
   ALERTMANAGER_GATEWAY_PORT,
@@ -24,6 +27,7 @@ import {
   homeAssistantEgressRule,
   otlpEgress,
   prometheusIngressRule,
+  seaweedfsEgress,
   dnsEgressRule,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
@@ -68,6 +72,12 @@ export function createAlertDashboardDeployment(chart: Chart) {
         chart,
         "alert-dashboard-ha-secret",
         haCredentials.name,
+      );
+      const s3Credentials = seaweedfsS3.item(chart, "alert-dashboard-s3-1p");
+      const s3Secret = Secret.fromSecretName(
+        chart,
+        "alert-dashboard-s3-secret",
+        s3Credentials.name,
       );
       return {
         init: [
@@ -126,6 +136,16 @@ export function createAlertDashboardDeployment(chart: Chart) {
             PROMETHEUS_URL: EnvValue.fromValue(
               "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
             ),
+            TEMPO_URL: EnvValue.fromValue(
+              "http://tempo.tempo.svc.cluster.local:3200",
+            ),
+            ...seaweedfsS3.bucketEnv(
+              "LLM_ARCHIVE_S3_BUCKET",
+              "alert-dashboard",
+            ),
+            LLM_ARCHIVE_S3_PREFIX: EnvValue.fromValue("llm"),
+            S3_ENDPOINT: EnvValue.fromValue(seaweedfsS3.endpoint),
+            ...seaweedfsS3.credentialsEnv(s3Secret),
             ...flagsEnv({ deployment: "alert-dashboard/prod" }),
             MAIL_API_URL: EnvValue.fromValue(MAIL_API_ENDPOINT.url),
             ALERT_DASHBOARD_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
@@ -204,6 +224,11 @@ export function createAlertDashboardDeployment(chart: Chart) {
             ports: [MAIL_API_ENDPOINT.tcp()],
           },
           homeAssistantEgressRule(),
+          seaweedfsEgress(),
+          {
+            to: [nsPeer("tempo")],
+            ports: [tcp(3200)],
+          },
           otlpEgress(),
         ],
       },

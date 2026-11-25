@@ -28,7 +28,7 @@ import { PrometheusSeries } from "#infrastructure/prometheus-series";
 import { createApp } from "#server/app";
 import { ChangeBus } from "#server/change-bus";
 import { Metrics } from "#server/metrics";
-import { serverModules } from "#server/modules";
+import { createServerModules } from "#server/modules";
 import { closeModules } from "#server/platform/module";
 import { reconcileAndPublish } from "#server/reconciliation";
 import { serializedWorker } from "#server/serialized-worker";
@@ -199,6 +199,7 @@ const runHomeAssistantWorker = serializedWorker(async () => {
   }
 });
 
+const serverModules = createServerModules(config);
 const app = createApp({
   service,
   changes,

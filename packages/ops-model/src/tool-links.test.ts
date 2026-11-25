@@ -7,6 +7,7 @@ import {
   chartmuseumChartLink,
   githubCommitLink,
   grafanaPyroscopeExploreUrl,
+  grafanaLokiTraceExploreUrl,
   hubDigestRunLink,
   hubDigestRunUrl,
   hubIncidentMailLink,
@@ -15,6 +16,10 @@ import {
   hubReportRunUrl,
   hubReportsLink,
   hubReportsUrl,
+  hubTraceDetailLink,
+  hubTraceDetailUrl,
+  hubTracesLink,
+  hubTracesUrl,
   temporalWorkflowLink,
   woodpeckerPipelineLink,
   woodpeckerStepLink,
@@ -116,6 +121,30 @@ describe("tool links", () => {
       label: "Hub incident mail",
       url: "https://hub.tailnet-1a49.ts.net/reports/mail/outbox-42",
     });
+
+    expect(hubTracesUrl()).toBe("https://hub.tailnet-1a49.ts.net/traces");
+    expect(hubTracesLink()).toEqual({
+      kind: "hub",
+      label: "Hub Traces",
+      url: "https://hub.tailnet-1a49.ts.net/traces",
+    });
+    expect(hubTraceDetailUrl("abcdef0123456789")).toBe(
+      "https://hub.tailnet-1a49.ts.net/traces/abcdef0123456789",
+    );
+    expect(hubTraceDetailLink("abcdef0123456789")).toEqual({
+      kind: "hub",
+      label: "Hub trace abcdef01",
+      url: "https://hub.tailnet-1a49.ts.net/traces/abcdef0123456789",
+    });
+    const lokiUrl = new URL(
+      grafanaLokiTraceExploreUrl({
+        grafanaUrl: TOOL_HOSTS.grafana,
+        traceId: "abcdef0123456789",
+      }),
+    );
+    expect(lokiUrl.origin).toBe("https://grafana.tailnet-1a49.ts.net");
+    expect(lokiUrl.pathname).toBe("/explore");
+    expect(lokiUrl.searchParams.get("panes")).toContain("abcdef0123456789");
   });
 
   it("builds Grafana Pyroscope Explore URLs scoped to namespace", () => {

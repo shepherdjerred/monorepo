@@ -249,4 +249,33 @@ describe("Alert Dashboard deployment", () => {
       "http://flags.flags.svc.cluster.local:7361",
     );
   });
+
+  test("wires Tempo and SeaweedFS llm-archive access with required S3 credentials", () => {
+    const env =
+      synthesizeDeployment().spec.template.spec.containers.find(
+        (container) => container.name === "alert-dashboard",
+      )?.env ?? [];
+    const entry = (name: string) => env.find((item) => item.name === name);
+
+    expect(entry("TEMPO_URL")?.value).toBe(
+      "http://tempo.tempo.svc.cluster.local:3200",
+    );
+    expect(entry("LLM_ARCHIVE_S3_BUCKET")?.value).toBe("llm-archive");
+    expect(entry("LLM_ARCHIVE_S3_PREFIX")?.value).toBe("llm");
+    expect(entry("S3_ENDPOINT")?.value).toBe(
+      "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+    );
+    const keyIdRef = entry("AWS_ACCESS_KEY_ID")?.valueFrom?.secretKeyRef;
+    const secretRef = entry("AWS_SECRET_ACCESS_KEY")?.valueFrom?.secretKeyRef;
+    expect(keyIdRef).toMatchObject({
+      key: "SEAWEEDFS_ACCESS_KEY_ID",
+      name: "alert-dashboard-alert-dashboard-s3-1p",
+    });
+    expect(keyIdRef?.optional).not.toBe(true);
+    expect(secretRef).toMatchObject({
+      key: "SEAWEEDFS_SECRET_ACCESS_KEY",
+      name: "alert-dashboard-alert-dashboard-s3-1p",
+    });
+    expect(secretRef?.optional).not.toBe(true);
+  });
 });

@@ -4594,6 +4594,11 @@
       "rule": "any-accepted"
     },
     {
+      "dependent": "ops-dashboard/prod",
+      "prerequisite": "tofu-seaweedfs/prod",
+      "rule": "any-accepted"
+    },
+    {
       "dependent": "outbound-mail/prod",
       "prerequisite": "1password/prod",
       "rule": "any-accepted"

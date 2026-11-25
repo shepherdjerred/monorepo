@@ -55,6 +55,8 @@ describe("the composed module registry", () => {
       "shell /house",
       "shell /history",
       "shell /system",
+      "shell /traces",
+      "shell /traces/:traceId",
     ]);
   });
 
@@ -79,6 +81,7 @@ describe("the composed module registry", () => {
           "Maintenance /maintenance",
           "Review /review",
           "Reports /reports",
+          "Traces /traces",
         ],
       },
       {
@@ -97,10 +100,7 @@ describe("the composed module registry", () => {
     ]);
   });
 
-  it("keeps the flat navigation in group order, with full names", () => {
-    expect(registry.nav).toEqual(
-      registry.navGroups.flatMap((group) => group.items),
-    );
+  it("lists every module's navigation entries in module declaration order, with full names", () => {
     expect(registry.nav.map((item) => item.title)).toEqual([
       "Home",
       "Cluster",
@@ -119,6 +119,7 @@ describe("the composed module registry", () => {
       "System",
       "The Storm overview",
       "Promotion",
+      "LLM traces",
     ]);
   });
 

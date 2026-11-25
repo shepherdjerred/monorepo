@@ -246,7 +246,11 @@ Required configuration is validated at startup: `DATABASE_URL` (a SQLite
 the bearer token the Temporal workflow presents), and `PROMETHEUS_URL` (the
 in-cluster Prometheus, `http://prometheus-operated.prometheus:9090`). Outbound
 mail uses the credential `MAIL_API_TOKEN` and bootstrap connection setting
-`MAIL_API_URL`.
+`MAIL_API_URL`. The `traces` module uses
+`TRACES_INDEX_DB_PATH` (default `/data/llm-traces-index.db`) plus optional
+`TEMPO_URL` (`http://tempo.tempo.svc.cluster.local:3200` in the cluster) and
+SeaweedFS `LLM_ARCHIVE_S3_BUCKET`, `LLM_ARCHIVE_S3_PREFIX`, `S3_ENDPOINT`,
+`AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY`.
 
 Incident mail uses `alert-dashboard-email-enabled` (default on). Incident
 sender and recipient come from `alert-dashboard-incident-email-from` /
@@ -532,3 +536,11 @@ A module that needs its own storage stays a separate workspace package that
 exports `./hub-server` and `./hub-client`. Its `src/modules/<id>/` adapter
 checks those exports with `satisfies` against the two module contracts, so
 the storage never enters this package.
+
+`src/modules/traces/` (`id: "traces"`, mounted at `/traces`, `/api/traces`, and
+`/readyz/traces`) is Hub's LLM trace viewer: it queries Tempo (`<=30d` OTLP
+traces) and SeaweedFS `llm-archive` (`0-365d` gzipped prompt/response envelopes
+indexed by Temporal's `llm-archive-index` schedule into
+`@shepherdjerred/llm-observability/archive-index`), normalizing trajectories
+through `@shepherdjerred/llm-observability/trajectory` and registering live
+`⌘K` trace ID jump and text search.

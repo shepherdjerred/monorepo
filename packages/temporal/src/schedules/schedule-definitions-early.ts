@@ -300,4 +300,20 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     initialPauseNote:
       "Awaiting 100% candidate traffic for runRenovateDeltaEnrichment; stable workers do not register this Workflow",
   },
+  {
+    id: "llm-archive-index",
+    workflowType: "runLlmArchiveIndex",
+    args: [{}],
+    timing: {
+      kind: "cron",
+      expression: "*/15 * * * *",
+      timezone: "UTC",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "25 minutes",
+    memo: "Every-15-minute SeaweedFS llm-archive S3 metadata sync into Hub SQLite index",
+    initialPauseNote:
+      "Awaiting 100% candidate traffic for runLlmArchiveIndex; stable workers do not register this Workflow",
+  },
 ]);

@@ -59,6 +59,24 @@ spec:
                   name: alert-dashboard-alert-dashboard-ha-1p
             - name: PROMETHEUS_URL
               value: http://prometheus-kube-prometheus-prometheus.prometheus:9090
+            - name: TEMPO_URL
+              value: http://tempo.tempo.svc.cluster.local:3200
+            - name: LLM_ARCHIVE_S3_BUCKET
+              value: llm-archive
+            - name: LLM_ARCHIVE_S3_PREFIX
+              value: llm
+            - name: S3_ENDPOINT
+              value: http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  key: SEAWEEDFS_ACCESS_KEY_ID
+                  name: alert-dashboard-alert-dashboard-s3-1p
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: SEAWEEDFS_SECRET_ACCESS_KEY
+                  name: alert-dashboard-alert-dashboard-s3-1p
             - name: FEATURE_FLAGS_MODE
               value: flags
             - name: FLAGS_DEPLOYMENT
@@ -220,6 +238,14 @@ metadata:
 spec:
   itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/42fn7x3zaemfenz35en27thw5u
 ---
+apiVersion: onepassword.com/v1
+kind: OnePasswordItem
+metadata:
+  name: alert-dashboard-alert-dashboard-s3-1p
+  namespace: alert-dashboard
+spec:
+  itemPath: vaults/v64ocnykdqju4ui6j6pua56xw4/items/vet52jaeh75chsalu6lulugium
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -346,6 +372,25 @@ spec:
       to:
         - ipBlock:
             cidr: 100.102.88.88/32
+    - ports:
+        - port: 8333
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: seaweedfs
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: s3
+              app.kubernetes.io/instance: seaweedfs
+              app.kubernetes.io/name: seaweedfs
+    - ports:
+        - port: 3200
+          protocol: TCP
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tempo
     - ports:
         - port: 4318
           protocol: TCP

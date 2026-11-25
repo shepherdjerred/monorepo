@@ -153,6 +153,11 @@ import {
   runOpsDigest as _runOpsDigest,
   runOpsSnapshot as _runOpsSnapshot,
 } from "./ops-snapshot.ts";
+import {
+  runLlmArchiveIndex as _runLlmArchiveIndex,
+  type LlmArchiveIndexWorkflowInput,
+} from "./ops/llm-archive-index.ts";
+import type { SyncLlmArchiveIndexResult } from "#activities/ops/llm-archive/llm-archive-index.ts";
 import { runRenovateDeltaEnrichment as _runRenovateDeltaEnrichment } from "./ops/renovate-delta-enrichment.ts";
 import * as agentChat from "./agent-chat/entrypoints.ts";
 import type {
@@ -402,6 +407,11 @@ export const runLlmBilledCostReconciliation = () =>
   _runLlmBilledCostReconciliation();
 export const runOpsSnapshot = () => _runOpsSnapshot();
 export const runRenovateDeltaEnrichment = () => _runRenovateDeltaEnrichment();
+export async function runLlmArchiveIndex(
+  input: LlmArchiveIndexWorkflowInput = {},
+): Promise<SyncLlmArchiveIndexResult> {
+  return _runLlmArchiveIndex(input);
+}
 export async function runOpsDigest(
   input: Parameters<typeof _runOpsDigest>[0],
 ): ReturnType<typeof _runOpsDigest> {

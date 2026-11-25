@@ -1,0 +1,531 @@
+/* ---- Hub LLM Trace Viewer (`/traces` & `/traces/:traceId`) ---- */
+
+.traces-page,
+.traces-detail-page {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.traces-page .page-heading,
+.traces-detail-page .page-heading {
+  margin-bottom: 4px;
+}
+
+.traces-detail-page .back-link {
+  margin-bottom: 0;
+}
+
+.traces-page .platform-tablist,
+.traces-detail-page .platform-tablist {
+  margin-bottom: 0;
+}
+
+.traces-kpi-grid {
+  margin-bottom: 0;
+}
+
+/* ---- Filter Bar & Responsive Table ---- */
+.traces-table-panel {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+
+.traces-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.traces-filter-bar {
+  display: grid;
+  grid-template-columns: minmax(210px, 1.8fr) repeat(6, minmax(110px, 1fr));
+  gap: 10px;
+  align-items: end;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.traces-filter-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  min-width: 0;
+}
+
+.traces-filter-field label {
+  color: var(--muted);
+  font-size: 0.71rem;
+  font-weight: 650;
+}
+
+.traces-filter-field select {
+  width: 100%;
+  min-width: 0;
+}
+
+.traces-table-wrap {
+  overflow-x: auto;
+  max-inline-size: 100%;
+}
+
+.traces-table-wrap:focus-visible {
+  outline: 3px solid var(--accent-ring);
+  outline-offset: -3px;
+}
+
+.traces-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.79rem;
+}
+
+.traces-table thead th {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.traces-row-link {
+  display: inline-block;
+  color: var(--ink);
+  font-size: 0.84rem;
+  font-weight: 650;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.traces-row-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.traces-short-id {
+  color: var(--muted);
+  font-size: 0.71rem;
+}
+
+.traces-cell-stack {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.traces-pill-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  min-width: 0;
+}
+
+.traces-tokens-cell {
+  font-family: "Berkeley Mono", ui-monospace, monospace;
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.traces-load-more {
+  display: flex;
+  justify-content: center;
+  padding: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+/* ---- Trajectory Step Cards ---- */
+.traces-tabpanel {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.traces-step-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  min-width: 0;
+}
+
+.traces-step-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.traces-step-title {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.92rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.traces-disclosure {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  padding: 8px 12px;
+  margin-top: 0;
+}
+
+.traces-disclosure > summary {
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.traces-disclosure > summary:focus-visible {
+  outline: 3px solid var(--accent-ring);
+  outline-offset: 2px;
+}
+
+.traces-pre {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+  background: var(--pre-bg);
+  color: var(--pre-ink);
+  font-family: "Berkeley Mono", ui-monospace, monospace;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.traces-messages {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.traces-msg {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+  min-width: 0;
+}
+
+.traces-msg-assistant {
+  border-inline-start: 3px solid var(--accent);
+  background: var(--panel);
+}
+
+.traces-msg-tool {
+  border-inline-start: 3px solid var(--status-info);
+}
+
+.traces-msg-role {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-family: "Berkeley Mono", ui-monospace, monospace;
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.traces-msg-text {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.traces-reasoning {
+  padding: 8px 10px;
+  border-inline-start: 2px solid var(--line);
+  background: var(--code-bg);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Decisions, Agent Turns & Commands ---- */
+.traces-decisions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.traces-decision-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-2);
+  min-width: 0;
+}
+
+.traces-cmd-card {
+  display: grid;
+  gap: 8px;
+}
+
+.traces-cmd-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.traces-cmd-code {
+  background: var(--code-bg);
+  color: var(--ink);
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  font-size: 0.76rem;
+  overflow-wrap: anywhere;
+}
+
+.traces-preview-pre {
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Waterfall Split View ---- */
+.traces-waterfall-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  min-width: 0;
+}
+
+.traces-waterfall-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.traces-wf-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.15fr) minmax(100px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--line-soft);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.traces-wf-row:hover {
+  background: var(--row-hover);
+}
+
+.traces-wf-row:focus-visible {
+  outline: 3px solid var(--accent-ring);
+  outline-offset: -3px;
+}
+
+.traces-wf-row[aria-pressed="true"] {
+  background: var(--panel-2);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.traces-wf-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.traces-wf-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--ui-track);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.traces-wf-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 2px;
+  border-radius: 999px;
+  background: var(--ui-accent);
+}
+
+.traces-wf-bar-error {
+  background: var(--ui-sev-error);
+}
+
+.traces-wf-dur {
+  color: var(--muted);
+  font-family: "Berkeley Mono", ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.traces-attr-list {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+
+.traces-attr-row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 40%) minmax(0, 1fr);
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  font-size: 0.74rem;
+}
+
+.traces-attr-row dt {
+  color: var(--muted);
+  font-family: "Berkeley Mono", ui-monospace, monospace;
+  overflow-wrap: anywhere;
+}
+
+.traces-attr-row dd {
+  margin: 0;
+  color: var(--ink);
+  font-family: "Berkeley Mono", ui-monospace, monospace;
+  overflow-wrap: anywhere;
+}
+
+@media (forced-colors: active) {
+  .traces-wf-track {
+    border: 1px solid CanvasText;
+  }
+  .traces-wf-bar {
+    background: Highlight;
+  }
+}
+
+@container content (max-width: 1120px) {
+  .traces-filter-bar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .traces-filter-search {
+    grid-column: 1 / -1;
+  }
+}
+
+@container content (max-width: 900px) {
+  .traces-waterfall-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Container-responsive stacked cards on narrow panels & 375px phone viewports */
+@container content (max-width: 720px) {
+  .traces-filter-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+  .traces-table-wrap {
+    overflow-x: visible;
+    padding: 10px;
+    background: var(--panel-2);
+  }
+  .traces-table,
+  .traces-table tbody,
+  .traces-table tr,
+  .traces-table td {
+    display: block;
+    width: 100%;
+  }
+  .traces-table thead {
+    display: none;
+  }
+  .traces-table tbody {
+    display: grid;
+    gap: 10px;
+  }
+  .traces-table tbody tr {
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--panel);
+  }
+  .traces-table td {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--line-soft);
+    white-space: normal;
+  }
+  .traces-table td:last-child {
+    border-bottom: 0;
+  }
+  .traces-table td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font:
+      700 0.65rem "Berkeley Mono",
+      ui-monospace,
+      monospace;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .traces-tokens-cell {
+    white-space: normal;
+  }
+  .traces-wf-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .traces-wf-track {
+    grid-column: 1 / -1;
+  }
+  .traces-attr-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .traces-filter-bar,
+  .traces-decisions-grid {
+    grid-template-columns: 1fr;
+  }
+  .traces-step-card {
+    padding: 12px;
+  }
+}
