@@ -82,6 +82,11 @@
       "service": "minecraft-tsmc-bluemap"
     },
     {
+      "hostname": "logging.sjer.red",
+      "namespace": "errors",
+      "service": "errors-ingest"
+    },
+    {
       "hostname": "plex.sjer.red",
       "namespace": "media",
       "service": "media-plex-service"
@@ -266,6 +271,11 @@
       "namespace": "delivery",
       "exposure": "ingress",
       "tags": ["tag:delivery"]
+    },
+    {
+      "host": "errors",
+      "namespace": "errors",
+      "exposure": "ingress"
     },
     {
       "host": "feeds",

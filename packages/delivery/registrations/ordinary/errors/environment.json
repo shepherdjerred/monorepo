@@ -1,0 +1,10 @@
+{
+  "id": "errors/prod",
+  "serviceId": "errors",
+  "name": "prod",
+  "application": "errors",
+  "pipelineRevisionId": "errors/prod/1",
+  "configurationRevision": "errors/prod/1",
+  "configuration": {},
+  "automatic": true
+}

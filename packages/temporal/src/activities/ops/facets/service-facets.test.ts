@@ -328,15 +328,11 @@ describe("bugsink, tracker, and flags facets", () => {
     expect(() => FlagsFacetSchema.parse(driftedFacet)).not.toThrow();
     expect(
       driftedFacet.namespaces
-        .filter((ns) => ns.namespace !== "justin" && ns.namespace !== "errors")
+        .filter((ns) => ns.namespace !== "justin")
         .every((ns) => ns.prodStatus === "missing"),
     ).toBe(true);
     expect(
       driftedFacet.namespaces.find((ns) => ns.namespace === "justin")
-        ?.prodStatus,
-    ).toBe("ok");
-    expect(
-      driftedFacet.namespaces.find((ns) => ns.namespace === "errors")
         ?.prodStatus,
     ).toBe("ok");
 

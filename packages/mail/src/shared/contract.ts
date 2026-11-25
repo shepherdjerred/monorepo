@@ -165,6 +165,7 @@ export type AdminRetryResponse = z.infer<typeof AdminRetryResponseSchema>;
 
 export const KNOWN_MAIL_CLIENTS: Readonly<Record<string, string>> = {
   "alert-dashboard": "Hub",
+  errors: "Errors",
   media: "Media",
   temporal: "Temporal",
   alertmanager: "Alertmanager",

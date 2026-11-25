@@ -59,6 +59,7 @@ const CONSUMER_NAMESPACES = [
   "golink",
   "mail",
   "feeds",
+  "errors",
 ] as const;
 
 export function createFlagsDeployment(chart: Chart) {
