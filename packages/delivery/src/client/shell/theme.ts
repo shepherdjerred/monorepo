@@ -9,43 +9,36 @@ function noop(): void {
   // SSR / headless router test fallback.
 }
 
-function deliveryThemeEnvironment(): ThemeEnvironment {
+function headlessThemeEnvironment(): ThemeEnvironment | undefined {
   if (
-    typeof document === "undefined" ||
-    typeof globalThis.matchMedia !== "function"
+    typeof document !== "undefined" &&
+    typeof globalThis.matchMedia === "function"
   ) {
-    const dataset: DOMStringMap = {};
-    return {
-      storage: () => ({
-        getItem: () => null,
-        setItem: noop,
-        removeItem: noop,
-      }),
-      darkQuery: {
-        matches: false,
-        addEventListener: noop,
-      },
-      root: { dataset },
-      onStorage: noop,
-    };
+    return undefined;
   }
+  const dataset: DOMStringMap = {};
   return {
-    storage: () => globalThis.localStorage,
-    darkQuery: globalThis.matchMedia("(prefers-color-scheme: dark)"),
-    root: document.documentElement,
-    onStorage: (listener) => {
-      globalThis.addEventListener("storage", (event) => {
-        if (event instanceof StorageEvent) listener(event.key, event.newValue);
-      });
+    storage: () => ({
+      getItem: () => null,
+      setItem: noop,
+      removeItem: noop,
+    }),
+    darkQuery: {
+      matches: false,
+      addEventListener: noop,
     },
+    root: { dataset },
+    onStorage: noop,
   };
 }
+
+const headlessEnvironment = headlessThemeEnvironment();
 
 /**
  * Delivery's theme preference (`system` | `light` | `dark`), persisted under
  * `delivery-theme` and reflected onto `html[data-theme]`.
  */
-export const deliveryTheme = createThemeStore(
-  DELIVERY_THEME_KEY,
-  deliveryThemeEnvironment(),
-);
+export const deliveryTheme =
+  headlessEnvironment === undefined
+    ? createThemeStore(DELIVERY_THEME_KEY)
+    : createThemeStore(DELIVERY_THEME_KEY, headlessEnvironment);

@@ -86,9 +86,25 @@ const NAV_GROUPS: readonly {
 ];
 
 const SWITCHER_APPS: readonly AppSwitcherEntry[] = CONSOLE_LINKS.map(
-  (link) => ({ label: link.label, url: link.url, group: link.group }),
+  ({ label, url, group }) => ({ label, url, group }),
 );
 const CURRENT_APP = { label: "Delivery", mark: "D" } as const;
+
+function DeliverySwitcher() {
+  return <AppSwitcher current={CURRENT_APP} apps={SWITCHER_APPS} />;
+}
+
+function approvalsAriaLabel(waitingCount: number): string {
+  return `Approvals, ${String(waitingCount)} awaiting approval`;
+}
+
+function ApprovalCountPill({ count }: { readonly count: number }) {
+  return (
+    <span className="nav-count" aria-hidden="true">
+      {count}
+    </span>
+  );
+}
 
 function useWaitingApprovalsCount(): number {
   const approvals = useQuery(queries.approvals());
@@ -152,19 +168,13 @@ function NavGroups({
                     // Space separates visible words so the accessible name
                     // contains the visible text (WCAG 2.5.3).
                     aria-label={
-                      showCount
-                        ? `${item.label}, ${String(waitingCount)} awaiting approval`
-                        : undefined
+                      showCount ? approvalsAriaLabel(waitingCount) : undefined
                     }
                   >
                     <Icon className="ui-nav-icon" aria-hidden="true" />
                     <span className="ui-nav-text">{item.label}</span>
                     {showCount && " "}
-                    {showCount && (
-                      <span className="nav-count" aria-hidden="true">
-                        {waitingCount}
-                      </span>
-                    )}
+                    {showCount && <ApprovalCountPill count={waitingCount} />}
                   </Link>
                 )}
               />
@@ -183,7 +193,7 @@ export function DeliverySidebar({ feed }: { readonly feed: ChangeFeed }) {
     <Sidebar
       label="Delivery"
       navLabel="Main"
-      top={<AppSwitcher current={CURRENT_APP} apps={SWITCHER_APPS} />}
+      top={<DeliverySwitcher />}
       footer={
         <div className="side-footer">
           <div className="side-meta">
@@ -203,33 +213,35 @@ function closeDrawer(): void {
   setNavDrawerOpen(false);
 }
 
+function TopbarApprovalsLink({ count }: { readonly count: number }) {
+  if (count <= 0) return null;
+  return (
+    <Link
+      to="/approvals"
+      className="topbar-approvals"
+      aria-label={approvalsAriaLabel(count)}
+    >
+      Approvals <ApprovalCountPill count={count} />
+    </Link>
+  );
+}
+
 /**
  * Sticky top bar and modal navigation drawer below 900px. The drawer mounts
  * only while open so the document never carries duplicate `Main` landmarks and
  * native `<dialog>` elements remain reserved for confirmation prompts.
  */
 export function Topbar({ feed }: { readonly feed: ChangeFeed }) {
-  const open = useNavDrawerOpen();
+  const isDrawerOpen = useNavDrawerOpen();
   const waitingCount = useWaitingApprovalsCount();
   return (
-    <Dialog.Root open={open} onOpenChange={setNavDrawerOpen}>
+    <Dialog.Root open={isDrawerOpen} onOpenChange={setNavDrawerOpen}>
       <header className="topbar">
-        <Dialog.Trigger className="icon-button" aria-label="Open navigation">
-          <MenuIcon aria-hidden="true" />
+        <Dialog.Trigger aria-label="Open navigation" className="icon-button">
+          <MenuIcon aria-hidden />
         </Dialog.Trigger>
-        <AppSwitcher current={CURRENT_APP} apps={SWITCHER_APPS} />
-        {waitingCount > 0 && (
-          <Link
-            to="/approvals"
-            className="topbar-approvals"
-            aria-label={`Approvals, ${String(waitingCount)} awaiting approval`}
-          >
-            Approvals{" "}
-            <span className="nav-count" aria-hidden="true">
-              {waitingCount}
-            </span>
-          </Link>
-        )}
+        <DeliverySwitcher />
+        <TopbarApprovalsLink count={waitingCount} />
         <FeedIndicator feed={feed} />
       </header>
       <Dialog.Portal>
@@ -238,8 +250,8 @@ export function Topbar({ feed }: { readonly feed: ChangeFeed }) {
           <div className="nav-drawer-head">
             <Dialog.Title className="visually-hidden">Navigation</Dialog.Title>
             <span className="brand">Delivery</span>
-            <Dialog.Close className="icon-button" aria-label="Close navigation">
-              <XIcon aria-hidden="true" />
+            <Dialog.Close aria-label="Close navigation" className="icon-button">
+              <XIcon aria-hidden />
             </Dialog.Close>
           </div>
           <nav className="ui-nav" aria-label="Main">
