@@ -4,6 +4,7 @@ import type { MediaUser } from "#shared/contract.ts";
 import type { MovieTargetContextV4 } from "#shared/movie-editions/lifecycle/public-v4.ts";
 import { MovieEditionKeySchema } from "#shared/movie-editions/registry.ts";
 import { movieEditionReason } from "#client/movie-editions/presentation.ts";
+import { movieDiscoveryCopy } from "#client/movie-editions/presentation-v4.ts";
 import { readMovieContextV4 } from "#client/movie-editions/request-api-v4.ts";
 import { readMovieTargetV4 } from "#client/movie-editions/target-api-v4.ts";
 import { AVAILABILITY_COPY } from "#client/presentation/availability.ts";
@@ -112,6 +113,8 @@ function Version({
   const { edition } = version.scope;
   const name = VERSION_COPY[edition];
   const facts = versionFacts(version, media, user);
+  const discovery =
+    facts.availability === "wanted" ? movieDiscoveryCopy(version) : undefined;
   const request = media.visibility.movieRequests.find(
     (candidate) => candidate.edition === edition,
   );
@@ -128,7 +131,9 @@ function Version({
       <div className={cx("versionHead")}>
         <h3 className={cx("versionName")}>{name}</h3>
         {facts.availability !== null && (
-          <StatePill state={AVAILABILITY_COPY[facts.availability]} />
+          <StatePill
+            state={discovery ?? AVAILABILITY_COPY[facts.availability]}
+          />
         )}
         {/* The head of the page already acts on the standard version. */}
         {edition !== "default" && (
@@ -137,6 +142,11 @@ function Version({
           </div>
         )}
       </div>
+      {discovery?.detail !== undefined && (
+        <p className={cx("versionLine")} role="status">
+          {discovery.detail}
+        </p>
+      )}
       {file.length > 0 && <p className={cx("quiet")}>{file.join(", ")}</p>}
       {lines.map((line) => (
         <p className={cx("versionLine")} key={line}>
