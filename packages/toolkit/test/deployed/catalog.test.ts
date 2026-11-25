@@ -76,6 +76,7 @@ describe("deployed registry derived from the service catalog", () => {
         "alert-dashboard default shepherdjerred/alert-dashboard alert-dashboard",
         "arcade default shepherdjerred/arcade arcade",
         "birmel default shepherdjerred/birmel birmel",
+        "feeds default shepherdjerred/feeds feeds",
         "flags default shepherdjerred/flags flags",
         "glitter-boys-launcher default shepherdjerred/glitter-boys-launcher glitter-boys-launcher",
         "golink default shepherdjerred/golink golink",
