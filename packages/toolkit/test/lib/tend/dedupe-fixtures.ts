@@ -11,6 +11,7 @@ import {
 import os from "node:os";
 import path from "node:path";
 import { sweepDedupe, type SweepDedupeOptions } from "#lib/tend/dedupe.ts";
+import type { FileProbes } from "#lib/tend/dedupe/types.ts";
 import { resolveTendPaths } from "#lib/tend/paths.ts";
 import type { CommandRunner, SurfaceSweepResult } from "#lib/tend/types.ts";
 import { computeWorktreeLastActivityMs } from "#lib/tend/worktrees-git.ts";
@@ -18,6 +19,17 @@ import { gitThrough, realGitRunner } from "./real-git.ts";
 import { makeLiveness } from "./worktree-fixtures.ts";
 
 export const onApfs = process.platform === "darwin";
+
+/**
+ * Probes for a test that plays macOS on any system: no file has flags or
+ * extended attributes and none is open. The real ones need macOS's own
+ * `stat`, `xattr` and `lsof`.
+ */
+export const PLAIN_FILE_PROBES: FileProbes = {
+  flaggedPaths: () => Promise.resolve(new Set<string>()),
+  xattrPaths: () => Promise.resolve(new Set<string>()),
+  openFiles: () => Promise.resolve(new Set<string>()),
+};
 export const runner = realGitRunner();
 export const git = gitThrough(runner);
 

@@ -12,7 +12,6 @@ import {
   statusTrustProblem,
 } from "#lib/tend/dedupe/metadata.ts";
 import type { DedupeContext } from "#lib/tend/dedupe/types.ts";
-import type { CommandExecResult } from "#lib/tend/types.ts";
 import {
   actionFor,
   buildFixture,
@@ -22,6 +21,7 @@ import {
   inodes,
   onApfs,
   physicalOffsets,
+  PLAIN_FILE_PROBES,
   removeFixtures,
   SHARED,
   UNTOUCHED_IN_A,
@@ -65,14 +65,11 @@ const wrongSizeForBigBin: CloneFile = async (source, destination) => {
   }
 };
 
-/** What `statusTrustProblem` concludes from one answer by `git config`. */
-function trustProblemGiven(
-  result: Partial<CommandExecResult>,
-): Promise<string | null> {
-  const ctx: DedupeContext = {
-    runner: () =>
-      Promise.resolve({ exitCode: 0, stdout: "", stderr: "", ...result }),
-    apply: false,
+/** A context for asking one worktree's git about itself. */
+function contextFor(apply: boolean): DedupeContext {
+  return {
+    runner: realGitRunner(),
+    apply,
     minSizeBytes: 0,
     stateDir: "/unused",
     cloneFile: cloneFileCopyOnWrite,
@@ -82,11 +79,15 @@ function trustProblemGiven(
     unsupportedDevices: new Map(),
     blobSizes: new Map(),
     currentUid: 0,
+    probes: PLAIN_FILE_PROBES,
     dryRunOpenFiles: {},
   };
+}
+
+function trustProblem(worktree: string): Promise<string | null> {
   return statusTrustProblem(
-    { path: "/wt", isTarget: true, gitDir: "/wt/.git" },
-    ctx,
+    { path: worktree, isTarget: true, gitDir: path.join(worktree, ".git") },
+    contextFor(false),
   );
 }
 
@@ -170,6 +171,61 @@ describe.skipIf(!onApfs)("sweepDedupe state and writes in place", () => {
       expect(await git(fx.b, "status", "--porcelain")).toBe("?? untracked.bin");
 
       // With nothing rewritten, a further run finds nothing to do.
+      const third = await fx.sweep();
+      expect(third.actions).toEqual([]);
+    },
+    REAL_GIT_TIMEOUT_MS,
+  );
+});
+
+describe.skipIf(!onApfs)("sweepDedupe state and the copy cloned from", () => {
+  it(
+    "shares a file again after the copy it was cloned from was rewritten in place",
+    async () => {
+      const fx = await buildFixture();
+      await fx.sweep();
+      const canonical = path.join(fx.main, "big.bin");
+      const afterFirst = {
+        a: await inodes(fx.a, SHARED),
+        b: await inodes(fx.b, [...SHARED, "modified.bin"]),
+      };
+      expect(await distinctBlocks(copiesOf(fx, "big.bin"))).toBe(1);
+
+      // The main checkout's file gets the same bytes written back. Neither
+      // clone is touched, yet neither shares blocks with it any more.
+      const bytes = await Bun.file(canonical).bytes();
+      const handle = await open(canonical, "r+");
+      await handle.write(bytes, 0, bytes.length, 0);
+      await handle.close();
+      const [main, a, b] = await physicalOffsets(copiesOf(fx, "big.bin"));
+      expect(a).toBe(b);
+      expect(main).not.toBe(a);
+
+      const second = await fx.sweep();
+
+      expect(await distinctBlocks(copiesOf(fx, "big.bin"))).toBe(1);
+      for (const wt of [fx.a, fx.b]) {
+        expect(actionFor(second, wt)?.candidate.metadata).toMatchObject({
+          files: 1,
+          replacedFiles: 1,
+        });
+      }
+      // Only that file was replaced again; the other pairs were left alone.
+      const afterSecond = {
+        a: await inodes(fx.a, SHARED),
+        b: await inodes(fx.b, [...SHARED, "modified.bin"]),
+      };
+      expect(afterSecond.a["big.bin"]).not.toBe(afterFirst.a["big.bin"]);
+      expect(afterSecond.b["big.bin"]).not.toBe(afterFirst.b["big.bin"]);
+      expect({ ...afterSecond.a, "big.bin": 0 }).toEqual({
+        ...afterFirst.a,
+        "big.bin": 0,
+      });
+      expect({ ...afterSecond.b, "big.bin": 0 }).toEqual({
+        ...afterFirst.b,
+        "big.bin": 0,
+      });
+
       const third = await fx.sweep();
       expect(third.actions).toEqual([]);
     },
@@ -385,7 +441,8 @@ describe.skipIf(!onApfs)(
       async () => {
         const fx = await buildFixture();
         await git(fx.main, "config", "extensions.worktreeConfig", "true");
-        await git(fx.a, "config", "--worktree", "core.trustctime", "false");
+        // Any spelling git reads as false counts, not only the word.
+        await git(fx.a, "config", "--worktree", "core.trustctime", "no");
         const before = await inodes(fx.a, SHARED);
 
         const result = await fx.sweep();
@@ -449,30 +506,77 @@ describe("dedupe metadata parsing", () => {
       "/usr/lib/dyld",
     ]);
   });
+});
 
-  it("judges git status by the configuration actually in effect", async () => {
-    expect(await trustProblemGiven({ exitCode: 1 })).toBeNull();
-    expect(
-      await trustProblemGiven({ stdout: "core.trustctime true\n" }),
-    ).toBeNull();
-    expect(
-      await trustProblemGiven({
-        stdout: "core.trustctime false\ncore.trustctime true\n",
-      }),
-    ).toBeNull();
-    expect(
-      await trustProblemGiven({
-        stdout: "core.trustctime true\ncore.trustctime false\n",
-      }),
-    ).toContain("core.trustctime is false");
-    expect(
-      await trustProblemGiven({ stdout: "core.checkstat minimal\n" }),
-    ).toContain("core.checkStat is minimal");
-    expect(
-      await trustProblemGiven({ stdout: "core.ignorestat true\n" }),
-    ).toContain("core.ignoreStat is true");
-    expect(await trustProblemGiven({ exitCode: 128 })).toBe(
-      "its git configuration could not be read",
-    );
-  });
+describe("git settings under which status cannot vouch for files", () => {
+  it(
+    "reads booleans as git does, in every spelling, per worktree",
+    async () => {
+      const fx = await buildFixture();
+      await git(fx.main, "config", "extensions.worktreeConfig", "true");
+      const set = (key: string, value: string) =>
+        git(fx.a, "config", "--worktree", key, value);
+      const unset = (key: string) =>
+        git(fx.a, "config", "--worktree", "--unset-all", key);
+      expect(await trustProblem(fx.a)).toBeNull();
+
+      for (const value of ["0", "no", "off", "false", "False", "OFF"]) {
+        await set("core.trustctime", value);
+        expect(await trustProblem(fx.a), value).toBe(
+          "core.trustctime is false, so git status cannot vouch for its files",
+        );
+        // The setting is this worktree's own; the others keep the default.
+        expect(await trustProblem(fx.b), value).toBeNull();
+      }
+      for (const value of ["1", "yes", "on", "true", "TRUE"]) {
+        await set("core.trustctime", value);
+        expect(await trustProblem(fx.a), value).toBeNull();
+      }
+      await unset("core.trustctime");
+
+      for (const value of ["1", "yes", "on", "true"]) {
+        await set("core.ignoreStat", value);
+        expect(await trustProblem(fx.a), value).toBe(
+          "core.ignoreStat is true, so git status cannot vouch for its files",
+        );
+      }
+      for (const value of ["0", "no", "off", "false"]) {
+        await set("core.ignoreStat", value);
+        expect(await trustProblem(fx.a), value).toBeNull();
+      }
+      await unset("core.ignoreStat");
+
+      // Not a boolean: `default` or `minimal`, in any case.
+      for (const value of ["minimal", "MINIMAL"]) {
+        await set("core.checkStat", value);
+        expect(await trustProblem(fx.a), value).toContain(
+          "core.checkStat is minimal",
+        );
+      }
+      await set("core.checkStat", "default");
+      expect(await trustProblem(fx.a)).toBeNull();
+      await unset("core.checkStat");
+    },
+    REAL_GIT_TIMEOUT_MS,
+  );
+
+  it(
+    "goes by the value in effect, and keeps a worktree it cannot read",
+    async () => {
+      const fx = await buildFixture();
+      await git(fx.main, "config", "extensions.worktreeConfig", "true");
+      // Off for the repository, back on for one worktree.
+      await git(fx.main, "config", "core.trustctime", "off");
+      await git(fx.a, "config", "--worktree", "core.trustctime", "on");
+      expect(await trustProblem(fx.a)).toBeNull();
+      expect(await trustProblem(fx.b)).toContain("core.trustctime is false");
+      expect(await trustProblem(fx.main)).toContain("core.trustctime is false");
+
+      await git(fx.a, "config", "--worktree", "core.trustctime", "sometimes");
+      expect(await trustProblem(fx.a)).toBe(
+        "its git configuration could not be read",
+      );
+    },
+    REAL_GIT_TIMEOUT_MS,
+  );
 });

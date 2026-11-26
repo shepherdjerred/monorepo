@@ -1,4 +1,4 @@
-import type { DedupeContext, DedupeWorktree } from "./types.ts";
+import type { DedupeContext, DedupeWorktree, FileProbes } from "./types.ts";
 
 /**
  * Bytes of path arguments per command: a few thousand paths, and far inside
@@ -182,12 +182,40 @@ export async function readOpenFiles(
   return res.exitCode === 0 ? parseOpenFiles(res.stdout) : null;
 }
 
-/** Settings under which `git status` compares too little, by effective value. */
-const STATUS_TRUST_PROBLEMS: Readonly<Record<string, string>> = {
-  "core.trustctime=false": "core.trustctime is false",
-  "core.checkstat=minimal": "core.checkStat is minimal",
-  "core.ignorestat=true": "core.ignoreStat is true",
+/**
+ * What the worktree's files are asked through, so that tests on a system
+ * without these tools can stand in for them.
+ */
+export const SYSTEM_FILE_PROBES: FileProbes = {
+  flaggedPaths: readFlaggedPaths,
+  xattrPaths: readXattrPaths,
+  openFiles: readOpenFiles,
 };
+
+/**
+ * A boolean git setting as git itself reads it. `--type=bool` makes git
+ * normalize every spelling (`0`, `no`, `off`, `false`, and their opposites)
+ * and print the value in effect; exit 1 means the setting is not set
+ * anywhere. `null` when git cannot say, for instance for a value that is
+ * not a boolean at all.
+ */
+async function readBooleanSetting(
+  wt: DedupeWorktree,
+  key: string,
+  ctx: DedupeContext,
+): Promise<boolean | "unset" | null> {
+  const res = await ctx.runner(["git", "config", "--type=bool", "--get", key], {
+    cwd: wt.path,
+    timeoutMs: 10_000,
+  });
+  if (res.exitCode === 1) {
+    return "unset";
+  }
+  const value = res.stdout.trim();
+  return res.exitCode !== 0 || (value !== "true" && value !== "false")
+    ? null
+    : value === "true";
+}
 
 /**
  * Why `git status` cannot vouch for file content in this worktree, if it
@@ -195,37 +223,40 @@ const STATUS_TRUST_PROBLEMS: Readonly<Record<string, string>> = {
  * recorded; these settings make it compare less, and then a file edited at
  * the same size with its mtime put back reads as unchanged. Worktrees can
  * carry their own configuration, so each is asked.
+ *
+ * Unset means git's default: change times are trusted and stat data is not
+ * ignored.
  */
 export async function statusTrustProblem(
   wt: DedupeWorktree,
   ctx: DedupeContext,
 ): Promise<string | null> {
-  const res = await ctx.runner(
-    [
-      "git",
-      "config",
-      "--get-regexp",
-      String.raw`^core\.(trustctime|checkstat|ignorestat)$`,
-    ],
-    { cwd: wt.path, timeoutMs: 10_000 },
+  const trustCtime = await readBooleanSetting(wt, "core.trustctime", ctx);
+  const ignoreStat = await readBooleanSetting(wt, "core.ignorestat", ctx);
+  // Not a boolean: `default` or `minimal`.
+  const checkStat = await ctx.runner(
+    ["git", "config", "--get", "core.checkstat"],
+    {
+      cwd: wt.path,
+      timeoutMs: 10_000,
+    },
   );
-  // Exit 1 is git's answer for "none of these is set".
-  if (res.exitCode !== 0 && res.exitCode !== 1) {
+  if (
+    trustCtime === null ||
+    ignoreStat === null ||
+    (checkStat.exitCode !== 0 && checkStat.exitCode !== 1)
+  ) {
     return "its git configuration could not be read";
   }
-  // Git lists every definition; the last one for a key is in effect.
-  const effective = new Map<string, string>();
-  for (const line of res.stdout.split("\n")) {
-    const [key, value] = line.trim().toLowerCase().split(/\s+/u);
-    if (key !== undefined && value !== undefined) {
-      effective.set(key, value);
-    }
+  let problem: string | null = null;
+  if (trustCtime === false) {
+    problem = "core.trustctime is false";
+  } else if (ignoreStat === true) {
+    problem = "core.ignoreStat is true";
+  } else if (checkStat.stdout.trim().toLowerCase() === "minimal") {
+    problem = "core.checkStat is minimal";
   }
-  for (const [key, value] of effective) {
-    const problem = STATUS_TRUST_PROBLEMS[`${key}=${value}`];
-    if (problem !== undefined) {
-      return `${problem}, so git status cannot vouch for its files`;
-    }
-  }
-  return null;
+  return problem === null
+    ? null
+    : `${problem}, so git status cannot vouch for its files`;
 }

@@ -1,10 +1,5 @@
 import { type FileIdentity, isSameFile, lstatRegularFile } from "./clone.ts";
-import {
-  overPaths,
-  readFlaggedPaths,
-  readOpenFiles,
-  readXattrPaths,
-} from "./metadata.ts";
+import { overPaths } from "./metadata.ts";
 import type {
   DedupeContext,
   DedupePassResult,
@@ -115,66 +110,40 @@ async function hashFiles(
   return ran ? hashes : null;
 }
 
-function recordBlobSizes(listing: string, ctx: DedupeContext): void {
-  for (const record of listing.split("\0")) {
-    const [sha, size] = record.split(" ");
-    if (sha !== undefined && size !== undefined && /^\d+$/u.test(size)) {
-      ctx.blobSizes.set(sha, Number(size));
-    }
-  }
-}
-
-const BLOB_SIZE_FORMAT = "--format=%(objectname) %(objectsize)";
-
-/** Above this many paths, listing the whole index is the cheaper way. */
-const MAX_PATHS_TO_LIST_BY_NAME = 400;
-
 /**
  * Make sure the size of every pending blob is known. Sizes belong to blobs,
- * not worktrees, so they are kept for the whole run, and a worktree is only
- * asked about the blobs no earlier worktree had. Git reads each object's
- * header to answer, which is why the few missing paths are named when they
- * are few.
+ * not worktrees, so they are kept for the whole run, and git is only asked
+ * about blobs no earlier worktree had. `cat-file --batch-check` answers
+ * `<name> <type> <size>` per name on its input, in any version of git.
  */
 async function loadBlobSizes(
   wt: DedupeWorktree,
   pending: readonly PendingReplacement[],
   ctx: DedupeContext,
 ): Promise<boolean> {
-  const missing = pending
-    .filter((item) => !ctx.blobSizes.has(item.entry.sha))
-    .map((item) => item.entry.path);
-  if (missing.length === 0) {
+  const missing = new Set<string>();
+  for (const item of pending) {
+    if (!ctx.blobSizes.has(item.entry.sha)) {
+      missing.add(item.entry.sha);
+    }
+  }
+  if (missing.size === 0) {
     return true;
   }
-  if (missing.length <= MAX_PATHS_TO_LIST_BY_NAME) {
-    const ran = await overPaths(
-      {
-        wt,
-        argv: [
-          "git",
-          "--literal-pathspecs",
-          "ls-files",
-          BLOB_SIZE_FORMAT,
-          "-z",
-        ],
-        paths: missing,
-        ctx,
-      },
-      (stdout) => {
-        recordBlobSizes(stdout, ctx);
-      },
-    );
-    return ran && pending.every((item) => ctx.blobSizes.has(item.entry.sha));
-  }
-  const res = await ctx.runner(["git", "ls-files", BLOB_SIZE_FORMAT, "-z"], {
+  const res = await ctx.runner(["git", "cat-file", "--batch-check"], {
     cwd: wt.path,
+    stdin: `${[...missing].join("\n")}\n`,
     timeoutMs: 120_000,
   });
   if (res.exitCode !== 0) {
     return false;
   }
-  recordBlobSizes(res.stdout, ctx);
+  for (const line of res.stdout.split("\n")) {
+    const [sha, type, size] = line.split(" ");
+    if (sha !== undefined && type === "blob" && /^\d+$/u.test(size ?? "")) {
+      ctx.blobSizes.set(sha, Number(size));
+    }
+  }
   return pending.every((item) => ctx.blobSizes.has(item.entry.sha));
 }
 
@@ -208,8 +177,8 @@ async function readPathFacts(
 ): Promise<PathFacts | null> {
   const lines = await readIndexLines(wt, ctx);
   const filtered = await readFilteredPaths(wt, paths, ctx);
-  const flagged = await readFlaggedPaths(wt, paths, ctx);
-  const attributed = await readXattrPaths(wt, paths, ctx);
+  const flagged = await ctx.probes.flaggedPaths(wt, paths, ctx);
+  const attributed = await ctx.probes.xattrPaths(wt, paths, ctx);
   return lines === null ||
     filtered === null ||
     flagged === null ||
@@ -225,9 +194,9 @@ async function readPathFacts(
  */
 function openFilesNow(ctx: DedupeContext): Promise<Set<string> | null> {
   if (ctx.apply) {
-    return readOpenFiles(ctx);
+    return ctx.probes.openFiles(ctx);
   }
-  ctx.dryRunOpenFiles.snapshot ??= readOpenFiles(ctx);
+  ctx.dryRunOpenFiles.snapshot ??= ctx.probes.openFiles(ctx);
   return ctx.dryRunOpenFiles.snapshot;
 }
 

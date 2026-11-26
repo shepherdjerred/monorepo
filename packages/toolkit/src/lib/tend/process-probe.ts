@@ -101,7 +101,10 @@ export const defaultCommandRunner: CommandRunner = async (
       ...(options.cwd === undefined ? {} : { cwd: options.cwd }),
       env: mergedEnv,
       ...(signal === undefined ? {} : { signal }),
-      stdin: "ignore",
+      stdin:
+        options.stdin === undefined
+          ? "ignore"
+          : new TextEncoder().encode(options.stdin),
       stdout: "pipe",
       stderr: "pipe",
     });

@@ -23,6 +23,7 @@ import {
   inodes,
   onApfs,
   physicalOffsets,
+  PLAIN_FILE_PROBES,
   reaperActivityMs,
   refreshedIn,
   removeFixtures,
@@ -777,8 +778,11 @@ describe("sweepDedupe when it cannot run", () => {
       const fx = await buildFixture();
       const before = await inodes(fx.b, SHARED);
       const attempts: string[] = [];
+      // This test plays macOS wherever it runs, so the probes that need
+      // macOS's own tools are stood in for.
       const unsupported = await fx.sweep({
         liveness: makeLiveness({ platform: "darwin" }),
+        probes: PLAIN_FILE_PROBES,
         cloneFile: (_source, destination) => {
           attempts.push(destination);
           return Promise.reject(codedError("ENOTSUP"));
@@ -793,6 +797,7 @@ describe("sweepDedupe when it cannot run", () => {
 
       const failed = await fx.sweep({
         liveness: makeLiveness({ platform: "darwin" }),
+        probes: PLAIN_FILE_PROBES,
         cloneFile: () => Promise.reject(codedError("EACCES")),
       });
       expect(actionFor(failed, fx.b)).toMatchObject({ status: "failed" });

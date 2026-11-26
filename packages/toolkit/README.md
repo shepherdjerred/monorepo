@@ -1991,9 +1991,10 @@ only when all of this holds:
   (macOS's `com.apple.provenance` aside). The copy being cloned from must be
   free of flags and such attributes too, because a clone carries them along;
 - the worktree's configuration lets `git status` notice edits: with
-  `core.trustctime=false`, `core.checkStat=minimal` or `core.ignoreStat=true`
-  the worktree is skipped. Worktrees can carry their own configuration, so
-  each is asked;
+  `core.trustctime` false, `core.checkStat=minimal` or `core.ignoreStat` true
+  the worktree is skipped. The booleans are read through git itself, so
+  `0`, `no` and `off` count as false. Worktrees can carry their own
+  configuration, so each is asked;
 - neither worktree is mid rebase, merge, cherry-pick or bisect, and the one
   being changed is not named by an open Forum notice for this host;
 - both are regular files, at least `--dedupe-min-size`, on the same device.
@@ -2059,10 +2060,12 @@ These limits are accepted:
 Which files are already clones is remembered per worktree under
 `~/.toolkit/tend/dedupe/`, so a later pass leaves them alone. A record holds
 while the file keeps the inode, size and change time it had right after it
-was replaced: a tool that rewrites a clone in place, even with the same
-bytes, gets blocks of its own again, and the changed time makes the file a
-candidate once more. That directory is a rebuildable cache: losing it costs
-one repeat pass.
+was replaced, and while the copy it was cloned from is still the same file
+with the same change time. A tool that rewrites either one in place, even
+with the same bytes, gives it blocks of its own again; the changed time makes
+the file a candidate once more, as does another worktree's copy becoming the
+one to clone from. That directory is a rebuildable cache: losing it, or a
+change to what it records, costs one repeat pass.
 
 The surface runs on macOS only and reports itself skipped elsewhere. A volume
 that cannot clone is reported and nothing on it is replaced; there is no

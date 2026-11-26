@@ -5,6 +5,7 @@ import {
   cloneFileCopyOnWrite,
   directoryDevice,
 } from "./dedupe/clone.ts";
+import { SYSTEM_FILE_PROBES } from "./dedupe/metadata.ts";
 import { dedupeWorktreePass } from "./dedupe/plan.ts";
 import type {
   DedupeContext,
@@ -12,6 +13,7 @@ import type {
   DedupeRefresh,
   DedupeRegistry,
   DedupeWorktree,
+  FileProbes,
 } from "./dedupe/types.ts";
 import { pruneDedupeState } from "./dedupe/state.ts";
 import {
@@ -67,6 +69,8 @@ export type SweepDedupeOptions = {
   readonly cloneFile?: CloneFile | undefined;
   /** `false` never refreshes an index after replacing files. */
   readonly refreshIndex?: boolean | undefined;
+  /** How files are asked about flags, attributes and open handles. */
+  readonly probes?: FileProbes | undefined;
   /** Device a directory is on; replaced in tests to stand in for a volume. */
   readonly deviceOf?:
     ((directory: string) => Promise<number | null>) | undefined;
@@ -313,6 +317,29 @@ function summaryWarnings(tally: DedupeTally, ctx: DedupeContext): string[] {
   return warnings;
 }
 
+function dedupeContext(
+  options: SweepDedupeOptions,
+  homeDir: string,
+): DedupeContext {
+  const paths = options.paths ?? resolveTendPaths({ homeDir });
+  return {
+    // Every git command here must act on the worktree it is started in.
+    runner: withoutInheritedGitContext(options.runner ?? defaultCommandRunner),
+    apply: options.apply,
+    minSizeBytes: options.minSizeBytes ?? DEFAULT_DEDUPE_MIN_SIZE_BYTES,
+    stateDir: path.join(paths.rootDir, "dedupe"),
+    cloneFile: options.cloneFile ?? cloneFileCopyOnWrite,
+    refreshIndex: options.refreshIndex ?? true,
+    isPidAlive: isProcessAliveByKillZero,
+    deviceOf: options.deviceOf ?? directoryDevice,
+    unsupportedDevices: new Map(),
+    blobSizes: new Map(),
+    currentUid: process.getuid?.() ?? -1,
+    probes: options.probes ?? SYSTEM_FILE_PROBES,
+    dryRunOpenFiles: {},
+  };
+}
+
 /**
  * Replace tracked files that are byte-identical across a repository's
  * worktrees with copy-on-write clones of one copy. Nothing is deleted and no
@@ -338,22 +365,7 @@ export async function sweepDedupe(
   }
 
   const homeDir = options.homeDir ?? Bun.env["HOME"] ?? os.homedir();
-  const paths = options.paths ?? resolveTendPaths({ homeDir });
-  const ctx: DedupeContext = {
-    // Every git command here must act on the worktree it is started in.
-    runner: withoutInheritedGitContext(options.runner ?? defaultCommandRunner),
-    apply: options.apply,
-    minSizeBytes: options.minSizeBytes ?? DEFAULT_DEDUPE_MIN_SIZE_BYTES,
-    stateDir: path.join(paths.rootDir, "dedupe"),
-    cloneFile: options.cloneFile ?? cloneFileCopyOnWrite,
-    refreshIndex: options.refreshIndex ?? true,
-    isPidAlive: isProcessAliveByKillZero,
-    deviceOf: options.deviceOf ?? directoryDevice,
-    unsupportedDevices: new Map(),
-    blobSizes: new Map(),
-    currentUid: process.getuid?.() ?? -1,
-    dryRunOpenFiles: {},
-  };
+  const ctx = dedupeContext(options, homeDir);
   const onlyWorktree =
     options.worktree === undefined
       ? undefined

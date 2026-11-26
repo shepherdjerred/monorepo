@@ -148,6 +148,10 @@ async function judgeTarget(
   if (
     recorded?.sha === entry.sha &&
     recorded.ctimeMs === target.ctimeMs &&
+    // The copy it was cloned from must still be that file, in that state.
+    recorded.source.worktree === canonical.worktree.path &&
+    recorded.source.ino === seen.ino &&
+    recorded.source.ctimeMs === seen.ctimeMs &&
     recorded.ino === target.ino &&
     recorded.size === target.size
   ) {
@@ -189,7 +193,7 @@ async function applyReplacement(
   verdict: PendingReplacement & { readonly source: FileIdentity },
   result: DedupePassResult,
   ctx: DedupeContext,
-): Promise<Omit<DedupeFileRecord, "sha"> | null> {
+): Promise<Pick<DedupeFileRecord, "ino" | "size" | "ctimeMs"> | null> {
   const outcome = await replaceWithClone({
     sourcePath: verdict.sourcePath,
     targetPath: verdict.targetPath,
@@ -386,6 +390,11 @@ async function settleReplacement(
     state.set(item.entry.path, {
       ...replaced,
       sha: item.entry.sha,
+      source: {
+        worktree: item.canonical.worktree.path,
+        ino: source.ino,
+        ctimeMs: source.ctimeMs,
+      },
     });
     pass.stateChanged = true;
   }

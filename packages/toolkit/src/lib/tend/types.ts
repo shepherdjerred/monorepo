@@ -55,6 +55,8 @@ export type TendState = z.infer<typeof TendStateSchema>;
 
 export type CommandExecOptions = {
   readonly cwd?: string | undefined;
+  /** Text for the command's standard input; without it there is none. */
+  readonly stdin?: string | undefined;
   readonly env?: Readonly<Record<string, string | undefined>> | undefined;
   readonly timeoutMs?: number | undefined;
 };

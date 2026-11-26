@@ -1,6 +1,27 @@
 import type { CloneFile, FileIdentity } from "./clone.ts";
 import type { CommandRunner } from "#lib/tend/types.ts";
 
+/**
+ * Questions about files that only system tools answer. Each returns `null`
+ * when it could not be answered, and nothing is replaced on a `null`.
+ */
+export type FileProbes = {
+  /** Paths, relative to the worktree, whose file has BSD file flags set. */
+  readonly flaggedPaths: (
+    wt: DedupeWorktree,
+    paths: readonly string[],
+    ctx: DedupeContext,
+  ) => Promise<Set<string> | null>;
+  /** Paths whose file has extended attributes of its own. */
+  readonly xattrPaths: (
+    wt: DedupeWorktree,
+    paths: readonly string[],
+    ctx: DedupeContext,
+  ) => Promise<Set<string> | null>;
+  /** Absolute paths of the regular files open in some process. */
+  readonly openFiles: (ctx: DedupeContext) => Promise<Set<string> | null>;
+};
+
 export type DedupeContext = {
   readonly runner: CommandRunner;
   readonly apply: boolean;
@@ -18,6 +39,7 @@ export type DedupeContext = {
   readonly blobSizes: Map<string, number>;
   /** The user this run acts as; another user's file is not replaced. */
   readonly currentUid: number;
+  readonly probes: FileProbes;
   /** The one look at open files a dry run takes. */
   readonly dryRunOpenFiles: {
     snapshot?: Promise<Set<string> | null> | undefined;

@@ -23,6 +23,17 @@ export type DedupeFileRecord = {
   /** The file's ctime right after it was replaced. */
   readonly ctimeMs: number;
   readonly sha: string;
+  /**
+   * The file it was cloned from, as that file was then. Sharing takes two:
+   * if the source is rewritten, or another worktree's copy is the canonical
+   * one now, the pair no longer shares blocks although this file is
+   * untouched.
+   */
+  readonly source: {
+    readonly worktree: string;
+    readonly ino: number;
+    readonly ctimeMs: number;
+  };
 };
 
 const DedupeStateSchema = z.strictObject({
@@ -35,6 +46,11 @@ const DedupeStateSchema = z.strictObject({
       size: z.number(),
       ctimeMs: z.number(),
       sha: z.string(),
+      source: z.strictObject({
+        worktree: z.string(),
+        ino: z.number(),
+        ctimeMs: z.number(),
+      }),
     }),
   ),
 });
