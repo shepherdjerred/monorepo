@@ -15,6 +15,7 @@ import {
 } from "#lib/launchd.ts";
 import { resolveTendPaths } from "#lib/tend/paths.ts";
 import type { TendRunReport } from "#lib/tend/types.ts";
+import { captureLog } from "./real-git.ts";
 
 const HOME = "/Users/tester";
 const paths = resolveTendPaths({ homeDir: HOME, env: {} });
@@ -23,14 +24,6 @@ const PLIST = `${HOME}/Library/LaunchAgents/com.jerred.toolkit-tend.plist`;
 afterEach(() => {
   vi.restoreAllMocks();
 });
-
-function captureLog(): () => string {
-  const lines: string[] = [];
-  vi.spyOn(console, "log").mockImplementation((...args: unknown[]) => {
-    lines.push(args.map(String).join(" "));
-  });
-  return () => lines.join("\n");
-}
 
 function fakeDeps(
   installed = true,

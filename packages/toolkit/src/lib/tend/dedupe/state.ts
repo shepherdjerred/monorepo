@@ -7,8 +7,12 @@ import { directoryExists } from "#lib/tend/worktrees-git.ts";
 /**
  * Which files of a worktree are already clones, so a later pass does not
  * clone them again (and make git re-hash them). An entry is only trusted
- * while the file still has the recorded inode and size and the index still
- * names the recorded blob.
+ * while the file still has the recorded inode, size and change time and the
+ * index still names the recorded blob.
+ *
+ * The change time is what catches a write in place: a tool that rewrites a
+ * clone, even with the same bytes, makes the filesystem give it blocks of
+ * its own again while its inode and size stay as they were.
  *
  * This is a rebuildable cache: a missing or unreadable file costs one repeat
  * pass and nothing else.
@@ -16,17 +20,20 @@ import { directoryExists } from "#lib/tend/worktrees-git.ts";
 export type DedupeFileRecord = {
   readonly ino: number;
   readonly size: number;
+  /** The file's ctime right after it was replaced. */
+  readonly ctimeMs: number;
   readonly sha: string;
 };
 
 const DedupeStateSchema = z.strictObject({
-  version: z.literal(1),
+  version: z.literal(2),
   worktree: z.string().min(1),
   files: z.record(
     z.string(),
     z.strictObject({
       ino: z.number(),
       size: z.number(),
+      ctimeMs: z.number(),
       sha: z.string(),
     }),
   ),
@@ -76,7 +83,7 @@ export async function writeDedupeState(
   await Bun.write(
     temporary,
     JSON.stringify({
-      version: 1,
+      version: 2,
       worktree: worktreePath,
       files: Object.fromEntries(files),
     }),

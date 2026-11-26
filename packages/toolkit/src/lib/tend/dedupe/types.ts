@@ -14,6 +14,14 @@ export type DedupeContext = {
   readonly deviceOf: (directory: string) => Promise<number | null>;
   /** Devices where a clone was refused, with the refusal. */
   readonly unsupportedDevices: Map<number, string>;
+  /** Size of each blob seen so far, by object name. */
+  readonly blobSizes: Map<string, number>;
+  /** The user this run acts as; another user's file is not replaced. */
+  readonly currentUid: number;
+  /** The one look at open files a dry run takes. */
+  readonly dryRunOpenFiles: {
+    snapshot?: Promise<Set<string> | null> | undefined;
+  };
 };
 
 /**
@@ -57,8 +65,10 @@ export type SourceCheck =
   | { readonly state: "ok"; readonly file: FileIdentity }
   /** The file or its index entry is no longer what was registered. */
   | { readonly state: "stale" }
-  /** An attribute means equal blobs do not prove equal files. */
-  | { readonly state: "filtered" };
+  /** Filtered or line-ending converted: its bytes need not be the blob's. */
+  | { readonly state: "unproven" }
+  /** It has file flags or extended attributes a clone would spread. */
+  | { readonly state: "protected" };
 
 /** The copy every later holder of the same index entry is cloned from. */
 export type CanonicalCopy = {
@@ -109,8 +119,16 @@ export type DedupePassResult = {
   changedFiles: number;
   failedFiles: number;
   firstFailure?: string | undefined;
-  /** Left alone: a `filter`, `ident` or `working-tree-encoding` attribute. */
-  filteredFiles: number;
+  /**
+   * Left alone: the path is filtered, or the file is not as long as its blob
+   * (line endings converted), so equal blobs do not prove equal bytes.
+   */
+  normalizedOrFilteredFiles: number;
+  /**
+   * Left alone: open in a process, hard-linked elsewhere, another user's, or
+   * carrying file flags or extended attributes of its own.
+   */
+  protectedFiles: number;
   /** Left alone: the copy to clone from was no longer the listed blob. */
   staleSourceFiles: number;
   refresh: DedupeRefresh;

@@ -23,6 +23,7 @@ import type {
   PendingReplacement,
   TemporaryPlace,
 } from "./types.ts";
+import { statusTrustProblem } from "./metadata.ts";
 import {
   confirmTargets,
   parseIndexLine,
@@ -35,6 +36,10 @@ function cleanCheck(
   ctx: DedupeContext,
 ): Promise<CleanCheck> {
   wt.clean ??= (async (): Promise<CleanCheck> => {
+    const problem = await statusTrustProblem(wt, ctx);
+    if (problem !== null) {
+      return { ok: false, reason: problem };
+    }
     const startedMs = Date.now();
     // Only tracked files are ever replaced, so untracked ones are not
     // looked for: listing them is most of what a status costs.
@@ -142,6 +147,7 @@ async function judgeTarget(
   const recorded = pass.state.get(entry.path);
   if (
     recorded?.sha === entry.sha &&
+    recorded.ctimeMs === target.ctimeMs &&
     recorded.ino === target.ino &&
     recorded.size === target.size
   ) {
@@ -183,7 +189,7 @@ async function applyReplacement(
   verdict: PendingReplacement & { readonly source: FileIdentity },
   result: DedupePassResult,
   ctx: DedupeContext,
-): Promise<{ readonly ino: number; readonly size: number } | null> {
+): Promise<Omit<DedupeFileRecord, "sha"> | null> {
   const outcome = await replaceWithClone({
     sourcePath: verdict.sourcePath,
     targetPath: verdict.targetPath,
@@ -196,7 +202,16 @@ async function applyReplacement(
     case "replaced":
       result.replacedFiles += 1;
       result.replacedBytes += outcome.size;
-      return { ino: outcome.ino, size: outcome.size };
+      return {
+        ino: outcome.ino,
+        size: outcome.size,
+        ctimeMs: outcome.ctimeMs,
+      };
+    case "unfit":
+      result.protectedFiles += 1;
+      result.plannedFiles -= 1;
+      result.plannedBytes -= verdict.target.size;
+      return null;
     case "changed":
       result.changedFiles += 1;
       return null;
@@ -326,6 +341,19 @@ async function collectCandidates(
   return pending;
 }
 
+function countUnusableSource(
+  state: "stale" | "unproven" | "protected",
+  result: DedupePassResult,
+): void {
+  if (state === "stale") {
+    result.staleSourceFiles += 1;
+  } else if (state === "unproven") {
+    result.normalizedOrFilteredFiles += 1;
+  } else {
+    result.protectedFiles += 1;
+  }
+}
+
 /** Replace one confirmed target, or count why it is left alone. */
 async function settleReplacement(
   item: PendingReplacement,
@@ -333,13 +361,11 @@ async function settleReplacement(
 ): Promise<void> {
   const { ctx, state, result } = pass;
   const check = item.canonical.verified;
-  if (check === undefined || check.state === "stale") {
-    result.staleSourceFiles += 1;
+  if (check?.state !== "ok") {
+    // The copy to clone from cannot be used. This file passed every check
+    // on its own side, so it stands in for later worktrees.
+    countUnusableSource(check?.state ?? "stale", result);
     promote(item.line, pass);
-    return;
-  }
-  if (check.state === "filtered") {
-    result.filteredFiles += 1;
     return;
   }
   const { file: source } = check;
@@ -358,8 +384,7 @@ async function settleReplacement(
     : null;
   if (replaced !== null) {
     state.set(item.entry.path, {
-      ino: replaced.ino,
-      size: replaced.size,
+      ...replaced,
       sha: item.entry.sha,
     });
     pass.stateChanged = true;
@@ -385,7 +410,8 @@ export async function dedupeWorktreePass(
     replacedBytes: 0,
     changedFiles: 0,
     failedFiles: 0,
-    filteredFiles: 0,
+    normalizedOrFilteredFiles: 0,
+    protectedFiles: 0,
     staleSourceFiles: 0,
     refresh: "not-needed",
     warnings: [],

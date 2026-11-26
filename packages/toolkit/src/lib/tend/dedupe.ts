@@ -38,6 +38,7 @@ import {
   isMidGitOperation,
   parsePorcelainWorktrees,
   resolveWorktreeGitDir,
+  withoutInheritedGitContext,
   type WorktreePorcelainEntry,
 } from "./worktrees-git.ts";
 import {
@@ -230,7 +231,8 @@ function toAction(
       replacedFiles: pass.replacedFiles,
       replacedBytes: pass.replacedBytes,
       refresh: pass.refresh,
-      filteredFiles: pass.filteredFiles,
+      normalizedOrFilteredFiles: pass.normalizedOrFilteredFiles,
+      protectedFiles: pass.protectedFiles,
       staleSourceFiles: pass.staleSourceFiles,
     },
   };
@@ -250,7 +252,8 @@ function toAction(
 type DedupeTally = {
   inspectedCount: number;
   matchedWorktree: boolean;
-  filteredFiles: number;
+  normalizedOrFilteredFiles: number;
+  protectedFiles: number;
   staleSourceFiles: number;
   readonly actions: TendActionOutcome[];
   readonly warnings: string[];
@@ -270,7 +273,8 @@ async function dedupeRepository(
   for (const wt of worktrees) {
     const pass = await dedupeWorktreePass(wt, registry, ctx);
     tally.warnings.push(...pass.warnings);
-    tally.filteredFiles += pass.filteredFiles;
+    tally.normalizedOrFilteredFiles += pass.normalizedOrFilteredFiles;
+    tally.protectedFiles += pass.protectedFiles;
     tally.staleSourceFiles += pass.staleSourceFiles;
     if (!wt.isTarget) {
       continue;
@@ -286,9 +290,14 @@ async function dedupeRepository(
 /** What the whole run left alone, and why, as one line per reason. */
 function summaryWarnings(tally: DedupeTally, ctx: DedupeContext): string[] {
   const warnings: string[] = [];
-  if (tally.filteredFiles > 0) {
+  if (tally.normalizedOrFilteredFiles > 0) {
     warnings.push(
-      `${String(tally.filteredFiles)} file(s) left alone: a filter, ident or working-tree-encoding attribute means equal blobs do not prove equal files`,
+      `${String(tally.normalizedOrFilteredFiles)} file(s) left alone as normalized or filtered: a filter, ident or working-tree-encoding attribute, or a file that is not as long as its blob, means equal blobs do not prove equal files`,
+    );
+  }
+  if (tally.protectedFiles > 0) {
+    warnings.push(
+      `${String(tally.protectedFiles)} file(s) left alone as in use or not plain: open in a process, hard-linked elsewhere, another user's, or carrying file flags or extended attributes`,
     );
   }
   if (tally.staleSourceFiles > 0) {
@@ -331,7 +340,8 @@ export async function sweepDedupe(
   const homeDir = options.homeDir ?? Bun.env["HOME"] ?? os.homedir();
   const paths = options.paths ?? resolveTendPaths({ homeDir });
   const ctx: DedupeContext = {
-    runner: options.runner ?? defaultCommandRunner,
+    // Every git command here must act on the worktree it is started in.
+    runner: withoutInheritedGitContext(options.runner ?? defaultCommandRunner),
     apply: options.apply,
     minSizeBytes: options.minSizeBytes ?? DEFAULT_DEDUPE_MIN_SIZE_BYTES,
     stateDir: path.join(paths.rootDir, "dedupe"),
@@ -340,6 +350,9 @@ export async function sweepDedupe(
     isPidAlive: isProcessAliveByKillZero,
     deviceOf: options.deviceOf ?? directoryDevice,
     unsupportedDevices: new Map(),
+    blobSizes: new Map(),
+    currentUid: process.getuid?.() ?? -1,
+    dryRunOpenFiles: {},
   };
   const onlyWorktree =
     options.worktree === undefined
@@ -358,7 +371,8 @@ export async function sweepDedupe(
   const tally: DedupeTally = {
     inspectedCount: 0,
     matchedWorktree: false,
-    filteredFiles: 0,
+    normalizedOrFilteredFiles: 0,
+    protectedFiles: 0,
     staleSourceFiles: 0,
     actions: [],
     warnings: [],

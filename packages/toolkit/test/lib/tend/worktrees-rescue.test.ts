@@ -2,7 +2,6 @@ import { mkdir, mkdtemp, realpath, rm, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { defaultCommandRunner } from "#lib/tend/process-probe.ts";
 import type { CommandRunner } from "#lib/tend/types.ts";
 import { sweepWorktrees } from "#lib/tend/worktrees.ts";
 import { directoryExists } from "#lib/tend/worktrees-git.ts";
@@ -11,45 +10,12 @@ import {
   snapshotDirtyWorktree,
 } from "#lib/tend/worktrees-rescue.ts";
 import { readWorktreeStatus } from "#lib/tend/worktrees-status.ts";
+import { gitThrough, REAL_GIT_TIMEOUT_MS, realGitRunner } from "./real-git.ts";
 import { makeLiveness } from "./worktree-fixtures.ts";
 
-const REAL_GIT_TIMEOUT_MS = 60_000;
 const DAY_MS = 86_400_000;
-
-/**
- * Real git, cut off from the developer's own configuration and from any git
- * context this process inherited. Run from a git hook, `GIT_INDEX_FILE`,
- * `GIT_DIR` and `GIT_WORK_TREE` would point the fixture's commands at the
- * caller's repository.
- */
-const GIT_ENV: Readonly<Record<string, string | undefined>> = {
-  GIT_INDEX_FILE: undefined,
-  GIT_DIR: undefined,
-  GIT_WORK_TREE: undefined,
-  GIT_CONFIG_GLOBAL: "/dev/null",
-  GIT_CONFIG_NOSYSTEM: "1",
-  GIT_AUTHOR_NAME: "Test Author",
-  GIT_AUTHOR_EMAIL: "author@example.com",
-  GIT_COMMITTER_NAME: "Test Author",
-  GIT_COMMITTER_EMAIL: "author@example.com",
-};
-
-const runner: CommandRunner = (argv, options = {}) =>
-  argv[0] === "hc"
-    ? // Herdr is not part of this test: no terminals are open anywhere.
-      Promise.resolve({ exitCode: 0, stdout: '{"terminals":[]}', stderr: "" })
-    : defaultCommandRunner(argv, {
-        ...options,
-        env: { ...GIT_ENV, ...options.env },
-      });
-
-async function git(cwd: string, ...args: string[]): Promise<string> {
-  const res = await runner(["git", ...args], { cwd });
-  if (res.exitCode !== 0) {
-    throw new Error(`git ${args.join(" ")} failed: ${res.stderr}`);
-  }
-  return res.stdout.trim();
-}
+const runner = realGitRunner();
+const git = gitThrough(runner);
 
 const tempDirs: string[] = [];
 

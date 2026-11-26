@@ -19,6 +19,9 @@ export type FileIdentity = {
   readonly ino: number;
   readonly size: number;
   readonly mode: number;
+  readonly nlink: number;
+  readonly uid: number;
+  readonly gid: number;
   readonly atimeMs: number;
   readonly mtimeMs: number;
   readonly ctimeMs: number;
@@ -36,6 +39,9 @@ export async function lstatRegularFile(
           ino: info.ino,
           size: info.size,
           mode: info.mode,
+          nlink: info.nlink,
+          uid: info.uid,
+          gid: info.gid,
           atimeMs: info.atimeMs,
           mtimeMs: info.mtimeMs,
           ctimeMs: info.ctimeMs,
@@ -149,9 +155,17 @@ function errorText(error: unknown): string {
 }
 
 export type ReplaceOutcome =
-  | { readonly kind: "replaced"; readonly ino: number; readonly size: number }
+  | {
+      readonly kind: "replaced";
+      readonly ino: number;
+      readonly size: number;
+      /** As the file is once every step here is done; any later write moves it. */
+      readonly ctimeMs: number;
+    }
   /** The target or the source changed after it was checked; nothing was done. */
   | { readonly kind: "changed" }
+  /** The clone would not have the target's size, owner or group. */
+  | { readonly kind: "unfit" }
   | { readonly kind: "unsupported"; readonly detail: string }
   | { readonly kind: "failed"; readonly detail: string };
 
@@ -200,6 +214,16 @@ export async function replaceWithClone(options: {
     const permissions = target.mode & 0o7777;
     await chmod(temporaryPath, permissions);
     await utimes(temporaryPath, target.atimeMs / 1000, target.mtimeMs / 1000);
+    // What is about to take the target's place must be its equal in
+    // everything a rename cannot fix afterwards.
+    const staged = await lstatRegularFile(temporaryPath);
+    if (
+      staged?.size !== target.size ||
+      staged.uid !== target.uid ||
+      staged.gid !== target.gid
+    ) {
+      return { kind: "unfit" };
+    }
     if (!isSameFile(await lstatRegularFile(targetPath), target)) {
       return { kind: "changed" };
     }
@@ -212,7 +236,12 @@ export async function replaceWithClone(options: {
     const replaced = await lstatRegularFile(targetPath);
     return replaced === null
       ? { kind: "failed", detail: `${targetPath} vanished after the rename` }
-      : { kind: "replaced", ino: replaced.ino, size: replaced.size };
+      : {
+          kind: "replaced",
+          ino: replaced.ino,
+          size: replaced.size,
+          ctimeMs: replaced.ctimeMs,
+        };
   } catch (error: unknown) {
     return { kind: "failed", detail: errorText(error) };
   } finally {

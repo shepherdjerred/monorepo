@@ -1976,15 +1976,37 @@ only when all of this holds:
 - the path has no `filter`, `ident` or `working-tree-encoding` attribute in
   either worktree. With one of those, two worktrees can hold different bytes
   for the same blob and both be clean, so equal index entries prove nothing
-  about the files. Line-ending conversion is the same in every worktree of a
-  repository and does not exclude a path;
+  about the files;
+- each file is exactly as long as its blob. Git's line-ending conversion
+  only removes carriage returns on the way into the repository, so a clean
+  file that is neither shorter nor longer than its blob is that blob, byte
+  for byte. A file checked out with CRLF endings, or one holding CRLFs that
+  git normalizes away, is a different length and is left alone, whatever
+  `core.autocrlf` and `core.eol` say in either worktree. Two files with
+  different line endings that are both clean against one blob can therefore
+  never both qualify;
+- the file being replaced is plain and nobody's but this run's to replace:
+  not open or mapped in any process, not hard-linked elsewhere, owned by the
+  current user, and without BSD file flags or extended attributes of its own
+  (macOS's `com.apple.provenance` aside). The copy being cloned from must be
+  free of flags and such attributes too, because a clone carries them along;
+- the worktree's configuration lets `git status` notice edits: with
+  `core.trustctime=false`, `core.checkStat=minimal` or `core.ignoreStat=true`
+  the worktree is skipped. Worktrees can carry their own configuration, so
+  each is asked;
 - neither worktree is mid rebase, merge, cherry-pick or bisect, and the one
   being changed is not named by an open Forum notice for this host;
-- both are regular files of the same size, at least `--dedupe-min-size`, on
-  the same device.
+- both are regular files, at least `--dedupe-min-size`, on the same device.
 
-Files left alone because of an attribute, or because the copy to clone from
-had changed, are counted in the report.
+A file's own permission bits are kept, so `core.fileMode=false` and a mode
+that differs from the other copy's change nothing. Sparse-checkout entries
+are skip-worktree and are never candidates. A tracked directory that a
+symlink has replaced reads as changed to `git status`, so nothing behind the
+symlink is touched.
+
+Files left alone are counted in the report, per worktree and for the run, by
+reason: normalized or filtered, in use or not plain, and the copy to clone
+from having changed.
 
 The clone source is the main checkout's copy when it qualifies, otherwise the
 first worktree whose copy does. `--worktree` limits which worktree has files
@@ -1997,11 +2019,12 @@ own git directory, gives the clone the target's permissions and times, checks
 once more that neither file changed, and renames the clone over the target.
 The clone is staged there, not beside the target, because git never reports
 anything under a git directory: a session running `git status`, or staging
-everything in the worktree, cannot pick up a half-finished clone. A worktree whose git
-directory is on a different volume than its files is skipped, since the rename
-would not be atomic. The directory's own times are then put
-back, because the reaper and build tools read directory mtimes as activity. A
-file that changed in between is left alone and counted.
+everything in the worktree, cannot pick up a half-finished clone. A worktree
+whose git directory is on a different volume than its files is skipped, since
+the rename would not be atomic. The directory's own times are then put back,
+because the reaper and build tools read directory mtimes as activity. A file
+that changed in between is left alone and counted, and so is a clone that
+does not come out with the target's size, owner and group.
 
 Replaced files have new inodes, so git treats them as possibly changed until
 it re-reads them. `git update-index -q --refresh` does that once per worktree,
@@ -2017,15 +2040,29 @@ worktree reports whether its index was refreshed, left to a live session,
 skipped by the flag, or could not be refreshed, and the summary line counts
 them.
 
-Two limits are accepted. An edit that lands in the instant between the last
-check and the rename, or through a file descriptor opened before it, is lost;
-closing that window would need a lock no editor honors. And each replacement
-is a rename, so file watchers in a live worktree see one burst of change
-events the first time its files are shared.
+These limits are accepted:
+
+- An edit that lands in the instant between the last check and the rename is
+  lost, as is a write through a file descriptor a process opens after the
+  open-file check; closing that window would need a lock no editor honors.
+- Each replacement is a rename, so file watchers in a live worktree see one
+  burst of change events the first time its files are shared.
+- A replaced file has a new inode and change time. Its modification time is
+  kept to the microsecond, not the nanosecond. Tools that go by inode or
+  ctime, backup software among them, see it as changed once.
+- The clone carries the source file's `com.apple.provenance` attribute, not
+  the replaced file's, and an access control list on the replaced file is
+  not carried over. Access control lists are not looked at.
+- Files checked out with CRLF line endings are never shared, even with each
+  other.
 
 Which files are already clones is remembered per worktree under
-`~/.toolkit/tend/dedupe/`, so a later pass leaves them alone. That directory
-is a rebuildable cache: losing it costs one repeat pass.
+`~/.toolkit/tend/dedupe/`, so a later pass leaves them alone. A record holds
+while the file keeps the inode, size and change time it had right after it
+was replaced: a tool that rewrites a clone in place, even with the same
+bytes, gets blocks of its own again, and the changed time makes the file a
+candidate once more. That directory is a rebuildable cache: losing it costs
+one repeat pass.
 
 The surface runs on macOS only and reports itself skipped elsewhere. A volume
 that cannot clone is reported and nothing on it is replaced; there is no

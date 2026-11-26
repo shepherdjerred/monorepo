@@ -1,4 +1,10 @@
 import { type FileIdentity, isSameFile, lstatRegularFile } from "./clone.ts";
+import {
+  overPaths,
+  readFlaggedPaths,
+  readOpenFiles,
+  readXattrPaths,
+} from "./metadata.ts";
 import type {
   DedupeContext,
   DedupePassResult,
@@ -23,56 +29,6 @@ export function parseIndexLine(line: string): IndexEntry | null {
   return mode === "100644" || mode === "100755"
     ? { sha: line.slice(9, tab - 2), path: line.slice(tab + 1) }
     : null;
-}
-
-/**
- * Bytes of path arguments per git invocation: a few thousand paths, and far
- * inside the limit on argument length on every platform.
- */
-const PATH_BYTES_PER_COMMAND = 120_000;
-
-function batchPaths(paths: readonly string[]): string[][] {
-  const batches: string[][] = [];
-  let batch: string[] = [];
-  let bytes = 0;
-  for (const filePath of paths) {
-    const size = Buffer.byteLength(filePath) + 1;
-    if (batch.length > 0 && bytes + size > PATH_BYTES_PER_COMMAND) {
-      batches.push(batch);
-      batch = [];
-      bytes = 0;
-    }
-    batch.push(filePath);
-    bytes += size;
-  }
-  if (batch.length > 0) {
-    batches.push(batch);
-  }
-  return batches;
-}
-
-/**
- * Run a git command over `paths` in batches and join the output. `null` when
- * any batch fails: a partial answer would read as "these paths are fine".
- */
-async function gitOverPaths(
-  wt: DedupeWorktree,
-  argv: readonly string[],
-  paths: readonly string[],
-  ctx: DedupeContext,
-): Promise<string | null> {
-  let output = "";
-  for (const batch of batchPaths(paths)) {
-    const res = await ctx.runner(["git", ...argv, "--", ...batch], {
-      cwd: wt.path,
-      timeoutMs: 300_000,
-    });
-    if (res.exitCode !== 0) {
-      return null;
-    }
-    output += res.stdout;
-  }
-  return output;
 }
 
 /**
@@ -112,21 +68,28 @@ export function parseAttributedPaths(checkAttrStdout: string): Set<string> {
  * Paths whose working file is not a plain function of the blob alone. With a
  * clean/smudge `filter`, `ident` expansion or a `working-tree-encoding`, two
  * worktrees can hold different bytes for one blob and both be clean, so equal
- * index entries say nothing about the files. Line-ending conversion is left
- * in: it is the same in every worktree of a repository.
+ * index entries say nothing about the files.
  */
 async function readFilteredPaths(
   wt: DedupeWorktree,
   paths: readonly string[],
   ctx: DedupeContext,
 ): Promise<Set<string> | null> {
-  const output = await gitOverPaths(
-    wt,
-    ["check-attr", "-z", ...BYTE_CHANGING_ATTRIBUTES],
-    paths,
-    ctx,
+  const filtered = new Set<string>();
+  const ran = await overPaths(
+    {
+      wt,
+      argv: ["git", "check-attr", "-z", ...BYTE_CHANGING_ATTRIBUTES],
+      paths,
+      ctx,
+    },
+    (stdout) => {
+      for (const filePath of parseAttributedPaths(stdout)) {
+        filtered.add(filePath);
+      }
+    },
   );
-  return output === null ? null : parseAttributedPaths(output);
+  return ran ? filtered : null;
 }
 
 /**
@@ -138,17 +101,145 @@ async function hashFiles(
   paths: readonly string[],
   ctx: DedupeContext,
 ): Promise<Map<string, string> | null> {
-  const output = await gitOverPaths(wt, ["hash-object"], paths, ctx);
-  const hashes = output?.split("\n").filter((line) => line.length > 0);
-  return hashes?.length === paths.length
-    ? new Map(paths.map((filePath, index) => [filePath, hashes[index] ?? ""]))
-    : null;
+  const hashes = new Map<string, string>();
+  const ran = await overPaths(
+    { wt, argv: ["git", "hash-object"], paths, ctx },
+    (stdout, batch) => {
+      // One line per file, in order. A missing line matches no blob.
+      const lines = stdout.split("\n");
+      for (const [index, filePath] of batch.entries()) {
+        hashes.set(filePath, lines[index] ?? "");
+      }
+    },
+  );
+  return ran ? hashes : null;
+}
+
+function recordBlobSizes(listing: string, ctx: DedupeContext): void {
+  for (const record of listing.split("\0")) {
+    const [sha, size] = record.split(" ");
+    if (sha !== undefined && size !== undefined && /^\d+$/u.test(size)) {
+      ctx.blobSizes.set(sha, Number(size));
+    }
+  }
+}
+
+const BLOB_SIZE_FORMAT = "--format=%(objectname) %(objectsize)";
+
+/** Above this many paths, listing the whole index is the cheaper way. */
+const MAX_PATHS_TO_LIST_BY_NAME = 400;
+
+/**
+ * Make sure the size of every pending blob is known. Sizes belong to blobs,
+ * not worktrees, so they are kept for the whole run, and a worktree is only
+ * asked about the blobs no earlier worktree had. Git reads each object's
+ * header to answer, which is why the few missing paths are named when they
+ * are few.
+ */
+async function loadBlobSizes(
+  wt: DedupeWorktree,
+  pending: readonly PendingReplacement[],
+  ctx: DedupeContext,
+): Promise<boolean> {
+  const missing = pending
+    .filter((item) => !ctx.blobSizes.has(item.entry.sha))
+    .map((item) => item.entry.path);
+  if (missing.length === 0) {
+    return true;
+  }
+  if (missing.length <= MAX_PATHS_TO_LIST_BY_NAME) {
+    const ran = await overPaths(
+      {
+        wt,
+        argv: [
+          "git",
+          "--literal-pathspecs",
+          "ls-files",
+          BLOB_SIZE_FORMAT,
+          "-z",
+        ],
+        paths: missing,
+        ctx,
+      },
+      (stdout) => {
+        recordBlobSizes(stdout, ctx);
+      },
+    );
+    return ran && pending.every((item) => ctx.blobSizes.has(item.entry.sha));
+  }
+  const res = await ctx.runner(["git", "ls-files", BLOB_SIZE_FORMAT, "-z"], {
+    cwd: wt.path,
+    timeoutMs: 120_000,
+  });
+  if (res.exitCode !== 0) {
+    return false;
+  }
+  recordBlobSizes(res.stdout, ctx);
+  return pending.every((item) => ctx.blobSizes.has(item.entry.sha));
+}
+
+/**
+ * True when the file on disk is, byte for byte, the blob: it is exactly as
+ * long as the blob. Git's line-ending conversion only ever removes carriage
+ * returns on the way in, so a file that is clean against its entry and no
+ * shorter or longer than the blob had nothing removed and is the blob
+ * itself. A file checked out with CRLF endings, or committed with them and
+ * normalized, differs in length and is left alone; so two files that are
+ * both clean against one blob but hold different line endings can never
+ * both pass. This holds whatever `core.autocrlf` and `core.eol` say, in
+ * each worktree separately.
+ */
+function isBlobLength(file: FileIdentity, sha: string, ctx: DedupeContext) {
+  return file.size === ctx.blobSizes.get(sha);
+}
+
+/** What several git and system commands say about a worktree's paths. */
+type PathFacts = {
+  readonly lines: Set<string>;
+  readonly filtered: Set<string>;
+  readonly flagged: Set<string>;
+  readonly attributed: Set<string>;
+};
+
+async function readPathFacts(
+  wt: DedupeWorktree,
+  paths: readonly string[],
+  ctx: DedupeContext,
+): Promise<PathFacts | null> {
+  const lines = await readIndexLines(wt, ctx);
+  const filtered = await readFilteredPaths(wt, paths, ctx);
+  const flagged = await readFlaggedPaths(wt, paths, ctx);
+  const attributed = await readXattrPaths(wt, paths, ctx);
+  return lines === null ||
+    filtered === null ||
+    flagged === null ||
+    attributed === null
+    ? null
+    : { lines, filtered, flagged, attributed };
+}
+
+/**
+ * The files open in some process. An applied run asks afresh for every
+ * worktree, immediately before it replaces anything there. A dry run only
+ * counts, so one look serves the whole run.
+ */
+function openFilesNow(ctx: DedupeContext): Promise<Set<string> | null> {
+  if (ctx.apply) {
+    return readOpenFiles(ctx);
+  }
+  ctx.dryRunOpenFiles.snapshot ??= readOpenFiles(ctx);
+  return ctx.dryRunOpenFiles.snapshot;
 }
 
 /**
  * Checks that can only be made once a target worktree's candidates are
- * known, in two git calls for all of them: the index must still list each
- * path as it did when the pass began, and the path must not be filtered.
+ * known, in a handful of commands for all of them:
+ *
+ * - the index must still list each path as it did when the pass began;
+ * - the path must not be filtered, and the file must be as long as its blob;
+ * - the file must be nobody's but this pass's to replace: not hard-linked
+ *   elsewhere, not another user's, without file flags or extended
+ *   attributes of its own, and not open in any process.
  */
 export async function confirmTargets(
   wt: DedupeWorktree,
@@ -160,19 +251,32 @@ export async function confirmTargets(
     return [];
   }
   const paths = pending.map((item) => item.entry.path);
-  const lines = await readIndexLines(wt, ctx);
-  const filtered = await readFilteredPaths(wt, paths, ctx);
-  if (lines === null || filtered === null) {
+  const facts = await readPathFacts(wt, paths, ctx);
+  const sizesKnown = await loadBlobSizes(wt, pending, ctx);
+  const open = await openFilesNow(ctx);
+  if (facts === null || !sizesKnown || open === null) {
     result.warnings.push(
-      `Skipped ${wt.path}: its index or attributes could not be read again`,
+      `Skipped ${wt.path}: its index, attributes or open files could not be read`,
     );
     return [];
   }
   const confirmed: PendingReplacement[] = [];
   for (const item of pending) {
-    if (filtered.has(item.entry.path)) {
-      result.filteredFiles += 1;
-    } else if (lines.has(item.line)) {
+    const { path: filePath, sha } = item.entry;
+    if (!facts.lines.has(item.line)) {
+      continue;
+    }
+    if (facts.filtered.has(filePath) || !isBlobLength(item.target, sha, ctx)) {
+      result.normalizedOrFilteredFiles += 1;
+    } else if (
+      item.target.nlink !== 1 ||
+      item.target.uid !== ctx.currentUid ||
+      facts.flagged.has(filePath) ||
+      facts.attributed.has(filePath) ||
+      open.has(item.targetPath)
+    ) {
+      result.protectedFiles += 1;
+    } else {
       confirmed.push(item);
     }
   }
@@ -183,19 +287,26 @@ function judgeSource(
   item: PendingReplacement,
   before: FileIdentity | null,
   after: FileIdentity | null,
-  read: {
-    readonly lines: Set<string>;
-    readonly filtered: Set<string>;
+  read: PathFacts & {
     readonly hashes: Map<string, string>;
+    readonly ctx: DedupeContext;
   },
 ): SourceCheck {
-  if (read.filtered.has(item.entry.path)) {
-    return { state: "filtered" };
+  const { path: filePath, sha } = item.entry;
+  if (
+    read.filtered.has(filePath) ||
+    (before !== null && !isBlobLength(before, sha, read.ctx))
+  ) {
+    return { state: "unproven" };
+  }
+  // A clone carries the source's flags and attributes with it.
+  if (read.flagged.has(filePath) || read.attributed.has(filePath)) {
+    return { state: "protected" };
   }
   const isRegisteredBlob =
     before !== null &&
     read.lines.has(item.line) &&
-    read.hashes.get(item.entry.path) === item.entry.sha &&
+    read.hashes.get(filePath) === sha &&
     // Hashed bytes only speak for the file if it did not change meanwhile.
     isSameFile(after, before);
   return isRegisteredBlob ? { state: "ok", file: before } : { state: "stale" };
@@ -212,19 +323,18 @@ async function verifyWorktreeCopies(
   }
   const present = items.filter((_item, index) => before[index] !== null);
   const paths = present.map((item) => item.entry.path);
-  const lines = await readIndexLines(sourceWt, ctx);
-  const filtered = await readFilteredPaths(sourceWt, paths, ctx);
+  const facts = await readPathFacts(sourceWt, paths, ctx);
   const hashes = await hashFiles(sourceWt, paths, ctx);
   for (const [index, item] of items.entries()) {
     const seen = before[index] ?? null;
     item.canonical.verified =
-      lines === null || filtered === null || hashes === null
+      facts === null || hashes === null
         ? { state: "stale" }
         : judgeSource(
             item,
             seen,
             seen === null ? null : await lstatRegularFile(item.sourcePath),
-            { lines, filtered, hashes },
+            { ...facts, hashes, ctx },
           );
   }
 }

@@ -1,20 +1,10 @@
-import { createHash, randomBytes } from "node:crypto";
-import {
-  appendFile,
-  chmod,
-  lstat,
-  mkdir,
-  mkdtemp,
-  readdir,
-  realpath,
-  rm,
-} from "node:fs/promises";
+import { randomBytes } from "node:crypto";
+import { appendFile, lstat, mkdtemp, readdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { handleTendCommand } from "#commands/tend/tend.ts";
 import { formatTendReport } from "#commands/tend/tend-format.ts";
-import { sweepDedupe, type SweepDedupeOptions } from "#lib/tend/dedupe.ts";
 import {
   type CloneFile,
   cloneFileCopyOnWrite,
@@ -22,80 +12,35 @@ import {
 } from "#lib/tend/dedupe/clone.ts";
 import { parseAttributedPaths } from "#lib/tend/dedupe/verify.ts";
 import { parseByteSize, resolveTendPaths } from "#lib/tend/paths.ts";
-import { defaultCommandRunner } from "#lib/tend/process-probe.ts";
 import { runTend } from "#lib/tend/runner.ts";
-import type {
-  CommandRunner,
-  SurfaceSweepResult,
-  TendRunReport,
-} from "#lib/tend/types.ts";
+import type { CommandRunner, TendRunReport } from "#lib/tend/types.ts";
+import { directoryExists } from "#lib/tend/worktrees-git.ts";
 import {
-  computeWorktreeLastActivityMs,
-  directoryExists,
-} from "#lib/tend/worktrees-git.ts";
+  actionFor,
+  buildFixture,
+  digest,
+  git,
+  inodes,
+  onApfs,
+  physicalOffsets,
+  reaperActivityMs,
+  refreshedIn,
+  removeFixtures,
+  runner,
+  SHARED,
+  sharedFileFacts,
+  stagingDir,
+  startOf,
+  UNTOUCHED_IN_A,
+} from "./dedupe-fixtures.ts";
+import { captureLog, REAL_GIT_TIMEOUT_MS } from "./real-git.ts";
 import { makeLiveness } from "./worktree-fixtures.ts";
-
-const REAL_GIT_TIMEOUT_MS = 60_000;
-const onApfs = process.platform === "darwin";
-
-/** Real git, cut off from the developer's own configuration. */
-const GIT_ENV = {
-  GIT_CONFIG_GLOBAL: "/dev/null",
-  GIT_CONFIG_NOSYSTEM: "1",
-  GIT_AUTHOR_NAME: "Test Author",
-  GIT_AUTHOR_EMAIL: "author@example.com",
-  GIT_COMMITTER_NAME: "Test Author",
-  GIT_COMMITTER_EMAIL: "author@example.com",
-};
-
-const runner: CommandRunner = (argv, options = {}) =>
-  argv[0] === "git" || argv[0] === "python3"
-    ? defaultCommandRunner(argv, {
-        ...options,
-        env: { ...GIT_ENV, ...options.env },
-      })
-    : // Herdr, ps, lsof and tailscale are not part of these tests.
-      Promise.resolve({ exitCode: 127, stdout: "", stderr: "" });
-
-async function git(cwd: string, ...args: string[]): Promise<string> {
-  const res = await runner(["git", ...args], { cwd });
-  if (res.exitCode !== 0) {
-    throw new Error(`git ${args.join(" ")} failed: ${res.stderr}`);
-  }
-  return res.stdout.trim();
-}
-
-/**
- * Physical device offset of each file's first byte (`F_LOG2PHYS_EXT`). Two
- * files that report the same offset store their data in the same blocks.
- */
-const PHYSICAL_OFFSET_SCRIPT = `
-import fcntl, os, struct, sys
-for name in sys.argv[1:]:
-    fd = os.open(name, os.O_RDONLY)
-    try:
-        os.fsync(fd)
-        request = struct.pack("=Iqq", 0, os.fstat(fd).st_size, 0)
-        print(struct.unpack("=Iqq", fcntl.fcntl(fd, 65, request))[2])
-    finally:
-        os.close(fd)
-`;
-
-async function physicalOffsets(files: readonly string[]): Promise<string[]> {
-  const res = await runner(
-    ["python3", "-I", "-c", PHYSICAL_OFFSET_SCRIPT, ...files],
-    {},
-  );
-  if (res.exitCode !== 0) {
-    throw new Error(`physical offset probe failed: ${res.stderr}`);
-  }
-  return res.stdout.trim().split("\n");
-}
 
 const tempDirs: string[] = [];
 
 afterEach(async () => {
   vi.restoreAllMocks();
+  await removeFixtures();
   while (tempDirs.length > 0) {
     const dir = tempDirs.pop();
     if (dir !== undefined) {
@@ -104,137 +49,6 @@ afterEach(async () => {
   }
 });
 
-type Fixture = {
-  readonly root: string;
-  readonly gitRoot: string;
-  readonly main: string;
-  readonly a: string;
-  readonly b: string;
-  readonly tendDir: string;
-  /** Every command the sweep ran, with the directory it ran in. */
-  readonly commands: { argv: readonly string[]; cwd: string }[];
-  readonly runner: CommandRunner;
-  readonly sweep: (
-    overrides?: Partial<SweepDedupeOptions>,
-  ) => Promise<SurfaceSweepResult>;
-};
-
-/**
- * `<root>/git/proj` with worktrees `a` and `b` on the same commit. Worktree
- * `a` then gets one file rewritten at the same size, one grown, and one
- * untracked file; `b` stays clean.
- */
-async function buildFixture(
-  beforeFirstCommit?: (main: string) => Promise<void>,
-): Promise<Fixture> {
-  const root = await realpath(
-    await mkdtemp(path.join(os.tmpdir(), "tend-dedupe-test-")),
-  );
-  tempDirs.push(root);
-  const gitRoot = path.join(root, "git");
-  const main = path.join(gitRoot, "proj");
-  const a = path.join(root, "wts", "a");
-  const b = path.join(root, "wts", "b");
-  await mkdir(path.join(main, "sub", "dir"), { recursive: true });
-  await git(main, "init", "-q", "-b", "main");
-  await Bun.write(path.join(main, "big.bin"), randomBytes(200_000));
-  await Bun.write(path.join(main, "tool.sh"), randomBytes(100_000));
-  await chmod(path.join(main, "tool.sh"), 0o755);
-  await Bun.write(path.join(main, "sub/dir/nested.bin"), randomBytes(150_000));
-  await Bun.write(path.join(main, "modified.bin"), randomBytes(120_000));
-  await Bun.write(path.join(main, "grown.bin"), randomBytes(90_000));
-  await Bun.write(path.join(main, "small.txt"), randomBytes(1500));
-  await beforeFirstCommit?.(main);
-  await git(main, "add", "-A");
-  await git(main, "commit", "-q", "-m", "initial");
-  await git(main, "worktree", "add", "-q", "-b", "feat/a", a);
-  await git(main, "worktree", "add", "-q", "-b", "feat/b", b);
-  await Bun.write(path.join(a, "modified.bin"), randomBytes(120_000));
-  await appendFile(path.join(a, "grown.bin"), "more");
-  await Bun.write(path.join(a, "untracked.bin"), randomBytes(200_000));
-  await Bun.write(path.join(b, "untracked.bin"), randomBytes(200_000));
-
-  const tendDir = path.join(root, "tend");
-  const commands: Fixture["commands"] = [];
-  const recordingRunner: CommandRunner = (argv, options = {}) => {
-    commands.push({ argv: [...argv], cwd: options.cwd ?? "" });
-    return runner(argv, options);
-  };
-  return {
-    root,
-    gitRoot,
-    main,
-    a,
-    b,
-    tendDir,
-    commands,
-    runner: recordingRunner,
-    sweep: (overrides = {}) =>
-      sweepDedupe({
-        liveness: makeLiveness({ platform: process.platform }),
-        runner: recordingRunner,
-        apply: true,
-        paths: resolveTendPaths({ tendDir }),
-        gitDirs: [gitRoot],
-        homeDir: root,
-        ...overrides,
-      }),
-  };
-}
-
-/** The reaper's newest activity signal for a worktree. */
-async function reaperActivityMs(wt: string): Promise<number> {
-  const signals = await computeWorktreeLastActivityMs({
-    wtPath: wt,
-    gitDir: await git(wt, "rev-parse", "--absolute-git-dir"),
-    runner,
-    changedPaths: ["untracked.bin", "sub/dir/nested.bin"],
-  });
-  return signals.lastActivityMs;
-}
-
-/** Where a worktree's clones are staged before being renamed into place. */
-async function stagingDir(worktree: string): Promise<string> {
-  const gitDir = await git(worktree, "rev-parse", "--absolute-git-dir");
-  return path.join(gitDir, "tend-dedupe");
-}
-
-/**
- * A file's content as a short digest. Comparing digests keeps a failed
- * assertion from diffing hundreds of kilobytes.
- */
-async function digest(file: string): Promise<string> {
-  const hash = createHash("sha256");
-  hash.update(await Bun.file(file).bytes());
-  return hash.digest("hex");
-}
-
-async function startOf(file: string): Promise<string> {
-  const text = await Bun.file(file).text();
-  return text.slice(0, 3);
-}
-
-async function inodes(dir: string, names: readonly string[]) {
-  const result: Record<string, number> = {};
-  for (const name of names) {
-    const info = await lstat(path.join(dir, name));
-    result[name] = info.ino;
-  }
-  return result;
-}
-
-const SHARED = ["big.bin", "tool.sh", "sub/dir/nested.bin"] as const;
-const UNTOUCHED_IN_A = [
-  "modified.bin",
-  "grown.bin",
-  "small.txt",
-  "untracked.bin",
-] as const;
-
-function actionFor(result: SurfaceSweepResult, worktree: string) {
-  return result.actions.find((action) => action.candidate.target === worktree);
-}
-
 describe.skipIf(!onApfs)("sweepDedupe on APFS", () => {
   it(
     "shares identical tracked files as clones and changes nothing else about them",
@@ -242,11 +56,7 @@ describe.skipIf(!onApfs)("sweepDedupe on APFS", () => {
       const fx = await buildFixture();
       const statusBefore = await git(fx.a, "status", "--porcelain");
       const before = {
-        big: await lstat(path.join(fx.a, "big.bin")),
-        tool: await lstat(path.join(fx.a, "tool.sh")),
-        nestedDir: await lstat(path.join(fx.a, "sub", "dir")),
-        rootDir: await lstat(fx.a),
-        shared: await inodes(fx.a, SHARED),
+        ...(await sharedFileFacts(fx.a)),
         untouched: await inodes(fx.a, UNTOUCHED_IN_A),
         content: await digest(path.join(fx.a, "big.bin")),
       };
@@ -290,13 +100,7 @@ describe.skipIf(!onApfs)("sweepDedupe on APFS", () => {
       expect(actionFor(result, fx.a)?.detail).toBeUndefined();
 
       // Replaced files are new inodes with the old content, times and mode.
-      const after = {
-        big: await lstat(path.join(fx.a, "big.bin")),
-        tool: await lstat(path.join(fx.a, "tool.sh")),
-        nestedDir: await lstat(path.join(fx.a, "sub", "dir")),
-        rootDir: await lstat(fx.a),
-        shared: await inodes(fx.a, SHARED),
-      };
+      const after = await sharedFileFacts(fx.a);
       for (const name of SHARED) {
         expect(after.shared[name]).not.toBe(before.shared[name]);
       }
@@ -522,11 +326,11 @@ describe.skipIf(!onApfs)(
         ).toEqual(inodesBefore);
         expect(new Set(await physicalOffsets(copies)).size).toBe(3);
         expect(result.warnings).toEqual([
-          "2 file(s) left alone: a filter, ident or working-tree-encoding attribute means equal blobs do not prove equal files",
+          "2 file(s) left alone as normalized or filtered: a filter, ident or working-tree-encoding attribute, or a file that is not as long as its blob, means equal blobs do not prove equal files",
         ]);
         expect(actionFor(result, fx.b)?.candidate.metadata).toMatchObject({
           replacedFiles: 5,
-          filteredFiles: 1,
+          normalizedOrFilteredFiles: 1,
         });
         // Unfiltered files are shared as before.
         const big = await physicalOffsets(
@@ -762,13 +566,6 @@ describe.skipIf(!onApfs)("sweepDedupe scope", () => {
     REAL_GIT_TIMEOUT_MS,
   );
 });
-
-/** Directories in which the sweep ran `git update-index --refresh`. */
-function refreshedIn(fx: Fixture): string[] {
-  return fx.commands
-    .filter((command) => command.argv.includes("update-index"))
-    .map((command) => command.cwd);
-}
 
 describe.skipIf(!onApfs)("sweepDedupe index refresh", () => {
   it(
@@ -1008,14 +805,6 @@ describe("sweepDedupe when it cannot run", () => {
     REAL_GIT_TIMEOUT_MS,
   );
 });
-
-function captureLog(): () => string {
-  const lines: string[] = [];
-  vi.spyOn(console, "log").mockImplementation((...args: unknown[]) => {
-    lines.push(args.map(String).join(" "));
-  });
-  return () => lines.join("\n");
-}
 
 describe("toolkit tend dedupe", () => {
   it("reads sizes with binary suffixes", () => {
