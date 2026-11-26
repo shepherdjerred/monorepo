@@ -15,6 +15,11 @@ import {
   type CollectionMembership,
 } from "./membership.ts";
 import { retiredWriterExpiry } from "./writer-proof.ts";
+import {
+  recordCollectionAttempt,
+  runCollectionAttempt,
+  unresolvedMembers,
+} from "./attempt.ts";
 
 // The two static Plex collections reviewed during the Maintainerr inventory.
 const COLLECTIONS = [
@@ -91,11 +96,12 @@ async function sweepCollection(
 }
 
 async function projectCollection(
-  { plex }: MediaAutomationContext,
+  context: MediaAutomationContext,
   tx: Prisma.TransactionClient,
   scope: CollectionScope,
   dedupeKey: string,
 ) {
+  const { plex } = context;
   const { target, access, epoch, signal } = scope;
   const desired = await desiredCollectionMembers(tx, access, epoch);
   if (desired === null) return;
@@ -110,24 +116,36 @@ async function projectCollection(
   const collection = await plex.collection(target, signal);
   if (stored !== null && stored.collectionGuid !== collection.guid)
     throw new IntegrationError("plex", "conflict");
+  const protectedKeys = await unresolvedMembers(tx, dedupeKey, collection.guid);
+  if (protectedKeys === null) return;
   const owned = previous.filter(({ ratingKey }) =>
     collection.memberKeys.has(ratingKey),
   );
-  const change = nextCollectionChange(desired, owned, collection.memberKeys);
-  if (change === null && owned.length === previous.length) return;
-  const applied =
-    change === null
-      ? owned
-      : await applyMembership(plex, tx, scope, {
-          change,
-          owned,
-          collectionGuid: collection.guid,
-        });
-  if (applied === null) return;
-  const payload = Checkpoint.parse({
-    collectionGuid: collection.guid,
-    owned: applied,
-  });
+  const change = nextCollectionChange(
+    desired,
+    owned,
+    collection.memberKeys,
+    protectedKeys,
+  );
+  if (change !== null) {
+    await applyMembership(context, tx, scope, {
+      change,
+      owned,
+      collectionGuid: collection.guid,
+      dedupeKey,
+    });
+  } else if (owned.length !== previous.length) {
+    await saveMembership(tx, dedupeKey, collection.guid, owned);
+  }
+}
+
+async function saveMembership(
+  tx: Prisma.TransactionClient,
+  dedupeKey: string,
+  collectionGuid: string,
+  owned: readonly CollectionMembership[],
+) {
+  const payload = Checkpoint.parse({ collectionGuid, owned });
   await tx.applicationEvent.upsert({
     where: { dedupeKey },
     create: { dedupeKey, kind: CHECKPOINT_KIND, payload },
@@ -136,13 +154,14 @@ async function projectCollection(
 }
 
 async function applyMembership(
-  plex: MediaAutomationContext["plex"],
+  { db, plex }: MediaAutomationContext,
   tx: Prisma.TransactionClient,
   { target, access, signal }: CollectionScope,
   input: {
     change: NonNullable<ReturnType<typeof nextCollectionChange>>;
     owned: readonly CollectionMembership[];
     collectionGuid: string;
+    dedupeKey: string;
   },
 ) {
   const { item, present } = input.change;
@@ -154,25 +173,45 @@ async function applyMembership(
   )
     throw new IntegrationError("plex", "conflict");
   const runtime = await runtimeAuthority(tx);
-  if (!runtime.active) return null;
-  await plex.setCollectionMembership(
-    {
-      serverMachineId: access.serverMachineId,
-      collection: target.ratingKey,
-      member: item.ratingKey,
-      present,
+  if (!runtime.active || signal.aborted) return;
+  await runCollectionAttempt({
+    record: () =>
+      recordCollectionAttempt(db, input.dedupeKey, {
+        collectionGuid: input.collectionGuid,
+        collectionTitle: target.title,
+        member: item,
+        present,
+      }),
+    applyAndVerify: async () => {
+      await plex.setCollectionMembership(
+        {
+          serverMachineId: access.serverMachineId,
+          collection: target.ratingKey,
+          member: item.ratingKey,
+          present,
+        },
+        signal,
+      );
+      const verified = await plex.collection(target, signal);
+      if (
+        verified.guid !== input.collectionGuid ||
+        verified.memberKeys.has(item.ratingKey) !== present
+      )
+        throw new IntegrationError("plex", "conflict");
     },
-    signal,
-  );
-  const verified = await plex.collection(target, signal);
-  if (
-    verified.guid !== input.collectionGuid ||
-    verified.memberKeys.has(item.ratingKey) !== present
-  )
-    throw new IntegrationError("plex", "conflict");
-  return present
-    ? [...input.owned, item]
-    : input.owned.filter((existing) => existing.ratingKey !== item.ratingKey);
+    acknowledge: async (operationId) => {
+      const owned = present
+        ? [...input.owned, item]
+        : input.owned.filter(
+            (existing) => existing.ratingKey !== item.ratingKey,
+          );
+      await saveMembership(tx, input.dedupeKey, input.collectionGuid, owned);
+      await tx.operation.update({
+        where: { id: operationId },
+        data: { status: "completed" },
+      });
+    },
+  });
 }
 
 /** The existing scheduled watch sweep owns one bounded turn for each collection. */

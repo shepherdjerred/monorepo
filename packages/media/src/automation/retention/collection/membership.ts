@@ -12,12 +12,20 @@ export function nextCollectionChange(
   desired: readonly CollectionMembership[],
   owned: readonly CollectionMembership[],
   present: ReadonlySet<string>,
+  protectedKeys?: ReadonlySet<string>,
 ) {
   const wanted = new Set(desired.map((item) => item.ratingKey));
   const remove = owned.find(
-    (item) => !wanted.has(item.ratingKey) && present.has(item.ratingKey),
+    (item) =>
+      protectedKeys?.has(item.ratingKey) !== true &&
+      !wanted.has(item.ratingKey) &&
+      present.has(item.ratingKey),
   );
   if (remove !== undefined) return { item: remove, present: false };
-  const add = desired.find((item) => !present.has(item.ratingKey));
+  const add = desired.find(
+    (item) =>
+      protectedKeys?.has(item.ratingKey) !== true &&
+      !present.has(item.ratingKey),
+  );
   return add === undefined ? null : { item: add, present: true };
 }

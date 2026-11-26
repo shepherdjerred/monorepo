@@ -53,6 +53,12 @@ episodes is leaving. Media removes its own verified additions when no
 qualifying warning or grace period remains. Existing Plex collection entries
 are kept.
 
+Manage → Activity shows a Leaving Soon collection change as **Reconciling**
+while its result is uncertain. Media records the exact attempt before calling
+Plex and completes the record after verified readback. An unresolved result
+holds automatic changes for that collection member. Other memberships can
+continue to reconcile.
+
 The authenticated read APIs are bounded and do not create acquisition or
 removal authority:
 
