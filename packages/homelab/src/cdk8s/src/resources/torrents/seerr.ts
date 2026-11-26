@@ -23,10 +23,7 @@ import { httpProbes } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/k
 import { createMailSmtpClientCaVolume } from "@shepherdjerred/homelab/cdk8s/src/resources/mail/mail-smtp.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import {
-  nsPeer,
-  tcp,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { MAIL_SMTP_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
 import { mediaAppEgress } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/media-app-egress.ts";
 
 const SEERR_PORT = 5055;
@@ -124,16 +121,11 @@ export function createSeerrDeployment(chart: Chart) {
       podSelector: { matchLabels: deployment.matchLabels },
       policyTypes: ["Egress"],
       egress: mediaAppEgress([
-        // Email notifications, configured in Seerr's own settings, go to
-        // Postal's SMTP Service.
+        // Email notifications, configured in Seerr's own settings, go to the
+        // outbound mail broker's SMTP listener.
         {
-          to: [
-            {
-              ...nsPeer("postal"),
-              podSelector: { matchLabels: { app: "postal-smtp" } },
-            },
-          ],
-          ports: [tcp(25)],
+          to: [MAIL_SMTP_ENDPOINT.peer()],
+          ports: [MAIL_SMTP_ENDPOINT.tcp()],
         },
       ]),
     },

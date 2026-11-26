@@ -6,7 +6,7 @@ import { createSeerrDeployment } from "./seerr.ts";
 beforeEach(resetProbeRegistry);
 
 describe("createSeerrDeployment", () => {
-  test("issues seerr-smtp-ca at sync-wave -1 and wires NODE_EXTRA_CA_CERTS without adding an egress policy", () => {
+  test("issues seerr-smtp-ca at sync-wave -1 and wires NODE_EXTRA_CA_CERTS", () => {
     const app = new App();
     const chart = new Chart(app, "media", {
       namespace: "media",
@@ -68,7 +68,39 @@ describe("createSeerrDeployment", () => {
         }),
       ]),
     );
+  });
 
-    expect(JSON.stringify(manifests)).not.toContain('"kind":"NetworkPolicy"');
+  test("its egress policy reaches the mail broker's SMTP listener", () => {
+    const app = new App();
+    const chart = new Chart(app, "media", {
+      namespace: "media",
+      disableResourceNameHashes: true,
+    });
+    createSeerrDeployment(chart);
+
+    expect(chart.toJson()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "NetworkPolicy",
+          metadata: { name: "seerr-egress-netpol", namespace: "media" },
+          spec: expect.objectContaining({
+            policyTypes: ["Egress"],
+            egress: expect.arrayContaining([
+              {
+                to: [
+                  {
+                    namespaceSelector: {
+                      matchLabels: { "kubernetes.io/metadata.name": "mail" },
+                    },
+                    podSelector: { matchLabels: { app: "mail" } },
+                  },
+                ],
+                ports: [{ port: 25, protocol: "TCP" }],
+              },
+            ]),
+          }),
+        }),
+      ]),
+    );
   });
 });

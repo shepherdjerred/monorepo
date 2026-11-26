@@ -17,11 +17,15 @@ import { createKueueMetricsServiceMonitor } from "@shepherdjerred/homelab/cdk8s/
  */
 export async function createPrometheusExporters(chart: Chart): Promise<void> {
   createPrometheusMonitoring(chart);
+  const { smartctlDaemonSet } = await createSmartctlMonitoring(chart);
+  const { nvmeMetricsDaemonSet } = await createNvmeMetricsMonitoring(chart);
+  const { zfsSnapshotsDaemonSet } = await createZfsSnapshotsMonitoring(chart);
+  const { zfsZpoolDaemonSet } = await createZfsZpoolMonitoring(chart);
   const collectors = [
-    (await createSmartctlMonitoring(chart)).smartctlDaemonSet,
-    (await createNvmeMetricsMonitoring(chart)).nvmeMetricsDaemonSet,
-    (await createZfsSnapshotsMonitoring(chart)).zfsSnapshotsDaemonSet,
-    (await createZfsZpoolMonitoring(chart)).zfsZpoolDaemonSet,
+    smartctlDaemonSet,
+    nvmeMetricsDaemonSet,
+    zfsSnapshotsDaemonSet,
+    zfsZpoolDaemonSet,
   ];
   createHostCollectorNetworkPolicies(chart, collectors);
   createKubernetesEventExporter(chart);
