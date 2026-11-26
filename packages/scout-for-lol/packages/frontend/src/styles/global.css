@@ -14,15 +14,35 @@
   --color-scout-accent-ink: var(--scout-color-accent-text);
   --color-scout-border: var(--scout-color-border);
   --color-scout-focus: var(--scout-color-focus);
-  --color-scout-success: var(--scout-color-success);
+  /* `text-scout-success` and `text-scout-danger` are the colours readable as
+     text; solid backgrounds, borders and gradient stops take the `-fill`
+     variants paired with `-ink` on top. This is the convention the app uses. */
+  --color-scout-success: var(--scout-color-success-on-surface);
+  --color-scout-success-fill: var(--scout-color-success);
   --color-scout-success-ink: var(--scout-color-success-text);
   --color-scout-warning: var(--scout-color-warning);
   --color-scout-warning-ink: var(--scout-color-warning-text);
-  --color-scout-danger: var(--scout-color-danger);
+  --color-scout-danger: var(--scout-color-danger-on-surface);
+  --color-scout-danger-fill: var(--scout-color-danger);
   --color-scout-danger-ink: var(--scout-color-danger-text);
   --color-scout-info: var(--scout-color-info);
   --color-scout-info-ink: var(--scout-color-info-text);
   --color-scout-overlay: var(--scout-color-overlay);
+  /* Match outcomes. `win`/`loss` read as text on a surface; the `-fill`
+     variants are solid fills for dots, bars and badges. */
+  --color-scout-win: var(--scout-color-success-on-surface);
+  --color-scout-win-fill: var(--scout-color-success);
+  --color-scout-loss: var(--scout-color-danger-on-surface);
+  --color-scout-loss-fill: var(--scout-color-danger);
+  /* Categorical chart series, in the order the themes define them. */
+  --color-scout-chart1: var(--scout-color-chart1);
+  --color-scout-chart2: var(--scout-color-chart2);
+  --color-scout-chart3: var(--scout-color-chart3);
+  --color-scout-chart4: var(--scout-color-chart4);
+  --color-scout-chart5: var(--scout-color-chart5);
+  --color-scout-chart6: var(--scout-color-chart6);
+  --color-scout-chart7: var(--scout-color-chart7);
+  --color-scout-chart8: var(--scout-color-chart8);
   --font-sans: var(--scout-font-body);
   --font-display: var(--scout-font-display);
   --font-mono: var(--scout-font-mono);
