@@ -210,6 +210,7 @@ export function createMaintenance(deps: Deps) {
           expiredSessions: 0,
           purgedBoards: 0,
           deletedBlobs: 0,
+          deletedOrphans: 0,
           prunedEvents: 0,
           more: false,
         };
@@ -223,7 +224,8 @@ export function createMaintenance(deps: Deps) {
         status: "ok",
         expiredSessions: sessions.count,
         purgedBoards: boards.count,
-        deletedBlobs: blobs.count + orphans.count,
+        deletedBlobs: blobs.count,
+        deletedOrphans: orphans.count,
         prunedEvents: events.count,
         more:
           sessions.more ||
@@ -247,6 +249,7 @@ export function createMaintenance(deps: Deps) {
         expiredSessions: result.expiredSessions,
         purgedBoards: result.purgedBoards,
         deletedBlobs: result.deletedBlobs,
+        deletedOrphans: result.deletedOrphans,
         prunedEvents: result.prunedEvents,
         more: result.more,
       });

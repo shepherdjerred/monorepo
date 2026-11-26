@@ -313,6 +313,8 @@ export const MaintenanceCleanupOutputSchema = z.strictObject({
   expiredSessions: z.number().int().min(0),
   purgedBoards: z.number().int().min(0),
   deletedBlobs: z.number().int().min(0),
+  /** Objects no `Blob` row named, swept after the blob grace. */
+  deletedOrphans: z.number().int().min(0),
   prunedEvents: z.number().int().min(0),
   /** True when a bounded batch stopped early; run the cleanup again. */
   more: z.boolean(),
