@@ -309,6 +309,7 @@ const commands: Record<
       "set -eu",
       "mkdir -p /tmp/smoke-vault",
       "cd /app",
+      "test -s packages/tasknotes-web/dist/index.html",
       "bun packages/tasknotes-server/src/index.ts >/tmp/tasknotes-smoke.log 2>&1 &",
       "pid=$!",
       "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
