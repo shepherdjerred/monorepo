@@ -1789,7 +1789,9 @@ default; pass `--apply` to mutate.
 toolkit tend status
 toolkit tend run
 toolkit tend run --apply --only worktrees,tailscale-serve
-toolkit tend worktrees --worktree-min-age 7d
+toolkit tend worktrees --summary
+toolkit tend worktrees --verbose --worktree-min-age 3d
+toolkit tend schedule install
 toolkit tend lease list --json
 toolkit tend lease wrap --kind process --target temporal-dev --ttl 2h -- bun run dev
 toolkit expose http 3000 --ttl 4h
@@ -1805,8 +1807,6 @@ with `databases` or `testing` in its scopes holds `postgres` and `processes`
 sweeps automatically; failed Forum queries fail closed unless `--offline` is
 passed.
 
-Worktree pruning skips the main checkout, dirty or mid-rebase trees, and any
-worktree younger than 7 days (`168h`, configurable via `--worktree-min-age`).
 Tailscale Serve sweeps never touch port `443` or root `/`, and unleased
 high-port listeners require two consecutive unreachable sweeps before teardown
 unless `--immediate-proxies` is passed. Docker sweeps skip cleanly when the
@@ -1818,6 +1818,89 @@ prune -f`), preserving named volumes.
 `tailscale-serve` lease tied to the caller shell and terminal, and prints the
 `<HOST>.tailnet-1a49.ts.net:<PORT>` address and `toolkit tend lease release`
 teardown command.
+
+### Worktree reaping
+
+`toolkit tend worktrees` (and the `worktrees` surface of `tend run`) inspects
+every linked worktree of each repository under `~/git` and never the main
+checkout. The first matching row decides:
+
+| #   | Condition                                                                                                                                                | Action                      |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| 1   | Directory missing, or git reports it `prunable`                                                                                                          | Prune the metadata          |
+| 2   | Locked as `Herdr worktree pool` (or under `~/.herdr/worktrees/.pool`), locked by a Claude agent whose pid is alive, or locked for any other reason       | Keep                        |
+| 3   | A live Herdr terminal, Herdr active file, process working directory, active lease, Forum notice path, or the caller's own working directory is inside it | Keep                        |
+| 4   | Mid rebase, merge, cherry-pick, or bisect                                                                                                                | Keep                        |
+| 5   | Its branch has an open pull request                                                                                                                      | Keep                        |
+| 6   | Last activity is newer than `--worktree-min-age` (default `3d`)                                                                                          | Keep                        |
+| 7   | Otherwise                                                                                                                                                | Remove, preserving all work |
+
+Activity is the newest of the worktree directory, its `.git` file, `HEAD`,
+the `HEAD` reflog, the last commit, and the files `git status` reports as
+changed. The index is not a signal: an ordinary `git status` rewrites it. The
+reaper itself runs `git --no-optional-locks -c core.fsmonitor=false status`,
+so inspecting a worktree neither rewrites its index nor starts an fsmonitor
+daemon.
+
+Removal never discards work:
+
+- **Uncommitted or untracked files** are committed to
+  `refs/tend/rescue/<worktree-name>-<utc-timestamp>` first, with `HEAD` as
+  the parent. Staging happens in a temporary copy of the index, so the
+  worktree's own index is untouched. `.gitignore` is honored: ignored files
+  (build output, `node_modules`, an ignored `.env`) are not saved.
+- **A named branch with unmerged commits** is kept; only the worktree goes.
+- **A detached `HEAD` with commits that are not on the default branch** gets
+  a rescue ref at `HEAD`.
+- **A branch that is fully merged** (no commits ahead of the default branch,
+  or a merged pull request at that head) is deleted with the worktree.
+
+The reaper keeps a worktree whenever it cannot establish a fact:
+
+- `hc ls --json` unavailable holds the whole surface, because a live Herdr
+  session would be invisible.
+- When open pull requests cannot be listed (`gh` missing, unauthenticated, or
+  returning something other than a JSON list), every branch worktree with
+  commits ahead of the default branch is kept. Open pull requests are queried
+  by state, separately from the recent-history window used to recognize
+  merged branches, which can miss an old open pull request.
+- A `git status` that fails or does not finish in 60 seconds keeps the
+  worktree and says so.
+- A snapshot or rescue ref that cannot be written keeps the worktree and
+  reports the run as failed. An untracked nested git repository is one such
+  case: a snapshot would record only a pointer to it.
+- Only a Claude-agent lock whose pid is dead is released. Pool slots and
+  locks with any other reason are never unlocked.
+
+Every inspected worktree gets a decision with a reason. `--summary` prints the
+per-reason keep counts, `--verbose` also lists each kept worktree, and `--json`
+carries the records as `surfaces[].decisions`. Directories under
+`~/.herdr/worktrees/<repo>` and `<repo>/.claude/worktrees` that git has no
+worktree for are reported as warnings and left in place.
+
+Restore rescued work from the repository's main checkout:
+
+```bash
+git for-each-ref refs/tend/rescue                      # list rescue refs
+git show --stat refs/tend/rescue/<name>                # uncommitted work as one commit
+git worktree add ../<name> refs/tend/rescue/<name>     # check it out again
+git update-ref -d refs/tend/rescue/<name>              # discard it for good
+```
+
+`toolkit tend schedule install` loads the per-user macOS LaunchAgent
+`com.jerred.toolkit-tend`, which runs
+`toolkit tend run --apply --only worktrees` every 24 hours with `~/.local/bin`
+and Homebrew on `PATH` (for `hc` and `gh`) and logs to
+`~/.toolkit/tend/logs/`. launchd also starts the job once when it is loaded,
+so installing it performs a real reap: run `toolkit tend worktrees` first and
+read the candidates. `schedule status` reports whether the plist exists and
+is loaded; `schedule uninstall` unloads and removes it.
+
+This is a host LaunchAgent rather than a Temporal Schedule on purpose.
+Scheduled work in this repository normally belongs to Temporal, but the reaper
+acts on one workstation's local filesystem and needs that login session's
+Herdr terminals, process list, and `gh` credentials; a cluster worker can
+reach none of them.
 
 ## Configuration
 

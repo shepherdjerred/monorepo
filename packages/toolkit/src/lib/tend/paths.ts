@@ -2,7 +2,7 @@ import { readdir, realpath, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-export const DEFAULT_WORKTREE_MIN_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+export const DEFAULT_WORKTREE_MIN_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 
 export type TendPaths = {
   readonly rootDir: string;

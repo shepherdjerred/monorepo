@@ -104,6 +104,48 @@ function formatCandidateLines(
   return itemLines;
 }
 
+/** Per-reason counts of what each surface decided to keep. */
+function formatKeepSummaryLines(
+  surfaces: readonly SurfaceSweepResult[],
+): string[] {
+  const lines: string[] = [];
+  for (const sr of surfaces) {
+    const counts = new Map<string, number>();
+    for (const decision of sr.decisions ?? []) {
+      if (decision.action === "keep") {
+        counts.set(decision.category, (counts.get(decision.category) ?? 0) + 1);
+      }
+    }
+    if (counts.size === 0) {
+      continue;
+    }
+    const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
+    lines.push(`Kept (${sr.surface}): ${String(total)}`);
+    const ordered = [...counts.entries()].sort(
+      ([leftName, leftCount], [rightName, rightCount]) =>
+        rightCount - leftCount || leftName.localeCompare(rightName),
+    );
+    for (const [category, count] of ordered) {
+      lines.push(`  ${padCell(String(count), 5)}${category}`);
+    }
+  }
+  return lines;
+}
+
+function formatKeptLines(surfaces: readonly SurfaceSweepResult[]): string[] {
+  const lines: string[] = [];
+  for (const sr of surfaces) {
+    for (const decision of sr.decisions ?? []) {
+      if (decision.action === "keep") {
+        lines.push(
+          `  [KEEP] (${sr.surface}) ${decision.target} — ${decision.reason}`,
+        );
+      }
+    }
+  }
+  return lines;
+}
+
 export function formatTendReport(
   report: TendRunReport,
   options: {
@@ -127,6 +169,11 @@ export function formatTendReport(
     }
   }
 
+  const keepSummary = formatKeepSummaryLines(report.surfaces);
+  if (keepSummary.length > 0) {
+    lines.push("", ...keepSummary);
+  }
+
   if (options.summaryOnly !== true) {
     const itemLines = formatCandidateLines(
       report.surfaces,
@@ -134,6 +181,11 @@ export function formatTendReport(
     );
     if (itemLines.length > 0) {
       lines.push("", "Candidates:", ...itemLines);
+    }
+    const keptLines =
+      options.verbose === true ? formatKeptLines(report.surfaces) : [];
+    if (keptLines.length > 0) {
+      lines.push("", "Kept:", ...keptLines);
     }
   }
 

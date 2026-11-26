@@ -28,15 +28,20 @@ import {
   type TendSurface,
   TendSurfaceSchema,
 } from "#lib/tend/types.ts";
+import {
+  handleTendScheduleCommand,
+  type TendScheduleDeps,
+} from "./schedule.ts";
 import { formatLeaseList, formatTendReport } from "./tend-format.ts";
 
 const TEND_HELP = `
 toolkit tend — inspect and reap orphaned local dev resources (dry-run by default)
 
 Usage:
-  toolkit tend status [--json] [--worktree-min-age 7d] [--offline]
-  toolkit tend run [--apply] [--only <surfaces>] [--worktree-min-age 7d] [--immediate-proxies] [--offline] [--json]
-  toolkit tend worktrees [--apply] [--worktree-min-age 7d] [--git-dir <dir>] [--include-closed-prs] [--summary] [--verbose] [--json]
+  toolkit tend status [--json] [--worktree-min-age 3d] [--offline]
+  toolkit tend run [--apply] [--only <surfaces>] [--worktree-min-age 3d] [--immediate-proxies] [--offline] [--json]
+  toolkit tend worktrees [--apply] [--worktree-min-age 3d] [--git-dir <dir>] [--include-closed-prs] [--summary] [--verbose] [--json]
+  toolkit tend schedule install | uninstall | status [--json]
   toolkit tend lease list [--json]
   toolkit tend lease acquire --kind <kind> --target <target> [--ttl 4h] [--worktree <path>] [--id <id>] [--json]
   toolkit tend lease release <id> [--json]
@@ -47,7 +52,15 @@ Surfaces (--only comma-separated):
 
 Notes:
   - Runs are read-only / dry-run unless --apply is passed.
-  - Worktrees younger than 7d (168h) of inactivity are never pruned by default.
+  - A worktree is removed only when nothing holds it (live Herdr terminal,
+    process, lease, Forum notice, pool or live-agent lock), it has no open
+    pull request, and it has been idle for 3d (72h) by default. Uncommitted
+    work, and detached commits that are not on the default branch, are saved
+    under refs/tend/rescue/ first; unmerged branches are kept.
+  - --summary prints the per-reason keep counts without the item lists;
+    --verbose also lists every kept worktree with its reason.
+  - "schedule install" loads a daily macOS LaunchAgent that runs
+    "tend run --apply --only worktrees". launchd starts it once on install.
   - Open Forum notices scoped to host/<thisHost> protect referenced paths, and
     notices with "databases" or "testing" hold postgres + processes sweeps.
   - Tailscale Serve port 443 and root "/" are unconditionally immune.
@@ -315,6 +328,7 @@ export async function handleTendCommand(
     readonly runner?: CommandRunner | undefined;
     readonly paths?: TendPaths | undefined;
     readonly pinchtab?: PinchtabClientOptions | undefined;
+    readonly schedule?: TendScheduleDeps | undefined;
   } = {},
 ): Promise<void> {
   if (
@@ -331,16 +345,36 @@ export async function handleTendCommand(
     return;
   }
 
+  if (subcommand === "schedule") {
+    await handleTendScheduleCommand(args, {
+      ...injected.schedule,
+      paths: injected.schedule?.paths ?? injected.paths,
+    });
+    return;
+  }
+
   if (
     subcommand !== "status" &&
     subcommand !== "run" &&
     subcommand !== "worktrees"
   ) {
     throw new Error(
-      `Unknown tend subcommand "${subcommand}". Expected status, run, worktrees, or lease.`,
+      `Unknown tend subcommand "${subcommand}". Expected status, run, worktrees, schedule, or lease.`,
     );
   }
 
+  await runTendSweepCommand(subcommand, args, injected);
+}
+
+async function runTendSweepCommand(
+  subcommand: "status" | "run" | "worktrees",
+  args: string[],
+  injected: {
+    readonly runner?: CommandRunner | undefined;
+    readonly paths?: TendPaths | undefined;
+    readonly pinchtab?: PinchtabClientOptions | undefined;
+  },
+): Promise<void> {
   const { values, positionals } = parseTendSweepArgs(args);
   if (values.help) {
     console.log(TEND_HELP);
