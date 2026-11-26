@@ -93,8 +93,10 @@ async function siteRecipes(): Promise<Record<string, unknown>> {
     const { definition } = z
       .object({ definition: z.looseObject({ kind: z.string() }) })
       .parse(await Bun.file(`${root}/${file}`).json());
-    if (definition.kind === "static-site")
-      sites[file.slice(0, file.lastIndexOf("/"))] = definition;
+    if (definition.kind === "static-site") {
+      const relativePath = file.replaceAll("\\", "/");
+      sites[relativePath.slice(0, relativePath.lastIndexOf("/"))] = definition;
+    }
   }
   return sites;
 }
@@ -114,7 +116,7 @@ async function desiredStates(): Promise<Record<string, string>> {
   return Object.fromEntries(
     await Promise.all(
       files.map(async (file) => [
-        file.slice(0, file.indexOf("/")),
+        file.split(/[\\/]/u)[0],
         await Bun.file(`${root}/${file}`).text(),
       ]),
     ),

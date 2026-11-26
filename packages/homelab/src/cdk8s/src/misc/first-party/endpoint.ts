@@ -94,6 +94,14 @@ export const TRACKER_ENDPOINT = defineEndpoint({
   portName: "http",
 });
 
+/** Experiments' cluster-only Hub and Ops Snapshot listener. */
+export const EXPERIMENTS_INTERNAL_ENDPOINT = defineEndpoint({
+  namespace: "experiments",
+  app: "experiments",
+  port: 7408,
+  portName: "internal",
+});
+
 /** Golink's HTTP server (`resources/golink`). */
 export const GOLINK_ENDPOINT = defineEndpoint({
   namespace: "golink",

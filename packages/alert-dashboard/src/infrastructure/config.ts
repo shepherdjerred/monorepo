@@ -50,6 +50,11 @@ const EnvironmentSchema = z
       .string()
       .min(1)
       .default("/data/llm-traces-index.db"),
+    EXPERIMENTS_INTERNAL_URL: z.url().optional(),
+    EXPERIMENTS_HUB_TOKEN: z.string().min(32).optional(),
+    HUB_EXPERIMENTS_INGRESS_IDENTITY_DIR: z.string().min(1).optional(),
+    HUB_EXPERIMENTS_OPERATOR_LOGINS: z.string().min(1).optional(),
+    HUB_EXPERIMENTS_PUBLIC_ORIGIN: z.url().optional(),
     LLM_ARCHIVE_S3_BUCKET: z.string().min(1).optional(),
     LLM_ARCHIVE_S3_PREFIX: z.string().min(1).default("llm"),
     S3_ENDPOINT: z.url().optional(),

@@ -101,6 +101,7 @@ test("replays the pre-Tracker collector command and payload unchanged", async ()
     );
     expect(names).toContain("collectOpsLinear");
     expect(names).not.toContain("collectOpsTracker");
+    expect(names).not.toContain("collectOpsExperiments");
     await Worker.runReplayHistory({ workflowsPath: workflowPath }, history);
   } finally {
     await environment.teardown();

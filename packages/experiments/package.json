@@ -1,0 +1,59 @@
+{
+  "name": "@shepherdjerred/experiments",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./contract": "./src/contract.ts",
+    "./browser/list": "./src/browser/list-page.tsx",
+    "./browser/detail": "./src/browser/detail-page.tsx",
+    "./browser/draft": "./src/browser/draft-page.tsx",
+    "./operator-identity": "./src/operator-identity.ts"
+  },
+  "imports": {
+    "#generated/*": "./generated/*"
+  },
+  "scripts": {
+    "build": "bun run build:client",
+    "build:client": "vite build",
+    "dev": "bun src/dev.ts",
+    "generate": "prisma generate",
+    "migrate:deploy": "prisma migrate deploy",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src --exclude '**/*.integration.test.ts'",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:extended": "bun ../../scripts/ci/run-ci-test.ts --tier extended",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "eslint . --max-warnings=0"
+  },
+  "dependencies": {
+    "@hono/bun": "^1.0.1",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "^7.10.1",
+    "@prisma/client-runtime-utils": "7.10.1",
+    "@shepherdjerred/flags": "workspace:*",
+    "hono": "^4.12.18",
+    "prisma": "^7.10.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@shepherdjerred/console-ui": "workspace:*",
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/ops-model": "workspace:*",
+    "@shepherdjerred/test-postgres": "workspace:*",
+    "@tanstack/react-query": "^5.101.2",
+    "@types/bun": "1.4.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/coverage-istanbul": "5.0.5",
+    "eslint": "^10.7.0",
+    "lucide-react": "^1.14.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-router": "8.4.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.11",
+    "vitest": "5.0.5"
+  }
+}

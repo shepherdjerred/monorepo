@@ -537,6 +537,10 @@ const commands: Record<
       FEATURE_FLAGS_MODE: "disabled",
     },
   },
+  experiments: {
+    command: "sh /app/ci/scripts/images/smokes/experiments.sh",
+    env: {},
+  },
 };
 
 /** The command and environment the in-image runner executes for `target`. */

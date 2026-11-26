@@ -51,7 +51,8 @@ export async function readCatalogRevisions(
   const files = await Array.fromAsync(
     new Bun.Glob("**/*.json").scan({ cwd: root, onlyFiles: true }),
   );
-  for (const file of files.toSorted()) {
+  for (const nativeFile of files.toSorted()) {
+    const file = nativeFile.replaceAll("\\", "/");
     const revisionId = expected.get(file);
     if (revisionId === undefined)
       throw new Error(
