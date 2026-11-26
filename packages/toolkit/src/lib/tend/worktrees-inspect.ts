@@ -15,6 +15,7 @@ import {
   countCommitsAhead,
   directoryExists,
   evaluateBranchAndPrEligibility,
+  fileOrDirExists,
   isMidGitOperation,
   parsePullRequestList,
   type RepoPrRecord,
@@ -28,6 +29,7 @@ import {
   type WorktreeDecision,
   type WorktreeFacts,
   type WorktreeLiveHold,
+  type WorktreeLockState,
   type WorktreePrState,
   type WorktreeWorkFacts,
 } from "./worktrees-policy.ts";
@@ -54,6 +56,8 @@ export type RepoSweepContext = {
   readonly isPidAlive: (pid: number) => boolean;
   /** Start time of the process that holds `pid` in the liveness snapshot. */
   readonly processStartOf: (pid: number) => string | undefined;
+  /** Start time of the process that holds `pid` right now. */
+  readonly readProcessStart: (pid: number) => Promise<string | undefined>;
   /**
    * Live Herdr terminals right now, or `null` when they cannot be listed.
    * Asked again before each removal, because the liveness snapshot is taken
@@ -253,13 +257,50 @@ async function gatherWorkFacts(options: {
     includeClosedPrs: ctx.includeClosedPrs,
     runner: ctx.runner,
   });
-  return { status: status.kind, lastActivityMs, aheadOfDefault, branchVerdict };
+  const hasSubmodules =
+    (await fileOrDirExists(path.join(wt.path, ".gitmodules"))) ||
+    (await fileOrDirExists(path.join(gitDir, "modules")));
+  return {
+    status: status.kind,
+    lastActivityMs,
+    aheadOfDefault,
+    branchVerdict,
+    hasSubmodules,
+  };
 }
 
 export type WorktreeInspection = {
   readonly decision: WorktreeDecision;
   readonly gitDir?: string | undefined;
 };
+
+/**
+ * Classify a worktree's lock. The process snapshot is older than the lock
+ * that was just read, so a start-time mismatch against it is not proof: the
+ * pid may have been reused by the very agent that now holds the lock. A lock
+ * is only called dead on a start time read after the lock was.
+ */
+async function classifyLockNow(
+  wt: WorktreePorcelainEntry,
+  ctx: RepoSweepContext,
+): Promise<WorktreeLockState> {
+  const lock = classifyWorktreeLock({
+    locked: wt.locked,
+    lockReason: wt.lockReason,
+    isPidAlive: ctx.isPidAlive,
+    processStartOf: ctx.processStartOf,
+  });
+  if (lock.kind !== "claude-agent" || lock.alive || !ctx.isPidAlive(lock.pid)) {
+    return lock;
+  }
+  const startNow = await ctx.readProcessStart(lock.pid);
+  return classifyWorktreeLock({
+    locked: wt.locked,
+    lockReason: wt.lockReason,
+    isPidAlive: ctx.isPidAlive,
+    processStartOf: () => startNow,
+  });
+}
 
 /** Gather the facts about one worktree and run them through the policy. */
 export async function inspectWorktree(
@@ -280,12 +321,7 @@ export async function inspectWorktree(
     detached: wt.detached,
     branch: wt.branch,
     defaultBranch,
-    lock: classifyWorktreeLock({
-      locked: wt.locked,
-      lockReason: wt.lockReason,
-      isPidAlive: ctx.isPidAlive,
-      processStartOf: ctx.processStartOf,
-    }),
+    lock: await classifyLockNow(wt, ctx),
     poolSlot: isPathInside(
       canonicalWt,
       path.join(ctx.homeDir, ".herdr", "worktrees", ".pool"),

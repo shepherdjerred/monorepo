@@ -1,14 +1,18 @@
 import { readdir, rm, rmdir } from "node:fs/promises";
 import path from "node:path";
+import { canonicalizeExistingPath, isPathInside } from "./paths.ts";
 import type { CommandRunner } from "./types.ts";
 import {
   isGitPathTooLongDeletionError,
   type WorktreePorcelainEntry,
 } from "./worktrees-git.ts";
+import type { RepoSweepContext } from "./worktrees-inspect.ts";
 import type { WorktreeDecision } from "./worktrees-policy.ts";
 import {
+  computeSnapshotTrees,
   rescueRefName,
   type RescueResult,
+  type SnapshotTrees,
   snapshotDirtyWorktree,
   writeRescueRef,
 } from "./worktrees-rescue.ts";
@@ -48,11 +52,16 @@ async function removeWorktreeDirectory(options: {
     isGitPathTooLongDeletionError(rmRes.stderr) &&
     (snapshotted || (await isWorktreeClean(wtPath, runner)));
   if (!canDeleteDirectly) {
+    const detail =
+      rmRes.stderr.trim() ||
+      `git worktree remove exited ${String(rmRes.exitCode)}`;
+    // Git may have deleted part of the tree, or its own metadata, before it
+    // gave up. Nothing here can prove the rest is disposable, so it stays.
     return {
       ok: false,
-      detail:
-        rmRes.stderr.trim() ||
-        `git worktree remove exited ${String(rmRes.exitCode)}`,
+      detail: isGitPathTooLongDeletionError(rmRes.stderr)
+        ? `${detail}; ${wtPath} may be partly removed and was left for a manual check`
+        : detail,
     };
   }
   try {
@@ -70,19 +79,60 @@ async function removeWorktreeDirectory(options: {
   }
 }
 
-async function preserveWork(options: {
+/** Lock reason recorded in the worktree's git dir; `null` when unlocked. */
+async function readLockReason(gitDir: string): Promise<string | null> {
+  const lockFile = Bun.file(path.join(gitDir, "locked"));
+  if (!(await lockFile.exists())) {
+    return null;
+  }
+  const text = await lockFile.text();
+  return text.trim();
+}
+
+type RemovalTarget = {
   readonly wt: WorktreePorcelainEntry;
   readonly gitDir: string;
-  readonly decision: WorktreeDecision;
   readonly runner: CommandRunner;
-  readonly nowMs: number;
-}): Promise<RescueResult | null> {
-  const { wt, decision, runner, nowMs } = options;
+};
+
+/**
+ * What no longer matches the facts the decision was made on, if anything.
+ * The decision is from the start of the sweep; by the time a worktree's turn
+ * comes someone may have committed in it or locked it.
+ */
+async function changedSinceInspection(
+  target: RemovalTarget,
+): Promise<string | null> {
+  const { wt, gitDir, runner } = target;
+  const head = await runner(["git", "rev-parse", "HEAD"], {
+    cwd: wt.path,
+    timeoutMs: 5000,
+  });
+  if (head.exitCode !== 0) {
+    return "HEAD could not be read";
+  }
+  const current = head.stdout.trim();
+  if (current !== wt.headSha) {
+    return `HEAD moved from ${wt.headSha.slice(0, 12)} to ${current.slice(0, 12)}`;
+  }
+  const expectedLock = wt.locked ? (wt.lockReason ?? "") : null;
+  return (await readLockReason(gitDir)) === expectedLock
+    ? null
+    : "its lock changed";
+}
+
+async function preserveWork(
+  target: RemovalTarget,
+  decision: WorktreeDecision,
+  nowMs: number,
+): Promise<RescueResult | null> {
+  const { wt, gitDir, runner } = target;
   const ref = rescueRefName(wt.path, nowMs);
   if (decision.preserve.includes("dirty-snapshot")) {
     return snapshotDirtyWorktree({
       wtPath: wt.path,
-      gitDir: options.gitDir,
+      gitDir,
+      head: wt.headSha,
       ref,
       runner,
       nowMs,
@@ -93,34 +143,83 @@ async function preserveWork(options: {
     : null;
 }
 
+/**
+ * The last look before the worktree is deleted. A clean worktree is checked
+ * by `git worktree remove` itself, but a forced removal checks nothing, so a
+ * snapshotted worktree is read again here and must still be exactly what was
+ * saved. An edit in the instant after this check is the one window left.
+ */
+async function changedSinceSnapshot(
+  target: RemovalTarget,
+  saved: SnapshotTrees | undefined,
+): Promise<string | null> {
+  const moved = await changedSinceInspection(target);
+  if (moved !== null || saved === undefined) {
+    return moved;
+  }
+  const now = await computeSnapshotTrees({
+    wtPath: target.wt.path,
+    gitDir: target.gitDir,
+    runner: target.runner,
+  });
+  if (!now.ok) {
+    return `its files could not be read again (${now.detail})`;
+  }
+  return now.indexTree === saved.indexTree && now.workTree === saved.workTree
+    ? null
+    : "files changed after they were saved";
+}
+
+/**
+ * Delete the branch only if it is still the commit the decision was made on.
+ * A forced delete is done as a compare-and-delete of the ref, so a commit
+ * that lands on the branch in between is never dropped with it.
+ */
 async function deleteWorktreeBranch(
   repoPath: string,
-  branch: string,
+  wt: WorktreePorcelainEntry & { readonly branch: string },
   decision: WorktreeDecision,
   runner: CommandRunner,
 ): Promise<string | undefined> {
+  const { branch } = wt;
   if (decision.deleteBranch === "none") {
     return `branch ${branch} kept`;
   }
-  const flag = decision.deleteBranch === "force-delete" ? "-D" : "-d";
-  const branchRes = await runner(["git", "branch", flag, branch], {
-    cwd: repoPath,
-    timeoutMs: 5000,
-  });
-  return branchRes.exitCode === 0
-    ? undefined
-    : `branch ${branch} kept (${branchRes.stderr.trim() || "not deleted"})`;
+  const argv =
+    decision.deleteBranch === "force-delete"
+      ? ["git", "update-ref", "-d", `refs/heads/${branch}`, wt.headSha]
+      : ["git", "branch", "-d", branch];
+  const branchRes = await runner(argv, { cwd: repoPath, timeoutMs: 5000 });
+  if (branchRes.exitCode !== 0) {
+    return `branch ${branch} kept (${branchRes.stderr.trim() || "not deleted"})`;
+  }
+  if (decision.deleteBranch === "force-delete") {
+    // `git branch -D` also drops the branch's configuration; the exit code
+    // only says whether there was any.
+    await runner(["git", "config", "--remove-section", `branch.${branch}`], {
+      cwd: repoPath,
+      timeoutMs: 5000,
+    });
+  }
+  return undefined;
 }
 
 type WorktreeRemovalOutcome = {
-  readonly status: "removed" | "failed";
+  /** `skipped`: the worktree changed during the sweep and was left alone. */
+  readonly status: "removed" | "failed" | "skipped";
   readonly detail?: string | undefined;
   readonly rescueRef?: string | undefined;
 };
 
+function joinNotes(notes: readonly (string | undefined)[]): string {
+  return notes.filter((part) => part !== undefined).join("; ");
+}
+
 /**
- * Carry out a `remove` decision. Work is preserved first, and a worktree
- * whose work could not be preserved is left exactly as it was.
+ * Carry out a `remove` decision. The worktree must still be what was
+ * inspected, its work is preserved first, and it is read once more
+ * immediately before it is deleted. A worktree that changed, or whose work
+ * could not be preserved, is left exactly as it was.
  */
 export async function applyWorktreeRemoval(options: {
   readonly repoPath: string;
@@ -131,7 +230,12 @@ export async function applyWorktreeRemoval(options: {
   readonly nowMs: number;
 }): Promise<WorktreeRemovalOutcome> {
   const { repoPath, wt, decision, runner } = options;
-  const rescue = await preserveWork(options);
+  const target: RemovalTarget = { wt, gitDir: options.gitDir, runner };
+  const stale = await changedSinceInspection(target);
+  if (stale !== null) {
+    return { status: "skipped", detail: `changed during the sweep: ${stale}` };
+  }
+  const rescue = await preserveWork(target, decision, options.nowMs);
   if (rescue !== null && !rescue.ok) {
     return {
       status: "failed",
@@ -148,6 +252,14 @@ export async function applyWorktreeRemoval(options: {
     cwd: wt.path,
     timeoutMs: 10_000,
   });
+  const changed = await changedSinceSnapshot(target, rescue?.trees);
+  if (changed !== null) {
+    return {
+      status: "skipped",
+      detail: joinNotes([`changed during the sweep: ${changed}`, savedNote]),
+      rescueRef,
+    };
+  }
   if (decision.unlock) {
     await runner(["git", "worktree", "unlock", wt.path], {
       cwd: repoPath,
@@ -163,27 +275,28 @@ export async function applyWorktreeRemoval(options: {
   if (!removed.ok) {
     return {
       status: "failed",
-      detail: [removed.detail, savedNote]
-        .filter((part) => part !== undefined)
-        .join("; "),
+      detail: joinNotes([removed.detail, savedNote]),
       rescueRef,
     };
   }
   const branchNote =
     wt.branch === undefined
       ? undefined
-      : await deleteWorktreeBranch(repoPath, wt.branch, decision, runner);
-  const notes = [savedNote, branchNote].filter((part) => part !== undefined);
+      : await deleteWorktreeBranch(
+          repoPath,
+          { ...wt, branch: wt.branch },
+          decision,
+          runner,
+        );
+  const notes = joinNotes([savedNote, branchNote]);
   return {
     status: "removed",
-    ...(notes.length === 0 ? {} : { detail: notes.join("; ") }),
+    ...(notes.length === 0 ? {} : { detail: notes }),
     rescueRef,
   };
 }
 
-export async function removeEmptyChildDirectories(
-  parentDir: string,
-): Promise<void> {
+async function removeEmptyChildDirectories(parentDir: string): Promise<void> {
   let names: string[];
   try {
     names = await readdir(parentDir);
@@ -208,5 +321,77 @@ export async function removeEmptyChildDirectories(
     }
   } catch {
     // Keep non-empty parent.
+  }
+}
+
+function worktreeParentDirectories(ctx: RepoSweepContext): string[] {
+  return [
+    path.join(ctx.homeDir, ".herdr", "worktrees", path.basename(ctx.repoPath)),
+    path.join(ctx.repoPath, ".claude", "worktrees"),
+  ];
+}
+
+/**
+ * Directories with something in them, in the places worktrees are created,
+ * that git has no worktree for. They are reported and never removed: nothing
+ * here knows what they are. An empty one is what a removed worktree leaves
+ * behind, and an applied sweep clears those.
+ */
+export async function findUnknownWorktreeDirectories(
+  ctx: RepoSweepContext,
+  worktrees: readonly WorktreePorcelainEntry[],
+): Promise<string[]> {
+  const known: string[] = [];
+  for (const wt of worktrees) {
+    known.push(await canonicalizeExistingPath(wt.path, ctx.platform));
+  }
+  const unknown: string[] = [];
+  for (const parentDir of worktreeParentDirectories(ctx)) {
+    let names: string[];
+    try {
+      names = await readdir(parentDir);
+    } catch {
+      continue;
+    }
+    for (const name of names.sort((a, b) => a.localeCompare(b))) {
+      const child = path.join(parentDir, name);
+      if (!(await isNonEmptyDirectory(child))) {
+        continue;
+      }
+      const canonicalChild = await canonicalizeExistingPath(
+        child,
+        ctx.platform,
+      );
+      // A directory may also be the parent of worktrees named `a/b`.
+      if (
+        !known.some((wtPath) =>
+          isPathInside(wtPath, canonicalChild, ctx.platform),
+        )
+      ) {
+        unknown.push(child);
+      }
+    }
+  }
+  return unknown;
+}
+
+async function isNonEmptyDirectory(dir: string): Promise<boolean> {
+  try {
+    const names = await readdir(dir);
+    return names.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+export async function pruneRepoWorktreeMetadataAndDirs(
+  ctx: RepoSweepContext,
+): Promise<void> {
+  await ctx.runner(["git", "worktree", "prune"], {
+    cwd: ctx.repoPath,
+    timeoutMs: 5000,
+  });
+  for (const parentDir of worktreeParentDirectories(ctx)) {
+    await removeEmptyChildDirectories(parentDir);
   }
 }

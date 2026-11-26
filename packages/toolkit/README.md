@@ -1827,7 +1827,7 @@ checkout. The first matching row decides:
 
 | #   | Condition                                                                                                                                                | Action                      |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| 1   | Directory missing, or git reports it `prunable`                                                                                                          | Prune the metadata          |
+| 1   | Directory missing, or git reports it `prunable`, and the worktree is not locked                                                                          | Prune the metadata          |
 | 2   | Locked as `Herdr worktree pool` (or under `~/.herdr/worktrees/.pool`), locked by a Claude agent whose pid is alive, or locked for any other reason       | Keep                        |
 | 3   | A live Herdr terminal, Herdr active file, process working directory, active lease, Forum notice path, or the caller's own working directory is inside it | Keep                        |
 | 4   | Mid rebase, merge, cherry-pick, or bisect                                                                                                                | Keep                        |
@@ -1837,23 +1837,36 @@ checkout. The first matching row decides:
 
 Activity is the newest of the worktree directory, its `.git` file, `HEAD`,
 the `HEAD` reflog, the last commit, and the files `git status` reports as
-changed. The index is not a signal: an ordinary `git status` rewrites it. The
-reaper itself runs `git --no-optional-locks -c core.fsmonitor=false status`,
-so inspecting a worktree neither rewrites its index nor starts an fsmonitor
-daemon.
+changed. Untracked files are listed one by one (`--untracked-files=all`),
+because editing a file does not move the mtime of the directory it is in; for
+a deleted path the nearest directory that still exists is read. The index is
+not a signal: an ordinary `git status` rewrites it. The reaper itself runs
+`git --no-optional-locks -c core.fsmonitor=false status`, so inspecting a
+worktree neither rewrites its index nor starts an fsmonitor daemon.
 
 Removal never discards work:
 
 - **Uncommitted or untracked files** are committed to
-  `refs/tend/rescue/<worktree-name>-<utc-timestamp>` first, with `HEAD` as
-  the parent. Staging happens in a temporary copy of the index, so the
-  worktree's own index is untouched. `.gitignore` is honored: ignored files
-  (build output, `node_modules`, an ignored `.env`) are not saved.
+  `refs/tend/rescue/<worktree-name>-<utc-timestamp>` first, as two commits on
+  top of `HEAD`: what was staged, then the working tree. A file that was
+  staged and then edited or restored therefore keeps both versions. Both
+  trees come from a temporary copy of the index, so the worktree's own index
+  is untouched. `.gitignore` is honored: ignored files (build output,
+  `node_modules`, an ignored `.env`) are not saved.
 - **A named branch with unmerged commits** is kept; only the worktree goes.
 - **A detached `HEAD` with commits that are not on the default branch** gets
   a rescue ref at `HEAD`.
 - **A branch that is fully merged** (no commits ahead of the default branch,
-  or a merged pull request at that head) is deleted with the worktree.
+  or a merged pull request at that head) is deleted with the worktree, and
+  only if it still points at the commit that was judged.
+
+The decision is made at the start of a sweep and checked again when the
+worktree's turn comes. A worktree whose `HEAD` moved or whose lock changed in
+between is left alone, and a snapshotted worktree is read once more
+immediately before the forced removal and kept if its files no longer match
+what was saved; both show as `SKIPPED` with "changed during the sweep". An
+edit that lands in the instant between that last read and the removal is the
+one window that remains.
 
 The reaper keeps a worktree whenever it cannot establish a fact:
 
@@ -1861,8 +1874,9 @@ The reaper keeps a worktree whenever it cannot establish a fact:
   session would be invisible.
 - The liveness snapshot is taken once, and a sweep that removes worktrees can
   run for minutes, so `hc ls --json` is asked again immediately before each
-  removal. A worktree a Herdr terminal has entered since is kept, and so is
-  every remaining candidate if the query fails; both show as `SKIPPED`.
+  removal. A worktree a Herdr terminal has entered since is kept. If the
+  query fails, that candidate is kept; the next candidate asks again, so a
+  single failure does not hold the rest of the sweep. Both show as `SKIPPED`.
 - When open pull requests cannot be listed (`gh` missing, unauthenticated, or
   returning something other than a JSON list), every branch worktree with
   commits ahead of the default branch is kept. Open pull requests are queried
@@ -1872,27 +1886,42 @@ The reaper keeps a worktree whenever it cannot establish a fact:
   worktree and says so.
 - A snapshot or rescue ref that cannot be written keeps the worktree and
   reports the run as failed. An untracked nested git repository is one such
-  case: a snapshot would record only a pointer to it.
+  case: a snapshot would record only a pointer to it. An index with unmerged
+  entries is another, since its staged state cannot be written as a tree.
+- A worktree with submodules (a `.gitmodules` file, or submodules already
+  cloned into its git directory) is kept. Git removes such a worktree only
+  when forced, and a forced removal deletes the submodules' files, which a
+  snapshot of the outer repository does not contain.
 - Only a Claude-agent lock whose process is gone is released: its pid is
   dead, or the pid is alive but started at a different time than the lock
   records, which means the number was reused. When either start time is
-  missing or unreadable, a live pid keeps the lock. Pool slots and locks with
-  any other reason are never unlocked.
+  missing or unreadable, a live pid keeps the lock. A differing start time
+  is confirmed against the process as it is now, not only against the
+  snapshot taken at the start of the sweep. Pool slots and locks with any
+  other reason are never unlocked.
 
 Every inspected worktree gets a decision with a reason. `--summary` prints the
 per-reason keep counts, `--verbose` also lists each kept worktree, and `--json`
 carries the records as `surfaces[].decisions`. Directories under
 `~/.herdr/worktrees/<repo>` and `<repo>/.claude/worktrees` that git has no
-worktree for are reported as warnings and left in place.
+worktree for are reported as warnings and left in place when they hold
+anything; an empty one, which is what a removed worktree leaves behind, is
+cleared by an applied sweep. Stale metadata is reported as removed only once
+`git worktree list` no longer shows it.
 
 Restore rescued work from the repository's main checkout:
 
 ```bash
 git for-each-ref refs/tend/rescue                      # list rescue refs
-git show --stat refs/tend/rescue/<name>                # uncommitted work as one commit
-git worktree add ../<name> refs/tend/rescue/<name>     # check it out again
+git show --stat refs/tend/rescue/<name>                # working tree, against what was staged
+git show --stat refs/tend/rescue/<name>^               # what was staged, against HEAD
+git worktree add ../<name> refs/tend/rescue/<name>     # check the working tree out again
+git show refs/tend/rescue/<name>^:<path>               # the staged version of one file
 git update-ref -d refs/tend/rescue/<name>              # discard it for good
 ```
+
+A rescue ref for a detached `HEAD` with nothing uncommitted points at that
+commit itself.
 
 `toolkit tend schedule install` loads the per-user macOS LaunchAgent
 `com.jerred.toolkit-tend`, which runs
@@ -1910,7 +1939,9 @@ toolkit tend worktrees --apply
 ```
 
 `schedule status` reports whether the plist exists and is loaded;
-`schedule uninstall` unloads and removes it.
+`schedule uninstall` unloads and removes it. When `TOOLKIT_TEND_DIR` is set at
+install time, the job carries it, so its lock, leases and events stay with
+its logs.
 
 This is a host LaunchAgent rather than a Temporal Schedule on purpose.
 Scheduled work in this repository normally belongs to Temporal, but the reaper

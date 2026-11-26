@@ -30,6 +30,12 @@ export function parseStatusPorcelainZ(stdout: string): string[] {
  * Read-only status. `--no-optional-locks` keeps git from rewriting the index
  * (which would look like activity and contend with a live session), and
  * fsmonitor is off so inspecting an idle worktree never starts a daemon.
+ *
+ * `--untracked-files=all` names every untracked file instead of only the
+ * directory that holds it. Editing a file does not move its directory's
+ * mtime, so without the files themselves recent work inside an old untracked
+ * directory would not count as activity. It also overrides a user setting
+ * that hides untracked files.
  */
 export async function readWorktreeStatus(
   wtPath: string,
@@ -43,6 +49,7 @@ export async function readWorktreeStatus(
       "core.fsmonitor=false",
       "status",
       "--porcelain",
+      "--untracked-files=all",
       "-z",
     ],
     { cwd: wtPath, timeoutMs: WORKTREE_STATUS_TIMEOUT_MS },

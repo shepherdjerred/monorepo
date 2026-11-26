@@ -108,6 +108,8 @@ export type WorktreeWorkFacts =
       readonly aheadOfDefault: number | null;
       /** Whether the branch itself may be deleted once the worktree is gone. */
       readonly branchVerdict: EligibilityVerdict;
+      /** The checkout has submodules, configured or already cloned. */
+      readonly hasSubmodules: boolean;
     };
 
 export type WorktreeFacts = {
@@ -186,6 +188,14 @@ export function decideWorktreeEarly(
   facts: WorktreeFacts,
 ): WorktreeDecision | null {
   if (facts.missing) {
+    // Git keeps the metadata of a locked worktree, so there is nothing to
+    // prune: a lock is how a checkout on an unmounted volume is protected.
+    if (facts.lock.kind !== "unlocked") {
+      return keep(
+        "locked, directory missing",
+        "directory is missing but the worktree is locked, so git keeps its metadata",
+      );
+    }
     return {
       action: "prune-metadata",
       category: "stale metadata",
@@ -310,10 +320,19 @@ export function decideWorktree(facts: WorktreeFacts): WorktreeDecision {
     return keep("activity unknown", "no activity signal could be read");
   }
   const idleMs = Math.max(0, facts.nowMs - work.lastActivityMs);
-  return idleMs < facts.minAgeMs
+  if (idleMs < facts.minAgeMs) {
+    return keep(
+      "recent activity",
+      `last activity ${formatDurationCompact(idleMs)} ago (under ${formatDurationCompact(facts.minAgeMs)})`,
+    );
+  }
+  // Git refuses to remove a worktree with submodules unless forced, and a
+  // forced removal deletes their files, which no snapshot of this
+  // repository can hold.
+  return work.hasSubmodules
     ? keep(
-        "recent activity",
-        `last activity ${formatDurationCompact(idleMs)} ago (under ${formatDurationCompact(facts.minAgeMs)})`,
+        "contains a submodule",
+        "contains a submodule, whose files cannot be saved before removal",
       )
     : decideRemoval(facts, work, idleMs);
 }
