@@ -78,6 +78,16 @@
   content: "";
 }
 
+/* ---------- name: one line in a row, cut with an ellipsis ---------- */
+
+.scout-name {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ---------- person: a round initial ---------- */
 
 .scout-person {
@@ -563,7 +573,9 @@
 /* ---------- narrower ---------- */
 
 @media (max-width: 720px) {
-  .scout-hero-panel .scout-hero-art {
+  /* [data-side] matches the specificity of the desktop side rules, which
+     set left, right and a horizontal mask, so these replace them. */
+  .scout-hero-panel .scout-hero-art[data-side] {
     position: relative;
     inset: auto;
     width: auto;
@@ -611,17 +623,42 @@
     min-height: 0;
   }
 
-  .scout-duel-hero .scout-hero-art {
+  /* The two champions share the top edge and overlap by a tenth. The start
+     one is whole and sits underneath; the end one fades in across the overlap,
+     so each half blends into the other art, never into the panel colour. The
+     fade must finish inside the overlap (a tenth of the panel is 18% of one
+     art box), or the start art's edge shows as a seam. */
+  .scout-duel-hero .scout-hero-art[data-side] {
     top: 0;
     bottom: auto;
-    width: 50%;
-    height: 11.875rem;
+    width: 55%;
+    height: 12rem;
     --scout-art-y: 50%;
+    mask-image: none;
+  }
+
+  .scout-duel-hero .scout-hero-art[data-side="end"] {
     mask-image: linear-gradient(
-      to bottom,
-      var(--scout-color-text) 45%,
-      transparent
+      to right,
+      transparent 0,
+      var(--scout-color-text) 16%
     );
+  }
+
+  /* One fade into the panel across both arts, rather than a mask on each: two
+     faded layers stacked in the overlap would leave a seam at the start art's
+     edge. It also leaves the heading a clean ground below the art. */
+  .scout-duel-hero::before {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 1;
+    height: 12rem;
+    background: linear-gradient(
+      to bottom,
+      transparent 40%,
+      var(--scout-color-surface)
+    );
+    content: "";
   }
 
   .scout-duel-hero .scout-hero-art[data-side="start"] {
@@ -641,6 +678,6 @@
   }
 
   .scout-duel-hero__text {
-    padding: 10.75rem 1.25rem 1.625rem;
+    padding: 11.75rem 1.25rem 1.625rem;
   }
 }
