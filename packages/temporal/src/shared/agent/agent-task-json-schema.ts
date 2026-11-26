@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { z } from "zod/v4";
 
 export function stripClaudeSchemaAnnotations(value: unknown): unknown {
@@ -34,7 +35,8 @@ function sortJson(value: unknown): unknown {
 }
 
 export function jsonSchemaFingerprint(schema: unknown): string {
-  const hasher = new Bun.CryptoHasher("sha256");
-  hasher.update(JSON.stringify(sortJson(schema)));
-  return hasher.digest("hex").slice(0, 16);
+  return createHash("sha256")
+    .update(JSON.stringify(sortJson(schema)))
+    .digest("hex")
+    .slice(0, 16);
 }

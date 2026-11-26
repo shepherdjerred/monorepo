@@ -2,7 +2,9 @@ import { describe, expect, test } from "vitest";
 import {
   OwnedSmokeProcesses,
   executableMappingMatches,
+  hasAquaGuiSession,
   parseProcessTable,
+  requireAquaGuiSession,
   requireStartupMarker,
   SmokeLaunchGate,
   SmokeShutdownWedgedError,
@@ -387,5 +389,96 @@ describe("Launch Services cancellation fence", () => {
       ),
     ).rejects.toThrow("open failed");
     expect(run.signals).toEqual([123]);
+  });
+});
+
+describe("Aqua GUI session detection", () => {
+  test("accepts only status 0 with unlocked console launchctl managername Aqua", async () => {
+    await expect(
+      hasAquaGuiSession(
+        async () => ({ status: 0, stdout: "Aqua\n" }),
+        async () => [
+          {
+            kCGSSessionUserIDKey: process.getuid?.() ?? 501,
+            kCGSSessionOnConsoleKey: true,
+            CGSSessionScreenIsLocked: false,
+          },
+        ],
+      ),
+    ).resolves.toBe(true);
+    await expect(
+      requireAquaGuiSession(
+        async () => ({ status: 0, stdout: "Aqua\n" }),
+        async () => [
+          {
+            kCGSSessionUserIDKey: process.getuid?.() ?? 501,
+            kCGSSessionOnConsoleKey: true,
+            CGSSessionScreenIsLocked: false,
+          },
+        ],
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  test("rejects locked or off-console Aqua sessions where SwiftUI scenes cannot realize", async () => {
+    const uid = process.getuid?.() ?? 501;
+    await expect(
+      hasAquaGuiSession(
+        async () => ({ status: 0, stdout: "Aqua\n" }),
+        async () => [
+          {
+            kCGSSessionUserIDKey: uid,
+            kCGSSessionOnConsoleKey: true,
+            CGSSessionScreenIsLocked: true,
+          },
+        ],
+      ),
+    ).resolves.toBe(false);
+    await expect(
+      requireAquaGuiSession(
+        async () => ({ status: 0, stdout: "Aqua\n" }),
+        async () => [
+          {
+            kCGSSessionUserIDKey: uid,
+            kCGSSessionOnConsoleKey: true,
+            CGSSessionScreenIsLocked: true,
+          },
+        ],
+      ),
+    ).rejects.toThrow(/CGSSessionScreenIsLocked=true/);
+  });
+
+  test("rejects Background and System launchd manager domains with a clear diagnostic", async () => {
+    for (const domain of ["Background", "System", "LoginWindow", ""]) {
+      await expect(
+        hasAquaGuiSession(async () => ({ status: 0, stdout: `${domain}\n` })),
+      ).resolves.toBe(false);
+      await expect(
+        requireAquaGuiSession(async () => ({
+          status: 0,
+          stdout: `${domain}\n`,
+        })),
+      ).rejects.toThrow(/Aqua GUI session/);
+    }
+  });
+
+  test("fails closed when launchctl exits non-zero or throws", async () => {
+    await expect(
+      hasAquaGuiSession(async () => ({ status: 1, stdout: "" })),
+    ).resolves.toBe(false);
+    await expect(
+      requireAquaGuiSession(async () => ({ status: 1, stdout: "" })),
+    ).rejects.toThrow("exited 1");
+
+    await expect(
+      hasAquaGuiSession(async () => {
+        throw new Error("spawn EPERM");
+      }),
+    ).resolves.toBe(false);
+    await expect(
+      requireAquaGuiSession(async () => {
+        throw new Error("spawn EPERM");
+      }),
+    ).rejects.toThrow("spawn EPERM");
   });
 });

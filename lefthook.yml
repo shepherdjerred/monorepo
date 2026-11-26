@@ -1,4 +1,6 @@
 glob_matcher: doublestar
+lefthook: bun scripts/tools/run-lefthook.ts
+no_auto_install: true
 
 # Local hooks inspect staged files, then run package-scoped typecheck and
 # lint for the workspaces that own those files (Turbo, concurrency 1).
@@ -46,8 +48,16 @@ pre-commit:
                   run: bun scripts/checks/check-suppressions.ts
 
                 - name: service-registration
-                  glob: "packages/{delivery/registrations/v2/**/{recipe,configuration}.json,ops-model/catalog-document.json}"
+                  glob: "{packages/delivery/registrations/v2/**/{recipe,configuration}.json,packages/ops-model/catalog-document.json,packages/version-catalog/src/image-registry.json,ci/scripts/images/image-targets.ts,scripts/checks/service-registration-exemptions.json}"
                   run: bun scripts/checks/service-registration.ts
+
+                - name: check-version-catalog-compat
+                  glob: "packages/{version-catalog/src/catalog.json,woodpecker-config-extension/src/images.ts}"
+                  run: bun scripts/checks/ci/check-version-catalog-compat.ts
+
+                - name: jscpd
+                  glob: "{packages/**/*.{ts,tsx},scripts/**/*.ts,.jscpd.json,.jscpd-baseline.json}"
+                  run: bun scripts/tools/jscpd-check.ts
 
                 - name: check-agent-guidance
                   glob: "**/*"
@@ -127,8 +137,12 @@ pre-commit:
                     - run: test -n "$CODEX_CI"
                     - run: test -n "$CODEX_CLOUD_TASKS_BASE_URL"
                     - run: 'bun -e ''process.exit(process.platform === "win32" ? 0 : 1)'''
+                    - run: 'test "$(uname -s)" = "Darwin" && bun packages/tasknotes-macos/scripts/verify-launch.ts --skip-if-no-gui'
                   run: |
+                    set -e
                     cd packages/tasknotes-macos
+                    [ -f Resources/macos/ThirdPartyNotices.txt ] || bun scripts/generate-native-notices.ts
+                    [ -d TaskNotes.xcodeproj ] || bun run mac:generate
                     bun run mac:smoke
 
                 - name: lockfile-check

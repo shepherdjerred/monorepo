@@ -42,16 +42,24 @@ async function check(
   return runCheckStatuses([statuses], pageSize);
 }
 
+type WoodpeckerPipelineMock = {
+  number: number;
+  commit: string;
+  workflows: readonly { name: string; state: string }[];
+};
+
 /** Runs the ci-complete script against a paginated GitHub statuses fake. */
 async function runCheckStatuses(
   timeline: readonly (readonly CommitStatus[])[],
   pageSize: number,
   useEtags = false,
+  woodpeckerPipeline?: WoodpeckerPipelineMock,
 ): Promise<CheckResult> {
   const source = [
     `const timeline = ${JSON.stringify(timeline)};`,
     `const pageSize = ${String(pageSize)};`,
     `const useEtags = ${String(useEtags)};`,
+    `const woodpeckerPipeline = ${JSON.stringify(woodpeckerPipeline ?? null)};`,
     `const sleeps = [];`,
     `const ifNoneMatchHeaders = [];`,
     `let pollIndex = 0;`,
@@ -59,6 +67,12 @@ async function runCheckStatuses(
     String.raw`process.on("exit", () => { console.error("\n__META__:" + JSON.stringify({ sleeps, ifNoneMatchHeaders }) + "\n"); });`,
     `globalThis.fetch = async (input, init) => {
       const url = new URL(String(input));
+      if (url.hostname !== "api.github.com") {
+        if (!woodpeckerPipeline || url.pathname !== "/api/repos/1/pipelines/1200") {
+          return new Response("not found", { status: 404 });
+        }
+        return Response.json(woodpeckerPipeline);
+      }
       const page = Number(url.searchParams.get("page") ?? "1");
       const statuses = timeline[Math.min(pollIndex, timeline.length - 1)];
       const start = (page - 1) * pageSize;
@@ -366,6 +380,89 @@ describe("complete PR status polling", () => {
       5_400_000,
     );
     expect(stuckRunning.stderr).toContain("no completed status");
+  });
+});
+
+describe("complete PR status Woodpecker reconciliation", () => {
+  test("reconciles dropped terminal GitHub statuses via Woodpecker pipeline state", async () => {
+    const okPipeline: WoodpeckerPipelineMock = {
+      number: 1200,
+      commit: SHA,
+      workflows: [
+        { name: "verify", state: "success" },
+        { name: "pr-dryrun", state: "success" },
+      ],
+    };
+    const verifyOk = {
+      context: "ci/woodpecker/pr/verify",
+      state: "success",
+      target_url: `${PIPELINE}/1`,
+    };
+    const stuckPending = {
+      context: "ci/woodpecker/pr/pr-dryrun",
+      state: "pending",
+      description: "Workflow is running",
+      target_url: `${PIPELINE}/2`,
+    };
+    const droppedPending = await runCheckStatuses(
+      [[verifyOk, stuckPending]],
+      100,
+      false,
+      okPipeline,
+    );
+    expect(droppedPending.code).toBe(0);
+    expect(droppedPending.sleeps).toEqual([]);
+
+    const droppedMissing = await runCheckStatuses(
+      [[verifyOk]],
+      100,
+      false,
+      okPipeline,
+    );
+    expect(droppedMissing.code).toBe(0);
+    expect(droppedMissing.sleeps).toEqual(
+      Array.from({ length: 20 }, () => 3000),
+    );
+  });
+
+  test("rejects Woodpecker reconciliation on commit mismatch or failed workflow", async () => {
+    const partial = [
+      [
+        {
+          context: "ci/woodpecker/pr/verify",
+          state: "success",
+          target_url: `${PIPELINE}/1`,
+        },
+        {
+          context: "ci/woodpecker/pr/pr-dryrun",
+          state: "pending",
+          description: "Workflow is running",
+          target_url: `${PIPELINE}/2`,
+        },
+      ],
+    ];
+    const wrongCommit = await runCheckStatuses(partial, 100, false, {
+      number: 1200,
+      commit: BASE,
+      workflows: [
+        { name: "verify", state: "success" },
+        { name: "pr-dryrun", state: "success" },
+      ],
+    });
+    expect(wrongCommit.code).not.toBe(0);
+    expect(wrongCommit.stderr).toContain("no completed status");
+
+    const failedWorkflow = await runCheckStatuses(partial, 100, false, {
+      number: 1200,
+      commit: SHA,
+      workflows: [
+        { name: "verify", state: "success" },
+        { name: "pr-dryrun", state: "canceled" },
+      ],
+    });
+    expect(failedWorkflow.code).not.toBe(0);
+    expect(failedWorkflow.sleeps).toEqual([]);
+    expect(failedWorkflow.stderr).toContain("Required workflows failed");
   });
 });
 

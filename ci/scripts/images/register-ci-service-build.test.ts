@@ -9,6 +9,7 @@ import type {
 import { CATALOG_CORE } from "../../../packages/ops-model/src/delivery-catalog/core.ts";
 import type { CiBuildContext } from "./ci-build-context.ts";
 import {
+  createCiServiceDeliveryClient,
   pinnedCiImages,
   registerCiServiceBuild,
   type CiServiceClient,
@@ -311,3 +312,113 @@ test("an unavailable Delivery stops the registration instead of reading as a mis
   ).rejects.toThrow("Delivery is paused");
   expect(published).toEqual([]);
 });
+
+test("createCiServiceDeliveryClient retries transient 503 PAUSED across reads and publish", async () => {
+  const sleeps: number[] = [];
+  let latestCalls = 0;
+  let publishCalls = 0;
+  const pausedBody = {
+    error: {
+      code: "PAUSED",
+      message: "Delivery mutations are paused",
+      requestId: "req-paused",
+    },
+  };
+  const client = createCiServiceDeliveryClient({
+    baseUrl: "https://delivery.sjer.red",
+    token: "test-token",
+    retry: {
+      delaysMs: [10, 20, 30],
+      sleep: async (ms) => {
+        sleeps.push(ms);
+      },
+      fetch: async (input, init) => {
+        const url = new URL(input instanceof Request ? input.url : input);
+        if (url.pathname === "/api/v1/artifacts/latest-qualified") {
+          latestCalls += 1;
+          if (latestCalls === 1) {
+            return Response.json(pausedBody, { status: 503 });
+          }
+          const component = url.searchParams.get("component") ?? "";
+          const match = pins.find((image) => image.component === component);
+          return Response.json(
+            qualified(
+              component,
+              `ci/7/11000/${match?.name ?? "x"}`,
+              match?.pin.digest ?? "",
+            ),
+          );
+        }
+        if (url.pathname === "/api/v1/builds" && init?.method === "POST") {
+          publishCalls += 1;
+          return publishCalls <= 2
+            ? Response.json(pausedBody, { status: 503 })
+            : Response.json({ buildId: "build/recovered", artifacts: [] });
+        }
+        return new Response("unexpected", { status: 500 });
+      },
+    },
+  });
+
+  const result = await registerCiServiceBuild({
+    context,
+    client,
+    inspect: inspector().inspect,
+    pins,
+  });
+  expect(result.buildId).toBe("build/recovered");
+  expect(sleeps).toEqual([10, 10, 20]);
+});
+
+test.each([
+  [400, "VALIDATION_ERROR", "Invalid build payload"],
+  [409, "CONFLICT", "Conflicting build provenance"],
+] as const)(
+  "createCiServiceDeliveryClient fails immediately on %i %s without retrying",
+  async (status, code, message) => {
+    const sleeps: number[] = [];
+    let calls = 0;
+    const client = createCiServiceDeliveryClient({
+      baseUrl: "https://delivery.sjer.red",
+      token: "test-token",
+      retry: {
+        delaysMs: [10, 20],
+        sleep: async (ms) => {
+          sleeps.push(ms);
+        },
+        fetch: async (input, init) => {
+          calls += 1;
+          const url = new URL(input instanceof Request ? input.url : input);
+          if (url.pathname === "/api/v1/artifacts/latest-qualified") {
+            const component = url.searchParams.get("component") ?? "";
+            const match = pins.find((image) => image.component === component);
+            return Response.json(
+              qualified(
+                component,
+                `ci/7/11000/${match?.name ?? "x"}`,
+                match?.pin.digest ?? "",
+              ),
+            );
+          }
+          return url.pathname === "/api/v1/builds" && init?.method === "POST"
+            ? Response.json(
+                { error: { code, message, requestId: "req-err" } },
+                { status },
+              )
+            : new Response("unexpected", { status: 500 });
+        },
+      },
+    });
+
+    await expect(
+      registerCiServiceBuild({
+        context,
+        client,
+        inspect: inspector().inspect,
+        pins,
+      }),
+    ).rejects.toThrow(message);
+    expect(sleeps).toEqual([]);
+    expect(calls).toBe(3);
+  },
+);

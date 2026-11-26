@@ -143,7 +143,7 @@ export function pgCtlOptionsForDurability(
     durability === "durable"
       ? "-c fsync=on -c synchronous_commit=on -c full_page_writes=on"
       : "-c fsync=off -c synchronous_commit=off -c full_page_writes=off";
-  return `-p ${port.toString()} -c listen_addresses=127.0.0.1 ${durabilityFlags} -c max_connections=200`;
+  return `-p ${port.toString()} -c listen_addresses=127.0.0.1 ${durabilityFlags} -c max_connections=200 -c timezone=UTC`;
 }
 
 export function runsAsRoot(): boolean {
@@ -164,8 +164,13 @@ export function asPostgresOwner(cmd: readonly string[]): string[] {
   return [su, "-s", "/bin/sh", "nobody", "-c", quoted];
 }
 
-export function runAsPostgresOwner(cmd: readonly string[]): RunResult {
-  return runCommandSync(asPostgresOwner(cmd));
+export function runAsPostgresOwner(
+  cmd: readonly string[],
+  options?: {
+    readonly env?: Readonly<Record<string, string | undefined>> | undefined;
+  },
+): RunResult {
+  return runCommandSync(asPostgresOwner(cmd), options);
 }
 
 export function serverIsUp(port: number): boolean {
@@ -294,17 +299,20 @@ function removeDisposableDataDirSync(dataDir: string): void {
 }
 
 function runInitdb(dataDir: string): void {
-  const init = runAsPostgresOwner([
-    postgresBinaryPath("initdb"),
-    "-D",
-    dataDir,
-    "-U",
-    "scout",
-    "--auth=trust",
-    "--encoding=UTF8",
-    "--no-locale",
-    "--data-checksums",
-  ]);
+  const init = runAsPostgresOwner(
+    [
+      postgresBinaryPath("initdb"),
+      "-D",
+      dataDir,
+      "-U",
+      "scout",
+      "--auth=trust",
+      "--encoding=UTF8",
+      "--no-locale",
+      "--data-checksums",
+    ],
+    { env: { TZ: "UTC" } },
+  );
   if (init.exitCode !== 0) {
     throw binariesHint(`initdb failed: ${init.stderr}`);
   }
@@ -330,19 +338,22 @@ function startClusterOnce(
   logPath: string,
   durability: PostgresClusterDurability,
 ): RunResult {
-  return runAsPostgresOwner([
-    postgresBinaryPath("pg_ctl"),
-    "-D",
-    dataDir,
-    "-w",
-    "-t",
-    "30",
-    "-l",
-    logPath,
-    "-o",
-    pgCtlOptionsForDurability(port, durability),
-    "start",
-  ]);
+  return runAsPostgresOwner(
+    [
+      postgresBinaryPath("pg_ctl"),
+      "-D",
+      dataDir,
+      "-w",
+      "-t",
+      "30",
+      "-l",
+      logPath,
+      "-o",
+      pgCtlOptionsForDurability(port, durability),
+      "start",
+    ],
+    { env: { TZ: "UTC" } },
+  );
 }
 
 function canRecoverDisposableWalPanic(

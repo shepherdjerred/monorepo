@@ -51,14 +51,26 @@ blanket `security down` preset. Screenshots work without screencasting.
 
 ## Verify a local UI change
 
-Start the app's dev server, then drive it and keep the capture for the PR:
+Start the app's dev server, then drive it with a unique `--agent-id` and revoke
+the session via `env -u PINCHTAB_SESSION` when finished:
 
 ```bash
-PINCHTAB_SESSION="$(pinchtab session create --agent-id ui-verification)" || exit 1
+PINCHTAB_AGENT_ID="ui-verify-$(uuidgen | tr '[:upper:]' '[:lower:]')"
+PINCHTAB_SESSION="$(pinchtab session create --agent-id "$PINCHTAB_AGENT_ID")" || exit 1
 export PINCHTAB_SESSION
 PINCHTAB_TAB="$(pinchtab nav http://localhost:5180/app/ --new-tab)" || exit 1
 pinchtab snap --tab "$PINCHTAB_TAB"
 pinchtab screenshot --tab "$PINCHTAB_TAB" -o /tmp/foo.png
+pinchtab tab close "$PINCHTAB_TAB"
+# `session create` prints only sessionToken; `session list` and `session revoke`
+# require the server token (`env -u PINCHTAB_SESSION`) and exit 0 on HTTP 403!
+PINCHTAB_SES_ID="$(
+  env -u PINCHTAB_SESSION pinchtab session list |
+    jq -r --arg a "$PINCHTAB_AGENT_ID" '.[] | select(.agentId == $a and .status == "active") | .id'
+)"
+revoke_out="$(env -u PINCHTAB_SESSION pinchtab session revoke "$PINCHTAB_SES_ID" 2>&1)"
+[[ "$revoke_out" != *"Error "* ]] || { printf '%s\n' "$revoke_out" >&2; exit 1; }
+unset PINCHTAB_SESSION
 toolkit pr asset <PR> /tmp/foo.png --markdown
 ```
 
@@ -93,7 +105,7 @@ The server requires a bearer token (`Authorization: Bearer <token>`) for all pro
 
 - **Where the token lives:** at `.server.token` inside the config file selected by the `PINCHTAB_CONFIG` env var. If `PINCHTAB_CONFIG` is unset, the CLI defaults to `~/.pinchtab/config.json`; the launchd daemon pins it to `~/Library/Application Support/pinchtab/config.json` via its plist. **These can be two different files** — if their tokens drift you get `401 bad_token` from the CLI while the daemon itself is fine. On macOS, `PINCHTAB_CONFIG` is exported (when unset) in fish config, `~/.zshenv`, and `~/.bash_env` to the Library path so interactive shells, non-interactive coding-agent shells, the CLI, the daemon, and the install script all share one config.
 - **CLI auth:** shorthand commands (`pinchtab nav`, `pinchtab health`, …) read the token from that config file. Setting `PINCHTAB_TOKEN` in the environment **overrides** the config-file token — handy for a one-off call, but if it's the only thing making the CLI work, you're masking a config split (fix the split instead).
-- **Agent sessions:** capture `session create` directly into `PINCHTAB_SESSION`; never print or persist its credential. Revoke the returned public session ID at cleanup. Use explicit `--tab` IDs so each command targets the intended tab even when another agent changes the default tab. These sessions are revocable credentials for trusted automation, not an isolation boundary.
+- **Agent sessions (`AI-740`):** `pinchtab session create --agent-id <unique-id>` prints **only** `sessionToken` (never print or persist it). While `PINCHTAB_SESSION` is set in the environment, `pinchtab session list` and `pinchtab session revoke` fail on stderr with `Error 403: agent session is not allowed to access this endpoint (session_scope_forbidden)` while **exiting `0`**, silently leaking active sessions if stderr is ignored. At cleanup, always unset `PINCHTAB_SESSION` for those admin calls (`env -u PINCHTAB_SESSION pinchtab session list` and `env -u PINCHTAB_SESSION pinchtab session revoke <ses_id>`), select the public `ses_...` ID with `jq` by `.agentId == "<unique-id>" and .status == "active"` (the list is not chronological — **never** use `tail -1`, which can pick an already-revoked entry), and check stderr for `Error ` (or use `POST /sessions` REST with the server bearer token to capture `{ id, sessionToken }` together in memory). Use explicit `--tab` IDs so each command targets the intended tab even when another agent changes the default tab. These sessions are revocable credentials for trusted automation, not an isolation boundary.
 - **Diagnose a 401:** inspect the selected config path, verify the daemon's config path, and run health against that config. Never dump the full config or print its token:
 
 ```bash
@@ -217,11 +229,12 @@ Auth: `Authorization: Bearer <token>`
 
 ### Sessions & Default Shorthand
 
-| Method | Endpoint                | Description                                       |
-| ------ | ----------------------- | ------------------------------------------------- |
-| POST   | `/sessions`             | Create agent session (`{"agentId": "<id>"}`)      |
-| POST   | `/sessions/{id}/revoke` | Revoke agent session                              |
-| POST   | `/navigate`             | Navigate default instance (`{"url", "newTab"}`)   |
+| Method | Endpoint                | Description                                                     |
+| ------ | ----------------------- | --------------------------------------------------------------- |
+| GET    | `/sessions`             | List agent sessions (requires server bearer token, not Session) |
+| POST   | `/sessions`             | Create agent session (`{"agentId": "<id>"}`)                    |
+| POST   | `/sessions/{id}/revoke` | Revoke agent session (requires server bearer token)             |
+| POST   | `/navigate`             | Navigate default instance (`{"url", "newTab"}`)                 |
 
 ### Profiles
 

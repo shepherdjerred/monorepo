@@ -38,6 +38,7 @@ import {
   catalogService,
   type CatalogCore,
 } from "../../../packages/ops-model/src/delivery-catalog/core.ts";
+import { createRetryingDeliveryFetch } from "../../../scripts/lib/delivery/retry-fetch.ts";
 import { imageRuntimeDigests } from "../../../scripts/lib/ci/image-runtime-digests.ts";
 import { requireEnv } from "../../../scripts/lib/run.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
@@ -241,12 +242,24 @@ export async function registerCiServiceBuild(input: {
   return registered;
 }
 
+export function createCiServiceDeliveryClient(options: {
+  readonly baseUrl: string;
+  readonly token: string;
+  readonly retry?: Parameters<typeof createRetryingDeliveryFetch>[0];
+}): CiServiceClient {
+  return createDeliveryClient({
+    baseUrl: options.baseUrl,
+    headers: { Authorization: `Bearer ${options.token}` },
+    fetch: createRetryingDeliveryFetch(options.retry),
+  });
+}
+
 async function main(): Promise<void> {
   if (Bun.argv.length > 2)
     throw new Error("Usage: register-ci-service-build.ts");
-  const client = createDeliveryClient({
+  const client = createCiServiceDeliveryClient({
     baseUrl: requireEnv("DELIVERY_URL"),
-    headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
+    token: requireEnv("DELIVERY_API_TOKEN"),
   });
   await registerCiServiceBuild({
     context: ciBuildContextFromEnv(),

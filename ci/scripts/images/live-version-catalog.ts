@@ -10,6 +10,7 @@ import {
   publicationOwners,
   type PublicationOwners,
 } from "../../../packages/ops-model/src/delivery-catalog/publication-owners.ts";
+import { createRetryingDeliveryFetch } from "../../../scripts/lib/delivery/retry-fetch.ts";
 import { requireEnv } from "../../../scripts/lib/run.ts";
 import { ensureAncestor } from "../selectors/ensure-ancestor.ts";
 import type { BuildxCommandResult } from "./bake-retry.ts";
@@ -55,6 +56,7 @@ export async function readRetainableImages(
     reader = createDeliveryClient({
       baseUrl: requireEnv("DELIVERY_URL"),
       headers: { Authorization: `Bearer ${requireEnv("DELIVERY_API_TOKEN")}` },
+      fetch: createRetryingDeliveryFetch(),
     }).latestRetainableArtifact;
   }
   const entries = await Promise.all(
