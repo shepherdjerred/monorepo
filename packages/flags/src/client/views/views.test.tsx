@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import { act } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import type { Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, useLocation } from "react-router";
 import { afterEach, expect, test, vi } from "vitest";
 import {
@@ -11,8 +10,10 @@ import {
 } from "@shepherdjerred/console-ui";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
 import type { FlagsDiffResponse } from "@shepherdjerred/feature-flags/flags-wire.ts";
-import { createQueryClient } from "@shepherdjerred/flags/client/api.ts";
-import { App } from "@shepherdjerred/flags/client/app.tsx";
+import {
+  mountApp,
+  settle,
+} from "@shepherdjerred/flags/client/app-harness.test-support.tsx";
 import { paletteStore } from "@shepherdjerred/flags/client/palette.tsx";
 import { DeploymentSidebar } from "@shepherdjerred/flags/client/sidebar.tsx";
 
@@ -165,13 +166,6 @@ function stubApi(options: { readonly diffStatus?: number } = {}) {
   return calls;
 }
 
-async function settle(): Promise<void> {
-  for (let round = 0; round < 4; round += 1)
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-}
-
 function Probe() {
   const location = useLocation();
   return (
@@ -210,34 +204,9 @@ function statSeverities(): Record<string, string | null> {
   );
 }
 
-/** jsdom has no `matchMedia`; the top bar asks whether the sidebar shows. */
-function stubNarrowViewport(): void {
-  vi.stubGlobal("matchMedia", (media: string) => ({
-    matches: false,
-    media,
-    addEventListener: noop,
-    removeEventListener: noop,
-  }));
-}
-
 async function mount(entry: string) {
-  stubNarrowViewport();
-  const container = document.createElement("div");
-  document.body.append(container);
-  const root = createRoot(container);
+  const { container, root } = await mountApp(entry, theme, <Probe />);
   roots.push(root);
-  await act(async () => {
-    root.render(
-      <QueryClientProvider client={createQueryClient()}>
-        <MemoryRouter initialEntries={[entry]} useTransitions={false}>
-          <App theme={theme} />
-          <Probe />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-    await Promise.resolve();
-  });
-  await settle();
   return {
     query,
     all,

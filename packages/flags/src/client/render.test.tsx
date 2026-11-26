@@ -1,8 +1,6 @@
 // @vitest-environment jsdom
 import { act, type ReactNode } from "react";
-import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
-import { QueryClientProvider } from "@tanstack/react-query";
 import {
   MemoryRouter,
   useLocation,
@@ -16,9 +14,8 @@ import {
 } from "@shepherdjerred/console-ui";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
 import { validateVariantValue } from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
-import { createQueryClient } from "./api.ts";
+import { mountApp, settle } from "./app-harness.test-support.tsx";
 import type { DiffViewProps, JsonEditorProps } from "./code.tsx";
-import { App } from "./app.tsx";
 import { ConflictBanner } from "./conflict-banner.tsx";
 import { FlagTable } from "./flag-table.tsx";
 import { DeploymentSidebar, FlagsTopBar } from "./sidebar.tsx";
@@ -290,14 +287,6 @@ function stubApi(
   };
 }
 
-/** Lets fetches resolve and React Query and React commit what they bring. */
-async function settle(): Promise<void> {
-  for (let round = 0; round < 4; round += 1)
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-}
-
 let go: NavigateFunction | undefined;
 
 /** Shows the router's location and hands the test its `navigate`. */
@@ -307,33 +296,8 @@ function Probe() {
   return <output id="probe">{`${location.pathname}${location.search}`}</output>;
 }
 
-/** jsdom has no `matchMedia`; the top bar asks whether the sidebar shows. */
-function stubNarrowViewport(): void {
-  vi.stubGlobal("matchMedia", (media: string) => ({
-    matches: false,
-    media,
-    addEventListener: noop,
-    removeEventListener: noop,
-  }));
-}
-
 async function mount(entry: string) {
-  stubNarrowViewport();
-  const container = document.createElement("div");
-  document.body.append(container);
-  const root = createRoot(container);
-  await act(async () => {
-    root.render(
-      <QueryClientProvider client={createQueryClient()}>
-        <MemoryRouter initialEntries={[entry]} useTransitions={false}>
-          <App theme={theme} />
-          <Probe />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
-    await Promise.resolve();
-  });
-  await settle();
+  const { container } = await mountApp(entry, theme, <Probe />);
   const query = (selector: string): Element => {
     const found = container.querySelector(selector);
     if (found === null) throw new Error(`nothing matches ${selector}`);
