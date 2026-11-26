@@ -14,7 +14,10 @@ import {
   rowNotes,
   rowStanding,
 } from "./routes/commits/commit-model.ts";
-import { releasesNote } from "./routes/commits/commit-release.ts";
+import {
+  includedIntro,
+  releasesNote,
+} from "./routes/commits/commit-release.ts";
 
 const full = (short: string) => short.padEnd(40, "0");
 
@@ -125,88 +128,126 @@ describe("carrying commits as a list", () => {
   });
 });
 
+/** The services a commit built and passed on its own, and how many changed. */
+const builtOf = (services: number, changed: number) => ({ services, changed });
+
+const failedBuild = (title: string) => ({
+  id: `${title}-build`,
+  serviceId: title.toLowerCase(),
+  sourceRevision: "3".repeat(40),
+  sourceKind: "ci" as const,
+  ciUrl: null,
+  status: "failed" as const,
+  qualificationReason: null,
+  platformChanges: null,
+  createdAt: "2026-11-01T00:00:00.000Z",
+  pipelineNumber: 1,
+  links: [],
+  serviceTitle: title,
+});
+
+/** Failed builds of the named services, each carried by bdf6689. */
+const carriedOf = (titles: string[]) =>
+  titles.map((title) => carried(title, "bdf6689"));
+
 describe("a partially carried commit says what it built itself", () => {
   const trmnl = carried("TRMNL dashboard", "bdf6689");
 
   it("keeps Not built on its own for a commit with no build of its own", () => {
     // Wholly carried: every service went through the carrier.
     expect(
-      rowNotes({ ...row, carriedFailures: [trmnl], builtCount: 0 }),
+      rowNotes({ ...row, carriedFailures: [trmnl], built: builtOf(0, 0) }),
     ).toEqual([
       "Not built on its own; included in bdf6689 (whose build of TRMNL dashboard passed)",
     ]);
-    // A server that predates builtCount says what it always said.
+    // A server that predates `built` says what it always said.
     expect(rowNotes({ ...row, carriedFailures: [trmnl] })).toEqual([
       "Not built on its own; included in bdf6689 (whose build of TRMNL dashboard passed)",
     ]);
   });
 
   it("says which services the commit built itself and which a later commit built", () => {
-    // /commits/8ebf9e8: its own releases, but TRMNL dashboard went through bdf6689.
+    // /commits/8ebf9e8: 25 built on its own, 7 of them changed, TRMNL through bdf6689.
     expect(
-      rowNotes({ ...row, carriedFailures: [trmnl], builtCount: 7 }),
+      rowNotes({ ...row, carriedFailures: [trmnl], built: builtOf(25, 7) }),
     ).toEqual([
-      "Built on its own for 7 services; 1 service (TRMNL dashboard) was built by a later commit: included in bdf6689 (whose build of TRMNL dashboard passed)",
+      "Built on its own for 25 services (7 changed); 1 service (TRMNL dashboard) was built by a later commit: included in bdf6689 (whose build of TRMNL dashboard passed)",
     ]);
     // /commits/db787eb: two services through two carriers.
     expect(
       rowNotes({
         ...row,
         failedBuildCount: 2,
-        builtCount: 13,
+        built: builtOf(13, 13),
         carriedFailures: [
           carried("Scout for LoL", "8ebf9e8"),
           carried("TRMNL dashboard", "bdf6689"),
         ],
       }),
     ).toEqual([
-      "Built on its own for 13 services; 2 services (Scout for LoL and TRMNL dashboard) were built by a later commit: included in 8ebf9e8 (whose build of Scout for LoL passed) and bdf6689 (whose build of TRMNL dashboard passed)",
+      "Built on its own for 13 services (13 changed); 2 services (Scout for LoL and TRMNL dashboard) were built by a later commit: included in 8ebf9e8 (whose build of Scout for LoL passed) and bdf6689 (whose build of TRMNL dashboard passed)",
     ]);
     expect(
-      rowNotes({
-        ...row,
-        carriedFailures: [trmnl],
-        builtCount: 1,
-      })[0],
-    ).toMatch(/^Built on its own for 1 service; 1 service \(/u);
+      rowNotes({ ...row, carriedFailures: [trmnl], built: builtOf(1, 0) })[0],
+    ).toMatch(/^Built on its own for 1 service \(0 changed\); 1 service \(/u);
+  });
+
+  const status = (
+    built: { services: number; changed: number },
+    titles: string[],
+  ): CommitStatus => ({
+    sha: full("8ebf9e8"),
+    title: null,
+    author: null,
+    verdict: "nothing_to_deploy",
+    buildId: "b",
+    seenAt: null,
+    environments: [],
+    changed: [],
+    unchangedCount: 0,
+    built,
+    failedBuilds: titles.map((title) => failedBuild(title)),
+    carriedFailures: titles.map((title) => ({
+      ...carried(title, "bdf6689"),
+      buildId: `${title}-build`,
+    })),
+    pendingBuilds: [],
+    blocker: null,
   });
 
   it("says the same in the headline", () => {
-    const failed = {
-      id: "trmnl-build",
-      serviceId: "trmnl",
-      sourceRevision: "3".repeat(40),
-      sourceKind: "ci" as const,
-      ciUrl: null,
-      status: "failed" as const,
-      qualificationReason: null,
-      platformChanges: null,
-      createdAt: "2026-11-01T00:00:00.000Z",
-      pipelineNumber: 1,
-      links: [],
-      serviceTitle: "TRMNL dashboard",
-    };
-    const status = (builtCount: number): CommitStatus => ({
-      sha: full("8ebf9e8"),
-      title: null,
-      author: null,
-      verdict: "nothing_to_deploy",
-      buildId: "b",
-      seenAt: null,
-      environments: [],
-      changed: [],
-      unchangedCount: 0,
-      builtCount,
-      failedBuilds: [failed],
-      carriedFailures: [{ ...trmnl, buildId: failed.id }],
-      pendingBuilds: [],
-      blocker: null,
-    });
-    expect(commitStatement(status(0))).toBe(
-      "Not built on its own; included in bdf6689 (whose build of TRMNL dashboard passed).",
+    expect(
+      commitStatement(status({ services: 0, changed: 0 }, ["TRMNL"])),
+    ).toBe(
+      "Not built on its own; included in bdf6689 (whose build of TRMNL passed).",
     );
-    expect(commitStatement(status(7))).toBe(
-      "Built on its own for 7 services; 1 service (TRMNL dashboard) was built by a later commit: included in bdf6689 (whose build of TRMNL dashboard passed).",
+    expect(
+      commitStatement(status({ services: 25, changed: 7 }, ["TRMNL"])),
+    ).toBe(
+      "Built on its own for 25 services (7 changed); 1 service (TRMNL) was built by a later commit: included in bdf6689 (whose build of TRMNL passed).",
+    );
+  });
+
+  it("scopes the detail section to the services CI failed for, and agrees with the header", () => {
+    // Partly carried: the failed service was built by a later commit, so the
+    // section never says the commit was not built on its own.
+    expect(includedIntro(carriedOf(["TRMNL dashboard"]), builtOf(25, 7))).toBe(
+      "CI failed for TRMNL dashboard on this commit, so it was built by a later commit. A newer commit includes this one, and its build of the same service passed and published the change; that commit's releases, shown below, decide whether it is live.",
+    );
+    expect(
+      includedIntro(
+        carriedOf(["Scout for LoL", "TRMNL dashboard"]),
+        builtOf(13, 13),
+      ),
+    ).toBe(
+      "CI failed for Scout for LoL and TRMNL dashboard on this commit, so they were built by a later commit. A newer commit includes this one, and its build of each of them passed and published the change; that commit's releases, shown below, decide whether they are live.",
+    );
+    // Wholly carried: nothing was built here.
+    expect(includedIntro(carriedOf(["CI (Woodpecker)"]), builtOf(0, 0))).toBe(
+      "CI failed for CI (Woodpecker) on this commit, so it was not built on its own. A newer commit includes this one, and its build of the same service passed and published the change; that commit's releases, shown below, decide whether it is live.",
+    );
+    expect(includedIntro(carriedOf(["A"]), undefined)).toContain(
+      "so it was not built on its own",
     );
   });
 });
