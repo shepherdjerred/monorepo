@@ -1,4 +1,4 @@
-import { stat } from "node:fs/promises";
+import { lstat, stat } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { CommandRunner } from "./types.ts";
@@ -9,6 +9,8 @@ export type WorktreePorcelainEntry = {
   readonly branch?: string | undefined;
   readonly detached: boolean;
   readonly locked: boolean;
+  /** Text after `locked ` in porcelain output; absent for a bare lock. */
+  readonly lockReason?: string | undefined;
   readonly prunable: boolean;
 };
 
@@ -36,6 +38,7 @@ function parseSinglePorcelainBlock(
   let branch: string | undefined;
   let detached = false;
   let locked = false;
+  let lockReason: string | undefined;
   let prunable = false;
 
   for (const rawLine of block.split(/\r?\n/u)) {
@@ -47,8 +50,11 @@ function parseSinglePorcelainBlock(
       branch = rawLine.slice("branch refs/heads/".length).trim();
     } else if (rawLine === "detached") {
       detached = true;
-    } else if (rawLine === "locked" || rawLine.startsWith("locked ")) {
+    } else if (rawLine === "locked") {
       locked = true;
+    } else if (rawLine.startsWith("locked ")) {
+      locked = true;
+      lockReason = rawLine.slice("locked ".length).trim();
     } else if (rawLine === "prunable" || rawLine.startsWith("prunable ")) {
       prunable = true;
     }
@@ -63,6 +69,9 @@ function parseSinglePorcelainBlock(
     ...(branch === undefined ? {} : { branch }),
     detached,
     locked,
+    ...(lockReason === undefined || lockReason.length === 0
+      ? {}
+      : { lockReason }),
     prunable,
   };
 }
@@ -103,23 +112,24 @@ function shouldReplacePrRecord(
     : nextUpdatedAtMs > existing.updatedAtMs;
 }
 
-export function parseBatchPullRequests(
+/**
+ * Strict parse of `gh pr list --json` output: `null` when the output is not
+ * the expected JSON array, so a caller can tell "no pull requests" from
+ * "pull request state unknown".
+ */
+export function parsePullRequestList(
   stdout: string,
-): Map<string, RepoPrRecord> {
+): Map<string, RepoPrRecord> | null {
   const map = new Map<string, RepoPrRecord>();
-  const trimmed = stdout.trim();
-  if (trimmed.length === 0) {
-    return map;
-  }
   let rawJson: unknown;
   try {
-    rawJson = JSON.parse(trimmed);
+    rawJson = JSON.parse(stdout.trim());
   } catch {
-    return map;
+    return null;
   }
   const parsed = GhPrListSchema.safeParse(rawJson);
   if (!parsed.success) {
-    return map;
+    return null;
   }
   for (const row of parsed.data) {
     const updatedAtMs = Date.parse(row.updatedAt);
@@ -198,20 +208,45 @@ export async function isMidGitOperation(gitDir: string): Promise<boolean> {
   return false;
 }
 
+async function newestChangedPathMtimeMs(
+  wtPath: string,
+  relativePaths: readonly string[],
+): Promise<number> {
+  let newest = 0;
+  for (const relativePath of relativePaths) {
+    const target = path.join(wtPath, relativePath);
+    try {
+      const info = await lstat(target);
+      newest = Math.max(newest, info.mtimeMs);
+    } catch {
+      // A deleted path: the directory it was removed from records when.
+      newest = Math.max(newest, await mtimeMsIfExists(path.dirname(target)));
+    }
+  }
+  return newest;
+}
+
+/**
+ * Newest sign of work in a worktree. The index is deliberately not a signal:
+ * an ordinary `git status` rewrites it, so it says when the tree was last
+ * looked at, not when it was last worked in.
+ */
 export async function computeWorktreeLastActivityMs(options: {
   readonly wtPath: string;
   readonly gitDir: string;
   readonly runner: CommandRunner;
+  readonly changedPaths?: readonly string[] | undefined;
 }): Promise<{
   readonly lastActivityMs: number;
   readonly commitEpochMs: number;
 }> {
-  const [wtMtime, dotGitMtime, headMtime, indexMtime, logRes] =
+  const [wtMtime, dotGitMtime, headMtime, headLogMtime, changedMtime, logRes] =
     await Promise.all([
       mtimeMsIfExists(options.wtPath),
       mtimeMsIfExists(path.join(options.wtPath, ".git")),
       mtimeMsIfExists(path.join(options.gitDir, "HEAD")),
-      mtimeMsIfExists(path.join(options.gitDir, "index")),
+      mtimeMsIfExists(path.join(options.gitDir, "logs", "HEAD")),
+      newestChangedPathMtimeMs(options.wtPath, options.changedPaths ?? []),
       options.runner(["git", "log", "-1", "--format=%ct"], {
         cwd: options.wtPath,
         timeoutMs: 3000,
@@ -227,7 +262,8 @@ export async function computeWorktreeLastActivityMs(options: {
       wtMtime,
       dotGitMtime,
       headMtime,
-      indexMtime,
+      headLogMtime,
+      changedMtime,
       commitEpochMs,
     ),
     commitEpochMs,
@@ -252,7 +288,7 @@ export async function resolveDefaultBranch(
   return mainVerify.exitCode === 0 ? "main" : null;
 }
 
-async function countCommitsAhead(
+export async function countCommitsAhead(
   cwd: string,
   range: string,
   runner: CommandRunner,
@@ -363,19 +399,17 @@ export async function evaluateBranchAndPrEligibility(options: {
   readonly defaultBranch: string;
   readonly pr: RepoPrRecord | undefined;
   readonly commitEpochMs: number;
+  /** `git rev-list --count origin/<default>..HEAD`; `null` when it failed. */
+  readonly aheadOfDefault: number | null;
   readonly includeClosedPrs: boolean;
   readonly runner: CommandRunner;
 }): Promise<EligibilityVerdict> {
-  const { wt, defaultBranch, pr, commitEpochMs, runner } = options;
+  const { wt, defaultBranch, pr, commitEpochMs, aheadOfDefault, runner } =
+    options;
   if (pr?.state === "OPEN") {
     return { prune: false, reason: "open pull request" };
   }
 
-  const aheadOfDefault = await countCommitsAhead(
-    wt.path,
-    `origin/${defaultBranch}..HEAD`,
-    runner,
-  );
   if (aheadOfDefault === 0) {
     const label = wt.detached
       ? `detached HEAD reachable from origin/${defaultBranch}`
@@ -406,15 +440,4 @@ export function isGitPathTooLongDeletionError(stderr: string): boolean {
   return stderr
     .split(/\r?\n/u)
     .some((line) => /:\s*Filename too long\s*$/iu.test(line));
-}
-
-export async function isWorktreeCleanForFallbackRemoval(
-  wtPath: string,
-  runner: CommandRunner,
-): Promise<boolean> {
-  const statusRes = await runner(
-    ["git", "-C", wtPath, "status", "--porcelain"],
-    { timeoutMs: 5000 },
-  );
-  return statusRes.exitCode === 0 && statusRes.stdout.trim().length === 0;
 }

@@ -117,7 +117,7 @@ async function toHcTerminalEntry(
   };
 }
 
-async function collectHcTerminals(options: {
+export async function collectHcTerminals(options: {
   readonly runner: CommandRunner;
   readonly homeDir: string;
   readonly platform: NodeJS.Platform;

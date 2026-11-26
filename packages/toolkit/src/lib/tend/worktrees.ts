@@ -1,15 +1,16 @@
-import { readdir, rm, rmdir } from "node:fs/promises";
+import { readdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { collectHcTerminals } from "./liveness.ts";
 import {
   canonicalizeExistingPath,
   DEFAULT_WORKTREE_MIN_AGE_MS,
-  formatDurationCompact,
-  isPathProtected,
-  isUnderProtectedPrefix,
-  normalizeHostPath,
+  isPathInside,
 } from "./paths.ts";
-import { defaultCommandRunner } from "./process-probe.ts";
+import {
+  defaultCommandRunner,
+  isProcessAliveByKillZero,
+} from "./process-probe.ts";
 import type {
   ClassifiedLease,
   CommandRunner,
@@ -17,22 +18,27 @@ import type {
   SurfaceSweepResult,
   TendActionOutcome,
   TendCandidate,
+  TendDecision,
 } from "./types.ts";
 import {
-  computeWorktreeLastActivityMs,
+  applyWorktreeRemoval,
+  removeEmptyChildDirectories,
+} from "./worktrees-apply.ts";
+import {
   directoryExists,
-  evaluateBranchAndPrEligibility,
   fileOrDirExists,
-  isGitPathTooLongDeletionError,
-  isMidGitOperation,
-  isWorktreeCleanForFallbackRemoval,
-  parseBatchPullRequests,
   parsePorcelainWorktrees,
-  type RepoPrRecord,
   resolveDefaultBranch,
-  resolveWorktreeGitDir,
   type WorktreePorcelainEntry,
 } from "./worktrees-git.ts";
+import {
+  collectWorktreeHoldSources,
+  fetchRepoPullRequests,
+  inspectWorktree,
+  type RepoSweepContext,
+  type WorktreeInspection,
+} from "./worktrees-inspect.ts";
+import type { WorktreeDecision } from "./worktrees-policy.ts";
 
 async function discoverGitRepositories(options: {
   readonly gitDirs: readonly string[];
@@ -66,131 +72,6 @@ async function discoverGitRepositories(options: {
   return repos;
 }
 
-function collectActiveProtectedWorktreePaths(
-  liveness: LivenessSnapshot,
-  leases: readonly ClassifiedLease[],
-  selfCwd: string,
-): Set<string> {
-  const protectedSet = new Set<string>(liveness.protectedPaths);
-  const normalizedSelf = normalizeHostPath(selfCwd, liveness.platform);
-  if (normalizedSelf.length > 0) {
-    protectedSet.add(normalizedSelf);
-  }
-  for (const item of leases) {
-    if (item.status !== "active") {
-      continue;
-    }
-    if (item.lease.kind === "dir") {
-      protectedSet.add(normalizeHostPath(item.lease.target, liveness.platform));
-    }
-    if (item.lease.worktree !== undefined) {
-      protectedSet.add(
-        normalizeHostPath(item.lease.worktree, liveness.platform),
-      );
-    }
-  }
-  return protectedSet;
-}
-
-async function removeWorktreeDirectory(
-  repoPath: string,
-  wtPath: string,
-  runner: CommandRunner,
-): Promise<{ readonly ok: boolean; readonly detail?: string | undefined }> {
-  const rmRes = await runner(["git", "worktree", "remove", wtPath], {
-    cwd: repoPath,
-    timeoutMs: 15_000,
-  });
-  if (rmRes.exitCode === 0) {
-    return { ok: true };
-  }
-  if (
-    !isGitPathTooLongDeletionError(rmRes.stderr) ||
-    !(await isWorktreeCleanForFallbackRemoval(wtPath, runner))
-  ) {
-    return {
-      ok: false,
-      detail:
-        rmRes.stderr.trim() ||
-        `git worktree remove exited ${String(rmRes.exitCode)}`,
-    };
-  }
-  try {
-    await rm(wtPath, { recursive: true, force: true });
-    await runner(["git", "worktree", "prune"], {
-      cwd: repoPath,
-      timeoutMs: 5000,
-    });
-    return { ok: true };
-  } catch (error: unknown) {
-    return {
-      ok: false,
-      detail: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
-
-async function applyWorktreeRemoval(options: {
-  readonly repoPath: string;
-  readonly wt: WorktreePorcelainEntry;
-  readonly forceDeleteBranch: boolean;
-  readonly runner: CommandRunner;
-}): Promise<{ readonly ok: boolean; readonly detail?: string | undefined }> {
-  const { repoPath, wt, runner } = options;
-  if (wt.locked) {
-    await runner(["git", "worktree", "unlock", wt.path], {
-      cwd: repoPath,
-      timeoutMs: 5000,
-    });
-  }
-  const removed = await removeWorktreeDirectory(repoPath, wt.path, runner);
-  if (!removed.ok) {
-    return removed;
-  }
-  if (wt.branch !== undefined) {
-    const flag = options.forceDeleteBranch ? "-D" : "-d";
-    const branchRes = await runner(["git", "branch", flag, wt.branch], {
-      cwd: repoPath,
-      timeoutMs: 5000,
-    });
-    if (branchRes.exitCode !== 0) {
-      return {
-        ok: true,
-        detail: `worktree removed; branch ${wt.branch} kept (${branchRes.stderr.trim() || "not deleted"})`,
-      };
-    }
-  }
-  return { ok: true };
-}
-
-async function removeEmptyChildDirectories(parentDir: string): Promise<void> {
-  let names: string[];
-  try {
-    names = await readdir(parentDir);
-  } catch {
-    return;
-  }
-  for (const name of names) {
-    const child = path.join(parentDir, name);
-    try {
-      const subEntries = await readdir(child);
-      if (subEntries.length === 0) {
-        await rmdir(child);
-      }
-    } catch {
-      // Ignore files or non-empty directories.
-    }
-  }
-  try {
-    const remaining = await readdir(parentDir);
-    if (remaining.length === 0) {
-      await rmdir(parentDir);
-    }
-  } catch {
-    // Keep non-empty parent.
-  }
-}
-
 export type SweepWorktreesOptions = {
   readonly liveness: LivenessSnapshot;
   readonly leases?: readonly ClassifiedLease[] | undefined;
@@ -203,139 +84,65 @@ export type SweepWorktreesOptions = {
   readonly checkPullRequests?: boolean | undefined;
   readonly includeClosedPrs?: boolean | undefined;
   readonly nowMs?: number | undefined;
+  /** Liveness of the pid named in a Claude-agent worktree lock. */
+  readonly isPidAlive?: ((pid: number) => boolean) | undefined;
 };
 
-type RepoSweepContext = {
-  readonly repoPath: string;
-  readonly protectedPaths: ReadonlySet<string>;
-  readonly forumNoticePaths: ReadonlySet<string>;
-  readonly platform: NodeJS.Platform;
-  readonly runner: CommandRunner;
-  readonly apply: boolean;
-  readonly worktreeMinAgeMs: number;
-  readonly checkPullRequests: boolean;
-  readonly includeClosedPrs: boolean;
-  readonly nowMs: number;
-  readonly homeDir: string;
+type RepoSweepResult = {
+  readonly inspected: number;
+  readonly candidates: TendCandidate[];
+  readonly actions: TendActionOutcome[];
+  readonly decisions: TendDecision[];
+  readonly warnings: string[];
 };
 
-async function inspectSingleWorktree(
-  wt: WorktreePorcelainEntry,
-  defaultBranch: string,
-  prMap: ReadonlyMap<string, RepoPrRecord>,
-  ctx: RepoSweepContext,
-): Promise<{
-  readonly candidate?: TendCandidate | undefined;
-  readonly forceDeleteBranch?: boolean | undefined;
-}> {
-  if (wt.prunable || !(await directoryExists(wt.path))) {
-    return {
-      candidate: {
-        id: `worktree-prunable:${wt.path}`,
-        surface: "worktrees",
-        kind: "worktree-metadata",
-        target: wt.path,
-        reason: "prunable stale worktree metadata (directory already missing)",
-      },
-    };
-  }
-
-  const canonicalWt = await canonicalizeExistingPath(wt.path, ctx.platform);
-  if (
-    isPathProtected(canonicalWt, ctx.protectedPaths, ctx.platform) ||
-    isUnderProtectedPrefix(canonicalWt, ctx.forumNoticePaths, ctx.platform)
-  ) {
-    return {};
-  }
-
-  const statusRes = await ctx.runner(["git", "status", "--porcelain"], {
-    cwd: wt.path,
-    timeoutMs: 5000,
-  });
-  if (statusRes.exitCode !== 0 || statusRes.stdout.trim().length > 0) {
-    return {};
-  }
-
-  const gitDir = await resolveWorktreeGitDir(wt.path, ctx.runner);
-  if (gitDir === null || (await isMidGitOperation(gitDir))) {
-    return {};
-  }
-
-  const { lastActivityMs, commitEpochMs } = await computeWorktreeLastActivityMs(
-    { wtPath: wt.path, gitDir, runner: ctx.runner },
-  );
-  const ageMs = Math.max(0, ctx.nowMs - lastActivityMs);
-  if (lastActivityMs > 0 && ageMs < ctx.worktreeMinAgeMs) {
-    return {};
-  }
-
-  const pr = wt.branch === undefined ? undefined : prMap.get(wt.branch);
-  const verdict = await evaluateBranchAndPrEligibility({
-    wt,
-    defaultBranch,
-    pr,
-    commitEpochMs,
-    includeClosedPrs: ctx.includeClosedPrs,
-    runner: ctx.runner,
-  });
-  if (!verdict.prune) {
-    return {};
-  }
-
-  return {
-    forceDeleteBranch: verdict.forceDeleteBranch,
-    candidate: {
-      id: `worktree:${wt.path}`,
-      surface: "worktrees",
-      kind: wt.detached ? "detached-worktree" : "branch-worktree",
-      target: wt.path,
-      reason: `${verdict.reason} (idle ${formatDurationCompact(ageMs)})`,
-      ageSeconds: Math.floor(ageMs / 1000),
-      metadata: {
-        repo: ctx.repoPath,
-        ...(wt.branch === undefined ? {} : { branch: wt.branch }),
-        locked: wt.locked,
-      },
-    },
-  };
+function worktreeParentDirectories(ctx: RepoSweepContext): string[] {
+  return [
+    path.join(ctx.homeDir, ".herdr", "worktrees", path.basename(ctx.repoPath)),
+    path.join(ctx.repoPath, ".claude", "worktrees"),
+  ];
 }
 
-async function fetchRepoPullRequestMap(
+/**
+ * Directories in the places worktrees are created that git has no worktree
+ * for. They are reported and never removed: nothing here knows what they are.
+ */
+async function findUnknownWorktreeDirectories(
   ctx: RepoSweepContext,
-  nonMain: readonly WorktreePorcelainEntry[],
-  warnings: string[],
-): Promise<Map<string, RepoPrRecord>> {
-  const hasNamedBranches = nonMain.some((wt) => wt.branch !== undefined);
-  if (!hasNamedBranches || !ctx.checkPullRequests) {
-    return new Map();
+  worktrees: readonly WorktreePorcelainEntry[],
+): Promise<string[]> {
+  const known: string[] = [];
+  for (const wt of worktrees) {
+    known.push(await canonicalizeExistingPath(wt.path, ctx.platform));
   }
-  const ghArgs = [
-    "pr",
-    "list",
-    "--state",
-    "all",
-    "--limit",
-    "500",
-    "--json",
-    "headRefName,state,updatedAt,headRefOid",
-  ];
-  const ghCandidates =
-    ctx.platform === "win32"
-      ? ["gh", String.raw`C:\Program Files\GitHub CLI\gh.exe`]
-      : ["gh"];
-  for (const ghBin of ghCandidates) {
-    const ghRes = await ctx.runner([ghBin, ...ghArgs], {
-      cwd: ctx.repoPath,
-      timeoutMs: 15_000,
-    });
-    if (ghRes.exitCode === 0) {
-      return parseBatchPullRequests(ghRes.stdout);
+  const unknown: string[] = [];
+  for (const parentDir of worktreeParentDirectories(ctx)) {
+    let names: string[];
+    try {
+      names = await readdir(parentDir);
+    } catch {
+      continue;
+    }
+    for (const name of names.sort((a, b) => a.localeCompare(b))) {
+      const child = path.join(parentDir, name);
+      if (!(await directoryExists(child))) {
+        continue;
+      }
+      const canonicalChild = await canonicalizeExistingPath(
+        child,
+        ctx.platform,
+      );
+      // A directory may also be the parent of worktrees named `a/b`.
+      if (
+        !known.some((wtPath) =>
+          isPathInside(wtPath, canonicalChild, ctx.platform),
+        )
+      ) {
+        unknown.push(child);
+      }
     }
   }
-  warnings.push(
-    `gh pr list unavailable in ${ctx.repoPath}; checking git ancestry only`,
-  );
-  return new Map();
+  return unknown;
 }
 
 async function pruneRepoWorktreeMetadataAndDirs(
@@ -345,93 +152,207 @@ async function pruneRepoWorktreeMetadataAndDirs(
     cwd: ctx.repoPath,
     timeoutMs: 5000,
   });
-  const repoName = path.basename(ctx.repoPath);
-  await removeEmptyChildDirectories(
-    path.join(ctx.homeDir, ".herdr", "worktrees", repoName),
-  );
-  await removeEmptyChildDirectories(
-    path.join(ctx.repoPath, ".claude", "worktrees"),
-  );
+  for (const parentDir of worktreeParentDirectories(ctx)) {
+    await removeEmptyChildDirectories(parentDir);
+  }
 }
 
-async function sweepRepositoryWorktrees(ctx: RepoSweepContext): Promise<{
-  readonly inspected: number;
-  readonly candidates: TendCandidate[];
-  readonly actions: TendActionOutcome[];
-  readonly warnings: string[];
+function toCandidate(
+  wt: WorktreePorcelainEntry,
+  decision: WorktreeDecision,
+  ctx: RepoSweepContext,
+): TendCandidate {
+  if (decision.action === "prune-metadata") {
+    return {
+      id: `worktree-prunable:${wt.path}`,
+      surface: "worktrees",
+      kind: "worktree-metadata",
+      target: wt.path,
+      reason: decision.reason,
+    };
+  }
+  return {
+    id: `worktree:${wt.path}`,
+    surface: "worktrees",
+    kind: wt.detached ? "detached-worktree" : "branch-worktree",
+    target: wt.path,
+    reason: decision.reason,
+    ...(decision.idleMs === undefined
+      ? {}
+      : { ageSeconds: Math.floor(decision.idleMs / 1000) }),
+    metadata: {
+      repo: ctx.repoPath,
+      ...(wt.branch === undefined ? {} : { branch: wt.branch }),
+      locked: wt.locked,
+      preserve: decision.preserve.join(","),
+      deleteBranch: decision.deleteBranch,
+    },
+  };
+}
+
+/**
+ * A reason to leave a removable worktree alone that only shows up now: a
+ * Herdr terminal opened in it after the liveness snapshot, or Herdr can no
+ * longer be asked.
+ */
+async function recheckLiveTerminals(
+  wt: WorktreePorcelainEntry,
+  ctx: RepoSweepContext,
+): Promise<{ readonly category: string; readonly reason: string } | null> {
+  const terminals = await ctx.listLiveTerminals();
+  if (terminals === null) {
+    return {
+      category: "Herdr sessions unknown",
+      reason:
+        "hc ls --json failed before removal; live Herdr sessions cannot be seen",
+    };
+  }
+  const canonicalWt = await canonicalizeExistingPath(wt.path, ctx.platform);
+  for (const terminal of terminals) {
+    for (const cwd of [terminal.cwd, terminal.foregroundCwd]) {
+      if (cwd !== undefined && isPathInside(cwd, canonicalWt, ctx.platform)) {
+        return {
+          category: "live Herdr terminal",
+          reason: `live Herdr terminal appeared during the sweep: ${cwd}`,
+        };
+      }
+    }
+  }
+  return null;
+}
+
+/** Act on one candidate and say what became of the worktree. */
+async function actOnCandidate(
+  wt: WorktreePorcelainEntry,
+  inspection: WorktreeInspection,
+  candidate: TendCandidate,
+  ctx: RepoSweepContext,
+): Promise<{
+  readonly action: TendActionOutcome;
+  readonly decision: TendDecision;
 }> {
-  const warnings: string[] = [];
+  const { decision } = inspection;
+  const record: TendDecision = {
+    target: wt.path,
+    action: decision.action,
+    category: decision.category,
+    reason: decision.reason,
+  };
+  if (!ctx.apply) {
+    return { action: { candidate, status: "planned" }, decision: record };
+  }
+  if (decision.action === "prune-metadata") {
+    return { action: { candidate, status: "removed" }, decision: record };
+  }
+  if (inspection.gitDir === undefined) {
+    throw new Error(`No git dir was resolved for removable ${wt.path}`);
+  }
+  const held = await recheckLiveTerminals(wt, ctx);
+  if (held !== null) {
+    return {
+      action: { candidate, status: "skipped", detail: held.reason },
+      decision: { target: wt.path, action: "keep", ...held },
+    };
+  }
+  const outcome = await applyWorktreeRemoval({
+    repoPath: ctx.repoPath,
+    wt,
+    gitDir: inspection.gitDir,
+    decision,
+    runner: ctx.runner,
+    nowMs: ctx.nowMs,
+  });
+  return {
+    action: {
+      candidate,
+      status: outcome.status,
+      ...(outcome.detail === undefined ? {} : { detail: outcome.detail }),
+    },
+    decision:
+      outcome.status === "removed"
+        ? record
+        : {
+            target: wt.path,
+            action: "keep",
+            category: "removal failed",
+            reason: outcome.detail ?? "removal failed",
+          },
+  };
+}
+
+async function sweepRepositoryWorktrees(
+  ctx: RepoSweepContext,
+): Promise<RepoSweepResult> {
+  const result: RepoSweepResult = {
+    inspected: 0,
+    candidates: [],
+    actions: [],
+    decisions: [],
+    warnings: [],
+  };
   const listRes = await ctx.runner(["git", "worktree", "list", "--porcelain"], {
     cwd: ctx.repoPath,
     timeoutMs: 5000,
   });
   if (listRes.exitCode !== 0) {
-    warnings.push(`git worktree list failed in ${ctx.repoPath}`);
-    return { inspected: 0, candidates: [], actions: [], warnings };
+    result.warnings.push(`git worktree list failed in ${ctx.repoPath}`);
+    return result;
   }
 
   const nonMain = parsePorcelainWorktrees(listRes.stdout).slice(1);
+  for (const unknownDir of await findUnknownWorktreeDirectories(ctx, nonMain)) {
+    result.warnings.push(`Not a git worktree, left in place: ${unknownDir}`);
+  }
   if (nonMain.length === 0) {
-    return { inspected: 0, candidates: [], actions: [], warnings };
+    return result;
   }
 
   const defaultBranch = await resolveDefaultBranch(ctx.repoPath, ctx.runner);
   if (defaultBranch === null) {
-    warnings.push(
+    result.warnings.push(
       `Skipping ${ctx.repoPath}: could not determine origin default branch`,
     );
-    return { inspected: nonMain.length, candidates: [], actions: [], warnings };
+    return { ...result, inspected: nonMain.length };
   }
 
-  const prMap = await fetchRepoPullRequestMap(ctx, nonMain, warnings);
-  const candidates: TendCandidate[] = [];
-  const actions: TendActionOutcome[] = [];
-  let needsMetadataPrune = false;
+  const prs = await fetchRepoPullRequests(ctx, nonMain, result.warnings);
 
   for (const wt of nonMain) {
-    const inspected = await inspectSingleWorktree(
-      wt,
-      defaultBranch,
-      prMap,
-      ctx,
-    );
-    if (inspected.candidate === undefined) {
+    const inspection = await inspectWorktree(wt, defaultBranch, prs, ctx);
+    const { decision } = inspection;
+    if (decision.action === "keep") {
+      result.decisions.push({
+        target: wt.path,
+        action: "keep",
+        category: decision.category,
+        reason: decision.reason,
+      });
       continue;
     }
-    candidates.push(inspected.candidate);
-    if (!ctx.apply) {
-      actions.push({ candidate: inspected.candidate, status: "planned" });
-      continue;
-    }
-    if (inspected.candidate.kind === "worktree-metadata") {
-      needsMetadataPrune = true;
-      actions.push({ candidate: inspected.candidate, status: "removed" });
-      continue;
-    }
-    const removal = await applyWorktreeRemoval({
-      repoPath: ctx.repoPath,
-      wt,
-      forceDeleteBranch: inspected.forceDeleteBranch === true,
-      runner: ctx.runner,
-    });
-    actions.push({
-      candidate: inspected.candidate,
-      status: removal.ok ? "removed" : "failed",
-      ...(removal.detail === undefined ? {} : { detail: removal.detail }),
-    });
+    const candidate = toCandidate(wt, decision, ctx);
+    const acted = await actOnCandidate(wt, inspection, candidate, ctx);
+    result.candidates.push(candidate);
+    result.actions.push(acted.action);
+    result.decisions.push(acted.decision);
   }
 
-  if (needsMetadataPrune || ctx.apply) {
+  if (ctx.apply) {
     await pruneRepoWorktreeMetadataAndDirs(ctx);
   }
 
-  return { inspected: nonMain.length, candidates, actions, warnings };
+  return { ...result, inspected: nonMain.length };
 }
 
 export async function sweepWorktrees(
   options: SweepWorktreesOptions,
 ): Promise<SurfaceSweepResult> {
-  const heldReason = options.liveness.holdSurfaces.get("worktrees");
+  // Without `hc ls` a live Herdr session is invisible, and a worktree that is
+  // in use would look idle.
+  const heldReason =
+    options.liveness.holdSurfaces.get("worktrees") ??
+    (options.liveness.hcAvailable
+      ? undefined
+      : "hc ls --json unavailable; live Herdr sessions cannot be seen");
   if (heldReason !== undefined) {
     return {
       surface: "worktrees",
@@ -439,6 +360,7 @@ export async function sweepWorktrees(
       inspectedCount: 0,
       candidates: [],
       actions: [],
+      decisions: [],
       warnings: [],
     };
   }
@@ -450,10 +372,18 @@ export async function sweepWorktrees(
       ? [path.join(homeDir, "git"), path.join(homeDir, "Git")]
       : [path.join(homeDir, "git")];
   const gitDirs = options.gitDirs ?? defaultGitDirs;
-  const worktreeMinAgeMs =
-    options.worktreeMinAgeMs ?? DEFAULT_WORKTREE_MIN_AGE_MS;
-  const nowMs = options.nowMs ?? Date.now();
-  const protectedPaths = collectActiveProtectedWorktreePaths(
+  const { processes, platform, localHostAliases } = options.liveness;
+  const probePid = options.isPidAlive ?? isProcessAliveByKillZero;
+  const listLiveTerminals = async () => {
+    const live = await collectHcTerminals({
+      runner,
+      homeDir,
+      platform,
+      localAliases: localHostAliases,
+    });
+    return live.available ? live.terminals : null;
+  };
+  const holds = collectWorktreeHoldSources(
     options.liveness,
     options.leases ?? [],
     options.selfCwd ?? process.cwd(),
@@ -467,25 +397,29 @@ export async function sweepWorktrees(
   let inspectedCount = 0;
   const candidates: TendCandidate[] = [];
   const actions: TendActionOutcome[] = [];
+  const decisions: TendDecision[] = [];
   const warnings: string[] = [];
 
   for (const repoPath of repos) {
     const repoSweep = await sweepRepositoryWorktrees({
       repoPath,
-      protectedPaths,
-      forumNoticePaths: options.liveness.forumNoticePaths,
+      holds,
       platform: options.liveness.platform,
       runner,
       apply: options.apply,
-      worktreeMinAgeMs,
+      worktreeMinAgeMs: options.worktreeMinAgeMs ?? DEFAULT_WORKTREE_MIN_AGE_MS,
       checkPullRequests: options.checkPullRequests ?? true,
       includeClosedPrs: options.includeClosedPrs ?? false,
-      nowMs,
+      nowMs: options.nowMs ?? Date.now(),
       homeDir,
+      isPidAlive: (pid) => processes.has(pid) || probePid(pid),
+      processStartOf: (pid) => processes.get(pid)?.processStart,
+      listLiveTerminals,
     });
     inspectedCount += repoSweep.inspected;
     candidates.push(...repoSweep.candidates);
     actions.push(...repoSweep.actions);
+    decisions.push(...repoSweep.decisions);
     warnings.push(...repoSweep.warnings);
   }
 
@@ -494,6 +428,7 @@ export async function sweepWorktrees(
     inspectedCount,
     candidates,
     actions,
+    decisions,
     warnings,
   };
 }

@@ -136,6 +136,18 @@ export type TendActionOutcome = {
   readonly detail?: string | undefined;
 };
 
+/**
+ * What a sweep concluded about one inspected item, including the ones it
+ * keeps. `category` is a stable, human-readable grouping for per-reason
+ * counts; `reason` carries the specifics.
+ */
+export type TendDecision = {
+  readonly target: string;
+  readonly action: "keep" | "remove" | "prune-metadata";
+  readonly category: string;
+  readonly reason: string;
+};
+
 export type SurfaceSweepResult = {
   readonly surface: TendSurface;
   readonly heldReason?: string | undefined;
@@ -143,6 +155,8 @@ export type SurfaceSweepResult = {
   readonly inspectedCount: number;
   readonly candidates: readonly TendCandidate[];
   readonly actions: readonly TendActionOutcome[];
+  /** One record per inspected item, for surfaces that explain their keeps. */
+  readonly decisions?: readonly TendDecision[] | undefined;
   readonly warnings: readonly string[];
 };
 
