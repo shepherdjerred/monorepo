@@ -136,7 +136,15 @@ export function createCiCacheDeployment(chart: Chart) {
         ingress: [
           prometheusIngressRule([CI_CACHE_PORT]),
           {
-            from: CONSUMER_NAMESPACES.map((namespace) => nsPeer(namespace)),
+            from: [
+              ...CONSUMER_NAMESPACES.map((namespace) => nsPeer(namespace)),
+              {
+                ...nsPeer("woodpecker-ci"),
+                podSelector: {
+                  matchLabels: { component: "maintenance-worker" },
+                },
+              },
+            ],
             ports: [tcp(CI_CACHE_PORT)],
           },
         ],

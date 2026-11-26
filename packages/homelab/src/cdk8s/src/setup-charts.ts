@@ -60,7 +60,10 @@ import { createMailChart } from "./cdk8s-charts/mail.ts";
 import { createFeedsChart } from "./cdk8s-charts/feeds.ts";
 import { createErrorsChart } from "./cdk8s-charts/errors.ts";
 
-import { createChartsChart } from "./cdk8s-charts/charts.ts";
+import {
+  createChartsBootstrapChart,
+  createChartsChart,
+} from "./cdk8s-charts/charts.ts";
 
 import { createCiCacheChart } from "./cdk8s-charts/ci-cache.ts";
 
@@ -138,6 +141,7 @@ export async function setupCharts(app: App): Promise<void> {
   createErrorsChart(app);
 
   createChartsChart(app);
+  createChartsBootstrapChart(app);
 
   createCiCacheChart(app);
 

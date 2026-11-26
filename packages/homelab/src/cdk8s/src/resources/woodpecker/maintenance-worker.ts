@@ -493,7 +493,8 @@ export function createWoodpeckerMaintenanceWorker(chart: Chart): void {
         },
         flagsEgress(),
         ...temporalTelemetryEgressRules(),
-        // `/v8/clean` on the Turborepo cache (TURBO_CACHE_CLEAN_URL).
+        // `/v8/clean` on `ci-cache` (TURBO_CACHE_CLEAN_URL) and legacy `turbo-cache`.
+        { to: [nsPeer("ci-cache")], ports: [tcp(7380)] },
         { to: [nsPeer("turbo-cache")], ports: [tcp(3000)] },
         // Kometa's Plex API (KOMETA_CONFIG).
         { to: [nsPeer("media")], ports: [tcp(32_400)] },

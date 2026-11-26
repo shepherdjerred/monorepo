@@ -269,7 +269,10 @@ export function bootstrapRootManifest(
         .parse(selected.spec["source"]);
       if (
         source.chart !== name ||
-        source.repoURL !== "https://chartmuseum.tailnet-1a49.ts.net"
+        ![
+          "https://charts.tailnet-1a49.ts.net",
+          "https://chartmuseum.tailnet-1a49.ts.net",
+        ].includes(source.repoURL)
       )
         throw new Error("Unexpected bootstrap chart definition");
       const selection = bootstrapTargetSelection(descriptor, name);

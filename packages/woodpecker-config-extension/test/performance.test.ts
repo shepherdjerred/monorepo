@@ -427,4 +427,5 @@ test("verify benchmarks use the Gradle cache only when warm, in their trust doma
   const cold = verify("cold", true);
   expect(passwords(cold)).toEqual([]);
   expect(cold?.environment?.["GRADLE_BUILD_CACHE_URL"]).toBeUndefined();
+  expect(cold?.environment?.["SCCACHE_WEBDAV_ENDPOINT"]).toBeUndefined();
 });

@@ -1,5 +1,5 @@
 {
-  "id": "scout-prod/2",
+  "id": "scout-prod/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "scout-prod"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "scout-prod"
       },
       "syncOptions": ["CreateNamespace=true"],

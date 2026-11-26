@@ -17,7 +17,7 @@ const reason =
   "Settled automatically by independent Application readback of the finished operation";
 const syncedSource = {
   chart: "arcade",
-  repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
+  repoURL: "https://charts.tailnet-1a49.ts.net",
   targetRevision: "0.9.0",
 };
 

@@ -1,5 +1,5 @@
 {
-  "id": "minecraft-tsmc/9",
+  "id": "minecraft-tsmc/10",
   "definition": {
     "kind": "compound",
     "subRecipes": [
@@ -24,7 +24,7 @@
               "namespace": "minecraft-tsmc"
             },
             "source": {
-              "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+              "repoURL": "https://charts.tailnet-1a49.ts.net",
               "chart": "minecraft-tsmc-companion"
             },
             "syncOptions": [

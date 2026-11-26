@@ -1,5 +1,5 @@
 {
-  "id": "charts/prod/2",
+  "id": "charts/prod/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,15 +18,15 @@
         "namespace": "charts"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
-        "chart": "charts"
+        "repoURL": "registry-1.docker.io/shepherdjerred",
+        "chart": "charts-bootstrap"
       },
       "syncOptions": ["CreateNamespace=true"],
       "ignoreDifferences": [],
       "revisionHistoryLimit": 5,
       "lifecycle": "retain"
     },
-    "chartComponent": "chart:charts",
+    "chartComponent": "chart:charts-bootstrap",
     "artifactParameters": {
       "delivery.images.charts": {
         "component": "image:charts",

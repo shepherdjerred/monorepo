@@ -9,6 +9,8 @@ import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template
 const BUILD_VERSION_RE = /^2\.0\.0-(\d+)$/;
 const CONTENT_FINGERPRINT_ANNOTATION = "ci.sjer.red/content-fingerprint";
 const REPOSITORY_CHART_URLS = new Set([
+  "https://charts.tailnet-1a49.ts.net",
+  "registry-1.docker.io/shepherdjerred",
   "https://chartmuseum.tailnet-1a49.ts.net",
   "https://chartmuseum.sjer.red",
 ]);

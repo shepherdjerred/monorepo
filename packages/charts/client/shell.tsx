@@ -24,7 +24,9 @@ import {
 } from "./model.ts";
 
 const SWITCHER_CURRENT = { label: "Charts", mark: "ch" } as const;
-const SWITCHER_APPS = CONSOLE_LINKS.map(({ label, url, group }) => ({
+export const SWITCHER_APPS = CONSOLE_LINKS.filter(
+  ({ id }) => id !== "charts",
+).map(({ label, url, group }) => ({
   label,
   url,
   group,

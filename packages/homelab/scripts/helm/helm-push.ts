@@ -14,6 +14,7 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import { createDeliveryClient } from "@shepherdjerred/delivery/client";
+import { publishOciBootstrapChart } from "./helm-oci-bootstrap.ts";
 import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template.ts";
 import {
   CHARTMUSEUM_API,
@@ -319,12 +320,16 @@ async function publishPlannedCharts(
       throw new Error(`No staged archive for ${name}`);
     }
     await pushChart(name, chart.archive, username, password);
+    const digest =
+      name === "charts-bootstrap"
+        ? await publishOciBootstrapChart(chart.archive, version, runCommand)
+        : `sha256:${createHash("sha256")
+            .update(new Uint8Array(await Bun.file(chart.archive).arrayBuffer()))
+            .digest("hex")}`;
     publication.charts.push({
       name,
       revision: version,
-      digest: `sha256:${createHash("sha256")
-        .update(new Uint8Array(await Bun.file(chart.archive).arrayBuffer()))
-        .digest("hex")}`,
+      digest,
       contentFingerprint: chart.contentFingerprint,
     });
   }

@@ -25,7 +25,7 @@ import { MC_SANDBOX_STORM_IMAGE_PARAMETERS } from "#cdk8s/src/resources/mc-sandb
 import path from "node:path";
 
 const BUILD_REVISION_RE = /^2\.0\.0-[1-9]\d*$/u;
-export const CHARTMUSEUM_ORIGIN = "https://chartmuseum.sjer.red";
+export const CHARTMUSEUM_ORIGIN = "https://charts.tailnet-1a49.ts.net";
 export const CHARTMUSEUM_API = `${CHARTMUSEUM_ORIGIN}/api/charts`;
 
 export type ChartMuseumRelease = NonNullable<

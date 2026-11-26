@@ -62,6 +62,7 @@ export const catalogComponents: readonly VersionCatalogEntry[] =
 const MAX_BYTES = 16 * 1024 * 1024;
 /** Transitional (X11): the Minecraft chart stays mirrored until its pipeline is re-registered. */
 const CHART_MIRRORS = [
+  "https://charts.tailnet-1a49.ts.net",
   "https://chartmuseum.sjer.red",
   "https://chartmuseum.tailnet-1a49.ts.net",
 ];

@@ -1,7 +1,10 @@
 import { beforeEach, expect, test } from "vitest";
 import { App } from "cdk8s";
 import { z } from "zod";
-import { createChartsChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/charts.ts";
+import {
+  createChartsBootstrapChart,
+  createChartsChart,
+} from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/charts.ts";
 import { resetProbeRegistry } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 
 const Manifest = z.looseObject({ kind: z.string() });
@@ -17,10 +20,10 @@ test("a prepared charts service renders only its activation marker", () => {
   });
 });
 
-test("an activated charts service renders its persistent workload", () => {
+test("an activated charts service renders its persistent workload via charts-bootstrap", () => {
   const kinds = z
     .array(Manifest)
-    .parse(createChartsChart(new App(), true).toJson())
+    .parse(createChartsBootstrapChart(new App(), true).toJson())
     .map((manifest) => manifest.kind);
   expect(kinds).toEqual(
     expect.arrayContaining([
@@ -32,4 +35,5 @@ test("an activated charts service renders its persistent workload", () => {
       "Ingress",
     ]),
   );
+  expect(createChartsChart(new App()).toJson()).toHaveLength(1);
 });

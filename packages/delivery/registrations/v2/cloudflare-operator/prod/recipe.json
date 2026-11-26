@@ -1,5 +1,5 @@
 {
-  "id": "cloudflare-operator/prod/1",
+  "id": "cloudflare-operator/prod/2",
   "definition": {
     "kind": "compound",
     "subRecipes": [
@@ -24,7 +24,7 @@
               "namespace": "cloudflare-operator-system"
             },
             "source": {
-              "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+              "repoURL": "https://charts.tailnet-1a49.ts.net",
               "chart": "cloudflare-operator-companion"
             },
             "syncOptions": [
@@ -136,7 +136,7 @@
               "namespace": "cloudflare-operator-system"
             },
             "source": {
-              "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+              "repoURL": "https://charts.tailnet-1a49.ts.net",
               "chart": "argocd-tunnel"
             },
             "syncOptions": [

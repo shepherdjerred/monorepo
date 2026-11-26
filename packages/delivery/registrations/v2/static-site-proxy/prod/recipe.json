@@ -1,5 +1,5 @@
 {
-  "id": "static-site-proxy/prod/1",
+  "id": "static-site-proxy/prod/2",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "s3-static-sites"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "s3-static-sites"
       },
       "syncOptions": ["CreateNamespace=true"],

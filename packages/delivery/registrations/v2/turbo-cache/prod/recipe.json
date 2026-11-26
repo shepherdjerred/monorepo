@@ -1,5 +1,5 @@
 {
-  "id": "turbo-cache/prod/1",
+  "id": "turbo-cache/prod/2",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "turbo-cache"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "turbo-cache"
       },
       "syncOptions": ["CreateNamespace=true"],

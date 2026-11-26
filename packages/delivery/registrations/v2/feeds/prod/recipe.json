@@ -1,5 +1,5 @@
 {
-  "id": "feeds/prod/2",
+  "id": "feeds/prod/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "feeds"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "feeds"
       },
       "syncOptions": ["CreateNamespace=true"],

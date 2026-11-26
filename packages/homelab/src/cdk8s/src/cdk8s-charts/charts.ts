@@ -7,9 +7,24 @@ import {
   createChartsDeployment,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/charts/index.ts";
 
-/** Prepared service: the chart is published inactive until its gate opens. */
-export function createChartsChart(app: App, active = CHARTS_ACTIVE) {
+/**
+ * Retained inactive wrapper shell for `chart:charts`: `charts` deploys from
+ * `charts-bootstrap` on Docker Hub OCI so recovery never depends on `charts`.
+ */
+export function createChartsChart(app: App, active = false) {
   const chart = new Chart(app, "charts", {
+    namespace: "charts",
+    disableResourceNameHashes: true,
+  });
+  if (!active) return closeActivationGate(chart);
+  new Namespace(chart, "charts-namespace", { metadata: { name: "charts" } });
+  createChartsDeployment(chart);
+  return chart;
+}
+
+/** Active OCI self-bootstrap chart deployed by the `charts` Application. */
+export function createChartsBootstrapChart(app: App, active = CHARTS_ACTIVE) {
+  const chart = new Chart(app, "charts-bootstrap", {
     namespace: "charts",
     disableResourceNameHashes: true,
   });
