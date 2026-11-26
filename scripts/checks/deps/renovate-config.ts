@@ -38,6 +38,7 @@ export const RenovateConfigSchema = z.object({
       matchFileNames: z.array(z.string()).optional(),
       matchDepNames: z.array(z.string()).optional(),
       matchManagers: z.array(z.string()).optional(),
+      matchUpdateTypes: z.array(z.string()).optional(),
       matchNewValue: z.string().optional(),
       matchPackageNames: z.array(z.string()).optional(),
       allowedVersions: z.string().optional(),

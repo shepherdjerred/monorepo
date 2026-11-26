@@ -16,6 +16,7 @@ import type { BrimCapturePaths } from "./paths.ts";
 // renovate: datasource=pypi depName=mitmproxy
 export const MITMPROXY_VERSION = "12.3.1";
 /** mitmproxy 12 needs Python 3.12+; pinning keeps uv from picking a newer one. */
+// renovate: datasource=python-version depName=python extractVersion=^(?<version>\d+\.\d+)
 export const CAPTURE_PYTHON_VERSION = "3.13";
 
 /**
