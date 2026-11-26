@@ -117,7 +117,7 @@ const TUNNEL_COLUMNS: readonly DataTableColumn<
     (r) => <span className="mono">{r.hostname}</span>,
     (r) => r.hostname,
   ),
-  tableCol("service", "Upstream Service", (r) => (
+  tableCol("service", "Upstream service", (r) => (
     <code className="platform-code-clip">{r.service}</code>
   )),
   tableCol("status", "Status", (r) =>
@@ -138,7 +138,7 @@ const TAILSCALE_COLUMNS: readonly DataTableColumn<
   ),
   tableCol(
     "os",
-    "OS / Client",
+    "OS / client",
     (r) => `${r.os} · ${r.clientVersion}`,
     (r) => r.os,
   ),
@@ -153,7 +153,7 @@ const TAILSCALE_COLUMNS: readonly DataTableColumn<
   ),
   numTableCol(
     "expiry",
-    "Key Expiry",
+    "Key expiry",
     (r) =>
       r.daysToExpiry === null ? "No expiry" : `${String(r.daysToExpiry)}d`,
     (r) => r.daysToExpiry,
@@ -202,14 +202,14 @@ export function NetworkingServiceView({
 
   return (
     <div className="platform-section">
-      <h2 className="block-heading">Cloudflare & RDAP Domain Posture</h2>
+      <h2 className="block-heading">Cloudflare & RDAP domain posture</h2>
       <StatusMatrix
         caption="Domain DNS, email & TLS baseline"
         rowHeaderLabel="Domain"
         columns={CF_COLUMNS}
         rows={(cf?.domains ?? []).map((d) => domainRow(d))}
       />
-      <h2 className="block-heading">Cloudflare R2 Free-Tier Budgets & Edge</h2>
+      <h2 className="block-heading">Cloudflare R2 free-tier budgets & edge</h2>
       <div className="platform-three-col">
         {r2Meters.map(([label, val, max, unit]) => (
           <div key={label} className="panel platform-meter-card">
@@ -237,22 +237,22 @@ export function NetworkingServiceView({
         columns={TUNNEL_COLUMNS}
         searchText={(r) => `${r.hostname} ${r.service}`}
       />
-      <h2 className="block-heading">Tailscale Tailnet & Cluster Ingress</h2>
+      <h2 className="block-heading">Tailscale tailnet & cluster ingress</h2>
       {ts === null ? null : (
         <div className="platform-kpi-grid">
           {kpiCard(
-            "Devices Online",
+            "Devices online",
             `${String(ts.onlineDevices)} / ${String(ts.totalDevices)}`,
             "Tailnet fleet",
           )}
           {kpiCard(
-            "Expiring Keys Soon",
+            "Expiring keys soon",
             String(ts.expiringKeysSoon),
             "Within warning window",
             ts.expiringKeysSoon > 0 ? "warning" : "ok",
           )}
           {kpiCard(
-            "Cluster Services",
+            "Cluster services",
             String(ts.clusterServicesCount),
             "Tailscale operator ingress",
             "info",
@@ -288,7 +288,7 @@ const NVME_COLUMNS: readonly DataTableColumn<
 >[] = [
   tableCol(
     "drive",
-    "Node / Device",
+    "Node / device",
     (r) => <span className="mono">{`${r.node}/${r.device}`}</span>,
     (r) => `${r.node}/${r.device}`,
   ),
@@ -300,7 +300,7 @@ const NVME_COLUMNS: readonly DataTableColumn<
   ),
   tableCol(
     "budget",
-    "24h Writes vs Budget",
+    "24h writes vs budget",
     (r) =>
       inlineBudgetMeter(
         `${r.node}/${r.device} writes`,

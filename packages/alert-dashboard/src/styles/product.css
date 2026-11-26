@@ -4,28 +4,6 @@
   min-inline-size: 0;
 }
 
-.product-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-block: 14px 18px;
-}
-
-.product-kpi-grid .metric {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 10px 12px;
-  background: var(--panel);
-  border-color: var(--line);
-}
-
-.product-kpi-grid .metric strong {
-  font-family: "Berkeley Mono", ui-monospace, monospace;
-  font-size: 1.35rem;
-  font-variant-numeric: tabular-nums;
-}
-
 .product-funnel-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
@@ -39,9 +17,9 @@
   gap: 12px;
   min-inline-size: 0;
   padding: 16px 18px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--panel);
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
 }
 
 .product-funnel-head {
@@ -55,11 +33,10 @@
 
 .product-funnel-head h3 {
   margin: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.95rem;
   font-weight: 650;
   letter-spacing: 0;
-  text-transform: none;
 }
 
 .product-funnel-steps {
@@ -87,7 +64,7 @@
 
 .product-funnel-step-label {
   min-inline-size: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.82rem;
   font-weight: 600;
   overflow-wrap: anywhere;
@@ -98,21 +75,21 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: 6px 10px;
-  color: var(--muted);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
   font-size: 0.73rem;
   font-variant-numeric: tabular-nums;
 }
 
 .product-funnel-step-stats strong {
-  color: var(--ink);
+  color: var(--ui-ink);
   font-weight: 650;
 }
 
 .product-funnel-bar {
   height: 8px;
   border-radius: 999px;
-  background: var(--meter-track);
+  background: var(--ui-track);
   overflow: clip;
 }
 
@@ -120,7 +97,7 @@
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: var(--accent);
+  background: var(--ui-accent);
 }
 
 .product-host-cell {
@@ -133,8 +110,8 @@
 
 .product-host-name {
   min-inline-size: 0;
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
   font-size: 0.8rem;
   font-weight: 650;
   overflow-wrap: anywhere;
@@ -151,8 +128,8 @@
 
 .product-trend-count {
   min-inline-size: 3.1rem;
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
   font-variant-numeric: tabular-nums;
   font-weight: 650;
   text-align: right;
@@ -184,14 +161,14 @@
 
 .product-cell-primary {
   min-inline-size: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-weight: 600;
   overflow-wrap: anywhere;
 }
 
 .product-cell-secondary {
   min-inline-size: 0;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.73rem;
   overflow-wrap: anywhere;
 }
@@ -201,7 +178,7 @@
   align-items: center;
   gap: 0.28rem;
   min-inline-size: 0;
-  color: var(--accent);
+  color: var(--ui-accent);
   font-weight: 600;
   text-decoration: none;
   overflow-wrap: anywhere;
@@ -250,9 +227,9 @@
   min-inline-size: 0;
   padding: 16px 18px;
   margin-block-end: 18px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--panel);
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
 }
 
 .storm-analytics-head {
@@ -267,11 +244,10 @@
 .storm-analytics-head h2,
 .product-meter-card h3 {
   margin: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.96rem;
   font-weight: 650;
   letter-spacing: 0;
-  text-transform: none;
 }
 
 .product-service-stack {
@@ -286,7 +262,6 @@
 }
 
 .product-service-stack > .chart-grid,
-.product-service-stack > .product-kpi-grid,
 .product-service-stack > .product-meter-card {
   margin-block: 0;
 }
@@ -302,9 +277,9 @@
   gap: 8px;
   min-inline-size: 0;
   padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--panel);
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
 }
 
 .product-inline-pills {
@@ -322,10 +297,6 @@
 }
 
 @container content (max-width: 960px) {
-  .product-kpi-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .product-split-grid,
   .storm-service-grid {
     grid-template-columns: 1fr;
@@ -333,10 +304,6 @@
 }
 
 @media (max-width: 600px) {
-  .product-kpi-grid {
-    grid-template-columns: 1fr;
-  }
-
   .product-funnel-card,
   .storm-analytics-panel,
   .product-meter-card {

@@ -1,10 +1,10 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import type {
   TrajectoryItem,
   TrajectoryMessage,
   TrajectoryMessagePart,
 } from "@shepherdjerred/ops-model/llm-traces.ts";
 
-import { SeverityBadge } from "#client/ops/ops-ui.tsx";
 import { statusPill } from "#client/ops/pages/cluster-page.tsx";
 import { formatValue } from "#shared/ops-format";
 
@@ -19,11 +19,11 @@ import {
 } from "./trajectory-agent-cards.tsx";
 
 const SHAPE_LABELS: Readonly<Record<TrajectoryItem["shape"], string>> = {
-  "ai-sdk-chat": "AI SDK Chat",
+  "ai-sdk-chat": "AI SDK chat",
   "ai-sdk-embed": "Embeddings",
-  "openai-decision": "OpenAI Decision",
-  "claude-agent": "Claude Agent",
-  "codex-agent": "Codex Agent",
+  "openai-decision": "OpenAI decision",
+  "claude-agent": "Claude agent",
+  "codex-agent": "Codex agent",
 };
 
 function ToolPartPreview({
@@ -160,11 +160,11 @@ function AiSdkEmbedBody({
   return (
     <div className="traces-messages">
       <div className="traces-pill-wrap">
-        <span className="visual-pill visual-pill-info">
+        <span className="visual-pill" data-sev="info">
           {`${String(item.inputCount)} input${item.inputCount === 1 ? "" : "s"}`}
         </span>
         {item.dimensions === null ? null : (
-          <span className="visual-pill visual-pill-neutral">
+          <span className="visual-pill">
             {`${String(item.dimensions)} dimensions`}
           </span>
         )}
@@ -190,12 +190,12 @@ function ClaudeAgentBody({
           <code className="rep-mailbox-chip">{`session: ${item.sessionId}`}</code>
         )}
         {item.numTurns === null ? null : (
-          <span className="visual-pill visual-pill-info">
+          <span className="visual-pill" data-sev="info">
             {`${String(item.numTurns)} turns`}
           </span>
         )}
         {item.notionalCostUsd === null ? null : (
-          <span className="visual-pill visual-pill-neutral">
+          <span className="visual-pill">
             {`Subscription est. ${formatUsdTrace(item.notionalCostUsd)}`}
           </span>
         )}
@@ -203,7 +203,7 @@ function ClaudeAgentBody({
       {item.optionsJson === null ? null : (
         <details className="query-raw traces-disclosure">
           <summary className="query-raw-summary">
-            Claude Agent SDK options
+            Claude agent SDK options
           </summary>
           <pre className="traces-pre">{prettyPrintJson(item.optionsJson)}</pre>
         </details>
@@ -262,19 +262,17 @@ export function TrajectoryCard({
     <article className="panel traces-step-card">
       <header className="traces-step-header">
         <div className="traces-pill-wrap">
-          <span className="visual-pill visual-pill-info">
+          <span className="visual-pill" data-sev="info">
             {SHAPE_LABELS[item.shape]}
           </span>
           <h3 className="traces-step-title">
             {`${String(index + 1)}. ${item.workload ?? item.spanName}`}
           </h3>
           {isRepair ? statusPill("warning", "!", "Repair attempt") : null}
-          {item.status === "error" ? <SeverityBadge severity="error" /> : null}
+          {item.status === "error" ? <StatusGlyph severity="error" /> : null}
         </div>
         <div className="traces-pill-wrap">
-          <span className="visual-pill visual-pill-neutral">
-            {item.provider}
-          </span>
+          <span className="visual-pill">{item.provider}</span>
           {modelName === null ? null : (
             <code className="rep-mailbox-chip">{modelName}</code>
           )}
@@ -285,9 +283,7 @@ export function TrajectoryCard({
             {formatValue(item.durationMs, "ms")}
           </span>
           {item.costKind === "subscription" ? (
-            <span className="visual-pill visual-pill-neutral">
-              Subscription est.
-            </span>
+            <span className="visual-pill">Subscription est.</span>
           ) : item.catalogCostUsd === null ? null : (
             <span className="mono traces-short-id">
               {formatUsdTrace(item.catalogCostUsd)}
@@ -297,7 +293,7 @@ export function TrajectoryCard({
       </header>
 
       {item.errorMessage === null ? null : (
-        <div className="eng-callout eng-callout-error">
+        <div className="eng-callout" data-sev="error">
           <div className="eng-callout-body">
             <p className="eng-callout-title">{item.errorMessage}</p>
           </div>

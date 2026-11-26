@@ -1,3 +1,5 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
+import { pillSeverity } from "#client/visuals/pill.ts";
 import type { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { ReportVerdictSchema } from "@shepherdjerred/ops-model/reports/report-envelope.ts";
@@ -5,7 +7,6 @@ import { ExternalLinkIcon, SearchIcon, XIcon } from "lucide-react";
 import { useId, useMemo, useRef } from "react";
 import { Link } from "react-router";
 
-import { SeverityBadge } from "#client/ops/ops-ui.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
 import { age } from "#client/time.ts";
 import { DataTable, type DataTableColumn } from "#client/visuals/index.ts";
@@ -54,7 +55,7 @@ const FEED_COLUMNS: readonly DataTableColumn<ReportFeedItem>[] = [
   },
   {
     key: "stream",
-    header: "Stream & Mailbox",
+    header: "Stream & mailbox",
     sortValue: (item) => `${item.eyebrow} ${item.mailboxTo}`,
     render: (item) => (
       <div className="eng-pkg-cell">
@@ -65,7 +66,7 @@ const FEED_COLUMNS: readonly DataTableColumn<ReportFeedItem>[] = [
   },
   {
     key: "subject",
-    header: "Subject & Headline",
+    header: "Subject & headline",
     sortValue: (item) => item.subject,
     render: (item) => (
       <div className="rep-subject-cell">
@@ -83,7 +84,7 @@ const FEED_COLUMNS: readonly DataTableColumn<ReportFeedItem>[] = [
     render: (item) => (
       <div className="rep-outcome-cell">
         <div className="eng-pill-row">
-          <SeverityBadge severity={verdictToSeverity(item.verdict)} />
+          <StatusGlyph severity={verdictToSeverity(item.verdict)} />
           <span className="rep-verdict-word">{verdictLabel(item.verdict)}</span>
         </div>
         {item.findingCount > 0 || item.failedCheckCount > 0 ? (
@@ -111,7 +112,7 @@ const FEED_COLUMNS: readonly DataTableColumn<ReportFeedItem>[] = [
       const meta = deliveryStatusMeta(item.deliveryStatus);
       return (
         <div className="rep-delivery-cell">
-          <span className={`visual-pill visual-pill-${meta.tone}`}>
+          <span className="visual-pill" data-sev={pillSeverity(meta.tone)}>
             {meta.label}
           </span>
           {item.skipReason === undefined ? null : (

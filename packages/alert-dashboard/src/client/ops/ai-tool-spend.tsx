@@ -59,7 +59,7 @@ function ToolSpendTable({
 }): React.JSX.Element {
   return (
     <table
-      className="tool-table"
+      className="tool-table ui-table"
       aria-labelledby="tool-spend-heading"
       aria-describedby="tool-spend-note"
     >

@@ -1,3 +1,4 @@
+import { Button } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import { skipToken, useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router";
@@ -5,13 +6,14 @@ import { Link, useSearchParams } from "react-router";
 import { StaleNotice } from "./stale-notice.tsx";
 import { formatInstant } from "./time.ts";
 import { useTRPC } from "./trpc.ts";
-import { Button } from "#components/button";
 import { Input } from "#components/input";
 import {
   AlertEventTypeSchema,
   EventListInputSchema,
   SeveritySchema,
 } from "#shared/schema";
+import { AlertSeverity, LEDGER_TONE } from "./ledger-severity.tsx";
+import { PageHeading } from "./ops/ops-ui.tsx";
 
 const SCOPE_OPTIONS = [
   ["ops", "Ops"],
@@ -81,9 +83,9 @@ export function HistoryFilters({
 }): React.JSX.Element {
   const filtered = hasActiveHistoryFilters(params);
   return (
-    <div className="filters history-filters">
-      <label>
-        Event
+    <div className="ui-toolbar ledger-toolbar history-filters">
+      <label className="toolbar-field">
+        <span className="toolbar-field-label">Event</span>
         <select
           value={params.get("type") ?? ""}
           onChange={(event) => {
@@ -98,8 +100,8 @@ export function HistoryFilters({
           ))}
         </select>
       </label>
-      <label>
-        Severity
+      <label className="toolbar-field">
+        <span className="toolbar-field-label">Severity</span>
         <select
           value={params.get("severity") ?? ""}
           onChange={(event) => {
@@ -114,8 +116,8 @@ export function HistoryFilters({
           ))}
         </select>
       </label>
-      <label>
-        From
+      <label className="toolbar-field">
+        <span className="toolbar-field-label">From</span>
         <Input
           defaultValue={params.get("from") ?? ""}
           key={`from-${params.get("from") ?? ""}`}
@@ -125,8 +127,8 @@ export function HistoryFilters({
           placeholder="2026-08-03T00:00:00Z"
         />
       </label>
-      <label>
-        To
+      <label className="toolbar-field">
+        <span className="toolbar-field-label">To</span>
         <Input
           defaultValue={params.get("to") ?? ""}
           key={`to-${params.get("to") ?? ""}`}
@@ -136,8 +138,8 @@ export function HistoryFilters({
           placeholder="2026-08-10T00:00:00Z"
         />
       </label>
-      <label>
-        Alert name
+      <label className="toolbar-field">
+        <span className="toolbar-field-label">Alert name</span>
         <Input
           value={params.get("alertname") ?? ""}
           onChange={(event) => {
@@ -145,8 +147,8 @@ export function HistoryFilters({
           }}
         />
       </label>
-      <label>
-        Namespace
+      <label className="toolbar-field">
+        <span className="toolbar-field-label">Namespace</span>
         <Input
           value={params.get("namespace") ?? ""}
           onChange={(event) => {
@@ -187,22 +189,16 @@ export function HistoryPage(): React.JSX.Element {
     setParams(next);
   };
   return (
-    <main>
+    <main className="ledger">
       <title>History · Hub</title>
       <StaleNotice
         errors={eventsValue.status === "degraded" ? eventsValue.errors : []}
       />
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">Durable lifecycle ledger</p>
-          <h1>History</h1>
-          <p>
-            Filter opening, resolution, suppression, and reconciliation events
-            over any RFC 3339 range.
-          </p>
-        </div>
-      </div>
-      <section className="panel">
+      <PageHeading
+        title="History"
+        meta="Opening, resolution, suppression and reconciliation events"
+      />
+      <section className="ledger-list" aria-label="History list">
         <nav className="scope-switch" aria-label="History scope">
           {SCOPE_OPTIONS.map(([scope, label]) => (
             <Link
@@ -232,32 +228,50 @@ export function HistoryPage(): React.JSX.Element {
             </div>
           ) : (
             <>
-              <div className="timeline">
-                {eventItems.map((event) => (
-                  <article key={event.id}>
-                    <span className="timeline-dot" />
-                    <div>
-                      <div className="timeline-title">
-                        <span
-                          className={`severity severity-${event.alert.severity}`}
-                        >
-                          {event.alert.severity}
-                        </span>
-                        <strong>{event.type.replaceAll("_", " ")}</strong>
-                        <Link to={`/alerts/${event.occurrenceId}`}>
-                          {event.alert.alertname}
-                        </Link>
-                      </div>
-                      <p>{event.alert.summary}</p>
-                      <time className="mono" dateTime={event.occurredAt}>
-                        {formatInstant(event.occurredAt)}
-                      </time>
-                    </div>
-                  </article>
-                ))}
+              <div className="ledger-table-wrap">
+                <table className="ui-table ledger-table" aria-label="Events">
+                  <thead>
+                    <tr>
+                      <th scope="col">When</th>
+                      <th scope="col">Severity</th>
+                      <th scope="col">Event</th>
+                      <th scope="col">Alert</th>
+                      <th scope="col">Summary</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {eventItems.map((event) => (
+                      <tr
+                        key={event.id}
+                        className="history-event"
+                        data-sev={LEDGER_TONE[event.alert.severity]}
+                      >
+                        <td className="mono" data-label="When">
+                          <time dateTime={event.occurredAt}>
+                            {formatInstant(event.occurredAt)}
+                          </time>
+                        </td>
+                        <td data-label="Severity">
+                          <AlertSeverity severity={event.alert.severity} />
+                        </td>
+                        <td data-label="Event">
+                          {event.type.replaceAll("_", " ")}
+                        </td>
+                        <th scope="row" data-label="Alert">
+                          <Link to={`/alerts/${event.occurrenceId}`}>
+                            {event.alert.alertname}
+                          </Link>
+                        </th>
+                        <td className="history-summary" data-label="Summary">
+                          {event.alert.summary}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
               {events.hasNextPage ? (
-                <div className="history-pagination">
+                <div className="ui-section-foot">
                   <Button
                     disabled={events.isFetchingNextPage}
                     onClick={() => {

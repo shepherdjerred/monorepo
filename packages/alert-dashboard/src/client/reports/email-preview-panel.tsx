@@ -12,7 +12,7 @@ const DETAIL_VIEW_TABS: readonly {
   readonly label: string;
 }[] = [
   { id: "inspector", label: "Inspector" },
-  { id: "email", label: "Rendered Email" },
+  { id: "email", label: "Rendered email" },
 ];
 
 export function useDetailViewMode(): {

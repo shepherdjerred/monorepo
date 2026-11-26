@@ -52,12 +52,12 @@ const DOWN_COLS: readonly DataTableColumn<
 const CARDINALITY_COLS: readonly DataTableColumn<
   ObservabilityFacet["prometheus"]["topMetricNames"][number]
 >[] = [
-  tableCol("name", "Metric Name", (r) => (
+  tableCol("name", "Metric name", (r) => (
     <span className="mono">{r.name}</span>
   )),
   numTableCol(
     "series",
-    "Active Series",
+    "Active series",
     (r) => formatValue(r.series, "count"),
     (r) => r.series,
   ),
@@ -77,7 +77,7 @@ const NOISY_NS_COLS: readonly DataTableColumn<
   ),
   numTableCol(
     "err",
-    "Error Lines (1h)",
+    "Error lines (1h)",
     (r) => formatValue(r.errorLines1h, "count"),
     (r) => r.errorLines1h,
   ),
@@ -114,19 +114,19 @@ const RED_COLS: readonly DataTableColumn<
   ),
   numTableCol(
     "rate",
-    "Span Rate (/s)",
+    "Span rate (/s)",
     (r) => `${r.spanRate.toFixed(1)}/s`,
     (r) => r.spanRate,
   ),
   numTableCol(
     "err",
-    "Error Rate",
+    "Error rate",
     (r) => formatValue(r.errorRate, "ratio"),
     (r) => r.errorRate,
   ),
   numTableCol(
     "p95",
-    "p95 Latency",
+    "p95 latency",
     (r) => formatValue(r.p95Ms, "ms"),
     (r) => r.p95Ms,
   ),
@@ -216,13 +216,13 @@ function ObsLokiPanel({
     <>
       <div className="platform-kpi-grid">
         {kpiCard(
-          "24h Log Ingestion",
+          "24h log ingestion",
           formatValue(obs?.loki.ingestedBytes24h ?? null, "bytes"),
           "Compressed stream volume",
           "info",
         )}
         {kpiCard(
-          "Loki Ruler Rules",
+          "Loki ruler rules",
           String(obs?.loki.rulerRulesCount ?? 0),
           "Active recording & alert rules",
         )}
@@ -306,7 +306,7 @@ export function ObservabilityServiceView({
                 "Provisioned backends",
               )}
               {kpiCard(
-                "Provisioned Dashboards",
+                "Provisioned dashboards",
                 String(obs?.grafana.dashboardsCount ?? 0),
                 "GitOps managed",
                 "info",

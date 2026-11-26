@@ -4,7 +4,10 @@
  * entry point; its rules sit in `ui.*` cascade layers, so everything here,
  * unlayered, wins over them.
  */
-@import "./legacy-tokens.css";
+@import "./primitives.css";
+@import "./tables.css";
+@import "./signals.css";
+@import "./ledger.css";
 
 /* Berkeley Mono is licensed and served by Hub from `public/fonts`. */
 @font-face {
@@ -22,6 +25,8 @@
 
 :root {
   font-synthesis: none;
+  /* The phone top bar's height, for anything that scrolls under it. */
+  --hub-topbar-h: 52px;
 }
 
 /*
@@ -57,14 +62,13 @@
   }
   h3 {
     margin: 1.5rem 0 0.6rem;
-    color: var(--muted);
-    font-size: 0.8rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    color: var(--ui-muted);
+    font-size: 13px;
+    font-weight: 600;
   }
   p {
     margin: 0.25rem 0;
-    color: var(--muted);
+    color: var(--ui-muted);
   }
 }
 
@@ -82,10 +86,10 @@
   left: 8px;
   z-index: 30;
   padding: 0.5rem 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
-  color: var(--ink);
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
   font-weight: 650;
   text-decoration: none;
   transform: translateY(-200%);
@@ -113,7 +117,7 @@
   background: var(--ui-side-hover);
 }
 .icon-button:focus-visible {
-  outline: 3px solid var(--accent-ring);
+  outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
   outline-offset: 2px;
 }
 /* Hub has three groups and eighteen pages, more than the shared sidebar's
@@ -137,7 +141,7 @@
   display: none;
   align-items: center;
   gap: 2px;
-  height: var(--topbar-h);
+  height: var(--hub-topbar-h);
   padding: 0 6px;
   border-bottom: 1px solid var(--ui-line);
   background: color-mix(in srgb, var(--ui-bg) 92%, transparent);
@@ -208,7 +212,7 @@
   }
 }
 /* Page layouts respond to the width of this container inside the panel, not
-   of the viewport, which the sidebar makes up to `--sidebar-w` wider. */
+   of the viewport, which the sidebar makes up to 228px wider. */
 .app-content {
   container: content / inline-size;
   min-width: 0;
@@ -226,27 +230,6 @@ main {
   margin: 0 auto;
   padding: 36px 24px 72px;
 }
-.eyebrow {
-  color: var(--accent);
-  text-transform: uppercase;
-  font-weight: 700;
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-}
-.page-heading,
-.detail-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 28px;
-}
-.heading-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
 .button {
   display: inline-flex;
   align-items: center;
@@ -254,16 +237,16 @@ main {
   gap: 0.45rem;
   min-height: 36px;
   padding: 0.45rem 0.8rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ui-line);
   border-radius: 7px;
-  background: var(--control-bg);
-  color: var(--ink);
+  background: var(--ui-panel);
+  color: var(--ui-ink);
   font-weight: 650;
   text-decoration: none;
   cursor: pointer;
 }
 .button:hover {
-  background: var(--control-hover);
+  background: var(--ui-hover);
 }
 .button:disabled {
   opacity: 0.55;
@@ -273,145 +256,26 @@ main {
 .input:focus-visible,
 select:focus-visible,
 a:focus-visible {
-  outline: 3px solid var(--accent-ring);
+  outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
   outline-offset: 2px;
 }
 .input,
 select {
   height: 36px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ui-line);
   border-radius: 7px;
-  background: var(--control-bg);
+  background: var(--ui-panel);
   padding: 0 0.7rem;
-  color: var(--ink);
+  color: var(--ui-ink);
 }
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 18px;
-}
-.summary-grid-4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-.summary-card,
-.health-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 16px;
-}
-.summary-card span {
-  display: block;
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-.summary-card strong {
-  display: block;
-  margin-top: 5px;
-  font:
-    700 1.7rem "Berkeley Mono",
-    monospace;
-}
+
 .panel {
-  border: 1px solid var(--line);
-  background: var(--panel);
+  border: 1px solid var(--ui-line);
+  background: var(--ui-panel);
   border-radius: 12px;
   overflow: hidden;
 }
-.section-heading {
-  padding: 20px 20px 0;
-}
-.filters {
-  padding: 14px;
-  border-bottom: 1px solid var(--line);
-  display: grid;
-  grid-template-columns: minmax(260px, 1fr) repeat(3, minmax(130px, auto));
-  gap: 12px;
-  align-items: end;
-}
-.filters label {
-  display: grid;
-  /* Lets a control shrink to its cell instead of overlapping the next. */
-  grid-template-columns: minmax(0, 1fr);
-  gap: 5px;
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 650;
-}
-.search {
-  position: relative;
-}
-.search svg {
-  position: absolute;
-  left: 0.65rem;
-  bottom: 0.6rem;
-  color: var(--muted);
-}
-.search .input {
-  padding-left: 2rem;
-  width: 100%;
-}
-.history-filters {
-  grid-template-columns: repeat(6, minmax(130px, 1fr));
-}
-.scope-switch {
-  display: flex;
-  gap: 4px;
-  padding: 0 14px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel-2);
-  overflow-x: auto;
-}
-.scope-switch a {
-  position: relative;
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  min-height: 40px;
-  padding: 0 12px;
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 650;
-  text-decoration: none;
-}
-.scope-switch a:hover {
-  color: var(--ink);
-}
-.scope-switch a[aria-current="page"] {
-  color: var(--ink);
-}
-.scope-switch a[aria-current="page"]::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0;
-  border-block-end: 3px solid var(--accent);
-}
-.table-wrap {
-  overflow-x: auto;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.77rem;
-}
-th {
-  text-align: left;
-  color: var(--muted);
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  background: var(--panel-2);
-}
-th,
-td {
-  padding: 11px 13px;
-  border-bottom: 1px solid var(--line-soft);
-  vertical-align: middle;
-}
-tbody tr:hover {
-  background: var(--row-hover);
-}
+
 .alert-link {
   display: grid;
   gap: 2px;
@@ -419,145 +283,32 @@ tbody tr:hover {
   min-width: 220px;
 }
 .alert-link strong {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--ui-font-sans);
   font-size: 0.85rem;
 }
 .alert-link span {
-  color: var(--muted);
+  color: var(--ui-muted);
 }
-.severity,
-.priority,
-.state,
-.suppression,
-.preview-status {
-  display: inline-flex;
-  width: fit-content;
-  border-radius: 999px;
-  padding: 0.25rem 0.48rem;
-  font:
-    700 0.65rem "Berkeley Mono",
-    monospace;
-  text-transform: uppercase;
-}
-.priority-urgent {
-  color: var(--sev-warning-ink);
-  background: var(--sev-warning-bg);
-}
-.priority-chore {
-  color: var(--sev-info-ink);
-  background: var(--sev-info-bg);
-}
-.severity-critical {
-  color: var(--sev-error-ink);
-  background: var(--sev-error-bg);
-}
-.severity-warning {
-  color: var(--sev-warning-ink);
-  background: var(--sev-warning-bg);
-}
-.severity-info {
-  color: var(--sev-info-ink);
-  background: var(--sev-info-bg);
-}
-.severity-unknown {
-  color: var(--sev-unknown-ink);
-  background: var(--sev-unknown-bg);
-}
-.state {
-  background: var(--sev-ok-bg);
-  color: var(--sev-ok-ink);
-}
-.suppression {
-  margin-left: 0.3rem;
-  background: var(--sev-unknown-bg);
-  color: var(--sev-unknown-ink);
-}
+
 .loading-state,
 .empty-state,
 .error-state {
   padding: 56px 24px;
   text-align: center;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .error-state {
-  color: var(--sev-error-ink);
+  color: var(--ui-sev-error-text);
 }
-.stale-state {
-  padding: 10px 24px;
-  text-align: center;
-  color: var(--stale-ink);
-  background: var(--stale-bg);
-  border-bottom: 1px solid var(--stale-line);
-  font-size: 0.9rem;
-}
-.timeline {
-  padding: 18px 24px;
-}
-.timeline article {
-  display: grid;
-  grid-template-columns: 15px 1fr;
-  gap: 10px;
-  position: relative;
-  padding-bottom: 24px;
-}
-.timeline article:not(:last-child)::before {
-  content: "";
-  position: absolute;
-  width: 1px;
-  background: var(--line);
-  left: 5px;
-  top: 12px;
-  bottom: 0;
-}
-.timeline-dot {
-  width: 11px;
-  height: 11px;
-  border-radius: 99px;
-  background: var(--accent);
-  margin-top: 4px;
-  z-index: 1;
-}
-.timeline-title {
-  display: flex;
-  gap: 0.75rem;
-  align-items: baseline;
-}
-.timeline-title a {
-  color: var(--accent);
-}
-.timeline time {
-  color: var(--muted);
-  font-size: 0.73rem;
-}
-.history-pagination {
-  display: flex;
-  justify-content: center;
-  padding: 0 24px 24px;
-}
+
 .back-link {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--muted);
+  color: var(--ui-muted);
   margin-bottom: 18px;
 }
-.badge-row,
-.link-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-.link-row a {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  color: var(--accent);
-}
-.detail-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-}
+
 .metadata {
   padding: 20px;
 }
@@ -570,7 +321,7 @@ tbody tr:hover {
   min-width: 0;
 }
 .metadata dt {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.72rem;
 }
 .metadata dd {
@@ -582,9 +333,8 @@ tbody tr:hover {
   flex-wrap: wrap;
   gap: 0.4rem;
 }
-.label-list code,
-.preview code {
-  background: var(--code-bg);
+.label-list code {
+  background: var(--ui-track);
   border-radius: 4px;
   padding: 0.3rem 0.45rem;
   font-size: 0.7rem;
@@ -593,264 +343,23 @@ tbody tr:hover {
 .compact {
   padding: 20px;
 }
-.previews {
-  margin-top: 28px;
-}
-.previews > h2 {
-  margin-bottom: 12px;
-  font-size: 1.2rem;
-}
-.preview-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-.preview {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel);
-  padding: 16px;
-  min-width: 0;
-}
-.preview-heading {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.preview-status.available {
-  background: var(--sev-ok-bg);
-  color: var(--sev-ok-ink);
-}
-.preview-status.unavailable {
-  background: var(--sev-unknown-bg);
-}
-.preview-status.error {
-  background: var(--sev-error-bg);
-  color: var(--sev-error-ink);
-}
-.preview pre {
-  max-height: 300px;
-  overflow: auto;
-  font-size: 0.65rem;
-  background: var(--pre-bg);
-  color: var(--pre-ink);
-  padding: 12px;
-  border-radius: 6px;
-}
-.health-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 18px;
-}
-.health-card {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-.health-card h2 {
-  margin-bottom: 2px;
-}
-.health-card strong {
-  font:
-    700 0.75rem "Berkeley Mono",
-    monospace;
-  text-transform: uppercase;
-}
-.health-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #b6b9b7;
-}
-.health-dot.ok {
-  background: #2b9a6d;
-}
-.health-dot.error,
-.health-dot.stale {
-  background: #c7463e;
-}
-.health-dot.disabled {
-  background: #777;
-}
-@container content (max-width: 1180px) {
-  .history-filters {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-@container content (max-width: 900px) {
-  .summary-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .filters,
-  .history-filters {
-    grid-template-columns: 1fr 1fr;
-  }
-  .detail-grid,
-  .preview-grid {
-    grid-template-columns: 1fr;
-  }
-  .health-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
+
 @media (max-width: 600px) {
   main {
     padding: 24px 14px 56px;
   }
-  .page-heading,
-  .detail-heading {
-    display: grid;
-  }
-  .summary-grid,
-  .filters,
-  .history-filters,
-  .health-grid,
+
   .metadata dl {
     grid-template-columns: 1fr;
   }
-  .table-wrap {
-    overflow-x: visible;
-    padding: 10px;
-    background: var(--panel-2);
-  }
-  .table-wrap table,
-  .table-wrap tbody,
-  .table-wrap tr,
-  .table-wrap td {
-    display: block;
-    width: 100%;
-  }
-  .table-wrap thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
-  .table-wrap tbody {
-    display: grid;
-    gap: 10px;
-  }
-  .table-wrap tbody tr {
-    padding: 8px 12px;
-    border: 1px solid var(--line);
-    border-radius: 9px;
-    background: var(--panel);
-  }
-  .table-wrap td {
-    display: grid;
-    grid-template-columns: 92px minmax(0, 1fr);
-    gap: 10px;
-    align-items: start;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--line-soft);
-  }
-  .table-wrap td:last-child {
-    border-bottom: 0;
-  }
-  .table-wrap td::before {
-    content: attr(data-label);
-    color: var(--muted);
-    font:
-      700 0.65rem "Berkeley Mono",
-      monospace;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
+
   .alert-link {
     min-width: 0;
   }
 }
 
-/* ---- Ops overview ---- */
-.sev {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 0.3rem;
-  width: fit-content;
-  height: 22px;
-  border-radius: 999px;
-  padding: 0 0.5rem 0 0.4rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.sev svg {
-  width: 0.85rem;
-  height: 0.85rem;
-}
-.sev-large {
-  height: 30px;
-  padding: 0 0.75rem 0 0.6rem;
-  font-size: 0.8rem;
-}
-.sev-large svg {
-  width: 1.05rem;
-  height: 1.05rem;
-}
-.sev-ok {
-  background: var(--sev-ok-bg);
-  color: var(--sev-ok-ink);
-}
-.sev-info {
-  background: var(--sev-info-bg);
-  color: var(--sev-info-ink);
-}
-.sev-unknown {
-  background: var(--sev-unknown-bg);
-  color: var(--sev-unknown-ink);
-}
-.sev-warning {
-  background: var(--sev-warning-bg);
-  color: var(--sev-warning-ink);
-}
-.sev-error {
-  background: var(--sev-error-bg);
-  color: var(--sev-error-ink);
-}
-.status-banner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 18px;
-  margin-bottom: 14px;
-  border: 1px solid var(--line);
-  border-left: 4px solid var(--status-unknown);
-  border-radius: 12px;
-  background: var(--panel);
-}
-.status-banner.status-ok {
-  border-left-color: var(--status-good);
-}
-.status-banner.status-info {
-  border-left-color: var(--status-info);
-}
-.status-banner.status-warning {
-  border-left-color: var(--status-warning);
-}
-.status-banner.status-error {
-  border-left-color: var(--status-critical);
-}
-.status-summary {
-  margin: 0;
-  color: var(--ink);
-  font-size: 1.05rem;
-  font-weight: 600;
-}
-.status-meta {
-  margin: 2px 0 0;
-  font-size: 0.85rem;
-}
 .lede {
-  margin: -16px 0 18px;
+  margin: 0 0 18px;
 }
 .stack {
   display: grid;
@@ -862,18 +371,15 @@ tbody tr:hover {
 }
 .panel-heading h2,
 .panel-heading h3,
-.section-card h2,
-.section-summary h2,
 .metadata h2 {
   font-weight: 650;
 }
 /* A panel under a block heading is one level down and looks the same. */
 .panel-heading h3 {
   margin: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 1rem;
   letter-spacing: 0;
-  text-transform: none;
 }
 .metadata h2 {
   margin-bottom: 14px;
@@ -912,8 +418,8 @@ tbody tr:hover {
   margin-left: 0.35rem;
   padding: 0.05rem 0.4rem;
   border-radius: 999px;
-  background: var(--code-bg);
-  color: var(--muted);
+  background: var(--ui-track);
+  color: var(--ui-muted);
   font-size: 0.75rem;
   text-align: center;
 }
@@ -924,151 +430,34 @@ tbody tr:hover {
   font-size: 0.9rem;
 }
 .inline-error {
-  color: var(--sev-error-ink);
+  color: var(--ui-sev-error-text);
 }
-.signal-list,
-.change-list,
 .service-grid {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.signal {
-  display: grid;
-  grid-template-columns: 6.3rem minmax(0, 1fr);
-  gap: 10px;
-  align-items: start;
-  padding: 10px 18px;
-  border-top: 1px solid var(--line-soft);
-}
-.signal .sev {
-  margin-top: 1px;
-}
-.signal-title {
-  margin: 0;
-  color: var(--ink);
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-.signal-title a {
-  text-decoration: none;
-}
-.signal-title a:hover {
-  text-decoration: underline;
-}
-.signal-detail {
-  margin: 2px 0 0;
-  font-size: 0.85rem;
-}
-.signal-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 0.75rem;
-}
-/* A run of same-kind signals collapsed into one disclosure row. */
-.signal-group {
-  border-top: 1px solid var(--line-soft);
-}
-.signal-group summary {
-  display: grid;
-  grid-template-columns: 6.3rem minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: start;
-  min-height: 44px;
-  padding: 10px 18px;
-  list-style: none;
-  cursor: pointer;
-}
-.signal-group summary::-webkit-details-marker {
-  display: none;
-}
-.signal-group summary .sev {
-  margin-top: 1px;
-}
-.signal-group summary .signal-body,
-.signal-group summary .signal-title {
-  display: block;
-  min-width: 0;
-}
-.signal-group-marker {
-  margin-top: 3px;
-  color: var(--muted);
-}
-.signal-group details[open] > summary .signal-group-marker {
-  transform: rotate(90deg);
-}
-.signal-group-members {
-  border-top: 1px solid var(--line-soft);
-  background: var(--panel-2);
-  box-shadow: inset 3px 0 0 var(--line);
-}
-.signal-group-members .signal:first-child {
-  border-top: 0;
-}
-.list-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  width: 100%;
-  min-height: 44px;
-  padding: 0 18px;
-  border: 0;
-  border-top: 1px solid var(--line-soft);
-  background: transparent;
-  color: var(--accent);
-  font-size: 0.82rem;
-  font-weight: 650;
-  text-align: left;
-  cursor: pointer;
-}
-.list-toggle svg {
-  width: 0.8rem;
-  height: 0.8rem;
-}
-.signal-group summary:hover,
-.list-toggle:hover {
-  background: var(--row-hover);
-}
-.signal-group summary:focus-visible,
-.list-toggle:focus-visible {
-  outline: 3px solid var(--accent-ring);
-  outline-offset: -3px;
-}
-.new-tag {
-  margin-left: 0.45rem;
-  padding: 0.05rem 0.4rem;
-  border-radius: 4px;
-  background: var(--accent);
-  color: var(--panel);
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  vertical-align: 2px;
-}
+
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   padding: 0.12rem 0.45rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ui-line);
   border-radius: 6px;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.72rem;
   text-decoration: none;
 }
 .chip:hover {
-  background: var(--control-hover);
+  background: var(--ui-hover);
 }
 .chip svg {
   width: 0.7rem;
   height: 0.7rem;
 }
 .service-chip {
-  color: var(--accent);
+  color: var(--ui-accent);
   font-weight: 650;
 }
 .block-heading {
@@ -1076,195 +465,7 @@ tbody tr:hover {
   font-size: 1.05rem;
   font-weight: 650;
 }
-.section-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-/* Each card's heading, summary and metrics sit on row tracks shared with the
-   cards beside it, so the three line up across a row whatever wraps. */
-.section-card {
-  display: grid;
-  grid-row: span 3;
-  grid-template-rows: auto 1fr auto;
-  grid-template-rows: subgrid;
-  align-content: start;
-  gap: 8px;
-  min-width: 0;
-  padding: 14px 14px 16px;
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--status-unknown);
-  border-radius: 10px;
-  background: var(--panel);
-}
-.section-card.section-ok,
-.section-summary.section-ok {
-  border-top-color: var(--status-good);
-}
-.section-card.section-info,
-.section-summary.section-info {
-  border-top-color: var(--status-info);
-}
-.section-card.section-warning,
-.section-summary.section-warning {
-  border-top-color: var(--status-warning);
-}
-.section-card.section-error,
-.section-summary.section-error {
-  border-top-color: var(--status-critical);
-}
-.section-card header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.section-card h2 a {
-  text-decoration: none;
-}
-.section-card h2 a:hover {
-  text-decoration: underline;
-}
-.section-card p {
-  margin: 0;
-  font-size: 0.88rem;
-}
-.metric-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
-  gap: 8px;
-  padding: 0 18px 12px;
-}
-.section-card .metric-row,
-.section-summary .metric-row,
-.ai-tiles,
-.incident-panel .metric-row {
-  padding: 0;
-}
-/* Three across, so a card is the same height whatever its metrics are named;
-   the values share a baseline when one label wraps and its neighbour does not. */
-.section-card .metric-row {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-}
-.section-card .metric {
-  --metric-pad: 8px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding-block: 7px;
-}
-.section-card .metric span {
-  font-size: 0.7rem;
-}
-.section-card .metric strong {
-  font-size: 1.05rem;
-  overflow-wrap: anywhere;
-}
 
-.incident-panel .metric-row {
-  padding: 0 18px 16px;
-}
-.metric {
-  --metric-pad: 10px;
-  min-width: 0;
-  padding: 8px var(--metric-pad);
-  border-radius: 8px;
-  background: var(--panel-2);
-  border: 1px solid var(--line-soft);
-}
-.metric span {
-  display: block;
-  color: var(--muted);
-  font-size: 0.72rem;
-  overflow-wrap: anywhere;
-}
-.metric strong {
-  display: block;
-  margin-top: 2px;
-  font-size: 1.2rem;
-  font-weight: 650;
-}
-/* A metric that needs attention: a bar in the status colour, and an icon in
-   the corner (named for screen readers) so the tile does not depend on the
-   colour. The bar is a border, which forced-colors mode keeps; the padding
-   gives back its width. The icon sits beside the label, which may wrap,
-   rather than the value, which may not. */
-.metric-warning,
-.metric-error,
-.metric-unknown {
-  position: relative;
-  border-left: 3px solid var(--status-unknown);
-  padding-left: calc(var(--metric-pad) - 2px);
-}
-.metric-warning > span:first-child,
-.metric-error > span:first-child,
-.metric-unknown > span:first-child {
-  padding-right: 1.05rem;
-}
-.metric-warning {
-  border-left-color: var(--status-warning);
-}
-.metric-error {
-  border-left-color: var(--status-critical);
-}
-.metric-flag {
-  position: absolute;
-  top: 8px;
-  right: calc(var(--metric-pad) - 2px);
-  width: 0.85rem;
-  height: 0.85rem;
-  color: var(--sev-unknown-ink);
-}
-.metric-warning .metric-flag {
-  color: var(--sev-warning-ink);
-}
-.metric-error .metric-flag {
-  color: var(--sev-error-ink);
-}
-/* One section at a glance, full width: the title, summary and verdict on
-   one line and every metric on the next, on columns the cards share. */
-.summary-stack {
-  display: grid;
-  gap: 10px;
-}
-.section-summary {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas:
-    "title summary sev"
-    "metrics metrics metrics";
-  align-items: baseline;
-  gap: 10px 14px;
-  min-width: 0;
-  padding: 12px 14px 14px;
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--status-unknown);
-  border-radius: 10px;
-  background: var(--panel);
-}
-.section-summary h2 {
-  grid-area: title;
-}
-.section-summary > p {
-  grid-area: summary;
-  margin: 0;
-  font-size: 0.88rem;
-}
-.section-summary > .sev {
-  grid-area: sev;
-  align-self: center;
-}
-.section-summary .metric-row {
-  grid-area: metrics;
-  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
-}
-/* The values share a baseline when one label wraps and its neighbour does not. */
-.section-summary .metric {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
 /* Two columns of panels that each stack on their own. */
 .signal-columns,
 .review-lists {
@@ -1276,6 +477,7 @@ tbody tr:hover {
 .signal-columns > :only-child {
   grid-column: 1 / -1;
 }
+
 .charts-heading {
   display: flex;
   align-items: center;
@@ -1290,9 +492,9 @@ tbody tr:hover {
 .segmented {
   display: inline-flex;
   padding: 3px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ui-line);
   border-radius: 9px;
-  background: var(--control-bg);
+  background: var(--ui-panel);
 }
 .segmented button {
   min-width: 3rem;
@@ -1301,16 +503,16 @@ tbody tr:hover {
   border: 0;
   border-radius: 6px;
   background: transparent;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-weight: 650;
   cursor: pointer;
 }
 .segmented button[aria-checked="true"] {
-  background: var(--code-bg);
-  color: var(--ink);
+  background: var(--ui-track);
+  color: var(--ui-ink);
 }
 .segmented button:focus-visible {
-  outline: 3px solid var(--accent-ring);
+  outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
 }
 .segmented-count {
   margin-left: 0.15rem;
@@ -1333,9 +535,9 @@ tbody tr:hover {
   min-width: 0;
   margin: 0;
   padding: 14px 16px 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ui-line);
   border-radius: 10px;
-  background: var(--panel);
+  background: var(--ui-panel);
 }
 .chart-panel figcaption {
   display: flex;
@@ -1346,19 +548,18 @@ tbody tr:hover {
 }
 .chart-panel h3 {
   margin: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.9rem;
   letter-spacing: 0;
-  text-transform: none;
 }
 .chart-range {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.75rem;
 }
 .chart-placeholder {
   height: 260px;
   border-radius: 8px;
-  background: var(--panel-2);
+  background: var(--ui-head);
 }
 .chart-empty,
 .chart-error {
@@ -1370,7 +571,7 @@ tbody tr:hover {
   font-size: 0.88rem;
 }
 .chart-error {
-  color: var(--sev-error-ink);
+  color: var(--ui-sev-error-text);
 }
 .uplot-host {
   width: 100%;
@@ -1381,35 +582,28 @@ tbody tr:hover {
   width: 100% !important;
 }
 .uplot-host .u-legend {
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 0.75rem;
   text-align: left;
 }
 .uplot-host .u-legend th,
 .uplot-host .u-legend td {
   padding: 2px 4px;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
 }
 .uplot-host .u-legend td {
-  color: var(--ink);
+  color: var(--ui-ink);
   font-variant-numeric: tabular-nums;
-}
-.uplot-host .u-legend tr:hover {
-  background: transparent;
 }
 .uplot-host .u-legend .u-marker {
   border-radius: 2px;
 }
 .chart-table summary {
   cursor: pointer;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.75rem;
   padding: 6px 0;
 }
@@ -1417,18 +611,30 @@ tbody tr:hover {
   margin-bottom: 6px;
 }
 /* ---- AI ---- */
-/* Under the page's verdict, the summary that explains it. */
+/* The page's verdict and the summary that explains it, on one line in the
+   header: the summary truncates rather than wrapping under the verdict. */
 .page-status {
-  display: grid;
-  flex: none;
-  justify-items: end;
-  gap: 6px;
-  max-width: 30rem;
-  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 34rem;
+  white-space: nowrap;
 }
 .page-status p {
+  min-width: 0;
   margin: 0;
-  font-size: 0.88rem;
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+}
+.page-head .ui-header-actions:has(> .page-status) {
+  min-width: 0;
+}
+/* The figures beside the spend panel are as tall as their content. */
+.ai-row > .metric-row {
+  align-self: start;
 }
 /* Two panels on tracks every row of the page shares, stretched to one height
    so neither leaves a hole beside the other. */
@@ -1441,56 +647,7 @@ tbody tr:hover {
 .ai-row > :only-child {
   grid-column: 1 / -1;
 }
-/* The tiles beside the spend panel stack to its height. */
-.ai-tiles {
-  grid-template-columns: 1fr;
-  grid-auto-rows: 1fr;
-}
-.ai-tiles .metric {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-inline: 16px;
-}
-.ai-tiles .metric strong {
-  font-size: 1.5rem;
-}
-.ai-tiles .metric-flag {
-  top: 12px;
-  right: 14px;
-}
-/* One line per window: the provider names its group from the first row. */
-.quota-table {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 0.8rem;
-}
-.quota-table th,
-.quota-table td {
-  padding: 6px 7px;
-}
-.quota-table thead th {
-  padding-block: 7px;
-}
-/* The outer cells line up with the panel's heading. A provider's later rows
-   start at the window, so these are named cells and not `:first-child`. */
-.quota-table thead th:first-child,
-.quota-table .quota-provider,
-.quota-table .invalid-row td {
-  padding-left: 18px;
-}
-.quota-table thead th:last-child,
-.quota-table .quota-resets,
-.quota-table .invalid-row td {
-  padding-right: 18px;
-}
-.quota-table tbody th {
-  background: transparent;
-  color: var(--ink);
-  font-size: inherit;
-  letter-spacing: 0;
-  text-transform: none;
-  white-space: nowrap;
-}
+
 .quota-provider {
   font-weight: 650;
   vertical-align: top;
@@ -1509,14 +666,14 @@ tbody tr:hover {
 }
 .quota-window code {
   display: block;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.7rem;
   font-weight: 400;
 }
 /* A stronger line closes each provider's group; the last needs none. */
 .quota-table tbody > tr:last-child > *,
 .quota-table .quota-provider {
-  border-bottom-color: var(--line);
+  border-bottom-color: var(--ui-line);
 }
 .quota-table tbody:last-child > tr:last-child > *,
 .quota-table tbody:last-child .quota-provider {
@@ -1527,50 +684,15 @@ tbody tr:hover {
   background: transparent;
 }
 .quota-table tbody:hover {
-  background: var(--row-hover);
+  background: var(--ui-hover);
 }
-/* The meter takes whatever the other columns leave. */
-.quota-used-heading,
-.quota-used {
-  width: 100%;
-}
-.quota-meter {
-  display: grid;
-  grid-template-columns: minmax(32px, 1fr) max-content 0.9rem;
-  align-items: center;
-  gap: 8px;
-}
-/* The floor is the width of "100%", so every meter ends at the same place. */
-.quota-value {
-  min-width: 2.4rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 650;
-  text-align: right;
-  white-space: nowrap;
-}
-.quota-reset .quota-value {
-  color: var(--muted);
-  font-weight: 500;
-}
+
 .quota-flag {
   display: flex;
 }
-.quota-flag-icon {
-  width: 0.9rem;
-  height: 0.9rem;
-  color: var(--sev-unknown-ink);
-}
-.quota-info .quota-flag-icon {
-  color: var(--sev-info-ink);
-}
-.quota-warning .quota-flag-icon {
-  color: var(--sev-warning-ink);
-}
-.quota-error .quota-flag-icon {
-  color: var(--sev-error-ink);
-}
+
 .quota-resets {
-  color: var(--muted);
+  color: var(--ui-muted);
   text-align: right;
   white-space: nowrap;
 }
@@ -1579,92 +701,34 @@ tbody tr:hover {
 }
 .invalid-row p {
   margin: 0;
-  color: var(--sev-error-ink);
+  color: var(--ui-sev-error-text);
   overflow-wrap: anywhere;
 }
 .tool-note {
   font-size: 0.85rem;
 }
-.tool-table th:first-child,
-.tool-table td:first-child {
-  padding-left: 18px;
-}
-.tool-table th:last-child,
-.tool-table td:last-child {
-  padding-right: 18px;
-}
+
 .tool-table tfoot th,
 .tool-table tfoot td {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--ui-line);
   border-bottom: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-weight: 700;
 }
-.meter {
-  --meter-fill: var(--status-good);
-  position: relative;
-  height: 10px;
-  border-radius: 999px;
-  background: var(--meter-track);
-}
-.meter > span {
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--meter-fill);
-}
-.meter-info {
-  --meter-fill: var(--status-info);
-}
-.meter-unknown {
-  --meter-fill: var(--status-unknown);
-}
-.meter-warning {
-  --meter-fill: var(--status-warning);
-}
-.meter-error {
-  --meter-fill: var(--status-critical);
-}
-/* The last reading before a reset: hatched and grey whatever its severity,
-   so it is never taken for the window's level now. */
-.meter-reset > span {
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--status-unknown) 0 2px,
-    transparent 2px 5px
-  );
-}
-/* Forced colours drop backgrounds; an outline and a system fill keep the
-   level readable. */
-@media (forced-colors: active) {
-  .meter {
-    border: 1px solid CanvasText;
-  }
-  .meter > span {
-    background: Highlight;
-  }
-}
-.meter .projection {
-  position: absolute;
-  top: -4px;
-  width: 2px;
-  height: 18px;
-  margin-left: -1px;
-  background: var(--ink);
-}
+
 .spend-panel {
   padding-bottom: 14px;
 }
 .hero-figure {
   margin: 0;
   padding: 0 18px 12px;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 2.6rem;
   font-weight: 650;
   letter-spacing: -0.02em;
 }
 .hero-figure span {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.95rem;
   font-weight: 500;
   letter-spacing: 0;
@@ -1687,26 +751,14 @@ tbody tr:hover {
   display: flex;
   flex-direction: column;
 }
-.incident-panel:not(:only-child) .metric-row {
-  flex: 1;
-  grid-template-columns: 1fr;
-  grid-auto-rows: 1fr;
-}
-.incident-panel:not(:only-child) .metric {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.incident-panel:not(:only-child) .metric strong {
-  font-size: 1.5rem;
-}
+
 /* Holds about the top block's height while the report loads, so the charts
    under it barely move when it lands. The weekly block has the trend table. */
 .review-lead[aria-busy="true"] {
-  min-height: 250px;
+  min-height: 198px;
 }
 .review-lead-weekly[aria-busy="true"] {
-  min-height: 590px;
+  min-height: 484px;
 }
 .drill-links {
   display: flex;
@@ -1721,46 +773,18 @@ tbody tr:hover {
   width: 0.8rem;
   height: 0.8rem;
 }
-.change {
-  display: grid;
-  grid-template-columns: 6.8rem minmax(0, 1fr);
-  gap: 10px;
-  padding: 10px 18px;
-  border-top: 1px solid var(--line-soft);
-}
-.change p {
-  margin: 0;
-  color: var(--ink);
-  overflow-wrap: anywhere;
-}
-.change a {
-  text-decoration: none;
-}
-.change a:hover {
-  text-decoration: underline;
-}
+
 .change-kind {
   align-self: start;
   width: fit-content;
   padding: 0.1rem 0.45rem;
   border-radius: 4px;
-  background: var(--code-bg);
-  color: var(--muted);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  background: var(--ui-track);
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
   font-size: 0.68rem;
 }
-.change-error .change-kind {
-  background: var(--sev-error-bg);
-  color: var(--sev-error-ink);
-}
-.change-warning .change-kind {
-  background: var(--sev-warning-bg);
-  color: var(--sev-warning-ink);
-}
-.change-ok .change-kind {
-  background: var(--sev-ok-bg);
-  color: var(--sev-ok-ink);
-}
+
 .service-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
@@ -1772,17 +796,17 @@ tbody tr:hover {
   gap: 6px 10px;
   align-items: center;
   padding: 12px 14px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ui-line);
   border-radius: 10px;
-  background: var(--panel);
+  background: var(--ui-panel);
   text-decoration: none;
 }
 .service-card:hover {
-  border-color: var(--accent);
+  border-color: var(--ui-accent);
 }
 .service-sub {
   grid-column: 1 / -1;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.78rem;
 }
 .table-scroll {
@@ -1790,12 +814,11 @@ tbody tr:hover {
 }
 .trend-table th[scope="row"],
 .tool-table th[scope="row"] {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--ui-font-sans);
   font-size: 0.85rem;
   font-weight: 500;
-  text-transform: none;
   letter-spacing: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   background: transparent;
 }
 .num {
@@ -1803,7 +826,7 @@ tbody tr:hover {
   white-space: nowrap;
 }
 .muted {
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .delta {
   font-weight: 650;
@@ -1815,37 +838,21 @@ tbody tr:hover {
   vertical-align: -1px;
 }
 .delta-good {
-  color: var(--delta-good);
+  color: var(--ui-sev-ok-text);
 }
 .delta-bad {
-  color: var(--delta-bad);
+  color: var(--ui-sev-error-text);
 }
 .delta-flat {
-  color: var(--muted);
+  color: var(--ui-muted);
 }
-/* Three metric tiles no longer fit across a card: it keeps its title, badge
-   and summary. */
-@container content (max-width: 1000px) {
-  .section-card {
-    grid-row: span 2;
-  }
-  .section-card header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .section-card .metric-row {
-    display: none;
-  }
-}
+
 /* The quota table's four columns need about 640px, which two thirds of a
    narrower column is not: the AI rows stack, and the tiles go back to
    sitting side by side. */
 @container content (max-width: 1020px) {
   .ai-row {
     grid-template-columns: 1fr;
-  }
-  .ai-tiles {
-    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   }
 }
 /* Too narrow for four columns: each window becomes two lines, its name and
@@ -1874,14 +881,17 @@ tbody tr:hover {
       "used used";
     column-gap: 12px;
     padding: 7px 18px 8px;
-    border-top: 1px solid var(--line-soft);
+    border-top: 1px solid var(--ui-line-soft);
   }
   .quota-table tbody > tr:first-child {
-    border-top-color: var(--line);
+    border-top-color: var(--ui-line);
   }
+  /* A stacked cell is as tall as its content, not a 36px table row. */
   .quota-table tbody th,
   .quota-table tbody td {
     width: auto;
+    height: auto;
+    min-height: 0;
     padding: 0;
     border: 0;
   }
@@ -1924,99 +934,23 @@ tbody tr:hover {
   .review-grid {
     grid-template-columns: 1fr;
   }
-  .incident-panel:not(:only-child) .metric-row {
-    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
-    grid-auto-rows: auto;
-  }
-  .incident-panel:not(:only-child) .metric strong {
-    font-size: 1.2rem;
-  }
-  .review-lead-weekly[aria-busy="true"] {
-    min-height: 740px;
-  }
-}
-/* A narrower column fits seven tiles across only at the size of Home's, so a
-   section's metrics still make one row instead of leaving one tile over. */
-@container content (min-width: 601px) and (max-width: 1000px) {
-  .section-summary .metric-row {
-    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-    gap: 6px;
-  }
-  .section-summary .metric {
-    --metric-pad: 8px;
-    padding-block: 7px;
-  }
-  .section-summary .metric span {
-    font-size: 0.7rem;
-  }
-  .section-summary .metric strong {
-    font-size: 1.05rem;
-  }
-}
-/* The summary drops under its title; the verdict stays beside the title. */
-@container content (max-width: 720px) {
-  .section-summary {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "title sev"
-      "summary summary"
-      "metrics metrics";
-    gap: 8px 12px;
-  }
-}
-@media (max-width: 600px) {
-  .section-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-  /* Nine areas leave one over; it takes the full row instead of half of it. */
-  .section-grid > :last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-  }
-  .section-card {
-    grid-row: auto;
-    grid-template-rows: none;
-    padding: 10px 12px 12px;
-  }
-  .section-card p {
-    display: none;
-  }
-  /* Two tiles across; an odd one out takes the full row, as above. */
-  .section-summary .metric-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .section-summary .metric-row > :last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-  }
+
   .review-lead[aria-busy="true"] {
-    min-height: 430px;
+    min-height: 309px;
   }
   .review-lead-weekly[aria-busy="true"] {
-    min-height: 1190px;
+    min-height: 732px;
   }
-  .status-banner {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .review-lead[aria-busy="true"] {
+    min-height: 324px;
   }
-  .signal,
-  .change {
-    grid-template-columns: 1fr;
-    gap: 6px;
-    padding: 10px 14px;
+  .review-lead-weekly[aria-busy="true"] {
+    min-height: 863px;
   }
-  .signal-group summary {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 6px 10px;
-    padding: 10px 14px;
-  }
-  .signal-group summary .signal-body {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-  .list-toggle {
-    padding: 0 14px;
-  }
+
   .panel-heading {
     padding: 14px 14px 8px;
   }
@@ -2046,225 +980,20 @@ tbody tr:hover {
   .hero-figure {
     font-size: 2.1rem;
   }
-  .page-heading .segmented {
-    width: fit-content;
-  }
+
   .chart-panel {
     padding: 12px;
   }
 }
 
-/* ---- Home ---- */
-/* Home leads with the overview, so its heading sits closer to it. */
-.home .page-heading {
-  margin-bottom: 18px;
-}
-.home .block-heading {
-  margin: 22px 0 10px;
-}
-.stat-grid,
-.launcher-grid {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-}
-.stat-grid {
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: 14px;
-}
-.stat-card {
-  min-width: 0;
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--status-unknown);
-  border-radius: 10px;
-  background: var(--panel);
-}
-.stat-card.stat-ok {
-  border-top-color: var(--status-good);
-}
-.stat-card.stat-info {
-  border-top-color: var(--status-info);
-}
-.stat-card.stat-warning {
-  border-top-color: var(--status-warning);
-}
-.stat-card.stat-error {
-  border-top-color: var(--status-critical);
-}
-/* The label and the severity badge share the first row; the number and its
-   hint share the second, on one baseline. */
-.stat-card a {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas:
-    "label label sev"
-    "value hint hint";
-  align-items: center;
-  gap: 2px 10px;
-  height: 100%;
-  padding: 11px 14px 9px;
-  border-radius: 0 0 9px 9px;
-  text-decoration: none;
-}
-.stat-card a:hover {
-  background: var(--row-hover);
-}
-.stat-label,
-.stat-hint {
-  color: var(--muted);
-  font-size: 0.78rem;
-}
-.stat-label {
-  grid-area: label;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-width: 0;
-}
-.stat-card .sev {
-  grid-area: sev;
-}
-.stat-card strong {
-  grid-area: value;
-  align-self: baseline;
-  font:
-    700 1.7rem "Berkeley Mono",
-    monospace;
-}
-.stat-hint {
-  grid-area: hint;
-  align-self: baseline;
-  min-width: 0;
-}
-.stat-external {
-  flex: none;
-  width: 0.8rem;
-  height: 0.8rem;
-}
-.home-columns {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  gap: 18px;
-  align-items: start;
-  margin-top: 18px;
-}
-/* One heading holds a filter and the other a button; a shared height starts
-   both lists on the same line. Either control drops under its heading when
-   the two do not fit on one line. */
-.home-columns .panel-heading {
-  flex-wrap: wrap;
-  min-height: 68px;
-}
-.home-columns .panel-heading h2 {
-  flex: none;
-}
 .attention-panel {
   scroll-margin-top: 16px;
 }
-/* Apps beside Tools: one column of apps and three of tools make a block
-   with no part-filled row. */
-.launcher-groups {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
-  gap: 0 10px;
-}
-.launcher-groups h3 {
-  margin-top: 0;
-}
-.launcher-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-.launcher-group:first-child .launcher-grid {
-  grid-template-columns: minmax(0, 1fr);
-}
-.launcher-card span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.launcher-card {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-width: 0;
-  padding: 11px 14px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel);
-  font-weight: 600;
-  text-decoration: none;
-}
-.launcher-card:hover {
-  border-color: var(--accent);
-}
-.launcher-card svg {
-  flex: none;
-  color: var(--muted);
-}
-.launcher-card .launcher-external {
-  margin-left: auto;
-  width: 0.8rem;
-  height: 0.8rem;
-}
-@container content (max-width: 900px) {
-  .home-columns {
-    grid-template-columns: 1fr;
-  }
-  .launcher-groups {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px 0;
-  }
-  .launcher-group:first-child .launcher-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-@container content (max-width: 860px) {
-  .stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-/* Too narrow for tiles to hold a label beside a badge: each tile
-   becomes one row that leads with its number. */
-@container content (max-width: 720px) {
-  .stat-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  .stat-card a {
-    grid-template-columns: 3.75rem minmax(0, 1fr) auto;
-    grid-template-areas:
-      "value label sev"
-      "value hint sev";
-    gap: 0 10px;
-    padding: 8px 14px;
-  }
-  .stat-card strong {
-    align-self: center;
-    font-size: 1.45rem;
-  }
-  .stat-label {
-    color: var(--ink);
-    font-size: 0.88rem;
-    font-weight: 600;
-  }
-}
+
 @media (max-width: 900px) {
   /* The top bar is sticky at this width and would cover the panel's heading. */
   .attention-panel {
-    scroll-margin-top: calc(var(--topbar-h) + 12px);
-  }
-}
-@media (max-width: 600px) {
-  .launcher-grid,
-  .launcher-group:first-child .launcher-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .launcher-card {
-    gap: 0.5rem;
-    padding: 11px 12px;
+    scroll-margin-top: calc(var(--hub-topbar-h) + 12px);
   }
 }
 
@@ -2274,14 +1003,11 @@ kbd {
   place-items: center;
   min-width: 1.35rem;
   padding: 0.05rem 0.3rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--ui-line);
   border-radius: 5px;
-  background: var(--code-bg);
-  color: var(--muted);
-  font:
-    600 0.68rem "Berkeley Mono",
-    ui-monospace,
-    monospace;
+  background: var(--ui-track);
+  color: var(--ui-muted);
+  font: 600 0.68rem var(--ui-font-mono);
 }
 kbd svg {
   width: 0.7rem;
@@ -2303,9 +1029,9 @@ kbd svg {
   width: min(640px, calc(100vw - 28px));
   max-height: min(560px, 76vh);
   transform: translateX(-50%);
-  border: 1px solid var(--line);
+  border: 1px solid var(--ui-line);
   border-radius: 12px;
-  background: var(--panel);
+  background: var(--ui-panel);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
   overflow: hidden;
 }
@@ -2317,8 +1043,8 @@ kbd svg {
   align-items: center;
   gap: 0.7rem;
   padding: 0 16px;
-  border-bottom: 1px solid var(--line);
-  color: var(--muted);
+  border-bottom: 1px solid var(--ui-line);
+  color: var(--ui-muted);
 }
 .palette-search svg {
   flex: none;
@@ -2330,11 +1056,11 @@ kbd svg {
   border: 0;
   outline: 0;
   background: transparent;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 1rem;
 }
 .palette-search input::placeholder {
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .palette-results {
   overflow-y: auto;
@@ -2343,11 +1069,10 @@ kbd svg {
 .palette-heading {
   margin: 0;
   padding: 10px 10px 4px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: normal;
 }
 .palette-option {
   display: flex;
@@ -2359,17 +1084,17 @@ kbd svg {
   border: 0;
   border-radius: 7px;
   background: transparent;
-  color: var(--ink);
+  color: var(--ui-ink);
   text-align: left;
   cursor: pointer;
 }
 .palette-option[aria-selected="true"] {
-  background: var(--control-hover);
-  box-shadow: inset 2px 0 0 var(--accent);
+  background: var(--ui-hover);
+  box-shadow: inset 2px 0 0 var(--ui-accent);
 }
 .palette-option svg {
   flex: none;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .palette-label {
   min-width: 0;
@@ -2382,11 +1107,8 @@ kbd svg {
   max-width: 45%;
   margin-left: auto;
   overflow: hidden;
-  color: var(--muted);
-  font:
-    0.75rem "Berkeley Mono",
-    ui-monospace,
-    monospace;
+  color: var(--ui-muted);
+  font: 0.75rem var(--ui-font-mono);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2402,9 +1124,9 @@ kbd svg {
   display: flex;
   gap: 1.1rem;
   padding: 8px 16px;
-  border-top: 1px solid var(--line);
-  background: var(--panel-2);
-  color: var(--muted);
+  border-top: 1px solid var(--ui-line);
+  background: var(--ui-head);
+  color: var(--ui-muted);
   font-size: 0.75rem;
 }
 @media (max-width: 600px) {
@@ -2418,29 +1140,11 @@ kbd svg {
 }
 /* ---- Alert groups: one disclosure row per repeated alertname ---- */
 .alert-group {
-  border-bottom: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--ui-line-soft);
 }
-.alert-group-summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.625rem 0.875rem;
-  list-style: none;
-  cursor: pointer;
-}
-.alert-group-summary::-webkit-details-marker {
-  display: none;
-}
-.alert-group-summary:hover {
-  background: var(--row-hover);
-}
-.alert-group-summary:focus-visible {
-  outline: 3px solid var(--accent-ring);
-  outline-offset: -3px;
-}
+
 .alert-group-chevron {
-  color: var(--muted);
+  color: var(--ui-muted);
   transition: rotate 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 .alert-group[open] .alert-group-chevron {
@@ -2449,16 +1153,7 @@ kbd svg {
 .alert-group-name {
   font-size: 0.85rem;
 }
-.alert-group-newest {
-  margin-left: auto;
-  color: var(--muted);
-  font-size: 0.75rem;
-  line-height: 1rem;
-}
-.alert-group-body {
-  border-top: 1px solid var(--line-soft);
-  background: var(--panel-2);
-}
+
 @media (prefers-reduced-motion: reduce) {
   .alert-group-chevron {
     transition: none;
@@ -2470,7 +1165,7 @@ kbd svg {
   margin-top: 0.5rem;
 }
 .query-raw-summary {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.75rem;
   line-height: 1rem;
   cursor: pointer;
@@ -2479,4 +1174,49 @@ kbd svg {
 .filter-action {
   justify-self: start;
   width: fit-content;
+}
+
+/* ---- Chart panels ---- */
+.chart-panel {
+  padding: 12px 16px 10px;
+  border-color: var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+}
+.chart-panel figcaption {
+  align-items: center;
+  min-height: 24px;
+  margin-bottom: 6px;
+}
+.chart-panel h3 {
+  font-size: 13px;
+  font-weight: 600;
+}
+.chart-range {
+  color: var(--ui-faint);
+  font-family: var(--ui-font-mono);
+  font-size: 11.5px;
+}
+.chart-placeholder {
+  border-radius: 6px;
+  background: var(--ui-head);
+}
+.chart-empty {
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+.chart-panel .chart-error p,
+.chart-error {
+  color: var(--ui-sev-error-text);
+}
+.uplot-host .u-legend,
+.uplot-host .u-legend :is(th, td) {
+  font-size: 11.5px;
+}
+.chart-table summary {
+  color: var(--ui-muted);
+  font-size: 12px;
+}
+.chart-table summary:hover {
+  color: var(--ui-ink);
 }
