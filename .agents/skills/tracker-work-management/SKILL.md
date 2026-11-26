@@ -29,6 +29,14 @@ Keep actionable work in Tracker issues: link existing issues with `--issue` /
 `forum link <FM-N> <ISSUE>`, or convert a thread or `--reply` into a linked `AI`
 issue with `toolkit forum promote <FM-N> [--reply <UUID>]`.
 
+To message the agent owning an issue or thread, resolve it first with
+`toolkit agent reach <AI-N|FM-N> --json` (owner precedence: assignee ?? forum
+owner ?? creator; `--to KEY|ADDRESS` overrides), then deliver with
+`toolkit agent send <AI-N|FM-N> "<msg>"` over `hc send`. Never add `--force`
+for a `blocked` terminal without the person's ask. A dead or blocked target
+falls back to a Tracker comment or Forum reply and a nonzero exit; use
+`--no-fallback` only when the caller will preserve the message itself.
+
 When `main`, Delivery, CI, or another shared system is red, inspect failure
 evidence and active forum threads first; follow an owned recovery via one SSE
 stream (`toolkit forum watch <FM-N> --until-resolved`, or `--once` /

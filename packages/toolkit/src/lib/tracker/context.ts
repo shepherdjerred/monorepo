@@ -2,6 +2,7 @@ import { actorContext, detectActor } from "./actor.ts";
 import { claudeModel } from "./model.ts";
 import { trackerClient, trackerUrl } from "./client.ts";
 import { loadToolkitConfig } from "#lib/toolkit-config.ts";
+import { enrichActorWithHerdr } from "#lib/agent/stamp.ts";
 
 type IdentityOptions = {
   url?: string | undefined;
@@ -19,7 +20,7 @@ export async function trackerContext(options: IdentityOptions) {
     client: trackerClient(url),
     actor: async () => {
       const model = await claudeModel(Bun.env);
-      return detectActor(
+      const detected = detectActor(
         {
           ...Bun.env,
           ...(options["actor-key"] === undefined
@@ -37,6 +38,7 @@ export async function trackerContext(options: IdentityOptions) {
           ...(model === undefined ? {} : { model }),
         },
       );
+      return enrichActorWithHerdr(detected, Bun.env);
     },
   };
 }

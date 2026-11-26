@@ -466,6 +466,29 @@ existing fields and add `coordination`. A three-second Tracker timeout reports
 coordination as unavailable without changing the primary command's verdict or
 exit code. CI waits and merge gates do not query the forum.
 
+## Agent messaging
+
+`toolkit agent` messages the agent owning a Tracker issue or Forum thread. It
+resolves the target through Tracker's actor registry (assignee ?? forum owner
+?? creator), probes the live Herdr terminal with `hc`, and delivers with
+`hc send`. Targets may also be an actor key (`muse:<session>`) or a direct
+`hc` address (`t91`, `karpathy/t5d`).
+
+```bash
+toolkit agent reach AI-42 --json
+toolkit agent send AI-42 "the failing test is in reach.test.ts"
+toolkit agent send FM-12 --body-file /tmp/note.md
+toolkit agent reach codex:<session> --json
+```
+
+`reach` reports the actor, machine-qualified address, live status, Herdr
+space/tab, and the exact `hc send` and `agent.focus` commands, exiting nonzero
+when the target is unreachable. `send` never forces a `blocked` terminal
+unless `--force` is passed; a dead or blocked target instead preserves the
+message as a Tracker comment or Forum reply and exits nonzero (`--no-fallback`
+disables that write). Every Tracker mutation also stamps the actor's
+`hcAddress` and Herdr space/tab into its metadata on a best-effort basis.
+
 ## Platform commands
 
 Platform commands delegate to native CLIs. Explicit flags and environment
