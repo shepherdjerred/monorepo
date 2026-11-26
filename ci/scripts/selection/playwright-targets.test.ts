@@ -4,6 +4,7 @@ import { globalPaths } from "../migration-core.ts";
 import {
   PLAYWRIGHT_TARGETS,
   additionalPlaywrightInstallFilters,
+  playwrightTask,
   selectPlaywrightTargets,
 } from "./playwright-targets.ts";
 import { partitionPlaywrightSelection } from "./playwright-partition.ts";
@@ -44,6 +45,10 @@ const workspaces = new Map<string, WorkspacePackage>([
       dir: "packages/media/",
       workspaceDependencies: ["@shepherdjerred/config"],
     },
+  ],
+  [
+    "@shepherdjerred/console-ui",
+    { dir: "packages/console-ui/", workspaceDependencies: [] },
   ],
   [
     "@shepherdjerred/config",
@@ -303,5 +308,30 @@ describe("Playwright target selection", () => {
         ),
       ),
     ).toEqual([]);
+  });
+});
+
+describe("Vitest browser-mode targets", () => {
+  test("selects console-ui's Vitest browser suite for its changes", async () => {
+    const selection = await selectPlaywrightTargets(
+      ["packages/console-ui/src/components/button.tsx"],
+      ".",
+      workspaces,
+    );
+    expect(packages(selection)).toEqual(["@shepherdjerred/console-ui"]);
+    expect(selection.targets.map((target) => playwrightTask(target))).toEqual([
+      "test:browser",
+    ]);
+  });
+
+  test("runs every other browser target as a Playwright project", () => {
+    const tasks = new Map(
+      PLAYWRIGHT_TARGETS.map((target) => [
+        target.package,
+        playwrightTask(target),
+      ]),
+    );
+    expect(tasks.get("@shepherdjerred/delivery")).toBe("test:e2e");
+    expect(tasks.get("@shepherdjerred/console-ui")).toBe("test:browser");
   });
 });

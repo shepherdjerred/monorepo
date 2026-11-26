@@ -21,6 +21,8 @@ register submitted stacks with GitHub's native stack feature itself).
    it on pull requests:
    `bun run verify:extended -- --filter='...[origin/main...HEAD]'` (or
    `bunx turbo run test:extended --filter='...[origin/main...HEAD]' --continue`).
+   Browser suites (Playwright and Vitest browser mode) run on main, not pull
+   requests: run `bun run e2e:affected` when the branch reaches one.
 4. Capture `Demo` material so a reviewer skimming the PR immediately sees what
    changed and that it works (when a prior state exists, capture `before` from
    `main` first — before editing, from a `main` worktree, or `git stash` — with

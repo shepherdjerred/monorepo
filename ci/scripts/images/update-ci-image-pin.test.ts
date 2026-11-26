@@ -441,6 +441,7 @@ describe("Playwright candidate promotion", () => {
       "packages/delivery/package.json",
       "packages/media/package.json",
       "packages/artifacts/package.json",
+      "packages/console-ui/package.json",
       "bun.lock",
     ]);
     expect(ciImagePromotionFiles("ci-base")).toEqual([

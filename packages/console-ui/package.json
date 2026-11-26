@@ -8,6 +8,7 @@
     "generate": "bun scripts/generate-tokens.ts",
     "lint": "bunx --no-install eslint --cache .",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
+    "test:browser": "bun --no-install --bun vitest --config vitest.browser.config.ts run",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
   },
@@ -37,12 +38,16 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@typescript/native": "npm:typescript@7.0.2",
+    "@vitest/browser-playwright": "5.0.5",
     "@vitest/coverage-istanbul": "5.0.5",
+    "axe-core": "^4.14.1",
     "eslint": "^10.7.0",
     "jiti": "^2.7.0",
+    "playwright": "1.64.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "typescript": "^6.0.3",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "vitest-browser-react": "^2.3.0"
   }
 }

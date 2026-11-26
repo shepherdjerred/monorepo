@@ -22,6 +22,7 @@ export const MEDIA_BROWSER_WORKFLOW = "playwright-media-e2e";
  * Main verifies the Media suite independently so a cold run of it cannot
  * consume the deadline shared by the other browser projects. Sites wait for
  * both workflows; the primary browser workflow provides the tested bundles.
+ * Vitest browser-mode suites (`test:browser` targets) run in the primary one.
  *
  * Playwright image promotion PRs and owner benchmarks keep the full browser
  * workflow. Other PRs run affected projects locally (`bun run e2e:affected`).
@@ -136,6 +137,7 @@ function browserStep(
         "packages/sjer.red/**",
         "packages/docs/wiki/**",
         "packages/alert-dashboard/**",
+        "packages/console-ui/**",
         "packages/media/**",
         "packages/tracker/**",
         "packages/scout-for-lol/**",

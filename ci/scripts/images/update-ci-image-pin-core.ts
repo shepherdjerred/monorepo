@@ -82,6 +82,12 @@ export const PLAYWRIGHT_PACKAGE_TARGETS = [
     section: "devDependencies",
     dependency: "@playwright/test",
   },
+  // Vitest browser mode drives Chromium through the `playwright` package.
+  {
+    path: "packages/console-ui/package.json",
+    section: "devDependencies",
+    dependency: "playwright",
+  },
 ] as const;
 
 export type CiImagePinState = {

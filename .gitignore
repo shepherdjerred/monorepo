@@ -32,6 +32,8 @@ packages/**/.vscode/settings.json
 
 # Playwright test results
 test-results/
+# Vitest browser-mode failure screenshots and attachments
+.vitest/
 
 # Built Storybook catalogs, and the deployed site assembled from them
 storybook-static/
