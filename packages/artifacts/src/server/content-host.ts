@@ -15,6 +15,7 @@ import {
   type ViewerAssets,
 } from "./assets.ts";
 import { operatorLogin } from "./auth.ts";
+import { probeAnswer, probeKind, type ReadyCheck } from "./health.ts";
 import { watchStream } from "./stream-errors.ts";
 
 const IMMUTABLE = "private, max-age=31536000, immutable";
@@ -30,6 +31,8 @@ export type ContentHostOptions = {
   viewer: ViewerAssets;
   metrics: Metrics;
   operatorLogins: () => Promise<string[]>;
+  /** Backs `/readyz`; the probes are answered before the login gate. */
+  ready: ReadyCheck;
 };
 
 /** Everything a content response carries; built per request, token-scoped. */
@@ -232,13 +235,31 @@ export function createContentHandler(options: ContentHostOptions) {
     };
   }
 
+  async function isOperator(request: Request): Promise<boolean> {
+    const login = operatorLogin(request.headers);
+    if (login === null) return false;
+    const allowed = await options.operatorLogins();
+    return allowed.includes(login);
+  }
+
   async function handleChecked(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const tokenForHeaders = TOKEN_PATH.exec(url.pathname)?.[1] ?? null;
     let outcome: { response: Response; route: string };
-    const login = operatorLogin(request.headers);
-    const allowed = await options.operatorLogins();
-    if (login === null || !allowed.includes(login)) {
+    const probe = probeKind(request.method, url.pathname);
+    if (probe !== null) {
+      const answer = await probeAnswer(probe, options.ready);
+      const headers = baseHeaders(options, null);
+      headers.set("Content-Type", "application/json");
+      headers.set("Cache-Control", "no-store");
+      outcome = {
+        response: new Response(
+          request.method === "HEAD" ? null : JSON.stringify(answer.body),
+          { status: answer.status, headers },
+        ),
+        route: "health",
+      };
+    } else if (!(await isOperator(request))) {
       options.metrics.csrfRejection("login");
       outcome = {
         response: plain(options, 403, tokenForHeaders),

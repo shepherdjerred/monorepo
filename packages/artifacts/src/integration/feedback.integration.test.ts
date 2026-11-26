@@ -388,6 +388,19 @@ describe("replies", () => {
   });
 });
 
+describe("probes", () => {
+  it("answers /readyz 200 on the app and content hosts without a login, from the database", async () => {
+    for (const host of ["app", "content"] as const)
+      for (const method of ["GET", "HEAD"]) {
+        const response = await fast.call(host, "/readyz", {
+          login: null,
+          method,
+        });
+        expect(response.status, `${host} ${method}`).toBe(200);
+      }
+  });
+});
+
 const waiterChanges = (raw: string) =>
   raw.split("\n\n").filter((block) => block.includes('"kind":"waiter"'));
 

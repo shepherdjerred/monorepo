@@ -23,6 +23,7 @@ import {
   renderGuide,
 } from "./agent-guide.ts";
 import { operatorLogin } from "./auth.ts";
+import { databaseReady, probeAnswer, probeKind } from "./health.ts";
 import { appRouter } from "./router.ts";
 import type { HostClass } from "./rpc.ts";
 import { serveClient } from "./client-files.ts";
@@ -46,6 +47,7 @@ const TRPC_BODY_LIMIT = 1024 * 1024;
 
 function routeName(path: string): string {
   if (path.startsWith("/trpc")) return "trpc";
+  if (path === "/healthz" || path === "/readyz") return "health";
   if (path.startsWith("/api/uploads")) return "upload";
   if (path.startsWith("/api/feedback")) return "feedback_stream";
   if (path.startsWith("/api/events")) return "events_stream";
@@ -76,6 +78,16 @@ export function createAppHandler(options: AppHostOptions) {
       route: routeName(c.req.path),
       status: c.res.status,
     });
+  });
+
+  // Probes answer before the login gate: the ingress and Delivery probe
+  // without an identity, and they reveal nothing.
+  const ready = databaseReady(services.deps.db);
+  app.use(async (c, next) => {
+    const kind = probeKind(c.req.method, c.req.path);
+    if (kind === null) return next();
+    const answer = await probeAnswer(kind, ready);
+    return c.json(answer.body, answer.status);
   });
 
   // Login gate, then CSRF. Both run before any route, so a rejected request

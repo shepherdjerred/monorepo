@@ -13,6 +13,7 @@ import {
   type ObjectStore,
 } from "#infrastructure/object-store.ts";
 import { createAppHandler } from "./app-host.ts";
+import { databaseReady } from "./health.ts";
 import {
   buildBridge,
   createViewerAssets,
@@ -85,6 +86,7 @@ export async function createRuntime(input: RuntimeInput): Promise<Runtime> {
     viewer: input.viewer ?? createViewerAssets(),
     metrics,
     operatorLogins,
+    ready: databaseReady(input.db),
   });
   const internal = createInternalHandler({
     services,
