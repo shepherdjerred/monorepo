@@ -9,19 +9,53 @@ import {
   useNavigate,
   type NavigateFunction,
 } from "react-router";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, expect, onTestFinished, test, vi } from "vitest";
 import {
   createThemeStore,
   type ThemeEnvironment,
 } from "@shepherdjerred/console-ui";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
+import { validateVariantValue } from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { createQueryClient } from "./api.ts";
+import type { DiffViewProps, JsonEditorProps } from "./code.tsx";
 import { App } from "./app.tsx";
 import { ConflictBanner } from "./conflict-banner.tsx";
 import { FlagTable } from "./flag-table.tsx";
 import { DeploymentPicker, DeploymentSidebar } from "./sidebar.tsx";
 
 Reflect.set(globalThis, "IS_REACT_ACT_ENVIRONMENT", true);
+
+// Monaco needs a real browser; the lazy editor and diff are stood in for by
+// a textarea and two <pre> blocks with the same props.
+vi.mock("./monaco/json-editor.tsx", async () => {
+  const { createElement } = await import("react");
+  return {
+    default: (props: JsonEditorProps) =>
+      createElement("textarea", {
+        className: "json-stand-in",
+        "aria-label": props.label,
+        "aria-invalid": props.invalid ? true : undefined,
+        "aria-describedby": props.describedBy,
+        "data-schema": JSON.stringify(props.schema),
+        value: props.value,
+        onChange: (event: { target: { value: string } }) => {
+          props.onChange(event.target.value);
+        },
+      }),
+  };
+});
+vi.mock("./monaco/diff-view.tsx", async () => {
+  const { createElement } = await import("react");
+  return {
+    default: (props: DiffViewProps) =>
+      createElement(
+        "div",
+        { className: "diff-stand-in" },
+        createElement("pre", { "data-side": "original" }, props.original),
+        createElement("pre", { "data-side": "modified" }, props.modified),
+      ),
+  };
+});
 
 const noop = (): void => {
   // The theme store's environment never fires events here.
@@ -125,8 +159,9 @@ test("the conflict banner shows both versions and offers theirs when it exists",
   expect(html).toContain('role="alert"');
   expect(html).toContain("Revision conflict");
   expect(html).toContain("revision 7");
-  expect(html).toContain("Their flag");
-  expect(html).toContain("Your draft");
+  expect(html).toContain("Their flag (before) against your draft (after).");
+  // Until the diff chunk loads, the draft shows as plain text.
+  expect(html).toContain('class="fl-code fl-code-loading"');
   expect(html).toContain("Load their version");
 
   const gone = staticHtml(
@@ -177,6 +212,18 @@ const documents: Readonly<
     revision: 9,
     flags: [{ type: "boolean", key: "debug", default: false, rollouts: [] }],
   },
+  "delivery/prod": {
+    id: "delivery/prod",
+    revision: 12,
+    flags: [
+      {
+        type: "variant",
+        key: "delivery-enabled-environments",
+        value: '["beta","prod"]',
+      },
+      { type: "variant", key: "delivery-executor-concurrency", value: "8" },
+    ],
+  },
 };
 
 afterEach(() => {
@@ -188,29 +235,43 @@ afterEach(() => {
  * Serves the deployment list and documents. Every request is recorded;
  * `hold(url)` keeps that URL's response back until the returned release runs.
  */
-function stubApi() {
+function stubApi(
+  options: { readonly apply?: (body: unknown) => Response } = {},
+) {
   const calls: string[] = [];
+  const applied: unknown[] = [];
   const held = new Map<string, Promise<undefined>>();
-  vi.stubGlobal("fetch", async (input: string): Promise<Response> => {
-    calls.push(input);
-    await held.get(input);
-    if (input === "/v1/deployments") {
-      return Response.json({
-        deployments: Object.values(documents).map((stored) => ({
-          id: stored.id,
-          revision: stored.revision,
-          flagCount: stored.flags.length,
-        })),
-      });
-    }
-    const id = decodeURIComponent(input.replace("/v1/deployments/", ""));
-    const found = documents[id];
-    return found === undefined
-      ? Response.json({ error: "unknown deployment" }, { status: 404 })
-      : Response.json(found);
-  });
+  vi.stubGlobal(
+    "fetch",
+    async (input: string, init?: RequestInit): Promise<Response> => {
+      calls.push(input);
+      await held.get(input);
+      if (input.endsWith("/apply")) {
+        if (typeof init?.body !== "string")
+          throw new TypeError("apply sends a JSON string body");
+        const body: unknown = JSON.parse(init.body);
+        applied.push(body);
+        return options.apply?.(body) ?? Response.json({ revision: 99 });
+      }
+      if (input === "/v1/deployments") {
+        return Response.json({
+          deployments: Object.values(documents).map((stored) => ({
+            id: stored.id,
+            revision: stored.revision,
+            flagCount: stored.flags.length,
+          })),
+        });
+      }
+      const id = decodeURIComponent(input.replace("/v1/deployments/", ""));
+      const found = documents[id];
+      return found === undefined
+        ? Response.json({ error: "unknown deployment" }, { status: 404 })
+        : Response.json(found);
+    },
+  );
   return {
     calls,
+    applied,
     hold(url: string): () => Promise<void> {
       const gate = Promise.withResolvers<undefined>();
       held.set(url, gate.promise);
@@ -455,4 +516,274 @@ test("an encoded flag key is decoded from the route", async () => {
   const page = await mount("/scout/prod");
   await navigate("/scout/prod/on%5Fflag");
   expect(page.query("#flag-heading").textContent).toBe("on_flag");
+});
+
+// ---- The editor's Form and JSON modes over one draft ----
+
+async function typeInto(
+  element: HTMLInputElement | HTMLTextAreaElement,
+  value: string,
+): Promise<void> {
+  const prototype =
+    element instanceof HTMLTextAreaElement
+      ? HTMLTextAreaElement.prototype
+      : HTMLInputElement.prototype;
+  await act(async () => {
+    Reflect.set(prototype, "value", value, element);
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+    await Promise.resolve();
+  });
+  await settle();
+}
+
+type Page = Awaited<ReturnType<typeof mount>>;
+
+function jsonEditor(page: Page): HTMLTextAreaElement {
+  const found = page.query("textarea.json-stand-in");
+  if (!(found instanceof HTMLTextAreaElement))
+    throw new TypeError("the JSON editor is not a textarea");
+  return found;
+}
+
+function button(page: Page, selector: string): HTMLButtonElement {
+  const found = page.query(selector);
+  if (!(found instanceof HTMLButtonElement))
+    throw new TypeError(`${selector} is not a button`);
+  return found;
+}
+
+const MODE_GROUP = '[role="radiogroup"][aria-label="Edit as"]';
+
+function modeButton(page: Page, label: "Form" | "JSON"): HTMLButtonElement {
+  const found = [
+    ...page.container.querySelectorAll<HTMLButtonElement>(
+      `${MODE_GROUP} [role="radio"]`,
+    ),
+  ].find((candidate) => candidate.textContent === label);
+  if (found === undefined) throw new Error(`no ${label} mode`);
+  return found;
+}
+
+function checkedMode(page: Page): string {
+  return page.query(`${MODE_GROUP} [aria-checked="true"]`).textContent;
+}
+
+const review = (page: Page) => button(page, '.fl-form button[type="submit"]');
+const issueText = (page: Page) => page.query(".fl-issues").textContent;
+
+function registryMessage(
+  key: "delivery-enabled-environments" | "delivery-executor-concurrency",
+  raw: string,
+): string {
+  const validation = validateVariantValue(key, raw);
+  if (validation.ok) throw new Error(`${raw} is valid for ${key}`);
+  const first = validation.issues[0];
+  if (first === undefined) throw new Error("no issues");
+  return first.message;
+}
+
+test("a JSON-encoded variant opens in JSON mode on its pretty-printed decoded value", async () => {
+  stubApi();
+  const page = await mount("/delivery/prod/delivery-enabled-environments");
+  expect(checkedMode(page)).toBe("JSON");
+  const editor = jsonEditor(page);
+  expect(editor.value).toBe('[\n  "beta",\n  "prod"\n]');
+  // Monaco validates against the key's generated JSON Schema.
+  expect(JSON.parse(editor.dataset["schema"] ?? "")).toMatchObject({
+    type: "array",
+    items: { type: "string", minLength: 1 },
+  });
+  expect(page.query(".fl-detail-head").textContent).toContain(
+    "variant flag · json",
+  );
+  expect(review(page).disabled).toBe(false);
+});
+
+test("an invalid value blocks Review with the registry's message", async () => {
+  stubApi();
+  const page = await mount("/delivery/prod/delivery-enabled-environments");
+  const editor = jsonEditor(page);
+
+  await typeInto(editor, '["", "prod"]');
+  expect(issueText(page)).toContain("/0");
+  expect(issueText(page)).toContain(
+    registryMessage("delivery-enabled-environments", '["","prod"]'),
+  );
+  expect(review(page).disabled).toBe(true);
+  expect(editor.getAttribute("aria-invalid")).toBe("true");
+  expect(editor.getAttribute("aria-describedby")).toBe(
+    page.query(".fl-issues").id,
+  );
+
+  await typeInto(editor, '["beta",');
+  expect(issueText(page)).toContain("Invalid JSON");
+  expect(review(page).disabled).toBe(true);
+
+  await typeInto(editor, '["beta"]');
+  expect(issueText(page)).toBe("");
+  expect(review(page).disabled).toBe(false);
+
+  // Number encodings keep a typed number field in Form mode.
+  await navigate("/delivery/prod/delivery-executor-concurrency");
+  expect(checkedMode(page)).toBe("Form");
+  const count = page.input(".fl-form input");
+  expect(count.type).toBe("number");
+  expect(count.value).toBe("8");
+  await typeInto(count, "100");
+  expect(issueText(page)).toContain(
+    registryMessage("delivery-executor-concurrency", "100"),
+  );
+  expect(review(page).disabled).toBe(true);
+});
+
+/** jsdom has no modal dialogs; these open and close like the browser's, minus the top layer. */
+function stubDialogs(): () => void {
+  const prototype = HTMLDialogElement.prototype;
+  Reflect.set(prototype, "showModal", function (this: HTMLDialogElement) {
+    this.setAttribute("open", "");
+  });
+  Reflect.set(prototype, "close", function (this: HTMLDialogElement) {
+    if (!this.hasAttribute("open")) return;
+    this.removeAttribute("open");
+    this.dispatchEvent(new Event("close"));
+  });
+  return () => {
+    Reflect.deleteProperty(prototype, "showModal");
+    Reflect.deleteProperty(prototype, "close");
+  };
+}
+
+test("the server's 400 issues are shown against the value", async () => {
+  onTestFinished(stubDialogs());
+  const api = stubApi({
+    apply: () =>
+      Response.json(
+        {
+          error: "invalid flag values",
+          issues: [
+            {
+              key: "delivery-enabled-environments",
+              path: "/1",
+              message: "environment staging is not deployed",
+            },
+          ],
+        },
+        { status: 400 },
+      ),
+  });
+  const page = await mount("/delivery/prod/delivery-enabled-environments");
+  await typeInto(jsonEditor(page), '[\n  "beta",\n  "staging"\n]');
+
+  await click(review(page));
+  const dialog = page.query("dialog.fl-dialog");
+  expect(dialog.hasAttribute("open")).toBe(true);
+  // The review diffs the decoded values, pretty-printed.
+  expect(dialog.querySelector('[data-side="original"]')?.textContent).toBe(
+    '[\n  "beta",\n  "prod"\n]',
+  );
+  expect(dialog.querySelector('[data-side="modified"]')?.textContent).toBe(
+    '[\n  "beta",\n  "staging"\n]',
+  );
+
+  await click(button(page, 'dialog button[value="save"]'));
+  expect(api.applied).toEqual([
+    {
+      expectedRevision: 12,
+      flags: [
+        {
+          type: "variant",
+          key: "delivery-enabled-environments",
+          value: '["beta","staging"]',
+        },
+      ],
+    },
+  ]);
+  expect(issueText(page)).toContain("/1");
+  expect(issueText(page)).toContain("environment staging is not deployed");
+  expect(page.query('.fl-form [role="alert"]').textContent).toBe(
+    "The server refused this value: invalid flag values",
+  );
+
+  // The refusal describes the submitted draft; editing it clears the issues.
+  await typeInto(jsonEditor(page), '["beta"]');
+  expect(issueText(page)).toBe("");
+});
+
+test("switching between Form and JSON keeps one draft, and keeps unparsed text", async () => {
+  stubApi();
+  const page = await mount("/scout/prod/on_flag");
+  expect(checkedMode(page)).toBe("Form");
+  const onByDefault = () => page.input('.fl-form input[type="checkbox"]');
+  expect(onByDefault().checked).toBe(true);
+  await click(onByDefault());
+  expect(onByDefault().checked).toBe(false);
+
+  await click(modeButton(page, "JSON"));
+  expect(JSON.parse(jsonEditor(page).value)).toEqual({
+    type: "boolean",
+    key: "on_flag",
+    default: false,
+    rollouts: [],
+  });
+  // The schema fixes the key and type, so they cannot be edited.
+  expect(JSON.parse(jsonEditor(page).dataset["schema"] ?? "")).toMatchObject({
+    properties: { type: { const: "boolean" }, key: { const: "on_flag" } },
+    additionalProperties: false,
+  });
+
+  await typeInto(
+    jsonEditor(page),
+    JSON.stringify({
+      type: "boolean",
+      key: "on_flag",
+      default: true,
+      rollouts: [
+        { constraints: [{ property: "user", value: "7" }], result: false },
+      ],
+    }),
+  );
+  await click(modeButton(page, "Form"));
+  expect(onByDefault().checked).toBe(true);
+  expect(page.input(".fl-constraint input").value).toBe("user");
+
+  // A renamed key is refused; the draft keeps its last good value.
+  await click(modeButton(page, "JSON"));
+  await typeInto(
+    jsonEditor(page),
+    JSON.stringify({
+      type: "boolean",
+      key: "other",
+      default: false,
+      rollouts: [],
+    }),
+  );
+  expect(issueText(page)).toContain("/key");
+  expect(review(page).disabled).toBe(true);
+
+  await typeInto(jsonEditor(page), "{");
+  expect(review(page).disabled).toBe(true);
+  await click(modeButton(page, "Form"));
+  expect(review(page).disabled).toBe(false);
+  expect(onByDefault().checked).toBe(true);
+  await click(modeButton(page, "JSON"));
+  expect(jsonEditor(page).value).toBe("{");
+
+  // A form edit rebuilds the JSON text from the draft.
+  await click(modeButton(page, "Form"));
+  await click(onByDefault());
+  await click(modeButton(page, "JSON"));
+  expect(JSON.parse(jsonEditor(page).value)).toMatchObject({ default: false });
+});
+
+test("an unmanaged variant is shown as plain text with a notice", async () => {
+  stubApi();
+  const page = await mount("/scout/prod/model");
+  expect(page.query('[role="note"]').textContent).toContain(
+    "The server rejects writes to unmanaged keys.",
+  );
+  expect(page.input(".fl-form input").value).toBe("luna");
+  await click(modeButton(page, "JSON"));
+  expect(jsonEditor(page).value).toBe('"luna"');
+  await typeInto(jsonEditor(page), "42");
+  expect(issueText(page)).toContain("Expected a JSON string");
 });
