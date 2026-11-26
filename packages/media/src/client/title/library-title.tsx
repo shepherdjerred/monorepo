@@ -6,6 +6,8 @@ import type { MediaUser } from "#shared/contract.ts";
 import type { DefaultTargetView } from "#shared/editions/target-view.ts";
 import type { MovieTargetContextV4 } from "#shared/movie-editions/lifecycle/public-v4.ts";
 import { movieFulfillmentLabel } from "#client/movie-editions/presentation.ts";
+import { movieDiscoveryCopy } from "#client/movie-editions/presentation-v4.ts";
+import { AVAILABILITY_COPY } from "#client/presentation/availability.ts";
 import { runtimeLabel } from "#client/presentation/state-phrase.ts";
 import { VERSION_COPY } from "#client/presentation/version.ts";
 import type { SheetSubject } from "#client/request-sheet/form.ts";
@@ -164,10 +166,12 @@ function TitleFrame({
   onRefresh,
   series,
   actions,
+  discovery,
   children,
 }: TitleProps & {
   series: ReturnType<typeof useSeries>;
   actions: ReactNode;
+  discovery?: ReturnType<typeof movieDiscoveryCopy>;
   children: ReactNode;
 }) {
   const [params] = useSearchParams();
@@ -176,6 +180,9 @@ function TitleFrame({
   // The details and the command versions are two reads; when they disagree
   // the title changed between them and nothing may be sent until both agree.
   const paired = media.version === context.expected.mediaVersion;
+  const availability = titleState(media);
+  const status =
+    availability === AVAILABILITY_COPY.wanted ? discovery : undefined;
   return (
     <>
       <BackLink />
@@ -184,10 +191,15 @@ function TitleFrame({
         artwork={media.artwork}
         trail={trailOf(media, series)}
         meta={metaOf(media)}
-        state={titleState(media)}
+        state={status ?? availability}
         overview={media.overview}
       >
         <Progress media={media} />
+        {status?.detail !== undefined && (
+          <p className={cx("notice")} role="status">
+            {status.detail}
+          </p>
+        )}
         {!paired && (
           <div className={cx("notice")} role="status">
             <p>
@@ -412,7 +424,12 @@ function MovieTitle(props: TitleProps) {
     );
   }
   return (
-    <TitleFrame {...props} series={undefined} actions={actions}>
+    <TitleFrame
+      {...props}
+      series={undefined}
+      actions={actions}
+      discovery={movieDiscoveryCopy(standard)}
+    >
       <Household
         user={user}
         media={media}
