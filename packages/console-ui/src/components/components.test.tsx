@@ -1,14 +1,27 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { HouseIcon, RefreshCwIcon } from "lucide-react";
+import {
+  HouseIcon,
+  MinusIcon,
+  RefreshCwIcon,
+  TerminalIcon,
+} from "lucide-react";
 import { describe, expect, test } from "vitest";
 import { AppSwitcher } from "@shepherdjerred/console-ui/components/app-switcher.tsx";
 import { Button } from "@shepherdjerred/console-ui/components/button.tsx";
 import { Chip } from "@shepherdjerred/console-ui/components/chip.tsx";
+import {
+  CommandPaletteButton,
+  CommandPaletteSearch,
+  createCommandPaletteStore,
+  isCommandPaletteShortcut,
+  type CommandPaletteKeyEvent,
+} from "@shepherdjerred/console-ui/components/command-palette.tsx";
 import { Field } from "@shepherdjerred/console-ui/components/field.tsx";
 import { FigureStrip } from "@shepherdjerred/console-ui/components/figure-strip.tsx";
 import { HeaderBar } from "@shepherdjerred/console-ui/components/header-bar.tsx";
 import { IconButton } from "@shepherdjerred/console-ui/components/icon-button.tsx";
 import { Meter } from "@shepherdjerred/console-ui/components/meter.tsx";
+import { SeverityBadge } from "@shepherdjerred/console-ui/components/severity-badge.tsx";
 import { ShellFrame } from "@shepherdjerred/console-ui/components/shell-frame.tsx";
 import {
   Sidebar,
@@ -358,5 +371,209 @@ describe("ThemeRow", () => {
     expect(html).toContain(
       '<span class="ui-nav-text">Theme</span> <span class="ui-nav-count">dark</span>',
     );
+  });
+});
+
+describe("SeverityBadge", () => {
+  test.each([
+    ["ok", "OK"],
+    ["info", "Info"],
+    ["unknown", "Unknown"],
+    ["warning", "Warning"],
+    ["error", "Error"],
+  ] as const)("%s shows a hidden glyph and the word %s", (severity, word) => {
+    const html = renderToStaticMarkup(<SeverityBadge severity={severity} />);
+    expect(html).toMatch(
+      new RegExp(
+        `^<span class="ui-badge" data-sev="${severity}"><svg[^>]*class="[^"]*ui-badge-icon"[^>]*aria-hidden="true"`,
+      ),
+    );
+    expect(html).toMatch(new RegExp(`</svg>${word}</span>$`));
+  });
+
+  test("takes a glyph of its own and keeps the severity colour", () => {
+    const html = renderToStaticMarkup(
+      <SeverityBadge severity="unknown" label="Off" icon={MinusIcon} />,
+    );
+    expect(html).toMatch(/^<span class="ui-badge" data-sev="unknown"><svg/);
+    expect(html).toContain("lucide-minus");
+    expect(html).toMatch(/<\/svg>Off<\/span>$/);
+  });
+
+  test("renames and enlarges", () => {
+    const html = renderToStaticMarkup(
+      <SeverityBadge severity="error" label="Critical" size="large" />,
+    );
+    expect(html).toMatch(
+      /^<span class="ui-badge ui-badge-large" data-sev="error">/,
+    );
+    expect(html).toMatch(/<\/svg>Critical<\/span>$/);
+  });
+});
+
+function keyTarget(): {
+  readonly target: {
+    addEventListener: (
+      type: "keydown",
+      listener: (event: CommandPaletteKeyEvent) => void,
+    ) => void;
+  };
+  readonly press: (key: Partial<CommandPaletteKeyEvent>) => boolean;
+} {
+  let handler: ((event: CommandPaletteKeyEvent) => void) | undefined;
+  return {
+    target: {
+      addEventListener: (_type, listener) => {
+        handler = listener;
+      },
+    },
+    press: (key) => {
+      let prevented = false;
+      handler?.({
+        key: "k",
+        metaKey: false,
+        ctrlKey: false,
+        altKey: false,
+        shiftKey: false,
+        ...key,
+        preventDefault: () => {
+          prevented = true;
+        },
+      });
+      return prevented;
+    },
+  };
+}
+
+describe("Command palette", () => {
+  test.each([
+    [{ key: "k", metaKey: true }, true],
+    [{ key: "K", ctrlKey: true }, true],
+    [{ key: "k" }, false],
+    [{ key: "k", metaKey: true, shiftKey: true }, false],
+    [{ key: "k", ctrlKey: true, altKey: true }, false],
+    [{ key: "j", metaKey: true }, false],
+  ])("%o is the shortcut: %s", (key, expected) => {
+    expect(
+      isCommandPaletteShortcut({
+        metaKey: false,
+        ctrlKey: false,
+        altKey: false,
+        shiftKey: false,
+        ...key,
+      }),
+    ).toBe(expected);
+  });
+
+  test("the store toggles on the shortcut and notifies subscribers", () => {
+    const keys = keyTarget();
+    const store = createCommandPaletteStore(keys.target);
+    let notified = 0;
+    const unsubscribe = store.subscribe(() => {
+      notified += 1;
+    });
+    expect(store.isOpen()).toBe(false);
+    expect(keys.press({ metaKey: true })).toBe(true);
+    expect(store.isOpen()).toBe(true);
+    expect(keys.press({ key: "a", metaKey: true })).toBe(false);
+    expect(store.isOpen()).toBe(true);
+    keys.press({ ctrlKey: true });
+    expect(store.isOpen()).toBe(false);
+    store.setOpen(false);
+    expect(notified).toBe(2);
+    unsubscribe();
+    store.setOpen(true);
+    expect(notified).toBe(2);
+  });
+
+  test("the search box is a combobox over grouped options", () => {
+    const store = createCommandPaletteStore(null);
+    const html = renderToStaticMarkup(
+      <CommandPaletteSearch
+        store={store}
+        label="Search and commands"
+        placeholder="Type a command…"
+        query=""
+        onQueryChange={noop}
+        onSelect={noop}
+        sections={[
+          {
+            heading: "Pages",
+            items: [{ id: "home", label: "Home", icon: HouseIcon }],
+          },
+          {
+            heading: "Commands",
+            items: [
+              {
+                id: "cli",
+                label: "Open terminal",
+                detail: "⌘T",
+                icon: TerminalIcon,
+              },
+            ],
+          },
+        ]}
+      />,
+    );
+    const listbox = /aria-controls="([^"]+)"/.exec(html)?.[1] ?? "";
+    expect(listbox).not.toBe("");
+    expect(html).toContain(
+      `<div class="ui-palette-results" id="${listbox}" role="listbox">`,
+    );
+    expect(html).toContain('role="combobox" aria-label="Search and commands"');
+    expect(html).toContain('placeholder="Type a command…"');
+    const options = [
+      ...html.matchAll(
+        /<button id="([^"]+)" type="button" role="option" tabindex="-1" aria-selected="(true|false)" class="ui-palette-option">/g,
+      ),
+    ];
+    expect(options.map((option) => option[2])).toEqual(["true", "false"]);
+    expect(html).toContain(`aria-activedescendant="${options[0]?.[1] ?? ""}"`);
+    expect(html).toContain('<div role="group" aria-label="Pages">');
+    expect(html).toContain(
+      '<span class="ui-palette-label">Open terminal</span><span class="ui-palette-detail">⌘T</span>',
+    );
+    expect(html).toContain('<p class="ui-palette-status" role="status"></p>');
+  });
+
+  test("an empty list says so unless the caller sets the status", () => {
+    const store = createCommandPaletteStore(null);
+    const empty = renderToStaticMarkup(
+      <CommandPaletteSearch
+        store={store}
+        label="Search"
+        query="zzz"
+        onQueryChange={noop}
+        onSelect={noop}
+        sections={[]}
+      />,
+    );
+    expect(empty).toContain('role="status">No results.</p>');
+    expect(empty).not.toContain("aria-activedescendant");
+    const searching = renderToStaticMarkup(
+      <CommandPaletteSearch
+        store={store}
+        label="Search"
+        query="zzz"
+        onQueryChange={noop}
+        onSelect={noop}
+        sections={[]}
+        status="Searching…"
+      />,
+    );
+    expect(searching).toContain('role="status">Searching…</p>');
+  });
+
+  test("the sidebar button names the shortcut", () => {
+    const html = renderToStaticMarkup(
+      <CommandPaletteButton
+        store={createCommandPaletteStore(null)}
+        label="Search and commands"
+      />,
+    );
+    expect(html).toContain('aria-keyshortcuts="Meta+K Control+K"');
+    expect(html).toContain('title="Search (⌘K)"');
+    expect(html).toContain('aria-label="Search and commands"');
+    expect(html).toContain('class="ui-icon-btn"');
   });
 });

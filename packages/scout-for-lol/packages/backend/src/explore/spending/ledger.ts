@@ -5,10 +5,8 @@ import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { supportsOpenAiUltrafast } from "#src/lib/openai-service-tier.ts";
 import { EXPLORE_MAX_PROVIDER_INPUT_BOUND } from "./input-bound.ts";
 
-import {
-  ExploreSpendPolicySchema,
-  DEFAULT_EXPLORE_SPEND_POLICY,
-} from "#src/configuration/explore-spend.ts";
+import { ExploreSpendPolicySchema } from "@shepherdjerred/feature-flags/flag-value-settings.ts";
+import { DEFAULT_EXPLORE_SPEND_POLICY } from "#src/configuration/explore-spend.ts";
 
 /** Why a turn was refused before it reached the provider. */
 export type ExploreBudgetReason = "allowance" | "input_limit";

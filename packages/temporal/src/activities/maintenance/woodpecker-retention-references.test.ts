@@ -142,14 +142,27 @@ describe("Woodpecker deployed artifact references", () => {
     expect([...result.numbers]).toEqual([4207]);
   });
   test.each([
-    "https://chartmuseum.tailnet-1a49.ts.net",
-    "chartmuseum.tailnet-1a49.ts.net/charts",
-    "oci://chartmuseum.tailnet-1a49.ts.net/charts",
+    ["https://charts.tailnet-1a49.ts.net", undefined],
+    ["https://chartmuseum.tailnet-1a49.ts.net", undefined],
+    ["chartmuseum.tailnet-1a49.ts.net/charts", undefined],
+    ["oci://chartmuseum.tailnet-1a49.ts.net/charts", undefined],
+    ["registry-1.docker.io/shepherdjerred", "charts-bootstrap"],
   ])(
-    "first-party repository %s retains exact chart provenance",
-    async (identifier) => {
+    "first-party repository %s (chart=%s) retains exact chart provenance",
+    async (identifier, chart) => {
+      const app = chartApplication(identifier);
       const result = await deployedArtifactReferences(
-        read([], [chartApplication(identifier)]),
+        read(
+          [],
+          [
+            chart === undefined
+              ? app
+              : {
+                  ...app,
+                  spec: { source: { ...app.spec.source, chart } },
+                },
+          ],
+        ),
       );
       expect(result.complete).toBe(true);
       expect([...result.numbers]).toEqual([4300]);

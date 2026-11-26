@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { defineConfig } from "@shepherdjerred/config";
 import { createObservabilityHooks } from "@shepherdjerred/config/observability.ts";
 import { createEnvSource } from "@shepherdjerred/config/sources/env.ts";
@@ -8,6 +7,10 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import type { ConfigSource } from "@shepherdjerred/config/source.ts";
 import { featureFlagMetrics } from "#src/metrics.ts";
 
@@ -30,7 +33,8 @@ import { featureFlagMetrics } from "#src/metrics.ts";
 const DEFINITION = {
   /** Discord user ID allowed to configure recaps without Manage Server. */
   karmaAdminUserId: {
-    schema: z.string(),
+    // "" (the default) means no administrator is configured.
+    schema: flagValueSchema("karma-admin-user-id"),
     sources: ["flag", "env", "default"],
     default: "",
     targeted: true,
@@ -40,7 +44,7 @@ const DEFINITION = {
    * guild emoji matches by its snowflake id.
    */
   karmaEmoji: {
-    schema: z.string().min(1),
+    schema: flagValueSchema("karma-emoji"),
     sources: ["flag", "env", "default"],
     default: "⭐",
     targeted: true,
@@ -100,7 +104,10 @@ export async function initializeConfig(
     // Per-guild targeting is supplied per read; this is the process-level
     // identity used when a call site has no guild in scope.
     targetingKey: "starlight-karma-bot",
-    kinds: { karmaAdminUserId: "string", karmaEmoji: "string" },
+    kinds: {
+      karmaAdminUserId: flagValueKind("karma-admin-user-id"),
+      karmaEmoji: flagValueKind("karma-emoji"),
+    },
   });
   resolver = buildResolver(flagSource, options.environment ?? Bun.env);
 }

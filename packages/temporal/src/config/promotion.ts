@@ -1,8 +1,18 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { z } from "zod/v4";
 
-export function promotionFlagSource(targetingKey: string) {
+type PromotionSettingsFlag =
+  "the-storm-promotion-settings" | "the-storm-reddit-outreach-settings";
+
+export function promotionFlagSource(
+  targetingKey: string,
+  settingsFlag: PromotionSettingsFlag,
+) {
   let available = true;
   const onUnavailable = () => {
     available = false;
@@ -12,7 +22,7 @@ export function promotionFlagSource(targetingKey: string) {
       flag: createFlagConfigSource({
         targetingKey,
         attributes: { environment: "prod" },
-        kinds: { enabled: "boolean", settings: "string" },
+        kinds: { enabled: "boolean", settings: flagValueKind(settingsFlag) },
         requireFreshSnapshot: true,
         onUnavailable,
       }),
@@ -25,7 +35,10 @@ export function promotionFlagSource(targetingKey: string) {
 }
 
 export async function promotionConfig() {
-  const flags = promotionFlagSource("the-storm-promotion-prod");
+  const flags = promotionFlagSource(
+    "the-storm-promotion-prod",
+    "the-storm-promotion-settings",
+  );
   const resolver = defineConfig({
     definition: {
       enabled: {
@@ -35,30 +48,7 @@ export async function promotionConfig() {
         names: { flag: "the-storm-promotion-enabled" },
       },
       settings: {
-        schema: z
-          .string()
-          .transform((value, context) => {
-            try {
-              const parsed: unknown = JSON.parse(value);
-              return parsed;
-            } catch {
-              context.addIssue({
-                code: "custom",
-                message: "Expected promotion settings JSON",
-              });
-              return z.NEVER;
-            }
-          })
-          .pipe(
-            z.strictObject({
-              model: z.string().min(1),
-              maxSteps: z.number().int().min(1).max(80),
-              timeoutMinutes: z.number().int().min(1).max(15),
-              monthlySolverUsd: z.number().min(0).max(10),
-              enabledTargets: z.array(z.string()),
-              dailySpendUsd: z.number().nonnegative().max(5).default(5),
-            }),
-          ),
+        schema: flagValueSchema("the-storm-promotion-settings"),
         sources: ["flag", "default"],
         default: JSON.stringify({
           model: "gpt-6-luna",

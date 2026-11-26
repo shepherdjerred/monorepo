@@ -2,7 +2,7 @@
   "kind": "argocd",
   "application": "delivery",
   "namespace": "delivery",
-  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartRepository": "https://charts.tailnet-1a49.ts.net",
   "chartName": "delivery",
   "chartComponent": "chart:delivery",
   "parameters": {},

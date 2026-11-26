@@ -1,5 +1,5 @@
 {
-  "id": "outbound-mail/prod/2",
+  "id": "outbound-mail/prod/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "mail"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "mail"
       },
       "syncOptions": ["CreateNamespace=true"],

@@ -395,16 +395,17 @@ export async function runGitBackup(): Promise<GitBackupResult> {
   const context = Context.current();
   const mirrorRootDir =
     Bun.env["GIT_BACKUP_MIRROR_DIR"]?.trim() ?? DEFAULT_GIT_BACKUP_MIRROR_DIR;
+  const hooks: GitSubprocessHooks = {
+    heartbeat: (detail) => {
+      context.heartbeat(detail);
+    },
+    cancellationSignal: context.cancellationSignal,
+  };
   return runGitBackupWithDependencies({
     mirrorRootDir,
     readToken: () => readGitHubTokenFromFile(),
-    store: () => createS3GitBackupStore(),
-    hooks: {
-      heartbeat: (detail) => {
-        context.heartbeat(detail);
-      },
-      cancellationSignal: context.cancellationSignal,
-    },
+    store: () => createS3GitBackupStore(Bun.env, hooks),
+    hooks,
     now: () => new Date(),
   });
 }

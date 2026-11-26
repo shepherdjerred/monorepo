@@ -20,6 +20,7 @@ import { verifyDuelClock } from "./verify-duel-clock.ts";
 import { verifyDuelVideo } from "./verify-duel-video.ts";
 import { startClient } from "./process.ts";
 import { stageMap } from "#learning/maps/stage.ts";
+import { ensureNavMeshes } from "#maps/nav/meshes.ts";
 import { status as readRwfMatchStatus } from "#e2e/harness/rwf-match.ts";
 import { watchRwfDuels } from "./rwf-duel-rejoin.ts";
 import {
@@ -172,6 +173,7 @@ async function run(options: PreviewOptions, runState: Run): Promise<void> {
       options.rwfMap ?? "training-yard",
       {
         duel: options.rwfDuel,
+        ensureMeshes: ensureNavMeshes,
         mapTool: path.join(
           packageRoot,
           "plugin/tools/rwfmap/build/install/rwfmap/bin/rwfmap",

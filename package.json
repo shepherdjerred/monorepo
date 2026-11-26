@@ -188,6 +188,7 @@
     "packages/tasknotes-windows",
     "packages/tasknotes-macos",
     "packages/tasknotes-server",
+    "packages/tasknotes-web",
     "packages/tasks-for-obsidian",
     "packages/temporal",
     "packages/temporal-observability",

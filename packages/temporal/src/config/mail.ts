@@ -1,10 +1,10 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import {
-  MailboxAddressSchema,
-  reportMailboxForType,
-} from "@shepherdjerred/ops-model/email/mailbox.ts";
-import { z } from "zod/v4";
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
+import { reportMailboxForType } from "@shepherdjerred/ops-model/email/mailbox.ts";
 
 export const DEFAULT_MAIL_RECIPIENT = "dependencies@sjer.red";
 export const DEFAULT_MAIL_SENDER = "deps@sjer.red";
@@ -14,13 +14,13 @@ export async function mailAddressesConfig() {
   const resolver = defineConfig({
     definition: {
       recipient: {
-        schema: z.email(),
+        schema: flagValueSchema("temporal-email-recipient"),
         sources: ["flag", "default"],
         default: DEFAULT_MAIL_RECIPIENT,
         names: { flag: "temporal-email-recipient" },
       },
       sender: {
-        schema: MailboxAddressSchema,
+        schema: flagValueSchema("temporal-email-sender"),
         sources: ["flag", "default"],
         default: DEFAULT_MAIL_SENDER,
         names: { flag: "temporal-email-sender" },
@@ -29,7 +29,10 @@ export async function mailAddressesConfig() {
     sources: {
       flag: createFlagConfigSource({
         targetingKey: "temporal-reports-worker",
-        kinds: { recipient: "string", sender: "string" },
+        kinds: {
+          recipient: flagValueKind("temporal-email-recipient"),
+          sender: flagValueKind("temporal-email-sender"),
+        },
       }),
     },
     hooks: {

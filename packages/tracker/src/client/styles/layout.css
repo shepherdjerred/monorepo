@@ -1,235 +1,77 @@
+/* The keyboard root; console-ui's ShellFrame draws the frame inside it. */
 .app-shell {
-  display: flex;
   min-height: 100dvh;
 }
-.sidebar {
-  position: fixed;
-  inset: 0 auto 0 0;
-  width: 232px;
-  padding: 22px 14px 14px;
-  display: flex;
-  flex-direction: column;
-  background: var(--sidebar);
-  border-right: 1px solid var(--border);
-}
-/* The sections scroll; the brand, actions and footer stay in view. */
-.sidebar-scroll {
-  flex: 1;
-  min-height: 0;
-  margin: 0 -14px;
-  padding: 0 14px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-.workspace-brand {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0 9px;
-  margin-bottom: 22px;
-}
-.workspace-brand strong {
-  flex: 1;
-  font-size: 14px;
-  letter-spacing: -0.2px;
-}
-.brand-mark {
-  display: grid;
-  place-items: center;
-  background: #7c59d9;
-  color: #fff;
-  width: 25px;
-  height: 25px;
-  border-radius: 7px;
-  font-size: 16px;
-  font-weight: 700;
-  box-shadow: inset 0 1px #ffffff30;
-}
-.search-command {
-  background: transparent;
-  border: 0;
-  color: var(--muted);
-  padding: 7px 9px;
-  justify-content: flex-start;
-  margin-bottom: 12px;
-  font-size: 12px;
-}
-.search-command > span {
-  flex: 1;
-  text-align: left;
-}
-.search-command kbd {
-  background: var(--hover);
-  border-radius: 3px;
-  padding: 1px 4px;
-}
-.new-issue {
-  justify-content: flex-start;
-  margin: 0 4px 22px;
-  font-size: 12px;
-  box-shadow: 0 1px 2px #00000005;
-}
-.new-issue > kbd {
-  margin-left: auto;
-}
-.nav-heading {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  padding: 0 10px;
-  margin: 8px 0 8px;
-}
-.sidebar nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 21px;
-}
-.sidebar nav a {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  padding: 8px 10px;
-  color: var(--muted);
-  border-radius: 6px;
-  font-size: 12px;
-}
-.sidebar nav a.active {
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 600;
-}
-.sidebar nav a:hover,
-.team-nav a:hover,
-.project-nav a:hover {
-  background: var(--hover);
-  color: var(--text);
-}
-.team-nav,
-.project-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 20px;
-}
-.team-nav a,
-.project-nav a {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  color: var(--muted);
-}
+
+/* Sidebar rows that are not plain console SidebarItems. */
 .team-icon {
-  font:
-    11px ui-monospace,
-    monospace;
   display: grid;
   place-items: center;
+  flex: none;
   min-width: 22px;
-  height: 20px;
+  height: 18px;
   padding: 0 3px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
   border-radius: 4px;
-  background: var(--panel);
+  background: var(--ui-panel);
+  color: var(--ui-muted);
+  font: 10.5px var(--ui-font-mono);
+  letter-spacing: 0;
 }
-.active-team {
-  color: var(--text) !important;
+.team-link[data-current-team] {
+  color: var(--ui-ink);
 }
-.project-nav .swatch {
-  margin: 0 5px;
+.team-link[data-current-team] .team-icon {
+  border-color: var(--ui-accent);
+  color: var(--ui-accent);
+}
+.project-icon {
+  display: grid;
+  place-items: center;
+}
+.view-nav .ui-nav-item svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: var(--ui-muted);
+}
+.view-nav .ui-nav-item[aria-current] svg {
+  color: var(--ui-accent);
 }
 .sidebar-footer {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: auto;
-  padding: 8px 4px 2px;
-  border-top: 1px solid var(--border);
-  color: var(--muted);
+  gap: 1px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ui-line);
 }
-.identity-button {
-  width: 100%;
-  justify-content: flex-start;
-  gap: 9px;
-  padding: 6px 8px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 500;
+.sidebar-footer kbd.ui-nav-count {
+  font-family: var(--ui-font-mono);
+}
+.identity-button .avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+}
+
+/* The panel's header bar: console-ui's .ui-header with Tracker's actions. */
+.page-header {
+  position: relative;
+}
+.page-header .page-title {
   min-width: 0;
-}
-.identity-button:hover {
-  background: var(--hover);
-}
-.identity-label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 0;
-}
-.sidebar-footer-links {
-  display: flex;
-  align-items: center;
-  padding: 2px 4px;
-}
-.sidebar-footer-links a {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 12px;
-}
-.sidebar-footer-links a:hover {
-  color: var(--text);
-}
-.main-content {
-  margin-left: 232px;
-  min-width: 0;
-  flex: 1;
-}
-.page-header {
-  height: 62px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 30px;
-  border-bottom: 1px solid var(--border);
-}
-.page-title {
-  font-size: 12px;
-  font-weight: 500;
-}
-.page-header .primary {
-  font-size: 11px;
-  padding: 6px 10px;
 }
 .mobile-search,
 .bottom-nav {
   display: none;
 }
-@media (max-width: 767px) {
-  .sidebar {
-    display: none;
-  }
-  .main-content {
-    margin-left: 0;
-    padding-bottom: calc(70px + env(safe-area-inset-bottom));
-  }
-  .page-header {
-    height: 62px;
-    padding: 0 16px;
-  }
-  .page-title {
-    font-size: 14px;
-  }
-  .page-header .primary {
-    min-height: 36px;
+/* console-ui hides the sidebar at this width; the header and bottom bar take over. */
+@media (max-width: 900px) {
+  .ui-panel {
+    margin-bottom: calc(70px + env(safe-area-inset-bottom));
   }
   .mobile-search {
     display: flex;
@@ -238,8 +80,8 @@
     position: fixed;
     inset: auto 0 0;
     padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-    background: var(--sidebar);
-    border-top: 1px solid var(--border);
+    background: var(--ui-bg);
+    border-top: 1px solid var(--ui-line);
     display: flex;
     justify-content: space-around;
     z-index: 20;
@@ -250,7 +92,7 @@
     gap: 3px;
     align-items: center;
     flex-direction: column;
-    color: var(--muted);
+    color: var(--ui-muted);
     font-size: 11px;
     font-weight: 400;
     padding: 3px 12px;
@@ -260,6 +102,6 @@
   }
   .bottom-nav a.active,
   .bottom-nav button.active {
-    color: var(--accent);
+    color: var(--ui-accent);
   }
 }

@@ -314,7 +314,7 @@ export function NewIssue({
         />
         {create.error !== null && <ErrorNotice error={create.error} />}
         <div className="modal-footer">
-          <span className="muted">
+          <span className="muted modal-keys">
             <kbd>⌘ Enter</kbd> create · <kbd>⌘ ⇧ Enter</kbd> create and open
           </span>
           <span className="spacer" />

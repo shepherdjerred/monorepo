@@ -7,6 +7,10 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { z } from "zod";
 import { featureFlagMetrics } from "@shepherdjerred/birmel/observability/metrics.ts";
 import { getConfig } from "./index.ts";
@@ -17,11 +21,6 @@ const DynamicBooleanSchema = z.preprocess((value) => {
   const lowered = value.toLowerCase();
   return lowered === "true" || (lowered !== "false" && value);
 }, z.boolean());
-const PositiveIntegerSchema = z.coerce.number().int().positive();
-const MaxStepsSchema = z.coerce.number().int().min(1).max(24);
-const ReasoningEffortSchema = z.enum(["minimal", "low", "medium", "high"]);
-const StringSchema = z.string().trim().min(1);
-const UnitIntervalSchema = z.number().min(0).max(1);
 
 /**
  * Values that are safe to change while Birmel is serving requests. Scheduler
@@ -69,13 +68,13 @@ const DEFINITION = {
     names: { flag: "birmel-elections-enabled", env: "ELECTIONS_ENABLED" },
   },
   llmModel: {
-    schema: StringSchema,
+    schema: flagValueSchema("birmel-llm-model"),
     sources: ["flag", "env", "default"],
     default: "gpt-6.1-sol",
     names: { flag: "birmel-llm-model", env: "LLM_MODEL" },
   },
   classifierModel: {
-    schema: StringSchema,
+    schema: flagValueSchema("birmel-llm-classifier-model"),
     sources: ["flag", "env", "default"],
     default: "gpt-6-luna",
     names: { flag: "birmel-llm-classifier-model", env: "LLM_CLASSIFIER_MODEL" },
@@ -87,49 +86,49 @@ const DEFINITION = {
     names: { flag: "birmel-llm-decisions-enabled" },
   },
   decisionsModel: {
-    schema: StringSchema,
+    schema: flagValueSchema("birmel-llm-decisions-model"),
     sources: ["flag", "default"],
     default: "gpt-6-luna",
     names: { flag: "birmel-llm-decisions-model" },
   },
   decisionsThreshold: {
-    schema: UnitIntervalSchema,
+    schema: flagValueSchema("birmel-llm-decisions-threshold"),
     sources: ["flag", "default"],
     default: 0.5,
     names: { flag: "birmel-llm-decisions-threshold" },
   },
   memoryModel: {
-    schema: StringSchema,
+    schema: flagValueSchema("birmel-llm-memory-model"),
     sources: ["flag", "env", "default"],
     default: "gpt-6-luna",
     names: { flag: "birmel-llm-memory-model", env: "LLM_MEMORY_MODEL" },
   },
   embeddingModel: {
-    schema: StringSchema,
+    schema: flagValueSchema("birmel-llm-embedding-model"),
     sources: ["flag", "env", "default"],
     default: "text-embedding-3-small",
     names: { flag: "birmel-llm-embedding-model", env: "LLM_EMBEDDING_MODEL" },
   },
   imageModel: {
-    schema: StringSchema,
+    schema: flagValueSchema("birmel-llm-image-model"),
     sources: ["flag", "env", "default"],
     default: "gemini-3-pro-image-preview",
     names: { flag: "birmel-llm-image-model", env: "LLM_IMAGE_MODEL" },
   },
   personaStyleModel: {
-    schema: StringSchema,
+    schema: flagValueSchema("birmel-persona-style-model"),
     sources: ["flag", "env", "default"],
     default: "gpt-6-luna",
     names: { flag: "birmel-persona-style-model", env: "PERSONA_STYLE_MODEL" },
   },
   reasoningEffort: {
-    schema: ReasoningEffortSchema,
+    schema: flagValueSchema("birmel-llm-reasoning-effort"),
     sources: ["flag", "env", "default"],
     default: "medium",
     names: { flag: "birmel-llm-reasoning-effort", env: "LLM_REASONING_EFFORT" },
   },
   maxTokens: {
-    schema: PositiveIntegerSchema,
+    schema: flagValueSchema("birmel-llm-max-output-tokens"),
     sources: ["flag", "env", "default"],
     default: 4096,
     names: {
@@ -138,13 +137,13 @@ const DEFINITION = {
     },
   },
   agentMaxSteps: {
-    schema: MaxStepsSchema,
+    schema: flagValueSchema("birmel-agent-max-steps"),
     sources: ["flag", "env", "default"],
     default: 12,
     names: { flag: "birmel-agent-max-steps", env: "AGENT_MAX_STEPS" },
   },
   agentResponseTimeoutMs: {
-    schema: PositiveIntegerSchema,
+    schema: flagValueSchema("birmel-agent-response-timeout-ms"),
     sources: ["flag", "env", "default"],
     default: 300_000,
     names: {
@@ -153,7 +152,7 @@ const DEFINITION = {
     },
   },
   agentAuxiliaryTimeoutMs: {
-    schema: PositiveIntegerSchema,
+    schema: flagValueSchema("birmel-agent-auxiliary-timeout-ms"),
     sources: ["flag", "env", "default"],
     default: 30_000,
     names: {
@@ -162,7 +161,7 @@ const DEFINITION = {
     },
   },
   responderEngagementWindowMs: {
-    schema: PositiveIntegerSchema,
+    schema: flagValueSchema("birmel-responder-engagement-window-ms"),
     sources: ["flag", "env", "default"],
     default: 180_000,
     names: {
@@ -171,7 +170,7 @@ const DEFINITION = {
     },
   },
   responderTranscriptWindowMs: {
-    schema: PositiveIntegerSchema,
+    schema: flagValueSchema("birmel-responder-transcript-window-ms"),
     sources: ["flag", "env", "default"],
     default: 3_600_000,
     names: {
@@ -180,7 +179,7 @@ const DEFINITION = {
     },
   },
   responderTranscriptMaxMessages: {
-    schema: z.coerce.number().int().min(1).max(50),
+    schema: flagValueSchema("birmel-responder-transcript-max-messages"),
     sources: ["flag", "env", "default"],
     default: 50,
     names: {
@@ -209,23 +208,33 @@ function createSnapshot(
           birthdaysEnabled: "boolean",
           activityTrackingEnabled: "boolean",
           electionsEnabled: "boolean",
-          llmModel: "string",
-          classifierModel: "string",
+          llmModel: flagValueKind("birmel-llm-model"),
+          classifierModel: flagValueKind("birmel-llm-classifier-model"),
           decisionsEnabled: "boolean",
-          decisionsModel: "string",
-          decisionsThreshold: "number",
-          memoryModel: "string",
-          embeddingModel: "string",
-          imageModel: "string",
-          personaStyleModel: "string",
-          reasoningEffort: "string",
-          maxTokens: "number",
-          agentMaxSteps: "number",
-          agentResponseTimeoutMs: "number",
-          agentAuxiliaryTimeoutMs: "number",
-          responderEngagementWindowMs: "number",
-          responderTranscriptWindowMs: "number",
-          responderTranscriptMaxMessages: "number",
+          decisionsModel: flagValueKind("birmel-llm-decisions-model"),
+          decisionsThreshold: flagValueKind("birmel-llm-decisions-threshold"),
+          memoryModel: flagValueKind("birmel-llm-memory-model"),
+          embeddingModel: flagValueKind("birmel-llm-embedding-model"),
+          imageModel: flagValueKind("birmel-llm-image-model"),
+          personaStyleModel: flagValueKind("birmel-persona-style-model"),
+          reasoningEffort: flagValueKind("birmel-llm-reasoning-effort"),
+          maxTokens: flagValueKind("birmel-llm-max-output-tokens"),
+          agentMaxSteps: flagValueKind("birmel-agent-max-steps"),
+          agentResponseTimeoutMs: flagValueKind(
+            "birmel-agent-response-timeout-ms",
+          ),
+          agentAuxiliaryTimeoutMs: flagValueKind(
+            "birmel-agent-auxiliary-timeout-ms",
+          ),
+          responderEngagementWindowMs: flagValueKind(
+            "birmel-responder-engagement-window-ms",
+          ),
+          responderTranscriptWindowMs: flagValueKind(
+            "birmel-responder-transcript-window-ms",
+          ),
+          responderTranscriptMaxMessages: flagValueKind(
+            "birmel-responder-transcript-max-messages",
+          ),
         },
       }),
       env: createEnvSource(environment),

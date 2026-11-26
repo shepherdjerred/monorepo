@@ -34,7 +34,41 @@ final class RwfMapTest {
     assertThat(run("verify", "x", "--out", "y")).isEqualTo(RwfMap.USAGE);
     assertThat(run("verify-health", "x", "--out", "y")).isEqualTo(RwfMap.USAGE);
     assertThat(run("bake", "x", "--outt", "y")).isEqualTo(RwfMap.USAGE);
+    assertThat(run("fetch")).isEqualTo(RwfMap.USAGE);
+    assertThat(run("fetch", "x", "y")).isEqualTo(RwfMap.USAGE);
+    assertThat(run("manifest", "x")).isEqualTo(RwfMap.USAGE);
     assertThat(err()).contains("usage:");
+  }
+
+  @Test
+  void manifestRecordsTheBakedFilesAndFetchFailsWithoutAManifest() throws IOException {
+    var rwf = temp.resolve("rwf");
+    var yard = rwf.resolve("maps/training-yard");
+    Files.createDirectories(yard);
+    Files.copy(
+        ShippedMapsTest.MAPS.resolve("training-yard").resolve(MapFolder.NAV_FILE),
+        yard.resolve(MapFolder.NAV_FILE));
+
+    assertThat(run("fetch", rwf.toString())).isEqualTo(RwfMap.FAILED);
+    assertThat(err()).contains(NavManifest.FILE_NAME).contains("could not be read");
+
+    new NavManifest("https://assets.example/nav", java.util.List.of()).write(rwf);
+    assertThat(run("manifest", rwf.toString(), "maps/training-yard/nav.rwfnav"))
+        .as(err())
+        .isEqualTo(RwfMap.OK);
+    assertThat(out.toString(UTF_8))
+        .contains("recorded 1 baked nav files")
+        .contains("maps:publish-nav");
+    assertThat(NavManifest.load(rwf).objects())
+        .containsExactly(
+            new NavManifest.Entry(
+                "maps/training-yard/" + MapFolder.NAV_FILE,
+                NavManifest.sha256(yard.resolve(MapFolder.NAV_FILE)),
+                Files.size(yard.resolve(MapFolder.NAV_FILE))));
+
+    // Everything the manifest names is already present, so the fetch reaches no store.
+    assertThat(run("fetch", rwf.toString())).as(err()).isEqualTo(RwfMap.OK);
+    assertThat(out.toString(UTF_8)).contains("1 already present, 0 from the cache, 0 downloaded");
   }
 
   @Test

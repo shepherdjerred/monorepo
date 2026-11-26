@@ -1,5 +1,9 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import { z } from "zod";
 
@@ -52,11 +56,7 @@ export function behaviorConfig(stage: string) {
         names: { flag: "tracker-live-updates-enabled" },
       },
       attachmentMaxBytes: {
-        schema: z.coerce
-          .number()
-          .int()
-          .positive()
-          .max(100 * 1024 * 1024),
+        schema: flagValueSchema("tracker-attachment-max-bytes"),
         sources: ["flag", "default"],
         default: 25 * 1024 * 1024,
         names: { flag: "tracker-attachment-max-bytes" },
@@ -71,7 +71,7 @@ export function behaviorConfig(stage: string) {
           writesEnabled: "boolean",
           telemetryEnabled: "boolean",
           liveUpdatesEnabled: "boolean",
-          attachmentMaxBytes: "string",
+          attachmentMaxBytes: flagValueKind("tracker-attachment-max-bytes"),
         },
       }),
     },

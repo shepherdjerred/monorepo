@@ -10,7 +10,10 @@ export const ControlPlanePipelineSchema = z
     kind: z.literal("control-plane"),
     application: z.literal("delivery-control-plane"),
     namespace: z.literal("temporal"),
-    chartRepository: z.literal("https://chartmuseum.tailnet-1a49.ts.net"),
+    chartRepository: z.enum([
+      "https://charts.tailnet-1a49.ts.net",
+      "https://chartmuseum.tailnet-1a49.ts.net",
+    ]),
     chartName: z.literal("delivery-control-plane"),
     chartComponent: z.literal("chart:delivery-control-plane"),
     runnerImage: z

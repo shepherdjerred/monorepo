@@ -1,5 +1,5 @@
 {
-  "id": "storm-forum/2",
+  "id": "storm-forum/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "storm-forum"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "storm-forum"
       },
       "syncOptions": ["CreateNamespace=true", "RespectIgnoreDifferences=true"],

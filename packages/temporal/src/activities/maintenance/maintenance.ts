@@ -36,7 +36,7 @@ const INHERITED_ENVIRONMENT_KEYS = [
 const CANCELLATION_GRACE_PERIOD_MS = 1000;
 export const TURBO_CACHE_CLEAN_ACTIVITY = "turbo-cache-clean";
 export const TURBO_CACHE_CLEAN_URL =
-  "http://turbo-cache-turbo-cache-service.turbo-cache.svc.cluster.local:3000/v8/clean";
+  "http://ci-cache.ci-cache.svc.cluster.local:7380/v8/clean";
 export const TURBO_CACHE_SLUGS = ["monorepo", "monorepo-pull-request"] as const;
 const TurboCacheCleanResponseSchema = z.object({
   deleted: z.number().int().nonnegative(),

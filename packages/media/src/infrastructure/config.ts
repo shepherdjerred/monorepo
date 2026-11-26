@@ -1,5 +1,9 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { z } from "zod";
 
 export const BootstrapSchema = z
@@ -63,9 +67,9 @@ export function mediaBehaviorConfig(
         names: { flag: "media-shared-announcements-upgrades" },
       },
       sharedDiscordChannelId: {
-        schema: z
-          .union([z.literal("disabled"), z.string().regex(/^\d{1,25}$/u)])
-          .transform((value) => (value === "disabled" ? "" : value)),
+        schema: flagValueSchema("media-shared-discord-channel-id").transform(
+          (value) => (value === "disabled" ? "" : value),
+        ),
         sources: ["flag", "default"],
         default: "disabled",
         names: { flag: "media-shared-discord-channel-id" },
@@ -119,45 +123,37 @@ export function mediaBehaviorConfig(
         names: { flag: "media-purge-enabled" },
       },
       sessionLifetimeMs: {
-        schema: z.coerce
-          .number()
-          .int()
-          .min(60_000)
-          .max(7 * 86_400_000),
+        schema: flagValueSchema("media-session-lifetime-ms"),
         sources: ["flag", "default"],
         default: 7 * 86_400_000,
         names: { flag: "media-session-lifetime-ms" },
       },
       keepDays: {
-        schema: z.coerce.number().int().min(1).max(365),
+        schema: flagValueSchema("media-keep-days"),
         sources: ["flag", "default"],
         default: 30,
         names: { flag: "media-keep-days" },
       },
       emailSender: {
-        schema: z.email(),
+        schema: flagValueSchema("media-email-sender"),
         sources: ["flag", "default"],
         default: "media@sjer.red",
         names: { flag: "media-email-sender" },
       },
       permittedMovieSectionId: {
-        schema: z.string().regex(/^[1-9]\d*$/u),
+        schema: flagValueSchema("media-permitted-movie-section-id"),
         sources: ["flag", "default"],
         default: "1",
         names: { flag: "media-permitted-movie-section-id" },
       },
       permittedTvSectionId: {
-        schema: z.string().regex(/^[1-9]\d*$/u),
+        schema: flagValueSchema("media-permitted-tv-section-id"),
         sources: ["flag", "default"],
         default: "2",
         names: { flag: "media-permitted-tv-section-id" },
       },
       artworkCacheMaxBytes: {
-        schema: z.coerce
-          .number()
-          .int()
-          .min(64 * 1024 * 1024)
-          .max(1024 * 1024 * 1024 * 1024),
+        schema: flagValueSchema("media-artwork-cache-max-bytes"),
         sources: ["flag", "default"],
         default: 1024 * 1024 * 1024,
         names: { flag: "media-artwork-cache-max-bytes" },
@@ -172,7 +168,9 @@ export function mediaBehaviorConfig(
           personalDiscordEnabled: "boolean",
           sharedAnnouncementsEnabled: "boolean",
           sharedAnnouncementsUpgrades: "boolean",
-          sharedDiscordChannelId: "string",
+          sharedDiscordChannelId: flagValueKind(
+            "media-shared-discord-channel-id",
+          ),
           requestsEnabled: "boolean",
           acquisitionEnabled: "boolean",
           subtitleMaintenanceEnabled: "boolean",
@@ -181,12 +179,14 @@ export function mediaBehaviorConfig(
           sourceCleanupEnabled: "boolean",
           quarantineEnabled: "boolean",
           purgeEnabled: "boolean",
-          sessionLifetimeMs: "string",
-          keepDays: "string",
-          emailSender: "string",
-          permittedMovieSectionId: "string",
-          permittedTvSectionId: "string",
-          artworkCacheMaxBytes: "string",
+          sessionLifetimeMs: flagValueKind("media-session-lifetime-ms"),
+          keepDays: flagValueKind("media-keep-days"),
+          emailSender: flagValueKind("media-email-sender"),
+          permittedMovieSectionId: flagValueKind(
+            "media-permitted-movie-section-id",
+          ),
+          permittedTvSectionId: flagValueKind("media-permitted-tv-section-id"),
+          artworkCacheMaxBytes: flagValueKind("media-artwork-cache-max-bytes"),
         },
       }),
     },

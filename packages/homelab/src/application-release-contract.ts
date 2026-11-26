@@ -11,6 +11,6 @@ export const APPLICATION_LIFECYCLE_ANNOTATION =
  */
 export const ORPHAN_ROOT_ANNOTATION = "delivery.shepherdjerred.com/orphan-root";
 export const REPOSITORY_CHART_URLS = new Set([
-  "https://chartmuseum.tailnet-1a49.ts.net",
-  "https://chartmuseum.sjer.red",
+  "https://charts.tailnet-1a49.ts.net",
+  "registry-1.docker.io/shepherdjerred",
 ]);

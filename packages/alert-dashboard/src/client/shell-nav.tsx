@@ -1,7 +1,7 @@
 import { Dialog } from "@base-ui/react/dialog";
 import {
   AppSwitcher,
-  IconButton,
+  CommandPaletteButton,
   Sidebar,
   SidebarGroup,
   SidebarItem,
@@ -21,7 +21,7 @@ import { NavLink } from "react-router";
 
 import { setNavDrawerOpen, useNavDrawerOpen } from "./nav-drawer.ts";
 import type { ResolvedNavGroup } from "./platform/module.ts";
-import { setPaletteOpen } from "./platform/palette.tsx";
+import { paletteStore } from "./platform/palette.tsx";
 import {
   setThemePreference,
   themeStore,
@@ -50,7 +50,7 @@ const SWITCHER_APPS: readonly AppSwitcherEntry[] = CONSOLE_LINKS.map(
 const CURRENT_APP = { label: "Hub", mark: "H" } as const;
 
 function openPalette(): void {
-  setPaletteOpen(true);
+  paletteStore.setOpen(true);
 }
 
 /**
@@ -122,13 +122,7 @@ export function HubSidebar({ groups }: Groups): React.JSX.Element {
       top={
         <>
           <AppSwitcher current={CURRENT_APP} apps={SWITCHER_APPS} />
-          <IconButton
-            icon={SearchIcon}
-            label={SEARCH_LABEL}
-            aria-keyshortcuts={SEARCH_SHORTCUT}
-            title="Search (⌘K)"
-            onClick={openPalette}
-          />
+          <CommandPaletteButton store={paletteStore} label={SEARCH_LABEL} />
         </>
       }
       footer={<ThemeRow store={themeStore} />}

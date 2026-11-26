@@ -3,6 +3,7 @@ import { selectSteps } from "#src/pipeline/select.ts";
 import { TEST_IMAGES, testPipelineSteps } from "./identity.ts";
 import { signRemoteCacheSteps } from "#src/pipeline/turbo-cache.ts";
 import { grantGradleBuildCache } from "#src/pipeline/gradle-build-cache.ts";
+import { grantSccacheWebdav } from "#src/pipeline/sccache-webdav.ts";
 import {
   EXTENDED_STEP_KEY,
   extendedRequest,
@@ -39,14 +40,17 @@ function credentialHolders(env: string): string[] {
 
 /** The worst case: a pull request against the default branch, touching anything. */
 const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
-  grantGradleBuildCache(
-    signRemoteCacheSteps(
-      selectSteps(steps, {
-        event: "pull_request",
-        branch: "main",
-        defaultBranch: "main",
-        changedFiles: [],
-      }),
+  grantSccacheWebdav(
+    grantGradleBuildCache(
+      signRemoteCacheSteps(
+        selectSteps(steps, {
+          event: "pull_request",
+          branch: "main",
+          defaultBranch: "main",
+          changedFiles: [],
+        }),
+        "pull-request",
+      ),
       "pull-request",
     ),
     "pull-request",
@@ -54,14 +58,17 @@ const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
 
 /** A push to the default branch, touching anything. */
 const defaultBranchPush = (steps: ReturnType<typeof allSteps>) =>
-  grantGradleBuildCache(
-    signRemoteCacheSteps(
-      selectSteps(steps, {
-        event: "push",
-        branch: "main",
-        defaultBranch: "main",
-        changedFiles: [],
-      }),
+  grantSccacheWebdav(
+    grantGradleBuildCache(
+      signRemoteCacheSteps(
+        selectSteps(steps, {
+          event: "push",
+          branch: "main",
+          defaultBranch: "main",
+          changedFiles: [],
+        }),
+        "trusted",
+      ),
       "trusted",
     ),
     "trusted",
@@ -86,6 +93,7 @@ const defaultBranchPush = (steps: ReturnType<typeof allSteps>) =>
 const PR_REACHABLE_SECRETS = [
   "GITHUB_DOWNLOAD_TOKEN",
   "GRADLE_BUILD_CACHE_READ_PASSWORD",
+  "SCCACHE_WEBDAV_PASSWORD",
   "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
   "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
   "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
@@ -123,6 +131,7 @@ describe("what a pull request can reach", () => {
     expect(credentialHolders("DOCKERHUB_PUBLISH_TOKEN")).toEqual([
       "ci-base-refresh",
       "ci-playwright-refresh",
+      "helm-push",
       "images",
     ]);
     expect(credentialHolders("DOCKERHUB_READ_CONFIG_JSON")).toEqual([
@@ -241,7 +250,9 @@ describe("what a pull request can reach", () => {
       );
     }
   });
+});
 
+describe("cache write boundaries and extended tier", () => {
   /**
    * Gradle cache entries are build outputs that later builds load instead of
    * compiling, so a writer is as trusted as the code it builds. Only verify on
@@ -270,10 +281,38 @@ describe("what a pull request can reach", () => {
     );
     expect(
       pullRequest.find((step) => step.key === "verify")?.environment,
-    ).toMatchObject({ GRADLE_BUILD_CACHE_USERNAME: "ci-pull-request" });
+    ).toMatchObject({
+      GRADLE_BUILD_CACHE_USERNAME: "ci-pull-request",
+      SCCACHE_WEBDAV_USERNAME: "ci-pull-request",
+    });
     expect(
       main.find((step) => step.key === "verify")?.environment,
-    ).toMatchObject({ GRADLE_BUILD_CACHE_USERNAME: "ci-main" });
+    ).toMatchObject({
+      GRADLE_BUILD_CACHE_USERNAME: "ci-main",
+      SCCACHE_WEBDAV_USERNAME: "ci-main",
+    });
+    expect(
+      pullRequest
+        .flatMap((step) => step.secrets ?? [])
+        .filter((grant) => grant.env === "SCCACHE_WEBDAV_PASSWORD"),
+    ).toEqual([
+      {
+        secret: "ci-gradle-build-cache-credentials",
+        key: "GRADLE_BUILD_CACHE_READ_PASSWORD",
+        env: "SCCACHE_WEBDAV_PASSWORD",
+      },
+    ]);
+    expect(
+      main
+        .flatMap((step) => step.secrets ?? [])
+        .filter((grant) => grant.env === "SCCACHE_WEBDAV_PASSWORD"),
+    ).toEqual([
+      {
+        secret: "ci-gradle-build-cache-credentials",
+        key: "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+        env: "SCCACHE_WEBDAV_PASSWORD",
+      },
+    ]);
   });
 
   test("keeps Argo credentials out of every pull-request workflow", () => {

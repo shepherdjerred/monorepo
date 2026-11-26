@@ -1,14 +1,20 @@
 #!/bin/bash
-# Build-time only. Downloads every artifact pinned in plugins.json and fails the
-# build on any sha256 mismatch, so the image never contains an unverified jar.
+# Build-time only. Downloads every artifact a manifest pins and fails the build
+# on any sha256 mismatch, so the image never contains an unverified file.
 #
-#   fetch.sh <plugins.json> <out-dir>
+#   fetch.sh plugins <plugins.json> <out-dir>
+#   fetch.sh nav <nav-manifest.json> <out-dir>
 #
-# Produces <out>/paper/<file>, <out>/paper-defaults/<file> and <out>/plugins/<file>.
+# `plugins` produces <out>/paper/<file>, <out>/paper-defaults/<file> and
+# <out>/plugins/<file>. `nav` produces <out>/<path> for every baked rwf
+# navigation mesh the manifest names (lobby/nav.rwfnav, maps/<id>/nav.rwfnav):
+# the meshes are not in Git, so the bucket object named by its sha256 is the
+# only source, and one that is missing or altered fails the build here.
 set -euo pipefail
 
-manifest=$1
-out=$2
+kind=$1
+manifest=$2
+out=$3
 
 fetch() { # url sha256 dest
   mkdir -p "$(dirname "$3")"
@@ -24,6 +30,18 @@ each() { # jq-filter dest-subdir
     done
 }
 
-each '.paper' paper
-each '.paperDefaults[]' paper-defaults
-each '.plugins[]' plugins
+case $kind in
+  plugins)
+    each '.paper' paper
+    each '.paperDefaults[]' paper-defaults
+    each '.plugins[]' plugins
+    ;;
+  nav)
+    # The object keeps the mesh's extension: the public site serves no path without one.
+    each '{baseUrl} + .objects[] | {url: "\(.baseUrl)/\(.sha256).rwfnav", sha256, file: .path}' .
+    ;;
+  *)
+    echo "usage: fetch.sh plugins|nav <manifest> <out-dir>" >&2
+    exit 1
+    ;;
+esac

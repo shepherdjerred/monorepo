@@ -37,7 +37,7 @@ RUN --mount=type=cache,id=the-storm-gradle,target=/home/gradle/.gradle/caches \
 # (minecraft-tsmc.test.ts enforces it; renovate.json groups both into one PR).
 FROM itzg/minecraft-server:2026.11.0-java25@sha256:8d5080d8dcd0a2629c2e4f248678373a337a40537ad6ef2857c7dbcda6e3eadd AS fetch
 COPY server/plugins.json server/fetch.sh /build/
-RUN bash /build/fetch.sh /build/plugins.json /out
+RUN bash /build/fetch.sh plugins /build/plugins.json /out
 COPY server/build-livemap.sh /build/
 COPY server/livemap/ /build/livemap/
 # Use the verified jar's matching frontend without changing the plugin artifact.
@@ -49,6 +49,13 @@ RUN bash /build/build-livemap.sh \
 WORKDIR /out/paper
 RUN java -Dpaperclip.patchonly=true -jar "$(jq -r .paper.file /build/plugins.json)" \
   && chmod -R a+rX /out
+# The rwf bots' baked navigation meshes are not in Git and never come from the
+# build context (Dockerfile.dockerignore): the tracked manifest names each one
+# by sha256, and the same verified download as the jars fetches it from the
+# asset bucket. Last in this stage, so a rebake re-runs only this layer.
+COPY server/owned/plugins/TheStorm/rwf/nav-manifest.json /build/nav-manifest.json
+RUN bash /build/fetch.sh nav /build/nav-manifest.json /out/nav \
+  && chmod -R a+rX /out/nav
 
 ########################
 ## release image
@@ -67,6 +74,8 @@ COPY --from=plugin --chmod=0644 /src/plugin/bridge/build/libs/MCBridge.jar /plug
 # itzg's /plugins sync into /data/plugins: overwritten when they differ, never
 # deleted. Secrets never live here; patches interpolate ${CFG_*} env instead.
 COPY server/owned/plugins/ /plugins/
+# The navigation meshes rwf/nav-manifest.json names, beside each map's files.
+COPY --from=fetch /out/nav/ /plugins/TheStorm/rwf/
 COPY server/owned.roots server/remove.list /bundle/
 COPY server/patches/ /bundle/patches/
 COPY server/world-protection/ /bundle/world-protection/
@@ -106,8 +115,9 @@ FROM release AS smoke
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Every third-party jar matches its pin, the jar set is exactly the manifest
 # plus TheStorm.jar and MCBridge.jar, both are Paper plugins, Paper is pre-patched at
-# the path PAPER_CUSTOM_JAR names, and every patch op is a $put (a $set on a
-# key an older file lacks stops the boot).
+# the path PAPER_CUSTOM_JAR names, every navigation mesh rwf/nav-manifest.json
+# names is present with its exact bytes and the lobby and each map has one, and
+# every patch op is a $put (a $set on a key an older file lacks stops the boot).
 RUN set -eu; \
   paper_version=$(jq -r '.paper.version | split("-")[0]' /opt/the-storm/plugins.json); \
   [ "$VERSION" = "$paper_version" ]; \
@@ -132,6 +142,22 @@ RUN set -eu; \
   test -f "$PAPER_CUSTOM_JAR"; \
   test -f "/opt/paper/versions/$paper_version/paper-$paper_version.jar"; \
   test -f /plugins/TheStorm/config.yml; \
+  nav_manifest=/plugins/TheStorm/rwf/nav-manifest.json; \
+  jq -e '.objects | length > 0' "$nav_manifest" > /dev/null; \
+  jq -r '.objects[] | "\(.sha256)  /plugins/TheStorm/rwf/\(.path)"' "$nav_manifest" \
+    | sha256sum --check --strict --quiet -; \
+  jq -r '.objects[] | "\(.bytes) /plugins/TheStorm/rwf/\(.path)"' "$nav_manifest" \
+    | while read -r bytes mesh; do \
+        [ "$(stat -c %s "$mesh")" = "$bytes" ] || { echo "$mesh is not $bytes bytes"; exit 1; }; \
+      done; \
+  expected_meshes=$(jq -r '.objects[].path' "$nav_manifest" | sort); \
+  actual_meshes=$(cd /plugins/TheStorm/rwf && find . -name nav.rwfnav -printf '%P\n' | sort); \
+  [ "$expected_meshes" = "$actual_meshes" ] \
+    || { echo "nav.rwfnav files differ from nav-manifest.json"; diff <(echo "$expected_meshes") <(echo "$actual_meshes"); exit 1; }; \
+  needed_meshes=$(cd /plugins/TheStorm/rwf && { echo lobby/nav.rwfnav; \
+    find maps -mindepth 1 -maxdepth 1 -type d -printf '%p/nav.rwfnav\n'; } | sort); \
+  [ "$expected_meshes" = "$needed_meshes" ] \
+    || { echo "nav-manifest.json does not name one mesh for the lobby and each map"; diff <(echo "$expected_meshes") <(echo "$needed_meshes"); exit 1; }; \
   grep -q '<title>LiveMap</title>' /opt/the-storm/livemap/index.html; \
   for patch in /bundle/patches/*.json; do \
     jq -e '(.file | startswith("/data/")) and (.ops | length > 0) and all(.ops[]; keys == ["$put"])' \

@@ -109,6 +109,13 @@
   ],
   "resource": {
     "docker_hub_repository": {
+      "charts_bootstrap": {
+        "description": "Bootstrap Helm chart for first-party charts registry from shepherdjerred/monorepo",
+        "lifecycle": { "prevent_destroy": true },
+        "name": "charts-bootstrap",
+        "namespace": "${local.registry.namespace}",
+        "private": false
+      },
       "image": {
         "description": "First-party ${each.key} image from shepherdjerred/monorepo",
         "for_each": "${local.images}",

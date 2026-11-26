@@ -76,16 +76,20 @@ describe("stylesheets", () => {
     },
   );
 
-  test("no stylesheet loads a Berkeley Mono file", async () => {
-    for (const name of [
-      "index.css",
-      "reset.css",
-      "tokens.css",
-      "fonts.css",
-      "components.css",
-      "page.css",
-    ]) {
-      expect(await stylesheet(name)).not.toMatch(/url\([^)]*berkeley/i);
+  test("fonts.css declares Berkeley Mono from committed WOFF2 files", async () => {
+    const css = await stylesheet("fonts.css");
+    const faces = [
+      ...css.matchAll(
+        /@font-face \{[^}]*url\("(\.\/fonts\/[^"]+)"\)[^}]*font-weight: (\d+);/g,
+      ),
+    ].map(([, url = "", weight]) => ({ url, weight }));
+    expect(faces).toEqual([
+      { url: "./fonts/BerkeleyMono-Regular.woff2", weight: "400" },
+      { url: "./fonts/BerkeleyMono-Bold.woff2", weight: "700" },
+    ]);
+    for (const { url } of faces) {
+      const bytes = await Bun.file(path.join(styles, url)).bytes();
+      expect(new TextDecoder().decode(bytes.subarray(0, 4))).toBe("wOF2");
     }
   });
 });

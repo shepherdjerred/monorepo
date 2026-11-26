@@ -1,36 +1,46 @@
 ---
 title: Rotate the DDNS credential
-description: Replace the shared DDNS API token and verify both updater containers.
+description: Replace the Cloudflare DDNS API token and verify the Temporal ddns-sync schedule.
 ---
 
-Replace the credential for both containers in the
-[DDNS deployment](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/ddns.ts)
+Replace the Cloudflare API token read by
+[`syncDdnsRecords`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/infra/ddns.ts)
+on
+[`temporal-infra-worker`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/temporal/workers/operations-workers.ts)
 before revoking the previous token.
 
 ## 1. Update the owning 1Password item
 
-Create a replacement Cloudflare token with the existing zone permissions.
-Update the Cloudflare DDNS item's `api_token` field and
-`config.json`'s `cloudflare[].authentication.api_token` together.
-Keep the rest of the JSON configuration intact.
+Create a replacement Cloudflare API token with DNS edit permission on the
+`sjer.red` zone.
+Update the `api_token` field on the owning 1Password item
+(`nhyb6lnjpvjsau2gkmb7n42oeq`) synced to `Secret/temporal-ddns-api-token` in
+namespace `temporal`.
 Use 1Password or a non-printing authenticated write; keep tokens out of files,
 command arguments, and output.
 
-## 2. Refresh both containers
+## 2. Refresh the infrastructure worker
 
-Wait for the operator-managed Kubernetes Secret to reflect both updated fields.
-Restart the deployment so both containers load the replacement credential:
+Wait for the operator-managed `Secret/temporal-ddns-api-token` to reflect the
+updated field, then restart `temporal-infra-worker` so `/run/secrets/ddns/api-token`
+updates immediately:
 
 ```bash
-kubectl -n ddns rollout restart deployment/ddns
-kubectl -n ddns rollout status deployment/ddns
+kubectl -n temporal rollout restart deployment/temporal-temporal-infra-worker
+kubectl -n temporal rollout status deployment/temporal-temporal-infra-worker
 ```
 
 ## 3. Verify the replacement
 
-Confirm both containers complete an authenticated DNS update without errors.
-Check the records against the [hostname contracts](/reference/dynamic-dns/).
-Revoke the previous token only after both updater instances succeed.
+Trigger an immediate `ddns-sync` run and confirm it completes without errors:
+
+```bash
+toolkit temporal schedule trigger --schedule-id ddns-sync
+```
+
+Check the updated records against the [hostname contracts](/reference/dynamic-dns/)
+and confirm `DdnsSyncStale` and `DdnsUpdateFailing` stay clear.
+Revoke the previous token only after `ddns-sync` succeeds for both hostnames.
 
 ## Related
 

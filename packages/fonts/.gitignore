@@ -1,5 +1,4 @@
-# Berkeley Mono is commercially licensed: patched outputs must never be
-# committed. The script defaults output_dir to ./patched, so guard that path
-# even though the documented usage writes outside the repository.
+# Generated output: the script defaults output_dir to ./patched, and --zip
+# writes the archive next to it.
 patched/
 BerkeleyMono-NerdFont.zip
