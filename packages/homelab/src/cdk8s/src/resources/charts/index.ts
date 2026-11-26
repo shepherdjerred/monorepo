@@ -57,12 +57,14 @@ function buildChartsEnv(authSecret: ISecret): Record<string, EnvValue> {
 
 // Policed workloads in `delivery` and `temporal` reach Charts over tailnet
 // HTTPS (`tailscale`), not direct in-cluster HTTP on port 7370.
+// CI step pods are absent: they reach Charts over the tailnet, and their own
+// Egress policy (`woodpecker-step-netpol`) opens no in-cluster path to port
+// 7370. Add `woodpecker-ci` back together with that Egress rule.
 const CONSUMER_NAMESPACES = [
   "tailscale",
   "argocd",
   "delivery-platform-jobs",
   "delivery-worker-jobs",
-  "woodpecker-ci",
 ] as const;
 
 export function createChartsDeployment(chart: Chart) {

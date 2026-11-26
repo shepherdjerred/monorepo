@@ -1,54 +1,20 @@
-import { Dialog } from "@base-ui/react/dialog";
+import {
+  CommandPalette as ConsolePalette,
+  CommandPaletteSearch,
+  createCommandPaletteStore,
+} from "@shepherdjerred/console-ui";
 import { useQuery } from "@tanstack/react-query";
-import { CornerDownLeftIcon, SearchIcon } from "lucide-react";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 
-import {
-  paletteSections,
-  searchableModules,
-  type PaletteItem,
-} from "./palette-items.ts";
+import { paletteSections, searchableModules } from "./palette-items.ts";
 import { useRegistry } from "./registry.tsx";
 
 const SEARCH_DEBOUNCE_MS = 200;
-const LISTBOX_ID = "palette-listbox";
+const PALETTE_LABEL = "Search and commands";
 
-// Whether the palette is open lives outside React so the global shortcut can
-// toggle it without an effect, the same way the theme store works.
-let paletteOpen = false;
-const listeners = new Set<() => void>();
-
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-export function setPaletteOpen(next: boolean): void {
-  if (paletteOpen === next) return;
-  paletteOpen = next;
-  for (const listener of listeners) listener();
-}
-
-/** Whether a key press is the palette's global shortcut, ⌘K or Ctrl+K. */
-export function isPaletteShortcut(event: KeyboardEvent): boolean {
-  return (
-    event.key.toLowerCase() === "k" &&
-    (event.metaKey || event.ctrlKey) &&
-    !event.altKey &&
-    !event.shiftKey
-  );
-}
-
-document.addEventListener("keydown", (event) => {
-  if (!isPaletteShortcut(event)) return;
-  event.preventDefault();
-  setPaletteOpen(!paletteOpen);
-});
-
-function optionId(index: number): string {
-  return `palette-option-${String(index)}`;
-}
+/** Whether the palette is open; creating it binds ⌘K and Ctrl+K. */
+export const paletteStore = createCommandPaletteStore();
 
 /**
  * Resolves after `delayMs`, or rejects as soon as the signal aborts. Search
@@ -73,7 +39,6 @@ function PaletteBody(): React.JSX.Element {
   const registry = useRegistry();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState(0);
   const term = query.trim();
   const searchers = searchableModules(registry);
   const search = useQuery({
@@ -94,143 +59,29 @@ function PaletteBody(): React.JSX.Element {
   // term's results visible would leave them first in the list, where Enter
   // would open one instead of the page or command just typed.
   const searched = term === "" ? [] : (search.data ?? []);
-  const sections = paletteSections(registry, query, searched);
-  const items = sections.flatMap((section) => section.items);
-  const active = Math.min(selected, items.length - 1);
-
-  function choose(item: PaletteItem | undefined): void {
-    if (item === undefined) return;
-    setPaletteOpen(false);
-    // Run after the dialog has closed and returned focus, so a navigation is
-    // not fought by the focus restore.
-    requestAnimationFrame(() => {
-      void item.run({
-        navigate: (to) => {
-          void navigate(to);
-        },
-      });
-    });
-  }
-
-  function move(step: 1 | -1): void {
-    if (items.length === 0) return;
-    const next = (active + step + items.length) % items.length;
-    setSelected(next);
-    document
-      .querySelector(`#${optionId(next)}`)
-      ?.scrollIntoView({ block: "nearest" });
-  }
-
-  function onKeyDown(event: React.KeyboardEvent): void {
-    switch (event.key) {
-      case "ArrowDown": {
-        event.preventDefault();
-        move(1);
-        break;
-      }
-      case "ArrowUp": {
-        event.preventDefault();
-        move(-1);
-        break;
-      }
-      case "Enter": {
-        event.preventDefault();
-        choose(items[active]);
-        break;
-      }
-      default:
-    }
-  }
-
-  // Each section's first option index in the flat, keyboard-ordered list.
-  const starts = sections.map((_, sectionIndex) =>
-    sections
-      .slice(0, sectionIndex)
-      .reduce((count, section) => count + section.items.length, 0),
-  );
   return (
-    <>
-      <div className="palette-search">
-        <SearchIcon aria-hidden="true" />
-        <input
-          role="combobox"
-          aria-label="Search and commands"
-          aria-expanded="true"
-          aria-controls={LISTBOX_ID}
-          aria-autocomplete="list"
-          {...(items.length === 0
-            ? {}
-            : { "aria-activedescendant": optionId(active) })}
-          placeholder="Search services and alerts, or type a command…"
-          autoComplete="off"
-          spellCheck={false}
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setSelected(0);
-          }}
-          onKeyDown={onKeyDown}
-        />
-      </div>
-      <div className="palette-results" id={LISTBOX_ID} role="listbox">
-        {sections.map((section, sectionIndex) => (
-          <div key={section.heading} role="group" aria-label={section.heading}>
-            <p className="palette-heading" aria-hidden="true">
-              {section.heading}
-            </p>
-            {section.items.map((item, position) => {
-              const itemIndex = (starts[sectionIndex] ?? 0) + position;
-              return (
-                <button
-                  key={item.id}
-                  id={optionId(itemIndex)}
-                  type="button"
-                  role="option"
-                  tabIndex={-1}
-                  aria-selected={itemIndex === active}
-                  className="palette-option"
-                  onMouseMove={() => {
-                    setSelected(itemIndex);
-                  }}
-                  onClick={() => {
-                    choose(item);
-                  }}
-                >
-                  <item.icon aria-hidden="true" />
-                  <span className="palette-label">{item.label}</span>
-                  {item.detail === undefined ? null : (
-                    <span className="palette-detail">{item.detail}</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        ))}
-        <p className="palette-status" role="status">
-          {search.isError
-            ? "Search is unavailable. Pages and commands still work."
-            : term !== "" && search.isFetching
-              ? "Searching…"
-              : items.length === 0
-                ? "No results."
-                : ""}
-        </p>
-      </div>
-      <div className="palette-footer" aria-hidden="true">
-        <span>
-          <kbd>↑</kbd> <kbd>↓</kbd> navigate
-        </span>
-        <span>
-          <kbd>
-            <CornerDownLeftIcon />
-          </kbd>{" "}
-          open
-        </span>
-        <span>
-          <kbd>Esc</kbd> close
-        </span>
-      </div>
-    </>
+    <CommandPaletteSearch
+      store={paletteStore}
+      label={PALETTE_LABEL}
+      placeholder="Search services and alerts, or type a command…"
+      query={query}
+      onQueryChange={setQuery}
+      sections={paletteSections(registry, query, searched)}
+      status={
+        search.isError
+          ? "Search is unavailable. Pages and commands still work."
+          : term !== "" && search.isFetching
+            ? "Searching…"
+            : undefined
+      }
+      onSelect={(item) => {
+        void item.run({
+          navigate: (to) => {
+            void navigate(to);
+          },
+        });
+      }}
+    />
   );
 }
 
@@ -240,16 +91,9 @@ function PaletteBody(): React.JSX.Element {
  * dialog, so each opening starts empty.
  */
 export function CommandPalette(): React.JSX.Element {
-  const open = useSyncExternalStore(subscribe, () => paletteOpen);
   return (
-    <Dialog.Root open={open} onOpenChange={setPaletteOpen}>
-      <Dialog.Portal>
-        <Dialog.Backdrop className="palette-backdrop" />
-        <Dialog.Popup className="palette">
-          <Dialog.Title className="sr-only">Search and commands</Dialog.Title>
-          <PaletteBody />
-        </Dialog.Popup>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <ConsolePalette store={paletteStore} label={PALETTE_LABEL}>
+      <PaletteBody />
+    </ConsolePalette>
   );
 }

@@ -20,7 +20,7 @@ async function viewsList(page: Page, mobile: boolean) {
       .click();
     return page.getByRole("dialog", { name: "More" });
   }
-  return page.locator(".sidebar");
+  return page.getByRole("complementary", { name: "Tracker" });
 }
 
 test("a saved view keeps its filters, lists in the sidebar and opens them again", async ({

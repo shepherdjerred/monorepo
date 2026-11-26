@@ -73,6 +73,14 @@ export type Runtime = {
   /** An `hc` call, for agents whose first message is typed in. */
   readonly hc: (args: string[]) => Promise<ExecResult>;
   readonly sleep: (ms: number) => Promise<void>;
+  /** `process.platform` of this computer. */
+  readonly platform: string;
+  /**
+   * Start `toolkit <args>` in `cwd` on this computer, detached and with its
+   * output discarded, and return without waiting for it. False when this
+   * computer has no toolkit.
+   */
+  readonly startToolkit: (cwd: string, args: string[]) => Promise<boolean>;
 };
 
 export type Step = "naming" | "branch" | "worktree" | "space" | "message";
@@ -124,7 +132,11 @@ export type Outcome = {
   readonly path: string;
   readonly terminal: string;
   readonly messageSent: "argument" | "typed" | "none";
+  /** Whether sharing the checkout's files with the main checkout was started. */
+  readonly dedupe: Dedupe;
 };
+
+export type Dedupe = "started" | "skipped";
 
 export function fields(value: unknown, what: string): Map<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value))
@@ -288,6 +300,37 @@ async function typeFirstMessage(
     );
 }
 
+/**
+ * A new worktree copies every tracked file. `toolkit tend dedupe` replaces the
+ * ones identical to the main checkout's with APFS clones, so this starts it in
+ * the background for a checkout on this Mac. It is an optimization only:
+ * nothing waits on it, and a toolkit that is missing, does not know the
+ * command, or fails leaves the worktree as git made it.
+ */
+async function shareWithMainCheckout(
+  runtime: Runtime,
+  machine: string | null,
+  path: string,
+): Promise<Dedupe> {
+  if (machine !== null || runtime.platform !== "darwin") return "skipped";
+  try {
+    const started = await runtime.startToolkit(path, [
+      "tend",
+      "dedupe",
+      "--worktree",
+      path,
+      "--apply",
+      "--no-refresh",
+      // Queue behind the daily sweep or another new worktree's run.
+      "--lock-wait",
+      "15m",
+    ]);
+    return started ? "started" : "skipped";
+  } catch {
+    return "skipped";
+  }
+}
+
 /** Name it, create the worktree, open the space. Throws a message fit for a person. */
 export async function createWorktree(
   request: Request,
@@ -334,6 +377,7 @@ export async function createWorktree(
   ]);
   if (added.code !== 0)
     throw new Error(firstLine(added, "git worktree add failed."));
+  const dedupe = await shareWithMainCheckout(runtime, machine, path);
   await report("space", named.title, branch, path);
   const { argv, task, typed } = launch(request, { branch, title: named.title });
   // Nesting follows the checkout folder. The generated title names the space
@@ -366,5 +410,6 @@ export async function createWorktree(
         : typed
           ? "typed"
           : "argument",
+    dedupe,
   };
 }

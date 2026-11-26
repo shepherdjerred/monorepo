@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-import { createHash } from "node:crypto";
 import { isDeepStrictEqual, parseArgs } from "node:util";
 import { z } from "zod";
 import {
@@ -7,6 +6,7 @@ import {
   DeliveryClientError,
 } from "@shepherdjerred/delivery/client";
 import { ArtifactVersionSchema } from "@shepherdjerred/delivery/contract";
+import { resolvePublishedChartArtifact } from "../lib/artifacts/published-chart-artifact.ts";
 import type {
   ArtifactVersion,
   FindQualifiedArtifact,
@@ -59,10 +59,6 @@ const DigestsSchema = z.record(
 );
 
 type Artifact = z.output<typeof PublishBuildSchema>["artifacts"][number];
-type Fetch = (
-  input: string | URL | Request,
-  init?: RequestInit,
-) => Promise<Response>;
 type PublicationInput = {
   digests: unknown;
   charts: unknown;
@@ -91,57 +87,6 @@ type PublicationDependencies = {
     query: FindQualifiedArtifact,
   ) => Promise<ArtifactVersion | undefined>;
 };
-
-export async function downloadChartArtifact(
-  name: string,
-  version: string,
-  options: { origin: string; fetch?: Fetch },
-) {
-  const transport = options.fetch ?? fetch;
-  const response = await transport(
-    new URL(
-      `/api/charts/${encodeURIComponent(name)}/${encodeURIComponent(version)}`,
-      options.origin,
-    ),
-    { signal: AbortSignal.timeout(30_000), redirect: "error" },
-  );
-  if (!response.ok)
-    throw new Error(
-      `Chart metadata unavailable for ${name}@${version} (${String(response.status)})`,
-    );
-  const raw: unknown = await response.json();
-  const metadata = z
-    .object({
-      name: z.literal(name),
-      version: z.literal(version),
-      digest: z.string().regex(/^[a-f\d]{64}$/u),
-      urls: z.array(z.string()).min(1),
-    })
-    .parse(raw);
-  const uri = new URL(`/charts/${name}-${version}.tgz`, options.origin);
-  if (
-    !metadata.urls.some(
-      (entry) => new URL(entry, `${options.origin}/`).href === uri.href,
-    )
-  )
-    throw new Error(
-      `Chart archive URL differs from the selected immutable version: ${name}@${version}`,
-    );
-  const archive = await transport(uri, {
-    signal: AbortSignal.timeout(60_000),
-    redirect: "error",
-  });
-  if (!archive.ok)
-    throw new Error(
-      `Chart archive unavailable for ${name}@${version} (${String(archive.status)})`,
-    );
-  const digest = createHash("sha256")
-    .update(new Uint8Array(await archive.arrayBuffer()))
-    .digest("hex");
-  if (digest !== metadata.digest)
-    throw new Error(`Chart archive checksum mismatch for ${name}@${version}`);
-  return { uri: uri.href, digest: `sha256:${digest}` };
-}
 
 function verifyChartProducer(input: PublicationInput) {
   if (input.chartPublication !== undefined) {
@@ -417,9 +362,7 @@ async function main() {
         return result.stdout;
       },
       chartArtifact: (name, version) =>
-        downloadChartArtifact(name, version, {
-          origin: "https://chartmuseum.tailnet-1a49.ts.net",
-        }),
+        resolvePublishedChartArtifact(name, version),
       findQualifiedArchive: async (query) => {
         try {
           return await client.findQualifiedArtifact(query);

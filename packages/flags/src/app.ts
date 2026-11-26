@@ -5,6 +5,7 @@ import { ZodError } from "zod";
 import { flagDeployments } from "@shepherdjerred/feature-flags/deployments.ts";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
 import { diffProjectedDeploymentFlags } from "@shepherdjerred/feature-flags/flags-drift.ts";
+import type { FlagValueKeyIssue } from "@shepherdjerred/feature-flags/flag-write-validation.ts";
 import {
   authenticate,
   parseTrustedProxyBlockList,
@@ -298,8 +299,15 @@ function writeFailure(
         document: { revision: number; flags: readonly FlagValue[] };
       }
     | { kind: "unknown-deployment" }
-    | { kind: "duplicate-key"; key: string },
+    | { kind: "duplicate-key"; key: string }
+    | { kind: "invalid-values"; issues: readonly FlagValueKeyIssue[] },
 ): Response {
+  if (failure.kind === "invalid-values") {
+    return c.json(
+      { error: "invalid flag values", issues: failure.issues },
+      400,
+    );
+  }
   if (failure.kind === "conflict") {
     return c.json(
       {

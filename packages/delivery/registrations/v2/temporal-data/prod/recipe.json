@@ -1,5 +1,5 @@
 {
-  "id": "temporal-data/prod/1",
+  "id": "temporal-data/prod/2",
   "definition": {
     "kind": "operator-run",
     "wrapped": {
@@ -20,7 +20,7 @@
           "namespace": "temporal"
         },
         "source": {
-          "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+          "repoURL": "https://charts.tailnet-1a49.ts.net",
           "chart": "temporal-data"
         },
         "syncOptions": [],

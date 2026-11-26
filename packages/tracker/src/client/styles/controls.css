@@ -1,5 +1,7 @@
 /* Pickers: one look for the customizable select, the Base UI fallback, the
-   searchable picker, menus and the filter and display popovers. */
+   searchable picker, menus and the filter and display popovers. Popups are
+   console-ui menus (.ui-menu): 8px panel, --ui-line border, a tight shadow,
+   30px rows with the --ui-hover highlight. */
 @supports (appearance: base-select) {
   select.picker,
   select.picker::picker(select) {
@@ -10,28 +12,32 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  min-height: 30px;
+  min-height: 28px;
   min-width: 0;
-  padding: 4px 9px;
-  border: 1px solid var(--border);
+  padding: 3px 9px;
+  border: 1px solid var(--ui-btn-edge);
   border-radius: 6px;
-  background: var(--panel);
-  color: var(--text);
-  font-size: 12px;
+  background: var(--ui-panel);
+  box-shadow: none;
+  color: var(--ui-ink);
+  font-size: 12.5px;
   font-weight: 500;
   text-align: left;
 }
 .picker:hover:not(:disabled) {
-  background: var(--hover);
+  background: var(--ui-hover);
 }
+/* The customizable select's inner button: the select is the control. */
 .picker-button {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   min-width: 0;
+  min-height: 0;
   padding: 0;
   border: 0;
   background: transparent;
+  box-shadow: none;
   color: inherit;
   font: inherit;
 }
@@ -43,7 +49,7 @@
   min-width: 0;
 }
 select.picker::picker-icon {
-  color: var(--muted);
+  color: var(--ui-muted);
   margin-left: auto;
 }
 .picker .option-label {
@@ -55,7 +61,7 @@ select.picker::picker-icon {
 .picker-chevron {
   display: flex;
   margin-left: auto;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .option-icon {
   display: inline-flex;
@@ -63,7 +69,7 @@ select.picker::picker-icon {
   align-items: center;
   justify-content: center;
   width: 16px;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .option-icon .avatar {
   width: 18px;
@@ -94,15 +100,15 @@ select.picker::picker-icon {
 }
 .urgency-high,
 .impact-high {
-  color: var(--danger);
+  color: var(--ui-sev-error-text);
 }
 .urgency-medium,
 .impact-medium {
-  color: var(--warning);
+  color: var(--ui-sev-warning-text);
 }
 .effort-l,
 .effort-xl {
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 /* A field fills its label in forms and the properties panel. */
 .properties .picker-field,
@@ -143,13 +149,12 @@ select.picker-icon::picker-icon {
   min-height: 22px;
   min-width: 0;
   padding: 1px 6px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
   border-radius: 10px;
-  background: var(--subtle);
-  color: var(--muted);
-  font-size: 10px;
+  background: var(--ui-head);
+  color: var(--ui-muted);
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 [data-picker="effort"].picker-icon selectedcontent .option-label,
@@ -181,7 +186,8 @@ select.picker-action::picker-icon {
   .picker-number,
   .palette-results kbd,
   .toolbar-button kbd,
-  .modal-footer kbd {
+  .modal-footer kbd,
+  .modal-keys {
     display: none;
   }
 }
@@ -194,11 +200,11 @@ select.picker-action::picker-icon {
   max-height: min(380px, var(--available-height, 380px));
   overflow-y: auto;
   padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--panel);
-  color: var(--text);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  box-shadow: var(--shadow-menu);
 }
 select.picker::picker(select) {
   min-width: 200px;
@@ -206,27 +212,30 @@ select.picker::picker(select) {
   max-height: min(380px, var(--available-height, 380px));
   overflow-y: auto;
   padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--panel);
-  color: var(--text);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  box-shadow: var(--shadow-menu);
   margin-block: 4px;
 }
+/* Rows are flat menu items, whatever element renders them. */
 select.picker option,
 .picker-item,
 .menu-item {
   display: flex;
   align-items: center;
-  gap: 9px;
-  min-height: 32px;
-  padding: 5px 8px;
+  gap: 8px;
+  min-height: 30px;
+  padding: 4px 8px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 5px;
   background: transparent;
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 450;
+  box-shadow: none;
+  transform: none;
+  color: var(--ui-ink);
+  font-size: 12.5px;
+  font-weight: 500;
   text-align: left;
   cursor: default;
   outline: none;
@@ -238,7 +247,7 @@ select.picker option:focus-visible,
 .picker-item[data-highlighted],
 .menu-item[data-highlighted],
 .menu-item[data-popup-open] {
-  background: var(--hover);
+  background: var(--ui-hover);
 }
 select.picker option:checked {
   font-weight: 600;
@@ -246,7 +255,7 @@ select.picker option:checked {
 select.picker option::checkmark {
   order: 3;
   margin-left: auto;
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 select.picker option[hidden] {
   display: none;
@@ -273,27 +282,27 @@ select.picker option[hidden] {
 .picker-check,
 .menu-check {
   display: flex;
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .picker-detail {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 11px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 400;
+  font-family: var(--ui-font-mono);
   white-space: nowrap;
   max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* Key hints: console mono in muted ink, no keycap. */
 .picker-number,
 .menu-item kbd,
 .palette-results kbd {
   margin-left: auto;
-  padding: 0 5px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 16px;
+  padding-left: 8px;
+  color: var(--ui-muted);
+  font: 400 11px/16px var(--ui-font-mono);
+  white-space: nowrap;
 }
 .picker-item .picker-detail + .picker-number,
 .picker-item .picker-check + .picker-number {
@@ -305,40 +314,44 @@ select.picker option[hidden] {
   flex: none;
   width: 15px;
   height: 15px;
-  border: 1px solid var(--muted);
+  border: 1px solid var(--ui-muted);
   border-radius: 4px;
-  color: #fff;
+  color: var(--ui-on-accent);
 }
 .picker-box[data-state="on"],
 .picker-box[data-state="mixed"] {
-  border-color: var(--accent);
-  background: #7c59d9;
+  border-color: var(--ui-accent);
+  background: var(--ui-accent);
+}
+/* The popup's search line: the popup is the field, so no box or ring. */
+.picker-search,
+.picker-search:focus-visible {
+  border: 0;
+  border-bottom: 1px solid var(--ui-line-soft);
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
 }
 .picker-search {
   display: block;
-  width: 100%;
-  margin-bottom: 4px;
-  padding: 8px 9px;
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  border-radius: 6px 6px 0 0;
+  width: calc(100% + 8px);
+  min-height: 36px;
+  margin: -4px -4px 4px;
+  padding: 0 12px;
   background: transparent;
-  font-size: 13px;
-}
-.picker-search:focus-visible {
-  outline: none;
+  font-size: 12.5px;
 }
 .picker-group + .picker-group {
   margin-top: 4px;
   padding-top: 4px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ui-line-soft);
 }
 .picker-group-label,
 .menu-heading {
-  padding: 6px 8px 3px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 500;
+  padding: 4px 8px;
+  color: var(--ui-muted);
+  font-size: 12px;
+  font-weight: 400;
 }
 .menu-heading {
   max-width: 280px;
@@ -348,7 +361,7 @@ select.picker option[hidden] {
 }
 .picker-empty {
   padding: 12px 10px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 12px;
 }
 .picker-empty:empty {
@@ -356,7 +369,7 @@ select.picker option[hidden] {
 }
 .picker-item[data-kind="more"],
 .picker-item[data-kind="create"] {
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .search-picker {
   width: 300px;
@@ -365,29 +378,29 @@ select.picker option[hidden] {
 .menu-popup {
   min-width: 220px;
   padding: 4px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--panel);
-  color: var(--text);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
+  box-shadow: var(--shadow-menu);
   outline: none;
   max-height: var(--available-height);
   overflow-y: auto;
 }
 .menu-item.danger {
-  color: var(--danger);
+  color: var(--ui-sev-error-text);
 }
 .menu-item.danger .option-icon {
-  color: var(--danger);
+  color: var(--ui-sev-error-text);
 }
 .menu-chevron {
   margin-left: auto;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .menu-separator {
   height: 1px;
-  margin: 4px 2px;
-  background: var(--border);
+  margin: 4px -4px;
+  background: var(--ui-line-soft);
 }
 /* Rows and cards: their properties are buttons that open pickers. */
 .row-control {
@@ -400,12 +413,12 @@ select.picker option[hidden] {
   border: 0;
   border-radius: 5px;
   background: transparent;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-weight: 400;
 }
 .row-control:hover:not(:disabled),
 .picker-icon:hover:not(:disabled) {
-  background: var(--hover);
+  background: var(--ui-hover);
 }
 .row-control:disabled,
 .picker:disabled {
@@ -425,7 +438,7 @@ select.picker option[hidden] {
   flex: none;
   width: 20px;
   height: 20px;
-  border: 1px dashed var(--muted);
+  border: 1px dashed var(--ui-muted);
   border-radius: 50%;
 }
 .row-check {
@@ -445,7 +458,7 @@ select.picker option[hidden] {
   background: var(--accent-soft);
 }
 .board-card[data-selected="true"] {
-  border-color: var(--accent);
+  border-color: var(--ui-accent);
   background: var(--accent-soft);
 }
 /* Group headers are rows of the window; the sticky copy follows the top. */
@@ -457,8 +470,8 @@ select.picker option[hidden] {
   top: 0;
   left: 0;
   width: 100%;
-  border-bottom: 1px solid var(--border);
-  background: var(--sidebar);
+  border-bottom: 1px solid var(--ui-line);
+  background: var(--ui-bg);
 }
 .group-sticky {
   position: sticky;
@@ -467,9 +480,9 @@ select.picker option[hidden] {
   height: 0;
 }
 .group-sticky .group-heading {
-  background: var(--sidebar);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 0 var(--border);
+  background: var(--ui-bg);
+  border-bottom: 1px solid var(--ui-line);
+  box-shadow: 0 1px 0 var(--ui-line);
 }
 .group-heading {
   display: flex;
@@ -493,10 +506,10 @@ select.picker option[hidden] {
   font-weight: 600;
 }
 .group-toggle:hover {
-  background: var(--hover);
+  background: var(--ui-hover);
 }
 .group-chevron {
-  color: var(--muted);
+  color: var(--ui-muted);
   transform: rotate(90deg);
 }
 .group-heading[data-collapsed="true"] .group-chevron {
@@ -524,58 +537,64 @@ select.picker option[hidden] {
   gap: 2px;
   max-width: calc(100vw - 232px - 32px);
   overflow-x: auto;
-  padding: 5px 6px 5px 14px;
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  background: var(--panel);
-  box-shadow: var(--shadow);
+  padding: 4px 4px 4px 12px;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+  box-shadow: var(--shadow-menu);
   transform: translateX(-50%);
 }
 .bulk-count {
   margin-right: 8px;
   white-space: nowrap;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .bulk-count strong {
-  color: var(--text);
+  color: var(--ui-ink);
 }
 .bulk-action,
 .toolbar-button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 30px;
-  padding: 4px 9px;
+  min-height: 28px;
+  padding: 0 9px;
   border: 1px solid transparent;
   border-radius: 6px;
   background: transparent;
-  color: var(--text);
-  font-size: 12px;
+  box-shadow: none;
+  color: var(--ui-ink);
+  font-size: 12.5px;
   font-weight: 500;
   white-space: nowrap;
 }
-.bulk-danger {
-  color: var(--danger);
+.bulk-action svg,
+.bulk-bar .picker-action .option-icon {
+  color: var(--ui-muted);
+}
+.bulk-danger,
+.bulk-danger svg {
+  color: var(--ui-sev-error-text);
 }
 .bulk-action:hover,
 .toolbar-button:hover {
-  background: var(--hover);
+  background: var(--ui-hover);
 }
 body:has(.bulk-bar) .toast-viewport {
   bottom: 76px;
 }
 /* The view toolbar: search, the one Filter control, its chips, display. */
 .toolbar-button {
-  border-color: var(--border);
-  color: var(--muted);
+  border-color: var(--ui-line);
+  color: var(--ui-muted);
 }
 .toolbar-button kbd {
-  font-size: 10px;
+  font-size: 11px;
 }
 .toolbar-button[data-popup-open] {
-  background: var(--hover);
-  color: var(--text);
+  background: var(--ui-hover);
+  color: var(--ui-ink);
 }
 .filter-bar {
   display: flex;
@@ -595,9 +614,9 @@ body:has(.bulk-bar) .toast-viewport {
 .filter-chip {
   display: inline-flex;
   align-items: stretch;
-  border: 1px solid var(--border);
+  border: 1px solid var(--ui-line);
   border-radius: 6px;
-  background: var(--subtle);
+  background: var(--ui-head);
   font-size: 12px;
 }
 .filter-chip-body {
@@ -610,10 +629,10 @@ body:has(.bulk-bar) .toast-viewport {
   font-weight: 400;
 }
 .chip-subject {
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .chip-verb {
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .chip-values {
   font-weight: 500;
@@ -626,15 +645,15 @@ body:has(.bulk-bar) .toast-viewport {
   min-width: 26px;
   padding: 0 6px;
   border: 0;
-  border-left: 1px solid var(--border);
+  border-left: 1px solid var(--ui-line);
   border-radius: 0 6px 6px 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .filter-chip-remove:hover,
 .filter-chip-body:hover {
-  background: var(--hover);
-  color: var(--text);
+  background: var(--ui-hover);
+  color: var(--ui-ink);
 }
 .filter-popover {
   width: 290px;
@@ -644,19 +663,23 @@ body:has(.bulk-bar) .toast-viewport {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 10px;
-  border-bottom: 1px solid var(--border);
-  color: var(--muted);
+  min-height: 36px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ui-line-soft);
+  color: var(--ui-muted);
+}
+.command-search input,
+.command-search input:focus-visible {
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
 }
 .command-search input {
   flex: 1;
-  padding: 10px 0;
-  border: 0;
+  padding: 8px 0;
   background: transparent;
-  font-size: 13px;
-}
-.command-search input:focus-visible {
-  outline: none;
+  font-size: 12.5px;
 }
 .command-items {
   max-height: 300px;
@@ -669,18 +692,20 @@ body:has(.bulk-bar) .toast-viewport {
 }
 .popover-title {
   margin-bottom: 10px;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
 }
+/* A row may be a label or a div (Ordering holds two controls). */
 .display-row {
+  display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 8px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 500;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+  font-weight: 400;
 }
 .display-row .picker {
   width: 160px;
@@ -714,8 +739,9 @@ body:has(.bulk-bar) .toast-viewport {
 }
 .display-properties legend {
   margin: 6px 0 8px;
-  color: var(--muted);
-  font-size: 11px;
+  color: var(--ui-muted);
+  font-size: 12px;
+  font-weight: 400;
 }
 .display-properties > div {
   display: flex;
@@ -723,15 +749,18 @@ body:has(.bulk-bar) .toast-viewport {
   gap: 6px;
 }
 .toggle-chip {
-  min-height: 28px;
-  padding: 3px 10px;
+  min-height: 26px;
+  padding: 0 9px;
+  border-color: var(--ui-line);
+  border-radius: 5px;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--ui-muted);
 }
+/* On reads as a pressed chip (sidebar's active fill), not an accent block. */
 .toggle-chip[aria-pressed="true"] {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
+  border-color: var(--ui-btn-edge);
+  background: var(--ui-active);
+  color: var(--ui-ink);
 }
 /* The issue's properties panel and the New issue dialog. */
 .properties label {
@@ -750,9 +779,9 @@ body:has(.bulk-bar) .toast-viewport {
   min-height: 18px;
 }
 .property-name {
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 500;
+  color: var(--ui-muted);
+  font-size: 12px;
+  font-weight: 400;
 }
 .priority-mode,
 .priority-mode-reset {
@@ -766,18 +795,18 @@ body:has(.bulk-bar) .toast-viewport {
   white-space: nowrap;
 }
 .priority-mode {
-  border: 1px solid var(--border);
-  background: var(--subtle);
-  color: var(--muted);
+  border: 1px solid var(--ui-line);
+  background: var(--ui-head);
+  color: var(--ui-muted);
 }
 .priority-mode-reset {
   min-height: 20px;
-  border-color: var(--accent);
+  border-color: var(--ui-accent);
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--ui-accent);
 }
 .priority-mode-reset:hover:not(:disabled) {
-  background: var(--hover);
+  background: var(--ui-hover);
 }
 .property-value {
   justify-content: flex-start;
@@ -803,13 +832,18 @@ body:has(.bulk-bar) .toast-viewport {
   flex-wrap: wrap;
   gap: 6px;
 }
+/* Unset properties under the New issue form: console chips. */
 .property-chip {
   max-width: 240px;
-  min-height: 28px;
-  padding: 3px 10px;
-  border-radius: 14px;
-  color: var(--muted);
+  min-height: 26px;
+  padding: 0 9px;
+  border-color: var(--ui-line);
+  border-radius: 5px;
+  color: var(--ui-muted);
   font-size: 12px;
+}
+.property-chip:hover:not(:disabled) {
+  color: var(--ui-ink);
 }
 .property-chip > span {
   overflow: hidden;
@@ -830,13 +864,22 @@ body:has(.bulk-bar) .toast-viewport {
 .palette-back {
   width: 26px;
   height: 26px;
+  min-height: 26px;
   padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ui-muted);
+}
+.palette-back:hover {
+  background: var(--ui-hover);
+  color: var(--ui-ink);
 }
 .palette-step-title {
   font-weight: 600;
 }
 .palette-results .option-icon {
-  color: var(--muted);
+  color: var(--ui-muted);
 }
 .shortcut-sheet {
   display: grid;
@@ -845,9 +888,9 @@ body:has(.bulk-bar) .toast-viewport {
 }
 .shortcut-sheet h3 {
   margin: 14px 0 4px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
+  color: var(--ui-muted);
+  font-size: 12px;
+  font-weight: 500;
 }
 @media (max-width: 767px) {
   select.picker option,
@@ -855,6 +898,11 @@ body:has(.bulk-bar) .toast-viewport {
   .menu-item {
     min-height: 44px;
     font-size: 14px;
+  }
+  .palette-back {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
   }
   .picker-popup,
   .menu-popup {
@@ -870,6 +918,7 @@ body:has(.bulk-bar) .toast-viewport {
   }
   .picker-search,
   .command-search input {
+    min-height: 44px;
     font-size: 16px;
   }
   .picker {
@@ -918,7 +967,7 @@ body:has(.bulk-bar) .toast-viewport {
   .bulk-clear-count {
     display: inline;
     font-weight: 600;
-    color: var(--text);
+    color: var(--ui-ink);
   }
   .bulk-bar .option-label,
   .bulk-action > span {

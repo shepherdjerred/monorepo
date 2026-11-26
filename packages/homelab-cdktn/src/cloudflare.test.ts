@@ -63,8 +63,8 @@ describe("cloudflare stack", () => {
       ),
     ).toEqual({
       cloudflare_ct_alerting: 10,
-      // 82 application records and 208 of the ten baselines.
-      cloudflare_dns_record: 290,
+      // 81 application records and 208 of the ten baselines.
+      cloudflare_dns_record: 289,
       cloudflare_r2_bucket: 4,
       cloudflare_r2_bucket_lifecycle: 4,
       cloudflare_r2_custom_domain: 2,
@@ -276,8 +276,8 @@ describe("cloudflare records and redirects", () => {
     const tunnel = Object.entries(records ?? {}).filter(
       ([, record]) => record["content"] === TUNNEL,
     );
-    // 47 application hostnames and each zone's MTA-STS policy host.
-    expect(tunnel).toHaveLength(57);
+    // 46 application hostnames and each zone's MTA-STS policy host.
+    expect(tunnel).toHaveLength(56);
     for (const [name, record] of tunnel)
       expect(record, name).toMatchObject({
         type: "CNAME",

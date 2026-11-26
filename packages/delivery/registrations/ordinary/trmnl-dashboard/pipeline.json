@@ -2,7 +2,7 @@
   "kind": "argocd",
   "trmnlPlugins": { "archiveComponent": "archive:trmnl-plugins" },
   "application": "trmnl-dashboard",
-  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartRepository": "https://charts.tailnet-1a49.ts.net",
   "chartName": "trmnl-dashboard",
   "chartComponent": "chart:trmnl-dashboard",
   "namespace": "trmnl-dashboard",

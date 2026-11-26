@@ -5,7 +5,7 @@ import { DockerProvider } from "#generated/providers/docker/provider/index.ts";
 import { HubRepository } from "#generated/providers/docker/hub-repository/index.ts";
 import { encryptStateAndPlans } from "#src/encryption.ts";
 import { HomelabStack } from "#src/homelab-stack.ts";
-import { importInstance, retire } from "#src/state-migrations.ts";
+import { importInstance, protect, retire } from "#src/state-migrations.ts";
 
 /**
  * First-party repositories in the personal `shepherdjerred` Docker Hub
@@ -108,6 +108,20 @@ export class DockerhubStack extends HomelabStack {
       this,
       'docker_hub_repository.image["errors"]',
       "shepherdjerred/errors",
+    );
+
+    // Self-bootstrap OCI Helm chart repository for the first-party `charts`
+    // registry: public so anonymous OCI resolution in Delivery and ArgoCD can
+    // pull and recover `charts` without `charts` itself being up. Created by
+    // `tofu-dockerhub/prod` before `CHARTS_BOOTSTRAP_OCI_ENABLED` flips on.
+    protect(
+      new HubRepository(this, "charts_bootstrap", {
+        namespace: Token.asString(registryNamespace),
+        name: "charts-bootstrap",
+        description:
+          "Bootstrap Helm chart for first-party charts registry from shepherdjerred/monorepo",
+        private: false,
+      }),
     );
 
     // Arcade replaced the Discord Plays Pokémon and Mario Kart deployments,

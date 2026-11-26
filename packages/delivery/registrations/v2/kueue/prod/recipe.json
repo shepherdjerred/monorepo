@@ -1,5 +1,5 @@
 {
-  "id": "kueue/prod/1",
+  "id": "kueue/prod/2",
   "definition": {
     "kind": "compound",
     "subRecipes": [
@@ -71,7 +71,7 @@
               "namespace": "kueue-system"
             },
             "source": {
-              "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+              "repoURL": "https://charts.tailnet-1a49.ts.net",
               "chart": "kueue-queues"
             },
             "syncOptions": [

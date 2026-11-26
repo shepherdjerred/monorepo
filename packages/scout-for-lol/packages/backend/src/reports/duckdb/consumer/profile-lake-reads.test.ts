@@ -1,6 +1,9 @@
 import { DiscordGuildIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -16,6 +19,7 @@ import {
   fetchTimelineCoverage,
   fetchTimelineEventPage,
   fetchTimelineFramePage,
+  fetchTimelineCheckpointFrames,
   fetchTimelineFramesAtIndex,
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import { fetchChampionComparisons } from "#src/reports/duckdb/consumer/profile-champion-comparison.ts";
@@ -83,9 +87,10 @@ function frame(options: {
   timestamp: number;
   participantId: number;
   puuid: LeaguePuuid;
+  matchId?: RiotMatchId;
 }): TimelineParticipantFrameLakeRow {
   return {
-    match_id: matchId,
+    match_id: options.matchId ?? matchId,
     month: "2026-08",
     observed_at: "2026-08-20 12:30:00.000",
     frame_index: options.index,
@@ -135,6 +140,23 @@ function eventParticipant(options: {
     role_index: 0,
   };
 }
+
+async function checkpointStamps(id: string): Promise<number[]> {
+  const frames = await fetchTimelineCheckpointFrames({
+    matchId: RiotMatchIdSchema.parse(id),
+    checkpointMs: 900_000,
+    lakeDir,
+  });
+  return frames.map((row) => row.frame_timestamp_ms);
+}
+
+/** Frame stamps for the 15:00 checkpoint cases; Riot stamps frames just after the minute. */
+const checkpointMatchFrames: Record<string, number[]> = {
+  NA1_9100000021: [840_217, 900_000, 960_100],
+  NA1_9100000022: [840_217, 900_303, 960_411],
+  NA1_9100000023: [840_217, 960_411, 1_020_500],
+  NA1_9100000024: [780_190, 840_217, 870_000],
+};
 
 const coverage: TimelineCoverageLakeRow = {
   match_id: matchId,
@@ -238,6 +260,17 @@ beforeAll(async () => {
         participantId: 1,
         puuid: playerOne,
       }),
+      ...Object.entries(checkpointMatchFrames).flatMap(([id, stamps]) =>
+        stamps.map((timestamp) =>
+          frame({
+            index: Math.floor(timestamp / 60_000),
+            timestamp,
+            participantId: 1,
+            puuid: playerOne,
+            matchId: RiotMatchIdSchema.parse(id),
+          }),
+        ),
+      ),
     ],
     timelineCoverage: [coverage],
   });
@@ -374,6 +407,24 @@ describe("consumer profile lake reads", () => {
     ).toEqual([
       expect.objectContaining({ participant_id: 2, minions_killed: 10 }),
     ]);
+  });
+
+  describe("15:00 checkpoint frames", () => {
+    test("reads a frame stamped exactly on the checkpoint", async () => {
+      expect(await checkpointStamps("NA1_9100000021")).toEqual([900_000]);
+    });
+
+    test("reads the frame stamped just after the checkpoint, not the 14:00 frame", async () => {
+      expect(await checkpointStamps("NA1_9100000022")).toEqual([900_303]);
+    });
+
+    test("has no checkpoint when the 15:00 frame is missing, even with later frames", async () => {
+      expect(await checkpointStamps("NA1_9100000023")).toEqual([]);
+    });
+
+    test("has no checkpoint when the game ended at 14:30", async () => {
+      expect(await checkpointStamps("NA1_9100000024")).toEqual([]);
+    });
   });
 
   test("returns null when Scout never retained timeline coverage", async () => {

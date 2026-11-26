@@ -1,5 +1,5 @@
 {
-  "id": "delivery-control-plane/2",
+  "id": "delivery-control-plane/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "temporal"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "delivery-control-plane"
       },
       "syncOptions": ["CreateNamespace=true"],

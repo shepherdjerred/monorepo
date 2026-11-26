@@ -1,9 +1,17 @@
 import { expect, test } from "@playwright/test";
 
-test("serves Berkeley Mono as a font instead of the SPA fallback", async ({
+test("serves the bundled Berkeley Mono as a font instead of the SPA fallback", async ({
   request,
 }) => {
-  const response = await request.get("/fonts/BerkeleyMono-Regular.woff2");
+  const home = await request.get("/");
+  const html = await home.text();
+  const stylesheet = /href="(\/assets\/[^"]+\.css)"/u.exec(html)?.[1];
+  expect(stylesheet).toBeDefined();
+  const sheet = await request.get(stylesheet ?? "");
+  const css = await sheet.text();
+  const font = /\/assets\/BerkeleyMono-Regular-[\w-]+\.woff2/u.exec(css)?.[0];
+  expect(font).toBeDefined();
+  const response = await request.get(font ?? "");
   const bytes = await response.body();
 
   expect(response.status()).toBe(200);

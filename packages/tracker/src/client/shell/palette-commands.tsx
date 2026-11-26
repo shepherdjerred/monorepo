@@ -43,7 +43,8 @@ import {
   toggleArchived,
 } from "#client/controls/issue-actions.ts";
 import type { IssuePrefill } from "#client/issues/issue-form.tsx";
-import { applyTheme, savedTheme, type Theme } from "#client/ui/theme.ts";
+import type { ThemePreference as Theme } from "@shepherdjerred/console-ui";
+import { trackerTheme } from "#client/ui/theme.ts";
 import { revealTheme } from "#client/feedback/motion.ts";
 import type { Targets } from "./shell-actions.ts";
 import { shortcutKeys } from "./shortcuts.ts";
@@ -425,12 +426,12 @@ function workspaceEntries(context: PaletteContext): PaletteEntry[] {
             label: theme.label,
             icon: theme.icon,
             section: "Theme",
-            checked: savedTheme() === theme.value,
+            checked: trackerTheme.getPreference() === theme.value,
             run: () => {
               // Chosen from the keyboard: the theme spreads from the top.
               revealTheme(
                 () => {
-                  applyTheme(theme.value);
+                  trackerTheme.setThemePreference(theme.value);
                 },
                 { x: globalThis.innerWidth / 2, y: 0 },
               );

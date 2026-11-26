@@ -7,7 +7,6 @@ import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/k
 import { createTailscaleResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/tailscale.ts";
 import { createPrometheusResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/prometheus-resources.ts";
 import { createCloudflareOperatorResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/cloudflare-operator.ts";
-import { createChartMuseumResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/chartmuseum.ts";
 import { createMinecraftTsmcResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/minecraft-tsmc.ts";
 import { createLokiResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/loki.ts";
 import { createTempoResources } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/tempo.ts";
@@ -52,7 +51,6 @@ const COMPANION_RESOURCES: Readonly<
   tailscale: createTailscaleResources,
   prometheus: createPrometheusResources,
   "cloudflare-operator": createCloudflareOperatorResources,
-  chartmuseum: createChartMuseumResources,
   "minecraft-tsmc": createMinecraftTsmcResources,
   loki: createLokiResources,
   tempo: createTempoResources,

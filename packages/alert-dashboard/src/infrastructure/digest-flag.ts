@@ -5,15 +5,16 @@ import {
   type InitFeatureFlagsOptions,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { managedBooleanDefault } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import {
   createFlagMetricsRecorder,
   type FlagMetricsRecorder,
 } from "@shepherdjerred/feature-flags/observability.ts";
-import {
-  MailboxAddressSchema,
-  OPS_MAILBOXES,
-} from "@shepherdjerred/ops-model/email/mailbox.ts";
+import { OPS_MAILBOXES } from "@shepherdjerred/ops-model/email/mailbox.ts";
 import { z } from "zod";
 
 const TARGETING_KEY = "alert-dashboard";
@@ -32,25 +33,25 @@ const DEFINITION = {
     names: { flag: "alert-dashboard-daily-digest-quiet-clear" },
   },
   incidentEmailFrom: {
-    schema: MailboxAddressSchema,
+    schema: flagValueSchema("alert-dashboard-incident-email-from"),
     sources: ["flag", "default"],
     default: OPS_MAILBOXES.alerts.from,
     names: { flag: "alert-dashboard-incident-email-from" },
   },
   incidentEmailTo: {
-    schema: z.email(),
+    schema: flagValueSchema("alert-dashboard-incident-email-to"),
     sources: ["flag", "default"],
     default: OPS_MAILBOXES.alerts.to,
     names: { flag: "alert-dashboard-incident-email-to" },
   },
   digestEmailFrom: {
-    schema: MailboxAddressSchema,
+    schema: flagValueSchema("alert-dashboard-digest-email-from"),
     sources: ["flag", "default"],
     default: OPS_MAILBOXES.digests.from,
     names: { flag: "alert-dashboard-digest-email-from" },
   },
   digestEmailTo: {
-    schema: z.email(),
+    schema: flagValueSchema("alert-dashboard-digest-email-to"),
     sources: ["flag", "default"],
     default: OPS_MAILBOXES.digests.to,
     names: { flag: "alert-dashboard-digest-email-to" },
@@ -66,10 +67,12 @@ function createResolver() {
         kinds: {
           alertEmailEnabled: "boolean",
           dailyDigestQuietClear: "boolean",
-          incidentEmailFrom: "string",
-          incidentEmailTo: "string",
-          digestEmailFrom: "string",
-          digestEmailTo: "string",
+          incidentEmailFrom: flagValueKind(
+            "alert-dashboard-incident-email-from",
+          ),
+          incidentEmailTo: flagValueKind("alert-dashboard-incident-email-to"),
+          digestEmailFrom: flagValueKind("alert-dashboard-digest-email-from"),
+          digestEmailTo: flagValueKind("alert-dashboard-digest-email-to"),
         },
       }),
     },

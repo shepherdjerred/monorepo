@@ -53,6 +53,28 @@ describe("eraseFromSegment", () => {
     expect(decodeSegment(result.segment.bytes)).toHaveLength(2);
   });
 
+  test("takes the erased player's checkpoints out with their match and keeps the others'", async () => {
+    const original = await crawlSegmentOf(DAY, [
+      { matchId: "NA1_9400000041" },
+      { matchId: "NA1_9400000042", player: ERASED },
+    ]);
+    const checkpointLines = (bytes: Uint8Array) =>
+      lines(bytes).filter((line) => line.includes('"checkpoints":[{'));
+    expect(checkpointLines(original.bytes)).toHaveLength(2);
+
+    const result = eraseFromSegment({
+      bytes: original.bytes,
+      route: original.route,
+      dt: original.dt,
+      erased: ERASED_SET,
+    });
+    if (result.kind !== "rewritten") throw new Error(`got ${result.kind}`);
+
+    expect(checkpointLines(result.segment.bytes)).toEqual([
+      lines(original.bytes)[0],
+    ]);
+  });
+
   test("a second pass over the rewritten segment is a no-op", async () => {
     const original = await crawlSegmentOf(DAY, [
       { matchId: "NA1_9400000011" },

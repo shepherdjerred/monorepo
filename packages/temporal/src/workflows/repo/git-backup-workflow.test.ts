@@ -27,8 +27,16 @@ describe("runGitBackupWorkflow", () => {
         repositories: [],
       };
 
+      let attempts = 0;
       const repoActivities: GitBackupActivities = {
-        runGitBackup: () => Promise.resolve(fakeResult),
+        runGitBackup: () => {
+          attempts += 1;
+          return attempts < 3
+            ? Promise.reject(
+                new Error(`worker pod recreate #${String(attempts)}`),
+              )
+            : Promise.resolve(fakeResult);
+        },
       };
       const reportActivities: Pick<
         ReportDeliveryActivities,
@@ -75,6 +83,7 @@ describe("runGitBackupWorkflow", () => {
         ),
       );
 
+      expect(attempts).toBe(3);
       expect(outcome).toEqual(fakeResult);
       expect(deliveredReports).toHaveLength(1);
       expect(deliveredReports[0]).toMatchObject({

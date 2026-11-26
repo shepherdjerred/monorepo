@@ -21,6 +21,7 @@ import { docker } from "@shepherdjerred/mc-harness/providers/docker/docker-cli.t
 import { serverLogs } from "#e2e/harness/external/files.ts";
 import { openNativeObserver } from "#learning/native/observer.ts";
 import { stageMap } from "#learning/maps/stage.ts";
+import { ensureNavMeshes } from "#maps/nav/meshes.ts";
 import { trainingMaps } from "#learning/maps/plan.ts";
 import { trainingScenarioFor } from "#learning/maps/training-scenarios.ts";
 
@@ -240,6 +241,7 @@ export async function openPaperDuels(
       mapId,
       {
         duel: profile === "duel",
+        ensureMeshes: ensureNavMeshes,
         ...trainingScenarioOption(trainingScenario),
         mapTool: path.join(
           root,

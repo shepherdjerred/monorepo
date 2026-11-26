@@ -7,7 +7,6 @@ import { getResourceMonitoringRuleGroups } from "./rules/platform/resource-monit
 import { getZfsMonitoringRuleGroups } from "./rules/storage/zfs.ts";
 import { getSmartctlRuleGroups } from "./rules/storage/smartctl.ts";
 import { getNvmeRuleGroups } from "./rules/storage/nvme.ts";
-import { getGitckupRuleGroups } from "./rules/gitckup.ts";
 import { getQBitTorrentRuleGroups } from "./rules/qbittorrent.ts";
 import { getStaticSitesRuleGroups } from "./rules/static-sites.ts";
 import { getServiceProbeRuleGroups } from "./rules/service-probes.ts";
@@ -170,18 +169,6 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getNvmeRuleGroups(),
-    },
-  });
-
-  // Create Gitckup rules
-  new PrometheusRule(chart, "prometheus-gitckup-rules", {
-    metadata: {
-      name: "prometheus-gitckup-rules",
-      namespace: "gickup",
-      labels: { release: "prometheus" },
-    },
-    spec: {
-      groups: getGitckupRuleGroups(),
     },
   });
 

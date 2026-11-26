@@ -31,8 +31,13 @@ tasks.test {
       .file(rootProject.file("../server/owned/plugins/TheStorm/rwf-archive.json"))
       .withPropertyName("archiveContract")
       .withPathSensitivity(PathSensitivity.RELATIVE)
+  // The bots' nav.rwfnav artifacts are fetched build output this suite never reads; a rebake
+  // still reaches it through nav-manifest.json and nav.summary.json.
   inputs
-      .dir(rootProject.file("../server/owned/plugins/TheStorm/rwf"))
+      .files(
+          fileTree(rootProject.file("../server/owned/plugins/TheStorm/rwf")) {
+            exclude("**/nav.rwfnav")
+          })
       .withPropertyName("shippedContent")
       .withPathSensitivity(PathSensitivity.RELATIVE)
 }

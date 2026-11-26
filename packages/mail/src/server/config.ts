@@ -10,6 +10,7 @@ import {
   FeatureFlagModeSchema,
   type FeatureFlagMode,
 } from "@shepherdjerred/feature-flags/config/schema.ts";
+import { flagValueSchema } from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import type { FlagMetricsRecorder } from "@shepherdjerred/feature-flags/observability.ts";
 import { MailClientsMapSchema, type MailClientsMap } from "./auth.ts";
 
@@ -82,12 +83,8 @@ const MailEnvSchema = z.object({
   FEATURE_FLAGS_MODE: OptionalNonEmptyStringSchema,
 });
 
-export const MailSettingsSchema = z.object({
-  retentionDays: z.number().int().positive().default(30),
-  maxPerClientPerTenMinutes: z.number().int().positive().default(200),
-  allowCleartextSmtpAuth: z.boolean().default(false),
-});
-export type MailSettings = z.infer<typeof MailSettingsSchema>;
+const MailSettingsSchema = flagValueSchema("mail-settings");
+export type MailSettings = z.output<typeof MailSettingsSchema>;
 
 export const DEFAULT_MAIL_SETTINGS: MailSettings = {
   retentionDays: 30,
@@ -242,8 +239,7 @@ export async function initMailFeatureFlags(options: {
           default: DEFAULT_MAIL_SETTINGS_JSON,
           targetingKey: "mail",
         });
-        const parsedJson: unknown = JSON.parse(result.value);
-        return MailSettingsSchema.parse(parsedJson);
+        return MailSettingsSchema.parse(result.value);
       } catch (error) {
         console.warn(
           JSON.stringify({

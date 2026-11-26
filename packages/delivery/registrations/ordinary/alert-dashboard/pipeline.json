@@ -1,7 +1,7 @@
 {
   "kind": "argocd",
   "application": "alert-dashboard",
-  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartRepository": "https://charts.tailnet-1a49.ts.net",
   "chartName": "alert-dashboard",
   "chartComponent": "chart:alert-dashboard",
   "namespace": "alert-dashboard",

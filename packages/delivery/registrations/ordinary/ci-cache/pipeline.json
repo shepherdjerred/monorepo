@@ -1,7 +1,7 @@
 {
   "kind": "argocd",
   "application": "ci-cache",
-  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartRepository": "https://charts.tailnet-1a49.ts.net",
   "chartName": "ci-cache",
   "chartComponent": "chart:ci-cache",
   "namespace": "ci-cache",

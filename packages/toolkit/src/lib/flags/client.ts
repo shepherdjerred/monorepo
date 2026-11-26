@@ -39,6 +39,8 @@ const ConflictSchema = z.object({
   flags: z.array(FlagSchema),
 });
 
+const IssueSchema = z.object({ path: z.string(), message: z.string() });
+
 const DiffSchema = z.object({
   deployments: z.array(
     z.object({
@@ -46,8 +48,23 @@ const DiffSchema = z.object({
       missing: z.array(z.unknown()),
       extra: z.array(z.string()),
       drift: z.array(z.object({ key: z.string() })),
+      // Flags servers released before value-schema validation omit this.
+      invalid: z
+        .array(
+          z.object({
+            key: z.string(),
+            value: z.string(),
+            issues: z.array(IssueSchema),
+          }),
+        )
+        .default([]),
     }),
   ),
+});
+
+const InvalidValuesSchema = z.object({
+  error: z.literal("invalid flag values"),
+  issues: z.array(IssueSchema.extend({ key: z.string() })),
 });
 
 const ApplyFileSchema = z.object({
@@ -249,18 +266,40 @@ async function diff(
     (deployment) =>
       deployment.missing.length > 0 ||
       deployment.extra.length > 0 ||
-      deployment.drift.length > 0,
+      deployment.drift.length > 0 ||
+      deployment.invalid.length > 0,
   );
   if (!json) {
-    for (const deployment of dirty) {
-      const drift = deployment.drift.map((flag) => flag.key).join(",");
-      io.stdout(
-        `${deployment.id}\tmissing ${String(deployment.missing.length)}\textra ${String(deployment.extra.length)}\tdrift ${drift}`,
-      );
-    }
+    for (const deployment of dirty) printDirtyDeployment(io, deployment);
     if (dirty.length === 0) io.stdout("diff empty");
   }
   return dirty.length === 0 ? 0 : 1;
+}
+
+function printDirtyDeployment(
+  io: FlagsIo,
+  deployment: z.infer<typeof DiffSchema>["deployments"][number],
+): void {
+  const drift = deployment.drift.map((flag) => flag.key).join(",");
+  const invalid = deployment.invalid.map((flag) => flag.key).join(",");
+  io.stdout(
+    `${deployment.id}\tmissing ${String(deployment.missing.length)}\textra ${String(deployment.extra.length)}\tdrift ${drift}\tinvalid ${invalid}`,
+  );
+  for (const entry of deployment.invalid) {
+    for (const issue of entry.issues) {
+      io.stdout(`  ${formatIssue({ key: entry.key, ...issue })}`);
+    }
+  }
+}
+
+function formatIssue(issue: {
+  readonly key: string;
+  readonly path: string;
+  readonly message: string;
+}): string {
+  return issue.path === ""
+    ? `${issue.key}: ${issue.message}`
+    : `${issue.key} ${issue.path}: ${issue.message}`;
 }
 
 function fail(io: FlagsIo, status: number, body: unknown): number {
@@ -296,10 +335,29 @@ export async function applyFlagsFile(
     else io.stderr(message);
     return 2;
   }
+  const invalid =
+    status === 400 ? InvalidValuesSchema.safeParse(body) : undefined;
+  if (invalid?.success === true) {
+    printInvalidValues(io, json, invalid.data);
+    return 1;
+  }
   if (status !== 200) return fail(io, status, body);
   const result = ApplyResultSchema.parse(body);
   io.stdout(
     json ? JSON.stringify(result) : `revised to ${String(result.revision)}`,
   );
   return 0;
+}
+
+function printInvalidValues(
+  io: FlagsIo,
+  json: boolean,
+  refused: z.infer<typeof InvalidValuesSchema>,
+): void {
+  if (json) {
+    io.stdout(JSON.stringify(refused));
+    return;
+  }
+  io.stderr("invalid flag values; nothing was written:");
+  for (const issue of refused.issues) io.stderr(`  ${formatIssue(issue)}`);
 }

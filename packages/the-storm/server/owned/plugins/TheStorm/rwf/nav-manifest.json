@@ -1,0 +1,230 @@
+{
+  "baseUrl": "https://public.sjer.red/the-storm/nav/sha256",
+  "objects": [
+    {
+      "path": "lobby/nav.rwfnav",
+      "sha256": "abbed13c5f751e982d2056cea31a321007df9a76f2a3b7dadf0ed4c6f630d875",
+      "bytes": 3055278
+    },
+    {
+      "path": "maps/apex-expanse/nav.rwfnav",
+      "sha256": "a2ea1d67b0dbf16c175dc8d2e6255536b4a6d93e0b413835d932da857ab109a1",
+      "bytes": 13669947
+    },
+    {
+      "path": "maps/bamboo-bastion/nav.rwfnav",
+      "sha256": "18574014e5d452a9650fe714b8db16076df33fa9e5125f8cd2d133165b03008d",
+      "bytes": 1584976
+    },
+    {
+      "path": "maps/battle-scarred/nav.rwfnav",
+      "sha256": "7a7110d98911e5d9c78655f96bb3b0fc35aa743fbd58f6456261a813ff8e598b",
+      "bytes": 4166162
+    },
+    {
+      "path": "maps/beanstalk/nav.rwfnav",
+      "sha256": "17ed1c891a6042094911da99b9b5aa3307ed03c1d9d82991a980de367a0f4967",
+      "bytes": 1432995
+    },
+    {
+      "path": "maps/catacombs/nav.rwfnav",
+      "sha256": "56c30bf75996327aa8355ebe12e698f35085bc2bb096aa3cebaec254311d5025",
+      "bytes": 1071606
+    },
+    {
+      "path": "maps/cloned-balance/nav.rwfnav",
+      "sha256": "a829791423d2a87df76a6f6deb809c3ddc7ffdc00abf6a93dbf4f66dd4f06677",
+      "bytes": 2441437
+    },
+    {
+      "path": "maps/cloned-beanstalks/nav.rwfnav",
+      "sha256": "44d607661a0bf2a88479366c51094115b6de67892284cd8cc505095f0d78a2b1",
+      "bytes": 9208117
+    },
+    {
+      "path": "maps/copperworks/nav.rwfnav",
+      "sha256": "a480bc2d6940adc6042c1b1588730d8f74ceb55fb81b92a0b6fb6e233c033192",
+      "bytes": 1446376
+    },
+    {
+      "path": "maps/cors-path/nav.rwfnav",
+      "sha256": "d37d760f4a87f425fbf7360c785ab767c301fed7a5f7567c81c72e86888f9f64",
+      "bytes": 780008
+    },
+    {
+      "path": "maps/fairylands/nav.rwfnav",
+      "sha256": "e6b6cfe63e8d87dd6c2b0074df79c145e6bb15cea5c3799ff0e8a4b4b97ad9ca",
+      "bytes": 7433953
+    },
+    {
+      "path": "maps/fancy-castles/nav.rwfnav",
+      "sha256": "943b130a4fe4a4e21dff5eeb1e6d141475ee20a693d80ba5dd3264e3d36c243c",
+      "bytes": 6115357
+    },
+    {
+      "path": "maps/fjords/nav.rwfnav",
+      "sha256": "afd9bc845089a08260b3c839f89cbbad9cdc1c87de92fc051961c941959786f7",
+      "bytes": 8200888
+    },
+    {
+      "path": "maps/floating-isles/nav.rwfnav",
+      "sha256": "320c4da5e61b5037d15466b9e5335fce53c748d498d258f363f06475f0b882ed",
+      "bytes": 8240525
+    },
+    {
+      "path": "maps/flying-ships/nav.rwfnav",
+      "sha256": "cd36455a8ccae5042398f0809161a178a2103aa72a561f02cc3cafbf4aa080d2",
+      "bytes": 933442
+    },
+    {
+      "path": "maps/frostline/nav.rwfnav",
+      "sha256": "998a772396a0795855a98d0e7da32963fe387d7e7a2ef7502ac6ca6fd525e840",
+      "bytes": 1596980
+    },
+    {
+      "path": "maps/gardens/nav.rwfnav",
+      "sha256": "dd1b09b65200fea42c74431dc32ccfd67c3c8be0a782c14c427915464143e094",
+      "bytes": 1012890
+    },
+    {
+      "path": "maps/grove-wars/nav.rwfnav",
+      "sha256": "30b76cfe13d1969c33db39c07aebcc0fe0ed6e3903390416ea7f1213b3af4814",
+      "bytes": 4959203
+    },
+    {
+      "path": "maps/hemispheres/nav.rwfnav",
+      "sha256": "73e3e187b3eff0c06b812a5ba8f02bda7bed69b2ac7dcd2a205faaeb33f78076",
+      "bytes": 12146011
+    },
+    {
+      "path": "maps/main-street/nav.rwfnav",
+      "sha256": "ae89030582647e5751251935640a0ff5409335060f2ee6f4d6b8b1189ae95825",
+      "bytes": 4062582
+    },
+    {
+      "path": "maps/miner-dispute/nav.rwfnav",
+      "sha256": "ed4b6d8094ae0b0b53da5348891c6c081cf345b36d1da2b1c999b8d1e9d9e166",
+      "bytes": 3870373
+    },
+    {
+      "path": "maps/modified-tropicals/nav.rwfnav",
+      "sha256": "fa71ec00974a3fcd4392a89266ae5936c5c37184cf93f4654fbd4210c54d3992",
+      "bytes": 35134824
+    },
+    {
+      "path": "maps/mountains/nav.rwfnav",
+      "sha256": "f1515b006fb7f57b82b0930bfefe13ec06ac2289ebfbf1b470a4cc2f38f4bd09",
+      "bytes": 6690580
+    },
+    {
+      "path": "maps/overgrown-relay/nav.rwfnav",
+      "sha256": "448c0996df0befd88a58a501f1c412aa6a2abc2415d1fed42e86ae4d3deeea4b",
+      "bytes": 1613030
+    },
+    {
+      "path": "maps/perfect-balance/nav.rwfnav",
+      "sha256": "227de402aee034e5006172f2a9b64987c244d28c165913761381a105deef0e87",
+      "bytes": 598434
+    },
+    {
+      "path": "maps/pirate-island/nav.rwfnav",
+      "sha256": "cad5ffd9313d1d6d35a9c00aa0783b341c22e1dd230857f8ff6a62e4133c7d70",
+      "bytes": 3759633
+    },
+    {
+      "path": "maps/railcut/nav.rwfnav",
+      "sha256": "3b7e55b7d70ea5e10d72a32446b1053239985a0355de9d141097ca092d5a5b80",
+      "bytes": 1277518
+    },
+    {
+      "path": "maps/red-mesa/nav.rwfnav",
+      "sha256": "708158d7ef3fe5a41384918dfc5c6888d29cbe7171a96d45d22a7af235f92d29",
+      "bytes": 1605166
+    },
+    {
+      "path": "maps/rival-castles/nav.rwfnav",
+      "sha256": "d0e03e4314ea59b5757ea6b64b8e5adf74efc6dfd4cf7937aabf4e5cb5db6d39",
+      "bytes": 38546776
+    },
+    {
+      "path": "maps/rotated-hemispheres/nav.rwfnav",
+      "sha256": "d0961e8693856ac35d9c6e44f59cd5428fb940328dfed370ab7b1cb381616b79",
+      "bytes": 29252660
+    },
+    {
+      "path": "maps/saigon/nav.rwfnav",
+      "sha256": "1c8941fb31972c9fd52f9703f4b272010563e6e705a496f5212940a7add663aa",
+      "bytes": 31163957
+    },
+    {
+      "path": "maps/stormbreak/nav.rwfnav",
+      "sha256": "7ef0e45a02fa3579d31e078eb1498d7a0f29f305fa46f033ef8567886a89ff91",
+      "bytes": 2111952
+    },
+    {
+      "path": "maps/sunspire/nav.rwfnav",
+      "sha256": "bc9eacc6921bcf0ae936677ff4f60c87e5cc2d3d867494c113663fd6206205d6",
+      "bytes": 2025109
+    },
+    {
+      "path": "maps/the-harshest-harvest/nav.rwfnav",
+      "sha256": "d4325fb185b2fe7d2cfb7c5f224e63bb39b55ff8d0cf2134fd9efe37cb1bcfb7",
+      "bytes": 2854239
+    },
+    {
+      "path": "maps/the-lost-kingdom/nav.rwfnav",
+      "sha256": "c1baef91c3534db78bd5aa6fb832647c94e9ac969421419c34202ff54c9d75ca",
+      "bytes": 5778376
+    },
+    {
+      "path": "maps/the-red-sand-seas/nav.rwfnav",
+      "sha256": "e9c09275bba82c7767c2cfe32de62f06e21b18d01485036e398ece4355b87f19",
+      "bytes": 2618706
+    },
+    {
+      "path": "maps/tidewatch/nav.rwfnav",
+      "sha256": "2f82bab409969d4979b7e361c5d670ad9275e352392693fa11865c3d3b226ecf",
+      "bytes": 1898642
+    },
+    {
+      "path": "maps/training-yard/nav.rwfnav",
+      "sha256": "b176fa11ff6f5c306626e19dc9c4a8e4dff41afcba725d31a10eddf256447acc",
+      "bytes": 360984
+    },
+    {
+      "path": "maps/tropical-resort/nav.rwfnav",
+      "sha256": "8c50175dc794a10f9fc3e5e774ade2c8cf661edc5c04239187d73ea1a4dd4fe9",
+      "bytes": 14590792
+    },
+    {
+      "path": "maps/valley/nav.rwfnav",
+      "sha256": "9df8066c77d46c969c17b4c740e62e8c810b40c4cc5535d975ea9ad1d91ece63",
+      "bytes": 5819054
+    },
+    {
+      "path": "maps/village-skirmish/nav.rwfnav",
+      "sha256": "a60d169403970a60f9eee3bffad3ac7652df9a0b6e72542eb292bf0c69d56e3d",
+      "bytes": 4129102
+    },
+    {
+      "path": "maps/warlords-castles/nav.rwfnav",
+      "sha256": "60712083881b21495349221e47a941a283c544722f63bfcb3c0dd3a0f11fe667",
+      "bytes": 91555291
+    },
+    {
+      "path": "maps/warzone/nav.rwfnav",
+      "sha256": "47af9e7c883b50c4a5ac82890f69422c0cf349020546c47ad63a19c83fe8c6f2",
+      "bytes": 2705183
+    },
+    {
+      "path": "maps/wet-britches/nav.rwfnav",
+      "sha256": "0e1af14c7e3f75477dcf6595e8f69d1184de37760c6183206414a6c7e6f680bf",
+      "bytes": 611006
+    },
+    {
+      "path": "maps/wonderland/nav.rwfnav",
+      "sha256": "5fc8d6529ba8ecffabca558ea56117a767d7fdc258d04648ff44a872e336a6e3",
+      "bytes": 2024108
+    }
+  ]
+}

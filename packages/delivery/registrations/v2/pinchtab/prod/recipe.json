@@ -1,5 +1,5 @@
 {
-  "id": "pinchtab/prod/1",
+  "id": "pinchtab/prod/2",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "pinchtab"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "pinchtab"
       },
       "syncOptions": [],

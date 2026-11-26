@@ -27,7 +27,9 @@ COPY --from=manifests /closure/ ./
 RUN bun install --frozen-lockfile --filter '@shepherdjerred/tracker'
 
 FROM deps AS build
-COPY --parents tsconfig.base.json packages/tracker packages/config packages/feature-flags packages/bugsink-config packages/eslint-config ./
+# console-ui and ops-model (the app switcher's links) are TypeScript source the
+# client build bundles; they are devDependencies, so the runtime never needs them.
+COPY --parents tsconfig.base.json packages/tracker packages/console-ui packages/ops-model packages/config packages/feature-flags packages/bugsink-config packages/eslint-config ./
 RUN cd packages/tracker && bun run generate && bun run build
 
 FROM base AS prod-deps

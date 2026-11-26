@@ -1,6 +1,7 @@
 import { cp, mkdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { captureConfig } from "#sandbox/capture-config.ts";
+import { ensureAssets } from "#sandbox/fetched-assets.ts";
 import { paper } from "#src/pins.ts";
 import {
   ensureArtifact,
@@ -120,6 +121,16 @@ export async function stageEntries(
         break;
       }
       case "repo-dir": {
+        if (entry.assets !== undefined) {
+          const manifest = path.join(repoRoot, entry.assets.manifest);
+          // A tree that predates the manifest tracks these files in Git.
+          if (await exists(manifest))
+            await ensureAssets({
+              manifest,
+              fetch: entry.assets.fetch,
+              cwd: repoRoot,
+            });
+        }
         await cp(source, target, { recursive: true });
         break;
       }

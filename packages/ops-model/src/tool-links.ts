@@ -12,7 +12,6 @@ export const TOOL_HOSTS = {
   grafana: "https://grafana.tailnet-1a49.ts.net",
   temporal: "https://temporal-ui.tailnet-1a49.ts.net",
   bugsink: "https://bugsink.sjer.red",
-  chartmuseum: "https://chartmuseum.tailnet-1a49.ts.net",
   phoenix: "https://phoenix.tailnet-1a49.ts.net",
   posthog: "https://us.posthog.com",
   prometheus: "https://prometheus.tailnet-1a49.ts.net",
@@ -35,6 +34,8 @@ export const APP_HOSTS = {
   media: "https://media.tailnet-1a49.ts.net",
   tasknotes: "https://tasknotes.tailnet-1a49.ts.net",
   mail: "https://mail.tailnet-1a49.ts.net",
+  charts: "https://charts.tailnet-1a49.ts.net",
+  ciCache: "https://ci-cache.tailnet-1a49.ts.net",
 } as const;
 
 const POSTHOG_PROJECT_ID = 549_883;
@@ -42,9 +43,10 @@ const POSTHOG_PROJECT_ID = 549_883;
 export type ConsoleLinkGroup = "Apps" | "Tools";
 
 /**
- * One entry in the app switcher shared by Hub, Go link and Flags, and in
- * Hub's launcher and command palette. `id` is stable so each console can
- * mark itself as current and attach its own icon.
+ * One entry in the app switcher shared by the consoles (Hub, Delivery,
+ * Tracker, Go link, Flags), and in Hub's launcher and command palette. `id`
+ * is stable so each console can mark itself as current and attach its own
+ * icon.
  */
 export type ConsoleLink = {
   readonly id: string;
@@ -74,6 +76,8 @@ export const CONSOLE_LINKS: readonly ConsoleLink[] = [
     group: "Apps",
   },
   { id: "mail", label: "Mail", url: APP_HOSTS.mail, group: "Apps" },
+  { id: "charts", label: "Charts", url: APP_HOSTS.charts, group: "Apps" },
+  { id: "ci-cache", label: "CI cache", url: APP_HOSTS.ciCache, group: "Apps" },
   { id: "grafana", label: "Grafana", url: TOOL_HOSTS.grafana, group: "Tools" },
   { id: "argocd", label: "Argo CD", url: TOOL_HOSTS.argocd, group: "Tools" },
   {
@@ -327,13 +331,13 @@ export function grafanaLokiTraceExploreUrl(input: {
   });
 }
 
-/** Chartmuseum chart-version metadata for a chart published there. */
+/** First-party chart-version metadata for a published Helm chart. */
 export function chartmuseumChartLink(name: string, version: string): Link {
   return {
     kind: "registry",
     label: `Chart ${name} ${version}`,
     url: url(
-      TOOL_HOSTS.chartmuseum,
+      APP_HOSTS.charts,
       `api/charts/${encodeURIComponent(name)}/${encodeURIComponent(version)}`,
     ),
   };

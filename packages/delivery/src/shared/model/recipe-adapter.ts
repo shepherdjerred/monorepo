@@ -20,7 +20,7 @@ const CI_RUNNER: RunnerReference = {
   component: "image:ci-base",
 };
 const CLUSTER = "https://kubernetes.default.svc";
-const CHART_REPOSITORY = "https://chartmuseum.tailnet-1a49.ts.net";
+const CHART_REPOSITORY = "https://charts.tailnet-1a49.ts.net";
 
 /** v1 static archives are named `site:<bucket>`; the model names every archive `archive:` (4.3). */
 function archiveComponentName(component: string): string {

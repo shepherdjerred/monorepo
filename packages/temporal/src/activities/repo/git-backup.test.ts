@@ -31,6 +31,7 @@ import {
 } from "./git-backup-report.ts";
 import {
   assertNoDeleteObjectsErrors,
+  createS3GitBackupStore,
   GitBackupLatestManifestSchema,
   type GitBackupLatestManifest,
   type GitBackupObjectStore,
@@ -729,6 +730,67 @@ describe("git-backup LFS enforcement and offline restoration", () => {
       "utf8",
     );
     expect(restoredLfsPayload).toBe("BINARY_LFS_BYTES");
+  });
+
+  test("streams S3 putFile with exact Content-Length and emits heartbeats during upload", async () => {
+    const root = await makeTempDir("git-backup-s3-stream-");
+    const samplePath = path.join(root, "sample.bundle.zst");
+    const payload = Buffer.alloc(131_072, 0x61);
+    await writeFile(samplePath, payload);
+
+    let receivedContentLength: string | null = null;
+    let receivedBytes = 0;
+    const server = Bun.serve({
+      port: 0,
+      hostname: "127.0.0.1",
+      async fetch(req) {
+        receivedContentLength = req.headers.get("content-length");
+        const buf = await req.arrayBuffer();
+        receivedBytes = buf.byteLength;
+        await Bun.sleep(25);
+        return new Response("", {
+          status: 200,
+          headers: { etag: '"streamed-etag"' },
+        });
+      },
+    });
+
+    try {
+      const heartbeats: Record<string, unknown>[] = [];
+      const s3Store = createS3GitBackupStore(
+        {
+          GIT_BACKUP_S3_BUCKET: "git-backups",
+          S3_ENDPOINT: `http://127.0.0.1:${String(server.port)}`,
+          S3_REGION: "us-east-1",
+          AWS_ACCESS_KEY_ID: "test-key",
+          AWS_SECRET_ACCESS_KEY: "test-secret",
+        },
+        {
+          heartbeatIntervalMs: 5,
+          heartbeat: (detail) => {
+            heartbeats.push(detail);
+          },
+        },
+      );
+
+      await s3Store.putFile(
+        "shepherdjerred/monorepo/snapshots/test.bundle.zst",
+        samplePath,
+        "application/zstd",
+      );
+
+      expect(receivedContentLength).toBe(String(payload.byteLength));
+      expect(receivedBytes).toBe(payload.byteLength);
+      expect(
+        heartbeats.some(
+          (entry) =>
+            entry["step"] ===
+            "s3-put:shepherdjerred/monorepo/snapshots/test.bundle.zst",
+        ),
+      ).toBe(true);
+    } finally {
+      await server.stop(true);
+    }
   });
 });
 

@@ -158,6 +158,7 @@ describe("compaction and retention round trip", () => {
       "match_team_bans_crawl",
       "timeline_events_crawl",
       "timeline_event_participants_crawl",
+      "timeline_checkpoints_crawl",
     ] as const) {
       expect(files(next, table, YESTERDAY), table).toHaveLength(1);
       expect(files(next, table, OLD_DAY), table).toEqual([]);

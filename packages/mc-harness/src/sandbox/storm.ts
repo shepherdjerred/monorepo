@@ -36,6 +36,16 @@ export const STORM_PATHS = {
 } as const;
 
 /**
+ * The rwf bots' baked navigation meshes. Git holds only their manifest; the
+ * package's own fetch materialises them, verified against it. A source tree
+ * from before the manifest existed still has the meshes as ordinary files.
+ */
+export const STORM_NAV_ASSETS = {
+  manifest: path.join(STORM_PATHS.ownedConfigDir, "rwf", "nav-manifest.json"),
+  fetch: ["bun", "run", "--cwd", STORM, "maps:fetch-nav"],
+} as const;
+
+/**
  * Modules `storm-dev` switches on: playable gameplay without external
  * services. `agent` needs storm-brain, `discord` a bot token and `world`
  * Flags, so they stay off. Towns requires the mail service, and its claim

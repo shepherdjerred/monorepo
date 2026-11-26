@@ -1,5 +1,5 @@
 {
-  "id": "delivery/3",
+  "id": "delivery/4",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "delivery"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "delivery"
       },
       "syncOptions": ["CreateNamespace=true"],

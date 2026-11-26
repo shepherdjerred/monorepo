@@ -4,13 +4,12 @@ import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
  * The remote Gradle build cache shared by CI's Gradle builds.
  *
  * CI's `GRADLE_USER_HOME` belongs to one workflow, so Gradle's local build
- * cache starts empty on every run. The homelab's nginx WebDAV cache
- * (`packages/homelab/src/cdk8s/src/resources/gradle-build-cache.ts`) keeps
+ * cache starts empty on every run. First-party `ci-cache`
+ * (`packages/homelab/src/cdk8s/src/resources/ci-cache/index.ts`) keeps
  * task outputs across runs; The Storm's `plugin/settings.gradle.kts` enables
  * it only when this URL is in the environment, so local builds are unchanged.
  */
-const GRADLE_BUILD_CACHE_URL =
-  "https://gradle-build-cache.tailnet-1a49.ts.net/cache/";
+const GRADLE_BUILD_CACHE_URL = "https://ci-cache.tailnet-1a49.ts.net/cache/";
 
 /** The CI credential Secret; one 1Password item holds both passwords. */
 const GRADLE_BUILD_CACHE_SECRET = "ci-gradle-build-cache-credentials";
@@ -20,12 +19,11 @@ type GradleCacheTrustDomain = "trusted" | "pull-request";
 /**
  * One cache identity per trust domain.
  *
- * The server enforces `level`: only `readwrite` users are in the htpasswd
- * file nginx checks for PUT, so a pull request holding the read password
- * cannot store an entry even if its build asks to push. That is the
- * cache-poisoning boundary: only default-branch builds write outputs that
- * later builds, including pull requests, load instead of compiling.
- * The homelab server's htpasswd files are rendered from this table.
+ * The server enforces `level`: only `readwrite` users may `PUT` to `/cache/`,
+ * so a pull request holding the read password cannot store an entry even if
+ * its build asks to push. That is the cache-poisoning boundary: only
+ * default-branch builds write outputs that later builds, including pull
+ * requests, load instead of compiling. `ci-cache` reads the same passwords.
  */
 export const GRADLE_BUILD_CACHE_USERS = {
   trusted: {

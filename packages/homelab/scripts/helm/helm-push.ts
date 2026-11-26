@@ -14,6 +14,11 @@ import path from "node:path";
 import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import { createDeliveryClient } from "@shepherdjerred/delivery/client";
+import {
+  chartsBootstrapRetainOptions,
+  publishedChartReceiptDigest,
+  pushChartArchive,
+} from "./helm-oci-bootstrap.ts";
 import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template.ts";
 import {
   CHARTMUSEUM_API,
@@ -140,23 +145,13 @@ async function pushChart(
   username: string,
   password: string,
 ): Promise<void> {
-  const response = await fetch(CHARTMUSEUM_API, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${btoa(`${username}:${password}`)}`,
-      "Content-Type": "application/octet-stream",
-    },
-    body: Bun.file(archive),
+  await pushChartArchive({
+    chart,
+    archive,
+    username,
+    password,
+    primaryApi: CHARTMUSEUM_API,
   });
-  if (response.ok) {
-    console.log(`${chart}: pushed (HTTP ${response.status.toString()})`);
-    return;
-  }
-  const responseText = await response.text();
-  const body = responseText.slice(0, 1024);
-  throw new Error(
-    `${chart}: ChartMuseum push failed (HTTP ${response.status.toString()}): ${body}`,
-  );
 }
 
 function usage(): never {
@@ -319,12 +314,20 @@ async function publishPlannedCharts(
       throw new Error(`No staged archive for ${name}`);
     }
     await pushChart(name, chart.archive, username, password);
+    const archiveDigest = `sha256:${createHash("sha256")
+      .update(new Uint8Array(await Bun.file(chart.archive).arrayBuffer()))
+      .digest("hex")}`;
+    const digest = await publishedChartReceiptDigest({
+      name,
+      archivePath: chart.archive,
+      archiveDigest,
+      version,
+      runCommand,
+    });
     publication.charts.push({
       name,
       revision: version,
-      digest: `sha256:${createHash("sha256")
-        .update(new Uint8Array(await Bun.file(chart.archive).arrayBuffer()))
-        .digest("hex")}`,
+      digest,
       contentFingerprint: chart.contentFingerprint,
     });
   }
@@ -452,7 +455,6 @@ async function main(): Promise<void> {
         ? releaseInputs
         : releaseInputs.filter((input) => requested.has(input.name));
     const plan = planCharts(releaseInputs, planningBase);
-    retainCurrentProducerArchives(publication, planningBase, plan, version);
     if (deliveryCatalog) {
       retainDeliveryChartBases(publication, planningBase, plan, version);
     }
@@ -470,6 +472,12 @@ async function main(): Promise<void> {
         "Actual chart publication requires its original CI identity",
       );
     }
+    await retainCurrentProducerArchives(
+      publication,
+      planningBase,
+      plan,
+      chartsBootstrapRetainOptions(version, runCommand),
+    );
     if (plan.publishOrder.length === 0) {
       console.log("No chart content changed; publishing zero charts");
     } else {

@@ -193,5 +193,5 @@ shortcut.
 
 The Brewfile is generated from pinned tool manifests. macOS Spotlight paths are
 declared in `.chezmoidata/spotlight.yaml` and applied by the existing
-configuration script. Berkeley Mono is licensed local input and must never
-enter the repo.
+configuration script. Berkeley Mono's desktop TTFs are local input to
+`install_macos.sh`, which patches and installs them.
