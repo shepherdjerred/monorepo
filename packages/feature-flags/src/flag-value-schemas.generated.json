@@ -879,24 +879,39 @@
     "encoding": "string",
     "schema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "string",
-      "pattern": "^(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?)(?:,\\s*(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?))*$"
+      "anyOf": [
+        { "type": "string", "const": "" },
+        {
+          "type": "string",
+          "pattern": "^(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?)(?:,\\s*(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?))*$"
+        }
+      ]
     }
   },
   "trmnl-ha-presence-entities": {
     "encoding": "string",
     "schema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "string",
-      "pattern": "^(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?)(?:,\\s*(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?))*$"
+      "anyOf": [
+        { "type": "string", "const": "" },
+        {
+          "type": "string",
+          "pattern": "^(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?)(?:,\\s*(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?))*$"
+        }
+      ]
     }
   },
   "trmnl-ha-security-entities": {
     "encoding": "string",
     "schema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "string",
-      "pattern": "^(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?)(?:,\\s*(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?))*$"
+      "anyOf": [
+        { "type": "string", "const": "" },
+        {
+          "type": "string",
+          "pattern": "^(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?)(?:,\\s*(?:[a-z0-9_]+\\.[a-z0-9_]+(?::[^,:\\s](?:[^,:]*[^,:\\s])?)?))*$"
+        }
+      ]
     }
   },
   "woodpecker-log-retention-days": {

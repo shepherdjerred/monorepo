@@ -54,11 +54,18 @@ const SemanticVersionSchema = z
     /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[\dA-Za-z-]+(?:\.[\dA-Za-z-]+)*)?(?:\+[\dA-Za-z-]+(?:\.[\dA-Za-z-]+)*)?$/u,
   );
 
-/** Home Assistant `domain.object_id`, optionally `:Label`, comma-separated (trmnl `parseEntities`). */
-const HomeAssistantEntitiesSchema = commaListSchema(
-  String.raw`[a-z0-9_]+\.[a-z0-9_]+(?::[^,:\s](?:[^,:]*[^,:\s])?)?`,
-  "Expected comma-separated `domain.object_id[:Label]` entries",
-);
+/**
+ * Home Assistant `domain.object_id`, optionally `:Label`, comma-separated
+ * (trmnl `parseEntities`). The empty string is an explicit empty selection
+ * that hides the tile.
+ */
+const HomeAssistantEntitiesSchema = z.union([
+  z.literal(""),
+  commaListSchema(
+    String.raw`[a-z0-9_]+\.[a-z0-9_]+(?::[^,:\s](?:[^,:]*[^,:\s])?)?`,
+    "Expected comma-separated `domain.object_id[:Label]` entries, or empty to hide the tile",
+  ),
+]);
 
 /**
  * Photon owner handles: the literal `[]` (none) or up to 20 comma-separated

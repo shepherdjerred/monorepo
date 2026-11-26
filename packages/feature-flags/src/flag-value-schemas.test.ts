@@ -110,6 +110,17 @@ describe("flagValueSchemas", () => {
     ).not.toEqualTypeOf<string>();
   });
 
+  test("accepts an explicit empty Home Assistant selection", () => {
+    for (const key of [
+      "trmnl-ha-presence-entities",
+      "trmnl-ha-security-entities",
+      "trmnl-ha-climate-entities",
+    ] as const) {
+      expect(validateVariantValue(key, "")).toEqual({ ok: true });
+      expect(decodeVariantValue(key, "")).toBe("");
+    }
+  });
+
   test("encodes canonically", () => {
     expect(encodeVariantValue("delivery-lease-seconds", 900)).toBe("900");
     expect(encodeVariantValue("birmel-llm-decisions-threshold", 0.25)).toBe(
