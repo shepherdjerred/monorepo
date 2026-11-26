@@ -48,17 +48,17 @@ export const thirdPartyPlugins: readonly PluginPin[] = z
     },
     {
       name: "ViaVersion",
-      version: "5.12.2",
-      url: "https://cdn.modrinth.com/data/P1OZGk5p/versions/Fkfcr89K/ViaVersion-5.12.2.jar",
+      version: "5.12.3",
+      url: "https://cdn.modrinth.com/data/P1OZGk5p/versions/MBRBVfoZ/ViaVersion-5.12.3.jar",
       sha256:
-        "c0b63badcb0f7d38f4443e06820f2b8142dd4f0d3b0511f9330ff1050430e6b2",
+        "8dec6b62c7ec4f355e59175fc8eaeb825719ae8d308723617097dcaab7073531",
     },
     {
       name: "ViaBackwards",
-      version: "5.12.2",
-      url: "https://cdn.modrinth.com/data/NpvuJQoq/versions/WFO37e8T/ViaBackwards-5.12.2.jar",
+      version: "5.12.3",
+      url: "https://cdn.modrinth.com/data/NpvuJQoq/versions/Z5xofDU6/ViaBackwards-5.12.3.jar",
       sha256:
-        "e989440e0aad7e12d4685d7a57df854691b67660966a95ec0450e20ce98e87ab",
+        "81a1ef49567f76ba4ad43f7489080bc580e3fcf3d9601b7e852820ed4b6cecc7",
     },
     // TheStorm's required plugins, shared with the mc-harness storm-dev profile.
     luckPerms,

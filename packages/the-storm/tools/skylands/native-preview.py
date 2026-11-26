@@ -27,7 +27,7 @@ if len(artifacts) != 1:
     raise SystemExit("Build :skylands:jar; expected exactly one module artifact")
 module = artifacts[0]
 jars = list((Path.home() / ".gradle/caches/modules-2/files-2.1").rglob("*.jar"))
-api = next(p for p in jars if p.name == "paper-api-26.3.build.251-stable.jar")
+api = next(p for p in jars if p.name == "paper-api-26.3.build.252-stable.jar")
 deps = [
     p
     for p in jars
@@ -88,7 +88,7 @@ cmd = [
     f"-Dsky.fixture.cellX={args.cell_x}",
     f"-Dsky.fixture.cellZ={args.cell_z}",
     "-jar",
-    str(CACHE / "paper-26.3-251.jar"),
+    str(CACHE / "paper-26.3-252.jar"),
     "nogui",
 ]
 with (root / "console.log").open("w") as log:
