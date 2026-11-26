@@ -73,3 +73,12 @@ test("extra live keys are not schema-checked", () => {
   expect(diff.extra).toEqual(["mail-settings"]);
   expect(diff.invalid).toEqual([]);
 });
+
+test("a diff from a Flags server without the value registry parses with no invalid values", () => {
+  const parsed = FlagsDiffResponseSchema.parse({
+    deployments: [
+      { id: "delivery/prod", revision: 3, missing: [], extra: [], drift: [] },
+    ],
+  });
+  expect(parsed.deployments[0]?.invalid).toEqual([]);
+});
