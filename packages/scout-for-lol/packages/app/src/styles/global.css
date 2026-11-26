@@ -33,6 +33,9 @@
   --color-scout-danger-ink: var(--scout-color-danger-text);
   --color-scout-success: var(--scout-color-success-on-surface);
   --color-scout-success-fill: var(--scout-color-success);
+  /* `text-scout-warning` was used without being mapped, so it rendered as
+     inherited text. Like success and danger, the readable-as-text colour. */
+  --color-scout-warning: var(--scout-color-warning-on-surface);
   --color-scout-border: var(--scout-color-border);
   --color-scout-focus: var(--scout-color-focus);
   /* Match outcomes. `win`/`loss` read as text on a surface; the `-fill`
