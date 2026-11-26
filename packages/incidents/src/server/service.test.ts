@@ -14,8 +14,18 @@ import {
   AGENT,
   agent,
   createHarness,
+  jsonOf,
+  OPS_TOKEN,
   requestDispatchLease,
 } from "#testing/hub.ts";
+import {
+  PRIORITY_SCENARIO_EXPECTED,
+  runPriorityScenario,
+  runWatermarkRace,
+  runWatermarkScenario,
+  WATERMARK_RACE_EXPECTED,
+  WATERMARK_SCENARIO_EXPECTED,
+} from "#testing/signal-scenarios.ts";
 import { minutes } from "#testing/records.ts";
 
 const DECLARE = {
@@ -439,5 +449,56 @@ describe("fixture server", () => {
     expect(
       all.find((incident) => incident.status === "resolved")?.systems,
     ).toEqual(["tracker"]);
+  });
+});
+
+describe("signal watermarks and open priority (in-memory)", () => {
+  it("orders retried, delayed, repeated, and tied reports by observation", async () => {
+    const h = createHarness();
+    expect(await runWatermarkScenario(h)).toEqual(WATERMARK_SCENARIO_EXPECTED);
+  });
+
+  it("keeps one incident and the newest watermark under concurrent reports", async () => {
+    const h = createHarness();
+    expect(await runWatermarkRace(h)).toEqual(WATERMARK_RACE_EXPECTED);
+  });
+
+  it("orders open incidents by severity before applying the limit", async () => {
+    const h = createHarness();
+    expect(await runPriorityScenario(h)).toEqual(PRIORITY_SCENARIO_EXPECTED);
+  });
+
+  it("does not let a retried firing reopen an auto-resolved outage over HTTP", async () => {
+    const h = createHarness();
+    const red = {
+      source: "main-ci",
+      key: "main-ci:main",
+      firing: true,
+      system: "main-ci",
+      severity: "sev2",
+      title: "main is red",
+      exitCondition: "main is green",
+      observedAt: minutes(0).toISOString(),
+    };
+    const send = (signals: unknown[]) =>
+      jsonOf(
+        h.app.request("/api/incidents/internal/signals", {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${OPS_TOKEN}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ signals }),
+        }),
+      );
+    await send([red]);
+    await send([
+      { ...red, firing: false, observedAt: minutes(5).toISOString() },
+    ]);
+    expect(await send([red])).toEqual({
+      results: [{ key: "main-ci:main", outcome: "ignored", identifier: null }],
+    });
+    const all = await h.server.service.list({ state: "all", limit: 50 });
+    expect(all.map((incident) => incident.status)).toEqual(["resolved"]);
   });
 });

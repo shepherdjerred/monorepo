@@ -6,6 +6,7 @@ import {
   CommandStateSchema,
   IncidentEventTypeSchema,
   IncidentKindSchema,
+  IncidentSignalInputSchema,
   IncidentLinkKindSchema,
   IncidentSeveritySchema,
   IncidentSourceSchema,
@@ -15,6 +16,7 @@ import {
 } from "#shared/contract.ts";
 import { Prisma } from "#generated/prisma/client.ts";
 import type { IncidentRecord, JsonValue, NewEvent } from "#domain/model.ts";
+import type { SignalWatermark } from "#domain/watermark.ts";
 import type { ActorRecord } from "#infrastructure/repository.ts";
 
 export const INCIDENT_INCLUDE = {
@@ -27,6 +29,7 @@ export type IncidentRow = Prisma.IncidentGetPayload<{
   include: typeof INCIDENT_INCLUDE;
 }>;
 
+const SignalSourceSchema = IncidentSignalInputSchema.shape.source;
 const NullableSuspectSchema = IncidentSuspectSchema.nullable();
 const NullableMetadataSchema = ActorMetadataSchema.nullable();
 const EventDataSchema = z.record(z.string(), z.json()).nullable();
@@ -101,6 +104,22 @@ export function toActorRecord(row: {
     name: row.name,
     metadata: NullableMetadataSchema.parse(row.metadata),
     lastSeenAt: row.lastSeenAt,
+  };
+}
+
+export function toSignalWatermark(row: {
+  source: string;
+  key: string;
+  lastObservedAt: Date;
+  firing: boolean;
+  revision: number;
+}): SignalWatermark {
+  return {
+    source: SignalSourceSchema.parse(row.source),
+    key: row.key,
+    lastObservedAt: row.lastObservedAt,
+    firing: row.firing,
+    revision: row.revision,
   };
 }
 

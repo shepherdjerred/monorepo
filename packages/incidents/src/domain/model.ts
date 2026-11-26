@@ -192,6 +192,21 @@ export function isMoreSevere(
   return SEVERITY_RANK[candidate] < SEVERITY_RANK[current];
 }
 
+/**
+ * Open-listing priority: most severe first, then newest declaration. The
+ * severity names sort lexically in rank order (`sev1` < `sev2` < `sev3`),
+ * which lets PostgreSQL apply the same order with a plain `ORDER BY`.
+ */
+export function compareOpenPriority(
+  a: Pick<IncidentRecord, "severity" | "declaredAt">,
+  b: Pick<IncidentRecord, "severity" | "declaredAt">,
+): number {
+  const bySeverity = SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity];
+  return bySeverity === 0
+    ? b.declaredAt.getTime() - a.declaredAt.getTime()
+    : bySeverity;
+}
+
 export function incidentLabel(record: IncidentRecord): string {
   return record.number > 0 ? `INC-${String(record.number)}` : "this incident";
 }

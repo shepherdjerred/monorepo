@@ -47,7 +47,7 @@ import {
   resolve,
 } from "#domain/incident.ts";
 import {
-  isMoreSevere,
+  compareOpenPriority,
   type IncidentRecord,
   type Transition,
 } from "#domain/model.ts";
@@ -74,12 +74,6 @@ function plain(
   return (...args) => unchanged(run(...args), null);
 }
 
-function bySeverityThenNewest(a: IncidentSummary, b: IncidentSummary): number {
-  if (a.severity !== b.severity)
-    return isMoreSevere(a.severity, b.severity) ? -1 : 1;
-  return b.declaredAt.localeCompare(a.declaredAt);
-}
-
 export function createIncidentsService(options: ServiceOptions) {
   const core = createServiceCore(options);
   const { repository } = core;
@@ -91,11 +85,9 @@ export function createIncidentsService(options: ServiceOptions) {
   const list = async (
     input: Out<typeof ListIncidentsInputSchema>,
   ): Promise<IncidentSummary[]> => {
+    // The repository orders open listings by priority before the limit.
     const records = await repository.listIncidents(input);
-    const summaries = await core.summaries(records);
-    return input.state === "open"
-      ? summaries.sort(bySeverityThenNewest)
-      : summaries;
+    return core.summaries(records);
   };
 
   const check = async (
@@ -108,7 +100,8 @@ export function createIncidentsService(options: ServiceOptions) {
         (record) =>
           input.system === undefined || record.systems.includes(input.system),
       )
-      .map((record) => presentAt(record, now));
+      .map((record) => presentAt(record, now))
+      .sort(compareOpenPriority);
     const known =
       input.actor === undefined
         ? null
@@ -143,7 +136,6 @@ export function createIncidentsService(options: ServiceOptions) {
         },
       };
     });
-    incidents.sort((a, b) => bySeverityThenNewest(a.incident, b.incident));
     return { checkedAt: now.toISOString(), incidents };
   };
 

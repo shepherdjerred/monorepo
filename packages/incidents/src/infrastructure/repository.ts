@@ -8,6 +8,8 @@
  *   it throws `RevisionConflictError` and changes nothing.
  * - `create` and `commit` claim every system an open incident holds; a system
  *   another open incident holds throws `SystemsTakenError`.
+ * - `commitSignal` advances a signal's observation watermark with the same
+ *   compare-and-set, atomically with the signal's incident write.
  */
 import type {
   ActorInput,
@@ -17,6 +19,7 @@ import type {
   IncidentSystem,
 } from "#shared/contract.ts";
 import type { IncidentRecord, NewEvent, Transition } from "#domain/model.ts";
+import type { SignalObservation, SignalWatermark } from "#domain/watermark.ts";
 
 export type ActorRecord = {
   readonly id: string;
@@ -40,8 +43,9 @@ export type IncidentLookup =
 export class RevisionConflictError extends Error {
   override readonly name = "RevisionConflictError";
 
-  constructor(readonly incidentId: string) {
-    super(`Incident ${incidentId} changed since it was read`);
+  /** `subject` names what moved: an incident id, or `signal <source>/<key>`. */
+  constructor(readonly subject: string) {
+    super(`${subject} changed since it was read`);
   }
 }
 
@@ -65,7 +69,10 @@ export type IncidentsRepository = {
   readonly findIncident: (
     lookup: IncidentLookup,
   ) => Promise<IncidentRecord | null>;
-  /** Newest first by declaration. */
+  /**
+   * Open listings: most severe first, then newest (`compareOpenPriority`),
+   * applied before `limit`. Other states: newest first by declaration.
+   */
   readonly listIncidents: (filter: IncidentFilter) => Promise<IncidentRecord[]>;
   /** Every non-terminal record, for dedupe and signal targeting. */
   readonly openIncidents: () => Promise<IncidentRecord[]>;
@@ -77,4 +84,27 @@ export type IncidentsRepository = {
     previous: IncidentRecord,
     transition: Transition,
   ) => Promise<IncidentRecord>;
+  readonly findSignalWatermark: (
+    source: SignalObservation["source"],
+    key: string,
+  ) => Promise<SignalWatermark | null>;
+  /**
+   * Advance a signal's watermark (CAS on `previous.revision`, or insert when
+   * `previous` is null) and apply its incident write, if any, in one
+   * transaction. Either conflict throws `RevisionConflictError` (or
+   * `SystemsTakenError`) and writes nothing.
+   */
+  readonly commitSignal: (write: SignalWrite) => Promise<IncidentRecord | null>;
+};
+
+export type SignalWrite = {
+  readonly watermark: {
+    readonly previous: SignalWatermark | null;
+    readonly next: SignalObservation;
+  };
+  /** `previous: null` creates the record. */
+  readonly incident: {
+    readonly previous: IncidentRecord | null;
+    readonly transition: Transition;
+  } | null;
 };

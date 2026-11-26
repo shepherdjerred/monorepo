@@ -58,6 +58,7 @@ export async function jsonOf(
 export type Harness = {
   readonly app: Hono;
   readonly server: IncidentsHubServer;
+  readonly repository: IncidentsRepository;
   readonly clock: { now: Date };
   readonly settings: { current: Partial<IncidentsSettings> };
   readonly call: <S extends z.ZodType>(
@@ -86,10 +87,11 @@ export function createHarness(
   } = {},
 ): Harness {
   const clock = { now: T0 };
+  const repository = options.repository ?? createInMemoryIncidentsRepository();
   const base = staticIncidentsFlags(options.settings);
   const settings: { current: Partial<IncidentsSettings> } = { current: {} };
   const server = createIncidentsHubServer({
-    repository: options.repository ?? createInMemoryIncidentsRepository(),
+    repository,
     flags: {
       read: async () => ({ ...(await base.read()), ...settings.current }),
     },
@@ -126,6 +128,7 @@ export function createHarness(
   return {
     app,
     server,
+    repository,
     clock,
     settings,
     call: async (path, input, output, headers) => {

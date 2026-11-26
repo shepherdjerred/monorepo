@@ -1,12 +1,19 @@
 import { isOpenStatus } from "#shared/contract.ts";
 import { heldSystems } from "#domain/dedupe.ts";
-import type { IncidentRecord, NewEvent } from "#domain/model.ts";
+import {
+  compareOpenPriority,
+  type IncidentRecord,
+  type NewEvent,
+  type Transition,
+} from "#domain/model.ts";
+import type { SignalWatermark } from "#domain/watermark.ts";
 import {
   RevisionConflictError,
   SystemsTakenError,
   type ActorRecord,
   type IncidentFilter,
   type IncidentsRepository,
+  type SignalWrite,
 } from "#infrastructure/repository.ts";
 
 /** Run synchronous work as a promise; a throw becomes a rejection. */
@@ -14,6 +21,14 @@ function run<T>(work: () => T): Promise<T> {
   return new Promise((resolve) => {
     resolve(work());
   });
+}
+
+function watermarkKey(source: string, key: string): string {
+  return JSON.stringify([source, key]);
+}
+
+function newestFirst(a: IncidentRecord, b: IncidentRecord): number {
+  return b.declaredAt.getTime() - a.declaredAt.getTime();
 }
 
 function matches(record: IncidentRecord, filter: IncidentFilter): boolean {
@@ -35,6 +50,7 @@ export function createInMemoryIncidentsRepository(): IncidentsRepository {
   const actors = new Map<string, ActorRecord>();
   const incidents = new Map<string, IncidentRecord>();
   const events = new Map<string, NewEvent[]>();
+  const watermarks = new Map<string, SignalWatermark>();
   let nextNumber = 1;
 
   const claimSystems = (record: IncidentRecord) => {
@@ -50,6 +66,41 @@ export function createInMemoryIncidentsRepository(): IncidentsRepository {
     incidents.set(record.id, record);
     events.set(record.id, [...(events.get(record.id) ?? []), ...added]);
     return record;
+  };
+
+  // Each prepare step validates and returns the write to apply, so a signal
+  // write checks every compare-and-set before changing anything.
+  const prepareCreate = (transition: Transition) => {
+    claimSystems(transition.next);
+    return () => {
+      const record = { ...transition.next, number: nextNumber, revision: 0 };
+      nextNumber += 1;
+      return store(record, transition.events);
+    };
+  };
+
+  const prepareCommit = (previous: IncidentRecord, transition: Transition) => {
+    if (incidents.get(previous.id)?.revision !== previous.revision)
+      throw new RevisionConflictError(previous.id);
+    claimSystems(transition.next);
+    return () =>
+      store(
+        { ...transition.next, revision: previous.revision + 1 },
+        transition.events,
+      );
+  };
+
+  const prepareWatermark = (watermark: SignalWrite["watermark"]) => {
+    const { next, previous } = watermark;
+    const id = watermarkKey(next.source, next.key);
+    if (watermarks.get(id)?.revision !== previous?.revision)
+      throw new RevisionConflictError(`signal ${next.source}/${next.key}`);
+    return () => {
+      watermarks.set(id, {
+        ...next,
+        revision: previous === null ? 0 : previous.revision + 1,
+      });
+    };
   };
 
   const byKey = (key: string) =>
@@ -100,7 +151,7 @@ export function createInMemoryIncidentsRepository(): IncidentsRepository {
       run(() =>
         [...incidents.values()]
           .filter((record) => matches(record, filter))
-          .sort((a, b) => b.declaredAt.getTime() - a.declaredAt.getTime())
+          .sort(filter.state === "open" ? compareOpenPriority : newestFirst)
           .slice(0, filter.limit),
       ),
 
@@ -111,23 +162,26 @@ export function createInMemoryIncidentsRepository(): IncidentsRepository {
 
     timeline: (incidentId) => run(() => [...(events.get(incidentId) ?? [])]),
 
-    create: (transition) =>
-      run(() => {
-        claimSystems(transition.next);
-        const record = { ...transition.next, number: nextNumber, revision: 0 };
-        nextNumber += 1;
-        return store(record, transition.events);
-      }),
+    create: (transition) => run(() => prepareCreate(transition)()),
 
     commit: (previous, transition) =>
+      run(() => prepareCommit(previous, transition)()),
+
+    findSignalWatermark: (source, key) =>
+      run(() => watermarks.get(watermarkKey(source, key)) ?? null),
+
+    commitSignal: (write) =>
       run(() => {
-        if (incidents.get(previous.id)?.revision !== previous.revision)
-          throw new RevisionConflictError(previous.id);
-        claimSystems(transition.next);
-        return store(
-          { ...transition.next, revision: previous.revision + 1 },
-          transition.events,
-        );
+        const advance = prepareWatermark(write.watermark);
+        const incident = write.incident;
+        let apply: (() => IncidentRecord) | null = null;
+        if (incident !== null)
+          apply =
+            incident.previous === null
+              ? prepareCreate(incident.transition)
+              : prepareCommit(incident.previous, incident.transition);
+        advance();
+        return apply === null ? null : apply();
       }),
   };
 }

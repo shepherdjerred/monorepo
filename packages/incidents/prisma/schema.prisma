@@ -151,3 +151,17 @@ model IncidentSignal {
   @@index([key])
   @@map("incident_signals")
 }
+
+/// Newest accepted observation per producer key, independent of incidents, so
+/// retried or delayed reports cannot recreate or resolve incidents against
+/// newer evidence. `revision` guards its compare-and-set.
+model SignalWatermark {
+  source         String
+  key            String
+  lastObservedAt DateTime @map("last_observed_at") @db.Timestamptz(6)
+  firing         Boolean
+  revision       Int      @default(0)
+
+  @@id([source, key])
+  @@map("signal_watermarks")
+}

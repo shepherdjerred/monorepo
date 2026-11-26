@@ -33,6 +33,7 @@ import {
   type ActorRecord,
   type IncidentLookup,
   type IncidentsRepository,
+  type SignalWrite,
 } from "#infrastructure/repository.ts";
 import type { IncidentEventBus } from "#server/event-bus.ts";
 import {
@@ -183,6 +184,16 @@ export function createServiceCore(options: ServiceOptions) {
     return committed;
   };
 
+  /** Commit a signal's watermark and incident write together; publish the incident change. */
+  const commitSignal = async (
+    write: SignalWrite,
+  ): Promise<IncidentRecord | null> => {
+    const committed = await repository.commitSignal(write);
+    if (committed !== null && write.incident !== null)
+      publish(committed, write.incident.transition);
+    return committed;
+  };
+
   /** After a failed commit: throw the caller-facing error, or return to re-decide. */
   const afterFailedCommit = async (
     error: unknown,
@@ -273,6 +284,7 @@ export function createServiceCore(options: ServiceOptions) {
     load,
     mutate,
     commitOrCreate,
+    commitSignal,
     duplicateFrom,
     summaries,
     detail,

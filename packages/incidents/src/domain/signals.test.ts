@@ -67,7 +67,7 @@ describe("applySignal", () => {
     ]);
   });
 
-  it("ignores repeats, stale reports, and clears with nothing attached", () => {
+  it("ignores repeats and clears with nothing attached", () => {
     const opened = committed(
       applySignal(signal(), contextAt(T0, system), [], SETTINGS),
     );
@@ -78,21 +78,7 @@ describe("applySignal", () => {
         [opened],
         SETTINGS,
       ),
-    ).toMatchObject({
-      kind: "ignore",
-      reason: "already firing",
-    });
-    expect(
-      applySignal(
-        signal({ firing: false, observedAt: minutes(-1).toISOString() }),
-        contextAt(T0, system),
-        [opened],
-        SETTINGS,
-      ),
-    ).toMatchObject({
-      kind: "ignore",
-      reason: "out of order",
-    });
+    ).toMatchObject({ kind: "ignore", reason: "already firing" });
     expect(
       applySignal(
         signal({ firing: false }),
@@ -100,10 +86,7 @@ describe("applySignal", () => {
         [],
         SETTINGS,
       ),
-    ).toMatchObject({
-      kind: "ignore",
-      reason: "nothing attached",
-    });
+    ).toMatchObject({ kind: "ignore", reason: "nothing attached" });
   });
 
   it("respects the per-producer auto-open flags but still attaches", () => {

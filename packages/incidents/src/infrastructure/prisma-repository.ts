@@ -7,7 +7,7 @@ import {
 } from "#shared/contract.ts";
 import { PrismaClient, type Prisma } from "#generated/prisma/client.ts";
 import { heldSystems } from "#domain/dedupe.ts";
-import type { IncidentRecord, NewEvent } from "#domain/model.ts";
+import type { IncidentRecord, NewEvent, Transition } from "#domain/model.ts";
 import {
   INCIDENT_INCLUDE,
   jsonOrDbNull,
@@ -16,12 +16,14 @@ import {
   toActorRecord,
   toEvent,
   toIncidentRecord,
+  toSignalWatermark,
 } from "#infrastructure/prisma-mapping.ts";
 import {
   RevisionConflictError,
   SystemsTakenError,
   type IncidentFilter,
   type IncidentsRepository,
+  type SignalWrite,
 } from "#infrastructure/repository.ts";
 
 type Tx = Prisma.TransactionClient;
@@ -123,6 +125,89 @@ async function syncCollections(
   }
 }
 
+async function createIn(
+  tx: Tx,
+  transition: Transition,
+): Promise<IncidentRecord> {
+  const next = transition.next;
+  const row = await tx.incident.create({
+    data: {
+      id: next.id,
+      ...scalarColumns(next),
+      suspect: suspectJson(next.suspect),
+      creatorId: next.creatorId,
+      commanderId: next.commanderId,
+      dispatcherId: next.dispatcherId,
+      revision: 0,
+    },
+    select: { number: true },
+  });
+  await claimSystems(tx, next);
+  await insertEvents(tx, next.id, transition.events);
+  await syncCollections(tx, null, next);
+  return { ...next, number: row.number, revision: 0 };
+}
+
+async function commitIn(
+  tx: Tx,
+  previous: IncidentRecord,
+  transition: Transition,
+): Promise<IncidentRecord> {
+  const next = transition.next;
+  // The compare-and-set: exactly one writer per read revision commits.
+  const updated = await tx.incident.updateMany({
+    where: { id: previous.id, revision: previous.revision },
+    data: {
+      ...scalarColumns(next),
+      suspect: suspectJson(next.suspect),
+      commanderId: next.commanderId,
+      dispatcherId: next.dispatcherId,
+      revision: previous.revision + 1,
+    },
+  });
+  if (updated.count !== 1) throw new RevisionConflictError(previous.id);
+  await claimSystems(tx, next);
+  await insertEvents(tx, next.id, transition.events);
+  await syncCollections(tx, previous, next);
+  return { ...next, revision: previous.revision + 1 };
+}
+
+/** Insert a first watermark, or move one with a CAS on its revision. */
+async function advanceWatermark(
+  tx: Tx,
+  watermark: SignalWrite["watermark"],
+): Promise<void> {
+  const { next, previous } = watermark;
+  const values = { lastObservedAt: next.lastObservedAt, firing: next.firing };
+  const changed =
+    previous === null
+      ? await tx.signalWatermark.createMany({
+          data: [
+            { source: next.source, key: next.key, ...values, revision: 0 },
+          ],
+          skipDuplicates: true,
+        })
+      : await tx.signalWatermark.updateMany({
+          where: {
+            source: next.source,
+            key: next.key,
+            revision: previous.revision,
+          },
+          data: { ...values, revision: previous.revision + 1 },
+        });
+  if (changed.count !== 1)
+    throw new RevisionConflictError(`signal ${next.source}/${next.key}`);
+}
+
+function listOrder(
+  filter: IncidentFilter,
+): Prisma.IncidentOrderByWithRelationInput[] {
+  // Severity names sort lexically in rank order; see compareOpenPriority.
+  return filter.state === "open"
+    ? [{ severity: "asc" }, { declaredAt: "desc" }]
+    : [{ declaredAt: "desc" }];
+}
+
 function listWhere(filter: IncidentFilter): Prisma.IncidentWhereInput {
   return {
     ...(filter.state === "open" ? { status: { in: OPEN_STATUSES } } : {}),
@@ -202,7 +287,7 @@ export function createPrismaIncidentsRepository(
       const rows = await prisma.incident.findMany({
         where: listWhere(filter),
         include: INCIDENT_INCLUDE,
-        orderBy: { declaredAt: "desc" },
+        orderBy: listOrder(filter),
         take: filter.limit,
       });
       return rows.map((row) => toIncidentRecord(row));
@@ -225,49 +310,33 @@ export function createPrismaIncidentsRepository(
       return rows.map((row) => toEvent(row));
     },
 
-    create: async (transition) => {
-      const next = transition.next;
-      const number = await prisma.$transaction(async (tx) => {
-        const row = await tx.incident.create({
-          data: {
-            id: next.id,
-            ...scalarColumns(next),
-            suspect: suspectJson(next.suspect),
-            creatorId: next.creatorId,
-            commanderId: next.commanderId,
-            dispatcherId: next.dispatcherId,
-            revision: 0,
-          },
-          select: { number: true },
-        });
-        await claimSystems(tx, next);
-        await insertEvents(tx, next.id, transition.events);
-        await syncCollections(tx, null, next);
-        return row.number;
-      }, TRANSACTION_OPTIONS);
-      return { ...next, number, revision: 0 };
+    create: async (transition) =>
+      prisma.$transaction(
+        async (tx) => createIn(tx, transition),
+        TRANSACTION_OPTIONS,
+      ),
+
+    commit: async (previous, transition) =>
+      prisma.$transaction(
+        async (tx) => commitIn(tx, previous, transition),
+        TRANSACTION_OPTIONS,
+      ),
+
+    findSignalWatermark: async (source, key) => {
+      const row = await prisma.signalWatermark.findUnique({
+        where: { source_key: { source, key } },
+      });
+      return row === null ? null : toSignalWatermark(row);
     },
 
-    commit: async (previous, transition) => {
-      const next = transition.next;
-      await prisma.$transaction(async (tx) => {
-        // The compare-and-set: exactly one writer per read revision commits.
-        const updated = await tx.incident.updateMany({
-          where: { id: previous.id, revision: previous.revision },
-          data: {
-            ...scalarColumns(next),
-            suspect: suspectJson(next.suspect),
-            commanderId: next.commanderId,
-            dispatcherId: next.dispatcherId,
-            revision: previous.revision + 1,
-          },
-        });
-        if (updated.count !== 1) throw new RevisionConflictError(previous.id);
-        await claimSystems(tx, next);
-        await insertEvents(tx, next.id, transition.events);
-        await syncCollections(tx, previous, next);
-      }, TRANSACTION_OPTIONS);
-      return { ...next, revision: previous.revision + 1 };
-    },
+    commitSignal: async (write) =>
+      prisma.$transaction(async (tx) => {
+        await advanceWatermark(tx, write.watermark);
+        const incident = write.incident;
+        if (incident === null) return null;
+        return incident.previous === null
+          ? createIn(tx, incident.transition)
+          : commitIn(tx, incident.previous, incident.transition);
+      }, TRANSACTION_OPTIONS),
   };
 }

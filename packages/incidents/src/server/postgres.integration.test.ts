@@ -31,6 +31,14 @@ import {
   OPS_TOKEN,
   requestDispatchLease,
 } from "#testing/hub.ts";
+import {
+  PRIORITY_SCENARIO_EXPECTED,
+  runPriorityScenario,
+  runWatermarkRace,
+  runWatermarkScenario,
+  WATERMARK_RACE_EXPECTED,
+  WATERMARK_SCENARIO_EXPECTED,
+} from "#testing/signal-scenarios.ts";
 import { minutes, T0 } from "#testing/records.ts";
 
 const ConflictBodySchema = z.object({
@@ -90,7 +98,8 @@ const DECLARE = {
 };
 
 async function clean(): Promise<void> {
-  await db().$executeRaw`TRUNCATE incidents, actors RESTART IDENTITY CASCADE`;
+  await db()
+    .$executeRaw`TRUNCATE incidents, actors, signal_watermarks RESTART IDENTITY CASCADE`;
 }
 
 describe("PostgreSQL incidents repository", () => {
@@ -353,5 +362,124 @@ describe("PostgreSQL lifecycle and signals", () => {
   it("reports readiness", async () => {
     const repo = repository();
     await expect(repo.ping()).resolves.toBe(true);
+  });
+});
+
+describe("PostgreSQL signal watermarks and open priority", () => {
+  it("matches the in-memory ordering of retried, delayed, repeated, and tied reports", async () => {
+    await clean();
+    const h = createHarness({ repository: repository() });
+    expect(await runWatermarkScenario(h)).toEqual(WATERMARK_SCENARIO_EXPECTED);
+    const rows = await db().signalWatermark.findMany({
+      orderBy: { key: "asc" },
+      select: { source: true, key: true, firing: true, revision: true },
+    });
+    expect(rows).toEqual([
+      { source: "alertmanager", key: "fp-argocd", firing: true, revision: 0 },
+      {
+        source: "alertmanager",
+        key: "fp-delivery",
+        firing: false,
+        revision: 0,
+      },
+      { source: "alertmanager", key: "fp-tracker", firing: true, revision: 1 },
+      { source: "main-ci", key: "main-ci:main", firing: false, revision: 1 },
+    ]);
+  });
+
+  it("keeps one incident and the newest watermark under concurrent reports", async () => {
+    await clean();
+    const h = createHarness({ repository: repository() });
+    expect(await runWatermarkRace(h)).toEqual(WATERMARK_RACE_EXPECTED);
+  });
+
+  it("commits exactly one of many watermark compare-and-sets against one revision", async () => {
+    await clean();
+    const repo = repository();
+    const first = {
+      source: "main-ci" as const,
+      key: "main-ci:main",
+      firing: true,
+    };
+    await repo.commitSignal({
+      watermark: {
+        previous: null,
+        next: { ...first, lastObservedAt: minutes(0) },
+      },
+      incident: null,
+    });
+    const previous = await repo.findSignalWatermark("main-ci", "main-ci:main");
+    const settled = await Promise.allSettled(
+      Array.from({ length: 10 }, (_, index) =>
+        repo.commitSignal({
+          watermark: {
+            previous,
+            next: { ...first, lastObservedAt: minutes(index + 1) },
+          },
+          incident: null,
+        }),
+      ),
+    );
+    expect(
+      settled.filter((result) => result.status === "fulfilled"),
+    ).toHaveLength(1);
+    expect(
+      settled.every(
+        (result) =>
+          result.status === "fulfilled" ||
+          result.reason instanceof RevisionConflictError,
+      ),
+    ).toBe(true);
+    const after = await repo.findSignalWatermark("main-ci", "main-ci:main");
+    expect(after?.revision).toBe(1);
+    const duplicateInsert = repo.commitSignal({
+      watermark: {
+        previous: null,
+        next: { ...first, lastObservedAt: minutes(30) },
+      },
+      incident: null,
+    });
+    await expect(duplicateInsert).rejects.toBeInstanceOf(RevisionConflictError);
+  });
+
+  it("writes no watermark when the signal's incident write loses its compare-and-set", async () => {
+    await clean();
+    const repo = repository();
+    const h = createHarness({ repository: repo });
+    const declared = await h.call("declare", DECLARE, IncidentDetailSchema);
+    const stale = await repo.findIncident({ id: declared.id });
+    if (stale === null) throw new Error("missing incident");
+    await h.call(
+      "join",
+      { actor: agent("blocked"), ref: "INC-1" },
+      IncidentDetailSchema,
+    );
+    const write = repo.commitSignal({
+      watermark: {
+        previous: null,
+        next: {
+          source: "alertmanager",
+          key: "fp-x",
+          firing: true,
+          lastObservedAt: minutes(1),
+        },
+      },
+      incident: {
+        previous: stale,
+        transition: emit(
+          begin(stale),
+          { now: minutes(1), actor: null, newId: () => crypto.randomUUID() },
+          { type: "signal-firing", body: "late" },
+        ),
+      },
+    });
+    await expect(write).rejects.toBeInstanceOf(RevisionConflictError);
+    expect(await db().signalWatermark.count()).toBe(0);
+  });
+
+  it("orders open incidents by severity before the limit", async () => {
+    await clean();
+    const h = createHarness({ repository: repository() });
+    expect(await runPriorityScenario(h)).toEqual(PRIORITY_SCENARIO_EXPECTED);
   });
 });

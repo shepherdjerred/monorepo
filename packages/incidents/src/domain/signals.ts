@@ -1,8 +1,10 @@
 /**
  * Machine signals (Alertmanager alerts, the main-ci status) auto-open, attach
- * to, and clear incidents. Both producers go through `applySignal`, which is
- * idempotent: a producer may resend the same state every few minutes and only
- * a change in firing state reaches the timeline.
+ * to, and clear incidents. Both producers go through `ingestSignal`: the
+ * signal's observation watermark first rejects stale reports, then
+ * `applySignal` decides against the open incidents. A producer may resend the
+ * same state every few minutes; only a change in firing state reaches the
+ * timeline, but every newer observation advances the watermark.
  */
 import type { z } from "zod";
 import {
@@ -12,6 +14,11 @@ import {
 } from "#shared/contract.ts";
 import { heldSystems } from "#domain/dedupe.ts";
 import { declare, resolve } from "#domain/incident.ts";
+import {
+  admitObservation,
+  type SignalObservation,
+  type SignalWatermark,
+} from "#domain/watermark.ts";
 import {
   begin,
   emit,
@@ -263,7 +270,11 @@ function clear(
   };
 }
 
-/** Decide what one signal does against the current open records. */
+/**
+ * Decide what one signal does against the current open records. Callers
+ * order reports with `ingestSignal`; this function assumes the report is
+ * the newest accepted observation for its key.
+ */
 export function applySignal(
   signal: IncidentSignal,
   context: DomainContext,
@@ -286,11 +297,6 @@ export function applySignal(
     return openFromSignal(signal, context, open, settings);
   }
   const existing = target.signals.find((entry) => entry.key === signal.key);
-  if (
-    existing !== undefined &&
-    new Date(signal.observedAt).getTime() < existing.lastChangedAt.getTime()
-  )
-    return { kind: "ignore", outcome: "ignored", reason: "out of order" };
   if (signal.firing) {
     return existing?.firing === true
       ? { kind: "ignore", outcome: "ignored", reason: "already firing" }
@@ -299,4 +305,44 @@ export function applySignal(
   return existing?.firing === true
     ? clear(target, signal, context)
     : { kind: "ignore", outcome: "ignored", reason: "already cleared" };
+}
+
+export type SignalIngestDecision =
+  /** Stale or duplicate: nothing is written. */
+  | {
+      readonly kind: "ignore";
+      readonly outcome: "ignored";
+      readonly reason: string;
+    }
+  /** Accepted but changes no incident: only the watermark advances. */
+  | {
+      readonly kind: "observe";
+      readonly outcome: "ignored";
+      readonly reason: string;
+      readonly observation: SignalObservation;
+    }
+  | (Exclude<SignalDecision, { kind: "ignore" }> & {
+      readonly observation: SignalObservation;
+    });
+
+export type SignalScene = {
+  readonly open: readonly IncidentRecord[];
+  readonly watermark: SignalWatermark | null;
+};
+
+/** Order a report against its watermark, then decide it against the open incidents. */
+export function ingestSignal(
+  signal: IncidentSignal,
+  context: DomainContext,
+  scene: SignalScene,
+  settings: IncidentsSettings,
+): SignalIngestDecision {
+  const admission = admitObservation(signal, scene.watermark);
+  if (!admission.admitted)
+    return { kind: "ignore", outcome: "ignored", reason: admission.reason };
+  const decision = applySignal(signal, context, scene.open, settings);
+  const { observation } = admission;
+  return decision.kind === "ignore"
+    ? { ...decision, kind: "observe", observation }
+    : { ...decision, observation };
 }

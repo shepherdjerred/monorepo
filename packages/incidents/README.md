@@ -120,10 +120,31 @@ commands with it fail with the stale-revision CONFLICT instead.
 
 ## Signals
 
-Both machine producers go through one domain function, `applySignal`. A
-signal is idempotent by `(key, firing)`: a producer may resend the same state
-on every run, and only a change reaches the timeline. A report older than the
-signal's last change is ignored.
+Both machine producers go through one domain function, `ingestSignal`. A
+producer may resend the same state on every run; only a change in firing
+state reaches the timeline.
+
+Each producer key (`source`, `key`) has a durable observation watermark in
+`signal_watermarks`: the newest accepted observation time and the state it
+reported. It is kept independently of incidents, so it still orders reports
+after the incident a signal belonged to has closed. For a report observed at
+`t` against a watermark at `w`:
+
+| Report                     | Result                                                            |
+| -------------------------- | ----------------------------------------------------------------- |
+| `t < w`                    | Ignored; nothing is written                                       |
+| `t > w`                    | Accepted; the watermark moves to `t`, even when the state repeats |
+| `t = w`, same state        | Ignored as a duplicate delivery                                   |
+| `t = w`, firing over clear | Accepted: firing wins a tie                                       |
+| `t = w`, clear over firing | Ignored: firing wins a tie                                        |
+
+Firing winning ties makes the result the same in either arrival order and
+means a tie never closes an incident. So a retried firing after a newer clear
+auto-resolved its incident is ignored, a clear that arrives before its
+delayed firing is remembered (and the firing ignored), and a delayed clear
+older than a repeated firing cannot resolve. The watermark and the signal's
+incident write commit in one transaction, each under its own
+compare-and-set; a lost race re-reads and re-decides.
 
 1. A firing signal attaches to the open record it is already attached to,
    else to the open incident holding its system, else to an `in_progress` or
@@ -184,7 +205,9 @@ with the contract schemas.
 | `addLink`, `join`, `leave`, `claimDispatch`, `releaseDispatch`       | mutation | `IncidentDetail`       |
 | `take`                                                               | mutation | `TakeCommandResult`    |
 
-`list` with `state: "open"` and `check` sort by severity, then newest.
+`list` with `state: "open"` and `check` sort by severity, then newest; `list`
+applies that order before `limit`, so a newer, less severe incident cannot
+hide an older sev1. Other states list newest first.
 `check` reports the actor's relation to each open incident (`commander`,
 `creator`, `suspect`, `affected`, `canTake`) without recording the actor.
 

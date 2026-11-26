@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { INCIDENT_STATUSES, MAINTENANCE_STATUSES } from "#shared/contract.ts";
+import {
+  INCIDENT_STATUSES,
+  IncidentSeveritySchema,
+  MAINTENANCE_STATUSES,
+} from "#shared/contract.ts";
+import { compareOpenPriority } from "#domain/model.ts";
 import { assertNoOverlap, findOverlap, heldSystems } from "#domain/dedupe.ts";
 import { IncidentError } from "#domain/errors.ts";
 import {
@@ -327,5 +332,32 @@ describe("resolve and reopen", () => {
     expect(() =>
       reopen(reopened.next, contextAt(T0, jerred), "again", []),
     ).toThrow(IncidentError);
+  });
+});
+
+function at(severity: "sev1" | "sev2" | "sev3", minute: number) {
+  return { severity, declaredAt: minutes(minute) };
+}
+
+describe("open priority", () => {
+  it("orders by severity, then newest, and severity names sort lexically in rank order", () => {
+    const sorted = [
+      at("sev3", 9),
+      at("sev1", 0),
+      at("sev2", 5),
+      at("sev1", 3),
+    ].sort(compareOpenPriority);
+    expect(sorted).toEqual([
+      at("sev1", 3),
+      at("sev1", 0),
+      at("sev2", 5),
+      at("sev3", 9),
+    ]);
+    // The PostgreSQL repository relies on this with `ORDER BY severity ASC`.
+    expect([...IncidentSeveritySchema.options].sort()).toEqual([
+      "sev1",
+      "sev2",
+      "sev3",
+    ]);
   });
 });
