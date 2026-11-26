@@ -26,7 +26,9 @@
     "golink": "golink/prod",
     "flags": "flags/prod",
     "storm-stats": "storm-stats/prod",
-    "mail": "outbound-mail/prod"
+    "mail": "outbound-mail/prod",
+    "charts": "charts/prod",
+    "ci-cache": "ci-cache/prod"
   },
   "platformDeliveryDelegated": true,
   "services": [
@@ -891,25 +893,47 @@
     },
     {
       "id": "charts",
-      "rootReleaseExclusions": { "charts": "inactive" },
-      "images": ["charts"],
-      "charts": ["charts"],
       "title": "Charts",
       "kind": "product",
       "package": "charts",
+      "aliases": [],
       "namespaces": ["charts"],
-      "argoApps": []
+      "argoApps": ["charts"],
+      "charts": [],
+      "images": ["charts"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/charts",
+          "argoApp": "charts"
+        }
+      ]
     },
     {
       "id": "ci-cache",
-      "rootReleaseExclusions": { "ci-cache": "inactive" },
-      "images": ["ci-cache"],
-      "charts": ["ci-cache"],
       "title": "CI cache",
       "kind": "product",
       "package": "ci-cache",
+      "aliases": [],
       "namespaces": ["ci-cache"],
-      "argoApps": []
+      "argoApps": ["ci-cache"],
+      "charts": [],
+      "images": ["ci-cache"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/ci-cache",
+          "argoApp": "ci-cache"
+        }
+      ]
     },
     {
       "id": "errors",

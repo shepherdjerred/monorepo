@@ -76,6 +76,8 @@ describe("deployed registry derived from the service catalog", () => {
         "alert-dashboard default shepherdjerred/alert-dashboard alert-dashboard",
         "arcade default shepherdjerred/arcade arcade",
         "birmel default shepherdjerred/birmel birmel",
+        "charts default shepherdjerred/charts charts",
+        "ci-cache default shepherdjerred/ci-cache ci-cache",
         "errors default shepherdjerred/errors errors",
         "feeds default shepherdjerred/feeds feeds",
         "flags default shepherdjerred/flags flags",

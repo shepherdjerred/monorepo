@@ -267,6 +267,16 @@
       "exposure": "ingress"
     },
     {
+      "host": "charts",
+      "namespace": "charts",
+      "exposure": "ingress"
+    },
+    {
+      "host": "ci-cache",
+      "namespace": "ci-cache",
+      "exposure": "ingress"
+    },
+    {
       "host": "delivery",
       "namespace": "delivery",
       "exposure": "ingress",
