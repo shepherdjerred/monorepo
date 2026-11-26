@@ -69,7 +69,7 @@ export async function createRuntime(input: RuntimeInput): Promise<Runtime> {
     hub: input.hub,
     stats,
     metrics,
-    origins: { app: input.appOrigin },
+    origins: { app: input.appOrigin, content: input.contentOrigin },
     operatorLogins,
     ...(input.clientRoot === undefined ? {} : { clientRoot: input.clientRoot }),
     ...(input.heartbeatMs === undefined

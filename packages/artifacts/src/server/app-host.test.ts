@@ -1,6 +1,7 @@
 import { Glob } from "bun";
 import { beforeAll, describe, expect, it } from "vitest";
 import { ALLOWED_CDN_ORIGINS, LIMIT_DEFAULTS } from "#shared/contract.ts";
+import { appPolicy } from "#domain/csp.ts";
 import {
   APP_ORIGIN,
   CONTENT_ORIGIN,
@@ -143,7 +144,7 @@ describe("app host: isolation", () => {
     }
   });
 
-  it("answers every status with frame-ancestors 'none' and no CORS", async () => {
+  it("answers every status with the app policy and no CORS", async () => {
     const responses = [
       await get("/", { headers: navigation }),
       await get("/_t/x", { headers: { "Sec-Fetch-Site": "same-origin" } }),
@@ -151,16 +152,43 @@ describe("app host: isolation", () => {
       await get("/trpc/boards.list", {
         headers: { "Sec-Fetch-Site": "cross-site" },
       }),
+      // Passes the gates and fails inside the handler: still a policed response.
+      await get("/trpc/boards.list", {
+        headers: { "Sec-Fetch-Site": "same-origin" },
+      }),
       await get("/agent/SKILL.md", {
+        headers: { "Sec-Fetch-Site": "same-origin" },
+      }),
+      await get("/api/missing", {
         headers: { "Sec-Fetch-Site": "same-origin" },
       }),
     ];
     for (const response of responses) {
       expect(response.headers.get("Content-Security-Policy")).toBe(
-        "frame-ancestors 'none'",
+        appPolicy(CONTENT_ORIGIN),
       );
+      expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+      expect(response.headers.get("Referrer-Policy")).toBe("no-referrer");
       expect(corsHeaders(response)).toEqual([]);
     }
+  });
+
+  it("lets only the content origin beyond 'self' and never evaluates script text", () => {
+    const policy = appPolicy(CONTENT_ORIGIN);
+    expect(policy).toContain("default-src 'self'");
+    expect(policy).toContain("script-src 'self' 'wasm-unsafe-eval'");
+    expect(policy).toContain(`frame-src ${CONTENT_ORIGIN}`);
+    expect(policy).toContain(`connect-src 'self' ${CONTENT_ORIGIN}`);
+    expect(policy).toContain("frame-ancestors 'none'");
+    expect(policy).toContain("object-src 'none'");
+    expect(policy).toContain("base-uri 'none'");
+    expect(policy).toContain("form-action 'self'");
+    expect(policy.replaceAll("wasm-unsafe-eval", "")).not.toContain(
+      "unsafe-eval",
+    );
+    expect(policy.match(/https?:\/\/[^\s;]+/gu)).toEqual(
+      Array.from({ length: 4 }, () => CONTENT_ORIGIN),
+    );
   });
 
   it("answers a CORS preflight like any other cross-site request: refused", async () => {

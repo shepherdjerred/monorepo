@@ -550,13 +550,17 @@ export const LiveMessageSchema = z.discriminatedUnion("type", [
     boardId: z.uuid(),
     revision: z.number().int().min(1),
   }),
-  /** UI stream only: something changed on a board; refetch what you show. */
+  /**
+   * UI stream only: something changed on a board; refetch what you show.
+   * `seq` is the change log position, or null for a change that is not in
+   * the log (kind `waiter`: an agent's feedback stream connected or closed).
+   */
   z.strictObject({
     type: z.literal("change"),
     boardId: z.uuid().nullable(),
     kind: z.string().min(1).max(100),
     entityId: z.string().min(1).max(100),
-    seq: z.number().int().min(1),
+    seq: z.number().int().min(1).nullable(),
   }),
   z.strictObject({ type: z.literal("resync") }),
   z.strictObject({ type: z.literal("gone") }),

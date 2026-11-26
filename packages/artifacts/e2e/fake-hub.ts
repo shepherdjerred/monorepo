@@ -141,7 +141,47 @@ export function subscribe(store: Store, subscriber: Subscriber): () => void {
   return () => store.subscribers.delete(subscriber);
 }
 
+/** The board a feedback scope belongs to, or null for an owner scope. */
+function scopeBoardId(store: Store, scope: FeedbackScope): string | null {
+  switch (scope.type) {
+    case "owner":
+      return null;
+    case "artifact":
+      return store.artifacts.get(scope.artifactId)?.boardId ?? null;
+    case "board":
+      return (
+        [...store.boards.values()].find((board) => board.slug === scope.board)
+          ?.id ?? null
+      );
+  }
+}
+
+/** Mirrors the server: a waiter connecting or leaving wakes the UI streams. */
+function announceWaiter(store: Store, waiter: Waiter, entityId: string): void {
+  const boardId = scopeBoardId(store, waiter.scope);
+  const slug =
+    boardId === null ? null : (store.boards.get(boardId)?.slug ?? null);
+  const message: LiveMessage = {
+    type: "change",
+    boardId,
+    kind: "waiter",
+    entityId,
+    seq: null,
+  };
+  for (const subscriber of store.subscribers)
+    if (
+      boardId === null ||
+      subscriber.board === null ||
+      subscriber.board === slug
+    )
+      subscriber.send(message);
+}
+
 export function addWaiter(store: Store, waiter: Waiter): () => void {
+  const entityId = crypto.randomUUID();
   store.waiters.add(waiter);
-  return () => store.waiters.delete(waiter);
+  announceWaiter(store, waiter, entityId);
+  return () => {
+    if (store.waiters.delete(waiter)) announceWaiter(store, waiter, entityId);
+  };
 }

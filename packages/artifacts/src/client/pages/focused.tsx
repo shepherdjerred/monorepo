@@ -165,7 +165,7 @@ export function FocusedPage(): React.JSX.Element {
       <FocusedHeader
         title={detail.title}
         boardSlug={detail.boardSlug}
-        boardTitle={detail.boardSlug}
+        boardTitle={detail.boardTitle}
         versions={sorted}
         shown={shown}
         version={version}

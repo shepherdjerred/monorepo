@@ -41,7 +41,7 @@ const EventPayloadSchema = z.looseObject({
   revision: z.number().int().optional(),
 });
 
-type Notice = Extract<HubMessage, { type: "event" }>;
+type Notice = Exclude<HubMessage, { type: "resync" }>;
 
 /** Resolves `idle` on the next `wake` or after one heartbeat; leaves no timer. */
 function createWaiter(heartbeatMs: number) {
@@ -227,9 +227,17 @@ function registerFeedbackStream(
     const inScope = createMembership(services, scope, boardId);
     let release: (() => void) | undefined;
     let touchedAt = Date.now();
+    // Names this connection in `waiter` changes; ids only, never the actor.
+    const connection = crypto.randomUUID();
+    const announce = () => {
+      options.hub.announce({ type: "waiter", boardId, entityId: connection });
+    };
     const response = runStream(c, options, "feedback", {
       close: () => {
-        release?.();
+        if (release === undefined) return;
+        release();
+        release = undefined;
+        announce();
       },
       first: async () => {
         release = services.waiters.add(
@@ -237,6 +245,9 @@ function registerFeedbackStream(
           scope,
           services.deps.now(),
         );
+        // The UI's "waiting" header refetches on this, so it is announced
+        // only once the waiter is listed.
+        announce();
         const { deliverable } = await services.feedback.pendingFor(
           scope,
           caller.id,
@@ -244,6 +255,7 @@ function registerFeedbackStream(
         return [{ type: "ready", scope, pending: deliverable }];
       },
       translate: async (notice) => {
+        if (notice.type === "waiter") return [];
         const row = await services.deps.db.event.findUnique({
           where: { seq: BigInt(notice.seq) },
         });
@@ -296,6 +308,30 @@ function registerFeedbackStream(
   });
 }
 
+/**
+ * The UI message for a waiter notice. A waiter on no one board (an owner
+ * scope) is shown on every board; otherwise only on its own.
+ */
+function waiterChange(
+  notice: Extract<HubMessage, { type: "waiter" }>,
+  streamBoardId: string | null,
+): LiveMessage[] {
+  const elsewhere =
+    notice.boardId !== null &&
+    streamBoardId !== null &&
+    notice.boardId !== streamBoardId;
+  if (elsewhere) return [];
+  return [
+    {
+      type: "change",
+      boardId: notice.boardId,
+      kind: "waiter",
+      entityId: notice.entityId,
+      seq: null,
+    },
+  ];
+}
+
 function registerEventsStream(
   app: Hono<{ Variables: AppVariables }>,
   options: StreamOptions,
@@ -315,6 +351,7 @@ function registerEventsStream(
     return runStream(c, options, "events", {
       first: () => Promise.resolve([RESYNC]),
       translate: async (notice) => {
+        if (notice.type === "waiter") return waiterChange(notice, boardId);
         if (notice.kind === CLEANUP_EVENT) return [];
         if (boardId !== null && notice.boardId !== boardId) return [];
         const row = await services.deps.db.event.findUnique({

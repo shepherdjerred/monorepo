@@ -35,7 +35,7 @@ export type AppHostOptions = {
   hub: ChangeHub;
   stats: StreamStats;
   metrics: Metrics;
-  origins: { app: string };
+  origins: { app: string; content: string };
   operatorLogins: () => Promise<string[]>;
   /** The built browser client; defaults to this package's `dist/client`. */
   clientRoot?: string;
@@ -66,7 +66,9 @@ export function createAppHandler(options: AppHostOptions) {
   app.use(async (c, next) => {
     c.set("requestId", crypto.randomUUID());
     await next();
-    for (const [name, value] of Object.entries(appHeaders()))
+    for (const [name, value] of Object.entries(
+      appHeaders(options.origins.content),
+    ))
       c.res.headers.set(name, value);
     c.res.headers.set("X-Request-Id", c.get("requestId"));
     options.metrics.requests({

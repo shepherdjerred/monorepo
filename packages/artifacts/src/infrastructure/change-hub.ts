@@ -15,6 +15,8 @@ const NotificationSchema = z.object({
 
 export type HubMessage =
   | { type: "event"; seq: number; boardId: string | null; kind: string }
+  /** In-process only: an agent's feedback stream connected or closed. */
+  | { type: "waiter"; boardId: string | null; entityId: string }
   | { type: "resync" };
 
 export type HubSubscriber = {
@@ -139,6 +141,8 @@ export function createChangeHub(connectionString: string) {
       subscribers.clear();
       await current?.end();
     },
+    /** Fans a message out to this process's subscribers without the database. */
+    announce: publish,
     subscriberCount: () => subscribers.size,
     listening: () => client !== null,
   };

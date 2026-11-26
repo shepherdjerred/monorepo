@@ -388,6 +388,69 @@ describe("replies", () => {
   });
 });
 
+const waiterChanges = (raw: string) =>
+  raw.split("\n\n").filter((block) => block.includes('"kind":"waiter"'));
+
+describe("waiter announcements", () => {
+  it("tells the UI when an agent starts and stops waiting, to the right board only", async () => {
+    const scene = await scenario();
+    const other = await scenario();
+    const watching = openEventStream(
+      await fast.call("app", `/api/events/stream?board=${scene.slug}`, {
+        headers: humanHeaders(),
+      }),
+    );
+    const elsewhere = openEventStream(
+      await fast.call("app", `/api/events/stream?board=${other.slug}`, {
+        headers: humanHeaders(),
+      }),
+    );
+    await watching.waitFor((events) => events.length > 0);
+    await elsewhere.waitFor((events) => events.length > 0);
+
+    const agent = openEventStream(
+      await fast.call(
+        "app",
+        `/api/feedback/stream?artifact=${scene.artifactId}`,
+        { headers: agentHeaders("waiter-announcer") },
+      ),
+    );
+    await agent.waitFor((events) =>
+      events.some((entry) => entry.event === "ready"),
+    );
+    const connected = await watching.waitFor(
+      (_events, raw) => waiterChanges(raw).length === 1,
+    );
+    const change: unknown = JSON.parse(
+      connected.events.find((entry) => entry.data.includes('"waiter"'))?.data ??
+        "{}",
+    );
+    expect(change).toMatchObject({
+      type: "change",
+      kind: "waiter",
+      seq: null,
+      boardId: expect.any(String),
+    });
+    // Announced after the waiter is listed, so the refetch it triggers sees it.
+    expect(
+      fast.services.waiters
+        .all()
+        .some((entry) => entry.actor.name === "waiter-announcer"),
+    ).toBe(true);
+
+    await agent.cancel();
+    const left = await watching.waitFor(
+      (_events, raw) => waiterChanges(raw).length === 2,
+    );
+    expect(waiterChanges(left.raw)).toHaveLength(2);
+    // A board nobody waits on hears nothing.
+    const quiet = await elsewhere.waitFor(() => false, 500);
+    expect(waiterChanges(quiet.raw)).toHaveLength(0);
+    await watching.cancel();
+    await elsewhere.cancel();
+  });
+});
+
 describe("live streams", () => {
   it("wakes a waiting agent over SSE, with ids only and a heartbeat", async () => {
     const scene = await scenario();

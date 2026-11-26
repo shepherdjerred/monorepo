@@ -102,6 +102,29 @@ describe("publish", () => {
     ).toBe(404);
   });
 
+  it("names the board by title on the artifact, for the focused view's breadcrumb", async () => {
+    await human.mutate("boards.create", {
+      slug: "named-board",
+      title: "Quarterly review",
+    });
+    const { committed } = await publish(
+      agent,
+      { "index.html": HTML },
+      { board: "named-board" },
+    );
+    const Titled = z.object({ boardSlug: z.string(), boardTitle: z.string() });
+    expect(
+      Titled.parse(
+        await human.query("artifacts.get", { id: committed.artifactId }),
+      ),
+    ).toEqual({ boardSlug: "named-board", boardTitle: "Quarterly review" });
+    expect(
+      z
+        .array(Titled)
+        .parse(await human.query("artifacts.list", { board: "named-board" })),
+    ).toEqual([{ boardSlug: "named-board", boardTitle: "Quarterly review" }]);
+  });
+
   it("is idempotent: the same key and request resume, a different request conflicts", async () => {
     const files = { "index.html": HTML };
     const first = await publish(agent, files, {

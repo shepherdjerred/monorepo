@@ -53,8 +53,10 @@ Content-Security-Policy.
 
 - **App** (`ARTIFACTS_APP_ORIGIN`): the UI, `/trpc`, `/api/uploads`,
   `/api/feedback/stream`, `/api/events/stream`, `/agent/*`. Login gate, CSRF
-  rules (`src/domain/csrf.ts`), no CORS, `frame-ancestors 'none'`. `/_t/*` and
-  `/_p/*` are 404, and it never reads object bytes: only
+  rules (`src/domain/csrf.ts`), no CORS. Every response carries the app
+  Content-Security-Policy (`appPolicy` in `src/domain/csp.ts`: `'self'` plus the
+  content origin for images, media, fetches and frames; `frame-ancestors 'none'`).
+  `/_t/*` and `/_p/*` are 404, and it never reads object bytes: only
   `src/server/content-host.ts` calls `ObjectStore.read`/`readRange`.
 - **Content** (`ARTIFACTS_CONTENT_ORIGIN`): `GET|HEAD|OPTIONS` of
   `/_t/<token>/*`, `/_bridge/*`, `/_viewer/*`. Every response, whatever its

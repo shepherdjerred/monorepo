@@ -127,13 +127,13 @@ type ArtifactRow = {
   kind: ArtifactSummary["kind"];
   ownerKey: string;
   createdAt: Date;
-  board: { slug: string };
+  board: { slug: string; title: string };
   currentVersion: VersionRow | null;
   _count: { versions: number };
 };
 
 export const ARTIFACT_INCLUDE = {
-  board: { select: { slug: true } },
+  board: { select: { slug: true, title: true } },
   currentVersion: { include: VERSION_INCLUDE },
   _count: { select: { versions: true } },
 } as const;
@@ -146,6 +146,7 @@ export function presentArtifact(
     id: artifact.id,
     boardId: artifact.boardId,
     boardSlug: artifact.board.slug,
+    boardTitle: artifact.board.title,
     title: artifact.title,
     kind: artifact.kind,
     ownerKey: artifact.ownerKey,
