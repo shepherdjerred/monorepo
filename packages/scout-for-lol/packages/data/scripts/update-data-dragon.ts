@@ -37,6 +37,7 @@ import { downloadAbilityIcons } from "./ability-icons.ts";
 import { buildAugmentNameCatalog } from "./augment-names.ts";
 import type { AugmentNameCatalog } from "#src/data-dragon/augment-names-schema.ts";
 import { analyzePatch, fetchOfficialPatchNotes } from "./patch-analysis.ts";
+import { classifySplashFacing } from "./classify-splash-facing.ts";
 import {
   PatchChangesetHistorySchema,
   type PatchChangeset,
@@ -1701,6 +1702,7 @@ async function main(): Promise<void> {
         discoveries,
       );
       await $`cd ${MONOREPO_ROOT} && bun run --cwd packages/scout-for-lol/packages/data generate:asset-manifest --write`;
+      await classifySplashFacing();
       return;
     }
     // --ability-facts-only regenerates just assets/ability-facts/ from the
@@ -1841,6 +1843,9 @@ async function main(): Promise<void> {
       discoveries,
     );
     await $`cd ${MONOREPO_ROOT} && bun run --cwd packages/scout-for-lol/packages/data generate:asset-manifest --write`;
+    // New or changed splashes get a facing entry; a model failure fails the
+    // refresh rather than leaving the metadata stale.
+    await classifySplashFacing();
 
     const totalImages =
       spellImagesCount +

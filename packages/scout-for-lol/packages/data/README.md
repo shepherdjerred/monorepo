@@ -73,6 +73,28 @@ schedule. Typed readers live beside the assets in `src/data-dragon/`
 (`champion.ts`, `item.ts`, `ability-facts.ts`, ...); all of them validate with
 Zod at read time.
 
+### Splash facing (`assets/champion-splash-facing.json`)
+
+One entry per champion splash, keyed by file (`Ahri_0.jpg`): which way the
+champion faces (`left`, `right`, `center`), `focusX` (the face's horizontal
+position, 0 to 1), `mirrorSafe` (false when text, a logo or an emblem would read
+wrong flipped), the `imageSha256` it describes, `source` (`model` or `human`),
+and the classifier's `confidence` and `note`. The images are never edited;
+`splashPresentation(key, "left" | "right")` in `browser-assets.ts` returns
+`{ mirrored, focusX }` so two champions can face each other, mirroring only a
+champion that faces away from the page centre and only when `mirrorSafe`.
+`focusX` is returned in displayed coordinates, so it flips with the image.
+
+`scripts/classify-splash-facing.ts` fills the file with a vision call per image
+(`claude-sonnet-5-5`, about $0.005 each, hard-stopped by `--max-cost-usd`,
+default 5). It skips images whose sha256 already has an entry, reclassifies an
+image whose bytes changed, and prunes entries for removed splashes. Run it
+with `ANTHROPIC_API_KEY` supplied by 1Password (`op run`), or let
+`update-data-dragon` run it after downloading splashes; a model failure fails
+the refresh. To correct an entry by hand, edit it and set `source` to
+`"human"`; it stays until its image changes. A test requires every splash in
+the manifest to have an entry whose `imageSha256` matches.
+
 ### Ability facts (`assets/ability-facts/`)
 
 One file per champion (`{ChampionKey}.json`, e.g. `Chogath.json`) with grounded
