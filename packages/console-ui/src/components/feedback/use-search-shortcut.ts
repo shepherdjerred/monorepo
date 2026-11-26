@@ -17,21 +17,37 @@ const NON_TEXT_INPUTS = new Set([
 const KEYBOARD_OWNERS =
   '[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [role="combobox"], [role="textbox"], dialog';
 
+/** An element, or null when `target` is not one (or there is no DOM). */
+function elementOf(target: EventTarget | null): HTMLElement | null {
+  return typeof HTMLElement !== "undefined" && target instanceof HTMLElement
+    ? target
+    : null;
+}
+
+/** Whether the target types text: a text input, a textarea or an editable region. */
+export function isTextField(target: EventTarget | null): boolean {
+  const element = elementOf(target);
+  return (
+    element !== null &&
+    (element.isContentEditable ||
+      (element instanceof HTMLInputElement &&
+        !NON_TEXT_INPUTS.has(element.type)) ||
+      element instanceof HTMLTextAreaElement)
+  );
+}
+
 /**
  * Whether a key press aimed at `target` belongs to that element rather than
  * to a page shortcut: text inputs, textareas, selects, contenteditable
- * regions, and anything inside a dialog, menu or listbox.
+ * regions, and anything inside a dialog, menu, listbox or combobox.
  */
 export function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  if (target.isContentEditable) return true;
-  const typesText =
-    target instanceof HTMLInputElement && !NON_TEXT_INPUTS.has(target.type);
+  const element = elementOf(target);
   return (
-    typesText ||
-    target instanceof HTMLTextAreaElement ||
-    target instanceof HTMLSelectElement ||
-    target.closest(KEYBOARD_OWNERS) !== null
+    element !== null &&
+    (isTextField(element) ||
+      element instanceof HTMLSelectElement ||
+      element.closest(KEYBOARD_OWNERS) !== null)
   );
 }
 

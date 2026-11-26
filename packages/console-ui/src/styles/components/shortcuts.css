@@ -1,0 +1,57 @@
+/*
+ * Keyboard: keycap groups (`.ui-keys`, drawn with `Kbd`), the hints at the end of menu and palette
+ * rows (muted mono, no keycap), and the shortcut help sheet's grouped list.
+ */
+@layer ui.components {
+  .ui-keys {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 3px;
+  }
+  :is(.ui-menu-item, .ui-palette-option) .ui-keys {
+    margin-left: auto;
+    padding-left: var(--ui-space-2);
+  }
+  /* In a menu or palette row a key is a muted hint, not a keycap. */
+  :is(.ui-menu-item, .ui-palette-option) .ui-keys .ui-kbd {
+    min-width: 0;
+    height: auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    font-weight: var(--ui-weight-regular);
+  }
+  .ui-shortcuts {
+    display: grid;
+    gap: var(--ui-space-4);
+  }
+  .ui-shortcuts-heading {
+    margin: 0 0 var(--ui-space-1);
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
+    font-weight: var(--ui-weight-medium);
+  }
+  .ui-shortcuts-list {
+    margin: 0;
+  }
+  .ui-shortcuts-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-space-3);
+    min-height: var(--ui-nav-row);
+    border-bottom: 1px solid var(--ui-line-soft);
+  }
+  .ui-shortcuts-row dd {
+    margin: 0;
+  }
+
+  /* Without a keyboard, key hints are noise. */
+  @media (pointer: coarse) {
+    :is(.ui-menu-item, .ui-palette-option) .ui-keys {
+      display: none;
+    }
+  }
+}

@@ -133,6 +133,34 @@
     height: 11px;
   }
 
+  /* Steps: a back button and the step titles before the input. */
+  .ui-palette-crumbs {
+    display: flex;
+    flex: none;
+    gap: var(--ui-space-1);
+    max-width: 50%;
+    overflow: hidden;
+  }
+  .ui-palette-crumb {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 7px;
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-radius-sm);
+    color: var(--ui-ink-2);
+    font-size: var(--ui-text-sm);
+    white-space: nowrap;
+  }
+  /* A check (the current value) and a shortcut hint end the row. */
+  .ui-palette-label + :is(.ui-keys, .ui-palette-check) {
+    margin-left: auto;
+  }
+  .ui-palette-option .ui-palette-check {
+    flex: none;
+    color: var(--ui-accent);
+  }
+
   @media (width <= 600px) {
     .ui-palette {
       top: 10px;

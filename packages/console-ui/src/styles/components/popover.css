@@ -1,0 +1,40 @@
+/*
+ * Popover: an anchored panel for a few controls (filters, display options,
+ * a date). The menu's border and shadow, no arrow, an optional 13px title.
+ */
+@layer ui.components {
+  .ui-popover {
+    display: grid;
+    gap: var(--ui-space-3);
+    width: min(320px, calc(100vw - 2 * var(--ui-space-2)));
+    max-height: var(--available-height, 480px);
+    padding: var(--ui-space-3);
+    overflow-y: auto;
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-panel);
+    color: var(--ui-ink);
+    box-shadow: var(--ui-shadow-menu);
+    outline: 0;
+  }
+  .ui-popover[data-size="sm"] {
+    width: min(240px, calc(100vw - 2 * var(--ui-space-2)));
+  }
+  .ui-popover[data-size="lg"] {
+    width: min(400px, calc(100vw - 2 * var(--ui-space-2)));
+  }
+  .ui-popover-title {
+    margin: 0;
+    font-size: var(--ui-text-base);
+    font-weight: var(--ui-weight-strong);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ui-popover {
+      transition: opacity var(--ui-duration-press) var(--ui-ease-out);
+    }
+    .ui-popover:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+  }
+}

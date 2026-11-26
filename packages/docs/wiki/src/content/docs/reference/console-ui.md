@@ -115,6 +115,7 @@ fails when any of these pairs drops below its WCAG ratio in either theme.
 | `ink`, `ink-2`, `muted`    | `bg`, `panel`, `head`, `hover`, `side-hover`, `active`          | 4.5:1   |
 | `faint`, `accent`          | `bg`, `panel`, `head`, `hover`                                  | 4.5:1   |
 | `on-accent`                | `accent`                                                        | 4.5:1   |
+| `ink-2` (avatar initials)  | `track`                                                         | 4.5:1   |
 | `sev-<severity>-text`      | `bg`, `panel`, `head`, `hover`, `sev-<severity>-soft`           | 4.5:1   |
 | `sev-<severity>`           | `bg`, `panel`, `head`, `hover`, `track`                         | 3:1     |
 | `accent` (as an indicator) | `bg`, `panel`, `head`, `hover`, `side-hover`, `active`, `track` | 3:1     |
@@ -152,6 +153,83 @@ One shared piece per job:
 | Budget, breakdown     | `Meter`, `StackedMeter`                   |
 | Theme                 | `createThemeStore()`                      |
 | Icons                 | `ICONS`                                   |
+
+## Overlays and inputs
+
+One shared piece per job, all on Base UI. Popups share the menu look
+(`panel`, `line` border, `radius-md`, `shadow-menu`, `z-popover`), fade
+with `duration-press` only when motion is allowed, and are inert while they
+fade out.
+
+| Job                            | Piece                                                                                                |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Commands on a button           | `Menu` with `MenuItem`, `MenuLinkItem`, `MenuCheckboxItem`, `MenuRadioGroup`, `Submenu`, `MenuGroup` |
+| Commands on a target           | `ContextMenu` (right-click, long press, Shift+F10, Menu key), same items                             |
+| A few controls by a button     | `Popover`                                                                                            |
+| A short list of values         | `Select` (28px)                                                                                      |
+| A long or searched list        | `Combobox` (single or `multiple` with chips; `loadOptions`; `onCreate`)                              |
+| An outcome, an Undo            | `toast.notify`, `toast.error`, `toast.undo` under one `ToastProvider`                                |
+| A panel on an edge             | `Sheet` (`right`, `left`, `bottom`)                                                                  |
+| A person or agent              | `Avatar` (16, 20, 24px), `ActorChip`                                                                 |
+| Keyboard shortcuts, help       | `createShortcutRegistry`, `ShortcutSheet`, `KeyHint`                                                 |
+| Search and multi-step commands | `CommandPaletteCommands` in a `CommandPalette`                                                       |
+
+There is no tooltip.
+
+### Rows
+
+Menu, select and combobox rows are 30px (`nav-row`, 36px with a
+description, 44px on `pointer: coarse`): a 15px icon, the label and an
+optional muted description, then at the end a shortcut hint (muted mono, no
+keycap, hidden on touch screens), a check in `accent` or a submenu chevron.
+Destructive items use `sev-error-text`; disabled items use `faint`.
+
+### Select
+
+`Select` is the Base UI select in every browser: a 28px trigger and a menu
+of rows. The native customizable select (`appearance: base-select`,
+`<selectedcontent>`) is Limited Availability (Chromium and Safari only), so
+the package does not use it; the consoles' browser-support policy needs an
+explicit request before any Limited Availability feature ships.
+
+### Toasts
+
+| Kind     | Glyph and word | Shown for | Announced                        |
+| -------- | -------------- | --------- | -------------------------------- |
+| `notify` | ok, "Done"     | 4s        | Politely                         |
+| `error`  | error, "Error" | 10s       | Assertively (high priority)      |
+| `undo`   | ok, "Done"     | 6s        | Politely; Undo runs at most once |
+
+At most four show; older ones wait. F6 moves focus to the region, hover or
+focus holds them, and `toast.undoLatest()` runs the newest Undo (bind it to
+⌘Z). A toast is a labelled group, never a dialog.
+
+## Keyboard shortcuts
+
+`createShortcutRegistry()` listens on the document; the key handler and
+`ShortcutSheet` read the same list. Each shortcut is
+`{ id, keys, description, group, run?, anywhere?, scope?, sheet? }`.
+
+| `keys`                     | Means                                                      |
+| -------------------------- | ---------------------------------------------------------- |
+| `"c"`, `"?"`, `"Escape"`   | One key, matched on `KeyboardEvent.key` (`"P"` is Shift+P) |
+| `"g i"`                    | A sequence; the second key within 900ms                    |
+| `"Mod+K"`, `"Mod+Shift+,"` | A chord; `Mod` is ⌘ or Ctrl, the key matched on `code`     |
+| `"Ctrl+K"`, `"Alt+N"`      | A chord on that exact modifier                             |
+
+| Focus or state                    | Plain keys | Chords  |
+| --------------------------------- | ---------- | ------- |
+| A text field                      | Ignored    | Ignored |
+| A select, menu or listbox         | Ignored    | Run     |
+| An open dialog, popover or sheet  | Ignored    | Ignored |
+| Enter on a link, button or option | Ignored    | —       |
+| `anywhere: true`                  | Run        | Run     |
+
+A shortcut whose `run` returns `false` leaves the key to the browser; one
+without `run` is listed only. The first key of a sequence wins over a
+one-key shortcut on the same key. Two shortcuts on one binding in one scope,
+or one id twice, throw. Hints show ⌘ ⌥ ⇧ on Apple platforms and Ctrl/Alt
+elsewhere; `aria-keyshortcuts` gives `Meta+K Control+K` for `Mod+K`.
 
 The page kit (`PageBody`, `PageHeading`, `SummaryGrid`, `Card`,
 `CardToolbar`, `Tag`, `Segmented`, `TopBar`, `ThemeToggle`, `SeverityBadge`,
@@ -272,3 +350,18 @@ search button to the sidebar and the top bar when given the store.
 
 `Timeline` shows times in Pacific (`America/Los_Angeles`) as a mono 24-hour
 clock, with the exact time and zone on hover.
+`sections` of `{ id, label, detail?, icon, checked?, hint? }` items and an
+`onSelect` that runs after the dialog has closed and returned focus.
+`ConsoleShell` adds the search button to the sidebar and the top bar when
+given the store.
+
+`CommandPaletteCommands` is a ready body for the same dialog:
+
+| Behaviour     | Contract                                                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Static        | `sections`, filtered by every typed word in `label`, `detail` and `keywords`; or a function of the query                                          |
+| Server search | `loadSections(query, signal)`, debounced (180ms), aborted when superseded, listed after the static sections                                       |
+| Status        | "Searching…" while loading; `errorText` when the load fails                                                                                       |
+| Steps         | A command with `step` opens a nested list; the breadcrumb sits before the input; Backspace on an empty query, Escape and the back button leave it |
+| Running       | `run(context)` after the palette closes; `stay` runs at once and keeps it open                                                                    |
+| Recent        | `createRecentCommands({ key })` keeps the last five run ids in `localStorage`; shown first while nothing is typed                                 |

@@ -1,5 +1,6 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import type { ReactElement, ReactNode } from "react";
+import { openStateProps } from "@shepherdjerred/console-ui/components/overlays/open-state.ts";
 import { ICONS } from "@shepherdjerred/console-ui/icons.ts";
 
 const CloseIcon = ICONS.close;
@@ -40,16 +41,7 @@ export function Dialog({
   children,
 }: DialogProps): React.JSX.Element {
   return (
-    <DialogPrimitive.Root
-      {...(open === undefined ? {} : { open })}
-      {...(onOpenChange === undefined
-        ? {}
-        : {
-            onOpenChange: (next: boolean) => {
-              onOpenChange(next);
-            },
-          })}
-    >
+    <DialogPrimitive.Root {...openStateProps(open, onOpenChange)}>
       {trigger === undefined ? null : (
         <DialogPrimitive.Trigger render={trigger} />
       )}

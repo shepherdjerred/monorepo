@@ -1,4 +1,7 @@
-/* Popup menus: the app switcher today, every Base UI menu later. */
+/*
+ * Popup menus: the app switcher, `Menu`, `ContextMenu`, and the lists of
+ * `Select` and `Combobox`.
+ */
 @layer ui.components {
   .ui-menu-positioner {
     z-index: var(--ui-z-popover);
@@ -38,5 +41,108 @@
   }
   .ui-menu-item[aria-current] {
     color: var(--ui-accent);
+  }
+
+  /*
+   * Rows beyond the app switcher: an icon slot, the label (with an optional
+   * muted description), then a shortcut hint, check or chevron at the end.
+   * `Select` and `Combobox` lists use the same rows.
+   */
+  .ui-menu {
+    max-width: min(360px, calc(100vw - 2 * var(--ui-space-2)));
+    max-height: min(420px, var(--available-height, 420px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .ui-menu-item {
+    gap: var(--ui-space-2);
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--ui-ink);
+    font-size: var(--ui-text-md);
+    text-align: left;
+    text-decoration: none;
+    cursor: default;
+  }
+  .ui-menu-item[data-highlighted],
+  .ui-menu-item[data-popup-open] {
+    background: var(--ui-hover);
+  }
+  .ui-menu-item:has(.ui-menu-description) {
+    height: auto;
+    min-height: var(--ui-row);
+    padding-block: var(--ui-space-1);
+  }
+  .ui-menu-item[data-danger],
+  .ui-menu-item[data-danger] .ui-menu-icon {
+    color: var(--ui-sev-error-text);
+  }
+  .ui-menu-item[data-disabled],
+  .ui-menu-item[data-disabled] .ui-menu-icon {
+    color: var(--ui-faint);
+  }
+  .ui-menu-icon {
+    width: 15px;
+    height: 15px;
+    flex: none;
+    color: var(--ui-muted);
+  }
+  .ui-menu-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .ui-menu-label-text,
+  .ui-menu-description {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ui-menu-description {
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
+    font-weight: var(--ui-weight-regular);
+  }
+  .ui-menu-check,
+  .ui-menu-chevron {
+    display: flex;
+    flex: none;
+    margin-left: auto;
+  }
+  .ui-menu-check {
+    color: var(--ui-accent);
+  }
+  .ui-menu-check svg,
+  .ui-menu-chevron {
+    width: 14px;
+    height: 14px;
+  }
+  .ui-menu-chevron {
+    color: var(--ui-muted);
+  }
+  .ui-menu-separator {
+    height: 1px;
+    margin: var(--ui-space-1) calc(-1 * var(--ui-space-1));
+    border: 0;
+    background: var(--ui-line-soft);
+  }
+
+  /* Touch: 44px rows. */
+  @media (pointer: coarse) {
+    .ui-menu-item {
+      height: auto;
+      min-height: var(--ui-hit);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ui-menu {
+      transition: opacity var(--ui-duration-press) var(--ui-ease-out);
+    }
+    .ui-menu:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
   }
 }

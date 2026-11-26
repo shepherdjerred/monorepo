@@ -1,0 +1,105 @@
+/*
+ * Combobox: the single picker's list has its own search line (the popup is
+ * the field, so no box or ring); the multiple picker holds chips and the
+ * input inside the control, which wraps as chips are added.
+ */
+@layer ui.components {
+  .ui-menu[data-combobox] {
+    width: max(var(--anchor-width, 260px), 260px);
+  }
+  .ui-combobox-search {
+    display: block;
+    width: calc(100% + 2 * var(--ui-space-1));
+    height: var(--ui-row);
+    margin: calc(-1 * var(--ui-space-1)) calc(-1 * var(--ui-space-1))
+      var(--ui-space-1);
+    padding: 0 var(--ui-space-3);
+    border: 0;
+    border-bottom: 1px solid var(--ui-line-soft);
+    background: transparent;
+    color: var(--ui-ink);
+    font-size: var(--ui-text-md);
+  }
+  .ui-combobox-search:focus-visible {
+    outline: none;
+  }
+  .ui-combobox-search::placeholder,
+  .ui-combobox-input::placeholder {
+    color: var(--ui-faint);
+  }
+  .ui-combobox-list {
+    outline: 0;
+  }
+  .ui-combobox-status,
+  .ui-combobox-empty {
+    padding: var(--ui-space-2) 10px;
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
+  }
+  .ui-combobox-status:empty,
+  .ui-combobox-empty:empty {
+    display: none;
+  }
+  .ui-menu-item[data-create],
+  .ui-menu-item[data-create] .ui-menu-icon {
+    color: var(--ui-accent);
+  }
+
+  .ui-picker[data-multiple] {
+    flex-wrap: wrap;
+    width: 100%;
+    height: auto;
+    min-height: var(--ui-control);
+    padding: 2px var(--ui-space-1);
+    cursor: text;
+  }
+  .ui-picker[data-multiple]:has(:focus-visible) {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: 2px;
+  }
+  .ui-combobox-chips {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ui-space-1);
+    min-width: 0;
+  }
+  .ui-combobox-chips .ui-chip {
+    height: 20px;
+    padding-right: 2px;
+    gap: 2px;
+  }
+  .ui-combobox-chips .ui-chip[data-highlighted] {
+    border-color: var(--ui-accent);
+  }
+  .ui-combobox-chip-remove {
+    display: inline-grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--ui-radius-xs);
+    background: transparent;
+    color: var(--ui-muted);
+    cursor: pointer;
+  }
+  .ui-combobox-chip-remove:hover {
+    background: var(--ui-hover);
+    color: var(--ui-ink);
+  }
+  .ui-combobox-input {
+    flex: 1;
+    min-width: 48px;
+    height: 22px;
+    padding: 0 var(--ui-space-1);
+    border: 0;
+    background: transparent;
+    color: var(--ui-ink);
+    font-size: var(--ui-text-md);
+  }
+  .ui-combobox-input:focus-visible {
+    outline: none;
+  }
+}

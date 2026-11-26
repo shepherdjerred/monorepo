@@ -25,6 +25,47 @@
   gap: var(--ui-space-2);
   color: var(--ui-ink-2);
 }
+/* Overlays and inputs: a context-menu target and labelled picker rows. */
+.kit-target {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ui-control);
+  padding: 0 var(--ui-space-3);
+  border: 1px dashed var(--ui-btn-edge);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-ink-2);
+}
+.kit-pickers {
+  display: grid;
+  gap: var(--ui-space-2);
+  max-width: 440px;
+}
+.kit-row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--ui-space-3);
+  color: var(--ui-muted);
+}
+.kit-key {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  color: var(--ui-muted);
+}
+@media (width <= 600px) {
+  .kit-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ui-space-1);
+  }
+}
+.kit-sheet-line {
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  margin: 0;
+  color: var(--ui-muted);
+}
 .kit-icons svg {
   width: 15px;
   height: 15px;

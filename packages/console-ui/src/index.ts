@@ -384,3 +384,114 @@ export {
   inferMeterSeverity,
   meterValueText,
 } from "@shepherdjerred/console-ui/components/meter.tsx";
+// Overlays and inputs (CU4).
+export {
+  Menu,
+  MenuCheckboxItem,
+  MenuGroup,
+  MenuItem,
+  MenuLinkItem,
+  MenuRadioGroup,
+  MenuRadioItem,
+  MenuSeparator,
+  Submenu,
+  type MenuAlign,
+  type MenuCheckboxItemProps,
+  type MenuGroupProps,
+  type MenuItemProps,
+  type MenuLinkItemProps,
+  type MenuProps,
+  type MenuRadioGroupProps,
+  type MenuRadioItemProps,
+  type MenuSide,
+  type SubmenuProps,
+} from "@shepherdjerred/console-ui/components/overlays/menu.tsx";
+export {
+  ContextMenu,
+  isContextMenuKey,
+  type ContextMenuProps,
+} from "@shepherdjerred/console-ui/components/overlays/context-menu.tsx";
+export {
+  Popover,
+  PopoverClose,
+  type PopoverProps,
+} from "@shepherdjerred/console-ui/components/overlays/popover.tsx";
+export {
+  ToastProvider,
+  toast,
+  type ErrorOptions as ToastErrorOptions,
+  type NotifyOptions as ToastNotifyOptions,
+  type ToastAction,
+  type ToastProviderProps,
+  type UndoOptions as ToastUndoOptions,
+} from "@shepherdjerred/console-ui/components/overlays/toast.tsx";
+export {
+  Sheet,
+  SheetClose,
+  type SheetProps,
+  type SheetSide,
+} from "@shepherdjerred/console-ui/components/overlays/sheet.tsx";
+export {
+  ActorChip,
+  Avatar,
+  initials,
+  type ActorChipProps,
+  type AvatarProps,
+  type AvatarSize,
+} from "@shepherdjerred/console-ui/components/people/avatar.tsx";
+export {
+  Select,
+  type SelectProps,
+} from "@shepherdjerred/console-ui/components/pickers/select.tsx";
+export {
+  Combobox,
+  type ComboboxMultipleProps,
+  type ComboboxProps,
+  type ComboboxSingleProps,
+} from "@shepherdjerred/console-ui/components/pickers/combobox.tsx";
+export {
+  flattenOptions,
+  matchesOption,
+  type PickerGroup,
+  type PickerOption,
+  type PickerOptions,
+} from "@shepherdjerred/console-ui/components/pickers/options.tsx";
+export {
+  createShortcutRegistry,
+  type Shortcut,
+  type ShortcutEvent,
+  type ShortcutKeyTarget,
+  type ShortcutRegistry,
+  type ShortcutRegistryOptions,
+  type ShortcutSheetGroup,
+} from "@shepherdjerred/console-ui/components/keyboard/shortcut-registry.ts";
+export {
+  ariaKeyshortcuts,
+  formatShortcut,
+  parseShortcut,
+  type ShortcutBinding,
+  type ShortcutKeyPress,
+} from "@shepherdjerred/console-ui/components/keyboard/shortcut-keys.ts";
+export {
+  ShortcutSheet,
+  type ShortcutSheetProps,
+} from "@shepherdjerred/console-ui/components/keyboard/shortcut-sheet.tsx";
+export {
+  KeyHint,
+  type KeyHintProps,
+} from "@shepherdjerred/console-ui/components/keyboard/key-hint.tsx";
+export {
+  CommandPaletteCommands,
+  matchesCommand,
+  type CommandPaletteCommandsProps,
+  type PaletteCommand,
+  type PaletteLoader,
+  type PaletteSections,
+  type PaletteSource,
+  type PaletteStep,
+} from "@shepherdjerred/console-ui/components/palette/palette-commands.tsx";
+export {
+  createRecentCommands,
+  type RecentCommands,
+  type RecentCommandsOptions,
+} from "@shepherdjerred/console-ui/components/palette/recent-commands.ts";

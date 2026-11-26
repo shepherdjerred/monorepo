@@ -1,0 +1,78 @@
+/*
+ * Toasts: a stack in the bottom-right corner, newest nearest the edge. Each
+ * is a quiet row like the banner (glyph, word, text) on the panel with the
+ * menu shadow: no tinted block, no stripe. They fade in place, so Undo never
+ * moves under the pointer.
+ */
+@layer ui.components {
+  .ui-toasts {
+    position: fixed;
+    right: var(--ui-gutter);
+    bottom: var(--ui-gutter);
+    z-index: var(--ui-z-popover);
+    display: flex;
+    flex-direction: column-reverse;
+    gap: var(--ui-space-2);
+    width: min(400px, calc(100vw - 2 * var(--ui-gutter)));
+  }
+  .ui-toast {
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-panel);
+    color: var(--ui-ink);
+    box-shadow: var(--ui-shadow-menu);
+    transform: translate(
+      var(--toast-swipe-movement-x, 0),
+      var(--toast-swipe-movement-y, 0)
+    );
+  }
+  .ui-toast[data-limited] {
+    display: none;
+  }
+  .ui-toast-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: var(--ui-hit);
+    padding: 6px 6px 6px var(--ui-space-3);
+  }
+  .ui-toast-content > .ui-glyph {
+    flex: none;
+    color: var(--ui-sev-ink);
+    font-weight: var(--ui-weight-strong);
+  }
+  .ui-toast-text {
+    flex: 1;
+    min-width: 0;
+  }
+  .ui-toast-title,
+  .ui-toast-description {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+  .ui-toast-description {
+    color: var(--ui-muted);
+    font-size: var(--ui-text-sm);
+  }
+  .ui-toast-description:empty {
+    display: none;
+  }
+
+  @media (width <= 600px) {
+    .ui-toasts {
+      right: var(--ui-gutter);
+      bottom: calc(var(--ui-gutter) + env(safe-area-inset-bottom));
+      left: var(--ui-gutter);
+      width: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ui-toast {
+      transition: opacity var(--ui-duration-panel) var(--ui-ease-out);
+    }
+    .ui-toast:is([data-starting-style], [data-ending-style]) {
+      opacity: 0;
+    }
+  }
+}

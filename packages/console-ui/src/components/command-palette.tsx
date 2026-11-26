@@ -1,16 +1,21 @@
 import { Dialog } from "@base-ui/react/dialog";
-import { CornerDownLeftIcon, type LucideIcon } from "lucide-react";
+import { CheckIcon, CornerDownLeftIcon, type LucideIcon } from "lucide-react";
 import {
+  createContext,
+  use,
   useId,
+  useRef,
   useState,
   useSyncExternalStore,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
 import { IconButton } from "@shepherdjerred/console-ui/components/icon-button.tsx";
+import { KeyHint } from "@shepherdjerred/console-ui/components/keyboard/key-hint.tsx";
 import { ICONS } from "@shepherdjerred/console-ui/icons.ts";
 
 const SearchIcon = ICONS.search;
+const BackIcon = ICONS.back;
 
 export type CommandPaletteItem = {
   /** Unique across the whole palette. */
@@ -19,7 +24,19 @@ export type CommandPaletteItem = {
   /** Muted monospace text at the end of the row, e.g. a path or an id. */
   readonly detail?: string;
   readonly icon: LucideIcon;
+  /** Shows a check: the option is the current value. */
+  readonly checked?: boolean;
+  /** The keys that run the same command elsewhere, e.g. `"g i"`. */
+  readonly hint?: string;
 };
+
+/**
+ * Lets the search inside a palette take Escape for "back" while a step is
+ * open, instead of closing the palette.
+ */
+const PaletteBackContext = createContext<{
+  current: (() => boolean) | null;
+} | null>(null);
 
 export type CommandPaletteSection<
   Item extends CommandPaletteItem = CommandPaletteItem,
@@ -114,10 +131,20 @@ export function CommandPalette({
   children,
 }: CommandPaletteProps): React.JSX.Element {
   const open = store.useOpen();
+  const back = useRef<(() => boolean) | null>(null);
   return (
     <Dialog.Root
       open={open}
-      onOpenChange={(next) => {
+      onOpenChange={(next, details) => {
+        // Inside a step, Escape goes back a step instead of closing.
+        if (
+          !next &&
+          details.reason === "escape-key" &&
+          back.current?.() === true
+        ) {
+          details.cancel();
+          return;
+        }
         store.setOpen(next);
       }}
     >
@@ -125,7 +152,7 @@ export function CommandPalette({
         <Dialog.Backdrop className="ui-palette-backdrop" />
         <Dialog.Popup className="ui-palette">
           <Dialog.Title className="ui-sr-only">{label}</Dialog.Title>
-          {children}
+          <PaletteBackContext value={back}>{children}</PaletteBackContext>
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>
@@ -146,13 +173,53 @@ export type CommandPaletteSearchProps<Item extends CommandPaletteItem> = {
    * is not undone by the focus restore.
    */
   readonly onSelect: (item: Item) => void;
-  readonly placeholder?: string;
+  readonly placeholder?: string | undefined;
   /**
    * Announced under the results, e.g. "Searching…". Without it, an empty
    * list reads "No results.".
    */
   readonly status?: string | undefined;
+  /**
+   * The steps taken into nested lists, shown before the input. With
+   * `onBack`, Backspace in an empty input, Escape and the back button
+   * leave the last step.
+   */
+  readonly breadcrumb?: readonly string[];
+  readonly onBack?: () => void;
+  /**
+   * Items for which this returns true are chosen without closing the
+   * palette: `onSelect` runs at once, e.g. to step into a list.
+   */
+  readonly keepOpen?: (item: Item) => boolean;
+  /** Changing it puts the highlight back on the first option, e.g. per step. */
+  readonly listKey?: string;
 };
+
+/** The back button and the step titles, before the input. */
+function PaletteCrumbs({
+  breadcrumb,
+  onBack,
+}: {
+  readonly breadcrumb: readonly string[];
+  readonly onBack: (() => void) | undefined;
+}): React.JSX.Element | null {
+  if (breadcrumb.length === 0) return null;
+  return (
+    <>
+      {onBack === undefined ? null : (
+        <IconButton icon={BackIcon} label="Back" onClick={onBack} />
+      )}
+      <span className="ui-palette-crumbs">
+        {breadcrumb.map((crumb, index) => (
+          // A step's place in the trail is its identity.
+          <span key={`${String(index)}-${crumb}`} className="ui-palette-crumb">
+            {crumb}
+          </span>
+        ))}
+      </span>
+    </>
+  );
+}
 
 /**
  * The palette's search box and grouped results, inside a `CommandPalette`.
@@ -168,17 +235,30 @@ export function CommandPaletteSearch<Item extends CommandPaletteItem>({
   onSelect,
   placeholder,
   status,
+  breadcrumb = [],
+  onBack,
+  keepOpen,
+  listKey = "",
 }: CommandPaletteSearchProps<Item>): React.JSX.Element {
   const baseId = useId();
   const listboxId = `${baseId}-listbox`;
   const optionId = (index: number): string =>
     `${baseId}-option-${String(index)}`;
-  const [selected, setSelected] = useState(0);
+  const [highlight, setHighlight] = useState({ key: listKey, index: 0 });
+  const selected = highlight.key === listKey ? highlight.index : 0;
+  const setSelected = (index: number): void => {
+    setHighlight({ key: listKey, index });
+  };
+  const back = use(PaletteBackContext);
   const items = sections.flatMap((section) => section.items);
   const active = Math.min(selected, items.length - 1);
 
   function choose(item: Item | undefined): void {
     if (item === undefined) return;
+    if (keepOpen?.(item) === true) {
+      onSelect(item);
+      return;
+    }
     store.setOpen(false);
     requestAnimationFrame(() => {
       onSelect(item);
@@ -207,8 +287,17 @@ export function CommandPaletteSearch<Item extends CommandPaletteItem>({
         break;
       }
       case "Enter": {
+        if (event.nativeEvent.isComposing) break;
         event.preventDefault();
         choose(items[active]);
+        break;
+      }
+      case "Backspace": {
+        if (query !== "" || onBack === undefined || breadcrumb.length === 0) {
+          break;
+        }
+        event.preventDefault();
+        onBack();
         break;
       }
       default:
@@ -224,10 +313,28 @@ export function CommandPaletteSearch<Item extends CommandPaletteItem>({
   return (
     <>
       <div className="ui-palette-search">
-        <SearchIcon aria-hidden="true" />
+        {breadcrumb.length === 0 ? <SearchIcon aria-hidden="true" /> : null}
+        <PaletteCrumbs breadcrumb={breadcrumb} onBack={onBack} />
         <input
+          ref={(input) => {
+            if (input === null || back === null) return;
+            back.current =
+              onBack === undefined || breadcrumb.length === 0
+                ? null
+                : () => {
+                    onBack();
+                    return true;
+                  };
+            return () => {
+              back.current = null;
+            };
+          }}
           role="combobox"
-          aria-label={label}
+          aria-label={
+            breadcrumb.length === 0
+              ? label
+              : `${label}: ${breadcrumb.join(", ")}`
+          }
           aria-expanded="true"
           aria-controls={listboxId}
           aria-autocomplete="list"
@@ -274,6 +381,15 @@ export function CommandPaletteSearch<Item extends CommandPaletteItem>({
                   {item.detail === undefined ? null : (
                     <span className="ui-palette-detail">{item.detail}</span>
                   )}
+                  {item.hint === undefined ? null : (
+                    <KeyHint keys={item.hint} decorative />
+                  )}
+                  {item.checked === true ? (
+                    <CheckIcon
+                      className="ui-palette-check"
+                      aria-label="Current"
+                    />
+                  ) : null}
                 </button>
               );
             })}
@@ -291,10 +407,10 @@ export function CommandPaletteSearch<Item extends CommandPaletteItem>({
           <kbd>
             <CornerDownLeftIcon />
           </kbd>{" "}
-          open
+          {breadcrumb.length === 0 ? "open" : "choose"}
         </span>
         <span>
-          <kbd>Esc</kbd> close
+          <kbd>Esc</kbd> {breadcrumb.length === 0 ? "close" : "back"}
         </span>
       </div>
     </>
