@@ -55,7 +55,6 @@ jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone" }
 nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
 errorprone-support-contrib = { module = "tech.picnic.error-prone-support:error-prone-contrib", version.ref = "errorprone-support" }
-errorprone-support-refaster = { module = "tech.picnic.error-prone-support:refaster-runner", version.ref = "errorprone-support" }
 jackson-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson" }
 jackson-core = { module = "tools.jackson.core:jackson-core", version.ref = "jackson" }
 jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson-annotations" }

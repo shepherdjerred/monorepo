@@ -16,7 +16,6 @@ import PackageDescription
 
 let syntax: [Target.Dependency] = [
   .product(name: "SwiftSyntax", package: "swift-syntax"),
-  .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
   .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
 ]
 let settings: [SwiftSetting] = [.swiftLanguageMode(.v6)]
