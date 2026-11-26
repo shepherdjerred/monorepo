@@ -1554,6 +1554,41 @@ async function savePatchChangeset(changeset: PatchChangeset): Promise<void> {
   }
 }
 
+export type PatchChangesetSteps = {
+  fetchNotes: (patch: RiotPatch) => Promise<string>;
+  analyze: (patch: RiotPatch, notes: string) => Promise<PatchChangeset>;
+  save: (changeset: PatchChangeset) => Promise<void>;
+  saveRaw: (patch: RiotPatch, notes: string) => Promise<void>;
+};
+
+const DEFAULT_PATCH_CHANGESET_STEPS: PatchChangesetSteps = {
+  fetchNotes: fetchOfficialPatchNotes,
+  analyze: (patch, notes) => analyzePatch(patch, notes),
+  save: savePatchChangeset,
+  saveRaw: saveRawPatchNotes,
+};
+
+/**
+ * Ask Opus to analyze deterministically fetched patch notes (`summary` +
+ * per-change data feed Scout analysis, `changelogHighlights` feed the public
+ * changelog), then persist the changeset and raw notes. Any failure
+ * propagates: a refresh without analysis is a failed refresh.
+ */
+export async function refreshPatchChangeset(
+  patch: RiotPatch,
+  steps: PatchChangesetSteps = DEFAULT_PATCH_CHANGESET_STEPS,
+): Promise<string[]> {
+  console.log(`🤖 Analyzing patch ${patch.patch} notes via Opus...`);
+  const officialPatchContent = await steps.fetchNotes(patch);
+  const changeset = await steps.analyze(patch, officialPatchContent);
+  await steps.save(changeset);
+  console.log(
+    `✓ Wrote patch changeset (${String(changeset.champions.length)} champion, ${String(changeset.items.length)} item, ${String(changeset.systems.length)} system changes)`,
+  );
+  await steps.saveRaw(patch, officialPatchContent);
+  return changeset.changelogHighlights;
+}
+
 async function maybeAppendChangelogEntry(
   previousVersion: string | undefined,
   version: string,
@@ -1585,28 +1620,11 @@ async function maybeAppendChangelogEntry(
     return;
   }
 
-  // Ask Opus to analyze deterministically fetched patch notes
-  // (`summary` + per-change data feed Scout analysis) plus the Scout-focused
-  // `changelogHighlights` consumed here for the "What's New" entry.
-  // Best-effort: a failure (no credential, timeout, bad output) falls back to just
-  // the data-refresh line and leaves the committed changeset untouched, rather
-  // than blocking the asset PR or shipping a garbage changeset.
-  let highlights: string[] = [];
-  try {
-    console.log(`🤖 Analyzing patch ${patch.patch} notes via Opus...`);
-    const officialPatchContent = await fetchOfficialPatchNotes(patch);
-    const changeset = await analyzePatch(patch, officialPatchContent);
-    await savePatchChangeset(changeset);
-    console.log(
-      `✓ Wrote patch changeset (${String(changeset.champions.length)} champion, ${String(changeset.items.length)} item, ${String(changeset.systems.length)} system changes)`,
-    );
-    highlights = changeset.changelogHighlights;
-    await saveRawPatchNotes(patch, officialPatchContent);
-  } catch (error) {
-    console.warn(
-      `⚠ Patch analysis failed; using data-refresh line only and leaving patch-notes.json unchanged: ${String(error)}`,
-    );
-  }
+  // `changelogHighlights` feed the "What's New" entry below. Analysis is
+  // required: a missing credential, timeout or off-spec output fails the
+  // refresh (and so the Temporal activity) instead of shipping a changelog
+  // that silently lacks the patch summary.
+  const highlights = await refreshPatchChangeset(patch);
 
   console.log(
     `📝 Adding "What's New" entry for League patch ${patch.patch}...`,

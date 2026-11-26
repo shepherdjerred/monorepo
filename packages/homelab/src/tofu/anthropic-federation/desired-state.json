@@ -33,6 +33,12 @@
       "namespace": "scout-prod",
       "token_lifetime_seconds": 1200,
       "onepassword_item_title": "llm-anthropic-federation-scout-prod"
+    },
+    "temporal-scout-worker": {
+      "workspace_key": "prod",
+      "namespace": "temporal",
+      "token_lifetime_seconds": 1200,
+      "onepassword_item_title": "llm-anthropic-federation-temporal-scout-worker"
     }
   }
 }

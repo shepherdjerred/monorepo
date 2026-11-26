@@ -3247,7 +3247,7 @@
       "approvalPolicy": "none",
       "automatic": false,
       "recipeRevisionId": "tofu-anthropic-federation/prod/1",
-      "configurationRevisionId": "tofu-anthropic-federation/prod/1"
+      "configurationRevisionId": "tofu-anthropic-federation/prod/2"
     },
     {
       "id": "tofu-argocd/prod",

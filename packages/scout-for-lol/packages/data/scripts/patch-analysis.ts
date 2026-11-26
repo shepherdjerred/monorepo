@@ -5,14 +5,15 @@
 // can't get the load-bearing facts wrong.
 //
 // Prompt building and output parsing are split out so they're unit-testable; the
-// model call is the only impure part. The `update-data-dragon` caller
-// treats a failure as non-fatal (it still ships the asset PR, just without a
-// refreshed changeset).
+// model call is the only impure part. Failures propagate: `update-data-dragon`
+// fails the refresh rather than shipping a changelog without the analysis.
 
 import {
   createLlmRuntime,
   providerCredentialsFromEnv,
   generateValidatedObject,
+  requireCredentialsFor,
+  type ProviderCredentials,
 } from "@shepherdjerred/llm-runtime";
 import type { RiotPatch } from "./riot-patch.ts";
 import {
@@ -108,17 +109,19 @@ export function parsePatchAnalysis(
 /**
  * Ask Opus to produce the structured changeset from content
  * fetched by deterministic application code. Throws on any transport or
- * output-contract failure so the caller can skip the
- * refresh. The final object comes only from schema-backed structured output;
- * prose and fenced JSON are never parsed.
+ * output-contract failure, and up front when the provider has no credentials,
+ * so a misconfigured worker fails the refresh. The final object comes only
+ * from schema-backed structured output; prose and fenced JSON are never parsed.
  */
 export async function analyzePatch(
   patch: RiotPatch,
   officialPatchContent: string,
   date: Date = new Date(),
+  credentials: ProviderCredentials = providerCredentialsFromEnv(),
 ): Promise<PatchChangeset> {
+  requireCredentialsFor(MODEL, credentials);
   const runtime = createLlmRuntime({
-    credentials: providerCredentialsFromEnv(),
+    credentials,
     service: "scout-data",
     appName: "scout-patch-analysis/1.0",
   });
