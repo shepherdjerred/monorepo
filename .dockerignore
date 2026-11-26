@@ -23,7 +23,9 @@ packages/docs/wiki/*
 # context AND out of scoped runtime source COPYs (e.g. scout's report package).
 **/__snapshots__
 packages/sjer.red/src/content
-# Media clients and the regex runtime are generated inside their image stages.
+# Media and incidents Prisma clients and the regex runtime are generated inside
+# their image stages.
+packages/incidents/generated
 packages/media/generated
 packages/media/scripts/regex-oracle/bin
 packages/media/scripts/regex-oracle/obj

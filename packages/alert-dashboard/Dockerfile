@@ -31,11 +31,14 @@ FROM deps AS build
 # export TypeScript source rather than a built dist, so having their
 # package.json present for the install is not enough — the client build has to
 # be able to read the files their export maps point at. console-ui is bundled
-# into the client, so the runtime stage below does not need it.
+# into the client, so the runtime stage below does not need it. Incidents is a
+# storage-backed module package: the client build bundles its pages, and its
+# Prisma client is generated here so the build sees the whole package.
 COPY --parents \
   tsconfig.base.json \
   packages/alert-dashboard \
   packages/console-ui \
+  packages/incidents \
   packages/eslint-config \
   packages/loaded \
   packages/ops-model \
@@ -46,6 +49,7 @@ COPY --parents \
   packages/config \
   packages/feature-flags \
   ./
+RUN cd packages/incidents && bun run generate
 RUN cd packages/alert-dashboard && bun run generate && bun run build
 
 FROM base AS prod-deps
@@ -67,7 +71,11 @@ COPY --from=build --exclude=node_modules /app/packages/alert-dashboard /app/pack
 # the source here those symlinks dangle in the runtime image. The traces module
 # reads the LLM archive index through llm-observability, which in turn imports
 # llm-models and s3-signed-request from source.
+# Prisma loads packages/incidents/prisma.config.ts with that package's
+# tsconfig, which extends the root base config; `prisma migrate deploy` in the
+# init container needs it too.
 COPY --parents \
+  tsconfig.base.json \
   packages/loaded \
   packages/ops-model \
   packages/ops-clients \
@@ -76,6 +84,7 @@ COPY --parents \
   packages/s3-signed-request \
   packages/config \
   packages/feature-flags \
+  packages/incidents \
   ./
 # Bake Prisma's migration engines into the production dependency tree. Bun's
 # production install omits lifecycle scripts, so the CLI would otherwise
@@ -83,7 +92,10 @@ COPY --parents \
 # node_modules, which correctly prevents that startup write. Generating once as
 # root here keeps `prisma migrate deploy` read-only at runtime.
 # Prisma's CLI records per-run state under $HOME; keep it out of the layer.
+# The incidents client is generated the same way: Hub's server imports it, and
+# its init container runs `prisma migrate deploy` from packages/incidents.
 RUN cd packages/alert-dashboard && CHECKPOINT_DISABLE=1 bunx --no-install --trust prisma generate \
+ && cd ../incidents && CHECKPOINT_DISABLE=1 bunx --no-install --trust prisma generate \
  && rm -rf "$HOME/.cache/checkpoint-nodejs" "$HOME/.config/prisma-nodejs"
 WORKDIR /app/packages/alert-dashboard
 ENV NODE_ENV=production HOME=/tmp
@@ -102,6 +114,7 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # Exercise Prisma as the deployed non-root user so a missing baked engine fails
 # the image gate instead of crash-looping the migration init container.
 RUN cd /app/packages/alert-dashboard && bunx --no-install prisma --version
+RUN cd /app/packages/incidents && bunx --no-install prisma --version
 RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image
