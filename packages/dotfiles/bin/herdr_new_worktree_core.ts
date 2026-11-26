@@ -3,6 +3,11 @@
 // the worktree on the space's machine, and open a space whose agent starts
 // with that message. The dialog only gathers choices; this owns the slow parts.
 
+import {
+  startMacBackground,
+  type Launchd,
+} from "./herdr_worktree_pool_launchd.ts";
+
 export type Request = {
   /** The agent's first message; also what the branch and tab are named from. */
   readonly message: string;
@@ -317,32 +322,26 @@ async function typeFirstMessage(
 }
 
 /**
- * Start `toolkit` from `toolkitPath` in `cwd`, in its own session with no
- * stdio, so it outlives this process unobserved. False when it is not
- * installed. For a {@link Toolkit} on a real computer. `spawned` is told the
- * child's pid, so a caller can record that a pass was started and a later look
- * can tell whether it ran; a failure there never fails the start.
+ * Submit Toolkit to the user's launchd domain so it outlives this process.
+ * False when Toolkit is missing. `submitted` records the accepted job label.
  */
 export async function startDetachedToolkit(
   toolkitPath: string,
   cwd: string,
   args: string[],
-  spawned?: (pid: number) => void | Promise<void>,
+  options: {
+    submitted?: (job: string) => void | Promise<void>;
+    launchd?: Launchd;
+  } = {},
 ): Promise<boolean> {
   if (!(await Bun.file(toolkitPath).exists())) return false;
-  const env = { ...Bun.env };
-  delete env["OP_SERVICE_ACCOUNT_TOKEN"];
-  const child = Bun.spawn([toolkitPath, ...args], {
+  const job = await startMacBackground(
     cwd,
-    env,
-    detached: true,
-    stdin: "ignore",
-    stdout: "ignore",
-    stderr: "ignore",
-  });
-  child.unref();
+    [toolkitPath, ...args],
+    options.launchd,
+  );
   try {
-    await spawned?.(child.pid);
+    await options.submitted?.(job);
   } catch {
     // Recording is for diagnosis only.
   }
@@ -398,7 +397,10 @@ export async function createWorktree(
       ? await runtime.name(request.message)
       : { branch: request.branch, title: null };
   await report("worktree", named.title, named.branch, null);
-  const { branch, path, dedupe } = await runtime.allocate(request, named.branch);
+  const { branch, path, dedupe } = await runtime.allocate(
+    request,
+    named.branch,
+  );
   await report("space", named.title, branch, path);
   const { argv, task, typed } = launch(request, { branch, title: named.title });
   const tab = request.tab ?? named.title;

@@ -16,6 +16,7 @@ import {
   type Toolkit,
 } from "../bin/herdr_new_worktree_core.ts";
 import { allocate, replenish } from "../bin/herdr_worktree_pool_core.ts";
+import type { Launchd } from "../bin/herdr_worktree_pool_launchd.ts";
 
 async function git(cwd: string, ...args: string[]): Promise<string> {
   const child = Bun.spawn(["git", ...args], {
@@ -368,46 +369,66 @@ test("the allocating Mac shares every kind of checkout it hands out, and a faile
   }
 }, 60_000);
 
-test("a claim returns while the dedupe it started is still running", async () => {
+test("a claim hands the dedupe to launchd and returns, and a refused handoff only skips it", async () => {
   const setup = await fixture();
   const { tmp } = setup;
-  const marker = path.join(tmp, "started");
-  const pidFile = path.join(tmp, "pid");
-  const slow = path.join(tmp, "toolkit");
-  await writeFile(
-    slow,
-    `#!/bin/sh\necho "$@" > '${marker}'\necho $$ > '${pidFile}'\nexec sleep 60\n`,
-    { mode: 0o755 },
-  );
+  const toolkit = path.join(tmp, "toolkit");
+  await writeFile(toolkit, "#!/bin/sh\n", { mode: 0o755 });
+  const bootstraps: string[] = [];
+  const logged: string[] = [];
+  const launchd = (code: number): Launchd => ({
+    platform: "darwin",
+    uid: 501,
+    home: tmp,
+    path: "/usr/bin:/bin",
+    now: () => 1_700_000_000_000,
+    launchctl: async (args) => {
+      if (args[0] === "bootstrap")
+        bootstraps.push(await readFile(String(args[2]), "utf8"));
+      return {
+        code: args[0] === "bootstrap" ? code : 0,
+        stdout: "",
+        stderr: "",
+      };
+    },
+    logError: (message) => logged.push(message),
+  });
   try {
-    const started = Date.now();
-    const pids: number[] = [];
+    const labels: string[] = [];
     const claimed = await allocate(
       { ...setup, branch: "work", generated: true },
       false,
       {
         platform: "darwin",
         startToolkit: (cwd, args) =>
-          startDetachedToolkit(slow, cwd, args, (pid) => {
-            pids.push(pid);
+          startDetachedToolkit(toolkit, cwd, args, {
+            submitted: (job) => {
+              labels.push(job);
+            },
+            launchd: launchd(0),
           }),
       },
     );
     expect(claimed.dedupe).toBe("started");
-    // The toolkit stand-in sleeps for a minute; the claim did not wait for it.
-    expect(Date.now() - started).toBeLessThan(30_000);
-    for (let attempt = 0; attempt < 100; attempt++) {
-      if (await Bun.file(pidFile).exists()) break;
-      await Bun.sleep(50);
-    }
-    const arguments_ = await readFile(marker, "utf8");
-    expect(arguments_.trim()).toBe(
-      `tend dedupe --worktree ${claimed.path} --apply --no-refresh --lock-wait 15m`,
+    expect(labels).toHaveLength(1);
+    expect(bootstraps).toHaveLength(1);
+    expect(bootstraps[0]).toContain(
+      `<string>${toolkit}</string><string>tend</string><string>dedupe</string><string>--worktree</string><string>${claimed.path}</string><string>--apply</string><string>--no-refresh</string><string>--lock-wait</string><string>15m</string>`,
     );
-    // The recorded pid is the process that ran, so a missing run can be traced.
-    const ran = await readFile(pidFile, "utf8");
-    expect(pids).toEqual([Number(ran.trim())]);
-    process.kill(pids[0] ?? 0);
+    // No GUI login (nobody signed in on the Mac): skipped, and the claim stands.
+    const refused: Toolkit = {
+      platform: "darwin",
+      startToolkit: (cwd, args) =>
+        startDetachedToolkit(toolkit, cwd, args, { launchd: launchd(5) }),
+    };
+    const second = await allocate(
+      { ...setup, branch: "second", generated: true },
+      false,
+      refused,
+    );
+    expect(second.dedupe).toBe("skipped");
+    expect(await git(second.path, "status", "--porcelain")).toBe("");
+    expect(await replenish(setup, true, refused)).toBe(3);
   } finally {
     await rm(tmp, { recursive: true, force: true });
   }

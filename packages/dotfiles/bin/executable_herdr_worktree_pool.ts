@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-import { spawn } from "node:child_process";
 import { appendFile, mkdir } from "node:fs/promises";
 import { homedir, hostname } from "node:os";
 import path from "node:path";
@@ -14,6 +13,7 @@ import {
   samePath,
   type PoolLocation,
 } from "./herdr_worktree_pool_core.ts";
+import { startMacBackground } from "./herdr_worktree_pool_launchd.ts";
 
 const home = homedir();
 const standardLocation: PoolLocation = {
@@ -24,11 +24,11 @@ const toolkitPath = path.join(home, ".local", "bin", "toolkit");
 const toolkit: Toolkit = {
   platform: process.platform,
   startToolkit: (cwd, args) =>
-    startDetachedToolkit(toolkitPath, cwd, args, (pid) =>
+    startDetachedToolkit(toolkitPath, cwd, args, {
       // `toolkit tend` records its own run in ~/.toolkit/tend/events.jsonl, so a
-      // pid here with no run for the path there means the pass was killed.
-      log(`dedupe started pid=${String(pid)} path=${cwd}`),
-    ),
+      // submission here can be matched to the pass recorded there.
+      submitted: (job) => log(`dedupe submitted job=${job} path=${cwd}`),
+    }),
 };
 const host = hostname().toLowerCase().split(".")[0] ?? "";
 const macs = new Set([
@@ -91,20 +91,11 @@ async function refillInBackground(): Promise<void> {
     if (code !== 0) throw new Error((error === "" ? output : error).trim());
     return;
   }
-  const env = { ...Bun.env };
-  delete env["OP_SERVICE_ACCOUNT_TOKEN"];
-  delete env["HERDR_WORKTREE_REQUEST"];
-  const child = spawn(process.execPath, [import.meta.path, "--refill"], {
-    env,
-    detached: true,
-    stdio: "ignore",
-    windowsHide: true,
-  });
-  await new Promise<void>((resolve, reject) => {
-    child.once("spawn", resolve);
-    child.once("error", reject);
-  });
-  child.unref();
+  await startMacBackground(home, [
+    process.execPath,
+    import.meta.path,
+    "--refill",
+  ]);
 }
 
 async function log(message: string): Promise<void> {
@@ -137,12 +128,14 @@ async function main(): Promise<void> {
   if (action !== "--seed" && action !== "--refill")
     throw new Error("Use --seed or --claim <base64url JSON>.");
   if (!codingHost) return;
-  const count = await replenish(standardLocation, action === "--seed", toolkit).catch(
-    async (error: unknown) => {
-      await log(error instanceof Error ? error.message : String(error));
-      throw error;
-    },
-  );
+  const count = await replenish(
+    standardLocation,
+    action === "--seed",
+    toolkit,
+  ).catch(async (error: unknown) => {
+    await log(error instanceof Error ? error.message : String(error));
+    throw error;
+  });
   await log(`${String(count)} worktrees ready`);
 }
 

@@ -104,6 +104,20 @@ remote worktrees alike, the allocating Mac starts the final pass after the
 checkout is ready. The run's `events.jsonl` line records `dedupe` as `started`
 or `skipped`.
 
+On macOS, launchd runs refill and dedupe jobs independently of the Herdr
+request, so they continue after a remote call returns. Each is a one-shot
+`com.jerred.herdr-worktree.job.<time>-<uuid>` job in the `gui/<uid>` domain
+that gets only `HOME` and `PATH` (`env -i`), discards its output, and unloads
+itself when its command ends, however it ends. Its plist sits in a private
+temporary folder for the moment `launchctl bootstrap` reads it. Each new
+submission first unloads any of these jobs that are no longer running and are
+over ten minutes old. With no GUI login on the Mac (nobody signed in) launchd
+refuses the job: the dedupe is then `skipped` and a refill is logged in
+`pool.log`, and the checkout or claim is unaffected. `pool.log` records
+`dedupe submitted job=<label> path=<path>`; `toolkit tend` records the pass
+itself in `~/.toolkit/tend/events.jsonl`, and `launchctl list | grep
+herdr-worktree.job` shows any job still loaded.
+
 While a run is in progress it writes
 `~/.local/state/herdr-worktree/active/<id>.json` (the step, and the title,
 branch and path once known; no message text) and deletes it when the run
