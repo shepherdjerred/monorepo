@@ -5,6 +5,20 @@ import type {
 } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import { isStandardRiftGame } from "#src/trpc/router/consumer/standard-rift.ts";
 
+/** The participant columns pairing roles reads. */
+export type RoleMatchupRow = Pick<
+  LakeMatchParticipantRow,
+  | "match_id"
+  | "queue"
+  | "queue_id"
+  | "game_mode"
+  | "game_type"
+  | "map_id"
+  | "participant_id"
+  | "team_id"
+  | "team_position"
+>;
+
 export const LANE_DELTA_MINUTE = 15;
 export const LANE_DELTA_CHECKPOINT_MS = LANE_DELTA_MINUTE * 60_000;
 
@@ -21,7 +35,7 @@ export type RoleMatchup = {
 };
 
 /** A role pairing needs timeline frames, which are keyed by participant id. */
-function requiredParticipantId(row: LakeMatchParticipantRow): number {
+function requiredParticipantId(row: RoleMatchupRow): number {
   if (row.participant_id === null) {
     throw new Error(
       `Role matchup row for ${row.match_id} has no participant id`,
@@ -31,10 +45,10 @@ function requiredParticipantId(row: LakeMatchParticipantRow): number {
 }
 
 function uniqueRoleParticipant(
-  rows: LakeMatchParticipantRow[],
+  rows: RoleMatchupRow[],
   teamId: number,
   role: Lane,
-): LakeMatchParticipantRow | null {
+): RoleMatchupRow | null {
   const candidates = rows.filter(
     (row) => row.team_id === teamId && parseLane(row.team_position) === role,
   );
@@ -47,7 +61,7 @@ function uniqueRoleParticipant(
  * frame is missing, so the pairing carries no lane result.
  */
 export function buildRoleMatchups(options: {
-  rows: LakeMatchParticipantRow[];
+  rows: RoleMatchupRow[];
   frames: LaneDeltaFrame[];
 }): RoleMatchup[] | null {
   if (options.rows[0] === undefined || !isStandardRiftGame(options.rows[0])) {

@@ -1,7 +1,7 @@
 import type { LeaguePuuid } from "@scout-for-lol/domain/identity/league-account.ts";
 import type { DiscordGuildId } from "@scout-for-lol/domain/identity/discord.ts";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 import {
   ChampionComparisonCohortSchema,
   ChampionComparisonCursorSchema,
@@ -12,11 +12,23 @@ import {
   PlayerProfileGameWindowSchema,
   PlayerProfileQueueSelectionSchema,
   getChampionDisplayName,
+  LaneSchema,
   type ChampionComparisonSort,
 } from "@scout-for-lol/data";
-import { prisma } from "#src/database/index.ts";
-import { assertConsumerPlayerScope } from "#src/consumer/player-access.ts";
+import { fetchChampionIndex } from "#src/reports/duckdb/consumer/pages/champion-index-reads.ts";
+import { fetchChampionMatchupInputs } from "#src/reports/duckdb/consumer/pages/champion-matchup-reads.ts";
 import { fetchChampionComparisons } from "#src/reports/duckdb/consumer/profile-champion-comparison.ts";
+import {
+  groupChampionPagePeople,
+  getScopedChampionPlayers,
+  pageEntries,
+} from "#src/trpc/router/consumer/consumer-champion-people.ts";
+import {
+  buildChampionIndex,
+  QUALIFYING_GAMES,
+} from "#src/trpc/router/consumer/consumer-champion-index.ts";
+import { buildChampionMatchups } from "#src/trpc/router/consumer/consumer-champion-matchups.ts";
+import { LANE_DELTA_CHECKPOINT_MS } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 import { enqueueChampionMasteryRefresh } from "#src/temporal/work-store.ts";
 import {
@@ -25,7 +37,6 @@ import {
 } from "#src/league/champion-mastery/snapshots.ts";
 
 const PAGE_SIZE = 25;
-const QUALIFYING_GAMES = 10;
 
 const GuildSelectionSchema = z
   .array(DiscordGuildIdSchema)
@@ -46,6 +57,17 @@ const ComparisonInput = z.object({
   cursor: ChampionComparisonCursorSchema.optional(),
 });
 
+const PageScopeInput = z.object({
+  games: PlayerProfileGameWindowSchema.default(20),
+  queues: PlayerProfileQueueSelectionSchema.optional(),
+  guildIds: GuildSelectionSchema.optional(),
+});
+
+const MatchupsInput = PageScopeInput.extend({
+  championId: ChampionIdSchema,
+  lane: LaneSchema,
+});
+
 type ComparisonRow = {
   playerId: number;
   alias: string;
@@ -55,6 +77,8 @@ type ComparisonRow = {
   wins: number;
   losses: number;
   winRate: number;
+  /** The newest games on the champion, newest first, at most 10. */
+  last10: { matchId: RiotMatchId; win: boolean; playedAtMs: number }[];
   kda: number;
   csPerMinute: number;
   damagePerMinute: number;
@@ -73,49 +97,6 @@ type MasteryRow = {
   fetchedAt: Date;
   freshness: "fresh" | "stale";
 };
-
-const ScopedPlayerSelect = {
-  id: true,
-  alias: true,
-  serverId: true,
-  discordId: true,
-  accounts: {
-    select: {
-      puuid: true,
-      riotGameName: true,
-      riotTagLine: true,
-      region: true,
-    },
-  },
-} as const;
-
-async function findScopedPlayers(guildIds: readonly DiscordGuildId[]) {
-  return await prisma.player.findMany({
-    where: { serverId: { in: [...guildIds] } },
-    select: ScopedPlayerSelect,
-  });
-}
-
-async function getScopedChampionPlayers(
-  user: Parameters<typeof assertConsumerPlayerScope>[0],
-  requestedGuildIds: readonly DiscordGuildId[] | undefined,
-) {
-  const accessibleGuilds = await assertConsumerPlayerScope(user);
-  const accessibleIds = new Set(accessibleGuilds.map((guild) => guild.id));
-  const selectedGuildIds =
-    requestedGuildIds ??
-    accessibleGuilds.map((guild) => DiscordGuildIdSchema.parse(guild.id));
-  if (selectedGuildIds.some((guildId) => !accessibleIds.has(guildId))) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Requested guild is outside the current player scope",
-    });
-  }
-  return {
-    accessibleGuilds,
-    players: await findScopedPlayers(selectedGuildIds),
-  };
-}
 
 function metric(row: ComparisonRow, sort: ChampionComparisonSort): number {
   switch (sort) {
@@ -165,6 +146,69 @@ function comparisonOrder(
 }
 
 export const consumerChampionRouter = router({
+  index: protectedProcedure
+    .input(PageScopeInput)
+    .query(async ({ ctx, input }) => {
+      const { accessibleGuilds, players } = await getScopedChampionPlayers(
+        ctx.user,
+        input.guildIds,
+      );
+      const people = groupChampionPagePeople({
+        players,
+        guildNames: new Map(
+          accessibleGuilds.map((guild) => [guild.id, guild.name] as const),
+        ),
+        viewerDiscordId: ctx.user.discordId,
+      });
+      const rows = await fetchChampionIndex({
+        entries: pageEntries(people),
+        games: input.games,
+        queues: input.queues,
+      });
+      return {
+        qualifyingGames: QUALIFYING_GAMES,
+        availableGuilds: accessibleGuilds.map((guild) => ({
+          guildId: guild.id,
+          name: guild.name,
+        })),
+        champions: buildChampionIndex({ rows, people }),
+      };
+    }),
+  matchups: protectedProcedure
+    .input(MatchupsInput)
+    .query(async ({ ctx, input }) => {
+      const { accessibleGuilds, players } = await getScopedChampionPlayers(
+        ctx.user,
+        input.guildIds,
+      );
+      const people = groupChampionPagePeople({
+        players,
+        guildNames: new Map(
+          accessibleGuilds.map((guild) => [guild.id, guild.name] as const),
+        ),
+        viewerDiscordId: ctx.user.discordId,
+      });
+      const inputs = await fetchChampionMatchupInputs({
+        championId: input.championId,
+        lane: input.lane,
+        entries: pageEntries(people),
+        games: input.games,
+        queues: input.queues,
+        checkpointMs: LANE_DELTA_CHECKPOINT_MS,
+      });
+      return {
+        champion: {
+          championId: input.championId,
+          name: getChampionDisplayName(input.championId),
+        },
+        lane: input.lane,
+        matchups: buildChampionMatchups({
+          lane: input.lane,
+          inputs,
+          people,
+        }),
+      };
+    }),
   masteryLeaderboard: protectedProcedure
     .input(
       z.object({
@@ -317,6 +361,7 @@ export const consumerChampionRouter = router({
           wins: lakeRow.wins,
           losses: lakeRow.games - lakeRow.wins,
           winRate: lakeRow.wins / lakeRow.games,
+          last10: lakeRow.recent,
           kda: computeKda(lakeRow),
           csPerMinute: minutes > 0 ? lakeRow.creep_score / minutes : 0,
           damagePerMinute:
