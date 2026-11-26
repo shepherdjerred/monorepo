@@ -66,7 +66,9 @@ export function ChampionCard({
         </span>
       )}
       {tier === undefined ? null : (
-        <span className="scout-champion-card__tier">{tier}</span>
+        <span className="scout-champion-card__tier-slot">
+          <span className="scout-champion-card__tier">{tier}</span>
+        </span>
       )}
     </a>
   );

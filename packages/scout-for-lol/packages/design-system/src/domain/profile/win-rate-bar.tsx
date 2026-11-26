@@ -26,9 +26,9 @@ export type WinRateBarProps = {
   className?: string;
 };
 
-/** "65", "51.8": at most one decimal, no trailing zero. */
+/** A rate always shows one decimal: "65.0%", "51.8%", so a column lines up. */
 export function formatPercent(value: number): string {
-  return `${String(Number(value.toFixed(1)))}%`;
+  return `${value.toFixed(1)}%`;
 }
 
 function assertPercent(name: string, value: number): void {

@@ -92,7 +92,7 @@ export const FriendsRanking: Story = {
           key={friend.name}
           style={{
             display: "grid",
-            gridTemplateColumns: "46px minmax(0, 1fr) 7.5rem",
+            gridTemplateColumns: "46px minmax(0, 1fr) 8rem",
             alignItems: "center",
             gap: "0.875rem",
             padding: "0.4rem 0.75rem",
