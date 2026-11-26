@@ -1383,6 +1383,22 @@
         "vitest": "5.0.5",
       },
     },
+    "packages/incidents": {
+      "name": "@shepherdjerred/incidents",
+      "version": "0.1.0",
+      "dependencies": {
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@types/bun": "1.4.5",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitest/coverage-istanbul": "5.0.5",
+        "eslint": "^10.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.5",
+      },
+    },
     "packages/justin-principal-engineer": {
       "name": "@shepherdjerred/justin-principal-engineer",
       "version": "0.1.0",
@@ -4719,6 +4735,8 @@
     "@shepherdjerred/hkctl": ["@shepherdjerred/hkctl@workspace:packages/hkctl"],
 
     "@shepherdjerred/home-assistant": ["@shepherdjerred/home-assistant@workspace:packages/home-assistant"],
+
+    "@shepherdjerred/incidents": ["@shepherdjerred/incidents@workspace:packages/incidents"],
 
     "@shepherdjerred/justin-principal-engineer": ["@shepherdjerred/justin-principal-engineer@workspace:packages/justin-principal-engineer"],
 

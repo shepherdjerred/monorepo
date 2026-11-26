@@ -140,6 +140,7 @@
     "packages/homelab-cdktn",
     "packages/homelab/src/cdk8s",
     "packages/homelab/src/helm-types",
+    "packages/incidents",
     "packages/justin-principal-engineer",
     "packages/landing-pages",
     "packages/leetcode",

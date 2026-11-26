@@ -1,0 +1,25 @@
+{
+  "name": "@shepherdjerred/incidents",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/bun": "1.4.5",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@vitest/coverage-istanbul": "5.0.5",
+    "eslint": "^10.7.0",
+    "typescript": "^6.0.3",
+    "vitest": "5.0.5"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  }
+}
