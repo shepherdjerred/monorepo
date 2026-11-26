@@ -61,15 +61,19 @@ export const FlagsDiffResponseSchema = z.strictObject({
           declared: FlagsValueSchema,
         }),
       ),
-      invalid: z.array(
-        z.strictObject({
-          key: z.string().min(1),
-          value: z.string(),
-          issues: z.array(
-            z.strictObject({ path: z.string(), message: z.string().min(1) }),
-          ),
-        }),
-      ),
+      // A Flags server older than the value registry omits `invalid`; until
+      // every server reports it, absence means nothing was found invalid.
+      invalid: z
+        .array(
+          z.strictObject({
+            key: z.string().min(1),
+            value: z.string(),
+            issues: z.array(
+              z.strictObject({ path: z.string(), message: z.string().min(1) }),
+            ),
+          }),
+        )
+        .default([]),
     }),
   ),
 });
