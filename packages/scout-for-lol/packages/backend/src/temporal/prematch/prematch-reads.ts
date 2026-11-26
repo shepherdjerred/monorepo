@@ -7,6 +7,10 @@ import {
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
+  LeaguePuuidSchema,
+  type LeaguePuuid,
+} from "@scout-for-lol/domain/identity/league-account.ts";
+import {
   ScoutFanOutResultSchema,
   ScoutPrematchScanResultSchema,
   type ScoutFanOutResult,
@@ -300,6 +304,13 @@ export type LivePrematchGame = {
   readonly detectedAt: Date;
   readonly expiresAt: Date;
   readonly participantPuuids: readonly string[];
+  /** The queue the spectator snapshot reports for the game. */
+  readonly queueId: number;
+  /** Who is on which champion, for the participants that carry a puuid. */
+  readonly participants: readonly {
+    readonly puuid: LeaguePuuid;
+    readonly championId: number;
+  }[];
 };
 
 export type LivePrematchCapture = Pick<
@@ -346,40 +357,35 @@ export function livePrematchCapturesOf(
 }
 
 /**
- * The games V2 captured that are still live, read from the durable record V2
- * writes rather than from `ActiveGame`, which only v1 wrote.
- *
- * The capture receipts give identity and timing; the archived snapshot each
- * one attests to gives the roster. `MatchTrackedAccount` cannot: the
- * post-match core writes it once the game is over. A game the caller already
- * knows completed is dropped before its snapshot is read, so a three-hour
- * window of finished games costs one query rather than an object read each.
- *
- * A receipt whose snapshot cannot be named or read is a broken archive
- * contract, so it throws rather than leaving the game out.
+ * The capture receipts still inside their tracked lifetime, newest first.
+ * Postgres only: callers that need the completed-game check on a lake slot of
+ * their own read the captures first and resolve them after.
  */
-export async function listLivePrematchGames(
-  args: {
-    now: Date;
-    /** Which of these match ids already completed, per the caller's source. */
-    completedMatchIds: (
-      riotMatchIds: readonly RiotMatchId[],
-    ) => Promise<ReadonlySet<string>>;
-  },
+export async function listLivePrematchCaptures(
+  now: Date,
   database: ExtendedPrismaClient = prisma,
-): Promise<LivePrematchGame[]> {
+): Promise<LivePrematchCapture[]> {
   const receipts = await database.matchProcessingReceipt.findMany({
     where: {
       kind: rawArchiveReceiptKind("prematch"),
-      recordedAt: { gt: new Date(args.now.getTime() - LIVE_GAME_TTL_MS) },
+      recordedAt: { gt: new Date(now.getTime() - LIVE_GAME_TTL_MS) },
     },
     select: { riotMatchId: true, recordedAt: true },
   });
-  const captures = livePrematchCapturesOf(receipts, args.now);
-  if (captures.length === 0) return [];
-  const completed = await args.completedMatchIds(
-    captures.map((capture) => capture.riotMatchId),
-  );
+  return livePrematchCapturesOf(receipts, now);
+}
+
+/**
+ * Read each capture's archived snapshot for its roster, skipping the games
+ * already known to have completed. A receipt whose snapshot cannot be named or
+ * read is a broken archive contract, so it throws rather than leaving the game
+ * out.
+ */
+export async function resolveLivePrematchGames(
+  captures: readonly LivePrematchCapture[],
+  completed: ReadonlySet<string>,
+  database: ExtendedPrismaClient = prisma,
+): Promise<LivePrematchGame[]> {
   return await Promise.all(
     captures
       .filter((capture) => !completed.has(capture.riotMatchId))
@@ -398,13 +404,53 @@ export async function listLivePrematchGames(
           descriptor,
           capture.riotMatchId,
         );
+        const participants = snapshot.participants.flatMap((participant) =>
+          participant.puuid === null
+            ? []
+            : [
+                {
+                  puuid: LeaguePuuidSchema.parse(participant.puuid),
+                  championId: participant.championId,
+                },
+              ],
+        );
         return {
           ...capture,
           gameId: snapshot.gameId.toString(),
-          participantPuuids: snapshot.participants.flatMap((participant) =>
-            participant.puuid === null ? [] : [participant.puuid],
+          queueId: snapshot.gameQueueConfigId,
+          participantPuuids: participants.map(
+            (participant) => participant.puuid,
           ),
+          participants,
         };
       }),
   );
+}
+
+/**
+ * The games V2 captured that are still live, read from the durable record V2
+ * writes rather than from `ActiveGame`, which only v1 wrote.
+ *
+ * The capture receipts give identity and timing; the archived snapshot each
+ * one attests to gives the roster. `MatchTrackedAccount` cannot: the
+ * post-match core writes it once the game is over. A game the caller already
+ * knows completed is dropped before its snapshot is read, so a three-hour
+ * window of finished games costs one query rather than an object read each.
+ */
+export async function listLivePrematchGames(
+  args: {
+    now: Date;
+    /** Which of these match ids already completed, per the caller's source. */
+    completedMatchIds: (
+      riotMatchIds: readonly RiotMatchId[],
+    ) => Promise<ReadonlySet<string>>;
+  },
+  database: ExtendedPrismaClient = prisma,
+): Promise<LivePrematchGame[]> {
+  const captures = await listLivePrematchCaptures(args.now, database);
+  if (captures.length === 0) return [];
+  const completed = await args.completedMatchIds(
+    captures.map((capture) => capture.riotMatchId),
+  );
+  return await resolveLivePrematchGames(captures, completed, database);
 }
