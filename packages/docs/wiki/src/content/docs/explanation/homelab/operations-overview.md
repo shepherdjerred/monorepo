@@ -194,12 +194,14 @@ Hub's Incidents module (`/api/incidents/internal/signals`, Bearer
 A red verdict fires with a suspect read from the failing commit: the squash
 subject's `(#N)`, the last `Claude-Session:` trailer, and the Woodpecker author,
 so the session that broke `main` can take command. A green verdict clears the
-same `main-ci:main` key, and the server dedupes on it, so retries are harmless.
+same `main-ci:main` key. The server
+[applies signals idempotently by key](packages/incidents/src/domain/signals.ts),
+so retries are harmless.
 
 The signal is an optional output of the CI source. A failed post never fails
-the snapshot; it is logged and sets `incidents_signal_post_ok` to 0, and
-`IncidentsSignalDeliveryFailing` pages once every post has failed for 30
-minutes.
+the snapshot; it is logged and sets `incidents_signal_post_ok` to 0.
+[`IncidentsSignalDeliveryFailing`](packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/ops-snapshot.ts)
+pages once every post has failed for 30 minutes.
 
 ## The service catalog is the join key
 

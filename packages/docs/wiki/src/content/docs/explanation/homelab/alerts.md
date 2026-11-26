@@ -42,12 +42,21 @@ retains an independent notification path for alerts that diagnose Hub or its
 webhook.
 
 A third receiver, `incidents`, copies a curated set of Delivery alerts to Hub's
-Incidents module at `/api/incidents/alertmanager`, which opens, attaches to, and
-clears incidents from them. Its route comes first and sets `continue: true`, so
-those alerts still reach `alerts`, `mail-fallback`, or `null` exactly as they
-would without it. The alertname list lives in `incidents-alerts.ts` beside
-`prometheus.ts`, and the rendered-route tests prove that removing the route
-changes no other receiver.
+Incidents module at `/api/incidents/alertmanager`. The module opens, attaches
+to, and clears incidents from them through its
+[curated rule table](packages/incidents/src/shared/alert-rules.ts) and
+[webhook mapping](packages/incidents/src/domain/alertmanager.ts). The route and
+its alertname list live in
+[`incidents-alerts.ts`](packages/homelab/src/cdk8s/src/resources/argo-applications/observability/incidents-alerts.ts),
+which
+[`incidents-alerts.test.ts`](packages/homelab/src/cdk8s/src/resources/argo-applications/observability/incidents-alerts.test.ts)
+keeps equal to that rule table.
+[`prometheus.ts`](packages/homelab/src/cdk8s/src/resources/argo-applications/observability/prometheus.ts)
+places the route first with
+`continue: true`, so those alerts still reach `alerts`, `mail-fallback`, or
+`null` exactly as they would without it. The
+[rendered-route tests](packages/homelab/src/cdk8s/src/resources/monitoring/alertmanager-routing.test.ts)
+prove that removing the route changes no other receiver.
 
 Alertmanager's `mail-fallback` receiver does not use that HTTP API. It submits
 mail through `@shepherdjerred/mail`'s `:25` SMTP listener and requires `STARTTLS`
