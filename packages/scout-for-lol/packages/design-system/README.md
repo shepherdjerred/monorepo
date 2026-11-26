@@ -106,6 +106,8 @@ restoration, and native form validation semantics. They target specific
 stories by id, so renaming those stories or their exports breaks the specs —
 `Runtime/ThemeMenu` → `Default`, `Components/Overlays/Dialog` → `CreateReport`,
 and `Components/Forms/Field` → `SemanticFormStates` are load-bearing names.
+`e2e/rich-tooltip.spec.ts` drives `Domain/EntityTooltip` → `Interactive` and
+`ThreeLayers` the same way.
 
 The parts both Scout catalogs share — the story-index loader, the page-level
 axe exclusions, the mount assertions, and the CI reporter shape — live in
@@ -118,6 +120,28 @@ preview with the installed Node runtime.
 
 Cross-browser visual coverage lives in `@scout-for-lol/design-audit`, which
 exercises the shipped Scout surfaces nightly. This package runs chromium only.
+
+## Rich tooltips
+
+`RichTooltip` (`components/overlays/rich-tooltip`) is a layered shell: hover
+opens a layer after 350 ms, focus opens it at once, a layer stays open while
+the pointer or focus is in it or in a layer it opened (150 ms grace), and a
+`RichTooltip` inside another's `content` opens beside its parent. Escape closes
+the top layer only. Under 640 px a tap opens a bottom sheet instead, and a
+tapped part replaces the sheet's content behind a back control. The timing
+rules live in `hover-layer-controller.ts` and are tested with fake timers. The
+shell never fetches.
+
+`domain/tooltips/entity-tooltip` supplies the bodies for champions, abilities, items,
+runes, summoner spells and keywords from the `GameFact` shape, and
+`domain/tooltips/player-tooltip` the player body. Each takes a `scout` node and an
+`href`; the page owns Scout's numbers. `GameFactTooltip` wires a trigger to a
+body through `useGameFact`, which loads through the `GameFactProvider`'s
+`loader` (the app passes `loadGameFact` from
+`@scout-for-lol/data/game-facts/client.ts`), caches in memory and aborts the
+request when the layer closes. The facts' types come from
+`@scout-for-lol/data/game-facts/schema.ts`, and the stories load the generated
+fact JSON itself (`entity-tooltip.facts.ts`), never retyped values.
 
 ## Tokens
 

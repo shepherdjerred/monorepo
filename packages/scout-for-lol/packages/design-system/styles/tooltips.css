@@ -1,0 +1,557 @@
+/* The layered tooltip: a small soft panel that floats, 320 to 360px wide, no
+   arrow. Anatomy, in order (a tooltip uses the parts it has):
+     header   .scout-tooltip__head | __art   art or icon, name, kind, key fact
+     facts    .scout-tooltip__facts          two or three labelled values
+     words    .scout-tooltip__desc           the game's own description
+     parts    __abilities | __recipe | __chips   things with tooltips of their own
+     scout    .scout-tooltip__scout          the block the page supplies
+     way out  .scout-tooltip__foot           one link to the full page          */
+
+.scout-tooltip {
+  --scout-tooltip-width: 21.5rem;
+
+  position: relative;
+  z-index: 60;
+  box-sizing: border-box;
+  width: var(--scout-tooltip-width);
+  max-width: calc(100vw - 1.5rem);
+  max-height: var(--radix-popover-content-available-height, none);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--scout-radius-panel);
+  background: var(--scout-color-surface-raised);
+  color: var(--scout-color-text);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--scout-color-text) 10%, transparent),
+    0 2px 6px color-mix(in srgb, var(--scout-color-overlay) 22%, transparent),
+    0 30px 60px -20px
+      color-mix(in srgb, var(--scout-color-overlay) 72%, transparent);
+}
+
+.scout-tooltip:focus-visible {
+  outline: 3px solid var(--scout-color-focus);
+  outline-offset: 2px;
+}
+
+/* A tooltip shown where it is, not floating over something. */
+.scout-tooltip--static {
+  z-index: auto;
+  max-height: none;
+  overflow: hidden;
+}
+
+/* The same content inside the phone bottom sheet: the sheet is the panel. */
+.scout-tooltip--sheet {
+  width: auto;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 1rem;
+}
+
+.scout-rich-tooltip-sheet {
+  padding-inline: 0;
+}
+
+.scout-rich-tooltip-sheet .scout-bottom-sheet__header {
+  padding-inline: 1.25rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .scout-tooltip:not(.scout-tooltip--static):not(.scout-tooltip--sheet) {
+    animation: scout-tooltip-in var(--scout-motion-duration-fast)
+      var(--scout-motion-easing);
+  }
+}
+
+@keyframes scout-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+}
+
+/* ---------- header ---------- */
+
+.scout-tooltip__head {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1.125rem 1.25rem 0;
+}
+
+.scout-tooltip__icon {
+  flex: none;
+  border-radius: calc(var(--scout-radius-large) * 0.9);
+}
+
+.scout-tooltip__icon--round {
+  border-radius: 50%;
+  background: var(--scout-surface-inset);
+}
+
+.scout-tooltip__monogram {
+  display: grid;
+  flex: none;
+  width: 3.25rem;
+  height: 3.25rem;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--scout-surface-inset);
+  box-shadow: var(--scout-ring);
+  font: 700 1.375rem/1 var(--scout-font-display);
+}
+
+.scout-tooltip__title {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.scout-tooltip__name {
+  font: 700 1.375rem/1.2 var(--scout-font-display);
+}
+
+.scout-tooltip__kind {
+  font-size: 0.875rem;
+  color: var(--scout-color-text-muted);
+}
+
+.scout-tooltip__key {
+  flex: none;
+  align-self: flex-start;
+  padding: 0.1875rem 0.6875rem;
+  border-radius: var(--scout-radius-pill);
+  background: var(--scout-surface-inset);
+  box-shadow: var(--scout-ring);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+  white-space: nowrap;
+}
+
+/* a champion's header is a strip of her art with the name over its foot */
+.scout-tooltip__art {
+  position: relative;
+  height: 8.25rem;
+}
+
+.scout-tooltip__art > img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: 62% 18%;
+  mask-image: linear-gradient(
+    to bottom,
+    var(--scout-color-text) 30%,
+    transparent 96%
+  );
+}
+
+.scout-tooltip__art-text {
+  position: absolute;
+  right: 1.25rem;
+  bottom: 0;
+  left: 1.25rem;
+  display: grid;
+  line-height: 1.2;
+}
+
+.scout-tooltip__art-text .scout-tooltip__name {
+  font-size: 1.875rem;
+  line-height: 1.05;
+}
+
+/* ---------- body: parts separated by space, not rules ---------- */
+
+.scout-tooltip__body {
+  display: grid;
+  gap: 0.875rem;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.scout-tooltip__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scout-tooltip__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: var(--scout-radius-pill);
+  background: var(--scout-surface-inset);
+  box-shadow: var(--scout-ring);
+  color: inherit;
+  font: 600 0.8125rem/1 var(--scout-font-body);
+}
+
+button.scout-tooltip__chip {
+  cursor: pointer;
+}
+
+button.scout-tooltip__chip:hover {
+  background: var(--scout-surface-inset-strong);
+}
+
+/* ---------- facts ---------- */
+
+.scout-tooltip__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.375rem;
+  margin: 0;
+}
+
+.scout-tooltip__facts > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.scout-tooltip__facts dt {
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  color: var(--scout-color-text-muted);
+}
+
+.scout-tooltip__facts dd {
+  margin: 0;
+  font: 700 1.125rem/1.3 var(--scout-font-display);
+}
+
+/* ---------- words ---------- */
+
+.scout-tooltip__desc {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.scout-tooltip__desc--clamp {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.scout-tooltip__keyword {
+  margin: -0.125rem -0.3125rem;
+  padding: 0.125rem 0.3125rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline dotted var(--scout-color-primary);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.scout-tooltip__keyword:hover,
+.scout-tooltip__keyword[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--scout-color-primary) 18%, transparent);
+}
+
+.scout-tooltip__ranks {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  table-layout: fixed;
+}
+
+.scout-tooltip__ranks th,
+.scout-tooltip__ranks td {
+  padding: 0.1875rem 0;
+  text-align: right;
+  font-weight: 400;
+}
+
+.scout-tooltip__ranks th:first-child {
+  width: 7.625rem;
+  text-align: left;
+}
+
+.scout-tooltip__ranks thead th {
+  font-size: 0.8125rem;
+  color: var(--scout-color-text-muted);
+}
+
+.scout-tooltip__ranks tbody th {
+  color: var(--scout-color-text-muted);
+}
+
+.scout-tooltip__ranks td {
+  font-weight: 600;
+}
+
+/* ---------- parts ---------- */
+
+.scout-tooltip__abilities {
+  display: flex;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scout-tooltip__ability {
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  margin: -0.25rem;
+  border: 0;
+  border-radius: calc(var(--scout-radius-large) * 1.1);
+  background: transparent;
+  color: var(--scout-color-text-muted);
+  cursor: pointer;
+  font: 700 0.8125rem/1.2 var(--scout-font-body);
+}
+
+.scout-tooltip__ability img {
+  border-radius: calc(var(--scout-radius-large) * 0.85);
+}
+
+.scout-tooltip__ability:hover,
+.scout-tooltip__ability[aria-expanded="true"] {
+  color: var(--scout-color-text);
+  background: var(--scout-surface-inset);
+}
+
+.scout-tooltip__recipe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scout-tooltip__part {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.125rem 0.25rem;
+  margin: -0.125rem -0.25rem;
+  border: 0;
+  border-radius: calc(var(--scout-radius-large) * 0.7);
+  background: transparent;
+  color: inherit;
+  font: 600 0.875rem/1.25 var(--scout-font-body);
+}
+
+button.scout-tooltip__part {
+  cursor: pointer;
+}
+
+button.scout-tooltip__part:hover,
+button.scout-tooltip__part[aria-expanded="true"] {
+  background: var(--scout-surface-inset);
+}
+
+/* "+650 gold" after the components: text, not a part. */
+.scout-tooltip__part--static {
+  color: var(--scout-color-text-muted);
+}
+
+.scout-tooltip__part img {
+  flex: none;
+  border-radius: calc(var(--scout-radius-large) * 0.6);
+}
+
+/* ---------- scout: the page's own block ---------- */
+
+.scout-tooltip__scout {
+  display: grid;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  border-radius: calc(var(--scout-radius-panel) * 0.65);
+  background: var(--scout-surface-inset);
+  box-shadow: var(--scout-ring);
+}
+
+.scout-tooltip__rows {
+  display: grid;
+  gap: 0.625rem;
+  margin: 0;
+}
+
+.scout-tooltip__row {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: 0.625rem;
+  align-items: baseline;
+}
+
+.scout-tooltip__row dd {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.scout-tooltip__who {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--scout-color-text-muted);
+}
+
+.scout-tooltip__who--you {
+  justify-self: start;
+  padding: 0 0.5rem;
+  border-radius: var(--scout-radius-pill);
+  background: var(--scout-brand-soft);
+  color: var(--scout-color-text);
+}
+
+.scout-tooltip__context {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--scout-color-text-muted);
+}
+
+.scout-tooltip__tally {
+  display: flex;
+  gap: 3px;
+}
+
+.scout-tooltip__tally i {
+  width: 0.5rem;
+  height: 1.125rem;
+  border-radius: var(--scout-radius-pill);
+}
+
+.scout-tooltip__tally i[data-result="win"] {
+  background: var(--scout-color-success);
+}
+
+.scout-tooltip__tally i[data-result="loss"] {
+  background: var(--scout-color-danger);
+}
+
+.scout-tooltip__rank {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: -0.375rem 0 -0.375rem -0.5rem;
+}
+
+.scout-tooltip__rank > span {
+  display: grid;
+  line-height: 1.3;
+}
+
+.scout-tooltip__rank b {
+  font: 700 1.1875rem/1.3 var(--scout-font-display);
+  color: var(--scout-color-text);
+}
+
+.scout-tooltip__quiet {
+  font-size: 0.875rem;
+  color: var(--scout-color-text-muted);
+}
+
+/* ---------- way out ---------- */
+
+.scout-tooltip__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 1.375rem;
+  margin-top: -0.25rem;
+  padding: 0 1.25rem 1.125rem;
+}
+
+/* ---------- loading and error ---------- */
+
+.scout-tooltip__skeleton-icon {
+  flex: none;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: calc(var(--scout-radius-large) * 0.9);
+}
+
+.scout-tooltip__skeleton-line {
+  height: 0.875rem;
+}
+
+.scout-tooltip__skeleton-line--name {
+  width: 55%;
+  height: 1.25rem;
+  margin-bottom: 0.375rem;
+}
+
+.scout-tooltip__skeleton-line--kind {
+  width: 35%;
+}
+
+.scout-tooltip__skeleton-line--short {
+  width: 60%;
+}
+
+.scout-tooltip__loading > .scout-tooltip__body {
+  gap: 0.625rem;
+}
+
+.scout-tooltip__error {
+  margin: 0;
+  color: var(--scout-color-text-muted);
+}
+
+/* ---------- phone sheet: back to the layer before ---------- */
+
+.scout-rich-tooltip__back {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0 0.75rem 0.25rem;
+  padding: 0 0.75rem 0 0.5rem;
+  border: 0;
+  border-radius: var(--scout-radius-pill);
+  background: var(--scout-surface-inset);
+  box-shadow: var(--scout-ring);
+  color: var(--scout-color-text);
+  cursor: pointer;
+  font: 600 0.875rem/1 var(--scout-font-body);
+}
+
+.scout-rich-tooltip__back:hover {
+  background: var(--scout-surface-inset-strong);
+}
+
+/* ---------- touch targets on a coarse pointer ---------- */
+
+@media (max-width: 640px), (pointer: coarse) {
+  .scout-tooltip__ability,
+  .scout-tooltip__part,
+  .scout-tooltip__chip {
+    min-height: 2.75rem;
+  }
+
+  .scout-tooltip__keyword,
+  .scout-tooltip__keyword:hover {
+    margin-block: 0;
+    padding-block: 0.8125rem;
+    background-clip: content-box;
+  }
+
+  .scout-tooltip__foot .scout-button {
+    min-height: 2.75rem;
+  }
+}
