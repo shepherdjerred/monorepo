@@ -84,6 +84,8 @@ hold only scoped invariants that agents must keep in context.
 | [llm-models](llm-models/)                         | Language-neutral LLM model catalog (JSON + schema) with upstream pricing sync  |
 | [llm-observability](llm-observability/)           | LLM tracing/metrics: OTel wrappers + S3 span-body archive                      |
 | [loaded](loaded/)                                 | `Loaded<T>` renderability algebra + `LoadingBlock` for async UI state          |
+| [console-client](console-client/)                 | Console kit, browser half: TanStack Query, tRPC bindings and router adapters   |
+| [console-server](console-server/)                 | Console kit, server half: Hono on Bun with health, metrics, identity and tRPC  |
 | [console-ui](console-ui/)                         | Shared console shell, components and colour tokens for the ops consoles        |
 | [ops-clients](ops-clients/)                       | Zod-validated upstream clients for the ops snapshot collector                  |
 | [ops-model](ops-model/)                           | Ops snapshot contract, severity policy, and the service catalog                |
