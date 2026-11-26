@@ -48,6 +48,9 @@ const CreateMissingResponseSchema = z.strictObject({
 
 const ErrorBodySchema = z.object({
   error: z.string(),
+  issues: z
+    .array(z.object({ key: z.string(), path: z.string(), message: z.string() }))
+    .optional(),
 });
 
 export type FlagsRetirementResult = {
@@ -93,7 +96,15 @@ export type DeclaredDeploymentApplyOptions = {
 async function readErrorDetail(response: Response): Promise<string> {
   try {
     const parsed = ErrorBodySchema.safeParse(await response.json());
-    return parsed.success ? ` (${parsed.data.error})` : "";
+    if (!parsed.success) return "";
+    const issues = (parsed.data.issues ?? []).map((issue) =>
+      issue.path === ""
+        ? `${issue.key}: ${issue.message}`
+        : `${issue.key} ${issue.path}: ${issue.message}`,
+    );
+    return issues.length === 0
+      ? ` (${parsed.data.error})`
+      : ` (${parsed.data.error}: ${issues.join("; ")})`;
   } catch {
     return "";
   }
@@ -328,10 +339,11 @@ async function commitDeclaredChanges(input: {
       }),
     });
     if (!response.ok) {
+      const detail = await readErrorDetail(response);
       markChangesFailed(
         input.planned,
         response.status === 409 ? "conflict" : "failed",
-        `Flags write returned HTTP ${String(response.status)}; read back before retrying`,
+        `Flags write returned HTTP ${String(response.status)}${detail}; read back before retrying`,
       );
       return;
     }

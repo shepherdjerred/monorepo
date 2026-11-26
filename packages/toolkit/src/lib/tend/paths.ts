@@ -2,7 +2,7 @@ import { readdir, realpath, stat } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-export const DEFAULT_WORKTREE_MIN_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+export const DEFAULT_WORKTREE_MIN_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 
 export type TendPaths = {
   readonly rootDir: string;
@@ -68,6 +68,27 @@ export function parseDurationMs(raw: string): number {
   const total = amount * multiplier;
   if (!Number.isSafeInteger(total)) {
     throw new RangeError(`Duration out of range: "${raw}"`);
+  }
+  return total;
+}
+
+const BYTE_UNITS: Readonly<Record<string, number>> = {
+  "": 1,
+  b: 1,
+  k: 1024,
+  m: 1024 ** 2,
+  g: 1024 ** 3,
+};
+
+/** Parse sizes such as `65536`, `64k`, `1m`, or `2g` (binary multiples). */
+export function parseByteSize(raw: string): number {
+  const match = /^(\d+)([bkmg]?)$/iu.exec(raw.trim());
+  const multiplier = BYTE_UNITS[match?.[2]?.toLowerCase() ?? "?"];
+  const total = Number(match?.[1]) * (multiplier ?? Number.NaN);
+  if (!Number.isSafeInteger(total)) {
+    throw new TypeError(
+      `Invalid size "${raw}"; expected <integer>[b|k|m|g] (for example 64k, 1m)`,
+    );
   }
   return total;
 }

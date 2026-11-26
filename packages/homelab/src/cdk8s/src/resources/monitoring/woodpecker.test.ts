@@ -255,7 +255,7 @@ describe("Woodpecker monitoring manifests", () => {
       labels: {
         severity: "warning",
         category: "ci",
-        namespace: "turbo-cache",
+        namespace: "ci-cache",
       },
     });
     const turboExpression = ruleExpression(turboCleanupStale);

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -93,6 +94,107 @@ export const CI_IO_OBSERVABILITY_VALUES = {
   "kubelet" | "kube-state-metrics"
 >;
 
+type GrafanaDatasourceSidecarValues = NonNullable<
+  GrafanaSidecarValues["datasources"]
+>;
+
+/**
+ * Datasources load once, before Grafana starts, and never through the
+ * sidecar's runtime reload.
+ *
+ * The default watch sidecar races Grafana at pod start: Grafana provisions from
+ * a still-empty /etc/grafana/provisioning/datasources and comes up with no
+ * datasources, then the sidecar writes datasource.yaml and asks
+ * /api/admin/provisioning/datasources/reload to pick it up. That reload
+ * authenticates as the chart's `admin` login, which no longer exists (the
+ * server admin was renamed), so it gets a 401 and Grafana is left with no
+ * datasources until a restart happens to win the race.
+ *
+ * The chart renders `initDatasources` as an init container in place of the
+ * watch sidecar, and `LIST` makes it sync once and exit. With `skipReload`,
+ * nothing needs a Grafana credential. Datasource changes take effect through a
+ * pod roll driven by {@link GRAFANA_DATASOURCE_HASH_ANNOTATION}.
+ */
+export const GRAFANA_DATASOURCE_SIDECAR_VALUES = {
+  initDatasources: true,
+  watchMethod: "LIST",
+  skipReload: true,
+  alertmanager: {
+    handleGrafanaManagedAlerts: true,
+  },
+} satisfies GrafanaDatasourceSidecarValues;
+
+const GRAFANA_DATASOURCE_PRUNE = true;
+
+export const GRAFANA_ADDITIONAL_DATASOURCES = [
+  {
+    name: "loki",
+    uid: "loki",
+    editable: false,
+    type: "loki",
+    url: "http://loki-gateway.loki",
+    version: 1,
+  },
+  {
+    name: "tempo",
+    uid: "tempo",
+    editable: false,
+    type: "tempo",
+    url: "http://tempo.tempo.svc:3200",
+    version: 1,
+    jsonData: {
+      tracesToLogsV2: {
+        datasourceUid: "loki",
+        spanStartTimeShift: "-5m",
+        spanEndTimeShift: "5m",
+        tags: [{ key: "service.name", value: "service_name" }],
+        filterByTraceID: true,
+        customQuery: false,
+      },
+      serviceMap: { datasourceUid: "prometheus" },
+      nodeGraph: { enabled: true },
+    },
+  },
+  {
+    // Continuous profiling store fed by the Alloy eBPF DaemonSet. Flame
+    // graphs are grouped by service_name = <namespace>/<container>.
+    name: "pyroscope",
+    uid: "pyroscope",
+    editable: false,
+    // Must be the datasource plugin ID. "grafanapyroscope" is not a
+    // registered plugin (health check returns plugin.notRegistered), which
+    // left this datasource dead and Profiles Drilldown reporting "Missing
+    // Pyroscope data source".
+    type: "grafana-pyroscope-datasource",
+    url: "http://pyroscope.pyroscope.svc.cluster.local:4040",
+    // Bump above the live Grafana DB version when changing provisioned
+    // datasource identity fields, or Grafana leaves the stale row in place.
+    version: 3,
+  },
+];
+
+/**
+ * Pod-template annotation that rolls Grafana whenever the provisioned
+ * datasource config changes. Nothing reloads datasources at runtime (see
+ * {@link GRAFANA_DATASOURCE_SIDECAR_VALUES}), so without the roll an edited
+ * datasource would update the ConfigMap but never reach Grafana.
+ */
+export const GRAFANA_DATASOURCE_HASH_ANNOTATION =
+  "homelab.sjer.red/grafana-datasource-config-hash";
+
+export function grafanaDatasourceConfigHash(): string {
+  return createHash("sha256")
+    .update(
+      JSON.stringify({
+        sidecar: GRAFANA_DATASOURCE_SIDECAR_VALUES,
+        prune: GRAFANA_DATASOURCE_PRUNE,
+        additionalDataSources: GRAFANA_ADDITIONAL_DATASOURCES,
+      }),
+    )
+    .digest("hex")
+    .slice(0, 12);
+}
+
 export function createGrafanaValues(
   rendererSecretName: string,
 ): NonNullable<PrometheusValuesWithBlackbox["grafana"]> {
@@ -161,6 +263,9 @@ export function createGrafanaValues(
       },
     },
     useStatefulSet: true,
+    podAnnotations: {
+      [GRAFANA_DATASOURCE_HASH_ANNOTATION]: grafanaDatasourceConfigHash(),
+    },
     sidecar: {
       resources: {
         requests: { cpu: "10m", memory: "128Mi" },
@@ -173,58 +278,9 @@ export function createGrafanaValues(
           allowUiUpdates: false,
         },
       },
-      datasources: {
-        alertmanager: {
-          handleGrafanaManagedAlerts: true,
-        },
-      },
+      datasources: GRAFANA_DATASOURCE_SIDECAR_VALUES,
     },
-    prune: true,
-    additionalDataSources: [
-      {
-        name: "loki",
-        uid: "loki",
-        editable: false,
-        type: "loki",
-        url: "http://loki-gateway.loki",
-        version: 1,
-      },
-      {
-        name: "tempo",
-        uid: "tempo",
-        editable: false,
-        type: "tempo",
-        url: "http://tempo.tempo.svc:3200",
-        version: 1,
-        jsonData: {
-          tracesToLogsV2: {
-            datasourceUid: "loki",
-            spanStartTimeShift: "-5m",
-            spanEndTimeShift: "5m",
-            tags: [{ key: "service.name", value: "service_name" }],
-            filterByTraceID: true,
-            customQuery: false,
-          },
-          serviceMap: { datasourceUid: "prometheus" },
-          nodeGraph: { enabled: true },
-        },
-      },
-      {
-        // Continuous profiling store fed by the Alloy eBPF DaemonSet. Flame
-        // graphs are grouped by service_name = <namespace>/<container>.
-        name: "pyroscope",
-        uid: "pyroscope",
-        editable: false,
-        // Must be the datasource plugin ID. "grafanapyroscope" is not a
-        // registered plugin (health check returns plugin.notRegistered), which
-        // left this datasource dead and Profiles Drilldown reporting "Missing
-        // Pyroscope data source".
-        type: "grafana-pyroscope-datasource",
-        url: "http://pyroscope.pyroscope.svc.cluster.local:4040",
-        // Bump above the live Grafana DB version when changing provisioned
-        // datasource identity fields, or Grafana leaves the stale row in place.
-        version: 3,
-      },
-    ],
+    prune: GRAFANA_DATASOURCE_PRUNE,
+    additionalDataSources: GRAFANA_ADDITIONAL_DATASOURCES,
   };
 }

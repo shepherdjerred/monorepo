@@ -1,9 +1,9 @@
 {
   "kind": "argocd",
   "application": "charts",
-  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
-  "chartName": "charts",
-  "chartComponent": "chart:charts",
+  "chartRepository": "https://charts.tailnet-1a49.ts.net",
+  "chartName": "charts-bootstrap",
+  "chartComponent": "chart:charts-bootstrap",
   "namespace": "charts",
   "parameters": {},
   "artifactParameters": {

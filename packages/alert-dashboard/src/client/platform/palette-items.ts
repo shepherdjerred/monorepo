@@ -8,7 +8,7 @@ import type {
 } from "./module.ts";
 
 export type PaletteItem = {
-  /** Unique across the whole palette; also the option's DOM id suffix. */
+  /** Unique across the whole palette; the option list keys rows by it. */
   readonly id: string;
   readonly label: string;
   readonly detail?: string;

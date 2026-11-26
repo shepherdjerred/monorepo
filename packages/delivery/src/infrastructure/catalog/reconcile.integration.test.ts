@@ -4,11 +4,8 @@ import { catalogDocument } from "#testing/catalog-fixture.ts";
 import { arcadePipeline } from "#testing/model-fixture.ts";
 import { useCatalogCluster } from "#testing/catalog-cluster.ts";
 import { testOperator, testPublisher } from "#testing/seed.ts";
-import {
-  V1_CATALOG_MIGRATION,
-  reconcileSummary,
-  type CatalogMigration,
-} from "./reconcile.ts";
+import { V1_CATALOG_MIGRATION, type CatalogMigration } from "./reconcile.ts";
+import { reconcileSummary } from "./result.ts";
 
 /** A record with no v1 environments to carry over. */
 const NO_MIGRATION: CatalogMigration = { renames: {}, retired: [] };

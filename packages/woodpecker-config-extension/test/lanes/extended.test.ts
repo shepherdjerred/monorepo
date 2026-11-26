@@ -172,11 +172,14 @@ describe("extended verification step", () => {
     expect(step.commands.join("\n")).not.toContain("write-ci-handoff");
     expect(step.commands.join("\n")).not.toContain("run verify --");
     expect(step.environment).toMatchObject({
-      TURBO_API: "https://turbo-cache.tailnet-1a49.ts.net",
+      TURBO_API: "https://ci-cache.tailnet-1a49.ts.net",
       TURBO_TEAM: "monorepo",
-      GRADLE_BUILD_CACHE_URL:
-        "https://gradle-build-cache.tailnet-1a49.ts.net/cache/",
+      GRADLE_BUILD_CACHE_URL: "https://ci-cache.tailnet-1a49.ts.net/cache/",
       GRADLE_BUILD_CACHE_USERNAME: "ci-main",
+      RUSTC_WRAPPER: "sccache",
+      CARGO_INCREMENTAL: "0",
+      SCCACHE_WEBDAV_ENDPOINT: "https://ci-cache.tailnet-1a49.ts.net/sccache/",
+      SCCACHE_WEBDAV_USERNAME: "ci-main",
       CI_CHANGED_BASE: "",
       CI_EXTENDED_REQUEST: REQUEST,
       CI_EXTENDED_SOURCE: fixture.pipeline.commit,
@@ -187,6 +190,7 @@ describe("extended verification step", () => {
     expect(step.secrets?.map((grant) => grant.env).toSorted()).toEqual([
       "GITHUB_DOWNLOAD_TOKEN",
       "GRADLE_BUILD_CACHE_WRITE_PASSWORD",
+      "SCCACHE_WEBDAV_PASSWORD",
       "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
       "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
       "TURBO_REMOTE_CACHE_SIGNATURE_KEY",
@@ -206,7 +210,8 @@ describe("extended verification step", () => {
         ?.filter(
           (grant) =>
             !grant.env.startsWith("TURBO_REMOTE_CACHE_SIGNATURE_KEY") &&
-            !grant.env.startsWith("GRADLE_BUILD_CACHE_"),
+            !grant.env.startsWith("GRADLE_BUILD_CACHE_") &&
+            !grant.env.startsWith("SCCACHE_WEBDAV_"),
         )
         .toSorted((a, b) => a.env.localeCompare(b.env)),
     ).toEqual(verify?.secrets?.toSorted((a, b) => a.env.localeCompare(b.env)));

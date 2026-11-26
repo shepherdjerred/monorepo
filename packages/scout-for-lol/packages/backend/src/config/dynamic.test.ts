@@ -46,13 +46,22 @@ describe("scout dynamic config", () => {
 
   test("env supplies a comma-separated allowlist", async () => {
     await initializeDynamicConfig({
-      environment: { ...DISABLED, EXPLORE_GUILD_ALLOWLIST: "111, 222 ,333" },
+      environment: { ...DISABLED, EXPLORE_GUILD_ALLOWLIST: "111, 222,333" },
       seed: SEED,
       startPolling: false,
     });
     expect(exploreGuildAllowlist()).toEqual(["111", "222", "333"]);
   });
 
+  test("a malformed env allowlist is refused and the seed is kept", async () => {
+    // The registry rejects padding before a comma, empty entries, and non-ids.
+    await initializeDynamicConfig({
+      environment: { ...DISABLED, EXPLORE_GUILD_ALLOWLIST: "111 ,,abc" },
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(exploreGuildAllowlist()).toEqual(["seeded-guild"]);
+  });
   test("a flag outranks env", async () => {
     await initializeDynamicConfig({
       environment: { ...DISABLED, EXPLORE_GUILD_ALLOWLIST: "111" },
@@ -323,6 +332,30 @@ describe("explore quota limits", () => {
       startPolling: false,
     });
     expect(exploreQuotaLimits()).toEqual(DEFAULT_EXPLORE_QUOTA_LIMITS);
+  });
+
+  test("unknown keys and numeric strings are refused, keeping the seed", async () => {
+    for (const policy of [
+      { ...DEFAULT_EXPLORE_QUOTA_LIMITS, userYear: 1000 },
+      { ...DEFAULT_EXPLORE_QUOTA_LIMITS, userMinute: "5" },
+    ]) {
+      await initializeDynamicConfig({
+        environment: {
+          ...DISABLED,
+          EXPLORE_QUOTA_LIMITS: JSON.stringify(policy),
+        },
+        seed: {
+          ...SEED,
+          exploreQuotaLimits: {
+            ...DEFAULT_EXPLORE_QUOTA_LIMITS,
+            userMinute: 3,
+          },
+        },
+        startPolling: false,
+      });
+      expect(exploreQuotaLimits().userMinute).toBe(3);
+      await shutdownDynamicConfig();
+    }
   });
 });
 

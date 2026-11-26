@@ -219,6 +219,7 @@ export async function captureParentArchive(root: BootstrapApplication) {
   const source = z
     .object({
       repoURL: z.enum([
+        "https://charts.tailnet-1a49.ts.net",
         "https://chartmuseum.sjer.red",
         "https://chartmuseum.tailnet-1a49.ts.net",
       ]),

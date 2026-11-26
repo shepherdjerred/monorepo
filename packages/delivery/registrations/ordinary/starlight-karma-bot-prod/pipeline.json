@@ -1,7 +1,7 @@
 {
   "kind": "argocd",
   "application": "starlight-karma-bot-prod",
-  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartRepository": "https://charts.tailnet-1a49.ts.net",
   "chartName": "starlight-karma-bot-prod",
   "chartComponent": "chart:starlight-karma-bot-prod",
   "namespace": "starlight-karma-bot-prod",

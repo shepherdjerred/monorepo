@@ -1,7 +1,8 @@
 import { TriangleAlertIcon } from "lucide-react";
 import { Button } from "@shepherdjerred/console-ui";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
-import { flagText } from "./model.ts";
+import { DiffView } from "./code.tsx";
+import { reviewText } from "./model.ts";
 
 export type ConflictBannerProps = {
   /** The revision another write landed at. */
@@ -12,7 +13,7 @@ export type ConflictBannerProps = {
   readonly onLoadTheirs: () => void;
 };
 
-/** Warns that a save was not applied and shows both versions side by side. */
+/** Warns that a save was not applied and diffs their flag against the draft. */
 export function ConflictBanner({
   revision,
   theirs,
@@ -32,24 +33,22 @@ export function ConflictBanner({
       <p>
         Another write landed at revision {revision}. This save was not applied.
       </p>
-      <div className="fl-compare">
-        <section aria-labelledby="conflict-theirs">
-          <h4 id="conflict-theirs">Their flag</h4>
-          <pre>
-            {theirs === undefined
-              ? "This flag is gone from their document."
-              : flagText(theirs)}
-          </pre>
-        </section>
-        <section aria-labelledby="conflict-yours">
-          <h4 id="conflict-yours">Your draft</h4>
-          <pre>{flagText(draft)}</pre>
-        </section>
-      </div>
-      {theirs === undefined ? null : (
-        <Button type="button" onClick={onLoadTheirs}>
-          Load their version
-        </Button>
+      {theirs === undefined ? (
+        <p>This flag is gone from their document.</p>
+      ) : (
+        <>
+          <p className="fl-conflict-legend ui-muted">
+            Their flag (before) against your draft (after).
+          </p>
+          <DiffView
+            original={reviewText(theirs)}
+            modified={reviewText(draft)}
+            labels={{ original: "Their flag", modified: "Your draft" }}
+          />
+          <Button type="button" onClick={onLoadTheirs}>
+            Load their version
+          </Button>
+        </>
       )}
     </section>
   );

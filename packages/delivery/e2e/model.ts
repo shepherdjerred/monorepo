@@ -157,7 +157,7 @@ async function publish(delivery: Delivery, database: Database, n: number) {
           id: `model/chart/${tag}`,
           component: "chart:arcade",
           kind: "chart",
-          uri: `https://chartmuseum.tailnet-1a49.ts.net/charts/arcade-1.${tag}.0.tgz`,
+          uri: `https://charts.tailnet-1a49.ts.net/charts/arcade-1.${tag}.0.tgz`,
           version: `1.${tag}.0`,
           digest: `sha256:${String(n + 4).repeat(64)}`,
         },

@@ -1,26 +1,21 @@
-import { z } from "zod";
-
-export const ThemeSchema = z.enum(["system", "light", "dark"]);
-export type Theme = z.infer<typeof ThemeSchema>;
-// The page background of each scheme; the browser tints its chrome with it.
-const themeColors = { light: "#ffffff", dark: "#1b1b1f" };
-
-export function savedTheme(): Theme {
-  const saved = ThemeSchema.safeParse(localStorage.getItem("tracker.theme"));
-  return saved.success ? saved.data : "system";
-}
+import { createThemeStore, tokens } from "@shepherdjerred/console-ui";
 
 /**
- * The only writer of the saved theme. `index.html` reads the same key before
- * first paint so an explicit choice never flashes the other scheme.
+ * Tracker's theme preference, persisted under `tracker.theme` beside its
+ * other `tracker.*` keys and reflected as `html[data-theme]`. `index.html`
+ * reads the same key before first paint so an explicit choice never flashes
+ * the other scheme.
  */
-export function applyTheme(theme: Theme) {
-  document.documentElement.dataset["theme"] = theme;
-  localStorage.setItem("tracker.theme", theme);
+export const trackerTheme = createThemeStore("tracker.theme");
+
+/** The browser tints its chrome with the sidebar surface of the shown theme. */
+function tintBrowserChrome() {
+  const preference = trackerTheme.getPreference();
   for (const meta of document.querySelectorAll<HTMLMetaElement>(
     'meta[name="theme-color"]',
   )) {
     const scheme = meta.media.includes("dark") ? "dark" : "light";
-    meta.content = themeColors[theme === "system" ? scheme : theme];
+    meta.content = tokens[preference === "system" ? scheme : preference].bg;
   }
 }
+trackerTheme.subscribe(tintBrowserChrome);

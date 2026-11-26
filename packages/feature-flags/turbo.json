@@ -6,9 +6,15 @@
       "inputs": [
         "src/managed-flag-inventory.json",
         "scripts/generate-flag-types.ts",
-        "src/managed-flag-inventory.ts"
+        "src/managed-flag-inventory.ts",
+        "src/flag-value-schemas.ts",
+        "src/flag-value-settings.ts",
+        "src/flag-value-spec.ts"
       ],
-      "outputs": ["src/managed-flag-keys.generated.ts"]
+      "outputs": [
+        "src/managed-flag-keys.generated.ts",
+        "src/flag-value-schemas.generated.json"
+      ]
     }
   }
 }

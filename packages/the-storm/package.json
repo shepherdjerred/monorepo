@@ -78,6 +78,8 @@
     "maps:author-lobby": "bun tools/maps/lobby.ts",
     "maps:integrate-content": "bun tools/maps/content/integrate-content.ts",
     "maps:bake": "bun tools/maps/bake.ts",
+    "maps:fetch-nav": "mise exec -- gradle -p plugin :rwfmap:fetchRwfNavs --console=plain",
+    "maps:publish-nav": "bun tools/maps/nav/publish.ts",
     "maps:details": "bun tools/maps/details.ts",
     "maps:stage": "bun tools/maps/stage.ts",
     "maps:close-starts": "bun tools/maps/close-starts.ts",

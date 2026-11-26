@@ -11,7 +11,7 @@ import {
   settleExploreCall,
   ExploreBudgetError,
 } from "./ledger.ts";
-import { ExploreSpendPolicySchema } from "#src/configuration/explore-spend.ts";
+import { ExploreSpendPolicySchema } from "@shepherdjerred/feature-flags/flag-value-settings.ts";
 import { EXPLORE_MAX_PROVIDER_INPUT_BOUND } from "./input-bound.ts";
 
 const db = createTestDatabase("explore-spending");

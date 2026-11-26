@@ -10,13 +10,20 @@ beforeEach(() => {
 });
 describe("iMessage configuration boundaries", () => {
   test("parses bounded exact sender handles and rejects invalid input", () => {
-    expect(ImessageOwnersSchema.parse(" owner, second ,")).toEqual([
+    expect(ImessageOwnersSchema.parse("owner, second")).toEqual([
       "owner",
       "second",
     ]);
-    expect(ImessageOwnersSchema.parse("")).toEqual([]);
     expect(ImessageOwnersSchema.parse("[]")).toEqual([]);
+    // The registry rejects padding, empty entries, and an empty list spelled "".
+    expect(() => ImessageOwnersSchema.parse(" owner, second ,")).toThrow();
+    expect(() => ImessageOwnersSchema.parse("")).toThrow();
     expect(() => ImessageOwnersSchema.parse("x".repeat(201))).toThrow();
+    expect(() =>
+      ImessageOwnersSchema.parse(
+        Array.from({ length: 21 }, (_, index) => `o${String(index)}`).join(","),
+      ),
+    ).toThrow();
   });
   test("absence resolves the provider model defaults", async () => {
     expect(await imessageChatModels()).toEqual({

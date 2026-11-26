@@ -300,26 +300,6 @@
       "clones": 1,
       "tokens": 80
     },
-    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts": {
-      "clones": 3,
-      "tokens": 281
-    },
-    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/scout/scout-dashboard.ts": {
-      "clones": 1,
-      "tokens": 78
-    },
-    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts": {
-      "clones": 1,
-      "tokens": 78
-    },
-    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts": {
-      "clones": 2,
-      "tokens": 158
-    },
-    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-panels.ts": {
-      "clones": 1,
-      "tokens": 95
-    },
     "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-api-competition-rows.ts": {
       "clones": 2,
       "tokens": 163
@@ -327,6 +307,10 @@
     "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/storage/velero-panels.ts": {
       "clones": 2,
       "tokens": 146
+    },
+    "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts": {
+      "clones": 1,
+      "tokens": 78
     },
     "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard.ts|packages/homelab/src/cdk8s/grafana/tasknotes-dashboard.ts": {
       "clones": 1,
@@ -349,8 +333,8 @@
       "tokens": 73
     },
     "packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-panels.ts": {
-      "clones": 1,
-      "tokens": 101
+      "clones": 2,
+      "tokens": 186
     },
     "packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard-panels.ts": {
       "clones": 3,
@@ -411,10 +395,6 @@
     "packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.test.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/ci-namespace.test.ts": {
       "clones": 1,
       "tokens": 91
-    },
-    "packages/homelab/src/cdk8s/src/resources/gradle-build-cache.ts|packages/homelab/src/cdk8s/src/resources/turbo-cache.ts": {
-      "clones": 1,
-      "tokens": 80
     },
     "packages/homelab/src/cdk8s/src/resources/home/eufy-security-ws.ts|packages/homelab/src/cdk8s/src/resources/home/zwave-js-ui.ts": {
       "clones": 1,

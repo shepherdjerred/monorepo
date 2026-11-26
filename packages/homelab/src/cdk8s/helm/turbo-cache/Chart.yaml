@@ -1,6 +1,0 @@
-apiVersion: v2
-name: turbo-cache
-description: Turborepo remote cache server with a local persistent-volume backend
-type: application
-version: "$version"
-appVersion: "$appVersion"

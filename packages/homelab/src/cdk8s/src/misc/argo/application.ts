@@ -19,8 +19,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/projects.ts";
 
 /** The chart repository every first-party wrapper chart is published to. */
-export const FIRST_PARTY_CHART_REPOSITORY =
-  tailnetService("chartmuseum").origin;
+export const FIRST_PARTY_CHART_REPOSITORY = tailnetService("charts").origin;
 /** Tracks the newest published 2.x wrapper chart, prereleases included. */
 export const FIRST_PARTY_CHART_REVISION = "~2.0.0-0";
 /** The history depth every Application keeps unless it says otherwise. */
@@ -146,7 +145,7 @@ export type FirstPartyApplicationOptions = ArgoApplicationOptions & {
   targetRevision?: string;
 };
 
-/** An Application of a first-party wrapper chart published to ChartMuseum. */
+/** An Application of a first-party wrapper chart published to the Charts registry. */
 export function createFirstPartyApplication(
   scope: Construct,
   options: FirstPartyApplicationOptions,

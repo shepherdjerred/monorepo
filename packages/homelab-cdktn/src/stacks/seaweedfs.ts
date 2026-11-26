@@ -79,13 +79,23 @@ type BucketOptions = {
   readonly forceDestroy?: true;
 };
 
-type Expiry = {
-  readonly bucket: S3Bucket;
+type ExpiryRule = {
   readonly days: number;
   /** The lifecycle rule's `ID`. */
   readonly rule: string;
   /** Key prefix the rule covers; empty for every object. */
   readonly prefix: string;
+};
+
+/**
+ * A bucket's whole lifecycle configuration. `put-bucket-lifecycle-configuration`
+ * replaces the bucket's entire configuration, so every rule of a bucket is
+ * declared here, in one call; a second `expiry` for the same bucket would
+ * silently drop the first one's rules.
+ */
+type Expiry = {
+  readonly bucket: S3Bucket;
+  readonly rules: readonly [ExpiryRule, ...ExpiryRule[]];
 };
 
 /**
@@ -286,11 +296,16 @@ export class SeaweedfsStack extends HomelabStack {
     // Expire PR-asset objects after 365 days. Scoped to the `pr/assets/`
     // prefix so any other public artifacts dropped in this bucket are
     // retained indefinitely.
+    //
+    // `share/tmp/` is where `toolkit share public` puts files that are not
+    // kept; they expire after 30 days. One configuration carries both rules:
+    // a second lifecycle call for this bucket would drop `expire-pr-assets`.
     this.expiry("public_sjer_red_lifecycle", {
       bucket: publicSjerRed,
-      days: 365,
-      rule: "expire-pr-assets",
-      prefix: "pr/assets/",
+      rules: [
+        { days: 365, rule: "expire-pr-assets", prefix: "pr/assets/" },
+        { days: 30, rule: "expire-share-tmp", prefix: "share/tmp/" },
+      ],
     });
 
     // Seed the bucket root with a landing + 404 page so `GET /` returns 200
@@ -309,6 +324,38 @@ export class SeaweedfsStack extends HomelabStack {
           '  --endpoint-url "${self.input.endpoint_url}" \\',
           '  --content-type "text/html; charset=utf-8"',
           'aws s3 cp "${path.module}/public/404.html" "s3://${self.input.bucket}/404.html" \\',
+          '  --endpoint-url "${self.input.endpoint_url}" \\',
+          '  --content-type "text/html; charset=utf-8"',
+        ]),
+      ],
+    });
+
+    // Tailnet-only counterpart of the public artifact bucket, served at
+    // https://private.<tailnet>.ts.net by a second Caddy s3proxy in the
+    // `s3-static-sites` namespace (no Cloudflare tunnel, no public DNS).
+    // `toolkit share private` writes `share/{tmp,keep}/...`; `share/tmp/`
+    // expires after 30 days. It is not a static site, so the model declares it
+    // as that namespace's consumer. Not protected (what lands here is
+    // disposable), but backed up like every other bucket.
+    const privateSjerRed = this.consumed({
+      env: "S3_BUCKET",
+      namespace: "s3-static-sites",
+    });
+    this.expiry("private_sjer_red_lifecycle", {
+      bucket: privateSjerRed,
+      rules: [{ days: 30, rule: "expire-share-tmp", prefix: "share/tmp/" }],
+    });
+
+    // Seed the bucket root with a landing page so `GET /` returns 200.
+    new DataResource(this, "private_sjer_red_seed", {
+      input: {
+        bucket: privateSjerRed.id,
+        endpoint_url: STATE_ENDPOINT,
+        index_md5: '${filemd5("${path.module}/private/index.html")}',
+      },
+      provisioners: [
+        this.deploy([
+          'aws s3 cp "${path.module}/private/index.html" "s3://${self.input.bucket}/index.html" \\',
           '  --endpoint-url "${self.input.endpoint_url}" \\',
           '  --content-type "text/html; charset=utf-8"',
         ]),
@@ -351,9 +398,7 @@ export class SeaweedfsStack extends HomelabStack {
 
     this.expiry("llm_archive_lifecycle", {
       bucket: llmArchive,
-      days: 365,
-      rule: "expire-llm-archives",
-      prefix: "",
+      rules: [{ days: 365, rule: "expire-llm-archives", prefix: "" }],
     });
 
     // Private Streambot diagnostic audio. Captures are intentionally
@@ -365,9 +410,13 @@ export class SeaweedfsStack extends HomelabStack {
     });
     this.expiry("streambot_voice_captures_lifecycle", {
       bucket: streambotVoiceCaptures,
-      days: 90,
-      rule: "expire-streambot-voice-captures",
-      prefix: "voice-captures/",
+      rules: [
+        {
+          days: 90,
+          rule: "expire-streambot-voice-captures",
+          prefix: "voice-captures/",
+        },
+      ],
     });
 
     // Build-scoped CI handoff and artifact store. Steps pass values to later
@@ -400,9 +449,7 @@ export class SeaweedfsStack extends HomelabStack {
     // outlive that belongs in a durable bucket, not here.
     this.expiry("ci_handoff_lifecycle", {
       bucket: ciHandoff,
-      days: 7,
-      rule: "expire-ci-handoff",
-      prefix: "",
+      rules: [{ days: 7, rule: "expire-ci-handoff", prefix: "" }],
     });
 
     // Immutable deployment artifacts outlive the producing CI pipeline. No
@@ -496,27 +543,54 @@ export class SeaweedfsStack extends HomelabStack {
   }
 
   /**
-   * `terraform_data.<id>`: one lifecycle rule expiring a bucket's objects
-   * under `prefix` after `days`.
+   * `terraform_data.<id>`: the lifecycle configuration of a bucket, expiring
+   * its objects under each rule's prefix after the rule's days. A bucket with
+   * one rule keeps its `expire_days` input and inline JSON; a bucket with
+   * several takes its configuration as one `jsonencode`d `rules` input, the
+   * shape of the static-site asset lifecycle.
    */
   private expiry(id: string, expiry: Expiry): void {
+    const [only, ...more] = expiry.rules;
+    if (more.length === 0) {
+      new DataResource(this, id, {
+        input: {
+          bucket: expiry.bucket.id,
+          expire_days: only.days,
+          endpoint_url: STATE_ENDPOINT,
+        },
+        provisioners: [
+          this.deploy([
+            ...PUT_LIFECYCLE,
+            "  --lifecycle-configuration '{",
+            '    "Rules": [{',
+            `      "ID": "${only.rule}",`,
+            '      "Status": "Enabled",',
+            `      "Filter": {"Prefix": "${only.prefix}"},`,
+            '      "Expiration": {"Days": ${self.input.expire_days}}',
+            "    }]",
+            "  }'",
+          ]),
+        ],
+      });
+      return;
+    }
+    const rules = expiry.rules
+      .map(
+        (rule) =>
+          `{ ID = "${rule.rule}", Status = "Enabled", Filter = { Prefix = "${rule.prefix}" }, Expiration = { Days = ${rule.days.toString()} } }`,
+      )
+      .join(", ");
     new DataResource(this, id, {
       input: {
         bucket: expiry.bucket.id,
-        expire_days: expiry.days,
         endpoint_url: STATE_ENDPOINT,
+        // Re-runs the provisioner whenever a rule, prefix or TTL changes.
+        rules: `\${jsonencode({ Rules = [${rules}] })}`,
       },
       provisioners: [
         this.deploy([
           ...PUT_LIFECYCLE,
-          "  --lifecycle-configuration '{",
-          '    "Rules": [{',
-          `      "ID": "${expiry.rule}",`,
-          '      "Status": "Enabled",',
-          `      "Filter": {"Prefix": "${expiry.prefix}"},`,
-          '      "Expiration": {"Days": ${self.input.expire_days}}',
-          "    }]",
-          "  }'",
+          "  --lifecycle-configuration '${self.input.rules}'",
         ]),
       ],
     });

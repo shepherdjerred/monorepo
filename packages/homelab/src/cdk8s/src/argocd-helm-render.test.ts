@@ -43,8 +43,8 @@ const APPS_YAML = path.join(DIST_DIR, "apps.k8s.yaml");
 
 // Internal chart repos — skip these (already validated by helm-template.test.ts)
 const INTERNAL_REPOS = [
-  "chartmuseum.tailnet-1a49.ts.net",
-  "chartmuseum.sjer.red",
+  "charts.tailnet-1a49.ts.net",
+  "registry-1.docker.io/shepherdjerred",
 ];
 
 // Git repos (not Helm chart repos) — skip

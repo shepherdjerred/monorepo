@@ -36,6 +36,7 @@ function fakeRuntime(
   const git: string[][] = [];
   const spaces: Record<string, unknown>[] = [];
   const hc: string[][] = [];
+  const toolkit: string[][] = [];
   const runtime: Runtime = {
     name: () => Promise.resolve(named),
     async freeBranch(name, taken) {
@@ -67,9 +68,14 @@ function fakeRuntime(
       return Promise.resolve(ok);
     },
     sleep: () => Promise.resolve(),
+    platform: "darwin",
+    startToolkit(cwd, args) {
+      toolkit.push([cwd, ...args]);
+      return Promise.resolve(true);
+    },
     ...overrides,
   };
-  return { runtime, git, spaces, hc };
+  return { runtime, git, spaces, hc, toolkit };
 }
 
 test("requests are checked strictly", () => {
@@ -297,7 +303,9 @@ test("creates a fresh branch and opens the space on the right machine", async ()
     path: "/home/.herdr/worktrees/repo/fix-cache-2",
     terminal: "t9",
     messageSent: "argument",
+    dedupe: "skipped",
   });
+  expect(fake.toolkit).toEqual([]);
   expect(fake.git).toContainEqual([
     "mac-mini",
     "/repo",
@@ -378,4 +386,73 @@ test("failures stop before any side effect they depend on", async () => {
     }),
   ).rejects.toThrow("fatal: path exists");
   expect(adding.spaces).toEqual([]);
+  expect(adding.toolkit).toEqual([]);
+});
+
+test("a worktree on this Mac starts sharing its files with the main checkout before the space opens", async () => {
+  const order: string[] = [];
+  const fake = fakeRuntime({
+    startToolkit(cwd, args) {
+      order.push("toolkit");
+      fake.toolkit.push([cwd, ...args]);
+      return Promise.resolve(true);
+    },
+    newSpace() {
+      order.push("space");
+      return Promise.resolve("t9");
+    },
+  });
+  const outcome = await createWorktree(base, fake.runtime, (update) => {
+    steps.push(update.step);
+  });
+  expect(outcome.dedupe).toBe("started");
+  expect(fake.toolkit).toEqual([
+    [
+      "/home/.herdr/worktrees/repo/fix-cache",
+      "tend",
+      "dedupe",
+      "--worktree",
+      "/home/.herdr/worktrees/repo/fix-cache",
+      "--apply",
+      "--no-refresh",
+      "--lock-wait",
+      "15m",
+    ],
+  ]);
+  expect(order).toEqual(["toolkit", "space"]);
+});
+
+test("sharing is skipped off macOS and without a toolkit, and never fails the worktree", async () => {
+  const linux = fakeRuntime({ platform: "linux" });
+  const onLinux = await createWorktree(base, linux.runtime, (update) => {
+    steps.push(update.step);
+  });
+  expect(onLinux.dedupe).toBe("skipped");
+  expect(linux.toolkit).toEqual([]);
+  const missing = fakeRuntime({ startToolkit: () => Promise.resolve(false) });
+  const withoutToolkit = await createWorktree(
+    base,
+    missing.runtime,
+    (update) => {
+      steps.push(update.step);
+    },
+  );
+  expect(withoutToolkit.dedupe).toBe("skipped");
+  for (const startToolkit of [
+    () => Promise.reject(new Error("spawn EACCES")),
+    () => {
+      throw new Error("spawn ENOENT");
+    },
+  ]) {
+    const failing = fakeRuntime({ startToolkit });
+    const outcome = await createWorktree(base, failing.runtime, (update) => {
+      steps.push(update.step);
+    });
+    expect(outcome).toMatchObject({
+      path: "/home/.herdr/worktrees/repo/fix-cache",
+      terminal: "t9",
+      dedupe: "skipped",
+    });
+    expect(failing.spaces).toHaveLength(1);
+  }
 });

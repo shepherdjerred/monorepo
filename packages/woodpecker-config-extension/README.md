@@ -121,13 +121,14 @@ workspace. Verify and Playwright use `TURBO_CACHE=remote:rw`: each is one Turbo
 run in a fresh workspace, so a local cache there would be written and never
 read.
 
-Verify also names the homelab Gradle build cache (nginx WebDAV) in
-`GRADLE_BUILD_CACHE_URL`. `grantGradleBuildCache` gives every step carrying
-that variable one identity for its trust domain: `ci-main` with
+Verify also names the first-party `ci-cache` Gradle and `sccache` WebDAV
+endpoints in `GRADLE_BUILD_CACHE_URL` and `SCCACHE_WEBDAV_ENDPOINT`.
+`grantGradleBuildCache` and `grantSccacheWebdav` give every step carrying those
+variables one identity for its trust domain: `ci-main` with
 `GRADLE_BUILD_CACHE_WRITE_PASSWORD` on the default branch, or
 `ci-pull-request` with `GRADLE_BUILD_CACHE_READ_PASSWORD` for a pull request.
-nginx rejects writes from the read user. A cold benchmark drops the URL so it
-measures a build without shared Gradle outputs.
+`ci-cache` rejects writes from the read user. A cold benchmark drops both URLs
+so it measures a build without shared Gradle or Rust compiler outputs.
 
 ### Experimental workspace reuse
 
@@ -315,8 +316,9 @@ Toolchain caches that tools otherwise keep in the home directory are separate
 shared claims, mounted by `withSharedToolCaches` on every trusted container
 that sources `ci/scripts/toolchain.sh`: the tool cache (`XDG_CACHE_HOME`,
 `NUGET_PACKAGES`, and `BUN_INSTALL` for `bunx` inside tasks) on every scope,
-plus Cargo's registry and Git caches, sccache, Go's module and build caches,
-and uv's Python installs on the full scope. Gradle's writable user home stays
+plus Cargo's registry and Git caches, Go's module and build caches,
+and uv's Python installs on the full scope (`sccache` uses WebDAV on
+`ci-cache`). Gradle's writable user home stays
 on each workflow's volume at `/woodpecker/gradle`: its cache locks require
 communication between processes, which separate pods cannot provide. The
 toolchain preamble overrides shared Gradle paths from older pipeline definitions
@@ -326,7 +328,7 @@ Cargo has no variable for its caches alone, so the toolchain preamble links
 The root `turbo.json` passes every such variable through strict env mode so
 tasks inherit them; `BUN_INSTALL_CACHE_DIR` is deliberately not passed, because
 it names the collected cache whose readers hold the collector's lock. None of
-these caches has a collector: Cargo, Go and sccache expire or bound
+these caches has a collector: Cargo and Go expire or bound
 their own entries, and the homelab's per-claim usage alert covers the rest.
 
 Tools the pinned CI image lacks are installed by `toolchain.sh` at runtime,

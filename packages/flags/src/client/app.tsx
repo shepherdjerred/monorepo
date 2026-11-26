@@ -25,6 +25,7 @@ import {
   type Route,
 } from "./model.ts";
 import { DeploymentPicker, DeploymentSidebar } from "./sidebar.tsx";
+import { ThemeContext } from "./theme-context.ts";
 
 /** The deployment and flag the URL names; undefined on pages outside a deployment. */
 function useDeploymentRoute(): Route | undefined {
@@ -218,5 +219,8 @@ const PAGES: RouteObject[] = [
 
 /** Client-side routes: links and the picker navigate without reloading the page. */
 export function App({ theme }: { theme: ThemeStore }) {
-  return useRoutes([{ element: <Shell theme={theme} />, children: PAGES }]);
+  const page = useRoutes([
+    { element: <Shell theme={theme} />, children: PAGES },
+  ]);
+  return <ThemeContext value={theme}>{page}</ThemeContext>;
 }

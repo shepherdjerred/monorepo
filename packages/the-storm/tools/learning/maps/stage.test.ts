@@ -6,6 +6,13 @@ import { stageMap } from "./stage.ts";
 import { MapScenario, scenarioFor } from "./scenario.ts";
 import { trainingScenarioFor } from "./training-scenarios.ts";
 
+/** Unit tests never start a build or a download; the meshes are not what they check. */
+let fetched = 0;
+const offline = () => {
+  fetched += 1;
+  return Promise.resolve();
+};
+
 test("stages the frozen controlled scenario in a private copy only", async () => {
   const source = path.resolve(
     import.meta.dirname,
@@ -17,6 +24,7 @@ test("stages the frozen controlled scenario in a private copy only", async () =>
     const staged = await stageMap(source, output, "training-yard", {
       duel: false,
       mapTool: "unused",
+      ensureMeshes: offline,
       trainingScenario: trainingScenarioFor("training-yard"),
     });
     const stagedScenario = MapScenario.parse(
@@ -32,6 +40,7 @@ test("stages the frozen controlled scenario in a private copy only", async () =>
         ),
       ),
     );
+    expect(fetched).toBe(1);
     expect(stagedScenario).toEqual(trainingScenarioFor("training-yard"));
     expect(stagedScenario).not.toEqual(ownedScenario);
     expect(ownedScenario).toEqual(scenarioFor("training-yard"));
@@ -48,13 +57,17 @@ test("refuses a controlled scenario that is not in the frozen training catalog",
   const temporary = await mkdtemp(path.join(os.tmpdir(), "rwf-training-map-"));
   try {
     const training = trainingScenarioFor("training-yard");
+    fetched = 0;
     await expect(
       stageMap(source, path.join(temporary, "stage"), "training-yard", {
         duel: false,
         mapTool: "unused",
+        ensureMeshes: offline,
         trainingScenario: { ...training, id: "training-yard-unreviewed" },
       }),
     ).rejects.toThrow("frozen catalog");
+    // Validation comes first: a rejected request never reaches the fetch.
+    expect(fetched).toBe(0);
   } finally {
     await rm(temporary, { recursive: true, force: true });
   }

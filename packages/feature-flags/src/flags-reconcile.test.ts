@@ -492,3 +492,42 @@ test("plan and apply declared flags verify revisions and post-write readback", a
   expect(corrupted.changes[0]?.status).toBe("failed");
   expect(corrupted.changes[0]?.error).toContain("readback differs");
 });
+
+test("create-missing surfaces Flags value-schema issues readably", async () => {
+  const delivery = selectFlagDeployments({
+    deploymentFilter: "delivery/prod",
+  })[0];
+  if (delivery === undefined) throw new Error("delivery/prod missing");
+  const fetcher: FlagsHttpFetcher = (input) => {
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    if (url.pathname.endsWith("/create-missing")) {
+      return Promise.resolve(
+        Response.json(
+          {
+            error: "invalid flag values",
+            issues: [
+              {
+                key: "delivery-lease-seconds",
+                path: "",
+                message: "Too small: expected number to be >=60",
+              },
+            ],
+          },
+          { status: 400 },
+        ),
+      );
+    }
+    return Promise.resolve(
+      Response.json({ id: delivery.id, revision: 1, flags: [] }),
+    );
+  };
+  await expect(
+    applyMissingDeploymentFlags({
+      url: "https://flags.example.test",
+      fetcher,
+      deployments: [delivery],
+    }),
+  ).rejects.toThrow(
+    "Flags create-missing failed in delivery/prod: HTTP 400 (invalid flag values: delivery-lease-seconds: Too small: expected number to be >=60)",
+  );
+});

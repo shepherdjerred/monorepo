@@ -57,6 +57,23 @@ describe("tool links", () => {
       url: "https://mail.tailnet-1a49.ts.net",
       group: "Apps",
     });
+    expect(CONSOLE_LINKS.find((link) => link.id === "charts")).toEqual({
+      id: "charts",
+      label: "Charts",
+      url: "https://charts.tailnet-1a49.ts.net",
+      group: "Apps",
+    });
+    expect(CONSOLE_LINKS.find((link) => link.id === "ci-cache")).toEqual({
+      id: "ci-cache",
+      label: "CI cache",
+      url: "https://ci-cache.tailnet-1a49.ts.net",
+      group: "Apps",
+    });
+    expect(chartmuseumChartLink("arcade", "2.0.0-100")).toEqual({
+      kind: "registry",
+      label: "Chart arcade 2.0.0-100",
+      url: "https://charts.tailnet-1a49.ts.net/api/charts/arcade/2.0.0-100",
+    });
   });
 
   it("builds Woodpecker pipeline and step URLs", () => {

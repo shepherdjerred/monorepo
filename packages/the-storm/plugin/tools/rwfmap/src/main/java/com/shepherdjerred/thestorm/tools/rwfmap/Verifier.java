@@ -23,10 +23,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Checks a map folder's committed {@code nav.rwfnav} and {@code nav.summary.json} against a fresh
- * bake: both must match byte for byte, the committed artifact must decode, carry the schematic's
- * hash and validate clean. The lobby is checked the same way, and its places must be standable.
- * Every finding is reported, not just the first.
+ * Checks a map folder's shipped {@code nav.rwfnav} (fetched by {@link NavFetch}) and committed
+ * {@code nav.summary.json} against a fresh bake: both must match byte for byte, the shipped
+ * artifact must decode, carry the schematic's hash and validate clean. The lobby is checked the
+ * same way, and its places must be standable. Every finding is reported, not just the first.
  */
 public final class Verifier {
 
@@ -129,7 +129,10 @@ public final class Verifier {
     committed(target.navFile())
         .ifPresentOrElse(
             bytes -> navFile(target, baked, bytes, failures),
-            () -> failures.add(target.navFile() + " is missing; run bakeRwfMaps"));
+            () ->
+                failures.add(
+                    target.navFile()
+                        + " is missing; run fetchRwfNavs, or bakeRwfMaps after a terrain change"));
     committed(target.summaryFile())
         .ifPresentOrElse(
             bytes -> {
