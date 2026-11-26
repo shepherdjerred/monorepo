@@ -18,6 +18,7 @@ import { sweepDedupe, type SweepDedupeOptions } from "#lib/tend/dedupe.ts";
 import {
   type CloneFile,
   cloneFileCopyOnWrite,
+  directoryDevice,
 } from "#lib/tend/dedupe-clone.ts";
 import { parseByteSize, resolveTendPaths } from "#lib/tend/paths.ts";
 import { defaultCommandRunner } from "#lib/tend/process-probe.ts";
@@ -27,7 +28,10 @@ import type {
   SurfaceSweepResult,
   TendRunReport,
 } from "#lib/tend/types.ts";
-import { directoryExists } from "#lib/tend/worktrees-git.ts";
+import {
+  computeWorktreeLastActivityMs,
+  directoryExists,
+} from "#lib/tend/worktrees-git.ts";
 import { makeLiveness } from "./worktree-fixtures.ts";
 
 const REAL_GIT_TIMEOUT_MS = 60_000;
@@ -172,6 +176,23 @@ async function buildFixture(): Promise<Fixture> {
         ...overrides,
       }),
   };
+}
+
+/** The reaper's newest activity signal for a worktree. */
+async function reaperActivityMs(wt: string): Promise<number> {
+  const signals = await computeWorktreeLastActivityMs({
+    wtPath: wt,
+    gitDir: await git(wt, "rev-parse", "--absolute-git-dir"),
+    runner,
+    changedPaths: ["untracked.bin", "sub/dir/nested.bin"],
+  });
+  return signals.lastActivityMs;
+}
+
+/** Where a worktree's clones are staged before being renamed into place. */
+async function stagingDir(worktree: string): Promise<string> {
+  const gitDir = await git(worktree, "rev-parse", "--absolute-git-dir");
+  return path.join(gitDir, "tend-dedupe");
 }
 
 async function inodes(dir: string, names: readonly string[]) {
@@ -330,11 +351,12 @@ describe.skipIf(!onApfs)("sweepDedupe on APFS", () => {
     async () => {
       const fx = await buildFixture();
       const raced = path.join(fx.a, "big.bin");
+      const stagingA = await stagingDir(fx.a);
       const inodeBefore = await inodes(fx.a, ["big.bin"]);
       // The seam: an edit lands while the clone is being prepared.
       const cloneFile: CloneFile = async (source, destination) => {
         await cloneFileCopyOnWrite(source, destination);
-        if (destination.startsWith(`${raced}.`)) {
+        if (source.endsWith("/big.bin") && destination.startsWith(stagingA)) {
           await appendFile(raced, "edited mid-run");
         }
       };
@@ -448,18 +470,118 @@ describe.skipIf(!onApfs)("sweepDedupe scope", () => {
   );
 
   it(
-    "removes a clone left behind by a run that died",
+    "stages clones in the git directory, where git never sees them",
     async () => {
       const fx = await buildFixture();
-      const stale = path.join(fx.b, "big.bin.tend-dedupe-999999-7");
-      const mine = path.join(fx.b, "notes.tend-dedupe-draft");
-      await Bun.write(stale, randomBytes(10));
-      await Bun.write(mine, "not ours");
+      const stagingB = await stagingDir(fx.b);
+      const statusBefore = await git(fx.b, "status", "--porcelain");
+      const seen: { destination: string; status: string }[] = [];
+      // The seam: look at the worktree while a clone exists but is not yet
+      // renamed into place.
+      const cloneFile: CloneFile = async (source, destination) => {
+        await cloneFileCopyOnWrite(source, destination);
+        if (destination.startsWith(stagingB)) {
+          seen.push({
+            destination,
+            status: await git(fx.b, "status", "--porcelain", "--ignored"),
+          });
+        }
+      };
+
+      await fx.sweep({ cloneFile, worktree: fx.b });
+
+      expect(seen).toHaveLength(5);
+      for (const moment of seen) {
+        expect(path.dirname(moment.destination)).toBe(stagingB);
+        expect(moment.status).toBe(statusBefore);
+      }
+      // Nothing is left behind in the git directory either.
+      expect(await directoryExists(stagingB)).toBe(false);
+      expect(await git(fx.b, "status", "--porcelain")).toBe(statusBefore);
+    },
+    REAL_GIT_TIMEOUT_MS,
+  );
+
+  it(
+    "removes a clone left behind by a run that died, and nothing else",
+    async () => {
+      const fx = await buildFixture();
+      const stagingA = await stagingDir(fx.a);
+      const stagingB = await stagingDir(fx.b);
+      await Bun.write(path.join(stagingA, "999999-7"), randomBytes(10));
+      await Bun.write(path.join(stagingB, "999999-3"), randomBytes(10));
+      await Bun.write(path.join(stagingB, "notes.txt"), "not ours");
 
       await fx.sweep();
 
-      expect(await Bun.file(stale).exists()).toBe(false);
-      expect(await Bun.file(mine).exists()).toBe(true);
+      expect(await directoryExists(stagingA)).toBe(false);
+      expect(await readdir(stagingB)).toEqual(["notes.txt"]);
+      expect(await git(fx.b, "diff-files", "--name-only")).toBe("");
+    },
+    REAL_GIT_TIMEOUT_MS,
+  );
+
+  it(
+    "skips a worktree whose git directory is on another volume than its files",
+    async () => {
+      const fx = await buildFixture();
+      const stagingA = await stagingDir(fx.a);
+      const aBefore = await inodes(fx.a, SHARED);
+      const attempts: string[] = [];
+
+      const result = await fx.sweep({
+        deviceOf: (directory) =>
+          directory === stagingA
+            ? Promise.resolve(-1)
+            : directoryDevice(directory),
+        cloneFile: async (source, destination) => {
+          attempts.push(destination);
+          await cloneFileCopyOnWrite(source, destination);
+        },
+      });
+
+      expect(result.warnings).toEqual([
+        `Skipped ${fx.a}: its git directory is on a different volume than big.bin, so a clone cannot be renamed into place`,
+      ]);
+      expect(actionFor(result, fx.a)).toBeUndefined();
+      expect(await inodes(fx.a, SHARED)).toEqual(aBefore);
+      // No sibling file is tried instead.
+      expect(attempts.filter((p) => p.startsWith(fx.a))).toEqual([]);
+      expect(attempts.filter((p) => p.startsWith(stagingA))).toEqual([]);
+      expect(await directoryExists(stagingA)).toBe(false);
+      expect(actionFor(result, fx.b)?.status).toBe("deduped");
+
+      // A dry run says the same without creating anything.
+      const other = await buildFixture();
+      const gitDirA = await git(other.a, "rev-parse", "--absolute-git-dir");
+      const dryRun = await other.sweep({
+        apply: false,
+        deviceOf: (directory) =>
+          directory === gitDirA
+            ? Promise.resolve(-1)
+            : directoryDevice(directory),
+      });
+      expect(dryRun.warnings.join("\n")).toContain(`Skipped ${other.a}:`);
+      expect(await directoryExists(await stagingDir(other.a))).toBe(false);
+    },
+    REAL_GIT_TIMEOUT_MS,
+  );
+
+  it(
+    "leaves the reaper's activity signals where they were",
+    async () => {
+      const fx = await buildFixture();
+      const before = {
+        a: await reaperActivityMs(fx.a),
+        b: await reaperActivityMs(fx.b),
+      };
+
+      const result = await fx.sweep();
+
+      expect(actionFor(result, fx.a)?.status).toBe("deduped");
+      expect(actionFor(result, fx.b)?.status).toBe("deduped");
+      expect(await reaperActivityMs(fx.a)).toBe(before.a);
+      expect(await reaperActivityMs(fx.b)).toBe(before.b);
     },
     REAL_GIT_TIMEOUT_MS,
   );

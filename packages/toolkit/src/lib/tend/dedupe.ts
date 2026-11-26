@@ -1,6 +1,10 @@
 import os from "node:os";
 import path from "node:path";
-import { type CloneFile, cloneFileCopyOnWrite } from "./dedupe-clone.ts";
+import {
+  type CloneFile,
+  cloneFileCopyOnWrite,
+  directoryDevice,
+} from "./dedupe-clone.ts";
 import {
   type DedupeContext,
   type DedupePassResult,
@@ -62,6 +66,9 @@ export type SweepDedupeOptions = {
   readonly cloneFile?: CloneFile | undefined;
   /** `false` never refreshes an index after replacing files. */
   readonly refreshIndex?: boolean | undefined;
+  /** Device a directory is on; replaced in tests to stand in for a volume. */
+  readonly deviceOf?:
+    ((directory: string) => Promise<number | null>) | undefined;
   readonly selfCwd?: string | undefined;
   readonly nowMs?: number | undefined;
 };
@@ -143,6 +150,7 @@ async function listRepoWorktrees(
       scope.onlyWorktree === undefined || scope.onlyWorktree === canonical;
     const worktree: DedupeWorktree = {
       path: entry.path,
+      gitDir,
       isTarget: selected && !isNamedByForumNotice(canonical, scope),
       liveReason: liveReasonFor(entry, canonical, scope),
     };
@@ -303,6 +311,7 @@ export async function sweepDedupe(
     cloneFile: options.cloneFile ?? cloneFileCopyOnWrite,
     refreshIndex: options.refreshIndex ?? true,
     isPidAlive: isProcessAliveByKillZero,
+    deviceOf: options.deviceOf ?? directoryDevice,
     unsupportedDevices: new Map(),
   };
   const onlyWorktree =

@@ -3,8 +3,11 @@ import {
   constants,
   copyFile,
   lstat,
+  mkdir,
+  readdir,
   rename,
   rm,
+  rmdir,
   utimes,
 } from "node:fs/promises";
 import path from "node:path";
@@ -72,17 +75,65 @@ const CLONE_UNSUPPORTED_CODES = new Set([
   "EXDEV",
 ]);
 
-const TEMP_MARKER = ".tend-dedupe-";
-const TEMP_NAME_PATTERN = /\.tend-dedupe-(\d+)-\d+$/u;
+const TEMP_NAME_PATTERN = /^(\d+)-\d+$/u;
 let temporaryCounter = 0;
 
 /**
- * The pid of the run that left `filePath` behind as a clone it never renamed
- * into place, or `null` when the name is not one of ours.
+ * Where a worktree's clones are made before they are renamed into place:
+ * inside its own git directory. Nothing under a git directory is ever
+ * reported by `git status` or staged by a blanket `git add`, so a session working
+ * in the worktree never sees a half-finished clone.
  */
-export function temporaryCloneOwnerPid(filePath: string): number | null {
-  const pid = TEMP_NAME_PATTERN.exec(filePath)?.[1];
-  return pid === undefined ? null : Number(pid);
+export function temporaryCloneDir(gitDir: string): string {
+  return path.join(gitDir, "tend-dedupe");
+}
+
+/**
+ * Create the directory and remove clones left by a run that died between
+ * cloning and renaming. A file owned by a live pid is another run's.
+ */
+export async function prepareTemporaryCloneDir(
+  directory: string,
+  isPidAlive: (pid: number) => boolean,
+): Promise<void> {
+  await mkdir(directory, { recursive: true });
+  for (const name of await readdir(directory)) {
+    const ownerPid = Number(TEMP_NAME_PATTERN.exec(name)?.[1]);
+    if (
+      Number.isSafeInteger(ownerPid) &&
+      ownerPid !== process.pid &&
+      !isPidAlive(ownerPid)
+    ) {
+      await rm(path.join(directory, name), { force: true });
+    }
+  }
+}
+
+/** Leave no trace in the git directory once a worktree is done. */
+export async function removeTemporaryCloneDirIfEmpty(
+  directory: string,
+): Promise<void> {
+  let names: string[];
+  try {
+    names = await readdir(directory);
+  } catch {
+    return;
+  }
+  if (names.length === 0) {
+    await rmdir(directory);
+  }
+}
+
+/** Device a directory is on; `null` when it is missing or not a directory. */
+export async function directoryDevice(
+  directory: string,
+): Promise<number | null> {
+  try {
+    const info = await lstat(directory);
+    return info.isDirectory() ? info.dev : null;
+  } catch {
+    return null;
+  }
 }
 
 function errorCode(error: unknown): string | undefined {
@@ -103,8 +154,9 @@ export type ReplaceOutcome =
 
 /**
  * Replace `targetPath` with a clone of `sourcePath`, which holds the same
- * bytes. The clone is made beside the target and renamed over it, so a reader
- * sees the old file or the new one and never a partial one.
+ * bytes. The clone is made in `temporaryDir` and renamed over the target, so
+ * a reader sees the old file or the new one and never a partial one, and the
+ * working tree never holds an extra file.
  *
  * Nothing about the target is allowed to look different afterwards except
  * its inode: permissions and times are carried over, and the directory's
@@ -117,12 +169,17 @@ export async function replaceWithClone(options: {
   readonly targetPath: string;
   readonly source: FileIdentity;
   readonly target: FileIdentity;
+  /** A directory on the target's volume that git does not look into. */
+  readonly temporaryDir: string;
   readonly cloneFile: CloneFile;
 }): Promise<ReplaceOutcome> {
   const { sourcePath, targetPath, source, target } = options;
   const directory = path.dirname(targetPath);
   temporaryCounter += 1;
-  const temporaryPath = `${targetPath}${TEMP_MARKER}${String(process.pid)}-${String(temporaryCounter)}`;
+  const temporaryPath = path.join(
+    options.temporaryDir,
+    `${String(process.pid)}-${String(temporaryCounter)}`,
+  );
   try {
     const directoryBefore = await lstat(directory);
     try {

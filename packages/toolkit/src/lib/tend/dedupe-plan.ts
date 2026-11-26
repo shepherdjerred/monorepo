@@ -1,11 +1,12 @@
-import { rm } from "node:fs/promises";
 import path from "node:path";
 import {
   type CloneFile,
   type FileIdentity,
   lstatRegularFile,
+  prepareTemporaryCloneDir,
+  removeTemporaryCloneDirIfEmpty,
   replaceWithClone,
-  temporaryCloneOwnerPid,
+  temporaryCloneDir,
 } from "./dedupe-clone.ts";
 import {
   type DedupeFileRecord,
@@ -24,6 +25,8 @@ export type DedupeContext = {
   /** `false` leaves every index alone (`--no-refresh`). */
   readonly refreshIndex: boolean;
   readonly isPidAlive: (pid: number) => boolean;
+  /** Device a directory is on, or `null` when it is not a directory. */
+  readonly deviceOf: (directory: string) => Promise<number | null>;
   /** Devices where a clone was refused, with the refusal. */
   readonly unsupportedDevices: Map<number, string>;
 };
@@ -41,12 +44,21 @@ type CleanCheck =
     }
   | { readonly ok: false; readonly reason: string };
 
+/** Where a worktree's clones are staged, and the volume that is on. */
+type TemporaryPlace = {
+  readonly dir: string;
+  readonly dev: number | null;
+};
+
 export type DedupeWorktree = {
   readonly path: string;
   /** Files here may be replaced; otherwise the worktree only lends its own. */
   readonly isTarget: boolean;
+  /** The worktree's own git directory, where its clones are staged. */
+  readonly gitDir: string;
   /** What marks the worktree as in use right now, if anything does. */
   readonly liveReason?: string | undefined;
+  temporary?: Promise<TemporaryPlace> | undefined;
   clean?: Promise<CleanCheck> | undefined;
 };
 
@@ -83,25 +95,6 @@ function parseIndexLine(line: string): IndexEntry | null {
     : null;
 }
 
-async function removeStaleTemporaryClones(
-  wt: DedupeWorktree,
-  changed: Set<string>,
-  ctx: DedupeContext,
-): Promise<void> {
-  for (const relativePath of changed) {
-    const ownerPid = temporaryCloneOwnerPid(relativePath);
-    if (
-      ownerPid !== null &&
-      ownerPid !== process.pid &&
-      !ctx.isPidAlive(ownerPid)
-    ) {
-      // Left by a run that died between cloning and renaming.
-      await rm(path.join(wt.path, relativePath), { force: true });
-      changed.delete(relativePath);
-    }
-  }
-}
-
 function cleanCheck(
   wt: DedupeWorktree,
   ctx: DedupeContext,
@@ -115,13 +108,36 @@ function cleanCheck(
     if (status.kind === "failed") {
       return { ok: false, reason: `git status failed: ${status.detail}` };
     }
-    const changed = new Set(status.kind === "dirty" ? status.paths : []);
-    if (ctx.apply) {
-      await removeStaleTemporaryClones(wt, changed, ctx);
-    }
-    return { ok: true, startedMs, changed };
+    return {
+      ok: true,
+      startedMs,
+      changed: new Set(status.kind === "dirty" ? status.paths : []),
+    };
   })();
   return wt.clean;
+}
+
+/**
+ * The worktree's staging directory, made ready on first use. A dry run only
+ * asks which volume the git directory is on and creates nothing.
+ */
+function temporaryPlace(
+  wt: DedupeWorktree,
+  ctx: DedupeContext,
+): Promise<TemporaryPlace> {
+  wt.temporary ??= (async (): Promise<TemporaryPlace> => {
+    const dir = temporaryCloneDir(wt.gitDir);
+    if (!ctx.apply) {
+      return { dir, dev: await ctx.deviceOf(wt.gitDir) };
+    }
+    try {
+      await prepareTemporaryCloneDir(dir, ctx.isPidAlive);
+    } catch {
+      return { dir, dev: null };
+    }
+    return { dir, dev: await ctx.deviceOf(dir) };
+  })();
+  return wt.temporary;
 }
 
 /** True when `file` is the committed content `check` vouches for. */
@@ -149,6 +165,7 @@ type Verdict =
       readonly targetPath: string;
       readonly source: FileIdentity;
       readonly target: FileIdentity;
+      readonly temporaryDir: string;
     };
 
 async function judgeCandidate(options: {
@@ -190,6 +207,18 @@ async function judgeCandidate(options: {
   ) {
     return { kind: "already-shared" };
   }
+  // A rename is only atomic within one volume, so the staging directory has
+  // to be on the volume the file is on. There is no second place to stage.
+  const place = await temporaryPlace(wt, ctx);
+  if (place.dev !== target.dev) {
+    return {
+      kind: "abort",
+      reason:
+        place.dev === null
+          ? `${place.dir} cannot be used to stage clones`
+          : `its git directory is on a different volume than ${entry.path}, so a clone cannot be renamed into place`,
+    };
+  }
   const targetCheck = await cleanCheck(wt, ctx);
   if (!targetCheck.ok) {
     return { kind: "abort", reason: targetCheck.reason };
@@ -199,7 +228,14 @@ async function judgeCandidate(options: {
   }
   const sourceCheck = await cleanCheck(canonical.worktree, ctx);
   return isVouchedFor(sourceCheck, entry.path, source)
-    ? { kind: "replace", sourcePath, targetPath, source, target }
+    ? {
+        kind: "replace",
+        sourcePath,
+        targetPath,
+        source,
+        target,
+        temporaryDir: place.dir,
+      }
     : { kind: "promote", file: target };
 }
 
@@ -234,6 +270,7 @@ async function applyReplacement(
     targetPath: verdict.targetPath,
     source: verdict.source,
     target: verdict.target,
+    temporaryDir: verdict.temporaryDir,
     cloneFile: ctx.cloneFile,
   });
   switch (outcome.kind) {
@@ -431,6 +468,10 @@ export async function dedupeWorktreePass(
     }
   }
 
+  if (wt.temporary !== undefined && ctx.apply) {
+    const place = await wt.temporary;
+    await removeTemporaryCloneDirIfEmpty(place.dir);
+  }
   if (pass.stateChanged && ctx.apply) {
     await finishWorktree(wt, pass.state, result, ctx);
   } else if (!ctx.apply && result.plannedFiles > 0) {

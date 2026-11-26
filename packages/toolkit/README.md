@@ -1968,9 +1968,14 @@ replaced; every worktree still lends its copies. Worktrees with live sessions
 are included: the checks above and the last-moment check below are the
 protection, not liveness.
 
-Each replacement clones the source beside the target, gives the clone the
-target's permissions and times, checks once more that neither file changed,
-and renames the clone over the target. The directory's own times are then put
+Each replacement clones the source into `tend-dedupe/` inside that worktree's
+own git directory, gives the clone the target's permissions and times, checks
+once more that neither file changed, and renames the clone over the target.
+The clone is staged there, not beside the target, because git never reports
+anything under a git directory: a session running `git status`, or staging
+everything in the worktree, cannot pick up a half-finished clone. A worktree whose git
+directory is on a different volume than its files is skipped, since the rename
+would not be atomic. The directory's own times are then put
 back, because the reaper and build tools read directory mtimes as activity. A
 file that changed in between is left alone and counted.
 
