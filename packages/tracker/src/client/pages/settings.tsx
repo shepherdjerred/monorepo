@@ -20,7 +20,7 @@ import {
 import { ActorIdentityForm } from "#client/shell/navigation.tsx";
 import { ActorChip, Swatch, TeamSelect } from "#client/ui/ui.tsx";
 import { notify } from "#client/ui/toast.tsx";
-import { applyTheme, savedTheme, type Theme } from "#client/ui/theme.ts";
+import { trackerTheme } from "#client/ui/theme.ts";
 import { FeedbackSettings } from "#client/feedback/feedback-settings.tsx";
 import { originOf, revealTheme } from "#client/feedback/motion.ts";
 
@@ -91,7 +91,7 @@ export function Settings({
   bootstrap: BootstrapData;
   teamKey: string;
 }) {
-  const [theme, setTheme] = useState<Theme>(savedTheme);
+  const theme = trackerTheme.useThemePreference();
   const actor = useCurrentActor();
   const saved = hasSavedActor();
   const [teamKey, setTeam] = useState(currentTeamKey);
@@ -150,9 +150,8 @@ export function Settings({
               onClick={(event) => {
                 // The new theme spreads from the button that chose it.
                 revealTheme(() => {
-                  applyTheme(value);
                   flushSync(() => {
-                    setTheme(value);
+                    trackerTheme.setThemePreference(value);
                   });
                 }, originOf(event));
               }}

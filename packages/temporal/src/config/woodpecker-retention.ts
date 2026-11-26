@@ -1,5 +1,9 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import {
+  flagValueKind,
+  flagValueSchema,
+} from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { z } from "zod/v4";
 
 export async function woodpeckerRetentionConfig() {
@@ -13,7 +17,7 @@ export async function woodpeckerRetentionConfig() {
         names: { flag: "woodpecker-log-retention-enabled" },
       },
       days: {
-        schema: z.number().int().min(30).max(3650),
+        schema: flagValueSchema("woodpecker-log-retention-days"),
         sources: ["flag", "default"],
         default: 30,
         names: { flag: "woodpecker-log-retention-days" },
@@ -23,7 +27,10 @@ export async function woodpeckerRetentionConfig() {
       flag: createFlagConfigSource({
         targetingKey: "woodpecker-log-retention-prod",
         attributes: { environment: "prod" },
-        kinds: { enabled: "boolean", days: "number" },
+        kinds: {
+          enabled: "boolean",
+          days: flagValueKind("woodpecker-log-retention-days"),
+        },
         requireFreshSnapshot: true,
         onUnavailable: () => {
           availability.value = false;

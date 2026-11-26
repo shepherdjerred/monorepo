@@ -7,6 +7,7 @@ import {
   PencilIcon,
   type LucideIcon,
 } from "lucide-react";
+import { Card } from "@shepherdjerred/console-ui";
 import type {
   DynamicLinkKind,
   LinkKind,
@@ -87,42 +88,43 @@ export function ShortcutsSection({
 
   return (
     <section id="shortcuts" aria-labelledby="shortcuts-heading">
-      <div className="ui-section-head">
-        <h2 className="ui-section-title" id="shortcuts-heading">
-          Shortcuts
-        </h2>
-        <span className="ui-muted">Path templates resolved on the fly</span>
-      </div>
-      <div className="ui-table-scroll">
-        <table className="ui-table golink-shortcuts">
-          <thead>
-            <tr>
-              <th scope="col">Pattern</th>
-              <th scope="col">Description</th>
-              <th scope="col">Example</th>
-            </tr>
-          </thead>
-          <tbody>
-            {shortcuts.map((spec) => (
-              <tr key={spec.pattern}>
-                <th scope="row" className="ui-mono">
-                  go/{spec.pattern}
-                </th>
-                <td>{spec.description}</td>
-                <td>
-                  <a href={`/${spec.exampleShort}`} className="ui-mono">
-                    go/{spec.exampleShort}
-                  </a>
-                  <span className="ui-muted ui-mono">
-                    {" "}
-                    → {spec.exampleTargetUrl}
-                  </span>
-                </td>
+      <h2 className="ui-block-head" id="shortcuts-heading">
+        Shortcuts
+      </h2>
+      <Card>
+        <div className="ui-data-scroll">
+          <table className="ui-data golink-shortcuts">
+            <thead>
+              <tr>
+                <th scope="col">Pattern</th>
+                <th scope="col">Description</th>
+                <th scope="col">Example</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {shortcuts.map((spec) => (
+                <tr key={spec.pattern}>
+                  <th scope="row" data-label="Pattern">
+                    go/{spec.pattern}
+                  </th>
+                  <td data-label="Description">{spec.description}</td>
+                  <td data-label="Example">
+                    <span>
+                      <a href={`/${spec.exampleShort}`}>
+                        go/{spec.exampleShort}
+                      </a>
+                      <span className="ui-muted">
+                        {" "}
+                        → {spec.exampleTargetUrl}
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </section>
   );
 }

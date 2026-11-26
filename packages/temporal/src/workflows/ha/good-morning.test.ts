@@ -15,6 +15,9 @@ import {
 } from "#shared/infra/ha-errors.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
+  floorPreheatHoldChunks,
+  FLOOR_PREHEAT_CHUNKS,
+  FLOOR_PREHEAT_LEGACY_CHUNKS,
   goodMorningGetUp,
   goodMorningPreheat,
   goodMorningWakeUp,
@@ -192,6 +195,38 @@ function climateCalls(scenario: Scenario): ServiceCall[] {
   return scenario.serviceCalls.filter((call) => call.domain === "climate");
 }
 
+function field(value: unknown, key: string): unknown {
+  return typeof value === "object" && value !== null && key in value
+    ? (Reflect.get(value, key) as unknown)
+    : undefined;
+}
+
+function durationSeconds(value: unknown): number {
+  return typeof value === "number" ||
+    typeof value === "bigint" ||
+    typeof value === "string" ||
+    (typeof value === "object" && value !== null)
+    ? Number(value)
+    : Number.NaN;
+}
+
+function quarterHourTimers(history: unknown): number {
+  const events = field(history, "events");
+  if (!Array.isArray(events)) return 0;
+  return events.filter((event: unknown) => {
+    const seconds = durationSeconds(
+      field(
+        field(
+          field(event, "timerStartedEventAttributes"),
+          "startToFireTimeout",
+        ),
+        "seconds",
+      ),
+    );
+    return Number.isFinite(seconds) && seconds === 15 * 60;
+  }).length;
+}
+
 async function runWorker<T>(
   scenario: Scenario,
   workflow: () => Promise<T>,
@@ -281,6 +316,15 @@ async function expectNonRetryableActivityFailure(
   expectNonRetryable(cause.cause, expected.type, expected.message);
 }
 
+describe("floorPreheatHoldChunks", () => {
+  test("new runs hold 120 minutes and replayed runs keep 195", () => {
+    expect(floorPreheatHoldChunks(true)).toBe(FLOOR_PREHEAT_CHUNKS);
+    expect(floorPreheatHoldChunks(false)).toBe(FLOOR_PREHEAT_LEGACY_CHUNKS);
+    expect(FLOOR_PREHEAT_CHUNKS * 15).toBe(120);
+    expect(FLOOR_PREHEAT_LEGACY_CHUNKS * 15).toBe(195);
+  });
+});
+
 describe("shouldHeatFloor", () => {
   test("heats at or below either threshold, skips above both", () => {
     expect(shouldHeatFloor({ indoorC: 20, outdoorC: 26 })).toBe(true);
@@ -364,11 +408,8 @@ describe("goodMorningPreheat", () => {
     "heats to 30°C when the bathroom air is cold",
     async () => {
       const scenario = makeScenario({ indoorC: 18, outdoorC: 28 });
-      await runWorker(
-        scenario,
-        goodMorningPreheat,
-        `preheat-cold-indoor-${crypto.randomUUID()}`,
-      );
+      const workflowId = `preheat-cold-indoor-${crypto.randomUUID()}`;
+      await runWorker(scenario, goodMorningPreheat, workflowId);
       const calls = climateCalls(scenario);
       expect(calls[0]).toEqual({
         domain: "climate",
@@ -380,6 +421,10 @@ describe("goodMorningPreheat", () => {
         },
       });
       expect(calls.at(-1)?.service).toBe("turn_off");
+      const history = await testEnv.client.workflow
+        .getHandle(workflowId)
+        .fetchHistory();
+      expect(quarterHourTimers(history)).toBe(FLOOR_PREHEAT_CHUNKS);
       expect(scenario.outcomes).toEqual([
         {
           workflow: "goodMorningPreheat",

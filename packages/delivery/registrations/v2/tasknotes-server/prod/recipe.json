@@ -1,5 +1,5 @@
 {
-  "id": "tasknotes-server/prod/3",
+  "id": "tasknotes-server/prod/4",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "tasknotes"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "tasknotes"
       },
       "syncOptions": ["CreateNamespace=true"],

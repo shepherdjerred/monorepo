@@ -91,7 +91,7 @@ describe("Reports URL parsing and formatting helpers", () => {
 
   it("maps automation modes, day cell labels, and durations cleanly", () => {
     expect(automationModeMeta("llm-pr-automerge").label).toBe("Auto-merge PR");
-    expect(automationModeMeta("llm-pr-review").label).toBe("LLM Review PR");
+    expect(automationModeMeta("llm-pr-review").label).toBe("LLM review PR");
     expect(automationModeMeta("deterministic-pr").label).toBe(
       "Deterministic PR",
     );
@@ -124,11 +124,11 @@ describe("ReportsPage and deep-dive inspector rendering", () => {
 
     const kpis = buildReportsKpis(overview.kpis);
     expect(kpis.map((item) => item.label)).toEqual([
-      "Needs Review",
+      "Needs review",
       "Automated PRs (7d)",
-      "Quiet Heartbeats (7d)",
-      "Schedule Freshness",
-      "Incident Outbox",
+      "Quiet heartbeats (7d)",
+      "Schedule freshness",
+      "Incident outbox",
     ]);
     expect(kpis[0]?.sev).toBe("warning");
 
@@ -142,7 +142,7 @@ describe("ReportsPage and deep-dive inspector rendering", () => {
     expect(html).toContain("Weekly link-rot scan");
     expect(html).toContain("The Storm promotion summary");
     expect(html).toContain("Auto-merge PR");
-    expect(html).toContain("LLM Review PR");
+    expect(html).toContain("LLM review PR");
     expect(html).toContain("Quiet in Hub");
     expect(html).toContain("14 / 14");
     expect(html).toContain("0 pending · 0 failed");

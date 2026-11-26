@@ -374,25 +374,35 @@ const TIMELINE_FRAME_COLUMNS = Object.keys(TimelineFrameReadSchema.shape).join(
   ", ",
 );
 
-export async function fetchTimelineFramesAtTime(options: {
+/**
+ * Riot stamps each timeline frame just after its minute (the 15:00 frame is
+ * about 900303 ms), so a checkpoint is the first frame stamped at or after the
+ * checkpoint and before the next minute. A game that ended earlier, or a
+ * missing frame, leaves no frame in that window and therefore no checkpoint.
+ */
+export const TIMELINE_CHECKPOINT_WINDOW_MS = 60_000;
+
+/** Every participant's frame at the checkpoint, or `[]` when there is none. */
+export async function fetchTimelineCheckpointFrames(options: {
   matchId: RiotMatchId;
-  timestampMs: number;
+  checkpointMs: number;
   lakeDir?: string;
-}) {
+}): Promise<LaneDeltaFrame[]> {
   return await withLakeQueryRetry(
     options.lakeDir ?? resolveLakeDir(),
     async (files) => {
       const source = buildTimelineParticipantFramesSource(files, {
-        sql: "match_id = ? AND frame_timestamp_ms <= ?",
+        sql: "match_id = ? AND frame_timestamp_ms >= ? AND frame_timestamp_ms < ?",
         params: [
           scalarParam(options.matchId),
-          scalarParam(options.timestampMs),
+          scalarParam(options.checkpointMs),
+          scalarParam(options.checkpointMs + TIMELINE_CHECKPOINT_WINDOW_MS),
         ],
       });
       if (source === undefined) return [];
       return await runSource({
         source,
-        sql: `SELECT ${Object.keys(LaneDeltaFrameSchema.shape).join(", ")} FROM (${source.sql}) QUALIFY frame_timestamp_ms = max(frame_timestamp_ms) OVER () ORDER BY participant_id`,
+        sql: `SELECT ${Object.keys(LaneDeltaFrameSchema.shape).join(", ")} FROM (${source.sql}) QUALIFY frame_timestamp_ms = min(frame_timestamp_ms) OVER () ORDER BY participant_id`,
         schema: LaneDeltaFrameSchema,
       });
     },

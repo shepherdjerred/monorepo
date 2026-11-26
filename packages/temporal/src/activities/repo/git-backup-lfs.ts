@@ -1,7 +1,13 @@
 import { createHash } from "node:crypto";
-import { readdir, stat } from "node:fs/promises";
+import { open, readdir, stat } from "node:fs/promises";
 import path from "node:path";
-import { zstdCompressSync } from "node:zlib";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import { createZstdCompress } from "node:zlib";
+import {
+  withActivityHeartbeat,
+  type GitSubprocessHooks,
+} from "./git-backup-git.ts";
 
 export type LfsObjectEntry = {
   readonly relPath: string;
@@ -40,8 +46,28 @@ async function collectRegularFiles(dirPath: string): Promise<string[]> {
   return results;
 }
 
+async function sha256FileStream(
+  absPath: string,
+  signal?: AbortSignal,
+): Promise<string> {
+  const hash = createHash("sha256");
+  const reader = Bun.file(absPath).stream().getReader();
+  try {
+    for (;;) {
+      signal?.throwIfAborted();
+      const step = await reader.read();
+      if (step.done) break;
+      hash.update(step.value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  return hash.digest("hex");
+}
+
 export async function inspectMirrorLfsObjects(
   mirrorPath: string,
+  hooks?: GitSubprocessHooks,
 ): Promise<LfsInventory> {
   const objectsRoot = path.join(mirrorPath, "lfs", "objects");
   const absPaths = await collectRegularFiles(objectsRoot);
@@ -49,33 +75,35 @@ export async function inspectMirrorLfsObjects(
     return { objectCount: 0, digest: null, files: [] };
   }
 
-  const entries: LfsObjectEntry[] = [];
-  for (const absPath of absPaths) {
-    const fileStat = await stat(absPath);
-    const bytes = await Bun.file(absPath).bytes();
-    const sha256 = createHash("sha256").update(bytes).digest("hex");
-    const relPath = path
-      .relative(mirrorPath, absPath)
-      .split(path.sep)
-      .join("/");
-    entries.push({ relPath, absPath, size: fileStat.size, sha256 });
-  }
+  return withActivityHeartbeat(hooks, "lfs-inspect", async () => {
+    const entries: LfsObjectEntry[] = [];
+    for (const absPath of absPaths) {
+      hooks?.cancellationSignal?.throwIfAborted();
+      const fileStat = await stat(absPath);
+      const sha256 = await sha256FileStream(absPath, hooks?.cancellationSignal);
+      const relPath = path
+        .relative(mirrorPath, absPath)
+        .split(path.sep)
+        .join("/");
+      entries.push({ relPath, absPath, size: fileStat.size, sha256 });
+    }
 
-  const sorted = entries.toSorted((left, right) =>
-    left.relPath < right.relPath ? -1 : left.relPath > right.relPath ? 1 : 0,
-  );
-  const digest = createHash("sha256")
-    .update(
-      sorted
-        .map(
-          (entry) => `${entry.relPath}:${entry.sha256}:${String(entry.size)}`,
-        )
-        .join("\n"),
-      "utf8",
-    )
-    .digest("hex");
+    const sorted = entries.toSorted((left, right) =>
+      left.relPath < right.relPath ? -1 : left.relPath > right.relPath ? 1 : 0,
+    );
+    const digest = createHash("sha256")
+      .update(
+        sorted
+          .map(
+            (entry) => `${entry.relPath}:${entry.sha256}:${String(entry.size)}`,
+          )
+          .join("\n"),
+        "utf8",
+      )
+      .digest("hex");
 
-  return { objectCount: sorted.length, digest, files: sorted };
+    return { objectCount: sorted.length, digest, files: sorted };
+  });
 }
 
 function splitUstarPath(relPath: string): { name: string; prefix: string } {
@@ -142,23 +170,69 @@ function buildUstarHeader(relPath: string, size: number): Buffer {
   return header;
 }
 
+async function* streamUstarBlocks(
+  inventory: LfsInventory,
+  signal?: AbortSignal,
+): AsyncGenerator<Buffer, void, undefined> {
+  for (const entry of inventory.files) {
+    signal?.throwIfAborted();
+    const fileStat = await stat(entry.absPath);
+    const expectedSize = fileStat.size;
+    yield buildUstarHeader(entry.relPath, expectedSize);
+
+    let bytesStreamed = 0;
+    const reader = Bun.file(entry.absPath).stream().getReader();
+    try {
+      for (;;) {
+        signal?.throwIfAborted();
+        const step = await reader.read();
+        if (step.done) break;
+        const buf = Buffer.from(
+          step.value.buffer,
+          step.value.byteOffset,
+          step.value.byteLength,
+        );
+        bytesStreamed += buf.byteLength;
+        yield buf;
+      }
+    } finally {
+      reader.releaseLock();
+    }
+    if (bytesStreamed !== expectedSize) {
+      throw new Error(
+        `LFS object size changed while streaming ${entry.relPath}: expected ${String(expectedSize)} bytes, read ${String(bytesStreamed)}`,
+      );
+    }
+
+    const remainder = expectedSize % TAR_BLOCK_BYTES;
+    if (remainder !== 0) {
+      yield Buffer.alloc(TAR_BLOCK_BYTES - remainder, 0);
+    }
+  }
+  yield Buffer.alloc(TAR_BLOCK_BYTES * 2, 0);
+}
+
 export async function createZstdLfsArchive(input: {
   readonly inventory: LfsInventory;
   readonly outputZstPath: string;
+  readonly hooks?: GitSubprocessHooks | undefined;
 }): Promise<void> {
-  const chunks: Uint8Array[] = [];
-  for (const entry of input.inventory.files) {
-    const payload = await Bun.file(entry.absPath).bytes();
-    const header = buildUstarHeader(entry.relPath, payload.byteLength);
-    chunks.push(header, payload);
-    const remainder = payload.byteLength % TAR_BLOCK_BYTES;
-    if (remainder !== 0) {
-      chunks.push(Buffer.alloc(TAR_BLOCK_BYTES - remainder, 0));
+  const signal = input.hooks?.cancellationSignal;
+  await withActivityHeartbeat(input.hooks, "lfs-archive-compress", async () => {
+    const outHandle = await open(input.outputZstPath, "w");
+    try {
+      await pipeline(
+        Readable.from(streamUstarBlocks(input.inventory, signal), {
+          objectMode: false,
+        }),
+        createZstdCompress(),
+        outHandle.createWriteStream(),
+        ...(signal === undefined ? [] : [{ signal }]),
+      );
+    } finally {
+      await outHandle.close().catch(() => {
+        // Closed by createWriteStream autoClose.
+      });
     }
-  }
-  chunks.push(Buffer.alloc(TAR_BLOCK_BYTES * 2, 0));
-
-  const rawTar = Buffer.concat(chunks);
-  const compressed = zstdCompressSync(rawTar);
-  await Bun.write(input.outputZstPath, compressed);
+  });
 }

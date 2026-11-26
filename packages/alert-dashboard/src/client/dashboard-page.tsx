@@ -1,3 +1,4 @@
+import { Button, FigureStrip, type Figure } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import { skipToken, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { RefreshCwIcon, SearchIcon } from "lucide-react";
@@ -5,10 +6,10 @@ import { useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "react-router";
 
 import { AlertTable } from "./alert-table.tsx";
+import { PageHeading } from "./ops/ops-ui.tsx";
 import { StaleNotice } from "./stale-notice.tsx";
 import { age } from "./time.ts";
 import { useTRPC } from "./trpc.ts";
-import { Button } from "#components/button";
 import { Input } from "#components/input";
 import {
   AlertListInputSchema,
@@ -168,16 +169,14 @@ export function SuppressionSelect({
 export type ScopedAlertPageProps = {
   readonly scope: "ops" | "house";
   readonly documentTitle: string;
-  readonly eyebrow: string;
+  /** What the page covers, before the reconciliation age in the header. */
+  readonly context?: string;
   readonly heading: string;
   readonly errorText: string;
   readonly refreshAriaLabel: string;
   readonly headerActionsPrefix?: React.ReactNode;
   readonly summaryAriaLabel: string;
-  readonly summaryGridClassName?: string;
-  readonly summaryCards: (
-    summary: Summary | undefined,
-  ) => readonly (readonly [string, number | undefined])[];
+  readonly summaryCards: (summary: Summary | undefined) => readonly Figure[];
   readonly renderFilterPrefix: (
     params: URLSearchParams,
     searchValue: string,
@@ -203,17 +202,16 @@ export function DashboardPage(): React.JSX.Element {
     <ScopedAlertPage
       scope="ops"
       documentTitle="Active alerts · Hub"
-      eyebrow="Alertmanager ledger"
       heading="Active alerts"
       errorText="Could not load alerts."
       refreshAriaLabel="Refresh alerts"
       summaryAriaLabel="Alert summary"
       summaryCards={(summary) => [
-        ["Open", summary?.open],
-        ["Critical", summary?.critical],
-        ["Warning", summary?.warning],
-        ["Silenced", summary?.silenced],
-        ["Inhibited", summary?.inhibited],
+        figure("Open", summary?.open),
+        figure("Critical", summary?.critical, "error"),
+        figure("Warning", summary?.warning, "warning"),
+        figure("Silenced", summary?.silenced),
+        figure("Inhibited", summary?.inhibited),
       ]}
       renderFilterPrefix={(params, searchValue, update) => (
         <>
@@ -225,8 +223,7 @@ export function DashboardPage(): React.JSX.Element {
               update("q", value);
             }}
           />
-          <label>
-            Severity
+          <ToolbarSelect label="Severity">
             <select
               value={params.get("severity") ?? ""}
               onChange={(event) => {
@@ -238,11 +235,10 @@ export function DashboardPage(): React.JSX.Element {
                 <option key={value}>{value}</option>
               ))}
             </select>
-          </label>
-          <label>
-            Suppression
+          </ToolbarSelect>
+          <ToolbarSelect label="Suppression">
             <SuppressionSelect params={params} update={update} />
-          </label>
+          </ToolbarSelect>
         </>
       )}
       renderFilterSuffix={(params, items, update) => {
@@ -276,9 +272,50 @@ export function DashboardPage(): React.JSX.Element {
           !showWatchdog && watchdogCount > 0
             ? `No alerts match these filters. ${String(watchdogCount)} Watchdog heartbeat hidden.`
             : "All clear — no operational alerts match these filters.";
-        return <AlertTable alerts={visibleAlerts} empty={empty} />;
+        return (
+          <AlertTable
+            alerts={visibleAlerts}
+            empty={empty}
+            label="Active alerts"
+          />
+        );
       }}
     />
+  );
+}
+
+/** A headline figure; a severity colours it only when it is above zero. */
+export function figure(
+  label: string,
+  value: number | undefined,
+  severity?: "error" | "warning",
+): Figure {
+  return {
+    label,
+    value: value ?? "—",
+    ...(severity !== undefined && value !== undefined && value > 0
+      ? { severity }
+      : {}),
+  };
+}
+
+/**
+ * A toolbar filter in console-ui's inline field look: the muted label and
+ * the control in one bordered box. The label wraps the control, so it names
+ * it without an id.
+ */
+export function ToolbarSelect({
+  label,
+  children,
+}: {
+  readonly label: string;
+  readonly children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <label className="toolbar-field">
+      <span className="toolbar-field-label">{label}</span>
+      {children}
+    </label>
   );
 }
 
@@ -331,53 +368,38 @@ export function ScopedAlertPage(
   };
   if (page.status === "error") {
     return (
-      <main>
+      <main className="ledger">
         <div className="error-state">
           {props.errorText} <Button onClick={refetchAll}>Retry</Button>
         </div>
       </main>
     );
   }
-  const refreshButton = (
-    <Button aria-label={props.refreshAriaLabel} onClick={refetchAll}>
-      <RefreshCwIcon aria-hidden="true" /> Refresh
-    </Button>
-  );
+  const reconciled = `Last reconciled ${age(summaryData?.lastReconciledAt ?? null)}`;
   return (
-    <main>
+    <main className="ledger">
       <title>{props.documentTitle}</title>
       <StaleNotice errors={page.status === "degraded" ? page.errors : []} />
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">{props.eyebrow}</p>
-          <h1>{props.heading}</h1>
-          <p>Last reconciled {age(summaryData?.lastReconciledAt ?? null)}</p>
-        </div>
-        {props.headerActionsPrefix === undefined ? (
-          refreshButton
-        ) : (
-          <div className="heading-actions">
-            {props.headerActionsPrefix}
-            {refreshButton}
-          </div>
-        )}
-      </div>
-      <section
-        className={props.summaryGridClassName ?? "summary-grid"}
-        aria-label={props.summaryAriaLabel}
+      <PageHeading
+        title={props.heading}
+        meta={
+          props.context === undefined
+            ? reconciled
+            : `${props.context} · ${reconciled}`
+        }
       >
-        {props.summaryCards(summaryData).map(([label, value = "—"]) => (
-          <div className="summary-card" key={label}>
-            <span>{label}</span>
-            <strong>{value}</strong>
-          </div>
-        ))}
+        {props.headerActionsPrefix}
+        <Button aria-label={props.refreshAriaLabel} onClick={refetchAll}>
+          <RefreshCwIcon aria-hidden="true" /> Refresh
+        </Button>
+      </PageHeading>
+      <section className="ledger-figures" aria-label={props.summaryAriaLabel}>
+        <FigureStrip figures={props.summaryCards(summaryData)} />
       </section>
-      <section className="panel">
-        <div className="filters">
+      <section className="ledger-list" aria-label={`${props.heading} list`}>
+        <div className="ui-toolbar ledger-toolbar">
           {props.renderFilterPrefix(params, searchValue, update)}
-          <label>
-            State
+          <ToolbarSelect label="State">
             <select
               value={params.get("state") ?? "open"}
               onChange={(event) => {
@@ -388,7 +410,7 @@ export function ScopedAlertPage(
                 <option key={value}>{value}</option>
               ))}
             </select>
-          </label>
+          </ToolbarSelect>
           {props.renderFilterSuffix?.(params, items, update)}
         </div>
         {input.success ? (
@@ -398,7 +420,7 @@ export function ScopedAlertPage(
             <>
               {props.renderTable(items, params)}
               {alerts.hasNextPage ? (
-                <div className="history-pagination">
+                <div className="ui-section-foot">
                   <Button
                     disabled={alerts.isFetchingNextPage}
                     onClick={() => {

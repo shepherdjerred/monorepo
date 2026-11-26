@@ -16,7 +16,7 @@ import {
 import {
   fetchFullMatch,
   fetchFullMatchTeams,
-  fetchTimelineFramesAtTime,
+  fetchTimelineCheckpointFrames,
   fetchTimelineChartFrames,
   fetchTimelineCoverage,
   fetchTimelineEventPage,
@@ -32,7 +32,10 @@ import {
   matchRowLoadout,
   orderMatchRows,
 } from "#src/explore-match/match-row-view.ts";
-import { buildRoleMatchups } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
+import {
+  buildRoleMatchups,
+  LANE_DELTA_CHECKPOINT_MS,
+} from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 
 const MatchInput = z.object({ matchId: RiotMatchIdSchema });
 const TimelinePageInput = MatchInput.extend({
@@ -74,9 +77,9 @@ export const exploreMatchRouter = router({
         matchId: input.matchId,
         population: ALL_POPULATION,
       }),
-      fetchTimelineFramesAtTime({
+      fetchTimelineCheckpointFrames({
         matchId: input.matchId,
-        timestampMs: 900_000,
+        checkpointMs: LANE_DELTA_CHECKPOINT_MS,
       }),
     ]);
     const snapshot = exploreMatchSnapshot(rows, teamRows);
@@ -87,7 +90,7 @@ export const exploreMatchRouter = router({
     return {
       match: {
         ...snapshot,
-        roleMatchups: buildRoleMatchups({ rows, coverage, frames: laneFrames }),
+        roleMatchups: buildRoleMatchups({ rows, frames: laneFrames }),
         teams: snapshot.teams.map((team) => ({
           ...team,
           participants: team.participants.map((participant) => {

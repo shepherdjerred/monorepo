@@ -3,7 +3,7 @@ import { createTarDecoder } from "modern-tar";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
 
-const MIRROR = "https://chartmuseum.sjer.red";
+const MIRROR = "https://charts.tailnet-1a49.ts.net";
 const MAX_BYTES = 16 * 1024 * 1024;
 // Helm indexes spell some chart versions with a leading `v` (cert-manager's
 // `v1.21.2`); the catalog pins the exact string the index carries.

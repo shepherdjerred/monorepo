@@ -1,10 +1,10 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import type {
   ArchiveEnvelopeRefView,
   WaterfallSpan,
 } from "@shepherdjerred/ops-model/llm-traces.ts";
 import { useId, useState } from "react";
 
-import { SeverityBadge } from "#client/ops/ops-ui.tsx";
 import { statusPill } from "#client/ops/pages/cluster-page.tsx";
 import { formatValue } from "#shared/ops-format";
 
@@ -100,10 +100,14 @@ export function WaterfallInspector({
                   >
                     <span>{span.name}</span>
                     {span.isLlmSpan ? (
-                      <span className="visual-pill visual-pill-info">LLM</span>
+                      <span className="visual-pill" data-sev="info">
+                        LLM
+                      </span>
                     ) : null}
                     {span.status === "error" ? (
-                      <span className="visual-pill visual-pill-error">ERR</span>
+                      <span className="visual-pill" data-sev="error">
+                        ERR
+                      </span>
                     ) : null}
                   </span>
                   <span className="traces-wf-track" aria-hidden="true">
@@ -137,11 +141,11 @@ export function WaterfallInspector({
               <dd className="mono">{selected.spanId}</dd>
             </div>
             <div>
-              <dt>Parent Span ID</dt>
+              <dt>Parent span ID</dt>
               <dd className="mono">{selected.parentSpanId ?? "root"}</dd>
             </div>
             <div>
-              <dt>Service &amp; Scope</dt>
+              <dt>Service &amp; scope</dt>
               <dd className="mono">
                 {selected.scopeName === null
                   ? selected.service
@@ -149,7 +153,7 @@ export function WaterfallInspector({
               </dd>
             </div>
             <div>
-              <dt>Offset / Duration</dt>
+              <dt>Offset / duration</dt>
               <dd className="mono">
                 {`+${formatValue(selected.offsetMs, "ms")} · ${formatValue(selected.durationMs, "ms")}`}
               </dd>
@@ -157,7 +161,7 @@ export function WaterfallInspector({
             <div>
               <dt>Status</dt>
               <dd>
-                <SeverityBadge
+                <StatusGlyph
                   severity={selected.status === "error" ? "error" : "ok"}
                 />
               </dd>
@@ -227,16 +231,19 @@ export function ArchiveAttributesPanel({
             tabIndex={0}
             role="region"
             aria-labelledby={headingId}
-            className="table-wrap traces-table-wrap"
+            className="ui-table-scroll traces-table-wrap"
           >
-            <table className="traces-table" aria-labelledby={headingId}>
+            <table
+              className="ui-table traces-table"
+              aria-labelledby={headingId}
+            >
               <thead>
                 <tr>
                   <th scope="col">Span</th>
-                  <th scope="col">Service &amp; Provider</th>
-                  <th scope="col">S3 Key</th>
+                  <th scope="col">Service &amp; provider</th>
+                  <th scope="col">S3 key</th>
                   <th scope="col">SHA-256</th>
-                  <th scope="col">Compressed / Raw</th>
+                  <th scope="col">Compressed / raw</th>
                   <th scope="col">Status</th>
                 </tr>
               </thead>
@@ -254,12 +261,10 @@ export function ArchiveAttributesPanel({
                     <td data-label="Service">
                       <div className="traces-pill-wrap">
                         <span className="mono">{ref.service}</span>
-                        <span className="visual-pill visual-pill-neutral">
-                          {ref.provider}
-                        </span>
+                        <span className="visual-pill">{ref.provider}</span>
                       </div>
                     </td>
-                    <td data-label="S3 Key">
+                    <td data-label="S3 key">
                       <code className="rep-mailbox-chip">
                         {ref.s3Bucket === null
                           ? ref.s3Key

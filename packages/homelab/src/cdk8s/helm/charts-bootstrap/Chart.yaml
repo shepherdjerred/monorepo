@@ -1,0 +1,6 @@
+apiVersion: v2
+name: charts-bootstrap
+description: Bootstrap Helm chart for first-party charts registry
+type: application
+version: "$version"
+appVersion: "$appVersion"

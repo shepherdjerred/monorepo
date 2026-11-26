@@ -15,6 +15,10 @@ import {
   GRADLE_BUILD_CACHE_ENVIRONMENT,
   grantGradleBuildCache,
 } from "#src/pipeline/gradle-build-cache.ts";
+import {
+  SCCACHE_WEBDAV_ENVIRONMENT,
+  grantSccacheWebdav,
+} from "#src/pipeline/sccache-webdav.ts";
 import { GITHUB_DOWNLOAD, HANDOFF_KEYS } from "#src/pipeline/lanes/tofu.ts";
 import { requestedSourcePipeline } from "#src/pipeline/maintenance.ts";
 import { TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
@@ -136,6 +140,7 @@ export function extendedSteps(
     environment: {
       ...TURBO_REMOTE_CACHE_ENVIRONMENT,
       ...GRADLE_BUILD_CACHE_ENVIRONMENT,
+      ...SCCACHE_WEBDAV_ENVIRONMENT,
       // The tier runs every extended suite; there is no changed base to narrow it.
       CI_CHANGED_BASE: "",
       [EXTENDED_REQUEST_VARIABLE]: request.request,
@@ -148,9 +153,12 @@ export function extendedSteps(
     volumes: [BUN_CACHE, BUN_CACHE_CONTROL, UV_CACHE],
     concurrency: { limit: 1, group: EXTENDED_STEP_KEY },
   };
-  return grantGradleBuildCache(
-    signRemoteCacheSteps(
-      [withSharedToolCaches(withSharedBunCache(step))],
+  return grantSccacheWebdav(
+    grantGradleBuildCache(
+      signRemoteCacheSteps(
+        [withSharedToolCaches(withSharedBunCache(step))],
+        "trusted",
+      ),
       "trusted",
     ),
     "trusted",

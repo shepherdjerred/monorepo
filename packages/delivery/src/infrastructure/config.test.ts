@@ -1,5 +1,37 @@
-import { expect, test } from "vitest";
-import { BootstrapSchema } from "./config.ts";
+import { afterEach, expect, test } from "vitest";
+import {
+  initFeatureFlags,
+  shutdownFeatureFlags,
+} from "@shepherdjerred/feature-flags";
+import { BootstrapSchema, behaviorConfig } from "./config.ts";
+
+afterEach(async () => {
+  await shutdownFeatureFlags();
+});
+
+test("behavior defaults decode through the flag value registry", async () => {
+  await initFeatureFlags({ environment: { FEATURE_FLAGS_MODE: "disabled" } });
+  const config = behaviorConfig("prod");
+  expect(await config.get("writesEnabled")).toEqual({
+    value: false,
+    source: "default",
+  });
+  for (const key of [
+    "enabledEnvironments",
+    "operatorLogins",
+    "enrichmentSources",
+  ] as const) {
+    expect(await config.get(key)).toEqual({ value: [], source: "default" });
+  }
+  expect(await config.get("executorConcurrency")).toEqual({
+    value: 4,
+    source: "default",
+  });
+  expect(await config.get("leaseSeconds")).toEqual({
+    value: 900,
+    source: "default",
+  });
+});
 
 const DATABASE_URL = "postgresql://localhost/delivery";
 function credentials(...entries: { id: string; scopes: string[] }[]) {

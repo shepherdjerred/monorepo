@@ -22,7 +22,7 @@ const peer = {
 };
 const stream = "**/api/events/stream";
 
-/** The presence indicator for this viewport: sidebar or mobile header. */
+/** The presence indicator in the page header. */
 const indicator = (page: Page) =>
   page.locator(".live-indicator").filter({ visible: true });
 

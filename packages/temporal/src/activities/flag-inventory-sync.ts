@@ -13,6 +13,7 @@ import {
 import {
   createFlagsMachineFetcher,
   describeFlagValueDrift,
+  describeInvalidFlagValue,
   fetchFlagsDeploymentDocument,
   fetchFlagsDiff,
   type FlagsHttpFetcher,
@@ -113,9 +114,14 @@ export async function reconcileFlagsInventory(
         revision: document.revision,
         missingFlags: deploymentDiff.missing.map((flag) => flag.key),
         extraFlags: deploymentDiff.extra,
-        contractMismatches: deploymentDiff.drift.flatMap((entry) =>
-          describeFlagValueDrift(entry.declared, entry.live),
-        ),
+        contractMismatches: [
+          ...deploymentDiff.drift.flatMap((entry) =>
+            describeFlagValueDrift(entry.declared, entry.live),
+          ),
+          ...deploymentDiff.invalid.map((entry) =>
+            describeInvalidFlagValue(entry),
+          ),
+        ],
         createdFlags: createdByDeployment.get(deployment.id) ?? [],
         retiredFlags: retiredByDeployment.get(deployment.id) ?? [],
         observedAt,

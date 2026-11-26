@@ -38,21 +38,33 @@ type Party = {
 };
 
 /**
+ * An `Exists` expression accepts any value. The empty string stands in for
+ * it: a valid label value that no `In` list here names.
+ */
+const ANY_LABEL_VALUE = "";
+
+/**
  * The label sets a selector requires: its matchLabels, once per combination
- * of the values its `In` expressions list.
+ * of the values its `In` expressions list, with every key an `Exists`
+ * expression names.
  */
 function labelSetsRequiredBy(
   selector: LabelSelector,
 ): Readonly<Record<string, string>>[] {
-  return (selector.matchExpressions ?? [])
-    .filter(({ operator }) => operator === "In")
-    .reduce<Readonly<Record<string, string>>[]>(
-      (sets, { key, values = [] }) =>
-        sets.flatMap((labels) =>
-          values.map((value) => ({ ...labels, [key]: value })),
-        ),
-      [selector.matchLabels ?? {}],
-    );
+  return (selector.matchExpressions ?? []).reduce<
+    Readonly<Record<string, string>>[]
+  >(
+    (sets, { key, operator, values = [] }) => {
+      if (operator === "Exists")
+        return sets.map((labels) => ({ ...labels, [key]: ANY_LABEL_VALUE }));
+      return operator === "In"
+        ? sets.flatMap((labels) =>
+            values.map((value) => ({ ...labels, [key]: value })),
+          )
+        : sets;
+    },
+    [selector.matchLabels ?? {}],
+  );
 }
 
 /**

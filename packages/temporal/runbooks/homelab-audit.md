@@ -553,13 +553,12 @@ observability, ingress, or child-resource signal.
 | `woodpecker`                   | `woodpecker`                   | Server, agent, config extension, and Postgres ready; connected agents exist when pipelines are pending; large Error/NotReady step pod buildup is Yellow unless current pipelines are blocked, then Red. |
 | `buildkitd`                    | `buildkitd`                    | Deployment ready on liskov; cache PVC below the GC limit; ServiceMonitor scrapes; CI image builds reach it; restart loops are Red for image publishing.                                                 |
 | `cert-manager`                 | `cert-manager`                 | Controller, cainjector, and webhook ready; certificates are `Ready=True`; webhook or certificate expiry/failure is Red for affected ingresses.                                                          |
-| `chartmuseum`                  | `chartmuseum`                  | Deployment ready; Tailscale/Cloudflare ingress proxy ready; `curl -fsS https://chartmuseum.tailnet-1a49.ts.net/health` or equivalent chart index check succeeds.                                        |
+| `charts`                       | `charts`                       | Deployment ready; Tailscale ingress proxy ready; `curl -fsS https://charts.tailnet-1a49.ts.net/healthz` passes; ServiceMonitor scrapes; PVC below warning thresholds.                                   |
+| `ci-cache`                     | `ci-cache`                     | Deployment ready on liskov; Tailscale ingress proxy ready; `/healthz` passes; ServiceMonitor scrapes; PVC below warning thresholds; the Temporal turbo-cache clean has succeeded recently.              |
 | `cloudflare-operator`          | `cloudflare-operator-system`   | Controller and webhook certificates ready; no TunnelBinding reconciliation errors; metrics/webhook certs `Ready=True`.                                                                                  |
 | `cloudflare-tunnel`            | `cloudflare-tunnel`            | Cluster tunnel resources reconcile; `homelab-tunnel` / cloudflared workload is running in `cloudflare-operator-system`; public tunnel-bound endpoints respond.                                          |
-| `ddns`                         | `ddns`                         | Deployment ready; logs show successful DNS update loop; sustained provider/auth failures are Red.                                                                                                       |
 | `flags`                        | `flags`                        | Deployment and PostgreSQL ready; Tailscale ingress proxy ready; flag-evaluation clients (Temporal, Scout, alert dashboard) report no evaluation errors; Flags down is Red for gated behavior.           |
 | `freshrss`                     | `freshrss`                     | Deployment ready; Tailscale/Cloudflare ingress proxy ready; FreshRSS HTTP endpoint responds; repeated feed update/login errors are Yellow or Red by impact.                                             |
-| `gickup`                       | `gickup`                       | Deployment and ServiceMonitor ready; check Gitckup alerts for job not running, failed jobs, incomplete sources/destinations, low repo success, or stuck duration.                                       |
 | `golink`                       | `golink`                       | `golink` deployment (`golink` + `tailscale` containers) and `golink-postgresql` ready; `/readyz` and ServiceMonitor scrape pass; `go.tailnet-1a49.ts.net` responds over Tailscale.                      |
 | `grafana`                      | `prometheus`                   | Grafana StatefulSet ready; Grafana ingress proxy ready; dashboards and datasource provisioning succeed; Section 6 alert queries work.                                                                   |
 | `grafana-db`                   | `prometheus`                   | Grafana PostgreSQL StatefulSet ready; PVC below warning thresholds; Grafana can read/write dashboards and alert state.                                                                                  |
@@ -599,14 +598,13 @@ observability, ingress, or child-resource signal.
 | `tempo`                        | `tempo`                        | StatefulSet ready; OTLP/Tempo service reachable from instrumented apps; tracing ingestion errors are Yellow unless app debugging is blocked.                                                            |
 | `temporal`                     | `temporal`                     | Run Section 10; server, UI, worker, PostgreSQL, metrics ServiceMonitors, schedules, and workflow failure checks must all be healthy.                                                                    |
 | `trmnl-dashboard`              | `trmnl-dashboard`              | Deployment ready; the ops snapshot from alert-dashboard renders; sustained render or fetch errors are Yellow.                                                                                           |
-| `turbo-cache`                  | `turbo-cache`                  | Deployment ready on liskov; Tailscale ingress proxy ready; PVC below warning thresholds; the Temporal turbo-cache clean has succeeded recently.                                                         |
 | `velero`                       | `velero`                       | Deployment ready; backup schedules fresh; Velero Prometheus alerts clear; failed/partial backups or restore validation failures are Red.                                                                |
 
 ### Coverage Gaps to Call Out
 
 Some apps intentionally have no app-native metrics. For these, the matrix uses
 workload readiness, logs, ingress response, Bugsink, and dependency checks:
-`birmel`, `ddns`, `freshrss`, `golink`, `redlib`,
+`birmel`, `freshrss`, `golink`, `redlib`,
 `starlight-karma-bot-*`, `syncthing`, and idle game servers.
 Report them as Green only after the row-specific non-metric check passes.
 
@@ -658,5 +656,5 @@ End with a "What's Working Well" section to confirm healthy systems.
 - Red `main` CI should correlate with ArgoCD state for any auto-synced app tracking `main` — if `main` is red but ArgoCD is Synced and Healthy, the deployed image is the last green build (not the tip of `main`)
 - PR `statusCheckRollup` failures on CI checks should match `toolkit woodpecker pipeline ls` output for that commit; a mismatch means GitHub's check status is stale and a re-run may be needed
 - Application Health row count should match the live ArgoCD app count; a missing app row means the audit did not answer whether every deployed app is healthy
-- App-specific alerts should match the matrix row status: firing `Scout*`, `Temporal*`, `Tasknotes*`, `Mail*`, `Gitckup*`, `StaticSite*`, `Bugsink*`, or `QBitTorrent*` alerts should produce Yellow/Red application rows
+- App-specific alerts should match the matrix row status: firing `Scout*`, `Temporal*`, `Ddns*`, `GitBackup*`, `Tasknotes*`, `Mail*`, `StaticSite*`, `Bugsink*`, or `QBitTorrent*` alerts should produce Yellow/Red application rows
 - Apps with no native metrics should still have row-specific proof from readiness, logs, endpoint response, Bugsink, or dependency checks; do not mark them Green on ArgoCD status alone

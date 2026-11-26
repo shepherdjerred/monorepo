@@ -9,7 +9,7 @@ import {
 import { RetireServiceRequestSchema } from "#shared/model/route-contract.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
-import { reconcileSummary } from "#infrastructure/catalog/reconcile.ts";
+import { reconcileSummary } from "#infrastructure/catalog/result.ts";
 import { catalogState } from "#infrastructure/catalog/state.ts";
 
 export function registerDefinitionRoutes(

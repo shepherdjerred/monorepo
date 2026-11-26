@@ -17,8 +17,10 @@ In `shepherdjerred/monorepo`, `monorepo-delivery` is authoritative for every
 feature branch and PR. Use `toolkit gh` here for inspection, review comments,
 and other explicitly requested GitHub operations; it supplies this repository
 as the default and otherwise preserves native CLI behavior. Do not create
-branches, create feature PRs, or merge them with the generic `gh` examples
-below. Load `monorepo-delivery` before any branch or feature-PR mutation.
+branches, create feature PRs, merge them, or build a stack with `gh stack` or
+`github/gh-stack`. Publication and stacking are `toolkit git-spice`. git-spice
+may register the result as a GitHub native stack. Load `monorepo-delivery`
+before any branch or feature-PR mutation.
 
 This monorepo uses Woodpecker CI, not GitHub Actions. Use
 `toolkit ci wait` for merge readiness, `toolkit ci explain` for blockers, and
@@ -373,9 +375,9 @@ gh pr view 123 --comments
 
 ### Create Pull Request
 
-For `shepherdjerred/monorepo`, use `git-spice branch submit` or
-`git-spice stack submit` instead. The commands below are for repositories that
-do not use git-spice.
+For `shepherdjerred/monorepo`, use `toolkit git-spice branch submit` or
+`toolkit git-spice stack submit`. Do not use `gh pr create` or `gh stack`.
+The commands below are for repositories that do not use git-spice.
 
 ```bash
 # Interactive

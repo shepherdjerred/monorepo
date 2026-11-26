@@ -23,8 +23,8 @@ Session\Interface=wg0
 Session\GlobalMaxRatio=1
 Session\ExcludedFileNames=
 
-[Preferences]
-WebUI\Username=jerred
+[WebUI]
+Username=jerred
 `;
 
 // The live conf qBittorrent persists: the same managed keys PLUS keys the app
@@ -41,9 +41,9 @@ Session\ExcludedFileNames=
 [Network]
 Cookies=@Invalid()
 
-[Preferences]
-WebUI\Username=jerred
-WebUI\Password_PBKDF2="@ByteArray(abc==:def==)"
+[WebUI]
+Username=jerred
+Password_PBKDF2="@ByteArray(abc==:def==)"
 `;
 
 let dir: string;
@@ -114,12 +114,69 @@ describe("check-config-drift.sh", () => {
     const seed = write("seed4.conf", SEED);
     const live = write(
       "live-missing.conf",
-      LIVE_IN_SYNC.replace("WebUI\\Username=jerred\n", ""),
+      LIVE_IN_SYNC.replace("Username=jerred\n", ""),
     );
     const { code, stderr } = await runGuard(seed, live);
     expect(code).toBe(3);
-    expect(stderr).toContain(String.raw`WebUI\Username`);
+    expect(stderr).toContain("[WebUI] Username");
     expect(stderr).toContain("missing from live config");
+  });
+
+  it("accepts the pre-5.3 WebUI settings on an older config volume", async () => {
+    const seedConfig = await Bun.file(
+      path.join(path.dirname(scriptPath), "qBittorrent.conf"),
+    ).text();
+    const legacyWebUi = String.raw`[Preferences]
+WebUI\Address=*
+WebUI\ServerDomains=*
+WebUI\Username=jerred
+`;
+    const legacyConfig = seedConfig
+      .replace("[Preferences]\n", legacyWebUi)
+      .replace(/\n\[WebUI\][\s\S]*$/u, "\n");
+    const seed = write("seed-modern.conf", seedConfig);
+    const live = write("live-legacy.conf", legacyConfig);
+    const { code } = await runGuard(seed, live);
+    expect(code).toBe(0);
+  });
+
+  it.each([
+    { version: 10, code: 3 },
+    { version: 12, code: 0 },
+  ])(
+    "uses the effective WebUI username at migration version $version",
+    async ({ version, code }) => {
+      const seed = write("seed-effective.conf", SEED);
+      const live = write(
+        "live-effective.conf",
+        String.raw`${LIVE_IN_SYNC}
+[Meta]
+MigrationVersion=${version}
+
+[Preferences]
+WebUI\Username=changed
+`,
+      );
+      const result = await runGuard(seed, live);
+      expect(result.code).toBe(code);
+    },
+  );
+
+  it("fails when a migrated config has only an obsolete copy of a managed key", async () => {
+    const seed = write("seed-modern-missing.conf", SEED);
+    const live = write(
+      "live-modern-missing.conf",
+      String.raw`${LIVE_IN_SYNC.replace("Username=jerred\n", "")}
+[Meta]
+MigrationVersion=12
+
+[Preferences]
+WebUI\Username=jerred
+`,
+    );
+    const { code, stderr } = await runGuard(seed, live);
+    expect(code).toBe(3);
+    expect(stderr).toContain("[WebUI] Username");
   });
 
   it(

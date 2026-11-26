@@ -551,7 +551,9 @@ const ONE_MINUTE = 60 * 1000;
 const ONE_HOUR = 60 * ONE_MINUTE;
 
 const WORKFLOW_MAX_SLEEP_MS: Record<string, number> = {
-  // preheat: 13 × 15m presence-checked hold chunks (195 minutes) + turn-off backstop
+  // New preheat runs sleep 8 × 15m (120 minutes) after floor-preheat-120m.
+  // Replays recorded before that patch still sleep 13 × 15m (195 minutes).
+  // The schedule timeout has to cover the longer path; 240 minutes still does.
   goodMorningPreheat: 195 * ONE_MINUTE,
   // wake-up: ~30 sec of media ramp + MORNING_HEAT_DURATION (60 minutes) heat hold
   goodMorningWakeUp: 60 * ONE_MINUTE,
@@ -704,6 +706,9 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // At most 20 page Activities per run, then return or continue-as-new. No
   // Workflow timers; continue-as-new retains the chain execution timeout.
   "sweepMediaWorkflow",
+  // Reads presence, weather, and two climate entities, then returns.
+  // Weather and Home Assistant retries stay inside activity budgets.
+  "applyClimateSchedule",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;
@@ -1052,15 +1057,41 @@ describe("homelab daily audit schedule config", () => {
   });
 });
 
+describe("home clock", () => {
+  test.each([
+    ["good-morning-weekday-preheat", "0 8 * * 1-5"],
+    ["good-morning-weekend-preheat", "0 8 * * 0,6"],
+    ["good-morning-weekday-wake", "0 9 * * 1-5"],
+    ["good-morning-weekend-wake", "0 9 * * 0,6"],
+    ["good-morning-weekday-up", "15 9 * * 1-5"],
+    ["good-morning-weekend-up", "15 9 * * 0,6"],
+    ["climate-sleep-setback", "0 0 * * *"],
+    ["climate-day-start", "0 8 * * *"],
+    ["climate-wake-reassert", "0 9 * * *"],
+  ])("%s uses cron %s in Los Angeles", (id, expression) => {
+    const schedule = findScheduleById(id);
+    expect(schedule.timing).toEqual({
+      kind: "cron",
+      expression,
+      timezone: "America/Los_Angeles",
+    });
+  });
+});
+
 describe("catchup window policy", () => {
   test.each([
     "vacuum-9am",
     "vacuum-12pm",
     "vacuum-5pm",
+    "good-morning-weekday-preheat",
     "good-morning-weekday-wake",
     "good-morning-weekday-up",
+    "good-morning-weekend-preheat",
     "good-morning-weekend-wake",
     "good-morning-weekend-up",
+    "climate-sleep-setback",
+    "climate-day-start",
+    "climate-wake-reassert",
   ])("time-of-day home schedule %s gets the tight 5-minute window", (id) => {
     expect(buildSchedulePolicies(findScheduleById(id)).catchupWindow).toBe(
       "5 minutes",

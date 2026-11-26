@@ -16,6 +16,8 @@ import {
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { KubeNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import { mediaAppEgress } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/media-app-egress.ts";
 
 const MAINTAINERR_PORT = 6246;
 /** The image's `node` user, which owns /opt/app. */
@@ -81,5 +83,14 @@ export function createMaintainerrDeployment(chart: Chart) {
     service,
     host: tailnetService("maintainerr"),
     proxyClass: "medium",
+  });
+
+  new KubeNetworkPolicy(chart, "maintainerr-egress-netpol", {
+    metadata: { name: "maintainerr-egress-netpol" },
+    spec: {
+      podSelector: { matchLabels: deployment.matchLabels },
+      policyTypes: ["Egress"],
+      egress: mediaAppEgress(),
+    },
   });
 }

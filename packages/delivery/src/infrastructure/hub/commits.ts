@@ -400,7 +400,10 @@ async function readCommitRows(
         seenAt: own[0]?.createdAt.toISOString() ?? null,
         changed,
         unchangedCount,
-        builtCount: built.length + unchangedCount,
+        built: {
+          services: built.length + unchangedCount,
+          changed: built.length,
+        },
         failedBuilds,
         carriedFailures,
         ...withCarriedReleases([...carriedEntries, ...pipelineEntries]),
@@ -474,9 +477,7 @@ function summary(status: CommitStatus, firstSeenAt: Date): CommitSummary {
       ),
     ],
     carriedFailures: status.carriedFailures ?? [],
-    ...(status.builtCount === undefined
-      ? {}
-      : { builtCount: status.builtCount }),
+    ...(status.built === undefined ? {} : { built: status.built }),
     ...(status.carriedReleases === undefined
       ? {}
       : { carriedReleases: status.carriedReleases }),

@@ -22,16 +22,16 @@ test("/reports renders KPIs, 14-stream matrix, feed filters, and navigates into 
   // 5 KPI cards
   await expect(page.locator(".eng-kpi-card")).toHaveCount(5);
   await expect(
-    page.locator(".eng-kpi-card", { hasText: "Needs Review" }),
+    page.locator(".eng-kpi-card", { hasText: "Needs review" }),
   ).toContainText("1");
   await expect(
     page.locator(".eng-kpi-card", { hasText: "Automated PRs (7d)" }),
   ).toContainText("2");
   await expect(
-    page.locator(".eng-kpi-card", { hasText: "Schedule Freshness" }),
+    page.locator(".eng-kpi-card", { hasText: "Schedule freshness" }),
   ).toContainText("14 / 14");
   await expect(
-    page.locator(".eng-kpi-card", { hasText: "Incident Outbox" }),
+    page.locator(".eng-kpi-card", { hasText: "Incident outbox" }),
   ).toContainText("0 pending · 0 failed");
 
   // 14-stream schedule matrix
@@ -43,7 +43,7 @@ test("/reports renders KPIs, 14-stream matrix, feed filters, and navigates into 
   await expect(matrix).toContainText("Weekly link-rot scan");
   await expect(matrix).toContainText("The Storm promotion summary");
   await expect(matrix).toContainText("Auto-merge PR");
-  await expect(matrix).toContainText("LLM Review PR");
+  await expect(matrix).toContainText("LLM review PR");
 
   // Filter feed to one stream via matrix button
   await matrix
@@ -117,7 +117,7 @@ test("/reports renders KPIs, 14-stream matrix, feed filters, and navigates into 
   await expect(checksTable).toContainText("Container & filesystem scan");
 
   // Switch to ?view=email and toggle HTML iframe vs Plain text
-  await page.getByRole("tab", { name: "Rendered Email" }).click();
+  await page.getByRole("tab", { name: "Rendered email" }).click();
   await expect(page).toHaveURL(/view=email/u);
   await expect(
     page.locator('iframe[title="Rendered email preview"]'),
@@ -140,7 +140,7 @@ test("/reports renders KPIs, 14-stream matrix, feed filters, and navigates into 
     .click();
   await expect(page).toHaveURL(/\/reports\/digests\/(daily|weekly)\//u);
   await expect(page.getByRole("heading", { name: "Incidents" })).toBeVisible();
-  await page.getByRole("tab", { name: "Rendered Email" }).click();
+  await page.getByRole("tab", { name: "Rendered email" }).click();
   await expect(
     page.locator('iframe[title="Rendered email preview"]'),
   ).toBeVisible();

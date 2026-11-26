@@ -98,8 +98,17 @@ describe("dockerhub", () => {
   test("keeps one protected repository per registered image, its imports and retirements", async () => {
     const dockerhub = await configuration("dockerhub");
     expect(addresses(dockerhub.resource)).toEqual([
+      "docker_hub_repository.charts_bootstrap",
       "docker_hub_repository.image",
     ]);
+    expect(
+      dockerhub.resource["docker_hub_repository"]?.["charts_bootstrap"],
+    ).toMatchObject({
+      name: "charts-bootstrap",
+      namespace: "${local.registry.namespace}",
+      private: false,
+      lifecycle: { prevent_destroy: true },
+    });
     expect(
       dockerhub.resource["docker_hub_repository"]?.["image"],
     ).toMatchObject({

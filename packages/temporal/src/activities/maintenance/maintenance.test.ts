@@ -209,7 +209,9 @@ describe("Turbo cache cleanup", () => {
       scanned: 30,
     });
     expect(requestUrls).toHaveLength(2);
-    expect(requestUrls[0]).toContain("/v8/clean");
+    expect(requestUrls[0]).toContain(
+      "http://ci-cache.ci-cache.svc.cluster.local:7380/v8/clean",
+    );
     expect(requestUrls[0]).toContain("slug=monorepo");
     expect(requestUrls[0]).toContain("olderThan=14");
     expect(requestUrls[1]).toContain("/v8/clean");

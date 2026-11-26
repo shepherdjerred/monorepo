@@ -111,6 +111,9 @@ describe("Temporal DDNS and Git-Backup homelab wiring", () => {
     );
     expect(mirrorPvc.metadata).toMatchObject({
       name: "temporal-git-mirror-cache",
+      annotations: {
+        "argocd.argoproj.io/sync-wave": "3",
+      },
       labels: {
         "velero.io/backup": "disabled",
         "velero.io/exclude-from-backup": "true",

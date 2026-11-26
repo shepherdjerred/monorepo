@@ -3,7 +3,6 @@ import { exportFeatureFlagsDashboardJson } from "@shepherdjerred/homelab/cdk8s/g
 import { exportCiCapacityDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/shared/ci-capacity-dashboard.ts";
 import { ConfigMap } from "cdk8s-plus-31";
 import { exportAiProviderDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ai/ai-provider-dashboard.ts";
-import { exportGitckupDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/gitckup-dashboard.ts";
 import { exportJustinDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/justin-dashboard.ts";
 import { exportScoutDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/scout/scout-dashboard.ts";
 import { exportScoutDurableDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/scout/scout-durable-dashboard.ts";
@@ -62,13 +61,6 @@ function createDashboardConfigMap(chart: Chart, config: DashboardConfig) {
 /**
  * All available Grafana dashboards
  */
-const GITCKUP_DASHBOARD: DashboardConfig = {
-  id: "gitckup-dashboard-configmap",
-  name: "gitckup-dashboard",
-  jsonFilename: "gitckup.json",
-  exportFn: exportGitckupDashboardJson,
-};
-
 const AI_PROVIDER_DASHBOARD: DashboardConfig = {
   id: "ai-provider-dashboard-configmap",
   name: "ai-provider-dashboard",
@@ -192,7 +184,6 @@ export const ALL_DASHBOARDS: DashboardConfig[] = [
   BUILDKITD_DASHBOARD,
   CI_CAPACITY_DASHBOARD,
   DISCORD_PLAYS_DASHBOARD,
-  GITCKUP_DASHBOARD,
   {
     id: "justin-dashboard-configmap",
     name: "justin-dashboard",

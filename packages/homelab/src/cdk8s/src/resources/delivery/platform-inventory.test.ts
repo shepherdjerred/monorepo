@@ -22,7 +22,7 @@ test("neutral root inventory equals actual active repository-chart Applications"
       const application = parsed.data;
       if (deliveryEnvironment(resource) !== undefined) return [];
       return application.spec.source.repoURL ===
-        "https://chartmuseum.tailnet-1a49.ts.net" &&
+        "https://charts.tailnet-1a49.ts.net" &&
         application.spec.source.chart !== undefined
         ? [application.spec.source.chart]
         : [];

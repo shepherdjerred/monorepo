@@ -1,5 +1,5 @@
 {
-  "id": "woodpecker/prod/1",
+  "id": "woodpecker/prod/2",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "woodpecker"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "woodpecker"
       },
       "syncOptions": ["CreateNamespace=true", "ServerSideApply=true"],

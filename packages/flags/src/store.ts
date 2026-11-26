@@ -7,6 +7,10 @@ import {
   evaluateBoolean,
   type FlagValue,
 } from "@shepherdjerred/feature-flags/evaluate.ts";
+import {
+  managedFlagWriteIssues,
+  type FlagValueKeyIssue,
+} from "@shepherdjerred/feature-flags/flag-write-validation.ts";
 import { projectDeploymentFlags } from "@shepherdjerred/feature-flags/project-deployment.ts";
 import { unreadFlagDocuments } from "@shepherdjerred/feature-flags/unread-documents.ts";
 import { FlagValueSchema } from "./schema.ts";
@@ -26,7 +30,11 @@ export type DeploymentSummary = {
 export type ApplyFailure =
   | { readonly kind: "conflict"; readonly document: DeploymentDocument }
   | { readonly kind: "unknown-deployment" }
-  | { readonly kind: "duplicate-key"; readonly key: string };
+  | { readonly kind: "duplicate-key"; readonly key: string }
+  | {
+      readonly kind: "invalid-values";
+      readonly issues: readonly FlagValueKeyIssue[];
+    };
 
 export type RetireFailure =
   | { readonly kind: "conflict"; readonly document: DeploymentDocument }
@@ -53,11 +61,28 @@ function duplicateKey(
   return undefined;
 }
 
+/**
+ * The first reason a write batch is refused before touching the database:
+ * a repeated key, or any flag the managed inventory and value schemas reject.
+ */
+function batchFailure(flags: readonly FlagValue[]): ApplyFailure | undefined {
+  const duplicate = duplicateKey(flags);
+  if (duplicate !== undefined) return { kind: "duplicate-key", key: duplicate };
+  const issues = managedFlagWriteIssues(flags);
+  return issues.length === 0 ? undefined : { kind: "invalid-values", issues };
+}
+
 function revisionFailure(
   result:
     | { readonly kind: "unknown" }
     | { readonly kind: "conflict"; readonly document: DeploymentDocument },
-): { readonly ok: false; readonly failure: ApplyFailure } {
+): {
+  readonly ok: false;
+  readonly failure: Extract<
+    ApplyFailure,
+    { kind: "conflict" | "unknown-deployment" }
+  >;
+} {
   return result.kind === "unknown"
     ? { ok: false, failure: { kind: "unknown-deployment" } }
     : { ok: false, failure: { kind: "conflict", document: result.document } };
@@ -216,7 +241,9 @@ export class FlagStore {
 
   /**
    * Writes named flags when the revision matches. A mismatch writes nothing,
-   * including flags later in the same request.
+   * including flags later in the same request. A batch with any undeclared
+   * key, wrong type, or invalid variant value is refused before the revision
+   * check and writes nothing.
    */
   apply(
     id: string,
@@ -225,10 +252,8 @@ export class FlagStore {
   ):
     | { readonly ok: true; readonly revision: number }
     | { readonly ok: false; readonly failure: ApplyFailure } {
-    const duplicate = duplicateKey(flags);
-    if (duplicate !== undefined) {
-      return { ok: false, failure: { kind: "duplicate-key", key: duplicate } };
-    }
+    const refused = batchFailure(flags);
+    if (refused !== undefined) return { ok: false, failure: refused };
     const upsert = this.db.query(
       `INSERT INTO flag (deployment_id, key, body) VALUES (?, ?, ?)
        ON CONFLICT (deployment_id, key) DO UPDATE SET body = excluded.body`,
@@ -250,6 +275,8 @@ export class FlagStore {
 
   /**
    * Inserts keys that are absent. A key that already exists keeps its body.
+   * Every submitted flag is validated, including ones that already exist, so
+   * one invalid entry refuses the whole batch.
    */
   createMissing(
     id: string,
@@ -261,10 +288,8 @@ export class FlagStore {
         readonly created: readonly string[];
       }
     | { readonly ok: false; readonly failure: ApplyFailure } {
-    const duplicate = duplicateKey(flags);
-    if (duplicate !== undefined) {
-      return { ok: false, failure: { kind: "duplicate-key", key: duplicate } };
-    }
+    const refused = batchFailure(flags);
+    if (refused !== undefined) return { ok: false, failure: refused };
     const insert = this.db.query(
       "INSERT INTO flag (deployment_id, key, body) VALUES (?, ?, ?)",
     );

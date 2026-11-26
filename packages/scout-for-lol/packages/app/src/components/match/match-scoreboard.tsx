@@ -399,14 +399,6 @@ function LaneDelta(props: { matchup: RoleMatchup; redPerspective: boolean }) {
           <p className="text-xs text-scout-subtle">
             {props.redPerspective ? "Red" : "Blue"} advantage · 15m
           </p>
-          {props.matchup.at15.timestampMs !== 900_000 && (
-            <p className="text-xs text-scout-subtle">
-              Snapshot {Math.floor(props.matchup.at15.timestampMs / 60_000)}:
-              {Math.floor((props.matchup.at15.timestampMs % 60_000) / 1000)
-                .toString()
-                .padStart(2, "0")}
-            </p>
-          )}
         </div>
       )}
     </div>

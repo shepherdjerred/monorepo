@@ -25,7 +25,7 @@ import {
  *
  * A segment line is a `CrawlRecord` (schema v1, `league/crawl/crawl-records.ts`):
  * the untouched Match-V5 document, the visited player's bracket, and for a
- * sampled match the timeline reduced to item and skill events. This is the
+ * sampled match the timeline reduced to item and skill events and the 10- and 15-minute checkpoints. This is the
  * one reader of those lines, shared by the inbox fold and a day rebuild, so
  * both produce the same rows from the same bytes.
  */
@@ -166,13 +166,17 @@ function timelineRows(
   ingestDay: string,
 ): Pick<
   CrawlTableRows,
-  "timeline_events_crawl" | "timeline_event_participants_crawl"
+  | "timeline_events_crawl"
+  | "timeline_event_participants_crawl"
+  | "timeline_checkpoints_crawl"
 > {
   const events: object[] = [];
   const eventParticipants: object[] = [];
+  const checkpoints: object[] = [];
   const rows = {
     timeline_events_crawl: events,
     timeline_event_participants_crawl: eventParticipants,
+    timeline_checkpoints_crawl: checkpoints,
   };
   if (line.timeline === null) return rows;
   const puuidByParticipant = new Map(
@@ -181,6 +185,21 @@ function timelineRows(
       participant.puuid,
     ]),
   );
+  for (const checkpoint of line.timeline.checkpoints ?? []) {
+    for (const participant of checkpoint.participants) {
+      checkpoints.push({
+        match_id: line.matchId,
+        ingest_day: ingestDay,
+        checkpoint_ms: checkpoint.atMs,
+        frame_timestamp_ms: checkpoint.frameMs,
+        participant_id: participant.participantId,
+        puuid: puuidByParticipant.get(participant.participantId) ?? null,
+        total_gold: participant.totalGold,
+        xp: participant.xp,
+        minions: participant.minions,
+      });
+    }
+  }
   for (const [index, event] of line.timeline.events.entries()) {
     // The reduced timeline has no frames, so the id names the event by its
     // position in the reduced list, never colliding with a tracked

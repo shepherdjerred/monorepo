@@ -22,6 +22,7 @@ export function zeroCrawlRowCounts(): CrawlRowCounts {
     match_team_bans_crawl: 0,
     timeline_events_crawl: 0,
     timeline_event_participants_crawl: 0,
+    timeline_checkpoints_crawl: 0,
   };
 }
 

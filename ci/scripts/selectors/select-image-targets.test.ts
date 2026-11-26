@@ -586,9 +586,9 @@ describe("patch attribution", () => {
   });
 
   test("a patch for a dep outside every image closure selects nothing", async () => {
-    expect(await select(["patches/react-native-sound@0.13.0.patch"])).toEqual(
-      [],
-    );
+    expect(
+      await select(["patches/@astrojs%2Finternal-helpers@0.13.2.patch"]),
+    ).toEqual([]);
   });
 
   test("a patch file with no patchedDependencies entry fails open", async () => {

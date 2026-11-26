@@ -1,5 +1,5 @@
 {
-  "id": "minecraft/sandbox/2",
+  "id": "minecraft/sandbox/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "mc-sandbox"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "mc-sandbox"
       },
       "syncOptions": ["CreateNamespace=true"],

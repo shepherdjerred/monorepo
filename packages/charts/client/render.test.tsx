@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import type { ThemeStore } from "@shepherdjerred/console-ui";
 import { CatalogWorkspace } from "./app.tsx";
 import { DEMO_CATALOG_SUMMARY, EMPTY_CATALOG_SUMMARY } from "./fixtures.ts";
+import { SWITCHER_APPS } from "./shell.tsx";
 
 const noop = (): void => {
   // Static markup rendering never fires DOM events.
@@ -36,6 +37,16 @@ describe("Charts console-ui rendering", () => {
     );
 
     expect(html).toContain("Charts");
+    expect(
+      SWITCHER_APPS.some(
+        (app) => app.url === "https://charts.tailnet-1a49.ts.net",
+      ),
+    ).toBe(false);
+    expect(
+      SWITCHER_APPS.some(
+        (app) => app.url === "https://ci-cache.tailnet-1a49.ts.net",
+      ),
+    ).toBe(true);
     expect(html).toContain("Revision 184");
     expect(html).toContain("Read-only");
     expect(html).toContain('href="/index.yaml"');

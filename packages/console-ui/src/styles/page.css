@@ -1,0 +1,465 @@
+/*
+ * The page kit: Hub's page layout, shared so every console page reads like a
+ * Hub page. Values match Hub's own page styles; every colour is a `--ui-*`
+ * token. Rems assume the reset's 16px root.
+ */
+@layer ui.components {
+  /* Page body and heading */
+  .ui-page {
+    container: ui-page / inline-size;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 36px 24px 72px;
+  }
+  .ui-page-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 28px;
+  }
+  .ui-eyebrow {
+    margin: 0.25rem 0;
+    color: var(--ui-accent);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .ui-page-title {
+    margin: 0.2rem 0 0.35rem;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    font-weight: 400;
+    letter-spacing: -0.04em;
+  }
+  .ui-page-lede {
+    margin: 0.25rem 0;
+    color: var(--ui-muted);
+  }
+  .ui-page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .ui-block-head {
+    margin: 30px 0 12px;
+    font-size: 1.05rem;
+    font-weight: 650;
+  }
+
+  /* Summary cards */
+  .ui-summary {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    gap: 12px;
+    margin: 0 0 18px;
+  }
+  .ui-summary-card {
+    padding: 16px;
+    border: 1px solid var(--ui-line);
+    border-radius: 10px;
+    background: var(--ui-panel);
+  }
+  .ui-summary-card dt {
+    color: var(--ui-muted);
+    font-size: 0.78rem;
+  }
+  .ui-summary-card dd {
+    margin: 5px 0 0;
+    font: 700 1.7rem var(--ui-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .ui-summary-card[data-sev] dd {
+    color: var(--ui-sev-ink);
+  }
+
+  /* Cards and their toolbars */
+  .ui-card {
+    overflow: hidden;
+    border: 1px solid var(--ui-line);
+    border-radius: 12px;
+    background: var(--ui-panel);
+  }
+  .ui-card-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border-bottom: 1px solid var(--ui-line);
+  }
+  .ui-state {
+    padding: 56px 24px;
+    color: var(--ui-muted);
+    text-align: center;
+  }
+
+  /* Page controls: 36px, quieter than the 28px toolbar controls */
+  .ui-btn[data-size="page"] {
+    gap: 0.45rem;
+    height: auto;
+    min-height: 36px;
+    padding: 0.45rem 0.8rem;
+    border-color: var(--ui-line);
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 650;
+    box-shadow: none;
+    transition: none;
+  }
+  .ui-btn[data-size="page"] svg {
+    width: 1rem;
+    height: 1rem;
+    color: currentcolor;
+  }
+  .ui-btn[data-size="page"]:hover {
+    background: var(--ui-hover);
+    transform: none;
+    box-shadow: none;
+  }
+  .ui-btn[data-size="page"]:active {
+    transform: none;
+    box-shadow: none;
+  }
+  .ui-btn[data-size="page"][data-variant="primary"] {
+    border-color: var(--ui-accent);
+  }
+  .ui-btn[data-size="page"][data-variant="primary"]:hover {
+    background: color-mix(in srgb, var(--ui-accent) 88%, var(--ui-ink));
+  }
+  .ui-input,
+  .ui-select {
+    min-width: 0;
+    height: 36px;
+    padding: 0 0.7rem;
+    border: 1px solid var(--ui-line);
+    border-radius: 7px;
+    background: var(--ui-panel);
+    color: var(--ui-ink);
+  }
+  .ui-input::placeholder {
+    color: var(--ui-faint);
+  }
+  .ui-btn[data-size="page"]:focus-visible,
+  .ui-input:focus-visible,
+  .ui-select:focus-visible,
+  .ui-page a:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
+    outline-offset: 2px;
+  }
+  .ui-search {
+    position: relative;
+    flex: 1 1 240px;
+    min-width: 0;
+  }
+  .ui-search svg {
+    position: absolute;
+    top: 50%;
+    left: 0.65rem;
+    width: 1rem;
+    height: 1rem;
+    color: var(--ui-muted);
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .ui-search .ui-input {
+    width: 100%;
+    padding-left: 2rem;
+  }
+  .ui-search .ui-input::-webkit-search-cancel-button {
+    cursor: pointer;
+  }
+
+  /* Segmented filter */
+  .ui-segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    padding: 3px;
+    border: 1px solid var(--ui-line);
+    border-radius: 9px;
+    background: var(--ui-panel);
+  }
+  .ui-segmented button {
+    min-width: 3rem;
+    height: 30px;
+    padding: 0 0.7rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ui-muted);
+    font-weight: 650;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .ui-segmented button[aria-checked="true"] {
+    background: var(--ui-track);
+    color: var(--ui-ink);
+  }
+  .ui-segmented button:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
+    outline-offset: 0;
+  }
+  .ui-segmented-count {
+    margin-left: 0.15rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Tag */
+  .ui-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0.08rem 0.42rem;
+    border: 1px solid var(--ui-line-soft);
+    border-radius: 6px;
+    background: var(--ui-head);
+    color: var(--ui-ink);
+    font-family: var(--ui-font-mono);
+    font-size: 0.69rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ui-tag svg {
+    width: 0.7rem;
+    height: 0.7rem;
+  }
+
+  /* Banner */
+  .ui-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin: 0 0 14px;
+    padding: 14px 18px;
+    border: 1px solid var(--ui-line);
+    border-left: 4px solid var(--ui-sev, var(--ui-sev-unknown));
+    border-radius: 12px;
+    background: var(--ui-panel);
+    color: var(--ui-ink);
+  }
+
+  /* Data tables: mono, uppercase headers, roomy cells */
+  .ui-data-scroll {
+    overflow-x: auto;
+  }
+  .ui-data {
+    width: 100%;
+    font-family: var(--ui-font-mono);
+    font-size: 0.77rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .ui-data th {
+    background: var(--ui-head);
+    color: var(--ui-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+  }
+  .ui-data :is(th, td) {
+    padding: 11px 13px;
+    border-bottom: 1px solid var(--ui-line-soft);
+    vertical-align: middle;
+  }
+  .ui-data tbody th {
+    background: none;
+    color: var(--ui-ink);
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    text-transform: none;
+  }
+  .ui-data tbody tr:hover > * {
+    background: var(--ui-hover);
+  }
+  .ui-data .ui-num {
+    text-align: right;
+  }
+  /* Controls in a row keep the page's sans face, not the table's mono. */
+  .ui-data .ui-btn {
+    font-family: var(--ui-font-sans);
+  }
+
+  /* Phone navigation: the top bar and its drawer replace the sidebar. */
+  .ui-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: none;
+    align-items: center;
+    gap: 2px;
+    height: 52px;
+    padding: 0 6px;
+    border-bottom: 1px solid var(--ui-line);
+    background: color-mix(in srgb, var(--ui-bg) 92%, transparent);
+    backdrop-filter: blur(12px);
+  }
+  .ui-topbar .ui-workspace {
+    flex: 0 1 auto;
+    margin-right: auto;
+  }
+  /* The bar's and drawer's icon buttons keep a 44px touch target. */
+  .ui-topbar-btn {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    color: var(--ui-ink-2);
+    cursor: pointer;
+  }
+  .ui-topbar-btn svg {
+    width: 1rem;
+    height: 1rem;
+  }
+  .ui-topbar-btn:hover {
+    background: var(--ui-side-hover);
+  }
+  .ui-topbar-btn:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
+    outline-offset: 2px;
+  }
+  .ui-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    background: rgb(10 12 10 / 0.45);
+  }
+  .ui-drawer {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 21;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: min(300px, calc(100vw - 56px));
+    padding: 4px 8px 12px;
+    overflow-y: auto;
+    border-right: 1px solid var(--ui-line);
+    background: var(--ui-bg);
+    box-shadow: 0 24px 60px rgb(0 0 0 / 0.28);
+  }
+  .ui-drawer:focus-visible {
+    outline: none;
+  }
+  .ui-drawer-head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    height: 44px;
+    margin-right: -4px;
+    padding-left: 8px;
+  }
+  .ui-drawer-brand {
+    font-size: 1rem;
+    font-weight: 650;
+  }
+  .ui-drawer .ui-nav {
+    flex: none;
+  }
+  .ui-drawer .ui-nav-item {
+    height: 38px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ui-drawer {
+      transition: transform 180ms ease-out;
+    }
+    .ui-drawer-backdrop {
+      transition: opacity 180ms ease-out;
+    }
+    .ui-drawer[data-starting-style],
+    .ui-drawer[data-ending-style] {
+      transform: translateX(-100%);
+    }
+    .ui-drawer-backdrop[data-starting-style],
+    .ui-drawer-backdrop[data-ending-style] {
+      opacity: 0;
+    }
+  }
+  @media (max-width: 900px) {
+    .ui-topbar {
+      display: flex;
+    }
+  }
+
+  @container ui-page (max-width: 900px) {
+    .ui-summary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-flow: row;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .ui-page {
+      padding: 24px 14px 56px;
+    }
+    .ui-page-head {
+      display: grid;
+    }
+    /* Two figures a row keep the content in view on a phone. */
+    .ui-summary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    /* Tables become one card per row, each cell labelled by `data-label`. */
+    .ui-data-scroll {
+      overflow-x: visible;
+      padding: 10px;
+      background: var(--ui-head);
+    }
+    .ui-data-scroll .ui-data,
+    .ui-data-scroll tbody,
+    .ui-data-scroll tr,
+    .ui-data-scroll tbody :is(th, td) {
+      display: block;
+      width: 100%;
+    }
+    .ui-data-scroll thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .ui-data-scroll tbody {
+      display: grid;
+      gap: 10px;
+    }
+    .ui-data-scroll tbody tr {
+      padding: 8px 12px;
+      border: 1px solid var(--ui-line);
+      border-radius: 9px;
+      background: var(--ui-panel);
+    }
+    .ui-data-scroll tbody tr:hover > * {
+      background: none;
+    }
+    .ui-data-scroll tbody :is(th, td) {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      justify-items: start;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--ui-line-soft);
+      text-align: left;
+    }
+    .ui-data-scroll tbody :is(th, td):last-child {
+      border-bottom: 0;
+    }
+    .ui-data-scroll tbody :is(th, td)::before {
+      color: var(--ui-muted);
+      font: 700 0.65rem var(--ui-font-mono);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      content: attr(data-label);
+    }
+  }
+}

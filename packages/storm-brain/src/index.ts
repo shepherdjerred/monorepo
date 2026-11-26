@@ -1,4 +1,5 @@
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
+import { flagValueKind } from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { createBrainApp, createBrainLogger } from "./app.ts";
 import { createBrain } from "./brain.ts";
 import { loadBrainConfig } from "./config.ts";
@@ -19,9 +20,9 @@ const config = await loadBrainConfig({
   flagSource: createFlagConfigSource({
     targetingKey: "storm-brain",
     kinds: {
-      model: "string",
-      decisionsModel: "string",
-      conversationModel: "string",
+      model: flagValueKind("storm-brain-model"),
+      decisionsModel: flagValueKind("storm-brain-decisions-model"),
+      conversationModel: flagValueKind("storm-brain-conversation-model"),
     },
   }),
 });

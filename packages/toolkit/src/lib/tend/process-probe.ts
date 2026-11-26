@@ -19,6 +19,49 @@ export function processStartsMatch(left: string, right: string): boolean {
   return a.length > 0 && a === b;
 }
 
+const LSTART_PATTERN =
+  /^[A-Za-z]{3} ([A-Za-z]{3}) (\d{1,2}) (\d{2}):(\d{2}):(\d{2}) (\d{4})$/u;
+const LSTART_MONTHS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+];
+
+/**
+ * Epoch milliseconds for a `ps -o lstart=` value taken with `TZ=UTC LC_ALL=C`
+ * (`Thu Nov 20 10:11:12 2026`), the form `OsProcessEntry.processStart` has on
+ * POSIX hosts. `null` for anything else.
+ */
+export function parseProcessStartMs(value: string): number | null {
+  const match = LSTART_PATTERN.exec(normalizeProcessStart(value));
+  if (match === null) {
+    return null;
+  }
+  const month = LSTART_MONTHS.indexOf((match[1] ?? "").toLowerCase());
+  if (month === -1) {
+    return null;
+  }
+  const [day, hour, minute, second, year] = match.slice(2).map(Number);
+  const epochMs = Date.UTC(
+    year ?? Number.NaN,
+    month,
+    day ?? Number.NaN,
+    hour ?? Number.NaN,
+    minute ?? Number.NaN,
+    second ?? Number.NaN,
+  );
+  return Number.isFinite(epochMs) ? epochMs : null;
+}
+
 function buildSanitizedChildEnv(
   overrides: Readonly<Record<string, string | undefined>> | undefined,
 ): Record<string, string> {
@@ -58,7 +101,10 @@ export const defaultCommandRunner: CommandRunner = async (
       ...(options.cwd === undefined ? {} : { cwd: options.cwd }),
       env: mergedEnv,
       ...(signal === undefined ? {} : { signal }),
-      stdin: "ignore",
+      stdin:
+        options.stdin === undefined
+          ? "ignore"
+          : new TextEncoder().encode(options.stdin),
       stdout: "pipe",
       stderr: "pipe",
     });

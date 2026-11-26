@@ -17,8 +17,25 @@ export type LaunchAgentSpec = {
   readonly logsDir: string;
   /** Restart the program whenever it exits. */
   readonly keepAlive: boolean;
-  /** Re-run a one-shot program every N seconds. */
+  /**
+   * Re-run a one-shot program every N seconds. A firing that falls while the
+   * machine is asleep is missed.
+   */
   readonly startIntervalSeconds?: number;
+  /**
+   * Run a one-shot program daily at this local time. A firing missed while
+   * the machine was asleep happens at the next wake.
+   */
+  readonly startCalendarInterval?: {
+    readonly hour: number;
+    readonly minute: number;
+  };
+  /**
+   * Start the program as soon as the agent is loaded (at install and at every
+   * login). Defaults to `true`. With `false`, the first run is the first
+   * scheduled one.
+   */
+  readonly runAtLoad?: boolean;
   /**
    * Environment for the job. launchd starts jobs with a minimal `PATH`
    * (`/usr/bin:/bin:/usr/sbin:/sbin`), so a job that spawns Homebrew tools
@@ -67,11 +84,16 @@ export function renderLaunchAgentPlist(spec: LaunchAgentSpec): string {
     .map((argument) => `    <string>${xmlEscape(argument)}</string>`)
     .join("\n");
   const logs = launchAgentLogPaths(spec);
+  const runAtLoad = spec.runAtLoad === false ? "<false/>" : "<true/>";
   const keepAlive = spec.keepAlive ? "  <key>KeepAlive</key>\n  <true/>\n" : "";
   const interval =
     spec.startIntervalSeconds === undefined
       ? ""
       : `  <key>StartInterval</key>\n  <integer>${String(spec.startIntervalSeconds)}</integer>\n`;
+  const calendar =
+    spec.startCalendarInterval === undefined
+      ? ""
+      : `  <key>StartCalendarInterval</key>\n  <dict>\n    <key>Hour</key>\n    <integer>${String(spec.startCalendarInterval.hour)}</integer>\n    <key>Minute</key>\n    <integer>${String(spec.startCalendarInterval.minute)}</integer>\n  </dict>\n`;
   const entries = Object.entries(spec.environment ?? {});
   const environment =
     entries.length === 0
@@ -93,8 +115,8 @@ export function renderLaunchAgentPlist(spec: LaunchAgentSpec): string {
 ${programArguments}
   </array>
   <key>RunAtLoad</key>
-  <true/>
-${keepAlive}${interval}${environment}  <key>ProcessType</key>
+  ${runAtLoad}
+${keepAlive}${interval}${calendar}${environment}  <key>ProcessType</key>
   <string>Background</string>
   <key>StandardOutPath</key>
   <string>${xmlEscape(logs.stdout)}</string>

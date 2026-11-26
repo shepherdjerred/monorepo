@@ -16,15 +16,11 @@
  * every pod in the cluster can connect to them.
  */
 export const WORKLOADS_WITHOUT_INGRESS_POLICY: ReadonlySet<string> = new Set([
-  // These share an upstream chart's namespace, and other namespaces' Egress
+  // It shares an upstream chart's namespace, and other namespaces' Egress
   // rules into it (Prometheus, Alertmanager and Grafana) name only the
-  // namespace. Policing these pods' Ingress first needs those rules narrowed
-  // to the upstream pods they mean, as `seaweedfsEgress` names the S3 pods.
+  // namespace. Policing its Ingress first needs those rules narrowed to the
+  // upstream pods they mean, as `seaweedfsEgress` names the S3 pods.
   "prometheus/kubernetes-event-exporter",
-  "prometheus/nvme-metrics-collector",
-  "prometheus/smartctl-collector",
-  "prometheus/zfs-snapshots-collector",
-  "prometheus/zfs-zpool-collector",
 ]);
 
 /**
@@ -35,18 +31,6 @@ export const WORKLOADS_WITHOUT_EGRESS_POLICY: ReadonlySet<string> = new Set([
   // Discord Go Live streaming sends voice media over UDP to whichever voice
   // server Discord assigns.
   "arcade/arcade",
-  // Dockerfile RUN steps reach whatever their package managers and fetches
-  // name, so destinations follow the build inputs, not this source.
-  "buildkitd/buildkitd",
-  // Indexers, download clients, subtitle providers and notification agents
-  // are configured in each app's own database, not in this source.
-  "media/media-bazarr",
-  "media/media-maintainerr",
-  "media/media-prowlarr",
-  "media/media-radarr",
-  "media/media-seerr",
-  "media/media-sonarr",
-  "media/media-tautulli",
   // Plex talks to LAN players and discovery as well as plex.tv and its relays.
   "media/media-plex",
   // gluetun picks an AirVPN server, and its WireGuard endpoint, from its own
@@ -57,15 +41,6 @@ export const WORKLOADS_WITHOUT_EGRESS_POLICY: ReadonlySet<string> = new Set([
   // Its Loki URL names port 3100 on loki-gateway, whose Service exposes only
   // 80; fix the sink before writing a rule for it.
   "prometheus/kubernetes-event-exporter",
-  // The host collectors have no policy yet. Their needs are DNS and HTTPS for
-  // `apk add` and `pip install`.
-  "prometheus/nvme-metrics-collector",
-  "prometheus/smartctl-collector",
-  "prometheus/zfs-snapshots-collector",
-  "prometheus/zfs-zpool-collector",
-  // The link-rot scan's lychee follows every web link in the repository, on
-  // whatever scheme and port the link names.
-  "woodpecker-ci/temporal-maintenance-worker",
 ]);
 
 /**
@@ -80,7 +55,6 @@ export const UPSTREAM_NAMESPACES_WITHOUT_INGRESS_POLICY: ReadonlySet<string> =
     "alloy-gateway",
     "argocd",
     "cert-manager",
-    "chartmuseum",
     "cloudflare-operator-system",
     "cloudflare-tunnel",
     "intel-device-plugin-operator",
@@ -108,7 +82,6 @@ export const UPSTREAM_NAMESPACES_WITHOUT_EGRESS_POLICY: ReadonlySet<string> =
     "alloy-gateway",
     "argocd",
     "cert-manager",
-    "chartmuseum",
     "cloudflare-operator-system",
     "cloudflare-tunnel",
     "intel-device-plugin-operator",
@@ -116,6 +89,7 @@ export const UPSTREAM_NAMESPACES_WITHOUT_EGRESS_POLICY: ReadonlySet<string> =
     "loki",
     "mc-router",
     "mc-sandbox",
+    // CoreProtect reaches its server over plain HTTP.
     "minecraft-tsmc",
     "node-feature-discovery",
     "openebs",
@@ -171,14 +145,9 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "birmel/birmel/main",
   "buildkitd/buildkitd/binfmt",
   "buildkitd/buildkitd/buildkitd",
-  "ddns/ddns/ipv4-ddns",
-  "ddns/ddns/main",
   "delivery/delivery/delivery",
   "delivery/delivery/migrate",
   "freshrss/freshrss/main",
-  "gickup/gickup/main",
-  "gradle-build-cache/gradle-build-cache/gradle-build-cache",
-  "gradle-build-cache/gradle-build-cache/prepare",
   "home/home-eufy-security-ws/main",
   "home/home-homeassistant/install-adaptive-lighting",
   "home/home-homeassistant/install-custom-brand-icons",
@@ -253,7 +222,6 @@ export const CONTAINERS_WITHOUT_SECCOMP: ReadonlySet<string> = new Set([
   "temporal/temporal-temporal-streambot-worker/temporal-streambot-worker",
   "temporal/temporal-temporal-ui/temporal-ui",
   "temporal/temporal-temporal-workflows-candidate/temporal-workflows-candidate",
-  "turbo-cache/turbo-cache/turbo-cache",
   "woodpecker-ci/temporal-maintenance-worker/copy-kometa-config",
   "woodpecker-ci/temporal-maintenance-worker/temporal-maintenance-worker",
   "woodpecker/woodpecker-woodpecker-agent-completion/woodpecker-agent",

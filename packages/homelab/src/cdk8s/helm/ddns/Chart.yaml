@@ -1,8 +1,0 @@
-apiVersion: v2
-name: ddns
-description: Cloudflare Dynamic DNS updater
-
-type: application
-
-version: "$version"
-appVersion: "$appVersion"
