@@ -156,7 +156,7 @@ h3 {
   font-weight: 600;
 }
 pre {
-  font: 11px/1.7 var(--ui-font-mono);
+  font: 12px/1.6 var(--ui-font-mono);
   overflow: auto;
   padding: 12px;
   border-radius: 6px;
@@ -206,6 +206,8 @@ summary {
 .text-button {
   border: 0;
   background: transparent;
+  box-shadow: none;
+  transform: none;
   padding: 4px 0;
   font-size: 12px;
   color: var(--ui-muted);
@@ -240,7 +242,7 @@ summary {
 .count {
   color: var(--ui-muted);
   font-weight: 400;
-  font-size: 11px;
+  font-size: 12px;
 }
 .label {
   display: inline-flex;
@@ -268,9 +270,9 @@ summary {
   min-width: 0;
 }
 .kind {
-  font-size: 11px;
+  font-size: 12px;
   border: 1px solid var(--ui-line);
-  border-radius: 4px;
+  border-radius: 5px;
   color: var(--ui-muted);
   padding: 0 4px;
 }
@@ -290,8 +292,8 @@ summary {
   opacity: 0.45;
 }
 .empty h2 {
-  font-size: 17px;
-  letter-spacing: -0.2px;
+  font-size: 15px;
+  font-weight: 600;
 }
 .empty p {
   max-width: 330px;
