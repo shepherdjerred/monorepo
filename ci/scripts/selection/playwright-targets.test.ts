@@ -16,6 +16,10 @@ const workspaces = new Map<string, WorkspacePackage>([
     "@shepherdjerred/tracker",
     { dir: "packages/tracker/", workspaceDependencies: [] },
   ],
+  [
+    "@shepherdjerred/artifacts",
+    { dir: "packages/artifacts/", workspaceDependencies: [] },
+  ],
   ["sjer.red", { dir: "packages/sjer.red/", workspaceDependencies: [] }],
   [
     "@shepherdjerred/docs-wiki",

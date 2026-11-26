@@ -19,6 +19,10 @@ export const PLAYWRIGHT_TARGETS: readonly PlaywrightTarget[] = [
     package: "@shepherdjerred/tracker",
     reportDirectory: "shepherdjerred__tracker",
   },
+  {
+    package: "@shepherdjerred/artifacts",
+    reportDirectory: "shepherdjerred__artifacts",
+  },
   { package: "sjer.red", reportDirectory: "sjer.red" },
   {
     package: "@shepherdjerred/docs-wiki",
