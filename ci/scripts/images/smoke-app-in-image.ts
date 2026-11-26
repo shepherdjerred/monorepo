@@ -523,6 +523,15 @@ const commands: Record<
       FEATURE_FLAGS_MODE: "disabled",
     },
   },
+  artifacts: {
+    command: backgroundProbeSmoke(
+      "artifacts",
+      "src/index.ts",
+      "artifacts",
+      'const health = await fetch("http://127.0.0.1:17440/healthz"); if (!health.ok) process.exit(1);',
+    ),
+    env: { HOST: "127.0.0.1", PORT: "17440" },
+  },
 };
 
 /** The command and environment the in-image runner executes for `target`. */

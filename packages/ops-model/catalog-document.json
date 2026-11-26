@@ -234,6 +234,12 @@
       "title": "Errors",
       "kind": "product",
       "package": "errors"
+    },
+    {
+      "id": "artifacts",
+      "title": "Artifacts",
+      "kind": "product",
+      "package": "artifacts"
     }
   ],
   "services": [
@@ -2876,6 +2882,34 @@
             "argoApp": "errors"
           }
         ]
+      }
+    },
+    {
+      "id": "artifacts",
+      "title": "Artifacts",
+      "package": "artifacts",
+      "lifecycle": "active",
+      "selfHosted": false,
+      "group": "artifacts",
+      "components": [
+        {
+          "name": "image:artifacts",
+          "producer": "first-party"
+        },
+        {
+          "name": "chart:artifacts",
+          "producer": "first-party"
+        }
+      ],
+      "ops": {
+        "kind": "product",
+        "namespaces": ["artifacts"]
+      },
+      "legacy": {
+        "rootReleaseExclusions": {
+          "artifacts": "inactive"
+        },
+        "charts": ["artifacts"]
       }
     }
   ],
