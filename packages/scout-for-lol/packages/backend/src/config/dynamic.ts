@@ -73,6 +73,13 @@ export const DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS = 360;
 export const DEFAULT_PARTICIPANT_CRAWL_DAILY_MATCH_BUDGET = 1000;
 
 /**
+ * The crawl's share of every Riot window before the ramp: a quarter, the
+ * ceiling it had as a fixed constant. The ramp is 0.25, 0.5, 0.85; the ledger
+ * clamps anything above 0.85.
+ */
+export const DEFAULT_PARTICIPANT_CRAWL_UTILISATION_TARGET = 0.25;
+
+/**
  * The oldest Scout Client build check-in and observation batch accept.
  *
  * Every build released so far is 0.1.0, so the default refuses none of them.
@@ -267,6 +274,17 @@ const DEFINITION = {
     default: DEFAULT_PARTICIPANT_CRAWL_DAILY_MATCH_BUDGET,
     names: { flag: "scout-participant-crawl-daily-match-budget" },
   },
+  /**
+   * The Riot utilisation the crawl fills each window up to, tracked traffic
+   * included: the crawl takes what tracked traffic leaves of it. Read on every
+   * Riot admission in every pod.
+   */
+  participantCrawlUtilisationTarget: {
+    schema: flagValueSchema("scout-participant-crawl-utilisation-target"),
+    sources: ["flag", "default"],
+    default: DEFAULT_PARTICIPANT_CRAWL_UTILISATION_TARGET,
+    names: { flag: "scout-participant-crawl-utilisation-target" },
+  },
   /** See {@link DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS}. */
   scoutClientEndOfGameDeadlineSeconds: {
     schema: flagValueSchema("scout-client-end-of-game-deadline-seconds"),
@@ -353,6 +371,9 @@ function buildSnapshot(
                 participantCrawlDailyMatchBudget: flagValueKind(
                   "scout-participant-crawl-daily-match-budget",
                 ),
+                participantCrawlUtilisationTarget: flagValueKind(
+                  "scout-participant-crawl-utilisation-target",
+                ),
                 scoutClientEndOfGameDeadlineSeconds: flagValueKind(
                   "scout-client-end-of-game-deadline-seconds",
                 ),
@@ -383,6 +404,8 @@ function buildSnapshot(
       participantCrawlEnabled: false,
       participantCrawlDailyMatchBudget:
         DEFAULT_PARTICIPANT_CRAWL_DAILY_MATCH_BUDGET,
+      participantCrawlUtilisationTarget:
+        DEFAULT_PARTICIPANT_CRAWL_UTILISATION_TARGET,
       scoutClientEndOfGameDeadlineSeconds:
         DEFAULT_SCOUT_CLIENT_END_OF_GAME_DEADLINE_SECONDS,
       scoutClientMinimumVersion: DEFAULT_SCOUT_CLIENT_MINIMUM_VERSION,
@@ -598,6 +621,14 @@ export function participantCrawlDailyMatchBudget(): number {
   return (
     snapshot?.get("participantCrawlDailyMatchBudget") ??
     DEFAULT_PARTICIPANT_CRAWL_DAILY_MATCH_BUDGET
+  );
+}
+
+/** Per-admission read by the Riot budget ledger: the crawl's utilisation target. */
+export function participantCrawlUtilisationTarget(): number {
+  return (
+    snapshot?.get("participantCrawlUtilisationTarget") ??
+    DEFAULT_PARTICIPANT_CRAWL_UTILISATION_TARGET
   );
 }
 

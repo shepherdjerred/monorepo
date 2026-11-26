@@ -31,18 +31,48 @@ export const CRAWL_MATCH_IDS_PER_QUEUE = 20;
 /** Tracked-match observations read per seeding pass. */
 export const CRAWL_SEED_OBSERVATIONS_PER_TICK = 25;
 
-/** Players visited per tick at most. */
-export const CRAWL_PLAYERS_PER_TICK = 4;
+/**
+ * Players claimed per batch. A tick runs batches until the Riot budget
+ * refuses, the deadline passes or its paced match allowance is spent, and
+ * commits each batch on its own.
+ */
+export const CRAWL_PLAYERS_PER_BATCH = 4;
+
+/**
+ * A batch stops claiming more players once it holds this many matches, which
+ * bounds a commit (and the raw payloads held in memory) to about this plus one
+ * player's 60 match ids.
+ */
+export const CRAWL_MATCHES_PER_COMMIT = 100;
 
 /** A tick stops starting new work after this long. */
 export const CRAWL_TICK_DEADLINE_MS = 4 * 60_000;
 
-const DAY_MS = 86_400_000;
-const MINUTES_PER_DAY = 1440;
+/** The Schedule's interval: one tick a minute. */
+export const CRAWL_TICK_INTERVAL_MS = 60_000;
 
-/** A tick spends about four ticks' worth of the daily budget, never fewer than 5 matches. */
-export function crawlMatchesPerTick(dailyBudget: number): number {
-  return Math.max(5, Math.ceil(dailyBudget / MINUTES_PER_DAY) * 4);
+/**
+ * The longest budget refusal a tick waits out before stopping: a full short
+ * window (Riot's is 10 s) is waited for, a full long window ends the tick.
+ */
+export const CRAWL_MAX_ADMISSION_WAIT_MS = 15_000;
+
+const DAY_MS = 86_400_000;
+
+/**
+ * Matches one tick may store: what is left of the day's budget spread evenly
+ * over the ticks left in the UTC day, so the budget lasts the whole day. A
+ * tick that stores less (or runs long and skips ticks) leaves more for the
+ * rest, so the pace corrects itself.
+ */
+export function crawlTickMatchAllowance(remaining: number, now: Date): number {
+  if (remaining <= 0) return 0;
+  const dayEnd = utcDayStart(now).getTime() + DAY_MS;
+  const ticksLeft = Math.max(
+    1,
+    Math.ceil((dayEnd - now.getTime()) / CRAWL_TICK_INTERVAL_MS),
+  );
+  return Math.ceil(remaining / ticksLeft);
 }
 
 export function crawlLookbackStart(now: Date): Date {

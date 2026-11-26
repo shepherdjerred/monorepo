@@ -3,6 +3,8 @@ import {
   riotApi429Total,
   riotApiAppRateLimitCount,
   riotApiAppRateLimitLimit,
+  riotApiAppWindowCrawlShareRatio,
+  riotApiAppWindowUtilisationRatio,
   riotApiLimiterDecisionsTotal,
   riotApiLimiterWaitSeconds,
   riotApiMethodRateLimitCount,
@@ -10,6 +12,7 @@ import {
 } from "#src/metrics/riot-rate-limit.ts";
 import {
   isExpectedUpstreamError,
+  RiotBudgetRefusedError,
   RiotHttpError,
   RiotTransportError,
 } from "./errors.ts";
@@ -84,6 +87,14 @@ export type RateLimitedRequestOptions = {
    * retrying a 429 is always safe regardless of method.
    */
   retryUpstreamErrors?: boolean | undefined;
+  /**
+   * Throw `RiotBudgetRefusedError` instead of holding (or, in `observe` mode,
+   * sending) a request the budget refuses or a cooldown blocks. The request
+   * is then never sent and the caller decides whether to wait. Always
+   * enforced, whatever the budget mode: the crawl uses it so its target binds
+   * even while tracked traffic is only observed.
+   */
+  refuseOverBudget?: boolean | undefined;
 };
 
 type RateLimiterRuntime = {
@@ -291,14 +302,23 @@ export class RateLimiter {
    * `observe` mode a refusal is only recorded; in `enforce` mode it releases
    * the slot for the ledger's wait and queues again.
    */
-  private async awaitAdmission(
-    route: string,
-    method: string,
-    priority: RiotPriority,
-  ): Promise<void> {
+  private async awaitAdmission(request: {
+    url: string;
+    route: string;
+    method: string;
+    priority: RiotPriority;
+    refuseOverBudget: boolean;
+  }): Promise<void> {
+    const { route, method, priority } = request;
     for (;;) {
       const cooldownMilliseconds =
         this.cooldownDeadline(route, method) - this.runtime.now();
+      if (cooldownMilliseconds > 0 && request.refuseOverBudget) {
+        this.refuse(request, {
+          waitMs: cooldownMilliseconds,
+          reason: "retry-after",
+        });
+      }
       if (cooldownMilliseconds > 0) {
         // Never sleep holding a slot: a cooling scope would starve others.
         this.release();
@@ -316,6 +336,9 @@ export class RateLimiter {
         });
         return;
       }
+      if (request.refuseOverBudget) {
+        this.refuse(request, decision);
+      }
       if (this.budgetMode() === "observe") {
         riotApiLimiterDecisionsTotal.inc({
           route,
@@ -329,7 +352,7 @@ export class RateLimiter {
           reason: decision.reason,
         });
         // Sent anyway, so it must hold a reservation its response releases.
-        this.ledger.reserve(route, method);
+        this.ledger.reserve(route, method, priority);
         return;
       }
       riotApiLimiterDecisionsTotal.inc({
@@ -349,17 +372,80 @@ export class RateLimiter {
     }
   }
 
+  /** Counts a refusal and throws it to a caller that asked to be refused. */
+  private refuse(
+    request: { url: string; route: string; priority: RiotPriority },
+    decision: { waitMs: number; reason: AdmitReason },
+  ): never {
+    riotApiLimiterDecisionsTotal.inc({
+      route: request.route,
+      priority: request.priority,
+      outcome: "deferred",
+      reason: decision.reason,
+    });
+    this.onBudgetRefusal?.({
+      priority: request.priority,
+      outcome: "deferred",
+      reason: decision.reason,
+    });
+    throw new RiotBudgetRefusedError(request.url, decision);
+  }
+
+  /** Publishes the key-wide usage of every window this response taught. */
+  private recordUsage(route: string, method: string, headers: Headers): void {
+    for (const window of parseAppRateLimitWindows(headers)) {
+      const labels = {
+        route,
+        window_seconds: window.windowSeconds.toString(),
+      };
+      riotApiAppRateLimitCount.set(labels, window.count);
+      riotApiAppRateLimitLimit.set(labels, window.limit);
+    }
+    for (const window of parseMethodRateLimitWindows(headers)) {
+      const labels = {
+        route,
+        method,
+        window_seconds: window.windowSeconds.toString(),
+      };
+      riotApiMethodRateLimitCount.set(labels, window.count);
+      riotApiMethodRateLimitLimit.set(labels, window.limit);
+    }
+    for (const window of this.ledger.windowUsage(route)) {
+      if (window.limit <= 0) continue;
+      const labels = {
+        route,
+        window_seconds: window.windowSeconds.toString(),
+      };
+      riotApiAppWindowUtilisationRatio.set(labels, window.count / window.limit);
+      // Only a ledger the crawl runs through knows its share; elsewhere the
+      // series is absent rather than a misleading zero.
+      if (this.ledger.crawlAttributed) {
+        riotApiAppWindowCrawlShareRatio.set(
+          labels,
+          window.crawlCount / window.limit,
+        );
+      }
+    }
+  }
+
   private async executeAttempt(
     url: string,
     executeRequest: RequestExecutor,
-    priority: RiotPriority,
+    options: { priority: RiotPriority; refuseOverBudget: boolean },
   ): Promise<Response> {
+    const { priority } = options;
     const route = routeOfUrl(url);
     const method = methodKeyOfUrl(url);
     const queuedAt = this.runtime.now();
     await this.acquire(priority);
     try {
-      await this.awaitAdmission(route, method, priority);
+      await this.awaitAdmission({
+        url,
+        route,
+        method,
+        priority,
+        refuseOverBudget: options.refuseOverBudget,
+      });
       riotApiLimiterWaitSeconds.observe(
         { priority },
         (this.runtime.now() - queuedAt) / 1000,
@@ -368,33 +454,22 @@ export class RateLimiter {
       try {
         response = await executeRequest();
       } catch (error) {
-        this.ledger.abandon(route, method);
+        this.ledger.abandon(route, method, priority);
         throw new RiotTransportError(url, error);
       }
 
-      this.ledger.observe(route, method, response.headers);
-      for (const window of parseAppRateLimitWindows(response.headers)) {
-        const labels = {
-          route,
-          window_seconds: window.windowSeconds.toString(),
-        };
-        riotApiAppRateLimitCount.set(labels, window.count);
-        riotApiAppRateLimitLimit.set(labels, window.limit);
-      }
-      for (const window of parseMethodRateLimitWindows(response.headers)) {
-        const labels = {
-          route,
-          method,
-          window_seconds: window.windowSeconds.toString(),
-        };
-        riotApiMethodRateLimitCount.set(labels, window.count);
-        riotApiMethodRateLimitLimit.set(labels, window.limit);
-      }
+      this.ledger.observe(route, method, response.headers, priority);
+      this.recordUsage(route, method, response.headers);
 
       if (response.status === 429) {
         const limitType = parseRateLimitType(response.headers);
         riotApi429Total.inc({ route, limit_type: limitType, priority });
-        this.ledger.recordRateLimited(route, method, response.headers);
+        this.ledger.recordRateLimited(
+          route,
+          method,
+          response.headers,
+          priority,
+        );
         // Establish the cooldown before releasing the semaphore slot so
         // queued calls cannot start during Riot's Retry-After window. A
         // service 429 sets none: execute() backs off that request alone.
@@ -426,7 +501,10 @@ export class RateLimiter {
     while (attempts <= maxRetries) {
       attempts += 1;
 
-      const response = await this.executeAttempt(url, executeRequest, priority);
+      const response = await this.executeAttempt(url, executeRequest, {
+        priority,
+        refuseOverBudget: options.refuseOverBudget ?? false,
+      });
 
       if (response.ok) {
         return response;

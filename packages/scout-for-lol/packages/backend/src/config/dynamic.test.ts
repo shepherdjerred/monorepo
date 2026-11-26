@@ -9,6 +9,7 @@ import {
   llmHourlyTokenBudget,
   participantCrawlDailyMatchBudget,
   participantCrawlEnabled,
+  participantCrawlUtilisationTarget,
   riotBudgetMode,
   scoutClientEndOfGameDeadlineSeconds,
   shutdownDynamicConfig,
@@ -213,8 +214,59 @@ describe("scout dynamic config", () => {
     expect(participantCrawlEnabled()).toBe(false);
     expect(participantCrawlDailyMatchBudget()).toBe(0);
   });
+});
 
-  test("readiness flips with initialize and shutdown", async () => {
+describe("participant crawl utilisation target", () => {
+  test("is a quarter until a flag says otherwise", async () => {
+    expect(participantCrawlUtilisationTarget()).toBe(0.25);
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(participantCrawlUtilisationTarget()).toBe(0.25);
+  });
+
+  test("follows its flag, and zero is an answer", async () => {
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({
+        "scout-participant-crawl-utilisation-target": 0.85,
+      }),
+    });
+    expect(participantCrawlUtilisationTarget()).toBe(0.85);
+    await shutdownDynamicConfig();
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+      provider: new StaticProvider({
+        "scout-participant-crawl-utilisation-target": 0,
+      }),
+    });
+    expect(participantCrawlUtilisationTarget()).toBe(0);
+  });
+
+  test.each([1.5, -0.1, "half"])(
+    "an invalid value (%s) is refused and the default kept",
+    async (value) => {
+      await initializeDynamicConfig({
+        environment: DISABLED,
+        seed: SEED,
+        startPolling: false,
+        provider: new StaticProvider({
+          "scout-participant-crawl-utilisation-target": value,
+        }),
+      });
+      expect(participantCrawlUtilisationTarget()).toBe(0.25);
+    },
+  );
+});
+
+describe("scout dynamic config readiness", () => {
+  test("flips with initialize and shutdown", async () => {
     expect(isDynamicConfigReady()).toBe(false);
     await initializeDynamicConfig({
       environment: DISABLED,

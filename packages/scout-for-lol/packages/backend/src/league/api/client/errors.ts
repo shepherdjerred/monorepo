@@ -1,3 +1,5 @@
+import type { AdmitReason } from "./rate-budget.ts";
+
 /**
  * HTTP status codes from the Riot API that indicate a temporary upstream
  * outage. These are expected during maintenance windows and should not be
@@ -65,6 +67,27 @@ export class RiotTransportError extends Error {
     super(`Riot API transport failure for ${url}`, { cause });
     this.name = "RiotTransportError";
     this.url = url;
+  }
+}
+
+/**
+ * A request the budget refused and was never sent: a request that asked to be
+ * refused rather than held (the crawl) met a full window, a cooldown, or a
+ * probe in flight. `waitMs` is the ledger's estimate of when it may succeed.
+ */
+export class RiotBudgetRefusedError extends Error {
+  public readonly url: string;
+  public readonly reason: AdmitReason;
+  public readonly waitMs: number;
+
+  constructor(url: string, refusal: { reason: AdmitReason; waitMs: number }) {
+    super(
+      `Riot budget refused ${url} (${refusal.reason}; retry in ${refusal.waitMs.toString()}ms)`,
+    );
+    this.name = "RiotBudgetRefusedError";
+    this.url = url;
+    this.reason = refusal.reason;
+    this.waitMs = refusal.waitMs;
   }
 }
 

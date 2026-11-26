@@ -2,12 +2,13 @@ import configuration from "#src/configuration.ts";
 import {
   participantCrawlDailyMatchBudget,
   participantCrawlEnabled,
-  riotBudgetMode,
 } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
+import { riotBudgetLedger } from "#src/league/api/riot-budget-ledger.ts";
 import {
   crawlBudgetRefusalsTotal,
   crawlTicksTotal,
+  crawlUtilisationTargetRatio,
 } from "#src/metrics/crawl.ts";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import { writeCrawlInboxSegment } from "#src/report-lake/crawl/crawl-inbox.ts";
@@ -22,16 +23,17 @@ import {
 } from "./crawl-run.ts";
 
 /**
- * The crawl's one Riot client for this process. Its ledger learns usage from
- * crawl responses only; Riot's key-wide count header carries what every pod
- * has spent, which is what lets it hold the crawl under its ceiling.
+ * The crawl's one Riot client for this process. It shares the process's
+ * budget ledger with the tracked client, so the ledger counts the crawl's own
+ * share of Riot's key-wide window counts exactly and holds the crawl to what
+ * tracked traffic leaves of `scout-participant-crawl-utilisation-target`.
  */
 let crawlRiot: ReturnType<typeof createCrawlRiotClient> | undefined;
 
 function crawlRiotClient() {
   crawlRiot ??= createCrawlRiotClient({
     apiKey: configuration.riotApiToken,
-    budgetMode: riotBudgetMode,
+    ledger: riotBudgetLedger(),
     onBudgetRefusal: (refusal) => {
       crawlBudgetRefusalsTotal.inc({ reason: refusal.reason });
     },
@@ -56,6 +58,7 @@ export async function runParticipantCrawlActivity(
   if (bucket === undefined) {
     throw new Error("The participant crawl requires S3_BUCKET_NAME");
   }
+  crawlUtilisationTargetRatio.set(riotBudgetLedger().crawlTarget());
   return await runCrawlTick({
     store: createPrismaCrawlStore(prisma),
     riot: crawlRiotClient(),
@@ -64,6 +67,7 @@ export async function runParticipantCrawlActivity(
       await writeCrawlInboxSegment(resolveLakeDir(), segment);
     },
     now: () => new Date(),
+    sleep: (milliseconds) => Bun.sleep(milliseconds),
     enabled: crawlEnabledHere,
     dailyMatchBudget: participantCrawlDailyMatchBudget,
     heartbeat,

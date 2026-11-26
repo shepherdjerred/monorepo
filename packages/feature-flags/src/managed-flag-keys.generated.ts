@@ -225,6 +225,7 @@ export const SCOUT_VARIANT_FLAG_KEYS = [
   "scout-report-ai-model",
   "scout-riot-budget-mode",
   "scout-participant-crawl-daily-match-budget",
+  "scout-participant-crawl-utilisation-target",
 ] as const;
 
 export type ScoutVariantFlagKey = (typeof SCOUT_VARIANT_FLAG_KEYS)[number];

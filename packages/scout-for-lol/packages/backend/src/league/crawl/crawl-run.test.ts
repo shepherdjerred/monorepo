@@ -5,19 +5,21 @@ import {
   type LeaguePuuid,
   type RiotMatchId,
 } from "@scout-for-lol/data";
-import { RiotHttpError } from "#src/league/api/client/errors.ts";
+import {
+  RiotBudgetRefusedError,
+  RiotHttpError,
+} from "#src/league/api/client/errors.ts";
 import { crawlBudgetRefusalsTotal } from "#src/metrics/crawl.ts";
 import {
+  CRAWL_MATCHES_PER_COMMIT,
   CRAWL_MAX_DEPTH,
+  CRAWL_TICK_DEADLINE_MS,
   crawlCooldownEnd,
   puuidHash,
 } from "./crawl-config.ts";
 import type { CrawlRiotApi } from "./crawl-riot-client.ts";
-import {
-  bracketFromLeagueEntries,
-  runCrawlTick,
-  type CrawlDeps,
-} from "./crawl-run.ts";
+import { runCrawlTick, type CrawlDeps } from "./crawl-run.ts";
+import { bracketFromLeagueEntries } from "./crawl-visit.ts";
 import { decodeSegment, type EncodedSegment } from "./crawl-segment.ts";
 import {
   CrawlErasureFenceError,
@@ -209,7 +211,10 @@ function fakeRiot(script: RiotScript): CrawlRiotApi & { calls: string[] } {
     timeline: (matchId) => {
       calls.push(`timeline:${matchId}`);
       return Promise.resolve({
-        info: { participants: [], frames: [{ events: [] }] },
+        info: {
+          participants: [],
+          frames: [{ timestamp: 0, participantFrames: {}, events: [] }],
+        },
       });
     },
     leagueEntries: (puuid) => {
@@ -261,8 +266,10 @@ function deps(
       return Promise.resolve();
     },
     now: () => NOW,
+    sleep: () => Promise.resolve(),
     enabled: () => true,
-    dailyMatchBudget: () => 1000,
+    // Large enough that daily pacing never binds unless a test sets it.
+    dailyMatchBudget: () => 1_000_000,
     ...overrides,
   };
 }
@@ -334,12 +341,17 @@ describe("runCrawlTick", () => {
       },
     });
     const result = await runCrawlTick(deps(riot));
+    // p1's batch admits its participants, so a second batch in the same tick
+    // visits them (pa has no matches of its own here).
     expect(result).toMatchObject({
       status: "completed",
-      playersVisited: 1,
+      playersVisited: 2,
       matchesStored: 1,
       segmentsWritten: 1,
     });
+    expect(store.commits[0]?.visits.map((visit) => unP(visit.puuid))).toEqual([
+      "p1",
+    ]);
     expect(store.matches.has("NA1_100")).toBe(true);
     expect(store.matches.has("NA1_101")).toBe(false);
     const frontier = [...store.frontier.values()];
@@ -519,5 +531,177 @@ describe("the erasure fence", () => {
     );
     expect(store.deletions).toHaveLength(1);
     expect(inboxed).toEqual([]);
+  });
+});
+
+/**
+ * A fake budget in front of the fake Riot, on its own virtual clock: it admits
+ * `admits` calls, then refuses each with `waitMs` until a sleep refills it by
+ * `refill`. It also counts match calls in flight at once.
+ */
+class FakeBudget {
+  now = NOW.getTime();
+  readonly sleeps: number[] = [];
+  refusals = 0;
+  private matchesInFlight = 0;
+  maxMatchesInFlight = 0;
+
+  constructor(
+    private admits: number,
+    private readonly window: { waitMs: number; refill: number },
+  ) {}
+
+  private take(): void {
+    if (this.admits <= 0) {
+      this.refusals += 1;
+      throw new RiotBudgetRefusedError("https://americas.api.riotgames.com", {
+        reason: "app-window",
+        waitMs: this.window.waitMs,
+      });
+    }
+    this.admits -= 1;
+  }
+
+  wrap(riot: CrawlRiotApi): CrawlRiotApi {
+    return {
+      matchIds: async (...args) => {
+        this.take();
+        return riot.matchIds(...args);
+      },
+      match: async (...args) => {
+        this.take();
+        this.matchesInFlight += 1;
+        this.maxMatchesInFlight = Math.max(
+          this.maxMatchesInFlight,
+          this.matchesInFlight,
+        );
+        try {
+          await Promise.resolve();
+          return await riot.match(...args);
+        } finally {
+          this.matchesInFlight -= 1;
+        }
+      },
+      timeline: async (...args) => {
+        this.take();
+        return riot.timeline(...args);
+      },
+      leagueEntries: async (...args) => {
+        this.take();
+        return riot.leagueEntries(...args);
+      },
+    };
+  }
+
+  deps(riot: CrawlRiotApi, overrides: Partial<CrawlDeps> = {}): CrawlDeps {
+    return deps(this.wrap(riot), {
+      now: () => new Date(this.now),
+      sleep: (milliseconds) => {
+        this.sleeps.push(milliseconds);
+        this.now += milliseconds;
+        this.admits += this.window.refill;
+        return Promise.resolve();
+      },
+      ...overrides,
+    });
+  }
+}
+
+/** Seeds `players` players, each with `perPlayer` unique crawlable ranked matches. */
+function crowd(players: number, perPlayer: number): RiotScript {
+  const ids: Record<string, string[]> = {};
+  const matches: Record<string, unknown> = {};
+  for (let player = 0; player < players; player += 1) {
+    const name = `c${player.toString()}`;
+    seedPlayer(name);
+    const own = Array.from(
+      { length: perPlayer },
+      (_, index) => `NA1_${(1000 * (player + 1) + index).toString()}`,
+    );
+    ids[`${name}:420`] = own.slice(0, 20);
+    ids[`${name}:440`] = own.slice(20);
+    for (const id of own) {
+      matches[id] = rawMatch(id, { participants: [name] });
+    }
+  }
+  return { ids, matches };
+}
+
+describe("runCrawlTick under the Riot budget", () => {
+  test("does as much work as the budget admits, then stops cleanly when it refuses", async () => {
+    const budget = new FakeBudget(20, { waitMs: 60_000, refill: 0 });
+    const result = await runCrawlTick(budget.deps(fakeRiot(crowd(3, 10))));
+
+    expect(result.status).toBe("completed");
+    expect(budget.refusals).toBeGreaterThan(0);
+    // A refusal longer than a tick may wait is never slept through.
+    expect(budget.sleeps).toEqual([]);
+    expect(result.matchesStored).toBeGreaterThan(0);
+    expect(result.matchesStored).toBeLessThan(30);
+    // Everything fetched is committed; the player cut short is not marked visited.
+    expect(store.matches.size).toBe(result.matchesStored);
+    expect(result.playersVisited).toBeLessThan(3);
+    const unvisited = [...store.frontier.values()].filter(
+      (row) => row.lastVisitedAt === undefined,
+    );
+    expect(unvisited.length).toBe(3 - result.playersVisited);
+  });
+
+  test("waits out a short refusal and carries on", async () => {
+    const budget = new FakeBudget(5, { waitMs: 5000, refill: 1000 });
+    const result = await runCrawlTick(budget.deps(fakeRiot(crowd(3, 10))));
+
+    // Each refused in-flight call waits on its own; every wait is the ledger's.
+    expect(budget.sleeps.length).toBeGreaterThan(0);
+    expect(new Set(budget.sleeps)).toEqual(new Set([5000]));
+    expect(result).toMatchObject({
+      status: "completed",
+      playersVisited: 3,
+      matchesStored: 30,
+    });
+  });
+
+  test("never waits past the tick's deadline", async () => {
+    const budget = new FakeBudget(0, { waitMs: 10_000, refill: 1 });
+    const result = await runCrawlTick(budget.deps(fakeRiot(crowd(3, 10))));
+
+    expect(result.status).toBe("completed");
+    expect(budget.sleeps.length).toBeGreaterThan(0);
+    const deadline = NOW.getTime() + CRAWL_TICK_DEADLINE_MS;
+    expect(budget.now).toBeLessThan(deadline);
+    expect(budget.now + 10_000).toBeGreaterThanOrEqual(deadline);
+  });
+
+  test("fetches a player's unseen matches eight at a time", async () => {
+    const budget = new FakeBudget(Infinity, { waitMs: 1, refill: 0 });
+    const result = await runCrawlTick(budget.deps(fakeRiot(crowd(1, 30))));
+
+    expect(result.matchesStored).toBe(30);
+    expect(budget.maxMatchesInFlight).toBe(8);
+  });
+
+  test("commits in batches of about a hundred matches", async () => {
+    const budget = new FakeBudget(Infinity, { waitMs: 1, refill: 0 });
+    const result = await runCrawlTick(budget.deps(fakeRiot(crowd(5, 30))));
+
+    expect(result).toMatchObject({ playersVisited: 5, matchesStored: 150 });
+    expect(store.commits.length).toBe(2);
+    for (const commit of store.commits) {
+      const matches = commit.segments.flatMap((segment) => segment.matches);
+      expect(matches.length).toBeLessThanOrEqual(CRAWL_MATCHES_PER_COMMIT + 60);
+    }
+    expect(store.matches.size).toBe(150);
+  });
+
+  test("stores at most its paced share of the day's budget", async () => {
+    // Noon leaves 720 one-minute ticks; 2160 remaining is 3 matches a tick.
+    const budget = new FakeBudget(Infinity, { waitMs: 1, refill: 0 });
+    const result = await runCrawlTick(
+      budget.deps(fakeRiot(crowd(1, 10)), { dailyMatchBudget: () => 2160 }),
+    );
+
+    expect(result.matchesStored).toBe(3);
+    // The visit was cut short by the allowance, so its cooldown does not start.
+    expect(result.playersVisited).toBe(0);
   });
 });

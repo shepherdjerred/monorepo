@@ -43,6 +43,20 @@ export const crawlRiot429Total = new Counter({
   registers: [registry],
 });
 
+/** The crawl utilisation target in force, after clamping; set every tick. */
+export const crawlUtilisationTargetRatio = new Gauge({
+  name: "scout_crawl_utilisation_target_ratio",
+  help: "Participant-crawl Riot utilisation target in force (clamped)",
+  registers: [registry],
+});
+
+/** Matches the latest tick was allowed: remaining daily budget over remaining ticks. */
+export const crawlTickMatchAllowance = new Gauge({
+  name: "scout_crawl_tick_match_allowance",
+  help: "Matches the latest participant-crawl tick was allowed by daily pacing",
+  registers: [registry],
+});
+
 /** Crawl ticks by how they ended. */
 export const crawlTicksTotal = new Counter({
   name: "scout_crawl_ticks_total",
