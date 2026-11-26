@@ -33,13 +33,13 @@ test("navigates to /traces from sidebar and AI page, filters traces, and reconst
   // 5 KPI cards
   await expect(page.locator(".eng-kpi-card")).toHaveCount(5);
   await expect(
-    page.locator(".eng-kpi-card", { hasText: "Matched Traces" }),
+    page.locator(".eng-kpi-card", { hasText: "Matched traces" }),
   ).toContainText("5");
   await expect(
-    page.locator(".eng-kpi-card", { hasText: "Error Traces" }),
+    page.locator(".eng-kpi-card", { hasText: "Error traces" }),
   ).toContainText("1");
   await expect(
-    page.locator(".eng-kpi-card", { hasText: "Archive Index" }),
+    page.locator(".eng-kpi-card", { hasText: "Archive index" }),
   ).toContainText("6 traces");
 
   const liveTable = page.getByRole("table", {
@@ -60,8 +60,8 @@ test("navigates to /traces from sidebar and AI page, filters traces, and reconst
   await page.getByRole("button", { name: "Reset" }).click();
   await expect(liveTable.locator("tbody tr")).toHaveCount(5);
 
-  // Switch to Archive Index (365d) tab -> 65-day archive-only trace appears
-  await page.getByRole("tab", { name: "Archive Index (365d)" }).click();
+  // Switch to Archive index (365d) tab -> 65-day archive-only trace appears
+  await page.getByRole("tab", { name: "Archive index (365d)" }).click();
   await expect(page).toHaveURL(/source=archive/u);
   const archiveTable = page.getByRole("table", {
     name: "SeaweedFS archived LLM traces",
@@ -88,17 +88,17 @@ test("navigates to /traces from sidebar and AI page, filters traces, and reconst
     "Patch 16.18 shifts mid-lane priority",
   );
 
-  // Back link preserves the Archive Index filter query params
+  // Back link preserves the Archive index filter query params
   await page.locator("main").getByRole("link", { name: "Traces" }).click();
   await expect(page).toHaveURL(/\/traces\?.*source=archive/u);
 });
 
-test("renders specialized trajectory views for AI SDK chat, OpenAI decisions, Claude Agent, and Codex Agent plus Waterfall and Archive tabs", async ({
+test("renders specialized trajectory views for AI SDK chat, OpenAI decisions, Claude agent, and Codex agent plus Waterfall and Archive tabs", async ({
   page,
 }) => {
   await page.setViewportSize(DESKTOP);
 
-  // 1. AI SDK Chat + Tool Call + Repair + Waterfall + Archive refs
+  // 1. AI SDK chat + Tool Call + Repair + Waterfall + Archive refs
   await gotoLoadedPage(page, `/traces/${FIXTURE_TRACE_IDS.aiSdkChat}`);
   await expect(page.locator(".traces-step-card")).toHaveCount(3);
   await expect(page.getByText("Repair attempt")).toBeVisible();
@@ -121,7 +121,7 @@ test("renders specialized trajectory views for AI SDK chat, OpenAI decisions, Cl
     page.getByRole("region", { name: "Selected span inspector" }),
   ).toContainText("call_timeline_1");
 
-  await page.getByRole("tab", { name: "Archive & Attributes" }).click();
+  await page.getByRole("tab", { name: "Archive & attributes" }).click();
   await expect(page).toHaveURL(/tab=archive/u);
   await expect(
     page.getByRole("table", { name: /SeaweedFS archive envelopes/u }),
@@ -129,22 +129,22 @@ test("renders specialized trajectory views for AI SDK chat, OpenAI decisions, Cl
 
   // 2. OpenAI Decisions
   await gotoLoadedPage(page, `/traces/${FIXTURE_TRACE_IDS.openAiDecision}`);
-  await expect(page.getByText("OpenAI Decision")).toBeVisible();
+  await expect(page.getByText("OpenAI decision")).toBeVisible();
   await expect(page.getByText("Choice · prismatic")).toBeVisible();
   await expect(page.getByText("Score · 4.30")).toBeVisible();
   await expect(
     page.getByRole("meter", { name: "eligible_for_dare probability" }),
   ).toHaveAttribute("aria-valuenow", "0.91");
 
-  // 3. Claude Agent SDK session
+  // 3. Claude agent SDK session
   await gotoLoadedPage(page, `/traces/${FIXTURE_TRACE_IDS.claudeAgent}`);
-  await expect(page.getByText("Claude Agent", { exact: true })).toBeVisible();
+  await expect(page.getByText("Claude agent", { exact: true })).toBeVisible();
   await expect(
     page.getByText("session: sess_claude_01J9PR5041", { exact: true }),
   ).toBeVisible();
   await expect(page.getByText("4 turns", { exact: true })).toBeVisible();
   await expect(
-    page.locator(".eng-kpi-card", { hasText: "Cost & Attribution" }),
+    page.locator(".eng-kpi-card", { hasText: "Cost & attribution" }),
   ).toContainText("Subscription est. $0.18");
   await expect(
     page.getByRole("link", { name: /Temporal workflow/u }),
@@ -153,9 +153,9 @@ test("renders specialized trajectory views for AI SDK chat, OpenAI decisions, Cl
     /temporal-ui\.tailnet-1a49\.ts\.net\/namespaces\/prod\/workflows\/pr-remediation-5041/u,
   );
 
-  // 4. Codex Agent SDK command execution
+  // 4. Codex agent SDK command execution
   await gotoLoadedPage(page, `/traces/${FIXTURE_TRACE_IDS.codexAgent}`);
-  await expect(page.getByText("Codex Agent", { exact: true })).toBeVisible();
+  await expect(page.getByText("Codex agent", { exact: true })).toBeVisible();
   await expect(page.getByText("pokemon-ctl state --json")).toBeVisible();
   await expect(page.getByText("exit 0", { exact: true })).toBeVisible();
   await expect(page.getByText("pokemon-ctl walk --to 40,18")).toBeVisible();

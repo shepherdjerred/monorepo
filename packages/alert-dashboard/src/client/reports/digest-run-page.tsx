@@ -1,3 +1,4 @@
+import { pillSeverity } from "#client/visuals/pill.ts";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import {
@@ -46,20 +47,18 @@ export function DigestRunBody({
       </Link>
 
       <div className="rep-heading-badges">
-        <span className={`visual-pill visual-pill-${statusMeta.tone}`}>
+        <span className="visual-pill" data-sev={pillSeverity(statusMeta.tone)}>
           {statusMeta.label}
         </span>
         {detail.skipReason === undefined ? null : (
-          <span className="visual-pill visual-pill-neutral">
-            {detail.skipReason}
-          </span>
+          <span className="visual-pill">{detail.skipReason}</span>
         )}
         <code className="rep-mailbox-chip">{detail.periodKey}</code>
         <code className="rep-mailbox-chip">{detail.mailboxTo}</code>
       </div>
 
       <PageHeading
-        eyebrow={
+        meta={
           detail.kind === "weekly"
             ? "Weekly operations review"
             : "Daily operations digest"

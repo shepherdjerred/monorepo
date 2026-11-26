@@ -138,7 +138,7 @@ export function automationModeMeta(mode: AutomationMode): {
     case "llm-pr-automerge":
       return { label: "Auto-merge PR", tone: "info" };
     case "llm-pr-review":
-      return { label: "LLM Review PR", tone: "warning" };
+      return { label: "LLM review PR", tone: "warning" };
     case "deterministic-pr":
       return { label: "Deterministic PR", tone: "info" };
     case "diagnostic":

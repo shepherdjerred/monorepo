@@ -27,7 +27,7 @@ describe("Sparkline", () => {
       <Sparkline values={[7, 7, 7, 7]} tone="good" />,
     );
     expect(flatHtml).not.toContain("NaN");
-    expect(flatHtml).toContain("visual-sparkline-good");
+    expect(flatHtml).toContain('data-sev="ok"');
   });
 
   it("renders polyline, area gradient, and final-point dot for multi-point series", () => {
@@ -40,7 +40,7 @@ describe("Sparkline", () => {
       />,
     );
     expect(html).not.toContain("NaN");
-    expect(html).toContain('class="visual-sparkline visual-sparkline-warning"');
+    expect(html).toContain('class="visual-sparkline" data-sev="warning"');
     expect(html).toContain('viewBox="0 0 120 28"');
     expect(html).toContain("<linearGradient");
     expect(html).toContain("<path");

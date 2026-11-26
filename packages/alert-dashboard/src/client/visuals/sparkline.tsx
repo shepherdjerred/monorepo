@@ -87,6 +87,16 @@ export function computeSparklineGeometry(
   return { points, polyline, areaPath, last };
 }
 
+/** The shared severity tone a sparkline draws in; `neutral` keeps the accent. */
+const SPARKLINE_SEVERITY: Readonly<
+  Record<SparklineTone, "ok" | "warning" | "error" | undefined>
+> = {
+  neutral: undefined,
+  good: "ok",
+  warning: "warning",
+  error: "error",
+};
+
 /** Decorative inline sparkline (`aria-hidden="true"`) paired with adjacent tabular text. */
 export function Sparkline({
   values,
@@ -103,7 +113,8 @@ export function Sparkline({
 
   return (
     <svg
-      className={`visual-sparkline visual-sparkline-${tone}`}
+      className="visual-sparkline"
+      data-sev={SPARKLINE_SEVERITY[tone]}
       width={safeWidth}
       height={safeHeight}
       viewBox={`0 0 ${String(safeWidth)} ${String(safeHeight)}`}

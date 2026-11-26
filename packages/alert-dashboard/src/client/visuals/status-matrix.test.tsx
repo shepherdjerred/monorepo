@@ -45,20 +45,20 @@ describe("StatusMatrix", () => {
     expect(html).toContain("PostgreSQL");
     expect(html).toContain("daily 02:00 UTC");
 
-    // Every status carries both its non-color glyph and semantic badge class.
-    expect(html).toContain("visual-matrix-ok");
+    // Every status carries both its non-color glyph and its shared severity.
+    expect(html).toContain('data-sev="ok"');
     expect(html).toContain(">✓<");
-    expect(html).toContain("visual-matrix-warning");
+    expect(html).toContain('data-sev="warning"');
     expect(html).toContain(">!<");
     expect(html).toContain('<span class="sr-only">Warning: </span>');
     expect(html).toContain('<span class="sr-only"> (SLA 24h)</span>');
-    expect(html).toContain("visual-matrix-error");
+    expect(html).toContain('data-sev="error"');
     expect(html).toContain(">✕<");
     // Unpopulated column key falls back to `missing` (`—` + `Missing`).
-    expect(html).toContain("visual-matrix-missing");
+    expect(html).toContain('data-sev="unknown"');
     expect(html).toContain(">—<");
     expect(html).toContain(">Missing<");
-    expect(html).toContain("visual-matrix-info");
+    expect(html).toContain('data-sev="info"');
     expect(html).toContain(">•<");
   });
 

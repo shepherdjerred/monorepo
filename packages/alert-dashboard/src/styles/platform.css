@@ -37,26 +37,15 @@
   gap: 6px;
   min-width: 0;
   padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--status-good);
-  border-radius: var(--radius-md);
-  background: var(--panel);
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
 }
-
-.platform-kpi-card-info {
-  border-top-color: var(--status-info);
-}
-
-.platform-kpi-card-unknown {
-  border-top-color: var(--status-unknown);
-}
-
-.platform-kpi-card-warning {
-  border-top-color: var(--status-warning);
-}
-
-.platform-kpi-card-error {
-  border-top-color: var(--status-critical);
+/* The figure takes its severity's text-safe colour; the glyph and word in
+   the head carry the meaning. */
+.platform-kpi-card:is([data-sev="warning"], [data-sev="error"])
+  .platform-kpi-value {
+  color: var(--ui-sev-ink);
 }
 
 .platform-kpi-head {
@@ -68,15 +57,15 @@
 }
 
 .platform-kpi-label {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.76rem;
   font-weight: 600;
   overflow-wrap: anywhere;
 }
 
 .platform-kpi-value {
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
   font-size: 1.45rem;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
@@ -85,7 +74,7 @@
 
 .platform-kpi-sub {
   margin: 0;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.76rem;
   overflow-wrap: anywhere;
 }
@@ -97,7 +86,7 @@
   gap: 4px;
   overflow-x: auto;
   margin-bottom: 18px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--ui-line);
   scrollbar-width: thin;
 }
 
@@ -110,9 +99,9 @@
   min-height: 40px;
   padding: 0.5rem 0.9rem;
   border: 0;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  border-radius: 6px 6px 0 0;
   background: transparent;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.86rem;
   font-weight: 600;
   white-space: nowrap;
@@ -120,24 +109,24 @@
 }
 
 .platform-tab:hover {
-  background: var(--control-hover);
-  color: var(--ink);
+  background: var(--ui-hover);
+  color: var(--ui-ink);
 }
 
 .platform-tab:focus-visible {
-  outline: 3px solid var(--accent-ring);
+  outline: 3px solid color-mix(in srgb, var(--ui-accent) 35%, transparent);
   outline-offset: -3px;
 }
 
 .platform-tab[aria-selected="true"] {
-  color: var(--ink);
+  color: var(--ui-ink);
 }
 
 .platform-tab[aria-selected="true"]::after {
   content: "";
   position: absolute;
   inset: auto 0 0;
-  border-bottom: 3px solid var(--accent);
+  border-bottom: 3px solid var(--ui-accent);
 }
 
 .platform-tabpanel {
@@ -191,16 +180,15 @@
 
 .platform-card-head h3 {
   margin: 0;
-  color: var(--ink);
+  color: var(--ui-ink);
   font-size: 1rem;
   font-weight: 650;
   letter-spacing: 0;
-  text-transform: none;
 }
 
 .platform-card-subtitle {
   margin: 0;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.76rem;
 }
 
@@ -210,7 +198,7 @@
   gap: 10px 12px;
   margin: 0;
   padding-top: 10px;
-  border-top: 1px solid var(--line-soft);
+  border-top: 1px solid var(--ui-line-soft);
 }
 
 .platform-kv-grid div {
@@ -218,17 +206,16 @@
 }
 
 .platform-kv-grid dt {
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: normal;
 }
 
 .platform-kv-grid dd {
   margin: 2px 0 0;
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
@@ -245,13 +232,13 @@
 
 .platform-toolbar-meta {
   margin: 0;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.82rem;
 }
 
 .platform-toggle[aria-pressed="true"] {
-  border-color: var(--accent);
-  background: var(--code-bg);
+  border-color: var(--ui-accent);
+  background: var(--ui-track);
 }
 
 .platform-cell-stack {
@@ -261,7 +248,7 @@
 }
 
 .platform-cell-primary {
-  color: var(--ink);
+  color: var(--ui-ink);
   font-weight: 600;
   overflow-wrap: anywhere;
 }
@@ -271,7 +258,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  color: var(--muted);
+  color: var(--ui-muted);
   font-size: 0.72rem;
 }
 
@@ -280,7 +267,7 @@
   max-width: 100%;
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
-  background: var(--code-bg);
+  background: var(--ui-track);
   font-size: 0.72rem;
   overflow-wrap: anywhere;
 }
@@ -292,11 +279,11 @@
 .platform-note {
   margin: 0;
   padding: 14px 16px;
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--status-info);
-  border-radius: var(--radius-md);
-  background: var(--panel);
-  color: var(--ink);
+  border: 1px solid var(--ui-line);
+  border-left: 3px solid var(--ui-sev-info);
+  border-radius: 8px;
+  background: var(--ui-panel);
+  color: var(--ui-ink);
   font-size: 0.85rem;
 }
 
@@ -331,11 +318,11 @@
   align-items: center;
   gap: 4px;
   padding: 0.08rem 0.42rem;
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--ui-line-soft);
   border-radius: 6px;
-  background: var(--panel-2);
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  background: var(--ui-head);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
   font-size: 0.69rem;
   font-variant-numeric: tabular-nums;
 }
@@ -345,11 +332,11 @@
   align-items: center;
   gap: 6px;
   padding: 0.08rem 0.45rem;
-  border: 1px solid var(--line-soft);
+  border: 1px solid var(--ui-line-soft);
   border-radius: 6px;
-  background: var(--panel-2);
-  color: var(--ink);
-  font-family: "Berkeley Mono", ui-monospace, monospace;
+  background: var(--ui-head);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
   font-size: 0.69rem;
   font-variant-numeric: tabular-nums;
 }

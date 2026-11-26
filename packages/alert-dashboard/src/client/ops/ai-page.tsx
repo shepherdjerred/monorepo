@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import { findMetric, findSection } from "@shepherdjerred/ops-model/assemble.ts";
 import { METRIC_IDS } from "@shepherdjerred/ops-model/metric-ids.ts";
 import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
@@ -11,10 +12,9 @@ import { Link } from "react-router";
 import { QuotaPanel } from "./ai-quota-table.tsx";
 import { ToolSpendPanel } from "./ai-tool-spend.tsx";
 import {
-  MetricTile,
+  MetricStrip,
   PageHeading,
   RangePicker,
-  SeverityBadge,
   WithSnapshot,
 } from "./ops-ui.tsx";
 import { SignalList } from "./signal-list.tsx";
@@ -41,14 +41,15 @@ function SpendPanel({
     <section className="panel spend-panel" aria-labelledby="spend-heading">
       <header className="panel-heading">
         <h2 id="spend-heading">API spend this month</h2>
-        <SeverityBadge severity={severity} />
+        <StatusGlyph severity={severity} />
       </header>
       <p className="hero-figure">
         {formatValue(spent, "usd")}
         <span> of {formatValue(budget, "usd")} budget</span>
       </p>
       <div
-        className={`meter meter-${severity} spend-meter`}
+        className="visual-meter spend-meter"
+        data-sev={severity}
         role="meter"
         aria-valuemin={0}
         aria-valuemax={budget}
@@ -56,13 +57,14 @@ function SpendPanel({
         aria-label="Month-to-date spend against budget"
       >
         <span
+          className="visual-meter-fill"
           style={{
             width: `${String(Math.min((spent ?? 0) / budget, 1) * 100)}%`,
           }}
         />
         {projected === null ? null : (
           <i
-            className="projection"
+            className="visual-meter-projection"
             style={{
               left: `${String(Math.min(projected / budget, 1) * 100)}%`,
             }}
@@ -111,26 +113,18 @@ function AiBody({
   );
   return (
     <>
-      <PageHeading eyebrow="AI budget" title="AI usage & spend">
-        <div className="heading-actions">
-          <Link className="button" to="/traces">
-            Explore LLM traces
-          </Link>
-          <div className="page-status">
-            <SeverityBadge severity={section.severity} large />
-            {section.severity === "ok" ? null : <p>{section.summary}</p>}
-          </div>
+      <PageHeading title="AI usage & spend">
+        <Link className="ui-btn" to="/traces">
+          Explore LLM traces
+        </Link>
+        <div className="page-status">
+          <StatusGlyph severity={section.severity} />
+          {section.severity === "ok" ? null : <p>{section.summary}</p>}
         </div>
       </PageHeading>
       <div className="ai-row">
         <SpendPanel section={section} />
-        {tiles.length === 0 ? null : (
-          <div className="metric-row ai-tiles">
-            {tiles.map((metric) => (
-              <MetricTile key={metric.id} metric={metric} />
-            ))}
-          </div>
-        )}
+        {tiles.length === 0 ? null : <MetricStrip metrics={tiles} />}
       </div>
       <div className="ai-row">
         <QuotaPanel signals={quotas} generatedAt={snapshot.generatedAt} />
@@ -167,6 +161,7 @@ function AiBody({
           <SignalList
             signals={other}
             empty=""
+            label="Other signals"
             newIds={new Set(snapshot.newSignalIds)}
           />
         </section>

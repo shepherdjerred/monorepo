@@ -1,6 +1,6 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
 
-import { SeverityIcon } from "#client/ops/ops-ui.tsx";
 import { formatValue, type ValueUnit } from "#shared/ops-format";
 
 export type BudgetMeterProps = {
@@ -27,11 +27,11 @@ export type StackedMeterProps = {
 };
 
 const DEFAULT_SEGMENT_COLORS: readonly string[] = [
-  "var(--accent)",
-  "var(--status-info)",
-  "var(--status-warning)",
-  "var(--status-critical)",
-  "var(--status-unknown)",
+  "var(--ui-accent)",
+  "var(--ui-sev-info)",
+  "var(--ui-sev-warning)",
+  "var(--ui-sev-error)",
+  "var(--ui-sev-unknown)",
   "#e87ba4",
   "#4a3aa7",
 ];
@@ -96,17 +96,12 @@ export function BudgetMeter({
     : "No data";
 
   return (
-    <div
-      className={`visual-budget-meter visual-budget-meter-${resolvedSeverity}`}
-    >
+    <div className="visual-budget-meter" data-sev={resolvedSeverity}>
       <div className="visual-meter-header">
         <span className="visual-meter-label">
           {label}
           {resolvedSeverity === "ok" ? null : (
-            <SeverityIcon
-              severity={resolvedSeverity}
-              className="visual-meter-flag"
-            />
+            <StatusGlyph severity={resolvedSeverity} />
           )}
         </span>
         <span className="visual-meter-reading">
@@ -115,7 +110,7 @@ export function BudgetMeter({
         </span>
       </div>
       <div
-        className={`meter meter-${resolvedSeverity} visual-meter`}
+        className="visual-meter"
         role="meter"
         aria-label={label}
         aria-valuemin={0}
@@ -156,7 +151,7 @@ export function StackedMeter({
       Number.isFinite(segment.value) && segment.value > 0 ? segment.value : 0;
     const defaultColor =
       DEFAULT_SEGMENT_COLORS[index % DEFAULT_SEGMENT_COLORS.length] ??
-      "var(--accent)";
+      "var(--ui-accent)";
     return {
       key: segment.key,
       label: segment.label,

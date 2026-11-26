@@ -62,20 +62,26 @@ function SeriesBody({
       />
       <details className="chart-table">
         <summary>Data table</summary>
-        <table>
+        <table className="ui-table">
           <thead>
             <tr>
               <th scope="col">Series</th>
-              <th scope="col">Latest</th>
-              <th scope="col">Peak</th>
+              <th scope="col" className="num">
+                Latest
+              </th>
+              <th scope="col" className="num">
+                Peak
+              </th>
             </tr>
           </thead>
           <tbody>
             {response.series.map((entry) => (
               <tr key={entry.name}>
-                <td>{entry.name}</td>
-                <td>{formatValue(latest(entry.points), response.unit)}</td>
-                <td>
+                <th scope="row">{entry.name}</th>
+                <td className="num">
+                  {formatValue(latest(entry.points), response.unit)}
+                </td>
+                <td className="num">
                   {formatValue(
                     entry.points.length === 0
                       ? null

@@ -227,16 +227,16 @@ describe("ClusterPage workload sorting and retained-pool filtering", () => {
 });
 
 describe("ClusterPage URL-synced explorer tabs", () => {
-  it("renders the overview strip and Nodes & Hardware tab by default", () => {
+  it("renders the overview strip and Nodes & hardware tab by default", () => {
     const html = renderClusterAt("/cluster");
     expect(html).toContain("<title>Cluster · Hub</title>");
     expect(html).toContain('role="tablist"');
     expect(html).toContain('role="tabpanel"');
-    expect(html).toContain("Nodes Ready");
+    expect(html).toContain("Nodes ready");
     expect(html).toContain("2/2");
     expect(html).toContain("2 degraded requiring attention");
     expect(html).toContain("SeaweedFS volume slots");
-    expect(html).toContain("SeaweedFS → B2 Lag");
+    expect(html).toContain("SeaweedFS → B2 lag");
     expect(html).toContain("torvalds");
     expect(html).toContain("liskov");
     expect(html).toContain("v1.34.1");
@@ -366,7 +366,7 @@ describe("Platform service views & UniversalServiceTelemetry", () => {
     expect(unconfiguredTsHtml).toContain(
       "Tailscale cloud API device list is unconfigured",
     );
-    expect(unconfiguredTsHtml).toContain("Cluster Services");
+    expect(unconfiguredTsHtml).toContain("Cluster services");
 
     expect(renderPlatformServiceView("arcade", "7d")).toBeNull();
 

@@ -70,7 +70,7 @@ still works. Other modules sit under their own path prefix.
 Home is the operations overview itself, not a summary that links to one. A
 summary with a fuller page behind it shows the same status and the same lists
 twice, and leaves the area cards at the bottom of the second page. Home opens
-on the overall status, three headline numbers, and a card for every area, so
+on the overall status, the headline figures, and a table of every area, so
 the first screen says whether anything is wrong and where. The lists that
 take reading come after. `/overview`, the address of an earlier separate
 page, redirects to Home.
