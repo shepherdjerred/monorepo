@@ -93,7 +93,7 @@ export function Sidebar({
           <AppSwitcher current={currentApp} apps={switcherApps} />
           <IconButton
             icon={Search}
-            label="Search issues and commands"
+            label="Search and commands"
             aria-keyshortcuts="Meta+K Control+K"
             title="Search (⌘K)"
             onClick={search}
