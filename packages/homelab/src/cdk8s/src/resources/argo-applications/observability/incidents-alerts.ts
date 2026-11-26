@@ -7,9 +7,10 @@
  * alertnames its rules cover.
  */
 
-// TODO(incidents-integration): replace these three definitions with
-// `import { INCIDENT_ALERTNAMES, INCIDENT_ALERT_RECEIVER, INCIDENT_ALERTMANAGER_PATH } from "@shepherdjerred/incidents/alert-rules"`
-// (same names, values and order as packages/incidents/src/shared/alert-rules.ts).
+// The Incidents package owns these values (`@shepherdjerred/incidents/alert-rules`).
+// They are restated here so the cdk8s runtime closure, which several images
+// copy, does not depend on the Incidents package; `incidents-alerts.test.ts`
+// fails when the two drift.
 export const INCIDENT_ALERTNAMES = [
   "DeliveryUnavailable",
   "DeliveryRecoveryRequired",
