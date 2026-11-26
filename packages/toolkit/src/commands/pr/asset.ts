@@ -281,9 +281,9 @@ export async function assetCommand(
     let client: ObjectStore;
     try {
       client =
-        options.createClient !== undefined
-          ? await options.createClient(profile ?? AGENT_SHARE_PROFILE)
-          : await createUploadClient(profile ?? null);
+        options.createClient === undefined
+          ? await createUploadClient(profile ?? null)
+          : await options.createClient(profile ?? AGENT_SHARE_PROFILE);
     } catch (error) {
       if (!(error instanceof UploadSetupError)) {
         throw error;

@@ -22,24 +22,44 @@ export function trackerUrl(value: string): string {
 
 const MAX_BODY_SNIPPET_LENGTH = 160;
 
+const SECRET_JSON_KEY =
+  /^(?:authorization|cookie|set-cookie|session(?:[_-]?id)?)$|token|api[_-]?key|access[_-]?key|secret|password|passwd|credential|private[_-]?key/iu;
+
+const QUOTED_SECRET_FIELD =
+  /(["'](?:authorization|cookie|set-cookie|[\w.-]*(?:token|api[_-]?key|access[_-]?key|secret|password|passwd|credential|private[_-]?key)[\w.-]*|session(?:[_-]?id)?)["']\s*:\s*)(?:"(?:[^"\\]|\\.)*"?|'(?:[^'\\]|\\.)*'?|[^\s,}\]]+)/giu;
+
 function redactBodySecrets(text: string): string {
   return text
+    .replaceAll(QUOTED_SECRET_FIELD, '$1"[REDACTED]"')
     .replaceAll(/\b(Bearer|Basic)\s+[^\s"',;<>]+/giu, "$1 [REDACTED]")
     .replaceAll(
       /\b(authorization|cookie|set-cookie)\s*:\s*[^\r\n"',;<>]+/giu,
       "$1: [REDACTED]",
     )
     .replaceAll(
-      /\b(token|access_token|refresh_token|api[_-]?key|secret|password|session(?:[_-]?id)?)\s*([=:])\s*[^\s&"',;<>]+/giu,
+      /\b(token|access_token|refresh_token|api[_-]?key|access[_-]?key|secret|password|passwd|credential|private[_-]?key|session(?:[_-]?id)?)\s*([=:])\s*[^\s&"',;<>]+/giu,
       "$1$2[REDACTED]",
     )
     .replaceAll(/\bop:\/\/[^\s"',;<>]+/giu, "op://[REDACTED]");
+}
+
+function redactJsonValue(value: unknown): unknown {
+  if (typeof value === "string") return redactBodySecrets(value);
+  if (Array.isArray(value)) return value.map((item) => redactJsonValue(item));
+  if (typeof value !== "object" || value === null) return value;
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => [
+      key,
+      SECRET_JSON_KEY.test(key) ? "[REDACTED]" : redactJsonValue(entry),
+    ]),
+  );
 }
 
 function summarizeResponseBody(
   rawBody: string,
   contentType: string,
   parsedJson: boolean,
+  parsedValue?: unknown,
 ): { classification: string; snippet: string } {
   const trimmed = rawBody.trim();
   if (trimmed.length === 0) {
@@ -55,7 +75,9 @@ function summarizeResponseBody(
           " ",
         )
         .replaceAll(/<[^>]+>/gu, " ")
-    : trimmed;
+    : parsedJson
+      ? JSON.stringify(redactJsonValue(parsedValue))
+      : trimmed;
   const singleLine = redactBodySecrets(stripped)
     .replaceAll(/\s+/gu, " ")
     .trim();
@@ -88,6 +110,7 @@ function buildInvalidTrpcResponseError(params: {
   method: string;
   rawBody: string;
   parsedJson?: boolean;
+  parsedValue?: unknown;
 }): Error {
   const normalizedType =
     params.contentType.replaceAll(/\s+/gu, " ").trim() || "unknown";
@@ -96,6 +119,7 @@ function buildInvalidTrpcResponseError(params: {
     params.rawBody,
     normalizedType,
     parsedJson,
+    params.parsedValue,
   );
   const bodyDetail =
     snippet.length === 0
@@ -154,6 +178,7 @@ function options(baseUrl: string, timeoutMs = 30_000) {
                   method,
                   rawBody,
                   parsedJson: true,
+                  parsedValue: parsed,
                 });
               }
               return parsed;

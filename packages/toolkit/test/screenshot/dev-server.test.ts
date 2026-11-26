@@ -85,12 +85,57 @@ describe("screenshot dev-server port allocation", () => {
     expect(launch.port).toBeGreaterThanOrEqual(1);
     expect(launch.port).toBeLessThanOrEqual(65_535);
 
+    const explicitPort = await allocateFreePort();
     const overridden = await buildIsolatedDevLaunch(
       resolvePackage("streambot"),
-      { PORT: "5299" },
+      { PORT: String(explicitPort) },
     );
-    expect(overridden.port).toBe(5299);
-    expect(overridden.env["PORT"]).toBe("5299");
+    expect(overridden.port).toBe(explicitPort);
+    expect(overridden.env["PORT"]).toBe(String(explicitPort));
+  });
+
+  test("rejects occupied, colliding, or invalid explicit port overrides before spawning", async () => {
+    const occupied = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch: () => new Response("occupied"),
+    });
+    const busyPort = occupied.port;
+    if (busyPort === undefined) {
+      await occupied.stop(true);
+      throw new Error("expected bound TCP port");
+    }
+    try {
+      await expect(
+        buildIsolatedDevLaunch(resolvePackage("streambot"), {
+          PORT: String(busyPort),
+        }),
+      ).rejects.toThrow("already in use");
+      await expect(
+        buildIsolatedDevLaunch(resolvePackage("alert-dashboard"), {
+          PORT: String(busyPort),
+        }),
+      ).rejects.toThrow("already in use");
+      await expect(
+        buildIsolatedDevLaunch(resolvePackage("alert-dashboard"), {
+          API_PORT: String(busyPort),
+        }),
+      ).rejects.toThrow("already in use");
+      const freePort = await allocateFreePort();
+      await expect(
+        buildIsolatedDevLaunch(resolvePackage("alert-dashboard"), {
+          PORT: String(freePort),
+          API_PORT: String(freePort),
+        }),
+      ).rejects.toThrow("collides");
+      await expect(
+        buildIsolatedDevLaunch(resolvePackage("streambot"), {
+          PORT: "not-a-port",
+        }),
+      ).rejects.toThrow("Invalid explicit PORT override");
+    } finally {
+      await occupied.stop(true);
+    }
   });
 
   test("allocates 2 distinct Hub fixture ports while preserving OPS_FIXTURE", async () => {

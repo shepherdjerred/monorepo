@@ -768,7 +768,9 @@ test("issue create/update alias --body and --body-file and reject ambiguous or b
 });
 
 test("tRPC client surfaces HTTP status, content-type, sanitized snippet, and mutation read-back warning on non-JSON or non-tRPC responses (AI-630)", async () => {
-  let responseMode: "html-502" | "empty-503" | "proxy-json-502" = "html-502";
+  let responseMode:
+    "html-502" | "empty-503" | "proxy-json-502" | "truncated-json-502" =
+    "html-502";
   const server = Bun.serve({
     hostname: "127.0.0.1",
     port: 0,
@@ -789,7 +791,21 @@ test("tRPC client surfaces HTTP status, content-type, sanitized snippet, and mut
           headers: { "Content-Type": "text/plain" },
         });
       }
-      return Response.json({ message: "Bad Gateway" }, { status: 502 });
+      if (responseMode === "truncated-json-502") {
+        return new Response('{"access_token":"truncated-secret-token', {
+          status: 502,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      return Response.json(
+        {
+          message: "Bad Gateway",
+          token: "quoted-json-secret",
+          nested: { api_key: "nested-json-api-key" },
+          detail: "Bearer inline-json-bearer",
+        },
+        { status: 502 },
+      );
     },
   });
   servers.push(server);
@@ -840,13 +856,35 @@ test("tRPC client surfaces HTTP status, content-type, sanitized snippet, and mut
   expect(queryMessage).not.toContain("Mutation completion is uncertain");
 
   responseMode = "proxy-json-502";
-  await expect(
-    client.comments.create.mutate({
+  let jsonError: unknown;
+  try {
+    await client.comments.create.mutate({
       actor,
       identifier: "AI-622",
       body: "Progress note",
-    }),
-  ).rejects.toThrow(
+    });
+  } catch (error) {
+    jsonError = error;
+  }
+  const jsonMessage = jsonError instanceof Error ? jsonError.message : "";
+  expect(jsonMessage).toMatch(
     /not a valid tRPC envelope.*HTTP 502.*body=non-trpc-json.*Mutation completion is uncertain/u,
   );
+  expect(jsonMessage).not.toContain("quoted-json-secret");
+  expect(jsonMessage).not.toContain("nested-json-api-key");
+  expect(jsonMessage).not.toContain("inline-json-bearer");
+  expect(jsonMessage).toContain("[REDACTED]");
+
+  responseMode = "truncated-json-502";
+  let truncatedError: unknown;
+  try {
+    await client.issues.byIdentifier.query({ identifier: "AI-622" });
+  } catch (error) {
+    truncatedError = error;
+  }
+  const truncatedMessage =
+    truncatedError instanceof Error ? truncatedError.message : "";
+  expect(truncatedMessage).toContain("not valid JSON");
+  expect(truncatedMessage).not.toContain("truncated-secret-token");
+  expect(truncatedMessage).toContain("[REDACTED]");
 });

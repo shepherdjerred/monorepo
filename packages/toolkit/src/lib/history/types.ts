@@ -75,6 +75,8 @@ export type UsageEventEntry = {
   readonly reasoningTokens: number;
   readonly costUsd: number | null;
   readonly costComplete: boolean;
+  /** True when `costUsd` came from provider-reported billing (e.g. Grok `costUsdTicks`). */
+  readonly costReported?: boolean;
 };
 
 /** One tool invocation the agent made, named as the transcript names it. */

@@ -344,18 +344,17 @@ function classifyFollowedRun(
 
 async function loadVerifiedFollowedEntry(
   entry: MainPipelineEntry,
-  seenCommits: Set<string>,
+  completedCommits: ReadonlySet<string>,
   options: FollowedScanOptions,
 ): Promise<WoodpeckerPipeline | null> {
+  if (completedCommits.has(entry.commit)) return null;
   const pipeline = await getPipeline(
     entry.number,
     options.config,
     options.signal,
   );
   assertMainIdentity(pipeline, entry);
-  if (seenCommits.has(pipeline.commit) || !verifiesMain(pipeline)) return null;
-  seenCommits.add(pipeline.commit);
-  return pipeline;
+  return verifiesMain(pipeline) ? pipeline : null;
 }
 
 async function followedEntryEligibility(
@@ -368,11 +367,20 @@ async function followedEntryEligibility(
     : "skip";
 }
 
+function classifyAndRecordFollowedRun(
+  pipeline: WoodpeckerPipeline,
+  completedCommits: Set<string>,
+): "failed" | "passed" | "pending" {
+  const outcome = classifyFollowedRun(pipeline);
+  if (outcome !== "pending") completedCommits.add(pipeline.commit);
+  return outcome;
+}
+
 async function scanFollowedCandidates(
   options: FollowedScanOptions,
 ): Promise<WoodpeckerPipeline | null> {
   const { candidates, tip } = options;
-  const seenCommits = new Set<string>();
+  const completedCommits = new Set<string>();
   const ancestryCache = new Map<string, boolean>();
   let tipRun: WoodpeckerPipeline | null = null;
   for (const entry of candidates) {
@@ -385,12 +393,12 @@ async function scanFollowedCandidates(
     if (eligibility === "skip") continue;
     const pipeline = await loadVerifiedFollowedEntry(
       entry,
-      seenCommits,
+      completedCommits,
       options,
     );
     if (pipeline === null) continue;
     if (tipRun === null && pipeline.commit === tip) tipRun = pipeline;
-    const outcome = classifyFollowedRun(pipeline);
+    const outcome = classifyAndRecordFollowedRun(pipeline, completedCommits);
     if (outcome === "failed") return tipRun ?? pipeline;
     if (outcome === "passed") return pipeline;
   }

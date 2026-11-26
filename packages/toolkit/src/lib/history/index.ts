@@ -48,7 +48,7 @@ import {
   type UsageQueryOptions,
 } from "./usage-query.ts";
 
-const INDEX_SCHEMA_VERSION = 6;
+const INDEX_SCHEMA_VERSION = 7;
 
 type HistoryQueryOptions = DocumentFilter & {
   readonly limit?: number;
@@ -237,7 +237,8 @@ function createSchema(database: Database): void {
       cached_input_tokens INTEGER NOT NULL DEFAULT 0,
       reasoning_tokens INTEGER NOT NULL DEFAULT 0,
       cost_usd REAL,
-      cost_complete INTEGER NOT NULL DEFAULT 1
+      cost_complete INTEGER NOT NULL DEFAULT 1,
+      cost_reported INTEGER NOT NULL DEFAULT 0
     );
     CREATE TABLE tool_calls (
       document_id INTEGER NOT NULL REFERENCES documents(id),

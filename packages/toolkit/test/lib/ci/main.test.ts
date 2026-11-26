@@ -312,3 +312,50 @@ test("getFollowedMainSnapshot ignores passing commits older than startSha", asyn
   expect(snap.run?.number).toBe(20);
   expect(snap.run?.status).toBe("running");
 });
+
+test("getFollowedMainSnapshot preserves a failed commit verdict while its manual rerun is pending", async () => {
+  const greenBase = "1".repeat(40);
+  const failedCommit = "2".repeat(40);
+  const unscheduledTip = "3".repeat(40);
+  mockFollowedApi(failedCommit, [
+    { ...pipeline(21, "manual", "running"), commit: failedCommit },
+    { ...pipeline(19, "push", "failure"), commit: failedCommit },
+    { ...pipeline(18, "push", "success"), commit: greenBase },
+  ]);
+  const pendingAtTip = await getFollowedMainSnapshot(
+    new GitHubClient("test"),
+    config,
+    greenBase,
+  );
+  expect(pendingAtTip.sha).toBe(failedCommit);
+  expect(pendingAtTip.run?.number).toBe(21);
+  expect(pendingAtTip.run?.status).toBe("running");
+
+  mockFollowedApi(unscheduledTip, [
+    { ...pipeline(21, "manual", "running"), commit: failedCommit },
+    { ...pipeline(19, "push", "failure"), commit: failedCommit },
+    { ...pipeline(18, "push", "success"), commit: greenBase },
+  ]);
+  const pendingBehindTip = await getFollowedMainSnapshot(
+    new GitHubClient("test"),
+    config,
+    greenBase,
+  );
+  expect(pendingBehindTip.sha).toBe(failedCommit);
+  expect(pendingBehindTip.run?.number).toBe(19);
+  expect(pendingBehindTip.run?.status).toBe("failure");
+
+  mockFollowedApi(failedCommit, [
+    { ...pipeline(21, "manual", "success"), commit: failedCommit },
+    { ...pipeline(19, "push", "failure"), commit: failedCommit },
+    { ...pipeline(18, "push", "success"), commit: greenBase },
+  ]);
+  const recovered = await getFollowedMainSnapshot(
+    new GitHubClient("test"),
+    config,
+    greenBase,
+  );
+  expect(recovered.sha).toBe(failedCommit);
+  expect(recovered.run?.number).toBe(21);
+  expect(recovered.run?.status).toBe("success");
+});

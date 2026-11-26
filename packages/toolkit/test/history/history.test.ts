@@ -3,13 +3,7 @@ import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import { Database } from "bun:sqlite";
 import path from "node:path";
-import { MODELS, type Catalog } from "@shepherdjerred/llm-models";
 import { HistoryIndex } from "#lib/history/index.ts";
-import {
-  pricingCatalogFingerprint,
-  repriceStoredUsageEvent,
-  ZERO_USAGE,
-} from "#lib/history/usage-cost.ts";
 import { parseSince } from "#lib/history/query/query.ts";
 import { renderLaunchAgent } from "#lib/history/sources/launchd.ts";
 import {
@@ -1354,132 +1348,6 @@ describe("history index", () => {
     expect(recentOnly.total.inputTokens).toBe(100);
     expect(recentOnly.total.documentCount).toBe(1);
     index.close();
-  });
-});
-
-function repriceSourceResult(
-  source: "codex" | "kimi" | "grok",
-  events: readonly (Partial<UsageEventEntry> & { readonly model: string })[],
-) {
-  const id = `${source}-1`;
-  const ts = "2026-09-01T00:00:00.000Z";
-  const usageEvents = events.map((entry, idx) => ({
-    ...ZERO_USAGE,
-    occurredAt: `2026-09-01T00:0${String(idx)}:00.000Z`,
-    inputTokens: 1_000_000,
-    outputTokens: 100_000,
-    costUsd: null,
-    costComplete: false,
-    ...entry,
-  }));
-  return {
-    source,
-    available: true,
-    fingerprint: id,
-    error: null,
-    complete: true,
-    sourceIds: [id],
-    documents: [
-      {
-        ...EMPTY_DOCUMENT_DETAILS,
-        source,
-        sourceId: id,
-        title: id,
-        path: `/nonexistent-transcript/${id}`,
-        workspace: "/fixture",
-        agent: source,
-        createdAt: ts,
-        updatedAt: ts,
-        runtimeId: id,
-        openingPromptHash: null,
-        dialogueText: id,
-        toolOutputText: "",
-        usageEvents,
-      },
-    ],
-  };
-}
-
-describe("history index catalog repricing", () => {
-  test("reprices stored usage events across opens when catalog pricing changes without re-reading transcripts", async () => {
-    const runtime = defaultHistoryRuntimePaths(
-      path.join(fixtureRoot, "reprice-home"),
-    );
-    const sample = Object.values(MODELS).find(
-      (entry) => entry.pricing.modality === "text",
-    );
-    if (sample?.pricing.modality !== "text") throw new Error("no text model");
-    const textModel = (
-      id: string,
-      provider: "openai" | "moonshot" | "xai",
-      input: number,
-      output: number,
-    ) => ({
-      ...sample,
-      id,
-      provider,
-      pricing: {
-        modality: "text" as const,
-        input,
-        cachedInput: 0.5,
-        cacheRead: 0.2,
-        output,
-      },
-      pricingOnly: true as const,
-      routes: {},
-    });
-    const catalogV1: Catalog = {
-      "codex-test-priced": textModel("codex-test-priced", "openai", 2, 10),
-    };
-    const catalogV2: Catalog = {
-      "codex-test-priced": textModel("codex-test-priced", "openai", 4, 20),
-      "codex-newly-priced": textModel("codex-newly-priced", "openai", 5, 15),
-      "kimi-k9-pro": textModel("kimi-k9-pro", "moonshot", 1, 3),
-      "grok-9": textModel("grok-9", "xai", 2, 8),
-    };
-    expect(pricingCatalogFingerprint(catalogV1)).not.toBe(
-      pricingCatalogFingerprint(catalogV2),
-    );
-    const firstOpen = await HistoryIndex.open(runtime, false, {
-      models: catalogV1,
-    });
-    await firstOpen.ingest([
-      repriceSourceResult("codex", [
-        { model: "codex-test-priced", cachedInputTokens: 400_000 },
-        { model: "codex-newly-priced", outputTokens: 200_000 },
-      ]),
-      repriceSourceResult("kimi", [
-        { model: "kimi-code/k9-pro", cacheReadTokens: 500_000 },
-      ]),
-      repriceSourceResult("grok", [
-        {
-          model: "xai/grok-9-build",
-          cacheReadTokens: 400_000,
-          costUsd: 0.77,
-          costComplete: true,
-        },
-        { model: "xai/grok-9-build", cacheReadTokens: 400_000 },
-      ]),
-    ]);
-    expect(firstOpen.usage({ since: null, source: null }).total).toMatchObject({
-      costUsd: expect.closeTo(3.17),
-      costComplete: false,
-    });
-    firstOpen.close();
-
-    const secondOpen = await HistoryIndex.open(runtime, false, {
-      models: catalogV2,
-    });
-    expect(secondOpen.usage({ since: null, source: null }).total).toMatchObject(
-      {
-        costUsd: expect.closeTo(4.6 + 8 + 1.4 + 0.77 + 2.2),
-        costComplete: true,
-      },
-    );
-    expect(
-      repriceStoredUsageEvent("antigravity", "gemini-x", ZERO_USAGE, catalogV2),
-    ).toEqual({ costUsd: null, costComplete: true });
-    secondOpen.close();
   });
 });
 

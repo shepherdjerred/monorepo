@@ -38,6 +38,7 @@ export const ZERO_USAGE: UsageCounts = {
 export type UsageCost = {
   readonly costUsd: number | null;
   readonly costComplete: boolean;
+  readonly costReported?: boolean;
 };
 
 function hasBillableTokens(usage: UsageCounts): boolean {
@@ -217,6 +218,7 @@ const PRICING_FINGERPRINT_KEY = "pricing_fingerprint";
 const StoredUsageRowSchema = UsageStoredColumnsSchema.extend({
   rowid: z.number(),
   source: z.string(),
+  cost_reported: z.number(),
 });
 
 function repriceUsageRows(database: Database, models: Catalog): void {
@@ -224,7 +226,7 @@ function repriceUsageRows(database: Database, models: Catalog): void {
     .prepare(
       `SELECT rowid, source, model, input_tokens, output_tokens,
               cache_read_tokens, cache_creation_tokens, cached_input_tokens,
-              reasoning_tokens, cost_usd, cost_complete
+              reasoning_tokens, cost_usd, cost_complete, cost_reported
          FROM usage_events`,
     )
     .all()
@@ -233,11 +235,8 @@ function repriceUsageRows(database: Database, models: Catalog): void {
     "UPDATE usage_events SET cost_usd = ?, cost_complete = ? WHERE rowid = ?",
   );
   for (const row of rows) {
-    // Preserve Grok rows already settled from exact xAI `costUsdTicks`.
-    if (
-      (row.source === "grok" || row.source === "grok-mirror") &&
-      row.cost_complete === 1
-    ) {
+    // Preserve rows already settled from exact provider-reported billing (e.g. Grok `costUsdTicks`).
+    if (row.cost_reported === 1) {
       continue;
     }
     const source = parseHistorySourceName(row.source, "in usage_events");
@@ -286,7 +285,11 @@ export function reconcileUsagePricing(
 
 /** Cost a source already computed and reported itself (e.g. Grok's costUsdTicks). */
 export function reportedCost(costUsd: number | null): UsageCost {
-  return { costUsd, costComplete: costUsd !== null };
+  return {
+    costUsd,
+    costComplete: costUsd !== null,
+    ...(costUsd === null ? {} : { costReported: true }),
+  };
 }
 
 export type UsageFieldLocation = {
@@ -420,5 +423,6 @@ export function usageEventEntry(
     reasoningTokens: usage.reasoningTokens,
     costUsd: cost.costUsd,
     costComplete: cost.costComplete,
+    ...(cost.costReported === true ? { costReported: true } : {}),
   };
 }
