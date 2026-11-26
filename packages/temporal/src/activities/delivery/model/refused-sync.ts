@@ -4,6 +4,7 @@ import type { DeploymentDetail } from "@shepherdjerred/delivery/contract";
 import { effectSignal } from "#lib/delivery/model/effect-signal.ts";
 import {
   SyncedArgoHistorySchema,
+  assertComparedApplication,
   latestArgoSyncedHistory,
 } from "#lib/delivery/argocd-proof.ts";
 import {
@@ -92,7 +93,13 @@ export async function syncPruneDecision(
   current: DeploymentDetail,
   recipe: KubernetesApplicationRecipe,
   rendered: RenderedApplication,
+  application: unknown,
 ) {
+  // Every prune guard below reads Argo's comparison; a failed one proves
+  // nothing. `application` is the sync step's own read, taken after
+  // apply-safety hard-refreshed the written body, so it describes this
+  // revision.
+  assertComparedApplication(rendered.name, application);
   // A preserved world switches images only with fresh preservation proof.
   minecraftSyncFence(current, recipe);
   // A forum release replaces the prior release's terminal migration Job;

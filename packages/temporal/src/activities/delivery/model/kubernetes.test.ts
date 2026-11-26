@@ -989,6 +989,43 @@ describe("a pre-sync guard refusal (AI-884)", () => {
   });
 });
 
+describe("a failed Argo comparison before the prune guards", () => {
+  test("refuses media's 2.0.0-1019523 ComparisonError before any guard reads managed resources", async () => {
+    const { current, recipe } = fixture();
+    const refused = refusedApplication("prior-request");
+    calls.reads = [
+      {
+        ...refused,
+        status: {
+          ...refused.status,
+          sync: { status: "Unknown" },
+          conditions: [
+            {
+              type: "ComparisonError",
+              message:
+                'Deployment.apps "media-qbittorrent" is invalid: spec.template.spec.initContainers[1].name: Duplicate value: "gluetun"',
+            },
+          ],
+        },
+      },
+    ];
+    const failure = await sync(current, recipe, "step-sync").catch(
+      (error: unknown) => error,
+    );
+    expect(failure).toMatchObject({
+      type: "DeliverySyncGuardRefused",
+      nonRetryable: true,
+    });
+    expect(JSON.stringify(calls.stages.at(-1)?.receipt)).toContain(
+      "until Argo completes its comparison",
+    );
+    expect(calls.events).not.toContain(
+      expect.stringContaining("managed-resources"),
+    );
+    expect(calls.events).not.toContain(expect.stringContaining("sync-managed"));
+  });
+});
+
 describe("Scout child sync timeout floor (AI-658)", () => {
   test.each([
     ["scout-beta", "scout-for-lol/beta", "2700"],

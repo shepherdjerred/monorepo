@@ -429,7 +429,7 @@ async function syncOwned(
   if (!before.requested) {
     let prune: Awaited<ReturnType<typeof syncPruneDecision>>;
     try {
-      prune = await syncPruneDecision(current, recipe, rendered);
+      prune = await syncPruneDecision(current, recipe, rendered, raw);
     } catch (error) {
       return await settleRefusedSyncGuard(
         { current, rendered, key, operationId: requestId },
