@@ -44,14 +44,15 @@ export async function captureHasUniquePlexRequester(
   const account = {
     payload: { path: ["plexAccountId"], equals: plexAccountId },
   };
-  const [matching, accountRows, requesterRows] = await Promise.all([
-    tx.migrationRecord.count({
-      where: { ...scope, AND: [requester, account] },
-    }),
-    tx.migrationRecord.count({ where: { ...scope, ...account } }),
+  const matching = await tx.migrationRecord.count({
+    where: { ...scope, AND: [requester, account] },
+  });
+  const accountRows = await tx.migrationRecord.count({
+    where: { ...scope, ...account },
+  });
+  const requesterRows =
     requestCount ??
-      tx.migrationRecord.count({ where: { ...scope, ...requester } }),
-  ]);
+    (await tx.migrationRecord.count({ where: { ...scope, ...requester } }));
   return matching > 0 && matching === accountRows && matching === requesterRows;
 }
 

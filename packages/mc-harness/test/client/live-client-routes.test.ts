@@ -1,6 +1,15 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { createServer } from "node:net";
+import os from "node:os";
+import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 import { dispatchClients } from "#daemon/client-routes.ts";
+import { assertConnectedClientName } from "#daemon/client-session.ts";
+import { ClientManager } from "#daemon/clients.ts";
+import * as prismModule from "#daemon/prism.ts";
 import { BridgeClient } from "#bridge/client.ts";
+import type { Player } from "#protocol/bridge.ts";
 import { ClientStatusResponseSchema } from "#protocol/client.ts";
 import { LiveJournal } from "#src/live/journal.ts";
 import { liveContext } from "#test/live-harness.ts";
@@ -35,6 +44,8 @@ function fixture() {
     },
     state: {
       connected: true,
+      name: "Tester",
+      uuid: "00000000-0000-4000-8000-000000000001",
       world: "minecraft:overworld",
       position: [8, 75, 112],
       yaw: 0,
@@ -87,13 +98,50 @@ function fixture() {
 describe("live rendered client actions", () => {
   it("keeps ordinary Prism starts separate from explicit documentation capture", async () => {
     const f = fixture();
+    let online: Player[] = [];
+    let activeName = "Tester";
+    let activeUuid = "00000000-0000-4000-8000-000000000001";
     const prism = vi
       .spyOn(f.ctx.clients, "startLive")
-      .mockResolvedValue(f.response.client);
+      .mockImplementation(async (name) => {
+        activeName = name;
+        activeUuid = "00000000-0000-4000-8000-000000000001";
+        online = [
+          {
+            name,
+            uuid: activeUuid,
+            world: "world",
+            pos: { x: 8, y: 75, z: 112 },
+            gameMode: "SURVIVAL",
+            npc: false,
+          },
+        ];
+        return { ...f.response.client, name };
+      });
     const capture = vi
       .spyOn(f.ctx.clients, "start")
-      .mockResolvedValue(f.response.client);
-    vi.spyOn(f.bridge, "players").mockResolvedValue({ players: [] });
+      .mockImplementation(async ({ name }) => {
+        activeName = name;
+        activeUuid = "00000000-0000-4000-8000-000000000002";
+        online = [
+          {
+            name,
+            uuid: activeUuid,
+            world: "world",
+            pos: { x: 8, y: 75, z: 112 },
+            gameMode: "SURVIVAL",
+            npc: false,
+          },
+        ];
+        return { ...f.response.client, name };
+      });
+    f.status.mockImplementation(async (name) => ({
+      client: { ...f.response.client, name },
+      state: { ...f.response.state, name: activeName, uuid: activeUuid },
+    }));
+    vi.spyOn(f.bridge, "players").mockImplementation(async () => ({
+      players: online,
+    }));
     vi.spyOn(f.ctx.clients, "list").mockReturnValue([]);
     const start = (body: unknown) =>
       dispatchClients(
@@ -179,5 +227,147 @@ describe("live rendered client actions", () => {
       f.call("move", { buttons: ["use"], ticks: 1 }),
     ).rejects.toThrow("unavailable");
     expect(f.request).not.toHaveBeenCalled();
+  });
+});
+
+describe("live client identity verification", () => {
+  it("refuses and immediately stops a live session when bridge player identity mismatches", async () => {
+    const f = fixture();
+    vi.spyOn(f.ctx.clients, "startLive").mockResolvedValue({
+      ...f.response.client,
+      name: "XiguaJerred",
+    });
+    f.status.mockResolvedValue({
+      client: { ...f.response.client, name: "XiguaJerred" },
+      state: {
+        ...f.response.state,
+        name: "XiguaJerred",
+        uuid: "00000000-0000-4000-8000-000000000011",
+      },
+    });
+    vi.spyOn(f.bridge, "players").mockResolvedValue({
+      players: [
+        {
+          name: "vietnamesechovy",
+          uuid: "00000000-0000-4000-8000-000000000099",
+          world: "world",
+          pos: { x: 8, y: 75, z: 112 },
+          gameMode: "SURVIVAL",
+          npc: false,
+        },
+      ],
+    });
+    const stop = vi.spyOn(f.ctx.clients, "stop").mockResolvedValue();
+    await expect(
+      dispatchClients(
+        f.ctx,
+        new Request("http://daemon/clients", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-mc-reason": "Verify%20identity",
+          },
+          body: JSON.stringify({ target: "live", name: "XiguaJerred" }),
+        }),
+        undefined,
+        undefined,
+      ),
+    ).rejects.toThrow(
+      "Live player identity differs from the controlled client",
+    );
+    expect(stop).toHaveBeenCalledWith(
+      "XiguaJerred",
+      "refused mismatched live player identity",
+    );
+  });
+
+  it("stops the controlled Prism session immediately when native client name mismatches requested session", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "live-id-check-"));
+    const actionsSeen: string[] = [];
+    let socketServer: ReturnType<typeof createServer> | undefined;
+    const launchSpy = vi
+      .spyOn(prismModule, "stageAndLaunchPrism")
+      .mockImplementation(async (options) => {
+        const bootstrapText = await Bun.file(options.bootstrap).text();
+        const { socket: socketPath } = z
+          .object({ socket: z.string() })
+          .parse(JSON.parse(bootstrapText));
+        socketServer = createServer((conn) => {
+          conn.setEncoding("utf8");
+          conn.once("data", (raw) => {
+            const req = z
+              .object({ id: z.string(), action: z.string() })
+              .parse(JSON.parse(raw.toString()));
+            actionsSeen.push(req.action);
+            const result =
+              req.action === "shutdown"
+                ? "stopping"
+                : {
+                    connected: true,
+                    name: "vietnamesechovy",
+                    uuid: "00000000-0000-4000-8000-000000000099",
+                    world: "minecraft:overworld",
+                    position: [0, 64, 0],
+                    yaw: 0,
+                    pitch: 0,
+                    health: 20,
+                    food: 20,
+                    hotbar: 0,
+                    screen: "",
+                    fps: 60,
+                    heldInputs: [],
+                    pid: process.pid,
+                    inventory: [],
+                    target: { kind: "miss" },
+                  };
+            conn.end(
+              `${JSON.stringify({ version: 1, id: req.id, ok: true, result })}\n`,
+            );
+          });
+        });
+        await new Promise<void>((resolve) => {
+          socketServer?.listen(socketPath, resolve);
+        });
+        return {
+          failure: Promise.withResolvers<never>().promise,
+          pid: process.pid,
+          instanceName: "storm-control-xiguajerred-test",
+          cleanup: () => Promise.resolve(),
+        };
+      });
+    try {
+      expect(() =>
+        assertConnectedClientName("XiguaJerred", {
+          ...fixture().response.state,
+          name: "vietnamesechovy",
+        }),
+      ).toThrow(
+        "Prism client connected as vietnamesechovy, expected XiguaJerred",
+      );
+
+      if (process.platform === "darwin") {
+        const manager = new ClientManager({
+          repoRoot: root,
+          dir: path.join(root, "clients"),
+          launcher: () => {
+            throw new Error("unused");
+          },
+          log: () => {
+            // Test logs are not asserted.
+          },
+          readyTimeoutMs: 5000,
+          stopTimeoutMs: 300,
+        });
+        await expect(manager.startLive("XiguaJerred")).rejects.toThrow(
+          "Prism client connected as vietnamesechovy, expected XiguaJerred",
+        );
+        expect(actionsSeen).toContain("shutdown");
+        expect(manager.list()).toEqual([]);
+      }
+    } finally {
+      launchSpy.mockRestore();
+      socketServer?.close();
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });

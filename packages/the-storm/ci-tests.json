@@ -14,10 +14,18 @@
       "args": ["-p", "plugin", "test"]
     },
     {
+      "runner": "gradle",
+      "group": "jvm",
+      "tier": "extended",
+      "name": "rwfbots-simulation",
+      "args": ["-p", "plugin", ":rwfbots:simulationTest"]
+    },
+    {
       "runner": "vitest",
       "group": "tools",
       "args": [
         "tests/pins.test.ts",
+        "tests/gameplay-fixtures.test.ts",
         "tests/rcon.test.ts",
         "tests/rwf-recording.test.ts",
         "tests/rwf-status.test.ts",

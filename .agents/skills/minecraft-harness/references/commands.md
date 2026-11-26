@@ -46,7 +46,12 @@ Take a snapshot before a large edit; `we-undo` only covers WorldEdit history.
 
 ```bash
 toolkit mc cmd "time set noon"
+toolkit mc cmd "minecraft:tp Steve 0 80 0"
 toolkit mc players
 toolkit mc events --since <cursor>     # chat, commands, joins, deaths, plugin log lines
 toolkit mc logs -n 100                 # container console tail
 ```
+
+Inside `storm-dev` (or any server running TheStorm), unqualified `tp` resolves
+to TheStorm's staff `/tp` override rather than vanilla console teleport syntax;
+always use `minecraft:tp` in harness commands and scripts.

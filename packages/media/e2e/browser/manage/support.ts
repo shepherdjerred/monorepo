@@ -1,17 +1,13 @@
 import { expect, type Page, type Request, type Route } from "@playwright/test";
-import {
-  allowWrites,
-  openSettled,
-  violationDetails,
-} from "#e2e/browser/support.ts";
+import { FIXTURE_CSRF_TOKEN } from "#testing/fixture-api/server.ts";
+import { openSettled, violationDetails } from "#e2e/browser/support.ts";
 
 /**
- * Opens one of the owner's Manage pages, waits for its sections to load, and
- * lets it send the commands a test then answers with `answerWrites`.
+ * Opens one of the owner's Manage pages and waits for its sections (and the
+ * fixture session's CSRF cookie) to settle before sending commands.
  */
 export async function openManage(page: Page, path: string) {
   await openSettled(page, "owner", path);
-  await allowWrites(page);
 }
 
 /** Opens a row that is closed until asked for, such as a provider. */
@@ -87,7 +83,9 @@ async function interceptWrites(
 
 function recorded(request: Request): Write {
   const headers = request.headers();
-  expect(headers["x-csrf-token"]).toBe("browser-test");
+  expect([FIXTURE_CSRF_TOKEN, "browser-test"]).toContain(
+    headers["x-csrf-token"],
+  );
   expect(headers["idempotency-key"]).toMatch(/^[\da-f-]{36}$/u);
   return {
     method: request.method(),

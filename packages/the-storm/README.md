@@ -119,10 +119,11 @@ the `excludedSuites` of `ci-tests.json`, outside both the `ci` and `extended`
 test tiers of the repository-wide rule (root `AGENTS.md`): they need a real
 Paper server or native client, which neither tier starts.
 
-The headless whole-match bot simulations are part of that acceptance. Their
-classes carry the JUnit tag `simulation`; the Gradle `test` task excludes the
-tag, so CI never runs them. Run them after changing bot behavior, rwf match
-rules, kits or shipped maps:
+The headless whole-match bot simulations carry the JUnit tag `simulation`.
+Gradle's PR `test` task excludes the tag, while `:rwfbots:simulationTest` runs
+in the `extended` tier (`test:extended:jvm` locally before marking a PR ready
+and nightly `ci-extended-verify` on `main`). Run them after changing bot
+behavior, rwf match rules, kits or shipped maps:
 
 ```bash
 cd packages/the-storm/plugin

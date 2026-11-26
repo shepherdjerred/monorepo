@@ -1,5 +1,6 @@
 import net from "node:net";
 import { afterEach, expect, it } from "vitest";
+import { verifyRconReady } from "./e2e/harness/boot/rcon-ready.ts";
 import { RconClient } from "./e2e/harness/rcon.ts";
 
 const servers: { server: net.Server; sockets: Set<net.Socket> }[] = [];
@@ -263,4 +264,40 @@ it("replays an already-lost RCON connection to a later session subscriber", asyn
   });
   expect(later).toEqual([failure]);
   await expect(rcon.command("list")).rejects.toBe(failure);
+});
+
+it(
+  "waits past a 5s post-Done main-thread stall when verifying RCON readiness within deadline",
+  { timeout: 15_000 },
+  async () => {
+    const seen: string[] = [];
+    const port = await fakeServer(
+      false,
+      undefined,
+      async (socket, id, type, body) => {
+        if (type === 2) {
+          seen.push(body);
+          await new Promise<void>((resolve) => {
+            setTimeout(resolve, 5200);
+          });
+        }
+        socket.write(packet(id, replyBody(type)));
+      },
+    );
+    await expect(
+      verifyRconReady(
+        { host: "127.0.0.1", port },
+        "test-only",
+        Date.now() + 10_000,
+      ),
+    ).resolves.toBeUndefined();
+    expect(seen).toEqual(["list"]);
+  },
+);
+
+it("aborts verifyRconReady when the main thread does not answer before deadline", async () => {
+  const port = await fakeServer(false, undefined, () => Promise.resolve());
+  await expect(
+    verifyRconReady({ host: "127.0.0.1", port }, "test-only", Date.now() + 120),
+  ).rejects.toThrow();
 });

@@ -4,9 +4,12 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { gradleLaunchArgs } from "#daemon/client-launch.ts";
 import {
+  createPrismMemoryMonitor,
   preparePrismInstance,
   prismControlInstanceName,
+  prismControlLaunchArgs,
   waitForPrismDiscovery,
+  watchPrismMemoryPrompt,
 } from "#daemon/prism.ts";
 import {
   caffeinateArgs,
@@ -264,5 +267,97 @@ describe("parallel Prism session isolation", () => {
     expect(
       await Bun.file(path.join(captureInstanceDir, "instance.cfg")).exists(),
     ).toBe(false);
+  });
+});
+
+describe("Prism profile selection and memory-pressure prompt detection", () => {
+  it("passes the requested session name as --profile when launching a controlled instance", () => {
+    expect(
+      prismControlLaunchArgs(
+        "/Applications/Prism Launcher.app/Contents/MacOS/prismlauncher",
+        "storm-control-xiguajerred-1234abcd",
+        "XiguaJerred",
+      ),
+    ).toEqual([
+      "/Applications/Prism Launcher.app/Contents/MacOS/prismlauncher",
+      "--launch",
+      "storm-control-xiguajerred-1234abcd",
+      "--profile",
+      "XiguaJerred",
+    ]);
+  });
+
+  it("fails fast with an actionable diagnostic when EnsureAvailableMemory stalls in PrismLauncher-0.log", async () => {
+    const { dir } = await fixture();
+    const logPath = path.join(dir, "PrismLauncher-0.log");
+    await writeFile(logPath, "0.001 D Prior launch entry\n");
+    const initial = await readFile(logPath);
+    const offset = initial.length;
+    let clock = 1000;
+    const monitor = createPrismMemoryMonitor({
+      logPath,
+      offset,
+      graceMs: 3000,
+      now: () => clock,
+    });
+
+    await writeFile(
+      logPath,
+      '1.234 D Task "EnsureAvailableMemory(0x600001)" starting\n',
+      { flag: "a" },
+    );
+    await expect(monitor.poll()).resolves.toBeUndefined();
+    clock = 3999;
+    await expect(monitor.poll()).resolves.toBeUndefined();
+    clock = 4000;
+    await expect(monitor.poll()).rejects.toThrow(
+      /memory-pressure confirmation dialog \(EnsureAvailableMemory\)/u,
+    );
+  });
+
+  it("clears the EnsureAvailableMemory timer once the check succeeds or aborted is logged", async () => {
+    const { dir } = await fixture();
+    const logPath = path.join(dir, "PrismLauncher-0.log");
+    await writeFile(logPath, "");
+    let clock = 100;
+    const monitor = createPrismMemoryMonitor({
+      logPath,
+      offset: 0,
+      graceMs: 3000,
+      now: () => clock,
+    });
+
+    await writeFile(
+      logPath,
+      '1.000 D Task "EnsureAvailableMemory(0x1)" starting\n',
+      { flag: "a" },
+    );
+    await expect(monitor.poll()).resolves.toBeUndefined();
+    clock = 1500;
+    await writeFile(
+      logPath,
+      '2.500 D Task "EnsureAvailableMemory(0x1)" succeeded\n',
+      { flag: "a" },
+    );
+    await expect(monitor.poll()).resolves.toBeUndefined();
+    clock = 10_000;
+    await expect(monitor.poll()).resolves.toBeUndefined();
+
+    const abortController = new AbortController();
+    const afterSuccess = await readFile(logPath);
+    const stalledWatch = watchPrismMemoryPrompt({
+      logPath,
+      offset: afterSuccess.length,
+      socketPath: path.join(dir, "missing.sock"),
+      signal: abortController.signal,
+      graceMs: 40,
+      pollMs: 10,
+    });
+    await writeFile(
+      logPath,
+      '3.000 D Task "EnsureAvailableMemory(0x2)" starting\n',
+      { flag: "a" },
+    );
+    await expect(stalledWatch).rejects.toThrow("EnsureAvailableMemory");
   });
 });

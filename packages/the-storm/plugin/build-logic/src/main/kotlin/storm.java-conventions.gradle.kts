@@ -101,8 +101,8 @@ val noSkippedTests =
     }
 
 tasks.test {
-  // Headless whole-match simulations are extended gameplay acceptance: the
-  // committer runs them locally (rwfbots' simulationTest), not CI.
+  // Headless whole-match simulations run in the extended tier (:rwfbots:simulationTest),
+  // not the PR unit suite.
   useJUnitPlatform { excludeTags("simulation") }
   // sqlite-jdbc loads a native library; JDK 25 warns unless native access is granted.
   jvmArgs("--enable-native-access=ALL-UNNAMED")

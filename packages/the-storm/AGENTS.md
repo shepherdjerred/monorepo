@@ -24,7 +24,8 @@ layout, layering table and commands.
   (see README.md). Paper suites stay in `excludedSuites`, outside both test
   tiers of the repository-wide rule in the root `AGENTS.md`.
 - Tag tests that play whole matches or long scenarios `@Tag("simulation")`.
-  CI excludes the tag; the committer runs `:rwfbots:simulationTest` locally.
+  PR `test` excludes the tag; `:rwfbots:simulationTest` runs in the `extended`
+  tier (`test:extended:jvm` locally before marking ready, and nightly on `main`).
 - Keep test assertions intact; MockBukkit gaps are fixed by moving logic into
   the pure domain or covered by committer-run real-server integration tests.
 - No `@SuppressWarnings`, `NOPMD` or `CHECKSTYLE:OFF`; the repository

@@ -1,14 +1,26 @@
-import { afterEach, beforeEach, expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
+  LAKE_PREDECESSOR_SCHEMA_FINGERPRINT,
+  lakeSchemaFingerprint,
+} from "@scout-for-lol/backend/report-lake/schema.ts";
+import {
+  DEV_SEED_REFRESH_COMMAND,
   adoptSeedIfUnseeded,
   copySeedInto,
+  inspectPublishedBuild,
   publishedBuildId,
   resolveBackendLakeDir,
   seedLakeDir,
 } from "./dev-lake-seed.ts";
+import {
+  describe as describeLake,
+  parseFlags,
+  publishFromCheckout,
+  runDevSeedCli,
+} from "./dev-seed.ts";
 
 let workspace = "";
 const originalDataHome = Bun.env["XDG_DATA_HOME"];
@@ -21,6 +33,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  vi.restoreAllMocks();
   if (originalDataHome === undefined) {
     delete Bun.env["XDG_DATA_HOME"];
   } else {
@@ -29,16 +42,32 @@ afterEach(async () => {
   await rm(workspace, { recursive: true, force: true });
 });
 
+type WriteLakeOptions = {
+  readonly schemaFingerprint?: string | null;
+  readonly rawManifest?: string;
+};
+
 /** A lake with one published build, plus the staging dirs startup creates. */
-async function writeLake(lakeDir: string, buildId: string): Promise<void> {
-  await mkdir(path.join(lakeDir, "builds", buildId, "matches"), {
+async function writeLake(
+  lakeDir: string,
+  buildId: string,
+  options: WriteLakeOptions = {},
+): Promise<void> {
+  const buildDir = path.join(lakeDir, "builds", buildId);
+  await mkdir(path.join(buildDir, "matches"), {
     recursive: true,
   });
   await mkdir(path.join(lakeDir, "matches-recent"), { recursive: true });
-  await writeFile(
-    path.join(lakeDir, "builds", buildId, "matches", "data_0.parquet"),
-    "rows",
-  );
+  await writeFile(path.join(buildDir, "matches", "data_0.parquet"), "rows");
+  if (options.rawManifest !== undefined) {
+    await writeFile(path.join(buildDir, "manifest.json"), options.rawManifest);
+  } else if (options.schemaFingerprint !== null) {
+    const fingerprint = options.schemaFingerprint ?? lakeSchemaFingerprint();
+    await writeFile(
+      path.join(buildDir, "manifest.json"),
+      JSON.stringify({ schemaFingerprint: fingerprint }),
+    );
+  }
   await writeFile(path.join(lakeDir, "CURRENT"), `${buildId}\n`);
 }
 
@@ -214,4 +243,191 @@ test("leaves an absolute REPORT_LAKE_DIR exactly where it points", () => {
   expect(
     resolveBackendLakeDir("/repo/packages/backend", "/srv/shared/report-lake"),
   ).toBe("/srv/shared/report-lake");
+});
+
+test("classifies current, predecessor, missing, corrupt, and stale build fingerprints", async () => {
+  const currentLake = path.join(workspace, "current");
+  await writeLake(currentLake, "build-current");
+  expect(await inspectPublishedBuild(currentLake)).toEqual({
+    buildId: "build-current",
+    schemaFingerprint: lakeSchemaFingerprint(),
+    schemaStatus: "current",
+    compatible: true,
+  });
+
+  const predecessorLake = path.join(workspace, "predecessor");
+  await writeLake(predecessorLake, "build-predecessor", {
+    schemaFingerprint: LAKE_PREDECESSOR_SCHEMA_FINGERPRINT,
+  });
+  expect(await inspectPublishedBuild(predecessorLake)).toEqual({
+    buildId: "build-predecessor",
+    schemaFingerprint: LAKE_PREDECESSOR_SCHEMA_FINGERPRINT,
+    schemaStatus: "predecessor",
+    compatible: true,
+  });
+
+  const missingManifestLake = path.join(workspace, "missing-manifest");
+  await writeLake(missingManifestLake, "build-missing", {
+    schemaFingerprint: null,
+  });
+  expect(await inspectPublishedBuild(missingManifestLake)).toEqual({
+    buildId: "build-missing",
+    schemaFingerprint: undefined,
+    schemaStatus: "unknown",
+    compatible: false,
+  });
+
+  const corruptManifestLake = path.join(workspace, "corrupt-manifest");
+  await writeLake(corruptManifestLake, "build-corrupt", {
+    rawManifest: "{not-json",
+  });
+  expect(await inspectPublishedBuild(corruptManifestLake)).toEqual({
+    buildId: "build-corrupt",
+    schemaFingerprint: undefined,
+    schemaStatus: "unknown",
+    compatible: false,
+  });
+
+  const staleLake = path.join(workspace, "stale");
+  await writeLake(staleLake, "build-stale", {
+    schemaFingerprint: "deadbeef00000000",
+  });
+  expect(await inspectPublishedBuild(staleLake)).toEqual({
+    buildId: "build-stale",
+    schemaFingerprint: "deadbeef00000000",
+    schemaStatus: "unknown",
+    compatible: false,
+  });
+});
+
+test("adopts a seed with the declared predecessor schema fingerprint", async () => {
+  await writeLake(seedLakeDir(), "pred-seed-0001", {
+    schemaFingerprint: LAKE_PREDECESSOR_SCHEMA_FINGERPRINT,
+  });
+  const lake = path.join(workspace, "checkout", "report-lake");
+
+  const message = await adoptSeedIfUnseeded(lake);
+
+  expect(message).toContain("pred-seed-0001");
+  expect(await publishedBuildId(lake)).toBe("pred-seed-0001");
+});
+
+test("skips adopting a stale or manifest-less seed and points to dev:seed", async () => {
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {
+    // Silence expected warning output during test.
+  });
+  await writeLake(seedLakeDir(), "1790446802941-0005", {
+    schemaFingerprint: "stale00000000000",
+  });
+  const lake = path.join(workspace, "checkout", "report-lake");
+  await mkdir(lake, { recursive: true });
+
+  const staleMessage = await adoptSeedIfUnseeded(lake);
+
+  expect(staleMessage).toContain("1790446802941-0005");
+  expect(staleMessage).toContain("stale00000000000");
+  expect(staleMessage).toContain(DEV_SEED_REFRESH_COMMAND);
+  expect(await publishedBuildId(lake)).toBeNull();
+  expect(warn).toHaveBeenCalledTimes(1);
+
+  await rm(seedLakeDir(), { recursive: true, force: true });
+  await writeLake(seedLakeDir(), "legacy-0001", { schemaFingerprint: null });
+
+  const missingMessage = await adoptSeedIfUnseeded(lake);
+
+  expect(missingMessage).toContain("legacy-0001");
+  expect(missingMessage).toContain("no valid schemaFingerprint");
+  expect(missingMessage).toContain(DEV_SEED_REFRESH_COMMAND);
+  expect(await publishedBuildId(lake)).toBeNull();
+});
+
+test("warns when this checkout already has an incompatible lake build", async () => {
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {
+    // Silence expected warning output during test.
+  });
+  await writeLake(seedLakeDir(), "seed-current-0001");
+  const lake = path.join(workspace, "checkout", "report-lake");
+  await writeLake(lake, "local-stale-0001", {
+    schemaFingerprint: "stale00000000000",
+  });
+
+  const message = await adoptSeedIfUnseeded(lake);
+
+  expect(message).toContain("local-stale-0001");
+  expect(message).toContain(DEV_SEED_REFRESH_COMMAND);
+  expect(await publishedBuildId(lake)).toBe("local-stale-0001");
+  expect(warn).toHaveBeenCalledTimes(1);
+});
+
+test("copySeedInto refuses a stale or manifest-less seed", async () => {
+  await writeLake(seedLakeDir(), "stale-seed-0001", {
+    schemaFingerprint: "stale00000000000",
+  });
+  const lake = path.join(workspace, "checkout", "report-lake");
+  await expect(copySeedInto(lake)).rejects.toThrow(DEV_SEED_REFRESH_COMMAND);
+
+  await rm(seedLakeDir(), { recursive: true, force: true });
+  await writeLake(seedLakeDir(), "missing-seed-0001", {
+    schemaFingerprint: null,
+  });
+  await expect(copySeedInto(lake)).rejects.toThrow(
+    "no valid schemaFingerprint",
+  );
+});
+
+test("dev-seed CLI modes validate flags, status, --from-checkout, and rebuild", async () => {
+  const log = vi.spyOn(console, "log").mockImplementation(() => {
+    // Silence expected status output during test.
+  });
+  expect(() => parseFlags(["--bogus"])).toThrow("Unknown flag --bogus");
+  expect([...parseFlags(["--status"])]).toEqual(["--status"]);
+
+  const fakeScoutRoot = path.join(workspace, "scout-root");
+  const checkoutLake = path.join(
+    fakeScoutRoot,
+    "packages",
+    "backend",
+    "report-lake",
+  );
+
+  await expect(publishFromCheckout(checkoutLake)).rejects.toThrow(
+    "has no published build to seed from",
+  );
+
+  await writeLake(checkoutLake, "stale-0001", {
+    schemaFingerprint: "stale00000000000",
+  });
+  expect(await describeLake(checkoutLake, "this checkout")).toContain(
+    "incompatible:",
+  );
+  await expect(
+    runDevSeedCli(["--from-checkout"], fakeScoutRoot),
+  ).rejects.toThrow("Refusing to seed from incompatible build stale-0001");
+  expect(await publishedBuildId(seedLakeDir())).toBeNull();
+
+  await rm(checkoutLake, { recursive: true, force: true });
+  await writeLake(checkoutLake, "pred-0001", {
+    schemaFingerprint: LAKE_PREDECESSOR_SCHEMA_FINGERPRINT,
+  });
+  await runDevSeedCli(["--from-checkout"], fakeScoutRoot);
+  expect(await publishedBuildId(seedLakeDir())).toBe("pred-0001");
+  expect(await describeLake(seedLakeDir(), "seed")).toContain(
+    "[schema: predecessor]",
+  );
+
+  await runDevSeedCli(["--status"], fakeScoutRoot);
+
+  const spawned: string[][] = [];
+  await runDevSeedCli([], fakeScoutRoot, (command, options) => {
+    spawned.push([...command]);
+    expect(options.env["REPORT_LAKE_DIR"]).toBe(seedLakeDir());
+    return { exited: Promise.resolve(0) };
+  });
+  expect(spawned).toHaveLength(1);
+  expect(spawned[0]).toContain("compact:report-lake");
+
+  await expect(
+    runDevSeedCli([], fakeScoutRoot, () => ({ exited: Promise.resolve(2) })),
+  ).rejects.toThrow("Report-lake rebuild failed with exit code 2");
+  expect(log).toHaveBeenCalled();
 });
