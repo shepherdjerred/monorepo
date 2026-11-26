@@ -1782,8 +1782,9 @@ S3 workflows retain the AWS credential chain.
 `toolkit tend` inspects and reaps orphaned local workstation and agent-host
 resources across git worktrees, temporary PostgreSQL clusters and dead-owner
 test databases, orphaned processes, high-port Tailscale Serve listeners,
-managed Docker sandboxes, and aged temporary artifacts. Runs are dry-run by
-default; pass `--apply` to mutate.
+managed Docker sandboxes, and aged temporary artifacts. It also shares the
+files that are identical between a repository's worktrees. Runs are dry-run
+by default; pass `--apply` to mutate.
 
 ```bash
 toolkit tend status
@@ -1791,6 +1792,8 @@ toolkit tend run
 toolkit tend run --apply --only worktrees,tailscale-serve
 toolkit tend worktrees --summary
 toolkit tend worktrees --verbose --worktree-min-age 3d
+toolkit tend dedupe --summary
+toolkit tend dedupe --worktree ~/.herdr/worktrees/monorepo/my-branch --apply
 toolkit tend schedule install
 toolkit tend lease list --json
 toolkit tend lease wrap --kind process --target temporal-dev --ttl 2h -- bun run dev
@@ -1924,19 +1927,79 @@ git update-ref -d refs/tend/rescue/<name>              # discard it for good
 A rescue ref for a detached `HEAD` with nothing uncommitted points at that
 commit itself.
 
+### Worktree deduplication
+
+Git writes every checkout fresh, so each worktree stores its own copy of files
+that are byte-for-byte the same in the others. `toolkit tend dedupe` (and the
+`dedupe` surface of `tend run`) replaces those copies with APFS copy-on-write
+clones of one of them: the files keep their path, content, permissions and
+modification time, and stop occupying the same blocks many times over. Nothing
+is deleted and no worktree is removed. Editing a clone later copies only the
+blocks that change and never touches the other worktrees.
+
+```bash
+toolkit tend dedupe --summary                    # dry run: files and bytes per worktree
+toolkit tend dedupe --apply
+toolkit tend dedupe --worktree <path> --apply    # one worktree, e.g. right after creating it
+toolkit tend dedupe --dedupe-min-size 4k         # default 64k
+```
+
+A file in one worktree is replaced by a clone of the same path in another
+only when all of this holds:
+
+- both index entries are plain entries for a regular file with the same blob
+  and mode (`git ls-files -s -v`; assume-unchanged and skip-worktree entries
+  are left out, because `git status` does not report changes to them);
+- `git status` reports the path as changed or untracked in neither worktree,
+  and neither file has been touched since that status started;
+- neither worktree is mid rebase, merge, cherry-pick or bisect, and the one
+  being changed is not named by an open Forum notice for this host;
+- both are regular files of the same size, at least `--dedupe-min-size`, on
+  the same device.
+
+The clone source is the main checkout's copy when it qualifies, otherwise the
+first worktree whose copy does. `--worktree` limits which worktree has files
+replaced; every worktree still lends its copies. Worktrees with live sessions
+are included: the checks above and the last-moment check below are the
+protection, not liveness.
+
+Each replacement clones the source beside the target, gives the clone the
+target's permissions and times, checks once more that neither file changed,
+and renames the clone over the target. The directory's own times are then put
+back, because the reaper and build tools read directory mtimes as activity. A
+file that changed in between is left alone and counted. Afterwards
+`git update-index -q --refresh` runs once in the worktree, so the job, not the
+next interactive `git status`, pays for re-reading the new inodes; if the
+index is locked that step is skipped with a warning.
+
+Which files are already clones is remembered per worktree under
+`~/.toolkit/tend/dedupe/`, so a later pass leaves them alone. That directory
+is a rebuildable cache: losing it costs one repeat pass.
+
+The surface runs on macOS only and reports itself skipped elsewhere. A volume
+that cannot clone is reported and nothing on it is replaced; there is no
+fallback to copying. A failed Forum notice query holds it, as it holds the
+reaper.
+
+### Daily schedule
+
 `toolkit tend schedule install` loads the per-user macOS LaunchAgent
 `com.jerred.toolkit-tend`, which runs
-`toolkit tend run --apply --only worktrees` daily at 04:30 local time with `~/.local/bin`
-and Homebrew on `PATH` (for `hc` and `gh`) and logs to
-`~/.toolkit/tend/logs/`. Installing removes nothing: the agent does not run
-at load, so the first sweep is the next 04:30. The schedule is a calendar time
-rather than an interval because launchd drops an interval firing that falls
-while the machine sleeps, and runs a missed calendar firing at the next wake. To sweep by hand, read the candidates from the dry run
-and then apply:
+`toolkit tend run --apply --only worktrees,dedupe` daily at 04:30 local time
+with `~/.local/bin` and Homebrew on `PATH` (for `hc` and `gh`) and logs to
+`~/.toolkit/tend/logs/`. The reaper runs first and dedupe then shares what is
+identical between the worktrees that are left. Installing changes nothing: the
+agent does not run at load, so the first run is the next 04:30. The schedule
+is a calendar time rather than an interval because launchd drops an interval
+firing that falls while the machine sleeps, and runs a missed calendar firing
+at the next wake. To sweep by hand, read the candidates from the dry run and
+then apply:
 
 ```bash
 toolkit tend worktrees --verbose   # dry run: candidates and kept worktrees
 toolkit tend worktrees --apply
+toolkit tend dedupe --summary      # dry run: files and bytes per worktree
+toolkit tend dedupe --apply
 ```
 
 `schedule status` reports whether the plist exists and is loaded;
@@ -1945,7 +2008,7 @@ install time, the job carries it, so its lock, leases and events stay with
 its logs.
 
 This is a host LaunchAgent rather than a Temporal Schedule on purpose.
-Scheduled work in this repository normally belongs to Temporal, but the reaper
+Scheduled work in this repository normally belongs to Temporal, but this job
 acts on one workstation's local filesystem and needs that login session's
 Herdr terminals, process list, and `gh` credentials; a cluster worker can
 reach none of them.

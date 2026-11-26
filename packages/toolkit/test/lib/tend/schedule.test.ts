@@ -76,7 +76,7 @@ describe("tend LaunchAgent", () => {
       "run",
       "--apply",
       "--only",
-      "worktrees",
+      "worktrees,dedupe",
     ]);
 
     const plist = renderLaunchAgentPlist(spec);
@@ -100,7 +100,7 @@ describe("tend LaunchAgent", () => {
       `<string>${HOME}/.toolkit/tend/logs/launchd.stdout.log</string>`,
     );
     expect(plist).toContain(
-      "<string>--apply</string>\n    <string>--only</string>\n    <string>worktrees</string>",
+      "<string>--apply</string>\n    <string>--only</string>\n    <string>worktrees,dedupe</string>",
     );
   });
 

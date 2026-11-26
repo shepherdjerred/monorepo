@@ -1,8 +1,14 @@
-import { appendFile, mkdir, open, rm, statfs } from "node:fs/promises";
+import { appendFile, mkdir, open, rm } from "node:fs/promises";
 import os from "node:os";
 import { z } from "zod";
 import type { PinchtabClientOptions } from "#lib/pinchtab-cli/http.ts";
 import { sweepArtifacts } from "./artifacts.ts";
+import { sweepDedupe } from "./dedupe.ts";
+import {
+  collectDockerDiskSummary,
+  collectHostDiskCapacity,
+  type StatDisk,
+} from "./disk-summary.ts";
 import { sweepDocker } from "./docker.ts";
 import { listLeases, sweepLeases } from "./leases.ts";
 import {
@@ -27,11 +33,7 @@ import { type ProcessSignaler, sweepProcesses } from "./processes.ts";
 import { sweepTailscaleServe } from "./tailscale-serve.ts";
 import {
   type CommandRunner,
-  type DiskCapacitySummary,
-  type DockerDiskSummary,
-  evaluateDiskCapacity,
   type LivenessSnapshot,
-  parseDockerSystemDfOutput,
   type SurfaceSweepResult,
   type TcpPortProbe,
   TEND_SURFACES,
@@ -201,57 +203,13 @@ export type RunTendOptions = {
   readonly processSignaler?: ProcessSignaler | undefined;
   readonly livenessOverride?: LivenessSnapshot | undefined;
   readonly pinchtab?: PinchtabClientOptions | undefined;
-  readonly statDisk?:
-    | ((
-        targetPath: string,
-      ) => Promise<{ availableBytes: number; totalBytes: number } | null>)
-    | undefined;
+  readonly statDisk?: StatDisk | undefined;
+  /** Smallest file the dedupe surface replaces with a clone. */
+  readonly dedupeMinSizeBytes?: number | undefined;
+  /** Limit the dedupe surface to replacing files in this one worktree. */
+  readonly dedupeWorktree?: string | undefined;
   readonly nowMs?: number | undefined;
 };
-
-async function collectHostDiskCapacity(
-  homeDir: string,
-  statDisk: RunTendOptions["statDisk"],
-): Promise<DiskCapacitySummary | null> {
-  try {
-    const raw =
-      statDisk === undefined
-        ? await statfs(homeDir).then((s) => ({
-            availableBytes: s.bavail * s.bsize,
-            totalBytes: s.blocks * s.bsize,
-          }))
-        : await statDisk(homeDir);
-    return raw === null
-      ? null
-      : evaluateDiskCapacity(homeDir, raw.availableBytes, raw.totalBytes);
-  } catch {
-    return null;
-  }
-}
-
-async function collectDockerDiskSummary(
-  mode: "status" | "run",
-  selectedSurfaces: readonly TendSurface[],
-  runner: CommandRunner,
-): Promise<DockerDiskSummary | null> {
-  if (mode !== "status" || !selectedSurfaces.includes("docker")) {
-    return null;
-  }
-  const res = await runner(["docker", "system", "df", "--format", "json"], {
-    timeoutMs: 3000,
-  });
-  if (res.exitCode !== 0) {
-    return {
-      available: false,
-      rows: [],
-      skippedReason:
-        res.timedOut === true
-          ? "docker system df timed out"
-          : "docker daemon not running",
-    };
-  }
-  return { available: true, rows: parseDockerSystemDfOutput(res.stdout) };
-}
 
 async function executeSelectedSurface(
   surface: TendSurface,
@@ -279,6 +237,18 @@ async function executeSelectedSurface(
         homeDir: ctx.options.homeDir,
         checkPullRequests: ctx.options.checkPullRequests,
         includeClosedPrs: ctx.options.includeClosedPrs,
+        nowMs: ctx.nowMs,
+      });
+    case "dedupe":
+      return sweepDedupe({
+        liveness: ctx.liveness,
+        runner: ctx.runner,
+        apply: ctx.apply,
+        paths: ctx.paths,
+        gitDirs: ctx.options.gitDirs,
+        homeDir: ctx.options.homeDir,
+        minSizeBytes: ctx.options.dedupeMinSizeBytes,
+        worktree: ctx.options.dedupeWorktree,
         nowMs: ctx.nowMs,
       });
     case "postgres":
@@ -396,7 +366,10 @@ export async function runTend(options: RunTendOptions): Promise<TendRunReport> {
   const probePort = options.probePort ?? defaultTcpPortProbe;
   const worktreeMinAgeMs =
     options.worktreeMinAgeMs ?? DEFAULT_WORKTREE_MIN_AGE_MS;
-  const selectedSurfaces = options.surfaces ?? TEND_SURFACES;
+  // Canonical order whatever --only said: dedupe shares what the reaper kept.
+  const selectedSurfaces = TEND_SURFACES.filter((surface) =>
+    (options.surfaces ?? TEND_SURFACES).includes(surface),
+  );
   const releaseLock = apply
     ? await acquireTendRunLock({ paths, runner })
     : undefined;

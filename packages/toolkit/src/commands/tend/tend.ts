@@ -9,6 +9,7 @@ import {
 } from "#lib/tend/leases.ts";
 import {
   DEFAULT_WORKTREE_MIN_AGE_MS,
+  parseByteSize,
   parseDurationMs,
   resolveTendPaths,
   type TendPaths,
@@ -41,6 +42,7 @@ Usage:
   toolkit tend status [--json] [--worktree-min-age 3d] [--offline]
   toolkit tend run [--apply] [--only <surfaces>] [--worktree-min-age 3d] [--immediate-proxies] [--offline] [--json]
   toolkit tend worktrees [--apply] [--worktree-min-age 3d] [--git-dir <dir>] [--include-closed-prs] [--summary] [--verbose] [--json]
+  toolkit tend dedupe [--apply] [--worktree <path>] [--dedupe-min-size 64k] [--git-dir <dir>] [--summary] [--json]
   toolkit tend schedule install | uninstall | status [--json]
   toolkit tend lease list [--json]
   toolkit tend lease acquire --kind <kind> --target <target> [--ttl 4h] [--worktree <path>] [--id <id>] [--json]
@@ -48,7 +50,7 @@ Usage:
   toolkit tend lease wrap --kind <kind> --target <target> [--ttl 4h] -- <command...>
 
 Surfaces (--only comma-separated):
-  worktrees, postgres, processes, tailscale-serve, docker, artifacts, leases
+  worktrees, dedupe, postgres, processes, tailscale-serve, docker, artifacts, leases
 
 Notes:
   - Runs are read-only / dry-run unless --apply is passed.
@@ -59,8 +61,13 @@ Notes:
     under refs/tend/rescue/ first; unmerged branches are kept.
   - --summary prints the per-reason keep counts without the item lists;
     --verbose also lists every kept worktree with its reason.
+  - dedupe replaces tracked files that are identical across a repository's
+    worktrees with APFS copy-on-write clones of one copy (macOS only). Nothing
+    is deleted. Files under --dedupe-min-size (default 64k), modified or
+    untracked files, and worktrees mid git operation are left alone;
+    --worktree limits replacement to one worktree.
   - "schedule install" loads a macOS LaunchAgent that runs
-    "tend run --apply --only worktrees" daily at 04:30 local time (or at the
+    "tend run --apply --only worktrees,dedupe" daily at 04:30 local time (or at the
     next wake after it). Installing removes nothing. To sweep by hand, read
     "tend worktrees" (dry run), then run "tend worktrees --apply".
   - Open Forum notices scoped to host/<thisHost> protect referenced paths, and
@@ -93,6 +100,8 @@ function parseTendSweepArgs(args: readonly string[]) {
       only: { type: "string", multiple: true },
       "worktree-min-age": { type: "string" },
       "git-dir": { type: "string" },
+      worktree: { type: "string" },
+      "dedupe-min-size": { type: "string" },
       "immediate-proxies": { type: "boolean", default: false },
       "include-closed-prs": { type: "boolean", default: false },
       "remove-clean-worktrees": { type: "boolean", default: false },
@@ -358,10 +367,11 @@ export async function handleTendCommand(
   if (
     subcommand !== "status" &&
     subcommand !== "run" &&
-    subcommand !== "worktrees"
+    subcommand !== "worktrees" &&
+    subcommand !== "dedupe"
   ) {
     throw new Error(
-      `Unknown tend subcommand "${subcommand}". Expected status, run, worktrees, schedule, or lease.`,
+      `Unknown tend subcommand "${subcommand}". Expected status, run, worktrees, dedupe, schedule, or lease.`,
     );
   }
 
@@ -369,7 +379,7 @@ export async function handleTendCommand(
 }
 
 async function runTendSweepCommand(
-  subcommand: "status" | "run" | "worktrees",
+  subcommand: "status" | "run" | "worktrees" | "dedupe",
   args: string[],
   injected: {
     readonly runner?: CommandRunner | undefined;
@@ -390,8 +400,8 @@ async function runTendSweepCommand(
 
   const explicitGitDir = values["git-dir"] ?? positionals[0];
   const surfaces: readonly TendSurface[] | undefined =
-    subcommand === "worktrees"
-      ? ["worktrees"]
+    subcommand === "worktrees" || subcommand === "dedupe"
+      ? [subcommand]
       : parseSurfaceFilter(values.only);
 
   const report = await runTend({
@@ -400,6 +410,10 @@ async function runTendSweepCommand(
     surfaces,
     worktreeMinAgeMs,
     ...(explicitGitDir === undefined ? {} : { gitDirs: [explicitGitDir] }),
+    ...(values["dedupe-min-size"] === undefined
+      ? {}
+      : { dedupeMinSizeBytes: parseByteSize(values["dedupe-min-size"]) }),
+    dedupeWorktree: values.worktree,
     checkPullRequests: !values["no-prs"],
     includeClosedPrs: values["include-closed-prs"],
     immediateProxies: values["immediate-proxies"],

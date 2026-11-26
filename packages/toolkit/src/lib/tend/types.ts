@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const TEND_SURFACES = [
   "worktrees",
+  "dedupe",
   "postgres",
   "processes",
   "tailscale-serve",
@@ -128,7 +129,12 @@ export type TendCandidate = {
     Readonly<Record<string, string | number | boolean>> | undefined;
 };
 
-export type TendActionStatus = "planned" | "removed" | "failed" | "skipped";
+/**
+ * `deduped` is the dedupe surface's applied outcome: files were replaced with
+ * clones of identical content and nothing was removed.
+ */
+export type TendActionStatus =
+  "planned" | "removed" | "deduped" | "failed" | "skipped";
 
 export type TendActionOutcome = {
   readonly candidate: TendCandidate;
@@ -182,7 +188,7 @@ export const TendItemEventSchema = z.strictObject({
   surface: TendSurfaceSchema,
   kind: z.string(),
   target: z.string(),
-  status: z.enum(["planned", "removed", "failed", "skipped"]),
+  status: z.enum(["planned", "removed", "deduped", "failed", "skipped"]),
   reason: z.string(),
   detail: z.string().optional(),
 });
@@ -224,6 +230,21 @@ const DockerSystemDfRowSchema = z.looseObject({
 
 export function formatGiB(bytes: number): string {
   return `${(bytes / GIB_BYTES).toFixed(1)} GiB`;
+}
+
+/** `512 B`, `64.0 KiB`, `1.8 GiB`. */
+export function formatByteSize(bytes: number): string {
+  if (bytes < 1024) {
+    return `${String(bytes)} B`;
+  }
+  const units = ["KiB", "MiB", "GiB", "TiB"];
+  let value = bytes / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(1)} ${units[unit] ?? "TiB"}`;
 }
 
 export function evaluateDiskCapacity(
