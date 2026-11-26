@@ -42,7 +42,7 @@ Usage:
   toolkit tend status [--json] [--worktree-min-age 3d] [--offline]
   toolkit tend run [--apply] [--only <surfaces>] [--worktree-min-age 3d] [--immediate-proxies] [--offline] [--json]
   toolkit tend worktrees [--apply] [--worktree-min-age 3d] [--git-dir <dir>] [--include-closed-prs] [--summary] [--verbose] [--json]
-  toolkit tend dedupe [--apply] [--worktree <path>] [--dedupe-min-size 64k] [--git-dir <dir>] [--summary] [--json]
+  toolkit tend dedupe [--apply] [--worktree <path>] [--dedupe-min-size 64k] [--no-refresh] [--git-dir <dir>] [--summary] [--json]
   toolkit tend schedule install | uninstall | status [--json]
   toolkit tend lease list [--json]
   toolkit tend lease acquire --kind <kind> --target <target> [--ttl 4h] [--worktree <path>] [--id <id>] [--json]
@@ -65,7 +65,9 @@ Notes:
     worktrees with APFS copy-on-write clones of one copy (macOS only). Nothing
     is deleted. Files under --dedupe-min-size (default 64k), modified or
     untracked files, and worktrees mid git operation are left alone;
-    --worktree limits replacement to one worktree.
+    --worktree limits replacement to one worktree. The index is refreshed
+    afterwards only in worktrees nobody is using; --no-refresh skips it
+    everywhere. "tend status" does not plan dedupe unless --only names it.
   - "schedule install" loads a macOS LaunchAgent that runs
     "tend run --apply --only worktrees,dedupe" daily at 04:30 local time (or at the
     next wake after it). Installing removes nothing. To sweep by hand, read
@@ -102,6 +104,7 @@ function parseTendSweepArgs(args: readonly string[]) {
       "git-dir": { type: "string" },
       worktree: { type: "string" },
       "dedupe-min-size": { type: "string" },
+      "no-refresh": { type: "boolean", default: false },
       "immediate-proxies": { type: "boolean", default: false },
       "include-closed-prs": { type: "boolean", default: false },
       "remove-clean-worktrees": { type: "boolean", default: false },
@@ -414,6 +417,7 @@ async function runTendSweepCommand(
       ? {}
       : { dedupeMinSizeBytes: parseByteSize(values["dedupe-min-size"]) }),
     dedupeWorktree: values.worktree,
+    dedupeRefreshIndex: !values["no-refresh"],
     checkPullRequests: !values["no-prs"],
     includeClosedPrs: values["include-closed-prs"],
     immediateProxies: values["immediate-proxies"],

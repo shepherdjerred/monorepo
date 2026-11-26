@@ -4,6 +4,7 @@ import { type CloneFile, cloneFileCopyOnWrite } from "./dedupe-clone.ts";
 import {
   type DedupeContext,
   type DedupePassResult,
+  type DedupeRefresh,
   type DedupeRegistry,
   type DedupeWorktree,
   dedupeWorktreePass,
@@ -33,7 +34,17 @@ import {
   isMidGitOperation,
   parsePorcelainWorktrees,
   resolveWorktreeGitDir,
+  type WorktreePorcelainEntry,
 } from "./worktrees-git.ts";
+import {
+  collectSessionHoldSources,
+  findLiveHold,
+  type WorktreeHoldSource,
+} from "./worktrees-inspect.ts";
+import {
+  classifyWorktreeLock,
+  type WorktreeLockProbe,
+} from "./worktrees-policy.ts";
 
 /** Below this a file is not worth an inode change and a re-hash by git. */
 export const DEFAULT_DEDUPE_MIN_SIZE_BYTES = 64 * 1024;
@@ -49,6 +60,9 @@ export type SweepDedupeOptions = {
   /** Replace files only in this worktree; every worktree still lends its own. */
   readonly worktree?: string | undefined;
   readonly cloneFile?: CloneFile | undefined;
+  /** `false` never refreshes an index after replacing files. */
+  readonly refreshIndex?: boolean | undefined;
+  readonly selfCwd?: string | undefined;
   readonly nowMs?: number | undefined;
 };
 
@@ -58,7 +72,28 @@ type RepoScope = {
   readonly forumNoticePaths: ReadonlySet<string>;
   /** Canonical path of the only worktree to replace files in, if limited. */
   readonly onlyWorktree: string | undefined;
+  readonly sessionHolds: readonly WorktreeHoldSource[];
+  readonly lockProbe: WorktreeLockProbe;
 };
+
+/**
+ * Why a worktree counts as in use, by the reaper's own signals. Dedupe still
+ * replaces files there; it only declines to take the index lock.
+ */
+function liveReasonFor(
+  entry: WorktreePorcelainEntry,
+  canonicalWt: string,
+  scope: RepoScope,
+): string | undefined {
+  const lock = classifyWorktreeLock({
+    locked: entry.locked,
+    lockReason: entry.lockReason,
+    ...scope.lockProbe,
+  });
+  return lock.kind === "claude-agent" && lock.alive
+    ? "locked by a live Claude agent"
+    : findLiveHold(canonicalWt, scope.sessionHolds, scope.platform)?.category;
+}
 
 function isNamedByForumNotice(canonicalWt: string, scope: RepoScope): boolean {
   for (const noticePath of scope.forumNoticePaths) {
@@ -109,6 +144,7 @@ async function listRepoWorktrees(
     const worktree: DedupeWorktree = {
       path: entry.path,
       isTarget: selected && !isNamedByForumNotice(canonical, scope),
+      liveReason: liveReasonFor(entry, canonical, scope),
     };
     // A worktree named by --worktree goes last, so that every other worktree
     // has offered its copies before this one is read.
@@ -121,11 +157,30 @@ async function listRepoWorktrees(
   return [...lenders, ...limited];
 }
 
-/** What differed from the plan; nothing when every planned file was shared. */
-function describeOutcome(pass: DedupePassResult): string | undefined {
+const REFRESH_NOTES: Readonly<Record<DedupeRefresh, string | undefined>> = {
+  "not-needed": undefined,
+  refreshed: undefined,
+  live: "index left for the live session's next git status",
+  disabled: "index not refreshed (--no-refresh)",
+  failed: "index refresh failed; the next git status refreshes it",
+};
+
+/** What differed from the plan, and what was left for git to catch up on. */
+function describeOutcome(
+  wt: DedupeWorktree,
+  pass: DedupePassResult,
+): string | undefined {
   const notes: string[] = [];
+  const refreshNote = REFRESH_NOTES[pass.refresh];
+  if (refreshNote !== undefined) {
+    notes.push(
+      pass.refresh === "live" && wt.liveReason !== undefined
+        ? `${refreshNote} (${wt.liveReason})`
+        : refreshNote,
+    );
+  }
   if (pass.replacedFiles === pass.plannedFiles) {
-    return undefined;
+    return notes[0];
   }
   if (pass.replacedFiles > 0) {
     notes.push(
@@ -166,12 +221,13 @@ function toAction(
       bytes: pass.plannedBytes,
       replacedFiles: pass.replacedFiles,
       replacedBytes: pass.replacedBytes,
+      refresh: pass.refresh,
     },
   };
   if (!apply) {
     return { candidate, status: "planned" };
   }
-  const detail = describeOutcome(pass);
+  const detail = describeOutcome(wt, pass);
   let status: TendActionOutcome["status"] = "skipped";
   if (pass.failedFiles > 0) {
     status = "failed";
@@ -245,6 +301,7 @@ export async function sweepDedupe(
     minSizeBytes: options.minSizeBytes ?? DEFAULT_DEDUPE_MIN_SIZE_BYTES,
     stateDir: path.join(paths.rootDir, "dedupe"),
     cloneFile: options.cloneFile ?? cloneFileCopyOnWrite,
+    refreshIndex: options.refreshIndex ?? true,
     isPidAlive: isProcessAliveByKillZero,
     unsupportedDevices: new Map(),
   };
@@ -253,6 +310,15 @@ export async function sweepDedupe(
       ? undefined
       : await canonicalizeExistingPath(options.worktree, platform);
   const gitDirs = options.gitDirs ?? [path.join(homeDir, "git")];
+  const { processes } = options.liveness;
+  const sessionHolds = collectSessionHoldSources(
+    options.liveness,
+    options.selfCwd ?? process.cwd(),
+  );
+  const lockProbe: WorktreeLockProbe = {
+    isPidAlive: (pid) => processes.has(pid) || isProcessAliveByKillZero(pid),
+    processStartOf: (pid) => processes.get(pid)?.processStart,
+  };
   const tally: DedupeTally = {
     inspectedCount: 0,
     matchedWorktree: false,
@@ -267,6 +333,8 @@ export async function sweepDedupe(
         platform,
         forumNoticePaths: options.liveness.forumNoticePaths,
         onlyWorktree,
+        sessionHolds,
+        lockProbe,
       },
       ctx,
       tally,

@@ -103,6 +103,29 @@ function numericMetadata(action: TendActionOutcome, key: string): number {
   return typeof value === "number" ? value : 0;
 }
 
+/** In how many worktrees the index was refreshed, left alone, or not. */
+function formatRefreshCounts(
+  actions: readonly TendActionOutcome[],
+  planned: boolean,
+): string {
+  const labels: readonly (readonly [string, string])[] = [
+    ["refreshed", planned ? "would be refreshed in" : "refreshed in"],
+    ["live", "left to live sessions in"],
+    ["disabled", "skipped by --no-refresh in"],
+    ["failed", "not refreshed after a failure in"],
+  ];
+  const parts: string[] = [];
+  for (const [value, label] of labels) {
+    const count = actions.filter(
+      (action) => action.candidate.metadata?.["refresh"] === value,
+    ).length;
+    if (count > 0) {
+      parts.push(`${label} ${String(count)}`);
+    }
+  }
+  return parts.length === 0 ? "" : `; index ${parts.join(", ")}`;
+}
+
 /** Files and bytes the dedupe surface shared, or would share in a dry run. */
 function formatDedupeSummaryLines(
   surfaces: readonly SurfaceSweepResult[],
@@ -127,7 +150,7 @@ function formatDedupeSummaryLines(
       0,
     );
     lines.push(
-      `Dedupe: ${planned ? "would share" : "shared"} ${String(files)} file(s), ${formatByteSize(bytes)} in ${String(acted.length)} worktree(s)`,
+      `Dedupe: ${planned ? "would share" : "shared"} ${String(files)} file(s), ${formatByteSize(bytes)} in ${String(acted.length)} worktree(s)${formatRefreshCounts(acted, planned)}`,
     );
   }
   return lines;

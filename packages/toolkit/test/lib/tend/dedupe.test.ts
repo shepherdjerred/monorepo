@@ -106,6 +106,9 @@ type Fixture = {
   readonly a: string;
   readonly b: string;
   readonly tendDir: string;
+  /** Every command the sweep ran, with the directory it ran in. */
+  readonly commands: { argv: readonly string[]; cwd: string }[];
+  readonly runner: CommandRunner;
   readonly sweep: (
     overrides?: Partial<SweepDedupeOptions>,
   ) => Promise<SurfaceSweepResult>;
@@ -144,6 +147,11 @@ async function buildFixture(): Promise<Fixture> {
   await Bun.write(path.join(b, "untracked.bin"), randomBytes(200_000));
 
   const tendDir = path.join(root, "tend");
+  const commands: Fixture["commands"] = [];
+  const recordingRunner: CommandRunner = (argv, options = {}) => {
+    commands.push({ argv: [...argv], cwd: options.cwd ?? "" });
+    return runner(argv, options);
+  };
   return {
     root,
     gitRoot,
@@ -151,10 +159,12 @@ async function buildFixture(): Promise<Fixture> {
     a,
     b,
     tendDir,
+    commands,
+    runner: recordingRunner,
     sweep: (overrides = {}) =>
       sweepDedupe({
         liveness: makeLiveness({ platform: process.platform }),
-        runner,
+        runner: recordingRunner,
         apply: true,
         paths: resolveTendPaths({ tendDir }),
         gitDirs: [gitRoot],
@@ -455,7 +465,166 @@ describe.skipIf(!onApfs)("sweepDedupe scope", () => {
   );
 });
 
+/** Directories in which the sweep ran `git update-index --refresh`. */
+function refreshedIn(fx: Fixture): string[] {
+  return fx.commands
+    .filter((command) => command.argv.includes("update-index"))
+    .map((command) => command.cwd);
+}
+
+describe.skipIf(!onApfs)("sweepDedupe index refresh", () => {
+  it(
+    "refreshes the index only where nobody is working",
+    async () => {
+      const fx = await buildFixture();
+      const result = await fx.sweep({
+        liveness: makeLiveness({
+          platform: process.platform,
+          hcTerminals: [{ address: "t1", cwd: path.join(fx.a, "sub") }],
+        }),
+      });
+
+      expect(refreshedIn(fx)).toEqual([fx.b]);
+      expect(actionFor(result, fx.a)).toMatchObject({
+        status: "deduped",
+        candidate: { metadata: { replacedFiles: 3, refresh: "live" } },
+        detail:
+          "index left for the live session's next git status (live Herdr terminal)",
+      });
+      expect(actionFor(result, fx.b)?.candidate.metadata).toMatchObject({
+        refresh: "refreshed",
+      });
+      // The live worktree is still clean; git just has not re-read the
+      // replaced files yet, and its own next status does that.
+      expect(await git(fx.a, "diff-files", "--name-only")).toContain("big.bin");
+      const statusA = await git(fx.a, "status", "--porcelain");
+      expect(statusA).not.toContain("big.bin");
+      expect(await git(fx.a, "diff-files", "--name-only")).not.toContain(
+        "big.bin",
+      );
+      expect(await git(fx.b, "diff-files", "--name-only")).toBe("");
+    },
+    REAL_GIT_TIMEOUT_MS,
+  );
+
+  it(
+    "treats a process, the caller, and a live Claude agent lock as someone working",
+    async () => {
+      const fx = await buildFixture();
+      await git(
+        fx.main,
+        "worktree",
+        "lock",
+        "--reason",
+        `claude agent agent-t1 (pid ${String(process.pid)})`,
+        fx.a,
+      );
+      const result = await fx.sweep({ selfCwd: path.join(fx.b, "sub", "dir") });
+      expect(refreshedIn(fx)).toEqual([]);
+      expect(actionFor(result, fx.a)?.detail).toContain(
+        "locked by a live Claude agent",
+      );
+      expect(actionFor(result, fx.b)?.detail).toContain(
+        "caller working directory",
+      );
+
+      // A lock whose agent is gone does not make the worktree live.
+      const other = await buildFixture();
+      await git(
+        other.main,
+        "worktree",
+        "lock",
+        "--reason",
+        "claude agent agent-t2 (pid 999999)",
+        other.a,
+      );
+      await other.sweep({
+        liveness: makeLiveness({
+          platform: process.platform,
+          processCwds: new Set([other.b]),
+        }),
+      });
+      expect(refreshedIn(other)).toEqual([other.a]);
+    },
+    REAL_GIT_TIMEOUT_MS,
+  );
+
+  it(
+    "never refreshes with --no-refresh, and says what a dry run would do",
+    async () => {
+      const fx = await buildFixture();
+      const live = makeLiveness({
+        platform: process.platform,
+        processCwds: new Set([fx.a]),
+      });
+      const dryRun = await fx.sweep({ apply: false, liveness: live });
+      expect(actionFor(dryRun, fx.a)?.candidate.metadata).toMatchObject({
+        refresh: "live",
+      });
+      expect(actionFor(dryRun, fx.b)?.candidate.metadata).toMatchObject({
+        refresh: "refreshed",
+      });
+
+      const result = await fx.sweep({ refreshIndex: false, liveness: live });
+      expect(refreshedIn(fx)).toEqual([]);
+      expect(actionFor(result, fx.a)?.candidate.metadata).toMatchObject({
+        refresh: "disabled",
+      });
+      expect(actionFor(result, fx.b)).toMatchObject({
+        status: "deduped",
+        detail: "index not refreshed (--no-refresh)",
+      });
+      expect(await git(fx.b, "status", "--porcelain")).toBe("?? untracked.bin");
+    },
+    REAL_GIT_TIMEOUT_MS,
+  );
+});
+
 describe("dedupe within a tend run", () => {
+  it("is left out of tend status unless --only names it", async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), "tend-dedupe-status-"));
+    tempDirs.push(root);
+    const calls: string[][] = [];
+    const base = {
+      mode: "status" as const,
+      paths: resolveTendPaths({ tendDir: path.join(root, "tend") }),
+      homeDir: root,
+      gitDirs: [path.join(root, "git")],
+      livenessOverride: makeLiveness({ platform: "darwin" }),
+      statDisk: () => Promise.resolve(null),
+      runner: ((argv) => {
+        calls.push([...argv]);
+        return Promise.resolve({ exitCode: 127, stdout: "", stderr: "" });
+      }) satisfies CommandRunner,
+    };
+
+    const byDefault = await runTend(base);
+    const dedupe = byDefault.surfaces.find(
+      (surface) => surface.surface === "dedupe",
+    );
+    expect(dedupe).toMatchObject({
+      skippedReason: "planning pass; run `toolkit tend dedupe`",
+      inspectedCount: 0,
+      actions: [],
+    });
+    expect(formatTendReport(byDefault)).toContain(
+      "SKIPPED (planning pass; run `toolkit tend dedupe`)",
+    );
+
+    const named = await runTend({ ...base, surfaces: ["dedupe"] });
+    expect(named.surfaces).toEqual([
+      expect.objectContaining({ surface: "dedupe", inspectedCount: 0 }),
+    ]);
+    expect(named.surfaces[0]?.skippedReason).toBeUndefined();
+
+    // A run, unlike a status report, plans dedupe by default.
+    const run = await runTend({ ...base, mode: "run" });
+    expect(
+      run.surfaces.find((surface) => surface.surface === "dedupe")
+        ?.skippedReason,
+    ).toBeUndefined();
+  });
+
   it("always runs after the worktree reaper, whatever order --only gave", async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), "tend-dedupe-order-"));
     tempDirs.push(root);
@@ -603,7 +772,7 @@ describe("toolkit tend dedupe", () => {
       expect(report.totals).toEqual({ candidates: 1, removed: 0, failed: 0 });
       expect(await inodes(fx.b, SHARED)).toEqual(before);
       expect(formatTendReport(report)).toContain(
-        "Dedupe: would share 6 file(s), 646.0 KiB in 1 worktree(s)",
+        "Dedupe: would share 6 file(s), 646.0 KiB in 1 worktree(s); index would be refreshed in 1",
       );
       expect(formatTendReport(report)).toContain(
         "[WOULD SHARE] (dedupe/worktree-files)",
@@ -636,12 +805,13 @@ describe("toolkit tend dedupe", () => {
       await handleTendCommand(
         "dedupe",
         ["--git-dir", fx.gitRoot, "--apply", "--offline"],
-        { paths: resolveTendPaths({ tendDir: fx.tendDir }), runner },
+        { paths: resolveTendPaths({ tendDir: fx.tendDir }), runner: fx.runner },
       );
+      expect(refreshedIn(fx).sort()).toEqual([fx.a, fx.b]);
 
       expect(output()).toContain("toolkit tend — APPLY");
       expect(output()).toContain(
-        "Dedupe: shared 8 file(s), 1.1 MiB in 2 worktree(s)",
+        "Dedupe: shared 8 file(s), 1.1 MiB in 2 worktree(s); index refreshed in 2",
       );
       expect(output()).toContain(
         `[SHARED] (dedupe/worktree-files) ${fx.b} — 5 file(s), 644.5 KiB identical to another worktree's`,
@@ -651,6 +821,27 @@ describe("toolkit tend dedupe", () => {
       expect(output()).not.toContain("WOULD REMOVE");
       expect(process.exitCode ?? 0).toBe(0);
       expect(await git(fx.b, "status", "--porcelain")).toBe("?? untracked.bin");
+    },
+    REAL_GIT_TIMEOUT_MS,
+  );
+
+  it.skipIf(!onApfs)(
+    "forwards --no-refresh",
+    async () => {
+      const fx = await buildFixture();
+      const output = captureLog();
+
+      await handleTendCommand(
+        "dedupe",
+        ["--git-dir", fx.gitRoot, "--apply", "--no-refresh", "--offline"],
+        { paths: resolveTendPaths({ tendDir: fx.tendDir }), runner: fx.runner },
+      );
+
+      expect(refreshedIn(fx)).toEqual([]);
+      expect(output()).toContain(
+        "Dedupe: shared 8 file(s), 1.1 MiB in 2 worktree(s); index skipped by --no-refresh in 2",
+      );
+      expect(await git(fx.a, "status", "--porcelain")).not.toContain("big.bin");
     },
     REAL_GIT_TIMEOUT_MS,
   );

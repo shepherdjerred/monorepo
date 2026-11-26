@@ -67,12 +67,11 @@ export type RepoSweepContext = {
 };
 
 /**
- * Everything that marks a worktree as in use, kept apart by source so a kept
- * worktree can say what is holding it.
+ * What shows a session is working in a worktree right now: a Herdr terminal,
+ * a Herdr active file, a process, or the caller itself.
  */
-export function collectWorktreeHoldSources(
+export function collectSessionHoldSources(
   liveness: LivenessSnapshot,
-  leases: readonly ClassifiedLease[],
   selfCwd: string,
 ): WorktreeHoldSource[] {
   const terminalPaths = new Set<string>();
@@ -82,6 +81,26 @@ export function collectWorktreeHoldSources(
       terminalPaths.add(terminal.foregroundCwd);
     }
   }
+  return [
+    { category: "live Herdr terminal", paths: terminalPaths },
+    { category: "Herdr active worktree", paths: liveness.herdrActivePaths },
+    { category: "process working directory", paths: liveness.processCwds },
+    {
+      category: "caller working directory",
+      paths: new Set([normalizeHostPath(selfCwd, liveness.platform)]),
+    },
+  ];
+}
+
+/**
+ * Everything that marks a worktree as in use, kept apart by source so a kept
+ * worktree can say what is holding it.
+ */
+export function collectWorktreeHoldSources(
+  liveness: LivenessSnapshot,
+  leases: readonly ClassifiedLease[],
+  selfCwd: string,
+): WorktreeHoldSource[] {
   const leasePaths = new Set<string>();
   for (const item of leases) {
     if (item.status !== "active") {
@@ -95,24 +114,18 @@ export function collectWorktreeHoldSources(
     }
   }
   return [
-    { category: "live Herdr terminal", paths: terminalPaths },
-    { category: "Herdr active worktree", paths: liveness.herdrActivePaths },
-    { category: "process working directory", paths: liveness.processCwds },
+    ...collectSessionHoldSources(liveness, selfCwd),
     { category: "active lease", paths: leasePaths },
     {
       category: "Forum notice path",
       paths: liveness.forumNoticePaths,
       coversDescendants: true,
     },
-    {
-      category: "caller working directory",
-      paths: new Set([normalizeHostPath(selfCwd, liveness.platform)]),
-    },
     { category: "protected path", paths: liveness.protectedPaths },
   ];
 }
 
-function findLiveHold(
+export function findLiveHold(
   canonicalWt: string,
   holds: readonly WorktreeHoldSource[],
   platform: NodeJS.Platform,

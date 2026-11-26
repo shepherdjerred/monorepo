@@ -208,6 +208,8 @@ export type RunTendOptions = {
   readonly dedupeMinSizeBytes?: number | undefined;
   /** Limit the dedupe surface to replacing files in this one worktree. */
   readonly dedupeWorktree?: string | undefined;
+  /** `false` never refreshes an index after dedupe replaces files. */
+  readonly dedupeRefreshIndex?: boolean | undefined;
   readonly nowMs?: number | undefined;
 };
 
@@ -240,6 +242,21 @@ async function executeSelectedSurface(
         nowMs: ctx.nowMs,
       });
     case "dedupe":
+      // Planning reads every worktree's index and takes the better part of a
+      // minute, which a status report should not cost unless asked for.
+      if (
+        ctx.options.mode === "status" &&
+        ctx.options.surfaces?.includes("dedupe") !== true
+      ) {
+        return {
+          surface: "dedupe",
+          skippedReason: "planning pass; run `toolkit tend dedupe`",
+          inspectedCount: 0,
+          candidates: [],
+          actions: [],
+          warnings: [],
+        };
+      }
       return sweepDedupe({
         liveness: ctx.liveness,
         runner: ctx.runner,
@@ -249,6 +266,7 @@ async function executeSelectedSurface(
         homeDir: ctx.options.homeDir,
         minSizeBytes: ctx.options.dedupeMinSizeBytes,
         worktree: ctx.options.dedupeWorktree,
+        refreshIndex: ctx.options.dedupeRefreshIndex,
         nowMs: ctx.nowMs,
       });
     case "postgres":

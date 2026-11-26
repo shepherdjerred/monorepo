@@ -21,6 +21,8 @@ export type DedupeContext = {
   readonly minSizeBytes: number;
   readonly stateDir: string;
   readonly cloneFile: CloneFile;
+  /** `false` leaves every index alone (`--no-refresh`). */
+  readonly refreshIndex: boolean;
   readonly isPidAlive: (pid: number) => boolean;
   /** Devices where a clone was refused, with the refusal. */
   readonly unsupportedDevices: Map<number, string>;
@@ -43,6 +45,8 @@ export type DedupeWorktree = {
   readonly path: string;
   /** Files here may be replaced; otherwise the worktree only lends its own. */
   readonly isTarget: boolean;
+  /** What marks the worktree as in use right now, if anything does. */
+  readonly liveReason?: string | undefined;
   clean?: Promise<CleanCheck> | undefined;
 };
 
@@ -199,6 +203,13 @@ async function judgeCandidate(options: {
     : { kind: "promote", file: target };
 }
 
+/**
+ * What became of the index after files were replaced. `refreshed` and
+ * `failed` are outcomes; in a dry run `refreshed` means it would be.
+ */
+export type DedupeRefresh =
+  "not-needed" | "refreshed" | "live" | "disabled" | "failed";
+
 export type DedupePassResult = {
   /** Files that qualify: replaced in an applied run, counted in a dry run. */
   plannedFiles: number;
@@ -209,6 +220,7 @@ export type DedupePassResult = {
   changedFiles: number;
   failedFiles: number;
   firstFailure?: string | undefined;
+  refresh: DedupeRefresh;
   readonly warnings: string[];
 };
 
@@ -245,6 +257,23 @@ async function applyReplacement(
   }
 }
 
+/**
+ * Replaced files have new inodes, so git sees them as possibly changed until
+ * it re-reads them. Refreshing here keeps the next interactive `git status`
+ * fast, but it holds `index.lock` while it hashes, and a `git add` or
+ * `git commit` in that worktree would fail meanwhile. A worktree someone is
+ * using is therefore left to refresh itself on its own next `git status`.
+ */
+function plannedRefresh(
+  wt: DedupeWorktree,
+  ctx: DedupeContext,
+): "refreshed" | "live" | "disabled" {
+  if (!ctx.refreshIndex) {
+    return "disabled";
+  }
+  return wt.liveReason === undefined ? "refreshed" : "live";
+}
+
 async function finishWorktree(
   wt: DedupeWorktree,
   state: ReadonlyMap<string, DedupeFileRecord>,
@@ -252,14 +281,15 @@ async function finishWorktree(
   ctx: DedupeContext,
 ): Promise<void> {
   if (result.replacedFiles > 0) {
-    // Replaced files have new inodes, so git sees them as possibly changed
-    // until it re-reads them. Paying for that here keeps the next
-    // interactive `git status` fast. Without the index lock it is skipped.
+    result.refresh = plannedRefresh(wt, ctx);
+  }
+  if (result.refresh === "refreshed") {
     const refreshed = await ctx.runner(
       ["git", "-c", "core.fsmonitor=false", "update-index", "-q", "--refresh"],
       { cwd: wt.path, timeoutMs: 600_000 },
     );
     if (refreshed.exitCode !== 0) {
+      result.refresh = "failed";
       result.warnings.push(
         `git update-index --refresh did not finish in ${wt.path} (exit ${String(refreshed.exitCode)}, usually a held index.lock); the next git status there refreshes it`,
       );
@@ -365,6 +395,7 @@ export async function dedupeWorktreePass(
     replacedBytes: 0,
     changedFiles: 0,
     failedFiles: 0,
+    refresh: "not-needed",
     warnings: [],
   };
   const listed = await ctx.runner(["git", "ls-files", "-s", "-v", "-z"], {
@@ -402,6 +433,8 @@ export async function dedupeWorktreePass(
 
   if (pass.stateChanged && ctx.apply) {
     await finishWorktree(wt, pass.state, result, ctx);
+  } else if (!ctx.apply && result.plannedFiles > 0) {
+    result.refresh = plannedRefresh(wt, ctx);
   }
   return result;
 }

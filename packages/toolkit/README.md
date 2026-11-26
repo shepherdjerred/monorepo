@@ -1941,8 +1941,13 @@ blocks that change and never touches the other worktrees.
 toolkit tend dedupe --summary                    # dry run: files and bytes per worktree
 toolkit tend dedupe --apply
 toolkit tend dedupe --worktree <path> --apply    # one worktree, e.g. right after creating it
+toolkit tend dedupe --worktree <path> --apply --no-refresh
 toolkit tend dedupe --dedupe-min-size 4k         # default 64k
 ```
+
+`tend run` plans and applies dedupe with the other surfaces. `tend status`
+shows it as skipped unless `--only` names it, because planning reads every
+worktree's index and takes the better part of a minute.
 
 A file in one worktree is replaced by a clone of the same path in another
 only when all of this holds:
@@ -1967,10 +1972,27 @@ Each replacement clones the source beside the target, gives the clone the
 target's permissions and times, checks once more that neither file changed,
 and renames the clone over the target. The directory's own times are then put
 back, because the reaper and build tools read directory mtimes as activity. A
-file that changed in between is left alone and counted. Afterwards
-`git update-index -q --refresh` runs once in the worktree, so the job, not the
-next interactive `git status`, pays for re-reading the new inodes; if the
-index is locked that step is skipped with a warning.
+file that changed in between is left alone and counted.
+
+Replaced files have new inodes, so git treats them as possibly changed until
+it re-reads them. `git update-index -q --refresh` does that once per worktree,
+so the job, not the next interactive `git status`, pays for it. The refresh
+holds `index.lock` while it hashes, and a `git add` or `git commit` in that
+worktree would fail meanwhile, so it only runs where nobody is working: a
+worktree with a live Herdr terminal, Herdr active file, process working
+directory, the caller's own working directory, or a live Claude-agent lock is
+left for that session's own next `git status`, which re-reads the files once
+with no lock conflict. `--no-refresh` skips the refresh everywhere; use it for
+a worktree that was just created, whose session may not be visible yet. Each
+worktree reports whether its index was refreshed, left to a live session,
+skipped by the flag, or could not be refreshed, and the summary line counts
+them.
+
+Two limits are accepted. An edit that lands in the instant between the last
+check and the rename, or through a file descriptor opened before it, is lost;
+closing that window would need a lock no editor honors. And each replacement
+is a rename, so file watchers in a live worktree see one burst of change
+events the first time its files are shared.
 
 Which files are already clones is remembered per worktree under
 `~/.toolkit/tend/dedupe/`, so a later pass leaves them alone. That directory
