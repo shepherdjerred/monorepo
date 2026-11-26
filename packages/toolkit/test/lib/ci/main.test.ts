@@ -359,3 +359,132 @@ test("getFollowedMainSnapshot preserves a failed commit verdict while its manual
   expect(recovered.run?.number).toBe(21);
   expect(recovered.run?.status).toBe("success");
 });
+
+test("superseded canceled and killed main pushes do not turn main red while a newer verifying push runs", async () => {
+  const canceledBurst = Array.from({ length: 55 }, (_, index) => ({
+    ...pipeline(200 - index, "push", index % 2 === 0 ? "canceled" : "killed"),
+    commit: `superseded-${String(index)}`,
+  }));
+  mockApi([
+    [
+      { ...pipeline(201, "push", "running"), commit: CI_HEAD },
+      ...canceledBurst.slice(0, 49),
+    ],
+    [
+      ...canceledBurst.slice(49),
+      { ...pipeline(140, "push", "success"), commit: "last-green" },
+    ],
+  ]);
+  const result = await status();
+  expect(result.state).toBe("pending");
+  expect(result.latest?.number).toBe(201);
+  expect(result.lastVerdict?.number).toBe(140);
+});
+
+test("superseded canceled pushes still preserve an older failed main verdict across pagination", async () => {
+  const canceledBurst = Array.from({ length: 50 }, (_, index) => ({
+    ...pipeline(300 - index, "push", "canceled"),
+    commit: `superseded-${String(index)}`,
+  }));
+  mockApi([
+    [
+      { ...pipeline(301, "push", "running"), commit: CI_HEAD },
+      ...canceledBurst.slice(0, 49),
+    ],
+    [...canceledBurst.slice(49), failedPush()],
+  ]);
+  const result = await status();
+  expect(result.state).toBe("red");
+  expect(result.latest?.number).toBe(301);
+  expect(result.lastVerdict?.number).toBe(7);
+});
+
+test("manually killing the tip main push keeps main red when no newer verifying run exists", async () => {
+  const partialManual = {
+    ...pipeline(12, "manual", "success"),
+    workflows: [{ name: "ci-noop", state: "success" }],
+  };
+  mockApi([
+    [
+      partialManual,
+      pipeline(11, "push", "killed"),
+      { ...pipeline(10, "push", "success"), commit: "older-green" },
+    ],
+  ]);
+  const result = await status();
+  expect(result.state).toBe("red");
+  expect(result.latest?.number).toBe(11);
+  expect(result.lastVerdict?.number).toBe(11);
+});
+
+test("pinned main wait follows the earliest non-superseded descendant when the pinned push was canceled", async () => {
+  const pinnedSha = "1".repeat(40);
+  const canceledNext = "2".repeat(40);
+  const keptRunning = "3".repeat(40);
+  const newestTip = "4".repeat(40);
+  const runs = [
+    { ...pipeline(103, "push", "pending"), commit: newestTip, finished: 0 },
+    { ...pipeline(102, "push", "running"), commit: keptRunning },
+    { ...pipeline(101, "push", "canceled"), commit: canceledNext },
+    { ...pipeline(100, "push", "canceled"), commit: pinnedSha },
+  ];
+  const compares: string[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: URL) => {
+      const url = new URL(input);
+      if (url.pathname.endsWith("/branches/main"))
+        return Response.json({ commit: { sha: newestTip } });
+      const compare = /\/compare\/([^/]+)$/.exec(url.pathname)?.[1];
+      if (compare !== undefined) {
+        compares.push(compare);
+        return Response.json({ status: "ahead" });
+      }
+      const number = /\/pipelines\/(\d+)$/.exec(url.pathname)?.[1];
+      if (number !== undefined) {
+        const found = runs.find((item) => item.number === Number(number));
+        if (found === undefined)
+          throw new Error(`Unexpected pipeline ${number}`);
+        return Response.json(found);
+      }
+      return Response.json(runs);
+    }),
+  );
+
+  const result = await pinned(pinnedSha);
+  expect(result.sha).toBe(pinnedSha);
+  expect(result.tipSha).toBe(newestTip);
+  expect(result.run?.number).toBe(102);
+  expect(compares).toEqual([`${pinnedSha}...${keptRunning}`]);
+});
+
+test("pinned main wait refuses non-descendant newer commits and keeps a killed tip failed", async () => {
+  const pinnedSha = "5".repeat(40);
+  const divergedSha = "6".repeat(40);
+  const runs = [
+    { ...pipeline(51, "push", "running"), commit: divergedSha },
+    { ...pipeline(50, "push", "canceled"), commit: pinnedSha },
+  ];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input: URL) => {
+      const url = new URL(input);
+      if (url.pathname.endsWith("/branches/main"))
+        return Response.json({ commit: { sha: divergedSha } });
+      if (url.pathname.includes("/compare/"))
+        return Response.json({ status: "diverged" });
+      const number = /\/pipelines\/(\d+)$/.exec(url.pathname)?.[1];
+      if (number !== undefined) {
+        const found = runs.find((item) => item.number === Number(number));
+        if (found === undefined)
+          throw new Error(`Unexpected pipeline ${number}`);
+        return Response.json(found);
+      }
+      return Response.json(runs);
+    }),
+  );
+
+  const result = await pinned(pinnedSha);
+  expect(result.run?.number).toBe(50);
+  expect(result.run?.status).toBe("canceled");
+});

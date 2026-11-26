@@ -1,6 +1,6 @@
 import { DeliveryError } from "#domain/error.ts";
 import type { Prisma } from "#generated/prisma/client.ts";
-import { PlatformChangesSchema } from "#shared/contract.ts";
+import { BuildSummarySchema, PlatformChangesSchema } from "#shared/contract.ts";
 import type { Principal } from "#shared/contract.ts";
 import { lock, required, audit } from "./delivery-records.ts";
 import type { Delivery } from "./delivery.ts";
@@ -9,6 +9,9 @@ import type { Database } from "./database.ts";
 import { composeVerifiedBuild } from "./composition/verified-build.ts";
 
 type BuildRow = Prisma.BuildGetPayload<object>;
+export type QualifyPendingBuild = (
+  build: BuildRow,
+) => Promise<"pending" | "verified" | "failed">;
 
 /** Rolls a tentative verification back while a retained original's build is pending (B2). */
 class AwaitingRetainedBuild extends Error {
@@ -51,6 +54,20 @@ async function referencedArtifacts(
   });
 }
 
+async function pendingSourceDoomed(
+  tx: Transaction | Database,
+  source: BuildRow,
+  seen: Set<string>,
+  qualifyPending?: QualifyPendingBuild,
+): Promise<boolean> {
+  if (qualifyPending !== undefined) {
+    const settled = await qualifyPending(source);
+    if (settled === "failed") return true;
+    if (settled === "verified") return false;
+  }
+  return doomed(tx, source, seen, qualifyPending);
+}
+
 /**
  * Whether the qualifier will fail this build: it, or a pending build it
  * references through any chain of pending builds, has a failed reference.
@@ -60,6 +77,7 @@ export async function doomed(
   tx: Transaction | Database,
   build: BuildRow,
   seen = new Set<string>(),
+  qualifyPending?: QualifyPendingBuild,
 ): Promise<boolean> {
   seen.add(build.id);
   for (const { build: source } of await referencedArtifacts(tx, build)) {
@@ -67,7 +85,7 @@ export async function doomed(
     if (
       source.status === "pending" &&
       !seen.has(source.id) &&
-      (await doomed(tx, source, seen))
+      (await pendingSourceDoomed(tx, source, seen, qualifyPending))
     )
       return true;
   }
@@ -158,7 +176,7 @@ export async function qualify(
     actor: Principal,
     reason?: string,
   ]
-) {
+): Promise<{ status: "pending" | "verified" | "failed" }> {
   const [
     buildId,
     status,
@@ -166,7 +184,8 @@ export async function qualify(
     reason = "CI pipeline did not pass exact main push verification",
   ] = args;
   const build = await this.build(buildId);
-  if (build.status !== "pending") return { status: build.status };
+  if (build.status !== "pending")
+    return { status: BuildSummarySchema.shape.status.parse(build.status) };
   if (status === "pending") return { status };
   try {
     await this.database.$transaction(async (tx) => {

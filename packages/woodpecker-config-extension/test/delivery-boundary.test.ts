@@ -248,9 +248,9 @@ describe("the v2 catalog's ci service", () => {
     const register = graph.find((step) => step.key === "ci-images-register");
     if (register === undefined) throw new Error("ci registration missing");
     expect(register.defaultBranchOnly).toBe(true);
-    // Pins are committed source; nothing from the refresh lane is needed, so
-    // maintenance separation cannot strand it.
-    expect(register.dependsOn).toEqual(["verify"]);
+    // Align with the post-verify publication phase so pre-publication main
+    // supersession never cancels a pipeline that already registered ci builds.
+    expect(register.dependsOn).toEqual(["verify", "images", "helm-push"]);
     expect(register.environment?.["DELIVERY_URL"]).toBe(
       "http://delivery.delivery.svc.cluster.local:7353",
     );

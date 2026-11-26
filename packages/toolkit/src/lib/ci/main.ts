@@ -26,6 +26,11 @@ function completedVerdict(
   );
 }
 
+function isCanceledStatus(state: string): boolean {
+  const normalized = state.toLowerCase();
+  return normalized === "canceled" || normalized === "killed";
+}
+
 function failedWorkflows(pipeline: WoodpeckerPipeline): boolean {
   for (const workflow of pipeline.workflows) workflowStatus(workflow.state);
   return pipeline.workflows.some((workflow) => isFailure(workflow.state));
@@ -85,24 +90,81 @@ function assertMainIdentity(
     throw new Error("Main pipeline does not match its listed main run");
 }
 
+function createPipelineLoader(
+  listed: Awaited<ReturnType<typeof listPipelines>>,
+  config: WoodpeckerConfig,
+  signal?: AbortSignal,
+) {
+  const cache = new Map<number, Promise<WoodpeckerPipeline>>();
+  const load = (
+    entry: (typeof listed)[number],
+  ): Promise<WoodpeckerPipeline> => {
+    let cached = cache.get(entry.number);
+    if (cached === undefined) {
+      cached = (async () => {
+        const pipeline = await getPipeline(entry.number, config, signal);
+        assertMainIdentity(pipeline, entry);
+        return pipeline;
+      })();
+      cache.set(entry.number, cached);
+    }
+    return cached;
+  };
+  const hasNewerVerifyingRun = async (number: number): Promise<boolean> => {
+    const newer = listed.filter((candidate) => candidate.number > number);
+    // Check push runs first since every push run on main verifies main.
+    const ordered = [
+      ...newer.filter((candidate) => candidate.event === "push"),
+      ...newer.filter((candidate) => candidate.event !== "push"),
+    ];
+    for (const candidate of ordered) {
+      const pipeline = await load(candidate);
+      if (verifiesMain(pipeline)) return true;
+    }
+    return false;
+  };
+  return { load, hasNewerVerifyingRun };
+}
+
+async function isSupersededCanceled(
+  status: string,
+  number: number,
+  hasNewerVerifyingRun: (pipelineNumber: number) => Promise<boolean>,
+): Promise<boolean> {
+  return isCanceledStatus(status) && (await hasNewerVerifyingRun(number));
+}
+
 async function selectMainRuns(
   headSha: string,
   listed: Awaited<ReturnType<typeof listPipelines>>,
   config: WoodpeckerConfig,
   signal?: AbortSignal,
 ): Promise<Pick<MainStatus, "latest" | "lastVerdict">> {
+  const { load, hasNewerVerifyingRun } = createPipelineLoader(
+    listed,
+    config,
+    signal,
+  );
   let latest: WoodpeckerPipeline | null = null;
   let lastVerdict: WoodpeckerPipeline | null = null;
   for (const entry of listed) {
     const needsCurrent = latest === null && entry.commit === headSha;
     const needsVerdict = lastVerdict === null && completedVerdict(entry);
     if (!needsCurrent && !needsVerdict) continue;
-    const pipeline = await getPipeline(entry.number, config, signal);
-    assertMainIdentity(pipeline, entry);
+    const pipeline = await load(entry);
     if (!verifiesMain(pipeline)) continue;
     if (needsCurrent) latest = pipeline;
-    if (lastVerdict === null && completedVerdict(pipeline))
+    if (
+      lastVerdict === null &&
+      completedVerdict(pipeline) &&
+      !(await isSupersededCanceled(
+        pipeline.status,
+        pipeline.number,
+        hasNewerVerifyingRun,
+      ))
+    ) {
       lastVerdict = pipeline;
+    }
   }
   return { latest, lastVerdict };
 }
@@ -172,11 +234,15 @@ export async function getMainStatus(
       {
         event: ["push", "manual"],
         branch: "main",
-        // A completed manual run may be partial. Read through it until a
-        // completed push gives us a lower bound for the last main verdict.
+        // A completed manual run may be partial, and a canceled push may be
+        // superseded. Read until a non-canceled completed push bounds the last
+        // main verdict.
         stopWhen: (entries) =>
           entries.some(
-            (entry) => entry.event === "push" && completedVerdict(entry),
+            (entry) =>
+              entry.event === "push" &&
+              completedVerdict(entry) &&
+              !isCanceledStatus(entry.status),
           ),
       },
       signal,
@@ -241,6 +307,60 @@ export type MainRunSnapshot = {
   url: string | null;
 };
 
+async function isDescendantCommit(
+  github: GitHubClient,
+  baseSha: string,
+  candidateSha: string,
+  signal?: AbortSignal,
+): Promise<boolean> {
+  if (candidateSha === baseSha) return true;
+  const comparison = await github.read(
+    `/repos/${github.repo}/compare/${baseSha}...${candidateSha}`,
+    z.object({
+      status: z.enum(["ahead", "behind", "identical", "diverged"]),
+    }),
+    signal,
+  );
+  return comparison.status === "ahead";
+}
+
+async function earliestNonSupersededDescendant(input: {
+  github: GitHubClient;
+  sha: string;
+  ownRun: WoodpeckerPipeline;
+  listed: Awaited<ReturnType<typeof listPipelines>>;
+  loader: ReturnType<typeof createPipelineLoader>;
+  signal?: AbortSignal | undefined;
+}): Promise<WoodpeckerPipeline> {
+  const { github, sha, ownRun, listed, loader, signal } = input;
+  const newerAscending = listed
+    .filter((entry) => entry.number > ownRun.number)
+    .toSorted((a, b) => a.number - b.number);
+  for (const entry of newerAscending) {
+    if (
+      await isSupersededCanceled(
+        entry.status,
+        entry.number,
+        loader.hasNewerVerifyingRun,
+      )
+    )
+      continue;
+    const candidate = await loader.load(entry);
+    if (!verifiesMain(candidate)) continue;
+    if (
+      await isSupersededCanceled(
+        candidate.status,
+        candidate.number,
+        loader.hasNewerVerifyingRun,
+      )
+    )
+      continue;
+    if (await isDescendantCommit(github, sha, candidate.commit, signal))
+      return candidate;
+  }
+  return ownRun;
+}
+
 /** The newest verifying main run for one exact commit. */
 export async function getMainRun(
   github: GitHubClient,
@@ -254,14 +374,24 @@ export async function getMainRun(
     sha,
     signal,
   );
+  const loader = createPipelineLoader(listed, config, signal);
   let run: WoodpeckerPipeline | null = null;
   for (const entry of listed) {
     if (entry.commit !== sha) continue;
-    const pipeline = await getPipeline(entry.number, config, signal);
-    assertMainIdentity(pipeline, entry);
+    const pipeline = await loader.load(entry);
     if (!verifiesMain(pipeline)) continue;
     run = pipeline;
     break;
+  }
+  if (run !== null && isCanceledStatus(run.status)) {
+    run = await earliestNonSupersededDescendant({
+      github,
+      sha,
+      ownRun: run,
+      listed,
+      loader,
+      signal,
+    });
   }
   return {
     sha,
