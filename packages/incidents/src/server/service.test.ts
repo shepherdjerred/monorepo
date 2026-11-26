@@ -10,7 +10,12 @@ import {
   TakeCommandResultSchema,
 } from "#shared/contract.ts";
 import { createIncidentsFixtureHubServer } from "#server/hub-server.ts";
-import { AGENT, agent, createHarness } from "#testing/hub.ts";
+import {
+  AGENT,
+  agent,
+  createHarness,
+  requestDispatchLease,
+} from "#testing/hub.ts";
 import { minutes } from "#testing/records.ts";
 
 const DECLARE = {
@@ -141,12 +146,7 @@ describe("command", () => {
     const h = createHarness({ settings: { takeoverProvider: "codex" } });
     await h.call("declare", DECLARE, IncidentDetailSchema);
     h.clock.now = minutes(11);
-    const lease = await h.call(
-      "take",
-      { actor: agent("waiter"), ref: "INC-1", dispatch: true },
-      TakeCommandResultSchema,
-    );
-    if (lease.outcome !== "dispatching") throw new Error("expected a lease");
+    const lease = await requestDispatchLease(h);
     expect(lease).toMatchObject({
       provider: "codex",
       leaseExpiresAt: minutes(21).toISOString(),

@@ -481,6 +481,7 @@
         "@shepherdjerred/delivery#generate",
         "@shepherdjerred/errors#generate",
         "@shepherdjerred/golink#generate",
+        "@shepherdjerred/incidents#generate",
         "@shepherdjerred/tracker#generate",
         "@shepherdjerred/media#generate",
         "@shepherdjerred/birmel#generate",

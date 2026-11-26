@@ -29,6 +29,7 @@ import {
   createHarness,
   jsonOf,
   OPS_TOKEN,
+  requestDispatchLease,
 } from "#testing/hub.ts";
 import { minutes, T0 } from "#testing/records.ts";
 
@@ -267,12 +268,7 @@ describe("PostgreSQL lifecycle and signals", () => {
     const h = createHarness({ repository: repository() });
     await h.call("declare", DECLARE, IncidentDetailSchema);
     h.clock.now = minutes(11);
-    const lease = await h.call(
-      "take",
-      { actor: agent("waiter"), ref: "INC-1", dispatch: true },
-      TakeCommandResultSchema,
-    );
-    if (lease.outcome !== "dispatching") throw new Error("expected a lease");
+    const lease = await requestDispatchLease(h);
     const stored = await db().incident.findUniqueOrThrow({
       where: { number: 1 },
     });

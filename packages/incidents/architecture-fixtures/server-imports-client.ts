@@ -1,3 +1,3 @@
-import "../src/client/paths.ts";
+import { incidentPath } from "../src/client/paths.ts";
 
-export const illegalServerDependency = true;
+export const illegalServerDependency = incidentPath;

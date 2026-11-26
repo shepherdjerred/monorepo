@@ -15,6 +15,7 @@
     "#*": "./src/*"
   },
   "scripts": {
+    "build": "bun build src/shared/contract.ts src/shared/alert-rules.ts --target bun --outdir dist",
     "generate": "prisma generate",
     "migrate:deploy": "prisma migrate deploy",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",

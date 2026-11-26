@@ -10,6 +10,7 @@ import {
   createIncidentsHubServer,
   type IncidentsHubServer,
 } from "#server/hub-server.ts";
+import { TakeCommandResultSchema } from "#shared/contract.ts";
 import { T0 } from "#testing/records.ts";
 
 export const WEBHOOK_TOKEN = "webhook-token-for-tests";
@@ -160,4 +161,15 @@ export function createHarness(
       return TrpcErrorSchema.parse(body).error;
     },
   };
+}
+
+/** Takes INC-1 as `waiter` with dispatch and returns the resulting lease. */
+export async function requestDispatchLease(h: Harness) {
+  const lease = await h.call(
+    "take",
+    { actor: agent("waiter"), ref: "INC-1", dispatch: true },
+    TakeCommandResultSchema,
+  );
+  if (lease.outcome !== "dispatching") throw new Error("expected a lease");
+  return lease;
 }
