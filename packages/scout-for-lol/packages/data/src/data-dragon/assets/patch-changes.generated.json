@@ -1,0 +1,6191 @@
+[
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 1,
+      "name": "Annie"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Summon: Tibbers"
+    },
+    "stat": "Tibbers Health",
+    "before": "1150 - 3500 (Scaling with Champion Level) (+50% AP)",
+    "after": "1275 - 4000 (Scaling with Champion Level) (+50% AP) (+150% Bonus HP)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 1,
+      "name": "Annie"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Summon: Tibbers"
+    },
+    "stat": "Tibbers Aura Damage per Second",
+    "before": "8 / 12 / 16 (+4% AP)",
+    "after": "10 / 15 / 20 (+4% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 1,
+      "name": "Annie"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Summon: Tibbers"
+    },
+    "stat": "Tibbers Attack Damage",
+    "before": "30 / 45 / 60 (+10% AP)",
+    "after": "30 / 50 / 70 (+10% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 268,
+      "name": "Azir"
+    },
+    "ability": null,
+    "stat": "Attack Range",
+    "before": "525",
+    "after": "550",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 268,
+      "name": "Azir"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Arise!"
+    },
+    "stat": "On Hit / Attack Damage Ratio",
+    "before": "50%",
+    "after": "67%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 432,
+      "name": "Bard"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Cosmic Binding"
+    },
+    "stat": "Damage",
+    "before": "80 / 120 / 160 / 200 / 240 (+80% AP)",
+    "after": "80 / 125 / 170 / 215 / 260 (+100% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 81,
+      "name": "Ezreal"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Essence Flux"
+    },
+    "stat": "Damage",
+    "before": "80 / 135 / 190 / 245 / 300 (+100% bonus AD) (+90% AP)",
+    "after": "80 / 135 / 190 / 245 / 300 (+115% bonus AD) (+100% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 81,
+      "name": "Ezreal"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Trueshot Barrage"
+    },
+    "stat": "Champion Damage",
+    "before": "350 / 550 / 750 (+100% bonus AD) (+110% AP)",
+    "after": "350 / 600 / 850 (+110% bonus AD) (+120% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 3,
+      "name": "Galio"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Shield of Durand"
+    },
+    "stat": "Shield Amount (Also affects R)",
+    "before": "7.5 / 9 / 10.5 / 12 / 13.5% of his Max HP",
+    "after": "8 / 11 / 14 / 17 / 20% of his Max HP",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 150,
+      "name": "Gnar"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Boomerang Throw"
+    },
+    "stat": "Mini Damage",
+    "before": "5 / 45 / 85 / 125 / 165 (+125% AD)",
+    "after": "5 / 45 / 85 / 125 / 165 (+135% AD)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 150,
+      "name": "Gnar"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Boomerang Throw"
+    },
+    "stat": "Mega Damage",
+    "before": "45 / 90 / 135 / 180 / 225 (+140% AD)",
+    "after": "45 / 90 / 135 / 180 / 225 (+150% AD)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 897,
+      "name": "K'Sante"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Path Maker"
+    },
+    "stat": "Mana",
+    "before": "45 / 50 / 55 / 60 / 65",
+    "after": "45",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 897,
+      "name": "K'Sante"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Path Maker"
+    },
+    "stat": "Base Damage",
+    "before": "45 / 75 / 105 / 135 / 165",
+    "after": "45 / 85 / 125 / 165 / 205",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 897,
+      "name": "K'Sante"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Path Maker"
+    },
+    "stat": "All Out Charge Time Damage Increase",
+    "before": "10 / 27.5 / 45 / 62.5 / 80% damage",
+    "after": "10 / 26.25 / 42.5 / 58.75 / 75% damage",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 7,
+      "name": "LeBlanc"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Sigil of Malice"
+    },
+    "stat": "Ability Power Ratio (Both Initial and Mark)",
+    "before": "40% AP",
+    "after": "35% AP",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 11,
+      "name": "Master Yi"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Alpha Strike"
+    },
+    "stat": "Damage",
+    "before": "20 / 40 / 60 / 80 / 100 (+70% AD)",
+    "after": "20 / 40 / 60 / 80 / 100 (+60% AD)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 11,
+      "name": "Master Yi"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Alpha Strike"
+    },
+    "stat": "Maximum Single Target Damage",
+    "before": "35 / 70 / 105 / 140 / 175 (+122.5% AD)",
+    "after": "35 / 70 / 105 / 140 / 175 (+105% AD). Reminder that this can also Critically Strike for bonus damage.",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Radiant Barrage"
+    },
+    "stat": "Subsequent Bolt Damage",
+    "before": "5 / 10 / 15 / 20 / 25 (+8% AP)",
+    "after": "6 / 11 / 16 / 21 / 26 (+9% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Radiant Barrage"
+    },
+    "stat": "Maximum Damage",
+    "before": "85 / 120 / 165 / 220 / 285 (+65 / 73 / 81 / 89 / 97% AP)",
+    "after": "90 / 126 / 172 / 228 / 294 (+70 / 79 / 88 / 97 / 106% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Rebuttal"
+    },
+    "stat": "Shield",
+    "before": "50 / 80 / 110 / 140 / 170 (+50% AP)",
+    "after": "50 / 90 / 130 / 170 / 210 (+50% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Rebuttal"
+    },
+    "stat": "Retaliation",
+    "before": "35 / 40 / 45 / 50 / 55 (+10% AP)",
+    "after": "35 / 45 / 55 / 65 / 75 (+10% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 134,
+      "name": "Syndra"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Scatter the Weak"
+    },
+    "stat": "Mana Cost",
+    "before": "50",
+    "after": "60",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 134,
+      "name": "Syndra"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Scatter the Weak"
+    },
+    "stat": "Cooldown",
+    "before": "15",
+    "after": "17 / 16.5 / 16 / 15.5 / 15",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 161,
+      "name": "Vel'Koz"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Life Form Disintegration Ray"
+    },
+    "stat": "Total Damage",
+    "before": "450 / 700 / 925",
+    "after": "450 / 700 / 950",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "champion",
+      "id": 254,
+      "name": "Vi"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Relentless Force"
+    },
+    "stat": "Damage",
+    "before": "10 / 30 / 50 / 70 / 90 (+110% AD) (+100% AP)",
+    "after": "10 / 35 / 60 / 85 / 110 (+110% AD) (+100% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.23",
+    "date": "2026-11-17",
+    "subject": {
+      "kind": "item",
+      "id": 6699,
+      "name": "Voltaic Cyclosword"
+    },
+    "ability": {
+      "slot": null,
+      "name": "Firmament Unique"
+    },
+    "stat": "Bonus Damage",
+    "before": "[9% || 7%] target's current hp",
+    "after": "[8% || 6%] target's current hp",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 136,
+      "name": "Aurelion Sol"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Singularity"
+    },
+    "stat": "Total Magic Damage",
+    "before": "50 / 75 / 100 / 125 / 150 (+60% AP) over 5s",
+    "after": "50 / 80 / 110 / 140 / 170 (+60 / 65 / 70 / 75 / 80% AP) over 5s",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 42,
+      "name": "Corki"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Missile Barrage"
+    },
+    "stat": "Damage",
+    "before": "90 / 170 / 250 (+85% bonus AD)",
+    "after": "100 / 190 / 280 (+90% bonus AD)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 42,
+      "name": "Corki"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Missile Barrage"
+    },
+    "stat": "Big One Damage",
+    "before": "180 / 340 / 500 (+170% bonus AD)",
+    "after": "200 / 380 / 560 (+180% bonus AD)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 10,
+      "name": "Kayle"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Radiant Blast"
+    },
+    "stat": "Cooldown",
+    "before": "12 / 11 / 10 / 9 / 8s",
+    "after": "10 / 9.5 / 9 / 8.5 / 8s",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 10,
+      "name": "Kayle"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Divine Judgment"
+    },
+    "stat": "Cooldown",
+    "before": "160 / 120 / 80s",
+    "after": "140 / 110 / 80s",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Ritual Nails"
+    },
+    "stat": "Stack Bonus Damage",
+    "before": "18 / 26 / 34 / 42 / 50",
+    "after": "15 / 22 / 29 / 36 / 43",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Ritual Nails"
+    },
+    "stat": "Maximum Stack Damage",
+    "before": "75.6 / 109.2 / 142.8 / 176.4 / 210",
+    "after": "63 / 92.4 / 121.8 / 151.2 / 180.6",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Soul Ignition"
+    },
+    "stat": "Duration",
+    "before": "6s",
+    "after": "5s",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 57,
+      "name": "Maokai"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Bramble Smash"
+    },
+    "stat": "Damage",
+    "before": "75 / 120 / 165 / 210 / 255 (+2 / 2.5 / 3 / 3.5 / 4% Target Maximum Health) (+50% AP)",
+    "after": "75 / 120 / 165 / 210 / 255 (+2.5 / 3 / 3.5 / 4 / 4.5% Target Maximum Health) (+50% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": null,
+    "stat": "Health",
+    "before": "640 + 99/Level",
+    "after": "590 + 107/Level",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": null,
+    "stat": "Mana",
+    "before": "480 + 28/Level",
+    "after": "455 + 38/Level",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": null,
+    "stat": "AR",
+    "before": "+5.2/Level",
+    "after": "+5.4/Level",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": null,
+    "stat": "AD",
+    "before": "54 + 3.3/Level",
+    "after": "52 + 3.3/Level",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": null,
+    "stat": "AS",
+    "before": "2.5%/Level",
+    "after": "2.75%/Level",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Searing Brilliance"
+    },
+    "stat": "Bonus Damage Per Bolt",
+    "before": "8 - 30 (+4% AP)",
+    "after": "4 - 30 (+4% AP)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Searing Brilliance"
+    },
+    "stat": "First Stack Damage Against Minions",
+    "before": "50% Less",
+    "after": "45% Less",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Radiant Volley"
+    },
+    "stat": "First Hit Damage",
+    "before": "60 / 85 / 110 / 135 / 160 (+55% AP)",
+    "after": "60 (+25% AP)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Radiant Volley"
+    },
+    "stat": "Multi-Hit Damage",
+    "before": "5 / 7 / 9 / 11 / 13 (+5% AP)",
+    "after": "5 / 10 / 15 / 20 / 25 (+8% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Radiant Volley"
+    },
+    "stat": "Total Damage",
+    "before": "85 - 277 (+80 - 100% AP)",
+    "after": "85 - 285 (+65 - 97% AP)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Radiant Volley"
+    },
+    "stat": "Mana Cost",
+    "before": "70 / 75 / 80 / 85 / 90",
+    "after": "60 / 65 / 70 / 75 / 80",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Radiant Volley"
+    },
+    "stat": "Missile Speed",
+    "before": "3800",
+    "after": "3200 (takes .047s longer to travel to max range)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Solar Snare"
+    },
+    "stat": "Root Duration",
+    "before": "1.5 seconds",
+    "after": "[0.8 - 1.6] / [0.85 - 1.75] / [0.9 - 1.9] / [0.95 - 2.05] / [1.0 - 2.2] seconds, increasing with distance",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Solar Snare"
+    },
+    "stat": "Slow Amount",
+    "before": "30%",
+    "after": "20 / 25 / 30 / 35 / 40%",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Solar Snare"
+    },
+    "stat": "Mana Cost",
+    "before": "50 / 60 / 70 / 80 / 90",
+    "after": "40 / 50 / 60 / 70 / 80",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 800,
+      "name": "Mel"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Golden Eclipse"
+    },
+    "stat": "Cooldown",
+    "before": "120 / 100 / 80 seconds",
+    "after": "120 / 90 / 60 seconds",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 950,
+      "name": "Naafiri"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Darkin Daggers"
+    },
+    "stat": "Heal",
+    "before": "45 / 60 / 75 / 90 / 105 (+40% bonus AD)",
+    "after": "55 / 70 / 85 / 100 / 115 (+45% bonus AD)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 950,
+      "name": "Naafiri"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "The Call of the Pack"
+    },
+    "stat": "Bonus Attack Damage",
+    "before": "20%",
+    "after": "22%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 68,
+      "name": "Rumble"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "The Equalizer"
+    },
+    "stat": "Damage per Second",
+    "before": "120 / 200 / 280 (+35% AP)",
+    "after": "(+40% AP)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 68,
+      "name": "Rumble"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "The Equalizer"
+    },
+    "stat": "Maximum Damage Ability Power Ratio",
+    "before": "175% AP",
+    "after": "200% AP",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 98,
+      "name": "Shen"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Twilight Assault"
+    },
+    "stat": "Monster Damage Modifier",
+    "before": "100 / 125 / 150 / 175 / 200",
+    "after": "120 / 140 / 160 / 180 / 200",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 901,
+      "name": "Smolder"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "ACHOOO!"
+    },
+    "stat": "Explosion Damage",
+    "before": "10 / 35 / 60 / 85 / 110 (+50% bonus AD) (+80% AP)",
+    "after": "25 / 50 / 75 / 100 / 125 (+50% bonus AD) (+80% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 412,
+      "name": "Thresh"
+    },
+    "ability": null,
+    "stat": "Attack Damage",
+    "before": "56",
+    "after": "54",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 412,
+      "name": "Thresh"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "The Box"
+    },
+    "stat": "Damage",
+    "before": "250 / 400 / 550 (+100% AP)",
+    "after": "200 / 350 / 500 (+100% AP)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 112,
+      "name": "Viktor"
+    },
+    "ability": null,
+    "stat": "Health Growth",
+    "before": "100/Level",
+    "after": "105/Level",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 112,
+      "name": "Viktor"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Arcane Storm"
+    },
+    "stat": "Conjure Damage",
+    "before": "100 / 175 / 250 (+50% AP)",
+    "after": "100 / 175 / 250 (+60% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 157,
+      "name": "Yasuo"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Steel Tempest"
+    },
+    "stat": "Damage",
+    "before": "20 / 45 / 70 / 95 / 120 (+105% total AD)",
+    "after": "20 / 45 / 70 / 95 / 120 (+100% total AD)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "champion",
+      "id": 904,
+      "name": "Zaahen"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "The Darkin Glaive"
+    },
+    "stat": "Cooldown",
+    "before": "10 / 9 / 8 / 7 / 6s",
+    "after": "8 / 7.5 / 7 / 6.5 / 6s",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "item",
+      "id": 1086,
+      "name": "Doran's Bow"
+    },
+    "ability": null,
+    "stat": "Attack Damage",
+    "before": "8",
+    "after": "7",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "item",
+      "id": 2501,
+      "name": "Overlord's Bloodmail"
+    },
+    "ability": null,
+    "stat": "Attack Damage",
+    "before": "30",
+    "after": "40",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.22",
+    "date": "2026-11-03",
+    "subject": {
+      "kind": "item",
+      "id": 2501,
+      "name": "Overlord's Bloodmail"
+    },
+    "ability": null,
+    "stat": "Retribution",
+    "before": "+0 - 12% total AD, based on % Missing Health",
+    "after": "+0 - 10% total AD, based on % Missing Health",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 268,
+      "name": "Azir"
+    },
+    "ability": null,
+    "stat": "Mana Growth",
+    "before": "40/Level",
+    "after": "50/Level",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 51,
+      "name": "Caitlyn"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Headshot"
+    },
+    "stat": "Damage",
+    "before": "60 - 100% AD (+1% AD per 1% per Crit Chance) (+1% AD per 1% Bonus Crit Damage)",
+    "after": "60 - 80% AD (+0.8% AD per 1% per Crit Chance) (+0.8% AD per 1% Bonus Crit Damage)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 51,
+      "name": "Caitlyn"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Piltover Peacemaker"
+    },
+    "stat": "Base Damage",
+    "before": "50 / 90 / 130 / 170 / 210",
+    "after": "50 / 95 / 140 / 185 / 230",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 122,
+      "name": "Darius"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Decimate"
+    },
+    "stat": "Cooldown",
+    "before": "9 / 8 / 7 / 6 / 5s",
+    "after": "9 / 8 / 7 / 6 / 4s",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 222,
+      "name": "Jinx"
+    },
+    "ability": null,
+    "stat": "Attack Damage",
+    "before": "59 + 3.25/Level",
+    "after": "59 + 3/Level",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 222,
+      "name": "Jinx"
+    },
+    "ability": null,
+    "stat": "Health",
+    "before": "630 + 105/Level",
+    "after": "610 + 105/Level",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 64,
+      "name": "Lee Sin"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Safeguard"
+    },
+    "stat": "Cooldown",
+    "before": "7s",
+    "after": "8s",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 64,
+      "name": "Lee Sin"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Dragon's Rage"
+    },
+    "stat": "Kick Damage",
+    "before": "175 / 400 / 625 (+200% bonus AD)",
+    "after": "150 / 350 / 550 (+200% bonus AD)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 64,
+      "name": "Lee Sin"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Dragon's Rage"
+    },
+    "stat": "Collision Damage",
+    "before": "175 / 400 / 625 (+200% bonus AD) (+12 / 15 / 18% Kicked Champion's Health)",
+    "after": "150 / 350 / 550 (+200% bonus AD) (+12 / 15 / 18% Kicked Champion's Health)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Ritual Nails"
+    },
+    "stat": "Unused Charge Refund",
+    "before": "20 - 35% mana and cooldown refund",
+    "after": "10 - 40% mana and cooldown refund",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": null,
+    "stat": "Mana Growth",
+    "before": "70",
+    "after": "60",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Soul Ignition"
+    },
+    "stat": "Mana Cost",
+    "before": "50 / 55 / 60 / 65 / 70",
+    "after": "60 / 65 / 70 / 75 / 80",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Soul Ignition"
+    },
+    "stat": "Grey Health Store Based on Current Health",
+    "before": "40 - 200 (both level based)",
+    "after": "20 - 200",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Soul Ignition"
+    },
+    "stat": "Current Health Store",
+    "before": "150 - 450 (both level based)",
+    "after": "100 - 500 (+60% AP)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Ashen Pursuit"
+    },
+    "stat": "Blink Damage",
+    "before": "40 / 50 / 60 / 70 / 80 (+40% AP)",
+    "after": "40 / 55 / 70 / 85 / 100 (+50% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 21,
+      "name": "Miss Fortune"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Make It Rain"
+    },
+    "stat": "Damage",
+    "before": "70 / 100 / 130 / 160 / 190 (+120% AP)",
+    "after": "90 / 120 / 150 / 180 / 210 (+120% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 21,
+      "name": "Miss Fortune"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Bullet Time"
+    },
+    "stat": "Critical Strike Damage",
+    "before": "130% (+0.3% per 1% Bonus Crit Damage)",
+    "after": "145% (+0.45% per 1% Bonus Crit Damage)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 76,
+      "name": "Nidalee"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Pounce"
+    },
+    "stat": "Damage",
+    "before": "55 / 88.75 / 122.5 / 156.25 / 190 (+50% bonus AD) (+30% AP)",
+    "after": "50 / 80 / 110 / 140 / 170 (+50% bonus AD) (+30% AP)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 76,
+      "name": "Nidalee"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Primal Surge"
+    },
+    "stat": "Attack Speed",
+    "before": "30 / 40 / 50 / 60 / 70%",
+    "after": "20 / 30 / 40 / 50 / 60%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 20,
+      "name": "Nunu & Willump"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Absolute Zero"
+    },
+    "stat": "Maximum Damage",
+    "before": "625 / 925 / 1275 (+300% AP)",
+    "after": "750 / 1100 / 1450 (+300% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 61,
+      "name": "Orianna"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Command: Attack"
+    },
+    "stat": "Damage",
+    "before": "60 / 90 / 120 / 150 / 180 (+55% AP)",
+    "after": "60 / 90 / 120 / 150 / 180 (+60% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 61,
+      "name": "Orianna"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Command: Dissonance"
+    },
+    "stat": "Damage",
+    "before": "70 / 110 / 150 / 190 / 230 (+80% AP)",
+    "after": "70 / 110 / 150 / 190 / 230 (+85% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 246,
+      "name": "Qiyana"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Elemental Wrath / Edge of Ixtal"
+    },
+    "stat": "Damage",
+    "before": "80 / 110 / 140 / 170 / 200 (+90% bonus AD)",
+    "after": "70 / 100 / 130 / 160 / 190 (+90% bonus AD)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 33,
+      "name": "Rammus"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Defensive Ball Curl"
+    },
+    "stat": "Bonus Armor",
+    "before": "27 / 32 / 37 / 42 / 47 (+30 - 60% Armor)",
+    "after": "25 / 30 / 35 / 40 / 45 (+30 - 50% Armor)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 33,
+      "name": "Rammus"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Defensive Ball Curl"
+    },
+    "stat": "Bonus Magic Resistance",
+    "before": "20 / 25 / 30 / 35 / 40 (+30 - 60% Magic Resistance)",
+    "after": "20 / 25 / 30 / 35 / 40 (+30 - 50% Magic Resistance)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 13,
+      "name": "Ryze"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Overload"
+    },
+    "stat": "Flux Bonus Damage",
+    "before": "15% / 40% / 65% / 90% increased damage",
+    "after": "10% / 40% / 70% / 100% increased damage",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 13,
+      "name": "Ryze"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Overload"
+    },
+    "stat": "Bonus Move Speed",
+    "before": "28% / 32% / 36% / 40% / 44%",
+    "after": "30% / 35% / 40% / 45% / 50%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 13,
+      "name": "Ryze"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Rune Prison"
+    },
+    "stat": "Damage",
+    "before": "60 / 90 / 120 / 150 / 180 (+60% AP) (+3% bonus mana)",
+    "after": "60 / 90 / 120 / 150 / 180 (+70% AP) (+3% bonus mana)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 14,
+      "name": "Sion"
+    },
+    "ability": null,
+    "stat": "Health",
+    "before": "655 + 87/Level",
+    "after": "655 + 95/Level",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 14,
+      "name": "Sion"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Unstoppable Onslaught"
+    },
+    "stat": "Damage Increase over the First 3s of Channeling",
+    "before": "+0 - 166.67% Base Damage, 0 - 100% Ratio Damage",
+    "after": "+0 - 200%",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 163,
+      "name": "Taliyah"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Unraveled Earth"
+    },
+    "stat": "Damage",
+    "before": "60 / 105 / 150 / 195 / 240 (+60% AP)",
+    "after": "70 / 115 / 160 / 205 / 250 (+70% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 163,
+      "name": "Taliyah"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Unraveled Earth"
+    },
+    "stat": "Detonation Damage",
+    "before": "25 / 40 / 55 / 70 / 85 (+30% AP)",
+    "after": "30 / 45 / 60 / 75 / 90 (+30% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 18,
+      "name": "Tristana"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Rapid Fire"
+    },
+    "stat": "Attack Speed",
+    "before": "60 / 75 / 90 / 105 / 120%",
+    "after": "40 / 60 / 80 / 100 / 120%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 110,
+      "name": "Varus"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Piercing Arrow"
+    },
+    "stat": "Damage Calculation",
+    "before": "Max Damage scaling, 53.33 - 240 (+80% bonus AD) to 80 - 360 (+120% bonus AD)",
+    "after": "Min Damage scaling, 50 - 230 (+80% bonus AD) to 85 - 391 (+136% bonus AD)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 110,
+      "name": "Varus"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Piercing Arrow"
+    },
+    "stat": "Damage Increase over Channel Time",
+    "before": "Up to 50%",
+    "after": "Up to 70%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 110,
+      "name": "Varus"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Blighted Quiver"
+    },
+    "stat": "On-Hit Damage",
+    "before": "4 / 13 / 22 / 31 / 40 (+15% bonus AD) (+25% AP)",
+    "after": "4 / 10 / 16 / 22 / 28 (+20% bonus AD) (+30% AP)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 110,
+      "name": "Varus"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Blighted Quiver"
+    },
+    "stat": "Per Stack Damage",
+    "before": "3 - 5% (+1.3% per 100 AP) Target Maximum Health",
+    "after": "2.5 - 4.5% (+1.4% per 100 AP) Target Maximum Health",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 110,
+      "name": "Varus"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Blighted Quiver"
+    },
+    "stat": "Active Missing Health Damage",
+    "before": "6 - 14%, increased by up to 50% based on Q Channel",
+    "after": "6 - 10%, increased by up to 70% based on Q Channel",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 110,
+      "name": "Varus"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Blighted Quiver"
+    },
+    "stat": "Basic Ability Cooldown Refund",
+    "before": "13% per stack, increased by up to 50% based on Q Channel",
+    "after": "11%, increased by up to 70% based on Q Channel",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 161,
+      "name": "Vel'Koz"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Organic Deconstruction"
+    },
+    "stat": "Damage",
+    "before": "35 - 180 (+60% AP)",
+    "after": "35 - 205 (+65% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 112,
+      "name": "Viktor"
+    },
+    "ability": null,
+    "stat": "Move Speed",
+    "before": "335",
+    "after": "330",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 112,
+      "name": "Viktor"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Siphon Power"
+    },
+    "stat": "Shield",
+    "before": "40 - 140 (based on level) (+25% AP)",
+    "after": "30 - 130 (+20% AP)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 62,
+      "name": "Wukong"
+    },
+    "ability": null,
+    "stat": "Health Regeneration",
+    "before": "3.5 + 0.65/Level",
+    "after": "5.5 + 0.65/Level",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 62,
+      "name": "Wukong"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Stone Skin"
+    },
+    "stat": "Armor per Stack",
+    "before": "6 - 10 (based on Champion Level)",
+    "after": "4.5 - 10 (based on Champion Level)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 5,
+      "name": "Xin Zhao"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Three Talon Strike"
+    },
+    "stat": "Damage per Strike",
+    "before": "15 / 30 / 45 / 60 / 75 (+40% bonus AD)",
+    "after": "15 / 30 / 45 / 60 / 75 (+45% bonus AD)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 5,
+      "name": "Xin Zhao"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Audacious Charge"
+    },
+    "stat": "Attack Speed Scaling",
+    "before": "1% per 5% bonus Attack Speed from permanent sources",
+    "after": "1% per 4% bonus Attack Speed from permanent sources",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 777,
+      "name": "Yone"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Mortal Steel"
+    },
+    "stat": "Damage",
+    "before": "25 / 50 / 75 / 100 / 125 (+110% AD)",
+    "after": "25 / 50 / 75 / 100 / 125 (+105% AD)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "champion",
+      "id": 143,
+      "name": "Zyra"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Rampant Growth"
+    },
+    "stat": "Seed Ammo Cooldown",
+    "before": "18 / 16 / 14 / 12 / 10s",
+    "after": "16 / 14.5 / 13 / 11.5 / 10s",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "item",
+      "id": 2520,
+      "name": "Bastion Breaker"
+    },
+    "ability": null,
+    "stat": "Lethality",
+    "before": "22",
+    "after": "18",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "item",
+      "id": 2520,
+      "name": "Bastion Breaker"
+    },
+    "ability": null,
+    "stat": "Shaped Charge Damage",
+    "before": "50 Melee + 1.5/Lethality / 25 Ranged + 0.75/Lethality",
+    "after": "40 Melee + 1.5/Lethality / 20 Ranged + 0.75/Lethality",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "item",
+      "id": 2520,
+      "name": "Bastion Breaker"
+    },
+    "ability": null,
+    "stat": "Sabotage Duration",
+    "before": "90s",
+    "after": "Infinite",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "item",
+      "id": 6621,
+      "name": "Dawncore"
+    },
+    "ability": null,
+    "stat": "Ability Power per 100% Base Mana Regeneration",
+    "before": "10",
+    "after": "15",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "item",
+      "id": 3008,
+      "name": "Gluttonous Greaves"
+    },
+    "ability": null,
+    "stat": "Total Cost",
+    "before": "1000g",
+    "after": "1100g",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "item",
+      "id": 6697,
+      "name": "Hubris"
+    },
+    "ability": null,
+    "stat": "Base Bonus Attack Damage",
+    "before": "12",
+    "after": "15 Melee / 10 Ranged",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.21",
+    "date": "2026-10-20",
+    "subject": {
+      "kind": "item",
+      "id": 6697,
+      "name": "Hubris"
+    },
+    "ability": null,
+    "stat": "Bonus Attack Damage per Stack",
+    "before": "3",
+    "after": "3 Melee / 2 Ranged",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 799,
+      "name": "Ambessa"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Drakehound's Step"
+    },
+    "stat": "Damage",
+    "before": "5 - 30 (+25% bonus AD)",
+    "after": "5 - 25 (+20% bonus AD)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 22,
+      "name": "Ashe"
+    },
+    "ability": null,
+    "stat": "Attack Damage per Level",
+    "before": "3.5",
+    "after": "3",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 69,
+      "name": "Cassiopeia"
+    },
+    "ability": null,
+    "stat": "Base Health",
+    "before": "630",
+    "after": "610",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 69,
+      "name": "Cassiopeia"
+    },
+    "ability": null,
+    "stat": "Base Mana",
+    "before": "480",
+    "after": "450",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 131,
+      "name": "Diana"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Pale Cascade"
+    },
+    "stat": "Shield Bonus Health Ratio",
+    "before": "11%",
+    "after": "14%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 85,
+      "name": "Kennen"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Lightning Rush"
+    },
+    "stat": "Bonus Attack Speed",
+    "before": "40 / 50 / 60 / 70 / 80%",
+    "after": "50 / 60 / 70 / 80 / 90%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 203,
+      "name": "Kindred"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Wolf's Frenzy"
+    },
+    "stat": "Monster Mod",
+    "before": "150%",
+    "after": "165%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 203,
+      "name": "Kindred"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Mounting Dread"
+    },
+    "stat": "Slow Duration",
+    "before": "1s",
+    "after": "1.5s",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 203,
+      "name": "Kindred"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Mounting Dread"
+    },
+    "stat": "Small Monster Targeting",
+    "before": "Enabled",
+    "after": "Removed",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 897,
+      "name": "K'Sante"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Path Maker"
+    },
+    "stat": "Mana Cost",
+    "before": "40 / 45 / 50 / 55 / 60",
+    "after": "45 / 50 / 55 / 60 / 65",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 897,
+      "name": "K'Sante"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Path Maker"
+    },
+    "stat": "W Base/All-Out Damage Reduction",
+    "before": "30 / 75%",
+    "after": "25 / 70%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 876,
+      "name": "Lillia"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Lilting Lullaby"
+    },
+    "stat": "Duration",
+    "before": "2.5s",
+    "after": "2.5 / 2.75 / 3s",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 236,
+      "name": "Lucian"
+    },
+    "ability": null,
+    "stat": "Attack Damage",
+    "before": "60 + 2.5/Level",
+    "after": "60 + 2.9/Level",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 82,
+      "name": "Mordekaiser"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Obliterate"
+    },
+    "stat": "Scaling Level 10-20",
+    "before": "(+5/lvl)",
+    "after": "(+7/lvl)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 82,
+      "name": "Mordekaiser"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Realm of Death"
+    },
+    "stat": "Cooldown",
+    "before": "140 / 120 / 100s",
+    "after": "120 / 110 / 100s",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 518,
+      "name": "Neeko"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Tangle-Barbs"
+    },
+    "stat": "Base Damage",
+    "before": "70 / 105 / 140 / 175 / 210 (+65% AP)",
+    "after": "80 / 115 / 150 / 185 / 220 (+65% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 518,
+      "name": "Neeko"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Tangle-Barbs"
+    },
+    "stat": "Empowered Root Duration",
+    "before": "1.8 / 2.1 / 2.4 / 2.7 / 3s",
+    "after": "2 / 2.25 / 2.5 / 2.75 / 3s",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 901,
+      "name": "Smolder"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Dragon Practice"
+    },
+    "stat": "Super Scorcher Bonus Magic Damage",
+    "before": "25 - 55% (+0-9% with IE) of Dragon Practice Stacks, scaling with Crit Chance",
+    "after": "25 - 60% (+0-10.5% with IE) of Dragon Practice Stacks, scaling with Crit Chance",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 901,
+      "name": "Smolder"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Dragon Practice"
+    },
+    "stat": "Flap Flap Flap Bonus Magic Damage",
+    "before": "8 - 12.8% (+0-1.44% with IE) of Dragon Practice Stacks, scaling with Crit Chance",
+    "after": "8 - 14% (+0-1.8% with IE) of Dragon Practice Stacks, scaling with Crit Chance",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 901,
+      "name": "Smolder"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Mmooommmm!"
+    },
+    "stat": "Self Heal",
+    "before": "100 / 135 / 170 (+50% bonus AD) (+75% AP)",
+    "after": "100 / 175 / 250 (+75% bonus AD) (+75% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 50,
+      "name": "Swain"
+    },
+    "ability": null,
+    "stat": "Base Magic Resistance",
+    "before": "31",
+    "after": "34",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 50,
+      "name": "Swain"
+    },
+    "ability": null,
+    "stat": "Base Armor",
+    "before": "25",
+    "after": "23",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 50,
+      "name": "Swain"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Vision of Empire"
+    },
+    "stat": "Damage",
+    "before": "70 / 105 / 140 / 175 / 210 (+60%)",
+    "after": "70 / 115 / 160 / 205 / 250 (+60%)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 50,
+      "name": "Swain"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Vision of Empire"
+    },
+    "stat": "Cooldown",
+    "before": "22 / 21 / 20 / 19 / 18s",
+    "after": "20 / 19 / 18 / 17 / 16s",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 223,
+      "name": "Tahm Kench"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Tongue Lash"
+    },
+    "stat": "Base Healing",
+    "before": "10 / 13.75 / 17.5 / 21.25 / 25",
+    "after": "10 / 20 / 30 / 40 / 50",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 67,
+      "name": "Vayne"
+    },
+    "ability": null,
+    "stat": "Health per 5",
+    "before": "4 + .5/Level",
+    "after": "5.5 +.4/Level",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 67,
+      "name": "Vayne"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Tumble"
+    },
+    "stat": "Mana Cost",
+    "before": "46 / 42 / 38 / 34 / 30",
+    "after": "30",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 804,
+      "name": "Yunara"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Cultivation of Spirit"
+    },
+    "stat": "Passive On Hit Damage",
+    "before": "5 / 10 / 15 / 20 / 25 (+20% AP)",
+    "after": "3 / 8 / 13 / 18 / 23 (+20% AP)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 804,
+      "name": "Yunara"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Cultivation of Spirit"
+    },
+    "stat": "Active On Hit Damage",
+    "before": "5 / 10 / 15 / 20 / 25 (+20% AP)",
+    "after": "3 / 8 / 13 / 18 / 23 (+20% AP)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "champion",
+      "id": 804,
+      "name": "Yunara"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Arc of Judgement"
+    },
+    "stat": "Slow Stacking",
+    "before": "Stacks with other slows",
+    "after": "No longer stacks with other slows",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "item",
+      "id": 3073,
+      "name": "Experimental Hexplate"
+    },
+    "ability": null,
+    "stat": "Ranged Mod",
+    "before": "70% of Value (35% Attack Speed, 14% Move Speed)",
+    "after": "50% of Value (25% Attack Speed, 10% Move Speed)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "item",
+      "id": 3152,
+      "name": "Hextech Rocketbelt"
+    },
+    "ability": null,
+    "stat": "Ability Haste",
+    "before": "20",
+    "after": "10",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "item",
+      "id": 3152,
+      "name": "Hextech Rocketbelt"
+    },
+    "ability": null,
+    "stat": "Active Damage",
+    "before": "100 (+10% AP)",
+    "after": "135 (+15% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.20",
+    "date": "2026-10-06",
+    "subject": {
+      "kind": "item",
+      "id": 3085,
+      "name": "Runaan's Hurricane"
+    },
+    "ability": null,
+    "stat": "Attack Damage per Bolt",
+    "before": "65%",
+    "after": "60%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 266,
+      "name": "Aatrox"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Infernal Chains"
+    },
+    "stat": "Cooldown",
+    "before": "20 / 18 / 16 / 14 / 12 seconds",
+    "after": "18 / 16.5 / 15 / 13.5 / 12 seconds",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 266,
+      "name": "Aatrox"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Umbral Dash"
+    },
+    "stat": "Health Heal Ratio",
+    "before": "1.1% per 100 bonus health",
+    "after": "1.3% per 100 bonus health",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 523,
+      "name": "Aphelios"
+    },
+    "ability": {
+      "slot": null,
+      "name": "Calibrum"
+    },
+    "stat": "Moonshot Damage",
+    "before": "70 - 160 (+42 - 60% bonus AD) (+100% AP)",
+    "after": "80 - 170 (+42 - 60% bonus AD) (+100% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 523,
+      "name": "Aphelios"
+    },
+    "ability": {
+      "slot": null,
+      "name": "Severum"
+    },
+    "stat": "Healing",
+    "before": "2 - 7.1%, increased to 5 - 17.75%",
+    "after": "2 - 8%, increased to 5 - 20%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 523,
+      "name": "Aphelios"
+    },
+    "ability": {
+      "slot": null,
+      "name": "Gravitum"
+    },
+    "stat": "Slow",
+    "before": "30% for 2.5 seconds, decaying to 10% after 0.7 seconds",
+    "after": "30% for 2.5 seconds, decaying to 15% after 0.7 seconds",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 523,
+      "name": "Aphelios"
+    },
+    "ability": {
+      "slot": null,
+      "name": "Infernum"
+    },
+    "stat": "Duskwave Cooldown",
+    "before": "9 / 8.25 / 7.5 / 6.75 / 6 seconds",
+    "after": "8 / 7.25 / 6.5 / 5.75 / 5 seconds",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 523,
+      "name": "Aphelios"
+    },
+    "ability": {
+      "slot": null,
+      "name": "Crescendum"
+    },
+    "stat": "Mini-Crescendum Damage",
+    "before": "15% AD, decreasing by 1.5% AD to a minimum of 5% AD for the 8th+ chakram",
+    "after": "16% AD, decreasing by 1.5% AD to a minimum of 5% AD for the 9th+ chakram",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 893,
+      "name": "Aurora"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "The Weirding"
+    },
+    "stat": "Base Damage",
+    "before": "70 / 110 / 150 / 190 / 230",
+    "after": "80 / 120 / 160 / 200 / 240",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 893,
+      "name": "Aurora"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Between Worlds"
+    },
+    "stat": "Rift Duration",
+    "before": "1.75 / 2.5 / 3.25 seconds",
+    "after": "2.25 / 2.75 / 3.25 seconds",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 119,
+      "name": "Draven"
+    },
+    "ability": null,
+    "stat": "Attack Damage",
+    "before": "62",
+    "after": "64",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 60,
+      "name": "Elise"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Spider Queen"
+    },
+    "stat": "Passive Magic Damage On-Hit",
+    "before": "12 / 22 / 32 / 42",
+    "after": "14 / 24 / 34 / 44",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 60,
+      "name": "Elise"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Skittering Frenzy"
+    },
+    "stat": "Bonus Attack Speed",
+    "before": "60 / 75 / 90 / 105 / 120%",
+    "after": "70 / 85 / 100 / 115 / 130%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 114,
+      "name": "Fiora"
+    },
+    "ability": null,
+    "stat": "Health Growth",
+    "before": "99",
+    "after": "105",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 114,
+      "name": "Fiora"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Grand Challenge"
+    },
+    "stat": "Heal Range",
+    "before": "550",
+    "after": "600",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 114,
+      "name": "Fiora"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Grand Challenge"
+    },
+    "stat": "Heal Per Tick",
+    "before": "18.75 / 25 / 31.25 (+15% bonus AD)",
+    "after": "20 / 26.25 / 32.5 (+17.5% bonus AD)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 114,
+      "name": "Fiora"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Grand Challenge"
+    },
+    "stat": "Maximum Heal",
+    "before": "375 / 500 / 625 (+300% bonus AD)",
+    "after": "400 / 525 / 650 (+350% bonus AD)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 121,
+      "name": "Kha'Zix"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Unseen Threat"
+    },
+    "stat": "Damage",
+    "before": "17 - 136 (+50% bonus AD)",
+    "after": "22 - 141 (+50% bonus AD)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 121,
+      "name": "Kha'Zix"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Void Spike"
+    },
+    "stat": "Evolved Slow Duration",
+    "before": "2 seconds",
+    "after": "2.25 seconds",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 121,
+      "name": "Kha'Zix"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Leap"
+    },
+    "stat": "Evolved Range Bonus",
+    "before": "+200",
+    "after": "+300",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 876,
+      "name": "Lillia"
+    },
+    "ability": null,
+    "stat": "Armor",
+    "before": "22",
+    "after": "24",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 876,
+      "name": "Lillia"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Lilting Lullaby"
+    },
+    "stat": "Sleep Duration",
+    "before": "2 seconds",
+    "after": "2.5 seconds",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 236,
+      "name": "Lucian"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Vigilance"
+    },
+    "stat": "Empowered On-Hit Damage",
+    "before": "15 (+20% AD)",
+    "after": "5 (+15% AD)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 236,
+      "name": "Lucian"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Piercing Light"
+    },
+    "stat": "Base Damage",
+    "before": "80 / 115 / 150 / 185 / 220 (+100% bonus AD)",
+    "after": "90 / 130 / 170 / 210 / 250 (+100% bonus AD)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 11,
+      "name": "Master Yi"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Alpha Strike"
+    },
+    "stat": "Cooldown Refund on Hit",
+    "before": "-1 second, scaling down with Ability Haste",
+    "after": "1 second",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 75,
+      "name": "Nasus"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Siphoning Strike"
+    },
+    "stat": "Bonus Damage",
+    "before": "40 / 60 / 80 / 100 / 120",
+    "after": "30 / 50 / 70 / 90 / 110",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 56,
+      "name": "Nocturne"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Paranoia"
+    },
+    "stat": "Cooldown",
+    "before": "140 / 115 / 90 seconds",
+    "after": "160 / 130 / 100 seconds",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 78,
+      "name": "Poppy"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Hammer Shock"
+    },
+    "stat": "Minion/Monster Maximum Health Cap",
+    "before": "85 / 120 / 155 / 190 / 225",
+    "after": "70 / 105 / 140 / 175 / 210",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 68,
+      "name": "Rumble"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Junkyard Titan"
+    },
+    "stat": "Overheat Attack Speed",
+    "before": "50 - 130%",
+    "after": "30 - 100%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 68,
+      "name": "Rumble"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Junkyard Titan"
+    },
+    "stat": "Monster Cap",
+    "before": "65 - 150",
+    "after": "90 - 175",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 13,
+      "name": "Ryze"
+    },
+    "ability": null,
+    "stat": "Armor Growth",
+    "before": "4.2",
+    "after": "4.7",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 13,
+      "name": "Ryze"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Overload"
+    },
+    "stat": "Flux Bonus Damage",
+    "before": "25 / 50 / 75 / 100% increased damage",
+    "after": "15 / 40 / 65 / 90% increased damage",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 13,
+      "name": "Ryze"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Spell Flux"
+    },
+    "stat": "Mana Cost",
+    "before": "35 / 45 / 55 / 65 / 75",
+    "after": "40 / 50 / 60 / 70 / 80",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 254,
+      "name": "Vi"
+    },
+    "ability": null,
+    "stat": "Attack Damage",
+    "before": "63 + 3.5/Level",
+    "after": "61 + 3.9/Level",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 254,
+      "name": "Vi"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Blast Shield"
+    },
+    "stat": "Shield",
+    "before": "12% Maximum Health",
+    "after": "10% Maximum Health",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 106,
+      "name": "Volibear"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "The Relentless Storm"
+    },
+    "stat": "Attack Speed per Stack",
+    "before": "5% (+3% per 100 AP)",
+    "after": "5% (+4% per 100 AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "champion",
+      "id": 106,
+      "name": "Volibear"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "The Relentless Storm"
+    },
+    "stat": "Lightning On-Hit Damage",
+    "before": "11 - 60 (Levels 1-18) (+45% AP)",
+    "after": "11 - 60 (Levels 1-18) (+45% AP) (+20% bonus AD)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "item",
+      "id": 3865,
+      "name": "World Atlas"
+    },
+    "ability": null,
+    "stat": "Health",
+    "before": "30 / 100 / 200",
+    "after": "0 / 60 / 200",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "item",
+      "id": 3866,
+      "name": "Runic Compass"
+    },
+    "ability": null,
+    "stat": "Health",
+    "before": "30 / 100 / 200",
+    "after": "0 / 60 / 200",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "item",
+      "id": 3865,
+      "name": "World Atlas"
+    },
+    "ability": null,
+    "stat": "Health Regeneration",
+    "before": "25% / 50% / 75%",
+    "after": "50% / 75% / 75%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.19",
+    "date": "2026-09-22",
+    "subject": {
+      "kind": "item",
+      "id": 3866,
+      "name": "Runic Compass"
+    },
+    "ability": null,
+    "stat": "Health Regeneration",
+    "before": "25% / 50% / 75%",
+    "after": "50% / 75% / 75%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 432,
+      "name": "Bard"
+    },
+    "ability": null,
+    "stat": "Armor",
+    "before": "34 + 5/Level",
+    "after": "32 + 4.7/Level",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 69,
+      "name": "Cassiopeia"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Serpentine Grace"
+    },
+    "stat": "Move Speed Bonus",
+    "before": "6% - 40% (based on level)",
+    "after": "5% - 36% (based on level)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 69,
+      "name": "Cassiopeia"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Noxious Blast"
+    },
+    "stat": "Damage",
+    "before": "75 / 110 / 145 / 180 / 215",
+    "after": "65 / 100 / 135 / 170 / 205",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 69,
+      "name": "Cassiopeia"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Noxious Blast"
+    },
+    "stat": "Ability Power Ratio",
+    "before": "65%",
+    "after": "75%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 69,
+      "name": "Cassiopeia"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Twin Fang"
+    },
+    "stat": "Mana Cost",
+    "before": "40",
+    "after": "45",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 69,
+      "name": "Cassiopeia"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Twin Fang"
+    },
+    "stat": "Base Ability Power Ratio",
+    "before": "10%",
+    "after": "20%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 69,
+      "name": "Cassiopeia"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Twin Fang"
+    },
+    "stat": "Enhanced Ability Power Ratio",
+    "before": "55%",
+    "after": "45%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 69,
+      "name": "Cassiopeia"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Twin Fang"
+    },
+    "stat": "Total Ability Power Ratio",
+    "before": "65%",
+    "after": "65%",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 69,
+      "name": "Cassiopeia"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Twin Fang"
+    },
+    "stat": "Damage",
+    "before": "52 - 120",
+    "after": "50 - 120",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 69,
+      "name": "Cassiopeia"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Petrifying Gaze"
+    },
+    "stat": "Damage",
+    "before": "150 / 250 / 350",
+    "after": "125 / 225 / 325",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 69,
+      "name": "Cassiopeia"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Petrifying Gaze"
+    },
+    "stat": "Ability Power Ratio",
+    "before": "50%",
+    "after": "75%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 245,
+      "name": "Ekko"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Timewinder"
+    },
+    "stat": "Mana Cost",
+    "before": "50 / 60 / 70 / 80 / 90",
+    "after": "40 / 50 / 60 / 70 / 80",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 245,
+      "name": "Ekko"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Timewinder"
+    },
+    "stat": "Return Damage Ability Power Ratio",
+    "before": "60%",
+    "after": "70%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 38,
+      "name": "Kassadin"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Null Sphere"
+    },
+    "stat": "Ability Power Ratio",
+    "before": "70% AP",
+    "after": "80% AP",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 38,
+      "name": "Kassadin"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Riftwalk"
+    },
+    "stat": "Base Damage",
+    "before": "70 / 90 / 110",
+    "after": "80 / 95 / 110",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 11,
+      "name": "Master Yi"
+    },
+    "ability": null,
+    "stat": "Armor Growth",
+    "before": "33 + 4.5/Level",
+    "after": "33 + 5/Level",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 11,
+      "name": "Master Yi"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Highlander"
+    },
+    "stat": "Move Speed",
+    "before": "35 / 45 / 55%",
+    "after": "40 / 50 / 60%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 111,
+      "name": "Nautilus"
+    },
+    "ability": null,
+    "stat": "Attack Damage",
+    "before": "61 + 3.3/Level",
+    "after": "58 + 3.3/Level",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 111,
+      "name": "Nautilus"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Dredge Line"
+    },
+    "stat": "Damage",
+    "before": "85 / 130 / 175 / 220 / 265 (+90% AP)",
+    "after": "85 / 125 / 165 / 205 / 245 (+90% AP)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 147,
+      "name": "Seraphine"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Beat Drop"
+    },
+    "stat": "Cooldown",
+    "before": "11 / 10.5 / 10 / 9.5 / 9s",
+    "after": "11s",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 134,
+      "name": "Syndra"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Transcendent"
+    },
+    "stat": "Splinter Mana",
+    "before": "20 - 255",
+    "after": "20 - 199",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 134,
+      "name": "Syndra"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Force of Will"
+    },
+    "stat": "Cooldown",
+    "before": "12 / 11 / 10 / 9 / 8s",
+    "after": "13 / 12 / 11 / 10 / 9s",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 234,
+      "name": "Viego"
+    },
+    "ability": null,
+    "stat": "Attack Damage Growth",
+    "before": "3.5",
+    "after": "4",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 234,
+      "name": "Viego"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Sovereign's Domination"
+    },
+    "stat": "Heal",
+    "before": "2% (+…. )",
+    "after": "2% (+ 2.5% per 100 bonus AD) (+ 2% per 100 AP) (+ 5% per 100% bonus attack speed) (+ 2% per 500 bonus HP) of the target's maximum health",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 904,
+      "name": "Zaahen"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "The Darkin Glaive"
+    },
+    "stat": "Q2 Damage",
+    "before": "25 / 50 / 75 / 100 / 125 (+20 / 25 / 30 / 35 / 40% bonus AD)",
+    "after": "30 / 60 / 90 / 120 / 150 (+20 / 25 / 30 / 35 / 40% bonus AD)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 221,
+      "name": "Zeri"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Ultrashock Laser"
+    },
+    "stat": "Damage",
+    "before": "30 / 70 / 110 / 150 / 190 (+120% tAD)",
+    "after": "30 / 70 / 110 / 150 / 190 (+100% tAD)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "champion",
+      "id": 221,
+      "name": "Zeri"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Ultrashock Laser"
+    },
+    "stat": "Wall Damage",
+    "before": "45 / 105 / 165 / 225 / 285 (+180% tAD)",
+    "after": "45 / 105 / 165 / 225 / 285 (+150% tAD)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.18",
+    "date": "2026-09-09",
+    "subject": {
+      "kind": "item",
+      "id": 3124,
+      "name": "Guinsoo's Rageblade"
+    },
+    "ability": null,
+    "stat": "Seething Strike Stack Duration",
+    "before": "3s",
+    "after": "4s",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 136,
+      "name": "Aurelion Sol"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Breath of Light"
+    },
+    "stat": "Mana Cost Per Second",
+    "before": "35 / 40 / 45 / 50 / 55",
+    "after": "30 / 35 / 40 / 45 / 50",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 136,
+      "name": "Aurelion Sol"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Astral Flight"
+    },
+    "stat": "Cooldown",
+    "before": "22 / 20.5 / 19 / 17.5 / 16s",
+    "after": "22 / 20 / 18 / 16 / 14s",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 31,
+      "name": "Cho'Gath"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Vorpal Spikes"
+    },
+    "stat": "Base Damage (x3 attacks)",
+    "before": "20 / 40 / 60 / 80 / 100 (+30% AP) (+2.5% - 3.9% (+.5% Per Feast) Target Max HP)",
+    "after": "30 / 50 / 70 / 90 / 110 (+30% AP) (+2.5% - 3.9% (+.5% Per Feast) Target Max HP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 104,
+      "name": "Graves"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "End of the Line"
+    },
+    "stat": "Initial Damage",
+    "before": "50 / 75 / 100 / 125 / 150 (+65% bonus AD)",
+    "after": "50 / 75 / 100 / 125 / 150 (+55% bonus AD)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 104,
+      "name": "Graves"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "End of the Line"
+    },
+    "stat": "Return Damage",
+    "before": "80 / 125 / 170 / 215 / 260 (+55 / 70 / 85 / 100 / 115% bonus AD)",
+    "after": "80 / 125 / 170 / 215 / 260 (+45 / 60 / 75 / 90 / 105% bonus AD)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 39,
+      "name": "Irelia"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Bladesurge"
+    },
+    "stat": "Damage",
+    "before": "5 / 25 / 45 / 65 / 85 (+70% AD)",
+    "after": "5 / 25 / 45 / 65 / 85 (+80% AD)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 39,
+      "name": "Irelia"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Defiant Dance"
+    },
+    "stat": "Damage Reduction Ability Power Ratio",
+    "before": "7% per 100 AP (Halved for Magic Damage) (reduced to 75% value for Magic Damage in Arena)",
+    "after": "8% per 100 AP (Halved for Magic Damage) (reduced to 75% value for Magic Damage in Arena)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 39,
+      "name": "Irelia"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Vanguard's Edge"
+    },
+    "stat": "Ability Power Ratio",
+    "before": "70%",
+    "after": "100% (It is already 100% in Arena, so this is standardizing the value)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 7,
+      "name": "LeBlanc"
+    },
+    "ability": null,
+    "stat": "Attack Speed Ratio",
+    "before": "0.4",
+    "after": "0.625",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 7,
+      "name": "LeBlanc"
+    },
+    "ability": null,
+    "stat": "Attack Speed Growth",
+    "before": "2.35%",
+    "after": "1.5%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 7,
+      "name": "LeBlanc"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Distortion"
+    },
+    "stat": "Damage",
+    "before": "75 / 115 / 155 / 195 / 235 (+80% AP)",
+    "after": "75 / 115 / 155 / 195 / 235 (+90% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 7,
+      "name": "LeBlanc"
+    },
+    "ability": {
+      "slot": "RW",
+      "name": "Mimic: Distortion"
+    },
+    "stat": "Damage",
+    "before": "150 / 315 / 480 (+80% AP)",
+    "after": "150 / 315 / 480 (+90% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 75,
+      "name": "Nasus"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Soul Eater"
+    },
+    "stat": "Life Steal",
+    "before": "12 / 18 / 24%",
+    "after": "10 / 15 / 20%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 56,
+      "name": "Nocturne"
+    },
+    "ability": null,
+    "stat": "Armor",
+    "before": "38",
+    "after": "36",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 56,
+      "name": "Nocturne"
+    },
+    "ability": null,
+    "stat": "Health",
+    "before": "655",
+    "after": "640",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 246,
+      "name": "Qiyana"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Elemental Wrath"
+    },
+    "stat": "Damage",
+    "before": "70 / 100 / 130 / 160 / 190 (+85% bonus AD)",
+    "after": "80 / 110 / 140 / 170 / 200 (+90% bonus AD)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 246,
+      "name": "Qiyana"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Elemental Wrath"
+    },
+    "stat": "Monster Damage Modifier",
+    "before": "175% against Monsters",
+    "after": "160% against Monsters",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 412,
+      "name": "Thresh"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Flay"
+    },
+    "stat": "Active Damage",
+    "before": "75 / 120 / 165 / 210 / 255 (+70% AP)",
+    "after": "65 / 110 / 155 / 200 / 245 (+60% AP)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 48,
+      "name": "Trundle"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Frozen Domain"
+    },
+    "stat": "Attack Speed",
+    "before": "30 / 45 / 60 / 75 / 90%",
+    "after": "30 / 50 / 70 / 90 / 110%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 67,
+      "name": "Vayne"
+    },
+    "ability": null,
+    "stat": "Health",
+    "before": "550 + 103/Level",
+    "after": "580 + 98/Level",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 67,
+      "name": "Vayne"
+    },
+    "ability": null,
+    "stat": "Health Regeneration",
+    "before": "3.5 + .55/Level",
+    "after": "4 + .5/Level",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 67,
+      "name": "Vayne"
+    },
+    "ability": null,
+    "stat": "Attack Speed Ratio",
+    "before": ".658 + 3.3%/Level",
+    "after": ".67 + 2.8%/Level",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 67,
+      "name": "Vayne"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Tumble"
+    },
+    "stat": "Mana Cost",
+    "before": "30",
+    "after": "46 / 42 / 38 / 34 / 30",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 67,
+      "name": "Vayne"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Silver Bolts"
+    },
+    "stat": "True Damage",
+    "before": "6 / 7 / 8 / 9 / 10% Target Max HP",
+    "after": "4 / 5.5 / 7 / 8.5 / 10% Target Max HP",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 67,
+      "name": "Vayne"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Silver Bolts"
+    },
+    "stat": "Minimum Damage",
+    "before": "50 / 65 / 80 / 95 / 110",
+    "after": "40 / 55 / 70 / 85 / 100",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 101,
+      "name": "Xerath"
+    },
+    "ability": null,
+    "stat": "Health",
+    "before": "596",
+    "after": "575",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 101,
+      "name": "Xerath"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Arcanopulse"
+    },
+    "stat": "Damage",
+    "before": "75 / 115 / 155 / 195 / 235 (+90% AP)",
+    "after": "70 / 110 / 150 / 190 / 230 (+90% AP)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 157,
+      "name": "Yasuo"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Way of the Wanderer"
+    },
+    "stat": "Critical Strike Damage Reduction",
+    "before": "-10%",
+    "after": "-5%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "champion",
+      "id": 777,
+      "name": "Yone"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Way of the Hunter"
+    },
+    "stat": "Critical Strike Damage Reduction",
+    "before": "-10%",
+    "after": "-5%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "item",
+      "id": 3095,
+      "name": "Stormrazor"
+    },
+    "ability": null,
+    "stat": "Attack Speed",
+    "before": "20%",
+    "after": "25%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "item",
+      "id": 6610,
+      "name": "Sundered Sky"
+    },
+    "ability": null,
+    "stat": "Health",
+    "before": "450",
+    "after": "400",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.17",
+    "date": "2026-08-25",
+    "subject": {
+      "kind": "item",
+      "id": 6610,
+      "name": "Sundered Sky"
+    },
+    "ability": null,
+    "stat": "Attack Damage",
+    "before": "45",
+    "after": "40",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 268,
+      "name": "Azir"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Conquering Sands"
+    },
+    "stat": "Damage",
+    "before": "60 / 80 / 100 / 120 / 140 (+35 / 40 / 45 / 50 / 55% AP)",
+    "after": "75 / 95 / 115 / 135 / 155 (+35 / 40 / 45 / 50 / 55% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": null,
+    "stat": "Health Growth",
+    "before": "110",
+    "after": "105",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "True Form Total Attack Speed",
+    "before": "5 / 15 / 25%",
+    "after": "6 / 13 / 20%",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 164,
+      "name": "Camille"
+    },
+    "ability": null,
+    "stat": "Mana",
+    "before": "339",
+    "after": "375",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 164,
+      "name": "Camille"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Adaptive Defenses"
+    },
+    "stat": "Shield",
+    "before": "20% Maximum Health",
+    "after": "10 / 15 / 20 / 25% Maximum Health (levels 1 / 7 / 13 / 19)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 164,
+      "name": "Camille"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Adaptive Defenses"
+    },
+    "stat": "Cooldown",
+    "before": "18 / 14 / 10 / 6s (levels 1 / 7 / 13 / 19)",
+    "after": "14 / 11 / 8s (levels 1 / 7 / 13)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 164,
+      "name": "Camille"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Tactical Sweep"
+    },
+    "stat": "Cooldown",
+    "before": "15 / 14 / 13 / 12 / 11s",
+    "after": "12 / 11.5 / 11 / 10.5 / 10s",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 164,
+      "name": "Camille"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Tactical Sweep"
+    },
+    "stat": "Outer Cone Bonus Damage",
+    "before": "6 / 6.5 / 7 / 7.5 / 8% (+2.5% per 100 bonus Attack Damage) Target Maximum Health",
+    "after": "7 / 7.5 / 8 / 8.5 / 9% (+2.5% per 100 bonus Attack Damage) Target Maximum Health",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 887,
+      "name": "Gwen"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "A Thousand Cuts"
+    },
+    "stat": "Healing On Champions",
+    "before": "50% post-mitigation, capped to 10-25 (based on level) (+6.5% AP)",
+    "after": "67% post-mitigation, capped to 12-40 (based on level) (+7% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 85,
+      "name": "Kennen"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Slicing Maelstrom"
+    },
+    "stat": "Bonus Resistances",
+    "before": "20 / 40 / 60",
+    "after": "25 / 50 / 75",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 85,
+      "name": "Kennen"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Slicing Maelstrom"
+    },
+    "stat": "Damage",
+    "before": "40 / 75 / 110 (+22.5% AP)",
+    "after": "40 / 80 / 120 (+25% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 85,
+      "name": "Kennen"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Slicing Maelstrom"
+    },
+    "stat": "Maximum Damage",
+    "before": "300 / 562.5 / 825 (+168.75% AP)",
+    "after": "300 / 600 / 900 (+187.5% AP)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 75,
+      "name": "Nasus"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Siphoning Strike"
+    },
+    "stat": "Stacks",
+    "before": "3, increased to 12 on champions / large minions / monsters",
+    "after": "4, increased to 10 on champions / large minions / monsters",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 78,
+      "name": "Poppy"
+    },
+    "ability": null,
+    "stat": "Attack Damage",
+    "before": "60",
+    "after": "56",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 78,
+      "name": "Poppy"
+    },
+    "ability": null,
+    "stat": "Health Regeneration",
+    "before": "8",
+    "after": "9",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 78,
+      "name": "Poppy"
+    },
+    "ability": null,
+    "stat": "Mana",
+    "before": "280 + 40/level",
+    "after": "300 + 45/level",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 78,
+      "name": "Poppy"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Hammer Shock"
+    },
+    "stat": "Damage",
+    "before": "30 / 55 / 80 / 105 / 130 (+100% bonus Attack Damage) (+9% Target Maximum Health), twice",
+    "after": "30 / 55 / 80 / 105 / 130 (+75% bonus Attack Damage) (+7 / 7.5 / 8 / 8.5 / 9% Target Maximum Health), twice",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 78,
+      "name": "Poppy"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Hammer Shock"
+    },
+    "stat": "Target Maximum Health Monster Cap",
+    "before": "75 / 105 / 135 / 165 / 195",
+    "after": "85 / 120 / 155 / 190 / 225",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 78,
+      "name": "Poppy"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Hammer Shock"
+    },
+    "stat": "Slow Amount",
+    "before": "20 / 25 / 30 / 35 / 40%",
+    "after": "20 / 23 / 26 / 29 / 32% (+8% per 1000 bonus Health)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "champion",
+      "id": 78,
+      "name": "Poppy"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Steadfast Presence"
+    },
+    "stat": "Total Armor and Magic Resistance",
+    "before": "12%, doubled below 40% Maximum Health",
+    "after": "16%, doubled below 40% Maximum Health",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 3006,
+      "name": "Berserker's Greaves"
+    },
+    "ability": null,
+    "stat": "Attack Speed",
+    "before": "25%",
+    "after": "30%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 3006,
+      "name": "Berserker's Greaves"
+    },
+    "ability": null,
+    "stat": "T3 Attack Speed",
+    "before": "40%",
+    "after": "45%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 3071,
+      "name": "Black Cleaver"
+    },
+    "ability": null,
+    "stat": "Attack Damage",
+    "before": "40",
+    "after": "45",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 3071,
+      "name": "Black Cleaver"
+    },
+    "ability": null,
+    "stat": "Fervor Move Speed",
+    "before": "20 for 2s",
+    "after": "[20 Melee || 10 Ranged] for 2s",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 6692,
+      "name": "Eclipse"
+    },
+    "ability": null,
+    "stat": "Damage",
+    "before": "[6% Melee || 4% Ranged] Target Maximum Health",
+    "after": "[8% Melee || 5% Ranged] Target Maximum Health",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 6692,
+      "name": "Eclipse"
+    },
+    "ability": null,
+    "stat": "Shield",
+    "before": "[160 + 40% bonus Attack Damage Melee || 80 + 20% bonus Attack Damage Ranged]",
+    "after": "[150 + 40% bonus Attack Damage Melee || 75 + 20% bonus Attack Damage Ranged]",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 3085,
+      "name": "Runaan's Hurricane"
+    },
+    "ability": null,
+    "stat": "Move Speed",
+    "before": "4%",
+    "after": "5%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 3085,
+      "name": "Runaan's Hurricane"
+    },
+    "ability": null,
+    "stat": "Wind's Fury Bolt Damage",
+    "before": "55% Attack Damage",
+    "after": "65% Attack Damage",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 3053,
+      "name": "Sterak's Gage"
+    },
+    "ability": null,
+    "stat": "Bonus Attack Damage",
+    "before": "45% of Base Attack Damage",
+    "after": "50% of Base Attack Damage",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 6610,
+      "name": "Sundered Sky"
+    },
+    "ability": null,
+    "stat": "Recipe",
+    "before": "Tunneler (1150g) + Caulfield's (1050g) + Ruby Crystal (400g) + 500g",
+    "after": "Tunneler (1150g) + Caulfield's (1050g) + 900g",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 6610,
+      "name": "Sundered Sky"
+    },
+    "ability": null,
+    "stat": "Healing",
+    "before": "[100% Melee || 50% Ranged] Base Attack Damage + 6% Missing Health",
+    "after": "[90% Melee || 45% Ranged] Base Attack Damage + 4% Missing Health",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 6610,
+      "name": "Sundered Sky"
+    },
+    "ability": null,
+    "stat": "Health",
+    "before": "400",
+    "after": "450",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 3068,
+      "name": "Sunfire Cape"
+    },
+    "ability": null,
+    "stat": "Damage",
+    "before": "20 (+1% bonus Health)",
+    "after": "20 (+1.5% bonus Health)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 3068,
+      "name": "Sunfire Cape"
+    },
+    "ability": null,
+    "stat": "Minion / Monster Modifier",
+    "before": "160% Minion, 200% Monster",
+    "after": "150% Minion, 180% Monster",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 3068,
+      "name": "Sunfire Cape"
+    },
+    "ability": null,
+    "stat": "Recipe",
+    "before": "600g",
+    "after": "700g",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 3173,
+      "name": "Chainlaced Crushers"
+    },
+    "ability": null,
+    "stat": "Magic Resistance",
+    "before": "30",
+    "after": "25",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 3175,
+      "name": "Spellslinger's Shoes"
+    },
+    "ability": null,
+    "stat": "Magic Penetration",
+    "before": "18 + 8%",
+    "after": "20 + 8%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.16",
+    "date": "2026-08-11",
+    "subject": {
+      "kind": "item",
+      "id": 3077,
+      "name": "Tiamat"
+    },
+    "ability": null,
+    "stat": "Attack Damage",
+    "before": "20",
+    "after": "25",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 12,
+      "name": "Alistar"
+    },
+    "ability": null,
+    "stat": "Move Speed",
+    "before": "330",
+    "after": "335",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": null,
+    "stat": "Attack Speed",
+    "before": "0.85",
+    "after": "0.67",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": null,
+    "stat": "Attack Speed Ratio",
+    "before": "0.85",
+    "after": "0.67",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": null,
+    "stat": "Attack Damage",
+    "before": "60",
+    "after": "55",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": null,
+    "stat": "Basic Attack Damage Modifier",
+    "before": "75%",
+    "after": "100%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": null,
+    "stat": "Attack Cast Time",
+    "before": "0.25",
+    "after": "0.22",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": null,
+    "stat": "Armor",
+    "before": "32",
+    "after": "28",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": null,
+    "stat": "Armor Growth",
+    "before": "4.7",
+    "after": "5",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": null,
+    "stat": "Health",
+    "before": "610",
+    "after": "580",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": null,
+    "stat": "Health Growth",
+    "before": "105",
+    "after": "110",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": null,
+    "stat": "Model Size",
+    "before": "100%",
+    "after": "95%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Death In Lavender"
+    },
+    "stat": "Attack Speed After Spell Cast",
+    "before": "20% minimum / 40% maximum for 2 attacks",
+    "after": "20% for 3 seconds",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Death In Lavender"
+    },
+    "stat": "Attack Speed per Stack",
+    "before": "0.28% minimum / 1.1% maximum",
+    "after": "0.1% minimum / 2% maximum",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Void Surge"
+    },
+    "stat": "Speed",
+    "before": "800 / 850 / 900 / 950 / 1000",
+    "after": "850",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Void Surge"
+    },
+    "stat": "Time Between Casts",
+    "before": "1",
+    "after": "4 / 3.25 / 2.5 / 1.75 / 1",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Void Surge"
+    },
+    "stat": "Monster Damage Modifier",
+    "before": "55 / 65 / 75 / 85 / 95",
+    "after": "70",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Void Surge"
+    },
+    "stat": "Minion Damage Modifier",
+    "before": "60 / 70 / 80 / 90 / 100%",
+    "after": "Removed",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Void Surge"
+    },
+    "stat": "Damage",
+    "before": "0 / 5 / 10 / 15 / 20 (+100% Attack Damage)",
+    "after": "12 / 14 / 16 / 18 / 20 (+105% Attack Damage)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Void Surge"
+    },
+    "stat": "Attack Speed to Ability Haste Conversion",
+    "before": "0.25",
+    "after": "0.2",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Above And Below"
+    },
+    "stat": "Damage",
+    "before": "70 / 110 / 150 / 190 / 230 (+100% Bonus Attack Damage) (+125% Ability Power)",
+    "after": "80 / 140 / 200 / 260 / 320 (+150% Ability Power)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Above And Below"
+    },
+    "stat": "Slow Duration",
+    "before": "1.25 / 1.5 / 1.75 / 2 / 2.25 seconds at 50% slow",
+    "after": "2 seconds at 30% slow",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Above And Below"
+    },
+    "stat": "Knockup Duration",
+    "before": "0.75 seconds",
+    "after": "0.6 / 0.7 / 0.8 / 0.9 / 1 second",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Royal Maelstrom"
+    },
+    "stat": "Damage per Strike",
+    "before": "6 / 7 / 8 / 9 / 10 (+8% Attack Damage) (+8% On-Hit effects), increased up to 300% based on missing Health",
+    "after": "10 / 12 / 14 / 16 / 18 (+12% Attack Damage) (+12% On-Hit effects), increased up to 100% based on missing Health",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Royal Maelstrom"
+    },
+    "stat": "Number of Strikes",
+    "before": "6 + 1 per 33% bonus Attack Speed",
+    "after": "6 + 1 per 40% bonus Attack Speed",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Royal Maelstrom"
+    },
+    "stat": "Damage Reduction",
+    "before": "35 / 40 / 45 / 50 / 55%",
+    "after": "20 / 30 / 40 / 50 / 60%",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Royal Maelstrom"
+    },
+    "stat": "Lifesteal",
+    "before": "20%",
+    "after": "20 / 25 / 30 / 35 / 40%",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Royal Maelstrom"
+    },
+    "stat": "Lifesteal Scaling",
+    "before": "100%",
+    "after": "Removed",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Royal Maelstrom"
+    },
+    "stat": "Cooldown",
+    "before": "20 / 19 / 18 / 17 / 16",
+    "after": "24 / 21 / 18 / 15 / 12",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Royal Maelstrom"
+    },
+    "stat": "Monster Damage Modifier",
+    "before": "150%",
+    "after": "200%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "Passive On-Hit Application",
+    "before": "Every other attack",
+    "after": "Every attack",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "Passive True Damage",
+    "before": "6 / 10 / 14 (+12% Bonus Attack Damage)",
+    "after": "2 / 4 / 6 (+3% Bonus Attack Damage)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "Target Swapping",
+    "before": "Passive removed when swapping targets",
+    "after": "Passive no longer removed when swapping targets",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "Maximum Epic Monster Stacks",
+    "before": "10",
+    "after": "8",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "Passive Application Requirement",
+    "before": "E and Q required Bel’Veth to have attacked the target first",
+    "after": "E and Q no longer require Bel’Veth to have attacked the target first",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "Explosion Damage",
+    "before": "150 / 200 / 250 (+100% Ability Power) (+25% missing Health)",
+    "after": "150 / 200 / 250 (+150% Ability Power) (+20% missing Health)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "Heal per Bonus Health",
+    "before": "100 / 150 / 200 (+120% Bonus Attack Damage) (+90% Ability Power)",
+    "after": "100 / 250 / 400 (+150% Bonus Attack Damage) (+150% Ability Power)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "Basic Attack Range Bonus",
+    "before": "75",
+    "after": "25 / 75 / 125",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "Total Attack Speed",
+    "before": "10 / 15 / 20%",
+    "after": "5 / 15 / 25%",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "Size",
+    "before": "10%",
+    "after": "10 / 15 / 20%",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "Unempowered Buff Duration",
+    "before": "60",
+    "after": "45 / 90 / infinite at 0 / 40 / 80 stacks",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "Empowered Buff Duration",
+    "before": "180",
+    "after": "45 / 90 / infinite at 0 / 40 / 80 stacks",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 200,
+      "name": "Bel'Veth"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Endless Banquet"
+    },
+    "stat": "Post-Cast Lockout",
+    "before": "0.5 seconds",
+    "after": "0.25 seconds",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 145,
+      "name": "Kai'Sa"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Second Skin"
+    },
+    "stat": "Caustic Wounds",
+    "before": "4 - 24 (Champion Level) (+12% Ability Power), +1 - 6 (Champion Level) (+3% Ability Power) per prior stack",
+    "after": "4 - 30 (Champion Level) (+12% Ability Power), +1 - 8 (Champion Level) (+3% Ability Power) per prior stack",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": null,
+    "stat": "Health",
+    "before": "655",
+    "after": "620",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Ritual Nails"
+    },
+    "stat": "Base Damage - Nail",
+    "before": "50 / 58 / 66 / 74 / 82 (+20% Ability Power)",
+    "after": "40 / 48 / 56 / 64 / 72 (+20% Ability Power)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Ritual Nails"
+    },
+    "stat": "Three Nails Damage",
+    "before": "150 / 174 / 198 / 222 / 246 (+60% Ability Power)",
+    "after": "120 / 144 / 168 / 192 / 216 (+60% Ability Power)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Soul Ignition"
+    },
+    "stat": "Move Speed",
+    "before": "40 / 45 / 50 / 55 / 60% (+2% per 100 Ability Power)",
+    "after": "40% (+2% per 100 Ability Power)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Soul Ignition"
+    },
+    "stat": "Grey Health Base Value",
+    "before": "40 / 70 / 100 / 130 / 160 (+120% Ability Power)",
+    "after": "40 / 60 / 80 / 100 / 120 (+100% Ability Power)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 57,
+      "name": "Maokai"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Bramble Smash"
+    },
+    "stat": "Monster Damage Modifier",
+    "before": "140 / 150 / 160 / 170 / 180",
+    "after": "150 / 160 / 170 / 180 / 190",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 57,
+      "name": "Maokai"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Bramble Smash"
+    },
+    "stat": "Ability Power Ratio",
+    "before": "40%",
+    "after": "50%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 82,
+      "name": "Mordekaiser"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Death's Grasp"
+    },
+    "stat": "Cooldown",
+    "before": "18 / 16 / 14 / 12 / 10",
+    "after": "16 / 14 / 12 / 10 / 8",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 82,
+      "name": "Mordekaiser"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Realm of Death"
+    },
+    "stat": "Stolen Stats",
+    "before": "13%",
+    "after": "10%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 950,
+      "name": "Naafiri"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "The Call of the Pack"
+    },
+    "stat": "Damage",
+    "before": "150 / 225 / 300 (+120% Attack Damage)",
+    "after": "125 / 200 / 275 (+100% Bonus Attack Damage)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 950,
+      "name": "Naafiri"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "The Call of the Pack"
+    },
+    "stat": "Damage per Packmate",
+    "before": "15 / 22.5 / 30 (+12% Attack Damage)",
+    "after": "12.5 / 20 / 27.5 (+10% Bonus Attack Damage)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 92,
+      "name": "Riven"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Blade of the Exile"
+    },
+    "stat": "Bonus Attack Damage Ratio",
+    "before": "25%",
+    "after": "20%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 92,
+      "name": "Riven"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Wind Slash"
+    },
+    "stat": "Bonus Attack Damage Ratio",
+    "before": "60% minimum / 180% maximum",
+    "after": "55% minimum / 165% maximum",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 517,
+      "name": "Sylas"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Chain Lash"
+    },
+    "stat": "First Lash Damage",
+    "before": "40 / 65 / 90 / 115 / 140 (+45% Ability Power)",
+    "after": "40 / 60 / 80 / 100 / 120 (+40% Ability Power)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 106,
+      "name": "Volibear"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Thundering Smash"
+    },
+    "stat": "Cooldown",
+    "before": "14 / 13 / 12 / 11 / 10",
+    "after": "12 / 11.5 / 11 / 10.5 / 10",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 154,
+      "name": "Zac"
+    },
+    "ability": null,
+    "stat": "Armor Growth",
+    "before": "4.7",
+    "after": "5.2",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "champion",
+      "id": 154,
+      "name": "Zac"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Elastic Slingshot"
+    },
+    "stat": "Cooldown",
+    "before": "22 / 19 / 16 / 13 / 10",
+    "after": "21 / 18 / 15 / 12 / 9",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "item",
+      "id": 2520,
+      "name": "Bastionbreaker"
+    },
+    "ability": null,
+    "stat": "Cost",
+    "before": "3200g",
+    "after": "3000g",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "item",
+      "id": 2520,
+      "name": "Bastionbreaker"
+    },
+    "ability": null,
+    "stat": "Shaped Charge Damage",
+    "before": "(30 + 150% lethality) true damage",
+    "after": "(50 + 150% lethality) true damage",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "item",
+      "id": 3302,
+      "name": "Terminus"
+    },
+    "ability": null,
+    "stat": "Unique - Shadow",
+    "before": "30 Magic Damage On-Hit",
+    "after": "30 (+10% bonus Attack Damage) (+10% Ability Power)",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "item",
+      "id": 3032,
+      "name": "Yun Tal Wildarrows"
+    },
+    "ability": null,
+    "stat": "Cost",
+    "before": "850g",
+    "after": "750g",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.15",
+    "date": "2026-07-28",
+    "subject": {
+      "kind": "item",
+      "id": 3032,
+      "name": "Yun Tal Wildarrows"
+    },
+    "ability": null,
+    "stat": "Attack Speed",
+    "before": "40%",
+    "after": "45%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 42,
+      "name": "Corki"
+    },
+    "ability": null,
+    "stat": "Attack Damage Growth",
+    "before": "2",
+    "after": "2.5",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 42,
+      "name": "Corki"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Missile Barrage"
+    },
+    "stat": "Remaining Recharge Time Reduction from Autos",
+    "before": "2 - 4 seconds (based on critical strike chance)",
+    "after": "2 - 6 seconds",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 86,
+      "name": "Garen"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Demacian Justice"
+    },
+    "stat": "True Damage",
+    "before": "150 / 250 / 350 (+ 25 / 30 / 35% of target's missing health)",
+    "after": "125 / 200 / 275 (+ 25 / 30 / 35% of target's missing health)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 126,
+      "name": "Jayce"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Hextech Capacitor"
+    },
+    "stat": "Bonus Move Speed",
+    "before": "40",
+    "after": "30",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 126,
+      "name": "Jayce"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Mercury Hammer"
+    },
+    "stat": "Bonus Armor and Magic Resistance",
+    "before": "5 / 15 / 25 / 35 (+7.5% bonus Attack Damage)",
+    "after": "5 / 12 / 19 / 26 (+7.5% bonus Attack Damage)",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Ritual Nails"
+    },
+    "stat": "Nail Recast Hold Time",
+    "before": "5 seconds",
+    "after": "4 seconds",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Ritual Nails"
+    },
+    "stat": "Nail Damage",
+    "before": "50 / 60 / 70 / 80 / 90",
+    "after": "50 / 58 / 66 / 74 / 82",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Ritual Nails"
+    },
+    "stat": "Mark Base Bonus Damage",
+    "before": "20 / 30 / 40 / 50 / 60",
+    "after": "18 / 26 / 34 / 42 / 50",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 805,
+      "name": "Locke"
+    },
+    "ability": {
+      "slot": "W",
+      "name": "Soul Ignition"
+    },
+    "stat": "Damage Taken Grey Health Cap",
+    "before": "40 / 80 / 120 / 160 / 200",
+    "after": "40 / 70 / 100 / 130 / 160",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 82,
+      "name": "Mordekaiser"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Death's Grasp"
+    },
+    "stat": "Damage",
+    "before": "60 / 75 / 90 / 105 / 120 (+40% Ability Power)",
+    "after": "60 / 80 / 100 / 120 / 140 (+45% Ability Power)",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 82,
+      "name": "Mordekaiser"
+    },
+    "ability": {
+      "slot": "R",
+      "name": "Realm of Death"
+    },
+    "stat": "Stat Steal",
+    "before": "10%",
+    "after": "13%",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 267,
+      "name": "Nami"
+    },
+    "ability": {
+      "slot": "E",
+      "name": "Tidecaller's Blessing"
+    },
+    "stat": "Damage per Hit",
+    "before": "20 / 30 / 40 / 50 / 60",
+    "after": "20 / 35 / 50 / 65 / 80",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 235,
+      "name": "Senna"
+    },
+    "ability": {
+      "slot": "passive",
+      "name": "Absolution"
+    },
+    "stat": "Critical Strike Damage Modifier",
+    "before": "85%",
+    "after": "80%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 235,
+      "name": "Senna"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Piercing Darkness"
+    },
+    "stat": "Ability Power Slow Ratio",
+    "before": "10% per 100 Ability Power",
+    "after": "7% per 100 Ability Power",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 235,
+      "name": "Senna"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "Piercing Darkness"
+    },
+    "stat": "Ability Power Healing Ratio",
+    "before": "50% Ability Power",
+    "after": "35% Ability Power",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 147,
+      "name": "Seraphine"
+    },
+    "ability": {
+      "slot": "Q",
+      "name": "High Note"
+    },
+    "stat": "Ability Power Ratio",
+    "before": "50% Ability Power",
+    "after": "40% Ability Power",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "champion",
+      "id": 804,
+      "name": "Yunara"
+    },
+    "ability": null,
+    "stat": "Attack Damage Growth",
+    "before": "2.5",
+    "after": "3",
+    "direction": "buff"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "item",
+      "id": 3168,
+      "name": "Immortal Path"
+    },
+    "ability": null,
+    "stat": "Damage Increase While Above 50% Maximum Health",
+    "before": "5%",
+    "after": "4%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "item",
+      "id": 3168,
+      "name": "Immortal Path"
+    },
+    "ability": null,
+    "stat": "Healing, Shielding, and Regeneration Increase While Below 50% Maximum Health",
+    "before": "15%",
+    "after": "12%",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "item",
+      "id": 2525,
+      "name": "Protoplasm Harness"
+    },
+    "ability": null,
+    "stat": "Cost",
+    "before": "2500",
+    "after": "2600",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "item",
+      "id": 2525,
+      "name": "Protoplasm Harness"
+    },
+    "ability": null,
+    "stat": "Bonus Health",
+    "before": "200 - 300",
+    "after": "100 - 300",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "item",
+      "id": 2525,
+      "name": "Protoplasm Harness"
+    },
+    "ability": null,
+    "stat": "Healing",
+    "before": "200 - 400",
+    "after": "100 - 400",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "item",
+      "id": 3152,
+      "name": "Hextech Rocketbelt"
+    },
+    "ability": null,
+    "stat": "Build Path",
+    "before": "Hextech Alternator + Fiendish Codex + Amplifying Tome + 300",
+    "after": "Hextech Alternator + Kindlegem + Ruby Crystal + 350",
+    "direction": "adjust"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "item",
+      "id": 3152,
+      "name": "Hextech Rocketbelt"
+    },
+    "ability": null,
+    "stat": "Active Cooldown",
+    "before": "40 seconds",
+    "after": "50 seconds",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "item",
+      "id": 3152,
+      "name": "Hextech Rocketbelt"
+    },
+    "ability": null,
+    "stat": "Ability Power",
+    "before": "70",
+    "after": "60",
+    "direction": "nerf"
+  },
+  {
+    "patch": "26.14",
+    "date": "2026-07-14",
+    "subject": {
+      "kind": "item",
+      "id": 3152,
+      "name": "Hextech Rocketbelt"
+    },
+    "ability": null,
+    "stat": "Health",
+    "before": "300",
+    "after": "350",
+    "direction": "buff"
+  }
+]
