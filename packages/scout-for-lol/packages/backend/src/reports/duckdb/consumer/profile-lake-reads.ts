@@ -105,10 +105,30 @@ export const MatchParticipantRowSchema = z
     inhibitor_kills: LakeIntSchema,
     baron_kills: LakeIntSchema.nullable(),
     dragon_kills: LakeIntSchema.nullable(),
+    // NULL for a record that does not state how the game ended.
+    end_of_game_result: z.string().nullable(),
+    early_surrendered: z.boolean(),
   })
   .extend(MatchLoadoutLakeRowSchema.shape);
 
 export type LakeMatchParticipantRow = z.infer<typeof MatchParticipantRowSchema>;
+
+/** The roster statement over a `buildMatchesSource` with `MATCH_UI_READ_COLUMNS`. */
+export function fullMatchRowsSql(sourceSql: string): string {
+  return (
+    `SELECT match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
+    `game_duration_seconds, queue, queue_id, game_mode, game_type, game_version, map_id, ` +
+    `puuid, participant_id, team_id, player_subteam_id, placement, subteam_placement, ` +
+    `augment_1_id, augment_2_id, augment_3_id, augment_4_id, augment_5_id, augment_6_id, ` +
+    `riot_id_game_name, riot_id_tagline, ` +
+    `champion_id, champion_name, team_position, win, kills, deaths, assists, creep_score, ` +
+    `gold_earned, vision_score, total_damage_dealt_to_champions, turret_kills, ` +
+    `inhibitor_kills, baron_kills, dragon_kills, end_of_game_result, early_surrendered, ` +
+    `${MATCH_LOADOUT_LAKE_COLUMNS_SQL} ` +
+    `FROM (${sourceSql}) ` +
+    `ORDER BY team_id, participant_id, champion_id`
+  );
+}
 
 export async function fetchFullMatch(options: {
   matchId: RiotMatchId;
@@ -131,17 +151,7 @@ export async function fetchFullMatch(options: {
       if (source === undefined) return [];
       return await runSource({
         source,
-        sql:
-          `SELECT match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
-          `game_duration_seconds, queue, queue_id, game_mode, game_type, game_version, map_id, ` +
-          `puuid, participant_id, team_id, player_subteam_id, placement, subteam_placement, ` +
-          `augment_1_id, augment_2_id, augment_3_id, augment_4_id, augment_5_id, augment_6_id, ` +
-          `riot_id_game_name, riot_id_tagline, ` +
-          `champion_id, champion_name, team_position, win, kills, deaths, assists, creep_score, ` +
-          `gold_earned, vision_score, total_damage_dealt_to_champions, turret_kills, ` +
-          `inhibitor_kills, baron_kills, dragon_kills, ${MATCH_LOADOUT_LAKE_COLUMNS_SQL} ` +
-          `FROM (${source.sql}) ` +
-          `ORDER BY team_id, participant_id, champion_id`,
+        sql: fullMatchRowsSql(source.sql),
         schema: MatchParticipantRowSchema,
       });
     },

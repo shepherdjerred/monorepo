@@ -508,6 +508,8 @@ function matchupParticipant(options: {
     inhibitor_kills: 0,
     baron_kills: 0,
     dragon_kills: 0,
+    end_of_game_result: "GameComplete",
+    early_surrendered: false,
     ...testLoadoutColumns,
   };
 }
