@@ -3114,6 +3114,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout-participant-crawl-utilisation-target",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Fraction of each Riot rate window the participant crawl may fill, tracked traffic included (clamped to 0.85); the ramp is 0.25, 0.5, 0.85.",
+      "type": "variant",
+      "default": "0.25",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scout-temporal-call-graph-tracing",
       "owner": "scout",
       "namespace": "scout",

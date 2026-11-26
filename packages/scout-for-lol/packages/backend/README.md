@@ -2626,12 +2626,37 @@ application 429, the host and endpoint for a method 429. A service 429 is Riot
 shedding load, so only that request backs off, exponentially.
 
 Each attempt also asks `RiotBudgetLedger` (`rate-budget.ts`) whether its class
-is under its share of the key-wide window. `scout-riot-budget-mode` decides
-what that answer does: `observe` (the default everywhere) records it in
-`riot_api_limiter_decisions_total` as `admitted` or `would_defer` and sends
-regardless; `enforce` holds refused requests (`deferred`). Switch to `enforce`
-only once realtime has shown zero `would_defer` across 50k realtime requests.
-`riot_api_limiter_wait_seconds{priority}` shows time spent queued.
+is under its limits in every key-wide window. `scout-riot-budget-mode` decides
+what that answer does for tracked classes: `observe` (the default everywhere)
+records it in `riot_api_limiter_decisions_total` as `admitted` or
+`would_defer` and sends regardless; `enforce` holds refused requests
+(`deferred`). Switch to `enforce` only once realtime has shown zero
+`would_defer` across 50k realtime requests. The crawl is always enforced (see
+below). `riot_api_limiter_wait_seconds{priority}` shows time spent queued.
+
+Each process has one ledger (`league/api/riot-budget-ledger.ts`), shared by the
+tracked client and the crawl's client. A tracked class has two limits per
+window: a share ceiling on tracked usage (realtime 0.95, interactive 0.85,
+backfill 0.6) and a total cap on everything, crawl included (realtime 0.95,
+interactive and backfill 0.90). The crawl has one: its utilisation target
+against the total, clamped to at most 0.85. The order crawl maximum (0.85) <
+non-realtime total cap (0.90) < realtime total cap (0.95) is the invariant
+(`assertCapOrdering`, pinned by `rate-budget.test.ts`): with the crawl
+saturated, interactive and backfill always have 5% of every window and
+realtime a further 5% no other class can take.
+
+Riot's count header is key-wide, so tracked usage is the total minus the
+crawl's share. In the `activity-worker` pod, where the crawl runs, the shared
+ledger counts the crawl's responses, so the share is exact. The `application`
+and `gateway` pods cannot see it, so while `scout-participant-crawl-enabled` is
+on they assume the crawl's upper bound (target x limit). That bound overshoots
+while the crawl is idle: an application-pod backfill burst can then pass its
+0.6 share, up to the 0.90 total cap, never into realtime's band.
+
+After a restart no ledger knows the windows yet. Tracked classes probe with one
+request each and never wait on a crawl probe; the crawl probes with one request
+only while nothing else is in flight, so the first responses are a tracked
+probe and at most one crawl probe.
 
 ### Participant crawl
 
@@ -2640,17 +2665,19 @@ keeps what it fetches as raw segments. It ships disabled:
 `scout-participant-crawl-enabled` is off until switched on per environment, and
 that flag alone decides in every environment, production included; with it off
 the Activity returns a `disabled` tick without touching PostgreSQL, S3 or Riot.
-`scout-participant-crawl-daily-match-budget` (default
-1000, beta's first step; the ladder is 1000, 5500, 20000, 55000) caps matches
-stored per UTC day.
+`scout-participant-crawl-utilisation-target` (default 0.25) is how much of
+each Riot window the crawl may fill, tracked traffic included, and
+`scout-participant-crawl-daily-match-budget` (default 1000) is the storage
+safety cap on matches stored per UTC day. Both are read per tick, the target
+also on every Riot admission.
 
 - **Schedule and queue.** `scoutParticipantCrawlWorkflow` runs every minute
   (overlap SKIP; both Schedules are created paused and reconciliation clears
   that pause in both stages, since both worker bundles export the Workflow)
   and calls one Activity on `scout-{stage}-crawl`, polled by the
   `activity-worker` pod. Each tick seeds from participants of tracked
-  `MatchObservation` rows, visits a few eligible players (7-day cooldown,
-  depth at most 2, both CHECKed in PostgreSQL), looks up their rank bracket
+  `MatchObservation` rows, then claims eligible players four at a time (7-day
+  cooldown, depth at most 2, both CHECKed in PostgreSQL), looks up their rank bracket
   once, lists ranked solo, ranked flex and normal draft matches from the last
   28 days, and stores unseen Summoner's Rift games. A deterministic 20% of
   matches also get a timeline, reduced to item and skill events plus each
@@ -2663,8 +2690,50 @@ stored per UTC day.
   frame at or before T. A segment written before the crawl kept checkpoints has
   none, and lane data cannot be backfilled from raw segments.
 - **Riot client.** `crawl-riot-client.ts` is a dedicated `RiotClient` with no
-  retries and no payload capture; every call is the `crawl` priority class, so
-  the budget ledger stops it at a quarter of each window. A 429 ends the tick.
+  retries, no payload capture and eight requests in flight at once, on the
+  process's shared ledger; every call is the `crawl` priority class. A call the
+  ledger refuses is never sent, in any budget mode: it throws
+  `RiotBudgetRefusedError` back to the tick.
+- **Utilisation target.** The crawl may bring each window's total, tracked
+  traffic included, up to the target, so it takes only what tracked traffic
+  leaves; while tracked traffic uses the whole target the crawl gets nothing.
+  It is paced through the window: by elapsed fraction f it may have brought the
+  total to f of the target, so tracked traffic arriving late in a window still
+  finds room. `rate-budget.target.simulation.test.ts` runs the real ledger
+  against the production key's windows (500/10 s, 30,000/600 s) with a 10%
+  realtime baseline: the total holds at the target with no 429 and no
+  realtime deferral the crawl caused.
+- **Tick sizing.** A tick does as much as the ledger admits before its
+  4-minute deadline. It claims players in batches and commits each batch on
+  its own once it holds about 100 matches, fetching a player's unseen matches
+  eight at a time. A refusal that ends within 15 s and before the deadline is
+  waited out (a full short window); a longer one ends the tick cleanly as
+  `completed`, keeping what it committed. The daily cap is paced, not spent
+  at midnight: a tick may store at most what is left of the day's budget
+  divided by the ticks left in the UTC day.
+- **429s.** A 429 on crawl traffic ends the tick and cools the crawl alone for
+  `Retry-After` (1 s without it), then the crawl re-probes with one request.
+  Tracked traffic is neither cooled nor made to wait on that probe. A 429 on
+  tracked traffic cools every class, the crawl included.
+- **Metrics.** `riot_api_app_window_utilisation_ratio{route,window_seconds}`
+  is each app window's key-wide usage over its limit (every pod);
+  `riot_api_app_window_crawl_share_ratio{route,window_seconds}` is the
+  crawl's share, reported only by the pod the crawl runs in. Tracked usage is
+  their difference. `scout_crawl_utilisation_target_ratio` is the target in
+  force, `scout_crawl_tick_match_allowance` the latest tick's paced allowance,
+  and `scout_crawl_budget_refusals_total{reason}` counts refusals.
+  `ScoutRiotApiAppRateLimitHigh` alerts on tracked usage above 0.7;
+  `ScoutRiotApiAppRateLimitCritical` on total usage above 0.92, which only
+  realtime can reach (pods racing on lagging counts read up to about 0.91
+  without it).
+- **Ramp.** Step the target 0.25, 0.5, 0.85 in the Flags deployment. Take the
+  next step as soon as the current one shows, over at least one nightly
+  rebuild: no realtime `deferred` or `would_defer` in
+  `riot_api_limiter_decisions_total`, no `riot_api_429_total`, the nightly
+  rebuild and partial folds finishing inside their timeouts, and storage
+  growth (the daily cap times the per-match cost) that fits the stores' free
+  capacity. Raise the daily cap with the target, since a cap that binds makes
+  a higher target useless. There is no fixed soak period: the evidence decides.
 - **Storage.** Segments are minified NDJSON compressed with zstd at
   `crawl/v1/route=…/dt=…/seg-{sha256}.ndjson.zst`. The crawl writes no receipt
   and no `MatchObservation`, and nothing under `crawl/` is under a prefix the

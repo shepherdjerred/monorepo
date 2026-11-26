@@ -192,6 +192,10 @@ export const flagValueSchemas = {
   "scout-participant-crawl-daily-match-budget": variantNumber(
     z.number().int().nonnegative().max(1_000_000),
   ),
+  /** A fraction of each Riot window; the ledger clamps it to 0.85. */
+  "scout-participant-crawl-utilisation-target": variantNumber(
+    z.number().min(0).max(1),
+  ),
 
   // starlight-karma-bot (`starlight-karma-bot/src/config.ts`)
   /** Empty means no admin is configured. */

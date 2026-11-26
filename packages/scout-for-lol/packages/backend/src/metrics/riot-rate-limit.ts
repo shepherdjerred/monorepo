@@ -83,3 +83,26 @@ export const riotApiLimiterDecisionsTotal = new Counter({
   labelNames: ["route", "priority", "outcome", "reason"] as const,
   registers: [registry],
 });
+
+/**
+ * Key-wide usage of each Riot app window as a fraction of its limit, from the
+ * budget ledger's latest observation. Every pod reports what it last saw.
+ */
+export const riotApiAppWindowUtilisationRatio = new Gauge({
+  name: "riot_api_app_window_utilisation_ratio",
+  help: "Riot app window usage (all classes, all pods) as a fraction of the limit",
+  labelNames: ["route", "window_seconds"] as const,
+  registers: [registry],
+});
+
+/**
+ * The participant crawl's share of each Riot app window as a fraction of its
+ * limit. Reported only by pods whose ledger the crawl runs through (where the
+ * share is exact); tracked usage is the utilisation ratio minus this.
+ */
+export const riotApiAppWindowCrawlShareRatio = new Gauge({
+  name: "riot_api_app_window_crawl_share_ratio",
+  help: "Participant-crawl share of the Riot app window as a fraction of the limit",
+  labelNames: ["route", "window_seconds"] as const,
+  registers: [registry],
+});

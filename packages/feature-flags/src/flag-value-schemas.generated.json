@@ -512,6 +512,15 @@
       "maximum": 1000000
     }
   },
+  "scout-participant-crawl-utilisation-target": {
+    "encoding": "number",
+    "schema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
   "scout-report-ai-model": {
     "encoding": "string",
     "schema": {

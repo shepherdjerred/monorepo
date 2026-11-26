@@ -1,5 +1,11 @@
 import { describe, expect, test } from "vitest";
 import {
+  FakeRiot,
+  Pod,
+  ROUTE,
+  Simulation,
+} from "#src/testing/riot-rate-simulation.ts";
+import {
   DEFAULT_RIOT_BUDGET_CONFIG,
   RiotBudgetLedger,
   type RiotPriority,
@@ -7,345 +13,9 @@ import {
 import { RateLimiter } from "./rate-limiter.ts";
 
 /**
- * Discrete-event simulation on a virtual clock: no timers, no sleeping. A fake
- * Riot enforces fixed windows per route (500/10s and 30,000/600s, like the
- * production key) and answers in Riot's real header format. Two ledgers share
- * it, one per pod: one sends realtime bursts, the other crawls with infinite
- * demand.
+ * Two ledgers share one fake Riot, one per pod: one sends realtime bursts, the
+ * other crawls with infinite demand.
  */
-
-const ROUTE = "americas";
-const LATENCY_MS = 50;
-const APP_WINDOWS = [
-  { seconds: 10, limit: 500 },
-  { seconds: 600, limit: 30_000 },
-];
-
-type Event = { at: number; seq: number; run: () => void };
-
-class Simulation {
-  now = 0;
-  private seq = 0;
-  private readonly heap: Event[] = [];
-
-  at(at: number, run: () => void): void {
-    const event = { at, seq: this.seq++, run };
-    this.heap.push(event);
-    let index = this.heap.length - 1;
-    while (index > 0) {
-      const parent = (index - 1) >> 1;
-      const parentEvent = this.heap[parent];
-      if (parentEvent === undefined || !this.before(event, parentEvent)) {
-        break;
-      }
-      this.heap[index] = parentEvent;
-      index = parent;
-    }
-    this.heap[index] = event;
-  }
-
-  runUntil(end: number): void {
-    for (;;) {
-      const next = this.heap[0];
-      if (next === undefined || next.at > end) {
-        break;
-      }
-      const last = this.heap.pop();
-      if (last !== undefined && this.heap.length > 0) {
-        this.siftDown(last);
-      }
-      this.now = next.at;
-      next.run();
-    }
-    this.now = end;
-  }
-
-  private before(a: Event, b: Event): boolean {
-    return a.at < b.at || (a.at === b.at && a.seq < b.seq);
-  }
-
-  private siftDown(event: Event): void {
-    let index = 0;
-    for (;;) {
-      const left = index * 2 + 1;
-      const right = left + 1;
-      let smallest = event;
-      let smallestIndex = index;
-      const leftEvent = this.heap[left];
-      if (leftEvent !== undefined && this.before(leftEvent, smallest)) {
-        smallest = leftEvent;
-        smallestIndex = left;
-      }
-      const rightEvent = this.heap[right];
-      if (rightEvent !== undefined && this.before(rightEvent, smallest)) {
-        smallest = rightEvent;
-        smallestIndex = right;
-      }
-      if (smallestIndex === index) {
-        break;
-      }
-      this.heap[index] = smallest;
-      index = smallestIndex;
-    }
-    this.heap[index] = event;
-  }
-}
-
-type Window = {
-  start: number;
-  count: number;
-  bySource: Map<string, number>;
-};
-
-type ForcedRateLimit = {
-  from: number;
-  until: number;
-  type: "application" | "method" | "service";
-  retryAfterSeconds: number;
-  method?: string;
-};
-
-type RiotResponse = { status: 200 | 429; headers: Headers };
-
-function newWindow(): Window {
-  return { start: 0, count: 0, bySource: new Map() };
-}
-
-class FakeRiot {
-  readonly peakBySource = new Map<string, Map<string, number>>();
-  readonly rejected: { source: string; at: number }[] = [];
-  forced: ForcedRateLimit | undefined;
-  private readonly appState = [newWindow(), newWindow()];
-  private readonly methodState = new Map<string, Window>();
-
-  constructor(
-    private readonly methodLimits: Map<
-      string,
-      { seconds: number; limit: number }
-    > = new Map(),
-  ) {}
-
-  handle(source: string, method: string, now: number): RiotResponse {
-    const methodLimit = this.methodLimits.get(method);
-    const methodWindow =
-      methodLimit === undefined
-        ? undefined
-        : this.refresh(this.methodState, method, methodLimit.seconds, now);
-    this.appState.forEach((state, index) => {
-      this.rollover(state, APP_WINDOWS[index]?.seconds ?? 0, now);
-    });
-
-    const forced = this.forced;
-    const isForced =
-      forced !== undefined &&
-      now >= forced.from &&
-      now < forced.until &&
-      (forced.method === undefined || forced.method === method);
-    const appFull = this.appState.some(
-      (state, index) => state.count + 1 > (APP_WINDOWS[index]?.limit ?? 0),
-    );
-    const methodFull =
-      methodWindow !== undefined &&
-      methodLimit !== undefined &&
-      methodWindow.count + 1 > methodLimit.limit;
-
-    if (isForced || appFull || methodFull) {
-      this.rejected.push({ source, at: now });
-      const type = isForced ? forced.type : appFull ? "application" : "method";
-      const headers = this.headers(methodLimit, methodWindow);
-      headers.set("x-rate-limit-type", type);
-      headers.set(
-        "retry-after",
-        String(isForced ? forced.retryAfterSeconds : 1),
-      );
-      return { status: 429, headers };
-    }
-
-    for (const state of this.appState) {
-      this.take(state, source);
-    }
-    if (methodWindow !== undefined) {
-      methodWindow.count += 1;
-    }
-    this.appState.forEach((state, index) => {
-      const seconds = APP_WINDOWS[index]?.seconds ?? 0;
-      const peaks = this.peakBySource.get(source) ?? new Map<string, number>();
-      const key = `app:${String(seconds)}`;
-      peaks.set(
-        key,
-        Math.max(peaks.get(key) ?? 0, state.bySource.get(source) ?? 0),
-      );
-      this.peakBySource.set(source, peaks);
-    });
-    if (methodLimit !== undefined && methodWindow !== undefined) {
-      const peaks = this.peakBySource.get(`${source}:${method}`) ?? new Map();
-      peaks.set(
-        "method",
-        Math.max(peaks.get("method") ?? 0, methodWindow.count),
-      );
-      this.peakBySource.set(`${source}:${method}`, peaks);
-    }
-    return { status: 200, headers: this.headers(methodLimit, methodWindow) };
-  }
-
-  private take(state: Window, source: string): void {
-    state.count += 1;
-    state.bySource.set(source, (state.bySource.get(source) ?? 0) + 1);
-  }
-
-  private rollover(state: Window, seconds: number, now: number): void {
-    // Like Riot, a window starts at its first request and ends `seconds` later.
-    if (state.count === 0 || now >= state.start + seconds * 1000) {
-      state.start = now;
-      state.count = 0;
-      state.bySource = new Map();
-    }
-  }
-
-  private refresh(
-    states: Map<string, Window>,
-    key: string,
-    seconds: number,
-    now: number,
-  ): Window {
-    const state = states.get(key) ?? {
-      start: now,
-      count: 0,
-      bySource: new Map(),
-    };
-    this.rollover(state, seconds, now);
-    states.set(key, state);
-    return state;
-  }
-
-  private headers(
-    methodLimit: { seconds: number; limit: number } | undefined,
-    methodWindow: Window | undefined,
-  ): Headers {
-    const headers = new Headers({
-      "x-app-rate-limit": APP_WINDOWS.map(
-        (window) => `${String(window.limit)}:${String(window.seconds)}`,
-      ).join(","),
-      "x-app-rate-limit-count": this.appState
-        .map(
-          (state, index) =>
-            `${String(state.count)}:${String(APP_WINDOWS[index]?.seconds)}`,
-        )
-        .join(","),
-    });
-    if (methodLimit !== undefined && methodWindow !== undefined) {
-      headers.set(
-        "x-method-rate-limit",
-        `${String(methodLimit.limit)}:${String(methodLimit.seconds)}`,
-      );
-      headers.set(
-        "x-method-rate-limit-count",
-        `${String(methodWindow.count)}:${String(methodLimit.seconds)}`,
-      );
-    }
-    return headers;
-  }
-}
-
-type Send = {
-  at: number;
-  method: string;
-  status: 200 | 429;
-  respondedAt: number;
-};
-
-class Pod {
-  readonly ledger: RiotBudgetLedger;
-  readonly sends: Send[] = [];
-
-  constructor(
-    private readonly sim: Simulation,
-    private readonly riot: FakeRiot,
-    private readonly name: string,
-  ) {
-    this.ledger = new RiotBudgetLedger({ clock: () => sim.now });
-  }
-
-  /** Tries to send now; returns the wait in ms when the ledger refuses. */
-  trySend(
-    priority: RiotPriority,
-    method: string,
-    onResponse?: (status: 200 | 429) => void,
-  ): number | undefined {
-    const decision = this.ledger.admit({ route: ROUTE, method, priority });
-    if (!decision.ok) {
-      return decision.waitMs;
-    }
-    const sentAt = this.sim.now;
-    let response: RiotResponse | undefined;
-    this.sim.at(sentAt + LATENCY_MS / 2, () => {
-      response = this.riot.handle(this.name, method, this.sim.now);
-    });
-    this.sim.at(sentAt + LATENCY_MS, () => {
-      if (response === undefined) {
-        throw new Error("response event ran before the request event");
-      }
-      this.ledger.observe(ROUTE, method, response.headers);
-      if (response.status === 429) {
-        this.ledger.recordRateLimited(ROUTE, method, response.headers);
-      }
-      this.sends.push({
-        at: sentAt,
-        method,
-        status: response.status,
-        respondedAt: this.sim.now,
-      });
-      onResponse?.(response.status);
-    });
-    return undefined;
-  }
-
-  /** Infinite-demand crawl: `workers` concurrent loops, methods round-robin. */
-  startCrawl(workers: number, methods: string[]): void {
-    let turn = 0;
-    const loop = (): void => {
-      // Try each method in rotation; a refused method must not block the rest.
-      let shortestWait = Infinity;
-      for (let offset = 0; offset < methods.length; offset += 1) {
-        const method = methods[(turn + offset) % methods.length] ?? "match";
-        const wait = this.trySend("crawl", method, loop);
-        if (wait === undefined) {
-          turn += offset + 1;
-          return;
-        }
-        shortestWait = Math.min(shortestWait, wait);
-      }
-      this.sim.at(this.sim.now + Math.max(1, shortestWait), loop);
-    };
-    for (let worker = 0; worker < workers; worker += 1) {
-      this.sim.at(0, loop);
-    }
-  }
-
-  /** Realtime bursts: `size` simultaneous requests every `periodMs`. */
-  startRealtimeBursts(
-    burst: { size: number; periodMs: number; offsetMs: number; endMs: number },
-    waits: number[],
-  ): void {
-    const { size, periodMs, offsetMs, endMs } = burst;
-    for (let at = offsetMs; at < endMs; at += periodMs) {
-      for (let request = 0; request < size; request += 1) {
-        this.sim.at(at, () => {
-          const arrival = this.sim.now;
-          const attempt = (): void => {
-            const wait = this.trySend("realtime", "match");
-            if (wait === undefined) {
-              waits.push(this.sim.now - arrival);
-            } else {
-              this.sim.at(this.sim.now + Math.max(1, wait), attempt);
-            }
-          };
-          attempt();
-        });
-      }
-    }
-  }
-}
 
 const SECOND = 1000;
 const END = 1800 * SECOND;
@@ -359,16 +29,17 @@ describe("RiotBudgetLedger simulation", () => {
     const crawlPod = new Pod(sim, riot, "crawl");
     const waits: number[] = [];
 
+    // Realtime at 20% of the key leaves the crawl 5% of its 25% target.
     crawlPod.startCrawl(5, ["match", "timeline"]);
     realtimePod.startRealtimeBursts(
-      { size: 150, periodMs: 10 * SECOND, offsetMs: 3 * SECOND, endMs: END },
+      { size: 100, periodMs: 10 * SECOND, offsetMs: 3 * SECOND, endMs: END },
       waits,
     );
     sim.runUntil(END + 60 * SECOND);
 
     expect(riot.rejected).toEqual([]);
     expect(waits.length).toBe(
-      150 * Math.ceil((END - 3 * SECOND) / (10 * SECOND)),
+      100 * Math.ceil((END - 3 * SECOND) / (10 * SECOND)),
     );
     expect(Math.max(...waits)).toBeLessThanOrEqual(1000);
 
@@ -483,7 +154,7 @@ describe("RiotBudgetLedger", () => {
       waitMs: DEFAULT_RIOT_BUDGET_CONFIG.probeWaitMs,
       reason: "probe-in-flight",
     });
-    ledger.observe(ROUTE, "match", appHeaders(1));
+    ledger.observe(ROUTE, "match", appHeaders(1), "realtime");
     expect(ledger.admit(input("realtime"))).toEqual({ ok: true });
   });
 
@@ -496,11 +167,14 @@ describe("RiotBudgetLedger", () => {
       ["realtime", 475],
     ];
     for (const [priority, cap] of caps) {
-      const { ledger } = setup();
+      const { ledger, advance } = setup();
       ledger.admit(input("realtime"));
-      ledger.observe(ROUTE, "match", appHeaders(cap - 1));
+      ledger.observe(ROUTE, "match", appHeaders(cap - 1), "realtime");
+      // The crawl is paced through each window; near the short window's end
+      // it may have reached its whole ceiling.
+      advance(10 * SECOND - 1);
       expect(ledger.admit(input(priority)).ok).toBe(true);
-      ledger.observe(ROUTE, "match", appHeaders(cap));
+      ledger.observe(ROUTE, "match", appHeaders(cap), "realtime");
       expect(ledger.admit(input(priority)).ok).toBe(false);
     }
   });
@@ -508,7 +182,7 @@ describe("RiotBudgetLedger", () => {
   test("stale headers fall back to a single probe instead of trusting old counts", () => {
     const { ledger, advance } = setup();
     ledger.admit(input("realtime"));
-    ledger.observe(ROUTE, "match", appHeaders(490));
+    ledger.observe(ROUTE, "match", appHeaders(490), "realtime");
     expect(ledger.admit(input("realtime")).ok).toBe(false);
 
     // The 10s window has certainly rolled over; the 490 means nothing now.
@@ -523,7 +197,7 @@ describe("RiotBudgetLedger", () => {
   test("a full window reports when it can reopen", () => {
     const { ledger } = setup();
     ledger.admit(input("crawl"));
-    ledger.observe(ROUTE, "match", appHeaders(125));
+    ledger.observe(ROUTE, "match", appHeaders(125), "crawl");
     expect(ledger.admit(input("crawl"))).toEqual({
       ok: false,
       waitMs: 10 * SECOND,
@@ -538,8 +212,8 @@ describe("RiotBudgetLedger", () => {
       "x-rate-limit-type": "application",
       "retry-after": "4",
     });
-    ledger.observe(ROUTE, "match", headers);
-    ledger.recordRateLimited(ROUTE, "match", headers);
+    ledger.observe(ROUTE, "match", headers, "realtime");
+    ledger.recordRateLimited(ROUTE, "match", headers, "realtime");
 
     advance(1 * SECOND);
     expect(ledger.admit(input("realtime"))).toEqual({
@@ -565,15 +239,15 @@ describe("RiotBudgetLedger", () => {
       "x-rate-limit-type": "method",
       "retry-after": "5",
     });
-    ledger.observe(ROUTE, "slow", headers);
-    ledger.recordRateLimited(ROUTE, "slow", headers);
+    ledger.observe(ROUTE, "slow", headers, "realtime");
+    ledger.recordRateLimited(ROUTE, "slow", headers, "realtime");
 
     expect(ledger.admit(input("realtime", "slow"))).toMatchObject({
       ok: false,
       reason: "retry-after",
     });
     ledger.admit(input("realtime", "fast"));
-    ledger.observe(ROUTE, "fast", appHeaders(10));
+    ledger.observe(ROUTE, "fast", appHeaders(10), "realtime");
     expect(ledger.admit(input("realtime", "fast"))).toEqual({ ok: true });
   });
 
@@ -584,22 +258,22 @@ describe("RiotBudgetLedger", () => {
       "x-rate-limit-type": "service",
       "retry-after": "30",
     });
-    ledger.observe(ROUTE, "match", headers);
-    ledger.recordRateLimited(ROUTE, "match", headers);
+    ledger.observe(ROUTE, "match", headers, "realtime");
+    ledger.recordRateLimited(ROUTE, "match", headers, "realtime");
     expect(ledger.admit(input("realtime"))).toEqual({ ok: true });
   });
 
   test("abandoning a probe frees the route for another", () => {
     const { ledger } = setup();
     ledger.admit(input("realtime"));
-    ledger.abandon(ROUTE, "match");
+    ledger.abandon(ROUTE, "match", "realtime");
     expect(ledger.admit(input("realtime"))).toEqual({ ok: true });
   });
 
   test("a probe response without app headers keeps the route unlearned", () => {
     const { ledger } = setup();
     expect(ledger.admit(input("realtime"))).toEqual({ ok: true });
-    ledger.observe(ROUTE, "match", new Headers());
+    ledger.observe(ROUTE, "match", new Headers(), "realtime");
     expect(ledger.admit(input("realtime"))).toEqual({ ok: true });
     expect(ledger.admit(input("realtime"))).toEqual({
       ok: false,

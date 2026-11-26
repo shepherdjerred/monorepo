@@ -19,6 +19,10 @@ vi.mock("#src/configuration.ts", () => ({
     environment: "prod",
     s3BucketName: "scout-prod",
     riotApiToken: "test-token",
+    runtimeCapabilities: {
+      temporalWorkers: ["realtime", "background", "crawl"],
+      deferredTemporalWorkers: [],
+    },
   },
 }));
 vi.mock("#src/database/index.ts", () => ({ prisma: {} }));

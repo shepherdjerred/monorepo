@@ -73,11 +73,15 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Scout Riot API rate limit usage is elevated",
             description: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is using {{ $value | humanizePercentage }} of its Riot app rate limit in the {{ $labels.window_seconds }}s window on route {{ $labels.route }}, leaving little headroom for bursts. Check polling concurrency and history backfill traffic on that route.",
+              "Scout {{ $labels.environment }} tracked traffic (everything but the participant crawl) is using {{ $value | humanizePercentage }} of its Riot app rate limit in the {{ $labels.window_seconds }}s window on route {{ $labels.route }}, leaving little headroom for bursts. Check polling concurrency and history backfill traffic on that route.",
             ),
           },
+          // The crawl deliberately fills the window up to its utilisation
+          // target, so only tracked usage (total minus the crawl's share,
+          // reported by the pod the crawl runs in) means lost burst room.
+          // Where no pod reports a crawl share, the total is tracked usage.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "max by (environment, route, window_seconds) (riot_api_app_rate_limit_count / riot_api_app_rate_limit_limit) > 0.7",
+            "(max by (environment, route, window_seconds) (riot_api_app_rate_limit_count / riot_api_app_rate_limit_limit) - max by (environment, route, window_seconds) (riot_api_app_window_crawl_share_ratio) or max by (environment, route, window_seconds) (riot_api_app_rate_limit_count / riot_api_app_rate_limit_limit)) > 0.7",
           ),
           for: "5m",
           labels: {
@@ -89,11 +93,16 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "Scout Riot API rate limit usage is critically high",
             description: escapePrometheusTemplate(
-              "Scout {{ $labels.environment }} is using {{ $value | humanizePercentage }} of its Riot app rate limit in the {{ $labels.window_seconds }}s window on route {{ $labels.route }}, risking HTTP 429 throttling and delayed match updates. Check active history imports and polling loops driving requests on that route.",
+              "Scout {{ $labels.environment }} is using {{ $value | humanizePercentage }} of its Riot app rate limit in the {{ $labels.window_seconds }}s window on route {{ $labels.route }}: past the 90% every class but realtime stops at, so realtime is using its reserved band and 429s are close. Check active history imports and polling loops driving requests on that route.",
             ),
           },
+          // Non-realtime classes stop at 0.90, but pods admit against counts
+          // that lag each other's in-flight requests, so the short window can
+          // read up to about 0.91 with no realtime at all (budget simulation,
+          // `rate-budget.target.simulation.test.ts`). 0.92 means the realtime
+          // band is in use.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "max by (environment, route, window_seconds) (riot_api_app_rate_limit_count / riot_api_app_rate_limit_limit) > 0.9",
+            "max by (environment, route, window_seconds) (riot_api_app_rate_limit_count / riot_api_app_rate_limit_limit) > 0.92",
           ),
           for: "5m",
           labels: {

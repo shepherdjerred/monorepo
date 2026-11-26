@@ -5,7 +5,7 @@ import {
   CRAWL_TIMELINE_PERCENT,
   crawlCooldownEnd,
   crawlLookbackStart,
-  crawlMatchesPerTick,
+  crawlTickMatchAllowance,
   puuidHash,
   shouldSampleTimeline,
   utcDayKey,
@@ -35,10 +35,33 @@ describe("crawl rules", () => {
     expect(utcDayKey(now)).toBe("2026-11-14");
   });
 
-  test("pace a tick from the daily budget", () => {
-    expect(crawlMatchesPerTick(1000)).toBe(5);
-    expect(crawlMatchesPerTick(5500)).toBe(16);
-    expect(crawlMatchesPerTick(55_000)).toBe(156);
+  test("pace a tick as the remaining budget over the ticks left in the UTC day", () => {
+    const midnight = new Date("2026-11-14T00:00:00Z");
+    // 1440 ticks left: 1000 spreads to one match a tick.
+    expect(crawlTickMatchAllowance(1000, midnight)).toBe(1);
+    expect(crawlTickMatchAllowance(55_000, midnight)).toBe(39);
+    // Noon, half the day left: what remains is spread over 720 ticks.
+    const noon = new Date("2026-11-14T12:00:00Z");
+    expect(crawlTickMatchAllowance(7200, noon)).toBe(10);
+    // The last minute may spend everything left.
+    const lastMinute = new Date("2026-11-14T23:59:30Z");
+    expect(crawlTickMatchAllowance(500, lastMinute)).toBe(500);
+    expect(crawlTickMatchAllowance(0, noon)).toBe(0);
+    expect(crawlTickMatchAllowance(-3, noon)).toBe(0);
+  });
+
+  test("a day of paced ticks spends the budget evenly and never more", () => {
+    const budget = 5500;
+    let spent = 0;
+    let firstHour = 0;
+    for (let minute = 0; minute < 1440; minute += 1) {
+      const now = new Date(Date.UTC(2026, 10, 14, 0, minute));
+      const allowance = crawlTickMatchAllowance(budget - spent, now);
+      spent += allowance;
+      if (minute < 60) firstHour += allowance;
+    }
+    expect(spent).toBe(budget);
+    expect(firstHour).toBeLessThanOrEqual(Math.ceil(budget / 24) + 60);
   });
 
   test("hash a PUUID to 64 lowercase hex characters", () => {

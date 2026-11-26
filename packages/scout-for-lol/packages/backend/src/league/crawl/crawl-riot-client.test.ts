@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 import { LeaguePuuidSchema, RiotMatchIdSchema } from "@scout-for-lol/data";
-import { RiotHttpError } from "#src/league/api/client/errors.ts";
+import {
+  RiotBudgetRefusedError,
+  RiotHttpError,
+} from "#src/league/api/client/errors.ts";
+import { RiotBudgetLedger } from "#src/league/api/client/rate-budget.ts";
 import { createCrawlRiotClient } from "./crawl-riot-client.ts";
 
 const puuid = LeaguePuuidSchema.parse("p".repeat(78));
@@ -10,7 +14,7 @@ function client(respond: (url: string) => Response, refusals: unknown[] = []) {
   const urls: string[] = [];
   const api = createCrawlRiotClient({
     apiKey: "key",
-    budgetMode: () => "observe",
+    ledger: new RiotBudgetLedger({ clock: Date.now }),
     onBudgetRefusal: (refusal) => refusals.push(refusal),
     fetchFn: (input) => {
       const url =
@@ -68,11 +72,10 @@ describe("crawl Riot client", () => {
     expect(urls[3]).toContain("/lol/league/v4/entries/by-puuid/");
   });
 
-  test("tags every request as the crawl class, reported on a budget refusal", async () => {
+  test("tags every request as the crawl class and is refused, unsent, over its target", async () => {
     const refusals: unknown[] = [];
-    // The key already spent 30 of 100 requests in the window; the crawl class
-    // stops at 25. In observe mode the refusal is recorded and the request
-    // still goes out.
+    // The key already spent 30 of 100 requests in the window; the crawl's
+    // default target is 25. The refusal is thrown back rather than sent.
     const { api, urls } = client(
       () =>
         Response.json([], {
@@ -84,10 +87,12 @@ describe("crawl Riot client", () => {
       refusals,
     );
     await api.leagueEntries(puuid, "NA1");
-    await api.leagueEntries(puuid, "NA1");
-    expect(urls).toHaveLength(2);
+    await expect(api.leagueEntries(puuid, "NA1")).rejects.toBeInstanceOf(
+      RiotBudgetRefusedError,
+    );
+    expect(urls).toHaveLength(1);
     expect(refusals).toEqual([
-      { priority: "crawl", outcome: "would_defer", reason: "app-window" },
+      { priority: "crawl", outcome: "deferred", reason: "app-window" },
     ]);
   });
 });

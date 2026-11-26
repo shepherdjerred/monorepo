@@ -160,6 +160,9 @@ describe("flagValueSchemas", () => {
     ["storm-forum-season", "monsoon", ""],
     ["birmel-llm-model", " gpt-6-luna", ""],
     ["scout-riot-budget-mode", "block", ""],
+    ["scout-participant-crawl-utilisation-target", "1.5", ""],
+    ["scout-participant-crawl-utilisation-target", "-0.1", ""],
+    ["scout-participant-crawl-utilisation-target", "half", ""],
     ["scout-client-minimum-version", "1.0", ""],
     ["storm-brain-conversation-model", "gpt-6.1-sol", ""],
     ["temporal-email-sender", "Deps <deps@>", ""],
@@ -229,6 +232,16 @@ describe("flagValueSchema", () => {
     expect(schema.safeParse(30).success).toBe(false);
     expect(schema.safeParse("").success).toBe(false);
     expect(schema.safeParse("nine hundred").success).toBe(false);
+  });
+
+  test("the crawl utilisation target is a fraction, zero and one included", () => {
+    const schema = flagValueSchema(
+      "scout-participant-crawl-utilisation-target",
+    );
+    expect(schema.parse(0)).toBe(0);
+    expect(schema.parse("0.85")).toBe(0.85);
+    expect(schema.parse(1)).toBe(1);
+    expect(schema.safeParse(1.01).success).toBe(false);
   });
 
   test("json keys accept JSON text and decoded defaults like StringListSchema", () => {
