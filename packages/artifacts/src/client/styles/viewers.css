@@ -1,28 +1,8 @@
 /* ── Focused view layout ─────────────────────────────────────────────────── */
 .ar-focus {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  height: calc(100dvh - var(--ar-top));
-  min-height: 0;
-}
-.ar-focus-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 16px;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--ui-line);
-}
-.ar-focus-title h1 {
-  font-size: 16px;
-  font-weight: 600;
-}
-.ar-crumbs {
-  font-size: 12px;
-}
-.ar-crumbs a {
-  color: var(--ui-muted);
+  position: relative;
+  height: 100dvh;
+  overflow: hidden;
 }
 .ar-focus-meta {
   display: flex;
@@ -37,42 +17,23 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.ar-focus-tools {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-.ar-select {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--ui-muted);
-  font-size: 12.5px;
-}
-.ar-select select {
-  height: 28px;
-  padding: 0 8px;
-  border: 1px solid var(--ui-btn-edge);
-  border-radius: 6px;
-  background: var(--ui-panel);
-  color: var(--ui-ink);
-}
-.ar-focus-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  min-height: 0;
-}
+/* The viewer fills the page; an open comments panel takes the strip on its right. */
 .ar-viewer-pane {
-  position: relative;
+  position: absolute;
+  inset: 0;
+  right: var(--ar-inset-right, 0px);
   min-width: 0;
   min-height: 0;
   overflow: hidden;
   background: var(--ui-track);
 }
+/* The viewer tools pill sits at the bottom centre of what the panel leaves. */
+.ar-focus-tools {
+  left: calc((100% - var(--ar-inset-right, 0px)) / 2);
+}
 .ar-mode-hint {
   position: absolute;
-  bottom: 12px;
+  bottom: 74px;
   left: 50%;
   z-index: 20;
   padding: 6px 12px;
@@ -83,18 +44,6 @@
   transform: translateX(-50%);
   pointer-events: none;
 }
-@media (max-width: 900px) {
-  .ar-focus {
-    height: auto;
-  }
-  .ar-focus-body {
-    grid-template-columns: 1fr;
-  }
-  .ar-viewer-pane {
-    height: 70dvh;
-  }
-}
-
 /* ── Stage ───────────────────────────────────────────────────────────────── */
 .ar-stage {
   position: relative;
@@ -111,9 +60,9 @@
 }
 
 /*
- * Pins: constant size, never scaled with the content. A pin is a 26 x 30
- * speech bubble whose tail tip is the anchor, so the box is shifted left and
- * up by the tip's position (see lib/pin-shape.ts).
+ * Pins: constant size, never scaled with the content. A pin is lucide's
+ * MessageCircle at 28 px; its box is shifted by the tail tip's position inline
+ * (see lib/pin-shape.ts) so the tip, not the corner, is on the anchor.
  */
 .ar-pins {
   position: absolute;
@@ -125,9 +74,9 @@
   position: absolute;
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 30px;
-  padding: 0 0 8px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
   border: 0;
   background: none;
   color: var(--ar-pin-ink);
@@ -135,7 +84,6 @@
   font-weight: 700;
   line-height: 1;
   filter: drop-shadow(0 1px 2px color-mix(in srgb, black 40%, transparent));
-  transform: translate(-1px, -30px);
   pointer-events: auto;
   cursor: pointer;
 }
@@ -151,6 +99,7 @@
   stroke: var(--ui-panel);
   stroke-width: 1.5;
   stroke-linejoin: round;
+  stroke-linecap: round;
 }
 .ar-pin-n {
   position: relative;

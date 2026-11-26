@@ -74,6 +74,9 @@
 .ar-cv-overlay {
   position: absolute;
   inset: 0;
+  /* Pills sit in what an open comments panel leaves; the camera origin stays at the left. */
+  right: var(--ar-inset-right, 0px);
+  container-type: inline-size;
   z-index: 10;
   overflow: hidden;
   pointer-events: none;
@@ -267,12 +270,6 @@
 /* Above the tool pill. */
 .ar-cv .ar-mode-hint {
   bottom: 74px;
-}
-
-@media (max-width: 900px) {
-  .ar-cv {
-    height: 70dvh;
-  }
 }
 
 /* Arranging */

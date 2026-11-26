@@ -207,7 +207,7 @@ test.describe("canvas", () => {
     await frame(page, seeded.concepts[0]?.artifactId ?? "").click();
     await page
       .getByTestId("canvas-viewport")
-      .click({ position: { x: 20, y: 20 } });
+      .click({ position: { x: 20, y: 140 } });
     await page.waitForTimeout(500);
     expect(documents.length).toBe(loaded);
   });

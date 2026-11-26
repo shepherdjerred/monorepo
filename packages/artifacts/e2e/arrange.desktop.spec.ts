@@ -9,7 +9,7 @@ test.beforeAll(async ({ baseURL }) => {
 
 const SAVED_MS = 6000;
 /** The camera every spec opens at: 100 %, so a screen pixel is a world pixel. */
-const CAMERA = { x: 40, y: 80, s: 1 };
+const CAMERA = { x: 40, y: 140, s: 1 };
 
 type Ids = readonly string[];
 

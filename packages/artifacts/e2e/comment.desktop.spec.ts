@@ -7,6 +7,7 @@ import {
   wheel,
 } from "./canvas-helpers.ts";
 import { agentApi, openFocused, resetAndSeed } from "./review-setup.ts";
+import { PIN_TIP } from "#client/lib/pin-shape.ts";
 import type { SeededBoards } from "./seed.ts";
 
 let seeded: SeededBoards;
@@ -40,8 +41,8 @@ test.describe("comments on the canvas", () => {
     const pinBox = await pin.boundingBox();
     if (pinBox === null) throw new Error("no pin box");
     // The speech bubble's tail tip (1 px in, on the bottom edge) is where the click was.
-    expect(Math.abs(pinBox.x + 1 - at.x)).toBeLessThan(1.5);
-    expect(Math.abs(pinBox.y + pinBox.height - at.y)).toBeLessThan(1.5);
+    expect(Math.abs(pinBox.x + PIN_TIP.x - at.x)).toBeLessThan(1.5);
+    expect(Math.abs(pinBox.y + PIN_TIP.y - at.y)).toBeLessThan(1.5);
 
     const claim = await agentApi(baseURL).feedback.claim.mutate({
       scope: { type: "board", board: "demo" },
@@ -99,7 +100,7 @@ test.describe("comments on the canvas", () => {
     expect(second.x - first.x).toBeCloseTo(frameAfter.x - frameBefore.x, 0);
   });
 
-  test("comment mode shows the speech-bubble cursor on the canvas and in the focused view", async ({
+  test("comment mode shows the MessageCircle cursor on the canvas and in the focused view", async ({
     page,
   }) => {
     const cursorOf = (selector: string) =>

@@ -40,6 +40,8 @@ export type CanvasProps = {
   readonly pins: readonly CanvasPin[];
   readonly selectedThreadId: string | null;
   readonly onSelectThread: (threadId: string | null) => void;
+  /** Pixels on the right that the open comments panel covers. */
+  readonly rightInset: number;
 };
 
 const SAVE_TEXT = {
@@ -53,6 +55,7 @@ export function Canvas({
   pins,
   selectedThreadId,
   onSelectThread,
+  rightInset,
 }: CanvasProps): React.JSX.Element {
   const create = useCreateThread();
   const arrange = useArrange(slug, data);
@@ -97,7 +100,7 @@ export function Canvas({
   const [section, setSection] = useState<HTMLElement | null>(null);
 
   const activeFrame = activeId === null ? undefined : byId.get(activeId);
-  const camera = useCanvasCamera(slug, frames, selectedFrames);
+  const camera = useCanvasCamera(slug, frames, selectedFrames, rightInset);
   const { controller, viewport, reveal, sizeRef } = camera;
   const tiers = useFrameTiers({
     frames,

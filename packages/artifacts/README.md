@@ -167,6 +167,20 @@ the typed placeholder card. Stacking is CSS `z-index` from the index `order`;
 an iframe is never moved or remounted, because that reloads it. The outline
 route stays the keyboard and screen-reader path.
 
+**Shell.** The canvas and the focused view are full-bleed: the console-ui shell bar
+and the page header are one floating pill at the top left (`shell/floating-nav.tsx`:
+the workspace switcher and Inbox the bar had, then the page's title and actions;
+a phone keeps the mark, the title and an overflow menu). The inbox and the outline
+keep the normal bar. The comments are a floating card on the right
+(`shell/comments-panel.tsx`; a bottom sheet on a phone) that collapses to a pill
+with the `MessageCircle` icon, the open count and a dot while an agent waits.
+Shift+C toggles it, the choice is remembered per viewer in `localStorage`, and a
+pin click, J/K or a new comment opens it on the thread. While it is open the
+canvas fits and reveals into what it leaves, and the viewer narrows (the
+`--ar-inset-right` variable). The comment cursor and the pins are lucide's
+`MessageCircle` glyph, read from its icon data (`lib/pin-shape.ts`), with the tail
+tip as the hotspot and the anchor.
+
 **Arranging** (`src/client/canvas/arrange/`). Click selects, Shift-click adds,
 a drag on empty canvas draws a marquee, a drag on a frame moves the selection
 (4 px threshold, pointer capture, edge auto-pan, 8 px grid, Alt for free

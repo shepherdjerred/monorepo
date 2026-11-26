@@ -1,10 +1,9 @@
-import { PIN_PATH } from "#client/lib/pin-shape.ts";
+import { ICON_PATH, PIN_TIP } from "#client/lib/pin-shape.ts";
 
 /**
- * One comment pin: a speech bubble with the thread number (or a count) inside
+ * One comment pin: the MessageCircle glyph with the thread number (or a count) inside
  * and its tail tip on the anchor. Filled for a thread on the version shown,
- * hollow for another version, dashed when the position is approximate. The box
- * is 26 x 30 and CSS translates it so the tail tip sits at `left`/`top`.
+ * hollow for another version, dashed when the position is approximate. It is lucide's MessageCircle at 28 px; the box is translated so the tail tip sits at `left`/`top`.
  */
 export function PinBubble({
   label,
@@ -37,14 +36,18 @@ export function PinBubble({
       data-resolved={resolved}
       data-approximate={approximate}
       data-board-pin={boardPin}
-      style={style}
+      style={{
+        ...style,
+        // The tail tip, not the box's corner, is on the anchor.
+        transform: `translate(${String(-PIN_TIP.x)}px, ${String(-PIN_TIP.y)}px)`,
+      }}
       aria-pressed={selected}
       aria-label={label}
       title={approximate ? "Approximate position" : undefined}
       onClick={onClick}
     >
-      <svg viewBox="0 0 26 30" aria-hidden="true" focusable="false">
-        <path d={PIN_PATH} />
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d={ICON_PATH} />
       </svg>
       <span className="ar-pin-n">{text}</span>
     </button>

@@ -79,6 +79,7 @@ export function useCanvasCamera(
   slug: string,
   frames: readonly CanvasFrameModel[],
   selected: readonly CanvasFrameModel[],
+  insetRight = 0,
 ): CanvasCamera {
   const restored = useRef(storedCamera(slug));
   const [controller] = useState(() =>
@@ -89,6 +90,17 @@ export function useCanvasCamera(
   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
   const sizeRef = useRef(size);
   sizeRef.current = size;
+  // The part of the viewport something floats over (the open comments panel):
+  // fitting and revealing aim at what is left.
+  const insetRef = useRef(insetRight);
+  insetRef.current = insetRight;
+  const usable = useCallback(
+    (): Size => ({
+      width: Math.max(1, sizeRef.current.width - insetRef.current),
+      height: sizeRef.current.height,
+    }),
+    [],
+  );
   const [settled, setSettled] = useState<SettledCamera>({
     camera: controller.get(),
     kind: "pan",
@@ -135,10 +147,8 @@ export function useCanvasCamera(
   const fitAll = useCallback(() => {
     const bounds = boundsOf(frames.map((frame) => frame.rect));
     if (bounds === null || sizeRef.current.width === 0) return;
-    move(
-      fitRect(bounds, sizeRef.current, { padding: FIT_PADDING, maxScale: 1 }),
-    );
-  }, [frames, move]);
+    move(fitRect(bounds, usable(), { padding: FIT_PADDING, maxScale: 1 }));
+  }, [frames, move, usable]);
 
   const initialised = useRef(restored.current !== null);
   useEffect(() => {
@@ -151,12 +161,12 @@ export function useCanvasCamera(
     const bounds = boundsOf(selected.map((frame) => frame.rect));
     if (bounds === null || sizeRef.current.width === 0) return;
     move(
-      fitRect(bounds, sizeRef.current, {
+      fitRect(bounds, usable(), {
         padding: FIT_PADDING,
         maxScale: FIT_SELECTION_MAX_SCALE,
       }),
     );
-  }, [selected, move]);
+  }, [selected, move, usable]);
 
   const viewportCentre = useCallback(
     (): Point => ({
@@ -192,11 +202,11 @@ export function useCanvasCamera(
       if (inside) return;
       move({
         s: camera.s,
-        x: sizeRef.current.width / 2 - (rect.x + rect.w / 2) * camera.s,
+        x: usable().width / 2 - (rect.x + rect.w / 2) * camera.s,
         y: sizeRef.current.height / 2 - (rect.y + rect.h / 2) * camera.s,
       });
     },
-    [controller, move],
+    [controller, move, usable],
   );
 
   return {

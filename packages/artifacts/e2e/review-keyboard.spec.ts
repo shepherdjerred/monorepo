@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openFocused, resetAndSeed, tabTo } from "./review-setup.ts";
+import { openFocused, openPanel, resetAndSeed, tabTo } from "./review-setup.ts";
 import type { SeededBoards } from "./seed.ts";
 
 let seeded: SeededBoards;
@@ -26,6 +26,7 @@ test.describe("keyboard", () => {
   }) => {
     const artifactId = seeded.demo.htmlV2.artifactId;
     await openFocused(page, artifactId);
+    await openPanel(page);
     for (const text of ["First note", "Second note"]) {
       await page.getByLabel("General comment").fill(text);
       await page
@@ -65,9 +66,13 @@ test.describe("keyboard", () => {
 
     await page.keyboard.press("[");
     await expect(page).toHaveURL(/v=1/u);
-    await expect(page.getByRole("combobox", { name: "Version" })).toHaveValue(
-      "1",
-    );
+    if ((page.viewportSize()?.width ?? 0) > 640)
+      await expect(page.getByRole("combobox", { name: "Version" })).toHaveValue(
+        "1",
+      );
+    // The URL changes before the page re-renders with the version it names; the
+    // next key must reach the handler of the new render, so let it commit.
+    await page.waitForTimeout(250);
     await page.keyboard.press("]");
     await expect(page).toHaveURL(/v=2/u);
   });
