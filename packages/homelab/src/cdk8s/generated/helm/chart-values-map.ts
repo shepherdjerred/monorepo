@@ -22,7 +22,6 @@ import type { OpenebsHelmValues } from "./openebs.types.ts";
 import type { KueueHelmValues } from "./kueue.types.ts";
 import type { VeleroHelmValues } from "./velero.types.ts";
 import type { PostgresoperatorHelmValues } from "./postgres-operator.types.ts";
-import type { RedisHelmValues } from "./redis.types.ts";
 import type { SeaweedfsHelmValues } from "./seaweedfs.types.ts";
 
 export type HelmChartValuesMap = {
@@ -48,6 +47,5 @@ export type HelmChartValuesMap = {
   kueue: KueueHelmValues;
   velero: VeleroHelmValues;
   "postgres-operator": PostgresoperatorHelmValues;
-  redis: RedisHelmValues;
   seaweedfs: SeaweedfsHelmValues;
 };

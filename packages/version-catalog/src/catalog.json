@@ -326,18 +326,6 @@
       "value": "v3.5.2@sha256:aadee014b40e28cf9aa4928bc9d1183a6eb08f8c44d543cddc9efdcb16549be2"
     },
     {
-      "name": "kometateam/kometa",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "semver"
-      },
-      "value": "v2.5.5@sha256:864cec57d099c71a26a5a5ce2784d34d9b53874c91269c3a12df3949eab96562"
-    },
-    {
       "name": "linuxserver/prowlarr",
       "category": "upstream",
       "artifactType": "image",
@@ -412,18 +400,6 @@
         "versioning": "docker"
       },
       "value": "latest@sha256:7e43f85f03b94513d2f05d84ac0f39293e9d339e00b2d64b5cc7bf73e8429d94"
-    },
-    {
-      "name": "cloudflare/cloudflared",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "semver"
-      },
-      "value": "2026.11.1@sha256:e613aadbc2d9511785d2e67a86b0c8ac18dd63a3f9af0d06faf04cbfdcb35f2d"
     },
     {
       "name": "tailscale/tailscale",
@@ -775,18 +751,6 @@
       "value": "1.30.4@sha256:af44385229541bee24aa9148d0ff8f3b40e095373c63a2c0f74e09a27d3c59df"
     },
     {
-      "name": "oven/bun",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "docker"
-      },
-      "value": "1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61"
-    },
-    {
       "name": "pinchtab/pinchtab",
       "category": "upstream",
       "artifactType": "image",
@@ -1054,18 +1018,6 @@
       "component": true
     },
     {
-      "name": "openebs/velero-plugin",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "semver"
-      },
-      "value": "3.6.0@sha256:9ea3331d891e436a7239e37e68ca4c8888500cb122be7cdc9d8400f345555c76"
-    },
-    {
       "name": "kubernetes/kubernetes",
       "category": "upstream",
       "artifactType": "source",
@@ -1202,18 +1154,6 @@
       "value": "v1.7@sha256:8abb52b66557d3333f9e473e0eff2951309abfd018bd8d7fcfd86c4ecce6b9cf"
     },
     {
-      "name": "redis",
-      "category": "upstream",
-      "artifactType": "helm-chart",
-      "management": {
-        "managed": true,
-        "datasource": "helm",
-        "registryUrl": "https://charts.bitnami.com/bitnami",
-        "versioning": "semver"
-      },
-      "value": "28.3.12"
-    },
-    {
       "name": "seaweedfs",
       "category": "upstream",
       "artifactType": "helm-chart",
@@ -1241,18 +1181,6 @@
         "Runs weed filer.backup beside the seaweedfs chart, whose servers use the chart's own image.",
         "renovate.json groups both so filer.backup tracks the server version."
       ]
-    },
-    {
-      "name": "library/php",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "docker"
-      },
-      "value": "8.5.13-fpm-bookworm@sha256:bad1d3498eaa489efe88c1d532e47e2f4111304c3f0b19fbc428842c39ec155c"
     },
     {
       "name": "library/mariadb",
@@ -1317,18 +1245,6 @@
         "versioning": "docker"
       },
       "value": "latest@sha256:8264741ba5d8f7f6a7d312fb048d1f84ec3286ca17abf569f0d06c4c666c60c8"
-    },
-    {
-      "name": "library/debian",
-      "category": "upstream",
-      "artifactType": "image",
-      "management": {
-        "managed": true,
-        "datasource": "docker",
-        "registryUrl": "https://docker.io",
-        "versioning": "docker"
-      },
-      "value": "bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc"
     },
     {
       "name": "library/nginx",

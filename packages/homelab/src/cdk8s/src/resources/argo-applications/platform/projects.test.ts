@@ -266,7 +266,6 @@ describe("ArgoCD AppProjects", () => {
   it("derives child sources from the version catalog", () => {
     const upstream = upstreamChartRepositories();
     expect(upstream).toContain("https://argoproj.github.io/argo-helm");
-    expect(upstream).toContain("https://charts.bitnami.com/bitnami");
     expect(upstream).toContain("registry.k8s.io/kueue/charts");
     expect(new Set(upstream).size).toBe(upstream.length);
     const sources = childSourceRepositories();

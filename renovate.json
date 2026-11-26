@@ -520,9 +520,9 @@
       "matchPackageNames": ["aquasecurity/trivy", "aquasec/trivy"]
     },
     {
-      "description": "The Temporal worker's Kometa checkout moves with the catalog Kometa image.",
+      "description": "The Temporal worker's Kometa checkout is a pinned git tag.",
       "groupName": "Kometa",
-      "matchPackageNames": ["Kometa-Team/Kometa", "kometateam/kometa"]
+      "matchPackageNames": ["Kometa-Team/Kometa"]
     },
     {
       "description": "WINE_VERSION and WINEHQ_PACKAGE_VERSION move together (packages/windows-cross-compiler/src/pins.test.ts). Half upgrade: Renovate cannot compute the source checksum or re-apply the Wine patches.",
