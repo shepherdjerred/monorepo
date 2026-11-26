@@ -56,6 +56,25 @@ test("lists the seeded open incidents, most severe first, with command state", a
   await expect(page).toHaveURL(/\/incidents\/INC-4$/u);
 });
 
+test("All kinds clears the Maintenance view's kind filter", async ({
+  page,
+}) => {
+  await page.setViewportSize(DESKTOP);
+  await gotoLoadedPage(page, "/incidents/maintenance");
+  const rows = page
+    .getByRole("table", { name: "Maintenance" })
+    .locator("tbody tr");
+  await expect(rows).toHaveCount(1);
+  const kind = page.getByLabel("Kind", { exact: true });
+  await expect(kind).toHaveValue("maintenance");
+
+  await kind.selectOption("all");
+  await expect(page).toHaveURL(/kind=all/u);
+  await expect(kind).toHaveValue("all");
+  await expect(rows).toHaveCount(4);
+  await expect(rows.nth(0)).toContainText("INC-4");
+});
+
 test("detail renders the record, signals, affected agents, and the full timeline", async ({
   page,
 }) => {

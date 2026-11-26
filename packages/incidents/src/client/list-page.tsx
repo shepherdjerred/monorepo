@@ -14,6 +14,7 @@ import {
 } from "#shared/contract.ts";
 import { actingActor, incidentListQuery, viewerQuery } from "#client/api.ts";
 import {
+  describeCommand,
   formatAge,
   KIND_LABEL,
   sortIncidents,
@@ -63,32 +64,50 @@ const PRESETS: Readonly<
 
 const StateParamSchema = ListIncidentsInputSchema.shape.state.unwrap();
 
+/**
+ * The `kind` search param for "All kinds". It is explicit rather than an
+ * absent param, so it can clear a preset's kind (Maintenance) as well.
+ */
+export const ALL_KINDS = "all";
+
 /** The preset's filter with any valid `kind`, `state`, `system` search params on top. */
 export function listFilter(
   preset: ListPreset,
   params: URLSearchParams,
 ): ListIncidentsInput {
-  const base = PRESETS[preset].filter;
-  const kind = IncidentKindSchema.safeParse(params.get("kind"));
+  const { kind: presetKind, ...base } = PRESETS[preset].filter;
+  const kindParam = params.get("kind");
+  const parsedKind = IncidentKindSchema.safeParse(kindParam);
+  const kind =
+    kindParam === ALL_KINDS
+      ? undefined
+      : parsedKind.success
+        ? parsedKind.data
+        : presetKind;
   const state = StateParamSchema.safeParse(params.get("state"));
   const system = IncidentSystemSchema.safeParse(params.get("system"));
   return {
     ...base,
     limit: 200,
-    ...(kind.success ? { kind: kind.data } : {}),
+    ...(kind === undefined ? {} : { kind }),
     ...(state.success ? { state: state.data } : {}),
     ...(system.success ? { system: system.data } : {}),
   };
 }
 
-function figures(incidents: readonly IncidentSummary[]): Figure[] {
+export function listFigures(
+  incidents: readonly IncidentSummary[],
+  nowMs: number,
+): Figure[] {
   const open = incidents.filter((incident) => isOpenStatus(incident.status));
   const sev1 = open.filter((incident) => incident.severity === "sev1").length;
   // Takeover is for broken shared systems: unowned maintenance is not news.
-  const unowned = open.filter(
-    (incident) =>
-      incident.kind === "incident" && incident.command.state === "none",
-  ).length;
+  // The command view also counts a lapsed dispatch lease as unowned.
+  const unowned = open.filter((incident) => {
+    if (incident.kind !== "incident") return false;
+    const { state } = describeCommand(incident.command, nowMs, incident.kind);
+    return state === "eligible" || state === "waiting";
+  }).length;
   const firing = open.reduce(
     (sum, incident) => sum + incident.firingSignals,
     0,
@@ -268,12 +287,12 @@ function FilterBar({
         <label htmlFor={`${baseId}-kind`}>Kind</label>
         <select
           id={`${baseId}-kind`}
-          value={filter.kind ?? ""}
+          value={filter.kind ?? ALL_KINDS}
           onChange={(event) => {
             onChange("kind", event.target.value);
           }}
         >
-          <option value="">All kinds</option>
+          <option value={ALL_KINDS}>All kinds</option>
           <option value="incident">Incidents</option>
           <option value="maintenance">Maintenance</option>
         </select>
@@ -346,7 +365,7 @@ function ListPage({ preset }: { readonly preset: ListPreset }) {
       <ActingAs viewer={viewerValue} actor={actingActor(viewerValue)} />
       <ViewLinks current={preset} />
       {list.data === undefined ? null : (
-        <FigureStrip figures={figures(incidents)} />
+        <FigureStrip figures={listFigures(incidents, nowMs)} />
       )}
       <section className="inc-panel">
         <div className="ui-section-head">

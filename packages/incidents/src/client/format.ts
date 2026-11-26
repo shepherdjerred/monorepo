@@ -172,7 +172,13 @@ export function describeCommand(
           : `Owned by ${actorLabel(command.commander)}`,
       detail: command.commander.key,
     };
-  if (command.state === "dispatching" && command.leaseExpiresAt !== null)
+  // A lapsed lease reads as unowned, as the server reads it: the record only
+  // moves on the next write, and a page left open must not keep showing it.
+  if (
+    command.state === "dispatching" &&
+    command.leaseExpiresAt !== null &&
+    Date.parse(command.leaseExpiresAt) > nowMs
+  )
     return {
       state: "dispatching",
       tone: "info",

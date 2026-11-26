@@ -52,6 +52,25 @@ function actions(overrides: Parameters<typeof detail>[0], viewer = VIEWER_KEY) {
   return commandActions(detail(overrides), viewer, NOW_MS);
 }
 
+describe("describeCommand after a dispatch lease lapses", () => {
+  it("reads as unowned, as the server does, once the lease has expired", () => {
+    // Lease ended a minute ago; the incident's grace ended five minutes ago.
+    expect(describeCommand(dispatching(-1), NOW_MS, "incident")).toMatchObject({
+      state: "eligible",
+      label: "Unowned — takeover eligible now",
+    });
+    expect(describeCommand(dispatching(0), NOW_MS, "incident").state).toBe(
+      "eligible",
+    );
+  });
+
+  it("offers Take instead of Force once the lease has lapsed", () => {
+    expect(
+      commandActions(detail({ command: dispatching(-1) }), VIEWER_KEY, NOW_MS),
+    ).toMatchObject({ canTake: true, canForce: false });
+  });
+});
+
 describe("describeCommand for maintenance", () => {
   it("names an owner or says there is none, with no takeover language", () => {
     expect(describeCommand(owned(FIXER), NOW_MS, "maintenance")).toMatchObject({

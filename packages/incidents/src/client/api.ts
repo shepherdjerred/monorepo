@@ -5,7 +5,7 @@
  * layer depends on `shared` alone.
  */
 import { queryOptions } from "@tanstack/react-query";
-import { z } from "zod";
+import type { z } from "zod";
 import {
   ActorInputSchema,
   AddLinkInputSchema,
@@ -27,16 +27,9 @@ import {
   type ActorInput,
   type ListIncidentsInput,
 } from "#shared/contract.ts";
+import { TrpcErrorSchema, TrpcResultSchema } from "#shared/trpc-wire.ts";
 
 const TRPC_PATH = `${INCIDENTS_API_PREFIX}/trpc`;
-
-const TrpcResultSchema = z.object({ result: z.object({ data: z.unknown() }) });
-const TrpcErrorSchema = z.object({
-  error: z.object({
-    message: z.string(),
-    data: z.looseObject({ code: z.string(), incident: z.unknown().optional() }),
-  }),
-});
 
 export type IncidentConflict = z.output<
   typeof IncidentErrorDataSchema

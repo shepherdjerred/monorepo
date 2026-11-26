@@ -288,7 +288,7 @@ The package reads no environment itself; Hub passes the values in.
 | Route          | Page                                                                                                                 |
 | -------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `/incidents`   | Open incidents, most severe then newest, with command state; `kind`, `state`, `system` search params filter          |
-| `/maintenance` | Open maintenance windows (same list, `kind=maintenance`)                                                             |
+| `/maintenance` | Open maintenance windows (same list, `kind=maintenance`; `kind=all` lifts it)                                        |
 | `/history`     | Resolved, completed, and canceled records                                                                            |
 | `/new`         | Declare; a duplicate CONFLICT shows the incident holding the system and a **Join it instead** action                 |
 | `/:ref`        | Record, command panel (Take, Force take, Hand off, Release), status, updates, links, signals, affected, and timeline |

@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
+import type { Command } from "#shared/contract.ts";
 import {
   BROWSER_ACTOR,
   IncidentsApiError,
@@ -11,7 +12,12 @@ import { CommandPanel, type RunCommand } from "#client/detail-command.tsx";
 import { declareInput, DuplicateNotice } from "#client/declare-page.tsx";
 import { HomeCardView } from "#client/home-card.tsx";
 import { incidentsPaletteSearch } from "#client/hub-client.tsx";
-import { IncidentTable, listFilter } from "#client/list-page.tsx";
+import {
+  ALL_KINDS,
+  IncidentTable,
+  listFigures,
+  listFilter,
+} from "#client/list-page.tsx";
 import {
   actorRecord,
   detail,
@@ -41,6 +47,12 @@ function trpcResponse(status: number, body: unknown): Response {
 afterEach(() => {
   vi.unstubAllGlobals();
 });
+
+function unownedFigure(command: Command) {
+  return listFigures([summary({ command })], NOW_MS).find(
+    (figure) => figure.label === "Unowned",
+  )?.value;
+}
 
 describe("incident list", () => {
   it("shows id, severity, status, systems, command, signals, affected, and age per row", () => {
@@ -94,6 +106,25 @@ describe("incident list", () => {
         new URLSearchParams("kind=maintenance&system=nope"),
       ),
     ).toEqual({ state: "resolved", limit: 200, kind: "maintenance" });
+  });
+
+  it("lets All kinds clear the Maintenance view's kind", () => {
+    expect(listFilter("maintenance", new URLSearchParams())).toEqual({
+      state: "open",
+      limit: 200,
+      kind: "maintenance",
+    });
+    expect(
+      listFilter("maintenance", new URLSearchParams(`kind=${ALL_KINDS}`)),
+    ).toEqual({ state: "open", limit: 200 });
+    expect(
+      listFilter("maintenance", new URLSearchParams("kind=incident")),
+    ).toEqual({ state: "open", limit: 200, kind: "incident" });
+  });
+
+  it("counts an incident whose dispatch lease lapsed as unowned", () => {
+    expect(unownedFigure(dispatching(30))).toBe(0);
+    expect(unownedFigure(dispatching(-1))).toBe(1);
   });
 });
 
