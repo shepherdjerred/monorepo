@@ -44,7 +44,6 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@scout-for-lol/data": "workspace:*",
     "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/root-scripts": "workspace:*",
     "@temporalio/activity": "1.26.0",
