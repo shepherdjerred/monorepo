@@ -29,6 +29,8 @@ COPY --parents \
   /tools/
 RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /closure \
   'tasknotes-server'
+RUN bun /tools/ci/scripts/images/workspace-manifests.ts /workspace /web-closure \
+  '@shepherdjerred/tasknotes-web'
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
 # Copying just the closure's package.json files (plus the lockfile, bunfig, and
@@ -46,6 +48,20 @@ RUN bun install --frozen-lockfile --production --filter 'tasknotes-server'
 COPY ci/scripts/images/complete-bin-links.ts /tools/
 RUN bun /tools/complete-bin-links.ts node_modules/.bun
 
+# ── web: Vite build of the browser client, copied into the runtime image ───
+FROM base AS web-deps
+COPY --parents bun.lock bunfig.toml patches/ ./
+COPY --from=manifests /web-closure/ ./
+RUN bun install --frozen-lockfile --filter '@shepherdjerred/tasknotes-web'
+
+FROM web-deps AS web-build
+COPY --parents \
+  tsconfig.base.json \
+  packages/tasknotes-web \
+  packages/facet-protocol \
+  ./
+RUN cd packages/tasknotes-web && bun run build
+
 # ── runtime: COPY-only — no install, no build tooling, no network ───────────
 FROM base AS runtime
 # The isolated-linker tree uses relative symlinks (store at node_modules/.bun),
@@ -59,6 +75,8 @@ COPY --parents \
   packages/tasknotes-server \
   packages/bugsink-config \
   ./
+
+COPY --from=web-build /app/packages/tasknotes-web/dist packages/tasknotes-web/dist
 
 # Prisma's CLI records per-run state under $HOME; keep it out of the layer.
 RUN cd packages/tasknotes-server && CHECKPOINT_DISABLE=1 bunx --no-install --trust prisma generate \
