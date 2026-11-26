@@ -291,14 +291,6 @@
       "enabled": false
     },
     {
-      "description": "React Native 0.86 and Worklets 0.11 require Babel 7 internally",
-      "matchDepNames": [
-        "@babel/core-v7",
-        "@babel/plugin-transform-export-namespace-from-v7"
-      ],
-      "enabled": false
-    },
-    {
       "description": "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
       "groupName": "typescript",
       "matchManagers": ["bun", "npm"],

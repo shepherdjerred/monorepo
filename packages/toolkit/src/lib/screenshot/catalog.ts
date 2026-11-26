@@ -5,7 +5,7 @@
  *
  * Deliberately excluded, not silently guessed at:
  * - `astro-opengraph-images` has no `dev` script (build-time codegen only).
- * - `tasks-for-obsidian` (React Native/Metro) needs a simulator/device, not
+ * - `tasks-for-obsidian` (native SwiftUI) needs a simulator/device, not
  *   a browser.
  */
 import type { PackageEntry } from "./types.ts";
