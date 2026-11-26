@@ -34,7 +34,6 @@
     "remeda": "^2.21.2",
     "satori": "^0.63.2",
     "ts-pattern": "^5.7.0",
-    "yoga-wasm-web": "^0.3.3",
     "zod": "^4.4.3",
     "@shepherdjerred/text": "workspace:*"
   },
