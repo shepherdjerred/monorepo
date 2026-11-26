@@ -193,6 +193,43 @@ export async function resolveRetainedProducerDigest(
   });
 }
 
+export async function appendRetainedProducerCharts<
+  Base extends {
+    readonly version: string;
+    readonly digest: string;
+    readonly fingerprint: string;
+    readonly archivePath?: string;
+  },
+>(
+  charts: {
+    name: string;
+    revision: string;
+    digest: string;
+    contentFingerprint: string;
+  }[],
+  bases: ReadonlyMap<string, Base>,
+  skippedNames: readonly { readonly name: string }[],
+  options: RetainProducerOptions,
+): Promise<void> {
+  const { version, ensureOciBootstrap } =
+    typeof options === "string" ? { version: options } : options;
+  for (const skipped of skippedNames) {
+    const archive = bases.get(skipped.name);
+    if (archive?.version !== version) continue;
+    charts.push({
+      name: skipped.name,
+      revision: version,
+      digest: await resolveRetainedProducerDigest(
+        skipped.name,
+        archive,
+        version,
+        ensureOciBootstrap,
+      ),
+      contentFingerprint: archive.fingerprint,
+    });
+  }
+}
+
 export async function publishedChartReceiptDigest(options: {
   readonly name: string;
   readonly archivePath: string;
@@ -230,4 +267,64 @@ export function chartsBootstrapRetainOptions(
         runCommand,
       }),
   };
+}
+
+const FIRST_PARTY_CHARTS_ORIGIN = "https://charts.tailnet-1a49.ts.net";
+const FIRST_PARTY_CHARTS_API = `${FIRST_PARTY_CHARTS_ORIGIN}/api/charts`;
+
+export function isRetainableChartOrigin(
+  name: string,
+  uri: string,
+  expectedOrigin: string,
+  ociBootstrapEnabled = CHARTS_BOOTSTRAP_OCI_ENABLED,
+): boolean {
+  if (expectedOrigin !== FIRST_PARTY_CHARTS_ORIGIN) return true;
+  const requiredPrefix =
+    name === "charts-bootstrap" && ociBootstrapEnabled
+      ? "oci://registry-1.docker.io/shepherdjerred/charts-bootstrap"
+      : `${expectedOrigin}/charts/${name}-`;
+  return uri.startsWith(requiredPrefix);
+}
+
+export async function pushChartArchive(options: {
+  readonly chart: string;
+  readonly archive: string;
+  readonly username: string;
+  readonly password: string;
+  readonly primaryApi: string;
+  readonly transport?: typeof fetch;
+}): Promise<void> {
+  const transport = options.transport ?? fetch;
+  const authHeader = `Basic ${btoa(`${options.username}:${options.password}`)}`;
+  const response = await transport(options.primaryApi, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/octet-stream",
+    },
+    body: Bun.file(options.archive),
+  });
+  if (!response.ok) {
+    const body = (await response.text()).slice(0, 1024);
+    throw new Error(
+      `${options.chart}: chart push failed (HTTP ${response.status.toString()}): ${body}`,
+    );
+  }
+  console.log(`${options.chart}: pushed (HTTP ${response.status.toString()})`);
+  if (options.primaryApi !== FIRST_PARTY_CHARTS_API) {
+    const mirror = await transport(FIRST_PARTY_CHARTS_API, {
+      method: "POST",
+      headers: {
+        Authorization: authHeader,
+        "Content-Type": "application/octet-stream",
+      },
+      body: Bun.file(options.archive),
+    });
+    if (!mirror.ok && mirror.status !== 409) {
+      const body = (await mirror.text()).slice(0, 1024);
+      throw new Error(
+        `${options.chart}: charts mirror push failed (HTTP ${mirror.status.toString()}): ${body}`,
+      );
+    }
+  }
 }

@@ -17,6 +17,7 @@ import { createDeliveryClient } from "@shepherdjerred/delivery/client";
 import {
   chartsBootstrapRetainOptions,
   publishedChartReceiptDigest,
+  pushChartArchive,
 } from "./helm-oci-bootstrap.ts";
 import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template.ts";
 import {
@@ -144,23 +145,13 @@ async function pushChart(
   username: string,
   password: string,
 ): Promise<void> {
-  const response = await fetch(CHARTMUSEUM_API, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${btoa(`${username}:${password}`)}`,
-      "Content-Type": "application/octet-stream",
-    },
-    body: Bun.file(archive),
+  await pushChartArchive({
+    chart,
+    archive,
+    username,
+    password,
+    primaryApi: CHARTMUSEUM_API,
   });
-  if (response.ok) {
-    console.log(`${chart}: pushed (HTTP ${response.status.toString()})`);
-    return;
-  }
-  const responseText = await response.text();
-  const body = responseText.slice(0, 1024);
-  throw new Error(
-    `${chart}: ChartMuseum push failed (HTTP ${response.status.toString()}): ${body}`,
-  );
 }
 
 function usage(): never {

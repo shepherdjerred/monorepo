@@ -62,10 +62,15 @@ export async function downloadChartArtifact(
 }
 
 /**
- * Staged rollout gate matching `helm-oci-bootstrap.ts`: stays `false` until
- * `woodpecker/prod` rolls out `DOCKERHUB_PUBLISH` on `helm-push` and
- * `tofu-dockerhub/prod` creates `shepherdjerred/charts-bootstrap`.
+ * Staged rollout gates matching `helm-delivery-publication.ts` and
+ * `helm-oci-bootstrap.ts`: `FIRST_PARTY_CHART_PUBLICATION_ORIGIN` stays on
+ * `chartmuseum` until live `delivery/prod` deploys `STORE_PREFIXES` support for
+ * `https://charts.tailnet-1a49.ts.net/`, and `CHARTS_BOOTSTRAP_OCI_ENABLED`
+ * stays `false` until `woodpecker/prod` deploys `DOCKERHUB_PUBLISH` on
+ * `helm-push` and `tofu-dockerhub/prod` creates `shepherdjerred/charts-bootstrap`.
  */
+export const FIRST_PARTY_CHART_PUBLICATION_ORIGIN =
+  "https://chartmuseum.tailnet-1a49.ts.net";
 export const CHARTS_BOOTSTRAP_OCI_ENABLED = false;
 
 export async function resolvePublishedChartArtifact(
@@ -78,7 +83,10 @@ export async function resolvePublishedChartArtifact(
   } = {},
 ) {
   const transport = options.fetch ?? fetch;
-  const { ociBootstrapEnabled = CHARTS_BOOTSTRAP_OCI_ENABLED } = options;
+  const {
+    origin = FIRST_PARTY_CHART_PUBLICATION_ORIGIN,
+    ociBootstrapEnabled = CHARTS_BOOTSTRAP_OCI_ENABLED,
+  } = options;
   if (name === "charts-bootstrap" && ociBootstrapEnabled) {
     const digest = await resolveManifestDigest(
       registryLocation(
@@ -94,7 +102,7 @@ export async function resolvePublishedChartArtifact(
     };
   }
   return downloadChartArtifact(name, version, {
-    origin: options.origin ?? "https://charts.tailnet-1a49.ts.net",
+    origin,
     fetch: transport,
   });
 }
