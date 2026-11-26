@@ -58,9 +58,10 @@ or subscribe from NetNewsWire.
 
 ## 3. Trigger or pause feed polling
 
-Temporal runs the
+Temporal polls upstream feeds on the
 [`feeds-refresh`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/schedule-definitions-early.ts)
-schedule at minutes `13` and `43` in `America/Los_Angeles`.
+schedule listed in
+[Temporal workflow inventory](/reference/temporal-workflows/#homelab-maintenance).
 
 To trigger an immediate poll from the operator CLI:
 
@@ -126,7 +127,7 @@ kubectl --context admin@torvalds -n temporal rollout restart deploy/temporal-tem
 If field names on `feeds-auth` changed, refresh and verify the vault snapshot:
 
 ```bash
-bun run --cwd packages/homelab/src/cdk8s snapshot:1password
+bun run --cwd packages/homelab/src/cdk8s scripts/snapshot-1password-vault.ts
 bun run --cwd packages/homelab/src/cdk8s check:1password
 ```
 
