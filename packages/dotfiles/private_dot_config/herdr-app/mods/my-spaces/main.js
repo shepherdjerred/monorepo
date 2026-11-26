@@ -243,6 +243,9 @@ export default class Spaces extends View {
     this.busy = {}; // pane -> an agent working or a program in front of its shell
     this.ready = {}; // machine -> its layout was readable at the last look
     this.at = {}; // space -> its where() at the last look
+    this.publishedCheckouts = JSON.stringify(
+      shared("worktree.checkouts") ?? {},
+    );
     this.watching = new Set(); // local repos' git folders
     // Spaces made while this runs wait (at most a moment) for their git, so a
     // worktree appears under its repo instead of jumping there.
@@ -284,9 +287,13 @@ export default class Spaces extends View {
     for (const s of sp) at[s.id] = where(s, ps);
     const keys = new Set(Object.values(at).filter((k) => JSON.parse(k)[1]));
     const due = new Set([...keys].filter((k) => !(k in this.git)));
-    for (const [id, k] of Object.entries(at))
+    let placesChanged = Object.keys(this.at).length !== Object.keys(at).length;
+    for (const [id, k] of Object.entries(at)) {
+      if (this.at[id] !== k) placesChanged = true;
       if (this.at[id] && this.at[id] !== k && keys.has(k)) due.add(k);
+    }
     this.at = at;
+    if (placesChanged) this.publishCheckouts();
     const spaceOf = {};
     for (const s of sp) for (const t of s.tabs ?? []) spaceOf[t.id] = s;
     const busy = {};
@@ -316,6 +323,19 @@ export default class Spaces extends View {
       }
     }
     return due;
+  }
+
+  publishCheckouts() {
+    const checkouts = {};
+    for (const key of Object.values(this.at)) {
+      const info = this.git[key];
+      if (info) checkouts[key] = info.linked ? "linked" : "main";
+    }
+    const encoded = JSON.stringify(checkouts);
+    if (encoded !== this.publishedCheckouts) {
+      this.publishedCheckouts = encoded;
+      setShared("worktree.checkouts", checkouts);
+    }
   }
 
   // `key` and the other places in its repo (a commit there moves their ahead/behind).
@@ -534,6 +554,8 @@ export default class Spaces extends View {
         { cwd, on },
       );
       const repo = common.stdout.trim();
+      if (top.code !== 0 || common.code !== 0 || !repo)
+        throw new Error("Could not identify the Git checkout");
       const name = repo.endsWith("/.git")
         ? base(repo.slice(0, -5))
         : base(repo).replace(/\.git$/, "");
@@ -559,6 +581,8 @@ export default class Spaces extends View {
       // Couldn't ask (the machine is away): keep what it showed, look again later.
       this.git[key] ??= null;
       this.unsure.add(key);
+    } finally {
+      this.publishCheckouts();
     }
   }
 

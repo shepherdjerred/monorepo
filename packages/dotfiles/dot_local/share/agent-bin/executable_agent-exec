@@ -78,6 +78,13 @@ AI_AGENT=$name
 export EDITOR VISUAL GIT_EDITOR PAGER GIT_PAGER ASTRO_DEV_BACKGROUND ASTRO_PREVIEW_BACKGROUND \
   GIT_CONFIG_GLOBAL AGENT_CLI AI_AGENT AGENT_LAUNCH_ID
 
+# This wrapper execs Codex in place. Its SessionStart hook can bind the
+# conversation to the actual foreground process, including for resumed threads.
+unset HERDR_CODEX_PID
+if [ "$name" = codex ] && [ -n "${HC_TERMINAL_ID:-}" ]; then
+  export HERDR_CODEX_PID=$$
+fi
+
 # Brim request capture: when brim.capture.enabled is on and brim.capture.clis
 # lists this CLI, route it through the local capture proxy. `brim capture env`
 # prints nothing when capture is off and fails when it is on but the proxy is

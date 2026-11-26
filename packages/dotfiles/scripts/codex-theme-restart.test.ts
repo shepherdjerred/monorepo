@@ -2,13 +2,14 @@ import { expect, test } from "vitest";
 import {
   discover,
   restart,
+  waitForReadiness,
   type Target,
 } from "../bin/codex_theme_restart_core.ts";
+import { launchedTheme } from "../bin/codex_theme_restart_config.ts";
 import {
   launchCommand,
   resumeArguments,
 } from "../bin/codex_theme_restart_launch.ts";
-import { launchedTheme } from "../bin/codex_theme_restart_config.ts";
 import { parseOptions } from "../bin/codex_theme_restart_options.ts";
 import {
   parseCodexTerminals,
@@ -24,12 +25,15 @@ function terminal(overrides: Record<string, unknown> = {}) {
   return {
     address: "t5",
     pid: 10,
+    argv: ["fish"],
+    created_ms: 10,
+    turn: 4,
     state: "live",
     status: { app: "codex", state: "idle" },
     foreground: {
       pid: 20,
       argv: ["/opt/homebrew/bin/codex", "--no-daemon"],
-      cwd: "/worktrees/path with 'quotes'",
+      cwd: "/worktrees/path with spaces",
     },
     ...overrides,
   };
@@ -79,7 +83,14 @@ test("reads status and the foreground process, treating a plain program as unrep
     terminal: "t5",
     status: "idle",
     shell: 10,
-    foreground: { pid: 20, argv: ["/opt/homebrew/bin/codex", "--no-daemon"] },
+    shellProgram: "fish",
+    created: 10,
+    turn: 4,
+    foreground: {
+      pid: 20,
+      argv: ["/opt/homebrew/bin/codex", "--no-daemon"],
+      cwd: "/worktrees/path with spaces",
+    },
   });
   expect(parseSnapshot(terminal({ status: null })).status).toBe("unknown");
   expect(() =>
@@ -198,488 +209,257 @@ test("quotes the launch line for the interactive shell or refuses before stoppin
 });
 
 type Scenario = {
-  nativeChanged?: boolean;
+  status?: "working" | "blocked";
   draft?: boolean;
-  staleStatus?: boolean;
-  staticStatus?: boolean;
-  lostSubmission?: boolean;
-  unsaved?: boolean;
-  status?: string;
-  resumedStatus?: string;
-  unreportedStart?: boolean;
+  unavailableIdentity?: boolean;
+  resumedIdentity?: string;
+  startedTheme?: "latte" | "mocha";
+  changesThread?: boolean;
   neverExits?: boolean;
-  replacedProcess?: boolean;
-  replacedShell?: boolean;
-  wrongResumedThread?: boolean;
-  resumedDifferent?: boolean;
-  promptFailure?: boolean;
-  startupFailure?: boolean;
-  lostStartAcknowledgement?: boolean;
-  bypass?: boolean;
-  lostBypass?: boolean;
-  /** The theme the wrapper appends to the relaunched client; null for none. */
-  relaunchTheme?: string | null;
+  direct?: boolean;
+  launchError?: boolean;
 };
-
-const isStatusKeys = (call: string[]) =>
-  call[0] === "keys" && call.slice(2).join("") === "/status";
-const isEnter = (call: string[]) =>
-  call[0] === "keys" && call[2] === "enter" && call.length === 3;
-const isCtrlC = (call: string[]) => call[0] === "keys" && call[2] === "ctrl+c";
-const isLaunch = (call: string[]) =>
-  call[0] === "send" && (call[2]?.startsWith("codex ") ?? false);
-const isPrompt = (call: string[]) => call[0] === "send" && !isLaunch(call);
 
 function fixture(scenario: Scenario = {}) {
   const calls: string[][] = [];
   let time = 0;
-  let ctrlC = 0;
-  let started = false;
-  let startedGets = 0;
-  let launchLine = "";
-  let statusQueries = 0;
-  let statusStaged = false;
-  let nativeThread = thread;
-  let afterDiscovery = false;
-  const shell = 10;
-  const foregroundPid = () => {
-    if (started) return 30;
-    if (ctrlC >= 2 && !scenario.neverExits) return shell;
-    return afterDiscovery && scenario.replacedProcess ? 99 : 20;
-  };
-  const foregroundArgv = () => {
-    if (started) {
-      const flags = launchLine
-        .split(" ")
-        .filter((word) => word.startsWith("--dangerously-bypass-"));
-      const theme =
-        scenario.relaunchTheme === undefined
-          ? "catppuccin-mocha"
-          : scenario.relaunchTheme;
-      return [
-        "/opt/homebrew/bin/codex",
-        "resume",
-        scenario.wrongResumedThread ? otherThread : thread,
-        ...(scenario.lostBypass ? [] : flags),
-        ...(theme === null ? [] : ["-c", `tui.theme="${theme}"`]),
-      ];
-    }
-    if (foregroundPid() === shell) return ["/opt/homebrew/bin/fish", "-l"];
-    return [
-      "/opt/homebrew/bin/codex",
-      "--no-daemon",
-      ...(scenario.bypass ? [bypassFlag] : []),
-      "-c",
-      'tui.theme="catppuccin-latte"',
-    ];
-  };
-  const status = () => {
-    if (!started && foregroundPid() === shell) return null;
-    if (started) {
-      return scenario.unreportedStart && startedGets++ < 4
-        ? null
-        : { app: "codex", state: scenario.resumedStatus ?? "idle" };
-    }
-    return scenario.status === "unknown"
-      ? null
-      : { app: "codex", state: scenario.status ?? "idle" };
-  };
-  const handlers: Record<string, (args: string[]) => string> = {
-    ls: () =>
-      JSON.stringify({
-        terminals: [
-          { address: "t1", agent: "claude-code", state: "live" },
-          { address: "desktop/t2", agent: "codex", state: "live" },
-          { address: "t5", agent: "codex", state: "live" },
-        ],
-      }),
-    get: () =>
-      JSON.stringify(
+  let interrupted = false;
+  let exited = false;
+  let launched = false;
+  let identities = 0;
+  function currentTerminal(): string {
+    if (launched)
+      return JSON.stringify(
         terminal({
-          pid: afterDiscovery && scenario.replacedShell ? 99 : shell,
-          status: status(),
           foreground: {
-            pid: foregroundPid(),
-            argv: foregroundArgv(),
-            cwd: "/worktrees",
+            pid: 30,
+            argv: [
+              "codex",
+              "resume",
+              thread,
+              "-c",
+              'tui.theme="catppuccin-mocha"',
+            ],
           },
         }),
-      ),
-    keys: (args) => {
-      if (isStatusKeys(args)) {
-        statusStaged = true;
-      } else if (isEnter(args)) {
-        statusStaged = scenario.lostSubmission ?? false;
-        statusQueries++;
-        if (scenario.nativeChanged && statusQueries > 1)
-          nativeThread = otherThread;
-      } else if (isCtrlC(args)) {
-        ctrlC++;
-      }
-      return "{}";
-    },
-    read: () => {
-      const shown =
-        started && scenario.resumedDifferent ? otherThread : nativeThread;
-      const cards = scenario.staleStatus
-        ? ""
-        : Array.from(
-            { length: scenario.staticStatus ? 1 : statusQueries },
-            () =>
-              `/status\n\n  >_ OpenAI Codex (v0.162.1)\n  Session:             ${shown}\n`,
-          ).join("\n");
-      const composer = scenario.draft
-        ? "unfinished user draft"
-        : statusStaged
-          ? "/status"
-          : "Ask Codex to do anything";
-      return `${cards}\n› ${composer}\n\n  model · /worktree             Vim: Insert`;
-    },
-    send: (args) => {
-      if (isLaunch(args)) {
-        if (scenario.startupFailure) throw new Error("not_found");
-        started = true;
-        launchLine = args[2] ?? "";
-        if (scenario.lostStartAcknowledgement) throw new Error("timeout");
-        return "{}";
-      }
-      if (scenario.promptFailure)
-        throw new Error("Delivery acknowledgement uncertain");
-      return "{}";
-    },
-  };
+      );
+    if (exited)
+      return JSON.stringify(
+        terminal({
+          status: null,
+          foreground: { pid: 10, argv: ["fish"] },
+        }),
+      );
+    return JSON.stringify(
+      terminal({
+        status: {
+          app: "codex",
+          state: interrupted ? "idle" : (scenario.status ?? "idle"),
+        },
+        foreground: {
+          pid: scenario.direct ? 10 : 20,
+          argv: [
+            "codex",
+            "--no-daemon",
+            "-c",
+            `tui.theme="catppuccin-${scenario.startedTheme ?? "latte"}"`,
+          ],
+          cwd: "/worktrees/path with spaces",
+        },
+      }),
+    );
+  }
   const runtime: Runtime = {
-    conversationSaved: () => !scenario.unsaved,
     now: () => time,
     sleep: async (milliseconds) => {
       time += milliseconds;
     },
-    async hc(args) {
+    identity: async (snapshot) => {
+      identities++;
+      if (scenario.unavailableIdentity) return;
+      if (snapshot.foreground.pid === 30)
+        return scenario.resumedIdentity ?? thread;
+      return scenario.changesThread && identities > 1 ? otherThread : thread;
+    },
+    hc: async (args) => {
       calls.push([...args]);
-      const handler = handlers[args[0] ?? ""];
-      if (handler === undefined) throw new Error("Unexpected test command");
-      return handler([...args]);
+      switch (args[0]) {
+        case "ls":
+          return JSON.stringify({
+            terminals: [
+              { address: "t5", agent: "codex", state: "live" },
+              { address: "desktop/t2", agent: "codex", state: "live" },
+            ],
+          });
+        case "get":
+          return currentTerminal();
+        case "read":
+          return scenario.draft
+            ? "› private draft"
+            : "› Ask Codex to do anything";
+        case "interrupt":
+          interrupted = true;
+          return "{}";
+        case "wait":
+          interrupted = true;
+          return "{}";
+        case "keys":
+          if (args[2] !== "ctrl+c") throw new Error("Unexpected key input");
+          if (!scenario.neverExits) exited = true;
+          return "{}";
+        case "send":
+          launched = true;
+          if (scenario.launchError)
+            throw new Error("Acknowledgement unavailable");
+          return "{}";
+        case undefined:
+        default:
+          throw new Error("Unexpected command");
+      }
     },
   };
-  async function execute() {
-    const result = await discover(runtime, "dark", { probe: true });
-    afterDiscovery = true;
-    const target = result.targets[0];
-    if (!target)
-      throw new Error(
-        `Expected an eligible fixture target: ${JSON.stringify(result.outcomes)}`,
-      );
-    return restart(runtime, target);
-  }
-  return { calls, runtime, execute };
+  return { runtime, calls };
 }
 
-test("a read-only preview lists eligible terminals without typing anything", async () => {
-  const { calls, runtime } = fixture();
-  const result = await discover(runtime, "dark");
-  expect(result.outcomes).toEqual([]);
-  expect(result.targets).toMatchObject([
-    { terminal: "t5", status: "idle", thread: undefined },
-  ]);
-  expect(calls.map((call) => call[0])).toEqual(["ls", "get"]);
-});
+async function targetOf(mock: ReturnType<typeof fixture>): Promise<Target> {
+  const { targets } = await discover(mock.runtime, "dark");
+  const target = targets[0];
+  if (target === undefined) throw new Error("Expected a verified target");
+  return target;
+}
 
-test("ignores remote and non-Codex terminals", async () => {
-  const { calls, runtime } = fixture();
-  await discover(runtime, "dark");
-  expect(calls.filter((call) => call[0] === "get")).toEqual([
-    ["get", "t5", "--json"],
-  ]);
-});
-
-test("restarts through the terminal's shell and continues a working turn once", async () => {
-  const { calls, execute } = fixture({ status: "working" });
-  expect(await execute()).toMatchObject({
+test("resumes the verified thread and exact working directory in the same shell", async () => {
+  const mock = fixture();
+  expect(await restart(mock.runtime, await targetOf(mock))).toEqual({
     terminal: "t5",
     status: "restarted",
-    message: "Same conversation restored; continuation submitted once",
+    message: "Same conversation restored",
   });
-  expect(calls.filter((call) => isLaunch(call))).toEqual([
-    ["send", "t5", `codex resume ${thread} --no-daemon`],
-  ]);
-  const prompts = calls.filter((call) => isPrompt(call));
-  expect(prompts).toHaveLength(1);
-  expect(prompts[0]?.[2]).toContain(
-    "external actions whose outcome is uncertain",
-  );
-  expect(calls.filter((call) => isCtrlC(call))).toHaveLength(2);
-  expect(calls.some((call) => call[0] === "kill" || call[0] === "run")).toBe(
-    false,
-  );
-});
-
-test.each(["idle", "done"])(
-  "does not prompt a previously %s terminal",
-  async (status) => {
-    const { calls, execute } = fixture({ status });
-    expect(await execute()).toMatchObject({ status: "restarted" });
-    expect(calls.filter((call) => isPrompt(call))).toEqual([]);
-  },
-);
-
-test("waits for a freshly started client to report before continuing a working turn", async () => {
-  const { calls, execute } = fixture({
-    status: "working",
-    unreportedStart: true,
-  });
-  expect(await execute()).toMatchObject({
-    status: "restarted",
-    message: "Same conversation restored; continuation submitted once",
-  });
-  expect(calls.filter((call) => isPrompt(call))).toHaveLength(1);
-});
-
-test("verifies an uncertain launch by process without repeating the send", async () => {
-  const { calls, execute } = fixture({ lostStartAcknowledgement: true });
-  expect(await execute()).toMatchObject({
-    status: "restarted",
-    message: expect.stringContaining(
-      "acknowledgement failed but terminal verified",
+  expect(
+    mock.calls.filter((call) =>
+      ["send", "keys", "interrupt"].includes(String(call[0])),
     ),
-  });
-  expect(calls.filter((call) => isLaunch(call))).toHaveLength(1);
+  ).toEqual([
+    ["keys", "t5", "ctrl+c"],
+    [
+      "send",
+      "t5",
+      `codex resume ${thread} --no-daemon --cd '/worktrees/path with spaces'`,
+    ],
+  ]);
 });
 
-test("does not inject another prompt if the shared daemon is already continuing work", async () => {
-  const { calls, execute } = fixture({
-    status: "working",
-    resumedStatus: "working",
-  });
-  expect(await execute()).toMatchObject({
-    status: "restarted",
-    message: "Existing turn is already working; no duplicate prompt sent",
-  });
-  expect(calls.filter((call) => isPrompt(call))).toEqual([]);
-});
-
-test.each(["blocked", "unknown", "error"])(
-  "leaves a %s terminal untouched",
-  async (status) => {
-    const { calls, runtime } = fixture({ status });
-    const result = await discover(runtime, "dark", { probe: true });
-    expect(result.targets).toEqual([]);
-    expect(result.outcomes[0]).toMatchObject({
-      terminal: "t5",
-      status: "skipped",
-    });
-    expect(calls.some((call) => call[0] === "keys" || call[0] === "send")).toBe(
-      false,
-    );
-  },
-);
-
-test.each([{ replacedProcess: true }, { replacedShell: true }])(
-  "rechecks the process before sending keys: %j",
+test.each([
+  { status: "working" as const },
+  { draft: true },
+  { status: "blocked" as const },
+])(
+  "defers without input when the terminal is not safely idle %o",
   async (scenario) => {
-    const { calls, execute } = fixture(scenario);
-    expect(await execute()).toMatchObject({
+    const mock = fixture(scenario);
+    expect(await restart(mock.runtime, await targetOf(mock))).toMatchObject({
       status: "skipped",
-      message: "Terminal process changed before restart",
+      retry: true,
     });
     expect(
-      calls.some((call) => isCtrlC(call)) ||
-        calls.some((call) => isLaunch(call)),
+      mock.calls.some((call) =>
+        ["send", "keys", "interrupt"].includes(String(call[0])),
+      ),
     ).toBe(false);
   },
 );
 
-test("a native conversation switch after discovery is detected before any exit keys", async () => {
-  const { calls, execute } = fixture({ nativeChanged: true });
-  expect(await execute()).toMatchObject({
-    status: "skipped",
+test("interrupts only the confirmed turn and submits no continuation prompt", async () => {
+  const mock = fixture({ status: "working" });
+  const target = await targetOf(mock);
+  expect(
+    await restart(mock.runtime, target, {
+      interruptWorking: true,
+      expectedTurn: 3,
+    }),
+  ).toMatchObject({ status: "skipped" });
+  expect(mock.calls.some((call) => call[0] === "interrupt")).toBe(false);
+  expect(
+    await restart(mock.runtime, target, {
+      interruptWorking: true,
+      expectedTurn: 4,
+    }),
+  ).toMatchObject({ status: "restarted" });
+  expect(mock.calls.filter((call) => call[0] === "interrupt")).toEqual([
+    ["interrupt", "t5", "--timeout", "5"],
+  ]);
+  expect(mock.calls.filter((call) => call[0] === "send")).toHaveLength(1);
+});
+
+test("queued theme changes wait for the same session to become idle", async () => {
+  const mock = fixture({ status: "working" });
+  const target = await targetOf(mock);
+  expect(
+    await waitForReadiness(mock.runtime, target, () => Promise.resolve(false)),
+  ).toBe(true);
+  expect(mock.calls).toContainEqual(["wait", "t5", "--timeout", "15"]);
+  expect(
+    mock.calls.some((call) =>
+      ["keys", "send", "interrupt"].includes(String(call[0])),
+    ),
+  ).toBe(false);
+});
+
+test("refuses stale identity and rejects a replacement reporting another thread", async () => {
+  const stale = fixture({ changesThread: true });
+  expect(await restart(stale.runtime, await targetOf(stale))).toMatchObject({
+    status: "failed",
     message: "Terminal conversation changed before restart",
   });
   expect(
-    calls.some((call) => isCtrlC(call)) || calls.some((call) => isLaunch(call)),
+    stale.calls.some((call) => call[0] === "keys" || call[0] === "send"),
   ).toBe(false);
-});
-
-test("bounds exit attempts without force-killing or writing commands into Codex", async () => {
-  const { calls, execute } = fixture({ neverExits: true });
-  expect(await execute()).toMatchObject({
-    status: "failed",
-    message: "Codex did not exit within 5 seconds; no force-kill attempted",
-  });
-  expect(calls.filter((call) => isCtrlC(call))).toHaveLength(3);
-  expect(calls.filter((call) => isLaunch(call))).toEqual([]);
-  expect(calls.some((call) => call[0] === "kill")).toBe(false);
-});
-
-test.each([
-  { status: "working", resumedStatus: "blocked" },
-  { status: "working", wrongResumedThread: true },
-  { status: "working", resumedDifferent: true },
-  { status: "working", startupFailure: true },
-])(
-  "does not continue a blocked or unidentified startup: %j",
-  async (scenario) => {
-    const { calls, execute } = fixture(scenario);
-    expect(await execute()).toMatchObject({ status: "failed" });
-    expect(calls.filter((call) => isPrompt(call))).toEqual([]);
-  },
-);
-
-test("does not retry a continuation after uncertain delivery", async () => {
-  const { calls, execute } = fixture({
-    status: "working",
-    promptFailure: true,
-  });
-  expect(await execute()).toMatchObject({ status: "failed" });
-  expect(calls.filter((call) => isPrompt(call))).toHaveLength(1);
-});
-
-test("passes observed bypass to the shell and verifies the replacement process", async () => {
-  const { calls, execute } = fixture({ status: "working", bypass: true });
-  expect(await execute()).toMatchObject({ status: "restarted" });
-  expect(calls.find((call) => isLaunch(call))?.[2]).toContain(bypassFlag);
-  expect(calls.filter((call) => isPrompt(call))).toHaveLength(1);
-});
-
-test("does not continue if the replacement loses the observed bypass flag", async () => {
-  const { calls, execute } = fixture({
-    status: "working",
-    bypass: true,
-    lostBypass: true,
-  });
-  expect(await execute()).toMatchObject({
-    status: "failed",
-    message:
-      "Wrapper did not preserve observed bypass flags; no continuation sent",
-  });
-  expect(calls.filter((call) => isPrompt(call))).toEqual([]);
-});
-
-test("reports a missing explicitly selected terminal without touching others", async () => {
-  const { calls, runtime } = fixture();
-  const result = await discover(runtime, "light", { terminal: "t9" });
-  expect(result.targets).toEqual([]);
-  expect(result.outcomes[0]).toMatchObject({
-    terminal: "t9",
-    status: "skipped",
-  });
-  expect(calls).toEqual([["ls", "--json"]]);
-});
-
-test("a closed terminal is a failure without a blind retry", async () => {
-  const target: Target = {
-    terminal: "closed",
-    status: "idle",
-    thread,
-    shell: 10,
-    pid: 20,
-    argv: ["codex"],
-    bypass: [],
-    mode: "dark",
-  };
-  let calls = 0;
-  const runtime: Runtime = {
-    conversationSaved: () => true,
-    now: Date.now,
-    sleep: async () => {
-      throw new Error("No polling expected for a closed terminal");
-    },
-    hc: async () => {
-      calls++;
-      throw new Error("get failed: not_found (exit 3)");
-    },
-  };
-  expect(await restart(runtime, target)).toMatchObject({
-    status: "failed",
-    message: "get failed: not_found (exit 3)",
-  });
-  expect(calls).toBe(1);
-});
-
-test("a native UUID without saved history is never stopped", async () => {
-  const { calls, runtime } = fixture({ unsaved: true });
-  const result = await discover(runtime, "dark", { probe: true });
-  expect(result.targets).toEqual([]);
-  expect(result.outcomes[0]?.message).toContain("no saved history");
+  const replacement = fixture({ resumedIdentity: otherThread });
   expect(
-    calls.some((call) => isCtrlC(call)) || calls.some((call) => isLaunch(call)),
-  ).toBe(false);
-});
-
-test("native probing rejects drafts without typing or exiting", async () => {
-  const { calls, runtime } = fixture({ draft: true });
-  const result = await discover(runtime, "dark", { probe: true });
-  expect(result.targets).toEqual([]);
-  expect(result.outcomes[0]?.message).toContain(
-    "draft or dialog left untouched",
-  );
-  expect(calls.some((call) => call[0] === "keys" || call[0] === "send")).toBe(
-    false,
-  );
-});
-
-test("native probe times out on missing status output without exiting or retrying its command", async () => {
-  const { calls, runtime } = fixture({ staleStatus: true });
-  const result = await discover(runtime, "dark", { probe: true });
-  expect(result.targets).toEqual([]);
-  expect(result.outcomes[0]?.message).toContain(
-    "Native /status did not complete",
-  );
-  expect(calls.filter((call) => isStatusKeys(call))).toHaveLength(1);
-  expect(calls.some((call) => isCtrlC(call))).toBe(false);
-});
-
-test("identical rendered status cards remain usable after observing command staging and completion", async () => {
-  const { execute } = fixture({ staticStatus: true });
-  expect(await execute()).toMatchObject({ status: "restarted" });
-});
-
-test("an old card is insufficient when the staged native command never completes", async () => {
-  const { calls, runtime } = fixture({
-    staticStatus: true,
-    lostSubmission: true,
+    await restart(replacement.runtime, await targetOf(replacement)),
+  ).toMatchObject({
+    status: "failed",
+    message: "Restarted Codex reported a different conversation",
   });
-  const result = await discover(runtime, "dark", { probe: true });
-  expect(result.targets).toEqual([]);
-  expect(result.outcomes[0]?.message).toContain("did not complete");
-  expect(calls.some((call) => isCtrlC(call))).toBe(false);
 });
 
-test("probe-only options are explicit and do not mix with a read-only preview or appearance event", () => {
-  expect(parseOptions(["--probe-identities"]).probeIdentities).toBe(true);
-  expect(() => parseOptions(["--dry-run", "--probe-identities"])).toThrow(
-    "cannot be combined",
-  );
-  expect(() => parseOptions(["--on-change", "--probe-identities"])).toThrow(
-    "cannot be combined",
-  );
+test("bounds exit attempts without typing into the old Codex process", async () => {
+  const mock = fixture({ neverExits: true });
+  expect(await restart(mock.runtime, await targetOf(mock))).toMatchObject({
+    status: "failed",
+    message: "Codex did not exit within 5 seconds",
+  });
+  expect(mock.calls.filter((call) => call[0] === "keys")).toHaveLength(3);
+  expect(mock.calls.some((call) => call[0] === "send")).toBe(false);
 });
 
-test("a continuation is reserved before delivery and never repeated across one thread", async () => {
-  const continued = new Set<string>([thread]);
-  const { calls, runtime } = fixture({ status: "working" });
-  const result = await discover(runtime, "dark", { probe: true });
-  const target = result.targets[0];
-  if (target === undefined) throw new Error("Missing target");
-  expect(await restart(runtime, target, continued)).toMatchObject({
+test("verifies an uncertain launch acknowledgement without launching twice", async () => {
+  const mock = fixture({ launchError: true });
+  expect(await restart(mock.runtime, await targetOf(mock))).toMatchObject({
     status: "restarted",
-    message: "Same conversation restored; continuation already handled",
   });
-  expect(calls.filter((call) => isPrompt(call))).toHaveLength(0);
+  expect(mock.calls.filter((call) => call[0] === "send")).toHaveLength(1);
 });
 
-test("reports a relaunch without the wrapper's theme after still continuing the turn", async () => {
-  for (const relaunchTheme of [null, "catppuccin-latte"]) {
-    const { calls, execute } = fixture({ status: "working", relaunchTheme });
-    const result = await execute();
-    expect(result).toMatchObject({ status: "failed" });
-    expect(result.message).toContain(
-      "Same conversation restored; continuation submitted once",
-    );
-    expect(result.message).toContain("expected catppuccin-mocha");
-    expect(calls.filter((call) => isPrompt(call))).toHaveLength(1);
+test("skips matched themes and refuses direct or unverified Codex processes", async () => {
+  expect(
+    await discover(fixture({ startedTheme: "mocha" }).runtime, "dark", {
+      onChange: true,
+    }),
+  ).toEqual({ targets: [], outcomes: [] });
+  for (const mock of [
+    fixture({ direct: true }),
+    fixture({ unavailableIdentity: true }),
+  ]) {
+    expect(await discover(mock.runtime, "dark")).toMatchObject({
+      targets: [],
+      outcomes: [{ terminal: "t5", status: "skipped" }],
+    });
+    expect(
+      mock.calls.some((call) => call[0] === "keys" || call[0] === "send"),
+    ).toBe(false);
   }
 });
-
 test("reads the launch theme from the last override in either option form", () => {
   expect(launchedTheme(["codex", "--no-daemon"])).toBeUndefined();
   expect(launchedTheme(["codex", "-c", 'tui.theme="catppuccin-mocha"'])).toBe(

@@ -117,6 +117,13 @@ failure posts a Windows toast. See
 [New worktree dialog](../dotfiles/README.md#new-worktree-dialog) and
 [Session takeover](../dotfiles/README.md#session-takeover).
 
+The `HerdrWorktreePool` task seeds the monorepo's three staged checkouts at
+logon and enables `core.longpaths` in the monorepo's local Git config so
+agents can stage files from long branch paths. New worktree requests queue
+a background refill with the same task. Results go to
+`~/.local/state/herdr-worktree/pool.log`. Run
+`bun ~/bin/herdr-worktree-pool.ts --seed` to fill the pool manually.
+
 ## Changing a managed file
 
 Edit the source here, then preview and apply only that target:

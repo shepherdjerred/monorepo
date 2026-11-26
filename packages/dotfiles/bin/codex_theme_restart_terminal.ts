@@ -46,7 +46,10 @@ export type Snapshot = {
   status: string;
   /** The terminal's own program, the interactive shell Codex runs under. */
   shell: number;
-  foreground: { pid: number; argv: string[] };
+  shellProgram: string;
+  created: number;
+  turn?: number;
+  foreground: { pid: number; argv: string[]; cwd?: string };
 };
 
 /** One `hc get <terminal> --json` response. */
@@ -59,13 +62,26 @@ export function parseSnapshot(value: unknown): Snapshot {
       : string(object(reported).get("state"));
   if (!statuses.has(status)) throw new Error("Unrecognized hc status");
   const foreground = object(terminal.get("foreground"));
+  const cwd = foreground.get("cwd");
+  const created = terminal.get("created_ms");
+  const turn = terminal.get("turn");
+  if (
+    typeof created !== "number" ||
+    !Number.isSafeInteger(created) ||
+    created < 0
+  )
+    throw new Error("Invalid terminal creation time");
   return {
     terminal: string(terminal.get("address")),
     status,
     shell: pid(terminal.get("pid")),
+    shellProgram: string(array(terminal.get("argv"))[0]),
+    created,
+    ...(typeof turn === "number" && Number.isSafeInteger(turn) ? { turn } : {}),
     foreground: {
       pid: pid(foreground.get("pid")),
       argv: array(foreground.get("argv")).map((argument) => string(argument)),
+      ...(typeof cwd === "string" && cwd !== "" ? { cwd } : {}),
     },
   };
 }
@@ -86,7 +102,12 @@ export type Runtime = {
   hc: (args: readonly string[]) => Promise<string>;
   now: () => number;
   sleep: (milliseconds: number) => Promise<void>;
-  conversationSaved: (thread: string) => boolean;
+  identity: (snapshot: Snapshot) => Promise<string | undefined>;
+  adoptIdentity?: (
+    replacement: Snapshot,
+    original: Snapshot,
+    thread: string,
+  ) => Promise<boolean>;
 };
 
 export async function snapshotOf(

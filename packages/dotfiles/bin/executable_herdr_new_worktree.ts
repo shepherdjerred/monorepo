@@ -19,6 +19,7 @@ import {
   createWorktree,
   fields,
   parseRequest,
+  startDetachedToolkit,
   type ExecResult,
   type Named,
   type Progress,
@@ -111,7 +112,6 @@ type Naming = {
   readonly timeoutMs: number;
   readonly request: (message: string, key: string) => unknown;
   readonly parse: (status: number, body: unknown) => Named;
-  readonly freeBranch: Runtime["freeBranch"];
 };
 
 function member(module: Map<string, unknown>, name: string): unknown {
@@ -157,19 +157,12 @@ async function loadNaming(): Promise<Naming> {
     throw new TypeError("naming.js TIMEOUT_MS is not a number.");
   const request = callable(member(module, "namingRequest"), "namingRequest");
   const parse = callable(member(module, "parseNaming"), "parseNaming");
-  const free = callable(member(module, "freeBranch"), "freeBranch");
   return {
     keyRef,
     url,
     timeoutMs,
     request,
     parse: (code, body) => named(parse(code, body)),
-    freeBranch: async (base, taken) => {
-      const branch: unknown = await free(base, taken);
-      if (typeof branch !== "string")
-        throw new TypeError("naming.js freeBranch returned no branch.");
-      return branch;
-    },
   };
 }
 
@@ -222,9 +215,9 @@ function fetchOptions(value: unknown): RequestInit {
   return { method, body, headers: flat };
 }
 
-function runtime(naming: Naming): Runtime {
+function runtime(): Runtime {
   let key: string | null = null;
-  async function readKey(): Promise<string> {
+  async function readKey(naming: Naming): Promise<string> {
     if (key !== null) return key;
     const read = await capture(["op", "read", naming.keyRef]);
     const value = read.stdout.trim();
@@ -235,7 +228,8 @@ function runtime(naming: Naming): Runtime {
   }
   return {
     async name(message) {
-      const init = fetchOptions(naming.request(message, await readKey()));
+      const naming = await loadNaming();
+      const init = fetchOptions(naming.request(message, await readKey(naming)));
       let reply: Response;
       try {
         reply = await fetch(naming.url, {
@@ -255,32 +249,83 @@ function runtime(naming: Naming): Runtime {
       const body: unknown = await reply.json().catch(() => null);
       return naming.parse(reply.status, body);
     },
-    freeBranch: naming.freeBranch,
-    async git(machine, cwd, args) {
-      const r = await capture([
-        hcPath,
-        "exec",
-        "--json",
-        ...(machine === null ? [] : ["--on", machine]),
-        "--cwd",
-        cwd,
-        "--timeout",
-        "300",
-        "--",
-        "git",
-        ...args,
-      ]);
-      if (r.code !== 0)
+    async allocate(request, branch) {
+      const { machine } = request;
+      const encoded = Buffer.from(
+        JSON.stringify({
+          repo: request.repoMain,
+          root: request.root,
+          branch,
+          generated: request.branch === undefined,
+        }),
+      ).toString("base64url");
+      let result: ExecResult;
+      if (machine === null) {
+        const worker = windows
+          ? "herdr-worktree-pool.ts"
+          : "herdr-worktree-pool";
+        result = await capture([
+          process.execPath,
+          path.join(home, "bin", worker),
+          "--claim",
+          encoded,
+        ]);
+      } else {
+        const normalized = request.root.replaceAll("\\", "/");
+        const target = /^(.*)\/\.herdr\/worktrees\/[^/]+$/.exec(
+          normalized,
+        )?.[1];
+        if (target === undefined || target === "")
+          throw new Error(
+            "Cannot locate the worktree pool worker on the target host.",
+          );
+        const worker = `${target}/bin/herdr-worktree-pool`;
+        const remote =
+          request.launcher === "profile" ? ["bun", `${worker}.ts`] : [worker];
+        const r = await capture([
+          hcPath,
+          "exec",
+          "--json",
+          "--on",
+          machine,
+          "--timeout",
+          "600",
+          "--",
+          ...remote,
+          "--claim",
+          encoded,
+        ]);
+        if (r.code !== 0)
+          throw new Error(
+            `hc exec failed: ${firstLine(r.stderr || r.stdout, "no output")}`,
+          );
+        const out = fields(JSON.parse(r.stdout), "hc exec output");
+        const code = out.get("code");
+        result = {
+          code: typeof code === "number" ? code : 1,
+          stdout: decoded(out.get("stdout")),
+          stderr: decoded(out.get("stderr")),
+        };
+      }
+      if (result.code !== 0)
         throw new Error(
-          `hc exec failed: ${firstLine(r.stderr === "" ? r.stdout : r.stderr, "no output")}`,
+          firstLine(
+            result.stderr || result.stdout,
+            "Worktree allocation failed.",
+          ),
         );
-      const out = fields(JSON.parse(r.stdout), "hc exec output");
-      const code = out.get("code");
-      return {
-        code: typeof code === "number" ? code : 1,
-        stdout: decoded(out.get("stdout")),
-        stderr: decoded(out.get("stderr")),
-      };
+      const allocation = fields(
+        JSON.parse(result.stdout),
+        "Worktree allocation",
+      );
+      const allocatedBranch = allocation.get("branch");
+      const allocatedPath = allocation.get("path");
+      if (
+        typeof allocatedBranch !== "string" ||
+        typeof allocatedPath !== "string"
+      )
+        throw new TypeError("Worktree allocator returned no branch or path.");
+      return { branch: allocatedBranch, path: allocatedPath };
     },
     async newSpace(args) {
       const r = await capture([
@@ -303,18 +348,7 @@ function runtime(naming: Naming): Runtime {
     hc: async (args) => capture([hcPath, ...args]),
     sleep: async (ms) => Bun.sleep(ms),
     platform: process.platform,
-    async startToolkit(cwd, args) {
-      if (!(await Bun.file(toolkitPath).exists())) return false;
-      // Its own session and no stdio: it outlives this worker, unobserved.
-      Bun.spawn([toolkitPath, ...args], {
-        cwd,
-        detached: true,
-        stdin: "ignore",
-        stdout: "ignore",
-        stderr: "ignore",
-      }).unref();
-      return true;
-    },
+    startToolkit: (cwd, args) => startDetachedToolkit(toolkitPath, cwd, args),
   };
 }
 
@@ -426,7 +460,7 @@ async function run(json: string): Promise<number> {
     event.machine = request.machine;
     const outcome = await createWorktree(
       request,
-      runtime(await loadNaming()),
+      runtime(),
       async (update: Progress) => {
         step = update.step;
         try {

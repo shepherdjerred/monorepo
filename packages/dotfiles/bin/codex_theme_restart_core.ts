@@ -9,9 +9,8 @@ import {
 } from "./codex_theme_restart_launch.ts";
 import type { Appearance } from "./codex_theme_restart_options.ts";
 import {
-  backgroundRunningTask,
+  emptyComposer,
   preservePausedGoal,
-  probeNativeConversation,
   waitForStartup,
 } from "./codex_theme_restart_status.ts";
 import {
@@ -23,26 +22,16 @@ import {
 } from "./codex_theme_restart_terminal.ts";
 
 export type Target = {
-  terminal: string;
-  status: string;
-  /** Verified by native `/status`; absent in a read-only preview. */
-  thread: string | undefined;
-  /** The terminal's own shell, which must survive the restart. */
-  shell: number;
-  /** The Codex foreground process being replaced. */
-  pid: number;
-  argv: string[];
-  bypass: string[];
+  snapshot: Snapshot;
+  thread: string;
   mode: Appearance;
 };
 export type Outcome = {
   terminal: string;
   status: "restarted" | "skipped" | "failed" | "would-restart" | "identified";
   message: string;
+  retry?: boolean;
 };
-
-/** Stands in for the conversation UUID to check launch options and shell quoting before any key is typed. */
-const previewThread = "00000000-0000-0000-0000-000000000000";
 
 export function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown restart error";
@@ -52,23 +41,57 @@ function executable(snapshot: Snapshot): string | undefined {
   return snapshot.foreground.argv[0]?.split("/").at(-1);
 }
 
-async function probeConversation(
+function sameTerminal(next: Snapshot, original: Snapshot): boolean {
+  return next.shell === original.shell && next.created === original.created;
+}
+
+export async function verifiedSnapshot(
+  runtime: Runtime,
+  target: Target,
+): Promise<Snapshot> {
+  const { snapshot, thread } = target;
+  const current = await snapshotOf(runtime, snapshot.terminal);
+  if (
+    !sameTerminal(current, snapshot) ||
+    current.foreground.pid !== snapshot.foreground.pid
+  )
+    throw new Error("Terminal process changed before restart");
+  if ((await runtime.identity(current)) !== thread)
+    throw new Error("Terminal conversation changed before restart");
+  return current;
+}
+
+async function verifiedTarget(
   runtime: Runtime,
   snapshot: Snapshot,
-  options: { allowUnreported?: boolean } = {},
-): Promise<string> {
-  const thread = await probeNativeConversation(runtime, snapshot, options);
-  if (!runtime.conversationSaved(thread))
-    throw new Error("Conversation has no saved history; client left running");
-  return thread;
+  mode: Appearance,
+): Promise<Target> {
+  if (executable(snapshot) !== "codex")
+    throw new Error("Foreground process is not Codex");
+  const root = snapshot.shellProgram.split("/").at(-1)?.replace(/^-/, "");
+  if (
+    snapshot.shell === snapshot.foreground.pid ||
+    (root !== "fish" && root !== "zsh" && root !== "bash")
+  )
+    throw new Error("Codex must be running inside a supported Herdr shell");
+  const thread = await runtime.identity(snapshot);
+  if (thread === undefined)
+    throw new Error(
+      "No verified saved conversation. Trust the Herdr hooks in /hooks and use the managed Codex wrapper.",
+    );
+  if (snapshot.foreground.cwd === undefined)
+    throw new Error("Codex working directory is unavailable");
+  // Reject an unsupported launch or unsafe shell argument before stopping Codex.
+  launchCommand(snapshot.foreground.argv, thread, snapshot.foreground.cwd);
+  return { snapshot, thread, mode };
 }
 
 export async function discover(
   runtime: Runtime,
   mode: Appearance,
-  selection: { terminal?: string; probe?: boolean } = {},
+  selection: { terminal?: string; onChange?: boolean } = {},
 ): Promise<{ targets: Target[]; outcomes: Outcome[] }> {
-  const { terminal: selected, probe = false } = selection;
+  const { terminal: selected, onChange } = selection;
   const addresses = parseCodexTerminals(
     parseJson(await runtime.hc(["ls", "--json"])),
   );
@@ -78,23 +101,12 @@ export async function discover(
     if (selected !== undefined && terminal !== selected) continue;
     try {
       const snapshot = await snapshotOf(runtime, terminal);
-      // Validate launch options before touching the native composer.
-      launchCommand(snapshot.foreground.argv, previewThread);
-      const thread = probe
-        ? await probeConversation(runtime, snapshot)
-        : undefined;
-      targets.push({
-        terminal,
-        status: snapshot.status,
-        thread,
-        shell: snapshot.shell,
-        pid: snapshot.foreground.pid,
-        argv: snapshot.foreground.argv,
-        bypass: snapshot.foreground.argv.filter((argument) =>
-          bypassFlags.has(argument),
-        ),
-        mode,
-      });
+      if (
+        onChange === true &&
+        launchedTheme(snapshot.foreground.argv) === themeForAppearance(mode)
+      )
+        continue;
+      targets.push(await verifiedTarget(runtime, snapshot, mode));
     } catch (error) {
       outcomes.push({
         terminal,
@@ -103,197 +115,211 @@ export async function discover(
       });
     }
   }
-  if (selected !== undefined && targets.length === 0 && outcomes.length === 0) {
+  if (selected !== undefined && !addresses.includes(selected))
     outcomes.push({
       terminal: selected,
       status: "skipped",
       message: "No live local Codex terminal at requested address",
     });
-  }
   return { targets, outcomes };
 }
 
-const continuation =
-  "Continue the task interrupted by the appearance-change restart. First inspect current state and any in-flight command results. Do not repeat completed work or external actions whose outcome is uncertain.";
+export async function readiness(
+  runtime: Runtime,
+  target: Target,
+): Promise<Snapshot | undefined> {
+  // Herdr clears agent status before it necessarily refreshes the foreground
+  // PID. Check status first, since an exited client's footer is already gone.
+  const current = await snapshotOf(runtime, target.snapshot.terminal);
+  if (current.status !== "done" && current.status !== "idle") return undefined;
+  const verified = await verifiedSnapshot(runtime, target);
+  if (verified.status !== "done" && verified.status !== "idle") return undefined;
+  return (await composerReady(runtime, verified)) ? verified : undefined;
+}
 
-async function shellReady(runtime: Runtime, target: Target): Promise<boolean> {
-  const snapshot = await snapshotOf(runtime, target.terminal);
-  if (snapshot.shell !== target.shell)
+async function composerReady(
+  runtime: Runtime,
+  current: Snapshot,
+): Promise<boolean> {
+  return emptyComposer(await runtime.hc(["read", current.terminal]));
+}
+
+async function originalStillRunning(
+  runtime: Runtime,
+  snapshot: Snapshot,
+): Promise<boolean> {
+  const current = await snapshotOf(runtime, snapshot.terminal);
+  if (!sameTerminal(current, snapshot))
     throw new Error("Terminal shell changed during restart");
-  if (snapshot.foreground.pid === snapshot.shell) return true;
-  if (snapshot.foreground.pid !== target.pid)
-    throw new Error("Foreground process changed; no further keys sent");
-  return false;
+  if (current.foreground.pid === current.shell) return false;
+  if (current.foreground.pid !== snapshot.foreground.pid)
+    throw new Error("Foreground process changed during restart");
+  return true;
 }
 
 async function exitCodex(runtime: Runtime, target: Target): Promise<void> {
+  const { snapshot } = target;
   for (let attempt = 0; attempt < 3; attempt++) {
-    if (await shellReady(runtime, target)) return;
-    await runtime.hc(["keys", target.terminal, "ctrl+c"]);
+    if (!(await originalStillRunning(runtime, snapshot))) return;
+    // hc can clear agent status on exit before it updates the foreground PID.
+    // If the composer disappeared, wait for the shell and send no further keys.
+    if ((await readiness(runtime, target)) === undefined) break;
+    await runtime.hc(["keys", snapshot.terminal, "ctrl+c"]);
     await runtime.sleep(350);
-    await backgroundRunningTask(runtime, target.terminal);
   }
   const deadline = runtime.now() + 5000;
   while (runtime.now() < deadline) {
-    if (await shellReady(runtime, target)) return;
+    if (!(await originalStillRunning(runtime, snapshot))) return;
     await runtime.sleep(100);
   }
-  throw new Error(
-    "Codex did not exit within 5 seconds; no force-kill attempted",
-  );
+  throw new Error("Codex did not exit within 5 seconds");
 }
 
-/** `hc send` returns before the shell runs the line, so wait for the new client. */
 async function awaitReplacement(
   runtime: Runtime,
   target: Target,
-  thread: string,
 ): Promise<Snapshot> {
+  const { snapshot, thread } = target;
   const deadline = runtime.now() + 30_000;
-  const mismatch =
-    "Restarted process does not match the requested conversation";
-  for (;;) {
-    const snapshot = await snapshotOf(runtime, target.terminal);
-    if (snapshot.shell !== target.shell)
+  while (runtime.now() < deadline) {
+    const current = await snapshotOf(runtime, snapshot.terminal);
+    if (!sameTerminal(current, snapshot))
       throw new Error("Terminal shell changed during restart");
-    const { pid, argv } = snapshot.foreground;
-    if (
-      pid !== snapshot.shell &&
-      pid !== target.pid &&
-      executable(snapshot) === "codex"
-    ) {
-      if (
-        !argv.some(
-          (argument, index) =>
-            argument === "resume" && argv[index + 1] === thread,
-        )
-      )
-        throw new Error(mismatch);
-      return snapshot;
+    const { pid, argv } = current.foreground;
+    if (pid !== snapshot.foreground.pid && executable(current) === "codex") {
+      const resumed = argv.some(
+        (argument, index) =>
+          argument === "resume" && argv[index + 1] === thread,
+      );
+      if (!resumed)
+        throw new Error(
+          "Restarted process does not match the requested conversation",
+        );
+      if (await replacementIdentity(runtime, current, target)) return current;
     }
-    if (runtime.now() >= deadline) throw new Error(mismatch);
     await runtime.sleep(200);
   }
-}
-
-async function verifyLaunch(
-  runtime: Runtime,
-  target: Target,
-  thread: string,
-): Promise<Snapshot> {
-  const replacement = await awaitReplacement(runtime, target, thread);
-  if (
-    !target.bypass.every((flag) => replacement.foreground.argv.includes(flag))
-  ) {
-    throw new Error(
-      "Wrapper did not preserve observed bypass flags; no continuation sent",
-    );
-  }
-  await waitForStartup(runtime, target.terminal);
-  await preservePausedGoal(runtime, target.terminal);
-  // A client that has just started may not have reported a status yet.
-  const resumed = await probeConversation(
-    runtime,
-    await snapshotOf(runtime, target.terminal),
-    { allowUnreported: true },
+  throw new Error(
+    "Restarted Codex did not confirm the conversation through its hook",
   );
-  if (resumed !== thread)
-    throw new Error("Native /status reported a different resumed conversation");
-  return replacement;
 }
 
-async function settledStatus(
+async function replacementIdentity(
   runtime: Runtime,
-  terminal: string,
-): Promise<Snapshot> {
-  const deadline = runtime.now() + 10_000;
-  for (;;) {
-    const snapshot = await snapshotOf(runtime, terminal);
-    if (snapshot.status !== "unknown") return snapshot;
-    if (runtime.now() >= deadline) return snapshot;
-    await runtime.sleep(200);
-  }
-}
-
-async function continueTerminal(
-  runtime: Runtime,
-  target: Target,
-  { thread, wasWorking }: { thread: string; wasWorking: boolean },
-  continued: Set<string>,
-): Promise<{ message: string; argv: string[] }> {
-  const replacement = await verifyLaunch(runtime, target, thread);
-  const { argv } = replacement.foreground;
-  const done = (message: string) => ({ message, argv });
-  if (!wasWorking) return done("Same conversation restored");
-  if (continued.has(thread))
-    return done("Same conversation restored; continuation already handled");
-  const resumed = await settledStatus(runtime, target.terminal);
-  if (resumed.status === "working") {
-    continued.add(thread);
-    return done("Existing turn is already working; no duplicate prompt sent");
-  }
-  if (resumed.status !== "idle" && resumed.status !== "done") {
-    throw new Error(
-      "Conversation restored but not ready for continuation; inspect terminal",
-    );
-  }
-  continued.add(thread);
-  await runtime.hc(["send", target.terminal, continuation]);
-  return done("Same conversation restored; continuation submitted once");
+  current: Snapshot,
+  { snapshot, thread }: Target,
+): Promise<boolean> {
+  const identity = await runtime.identity(current);
+  if (identity === undefined)
+    return (await runtime.adoptIdentity?.(current, snapshot, thread)) === true;
+  if (identity !== thread)
+    throw new Error("Restarted Codex reported a different conversation");
+  return true;
 }
 
 export async function restart(
   runtime: Runtime,
   target: Target,
-  continued = new Set<string>(),
+  policy: { interruptWorking?: boolean; expectedTurn?: number } = {},
 ): Promise<Outcome> {
-  const { terminal } = target;
-  const outcome = (status: Outcome["status"], message: string): Outcome => ({
-    terminal,
-    status,
-    message,
-  });
+  const { snapshot, mode, thread } = target;
+  const { terminal } = snapshot;
   try {
-    if (target.thread === undefined)
-      throw new Error("Restart requires a verified conversation");
-    const before = await snapshotOf(runtime, terminal);
-    if (before.shell !== target.shell || before.foreground.pid !== target.pid)
-      return outcome("skipped", "Terminal process changed before restart");
-    const thread = await probeConversation(runtime, before);
-    if (thread !== target.thread)
-      return outcome("skipped", "Terminal conversation changed before restart");
-    // Use the last observed working state, not a potentially old discovery snapshot.
-    const observed = await snapshotOf(runtime, terminal);
-    const wasWorking = observed.status === "working";
-    // Quote the launch line before stopping anything.
-    const command = launchCommand(target.argv, thread);
+    let current = await verifiedSnapshot(runtime, target);
+    if (current.status === "working" && policy.interruptWorking === true) {
+      if (current.turn !== (policy.expectedTurn ?? snapshot.turn))
+        return {
+          terminal,
+          status: "skipped",
+          message: "Codex started another turn before confirmation",
+        };
+      if (!(await composerReady(runtime, current)))
+        return {
+          terminal,
+          status: "skipped",
+          message: "Draft or dialog is present",
+        };
+      current = await verifiedSnapshot(runtime, target);
+      if (current.status === "working") {
+        if (current.turn !== (policy.expectedTurn ?? snapshot.turn))
+          return {
+            terminal,
+            status: "skipped",
+            message: "The confirmed turn already changed",
+          };
+        await runtime.hc(["interrupt", terminal, "--timeout", "5"]);
+      }
+    }
+    if ((await readiness(runtime, target)) === undefined)
+      return {
+        terminal,
+        status: "skipped",
+        message: "Waiting for idle Codex with an empty composer",
+        retry: true,
+      };
+    const command = launchCommand(
+      current.foreground.argv,
+      thread,
+      current.foreground.cwd,
+    );
     await exitCodex(runtime, target);
     const startError = await launchReplacement(runtime, terminal, command);
-    const { message, argv } = await continueTerminal(
-      runtime,
-      target,
-      { thread, wasWorking },
-      continued,
-    ).catch((error: unknown) => {
-      if (startError !== undefined)
-        throw new Error(`${startError}; ${errorMessage(error)}`);
-      throw error;
-    });
-    const restored =
-      startError === undefined
-        ? message
-        : `${message}; hc launch acknowledgement failed but terminal verified (${startError})`;
-    // The interrupted conversation is restored and continued either way; a
-    // wrong theme means the `codex` wrapper did not apply the appearance.
-    const expected = themeForAppearance(target.mode);
-    const theme = launchedTheme(argv);
-    if (theme !== expected)
-      return outcome(
-        "failed",
-        `${restored}; relaunched with ${theme === undefined ? "the config default theme" : `theme ${theme}`}, expected ${expected} from the codex wrapper`,
+    const replacement = await awaitReplacement(runtime, target).catch(
+      (error: unknown) => {
+        if (startError !== undefined)
+          throw new Error(`${startError}. ${errorMessage(error)}`);
+        throw error;
+      },
+    );
+    const argv = replacement.foreground.argv;
+    if (
+      !current.foreground.argv
+        .filter((arg) => bypassFlags.has(arg))
+        .every((flag) => argv.includes(flag))
+    )
+      throw new Error(
+        "Replacement did not preserve the observed launch policy",
       );
-    return outcome("restarted", restored);
+    await waitForStartup(runtime, terminal);
+    await preservePausedGoal(runtime, terminal, async () => {
+      await verifiedSnapshot(runtime, { ...target, snapshot: replacement });
+    });
+    if (launchedTheme(argv) !== themeForAppearance(mode))
+      throw new Error(
+        "Conversation restored but the wrapper applied the wrong theme",
+      );
+    return {
+      terminal,
+      status: "restarted",
+      message: "Same conversation restored",
+    };
   } catch (error) {
-    return outcome("failed", errorMessage(error));
+    return { terminal, status: "failed", message: errorMessage(error) };
   }
+}
+
+export async function waitForReadiness(
+  runtime: Runtime,
+  target: Target,
+  cancelled: (current: Snapshot) => Promise<boolean>,
+): Promise<boolean> {
+  const deadline = runtime.now() + 60 * 60_000;
+  const { terminal } = target.snapshot;
+  while (runtime.now() < deadline) {
+    let current;
+    try {
+      current = await verifiedSnapshot(runtime, target);
+    } catch {
+      return false; // The terminal closed or changed before it was eligible.
+    }
+    if (await cancelled(current)) return false;
+    if ((await readiness(runtime, target)) !== undefined) return true;
+    if (current.status === "working") {
+      // The timeout is a check-in, including when no news has arrived.
+      await runtime.hc(["wait", terminal, "--timeout", "15"]).catch(() => "");
+    }
+    // A draft or dialog can disappear without changing hc's agent status.
+    await runtime.sleep(2500);
+  }
+  return false;
 }
