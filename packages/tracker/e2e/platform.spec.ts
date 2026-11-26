@@ -169,6 +169,6 @@ test("an explicit theme is applied before the app loads and tints the browser ch
   await page.goto("/issues");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   for (const meta of await page.locator('meta[name="theme-color"]').all()) {
-    await expect(meta).toHaveAttribute("content", "#1b1b1f");
+    await expect(meta).toHaveAttribute("content", "#111210");
   }
 });

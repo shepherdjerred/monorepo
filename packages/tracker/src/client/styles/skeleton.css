@@ -10,7 +10,7 @@
   max-width: 100%;
   overflow: hidden;
   border-radius: 4px;
-  background: var(--hover);
+  background: var(--ui-hover);
   vertical-align: middle;
 }
 .bone-icon {
@@ -36,7 +36,7 @@
     background: linear-gradient(
       90deg,
       transparent,
-      color-mix(in srgb, var(--panel) 60%, transparent),
+      color-mix(in srgb, var(--ui-panel) 60%, transparent),
       transparent
     );
     translate: -100% 0;
@@ -64,7 +64,7 @@
 }
 .skeleton-toolbar .skeleton-control {
   border-color: transparent;
-  background: var(--subtle);
+  background: var(--ui-head);
 }
 .skeleton-toolbar .filter-search {
   min-height: 28px;
