@@ -11,7 +11,10 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect, test } from "vitest";
-import type { Toolkit } from "../bin/herdr_new_worktree_core.ts";
+import {
+  startDetachedToolkit,
+  type Toolkit,
+} from "../bin/herdr_new_worktree_core.ts";
 import { allocate, replenish } from "../bin/herdr_worktree_pool_core.ts";
 
 async function git(cwd: string, ...args: string[]): Promise<string> {
@@ -276,10 +279,26 @@ test("claiming a slot leaves unchanged files as they were, so their sharing surv
     await writeFile(path.join(repo, "file"), "second\n");
     await git(repo, "commit", "-am", "Second");
     await git(repo, "push", "origin", "main");
+    const fake = fakeToolkit();
     const claimed = await allocate(
       { ...setup, branch: "work", generated: true },
       true,
+      fake.toolkit,
     );
+    expect(claimed.dedupe).toBe("started");
+    expect(fake.started).toEqual([
+      [
+        claimed.path,
+        "tend",
+        "dedupe",
+        "--worktree",
+        claimed.path,
+        "--apply",
+        "--no-refresh",
+        "--lock-wait",
+        "15m",
+      ],
+    ]);
     expect(await git(claimed.path, "status", "--porcelain")).toBe("");
     const { ino: after } = await stat(path.join(claimed.path, "stable"));
     expect(after).toBe(before);
@@ -290,3 +309,106 @@ test("claiming a slot leaves unchanged files as they were, so their sharing surv
     await rm(tmp, { recursive: true, force: true });
   }
 }, 30_000);
+
+test("the allocating Mac shares every kind of checkout it hands out, and a failed start never fails the claim", async () => {
+  const setup = await fixture();
+  const { repo, tmp } = setup;
+  try {
+    const fake = fakeToolkit();
+    // No slot is ready, so this one is created directly from origin/main.
+    const direct = await allocate(
+      { ...setup, branch: "direct", generated: true },
+      false,
+      fake.toolkit,
+    );
+    expect(direct.dedupe).toBe("started");
+    // An existing branch is opened as a worktree.
+    await git(repo, "branch", "saved", "HEAD");
+    const existing = await allocate(
+      { ...setup, branch: "saved", generated: false },
+      false,
+      fake.toolkit,
+    );
+    expect(existing.dedupe).toBe("started");
+    expect(fake.started.map((call) => [call[0], call[4]])).toEqual([
+      [direct.path, direct.path],
+      [existing.path, existing.path],
+    ]);
+    const other = fakeToolkit({ platform: "linux" });
+    const onLinux = await allocate(
+      { ...setup, branch: "linux", generated: true },
+      false,
+      other.toolkit,
+    );
+    expect(onLinux.dedupe).toBe("skipped");
+    expect(other.started).toEqual([]);
+    const withoutToolkit = await allocate(
+      { ...setup, branch: "bare", generated: true },
+      false,
+    );
+    expect(withoutToolkit.dedupe).toBe("skipped");
+    for (const startToolkit of [
+      () => Promise.resolve(false),
+      () => Promise.reject(new Error("spawn EACCES")),
+      () => {
+        throw new Error("spawn ENOENT");
+      },
+    ]) {
+      const failing = fakeToolkit({ startToolkit });
+      const claimed = await allocate(
+        { ...setup, branch: "failing", generated: true },
+        false,
+        failing.toolkit,
+      );
+      expect(claimed.dedupe).toBe("skipped");
+      expect(await git(claimed.path, "status", "--porcelain")).toBe("");
+    }
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+}, 60_000);
+
+test("a claim returns while the dedupe it started is still running", async () => {
+  const setup = await fixture();
+  const { tmp } = setup;
+  const marker = path.join(tmp, "started");
+  const pidFile = path.join(tmp, "pid");
+  const slow = path.join(tmp, "toolkit");
+  await writeFile(
+    slow,
+    `#!/bin/sh\necho "$@" > '${marker}'\necho $$ > '${pidFile}'\nexec sleep 60\n`,
+    { mode: 0o755 },
+  );
+  try {
+    const started = Date.now();
+    const pids: number[] = [];
+    const claimed = await allocate(
+      { ...setup, branch: "work", generated: true },
+      false,
+      {
+        platform: "darwin",
+        startToolkit: (cwd, args) =>
+          startDetachedToolkit(slow, cwd, args, (pid) => {
+            pids.push(pid);
+          }),
+      },
+    );
+    expect(claimed.dedupe).toBe("started");
+    // The toolkit stand-in sleeps for a minute; the claim did not wait for it.
+    expect(Date.now() - started).toBeLessThan(30_000);
+    for (let attempt = 0; attempt < 100; attempt++) {
+      if (await Bun.file(pidFile).exists()) break;
+      await Bun.sleep(50);
+    }
+    const arguments_ = await readFile(marker, "utf8");
+    expect(arguments_.trim()).toBe(
+      `tend dedupe --worktree ${claimed.path} --apply --no-refresh --lock-wait 15m`,
+    );
+    // The recorded pid is the process that ran, so a missing run can be traced.
+    const ran = await readFile(pidFile, "utf8");
+    expect(pids).toEqual([Number(ran.trim())]);
+    process.kill(pids[0] ?? 0);
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+}, 60_000);

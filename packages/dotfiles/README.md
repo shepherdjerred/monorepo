@@ -99,9 +99,10 @@ with APFS clones and queues behind any other tend run. A claim moves the slot
 to its branch's folder, and the sharing record is kept by path, so the new-worktree
 worker starts one more pass there; `git switch -c` leaves unchanged files
 alone, so the slot's clones stay shared. Nothing waits on it, and it is skipped
-on other machines and platforms and when toolkit is missing or does not
-provide the command. The run's `events.jsonl` line records `dedupe` as
-`started` or `skipped`.
+off macOS or when toolkit is missing or cannot be started. For local and
+remote worktrees alike, the allocating Mac starts the final pass after the
+checkout is ready. The run's `events.jsonl` line records `dedupe` as `started`
+or `skipped`.
 
 While a run is in progress it writes
 `~/.local/state/herdr-worktree/active/<id>.json` (the step, and the title,

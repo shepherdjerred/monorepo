@@ -63,13 +63,13 @@ export type Runtime = {
   readonly allocate: (
     request: Request,
     branch: string,
-  ) => Promise<{ branch: string; path: string }>;
+  ) => Promise<{ branch: string; path: string; dedupe: Dedupe }>;
   /** `herdr-app do space.new <json>`; resolves to the new terminal's address. */
   readonly newSpace: (args: Record<string, unknown>) => Promise<string>;
   /** An `hc` call, for agents whose first message is typed in. */
   readonly hc: (args: string[]) => Promise<ExecResult>;
   readonly sleep: (ms: number) => Promise<void>;
-} & Toolkit;
+};
 
 /** What starting `toolkit` in the background needs from this computer. */
 export type Toolkit = {
@@ -319,21 +319,33 @@ async function typeFirstMessage(
 /**
  * Start `toolkit` from `toolkitPath` in `cwd`, in its own session with no
  * stdio, so it outlives this process unobserved. False when it is not
- * installed. For a {@link Toolkit} on a real computer.
+ * installed. For a {@link Toolkit} on a real computer. `spawned` is told the
+ * child's pid, so a caller can record that a pass was started and a later look
+ * can tell whether it ran; a failure there never fails the start.
  */
 export async function startDetachedToolkit(
   toolkitPath: string,
   cwd: string,
   args: string[],
+  spawned?: (pid: number) => void | Promise<void>,
 ): Promise<boolean> {
   if (!(await Bun.file(toolkitPath).exists())) return false;
-  Bun.spawn([toolkitPath, ...args], {
+  const env = { ...Bun.env };
+  delete env["OP_SERVICE_ACCOUNT_TOKEN"];
+  const child = Bun.spawn([toolkitPath, ...args], {
     cwd,
+    env,
     detached: true,
     stdin: "ignore",
     stdout: "ignore",
     stderr: "ignore",
-  }).unref();
+  });
+  child.unref();
+  try {
+    await spawned?.(child.pid);
+  } catch {
+    // Recording is for diagnosis only.
+  }
   return true;
 }
 
@@ -345,11 +357,10 @@ export async function startDetachedToolkit(
  * not know the command, or fails leaves the worktree as git made it.
  */
 export async function shareWithMainCheckout(
-  runtime: Toolkit,
-  machine: string | null,
+  runtime: Toolkit | undefined,
   path: string,
 ): Promise<Dedupe> {
-  if (machine !== null || runtime.platform !== "darwin") return "skipped";
+  if (runtime?.platform !== "darwin") return "skipped";
   try {
     const started = await runtime.startToolkit(path, [
       "tend",
@@ -387,10 +398,7 @@ export async function createWorktree(
       ? await runtime.name(request.message)
       : { branch: request.branch, title: null };
   await report("worktree", named.title, named.branch, null);
-  const { branch, path } = await runtime.allocate(request, named.branch);
-  // The final path: a claimed pool slot was moved, and sharing is recorded by
-  // path, so the slot's own pass does not cover the checkout it became.
-  const dedupe = await shareWithMainCheckout(runtime, machine, path);
+  const { branch, path, dedupe } = await runtime.allocate(request, named.branch);
   await report("space", named.title, branch, path);
   const { argv, task, typed } = launch(request, { branch, title: named.title });
   const tab = request.tab ?? named.title;

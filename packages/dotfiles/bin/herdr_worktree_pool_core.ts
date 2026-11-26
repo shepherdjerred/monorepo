@@ -419,9 +419,7 @@ export async function replenish(
           );
         return ready.length;
       });
-      // After publishing, with no lock held: a failure here must not fail the refill.
-      if (toolkit !== undefined)
-        await shareWithMainCheckout(toolkit, null, candidate);
+      await shareWithMainCheckout(toolkit, candidate);
     }
     return count;
   });
@@ -458,17 +456,22 @@ async function chooseCheckout(
   throw new Error(`Every generated name for ${input.branch} is taken.`);
 }
 
+/**
+ * Allocate on this computer, which owns the worktree even when the worker
+ * reached it through `hc exec`, and start the final-path dedupe here.
+ */
 export async function allocate(
   input: Allocation,
   pooled: boolean,
-): Promise<{ branch: string; path: string }> {
+  toolkit?: Toolkit,
+) {
   await mkdir(input.root, { recursive: true });
   const [repo, root] = await Promise.all([
     realpath(input.repo),
     realpath(input.root),
   ]);
   const directory = await directoryFor(repo, root);
-  return locked(path.join(directory, "claim.sqlite"), async () => {
+  const checkout = await locked(path.join(directory, "claim.sqlite"), async () => {
     const { branch, target, existing } = await chooseCheckout({
       ...input,
       repo,
@@ -482,8 +485,7 @@ export async function allocate(
       return { branch, path: target };
     }
     const tip = await fetchMain(repo);
-    const ready = pooled ? await readySlots(repo, root, directory, 1) : [];
-    const [slot] = ready;
+    const [slot] = pooled ? await readySlots(repo, root, directory, 1) : [];
     if (slot === undefined) {
       checked(
         await git(repo, ["worktree", "add", "-b", branch, "--", target, tip]),
@@ -508,4 +510,6 @@ export async function allocate(
     }
     return { branch, path: target };
   });
+  const dedupe = await shareWithMainCheckout(toolkit, checkout.path);
+  return { ...checkout, dedupe };
 }

@@ -19,7 +19,7 @@ import {
   createWorktree,
   fields,
   parseRequest,
-  startDetachedToolkit,
+  type Dedupe,
   type ExecResult,
   type Named,
   type Progress,
@@ -42,7 +42,6 @@ const herdrAppPath = windows
 // On Windows the dialog passes the request in this variable: Start-Process
 // does not quote arguments, so JSON cannot go on the command line.
 const requestVariable = "HERDR_WORKTREE_REQUEST";
-const toolkitPath = path.join(home, ".local/bin/toolkit");
 // The mod's pure naming module, as installed: one copy of the prompt and schema.
 const namingPath = path.join(
   home,
@@ -215,6 +214,25 @@ function fetchOptions(value: unknown): RequestInit {
   return { method, body, headers: flat };
 }
 
+function parseAllocation(stdout: string): {
+  branch: string;
+  path: string;
+  dedupe: Dedupe;
+} {
+  const allocation = fields(JSON.parse(stdout), "Worktree allocation");
+  const branch = allocation.get("branch");
+  const checkoutPath = allocation.get("path");
+  if (typeof branch !== "string" || typeof checkoutPath !== "string")
+    throw new TypeError("Worktree allocator returned no branch or path.");
+  const dedupe = allocation.get("dedupe");
+  if (dedupe !== undefined && dedupe !== "started" && dedupe !== "skipped")
+    throw new TypeError(
+      "Worktree allocator returned an invalid dedupe status.",
+    );
+  // A peer running an older worker omits this field.
+  return { branch, path: checkoutPath, dedupe: dedupe ?? "skipped" };
+}
+
 function runtime(): Runtime {
   let key: string | null = null;
   async function readKey(naming: Naming): Promise<string> {
@@ -314,18 +332,7 @@ function runtime(): Runtime {
             "Worktree allocation failed.",
           ),
         );
-      const allocation = fields(
-        JSON.parse(result.stdout),
-        "Worktree allocation",
-      );
-      const allocatedBranch = allocation.get("branch");
-      const allocatedPath = allocation.get("path");
-      if (
-        typeof allocatedBranch !== "string" ||
-        typeof allocatedPath !== "string"
-      )
-        throw new TypeError("Worktree allocator returned no branch or path.");
-      return { branch: allocatedBranch, path: allocatedPath };
+      return parseAllocation(result.stdout);
     },
     async newSpace(args) {
       const r = await capture([
@@ -347,8 +354,6 @@ function runtime(): Runtime {
     },
     hc: async (args) => capture([hcPath, ...args]),
     sleep: async (ms) => Bun.sleep(ms),
-    platform: process.platform,
-    startToolkit: (cwd, args) => startDetachedToolkit(toolkitPath, cwd, args),
   };
 }
 

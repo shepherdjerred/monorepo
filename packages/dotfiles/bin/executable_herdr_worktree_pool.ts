@@ -3,7 +3,11 @@ import { spawn } from "node:child_process";
 import { appendFile, mkdir } from "node:fs/promises";
 import { homedir, hostname } from "node:os";
 import path from "node:path";
-import { fields, startDetachedToolkit } from "./herdr_new_worktree_core.ts";
+import {
+  fields,
+  startDetachedToolkit,
+  type Toolkit,
+} from "./herdr_new_worktree_core.ts";
 import {
   allocate,
   replenish,
@@ -17,6 +21,15 @@ const standardLocation: PoolLocation = {
   root: path.join(home, ".herdr", "worktrees", "monorepo"),
 };
 const toolkitPath = path.join(home, ".local", "bin", "toolkit");
+const toolkit: Toolkit = {
+  platform: process.platform,
+  startToolkit: (cwd, args) =>
+    startDetachedToolkit(toolkitPath, cwd, args, (pid) =>
+      // `toolkit tend` records its own run in ~/.toolkit/tend/events.jsonl, so a
+      // pid here with no run for the path there means the pass was killed.
+      log(`dedupe started pid=${String(pid)} path=${cwd}`),
+    ),
+};
 const host = hostname().toLowerCase().split(".")[0] ?? "";
 const macs = new Set([
   "macbook",
@@ -109,7 +122,7 @@ async function main(): Promise<void> {
   if (action === "--claim") {
     const input = request(encoded);
     const enabled = pooled(input);
-    const result = await allocate(input, enabled).finally(async () => {
+    const result = await allocate(input, enabled, toolkit).finally(async () => {
       if (enabled)
         await refillInBackground().catch(async (error: unknown) => {
           const message = `Could not start background refill: ${error instanceof Error ? error.message : String(error)}`;
@@ -124,10 +137,7 @@ async function main(): Promise<void> {
   if (action !== "--seed" && action !== "--refill")
     throw new Error("Use --seed or --claim <base64url JSON>.");
   if (!codingHost) return;
-  const count = await replenish(standardLocation, action === "--seed", {
-    platform: process.platform,
-    startToolkit: (cwd, args) => startDetachedToolkit(toolkitPath, cwd, args),
-  }).catch(
+  const count = await replenish(standardLocation, action === "--seed", toolkit).catch(
     async (error: unknown) => {
       await log(error instanceof Error ? error.message : String(error));
       throw error;
