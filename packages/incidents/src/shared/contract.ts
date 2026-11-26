@@ -339,6 +339,39 @@ export const ListIncidentsInputSchema = z
   .strict();
 export type ListIncidentsInput = z.input<typeof ListIncidentsInputSchema>;
 
+export const IncidentRefInputSchema = z.object({ ref: Ref }).strict();
+
+/**
+ * `check`: the open incidents an agent is blocked by, and its relation to
+ * each. `actor` is matched by key and metadata only; a check never records it.
+ */
+export const CheckIncidentsInputSchema = z
+  .object({
+    system: IncidentSystemSchema.optional(),
+    actor: ActorInputSchema.optional(),
+  })
+  .strict();
+export type CheckIncidentsInput = z.input<typeof CheckIncidentsInputSchema>;
+export const IncidentRelationSchema = z.object({
+  commander: z.boolean(),
+  creator: z.boolean(),
+  /** Session or branch matches the incident's suspect. */
+  suspect: z.boolean(),
+  affected: z.boolean(),
+  /** `take` would succeed now without `force`. */
+  canTake: z.boolean(),
+});
+export const CheckIncidentsResultSchema = z.object({
+  checkedAt: z.iso.datetime(),
+  incidents: z.array(
+    z.object({
+      incident: IncidentSummarySchema,
+      relation: IncidentRelationSchema,
+    }),
+  ),
+});
+export type CheckIncidentsResult = z.infer<typeof CheckIncidentsResultSchema>;
+
 export const DeclareIncidentInputSchema = z
   .object({
     actor: ActorInputSchema,
@@ -367,6 +400,20 @@ export const DuplicateIncidentSchema = z.object({
   systems: z.array(IncidentSystemSchema),
 });
 export type DuplicateIncident = z.infer<typeof DuplicateIncidentSchema>;
+
+/** CONFLICT for a stale `expectedRevision`; refetch and retry against `incident`. */
+export const StaleRevisionSchema = z.object({
+  code: z.literal("stale-revision"),
+  expectedRevision: z.number().int().min(0),
+  incident: IncidentSummarySchema,
+});
+/** tRPC `error.data.incident` on CONFLICT (`error.data` also carries tRPC's own fields). */
+export const IncidentErrorDataSchema = z.object({
+  incident: z.discriminatedUnion("code", [
+    DuplicateIncidentSchema,
+    StaleRevisionSchema,
+  ]),
+});
 
 const Mutation = { actor: ActorInputSchema, ref: Ref };
 const Revisioned = { ...Mutation, expectedRevision: z.number().int().min(0) };
@@ -488,10 +535,38 @@ export const IncidentSignalBatchSchema = z
   .strict();
 export type IncidentSignalBatch = z.input<typeof IncidentSignalBatchSchema>;
 
+/** `ignored`: a clear with nothing attached, a repeat, or auto-open disabled. */
+export const IncidentSignalOutcomeSchema = z.enum([
+  "opened",
+  "attached",
+  "updated",
+  "cleared",
+  "auto-resolved",
+  "ignored",
+]);
+export type IncidentSignalOutcome = z.infer<typeof IncidentSignalOutcomeSchema>;
+/** 202 body for both signal producers, one result per input signal, in order. */
+export const IncidentSignalBatchResultSchema = z.object({
+  results: z.array(
+    z.object({
+      key: z.string(),
+      outcome: IncidentSignalOutcomeSchema,
+      identifier: z.string().regex(INCIDENT_IDENTIFIER_PATTERN).nullable(),
+    }),
+  ),
+});
+export type IncidentSignalBatchResult = z.infer<
+  typeof IncidentSignalBatchResultSchema
+>;
+
 // ---------------------------------------------------------------------------
 // Live stream: `GET /api/incidents/events/stream` (text/event-stream).
 // Each `incident` frame names a changed incident; clients refetch by id.
+// `?incident=INC-N` limits the stream to one incident. Idle streams carry a
+// `: heartbeat` comment every few seconds.
 // ---------------------------------------------------------------------------
+
+export const INCIDENT_STREAM_EVENT = "incident";
 
 export const IncidentStreamFrameSchema = z.object({
   incidentId: z.string(),

@@ -4,5 +4,6 @@
     "types": ["bun"],
     "noEmit": true
   },
-  "include": ["src", "eslint.config.ts"]
+  "include": ["src", "*.ts"],
+  "exclude": ["architecture-fixtures", "generated", "dist", "node_modules"]
 }
