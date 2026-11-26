@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Shen-Q",
+  "name": "Twilight Assault",
+  "description": "Shen recalls his Spirit Blade. Enemies hit by the pull are Slowed by 25/30/35/40/45% while moving away from Shen for the next 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "140/130/120/110/100 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Shen-Q.png",
+  "slot": "Q",
+  "championKey": "Shen",
+  "championName": "Shen",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7.25,
+    6.5,
+    5.75,
+    5
+  ],
+  "costByRank": [
+    140,
+    130,
+    120,
+    110,
+    100
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7.25/6.5/5.75/5 s"
+  }
+}

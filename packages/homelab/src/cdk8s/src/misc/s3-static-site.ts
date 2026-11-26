@@ -386,6 +386,9 @@ export class S3StaticSites extends Construct {
             "Caddy requires writable filesystem for runtime data",
         },
       },
+      // The public pod's NetworkPolicy selects it by this label, so the
+      // namespace's other pod (the tailnet-only gateway) is not covered by it.
+      podMetadata: { labels: { app: "s3-static-sites" } },
     });
 
     const dataVolume = Volume.fromEmptyDir(this, "caddy-data", "caddy-data");

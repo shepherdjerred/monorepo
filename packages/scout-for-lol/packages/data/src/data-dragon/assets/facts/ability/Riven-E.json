@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Riven-E",
+  "name": "Valor",
+  "description": "Riven quickly dashes and gains 70/95/120/145/170 (+110% bonus AD) Shield for 1.5 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Riven-E.png",
+  "slot": "E",
+  "championKey": "Riven",
+  "championName": "Riven",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9,
+    8,
+    7,
+    6
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    250,
+    250,
+    250,
+    250,
+    250
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9/8/7/6 s"
+  }
+}

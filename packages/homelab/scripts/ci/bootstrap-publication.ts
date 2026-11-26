@@ -19,7 +19,12 @@ import {
   type BootstrapApplication,
 } from "./bootstrap-selection.ts";
 
-const CHART_ORIGIN = "https://chartmuseum.tailnet-1a49.ts.net";
+const CHART_ORIGIN = "https://charts.tailnet-1a49.ts.net";
+const ALLOWED_CHART_ORIGINS = [
+  CHART_ORIGIN,
+  "https://chartmuseum.tailnet-1a49.ts.net",
+  "https://chartmuseum.sjer.red",
+] as const;
 type Captured = {
   root: BootstrapApplication;
   applications: BootstrapApplication[];
@@ -49,7 +54,7 @@ export async function bootstrapImages(
   if (prior === undefined)
     throw new Error("Woodpecker bootstrap requires its original Application");
   z.object({
-    repoURL: z.literal(CHART_ORIGIN),
+    repoURL: z.enum(ALLOWED_CHART_ORIGINS),
     chart: z.literal("woodpecker"),
   }).parse(prior.spec["source"]);
   const result = z
@@ -255,9 +260,7 @@ export async function prepareBootstrapArchives(
       })
       .parse(doc.toJSON()).spec.source;
     if (
-      ![CHART_ORIGIN, "https://chartmuseum.sjer.red"].includes(
-        source.repoURL,
-      ) ||
+      !new Set<string>(ALLOWED_CHART_ORIGINS).has(source.repoURL) ||
       source.chart === undefined
     )
       continue;

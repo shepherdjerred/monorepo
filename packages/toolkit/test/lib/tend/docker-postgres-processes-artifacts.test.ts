@@ -14,11 +14,8 @@ import {
 import { resolveTendPaths } from "#lib/tend/paths.ts";
 import { sweepPostgres } from "#lib/tend/postgres.ts";
 import { sweepProcesses } from "#lib/tend/processes.ts";
-import {
-  acquireTendRunLock,
-  readLastTendRunSummary,
-  runTend,
-} from "#lib/tend/runner.ts";
+import { acquireTendRunLock } from "#lib/tend/run-lock.ts";
+import { readLastTendRunSummary, runTend } from "#lib/tend/runner.ts";
 import type {
   CommandRunner,
   LivenessSnapshot,

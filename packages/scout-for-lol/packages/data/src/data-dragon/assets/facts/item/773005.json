@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773005",
+  "name": "Atma's Impaler",
+  "description": "Impact: Grants bonus Attack Damage equal to 2% of Maximum Health.",
+  "facts": [
+    {
+      "label": "Armor",
+      "value": "45"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "18%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771031",
+      "name": "Chain Vest",
+      "icon": "img/item/771031.png"
+    },
+    {
+      "kind": "item",
+      "key": "773093",
+      "name": "Avarice Blade",
+      "icon": "img/item/773093.png"
+    }
+  ],
+  "icon": "img/item/773005.png",
+  "goldTotal": 2300,
+  "goldCombine": 780,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2300 gold"
+  }
+}

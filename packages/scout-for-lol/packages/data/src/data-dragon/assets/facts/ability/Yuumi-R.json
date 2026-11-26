@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yuumi-R",
+  "name": "Final Chapter",
+  "description": "Yuumi channels for 3.5 seconds, launching 5 magical waves affecting both teams. If initially cast while Attached, Yuumi can steer the waves to follow her mouse.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yuumi-R.png",
+  "slot": "R",
+  "championKey": "Yuumi",
+  "championName": "Yuumi",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    110,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1100,
+    1100,
+    1100
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/110/100 s"
+  }
+}

@@ -87,7 +87,6 @@ const psaNamespaces = [
   "velero",
   "postgres-operator",
   "seaweedfs",
-  "ddns",
 ];
 
 const CLUSTER_PLATFORM_INVENTORY = [
@@ -129,7 +128,6 @@ const prometheusRules: readonly [namespace: string, name: string][] = [
   ["prometheus", "zfs-monitoring"],
   ["prometheus", "smartctl"],
   ["prometheus", "nvme"],
-  ["gickup", "gitckup"],
   ["media", "qbittorrent"],
   ["media", "media"],
   ["s3-static-sites", "static-sites"],
@@ -174,7 +172,6 @@ const grafanaDashboards = [
   "ci-capacity-dashboard",
   "discord-plays-dashboard",
   "feature-flags-dashboard",
-  "gitckup-dashboard",
   "justin-dashboard",
   "network-policy-enforcement-dashboard",
   "scout-for-lol-dashboard",
@@ -210,6 +207,7 @@ const CLUSTER_OBSERVABILITY_INVENTORY = [
     `v1/ServiceAccount/prometheus/${exporter}-service-account`,
     `v1/ConfigMap/prometheus/${exporter === "smartctl" ? "smartmon" : exporter}-script`,
     `apps/v1/DaemonSet/prometheus/${exporter}-collector`,
+    `networking.k8s.io/v1/NetworkPolicy/prometheus/${exporter}-collector-netpol`,
   ]),
   "v1/ServiceAccount/prometheus/kubernetes-event-exporter",
   "rbac.authorization.k8s.io/v1/ClusterRole/argocd/kubernetes-event-exporter",

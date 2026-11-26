@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import { Loaded } from "@shepherdjerred/loaded";
 import { findSection } from "@shepherdjerred/ops-model/assemble.ts";
 import type { PostHogFacet } from "@shepherdjerred/ops-model/facets.ts";
@@ -16,11 +17,10 @@ import {
   snapshotQuery,
 } from "#client/ops/ops-api.ts";
 import {
-  MetricTile,
+  MetricStrip,
   PageHeading,
   RangePicker,
   SectionSummary,
-  SeverityBadge,
 } from "#client/ops/ops-ui.tsx";
 import { SignalList } from "#client/ops/signal-list.tsx";
 import { StaleNotice } from "#client/stale-notice.tsx";
@@ -30,12 +30,12 @@ import "#styles/product.css";
 import { ProductPostHogSections } from "./product-sections.tsx";
 
 export type LcpBadge = {
-  readonly label: "Good" | "Needs Improvement" | "Poor" | "No data";
+  readonly label: "Good" | "Needs improvement" | "Poor" | "No data";
   readonly glyph: "✓" | "!" | "✕" | "—";
   readonly tone: "ok" | "warning" | "error" | "neutral";
 };
 
-/** Core Web Vitals p75 LCP classification: <=2500ms Good, <=4000ms Needs Improvement, >4000ms Poor. */
+/** Core Web Vitals p75 LCP classification: <=2500ms Good, <=4000ms Needs improvement, >4000ms Poor. */
 export function classifyLcpMs(value: number | null): LcpBadge {
   if (value === null || !Number.isFinite(value)) {
     return { label: "No data", glyph: "—", tone: "neutral" };
@@ -44,7 +44,7 @@ export function classifyLcpMs(value: number | null): LcpBadge {
     return { label: "Good", glyph: "✓", tone: "ok" };
   }
   return value <= 4000
-    ? { label: "Needs Improvement", glyph: "!", tone: "warning" }
+    ? { label: "Needs improvement", glyph: "!", tone: "warning" }
     : { label: "Poor", glyph: "✕", tone: "error" };
 }
 
@@ -80,25 +80,25 @@ function buildHeadlineMetrics(posthog: PostHogFacet | null): readonly Metric[] {
   return [
     posthogKpi(
       "posthog.pageviews.24h",
-      "24h Pageviews",
+      "24h pageviews",
       posthog?.totalPageviews24h ?? null,
       baseSeverity,
     ),
     posthogKpi(
       "posthog.dau.24h",
-      "24h Active Users (DAU)",
+      "24h active users (DAU)",
       posthog?.totalDau24h ?? null,
       baseSeverity,
     ),
     posthogKpi(
       "posthog.wau.7d",
-      "7d Weekly Active Users (WAU)",
+      "7d weekly active users (WAU)",
       posthog?.totalWau7d ?? null,
       baseSeverity,
     ),
     posthogKpi(
       "posthog.exceptions.24h",
-      "24h Client Exceptions",
+      "24h client exceptions",
       exceptions,
       exceptionSeverity,
     ),
@@ -122,9 +122,9 @@ export function ProductPageView({
 
   return (
     <>
-      <PageHeading eyebrow="Web analytics & vitals" title="Product">
+      <PageHeading title="Product" meta="Web analytics & vitals">
         {productSection === null ? null : (
-          <SeverityBadge severity={productSection.severity} large />
+          <StatusGlyph severity={productSection.severity} />
         )}
       </PageHeading>
       {productSection === null ? null : (
@@ -134,11 +134,7 @@ export function ProductPageView({
         />
       )}
       <section aria-label="Headline analytics metrics">
-        <div className="product-kpi-grid">
-          {kpis.map((metric) => (
-            <MetricTile key={metric.id} metric={metric} />
-          ))}
-        </div>
+        <MetricStrip metrics={kpis} />
       </section>
       <div className="charts-heading">
         <h2 className="block-heading">Traffic & Web Vitals trends</h2>
@@ -161,7 +157,7 @@ export function ProductPageView({
         <SeriesChart
           preset="posthog-lcp-p75"
           range={range}
-          threshold={{ value: 2500, label: "CWV Good 2.5s", tone: "warning" }}
+          threshold={{ value: 2500, label: "CWV good 2.5s", tone: "warning" }}
           title="Web Vitals p75 LCP"
           syncKey="product"
         />
@@ -199,6 +195,7 @@ export function ProductPageView({
           <SignalList
             signals={productSection.signals}
             empty="No product signals."
+            label="Product signals"
             newIds={new Set(snapshot?.newSignalIds)}
           />
         </section>

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9304",
+  "name": "Steel Tempest",
+  "description": "Yasuo gains 25 Flow per second, and more when he moves and dashes.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9304.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

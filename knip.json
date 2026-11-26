@@ -70,7 +70,7 @@
         "vitest.global-setup.ts"
       ],
       "project": [
-        "src/**/*.{ts,tsx,css}",
+        "src/**/*.{ts,tsx}",
         "e2e/**/*.ts",
         "prisma/**/*.prisma",
         "*.ts"

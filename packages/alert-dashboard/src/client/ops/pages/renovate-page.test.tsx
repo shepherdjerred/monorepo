@@ -96,7 +96,7 @@ describe("RenovatePage rendering, tabs, and LLM version-delta drawer", () => {
 
     // Meters & KPIs
     expect(html).toContain('aria-label="Open Renovate PRs"');
-    expect(html).toContain('aria-label="LLM Delta Coverage"');
+    expect(html).toContain('aria-label="LLM delta coverage"');
     expect(html).toContain("1 breaking delta across 3 tracked updates");
     expect(html).toContain("29 / 114");
     expect(html).toContain("Median 2.4h to merge");
@@ -121,10 +121,10 @@ describe("RenovatePage rendering, tabs, and LLM version-delta drawer", () => {
     expect(html).toContain("Half-upgrade");
   });
 
-  it("switches across Pending Approval, Hygiene & Deprecations, and Recent Merges tabs and expands LLM Version Delta drawer", () => {
+  it("switches across Pending approval, Hygiene & deprecations, and Recent merges tabs and expands LLM version delta drawer", () => {
     const renovate = getFixtureRenovate();
 
-    // Pending Approval tab with expanded prisma breaking delta drawer
+    // Pending approval tab with expanded prisma breaking delta drawer
     const approvalHtml = renderRenovatePage(
       "/renovate?tab=approval&expand=renovate:prisma-8",
       renovate,
@@ -150,13 +150,13 @@ describe("RenovatePage rendering, tabs, and LLM version-delta drawer", () => {
     );
     expect(approvalHtml).toContain('aria-label="Copy command for prisma"');
 
-    // Hygiene & Deprecations tab includes deprecations table
+    // Hygiene & deprecations tab includes deprecations table
     const hygieneHtml = renderRenovatePage("/renovate?tab=hygiene", renovate);
     expect(hygieneHtml).toContain("Deprecated dependencies");
     expect(hygieneHtml).toContain("@opentelemetry/sdk-metrics@1.30.0");
     expect(hygieneHtml).toContain("@opentelemetry/sdk-metrics@2.x");
 
-    // Recent Merges tab renders merged PR history
+    // Recent merges tab renders merged PR history
     const mergedHtml = renderRenovatePage("/renovate?tab=merged", renovate);
     expect(mergedHtml).toContain("Recently merged Renovate pull requests");
     expect(mergedHtml).toContain("#4805");

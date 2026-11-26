@@ -38,7 +38,7 @@ describe("Delivery root canonical authority", () => {
         metadata: { name: "apps", namespace: "argocd" },
         spec: {
           source: {
-            repoURL: "https://chartmuseum.sjer.red",
+            repoURL: "https://charts.tailnet-1a49.ts.net",
             chart: "apps",
             targetRevision: "2.0.0-42",
           },
@@ -287,7 +287,7 @@ const RootApplicationResource = {
 
 const RootApplicationSource = {
   chart: "apps",
-  repoURL: "https://chartmuseum.sjer.red",
+  repoURL: "https://charts.tailnet-1a49.ts.net",
   targetRevision: "2.0.0-43",
 };
 
@@ -309,7 +309,7 @@ const StagedRepositoryApplication = JSON.stringify({
   metadata: { name: "worker" },
   spec: {
     source: {
-      repoURL: "https://chartmuseum.sjer.red",
+      repoURL: "https://charts.tailnet-1a49.ts.net",
       chart: "worker",
       targetRevision: "2.0.0-43",
     },

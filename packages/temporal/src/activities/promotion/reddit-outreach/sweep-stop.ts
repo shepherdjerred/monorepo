@@ -6,6 +6,7 @@ import { RedditBrowserReadError } from "#activities/promotion/reddit-discovery/b
 import { DecisionHttpError } from "#activities/promotion/reddit-discovery/decisions.ts";
 import type { PromotionStore } from "#activities/promotion/store.ts";
 import { RedditNavigationBudget } from "./browser-session.ts";
+import { RedditDatasetStorageError } from "./dataset.ts";
 import {
   readRedditPromotionAccount,
   RedditAccountBusy,
@@ -37,7 +38,10 @@ function failureCategory(error: unknown): RedditOutreachFailureCategory {
     error instanceof PromotionSnapshotBlocked
   )
     return "browser";
-  return error instanceof S3ServiceException ? "storage" : "other";
+  return error instanceof S3ServiceException ||
+    error instanceof RedditDatasetStorageError
+    ? "storage"
+    : "other";
 }
 
 export function recordSweepFailure(

@@ -31,6 +31,19 @@ authenticates your Tailscale identity through the verified ingress proxy.
    writes nothing. Compare **Their flag** with **Your draft**, click **Load
    their version**, and re-apply your intended edit.
 
+To compare two deployments, open **Compare** in the sidebar (or **Compare with
+Beta** / **Compare with Prod** in a deployment's heading). Choose the **Left**
+and **Right** deployments; the table lists keys that differ or exist on one
+side only, **All** adds the identical ones, and selecting a key shows both
+JSON payloads side by side with links to each editor.
+
+To review inventory drift, open **Drift** (its sidebar count is the total of
+drifted items). Each drifted deployment lists invalid live values with their
+schema issues, declared-versus-live diffs, and missing and extra keys, with the
+command that fixes each category. A deployment heading's drift badge links to
+its section. Press <kbd>⌘K</kbd> to search deployments and flags across every
+deployment.
+
 Changing a managed flag in the UI without updating
 [`managed-flag-inventory.json`](https://github.com/shepherdjerred/monorepo/blob/main/packages/feature-flags/src/managed-flag-inventory.json)
 raises drift on the next reconciliation run.
@@ -43,13 +56,13 @@ brokers `FLAGS_MACHINE_TOKEN` from `flags-auth` when `--machine` is passed. The
 endpoint resolves from `--url`, `FLAGS_URL`, `[flags].url`, or
 `https://flags.tailnet-1a49.ts.net`.
 
-| Command                                          | Purpose                                                                                 |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| `toolkit flags deployments [--json]`             | List every stored deployment, its current revision, and its flag count.                 |
-| `toolkit flags list <deployment> [--json]`       | List keys, types, and `on`/`off`/`targeted` or variant values in `<catalog>/<stage>`.   |
-| `toolkit flags get <deployment> <flag> [--json]` | Print one flag and the deployment's current `revision`.                                 |
-| `toolkit flags diff [--json]`                    | Compare all deployments against the inventory; exits `1` when any key is drifted.       |
-| `toolkit flags apply --file <json> [--machine]`  | Apply a reviewed JSON batch bound to `expectedRevision`; exits `2` on conflict (`409`). |
+| Command                                          | Purpose                                                                                      |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `toolkit flags deployments [--json]`             | List every stored deployment, its current revision, and its flag count.                      |
+| `toolkit flags list <deployment> [--json]`       | List keys, types, and `on`/`off`/`targeted` or variant values in `<catalog>/<stage>`.        |
+| `toolkit flags get <deployment> <flag> [--json]` | Print one flag and the deployment's current `revision`.                                      |
+| `toolkit flags diff [--json]`                    | Compare all deployments against the inventory; exits `1` when any key is drifted or invalid. |
+| `toolkit flags apply --file <json> [--machine]`  | Apply a reviewed JSON batch bound to `expectedRevision`; exits `2` on conflict (`409`).      |
 
 Read the current revision first, then submit an exact JSON file:
 
@@ -62,6 +75,21 @@ toolkit flags apply --file reviewed.json
 entries (`{ "deployment": "scout/prod", "expectedRevision": 12, "flags": [...] }`).
 Use `--machine` in non-tailnet or automated sessions so toolkit injects the
 brokered bearer token without printing it.
+
+Each variant `value` must decode under its key's entry in the
+[variant value-schema registry](https://github.com/shepherdjerred/monorepo/blob/main/packages/feature-flags/README.md#variant-value-schemas)
+(numbers as decimal strings such as `"900"`, lists and settings as JSON text).
+Flags refuses the whole batch, writes nothing, and toolkit exits `1` when any
+entry is undeclared, has the wrong type, or fails its schema:
+
+```text
+invalid flag values; nothing was written:
+  delivery-lease-seconds: Too small: expected number to be >=60
+```
+
+`toolkit flags diff` prints one line per dirty deployment (`missing`, `extra`,
+`drift`, and `invalid` keys), followed by an indented line for each schema issue
+in an invalid live value. Fix an invalid value with a reviewed `apply`.
 
 ## 3. Run the snapshot inventory check
 

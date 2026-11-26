@@ -1,0 +1,52 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6671",
+  "name": "Galeforce",
+  "description": "Mythic Passive: Grants all other Legendary items 5 Attack Damage. Active -.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "50"
+    },
+    {
+      "label": "Attack Speed",
+      "value": "15%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "20%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "7%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1038",
+      "name": "B. F. Sword",
+      "icon": "img/item/1038.png"
+    },
+    {
+      "kind": "item",
+      "key": "3086",
+      "name": "Zeal",
+      "icon": "img/item/3086.png"
+    },
+    {
+      "kind": "item",
+      "key": "1036",
+      "name": "Long Sword",
+      "icon": "img/item/1036.png"
+    }
+  ],
+  "icon": "img/item/6671.png",
+  "goldTotal": 3500,
+  "goldCombine": 650,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3500 gold"
+  }
+}

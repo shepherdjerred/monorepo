@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "TwistedFate-passive",
+  "name": "Loaded Dice",
+  "description": "Upon killing a unit, Twisted Fate rolls his 'lucky' dice receiving 1 to 6 bonus gold.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/TwistedFate-passive.png",
+  "slot": "passive",
+  "championKey": "TwistedFate",
+  "championName": "Twisted Fate",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

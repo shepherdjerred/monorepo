@@ -27,12 +27,28 @@ export {
 export {
   Button,
   type ButtonProps,
+  type ButtonSize,
   type ButtonVariant,
 } from "@shepherdjerred/console-ui/components/button.tsx";
 export {
   Chip,
   type ChipProps,
 } from "@shepherdjerred/console-ui/components/chip.tsx";
+export {
+  CommandPalette,
+  CommandPaletteButton,
+  CommandPaletteSearch,
+  createCommandPaletteStore,
+  isCommandPaletteShortcut,
+  type CommandPaletteButtonProps,
+  type CommandPaletteItem,
+  type CommandPaletteKeyEvent,
+  type CommandPaletteKeyTarget,
+  type CommandPaletteProps,
+  type CommandPaletteSearchProps,
+  type CommandPaletteSection,
+  type CommandPaletteStore,
+} from "@shepherdjerred/console-ui/components/command-palette.tsx";
 export {
   Field,
   type FieldControlProps,
@@ -56,6 +72,10 @@ export {
   type MeterProps,
 } from "@shepherdjerred/console-ui/components/meter.tsx";
 export {
+  SeverityBadge,
+  type SeverityBadgeProps,
+} from "@shepherdjerred/console-ui/components/severity-badge.tsx";
+export {
   ShellFrame,
   type ShellFrameProps,
 } from "@shepherdjerred/console-ui/components/shell-frame.tsx";
@@ -71,6 +91,25 @@ export {
   type SidebarLinkProps,
 } from "@shepherdjerred/console-ui/components/sidebar-item.tsx";
 export {
+  Card,
+  CardToolbar,
+  PageBody,
+  PageHeading,
+  SummaryGrid,
+  Tag,
+  type CardProps,
+  type PageBodyProps,
+  type PageHeadingProps,
+  type SummaryGridProps,
+  type SummaryItem,
+  type TagProps,
+} from "@shepherdjerred/console-ui/components/page.tsx";
+export {
+  SearchField,
+  type SearchFieldProps,
+} from "@shepherdjerred/console-ui/components/search-field.tsx";
+export { Segmented } from "@shepherdjerred/console-ui/components/segmented.tsx";
+export {
   SEVERITY_ICON,
   SEVERITY_LABEL,
   StatusGlyph,
@@ -81,6 +120,11 @@ export {
   type TabOption,
   type TabsProps,
 } from "@shepherdjerred/console-ui/components/tabs.tsx";
+export {
+  ThemeToggle,
+  TopBar,
+  type TopBarProps,
+} from "@shepherdjerred/console-ui/components/top-bar.tsx";
 export {
   ThemeRow,
   type ThemeRowProps,

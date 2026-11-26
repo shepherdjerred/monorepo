@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Vi-passive",
+  "name": "Blast Shield",
+  "description": "Vi charges a shield over time. The shield can be activated by hitting an enemy with an ability.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Vi-passive.png",
+  "slot": "passive",
+  "championKey": "Vi",
+  "championName": "Vi",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

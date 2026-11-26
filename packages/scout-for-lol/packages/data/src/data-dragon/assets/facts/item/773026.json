@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773026",
+  "name": "Guardian Angel",
+  "description": "Guardian's Intervention: Upon taking lethal damage, restores 30% of maximum Health and Mana after 4 seconds of stasis (5 minute cooldown).",
+  "facts": [
+    {
+      "label": "Armor",
+      "value": "50"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "40"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771057",
+      "name": "Negatron Cloak",
+      "icon": "img/item/771057.png"
+    },
+    {
+      "kind": "item",
+      "key": "771031",
+      "name": "Chain Vest",
+      "icon": "img/item/771031.png"
+    }
+  ],
+  "icon": "img/item/773026.png",
+  "goldTotal": 2750,
+  "goldCombine": 1310,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2750 gold"
+  }
+}

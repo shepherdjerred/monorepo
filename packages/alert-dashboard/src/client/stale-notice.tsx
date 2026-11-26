@@ -1,3 +1,4 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
 import type { LoadedError } from "@shepherdjerred/loaded";
 
 /**
@@ -15,8 +16,9 @@ export function StaleNotice({
 }): React.JSX.Element | undefined {
   if (errors.length === 0) return undefined;
   return (
-    <div className="stale-state" role="status">
-      Showing the last known data — the most recent refresh failed.
+    <div className="stale-state" role="status" data-sev="warning">
+      <StatusGlyph severity="warning" /> Showing the last known data — the most
+      recent refresh failed.
     </div>
   );
 }

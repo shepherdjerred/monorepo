@@ -3,13 +3,7 @@ import { temporalAddressEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { Size, type Chart } from "cdk8s";
 import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-sata-volume.ts";
 import { codexApiKeyEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
-import {
-  ConfigMap,
-  EnvValue,
-  Secret,
-  ServiceAccount,
-  Volume,
-} from "cdk8s-plus-31";
+import { EnvValue, Secret, ServiceAccount, Volume } from "cdk8s-plus-31";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import {
   vaultItemPath,
@@ -32,7 +26,6 @@ import { createTemporalIngressWorkers } from "./ingress-workers.ts";
 import { homelabAuditEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/homelab-audit-env.ts";
 import { createTemporalOperationsWorkers } from "./operations-workers.ts";
 import { createTemporalWorkflowWorkers } from "./workflow-worker.ts";
-import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss/freshrss-config.ts";
 import {
   createTemporalWorkerMaintenanceRbac,
   createTemporalStormRbac,
@@ -143,14 +136,6 @@ export function createTemporalWorkerDeployment(
     "temporal-starlight-bot-secret",
     starlightBotItem.name,
   );
-  const freshRssCredentialItem = new OnePasswordItem(
-    chart,
-    "temporal-freshrss-sync-1p",
-    {
-      metadata: { name: "temporal-freshrss-sync" },
-      spec: { itemPath: vaultItemPath("freshrss-sync") },
-    },
-  );
   const agentCodexCredentialItem = onePasswordSecret(
     chart,
     "temporal-agent-codex-1p",
@@ -161,11 +146,6 @@ export function createTemporalWorkerDeployment(
     chart,
     "temporal-agent-codex-secret",
     agentCodexCredentialItem.name,
-  );
-  const freshRssCredential = Secret.fromSecretName(
-    chart,
-    "temporal-freshrss-sync-secret",
-    freshRssCredentialItem.name,
   );
   const openAiUsageMonitorItem = new OnePasswordItem(
     chart,
@@ -180,10 +160,6 @@ export function createTemporalWorkerDeployment(
     "temporal-openai-usage-monitor-secret",
     openAiUsageMonitorItem.name,
   );
-  const freshRssManifest = new ConfigMap(chart, "temporal-freshrss-manifest", {
-    metadata: { name: "temporal-freshrss-manifest" },
-    data: { "desired.json": FRESHRSS_DESIRED_JSON },
-  });
 
   const infraServiceAccount = createTemporalWorkerServiceAccount(chart, {
     constructId: "temporal-infra-worker-sa",
@@ -218,18 +194,6 @@ export function createTemporalWorkerDeployment(
   // Snapshots the golden CI workspace and selects it for new workspaces.
   createTemporalWorkerCiWorkspaceGoldenRbac(chart, [infraServiceAccount]);
 
-  const freshRssManifestVolume = Volume.fromConfigMap(
-    chart,
-    "temporal-freshrss-manifest-volume",
-    freshRssManifest,
-    { items: { "desired.json": { path: "desired.json" } } },
-  );
-  const freshRssCredentialVolume = Volume.fromSecret(
-    chart,
-    "temporal-freshrss-sync-secret-volume",
-    freshRssCredential,
-    { items: { password: { path: "password" } } },
-  );
   const ddnsApiTokenItem = onePasswordSecret(
     chart,
     "temporal-ddns-api-token-1p",
@@ -276,6 +240,13 @@ export function createTemporalWorkerDeployment(
     chart,
     "temporal-git-mirror-cache",
     { storage: Size.gibibytes(128) },
+  );
+  // Apply alongside Deployment/temporal-temporal-repo-worker (wave 3): zfs-hdd
+  // uses WaitForFirstConsumer, so a wave-0 claim stays Progressing until its
+  // first pod mounts it.
+  gitMirrorCachePvc.claim.metadata.addAnnotation(
+    "argocd.argoproj.io/sync-wave",
+    "3",
   );
   const gitMirrorCacheVolume = Volume.fromPersistentVolumeClaim(
     chart,
@@ -423,8 +394,6 @@ export function createTemporalWorkerDeployment(
     ),
     talosConfigVolume,
     ddnsApiTokenVolume,
-    freshRssManifestVolume,
-    freshRssCredentialVolume,
     gitBackupTokenVolume,
     gitMirrorCacheVolume,
     billingSecret: openAiUsageMonitorSecret,

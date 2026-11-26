@@ -12,9 +12,13 @@ import { ReviewBundleSchema } from "#shared/migration-handoff.ts";
 import { CreateBundleProtocolSchema } from "#shared/handoff/library-bundle.ts";
 import { DiscoverMigrationCatalogSchema } from "#shared/migration-catalog.ts";
 import { registerPersonalMigrationRoutes } from "./personal-migration/routes.ts";
+import { LegacyActivityImportSchema } from "#shared/legacy-activity/contract.ts";
+const ActivityUploadMarkerSchema = z.object({
+  kind: LegacyActivityImportSchema.shape.kind,
+});
 export type MigrationAdministration = Pick<
   PrismaMigrationAdministration,
-  "list" | "detail" | "upload" | "review" | "discover"
+  "list" | "detail" | "upload" | "review" | "discover" | "importActivity"
 > & {
   personal?: Pick<
     PrismaMigrationAdministration["personal"],
@@ -86,14 +90,23 @@ export function registerMigrationRoutes(
       ),
     ),
   );
-  app.post("/api/v1/admin/migration", async (c) =>
-    c.json(
-      await migration.upload(
-        c.get("actor"),
-        parseInput(UploadMigrationSchema, await readJson(c.req.raw)),
-      ),
-    ),
-  );
+  app.post("/api/v1/admin/migration", async (c) => {
+    const body = await readJson(c.req.raw);
+    const actor = c.get("actor");
+    return ActivityUploadMarkerSchema.safeParse(body).success
+      ? c.json(
+          await migration.importActivity(
+            actor,
+            parseInput(LegacyActivityImportSchema, body),
+          ),
+        )
+      : c.json(
+          await migration.upload(
+            actor,
+            parseInput(UploadMigrationSchema, body),
+          ),
+        );
+  });
   app.post("/api/v1/admin/migration/:id/review", async (c) =>
     c.json(
       await migration.review(

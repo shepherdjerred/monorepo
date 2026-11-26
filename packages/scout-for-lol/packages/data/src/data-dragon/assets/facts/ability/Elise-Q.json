@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Elise-Q",
+  "name": "Neurotoxin / Venomous Bite",
+  "description": "Human Form: Deals damage based upon how high the target's Health is. Spider Form: Lunges at an enemy and deals damage based upon how low their Health is.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80/85/90/95/100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "615"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Elise-Q.png",
+  "slot": "Q",
+  "championKey": "Elise",
+  "championName": "Elise",
+  "maxRank": 5,
+  "cooldownByRank": [
+    6,
+    6,
+    6,
+    6,
+    6
+  ],
+  "costByRank": [
+    80,
+    85,
+    90,
+    95,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    615,
+    615,
+    615,
+    615,
+    615
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6 s"
+  }
+}

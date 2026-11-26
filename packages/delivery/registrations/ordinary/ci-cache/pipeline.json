@@ -1,0 +1,16 @@
+{
+  "kind": "argocd",
+  "application": "ci-cache",
+  "chartRepository": "https://charts.tailnet-1a49.ts.net",
+  "chartName": "ci-cache",
+  "chartComponent": "chart:ci-cache",
+  "namespace": "ci-cache",
+  "parameters": {},
+  "artifactParameters": {
+    "delivery.images.ci-cache": "image:ci-cache"
+  },
+  "verification": {
+    "url": "https://ci-cache.tailnet-1a49.ts.net/readyz",
+    "expectedStatus": 200
+  }
+}

@@ -195,7 +195,7 @@ describe("createFirstPartyApplication", () => {
           revisionHistoryLimit: 5,
           source: {
             chart: "tracker",
-            repoURL: "https://chartmuseum.tailnet-1a49.ts.net",
+            repoURL: "https://charts.tailnet-1a49.ts.net",
             targetRevision: "~2.0.0-0",
           },
           syncPolicy: AUTOMATED,

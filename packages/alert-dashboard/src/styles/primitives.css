@@ -1,0 +1,307 @@
+/*
+ * Hub's shared page primitives (`src/client/ops/ops-ui.tsx` and friends) on
+ * the console look: a header bar, figure strips, quiet verdict rows and
+ * plain cards. Severity colour comes only from `data-sev`, which console-ui
+ * turns into `--ui-sev` (glyph) and `--ui-sev-ink` (text-safe colour); the
+ * word beside every glyph carries the meaning.
+ */
+
+/* ---- Page header: console-ui's HeaderBar across the top of the panel ---- */
+/* `main` pads its content; the bar reaches past that padding to the panel's
+   side edges, as the shared shell draws it. Only a bar that opens the page
+   also reaches up to the panel's top edge: after a stale notice or a back
+   link it stays below them instead of covering them. */
+.page-head {
+  margin: 0 -24px 24px;
+}
+.page-head:first-child {
+  margin-top: -36px;
+}
+.page-head .ui-header {
+  flex-wrap: wrap;
+  row-gap: 8px;
+  padding: 8px 24px;
+}
+/* Hub's element defaults size every `h1`; the bar's title keeps its own. */
+.page-head .ui-header-title {
+  margin: 0;
+  letter-spacing: inherit;
+}
+.page-head .ui-header-actions {
+  flex-wrap: wrap;
+}
+@media (max-width: 600px) {
+  .page-head {
+    margin: 0 -14px 18px;
+  }
+  .page-head:first-child {
+    margin-top: -24px;
+  }
+  .page-head .ui-header {
+    padding-inline: 14px;
+  }
+}
+
+/* ---- Severity ---- */
+/* A figure that needs attention takes its severity's text-safe colour; its
+   glyph and word sit beside it. */
+:is(.metric, .glance-cell):is(
+    [data-sev="warning"],
+    [data-sev="error"],
+    [data-sev="unknown"]
+  )
+  .ui-strip-figure {
+  color: var(--ui-sev-ink);
+}
+.ui-glyph {
+  white-space: nowrap;
+}
+/* A section title can be any heading level; Hub's element defaults for
+   h2/h3 must not move or mute it. */
+.ui-section-title {
+  margin: 0;
+  color: var(--ui-ink);
+}
+
+/* ---- Figure strips: metrics as hairline-separated cells ---- */
+/* Each cell draws the hairlines on its left and top; the strip's border and
+   clipping hide the ones on the outer edge, so a partly filled last row
+   needs no filler. */
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  background: var(--ui-panel);
+}
+.metric {
+  min-width: 0;
+  padding: 9px 14px 11px;
+  box-shadow:
+    -1px 0 0 var(--ui-line),
+    0 -1px 0 var(--ui-line);
+}
+.metric .ui-strip-label {
+  overflow-wrap: anywhere;
+}
+.metric .ui-strip-value {
+  flex-wrap: wrap;
+  gap: 2px 10px;
+}
+.metric .ui-strip-figure {
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Home's headline figures: one strip of linked cells ---- */
+.glance-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  margin: 0 0 18px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+  list-style: none;
+}
+.glance-cell {
+  min-width: 0;
+  box-shadow:
+    -1px 0 0 var(--ui-line),
+    0 -1px 0 var(--ui-line);
+}
+.glance-cell a {
+  display: grid;
+  align-content: start;
+  gap: 1px;
+  height: 100%;
+  padding: 11px 18px 13px;
+  text-decoration: none;
+}
+.glance-cell a:hover {
+  background: var(--ui-hover);
+}
+.glance-cell .ui-strip-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.glance-external {
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+.glance-cell .ui-strip-value {
+  flex-wrap: wrap;
+  gap: 2px 10px;
+}
+.glance-cell .ui-strip-hint {
+  min-width: 0;
+}
+@container content (max-width: 720px) {
+  .glance-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .glance-cell a {
+    padding: 9px 14px 10px;
+  }
+}
+
+.section-summary h2 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.section-summary > p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.summary-stack {
+  display: grid;
+  gap: 10px;
+}
+/* One section at a glance, full width: the title, summary and verdict on
+   one line and every metric on the next. */
+.section-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title summary sev"
+    "metrics metrics metrics";
+  align-items: baseline;
+  gap: 10px 14px;
+  min-width: 0;
+  padding: 12px 16px 14px;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-panel);
+}
+.section-summary h2 {
+  grid-area: title;
+}
+.section-summary > p {
+  grid-area: summary;
+}
+.section-summary > .ui-glyph {
+  grid-area: sev;
+  align-self: center;
+}
+.section-summary .metric-row {
+  grid-area: metrics;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+}
+/* Three metrics no longer fit across a card: it keeps its title, verdict and
+   summary. */
+
+/* The summary drops under its title; the verdict stays beside the title. */
+@container content (max-width: 720px) {
+  .section-summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title sev"
+      "summary summary"
+      "metrics metrics";
+    gap: 8px 12px;
+  }
+}
+@media (max-width: 600px) {
+  .section-summary .metric-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---- Verdict row ---- */
+/* The glyph and word, the one-line summary, then its context, muted. */
+.status-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-head);
+}
+.status-banner > .ui-glyph {
+  align-self: center;
+  font-weight: 600;
+}
+.status-summary {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+.status-meta {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 12.5px;
+}
+
+/* ---- Change timeline: the change kind takes its severity colour ---- */
+.change[data-sev="error"] .change-kind,
+.change[data-sev="warning"] .change-kind,
+.change[data-sev="ok"] .change-kind {
+  background: var(--ui-sev-soft, var(--ui-track));
+  color: var(--ui-sev-ink);
+}
+.change[data-sev="error"] {
+  --ui-sev-soft: var(--ui-sev-error-soft);
+}
+.change[data-sev="warning"] {
+  --ui-sev-soft: var(--ui-sev-warning-soft);
+}
+.change[data-sev="ok"] {
+  --ui-sev-soft: var(--ui-sev-ok-soft);
+}
+
+/* ---- Stale data notice ---- */
+.stale-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--ui-line);
+  background: var(--ui-sev-warning-soft);
+  color: var(--ui-sev-warning-text);
+  font-size: 13px;
+}
+
+/* ---- Labelled search fields (Reports and Traces filter bars) ----
+   An icon and a borderless input inside one 36px field. */
+:is(.rep-filter-search, .traces-filter-search) .search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  background: var(--ui-panel);
+}
+:is(.rep-filter-search, .traces-filter-search) .search:focus-within {
+  border-color: var(--ui-accent);
+}
+:is(.rep-filter-search, .traces-filter-search) .search svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--ui-muted);
+}
+:is(.rep-filter-search, .traces-filter-search) .search .input {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+:is(.rep-filter-search, .traces-filter-search) .search .input:focus-visible {
+  outline: 0;
+}

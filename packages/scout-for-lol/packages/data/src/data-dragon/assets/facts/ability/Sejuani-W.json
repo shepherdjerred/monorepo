@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sejuani-W",
+  "name": "Winter's Wrath",
+  "description": "Sejuani swings her flail, dealing 5/15/25/35/45 (+30% AP) (+4% max Health) physical damage and Knocking Back minions and jungle monsters. She then lashes out again, dealing 5/25/45/65/85 (+60% AP) (+8% max Health) physical damage and briefly Slowing targets.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sejuani-W.png",
+  "slot": "W",
+  "championKey": "Sejuani",
+  "championName": "Sejuani",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    8,
+    7,
+    6,
+    5
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/8/7/6/5 s"
+  }
+}

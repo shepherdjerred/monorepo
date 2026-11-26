@@ -1,0 +1,36 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3175",
+  "name": "Spellslinger's Shoes",
+  "description": "Grants 20 Magic Penetration, 8% Magic Penetration, 45 Move Speed.",
+  "facts": [
+    {
+      "label": "Magic Penetration",
+      "value": "20"
+    },
+    {
+      "label": "Magic Penetration",
+      "value": "8%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "45"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3020",
+      "name": "Sorcerer's Shoes",
+      "icon": "img/item/3020.png"
+    }
+  ],
+  "icon": "img/item/3175.png",
+  "goldTotal": 1100,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1100 gold"
+  }
+}

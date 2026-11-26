@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Viktor-Q",
+  "name": "Siphon Power",
+  "description": "Viktor blasts an enemy, dealing 60/75/90/105/120 (+40% AP) magic damage and granting Viktor 30-130 (based on level) (+20% AP) Shield for 2.5 seconds. Viktor's next Attack within 4 seconds deals 20/45/70/95/120 (+50% AP) (+100% AD) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "45/50/55/60/65 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Viktor-Q.png",
+  "slot": "Q",
+  "championKey": "Viktor",
+  "championName": "Viktor",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    8,
+    7,
+    6,
+    5
+  ],
+  "costByRank": [
+    45,
+    50,
+    55,
+    60,
+    65
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9/8/7/6/5 s"
+  }
+}

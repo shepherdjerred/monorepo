@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Fiora-R",
+  "name": "Grand Challenge",
+  "description": "Passive: Duelist's Dance Move Speed bonus is increased to 30/40/50%.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Fiora-R.png",
+  "slot": "R",
+  "championKey": "Fiora",
+  "championName": "Fiora",
+  "maxRank": 3,
+  "cooldownByRank": [
+    110,
+    90,
+    70
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    500,
+    500,
+    500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "110/90/70 s"
+  }
+}

@@ -37,13 +37,13 @@ Tiers 1–4 forward any request subpath and merge query parameters onto the dest
 
 ## Web UI
 
-The SPA uses the shared console look from `@shepherdjerred/console-ui` (Hub, Go link and Flags share it) and has no router: one page, one `GET /api/links` load.
+The SPA is laid out as a Hub page with the `@shepherdjerred/console-ui` shell and page kit, and has no router: one page, one `GET /api/links` load.
 
-- **App switcher.** The workspace button at the top of the sidebar shows "Go links" and lists the other consoles and tools from `CONSOLE_LINKS` in `@shepherdjerred/ops-model`.
-- **Sources sidebar.** All, Manual, Tailnet, Public sites and Auto-aliases rows, each with its count, filter the table; the selected row is `aria-current`. A Shortcuts row jumps to the shortcut reference. Below 900px the sidebar is hidden and a top bar offers the switcher and a source `<select>`. The theme row cycles system, light and dark (`golink-theme` in `localStorage`).
-- **Search.** The header filter matches slug, destination and source detail; `/` focuses it.
+- **Sidebar.** The workspace button shows "Go links" and lists the other consoles and tools from `CONSOLE_LINKS` in `@shepherdjerred/ops-model`; the search button beside it focuses the search field. A Directory group links to the Links card and the Shortcuts reference, with counts. The theme row cycles system, light and dark (`golink-theme` in `localStorage`). Below 900px the shared `TopBar` replaces the sidebar with a menu drawer, search and theme buttons.
+- **Page.** A Hub page heading with the New link button, then summary cards (links, manual, tailnet, public sites, total clicks), then the Links card.
+- **Search and source filter.** The Links card's toolbar holds a search field matching slug, destination and source detail (`/` focuses it from anywhere outside a text field or dialog) and a segmented All, Manual, Tailnet, Public sites and Auto-aliases filter with counts. At phone width each table row becomes a labelled card.
 - **Dialogs.** New link, Edit and Override open one native `<dialog>` (`showModal()`) with the same slug and URL validation; Delete asks for confirmation in a second dialog. Escape closes either and focus returns to the opener. A `go/<slug>` that does not exist shows a banner whose button opens the New link dialog prefilled.
-- **Read-only mode.** When `golink-writes-enabled` is off the header shows a "Read-only" chip instead of New link, and rows show no actions.
+- **Read-only mode.** When `golink-writes-enabled` is off the page heading shows a "Read-only" tag instead of New link, and rows show no actions.
 
 ## Development
 

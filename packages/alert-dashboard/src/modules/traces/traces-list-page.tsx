@@ -46,7 +46,7 @@ import {
 const SOURCE_TABS = ["tempo", "archive"] as const;
 const SOURCE_TAB_LABELS: Readonly<Record<TraceSource, string>> = {
   tempo: "Live Tempo (30d)",
-  archive: "Archive Index (365d)",
+  archive: "Archive index (365d)",
 };
 
 function buildTracesKpis(input: {
@@ -76,7 +76,7 @@ function buildTracesKpis(input: {
 
   return [
     {
-      label: "Matched Traces",
+      label: "Matched traces",
       val: `${String(items.length)}${truncated ? "+" : ""}`,
       hint:
         source === "tempo"
@@ -85,7 +85,7 @@ function buildTracesKpis(input: {
       sev: "info",
     },
     {
-      label: "Error Traces",
+      label: "Error traces",
       val: String(errorCount),
       hint:
         errorCount === 0
@@ -94,19 +94,19 @@ function buildTracesKpis(input: {
       sev: errorCount > 0 ? "error" : "ok",
     },
     {
-      label: "Input & Cache Tokens",
+      label: "Input & cache tokens",
       val: formatValue(inputSum, "tokens"),
       hint: `${formatValue(cachedSum, "tokens")} cached input read`,
       sev: "ok",
     },
     {
-      label: "Output Tokens",
+      label: "Output tokens",
       val: formatValue(outputSum, "tokens"),
       hint: `${String(toolIoCount)} traces with tool or command I/O`,
       sev: "ok",
     },
     {
-      label: "Archive Index",
+      label: "Archive index",
       val: `${String(facets.indexedTraces)} traces`,
       hint: `${String(facets.indexedSpans)} spans · synced ${ageFromEpochMs(facets.latestWatermarkUpdatedAtMs)}`,
       sev: facets.archiveConfigured ? "ok" : "unknown",
@@ -189,13 +189,13 @@ export function TracesListPage(): React.JSX.Element {
     <main className="eng-page traces-page">
       <title>Traces · Hub</title>
       <PageHeading
-        eyebrow="LLM trajectories · Tempo &amp; SeaweedFS"
+        meta="LLM trajectories · Tempo &amp; SeaweedFS"
         title="Traces"
       >
-        <div className="heading-actions">
+        <>
           <button
             type="button"
-            className="button"
+            className="ui-btn"
             onClick={() => {
               void queryClient.invalidateQueries({ queryKey: tracesKeys.all });
             }}
@@ -203,7 +203,7 @@ export function TracesListPage(): React.JSX.Element {
             <RefreshCwIcon aria-hidden="true" />
             <span>Refresh</span>
           </button>
-        </div>
+        </>
       </PageHeading>
 
       <LoadingBlock
@@ -290,7 +290,7 @@ export function TracesListPage(): React.JSX.Element {
                   <div className="traces-load-more">
                     <button
                       type="button"
-                      className="button"
+                      className="ui-btn"
                       disabled={searchQuery.isFetchingNextPage}
                       onClick={() => {
                         void searchQuery.fetchNextPage();

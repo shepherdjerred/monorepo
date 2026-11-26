@@ -1,7 +1,7 @@
 {
   "kind": "argocd",
   "application": "tracker",
-  "chartRepository": "https://chartmuseum.tailnet-1a49.ts.net",
+  "chartRepository": "https://charts.tailnet-1a49.ts.net",
   "chartName": "tracker",
   "chartComponent": "chart:tracker",
   "namespace": "tracker",

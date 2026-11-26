@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lillia-passive",
+  "name": "Dream-Laden Bough",
+  "description": "Hitting a champion or monster with a skill will deal additional max Health damage over time.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Lillia-passive.png",
+  "slot": "passive",
+  "championKey": "Lillia",
+  "championName": "Lillia",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rakan-passive",
+  "name": "Fey Feathers",
+  "description": "Rakan periodically gains a shield.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Rakan-passive.png",
+  "slot": "passive",
+  "championKey": "Rakan",
+  "championName": "Rakan",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Yasuo",
+  "name": "Yasuo",
+  "description": "An Ionian of deep resolve, Yasuo is an agile swordsman who wields the air itself against his enemies.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "590"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Yasuo-passive",
+      "name": "Way of the Wanderer",
+      "icon": "img/ability/Yasuo-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yasuo-Q",
+      "name": "Steel Tempest",
+      "icon": "img/ability/Yasuo-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yasuo-W",
+      "name": "Wind Wall",
+      "icon": "img/ability/Yasuo-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yasuo-E",
+      "name": "Sweeping Blade",
+      "icon": "img/ability/Yasuo-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Yasuo-R",
+      "name": "Last Breath",
+      "icon": "img/ability/Yasuo-R.png"
+    }
+  ],
+  "icon": "img/champion/Yasuo.png",
+  "art": "img/champion-splash/Yasuo_0.jpg",
+  "title": "the Unforgiven",
+  "roles": [
+    "Fighter",
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Assassin"
+  }
+}

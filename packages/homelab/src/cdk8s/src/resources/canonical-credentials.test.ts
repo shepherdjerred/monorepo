@@ -2,7 +2,7 @@ import { App, Chart, Testing } from "cdk8s";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { createRecyclarrDeployment } from "./torrents/recyclarr.ts";
-import { createChartMuseumResources } from "./argo-applications/platform/chartmuseum.ts";
+import { createChartsDeployment } from "./charts/index.ts";
 import { createWoodpeckerCredentialBoundaries } from "./argo-applications/ci/woodpecker-credentials.ts";
 import {
   DELIVERY_PLATFORM_ITEMS,
@@ -55,9 +55,11 @@ test("Recyclarr and ARR provider jobs bind the same canonical credentials", asyn
   expect(serialized).toContain("/credentials/sonarr/api-key");
 });
 
-test("ChartMuseum server and CI share one owning 1Password item", () => {
-  const chart = new Chart(new App(), "chartmuseum-owner-contract");
-  createChartMuseumResources(chart);
+test("Charts server and CI share one owning 1Password item", () => {
+  const chart = new Chart(new App(), "charts-owner-contract", {
+    namespace: "charts",
+  });
+  createChartsDeployment(chart);
   createWoodpeckerCredentialBoundaries(chart);
   const bindings = Testing.synth(chart).flatMap((manifest) => {
     const parsed = z
@@ -70,7 +72,7 @@ test("ChartMuseum server and CI share one owning 1Password item", () => {
     return parsed.success ? [parsed.data] : [];
   });
   const server = bindings.find(
-    (item) => item.metadata.name === "chartmuseum-basic-auth",
+    (item) => item.metadata.name === "charts-basic-auth",
   );
   const ci = bindings.find(
     (item) => item.metadata.name === "ci-chartmuseum-basic-auth",

@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gwen-W",
+  "name": "Hallowed Mist",
+  "description": "Gwen summons the Hallowed Mist, making her Untargetable to all enemies (except towers) outside the zone for 4 seconds or until she leaves it. While in the Mist, Gwen gains 22/24/26/28/30 (+7% AP) Armor and Magic Resist.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Gwen-W.png",
+  "slot": "W",
+  "championKey": "Gwen",
+  "championName": "Gwen",
+  "maxRank": 5,
+  "cooldownByRank": [
+    22,
+    21,
+    20,
+    19,
+    18
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "22/21/20/19/18 s"
+  }
+}

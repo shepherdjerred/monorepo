@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Katarina-W",
+  "name": "Preparation",
+  "description": "Katarina tosses a Dagger into the air and gains 50/60/70/80/90% Move Speed decaying over 1.25 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Katarina-W.png",
+  "slot": "W",
+  "championKey": "Katarina",
+  "championName": "Katarina",
+  "maxRank": 5,
+  "cooldownByRank": [
+    15,
+    14,
+    13,
+    12,
+    11
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "15/14/13/12/11 s"
+  }
+}

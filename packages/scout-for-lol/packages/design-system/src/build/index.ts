@@ -3,6 +3,10 @@ import { cp, mkdir, stat, writeFile } from "node:fs/promises";
 import { extname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gameAssetManifest } from "@scout-for-lol/data/browser-assets";
+import {
+  GameFactSchema,
+  gameFactPath,
+} from "@scout-for-lol/data/game-facts/schema.ts";
 import type { Connect, Plugin } from "vite";
 import { SCOUT_THEME_BOOTSTRAP_SCRIPT } from "#src/runtime/bootstrap.ts";
 
@@ -19,6 +23,7 @@ function mimeType(path: string): string {
   if (extension === ".jpg") return "image/jpeg";
   if (extension === ".svg") return "image/svg+xml";
   if (extension === ".js") return "text/javascript; charset=utf-8";
+  if (extension === ".json") return "application/json; charset=utf-8";
   if (extension === ".ttf") return "font/ttf";
   if (extension === ".otf") return "font/otf";
   if (extension === ".woff2") return "font/woff2";
@@ -60,7 +65,11 @@ function sourceForUrl(url: string): string | undefined {
     );
   const ranksPrefix = "/assets/scout/shared/ranks/";
   const mapsPrefix = "/assets/scout/maps/";
-  if (url.startsWith(mapsPrefix)) return resolveScoutAssetSource(resolve(ownedAssetsRoot, "maps"), url.slice(mapsPrefix.length));
+  if (url.startsWith(mapsPrefix))
+    return resolveScoutAssetSource(
+      resolve(ownedAssetsRoot, "maps"),
+      url.slice(mapsPrefix.length),
+    );
   if (url.startsWith(ranksPrefix))
     return resolveScoutAssetSource(
       resolve(ownedAssetsRoot, "ranks"),
@@ -168,10 +177,18 @@ export function scoutAssetsPlugin(options: { emit?: boolean } = {}): Plugin {
 export async function copyScoutAssets(outputRoot: string): Promise<void> {
   const root = resolve(outputRoot, "assets/scout");
   await Promise.all([
-    cp(resolve(ownedAssetsRoot, "maps"), resolve(root, "maps"), { recursive: true }),
+    cp(resolve(ownedAssetsRoot, "maps"), resolve(root, "maps"), {
+      recursive: true,
+    }),
     cp(
       resolve(dataAssetsRoot, "img"),
       resolve(root, "game", gameAssetManifest.sourceVersion, "img"),
+      { recursive: true },
+    ),
+    // Per-entity tooltip facts, served at game/<patch>/facts/<kind>/<key>.json.
+    cp(
+      resolve(dataAssetsRoot, "facts"),
+      resolve(root, "game", gameAssetManifest.sourceVersion, "facts"),
       { recursive: true },
     ),
     cp(resolve(ownedAssetsRoot, "fonts"), resolve(root, "fonts"), {
@@ -212,6 +229,7 @@ export async function verifyScoutAssetBucket(
       );
     }
   }
+  await verifyGameFactFiles(outputRoot);
   for (const path of [
     "assets/scout/brand/emblem.svg",
     "assets/scout/brand/theme-bootstrap.js",
@@ -219,5 +237,29 @@ export async function verifyScoutAssetBucket(
     "assets/scout/shared/ranks/Rank=Challenger.png",
   ]) {
     await stat(resolve(outputRoot, path));
+  }
+}
+
+/** One emitted fact file per kind must exist and parse as the entity it names. */
+const FACT_SAMPLES = [
+  ["champion", "Ahri"],
+  ["ability", "Ahri-E"],
+  ["item", "3118"],
+  ["rune", "8112"],
+  ["summoner-spell", "14"],
+] as const;
+
+async function verifyGameFactFiles(outputRoot: string): Promise<void> {
+  for (const [kind, key] of FACT_SAMPLES) {
+    const path = resolve(
+      outputRoot,
+      "assets/scout/game",
+      gameAssetManifest.sourceVersion,
+      gameFactPath(kind, key),
+    );
+    const fact = GameFactSchema.parse(await Bun.file(path).json());
+    if (fact.kind !== kind || fact.key !== key) {
+      throw new Error(`Built game fact ${path} holds ${fact.kind}/${fact.key}`);
+    }
   }
 }

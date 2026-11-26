@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Bard-E",
+  "name": "Magical Journey",
+  "description": "Bard opens a one-way portal through Terrain for 10 seconds. Any champion can enter the portal by moving onto it while near the entrance.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "30 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Bard-E.png",
+  "slot": "E",
+  "championKey": "Bard",
+  "championName": "Bard",
+  "maxRank": 5,
+  "cooldownByRank": [
+    22,
+    20.5,
+    19,
+    17.5,
+    16
+  ],
+  "costByRank": [
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "22/20.5/19/17.5/16 s"
+  }
+}

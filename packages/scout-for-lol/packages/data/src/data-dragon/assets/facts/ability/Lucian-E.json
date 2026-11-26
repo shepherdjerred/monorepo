@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lucian-E",
+  "name": "Relentless Pursuit",
+  "description": "Lucian dashes. Cooldown is reduced by 1 second whenever Lucian hits an enemy with Lightslinger (2 seconds for champions).",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "32/24/16/8/0 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "445"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Lucian-E.png",
+  "slot": "E",
+  "championKey": "Lucian",
+  "championName": "Lucian",
+  "maxRank": 5,
+  "cooldownByRank": [
+    16,
+    15.5,
+    15,
+    14.5,
+    14
+  ],
+  "costByRank": [
+    32,
+    24,
+    16,
+    8,
+    0
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    445,
+    445,
+    445,
+    445,
+    445
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "16/15.5/15/14.5/14 s"
+  }
+}

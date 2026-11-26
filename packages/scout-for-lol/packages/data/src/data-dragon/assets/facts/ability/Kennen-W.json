@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kennen-W",
+  "name": "Electrical Surge",
+  "description": "Kennen passively deals extra damage and adds a Mark of the Storm to his target every few attacks, and he can activate this ability to damage and add another Mark of the Storm to targets who are already marked.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Energy"
+    },
+    {
+      "label": "Range",
+      "value": "725"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kennen-W.png",
+  "slot": "W",
+  "championKey": "Kennen",
+  "championName": "Kennen",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    11.25,
+    9.5,
+    7.75,
+    6
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Energy",
+  "rangeByRank": [
+    725,
+    725,
+    725,
+    725,
+    725
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/11.25/9.5/7.75/6 s"
+  }
+}

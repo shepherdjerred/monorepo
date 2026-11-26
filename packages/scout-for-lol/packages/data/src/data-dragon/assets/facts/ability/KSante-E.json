@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "KSante-E",
+  "name": "Footwork",
+  "description": "K'Sante dashes, gaining 70/112.5/155/197.5/240 (+13.5% bonus Health) Shield for 2 seconds. If dashing to an ally, the distance of the dash is significantly increased and the ally is also Shielded.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "45/50/55/60/65 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "525"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/KSante-E.png",
+  "slot": "E",
+  "championKey": "KSante",
+  "championName": "K'Sante",
+  "maxRank": 5,
+  "cooldownByRank": [
+    10,
+    9.5,
+    9,
+    8.5,
+    8
+  ],
+  "costByRank": [
+    45,
+    50,
+    55,
+    60,
+    65
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    525,
+    525,
+    525,
+    525,
+    525
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "10/9.5/9/8.5/8 s"
+  }
+}

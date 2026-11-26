@@ -630,12 +630,8 @@ export const CommitStatusSchema = z.object({
   changed: z.array(CommitServiceSchema),
   /** Services whose build passed with nothing to deploy. */
   unchangedCount: z.number().int().nonnegative(),
-  /**
-   * Services this commit's own pipeline built and passed, whether or not
-   * they changed anything. Zero means no service was built on its own, so a
-   * carried failure is the whole commit; absent from servers that predate it.
-   */
-  builtCount: z.number().int().nonnegative().optional(),
+  /** What this commit's own pipeline built and passed; absent from servers that predate it. */
+  built: releases.BuiltSchema.optional(),
   /** Builds that failed or are still running, whether or not they changed anything. */
   failedBuilds: z.array(CommitBuildSchema),
   /**
@@ -668,7 +664,7 @@ export const CommitSummarySchema = CommitStatusSchema.pick({
   blockers: true,
   carriedFailures: true,
   carriedReleases: true,
-  builtCount: true,
+  built: true,
 }).extend({
   /** The services whose CI failed with nothing carrying it, by title, each once. */
   failedServices: z.array(z.string()).optional(),

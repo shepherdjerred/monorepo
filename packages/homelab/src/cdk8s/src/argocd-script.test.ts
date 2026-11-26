@@ -68,7 +68,7 @@ const StagedRepositoryApplication = JSON.stringify({
   metadata: { name: "worker" },
   spec: {
     source: {
-      repoURL: "https://chartmuseum.sjer.red",
+      repoURL: "https://charts.tailnet-1a49.ts.net",
       chart: "worker",
       targetRevision: "2.0.0-43",
     },
@@ -131,7 +131,7 @@ function expectSuspendedWorkerRequest(request: unknown): void {
   expect(JSON.parse(manifests[0] ?? "")).toMatchObject({
     spec: {
       source: {
-        repoURL: "https://chartmuseum.sjer.red",
+        repoURL: "https://charts.tailnet-1a49.ts.net",
         chart: "worker",
         targetRevision: "~2.0.0-0",
       },
@@ -492,7 +492,7 @@ describe("Argo CD release gating", () => {
       spec: {
         project: "default",
         source: {
-          repoURL: "https://chartmuseum.sjer.red",
+          repoURL: "https://charts.tailnet-1a49.ts.net",
           chart: "worker",
           targetRevision: "~2.0.0-0",
         },
@@ -969,7 +969,7 @@ describe("Argo CD stale release protection", () => {
       app: "worker",
       revision: "2.0.0-42",
       source: {
-        repoURL: "https://chartmuseum.sjer.red",
+        repoURL: "https://charts.tailnet-1a49.ts.net",
         chart: "worker",
         targetRevision: "~2.0.0-0",
       },

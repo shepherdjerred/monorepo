@@ -140,37 +140,40 @@ Only corpus capture and context-refresh are scheduled.
 
 ## Homelab maintenance
 
-| Workflow                        | Trigger               | Brain         | Output                                                  |
-| ------------------------------- | --------------------- | ------------- | ------------------------------------------------------- |
-| zfs-maintenance                 | Sun 03:00             | deterministic | scrub + autotrim                                        |
-| the-storm-rwf-recording-archive | hourly (flag-gated)   | deterministic | rwf recordings in object storage + `.archived` markers  |
-| ci-uv-cache-prune-weekly        | Sun 03:15             | deterministic | uv cache prune                                          |
-| bugsink-housekeeping            | daily 03:00           | deterministic | DB cleanup                                              |
-| velero-orphan-audit             | daily 03:30           | deterministic | metrics only                                            |
-| kometa-daily                    | daily 04:30           | deterministic | Plex metadata sync                                      |
-| ci-bun-cache-gc                 | every 5 min           | deterministic | Bun cache GC                                            |
-| ci-trivy-db-refresh             | every 6 hours         | deterministic | Trivy database refresh                                  |
-| ci-workspace-reaper             | every 15 min (paused) | deterministic | leaked CI pods and workspace claims deleted             |
-| ci-extended-verify-nightly      | daily 02:00           | deterministic | manual `verify-extended` pipeline on main; fails on red |
-| dns-audit                       | daily 06:00           | deterministic | logs                                                    |
-| temporal-failure-watch          | every 5 min           | deterministic | durable alert occurrence                                |
-| report-freshness-monitor        | every 15 min          | deterministic | metrics + durable alert                                 |
-| TaskNotes canary                | Mon 09:00             | deterministic | heartbeat email                                         |
-| main-vuln-scan                  | Sun 05:00             | deterministic | report email + durable alert on CRITICAL                |
+| Workflow                                                                                                                            | Trigger                                | Brain         | Output                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ------------- | ------------------------------------------------------- |
+| zfs-maintenance                                                                                                                     | Sun 03:00                              | deterministic | scrub + autotrim                                        |
+| the-storm-rwf-recording-archive                                                                                                     | hourly (flag-gated)                    | deterministic | rwf recordings in object storage + `.archived` markers  |
+| ci-uv-cache-prune-weekly                                                                                                            | Sun 03:15                              | deterministic | uv cache prune                                          |
+| bugsink-housekeeping                                                                                                                | daily 03:00                            | deterministic | DB cleanup                                              |
+| velero-orphan-audit                                                                                                                 | daily 03:30                            | deterministic | metrics only                                            |
+| kometa-daily                                                                                                                        | daily 04:30                            | deterministic | Plex metadata sync                                      |
+| [feeds-refresh](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/schedule-definitions-early.ts) | hourly at `:13` and `:43` (flag-gated) | deterministic | upstream RSS/Atom feed poll                             |
+| ci-bun-cache-gc                                                                                                                     | every 5 min                            | deterministic | Bun cache GC                                            |
+| ci-trivy-db-refresh                                                                                                                 | every 6 hours                          | deterministic | Trivy database refresh                                  |
+| ci-workspace-reaper                                                                                                                 | every 15 min (paused)                  | deterministic | leaked CI pods and workspace claims deleted             |
+| ci-extended-verify-nightly                                                                                                          | daily 02:00                            | deterministic | manual `verify-extended` pipeline on main; fails on red |
+| dns-audit                                                                                                                           | daily 06:00                            | deterministic | logs                                                    |
+| temporal-failure-watch                                                                                                              | every 5 min                            | deterministic | durable alert occurrence                                |
+| report-freshness-monitor                                                                                                            | every 15 min                           | deterministic | metrics + durable alert                                 |
+| TaskNotes canary                                                                                                                    | Mon 09:00                              | deterministic | heartbeat email                                         |
+| main-vuln-scan                                                                                                                      | Sun 05:00                              | deterministic | report email + durable alert on CRITICAL                |
 
 ## Home automation
 
-| Workflow           | Trigger                 | Brain         | Output                   |
-| ------------------ | ----------------------- | ------------- | ------------------------ |
-| good-morning ×3    | weekday/weekend crons   | deterministic | heat, music, scenes      |
-| vacuum-if-not-home | 09/12/17:00             | deterministic | vacuum fleet             |
-| welcome-home       | arrival edge            | deterministic | scenes, lights, dock     |
-| leaving-home       | last-departure edge     | deterministic | lights off, vacuums      |
-| reconcile-lock     | every presence edge     | deterministic | deadbolt (settled)       |
-| pet-care-alerts    | HA sensor state changes | deterministic | HA, iPhone, Alertmanager |
-| good-night         | iOS shortcut            | deterministic | scene + sleep audio      |
-| sleep-music        | iOS Shortcut + duration | deterministic | bedroom sleep audio      |
-| sleep-ac           | iOS Shortcut + duration | deterministic | bedroom cooling          |
+| Workflow               | Trigger                       | Brain         | Output                                   |
+| ---------------------- | ----------------------------- | ------------- | ---------------------------------------- |
+| good-morning ×3        | 08:00, 09:00, 09:15 every day | deterministic | floor heat, music, scenes                |
+| apply-climate-schedule | 00:00, 08:00, 09:00           | deterministic | bedroom and living-room heat             |
+| vacuum-if-not-home     | 09/12/17:00                   | deterministic | vacuum fleet                             |
+| welcome-home           | arrival edge                  | deterministic | scenes, lights, dock                     |
+| leaving-home           | last-departure edge           | deterministic | lights off, vacuums                      |
+| reconcile-lock         | every presence edge           | deterministic | deadbolt (settled)                       |
+| reconcile-climate      | every presence edge           | deterministic | bedroom and living-room heat, after 90 s |
+| pet-care-alerts        | HA sensor state changes       | deterministic | HA, iPhone, Alertmanager                 |
+| good-night             | iOS shortcut                  | deterministic | scene + sleep audio                      |
+| sleep-music            | iOS Shortcut + duration       | deterministic | bedroom sleep audio                      |
+| sleep-ac               | iOS Shortcut + duration       | deterministic | bedroom cooling                          |
 
 Parameters for the sleep and morning routines are in
 [Home automation routines](/reference/home-automation-routines/).

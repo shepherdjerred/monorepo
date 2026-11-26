@@ -1,3 +1,4 @@
+import { Button } from "@shepherdjerred/console-ui";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -42,81 +43,100 @@ export function HistoryPanel({
   });
   return (
     <>
-      <div className="p-filters">
-        <select
-          aria-label="History source"
-          value={selected}
-          onChange={(e) => {
-            onSelect(e.target.value);
-            setCursor(null);
-          }}
-        >
-          <option value="">All sources</option>
-          {data.sources.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label="History range"
-          value={days}
-          onChange={(e) => {
-            setDays(e.target.value);
-            setCursor(null);
-          }}
-        >
-          <option value="1">Last 24 hours</option>
-          <option value="7">Last 7 days</option>
-          <option value="all">All history</option>
-        </select>
-        <select
-          aria-label="Run history"
-          value={batchId}
-          onChange={(e) => {
-            setBatchId(e.target.value);
-            setCursor(null);
-          }}
-        >
-          <option value="">All runs and follow-ups</option>
-          {data.batches.map((b) => (
-            <option key={b.id} value={b.id}>
-              {time(b.startedAt)} · {b.mode}
-            </option>
-          ))}
-        </select>
+      <div className="ui-toolbar p-filters">
+        <label className="toolbar-field">
+          <span className="toolbar-field-label">Source</span>
+          <select
+            aria-label="History source"
+            value={selected}
+            onChange={(e) => {
+              onSelect(e.target.value);
+              setCursor(null);
+            }}
+          >
+            <option value="">All sources</option>
+            {data.sources.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="toolbar-field">
+          <span className="toolbar-field-label">Range</span>
+          <select
+            aria-label="History range"
+            value={days}
+            onChange={(e) => {
+              setDays(e.target.value);
+              setCursor(null);
+            }}
+          >
+            <option value="1">Last 24 hours</option>
+            <option value="7">Last 7 days</option>
+            <option value="all">All history</option>
+          </select>
+        </label>
+        <label className="toolbar-field">
+          <span className="toolbar-field-label">Run</span>
+          <select
+            aria-label="Run history"
+            value={batchId}
+            onChange={(e) => {
+              setBatchId(e.target.value);
+              setCursor(null);
+            }}
+          >
+            <option value="">All runs and follow-ups</option>
+            {data.batches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {time(b.startedAt)} · {b.mode}
+              </option>
+            ))}
+          </select>
+        </label>
         {cursor !== null && (
-          <button
+          <Button
             onClick={() => {
               setCursor(null);
             }}
           >
             Newest records
-          </button>
+          </Button>
         )}
       </div>
-      {history.isPending && <p>Reading history…</p>}
-      {history.isError && <p role="alert">{history.error.message}</p>}
-      {history.data?.items.map((entry) => (
-        <div key={entry.id}>
-          <small className="p-muted">
-            {data.sources.find((s) => s.id === entry.targetId)?.name ??
-              entry.targetId}
-          </small>
-          <HistoryItem entry={entry} />
-        </div>
-      ))}
+      {history.isPending && <p className="p-empty">Reading history…</p>}
+      {history.isError && (
+        <p role="alert" className="p-empty">
+          {history.error.message}
+        </p>
+      )}
+      <ol className="p-history-list">
+        {history.data?.items.map((entry) => (
+          <li key={entry.id}>
+            <HistoryItem
+              entry={entry}
+              source={
+                data.sources.find((s) => s.id === entry.targetId)?.name ??
+                entry.targetId
+              }
+            />
+          </li>
+        ))}
+      </ol>
       {history.data?.items.length === 0 && (
-        <p>No history matches these filters.</p>
+        <p className="p-empty">No history matches these filters.</p>
       )}
       {history.data?.nextCursor != null && (
-        <button
-          onClick={() => {
-            setCursor(history.data?.nextCursor ?? null);
-          }}
-        >
-          Older records
-        </button>
+        <div className="ui-section-foot">
+          <Button
+            onClick={() => {
+              setCursor(history.data?.nextCursor ?? null);
+            }}
+          >
+            Older records
+          </Button>
+        </div>
       )}
     </>
   );

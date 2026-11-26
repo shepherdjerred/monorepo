@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "323002",
+  "name": "Trailblazer",
+  "description": "Lead the Way: While moving, build up to 20 bonus Move Speed.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "300"
+    },
+    {
+      "label": "Armor",
+      "value": "45"
+    },
+    {
+      "label": "Move Speed",
+      "value": "6%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3066",
+      "name": "Winged Moonplate",
+      "icon": "img/item/3066.png"
+    },
+    {
+      "kind": "item",
+      "key": "1031",
+      "name": "Chain Vest",
+      "icon": "img/item/1031.png"
+    }
+  ],
+  "icon": "img/item/323002.png",
+  "goldTotal": 2600,
+  "goldCombine": 1000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2600 gold"
+  }
+}

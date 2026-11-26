@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9189",
+  "name": "Final City Transit",
+  "description": "Fires a rotating stream of projectiles.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9189.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

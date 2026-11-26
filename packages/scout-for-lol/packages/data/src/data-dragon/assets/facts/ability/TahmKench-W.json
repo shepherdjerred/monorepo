@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "TahmKench-W",
+  "name": "Abyssal Dive",
+  "description": "Dive down and then re-appear at target location, dealing 100/135/170/205/240 (+150% AP) magic damage and Knock Up all enemies in an area for 1 second. Hitting at least one enemy champion refunds 40/42.5/45/47.5/50% of the Cooldown and Mana cost.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/75/90/105/120 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000/1050/1100/1150/1200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/TahmKench-W.png",
+  "slot": "W",
+  "championKey": "TahmKench",
+  "championName": "Tahm Kench",
+  "maxRank": 5,
+  "cooldownByRank": [
+    21,
+    20,
+    19,
+    18,
+    17
+  ],
+  "costByRank": [
+    60,
+    75,
+    90,
+    105,
+    120
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1050,
+    1100,
+    1150,
+    1200
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "21/20/19/18/17 s"
+  }
+}

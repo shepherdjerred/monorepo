@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "771006",
+  "name": "Rejuvenation Bead",
+  "description": "Grants 5 Health Regen per 5 seconds.",
+  "facts": [
+    {
+      "label": "Health Regen per 5 seconds",
+      "value": "5"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/771006.png",
+  "goldTotal": 180,
+  "goldCombine": 180,
+  "keyFact": {
+    "label": "Cost",
+    "value": "180 gold"
+  }
+}

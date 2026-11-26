@@ -1,4 +1,4 @@
-# Syncs shared Herdr layout, themes, and mods as real files from ../dotfiles
+# Syncs shared Herdr layout, themes, mods, and sounds as real files from ../dotfiles
 # into ~/.config/herdr-app (Herdr on Windows does not load mod SVGs through a
 # symlinked folder). Windows-specific settings.json and keys.json stay managed
 # directly by packages/dotfiles-windows.
@@ -10,7 +10,7 @@
 {{- if and $layoutInfo (eq $layoutInfo.type "file") }}
 {{-   $manifest = append $manifest (printf "# %s %s" (trimPrefix $srcPrefix ($layout | replace "\\" "/")) (include $layout | sha256sum)) }}
 {{- end }}
-{{- range (concat (glob (joinPath $srcRoot "themes" "**" "*")) (glob (joinPath $srcRoot "mods" "**" "*"))) }}
+{{- range (concat (glob (joinPath $srcRoot "themes" "**" "*")) (glob (joinPath $srcRoot "mods" "**" "*")) (glob (joinPath $srcRoot "sounds" "**" "*"))) }}
 {{-   $base := base . }}
 {{-   if and (ne $base "gpui-kit.d.ts") (ne $base "jsconfig.json") }}
 {{-     $info := stat . }}
@@ -25,7 +25,7 @@
 $ErrorActionPreference = 'Stop'
 
 $sourceRoot = '{{ $srcRoot }}'
-$targetRoot = Join-Path '{{ .chezmoi.homeDir }}' '.config\herdr-app'
+$targetRoot = Join-Path '{{ .chezmoi.destDir }}' '.config\herdr-app'
 $generatedNames = @('gpui-kit.d.ts', 'jsconfig.json')
 
 if (-not (Test-Path $sourceRoot -PathType Container)) {
@@ -37,7 +37,7 @@ function Sync-RealFile([string]$Src, [string]$Dst) {
     if (-not (Test-Path $parent -PathType Container)) {
         New-Item -ItemType Directory -Path $parent -Force | Out-Null
     }
-    Copy-Item -Path $Src -Destination $Dst -Force
+    Copy-Item -LiteralPath $Src -Destination $Dst -Force
 }
 
 function Sync-DirectoryTree([string]$RelDir) {
@@ -46,31 +46,15 @@ function Sync-DirectoryTree([string]$RelDir) {
     if (-not (Test-Path $srcDir -PathType Container)) { return }
     New-Item -ItemType Directory -Path $dstDir -Force | Out-Null
 
-    $expected = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-    Get-ChildItem -Path $srcDir -Recurse -File | ForEach-Object {
+    # The app owns built-ins, editor files, and local copies in these folders.
+    Get-ChildItem -LiteralPath $srcDir -Recurse -File | ForEach-Object {
         if ($generatedNames -contains $_.Name) { return }
         $rel = [System.IO.Path]::GetRelativePath($srcDir, $_.FullName)
-        [void]$expected.Add($rel)
         Sync-RealFile $_.FullName (Join-Path $dstDir $rel)
     }
-
-    Get-ChildItem -Path $dstDir -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
-        if ($generatedNames -contains $_.Name) { return }
-        $rel = [System.IO.Path]::GetRelativePath($dstDir, $_.FullName)
-        if (-not $expected.Contains($rel)) {
-            Remove-Item -Path $_.FullName -Force
-        }
-    }
-
-    Get-ChildItem -Path $dstDir -Recurse -Directory -ErrorAction SilentlyContinue |
-        Sort-Object { $_.FullName.Length } -Descending |
-        ForEach-Object {
-            if ((Get-ChildItem -Path $_.FullName -Force | Measure-Object).Count -eq 0) {
-                Remove-Item -Path $_.FullName -Force
-            }
-        }
 }
 
 Sync-RealFile (Join-Path $sourceRoot 'layouts\mine.json') (Join-Path $targetRoot 'layouts\mine.json')
 Sync-DirectoryTree 'themes'
 Sync-DirectoryTree 'mods'
+Sync-DirectoryTree 'sounds'

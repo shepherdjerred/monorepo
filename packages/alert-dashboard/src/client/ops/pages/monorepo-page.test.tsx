@@ -32,7 +32,7 @@ describe("MonorepoPage", () => {
     const html = renderMonorepoPage("/monorepo?range=7d", monorepo);
 
     expect(html).toContain("<title>Monorepo · Hub</title>");
-    expect(html).toContain('aria-label="7d Turbo Cache Hit Ratio"');
+    expect(html).toContain('aria-label="7d Turbo cache hit ratio"');
     expect(html).toContain("89%");
     expect(html).toContain("41.6 h");
     expect(html).toContain("142");
@@ -49,8 +49,14 @@ describe("MonorepoPage", () => {
     expect(html).toContain("Main dependency vulnerability scan");
 
     // Expensive tasks sorted by totalMissMinutes descending
-    const homelabPos = html.indexOf("@shepherdjerred/homelab#test");
-    const scoutPos = html.indexOf("@shepherdjerred/scout-for-lol#build");
+    // Task ids may wrap only after "/" or "#": no-wrap segments with a
+    // <wbr> between them.
+    const homelabPos = html.indexOf(
+      '<span class="id-seg">@shepherdjerred/</span><wbr/><span class="id-seg">homelab#</span><wbr/><span class="id-seg">test</span>',
+    );
+    const scoutPos = html.indexOf(
+      '<span class="id-seg">@shepherdjerred/</span><wbr/><span class="id-seg">scout-for-lol#</span><wbr/><span class="id-seg">build</span>',
+    );
     expect(homelabPos).toBeGreaterThan(-1);
     expect(scoutPos).toBeGreaterThan(homelabPos);
     expect(html).toContain("12.6 min");

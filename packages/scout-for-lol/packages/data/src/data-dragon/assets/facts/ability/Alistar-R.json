@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Alistar-R",
+  "name": "Unbreakable Will",
+  "description": "Alistar immediately cleanses all Disabling effects and takes 55/65/75% reduced damage for 7 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Alistar-R.png",
+  "slot": "R",
+  "championKey": "Alistar",
+  "championName": "Alistar",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1,
+    1,
+    1
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

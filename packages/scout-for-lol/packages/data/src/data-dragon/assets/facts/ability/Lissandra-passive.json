@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lissandra-passive",
+  "name": "Iceborn Subjugation",
+  "description": "When an enemy champion dies near Lissandra they become a Frozen Thrall. Frozen Thralls slow nearby enemies and then, after a delay, shatter from the intense cold, dealing magic damage to nearby targets.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Lissandra-passive.png",
+  "slot": "passive",
+  "championKey": "Lissandra",
+  "championName": "Lissandra",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

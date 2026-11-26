@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "LeeSin-passive",
+  "name": "Flurry",
+  "description": "After Lee Sin uses an ability, his next 2 basic attacks gain Attack Speed and return Energy.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/LeeSin-passive.png",
+  "slot": "passive",
+  "championKey": "LeeSin",
+  "championName": "Lee Sin",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

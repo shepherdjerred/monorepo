@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yasuo-W",
+  "name": "Wind Wall",
+  "description": "Yasuo creates a drifting wall of wind that blocks all enemy projectiles for 4 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yasuo-W.png",
+  "slot": "W",
+  "championKey": "Yasuo",
+  "championName": "Yasuo",
+  "maxRank": 5,
+  "cooldownByRank": [
+    25,
+    23,
+    21,
+    19,
+    17
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "25/23/21/19/17 s"
+  }
+}

@@ -16,7 +16,6 @@ import { createPromtailNamespace } from "@shepherdjerred/homelab/cdk8s/src/resou
 import { createAlloyNamespace } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alloy.ts";
 import { createAlloyGatewayNamespace } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alloy-gateway.ts";
 import { createPyroscopeNamespace } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/pyroscope.ts";
-import { createDdnsNamespace } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/ddns.ts";
 import { createMcRouterNamespace } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/mc-router.ts";
 
 /** Pod-Security-labelled namespaces the root declares directly. */
@@ -89,5 +88,4 @@ export function createClusterPlatform(chart: Chart): void {
   createVeleroNamespaces(chart);
   createPostgresOperatorNamespace(chart);
   createSeaweedfsNamespace(chart);
-  createDdnsNamespace(chart);
 }

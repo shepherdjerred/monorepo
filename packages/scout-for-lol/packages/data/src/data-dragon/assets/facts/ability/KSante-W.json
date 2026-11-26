@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "KSante-W",
+  "name": "Path Maker",
+  "description": "K'Sante charges up, taking reduced damage, then dashes, knocking back and stunning enemies. When All Out, deals increased damage and no longer knocks back or stuns.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "45 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/KSante-W.png",
+  "slot": "W",
+  "championKey": "KSante",
+  "championName": "K'Sante",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13,
+    12,
+    11,
+    10
+  ],
+  "costByRank": [
+    45,
+    45,
+    45,
+    45,
+    45
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13/12/11/10 s"
+  }
+}

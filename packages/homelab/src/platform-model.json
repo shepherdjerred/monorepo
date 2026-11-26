@@ -52,19 +52,9 @@
       "service": "bugsink-bugsink-service"
     },
     {
-      "hostname": "chartmuseum.sjer.red",
-      "namespace": "chartmuseum",
-      "service": "chartmuseum"
-    },
-    {
       "hostname": "feeds.sjer.red",
       "namespace": "feeds",
       "service": "feeds-reader-service"
-    },
-    {
-      "hostname": "freshrss.sjer.red",
-      "namespace": "freshrss",
-      "service": "freshrss-service"
     },
     {
       "hostname": "homeassistant.sjer.red",
@@ -262,8 +252,13 @@
       "exposure": "ingress"
     },
     {
-      "host": "chartmuseum",
-      "namespace": "chartmuseum",
+      "host": "charts",
+      "namespace": "charts",
+      "exposure": "ingress"
+    },
+    {
+      "host": "ci-cache",
+      "namespace": "ci-cache",
       "exposure": "ingress"
     },
     {
@@ -288,20 +283,10 @@
       "exposure": "ingress"
     },
     {
-      "host": "freshrss",
-      "namespace": "freshrss",
-      "exposure": "ingress"
-    },
-    {
       "host": "go",
       "namespace": "golink",
       "exposure": "tsnet",
       "tags": ["tag:k8s"]
-    },
-    {
-      "host": "gradle-build-cache",
-      "namespace": "gradle-build-cache",
-      "exposure": "ingress"
     },
     {
       "host": "grafana",
@@ -361,6 +346,11 @@
     {
       "host": "plex",
       "namespace": "media",
+      "exposure": "ingress"
+    },
+    {
+      "host": "private",
+      "namespace": "s3-static-sites",
       "exposure": "ingress"
     },
     {
@@ -456,11 +446,6 @@
     {
       "host": "tracker",
       "namespace": "tracker",
-      "exposure": "ingress"
-    },
-    {
-      "host": "turbo-cache",
-      "namespace": "turbo-cache",
       "exposure": "ingress"
     },
     {
@@ -589,6 +574,11 @@
       "bucket": "llm-archive",
       "namespace": "temporal",
       "env": "LLM_ARCHIVE_S3_BUCKET"
+    },
+    {
+      "bucket": "private-sjer-red",
+      "namespace": "s3-static-sites",
+      "env": "S3_BUCKET"
     },
     {
       "bucket": "scout-beta",

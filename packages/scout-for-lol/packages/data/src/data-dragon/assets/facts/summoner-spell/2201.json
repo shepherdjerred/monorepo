@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "2201",
+  "name": "Flee",
+  "description": "Gain a short burst of Move Speed, increased while running away from enemy champions.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "25000"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerCherryHold.png",
+  "cooldownSeconds": 45,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "45 s"
+  }
+}

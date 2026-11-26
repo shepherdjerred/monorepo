@@ -204,3 +204,54 @@ describe("unreciprocatedRules within one namespace", () => {
     ]);
   });
 });
+
+/**
+ * A CI-shaped pair: step pods no synthesized workload backs, selected by a
+ * label's existence, dial a builder whose Ingress names them the same way.
+ */
+const STEP_SELECTOR = {
+  matchExpressions: [{ key: "step", operator: "Exists" as const }],
+};
+
+function ciFleet(builderAdmits: NetworkPolicyPeer): Fleet {
+  const steps: FleetNetworkPolicy = {
+    ...policy("ci", undefined, {
+      egress: [{ peers: [namespacePeer("builder")], ports: [tcpPort(1234)] }],
+    }),
+    podSelector: STEP_SELECTOR,
+  };
+  return fleetOf({
+    workloads: [workload("ci", "worker", 9464), workload("builder", "b", 1234)],
+    networkPolicies: [
+      steps,
+      // A policed neighbour that never dials the builder.
+      policy("ci", "worker", { egress: [] }),
+      policy("builder", undefined, {
+        ingress: [{ peers: [builderAdmits], ports: [tcpPort(1234)] }],
+      }),
+    ],
+  });
+}
+
+describe("unreciprocatedRules with an Exists selector", () => {
+  test("pods named by a label's existence carry the label on both ends", () => {
+    const fleet = ciFleet({
+      ...namespacePeer("ci"),
+      podSelector: STEP_SELECTOR,
+    });
+    expect(unreciprocatedRules(fleet, "Egress")).toEqual([]);
+    expect(unreciprocatedRules(fleet, "Ingress")).toEqual([]);
+  });
+
+  test("an Ingress rule naming other pods of the namespace does not answer the steps", () => {
+    expect(
+      unreciprocatedRules(
+        ciFleet({
+          ...namespacePeer("ci"),
+          podSelector: { matchLabels: { app: "other" } },
+        }),
+        "Egress",
+      ),
+    ).toEqual(["ci/ci-egress -> builder:1234"]);
+  });
+});

@@ -24,11 +24,13 @@ export type PromotionStore = {
   read: <T>(
     key: string,
     schema: z.ZodType<T>,
+    signal?: AbortSignal,
   ) => Promise<{ value: T; etag: string } | undefined>;
   put: (
     key: string,
     value: unknown,
     expectedEtag: string | undefined,
+    signal?: AbortSignal,
   ) => Promise<boolean>;
 };
 
@@ -37,11 +39,13 @@ export function promotionStore(
 ): PromotionStore {
   const prefix = promotionStoragePrefix();
   return {
-    read: (key, schema) => readJson(storage, `${prefix}/${key}`, schema),
-    put: (key, value, expectedEtag) =>
+    read: (key, schema, signal) =>
+      readJson(storage, `${prefix}/${key}`, schema, signal),
+    put: (key, value, expectedEtag, signal) =>
       conditionalWrite(() =>
         writeJson(storage, `${prefix}/${key}`, value, {
           expectedEtag,
+          ...(signal === undefined ? {} : { abortSignal: signal }),
         }),
       ),
   };

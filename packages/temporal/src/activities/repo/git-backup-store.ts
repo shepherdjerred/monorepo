@@ -1,3 +1,4 @@
+import { open, stat } from "node:fs/promises";
 import {
   DeleteObjectsCommand,
   GetObjectCommand,
@@ -8,6 +9,10 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { z } from "zod/v4";
+import {
+  withActivityHeartbeat,
+  type GitSubprocessHooks,
+} from "./git-backup-git.ts";
 
 const SHA256_HEX_SCHEMA = z.string().regex(/^[a-f0-9]{64}$/u);
 
@@ -46,6 +51,7 @@ export type GitBackupObjectStore = {
     key: string,
     filePath: string,
     contentType: string,
+    hooks?: GitSubprocessHooks,
   ) => Promise<void>;
   readonly putBytes: (
     key: string,
@@ -187,12 +193,15 @@ function isMissingObjectError(error: unknown): boolean {
 
 export function createS3GitBackupStore(
   env: Readonly<Record<string, string | undefined>> = Bun.env,
+  defaultHooks?: GitSubprocessHooks,
 ): GitBackupObjectStore {
   const bucket = requiredEnv(env, "GIT_BACKUP_S3_BUCKET");
   const client = new S3Client({
     endpoint: requiredEnv(env, "S3_ENDPOINT"),
     region: env["S3_REGION"] ?? env["AWS_REGION"] ?? "us-east-1",
     forcePathStyle: true,
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
     credentials: {
       accessKeyId: requiredEnv(env, "AWS_ACCESS_KEY_ID"),
       secretAccessKey: requiredEnv(env, "AWS_SECRET_ACCESS_KEY"),
@@ -231,17 +240,32 @@ export function createS3GitBackupStore(
       );
     },
 
-    async putFile(key, filePath, contentType) {
-      const bytes = await Bun.file(filePath).bytes();
-      await client.send(
-        new PutObjectCommand({
-          Bucket: bucket,
-          Key: key,
-          Body: bytes,
-          ContentLength: bytes.byteLength,
-          ContentType: contentType,
-        }),
-      );
+    async putFile(key, filePath, contentType, callHooks) {
+      const effectiveHooks = callHooks ?? defaultHooks;
+      const fileStat = await stat(filePath);
+      const fileHandle = await open(filePath, "r");
+      const bodyStream = fileHandle.createReadStream();
+      try {
+        await withActivityHeartbeat(effectiveHooks, `s3-put:${key}`, () =>
+          client.send(
+            new PutObjectCommand({
+              Bucket: bucket,
+              Key: key,
+              Body: bodyStream,
+              ContentLength: fileStat.size,
+              ContentType: contentType,
+            }),
+            effectiveHooks?.cancellationSignal === undefined
+              ? undefined
+              : { abortSignal: effectiveHooks.cancellationSignal },
+          ),
+        );
+      } finally {
+        bodyStream.destroy();
+        await fileHandle.close().catch(() => {
+          // Closed by createReadStream autoClose.
+        });
+      }
     },
 
     async putBytes(key, body, contentType) {

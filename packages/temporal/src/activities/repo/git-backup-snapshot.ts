@@ -91,7 +91,7 @@ export async function observeRepositoryMirrors(input: {
     hooks,
   });
   const lfsInventory: LfsInventory = config.includeLfs
-    ? await inspectMirrorLfsObjects(mirrorPath)
+    ? await inspectMirrorLfsObjects(mirrorPath, hooks)
     : { objectCount: 0, digest: null, files: [] };
 
   return {
@@ -183,7 +183,12 @@ async function resolveMainBundleKey(
     auth: ctx.auth,
     hooks: ctx.hooks,
   });
-  await ctx.store.putFile(targetKey, localBundleZst, "application/zstd");
+  await ctx.store.putFile(
+    targetKey,
+    localBundleZst,
+    "application/zstd",
+    ctx.hooks,
+  );
   return targetKey;
 }
 
@@ -207,8 +212,14 @@ async function resolveLfsArchiveKey(
   await createZstdLfsArchive({
     inventory: ctx.observation.lfsInventory,
     outputZstPath: localLfsZst,
+    hooks: ctx.hooks,
   });
-  await ctx.store.putFile(targetKey, localLfsZst, "application/zstd");
+  await ctx.store.putFile(
+    targetKey,
+    localLfsZst,
+    "application/zstd",
+    ctx.hooks,
+  );
   return targetKey;
 }
 
@@ -240,7 +251,12 @@ async function resolveWikiBundleKey(
     auth: ctx.auth,
     hooks: ctx.hooks,
   });
-  await ctx.store.putFile(targetKey, localWikiZst, "application/zstd");
+  await ctx.store.putFile(
+    targetKey,
+    localWikiZst,
+    "application/zstd",
+    ctx.hooks,
+  );
   return targetKey;
 }
 

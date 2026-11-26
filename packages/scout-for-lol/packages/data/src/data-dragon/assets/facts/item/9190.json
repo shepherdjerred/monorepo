@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9190",
+  "name": "Echoing Batblades",
+  "description": "Fires piercing projectiles that bounce off walls.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9190.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

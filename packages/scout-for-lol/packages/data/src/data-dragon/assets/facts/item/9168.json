@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9168",
+  "name": "Locked Weapon Slot",
+  "description": "Prove yourself, and Miss Fortune will approve an inventory upgrade.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9168.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

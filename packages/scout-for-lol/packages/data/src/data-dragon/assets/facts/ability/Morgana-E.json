@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Morgana-E",
+  "name": "Black Shield",
+  "description": "Morgana grants an ally champion 100/155/210/265/320 (+70% AP) Magic Shield for 5 seconds. The shield prevents Disabling and Immobilizing effects until it breaks.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Morgana-E.png",
+  "slot": "E",
+  "championKey": "Morgana",
+  "championName": "Morgana",
+  "maxRank": 5,
+  "cooldownByRank": [
+    26,
+    23.5,
+    21,
+    18.5,
+    16
+  ],
+  "costByRank": [
+    80,
+    80,
+    80,
+    80,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "26/23.5/21/18.5/16 s"
+  }
+}

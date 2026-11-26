@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Malzahar",
+  "name": "Malzahar",
+  "description": "A zealous seer dedicated to the unification of all life, Malzahar truly believes the newly emergent Void to be the path to Runeterra's salvation.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "580"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "500"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Malzahar-passive",
+      "name": "Void Shift",
+      "icon": "img/ability/Malzahar-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Malzahar-Q",
+      "name": "Call of the Void",
+      "icon": "img/ability/Malzahar-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Malzahar-W",
+      "name": "Void Swarm",
+      "icon": "img/ability/Malzahar-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Malzahar-E",
+      "name": "Malefic Visions",
+      "icon": "img/ability/Malzahar-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Malzahar-R",
+      "name": "Nether Grasp",
+      "icon": "img/ability/Malzahar-R.png"
+    }
+  ],
+  "icon": "img/champion/Malzahar.png",
+  "art": "img/champion-splash/Malzahar_0.jpg",
+  "title": "the Prophet of the Void",
+  "roles": [
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage"
+  }
+}

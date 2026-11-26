@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Soraka-Q",
+  "name": "Starcall",
+  "description": "Soraka calls down a star, dealing 85/120/155/190/225 (+35% AP) magic damage and Slowing by 30% for 1.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "45/50/55/60/65 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "810"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Soraka-Q.png",
+  "slot": "Q",
+  "championKey": "Soraka",
+  "championName": "Soraka",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7,
+    6,
+    5,
+    4
+  ],
+  "costByRank": [
+    45,
+    50,
+    55,
+    60,
+    65
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    810,
+    810,
+    810,
+    810,
+    810
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7/6/5/4 s"
+  }
+}

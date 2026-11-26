@@ -263,7 +263,8 @@ export function Actors() {
             {created.items.map((issue) => (
               <p key={issue.id}>
                 <Link to={`/issues/${issue.identifier}`}>
-                  {issue.identifier} · {issue.title}
+                  <span className="identifier">{issue.identifier}</span> ·{" "}
+                  {issue.title}
                 </Link>
               </p>
             ))}
@@ -282,7 +283,8 @@ export function Actors() {
             {votes.data?.map((vote) => (
               <p key={vote.identifier}>
                 <Link to={`/issues/${vote.identifier}`}>
-                  {vote.identifier} · {vote.title}
+                  <span className="identifier">{vote.identifier}</span> ·{" "}
+                  {vote.title}
                 </Link>
                 {vote.note !== null && (
                   <span className="muted"> · {vote.note}</span>

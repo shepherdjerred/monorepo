@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Senna-E",
+  "name": "Curse of the Black Mist",
+  "description": "Senna dissolves into a cloud of Black Mist for 6/6.5/7/7.5/8 seconds, becoming a Wraith. Allied champions who enter the Mist are Camouflaged and become Wraiths when they leave.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Senna-E.png",
+  "slot": "E",
+  "championKey": "Senna",
+  "championName": "Senna",
+  "maxRank": 5,
+  "cooldownByRank": [
+    26,
+    24.5,
+    23,
+    21.5,
+    20
+  ],
+  "costByRank": [
+    70,
+    70,
+    70,
+    70,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "26/24.5/23/21.5/20 s"
+  }
+}

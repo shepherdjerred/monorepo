@@ -1,3 +1,4 @@
+import { Button, HeaderBar } from "@shepherdjerred/console-ui";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PromotionOverviewSchema } from "@shepherdjerred/ops-model/promotion/model.ts";
@@ -45,24 +46,26 @@ export function PromotionContent() {
   return (
     <>
       <title>The Storm promotion · Hub</title>
-      <main className="p-main">
-        <div className="p-heading">
-          <div>
-            <p className="eyebrow">The Storm</p>
-            <h1>Promotion</h1>
-          </div>
-          <div className="p-refresh">
-            {data && (
-              <span className="p-muted">Updated {time(data.readAt)}</span>
-            )}
-            <button
-              onClick={() => {
-                void overview.refetch();
-              }}
-            >
-              Refresh
-            </button>
-          </div>
+      <main className="ledger p-main">
+        <div className="page-head">
+          <HeaderBar
+            title="Promotion"
+            meta={
+              <>
+                The Storm
+                {data && ` · Updated ${time(data.readAt)}`}
+              </>
+            }
+            actions={
+              <Button
+                onClick={() => {
+                  void overview.refetch();
+                }}
+              >
+                Refresh
+              </Button>
+            }
+          />
         </div>
         {overview.isError && (
           <div role="alert" className="p-error">
@@ -70,11 +73,15 @@ export function PromotionContent() {
             {data && " Showing the previous read; results may be stale."}
           </div>
         )}
-        {overview.isPending && <p role="status">Reading the latest run…</p>}
+        {overview.isPending && (
+          <p role="status" className="p-pending">
+            Reading the latest run…
+          </p>
+        )}
         {data && (
           <>
             <RedditOutreachPanel data={data.redditOutreach} />
-            <RunPanel summary={data.lastRun} />
+            <RunPanel summary={data.lastRun} spend={data.spend} />
             {activity.size > 0 && <ActivityLegend />}
             <SourceGroups
               summary={sourceTimingSummary(data)}
@@ -89,7 +96,11 @@ export function PromotionContent() {
                 setShowHistory(event.currentTarget.open);
               }}
             >
-              <summary>History, receipts and run details</summary>
+              <summary className="ui-section-head">
+                <span className="ui-section-title">
+                  History, receipts and run details
+                </span>
+              </summary>
               {showHistory && (
                 <HistoryPanel
                   data={data}

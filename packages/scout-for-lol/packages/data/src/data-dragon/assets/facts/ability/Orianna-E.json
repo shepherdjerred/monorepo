@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Orianna-E",
+  "name": "Command: Protect",
+  "description": "Passive: The Ball adds 6/12/18/24/30 Armor and 6/12/18/24/30 Magic Resist to the allied champion it is attached to. Active: Orianna commands her Ball to attach to an allied champion, granting them 55/90/125/160/195 (+45% AP) Shield for 2.5 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1095"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Orianna-E.png",
+  "slot": "E",
+  "championKey": "Orianna",
+  "championName": "Orianna",
+  "maxRank": 5,
+  "cooldownByRank": [
+    9,
+    9,
+    9,
+    9,
+    9
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1095,
+    1095,
+    1095,
+    1095,
+    1095
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "9 s"
+  }
+}

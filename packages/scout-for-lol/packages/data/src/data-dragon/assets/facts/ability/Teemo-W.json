@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Teemo-W",
+  "name": "Move Quick",
+  "description": "Passive: Teemo gains 12/16/20/24/28% Move Speed while he hasn't been damaged by a champion or turret in the last 5 seconds. Active: Teemo sprints, gaining 24/32/40/48/56% Move Speed that is not lost when struck for 3 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Teemo-W.png",
+  "slot": "W",
+  "championKey": "Teemo",
+  "championName": "Teemo",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    14,
+    14,
+    14,
+    14
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14 s"
+  }
+}

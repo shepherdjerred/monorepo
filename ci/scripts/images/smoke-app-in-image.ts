@@ -157,7 +157,7 @@ const commands: Record<
       "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
       "for _ in $(seq 1 30); do",
       "  if grep -Fq 'alert_dashboard_started' /tmp/alert-dashboard-smoke.log; then",
-      String.raw`    bun -e 'const response = await fetch("http://127.0.0.1:17341/"); const body = await response.text(); if (!response.ok || !body.includes("<div id=\"root\"></div>")) throw new Error("alert dashboard UI was not served"); const font = await fetch("http://127.0.0.1:17341/fonts/BerkeleyMono-Regular.woff2"); const bytes = new Uint8Array(await font.arrayBuffer()); if (!font.ok || !font.headers.get("content-type")?.includes("font/woff2") || String.fromCodePoint(...bytes.slice(0, 4)) !== "wOF2") throw new Error("alert dashboard font was not served")'`,
+      String.raw`    bun -e 'const response = await fetch("http://127.0.0.1:17341/"); const body = await response.text(); if (!response.ok || !body.includes("<div id=\"root\"></div>")) throw new Error("alert dashboard UI was not served"); const base = "http://127.0.0.1:17341"; const sheetPath = /href="(\/assets\/[^"]+\.css)"/u.exec(body)?.[1]; if (sheetPath === undefined) throw new Error("alert dashboard stylesheet was not linked"); const css = await (await fetch(base + sheetPath)).text(); const fontPath = /\/assets\/BerkeleyMono-Regular-[\w-]+\.woff2/u.exec(css)?.[0]; if (fontPath === undefined) throw new Error("alert dashboard stylesheet does not reference Berkeley Mono"); const font = await fetch(base + fontPath); const bytes = new Uint8Array(await font.arrayBuffer()); if (!font.ok || !font.headers.get("content-type")?.includes("font/woff2") || String.fromCodePoint(...bytes.slice(0, 4)) !== "wOF2") throw new Error("alert dashboard font was not served")'`,
       "    exit 0",
       "  fi",
       "  if ! kill -0 $pid; then cat /tmp/alert-dashboard-smoke.log; exit 1; fi",
@@ -171,6 +171,9 @@ const commands: Record<
       ALERT_DASHBOARD_WEBHOOK_TOKEN:
         "smoke-test-token-with-at-least-32-characters",
       DATABASE_URL: "file:/tmp/alert-dashboard-smoke.db",
+      // The traces index defaults to the production volume (/data), which the
+      // image does not have; keep it beside the smoke database.
+      TRACES_INDEX_DB_PATH: "/tmp/alert-dashboard-smoke-traces.db",
       FEATURE_FLAGS_MODE: "disabled",
       GRAFANA_API_KEY: "smoke-viewer-token",
       GRAFANA_URL: "http://127.0.0.1:13000",
@@ -306,6 +309,7 @@ const commands: Record<
       "set -eu",
       "mkdir -p /tmp/smoke-vault",
       "cd /app",
+      "test -s packages/tasknotes-web/dist/index.html",
       "bun packages/tasknotes-server/src/index.ts >/tmp/tasknotes-smoke.log 2>&1 &",
       "pid=$!",
       "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
@@ -332,7 +336,6 @@ const commands: Record<
       `bun -e 'const recipe = await import("./scripts/jobs/control-plane.ts"); if (typeof recipe.run !== "function") throw new Error("Control-plane recipe runtime closure is incomplete");'`,
       `bun -e 'const guard = await import("./src/lib/delivery/credential-prune.ts"); if (typeof guard.credentialSyncPrunes !== "function") throw new Error("Credential retirement runtime closure is incomplete");'`,
       "kubectl version --client",
-      "github-mcp-server --version",
       "talosctl version --client",
       "tofu version",
       "argocd version --client",

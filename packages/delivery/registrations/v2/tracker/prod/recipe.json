@@ -1,5 +1,5 @@
 {
-  "id": "tracker/prod/2",
+  "id": "tracker/prod/3",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "tracker"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "tracker"
       },
       "syncOptions": ["CreateNamespace=true"],

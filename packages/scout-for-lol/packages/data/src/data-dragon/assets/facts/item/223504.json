@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223504",
+  "name": "Ardent Censer",
+  "description": "Sanctify: Healing or Shielding another ally enhances you both for 6 seconds, granting your Attacks 40% Attack Speed and 25 magic damage On-Hit.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "40"
+    },
+    {
+      "label": "Heal and Shield Power",
+      "value": "10%"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "150%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "6%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223504.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

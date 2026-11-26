@@ -272,7 +272,9 @@ const COLLECTIONS: Record<SourceId, OpsCollection> = {
   ),
   maintenance: mapMaintenance(
     {
-      certificates: [sample(86_400, { namespace: "postal", name: "smtp" })],
+      certificates: [
+        sample(86_400, { namespace: "mail", name: "mail-smtp-tls" }),
+      ],
       probeCertificates: [sample(5 * 86_400, { instance: "https://sjer.red" })],
       filesystems: [sample(0.95, { instance: "torvalds", mountpoint: "/var" })],
       zpools: [sample(0.85, { zpool_name: "tank" })],

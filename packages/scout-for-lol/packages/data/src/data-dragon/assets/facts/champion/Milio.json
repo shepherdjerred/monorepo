@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Milio",
+  "name": "Milio",
+  "description": "Milio is a warmhearted boy from Ixtal who has, despite his young age, mastered the fire axiom and discovered something new: soothing fire.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "560"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Milio-passive",
+      "name": "Fired Up!",
+      "icon": "img/ability/Milio-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Milio-Q",
+      "name": "Ultra Mega Fire Kick",
+      "icon": "img/ability/Milio-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Milio-W",
+      "name": "Cozy Campfire",
+      "icon": "img/ability/Milio-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Milio-E",
+      "name": "Warm Hugs",
+      "icon": "img/ability/Milio-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Milio-R",
+      "name": "Breath of Life",
+      "icon": "img/ability/Milio-R.png"
+    }
+  ],
+  "icon": "img/champion/Milio.png",
+  "art": "img/champion-splash/Milio_0.jpg",
+  "title": "The Gentle Flame",
+  "roles": [
+    "Support",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Support, Mage"
+  }
+}

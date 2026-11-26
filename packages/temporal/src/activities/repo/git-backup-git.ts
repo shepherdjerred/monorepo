@@ -1,10 +1,20 @@
 import { createHash } from "node:crypto";
-import { chmod, mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises";
+import {
+  chmod,
+  mkdir,
+  mkdtemp,
+  open,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { zstdCompressSync } from "node:zlib";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import { createZstdCompress } from "node:zlib";
 
-const HEARTBEAT_INTERVAL_MS = 15_000;
+export const HEARTBEAT_INTERVAL_MS = 15_000;
 const CANCELLATION_GRACE_MS = 1000;
 const INHERITED_ENV_KEYS = [
   "HOME",
@@ -96,17 +106,15 @@ export async function withGitAuthEnvironment<T>(
   await writeFile(configPath, gitConfigContent, { mode: 0o600 });
   await chmod(configPath, 0o600);
 
-  const env: Record<string, string> = {};
+  const env: Record<string, string> = {
+    GIT_CONFIG_GLOBAL: configPath,
+    GIT_CONFIG_NOSYSTEM: "1",
+    GIT_TERMINAL_PROMPT: "0",
+    GCM_INTERACTIVE: "never",
+  };
   for (const key of INHERITED_ENV_KEYS) {
-    const value = Bun.env[key];
-    if (value !== undefined) {
-      env[key] = value;
-    }
+    if (Bun.env[key] !== undefined) env[key] = Bun.env[key];
   }
-  env["GIT_CONFIG_GLOBAL"] = configPath;
-  env["GIT_CONFIG_NOSYSTEM"] = "1";
-  env["GIT_TERMINAL_PROMPT"] = "0";
-  env["GCM_INTERACTIVE"] = "never";
 
   try {
     return await fn({ env, secrets });
@@ -119,8 +127,7 @@ async function readRedactedStream(
   stream: ReadableStream<Uint8Array>,
   secrets: readonly string[],
 ): Promise<string> {
-  const raw = await new Response(stream).text();
-  return redactGitSecrets(raw, secrets);
+  return redactGitSecrets(await new Response(stream).text(), secrets);
 }
 
 export async function runGitSubprocess(input: {
@@ -220,9 +227,7 @@ async function mirrorUsesLfs(
   hooks: GitSubprocessHooks,
 ): Promise<boolean> {
   const check = await runGitSubprocess({
-    args: ["-C", mirrorPath, " show", "HEAD:.gitattributes"].map((s) =>
-      s.trim(),
-    ),
+    args: ["-C", mirrorPath, "show", "HEAD:.gitattributes"],
     auth,
     hooks,
     stepLabel: "inspect-gitattributes",
@@ -250,8 +255,7 @@ export async function syncBareMirror(input: {
   readonly hooks: GitSubprocessHooks;
   readonly resolveLfsBinary?: (() => string | null) | undefined;
 }): Promise<void> {
-  const initialized = await isInitializedBareRepo(input.mirrorPath);
-  if (initialized) {
+  if (await isInitializedBareRepo(input.mirrorPath)) {
     await runGitSubprocess({
       args: [
         "-C",
@@ -294,19 +298,13 @@ export async function syncBareMirror(input: {
     }
     const existingPath = input.auth.env["PATH"] ?? "";
     const lfsDir = path.dirname(lfsBin);
-    const lfsAuth: GitAuthContext = {
-      ...input.auth,
-      env: {
-        ...input.auth.env,
-        PATH:
-          existingPath === ""
-            ? lfsDir
-            : `${lfsDir}${path.delimiter}${existingPath}`,
-      },
-    };
+    const nextPath =
+      existingPath === ""
+        ? lfsDir
+        : `${lfsDir}${path.delimiter}${existingPath}`;
     await runGitSubprocess({
       args: ["-C", input.mirrorPath, "lfs", "fetch", "--all"],
-      auth: lfsAuth,
+      auth: { ...input.auth, env: { ...input.auth.env, PATH: nextPath } },
       hooks: input.hooks,
       stepLabel: `lfs-fetch:${input.repoLabel}`,
     });
@@ -421,6 +419,31 @@ export async function computeMirrorRefDigest(input: {
   return { refCount: sortedLines.length, refDigest };
 }
 
+export async function withActivityHeartbeat<T>(
+  hooks: GitSubprocessHooks | undefined,
+  stepLabel: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  if (hooks === undefined) {
+    return fn();
+  }
+  hooks.cancellationSignal?.throwIfAborted();
+  const startedAt = Date.now();
+  const heartbeatTimer = setInterval(() => {
+    hooks.heartbeat({
+      step: stepLabel,
+      elapsedMs: Date.now() - startedAt,
+    });
+  }, hooks.heartbeatIntervalMs ?? HEARTBEAT_INTERVAL_MS);
+  try {
+    const result = await fn();
+    hooks.cancellationSignal?.throwIfAborted();
+    return result;
+  } finally {
+    clearInterval(heartbeatTimer);
+  }
+}
+
 export async function createZstdGitBundle(input: {
   readonly mirrorPath: string;
   readonly outputZstPath: string;
@@ -449,9 +472,27 @@ export async function createZstdGitBundle(input: {
       hooks: input.hooks,
       stepLabel: `bundle-verify:${input.repoLabel}`,
     });
-    const rawBytes = await Bun.file(rawBundlePath).bytes();
-    const compressedBytes = zstdCompressSync(rawBytes);
-    await Bun.write(input.outputZstPath, compressedBytes);
+    await withActivityHeartbeat(
+      input.hooks,
+      `bundle-compress:${input.repoLabel}`,
+      async () => {
+        const outHandle = await open(input.outputZstPath, "w");
+        try {
+          await pipeline(
+            Readable.fromWeb(Bun.file(rawBundlePath).stream()),
+            createZstdCompress(),
+            outHandle.createWriteStream(),
+            ...(input.hooks.cancellationSignal === undefined
+              ? []
+              : [{ signal: input.hooks.cancellationSignal }]),
+          );
+        } finally {
+          await outHandle.close().catch(() => {
+            // Closed by createWriteStream autoClose.
+          });
+        }
+      },
+    );
   } finally {
     await rm(rawBundlePath, { force: true });
   }

@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Yone-R",
+  "name": "Fate Sealed",
+  "description": "Yone strikes all enemies along a path for 100/200/300 (+40% bonus AD) physical damage and 100/200/300 (+40% bonus AD) magic damage, teleporting behind the last champion hit and Knocking Up victims towards Yone.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Yone-R.png",
+  "slot": "R",
+  "championKey": "Yone",
+  "championName": "Yone",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

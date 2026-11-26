@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "771027",
+  "name": "Sapphire Crystal",
+  "description": "Grants 200 Mana.",
+  "facts": [
+    {
+      "label": "Mana",
+      "value": "200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/771027.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

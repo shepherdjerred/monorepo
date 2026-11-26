@@ -62,6 +62,7 @@
     "discord.js-selfbot-v13": "^3.7",
     "ink": "8.0.0",
     "react": "19.3.1",
+    "react-devtools-core": "6.1.5",
     "zod": "^4.4.3",
     "@shepherdjerred/ops-model": "workspace:*",
     "@shepherdjerred/config": "workspace:*",

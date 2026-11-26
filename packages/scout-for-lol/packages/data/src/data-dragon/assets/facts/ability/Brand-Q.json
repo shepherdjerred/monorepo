@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Brand-Q",
+  "name": "Sear",
+  "description": "Brand launches a fireball that deals 70/100/130/160/190 (+65% AP) magic damage to the first enemy hit. If the target is Ablaze, they will be Stunned for 1.75 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1050"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Brand-Q.png",
+  "slot": "Q",
+  "championKey": "Brand",
+  "championName": "Brand",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    7.5,
+    7,
+    6.5,
+    6
+  ],
+  "costByRank": [
+    70,
+    70,
+    70,
+    70,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1050,
+    1050,
+    1050,
+    1050,
+    1050
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8/7.5/7/6.5/6 s"
+  }
+}

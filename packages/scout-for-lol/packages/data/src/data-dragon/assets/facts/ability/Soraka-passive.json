@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Soraka-passive",
+  "name": "Salvation",
+  "description": "Soraka runs faster towards nearby low health allies.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Soraka-passive.png",
+  "slot": "passive",
+  "championKey": "Soraka",
+  "championName": "Soraka",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

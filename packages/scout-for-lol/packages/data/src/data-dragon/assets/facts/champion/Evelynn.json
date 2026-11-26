@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Evelynn",
+  "name": "Evelynn",
+  "description": "Within the dark seams of Runeterra, the demon Evelynn searches for her next victim. She lures in prey with the voluptuous façade of a human female, but once a person succumbs to her charms, Evelynn's true form is unleashed.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "642"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Evelynn-passive",
+      "name": "Demon Shade",
+      "icon": "img/ability/Evelynn-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Evelynn-Q",
+      "name": "Hate Spike",
+      "icon": "img/ability/Evelynn-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Evelynn-W",
+      "name": "Allure",
+      "icon": "img/ability/Evelynn-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Evelynn-E",
+      "name": "Whiplash",
+      "icon": "img/ability/Evelynn-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Evelynn-R",
+      "name": "Last Caress",
+      "icon": "img/ability/Evelynn-R.png"
+    }
+  ],
+  "icon": "img/champion/Evelynn.png",
+  "art": "img/champion-splash/Evelynn_0.jpg",
+  "title": "Agony's Embrace",
+  "roles": [
+    "Assassin",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin, Mage"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "223100",
+  "name": "Lich Bane",
+  "description": "Spellblade: (0s) After using an Ability, your next Attack is enhanced with an additional magic damage On-Hit.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "80"
+    },
+    {
+      "label": "Move Speed",
+      "value": "10%"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/223100.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

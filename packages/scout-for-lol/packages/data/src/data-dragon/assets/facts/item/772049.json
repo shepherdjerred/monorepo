@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "772049",
+  "name": "Sightstone",
+  "description": "Ward Refresh: Holds 3 charges and refills upon visiting the shop.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "180"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/771028.png"
+    }
+  ],
+  "icon": "img/item/772049.png",
+  "goldTotal": 800,
+  "goldCombine": 325,
+  "keyFact": {
+    "label": "Cost",
+    "value": "800 gold"
+  }
+}

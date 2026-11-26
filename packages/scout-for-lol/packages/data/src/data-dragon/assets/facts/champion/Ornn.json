@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Ornn",
+  "name": "Ornn",
+  "description": "Ornn is the Freljordian spirit of forging and craftsmanship. He works in the solitude of a massive smithy, hammered out from the lava caverns beneath the volcano Hearth-Home.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "660"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Ornn-passive",
+      "name": "Living Forge",
+      "icon": "img/ability/Ornn-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ornn-Q",
+      "name": "Volcanic Rupture",
+      "icon": "img/ability/Ornn-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ornn-W",
+      "name": "Bellows Breath",
+      "icon": "img/ability/Ornn-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ornn-E",
+      "name": "Searing Charge",
+      "icon": "img/ability/Ornn-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Ornn-R",
+      "name": "Call of the Forge God",
+      "icon": "img/ability/Ornn-R.png"
+    }
+  ],
+  "icon": "img/champion/Ornn.png",
+  "art": "img/champion-splash/Ornn_0.jpg",
+  "title": "The Fire below the Mountain",
+  "roles": [
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9280",
+  "name": "OwO Blaster",
+  "description": "Fires projectiles extremely rapidly at the nearest enemy, dealing damage to the first target hit.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9280.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

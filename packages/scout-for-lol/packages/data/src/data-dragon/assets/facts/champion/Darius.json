@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Darius",
+  "name": "Darius",
+  "description": "There is no greater symbol of Noxian might than Darius, the nation's most feared and battle-hardened commander. Rising from humble origins to become the Hand of Noxus, he cleaves through the empire's enemies—many of them Noxians themselves.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "652"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Darius-passive",
+      "name": "Hemorrhage",
+      "icon": "img/ability/Darius-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Darius-Q",
+      "name": "Decimate",
+      "icon": "img/ability/Darius-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Darius-W",
+      "name": "Crippling Strike",
+      "icon": "img/ability/Darius-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Darius-E",
+      "name": "Apprehend",
+      "icon": "img/ability/Darius-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Darius-R",
+      "name": "Noxian Guillotine",
+      "icon": "img/ability/Darius-R.png"
+    }
+  ],
+  "icon": "img/champion/Darius.png",
+  "art": "img/champion-splash/Darius_0.jpg",
+  "title": "the Hand of Noxus",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

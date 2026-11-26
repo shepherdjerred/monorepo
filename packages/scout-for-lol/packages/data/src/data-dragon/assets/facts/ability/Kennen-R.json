@@ -1,0 +1,39 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kennen-R",
+  "name": "Slicing Maelstrom",
+  "description": "Kennen unleashes a magical storm, dealing 40/80/120 (+25% AP) magic damage to all nearby enemies every 0.5 seconds, and gaining 25/50/75 Armor and 25/50/75 Magic Resist for 3 seconds.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kennen-R.png",
+  "slot": "R",
+  "championKey": "Kennen",
+  "championName": "Kennen",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    120,
+    120
+  ],
+  "costByRank": [
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120 s"
+  }
+}

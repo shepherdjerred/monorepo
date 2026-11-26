@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Katarina-E",
+  "name": "Shunpo",
+  "description": "Katarina blinks in the wink of an eye to the target ally, enemy, or Dagger. If it is an enemy, Katarina strikes for 20/30/40/50/60 (+25% AP) (+40% AD) magic damage - otherwise she strikes the nearest enemy in range.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "725"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Katarina-E.png",
+  "slot": "E",
+  "championKey": "Katarina",
+  "championName": "Katarina",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11,
+    10,
+    9,
+    8
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    725,
+    725,
+    725,
+    725,
+    725
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11/10/9/8 s"
+  }
+}

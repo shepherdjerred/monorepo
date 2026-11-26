@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Veigar-passive",
+  "name": "Phenomenal Evil Power",
+  "description": "Veigar is the greatest Evil to ever strike at the hearts of Runeterra - and he's only getting bigger! Striking an enemy Champion with a spell or scoring a takedown grants Veigar permanently increased Ability Power.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Veigar-passive.png",
+  "slot": "passive",
+  "championKey": "Veigar",
+  "championName": "Veigar",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

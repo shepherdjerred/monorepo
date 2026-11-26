@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Nautilus",
+  "name": "Nautilus",
+  "description": "A lonely legend as old as the first piers sunk in Bilgewater, the armored goliath known as Nautilus roams the dark waters off the coast of the Blue Flame Isles.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "646"
+    },
+    {
+      "label": "Move speed",
+      "value": "325"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Nautilus-passive",
+      "name": "Staggering Blow",
+      "icon": "img/ability/Nautilus-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nautilus-Q",
+      "name": "Dredge Line",
+      "icon": "img/ability/Nautilus-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nautilus-W",
+      "name": "Titan's Wrath",
+      "icon": "img/ability/Nautilus-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nautilus-E",
+      "name": "Riptide",
+      "icon": "img/ability/Nautilus-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Nautilus-R",
+      "name": "Depth Charge",
+      "icon": "img/ability/Nautilus-R.png"
+    }
+  ],
+  "icon": "img/champion/Nautilus.png",
+  "art": "img/champion-splash/Nautilus_0.jpg",
+  "title": "the Titan of the Depths",
+  "roles": [
+    "Tank",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Support"
+  }
+}

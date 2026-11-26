@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "9111",
+  "name": "Triumph",
+  "description": "Takedowns restore 5% of your missing health and grant an additional 20 gold.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/Triumph.png",
+  "tree": "Precision",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Precision"
+  }
+}

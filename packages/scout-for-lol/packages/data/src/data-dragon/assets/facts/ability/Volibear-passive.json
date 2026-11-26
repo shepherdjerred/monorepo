@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Volibear-passive",
+  "name": "The Relentless Storm",
+  "description": "Volibear's Attacks and abilities grant Attack Speed, and eventually cause his Attacks to deal bonus magic damage to nearby enemies.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Volibear-passive.png",
+  "slot": "passive",
+  "championKey": "Volibear",
+  "championName": "Volibear",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

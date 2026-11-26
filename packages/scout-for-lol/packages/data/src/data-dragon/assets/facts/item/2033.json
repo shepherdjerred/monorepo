@@ -1,0 +1,23 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2033",
+  "name": "Corrupting Potion",
+  "description": "Active - Consume: Consumes a charge to restore 100 Health and 75 Mana over 12 seconds.",
+  "facts": [],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "2031",
+      "name": "Refillable Potion",
+      "icon": "img/item/2031.png"
+    }
+  ],
+  "icon": "img/item/2033.png",
+  "goldTotal": 500,
+  "goldCombine": 350,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

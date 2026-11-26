@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9187",
+  "name": "T.I.B.B.E.R.S",
+  "description": "Summons Robo-Tibbers.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9187.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

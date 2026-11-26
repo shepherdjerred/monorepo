@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "446693",
+  "name": "Prowler's Claw",
+  "description": "Sandswipe: Dash through target enemy, dealing a part of the target's maximum Health as bonus Physical Damage.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "60"
+    },
+    {
+      "label": "Lethality",
+      "value": "20"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/446693.png",
+  "goldTotal": 1000,
+  "goldCombine": 1000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1000 gold"
+  }
+}

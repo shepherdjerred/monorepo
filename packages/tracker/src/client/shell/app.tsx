@@ -8,6 +8,7 @@ import {
   useSearchParams,
 } from "react-router";
 import { Plus, Search } from "lucide-react";
+import { ShellFrame } from "@shepherdjerred/console-ui";
 import { api, queryClient, type BootstrapData } from "#client/data/api.ts";
 import { bootstrapKey, listsKey } from "#client/data/cache.ts";
 import { ErrorNotice, Modal } from "#client/ui/ui.tsx";
@@ -259,48 +260,52 @@ export function Shell() {
       >
         Skip to content
       </a>
-      <Sidebar
-        bootstrap={data}
-        teamKey={teamKey}
-        create={newIssue}
-        search={() => {
-          setOverlay("palette");
-        }}
-        help={() => {
-          setOverlay("help");
-        }}
-        identity={() => {
-          setOverlay("identity");
-        }}
-      />
-      <div className="main-content">
-        <header className="page-header">
+      <ShellFrame
+        sidebar={
+          <Sidebar
+            bootstrap={data}
+            teamKey={teamKey}
+            search={() => {
+              setOverlay("palette");
+            }}
+            help={() => {
+              setOverlay("help");
+            }}
+            identity={() => {
+              setOverlay("identity");
+            }}
+          />
+        }
+      >
+        <header className="ui-header page-header">
           {route.view === "issue" ||
           route.view === "forum" ||
           route.view === "forum-thread" ? (
-            <p className="page-title">{heading}</p>
+            <p className="ui-header-title page-title">{heading}</p>
           ) : (
-            <h1 className="page-title">{heading}</h1>
+            <h1 className="ui-header-title page-title">{heading}</h1>
           )}
-          <span className="spacer" />
-          <LiveIndicator className="mobile-live" />
-          <button
-            className="mobile-search icon-button"
-            aria-label="Search"
-            onClick={() => {
-              setOverlay("palette");
-            }}
-          >
-            <Search size={18} />
-          </button>
-          <button
-            className="primary"
-            disabled={data?.writesEnabled !== true}
-            onClick={newIssue}
-          >
-            <Plus size={15} />
-            <span>New issue</span>
-          </button>
+          <div className="ui-header-actions">
+            <LiveIndicator className="header-live" />
+            <button
+              className="mobile-search icon-button"
+              aria-label="Search"
+              onClick={() => {
+                setOverlay("palette");
+              }}
+            >
+              <Search size={18} />
+            </button>
+            <button
+              className="primary"
+              aria-keyshortcuts="C"
+              disabled={data?.writesEnabled !== true}
+              onClick={newIssue}
+            >
+              <Plus size={14} />
+              <span>New issue</span>
+            </button>
+          </div>
         </header>
         <main id="main" tabIndex={-1}>
           {bootstrap.error !== null && <ErrorNotice error={bootstrap.error} />}
@@ -317,7 +322,7 @@ export function Shell() {
             </>
           )}
         </main>
-      </div>
+      </ShellFrame>
       {context !== undefined && (
         <>
           <NewIssue

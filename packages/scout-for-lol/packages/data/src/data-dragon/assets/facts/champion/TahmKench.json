@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "TahmKench",
+  "name": "Tahm Kench",
+  "description": "Known by many names throughout history, the demon Tahm Kench travels the waterways of Runeterra, feeding his insatiable appetite with the misery of others.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "640"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "TahmKench-passive",
+      "name": "An Acquired Taste",
+      "icon": "img/ability/TahmKench-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "TahmKench-Q",
+      "name": "Tongue Lash",
+      "icon": "img/ability/TahmKench-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "TahmKench-W",
+      "name": "Abyssal Dive",
+      "icon": "img/ability/TahmKench-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "TahmKench-E",
+      "name": "Thick Skin",
+      "icon": "img/ability/TahmKench-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "TahmKench-R",
+      "name": "Devour",
+      "icon": "img/ability/TahmKench-R.png"
+    }
+  ],
+  "icon": "img/champion/TahmKench.png",
+  "art": "img/champion-splash/TahmKench_0.jpg",
+  "title": "The River King",
+  "roles": [
+    "Tank",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank, Support"
+  }
+}

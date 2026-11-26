@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2150",
+  "name": "Elixir of Skill",
+  "description": "Consume: Grants 1 Skill Point.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2150.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

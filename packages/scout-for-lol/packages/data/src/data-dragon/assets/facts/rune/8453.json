@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8453",
+  "name": "Revitalize",
+  "description": "Gain 5% Heal and Shield Power. Heals and shields you cast or receive are 10% stronger on targets below 40% health.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/Revitalize.png",
+  "tree": "Resolve",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Resolve"
+  }
+}

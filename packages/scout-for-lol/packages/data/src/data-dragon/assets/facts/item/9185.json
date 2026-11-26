@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9185",
+  "name": "Anti-Shark Sea Mine",
+  "description": "Fires explosives that bounce between enemies.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9185.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

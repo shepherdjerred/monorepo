@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Sona-R",
+  "name": "Crescendo",
+  "description": "Sona strikes an irresistible chord, Stunning enemy for 1.5 seconds and dealing 150/250/350 (+50% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "900"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Sona-R.png",
+  "slot": "R",
+  "championKey": "Sona",
+  "championName": "Sona",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    120,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    900,
+    900,
+    900
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/120/100 s"
+  }
+}

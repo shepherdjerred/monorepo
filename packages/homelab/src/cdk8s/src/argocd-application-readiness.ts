@@ -138,7 +138,7 @@ function offendingResources(item: ApplicationListItem): string[] {
  * its offending resources. Consumed by the health-wait timeout path so a
  * failed wait names the stuck app (during the build 6296–6333 incident the
  * bare "apps did not become Synced/Healthy" message forced manual kubectl
- * archaeology to find the turbo-cache orphan / mario-kart crash-loop).
+ * archaeology to find the orphaned resource / crash-looping pod).
  */
 export function unreadyApplicationSummaries(
   list: unknown,

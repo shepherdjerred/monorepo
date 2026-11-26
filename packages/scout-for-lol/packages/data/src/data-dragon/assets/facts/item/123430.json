@@ -1,0 +1,52 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "123430",
+  "name": "Rite of Ruin",
+  "description": "Wrath and Ruin: On spell cast, gain 2.5% Critical Strike Chance for 6 seconds, stacking up to 20%. Salvage the Wreckage: Your spells have a chance equal to your Critical Strike Chance to grant you or your targeted ally a shield for for 3s.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "55"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "4%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1018",
+      "name": "Cloak of Agility",
+      "icon": "img/item/1018.png"
+    },
+    {
+      "kind": "item",
+      "key": "3113",
+      "name": "Aether Wisp",
+      "icon": "img/item/3113.png"
+    },
+    {
+      "kind": "item",
+      "key": "3108",
+      "name": "Fiendish Codex",
+      "icon": "img/item/3108.png"
+    }
+  ],
+  "icon": "img/item/123430.png",
+  "goldTotal": 3000,
+  "goldCombine": 650,
+  "keyFact": {
+    "label": "Cost",
+    "value": "3000 gold"
+  }
+}

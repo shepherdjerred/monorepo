@@ -21,7 +21,6 @@ test("release pruning is limited to charts with intentional resource removal", (
     [
       "arcade",
       "birmel",
-      "freshrss",
       "media",
       "s3-static-sites",
       "scout-beta",
@@ -30,13 +29,11 @@ test("release pruning is limited to charts with intentional resource removal", (
       "storm-forum",
       "temporal",
       "trmnl-dashboard",
-      "turbo-cache",
       "woodpecker",
     ].filter(releasePrunesChart),
   ).toEqual([
     "arcade",
     "birmel",
-    "freshrss",
     "media",
     "s3-static-sites",
     "scout-beta",
@@ -45,7 +42,6 @@ test("release pruning is limited to charts with intentional resource removal", (
     "storm-forum",
     "temporal",
     "trmnl-dashboard",
-    "turbo-cache",
     "woodpecker",
   ]);
   expect(releasePrunesChart("apps")).toBe(false);
@@ -69,7 +65,7 @@ metadata:
   name: worker
 spec:
   source:
-    repoURL: https://chartmuseum.sjer.red
+    repoURL: https://charts.tailnet-1a49.ts.net
     chart: worker
 ---
 apiVersion: v1
@@ -91,7 +87,7 @@ items:
       name: retired-app
     spec:
       source:
-        repoURL: https://chartmuseum.tailnet-1a49.ts.net
+        repoURL: https://charts.tailnet-1a49.ts.net
         chart: retired-app
 ---
 ---
@@ -114,7 +110,7 @@ kind: Application
 metadata: {}
 spec:
   source:
-    repoURL: https://chartmuseum.sjer.red
+    repoURL: https://charts.tailnet-1a49.ts.net
 `),
     ).toThrow("missing metadata.name");
   });
@@ -129,7 +125,7 @@ metadata:
     delivery.shepherdjerred.com/environment: minecraft/tsmc
 spec:
   source:
-    repoURL: https://chartmuseum.sjer.red
+    repoURL: https://charts.tailnet-1a49.ts.net
     chart: minecraft
 `),
     ).toEqual(new Set());

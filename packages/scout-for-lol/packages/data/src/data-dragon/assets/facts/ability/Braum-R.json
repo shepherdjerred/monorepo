@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Braum-R",
+  "name": "Glacial Fissure",
+  "description": "Braum slams the ground sending forth a fissure that Knocks Up enemies in its path and nearby Braum, and deals 150/250/350 (+60% AP) magic damage. The first target hit is Knocked Up for between 0.6 and 1/1.5/2 seconds, increasing with distance from Braum.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1250"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Braum-R.png",
+  "slot": "R",
+  "championKey": "Braum",
+  "championName": "Braum",
+  "maxRank": 3,
+  "cooldownByRank": [
+    130,
+    115,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1250,
+    1250,
+    1250
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "130/115/100 s"
+  }
+}

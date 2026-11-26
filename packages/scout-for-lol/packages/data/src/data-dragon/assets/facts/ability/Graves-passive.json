@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Graves-passive",
+  "name": "New Destiny",
+  "description": "Graves' shotgun has some unique properties. He must reload when he runs out of ammo.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Graves-passive.png",
+  "slot": "passive",
+  "championKey": "Graves",
+  "championName": "Graves",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

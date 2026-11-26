@@ -63,8 +63,8 @@ An agent host keeps no credential files. Do not run `talosctl kubeconfig`,
   apply time through the service account), and the `admin@torvalds` context;
   kubectl obtains a client credential from `toolkit kube credential`.
 - `~/.aws/config` gives the bucket-scoped `b2-velero`, `b2-postgres-wal`, and
-  `b2-seaweedfs-backups` profiles, plus `seaweedfs` and `brim-sync`, a
-  `credential_process` of `toolkit aws credential <profile>`.
+  `b2-seaweedfs-backups` profiles, plus `seaweedfs`, `brim-sync`, and
+  `agent-share`, a `credential_process` of `toolkit aws credential <profile>`.
 - `~/.local/share/toolkit/shims` holds `talosctl`, `argocd`, `gcx`,
   `woodpecker-cli`, `temporal`, and `posthog-cli` shims that run the matching
   `toolkit` passthrough. Fish, bash, and zsh put that directory ahead of the
@@ -144,12 +144,11 @@ Do not infer sync completeness merely because a client process is running.
 
 ## Before the automated installer
 
-Download the licensed Berkeley Mono static TTF package and leave its extracted
+Download the Berkeley Mono static TTF package and leave its extracted
 directory under `~/Downloads`. The installer locates the directory through its
 single `BerkeleyMono-Regular.ttf`, downloads the pinned Nerd Fonts patcher,
 patches every TTF in that directory, and installs the results in
-`~/Library/Fonts`. The licensed source fonts and generated fonts remain outside
-the repository.
+`~/Library/Fonts`.
 
 If the extracted fonts live elsewhere, set `BERKELEY_MONO_SOURCE_DIR` to that
 directory when invoking `install_macos.sh`. The source directory must contain

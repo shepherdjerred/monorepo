@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Katarina",
+  "name": "Katarina",
+  "description": "Decisive in judgment and lethal in combat, Katarina is a Noxian assassin of the highest caliber. Eldest daughter to the legendary General Du Couteau, she made her talents known with swift kills against unsuspecting enemies.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "672"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Katarina-passive",
+      "name": "Voracity",
+      "icon": "img/ability/Katarina-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Katarina-Q",
+      "name": "Bouncing Blade",
+      "icon": "img/ability/Katarina-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Katarina-W",
+      "name": "Preparation",
+      "icon": "img/ability/Katarina-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Katarina-E",
+      "name": "Shunpo",
+      "icon": "img/ability/Katarina-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Katarina-R",
+      "name": "Death Lotus",
+      "icon": "img/ability/Katarina-R.png"
+    }
+  ],
+  "icon": "img/champion/Katarina.png",
+  "art": "img/champion-splash/Katarina_0.jpg",
+  "title": "the Sinister Blade",
+  "roles": [
+    "Assassin",
+    "Mage"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin, Mage"
+  }
+}

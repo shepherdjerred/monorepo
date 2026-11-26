@@ -163,6 +163,12 @@ modules on (skylands generates the `skylands` claim world towns requires; agent,
 discord and world need external services), and `TheStormMechanicsE2E.jar`, which runs the production
 mechanics module and builds its bridge and super-push fixtures at x 400-415.
 
+The repository-owned TheStorm directory carries files Git does not hold: the
+rwf bots' baked navigation meshes, named by sha256 in `rwf/nav-manifest.json`.
+Staging checks each one against the manifest and, when any is absent or
+different, runs The Storm's `maps:fetch-nav` before copying. A mesh the store
+cannot serve stops sandbox creation.
+
 ## Actors
 
 With Citizens installed, MCBridge exposes `/v1/actors`: player NPCs in a

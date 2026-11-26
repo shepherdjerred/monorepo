@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3860",
+  "name": "Bulwark of the Mountain",
+  "description": "This item grants reduced gold from minions if anyone on your team with this item kill excessive numbers of them. ACTIVE.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "20"
+    },
+    {
+      "label": "Health",
+      "value": "250"
+    },
+    {
+      "label": "Base Health Regen",
+      "value": "100%"
+    },
+    {
+      "label": "Gold Per 10 Seconds",
+      "value": "3"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3860.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

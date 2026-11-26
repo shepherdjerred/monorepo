@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nasus-R",
+  "name": "Fury of the Sands",
+  "description": "Nasus becomes empowered in the sandstorm for 15 seconds, increasing his maximum Health by 300/450/600 and Armor and Magic Resistance by 40/55/70.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nasus-R.png",
+  "slot": "R",
+  "championKey": "Nasus",
+  "championName": "Nasus",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

@@ -156,6 +156,7 @@ describe("SeaweedFS backup to Backblaze", () => {
       "delivery-artifacts",
       "glitter-discord-corpus",
       "homelab-tofu-state",
+      "private-sjer-red",
       "public-sjer-red",
       "scout-prod",
       "streambot-voice-captures",

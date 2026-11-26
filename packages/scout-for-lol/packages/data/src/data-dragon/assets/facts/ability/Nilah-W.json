@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nilah-W",
+  "name": "Jubilant Veil",
+  "description": "Nilah envelops herself in mist for 2.25 seconds, becoming Ghosted, gaining 15/17.5/20/22.5/25% Move Speed, dodging Attacks, and reducing magic damage taken by 25%.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/45/30/15/0 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "150"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nilah-W.png",
+  "slot": "W",
+  "championKey": "Nilah",
+  "championName": "Nilah",
+  "maxRank": 5,
+  "cooldownByRank": [
+    26,
+    25,
+    24,
+    23,
+    22
+  ],
+  "costByRank": [
+    60,
+    45,
+    30,
+    15,
+    0
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    150,
+    150,
+    150,
+    150,
+    150
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "26/25/24/23/22 s"
+  }
+}

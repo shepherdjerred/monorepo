@@ -8,6 +8,8 @@ import {
   PlaybackPeopleSchema,
   PlaybackQuerySchema,
   PlaybackStatisticsSchema,
+  PlaybackTimelineQuerySchema,
+  PlaybackTimelineSchema,
   SealPlaybackHandoffSchema,
   PlaybackHandoffStatusSchema,
 } from "#shared/household/playback.ts";
@@ -58,16 +60,25 @@ export function registerPlaybackRoutes(
   app.get("/api/v1/playback/people", async (c) =>
     c.json(PlaybackPeopleSchema.parse(await service.people(c.get("actor")))),
   );
-  app.get("/api/v1/playback/history", async (c) =>
-    c.json(
-      PlaybackHistorySchema.parse(
-        await service.history(
-          c.get("actor"),
-          parseInput(PlaybackQuerySchema, c.req.query()),
-        ),
-      ),
-    ),
-  );
+  app.get("/api/v1/playback/history", async (c) => {
+    const query = c.req.query();
+    const actor = c.get("actor");
+    const payload =
+      query["view"] === "timeline"
+        ? PlaybackTimelineSchema.parse(
+            await service.timeline(
+              actor,
+              parseInput(PlaybackTimelineQuerySchema, query),
+            ),
+          )
+        : PlaybackHistorySchema.parse(
+            await service.history(
+              actor,
+              parseInput(PlaybackQuerySchema, query),
+            ),
+          );
+    return c.json(payload);
+  });
   app.get("/api/v1/playback/statistics", async (c) =>
     c.json(
       PlaybackStatisticsSchema.parse(

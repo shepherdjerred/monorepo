@@ -8,9 +8,12 @@ import {
 } from "@shepherdjerred/ops-model/catalog.ts";
 import {
   buildPublications,
-  downloadChartArtifact,
   parsePublicationOptions,
 } from "./publish-delivery.ts";
+import {
+  downloadChartArtifact,
+  resolvePublishedChartArtifact,
+} from "../lib/artifacts/published-chart-artifact.ts";
 import {
   createRetryingDeliveryFetch,
   readPublicationHandoffs as readProducerHandoffs,
@@ -324,15 +327,15 @@ test("the full catalog publication preserves the smaller coordinated root invent
   // The baseline and data-layer charts publish but stay out of the root
   // inventory: no root Application renders a baseline chart, and the two
   // data layers join together once transition rendering renders theirs. The
-  // 12 upstream-chart companions and the three following charts (Velero's
+  // 11 upstream-chart companions and the three following charts (Velero's
   // Schedules, Kueue's queues and ArgoCD's tunnel) are owned now and publish
   // once transition rendering synthesizes them; none joins the root inventory.
-  expect(charts).toHaveLength(66);
+  expect(charts).toHaveLength(61);
   const dataLayers = rootInventory.filter(({ name }) =>
     ["delivery-data", "temporal-data"].includes(name),
   ).length;
   expect([0, 2]).toContain(dataLayers);
-  expect(rootInventory).toHaveLength(18 + dataLayers);
+  expect(rootInventory).toHaveLength(13 + dataLayers);
   expect(result.charts).toEqual(charts);
   expect(result.rootInventory).toEqual(rootInventory);
 });
@@ -767,6 +770,9 @@ describe("immutable CI artifact publication", () => {
       "image:scout-for-lol",
     );
   });
+});
+
+describe("published chart artifact verification", () => {
   test("chart bytes are checked against exact version metadata", async () => {
     const archive = "immutable chart archive fixture";
     const digest = createHash("sha256").update(archive).digest("hex");
@@ -790,6 +796,65 @@ describe("immutable CI artifact publication", () => {
       digest: `sha256:${digest}`,
     });
     expect(requests).toHaveLength(2);
+  });
+  test("resolves charts-bootstrap from Docker Hub OCI and ordinary charts from first-party charts", async () => {
+    const manifest = JSON.stringify({
+      schemaVersion: 2,
+      mediaType: "application/vnd.oci.image.manifest.v1+json",
+      config: { mediaType: "application/vnd.cncf.helm.config.v1+json" },
+    });
+    const manifestDigest = `sha256:${createHash("sha256").update(manifest).digest("hex")}`;
+    const ociRequests: string[] = [];
+    const bootstrapResult = await resolvePublishedChartArtifact(
+      "charts-bootstrap",
+      "2.0.0-42",
+      {
+        ociBootstrapEnabled: true,
+        fetch: async (url) => {
+          ociRequests.push(requestUrl(url));
+          return new Response(manifest, {
+            headers: { "docker-content-digest": manifestDigest },
+          });
+        },
+      },
+    );
+    expect(bootstrapResult).toEqual({
+      uri: "oci://registry-1.docker.io/shepherdjerred/charts-bootstrap",
+      digest: manifestDigest,
+    });
+    expect(ociRequests).toEqual([
+      "https://registry-1.docker.io/v2/shepherdjerred/charts-bootstrap/manifests/2.0.0-42",
+    ]);
+
+    const archive = "first-party chart bytes";
+    const archiveHex = createHash("sha256").update(archive).digest("hex");
+    const httpRequests: string[] = [];
+    const ordinaryResult = await resolvePublishedChartArtifact(
+      "arcade",
+      "2.0.0-42",
+      {
+        origin: "https://charts.tailnet-1a49.ts.net",
+        fetch: async (url) => {
+          httpRequests.push(requestUrl(url));
+          return requestUrl(url).includes("/api/")
+            ? Response.json({
+                name: "arcade",
+                version: "2.0.0-42",
+                digest: archiveHex,
+                urls: ["charts/arcade-2.0.0-42.tgz"],
+              })
+            : new Response(archive);
+        },
+      },
+    );
+    expect(ordinaryResult).toEqual({
+      uri: "https://charts.tailnet-1a49.ts.net/charts/arcade-2.0.0-42.tgz",
+      digest: `sha256:${archiveHex}`,
+    });
+    expect(httpRequests).toEqual([
+      "https://charts.tailnet-1a49.ts.net/api/charts/arcade/2.0.0-42",
+      "https://charts.tailnet-1a49.ts.net/charts/arcade-2.0.0-42.tgz",
+    ]);
   });
   test("mismatched chart checksum is never registered", async () => {
     await expect(

@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "2161",
+  "name": "Bandle Juice of Power",
+  "description": "Drink to permanently gain 20+ 3% bonus Ability Power or 12+ 3% bonus Attack Damage.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/2161.png",
+  "goldTotal": 1000,
+  "goldCombine": 1000,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1000 gold"
+  }
+}

@@ -56,7 +56,11 @@ function reviewedObservations(receipts: readonly { payload: unknown }[]) {
 
 async function latestObservations(tx: Prisma.TransactionClient) {
   const receipts = await tx.applicationEvent.findMany({
-    where: { kind: "personal_state_imported" },
+    where: {
+      kind: {
+        in: ["personal_state_imported", "seerr_request_history_imported"],
+      },
+    },
     select: { payload: true },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: 1001,

@@ -1,8 +1,29 @@
 import type { z } from "zod";
-import type { CatalogReconcileRecordSchema } from "#shared/model/route-contract.ts";
+import {
+  type CatalogReconcileRecordSchema,
+  CatalogReconcileResultSchema,
+  type CatalogReconcileResult,
+} from "#shared/model/route-contract.ts";
 
 /** What one reconcile did, entity by entity: the record `catalog.reconciled` audits; the route reports the counts. */
 export type Result = z.infer<typeof CatalogReconcileRecordSchema>;
+
+/** `POST /catalog/reconcile`: counts of what was created and kept, and what was refused. */
+export function reconcileSummary(result: Result): CatalogReconcileResult {
+  return CatalogReconcileResultSchema.parse({
+    catalogRevision: result.catalogRevision,
+    created: {
+      services: result.services.created.length,
+      environments: result.environments.created.length,
+      recipes: result.recipes.created.length,
+      configurations: result.configurations.created.length,
+      edges: result.edges,
+      carriedSelections: result.environments.carried.length,
+    },
+    unchanged: result.unchanged,
+    refused: result.refused,
+  });
+}
 
 /**
  * The catalog revision a reconciled row records: this reconcile's, unless the

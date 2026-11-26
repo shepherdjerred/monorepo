@@ -38,12 +38,35 @@ export function tabTargetIndex(
  * pattern the consoles already use for view toggles: one stop in the tab
  * order, arrow keys move the selection, Home and End jump to the ends.
  */
-export function Tabs<Value extends string>({
+export function Tabs<Value extends string>(
+  props: TabsProps<Value>,
+): React.JSX.Element {
+  return (
+    <RadioOptions
+      {...props}
+      groupClass="ui-tabs"
+      optionClass="ui-tab"
+      countClass="ui-tab-count"
+    />
+  );
+}
+
+/**
+ * The radio group behind `Tabs` and `Segmented`: they differ only in classes.
+ */
+export function RadioOptions<Value extends string>({
   label,
   options,
   value,
   onChange,
-}: TabsProps<Value>): React.JSX.Element {
+  groupClass,
+  optionClass,
+  countClass,
+}: TabsProps<Value> & {
+  readonly groupClass: string;
+  readonly optionClass?: string;
+  readonly countClass: string;
+}): React.JSX.Element {
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
 
   function select(index: number): void {
@@ -66,7 +89,7 @@ export function Tabs<Value extends string>({
 
   return (
     <div
-      className="ui-tabs"
+      className={groupClass}
       role="radiogroup"
       aria-label={label}
       onKeyDown={onKeyDown}
@@ -81,7 +104,7 @@ export function Tabs<Value extends string>({
             }}
             type="button"
             role="radio"
-            className="ui-tab"
+            className={optionClass}
             aria-checked={selected}
             tabIndex={selected ? 0 : -1}
             onClick={() => {
@@ -90,7 +113,7 @@ export function Tabs<Value extends string>({
           >
             {option.label}
             {option.count === undefined ? null : (
-              <span className="ui-tab-count">{option.count}</span>
+              <span className={countClass}>{option.count}</span>
             )}
           </button>
         );

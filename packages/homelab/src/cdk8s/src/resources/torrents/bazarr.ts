@@ -15,6 +15,11 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/linux-server.ts";
 import { LinuxServerApp } from "@shepherdjerred/homelab/cdk8s/src/misc/third-party/linuxserver-app.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { mediaAppEgress } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/media-app-egress.ts";
+import {
+  publicAddressPeer,
+  tcp,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { PINCHTAB_ENDPOINT } from "@shepherdjerred/homelab/cdk8s/src/misc/first-party/endpoint.ts";
@@ -171,5 +176,23 @@ export function createBazarrDeployment(
       },
     },
     tailscale: { host: tailnetService("bazarr"), proxyClass: "medium" },
+    policies: [
+      {
+        name: "bazarr-egress-netpol",
+        selects: "app",
+        egress: mediaAppEgress([
+          // SubHD's provider drives a PinchTab browser.
+          {
+            to: [PINCHTAB_ENDPOINT.namespacePeer()],
+            ports: [PINCHTAB_ENDPOINT.tcp()],
+          },
+          // Bazarr signs in to Plex with OAuth and uses the server URL
+          // plex.tv returns: the home WAN address's `plex.direct` name, which
+          // hairpins back to Plex. The WAN address is dynamic, so the rule
+          // names the port on any public address.
+          { to: [publicAddressPeer()], ports: [tcp(32_400)] },
+        ]),
+      },
+    ],
   });
 }

@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "JarvanIV",
+  "name": "Jarvan IV",
+  "description": "Prince Jarvan, scion of the Lightshield dynasty, is heir apparent to the throne of Demacia.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "640"
+    },
+    {
+      "label": "Move speed",
+      "value": "340"
+    },
+    {
+      "label": "Attack range",
+      "value": "175"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "JarvanIV-passive",
+      "name": "Martial Cadence",
+      "icon": "img/ability/JarvanIV-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "JarvanIV-Q",
+      "name": "Dragon Strike",
+      "icon": "img/ability/JarvanIV-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "JarvanIV-W",
+      "name": "Golden Aegis",
+      "icon": "img/ability/JarvanIV-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "JarvanIV-E",
+      "name": "Demacian Standard",
+      "icon": "img/ability/JarvanIV-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "JarvanIV-R",
+      "name": "Cataclysm",
+      "icon": "img/ability/JarvanIV-R.png"
+    }
+  ],
+  "icon": "img/champion/JarvanIV.png",
+  "art": "img/champion-splash/JarvanIV_0.jpg",
+  "title": "the Exemplar of Demacia",
+  "roles": [
+    "Fighter",
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Fighter, Tank"
+  }
+}

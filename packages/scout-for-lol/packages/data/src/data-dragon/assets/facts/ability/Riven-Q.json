@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Riven-Q",
+  "name": "Broken Wings",
+  "description": "Riven dashes forward, dealing 45/75/105/135/165 (+60/65/70/75/80% bonus AD) physical damage. She can Recast this Ability twice.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "275"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Riven-Q.png",
+  "slot": "Q",
+  "championKey": "Riven",
+  "championName": "Riven",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    13,
+    13,
+    13,
+    13
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    275,
+    275,
+    275,
+    275,
+    275
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13 s"
+  }
+}

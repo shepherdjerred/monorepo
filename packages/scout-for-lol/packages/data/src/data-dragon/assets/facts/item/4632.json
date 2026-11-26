@@ -1,0 +1,44 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "4632",
+  "name": "Verdant Barrier",
+  "description": "Annul: Grants a Spell Shield that blocks the next enemy Ability.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "40"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "25"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1052",
+      "name": "Amplifying Tome",
+      "icon": "img/item/1052.png"
+    },
+    {
+      "kind": "item",
+      "key": "1033",
+      "name": "Null-Magic Mantle",
+      "icon": "img/item/1033.png"
+    },
+    {
+      "kind": "item",
+      "key": "1052",
+      "name": "Amplifying Tome",
+      "icon": "img/item/1052.png"
+    }
+  ],
+  "icon": "img/item/4632.png",
+  "goldTotal": 1600,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1600 gold"
+  }
+}

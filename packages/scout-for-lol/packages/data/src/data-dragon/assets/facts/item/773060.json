@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773060",
+  "name": "Banner of Command",
+  "description": "Aura - Leadership: Grants nearby allies 10 Health Regen per 5 seconds.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "40"
+    },
+    {
+      "label": "Armor",
+      "value": "30"
+    },
+    {
+      "label": "Cooldown Reduction",
+      "value": "10%"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "773108",
+      "name": "Fiendish Codex",
+      "icon": "img/item/773108.png"
+    },
+    {
+      "kind": "item",
+      "key": "773052",
+      "name": "Emblem of Valor",
+      "icon": "img/item/773052.png"
+    }
+  ],
+  "icon": "img/item/773060.png",
+  "goldTotal": 2360,
+  "goldCombine": 890,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2360 gold"
+  }
+}

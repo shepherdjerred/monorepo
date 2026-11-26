@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Taliyah",
+  "name": "Taliyah",
+  "description": "Taliyah is a nomadic mage from Shurima, torn between teenage wonder and adult responsibility.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "550"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Taliyah-passive",
+      "name": "Rock Surfing",
+      "icon": "img/ability/Taliyah-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Taliyah-Q",
+      "name": "Threaded Volley",
+      "icon": "img/ability/Taliyah-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Taliyah-W",
+      "name": "Seismic Shove",
+      "icon": "img/ability/Taliyah-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Taliyah-E",
+      "name": "Unraveled Earth",
+      "icon": "img/ability/Taliyah-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Taliyah-R",
+      "name": "Weaver's Wall",
+      "icon": "img/ability/Taliyah-R.png"
+    }
+  ],
+  "icon": "img/champion/Taliyah.png",
+  "art": "img/champion-splash/Taliyah_0.jpg",
+  "title": "the Stoneweaver",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

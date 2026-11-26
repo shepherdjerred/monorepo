@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226675",
+  "name": "Navori Flickerblades",
+  "description": "Transcendence: Your Attacks reduce your non-Ultimate Ability cooldowns by 15% of their remaining cooldown.",
+  "facts": [
+    {
+      "label": "Attack Speed",
+      "value": "40%"
+    },
+    {
+      "label": "Critical Strike Chance",
+      "value": "25%"
+    },
+    {
+      "label": "Move Speed",
+      "value": "4%"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226675.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

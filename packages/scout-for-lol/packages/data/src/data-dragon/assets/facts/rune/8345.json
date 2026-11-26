@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8345",
+  "name": "Biscuit Delivery",
+  "description": "Gain a free Biscuit every 2 min, until 6 min. Consuming or selling a Biscuit permanently increases your max health and restores health.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Rune"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/BiscuitDelivery.png",
+  "tree": "Inspiration",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Inspiration"
+  }
+}

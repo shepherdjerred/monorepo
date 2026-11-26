@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Zed",
+  "name": "Zed",
+  "description": "Utterly ruthless and without mercy, Zed is the leader of the Order of Shadow, an organization he created with the intent of militarizing Ionia's magical and martial traditions to drive out Noxian invaders.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "654"
+    },
+    {
+      "label": "Move speed",
+      "value": "345"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Zed-passive",
+      "name": "Contempt for the Weak",
+      "icon": "img/ability/Zed-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zed-Q",
+      "name": "Razor Shuriken",
+      "icon": "img/ability/Zed-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zed-W",
+      "name": "Living Shadow",
+      "icon": "img/ability/Zed-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zed-E",
+      "name": "Shadow Slash",
+      "icon": "img/ability/Zed-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Zed-R",
+      "name": "Death Mark",
+      "icon": "img/ability/Zed-R.png"
+    }
+  ],
+  "icon": "img/champion/Zed.png",
+  "art": "img/champion-splash/Zed_0.jpg",
+  "title": "the Master of Shadows",
+  "roles": [
+    "Assassin"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Assassin"
+  }
+}

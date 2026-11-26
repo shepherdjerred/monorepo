@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "DrMundo-W",
+  "name": "Heart Zapper",
+  "description": "Dr. Mundo charges up a defibrilator, dealing 20/35/50/65/80 magic damage each second for up to 3 seconds to nearby enemies.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/DrMundo-W.png",
+  "slot": "W",
+  "championKey": "DrMundo",
+  "championName": "Dr. Mundo",
+  "maxRank": 5,
+  "cooldownByRank": [
+    17,
+    16.5,
+    16,
+    15.5,
+    15
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    325,
+    325,
+    325,
+    325,
+    325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "17/16.5/16/15.5/15 s"
+  }
+}

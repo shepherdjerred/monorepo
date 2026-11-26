@@ -33,6 +33,7 @@ import { bootContainer } from "#e2e/harness/paper/boot.ts";
 import { stageWorld } from "./world-copy.ts";
 import { serverIcon } from "./paths.ts";
 import { ExternalServerShape } from "#e2e/harness/external/inputs.ts";
+import { ensureNavMeshes } from "#maps/nav/meshes.ts";
 
 const ownerLabel = "the-storm.e2e";
 const pidLabel = "the-storm.e2e.pid";
@@ -192,6 +193,14 @@ async function selectRwfMap(
   }
 }
 
+/** Whether the staged config.yml switches on rwfbots, the module that loads baked nav meshes. */
+function enablesBots(stormConfig: string): boolean {
+  const { modules } = z
+    .object({ modules: z.record(z.string(), z.boolean()) })
+    .parse(Bun.YAML.parse(stormConfig));
+  return modules["rwfbots"] === true;
+}
+
 /** Builds a private plugin mount, leaving the owned source content untouched. */
 export async function stagePlugins(
   cacheDir: string,
@@ -240,6 +249,9 @@ export async function stagePlugins(
     "check-updates: false\n",
   );
   if (options.ownedConfigDir !== undefined) {
+    // Git holds only the meshes' manifest; a humans-only server never reads them.
+    if (enablesBots(options.stormConfig))
+      await ensureNavMeshes(options.ownedConfigDir);
     await cp(options.ownedConfigDir, path.join(pluginsDir, "TheStorm"), {
       recursive: true,
     });

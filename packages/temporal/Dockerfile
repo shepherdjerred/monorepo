@@ -6,8 +6,7 @@
 # This image bakes in the operator CLIs the worker's scheduled workflows shell
 # out to: gh (pr-agent PR review/summary + PR creation),
 # kubectl (bugsink-housekeeping / zfs-maintenance `kubectl exec`),
-# github-mcp-server (pr-agent's MCP GitHub backend), talosctl / tofu / argocd /
-# velero / woodpecker-cli / temporal / gcx / toolkit (homelab-audit-daily runbook + preflight —
+# talosctl / tofu / argocd / velero / woodpecker-cli / temporal / gcx / toolkit (homelab-audit-daily runbook + preflight —
 # see src/activities/homelab/homelab-audit-preflight.ts REQUIRED_AUDIT_BINARIES),
 # and the direct maintenance runtimes Kometa, uv, and Trivy.
 # scripts/smoke.ts asserts every one of these boots + is on PATH.
@@ -190,8 +189,6 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ARG GH_CLI_VERSION=2.105.0
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
 ARG KUBECTL_VERSION=v1.37.2
-# renovate: datasource=github-releases depName=github/github-mcp-server
-ARG GITHUB_MCP_SERVER_VERSION=2.2.0
 # renovate: datasource=github-releases depName=siderolabs/talos
 ARG TALOSCTL_VERSION=v1.14.6
 # renovate: datasource=github-releases depName=opentofu/opentofu
@@ -276,24 +273,6 @@ RUN set -e; \
     chmod +x /usr/local/bin/kubectl; \
     rm /tmp/kubectl.sha256; \
     kubectl version --client
-
-# --- github-mcp-server (per-arch tarball, SHA256-verified) ---
-RUN set -e; \
-    arch="$(dpkg --print-architecture)"; \
-    case "$arch" in amd64) gmsarch=x86_64 ;; arm64) gmsarch=arm64 ;; \
-      *) echo "unsupported architecture: $arch" >&2; exit 1 ;; esac; \
-    base="https://github.com/github/github-mcp-server/releases/download/v${GITHUB_MCP_SERVER_VERSION}"; \
-    tarball="github-mcp-server_Linux_${gmsarch}.tar.gz"; \
-    curl -fsSL "$base/$tarball" -o /tmp/gms.tar.gz; \
-    curl -fsSL "$base/github-mcp-server_${GITHUB_MCP_SERVER_VERSION}_checksums.txt" -o /tmp/gms.checksums.txt; \
-    expected="$(grep " $tarball$" /tmp/gms.checksums.txt | awk '{print $1}')"; \
-    [ -n "$expected" ] || { echo "no checksum entry for $tarball" >&2; exit 1; }; \
-    actual="$(sha256sum /tmp/gms.tar.gz | awk '{print $1}')"; \
-    [ "$expected" = "$actual" ] || { echo "github-mcp-server checksum mismatch (expected $expected, got $actual)" >&2; exit 1; }; \
-    tar -xzf /tmp/gms.tar.gz -C /usr/local/bin github-mcp-server; \
-    chmod +x /usr/local/bin/github-mcp-server; \
-    rm /tmp/gms.tar.gz /tmp/gms.checksums.txt; \
-    github-mcp-server --version
 
 # --- talosctl (per-arch binary; no stable checksums file — verify by exec) ---
 RUN set -e; \

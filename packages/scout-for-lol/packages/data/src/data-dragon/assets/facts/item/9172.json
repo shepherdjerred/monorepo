@@ -1,0 +1,16 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "9172",
+  "name": "YuumiBot",
+  "description": "Summons a Yuum.Ai drone.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/item/9172.png",
+  "goldTotal": 0,
+  "goldCombine": 0,
+  "keyFact": {
+    "label": "Cost",
+    "value": "Free"
+  }
+}

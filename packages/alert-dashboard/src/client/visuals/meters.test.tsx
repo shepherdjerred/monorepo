@@ -26,7 +26,7 @@ describe("BudgetMeter", () => {
     );
     expect(html).toContain('class="visual-meter-projection"');
     expect(html).toContain("left:100%");
-    expect(html).toContain('<span class="sr-only">warning</span>');
+    expect(html).toContain('<span class="ui-glyph-label">Warning</span>');
     expect(html).toContain("Projected above monthly cap");
   });
 

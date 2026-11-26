@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Maokai-E",
+  "name": "Sapling Toss",
+  "description": "Maokai flings a sapling, which stands watch for 30 seconds. Saplings chase nearby enemies, detonating on arrival to deal 50/75/100/125/150 (+25% AP) (+5% bonus Health) magic damage and Slow surrounding enemies by 45% for 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1100"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Maokai-E.png",
+  "slot": "E",
+  "championKey": "Maokai",
+  "championName": "Maokai",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    17,
+    16,
+    15,
+    14
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1100,
+    1100,
+    1100,
+    1100,
+    1100
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/17/16/15/14 s"
+  }
+}

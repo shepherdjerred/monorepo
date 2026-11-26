@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773067",
+  "name": "Kindlegem",
+  "description": "Kindlespark: 10% Cooldown Reduction",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "200"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/771028.png"
+    }
+  ],
+  "icon": "img/item/773067.png",
+  "goldTotal": 850,
+  "goldCombine": 375,
+  "keyFact": {
+    "label": "Cost",
+    "value": "850 gold"
+  }
+}

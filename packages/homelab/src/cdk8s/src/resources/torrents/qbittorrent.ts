@@ -1,5 +1,6 @@
 import {
   ConfigMap,
+  ContainerRestartPolicy,
   Cpu,
   Deployment,
   DeploymentStrategy,
@@ -88,7 +89,7 @@ export function createQBitTorrentDeployment(
   //   container so the operator must reconcile by committing the change — config
   //   drift is never silently tolerated.
   // Only keys we declare are enforced; keys qBittorrent writes on its own
-  // (WebUI\Password_PBKDF2, Network\Cookies, ...) are ignored, so the guard never
+  // ([WebUI] Password_PBKDF2, [Network] Cookies, ...) are ignored, so the guard never
   // false-positives on the app's runtime churn. A few engine-owned keys that DO
   // appear in the committed seed (Meta\MigrationVersion, bumped by the image on a
   // qBittorrent upgrade) are also excluded from enforcement so a version bump
@@ -98,6 +99,10 @@ export function createQBitTorrentDeployment(
   // password (logged) on a fresh start, which is then reset.
   const qbittorrentConfig = new ConfigMap(chart, "qbittorrent-config", {
     metadata: {
+      // Keep this name stable. Delivery's media prune guard does not authorize
+      // retiring this ConfigMap, so a rename blocks every media release. The
+      // Recreate strategy stops the old pod first, and Argo applies ConfigMaps
+      // before Deployments, so the new pod always starts on updated content.
       name: "qbittorrent-config",
     },
   });
@@ -170,7 +175,9 @@ export function createQBitTorrentDeployment(
     ],
   });
 
-  deployment.addContainer(
+  // A restartable init container establishes the kill switch and tunnel
+  // before qBittorrent starts, and stays up until qBittorrent has stopped.
+  deployment.addInitContainer(
     withCommonProps({
       resources: {
         cpu: { request: Cpu.millis(25) },
@@ -178,6 +185,12 @@ export function createQBitTorrentDeployment(
       },
       name: "gluetun",
       image: `ghcr.io/qdm12/gluetun:${versions["qdm12/gluetun"]}`,
+      restartPolicy: ContainerRestartPolicy.ALWAYS,
+      startup: Probe.fromCommand(["/gluetun-entrypoint", "healthcheck"], {
+        periodSeconds: Duration.seconds(5),
+        timeoutSeconds: Duration.seconds(3),
+        failureThreshold: 24,
+      }),
       // TODO: replace this with capability to run as non-root
       // this is mostly required right now to setup the VPN
       securityContext: {
@@ -192,6 +205,7 @@ export function createQBitTorrentDeployment(
         UPDATER_PERIOD: EnvValue.fromValue("24h"),
         VPN_SERVICE_PROVIDER: EnvValue.fromValue("airvpn"),
         VPN_TYPE: EnvValue.fromValue("wireguard"),
+        SERVER_CITIES: EnvValue.fromValue("Vancouver"),
         WIREGUARD_PRIVATE_KEY: EnvValue.fromSecretValue({
           secret: Secret.fromSecretName(chart, "airvpn-private-key", item.name),
           key: "PRIVATE_KEY",
@@ -315,7 +329,7 @@ export function createQBitTorrentDeployment(
       envVariables: {
         QBITTORRENT_HOST: EnvValue.fromValue("localhost"),
         QBITTORRENT_PORT: EnvValue.fromValue("8080"),
-        // Must match the qBittorrent WebUI username (WebUI\Username in the
+        // Must match the qBittorrent WebUI username ([WebUI] Username in the
         // /config PVC), otherwise every scrape fails auth, reports
         // qbittorrent_up=0, and bans the pod's localhost IP for repeated bad logins.
         QBITTORRENT_USER: EnvValue.fromValue("jerred"),

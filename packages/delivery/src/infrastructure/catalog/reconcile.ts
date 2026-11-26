@@ -14,10 +14,6 @@ import {
   V1_ENVIRONMENT_RENAMES,
   V1_RETIRED_ENVIRONMENTS,
 } from "@shepherdjerred/ops-model/delivery-catalog/migration.ts";
-import {
-  CatalogReconcileResultSchema,
-  type CatalogReconcileResult,
-} from "#shared/model/route-contract.ts";
 import type { RecipeDefinition } from "#shared/model/recipe-contract.ts";
 import { requireScope } from "#infrastructure/auth.ts";
 import type { Delivery } from "#infrastructure/delivery.ts";
@@ -45,7 +41,16 @@ export type CatalogMigration = {
 };
 export const V1_CATALOG_MIGRATION: CatalogMigration = {
   renames: V1_ENVIRONMENT_RENAMES,
-  retired: [...V1_RETIRED_ENVIRONMENTS, "postal/prod"],
+  retired: [
+    ...V1_RETIRED_ENVIRONMENTS,
+    "postal/prod",
+    "ddns/prod",
+    "gickup/prod",
+    "chartmuseum/prod",
+    "turbo-cache/prod",
+    "gradle-build-cache/prod",
+    "freshrss/prod",
+  ],
 };
 type Lifecycle = "active" | "retired" | "removed";
 const LIFECYCLE_RANK = new Map<string, number>([
@@ -53,23 +58,6 @@ const LIFECYCLE_RANK = new Map<string, number>([
   ["retired", 1],
   ["removed", 2],
 ]);
-
-/** `POST /catalog/reconcile`: counts of what was created and kept, and what was refused. */
-export function reconcileSummary(result: Result): CatalogReconcileResult {
-  return CatalogReconcileResultSchema.parse({
-    catalogRevision: result.catalogRevision,
-    created: {
-      services: result.services.created.length,
-      environments: result.environments.created.length,
-      recipes: result.recipes.created.length,
-      configurations: result.configurations.created.length,
-      edges: result.edges,
-      carriedSelections: result.environments.carried.length,
-    },
-    unchanged: result.unchanged,
-    refused: result.refused,
-  });
-}
 
 /** Lifecycle moves forward only (4.2, 4.10). */
 function requireForward(entity: string, from: string, to: Lifecycle) {

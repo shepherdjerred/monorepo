@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Kayn-R",
+  "name": "Umbral Trespass",
+  "description": "Passive: Champions damaged by Kayn are marked for 3.15 seconds. Kayn infests a marked enemy, becoming Untargetable.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "550"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Kayn-R.png",
+  "slot": "R",
+  "championKey": "Kayn",
+  "championName": "Kayn",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    100,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    550,
+    550,
+    550
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/100/80 s"
+  }
+}

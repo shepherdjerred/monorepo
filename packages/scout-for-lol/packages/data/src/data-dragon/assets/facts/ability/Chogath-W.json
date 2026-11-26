@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Chogath-W",
+  "name": "Feral Scream",
+  "description": "Cho'Gath roars, Silencing enemies for 1.6/1.7/1.8/1.9/2 seconds and dealing 80/130/180/230/280 (+70% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/75/80/85/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Chogath-W.png",
+  "slot": "W",
+  "championKey": "Chogath",
+  "championName": "Cho'Gath",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10.5,
+    10,
+    9.5,
+    9
+  ],
+  "costByRank": [
+    70,
+    75,
+    80,
+    85,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10.5/10/9.5/9 s"
+  }
+}

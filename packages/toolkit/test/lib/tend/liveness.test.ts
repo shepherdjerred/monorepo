@@ -208,6 +208,7 @@ describe("collectLivenessSnapshot", () => {
     expect(failedOnline.hcAvailable).toBe(false);
     expect(failedOnline.forumAvailable).toBe(false);
     expect(failedOnline.holdSurfaces.has("worktrees")).toBe(true);
+    expect(failedOnline.holdSurfaces.has("dedupe")).toBe(true);
     expect(failedOnline.holdSurfaces.has("postgres")).toBe(true);
     expect(failedOnline.holdSurfaces.has("processes")).toBe(true);
 

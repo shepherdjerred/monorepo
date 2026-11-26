@@ -69,7 +69,7 @@ const DELIVERY_RESULT: ReportDeliveryResult = {
   reportRunId: REPORT.reportRunId,
   reportType: REPORT.reportType,
   subject: "compatibility: Report ready",
-  messageId: "postal-message-1",
+  messageId: "mail-message-1",
   recipientId: 42,
   acceptedAt: "2026-08-10T12:01:01.000Z",
   reportStateKey: "reports/state/agent-task/manual/agent-task-run-123.json",

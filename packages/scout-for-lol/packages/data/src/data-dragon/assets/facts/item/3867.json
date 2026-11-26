@@ -1,0 +1,33 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3867",
+  "name": "Bounty of Worlds",
+  "description": "Upgrade: This item can be upgraded into Bloodsong, Celestial Opposition, Dream Maker, Zaz'Zak's Realmspike, or Solstice Sleigh for free. Active: (4 charges) Places an Invisible Stealth Ward that grants vision.",
+  "facts": [
+    {
+      "label": "Gold Per 10 Seconds",
+      "value": "5"
+    },
+    {
+      "label": "Base Health Regen",
+      "value": "75%"
+    },
+    {
+      "label": "Base Mana Regen",
+      "value": "75%"
+    },
+    {
+      "label": "Health",
+      "value": "200"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/3867.png",
+  "goldTotal": 400,
+  "goldCombine": 400,
+  "keyFact": {
+    "label": "Cost",
+    "value": "400 gold"
+  }
+}

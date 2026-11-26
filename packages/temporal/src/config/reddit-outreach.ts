@@ -1,26 +1,12 @@
 import { defineConfig } from "@shepherdjerred/config";
+import { flagValueSchema } from "@shepherdjerred/feature-flags/flag-value-schemas.ts";
 import { z } from "zod/v4";
 import { promotionFlagSource } from "./promotion.ts";
 
-export const RedditOutreachSettingsSchema = z.strictObject({
-  subreddits: z
-    .array(z.string().regex(/^\w{3,21}$/u))
-    .min(1)
-    .max(10)
-    .refine(
-      (names) =>
-        new Set(names.map((name) => name.toLowerCase())).size === names.length,
-      "Subreddit names must be unique",
-    ),
-  maxPostAgeHours: z.number().int().min(1).max(24),
-  maxPostsPerSweep: z.number().int().min(1).max(1500),
-  maxListingPagesPerSweep: z.number().int().min(1).max(100).default(12),
-  maxThreadReadsPerSweep: z.number().int().min(1).max(100).default(20),
-  maxRedditNavigationsPerSweep: z.number().int().min(1).max(300).default(60),
-  maxRepliesPerSweep: z.number().int().min(0).max(10),
-  maxRepliesPerDay: z.number().int().min(0).max(10),
-});
-export type RedditOutreachSettings = z.infer<
+const RedditOutreachSettingsSchema = flagValueSchema(
+  "the-storm-reddit-outreach-settings",
+);
+export type RedditOutreachSettings = z.output<
   typeof RedditOutreachSettingsSchema
 >;
 
@@ -40,9 +26,19 @@ export const DEFAULT_REDDIT_OUTREACH_SETTINGS: RedditOutreachSettings = {
   maxRepliesPerDay: 10,
 };
 
+export function validateRedditOutreachSubreddits(subreddits: unknown) {
+  return RedditOutreachSettingsSchema.parse({
+    ...DEFAULT_REDDIT_OUTREACH_SETTINGS,
+    subreddits,
+  }).subreddits;
+}
+
 /** Re-evaluated for each sweep and immediately before submitting a reply. */
 export async function redditOutreachConfig() {
-  const flags = promotionFlagSource("the-storm-reddit-outreach-prod");
+  const flags = promotionFlagSource(
+    "the-storm-reddit-outreach-prod",
+    "the-storm-reddit-outreach-settings",
+  );
   const resolver = defineConfig({
     definition: {
       enabled: {
@@ -52,21 +48,7 @@ export async function redditOutreachConfig() {
         names: { flag: "the-storm-reddit-outreach-enabled" },
       },
       settings: {
-        schema: z
-          .string()
-          .transform((value, context) => {
-            try {
-              const parsed: unknown = JSON.parse(value);
-              return parsed;
-            } catch {
-              context.addIssue({
-                code: "custom",
-                message: "Expected Reddit outreach settings JSON",
-              });
-              return z.NEVER;
-            }
-          })
-          .pipe(RedditOutreachSettingsSchema),
+        schema: RedditOutreachSettingsSchema,
         sources: ["flag", "default"],
         default: JSON.stringify(DEFAULT_REDDIT_OUTREACH_SETTINGS),
         names: { flag: "the-storm-reddit-outreach-settings" },

@@ -1,76 +1,25 @@
 import { isDeepStrictEqual } from "node:util";
-import { z } from "zod";
 import { parseFlagsDeployment, validateFlagsUrl } from "./config/schema.ts";
 import { flagDeployments, type FlagDeployment } from "./deployments.ts";
 import type { FlagValue } from "./evaluate.ts";
+import { variantValueIssues } from "./flag-write-validation.ts";
 import {
   managedFlagInventory,
   managedFlagNamespaces,
   type ManagedFlagInventory,
 } from "./managed-flag-inventory.ts";
 import { projectDeploymentFlags } from "./project-deployment.ts";
+import * as wire from "./flags-wire.ts";
 
-const SegmentConstraintSchema = z.strictObject({
-  property: z.string().min(1),
-  value: z.string().min(1),
-});
-
-const SegmentRolloutSchema = z.strictObject({
-  constraints: z.array(SegmentConstraintSchema).min(1),
-  result: z.boolean(),
-});
-
-export const FlagsValueSchema = z.discriminatedUnion("type", [
-  z.strictObject({
-    type: z.literal("boolean"),
-    key: z.string().min(1),
-    default: z.boolean(),
-    rollouts: z.array(SegmentRolloutSchema),
-  }),
-  z.strictObject({
-    type: z.literal("variant"),
-    key: z.string().min(1),
-    value: z.string(),
-  }),
-]);
-
-export const FlagsDeploymentDocumentSchema = z.strictObject({
-  id: z.string().min(1),
-  revision: z.number().int().nonnegative(),
-  flags: z.array(FlagsValueSchema),
-});
-
-export const FlagsDeploymentSnapshotSchema = z.strictObject({
-  deployment: z.string().min(1),
-  revision: z.number().int().nonnegative(),
-  flags: z.array(FlagsValueSchema),
-});
-
-export const FlagsDiffResponseSchema = z.strictObject({
-  deployments: z.array(
-    z.strictObject({
-      id: z.string().min(1),
-      revision: z.number().int().nonnegative(),
-      missing: z.array(FlagsValueSchema),
-      extra: z.array(z.string().min(1)),
-      drift: z.array(
-        z.strictObject({
-          key: z.string().min(1),
-          live: FlagsValueSchema,
-          declared: FlagsValueSchema,
-        }),
-      ),
-    }),
-  ),
-});
-
-export type FlagsDeploymentDocument = z.infer<
-  typeof FlagsDeploymentDocumentSchema
->;
-export type FlagsDeploymentSnapshot = z.infer<
-  typeof FlagsDeploymentSnapshotSchema
->;
-export type FlagsDiffResponse = z.infer<typeof FlagsDiffResponseSchema>;
+// The wire schemas live in the Zod-only `flags-wire.ts` so the Flags browser
+// client can share them; existing server-side importers keep these names.
+export const FlagsValueSchema = wire.FlagsValueSchema;
+export const FlagsDeploymentDocumentSchema = wire.FlagsDeploymentDocumentSchema;
+export const FlagsDeploymentSnapshotSchema = wire.FlagsDeploymentSnapshotSchema;
+export const FlagsDiffResponseSchema = wire.FlagsDiffResponseSchema;
+export type FlagsDeploymentDocument = wire.FlagsDeploymentDocument;
+export type FlagsDeploymentSnapshot = wire.FlagsDeploymentSnapshot;
+export type FlagsDiffResponse = wire.FlagsDiffResponse;
 
 export type FlagsHttpFetcher = (
   input: string | Request | URL,
@@ -171,7 +120,31 @@ export function diffProjectedDeploymentFlags(
         ? []
         : [{ key: flag.key, live: current, declared: flag }];
     }),
+    invalid: invalidLiveVariants(declared, document.flags),
   };
+}
+
+/**
+ * Declared variant flags whose live value fails the key's value schema. Live
+ * data is reported, never trusted or thrown on: a bad value written before
+ * validation existed must stay visible rather than break the diff.
+ */
+function invalidLiveVariants(
+  declared: readonly FlagValue[],
+  liveFlags: readonly FlagValue[],
+) {
+  const declaredVariants = new Set(
+    declared.filter((flag) => flag.type === "variant").map((flag) => flag.key),
+  );
+  return liveFlags.flatMap((flag) => {
+    if (flag.type !== "variant" || !declaredVariants.has(flag.key)) return [];
+    const issues = variantValueIssues(flag.key, flag.value).map(
+      ({ path, message }) => ({ path, message }),
+    );
+    return issues.length === 0
+      ? []
+      : [{ key: flag.key, value: flag.value, issues }];
+  });
 }
 
 export async function fetchFlagsDeploymentSnapshot(options: {
@@ -276,6 +249,23 @@ export function describeFlagValueDrift(
     return mismatches;
   }
   return [];
+}
+
+/** One line per invalid live variant, naming each failing path. */
+export function describeInvalidFlagValue(entry: {
+  readonly key: string;
+  readonly value: string;
+  readonly issues: readonly {
+    readonly path: string;
+    readonly message: string;
+  }[];
+}): string {
+  const issues = entry.issues
+    .map((issue) =>
+      issue.path === "" ? issue.message : `${issue.path}: ${issue.message}`,
+    )
+    .join("; ");
+  return `${entry.key}: live value ${JSON.stringify(entry.value)} fails its value schema (${issues})`;
 }
 
 export function compareDeploymentFlags(

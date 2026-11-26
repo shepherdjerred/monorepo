@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Orianna-Q",
+  "name": "Command: Attack",
+  "description": "Orianna commands her Ball to move to an area, dealing 60/90/120/150/180 (+60% AP) magic damage to enemies it passes through and nearby enemies at the destination. Damage is reduced to 42/63/84/105/126 (+42% AP) magic damage for enemies after the first hit.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "35 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "815"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Orianna-Q.png",
+  "slot": "Q",
+  "championKey": "Orianna",
+  "championName": "Orianna",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    6,
+    5,
+    4,
+    3
+  ],
+  "costByRank": [
+    35,
+    35,
+    35,
+    35,
+    35
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    815,
+    815,
+    815,
+    815,
+    815
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7/6/5/4/3 s"
+  }
+}

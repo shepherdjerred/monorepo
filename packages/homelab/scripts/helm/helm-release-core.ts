@@ -9,20 +9,13 @@ import { workerPoolTemplate } from "#cdk8s/scripts/delivery/worker-pool-template
 const BUILD_VERSION_RE = /^2\.0\.0-(\d+)$/;
 const CONTENT_FINGERPRINT_ANNOTATION = "ci.sjer.red/content-fingerprint";
 const REPOSITORY_CHART_URLS = new Set([
-  "https://chartmuseum.tailnet-1a49.ts.net",
-  "https://chartmuseum.sjer.red",
+  "https://charts.tailnet-1a49.ts.net",
+  "registry-1.docker.io/shepherdjerred",
 ]);
 // Charts whose release sync is allowed to remove live resources the chart no
 // longer declares. Deliberately an allowlist: pruning is off for every other
 // chart, so an accidental drop cannot delete anything.
 //
-// freshrss is here because #2317 renamed its Service
-// (`freshrss-freshrss-service` -> `freshrss-service`). Without pruning the old
-// Service survives undeclared, freshrss stays `Sync=OutOfSync Health=Healthy`
-// forever, and `releaseHealthWait` fails every main build — it failed 10792.
-// ArgoCD reports `requiresPruning` for that Service alone; both PVCs
-// (`freshrss-data`, `freshrss-extensions`) are declared and are not candidates,
-// so no data is at risk.
 // temporal is here because the default Glitter worker was split into the
 // corpus/context workers. The old worker's Services, Deployment, and
 // ServiceMonitors are intentionally retired; leaving them live keeps the
@@ -56,7 +49,6 @@ const REPOSITORY_CHART_URLS = new Set([
 const PRUNED_RELEASE_CHARTS = new Set([
   "arcade",
   "birmel",
-  "freshrss",
   "media",
   "s3-static-sites",
   "scout-beta",
@@ -65,7 +57,6 @@ const PRUNED_RELEASE_CHARTS = new Set([
   "storm-forum",
   "temporal",
   "trmnl-dashboard",
-  "turbo-cache",
   "woodpecker",
 ]);
 

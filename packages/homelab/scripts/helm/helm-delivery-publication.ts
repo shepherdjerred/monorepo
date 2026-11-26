@@ -4,8 +4,10 @@ import {
   type PublicationOwners,
 } from "@shepherdjerred/ops-model/delivery-catalog/publication-owners.ts";
 import type { ChartPublication } from "@shepherdjerred/ops-model/chart-publication.ts";
-import { DeliveryClientError } from "@shepherdjerred/delivery/client";
-import type { DeliveryClient } from "@shepherdjerred/delivery/client";
+import {
+  DeliveryClientError,
+  type DeliveryClient,
+} from "@shepherdjerred/delivery/client";
 import type { ArtifactVersion } from "@shepherdjerred/delivery/contract";
 import {
   fingerprintChart,
@@ -23,9 +25,14 @@ import { parseAllDocuments, stringify } from "yaml";
 import { mkdir } from "node:fs/promises";
 import { MC_SANDBOX_STORM_IMAGE_PARAMETERS } from "#cdk8s/src/resources/mc-sandbox/image-parameters.ts";
 import path from "node:path";
+import {
+  appendRetainedProducerCharts,
+  isRetainableChartOrigin,
+  type RetainProducerOptions,
+} from "./helm-oci-bootstrap.ts";
 
 const BUILD_REVISION_RE = /^2\.0\.0-[1-9]\d*$/u;
-export const CHARTMUSEUM_ORIGIN = "https://chartmuseum.sjer.red";
+export const CHARTMUSEUM_ORIGIN = "https://charts.tailnet-1a49.ts.net";
 export const CHARTMUSEUM_API = `${CHARTMUSEUM_ORIGIN}/api/charts`;
 
 export type ChartMuseumRelease = NonNullable<
@@ -228,6 +235,7 @@ export type ChartPlanningClient = Pick<
 export type ChartPlanningBase = PublishedChart & {
   readonly digest: string;
   readonly artifactId?: string;
+  readonly archivePath?: string;
 };
 
 /** ChartMuseum's newest build-versioned release of a chart; no archive bytes are read. */
@@ -305,6 +313,7 @@ export async function fetchPublishedArchive(
       path.join(chartDirectory, "templates", `${chartName}.k8s.yaml`),
     ),
     digest: `sha256:${release.digest}`,
+    archivePath: archive,
   };
 }
 
@@ -416,7 +425,11 @@ export async function deliveryChartBase(
     throw new Error(
       `Delivery chart ${name} differs from its canonical owner, component, or CI revision`,
     );
-  if (artifact.contentFingerprint === undefined) return undefined;
+  if (
+    artifact.contentFingerprint === undefined ||
+    !isRetainableChartOrigin(name, artifact.uri, CHARTMUSEUM_ORIGIN)
+  )
+    return undefined;
   return {
     version: artifact.version,
     fingerprint: artifact.contentFingerprint,
@@ -469,23 +482,19 @@ export async function planningBases(
 }
 
 /** A retry may reuse only this same CI producer's verified immutable archive bytes. */
-export function retainCurrentProducerArchives(
+export async function retainCurrentProducerArchives(
   publication: ChartPublication | undefined,
   bases: ReadonlyMap<string, ChartPlanningBase>,
   plan: HelmReleasePlan,
-  version: string,
-): void {
+  options: RetainProducerOptions,
+): Promise<void> {
   if (publication === undefined) return;
-  for (const skipped of plan.skipped) {
-    const archive = bases.get(skipped.name);
-    if (archive?.version !== version) continue;
-    publication.charts.push({
-      name: skipped.name,
-      revision: version,
-      digest: archive.digest,
-      contentFingerprint: archive.fingerprint,
-    });
-  }
+  await appendRetainedProducerCharts(
+    publication.charts,
+    bases,
+    plan.skipped,
+    options,
+  );
 }
 
 /** An unchanged chart is retained by reference to the Delivery artifact it was planned against. */

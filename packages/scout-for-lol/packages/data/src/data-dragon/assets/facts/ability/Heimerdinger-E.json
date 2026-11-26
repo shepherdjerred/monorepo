@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Heimerdinger-E",
+  "name": "CH-2 Electron Storm Grenade",
+  "description": "Heimerdinger lobs a grenade at a location, dealing damage to enemy units, as well as stunning anyone directly hit and slowing surrounding units.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "85 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "970"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Heimerdinger-E.png",
+  "slot": "E",
+  "championKey": "Heimerdinger",
+  "championName": "Heimerdinger",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    11,
+    11,
+    11,
+    11
+  ],
+  "costByRank": [
+    85,
+    85,
+    85,
+    85,
+    85
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    970,
+    970,
+    970,
+    970,
+    970
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11 s"
+  }
+}

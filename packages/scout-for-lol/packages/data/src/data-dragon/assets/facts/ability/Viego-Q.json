@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Viego-Q",
+  "name": "Blade of the Ruined King",
+  "description": "Passive: Viego's Attacks deal an additional 2/3/4/5/6% current Health physical damage.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Viego-Q.png",
+  "slot": "Q",
+  "championKey": "Viego",
+  "championName": "Viego",
+  "maxRank": 5,
+  "cooldownByRank": [
+    5,
+    4.5,
+    4,
+    3.5,
+    3
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "5/4.5/4/3.5/3 s"
+  }
+}

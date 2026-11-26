@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Annie-W",
+  "name": "Incinerate",
+  "description": "Annie projects a wave of fire, dealing 70/110/150/190/230 (+80% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/75/80/85/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Annie-W.png",
+  "slot": "W",
+  "championKey": "Annie",
+  "championName": "Annie",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    7,
+    7,
+    7,
+    7
+  ],
+  "costByRank": [
+    70,
+    75,
+    80,
+    85,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7 s"
+  }
+}

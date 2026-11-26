@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Maokai-R",
+  "name": "Nature's Grasp",
+  "description": "Maokai summons a colossal wave of brambles and thorns, Rooting enemies for 0.75 to 2.25 seconds, increasing with distance travelled, and dealing 150/225/300 (+75% AP) magic damage. Hitting a champion gives Maokai 40/50/60% Move Speed, decaying over 2 seconds.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "3000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Maokai-R.png",
+  "slot": "R",
+  "championKey": "Maokai",
+  "championName": "Maokai",
+  "maxRank": 3,
+  "cooldownByRank": [
+    130,
+    110,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    3000,
+    3000,
+    3000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "130/110/90 s"
+  }
+}

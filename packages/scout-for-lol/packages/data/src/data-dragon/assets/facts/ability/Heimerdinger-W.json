@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Heimerdinger-W",
+  "name": "Hextech Micro-Rockets",
+  "description": "Heimerdinger unleashes a barrage of 5 rockets that deal 50/75/100/125/150 (+55% AP) magic damage to the first enemy hit. Additional rocket hits deal reduced damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50/60/70/80/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1325"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Heimerdinger-W.png",
+  "slot": "W",
+  "championKey": "Heimerdinger",
+  "championName": "Heimerdinger",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10,
+    9,
+    8,
+    7
+  ],
+  "costByRank": [
+    50,
+    60,
+    70,
+    80,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1325,
+    1325,
+    1325,
+    1325,
+    1325
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10/9/8/7 s"
+  }
+}

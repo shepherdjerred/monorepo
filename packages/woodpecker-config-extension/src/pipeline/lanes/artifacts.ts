@@ -79,6 +79,7 @@ export function artifactPublicationSteps(
         // after the flip) publishes, and an unchanged one retains its base.
         ...(catalogV2 ? [] : chartPublicationRequested()),
         "MISE_TOOLCHAIN_SCOPE=deployment . ci/scripts/toolchain.sh",
+        DOCKERHUB_PUBLISH_LOGIN,
         `bun --no-install packages/homelab/scripts/helm/helm-push.ts "$CI_RELEASE_NUMBER" --delivery-catalog${catalogV2 ? " --catalog-v2" : ""}`,
         "bun --no-install scripts/ci/write-ci-handoff.ts argocd-release-expected < argocd-release-expected.json",
         "bun --no-install scripts/ci/write-ci-handoff.ts helm-release-plan < helm-release-plan.json",
@@ -91,6 +92,7 @@ export function artifactPublicationSteps(
       concurrency: { limit: 1, group: "chart-publication" },
       secrets: [
         GITHUB_DOWNLOAD,
+        ...DOCKERHUB_PUBLISH,
         ...HANDOFF_KEYS,
         grant("ci-chartmuseum-basic-auth", "username", "CHARTMUSEUM_USERNAME"),
         grant("ci-chartmuseum-basic-auth", "password", "CHARTMUSEUM_PASSWORD"),

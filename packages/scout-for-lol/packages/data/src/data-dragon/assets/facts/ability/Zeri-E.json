@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Zeri-E",
+  "name": "Spark Surge",
+  "description": "Zeri dashes a short distance and vaults over any terrain she touches, greatly extending the dash range.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "90/85/80/75/70 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Zeri-E.png",
+  "slot": "E",
+  "championKey": "Zeri",
+  "championName": "Zeri",
+  "maxRank": 5,
+  "cooldownByRank": [
+    24,
+    22.5,
+    21,
+    19.5,
+    18
+  ],
+  "costByRank": [
+    90,
+    85,
+    80,
+    75,
+    70
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "24/22.5/21/19.5/18 s"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "221038",
+  "name": "B. F. Sword",
+  "description": "Grants 40 Attack Damage.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "40"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/221038.png",
+  "goldTotal": 1300,
+  "goldCombine": 1300,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1300 gold"
+  }
+}

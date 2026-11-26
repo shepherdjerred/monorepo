@@ -1,0 +1,29 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "226664",
+  "name": "Hollow Radiance",
+  "description": "Immolate: After taking or dealing damage, deal magic damage per second to nearby enemies for 3 seconds. Desolate: Killing an enemy deals magic damage around them.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "450"
+    },
+    {
+      "label": "Magic Resist",
+      "value": "40"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "10"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/226664.png",
+  "goldTotal": 2500,
+  "goldCombine": 2500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2500 gold"
+  }
+}

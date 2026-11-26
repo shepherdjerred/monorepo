@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Lux-W",
+  "name": "Prismatic Barrier",
+  "description": "Lux throws her wand, granting 40/55/70/85/100 (+40% AP) Shield for 2.5 seconds to allies it passes through. Then it returns, granting the same Shield on its return.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1150"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Lux-W.png",
+  "slot": "W",
+  "championKey": "Lux",
+  "championName": "Lux",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11.5,
+    11,
+    10.5,
+    10
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1150,
+    1150,
+    1150,
+    1150,
+    1150
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11.5/11/10.5/10 s"
+  }
+}

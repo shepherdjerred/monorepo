@@ -1,0 +1,21 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "221058",
+  "name": "Needlessly Large Rod",
+  "description": "Grants 120 Ability Power.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "120"
+    }
+  ],
+  "parts": [],
+  "icon": "img/item/221058.png",
+  "goldTotal": 500,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "500 gold"
+  }
+}

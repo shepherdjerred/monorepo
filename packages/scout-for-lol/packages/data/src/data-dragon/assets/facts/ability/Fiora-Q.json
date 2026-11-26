@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Fiora-Q",
+  "name": "Lunge",
+  "description": "Fiora lunges in a direction and stabs a nearby enemy, dealing physical damage and applying on-hit effects.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "20 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Fiora-Q.png",
+  "slot": "Q",
+  "championKey": "Fiora",
+  "championName": "Fiora",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    11.25,
+    9.5,
+    7.75,
+    6
+  ],
+  "costByRank": [
+    20,
+    20,
+    20,
+    20,
+    20
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/11.25/9.5/7.75/6 s"
+  }
+}

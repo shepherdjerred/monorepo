@@ -72,8 +72,6 @@ export type TemporalOperationsWorkerProps = {
   homelabAuditEnvironment: Record<string, EnvValue>;
   talosConfigVolume: Volume;
   ddnsApiTokenVolume: Volume;
-  freshRssManifestVolume: Volume;
-  freshRssCredentialVolume: Volume;
   gitBackupTokenVolume: Volume;
   gitMirrorCacheVolume: Volume;
   billingSecret: ISecret;
@@ -266,15 +264,6 @@ export function createTemporalOperationsWorkers(
         secret: props.feedsAuthSecret,
         key: "FEEDS_MACHINE_TOKEN",
       }),
-      FRESHRSS_API_URL: EnvValue.fromValue(
-        "http://freshrss-service.freshrss.svc.cluster.local/api/greader.php",
-      ),
-      FRESHRSS_USER: EnvValue.fromValue("sjerred"),
-      FRESHRSS_CATEGORY: EnvValue.fromValue("Repo Stack"),
-      FRESHRSS_MANIFEST_PATH: EnvValue.fromValue("/etc/freshrss/desired.json"),
-      FRESHRSS_API_PASSWORD_FILE: EnvValue.fromValue(
-        "/run/secrets/freshrss/password",
-      ),
       ...seaweedfsS3.bucketEnv("GIT_BACKUP_S3_BUCKET", "temporal"),
       GIT_BACKUP_GITHUB_TOKEN_FILE: EnvValue.fromValue(
         "/run/secrets/git-backup/password",
@@ -282,16 +271,6 @@ export function createTemporalOperationsWorkers(
       GIT_BACKUP_MIRROR_DIR: EnvValue.fromValue("/var/lib/git-backups/mirrors"),
     },
     volumeMounts: [
-      {
-        path: "/etc/freshrss",
-        volume: props.freshRssManifestVolume,
-        readOnly: true,
-      },
-      {
-        path: "/run/secrets/freshrss",
-        volume: props.freshRssCredentialVolume,
-        readOnly: true,
-      },
       {
         path: "/run/secrets/git-backup",
         volume: props.gitBackupTokenVolume,

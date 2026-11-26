@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Pantheon-Q",
+  "name": "Comet Spear",
+  "description": "Tap: Pantheon thrusts his spear, dealing 70/100/130/160/190 (+115% bonus AD) physical damage to enemies hit. Refunds 60% of this Ability's Cooldown.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "25 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "575"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Pantheon-Q.png",
+  "slot": "Q",
+  "championKey": "Pantheon",
+  "championName": "Pantheon",
+  "maxRank": 5,
+  "cooldownByRank": [
+    11,
+    10.25,
+    9.5,
+    8.75,
+    8
+  ],
+  "costByRank": [
+    25,
+    25,
+    25,
+    25,
+    25
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    575,
+    575,
+    575,
+    575,
+    575
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "11/10.25/9.5/8.75/8 s"
+  }
+}

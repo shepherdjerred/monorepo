@@ -2651,7 +2651,15 @@ stored per UTC day.
   depth at most 2, both CHECKed in PostgreSQL), looks up their rank bracket
   once, lists ranked solo, ranked flex and normal draft matches from the last
   28 days, and stores unseen Summoner's Rift games. A deterministic 20% of
-  matches also get a timeline, reduced to item and skill events.
+  matches also get a timeline, reduced to item and skill events plus each
+  participant's gold, XP and minions (`minionsKilled + jungleMinionsKilled`) at
+  10 and 15 minutes. A checkpoint at T is the first frame stamped at or after T
+  and before T + 60 seconds (Riot stamps the frame for 10:00 at about 600249
+  ms), and there is none when no frame falls in that window: a game that ended
+  first, or a missing frame, has no row and no neighbouring frame stands in.
+  This differs from today's `fetchTimelineFramesAtTime`, which takes the latest
+  frame at or before T. A segment written before the crawl kept checkpoints has
+  none, and lane data cannot be backfilled from raw segments.
 - **Riot client.** `crawl-riot-client.ts` is a dedicated `RiotClient` with no
   retries and no payload capture; every call is the `crawl` priority class, so
   the budget ledger stops it at a quarter of each window. A 429 ends the tick.
@@ -2670,12 +2678,16 @@ stored per UTC day.
   renamed into place, so the folding pod never reads half a segment). The lake
   fold (`src/report-lake/crawl/`) turns the inbox into sibling Parquet tables
   in the same build and `CURRENT`: `matches_crawl/`, `match_teams_crawl/`,
-  `match_team_bans_crawl/`, `timeline_events_crawl/` and
-  `timeline_event_participants_crawl/`, each partitioned by `ingest_day`. The
+  `match_team_bans_crawl/`, `timeline_events_crawl/`,
+  `timeline_event_participants_crawl/` and `timeline_checkpoints_crawl/`, each
+  partitioned by `ingest_day`. The
   participant, team and ban tables carry every tracked column plus the crawl's
   own (`ingest_day`, `crawled_at`, `crawl_depth`, `bracket_tier`,
-  `bracket_division`); the timeline tables hold only item and skill events,
-  and there is no `timeline_coverage` for a reduced timeline. The tables have
+  `bracket_division`); the timeline event tables hold only item and skill
+  events, `timeline_checkpoints_crawl` one row per participant per checkpoint
+  (`match_id`, `checkpoint_ms`, `frame_timestamp_ms`, `participant_id`, `puuid`,
+  `total_gold`, `xp`, `minions`), and there is no `timeline_coverage` for a
+  reduced timeline. The tables have
   their own `crawlSchemaFingerprint`, recorded with the folded segment ledger
   in each build's `crawl-manifest.json`; the tracked lake fingerprint never
   covers them, so a crawl column change costs no tracked migration.
@@ -2726,10 +2738,19 @@ stored per UTC day.
     (`report-lake/crawl/meta-partials.ts`): additive `games`/`wins` counts per
     patch, queue, rank tier and role for champion, ban, core item, starting
     items, build path, rune, spell, skill order, matchup and item-versus-enemy
-    damage-profile. It is a sibling of the crawl tables, not one of them, so
+    damage-profile, plus the public champion-page figures: `duration` (win
+    rate under 25, 25 to 35 and over 35 minutes), `boots` (final-inventory
+    boots), `keystone`, `spell_single` (each summoner spell on its own) and
+    `matchup_spell` (the player's spell pair against one same-role opponent).
+    It is a sibling of the crawl tables, not one of them, so
     retention, hardlink carry-over and erasure treat it as part of its day and
     it is outside the crawl schema fingerprint; the version in the file name
-    makes a day at an older definition count as missing. Only Summoner's Rift
+    (`META_PARTIALS_VERSION`, 2) makes a day at an older definition count as
+    missing: the nightly rebuild carries the previous build's files by
+    hardlink, finds no file at the current version, re-derives every completed
+    retained day from its crawl files (`compactCrawlDay`) and unlinks the old
+    file in the new build only. The roll-up reads only current-version files,
+    so a day is never summed at a mixed definition. Only Summoner's Rift
     ranked solo, flex and normal draft count: Arena, Brawl, League Classic,
     ARAM Mayhem and any augment game are excluded by the queue allowlist and
     again by the augment columns. The rank is the visited player's.
@@ -2745,7 +2766,16 @@ stored per UTC day.
     `meta/v1` wholesale: a second run over the same partials writes identical
     files. It adds no schedule; it rides the existing lake Workflows.
     Rates are Wilson 95% intervals; a (champion, role) slice needs 100 games,
-    a build or rune entry 20, a matchup 30. Tier grades use the win-rate
+    a build, rune, boots, keystone, spell, game-length or item entry 20, a
+    matchup 30. A spell pair inside a matchup follows the matchup floor (30)
+    and is listed only under a matchup that is itself listed.
+    The `meta/v1` schemas gained optional, additive fields, so files written
+    before them still parse: per slice `durations`, `boots`, `keystones`,
+    `singleSpells` and `itemsAfterCore`, per matchup opponent `spells`. Each
+    entry carries games, wins, the win-rate interval and its share with the
+    denominator named. `itemsAfterCore` is derived in `meta-assemble.ts`
+    from the core-item entries minus the items of the most-played build path
+    and the boots; a slice with no build path above the floor serves none. Tier grades use the win-rate
     interval's lower bound, and every slice states its patch, queue, bracket
     and sample.
   - **Serving.** `GET /api/meta/v1/{manifest,tiers,champions/:id,matchups/:a/:b}`

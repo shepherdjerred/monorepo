@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Annie-R",
+  "name": "Summon: Tibbers",
+  "description": "Passive: Annie gains 10/15/20% Magic Penetration. Annie summons her bear Tibbers, dealing 150/275/400 (+75% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "600"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Annie-R.png",
+  "slot": "R",
+  "championKey": "Annie",
+  "championName": "Annie",
+  "maxRank": 3,
+  "cooldownByRank": [
+    130,
+    115,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    600,
+    600,
+    600
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "130/115/100 s"
+  }
+}

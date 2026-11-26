@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ryze-R",
+  "name": "Realm Warp",
+  "description": "Passive: Overload damage bonus against targets with Flux increased to 40/70/100%. Active: Ryze opens a portal to another location.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "3000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ryze-R.png",
+  "slot": "R",
+  "championKey": "Ryze",
+  "championName": "Ryze",
+  "maxRank": 3,
+  "cooldownByRank": [
+    180,
+    160,
+    140
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    3000,
+    3000,
+    3000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "180/160/140 s"
+  }
+}

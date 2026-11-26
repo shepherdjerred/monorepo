@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Irelia-W",
+  "name": "Defiant Dance",
+  "description": "Begin Charging: Irelia enters a defensive stance for up to 1.5 seconds, becoming unable to act but reducing physical damage taken by 40-70% (based on level) (+8% AP) and magic damage taken by 20-35% (based on level) (+4% AP).",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "70/75/80/85/90 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "825"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Irelia-W.png",
+  "slot": "W",
+  "championKey": "Irelia",
+  "championName": "Irelia",
+  "maxRank": 5,
+  "cooldownByRank": [
+    20,
+    18,
+    16,
+    14,
+    12
+  ],
+  "costByRank": [
+    70,
+    75,
+    80,
+    85,
+    90
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    825,
+    825,
+    825,
+    825,
+    825
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "20/18/16/14/12 s"
+  }
+}

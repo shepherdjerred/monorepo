@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773124",
+  "name": "Guinsoo's Rageblade",
+  "description": "Growing Fury: Basic Attacks (on attack) and spell casts grant 4% Attack Speed and 4 Ability Power for 8 seconds (stacks up to 8 times).",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "30"
+    },
+    {
+      "label": "Ability Power",
+      "value": "40"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771026",
+      "name": "Blasting Wand",
+      "icon": "img/item/771026.png"
+    },
+    {
+      "kind": "item",
+      "key": "771037",
+      "name": "Pickaxe",
+      "icon": "img/item/771037.png"
+    }
+  ],
+  "icon": "img/item/773124.png",
+  "goldTotal": 2600,
+  "goldCombine": 865,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2600 gold"
+  }
+}

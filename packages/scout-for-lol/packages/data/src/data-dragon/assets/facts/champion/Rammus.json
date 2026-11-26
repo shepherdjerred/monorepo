@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Rammus",
+  "name": "Rammus",
+  "description": "Idolized by many, dismissed by some, mystifying to all, the curious being Rammus is an enigma.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "645"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "125"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Rammus-passive",
+      "name": "Spiked Shell",
+      "icon": "img/ability/Rammus-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rammus-Q",
+      "name": "Powerball",
+      "icon": "img/ability/Rammus-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rammus-W",
+      "name": "Defensive Ball Curl",
+      "icon": "img/ability/Rammus-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rammus-E",
+      "name": "Frenzying Taunt",
+      "icon": "img/ability/Rammus-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Rammus-R",
+      "name": "Soaring Slam",
+      "icon": "img/ability/Rammus-R.png"
+    }
+  ],
+  "icon": "img/champion/Rammus.png",
+  "art": "img/champion-splash/Rammus_0.jpg",
+  "title": "the Armordillo",
+  "roles": [
+    "Tank"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Tank"
+  }
+}

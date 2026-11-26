@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Hwei-passive",
+  "name": "Signature of the Visionary",
+  "description": "Hwei primes enemy champions he damages with his abilities for his signature finishing touch. Hitting an enemy with a second damaging spell completes his signature, leaving it beneath them.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Hwei-passive.png",
+  "slot": "passive",
+  "championKey": "Hwei",
+  "championName": "Hwei",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

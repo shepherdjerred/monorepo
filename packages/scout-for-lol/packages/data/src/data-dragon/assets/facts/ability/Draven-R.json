@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Draven-R",
+  "name": "Whirling Death",
+  "description": "Draven hurls two massive axes that deal 200/300/400 (+110/130/150% bonus AD) physical damage. Upon hitting a champion or Recasting, they reverse direction and return to Draven.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "20000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Draven-R.png",
+  "slot": "R",
+  "championKey": "Draven",
+  "championName": "Draven",
+  "maxRank": 3,
+  "cooldownByRank": [
+    100,
+    90,
+    80
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    20000,
+    20000,
+    20000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "100/90/80 s"
+  }
+}

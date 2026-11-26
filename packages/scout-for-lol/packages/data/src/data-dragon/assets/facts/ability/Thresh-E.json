@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Thresh-E",
+  "name": "Flay",
+  "description": "Passive: Thresh's Attacks deal additional damage based on how long since he last Attacked.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60/65/70/75/80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Thresh-E.png",
+  "slot": "E",
+  "championKey": "Thresh",
+  "championName": "Thresh",
+  "maxRank": 5,
+  "cooldownByRank": [
+    13,
+    12.25,
+    11.5,
+    10.75,
+    10
+  ],
+  "costByRank": [
+    60,
+    65,
+    70,
+    75,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    500,
+    500,
+    500,
+    500,
+    500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "13/12.25/11.5/10.75/10 s"
+  }
+}

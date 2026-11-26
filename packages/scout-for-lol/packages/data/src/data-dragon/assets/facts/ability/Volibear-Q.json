@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Volibear-Q",
+  "name": "Thundering Smash",
+  "description": "Volibear gains 12/15.5/19/22.5/26% Move Speed, doubled to 24/31/38/45/52% towards enemy champions for the next 4 seconds. While active, Volibear's next Attack deals 10/20/30/40/50 (+100% AD) (+160% bonus AD) physical damage and Stuns the target for 1 second.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "50 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Volibear-Q.png",
+  "slot": "Q",
+  "championKey": "Volibear",
+  "championName": "Volibear",
+  "maxRank": 5,
+  "cooldownByRank": [
+    12,
+    11.5,
+    11,
+    10.5,
+    10
+  ],
+  "costByRank": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "12/11.5/11/10.5/10 s"
+  }
+}

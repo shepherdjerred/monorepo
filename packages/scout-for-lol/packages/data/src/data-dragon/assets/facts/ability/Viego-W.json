@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Viego-W",
+  "name": "Spectral Maw",
+  "description": "Begin Charging: Viego begins gathering Mist, Slowing himself by 10%. Release: Viego dashes forward and hurls the gathered Mist.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "400"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Viego-W.png",
+  "slot": "W",
+  "championKey": "Viego",
+  "championName": "Viego",
+  "maxRank": 5,
+  "cooldownByRank": [
+    8,
+    8,
+    8,
+    8,
+    8
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    400,
+    400,
+    400,
+    400,
+    400
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "8 s"
+  }
+}

@@ -1,3 +1,8 @@
+import { StatusGlyph } from "@shepherdjerred/console-ui";
+
+import { Identifier } from "./identifier.tsx";
+import { pillSeverity, type PillTone } from "./pill.ts";
+
 export type StackCheckState =
   | "SUCCESS"
   | "FAILURE"
@@ -55,11 +60,8 @@ export type StackTreeProps = {
   readonly emptyMessage?: string | undefined;
 };
 
-type PillTone = "ok" | "warning" | "error" | "info" | "neutral";
-
 type PillSpec = {
   readonly key: string;
-  readonly glyph: string;
   readonly text: string;
   readonly tone: PillTone;
 };
@@ -146,13 +148,13 @@ function checkPill(checks: StackCheckState): PillSpec {
   switch (checks) {
     case "SUCCESS":
     case "passing":
-      return { key: "checks", glyph: "✓", text: "Checks OK", tone: "ok" };
+      return { key: "checks", text: "Checks OK", tone: "ok" };
     case "FAILURE":
     case "ERROR":
     case "failing":
       return {
         key: "checks",
-        glyph: "✕",
+
         text: "Checks failing",
         tone: "error",
       };
@@ -161,13 +163,13 @@ function checkPill(checks: StackCheckState): PillSpec {
     case "pending":
       return {
         key: "checks",
-        glyph: "•",
+
         text: "Checks pending",
         tone: "warning",
       };
     case "NONE":
     case "none":
-      return { key: "checks", glyph: "—", text: "No checks", tone: "neutral" };
+      return { key: "checks", text: "No checks", tone: "neutral" };
   }
 }
 
@@ -179,7 +181,7 @@ function reviewPill(
   if (normalized === "CHANGES_REQUESTED") {
     return {
       key: "review",
-      glyph: "✕",
+
       text: "Changes requested",
       tone: "error",
     };
@@ -187,23 +189,23 @@ function reviewPill(
   if (exactHeadApproved === false && normalized === "APPROVED") {
     return {
       key: "review",
-      glyph: "!",
+
       text: "Stale approval",
       tone: "warning",
     };
   }
   if (exactHeadApproved === true || normalized === "APPROVED") {
-    return { key: "review", glyph: "✓", text: "Approved", tone: "ok" };
+    return { key: "review", text: "Approved", tone: "ok" };
   }
   return normalized === "REVIEW_REQUIRED"
-    ? { key: "review", glyph: "•", text: "Review needed", tone: "info" }
+    ? { key: "review", text: "Review needed", tone: "info" }
     : null;
 }
 
 function pillsForPr(pr: StackPullRequest): PillSpec[] {
   const pills: PillSpec[] = [];
   if (pr.draft) {
-    pills.push({ key: "draft", glyph: "•", text: "Draft", tone: "neutral" });
+    pills.push({ key: "draft", text: "Draft", tone: "neutral" });
   }
   pills.push(checkPill(pr.checks));
   const review = reviewPill(pr.reviewDecision, pr.exactHeadApproved);
@@ -213,7 +215,7 @@ function pillsForPr(pr: StackPullRequest): PillSpec[] {
   if (pr.mergeable?.toUpperCase() === "CONFLICTING") {
     pills.push({
       key: "conflict",
-      glyph: "✕",
+
       text: "Conflict",
       tone: "error",
     });
@@ -221,19 +223,26 @@ function pillsForPr(pr: StackPullRequest): PillSpec[] {
   return pills;
 }
 
-function StackNodeItem({
+function flatten(forest: readonly StackTreeNode[]): StackTreeNode[] {
+  return forest.flatMap((node) => [node, ...flatten(node.children)]);
+}
+
+function StackRow({
   node,
 }: {
   readonly node: StackTreeNode;
 }): React.JSX.Element {
-  const { pr, depth, children } = node;
+  const { pr, depth } = node;
   const pills = pillsForPr(pr);
   const showBase = depth === 0 && !TRUNK_BRANCHES.has(pr.baseRefName);
 
   return (
-    <li className="visual-stack-item" data-stack-depth={depth}>
-      <div className="visual-stack-card">
-        <div className="visual-stack-head">
+    <tr data-stack-depth={depth}>
+      <th scope="row">
+        <span
+          className="visual-stack-head"
+          style={{ paddingInlineStart: `${String(Math.min(depth, 4) * 18)}px` }}
+        >
           {depth > 0 ? (
             <span className="visual-stack-connector" aria-hidden="true">
               └─
@@ -255,40 +264,42 @@ function StackNodeItem({
           >
             {pr.title}
           </a>
-        </div>
-        <div className="visual-stack-meta">
+        </span>
+      </th>
+      <td>
+        <span className="visual-stack-status">
           {pills.map((pill) => (
-            <span
+            <StatusGlyph
               key={pill.key}
-              className={`visual-pill visual-pill-${pill.tone}`}
-            >
-              <span aria-hidden="true">{pill.glyph}</span>
-              {pill.text}
-            </span>
+              severity={pillSeverity(pill.tone) ?? "unknown"}
+              label={pill.text}
+            />
           ))}
-          <code className="visual-branch-chip">
-            {showBase ? `${pr.branch} → ${pr.baseRefName}` : pr.branch}
-          </code>
-          {pr.authorLogin !== undefined &&
-          pr.authorLogin !== null &&
-          pr.authorLogin.length > 0 ? (
-            <span className="visual-stack-author">{`@${pr.authorLogin}`}</span>
-          ) : null}
-          <span className="visual-stack-age">{formatAge(pr.ageHours)}</span>
-        </div>
-      </div>
-      {children.length === 0 ? null : (
-        <ol className="visual-stack-children">
-          {children.map((child) => (
-            <StackNodeItem key={child.pr.number} node={child} />
-          ))}
-        </ol>
-      )}
-    </li>
+        </span>
+      </td>
+      <td>
+        <code className="visual-stack-branch">
+          <Identifier
+            value={showBase ? `${pr.branch} → ${pr.baseRefName}` : pr.branch}
+          />
+        </code>
+      </td>
+      <td className="visual-stack-author">
+        {pr.authorLogin !== undefined &&
+        pr.authorLogin !== null &&
+        pr.authorLogin.length > 0
+          ? `@${pr.authorLogin}`
+          : null}
+      </td>
+      <td className="num">{formatAge(pr.ageHours)}</td>
+    </tr>
   );
 }
 
-/** Stacked PR hierarchy view rooted at `main` or standalone base branches. */
+/**
+ * Stacked PR hierarchy rooted at `main` or standalone base branches, as one
+ * table: each stacked PR is a child row under the PR it builds on.
+ */
 export function StackTree({
   pullRequests,
   label = "Pull request stacks",
@@ -299,12 +310,25 @@ export function StackTree({
     return <p className="visual-empty">{emptyMessage}</p>;
   }
   return (
-    <div className="visual-stack-tree">
-      <ol className="visual-stack-list" aria-label={label}>
-        {forest.map((node) => (
-          <StackNodeItem key={node.pr.number} node={node} />
-        ))}
-      </ol>
+    <div className="ui-table-scroll visual-stack-tree">
+      <table className="ui-table visual-stack-table" aria-label={label}>
+        <thead>
+          <tr>
+            <th scope="col">Pull request</th>
+            <th scope="col">Status</th>
+            <th scope="col">Branch</th>
+            <th scope="col">Author</th>
+            <th scope="col" className="num">
+              Age
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {flatten(forest).map((node) => (
+            <StackRow key={node.pr.number} node={node} />
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

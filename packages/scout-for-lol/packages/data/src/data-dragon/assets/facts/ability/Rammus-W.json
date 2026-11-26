@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Rammus-W",
+  "name": "Defensive Ball Curl",
+  "description": "Rammus goes into a defensive formation, vastly increasing his Armor and Magic Resistance, and returning damage to enemies that attack him.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "300"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Rammus-W.png",
+  "slot": "W",
+  "championKey": "Rammus",
+  "championName": "Rammus",
+  "maxRank": 5,
+  "cooldownByRank": [
+    7,
+    7,
+    7,
+    7,
+    7
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    300,
+    300,
+    300,
+    300,
+    300
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "7 s"
+  }
+}

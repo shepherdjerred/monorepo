@@ -1,0 +1,63 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Xayah",
+  "name": "Xayah",
+  "description": "Deadly and precise, Xayah is a vastayan revolutionary waging a personal war to save her people. She uses her speed, guile, and razor-sharp feather blades to cut down anyone who stands in her way.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "630"
+    },
+    {
+      "label": "Move speed",
+      "value": "330"
+    },
+    {
+      "label": "Attack range",
+      "value": "525"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Xayah-passive",
+      "name": "Clean Cuts",
+      "icon": "img/ability/Xayah-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Xayah-Q",
+      "name": "Double Daggers",
+      "icon": "img/ability/Xayah-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Xayah-W",
+      "name": "Deadly Plumage",
+      "icon": "img/ability/Xayah-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Xayah-E",
+      "name": "Bladecaller",
+      "icon": "img/ability/Xayah-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Xayah-R",
+      "name": "Featherstorm",
+      "icon": "img/ability/Xayah-R.png"
+    }
+  ],
+  "icon": "img/champion/Xayah.png",
+  "art": "img/champion-splash/Xayah_0.jpg",
+  "title": "the Rebel",
+  "roles": [
+    "Marksman"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Marksman"
+  }
+}

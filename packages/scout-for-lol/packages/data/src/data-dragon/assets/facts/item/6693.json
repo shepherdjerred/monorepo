@@ -1,0 +1,42 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6693",
+  "name": "Prowler's Claw",
+  "description": "Ambush Predator: After entering a bush your next damaging Attack or Ability on enemy champions deals 10% of their current health over 4 seconds, revealing them and reducing their vision radius for the duration.",
+  "facts": [
+    {
+      "label": "Attack Damage",
+      "value": "55"
+    },
+    {
+      "label": "Lethality",
+      "value": "22"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3134",
+      "name": "Serrated Dirk",
+      "icon": "img/item/3134.png"
+    },
+    {
+      "kind": "item",
+      "key": "3133",
+      "name": "Caulfield's Warhammer",
+      "icon": "img/item/3133.png"
+    }
+  ],
+  "icon": "img/item/6693.png",
+  "goldTotal": 2850,
+  "goldCombine": 800,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2850 gold"
+  }
+}

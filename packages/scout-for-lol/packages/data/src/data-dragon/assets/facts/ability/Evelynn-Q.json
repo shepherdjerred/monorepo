@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Evelynn-Q",
+  "name": "Hate Spike",
+  "description": "Evelynn strikes with her Lasher, dealing 25/30/35/40/45 (+25% AP) magic damage to the first enemy hit and causing Evelynn's next 3 Attacks or Abilities on that unit to deal an additional 15/25/35/45/55 (+25% AP) magic damage.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/45/50/55/60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "800"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Evelynn-Q.png",
+  "slot": "Q",
+  "championKey": "Evelynn",
+  "championName": "Evelynn",
+  "maxRank": 5,
+  "cooldownByRank": [
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "costByRank": [
+    40,
+    45,
+    50,
+    55,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    800,
+    800,
+    800,
+    800,
+    800
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "4 s"
+  }
+}

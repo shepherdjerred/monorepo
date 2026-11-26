@@ -1,0 +1,52 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "6656",
+  "name": "Everfrost",
+  "description": "Mythic Passive: Grants all other Legendary items 10 Ability Power. Active -.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "70"
+    },
+    {
+      "label": "Health",
+      "value": "250"
+    },
+    {
+      "label": "Mana",
+      "value": "600"
+    },
+    {
+      "label": "Ability Haste",
+      "value": "20"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "3067",
+      "name": "Kindlegem",
+      "icon": "img/item/3067.png"
+    },
+    {
+      "kind": "item",
+      "key": "3802",
+      "name": "Lost Chapter",
+      "icon": "img/item/3802.png"
+    },
+    {
+      "kind": "item",
+      "key": "1052",
+      "name": "Amplifying Tome",
+      "icon": "img/item/1052.png"
+    }
+  ],
+  "icon": "img/item/6656.png",
+  "goldTotal": 2865,
+  "goldCombine": 465,
+  "keyFact": {
+    "label": "Cost",
+    "value": "2865 gold"
+  }
+}

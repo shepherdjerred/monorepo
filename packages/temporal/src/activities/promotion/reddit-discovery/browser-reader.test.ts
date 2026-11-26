@@ -5,6 +5,7 @@ import {
   readRedditCommentReceipt,
   readRedditFeedPage,
   readRedditRules,
+  readRedditThreadSnapshot,
   RedditBrowserReadError,
   validateRedditFeedPageUrl,
   type RedditPageReader,
@@ -14,6 +15,7 @@ import {
   redditCommentReceiptScript,
   redditFeedPageScript,
   redditRulesScript,
+  redditThreadScript,
 } from "./browser-scripts.ts";
 
 const community = "MinecraftServer";
@@ -45,6 +47,100 @@ const post = {
   archived: false,
   over18: false,
 };
+
+it("reads loaded comment text and parent IDs from the scanned thread", async () => {
+  const url = "https://old.reddit.com/r/MinecraftServer/comments/abc123/";
+  const fullname = "t1_first";
+  const timestamp = "2026-11-20T17:15:00.000Z";
+  const createComment = (
+    id: string,
+    author: string,
+    body: string,
+    parentId: string | null,
+  ) => ({
+    getAttribute: (name: string) =>
+      name === "data-fullname" ? id : name === "data-author" ? author : null,
+    parentElement: {
+      closest: () =>
+        parentId === null ? null : { getAttribute: () => parentId },
+    },
+    querySelector: (selector: string) =>
+      selector === ":scope > .entry"
+        ? {
+            querySelector: (entrySelector: string) =>
+              entrySelector.includes("time")
+                ? { getAttribute: () => timestamp }
+                : { textContent: body },
+          }
+        : null,
+  });
+  const comments = [
+    createComment(fullname, "other", "First reply", null),
+    createComment("t1_nested", "the_storm_mc", "Nested reply", fullname),
+  ];
+  const observedPost = {
+    getAttribute: (name: string) =>
+      name === "data-subreddit" ? community : "seeker",
+    classList: { contains: () => false },
+    querySelector: (selector: string) => {
+      if (selector === ".usertext-body .md")
+        return { textContent: "Looking for builders." };
+      if (selector === "a.title") return { textContent: post.title };
+      return selector.includes("time")
+        ? { getAttribute: () => post.createdAt }
+        : null;
+    },
+  };
+  const document = {
+    querySelector: (selector: string) => {
+      if (selector.startsWith("#siteTable")) return observedPost;
+      if (selector.startsWith(".commentarea .morecomments")) return {};
+      return selector.includes(".user a")
+        ? { textContent: "the_storm_mc" }
+        : null;
+    },
+    querySelectorAll: () => comments,
+  };
+  const events: string[] = [];
+  const result = await readRedditThreadSnapshot(
+    {
+      currentUrl: async () => url,
+      snapshot: async ({ selector }) => {
+        events.push(selector);
+        return { url, text: "", publishedAt: null };
+      },
+      evaluate: async (script) => {
+        expect(script).toEqual(redditThreadScript("the_storm_mc", true));
+        events.push("evaluate");
+        return runInNewContext(script, { document, location: new URL(url) });
+      },
+    },
+    { account: "the_storm_mc" },
+  );
+  expect(events).toEqual(["#siteTable", ".commentarea", "evaluate"]);
+  expect(result.post).toMatchObject({
+    id: "abc123",
+    body: "Looking for builders.",
+    commentsComplete: false,
+    ownReplyIds: ["nested"],
+  });
+  expect(result.comments).toEqual([
+    {
+      id: "first",
+      parentId: "t3_abc123",
+      body: "First reply",
+      createdAt: timestamp,
+      isStormReply: false,
+    },
+    {
+      id: "nested",
+      parentId: fullname,
+      body: "Nested reply",
+      createdAt: timestamp,
+      isStormReply: true,
+    },
+  ]);
+});
 
 it("scans the exact public comment body before reading modern receipt metadata", async () => {
   const url =

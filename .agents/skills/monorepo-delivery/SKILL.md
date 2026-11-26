@@ -7,10 +7,16 @@ description: Deliver changes in this monorepo through Git-Spice, focused checks,
 
 Use `toolkit git-spice` (or its `toolkit spice` alias in isolated Claude
 worktrees, where the worktree guard refuses `git-spice` operands) for every
-feature branch and PR operation. A single PR is a stack of one. Always pass
-`--no-prompt` in agent shells so PTY sessions never block on interactive input,
-and never use `gs`, hand-roll a stack rebase, or create a feature PR with
-`gh pr create`.
+feature branch and PR operation. A single PR is a stack of one, and every
+stack is a git-spice stack. Always pass `--no-prompt` in agent shells so PTY
+sessions never block on interactive input, and never use `gs`, hand-roll a
+stack rebase, or create a feature PR with `gh pr create`.
+
+Do not drive GitHub stacked pull requests outside git-spice. Do not run
+`gh stack`, install `github/gh-stack`, or open a chain of pull requests by
+pointing each base at the branch below it. git-spice may register submitted
+stacks with GitHub's native stack feature. Leave that registration to
+git-spice.
 
 ## Work locally
 
@@ -53,7 +59,7 @@ ready (`Why`, `What`, `Demo`, and `Verification` in the PR body):
 
 ```bash
 toolkit git-spice branch submit --draft --no-prompt --no-web --title "type(scope): outcome" --body-file /tmp/pr-body.md
-toolkit pr asset before.png after.png --profile seaweedfs --markdown
+toolkit pr asset before.png after.png --markdown
 # Embed printed markdown in ## Demo of /tmp/pr-body.md, then mark ready:
 toolkit git-spice branch submit --no-draft --no-prompt --no-web --body-file /tmp/pr-body.md
 toolkit ci wait --json
@@ -113,7 +119,7 @@ whole branch, not the latest commit.
 - Never change a real gate, skip a test, or suppress an error merely to make a
   PR green.
 
-Upload `Demo` media with `toolkit pr asset [PR] <path...> --profile seaweedfs --markdown`
+Upload `Demo` media with `toolkit pr asset [PR] <path...> --markdown`
 (omitting `PR` infers the current branch's open PR) and embed the printed
 markdown in the PR body's `## Demo` section before marking ready. A `.cast`
 renders as an inline GIF linked to the full player; a directory with root
@@ -123,8 +129,9 @@ reason to omit it; test pass counts stay in `## Verification`, alongside any
 unperformed live or production checks).
 
 Complex work may use several commits inside this one branch. Use multiple
-stacked PRs only when each branch is independently landable and the requested
-scope permits more than one PR.
+git-spice stacked PRs only when each branch is independently landable and the
+requested scope permits more than one PR. Those stacks are still git-spice
+stacks.
 
 ## Merge when authorized
 

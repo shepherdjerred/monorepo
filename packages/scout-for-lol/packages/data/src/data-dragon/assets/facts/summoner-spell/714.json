@@ -1,0 +1,24 @@
+{
+  "kind": "summoner-spell",
+  "patch": "16.23.1",
+  "key": "714",
+  "name": "Ignite",
+  "description": "Deals true damage over time to target enemy champion and reduces healing effects on them for the duration. Summoner's Wrath: While Ignite is on cooldown, gain 5 Ability Power and Attack Damage.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "600"
+    },
+    {
+      "label": "Unlocks",
+      "value": "Level 1"
+    }
+  ],
+  "parts": [],
+  "icon": "img/spell/SummonerDot_Jade.png",
+  "cooldownSeconds": 210,
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "210 s"
+  }
+}

@@ -2,7 +2,10 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { startMediaTestPostgres } from "#testing/postgres.ts";
 import { PrismaPlaybackHistory } from "./service.ts";
 import { PrismaPlaybackCollector } from "./collector.ts";
-import { ImportPlaybackHistorySchema } from "#shared/household/playback.ts";
+import {
+  ImportPlaybackHistorySchema,
+  PlaybackTimelineQuerySchema,
+} from "#shared/household/playback.ts";
 import {
   PlexHistoricalViewImportSchema,
   type PlexHistoricalViewImport,
@@ -117,6 +120,142 @@ async function fixture() {
   };
   return { db, server, owner, member, time, service, input, seal };
 }
+
+describe("Unified playback timeline", () => {
+  it("pages timed sessions and Plex views together, within the current actor and filters", async () => {
+    const f = await fixture();
+    await f.service.importHistory(f.owner, f.input);
+    const history = await f.service.history(f.member, { limit: 1 });
+    const sameTime = history.items[0]?.startedAt;
+    expect(sameTime).toBeDefined();
+    await f.db.plexIdentityMapping.create({
+      data: {
+        userId: f.member.id,
+        kind: "independent",
+        serverMachineId: f.server,
+        serverAccountId: "123",
+        verifiedAt: f.time.now,
+      },
+    });
+    const marker = {
+      source: "view",
+      sourceViewId: 29,
+      serverAccountId: "123",
+      sectionId: "7",
+      kind: "episode",
+      title: "Removed episode",
+      guid: "plex://episode/removed",
+      seriesTitle: "Removed series",
+      seriesGuid: "plex://show/removed",
+      seasonNumber: 1,
+      episodeNumber: 2,
+      viewedAt: sameTime,
+      originallyAvailableAt: null,
+      viewType: 1,
+      viewCount: null,
+    };
+    const input = PlexHistoricalViewImportSchema.parse({
+      serverMachineId: f.server,
+      rows: [
+        marker,
+        { ...marker, sourceViewId: 30, serverAccountId: "9" },
+        {
+          ...marker,
+          source: "last_watched",
+          sourceViewId: 30,
+          viewType: null,
+          viewCount: 1,
+        },
+      ],
+    });
+    await importPlexHistoricalViews(f.db, f.owner, f.server, input);
+    const timeline = (
+      actor: MediaActor,
+      filters: Record<string, string | number | null | undefined> = {},
+    ) =>
+      f.service.timeline(
+        actor,
+        PlaybackTimelineQuerySchema.parse({
+          view: "timeline",
+          limit: 1,
+          ...filters,
+        }),
+      );
+    const session = await timeline(f.member);
+    expect(session.items).toMatchObject([
+      {
+        kind: "session",
+        session: { title: "Historical title", source: "tautulli" },
+      },
+    ]);
+    const view = await timeline(f.member, { cursor: session.nextCursor });
+    expect(view.items).toEqual([
+      {
+        kind: "plex_view",
+        id: "view:29",
+        source: "view",
+        mediaKind: "episode",
+        title: "Removed episode",
+        seriesTitle: "Removed series",
+        seasonNumber: 1,
+        episodeNumber: 2,
+        viewedAt: sameTime,
+        userName: "Member",
+      },
+    ]);
+    expect(await timeline(f.member, { cursor: view.nextCursor })).toMatchObject(
+      {
+        items: [{ kind: "plex_view", id: "last_watched:30" }],
+        nextCursor: null,
+      },
+    );
+    await expect(
+      timeline(f.member, { cursor: "view:30" }),
+    ).rejects.toMatchObject({ code: "invalid_cursor" });
+    await expect(
+      timeline(f.member, { userId: f.owner.id }),
+    ).rejects.toMatchObject({ code: "forbidden" });
+    await expect(
+      timeline(f.member, { cursor: session.nextCursor, source: "plex" }),
+    ).rejects.toMatchObject({ code: "invalid_cursor" });
+    expect(
+      await timeline(f.owner, { search: "removed SERIES", source: "plex" }),
+    ).toMatchObject({
+      items: [{ kind: "plex_view", id: "view:30", userName: null }],
+    });
+    expect(
+      await timeline(f.owner, {
+        search: "removed SERIES",
+        userId: f.member.id,
+      }),
+    ).toMatchObject({
+      items: [{ kind: "plex_view", id: "view:29", userName: "Member" }],
+    });
+    expect(await timeline(f.owner, { to: sameTime })).toEqual({
+      items: [],
+      nextCursor: null,
+    });
+    expect(
+      await f.service.statistics(f.owner, { limit: 20, source: "plex" }),
+    ).toMatchObject({ plays: 0, watchedMs: 0 });
+    expect(await f.service.statistics(f.owner, { limit: 20 })).toMatchObject({
+      plays: 2,
+      watchedMs: 450_000,
+    });
+
+    await f.db.plexIdentityMapping.update({
+      where: { userId: f.member.id },
+      data: { userId: f.owner.id },
+    });
+    expect(
+      await timeline(f.owner, { userId: f.owner.id, source: "plex" }),
+    ).toEqual({ items: [], nextCursor: null });
+    expect(await timeline(f.member, { source: "plex" })).toEqual({
+      items: [],
+      nextCursor: null,
+    });
+  });
+});
 
 describe("Plex historical views", () => {
   it("retains removed Plex titles privately with stable pagination and no timed play or request changes", async () => {

@@ -79,6 +79,7 @@ const BUCKETS = {
   homelab_tofu_state: "homelab-tofu-state",
   landing_pages: "landing-pages",
   llm_archive: "llm-archive",
+  private_sjer_red: "private-sjer-red",
   public_sjer_red: "public-sjer-red",
   resume: "resume",
   scout_beta: "scout-beta",
@@ -185,12 +186,40 @@ const TERRAFORM_DATA = {
       `${PUT_LIFECYCLE}  --lifecycle-configuration '\${self.input.rules}'\n`,
     ),
   },
-  public_sjer_red_lifecycle: expiry(
-    "public_sjer_red",
-    365,
-    "expire-pr-assets",
-    "pr/assets/",
+  private_sjer_red_lifecycle: expiry(
+    "private_sjer_red",
+    30,
+    "expire-share-tmp",
+    "share/tmp/",
   ),
+  private_sjer_red_seed: {
+    input: {
+      bucket: "${aws_s3_bucket.private_sjer_red.id}",
+      endpoint_url: ENDPOINT,
+      index_md5: '${filemd5("${path.module}/private/index.html")}',
+    },
+    provisioner: provisioner(
+      [
+        'aws s3 cp "${path.module}/private/index.html" "s3://${self.input.bucket}/index.html" \\',
+        '  --endpoint-url "${self.input.endpoint_url}" \\',
+        '  --content-type "text/html; charset=utf-8"',
+        "",
+      ].join("\n"),
+    ),
+  },
+  // Two rules in one configuration: a second lifecycle call would replace the
+  // first, so `expire-pr-assets` is only kept by being in the same one.
+  public_sjer_red_lifecycle: {
+    input: {
+      bucket: "${aws_s3_bucket.public_sjer_red.id}",
+      endpoint_url: ENDPOINT,
+      rules:
+        '${jsonencode({ Rules = [{ ID = "expire-pr-assets", Status = "Enabled", Filter = { Prefix = "pr/assets/" }, Expiration = { Days = 365 } }, { ID = "expire-share-tmp", Status = "Enabled", Filter = { Prefix = "share/tmp/" }, Expiration = { Days = 30 } }] })}',
+    },
+    provisioner: provisioner(
+      `${PUT_LIFECYCLE}  --lifecycle-configuration '\${self.input.rules}'\n`,
+    ),
+  },
   public_sjer_red_seed: {
     input: {
       bucket: "${aws_s3_bucket.public_sjer_red.id}",
@@ -336,13 +365,68 @@ describe("seaweedfs", () => {
     expect(resource.terraform_data).toEqual(TERRAFORM_DATA);
   });
 
+  test("every bucket gets exactly one lifecycle configuration holding all its rules", async () => {
+    const { resource } = await seaweedfs();
+    const LifecycleSchema = z.object({
+      input: z.looseObject({
+        bucket: z.string(),
+        rules: z.string().optional(),
+      }),
+      provisioner: z.array(
+        z.object({ "local-exec": z.object({ command: z.string() }) }),
+      ),
+    });
+    // `put-bucket-lifecycle-configuration` replaces a bucket's whole
+    // configuration, so a bucket written by two resources would keep only the
+    // last one's rules.
+    const configurations = Object.entries(resource.terraform_data)
+      .map(([id, data]) => ({ id, parsed: LifecycleSchema.safeParse(data) }))
+      .filter(
+        (entry) =>
+          entry.parsed.success &&
+          entry.parsed.data.provisioner.some((step) =>
+            step["local-exec"].command.includes(
+              "put-bucket-lifecycle-configuration",
+            ),
+          ),
+      );
+    const writers = new Map<string, string[]>();
+    for (const { id, parsed } of configurations) {
+      if (!parsed.success) continue;
+      const { bucket } = parsed.data.input;
+      writers.set(bucket, [...(writers.get(bucket) ?? []), id]);
+    }
+    for (const [bucket, ids] of writers) expect(ids, bucket).toHaveLength(1);
+    // Public: both rules of the bucket in its one configuration. Private: the
+    // single rule it has.
+    expect(
+      [...writers.entries()]
+        .filter(([bucket]) => bucket.includes("_sjer_red."))
+        .flatMap(([, ids]) => ids)
+        .toSorted((left, right) => left.localeCompare(right)),
+    ).toEqual(["private_sjer_red_lifecycle", "public_sjer_red_lifecycle"]);
+
+    const publicRules = LifecycleSchema.parse(
+      resource.terraform_data["public_sjer_red_lifecycle"],
+    ).input.rules;
+    expect(
+      [...(publicRules ?? "").matchAll(/ID = "([^"]+)"/g)].map(
+        (match) => match[1],
+      ),
+    ).toEqual(["expire-pr-assets", "expire-share-tmp"]);
+  });
+
   test("the seed pages the stack hashes and uploads are committed beside it", async () => {
     const stackDirectory = path.dirname(
       synthesizedConfigurationPath("seaweedfs"),
     );
-    for (const page of ["index.html", "404.html"])
+    for (const page of [
+      "public/index.html",
+      "public/404.html",
+      "private/index.html",
+    ])
       expect(
-        await Bun.file(path.join(stackDirectory, "public", page)).exists(),
+        await Bun.file(path.join(stackDirectory, page)).exists(),
         page,
       ).toBe(true);
   });

@@ -1295,25 +1295,6 @@
       }
     },
     {
-      "id": "freshrss",
-      "title": "FreshRSS",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "self-hosted-apps",
-      "components": [
-        {
-          "name": "chart:freshrss",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "workload",
-        "namespaces": ["freshrss"],
-        "argoApps": ["freshrss"]
-      }
-    },
-    {
       "id": "golink",
       "title": "Golink",
       "package": "golink",
@@ -1472,35 +1453,6 @@
           "argocd-companion": "inactive"
         },
         "charts": ["argocd-companion"]
-      }
-    },
-    {
-      "id": "chartmuseum",
-      "title": "ChartMuseum",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "gitops",
-      "components": [
-        {
-          "name": "chart:chartmuseum",
-          "producer": "acquisition"
-        },
-        {
-          "name": "chart:chartmuseum-companion",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["chartmuseum"],
-        "argoApps": ["chartmuseum"]
-      },
-      "legacy": {
-        "rootReleaseExclusions": {
-          "chartmuseum": "upstream",
-          "chartmuseum-companion": "inactive"
-        },
-        "charts": ["chartmuseum-companion"]
       }
     },
     {
@@ -2180,44 +2132,6 @@
       }
     },
     {
-      "id": "turbo-cache",
-      "title": "Turborepo cache",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "ci",
-      "components": [
-        {
-          "name": "chart:turbo-cache",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["turbo-cache"],
-        "argoApps": ["turbo-cache"]
-      }
-    },
-    {
-      "id": "gradle-build-cache",
-      "title": "Gradle build cache",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "ci",
-      "components": [
-        {
-          "name": "chart:gradle-build-cache",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["gradle-build-cache"],
-        "argoApps": ["gradle-build-cache"]
-      }
-    },
-    {
       "id": "kueue",
       "title": "Kueue",
       "lifecycle": "active",
@@ -2420,26 +2334,6 @@
       }
     },
     {
-      "id": "gickup",
-      "title": "Gickup",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "storage",
-      "components": [
-        {
-          "name": "chart:gickup",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["gickup"],
-        "argoApps": ["gickup"],
-        "grafanaDashboards": ["gitckup-dashboard"]
-      }
-    },
-    {
       "id": "tailscale",
       "title": "Tailscale operator",
       "lifecycle": "active",
@@ -2542,25 +2436,6 @@
         "rootReleaseExclusions": {
           "cert-manager": "upstream"
         }
-      }
-    },
-    {
-      "id": "ddns",
-      "title": "Dynamic DNS",
-      "package": "homelab",
-      "lifecycle": "active",
-      "selfHosted": false,
-      "group": "networking",
-      "components": [
-        {
-          "name": "chart:ddns",
-          "producer": "first-party"
-        }
-      ],
-      "ops": {
-        "kind": "platform",
-        "namespaces": ["ddns"],
-        "argoApps": ["ddns"]
       }
     },
     {
@@ -2797,17 +2672,29 @@
         {
           "name": "chart:charts",
           "producer": "first-party"
+        },
+        {
+          "name": "chart:charts-bootstrap",
+          "producer": "first-party"
         }
       ],
       "ops": {
         "kind": "product",
-        "namespaces": ["charts"]
+        "namespaces": ["charts"],
+        "argoApps": ["charts"]
       },
       "legacy": {
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/charts",
+            "argoApp": "charts"
+          }
+        ],
+        "charts": ["charts-bootstrap"],
         "rootReleaseExclusions": {
-          "charts": "inactive"
-        },
-        "charts": ["charts"]
+          "charts-bootstrap": "inactive"
+        }
       }
     },
     {
@@ -2829,13 +2716,17 @@
       ],
       "ops": {
         "kind": "product",
-        "namespaces": ["ci-cache"]
+        "namespaces": ["ci-cache"],
+        "argoApps": ["ci-cache"]
       },
       "legacy": {
-        "rootReleaseExclusions": {
-          "ci-cache": "inactive"
-        },
-        "charts": ["ci-cache"]
+        "deploy": [
+          {
+            "name": "default",
+            "versionKey": "shepherdjerred/ci-cache",
+            "argoApp": "ci-cache"
+          }
+        ]
       }
     },
     {
@@ -2877,7 +2768,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "delivery/3",
+      "recipeRevisionId": "delivery/4",
       "configurationRevisionId": "delivery/1"
     },
     {
@@ -2885,7 +2776,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": false,
-      "recipeRevisionId": "delivery-data/prod/1",
+      "recipeRevisionId": "delivery-data/prod/2",
       "configurationRevisionId": "delivery-data/prod/1"
     },
     {
@@ -2893,7 +2784,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "arcade/3",
+      "recipeRevisionId": "arcade/4",
       "configurationRevisionId": "arcade/1"
     },
     {
@@ -2901,7 +2792,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "scout-beta/2",
+      "recipeRevisionId": "scout-beta/3",
       "configurationRevisionId": "scout-beta/2"
     },
     {
@@ -2910,7 +2801,7 @@
       "approvalPolicy": "required",
       "automatic": true,
       "promotionSourceEnvironmentId": "scout-for-lol/beta",
-      "recipeRevisionId": "scout-prod/2",
+      "recipeRevisionId": "scout-prod/3",
       "configurationRevisionId": "scout-prod/2"
     },
     {
@@ -2918,7 +2809,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "birmel/prod/2",
+      "recipeRevisionId": "birmel/prod/3",
       "configurationRevisionId": "birmel/prod/1"
     },
     {
@@ -2926,7 +2817,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "tasknotes-server/prod/3",
+      "recipeRevisionId": "tasknotes-server/prod/4",
       "configurationRevisionId": "tasknotes-server/prod/1"
     },
     {
@@ -2934,7 +2825,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "starlight-karma-bot/beta/2",
+      "recipeRevisionId": "starlight-karma-bot/beta/3",
       "configurationRevisionId": "starlight-karma-bot/beta/1"
     },
     {
@@ -2943,7 +2834,7 @@
       "approvalPolicy": "required",
       "automatic": true,
       "promotionSourceEnvironmentId": "starlight-karma-bot/beta",
-      "recipeRevisionId": "starlight-karma-bot/prod/2",
+      "recipeRevisionId": "starlight-karma-bot/prod/3",
       "configurationRevisionId": "starlight-karma-bot/prod/1"
     },
     {
@@ -2951,7 +2842,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "streambot/prod/3",
+      "recipeRevisionId": "streambot/prod/4",
       "configurationRevisionId": "streambot/prod/1"
     },
     {
@@ -2959,7 +2850,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "static-site-proxy/prod/1",
+      "recipeRevisionId": "static-site-proxy/prod/2",
       "configurationRevisionId": "static-site-proxy/prod/1"
     },
     {
@@ -3087,7 +2978,7 @@
       "role": "qualification",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "minecraft/sandbox/2",
+      "recipeRevisionId": "minecraft/sandbox/3",
       "configurationRevisionId": "minecraft/sandbox/1"
     },
     {
@@ -3096,7 +2987,7 @@
       "approvalPolicy": "none",
       "automatic": true,
       "promotionSourceEnvironmentId": "minecraft/sandbox",
-      "recipeRevisionId": "minecraft-tsmc/9",
+      "recipeRevisionId": "minecraft-tsmc/11",
       "configurationRevisionId": "minecraft-tsmc/11"
     },
     {
@@ -3112,7 +3003,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "tracker/prod/2",
+      "recipeRevisionId": "tracker/prod/3",
       "configurationRevisionId": "tracker/prod/1"
     },
     {
@@ -3120,7 +3011,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "storm-stats/prod/2",
+      "recipeRevisionId": "storm-stats/prod/3",
       "configurationRevisionId": "storm-stats/prod/1"
     },
     {
@@ -3128,7 +3019,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "feeds/prod/2",
+      "recipeRevisionId": "feeds/prod/3",
       "configurationRevisionId": "feeds/prod/1"
     },
     {
@@ -3136,7 +3027,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "outbound-mail/prod/2",
+      "recipeRevisionId": "outbound-mail/prod/3",
       "configurationRevisionId": "outbound-mail/prod/1"
     },
     {
@@ -3144,7 +3035,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "storm-forum/2",
+      "recipeRevisionId": "storm-forum/3",
       "configurationRevisionId": "storm-forum/2"
     },
     {
@@ -3152,7 +3043,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "temporal/3",
+      "recipeRevisionId": "temporal/4",
       "configurationRevisionId": "temporal/1"
     },
     {
@@ -3160,7 +3051,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": false,
-      "recipeRevisionId": "cluster-admission/prod/1",
+      "recipeRevisionId": "cluster-admission/prod/2",
       "configurationRevisionId": "cluster-admission/prod/1"
     },
     {
@@ -3184,7 +3075,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "cluster-platform/prod/1",
+      "recipeRevisionId": "cluster-platform/prod/2",
       "configurationRevisionId": "cluster-platform/prod/1"
     },
     {
@@ -3192,7 +3083,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "cluster-observability/prod/1",
+      "recipeRevisionId": "cluster-observability/prod/2",
       "configurationRevisionId": "cluster-observability/prod/1"
     },
     {
@@ -3200,7 +3091,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": false,
-      "recipeRevisionId": "temporal-data/prod/1",
+      "recipeRevisionId": "temporal-data/prod/2",
       "configurationRevisionId": "temporal-data/prod/1"
     },
     {
@@ -3208,7 +3099,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "delivery-control-plane/2",
+      "recipeRevisionId": "delivery-control-plane/3",
       "configurationRevisionId": "delivery-control-plane/1"
     },
     {
@@ -3216,7 +3107,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "trmnl-dashboard/prod/2",
+      "recipeRevisionId": "trmnl-dashboard/prod/3",
       "configurationRevisionId": "trmnl-dashboard/prod/1"
     },
     {
@@ -3224,7 +3115,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "glitter-boys-launcher/prod/2",
+      "recipeRevisionId": "glitter-boys-launcher/prod/3",
       "configurationRevisionId": "glitter-boys-launcher/prod/1"
     },
     {
@@ -3232,7 +3123,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "ops-dashboard/prod/3",
+      "recipeRevisionId": "ops-dashboard/prod/4",
       "configurationRevisionId": "ops-dashboard/prod/1"
     },
     {
@@ -3240,7 +3131,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "storm-brain/prod/2",
+      "recipeRevisionId": "storm-brain/prod/3",
       "configurationRevisionId": "storm-brain/prod/1"
     },
     {
@@ -3248,23 +3139,15 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "home/prod/1",
+      "recipeRevisionId": "home/prod/2",
       "configurationRevisionId": "home/prod/1"
-    },
-    {
-      "id": "freshrss/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "freshrss/prod/1",
-      "configurationRevisionId": "freshrss/prod/1"
     },
     {
       "id": "golink/prod",
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "golink/prod/3",
+      "recipeRevisionId": "golink/prod/4",
       "configurationRevisionId": "golink/prod/1"
     },
     {
@@ -3272,7 +3155,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "errors/prod/2",
+      "recipeRevisionId": "errors/prod/3",
       "configurationRevisionId": "errors/prod/1"
     },
     {
@@ -3280,7 +3163,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "flags/prod/2",
+      "recipeRevisionId": "flags/prod/3",
       "configurationRevisionId": "flags/prod/1"
     },
     {
@@ -3288,7 +3171,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "redlib/prod/2",
+      "recipeRevisionId": "redlib/prod/3",
       "configurationRevisionId": "redlib/prod/1"
     },
     {
@@ -3296,7 +3179,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "stash/prod/1",
+      "recipeRevisionId": "stash/prod/2",
       "configurationRevisionId": "stash/prod/1"
     },
     {
@@ -3304,7 +3187,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "syncthing/prod/1",
+      "recipeRevisionId": "syncthing/prod/2",
       "configurationRevisionId": "syncthing/prod/1"
     },
     {
@@ -3312,7 +3195,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "pinchtab/prod/1",
+      "recipeRevisionId": "pinchtab/prod/2",
       "configurationRevisionId": "pinchtab/prod/1"
     },
     {
@@ -3320,16 +3203,8 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "argocd/prod/1",
-      "configurationRevisionId": "argocd/prod/18"
-    },
-    {
-      "id": "chartmuseum/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "chartmuseum/prod/1",
-      "configurationRevisionId": "chartmuseum/prod/3"
+      "recipeRevisionId": "argocd/prod/2",
+      "configurationRevisionId": "argocd/prod/21"
     },
     {
       "id": "tofu-anthropic/prod",
@@ -3472,8 +3347,8 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "prometheus/prod/1",
-      "configurationRevisionId": "prometheus/prod/11"
+      "recipeRevisionId": "prometheus/prod/2",
+      "configurationRevisionId": "prometheus/prod/12"
     },
     {
       "id": "prometheus-adapter/prod",
@@ -3496,7 +3371,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "service-probes/prod/1",
+      "recipeRevisionId": "service-probes/prod/2",
       "configurationRevisionId": "service-probes/prod/1"
     },
     {
@@ -3504,7 +3379,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "grafana-db/prod/1",
+      "recipeRevisionId": "grafana-db/prod/2",
       "configurationRevisionId": "grafana-db/prod/1"
     },
     {
@@ -3512,7 +3387,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "loki/prod/2",
+      "recipeRevisionId": "loki/prod/3",
       "configurationRevisionId": "loki/prod/3"
     },
     {
@@ -3520,7 +3395,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "tempo/prod/1",
+      "recipeRevisionId": "tempo/prod/2",
       "configurationRevisionId": "tempo/prod/1"
     },
     {
@@ -3528,7 +3403,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "pyroscope/prod/1",
+      "recipeRevisionId": "pyroscope/prod/2",
       "configurationRevisionId": "pyroscope/prod/2"
     },
     {
@@ -3544,7 +3419,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "alloy-gateway/prod/1",
+      "recipeRevisionId": "alloy-gateway/prod/2",
       "configurationRevisionId": "alloy-gateway/prod/3"
     },
     {
@@ -3560,7 +3435,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "phoenix/prod/1",
+      "recipeRevisionId": "phoenix/prod/2",
       "configurationRevisionId": "phoenix/prod/1"
     },
     {
@@ -3568,7 +3443,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "bugsink/prod/1",
+      "recipeRevisionId": "bugsink/prod/2",
       "configurationRevisionId": "bugsink/prod/1"
     },
     {
@@ -3576,7 +3451,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "woodpecker/prod/1",
+      "recipeRevisionId": "woodpecker/prod/2",
       "configurationRevisionId": "woodpecker/prod/1"
     },
     {
@@ -3584,24 +3459,8 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "buildkitd/prod/1",
+      "recipeRevisionId": "buildkitd/prod/2",
       "configurationRevisionId": "buildkitd/prod/1"
-    },
-    {
-      "id": "turbo-cache/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "turbo-cache/prod/1",
-      "configurationRevisionId": "turbo-cache/prod/1"
-    },
-    {
-      "id": "gradle-build-cache/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "gradle-build-cache/prod/1",
-      "configurationRevisionId": "gradle-build-cache/prod/1"
     },
     {
       "id": "openebs/prod",
@@ -3616,7 +3475,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "seaweedfs/prod/1",
+      "recipeRevisionId": "seaweedfs/prod/2",
       "configurationRevisionId": "seaweedfs/prod/2"
     },
     {
@@ -3624,7 +3483,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "velero/prod/1",
+      "recipeRevisionId": "velero/prod/2",
       "configurationRevisionId": "velero/prod/5"
     },
     {
@@ -3636,19 +3495,11 @@
       "configurationRevisionId": "postgres-operator/prod/2"
     },
     {
-      "id": "gickup/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "gickup/prod/1",
-      "configurationRevisionId": "gickup/prod/1"
-    },
-    {
       "id": "tailscale/prod",
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "tailscale/prod/1",
+      "recipeRevisionId": "tailscale/prod/2",
       "configurationRevisionId": "tailscale/prod/1"
     },
     {
@@ -3656,7 +3507,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "cloudflare-tunnel/prod/1",
+      "recipeRevisionId": "cloudflare-tunnel/prod/2",
       "configurationRevisionId": "cloudflare-tunnel/prod/1"
     },
     {
@@ -3664,7 +3515,7 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "cloudflare-operator/prod/1",
+      "recipeRevisionId": "cloudflare-operator/prod/2",
       "configurationRevisionId": "cloudflare-operator/prod/1"
     },
     {
@@ -3680,16 +3531,8 @@
       "role": "durable",
       "approvalPolicy": "none",
       "automatic": true,
-      "recipeRevisionId": "kueue/prod/1",
+      "recipeRevisionId": "kueue/prod/2",
       "configurationRevisionId": "kueue/prod/2"
-    },
-    {
-      "id": "ddns/prod",
-      "role": "durable",
-      "approvalPolicy": "none",
-      "automatic": true,
-      "recipeRevisionId": "ddns/prod/1",
-      "configurationRevisionId": "ddns/prod/1"
     },
     {
       "id": "1password/prod",
@@ -3722,6 +3565,22 @@
       "automatic": true,
       "recipeRevisionId": "nfd/prod/1",
       "configurationRevisionId": "nfd/prod/1"
+    },
+    {
+      "id": "charts/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "charts/prod/5",
+      "configurationRevisionId": "charts/prod/1"
+    },
+    {
+      "id": "ci-cache/prod",
+      "role": "durable",
+      "approvalPolicy": "none",
+      "automatic": true,
+      "recipeRevisionId": "ci-cache/prod/3",
+      "configurationRevisionId": "ci-cache/prod/1"
     }
   ],
   "edges": [
@@ -3926,33 +3785,63 @@
       "rule": "any-accepted"
     },
     {
-      "dependent": "chartmuseum/prod",
+      "dependent": "charts/prod",
       "prerequisite": "1password/prod",
       "rule": "any-accepted"
     },
     {
-      "dependent": "chartmuseum/prod",
+      "dependent": "charts/prod",
       "prerequisite": "argocd/prod",
       "rule": "any-accepted"
     },
     {
-      "dependent": "chartmuseum/prod",
-      "prerequisite": "cloudflare-operator/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "chartmuseum/prod",
+      "dependent": "charts/prod",
       "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
     {
-      "dependent": "chartmuseum/prod",
+      "dependent": "charts/prod",
       "prerequisite": "cluster-platform/prod",
       "rule": "any-accepted"
     },
     {
-      "dependent": "chartmuseum/prod",
+      "dependent": "charts/prod",
       "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "charts/prod",
+      "prerequisite": "prometheus/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ci-cache/prod",
+      "prerequisite": "1password/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ci-cache/prod",
+      "prerequisite": "argocd/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ci-cache/prod",
+      "prerequisite": "cluster-admission/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ci-cache/prod",
+      "prerequisite": "cluster-platform/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ci-cache/prod",
+      "prerequisite": "openebs/prod",
+      "rule": "any-accepted"
+    },
+    {
+      "dependent": "ci-cache/prod",
+      "prerequisite": "prometheus/prod",
       "rule": "any-accepted"
     },
     {
@@ -4038,21 +3927,6 @@
     {
       "dependent": "cross-compilers/prod",
       "prerequisite": "tofu-seaweedfs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "ddns/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "ddns/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "ddns/prod",
-      "prerequisite": "cluster-admission/prod",
       "rule": "any-accepted"
     },
     {
@@ -4251,66 +4125,6 @@
       "rule": "any-accepted"
     },
     {
-      "dependent": "freshrss/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "freshrss/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "freshrss/prod",
-      "prerequisite": "cloudflare-operator/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "freshrss/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "freshrss/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "freshrss/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gickup/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gickup/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gickup/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gickup/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gickup/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gickup/prod",
-      "prerequisite": "prometheus/prod",
-      "rule": "any-accepted"
-    },
-    {
       "dependent": "glitter-boys-launcher/prod",
       "prerequisite": "1password/prod",
       "rule": "any-accepted"
@@ -4378,31 +4192,6 @@
     {
       "dependent": "golink/prod",
       "prerequisite": "prometheus/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gradle-build-cache/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gradle-build-cache/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gradle-build-cache/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gradle-build-cache/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "gradle-build-cache/prod",
-      "prerequisite": "openebs/prod",
       "rule": "any-accepted"
     },
     {
@@ -5467,11 +5256,6 @@
     },
     {
       "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "chartmuseum/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
       "prerequisite": "cloudflare-operator/prod",
       "rule": "any-accepted"
     },
@@ -5488,11 +5272,6 @@
     {
       "dependent": "tofu-cloudflare/prod",
       "prerequisite": "feeds/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "tofu-cloudflare/prod",
-      "prerequisite": "freshrss/prod",
       "rule": "any-accepted"
     },
     {
@@ -5621,31 +5400,6 @@
       "rule": "any-accepted"
     },
     {
-      "dependent": "turbo-cache/prod",
-      "prerequisite": "1password/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "turbo-cache/prod",
-      "prerequisite": "argocd/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "turbo-cache/prod",
-      "prerequisite": "cluster-admission/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "turbo-cache/prod",
-      "prerequisite": "cluster-platform/prod",
-      "rule": "any-accepted"
-    },
-    {
-      "dependent": "turbo-cache/prod",
-      "prerequisite": "openebs/prod",
-      "rule": "any-accepted"
-    },
-    {
       "dependent": "velero/prod",
       "prerequisite": "1password/prod",
       "rule": "any-accepted"
@@ -5743,7 +5497,9 @@
       "storm-stats": "storm-stats/prod",
       "mail": "outbound-mail/prod",
       "feeds": "feeds/prod",
-      "errors": "errors/prod"
+      "errors": "errors/prod",
+      "charts": "charts/prod",
+      "ci-cache": "ci-cache/prod"
     },
     "platformDeliveryDelegated": true
   }

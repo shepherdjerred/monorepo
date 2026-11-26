@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Ziggs-W",
+  "name": "Satchel Charge",
+  "description": "Ziggs flings an explosive charge that detonates after 4 seconds, or when this ability is Recast. It deals 70/105/140/175/210 (+50% AP) magic damage to enemies and Knocks them Back.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "80 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Ziggs-W.png",
+  "slot": "W",
+  "championKey": "Ziggs",
+  "championName": "Ziggs",
+  "maxRank": 5,
+  "cooldownByRank": [
+    20,
+    18,
+    16,
+    14,
+    12
+  ],
+  "costByRank": [
+    80,
+    80,
+    80,
+    80,
+    80
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "20/18/16/14/12 s"
+  }
+}

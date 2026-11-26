@@ -71,7 +71,7 @@ describe("ToolSpendPanel", () => {
     const html = renderToStaticMarkup(<ToolSpendPanel signals={TOOLS} />);
     expect(html).toContain('<h2 id="tool-spend-heading">Usage by tool</h2>');
     expect(html).toContain(
-      '<table class="tool-table" aria-labelledby="tool-spend-heading" aria-describedby="tool-spend-note">',
+      '<table class="tool-table ui-table" aria-labelledby="tool-spend-heading" aria-describedby="tool-spend-note">',
     );
     expect(html).toContain(
       '<th scope="col">Tool</th><th scope="col" class="num">API-equivalent this month</th>',

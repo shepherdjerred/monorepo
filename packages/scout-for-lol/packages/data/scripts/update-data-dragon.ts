@@ -1729,6 +1729,7 @@ async function main(): Promise<void> {
         .filter((entry) => !entry.id.startsWith("Jade_"))
         .map((entry) => entry.id);
       await generateAbilityFacts(cdVersion, championNames);
+      await $`cd ${MONOREPO_ROOT} && bun run --cwd packages/scout-for-lol/packages/data generate:game-facts`;
       return;
     }
     // --snapshots-only skips version resolution + asset download and jumps
@@ -1841,6 +1842,7 @@ async function main(): Promise<void> {
       discoveries,
     );
     await $`cd ${MONOREPO_ROOT} && bun run --cwd packages/scout-for-lol/packages/data generate:asset-manifest --write`;
+    await $`cd ${MONOREPO_ROOT} && bun run --cwd packages/scout-for-lol/packages/data generate:game-facts`;
 
     const totalImages =
       spellImagesCount +

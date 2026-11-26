@@ -48,8 +48,8 @@ afterEach(async () => {
 });
 
 describe("paths and duration utilities", () => {
-  it("parses compact durations and enforces the 7-day default floor", () => {
-    expect(DEFAULT_WORKTREE_MIN_AGE_MS).toBe(7 * 24 * 60 * 60 * 1000);
+  it("parses compact durations and enforces the 3-day default floor", () => {
+    expect(DEFAULT_WORKTREE_MIN_AGE_MS).toBe(3 * 24 * 60 * 60 * 1000);
     expect(parseDurationMs("7d")).toBe(7 * 24 * 60 * 60 * 1000);
     expect(parseDurationMs("168h")).toBe(7 * 24 * 60 * 60 * 1000);
     expect(parseDurationMs("30m")).toBe(30 * 60 * 1000);

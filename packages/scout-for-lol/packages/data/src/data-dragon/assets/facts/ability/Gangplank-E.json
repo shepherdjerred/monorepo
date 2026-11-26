@@ -1,0 +1,45 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Gangplank-E",
+  "name": "Powder Keg",
+  "description": "Gangplank places a powder keg that can be attacked by Gangplank and enemy champions for 25 seconds. When an enemy destroys it, the keg is defused.",
+  "facts": [
+    {
+      "label": "Range",
+      "value": "1000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Gangplank-E.png",
+  "slot": "E",
+  "championKey": "Gangplank",
+  "championName": "Gangplank",
+  "maxRank": 5,
+  "cooldownByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costByRank": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "costType": "",
+  "rangeByRank": [
+    1000,
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "0 s"
+  }
+}

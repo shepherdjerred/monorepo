@@ -1,0 +1,28 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "773020",
+  "name": "Sorcerer's Shoes",
+  "description": "Enhanced Movement: 45 Move Speed",
+  "facts": [
+    {
+      "label": "Magic Penetration",
+      "value": "15"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "771001",
+      "name": "Boots of Speed",
+      "icon": "img/item/771001.png"
+    }
+  ],
+  "icon": "img/item/773020.png",
+  "goldTotal": 1100,
+  "goldCombine": 775,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1100 gold"
+  }
+}

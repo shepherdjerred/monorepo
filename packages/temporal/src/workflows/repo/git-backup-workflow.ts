@@ -17,9 +17,9 @@ import { rethrowReportDeliveryFailure } from "#workflows/scout/report-delivery.t
 const { runGitBackup } = proxyActivities<GitBackupActivities>({
   taskQueue: TASK_QUEUES.REPO_AUTOMATION,
   startToCloseTimeout: "3 hours",
-  heartbeatTimeout: "2 minutes",
+  heartbeatTimeout: "5 minutes",
   retry: {
-    maximumAttempts: 2,
+    maximumAttempts: 3,
     initialInterval: "2 minutes",
     backoffCoefficient: 2,
     maximumInterval: "10 minutes",

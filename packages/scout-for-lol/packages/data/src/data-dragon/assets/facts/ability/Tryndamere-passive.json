@@ -1,0 +1,22 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Tryndamere-passive",
+  "name": "Battle Fury",
+  "description": "Tryndamere gains Fury for each attack, critical strike, and killing blow he makes. Fury passively increases his Critical Strike Chance and can be consumed with his Bloodlust spell.",
+  "facts": [],
+  "parts": [],
+  "icon": "img/ability/Tryndamere-passive.png",
+  "slot": "passive",
+  "championKey": "Tryndamere",
+  "championName": "Tryndamere",
+  "maxRank": 1,
+  "cooldownByRank": [],
+  "costByRank": [],
+  "costType": "",
+  "rangeByRank": [],
+  "keyFact": {
+    "label": "Slot",
+    "value": "Passive"
+  }
+}

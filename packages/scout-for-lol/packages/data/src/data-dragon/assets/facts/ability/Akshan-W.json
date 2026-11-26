@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Akshan-W",
+  "name": "Going Rogue",
+  "description": "Akshan passively marks enemy champions as Scoundrels when they kill his ally champions. If Akshan kills a Scoundrel, he resurrects the allies they killed, gains bonus gold, and clears all marks.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40/30/20/10/0 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "5500"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Akshan-W.png",
+  "slot": "W",
+  "championKey": "Akshan",
+  "championName": "Akshan",
+  "maxRank": 5,
+  "cooldownByRank": [
+    18,
+    14,
+    10,
+    6,
+    2
+  ],
+  "costByRank": [
+    40,
+    30,
+    20,
+    10,
+    0
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    5500,
+    5500,
+    5500,
+    5500,
+    5500
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "18/14/10/6/2 s"
+  }
+}

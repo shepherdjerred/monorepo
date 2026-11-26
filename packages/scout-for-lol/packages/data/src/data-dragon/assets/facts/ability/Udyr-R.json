@@ -1,0 +1,52 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Udyr-R",
+  "name": "Wingborne Storm",
+  "description": "Storm Stance: Udyr surrounds himself in a glacial storm for 4 seconds, dealing 20/36/52/68/84/100 (+35% AP) magic damage per second to nearby enemies and Slowing them by 15/18/21/24/27/30%.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "40 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "370"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Udyr-R.png",
+  "slot": "R",
+  "championKey": "Udyr",
+  "championName": "Udyr",
+  "maxRank": 6,
+  "cooldownByRank": [
+    6,
+    6,
+    6,
+    6,
+    6,
+    6
+  ],
+  "costByRank": [
+    40,
+    40,
+    40,
+    40,
+    40,
+    40
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    370,
+    370,
+    370,
+    370,
+    370,
+    370
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "6 s"
+  }
+}

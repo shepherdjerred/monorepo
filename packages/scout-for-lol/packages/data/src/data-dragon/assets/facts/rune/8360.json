@@ -1,0 +1,20 @@
+{
+  "kind": "rune",
+  "patch": "16.23.1",
+  "key": "8360",
+  "name": "Unsealed Spellbook",
+  "description": "Swap Summoner Spells while out of combat. Swapping to unique Summoner Spells will increase the rate at which you can make future swaps.",
+  "facts": [
+    {
+      "label": "Type",
+      "value": "Keystone"
+    }
+  ],
+  "parts": [],
+  "icon": "img/rune/UnsealedSpellbook.png",
+  "tree": "Inspiration",
+  "keyFact": {
+    "label": "Tree",
+    "value": "Inspiration"
+  }
+}

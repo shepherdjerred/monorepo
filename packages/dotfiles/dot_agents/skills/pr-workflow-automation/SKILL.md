@@ -7,9 +7,12 @@ description: Deliver authorized PR changes and repair review or CI blockers. Use
 
 In `shepherdjerred/monorepo`, load `monorepo-delivery` and follow it for
 branches, commits, submission, verification, and review fixes. Use
-`toolkit git-spice`; a single PR is a stack of one. Toolkit resolves registered
-credentials automatically; setup and the separate CI credential path live in
-`packages/toolkit/README.md`.
+`toolkit git-spice`; a single PR is a stack of one, and every stack is a
+git-spice stack. Do not drive GitHub stacked pull requests outside git-spice
+(`gh stack` or `github/gh-stack`). git-spice may register its stacks with
+GitHub. Toolkit resolves
+registered credentials automatically; setup and the separate CI credential path
+live in `packages/toolkit/README.md`.
 
 Create or merge a PR only within the user's authorization. Preserve unrelated
 changes, stage explicit paths, and keep the PR's `Why`, `What`, `Demo`, and

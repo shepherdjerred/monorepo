@@ -72,13 +72,51 @@ take them, a mode, model and effort: click a chip, or step it with ⌥M, ⌥O an
 remembered per agent. Plan modes run with `AGENT_SAFE=1`, so the wrapper adds
 no bypass flag that would contradict them.
 
-Enter closes the dialog and starts `~/bin/herdr-new-worktree` detached. It
-names a branch and a title with one OpenAI Responses call (`naming.js`, the
-personal key read with `op read`), creates the worktree on the space's machine
-through `hc exec`, and opens a space named with that title, whose agent starts
-with the message. A generated branch that already exists gets a `-2` suffix. A
-given `{ branch }` skips naming and runs in the dialog; that space stays
-unnamed.
+Enter starts `~/bin/herdr-new-worktree` and closes the dialog. The detached
+worker names a branch and title with one OpenAI Responses call (`naming.js`,
+the personal key read with `op read`). It allocates the checkout on the
+space's machine and opens a background space with the title and first
+message. The current terminal keeps keyboard focus. A generated branch or
+folder collision adds a numeric suffix. A given `{ branch }` skips naming,
+opens an unnamed space, and preserves that branch's history if it exists.
+
+MacBook, Karpathy, and the Windows desktop maintain three Git-only staged
+monorepo worktrees. The login job seeds the pool and claims trigger a host-local
+background refill. The worker fetches `origin/main` before allocating a new
+branch. If the pool is empty it creates the checkout from the fetched commit.
+If fetching fails it reports the error and leaves the request unlaunched.
+Staged checkouts are hidden in Herdr's picker and Git-locked against ordinary
+cleanup. A dirty or ambiguous checkout is preserved. Inspect the latest
+seed and refill results in `~/.local/state/herdr-worktree/pool.log` on the
+target host. To seed manually, run `~/bin/herdr-worktree-pool --seed` on macOS
+or `bun ~/bin/herdr-worktree-pool.ts --seed` on Windows.
+
+On a Mac, the checkout a request ends up with then shares its unchanged files
+with the main checkout. Each new pool slot does too, right after it is staged:
+the pool worker starts `~/.local/bin/toolkit tend dedupe --worktree <path>
+--apply --no-refresh --lock-wait 15m` in the background, which replaces them
+with APFS clones and queues behind any other tend run. A claim moves the slot
+to its branch's folder, and the sharing record is kept by path, so the new-worktree
+worker starts one more pass there; `git switch -c` leaves unchanged files
+alone, so the slot's clones stay shared. Nothing waits on it, and it is skipped
+off macOS or when toolkit is missing or cannot be started. For local and
+remote worktrees alike, the allocating Mac starts the final pass after the
+checkout is ready. The run's `events.jsonl` line records `dedupe` as `started`
+or `skipped`.
+
+On macOS, launchd runs refill and dedupe jobs independently of the Herdr
+request, so they continue after a remote call returns. Each is a one-shot
+`com.jerred.herdr-worktree.job.<time>-<uuid>` job in the `gui/<uid>` domain
+that gets only `HOME` and `PATH` (`env -i`), discards its output, and unloads
+itself when its command ends, however it ends. Its plist sits in a private
+temporary folder for the moment `launchctl bootstrap` reads it. Each new
+submission first unloads any of these jobs that are no longer running and are
+over ten minutes old. With no GUI login on the Mac (nobody signed in) launchd
+refuses the job: the dedupe is then `skipped` and a refill is logged in
+`pool.log`, and the checkout or claim is unaffected. `pool.log` records
+`dedupe submitted job=<label> path=<path>`; `toolkit tend` records the pass
+itself in `~/.toolkit/tend/events.jsonl`, and `launchctl list | grep
+herdr-worktree.job` shows any job still loaded.
 
 While a run is in progress it writes
 `~/.local/state/herdr-worktree/active/<id>.json` (the step, and the title,
@@ -102,6 +140,22 @@ PowerShell profile wrapper, and through `agent-safe` for plan modes, instead of
 request in `HERDR_WORKTREE_REQUEST`. A failure there posts a Windows toast and
 writes no unified log. [`../dotfiles-windows`](../dotfiles-windows/README.md)
 links the script into `~/bin`.
+
+## Agent menus and alerts
+
+Right-click an agent in the Agents sidebar to rename its tab or space, rename
+a parked agent, or close the named target. The menu scrolls and follows the
+selection when you use the arrow keys or Home and End. Close actions from
+this sidebar ask for confirmation and identify the selected target.
+For Codex sessions on a macOS agent host, the same menu offers
+**Restart Codex session**. When the agent is working, choose **Wait until
+idle** or confirm **Interrupt and restart** for its current turn.
+
+The personal layout's toast shows the agent and host and opens the session
+when clicked. Herdr Desktop still decides when to notify you. **Settings →
+Alerts** plays the completion and needs-attention sounds. Their MP3 paths
+are set separately in `~/.config/herdr-app/settings.json` under `sounds.done`
+and `sounds.blocked`, relative to the app's config directory.
 
 ## Session takeover
 
@@ -165,11 +219,23 @@ writes the Codex config or uses the Codex daemon socket, so this works with
 the `--no-daemon` clients that Herdr requires.
 
 The `dark-notify` LaunchAgent calls `sync-theme.sh`, which starts an independent
-`restart-codex-panes --on-change` worker. The first run records the current
-appearance; each later light/dark transition restarts identifiable Codex
-terminals on the local [Herdr](https://herdr.dev) core through `hc`. Repeated
-notifications in the same mode do not restart terminals. Remote machines are
-outside this automation.
+`restart-codex-panes --on-change` worker. Each event reconciles the actual
+launch theme of managed Codex terminals on that Mac. Working turns, blocked
+prompts, and drafts wait up to one hour for a safely idle composer. Another
+appearance event or an ordinary theme sync rechecks remaining mismatches.
+
+After installing the managed configuration, open `/hooks` in Codex and
+trust the two exact Herdr identity hooks, then reopen the session. The
+`SessionStart` hook binds the current thread and saved transcript to the
+terminal's Codex process after the first prompt. `UserPromptSubmit` updates
+the transcript path when a new conversation first gets saved. Restart checks
+the current thread using Codex's configured `session-id` footer, verifies the
+transcript, and resumes the same thread in the same terminal. Because the
+replacement may defer its start hook until the next prompt, a matching live
+footer confirms the resume and carries the process binding forward. Restart
+requires a managed `codex` wrapper running inside a macOS fish,
+zsh, or Bash terminal. The Windows core currently reports the root shell as
+the foreground process, so this action is available on macOS.
 
 Check the result with `~/bin/restart-codex-panes --status`. It is read-only and
 prints the last run, the recorded appearance against the current one, and the
@@ -186,14 +252,13 @@ the macOS unified log:
 /usr/bin/log show --last 1d --style compact --predicate 'eventMessage CONTAINS "codex-theme-restart"'
 ```
 
-Preview eligible terminals without changing any with
-`~/bin/restart-codex-panes --dry-run`. Verify current conversation identities
-with `~/bin/restart-codex-panes --probe-identities`; this submits the local
-`/status` command in each idle terminal without restarting clients or starting
-model turns. Manually restart with `~/bin/restart-codex-panes`. Use
-`--terminal ADDRESS` (an `hc ls` address such as `t7`) to restrict a manual
-run. The launcher returning success means only that the independent worker
-started; use `--status` or `events.jsonl` for its result.
+Preview eligible terminals with `~/bin/restart-codex-panes --dry-run` or verify
+the hook and saved transcript with `~/bin/restart-codex-panes --probe-identities`.
+Both commands are read-only. Use **Restart Codex session** in the Agents
+context menu to select a client. Working sessions offer a queued restart or a
+confirmed interruption of the current turn. For CLI use, `--terminal t7`
+targets a single local address and `--wait` queues that conversation. Use
+`--status` or `events.jsonl` to check the result of a queued restart.
 
 Restarts preserve the exact conversation, directory, and supported launch
 options, including `--no-daemon` and bypass flags. The worker types

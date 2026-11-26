@@ -80,6 +80,7 @@
       },
       "landing_pages": { "bucket": "landing-pages" },
       "llm_archive": { "bucket": "llm-archive" },
+      "private_sjer_red": { "bucket": "private-sjer-red" },
       "public_sjer_red": { "bucket": "public-sjer-red" },
       "resume": { "bucket": "resume" },
       "scout_beta": { "bucket": "scout-beta" },
@@ -153,16 +154,46 @@
           }
         ]
       },
-      "public_sjer_red_lifecycle": {
+      "private_sjer_red_lifecycle": {
         "input": {
-          "bucket": "${aws_s3_bucket.public_sjer_red.id}",
+          "bucket": "${aws_s3_bucket.private_sjer_red.id}",
           "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
-          "expire_days": 365
+          "expire_days": 30
         },
         "provisioner": [
           {
             "local-exec": {
-              "command": "aws s3api put-bucket-lifecycle-configuration \\\n  --bucket \"${self.input.bucket}\" \\\n  --endpoint-url \"${self.input.endpoint_url}\" \\\n  --lifecycle-configuration '{\n    \"Rules\": [{\n      \"ID\": \"expire-pr-assets\",\n      \"Status\": \"Enabled\",\n      \"Filter\": {\"Prefix\": \"pr/assets/\"},\n      \"Expiration\": {\"Days\": ${self.input.expire_days}}\n    }]\n  }'\n",
+              "command": "aws s3api put-bucket-lifecycle-configuration \\\n  --bucket \"${self.input.bucket}\" \\\n  --endpoint-url \"${self.input.endpoint_url}\" \\\n  --lifecycle-configuration '{\n    \"Rules\": [{\n      \"ID\": \"expire-share-tmp\",\n      \"Status\": \"Enabled\",\n      \"Filter\": {\"Prefix\": \"share/tmp/\"},\n      \"Expiration\": {\"Days\": ${self.input.expire_days}}\n    }]\n  }'\n",
+              "environment": "${local.seaweedfs_deploy_environment}"
+            }
+          }
+        ]
+      },
+      "private_sjer_red_seed": {
+        "input": {
+          "bucket": "${aws_s3_bucket.private_sjer_red.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "index_md5": "${filemd5(\"${path.module}/private/index.html\")}"
+        },
+        "provisioner": [
+          {
+            "local-exec": {
+              "command": "aws s3 cp \"${path.module}/private/index.html\" \"s3://${self.input.bucket}/index.html\" \\\n  --endpoint-url \"${self.input.endpoint_url}\" \\\n  --content-type \"text/html; charset=utf-8\"\n",
+              "environment": "${local.seaweedfs_deploy_environment}"
+            }
+          }
+        ]
+      },
+      "public_sjer_red_lifecycle": {
+        "input": {
+          "bucket": "${aws_s3_bucket.public_sjer_red.id}",
+          "endpoint_url": "https://seaweedfs-s3.tailnet-1a49.ts.net",
+          "rules": "${jsonencode({ Rules = [{ ID = \"expire-pr-assets\", Status = \"Enabled\", Filter = { Prefix = \"pr/assets/\" }, Expiration = { Days = 365 } }, { ID = \"expire-share-tmp\", Status = \"Enabled\", Filter = { Prefix = \"share/tmp/\" }, Expiration = { Days = 30 } }] })}"
+        },
+        "provisioner": [
+          {
+            "local-exec": {
+              "command": "aws s3api put-bucket-lifecycle-configuration \\\n  --bucket \"${self.input.bucket}\" \\\n  --endpoint-url \"${self.input.endpoint_url}\" \\\n  --lifecycle-configuration '${self.input.rules}'\n",
               "environment": "${local.seaweedfs_deploy_environment}"
             }
           }

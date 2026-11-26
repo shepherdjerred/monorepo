@@ -1,0 +1,49 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Nautilus-Q",
+  "name": "Dredge Line",
+  "description": "Nautilus hurls his anchor forward. If it hits an enemy, Nautilus drags himself and the target together, dealing 85/125/165/205/245 (+90% AP) magic damage and Stunning them briefly.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "60 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "1150"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Nautilus-Q.png",
+  "slot": "Q",
+  "championKey": "Nautilus",
+  "championName": "Nautilus",
+  "maxRank": 5,
+  "cooldownByRank": [
+    14,
+    13,
+    12,
+    11,
+    10
+  ],
+  "costByRank": [
+    60,
+    60,
+    60,
+    60,
+    60
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    1150,
+    1150,
+    1150,
+    1150,
+    1150
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "14/13/12/11/10 s"
+  }
+}

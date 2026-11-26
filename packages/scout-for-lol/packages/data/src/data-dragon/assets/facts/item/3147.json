@@ -1,0 +1,38 @@
+{
+  "kind": "item",
+  "patch": "16.23.1",
+  "key": "3147",
+  "name": "Haunting Guise",
+  "description": "Madness: For each second in combat with enemy champions, deal 2% bonus damage, up to 6%.",
+  "facts": [
+    {
+      "label": "Ability Power",
+      "value": "30"
+    },
+    {
+      "label": "Health",
+      "value": "200"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "item",
+      "key": "1052",
+      "name": "Amplifying Tome",
+      "icon": "img/item/1052.png"
+    },
+    {
+      "kind": "item",
+      "key": "1028",
+      "name": "Ruby Crystal",
+      "icon": "img/item/1028.png"
+    }
+  ],
+  "icon": "img/item/3147.png",
+  "goldTotal": 1300,
+  "goldCombine": 500,
+  "keyFact": {
+    "label": "Cost",
+    "value": "1300 gold"
+  }
+}

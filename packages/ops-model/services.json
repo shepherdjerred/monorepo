@@ -26,7 +26,9 @@
     "golink": "golink/prod",
     "flags": "flags/prod",
     "storm-stats": "storm-stats/prod",
-    "mail": "outbound-mail/prod"
+    "mail": "outbound-mail/prod",
+    "charts": "charts/prod",
+    "ci-cache": "ci-cache/prod"
   },
   "platformDeliveryDelegated": true,
   "services": [
@@ -546,8 +548,8 @@
       "kind": "workload",
       "package": "homelab",
       "aliases": [],
-      "namespaces": ["freshrss", "redlib", "stash", "syncthing", "pinchtab"],
-      "argoApps": ["freshrss", "redlib", "stash", "syncthing", "pinchtab"],
+      "namespaces": ["redlib", "stash", "syncthing", "pinchtab"],
+      "argoApps": ["redlib", "stash", "syncthing", "pinchtab"],
       "charts": [],
       "images": ["redlib"],
       "bootstrapImages": [],
@@ -567,14 +569,12 @@
       "title": "GitOps & charts",
       "kind": "platform",
       "aliases": [],
-      "namespaces": ["argocd", "chartmuseum"],
-      "argoApps": ["apps", "argocd", "chartmuseum"],
-      "charts": ["argocd-companion", "chartmuseum-companion"],
+      "namespaces": ["argocd"],
+      "argoApps": ["apps", "argocd"],
+      "charts": ["argocd-companion"],
       "rootReleaseExclusions": {
         "argocd": "upstream",
-        "argocd-companion": "inactive",
-        "chartmuseum": "upstream",
-        "chartmuseum-companion": "inactive"
+        "argocd-companion": "inactive"
       },
       "images": [],
       "bootstrapImages": [],
@@ -666,17 +666,9 @@
         "woodpecker",
         "woodpecker-ci",
         "buildkitd",
-        "turbo-cache",
-        "gradle-build-cache",
         "kueue-system"
       ],
-      "argoApps": [
-        "woodpecker",
-        "buildkitd",
-        "turbo-cache",
-        "gradle-build-cache",
-        "kueue"
-      ],
+      "argoApps": ["woodpecker", "buildkitd", "kueue"],
       "charts": ["kueue-queues"],
       "rootReleaseExclusions": {
         "kueue": "upstream",
@@ -701,20 +693,8 @@
       "title": "Storage & backups",
       "kind": "platform",
       "aliases": [],
-      "namespaces": [
-        "openebs",
-        "seaweedfs",
-        "velero",
-        "postgres-operator",
-        "gickup"
-      ],
-      "argoApps": [
-        "openebs",
-        "seaweedfs",
-        "velero",
-        "postgres-operator",
-        "gickup"
-      ],
+      "namespaces": ["openebs", "seaweedfs", "velero", "postgres-operator"],
+      "argoApps": ["openebs", "seaweedfs", "velero", "postgres-operator"],
       "charts": ["seaweedfs-companion", "velero-companion", "velero-schedules"],
       "rootReleaseExclusions": {
         "openebs": "upstream",
@@ -729,7 +709,7 @@
       "bootstrapImages": [],
       "bugsinkProjects": [],
       "analyticsSites": [],
-      "grafanaDashboards": ["zfs-dashboard", "gitckup-dashboard"],
+      "grafanaDashboards": ["zfs-dashboard"],
       "deploy": []
     },
     {
@@ -741,15 +721,13 @@
         "tailscale",
         "cloudflare-tunnel",
         "cloudflare-operator-system",
-        "cert-manager",
-        "ddns"
+        "cert-manager"
       ],
       "argoApps": [
         "tailscale",
         "cloudflare-tunnel",
         "cloudflare-operator",
-        "cert-manager",
-        "ddns"
+        "cert-manager"
       ],
       "charts": [
         "tailscale-companion",
@@ -891,25 +869,48 @@
     },
     {
       "id": "charts",
-      "rootReleaseExclusions": { "charts": "inactive" },
-      "images": ["charts"],
-      "charts": ["charts"],
       "title": "Charts",
       "kind": "product",
       "package": "charts",
+      "aliases": [],
       "namespaces": ["charts"],
-      "argoApps": []
+      "argoApps": ["charts"],
+      "charts": ["charts-bootstrap"],
+      "rootReleaseExclusions": { "charts-bootstrap": "inactive" },
+      "images": ["charts"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/charts",
+          "argoApp": "charts"
+        }
+      ]
     },
     {
       "id": "ci-cache",
-      "rootReleaseExclusions": { "ci-cache": "inactive" },
-      "images": ["ci-cache"],
-      "charts": ["ci-cache"],
       "title": "CI cache",
       "kind": "product",
       "package": "ci-cache",
+      "aliases": [],
       "namespaces": ["ci-cache"],
-      "argoApps": []
+      "argoApps": ["ci-cache"],
+      "charts": [],
+      "images": ["ci-cache"],
+      "bootstrapImages": [],
+      "bugsinkProjects": [],
+      "analyticsSites": [],
+      "grafanaDashboards": [],
+      "deploy": [
+        {
+          "name": "default",
+          "versionKey": "shepherdjerred/ci-cache",
+          "argoApp": "ci-cache"
+        }
+      ]
     },
     {
       "id": "errors",

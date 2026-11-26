@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Illaoi-R",
+  "name": "Leap of Faith",
+  "description": "Illaoi smashes her idol into the ground, dealing 150/250/350 (+50% bonus AD) physical damage to nearby enemies and spawning a Tentacle for each enemy champion hit.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "450"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Illaoi-R.png",
+  "slot": "R",
+  "championKey": "Illaoi",
+  "championName": "Illaoi",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    95,
+    70
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    450,
+    450,
+    450
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/95/70 s"
+  }
+}

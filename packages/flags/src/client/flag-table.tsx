@@ -4,19 +4,21 @@ import {
   CrosshairIcon,
   type LucideIcon,
 } from "lucide-react";
+import { Link } from "react-router";
+import { SeverityBadge, type Severity } from "@shepherdjerred/console-ui";
 import type { FlagValue } from "@shepherdjerred/feature-flags/evaluate.ts";
 import { flagPath, flagState, searchSuffix, type FlagState } from "./model.ts";
 
 /*
  * On is ok (green). Off is neutral (`unknown`'s grey) rather than an error:
  * a switched-off flag is a normal state, not a fault. Targeted is info (blue):
- * it is neither on nor off for everyone. `unknown`'s "?" icon would read as
- * "we do not know", so Off draws a minus instead.
+ * it is neither on nor off for everyone. `unknown`'s "?" glyph would read as
+ * "we do not know", so Off draws a minus and Targeted a crosshair.
  */
-const GLYPHS: Readonly<
+const BADGES: Readonly<
   Record<
     Exclude<FlagState["kind"], "variant">,
-    { readonly severity: "ok" | "unknown" | "info"; readonly icon: LucideIcon }
+    { readonly severity: Severity; readonly icon: LucideIcon }
   >
 > = {
   on: { severity: "ok", icon: CircleCheckIcon },
@@ -24,6 +26,7 @@ const GLYPHS: Readonly<
   targeted: { severity: "info", icon: CrosshairIcon },
 };
 
+/** A boolean's state as Hub's severity badge; a variant's value as mono text. */
 export function FlagStateCell({
   flag,
 }: {
@@ -32,18 +35,18 @@ export function FlagStateCell({
   const state = flagState(flag);
   if (state.kind === "variant") {
     return (
-      <span className="ui-mono fl-value" title={state.label}>
+      <span className="fl-value" title={state.label}>
         {state.label}
       </span>
     );
   }
-  const glyph = GLYPHS[state.kind];
-  const Icon = glyph.icon;
+  const badge = BADGES[state.kind];
   return (
-    <span className="ui-glyph" data-sev={glyph.severity}>
-      <Icon className="ui-glyph-icon" aria-hidden="true" />
-      <span>{state.label}</span>
-    </span>
+    <SeverityBadge
+      severity={badge.severity}
+      label={state.label}
+      icon={badge.icon}
+    />
   );
 }
 
@@ -66,12 +69,12 @@ export function FlagTable({
 }: FlagTableProps): React.JSX.Element {
   return (
     <div
-      className="ui-table-scroll"
+      className="ui-data-scroll"
       tabIndex={0}
       role="region"
       aria-label={`${catalog}/${stage} flags`}
     >
-      <table className="ui-table">
+      <table className="ui-data fl-table">
         <thead>
           <tr>
             <th scope="col">Flag</th>
@@ -84,19 +87,21 @@ export function FlagTable({
             const selected = flag.key === selectedKey;
             return (
               <tr key={flag.key} data-current={selected ? "" : undefined}>
-                <th scope="row">
-                  <a
-                    className="ui-mono fl-key"
-                    href={`${flagPath(catalog, stage, flag.key)}${searchSuffix(query)}`}
+                <th scope="row" data-label="Flag">
+                  <Link
+                    className="fl-key"
+                    to={`${flagPath(catalog, stage, flag.key)}${searchSuffix(query)}`}
                     aria-current={selected ? "page" : undefined}
                   >
                     {flag.key}
-                  </a>
+                  </Link>
                 </th>
-                <td>
+                <td data-label="State">
                   <FlagStateCell flag={flag} />
                 </td>
-                <td className="ui-muted">{flag.type}</td>
+                <td className="ui-muted" data-label="Type">
+                  {flag.type}
+                </td>
               </tr>
             );
           })}

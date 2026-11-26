@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Senna-R",
+  "name": "Dawning Shadow",
+  "description": "Senna fires a beam of light that deals 250/400/550 (+70% AP) (+115% bonus AD) physical damage to all enemy champions hit.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "25000"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Senna-R.png",
+  "slot": "R",
+  "championKey": "Senna",
+  "championName": "Senna",
+  "maxRank": 3,
+  "cooldownByRank": [
+    140,
+    120,
+    100
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    25000,
+    25000,
+    25000
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "140/120/100 s"
+  }
+}

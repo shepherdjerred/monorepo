@@ -1,5 +1,5 @@
 {
-  "id": "arcade/3",
+  "id": "arcade/4",
   "definition": {
     "kind": "kubernetes-application",
     "application": {
@@ -18,7 +18,7 @@
         "namespace": "arcade"
       },
       "source": {
-        "repoURL": "https://chartmuseum.tailnet-1a49.ts.net",
+        "repoURL": "https://charts.tailnet-1a49.ts.net",
         "chart": "arcade"
       },
       "syncOptions": ["CreateNamespace=true"],

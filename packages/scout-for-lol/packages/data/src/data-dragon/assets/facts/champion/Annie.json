@@ -1,0 +1,64 @@
+{
+  "kind": "champion",
+  "patch": "16.23.1",
+  "key": "Annie",
+  "name": "Annie",
+  "description": "Dangerous, yet disarmingly precocious, Annie is a child mage with immense pyromantic power. Even in the shadows of the mountains north of Noxus, she is a magical outlier.",
+  "facts": [
+    {
+      "label": "Health",
+      "value": "560"
+    },
+    {
+      "label": "Move speed",
+      "value": "335"
+    },
+    {
+      "label": "Attack range",
+      "value": "625"
+    }
+  ],
+  "parts": [
+    {
+      "kind": "ability",
+      "key": "Annie-passive",
+      "name": "Pyromania",
+      "icon": "img/ability/Annie-passive.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Annie-Q",
+      "name": "Disintegrate",
+      "icon": "img/ability/Annie-Q.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Annie-W",
+      "name": "Incinerate",
+      "icon": "img/ability/Annie-W.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Annie-E",
+      "name": "Molten Shield",
+      "icon": "img/ability/Annie-E.png"
+    },
+    {
+      "kind": "ability",
+      "key": "Annie-R",
+      "name": "Summon: Tibbers",
+      "icon": "img/ability/Annie-R.png"
+    }
+  ],
+  "icon": "img/champion/Annie.png",
+  "art": "img/champion-splash/Annie_0.jpg",
+  "title": "the Dark Child",
+  "roles": [
+    "Mage",
+    "Support"
+  ],
+  "keyFact": {
+    "label": "Roles",
+    "value": "Mage, Support"
+  }
+}

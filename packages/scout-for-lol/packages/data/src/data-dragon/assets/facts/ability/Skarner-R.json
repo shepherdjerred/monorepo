@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Skarner-R",
+  "name": "Impale",
+  "description": "Skarner's tails lash forward, dealing 150/250/350 (+100% AP) magic damage and Suppressing the first 3 champions he hits for 1.5s. Those hit are dragged along by Skarner for the duration of this Ability.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "625"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Skarner-R.png",
+  "slot": "R",
+  "championKey": "Skarner",
+  "championName": "Skarner",
+  "maxRank": 3,
+  "cooldownByRank": [
+    120,
+    105,
+    90
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    625,
+    625,
+    625
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "120/105/90 s"
+  }
+}

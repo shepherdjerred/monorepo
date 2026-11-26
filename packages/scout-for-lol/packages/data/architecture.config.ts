@@ -31,6 +31,7 @@ export const layers = [
   "customs",
   "data-dragon",
   "example",
+  "game-facts",
   "lane-priors",
   "league",
   "meta",
@@ -49,6 +50,7 @@ export const layers = [
   "scout-client",
   "seasons",
   "testing",
+  "tips",
   "util",
 ];
 

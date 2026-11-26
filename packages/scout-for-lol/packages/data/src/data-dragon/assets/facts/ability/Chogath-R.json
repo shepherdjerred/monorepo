@@ -1,0 +1,43 @@
+{
+  "kind": "ability",
+  "patch": "16.23.1",
+  "key": "Chogath-R",
+  "name": "Feast",
+  "description": "Cho'Gath ravenously feeds on an enemy, dealing 300/475/650 (+50% AP) (+10% bonus Health) true damage to champions or 1200 (+50% AP) (+10% bonus Health) to minions or jungle monsters.",
+  "facts": [
+    {
+      "label": "Cost",
+      "value": "100 Mana"
+    },
+    {
+      "label": "Range",
+      "value": "175"
+    }
+  ],
+  "parts": [],
+  "icon": "img/ability/Chogath-R.png",
+  "slot": "R",
+  "championKey": "Chogath",
+  "championName": "Cho'Gath",
+  "maxRank": 3,
+  "cooldownByRank": [
+    80,
+    70,
+    60
+  ],
+  "costByRank": [
+    100,
+    100,
+    100
+  ],
+  "costType": "Mana",
+  "rangeByRank": [
+    175,
+    175,
+    175
+  ],
+  "keyFact": {
+    "label": "Cooldown",
+    "value": "80/70/60 s"
+  }
+}

@@ -20,6 +20,7 @@ import {
 import { VideoStatus } from "#client/video-frames.ts";
 import { encodeVideo } from "#client/video.ts";
 import { stageMap } from "#learning/maps/stage.ts";
+import { ensureNavMeshes } from "#maps/nav/meshes.ts";
 import { prepareOutputDirectory } from "#maps/cli.ts";
 import { freezeInputs, type ConversionInputs } from "#maps/inputs.ts";
 import { root, startRuntimeMapServer } from "#maps/paper.ts";
@@ -44,6 +45,7 @@ const staged = await stageMap(
   "training-yard",
   {
     duel: false,
+    ensureMeshes: ensureNavMeshes,
     mapTool: path.join(frozen.mapTool, "bin/rwfmap"),
   },
 );
