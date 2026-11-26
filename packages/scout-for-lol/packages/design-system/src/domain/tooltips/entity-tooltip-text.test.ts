@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { splitKeywords, splitPassives } from "./entity-tooltip-text.ts";
-import type { GameFactPart } from "./game-fact-types.ts";
+import type { GameFactPart } from "@scout-for-lol/data/game-facts/schema.ts";
 
 const charm: GameFactPart = {
   kind: "keyword",

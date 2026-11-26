@@ -17,7 +17,7 @@ import type {
   GameFact,
   GameFactKind,
   GameFactPart,
-} from "#src/domain/tooltips/game-fact-types.ts";
+} from "@scout-for-lol/data/game-facts/schema.ts";
 
 /** What the page adds to a tooltip: its own block, and the one link out. */
 export type EntityTooltipExtras = EntityTooltipBodyExtras & {

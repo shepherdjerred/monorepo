@@ -23,7 +23,7 @@ import type {
   KeywordFact,
   RuneFact,
   SummonerSpellFact,
-} from "#src/domain/tooltips/game-fact-types.ts";
+} from "@scout-for-lol/data/game-facts/schema.ts";
 
 /** What the page adds to one layer: its own block, and the one link out. */
 export type EntityTooltipBodyExtras = {
@@ -296,8 +296,7 @@ export function ItemTooltip(props: FactProps<ItemFact>) {
           trailing={
             fact.goldCombine === 0 ? null : (
               <li className="scout-tooltip__part scout-tooltip__part--static">
-                <i className="scout-tooltip__coin" aria-hidden="true" />
-                <span>{fact.goldCombine} gold</span>
+                <span>+{fact.goldCombine} gold</span>
               </li>
             )
           }

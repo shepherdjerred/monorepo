@@ -1,8 +1,17 @@
 import type {
   GameFact,
   GameFactKind,
-  GameFactLoader,
-} from "#src/domain/tooltips/game-fact-types.ts";
+} from "@scout-for-lol/data/game-facts/schema.ts";
+
+/**
+ * How the tooltips fetch one fact. `loadGameFact` from
+ * `@scout-for-lol/data/game-facts/client.ts` has this shape.
+ */
+export type GameFactLoader = (
+  kind: GameFactKind,
+  key: string,
+  options: { signal: AbortSignal },
+) => Promise<GameFact>;
 
 /** One caller's hold on a load; release it when the result is not wanted. */
 export type GameFactHandle = {

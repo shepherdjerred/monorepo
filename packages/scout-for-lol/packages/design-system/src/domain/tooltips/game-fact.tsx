@@ -7,16 +7,16 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  createGameFactStore,
-  isAbortError,
-  type GameFactStore,
-} from "#src/domain/tooltips/game-fact-store.ts";
 import type {
   GameFact,
   GameFactKind,
-  GameFactLoader,
-} from "#src/domain/tooltips/game-fact-types.ts";
+} from "@scout-for-lol/data/game-facts/schema.ts";
+import {
+  createGameFactStore,
+  isAbortError,
+  type GameFactLoader,
+  type GameFactStore,
+} from "#src/domain/tooltips/game-fact-store.ts";
 
 const GameFactContext = createContext<GameFactStore | undefined>(undefined);
 

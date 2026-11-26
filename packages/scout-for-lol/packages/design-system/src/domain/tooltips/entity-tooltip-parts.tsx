@@ -9,7 +9,7 @@ import { cn } from "#src/lib/cn.ts";
 import type {
   GameFactEntry,
   GameFactPart,
-} from "#src/domain/tooltips/game-fact-types.ts";
+} from "@scout-for-lol/data/game-facts/schema.ts";
 
 /**
  * The pieces every tooltip shares, in anatomy order: header, facts, words,

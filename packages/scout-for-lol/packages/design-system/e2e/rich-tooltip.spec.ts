@@ -109,7 +109,12 @@ test.describe("keyboard", () => {
     await expect(layer(page, "Ahri")).toBeVisible();
     await expect(trigger).toBeFocused();
 
-    // The right arrow moves focus into the layer, onto its first part.
+    // The right arrow moves focus into the layer, onto its first part. Wait
+    // for the fact to load first: a layer still showing its skeleton has no
+    // part to focus.
+    await expect(
+      layer(page, "Ahri").getByRole("button", { name: "Essence Theft" }),
+    ).toBeVisible();
     await page.keyboard.press("ArrowRight");
     const ahri = layer(page, "Ahri");
     await expect(

@@ -139,8 +139,9 @@ runes, summoner spells and keywords from the `GameFact` shape, and
 body through `useGameFact`, which loads through the `GameFactProvider`'s
 `loader` (the app passes `loadGameFact` from
 `@scout-for-lol/data/game-facts/client.ts`), caches in memory and aborts the
-request when the layer closes. `domain/tooltips/game-fact-types.ts` mirrors the schema
-in the data package.
+request when the layer closes. The facts' types come from
+`@scout-for-lol/data/game-facts/schema.ts`, and the stories load the generated
+fact JSON itself (`entity-tooltip.facts.ts`), never retyped values.
 
 ## Tokens
 

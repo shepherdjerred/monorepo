@@ -1,4 +1,4 @@
-import type { GameFactPart } from "#src/domain/tooltips/game-fact-types.ts";
+import type { GameFactPart } from "@scout-for-lol/data/game-facts/schema.ts";
 
 export type DescriptionSegment =
   | { type: "text"; text: string }

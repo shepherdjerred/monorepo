@@ -364,23 +364,14 @@ button.scout-tooltip__part[aria-expanded="true"] {
   background: var(--scout-surface-inset);
 }
 
+/* "+650 gold" after the components: text, not a part. */
+.scout-tooltip__part--static {
+  color: var(--scout-color-text-muted);
+}
+
 .scout-tooltip__part img {
   flex: none;
   border-radius: calc(var(--scout-radius-large) * 0.6);
-}
-
-.scout-tooltip__coin {
-  flex: none;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 50%;
-  background: color-mix(
-    in srgb,
-    var(--scout-color-primary) 22%,
-    var(--scout-surface-inset)
-  );
-  box-shadow: inset 0 0 0 2px
-    color-mix(in srgb, var(--scout-color-primary) 60%, transparent);
 }
 
 /* ---------- scout: the page's own block ---------- */

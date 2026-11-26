@@ -18,7 +18,7 @@ import {
   type EntityTooltipExtras,
 } from "#src/domain/tooltips/entity-tooltip.tsx";
 import { GameFactProvider } from "#src/domain/tooltips/game-fact.tsx";
-import type { GameFactLoader } from "#src/domain/tooltips/game-fact-types.ts";
+import type { GameFactLoader } from "#src/domain/tooltips/game-fact-store.ts";
 import { PlayerTooltip } from "#src/domain/tooltips/player-tooltip.tsx";
 
 const meta = {

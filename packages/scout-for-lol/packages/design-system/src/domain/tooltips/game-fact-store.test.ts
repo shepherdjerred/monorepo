@@ -1,10 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { createGameFactStore, isAbortError } from "./game-fact-store.ts";
 import type {
   GameFact,
   GameFactKind,
-  GameFactLoader,
-} from "./game-fact-types.ts";
+} from "@scout-for-lol/data/game-facts/schema.ts";
+import {
+  createGameFactStore,
+  isAbortError,
+  type GameFactLoader,
+} from "./game-fact-store.ts";
 
 const charm: GameFact = {
   kind: "ability",
