@@ -4,7 +4,8 @@ The flag service stores one document per deployment a workload reads. Prod-only
 workloads have one document. Scout and Karma have a second document because a
 second workload reads one. Storm forum and storm brain share `storm/prod`.
 A document is a list of boolean flags with ordered segment rollouts, or
-variant flags whose value is one string.
+variant flags whose value is one string, encoded and typed per key by the
+value-schema registry in `@shepherdjerred/feature-flags`.
 
 `FLAGS_ACTIVE` is `true`, so Delivery deploys `flags/prod` on its own ZFS NVMe
 SQLite volume at `/var/lib/flags` as the authoritative feature-flag service.
@@ -44,6 +45,35 @@ combined with `FLAGS_INGRESS_IDENTITY_DIR`. Browser writes must be same-origin
 `retire`, and `diff`. `apply` and `retire` take `expectedRevision` and change
 nothing when it does not match, including later flags in that request.
 `create-missing` inserts absent keys and leaves an existing body as it is.
+
+`apply` and `create-missing` validate every submitted flag before touching the
+database. A key absent from `managed-flag-inventory.json`, a type other than the
+declared one, or a variant value that fails its registered value schema
+(`@shepherdjerred/feature-flags/flag-value-schemas.ts`) refuses the whole
+request, writes nothing, and leaves the revision unchanged. Validation runs
+before the revision check, so an invalid stale request is 400, not 409:
+
+```json
+{
+  "error": "invalid flag values",
+  "issues": [
+    {
+      "key": "delivery-lease-seconds",
+      "path": "",
+      "message": "Too small: expected number to be >=60"
+    }
+  ]
+}
+```
+
+`path` is a JSON Pointer into the decoded value (`/1`, `/weights/codex`); `""`
+names the whole value.
+
+`diff` compares each deployment with its inventory projection and returns
+`missing`, `extra`, `drift` (value differs from the declaration), and `invalid`
+(`{ key, value, issues }` for a declared variant whose live value fails its
+value schema). Invalid live data is reported and never fails the request, so a
+value stored before validation existed stays visible until an operator fixes it.
 
 Startup seeds missing deployments from the managed inventory once. Any document
 already stored in SQLite is left alone across restarts. Namespace and

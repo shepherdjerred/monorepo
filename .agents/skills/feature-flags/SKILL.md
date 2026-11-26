@@ -22,7 +22,13 @@ Before adding a key:
    session-scoped, or boot-wired.
 2. Classify credentials/bootstrap versus behavior.
 3. Define a Zod schema, safe production-compatible default, allowed sources,
-   sensitivity, and targeting.
+   sensitivity, and targeting. A variant flag's value schema lives in the
+   registry `packages/feature-flags/src/flag-value-schemas.ts` (encoding plus
+   decoded Zod schema, no transforms), never only in the consumer: add the
+   entry, run `bun run generate` in `packages/feature-flags`, and have the
+   consumer use `schema: flagValueSchema(key)` with
+   `kinds: { ...: flagValueKind(key) }`. The Flags server rejects writes that
+   fail the registry.
 4. New features default on in production and beta. Keep the code default,
    `packages/feature-flags/src/managed-flag-inventory.json` declarations, and
    active deployment projections (`packages/feature-flags/src/deployments.ts`)

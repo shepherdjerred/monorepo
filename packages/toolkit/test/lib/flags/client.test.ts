@@ -150,6 +150,95 @@ test("a clean diff exits 0 and a drifted diff exits 1", async () => {
   expect(drifted.text()).toContain("dares_enabled");
 });
 
+test("diff names invalid live values and their schema issues", async () => {
+  const invalid = capture(async () =>
+    jsonResponse(200, {
+      deployments: [
+        {
+          id: "delivery/prod",
+          missing: [],
+          extra: [],
+          drift: [{ key: "delivery-lease-seconds" }],
+          invalid: [
+            {
+              key: "delivery-lease-seconds",
+              value: "30",
+              issues: [
+                { path: "", message: "Too small: expected number to be >=60" },
+              ],
+            },
+            {
+              key: "delivery-enabled-environments",
+              value: '["a",""]',
+              issues: [{ path: "/1", message: "Too small" }],
+            },
+          ],
+        },
+      ],
+    }),
+  );
+  expect(
+    await runFlags(["diff"], invalid.io, { json: false, file: undefined }),
+  ).toBe(1);
+  expect(invalid.text()).toBe(
+    [
+      "delivery/prod\tmissing 0\textra 0\tdrift delivery-lease-seconds\tinvalid delivery-lease-seconds,delivery-enabled-environments",
+      "  delivery-lease-seconds: Too small: expected number to be >=60",
+      "  delivery-enabled-environments /1: Too small",
+    ].join("\n"),
+  );
+  const onlyInvalid = capture(async () =>
+    jsonResponse(200, {
+      deployments: [
+        {
+          id: "delivery/prod",
+          missing: [],
+          extra: [],
+          drift: [],
+          invalid: [
+            {
+              key: "delivery-lease-seconds",
+              value: "30",
+              issues: [{ path: "", message: "Too small" }],
+            },
+          ],
+        },
+      ],
+    }),
+  );
+  expect(
+    await runFlags(["diff"], onlyInvalid.io, { json: true, file: undefined }),
+  ).toBe(1);
+});
+
+test("apply prints each refused value and writes nothing", async () => {
+  const { io, text } = capture(async () =>
+    jsonResponse(400, {
+      error: "invalid flag values",
+      issues: [
+        {
+          key: "delivery-lease-seconds",
+          path: "",
+          message: "Too small: expected number to be >=60",
+        },
+        { key: "mail-settings", path: "/retentionDays", message: "Too small" },
+      ],
+    }),
+  );
+  const code = await runFlags(["apply"], io, {
+    json: false,
+    file: "reviewed.json",
+  });
+  expect(code).toBe(1);
+  expect(text()).toBe(
+    [
+      "invalid flag values; nothing was written:",
+      "  delivery-lease-seconds: Too small: expected number to be >=60",
+      "  mail-settings /retentionDays: Too small",
+    ].join("\n"),
+  );
+});
+
 test("--machine resolves FLAGS_MACHINE_TOKEN through the broker when unset", async () => {
   const saved = Bun.env["FLAGS_MACHINE_TOKEN"];
   try {

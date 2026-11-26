@@ -57,6 +57,15 @@ test("defaults enable requests and acquisition while destructive and optional ga
     expect(await config.get(key)).toMatchObject({ value: true });
   }
   expect(await config.get("keepDays")).toMatchObject({ value: 30 });
+  expect(await config.get("sessionLifetimeMs")).toMatchObject({
+    value: 604_800_000,
+  });
+  expect(await config.get("artworkCacheMaxBytes")).toMatchObject({
+    value: 1_073_741_824,
+  });
+  expect(await config.get("emailSender")).toMatchObject({
+    value: "media@sjer.red",
+  });
   expect(await config.get("sharedDiscordChannelId")).toMatchObject({
     value: "",
   });
@@ -97,13 +106,14 @@ test("a resolved false stays authoritative independently of another enabled gate
 });
 
 test.each([
-  ["media-keep-days", "keepDays", "0"],
-  ["media-keep-days", "keepDays", "-1"],
-  ["media-keep-days", "keepDays", "366"],
+  ["media-keep-days", "keepDays", 0],
+  ["media-keep-days", "keepDays", -1],
+  ["media-keep-days", "keepDays", 366],
+  ["media-keep-days", "keepDays", 1.5],
   ["media-keep-days", "keepDays", "not-a-number"],
-  ["media-artwork-cache-max-bytes", "artworkCacheMaxBytes", "0"],
-  ["media-artwork-cache-max-bytes", "artworkCacheMaxBytes", "1048576"],
-  ["media-artwork-cache-max-bytes", "artworkCacheMaxBytes", "1.5"],
+  ["media-artwork-cache-max-bytes", "artworkCacheMaxBytes", 0],
+  ["media-artwork-cache-max-bytes", "artworkCacheMaxBytes", 1_048_576],
+  ["media-artwork-cache-max-bytes", "artworkCacheMaxBytes", 1.5],
   ["media-artwork-cache-max-bytes", "artworkCacheMaxBytes", "unlimited"],
 ] as const)(
   "present invalid %s (%s) value %s fails instead of falling back",
@@ -125,7 +135,7 @@ test("the artwork cache cap defaults to 1 GiB and takes a managed value", async 
   await initFeatureFlags({
     environment: { FEATURE_FLAGS_MODE: "disabled" },
     provider: new StaticProvider({
-      "media-artwork-cache-max-bytes": "3221225472",
+      "media-artwork-cache-max-bytes": 3_221_225_472,
     }),
   });
   await expect(
