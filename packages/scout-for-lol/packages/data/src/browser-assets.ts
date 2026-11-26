@@ -1,6 +1,11 @@
 import { z } from "zod";
 import championData from "./data-dragon/assets/champion.json" with { type: "json" };
 import assetManifestData from "./data-dragon/assets/manifest.json" with { type: "json" };
+import splashFacingData from "./data-dragon/assets/champion-splash-facing.json" with { type: "json" };
+import {
+  ChampionSplashFacingSchema,
+  type ChampionSplashFacingEntry,
+} from "./data-dragon/champion-splash-facing.ts";
 
 export const GameAssetKindSchema = z.enum([
   "champion",
@@ -136,4 +141,58 @@ export function getGameAsset(
     throw new Error(`Unknown ${kind} asset ${String(canonicalKey)}`);
   }
   return asset;
+}
+
+export const championSplashFacing =
+  ChampionSplashFacingSchema.parse(splashFacingData);
+
+export type SplashSide = "left" | "right";
+export type SplashPresentation = {
+  /** Flip the image horizontally (CSS `scaleX(-1)`) when rendering. */
+  mirrored: boolean;
+  /**
+   * Horizontal position of the champion's face in the image as displayed
+   * (after any mirroring), 0 to 1, for cropping toward the face.
+   */
+  focusX: number;
+};
+
+export function getSplashFacing(
+  canonicalKey: string | number,
+): ChampionSplashFacingEntry {
+  const asset = getGameAsset("champion-splash", canonicalKey);
+  const entry = championSplashFacing.entries[`${asset.canonicalId}.jpg`];
+  if (entry === undefined) {
+    throw new Error(
+      `Splash ${asset.canonicalId} has no facing entry; run bun run classify-splash-facing`,
+    );
+  }
+  return entry;
+}
+
+/**
+ * How to present a splash so the champion looks toward the centre of the
+ * page: a champion placed on the left should face right, and one placed on
+ * the right should face left. Mirror only when it faces away from the centre
+ * and the art survives mirroring (`mirrorSafe`). Centre-facing art is never
+ * mirrored.
+ */
+export function presentSplash(
+  entry: Pick<ChampionSplashFacingEntry, "facing" | "focusX" | "mirrorSafe">,
+  side: SplashSide,
+): SplashPresentation {
+  const wanted = side === "left" ? "right" : "left";
+  const mirrored =
+    entry.mirrorSafe && entry.facing !== "center" && entry.facing !== wanted;
+  return {
+    mirrored,
+    focusX: mirrored ? 1 - entry.focusX : entry.focusX,
+  };
+}
+
+export function splashPresentation(
+  canonicalKey: string | number,
+  side: SplashSide,
+): SplashPresentation {
+  return presentSplash(getSplashFacing(canonicalKey), side);
 }

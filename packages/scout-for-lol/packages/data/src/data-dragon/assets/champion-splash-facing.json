@@ -1,0 +1,2354 @@
+{
+  "version": 1,
+  "entries": {
+    "Aatrox_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The head is tilted down and turned slightly toward the right, and the glowing sword is on the right. No text or logos appear.",
+      "imageSha256": "6ecbdbdef41926627972685b16862147867f49ab5666a3c2fa662451f6b20f43",
+      "source": "model"
+    },
+    "Ahri_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "5afbef28257c8118c54f4e9aa56706a4843b2f9bb8071154afac9a13309fc204",
+      "source": "model"
+    },
+    "Akali_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her back is to the camera and her head turns over her shoulder, with the face and gaze angled toward the viewer's left; the tattoo is not a reason to block mirroring.",
+      "imageSha256": "4355b383afc3564fd5bea48fac3805d700037552104d04b3b6006f1317dea4b3",
+      "source": "model"
+    },
+    "Akshan_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned toward the viewer's left with a gaze to the left, while the body and raised gun arm extend toward the right, so the face decided it.",
+      "imageSha256": "fa4a49b94c40b4de9b3bb82da1780e8850515a7df63383f629bf321996b8374a",
+      "source": "model"
+    },
+    "Alistar_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Alistar charges almost straight at the camera, with the face only slightly turned and the body square, so it reads as center.",
+      "imageSha256": "786bb59dbe147ebec576ae40d8477b08efaccac504fe2761f76c5eae0d5e62b1",
+      "source": "model"
+    },
+    "Ambessa_0.jpg": {
+      "facing": "right",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right with her gaze going right, while the shoulders are mostly square to the camera, so the turn is subtle.",
+      "imageSha256": "cda116e8aefadacf4be3c22f4e9c5390343757ef9fcfd0e3bd0d073790757ce9",
+      "source": "model"
+    },
+    "Amumu_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": false,
+      "confidence": "high",
+      "note": "Amumu gazes left at the glowing puzzle piece; faint glowing Eye of Horus-style glyphs and a puzzle-piece symbol would read wrong if mirrored.",
+      "imageSha256": "9d68d753c516a566bd437e6bac512e74c31b70ce4343ed7a9f47a3fe11e06fd7",
+      "source": "model"
+    },
+    "Anivia_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "5dc0d3a7159ccf00926af6dc0c1df3800392555b1269e3355533c1834a855e8c",
+      "source": "model"
+    },
+    "Annie_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Annie's face is nearly square to the camera with a slight turn toward the viewer's left, while her body angles right; the face was used.",
+      "imageSha256": "edb0ba3ce8688cf8419e56bbb31fbd4c5650fd2b1b0257c291efc327c66cf59b",
+      "source": "model"
+    },
+    "Aphelios_0.jpg": {
+      "facing": "center",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera with only a slight turn, and the body is hunched forward without a clear lean.\n",
+      "imageSha256": "4a36896250a67c46d81155df9d1f014d770f95aeb4c8f075ae37b41a6b7efd47",
+      "source": "model"
+    },
+    "Ashe_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "df3befc37d6a1a13c30ec59458f4976688668d0aa9ddbbe609571dfe28323ac9",
+      "source": "model"
+    },
+    "AurelionSol_0.jpg": {
+      "facing": "right",
+      "focusX": 0.58,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "1a501fb64f84dd77518b819603ffe49df7df73b0264b05e9828b67de7476a5c0",
+      "source": "model"
+    },
+    "Aurora_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "32cc6e69e8809e43b8a3f39285f1ab76a005d6e4369fd31c51946f0999b09648",
+      "source": "model"
+    },
+    "Azir_0.jpg": {
+      "facing": "right",
+      "focusX": 0.48,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The helmeted face is in profile turned toward the right, and the outstretched arm reaches right, though the body is angled toward the camera.",
+      "imageSha256": "68a0ecfef4ccd4475214bea81e1305457c647487b9a5836c1ebc8b62b80fc476",
+      "source": "model"
+    },
+    "Bard_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "low",
+      "note": "Bard's head is tilted back and viewed from below, so the face is mostly hidden under the white beard and the body has no clear lean; the raised arm on the right is the only hint of direction.",
+      "imageSha256": "f386e1465e8a1695760f5f7d7727859b4110e1baf92c26161b1d7ab92307805d",
+      "source": "model"
+    },
+    "Belveth_0.jpg": {
+      "facing": "right",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The face is turned slightly toward the viewer's right with the gaze angled that way, while the body is mostly square to the camera.",
+      "imageSha256": "098841adf2dfd5ee5beb9d3c92271b63cb2abc61896d83ab36207b54d54ba0c5",
+      "source": "model"
+    },
+    "Blitzcrank_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The head sits slightly turned toward the left, and the giant fist reaches out toward the left edge, though the face is nearly square to the camera.  No text or logos appear.",
+      "imageSha256": "4181c2beb8249ee974e43384a4f4128b584f860b0df23d1db4bfa434c484fefa",
+      "source": "model"
+    },
+    "Brand_0.jpg": {
+      "facing": "right",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned in three-quarter view toward the right while the arm reaches left; the face decides the call.",
+      "imageSha256": "dde77137bdd7d9adcd54dc82305ecb4cb2f1f1a6556d4dd2bb7987b253f94a65",
+      "source": "model"
+    },
+    "Braum_0.jpg": {
+      "facing": "center",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Braum is seen from a low angle with his face turned only slightly and his gaze lifted upward, so he is nearly square to the camera; no text or logos appear.",
+      "imageSha256": "31407a0a9c15b4a8bed0cd65a61d43643ca27577cf517254f7ac9afc67ed81d9",
+      "source": "model"
+    },
+    "Briar_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera with a slight tilt, while the crouched body leans toward the left; no readable text or logos.",
+      "imageSha256": "afb985938447746b67045ee79f020c571c6d4c4b575a3a99bab4e681178a3f52",
+      "source": "model"
+    },
+    "Caitlyn_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly frontal with a slight tilt and gaze toward the viewer; the body is square to the camera, so it reads as center.",
+      "imageSha256": "62398363e3a1a459268d4a9e02f7984592ca1a48f80e2d5da06640da834c8ac3",
+      "source": "model"
+    },
+    "Camille_0.jpg": {
+      "facing": "right",
+      "focusX": 0.56,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "334bec5896a85d2dba3794bc2c48a868375bf4bb9e05e0d74dfebe740258ab4a",
+      "source": "model"
+    },
+    "Cassiopeia_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her face is turned slightly toward the viewer's left and her gaze is directed left and toward the camera, while her body lunges from the right.",
+      "imageSha256": "be45670729e4d96295d88fd19018cf01f614b3205b7100c22edc0ab6cdfb9fe5",
+      "source": "model"
+    },
+    "Chogath_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "535f1bf3118403824af370da51573974c3328a2a996a36a7577718c24133d573",
+      "source": "model"
+    },
+    "Corki_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Corki's face looks nearly straight at the viewer with only a slight lean, and the body angles toward the lower left.",
+      "imageSha256": "4883be05c14981ff0f19fa823709319d7f18abe0fefac963bd9c0ecb472cb9bf",
+      "source": "model"
+    },
+    "Darius_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is angled slightly toward the viewer's left, and the spiked shoulder and arm thrust left, but the torso is fairly frontal.",
+      "imageSha256": "4d33767933c48b895a32a219f40b5ad30550a6f326ce7d367abe4bda2834fc5c",
+      "source": "model"
+    },
+    "Diana_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera but turns slightly toward the viewer's left, and the body leans left while she grips the scythe on that side. The crescent moon on her forehead is a facial marking, so it does not block mirroring.",
+      "imageSha256": "bf2e6992373e79d5c57a3800aed37180caf6de1c44c55414c872902dd0cdb831",
+      "source": "model"
+    },
+    "Draven_0.jpg": {
+      "facing": "right",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right while he grins at the camera, and his body leans right; no text or logos are visible.",
+      "imageSha256": "4f8c2145106520f617f1ad59ad6f51871749bb359c4410adb1a247fdfe122fdb",
+      "source": "model"
+    },
+    "DrMundo_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face and torso are nearly square to the camera with only a slight head tilt, so center; the small text on the coat is tiny and blurred, so it does not block mirroring.",
+      "imageSha256": "bad3aa1ffbce577bcf90fc56b74de9c3e6d6a4d75367b0141d4ea3573a839140",
+      "source": "model"
+    },
+    "Ekko_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": false,
+      "confidence": "medium",
+      "note": "Face is nearly square to camera with a slight lean; the paper behind him is covered in readable-looking glyphs that would mirror wrongly.",
+      "imageSha256": "d7a4848e9e85a3b2f181942de478d4e0f22c0082ca81ffa23b4795c399197c2b",
+      "source": "model"
+    },
+    "Elise_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Elise faces the camera nearly square, with only a very slight head tilt, so there is no clear lean to either side.",
+      "imageSha256": "7c5bc1ba44c479dc22febff1ee6d1fea4210185342c1f432dfcfe562a2fda4fa",
+      "source": "model"
+    },
+    "Evelynn_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right with a sidelong gaze, while the shoulders and body angle back toward the left; face takes priority.",
+      "imageSha256": "4d08dc4a84ea238cfd6d8e792fcab71a3514fa098d104faa564c66add56ae5eb",
+      "source": "model"
+    },
+    "Ezreal_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned toward the viewer but angled slightly left with the gaze, while the gauntlet arm extends toward the viewer; no text or logos.",
+      "imageSha256": "06279545481e63a6c558b0fde6a9015432f98f981642012b2d3ea3d0d840f9b8",
+      "source": "model"
+    },
+    "Fiddlesticks_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The gaping toothed maw and head are angled toward the lower right, with the arm reaching to the right, but the head is fairly frontal and the body is hunched.",
+      "imageSha256": "69cae697721d7463eac788c924f0db7a454167885bf5fb932a39b6df927d37f6",
+      "source": "model"
+    },
+    "Fiora_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her sword arm extends to the left and her body leans that way, but her face is turned nearly toward the camera and glances slightly left. The window tracery behind her is abstract and not readable text.​",
+      "imageSha256": "c2f0810257f2be5e6e81d5d449103ecaf3efb23c2d0877d4ea00a9177f3fe3d7",
+      "source": "model"
+    },
+    "Fizz_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned three-quarters toward the viewer's right while the trident extends to the left; the face decides the facing.",
+      "imageSha256": "f9276bb229a5169252879ea8d832b53ea4a4db2c0ef8d0c600a1f0c97c9e218f",
+      "source": "model"
+    },
+    "Galio_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Galio looks down at the camera from a low angle with his face nearly square to the viewer and only a slight tilt, so the body has no clear lean.\n",
+      "imageSha256": "de2c69326c2953a166d5dd1e64d6a5b709671ac0bc5c3c0e2c6c623067481bd7",
+      "source": "model"
+    },
+    "Gangplank_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face looks nearly straight at the camera with only a slight tilt, and the body is square, so it reads as center.",
+      "imageSha256": "baee1f6484fcf9465ead9d1c65bbc8e9645e21965742ef2c7ddecc15211adfd4",
+      "source": "model"
+    },
+    "Garen_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right and he lunges forward, but the head is nearly square to the camera, so the lean is subtle.",
+      "imageSha256": "a7c363af03f7c828599a5cec9391df8d583840067152825e06d72afdebc13ded",
+      "source": "model"
+    },
+    "Gnar_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Gnar crouches low and looks down at the glowing spot, with his face nearly square to the camera and only a slight tilt toward the viewer's left.",
+      "imageSha256": "30b4a5b645502ee014200b6f3d7a625b3eecda3f6490fa0a262fd5e58433b4e2",
+      "source": "model"
+    },
+    "Gragas_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Head is turned slightly toward the viewer's left while the body lunges toward the lower left with a fist forward; no readable text or logos.",
+      "imageSha256": "735cbb61cd893f9fd4eea3da4a07da0ce0482763b4b83f5fdb2904de002f7b59",
+      "source": "model"
+    },
+    "Graves_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "9bab8d9fc2d6c0c82d3d7efbd504e250e4ba60cb187291e1982aafaa647bf382",
+      "source": "model"
+    },
+    "Gwen_0.jpg": {
+      "facing": "right",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right while the body twists with the arm extending toward the lower right; the gaze is nearly at the camera.",
+      "imageSha256": "f94a9ab3c3a742d025048703b0ffbfa7b7df9ba5aa134d703da33b414cb8cd6c",
+      "source": "model"
+    },
+    "Hecarim_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The skull-like face looks nearly square to the camera, perhaps turned slightly right, while the body leans left with an arm reaching left; the face is the main cue.",
+      "imageSha256": "b133cdce4aeb1426d5d17778e004dc36400fde390e336777cfbe74e53492bb0e",
+      "source": "model"
+    },
+    "Heimerdinger_0.jpg": {
+      "facing": "center",
+      "focusX": 0.47,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera with only a slight lean, so it falls within the center range; no readable text or logos.",
+      "imageSha256": "432c03232fc7309528b1bc2179ac1fd27b3bdfcd9fd6a1b4aba0eac949978820",
+      "source": "model"
+    },
+    "Hwei_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "b5517fc004938b6d6e7418b1228a0ba7a8fccd14c9f5ab4f0d37045b8f149273",
+      "source": "model"
+    },
+    "Illaoi_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face looks nearly square to the camera from a low angle, with the body angled slightly; no text or logos appear.",
+      "imageSha256": "0d2083fd5c24de7f1c8c1c2a7a88157e073e44322a98fda44d5cdff6491db015",
+      "source": "model"
+    },
+    "Irelia_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera, with a very slight turn; body angles slightly left, but it is within about 15 degrees of frontal.",
+      "imageSha256": "debfa4d1d68431ebd205c96e40e5a87bec4826a581b6e7ec2ecd7d351d11a1c3",
+      "source": "model"
+    },
+    "Ivern_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "e98650876977961b0af658061a6fad7c969452c8528bbf9df08bcd9839716d05",
+      "source": "model"
+    },
+    "Jade_Aatrox_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The helmeted face is angled down and toward the right with the glowing eye and bared teeth, though the pose is dynamic and the head is somewhat frontal.",
+      "imageSha256": "4a51eb093c8b2b0fa55c81e9a70dfce9d2f106f5bb02e4e78997e2bc19a238d2",
+      "source": "model"
+    },
+    "Jade_Ahri_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "d945d22eb73def929754393aebf55f52ac2aebbbc219c300816ddca68bbae187",
+      "source": "model"
+    },
+    "Jade_Akali_0.jpg": {
+      "facing": "left",
+      "focusX": 0.47,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her back is to the camera and she looks over her shoulder toward the left, with the face turned slightly left; the body leans the same way.",
+      "imageSha256": "7ca5aa834b2dfb043413717eaed70d72d92bd3f863402ee1ea54116e21b17ded",
+      "source": "model"
+    },
+    "Jade_Alistar_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Alistar charges almost straight at the camera; the face is nearly square on, with only a slight turn, so it is a borderline call.",
+      "imageSha256": "0bb70350bc716046ece51d67440a9dfe8398258f69d39a0b9fcd46bc8770ba8f",
+      "source": "model"
+    },
+    "Jade_Amumu_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera, with the right eye slightly smaller and the head turned only a touch to the right; no text or emblems.",
+      "imageSha256": "f5a6cc412570a35140f0281d968719abbf7188a4d94912f16f1e52251947c5e1",
+      "source": "model"
+    },
+    "Jade_Anivia_0.jpg": {
+      "facing": "right",
+      "focusX": 0.61,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The beak and head point up and to the right in profile, while the body is mostly frontal with wings spread symmetrically.",
+      "imageSha256": "9db00d00e59b68c7ec6afee3890dae59f20a1712468b440f7a311cd337f1f38a",
+      "source": "model"
+    },
+    "Jade_Annie_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera with a slight turn toward the left, and her glare is directed at the viewer; no text or logos appear.",
+      "imageSha256": "af0c11c71a7f9bce81460297c16aae96389f21f99952f6dcad6221b36c4b30c3",
+      "source": "model"
+    },
+    "Jade_Ashe_0.jpg": {
+      "facing": "right",
+      "focusX": 0.54,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right with the body angled that way, though the gaze is nearly frontal.",
+      "imageSha256": "b30a824e3fecbb1f7c8a865c6a654d1bd7ccccf6c9168bf30899a4290df21dac",
+      "source": "model"
+    },
+    "Jade_Blitzcrank_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "bcfda688d1b2ea3b6ddda8d9dd2c359da8279115976bf76be149cdff70674f1f",
+      "source": "model"
+    },
+    "Jade_Brand_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Brand's head and torso are mostly square to the camera, with only a very slight lean toward the left.",
+      "imageSha256": "daab7f56a243162394bcdd1c2b6a2749e9ec4c0cfeb9f14b33bc194ffd1668cd",
+      "source": "model"
+    },
+    "Jade_Caitlyn_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera with only a slight tilt toward the left under the hat brim, and the body is frontal with no clear lean.",
+      "imageSha256": "40a7ffc70645cd3085bed3b9fc3b6995314669b8a04bb725c622ace015eb388a",
+      "source": "model"
+    },
+    "Jade_Chogath_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Cho'Gath looks straight at the camera with symmetrical horns and eyes, and the image has no text or logos.",
+      "imageSha256": "1a7cce8b546215c9f91d5cef450c0e32906b5c069dd5fe896eb916bff59e0e0c",
+      "source": "model"
+    },
+    "Jade_Corki_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Corki's face looks nearly straight at the viewer, but the plane body angles toward the lower left, so the lean is slight.",
+      "imageSha256": "ba5d7694561f7909a4a5a109670c208709484c0fa6d7494c6112a767ef728e7b",
+      "source": "model"
+    },
+    "Jade_DrMundo_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face and torso are nearly square to the camera, with only a slight head tilt, so center was chosen over a side.",
+      "imageSha256": "9fe341d0179bf9a3fa87e9eb023791d8ae601e70cdb061c931e9a377829b82c6",
+      "source": "model"
+    },
+    "Jade_Elise_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "7c5bc1ba44c479dc22febff1ee6d1fea4210185342c1f432dfcfe562a2fda4fa",
+      "source": "model"
+    },
+    "Jade_Evelynn_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right while the bare shoulder and body lean to the left, so the face decides; the head is near square to the camera.",
+      "imageSha256": "80598ac1ed5ec1cf6e4d8f47b839b8a73f8b89177d00e5e5a6f9e2d73fbd3e51",
+      "source": "model"
+    },
+    "Jade_Ezreal_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "low",
+      "note": "Face is nearly square to the camera with a slight tilt, while the armored gauntlet thrusts toward the viewer on the right; no clear lean either way.",
+      "imageSha256": "14d65725fb87147fa752bd7f10fbdfa7d98c89048538a2d24e72048a6c14cbf0",
+      "source": "model"
+    },
+    "Jade_Fiddlesticks_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The gaping toothed maw and head tilt toward the lower right, though the body trails off to the left, so the lean is somewhat subtle.",
+      "imageSha256": "aea5386de9362cbaa0e5bbc4d4df4bfbf0842ffa023ab8b3a7cb4a9d1ee1e279",
+      "source": "model"
+    },
+    "Jade_Fiora_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her sword arm extends toward the left and her face is turned slightly left, but her gaze looks back toward the viewer, so the facing is subtle.  The rose window has no readable text.",
+      "imageSha256": "809e4cfe1fb0ca2a738a608f4276dc964a5b48b18611c0d492cb90fb3976429d",
+      "source": "model"
+    },
+    "Jade_Fizz_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Fizz's face is turned slightly toward the viewer's left and his trident extends leftward, but his head is nearly front-on.",
+      "imageSha256": "60200779d878dec48191dae615689c2e35fa9117f7d46502c2cd5f4675e92801",
+      "source": "model"
+    },
+    "Jade_Galio_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Galio looks down at the camera from a low angle; the head is nearly square to the viewer with only a slight tilt, so the body has no clear lean.",
+      "imageSha256": "de2c69326c2953a166d5dd1e64d6a5b709671ac0bc5c3c0e2c6c623067481bd7",
+      "source": "model"
+    },
+    "Jade_Gangplank_0.jpg": {
+      "facing": "center",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face looks nearly straight at the camera with only a slight lean, so it is treated as square-on.",
+      "imageSha256": "03955066105fd74761715bf34c466fcb51d2ebe8035d7f50a0d56d329064a88c",
+      "source": "model"
+    },
+    "Jade_Garen_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right with the body twisting and leaning right, though the head is nearly frontal.",
+      "imageSha256": "067251a4f632b62d8fdfda3efe83845ba57a6f7c8f79f130a5e202414193c868",
+      "source": "model"
+    },
+    "Jade_Gragas_0.jpg": {
+      "facing": "center",
+      "focusX": 0.54,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face and body are nearly square to the camera, with only a slight lean; no text or logos are visible.",
+      "imageSha256": "49118755993623fbc28df69903df63f1626e678a70ab5af13c6e25d27df0c867",
+      "source": "model"
+    },
+    "Jade_Graves_0.jpg": {
+      "facing": "left",
+      "focusX": 0.56,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Head is turned slightly toward the viewer's left with the gaze toward the camera; shoulders and raised gun arm also angle left.  No readable text or logos.",
+      "imageSha256": "761727f128a3fed84d609fd57b87c073ca8687a91ad078885a7b1436e944b63f",
+      "source": "model"
+    },
+    "Jade_Hecarim_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Helmeted head and armored torso face the camera nearly square, with only a slight lean toward the left as the arm swings the weapon that way.",
+      "imageSha256": "63a29458d4b817c034a5c253eaa52c82ec20e982cc464870457dfac71cc800cd",
+      "source": "model"
+    },
+    "Jade_Heimerdinger_0.jpg": {
+      "facing": "center",
+      "focusX": 0.47,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera with only a slight lean left; no text or logos are present.",
+      "imageSha256": "30ed1514aa7289b77ca89a4e066dcfc79db51129f8063d67672a76ebc3e9da94",
+      "source": "model"
+    },
+    "Jade_Irelia_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera with only a slight turn; body leans subtly, so the call is close to the center threshold.",
+      "imageSha256": "af195709df0f538edc3a0ae327da9fb52a5e4c77bdf1697170666034e4be0a36",
+      "source": "model"
+    },
+    "Jade_Janna_0.jpg": {
+      "facing": "center",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "047bf5398b31bf510775fcfc3e0234090589b606bd139187b9cc442f1255b605",
+      "source": "model"
+    },
+    "Jade_JarvanIV_0.jpg": {
+      "facing": "left",
+      "focusX": 0.53,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left with a snarl and the body is near frontal, so the lean is subtle; no readable text is present.",
+      "imageSha256": "b3ef01eb8397762f3af866546e9eb5b59213b0deb4e683fb6b54ec0e13fb8614",
+      "source": "model"
+    },
+    "Jade_Jax_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The masked face is nearly square to the camera with only a slight tilt, and the body hunches forward with the lamppost angled toward the right, so there is no clear lean.",
+      "imageSha256": "5d1ad9d6c45fe6c2f97758cb58df9668b64e1dfc3a8b9f18e261116dafee7c57",
+      "source": "model"
+    },
+    "Jade_Karma_0.jpg": {
+      "facing": "left",
+      "focusX": 0.53,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her face is turned slightly toward the viewer's left and her extended arm and fan point left; no readable text or logos appear.",
+      "imageSha256": "3aedd54e9f352b2bc5180f9bdcd7ef32f50cb3541a35b3b294fbb09e6173f366",
+      "source": "model"
+    },
+    "Jade_Karthus_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face and torso are nearly square to the camera with only a very slight turn, so no side is clearly favored.",
+      "imageSha256": "e71f4b75645444641adfce1c6f35618b32c96e1612451a3145c554ddbacd7d78",
+      "source": "model"
+    },
+    "Jade_Kassadin_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "f56436bd018e0c146da23225d1376046159e3cd1f5c6988896b5a5f585c1e6cf",
+      "source": "model"
+    },
+    "Jade_Katarina_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left with her gaze toward the camera, while her body lunges toward the left foreground; no text or logos.",
+      "imageSha256": "51501fb517226563de89d3df679be4279e67fa4d9ed35820929cc1f5adab09bc",
+      "source": "model"
+    },
+    "Jade_Kayle_0.jpg": {
+      "facing": "center",
+      "focusX": 0.54,
+      "mirrorSafe": true,
+      "confidence": "low",
+      "note": "Helmeted head is seen from a low angle and looks nearly straight down at the viewer; the body leans slightly left, but the face is hidden and has no clear turn.",
+      "imageSha256": "a8436bcf06b65319c573d9539303a2fa5249ff46bbfd71113ae1835428a9e0ea",
+      "source": "model"
+    },
+    "Jade_Kennen_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Eyes look toward the viewer's left and the extended arm and shuriken point left, though the face is nearly frontal.",
+      "imageSha256": "7264f545d4d906fe59b994216afbce9c676aab5ac1c5dd1ba8eb68d2383421b9",
+      "source": "model"
+    },
+    "Jade_KogMaw_0.jpg": {
+      "facing": "center",
+      "focusX": 0.55,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Head looks nearly square to the camera with a slight lean toward the right, so it reads as center with low lean.",
+      "imageSha256": "6fa74d3b28e7d6b5e86f373b85e96b1935b8ff0ba235a3ef1d9e92c689966059",
+      "source": "model"
+    },
+    "Jade_LeeSin_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly frontal with a slight turn toward the left, and the kicking leg and body extend toward the left foreground.",
+      "imageSha256": "e8ca768fd8a09c4040645bcc473521272de7c2985c4e9323da8cfebc977ba047",
+      "source": "model"
+    },
+    "Jade_Leona_0.jpg": {
+      "facing": "left",
+      "focusX": 0.48,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face turns slightly toward the viewer's left while the shield and body angle to the right, so the face decides.",
+      "imageSha256": "53fc589942b60213434cac05e3b7551f5f2b752ada2f1c5b8d5f16b6fbc9ba7a",
+      "source": "model"
+    },
+    "Jade_Lucian_0.jpg": {
+      "facing": "right",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "His face is turned slightly toward the viewer's right while his gun arm extends to the left, so the face decides the call.",
+      "imageSha256": "66e9b07454a99c77607a20aa6fa80f983eb5ddd551ca1feb307a9fb3ac49ba03",
+      "source": "model"
+    },
+    "Jade_Lulu_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Lulu hangs upside down with her face turned toward the left, where Pix floats, though her body is mostly vertical.",
+      "imageSha256": "94b55e96564497d3a5f9de51fd2c7caaaae208605673e2ddcae0351884321ce9",
+      "source": "model"
+    },
+    "Jade_Lux_0.jpg": {
+      "facing": "right",
+      "focusX": 0.48,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right with her gaze to that side, while the torso is nearly frontal and the hair blows right.",
+      "imageSha256": "6ce4529993f5178f42f9192e93625548c68fc7352fa3ee6a512c783afc67e8a3",
+      "source": "model"
+    },
+    "Jade_Malphite_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "ed95ba155bcfc67947295e97f083754e11f178ad1f12a9441758005a86e6cab7",
+      "source": "model"
+    },
+    "Jade_Malzahar_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face looks nearly square to the camera with glowing eyes, while the outstretched casting arm reaches left and the body leans slightly that way.",
+      "imageSha256": "cfb2e9664eb13604e1406491bf5626c0b43f5fd1c841d196a3fd24db1ee6a1fc",
+      "source": "model"
+    },
+    "Jade_MasterYi_0.jpg": {
+      "facing": "left",
+      "focusX": 0.48,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The glowing eye lights on the helmet point toward the viewer's left, and the body leaps with a leftward lean, though the pose is dynamic and the face is partly obscured.",
+      "imageSha256": "78ed07e69a0e002baa6a77b6d54f743d3b729356be2dcff9505f58af2c586ec2",
+      "source": "model"
+    },
+    "Jade_MissFortune_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Her face is in profile blowing a kiss toward the left, though her extended pistol points right.",
+      "imageSha256": "def3c8d0b83f0f991b9782117a2fa30d10a3eee2c6b26d172ea6e0c8d7124609",
+      "source": "model"
+    },
+    "Jade_Mordekaiser_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Helmet and red eyes face the camera nearly square, while the body is angled slightly with the large pauldron on the right and the mace over the left shoulder.",
+      "imageSha256": "e073466cb4fa822606bd268e8d7246030823d8945a362a304844a2f48cb466f9",
+      "source": "model"
+    },
+    "Jade_Morgana_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left with the gaze angled that way, though the shoulders and wings are fairly frontal.",
+      "imageSha256": "381d15f5705a9c8ff6b20d51ba44019b2737b6c68577799693891f83233be45b",
+      "source": "model"
+    },
+    "Jade_Nami_0.jpg": {
+      "facing": "left",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left and the body twists that way while she swings the staff, so the turn is subtle.",
+      "imageSha256": "4986be0a2e264d43fdc60d5efb717370fcfa23f940e673790518334168be134d",
+      "source": "model"
+    },
+    "Jade_Nasus_0.jpg": {
+      "facing": "left",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The snout and snarling jaw point toward the viewer's left while the body is mostly square, so the turn is slight.",
+      "imageSha256": "42b7133f9232f23945b301ad41f2f6133ff1f3ba3f32cde1689f15d523314d8d",
+      "source": "model"
+    },
+    "Jade_Nautilus_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Helmet is nearly frontal, but the body lunges toward the left with a huge arm reaching that way, so the pose leans left.",
+      "imageSha256": "ab131333c372401380ffb84cf3a512e40b2f35602cddfd4a544f622de463c2fa",
+      "source": "model"
+    },
+    "Jade_Nidalee_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "She crouches nearly square to the camera with her face turned slightly toward the viewer's right and her eyes locked on the viewer; no text or logos appear.",
+      "imageSha256": "632595c82a0e6cf2b77ee8c379bf0c5b3e698a3fafe07f0d712a562e50152531",
+      "source": "model"
+    },
+    "Jade_Nunu_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Nunu's face is turned slightly toward the viewer's left with his gaze to that side, while his body leans back against Willump on the right.  No text or logos appear in the art.",
+      "imageSha256": "f22cdb483884190276e9ae05d91c92d6d255889c7b665c82ff4d12c68ec502f2",
+      "source": "model"
+    },
+    "Jade_Olaf_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Helmeted face is nearly square to the camera with the body leaning slightly left, axe raised on the left side; no text or emblems.",
+      "imageSha256": "6bea999cbf345ee7ef1d55dd09704b18f6b7d6618272ea01f4a43db57bda026c",
+      "source": "model"
+    },
+    "Jade_Pantheon_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The helmet's nose guard and visor point down and to the left, while the shoulders are mostly square to the viewer, so the lean is subtle.",
+      "imageSha256": "1a532ebd0f49352ac64953e879dbf594884e426152087a6649e13e23d0304662",
+      "source": "model"
+    },
+    "Jade_Poppy_0.jpg": {
+      "facing": "right",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the right with eyes glancing right, while the body is mostly square to the camera; no text or logos present.",
+      "imageSha256": "6da81bab33fed69419ca123282a7bc4d430b1c907220bebaa682bb2f60ab14a3",
+      "source": "model"
+    },
+    "Jade_Quinn_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her face turns slightly toward the viewer's left and her outstretched arm and claws reach left, while her gaze meets the camera.",
+      "imageSha256": "71a98c123ddc13ce7875daae231c957190be0c916e745b1f1e2a2cf2aeeb30d4",
+      "source": "model"
+    },
+    "Jade_Rammus_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "a1f38762ee6eb231212910bbf043f70c95a78036de7043ef4466b2b8b9f97716",
+      "source": "model"
+    },
+    "Jade_Ryze_0.jpg": {
+      "facing": "right",
+      "focusX": 0.65,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Face and body lunge toward the right edge; the glowing runes on the arm are decorative tattoos, not readable text.",
+      "imageSha256": "ca47373269b4a6a053a424a4d0ef085a24bfbdc4659876735c91ff6019399337",
+      "source": "model"
+    },
+    "Jade_Shaco_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face looks nearly square to the camera, with only a slight lean to the right; the body is symmetrical with no readable text or logos.",
+      "imageSha256": "244743b15aa9db719357768d04449a1c2e5ada37cf164e24151654055b103a57",
+      "source": "model"
+    },
+    "Jade_Shen_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Head is in profile with the glowing eyes and mask pointing toward the left edge.",
+      "imageSha256": "46e609ca34e2f3029cb4af3fd60ea9689d0fa9a62d0912dcfa8e575023175ce2",
+      "source": "model"
+    },
+    "Jade_Shyvana_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera with only a very slight turn; the body is frontal, so it is treated as center.",
+      "imageSha256": "8c9acd4d72a7fc7d728c9e60f2986c76e57f92b22e1febf30ee4121e9ed36f4c",
+      "source": "model"
+    },
+    "Jade_Singed_0.jpg": {
+      "facing": "right",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "0730b46b3a5af4364456ca5de4d3cd75b42d8b6598ce43be93359847b7044749",
+      "source": "model"
+    },
+    "Jade_Sion_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face looks nearly straight at the camera with a very slight tilt, and the shoulders are broad and square; the large armored shoulder on the right adds only a faint lean.",
+      "imageSha256": "67f2e77fb77b612e3fd29a8e0a5ec94e423587763f6f40246299f169f3a60fec",
+      "source": "model"
+    },
+    "Jade_Sivir_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face and torso are nearly square to the camera with only a slight turn toward the viewer's left; no readable text, and the small shoulder emblem is not a clear mirror problem.",
+      "imageSha256": "4a1cf067fee52ab729a4b6d75b8e2b72d4e75b241efa71b803d43658bd67d77f",
+      "source": "model"
+    },
+    "Jade_Skarner_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Skarner's head is almost square to the camera, looking down at the viewer, while his body curls away to the upper left, so I used the face and called it center.",
+      "imageSha256": "8a0e8a032723993491e81163c7febb71ca6b403c5d48c1e77d0c4c2339826256",
+      "source": "model"
+    },
+    "Jade_Sona_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face and torso are nearly square to the viewer, with only a slight tilt, and the instrument extends to the left.",
+      "imageSha256": "3b3add09214649ed2a42b7eb08d52eca75ec41ee810e813bdff09bf4d693965e",
+      "source": "model"
+    },
+    "Jade_Soraka_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left with her gaze toward the camera, and her body leans left with the staff raised on that side.",
+      "imageSha256": "591b00d7513d4deadb4d815711e33641c1b3f7ce1f0c883b8b05bc2569abf163",
+      "source": "model"
+    },
+    "Jade_Swain_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Swain's face and torso look nearly square to the camera, with only a very slight turn; the gold chest emblem is an abstract pattern, not readable text.",
+      "imageSha256": "3a7f3efcb747f6e60bfeeda517b6c1a7e8ab223a1036861e0da70ee28550270b",
+      "source": "model"
+    },
+    "Jade_Talon_0.jpg": {
+      "facing": "left",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left and his blade points left, though the torso is fairly frontal and his other arm reaches right.",
+      "imageSha256": "e98c52a7022b50d03b12c1fc21b0d1436dd589f7626d7dfc629e1ad82c4a24c9",
+      "source": "model"
+    },
+    "Jade_Taric_0.jpg": {
+      "facing": "center",
+      "focusX": 0.58,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is tilted up and nearly square to the camera, with only a slight turn toward the viewer's left; no text or emblem is visible.",
+      "imageSha256": "a45c2aa2624966d09e53c3c804d9a3eb7aeabb0199804eda0f1826a4eed74887",
+      "source": "model"
+    },
+    "Jade_Teemo_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly frontal but turns slightly toward the viewer's right, and the body and blowgun lean right; the map has only a tiny red X, not readable text.",
+      "imageSha256": "09299535bc04cc1bfecc2aa867004b1ac0b62f22fa84326efb3f18eced1d43fc",
+      "source": "model"
+    },
+    "Jade_Tristana_0.jpg": {
+      "facing": "left",
+      "focusX": 0.47,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "32a00a7edefbc0f0316ebb3651f79d403a0cc5aeb0f6b4517e6d096642c52e69",
+      "source": "model"
+    },
+    "Jade_Tryndamere_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The helmeted face looks almost straight at the camera with only a slight tilt, and the body is mostly square-on, so no side is clearly favored. There is no text or logo.",
+      "imageSha256": "e43a838982595020b75da295385c97e2f1e9328ab5d07e2a7f46af0c8236f9d1",
+      "source": "model"
+    },
+    "Jade_TwistedFate_0.jpg": {
+      "facing": "left",
+      "focusX": 0.53,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "38159603405cae4642d8b28692eff10f76bf2d674f6bc1b8147f67933a58c5e4",
+      "source": "model"
+    },
+    "Jade_Twitch_0.jpg": {
+      "facing": "right",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "fc76bc066df7efc43a47e19916fa7fd5537663f6e48ef1c678ef5438bc1c5e68",
+      "source": "model"
+    },
+    "Jade_Udyr_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Udyr stands square to the camera with arms crossed and head tilted up; no text or emblem is present.",
+      "imageSha256": "9a71440cbaa09cc951fa85a209628e9ebbcfee5a520eb788490ab0729c9f6235",
+      "source": "model"
+    },
+    "Jade_Urgot_0.jpg": {
+      "facing": "center",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face and torso are nearly square to the camera, with only a slight turn; the big claw arm reaches toward the right.",
+      "imageSha256": "bea8f332256a10b41f2ebafdd25e26f97b23e38148616477feca018c37dc1e21",
+      "source": "model"
+    },
+    "Jade_Vayne_0.jpg": {
+      "facing": "left",
+      "focusX": 0.54,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly frontal but turns slightly toward the viewer's left, and the crossbow arm and cape sweep left.  No text or emblems appear.​",
+      "imageSha256": "5e9f6919bcea816c771c2a8cb766418d840073dcf882fd3f81f3c7ab37374b36",
+      "source": "model"
+    },
+    "Jade_Veigar_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Veigar looks straight at the camera with symmetrical glowing eyes; no text or emblems appear.",
+      "imageSha256": "21e40a90db64562491a94808d00d45e9cf25146cc1d019ee618b0ebd85256acc",
+      "source": "model"
+    },
+    "Jade_Volibear_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Volibear's snout points up and to the left toward the lightning, and his body is mostly frontal.",
+      "imageSha256": "b280d8b21bad20d5aa098420b591c9193730dae2ffaa9581cd535dc9efdc8338",
+      "source": "model"
+    },
+    "Jade_Warwick_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The snarling face is angled down and toward the left, with the snout pointing lower-left, though the head is close to the camera and the body is mostly hidden.",
+      "imageSha256": "8231b5579f758a578d9d2005073efaa5119c7072ef86a7607d7ecffd523a1b84",
+      "source": "model"
+    },
+    "Jade_Wukong_0.jpg": {
+      "facing": "center",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "low",
+      "note": "Face is nearly square to the camera with a slight tilt; the body is frontal and the staff trails to the right, so there is no clear lean.",
+      "imageSha256": "d415866ad3c5e74559c3068a42221c29b85cdae1d160f3c14cd0d44519e9b54c",
+      "source": "model"
+    },
+    "Jade_Xerath_0.jpg": {
+      "facing": "center",
+      "focusX": 0.53,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Xerath's hooded head is almost square to the camera with glowing eyes and no clear turn, and the body has no strong lean.",
+      "imageSha256": "df7a9e269b20cbe49294c2e34f302a27d0ac2e3333a755943d09c81862213b8d",
+      "source": "model"
+    },
+    "Jade_XinZhao_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "2a757e0076fd546ab978914e601495cce754a1053b93b3fdc612cb4b682d3ca4",
+      "source": "model"
+    },
+    "Jade_Yorick_0.jpg": {
+      "facing": "center",
+      "focusX": 0.53,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is hidden under shaggy hair with glowing eyes, looking nearly square to the camera; the body has no clear lean.",
+      "imageSha256": "d8ed8c590a26dafb055cd967b58c96663562c72a6187a5e8865c73f0a6c3bf8f",
+      "source": "model"
+    },
+    "Jade_Zilean_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Zilean faces the camera squarely with arms spread; the clock behind him has no readable numerals or text.",
+      "imageSha256": "41349c244004565a7241a6f072d2bfbe90d0373e3da79cebbe6c6a8b9f1b4a91",
+      "source": "model"
+    },
+    "Janna_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "cdccfa2b76db4232d920b9bdfa3cdf23a1192ddd2c5605c2ef3636bb46af882f",
+      "source": "model"
+    },
+    "JarvanIV_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is mostly toward the camera but turned slightly to the viewer's left, and the body and shoulder armor angle the same way.",
+      "imageSha256": "0606ececc1f5a5763b23e147038da9535436cbb8099a1f313e764cc87cd07e1b",
+      "source": "model"
+    },
+    "Jax_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The mask and hood tilt slightly toward the right and the body leans right with the lamppost held across, though the face is nearly frontal.",
+      "imageSha256": "013bdc0f0e31261bbe1444f083ae18f6aa4ad9890f265cd76e4016c5e7ae853d",
+      "source": "model"
+    },
+    "Jayce_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "His face is turned toward the viewer's left with a sideways glance, while his shoulders are closer to square. The gear emblems are symmetric, so mirroring is fine.",
+      "imageSha256": "4d0dec78be476002d2a7dc1064015048a301f65e13df8ce00e42cc6e7e7f6bd8",
+      "source": "model"
+    },
+    "Jhin_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Mask and torso face the camera almost squarely, with only a slight head tilt; no readable text or logos, only abstract markings on the cloak.",
+      "imageSha256": "14743d01fb5b34ed94502bc691c8f825e1f345b64d0114842bdfd0b6c5766945",
+      "source": "model"
+    },
+    "Jinx_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera with a slight head tilt; the body leans subtly toward the viewer's left, with no text or logos.",
+      "imageSha256": "685e1d4ba1dbd5b3a62c266fcbfa7917a593355deb456a5aa7e0cf44b7341211",
+      "source": "model"
+    },
+    "Kaisa_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right with gaze up and right, while her outstretched arm points left; face takes priority.",
+      "imageSha256": "b62bb351638e9f22fd12195c8d1c3c3c380a4d6abc1a7e30faad085c75fa3a40",
+      "source": "model"
+    },
+    "Kalista_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly frontal but turns slightly toward the right, and the body and outstretched arm reach to the right.",
+      "imageSha256": "941f585a1b6e9e863a34a4601aa2a88e9a6688170a4a3e88bc2e5faa708d21dd",
+      "source": "model"
+    },
+    "Karma_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Head is tilted down with eyes closed and faces nearly square to the camera, with only a very slight turn; the body is frontal, so no clear lean either way.",
+      "imageSha256": "443e1f53eeba9ee5630f4843aa01bd04ef3aa8fb460cbdea3da49310df138e56",
+      "source": "model"
+    },
+    "Karthus_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Karthus is square to the camera with arms spread, and no text or logos appear.",
+      "imageSha256": "56a35484312d09c2da2305333142d2d1858f9762a2f72a1a9cfa83727c66b3cb",
+      "source": "model"
+    },
+    "Kassadin_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "39163ad5f4d4e711fd6900434f77e7ac847b7b052d3752e5e1ad9ceac0e084e7",
+      "source": "model"
+    },
+    "Katarina_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her face is nearly frontal with a slight turn and gaze toward the viewer's left, while her body leans in from the right toward the left, so the facing is subtle.",
+      "imageSha256": "bb8b7824a5425fd227c0f43e9661f0a291f3a8de1abc827837e1a8aaf35d3752",
+      "source": "model"
+    },
+    "Kayle_0.jpg": {
+      "facing": "right",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The helmet is nearly front-on but turns slightly right, and the shoulder and arm with the golden weapon extend to the right.",
+      "imageSha256": "424859295252b952b5265260a4294b61ff1fffc9f12248272a139307149f5b9a",
+      "source": "model"
+    },
+    "Kayn_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right with the red eye on that side, and the armored shoulder and scythe extend rightward, though the head is nearly frontal.",
+      "imageSha256": "e9383ebaa9af3544ed86c779bdf44065d6ce5b40b506a3dddf5f5300a9e31db4",
+      "source": "model"
+    },
+    "Kennen_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "7a205d2419bd9a8b0a1a95baa4ac26fdfba72acda7852f515c866f05ad942ca8",
+      "source": "model"
+    },
+    "Khazix_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The head is tilted down and the glowing eye and mandibles point toward lower left, while the body crouches with limbs spread, so the lean is subtle.",
+      "imageSha256": "81e42f45d779e9fa85574caf4f36c115ed7986a517ca17ad4c2e331806321ced",
+      "source": "model"
+    },
+    "Kindred_0.jpg": {
+      "facing": "right",
+      "focusX": 0.53,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Lamb's mask is turned three-quarters toward the right with eyes glowing, while the body leans back to the left; face takes priority.",
+      "imageSha256": "065670bb722f9e5e654464e3c0d1d694e0e3942b70abab723b8ac0474808e4da",
+      "source": "model"
+    },
+    "Kled_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "a22099c60821fa8e7ae87193224e4aaa45d0bd8d7bb253b2cf11c178ff4cd4f5",
+      "source": "model"
+    },
+    "KogMaw_0.jpg": {
+      "facing": "left",
+      "focusX": 0.55,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The head and mouth angle toward the lower left, though the visible eye sits on the right side of the face, so the turn is somewhat subtle.",
+      "imageSha256": "259caefd27c1481c70d2955fa3b47888774e14d94d8466132512ccdfdded7315",
+      "source": "model"
+    },
+    "KSante_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "167031d190e1acc1b516a804f81932cf5c55a2255497a3076e747d7b3ff611c2",
+      "source": "model"
+    },
+    "Leblanc_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face and torso are nearly square to the camera with only a slight head tilt; the reaching arm on the right does not change the facing.",
+      "imageSha256": "7b925b6df75ff39ae61b301234fe0bede85deb1e2ed7182da608d9008e1cec37",
+      "source": "model"
+    },
+    "LeeSin_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Head is turned slightly toward the viewer's left, following the high kick toward the left, while the torso is nearly frontal and one arm reaches right.",
+      "imageSha256": "c403bd419dcfda77278cfe756bd0281f941045afd5e2e905d19952160e7c9f24",
+      "source": "model"
+    },
+    "Leona_0.jpg": {
+      "facing": "right",
+      "focusX": 0.47,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face turns slightly toward the right with her gaze to the right, while her chest is angled toward the left; face takes priority.",
+      "imageSha256": "c6ab0267acfc20e690d69a2df2aa614bc8b9a45867b8992ba95fd3b5164c6294",
+      "source": "model"
+    },
+    "Lillia_0.jpg": {
+      "facing": "right",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right in a three-quarter view, and her body and outstretched arm also point right.",
+      "imageSha256": "bbe485fe7fb69ae5739aa3f66003140193d58075c977d8f087b01f082087c825",
+      "source": "model"
+    },
+    "Lissandra_0.jpg": {
+      "facing": "left",
+      "focusX": 0.44,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "78f3296283828b376a2dc5b43f33540412cdff8f3dfcf6008462ac50a5886353",
+      "source": "model"
+    },
+    "Locke_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left, with the body angled in the same direction and a smirk aimed that way.  No readable text or logos.  The head sits near the center of the frame.  ”",
+      "imageSha256": "8c4ab1cbcc61670b458bf2b69072625ed3fd0c24b3b0b7151c0516185720e07d",
+      "source": "model"
+    },
+    "Lucian_0.jpg": {
+      "facing": "right",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right, but the pistol arm extends to the left and the torso twists, so the pose is debatable.",
+      "imageSha256": "66e9b07454a99c77607a20aa6fa80f983eb5ddd551ca1feb307a9fb3ac49ba03",
+      "source": "model"
+    },
+    "Lulu_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Lulu hangs upside down; her face is turned slightly toward the viewer's left, toward Pix, with her gaze and reaching hand also directed left.",
+      "imageSha256": "41d678ee3fefb4da17cf58ad6f6069f35348c00676dd2b61e28306130bf341f5",
+      "source": "model"
+    },
+    "Lux_0.jpg": {
+      "facing": "right",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right with the body angled and leaping that way, but she looks nearly at the camera.",
+      "imageSha256": "73618e4dcb661badcbf73ed5dfd99be0dccdf497361bdf89ceae2dbbb3d6b794",
+      "source": "model"
+    },
+    "Malphite_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Malphite's head is lowered and faces nearly straight at the camera, with only a slight tilt, so there is no clear lean to either side. No text or logos appear.",
+      "imageSha256": "f62875ca4e83e577058d2d93be37fece530997a57aa5255b893f196e66a1e411",
+      "source": "model"
+    },
+    "Malzahar_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Malzahar is square to the camera, with the glowing hood emblem and eyes centered and the body symmetrical, so there is no lean.",
+      "imageSha256": "15f629d0fda5216893d2d8c484289a8a804318acf8edd524f78e4ced87f93244",
+      "source": "model"
+    },
+    "Maokai_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Maokai's face and glowing eyes are turned toward the left of the frame, with his body hunched in from the right.",
+      "imageSha256": "f5f57cc10194488187ea948234cacbcf7ca38a69f0667556b48a4bcc0848c2df",
+      "source": "model"
+    },
+    "MasterYi_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The face with its glowing eye cluster turns toward the viewer's left, while the body leaps toward the right with the sword raised, so the face decides the call.",
+      "imageSha256": "78ed07e69a0e002baa6a77b6d54f743d3b729356be2dcff9505f58af2c586ec2",
+      "source": "model"
+    },
+    "Mel_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "ec7c177154c164689a09f9dfa75dab4429ca71080382ad434f65b491b4b84c19",
+      "source": "model"
+    },
+    "Milio_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "70006a4afbbdbf4af72e6ed9ba86c1213fba01fe436de818679037c8eb29cf21",
+      "source": "model"
+    },
+    "MissFortune_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "b3501f90cb584da4ed243530bf9b6ee95bdf4a639d999d63f1faed2999dbec36",
+      "source": "model"
+    },
+    "MonkeyKing_0.jpg": {
+      "facing": "left",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned toward the viewer's left in three-quarter view while the body and shoulder guard angle toward the right, so the face decides it.",
+      "imageSha256": "4aaa256206744b6eb612d1d28e3860bd43ea5dfa2fb93516db9d10fb1952e9e1",
+      "source": "model"
+    },
+    "Mordekaiser_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The helmet is turned down and slightly toward the viewer's left, toward the green glow, while the large pauldron on the right fills the frame; no readable text or emblem.",
+      "imageSha256": "9eaa2130016379438bb328e00020f29cc5f29d245b4fbfc535f1bce0b6710579",
+      "source": "model"
+    },
+    "Morgana_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her face is turned slightly toward the viewer's left with her gaze angled that way, while her shoulders and wings angle back to the right.",
+      "imageSha256": "98bbb4a3c3ef51d2ef28a08478da5d23378c1df6325224120b1d0f4413179929",
+      "source": "model"
+    },
+    "Naafiri_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "49cef9979aaeac1c3d3c85ebd020dbefdfd3d461a76286c7469ea39ac81799db",
+      "source": "model"
+    },
+    "Nami_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly frontal but turns slightly toward the viewer's left, and the body and staff lean left; no text or logos appear.",
+      "imageSha256": "9325aec3457b4c763be780d32ba7ff0ad1224a42d4fa9595b6d8a9928e7abdd9",
+      "source": "model"
+    },
+    "Nasus_0.jpg": {
+      "facing": "left",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The snout and glowing eye turn toward the viewer's left while the shoulders are nearly square, so the face decides the call; no text or logos appear.",
+      "imageSha256": "c858644ee0ac6b2c4f5c424b75e8fcc8ec96f4e0a56b0a729d2b61f7bdbbac3b",
+      "source": "model"
+    },
+    "Nautilus_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Helmet and glowing eyes face the camera nearly square, though the body lunges slightly left with the arm reaching that way; no text or logos.",
+      "imageSha256": "c1374f1802c2291af213e9ab67a0e3b0cd0a3ed725a9c5e98e69a9ab903dfab0",
+      "source": "model"
+    },
+    "Neeko_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Her face and gaze turn toward the glowing butterfly on the left, while her body leans in from the right.",
+      "imageSha256": "c97ebe63dda5fb25584d609f847a31db37a4a0b87890abb84b9a799e604c1979",
+      "source": "model"
+    },
+    "Nidalee_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "She crouches nearly square to the camera with her face turned slightly toward the viewer's right, and the spear extends to the right. No text or logos appear.",
+      "imageSha256": "2530ef327960fb603a4a2c3eee86b618466fde5e2c2d57ee08dccdbd41c1d3d4",
+      "source": "model"
+    },
+    "Nilah_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left with her gaze to the left, while her torso and limbs are mostly square to the camera.",
+      "imageSha256": "ed128968140e7269493d36b880bc50ca76cc87d354139e1d64a62ab00acfd393",
+      "source": "model"
+    },
+    "Nocturne_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "c75e2e2a42f7d405fccfb7409fc08cfdcdd5d59e25b9df4d0ed9934fd78c2aa1",
+      "source": "model"
+    },
+    "Nunu_0.jpg": {
+      "facing": "right",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Nunu's face is turned slightly toward the viewer's right while he leans back against Willump's fur, so the turn is subtle.",
+      "imageSha256": "89c98bdba5e8365e6f65ea8a02e09b91cf996eab4d516e393eb8d073995b31ef",
+      "source": "model"
+    },
+    "Olaf_0.jpg": {
+      "facing": "center",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Olaf charges almost straight at the camera with his face square on, though his body leans very slightly left.",
+      "imageSha256": "602038beafe755f472ad17323bd910d886ff23daaa3191d7c13f745c5735cee2",
+      "source": "model"
+    },
+    "Orianna_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Head is tilted back and turned toward the left while the arm extends left, though the torso faces mostly toward the camera. No readable text or logos.",
+      "imageSha256": "7e434b79a4076f2d44dd2a2718d7c19cc4b1a03c3c14f432cdbb9027bf5941bc",
+      "source": "model"
+    },
+    "Ornn_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "97ea389ef522551ce7c57a6e52484561cfddf376f582e80b0ef17b5c609646d5",
+      "source": "model"
+    },
+    "Pantheon_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The helmet's nose guard and visor point down and to the left while the body is fairly square, so the face decides the call.",
+      "imageSha256": "1a532ebd0f49352ac64953e879dbf594884e426152087a6649e13e23d0304662",
+      "source": "model"
+    },
+    "Poppy_0.jpg": {
+      "facing": "right",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the right with eyes looking right; the body is mostly square with arms crossed, so the turn is subtle.",
+      "imageSha256": "76f221aca4979212a5e573ac6b538c1a027387e4ee39557f591c9713ae6e13bb",
+      "source": "model"
+    },
+    "Pyke_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Pyke's face looks nearly straight at the camera with his head tilted down and his body square, so there is no clear lean to either side.  No readable text or logos appear.  .",
+      "imageSha256": "f874c5561d1bc7e2628a9ac8a56c5c05bc238338eb9c4f0dfec6b05e5b4faa81",
+      "source": "model"
+    },
+    "Qiyana_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face and gaze are nearly square to the camera, with only a slight turn; the body angles a little toward the left, so facing is called center with medium confidence. ",
+      "imageSha256": "cb8f155602e8ca563d29259772df97b08e4d3d311f8bb1a34e073ddb9ec9f5a0",
+      "source": "model"
+    },
+    "Quinn_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her face is turned slightly toward the viewer's left and she reaches that way with her arm, though her gaze meets the camera.",
+      "imageSha256": "71a98c123ddc13ce7875daae231c957190be0c916e745b1f1e2a2cf2aeeb30d4",
+      "source": "model"
+    },
+    "Rakan_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Rakan's head tilts and his gaze turns slightly toward the right while his body leans back toward the left, so the face decides the call.",
+      "imageSha256": "3d851e326aeae625467ae25a539ddd48ad5e91b143a82c6a22e101157ce28872",
+      "source": "model"
+    },
+    "Rammus_0.jpg": {
+      "facing": "left",
+      "focusX": 0.55,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "7f347dafcebcdf46076ab22a3e4734eaeb0883ad0bf55f505e834b3c24d056bb",
+      "source": "model"
+    },
+    "RekSai_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The head is tilted down and toward the lower left with the mandibles and glowing eye pointing that way, while the body extends back to the right.",
+      "imageSha256": "8700aaa934ca21bfcda31ea20faad47f3ae35489b5fbfd40f47fc55d875ece38",
+      "source": "model"
+    },
+    "Rell_0.jpg": {
+      "facing": "right",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned in three-quarter view toward the right while the torso is nearly square to the camera; the face decides the call.  No text or emblems appear.",
+      "imageSha256": "b768240716e42f97685a32c8de153b4fe883a1180f6e713054cf6eb2cee5f98e",
+      "source": "model"
+    },
+    "Renata_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left (mask and ear on the left side), shot from a low angle; no readable text or logos.",
+      "imageSha256": "7864cac15b4aa7389f15d087d4c4e22f3aa96326f76af192c77565b28e481966",
+      "source": "model"
+    },
+    "Renekton_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "878c7cc1bc2be00dc3117295a5f982ffd625a437299b758126c930f07ea4ea60",
+      "source": "model"
+    },
+    "Rengar_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "ddb318b14be6fb20058e0df341854dc79bea16ea6fad7cdfcee700a78ab5dec9",
+      "source": "model"
+    },
+    "Riven_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "703f16ae874312023944cd9aba2a8e4843398d0c92a09e011d3057b76b319d8f",
+      "source": "model"
+    },
+    "Rumble_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned in three-quarter view toward the viewer's left with the nose and gaze pointing left, though the body leans in a forward lunge and the face is close to the camera.",
+      "imageSha256": "0fa053536c5afdb3d68d3278de6cc2770bc5e6fd5c050e127ac003e34c03e2c1",
+      "source": "model"
+    },
+    "Ryze_0.jpg": {
+      "facing": "right",
+      "focusX": 0.65,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Ryze's face and body lunge toward the right edge; the glowing runes on his arm are decorative tattoos, not readable text.",
+      "imageSha256": "69fdc9ac8d90f6027b46145da44c64b251bec1377792de5318b243c6fe0c0b30",
+      "source": "model"
+    },
+    "Samira_0.jpg": {
+      "facing": "right",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her face is turned slightly toward the viewer's right with a tilted head and a sidelong gaze, while her body is nearly square, so the lean is subtle.",
+      "imageSha256": "70940d97f7846809b6837e8e4b14fe809984ed71bb02805e5bd06d752b274c30",
+      "source": "model"
+    },
+    "Sejuani_0.jpg": {
+      "facing": "right",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly frontal but turns slightly toward the viewer's right, and the body leans right with the arm and whip on that side.",
+      "imageSha256": "6959d4ea7d3d98389db0b4a84c308757bd7c5b7c3ac365196bccc170d05de51b",
+      "source": "model"
+    },
+    "Senna_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her face is in three-quarter view turned toward the left and tilted upward, while her shoulders and body angle toward the right, so the face decides.",
+      "imageSha256": "e71a85c1e0acc6d6e228fef6680bd0594506afa9688d94622d56656eeaa17632",
+      "source": "model"
+    },
+    "Seraphine_0.jpg": {
+      "facing": "left",
+      "focusX": 0.47,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly frontal but turns slightly toward the viewer's left, and the body leans left with the raised arm reaching that way.",
+      "imageSha256": "0330881e26fbd79f37ed3d1f2ef805c721af3f2d533b5a28a1c35db81ac09c00",
+      "source": "model"
+    },
+    "Sett_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Sett's head and torso face the camera nearly square, with only a slight tilt of the head; no text or logos are visible.",
+      "imageSha256": "326f7444936b8a04cf67e8b7a8c899cd45c7881a30917244b2afec7852968c70",
+      "source": "model"
+    },
+    "Shaco_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "636511dc86dbf7f2c80c5fbdfd808762df57ede582a4ddf2180518c6e0f6301e",
+      "source": "model"
+    },
+    "Shen_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Head is in profile with the glowing eye and mask pointing toward the left edge, hand raised on that side.",
+      "imageSha256": "4a86a70141d112ea10f5bb5a7ae0f27a117d75fc2c47f3d3ef76a3da86c3869e",
+      "source": "model"
+    },
+    "Shyvana_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera with a very slight turn toward the left, and the body is frontal with no clear lean; no text or emblems appear.",
+      "imageSha256": "35274aee8d84f86d08d9ab4ae8b436438bc71331339c07701e06d3a6ef399de8",
+      "source": "model"
+    },
+    "Singed_0.jpg": {
+      "facing": "right",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Head is turned slightly toward the viewer's right with the nose and mask pointing right, while the body leans in from the upper left and a green gaze looks sideways; no text or logos appear.",
+      "imageSha256": "da47d294744cb5cb302e123cb9d077b7f40fabd15bdf6e650528adbc3fe27708",
+      "source": "model"
+    },
+    "Sion_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera with only a slight tilt, and the body is broad and frontal with no clear lean; the shoulder armor on the right is heavier.",
+      "imageSha256": "c408dc0ff0f5a691bbe6d28dba72ac20c749a716ccd7f4186c4e247d08531552",
+      "source": "model"
+    },
+    "Sivir_0.jpg": {
+      "facing": "left",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face and gaze turn slightly toward the viewer's left while the torso is nearly frontal; no text or logos appear.",
+      "imageSha256": "3f7c15d6cd8b1138c61e4ece11415baff25fd2001f409eb2a8f8c66bb8a2adeb",
+      "source": "model"
+    },
+    "Skarner_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face looks nearly straight at the camera, though the body curls away to the left behind the head, so the lean is subtle.",
+      "imageSha256": "6a7ab614951016afa56eb82594458b60bc683e3fd109c0029afbe7d279ca35fc",
+      "source": "model"
+    },
+    "Smolder_0.jpg": {
+      "facing": "left",
+      "focusX": 0.45,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "115f867be8341dfe4d72390f5dfda4ffe52247ccf8097d55cd2cd03090f044af",
+      "source": "model"
+    },
+    "Sona_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her face is tilted down and turned toward the viewer's left, while her torso is more frontal and her hand reaches left.",
+      "imageSha256": "e29e3cc9f41131dc62e94a999852c790fef5c6318de2e1d4dd6fba27ffb6347d",
+      "source": "model"
+    },
+    "Soraka_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her face is turned slightly toward the viewer's left, and her body and outstretched arm lean left, with the staff extending left. No text or logos appear.",
+      "imageSha256": "ef3ce8f8a28b48ded519e909501fea682adb75bb2b6e49e8e4e42ed3f634de68",
+      "source": "model"
+    },
+    "Swain_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left while the torso is nearly square to the camera; the face decides the call.",
+      "imageSha256": "0428387592ae5bc6a7819ddcf438583c0787d8abd4ade25c471983168526cba3",
+      "source": "model"
+    },
+    "Sylas_0.jpg": {
+      "facing": "right",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's right while the body is nearly square and the outstretched hand reaches toward the lower right.",
+      "imageSha256": "00852c624cd9b46b727e5b0336945e724ca1731e80f50f75a7c17ee93c66f688",
+      "source": "model"
+    },
+    "Syndra_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left with a gaze at the camera, and the body leans left toward the dark orb.",
+      "imageSha256": "7dcbc2b9e563e1317812153fe9e300bd9e026442c94edf2b3e6762bf2beaf54f",
+      "source": "model"
+    },
+    "TahmKench_0.jpg": {
+      "facing": "center",
+      "focusX": 0.55,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Tahm Kench's wide grinning face is nearly square to the camera, with only a slight tilt, and no text or logos appear.",
+      "imageSha256": "ec003e38b00f9375fd4329967aa0fffbfd06caf7130968203dccf5d28a428235",
+      "source": "model"
+    },
+    "Taliyah_0.jpg": {
+      "facing": "right",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her face is turned slightly toward the right and looks at the viewer, while her body reaches and leans toward the left, so the face decides the call.",
+      "imageSha256": "20a17da356a01dcc409415abd63d99545384b24a94f6a218d76c1c5023db6a09",
+      "source": "model"
+    },
+    "Talon_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "4e64f26656d27a4a6f56f70353bddc140857c05644edb14f59036d5d53d25e32",
+      "source": "model"
+    },
+    "Taric_0.jpg": {
+      "facing": "center",
+      "focusX": 0.58,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face and torso are nearly square to the camera, with only a slight head tilt and gaze to the viewer's right; no text or logos.",
+      "imageSha256": "3afbf3d09c1e49b812ee4c4c05f26180af2de9080c1a6344a2e314668d395d85",
+      "source": "model"
+    },
+    "Teemo_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly frontal but tilted, with the nose and smile shifted slightly right and the body and legs swinging toward the right; the map has only a faint X mark, not readable text.",
+      "imageSha256": "42edf8d771ff530e2b26606ed072cbf6899371a17ebac50a43a679a7abcef168",
+      "source": "model"
+    },
+    "Thresh_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The skull face is tilted downward and looks nearly square to the camera, and the hunched body has no clear lean to either side.",
+      "imageSha256": "3e958a0e0f0b827412d9cc4c2b910aa518b7b7bb412e8353153b67bf9dec117d",
+      "source": "model"
+    },
+    "Tristana_0.jpg": {
+      "facing": "left",
+      "focusX": 0.47,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "32a00a7edefbc0f0316ebb3651f79d403a0cc5aeb0f6b4517e6d096642c52e69",
+      "source": "model"
+    },
+    "Trundle_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "76405ed260d461aa6f3462702d44d0aec24831864f9efd16f5c1186926c6df15",
+      "source": "model"
+    },
+    "Tryndamere_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera with only a slight turn, while the body reaches toward the lower right with a blurred weapon in the foreground; no text or logos appear.",
+      "imageSha256": "0924a1a1a4d95d69d786256b75a6bee523b230dd9b5d4894d367040e68d932af",
+      "source": "model"
+    },
+    "TwistedFate_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": false,
+      "confidence": "high",
+      "note": "Face and body are in profile toward the left; the hat has a spade card emblem and the cards show suit symbols that would read mirrored.",
+      "imageSha256": "0da4fed4ac524635b42d234a6a9a7828fee4f1da8c827bfdf659f6feb864db6a",
+      "source": "model"
+    },
+    "Twitch_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "81c51222a1a57b53ace28742f9ddd3278f97b4be7d92a33971f638572c62527c",
+      "source": "model"
+    },
+    "Udyr_0.jpg": {
+      "facing": "right",
+      "focusX": 0.53,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "dfae8bcfb12dd22b8a80df7ad287c4f21631a65a6c4188f1a6647277025c4014",
+      "source": "model"
+    },
+    "Urgot_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Head is tilted down and angled slightly toward the left with eyes glancing left, while the shoulder and muscled body extend to the right; no readable text, only abstract tattoo markings.",
+      "imageSha256": "b4d55c9aa3758554ecbb0e62ec9b88ccacfe909185ffa8fc952ce463d6950c2e",
+      "source": "model"
+    },
+    "Varus_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left with a sidelong glance, while the torso is angled left, so it reads as left rather than center.",
+      "imageSha256": "139ad4bad001824ff83bc452cb4722cb049281bea1a3c81d97f5e10fed62f56b",
+      "source": "model"
+    },
+    "Vayne_0.jpg": {
+      "facing": "center",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face looks almost straight at the camera with a very slight tilt, while the body angles toward the left with the leg and crossbow arm thrust that way.",
+      "imageSha256": "7d8a79464182e57b8e98694892cd8b9a60eb21976dd2ee5ab55e005ad7a0aaff",
+      "source": "model"
+    },
+    "Veigar_0.jpg": {
+      "facing": "left",
+      "focusX": 0.54,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face with glowing eyes is nearly frontal but turns slightly left, and the body lunges toward the left with a big armored arm reaching that way.",
+      "imageSha256": "a261e528901bd2b413eb43623328835c88bcdbfcb60bd906f5a56e1641268e7c",
+      "source": "model"
+    },
+    "Velkoz_0.jpg": {
+      "facing": "center",
+      "focusX": 0.47,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Vel'Koz's central eye looks almost straight at the camera, with only a slight lean, so it reads as center.",
+      "imageSha256": "564845dd3373b5d358f9bbcfda358429cf19e8a206dca624c4bd528a7aa80a09",
+      "source": "model"
+    },
+    "Vex_0.jpg": {
+      "facing": "right",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Head is tilted and turned slightly toward the right, with the nose and gaze pointing right; the body is mostly frontal, so the lean is subtle. No text or logos are visible.",
+      "imageSha256": "5ec4ca67947ff8cf71d253a8627636c14d9e220cb3ed8b8ca97c269a244d52da",
+      "source": "model"
+    },
+    "Vi_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face and torso are nearly square to the camera with only a slight head tilt, so center was chosen; no readable text or logos appear.",
+      "imageSha256": "5254bf8ce93808252eb1f184357839e7a426abf53c45768fae9fc29f56e326ea",
+      "source": "model"
+    },
+    "Viego_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera with only a slight turn, and the head is tilted down; the body is angled slightly, so center is a close call.",
+      "imageSha256": "80d6a60430682c4ba2a6bd25e0c578b292b7be323c4200f47d16b46b5ec0ede8",
+      "source": "model"
+    },
+    "Viktor_0.jpg": {
+      "facing": "center",
+      "focusX": 0.47,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Helmet and face are nearly square to the camera with only a slight turn, and the shoulders are level, so this is treated as center.  The brooch on the cloak is a small ornament, not readable text.  ‌",
+      "imageSha256": "f10aa6353231f8dccaa9f7173f282a53cda0aa75e3f12b0626cfb47f273887b4",
+      "source": "model"
+    },
+    "Vladimir_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Head is tilted back and nearly square to the camera with only a slight lean, so no clear side; no text or emblems.",
+      "imageSha256": "898b9f4237b2510bd1f604805244081fb763311c6dcc1772f4d6855f9a300bbd",
+      "source": "model"
+    },
+    "Volibear_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": false,
+      "confidence": "high",
+      "note": "The snout and snarl point toward the left edge. A glowing rune glyph on the armband would read wrong if mirrored.\n",
+      "imageSha256": "1db3271d8ccbb40f281dab06c32e9494462582bb139816eaf9555c763cc1f67f",
+      "source": "model"
+    },
+    "Warwick_0.jpg": {
+      "facing": "left",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The snout and snarling jaw point down and to the left while the head is partly turned to the camera, and the body extends to the right behind the head.",
+      "imageSha256": "39832de8891d8e94e833a7faf40c09e7ad78c70cdba1bde22f0ffef4ab440c5f",
+      "source": "model"
+    },
+    "Xayah_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Her face looks nearly square to the camera with a slight tilt, while her body leans toward the left with the shoulder skull pointing right, so there is no clear lean.",
+      "imageSha256": "5c2083aa0d5100b4097c72f2294d72e325fcb7c874b84fdc3d4154beda335041",
+      "source": "model"
+    },
+    "Xerath_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "low",
+      "note": "The champion is mostly hidden behind a burst of shattering shackles and blue energy, so the face is not visible and the body is blurred with no clear lean.",
+      "imageSha256": "bb22d89a73bd30aae332fdd1ef087895e9bd65df772c8e681f9d5753eb2f9bb5",
+      "source": "model"
+    },
+    "XinZhao_0.jpg": {
+      "facing": "right",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "",
+      "imageSha256": "9e91203e2562d077e660d11da3964f0a9801822b16161a956528bf2979c46525",
+      "source": "model"
+    },
+    "Yasuo_0.jpg": {
+      "facing": "left",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left with eyes looking down and left, while his body lunges leftward with the arm extended that way.",
+      "imageSha256": "4436e2b10901774bb6fece4b541418b2385fc8d5e187ec7e61ba7eb386adfa8e",
+      "source": "model"
+    },
+    "Yone_0.jpg": {
+      "facing": "left",
+      "focusX": 0.47,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is in three-quarter view turned toward the left edge, while the shoulders and sword stay roughly square; the glowing rune on the blade is abstract, so flipping is fine.",
+      "imageSha256": "70db032f8239ea5856e8f2c7625e547c451dd6a7dfbb70316efcbc3bd7dcc0c5",
+      "source": "model"
+    },
+    "Yorick_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face looks down at the camera from a low angle, nearly square, with a very slight turn toward the left; the large shoulder on the right is not a lean.",
+      "imageSha256": "8afd9cfb690b18a3890c7ed7956f27d6499f8bdf21e6cff2e4e673f3a1c9424a",
+      "source": "model"
+    },
+    "Yunara_0.jpg": {
+      "facing": "left",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is turned slightly toward the viewer's left with the glowing eye on that side, and the body and outstretched arm reach left; the gaze is nearly forward, so the turn is subtle.",
+      "imageSha256": "a473e9db610405ca876db4be005b1214bdf8161d81ccf9ae02c40efd4e51f235",
+      "source": "model"
+    },
+    "Yuumi_0.jpg": {
+      "facing": "center",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera, tilted upward, with only a slight turn; the body leans a little toward the viewer's right.",
+      "imageSha256": "6d4e42fc5f1cdc4061246731eaa407c349aaa49e28f752db09683c144756606b",
+      "source": "model"
+    },
+    "Zaahen_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Face is turned toward the viewer's left in three-quarter view, gazing off to the left, while the shoulders are broader to the right.",
+      "imageSha256": "3ba396a1ccada2a789e8498791508953d56bd7fce23b2960e409a7f2b71cdb8c",
+      "source": "model"
+    },
+    "Zac_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Zac's face looks nearly straight at the camera, with only a slight tilt, and no text or logos appear.",
+      "imageSha256": "49e02a76be4a53c09123b7015c50eff10aca7a4daefbfbbd837b79be3d83c6dd",
+      "source": "model"
+    },
+    "Zed_0.jpg": {
+      "facing": "center",
+      "focusX": 0.5,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "The helmet faces the camera nearly square, with only a slight lean toward the left, while the body crouches and angles toward the right.",
+      "imageSha256": "cb50346a6eaec9d1a7ee637d19290e75ba5bf68fb54422c6c717f98678ed6a53",
+      "source": "model"
+    },
+    "Zeri_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face looks nearly square to the camera with a slight head tilt; body leans a little to the left with the legs kicked out left, but no clear turn.",
+      "imageSha256": "25fa998efd47d354a82fe15f13d0e4f773e220053d26253571bd0b4ae493ad9e",
+      "source": "model"
+    },
+    "Ziggs_0.jpg": {
+      "facing": "left",
+      "focusX": 0.49,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Ziggs' face and grin point toward the left edge while his body trails off to the right; the bomb markings are a stylized skull-like shape, not readable text.",
+      "imageSha256": "9bd2f0c98c890f70224bd8501450b1630b90961c4b7dfd3181b7709352b312b7",
+      "source": "model"
+    },
+    "Zilean_0.jpg": {
+      "facing": "left",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Zilean's face is in three-quarter view turned toward the image's left, with his gaze also directed left; the faint runes on the time circle are decorative and not readable text.",
+      "imageSha256": "bca676dbf1d07da69c8f09527df67276e631acded9b13785892b097f7d3ce8f1",
+      "source": "model"
+    },
+    "Zoe_0.jpg": {
+      "facing": "center",
+      "focusX": 0.52,
+      "mirrorSafe": true,
+      "confidence": "medium",
+      "note": "Face is nearly square to the camera, tilted slightly with eyes glancing right; body is mostly facing the viewer with no clear lean.",
+      "imageSha256": "4cce42e6854dd8cfa8140d33553155c1de31c35c93a014ccc02d9a5fc64358e8",
+      "source": "model"
+    },
+    "Zyra_0.jpg": {
+      "facing": "left",
+      "focusX": 0.51,
+      "mirrorSafe": true,
+      "confidence": "high",
+      "note": "Face is turned toward the viewer's left and her thorny vine arm reaches out to the left; no text or logos appear.",
+      "imageSha256": "ea40fdc9b72f8b62ba9a969d55b028b191e5861f41aadf043995a4794aac5392",
+      "source": "model"
+    }
+  }
+}
