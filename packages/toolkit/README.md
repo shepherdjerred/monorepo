@@ -1785,8 +1785,9 @@ S3 workflows retain the AWS credential chain.
 `toolkit tend` inspects and reaps orphaned local workstation and agent-host
 resources across git worktrees, temporary PostgreSQL clusters and dead-owner
 test databases, orphaned processes, high-port Tailscale Serve listeners,
-managed Docker sandboxes, and aged temporary artifacts. Runs are dry-run by
-default; pass `--apply` to mutate.
+managed Docker sandboxes, and aged temporary artifacts. It also shares the
+files that are identical between a repository's worktrees. Runs are dry-run
+by default; pass `--apply` to mutate.
 
 ```bash
 toolkit tend status
@@ -1794,6 +1795,8 @@ toolkit tend run
 toolkit tend run --apply --only worktrees,tailscale-serve
 toolkit tend worktrees --summary
 toolkit tend worktrees --verbose --worktree-min-age 3d
+toolkit tend dedupe --summary
+toolkit tend dedupe --worktree ~/.herdr/worktrees/monorepo/my-branch --apply
 toolkit tend schedule install
 toolkit tend lease list --json
 toolkit tend lease wrap --kind process --target temporal-dev --ttl 2h -- bun run dev
@@ -1809,6 +1812,16 @@ notices scoped to `host/<thisHost>`. Any open `host/<thisHost>` Forum notice
 with `databases` or `testing` in its scopes holds `postgres` and `processes`
 sweeps automatically; failed Forum queries fail closed unless `--offline` is
 passed.
+
+Only one applied run works at a time, guarded by `~/.toolkit/tend/run.lock`.
+A second `--apply` fails at once with "Another toolkit tend --apply run is
+active". `--lock-wait <duration>` (on `tend run`, `tend worktrees` and
+`tend dedupe`; for example `--lock-wait 15m`) makes it wait that long for the
+first run to finish, checking once a second, and fail with the same message
+and the time waited if it does not. A lock whose owner has died is taken over
+immediately either way. Dry runs never take the lock and never wait. The daily
+schedule does not wait; a per-worktree `tend dedupe --worktree <path> --apply`
+started while it runs should.
 
 Tailscale Serve sweeps never touch port `443` or root `/`, and unleased
 high-port listeners require two consecutive unreachable sweeps before teardown
@@ -1927,19 +1940,160 @@ git update-ref -d refs/tend/rescue/<name>              # discard it for good
 A rescue ref for a detached `HEAD` with nothing uncommitted points at that
 commit itself.
 
+### Worktree deduplication
+
+Git writes every checkout fresh, so each worktree stores its own copy of files
+that are byte-for-byte the same in the others. `toolkit tend dedupe` (and the
+`dedupe` surface of `tend run`) replaces those copies with APFS copy-on-write
+clones of one of them: the files keep their path, content, permissions and
+modification time, and stop occupying the same blocks many times over. Nothing
+is deleted and no worktree is removed. Editing a clone later copies only the
+blocks that change and never touches the other worktrees.
+
+```bash
+toolkit tend dedupe --summary                    # dry run: files and bytes per worktree
+toolkit tend dedupe --apply
+toolkit tend dedupe --worktree <path> --apply    # one worktree, e.g. right after creating it
+toolkit tend dedupe --worktree <path> --apply --no-refresh --lock-wait 15m
+toolkit tend dedupe --dedupe-min-size 4k         # default 64k
+```
+
+`tend run` plans and applies dedupe with the other surfaces. `tend status`
+shows it as skipped unless `--only` names it, because planning reads every
+worktree's index and takes the better part of a minute.
+
+A file in one worktree is replaced by a clone of the same path in another
+only when all of this holds:
+
+- both index entries are plain entries for a regular file with the same blob
+  and mode (`git ls-files -s -v`; assume-unchanged and skip-worktree entries
+  are left out, because `git status` does not report changes to them);
+- in the worktree being changed, `git status` does not report the path as
+  changed, the file has not been touched since before that worktree's index
+  was read, and the index still lists the path the same way afterwards;
+- the copy being cloned from still is that blob: before a copy is used it is
+  hashed with `git hash-object` and its index entry is read again, because
+  its worktree's index was read earlier in the run and the worktree may have
+  switched commits since. A copy that no longer matches is passed over, and
+  the next worktree with a matching copy takes its place;
+- the path has no `filter`, `ident` or `working-tree-encoding` attribute in
+  either worktree. With one of those, two worktrees can hold different bytes
+  for the same blob and both be clean, so equal index entries prove nothing
+  about the files;
+- each file is exactly as long as its blob. Git's line-ending conversion
+  only removes carriage returns on the way into the repository, so a clean
+  file that is neither shorter nor longer than its blob is that blob, byte
+  for byte. A file checked out with CRLF endings, or one holding CRLFs that
+  git normalizes away, is a different length and is left alone, whatever
+  `core.autocrlf` and `core.eol` say in either worktree. Two files with
+  different line endings that are both clean against one blob can therefore
+  never both qualify;
+- the file being replaced is plain and nobody's but this run's to replace:
+  not open or mapped in any process, not hard-linked elsewhere, owned by the
+  current user, and without BSD file flags or extended attributes of its own
+  (macOS's `com.apple.provenance` aside). The copy being cloned from must be
+  free of flags and such attributes too, because a clone carries them along;
+- the worktree's configuration lets `git status` notice edits: with
+  `core.trustctime` false, `core.checkStat=minimal` or `core.ignoreStat` true
+  the worktree is skipped. The booleans are read through git itself, so
+  `0`, `no` and `off` count as false. Worktrees can carry their own
+  configuration, so each is asked;
+- neither worktree is mid rebase, merge, cherry-pick or bisect, and the one
+  being changed is not named by an open Forum notice for this host;
+- both are regular files, at least `--dedupe-min-size`, on the same device.
+
+A file's own permission bits are kept, so `core.fileMode=false` and a mode
+that differs from the other copy's change nothing. Sparse-checkout entries
+are skip-worktree and are never candidates. A tracked directory that a
+symlink has replaced reads as changed to `git status`, so nothing behind the
+symlink is touched.
+
+Files left alone are counted in the report, per worktree and for the run, by
+reason: normalized or filtered, in use or not plain, and the copy to clone
+from having changed.
+
+The clone source is the main checkout's copy when it qualifies, otherwise the
+first worktree whose copy does. `--worktree` limits which worktree has files
+replaced; every worktree still lends its copies. Worktrees with live sessions
+are included: the checks above and the last-moment check below are the
+protection, not liveness.
+
+Each replacement clones the source into `tend-dedupe/` inside that worktree's
+own git directory, gives the clone the target's permissions and times, checks
+once more that neither file changed, and renames the clone over the target.
+The clone is staged there, not beside the target, because git never reports
+anything under a git directory: a session running `git status`, or staging
+everything in the worktree, cannot pick up a half-finished clone. A worktree
+whose git directory is on a different volume than its files is skipped, since
+the rename would not be atomic. The directory's own times are then put back,
+because the reaper and build tools read directory mtimes as activity. A file
+that changed in between is left alone and counted, and so is a clone that
+does not come out with the target's size, owner and group.
+
+Replaced files have new inodes, so git treats them as possibly changed until
+it re-reads them. `git update-index -q --refresh` does that once per worktree,
+so the job, not the next interactive `git status`, pays for it. The refresh
+holds `index.lock` while it hashes, and a `git add` or `git commit` in that
+worktree would fail meanwhile, so it only runs where nobody is working: a
+worktree with a live Herdr terminal, Herdr active file, process working
+directory, the caller's own working directory, or a live Claude-agent lock is
+left for that session's own next `git status`, which re-reads the files once
+with no lock conflict. `--no-refresh` skips the refresh everywhere; use it for
+a worktree that was just created, whose session may not be visible yet. Each
+worktree reports whether its index was refreshed, left to a live session,
+skipped by the flag, or could not be refreshed, and the summary line counts
+them.
+
+These limits are accepted:
+
+- An edit that lands in the instant between the last check and the rename is
+  lost, as is a write through a file descriptor a process opens after the
+  open-file check; closing that window would need a lock no editor honors.
+- Each replacement is a rename, so file watchers in a live worktree see one
+  burst of change events the first time its files are shared.
+- A replaced file has a new inode and change time. Its modification time is
+  kept to the microsecond, not the nanosecond. Tools that go by inode or
+  ctime, backup software among them, see it as changed once.
+- The clone carries the source file's `com.apple.provenance` attribute, not
+  the replaced file's, and an access control list on the replaced file is
+  not carried over. Access control lists are not looked at.
+- Files checked out with CRLF line endings are never shared, even with each
+  other.
+
+Which files are already clones is remembered per worktree under
+`~/.toolkit/tend/dedupe/`, so a later pass leaves them alone. A record holds
+while the file keeps the inode, size and change time it had right after it
+was replaced, and while the copy it was cloned from is still the same file
+with the same change time. A tool that rewrites either one in place, even
+with the same bytes, gives it blocks of its own again; the changed time makes
+the file a candidate once more, as does another worktree's copy becoming the
+one to clone from. That directory is a rebuildable cache: losing it, or a
+change to what it records, costs one repeat pass.
+
+The surface runs on macOS only and reports itself skipped elsewhere. A volume
+that cannot clone is reported and nothing on it is replaced; there is no
+fallback to copying. A failed Forum notice query holds it, as it holds the
+reaper.
+
+### Daily schedule
+
 `toolkit tend schedule install` loads the per-user macOS LaunchAgent
 `com.jerred.toolkit-tend`, which runs
-`toolkit tend run --apply --only worktrees` daily at 04:30 local time with `~/.local/bin`
-and Homebrew on `PATH` (for `hc` and `gh`) and logs to
-`~/.toolkit/tend/logs/`. Installing removes nothing: the agent does not run
-at load, so the first sweep is the next 04:30. The schedule is a calendar time
-rather than an interval because launchd drops an interval firing that falls
-while the machine sleeps, and runs a missed calendar firing at the next wake. To sweep by hand, read the candidates from the dry run
-and then apply:
+`toolkit tend run --apply --only worktrees,dedupe` daily at 04:30 local time
+with `~/.local/bin` and Homebrew on `PATH` (for `hc` and `gh`) and logs to
+`~/.toolkit/tend/logs/`. The reaper runs first and dedupe then shares what is
+identical between the worktrees that are left. Installing changes nothing: the
+agent does not run at load, so the first run is the next 04:30. The schedule
+is a calendar time rather than an interval because launchd drops an interval
+firing that falls while the machine sleeps, and runs a missed calendar firing
+at the next wake. To sweep by hand, read the candidates from the dry run and
+then apply:
 
 ```bash
 toolkit tend worktrees --verbose   # dry run: candidates and kept worktrees
 toolkit tend worktrees --apply
+toolkit tend dedupe --summary      # dry run: files and bytes per worktree
+toolkit tend dedupe --apply
 ```
 
 `schedule status` reports whether the plist exists and is loaded;
@@ -1948,7 +2102,7 @@ install time, the job carries it, so its lock, leases and events stay with
 its logs.
 
 This is a host LaunchAgent rather than a Temporal Schedule on purpose.
-Scheduled work in this repository normally belongs to Temporal, but the reaper
+Scheduled work in this repository normally belongs to Temporal, but this job
 acts on one workstation's local filesystem and needs that login session's
 Herdr terminals, process list, and `gh` credentials; a cluster worker can
 reach none of them.

@@ -42,7 +42,7 @@ import {
 } from "./worktrees-inspect.ts";
 import type { WorktreeDecision } from "./worktrees-policy.ts";
 
-async function discoverGitRepositories(options: {
+export async function discoverGitRepositories(options: {
   readonly gitDirs: readonly string[];
   readonly platform: NodeJS.Platform;
 }): Promise<string[]> {

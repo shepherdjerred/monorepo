@@ -6,7 +6,8 @@ import type { CommandRunner } from "./types.ts";
 /**
  * Run git against the directory it is started in and nothing else. Inside a
  * git hook `GIT_DIR`, `GIT_WORK_TREE` and `GIT_INDEX_FILE` are set, and an
- * inherited value would point every command at the hook's repository.
+ * inherited value would point every command at the hook's repository. The
+ * other variables redirect where git finds a repository's objects and refs.
  */
 export function withoutInheritedGitContext(
   runner: CommandRunner,
@@ -18,6 +19,11 @@ export function withoutInheritedGitContext(
         GIT_DIR: undefined,
         GIT_WORK_TREE: undefined,
         GIT_INDEX_FILE: undefined,
+        GIT_COMMON_DIR: undefined,
+        GIT_OBJECT_DIRECTORY: undefined,
+        GIT_ALTERNATE_OBJECT_DIRECTORIES: undefined,
+        GIT_NAMESPACE: undefined,
+        GIT_PREFIX: undefined,
         ...options.env,
       },
     });

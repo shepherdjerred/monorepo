@@ -1,9 +1,13 @@
 import { formatDurationCompact } from "#lib/tend/paths.ts";
 import {
   type ClassifiedLease,
+  formatByteSize,
   formatGiB,
   type SurfaceSweepResult,
+  type TendActionOutcome,
+  type TendActionStatus,
   type TendRunReport,
+  type TendSurface,
 } from "#lib/tend/types.ts";
 
 function padCell(value: string, width: number): string {
@@ -25,7 +29,7 @@ function modeBanner(mode: TendRunReport["mode"]): string {
   if (mode === "status") {
     return "STATUS (read-only)";
   }
-  return mode === "apply" ? "APPLY" : "DRY-RUN (pass --apply to remove)";
+  return mode === "apply" ? "APPLY" : "DRY-RUN (pass --apply to make changes)";
 }
 
 function formatHeaderLines(report: TendRunReport): string[] {
@@ -76,16 +80,80 @@ function formatHeaderLines(report: TendRunReport): string[] {
   return lines;
 }
 
+const ACTION_TAGS: Readonly<Record<TendActionStatus, string>> = {
+  planned: "WOULD REMOVE",
+  removed: "REMOVED",
+  deduped: "SHARED",
+  skipped: "SKIPPED",
+  failed: "FAILED",
+};
+
 function formatActionTag(
-  status: "planned" | "removed" | "skipped" | "failed",
+  status: TendActionStatus,
+  surface: TendSurface,
 ): string {
-  if (status === "removed") {
-    return "REMOVED";
+  // The dedupe surface removes nothing, so its plan must not read as removal.
+  return surface === "dedupe" && status === "planned"
+    ? "WOULD SHARE"
+    : ACTION_TAGS[status];
+}
+
+function numericMetadata(action: TendActionOutcome, key: string): number {
+  const value = action.candidate.metadata?.[key];
+  return typeof value === "number" ? value : 0;
+}
+
+/** In how many worktrees the index was refreshed, left alone, or not. */
+function formatRefreshCounts(
+  actions: readonly TendActionOutcome[],
+  planned: boolean,
+): string {
+  const labels: readonly (readonly [string, string])[] = [
+    ["refreshed", planned ? "would be refreshed in" : "refreshed in"],
+    ["live", "left to live sessions in"],
+    ["disabled", "skipped by --no-refresh in"],
+    ["failed", "not refreshed after a failure in"],
+  ];
+  const parts: string[] = [];
+  for (const [value, label] of labels) {
+    const count = actions.filter(
+      (action) => action.candidate.metadata?.["refresh"] === value,
+    ).length;
+    if (count > 0) {
+      parts.push(`${label} ${String(count)}`);
+    }
   }
-  if (status === "skipped") {
-    return "SKIPPED";
+  return parts.length === 0 ? "" : `; index ${parts.join(", ")}`;
+}
+
+/** Files and bytes the dedupe surface shared, or would share in a dry run. */
+function formatDedupeSummaryLines(
+  surfaces: readonly SurfaceSweepResult[],
+): string[] {
+  const lines: string[] = [];
+  for (const sr of surfaces) {
+    if (sr.surface !== "dedupe" || sr.actions.length === 0) {
+      continue;
+    }
+    const planned = sr.actions.every((action) => action.status === "planned");
+    const acted = sr.actions.filter(
+      (action) => planned || numericMetadata(action, "replacedFiles") > 0,
+    );
+    const files = acted.reduce(
+      (sum, action) =>
+        sum + numericMetadata(action, planned ? "files" : "replacedFiles"),
+      0,
+    );
+    const bytes = acted.reduce(
+      (sum, action) =>
+        sum + numericMetadata(action, planned ? "bytes" : "replacedBytes"),
+      0,
+    );
+    lines.push(
+      `Dedupe: ${planned ? "would share" : "shared"} ${String(files)} file(s), ${formatByteSize(bytes)} in ${String(acted.length)} worktree(s)${formatRefreshCounts(acted, planned)}`,
+    );
   }
-  return status === "failed" ? "FAILED" : "WOULD REMOVE";
+  return lines;
 }
 
 function formatCandidateLines(
@@ -100,7 +168,7 @@ function formatCandidateLines(
       }
       const suffix = action.detail === undefined ? "" : ` — ${action.detail}`;
       itemLines.push(
-        `  [${formatActionTag(action.status)}] (${sr.surface}/${action.candidate.kind}) ${action.candidate.target} — ${action.candidate.reason}${suffix}`,
+        `  [${formatActionTag(action.status, sr.surface)}] (${sr.surface}/${action.candidate.kind}) ${action.candidate.target} — ${action.candidate.reason}${suffix}`,
       );
     }
   }
@@ -172,7 +240,10 @@ export function formatTendReport(
     }
   }
 
-  const keepSummary = formatKeepSummaryLines(report.surfaces);
+  const keepSummary = [
+    ...formatKeepSummaryLines(report.surfaces),
+    ...formatDedupeSummaryLines(report.surfaces),
+  ];
   if (keepSummary.length > 0) {
     lines.push("", ...keepSummary);
   }

@@ -18,13 +18,16 @@ export const TEND_LAUNCH_AGENT_LABEL = "com.jerred.toolkit-tend";
 const DAILY_AT = { hour: 4, minute: 30 } as const;
 const DAILY_AT_TEXT = "04:30";
 
-/** What the daily job runs: `toolkit tend run --apply --only worktrees`. */
+/**
+ * What the daily job runs: reap idle worktrees, then share what is identical
+ * between the ones that are left.
+ */
 const TEND_SCHEDULE_ARGS = [
   "tend",
   "run",
   "--apply",
   "--only",
-  "worktrees",
+  "worktrees,dedupe",
 ] as const;
 
 /**
@@ -111,7 +114,7 @@ export async function handleTendScheduleCommand(
           `Tend LaunchAgent installed: ${spec.plistPath}`,
           `Runs daily at ${DAILY_AT_TEXT}: ${spec.programArguments.join(" ")}`,
           `Nothing runs now; the first sweep is the next ${DAILY_AT_TEXT}, or the next wake after it.`,
-          "To sweep by hand: `toolkit tend worktrees` (dry run), then `toolkit tend worktrees --apply`.",
+          "To sweep by hand: `toolkit tend worktrees` (dry run), then `toolkit tend worktrees --apply`; the same for `toolkit tend dedupe`.",
           `Logs: ${logs.stdout}`,
         ].join("\n"),
       );

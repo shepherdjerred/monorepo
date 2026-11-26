@@ -27,7 +27,7 @@ async function isWorktreeClean(
   wtPath: string,
   runner: CommandRunner,
 ): Promise<boolean> {
-  const status = await readWorktreeStatus(wtPath, runner);
+  const status = await readWorktreeStatus(wtPath, runner, "all");
   return status.kind === "clean";
 }
 
