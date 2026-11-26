@@ -63,4 +63,3 @@ export function createInbox(deps: Deps) {
     },
   };
 }
-export type Inbox = ReturnType<typeof createInbox>;

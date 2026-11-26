@@ -217,4 +217,3 @@ export function createArtifacts(deps: Deps) {
     },
   };
 }
-export type Artifacts = ReturnType<typeof createArtifacts>;

@@ -180,4 +180,3 @@ export async function publish(
   );
   return { created, committed, request };
 }
-export type PublishResult = Awaited<ReturnType<typeof publish>>;

@@ -250,4 +250,3 @@ export function createMaintenance(deps: Deps) {
     },
   };
 }
-export type Maintenance = ReturnType<typeof createMaintenance>;
