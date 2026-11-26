@@ -1,12 +1,13 @@
 /**
  * The frozen wire contract of the artifacts service, shared by the server, the
- * UI and `toolkit artifacts`. Exported as `@shepherdjerred/artifacts/contract`.
+ * UI and `toolkit artifacts`. Exported as `@shepherdjerred/artifacts/contract`;
+ * the tRPC procedure schemas are in `procedures.ts`.
  *
- * It imports nothing from the server, the database or the browser. The tRPC
- * `AppRouter` type is deliberately absent: the server change that defines the
- * router adds it here.
+ * It imports nothing from the server, the database or the browser at runtime:
+ * `AppRouter` is a type-only import, erased at build time.
  */
 import { z } from "zod";
+import type { AppRouter as ServerRouter } from "#server/router.ts";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
@@ -543,7 +544,18 @@ export const LiveMessageSchema = z.discriminatedUnion("type", [
     boardId: z.uuid(),
     revision: z.number().int().min(1),
   }),
+  /** UI stream only: something changed on a board; refetch what you show. */
+  z.strictObject({
+    type: z.literal("change"),
+    boardId: z.uuid().nullable(),
+    kind: z.string().min(1).max(100),
+    entityId: z.string().min(1).max(100),
+    seq: z.number().int().min(1),
+  }),
   z.strictObject({ type: z.literal("resync") }),
   z.strictObject({ type: z.literal("gone") }),
 ]);
 export type LiveMessage = z.infer<typeof LiveMessageSchema>;
+
+/** The tRPC router type; `maintenance.*` is served on the internal host only. */
+export type AppRouter = ServerRouter & { readonly __wireContract?: never };
