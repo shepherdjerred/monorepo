@@ -37,9 +37,11 @@ export const CI_CACHE_ACTIVE = true;
 const CI_CACHE_PORT = 7380;
 const CI_TURBO_CACHE_ITEM_ID = "mzvcz4pqqbda75ufu7l5myd4ey";
 
+// CI step pods are absent: they reach the CI cache over the tailnet, and their own
+// Egress policy (`woodpecker-step-netpol`) opens no in-cluster path to port
+// 7380. Add `woodpecker-ci` back together with that Egress rule.
 const CONSUMER_NAMESPACES = [
   "tailscale",
-  "woodpecker-ci",
   "delivery-worker-jobs",
   "delivery-platform-jobs",
 ] as const;
