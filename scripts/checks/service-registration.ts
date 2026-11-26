@@ -43,6 +43,11 @@ import {
   ORDINARY_DELIVERY_ENVIRONMENTS,
   SPECIALIZED_DELIVERY_ENVIRONMENTS,
 } from "../../packages/homelab/src/delivery-target-policy.ts";
+import {
+  collectImmutableRevisionFindings,
+  nextRevisionId as computeNextRevisionId,
+  resolveImmutableRevisionBase as computeImmutableRevisionBase,
+} from "../lib/delivery/immutable-revisions.ts";
 
 const REPOSITORY_ROOT = path.resolve(import.meta.dirname, "..", "..");
 
@@ -91,61 +96,14 @@ const RootPackageSchema = z.looseObject({ workspaces: z.array(z.string()) });
 const RevisionRecordSchema = z.record(z.string(), z.unknown());
 
 export function nextRevisionId(revisionId: string): string {
-  const match = /^(.+)\/(\d+)$/u.exec(revisionId);
-  return match?.[1] === undefined || match[2] === undefined
-    ? `${revisionId}/2`
-    : `${match[1]}/${String(Number(match[2]) + 1)}`;
-}
-
-function canonicalJsonValue(value: unknown): unknown {
-  if (Array.isArray(value))
-    return value.map((item) => canonicalJsonValue(item));
-  if (typeof value !== "object" || value === null) return value;
-  const record = RevisionRecordSchema.parse(value);
-  return Object.fromEntries(
-    Object.keys(record)
-      .toSorted()
-      .map((key) => [key, canonicalJsonValue(record[key])]),
-  );
-}
-
-function splitRevisionJson(raw: unknown) {
-  const { id, ...rest } = RevisionRecordSchema.parse(raw);
-  return {
-    id: typeof id === "string" ? id : undefined,
-    payloadKey: JSON.stringify(canonicalJsonValue(rest)),
-  };
-}
-
-function runGit(
-  root: string,
-  args: readonly string[],
-  env: Readonly<Record<string, string | undefined>>,
-): { exitCode: number; stdout: string } {
-  const res = Bun.spawnSync(["git", ...args], {
-    cwd: root,
-    env,
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  return { exitCode: res.exitCode, stdout: res.stdout.toString("utf8") };
+  return computeNextRevisionId(revisionId);
 }
 
 export function resolveImmutableRevisionBase(
   root: string = REPOSITORY_ROOT,
   env: Readonly<Record<string, string | undefined>> = Bun.env,
 ): string | undefined {
-  const req = env["CI_CHANGED_BASE"]?.trim();
-  const baseRef = req !== undefined && req.length > 0 ? req : "origin/main";
-  for (const args of [
-    ["merge-base", baseRef, "HEAD"],
-    ["rev-parse", "--verify", "HEAD"],
-  ] as const) {
-    const res = runGit(root, args, env);
-    if (res.exitCode === 0 && res.stdout.trim().length > 0)
-      return res.stdout.trim();
-  }
-  return undefined;
+  return computeImmutableRevisionBase(root, env);
 }
 
 export async function immutableRevisionFindings(
@@ -154,41 +112,10 @@ export async function immutableRevisionFindings(
     env?: Readonly<Record<string, string | undefined>>;
   } = {},
 ): Promise<Finding[]> {
-  const root = options.root ?? REPOSITORY_ROOT;
-  const env = options.env ?? Bun.env;
-  const base = resolveImmutableRevisionBase(root, env);
-  if (base === undefined) return [];
-  const diff = runGit(
-    root,
-    ["diff", "--name-only", base, "--", RECIPE_ROOT],
-    env,
-  );
-  if (diff.exitCode !== 0) return [];
-  const findings: Finding[] = [];
-  const pattern =
-    /^packages\/delivery\/registrations\/v2\/(.+)\/(recipe|configuration)\.json$/u;
-  for (const rel of diff.stdout
-    .split("\n")
-    .map((s) => s.trim())
-    .toSorted()) {
-    const m = pattern.exec(rel);
-    if (m?.[1] === undefined || m[2] === undefined) continue;
-    const file = Bun.file(path.join(root, rel));
-    if (!(await file.exists())) continue;
-    const blob = runGit(root, ["show", `${base}:${rel}`], env);
-    if (blob.exitCode !== 0) continue;
-    const baseRev = splitRevisionJson(JSON.parse(blob.stdout));
-    const currRev = splitRevisionJson(JSON.parse(await file.text()));
-    if (baseRev.id === undefined || currRev.id !== baseRev.id) continue;
-    if (currRev.payloadKey === baseRev.payloadKey) continue;
-    const field =
-      m[2] === "recipe" ? "recipeRevisionId" : "configurationRevisionId";
-    findings.push({
-      subject: m[1],
-      item: `${rel}: immutable ${m[2]} revision "${baseRev.id}" changed in place relative to ${base.slice(0, 12)}; bump "id" and ${field} in ${CATALOG} to "${nextRevisionId(baseRev.id)}"`,
-    });
-  }
-  return findings;
+  return collectImmutableRevisionFindings({
+    root: options.root ?? REPOSITORY_ROOT,
+    env: options.env ?? Bun.env,
+  });
 }
 
 export type CatalogService = {
