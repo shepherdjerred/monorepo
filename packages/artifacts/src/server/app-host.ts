@@ -1,6 +1,8 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { createMiddleware } from "hono/factory";
+import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import { ArtifactsError, STATUS } from "#application/errors.ts";
 import {
@@ -39,6 +41,8 @@ export type AppHostOptions = {
   clientRoot?: string;
   heartbeatMs?: number;
 };
+
+const TRPC_BODY_LIMIT = 1024 * 1024;
 
 function routeName(path: string): string {
   if (path.startsWith("/trpc")) return "trpc";
@@ -161,6 +165,8 @@ export function createAppHandler(options: AppHostOptions) {
       await next();
     },
   );
+  // JSON procedures never need a large body; blobs have their own route.
+  app.use("/trpc/*", bodyLimit({ maxSize: TRPC_BODY_LIMIT }));
   app.use("/trpc/*", resolveCaller);
   app.use("/api/*", resolveCaller);
 
@@ -199,6 +205,7 @@ export function createAppHandler(options: AppHostOptions) {
   app.get("*", (c) => serveClient(c.req.path, options.clientRoot));
 
   app.onError((error, c) => {
+    if (error instanceof HTTPException) return error.getResponse();
     if (error instanceof z.ZodError)
       return c.json(
         { error: "Invalid request", details: z.treeifyError(error) },

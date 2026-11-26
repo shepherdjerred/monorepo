@@ -13,14 +13,15 @@
   },
   "scripts": {
     "generate": "prisma generate",
-    "build": "bun build src/index.ts --outdir dist",
+    "build": "bun build src/index.ts --target bun --outdir dist",
     "start": "bun src/index.ts",
     "migrate:deploy": "prisma migrate deploy",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run src/shared src/domain src/application src/bridge src/server --testTimeout 30000 --hookTimeout 30000",
     "test:extended": "bun ../../scripts/ci/run-ci-test.ts --tier extended",
     "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "lint": "eslint . --max-warnings=0"
+    "lint": "eslint . --max-warnings=0",
+    "dev": "bun src/dev.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",

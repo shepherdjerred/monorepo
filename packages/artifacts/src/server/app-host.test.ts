@@ -175,6 +175,19 @@ describe("app host: isolation", () => {
     expect(corsHeaders(response)).toEqual([]);
   });
 
+  it("refuses a /trpc body over 1 MiB before resolving any caller", async () => {
+    const response = await get("/trpc/boards.create", {
+      method: "POST",
+      headers: {
+        Origin: APP_ORIGIN,
+        "Sec-Fetch-Site": "same-origin",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ slug: "big", title: "x".repeat(2 * 1024 * 1024) }),
+    });
+    expect(response.status).toBe(413);
+  });
+
   it("does not hide the maintenance procedures behind the app host", async () => {
     const response = await get("/trpc/maintenance.cleanup", {
       method: "POST",

@@ -5,6 +5,7 @@ import { contentHeaders, type ContentOrigins } from "#domain/csp.ts";
 import { injectBridge } from "#domain/html-inject.ts";
 import { isTokenFormat, resolveContentPath } from "#domain/paths.ts";
 import { ifRangeMatches, noneMatch, parseRange } from "#domain/range.ts";
+import { reportError } from "#infrastructure/log.ts";
 import type { ObjectStore } from "#infrastructure/object-store.ts";
 import type { Metrics } from "#infrastructure/metrics.ts";
 import {
@@ -219,7 +220,7 @@ export function createContentHandler(options: ContentHostOptions) {
     };
   }
 
-  return async function handle(request: Request): Promise<Response> {
+  async function handleChecked(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const tokenForHeaders = TOKEN_PATH.exec(url.pathname)?.[1] ?? null;
     let outcome: { response: Response; route: string };
@@ -254,5 +255,21 @@ export function createContentHandler(options: ContentHostOptions) {
       status: outcome.response.status,
     });
     return outcome.response;
+  }
+
+  /** An unexpected failure still answers with the sandbox headers, token-free. */
+  return async function handle(request: Request): Promise<Response> {
+    try {
+      return await handleChecked(request);
+    } catch (error) {
+      reportError(error, "artifacts_content_request_failed");
+      const token = TOKEN_PATH.exec(new URL(request.url).pathname)?.[1] ?? null;
+      options.metrics.requests({
+        host: "content",
+        route: "error",
+        status: 500,
+      });
+      return plain(options, 500, token);
+    }
   };
 }

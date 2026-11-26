@@ -334,6 +334,28 @@ describe("content host: HTML", () => {
   }, 60_000);
 });
 
+describe("content host: failures", () => {
+  it("answers an unexpected failure with 500 and the sandbox headers, and logs no token", async () => {
+    const broken = await createTestRuntime();
+    const { entries } = await publishFixture(broken, {
+      "index.html": { body: HTML, mediaType: "text/html" },
+    });
+    await broken.store.delete(entries["index.html"]?.storageKey ?? "");
+    const error = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    try {
+      const response = await broken.call("content", `/_t/${TOKEN}/`);
+      expect(response.status).toBe(500);
+      expect(response.headers.get("Content-Security-Policy")).toContain(
+        "sandbox allow-scripts",
+      );
+      expect(response.headers.get("Cache-Control")).toBe("no-store");
+      expect(error.mock.calls.flat().join("\n")).not.toContain(TOKEN);
+    } finally {
+      error.mockRestore();
+    }
+  });
+});
+
 describe("content host: tokens", () => {
   it("404s a rotated token at once, even when it was cached", async () => {
     const rotating = await createTestRuntime();
