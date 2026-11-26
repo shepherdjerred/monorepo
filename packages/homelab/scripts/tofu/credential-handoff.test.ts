@@ -437,21 +437,21 @@ describe("credential preparation", () => {
 
 describe("physical selector adoption", () => {
   test("section fields require exact selectors and long ASCII adoption preserves values", () => {
-    const postal = {
-      vault_item_id: "postal",
-      vault_field: "RAILS_SECRET_KEY",
+    const mailItem = {
+      vault_item_id: "mail-secrets",
+      vault_field: "MAIL_API_TOKEN",
       vault_section_id: "section",
       vault_field_id: "field",
     };
     const value = "fixture-long-existing-key".repeat(5);
     const source = [
       {
-        id: "postal",
-        title: "postal",
+        id: "mail-secrets",
+        title: "mail-secrets",
         fields: [
           {
             id: "field",
-            label: "RAILS_SECRET_KEY",
+            label: "MAIL_API_TOKEN",
             section: { id: "section" },
             value,
           },
@@ -460,17 +460,17 @@ describe("physical selector adoption", () => {
     ];
     expect(
       targetValue(source, {
-        vault_item_id: "postal",
-        vault_field: "RAILS_SECRET_KEY",
+        vault_item_id: "mail-secrets",
+        vault_field: "MAIL_API_TOKEN",
         vault_field_id: "field",
       }),
     ).toBeUndefined();
-    expect(targetValue(source, postal) === value).toBe(true);
+    expect(targetValue(source, mailItem) === value).toBe(true);
     expect(
-      targetValue(source, { ...postal, vault_field_id: "other" }),
+      targetValue(source, { ...mailItem, vault_field_id: "other" }),
     ).toBeUndefined();
     expect(
-      targetValue(source, { ...postal, vault_section_id: "other" }),
+      targetValue(source, { ...mailItem, vault_section_id: "other" }),
     ).toBeUndefined();
     const scout = previewAdoption([
       {

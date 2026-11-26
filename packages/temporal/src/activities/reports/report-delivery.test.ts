@@ -138,7 +138,7 @@ describe("report delivery", () => {
       send: async (input: MailSendInput) => {
         sent.push(input);
         return {
-          messageId: "postal-message-1",
+          messageId: "mail-message-1",
           recipientId: 42,
           subject: input.subject,
           tag: input.tag,
@@ -156,7 +156,7 @@ describe("report delivery", () => {
 
     expect(sent).toHaveLength(1);
     expect(retried.deduplicated).toBe(true);
-    expect(retried.messageId).toBe("postal-message-1");
+    expect(retried.messageId).toBe("mail-message-1");
     expect(sent[0]?.idempotencyKey).toBe("test-report:run-1");
     expect(sent[0]?.headers).toEqual({
       "X-Report-Run-ID": "test-report:run-1",
@@ -200,7 +200,7 @@ function scenario(claims: Map<string, StoredClaim>) {
       send: async (input: MailSendInput) => {
         sent.push(input);
         return {
-          messageId: `postal-${String(sent.length)}`,
+          messageId: `mail-${String(sent.length)}`,
           recipientId: 42,
           subject: input.subject,
           tag: input.tag,
@@ -347,7 +347,7 @@ describe("report send ownership", () => {
         send: async (input: MailSendInput) => {
           sent.push(input);
           return {
-            messageId: "postal-1",
+            messageId: "mail-1",
             recipientId: 42,
             subject: input.subject,
             tag: input.tag,
@@ -386,7 +386,7 @@ describe("report send ownership", () => {
   });
 
   test("refuses to record a delivery whose lease was taken over mid-persistence", async () => {
-    // Postal accepted the message, but recording it lands after the send and
+    // The Mail API accepted the message, but recording it lands after the send and
     // can outlast the lease. A displaced owner must not overwrite the
     // successor's durable record, and must fail loudly so the duplicate is
     // visible rather than recorded as one clean delivery.
@@ -437,7 +437,7 @@ describe("report send ownership", () => {
           reportType: report().reportType,
           scheduleId: report().scheduleId,
           subject: "Test report: no action needed",
-          messageId: "postal-successor",
+          messageId: "mail-successor",
           recipientId: 42,
           acceptedAt: NOW,
           reportStateKey: reportStateKey(report()),
@@ -452,7 +452,7 @@ describe("report send ownership", () => {
 
     // The successor's receipt survived; the loser's was discarded.
     const stored = await owner.backend.readReceipt(receiptKey);
-    expect(stored?.messageId).toBe("postal-successor");
+    expect(stored?.messageId).toBe("mail-successor");
     expect(sent).toHaveLength(1);
   });
 

@@ -71,9 +71,7 @@ const REPORT_DELIVERY_BOUNDARY_ENVIRONMENT = new Set([
 
 export function isReportDeliveryBoundaryEnvironmentKey(key: string): boolean {
   return (
-    key.startsWith("MAIL_") ||
-    key.startsWith("POSTAL_") ||
-    REPORT_DELIVERY_BOUNDARY_ENVIRONMENT.has(key)
+    key.startsWith("MAIL_") || REPORT_DELIVERY_BOUNDARY_ENVIRONMENT.has(key)
   );
 }
 

@@ -43,7 +43,7 @@ export function reportDeliveryRetrySchedule(): number[] {
 // after its owner died — the stranded-report failure again, just triggered by
 // slow storage rather than by short retries.
 
-// An attempt must not still be talking to Postal when someone else may take
+// An attempt must not still be talking to the Mail API when someone else may take
 // its lease, so the send is abandoned this long after the attempt started.
 // Measured from attempt start rather than from the call, because slow
 // pre-send work would otherwise push the deadline past the takeover point.
