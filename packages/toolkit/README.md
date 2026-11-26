@@ -2119,6 +2119,20 @@ toolkit tend dedupe --apply
 install time, the job carries it, so its lock, leases and events stay with
 its logs.
 
+launchd starts the job with none of the installing shell's environment, so
+the job is also told which `gh` configuration to use. The reaper asks `gh`
+which branches have pull requests, and when `gh` has no valid login it keeps
+every branch worktree with commits ahead: a job left on a stale default
+login would run daily and never reap a merged branch. At install time the
+job gets `GH_CONFIG_DIR` from the installing shell when that is set;
+otherwise `~/.config/gh-agent` when it holds a login (`hosts.yml`);
+otherwise nothing, and `gh` uses its default. Only the directory's path is
+written to the plist, never a token: `GH_TOKEN` and its kin are not carried.
+`schedule install` prints the directory it chose, and `schedule status`
+prints the one the installed job carries. Reinstall after moving the login.
+A sweep whose `gh` is not logged in says so in its warnings (`gh is not
+authenticated: ...`), apart from other `gh` failures.
+
 This is a host LaunchAgent rather than a Temporal Schedule on purpose.
 Scheduled work in this repository normally belongs to Temporal, but this job
 acts on one workstation's local filesystem and needs that login session's
