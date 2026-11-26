@@ -210,6 +210,7 @@ const CLUSTER_OBSERVABILITY_INVENTORY = [
     `v1/ServiceAccount/prometheus/${exporter}-service-account`,
     `v1/ConfigMap/prometheus/${exporter === "smartctl" ? "smartmon" : exporter}-script`,
     `apps/v1/DaemonSet/prometheus/${exporter}-collector`,
+    `networking.k8s.io/v1/NetworkPolicy/prometheus/${exporter}-collector-netpol`,
   ]),
   "v1/ServiceAccount/prometheus/kubernetes-event-exporter",
   "rbac.authorization.k8s.io/v1/ClusterRole/argocd/kubernetes-event-exporter",
