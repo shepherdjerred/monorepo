@@ -19,7 +19,7 @@ function application(
     kind: "Application",
     metadata: { name },
     spec: {
-      source: { repoURL: "https://chartmuseum.sjer.red", chart: name },
+      source: { repoURL: "https://charts.tailnet-1a49.ts.net", chart: name },
       syncPolicy: {
         ...(automated === undefined ? {} : { automated }),
         syncOptions: ["CreateNamespace=true"],

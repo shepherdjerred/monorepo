@@ -145,7 +145,7 @@ export type FirstPartyApplicationOptions = ArgoApplicationOptions & {
   targetRevision?: string;
 };
 
-/** An Application of a first-party wrapper chart published to ChartMuseum. */
+/** An Application of a first-party wrapper chart published to the Charts registry. */
 export function createFirstPartyApplication(
   scope: Construct,
   options: FirstPartyApplicationOptions,

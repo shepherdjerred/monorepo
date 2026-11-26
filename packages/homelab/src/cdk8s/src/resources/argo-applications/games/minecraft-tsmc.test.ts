@@ -48,7 +48,7 @@ test("TSMC chart mirror is coupled to its exact reviewed ownership cutover", () 
     "https://itzg.github.io/minecraft-server-charts/",
   );
   expect(minecraftChartRepository({ "minecraft-tsmc": "minecraft/tsmc" })).toBe(
-    "https://chartmuseum.sjer.red",
+    "https://charts.tailnet-1a49.ts.net",
   );
   expect(() =>
     minecraftChartRepository({ "minecraft-tsmc": "arcade/prod" }),

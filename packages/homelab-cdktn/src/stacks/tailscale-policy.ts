@@ -73,7 +73,7 @@ export const TAILNET_POLICY = {
     //     seaweedfs-s3.tailnet-1a49.ts.net — the SeaweedFS S3 backend that stores
     //     OpenTofu state for EVERY stack. Losing this breaks `tofu apply`/`plan`
     //     for cloudflare, github, seaweedfs, AND tailscale.
-    //   * ArgoCD pulls Helm charts from chartmuseum.tailnet-1a49.ts.net. Losing
+    //   * ArgoCD pulls Helm charts from charts.tailnet-1a49.ts.net. Losing
     //     this breaks chart pulls / deployments.
     // Both targets are tag:k8s operator ingresses on 443. (The state backend
     // uses the *.ts.net tailnet endpoint deliberately — see homelab-stack.ts —

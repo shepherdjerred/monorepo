@@ -72,7 +72,7 @@ export function minecraftChartRepository(
     throw new Error(
       "TSMC chart mirror requires its reviewed Delivery environment",
     );
-  return "https://chartmuseum.sjer.red";
+  return "https://charts.tailnet-1a49.ts.net";
 }
 
 /**

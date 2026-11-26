@@ -99,9 +99,6 @@ export const EXTENSIBLE_TYPE_PATTERNS: Record<string, string[]> = {
   "postgres-operator": [
     "configGeneral", // General config allows various settings
   ],
-  chartmuseum: [
-    "persistence", // Storage options
-  ],
   "intel-device-plugins-operator": [
     // Root level for device-specific settings
     "",
