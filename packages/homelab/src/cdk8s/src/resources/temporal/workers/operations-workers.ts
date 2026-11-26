@@ -11,6 +11,7 @@ import {
   type ServiceAccount,
   Volume,
 } from "cdk8s-plus-31";
+import { addAnthropicFederation } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { createTemporalDomainWorker } from "./domain-worker.ts";
 import { temporalRuntimeEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/runtime-env.ts";
@@ -330,6 +331,15 @@ export function createTemporalOperationsWorkers(
         key: "OPENAI_API_KEY",
       }),
     },
+  });
+
+  // Scout's content jobs run here: the weekly Data Dragon refresh shells out to
+  // `update-data-dragon`, whose patch analysis calls Anthropic, and the
+  // splash-classification and generated-tips jobs do the same. The identity is
+  // federated, so the pod holds no Anthropic secret; the subprocess inherits
+  // the worker's environment and the projected token file.
+  addAnthropicFederation(scoutDeployment, {
+    workload: "temporal-scout-worker",
   });
 
   return {

@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { buildAnalysisPrompt, parsePatchAnalysis } from "./patch-analysis.ts";
+import {
+  analyzePatch,
+  buildAnalysisPrompt,
+  parsePatchAnalysis,
+} from "./patch-analysis.ts";
 import type { RiotPatch } from "./riot-patch.ts";
 
 const PATCH: RiotPatch = {
@@ -101,5 +105,21 @@ describe("parsePatchAnalysis", () => {
 
   test("throws when the structured object is missing", () => {
     expect(() => parsePatchAnalysis(undefined, PATCH, DATE)).toThrow();
+  });
+});
+
+describe("analyzePatch credentials", () => {
+  test("fails before any model call when Anthropic has no credentials", async () => {
+    await expect(
+      analyzePatch(PATCH, "official notes", DATE, {}),
+    ).rejects.toThrow(/routes to anthropic, but no anthropic credentials/);
+  });
+
+  test("an OpenAI-only environment is not enough for the Opus model", async () => {
+    await expect(
+      analyzePatch(PATCH, "official notes", DATE, {
+        openai: { apiKey: "sk-test" },
+      }),
+    ).rejects.toThrow(/ANTHROPIC_API_KEY or the ANTHROPIC_FEDERATION_/);
   });
 });

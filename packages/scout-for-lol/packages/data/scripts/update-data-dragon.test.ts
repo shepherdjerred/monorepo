@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
   assertSnapshotUpdateSucceeded,
   classicCatalogEntryFromCDragon,
@@ -6,6 +6,7 @@ import {
   getCDragonAugmentNamesUrl,
   getCommunityDragonVersion,
   mergeClassicChampionEntries,
+  refreshPatchChangeset,
   resolveCDragonAssetUrl,
   validateClassicMetadata,
 } from "./update-data-dragon.ts";
@@ -150,5 +151,56 @@ describe("assertSnapshotUpdateSucceeded", () => {
     }).toThrow(
       "Snapshot update failed for ranked-square/square.integration.test.ts (exit 1): snapshot mismatch",
     );
+  });
+});
+
+describe("refreshPatchChangeset", () => {
+  const patch = {
+    patch: "26.23",
+    major: 26,
+    minor: 23,
+    title: "Patch 26.23 Notes",
+    tagline: "",
+    url: "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-23-notes/",
+  };
+
+  test("propagates an analysis failure instead of continuing without it", async () => {
+    const save = vi.fn();
+    const saveRaw = vi.fn();
+    await expect(
+      refreshPatchChangeset(patch, {
+        fetchNotes: () => Promise.resolve("notes"),
+        analyze: () =>
+          Promise.reject(
+            new Error(
+              "Model claude-opus-5-5 routes to anthropic, but no anthropic credentials are configured",
+            ),
+          ),
+        save,
+        saveRaw,
+      }),
+    ).rejects.toThrow(/no anthropic credentials/);
+    expect(save).not.toHaveBeenCalled();
+    expect(saveRaw).not.toHaveBeenCalled();
+  });
+
+  test("returns the changelog highlights after persisting the analysis", async () => {
+    const save = vi.fn(() => Promise.resolve());
+    const saveRaw = vi.fn(() => Promise.resolve());
+    const highlights = await refreshPatchChangeset(patch, {
+      fetchNotes: () => Promise.resolve("notes"),
+      analyze: () =>
+        Promise.resolve({
+          champions: [],
+          items: [],
+          systems: [],
+          changelogHighlights: ["New champion"],
+        } as never),
+      save,
+      saveRaw,
+    });
+    expect(highlights).toEqual(["New champion"]);
+    expect(save).toHaveBeenCalledOnce();
+    expect(saveRaw).toHaveBeenCalledWith(patch, "notes");
   });
 });
