@@ -6,6 +6,7 @@
  */
 .ar-cv {
   position: relative;
+  container-type: inline-size;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -346,4 +347,146 @@
 .ar-cv-save[data-status="error"] {
   background: var(--ui-sev-warning-soft);
   color: var(--ui-sev-warning-text);
+}
+
+/* Annotations: drawn in the world layer (so they stay sharp), never take a pointer. */
+.ar-annot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+.ar-annot-sticky {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px color-mix(in srgb, black 22%, transparent);
+  font-size: 18px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.ar-annot-title {
+  color: var(--ui-ink);
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: pre;
+}
+.ar-annot-box {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border-style: solid;
+  border-radius: 6px;
+}
+.ar-annot-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+}
+.ar-annot-editor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 2px solid var(--ui-accent);
+  border-radius: 4px;
+  font-family: inherit;
+  line-height: 1.3;
+  outline: none;
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+  resize: none;
+}
+.ar-annot-editor[data-kind="title"] {
+  padding: 0 2px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.ar-cv-palette {
+  position: absolute;
+  bottom: 74px;
+  left: 50%;
+  z-index: 11;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  background: var(--ui-panel);
+  box-shadow: 0 2px 12px color-mix(in srgb, black 14%, transparent);
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+.ar-cv-swatch {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.ar-cv-swatch[aria-pressed="true"] {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+}
+.ar-cv-size {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ui-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ar-cv-size[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--ui-accent) 16%, transparent);
+  color: var(--ui-accent);
+}
+@media (pointer: coarse) {
+  .ar-cv-swatch {
+    width: 32px;
+    height: 32px;
+  }
+  .ar-cv-size {
+    min-width: 44px;
+    height: 44px;
+  }
+}
+
+/* A phone: the tool pill scrolls instead of overflowing, and zoom sits above it. */
+@media (max-width: 640px) {
+  .ar-cv-toolbar {
+    max-width: calc(100% - 20px);
+    overflow-x: auto;
+  }
+  .ar-cv-zoompill {
+    right: 10px;
+    bottom: 74px;
+  }
+  .ar-cv-palette {
+    bottom: 130px;
+    max-width: calc(100% - 20px);
+  }
+}
+
+/* A canvas too narrow for both pills side by side: zoom sits above the tools. */
+@container (max-width: 940px) {
+  .ar-cv-zoompill {
+    right: 10px;
+    bottom: 74px;
+  }
+  .ar-cv-palette {
+    bottom: 130px;
+  }
 }

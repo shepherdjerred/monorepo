@@ -124,3 +124,70 @@ export function MarqueeBox({
     />
   );
 }
+
+/** The two ends of a selected line or arrow: each is dragged on its own. */
+export function EndpointHandles({
+  controller,
+  from,
+  to,
+  start,
+}: {
+  readonly controller: CameraController;
+  readonly from: Point;
+  readonly to: Point;
+  readonly start: (end: "start" | "end", point: Point) => PointerSession | null;
+}): React.JSX.Element {
+  const ref = useRef<HTMLDivElement>(null);
+  const session = useRef<PointerSession | null>(null);
+  const place = useCallback(
+    (camera: Camera, element: HTMLElement) => {
+      element.style.transform = `translate(${String(camera.x)}px, ${String(camera.y)}px)`;
+      const ends = element.querySelectorAll<HTMLElement>("[data-endpoint]");
+      for (const handle of ends) {
+        const at = handle.dataset["endpoint"] === "start" ? from : to;
+        handle.style.left = `${String(at.x * camera.s)}px`;
+        handle.style.top = `${String(at.y * camera.s)}px`;
+      }
+    },
+    [from, to],
+  );
+  useFollowCamera(controller, ref, place);
+
+  return (
+    <div
+      ref={ref}
+      className="ar-cv-handles"
+      data-testid="endpoint-handles"
+      aria-hidden="true"
+    >
+      {(["start", "end"] as const).map((end) => (
+        <div
+          key={end}
+          className="ar-cv-handle"
+          data-cv-ignore=""
+          data-endpoint={end}
+          style={{ cursor: "move", borderRadius: "50%" }}
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            event.stopPropagation();
+            event.currentTarget.setPointerCapture(event.pointerId);
+            session.current = start(end, inViewport(event));
+          }}
+          onPointerMove={(event) => {
+            session.current?.move(inViewport(event), { altKey: event.altKey });
+          }}
+          onPointerUp={(event) => {
+            session.current?.end(false);
+            session.current = null;
+            if (event.currentTarget.hasPointerCapture(event.pointerId))
+              event.currentTarget.releasePointerCapture(event.pointerId);
+          }}
+          onPointerCancel={() => {
+            session.current?.end(true);
+            session.current = null;
+          }}
+        />
+      ))}
+    </div>
+  );
+}

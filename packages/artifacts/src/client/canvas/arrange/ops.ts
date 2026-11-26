@@ -9,15 +9,23 @@ import type {
   BoardOp,
   Frame,
 } from "@shepherdjerred/artifacts/contract";
+import type { Note } from "#client/canvas/notes/shapes.ts";
 
 export type FrameChange = {
   readonly before: Frame | null;
   readonly after: Frame | null;
 };
 
+export type NoteChange = {
+  readonly before: Note | null;
+  readonly after: Note | null;
+};
+
 export type HistoryEntry = {
   readonly label: string;
   readonly frames: ReadonlyMap<string, FrameChange>;
+  /** The annotations the edit touched. */
+  readonly notes: ReadonlyMap<string, NoteChange>;
   /** The whole order before and after, when the edit changed it. */
   readonly order: {
     readonly before: readonly string[];
@@ -41,6 +49,10 @@ export function sameFrame(a: Frame | null, b: Frame | null): boolean {
   );
 }
 
+export function sameNote(a: Note | null, b: Note | null): boolean {
+  return a === b || JSON.stringify(a) === JSON.stringify(b);
+}
+
 function sameOrder(a: readonly string[], b: readonly string[]): boolean {
   return a.length === b.length && a.every((id, at) => id === b[at]);
 }
@@ -59,19 +71,26 @@ export function entryBetween(edit: {
 }): HistoryEntry | null {
   const { label, before, after, touched } = edit;
   const frames = new Map<string, FrameChange>();
+  const notes = new Map<string, NoteChange>();
   for (const id of touched) {
     const change = {
       before: before.frames[id] ?? null,
       after: after.frames[id] ?? null,
     };
     if (!sameFrame(change.before, change.after)) frames.set(id, change);
+    const noteChange = {
+      before: before.notes[id] ?? null,
+      after: after.notes[id] ?? null,
+    };
+    if (!sameNote(noteChange.before, noteChange.after))
+      notes.set(id, noteChange);
   }
   const order = sameOrder(before.order, after.order)
     ? null
     : { before: before.order, after: after.order };
-  return order === null && frames.size === 0
+  return order === null && frames.size === 0 && notes.size === 0
     ? null
-    : { label, frames, order, key: edit.key ?? null, at: edit.at };
+    : { label, frames, notes, order, key: edit.key ?? null, at: edit.at };
 }
 
 /** Merges two entries of one run: the first's before, the second's after. */
@@ -87,9 +106,18 @@ export function mergeEntries(
       after: change.after,
     });
   }
+  const notes = new Map(first.notes);
+  for (const [id, change] of second.notes) {
+    const earlier = notes.get(id);
+    notes.set(id, {
+      before: earlier === undefined ? change.before : earlier.before,
+      after: change.after,
+    });
+  }
   return {
     label: second.label,
     frames,
+    notes,
     order:
       first.order === null && second.order === null
         ? null
@@ -134,6 +162,14 @@ export function entryOps(
       current,
     ),
   );
+  for (const [id, change] of entry.notes)
+    ops.push(
+      ...opsForNote(
+        id,
+        direction === "undo" ? change.before : change.after,
+        current,
+      ),
+    );
   if (entry.order !== null)
     ops.push({
       op: "reorder",
@@ -142,6 +178,17 @@ export function entryOps(
       ],
     });
   return ops;
+}
+
+function opsForNote(
+  id: string,
+  target: Note | null,
+  current: BoardIndex,
+): BoardOp[] {
+  const present = current.notes[id] ?? null;
+  if (target === null)
+    return present === null ? [] : [{ op: "deleteNote", id }];
+  return sameNote(present, target) ? [] : [{ op: "putNote", id, note: target }];
 }
 
 function opsForFrame(
@@ -178,20 +225,23 @@ const MAX_MOVES = 500;
 export function coalesceOps(ops: readonly BoardOp[]): BoardOp[] {
   const out: BoardOp[] = [];
   for (const op of ops) {
-    const last = out.at(-1);
-    if (last?.op === "moveFrames" && op.op === "moveFrames") {
-      const merged = new Map(last.moves.map((move) => [move.artifactId, move]));
-      for (const move of op.moves) merged.set(move.artifactId, move);
-      if (merged.size <= MAX_MOVES) {
-        out[out.length - 1] = { op: "moveFrames", moves: [...merged.values()] };
-        continue;
-      }
-    }
-    if (last?.op === "reorder" && op.op === "reorder") {
-      out[out.length - 1] = op;
-      continue;
-    }
-    out.push(op);
+    const merged = mergeInto(out.at(-1), op);
+    if (merged === null) out.push(op);
+    else out[out.length - 1] = merged;
   }
   return out;
+}
+
+/** `op` folded into the operation before it, or null when they do not merge. */
+function mergeInto(last: BoardOp | undefined, op: BoardOp): BoardOp | null {
+  if (last?.op === "moveFrames" && op.op === "moveFrames") {
+    const merged = new Map(last.moves.map((move) => [move.artifactId, move]));
+    for (const move of op.moves) merged.set(move.artifactId, move);
+    return merged.size <= MAX_MOVES
+      ? { op: "moveFrames", moves: [...merged.values()] }
+      : null;
+  }
+  if (last?.op === "putNote" && op.op === "putNote" && last.id === op.id)
+    return op;
+  return last?.op === "reorder" && op.op === "reorder" ? op : null;
 }

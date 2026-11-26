@@ -106,6 +106,10 @@ export const SHORTCUT_SHEET: readonly {
     keys: "V / H / Space",
     does: "Canvas: select tool, hand tool, or hold Space and drag to pan",
   },
+  {
+    keys: "T S P B A L",
+    does: "Canvas: text, sticky, pen, box, arrow and line tools (Shift keeps the tool)",
+  },
   { keys: "Arrows", does: "Canvas: nudge the selection 1 px (Shift: 10 px)" },
   { keys: "[ / ]", does: "Canvas: send the selection back or forward" },
   { keys: "Delete", does: "Canvas: remove the selection from the board" },

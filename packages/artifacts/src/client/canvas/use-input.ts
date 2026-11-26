@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { HostInput } from "#client/viewers/types.ts";
+import type { Point } from "#client/lib/geometry.ts";
 import { panBy, wheelZoomFactor, zoomAt } from "./camera.ts";
 import type { CameraController } from "./controller.ts";
 import {
@@ -27,6 +28,7 @@ export function useCanvasInput({
   tool,
   onTap,
   onDoubleTap,
+  pick,
   beginSession,
 }: {
   readonly controller: CameraController;
@@ -34,14 +36,15 @@ export function useCanvasInput({
   readonly blanket: HTMLElement | null;
   readonly tool: Tool;
   readonly onTap: (tap: Tap) => void;
-  readonly onDoubleTap: (frameId: string) => void;
+  readonly onDoubleTap: (targetId: string) => void;
+  readonly pick: (point: Point, frame: string | null) => string | null;
   readonly beginSession: (start: SessionStart) => PointerSession | null;
 }): (input: HostInput) => void {
   const toolRef = useRef(tool);
   toolRef.current = tool;
   const spaceHeld = useRef(false);
-  const handlers = useRef({ onTap, onDoubleTap, beginSession });
-  handlers.current = { onTap, onDoubleTap, beginSession };
+  const handlers = useRef({ onTap, onDoubleTap, beginSession, pick });
+  handlers.current = { onTap, onDoubleTap, beginSession, pick };
 
   useEffect(() => {
     if (viewport === null || blanket === null) return;
@@ -58,6 +61,7 @@ export function useCanvasInput({
         handlers.current.onDoubleTap(id);
       },
       beginSession: (start) => handlers.current.beginSession(start),
+      pick: (point, frame) => handlers.current.pick(point, frame),
     });
   }, [viewport, blanket, controller]);
 

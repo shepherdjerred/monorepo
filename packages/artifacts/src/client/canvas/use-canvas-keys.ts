@@ -4,6 +4,15 @@ import type { CanvasCamera } from "./use-camera.ts";
 import { ZOOM_STEP } from "./use-camera.ts";
 import type { Tool } from "./gestures.ts";
 
+const DRAWING_KEYS: readonly (readonly [string, Tool])[] = [
+  ["t", "text"],
+  ["s", "sticky"],
+  ["p", "pen"],
+  ["b", "box"],
+  ["a", "arrow"],
+  ["l", "line"],
+];
+
 type Keys = {
   readonly camera: CanvasCamera;
   /** The one selected frame, if exactly one is. */
@@ -13,9 +22,11 @@ type Keys = {
   readonly commentMode: boolean;
   readonly tool: Tool;
   readonly selectTool: () => void;
+  readonly pickTool: (tool: Tool) => void;
+  /** Enter: interact with the selected frame, or edit the selected annotation's text. */
+  readonly onEnter: () => void;
   readonly toggleHand: () => void;
   readonly toggleComment: () => void;
-  readonly activate: (id: string) => void;
   readonly cancelPlacement: () => void;
   readonly deactivate: () => void;
   readonly leaveComment: () => void;
@@ -49,6 +60,12 @@ export function useCanvasKeys(keys: Keys): void {
       },
     },
     { key: "v", run: keys.selectTool },
+    ...DRAWING_KEYS.map(([key, tool]) => ({
+      key,
+      run: () => {
+        keys.pickTool(tool);
+      },
+    })),
     { key: "h", run: keys.toggleHand },
     { key: "c", run: keys.toggleComment },
     {
@@ -60,9 +77,8 @@ export function useCanvasKeys(keys: Keys): void {
     {
       key: "Enter",
       run: (event) => {
-        if (keys.onlyId === null) return;
         event.preventDefault();
-        keys.activate(keys.onlyId);
+        keys.onEnter();
       },
     },
     {
@@ -71,8 +87,8 @@ export function useCanvasKeys(keys: Keys): void {
         if (keys.placing) keys.cancelPlacement();
         else if (keys.activeId !== null) keys.deactivate();
         else if (keys.commentMode) keys.leaveComment();
-        else if (keys.tool === "hand") keys.selectTool();
-        else keys.clearSelection();
+        else if (keys.tool === "select") keys.clearSelection();
+        else keys.selectTool();
       },
     },
   ]);

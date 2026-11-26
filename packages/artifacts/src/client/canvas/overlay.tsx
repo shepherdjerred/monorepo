@@ -6,7 +6,7 @@
 import { LogOutIcon, MaximizeIcon } from "lucide-react";
 import { useCallback, useRef } from "react";
 import { Link } from "react-router";
-import type { Camera } from "./camera.ts";
+import type { Camera, WorldRect } from "./camera.ts";
 import type { CameraController } from "./controller.ts";
 import { useFollowCamera } from "./follow.ts";
 import type { CanvasFrameModel } from "./model.ts";
@@ -126,7 +126,7 @@ export function SelectionRing({
   active,
 }: {
   readonly controller: CameraController;
-  readonly model: CanvasFrameModel;
+  readonly model: { readonly rect: WorldRect };
   readonly active: boolean;
 }): React.JSX.Element {
   const { rect } = model;

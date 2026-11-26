@@ -8,7 +8,6 @@ import {
   type Placement,
 } from "#client/pages/placement-composer.tsx";
 import { clickSelection } from "./arrange/geometry.ts";
-import { MarqueeBox, ResizeHandles } from "./arrange/handles.tsx";
 import { RemoveDialog } from "./arrange/remove-dialog.tsx";
 import { Toasts, useNewFrameToasts } from "./arrange/toasts.tsx";
 import { useArrange } from "./arrange/use-arrange.ts";
@@ -18,9 +17,11 @@ import { screenToWorld, type WorldRect } from "./camera.ts";
 import { CanvasFrame } from "./canvas-frame.tsx";
 import type { Tap } from "./gestures.ts";
 import { readingOrder, type CanvasPin } from "./model.ts";
-import { ExitChip, FrameChip, SelectionRing } from "./overlay.tsx";
-import { PinsLayer } from "./pins-layer.tsx";
-import { commentTool, pointerTools, ToolPill, ZoomPill } from "./toolbar.tsx";
+import { commentTool, drawingTools, pointerTools } from "./toolbar.tsx";
+import { CanvasOverlay } from "./canvas-overlay.tsx";
+import { NoteWorld } from "./notes/note-parts.tsx";
+import { isDrawTool } from "./gestures.ts";
+import { useNotes } from "./notes/use-notes.ts";
 import { useCanvasCamera } from "./use-camera.ts";
 import { useCanvasKeys } from "./use-canvas-keys.ts";
 import { useCanvasInput } from "./use-input.ts";
@@ -89,6 +90,7 @@ export function Canvas({
     commentMode,
     selectTool,
     handTool,
+    pickTool,
     toggleHand,
     toggleComment,
     leaveComment,
@@ -112,8 +114,8 @@ export function Canvas({
 
   const leaveCommentRef = useRef(leaveComment);
   leaveCommentRef.current = leaveComment;
-  const latest = useRef({ commentMode, activeId, byId });
-  latest.current = { commentMode, activeId, byId };
+  const latest = useRef({ commentMode, activeId, byId, tool });
+  latest.current = { commentMode, activeId, byId, tool };
 
   const activate = useCallback(
     (id: string) => {
@@ -151,22 +153,34 @@ export function Canvas({
     });
   }, []);
 
+  const notes = useNotes({
+    arrange,
+    controller,
+    frames: byId,
+    tool,
+    selectTool,
+  });
   const selectionRef = useRef(selection);
   selectionRef.current = selection;
   const onTap = useCallback(
     (tap: Tap) => {
+      if (isDrawTool(latest.current.tool)) {
+        // A click with the text or sticky tool makes one; other tools need a drag.
+        notes.createAt(tap.point);
+        return;
+      }
       if (!latest.current.commentMode) {
-        if (tap.frameId === null) {
+        if (tap.targetId === null) {
           if (!tap.shiftKey) setSelection(new Set());
         } else
           setSelection(
-            clickSelection(selectionRef.current, tap.frameId, tap.shiftKey),
+            clickSelection(selectionRef.current, tap.targetId, tap.shiftKey),
           );
         return;
       }
       // On a frame, the frame's own stage places the pin; empty canvas places a board pin.
       const box = viewport?.getBoundingClientRect();
-      if (box === undefined || tap.frameId !== null) return;
+      if (box === undefined || tap.targetId !== null) return;
       const world = screenToWorld(controller.get(), tap.point);
       const [x, y] = [tidy(world.x), tidy(world.y)];
       setPlacement({
@@ -176,15 +190,17 @@ export function Canvas({
         frameId: null,
       });
     },
-    [controller, viewport, setSelection],
+    [controller, viewport, setSelection, notes],
   );
 
   const onDoubleTap = useCallback(
     (id: string) => {
       // In comment mode a double click is two comments' worth of clicking.
-      if (!latest.current.commentMode) activate(id);
+      if (latest.current.commentMode) return;
+      if (arrange.notes.some((model) => model.id === id)) notes.startEdit(id);
+      else activate(id);
     },
-    [activate],
+    [activate, arrange.notes, notes],
   );
   const viewportSize = useCallback(() => sizeRef.current, [sizeRef]);
   const sessions = useArrangeSessions({
@@ -192,10 +208,16 @@ export function Canvas({
     size: viewportSize,
     arrange,
     frames,
-    blocked: (frameId) =>
+    notes: arrange.notes,
+    tool,
+    color: notes.color,
+    blocked: (targetId) =>
       latest.current.commentMode ||
-      (frameId !== null && frameId === latest.current.activeId),
+      (targetId !== null && targetId === latest.current.activeId),
+    shift: notes.shiftHeld,
     setMarquee,
+    setPreview: notes.setPreview,
+    onCreate: notes.onCreate,
   });
   const onHostInput = useCanvasInput({
     controller,
@@ -204,6 +226,7 @@ export function Canvas({
     tool,
     onTap,
     onDoubleTap,
+    pick: notes.pick,
     beginSession: sessions.beginSession,
   });
 
@@ -266,7 +289,10 @@ export function Canvas({
   useArrangeKeys({
     arrange,
     onDelete: () => {
-      if (activeId === null && selection.size > 0) setConfirmRemove(true);
+      if (activeId !== null || selection.size === 0) return;
+      // Frames ask first; annotations alone are deleted at once (and undo brings them back).
+      if (selectedFrames.length > 0) setConfirmRemove(true);
+      else arrange.remove();
     },
   });
   const toolGroups = pointerTools({
@@ -284,9 +310,13 @@ export function Canvas({
     commentMode,
     tool,
     selectTool,
+    pickTool,
+    onEnter: () => {
+      if (only !== undefined) activate(only.id);
+      else if (notes.onlyNote !== undefined) notes.startEdit(notes.onlyNote.id);
+    },
     toggleHand,
     toggleComment,
-    activate,
     cancelPlacement: () => {
       setPlacement(null);
     },
@@ -296,6 +326,13 @@ export function Canvas({
       setSelection(new Set());
     },
   });
+
+  const onlyNote = selection.size === 1 ? notes.onlyNote : undefined;
+  const resizable =
+    only ??
+    (onlyNote?.note.type === "box" || onlyNote?.note.type === "sticky"
+      ? onlyNote
+      : undefined);
 
   const removing = selectedFrames.map((frame) => frame.summary.title);
 
@@ -314,89 +351,40 @@ export function Canvas({
         data-testid="canvas-viewport"
         data-pan="false"
       >
-        <div className="ar-cv-overlay" data-testid="canvas-overlay">
-          <div
-            className="ar-cv-chips"
-            role="group"
-            aria-label="Frames in reading order"
-          >
-            {inReadingOrder.map((frame) => (
-              <FrameChip
-                key={frame.id}
-                controller={controller}
-                model={frame}
-                selected={selection.has(frame.id)}
-                active={frame.id === activeId}
-                onSelect={(id) => {
-                  setSelection(new Set([id]));
-                }}
-                onActivate={activate}
-                onFocusFrame={(id) => {
-                  const target = byId.get(id);
-                  if (target !== undefined) reveal(target.rect);
-                }}
-              />
-            ))}
-          </div>
-          {selectedFrames.map((frame) => (
-            <SelectionRing
-              key={frame.id}
-              controller={controller}
-              model={frame}
-              active={frame.id === activeId}
-            />
-          ))}
-          {commentMode || only === undefined || only.id === activeId ? null : (
-            <ResizeHandles
-              key={only.id}
-              controller={controller}
-              rect={only.rect}
-              start={(handle, point) =>
-                sessions.startResize(only.id, handle, point)
-              }
-            />
-          )}
-          {marquee === null ? null : (
-            <MarqueeBox controller={controller} rect={marquee} />
-          )}
-          {activeFrame === undefined ? null : (
-            <ExitChip
-              controller={controller}
-              model={activeFrame}
-              onExit={deactivate}
-            />
-          )}
-          <PinsLayer
-            controller={controller}
-            viewport={viewport}
-            pins={pins}
-            rects={rects}
-            adapters={tiers.adapters}
-            settled={camera.settled.camera}
-            tick={tick}
-            selectedId={selectedThreadId}
-            onSelect={onSelectThread}
-          />
-          <ToolPill
-            groups={[
-              toolGroups.pointer,
-              [
-                commentTool({
-                  commenting: commentMode,
-                  onToggle: toggleComment,
-                }),
-              ],
-            ]}
-          />
-          <ZoomPill
-            controller={controller}
-            hasSelection={selection.size > 0}
-            onZoom={camera.zoomBy}
-            onReset={camera.reset}
-            onFitAll={camera.fitAll}
-            onFitSelection={camera.fitSelection}
-          />
-        </div>
+        <CanvasOverlay
+          controller={controller}
+          camera={camera}
+          viewport={viewport}
+          tiers={tiers}
+          sessions={sessions}
+          notes={notes}
+          inReadingOrder={inReadingOrder}
+          byId={byId}
+          selection={selection}
+          selectedFrames={selectedFrames}
+          selectedNotes={notes.selectedNotes}
+          resizable={resizable}
+          activeId={activeId}
+          activeFrame={activeFrame}
+          commentMode={commentMode}
+          marquee={marquee}
+          toolGroups={[
+            toolGroups.pointer,
+            drawingTools({ tool, commenting: commentMode, onPick: pickTool }),
+            [commentTool({ commenting: commentMode, onToggle: toggleComment })],
+          ]}
+          pins={pins}
+          rects={rects}
+          adapters={tiers.adapters}
+          tick={tick}
+          selectedThreadId={selectedThreadId}
+          onSelectThread={onSelectThread}
+          onSelectFrame={(id) => {
+            setSelection(new Set([id]));
+          }}
+          onActivate={activate}
+          onDeactivate={deactivate}
+        />
         <div
           className="ar-cv-world"
           ref={camera.setWorld}
@@ -417,6 +405,11 @@ export function Canvas({
               onViewChange={onViewChange}
             />
           ))}
+          <NoteWorld
+            notes={arrange.notes}
+            preview={notes.preview}
+            editing={notes.editing}
+          />
         </div>
         <div className="ar-cv-blanket" ref={setBlanket} hidden />
       </div>

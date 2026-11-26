@@ -29,6 +29,18 @@ export function OutlinePage(): React.JSX.Element {
     );
 
   const { index, artifacts } = board.data;
+  // Sticky notes and titles carry text; drawings have none to read.
+  const texts = Object.entries(index.notes).flatMap(([id, note]) =>
+    note.type === "sticky" || note.type === "title"
+      ? [
+          {
+            id,
+            kind: note.type === "sticky" ? "Sticky" : "Title",
+            text: note.text,
+          },
+        ]
+      : [],
+  );
   const byId = new Map(artifacts.map((artifact) => [artifact.id, artifact]));
   const all = threads.data ?? [];
   const boardLevel = all.filter((thread) => thread.artifactId === null);
@@ -100,6 +112,18 @@ export function OutlinePage(): React.JSX.Element {
           ];
         })}
       </ol>
+      {texts.length === 0 ? null : (
+        <section aria-labelledby="board-annotations">
+          <h2 id="board-annotations">Annotations</h2>
+          <ul className="ar-annotations" aria-label="Annotations on the board">
+            {texts.map((entry) => (
+              <li key={entry.id}>
+                <strong>{entry.kind}</strong> {entry.text}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <section aria-labelledby="board-comments">
         <h2 id="board-comments">Board comments</h2>
         {boardLevel.length === 0 ? (

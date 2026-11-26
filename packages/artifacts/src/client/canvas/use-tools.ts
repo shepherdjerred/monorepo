@@ -24,6 +24,19 @@ export function useToolModes(drop: {
     setCommentMode(false);
     placement();
   }, [placement]);
+  /** A drawing tool; choosing the active one again goes back to select. */
+  const pickTool = useCallback(
+    (next: Tool) => {
+      if (tool === next) {
+        selectTool();
+        return;
+      }
+      setTool(next);
+      setCommentMode(false);
+      placement();
+    },
+    [tool, selectTool, placement],
+  );
   const toggleComment = useCallback(() => {
     setCommentMode((on) => !on);
     live();
@@ -41,6 +54,7 @@ export function useToolModes(drop: {
     commentMode,
     selectTool,
     handTool,
+    pickTool,
     toggleHand,
     toggleComment,
     leaveComment,
