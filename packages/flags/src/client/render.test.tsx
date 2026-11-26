@@ -21,7 +21,7 @@ import type { DiffViewProps, JsonEditorProps } from "./code.tsx";
 import { App } from "./app.tsx";
 import { ConflictBanner } from "./conflict-banner.tsx";
 import { FlagTable } from "./flag-table.tsx";
-import { DeploymentPicker, DeploymentSidebar } from "./sidebar.tsx";
+import { DeploymentSidebar, FlagsTopBar } from "./sidebar.tsx";
 
 Reflect.set(globalThis, "IS_REACT_ACT_ENVIRONMENT", true);
 
@@ -128,16 +128,14 @@ test("the flag table shows state words, mono variant values and the selected row
       query="flag"
     />,
   );
-  expect(html).toContain("<span>On</span>");
-  expect(html).toContain("<span>Off</span>");
-  expect(html).toContain("<span>Targeted</span>");
-  expect(html).toContain('data-sev="ok"');
-  expect(html).toContain('data-sev="unknown"');
-  expect(html).toContain('data-sev="info"');
-  expect(html).toMatch(/class="ui-mono fl-value"[^>]*>20000000</);
+  // Hub's severity badges: On is ok, Off is neutral, Targeted is info.
+  expect(html).toMatch(/class="ui-badge" data-sev="ok">.*?On<\/span>/);
+  expect(html).toMatch(/class="ui-badge" data-sev="unknown">.*?Off<\/span>/);
+  expect(html).toMatch(/class="ui-badge" data-sev="info">.*?Targeted<\/span>/);
+  expect(html).toMatch(/class="fl-value"[^>]*>20000000</);
   expect(html.match(/aria-current="page"/g)).toHaveLength(1);
   expect(html).toContain('href="/scout/prod/off_flag?q=flag"');
-  expect(html).toContain('<td class="ui-muted">variant</td>');
+  expect(html).toContain('<td class="ui-muted" data-label="Type">variant</td>');
 });
 
 test("the conflict banner shows both versions and offers theirs when it exists", () => {
@@ -176,13 +174,19 @@ test("the conflict banner shows both versions and offers theirs when it exists",
   expect(gone).not.toContain("Load their version");
 });
 
-test("the narrow-width picker keeps the app switcher and the deployment select", () => {
+test("the narrow-width top bar keeps the app switcher, search and the menu", () => {
   const html = staticHtml(
-    <DeploymentPicker ids={ids} route={{ catalog: "scout", stage: "prod" }} />,
+    <FlagsTopBar
+      ids={ids}
+      counts={counts}
+      route={{ catalog: "scout", stage: "prod" }}
+      theme={theme}
+    />,
   );
   expect(html).toContain("switch app");
-  expect(html).toContain("<select");
-  expect(html).toContain('<option value="scout/prod" selected');
+  expect(html).toContain('aria-label="Open navigation"');
+  expect(html).toContain('aria-label="Search deployments and flags"');
+  expect(html).toContain("Theme: system");
 });
 
 // ---- Client-side navigation, rendered in jsdom against a stubbed API ----
@@ -303,7 +307,18 @@ function Probe() {
   return <output id="probe">{`${location.pathname}${location.search}`}</output>;
 }
 
+/** jsdom has no `matchMedia`; the top bar asks whether the sidebar shows. */
+function stubNarrowViewport(): void {
+  vi.stubGlobal("matchMedia", (media: string) => ({
+    matches: false,
+    media,
+    addEventListener: noop,
+    removeEventListener: noop,
+  }));
+}
+
 async function mount(entry: string) {
+  stubNarrowViewport();
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
@@ -348,6 +363,12 @@ async function mount(entry: string) {
     query,
     input,
     select,
+    element: (selector: string): HTMLElement => {
+      const found = query(selector);
+      if (!(found instanceof HTMLElement))
+        throw new TypeError(`${selector} is not an element`);
+      return found;
+    },
     link,
     location: () => query("#probe").textContent,
     heading: () => query("h1").textContent,
@@ -398,12 +419,13 @@ function documentCalls(calls: readonly string[], id: string): number {
 test("the sidebar and flag rows navigate in the page and a flag reuses its deployment's document", async () => {
   const api = stubApi();
   const page = await mount("/");
-  expect(page.heading()).toBe("Flags");
+  expect(page.heading()).toBe("Deployments");
   expect(document.title).toBe("Flags");
 
   expect(await click(page.link("a.ui-nav-item", "golink"))).toBe(true);
   expect(page.location()).toBe("/golink/prod");
-  expect(page.heading()).toBe("golink / prod");
+  expect(page.query(".ui-eyebrow").textContent).toBe("golink");
+  expect(page.heading()).toBe("Prod");
   expect(document.title).toBe("golink/prod · Flags");
   expect(
     page.link("a.ui-nav-item", "golink").getAttribute("aria-current"),
@@ -478,9 +500,10 @@ test("switching deployments keeps the previous table, busy, under the new header
 
   await click(page.link("a.ui-nav-item", "golink"));
   expect(page.location()).toBe("/golink/prod");
-  expect(page.heading()).toBe("golink / prod");
+  expect(page.query(".ui-eyebrow").textContent).toBe("golink");
+  expect(page.heading()).toBe("Prod");
   expect(document.title).toBe("golink/prod · Flags");
-  expect(page.query(".ui-header-meta").textContent).toBe("Loading…");
+  expect(page.query(".fl-revision").textContent).toBe("Loading…");
   expect(page.query(".fl-body").getAttribute("aria-busy")).toBe("true");
   expect(page.query(".fl-list").hasAttribute("inert")).toBe(true);
   // The kept rows still link to the deployment they belong to.
@@ -490,25 +513,30 @@ test("switching deployments keeps the previous table, busy, under the new header
 
   await release();
   expect(page.query(".fl-body").hasAttribute("aria-busy")).toBe(false);
-  expect(page.query(".ui-header-meta").textContent).toBe("Revision 9");
+  expect(page.query(".fl-revision").textContent).toBe("Revision 9");
   expect(page.link("a.fl-key", "debug").getAttribute("href")).toBe(
     "/golink/prod/debug",
   );
   expect(page.container.querySelectorAll("a.fl-key")).toHaveLength(1);
 });
 
-test("the narrow-width picker navigates in the page", async () => {
+test("the narrow-width drawer lists the views and deployments and closes on navigating", async () => {
   stubApi();
   const page = await mount("/scout/prod");
-  const select = page.select(".fl-picker select");
-  await act(async () => {
-    select.value = "golink/prod";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
-    await Promise.resolve();
-  });
-  await settle();
+  await click(page.element('button[aria-label="Open navigation"]'));
+  const drawer = document.querySelector(".ui-drawer");
+  if (drawer === null) throw new Error("the drawer did not open");
+  expect(
+    [...drawer.querySelectorAll(".ui-nav-label")].map((l) => l.textContent),
+  ).toEqual(["Views", "Deployments", "scout"]);
+  const golink = [...drawer.querySelectorAll<HTMLAnchorElement>("a")].find(
+    (anchor) => anchor.textContent.includes("golink"),
+  );
+  if (golink === undefined) throw new Error("no golink row in the drawer");
+  expect(await click(golink)).toBe(true);
   expect(page.location()).toBe("/golink/prod");
-  expect(page.heading()).toBe("golink / prod");
+  expect(page.heading()).toBe("Prod");
+  expect(document.querySelector(".ui-drawer")).toBeNull();
 });
 
 test("an encoded flag key is decoded from the route", async () => {
