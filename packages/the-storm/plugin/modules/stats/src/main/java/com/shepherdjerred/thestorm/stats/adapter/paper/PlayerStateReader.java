@@ -1,6 +1,8 @@
 package com.shepherdjerred.thestorm.stats.adapter.paper;
 
+import com.shepherdjerred.thestorm.stats.adapter.network.PlayerAddresses;
 import com.shepherdjerred.thestorm.stats.domain.GameModeBucket;
+import com.shepherdjerred.thestorm.stats.domain.GeoIpDatabase;
 import com.shepherdjerred.thestorm.stats.domain.Platform;
 import com.shepherdjerred.thestorm.stats.domain.ProtocolVersions;
 import com.shepherdjerred.thestorm.stats.domain.SessionLedger;
@@ -19,11 +21,18 @@ public final class PlayerStateReader {
   private final Server server;
   private final StatsPaperPorts ports;
   private final InstantSource time;
+  private final GeoIpDatabase geoIp;
 
   public PlayerStateReader(Server server, StatsPaperPorts ports, InstantSource time) {
+    this(server, ports, time, GeoIpDatabase.bundled());
+  }
+
+  public PlayerStateReader(
+      Server server, StatsPaperPorts ports, InstantSource time, GeoIpDatabase geoIp) {
     this.server = server;
     this.ports = ports;
     this.time = time;
+    this.geoIp = geoIp;
   }
 
   public boolean inArena(Player player) {
@@ -71,6 +80,7 @@ public final class PlayerStateReader {
     var world = WorldClassifier.classifyWorld(player.getWorld().getName(), arena);
     var mode =
         WorldClassifier.classifyMode(world, arena, player.getGameMode() == GameMode.CREATIVE);
+    var country = PlayerAddresses.countryOf(player, geoIp);
     return new SessionLedger.JoinInput(
         player.getUniqueId(),
         player.getName(),
@@ -81,7 +91,9 @@ public final class PlayerStateReader {
         joinAddress,
         world,
         mode,
-        isAfk(player));
+        isAfk(player),
+        country.map(GeoIpDatabase.Country::code).orElse(null),
+        country.map(GeoIpDatabase.Country::name).orElse(null));
   }
 
   public String primaryGroup(Player player) {

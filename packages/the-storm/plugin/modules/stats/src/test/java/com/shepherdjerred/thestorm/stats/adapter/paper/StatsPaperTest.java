@@ -693,6 +693,87 @@ final class StatsPaperTest {
     }
   }
 
+  @Test
+  void resolvesJoiningPlayerCountryOfflineAndOmitsPrivatePeerAddresses() throws Exception {
+    var exportedBatches = new ArrayList<StatsWire.IngestBatch>();
+    StatsTransport recordingTransport =
+        new StatsTransport() {
+          @Override
+          public CompletableFuture<Void> send(StatsWire.IngestBatch batch) {
+            exportedBatches.add(batch);
+            return CompletableFuture.completedFuture(null);
+          }
+
+          @Override
+          public void close() {}
+        };
+
+    var customConfig =
+        new StatsConfig(
+            "The Storm",
+            "https://stats.ts-mc.net",
+            "STORM_STATS_INGEST_URL",
+            "STORM_STATS_INGEST_TOKEN",
+            15,
+            60);
+    var rng = new SplittableRandom(123L);
+    var logger = mock(org.slf4j.Logger.class);
+    var json = tools.jackson.databind.json.JsonMapper.builder().build();
+
+    try (var customDatabase = StormDatabase.open(tempDir.resolve("geoip-stats.db"))) {
+      customDatabase.migrate("stats", JooqStatsStore.class.getClassLoader());
+      var customStore = new JooqStatsStore(customDatabase);
+      try (var customService =
+          new StatsService(
+              new StatsService.Dependencies(
+                  customConfig,
+                  customStore,
+                  recordingTransport,
+                  () -> CompletableFuture.completedFuture(true)),
+              new StatsService.Clocks(
+                  now::get, () -> new java.util.UUID(rng.nextLong(), rng.nextLong()), logger))) {
+        var ports = StatsPaperPorts.discover(new Services());
+        var reader = new PlayerStateReader(server, ports, now::get);
+        var listener = new StatsSessionListener(customService, reader);
+        server.getPluginManager().registerEvents(listener, harnessPlugin);
+        try {
+          var publicPlayer = addHumanPlayerWithIp("PublicUsa", "8.8.8.8");
+          var tailscalePlayer = addHumanPlayerWithIp("TailnetPeer", "100.96.247.28");
+          assertThat(publicPlayer.getName()).isEqualTo("PublicUsa");
+          assertThat(tailscalePlayer.getName()).isEqualTo("TailnetPeer");
+
+          waitForAsyncDb(customService);
+          var outboxEvents = customStore.pendingEvents(10).get();
+          assertThat(outboxEvents).hasSize(2);
+
+          var firstOutboxJson = json.readTree(outboxEvents.get(0).eventJson());
+          assertThat(firstOutboxJson.required("type").asString()).isEqualTo("session_started");
+          assertThat(firstOutboxJson.required("playerName").asString()).isEqualTo("PublicUsa");
+          assertThat(firstOutboxJson.required("countryCode").asString()).isEqualTo("US");
+          assertThat(firstOutboxJson.required("countryName").asString()).isEqualTo("United States");
+          assertThat(outboxEvents.get(0).eventJson()).doesNotContain("8.8.8.8");
+
+          var secondOutboxJson = json.readTree(outboxEvents.get(1).eventJson());
+          assertThat(secondOutboxJson.required("playerName").asString()).isEqualTo("TailnetPeer");
+          assertThat(secondOutboxJson.required("countryCode").isNull()).isTrue();
+          assertThat(secondOutboxJson.required("countryName").isNull()).isTrue();
+          assertThat(outboxEvents.get(1).eventJson()).doesNotContain("100.96.247.28");
+
+          customService.flush().get();
+          assertThat(exportedBatches).hasSize(1);
+          var wireBatchJson = json.writeValueAsString(exportedBatches.getFirst());
+          assertThat(wireBatchJson)
+              .contains("\"countryCode\":\"US\"")
+              .contains("\"countryName\":\"United States\"")
+              .doesNotContain("8.8.8.8")
+              .doesNotContain("100.96.247.28");
+        } finally {
+          org.bukkit.event.HandlerList.unregisterAll(listener);
+        }
+      }
+    }
+  }
+
   private PlayerMock addHumanPlayer(String name) {
     var player =
         new PlayerMock(server, name, java.util.UUID.randomUUID()) {
@@ -704,6 +785,30 @@ final class StatsPaperTest {
           @Override
           public int getProtocolVersion() {
             return 775;
+          }
+        };
+    server.addPlayer(player);
+    return player;
+  }
+
+  private PlayerMock addHumanPlayerWithIp(String name, String ipLiteral) {
+    var peerAddress =
+        new java.net.InetSocketAddress(java.net.InetAddress.ofLiteral(ipLiteral), 25565);
+    var player =
+        new PlayerMock(server, name, java.util.UUID.randomUUID()) {
+          @Override
+          public String getClientBrandName() {
+            return "vanilla";
+          }
+
+          @Override
+          public int getProtocolVersion() {
+            return 775;
+          }
+
+          @Override
+          public java.net.InetSocketAddress getAddress() {
+            return peerAddress;
           }
         };
     server.addPlayer(player);

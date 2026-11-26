@@ -39,7 +39,7 @@ const WARRIOR_ACCESSORS: Readonly<
 };
 
 const WARRIOR_LABELS: Readonly<Record<WarriorSortKey, string>> = {
-  name: "Warrior",
+  name: "Combatant",
   kills: "PvP Kills",
   deaths: "PvP Deaths",
   kdr: "K/D Ratio",
@@ -198,18 +198,18 @@ function TopWarriorsPanel({
   return (
     <div className="panel">
       <div className="panel-header">
-        <h2>Top PvP Warriors</h2>
+        <h2>Top Combatants</h2>
         <span className="panel-subtitle">
           Click any column header to sort combatants
         </span>
       </div>
       {sortedRows.length === 0 ? (
-        <p className="panel-subtitle">No PvP warriors recorded yet.</p>
+        <p className="panel-subtitle">No combatants recorded yet.</p>
       ) : (
-        <ResponsiveTable caption="Top PvP warriors leaderboard">
+        <ResponsiveTable caption="Top combatants leaderboard">
           <thead>
             <tr>
-              <SortableTh label="Warrior" {...headerProps("name")} />
+              <SortableTh label="Combatant" {...headerProps("name")} />
               <SortableTh label="PvP Kills" numeric {...headerProps("kills")} />
               <SortableTh
                 label="PvP Deaths"
@@ -271,7 +271,7 @@ function WeaponsSection({
     <div className="stack-lg">
       <ShareBreakdownPanel
         title="Top Weapons Share"
-        subtitle="Share of fatal PvP blows"
+        subtitle="Share of player combat kills"
         items={weapons.slice(0, 6).map((item) => ({
           key: item.weapon,
           label: formatTitleIdentifier(item.weapon),
@@ -281,7 +281,7 @@ function WeaponsSection({
       />
 
       {sortedRows.length > 0 ? (
-        <ResponsiveTable caption="Top PvP weapons breakdown" compact>
+        <ResponsiveTable caption="Top combat weapons breakdown" compact>
           <thead>
             <tr>
               <SortableTh

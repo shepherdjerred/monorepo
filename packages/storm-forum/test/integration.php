@@ -23,6 +23,10 @@ $check(array_map(fn($reaction) => (string)$reaction->title, array_values($reacti
 $check($map['reaction:like'] === 1, 'Native Like ID changed');
 $check($app->em()->find('XF:Reaction', $map['reaction:disagree'])->reaction_score === 0, 'Disagree should not punish reputation');
 $check($app->options()->registrationSetup['enabled'] === false, 'Registration must begin closed');
+foreach (['stormHome' => ['Home', '{{ link(\'storm-home\') }}'], 'stormDocs' => ['Docs', 'https://docs.ts-mc.net'], 'stormMap' => ['LiveMap', 'https://bluemap.ts-mc.net'], 'stormStats' => ['Stats', 'https://stats.ts-mc.net']] as $navKey => [$navTitle, $navLink]) {
+    $nav = $app->em()->find('XF:Navigation', $navKey);
+    $check($nav !== null && $nav->enabled && ($nav->type_config['link'] ?? null) === $navLink && $nav->getMasterPhrase()->phrase_text === $navTitle, 'Managed navigation mismatch: ' . $navKey);
+}
 foreach (['MAIL_SMTP_PASSWORD', 'TURNSTILE_SECRET_KEY'] as $key) {
     $check(!str_contains($app->db()->fetchOne('SELECT GROUP_CONCAT(option_value) FROM xf_option'), getenv($key)), 'Credential leaked into options');
 }

@@ -18,6 +18,7 @@ import com.shepherdjerred.thestorm.stats.adapter.paper.StatsSessionListener;
 import com.shepherdjerred.thestorm.stats.app.StatsConfig;
 import com.shepherdjerred.thestorm.stats.app.StatsService;
 import com.shepherdjerred.thestorm.stats.app.StatsTransport;
+import com.shepherdjerred.thestorm.stats.domain.GeoIpDatabase;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.time.Duration;
 import java.util.Optional;
@@ -83,7 +84,7 @@ public final class StatsModule implements StormModule {
 
     var server = context.plugin().getServer();
     var ports = StatsPaperPorts.discover(context.services());
-    var stateReader = new PlayerStateReader(server, ports, context.time());
+    var stateReader = new PlayerStateReader(server, ports, context.time(), GeoIpDatabase.bundled());
     var sampler =
         new StatsSampler(
             new StatsSampler.Context(server, service, ports, stateReader),
