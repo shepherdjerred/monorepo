@@ -2905,28 +2905,17 @@ model DareNotificationPreference {
 /// unvisited backlog. The claim order is the index order: depth, then
 /// `nextEligibleAt`. Crawled matches, not frontier rows, are the permanent
 /// record; a pruned player is admitted again when a later match names them.
-///
-/// `seedMatchId`, `visitCount`, `createdAt` and `updatedAt` are retired: no code
-/// reads or writes them, and their defaults let a row insert without them. A
-/// later migration drops them once no running pod writes them.
 model CrawlFrontier {
   puuid          String    @id
   platformRoute  String
   depth          Int
-  seedMatchId    String    @default("")
   rankTier       String?
   rankDivision   String?
   rankedAt       DateTime?
   lastVisitedAt  DateTime?
   nextEligibleAt DateTime
-  visitCount     Int       @default(0)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @default(now())
 
-  /// The claim and the pruner walk this order. The older
-  /// (nextEligibleAt, depth) index below is retired with the columns above.
   @@index([depth, nextEligibleAt])
-  @@index([nextEligibleAt, depth])
 }
 
 /// One crawled match: the dedupe key and the daily-budget ledger. It is not a
